@@ -74,13 +74,20 @@ class cumat{
 	    }
 	}
     }
-    cumat<T>* ref(){
+    cumat<T>* ref(int vector=0){
 	if(nref) nref[0]++;
-	cumat<T>* res=new cumat<T>(nx, ny, p, 0);
+	cumat<T>* res;
+	if(vector){
+	    res=new cumat<T>(nx*ny, 1, p, 0);
+	}else{
+	    res=new cumat<T>(nx, ny, p, 0);
+	}
 	res->nref=nref;
 	return res;
     }
-
+    operator T*(){
+	return p;
+    }
     operator bool(){
 	return p?true:false;
     }
@@ -219,7 +226,10 @@ typedef class cumat<float>    curmat;
 typedef class cumat<fcomplex> cucmat;
 typedef class cucell<float>  curcell;
 typedef class cucell<fcomplex>  cuccell;
-
+enum TYPE_SP{
+    SP_CSC,
+    SP_CSR,
+};
 class cusp{
  public:
     int *p;
@@ -228,11 +238,26 @@ class cusp{
     int nx;
     int ny;
     int nzmax;
+    enum TYPE_SP type;
+    cusp():p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){}
     ~cusp(){
 	cudaFree(p);
 	cudaFree(i);
 	cudaFree(x);
     }
+    void toCSR(){
+	if(type==SP_CSC){
+	    trans();
+	    type=SP_CSR;
+	}
+    }
+    void toCSC(){
+	if(type==SP_CSR){
+	    trans();
+	    type=SP_CSC;
+	}
+    }
+    void trans();/*covnert to CSR mode by transpose*/
 };
 class cuspcell{
  public:
@@ -248,11 +273,16 @@ class cuspcell{
 };
 class cumuv_t{
  public:
-    cuspcell *Mt;
-    curcell *U;
-    curcell *V;
+    cusp *M;
+    curmat *U;
+    curmat *V;
+    curmat *Vx;
+    int nx, ny, *nxs, *nys;
     stream_t *fitstream;
     stream_t *dmstream;
+    cumuv_t(){
+	memset(this, 0 ,sizeof(*this));
+    }
 };
 void cp2gpu(float (* restrict *dest)[2], loc_t *src);
 typedef float(*float2p)[2];
@@ -303,6 +333,7 @@ private:
    Specifies the grid.
 */
 struct cugrid_t{
+    long  nx,ny;
     float ox, oy;
     float dx, dy;
     float ht;
@@ -311,6 +342,8 @@ struct cugrid_t{
 	memcpy(this, &in, sizeof(*this));
     }
     void init(const map_t *in){
+	nx=in->nx;
+	ny=in->ny;
 	ox=in->ox;
 	oy=in->oy;
 	dx=in->dx;
@@ -319,37 +352,28 @@ struct cugrid_t{
 	vx=in->vx;
 	vy=in->vy;
     }
-    cugrid_t(float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0):
-	ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi){}
-    cugrid_t(const map_t *in):ox(in->ox),oy(in->oy),dx(in->dx),dy(in->dy),ht(in->h),vx(in->vx),vy(in->vy){}
-    //cugrid_t(const cugrid_t &in):ox(in.ox),oy(in.oy),dx(in.dx),dy(in.dy),ht(in.ht),vx(in.vx),vy(in.vy){}
-
-    cugrid_t operator *(float scale){
-	return cugrid_t(ox*scale,oy*scale,dx*scale,dy*scale,ht*scale,vx*scale,vy*scale);
+    cugrid_t(long nxi=0, long nyi=0,float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi){}
+    //cugrid_t(const map_t *in):nx(in->nx),ny(in->ny),ox(in->ox),oy(in->oy),dx(in->dx),dy(in->dy),ht(in->h),vx(in->vx),vy(in->vy){}
+    cugrid_t scale(float sc){
+	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy);
+    }
+    cugrid_t operator *(float sc){
+	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy);
     }
 };
-class cumap_t:public curmat, public cugrid_t{
- public:
-    float *cubic_cc; /*coefficients for cubic influence function. */
-    virtual void init(long nxi, long nyi, float *pi=NULL, int own=1){
-	curmat::init(nxi, nyi, pi, own);
+class cumap_t:public cugrid_t{
+public:
+    curmat p;
+    curmat *cubic_cc; /*coefficients for cubic influence function. */
+    /*Init the data, p*/
+    cumap_t():cubic_cc(NULL){
     }
-    virtual void init(const map_t *in){
-	curmat::init(in->nx, in->ny);
-	cugrid_t::init(in);
+    operator curmat&(){
+	return p;
     }
-    virtual void init(const cumap_t &in){
-	curmat::init(in.nx, in.ny);
-	cugrid_t::init(in);
+    cugrid_t *grid(){
+	return (cugrid_t*)this;
     }
-    cumap_t():cubic_cc(NULL){}
-    cumap_t(int nxi, int nyi, float *pi=NULL, int own=1):cubic_cc(NULL){
-	init(nxi, nyi, pi, own);
-    }
-    cumap_t(const map_t *in):cubic_cc(NULL){
-	init(in);
-    }
-
 };
 
 struct mulock{

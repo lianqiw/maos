@@ -40,7 +40,7 @@ typedef struct CGTMP_T{
 typedef void (*G_CGFUN)(curcell**, float, const void*, const curcell*, float, stream_t &stream);
 typedef void (*G_PREFUN)(curcell**, const void*, const curcell*, stream_t &stream);
 
-float gpu_pcg(curcell **px, 
+float gpu_pcg(curcell *x0, 
 	      G_CGFUN Amul, const void *A, 
 	      G_PREFUN Mmul, const void *M, 
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter, 

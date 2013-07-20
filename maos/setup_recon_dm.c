@@ -91,6 +91,9 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
     recon->amap=calloc(ndm, sizeof(map_t*));
     recon->aembed=calloc(ndm, sizeof(long*));
+    if(parms->fit.cachedm){
+	recon->acmap=calloc(ndm, sizeof(map_t*));
+    }
     if(parms->load.aloc){
 	char *fn=parms->load.aloc;
 	warning("Loading aloc from %s\n",fn);
@@ -104,14 +107,26 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double ht=parms->dm[idm].ht;
 	    double dx=parms->dm[idm].dx;
 	    double dy=parms->dm[idm].dy;
-	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
-	    const double guard=parms->dm[idm].guard*MAX(dx,dy);
-	    
+	    double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+	    double guard=parms->dm[idm].guard*MAX(dx,dy);
+	    if(parms->fit.square && parms->gpu.fit==2 && guard<2*dx){
+		//need sufficient guard to avoid checking index.
+		guard=2*dx;
+	    }
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
+	    if(parms->fit.cachedm){
+		const double dx2=parms->atmr.dx/parms->fit.pos;
+		const double dy2=dx2;
+		recon->acmap[idm]=create_metapupil_wrap
+		    (parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
+		info("amap origin is %g, %g. acmap is %g, %g\n", 
+		     recon->amap[idm]->ox, recon->amap[idm]->oy,
+		     recon->acmap[idm]->ox, recon->acmap[idm]->oy);
+	    }
 	}
 	if(parms->save.setup){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);

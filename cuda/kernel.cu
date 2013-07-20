@@ -198,6 +198,26 @@ __global__ void max_do(float *restrict res, const float *a, const int n){
 	atomicMax(res, sb[0]);
     }
 }
+
+__global__ void maxabs_do(float *restrict res, const float *a, const int n){
+    extern __shared__ float sb[];
+    sb[threadIdx.x]=0;
+    int step=blockDim.x * gridDim.x ;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	if(sb[threadIdx.x]<fabs(a[i])) sb[threadIdx.x]=fabs(a[i]);
+    }
+    for(step=(blockDim.x>>1);step>0;step>>=1){
+	__syncthreads();
+	if(threadIdx.x<step){
+	    if(sb[threadIdx.x]<sb[threadIdx.x+step]){
+		sb[threadIdx.x]=sb[threadIdx.x+step];
+	    }
+	}
+    }
+    if(threadIdx.x==0){
+	atomicMax(res, sb[0]);
+    }
+}
 /**
    tmp=sum(a.*b) res_add+=tmp
 

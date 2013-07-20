@@ -485,7 +485,7 @@ static void readcfg_dm(PARMS_T *parms){
     int* inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
-    READ_DM(int,order);
+    READ_DM(dbl,order);
     READ_DM_RELAX(dbl,ar);
     READ_DM(dbl,ht);
     READ_DM(dbl,offset);
@@ -726,6 +726,8 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.square);
     READ_INT(fit.assemble);
     READ_INT(fit.pos);
+    READ_INT(fit.cachedm);
+    READ_INT(fit.cachex);
     int *fitwfs=NULL;
     double *wfswt=NULL;
     int nfitwfs=readcfg_intarr(&fitwfs, "fit.wfs");
@@ -2204,7 +2206,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d DMs\033[0;0m\n",parms->ndm);
     for(i=0; i<parms->ndm; i++){
-	info2("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+	info2("DM %d: Order %g, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 	      i, parms->dm[i].order,
 	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
@@ -2498,7 +2500,7 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	    parms->gpu.wfs=0;
 	}
 	if(parms->gpu.evl && parms->gpu.wfs){
-	    parms->sim.cachedm=0; /*Done in CUDA. */
+	    parms->sim.cachedm=0; /*No need in CUDA. */
 	}
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    parms->tomo.square=1;
@@ -2508,5 +2510,9 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	}
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
+    }
+    if(parms->gpu.fit!=2){
+	parms->fit.cachedm=0;
+	parms->fit.cachex=0;
     }
 }

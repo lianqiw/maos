@@ -62,7 +62,7 @@ typedef struct{
     cublasHandle_t handle;
     cudaStream_t stream;*/
     cupowfs_t *powfs;
-    cusp *GS0t;         /**<For gtilt. is GS0t in col major */
+    cusp *GS0;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/

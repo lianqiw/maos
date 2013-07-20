@@ -227,7 +227,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    cudata->atm=new cumap_t[nps];
 	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
-		cudata->atm[ips].init(nx0, ny0);
+		cudata->atm[ips].p.init(nx0, ny0);
 	    }
 	}/*for im */
     }/*if need_init; */
@@ -353,7 +353,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 /**
    Copy DM configurations to GPU.
 */
-float* gpu_dmcubic_cc(float iac){
+curmat* gpu_dmcubic_cc(float iac){
     float cc[5];
     float cubicn=1.f/(1.f+2.f*iac);
     cc[0]=1.f*cubicn;
@@ -361,10 +361,9 @@ float* gpu_dmcubic_cc(float iac){
     cc[2]=(1.5f-3.f*iac)*cubicn;		       
     cc[3]=(2.f*iac-0.5f)*cubicn;			
     cc[4]=(0.5f-iac)*cubicn; 
-    float *ret=NULL;
-    DO(cudaMalloc(&ret, 5*sizeof(float)));
-    cudaMemcpy(ret, cc, 5*sizeof(float), cudaMemcpyHostToDevice);
-    return ret;
+    curmat *res=curnew(5,1);
+    cudaMemcpy(res->p, cc, 5*sizeof(float), cudaMemcpyHostToDevice);
+    return res;
 }
 /**
    Copy DM commands to GPU.
@@ -542,7 +541,7 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 #define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
 #define KARG cudm[idm].p,cudm[idm].nx,cudm[idm].ny, COMM
 	if (cudm[idm].cubic_cc){//128 is a good number for cubic. 
-	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc);
+	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc->p);
 	}else{
 	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
 	}

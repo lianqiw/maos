@@ -149,13 +149,12 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 	long icol=0;
 	for(int iact=0; iact<nact; iact++){
 	    if(stuck && stuck[iact]){/*limit the strength of stuck actuators. */
-		pp[icol]=count;
+		pp[icol++]=count;
 		pi[count]=iact;
 		px[count]=scl;
 		count++;
-		icol++;
 	    }else if(actcpl[iact]<thres){/*slave actuators */
-		pp[icol]=count;
+		pp[icol++]=count;
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dy1);
 		assert(map[mapy][mapx]-1==iact);
@@ -179,7 +178,7 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		if(!near_exist){
 		    error("This is an isolated actuator\n");
 		}
-	
+		if(near_active<1e-4) continue;
 		/*
 		  neighbors are defined as the four pixels to the left, right,
 		  top and bottom.  If some of the neighbors are active, use the
@@ -218,7 +217,6 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		    px[count]+=scl;
 		}
 		count++;
-		icol++;
 	    }/*if */
 	}/*for iact */
 	free(stuck);

@@ -73,7 +73,7 @@ static void mvm_direct_igpu(thread_t *info){
     curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)NULL);//the I
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);//right hand size
     curcell *opdr=NULL;//initialized later
-    curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
+    //curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
     curcell *fitr=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL, (float*)1);//skip data allocation.
     curmat *mvm=curnew(ntotact, info->end-info->start);
     float *eye2; cudaMalloc(&eye2, sizeof(float)*2);
@@ -84,7 +84,7 @@ static void mvm_direct_igpu(thread_t *info){
 	cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
     }
     curecon_t *curecon=cudata->recon;
-    stream_t &stream=curecon->cgstream[0];
+    stream_t &stream=curecon->cgstream;
     if(parms->load.mvmf){
 	cudaMemcpyAsync(mvm->p, data->mvmc->p+info->start*ntotact, 
 			ntotact*(info->end-info->start)*sizeof(float), 
@@ -125,7 +125,7 @@ static void mvm_direct_igpu(thread_t *info){
 	residual->p[ig]=gpu_tomo_do(parms, recon, opdr, opdx, grad, stream);
 	RECORD(2);
 	fitr->replace(mvm->p+(ig-info->start)*ntotact, 0, stream);
-	residualfit->p[ig]=gpu_fit_do(parms, recon, fitr, fitx, opdr, stream);
+	residualfit->p[ig]=gpu_fit_do(parms, recon, fitr, opdr, stream);
 	RECORD(3);
 #if TIMING
 	stream.sync();
@@ -148,7 +148,7 @@ static void mvm_direct_igpu(thread_t *info){
     toc2("Thread %ld mvm", info->ithread);
     curfree(mvm);
     curfree(mvmi);
-    curcellfree(fitx);
+    //curcellfree(fitx);
     curcellfree(fitr);
     curcellfree(opdx);
     curcellfree(opdr);

@@ -617,7 +617,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
     char *exefile=get_job_progname(0);
-    link(exefile, "maos");
+    if(remove("maos-save")||link(exefile, "maos-save")){
+	info2("Unable to link maos to maos-save\n");
+    }
     free(exefile);
     return arg;
 }

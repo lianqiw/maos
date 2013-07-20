@@ -117,8 +117,8 @@ typedef enum CEMBED{
 }CEMBED;
 #define SPMAT(T)\
     T *restrict x ;       /**< numerical values, size nzmax */		\
-    long m ;	          /**< number of rows */			\
-    long n ;	          /**< number of columns */			\
+    union{long m;long nx;};	          /**< number of rows */	\
+    union{long n;long ny;};	          /**< number of columns */	\
     char *header;         /**<header*/					\
     long nzmax ;          /**< maximum number of entries */		\
     spint *restrict p ;   /**< column pointers (size n+1) or col indices (size \

@@ -133,7 +133,19 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
 	}
     }
-  
+    if(parms->gpu.fit==2){//to cache x on grid matching floc.
+	recon->xcmap=calloc(npsr, sizeof(map_t *));
+	for(int ips=0; ips<npsr; ips++){
+	    const double ht=recon->ht->p[ips];
+	    double dxr=parms->atmr.dx/parms->fit.pos;
+	    const double guard=parms->tomo.guard*dxr;
+	    recon->xcmap[ips]=create_metapupil_wrap
+		(parms,ht,dxr,dxr,0,guard,0,0,0,parms->fit.square);
+	    free(recon->xcmap[ips]->p);recon->xcmap[ips]->p=NULL;
+	    free(recon->xcmap[ips]->nref);recon->xcmap[ips]->nref=NULL;
+	}
+    }
+    
     recon->xnx=calloc(recon->npsr, sizeof(long));
     recon->xny=calloc(recon->npsr, sizeof(long));
     for(long i=0; i<recon->npsr; i++){
@@ -2146,6 +2158,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	free(recon->aembed[idm]);
     }
     maparrfree(recon->amap, parms->ndm);
+    maparrfree(recon->acmap, parms->ndm);
     free(recon->aembed);
     free(recon->alocm);
     free(recon->aloc);

@@ -20,7 +20,6 @@
 #include "cucmat.h"
 #include <errno.h>
 #include <pthread.h>
-
 const char *cufft_str[]={
     "success", 
     "invalid plan",
@@ -256,7 +255,7 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
 	dest[ips].cugrid_t::init(source[ips]);
 	int nx=source[ips]->nx;
 	int ny=source[ips]->ny;
-	cp2gpu(&dest[ips].p, source[ips]->p, nx*ny);
+	cp2gpu(&dest[ips].p.p, source[ips]->p, nx*ny);
     }
     CUDA_SYNC_DEVICE;
 }
@@ -264,17 +263,26 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
 /*
   Convert a host dsp array to GPU sprase array. Both are in CSC format. 
 */
-void cp2gpu(cusp **dest0, dsp *src){
-    if(!src) return;
+void cp2gpu(cusp **dest0, dsp *src_csc){
+    if(!src_csc) return;
     if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
+    dsp *src_csr=sptrans(src_csc);
     cusp *dest=*dest0;
-    dest->nx=src->m;
-    dest->ny=src->n;
-    dest->nzmax=src->nzmax;
+    dest->nx=src_csc->m;
+    dest->ny=src_csc->n;
+    dest->nzmax=src_csr->nzmax;
     dest->p=NULL; dest->i=NULL; dest->x=NULL;
-    cp2gpu(&dest->p, src->p, src->n+1);
-    cp2gpu(&dest->i, src->i, src->nzmax);
-    cp2gpu(&dest->x, src->x, src->nzmax);
+    cp2gpu(&dest->p, src_csr->p, src_csr->n+1);
+    cp2gpu(&dest->i, src_csr->i, src_csr->nzmax);
+    cp2gpu(&dest->x, src_csr->x, src_csr->nzmax);
+    dest->type=SP_CSR;
+    spfree(src_csr);
+    //dest->toCSR();
+}
+void cp2gpu(cusp **dest0, spcell *srcc){
+    dsp *src=spcell2sp(srcc);
+    cp2gpu(dest0, src);
+    spfree(src);
 }
 void cp2gpu(cuspcell **dest0, spcell *src){
     if(!src) return;
@@ -283,14 +291,6 @@ void cp2gpu(cuspcell **dest0, spcell *src){
     }
     for(int i=0; i<src->nx*src->ny; i++){
 	cp2gpu(&(*dest0)->p[i], src->p[i]);
-    }
-}
-__global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
-    int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<A->ny; i+=step){
-	for(int j=A->p[i]; j<A->p[i+1]; j++){
-	    atomicAdd(&y[A->i[j]], A->x[j]*x[i]*alpha);
-	}
     }
 }
 static const char *scsrmv_err[]={
@@ -304,62 +304,75 @@ static const char *scsrmv_err[]={
     "Internal error",
     "Matrix type not supported"
 };
+
+//  Need debugging. result not correct.
+/*void cusp::trans(){
+    if(!p) return;
+    int ncol, nrow;
+    switch(type){
+    case SP_CSR:
+	nrow=nx;
+	ncol=ny;
+	break;
+    case SP_CSC:
+	nrow=ny;
+	ncol=nx;
+	break;
+    default:
+	nrow=0;ncol=0;
+	error("Invalid format\n");
+    }
+    float *xnew;
+    int *inew, *pnew;
+    cudaMalloc(&xnew, nzmax*sizeof(float));
+    cudaMalloc(&inew, nzmax*sizeof(int));
+    cudaMalloc(&pnew, (ncol+1)*sizeof(int));
+    stream_t stream;
+    cusparseScsr2csc(stream, nrow, ncol,
+		     x, p, i, xnew, inew, pnew,
+		     1, CUSPARSE_INDEX_BASE_ZERO);
+    cudaFree(x); x=xnew;
+    cudaFree(i); i=inew;
+    cudaFree(p); p=pnew;
+    }*/
 /*
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
-void cuspmul(float *y, cusp *A, float *x, float alpha, 
-#if MYSPARSE ==1
-	     cudaStream_t stream
-#else
-	     cusparseHandle_t handle
-#endif
-	     ){
-#if MYSPARSE ==1
-    cuspmul_do<<<DIM(A->nx, 256), 0, stream>>>(y,A,x,alpha);
-#else
-    int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_TRANSPOSE, 
-			      A->ny, A->nx, alpha, spdesc,
-			      A->x, A->p, A->i, x, 1.f, y);
-    if(status!=0){
-	error("cusparseScsrmv failed with status '%s'\n", scsrmv_err[status]);
-    }
-#endif
-}
 
-/*
-  y=A'*x where A is sparse. x, y are vectors
-*/
-__global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
-    __shared__ float val;
-    if(threadIdx.x==0) val=0;
-    int i=blockIdx.x * blockDim.x + threadIdx.x;
-    int j=i+A->p[icol];
-    atomicAdd(&val, A->x[j]*x[A->i[j]]);
-    if(threadIdx.x==0) y[icol]+=val*alpha;
-}
-/*
-  Does not work right yet. Try to launch a block for each column and n items in each block.
-*/
-void cusptmul(float *y, cusp *A, float *x, float alpha, 
-#if MYSPARSE ==1
-	      cudaStream_t stream
-#else
-	      cusparseHandle_t handle
-#endif
-	      ){
-#if MYSPARSE == 1
-    for(int i=0; i<A->ny; i++){
-	cusptmul_do<<<1, A->p[i+1]-A->p[i], 0, stream>>>(y,i,A,x,alpha);
+void cuspmul(float *y, cusp *A, const float *x, int ncolvec, char trans, float alpha, cusparseHandle_t handle){
+    cusparseOperation_t opr;
+    int istrans=(trans=='t' || trans==1);
+    if(A->type==SP_CSC){
+	istrans=!istrans;
     }
-    warning("Not working correctly yet\n");
-#else
-    int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
-			      A->ny, A->nx, alpha, spdesc,
+    if(istrans){
+	opr=CUSPARSE_OPERATION_TRANSPOSE;
+    }else{
+	opr=CUSPARSE_OPERATION_NON_TRANSPOSE;
+    }
+    int ncol, nrow;
+    switch(A->type){
+    case SP_CSR:
+	nrow=A->nx; ncol=A->ny; break;
+    case SP_CSC:
+	nrow=A->ny; ncol=A->nx; break;
+    default:
+	error("Invalid type");
+    }
+    int status;
+    if(ncolvec==1){
+	status=cusparseScsrmv(handle, opr,
+			      nrow, ncol, alpha, spdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
-    if(status!=0){
-	error("cusparseScsrmv failed with status %d\n", status);
+    }else{
+	int nlead=istrans?nrow:ncol;
+	status=cusparseScsrmm(handle, opr,
+			      nrow, ncolvec, ncol, alpha, spdesc,
+			      A->x, A->p, A->i, x, nlead, 1.f, y, nlead);
     }
-#endif
+    if(status!=0){
+	error("cusparseScsrmv(m) failed with status '%s'\n", scsrmv_err[status]);
+    }
 }
 
 /**
@@ -621,12 +634,25 @@ void gpu_write(int *p, int nx, int ny, const char *format, ...){
 }
 
 void cp2gpu(cumuv_t *out, MUV_T *in){
-    if(!in->M) error("in->M should not be NULL\n");
-    spcell *Mt=spcelltrans(in->M);
-    cp2gpu(&(out)->Mt, Mt);
-    cp2gpu(&(out)->U, in->U);
-    cp2gpu(&(out)->V, in->V);
-    spcellfree(Mt);
+    if(out->M || !in->M) error("in->M should not be NULL and out->M should be NULL\n");
+    dsp *M=spcell2sp(in->M);
+    dmat *U=dcell2m(in->U);
+    dmat *V=dcell2m(in->V);
+    out->nx=in->M->nx;
+    out->ny=in->M->ny;
+    out->nxs=(int*)malloc(sizeof(int)*out->nx);
+    out->nys=(int*)malloc(sizeof(int)*out->ny);
+    for(int i=0; i<out->nx; i++){
+	out->nxs[i]=in->M->p[i]->m;
+    }
+    for(int i=0; i<out->ny; i++){
+	out->nys[i]=in->M->p[i*in->M->nx]->n;
+    }
+    cp2gpu(&out->M, M);
+    cp2gpu(&out->U, U);
+    cp2gpu(&out->V, V);
+    spfree(M); dfree(U); dfree(V);
+    out->Vx=curnew(out->V->ny, 1);
 }
 void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
     if(!in){

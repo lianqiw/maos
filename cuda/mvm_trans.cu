@@ -104,7 +104,7 @@ static void mvm_trans_igpu(thread_t *info){
     }
     curmat *mvmt=curnew(ntotgrad, info->end-info->start);/*contains result*/
     tk_prep+=toc3;tic;
-    stream_t &stream=curecon->cgstream[0];
+    stream_t &stream=curecon->cgstream;
     for(int iact=info->start; iact<info->end; iact++){
 	int curdm=curp[iact][0];
 	int curact=curp[iact][1];
@@ -130,7 +130,7 @@ static void mvm_trans_igpu(thread_t *info){
 		if(eyec){
 		    /*Fitting operator*/
 		    curcellzero(dmfit, stream);//temp
-		    if((residualfit->p[iact]=gpu_pcg(&dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
+		    if((residualfit->p[iact]=gpu_pcg(dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
 						    parms->recon.warm_restart, parms->fit.maxit, stream))>1.){
 		    warning("Fit CG residual is %.2f for %d.\n",
 			    residualfit->p[iact], iact);
@@ -166,7 +166,7 @@ static void mvm_trans_igpu(thread_t *info){
 		    opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
 		}
 		/*disable the t/t removal lrt in split tomo that creats problem in fdpcg mode*/
-		if((residual->p[iact]=gpu_pcg(&opdr, gpu_TomoL, recon, prefun, predata, opdx, &curecon->cgtmp_tomo,
+		if((residual->p[iact]=gpu_pcg(opdr, gpu_TomoL, recon, prefun, predata, opdx, &curecon->cgtmp_tomo,
 					      parms->recon.warm_restart, parms->tomo.maxit,
 					      stream, parms->tomo.cgthres))>0.5){
 		    warning2("Tomo CG residual is %.2f for %d\n", residual->p[iact], iact);
@@ -188,8 +188,8 @@ static void mvm_trans_igpu(thread_t *info){
     }//for iact
     int nn=ntotgrad*(info->end-info->start)*sizeof(float);
     float *mvmtc=data->mvmt->p+info->start*ntotgrad;
-    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToHost, curecon->cgstream[0]);
-    cudaStreamSynchronize(curecon->cgstream[0]);
+    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToHost, curecon->cgstream);
+    cudaStreamSynchronize(curecon->cgstream);
     curcellfree(dmfit);
     curcellfree(opdx);
     curcellfree(opdr);

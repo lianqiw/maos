@@ -321,7 +321,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     /*CUDA_SYNC_STREAM; */
     
     if(imoao>-1){
-	gpu_dm2loc(phiout->p, loc, nloc, (cumap_t*)(cudata->dm_wfs->p[iwfs]), 1,
+	gpu_dm2loc(phiout->p, loc, nloc, &(cudata->dm_wfs[iwfs]), 1,
 		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
     if(simu->telws){
@@ -352,7 +352,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     }
     if(do_geom){
 	if(!do_pistatout || parms->powfs[ipowfs].pistatstc || dtrat==1){
-	    gradcalc=curref(gradacc);
+	    gradcalc=gradacc->ref();
 	}else{ //calculate first to gradcalc then add to gradacc
 	    gradcalc=curnew(nsa*2, 1);	
 	}
@@ -366,8 +366,8 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		 cupowfs[ipowfs].pts.p, cuwfs[iwfs].amp, 
 		 1.f/(float)dtrat);
 	}else{
-	    cusp *GS0=cuwfs[iwfs].GS0t;
-	    cusptmul(gradcalc->p, GS0, phiout->p, 1.f/(float)dtrat,cuwfs[iwfs].stream);
+	    cusp *GS0=cuwfs[iwfs].GS0;
+	    cuspmul(gradcalc->p, GS0, phiout->p, 1, 'n', 1.f/(float)dtrat,cuwfs[iwfs].stream);
 	}
 	
 	if(gradcalc->p!=gradacc->p){

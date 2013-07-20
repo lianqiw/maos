@@ -25,7 +25,6 @@
 #define curnew  new cumat<float> 
 #define curcellnew  new cucell<float>
 //#define curref  curef<float>
-#define curref(A) (A)->ref()
 
 #define curfree(A) ({delete A; A=NULL;})
 #define curcellfree(A) ({delete A; A=NULL;})
@@ -65,7 +64,9 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream);
 void cursum2(float *restrict, const curmat *a, cudaStream_t stream);
 void curcellscale(curcell *A, float alpha, cudaStream_t stream);
 float curmax(const curmat *a, cudaStream_t stream);
+float curmaxabs(const curmat *a, cudaStream_t stream);
 float curcellmax(const curcell *a, cudaStream_t stream);
+float curcellmaxabs(const curcell *a, cudaStream_t stream);
 /**
    Add tip/tilt to OPD
 */

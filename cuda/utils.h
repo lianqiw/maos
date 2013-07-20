@@ -59,8 +59,8 @@ typedef struct cudata_t{
     /*for recon */
     curecon_t *recon;
     /*for moao*/
-    curcell *dm_wfs;
-    curcell *dm_evl;
+    cumap_t *dm_wfs;
+    cumap_t *dm_evl;
     /*for mvm*/
     curmat *mvm_m;/*the control matrix*/
     ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
@@ -118,6 +118,7 @@ void spint2int(int * restrict *dest, spint *src, int n);
 
 void cp2gpu(cumap_t **dest, map_t **source, int nps);
 void cp2gpu(cusp **dest, dsp *src);
+void cp2gpu(cusp **dest, spcell *src);
 void cp2gpu(cuspcell **dest, spcell *src);
 void cp2gpu(float (* restrict *dest)[2], loc_t *src);
 void cp2gpu(float * restrict *dest, double *src, int n);
@@ -144,13 +145,9 @@ inline void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0){
     }
 }
 
-#if MYSPARSE
-void cuspmul (float *y, cusp *A, float *x, float alpha, cudaStream_t stream);
-void cusptmul(float *y, cusp *A, float *x, float alpha, cudaStream_t stream);
-#else
-void cuspmul (float *y, cusp *A, float *x, float alpha, cusparseHandle_t handle);
-void cusptmul(float *y, cusp *A, float *x, float alpha, cusparseHandle_t handle);
-#endif
+void cuspmul (float *y, cusp *A, const float *x, int ncol, char trans,
+	      float alpha, cusparseHandle_t handle);
+
 void gpu_write(float *p, int nx, int ny, const char *format, ...);
 void gpu_write(fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_write(int *p, int nx, int ny, const char *format, ...);

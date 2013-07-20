@@ -89,7 +89,7 @@ int pcg_save=0;
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
  */
-float gpu_pcg(curcell **px, 
+float gpu_pcg(curcell *x0, 
 	      G_CGFUN Amul, const void *A, 
 	      G_PREFUN Mmul, const void *M, 
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter,
@@ -131,12 +131,9 @@ float gpu_pcg(curcell **px,
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
     /*computes r0=b-A*x0 */
-    if(!*px){
-	*px=curcellnew(b);
-    }else if(!warm){
-	curcellzero(*px, stream);
+    if(!warm){
+	curcellzero(x0, stream);
     }
-    curcell *x0=*px;
 #if DEBUG_OPDR == 1  && 0
     curcell *x0save=curcellnew(x0);
 #endif
@@ -208,26 +205,45 @@ float gpu_pcg(curcell **px,
 	    maxp[k+1]=curcellmax(p0, stream);
 	    curcelladd(&r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
+	    CUDA_SYNC_STREAM;
 	    if(maxiter==30){
 		static int counter=0;
 		warning_once("Remove after debugging\n");
 		float maxxax=curcellmax(x0, stream);
 		if(maxxax>4e-6 || pcg_save){
 		    //CUDA_SYNC_STREAM;
-		    curcellwrite(x0, "pcg_x0_%d", counter);
-		    //curcellwrite(x0save, "pcg_x0save_%d", counter);
+		    curcellwrite(b, "tomo_b_%d", counter);
+		    curcellwrite(x0, "tomo_x0_%d", counter);
+		    //curcellwrite(x0save, "tomo_x0save_%d", counter);
 		    //curcelladd(&x0save, p0, ak+k, 1, stream);
-		    //curcellwrite(x0save, "pcg_x0saveadd_%d", counter);
-		    gpu_write(ak, maxiter, 1, "pcg_ak_%d", counter);
-		    gpu_write(rkzk, maxiter+1, 1, "pcg_rz_%d", counter);
-		    curcellwrite(Ap, "pcg_Ap_%d", counter);
-		    curcellwrite(p0, "pcg_p0_%d", counter);
-		    curcellwrite(r0, "pcg_r0_%d", counter);
-		    writeflt(maxx, maxiter+1, 1, "pcg_mx_%d", counter);
-		    writeflt(maxp, maxiter+1, 1, "pcg_mp_%d", counter);
+		    //curcellwrite(x0save, "tomo_x0saveadd_%d", counter);
+		    gpu_write(ak, maxiter, 1, "tomo_ak_%d", counter);
+		    gpu_write(rkzk, maxiter+1, 1, "tomo_rz_%d", counter);
+		    curcellwrite(Ap, "tomo_Ap_%d", counter);
+		    curcellwrite(p0, "tomo_p0_%d", counter);
+		    curcellwrite(r0, "tomo_r0_%d", counter);
+		    writeflt(maxx, maxiter+1, 1, "tomo_mx_%d", counter);
+		    writeflt(maxp, maxiter+1, 1, "tomo_mp_%d", counter);
 		    counter++;
 		}
 	    }
+	    if(maxiter==4 ){
+		static int counter=0;
+		if(diff[k+1]>0.01){
+		    curcellwrite(b, "fit_b_%d", counter);
+		    curcellwrite(x0, "fit_x0_%d", counter);
+		    gpu_write(ak, maxiter, 1, "fit_ak_%d", counter);
+		    gpu_write(rkzk, maxiter+1, 1, "fit_rz_%d", counter);
+		    curcellwrite(Ap, "fit_Ap_%d", counter);
+		    curcellwrite(p0, "fit_p0_%d", counter);
+		    curcellwrite(r0, "fit_r0_%d", counter);
+		    writeflt(maxx, maxiter+1, 1, "fit_mx_%d", counter);
+		    writeflt(maxp, maxiter+1, 1, "fit_mp_%d", counter);
+		    counter++;
+		}
+	    }
+#else
+	    CUDA_SYNC_STREAM;
 #endif
 #if TIMING 
 	    CUDA_SYNC_STREAM;
@@ -268,7 +284,6 @@ float gpu_pcg(curcell **px,
     }
     RECORD(15);
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
-    CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
     fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter-1]);
 #elif PRINT_RES==2

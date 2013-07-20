@@ -82,6 +82,7 @@ __global__ void add_do(float *restrict a, float *alpha1, float alpha2,
 		       const float *restrict b, float *beta1, float beta2, int n);
 
 __global__ void max_do(float *restrict res, const float *a, const int n);
+__global__ void maxabs_do(float *restrict res, const float *a, const int n);
 __global__ void sum_do(float *restrict res, const float *a, const int n);
 __global__ void sum2_do(float *restrict res, const float *a, const int n);
 __global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
@@ -97,6 +98,9 @@ inline static void sum2_wrap(float *res, const float * a, const int n, cudaStrea
 }
 inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+}
+inline static void maxabs_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+    maxabs_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 __global__ void embed_do(fcomplex *out, float *in, int nx);
 __global__ void extract_do(float *out, fcomplex *in, int nx);

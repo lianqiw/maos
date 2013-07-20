@@ -32,10 +32,11 @@ typedef struct W01_T{
 }W01_T;
 typedef struct cumoao_t{
     curcell *fitNW;
-    cuspcell *actslave;
-    float *cubic_cc; 
-    cumap_t amap;/**<Info of amap*/
-    cumap_t fmap;/**<Info of fmap*/
+    cusp *actslave;
+    curmat *cubic_cc; 
+    cugrid_t amap;/**<Info of amap*/
+    cugrid_t acmap;/**<Info of acmap*/
+    cugrid_t fmap;/**<Info of fmap*/
     /*aperture weighting*/
     W01_T *W01;
     curcell *rhs;/*right hand side.*/
@@ -50,20 +51,30 @@ typedef struct cumoao_t{
 
 /*data to be used by kernel */
 typedef struct GPU_PROP_GRID_T{
-    int offo, offi;
-    float *po;
-    const float *pi;
-    int nxo,nyo;
-    int nxi,nyi;
+    int offdir, offdirx, offdiry;
+    int offps, offpsx, offpsy;
+    float *cc;
+    int nxdir,nydir;
+    int nxps,nyps;
     float dispx, dispy;
     float xratio, yratio;
     int nx, ny;
-    char trans;
     float l2c; /*coefficient for laplacian*/
     int zzi;   /*for piston constraint*/
     float zzv; /*for piston constraint*/
+    int isreverse;/*Indicate this is an reverse*/
+    GPU_PROP_GRID_T *reverse;/*store pointer for the reversely prepared data.*/
     GPU_PROP_GRID_T(){ /*This is not good. zeros out already initialized childs.*/
 	memset(this, 0, sizeof(*this));
+    }
+    void togpu(GPU_PROP_GRID_T *pgpu){
+	if(reverse){
+	    GPU_PROP_GRID_T *gpureverse;
+	    DO(cudaMalloc(&gpureverse, sizeof(GPU_PROP_GRID_T)));
+	    reverse->togpu(gpureverse);
+	    reverse=gpureverse;
+	}
+	DO(cudaMemcpy(pgpu, this, sizeof(GPU_PROP_GRID_T),cudaMemcpyHostToDevice));  
     }
 }GPU_PROP_GRID_T;
 /*Packs two shorts into a int for 32bit access. This is better than (long*)[2]
@@ -124,7 +135,9 @@ typedef struct cufdpcg_t{
 }cufdpcg_t;
 typedef struct curecon_t{
     cugrid_t *amap;/*Grid of amap*/
+    cugrid_t *acmap;
     cugrid_t *xmap;/*Grid of xmap*/
+    cugrid_t *xcmap;
     cugrid_t pmap; /*Pupil map for tomo*/
     cugrid_t fmap; /*Pupil map for fit*/
     curcell *gradin; /**< The grad to operator on*/
@@ -135,11 +148,10 @@ typedef struct curecon_t{
     curcell *opdr_vec; /**<Referencing opdr in vector form*/
     curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm restart. Free with new seed.*/
     curcell *dmfit_vec;/**<Referencing dmfit in vector form.*/
+    curcell *dmcache;/**<cache dm during DM fitting*/
+    curcell *xcache;
     cufdpcg_t *fdpcg;
-    stream_t    *psstream;
-    stream_t    *dmstream;
-    stream_t    *fitstream;
-    stream_t    *cgstream;
+    stream_t    cgstream;
 
     curcell *PTT;  /**< Global tip/tilt */
     curcell *PDF;  /**< Differential focus removal */
@@ -150,18 +162,24 @@ typedef struct curecon_t{
     int   *zzi;    /**< Piston constraint coordinate*/
     float *zzv;    /**< Piston constraint value*/
     W01_T *W01;    /**< The aperture weighting,*/
+    curcell *fitrhs;
     curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
+    curmat *opdfitv;/**<Concatenated version of opdfit. 1 column for each direction*/
+    curmat *opdfit2v;/**<Concatenated version of opdfit2. 1 column for each direction*/
     curmat *pis;     /**<contains result of W1'*opdfit*/
-    float **cubic_cc;
+    curcell*cubic_cc;
+    curmat *fitwt;
     cumuv_t FR;
     cumuv_t FL;
+
     curcell *MVM;
     float (*floc)[2];/**<recon->floc*/
     int nfloc;       /**<recon->floc->nloc*/
     int reconisim;
-    curcell *fitNW;/**< DM fitting low rank terms*/
-    cuspcell *actslave;/**<DM fitting actuator slaving*/
+    curmat *fitNW;/**< DM fitting low rank terms*/
+    curmat *dotNW;/**<fitNW*dm*/
+    cusp *actslave;/**<DM fitting actuator slaving*/
     cumoao_t *moao;/**<moao configurations for GPU*/
     curcell **dm_wfs;/**<moao results for wfs for warm restart*/
     curcell **dm_evl;/**<moao results for evl for warm restart*/
@@ -189,11 +207,28 @@ typedef struct curecon_t{
     CGTMP_T cgtmp_moaoevl;
     /*the following data reside in the gpu memory*/
     GPU_PROP_GRID_T *hxdata;
-    GPU_PROP_GRID_T *hxtdata;
+    GPU_PROP_GRID_T *hxpdata;
+    GPU_PROP_GRID_T *hxp1data;
+    GPU_PROP_GRID_T *hxp0data;
+    GPU_PROP_GRID_T *hadata;
+    GPU_PROP_GRID_T *ha1data;
+    GPU_PROP_GRID_T *ha0data;
     GPU_GP_T *gpdata;
     GPU_FDPCG_T *fddata;
     curecon_t(){ /*This is not good. zeros out already initialized childs.*/
-	memset(this, 0, sizeof(*this));
+	amap=NULL;acmap=NULL;xmap=NULL;
+	gradin=NULL;neai=NULL;opdwfs=NULL;grad=NULL;opdr=NULL;opdr_vec=NULL;dmfit=NULL;dmfit_vec=NULL;dmcache=NULL;xcache=NULL;fdpcg=NULL;
+	PTT=NULL;PDF=NULL;PDFTT=NULL;ttf=NULL;
+	l2c=NULL;zzi=NULL;zzv=NULL;W01=NULL;
+	opdfit=NULL;opdfit2=NULL;opdfitv=NULL;opdfit2v=NULL;pis=NULL;cubic_cc=NULL;fitwt=NULL;
+	MVM=NULL;floc=NULL;
+	fitNW=NULL;dotNW=NULL;actslave=NULL;moao=NULL;
+	dm_wfs=NULL;dm_evl=NULL;moao_stream=NULL;
+	RCl=NULL;RCp=NULL;RUp=NULL;RVp=NULL;RMI=NULL;
+	FCl=NULL;FCp=NULL;FUp=NULL;FVp=NULL;FMI=NULL;
+	RFlgsx=NULL;RFngsx=NULL;RFdfx=NULL;GXL=NULL;
+	hxdata=NULL;hxpdata=NULL;hxp1data=NULL;hxp0data=NULL;hadata=NULL;ha1data=NULL;ha0data=NULL;
+	gpdata=NULL;fddata=NULL;
     }
 }curecon_t;
 
@@ -222,6 +257,6 @@ void gpu_fit_test(SIM_T *simu);
 void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_recon_free_do();
-double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream);
+double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *opdr, stream_t &stream);
 double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, curcell *opdx, curcell *grad, stream_t &stream);
 #endif

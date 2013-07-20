@@ -269,6 +269,7 @@ typedef struct RECON_T{
 
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
+    map_t **xcmap;     /**<The map of xloc on non-cone coordinate, with floc sampling.*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
     long *xnx;
     long *xny;
@@ -277,6 +278,7 @@ typedef struct RECON_T{
 
     loc_t **aloc;      /**<actuator grid*/
     map_t **amap;      /**<square grid of actuators*/
+    map_t **acmap;     /**For caching DM to intermediate plane*/
     long  *anx;        /**<Size of each amap*/
     long  *any;        /**<Size of each amap*/
     long  *anloc;      /**<Size of each aloc*/

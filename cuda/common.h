@@ -101,7 +101,6 @@ extern int nstream;
 #define HANDLE_DONE(handle) DO(cublasDestroy(handle))
 #define SPHANDLE_DONE(sphandle) DO(cusparseDestroy(sphandle))
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
-#define MYSPARSE 0
 
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
@@ -152,7 +151,7 @@ extern pthread_mutex_t cufft_mutex;
     
 #define EVENT_DEINIT				\
     for(int i=0; i<NEVENT; i++){		\
-	 DO(cudaEventDestroy(&event[i]));	\
+	 DO(cudaEventDestroy(event[i]));	\
     }
 
 extern const char *cufft_str[];
@@ -199,15 +198,15 @@ typedef struct stream_t{
 	assert(this);
 	DO(cudaStreamSynchronize(stream));
     }
-    operator cudaStream_t(){
+    operator cudaStream_t&(){
 	assert(this);
 	return stream;
     }
-    operator cublasHandle_t(){
+    operator cublasHandle_t&(){
 	assert(this);
 	return handle;
     }
-    operator cusparseHandle_t(){
+    operator cusparseHandle_t&(){
 	assert(this);
 	return sphandle;
     }

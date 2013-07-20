@@ -27,68 +27,30 @@ extern "C"
   This routine needs to be improved by merging all these operations in loops to a big kernel and only use stream.
 */
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){
-    if(!A->Mt) error("A->M Can not be empty\n");
-    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not implemented yet\n");
-    stream.sync();//must sync because it is no used.
-    const int ndm=A->Mt->ny;
-    curmat *tmp=NULL;
-    if(A->U && A->V){
-	tmp=curnew(A->V->p[0]->ny, 1);
-	//No need to sync dmstream here.
-	for(int ifit=0; ifit<A->V->nx; ifit++){
-	    curmv(tmp->p, 1.f, A->V->p[ifit], in->p[ifit]->p, 't', 1, A->fitstream[0]);
-	}
-    }
+    if(!A->M) error("A->M Can not be empty\n");
     if(!*out){
-	*out=curcellnew(ndm, 1);
-	int nact[ndm];
-	for(int idm=0; idm<ndm; idm++){
-	    nact[idm]=A->Mt->p[idm*A->Mt->nx]->ny;
-	}
-	*out=curcellnew(A->Mt->ny, 1, nact, (int*)NULL);
+	*out=curcellnew(A->nx, 1, A->nxs, (int*)NULL);
+    }else{
+	curscale((*out)->m, beta, stream);
     }
-    for(int idm=0; idm<ndm; idm++){
-	curscale((*out)->p[idm], beta, A->dmstream[idm]);
-	for(int ifit=0; ifit<A->Mt->nx; ifit++){
-	    cusptmul((*out)->p[idm]->p, A->Mt->p[ifit+idm*A->Mt->nx], in->p[ifit]->p,
-		     alpha, A->dmstream[idm]);
-	}
+    cuspmul((*out)->m->p, A->M, in->m->p, 1, 'n', alpha, stream);
+    if(A->U && A->V){
+	curmv(A->Vx->p, 0, A->V, in->m->p, 't', 1, stream);
+	curmv((*out)->m->p, 1, A->U, A->Vx->p, 'n', -alpha, stream);
     }
-    if(tmp){
-	A->fitstream[0].sync();
-	for(int idm=0; idm<ndm; idm++){
-	    curmv((*out)->p[idm]->p, 1.f, A->U->p[idm], tmp->p, 'n', -alpha, A->dmstream[idm]);
-	}
-    }
-    for(int idm=0; idm<ndm; idm++){
-	A->dmstream[idm].sync();
-    }
-    curfree(tmp);
 }
-void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){
-    stream.sync();//must sync.
-    for(int ifit=0; ifit<A->Mt->nx; ifit++){
-	if(fabs(beta)<EPS) curzero((*out)->p[ifit], A->fitstream[ifit]);
-	else if(fabs(beta-1)>EPS) 
-	    curscale((*out)->p[ifit], beta, A->fitstream[ifit]);
-	for(int idm=0; idm<A->Mt->ny; idm++){
-	    cuspmul((*out)->p[ifit]->p, A->Mt->p[ifit+idm*A->Mt->nx], in->p[idm]->p, alpha, 
-		    A->fitstream[ifit]);
-	}
+void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){ 
+    if(!A->M) error("A->M Can not be empty\n");
+    if(!*out){
+	*out=curcellnew(A->ny, 1, A->nys, (int*)NULL);
+    }else{
+	curscale((*out)->m, beta, stream);
     }
-    curmat *tmp=NULL;
-    if(A->V && A->U){
-	tmp=curnew(A->U->p[0]->ny, 1);
-	for(int idm=0; idm<A->U->nx; idm++){
-	    curmv(tmp->p, 1.f, A->U->p[idm], in->p[idm]->p, 't', 1, A->dmstream[0]);
-	}
-	cudaStreamSynchronize(A->dmstream[0]);
-	for(int ifit=0; ifit<A->V->nx; ifit++){
-	    curmv((*out)->p[ifit]->p, 1.f, A->V->p[ifit], tmp->p, 'n', -alpha, A->fitstream[ifit]);
-	}
+    
+    curscale((*out)->m, beta, stream);
+    cuspmul((*out)->m->p, A->M, in->m->p, 1, 't', alpha, stream);
+    if(A->U && A->V){
+	curmv(A->Vx->p, 0, A->U, in->m->p, 't', 1, stream);
+	curmv((*out)->m->p, 1, A->V, A->Vx->p, 'n', -alpha, stream);
     }
-    for(int ifit=0; ifit<A->Mt->nx; ifit++){
-	cudaStreamSynchronize(A->fitstream[ifit]);
-    }
-    curfree(tmp);
 }

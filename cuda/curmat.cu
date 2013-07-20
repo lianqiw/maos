@@ -132,7 +132,7 @@ void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, const char
    Computes C = alpha * C + beta * op(A) * B ;
 */
 void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, float beta, cublasHandle_t handle){
-    cublasSgemv(handle, trans=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
+    cublasSgemv(handle, (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
 }
 void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B, 
 	       const char trans[2], const double beta, cublasHandle_t handle){
@@ -316,6 +316,21 @@ float curmax(const curmat *a, cudaStream_t stream){
     cudaFree(res);
     return out;
 }
+
+/**
+   Find the maximum value
+*/
+float curmaxabs(const curmat *a, cudaStream_t stream){
+    float out;
+    float *res;
+    cudaMalloc(&res, sizeof(float));
+    cudaMemsetAsync(res, 0, sizeof(float), stream);
+    int n=a->nx*a->ny;
+    maxabs_wrap(res, a->p, n, stream);
+    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaFree(res);
+    return out;
+}
 /**
    Find the maximum value
 */
@@ -331,6 +346,26 @@ float curcellmax(const curcell *a, cudaStream_t stream){
     }
     if(n>1) {
 	max_wrap(&res[n], res, n, stream);
+    }
+    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaFree(res);
+    return out;
+}
+/**
+   Find the maximum value
+*/
+float curcellmaxabs(const curcell *a, cudaStream_t stream){
+    int n=a->nx*a->ny;
+    float out;
+    float *res;
+    cudaMalloc(&res, (n+1)*sizeof(float));
+    cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
+    for(int i=0; i<n; i++){
+	int m=a->p[i]->nx*a->p[i]->ny;
+	maxabs_wrap(&res[i], a->p[i]->p, m, stream);
+    }
+    if(n>1) {
+	maxabs_wrap(&res[n], res, n, stream);
     }
     cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(float), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);
