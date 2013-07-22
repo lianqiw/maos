@@ -26,6 +26,7 @@ typedef struct CGTMP_T{
     curcell *p0;
     curcell *Ap;
     float *store;
+    float *diff;
     CGTMP_T(){
 	memset(this, 0, sizeof(CGTMP_T));
     }
@@ -35,6 +36,7 @@ typedef struct CGTMP_T{
 	delete p0;p0=NULL;
 	delete Ap;Ap=NULL;
 	if(store) cudaFree(store); store=NULL;
+	if(diff) cudaFreeHost(diff); diff=NULL;
     }
 }CGTMP_T;
 typedef void (*G_CGFUN)(curcell**, float, const void*, const curcell*, float, stream_t &stream);

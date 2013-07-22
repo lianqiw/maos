@@ -26,7 +26,6 @@ extern "C"
 
 #include "recon.h" /*for  debugging */
 
-#define PRINT_RES 0
 
 /* dest = a/dest Do not use restric because dest and b maybe the same*/
 __global__ static void div_do(float *dest, const float * a){
@@ -77,8 +76,10 @@ static inline void pcg_residual(float *r0r0, float *rkzk, float *rr0, curcell *r
     }
 }
 int pcg_save=0;
-#define DEBUG_OPDR 1
+#define DEBUG_OPDR 0
 #define TIMING 0
+#define PRINT_RES 0
+
 /**
    The PCG algorithm. Copy of lib/pcg.c, but replacing dcell with curcell.
    Timing: 
@@ -88,7 +89,7 @@ int pcg_save=0;
    return non-zero during unconvergence.
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
- */
+*/
 float gpu_pcg(curcell *x0, 
 	      G_CGFUN Amul, const void *A, 
 	      G_PREFUN Mmul, const void *M, 
@@ -124,8 +125,10 @@ float gpu_pcg(curcell *x0,
     float *rkzk=store; store+=maxiter+1;
     float *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
-    float *diff;
-    cudaMallocHost(&diff, sizeof(float)*(maxiter+1));//Only this enables async transfer
+    if(!cg_data->diff){
+	cudaMallocHost(&cg_data->diff, sizeof(float)*(maxiter+1));//Only this enables async transfer
+    }
+    float *diff=cg_data->diff;
     memset(diff, 0, sizeof(float)*(maxiter+1));
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
@@ -134,9 +137,6 @@ float gpu_pcg(curcell *x0,
     if(!warm){
 	curcellzero(x0, stream);
     }
-#if DEBUG_OPDR == 1  && 0
-    curcell *x0save=curcellnew(x0);
-#endif
 #if DEBUG_OPDR == 1
     float maxx[maxiter+1];
     float maxp[maxiter+1];
@@ -189,9 +189,7 @@ float gpu_pcg(curcell *x0,
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
-#if DEBUG_OPDR == 1 && 0
-	curcellcp(&x0save, x0, stream);
-#endif
+
 #if DEBUG_OPDR
 	maxx[k]=curcellmax(x0, stream);
 	maxp[k]=curcellmax(p0, stream);
@@ -200,11 +198,12 @@ float gpu_pcg(curcell *x0,
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
+	    curcelladd(&r0, Ap, ak+k, -1, stream);
+	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
+	    RECORD(15);
 #if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
 	    maxx[k+1]=curcellmax(x0, stream);
 	    maxp[k+1]=curcellmax(p0, stream);
-	    curcelladd(&r0, Ap, ak+k, -1, stream);
-	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
 	    CUDA_SYNC_STREAM;
 	    if(maxiter==30){
 		static int counter=0;
@@ -242,11 +241,9 @@ float gpu_pcg(curcell *x0,
 		    counter++;
 		}
 	    }
-#else
-	    CUDA_SYNC_STREAM;
 #endif
-#if TIMING 
 	    CUDA_SYNC_STREAM;
+#if TIMING 
 	    for(int i=7; i<11; i++){
 		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 		times[i]*=1e3;
@@ -282,26 +279,18 @@ float gpu_pcg(curcell *x0,
 	      maxiter, k, times[8], times[9], times[10], times[11], times[12], times[13], times[14]);
 #endif
     }
-    RECORD(15);
+
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
 #if PRINT_RES == 1
     fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter-1]);
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
 #endif
-#if DEBUG_OPDR
     residual=diff[maxiter];
-#else
-    residual=diff[maxiter-1];
-#endif
 #if TIMING 
     DO(cudaEventElapsedTime(&times[15], event[0], event[15]));
     times[15]*=1e3;
     info2("CG %d total %4.0f\n", maxiter, times[15]);
-#endif
-    cudaFreeHost(diff);
-#if DEBUG_OPDR == 1 && 0
-    delete x0save;
 #endif
     return residual;
 }

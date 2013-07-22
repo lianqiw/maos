@@ -116,32 +116,103 @@ gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss,
 	    if(cc){
 		/* Question: For cubic spline, don't we have to test whether pps
 		   is within boundary?*/
+		const bool match2=fabsf(datai->xratio-0.5f)<EPS && fabsf(datai->yratio-.5f)<EPS;
 		if(trans=='t'){
-		    for(int my=iy0; my<ny; my+=stepy){
-			float jy;
-			float y=modff(dispy+my*yratio, &jy);
-			int iy=(int)jy;	
-			float fy[4];
-			fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
-			fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
-			fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));			
-			fy[3]=y*y*(cc[3]+cc[4]*y);		
-			for(int mx=ix0; mx<nx; mx+=stepx){
-			    float jx;
-			    float x=modff(dispx+mx*xratio, &jx);
-			    int ix=(int)jx;
-			    float fx[4];
-			    float value=pdir[mx+my*nxdir]*alpha;
-			    /*cc need to be in device memory for sm_13 to work.*/
-			    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
-			    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
-			    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
-			    fx[3]=x*x*(cc[3]+cc[4]*x);	
+		    if(match2){//do without atomic operations.
+			const int nxin=ceil(nx*xratio)+1;
+			const int nyin=ceil(ny*xratio)+1;
+			//const int nxin=datai->nxps-datai->offpsx;
+			//const int nyin=datai->nyps-datai->offpsy;
+			const int xmaxdir=datai->nxdir-datai->offdirx;
+			const int ymaxdir=datai->nydir-datai->offdiry;
+			const int xmindir=-datai->offdirx-1;
+			const int ymindir=-datai->offdiry-1;
+			int offx=0, offy=0;
+			float xc=dispx, yc=dispy;
+			if(dispx>=0.5){
+			    offx=-1;
+			    xc=dispx-0.5f;
+			}
+			if(dispy>=0.5){
+			    offy=-1;
+			    yc=dispy-0.5f;
+			}
+		
+			const float xc2=xc+0.5f;
+			const float yc2=yc+0.5f;
+			float fy[8], fx[8];
+
+			fy[0]=(cc[3]+cc[4]*yc)*yc*yc;
+			fy[1]=(cc[3]+cc[4]*yc2)*yc2*yc2;
+			fy[2]=(cc[1]+cc[2]*(1-yc))*(1-yc)*(1-yc)+cc[0];
+			fy[3]=(cc[1]+cc[2]*(1-yc2))*(1-yc2)*(1-yc2)+cc[0];
+			fy[4]=(cc[1]+cc[2]*yc)*yc*yc+cc[0];
+			fy[5]=(cc[1]+cc[2]*yc2)*yc2*yc2+cc[0];
+			fy[6]=(cc[3]+cc[4]*(1-yc))*(1-yc)*(1-yc);
+			fy[7]=(cc[3]+cc[4]*(1-yc2))*(1-yc2)*(1-yc2);
+
+			fx[0]=(cc[3]+cc[4]*xc)*xc*xc;
+			fx[1]=(cc[3]+cc[4]*xc2)*xc2*xc2;
+			fx[2]=(cc[1]+cc[2]*(1-xc))*(1-xc)*(1-xc)+cc[0];
+			fx[3]=(cc[1]+cc[2]*(1-xc2))*(1-xc2)*(1-xc2)+cc[0];
+			fx[4]=(cc[1]+cc[2]*xc)*xc*xc+cc[0];
+			fx[5]=(cc[1]+cc[2]*xc2)*xc2*xc2+cc[0];
+			fx[6]=(cc[3]+cc[4]*(1-xc))*(1-xc)*(1-xc);
+			fx[7]=(cc[3]+cc[4]*(1-xc2))*(1-xc2)*(1-xc2);
+
+			for(int my=iy0; my<nyin; my+=stepy){
+			    int ycent=2*my+offy;
+			    for(int mx=ix0; mx<nxin; mx+=stepx){
+				float sum=0;
+				int xcent=2*mx+offx;
+#pragma unroll
+				for(int ky=-4; ky<4; ky++){
+				    int ky2=ky+ycent;
+				    if(ky2>ymindir && ky2<ymaxdir){
+#pragma unroll
+					for(int kx=-4; kx<4; kx++){
+					    int kx2=kx+xcent;
+					    if(kx2>xmindir && kx2<xmaxdir){
+						sum+=fy[ky+4]*fx[kx+4]*pdir[(kx2)+(ky2)*nxdir];
+					    }
+					}
+				    }
+				}
+				//Need atomic because different layers have different offset.
+				if(nn>1){
+				    atomicAdd(&pps[mx+my*nxps],sum*alpha);
+				}else{
+				    pps[mx+my*nxps]+=sum*alpha;
+				}
+			    }
+			}
+		    }else{
+			for(int my=iy0; my<ny; my+=stepy){
+			    float jy;
+			    float y=modff(dispy+my*yratio, &jy);
+			    int iy=(int)jy;	
+			    float fy[4];
+			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
+			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
+			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));			
+			    fy[3]=y*y*(cc[3]+cc[4]*y);		
+			    for(int mx=ix0; mx<nx; mx+=stepx){
+				float jx;
+				float x=modff(dispx+mx*xratio, &jx);
+				int ix=(int)jx;
+				float fx[4];
+				float value=pdir[mx+my*nxdir]*alpha;
+				/*cc need to be in device memory for sm_13 to work.*/
+				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
+				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
+				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
+				fx[3]=x*x*(cc[3]+cc[4]*x);	
 	
-#pragma unrollandfuse
-			    for(int ky=-1; ky<3; ky++){
-				for(int kx=-1; kx<3; kx++){
-				    atomicAdd(&pps[(iy+ky)*nxps+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
+#pragma unroll
+				for(int ky=-1; ky<3; ky++){
+				    for(int kx=-1; kx<3; kx++){
+					atomicAdd(&pps[(iy+ky)*nxps+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
+				    }
 				}
 			    }
 			}
@@ -169,7 +240,7 @@ gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss,
 			    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
 			    fx[3]=x*x*(cc[3]+cc[4]*x);		
 			    
-#pragma unrollandfuse
+#pragma unroll
 			    for(int ky=-1; ky<3; ky++){
 				for(int kx=-1; kx<3; kx++){
 				    sum+=fx[kx+1]*fy[ky+1]*pps[(iy+ky)*nxps+(kx+ix)];

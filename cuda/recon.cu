@@ -38,6 +38,7 @@ extern "C"
 #define tic_test tic
 #define toc_test(A) toc2(A);tic
 #endif
+#define CATCH_ERR 0
 __global__ static void saloc2ptr_do(int (*restrict saptr)[2], float (*restrict saloc)[2], 
 				    int nsa, float ox, float oy, float dx, float dy){
     const int step=blockDim.x * gridDim.x;
@@ -871,13 +872,16 @@ void gpu_tomo(SIM_T *simu){
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc_test("Gradin");
     cudaProfilerStart();
+#if CATCH_ERR == 1
     curcell *opdrsave=NULL;
     warning_once("remove opdrsave after debugging\n");
     curcellcp(&opdrsave, curecon->opdr, curecon->cgstream);
+#endif
     simu->cgres->p[0]->p[simu->reconisim]=
 	gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream);
     //Sanity check the result
     float opdrmax=curcellmax(curecon->opdr, curecon->cgstream);
+#if CATCH_ERR == 1
     if(curecon->opdr->nx>1 && opdrmax>4e-6){
 	simu->status->warning=2;
 	info("opdrmax=%g\n", opdrmax);
@@ -893,6 +897,7 @@ void gpu_tomo(SIM_T *simu){
 	info("oldres=%g. newres=%g\n", simu->cgres->p[0]->p[simu->reconisim], newres);
     }
     curfree(opdrsave);
+#endif
     if(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream);
     }
@@ -930,16 +935,19 @@ void gpu_fit(SIM_T *simu){
     if(!parms->gpu.tomo){
 	cp2gpu(&curecon->opdr_vec, simu->opdr);
     }
-#if 0
+#if 1
     gpu_fit_test(simu);
 #endif
     toc_test("Before FitR");
+#if CATCH_ERR == 1
     curcell *fitsave=NULL;//for debugging purpose.
     warning_once("remove fitsave after debugging\n");
     curcellcp(&fitsave, curecon->dmfit, curecon->cgstream);
+#endif
     simu->cgres->p[1]->p[simu->reconisim]=
 	gpu_fit_do(parms, recon, curecon->dmfit, curecon->opdr, curecon->cgstream);
     curecon->cgstream.sync();
+#if CATCH_ERRO == 1
     if(simu->reconisim>0 && simu->cgres->p[1]->p[simu->reconisim]>simu->cgres->p[1]->p[simu->reconisim-1]*2){
 	simu->status->warning=2;
 	curcellwrite(curecon->gradin, "dbg_gradin_%d", simu->reconisim);
@@ -950,9 +958,10 @@ void gpu_fit(SIM_T *simu){
 	double newres=gpu_fit_do(parms, recon, curecon->dmfit, curecon->opdr, curecon->cgstream);
 	curcellwrite(curecon->dmfit, "dbg_dmfitredo_%d", simu->reconisim);
 	info("oldres=%g newres=%g\n", simu->cgres->p[1]->p[simu->reconisim], newres);
-    }
-    cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream);
+	}
     curfree(fitsave);
+#endif
+    cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream);
     /*Don't free opdr. Needed for warm restart in tomo.*/
     toc_test("Fit");
 }
