@@ -244,20 +244,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	    for(long i=0; i<ntotact*ntotgrad; i++){
 		dmvmc->p[i]=(double)mvmc->p[i];
 	    }
-	    int ndm=parms->ndm;
-	    int nwfs=parms->nwfsr;
-	    recon->MVM=dcellnew(ndm, nwfs);
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(!parms->powfs[ipowfs].skip){
-		    for(int idm=0; idm<ndm; idm++){
-			recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
-		    }
-		}
-	    }
-	    d2cell(&recon->MVM, dmvmc, NULL);
-	    toc("Copy");
-	    dfree(dmvmc);
+	    recon->MVM=dmvmc;
 	    sfree(mvmc);
 	}
     }

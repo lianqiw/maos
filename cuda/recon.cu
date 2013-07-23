@@ -96,6 +96,7 @@ W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1){
     }
     return W01;
 }
+static void gpu_setup_recon_fdpcg_do(const PARMS_T *parms, RECON_T *recon);
 /*
   The caller must specify current GPU.
 */
@@ -270,7 +271,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	    cp2gpu(&curecon->PTT, recon->PTT);
 	}
 	if(parms->tomo.precond==1){
-	    gpu_setup_recon_fdpcg(parms, recon);
+	    gpu_setup_recon_fdpcg_do(parms, recon);
 	}
 	if(parms->tomo.alg==0){//CBS
 	    chol_convert(recon->RL.C, 0);
@@ -737,10 +738,12 @@ void gpu_recon_free(){
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     /*The following routine assemble MVM and put in recon->MVM*/
-    if(parms->recon.mvm==1){
-	gpu_setup_recon_mvm_trans(parms, recon, powfs);
-    }else{
-	gpu_setup_recon_mvm_direct(parms, recon, powfs);
+    if(!parms->load.mvm){
+	if(parms->recon.mvm==1){
+	    gpu_setup_recon_mvm_trans(parms, recon, powfs);
+	}else{
+	    gpu_setup_recon_mvm_direct(parms, recon, powfs);
+	}
     }
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);
@@ -935,7 +938,7 @@ void gpu_fit(SIM_T *simu){
     if(!parms->gpu.tomo){
 	cp2gpu(&curecon->opdr_vec, simu->opdr);
     }
-#if 1
+#if 0
     gpu_fit_test(simu);
 #endif
     toc_test("Before FitR");
@@ -970,7 +973,11 @@ void gpu_recon_mvm(SIM_T *simu){
     gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-    curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream);
+    if(!curecon->dmfit){
+	curecon->dmfit=curcellnew(parms->ndm, 1, simu->recon->anloc, (long*)NULL);
+	curecon->dmfit_vec=curecon->dmfit;
+    }
+    curmv(curecon->dmfit->m->p, 0., curecon->MVM, curecon->gradin->m->p,'n', 1., curecon->cgstream);
     cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream);
     curecon->cgstream.sync();
 }

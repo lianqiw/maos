@@ -342,7 +342,7 @@ typedef struct RECON_T{
     MUV_T FL;          /**<DM fit left hand size matrix*/
     MUV_T LR;          /**<least square reconstructor rhs*/
     MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
-    dcell *MVM;        /**<Matrix vector multiply*/
+    dmat *MVM;        /**<Matrix vector multiply*/
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */

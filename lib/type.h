@@ -88,24 +88,28 @@ typedef struct zmat{
  */
 typedef struct ccell{
     MAT(cmat*)
+    cmat *m; /*stores the continuous data*/
 }ccell;
 /**
    an 2-d block matrix of zmat.
  */
 typedef struct zcell{
     MAT(zmat*)
+    zmat *m;
 }zcell;
 /**
    an 2-d block matrix of dmat.
  */
 typedef struct dcell{
     MAT(dmat*)
+    dmat *m;
 }dcell;
 /**
    an 2-d block matrix of smat.
  */
 typedef struct scell{
     MAT(smat*)
+    smat *m;
 }scell;
 
 typedef enum CEMBED{

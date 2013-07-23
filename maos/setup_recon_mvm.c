@@ -29,6 +29,7 @@
 static void 
 setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     info2("Assembling LSR MVM in CPU\n");
+    dcell *MVM=NULL;
     if(recon->LR.Mfun || parms->lsr.alg==1){
 	/*
 	  First create an identity matrix. then solve each column one by one. 
@@ -41,12 +42,12 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    ntotgrad+=powfs[ipowfs].saloc->nloc*2;
 	}
-	recon->MVM=dcellnew(ndm, nwfs);
+	MVM=dcellnew(ndm, nwfs);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
 		for(int idm=0; idm<ndm; idm++){
-		    recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
+		    MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
 		}
 	    }
 	}
@@ -67,7 +68,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		muv_solve(&res, &recon->LL, &recon->LR, eyec);
 	    }
 	    for(int idm=0; idm<ndm; idm++){
-		dmat *to=recon->MVM->p[idm+curwfs*ndm];
+		dmat *to=MVM->p[idm+curwfs*ndm];
 		if(to){
 		    int nact=to->nx;
 		    memcpy(to->p+curg*nact,res->p[idm]->p, nact*sizeof(double));
@@ -88,9 +89,11 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	if(recon->LR.U && recon->LR.V){
 	    dcellmm(&LR, recon->LR.U, recon->LR.V, "nt", -1);
 	}
-	muv_solve(&recon->MVM, &recon->LL, NULL,  LR);
+	muv_solve(&MVM, &recon->LL, NULL,  LR);
 	dcellfree(LR);
     }
+    recon->MVM=dcell2m(MVM);
+    dcellfree(MVM);
 }
 
 
@@ -206,9 +209,11 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     thread_t info[nthread];
     thread_prep(info, 0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
     CALL_THREAD(info, nthread, 1);
-    recon->MVM=dcelltrans(MVMt);
-    free(curp);
+    dcell *MVM=dcelltrans(MVMt);
     dcellfree(MVMt);
+    recon->MVM=dcell2m(MVM);
+    dcellfree(MVM);
+    free(curp);
 }
 
 /*assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.*/
@@ -216,19 +221,7 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
     if(parms->recon.mvm){
 	if(parms->load.mvm){
-	    recon->MVM=dcellread("%s", parms->load.mvm);
-	    for(int idm=0; idm<parms->ndm; idm++){
-		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		    int ipowfs=parms->wfsr[iwfs].powfs;
-		    if(!parms->powfs[ipowfs].skip){
-			dmat *temp=recon->MVM->p[idm+iwfs*parms->ndm];
-			if(temp->nx!=recon->aloc[idm]->nloc 
-			   || temp->ny !=powfs[ipowfs].pts->nsa*2){
-			    error("MVM[%d, %d] should have dimension (%ld, %ld), but have (%ld, %ld)\n", idm, iwfs, recon->aloc[idm]->nloc , powfs[ipowfs].pts->nsa*2, temp->nx, temp->ny);
-			}
-		    }
-		}
-	    }
+	    recon->MVM=dread("%s", parms->load.mvm);
 	}
 	if(parms->gpu.tomo && parms->gpu.fit){
 #if USE_CUDA
@@ -245,13 +238,13 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	    }
 	}
 	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm)){
-	    dcellwrite(recon->MVM, "MVM.bin");
+	    dwrite(recon->MVM, "MVM.bin");
 	}
 	if(parms->sim.mvmport){
 	    mvm_client_send_m(parms, recon->MVM);
 	}
 	if(parms->gpu.tomo && parms->gpu.fit){
-	    dcellfree(recon->MVM);
+	    dfree(recon->MVM);
 	}
     }
     toc2("setup_recon_mvm");

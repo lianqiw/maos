@@ -85,6 +85,7 @@ class cumat{
 	res->nref=nref;
 	return res;
     }
+    cumat<T>*trans(stream_t &stream);
     operator T*(){
 	return p;
     }

@@ -182,7 +182,27 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
 	}
     }
 }
-
+/*Transpose a matrix in naive way. Faster way is to use shared memory and handle
+  a block each time.*/
+__global__ void transpose(float *restrict out, const float *restrict in, int nx, int ny){
+    const int stepx=blockDim.x * gridDim.x;
+    const int stepy=blockDim.y * gridDim.y;
+    const int ix0=threadIdx.x+blockDim.x*blockIdx.x;
+    const int iy0=threadIdx.y+blockDim.y*blockIdx.y;
+    for(int iy=iy0; iy<ny; iy+=stepy){
+	for(int ix=ix0; ix<nx; ix+=stepx){
+	    out[iy+ix*ny]=in[ix+iy*nx];
+	}
+    }
+}
+/*Transpose a matrix*/
+template <>
+curmat* curmat::trans(stream_t &stream){
+    curmat *B=curnew(ny, nx);
+    transpose<<<dim3(16,16),dim3(16,16),0,stream>>>
+	(B->p, p, nx, ny);
+    return B;
+}
 cuspcell* cuspcellnew(int nx, int ny){
     cuspcell *out=(cuspcell*)calloc(1, sizeof(cuspcell));
     out->p=(cusp**)calloc(nx*ny, sizeof(void*));

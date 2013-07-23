@@ -35,7 +35,7 @@ typedef struct MVM_IGPU_T{
     POWFS_T *powfs;
     curcell *mvmig; /*intermediate TomoL result*/
     curcell *mvmfg; /*intermediate FitR result*/
-    smat *mvmt;     /*result: tranpose of MVM calculated by this GPU.*/
+    curmat *mvmt;     /*result: tranpose of MVM calculated by this GPU.*/
     float *FLI;
     smat *residual;
     smat *residualfit;
@@ -188,7 +188,7 @@ static void mvm_trans_igpu(thread_t *info){
     }//for iact
     int nn=ntotgrad*(info->end-info->start)*sizeof(float);
     float *mvmtc=data->mvmt->p+info->start*ntotgrad;
-    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToHost, curecon->cgstream);
+    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToDevice, curecon->cgstream);
     cudaStreamSynchronize(curecon->cgstream);
     curcellfree(dmfit);
     curcellfree(opdx);
@@ -307,7 +307,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		dfree(FLId);
 	    }
 	}
-    	smat *mvmt=snew(ntotgrad, ntotact);
+	gpu_set(gpu_recon);
+    	curmat *mvmt=curnew(ntotgrad, ntotact);
 	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
 	thread_t info[nthread];
@@ -349,30 +350,18 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	CALL_THREAD(info, nthread, 1);
 	/*Copy MVM control matrix results back*/
 	{
+	    gpu_set(gpu_recon);
+	    curecon_t *curecon=cudata->recon;
 	    TIC;tic;
-	    int ndm=parms->ndm;
-	    int nwfs=parms->nwfsr;
-	    recon->MVM=dcellnew(ndm, nwfs);
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(!parms->powfs[ipowfs].skip){
-		    for(int idm=0; idm<ndm; idm++){
-			recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
-		    }
-		}
-	    }
-	    dmat *mvmtt=dnew(mvmt->ny, mvmt->nx);
-	    for(int iy=0; iy<mvmtt->ny; iy++){
-		for(int ix=0; ix<mvmtt->nx; ix++){
-		    mvmtt->p[ix+iy*mvmtt->nx]=(double)mvmt->p[iy+ix*mvmt->nx];
-		}
-	    }
-	    toc2("MVM Reshape in CPU 1");
-	    sfree(mvmt);
-	    d2cell(&recon->MVM, mvmtt, NULL);
-	    dfree(mvmtt);
-	    toc2("MVM Reshape in CPU 2");
+	    curmat *mvmtt=mvmt->trans(curecon->cgstream);
+	    curecon->cgstream.sync();
+	    toc2("MVM Reshape in GPU");tic;
+	    cp2cpu(&recon->MVM, 0, mvmtt, 1, curecon->cgstream, NULL);
+	    curecon->cgstream.sync();
+	    curfree(mvmtt);
+	    toc2("MVM copy to CPU");
 	}
+	curfree(mvmt);
 	swrite(residual, "MVM_RL_residual");
 	swrite(residualfit, "MVM_FL_residual");
 	

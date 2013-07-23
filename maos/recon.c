@@ -245,12 +245,7 @@ void reconstruct(SIM_T *simu){
 	if(hi_output){
 	    if(parms->recon.mvm){
 		if(!simu->dmerr){
-		    simu->dmerr=dcellnew(parms->ndm, 1);
-		}
-		for(int idm=0; idm<parms->ndm; idm++){
-		    if(!simu->dmerr->p[idm]){
-			simu->dmerr->p[idm]=dnew(simu->recon->aloc[idm]->nloc,1);
-		    }
+		    simu->dmerr=dcellnew3(parms->ndm, 1, simu->recon->anloc, NULL);
 		}
 		if(parms->sim.mvmport){
 		    mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
@@ -261,8 +256,13 @@ void reconstruct(SIM_T *simu){
 		    }else
 #endif		
 			{
-			    dcellzero(simu->dmerr);
-			    dcellmm(&simu->dmerr, recon->MVM, parms->tomo.psol?simu->gradlastol:simu->gradlastcl,"nn",1);
+			    if(!simu->dmerr){
+				simu->dmerr=dcellnew2(simu->dmcmd);
+			    }else{
+				dcellzero(simu->dmerr);
+			    }
+			    //This assumes skipped WFS are in the end. \todo: fix it if not.
+			    dmulvec(simu->dmerr->m->p, recon->MVM, (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
 			}
 	    }else{
 		switch(parms->recon.alg){

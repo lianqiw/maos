@@ -54,20 +54,53 @@ X(cell) *X(cellnew)(long nx, long ny){
 */
 X(cell) *X(cellnew2)(const X(cell) *A){
     X(cell) *out=X(cellnew)(A->nx, A->ny);
+    long tot=0;
+    for(long i=0; i<A->nx*A->ny; i++){
+	if(A->p[i]){
+	    tot+=A->p[i]->nx*A->p[i]->ny*sizeof(T);
+	}
+    }
+    out->m=X(new)(tot,1);
+    tot=0;
     for(int i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
-	    out->p[i]=X(new)(A->p[i]->nx, A->p[i]->ny);
+	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
+	    tot+=A->p[i]->nx*A->p[i]->ny*sizeof(T);
 	}
     }
     return out;
 }
 /**
-   Create an new X(cell) with X(mat) specified.
+   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
  */
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     X(cell) *out=X(cellnew)(nx,ny);
+    long tot=0;
     for(long i=0; i<nx*ny; i++){
-	out->p[i]=X(new)(nnx[i], nny[i]);
+	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+    }
+    out->m=X(new)(tot,1);
+    tot=0;
+    for(long i=0; i<nx*ny; i++){
+	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
+	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+    }
+    return out;
+}
+/**
+   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
+ */
+X(cell) *X(cellnew3int)(long nx, long ny, int *nnx, int *nny){
+    X(cell) *out=X(cellnew)(nx,ny);
+    long tot=0;
+    for(long i=0; i<nx*ny; i++){
+	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+    }
+    out->m=X(new)(tot,1);
+    tot=0;
+    for(long i=0; i<nx*ny; i++){
+	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
+	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
     }
     return out;
 }
@@ -94,6 +127,7 @@ void X(cellfree_do)(X(cell) *dc){
 	}
 	free(dc->p);
     }
+    if(dc->m) X(free)(dc->m);
     free(dc);
 }
 /**
@@ -133,10 +167,12 @@ X(cell) *X(celldup)(const X(cell) *in){
 */
 void X(cellcp)(X(cell)** out0, const X(cell) *in){
     if(in){
-	if(!*out0)
-	    *out0=X(cellnew)(in->nx, in->ny);
+	if(!*out0){
+	    *out0=X(cellnew2)(in);
+	}else{
+	    assert((*out0)->nx==in->nx && (*out0)->ny==in->ny);
+	}
 	X(cell)* out=*out0;
-	assert(out->nx==in->nx && out->ny==in->ny);
 	for(int i=0; i<in->nx*in->ny; i++){
 	    X(cp)(&out->p[i], in->p[i]);
 	}
@@ -451,7 +487,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 void X(celladd)(X(cell) **B0, double bc, const X(cell) *A,const double ac){
     if(A){
 	if(!*B0){
-	    *B0=X(cellnew)(A->nx, A->ny); bc=0;
+	    *B0=X(cellnew2)(A); bc=0;
 	}
 	X(cell) *B=*B0;
 	assert(A->nx==B->nx && A->ny == B->ny);
@@ -551,7 +587,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	      nx,ny,A->nx,A->ny);
     }
     if(!*B){
-	*B=X(cellnew)(ref->nx, ref->ny);
+	*B=X(cellnew2)(ref);
 	PCELL((*B),Bp);
 	for(long iy=0; iy<ref->ny; iy++){
 	    for(long ix=0; ix<ref->nx; ix++){

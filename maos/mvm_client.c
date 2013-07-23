@@ -57,8 +57,7 @@ void mvm_client_init(const char *host, int port){
 /**
    It is called by maos to send mvm matrix to mvm server
 */
-void mvm_client_send_m(const PARMS_T *parms, dcell *mvm){
-    dmat *mvmd=dcell2m(mvm);
+void mvm_client_send_m(const PARMS_T *parms, dmat *mvmd){
     int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
     cmd[1]=parms->sim.mvmngpu;
     cmd[2]=mvmd->nx;
@@ -70,7 +69,6 @@ void mvm_client_send_m(const PARMS_T *parms, dcell *mvm){
 	fmvm[i]=(float)(mvmd->p[i]*GSCALE1*ASCALE);
     }
     WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
-    dfree(mvmd);
     free(fmvm);
     info2(" done\n");
 }

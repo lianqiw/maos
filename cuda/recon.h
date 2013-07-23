@@ -173,7 +173,7 @@ typedef struct curecon_t{
     cumuv_t FR;
     cumuv_t FL;
 
-    curcell *MVM;
+    curmat *MVM;
     float (*floc)[2];/**<recon->floc*/
     int nfloc;       /**<recon->floc->nloc*/
     int reconisim;

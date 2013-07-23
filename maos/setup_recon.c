@@ -2173,7 +2173,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     muv_free(&recon->FL);
     muv_free(&recon->LR);
     muv_free(&recon->LL);
-    dcellfree(recon->MVM);
+    dfree(recon->MVM);
     spcellfree(recon->saneai);
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;

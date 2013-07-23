@@ -906,7 +906,12 @@ static void init_simu_wfs(SIM_T *simu){
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
-	simu->gradlastol=dcellnew(parms->nwfsr, 1);
+	long nnx[parms->nwfsr];
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    nnx[iwfs]=powfs[ipowfs].pts->nsa*2;
+	}
+	simu->gradlastol=dcellnew3(parms->nwfsr, 1, nnx, NULL);
     }
     simu->gradacc=dcellnew(nwfs,1);/*wfsgrad internal */
 
@@ -1155,15 +1160,14 @@ static void init_simu_dm(SIM_T *simu){
     SIM_SAVE_T *save=simu->save;
     const int seed=simu->seed;
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
-    simu->dmcmd=dcellnew(parms->ndm,1);
+    simu->dmcmd=dcellnew3(parms->ndm,1, recon->anloc, NULL);
     simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
     if(parms->sim.dmproj){
-	simu->dmproj=dcellnew(parms->ndm,1);
+	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
 	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
     }
     for(int idm=0; idm<parms->ndm; idm++){
-	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	if(simu->hyst){
 	    simu->dmreal->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	}else{
@@ -1171,19 +1175,18 @@ static void init_simu_dm(SIM_T *simu){
 	}
 	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
 	if(simu->dmprojsq){
-	    simu->dmproj->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
 	}
 	if(parms->fit.square){/*dmreal is already square.*/
 	    free(simu->dmrealsq[idm]->p);
 	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
-	    simu->dmrealsq[idm]->nref=simu->dmreal->p[idm]->nref;
-	    simu->dmrealsq[idm]->nref[0]++;
+	    free(simu->dmrealsq[idm]->nref);
+	    simu->dmrealsq[idm]->nref=NULL;
 	    if(simu->dmprojsq){
 		free(simu->dmprojsq[idm]->p);
 		simu->dmprojsq[idm]->p=simu->dmproj->p[idm]->p;
-		simu->dmprojsq[idm]->nref=simu->dmproj->p[idm]->nref;
-		simu->dmprojsq[idm]->nref[0]++;
+		free(simu->dmprojsq[idm]->nref);
+		simu->dmprojsq[idm]->nref=NULL;
 	    }
 	}
     }
