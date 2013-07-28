@@ -2443,6 +2443,7 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->sim.idealfit){
 	    parms->gpu.tomo=0;/*no need tomo.*/
+	    parms->fit.cachex=0;
 	}
 	if(parms->recon.alg==0){/*MV*/
 	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
@@ -2502,7 +2503,7 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	if(parms->gpu.evl && parms->gpu.wfs){
 	    parms->sim.cachedm=0; /*No need in CUDA. */
 	}
-	if(parms->gpu.tomo || parms->gpu.fit){
+	if(parms->gpu.tomo || parms->gpu.fit==2){
 	    parms->tomo.square=1;
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){

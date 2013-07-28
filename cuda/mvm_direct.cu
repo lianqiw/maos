@@ -27,7 +27,7 @@ extern "C"
 #include "curmat.h"
 #include "cucmat.h"
 #include "accphi.h"
-
+#include "cudata.h"
 static int *gpu_avail=NULL;//implementes a single stack to manage available GPUs
 static int gpu_pos=0;
 PNEW(gpu_mutex);
@@ -84,7 +84,7 @@ static void mvm_direct_igpu(thread_t *info){
 	cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
     }
     curecon_t *curecon=cudata->recon;
-    stream_t &stream=curecon->cgstream;
+    stream_t stream;
     if(parms->load.mvmf){
 	cudaMemcpyAsync(mvm->p, data->mvmc->p+info->start*ntotact, 
 			ntotact*(info->end-info->start)*sizeof(float), 
@@ -122,10 +122,10 @@ static void mvm_direct_igpu(thread_t *info){
 	if(mvmi){
 	    opdr->replace(mvmi->p+(ig-info->start)*ntotxloc, 0, stream);
 	}
-	residual->p[ig]=gpu_tomo_do(parms, recon, opdr, opdx, grad, stream);
+	residual->p[ig]=curecon->RL->solve(&opdr, grad, curecon->RR, stream);
 	RECORD(2);
 	fitr->replace(mvm->p+(ig-info->start)*ntotact, 0, stream);
-	residualfit->p[ig]=gpu_fit_do(parms, recon, fitr, opdr, stream);
+	residualfit->p[ig]=curecon->FL->solve(&fitr, opdr, curecon->FR, stream);
 	RECORD(3);
 #if TIMING
 	stream.sync();

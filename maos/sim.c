@@ -62,7 +62,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
     double ck_0,ck_end;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	extern int draw_single;
-	draw_single=1;//Only draw active frame.
+	if(!parms->pause){
+	    draw_single=1;//Only draw active frame.
+	}else{
+	    draw_single=0;
+	}
 	global->iseed=iseed;
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
@@ -86,8 +90,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    /*put here to avoid messing up timing due to transfering. */
 	    gpu_atm2gpu(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
 	    if(parms->tomo.predict){
-		gpu_setup_recon_predict(parms, recon);
-		gpu_setup_recon_fdpcg(parms, recon);
+		gpu_update_recon(parms, recon);
 	    }
 	}
 #endif

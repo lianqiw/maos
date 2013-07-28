@@ -528,7 +528,7 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
-    double deltafocus; /**<focus difference between science and ngs estimated from opdr*/
+    dcell *deltafocus; /**<focus difference between science and ngs estimated from opdr*/
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/

@@ -72,27 +72,13 @@ void tomofit(SIM_T *simu){
 	
 	if(parms->dbg.deltafocus){
 	    if(simu->opdr && recon->RFdfx){
-		dcell *tmp=NULL;
 		//Compute the delta focus in open loop.
-		dcellmm(&tmp, recon->RFdfx, simu->opdr, "nn", 1);
-		if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
-		    error("Wrong format");
-		}
-		simu->deltafocus=tmp->p[0]->p[0];
-		dcellfree(tmp);
+		dcellmm(&simu->deltafocus, recon->RFdfx, simu->opdr, "nn", 1);
 	    }
 	    if(parms->dbg.deltafocus==2){
-		info("dfx=%g\n", simu->deltafocus);
 		dcell *dmpsol=simu->dmpsol[parms->hipowfs[0]];
 		//Compute the delta focus in closed loop.
-		dcell *tmp=NULL;
-		dcellmm(&tmp, recon->RFdfa, dmpsol, "nn", 1);
-		if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
-		    error("Wrong format");
-		}
-		info("dfa=%g\n", tmp->p[0]->p[0]);
-		simu->deltafocus-=tmp->p[0]->p[0];
-		dcellfree(tmp);
+		dcellmm(&simu->deltafocus, recon->RFdfa, dmpsol, "nn", -1);
 	    }
 	}
     }
@@ -206,7 +192,7 @@ void recon_split(SIM_T *simu){
 	    simu->Merr_lo->p[0]->p[5]=0;
 	}
 	if(parms->sim.mffocus && parms->dbg.deltafocus){
-	    simu->ngsfocus+=simu->deltafocus;
+	    simu->ngsfocus+=simu->deltafocus->p[0]->p[0];
 	}
     }else{
 	dcellfree(simu->Merr_lo);
@@ -277,7 +263,9 @@ void reconstruct(SIM_T *simu){
 	    }
 	    if(parms->tomo.psol){//form error signal in PSOL mode
 		dcell *dmpsol;
-		if(parms->sim.fuseint || parms->recon.split==1){
+		if(parms->sim.idealfit){
+		    dmpsol=simu->dmreallast;
+		}else if(parms->sim.fuseint || parms->recon.split==1){
 		    dmpsol=simu->dmpsol[parms->hipowfs[0]];
 		}else{
 		    warning_once("Temporary solution\n");

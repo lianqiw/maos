@@ -17,6 +17,7 @@
 */
 #ifndef AOS_CUDA_PCG_H
 #define AOS_CUDA_PCG_H
+
 /**
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.
 */
@@ -27,10 +28,12 @@ typedef struct CGTMP_T{
     curcell *Ap;
     float *store;
     float *diff;
+    int count_fail;
     CGTMP_T(){
 	memset(this, 0, sizeof(CGTMP_T));
     }
     ~CGTMP_T(){
+	if(!this) return;
 	delete r0;r0=NULL;
 	delete z0;z0=NULL;
 	delete p0;p0=NULL;
@@ -39,12 +42,11 @@ typedef struct CGTMP_T{
 	if(diff) cudaFreeHost(diff); diff=NULL;
     }
 }CGTMP_T;
-typedef void (*G_CGFUN)(curcell**, float, const void*, const curcell*, float, stream_t &stream);
-typedef void (*G_PREFUN)(curcell**, const void*, const curcell*, stream_t &stream);
-
-float gpu_pcg(curcell *x0, 
-	      G_CGFUN Amul, const void *A, 
-	      G_PREFUN Mmul, const void *M, 
+//typedef void (*G_CGFUN)(curcell**, float, const curcell*, float, stream_t &stream);
+//typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
+class cucg_t;
+class cucgpre_t;
+float gpu_pcg(curcell **x0, cucg_t *Amul, cucgpre_t *Mmul,
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter, 
 	      stream_t &stream, double cgthres=-1);
 #endif

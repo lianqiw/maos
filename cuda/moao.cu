@@ -24,6 +24,7 @@ extern "C"
 #include "recon.h"
 #include "accphi.h"
 #include "pcg.h"
+#include "cudata.h"
 extern int *wfsgpu;
 extern int *evlgpu;
 void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
@@ -34,18 +35,14 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	cumoao_t* cumoao=&curecon->moao[imoao];
 	cp2gpu(&cumoao->fitNW,recon->moao[imoao].NW);
-	cp2gpu(&cumoao->actslave, recon->moao[imoao].actslave->p[0]);
+	cp2gpu(&cumoao->actslave, recon->moao[imoao].actslave->p[0], 1);
 	if(parms->moao[imoao].cubic){
 	    cumoao->cubic_cc=gpu_dmcubic_cc(parms->moao[imoao].iac);
 	}
 	cumoao->amap.init(cumoao->amap);
 	cumoao->fmap.init(cumoao->fmap);
 
-	if(curecon->W01){
-	    cumoao->W01=curecon->W01;/*same configuration.*/
-	}else{
-	    cumoao->W01=gpu_get_W01(recon->W0, recon->W1);
-	}
+	cumoao->W01=curecon->grid->W01;
 	cumoao->rhs=curcellnew(1,1);
 	cumoao->rhs->p[0]=curnew(cumoao->amap.nx, cumoao->amap.ny);
 	cudaMalloc(&cumoao->pis, sizeof(float));
@@ -148,7 +145,7 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
 	const float dispx=thetax*ht;
 	const float dispy=thetay*ht;
 	gpu_prop_grid(xp, cumoao->fmap*scale, 
-		      curecon->opdr->p[ips], curecon->xmap[ips],
+		      curecon->opdr->p[ips], curecon->grid->xmap[ips],
 		      dispx, dispy, 1.f,'n', stream);
     }
     /*do HA operation, from curecon->dmfit to xp */
@@ -157,15 +154,15 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
 	const float scale=1.f-ht/hs;
 	const float dispx=thetax*ht;
 	const float dispy=thetay*ht;
-	if(curecon->cubic_cc->p[idm]){
+	if(curecon->grid->cubic_cc->p[idm]){
 	    gpu_prop_grid_cubic
 		(xp, cumoao->fmap*scale,
-		 curecon->dmfit->p[idm], curecon->amap[idm],
-		 dispx, dispy, curecon->cubic_cc->p[idm]->p, -1.f, 'n', stream);
+		 curecon->dmfit->p[idm], curecon->grid->amap[idm],
+		 dispx, dispy, curecon->grid->cubic_cc->p[idm]->p, -1.f, 'n', stream);
 	}else{
 	    gpu_prop_grid
 		(xp, cumoao->fmap*scale,
-		 curecon->dmfit->p[idm], curecon->amap[idm],
+		 curecon->dmfit->p[idm], curecon->grid->amap[idm],
 		 dispx, dispy, -1.f, 'n', stream);
 	}
     }
@@ -239,10 +236,10 @@ void gpu_moao_recon(SIM_T *simu){
 	    gpu_moao_FitR(&cumoao->rhs, 0, simu, cumoao,
 			  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 			  parms->powfs[ipowfs].hs, 1);
-	    if(gpu_pcg(curecon->dm_wfs[iwfs], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaowfs,
+	    /*if(gpu_pcg(curecon->dm_wfs[iwfs], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaowfs,
 		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
-	    }
+		}*/
 	}
     }
     if(curecon->dm_evl){
@@ -253,10 +250,10 @@ void gpu_moao_recon(SIM_T *simu){
 	    gpu_moao_FitR(&cumoao->rhs, 0, simu, cumoao,
 			  parms->evl.thetax[ievl], parms->evl.thetay[ievl], 
 			  parms->evl.hs[ievl], 1);
-	    if(gpu_pcg(curecon->dm_evl[ievl], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaoevl,
+	    /*if(gpu_pcg(curecon->dm_evl[ievl], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaoevl,
 		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
-	    }
+		}*/
 	}
     }
     CUDA_SYNC_STREAM;

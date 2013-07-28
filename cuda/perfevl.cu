@@ -24,6 +24,7 @@ extern "C"
 #include "accphi.h"
 #include "cucmat.h"
 #include "kernel.h"
+#include "cudata.h"
 static int *cunembed=NULL;
 static int *cupsfsize=NULL;
 static float *cuwvls=NULL;    

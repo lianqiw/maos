@@ -90,9 +90,7 @@ int pcg_save=0;
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
 */
-float gpu_pcg(curcell *x0, 
-	      G_CGFUN Amul, const void *A, 
-	      G_PREFUN Mmul, const void *M, 
+float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter,
 	      stream_t &stream, double cgthres){
 #if TIMING 
@@ -134,9 +132,12 @@ float gpu_pcg(curcell *x0,
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
     /*computes r0=b-A*x0 */
-    if(!warm){
-	curcellzero(x0, stream);
+    if(!*px){
+	*px=curcellnew(b);
+    }else if(!warm){
+	curcellzero(*px, stream);
     }
+    curcell *x0=*px;
 #if DEBUG_OPDR == 1
     float maxx[maxiter+1];
     float maxp[maxiter+1];
@@ -154,10 +155,10 @@ float gpu_pcg(curcell *x0,
 	    /*computes r0=b-A*x0 */
 	    curcellcp(&r0, b, stream);/*r0=b; */
 	    RECORD(2);
-	    Amul(&r0, 1, A, x0, -1, stream);/*r0=r0+(-1)*A*x0 */ 
+	    (*Amul)(&r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */ 
 	    RECORD(3);
 	    if(Mmul){/*z0=M*r0*/
-		Mmul(&z0,M,r0,stream);
+		(*Mmul)(&z0,r0,stream);
 	    }else{
 		z0=r0;
 	    }
@@ -184,7 +185,7 @@ float gpu_pcg(curcell *x0,
 	info2("%.5f ", diff[k]);
 #endif	
 	/*Ap=A*p0*/
-	Amul(&Ap, 0, A, p0, 1, stream); RECORD(8);
+	(*Amul)(&Ap, 0.f, p0, 1.f, stream); RECORD(8);
 	/*ak[k]=rkzk[k]/(p0'*Ap); */
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
@@ -258,7 +259,7 @@ float gpu_pcg(curcell *x0,
 	RECORD(11);
 	/*preconditioner */
 	if(Mmul) {/*z0=M*r0*/
-	    Mmul(&z0,M,r0, stream);
+	    (*Mmul)(&z0,r0, stream);
 	}
 	RECORD(12);
 	/*rkzk[k+1]=r0'*z0 for next step*/

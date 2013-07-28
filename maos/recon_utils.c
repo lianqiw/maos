@@ -487,7 +487,7 @@ void FitR(dcell **xout, const void *A,
     if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
 	const PARMS_T *parms=recon->parms;
 	SIM_T *simu=recon->simu;
-	int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
+	int isim=simu->reconisim;
 	const int nfit=parms->fit.nfit;
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){

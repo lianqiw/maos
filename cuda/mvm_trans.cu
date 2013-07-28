@@ -27,7 +27,7 @@ extern "C"
 #include "curmat.h"
 #include "cucmat.h"
 #include "accphi.h"
-
+#include "cudata.h"
 
 typedef struct MVM_IGPU_T{
     const PARMS_T *parms;
@@ -59,16 +59,10 @@ static void mvm_trans_igpu(thread_t *info){
     int igpu=info->ithread;
     gpu_set(igpu);
     curecon_t *curecon=cudata->recon;
+    curecon_geom *grid=curecon->grid;
     curmat *mvmi=data->mvmig?data->mvmig->p[igpu]:NULL;/*Tomography output, for warm restart*/
     curmat *mvmf=data->mvmfg?data->mvmfg->p[igpu]:NULL;/*loaded FitR output.*/
-    /*Tomography*/
-    G_PREFUN prefun=NULL;
-    void *predata=NULL;
-    if(parms->tomo.precond==1){
-	prefun=gpu_Tomo_fdprecond;
-	predata=(void*)recon;
-    }
-  
+
     curcell *eyec=NULL;/* Only use eyec for CG.*/
     float eye2c[2]={0,1.};
     float *eye2;
@@ -77,15 +71,6 @@ static void mvm_trans_igpu(thread_t *info){
     //const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
     /*fit*/
-    G_CGFUN cg_fun;
-    void *cg_data;
-    if(parms->gpu.fit==1){//sparse matrix
-	cg_fun=(G_CGFUN) cumuv;
-	cg_data=&curecon->FL;
-    }else{
-	cg_fun=(G_CGFUN) gpu_FitL;
-	cg_data=recon;
-    }
     const float *FLI=data->FLI;
     if(!FLI && !load_mvmf){
 	if(parms->fit.square){
@@ -95,7 +80,7 @@ static void mvm_trans_igpu(thread_t *info){
 	}
     }
  
-    curcell *dmfit=load_mvmf?NULL:curcellnew(curecon->dmfit);
+    curcell *dmfit=load_mvmf?NULL:curcellnew(grid->ndm, 1, grid->anx, grid->any);
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmf?1L:0L));
     curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmi?1L:0L));
     curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)0, (float*)1);
@@ -104,7 +89,7 @@ static void mvm_trans_igpu(thread_t *info){
     }
     curmat *mvmt=curnew(ntotgrad, info->end-info->start);/*contains result*/
     tk_prep+=toc3;tic;
-    stream_t &stream=curecon->cgstream;
+    stream_t stream;
     for(int iact=info->start; iact<info->end; iact++){
 	int curdm=curp[iact][0];
 	int curact=curp[iact][1];
@@ -127,69 +112,33 @@ static void mvm_trans_igpu(thread_t *info){
 	if(!recon->actcpl || recon->actcpl->p[curdm]->p[curact]>EPS){
 	    if(mvmf) opdx->replace(mvmf->p+(iact-info->start)*mvmf->nx, 0, stream);
 	    if(!load_mvmf){
-		if(eyec){
-		    /*Fitting operator*/
+		if(eyec){ /*Fitting operator*/
 		    curcellzero(dmfit, stream);//temp
-		    if((residualfit->p[iact]=gpu_pcg(dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
-						    parms->recon.warm_restart, parms->fit.maxit, stream))>1.){
-		    warning("Fit CG residual is %.2f for %d.\n",
-			    residualfit->p[iact], iact);
-		    }
+		    residualfit->p[iact]=curecon->FL->solve(&dmfit, eyec, NULL, stream);
 		}else{
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
 				    cudaMemcpyHostToDevice, stream);
 		}
     		tk_fitL+=toc3; tic;
 		/*Transpose of fitting operator*/
-		if(parms->gpu.fit==1){//sparse matrix
-		    cumuv_trans(&opdx, 0, &curecon->FR, dmfit, 1, stream);
-		}else{
-		    gpu_FitRt(&opdx, 0, recon, dmfit, 1, stream);
-		}
+		curecon->FR->Rt(&opdx, 0.f, dmfit, 1.f, stream);
 	    }
 	    tk_fitR+=toc3; tic;
-	    switch(parms->tomo.alg){
-	    case 0:
-		if(!opdr->m || !opdx->m){
-		    error("opdr and opdx must be continuous\n");
-		}
-		cuchol_solve(opdr->m->p, curecon->RCl, curecon->RCp, opdx->m->p, stream);
-		if(curecon->RUp){
-		    curmat *tmp=curnew(curecon->RVp->ny, 1);
-		    curmv(tmp->p, 0, curecon->RVp, opdx->m->p, 't', -1, stream);
-		    curmv(opdr->m->p, 1, curecon->RUp, tmp->p, 'n', 1, stream);
-		    curfree(tmp);
-		}
-		break;
-	    case 1:{
-		if(mvmi){
-		    opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
-		}
-		/*disable the t/t removal lrt in split tomo that creats problem in fdpcg mode*/
-		if((residual->p[iact]=gpu_pcg(opdr, gpu_TomoL, recon, prefun, predata, opdx, &curecon->cgtmp_tomo,
-					      parms->recon.warm_restart, parms->tomo.maxit,
-					      stream, parms->tomo.cgthres))>0.5){
-		    warning2("Tomo CG residual is %.2f for %d\n", residual->p[iact], iact);
-		}
+	    if(mvmi){
+		opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
 	    }
-		break;
-	    case 2:
-		curmv(opdr->m->p, 0, curecon->RMI, opdx->m->p, 'n', 1, stream);
-		break;
-	    default:
-		error("Invalid");
-	    }
+	    residual->p[iact]=curecon->RL->solve(&opdr, opdx, NULL, stream);
 	    tk_TomoL+=toc3; tic;
 	    /*Right hand side. output directly to mvmt*/
 	    grad->replace(mvmt->p+(iact-info->start)*ntotgrad, 0, stream);
-	    gpu_TomoRt(&grad, 0, recon, opdr, 1, stream);
+	    curecon->RR->Rt(&grad, 0, opdr, 1, stream);
 	    tk_TomoR+=toc3; tic;
 	}
     }//for iact
     int nn=ntotgrad*(info->end-info->start)*sizeof(float);
     float *mvmtc=data->mvmt->p+info->start*ntotgrad;
-    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToDevice, curecon->cgstream);
-    cudaStreamSynchronize(curecon->cgstream);
+    cudaMemcpyAsync(mvmtc, mvmt->p, nn, cudaMemcpyDeviceToDevice, stream);
+    stream.sync();
     curcellfree(dmfit);
     curcellfree(opdx);
     curcellfree(opdr);
@@ -351,13 +300,13 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	/*Copy MVM control matrix results back*/
 	{
 	    gpu_set(gpu_recon);
-	    curecon_t *curecon=cudata->recon;
 	    TIC;tic;
-	    curmat *mvmtt=mvmt->trans(curecon->cgstream);
-	    curecon->cgstream.sync();
+	    stream_t stream;
+	    curmat *mvmtt=mvmt->trans(stream);
+	    stream.sync();
 	    toc2("MVM Reshape in GPU");tic;
-	    cp2cpu(&recon->MVM, 0, mvmtt, 1, curecon->cgstream, NULL);
-	    curecon->cgstream.sync();
+	    cp2cpu(&recon->MVM, 0, mvmtt, 1, stream, NULL);
+	    stream.sync();
 	    curfree(mvmtt);
 	    toc2("MVM copy to CPU");
 	}

@@ -15,16 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-extern "C"
-{
-#include <cuda.h>
-#include "gpu.h"
-}
 #include "utils.h"
-#include "recon.h"
 #include "accphi.h"
-#include "pcg.h"
-
+#include "fit.h"
 #define TIMING 0
 #if TIMING <1
 #undef EVENT_INIT
@@ -51,6 +44,139 @@ extern "C"
 #define EVENT2_PRINT(A...) fprintf(stderr, A);EVENT_DEINIT
 #endif
 
+void cufit_grid::init(const PARMS_T *parms, const RECON_T *recon){
+    /*Initialize*/
+    const int ndm=parms->ndm;
+    const int npsr=recon->npsr;
+    nfit=parms->fit.nfit;
+    /*Setup various grid*/
+ 
+    if(parms->sim.idealfit){
+	floc=new culoc_t(recon->floc);
+	fit_thetax=new float[nfit];
+	fit_thetay=new float[nfit];
+	for(int ifit=0; ifit<nfit; ifit++){
+	    fit_thetax[ifit]=parms->fit.thetax[ifit];
+	    fit_thetay[ifit]=parms->fit.thetay[ifit];
+	}
+    }
+    /*Various*/
+    if(recon->fitNW){
+	dmat *_fitNW=dcell2m(recon->fitNW);
+	cp2gpu(&fitNW, _fitNW);
+	dfree(_fitNW);
+	dotNW=curnew(fitNW->ny, 1);
+    }
+    if(recon->actslave){
+	cp2gpu(&actslave, recon->actslave, 1);
+    }
+    if(parms->fit.cachedm){
+	long acnx[ndm], acny[ndm];
+	for(int idm=0; idm<ndm; idm++){
+	    acnx[idm]=grid->acmap[idm].nx;
+	    acny[idm]=grid->acmap[idm].ny;
+	}
+	dmcache=curcellnew(ndm, 1, acnx, acny);
+    }
+    if(parms->fit.cachex){
+	long xcnx[npsr], xcny[npsr];
+	for(int ips=0; ips<npsr; ips++){
+	    xcnx[ips]=grid->xcmap[ips].nx;
+	    xcny[ips]=grid->xcmap[ips].ny;
+	}
+	xcache=curcellnew(npsr, 1, xcnx, xcny);
+    } 
+    cp2gpu(&fitwt, recon->fitwt);
+ 
+    long fnx[nfit],fny[nfit];
+    for(int ifit=0; ifit<nfit; ifit++){
+	fnx[ifit]=grid->fmap.nx;
+	fny[ifit]=grid->fmap.ny;
+    }
+    opdfit=curcellnew(nfit, 1, fnx, fny);
+    opdfit2=curcellnew(nfit, 1, fnx, fny);
+    opdfitv=curnew(grid->fmap.nx*grid->fmap.ny, nfit, opdfit->m->p, 0);
+    opdfit2v=curnew(grid->fmap.nx*grid->fmap.ny, nfit, opdfit2->m->p, 0);
+    pis=curnew(1, parms->fit.nfit);
+
+    /*Data for ray tracing*/
+    //dm -> floc
+    PROP_WRAP_T *hadata=new PROP_WRAP_T[ndm*nfit];
+    DO(cudaMalloc(&this->hadata, sizeof(PROP_WRAP_T)*ndm*nfit));
+    //dm: amap->acmap
+    PROP_WRAP_T *ha0data=NULL, *ha1data=NULL;
+    if(parms->fit.cachedm){
+	ha0data=new PROP_WRAP_T[ndm];
+	ha1data=new PROP_WRAP_T[ndm*nfit];
+	DO(cudaMalloc(&this->ha0data, sizeof(PROP_WRAP_T)*ndm));
+	DO(cudaMalloc(&this->ha1data, sizeof(PROP_WRAP_T)*ndm*nfit));
+    }
+    if(!parms->sim.idealfit){
+    //xmap -> fmap
+	PROP_WRAP_T *hxpdata=new PROP_WRAP_T[npsr*nfit];
+	PROP_WRAP_T *hxp0data=NULL, *hxp1data=NULL;
+	DO(cudaMalloc(&this->hxpdata, sizeof(PROP_WRAP_T)*npsr*nfit));
+	if(parms->fit.cachex){
+	    hxp0data=new PROP_WRAP_T[npsr];
+	    hxp1data=new PROP_WRAP_T[npsr*nfit];
+	    DO(cudaMalloc(&this->hxp0data, sizeof(PROP_WRAP_T)*npsr));
+	    DO(cudaMalloc(&this->hxp1data, sizeof(PROP_WRAP_T)*npsr*nfit));
+	}
+    
+	for(int ipsr=0; ipsr<npsr; ipsr++){
+	    const float ht=recon->ht->p[ipsr];
+	    if(parms->fit.cachex){
+		gpu_prop_grid_prep(hxp0data+ipsr, grid->xcmap[ipsr], grid->xmap[ipsr],
+				   0,0, NULL);
+		hxp0data[ipsr].togpu(&this->hxp0data[ipsr]);
+	    }
+	    for(int ifit=0;  ifit<nfit; ifit++){
+		const float hs=parms->fit.hs[ifit];
+		const float thetax=(float)parms->fit.thetax[ifit];
+		const float thetay=(float)parms->fit.thetay[ifit];
+		const float scale=1.f-ht/hs;
+		cugrid_t fmapscale=grid->fmap*scale;
+		gpu_prop_grid_prep(hxpdata+ifit+ipsr*nfit, fmapscale, grid->xmap[ipsr],
+				   thetax*ht, thetay*ht, NULL);
+		hxpdata[ifit+ipsr*nfit].togpu(&this->hxpdata[ifit+ipsr*nfit]);
+		if(parms->fit.cachex){
+		    gpu_prop_grid_prep(hxp1data+ifit+ipsr*nfit, fmapscale, grid->xcmap[ipsr],
+				       thetax*ht, thetay*ht, NULL);
+		    hxp1data[ifit+ipsr*nfit].togpu(&this->hxp1data[ifit+ipsr*nfit]);
+		}
+	    }
+	}
+	delete [] hxpdata;
+	delete [] hxp0data;
+	delete [] hxp1data;
+    }
+    for(int idm=0; idm<ndm; idm++){
+	const float ht=parms->dm[idm].ht;
+	if(parms->fit.cachedm){
+	    gpu_prop_grid_prep(ha0data+idm, grid->acmap[idm], grid->amap[idm],
+			       0, 0, grid->cubic_cc->p[idm]);
+	    ha0data[idm].togpu(&this->ha0data[idm]);
+	}
+	for(int ifit=0; ifit<nfit; ifit++){
+	    const float hs=parms->fit.hs[ifit];
+	    const float thetax=(float)parms->fit.thetax[ifit];
+	    const float thetay=(float)parms->fit.thetay[ifit];
+	    const float scale=1.f-ht/hs;
+	    cugrid_t fmapscale=grid->fmap*scale;
+	    if(parms->fit.cachedm){
+		gpu_prop_grid_prep(ha1data+ifit+idm*nfit, fmapscale, grid->acmap[idm],
+				   thetax*ht, thetay*ht, NULL);
+		ha1data[ifit+idm*nfit].togpu(&this->ha1data[ifit+idm*nfit]);
+	    }
+	    gpu_prop_grid_prep(hadata+ifit+idm*nfit, fmapscale, grid->amap[idm],
+			       thetax*ht, thetay*ht, grid->cubic_cc->p[idm]);	
+	    hadata[ifit+idm*nfit].togpu(&this->hadata[ifit+idm*nfit]);
+	}
+    }
+    delete [] hadata;
+    delete [] ha0data;
+    delete [] ha1data;
+}
 
 /*
   Todo: share the ground layer which is both matched and same.
@@ -72,50 +198,54 @@ apply_W_do(float *outs, const float *ins, const int *W0f, float alpha, int nx, i
 }
 /**
 do HXp operation, opdfit+=Hxp*xin*/
-static inline void
-fit_do_hxp(curecon_t *curecon, const curcell *xin, stream_t &stream){
-    const int nfit=curecon->opdfit->nx;
-    const int npsr=xin->nx;
+void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
     EVENT2_INIT(4);
     EVENT2_TIC(0);
-    curecon->opdfit->m->zero(stream);
+    opdfit->m->zero(stream);
     EVENT2_TIC(1);
-    if(curecon->xcache){
-	curecon->xcache->m->zero(stream);
-	gpu_prop_grid_do<<<dim3(3,3,npsr),dim3(16,16),0,stream>>>
-	    (curecon->hxp0data, curecon->xcache->pm, xin->pm, 1, npsr, 1, NULL, 'n');
-	EVENT2_TIC(2);
-	gpu_prop_grid_do<<<dim3(3,3,nfit),dim3(16,16),0,stream>>>
-	    (curecon->hxp1data, curecon->opdfit->pm, curecon->xcache->pm, nfit, npsr, 1, NULL, 'n');
-	EVENT2_TIC(3);
+    if(!hxpdata){//idealfit
+	for(int ifit=0; ifit<nfit; ifit++){
+	    gpu_atm2loc(opdfit->p[ifit]->p, floc->p, floc->nloc, INFINITY,
+			fit_thetax[ifit], fit_thetay[ifit], 
+			0, 0, grid->dt*grid->isim, 1, stream);
+	}
     }else{
-	EVENT2_TIC(2);
-	gpu_prop_grid_do<<<dim3(3,3,nfit),dim3(16,16),0,stream>>>
-	    (curecon->hxpdata, curecon->opdfit->pm, xin->pm, nfit, npsr, 1, NULL, 'n');
-	EVENT2_TIC(3);
+	const int npsr=xin->nx;
+	if(xcache){
+	    xcache->m->zero(stream);
+	    gpu_prop_grid_do<<<dim3(3,3,npsr),dim3(16,16),0,stream>>>
+		(hxp0data, xcache->pm, xin->pm, 1, npsr, 1, NULL, 'n');
+	    EVENT2_TIC(2);
+	    gpu_prop_grid_do<<<dim3(3,3,nfit),dim3(16,16),0,stream>>>
+		(hxp1data, opdfit->pm, xcache->pm, nfit, npsr, 1, NULL, 'n');
+	    EVENT2_TIC(3);
+	}else{
+	    EVENT2_TIC(2);
+	    gpu_prop_grid_do<<<dim3(3,3,nfit),dim3(16,16),0,stream>>>
+		(hxpdata, opdfit->pm, xin->pm, nfit, npsr, 1, NULL, 'n');
+	    EVENT2_TIC(3);
+	}
     }
     EVENT2_TOC;
     EVENT2_PRINT("do_hxp: zero: %.3f cache: %.3f prop: %.3f tot: %.3f\n", times[1], times[2], times[3], times[0]);
 }
 /**
 do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
-static inline void
-fit_do_hxpt(curecon_t *curecon, const curcell *xout, float alpha, stream_t &stream){
-    const int nfit=curecon->opdfit->nx;
+void cufit_grid::do_hxpt(const curcell *xout, float alpha, stream_t &stream){
     const int npsr=xout->nx;
     EVENT2_INIT(4);
     EVENT2_TIC(0);
-    if(curecon->xcache){
-	curecon->xcache->m->zero(stream);
+    if(xcache){
+	xcache->m->zero(stream);
 	gpu_prop_grid_do<<<dim3(3,3,npsr),dim3(16,16),0,stream>>>
-	    (curecon->hxp1data, curecon->opdfit2->pm, curecon->xcache->pm, nfit, npsr, alpha, curecon->fitwt->p, 't');
+	    (hxp1data, opdfit2->pm, xcache->pm, nfit, npsr, alpha, fitwt->p, 't');
 	EVENT2_TIC(2);
 	gpu_prop_grid_do<<<dim3(3,3,npsr),dim3(16,16),0,stream>>>
-	    (curecon->hxp0data, curecon->xcache->pm, xout->pm, 1, npsr, alpha, NULL, 't');
+	    (hxp0data, xcache->pm, xout->pm, 1, npsr, alpha, NULL, 't');
 	EVENT2_TIC(3);
     }else{
 	gpu_prop_grid_do<<<dim3(3,3,npsr), dim3(16,16),0,stream>>>
-	    (curecon->hxpdata, curecon->opdfit2->pm, xout->pm, nfit, npsr, alpha, curecon->fitwt->p, 't');
+	    (hxpdata, opdfit2->pm, xout->pm, nfit, npsr, alpha, fitwt->p, 't');
 	EVENT2_TIC(3);
     }
     EVENT2_TOC;
@@ -157,32 +287,31 @@ assign_multi_do(float *as, const float *b, float *beta1, float beta2, int n){
 }
 /**
    opdfit2 = (W0-W1*W1')*opdfit */
-static inline void
-fit_do_w(curecon_t *curecon, stream_t &stream){
+void cufit_grid::do_w(stream_t &stream){
     EVENT2_INIT(6);
     EVENT2_TIC(0);
     EVENT2_TIC(1);
-    curecon->pis->zero(stream);
-    const int nfit=curecon->opdfit->nx;
-    const int nxf=curecon->opdfit->p[0]->nx;
-    const int nf=curecon->opdfit->p[0]->nx*curecon->opdfit->p[0]->ny;
+    pis->zero(stream);
+    const int nxf=opdfit->p[0]->nx;
+    const int nf=opdfit->p[0]->nx*opdfit->p[0]->ny;
+    const W01_T *W01=grid->W01;
     //inn_multi_do takes only 28 us while curmv takes 121 us.
     inn_multi_do<<<dim3(32, nfit), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>
-	(curecon->pis->p, curecon->opdfit->m->p, curecon->W01->W1->p, nf);
+	(pis->p, opdfit->m->p, W01->W1->p, nf);
     EVENT2_TIC(2);
     //assign_multi_do takes 8 us while curmm takes 28.6 us
     assign_multi_do<<<dim3(32, nfit), dim3(256), 0, stream>>>
-	(curecon->opdfit2->m->p, curecon->W01->W1->p, curecon->pis->p, -1, nf);
+	(opdfit2->m->p, W01->W1->p, pis->p, -1, nf);
     EVENT2_TIC(3);
-    if(curecon->W01->nW0f){ //19us
+    if(W01->nW0f){ //19us
 	apply_W_do<<<dim3(16, nfit), dim3(256,1), 0, stream>>> 		
-	    (curecon->opdfit2->m->p, curecon->opdfit->m->p, curecon->W01->W0f, 
-	     curecon->W01->W0v, nxf, curecon->W01->nW0f); 
+	    (opdfit2->m->p, opdfit->m->p, W01->W0f, 
+	     W01->W0v, nxf, W01->nW0f); 
     }
     EVENT2_TIC(4);
-    if(curecon->W01->W0p){ //53 us *********Can we use B/W map to avoid this matrix?***********
-	cuspmul(curecon->opdfit2->m->p, curecon->W01->W0p, 
-		curecon->opdfit->m->p, nfit, 'n', 1.f, stream); //80us
+    if(W01->W0p){ //53 us *********Can we use B/W map to avoid this matrix?***********
+	cuspmul(opdfit2->m->p, W01->W0p, 
+		opdfit->m->p, nfit, 'n', 1.f, stream); //80us
     }
     EVENT2_TIC(5);
     EVENT2_TOC;
@@ -193,30 +322,28 @@ fit_do_w(curecon_t *curecon, stream_t &stream){
 /**
    opdfit+=Ha*xin;
 */
-static inline void
-fit_do_ha(curecon_t *curecon, const curcell *xin, stream_t &stream){
-    curecon->opdfit->m->zero(stream); 
-    const int nfit=curecon->opdfit->nx;
+void cufit_grid::do_ha(const curcell *xin, stream_t &stream){
+    opdfit->m->zero(stream); 
     const int ndm=xin->nx;
     EVENT2_INIT(3);
     EVENT2_TIC(0);
-    if(curecon->dmcache){
+    if(dmcache){
 	/*xout->dmcache*/ 
-	curecon->dmcache->m->zero(stream); 
+	dmcache->m->zero(stream); 
 	gpu_prop_grid_do<<<dim3(8,8,ndm),dim3(16,16),0,stream>>> 
-	    (curecon->ha0data, curecon->dmcache->pm, xin->pm, 
+	    (ha0data, dmcache->pm, xin->pm, 
 	     1, ndm, 1.f,NULL,'n');//25 us
 	EVENT2_TIC(1);
 	/*dmcache->opdfit*/ 
 	gpu_prop_grid_do<<<dim3(8,8,nfit),dim3(16,16),0,stream>>> 
-	    (curecon->ha1data, curecon->opdfit->pm, curecon->dmcache->pm, 
+	    (ha1data, opdfit->pm, dmcache->pm, 
 	     nfit, ndm, 1.f,NULL, 'n'); // 87 us
 	EVENT2_TIC(2);
     }else{ 
 	EVENT2_TIC(1);
 	/*xout->opfit*/ 
 	gpu_prop_grid_do<<<dim3(8,8,nfit),dim3(16,16),0,stream>>> 
-	    (curecon->hadata, curecon->opdfit->pm, xin->pm, 
+	    (hadata, opdfit->pm, xin->pm, 
 	     nfit, ndm, 1.f,NULL, 'n'); 
 	EVENT2_TIC(2);
     }
@@ -226,29 +353,27 @@ fit_do_ha(curecon_t *curecon, const curcell *xin, stream_t &stream){
 
 /**
    xout+=alpha*HA'*opdfit2*/
-static inline void 
-fit_do_hat(curecon_t *curecon, curcell *xout,  float alpha, stream_t &stream){
-    const int nfit=curecon->opdfit->nx;
+void cufit_grid::do_hat(curcell *xout,  float alpha, stream_t &stream){
     const int ndm=xout->nx;
     EVENT2_INIT(3);
     EVENT2_TIC(0);
-    if(curecon->dmcache){ 
+    if(dmcache){ 
 	/*opdfit2->dmcache*/ 
-	curecon->dmcache->m->zero(stream); 
+	dmcache->m->zero(stream); 
 	gpu_prop_grid_do<<<dim3(8,8,ndm),dim3(16,16),0,stream>>> 
-	    (curecon->ha1data, curecon->opdfit2->pm, curecon->dmcache->pm, 
-	     nfit, ndm, 1.,curecon->fitwt->p, 't'); //105 us
+	    (ha1data, opdfit2->pm, dmcache->pm, 
+	     nfit, ndm, 1.,fitwt->p, 't'); //105 us
 	EVENT2_TIC(1);
 	/*dmcache->xout*/ 
 	gpu_prop_grid_do<<<dim3(8,8,ndm),dim3(16,16),0,stream>>> 
-	    (curecon->ha0data, curecon->dmcache->pm, xout->pm, 
+	    (ha0data, dmcache->pm, xout->pm, 
 	     1, ndm, alpha, NULL,'t'); //278 us. ******NEED Improvement****
 	EVENT2_TIC(2);
     }else{ 
 	/*opfit2->xout	*/ 
 	gpu_prop_grid_do<<<dim3(8,8,ndm),dim3(16,16),0,stream>>> 
-	    (curecon->hadata, curecon->opdfit2->pm, xout->pm, 
-	     nfit, ndm, alpha, curecon->fitwt->p, 't'); 
+	    (hadata, opdfit2->pm, xout->pm, 
+	     nfit, ndm, alpha, fitwt->p, 't'); 
 	EVENT2_TIC(1);
 	EVENT2_TIC(2);
     } 
@@ -259,196 +384,51 @@ fit_do_hat(curecon_t *curecon, curcell *xout,  float alpha, stream_t &stream){
 /*
   Right hand size operator. 
 */
-void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
+void cufit_grid::R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
     if(!*xout){
-	*xout=curcellnew(recon->ndm, 1, recon->anx, recon->any);
+	*xout=curcellnew(grid->ndm, 1, grid->anx, grid->any);
     }else{
 	curscale((*xout)->m, beta, stream);
     }
-    fit_do_hxp(curecon, xin, stream);//153 us
-    fit_do_w(curecon, stream);//123 us
-    fit_do_hat(curecon, *xout, alpha, stream);//390 us
+    do_hxp(xin, stream);//153 us
+    do_w(stream);//123 us
+    do_hat(*xout, alpha, stream);//390 us
 }
-void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
+void cufit_grid::Rt(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
     if(!*xout){
-	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
 	curscale((*xout)->m, beta, stream);
     }
-    fit_do_ha(curecon, xin, stream);
-    fit_do_w(curecon, stream);
-    fit_do_hxpt(curecon, *xout, alpha, stream);
+    do_ha(xin, stream);
+    do_w(stream);
+    do_hxpt(*xout, alpha, stream);
 }
-void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
-    const PARMS_T *parms=recon->parms;
-    const int ndm=parms->ndm;
+void cufit_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+    const int ndm=grid->ndm;
     EVENT_INIT(6);
     EVENT_TIC(0);
     if(!*xout){
-	*xout=curcellnew(ndm, 1, recon->anx, recon->any);
+	*xout=curcellnew(ndm, 1, grid->anx, grid->any);
     }else{
 	curscale((*xout)->m, beta, stream);
     }   
-    fit_do_ha(curecon, xin, stream);//112 us
+    do_ha(xin, stream);//112 us
     EVENT_TIC(1);
-    fit_do_w(curecon, stream);//108 us
+    do_w(stream);//108 us
     EVENT_TIC(2);
-    fit_do_hat(curecon, *xout, alpha, stream);//390 us
+    do_hat(*xout, alpha, stream);//390 us
     EVENT_TIC(3);
-    if(curecon->fitNW){
-	curmv(curecon->dotNW->p, 0, curecon->fitNW, xin->m->p, 't', 1, stream);
-	curmv((*xout)->m->p, 1, curecon->fitNW, curecon->dotNW->p, 'n', alpha, stream);
+    if(fitNW){
+	curmv(dotNW->p, 0, fitNW, xin->m->p, 't', 1, stream);
+	curmv((*xout)->m->p, 1, fitNW, dotNW->p, 'n', alpha, stream);
     }
     EVENT_TIC(4);
-    if(curecon->actslave){
-	cuspmul((*xout)->m->p, curecon->actslave, xin->m->p, 1,'n', alpha, stream);
+    if(actslave){
+	cuspmul((*xout)->m->p, actslave, xin->m->p, 1,'n', alpha, stream);
     }
     EVENT_TIC(5);
     EVENT_TOC;
     EVENT_PRINT("FitL HA: %.3f W: %.3f HAT: %.3f NW: %.3f SL: %.3f tot: %.3f\n",
 	  times[1],times[2],times[3],times[4],times[5],times[0]);
-}
-/**
-   Wrap of the DM fitting operation
-
-   opdr is the OPD input.
-   fitx is the right hand side vector computed from opdr for output. Allow NULL.
-   fitr is the DM fitting result.
-*/
-double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *opdr, stream_t &stream){
-    G_CGFUN cg_fun;
-    void *cg_data;
-    double res=0;
-    curecon_t *curecon=cudata->recon;
-    curcell *rhs=curecon->fitrhs;
-    EVENT_INIT(3);
-    EVENT_TIC(0);
-    curmat *tmp=NULL;
-    if(parms->gpu.fit==1){//sparse matrix
-	cumuv(&curecon->fitrhs, 0, &curecon->FR, opdr, 1, stream);
-	cg_fun=(G_CGFUN) cumuv;
-	cg_data=&curecon->FL;
-    }else{
-	gpu_FitR(&curecon->fitrhs, 0, recon, opdr, 1, stream);
-	cg_fun=(G_CGFUN) gpu_FitL;
-	cg_data=(void*)recon;
-    }
-    EVENT_TIC(1);
-    switch(parms->fit.alg){
-    case 0:
-	cuchol_solve(fitr->m->p, curecon->FCl, curecon->FCp, rhs->m->p, stream);
-	if(curecon->FUp){
-	    tmp=curnew(curecon->FVp->ny, 1);
-	    curmv(tmp->p, 0, curecon->FVp, rhs->m->p, 't', -1, stream);
-	    curmv(fitr->m->p, 1, curecon->FUp, tmp->p, 'n', 1, stream);
-	}
-	break;
-    case 1:{
-	if((res=gpu_pcg(fitr, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
-			parms->recon.warm_restart, parms->fit.maxit, stream))>1){
-	    warning("DM Fitting PCG not converge. res=%g\n", res);
-	}
-    }
-	break;
-    case 2:
-	curmv(fitr->m->p, 0, curecon->FMI, rhs->m->p, 'n', 1, stream);
-	break;
-    default:
-	error("Invalid");
-    }
-    EVENT_TIC(2);
-    EVENT_TOC;
-    EVENT_PRINT("Fit RHS: %6.0f, LHS: %6.0f, Tot: %5.0f\n", times[1], times[2], times[0]);
-    if(tmp) curfree(tmp);
-    return res;
-}
-
-void gpu_fit_test(SIM_T *simu){	/*Debugging. */
-    gpu_set(gpu_recon);
-    stream_t stream;
-    curecon_t *curecon=cudata->recon;
-    const PARMS_T *parms=simu->parms;
-    const RECON_T *recon=simu->recon;
-    dcell *rhsc=NULL;
-    dcell *rb=NULL;
-    dcell *lc=NULL;	
-    if(!simu->opdr){
-	cp2cpu(&simu->opdr, 0, curecon->opdr, 1, 0);
-	for(int i=0; i<simu->opdr->nx; i++){
-	    simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
-	    simu->opdr->p[i]->ny=1;
-	}
-    }
-    dcellwrite(simu->opdr, "opdr");
-    muv(&rhsc, &recon->FR, simu->opdr, 1);
-    dcellwrite(rhsc, "CPU_FitR");
-    muv_trans(&rb, &recon->FR, rhsc, 1);
-    dcellwrite(rb, "CPU_FitRt");
-    muv_trans(&rb, &recon->FR, rhsc, -1);
-    dcellwrite(rb, "CPU_FitRt2");
-    muv(&lc, &recon->FL, rhsc, 1);
-    dcellwrite(lc, "CPU_FitL");
-    muv(&lc, &recon->FL, rhsc, -1);
-    dcellwrite(lc, "CPU_FitL2");
-    dcellzero(lc);
-    muv(&lc, &recon->FL, rhsc, 1);
-    dcellwrite(lc, "CPU_FitL3");
-    dcellzero(lc);
-    for(int i=0; i<5; i++){
-	muv_solve(&lc, &recon->FL, NULL, rhsc);
-	dcellwrite(lc, "CPU_FitCG%d", i);
-    }
-   
-    curcell *rhsg=NULL;
-    curcell *lg=NULL;
-    curcell *rg=NULL;
-    if(parms->gpu.fit==2){
-	gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1, stream);
-	curcellwrite(rhsg, "GPU_FitR");
-	gpu_FitRt(&rg, 0, recon, rhsg, 1, stream);
-	curcellwrite(rg, "GPU_FitRt");
-	gpu_FitRt(&rg, 1, recon, rhsg, -1, stream);
-	curcellwrite(rg, "GPU_FitRt2");
-	gpu_FitL(&lg, 0, recon, rhsg, 1, stream);
-	curcellwrite(lg, "GPU_FitL");
-	gpu_FitL(&lg, 1, recon, rhsg, -1, stream);
-	curcellwrite(lg, "GPU_FitL2");
-	gpu_FitL(&lg, 0, recon, rhsg, 1, stream);
-	curcellwrite(lg, "GPU_FitL3");
-  
-	curcellzero(lg, curecon->cgstream);
-	for(int i=0; i<5; i++){
-	    gpu_pcg(lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg, &curecon->cgtmp_fit,
-		    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
-	    curcellwrite(lg, "GPU_FitCG%d",i);
-	}
-    }else{
-	cumuv(&rhsg, 0, &curecon->FR, curecon->opdr, 1, stream);
-	curcellwrite(rhsg, "GPU_FitR");
-	cumuv_trans(&rg, 0, &curecon->FR, rhsg, 1, stream);
-	curcellwrite(rg, "GPU_FitRt");
-	cumuv_trans(&rg, 1, &curecon->FR, rhsg, -1, stream);
-	curcellwrite(rg, "GPU_FitRt2");
-	cumuv(&lg, 0, &curecon->FL, rhsg, 1, stream);
-	curcellwrite(lg, "GPU_FitL");
-	cumuv(&lg, 1, &curecon->FL, rhsg, -1, stream);
-	curcellwrite(lg, "GPU_FitL2");
-	cumuv(&lg, 0, &curecon->FL, rhsg, 1, stream);
-	curcellwrite(lg, "GPU_FitL3");
-  
-	curcellzero(lg, curecon->cgstream);
-	for(int i=0; i<5; i++){
-	    gpu_pcg(lg, (G_CGFUN)cumuv, &curecon->FL, NULL, NULL, rhsg, &curecon->cgtmp_fit,
-		    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
-	    curcellwrite(lg, "GPU_FitCG%d",i);
-	}
-    }
-    CUDA_SYNC_DEVICE;
-    exit(0);
 }

@@ -17,14 +17,12 @@
 */
 #ifndef AOS_CUDA_CURMAT_H
 #define AOS_CUDA_CURMAT_H
-
-#include "utils.h"
 #include "types.h"
 #include "kernel.h"
 #include "cumat.h"
 #define curnew  new cumat<float> 
 #define curcellnew  new cucell<float>
-//#define curref  curef<float>
+#define cuspcellnew new cuspcell
 
 #define curfree(A) ({delete A; A=NULL;})
 #define curcellfree(A) ({delete A; A=NULL;})
@@ -34,7 +32,6 @@
 #define curcellwrite cucellwrite<float, (uint32_t)M_FLT>
 #define curcellcp    cucellcp<float>
 
-cuspcell *cuspcellnew(int nx, int ny);
 void curset(curmat *A, float alpha, cudaStream_t stream);
 void curshow(curmat *A, cudaStream_t stream);
 void curcp(curmat **out, const curmat *in);

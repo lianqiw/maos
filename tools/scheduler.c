@@ -765,7 +765,7 @@ static void scheduler_timeout(void){
     /*Report CPU usage every 3 seconds. */
     int thistime=myclocki();
     if(thistime>=(lasttime3+3)){
-	if(nrun_get()>0){
+	if(running>0){
 	    check_jobs();
 	}
 	usage_cpu=get_usage_cpu();

@@ -36,15 +36,6 @@ void gpu_prop_grid_cubic(curmat *out,const cugrid_t &go,
 			 curmat *in, const cugrid_t &gi,
 			 float dispx, float dispy, float *cc,
 			 float alpha, char trans, cudaStream_t stream);
-
-__global__ void 
-gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss, 
-		 int ndir, int nps, float alpha1, float *alpha2, char trans);
-
-void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, 
-			const cugrid_t &g_dir, const cugrid_t &gi,
-			float dispx, float dispy, curmat *cc);
-
 void gpu_ngsmod2science(curmat *opd, float (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 

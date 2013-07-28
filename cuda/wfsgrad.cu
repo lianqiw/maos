@@ -27,7 +27,7 @@ extern "C"
 #include <cusparse.h>
 #include <cufft.h>
 #include "wfs.h"
-
+#include "cudata.h"
 #undef TIMING
 #define TIMING 0
 #if !TIMING

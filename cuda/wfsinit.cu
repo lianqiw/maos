@@ -26,6 +26,7 @@ extern "C"
 #include <cusparse.h>
 #include <cufft.h>
 #include "wfs.h"
+#include "cudata.h"
 /*static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
     wloc->nxsa=pts->nx;
     wloc->nsa=pts->nsa;
@@ -119,7 +120,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	if(powfs[ipowfs].GS0){
 	    if(powfs[ipowfs].GS0->nx>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		dsp *t=powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0];
-		cp2gpu(&cuwfs[iwfs].GS0, t);
+		cp2gpu(&cuwfs[iwfs].GS0, t, 1);
 	    }else{
 		cuwfs[iwfs].GS0=cuwfs[iwfs0].GS0;
 	    }

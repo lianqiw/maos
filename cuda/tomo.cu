@@ -21,18 +21,289 @@ extern "C"
 #include "gpu.h"
 }
 #include "utils.h"
-#include "wfs.h"
-#include "recon.h"
 #include "accphi.h"
 #include "cucmat.h"
-#include "pcg.h"
+#include "curmat.h"
+#include "cudata.h"
+#include "tomo.h"
 
+/*Prepare data for GP operation in GPU*/
+void prep_GP(cumat<int>**GPp, float *GPscale, cusp **GPf,
+	     const dsp *GP, const loc_t *saloc, const loc_t *ploc){
+    if(!GP){ 
+	error("GP is required\n");
+    }
+    int pos=(int)round(saloc->dx/ploc->dx);
+    if(pos==1 || pos==2){//normally true
+	dsp *GPt=sptrans(GP);
+	const spint *pp=GPt->p;
+	const spint *pi=GPt->i;
+	const double *px=GPt->x;
+	//convert the max float to max 2 byte integer
+	const double pxscale=floor(32767./maxabs(px, GPt->nzmax));
+	const int np1=pos+1;
+	const int np=np1*np1;
+	const int zmax=pos;
+	int nsa=saloc->nloc;
+	short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
+	double dx1=1./ploc->dx;
+	double dy1=1./ploc->dy;
+	for(int ic=0; ic<GPt->n; ic++){
+	    int isa=(ic<nsa)?ic:(ic-nsa);
+	    for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
+		int ix=pi[ir];
+		double lx=ploc->locx[ix];
+		double ly=ploc->locy[ix];
+		double sx=saloc->locx[isa];
+		double sy=saloc->locy[isa];
+		int zx=(int)round((lx-sx)*dx1);
+		int zy=(int)round((ly-sy)*dy1);
+		/**
+		   When the points used to generate GP align well
+		   with the subaperture edge, the coupled points are
+		   confined within the subaperture.
+		*/
+		if(zx<0 || zx>zmax || zy<0 || zy>zmax){
+		    warning("isa=%d, zxy=%d %d\n", isa, zx, zy);
+		}
+		if(zx<0) zx=0;
+		if(zx>zmax) zx=zmax;
+		if(zy<0) zy=0;
+		if(zy>zmax) zy=zmax;
+		if(ic<nsa){
+		    partxy[np*isa+zx+zy*np1].x+=(short)round(px[ir]*pxscale);
+		}else{
+		    partxy[np*isa+zx+zy*np1].y+=(short)round(px[ir]*pxscale);
+		}
+	    }
+	}
+	spfree(GPt);
+	*GPp=new cumat<int>(np, nsa);
+	cudaMemcpy((*GPp)->p, partxy, sizeof(int)*np*nsa, cudaMemcpyHostToDevice);
+	*GPscale=1./pxscale;
+	free(partxy);
+    }else{/*use sparse */
+	cp2gpu(GPf, GP, 1);
+    }
+}
+static cumat<int> *
+prep_saptr(loc_t *saloc, map_t *pmap){
+    /*saloc mapped onto pmap*/
+    int nsa=saloc->nloc;
+    int (*saptr)[2]=new int[nsa][2];
+    const float dx1=1./pmap->dx;
+    const float dy1=1./pmap->dy;
+    const float ox=pmap->ox;
+    const float oy=pmap->oy;
+    const double *salocx=saloc->locx;
+    const double *salocy=saloc->locy;
+    for(int isa=0; isa<nsa; isa++){
+	saptr[isa][0]=(int)roundf((salocx[isa]-ox)*dx1);
+	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
+    }
+    cumat<int> *saptr_gpu=new cumat<int>(2, nsa);
+    DO(cudaMemcpy(saptr_gpu->p, saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
+    delete [] saptr;
+    return saptr_gpu;
+}
+static curmat *get_neai(dsp *nea){
+    spint *pp=nea->p;
+    spint *pi=nea->i;
+    double *px=nea->x;
+    int nsa=nea->ny/2;
+    float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
+    for(int ic=0; ic<nea->n; ic++){
+	for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
+	    int ix=pi[ir];
+	    int isa=ic<nsa?ic:ic-nsa;
+	    float val=(float)px[ir]*TOMOSCALE;
+	    if(ix==ic){/*diagonal part. */
+		if(ic==isa){/*x */
+		    neai[isa][0]=val;
+		}else{/*y */
+		    neai[isa][1]=val;
+		}
+	    }else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
+		neai[isa][2]=val;
+	    }else{
+		error("saneai has invalid format\n");
+	    }
+	}
+    }
+    curmat *neai_gpu=curnew(3, nsa);
+    DO(cudaMemcpy(neai_gpu->p, neai, 3*nsa*sizeof(float), cudaMemcpyHostToDevice));
+    free(neai);
+    return neai_gpu;
+}
 #define TIMING 0
+void cutomo_grid::init_hxdata(const PARMS_T *parms, const RECON_T *recon){
+    PROP_WRAP_T *HXDATA=new PROP_WRAP_T[nwfs*recon->npsr];
+    if(!hxdata){
+	DO(cudaMalloc(&hxdata, sizeof(PROP_WRAP_T)*nwfs*recon->npsr));
+    }
+    for(int ips=0; ips<recon->npsr; ips++){ 
+	const float ht=recon->ht->p[ips]; 
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(!parms->powfs[ipowfs].skip){
+		const float hs = parms->powfs[ipowfs].hs; 
+		const float scale = 1.f - ht/hs; 
+		float dispx=parms->wfsr[iwfs].thetax*ht; 
+		float dispy=parms->wfsr[iwfs].thetay*ht; 
+		if(parms->tomo.predict && grid->vx){
+		    dispx+=grid->vx[ips]*grid->dt*grid->delay;
+		    dispy+=grid->vy[ips]*grid->dt*grid->delay;
+		}
+		cugrid_t pmapscale=grid->pmap.scale(scale);
+		gpu_prop_grid_prep(HXDATA+iwfs+ips*nwfs, pmapscale, grid->xmap[ips],
+				   dispx, dispy, NULL); 
+		{
+		    float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
+		    HXDATA[iwfs+ips*nwfs].l2c=tmp*tmp*TOMOSCALE;
+		    if(parms->tomo.piston_cr){
+			HXDATA[iwfs+ips*nwfs].zzi=loccenter(recon->xloc[ips]);
+			HXDATA[iwfs+ips*nwfs].zzv=tmp*tmp*TOMOSCALE*1e-6;
+		    }else{
+			HXDATA[iwfs+ips*nwfs].zzi=-1;
+		    }
+		}
+	    }
+	    HXDATA[iwfs+ips*nwfs].togpu(&hxdata[iwfs+ips*nwfs]);
+	}
+    }
+    delete [] HXDATA;
+}
+void cutomo_grid::init_fdpcg(FDPCG_T *fdpcg, curecon_geom *grid){
+    precond=new cufdpcg_t(fdpcg, grid);
+}
+void cutomo_grid::init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
+    if(!parms) return;
+    nwfs=parms->nwfsr;
+
+    if(recon->PTT && !PTT){//for t/t proj in 1)uplink t/t 2) recon
+	cp2gpu(&PTT, recon->PTT);
+    }
+    ptt=!parms->recon.split || parms->tomo.splitlrt; 
+    {
+	PDF=curcellnew(parms->npowfs, 1);
+	PDFTT=curcellnew(parms->npowfs, 1);
+	dcell *pdftt=NULL;
+	dcellmm(&pdftt, recon->PDF, recon->TT, "nn", 1);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].dfrs){//deprecated.	
+		/*We only use the first diagonal block for each powfs. The
+		  off diagonal is simply -1/(nlgswfs-1) times the diagonal block*/
+		int iwfs1=parms->powfs[ipowfs].wfs[1];//second wfs
+		cp2gpu(&PDF->p[ipowfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
+		if(parms->powfs[ipowfs].trs){
+		    /*coupling between TT and DF modes. 
+		      We desire (I-DF*PDF)(I-TT*PTT)g=(I-TT*PTT-DF*PDF+DF*PDF*TT*PTT)g
+		      So we first compute tt=PTT*g; df=PDF*g; then
+		      g2=(I-TT*tt-DF*(df-(PDF*TT)*tt))
+		      Here we record the values of PDF*TT
+		    */
+		    cp2gpu(&PDFTT->p[ipowfs], pdftt->p[iwfs1*nwfs+iwfs1]);
+		}
+	    }
+	}
+	dcellfree(pdftt);
+    }
+    {
+	const int npowfs=parms->npowfs;
+	GPp=new cucell<int>(npowfs, 1);
+	GP=new cuspcell(npowfs, 1);
+	GPscale=new float[npowfs];
+	saptr=new cucell<int>(npowfs, 1);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].skip) continue;
+	    prep_GP(&GPp->p[ipowfs], &GPscale[ipowfs], &GP->p[ipowfs],
+		    recon->GP->p[ipowfs], powfs[ipowfs].saloc, recon->ploc);
+	    saptr->p[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
+	}
+    }
+
+    {
+	neai=curcellnew(parms->nwfsr, 1);
+	/*convert recon->saneai to gpu. */
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
+	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
+		neai->p[iwfs]=neai->p[iwfs0]->ref();
+	    }else{
+		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
+		neai->p[iwfs]=get_neai(nea);
+	    }
+	}/*for iwfs */
+    }
+
+    {
+	init_hxdata(parms, recon);
+    }
+    {
+	GPU_GP_T *GPDATA=new GPU_GP_T[nwfs];
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    GPDATA[iwfs].ipowfs=ipowfs;
+	    GPDATA[iwfs].nwfs=parms->powfs[ipowfs].nwfsr;
+	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind[iwfs];//wfs index in this group
+	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
+	    GPDATA[iwfs].pos=parms->tomo.pos;
+	    GPDATA[iwfs].saptr=(int(*)[2])saptr->p[ipowfs]->p;
+	    GPDATA[iwfs].GPp=(short2*)GPp->p[ipowfs]->p;
+	    GPDATA[iwfs].GPscale=GPscale[ipowfs];
+	    GPDATA[iwfs].PTT=PTT->p[iwfs+iwfs*nwfs]->p;
+	    if(parms->powfs[ipowfs].dfrs){
+		GPDATA[iwfs].PDF=PDF->p[ipowfs]->p;
+		GPDATA[iwfs].PDFTT=PDFTT->p[ipowfs]->p;
+	    }
+
+	    GPDATA[iwfs].neai=(const float(*)[3])neai->p[iwfs]->p;
+	    GPDATA[iwfs].nsa=powfs[ipowfs].pts->nsa;
+	    GPDATA[iwfs].nxp=recon->pmap->nx;
+	    GPDATA[iwfs].dxp=recon->pmap->dx;
+	    GPDATA[iwfs].dyp=recon->pmap->dy;
+	    GPDATA[iwfs].oxp=recon->pmap->ox;
+	    GPDATA[iwfs].oyp=recon->pmap->oy;
+	}
+	DO(cudaMalloc(&gpdata, sizeof(GPU_GP_T)*nwfs));
+	DO(cudaMemcpy(gpdata, GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
+	delete [] GPDATA;
+    }
+
+    if(parms->tomo.precond==1){
+	init_fdpcg(recon->fdpcg, grid);
+    }
+
+    {/**Initialize temporary data*/
+	int nxp=recon->pmap->nx;
+	int nyp=recon->pmap->ny;
+	int nxpw[nwfs], nypw[nwfs], ngw[nwfs];
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip){
+		nxpw[iwfs]=0;
+		nypw[iwfs]=0;
+		ngw[iwfs]=0;
+	    }else{
+		nxpw[iwfs]=nxp;
+		nypw[iwfs]=nyp;
+		ngw[iwfs]=powfs[ipowfs].pts->nsa*2;
+	    }
+	}
+
+	opdwfs=curcellnew(nwfs, 1, nxpw, nypw);
+	grad=curcellnew(nwfs, 1, ngw, (int*)NULL);
+	ttf=curnew(3*nwfs, 1);
+    }
+}
 
 /*
   If merge the operation in to gpu_prop_grid_do, need to do atomic
 operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(GPU_PROP_GRID_T *datai, float **outall, float **inall, int nwfs, float alpha){
+__global__ void gpu_laplacian_do(PROP_WRAP_T *datai, float **outall, float **inall, int nwfs, float alpha){
     float *restrict in, *restrict out;
     
     const int ips=blockIdx.z;
@@ -314,51 +585,39 @@ __global__ static void gpu_nea_do(GPU_GP_T *data, float *ttin, float *dfin, floa
   Tomography right hand size matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
 */
-void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
+void cutomo_grid::R(curcell **xout, float beta, const curcell *grad, float alpha, stream_t &stream){
     if(!*xout){
-	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
+    }else{
+	curcellscale(*xout, beta, stream);
     }
     curcell *opdx=*xout;
-    const int nwfs=grad->nx;
-    curcell *opdwfs=curecon->opdwfs;
     curzero(opdwfs->m, stream);
-    if(fabsf(beta)<EPS){
-	curzero(opdx->m, stream);
-    }else if(fabsf(beta-1)>EPS){
-	curscale(opdx->m, beta, stream);
-    }
-    curmat *ttf=curecon->ttf;
     curzero(ttf, stream);
     //just does low rank terms
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, NULL, 1);
+	(gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, NULL, 1);
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, 1);
-    gpu_prop_grid_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
-    	(curecon->hxdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, NULL, 't');
+	(gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, 1);
+    gpu_prop_grid_do<<<dim3(3,3,grid->npsr), dim3(16,16), 0, stream>>>
+    	(hxdata, opdwfs->pm, opdx->pm, nwfs, grid->npsr, alpha, NULL, 't');
 }
 
-void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
-    const PARMS_T *parms=recon->parms;
-    const int nwfs=parms->nwfsr;
+void cutomo_grid::Rt(curcell **gout, float beta, const curcell *xin, float alpha, stream_t &stream){
     if(!*gout){
-	*gout=curcellnew(parms->nwfs, 1, recon->ngrad, (long*)NULL);
+	*gout=curcellnew(nwfs, 1, grid->ngrad, (long*)NULL);
+    }else{
+	curcellscale(*gout, beta, stream);
     }
     curcell *grad=*gout;
-    curcell *opdwfs=curecon->opdwfs;
-    curmat *ttf=curecon->ttf;
     curzero(opdwfs->m, stream);
     gpu_prop_grid_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
-	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, alpha, NULL, 'n');
+	(hxdata, opdwfs->pm, xin->pm, nwfs, grid->npsr, alpha, NULL, 'n');
     curzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, 1);
+	(gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, 1);
     gpu_nea_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, ttf->p, ttf->p+nwfs*2, grad->pm);
+	(gpdata, ttf->p, ttf->p+nwfs*2, grad->pm);
 }
 
 /*
@@ -369,14 +628,10 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
   1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
   2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
 */
-void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
-    const PARMS_T *parms=recon->parms;
-    const int nwfs=parms->nwfsr;
-    curcell *grad=curecon->grad;
+void cutomo_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+    const int npsr=grid->npsr;
     if(!*xout){
-	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
 	curscale((*xout)->m, beta, stream);
     }
@@ -388,31 +643,28 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 #endif
     RECORD(0);
     curcell *opdx=*xout;
-    curcell *opdwfs=curecon->opdwfs;
-    int ptt=!parms->recon.split || parms->tomo.splitlrt; 
-    curmat *ttf=curecon->ttf;
     curzero(opdwfs->m, stream);
     //xin to opdwfs
     gpu_prop_grid_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
-    	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, NULL, 'n');
+    	(hxdata, opdwfs->pm, xin->pm, nwfs, npsr, 1, NULL, 'n');
     RECORD(1);
     curzero(ttf, stream);
     //opdwfs to grad to ttf
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, ptt);
+	(gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, ptt);
     RECORD(2);
     curzero(opdwfs->m, stream);
     //grad and ttf to opdwfs
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
+	(gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
     RECORD(3);
     //opdwfs to opdx
-    gpu_prop_grid_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
-    	(curecon->hxdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, NULL,'t');
+    gpu_prop_grid_do<<<dim3(3,3,grid->npsr), dim3(16,16), 0, stream>>>
+    	(hxdata, opdwfs->pm, opdx->pm, nwfs, grid->npsr, alpha, NULL,'t');
     RECORD(4);
     /*This could be in parallel to above ones. */
-    gpu_laplacian_do<<<dim3(3,3,recon->npsr),dim3(16,16), 0, stream>>>
-	(curecon->hxdata, opdx->pm, xin->pm, nwfs, alpha);
+    gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>
+	(hxdata, opdx->pm, xin->pm, nwfs, alpha);
     RECORD(5);
 #if TIMING==2
     EVENT_TOC;
@@ -422,161 +674,4 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 #endif
     //overhead of TomoL 27 micro-seconds (timing without synchornization).
 }
-/**
-   Wrap of the tomography operation
 
-   grad is the gradient input.
-   opdx is the right hand side vector computed from grad. Allow NULL.
-   opdr is the tomography result.
-*/
-double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, curcell *opdx, curcell *grad, stream_t &stream){
-    curcell *rhs=NULL;
-    if(opdx){
-	rhs=opdx;
-    }
-    double res=0;
-    curecon_t *curecon=cudata->recon;
-    curmat *tmp=NULL;
-#if TIMING>=2
-    EVENT_INIT(3);
-#define RECORD(i) EVENT_TIC(i)
-#else
-#define RECORD(i)
-#endif
-    RECORD(0);
-    gpu_TomoR(&rhs, 0, recon, grad, 1, stream);
-    RECORD(1);
-    switch(parms->tomo.alg){
-    case 0:
-	if(!opdr->m || !rhs->m){
-	    error("opdr and rhs must be continuous\n");
-	}
-	cuchol_solve(opdr->m->p, curecon->RCl, curecon->RCp, rhs->m->p, stream);
-	if(curecon->RUp){
-	    tmp=curnew(curecon->RVp->ny, 1);
-	    curmv(tmp->p, 0, curecon->RVp, rhs->m->p, 't', -1, stream);
-	    curmv(opdr->m->p, 1, curecon->RUp, tmp->p, 'n', 1, stream);
-	}
-	break;
-    case 1:{
-	G_PREFUN prefun=NULL;
-	void *predata=NULL;
-	if(parms->tomo.precond==1){
-	    prefun=gpu_Tomo_fdprecond;
-	    predata=(void*)recon;
-	}
-	if((res=gpu_pcg(opdr, gpu_TomoL, recon, prefun, predata, rhs, &curecon->cgtmp_tomo, 
-			parms->recon.warm_restart, parms->tomo.maxit, stream))>1){
-	    warning("Tomo CG not converge.\n");
-	}
-    }break;
-    case 2:
-	curmv(opdr->m->p, 0, curecon->RMI, rhs->m->p, 'n', 1, stream);
-	break;
-    default:
-	error("Invalid");
-    }
-#if TIMING>=2
-    RECORD(2);
-    EVENT_TOC;
-    info2("Tomo RHS: %6.0f, LHS: %6.0f, Tot: %6.0f\n", times[1], times[2], times[0]);
-#endif
-    if(!opdx){
-	curcellfree(rhs);
-    }
-    if(tmp) curfree(tmp);
-    return res;
-}
-void gpu_tomo_test(SIM_T *simu){
-    gpu_set(gpu_recon);
-    curecon_t *curecon=cudata->recon;
-    const PARMS_T *parms=simu->parms;
-    stream_t &stream=curecon->cgstream;//had to be cgstream because fdpcg uses it intrisically
-    RECON_T *recon=simu->recon;
-    /*Debugging. */
-    dcell *rhsc=NULL;
-    dcell *lc=NULL;
-    dcell *rtc=NULL;
-    curcell *rhsg=NULL;
-    curcell *lg=NULL;
-    curcell *rtg=NULL;
-    if(1){
-	muv(&rhsc, &recon->RR, simu->gradlastol, 1);
-    }else{
-	rhsc=dcellread("../load_rhs");
-	cp2gpu(&rhsg, rhsc);
-	dcellscale(rhsc, 1.e12);
-	for(int i=0; i<rhsc->nx; i++){
-	    if(rhsc->p[i]->nx != recon->xnx[i]*recon->xny[i]){
-		error("Loaded RHS has wrong dimension\n");
-	    }
-	    rhsc->p[i]->nx=rhsc->p[i]->nx*rhsc->p[i]->ny;
-	    rhsc->p[i]->ny=1;
-	    rhsg->p[i]->nx=recon->xnx[i];
-	    rhsg->p[i]->ny=recon->xny[i];
-	}
-    }
-    dcellwrite(rhsc, "CPU_TomoR");
-    muv_trans(&rtc, &recon->RR, rhsc, 1);
-    dcellwrite(rtc, "CPU_TomoRt");
-    muv(&lc, &recon->RL, rhsc, 1);
-    dcellwrite(lc, "CPU_TomoL");
-    muv(&lc, &recon->RL, rhsc, -1);
-    dcellwrite(lc, "CPU_TomoL2");
-    dcellzero(lc);
-    muv(&lc, &recon->RL, rhsc, 1);
-    dcellwrite(lc, "CPU_TomoL3");
-    if(parms->tomo.alg==1 && parms->tomo.precond==1){
-	dcell *lp=NULL;
-	fdpcg_precond(&lp, recon, lc);
-	dcellwrite(lp, "CPU_TomoP");
-	fdpcg_precond(&lp, recon, lc);
-	dcellwrite(lp, "CPU_TomoP2");
-    }
-    dcellzero(lc);
-    for(int i=0; i<1; i++){
-	muv_solve(&lc, &recon->RL, NULL, rhsc);
-	dcellwrite(lc, "CPU_Tomo_%d", i);
-    }
-	
-    if(!rhsg){
-	cp2gpu(&curecon->gradin, simu->gradlastol);
-	gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1, stream);
-    }
-    curcellwrite(rhsg, "GPU_TomoR");
-    gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1, stream);
-    curcellwrite(rhsg, "GPU_TomoR1");
-    gpu_TomoRt(&rtg, 0, recon, rhsg, 1, stream);
-    curcellwrite(rtg, "GPU_TomoRt");
-    gpu_TomoL(&lg, 0, recon, rhsg, 1,stream);
-    curcellwrite(lg, "GPU_TomoL");
-    gpu_TomoL(&lg, 0, recon, rhsg, 1,stream);
-    curcellwrite(lg, "GPU_TomoL1"); 
-    gpu_TomoL(&lg, 1, recon, rhsg, -1,stream);
-    curcellwrite(lg, "GPU_TomoL2");
-    gpu_TomoL(&lg, 0, recon, rhsg, 1,stream);
-    curcellwrite(lg, "GPU_TomoL3");
-    if(parms->tomo.alg==1 && parms->tomo.precond==1){
-	curcell *lp=NULL;
-	gpu_Tomo_fdprecond(&lp, recon, lg, stream);
-	curcellwrite(lp, "GPU_TomoP");
-	gpu_Tomo_fdprecond(&lp, recon, lg, stream);
-	curcellwrite(lp, "GPU_TomoP2");
-	//exit(0);
-    }
-    G_PREFUN prefun=NULL;
-    void *predata=NULL;
-    if(parms->tomo.precond==1){
-	prefun=gpu_Tomo_fdprecond;
-	predata=(void*)recon;
-    }
-    for(int i=0; i<1000; i++){
-	curcellzero(lg, stream);
-	gpu_pcg(lg, (G_CGFUN)gpu_TomoL, (void*)recon, prefun, predata, rhsg, &curecon->cgtmp_tomo,
-		simu->parms->recon.warm_restart, parms->tomo.maxit, stream);
-	CUDA_SYNC_STREAM;
-	curcellwrite(lg, "GPU_Tomo_%d", i);
-    }
-    CUDA_SYNC_DEVICE;
-    exit(0);
-}

@@ -22,6 +22,7 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
+#include "prop_wrap.h"
 /*
   One kernel that handles multiple layers/directions.
   Forward: Propagate from XLOC to WFS (Parallel across each WFS).  
@@ -33,9 +34,7 @@ extern "C"
   alpha2: additional scaling defined on dimension dir.
 */
 
-__global__ void 
-gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss, 
-		 int ndir, int nps, float alpha1, float *alpha2, char trans){
+__global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss, int ndir, int nps, float alpha1, float *alpha2, char trans){
     int nn;
     if(ndir==1){
 	assert(gridDim.z==nps);
@@ -53,7 +52,7 @@ gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss,
     const int stepy=blockDim.y*gridDim.y;
   
     for(int ii=0; ii<nn; ii++){
-	GPU_PROP_GRID_T *datai;
+	PROP_WRAP_T *datai;
 	int ips, idir;
 	if(ndir==1){//plane to plane. no direction
 	    ips=idir=blockIdx.z;
@@ -296,7 +295,7 @@ gpu_prop_grid_do(GPU_PROP_GRID_T *data, float **pdirs, float **ppss,
   Backward: dir->ps (wfs -> xloc or floc->dm)
 */
 
-void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, 
+void gpu_prop_grid_prep(PROP_WRAP_T*res, 
 			const cugrid_t &g_dir, const cugrid_t &g_ps,
 			float dispx, float dispy, curmat *cc){
     assert(g_ps.ny!=1);
@@ -308,7 +307,7 @@ void gpu_prop_grid_prep(GPU_PROP_GRID_T*res,
     if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)<EPS){
 	xratio=yratio=1.f;
 	if(!cc && !res->isreverse){
-	    res->reverse=new GPU_PROP_GRID_T;
+	    res->reverse=new PROP_WRAP_T;
 	    res->reverse->isreverse=1;
 	    gpu_prop_grid_prep(res->reverse, g_ps, g_dir, -dispx, -dispy, NULL);
 	}

@@ -17,6 +17,9 @@
 */
 #ifndef AOS_CUDA_GPU_H
 #define AOS_CUDA_GPU_H
+#ifdef __cplusplus
+extern "C"{
+#endif
 #include "../lib/aos.h"
 #include "../maos/parms.h"
 #include "../maos/types.h"
@@ -45,8 +48,6 @@ void gpu_perfevl_save(SIM_T *simu);
 void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper);
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
-void gpu_setup_recon_fdpcg(const PARMS_T *parms, RECON_T *recon);
-void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon);
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
 void gpu_recon_reset(const PARMS_T *parms);
 void gpu_recon_free(void);
@@ -64,5 +65,8 @@ void mvm_only(int *gpus, int ngpu, int nstep);
 void mvmfull_iwfs(int *gpus, int ngpu, int nstep);
 void mvmfull_pipe(char *mvm1, char *mvm2, char *pix1, char *pix2, char *mtch, int *gpus, int ngpu, int nstep);
 void mvm_test(int igpu);
+#ifdef __cplusplus
+}
+#endif
 #endif
 

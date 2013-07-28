@@ -15,19 +15,91 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-extern "C"
-{
-#include <cuda.h>
-#include "gpu.h"
-}
+
 #include "utils.h"
-#include "wfs.h"
+#include "tomo.h"
 #include "recon.h"
-#include "accphi.h"
 #include "cucmat.h"
-
 #define TIMING 0
+void cufdpcg_t::init(FDPCG_T *fdpcg, curecon_geom *_grid){
+    int bs=fdpcg->bs;
+    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;//half frequency range
+    //copy or update Mb. 
+    int nxsave=fdpcg->Mbinv->nx;
+    fdpcg->Mbinv->nx=nb;
+    cp2gpu(&Mb, fdpcg->Mbinv);
+    fdpcg->Mbinv->nx=nxsave;
+    if(perm){//already initialized. 
+	return;
+    }
+    grid=_grid;
+    scale=fdpcg->scale;
+    cp2gpu(&perm, fdpcg->permhf, nb*bs);
+    int nps=grid->npsr;
+    int count=0;
+    int osi=-1;
+    int start[nps];
+    for(int ips=0; ips<nps; ips++){
+	/*group layers with the same os together in a batch fft.*/
+	if(osi != grid->xnx[ips]){
+	    osi = grid->xnx[ips];
+	    start[count]=ips;
+	    count++;
+	}
+    }
+    fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+    ffti=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+    fftnc=count;
+    fftips=(int*)calloc(count+1, sizeof(int));
+    for(int ic=0; ic<count; ic++){
+	fftips[ic]=start[ic];
+    }
+    fftips[count]=nps;
+    for(int ic=0; ic<count; ic++){
+	int ncomp[2];
+	/*Notice the reverse in specifying dimensions. THe first element is outmost rank.*/
+	ncomp[0]=grid->xny[start[ic]];
+	ncomp[1]=grid->xnx[start[ic]];
 
+	int nembed[2];
+	nembed[0]=grid->xnx[start[ic]]*grid->xny[start[ic]];
+	nembed[1]=grid->xnx[start[ic]];
+	DO(cufftPlanMany(&fft[ic], 2, ncomp, 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 CUFFT_R2C, fftips[ic+1]-fftips[ic]));
+	DO(cufftPlanMany(&ffti[ic], 2, ncomp, 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 nembed, 1, ncomp[0]*ncomp[1],
+			 CUFFT_C2R, fftips[ic+1]-fftips[ic]));
+    }
+    xhat1=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
+    {
+	nby=256/bs;//number of blocks in each grid
+	nbz=nb/nby;//number of grids to launch.
+	while(nb!=nbz*nby){
+	    nby--;
+	    nbz=nb/nby;
+	}
+	nby=nby;
+    }
+    /* notice: performance may be improved by using
+       R2C FFTs instead of C2C. Need to update perm
+       and Mbinv to use R2C.*/
+    GPU_FDPCG_T *FDDATA=new GPU_FDPCG_T[nps];
+    for(int ips=0; ips<nps; ips++){
+	FDDATA[ips].nx=grid->xnx[ips];
+	FDDATA[ips].ny=grid->xny[ips];
+	if(scale){
+	    FDDATA[ips].scale=1.f/sqrtf((float)(grid->xnx[ips]*grid->xny[ips]));
+	}else{
+	    FDDATA[ips].scale=1.f;
+	}
+    }
+    cudaMalloc(&fddata, sizeof(GPU_FDPCG_T)*nps);
+    cudaMemcpy(fddata, FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+    delete [] FDDATA;
+}
 /*
   2012-08-01: Have tried the following with no improvement:
   Unroll with template.
@@ -90,7 +162,7 @@ __global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, fcomplex **xall){
    frequencies. We can actually skip the multiplication of negative frequencies.
 
 */
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, stream_t &stream){
+void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 #if TIMING
     EVENT_INIT(4)
 #define RECORD(i) EVENT_TIC(i)
@@ -98,41 +170,39 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, strea
 #define RECORD(i)
 #endif
     RECORD(0);
-    curecon_t *curecon=cudata->recon;
-    const RECON_T *recon=(const RECON_T *)A;
     if(!xin->m){
 	error("xin is not continuous");
     }
     if(!*xout){
-	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else if(!(*xout)->m){
 	error("xout is not continuous");
     }
     /*2012-07-11: Use real to complex fft*/
-    cufdpcg_t *cufd=curecon->fdpcg;
-    for(int ic=0; ic<cufd->fftnc; ic++){
-	int ips=cufd->fftips[ic];
-	CUFFTR2C(cufd->fft[ic], xin->p[ips]->p, cufd->xhat1->p[ips]->p);
+    for(int ic=0; ic<fftnc; ic++){
+	int ips=fftips[ic];
+	DO(cufftSetStream(fft[ic], stream));
+	CUFFTR2C(fft[ic], xin->p[ips]->p, xhat1->p[ips]->p);
     }
     RECORD(1);
-    if(cufd->scale){
-	fdpcg_scale<<<dim3(3,3,recon->npsr), dim3(16,16),0,stream>>>
-	    (curecon->fddata, cufd->xhat1->pm);
+    if(scale){
+	fdpcg_scale<<<dim3(3,3,grid->npsr), dim3(16,16),0,stream>>>
+	    (fddata, xhat1->pm);
     }
-    int bs=cufd->Mb->p[0]->nx;
-    fdpcg_mul_block_sync_half<<<cufd->nbz, dim3(bs,cufd->nby), sizeof(fcomplex)*bs*2*cufd->nby, stream>>>
-	(cufd->xhat1->m->p, cufd->Mb->m->p, cufd->perm);
+    int bs=Mb->p[0]->nx;
+    fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(fcomplex)*bs*2*nby, stream>>>
+	(xhat1->m->p, Mb->m->p, perm);
     RECORD(2);
-    for(int ic=0; ic<cufd->fftnc; ic++){
-	int ips=cufd->fftips[ic];
-	CUFFTC2R(cufd->ffti[ic], cufd->xhat1->p[ips]->p, (*xout)->p[ips]->p);
+    for(int ic=0; ic<fftnc; ic++){
+	int ips=fftips[ic];
+	DO(cufftSetStream(ffti[ic], stream));
+	CUFFTC2R(ffti[ic], xhat1->p[ips]->p, (*xout)->p[ips]->p);
     }
-    if(cufd->scale){
-	fdpcg_scale<<<dim3(9,1,recon->npsr),dim3(256,1),0,stream>>>
-	    (curecon->fddata, (*xout)->pm);
+    if(scale){
+	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
+	    (fddata, (*xout)->pm);
     }
     RECORD(3);
-
 #if TIMING
     EVENT_TOC;
     info2("FDPCG: FFT %3.0f MUL %3.0f FFTI %3.0f Total %3.0f\n", 

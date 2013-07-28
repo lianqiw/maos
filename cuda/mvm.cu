@@ -26,6 +26,7 @@ extern "C"{
 #include <netinet/in.h>
 #include <errno.h>
 }
+#include "cudata.h"
 double tic_save;
 pthread_t *threads=NULL;
 int *cmds=NULL;

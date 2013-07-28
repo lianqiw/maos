@@ -22,7 +22,7 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
-
+#include "cudata.h"
 /**
    First written on 2011-07.
    Port wfsgrad.c perfevl, etc to GPU.

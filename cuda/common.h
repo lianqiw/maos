@@ -119,14 +119,13 @@ extern int nstream;
 #define MEMCPY_D2H cudaMemcpyDeviceToHost
 #define MEMCPY_H2D cudaMemcpyHostToDevice
 /*
-  Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
+  Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a work around of
   the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 #if CUDA_VERSION < 4010
 extern pthread_mutex_t cufft_mutex;
 #define LOCK_CUFFT LOCK(cufft_mutex)
 #define UNLOCK_CUFFT UNLOCK(cufft_mutex)
-#else
-/*cufft 4.1 is thread safe. no need lock.*/
+#else /*cufft>=4.1 is thread safe. no need lock.*/
 #define LOCK_CUFFT
 #define UNLOCK_CUFFT
 #endif
@@ -190,9 +189,11 @@ typedef struct stream_t{
 	SPHANDLE_NEW(sphandle, stream);
     }
     ~stream_t(){
-	SPHANDLE_DONE(sphandle);
-	HANDLE_DONE(handle);
-	STREAM_DONE(stream);
+	if(this){
+	    SPHANDLE_DONE(sphandle);
+	    HANDLE_DONE(handle);
+	    STREAM_DONE(stream);
+	}
     }
     void sync(){
 	assert(this);
@@ -220,7 +221,7 @@ typedef struct event_t{
 	DO(cudaEventCreateWithFlags(&event, flag));
     }
     ~event_t(){
-	cudaEventDestroy(event);
+	if(this) cudaEventDestroy(event);
     }
     void record(cudaStream_t stream){
 	DO(cudaEventRecord(event, stream));

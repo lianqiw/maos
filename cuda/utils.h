@@ -18,128 +18,35 @@
 #ifndef AOS_CUDA_UTILS_H
 #define AOS_CUDA_UTILS_H
 #include "types.h"
-#include <cublas_v2.h>
-#include <cusparse.h>
-#include <cufft.h>
-#include "recon.h"
-#include "kernel.h"
-#include "wfs.h"
-extern "C"{
-#include "../maos/mvm_client.h"
-}
-extern int gpu_recon;
-extern int NGPU;
-typedef struct cudata_t{ 
-    /**<for accphi */
-    void *reserve;   /**<Reserve some memory in GPU*/
-    cumap_t *atm;   /**<atmosphere: array of cumap_t */
-    cumap_t *dmreal;/**<DM: array of cumap_t */
-    cumap_t *dmproj;/**<DM: array of cumap_t */
-    int nps; /**<number of phase screens*/
-    int ndm; /**<number of DM.*/
-    /*for perfevl */
-    float  (*plocs)[2];
-    float   *pamp;
-    int    **embed;
-    cuccell *evlwvf;
-    curcell *surfevl;
-    curcell *evlopd;
-    curcell *evlpsfol;
-    curcell *evlpsfcl;
-    curcell *evlpsfcl_ngsr;
-    curcell *evlopdcov;
-    curmat *evlopdcovol;
-    curcell *evlopdcov_ngsr;
-    curcell *evlopdmean;
-    curmat *evlopdmeanol;
-    curcell *evlopdmean_ngsr;
-    /*for wfsgrad */
-    cuwloc_t *powfs;
-    cuwfs_t *wfs;
-    /*for recon */
-    curecon_t *recon;
-    /*for moao*/
-    cumap_t *dm_wfs;
-    cumap_t *dm_evl;
-    /*for mvm*/
-    curmat *mvm_m;/*the control matrix*/
-    ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
-    ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
-    GTYPE *mvm_g;/*the gradients copied from gpu*/
-    stream_t *mvm_stream;
-    pthread_mutex_t mvm_mutex;
-    cudata_t(){
-	memset(this, 0, sizeof(cudata_t));
-    }
-}cudata_t;
-#ifdef __APPLE__
-extern pthread_key_t cudata_key;
-inline cudata_t* _cudata(){
-    return (cudata_t*)pthread_getspecific(cudata_key);
-}
-#define cudata _cudata()
-#else
-extern __thread cudata_t *cudata;
-#endif
-extern cudata_t *cudata_all;/*use pointer array to avoid misuse. */
 
-void gpu_print_mem(const char *msg);
-long gpu_get_mem(void);
-/**
-   switch to the next GPU and update the pointer.
-*/
-inline void gpu_set(int igpu){
-    extern int *GPUS;
-    if(igpu>=NGPU){
-	error("Invalid igpu=%d", igpu);
-    }
-    cudaSetDevice(GPUS[igpu]);
-#ifdef __APPLE__
-    pthread_setspecific(cudata_key, &cudata_all[igpu]);
-#else
-    cudata=&cudata_all[igpu];
-#endif
-    if(cudata->reserve){
-	cudaFree(cudata->reserve);
-	cudata->reserve=NULL;
-    }
-}
-/**
-   returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.
-*/
-inline int gpu_next(){
-    static int cur=-1;
-    return cur=(cur+1)%NGPU;
-}
 /*void gpu_set(int igpu);
   int  gpu_next(void);*/
 void dbl2flt(float * restrict *dest, double *src, int n);
 void spint2int(int * restrict *dest, spint *src, int n);
 
 void cp2gpu(cumap_t **dest, map_t **source, int nps);
-void cp2gpu(cusp **dest, dsp *src);
-void cp2gpu(cusp **dest, spcell *src);
-void cp2gpu(cuspcell **dest, spcell *src);
-void cp2gpu(float (* restrict *dest)[2], loc_t *src);
-void cp2gpu(float * restrict *dest, double *src, int n);
-void cp2gpu(float * restrict *dest, dmat *src);
-void cp2gpu(fcomplex * restrict *dest, dcomplex *src, int n);
-void cp2gpu(fcomplex * restrict *dest, cmat *src);
+void cp2gpu(cusp **dest, const dsp *src, int tocsr);
+void cp2gpu(cusp **dest, const spcell *src, int tocsr);
+void cp2gpu(cuspcell **dest, const spcell *src, int tocsr);
+void cp2gpu(float (* restrict *dest)[2], const loc_t *src);
+void cp2gpu(float * restrict *dest, const double *src, int n);
+void cp2gpu(float * restrict *dest, const dmat *src);
+void cp2gpu(fcomplex * restrict *dest, const dcomplex *src, int n);
+void cp2gpu(fcomplex * restrict *dest, const cmat *src);
 
-void cp2gpu(curmat *restrict *dest, dmat *src);
-void cp2gpu(curcell *restrict *dest, dcell *src);
-void cp2gpu(cucmat *restrict *dest, cmat *src);
-void cp2gpu(cuccell *restrict *dest, ccell *src);
+void cp2gpu(curmat *restrict *dest, const dmat *src);
+void cp2gpu(curcell *restrict *dest, const dcell *src);
+void cp2gpu(cucmat *restrict *dest, const cmat *src);
+void cp2gpu(cuccell *restrict *dest, const ccell *src);
 
-void cp2gpu(int * restrict *dest, long *src, int n);
-void cp2gpu(int * restrict *dest, spint *src, int n);
-void cp2gpu(int * restrict *dest, int *src, int n);
-void cp2gpu(cumuv_t *out, MUV_T *in);
-void cp2gpu(curmat *restrict *dest, float *src, int nx, int ny, cudaStream_t stream);
-inline void cp2gpu(curmat *restrict *dest, float *src, int nx, cudaStream_t stream){
+void cp2gpu(int * restrict *dest, const long *src, int n);
+void cp2gpu(int * restrict *dest, const spint *src, int n);
+void cp2gpu(int * restrict *dest, const int *src, int n);
+void cp2gpu(curmat *restrict *dest, const float *src, int nx, int ny, cudaStream_t stream);
+inline void cp2gpu(curmat *restrict *dest, const float *src, int nx, cudaStream_t stream){
     cp2gpu(dest, src, nx, 1, stream);
 }
-inline void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0){
+inline void cp2gpu(curmat *restrict *dest, const smat *src, cudaStream_t stream=0){
     if(src){
 	cp2gpu(dest, src->p, src->nx, src->ny, stream);
     }
@@ -148,10 +55,10 @@ inline void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0){
 void cuspmul (float *y, cusp *A, const float *x, int ncol, char trans,
 	      float alpha, cusparseHandle_t handle);
 
-void gpu_write(float *p, int nx, int ny, const char *format, ...);
-void gpu_write(fcomplex *p, int nx, int ny, const char *format, ...);
-void gpu_write(int *p, int nx, int ny, const char *format, ...);
-
+void gpu_write(const float *p, int nx, int ny, const char *format, ...);
+void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...);
+void gpu_write(const int *p, int nx, int ny, const char *format, ...);
+W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
 void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream);

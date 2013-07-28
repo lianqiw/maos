@@ -17,19 +17,10 @@
 */
 #ifndef AOS_CUDA_RECON_H
 #define AOS_CUDA_RECON_H
-#include "types.h"
-#include "pcg.h"
 
-typedef struct W01_T{
-    curmat *W1;    /**< The aperture weighting, piston removal*/
-    cusp   *W0p;   /**< W0 for partial points*/
-    int    *W0f;   /**< index for fully illuminated points.*/
-    int     nW0f;  /**< Number of fully illuminated points.*/
-    float   W0v;   /**< maximum Value of W0*/
-    W01_T(){
-	memset(this, 0, sizeof(W01_T));
-    }
-}W01_T;
+#include "gpu.h"
+#include "solve.h"
+#include "recon_geom.h"
 typedef struct cumoao_t{
     curcell *fitNW;
     cusp *actslave;
@@ -49,192 +40,92 @@ typedef struct cumoao_t{
     }
 }cumoao_t;
 
-/*data to be used by kernel */
-typedef struct GPU_PROP_GRID_T{
-    int offdir, offdirx, offdiry;
-    int offps, offpsx, offpsy;
-    float *cc;
-    int nxdir,nydir;
-    int nxps,nyps;
-    float dispx, dispy;
-    float xratio, yratio;
-    int nx, ny;
-    float l2c; /*coefficient for laplacian*/
-    int zzi;   /*for piston constraint*/
-    float zzv; /*for piston constraint*/
-    int isreverse;/*Indicate this is an reverse*/
-    GPU_PROP_GRID_T *reverse;/*store pointer for the reversely prepared data.*/
-    GPU_PROP_GRID_T(){ /*This is not good. zeros out already initialized childs.*/
-	memset(this, 0, sizeof(*this));
-    }
-    void togpu(GPU_PROP_GRID_T *pgpu){
-	if(reverse){
-	    GPU_PROP_GRID_T *gpureverse;
-	    DO(cudaMalloc(&gpureverse, sizeof(GPU_PROP_GRID_T)));
-	    reverse->togpu(gpureverse);
-	    reverse=gpureverse;
-	}
-	DO(cudaMemcpy(pgpu, this, sizeof(GPU_PROP_GRID_T),cudaMemcpyHostToDevice));  
-    }
-}GPU_PROP_GRID_T;
-/*Packs two shorts into a int for 32bit access. This is better than (long*)[2]
-  which caused kernel to hang. This is already define by cuda/vector_types.h*/
-/*typedef struct {
-    short x;
-    short y;
-    }short2;*/
-typedef struct GPU_GP_T{
-    int ipowfs;
-    int nwfs; //number of wfs in this group
-    int jwfs; //wfs index in this group.
-    int (*saptr)[2];
-    float *PTT;
-    float *PDF;
-    float *PDFTT;
-    float dsa;
-    int nsa;
-    short2 *GPp;
-    float GPscale;
-    int pos;
-    int nxp;
-    float dxp, dyp;/*pmap dx*/
-    float oxp, oyp;/*pmap origin*/
-    const float(*neai)[3];
-    GPU_GP_T(){
-	memset(this, 0, sizeof(*this));	
-    }
-}GPU_GP_T;
-
-typedef struct GPU_FDPCG_T{
-    int nx;
-    int ny;
-    float scale;
-    GPU_FDPCG_T(){
-	memset(this, 0, sizeof(*this));	
-    }
-}GPU_FDPCG_T;
-typedef struct cufdpcg_t{
-    int *perm;   /**<permutation vector for fdpcg*/
-    cuccell *Mb;  /**<The main fdpcg block matrix*/
-    cufftHandle *fft;
-    cufftHandle *ffti;
-    int      fftnc;/*total number of ffts*/
-    int     *fftips;/*starting ips for each fft.*/
-    cuccell *xhat1;
-    int nby, nbz; 
-    int scale;
-    ~cufdpcg_t(){
-	cudaFree(perm);
-	free(fftips);
-	delete Mb;
-	delete xhat1;
-    }
-    cufdpcg_t(){
-	memset(this, 0, sizeof(*this));
-    }
-}cufdpcg_t;
-typedef struct curecon_t{
-    cugrid_t *amap;/*Grid of amap*/
-    cugrid_t *acmap;
-    cugrid_t *xmap;/*Grid of xmap*/
-    cugrid_t *xcmap;
-    cugrid_t pmap; /*Pupil map for tomo*/
-    cugrid_t fmap; /*Pupil map for fit*/
+class curecon_t{
+public:
+    curecon_geom *grid;
+    cusolve_r *FR;
+    cusolve_l *FL;
+    cusolve_r *RR;
+    cusolve_l *RL;
+    cusolve_l *MVM;
+private:
     curcell *gradin; /**< The grad to operator on*/
-    curcell *neai;
-    curcell *opdwfs;/**<Temporary*/
-    curcell *grad;  /**<Temporary*/
+   
     curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
     curcell *opdr_vec; /**<Referencing opdr in vector form*/
-    curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm restart. Free with new seed.*/
-    curcell *dmfit_vec;/**<Referencing dmfit in vector form.*/
-    curcell *dmcache;/**<cache dm during DM fitting*/
-    curcell *xcache;
-    cufdpcg_t *fdpcg;
-    stream_t    cgstream;
+    curcell *dmfit;
+    curcell *dmfit_vec;
+    stream_t cgstream;
+    curcell *opdr_save;/*for debugging*/
+    curcell *dmfit_save;/*for debugging*/
+    curcell *RFdfx;
+    curcell *GXL;
 
-    curcell *PTT;  /**< Global tip/tilt */
-    curcell *PDF;  /**< Differential focus removal */
-    curcell *PDFTT;/**<Coupling between DF and TT*/
-    curmat *ttf;
-
-    float *l2c;    /**< Laplacian */
-    int   *zzi;    /**< Piston constraint coordinate*/
-    float *zzv;    /**< Piston constraint value*/
-    W01_T *W01;    /**< The aperture weighting,*/
-    curcell *fitrhs;
-    curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
-    curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
-    curmat *opdfitv;/**<Concatenated version of opdfit. 1 column for each direction*/
-    curmat *opdfit2v;/**<Concatenated version of opdfit2. 1 column for each direction*/
-    curmat *pis;     /**<contains result of W1'*opdfit*/
-    curcell*cubic_cc;
-    curmat *fitwt;
-    cumuv_t FR;
-    cumuv_t FL;
-
-    curmat *MVM;
-    float (*floc)[2];/**<recon->floc*/
-    int nfloc;       /**<recon->floc->nloc*/
-    int reconisim;
-    curmat *fitNW;/**< DM fitting low rank terms*/
-    curmat *dotNW;/**<fitNW*dm*/
-    cusp *actslave;/**<DM fitting actuator slaving*/
+    curcell *gngsmvst;
+    curcell *deltafocus;
+    
+    friend void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon);
+    friend void gpu_moao_filter(SIM_T *simu);
+    friend void gpu_moao_recon(SIM_T *simu);
+    friend void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, float thetax, float thetay, float hs, const float alpha);
+    friend void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
+    
+public:
     cumoao_t *moao;/**<moao configurations for GPU*/
     curcell **dm_wfs;/**<moao results for wfs for warm restart*/
     curcell **dm_evl;/**<moao results for evl for warm restart*/
     stream_t *moao_stream;
-    //CBS Tomo
-    cusp *RCl;/**<Tomography Cholesky factor*/
-    int  *RCp;/**<Tomography Cholesky permutation vector*/
-    curmat *RUp;
-    curmat *RVp;
-    curmat *RMI;//SVD
-    
-    cusp *FCl;
-    int  *FCp;
-    curmat *FUp;
-    curmat *FVp;
-    curmat *FMI;//SVD
-
-    curcell *RFlgsx;
-    curcell *RFngsx;
-    curcell *RFdfx;
-    curcell *GXL;
-    CGTMP_T cgtmp_tomo;
-    CGTMP_T cgtmp_fit;
     CGTMP_T cgtmp_moaowfs;
     CGTMP_T cgtmp_moaoevl;
     /*the following data reside in the gpu memory*/
-    GPU_PROP_GRID_T *hxdata;
-    GPU_PROP_GRID_T *hxpdata;
-    GPU_PROP_GRID_T *hxp1data;
-    GPU_PROP_GRID_T *hxp0data;
-    GPU_PROP_GRID_T *hadata;
-    GPU_PROP_GRID_T *ha1data;
-    GPU_PROP_GRID_T *ha0data;
-    GPU_GP_T *gpdata;
-    GPU_FDPCG_T *fddata;
-    curecon_t(){ /*This is not good. zeros out already initialized childs.*/
-	amap=NULL;acmap=NULL;xmap=NULL;
-	gradin=NULL;neai=NULL;opdwfs=NULL;grad=NULL;opdr=NULL;opdr_vec=NULL;dmfit=NULL;dmfit_vec=NULL;dmcache=NULL;xcache=NULL;fdpcg=NULL;
-	PTT=NULL;PDF=NULL;PDFTT=NULL;ttf=NULL;
-	l2c=NULL;zzi=NULL;zzv=NULL;W01=NULL;
-	opdfit=NULL;opdfit2=NULL;opdfitv=NULL;opdfit2v=NULL;pis=NULL;cubic_cc=NULL;fitwt=NULL;
-	MVM=NULL;floc=NULL;
-	fitNW=NULL;dotNW=NULL;actslave=NULL;moao=NULL;
-	dm_wfs=NULL;dm_evl=NULL;moao_stream=NULL;
-	RCl=NULL;RCp=NULL;RUp=NULL;RVp=NULL;RMI=NULL;
-	FCl=NULL;FCp=NULL;FUp=NULL;FVp=NULL;FMI=NULL;
-	RFlgsx=NULL;RFngsx=NULL;RFdfx=NULL;GXL=NULL;
-	hxdata=NULL;hxpdata=NULL;hxp1data=NULL;hxp0data=NULL;hadata=NULL;ha1data=NULL;ha0data=NULL;
-	gpdata=NULL;fddata=NULL;
+    friend void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
+public:
+    void init(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
+    curecon_t(const PARMS_T *parms=0, POWFS_T *powfs=0, RECON_T *recon=0){ 
+	grid=0;
+	FR=0; FL=0; RR=0; RL=0; MVM=0;
+	gradin=0;opdr=0;opdr_vec=0;opdr_save=0;
+	dmfit=0; dmfit_vec=0;dmfit_save=0;
+	RFdfx=0;GXL=0;gngsmvst=0; deltafocus=0;
+	moao=0;
+	dm_wfs=0;dm_evl=0;moao_stream=0;
+	if(!parms) return;
+	init(parms, powfs, recon);
     }
-}curecon_t;
+    ~curecon_t(){
+	delete grid;
+	if(FL!=dynamic_cast<cusolve_l*>(FR)) delete FL;
+	delete FR;
+	if(RL!=dynamic_cast<cusolve_l*>(RR)) delete RL;
+	delete RR;
+	delete gradin;
+
+	delete opdr;
+	delete opdr_vec; 
+	delete opdr_save;
+
+	delete dmfit;
+	delete dmfit_vec; 
+	delete dmfit_save;
+
+	delete moao;
+	delete dm_wfs;
+	delete dm_evl;
+	delete moao_stream;
+	delete RFdfx;
+	delete GXL;
+    }
+    void reset(const PARMS_T *parms);
+    float tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
+    float fit(dcell **_dmfit, dcell *_opdr);
+    void mvm(dcell **_dmerr, dcell *_gradin);
+    void tomo_test(SIM_T *simu);
+    void fit_test(SIM_T *simu);
+};
 
 __global__ void apply_W_do(float *restrict out, const float *restrict in, const int *W0f, 
 			   float alpha, int nx, int n);
-W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
+
 
 
 void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha, stream_t &stream);

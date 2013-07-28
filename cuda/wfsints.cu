@@ -27,6 +27,7 @@ extern "C"
 #include <cufft.h>
 #include "cucmat.h"
 #include "wfs.h"
+#include "cudata.h"
 /*
   Timing results for TMT NFIRAOS case per LGS WFS:
   Embedding takes about 1 ms.

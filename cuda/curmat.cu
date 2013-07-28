@@ -203,13 +203,6 @@ curmat* curmat::trans(stream_t &stream){
 	(B->p, p, nx, ny);
     return B;
 }
-cuspcell* cuspcellnew(int nx, int ny){
-    cuspcell *out=(cuspcell*)calloc(1, sizeof(cuspcell));
-    out->p=(cusp**)calloc(nx*ny, sizeof(void*));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
 
 /*
   A=A*beta+B*alpha;

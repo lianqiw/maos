@@ -133,7 +133,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
 	}
     }
-    if(parms->gpu.fit==2){//to cache x on grid matching floc.
+    if(parms->gpu.fit==2 && parms->fit.cachex){//to cache x on grid matching floc.
 	recon->xcmap=calloc(npsr, sizeof(map_t *));
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];

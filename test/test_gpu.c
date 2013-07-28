@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 	}
 	break;
     case 10:
-	mvm_test(gpus[0]);
+	//mvm_test(gpus[0]);
 	break;
     }
 }

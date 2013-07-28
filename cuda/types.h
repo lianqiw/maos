@@ -27,7 +27,7 @@ class cumat{
     long ny;
     int *nref;
     char *header;
-    virtual void init(long nxi, long nyi, T *pi=NULL, int own=1){
+    void init(long nxi, long nyi, T *pi=NULL, int own=1){
 	p=pi;
 	nx=nxi;
 	ny=nyi;
@@ -265,6 +265,9 @@ class cuspcell{
     cusp **p;
     int nx;
     int ny;
+    cuspcell(int _nx, int _ny):nx(_nx),ny(_ny){
+	p=(cusp**)calloc(1, sizeof(void*));
+    }
     ~cuspcell(){
 	for(long i=0; i<nx*ny; i++){
 	    delete p[i];
@@ -272,20 +275,8 @@ class cuspcell{
 	free(p);
     }
 };
-class cumuv_t{
- public:
-    cusp *M;
-    curmat *U;
-    curmat *V;
-    curmat *Vx;
-    int nx, ny, *nxs, *nys;
-    stream_t *fitstream;
-    stream_t *dmstream;
-    cumuv_t(){
-	memset(this, 0 ,sizeof(*this));
-    }
-};
-void cp2gpu(float (* restrict *dest)[2], loc_t *src);
+
+void cp2gpu(float (* restrict *dest)[2], const loc_t *src);
 typedef float(*float2p)[2];
 class culoc_t{
 public:
@@ -294,15 +285,15 @@ public:
     float dy;
     long nloc;
     virtual void init(loc_t*in){
-	if(in){
-	    dx=in->dx;
-	    dy=in->dy;
-	    nloc=in->nloc;
-	    cp2gpu(&p, in);
-	}
+	if(!in) return;
+	dx=in->dx;
+	dy=in->dy;
+	nloc=in->nloc;
+	cp2gpu(&p, in);
     }
-    culoc_t(){
-	memset(this, 0, sizeof(*this));
+    culoc_t(loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
+	if(!in) return;
+	init(in);
     }
     ~culoc_t(){
 	if(p) cudaFree(p);
@@ -319,11 +310,12 @@ class cupts_t:public culoc_t{
 public:
     float dxsa;
     float nxsa;
-    cupts_t(){
-	dxsa=nxsa=0;
+    cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
+	if(!in) return;
+	init(in);
     }
     virtual void init(pts_t*in){
-	culoc_t::init((loc_t*)in);
+	if(!in) return;
 	dxsa=in->dx;
 	nxsa=in->nx;
     }
@@ -377,6 +369,16 @@ public:
     }
 };
 
+typedef struct W01_T{
+    curmat *W1;    /**< The aperture weighting, piston removal*/
+    cusp   *W0p;   /**< W0 for partial points*/
+    int    *W0f;   /**< index for fully illuminated points.*/
+    int     nW0f;  /**< Number of fully illuminated points.*/
+    float   W0v;   /**< maximum Value of W0*/
+    W01_T(){
+	memset(this, 0, sizeof(W01_T));
+    }
+}W01_T;
 struct mulock{
     int lock;
     pthread_mutex_t mutex;
