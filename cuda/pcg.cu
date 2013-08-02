@@ -25,7 +25,7 @@ extern "C"
 #include "pcg.h"
 
 #include "recon.h" /*for  debugging */
-
+namespace cuda_recon{
 
 /* dest = a/dest Do not use restric because dest and b maybe the same*/
 __global__ static void div_do(float *dest, const float * a){
@@ -295,3 +295,4 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 #endif
     return residual;
 }
+}//namespace

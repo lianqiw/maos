@@ -19,9 +19,10 @@
 #define AOS_CUDA_TOMO_H
 #include "gpu.h"
 #include "solve.h"
-#include "recon_geom.h"
+#include "recon_base.h"
 #include "prop_wrap.h"
 #include "fdpcg.h"
+namespace cuda_recon{
 typedef struct GPU_GP_T{
     int ipowfs;
     int nwfs; //number of wfs in this group
@@ -43,6 +44,12 @@ typedef struct GPU_GP_T{
 	memset(this, 0, sizeof(*this));	
     }
 }GPU_GP_T;
+struct LAP_T{
+    int nxps,nyps;
+    float l2c;
+    int zzi;
+    float zzv;
+};
 class cutomo_grid:public cusolve_r, public cucg_t{
     curecon_geom *grid;
     /*Temporary data*/
@@ -61,21 +68,18 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     cuspcell *GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
-    PROP_WRAP_T *hxdata;
+    map_ray *hx;
     GPU_GP_T *gpdata;
-    cufdpcg_t *fdcfg;
+    LAP_T *lap;
 public:
     void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
-    void init_hxdata(const PARMS_T *parms, const RECON_T *recon);
-    void init_fdpcg(FDPCG_T *fdpcg, curecon_geom *grid);
-
-    cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
-		const POWFS_T *powfs=0, curecon_geom *_grid=0)
-	:cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-	 opdwfs(0),grad(0),ttf(0),neai(0),PTT(0),PDF(0),PDFTT(0),saptr(0),GPp(0),
-	 GPscale(0),GP(0),ptt(0),nwfs(0),hxdata(0),gpdata(0),fdcfg(0){
-	init(parms, recon, powfs);
+    void init_hx(const PARMS_T *parms, const RECON_T *recon);
+    void update_fdpcg(FDPCG_T *fdpcg){
+	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
     }
+    
+    cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
+		const POWFS_T *powfs=0, curecon_geom *_grid=0);
     virtual void R(curcell **out, float beta, 
 		   const curcell *xin, float alpha, stream_t &stream);
     virtual void L(curcell **out, float beta, 
@@ -95,9 +99,8 @@ public:
 	delete GPp;
 	delete[] GPscale;
 	delete GP;
-	cudaFree(hxdata);
+	delete hx;
 	cudaFree(gpdata);
-	delete fdcfg;
     }
 };
 
@@ -105,5 +108,5 @@ class cutomo_sparse:public cusolve_sparse{
 public:
     cutomo_sparse(const PARMS_T *parms, const RECON_T *recon);
 };
-
+}//namespace
 #endif

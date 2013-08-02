@@ -284,26 +284,15 @@ public:
     float dx;
     float dy;
     long nloc;
-    virtual void init(loc_t*in){
+    culoc_t(loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
 	if(!in) return;
 	dx=in->dx;
 	dy=in->dy;
 	nloc=in->nloc;
 	cp2gpu(&p, in);
     }
-    culoc_t(loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
-	if(!in) return;
-	init(in);
-    }
     ~culoc_t(){
 	if(p) cudaFree(p);
-    }
-    operator float2p(){
-	assert(this);
-	return p;
-    }
-    operator bool(){
-	return p?true:false;
     }
 };
 class cupts_t:public culoc_t{
@@ -312,29 +301,27 @@ public:
     float nxsa;
     cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
 	if(!in) return;
-	init(in);
-    }
-    virtual void init(pts_t*in){
-	if(!in) return;
 	dxsa=in->dx;
 	nxsa=in->nx;
     }
-private:
-    virtual void init(loc_t*in);//not allowed
 };
 /**
    Specifies the grid.
 */
-struct cugrid_t{
-    long  nx,ny;
+class cugrid_t{
+public:
+    long  nx, ny;
     float ox, oy;
     float dx, dy;
     float ht;
     float vx, vy;
-    void init(const cugrid_t &in){
+    curmat *cubic_cc; /*coefficients for cubic influence function. */
+    /*void init(const cugrid_t &in){
+	if(nx) error("multiple init\n");
 	memcpy(this, &in, sizeof(*this));
-    }
+    }*/
     void init(const map_t *in){
+	if(nx) error("multiple init\n");
 	nx=in->nx;
 	ny=in->ny;
 	ox=in->ox;
@@ -344,28 +331,24 @@ struct cugrid_t{
 	ht=in->h;
 	vx=in->vx;
 	vy=in->vy;
+	cubic_cc=0;
     }
-    cugrid_t(long nxi=0, long nyi=0,float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi){}
-    //cugrid_t(const map_t *in):nx(in->nx),ny(in->ny),ox(in->ox),oy(in->oy),dx(in->dx),dy(in->dy),ht(in->h),vx(in->vx),vy(in->vy){}
-    cugrid_t scale(float sc){
-	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy);
+    cugrid_t(long nxi=0, long nyi=0,float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
+    cugrid_t scale(float sc)const{
+	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }
-    cugrid_t operator *(float sc){
-	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy);
+    cugrid_t operator *(float sc)const{
+	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }
 };
 class cumap_t:public cugrid_t{
 public:
-    curmat p;
-    curmat *cubic_cc; /*coefficients for cubic influence function. */
+    curmat *p;
     /*Init the data, p*/
-    cumap_t():cubic_cc(NULL){
+    cumap_t():p(0){
     }
-    operator curmat&(){
+    operator curmat*()const{
 	return p;
-    }
-    cugrid_t *grid(){
-	return (cugrid_t*)this;
     }
 };
 

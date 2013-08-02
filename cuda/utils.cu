@@ -91,10 +91,7 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     }
     cumap_t *dest=*dest0;
     for(int ips=0; ips<nps; ips++){
-	dest[ips].cugrid_t::init(source[ips]);
-	int nx=source[ips]->nx;
-	int ny=source[ips]->ny;
-	cp2gpu(&dest[ips].p.p, source[ips]->p, nx*ny);
+	cp2gpu(&dest[ips].p, (dmat*)source[ips]);
     }
     CUDA_SYNC_DEVICE;
 }

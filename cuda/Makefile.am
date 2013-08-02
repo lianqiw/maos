@@ -12,9 +12,16 @@ AM_CFLAGS+=-DDLONG
 endif
 AM_CFLAGS+=-DHAVE_CONFIG_H -I..
 #AM_LDFLAGS=$(LDCUDA) -static
+#In the order of include:
+HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h prop_wrap.h
+HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
 
-EXTRA_DIST=accphi.h  common.h  cucmat.h  cumat.h  curmat.h  gpu.h  kernel.h  pcg.h  recon.h  types.h  utils.h  wfs.h recon_geom.h fit.h tomo.h solve.h fdpcg.h prop_wrap.h cudata.h
-SRCS=solve.cu accphi.cu utils.cu curmat.cu cucmat.cu  wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu pcg.cu recon_geom.cu tomo.cu fdpcg.cu fit.cu moao.cu kernel.cu prop_grid.cu prop_wrap.cu mvm.cu test.cu mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_pipe.cu cudata.cu
+EXTRA_DIST=$(HEADER_LIB) $(HEADER_RECON) accphi.h wfs.h cudata.h
+SRC_LIB=curmat.cu cucmat.cu kernel.cu prop_grid.cu prop_wrap.cu accphi.cu utils.cu
+SRC_RECON=solve.cu recon_base.cu pcg.cu tomo.cu fit.cu recon.cu fdpcg.cu moao.cu 
+SRC_MVM=mvm.cu mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_pipe.cu
+SRC_WFS=wfsinit.cu wfsints.cu wfsgrad.cu
+SRCS=$(SRC_LIB) cudata.cu $(SRC_RECON) $(SRC_MVM) $(SRC_WFS) perfevl.cu test.cu
 
 #LTLIBRARIES does not work.
 lib_LIBRARIES=libgpu.a

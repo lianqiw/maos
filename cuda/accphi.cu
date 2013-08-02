@@ -227,7 +227,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    cudata->atm=new cumap_t[nps];
 	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
-		cudata->atm[ips].p.init(nx0, ny0);
+		cudata->atm[ips].p=new curmat(nx0, ny0);
 	    }
 	}/*for im */
     }/*if need_init; */
@@ -514,10 +514,10 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 #define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips].p, cuatm[ips].nx, cuatm[ips].ny, COMM);
+		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}else{/*we are gauranteed. */
 	    prop_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips].p, cuatm[ips].nx, cuatm[ips].ny, COMM);
+		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}
 #undef COMM
     }    
@@ -539,7 +539,7 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 	const float dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
 	const float scale=1.f-ht/hs;
 #define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
-#define KARG cudm[idm].p,cudm[idm].nx,cudm[idm].ny, COMM
+#define KARG cudm[idm].p->p,cudm[idm].nx,cudm[idm].ny, COMM
 	if (cudm[idm].cubic_cc){//128 is a good number for cubic. 
 	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc->p);
 	}else{

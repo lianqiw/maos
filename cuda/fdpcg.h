@@ -18,6 +18,7 @@
 #ifndef AOS_CUDA_FDPCG_H
 #define AOS_CUDA_FDPCG_H
 #include "solve.h"
+namespace cuda_recon{
 typedef struct GPU_FDPCG_T{
     int nx;
     int ny;
@@ -37,7 +38,7 @@ class cufdpcg_t:public cucgpre_t{
     int scale;
     GPU_FDPCG_T *fddata;
 public:
-    ~cufdpcg_t(){
+    virtual ~cufdpcg_t(){
 	if(!this) return;
 	cudaFree(perm);
 	free(fftips);
@@ -47,12 +48,9 @@ public:
 	cudaFree(fft);
 	cudaFree(ffti);
     }
-    void init(FDPCG_T *fdpcg, curecon_geom *_grid);
-    cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
-	:grid(_grid),perm(NULL),Mb(NULL),fft(NULL),ffti(NULL),fftnc(0),fftips(NULL),
-	 xhat1(NULL),nby(0),nbz(0),scale(0),fddata(0){
-	init(fdpcg, _grid);
-    }
+    cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid);
+    void update(FDPCG_T *fdpcg);
     void P(curcell **xout, const curcell *xin, stream_t &stream);
 };
+}//namespace
 #endif

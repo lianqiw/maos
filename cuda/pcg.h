@@ -17,7 +17,7 @@
 */
 #ifndef AOS_CUDA_PCG_H
 #define AOS_CUDA_PCG_H
-
+namespace cuda_recon{
 /**
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.
 */
@@ -49,4 +49,5 @@ class cucgpre_t;
 float gpu_pcg(curcell **x0, cucg_t *Amul, cucgpre_t *Mmul,
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter, 
 	      stream_t &stream, double cgthres=-1);
+}//namespace
 #endif

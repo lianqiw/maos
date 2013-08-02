@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "solve.h"
+namespace cuda_recon{
 float cucg_t::solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream){
     float ans;
     if(Rfun){
@@ -58,7 +59,9 @@ void cumuv_t::Trans(curcell **out, float beta, const curcell *in, float alpha, s
 	curmv((*out)->m->p, 1, V, Vx->p, 'n', -alpha, stream);
     }
 }
-void cumuv_t::init(const MUV_T *in){
+cumuv_t::cumuv_t(const MUV_T *in)
+    :M(0),U(0),V(0),Vx(0),nx(0),ny(0),nxs(0),nys(0){
+    if(!in) return;
     if(M || !in->M) error("in->M should not be NULL and M should be NULL\n");
     dsp *Mc=spcell2sp(in->M);
     dmat *Uc=dcell2m(in->U);
@@ -80,10 +83,10 @@ void cumuv_t::init(const MUV_T *in){
     Vx=curnew(V->ny, 1);
 }
 cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L)
-    :cucg_t(_maxit, _warm_restart){
+    :cucg_t(_maxit, _warm_restart),CR(NULL),CL(NULL){
     if(!_R) return;
-    CR.init(_R);
-    CL.init(_L);
+    CR=new cumuv_t(_R);
+    CL=new cumuv_t(_L);
 }
 cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp)
     :rhs(0),Vr(0),Cl(0),Cp(0),Up(0),Vp(0),y(0){
@@ -168,4 +171,5 @@ void cusolve_cbs::chol_solve(float *out, const float *in, stream_t &stream){
     cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(float),stream>>>(y->p, Cl->x, Cl->p, Cl->i, n); 
     perm_i_do<<<DIM(n, 256),0,stream>>>(out, y->p, Cp, n);
     cudaStreamSynchronize(stream);
+}
 }

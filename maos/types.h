@@ -273,6 +273,7 @@ typedef struct RECON_T{
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
     long *xnx;
     long *xny;
+    long *xnloc;
     map_t *fmap;       /**<Grid on pupil for DM fitting*/
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 

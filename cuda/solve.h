@@ -20,7 +20,7 @@
 #include "utils.h"
 #include "curmat.h"
 #include "pcg.h"
-
+namespace cuda_recon{
 class cusolve_r{/*Interface for RHS*/
 public:
     virtual void R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
@@ -38,6 +38,7 @@ public:
     void operator()(curcell **xout, const curcell *xin, stream_t &stream){
 	P(xout, xin, stream);
     }
+    virtual ~cucgpre_t(){}
 };
 
 class cucg_t:public cusolve_l{/*Implementes LHS with cg algorithm*/
@@ -49,6 +50,10 @@ protected:
 public:
     cucg_t(int _maxit=0, int _warm_restart=0)
 	:maxit(_maxit),warm_restart(_warm_restart),rhs(NULL),precond(NULL){}
+    virtual ~cucg_t(){
+	delete rhs;
+	delete precond;
+    }
     /*Left hand side forward operaton*/
     virtual void L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
     void operator()(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
@@ -65,10 +70,7 @@ class cumuv_t{
     int nx, ny, *nxs, *nys;
     
 public:
-    void init(const MUV_T *in);
-    cumuv_t(MUV_T *in=0):M(0),U(0),V(0),Vx(0),nx(0),ny(0),nxs(0),nys(0){
-	if(in) init(in);
-    }
+    cumuv_t(const MUV_T *in=0);
     void Forward(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream);
     void operator()(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream){
 	Forward(out, beta, in, alpha, stream);
@@ -78,23 +80,25 @@ public:
 
 class cusolve_sparse:public cusolve_r,public cucg_t{
 protected:
-    cumuv_t CR, CL;
+    cumuv_t *CR, *CL;
 public:
     cusolve_sparse(int _maxit=0, int _warm_restart=0, MUV_T *_R=0, MUV_T *_L=0);
     virtual ~cusolve_sparse(){
 	info2("cusolve_sparse::destructor\n");
+	delete CR;
+	delete CL;
     }
     virtual void R(curcell **out, float beta, 
 		   const curcell *xin, float alpha, stream_t &stream){
-	CR(out, beta, xin, alpha, stream);
+	CR->Forward(out, beta, xin, alpha, stream);
     }
     virtual void L(curcell **out, float beta, 
 		   const curcell *xin, float alpha, stream_t &stream){
-	CL(out, beta, xin, alpha, stream);
+	CL->Forward(out, beta, xin, alpha, stream);
     }
     virtual void Rt(curcell **out, float beta, 
 		    const curcell *xin, float alpha, stream_t &stream){
-	CR.Trans(out, beta, xin, alpha, stream);
+	CR->Trans(out, beta, xin, alpha, stream);
     }
 };
 
@@ -158,4 +162,5 @@ public:
 	return 0;
     }
 };
+}//namespace
 #endif

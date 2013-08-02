@@ -21,19 +21,23 @@
 #include "recon.h"
 #include "cucmat.h"
 #define TIMING 0
-void cufdpcg_t::init(FDPCG_T *fdpcg, curecon_geom *_grid){
-    int bs=fdpcg->bs;
+namespace cuda_recon{
+void cufdpcg_t::update(FDPCG_T *fdpcg){
     int nb=(fdpcg->nbx/2+1)*fdpcg->nby;//half frequency range
     //copy or update Mb. 
     int nxsave=fdpcg->Mbinv->nx;
     fdpcg->Mbinv->nx=nb;
     cp2gpu(&Mb, fdpcg->Mbinv);
     fdpcg->Mbinv->nx=nxsave;
-    if(perm){//already initialized. 
-	return;
-    }
+}
+cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
+    :grid(_grid),perm(0),Mb(0),fft(0),ffti(0),fftnc(0),fftips(0),
+     xhat1(0),nby(0),nbz(0),scale(0),fddata(0){
+    update(fdpcg);
     grid=_grid;
     scale=fdpcg->scale;
+    int bs=fdpcg->bs;  
+    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;
     cp2gpu(&perm, fdpcg->permhf, nb*bs);
     int nps=grid->npsr;
     int count=0;
@@ -209,3 +213,4 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 	  times[1], times[2], times[3], times[0]);
 #endif
 }
+}//namespace

@@ -148,9 +148,11 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     
     recon->xnx=calloc(recon->npsr, sizeof(long));
     recon->xny=calloc(recon->npsr, sizeof(long));
+    recon->xnloc=calloc(recon->npsr, sizeof(long));
     for(long i=0; i<recon->npsr; i++){
 	recon->xnx[i]=recon->xmap[i]->nx;
 	recon->xny[i]=recon->xmap[i]->ny;
+	recon->xnloc[i]=recon->xloc[i]->nloc;
     }
     recon->xmcc=dcellnew(npsr,1);
     for(int ipsr=0; ipsr<npsr; ipsr++){

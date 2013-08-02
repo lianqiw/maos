@@ -18,48 +18,79 @@
 #ifndef AOS_CUDA_RECON_GEOM_H
 #define AOS_CUDA_RECON_GEOM_H
 #include "types.h"
+#include "prop_wrap.h"
 /**
    Contains geometry information that may be shared by 
    tomo
    fit
    moao
 */
+namespace cuda_recon{
 class curecon_geom{
 public:
     int npsr, ndm;
     int delay, isim, isimr;
     curcell *cubic_cc;/*Cubic influence function of system DM*/
-    cugrid_t *amap;/*Grid of amap*/
-    cugrid_t *acmap;
     cugrid_t *xmap;/*Grid of xmap*/
     cugrid_t *xcmap;
+    cugrid_t *amap;
     cugrid_t pmap; /*Pupil map for tomo*/
     cugrid_t fmap; /*Pupil map for fit*/
     W01_T *W01;    /**< The aperture weighting defined on floc*/
     long *xnx, *xny;/*do not free*/
     long *anx, *any;/*do not free*/
     long *anloc, *ngrad;/*do not free*/
-    float *vx, *vy, dt; /*wind speed*/
-    void init(const PARMS_T *parms, const RECON_T *recon);
-    curecon_geom(const PARMS_T *parms=0, const RECON_T *recon=0):
-	npsr(0),ndm(0),isim(0),isimr(0),cubic_cc(0),
-	amap(0),acmap(0),xmap(0),xcmap(0),W01(0),
-	xnx(0),xny(0),anx(0),any(0),
-	anloc(0),ngrad(0),
-	vx(0),vy(0),dt(0),delay(0){
-	if(parms){
-	    init(parms, recon);
-	}
-    }
+    float dt; 
+    curecon_geom(const PARMS_T *parms=0, const RECON_T *recon=0);
     ~curecon_geom(){
-	delete[] amap;
-	delete[] acmap;
 	delete[] xmap;
+	delete[] amap;
 	delete[] xcmap;
-	delete[] vx;
-	delete[] vy;
 	delete W01;
 	delete cubic_cc;
     }
 };
+class map_ray{
+protected:
+    PROP_WRAP_T *hdata;
+    int nlayer, ndir;
+public:
+    map_ray():hdata(0),nlayer(0),ndir(0){};
+    //from in to out
+    void forward(float **out, float **in,  float alpha, float *wt, stream_t &stream){
+	gpu_prop_grid_do<<<dim3(4,4,ndir>1?ndir:nlayer),dim3(16,16),0,stream>>>
+	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
+    }
+    //from out to in
+    void backward(float **out, float **in, float alpha, float *wt, stream_t &stream){
+	gpu_prop_grid_do<<<dim3(4,4,nlayer),dim3(16,16),0,stream>>>
+	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
+    }
+    virtual ~map_ray(){
+	PROP_WRAP_T pcpu[ndir*nlayer];
+	cudaMemcpy(&pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+	for(int i=0; i<ndir*nlayer; i++){
+	    if(pcpu[i].reverse){
+		cudaFree(pcpu[i].reverse);
+	    }
+	}
+	cudaFree(hdata);
+    }
+};
+/*Ray tracing from one/multiple layers to one/multiple directions*/
+class map_l2d:public map_ray{
+public:
+    map_l2d(const cugrid_t &out, int _ndir, const cugrid_t *in, int _nlayer,
+	    float *thetaxv, float *thetayv, float *hsv, int *skip, float dt=0);
+  
+};
+
+/*Ray tracing from layer to layer, for caching.*/
+class map_l2l:public map_ray{
+public:
+    map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer);
+};
+
+
+}//namespace
 #endif

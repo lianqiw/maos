@@ -19,14 +19,16 @@
 #define AOS_CUDA_FIT_H
 #include "gpu.h"
 #include "solve.h"
-#include "recon_geom.h"
+#include "recon_base.h"
 #include "prop_wrap.h"
 /*cufit_grid implements both RHS and LHS. LHS is through cucg*/
-class curecon_geom;
+namespace cuda_recon{
 class cufit_grid:public cusolve_r,public cucg_t{/*grid based*/
+protected:
     /*the following data are input or intermediate data for the operation*/
     curecon_geom *grid;
     int nfit;
+    cugrid_t *acmap;
     curcell *dmcache, *xcache;
     curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
@@ -35,20 +37,14 @@ class cufit_grid:public cusolve_r,public cucg_t{/*grid based*/
     curmat *pis;     /**<contains result of W1'*opdfit*/
     curmat *fitwt, *fitNW, *dotNW;
     culoc_t *floc;
-    float *fit_thetax, *fit_thetay;
+    float *fit_thetax, *fit_thetay, *fit_hs;
     cusp *actslave;
-    PROP_WRAP_T *hxpdata,*hadata,*ha0data,*ha1data,*hxp0data,*hxp1data;
+    map_ray *hxp, *hxp0, *hxp1, *ha, *ha0, *ha1;
+    /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
+    PROP_WRAP_T *hapdata;//for moao
+    PROP_WRAP_T *hadata,*ha0data,*ha1data;*/
 public:
-    void init(const PARMS_T *parms, const RECON_T *recon);
-    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0):
-	cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-	nfit(0),dmcache(0),xcache(0),opdfit(0),opdfit2(0), opdfitv(0),opdfit2v(0),
-	pis(0),fitwt(0),fitNW(0),dotNW(0),floc(0),fit_thetax(0),fit_thetay(0),
-	actslave(0), 
-	hxpdata(0),hadata(0),ha0data(0),ha1data(0),hxp0data(0),hxp1data(0){
-	if(!parms) return;
-	init(parms, recon);
-    }
+    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     void do_hxp(const curcell *xin, stream_t &stream);
     void do_hxpt(const curcell *xout, float alpha, stream_t &stream);
     void do_w(stream_t &stream);
@@ -57,6 +53,7 @@ public:
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
 	if(!this) return;
+	delete[] acmap;
 	delete dmcache;
 	delete xcache;
 	delete opdfit;
@@ -71,13 +68,13 @@ public:
 	delete [] fit_thetay;
 	delete floc;
 	delete actslave;
-	delete [] hadata;
-	delete [] ha0data;
-	delete [] ha1data;
+	delete [] ha;
+	delete [] ha0;
+	delete [] ha1;
 
-	delete [] hxpdata;
-	delete [] hxp0data;
-	delete [] hxp1data;
+	delete [] hxp;
+	delete [] hxp0;
+	delete [] hxp1;
     }
     virtual void R(curcell **out, float beta, 
 		   const curcell *xin, float alpha, stream_t &stream);
@@ -91,5 +88,5 @@ class cufit_sparse:public cusolve_sparse{
 public:
     cufit_sparse(const PARMS_T *parms, const RECON_T *recon);
 };
-
+}//namespace
 #endif

@@ -23,22 +23,19 @@
 
 #define RAND_BLOCK 16
 #define RAND_THREAD 32
-typedef struct {
+struct cudtf_t{
     fcomplex **nominal;/*array for each sa. */
     fcomplex **etf;
     int etfis1d;
-}cudtf_t;
-typedef struct cullt_t{
-    cupts_t pts;
-    culoc_t loc;
-    operator bool(){
-	return pts;
-    }
-}cullt_t;
+};
+struct cullt_t{
+    cupts_t *pts;
+    culoc_t *loc;
+};
 typedef struct cuwloc_t{
-    cupts_t pts;   /**<location of lower left OPD point in each sa*/
-    culoc_t loc;  /**<location of OPD points*/
-    culoc_t saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
+    cupts_t *pts;   /**<location of lower left OPD point in each sa*/
+    culoc_t *loc;  /**<location of OPD points*/
+    culoc_t *saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
     //float (*pts)[2];  /**<location of lower left OPD point in each sa*/
     //float (*loc)[2];  /**<location of OPD points*/
     //float dsa;        /**<Subaperture spacing*/
@@ -52,7 +49,7 @@ typedef struct cuwloc_t{
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
     curmat *fieldstop;/**<*mask for field stop computation*/
-    struct cullt_t llt;
+    cullt_t *llt;
 }cupowfs_t;
 
 

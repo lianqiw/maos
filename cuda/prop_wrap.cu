@@ -67,18 +67,17 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 	    }
 	    datai=data+idir+ndir*ips;
 	}
-
 	const bool match=fabsf(datai->xratio-1.f)<EPS && fabsf(datai->yratio-1.f)<EPS;
 	if(!datai->cc && trans=='t' && match){
 	    datai=datai->reverse;
 	}
+	const int nx=datai->nx;
+	const int ny=datai->ny;
+	if(nx==0) continue;//skip empty wfs
 	float *restrict pps=ppss[ips]+datai->offps;
 	float *restrict pdir=pdirs[idir]+datai->offdir;
 	const float alpha=alpha2?(alpha2[idir]*alpha1):alpha1;
 	const float *cc=datai->cc;
-	const int nx=datai->nx;
-	const int ny=datai->ny;
-	if(nx==0) continue;//skip empty wfs
 	const int nxdir=datai->nxdir;
 	const int nxps=datai->nxps;
 	if(!cc && match){

@@ -23,7 +23,13 @@ extern int gpu_recon;
 extern int NGPU;
 typedef float ATYPE;
 typedef float GTYPE;
+namespace cuda_recon{
 class curecon_t;
+class curecon_geom;
+}
+using namespace cuda_recon;//temporary during code migration.
+//using cuda::curecon_t;
+//using cuda::curecon_geom;
 typedef struct cudata_t{ 
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
