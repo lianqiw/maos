@@ -283,6 +283,8 @@ static void redirect2fn(const char *fn){
   If we are in attached mode, will output to both file and screen.
 */
 void redirect(void){
+    extern int disable_save;
+    if(disable_save) return;
     char *fn=malloc(PATH_MAX);
     pid_t pid=getpid();
     snprintf(fn,PATH_MAX,"run_%d.log",pid);

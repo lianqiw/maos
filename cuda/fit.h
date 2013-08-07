@@ -34,10 +34,9 @@ protected:
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
     curmat *opdfitv;/**<Concatenated version of opdfit. 1 column for each direction*/
     curmat *opdfit2v;/**<Concatenated version of opdfit2. 1 column for each direction*/
-    curmat *pis;     /**<contains result of W1'*opdfit*/
     curmat *fitwt, *fitNW, *dotNW;
     culoc_t *floc;
-    float *fit_thetax, *fit_thetay, *fit_hs;
+    dir_t *dir;
     cusp *actslave;
     map_ray *hxp, *hxp0, *hxp1, *ha, *ha0, *ha1;
     /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
@@ -47,7 +46,6 @@ public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     void do_hxp(const curcell *xin, stream_t &stream);
     void do_hxpt(const curcell *xout, float alpha, stream_t &stream);
-    void do_w(stream_t &stream);
     void do_ha(const curcell *xin, stream_t &stream);
     void do_hat(curcell *xout,  float alpha, stream_t &stream);
     virtual ~cufit_grid(){
@@ -60,12 +58,10 @@ public:
 	delete opdfit2;
 	delete opdfitv;
 	delete opdfit2v;
-	delete pis;
 	delete fitwt;
 	delete fitNW;
 	delete dotNW;
-	delete [] fit_thetax;
-	delete [] fit_thetay;
+	delete dir;
 	delete floc;
 	delete actslave;
 	delete [] ha;

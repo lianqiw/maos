@@ -321,7 +321,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     /*CUDA_SYNC_STREAM; */
     
     if(imoao>-1){
-	gpu_dm2loc(phiout->p, loc, nloc, &(cudata->dm_wfs[iwfs]), 1,
+	gpu_dm2loc(phiout->p, loc, nloc, cudata->dm_wfs[iwfs], 1,
 		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
     if(simu->telws){

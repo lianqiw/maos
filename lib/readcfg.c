@@ -168,7 +168,7 @@ static char *squeeze(char *line){
  */
 void close_config(const char *format, ...){
     format2fn;
-    const char *fnout=fn;
+    const char *fnout=format?fn:NULL;
     if(store){
 	info2("Used %ld of %ld supplied keys\n",nused,nstore);
 	if(fnout && strlen(fnout)>0){

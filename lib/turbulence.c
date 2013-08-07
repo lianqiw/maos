@@ -179,8 +179,11 @@ static map_t** create_screen(GENSCREEN_T *data,
 		if(fd>=0){/*succeed to lock file. */
 		    char fntmp[PATH_MAX];
 		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
+		    int disable_save_save=disable_save;
+		    disable_save=0;//temporarily disable this feature.
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fntmp); 
 		    funsave(fc, data);
+		    disable_save=disable_save_save;
 		    cellarr_close(fc);
 		    if(rename(fntmp, fnatm)){
 			error("Unable to rename %s\n", fnlock);

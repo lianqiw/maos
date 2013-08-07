@@ -137,6 +137,8 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    recon->amap[idm]=loc2map(recon->aloc[idm]);
 	}
 	recon->aembed[idm]=map2embed(recon->amap[idm]);
+	recon->amap[idm]->cubic=parms->dm[idm].cubic;
+	recon->amap[idm]->iac=parms->dm[idm].iac;
     }
 
     recon->alocm=calloc(ndm, sizeof(loc_t*));

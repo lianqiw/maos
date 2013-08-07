@@ -3,7 +3,12 @@ WARN=--compiler-options -Wall --compiler-options -Wno-unused-value --compiler-op
 #VER=-gencode arch=compute_$(CUDAVER),code=sm_$(CUDAVER)
 #VER+=-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
 #VER+=-gencode arch=compute_35,code=sm_35.
-AM_CFLAGS=$(WARN) -g -O2 $(CUDAOPT)
+AM_CFLAGS=$(WARN) -g $(CUDAOPT)
+if DEBUG
+AM_CFLAGS+=-O0
+else
+AM_CFLAGS+=-O3
+endif
 #AM_CFLAGS+=-Xptxas="-v" #for verbose 
 #AM_CFLAGS+=-Xptxas -dlcm=cg
 AM_CFLAGS+=-lineinfo

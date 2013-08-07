@@ -21,26 +21,8 @@
 #include "gpu.h"
 #include "solve.h"
 #include "recon_base.h"
+#include "moao.h"
 namespace cuda_recon{
-typedef struct cumoao_t{
-    curcell *fitNW;
-    cusp *actslave;
-    curmat *cubic_cc; 
-    cugrid_t amap;/**<Info of amap*/
-    cugrid_t acmap;/**<Info of acmap*/
-    cugrid_t fmap;/**<Info of fmap*/
-    /*aperture weighting*/
-    W01_T *W01;
-    curcell *rhs;/*right hand side.*/
-    float *pis; /*a temporary variable*/
-    curmat *xp; /*temporary array*/
-    curmat *xp2;/*temporary array*/
-    curmat *tmpNW;/*temporary array*/
-    cumoao_t(){
-	memset(this, 0, sizeof(*this));
-    }
-}cumoao_t;
-
 class curecon_t{
 public:
     curecon_geom *grid;
@@ -54,30 +36,27 @@ private:
    
     curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
     curcell *opdr_vec; /**<Referencing opdr in vector form*/
+    curcell *tomo_rhs;
     curcell *dmfit;
     curcell *dmfit_vec;
+    curcell *fit_rhs;
     stream_t cgstream;
     curcell *opdr_save;/*for debugging*/
     curcell *dmfit_save;/*for debugging*/
+
     curcell *RFdfx;
     curcell *GXL;
 
     curcell *gngsmvst;
     curcell *deltafocus;
     
-    friend void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon);
-    friend void gpu_moao_filter(SIM_T *simu);
-    friend void gpu_moao_recon(SIM_T *simu);
-    friend void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, float thetax, float thetay, float hs, const float alpha);
-    friend void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-    
 public:
-    cumoao_t *moao;/**<moao configurations for GPU*/
-    curcell **dm_wfs;/**<moao results for wfs for warm restart*/
-    curcell **dm_evl;/**<moao results for evl for warm restart*/
-    stream_t *moao_stream;
-    CGTMP_T cgtmp_moaowfs;
-    CGTMP_T cgtmp_moaoevl;
+    int nmoao;
+    cumoao_t **moao;/**<moao configurations for GPU*/
+    smat *moao_gwfs, *moao_gevl;
+    curcell ***dm_moao;/**<moao output*/
+    curcell *dm_wfs;/**<moao results for wfs for warm restart*/
+    curcell *dm_evl;/**<moao results for evl for warm restart*/
     /*the following data reside in the gpu memory*/
     friend void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
 public:
@@ -93,15 +72,16 @@ public:
 	delete opdr;
 	delete opdr_vec; 
 	delete opdr_save;
+	delete tomo_rhs;
 
 	delete dmfit;
 	delete dmfit_vec; 
 	delete dmfit_save;
+	delete fit_rhs;
 
 	delete moao;
 	delete dm_wfs;
 	delete dm_evl;
-	delete moao_stream;
 	delete RFdfx;
 	delete GXL;
     }
@@ -109,6 +89,8 @@ public:
     void update(const PARMS_T *parms, RECON_T *recon);
     float tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
     float fit(dcell **_dmfit, dcell *_opdr);
+    float moao_recon(dcell *_dmfit, dcell *_opdr);
+    void moao_filter(dcell *_dm_wfs, dcell *_dm_evl);
     void mvm(dcell **_dmerr, dcell *_gradin);
     void tomo_test(SIM_T *simu);
     void fit_test(SIM_T *simu);

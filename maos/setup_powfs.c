@@ -1644,6 +1644,8 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 */
 static void 
 setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
+    int disable_save_save=disable_save;
+    disable_save=0;//temporarily disable this feature.
     long nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat){
 	error("Should only be called once\n");
@@ -1898,6 +1900,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     dcellfree(powfs[ipowfs].intstat->i0);
     dcellfree(powfs[ipowfs].intstat->gx);
     dcellfree(powfs[ipowfs].intstat->gy);
+    disable_save=disable_save_save;//put it back.
 }
 /*
   Setup gradient offset for calibration.

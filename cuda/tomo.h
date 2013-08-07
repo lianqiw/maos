@@ -63,7 +63,7 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     curcell *PDF;  /**< Differential focus removal */
     curcell *PDFTT;/**<Coupling between DF and TT*/
     cucell<int> *saptr;
-    cucell<int> *GPp;
+    cucell<short2> *GPp;
     float *GPscale;
     cuspcell *GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
@@ -77,7 +77,8 @@ public:
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
     }
-    
+    void do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream);
+    void do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream);
     cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
 		const POWFS_T *powfs=0, curecon_geom *_grid=0);
     virtual void R(curcell **out, float beta, 

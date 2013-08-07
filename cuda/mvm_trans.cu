@@ -114,7 +114,7 @@ static void mvm_trans_igpu(thread_t *info){
 	    if(!load_mvmf){
 		if(eyec){ /*Fitting operator*/
 		    curcellzero(dmfit, stream);//temp
-		    residualfit->p[iact]=curecon->FL->solve(&dmfit, eyec, NULL, stream);
+		    residualfit->p[iact]=curecon->FL->solve(&dmfit, eyec, stream);
 		}else{
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
 				    cudaMemcpyHostToDevice, stream);
@@ -127,7 +127,7 @@ static void mvm_trans_igpu(thread_t *info){
 	    if(mvmi){
 		opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
 	    }
-	    residual->p[iact]=curecon->RL->solve(&opdr, opdx, NULL, stream);
+	    residual->p[iact]=curecon->RL->solve(&opdr, opdx, stream);
 	    tk_TomoL+=toc3; tic;
 	    /*Right hand side. output directly to mvmt*/
 	    grad->replace(mvmt->p+(iact-info->start)*ntotgrad, 0, stream);

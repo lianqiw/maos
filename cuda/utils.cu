@@ -99,31 +99,32 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
 /*
   Convert a host dsp array to GPU sprase array.
 */
-void cp2gpu(cusp **dest0, const dsp *src_csc, int tocsr){
+cusp::cusp(const dsp *src_csc, int tocsr)
+    :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){
     if(!src_csc) return;
-    if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
-    cusp *dest=*dest0;
     dsp *src=const_cast<dsp*>(src_csc);
     if(tocsr){
-	dest->type=SP_CSR;
+	type=SP_CSR;
 	src=sptrans(src_csc);
     }else{
-	dest->type=SP_CSC;
+	type=SP_CSC;
     }
-    dest->nx=src_csc->m;
-    dest->ny=src_csc->n;
-    dest->nzmax=src->nzmax;
-    dest->p=NULL; dest->i=NULL; dest->x=NULL;
-    cp2gpu(&dest->p, src->p, src->n+1);
-    cp2gpu(&dest->i, src->i, src->nzmax);
-    cp2gpu(&dest->x, src->x, src->nzmax);
+    nx=src_csc->m;
+    ny=src_csc->n;
+    nzmax=src->nzmax;
+    p=NULL; i=NULL; x=NULL;
+    cp2gpu(&p, src->p, src->n+1);
+    cp2gpu(&i, src->i, src->nzmax);
+    cp2gpu(&x, src->x, src->nzmax);
     if(tocsr){
 	spfree(src);
     }
+    nref=new int[1];
+    nref[0]=1;
 }
 void cp2gpu(cusp **dest0, const spcell *srcc, int tocsr){
     dsp *src=spcell2sp(srcc);
-    cp2gpu(dest0, src, tocsr);
+    *dest0=new cusp(src, tocsr);
     spfree(src);
 }
 void cp2gpu(cuspcell **dest0, const spcell *src, int tocsr){
@@ -132,7 +133,7 @@ void cp2gpu(cuspcell **dest0, const spcell *src, int tocsr){
 	*dest0=cuspcellnew(src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){
-	cp2gpu(&(*dest0)->p[i], src->p[i], tocsr);
+	(*dest0)->p[i]=new cusp(src->p[i], tocsr);
     }
 }
 static const char *scsrmv_err[]={
@@ -539,53 +540,7 @@ void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream){
 	cp2cpu(&(*out)->p[i], in->p[i], stream);
     }
 }
-W01_T* gpu_get_W01(dsp *R_W0, dmat *R_W1){
-    if(!R_W0 || !R_W1){
-	error("R0, R1 must not be empty\n");
-    }
-    W01_T *W01=(W01_T*)calloc(1, sizeof(W01_T));
-    cp2gpu(&W01->W1, R_W1);
-    {
-	/*W0 of partially illuminates subaps are stored as sparse matrix in
-	  GPU. W0 of fully illuminated subaps are not.*/
-	spint *pp=R_W0->p;
-	spint *pi=R_W0->i;
-	double *px=R_W0->x;
-	dsp *W0new=spnew(R_W0->m, R_W0->n, R_W0->nzmax);
-	spint *pp2=W0new->p;
-	spint *pi2=W0new->i;
-	double *px2=W0new->x;
-	int *full;
-	cudaMallocHost(&full, R_W0->n*sizeof(int));
-	//#define W0_BW 1
-	double W1max=dmax(R_W1);
-	double thres=W1max*(1.f-1e-6);
-	W01->W0v=(float)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
-	info("W0v=%g\n", W01->W0v);
-	int count=0;
-	int count2=0;
-	for(int ic=0; ic<R_W0->n; ic++){
-	    pp2[ic]=count;
-	    if(R_W1->p[ic]>thres){
-		full[count2]=ic;
-		count2++;
-	    }else{
-		int nv=pp[ic+1]-pp[ic];
-		memcpy(pi2+count, pi+pp[ic], sizeof(spint)*nv);
-		memcpy(px2+count, px+pp[ic], sizeof(double)*nv);
-		count+=nv;
-	    }
-	}
-	pp2[R_W0->n]=count;
-	W0new->nzmax=count;
-	cp2gpu(&W01->W0p, W0new, 1);
-	cp2gpu(&W01->W0f, full, count2);
-	W01->nW0f=count2;
-	spfree(W0new);
-	cudaFreeHost(full);
-    }
-    return W01;
-}
+
 void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream){
     smat *tmp=NULL;
     cp2cpu(&tmp,A,stream);

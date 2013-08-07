@@ -58,7 +58,6 @@ void cuspmul (float *y, cusp *A, const float *x, int ncol, char trans,
 void gpu_write(const float *p, int nx, int ny, const char *format, ...);
 void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_write(const int *p, int nx, int ny, const char *format, ...);
-W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
 void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream);

@@ -32,7 +32,7 @@
 */
 /*static double opdzlim[2]={-3e-5,3e-5}; */
 static double *opdzlim=NULL;
-
+extern int disable_save;
 static map_t **genscreen_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
@@ -555,7 +555,7 @@ static void init_simu_evl(SIM_T *simu){
     SIM_SAVE_T *save=simu->save;
     simu->evlopd=dcellnew(nevl, 1);
     simu->perfevl_iground=parms->atm.iground;
-    
+
     {/*MMAP the main result file */
 	long nnx[4]={nmod,nmod,nmod,nmod};
 	long nny[4]={nsim,nsim,nsim,nsim};
@@ -565,7 +565,11 @@ static void init_simu_evl(SIM_T *simu){
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
-	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
+	if(disable_save){
+	    simu->res = dcellnew3(4,1,nnx,nny);
+	}else{
+	    simu->res = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
+	}
 	simu->ole     = dref(simu->res->p[0]);
 	simu->cle     = dref(simu->res->p[2]);
 	simu->clem    = dref(simu->res->p[3]);
@@ -651,8 +655,13 @@ static void init_simu_evl(SIM_T *simu){
 		nny[iwfs]=1;
 	    }
 	}
-	simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
-	simu->lgsfocus=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszlgsfocus_%d.bin", seed);
+	if(disable_save){
+	    simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
+	    simu->lgsfocus=dcellnew3(parms->nwfs, 1, nnx, nny);
+	}else{
+	    simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
+	    simu->lgsfocus=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszlgsfocus_%d.bin", seed);
+	}
     }    
 
     if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
@@ -1318,11 +1327,11 @@ static void init_simu_moao(SIM_T *simu){
 	    }
 	}
     }
-#if USE_CUDA
+/*#if USE_CUDA
     if(parms->gpu.moao && recon->moao){
 	gpu_moao_2gpu(simu);//initilization.
     }
-#endif
+    #endif*/
     if(parms->save.dm){
 	if(simu->dm_wfs){
 	    save->dm_wfs=calloc(nwfs, sizeof(cellarr*));
@@ -1349,10 +1358,6 @@ static void init_simu_moao(SIM_T *simu){
 */
 SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, 
 		 APER_T *aper, RECON_T *recon, int iseed){
-    if(parms->fdlock[iseed]<0){
-	warning("Another MAOS is already running. Skip seed %d\n", parms->sim.seeds[iseed]);
-	return NULL;
-    }
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     SIM_T *simu=calloc(1, sizeof(SIM_T));
@@ -1432,8 +1437,12 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[1]=nnx[0]=parms->sim.end;
 	    nny[1]=nny[0]=1;
 	    const char *header[2]={"Tomography", "DM Fit"};
-	    simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
-				      "ResCG_%d.bin", seed);
+	    if(disable_save){
+		simu->cgres=dcellnew3(2, 1, nnx, nny);
+	    }else{
+		simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
+					  "ResCG_%d.bin", seed);
+	    }
 	}
     }
     init_simu_evl(simu);
@@ -1644,7 +1653,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->dm_wfs, nwfs);
  
     dfree(simu->winddir);
-    {
+    if(parms->fdlock){
 	/*release the lock and close the file. */
 	char fn[80];
 	char fnnew[80];

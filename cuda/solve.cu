@@ -17,12 +17,9 @@
 */
 #include "solve.h"
 namespace cuda_recon{
-float cucg_t::solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream){
+float cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
     float ans;
-    if(Rfun){
-	Rfun->R(&rhs, 0, xin, 1, stream);
-    }
-    if((ans=gpu_pcg(xout, this, precond, Rfun?rhs:xin, &cgtmp,
+    if((ans=gpu_pcg(xout, this, precond, xin, &cgtmp,
 		    warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
 	warning2("CG %5d does not converge. ans=%g. maxit=%d\n", 
@@ -76,7 +73,7 @@ cumuv_t::cumuv_t(const MUV_T *in)
     for(int i=0; i<ny; i++){
 	nys[i]=in->M->p[i*in->M->nx]->n;
     }
-    cp2gpu(&M, Mc, 1);
+    M=new cusp(Mc, 1);
     cp2gpu(&U, Uc);
     cp2gpu(&V, Vc);
     spfree(Mc); dfree(Uc); dfree(Vc);
@@ -89,27 +86,20 @@ cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *
     CL=new cumuv_t(_L);
 }
 cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp)
-    :rhs(0),Vr(0),Cl(0),Cp(0),Up(0),Vp(0),y(0){
+    :Vr(0),Cl(0),Cp(0),Up(0),Vp(0),y(0){
     if(!_C) return;
     chol_convert(_C, 0);
-    cp2gpu(&Cl, _C->Cl, 0);
+    Cl=new cusp(_C->Cl, 0);
     cp2gpu(&Cp, _C->Cp, _C->Cl->m);
     if(_Up){
 	cp2gpu(&Up, _Up);
 	cp2gpu(&Vp, _Vp);
     }
 }
-float cusolve_cbs::solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream){
-    const curcell *in=NULL;
-    if(Rfun){
-	Rfun->R(&rhs, 0, xin, 1, stream);
-	in=rhs;
-    }else{
-	in=xin;
-    }
+float cusolve_cbs::solve(curcell **xout, const curcell *xin, stream_t &stream){
     if(!*xout) *xout=curcellnew(xin);
     if(Cl->type==SP_CSC){
-	chol_solve((*xout)->m->p, in->m->p, stream);
+	chol_solve((*xout)->m->p, xin->m->p, stream);
     }else{
 	error("To implemente\n");
     }
@@ -117,7 +107,7 @@ float cusolve_cbs::solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, st
 	if(!Vr){
 	    Vr=curnew(Vp->ny, 1);
 	}
-	curmv(Vr->p, 0, Vp, in->m->p, 't', -1, stream);
+	curmv(Vr->p, 0, Vp, xin->m->p, 't', -1, stream);
 	curmv((*xout)->m->p, 1, Up, Vr->p, 'n', 1, stream);
     }
     return 0;

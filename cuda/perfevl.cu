@@ -603,7 +603,7 @@ void gpu_perfevl(thread_t *info){
 		   parms->evl.hs[ievl], thetax, thetay,
 		   parms->evl.misreg[0], parms->evl.misreg[1], -1, stream);
 	if(imoao!=-1){
-	    gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, &(cudata->dm_evl[ievl]), 1,
+	    gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, cudata->dm_evl[ievl], 1,
 		       INFINITY, 0, 0, 0, 0, -1, stream);
 	}
     }

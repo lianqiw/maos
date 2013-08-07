@@ -152,6 +152,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 	cellarr_dcell(simu->save->dmpttr, simu->isim, NULL);
     }
 }
+
 /**
    Update DM command for next cycle using info from last cycle (two cycle delay)
 in closed loop mode */
@@ -254,25 +255,24 @@ void filter_cl(SIM_T *simu){
     if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
 	dcelladd(&simu->zoomint, 1, simu->zoomerr, 1);
     }
-    if(recon->moao){
-	if(!parms->gpu.moao){ /*close loop filtering.*/
-	    if(simu->dm_wfs){
-		const int nwfs=parms->nwfs;
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-		    int ipowfs=parms->wfs[iwfs].powfs;
-		    int imoao=parms->powfs[ipowfs].moao;
-		    if(imoao<0) continue;
-		    double g=parms->moao[imoao].gdm;
-		    dadd(&simu->dm_wfs->p[iwfs], 1.-g, simu->dm_wfs->p[iwfs+nwfs], g);
-		}
-	    }
-	    if(simu->dm_evl){
-		const int nevl=parms->evl.nevl;
-		int imoao=parms->evl.moao;
+    if(recon->moao && !parms->gpu.moao){
+	warning_once("moao filter implemented with LPF\n");
+	if(simu->dm_wfs){
+	    const int nwfs=parms->nwfs;
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		int imoao=parms->powfs[ipowfs].moao;
+		if(imoao<0) continue;
 		double g=parms->moao[imoao].gdm;
-		for(int ievl=0; ievl<nevl; ievl++){
-		    dadd(&simu->dm_evl->p[ievl], 1.-g, simu->dm_evl->p[ievl+nevl], g);
-		}
+		dadd(&simu->dm_wfs->p[iwfs], 1-g, simu->dm_wfs->p[iwfs+nwfs], g);
+	    }
+	}
+	if(simu->dm_evl){
+	    const int nevl=parms->evl.nevl;
+	    int imoao=parms->evl.moao;
+	    double g=parms->moao[imoao].gdm;
+	    for(int ievl=0; ievl<nevl; ievl++){
+		dadd(&simu->dm_evl->p[ievl], 1-g, simu->dm_evl->p[ievl+nevl], g);
 	    }
 	}
     }

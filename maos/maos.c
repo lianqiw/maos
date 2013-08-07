@@ -251,7 +251,7 @@ int main(int argc, const char *argv[]){
 	    wait_cpu(arg->nthread);
 	}
     }
-    {
+    if(!disable_save){
 	//Make the symlinks for running job only.
 	char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());

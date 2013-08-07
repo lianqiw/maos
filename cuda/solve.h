@@ -29,7 +29,7 @@ public:
 
 class cusolve_l{/*Interface for LHS*/
 public:
-    virtual float solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream)=0;
+    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream)=0;
 };
 
 class cucgpre_t{/*Interface for preconditioner*/
@@ -44,14 +44,12 @@ public:
 class cucg_t:public cusolve_l{/*Implementes LHS with cg algorithm*/
     int maxit, warm_restart;
     CGTMP_T cgtmp;
-    curcell *rhs;
 protected:
     cucgpre_t *precond;
 public:
     cucg_t(int _maxit=0, int _warm_restart=0)
-	:maxit(_maxit),warm_restart(_warm_restart),rhs(NULL),precond(NULL){}
+	:maxit(_maxit),warm_restart(_warm_restart),precond(NULL){}
     virtual ~cucg_t(){
-	delete rhs;
 	delete precond;
     }
     /*Left hand side forward operaton*/
@@ -59,7 +57,7 @@ public:
     void operator()(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
 	L(xout, beta, xin, alpha, stream);
     }
-    virtual float solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream);
+    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
 };
 
 class cumuv_t{
@@ -108,14 +106,12 @@ protected:
     int  *Cp;
     curmat *Up;
     curmat *Vp;
-    curcell *rhs; 
     curmat *y;
     curmat *Vr;
 public:
     cusolve_cbs(spchol *_C=0, dmat *_Up=0, dmat *_Vp=0);
     virtual ~cusolve_cbs(){
 	if(!this) return;
-	delete rhs;
 	delete Vr;
 	delete Cl;
 	delete Up;
@@ -124,23 +120,21 @@ public:
 	info2("cusolve_cbs::destructor\n");
     }
     void chol_solve(float *out, const float *in,  stream_t &stream);
-    virtual float solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream);
+    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
 };
 
 class cusolve_svd:public cusolve_l{
-    curcell *rhs;
     curmat *LI;//Inversion of left hand operator
 public:
-    cusolve_svd(dmat *_LI=0):rhs(NULL),LI(NULL){
+    cusolve_svd(dmat *_LI=0):LI(NULL){
 	if(_LI) cp2gpu(&LI, _LI);
     }
     virtual ~cusolve_svd(){
 	info2("cusolve_svd::destructor\n");
     }
-    virtual float solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream){
-	Rfun->R(&rhs, 0, xin, 1, stream);
+    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream){
 	if(!*xout) *xout=curcellnew(xin);
-	curmv((*xout)->m->p, 0, LI, rhs->m->p, 'n', 1, stream);
+	curmv((*xout)->m->p, 0, LI, xin->m->p, 'n', 1, stream);
 	return 0;
     }
 }; 
@@ -155,9 +149,8 @@ public:
 	if(!this) return;
 	delete MVM;
     }
-    virtual float solve(curcell **xout, const curcell *xin, cusolve_r *Rfun, stream_t &stream){
-	assert(*xout && (*xout)->m);
-	(void)Rfun;
+    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream){
+	if(!*xout) *xout=curcellnew(xin);
 	curmv((*xout)->m->p, 0., MVM, xin->m->p, 'n', 1., stream);
 	return 0;
     }

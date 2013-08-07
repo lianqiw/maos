@@ -50,8 +50,7 @@
    and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls
    moao_recon() for MOAO DM fitting.  \callgraph */
 
-void sim(const PARMS_T *parms,  POWFS_T *powfs, 
-	 APER_T *aper,  RECON_T *recon){
+void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
     if(parms->sim.skysim){
@@ -60,7 +59,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
     if(simstart>=simend) return;
     double tk_0=myclockd();
     double ck_0,ck_end;
+    double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	if(parms->fdlock && parms->fdlock[iseed]<0){
+	    warning("Another MAOS is already running. Skip seed %d\n", 
+		    parms->sim.seeds[iseed]);
+	    continue;
+	}
 	extern int draw_single;
 	if(!parms->pause){
 	    draw_single=1;//Only draw active frame.
@@ -71,7 +76,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	global->simu=simu;
-	if(!simu) continue;/*skip. */
 	if(recon) recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
@@ -209,7 +213,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 
 	    int this_time=myclocki();
 	    if(this_time>simu->last_report_time+1 || isim+1==simend){
-		/*we don't print out or report too frequenctly. */
+		/*we don't print out or report too frequently. */
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
 		scheduler_report(simu->status);
@@ -229,6 +233,21 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		PAUSE;
 	    }
 	}/*isim */
+	{
+	    int isim0;
+	    if(parms->sim.closeloop){
+		isim0=MAX(MAX(50, parms->sim.start), parms->sim.end/10);
+	    }else{
+		isim0=0;
+	    }
+	    double sum=0;
+	    for(int i=isim0; i<parms->sim.end; i++){
+		sum+=simu->cle->p[i*parms->evl.nmod];
+	    }
+	    restot+=sum/(parms->sim.end-isim0);
+	    rescount++;
+	}
 	free_simu(simu);
     }/*seed */
+    printf("%g\n", sqrt(restot/rescount)*1e9);
 }

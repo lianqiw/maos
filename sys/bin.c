@@ -177,6 +177,7 @@ file_t* zfdopen(int sock, char *mod){
     }
     return fp;
 }
+int disable_save=0;
 /**
    Open a bin file for read/write access. Whether the file is gzipped or not is
    automatically determined when open for reading. When open for writing, if the
@@ -204,6 +205,9 @@ file_t* zfopen(const char *fn, char *mod){
 	break;
     case 'w':/*write */
     case 'a':
+	if(disable_save){
+	    error("disable_save is set\n");
+	}
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
 	}else{

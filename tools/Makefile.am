@@ -7,7 +7,7 @@ LDADD=../lib/libaos_int.la ../sys/libaosys.la $(LDOPTS)
 endif
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
-icon-finished.h icon-optics.h mouse_black.h  mouse_hand.h  mouse_white.h mygtk.h
+icon-finished.h icon-optics.h icon-waiting.h mouse_black.h  mouse_hand.h  mouse_white.h mygtk.h
 
 noinst_HEADERS=monitor.h drawdaemon.h $(ICONS)
 

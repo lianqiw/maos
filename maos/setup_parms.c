@@ -1847,6 +1847,36 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
+    if(parms->nmoao>0){//remove unused moao configurations
+	int count=0;
+	for(int imoao=0; imoao<parms->nmoao; imoao++){
+	    int used=0;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].moao>=parms->nmoao){
+		    error("invalid powfs[%d].moao=%d", ipowfs, parms->powfs[ipowfs].moao);
+		}
+		if(parms->powfs[ipowfs].moao==imoao){
+		    used=1;
+		    break;
+		}
+	    }
+	    if(parms->evl.moao>=parms->nmoao){
+		error("invalid evl.moao=%d\n", parms->evl.moao);
+	    }
+	    if(parms->evl.moao==imoao){
+		used=1;
+	    }
+	    if(used){
+		parms->moao[imoao].used=1;
+		count++;
+	    }
+	}
+	if(count==0){//no moao
+	    parms->nmoao=0;
+	    free(parms->moao);
+	    parms->moao=NULL;
+	}
+    }
 }
 
 /**
@@ -1890,7 +1920,7 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 */
 static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     parms->pause=arg->pause;
-    {
+    if(arg->dirout){
 	/*Remove seeds that are already done. */
 	char fn[80];
 	int iseed=0; 
@@ -1923,7 +1953,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->sim.nseed<1){
 	    warning("There are no seed to run. Use -O to override. Exit\n");
-	    {//remove log and conf files
+	    if(!disable_save){//remove log and conf files
 		char fnpid[PATH_MAX];
 		snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
 		remove(fnpid);
@@ -2398,14 +2428,21 @@ PARMS_T * setup_parms(ARG_T *arg){
       Output all the readed parms to a single file that can be used to reproduce
       the same simulation.
     */
-    char fnconf[PATH_MAX];
-    snprintf(fnconf, PATH_MAX, "maos_%ld.conf", (long)getpid());
-    close_config("%s",fnconf);
+    if(disable_save){
+	close_config(NULL);
+    }else{
+	close_config("maos_%ld.conf", (long)getpid());
+    }
 
     /*
       Postprocess the parameters for integrity. The ordering of the following
       routines are critical.
     */
+    if(!arg->dirout){
+	if(parms->save.setup || parms->save.all || parms->sim.skysim){
+	    error("Please specify -o to enable saving to disk\n");
+	}
+    }
     setup_parms_postproc_sim(parms);
     setup_parms_postproc_za(parms);
     setup_parms_postproc_wfs(parms);
@@ -2477,11 +2514,11 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	    if(moao_used>0){
 		if(parms->gpu.moao || parms->gpu.fit){
 		    if(!parms->fit.square){
-			warning("GPU moao=1 requires fit.square=1. Changed\n");
+			info2("GPU moao=1 requires fit.square=1. Changed\n");
 			parms->fit.square=1;
 		    }
 		    if(!parms->tomo.square){
-			warning("GPU moao=1 requires tomo.square=1. Changed\n");
+			info2("GPU moao=1 requires tomo.square=1. Changed\n");
 			parms->tomo.square=1;
 		    }
 		}

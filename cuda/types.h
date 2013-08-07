@@ -27,23 +27,22 @@ class cumat{
     long ny;
     int *nref;
     char *header;
-    void init(long nxi, long nyi, T *pi=NULL, int own=1){
-	p=pi;
-	nx=nxi;
-	ny=nyi;
-	nref=NULL;
-	header=NULL;
-	if(!p && nxi!=0 && nyi!=0){
+  
+  
+    /*Constructors */
+    cumat(long nxi, long nyi, T *pi=NULL, int own=1)
+	:nx(nxi),ny(nyi),p(pi),nref(NULL),header(NULL){
+	if(!p && nxi >0 && nyi >0){
 	    DO(cudaMalloc(&p, nx*ny*sizeof(T)));
 	    DO(cudaMemset(p, 0, nx*ny*sizeof(T)));
+	    own=1;
 	}
-	if(!pi || own){
+	if(own){
 	    nref=new int[1];
 	    nref[0]=1;
 	}
-	header=NULL;
     }
-    void deinit(){
+    virtual ~cumat(){
 	if(nref){
 	    nref[0]--;
 	    if(nref[0]==0){
@@ -57,14 +56,6 @@ class cumat{
 	p=NULL;
     }
 
-    /*Constructors */
-    cumat():p(NULL),nx(0),ny(0),nref(NULL),header(NULL){}
-    cumat(long nxi, long nyi, T *pi=NULL, int own=1){
-	init(nxi, nyi, pi, own);
-    }
-    ~cumat(){
-	deinit();
-    }
     void zero(cudaStream_t stream=(cudaStream_t)-1){
 	if(this && p){
 	    if(stream==(cudaStream_t)-1){
@@ -74,9 +65,10 @@ class cumat{
 	    }
 	}
     }
-    cumat<T>* ref(int vector=0){
+    cumat* ref(int vector=0){
+	if(!this) return NULL;
 	if(nref) nref[0]++;
-	cumat<T>* res;
+	cumat* res;
 	if(vector){
 	    res=new cumat<T>(nx*ny, 1, p, 0);
 	}else{
@@ -88,9 +80,6 @@ class cumat{
     cumat<T>*trans(stream_t &stream);
     operator T*(){
 	return p;
-    }
-    operator bool(){
-	return p?true:false;
     }
 };
 
@@ -239,12 +228,20 @@ class cusp{
     int nx;
     int ny;
     int nzmax;
+    int *nref;
     enum TYPE_SP type;
-    cusp():p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){}
+    //cusp():p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){}
+    cusp(const dsp *in=0, int tocsr=1);
     ~cusp(){
-	cudaFree(p);
-	cudaFree(i);
-	cudaFree(x);
+	if(nref){
+	    nref[0]--;
+	    if(nref[0]==0){
+		cudaFree(p);
+		cudaFree(i);
+		cudaFree(x);
+		delete nref;
+	    }
+	}
     }
     void toCSR(){
 	if(type==SP_CSC){
@@ -259,6 +256,13 @@ class cusp{
 	}
     }
     void trans();/*covnert to CSR mode by transpose*/
+    cusp* ref(void){
+	if(!this) return NULL;
+	if(nref) nref[0]++;
+	cusp* res=(cusp*)malloc(sizeof(cusp));
+	memcpy(res, this, sizeof(*this));
+	return res;
+    }
 };
 class cuspcell{
  public:
@@ -266,7 +270,7 @@ class cuspcell{
     int nx;
     int ny;
     cuspcell(int _nx, int _ny):nx(_nx),ny(_ny){
-	p=(cusp**)calloc(1, sizeof(void*));
+	p=(cusp**)calloc(nx*ny, sizeof(void*));
     }
     ~cuspcell(){
 	for(long i=0; i<nx*ny; i++){
@@ -305,6 +309,7 @@ public:
 	nxsa=in->nx;
     }
 };
+curmat* gpu_dmcubic_cc(float iac);
 /**
    Specifies the grid.
 */
@@ -316,12 +321,7 @@ public:
     float ht;
     float vx, vy;
     curmat *cubic_cc; /*coefficients for cubic influence function. */
-    /*void init(const cugrid_t &in){
-	if(nx) error("multiple init\n");
-	memcpy(this, &in, sizeof(*this));
-    }*/
     void init(const map_t *in){
-	if(nx) error("multiple init\n");
 	nx=in->nx;
 	ny=in->ny;
 	ox=in->ox;
@@ -331,7 +331,25 @@ public:
 	ht=in->h;
 	vx=in->vx;
 	vy=in->vy;
-	cubic_cc=0;
+	if(in->cubic){
+	    cubic_cc=gpu_dmcubic_cc(in->iac);
+	}else{
+	    cubic_cc=0;
+	}
+    }
+    cugrid_t(cugrid_t *in){
+	if(in){
+	    memcpy(this, in, sizeof(*this));
+	}else{
+	    memset(this, 0, sizeof(*this));
+	}
+    }
+    cugrid_t(const map_t *in){
+	if(in){
+	    init(in);
+	}else{
+	    memset(this, 0, sizeof(*this));
+	}
     }
     cugrid_t(long nxi=0, long nyi=0,float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
     cugrid_t scale(float sc)const{
@@ -345,38 +363,21 @@ class cumap_t:public cugrid_t{
 public:
     curmat *p;
     /*Init the data, p*/
-    cumap_t():p(0){
+    cumap_t(cugrid_t *grid=0):cugrid_t(grid),p(0){
+	if(nx>0 && ny>0) {
+	    p=new curmat(nx,ny);
+	}
+    }
+    cumap_t(map_t *map):cugrid_t(map){
+	if(nx>0 && ny>0) {
+	    p=new curmat(nx,ny);
+	}
     }
     operator curmat*()const{
 	return p;
     }
 };
 
-typedef struct W01_T{
-    curmat *W1;    /**< The aperture weighting, piston removal*/
-    cusp   *W0p;   /**< W0 for partial points*/
-    int    *W0f;   /**< index for fully illuminated points.*/
-    int     nW0f;  /**< Number of fully illuminated points.*/
-    float   W0v;   /**< maximum Value of W0*/
-    W01_T(){
-	memset(this, 0, sizeof(W01_T));
-    }
-}W01_T;
-struct mulock{
-    int lock;
-    pthread_mutex_t mutex;
-    mulock(int dolock=1):lock(dolock){
-	if(lock){
-	    pthread_mutex_init(&mutex, NULL);
-	    LOCK(mutex);
-	}
-    }
-    ~mulock(){
-	if(lock){
-	    UNLOCK(mutex);
-	}
-    }
-};
 
 template <typename T>
 void initzero(cumat<T> **A, long nx, long ny){

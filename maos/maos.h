@@ -36,7 +36,6 @@ extern int exit_success;
 extern const char* dirsetup;
 extern const char *dirskysim;
 #define EXIT raise(SIGUSR1)
-void maos(const PARMS_T *parms);
 extern GLOBAL_T *global;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define CALL_ONCE\

@@ -17,14 +17,50 @@
 */
 #ifndef AOS_CUDA_MOAO_H
 #define AOS_CUDA_MOAO_H
-#include "fit.h"
+#include "types.h"
+#include "solve.h"
+#include "recon_base.h"
 namespace cuda_recon{
-class cumoao_grid:public cusolve_r, public cucg_t{
+class cumoao_l:public cucg_t{
+protected:
     curecon_geom *grid;
+    curmat *NW, *dotNW;
+    cugrid_t *amap;
+    cusp *actslave;
+    curcell *opdfit;
+    curcell *opdfit2;
+    map_ray *ha;
 public:
-    cumoao_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom *_grid);
-    virtual ~cumoao_grid(){}
+    cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid);
+    virtual ~cumoao_l(){
+	delete NW;
+	delete dotNW;
+	delete amap;
+	delete actslave;
+	delete opdfit;
+	delete opdfit2;
+	delete ha;
+    }
+    virtual void L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream);
 };
 
+class cumoao_t:public cumoao_l{
+    map_ray **hxp;
+    map_ray **hap;
+    int ndir;
+    curcell *rhs;
+public:
+    cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
+    float moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
+    ~cumoao_t(){
+	for(int idir=0; idir<ndir; idir++){
+	    delete hxp[idir];
+	    delete hap[idir];
+	}
+	delete hxp;
+	delete hap;
+	delete rhs;
+    }
+};
 }//namespace
 #endif

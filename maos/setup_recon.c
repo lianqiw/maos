@@ -632,8 +632,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
    
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
-	    warning("why free here crash maos?\n");
-	    //dcellfree(powfs[ipowfs].intstat->saneaxy);//why 
+	    //warning("why free here crash maos?\n");
+	    dcellfree(powfs[ipowfs].intstat->saneaxy);//why 
 	    dcellfree(powfs[ipowfs].intstat->saneaxyl);
 	    dcellfree(powfs[ipowfs].intstat->saneaixy);
 	}

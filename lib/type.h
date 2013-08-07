@@ -203,6 +203,8 @@ typedef struct map_t{
     double h;       /**<Heigh conjugation of this surface*/
     double vx;      /**Wind velocity. Useful for atmospheric grid*/
     double vy;      /**Wind velocity. Useful for atmospheric grid*/
+    int cubic;
+    double iac;
 } map_t;
 
 /**

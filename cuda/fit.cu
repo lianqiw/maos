@@ -47,8 +47,8 @@ namespace cuda_recon{
 cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom *_grid)
     :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
      nfit(0),acmap(0),dmcache(0),xcache(0),
-     opdfit(0),opdfit2(0), opdfitv(0),opdfit2v(0),
-     pis(0),fitwt(0),fitNW(0),dotNW(0),floc(0),fit_thetax(0),fit_thetay(0),fit_hs(0),
+     opdfit(0),opdfit2(0), 
+     fitwt(0),fitNW(0),dotNW(0),floc(0),dir(0),
      actslave(0), 
      hxp(0),ha(0),ha0(0),ha1(0),hxp0(0),hxp1(0){
     if(!parms || !recon) return;
@@ -66,13 +66,12 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     if(parms->sim.idealfit){
 	floc=new culoc_t(recon->floc);
     }
-    fit_thetax=new float[nfit];
-    fit_thetay=new float[nfit];
-    fit_hs=new float[nfit];
+    dir=new dir_t[nfit];
     for(int ifit=0; ifit<nfit; ifit++){
-	fit_thetax[ifit]=parms->fit.thetax[ifit];
-	fit_thetay[ifit]=parms->fit.thetay[ifit];
-	fit_hs[ifit]=parms->fit.hs[ifit];
+	dir[ifit].thetax=parms->fit.thetax[ifit];
+	dir[ifit].thetay=parms->fit.thetay[ifit];
+	dir[ifit].hs=parms->fit.hs[ifit];
+	dir[ifit].skip=0;
     }
     /*Various*/
     if(recon->fitNW){
@@ -102,169 +101,60 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     } 
     cp2gpu(&fitwt, recon->fitwt);
  
-    long fnx[nfit],fny[nfit];
-    for(int ifit=0; ifit<nfit; ifit++){
-	fnx[ifit]=grid->fmap.nx;
-	fny[ifit]=grid->fmap.ny;
-    }
-    opdfit=curcellnew(nfit, 1, fnx, fny);
-    opdfit2=curcellnew(nfit, 1, fnx, fny);
-    opdfitv=curnew(grid->fmap.nx*grid->fmap.ny, nfit, opdfit->m->p, 0);
-    opdfit2v=curnew(grid->fmap.nx*grid->fmap.ny, nfit, opdfit2->m->p, 0);
-    pis=curnew(1, parms->fit.nfit);
-
+    opdfit=curcellnew(nfit, 1, grid->fmap.nx, grid->fmap.ny);
+    opdfit2=curcellnew(nfit, 1, grid->fmap.nx, grid->fmap.ny);
     /*Data for ray tracing*/
     //dm -> floc
     if(!parms->sim.idealfit){
 	if(parms->fit.cachex){
 	    hxp0=new map_l2l(grid->xcmap, grid->xmap, npsr);
-	    hxp1=new map_l2d(grid->fmap, nfit, grid->xcmap, npsr,
-			     fit_thetax, fit_thetay, fit_hs, NULL);
-	
+	    hxp1=new map_l2d(grid->fmap, dir, nfit, grid->xcmap, npsr);
 	}else{
-	    hxp=new map_l2d(grid->fmap, nfit,grid->xmap, npsr,
-			    fit_thetax, fit_thetay, fit_hs, NULL);
+	    hxp=new map_l2d(grid->fmap, dir, nfit,grid->xmap, npsr);
 	}
     }
     if(parms->fit.cachedm){
 	ha0=new map_l2l(acmap, grid->amap, ndm);
-	ha1=new map_l2d(grid->fmap, nfit, acmap, ndm,
-			fit_thetax, fit_thetay, fit_hs, NULL);
+	ha1=new map_l2d(grid->fmap, dir, nfit, acmap, ndm);
     }else{
-	ha=new map_l2d(grid->fmap, nfit, grid->amap, ndm,
-		       fit_thetax, fit_thetay, fit_hs, NULL);
+	ha=new map_l2d(grid->fmap, dir, nfit, grid->amap, ndm);
     }
 }
 
 /*
   Todo: share the ground layer which is both matched and same.
 */
-/**
-   Apply W for fully illuminated points. fully illuminated points are surrounded
-   by partially illuminated points. So unexpected wrapover won't happen.  */
-__global__ void 
-apply_W_do(float *outs, const float *ins, const int *W0f, float alpha, int nx, int n){
-    float *out=outs+blockIdx.y*nx*nx;
-    const float *in=ins+blockIdx.y*nx*nx;
-    const int step=blockDim.x * gridDim.x;
-    for(int k=blockIdx.x * blockDim.x + threadIdx.x; k<n; k+=step){
-	int i=W0f[k];
-	out[i]+=alpha*(in[i]
-		       +0.25f*(in[i-1]+in[i+1]+in[i-nx]+in[i+nx])
-		       +0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
-    }
-}
+
 /**
    do HXp operation, opdfit+=Hxp*xin*/
 void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
-    EVENT2_INIT(4);
-    EVENT2_TIC(0);
     opdfit->m->zero(stream);
-    EVENT2_TIC(1);
     if(!hxp){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
 	    gpu_atm2loc(opdfit->p[ifit]->p, floc->p, floc->nloc, INFINITY,
-			fit_thetax[ifit], fit_thetay[ifit], 
+			dir[ifit].thetax, dir[ifit].thetay,
 			0, 0, grid->dt*grid->isim, 1, stream);
 	}
     }else{
 	if(xcache){//caching
 	    xcache->m->zero(stream);
-	    hxp0->forward(xcache->pm, xin->pm, 1, NULL, stream);EVENT2_TIC(2);
-	    hxp1->forward(opdfit->pm, xcache->pm, 1, NULL, stream);EVENT2_TIC(3);
+	    hxp0->forward(xcache->pm, xin->pm, 1, NULL, stream);
+	    hxp1->forward(opdfit->pm, xcache->pm, 1, NULL, stream);
 	}else{
-	    EVENT2_TIC(2);
-	    hxp->forward(opdfit->pm, xin->pm, 1, NULL, stream);EVENT2_TIC(3);
+	    hxp->forward(opdfit->pm, xin->pm, 1, NULL, stream);
 	}
     }
-    EVENT2_TOC;
-    EVENT2_PRINT("do_hxp: zero: %.3f cache: %.3f prop: %.3f tot: %.3f\n",
-		 times[1], times[2], times[3], times[0]);
 }
 /**
    do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
 void cufit_grid::do_hxpt(const curcell *xout, float alpha, stream_t &stream){
-    EVENT2_INIT(4);
-    EVENT2_TIC(0);
     if(xcache){
 	xcache->m->zero(stream);
-	hxp1->backward(opdfit2->pm, xcache->pm, alpha, fitwt->p, stream); EVENT2_TIC(2);
-	hxp0->backward(xcache->pm, xout->pm, alpha, NULL, stream); EVENT2_TIC(3);
+	hxp1->backward(opdfit2->pm, xcache->pm, alpha, fitwt->p, stream);
+	hxp0->backward(xcache->pm, xout->pm, alpha, NULL, stream);
     }else{
-	EVENT2_TIC(2);
 	hxp->backward(opdfit2->pm, xout->pm, alpha, fitwt->p, stream);
-	EVENT2_TIC(3);
     }
-    EVENT2_TOC;
-    EVENT2_PRINT("do_hxpt: zero: %.3f prop: %.3f cache: %.3f tot: %.3f\n",
-		 times[1], times[2], times[3], times[0]);
-}
-/**
-   res_vec[i]+=sum_j(as[i][j]*b[j]);
-*/
-__global__ void 
-inn_multi_do(float *res_vec, const float *as, const float *b, const int n){
-    extern __shared__ float sb[];
-    sb[threadIdx.x]=0;
-    const float *a=as+n*blockIdx.y;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	sb[threadIdx.x]+=a[i]*b[i];
-    }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
-	__syncthreads();
-	if(threadIdx.x<step){
-	    sb[threadIdx.x]+=sb[threadIdx.x+step];
-	}
-    }
-    if(threadIdx.x==0){
-	atomicAdd(&res_vec[blockIdx.y], sb[0]);
-    }
-}
-/**
-   a[i][j]=b[j]*beta1[i]*beta2;
-*/
-__global__ void 
-assign_multi_do(float *as, const float *b, float *beta1, float beta2, int n){
-    float *a=as+blockIdx.y*n;
-    float beta=beta1[blockIdx.y]*beta2;
-    const int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	a[i]=b[i]*beta;
-    }
-}
-/**
-   opdfit2 = (W0-W1*W1')*opdfit */
-void cufit_grid::do_w(stream_t &stream){
-    EVENT2_INIT(6);
-    EVENT2_TIC(0);
-    EVENT2_TIC(1);
-    pis->zero(stream);
-    const int nxf=opdfit->p[0]->nx;
-    const int nf=opdfit->p[0]->nx*opdfit->p[0]->ny;
-    const W01_T *W01=grid->W01;
-    //inn_multi_do takes only 28 us while curmv takes 121 us.
-    inn_multi_do<<<dim3(32, nfit), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>
-	(pis->p, opdfit->m->p, W01->W1->p, nf);
-    EVENT2_TIC(2);
-    //assign_multi_do takes 8 us while curmm takes 28.6 us
-    assign_multi_do<<<dim3(32, nfit), dim3(256), 0, stream>>>
-	(opdfit2->m->p, W01->W1->p, pis->p, -1, nf);
-    EVENT2_TIC(3);
-    if(W01->nW0f){ //19us
-	apply_W_do<<<dim3(16, nfit), dim3(256,1), 0, stream>>> 		
-	    (opdfit2->m->p, opdfit->m->p, W01->W0f, 
-	     W01->W0v, nxf, W01->nW0f); 
-    }
-    EVENT2_TIC(4);
-    if(W01->W0p){ //53 us *********Can we use B/W map to avoid this matrix?***********
-	cuspmul(opdfit2->m->p, W01->W0p, 
-		opdfit->m->p, nfit, 'n', 1.f, stream); //80us
-    }
-    EVENT2_TIC(5);
-    EVENT2_TOC;
-    EVENT2_PRINT("do_w: zero: %.3f W1_dot: %.3f W1_add: %.3f W0f: %.3f W0p: %.3f tot: %.3f\n",
-		 times[1], times[2], times[3], times[4], times[5], times[0]);
 }
 
 /**
@@ -272,52 +162,35 @@ void cufit_grid::do_w(stream_t &stream){
 */
 void cufit_grid::do_ha(const curcell *xin, stream_t &stream){
     opdfit->m->zero(stream); 
-    EVENT2_INIT(3);
-    EVENT2_TIC(0);
     if(dmcache){
 	/*xout->dmcache*/ 
 	dmcache->m->zero(stream); 
 	ha0->forward(dmcache->pm, xin->pm, 1.f, NULL, stream);
-	EVENT2_TIC(1);
 	/*dmcache->opdfit*/ 
 	ha1->forward(opdfit->pm, dmcache->pm, 1.f, NULL, stream);
-	EVENT2_TIC(2);
     }else{ 
-	EVENT2_TIC(1);
 	/*xout->opfit*/ 
 	ha->forward(opdfit->pm, xin->pm, 1.f, NULL, stream);
-	EVENT2_TIC(2);
     }
-    EVENT2_TOC;
-    EVENT2_PRINT("do_ha: cache: %.3f prop: %.3f tot: %.3f\n", 
-		 times[1], times[2], times[0]);
 }
 
 /**
    xout+=alpha*HA'*opdfit2*/
 void cufit_grid::do_hat(curcell *xout,  float alpha, stream_t &stream){
-    EVENT2_INIT(3);
-    EVENT2_TIC(0);
     if(dmcache){ 
 	/*opdfit2->dmcache*/ 
 	dmcache->m->zero(stream); 
 	ha1->backward(opdfit2->pm, dmcache->pm, alpha, fitwt->p, stream);
-	EVENT2_TIC(1);
 	/*dmcache->xout*/ 
 	ha0->backward(dmcache->pm, xout->pm, 1, NULL, stream);
-	EVENT2_TIC(2);
     }else{ 
 	/*opfit2->xout	*/ 
-	EVENT2_TIC(1);
 	ha->backward(opdfit2->pm, xout->pm, alpha, fitwt->p, stream);
-	EVENT2_TIC(2);
     } 
-    EVENT2_TOC;
-    EVENT2_PRINT("do_hat: prop: %.3f cache: %.3f tot: %.3f\n", times[1], times[2], times[0]);
 }
 
 /*
-  Right hand size operator. 
+  Right hand side operator. 
 */
 void cufit_grid::R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
     if(!*xout){
@@ -326,7 +199,7 @@ void cufit_grid::R(curcell **xout, float beta, const curcell *xin, float alpha, 
 	curscale((*xout)->m, beta, stream);
     }
     do_hxp(xin, stream);//153 us
-    do_w(stream);//123 us
+    grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);//123 us
     do_hat(*xout, alpha, stream);//390 us
 }
 void cufit_grid::Rt(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
@@ -336,7 +209,7 @@ void cufit_grid::Rt(curcell **xout, float beta, const curcell *xin, float alpha,
 	curscale((*xout)->m, beta, stream);
     }
     do_ha(xin, stream);
-    do_w(stream);
+    grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);
     do_hxpt(*xout, alpha, stream);
 }
 void cufit_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
@@ -350,7 +223,7 @@ void cufit_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, 
     }   
     do_ha(xin, stream);//112 us
     EVENT_TIC(1);
-    do_w(stream);//108 us
+    grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);
     EVENT_TIC(2);
     do_hat(*xout, alpha, stream);//390 us
     EVENT_TIC(3);

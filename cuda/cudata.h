@@ -60,15 +60,14 @@ typedef struct cudata_t{
     /*for recon */
     curecon_t *recon;
     /*for moao*/
-    cumap_t *dm_wfs;
-    cumap_t *dm_evl;
+    cumap_t **dm_wfs;
+    cumap_t **dm_evl;
     /*for mvm*/
     curmat *mvm_m;/*the control matrix*/
     ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
     ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
     GTYPE *mvm_g;/*the gradients copied from gpu*/
     stream_t *mvm_stream;
-    pthread_mutex_t mvm_mutex;
     cudata_t(){
 	memset(this, 0, sizeof(cudata_t));
     }

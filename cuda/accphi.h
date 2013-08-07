@@ -30,8 +30,6 @@ void gpu_prop_grid(curmat *out, const cugrid_t &go,
 		   float dispx, float dispy,
 		   float alpha, char trans, cudaStream_t stream);
 
-curmat* gpu_dmcubic_cc(float iac);
-
 void gpu_prop_grid_cubic(curmat *out,const cugrid_t &go,
 			 curmat *in, const cugrid_t &gi,
 			 float dispx, float dispy, float *cc,

@@ -509,6 +509,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
+    if((host || arg->detach) && !arg->dirout){
+	error("detach mode requires specifying -o\n");
+    }
     if(!host && !arg->detach){//forground running.
 	arg->force=1;
     }else if(getenv("MAOS_DIRECT_LAUNCH")){
@@ -608,19 +611,21 @@ ARG_T * parse_args(int argc, const char *argv[]){
     free(bin_path);
     free(config_path);
 
-    if(!arg->dirout){
-	arg->dirout=strtime();
-    }
     addpath(".");
-    mymkdir("%s",arg->dirout);
-    if(chdir(arg->dirout)){
-	error("Unable to chdir to %s\n", arg->dirout);
+    if(arg->dirout){
+	mymkdir("%s",arg->dirout);
+	if(chdir(arg->dirout)){
+	    error("Unable to chdir to %s\n", arg->dirout);
+	}
+        char *exefile=get_job_progname(0);
+	if(remove("maos-save")||link(exefile, "maos-save")){
+	    info2("Unable to link maos to maos-save\n");
+	}
+	free(exefile);
+    }else{
+	warning2("Disable saving when no -o is supplied.\n");
+	disable_save=1;
     }
-    char *exefile=get_job_progname(0);
-    if(remove("maos-save")||link(exefile, "maos-save")){
-	info2("Unable to link maos to maos-save\n");
-    }
-    free(exefile);
     return arg;
 }
 /**

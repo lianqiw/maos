@@ -19,13 +19,41 @@
 #define AOS_CUDA_RECON_GEOM_H
 #include "types.h"
 #include "prop_wrap.h"
+
+namespace cuda_recon{
+struct dir_t{
+    float thetax;
+    float thetay;
+    float hs;
+    int skip;
+};
+/*Data for aperture bi-linear weighting, used in fitting*/
+class W01_T{
+    curmat *W1;    /**< The aperture weighting, piston removal*/
+    cusp   *W0p;   /**< W0 for partial points*/
+    int    *W0f;   /**< index for fully illuminated points.*/
+    int     nW0f;  /**< Number of fully illuminated points.*/
+    float   W0v;   /**< maximum Value of W0*/
+    int     nxx;   /**< First dimension of grid*/
+    curmat *pis;   /**< Temporary data*/
+public:
+    W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
+    ~W01_T(){
+	delete W1;
+	delete W0p;
+	delete W0f;
+	delete pis;
+    }
+    void apply(float *restrict out, const float *in, int ndir, stream_t &stream);
+};
+
 /**
    Contains geometry information that may be shared by 
    tomo
    fit
    moao
 */
-namespace cuda_recon{
+
 class curecon_geom{
 public:
     int npsr, ndm;
@@ -58,7 +86,7 @@ public:
     map_ray():hdata(0),nlayer(0),ndir(0){};
     //from in to out
     void forward(float **out, float **in,  float alpha, float *wt, stream_t &stream){
-	gpu_prop_grid_do<<<dim3(4,4,ndir>1?ndir:nlayer),dim3(16,16),0,stream>>>
+	gpu_prop_grid_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(16,16),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
     }
     //from out to in
@@ -80,9 +108,7 @@ public:
 /*Ray tracing from one/multiple layers to one/multiple directions*/
 class map_l2d:public map_ray{
 public:
-    map_l2d(const cugrid_t &out, int _ndir, const cugrid_t *in, int _nlayer,
-	    float *thetaxv, float *thetayv, float *hsv, int *skip, float dt=0);
-  
+    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugrid_t *in, int _nlayer, float dt=0);
 };
 
 /*Ray tracing from layer to layer, for caching.*/
@@ -90,7 +116,6 @@ class map_l2l:public map_ray{
 public:
     map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer);
 };
-
 
 }//namespace
 #endif

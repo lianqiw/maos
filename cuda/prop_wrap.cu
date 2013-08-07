@@ -36,7 +36,8 @@ extern "C"
 
 __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss, int ndir, int nps, float alpha1, float *alpha2, char trans){
     int nn;
-    if(ndir==1){
+    if(ndir==0){
+	//layer to layer. caching mechanism
 	assert(gridDim.z==nps);
 	nn=1;
     }else if(trans=='t'){
@@ -54,7 +55,7 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
     for(int ii=0; ii<nn; ii++){
 	PROP_WRAP_T *datai;
 	int ips, idir;
-	if(ndir==1){//plane to plane. no direction
+	if(ndir==0){//plane to plane. no direction
 	    ips=idir=blockIdx.z;
 	    datai=data+blockIdx.z;
 	}else{
@@ -119,8 +120,6 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 		    if(match2){//do without atomic operations.
 			const int nxin=ceil(nx*xratio)+1;
 			const int nyin=ceil(ny*xratio)+1;
-			//const int nxin=datai->nxps-datai->offpsx;
-			//const int nyin=datai->nyps-datai->offpsy;
 			const int xmaxdir=datai->nxdir-datai->offdirx;
 			const int ymaxdir=datai->nydir-datai->offdiry;
 			const int xmindir=-datai->offdirx-1;
@@ -185,6 +184,10 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 			    }
 			}
 		    }else{
+			const int xmaxps=datai->nxps-datai->offpsx;
+			const int ymaxps=datai->nyps-datai->offpsy;
+			const int xminps=-datai->offpsx;
+			const int yminps=-datai->offpsy;
 			for(int my=iy0; my<ny; my+=stepy){
 			    float jy;
 			    float y=modff(dispy+my*yratio, &jy);
@@ -206,9 +209,12 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
 				fx[3]=x*x*(cc[3]+cc[4]*x);	
 	
-#pragma unroll
-				for(int ky=-1; ky<3; ky++){
-				    for(int kx=-1; kx<3; kx++){
+				const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
+				const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
+				for(int ky=ky0; ky<ky1; ky++){
+				    int kx0=(xminps-ix)>-1?(xminps-ix):-1;
+				    int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
+				    for(int kx=kx0; kx<kx1; kx++){
 					atomicAdd(&pps[(iy+ky)*nxps+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
 				    }
 				}
@@ -216,6 +222,10 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 			}
 		    }
 		}else{
+		    const int xmaxps=datai->nxps-datai->offpsx;
+		    const int ymaxps=datai->nyps-datai->offpsy;
+		    const int xminps=-datai->offpsx;
+		    const int yminps=-datai->offpsy;
 		    for(int my=iy0; my<ny; my+=stepy){
 			float jy;
 			float y=modff(dispy+my*yratio, &jy);
@@ -237,10 +247,12 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss,
 			    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
 			    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
 			    fx[3]=x*x*(cc[3]+cc[4]*x);		
-			    
-#pragma unroll
-			    for(int ky=-1; ky<3; ky++){
-				for(int kx=-1; kx<3; kx++){
+			    const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
+			    const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
+			    for(int ky=ky0; ky<ky1; ky++){
+				int kx0=(xminps-ix)>-1?(xminps-ix):-1;
+				int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
+				for(int kx=kx0; kx<kx1; kx++){
 				    sum+=fx[kx+1]*fy[ky+1]*pps[(iy+ky)*nxps+(kx+ix)];
 				}
 			    }

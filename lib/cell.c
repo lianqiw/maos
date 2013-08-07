@@ -79,6 +79,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     for(long i=0; i<nx*ny; i++){
 	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
     }
+    if(!tot) return NULL;
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){

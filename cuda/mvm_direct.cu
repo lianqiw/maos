@@ -104,6 +104,7 @@ static void mvm_direct_igpu(thread_t *info){
 	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
     TIC;tic;
+    curcell *tomo_rhs=NULL, *fit_rhs=NULL;
     for(int ig=info->start; ig<info->end; ig++){
 	RECORD(0);
 	if(info->ithread==0){
@@ -122,10 +123,12 @@ static void mvm_direct_igpu(thread_t *info){
 	if(mvmi){
 	    opdr->replace(mvmi->p+(ig-info->start)*ntotxloc, 0, stream);
 	}
-	residual->p[ig]=curecon->RL->solve(&opdr, grad, curecon->RR, stream);
+	curecon->RR->R(&tomo_rhs, 0, grad, 1, stream);
+	residual->p[ig]=curecon->RL->solve(&opdr, tomo_rhs, stream);
 	RECORD(2);
 	fitr->replace(mvm->p+(ig-info->start)*ntotact, 0, stream);
-	residualfit->p[ig]=curecon->FL->solve(&fitr, opdr, curecon->FR, stream);
+	curecon->FR->R(&fit_rhs, 0, opdr, 1, stream);
+	residualfit->p[ig]=curecon->FL->solve(&fitr, fit_rhs, stream);
 	RECORD(3);
 #if TIMING
 	stream.sync();

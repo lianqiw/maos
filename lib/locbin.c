@@ -171,6 +171,8 @@ void maparrwrite(map_t ** map, int nmap, const char *format,...){
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
     char *header=in->header;
+    map->cubic=0;
+    map->iac=0;
     if(header){
 	map->ox=search_header_num(header,"ox");
 	map->oy=search_header_num(header,"oy");

@@ -34,7 +34,7 @@
 void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     if(!recon || !recon->moao) return;
     for(int imoao=0; imoao<parms->nmoao; imoao++){
-	if(!recon->moao[imoao].used) continue;
+	if(!parms->moao[imoao].used) continue;
 	locfree(recon->moao[imoao].aloc);
 	mapfree(recon->moao[imoao].amap);
 	spcellfree(recon->moao[imoao].HA);
@@ -56,41 +56,13 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	error("Moao only works in recon.alg=0 mode MVR\n");
     }
     const int nmoao=parms->nmoao;
-    int used[parms->nmoao];
-    memset(used,0,sizeof(int)*nmoao);
-    
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].moao>-1){
-	    int imoao=parms->powfs[ipowfs].moao;
-	    if(imoao<parms->nmoao){
-		used[imoao]++;
-	    }else{
-		error("powfs[%d].moao=%d is inused\n", ipowfs, imoao);
-	    }
-	}
-    }
-    if(parms->evl.moao>-1){
-	int imoao=parms->evl.moao;
-	if(imoao<parms->nmoao){
-	    used[imoao]++;
-	}else{
-	    error("evl.moao=%d is inused\n",imoao);
-	}
-    }
-    int nused=0;
-    for(int imoao=0; imoao<nmoao; imoao++){
-	if(used[imoao]){
-	    nused++;
-	}
-    }
-    if(nused==0) return;/*nothing need to be done. */
+    if(nmoao==0) return;
     if(recon->moao){
 	free_recon_moao(recon, parms);
     }
     recon->moao=calloc(nmoao, sizeof(MOAO_T));
     for(int imoao=0; imoao<nmoao; imoao++){
-	if(!used[imoao]) continue;
-	recon->moao[imoao].used=1;
+	if(!parms->moao[imoao].used) continue;
 	int order=parms->moao[imoao].order;
 	if(order==0){
 	    if(parms->ndm>0){
@@ -105,6 +77,8 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].aloc=map2loc(map);
 	recon->moao[imoao].aembed=map2embed(map);
 	recon->moao[imoao].amap=map;
+	recon->moao[imoao].amap->cubic=parms->moao[imoao].cubic;
+	recon->moao[imoao].amap->iac=parms->moao[imoao].iac;
 	free(map->p); map->p=NULL;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
@@ -161,11 +135,6 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    plotloc("FoV",parms,recon->moao[imoao].aloc,0,"moao_aloc");
 	}
     }/*imoao */
-#if USE_CUDA
-    if(parms->gpu.moao){
-	gpu_setup_moao(parms, recon);
-    }
-#endif    
 }
 
 /**

@@ -88,7 +88,7 @@ typedef struct {
   Make the following function private so that other 
   routine won't call them directly to avoid conflict.
 */
-
+extern int disable_save; //saving to disk will be disabled when set to nonzero.
 /*
   The following functions takes long type integers.
 */
