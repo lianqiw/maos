@@ -18,6 +18,7 @@
 extern "C"
 {
 #include <cuda.h>
+#include "../sys/thread.h"
 #include "gpu.h"
 }
 #include "utils.h"
@@ -48,12 +49,19 @@ typedef struct{
 }MVM_IGPU_T;
 #define TIMING 0
 static void mvm_direct_igpu(thread_t *info){
+    info2("thread %ld started\n", info->ithread);
     int igpu=info->ithread;
     if(gpu_avail){
 	LOCK(gpu_mutex);
-	igpu=gpu_avail[--gpu_pos];
+	if(gpu_pos>0){
+	    igpu=gpu_avail[--gpu_pos];
+	}else{
+	    igpu=-1;
+	    warning("error usage\n");
+	}
 	UNLOCK(gpu_mutex);
     }
+    if(igpu==-1) return;
     gpu_set(igpu);
     info("Using GPU %d\n", igpu);
 #if TIMING
@@ -165,6 +173,7 @@ static void mvm_direct_igpu(thread_t *info){
 	gpu_avail[gpu_pos++]=igpu;
 	UNLOCK(gpu_mutex);
     }
+    info("thread %ld finish.\n", info->ithread);
 }
 /**
    Assemble the MVM control matrix.

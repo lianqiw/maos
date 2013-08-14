@@ -60,30 +60,29 @@ struct thread_t{
 #include <pthread.h>
 #include "thread_pool.h"
 #if _OPENMP >= 200805
-#define THREAD_POOL_INIT(A)			\
-    {						\
-	char strA[20];				\
-	snprintf(strA, 20, "%d", A);		\
-	setenv("OMP_NUM_THREADS", strA, 1);	\
-	setenv("OMP_PROC_BIND","true",1);	\
-    }
-
+/**
+   Notice it is not effective to set the environment variables here.
+*/
 #define THREAD_RUN_ONCE	1
+INLINE void THREAD_POOL_INIT(int nthread){
+    omp_set_num_threads(nthread);
+}
+INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
+    for(int it=0; it<nthread; it++){
+#pragma omp task untied
+	((thread_fun)fun)(arg);
+    }
+#pragma omp taskwait
+}
 
 /*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
+/*Don't turn the following into INLINE function becase task will be waited*/
 #define QUEUE(group,fun,arg,nthread,urgent)	\
     (void)group;				\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task untied")			\
+	_Pragma("omp task untied")		\
 	fun(arg);				\
     }
-
-#define CALL(fun,arg,nthread,urgent)	 \
-    for(int it=0; it<nthread; it++){	 \
-	_Pragma("omp task untied")		 \
-	fun(arg);			 \
-    }					 \
-    _Pragma("omp taskwait")
 
 #define WAIT(group)				\
     (void)group;				\
@@ -95,19 +94,19 @@ struct thread_t{
 #define QUEUE_THREAD(group,A,nthread,urgent)	\
     (void)group;				\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task untied")			\
-	A[it].fun(A+it);			\
+	_Pragma("omp task untied")		\
+	    A[it].fun(A+it);			\
     }
-
-#define CALL_THREAD(A,nthread,urgent)		\
-    for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task untied")			\
-	A[it].fun(A+it);			\
-    }						\
-    _Pragma("omp taskwait")
-
 #define WAIT_THREAD(group)			\
     _Pragma("omp taskwait")
+/*Turn to inline function because nvcc concatenates _Pragma to } */
+INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
+    for(int it=0; it<nthread; it++){		
+#pragma omp task untied
+	A[it].fun(A+it);				
+    }
+#pragma omp taskwait
+}
 
 #else //pthread directly.
 

@@ -748,6 +748,9 @@ if test "$use_cuda" = "yes" ;then
    if test $cudaver -ge 50 ;then
        CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
    fi
+   if test -n "$OPENMP_CFLAGS";then
+       CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
+   fi
    echo LDCUDA=$LDCUDA
    echo CUDAOPT=$CUDAOPT
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
