@@ -33,9 +33,10 @@ class cufdpcg_t:public cucgpre_t{
     cufftHandle *ffti;
     int      fftnc;/*total number of ffts*/
     int     *fftips;/*starting ips for each fft.*/
-    cuccell *xhat1;
-    int nby, nbz; 
+    cuccell *xhat1, *xhat2;
+    int nb, bs, nby, nbz; 
     int scale;
+    int ixskip;//skip the ix due to redundant
     GPU_FDPCG_T *fddata;
 public:
     virtual ~cufdpcg_t(){
@@ -44,6 +45,7 @@ public:
 	free(fftips);
 	delete Mb;
 	delete xhat1;
+	delete xhat2;
 	cudaFree(fddata);
 	cudaFree(fft);
 	cudaFree(ffti);

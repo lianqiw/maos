@@ -37,4 +37,6 @@ imat* inew(long nx, long ny);
 icell* icellnew(long nx, long ny);
 void ifree(imat *A);
 void icellfree(icell *A);
+void iwrite(const imat *A, const char *format, ...);
+void icellwrite(const icell *A, const char *format, ...);
 #endif

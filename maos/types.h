@@ -196,8 +196,8 @@ typedef struct FDPCG_T{
     loc_t **xloc;  /**<record recon->xloc*/
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
-    long *perm;    /**<Permutation vector to get block diagonal matrix*/
-    long *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
+    imat *perm;    /**<Permutation vector to get block diagonal matrix*/
+    imat *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
     int square;    /**<Whether xloc is square*/

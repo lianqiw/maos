@@ -22,9 +22,9 @@ HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h p
 HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
 
 EXTRA_DIST=$(HEADER_LIB) $(HEADER_RECON) accphi.h wfs.h cudata.h
-SRC_LIB=curmat.cu cucmat.cu kernel.cu prop_grid.cu prop_wrap.cu accphi.cu utils.cu
+SRC_LIB=utils.cu curmat.cu cucmat.cu kernel.cu prop_grid.cu prop_wrap.cu accphi.cu 
 SRC_RECON=solve.cu recon_base.cu pcg.cu tomo.cu fit.cu recon.cu fdpcg.cu moao.cu 
-SRC_MVM=mvm.cu mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_pipe.cu
+SRC_MVM=mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_pipe.cu mvm_daemon.cu
 SRC_WFS=wfsinit.cu wfsints.cu wfsgrad.cu
 SRCS=$(SRC_LIB) cudata.cu $(SRC_RECON) $(SRC_MVM) $(SRC_WFS) perfevl.cu test.cu
 

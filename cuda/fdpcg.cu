@@ -23,7 +23,7 @@
 #define TIMING 0
 namespace cuda_recon{
 void cufdpcg_t::update(FDPCG_T *fdpcg){
-    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;//half frequency range
+    int nb=fdpcg->permhf->nx/fdpcg->bs;//half frequency range
     //copy or update Mb. 
     int nxsave=fdpcg->Mbinv->nx;
     fdpcg->Mbinv->nx=nb;
@@ -32,13 +32,13 @@ void cufdpcg_t::update(FDPCG_T *fdpcg){
 }
 cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
     :grid(_grid),perm(0),Mb(0),fft(0),ffti(0),fftnc(0),fftips(0),
-     xhat1(0),nby(0),nbz(0),scale(0),fddata(0){
+     xhat1(0),xhat2(0),nb(0),bs(0),nby(0),nbz(0),scale(0),fddata(0){
     update(fdpcg);
     grid=_grid;
     scale=fdpcg->scale;
-    int bs=fdpcg->bs;  
-    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;
-    cp2gpu(&perm, fdpcg->permhf, nb*bs);
+    bs=fdpcg->bs;//linear size of each block.
+    nb=fdpcg->permhf->nx/bs;//size of non-redundant block
+    cp2gpu(&perm, fdpcg->permhf->p, nb*bs, 1);
     int nps=grid->npsr;
     int count=0;
     int osi=-1;
@@ -78,14 +78,12 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 			 CUFFT_C2R, fftips[ic+1]-fftips[ic]));
     }
     xhat1=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
+    xhat2=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
     {
+	/*nby is blockDim.y: number of FD blocks in each threading block*/
+	/*nbz is gridDim.x: number of threading blocks to launch*/
 	nby=256/bs;//number of blocks in each grid
 	nbz=nb/nby;//number of grids to launch.
-	while(nb!=nbz*nby){
-	    nby--;
-	    nbz=nb/nby;
-	}
-	nby=nby;
     }
     /* notice: performance may be improved by using
        R2C FFTs instead of C2C. Need to update perm
@@ -107,52 +105,54 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 /*
   2012-08-01: Have tried the following with no improvement:
   Unroll with template.
-  Ech 32 threads to handle each bs for bs<32.
+  Each 32 threads to handle each bs for bs<32.
+
+  Changed 2013-08-13:
+  Input and output may overlap for different blocks due to FFT based mirroring. So separate intput/output.
 */
 
-__global__ static void fdpcg_mul_block_sync_half(fcomplex *xin, fcomplex *M, int *restrict perm){
-    int bs=blockDim.x;
+__global__ static void fdpcg_mul_block_sync_half(fcomplex *xout, const fcomplex *xin, fcomplex *Mi, int *restrict perm, int nb){
     extern __shared__ fcomplex v[];
-    fcomplex *vin=v+threadIdx.y*2*bs;
-    fcomplex *vout=v+bs+threadIdx.y*2*bs;
-    int ib=blockIdx.x*blockDim.y+threadIdx.y;
-    M+=ib*bs*bs;
-    int ix=threadIdx.x;
-    int pm=perm[ib*bs+ix];
-    vin[ix]=xin[abs(pm)];
-    if(pm<0){
-	vin[ix]=cuConjf(vin[ix]);
+    int bs=blockDim.x;//size of each block
+    fcomplex *vin=v+threadIdx.y*2*bs;//stores reordered input
+    fcomplex *vout=v+bs+threadIdx.y*2*bs;//stores output before reorder again
+    int nstep=blockDim.y*gridDim.x;
+    for(int ib=blockIdx.x*blockDim.y+threadIdx.y; ib<nb; ib+=nstep){
+	const fcomplex *M=Mi+ib*bs*bs;
+	const int ix=threadIdx.x;
+	const int pm=perm[ib*bs+ix];//last 2 bit are flags
+	const int pm2=abs(pm);
+	vin[ix]=xin[pm2];
+	if(pm<0){//last bit is on: doing conjugate
+	    vin[ix]=cuConjf(vin[ix]);
+	}
+	vout[ix].x=vout[ix].y=0;
+	__syncthreads();//wait for loading of vin
+	for(int iy=0; iy<bs; iy++){
+	    vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
+	}
+	if(pm<0){
+	    vout[ix]=cuConjf(vout[ix]);
+	}
+	xout[pm2]=vout[ix];
     }
-    vout[ix]=make_cuComplex(0,0);
-    __syncthreads();//wait for loading of vin
-    for(int iy=0; iy<bs; iy++){
-	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
-    }
-    if(pm<0){
-	xin[-pm]=cuConjf(vout[ix]);
-    }else{
-	xin[pm]=vout[ix];
-    }
-
 }
-__global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, float **xall){
+__device__ inline void do_scale(float &a, float b){
+    a*=b;
+}
+__device__ inline void do_scale(float2 &a, float b){
+    a.x*=b;
+    a.y*=b;
+}
+template<typename T> __global__ static void 
+fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
     int ips=blockIdx.z;
     int nx=fddata[ips].nx*fddata[ips].ny;
     int step=blockDim.x * gridDim.x; 
     float scale=fddata[ips].scale;
-    float *restrict x=xall[ips];
+    T *restrict x=xall[ips];
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
-	x[i]*=scale;
-    }
-}
-__global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, fcomplex **xall){
-    int ips=blockIdx.z;
-    int nx=fddata[ips].nx*fddata[ips].ny;
-    int step=blockDim.x * gridDim.x; 
-    float scale=fddata[ips].scale;
-    fcomplex *restrict x=xall[ips];
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
-	cuCscalef(x[i], scale);
+	do_scale(x[i], scale);
     }
 }
 
@@ -166,6 +166,7 @@ __global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, fcomplex **xall){
    frequencies. We can actually skip the multiplication of negative frequencies.
 
 */
+#define DBG_FD 0
 void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 #if TIMING
     EVENT_INIT(4)
@@ -182,6 +183,9 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
     }else if(!(*xout)->m){
 	error("xout is not continuous");
     }
+#if DBG_FD
+    curcellwrite(xin, "fdg_xin");
+#endif
     /*2012-07-11: Use real to complex fft*/
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
@@ -190,22 +194,31 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
     }
     RECORD(1);
     if(scale){
-	fdpcg_scale<<<dim3(3,3,grid->npsr), dim3(16,16),0,stream>>>
+	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
 	    (fddata, xhat1->pm);
     }
-    int bs=Mb->p[0]->nx;
+#if DBG_FD
+	cuccellwrite(xhat1, "fdg_fft");
+#endif
+
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(fcomplex)*bs*2*nby, stream>>>
-	(xhat1->m->p, Mb->m->p, perm);
+	(xhat2->m->p, xhat1->m->p, Mb->m->p, perm, nb);
     RECORD(2);
+#if DBG_FD
+    cuccellwrite(xhat2, "fdg_mul");
+#endif
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
 	DO(cufftSetStream(ffti[ic], stream));
-	CUFFTC2R(ffti[ic], xhat1->p[ips]->p, (*xout)->p[ips]->p);
+	CUFFTC2R(ffti[ic], xhat2->p[ips]->p, (*xout)->p[ips]->p);
     }
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
 	    (fddata, (*xout)->pm);
     }
+#if DBG_FD
+    curcellwrite(*xout, "fdg_xout");
+#endif
     RECORD(3);
 #if TIMING
     EVENT_TOC;

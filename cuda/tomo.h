@@ -105,9 +105,5 @@ public:
     }
 };
 
-class cutomo_sparse:public cusolve_sparse{
-public:
-    cutomo_sparse(const PARMS_T *parms, const RECON_T *recon);
-};
 }//namespace
 #endif

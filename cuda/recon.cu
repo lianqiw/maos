@@ -68,6 +68,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	}
 	if(recon->MVM){//MVM already exists
 	    MVM=new cusolve_mvm(recon->MVM);
+	    return;//done.
 	}
     }
     grid=new curecon_geom(parms, recon);
@@ -250,11 +251,11 @@ float curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 #ifdef DBG_RECON
     static float cgres_last=INFINITY;
     int isimr=grid->isimr;
-    if(isimr>5 || cgres>cgres_last*2){
+    if(isimr>5 || cgres>cgres_last*5){
 	float omax=curmax(opdr->m, cgstream);
 	static float omax_last=INFINITY;
-	if(omax>omax_last*5 || cgres>cgres_last*2){
-	    info("tomo cgres=%g. omax=%g, omax_last=%g\n", cgres, omax, omax_last);
+	if(omax>omax_last*5 || cgres>cgres_last*5){
+	    info("tomo cgres=%g cgres_last=%g. omax=%g, omax_last=%g\n", cgres, cgres_last, omax, omax_last);
 	    if(!disable_save){
 		dcellwrite(_gradin, "tomo_gradin_%d", isimr);
 		curcellwrite(opdr_save, "tomo_opdrlast_%d", isimr);
@@ -300,7 +301,7 @@ float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
 #ifdef DBG_RECON
     static float cgres_last=INFINITY;
     int isimr=grid->isimr;
-    if(cgres>cgres_last*2){
+    if(cgres>cgres_last*5){
 	info("fit cgres=%g\n", cgres);
 	if(!disable_save){
 	    curcellwrite(opdr, "fit_opdr_%d", isimr);
@@ -402,16 +403,19 @@ void curecon_t::tomo_test(SIM_T *simu){
     dcellwrite(rhsc, "CPU_TomoR");
     muv_trans(&rtc, &recon->RR, rhsc, 1);
     dcellwrite(rtc, "CPU_TomoRt");
-    muv(&lc, &recon->RL, rhsc, 1);
-    dcellwrite(lc, "CPU_TomoL");
-    muv(&lc, &recon->RL, rhsc, -1);
-    dcellwrite(lc, "CPU_TomoL2");
-    if(parms->tomo.alg==1 && parms->tomo.precond==1){
-	dcell *lp=NULL;
-	fdpcg_precond(&lp, recon, lc);
-	dcellwrite(lp, "CPU_TomoP");
-	fdpcg_precond(&lp, recon, lc);
-	dcellwrite(lp, "CPU_TomoP2");
+    if(parms->tomo.alg==1){
+	muv(&lc, &recon->RL, rhsc, 1);
+	dcellwrite(lc, "CPU_TomoL");
+	muv(&lc, &recon->RL, rhsc, -1);
+	dcellwrite(lc, "CPU_TomoL2");
+	if(parms->tomo.precond==1){
+	    dcell *lp=NULL;
+	    fdpcg_precond(&lp, recon, rhsc);
+	    dcellwrite(lp, "CPU_TomoP");
+	    fdpcg_precond(&lp, recon, rhsc);
+	    dcellwrite(lp, "CPU_TomoP2");
+	    dcellfree(lp);
+	}
     }
     dcellzero(lc);
     for(int i=0; i<5; i++){
@@ -430,14 +434,16 @@ void curecon_t::tomo_test(SIM_T *simu){
 	curcellwrite(lg, "GPU_TomoL"); 
 	RL2->L(&lg, 1, rhsg, -1,stream);
 	curcellwrite(lg, "GPU_TomoL2");
+	if(parms->tomo.precond==1){
+	    cucg_t *RL2=dynamic_cast<cucg_t*>(RL);
+	    curcell *lp=NULL;
+	    RL2->P(&lp, rhsg, stream);
+	    curcellwrite(lp, "GPU_TomoP");
+	    RL2->P(&lp, rhsg, stream);
+	    curcellwrite(lp, "GPU_TomoP2");
+	    delete lp;
+	}
     }
-    /*if(parms->tomo.alg==1 && parms->tomo.precond==1){
-      curcell *lp=NULL;
-      gpu_Tomo_fdprecond(&lp, recon, lg, stream);
-      curcellwrite(lp, "GPU_TomoP");
-      gpu_Tomo_fdprecond(&lp, recon, lg, stream);
-      curcellwrite(lp, "GPU_TomoP2");
-      }*/
     curcellzero(lg, stream);
     for(int i=0; i<5; i++){
 	RL->solve(&lg, rhsg, stream);
@@ -579,13 +585,14 @@ void gpu_tomo(SIM_T *simu){
     curecon->grid->isimr=simu->reconisim;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-#if 0
-    curecon->tomo_test(simu);
-#endif
-    int copy2cpu=(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao));
-    simu->cgres->p[0]->p[simu->reconisim]=
-	curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
-		      parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    if(parms->dbg.tomo){
+	curecon->tomo_test(simu);
+    }else{
+	int copy2cpu=(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao));
+	simu->cgres->p[0]->p[simu->reconisim]=
+	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
+			  parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    }
 }
 
 void gpu_fit(SIM_T *simu){
@@ -594,11 +601,12 @@ void gpu_fit(SIM_T *simu){
     curecon->grid->isim=simu->isim;
     curecon->grid->isimr=simu->reconisim;
     const PARMS_T *parms=simu->parms;
-#if 0
-    curecon->fit_test(simu);
-#endif
-    simu->cgres->p[1]->p[simu->reconisim]=
-	curecon->fit(&simu->dmfit, parms->gpu.tomo?NULL:simu->opdr);
+    if(parms->dbg.fit){
+	curecon->fit_test(simu);
+    }else{
+	simu->cgres->p[1]->p[simu->reconisim]=
+	    curecon->fit(&simu->dmfit, parms->gpu.tomo?NULL:simu->opdr);
+    }
     /*Don't free opdr. Needed for warm restart in tomo.*/
 }
 void gpu_recon_mvm(SIM_T *simu){

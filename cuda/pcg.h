@@ -28,7 +28,7 @@ typedef struct CGTMP_T{
     curcell *Ap;
     float *store;
     float *diff;
-    int count_fail;
+    int count_fail, count;
     CGTMP_T(){
 	memset(this, 0, sizeof(CGTMP_T));
     }

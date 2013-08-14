@@ -95,6 +95,7 @@ map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
 map_t *mapnew2(map_t *A);
 map_t *loc2map(loc_t *loc);
 void mapcircle(map_t *map, double r, double val);
+void mapcircle_symbolic(map_t *map, double r);
 void map_d_din(map_t *map, double *d, double *din);
 void locresize(loc_t *loc, long nloc);
 #define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)

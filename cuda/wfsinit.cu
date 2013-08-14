@@ -74,7 +74,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
 	    if(parms->powfs[ipowfs].fieldstop){
-		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc);
+		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc, 1);
 		cupowfs[ipowfs].nembed=powfs[ipowfs].nembed;
 		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop);
 	    }
@@ -107,7 +107,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		for(int isa=0; isa<nsa; isa++){
 		    imcc[isa]=NULL;
 		    cp2gpu((float**)&(imcc[isa]),
-				 powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
+			   powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
 		}
 		cudaMalloc(&cuwfs[iwfs].imcc, nsa*sizeof(void*));
 		cudaMemcpy(cuwfs[iwfs].imcc, imcc, nsa*sizeof(void*), cudaMemcpyHostToDevice);
@@ -128,7 +128,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	/*wfs amplitude map on loc */
 	if(powfs[ipowfs].nlocm>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-	    cp2gpu(&cuwfs[iwfs].amp, powfs[ipowfs].realamp[powfs[ipowfs].nlocm>1?wfsind:0], powfs[ipowfs].loc->nloc);
+	    cp2gpu(&cuwfs[iwfs].amp, powfs[ipowfs].realamp[powfs[ipowfs].nlocm>1?wfsind:0], powfs[ipowfs].loc->nloc, 1);
 	}else{
 	    cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
 	}
@@ -316,7 +316,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			free(temp);
 			cudaMalloc(&cuwfs[iwfs].mtche, nsa*sizeof(void*));
 			cudaMemcpy(cuwfs[iwfs].mtche, mtche2, nsa*sizeof(void*),cudaMemcpyHostToDevice);
-			cp2gpu(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
+			cp2gpu(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa, 1);
 		    }else{
 			cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
 			cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
@@ -324,7 +324,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}else if(parms->powfs[ipowfs].phytypesim==2){/*cog*/
 		    if(powfs[ipowfs].intstat->cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			cp2gpu(&cuwfs[iwfs].cogcoeff, 
-				    powfs[ipowfs].intstat->cogcoeff->p[powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0]->p, nsa*2);
+			       powfs[ipowfs].intstat->cogcoeff->p[powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);
 		    }else{
 			cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
 		    }

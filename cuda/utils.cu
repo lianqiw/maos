@@ -46,39 +46,6 @@ static __attribute((constructor)) void init(){
 }
 
 /**
-   Convert double array to device memory (float)
-*/
-
-void cp2gpu(float * restrict *dest, const double *src, int n){
-    if(!src) return;
-    float *tmp=(float*)malloc(n*sizeof(float));
-    for(int i=0; i<n; i++){
-	tmp[i]=(float)src[i];
-    }
-    if(!*dest){
-	DO(cudaMalloc((float**)dest, n*sizeof(float)));
-    }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
-    free(tmp);
-}
-/**
-   Convert double array to device memory (float)
-*/
-
-void cp2gpu(fcomplex * restrict *dest, const dcomplex *restrict src, int n){
-    if(!src) return;
-    fcomplex *tmp=(fcomplex*)malloc(n*sizeof(fcomplex));
-    for(int i=0; i<n; i++){
-	tmp[i]=(make_cuFloatComplex)(cuCreal(src[i]), cuCimag(src[i]));
-    }
-    if(!*dest){
-	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
-    }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
-    free(tmp);
-}
-
-/**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
    array. Allow multiple calling to override the data.  */
 void cp2gpu(cumap_t **dest0, map_t **source, int nps){
@@ -113,9 +80,9 @@ cusp::cusp(const dsp *src_csc, int tocsr)
     ny=src_csc->n;
     nzmax=src->nzmax;
     p=NULL; i=NULL; x=NULL;
-    cp2gpu(&p, src->p, src->n+1);
-    cp2gpu(&i, src->i, src->nzmax);
-    cp2gpu(&x, src->x, src->nzmax);
+    cp2gpu(&p, src->p, src->n+1, 1);
+    cp2gpu(&i, src->i, src->nzmax, 1);
+    cp2gpu(&x, src->x, src->nzmax, 1);
     if(tocsr){
 	spfree(src);
     }
@@ -193,7 +160,7 @@ void cuspmul(float *y, cusp *A, const float *x, int ncolvec, char trans, float a
     }else{
 	opr=CUSPARSE_OPERATION_NON_TRANSPOSE;
     }
-    int ncol, nrow;
+    int ncol=0, nrow=0;
     switch(A->type){
     case SP_CSR:
 	nrow=A->nx; ncol=A->ny; break;
@@ -234,59 +201,6 @@ void cp2gpu(float (* restrict *dest)[2], const loc_t *src){
     free(tmp);
 }
 
-/**
-   Convert dmat array to device memory.
-*/
-void cp2gpu(float * restrict *dest, const dmat *src){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx*src->ny);
-}
-/**
-   Convert dmat array to curmat
-*/
-void cp2gpu(curmat *restrict *dest, const dmat *src){
-    if(!src){
-	curzero(*dest);
-	return;
-    }
-    if(!*dest){
-	*dest=curnew(src->nx, src->ny);
-    }else{
-	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
-    }
-    cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
-}
-void cp2gpu(curmat *restrict *dest, const float *src, int nx, int ny, cudaStream_t stream){
-    if(!src){
-	curzero(*dest);
-	return;
-    }
-    if(!*dest){
-	*dest=curnew(nx, ny);
-    }else{
-	assert(nx*ny==(*dest)->nx*(*dest)->ny);
-    }
-    if(stream){
-	DO(cudaMemcpyAsync((*dest)->p, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice, stream));
-    }else{
-	DO(cudaMemcpy((*dest)->p, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice));
-    }
-}
-/*
-  convert cmat to cucmat
-*/
-void cp2gpu(cucmat *restrict *dest, const cmat *src){
-    if(!src){
-	czero(*dest);
-	return;
-    }
-    if(!*dest){
-	*dest=cucnew(src->nx, src->ny);
-    }else{
-	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
-    }
-    cp2gpu(&(*dest)->p, (dcomplex*)src->p, (int)(src->nx*src->ny));
-}
 /**
    Convert dcell to curcell
 */
@@ -345,79 +259,6 @@ void cp2gpu(cuccell *restrict *dest, const ccell *src){
     }
     for(int i=0; i<src->nx*src->ny; i++){
 	cp2gpu(&(*dest)->p[i], src->p[i]);
-    }
-}
-/**
-   Convert dmat array to device memory.
-*/
-void cp2gpu(fcomplex * restrict *dest, const cmat *src){
-    if(src){
-	cp2gpu(dest, (dcomplex*)src->p, src->nx*src->ny);
-    }
-}
-/**
-   Convert double array to device memory (float)
-*/
-void dbl2flt(float * restrict *dest, const double *src, int n){
-    if(!src) return;
-    if(!*dest){
-	cudaMallocHost((float**)dest, n*sizeof(float));
-    }
-    for(int i=0; i<n; i++){
-	(*dest)[i]=(float)src[i];
-    }
-}
-/**
-   Convert long array to device int
-*/
-void cp2gpu(int * restrict *dest, const long *src, int n){
-    if(!src) return;
-    if(!*dest){
-	DO(cudaMalloc((int**)dest, n*sizeof(int)));
-    }
-    if(sizeof(long)==sizeof(int)){
-	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyHostToDevice));
-	cudaDeviceSynchronize();
-    }else{
-	int *tmp=(int*)malloc(sizeof(int)*n);
-	for(int i=0; i<n; i++){
-	    tmp[i]=(int)src[i];
-	    if((long)tmp[i]!=src[i]){
-		error("Overflow occured\n");
-	    }
-	}
-	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyHostToDevice));
-	cudaDeviceSynchronize();
-	free(tmp);
-    }
-}
-void cp2gpu(int *restrict *dest, const int *src, int n){
-    if(!*dest){
-	DO(cudaMalloc((int**)dest, n*sizeof(int)));
-    }
-    DO(cudaMemcpy(*dest, src, sizeof(int)*n, cudaMemcpyHostToDevice));
-}
-/**
-   Convert long array to device int
-*/
-void cp2gpu(int * restrict *dest, const spint *src, int n){
-    if(!*dest){
-	DO(cudaMalloc((int**)dest, n*sizeof(int)));
-    }
-    if(sizeof(spint)==sizeof(int)){
-	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyHostToDevice));
-	cudaDeviceSynchronize();
-    }else{
-	int *tmp=(int*)malloc(sizeof(int)*n);
-	for(int i=0; i<n; i++){
-	    tmp[i]=(int)src[i];
-	    if((spint)tmp[i]!=src[i]){
-		error("Overflow occured\n");
-	    }
-	}
-	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyHostToDevice));
-	cudaDeviceSynchronize();
-	free(tmp);
     }
 }
 /**

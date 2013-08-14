@@ -28,12 +28,6 @@ streams are used now with each stream doing tasks in series. This helps to incre
 */
 
 #define TIMING 0
-
-#if TIMING 
-static unsigned int event_flag=cudaEventDefault;
-#else
-static unsigned int event_flag=cudaEventDisableTiming;
-#endif
 typedef struct{
     curmat *cumvm;//active mvm control matrix
     curmat *cumvm_next;//inactive mvm control matrix.
@@ -82,7 +76,6 @@ static void __global__ mtch_do(const float *mtch, const float *pix, float *grad,
     }
 }
 
-static int mp_count;
 /**
    A standalone routine that testes applying MVM for a single WFS and update mvm.*/
 void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, 
@@ -91,7 +84,6 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	DO(cudaFuncSetCacheConfig(mvm_do, cudaFuncCachePreferShared));
 	struct cudaDeviceProp prop;
 	DO(cudaGetDeviceProperties(&prop, 0));
-	mp_count=prop.multiProcessorCount;
     }
     const int nsm=6;
 
@@ -125,7 +117,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     const int mtch_dimy=12;//4 subapertures, 8 gradients
     const int sastep=mtch_dimy*mtch_ngrid/2;
     const int nact=mvm1->nx;
-    int nc=10;//each time copy nc column of mvm.
+
     GPU_DATA_T *data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
     const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
     for(int igpu=0; igpu<ngpu; igpu++){
@@ -151,9 +143,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	spagelock(dmres->p[igpu], NULL);
     }
     smat *timing=snew(nstep, 1);
-    smat *timing2=snew(nstep, 1);
     smat *result=snew(nstep, 1);
-    float one=1; float zero=0; float *pbeta;
     cudaProfilerStart();
     TIC;tic;
     for(int istep=0; istep<nstep; istep++){
@@ -196,12 +186,14 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		mtch_dimx*mtch_dimy*sizeof(float), datai->stream[ism]>>>
 	       (datai->mtch->p+isa*2*pixpsa, datai->pix->p+isa*pixpsa, 
 		datai->grad->p+isa*2, pixpsa, nleft);
+#if 0
+	    float one=1; float zero=0; 
+	    float *pbeta;
 	    if(!datai->count){
 		pbeta=&zero;//initialize act.
 	    }else{
 		pbeta=&one;
 	    }
-#if 0
 	    DO(cublasSgemv(datai->stream[ism], CUBLAS_OP_N, nact, nleft*2, 
 			   &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 
 			   1, pbeta, datai->act->p, 1));

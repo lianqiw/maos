@@ -332,14 +332,14 @@ void daemonize(void){ /* Fork off the parent process */
     umask(0077);
     detached=1;/*we are in detached mode, disable certain print outs.*/
     redirect();
-    char fn[256];
+    /*char fn[256];
     snprintf(fn,256,"kill_%d",pid);
     FILE *fp=fopen(fn,"w");
     if(fp){
 	fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
 	fclose(fp);
     }
-    chmod(fn,00700);
+    chmod(fn,00700);*/
 }
 /**
    fork and launch exe as specified in cmd. cmd should composed of the path to

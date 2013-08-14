@@ -72,7 +72,8 @@ void mvm_only(int *gpus, int ngpu, int nstep){
     float one=1; 
     for(int istep=0; istep<nstep; istep++){
 	DO(cudaEventRecord(event_mvm[istep], stream_mvm));
-	DO(cublasSgemv(stream_mvm, CUBLAS_OP_N, nact, ng, &one, cumvm1->p, nact, cugrad1->p, 1, &one, cuact->p, 1));
+	DO(cublasSgemv(stream_mvm, CUBLAS_OP_N, nact, ng, &one,
+		       cumvm1->p, nact, cugrad1->p, 1, &one, cuact->p, 1));
     }
     DO(cudaEventRecord(event_mvm[nstep], stream_mvm));
     stream_mvm.sync();

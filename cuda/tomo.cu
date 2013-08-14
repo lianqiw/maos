@@ -186,7 +186,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     if(recon->PTT && !PTT){//for t/t proj in 1)uplink t/t 2) recon
 	cp2gpu(&PTT, recon->PTT);
     }
-    ptt=!parms->recon.split || parms->tomo.splitlrt; 
+    ptt=!parms->recon.split || (parms->tomo.splitlrt && parms->recon.mvm!=2); 
     {
 	PDF=curcellnew(parms->npowfs, 1);
 	PDFTT=curcellnew(parms->npowfs, 1);

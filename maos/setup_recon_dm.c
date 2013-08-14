@@ -109,12 +109,23 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double dy=parms->dm[idm].dy;
 	    double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
-	    if(parms->fit.square && parms->gpu.fit==2 && guard<2*dx){
-		//need sufficient guard to avoid checking index.
+	    /*if(parms->fit.square && parms->gpu.fit==2 && guard<2*dx){
+		//need sufficient guard to avoid checking index. index checked now. no longer needed.
 		guard=2*dx;
+		}*/
+	    map_t *map;
+	    if(parms->dbg.dmfullfov){//DM covers full fov
+		double D=(parms->sim.fov/206265.*ht+parms->aper.d+guard*2);
+		long nx=D/dx+1;
+		long ny=D/dy+1;
+		map=mapnew(nx, ny, dx, dy, 0);
+		map->h=ht;
+		map->ox+=offset*dx;
+		mapcircle_symbolic(map, D*0.5);
+	    }else{
+		map=create_metapupil_wrap
+		    (parms,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
-	    map_t *map=create_metapupil_wrap
-		(parms,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
@@ -135,6 +146,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     for(int idm=0; idm<parms->ndm; idm++){
 	if(!recon->amap[idm]){
 	    recon->amap[idm]=loc2map(recon->aloc[idm]);
+	    recon->amap[idm]->h=parms->dm[idm].ht;
 	}
 	recon->aembed[idm]=map2embed(recon->amap[idm]);
 	recon->amap[idm]->cubic=parms->dm[idm].cubic;
@@ -225,6 +237,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	    spcellwrite(recon->HA,"%s/HA",dirsetup);
 	}
     }
+    recon->actcpl=genactcpl(recon->HA, recon->W1);
     if(recon->actstuck){
 	warning2("Apply stuck actuators to HA\n");
 	act_stuck(recon->aloc, recon->HA, NULL, recon->actstuck);
@@ -240,9 +253,9 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
 	}
     }
-    if(parms->fit.actslave && parms->fit.alg==1){
-	//Only do in CG mode. Some problem in CBS SCAO mode.
-	spcell *interp2=act_inactive_interp(recon->aloc, recon->HA, recon->W1);
+    if(parms->fit.actinterp){
+	warning2("Apply slaving actuator operation\n");
+	spcell *interp2=act_inactive_interp(recon->aloc, recon->actcpl, 0.5);
 	spcelladd(&recon->actinterp, interp2);
 	spcellfree(interp2);
     }
@@ -285,8 +298,11 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc[idm]->nloc;
 	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
+	    const double *cpl=recon->actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
-		p[iloc]=scl;
+		if(cpl[iloc]>0.5){
+		    p[iloc]=scl;
+		}
 	    }
 	}
 	inw+=ndm;
@@ -301,9 +317,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
 		double *p2x=p;
 		double *p2y=p+nloc;
+		const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
-		    p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		    if(cpl[iloc]>0.5){
+			p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		    }
 		}
 	    }
 	}else if(lrt_tt==2){/*Canceling TT. only valid for 2 DMs */
@@ -318,9 +337,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		else if(idm==1) factor=-scl*2./parms->aper.d;
 		double *p2x=p;
 		double *p2y=p+nloc;
+		const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
-		    p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		    if(cpl[iloc]>0.5){
+			p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		    }
 		}
 	    }
 
@@ -333,10 +355,11 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	  that slaving is causing mis-measurement of a few edge
 	  actuators. First try to remove W1. Or lower the weight. Revert
 	  back.
+	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. We use sqrt() because 
 	*/
-	recon->actslave=slaving(&recon->actcpl, recon->aloc, recon->HA, recon->W1,
+	recon->actslave=slaving(recon->aloc, recon->actcpl,
 				recon->fitNW, recon->actstuck,
-				recon->actfloat, 0.1, 1./recon->floc->nloc);
+				recon->actfloat, .5, 1./recon->floc->nloc);
 	if(parms->save.setup){
 	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);

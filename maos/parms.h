@@ -382,6 +382,7 @@ typedef struct FIT_CFG_T{
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
+    int actinterp;   /**<interpolate actuator results to non-active actuators after DM fitting. turn on when inter-actuator-stroke study.*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/
     int lrt_tt;      /**<differential tip/tilt constraint on two DMs or tt on upper dms.*/
@@ -566,6 +567,9 @@ typedef struct DBG_CFG_T{
     int nocgwarm;    /**<Disable warm restart in CG*/
     int deltafocus;  /**<use delta focus between science and NGS estimated from opdr.*/
     int test;        /**<Temporary any testing purpose*/
+    int dmfullfov;   /**<let DM cover full FoV (sim.fov)*/
+    int tomo;        /**<Comparing tomography in GPU and CPU*/
+    int fit;         /**<Comparing DM fitting in GPU and CPU*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

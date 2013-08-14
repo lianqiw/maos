@@ -25,6 +25,7 @@
 */
 #include <stdlib.h>
 #include "imat.h"
+#include "../sys/bin.h"
 /**
    Allocate a new imat.
  */
@@ -64,4 +65,43 @@ void icellfree(icell *A){
 	}
 	free(A);
     }
+}
+void iwritedata(file_t *fp, const imat *A){
+    uint64_t nx=0, ny=0;
+    if(A){
+	nx=(uint64_t)A->nx;
+	ny=(uint64_t)A->ny;
+    }
+    do_write(fp, 0, sizeof(long), M_INT64, NULL, A?A->p:NULL, nx, ny);
+}
+/**
+   Function to write cell array of dense matrix data. into a file pointer
+   Generally used by library developer
+*/
+void icellwritedata(file_t *fp, const icell *dc){
+    uint64_t nx=0;
+    uint64_t ny=0;
+    if(dc){
+	nx=dc->nx;
+	ny=dc->ny;
+    }
+    header_t header={MCC_ANY, nx, ny, NULL};
+    write_header(&header, fp);
+    if(nx>0 && ny>0){
+	for(unsigned long iy=0; iy<ny; iy++){
+	    for(unsigned long ix=0; ix<nx; ix++){
+		iwritedata(fp, dc->p[ix+iy*nx]);
+	    }
+	}
+    }
+}
+/**
+   User callable function to write dense matrix into a file. Usage:
+   iwrite(A,"A") for double matrix.
+*/
+void iwrite(const imat *A, const char* format,...){
+    format2fn;
+    file_t *fp=zfopen(fn,"wb");
+    iwritedata(fp, A);
+    zfclose(fp);
 }

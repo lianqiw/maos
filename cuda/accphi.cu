@@ -145,7 +145,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	long nxn=parms->atm.nxn;
 	long nyn=parms->atm.nyn;
 	
-	long avail_min, avail_max;
+	long avail_min=0, avail_max=0;
 	for(int igpu=0; igpu<NGPU; igpu++){
 	    gpu_set(igpu);
 	    long availi=gpu_get_mem();

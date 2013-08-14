@@ -80,9 +80,5 @@ public:
 		    const curcell *xin, float alpha, stream_t &stream);
 };
 
-class cufit_sparse:public cusolve_sparse{
-public:
-    cufit_sparse(const PARMS_T *parms, const RECON_T *recon);
-};
 }//namespace
 #endif

@@ -58,6 +58,11 @@ public:
 	L(xout, beta, xin, alpha, stream);
     }
     virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
+    void P(curcell **xout, const curcell *xin, stream_t &stream){
+	if(precond){
+	    (*precond)(xout, xin, stream);
+	}
+    }
 };
 
 class cumuv_t{
@@ -140,18 +145,17 @@ public:
 }; 
 
 class cusolve_mvm:public cusolve_l{
-    curmat *MVM;
+    curmat *M;
 public:
-    cusolve_mvm(dmat *mvm=0):MVM(0){
-	if(!mvm) cp2gpu(&MVM, mvm);
+    cusolve_mvm(dmat *_M=0):M(0){
+	cp2gpu(&M, _M);
     }
     ~cusolve_mvm(){
-	if(!this) return;
-	delete MVM;
+	delete M;
     }
     virtual float solve(curcell **xout, const curcell *xin, stream_t &stream){
 	if(!*xout) *xout=curcellnew(xin);
-	curmv((*xout)->m->p, 0., MVM, xin->m->p, 'n', 1., stream);
+	curmv((*xout)->m->p, 0., M, xin->m->p, 'n', 1., stream);
 	return 0;
     }
 };

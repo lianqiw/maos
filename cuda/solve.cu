@@ -19,11 +19,12 @@
 namespace cuda_recon{
 float cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
     float ans;
+    cgtmp.count++;
     if((ans=gpu_pcg(xout, this, precond, xin, &cgtmp,
 		    warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
-	warning2("CG %5d does not converge. ans=%g. maxit=%d\n", 
-		 cgtmp.count_fail, ans, maxit);
+	warning2("CG %5d(%5d) does not converge. ans=%g. maxit=%d\n", 
+		 cgtmp.count, cgtmp.count_fail, ans, maxit);
     }
     return ans;
 }
@@ -90,7 +91,7 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp)
     if(!_C) return;
     chol_convert(_C, 0);
     Cl=new cusp(_C->Cl, 0);
-    cp2gpu(&Cp, _C->Cp, _C->Cl->m);
+    cp2gpu(&Cp, _C->Cp, _C->Cl->m, 1);
     if(_Up){
 	cp2gpu(&Up, _Up);
 	cp2gpu(&Vp, _Vp);

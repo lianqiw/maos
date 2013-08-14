@@ -26,6 +26,8 @@ extern "C"
 #include <cublas_v2.h>
 #include <cusparse.h>
 #include <cufft.h>
+#include <cuComplex.h>
+#define fcomplex float2
 extern "C"{
     void cudaProfilerStart(void);
     void cudaProfilerStop(void);

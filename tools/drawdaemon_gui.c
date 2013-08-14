@@ -953,6 +953,7 @@ static void tool_save(GtkToolButton *button){
 	error_msg("surface is NULL\n");
 	return;
     }
+    drawdata->dtime=100;//disable FPS
     cairo_draw(cairo_create(surface), drawdata,width,height);
     if(strcmp(suffix,".png")==0){
 	cairo_surface_write_to_png(surface, filename);

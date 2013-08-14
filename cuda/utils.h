@@ -17,40 +17,91 @@
 */
 #ifndef AOS_CUDA_UTILS_H
 #define AOS_CUDA_UTILS_H
+#include <typeinfo>
+#include "common.h"
 #include "types.h"
 
-/*void gpu_set(int igpu);
-  int  gpu_next(void);*/
-void dbl2flt(float * restrict *dest, double *src, int n);
-void spint2int(int * restrict *dest, spint *src, int n);
-
+template<typename M>
+void cp2gpu(M**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) return;
+    if(!*dest){
+	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
+    }
+    if(stream==(cudaStream_t)0){
+	DO(cudaMemcpy(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
+    }else{
+	DO(cudaMemcpyAsync(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
+    }
+}
+template<typename M, typename N> 
+inline void type_convert(M &out, const N in){
+    out=(M) in;
+}
+template<>
+inline void type_convert<float2, dcomplex>(float2 &out, const dcomplex in){
+    const double *tmp=(const double*)&in;
+    out=make_cuFloatComplex((float)tmp[0], (float)tmp[1]);
+}
+template<>
+inline void type_convert<float2, double2>(float2 &out, const double2 in){
+    const double *tmp=(const double*)&in;
+    out=make_cuFloatComplex((float)tmp[0], (float)tmp[1]);
+}
+template<typename M, typename N>
+void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) return;
+    M*from;
+    cudaMallocHost(&from, sizeof(M)*nx*ny);
+    for(int i=0; i<nx*ny; i++){
+	type_convert(from[i], src[i]);
+    }
+    //don't call previous cp2gpu() as it may call itself.
+    if(!*dest){
+	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
+    }
+    if(stream==(cudaStream_t)0){
+	DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
+    }else{
+	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
+    }
+    cudaFreeHost(from);
+}
+template<typename M, typename N>
+void cp2gpu(cumat<M>**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) return;
+    if(!*dest){
+	*dest=new cumat<M>(nx, ny);
+    }
+    cp2gpu(&((*dest)->p), src, nx, ny, stream);
+}
+template<typename M, typename N>
+void cp2gpu(M**dest, const cumat<N>*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+/* A few special cases to avoid N match to cell*/
+template<typename M>
+void cp2gpu(M**dest, const dmat*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+template<typename M>
+void cp2gpu(M**dest, const smat*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+template<typename M>
+void cp2gpu(M**dest, const cmat*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
 void cp2gpu(cumap_t **dest, map_t **source, int nps);
 void cp2gpu(cusp **dest, const dsp *src, int tocsr);
 void cp2gpu(cusp **dest, const spcell *src, int tocsr);
 void cp2gpu(cuspcell **dest, const spcell *src, int tocsr);
 void cp2gpu(float (* restrict *dest)[2], const loc_t *src);
-void cp2gpu(float * restrict *dest, const double *src, int n);
-void cp2gpu(float * restrict *dest, const dmat *src);
-void cp2gpu(fcomplex * restrict *dest, const dcomplex *src, int n);
-void cp2gpu(fcomplex * restrict *dest, const cmat *src);
-
-void cp2gpu(curmat *restrict *dest, const dmat *src);
 void cp2gpu(curcell *restrict *dest, const dcell *src);
-void cp2gpu(cucmat *restrict *dest, const cmat *src);
 void cp2gpu(cuccell *restrict *dest, const ccell *src);
-
-void cp2gpu(int * restrict *dest, const long *src, int n);
-void cp2gpu(int * restrict *dest, const spint *src, int n);
-void cp2gpu(int * restrict *dest, const int *src, int n);
-void cp2gpu(curmat *restrict *dest, const float *src, int nx, int ny, cudaStream_t stream);
-inline void cp2gpu(curmat *restrict *dest, const float *src, int nx, cudaStream_t stream){
-    cp2gpu(dest, src, nx, 1, stream);
-}
-inline void cp2gpu(curmat *restrict *dest, const smat *src, cudaStream_t stream=0){
-    if(src){
-	cp2gpu(dest, src->p, src->nx, src->ny, stream);
-    }
-}
 
 void cuspmul (float *y, cusp *A, const float *x, int ncol, char trans,
 	      float alpha, cusparseHandle_t handle);

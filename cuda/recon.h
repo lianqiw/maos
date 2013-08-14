@@ -96,24 +96,6 @@ public:
     void fit_test(SIM_T *simu);
 };
 
-__global__ void apply_W_do(float *restrict out, const float *restrict in, const int *W0f, 
-			   float alpha, int nx, int n);
-
-
-
-void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha, stream_t &stream);
-void gpu_TomoRt(curcell **gout,float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_FitR (curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, stream_t &stream);
-
-void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream);
-void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream);
-
-void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict in, 
-		  cudaStream_t stream);
 }//namespace
 
 void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);

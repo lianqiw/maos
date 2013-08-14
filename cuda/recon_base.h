@@ -31,8 +31,7 @@ struct dir_t{
 class W01_T{
     curmat *W1;    /**< The aperture weighting, piston removal*/
     cusp   *W0p;   /**< W0 for partial points*/
-    int    *W0f;   /**< index for fully illuminated points.*/
-    int     nW0f;  /**< Number of fully illuminated points.*/
+    cumat<int>*W0f;   /**< index for fully illuminated points.*/
     float   W0v;   /**< maximum Value of W0*/
     int     nxx;   /**< First dimension of grid*/
     curmat *pis;   /**< Temporary data*/
@@ -58,7 +57,6 @@ class curecon_geom{
 public:
     int npsr, ndm;
     int delay, isim, isimr;
-    curcell *cubic_cc;/*Cubic influence function of system DM*/
     cugrid_t *xmap;/*Grid of xmap*/
     cugrid_t *xcmap;
     cugrid_t *amap;
@@ -75,7 +73,6 @@ public:
 	delete[] amap;
 	delete[] xcmap;
 	delete W01;
-	delete cubic_cc;
     }
 };
 class map_ray{

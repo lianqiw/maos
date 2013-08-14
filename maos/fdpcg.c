@@ -105,7 +105,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    shift=1: apply a fftshift with permutation vector.
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
-static long *
+static imat *
 fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int shift, int half){
     long nx2[nps],ny2[nps];
     long noff[nps];
@@ -116,12 +116,17 @@ fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int s
 	noff[ips]=xloctot;
 	xloctot+=nx[ips]*ny[ips];
     }
-    long adimx=nx[0]/os[0];//subaperture dimension.
-    long adimy=ny[0]/os[0];
-    if(half){
-	xloctot=(adimx/2+1)*adimy*bs;//about half of xloctot.
+    if(xloctot>(1<<29)-1){
+	//we reserved 2 bit for load and store flag.
+	error("Current storage format overflows\n");
     }
-    long *perm=calloc(xloctot, sizeof(long));
+    const long adimx=nx[0]/os[0];//subaperture dimension.
+    const long adimy=ny[0]/os[0];
+    const long adimx2=adimx/2;
+    if(half){
+	xloctot=(adimx2+1)*adimy*bs;//about half of xloctot.
+    }
+    imat *perm=inew(xloctot, 1);
     long count=0;
     /*We select the positive x frequencies first and negative x frequencies
       later so that in GPU, when at os0 or os6, we only need to do postive
@@ -130,31 +135,30 @@ fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int s
     int ix0, ix1;
     for(int ixh=0; ixh<nxh; ixh++){
 	if(ixh==0){
-	    ix0=-adimx/2;
+	    ix0=-adimx2;
 	    ix1=1;
 	}else{
 	    ix0=1;
-	    ix1=adimx/2;
+	    ix1=adimx2;
 	}
 	for(long iy=-adimy/2; iy<adimy/2; iy++){
 	    for(long ix=ix0; ix<ix1; ix++){
-		//for(long ix=-adim/2; ix<adim/2; ix++){
 		/*(ix,iy) is the frequency in SALOC grid. We are going to group all
 		  points couple to this subaperture together. First loop over all
 		  points on PLOC and find all coupled points in XLOC*/
 		for(long ips=0; ips<nps; ips++){
 		    for(long jos=0; jos<os[ips]; jos++){
 			long jy=(iy+adimy*jos); 
-			if(jy>=ny2[ips]) jy-=ny[ips];
 			if(shift){
 			    if(jy<0) jy+=ny[ips];
 			}else{
 			    jy=(jy+ny2[ips]); 
+			    if(jy>=ny[ips]) jy-=ny[ips];
 			}
 			for(long ios=0; ios<os[ips]; ios++){
 			    long jx=(ix+adimx*ios); 
 			    int ratio=1;/*no scale by default*/
-			    if(jx>=nx2[ips]) jx-=nx[ips];
+			    //jx may be negative already here.
 			    if(shift){
 				if(jx<0) jx+=nx[ips];/*we embeded a fftshift here.*/
 				if(half && jx>nx2[ips]){
@@ -163,8 +167,9 @@ fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int s
 				}
 			    }else{
 				jx=(jx+nx2[ips]);
+				if(jx>=nx[ips]) jx-=nx[ips];
 			    }
-			    perm[count++]=ratio*(noff[ips]+jx+(ratio<0?(jy==0?0:ny[ips]-jy):jy)*nx[ips]);
+			    perm->p[count++]=ratio*(noff[ips]+jx+(ratio<0?(jy==0?0:ny[ips]-jy):jy)*nx[ips]);
 			}
 		    }
 		}
@@ -502,26 +507,24 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     for(long ips=0; ips<nps; ips++){
 	bs+=os[ips]*os[ips];
     }
-    fdpcg->nbx=nx[0]/os[0];
-    fdpcg->nby=ny[0]/os[0];
     fdpcg->bs=bs;
-    long nb=fdpcg->nbx*fdpcg->nby;
+    long nb=(nx[0]/os[0])*(ny[0]/os[0]);
     info2("fdpcg: Block size is %d, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     fdpcg->scale=needscale;
-    long *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
-    csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
+    imat *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
+    csp *Mhatp=cspperm(Mhat,0,perm->p,perm->p);/*forward permutation. */
     cspfree(Mhat);
-    free(perm);
+    ifree(perm);
 
     perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
-    if(parms->save.setup>1){
-	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
+    if(parms->save.setup){
+	iwrite(perm, "%s/fdpcg_perm", dirsetup);
     }
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
     csp *Minvp=cspinvbdiag(Mhatp,bs);
-    csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */
-    free(perm); perm=NULL;
+    csp *Minv=cspperm(Minvp,1,perm, perm->p);/*revert permutation */
+    ifree(perm); perm=NULL;
     cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
@@ -532,7 +535,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->gpu.tomo){
 	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
 	if(parms->save.setup>1){
-	    writelong(fdpcg->permhf, nxtot, 1, "%s/fdpcg_permhf", dirsetup);
+	    iwrite(fdpcg->permhf, "%s/fdpcg_permhf", dirsetup);
 	}
     }
     
@@ -542,7 +545,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     double svd_thres=1e-7;
     info2("FDPCG SVD Threshold is %g\n", svd_thres);
-
+    
     for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
@@ -675,44 +678,51 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     thread_t info_fft[NTH],info_ifft[NTH],info_mulblock[NTH];
     thread_prep(info_fft, 0, nps, NTH, fdpcg_fft, &data);
     thread_prep(info_ifft, 0, nps, NTH, fdpcg_ifft, &data);
-    long bs=recon->fdpcg->Mbinv->p[0]->nx;
+    long bs=recon->fdpcg->bs;
     long nb=recon->fdpcg->nxtot/bs;
     thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
     /*apply forward FFT */
+#define DBG_FD 0
+#if DBG_FD
+    dcellwrite(xin, "fdc_xin");
+#endif
     CALL_THREAD(info_fft, NTH, 1);
-    //ccellwrite(xhati, "fdpcg_fft");
+#if DBG_FD
+    ccellwrite(xhati, "fdc_fft");
+#endif
 #if PRE_PERMUT
     czero(xhat2);
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
-    cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
-    //ccellwrite(xhat2i, "fdpcg_perm");
+    cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm->p,nxtot);
     czero(xhat);
     CALL_THREAD(info_mulblock, NTH, 1);
-    //ccellwrite(xhati, "fdc_mul");
-    cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
-    //ccellwrite(xhat2i, "fdc_iperm");
+    cvecpermi(xhat2->p,xhat->p,fdpcg->perm->p,nxtot);
+#if DBG_FD
+    ccellwrite(xhat2i, "fdc_mul");
+#endif
 #endif
     /*Apply inverse FFT */
     CALL_THREAD(info_ifft, NTH, 1);
-    //ccellwrite(fdpcg->xhat2i, "fdc_ifft_%d", count);
-    //dcellwrite(*xout, "fdpcg_xout"); exit(0);
+#if DBG_FD
+    dcellwrite(*xout, "fdc_xout"); 
+#endif
     ccellfree(xhati);
     ccellfree(xhat2i);
     cfree(xhat);
     cfree(xhat2);
 }
-
+    
 /**
    Free fdpcg related data structs.
- */
+*/
 void fdpcg_free(FDPCG_T *fdpcg){
     if(!fdpcg) return;
     cspfree(fdpcg->Minv);
     if(fdpcg->Mbinv){
-	free(fdpcg->perm);
-	ccellfree(fdpcg->Mbinv);
+        ifree(fdpcg->perm);
+        ccellfree(fdpcg->Mbinv);
     }
     free(fdpcg);
 }

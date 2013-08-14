@@ -27,33 +27,26 @@ extern "C"{
 #include <errno.h>
 }
 #include "cudata.h"
+
+/**
+   \file mvm_daemon.cu
+
+   A standalone mvm daemon by gpu_mvm_daemon(). Waiting correction from MAOS,
+   read pixels, and send DM commands back.
+
+   This is not part of maos executable.
+   
+   For RTC benchmarking, use mvmfull_iwfs.cu which does both gradient processing
+   and MVM, in a piplined way.
+*/
+
 double tic_save;
 pthread_t *threads=NULL;
 int *cmds=NULL;
 int NGPU_MAX=0;
-/*Read into double array until we get all*/
-#define READ_ARR(p,n,type)					\
-    nleft=(n)*sizeof(type);					\
-    start=(char*)(p);						\
-    do{								\
-	int nread=read(sock_mvm, start, nleft);			\
-	nleft-=nread;						\
-	start+=nread;						\
-	if(nread<=0){						\
-	    warning("nread=%d, nleft=%d\n", nread, nleft);	\
-	    return -1;						\
-	}							\
-    }while(nleft>0);
 
-#define WRITE_ARR(p,n,type)						\
-    if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
-	perror("write");						\
-	warning("error writing. want %ld wrote %d\n",(n)*sizeof(type), ndone); \
-	return -1;							\
-    }
-
-#define READ_CMD(p) READ_ARR(p,N_CMD,int)
-#define WRITE_CMD(p) WRITE_ARR(p,N_CMD,int)
+#define READ_CMD(p) stread(sock_mvm, p,N_CMD*sizeof(int))
+#define WRITE_CMD(p) stwrite(sock_mvm, p,N_CMD*sizeof(int))
 
 enum{
     CMD_MCOPY=1,
@@ -229,7 +222,7 @@ static int respond(int sock){
 	mvm_data->nact=nact;
 	mvm_data->ngtot=ngtot;
 	mvm_data->mvm=snew(nact, ngtot);
-	READ_ARR(mvm_data->mvm->p, (nact*ngtot), float);
+	stread(sock_mvm, mvm_data->mvm->p, (nact*ngtot)*sizeof(float));
 	if(!thread_init_joined){
 	    pthread_join(thread_init, NULL);
 	    thread_init_joined=1;
@@ -280,7 +273,7 @@ static int respond(int sock){
 	tim_gfirst=myclockd();
 	for(int icol=cmd[1]; icol<ngtot; icol+=ngeach){
 	    int k=MIN(ngeach, ngtot-icol);
-	    READ_ARR(mvm_data->g+icol, k, GTYPE);
+	    stread(sock_mvm, mvm_data->g+icol, k*sizeof(GTYPE));
 	    tim_gsend+=toc3;tic;
 	    if(cmd[2]<1800){//part of grads
 		int igpu=gpu_next();
@@ -326,7 +319,7 @@ static int respond(int sock){
 	    }
 	}
 	tim_dmsum+=toc3;tic;
-	WRITE_ARR(mvm_data->a, mvm_data->nact, ATYPE);
+	stwrite(sock_mvm, mvm_data->a, mvm_data->nact*sizeof(ATYPE));
 	tim_dmsend+=toc3;tic;
 	info2("k=%4d CMD %1.0f, gsend %2.0f, gcp %3.0f, queue %3.0f, sync %3.0f sum %3.0f, send %2.0f, total %4.0f\n", ngeach,
 	      tim_cmd*1e6, tim_gsend*1e6, tim_gcp*1e6, tim_queue*1e6, tim_dmcp*1e6, 
@@ -338,7 +331,7 @@ static int respond(int sock){
     }
     return 0;
 }
-void* gpu_mvm_gpu_init(void* A){
+static void* gpu_mvm_gpu_init(void* A){
     (void)A;
     gpu_init(NULL, 0);
     DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));

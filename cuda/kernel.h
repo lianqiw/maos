@@ -23,9 +23,6 @@ extern "C"
 #include "gpu.h"
 }
 #include "common.h"
-#include <cuComplex.h>
-#define fcomplex cuFloatComplex
-#define dcomplex cuDoubleComplex
 const int NG1D=64;
 const int NG2D=8;
 const int WRAP_SIZE=32; /*The wrap size is currently always 32 */

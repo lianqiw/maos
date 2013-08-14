@@ -39,7 +39,7 @@ void test_sum(){
     //seed_rand(&srand, 1);
     //srandu(As, 1, &srand);
     sset(As, 1);
-    curmat *Ap;
+    curmat *Ap=NULL;
     cp2gpu(&Ap, As);
     float *res_gpu;
     cudaMalloc(&res_gpu, sizeof(float));

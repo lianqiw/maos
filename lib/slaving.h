@@ -23,11 +23,12 @@
    \file slaving.h
    Routines to compute interpolation matrices for stuck and floating actuators.
  */
-spcell *slaving(dcell **pactcpl, loc_t **aloc, spcell *HA, dmat *W1, dcell *NW, icell *actstuck, icell *actfloat, double thres, double scl);
-void act_stuck(loc_t **aloc, spcell *HA, dcell *HB, icell *stuck);
-void act_zero(loc_t **aloc, dcell *HB, icell *dead);
-void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat);
-void act_stuck_cmd(loc_t **aloc, dcell *adm, icell *stuck);
-spcell* act_float_interp(loc_t **aloc, icell *actfloat);
-spcell* act_inactive_interp(loc_t **aloc, spcell *HA, dmat *W1);
+dcell *genactcpl(const spcell *HA, const dmat *W1);
+spcell *slaving(loc_t **aloc, const dcell *actcpl, const dcell *NW, const icell *actstuck, const icell *actfloat, const double thres, const double scl);
+void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stuck);
+void act_zero(loc_t **aloc, const dcell *HB, const icell *dead);
+void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat);
+void act_stuck_cmd(loc_t **aloc, const dcell *adm, const icell *stuck);
+spcell* act_float_interp(loc_t **aloc, const icell *actfloat);
+spcell* act_inactive_interp(loc_t **aloc,const dcell *actcpl, const double scl);
 #endif

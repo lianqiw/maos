@@ -206,7 +206,7 @@ file_t* zfopen(const char *fn, char *mod){
     case 'w':/*write */
     case 'a':
 	if(disable_save){
-	    error("disable_save is set\n");
+	    error("output directory is not specified\n");
 	}
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");

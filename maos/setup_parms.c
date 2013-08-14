@@ -717,6 +717,7 @@ static void readcfg_fit(PARMS_T *parms){
     READ_DBL(fit.tikcr);
     READ_DBL(fit.svdthres);
     READ_INT(fit.actslave);
+    READ_INT(fit.actinterp);
     READ_INT(fit.lrt_piston);
     READ_INT(fit.lrt_tt);
     READ_INT(fit.alg);
@@ -910,6 +911,9 @@ static void readcfg_dbg(PARMS_T *parms){
     if(readcfg_peek("dbg.test")){
 	READ_INT(dbg.test);
     }
+    READ_INT(dbg.dmfullfov);
+    READ_INT(dbg.tomo);
+    READ_INT(dbg.fit);
 }
 /**
    Read in GPU options
@@ -1051,6 +1055,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    parms->recon.split=0;
 	}
 	if(parms->recon.mvm){
+	    warning("idealfit cannot be used with recon.mvm. changed\n");
 	    parms->recon.mvm=0;
 	}
     }
@@ -1753,11 +1758,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    factor=parms->recon.warm_restart?1:10;
 	}
-	if(parms->tomo.precond==1){
-	    parms->tomo.maxit=3*factor;
-	}else{
-	    parms->tomo.maxit=30*factor;
+	if(!parms->tomo.precond){
+	    factor*=10;
 	}
+	parms->tomo.maxit=3*factor;
 	if(parms->recon.mvm==1 && parms->tomo.splitlrt){
 	    warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 	    parms->tomo.splitlrt=0;

@@ -49,7 +49,6 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
 	W0v=(float)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
-	info("W0v=%g\n", W0v);
 	int count=0;
 	int count2=0;
 	for(int ic=0; ic<R_W0->n; ic++){
@@ -67,8 +66,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	pp2[R_W0->n]=count;
 	W0new->nzmax=count;
 	W0p=new cusp(W0new, 1);
-	cp2gpu(&W0f, full, count2);
-	nW0f=count2;
+	cp2gpu(&W0f, full, count2, 1);
 	spfree(W0new);
 	cudaFreeHost(full);
     }
@@ -135,9 +133,9 @@ void W01_T::apply(float *restrict xout, const float *xin, int ndir, stream_t &st
     assign_multi_do<<<dim3(32, ndir), dim3(256), 0, stream>>>
 	(xout, W1->p, pis->p, -1, W1->nx);
     //Apply W0: bilinar-weighting
-    if(nW0f){
+    if(W0f){
 	apply_W0_do<<<dim3(16, ndir), dim3(256,1), 0, stream>>> 		
-	    (xout, xin, W0f, W0v, nxx, W1->nx, nW0f);
+	    (xout, xin, W0f->p, W0v, nxx, W1->nx, W0f->nx);
     }
     if(W0p){
 	cuspmul(xout, W0p, xin, ndir, 'n', 1.f, stream);

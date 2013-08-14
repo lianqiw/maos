@@ -28,7 +28,10 @@ extern "C"
 #include "cucmat.h"
 #include "accphi.h"
 #include "cudata.h"
-
+/**
+   \file mvm_trans.cu
+   Compute the transpose of MVM control matrix in GPU colume by colume.
+*/
 typedef struct MVM_IGPU_T{
     const PARMS_T *parms;
     RECON_T *recon;
@@ -44,6 +47,7 @@ typedef struct MVM_IGPU_T{
     int ntotgrad;
     int load_mvmf; /*intermediate FitR result is for 1) loading, 0) saving.*/
 }MVM_IGPU_T;
+#define MVM_DEBUG 0
 static void mvm_trans_igpu(thread_t *info){
     TIC;tic;
     double tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
@@ -79,8 +83,14 @@ static void mvm_trans_igpu(thread_t *info){
 	    eyec=curcellnew(ndm, 1, recon->anloc, (long*)0);
 	}
     }
- 
-    curcell *dmfit=load_mvmf?NULL:curcellnew(grid->ndm, 1, grid->anx, grid->any);
+    curcell *dmfit=NULL;
+    if(!load_mvmf){
+	if(parms->fit.square){
+	    dmfit=curcellnew(grid->ndm, 1, grid->anx, grid->any);
+	}else{
+	    dmfit=curcellnew(grid->ndm, 1, recon->anloc, (long*)0);
+	}
+    }
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmf?1L:0L));
     curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmi?1L:0L));
     curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)0, (float*)1);
@@ -108,6 +118,9 @@ static void mvm_trans_igpu(thread_t *info){
 		cudaMemcpyAsync(eyec->m->p+iact, eye2+1, sizeof(float), 
 				cudaMemcpyDeviceToDevice, stream);
 	    }
+#if MVM_DEBUG == 1
+		    curcellwrite(eyec, "mvm_eyec_%d", iact);
+#endif
 	}
 	if(!recon->actcpl || recon->actcpl->p[curdm]->p[curact]>EPS){
 	    if(mvmf) opdx->replace(mvmf->p+(iact-info->start)*mvmf->nx, 0, stream);
@@ -115,6 +128,9 @@ static void mvm_trans_igpu(thread_t *info){
 		if(eyec){ /*Fitting operator*/
 		    curcellzero(dmfit, stream);//temp
 		    residualfit->p[iact]=curecon->FL->solve(&dmfit, eyec, stream);
+#if MVM_DEBUG == 1
+		    curcellwrite(dmfit, "mvm_dmfit_%d", iact);
+#endif
 		}else{
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
 				    cudaMemcpyHostToDevice, stream);
@@ -122,16 +138,30 @@ static void mvm_trans_igpu(thread_t *info){
     		tk_fitL+=toc3; tic;
 		/*Transpose of fitting operator*/
 		curecon->FR->Rt(&opdx, 0.f, dmfit, 1.f, stream);
+#if MVM_DEBUG == 1
+		curcellwrite(opdx, "mvm_opdx_%d", iact);
+#endif
 	    }
 	    tk_fitR+=toc3; tic;
 	    if(mvmi){
 		opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
+	    }else{
+		opdr->m->zero(stream);
 	    }
 	    residual->p[iact]=curecon->RL->solve(&opdr, opdx, stream);
+#if MVM_DEBUG == 1
+	    curcellwrite(opdx, "mvm_opdr_%d", iact);
+#endif
 	    tk_TomoL+=toc3; tic;
 	    /*Right hand side. output directly to mvmt*/
 	    grad->replace(mvmt->p+(iact-info->start)*ntotgrad, 0, stream);
 	    curecon->RR->Rt(&grad, 0, opdr, 1, stream);
+#if MVM_DEBUG == 1
+	    curcellwrite(grad, "mvm_grad_%d", iact);
+	    if(iact>10){
+		_Exit(0);
+	    }
+#endif
 	    tk_TomoR+=toc3; tic;
 	}
     }//for iact

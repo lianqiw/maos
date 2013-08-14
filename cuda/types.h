@@ -27,8 +27,7 @@ class cumat{
     long ny;
     int *nref;
     char *header;
-  
-  
+    
     /*Constructors */
     cumat(long nxi, long nyi, T *pi=NULL, int own=1)
 	:nx(nxi),ny(nyi),p(pi),nref(NULL),header(NULL){
@@ -207,9 +206,6 @@ class cucell{
 		p[i]->zero(stream);
 	    }
 	}
-    }
-    operator bool(){
-	return p?true:false;
     }
 };
 typedef class cumat<float>    curmat;

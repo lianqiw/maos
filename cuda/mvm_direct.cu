@@ -28,6 +28,10 @@ extern "C"
 #include "cucmat.h"
 #include "accphi.h"
 #include "cudata.h"
+/**
+   \file mvm_direct.cu
+   Compute the MVM control matrix in GPU colume by colume
+*/
 static int *gpu_avail=NULL;//implementes a single stack to manage available GPUs
 static int gpu_pos=0;
 PNEW(gpu_mutex);

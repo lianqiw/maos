@@ -27,3 +27,5 @@ echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] -cmcao_ngs.conf 2>>maos_check.stder
 echo -n "D=$D SCAO LGS mode: "
 echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_lgs.conf 2>>maos_check.stderr ) nm
 
+echo -n "D=$D MVM mode:       "
+echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] atmr.os=[2 2 2 2 2 2] tomo.precond=1 tomo.maxit=100 fit.alg=0 2>>maos_check.stderr) nm

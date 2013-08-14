@@ -1322,6 +1322,12 @@ void mapcircle(map_t *map, double r, double val){
     dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
 /**
+   Create a circular aperture on map_t.
+*/
+void mapcircle_symbolic(map_t *map, double r){
+    dcircle_symbolic((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r);
+}
+/**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
 void map_d_din(map_t *map, double *d, double *din){

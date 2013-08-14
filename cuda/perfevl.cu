@@ -40,7 +40,7 @@ static void gpu_plocs2gpu(loc_t *loc, dmat *amp){
     if(cudata->plocs) error("plocs is already Copied.\n");
     int nloc=loc->nloc;
     cp2gpu(&cudata->plocs, loc);
-    cp2gpu(&cudata->pamp, amp->p, nloc);
+    cp2gpu(&cudata->pamp, amp->p, nloc, 1);
 }
 __global__ static void calc_ptt_do( float *cc,
 				    const float (*restrict loc)[2], 
@@ -268,7 +268,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    cudata->embed    = (int**) calloc(nwvl, sizeof(int*));
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cp2gpu(&cudata->embed[iwvl], aper->embed[iwvl], aper->locs->nloc);
+		cp2gpu(&cudata->embed[iwvl], aper->embed[iwvl], aper->locs->nloc, 1);
 	    }
 	}
     }/*for igpu */
