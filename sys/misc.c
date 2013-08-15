@@ -374,7 +374,6 @@ char *strnadd(int argc, const char *argv[], const char* delim){
 	    strcat(scmd,delim);
 	}
     }
-    if(strlen(scmd)>slen-1) error("Overflow\n");
     char *scmdend=scmd+strlen(scmd)-1;
     while(scmdend>scmd+1 && scmdend[0]==delim[0] && scmdend[-1]==delim[0]){
 	scmdend[0]='\0';

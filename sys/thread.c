@@ -79,3 +79,14 @@ void thread_block_signal(){
     sigfillset(&set);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 }
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/syscall.h>
+long thread_id(){
+    return (long)syscall(SYS_gettid);
+}
+#else
+long thread_id(){
+    return pthread_self();
+}
+#endif

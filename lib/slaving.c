@@ -153,7 +153,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		assert(map[mapy][mapx]-1==iact);
 		int near_active=0;//neighbor is more coupled
 		int near_exist=0;//neighbor exist
-		double thres2=MAX(0, actcpl[iact]);//was 0.1
+		double thres2=MAX(0.1, actcpl[iact]);//was 0.1
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
 			if(abs(idx+idy)!=1){
@@ -179,7 +179,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		  all neighbors.
 		*/
 		double value=0;
-		if(!near_active) value=-scl/near_exist;
+		if(!near_active) value=-scl*0.1/near_exist;
 		double valsum=0;
 		/*part 1*/
 		for(int idy=-1; idy<2; idy++){
@@ -600,7 +600,7 @@ spcell* act_inactive_interp(loc_t **aloc,     /**<[in] Actuator grid array*/
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
 			if(abs(idx)+abs(idy)>1){
-			    continue;/*skip corner */
+			    continue;/*skip corner only*/
 			}
 			int kact1=map[mapy+idy][mapx+idx];
 			if(kact1){

@@ -68,7 +68,7 @@ void tomofit(SIM_T *simu){
 	    gpu_tomo(simu);
 	}else
 #endif
-	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
 	
 	if(parms->dbg.deltafocus){
 	    if(simu->opdr && recon->RFdfx){
@@ -89,7 +89,7 @@ void tomofit(SIM_T *simu){
 	    gpu_fit(simu);
 	}else
 #endif
-	    muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
+	    simu->cgres->p[1]->p[isim]=muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
     }
 
     /*zero stuck actuators*/

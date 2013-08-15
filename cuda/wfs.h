@@ -54,7 +54,7 @@ typedef struct cuwloc_t{
 
 
 typedef struct{
-    stream_t stream;
+    stream_t *stream;
     /*cusparseHandle_t sphandle;
     cublasHandle_t handle;
     cudaStream_t stream;*/

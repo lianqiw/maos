@@ -175,9 +175,9 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
-    recon->anx=calloc(ndm, sizeof(int));
-    recon->any=calloc(ndm, sizeof(int));
-    recon->anloc=calloc(ndm, sizeof(int));
+    recon->anx=calloc(ndm, sizeof(long));
+    recon->any=calloc(ndm, sizeof(long));
+    recon->anloc=calloc(ndm, sizeof(long));
     for(int idm=0; idm<ndm; idm++){
 	recon->anx[idm]=recon->amap[idm]->nx;
 	recon->any[idm]=recon->amap[idm]->ny;

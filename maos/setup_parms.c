@@ -1823,10 +1823,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->dm[idm].hist){
 	    parms->sim.dmttcast=1;
 	}
-	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke){
+	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke>0){
 	    parms->sim.dmclip=1;
 	}
-	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke){
+	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke>0){
 	    parms->sim.dmclipia=1;
 	}
     }

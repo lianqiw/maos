@@ -307,7 +307,6 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm[ips].oy=next_oy[ips];
 		DO(cudaMemcpy(cuatm[ips].p, (float*)next_atm[ips],
 			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
-		CUDA_SYNC_DEVICE;
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
@@ -377,14 +376,20 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 	    }
 	}
     }
-    CUDA_SYNC_DEVICE;
 }
 void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
-    for(int im=0; im<NGPU; im++){
+    for(int im=0; im<NGPU; im++)
+#if _OPENMP >= 200805
+#pragma omp task
+#endif
+    {
 	gpu_set(im);
 	cudata->ndm=ndm;
 	gpu_dm2gpu(&cudata->dmreal, dmreal, ndm, dmcfg);
     }
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
 }
 void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++){

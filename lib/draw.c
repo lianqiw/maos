@@ -78,7 +78,7 @@ typedef struct{
 }sockinfo_t;
 sockinfo_t sock_draws[MAXDRAW];
 
-#define CATCH(A) if(A){info("stwrite to %d failed with %s\n", sock_draw, strerror(errno));print_backtrace();if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw); continue;}
+#define CATCH(A) if(A){info("stwrite to %d failed with %s\n", sock_draw, strerror(errno));print_backtrace();if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw,0); continue;}
 #define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
 #define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
 #define STWRITECMDSTR(cmd,str) CATCH(stwriteint(sock_draw,cmd) || stwritestr(sock_draw,str))
@@ -171,7 +171,7 @@ int draw_add(int fd){
 	return -1;
     }
 }
-static void draw_remove(int fd){
+static void draw_remove(int fd, int reuse){
     if(sock_ndraw<=0 || fd<0) return;
     int found=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
@@ -184,6 +184,10 @@ static void draw_remove(int fd){
 	    memcpy(&sock_draws[ifd-1], &sock_draws[ifd], sizeof(sockinfo_t));
 	}
     }
+    if(reuse){
+	scheduler_send_socket(fd);
+    }
+    close(fd);
     if(found){
 	sock_ndraw--;
     }else{
@@ -260,7 +264,7 @@ static int open_drawdaemon(){
     }
     if(!sock_ndraw){
 	int sock=-1;
-	if(scheduler_recv_socket(&sock)){
+	if(DRAW_DIRECT && scheduler_recv_socket(&sock)){
 	    sock=-1;
 	}
 	if(sock==-1){
@@ -305,9 +309,7 @@ void draw_final(int reuse){
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	int sock_draw=sock_draws[ifd].fd;
 	STWRITEINT(DRAW_FINAL);
-	if(reuse && scheduler_send_socket(sock_draw)){
-	    warning("send sock %d to scheduler failed\n", sock_draw);
-	}
+	draw_remove(sock_draw, reuse);
     }
     UNLOCK(lock);
 }

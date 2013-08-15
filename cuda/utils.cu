@@ -60,7 +60,6 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     for(int ips=0; ips<nps; ips++){
 	cp2gpu(&dest[ips].p, (dmat*)source[ips]);
     }
-    CUDA_SYNC_DEVICE;
 }
 
 /*
@@ -267,19 +266,19 @@ void cp2gpu(cuccell *restrict *dest, const ccell *src){
 */
 void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, 
 	    cudaStream_t stream, pthread_mutex_t *mutex){
-    float *tmp=(float*)malloc4async(n*sizeof(float));
-    DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
+    CUDA_SYNC_STREAM;
+    float *tmp=(float*)malloc(n*sizeof(float));
+    DO(cudaMemcpy(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost));
     if(!*dest){
 	*dest=(double*)malloc(sizeof(double)*n);
     }
     double *restrict p=*dest;
-    CUDA_SYNC_STREAM;
     if(mutex) LOCK(*mutex);
     for(int i=0; i<n; i++){
 	p[i]=p[i]*alpha+beta*tmp[i];
     }
     if(mutex) UNLOCK(*mutex);
-    free4async(tmp);
+    free(tmp);
 }
 /*
   Write float on gpu to file
@@ -287,7 +286,6 @@ void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int 
 void gpu_write(const float *p, int nx, int ny, const char *format, ...){
     format2fn;
     float *tmp=(float*)malloc(nx*ny*sizeof(float));
-    cudaDeviceSynchronize();
     cudaMemcpy(tmp, p, nx*ny*sizeof(float), cudaMemcpyDeviceToHost);
     writeflt(tmp,nx,ny,"%s",fn);
     free(tmp);
@@ -299,7 +297,6 @@ void gpu_write(const float *p, int nx, int ny, const char *format, ...){
 void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...){
     format2fn;
     fcomplex *tmp=(fcomplex*)malloc(nx*ny*sizeof(fcomplex));
-    cudaDeviceSynchronize();
     cudaMemcpy(tmp, p, nx*ny*sizeof(fcomplex), cudaMemcpyDeviceToHost);
     writefcmp((float complex*)tmp,nx,ny,"%s",fn);
     free(tmp);
@@ -310,9 +307,7 @@ void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...){
 void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     format2fn;
     int *tmp=(int*)malloc(nx*ny*sizeof(int));
-    cudaDeviceSynchronize();
     cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);
 }

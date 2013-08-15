@@ -2059,8 +2059,8 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    locfree(powfs[ipowfs].llt->loc);
 	    dcellfree(powfs[ipowfs].llt->mcc);
 	    dcellfree(powfs[ipowfs].llt->imcc);
-	    free(powfs[ipowfs].llt);
 	    dcellfree(powfs[ipowfs].llt->ncpa);
+	    free(powfs[ipowfs].llt);
 	}
 	dfree(powfs[ipowfs].sodium);
 	if(powfs[ipowfs].etfprep){

@@ -283,7 +283,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     float (*loc)[2]=cupowfs[ipowfs].loc->p;
     const int nloc=cupowfs[ipowfs].loc->nloc;
     /*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
-    cudaStream_t stream=cuwfs[iwfs].stream;
+    stream_t &stream=*cuwfs[iwfs].stream;
     dmat *gradcl=simu->gradcl->p[iwfs];
     curmat *phiout=curnew(nloc, 1);
     curmat *gradacc=cuwfs[iwfs].gradacc;
@@ -366,7 +366,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		 1.f/(float)dtrat);
 	}else{
 	    cusp *GS0=cuwfs[iwfs].GS0;
-	    cuspmul(gradcalc->p, GS0, phiout->p, 1, 'n', 1.f/(float)dtrat,cuwfs[iwfs].stream);
+	    cuspmul(gradcalc->p, GS0, phiout->p, 1, 'n', 1.f/(float)dtrat, stream);
 	}
 
 	
@@ -489,7 +489,7 @@ void gpu_wfsgrad_save(SIM_T *simu){
 	    cuwfs_t *cuwfs=cudata->wfs;
 	    const PARMS_T *parms=simu->parms;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
-	    cudaStream_t stream=cuwfs[iwfs].stream;
+	    stream_t &stream=*cuwfs[iwfs].stream;
 	    if(cuwfs[iwfs].pistatout){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
 		if(nstep>0){

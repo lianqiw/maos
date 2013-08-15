@@ -92,14 +92,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	int iwfs0=parms->powfs[ipowfs].wfs[0];
 	/*imcc for ztilt. */
-	/*STREAM_NEW(cuwfs[iwfs].stream);
-	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
-	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
-	DO(cublasCreate(&cuwfs[iwfs].handle));
-	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));*/
+	cuwfs[iwfs].stream=new stream_t;
 	if(parms->powfs[ipowfs].fieldstop){
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, CUFFT_C2C));
-	    cufftSetStream(cuwfs[iwfs].plan_fs, cuwfs[iwfs].stream);
+	    cufftSetStream(cuwfs[iwfs].plan_fs, *cuwfs[iwfs].stream);
 	}
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
@@ -185,7 +181,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			     CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
-	    cufftSetStream(cuwfs[iwfs].plan1, cuwfs[iwfs].stream);
+	    cufftSetStream(cuwfs[iwfs].plan1, *cuwfs[iwfs].stream);
 
 	    if(notf==nwvf){
 		cuwfs[iwfs].plan2=cuwfs[iwfs].plan1;
@@ -194,7 +190,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
-		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
+		cufftSetStream(cuwfs[iwfs].plan2, *cuwfs[iwfs].stream);
 	    }
 	    if(notf==ncompx && notf==ncompy){
 		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
@@ -203,7 +199,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
-		cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
+		cufftSetStream(cuwfs[iwfs].plan3, *cuwfs[iwfs].stream);
 	    }
 
 	    if(parms->powfs[ipowfs].llt){
@@ -213,7 +209,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				 CUFFT_C2C, 1)){
 		    error("CUFFT plan failed\n");
 		}
-		cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
+		cufftSetStream(cuwfs[iwfs].lltplan_wvf, *cuwfs[iwfs].stream);
 		if(notf==nlwvf){
 		    cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
 		}else{
@@ -221,7 +217,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				     CUFFT_C2C, 1)){
 			error("CUFFT plan failed\n");
 		    }
-		    cufftSetStream(cuwfs[iwfs].lltplan_otf, cuwfs[iwfs].stream);
+		    cufftSetStream(cuwfs[iwfs].lltplan_otf, *cuwfs[iwfs].stream);
 		}
 	    }
 	    /*DTF. */

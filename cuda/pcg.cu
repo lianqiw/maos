@@ -205,11 +205,11 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 #if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
 	    maxx[k+1]=curcellmax(x0, stream);
 	    maxp[k+1]=curcellmax(p0, stream);
-	    CUDA_SYNC_STREAM;
 	    if(maxiter==30){
 		static int counter=0;
 		warning_once("Remove after debugging\n");
 		float maxxax=curcellmax(x0, stream);
+	    CUDA_SYNC_STREAM;
 		if(maxxax>4e-6 || pcg_save){
 		    //CUDA_SYNC_STREAM;
 		    curcellwrite(b, "tomo_b_%d", counter);
@@ -243,8 +243,8 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 		}
 	    }
 #endif
-	    CUDA_SYNC_STREAM;
 #if TIMING 
+	    CUDA_SYNC_STREAM;
 	    for(int i=7; i<11; i++){
 		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 		times[i]*=1e3;
@@ -282,8 +282,9 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     }
 
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
+    CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
-    fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter-1]);
+    fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter]);
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
 #endif

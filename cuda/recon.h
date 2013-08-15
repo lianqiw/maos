@@ -40,7 +40,7 @@ private:
     curcell *dmfit;
     curcell *dmfit_vec;
     curcell *fit_rhs;
-    stream_t cgstream;
+    stream_t *cgstream;
     curcell *opdr_save;/*for debugging*/
     curcell *dmfit_save;/*for debugging*/
 
