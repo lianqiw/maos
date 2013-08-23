@@ -262,9 +262,9 @@ fi
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
 COMMON_ICC="-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Mcache_align"
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc " #-Mcache_align"
 OPTIM_OPENCC="-O3"
-OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
+OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
@@ -800,7 +800,7 @@ echo BIGENDIAN=$BIGENDIAN
 if test x$use_icc = xno -a x$system = xlinux -a $cross_compile = no ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi
-echo "*********************************************************************************"
-echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
-echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
-echo "*********************************************************************************"
+echo "*************************************************************************"
+echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos ***"
+echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos     ***"
+echo "*************************************************************************"

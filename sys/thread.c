@@ -87,6 +87,6 @@ long thread_id(){
 }
 #else
 long thread_id(){
-    return pthread_self();
+    return (long)pthread_self();
 }
 #endif

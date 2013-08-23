@@ -80,6 +80,14 @@ cumuv_t::cumuv_t(const MUV_T *in)
     spfree(Mc); dfree(Uc); dfree(Vc);
     Vx=curnew(V->ny, 1);
 }
+cumuv_t::~cumuv_t(){
+    delete M;
+    delete U;
+    delete V;
+    delete Vx;
+    delete nxs;
+    delete nys;
+}
 cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L)
     :cucg_t(_maxit, _warm_restart),CR(NULL),CL(NULL){
     if(!_R) return;

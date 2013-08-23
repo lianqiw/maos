@@ -861,8 +861,12 @@ int main(int argc, char *argv[])
 	gtk_scrolled_window_set_policy
 	    (GTK_SCROLLED_WINDOW(tabs[ihost]),
 	     GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION < 6
 	gtk_scrolled_window_add_with_viewport
 	    (GTK_SCROLLED_WINDOW(tabs[ihost]),pages[ihost]);
+#else
+	gtk_container_add(GTK_CONTAINER(tabs[ihost]), pages[ihost]);
+#endif
 	gtk_notebook_append_page
 	    (GTK_NOTEBOOK(notebook),tabs[ihost],eventbox);
 	update_title(GINT_TO_POINTER(ihost));

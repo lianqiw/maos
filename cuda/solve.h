@@ -25,11 +25,13 @@ class cusolve_r{/*Interface for RHS*/
 public:
     virtual void R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
     virtual void Rt(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
+    virtual ~cusolve_r(){}
 };
 
 class cusolve_l{/*Interface for LHS*/
 public:
     virtual float solve(curcell **xout, const curcell *xin, stream_t &stream)=0;
+    virtual ~cusolve_l(){}
 };
 
 class cucgpre_t{/*Interface for preconditioner*/
@@ -71,9 +73,9 @@ class cumuv_t{
     curmat *V;
     curmat *Vx;
     int nx, ny, *nxs, *nys;
-    
-public:
+ public:
     cumuv_t(const MUV_T *in=0);
+    ~cumuv_t();
     void Forward(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream);
     void operator()(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream){
 	Forward(out, beta, in, alpha, stream);

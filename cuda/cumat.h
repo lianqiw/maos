@@ -45,7 +45,7 @@ template <typename T, uint32_t magic>
     inline void cucellwrite(const cucell<T> *A, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
-    header_t header={MCC_ANY, A?A->nx:0, A?A->ny:0, NULL};
+    header_t header={MCC_ANY, A?(uint64_t)A->nx:0, A?(uint64_t)A->ny:0, NULL};
     write_header(&header, fp);
     if(A){
 	for(int i=0; i<A->nx*A->ny; i++){

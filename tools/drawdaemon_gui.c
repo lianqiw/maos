@@ -844,8 +844,12 @@ gboolean addpage(gpointer indata){
 	  G_CALLBACK(button_release),drawdatawrap);*/
 	g_signal_connect(drawarea,"key-press-event",
 			 G_CALLBACK(key_press),drawdatawrap);
+#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION < 6
 	gtk_scrolled_window_add_with_viewport
 	    (GTK_SCROLLED_WINDOW(page), drawarea);
+#else
+	gtk_container_add(GTK_CONTAINER(page), drawarea);
+#endif
 	GtkWidget *button=subnb_label_new(drawdatawrap);
 	GtkWidget *subnb=subnbs->data;/*choose first. */
 	gtk_notebook_append_page(GTK_NOTEBOOK(subnb), page,button);

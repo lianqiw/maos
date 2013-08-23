@@ -227,7 +227,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
     char fnstore[PATH_MAX]; char *fn=fnstore;		\
     va_list ap;						\
     va_start(ap,format);				\
-    vsnprintf(fnstore,sizeof(fnstore), format, ap);	\
+    if(format) vsnprintf(fnstore,PATH_MAX, format, ap);	else fnstore[0]='\0';\
     va_end(ap);						\
     if(strlen(fnstore)==0) fn=NULL
 
