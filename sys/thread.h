@@ -17,6 +17,7 @@
 */
 #ifndef AOS_LIB_THREAD_H
 #define AOS_LIB_THREAD_H
+#include <stdio.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -65,6 +66,7 @@ struct thread_t{
 */
 #define THREAD_RUN_ONCE	1
 INLINE void THREAD_POOL_INIT(int nthread){
+    fprintf(stderr, "Using OpenMP version %d\n", _OPENMP);
     omp_set_num_threads(nthread);
 }
 INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
@@ -151,7 +153,7 @@ INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
 */
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 
-#define THREAD_POOL_INIT(A) thread_pool_init(A)
+#define THREAD_POOL_INIT(A) ({thread_pool_init(A);fprintf(stderr, "Using thread pool\n");})
 #define THREAD_RUN_ONCE thread_pool_do_job_once()
 #endif
 

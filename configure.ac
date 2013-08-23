@@ -4,7 +4,7 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS="http://dl.dropbox.com/u/22875570"
+BASEURLS="https://www.dropbox.com/sh/gygtam516wjy65s/aS4ju1lP2q https://project.tmt.org/~lianqiw/maos/"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -158,7 +158,7 @@ case "$host_os" in
  use_static_default="no"
  wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
- mkldep="-lguide"
+ mkldep="-liomp5"
  libsuffix=${cpu}
  system="linux"
  ldsuffix="so"
