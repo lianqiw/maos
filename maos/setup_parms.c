@@ -786,14 +786,22 @@ static void readcfg_sim(PARMS_T *parms){
 
     parms->sim.apdm=readcfg_dmat("sim.apdm");
     parms->sim.epdm=readcfg_dmat("sim.epdm");
+    parms->sim.aldm=readcfg_int("sim.aldm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
+    parms->sim.allo=readcfg_int("sim.allo");
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
     }
+    if(parms->sim.apdm->nx>2 || parms->sim.apdm->ny!=1){
+	error("Invalid use of apdm\n");
+    }
     if(parms->sim.aplo->nx==1){
 	dresize(parms->sim.aplo, 2, 1);
+    }
+    if(parms->sim.aplo->nx>2 || parms->sim.aplo->ny!=1){
+	error("Invalid use of aplo\n");
     }
     if(fabs(dsum(parms->sim.apdm)-1)>1.e-10){
 	warning("sum(sim.apdm)=%g. Should be 1.\n", dsum(parms->sim.apdm));

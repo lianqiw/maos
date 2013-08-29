@@ -456,15 +456,17 @@ typedef struct SIM_CFG_T{
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
-    dmat *apdm;    /**<servo coefficient for high order dm.  A is command. e is
+    dmat *apdm;      /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
 		     */
-    dmat *epdm;     /**<error gain for DM commands (high order)*/
-    dmat *aplo;   /**<servo coefficient for ngs modes.*/
-    dmat *eplo;     /**<error gain for NGS modes (low order)*/
-    dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
-    dmat *epupt;    /**<error gain for uplink pointing*/
+    dmat *epdm;      /**<error gain for DM commands (high order)*/
+    dmat *aplo;      /**<servo coefficient for ngs modes.*/
+    dmat *eplo;      /**<error gain for NGS modes (low order)*/
+    int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
+    int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
+    dmat *apupt;     /**<servo coefficient for for LGS uplink pointing loop.*/
+    dmat *epupt;     /**<error gain for uplink pointing*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
     double lpfocus;  /**<derived: lpfocus=2*pi*fc/fs. fs=1./sim.dt*/
     double fov;      /**<The diameter of total fov in arcsec*/

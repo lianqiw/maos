@@ -194,7 +194,9 @@ void filter_cl(SIM_T *simu){
 	    simu->ngsfocuslpf->p[0]->p[5]=
 		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
 	}
-
+    }
+    /*Auto adjusting epdm if necessary*/
+    {
 	static int epdm_is_auto=0;
 	if(simcfg->epdm->p[0]<0){
 	    epdm_is_auto=1;
@@ -208,8 +210,11 @@ void filter_cl(SIM_T *simu){
 		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], simu->isim);
 	    }
 	}
+    }
+    /*Do the servo filtering*/
+    {
 	int drop=0;
-	if(parms->sim.dtrat_skip){
+	if(simu->dmerr && parms->sim.dtrat_skip){
 	    if(parms->sim.dtrat_skip>0){
 		if((simu->isim+1)%parms->sim.dtrat_skip==0){//evenly
 		    drop=1;
@@ -223,14 +228,14 @@ void filter_cl(SIM_T *simu){
 	}
 	if(drop){
 	    warning("Drop a frame at step %d\n", simu->isim);
-	}else{
+	}else{//always run servo_filter even if dmerr is NULL.
 	    servo_filter(simu->dmint, simu->dmerr);
 	}
     }
-    if(parms->recon.split && simu->Merr_lo){ 
+    if(parms->recon.split){ 
 	/*Low order in split tomography only. global focus mode is removed.*/
-	servo_filter(simu->Mint_lo, simu->Merr_lo);
-	if(parms->sim.fuseint){/*accumulate to the main integrator.*/
+	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
+	    /*accumulate to the main integrator.*/
 	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }

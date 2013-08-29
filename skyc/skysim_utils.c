@@ -194,7 +194,18 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
     const double dtngs=parms->maos.dt*dtrat;
-    SERVO_T *st2t=servo_new(merrm, NULL, dtngs, aster->gain->p[idtrat]);
+    dmat *gngs=0;
+    switch(parms->skyc.servo){
+    case 1:
+	gngs=dnew(1,1);
+	gngs->p[0]=0.3;
+	break;
+    case 2:
+	gngs=dref(aster->gain->p[idtrat]);
+	break;
+    }
+    SERVO_T *st2t=servo_new(merrm, NULL, 0, dtngs, gngs);
+    dfree(gngs);
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
     if(demotettf){
@@ -284,17 +295,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		dmm(&merrm->p[0], pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
 		dzero(zgrad);
-		switch(parms->skyc.servo){
-		case 1:
-		    dcelladd(st2t->mint, 1, merrm, 0.3);
-		    break;
-		case 2:
-		    servo_filter(st2t, merrm);
-		    break;
-		default:
-		    error("Invalid\n");
-		}
 	    }
+	    servo_filter(st2t, merrm);//do even if merrm is zero. for additional latency
 	}else{
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const double thetax=aster->wfs[iwfs].thetax;

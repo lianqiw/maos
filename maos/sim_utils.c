@@ -1211,10 +1211,12 @@ static void init_simu_dm(SIM_T *simu){
     }
 #endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
-    simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.dthi, parms->sim.epdm);
-    simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.dtlo, parms->sim.eplo);
+    simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
+			  parms->sim.dthi, parms->sim.epdm);
+    simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
+			    parms->sim.dtlo, parms->sim.eplo);
     if(parms->nuptpowfs){
-	simu->uptint=servo_new(NULL, parms->sim.apupt, parms->sim.dthi, parms->sim.epupt);
+	simu->uptint=servo_new(NULL, parms->sim.apupt, 0, parms->sim.dthi, parms->sim.epupt);
     }
     /*Setup hysterisis */
     int anyhyst=0;
