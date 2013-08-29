@@ -62,8 +62,8 @@ static void mvm_trans_igpu(thread_t *info){
     const int load_mvmf=data->load_mvmf;
     int igpu=info->ithread;
     gpu_set(igpu);
-    curecon_t *curecon=cudata->recon;
-    curecon_geom *grid=curecon->grid;
+    cuda_recon::curecon_t *curecon=cudata->recon;
+    cuda_recon::curecon_geom *grid=curecon->grid;
     curmat *mvmi=data->mvmig?data->mvmig->p[igpu]:NULL;/*Tomography output, for warm restart*/
     curmat *mvmf=data->mvmfg?data->mvmfg->p[igpu]:NULL;/*loaded FitR output.*/
 

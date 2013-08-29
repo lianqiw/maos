@@ -95,7 +95,7 @@ static void mvm_direct_igpu(thread_t *info){
 	float eye2c[2]={0,1.};
 	cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
     }
-    curecon_t *curecon=cudata->recon;
+    cuda_recon::curecon_t *curecon=cudata->recon;
     stream_t stream;
     if(parms->load.mvmf){
 	cudaMemcpyAsync(mvm->p, data->mvmc->p+info->start*ntotact, 

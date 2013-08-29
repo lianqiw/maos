@@ -27,7 +27,7 @@ namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
 }
-using namespace cuda_recon;//temporary during code migration.
+//using namespace cuda_recon;//temporary during code migration.
 //using cuda::curecon_t;
 //using cuda::curecon_geom;
 typedef struct cudata_t{ 
@@ -58,7 +58,7 @@ typedef struct cudata_t{
     cuwloc_t *powfs;
     cuwfs_t *wfs;
     /*for recon */
-    curecon_t *recon;
+    cuda_recon::curecon_t *recon;
     /*for moao*/
     cumap_t **dm_wfs;
     cumap_t **dm_evl;

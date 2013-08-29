@@ -27,14 +27,7 @@ extern "C"
 #include <cufft.h>
 #include "wfs.h"
 #include "cudata.h"
-/*static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
-    wloc->nxsa=pts->nx;
-    wloc->nsa=pts->nsa;
-    wloc->dx=pts->dx;
-    wloc->nloc=loc->nloc;
-    cp2gpu(&wloc->pts, (loc_t*)pts);
-    cp2gpu(&wloc->loc, loc);
-}*/
+
 int *wfsgpu=NULL;/*assign GPU to wfs statically. */
 /**
    Initialize other arrays
@@ -61,16 +54,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    cupowfs[ipowfs].pts=new cupts_t(pts);
 	    cupowfs[ipowfs].loc=new culoc_t(loc);
 	    cupowfs[ipowfs].saloc=new culoc_t(powfs[ipowfs].saloc);
-	    //gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
-	    //cp2gpu(&cupowfs[ipowfs].saloc, powfs[ipowfs].saloc);
-	    //cupowfs[ipowfs].dsa=pts->dsa;
+	
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		pts=powfs[ipowfs].llt->pts;
 		loc=powfs[ipowfs].llt->loc;
 		cupowfs[ipowfs].llt=new cullt_t;
 		cupowfs[ipowfs].llt->pts=new cupts_t(pts);
 		cupowfs[ipowfs].llt->loc=new culoc_t(loc);
-		//gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
 	    if(parms->powfs[ipowfs].fieldstop){
@@ -165,15 +155,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    const int notf=MAX(ncompx, ncompy);
 	    int ncomp2[2]={ncompx, ncompy};
 	    int notf2[2]={notf, notf};
-	    /*
-	      int inembed[2]; inembed[0]=nx; inembed[1]=nx;
-	      int istride=1;
-	      int idist=nx*nx;
-	      DO(cufftPlanMany(&cuwfs[iwfs].plan, 2, nr, 
-	      inembed, istride, idist, 
-	      inembed, istride, idist, 
-	      CUFFT_C2C, nsa));
-	    */
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;

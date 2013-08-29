@@ -36,16 +36,6 @@ typedef struct cuwloc_t{
     cupts_t *pts;   /**<location of lower left OPD point in each sa*/
     culoc_t *loc;  /**<location of OPD points*/
     culoc_t *saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
-    //float (*pts)[2];  /**<location of lower left OPD point in each sa*/
-    //float (*loc)[2];  /**<location of OPD points*/
-    //float dsa;        /**<Subaperture spacing*/
-    //int nloc;
-    //float (*saloc)[2];/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
-    int (*saptr)[2];  /**<pointer of subaperture in ploc*/
-    //int nsa;
-    cusp *GP;         /**<GP in col major*/
-    float GPscale;    /**<Scale GP to fit in 2 byte int*/
-    cumat<int> *GPp ; /**<GP for x/y grad in dense matrix format.*/
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
     curmat *fieldstop;/**<*mask for field stop computation*/
@@ -55,9 +45,6 @@ typedef struct cuwloc_t{
 
 typedef struct{
     stream_t *stream;
-    /*cusparseHandle_t sphandle;
-    cublasHandle_t handle;
-    cudaStream_t stream;*/
     cupowfs_t *powfs;
     cusp *GS0;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/

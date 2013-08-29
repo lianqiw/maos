@@ -130,22 +130,6 @@ public:
     virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
 };
 
-class cusolve_svd:public cusolve_l{
-    curmat *LI;//Inversion of left hand operator
-public:
-    cusolve_svd(dmat *_LI=0):LI(NULL){
-	if(_LI) cp2gpu(&LI, _LI);
-    }
-    virtual ~cusolve_svd(){
-	info2("cusolve_svd::destructor\n");
-    }
-    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream){
-	if(!*xout) *xout=curcellnew(xin);
-	curmv((*xout)->m->p, 0, LI, xin->m->p, 'n', 1, stream);
-	return 0;
-    }
-}; 
-
 class cusolve_mvm:public cusolve_l{
     curmat *M;
 public:

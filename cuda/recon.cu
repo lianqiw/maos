@@ -95,7 +95,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	    FL=dynamic_cast<cusolve_l*>(FR);
 	    break;
 	case 2:
-	    FL=new cusolve_svd(recon->FL.MI);
+	    FL=new cusolve_mvm(recon->FL.MI);
 	    break;
 	default:
 	    error("Invalid");
@@ -111,7 +111,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	    RL=dynamic_cast<cusolve_l*>(RR);
 	    break;
 	case 2:
-	    RL=new cusolve_svd(recon->RL.MI);
+	    RL=new cusolve_mvm(recon->RL.MI);
 	    break;
 	default:
 	    error("Invalid");
@@ -504,6 +504,7 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     exit(0);
 }
 }//namespace
+using cuda_recon::curecon_t;
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
