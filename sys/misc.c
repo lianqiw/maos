@@ -803,10 +803,10 @@ void set_realtime(int icpu, int niceness){
     cpu_set_t cpuset={{0}};
     CPU_SET(0, &cpuset);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-#endif
     //lock data in memory, avoid swapping.
     mlockall(MCL_FUTURE | MCL_CURRENT);
-    //faile stack
+#endif
+    //fail stack
     struct rlimit rl;
     if(!getrlimit(RLIMIT_STACK, &rl)){
 	const int NSTACK=rl.rlim_cur/2;

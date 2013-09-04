@@ -17,9 +17,10 @@
 */
 #if defined (__CYGWIN__)
 #include "process.h"
+#include <string.h>
 /*Largely not implemented. */
 char *get_job_progname(int pid){
-    return strdup0("maos");
+    return strdup("maos");
 }
 int get_job_mem(void){
     return 0;

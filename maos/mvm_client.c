@@ -18,6 +18,7 @@
 
 #include "mvm_client.h"
 #include <sys/file.h>
+#include <sys/socket.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <errno.h>

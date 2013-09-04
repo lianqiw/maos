@@ -81,7 +81,8 @@ int scheduler_listen(void(*fun)(int)){
 }
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     (void)host;
-    (void)scmd;
+    (void)argc;
+    (void)argv;
     return -1;
 }
 int scheduler_send_socket(int sfd){
