@@ -42,6 +42,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <sys/socket.h>
 #include "../sys/sys.h"
 
 static char *scheduler_fnlog=NULL;
