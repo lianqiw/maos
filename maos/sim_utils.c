@@ -830,9 +830,9 @@ static void init_simu_evl(SIM_T *simu){
 	save->evlopdcl=calloc(nevl, sizeof(cellarr*));
 
 	for(int ievl=0; ievl<nevl; ievl++){
-	    save->evlopdol[ievl]=cellarr_init(nstep/parms->save.evlopd,1, 
+	    save->evlopdol[ievl]=cellarr_init(nstep,1, 
 					      "evl%d_opdol_%d.bin",ievl,seed);
-	    save->evlopdcl[ievl]=cellarr_init(nstep/parms->save.evlopd,1,
+	    save->evlopdcl[ievl]=cellarr_init(nstep,1,
 					      "evl%d_opdcl_%d.bin",ievl,seed);
 	}
     }

@@ -380,7 +380,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 	do{
 	    stexe=strstr(cmd3, exe);
 	    cmd3=cmd3+strlen(exe);
-	}while(stexe && cmd3<cmd2end && (stexe[-1]!='/'||!isspace(stexe[strlen(exe)])));
+	}while(stexe && cmd3<cmd2end && (*(stexe-1)!='/'||!isspace((int)stexe[strlen(exe)])));
 	if(stexe){
 	    exename=exe;
 	    stexe[-1]='\0';
