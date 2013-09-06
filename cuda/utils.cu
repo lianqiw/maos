@@ -38,7 +38,7 @@ static cusparseMatDescr_t spdesc=NULL;
 #if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
-
+int cuda_dedup=0;//1: allow memory deduplication. Useful during setup for const memory.
 static __attribute((constructor)) void init(){
     DO(cusparseCreateMatDescr(&spdesc));
     cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -193,10 +193,7 @@ void cp2gpu(float (* restrict *dest)[2], const loc_t *src){
 	tmp[iloc][0]=(float)src->locx[iloc];
 	tmp[iloc][1]=(float)src->locy[iloc];
     }
-    if(!*dest){
-	DO(cudaMalloc((float**)dest, src->nloc*2*sizeof(float)));
-    }
-    DO(cudaMemcpy(*dest, tmp, src->nloc*2*sizeof(float),cudaMemcpyHostToDevice));
+    cp2gpu((float**)dest, (float*)tmp, src->nloc*2, 1);
     free(tmp);
 }
 

@@ -18,7 +18,6 @@
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
 #include <cusparse.h>
-//#include <curand_kernel.h>
 #include <cufft.h>
 
 #define RAND_BLOCK 16
@@ -43,12 +42,13 @@ typedef struct cuwloc_t{
 }cupowfs_t;
 
 
-typedef struct{
+class cuwfs_t{
+  public:
     stream_t *stream;
     cupowfs_t *powfs;
     cusp *GS0;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
-    float  *neasim;     /**<The noise equivalent angles for each grad.*/
+    float  *neasim;     /**<The noise equivalent angles for each subaperture.*/
     float  *amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
     cudtf_t *dtf;       /**<array for each wvl.*/
@@ -75,7 +75,7 @@ typedef struct{
     curmat *gradacc;    /**<For accumulating grads*/
     curcell *ints;       /**<For accumulating subaperture image.*/
     curcell *pistatout;  /**<For output pistatout*/
-}cuwfs_t;
+};
 
 void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
 

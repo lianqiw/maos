@@ -80,6 +80,9 @@ class cumat{
     operator T*(){
 	return p;
     }
+    T&operator ()(int ix, int iy){
+	return p[ix+nx*iy];
+    }
 };
 
 template <typename T>

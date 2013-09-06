@@ -157,7 +157,7 @@ int gpu_init(int *gpus, int ngpu){
     }
     if(NGPU) {
 	gpu_recon=0;/*first gpu in GPUS*/
-	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
+	cudata_all=new cudata_t[NGPU];
 	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){

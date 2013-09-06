@@ -390,7 +390,7 @@ __global__ void cwm_do(fcomplex *dest, float *from, int n){
     }
 }
 /**
-   unwrap the wvf back to opd. assume it within lambda/2 of the opd.
+   unwrap the wvf back to opd. assume it within lambda/2 of the original opd.
  */
 __global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl){
     float kki=wvl/(2*M_PI);

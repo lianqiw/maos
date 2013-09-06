@@ -17,41 +17,50 @@
 */
 #ifndef AOS_CUDA_UTILS_H
 #define AOS_CUDA_UTILS_H
-#include <typeinfo>
 #include "common.h"
+#include <typeinfo>
 #include "types.h"
+#include "cudata.h"
+
 /**
    Without type conversion. Enable asynchrous transfer. It is asynchrous only if
    called allocated pinned memory.
 */
+/*
 template<typename M> inline
 void cp2gpu(M**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
+    uint64_t key=0;
+    if(cuda_dedup){
+	TIC;tic;
+	key=hashlittle(src, nx*ny*sizeof(M))<<32 | (nx*ny);
+	toc2("hashlittle");
+	iterator it=cudata->memhash.find(key);
+	if(it!=cudata->memhash.end()){//find
+	    info2("memory at %p is already at %p in gpu.\n", src, (void*)it);
+	    if(*dest){
+		warning("Free %p\n", *dest);
+		cudaFree(*dest);
+	    }
+	    *dest=(M*)it;
+	    return;
+	}
+    }
     if(!*dest){
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
     }
+    if(cuda_dedup){
+	cudata->memhash.insert(key, *dest);
+	info2("memory at %p is copied to %p in gpu.\n", src, *dest);
+    }
+
     if(stream==(cudaStream_t)0){
 	DO(cudaMemcpy(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
     }else{
 	DO(cudaMemcpyAsync(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
 }
-template<typename M> inline
-void cp2gpu(cumat<M>**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
-    if(!src) return;
-    if(!*dest){
-	*dest=new cumat<M>(nx, ny);
-    }
-    cp2gpu(&((*dest)->p), src, nx, ny, stream);
-}
-inline void cp2gpu(float**dest, const smat*src, cudaStream_t stream=0){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
-inline void cp2gpu(curmat**dest, const smat*src, cudaStream_t stream=0){
-    if(!src) return;
-    cp2gpu(dest, src->p, src->nx, src->ny, stream);
-}
+*/
 /**
    With type conversion
 */
@@ -61,13 +70,18 @@ inline void type_convert(M *out, const N* in, int nx){
 	out[i]=(M)in[i];
     }
 }
+
 template<>
 inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
-    double *tmp=(double*)in;
+    double (*tmp)[2]=(double(*)[2])in;
     for(int i=0; i<nx; i++){
-	out[i].x=(float)tmp[2*i];
-	out[i].y=(float)tmp[2*i+1];
+	out[i].x=(float)tmp[i][0];
+	out[i].y=(float)tmp[i][1];
     }
+}
+template<> /*This one should never be called. float complex is defined by C99*/
+inline void type_convert<float2, float complex>(float2* out, const float complex* in, int nx){
+    memcpy(out, in, sizeof(float2)*nx);
 }
 template<>
 inline void type_convert<float2, double2>(float2* out, const double2* in, int nx){
@@ -78,25 +92,74 @@ inline void type_convert<float2, double2>(float2* out, const double2* in, int nx
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
-void cp2gpu(M**dest, const N*src, int nx, int ny){
+void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
-    M*from=(M*)malloc(sizeof(M)*nx*ny);
-    type_convert(from, src, nx*ny);
+    uint64_t key=0;
+    extern int cuda_dedup;
+    if(cuda_dedup && !*dest){
+	key=hashlittle(src, nx*ny*sizeof(N), 0);
+	key=(key<<32) | (nx*ny);
+	if(cudata->memhash->count(key)){
+	    info2("memory at %p is already at %p in gpu.\n", src, 
+		  (*cudata->memhash)[key]);
+	    *dest=(M*)(*cudata->memhash)[key];
+	    return;
+	}
+    }
+    M* from;
+    if(sizeof(M)!=sizeof(N)){
+	from=(M*)malloc(sizeof(M)*nx*ny);
+	type_convert(from, src, nx*ny);
+    }else{
+	if(typeid(M)!=typeid(N)){
+	    warning("No convert from %s to %s\n", typeid(M).name(), typeid(N).name());
+	}
+	from=(M*)(src);
+    }
     //don't call previous cp2gpu() as it may call itself.
     if(!*dest){
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
     }
-    DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
-    free(from);
+    if(cuda_dedup){
+	(*cudata->memhash)[key]=*dest;
+	info2("memory at %p is copied to %p in gpu.\n", src, *dest);
+    }
+    if(stream==(cudaStream_t)0){
+	DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
+    }else{
+	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
+    }
+    if((void*)from !=(void*)src) free(from);
 }
-template<typename M, typename N>
-void cp2gpu(cumat<M>**dest, const N*src, int nx, int ny){
+/*template<typename M> inline
+void cp2gpu(cumat<M>**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
     if(!*dest){
 	*dest=new cumat<M>(nx, ny);
     }
-    cp2gpu(&((*dest)->p), src, nx, ny);
+    cp2gpu(&((*dest)->p), src, nx, ny, stream);
+}*/
+template<typename M, typename N> inline void
+cp2gpu(cumat<M>**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) return;
+    if(*dest){
+	cp2gpu(&((*dest)->p), src, nx, ny, stream);
+    }else{
+	M *p=NULL;
+	cp2gpu(&p, src, nx, ny, stream);
+	*dest=new cumat<M>(nx, ny, p);
+    }
+
 }
+inline void cp2gpu(float**dest, const smat*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+inline void cp2gpu(curmat**dest, const smat*src, cudaStream_t stream=0){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny, stream);
+}
+
 
 /* A few special cases to avoid N match to cell*/
 template<typename M>
@@ -107,6 +170,12 @@ void cp2gpu(M**dest, const dmat*src){
 
 template<typename M>
 void cp2gpu(M**dest, const cmat*src){
+    if(!src) return;
+    cp2gpu(dest, src->p, src->nx, src->ny);
+}
+
+template<typename M>
+void cp2gpu(M**dest, const zmat*src){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny);
 }

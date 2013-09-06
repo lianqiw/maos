@@ -207,7 +207,7 @@ __device__ static float curandp(curandState *rstat, float xm){
 /**
    Add noise to pix images.
 */
-__global__ static void addnoise_do(float *restrict ints0, int nsa, int pixpsa, float bkgrnd, float pcalib, 
+__global__ static void addnoise_do(float *restrict ints0, int nsa, int pixpsa, float bkgrnd, float bkgrndc, 
 				   float *const restrict *restrict bkgrnd2s, float *const restrict *restrict bkgrnd2cs,
 				   float rne, curandState *rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
@@ -218,13 +218,11 @@ __global__ static void addnoise_do(float *restrict ints0, int nsa, int pixpsa, f
 	const float *restrict bkgrnd2=bkgrnd2s?bkgrnd2s[isa]:NULL;
 	const float *restrict bkgrnd2c=bkgrnd2cs?bkgrnd2cs[isa]:NULL;
 	for(int ipix=0; ipix<pixpsa; ipix++){
+	    float corr=bkgrnd2c?(bkgrnd2c[ipix]+bkgrndc):bkgrndc;
 	    if(bkgrnd2){
-		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd+bkgrnd2[ipix])+rne*curand_normal(&lstat)-bkgrnd*pcalib;
+		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd+bkgrnd2[ipix])+rne*curand_normal(&lstat)-corr;
 	    }else{
-		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd)+rne*curand_normal(&lstat)-bkgrnd*pcalib;
-	    }
-	    if(bkgrnd2c){
-		ints[ipix]-=bkgrnd2c[ipix];
+		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd)+rne*curand_normal(&lstat)-corr;
 	    }
 	}
     }
@@ -351,10 +349,13 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	dfree(tmp);
     }
     if(do_geom){
+	float ratio;
 	if(!do_pistatout || parms->powfs[ipowfs].pistatstc || dtrat==1){
 	    gradcalc=gradacc->ref();
+	    ratio=1.f/(float)dtrat;
 	}else{ //calculate first to gradcalc then add to gradacc
 	    gradcalc=curnew(nsa*2, 1);	
+	    ratio=1;
 	}
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>
@@ -363,12 +364,11 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		 cupowfs[ipowfs].pts->dxsa, 
 		 cupowfs[ipowfs].pts->nxsa, cuwfs[iwfs].imcc,
 		 cupowfs[ipowfs].pts->p, cuwfs[iwfs].amp, 
-		 1.f/(float)dtrat);
+		 ratio);
 	}else{
 	    cusp *GS0=cuwfs[iwfs].GS0;
-	    cuspmul(gradcalc->p, GS0, phiout->p, 1, 'n', 1.f/(float)dtrat, stream);
+	    cuspmul(gradcalc->p, GS0, phiout->p, 1, 'n', ratio, stream);
 	}
-
 	
 	if(gradcalc->p!=gradacc->p){
 	    curadd(&gradacc, 1, gradcalc, 1.f/(float)dtrat, stream);
@@ -397,7 +397,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		rne=parms->powfs[ipowfs].rne;
 		bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 		addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-		    (ints->p[0]->p, nsa, pixpsa, bkgrnd, parms->powfs[ipowfs].bkgrndc,
+		    (ints->p[0]->p, nsa, pixpsa, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
 		     cuwfs[iwfs].bkgrnd2, cuwfs[iwfs].bkgrnd2c, 
 		     rne, cuwfs[iwfs].custat);
 		ctoc("noise");

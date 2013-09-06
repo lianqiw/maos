@@ -82,6 +82,8 @@ void maos(const PARMS_T *parms){
 	plot_setup(parms, powfs, aper, recon);
     }
 #if USE_CUDA
+    extern int cuda_dedup;
+    cuda_dedup=1;
     if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
     }
@@ -97,6 +99,7 @@ void maos(const PARMS_T *parms){
     if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
 	gpu_setup_recon(parms, powfs, recon);
     }
+    cuda_dedup=0;
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){

@@ -17,8 +17,8 @@
 */
 #ifndef AOS_CUDA_DATA_H
 #define AOS_CUDA_DATA_H
+#include <map>
 #include "types.h"
-#include "wfs.h"
 extern int gpu_recon;
 extern int NGPU;
 typedef float ATYPE;
@@ -27,10 +27,15 @@ namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
 }
+
+class cuwloc_t;
+class cuwfs_t;
+
 //using namespace cuda_recon;//temporary during code migration.
 //using cuda::curecon_t;
 //using cuda::curecon_geom;
 typedef struct cudata_t{ 
+    std::map<uint64_t, void*> *memhash;
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
     cumap_t *atm;   /**<atmosphere: array of cumap_t */
@@ -70,6 +75,7 @@ typedef struct cudata_t{
     stream_t *mvm_stream;
     cudata_t(){
 	memset(this, 0, sizeof(cudata_t));
+	memhash=new std::map<uint64_t, void*>;
     }
 }cudata_t;
 class cudata_t;
