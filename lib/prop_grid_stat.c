@@ -84,6 +84,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    {
 		/*grid size of loc_in and loc_out agree*/
 		CONST_IN double *phicol, *phicol2;
+		double bl,br,tl,tr;
 		int rowdiv,rowdiv2;
 		int irows;
 		/*starting address of that col*/
@@ -123,11 +124,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    }
 		}
  
-		double bl=dplocx*dplocy;
-		double br=(1.-dplocx)*dplocy;
-		double tl=dplocx*(1-dplocy);
-		double tr=(1.-dplocx)*(1-dplocy);
-	    
+		bl=dplocx*dplocy;
+		br=(1.-dplocx)*dplocy;
+		tl=dplocx*(1-dplocy);
+		tr=(1.-dplocx)*(1-dplocy);
+		
 		rowdiv=wrapx-nplocx;
 		/*max number of rows possible before wraping*/
 		if(rowdiv>collen) rowdiv=collen;

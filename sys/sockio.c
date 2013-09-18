@@ -40,7 +40,7 @@ int stwrite(int sfd, const void *p, size_t len){
 	}else{
 	    nwrite=write(sfd, p, left);
 	}
-	p+=nwrite; left-=nwrite;
+	p=(char*)p+nwrite; left-=nwrite;
     }while(nwrite>0 && left>0);
     return left?-1:0;
 }
@@ -54,7 +54,7 @@ int stread(int sfd, void *p, size_t len){
 	}else{
 	    nread=recv(sfd, p, left, MSG_WAITALL);
 	}
-	p+=nread; left-=nread;
+	p=(char*)p+nread; left-=nread;
     }while(nread>0 && left>0);
     return left?-1:0;
 }
@@ -74,7 +74,7 @@ int stwrite2(int sfd, const void *p, size_t len, size_t nbuf){
 #endif
 	    nwrite=write(sfd, p, nbuf);
 	
-	p+=nwrite; left-=nwrite;
+	p=(char*)p+nwrite; left-=nwrite;
     }while(nwrite>0 && left>0);
     return left?-1:0;
 }
@@ -85,7 +85,7 @@ int stread2(int sfd, void *p, size_t len, size_t nbuf){
     long left=len;
     do{
 	nread=read(sfd, p, nbuf);
-	p+=nread; left-=nread;
+	p=(char*)p+nread; left-=nread;
     }while(nread>0 && left>0);
     return left?-1:0;
 }

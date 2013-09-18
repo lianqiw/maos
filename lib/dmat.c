@@ -105,13 +105,13 @@ dmat *denc(dmat *psf, /**<The input array*/
 	   int nthread
 	   ){
     double rmax=dvec->p[dvec->nx-1];
-    double ncomp;
+    long ncomp;
     if(type==-1){
 	ncomp=nextfftsize(rmax*2);
     }else{
 	ncomp=nextfftsize(rmax);
     }
-    double ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
+    long ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
     dmat *psfc;
     if(ncomp_max > ncomp){
 	psfc=dnew(ncomp, ncomp);
@@ -129,7 +129,7 @@ dmat *denc(dmat *psf, /**<The input array*/
     cfft2(psf2, -1);
     dmat *phat=NULL;
     creal2d(&phat, 0, psf2, 1);
-    dscale(phat, pow(ncomp2,-2));
+    dscale(phat, pow((double)ncomp2,-2));
     cfree(psf2);
     dmat *enc=dnew(dvec->nx, 1);    
     ENC_T data={enc, dvec, phat, type};

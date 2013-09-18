@@ -314,8 +314,8 @@ X(svd).  */
 void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
     assert(A->nx==A->ny && A->nx>0);
     *Sdiag=XR(new)(A->nx,1);
-    char jobz=U?'V':'N';
-    char uplo='U';
+    char jobz=(char)(U?'V':'N');
+    char uplo=(char)'U';
     int lda=A->nx;
     T worksize;
     int lwork=-1;

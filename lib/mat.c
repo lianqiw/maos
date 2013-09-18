@@ -116,10 +116,10 @@ void X(free_do)(X(mat) *A, int keepdata){
 	A->nref[0]--;
 	if(!A->nref[0]){
 	    if(A->header){
-		double count=search_header_num(A->header, "count");
+		long count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
-		    error("deprecated: count=%g, scaling the data\n", count);
-		    X(scale)(A, 1./count);
+		    error("deprecated: count=%ld, scaling the data\n", count);
+		    X(scale)(A, (T)(1./count));
 		}
 	    }
 	    if(!keepdata && A->p){
@@ -674,7 +674,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(mat) *C=NULL;
     X(cp)(&C,A);
     X(add)(&C,1,B,-1);
-    T d=sqrt(X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B)));
+    T d=SQRT(X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B)));
     X(free)(C);
     return isnan(d)?0:d;
 }
@@ -686,33 +686,34 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
 */
 void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val){
     int nres=100;
-    const double res=1./(double)(nres);
-    const double res1=1./(double)(nres);
-    const double res2=res1*res1*4.;
-    double resm=(double)(nres-1)/2.;
-    double r2=r*r;
-    double r2l=(r-1.5)*(r-1.5);
-    double r2u=(r+2.5)*(r+2.5);
+    const R res=(R)(1./nres);
+    const R res1=(R)(1./nres);
+    const R res2=(R)(res1*res1*4.);
+    R resm=(R)((nres-1)*0.5);
+    R r2=r*r;
+    R r2l=(r-1.5)*(r-1.5);
+    R r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy*dy-cy)*(iy*dy-cy);
+	R r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
-	    double val2=0;
+	    R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
+	    T val2=0;
 	    if(r2r<r2l) {
 		val2=val;
 	    }else if(r2r<r2u){
-		double tot=0.;
+		T tot=0.;
 		for(int jy=0; jy<nres; jy++){
-		    double iiy=iy+(jy-resm)*2*res;
-		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    double wty=1.-fabs(iy-iiy);
+		    R iiy=iy+(jy-resm)*2*res;
+		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
+		    R wty=1.-fabs(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
-			double iix=ix+(jx-resm)*2*res;
-			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			double wtx=1.-fabs(ix-iix);
-			if(rr2r<r2)
+			R iix=ix+(jx-resm)*2*res;
+			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
+			R wtx=1.-fabs(ix-iix);
+			if(rr2r<r2){
 			    tot+=res2*wty*wtx;
+			}
 		    }
 		}
 		val2=tot*val;
@@ -1599,10 +1600,10 @@ X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat) *xnew){
     const long nx=coeff->ny;
     PMAT(coeff,pc);
     T xmin=x->p[0];
-    T xsep1=(double)(nx-1)/(x->p[nx-1]-xmin);
+    T xsep1=(T)(nx-1)/(x->p[nx-1]-xmin);
     X(mat) *out=X(new)(xnew->nx, xnew->ny);
     for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-	double xn=REAL((xnew->p[ix]-xmin)*xsep1);
+	R xn=REAL((xnew->p[ix]-xmin)*xsep1);
 	long xnf=floor(xn);
 	if(xnf<0) xnf=0;
 	if(xnf>nx-2) xnf=nx-2;

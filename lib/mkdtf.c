@@ -38,7 +38,6 @@ void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
 	   double pixoffy,   /**<[in] offset of the image from the center of detector*/
 	   double blurx,     /**<[in] blurring as a percentage of pixel*/
 	   double blury,     /**<[in] blurring as a percentage of pixel*/
-	   double wvl,       /**<[in] the wavelength in meter*/
 	   dmat* theta       /**<[in] angle of rotation of each subaps for polar ccd. NULL for  geometry.*/
 	   ){
     const int ncompx2=ncompx>>1;

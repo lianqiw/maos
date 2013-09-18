@@ -89,7 +89,7 @@ static void psfiris_do(thread_t *info){
     if(npix>0){
 	ccell *dtf=NULL;
 	spcell *si=NULL;
-	mkdtf(&dtf, &si, ncomp, ncomp, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, wvl, NULL);
+	mkdtf(&dtf, &si, ncomp, ncomp, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, NULL);
 	ccwm(otf, dtf->p[0]);
 	cfft2(otf,-1);
 	output->p[ipsf]=dnew(npix, npix);

@@ -58,7 +58,7 @@
 #include "thread_pool.h"
 #include "process.h"
 #define USE_SPIN_LOCK 1
-#if USE_SPIN_LOCK == 1
+#if USE_SPIN_LOCK == 1 && !USE_ICC
 /*Important to be volatile, otherwise lockes up in Sandy Bridge CPUs */
 #define LOCK_T volatile int 
 #define LOCK_DO(A) SPIN_LOCK(A)

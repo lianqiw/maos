@@ -70,6 +70,7 @@ INLINE void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
 }
 INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
+    (void)urgent;
     for(int it=0; it<nthread; it++){
 #pragma omp task untied
 	((thread_fun)fun)(arg);
@@ -103,6 +104,7 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
     _Pragma("omp taskwait")
 /*Turn to inline function because nvcc concatenates _Pragma to } */
 INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
+    (void) urgent;
     for(int it=0; it<nthread; it++){		
 #pragma omp task untied
 	A[it].fun(A+it);				

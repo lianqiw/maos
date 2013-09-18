@@ -224,6 +224,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
    Copy information from star struct STAR_S to stars in asterism ASTER_S.
 */
 void setup_aster_copystar(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
+    (void)parms;
     int nwfs=aster->nwfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;

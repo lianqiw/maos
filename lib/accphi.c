@@ -606,6 +606,7 @@ void prop_grid_cubic(ARGIN_GRID,
 		     long start,         /**<[in] First point to do*/
 		     long end            /**<[in] Last point to do*/
 		     ){
+    (void)ampout;
     PREPIN_GRID(3);
     PREPOUT_LOC;
     RUNTIME_CUBIC;

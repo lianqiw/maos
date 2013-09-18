@@ -514,8 +514,7 @@ void mysleep(double sec){
 */
 void mypause(void){
     info2("Press ENTER key to continue.\n");
-    int ans;
-    while((ans=getchar())!='\n');
+    while((getchar())!='\n');
 }
 /**
    Return available space of mounted file system in bytes.
@@ -672,7 +671,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 		int *nval=options[iopt].nval;
 		(*nval)++;
 		*tmp=realloc(*tmp, *nval*sizeof(double));
-		(*tmp)[(*nval)-1]=val;
+		(*tmp)[(*nval)-1]=(int)val;
 	    }
 		break;
 	    }/*switch */
@@ -798,6 +797,7 @@ void maos_version(void){
    Set scheduling priorities for the process to enable real time behavior.
 */
 void set_realtime(int icpu, int niceness){
+    (void) icpu;
     //Set CPU affinity.
 #ifdef __linux__    
     cpu_set_t cpuset={{0}};

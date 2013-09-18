@@ -73,7 +73,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	error("Catalogue and wanted doesn't match\n");
     }
     long ntot=catalog->nx;
-    double nsky0=0;
+    long nsky0=0;
     dcell *res=dcellnew(nsky,1);
     PDMAT(catalog, pcatalog);
     double fov22=pow(fov/2/206265,2);
