@@ -86,9 +86,6 @@ typedef struct APER_CFG_T{
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
     int fnampuser;/**<User provided amplitude map (not default)*/
-    double *misreg;/**<misregistration of the pupil along x and y. Shifts the
-		      amplitude map and atmosphere.*/
-    int ismisreg; /**<true if misreg contains nonzero numbers*/
     char *pupmask;/**<The pupil cold stop*/
 }APER_CFG_T;
 /**
@@ -204,15 +201,6 @@ typedef struct POWFS_CFG_T{
     double cogoff;  /**<CoG offset to remove, relative to max(im). */
     int hasGS0;     /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
-    char* misreg;   /**misregistration of the WFS, described by file containing
-		       a cell array A of 2xp, where p is #1 or number of wfs
-		       belonging to this powfs. The misregistered coordinate is
-		       computed as
-
-		       xm(ip)=\sum_{ic}(A{1,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
-		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
-		       where ip is ipowfs. ic is index of column in entries of
-		       A.*/
     int ncpa_method;/**<Method to correct ncpa.
 		       - 0: do nothing.
 		       - 1: apply gradient electronic offset. 
@@ -269,14 +257,6 @@ typedef struct DM_CFG_T{
     int ncache;
     double *dxcache;/**<the sampling of plane to cache dm for each scale
 		       group. (derived)*/
-    char* misreg;   /**<misregistration of the DM with respect to the pupil,
-		       described by file containing a cell array A of 2x1.  The
-		       misregistered coordinate is computed as
-
-		       xm(ip)=\sum_{ic}(A{1,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
-		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
-		       where ip is ipowfs. ic is index of column in entries of
-		       A.*/
     char *hyst;     /**<File containing a matrix that describes the
 		       hysterisis. The matrix should have 3 rows, and multiple
 		       columns. Each column describe the parameters for a mode,
@@ -291,9 +271,7 @@ typedef struct EVL_CFG_T{
     double *wt;     /**<weight of each direction*/
     double *wvl;    /**<wavelength for PSF and strehl computation*/
     double *hs;     /**<height of each science object*/
-    double *misreg; /**<Misregistration wrt to nominal pupil.*/
     double dx;     /**<sampling of aperture for evaluation*/
-    int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
     int *psf;       /**<1: participate in psf evaluation.*/
     int *psfr;      /**<1: participate in psf reconstruction telemetry*/
@@ -675,6 +653,12 @@ typedef struct SAVE_CFG_T{
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
     int mvm;         /**<save computed mvm control matrix*/
 }SAVE_CFG_T;
+typedef struct MISREG_CFG_T{
+    char **tel2wfs;  /**<Distortion from telescope pupil to each WFS*/
+    char **dm2wfs;   /**<Distortion from DM to each WFS. Displacement due to altitude should not be included here*/
+    char **dm2sci;   /**<Distortion from DM to science. Not specified for individual science*/
+    double* pupil;   /**<Misregistration of the telescope pupil*/
+}MISREG_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
 */
@@ -703,6 +687,7 @@ typedef struct PARMS_T{
     GPU_CFG_T    gpu;   /**<Specify GPU options.*/
     LOAD_CFG_T   load;  /**<Specify what matrices to load for debugging*/
     SAVE_CFG_T   save;  /**<Specify what to save to file for debugging*/
+    MISREG_CFG_T misreg;
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
     int nwfsr;       /**<Number of wfs used in reconstruction. =npowfs in glao, =nwfs otherwise*/

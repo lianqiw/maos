@@ -89,7 +89,7 @@ static void strtrim(char **str){
     while(!is_end(**str) && is_space((*str)[0])) (*str)++;
     iend=strlen(*str)-1;
     /*remove tailing spaces. */
-    while(is_space((*str)[iend]) && iend>=0){
+    while((is_space((*str)[iend]) || (*str)[iend]==';') && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
@@ -290,8 +290,6 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	eql[0]='\0';
 	var=ssline;
 	value=eql+1;
-	/*var=strtok(ssline, "=");
-	  value=strtok(NULL, "=");*/
 	strtrim(&var);
 	strtrim(&value);
 	if(!var || strlen(var)==0){

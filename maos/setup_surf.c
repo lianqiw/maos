@@ -90,11 +90,9 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	loc_t *locwfs;
-	    
-	if(powfs[ipowfs].nlocm){
-	    error("We don't handle this case yet. Think carefully when to apply shift.\n");
-	    int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
-	    locwfs=powfs[ipowfs].locm[ilocm];
+	if(powfs[ipowfs].loc_tel){
+	    warning("We don't handle this case yet. Think carefully when to apply shift.\n");
+	    locwfs=powfs[ipowfs].loc_tel[wfsind];
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
@@ -201,13 +199,12 @@ static void prop_surf_wfs(thread_t *info){
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
 	const double scale=1.-hl/hs;
-	const double displacex=parms->wfs[iwfs].thetax*hl+powfs[ipowfs].misreg[wfsind][0];
-	const double displacey=parms->wfs[iwfs].thetay*hl+powfs[ipowfs].misreg[wfsind][1];
+	const double displacex=parms->wfs[iwfs].thetax*hl;
+	const double displacey=parms->wfs[iwfs].thetay*hl;
 
 	loc_t *locwfs;
-	if(powfs[ipowfs].locm){
-	    int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
-	    locwfs=powfs[ipowfs].locm[ilocm];
+	if(powfs[ipowfs].loc_tel){
+	    locwfs=powfs[ipowfs].loc_tel[wfsind];
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
@@ -226,7 +223,7 @@ static void prop_surf_wfs(thread_t *info){
 static void 
 setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info2("Setting up surface OPD (M1/M2/M3)\n");
-    if(fabs(parms->aper.misreg[0])>EPS || fabs(parms->aper.misreg[1])>EPS){
+    if(fabs(parms->misreg.pupil[0])>EPS || fabs(parms->misreg.pupil[1])>EPS){
 	warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 		"in maos because some surfaces may belong to instrument.\n");
     }
@@ -259,6 +256,10 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	const char *strevl=search_header(surf->header, "SURFEVL");
 	const char *strwfs=search_header(surf->header, "SURFWFS");
 	const char *stropdx=search_header(surf->header, "SURFOPDX");
+	if(strname && (!strcmp(strname, "M1"))){
+	    surf->ox+=parms->misreg.pupil[0];
+	    surf->oy+=parms->misreg.pupil[1];
+	}
 	//pupil rotation. rotate the surface directly
 	if(strname && (!strcmp(strname, "M1") || !strcmp(strname, "M2"))){
 	    if(fabs(parms->aper.rotdeg)>1.e-10){

@@ -153,21 +153,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->amap[idm]->iac=parms->dm[idm].iac;
     }
 
-    recon->alocm=calloc(ndm, sizeof(loc_t*));
-    for(int idm=0; idm<ndm; idm++){
-	if(parms->dm[idm].misreg){
-	    warning("Creating misregistration for DM.\n");
-	    dcell *misreg=dcellread("%s",parms->dm[idm].misreg); 
-	    PDCELL(misreg, pmisreg);
-	    if(misreg->nx!=2 || misreg->ny!=1)
-		error("%s is in wrong format\n",parms->dm[idm].misreg);
-	    recon->alocm[idm]=loctransform(recon->aloc[idm],NULL,pmisreg[0]);
-	}else{
-	    recon->alocm[idm]=recon->aloc[idm];
-	}
-    }
-    if(parms->save.setup){
-	locarrwrite(recon->alocm,parms->ndm,"%s/alocm",dirsetup);
+     if(parms->save.setup){
 	maparrwrite(recon->amap, parms->ndm,"%s/amap", dirsetup);
     }
     recon->aimcc=dcellnew(ndm,1);

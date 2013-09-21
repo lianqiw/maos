@@ -88,7 +88,7 @@ dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
 loc_t *locdup(loc_t *loc);
-loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff);
+loc_t *loctransform(loc_t *loc, const char *ps);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p);

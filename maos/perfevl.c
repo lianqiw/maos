@@ -55,17 +55,21 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
   
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	double dispx=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
-	double dispy=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	double dispx=ht*parms->evl.thetax[ievl];
+	double dispy=ht*parms->evl.thetay[ievl];
 	double scale=1.-ht/hs;
+	loc_t *locs=aper->locs;
+	if(aper->locs_dm){
+	    locs=aper->locs_dm[ievl+idm*parms->evl.nevl];
+	}
 	if(parms->dm[idm].cubic){
 	    prop_grid_cubic(simu->dmprojsq[idm],
-			    aper->locs, aper->amp->p, iopdevl->p, 
+			    locs, aper->amp->p, iopdevl->p, 
 			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
 			    0, 0);
 	}else{
 	    prop_grid(simu->dmprojsq[idm],
-		      aper->locs, aper->amp->p, iopdevl->p,
+		      locs, aper->amp->p, iopdevl->p,
 		      alpha, dispx, dispy, scale, 0,
 		      0, 0);
 	}
@@ -245,8 +249,8 @@ void perfevl_ievl(thread_t *info){
 	    for(int ipsr=0; ipsr<npsr; ipsr++){
 		double hl=parms->atmr.ht[ipsr];
 		double scale = 1. - hl/parms->evl.hs[ievl];
-		double displacex=parms->evl.thetax[ievl]*hl+parms->evl.misreg[0];
-		double displacey=parms->evl.thetay[ievl]*hl+parms->evl.misreg[1];
+		double displacex=parms->evl.thetax[ievl]*hl;
+		double displacey=parms->evl.thetay[ievl]*hl;
 		prop_nongrid(recon->xloc[ipsr], 
 			     simu->opdr->p[ipsr]->p,
 			     aper->locs, NULL, iopdevl->p, -1,

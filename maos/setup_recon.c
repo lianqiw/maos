@@ -230,7 +230,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 
 
 /**
-   Setup gradient operator from powfs.loc to wavefront sensor for least square reconstruction.
+   Setup gradient operator from powfs.gloc to wavefront sensor for least square reconstruction.
 */
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
@@ -279,7 +279,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    
 	    switch(parms->powfs[ipowfs].gtype_recon){
 	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
-		       using fine sampled powfs.loc as intermediate plane*/
+		       using fine sampled powfs.gloc as intermediate plane*/
 		double displace[2]={0,0};
 		info2(" Gploc");
 		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
@@ -287,7 +287,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 		break;
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
-		       powfs.loc as intermediate plane.*/
+		       powfs.gloc as intermediate plane.*/
 		double displace[2]={0,0};
 		dsp* ZS0=mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,displace);
@@ -1320,36 +1320,17 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	warning("There are no LGS with llt. \n");
 	return;
     }
-    /*Create GFall: Focus mode -> WFS grad */
-    recon->GFall=dcellnew(parms->nwfsr, 1);
+    /*Create GFall: Focus mode -> WFS grad. This is model*/
+    recon->GFall=dcellnew(parms->npowfs, 1);
     recon->GFlgs=dcellnew(parms->nwfsr, 1);
     recon->GFngs=dcellnew(parms->nwfsr, 1);
-    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	int ipowfs=parms->wfsr[iwfs].powfs;
-	dmat *opd=dnew(powfs[ipowfs].loc->nloc,1);
-	loc_add_focus(opd->p, powfs[ipowfs].loc, 1);
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	if(parms->powfs[ipowfs].gtype_recon==1){
-	    dcell *saimcc;
-	    if(powfs[ipowfs].locm){/*We can not use realamp as in simulation. */
-		dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].amp->p);
-		saimcc=dcellinvspd_each(mcc);
-		dcellfree(mcc);
-	    }else{
-		saimcc=dcellref(powfs[ipowfs].saimcc[0]);
-	    }
-	    pts_ztilt(&recon->GFall->p[iwfs], powfs[ipowfs].pts, saimcc,
-		      powfs[ipowfs].realamp[wfsind], opd->p);
-	}else{
-	    spmulmat(&recon->GFall->p[iwfs], adpind(powfs[ipowfs].GS0,wfsind), opd, 1);
-	}
-	if(parms->powfs[ipowfs].llt){
-	    recon->GFlgs->p[iwfs]=dref(recon->GFall->p[iwfs]);
-	}else{
-	    recon->GFngs->p[iwfs]=dref(recon->GFall->p[iwfs]);
-	}
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
+	dmat *opd=dnew(powfs[ipowfs].gloc->nloc,1);
+	loc_add_focus(opd->p, powfs[ipowfs].gloc, 1);
+	spmulmat(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 1);
 	dfree(opd);
     }
+
     if(parms->save.setup){
 	dcellwrite(recon->GFall,"%s/GFall",dirsetup);
     }
@@ -1367,15 +1348,16 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	    continue;
 	}
 	spmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 recon->GFall->p[iwfs],1);
-	dmm(&GMGngs,recon->GFall->p[iwfs], GMngs->p[iwfs], "tn",1);
+		 recon->GFall->p[ipowfs],1);
+	dmm(&GMGngs,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
     }
     dinvspd_inplace(GMGngs);
     /*A focus reconstructor from all NGS measurements.*/
     dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
   
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	if(!recon->GFall->p[iwfs]) continue;
+	int ipowfs=parms->wfsr[iwfs].powfs;
+	if(!recon->GFall->p[ipowfs]) continue;
 	//NGS gradient to Focus mode reconstructor.
 	dmm(&RFngsg->p[iwfs],GMGngs, GMngs->p[iwfs],"nt",1);
     }
@@ -1462,8 +1444,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *GMtmp=NULL;
 	dmat *GMGtmp=NULL;
 	spmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 recon->GFall->p[iwfs], 1);
-	dmm(&GMGtmp, recon->GFall->p[iwfs], GMtmp, "tn",1);
+		 recon->GFall->p[ipowfs], 1);
+	dmm(&GMGtmp, recon->GFall->p[ipowfs], GMtmp, "tn",1);
 	dinvspd_inplace(GMGtmp);
 	dmm(&RFlgsg[iwfs][iwfs], GMGtmp, GMtmp, "nt", 1);
 
@@ -2154,15 +2136,11 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     locfree(recon->ploc); 
     mapfree(recon->pmap);
     for(int idm=0; idm<ndm; idm++){
-	if(recon->alocm[idm]!=recon->aloc[idm])
-	    locfree(recon->alocm[idm]);
-	locfree(recon->alocm[idm]);
 	free(recon->aembed[idm]);
     }
     maparrfree(recon->amap, parms->ndm);
     maparrfree(recon->acmap, parms->ndm);
     free(recon->aembed);
-    free(recon->alocm);
     free(recon->aloc);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);

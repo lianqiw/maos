@@ -64,8 +64,14 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     free(powfscfg->neareconfile);
     free(powfscfg->neasimfile);
     free(powfscfg->bkgrndfn);
-    free(powfscfg->misreg);
 }
+void free_strarr(char **str, int n){
+    for(int i=0; i<n; i++){
+	free(str[i]);
+    }
+    free(str);
+}
+
 /**
    Free the parms struct.
  */
@@ -92,7 +98,6 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.psfr);
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);
-    free(parms->evl.misreg);
     free(parms->evl.psfpttr);
     free(parms->evl.psfngsr);
 
@@ -139,7 +144,6 @@ void free_parms(PARMS_T *parms){
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
 	free(parms->dm[idm].dxcache);
-	free(parms->dm[idm].misreg);
 	free(parms->dm[idm].hyst);
 	free(parms->dm[idm].actstuck);
 	free(parms->dm[idm].actfloat);
@@ -153,7 +157,6 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.scalegroup);
     free(parms->aper.fnamp);
     free(parms->aper.pupmask);
-    free(parms->aper.misreg);
     free(parms->save.ints);
     free(parms->save.wfsopd);
     free(parms->save.grad);
@@ -164,6 +167,11 @@ void free_parms(PARMS_T *parms){
     free(parms->fdlock);
     free(parms->hipowfs);
     free(parms->lopowfs);
+
+    free(parms->misreg.pupil);
+    free_strarr(parms->misreg.tel2wfs, parms->nwfs);
+    free_strarr(parms->misreg.dm2wfs, parms->ndm*parms->nwfs);
+    free_strarr(parms->misreg.dm2sci, parms->ndm);
     free(parms);
 }
 static inline int sum_intarr(int n, int *a){
@@ -294,7 +302,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,mtchadp);
     READ_POWFS_RELAX(dbl,cogthres);
     READ_POWFS_RELAX(dbl,cogoff);
-    READ_POWFS_RELAX(str,misreg);
     READ_POWFS_RELAX(int,ncpa_method);
     READ_POWFS_RELAX(int,i0scale);
     READ_POWFS_RELAX(dbl,sigscale);
@@ -498,7 +505,6 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(int,hist); 
     READ_DM_RELAX(int,cubic);
     READ_DM_RELAX(dbl,iac);
-    READ_DM_RELAX(str,misreg);
     READ_DM_RELAX(str,hyst);
     READ_DM_RELAX(str,actfloat);
     READ_DM_RELAX(str,actstuck);
@@ -545,7 +551,6 @@ static void readcfg_moao(PARMS_T *parms){
    Read in atmosphere parameters.
 */
 static void readcfg_atm(PARMS_T *parms){
-
     READ_DBL(atm.r0z);
     READ_DBL(atm.l0);
     READ_DBL(atm.dx);
@@ -611,10 +616,6 @@ static void readcfg_aper(PARMS_T *parms){
     parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
     READ_STR(aper.fnamp);
     READ_STR(aper.pupmask);
-    readcfg_dblarr_n(&parms->aper.misreg, 2, "aper.misreg");
-    if(fabs(parms->aper.misreg[0])>EPS || fabs(parms->aper.misreg[1])>EPS){
-	parms->aper.ismisreg=1;
-    }
 }
 
 /**
@@ -626,10 +627,6 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
     readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
     readcfg_dblarr_nmax(&(parms->evl.hs), parms->evl.nevl, "evl.hs");
-    readcfg_dblarr_n(&(parms->evl.misreg),2, "evl.misreg");
-    if(fabs(parms->evl.misreg[0])>EPS || fabs(parms->evl.misreg[1])>EPS){
-	parms->evl.ismisreg=1;
-    }
     normalize_sum(parms->evl.wt, parms->evl.nevl, 1);
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     readcfg_intarr_nmax(&(parms->evl.psfr), parms->evl.nevl, "evl.psfr");
@@ -888,9 +885,9 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.opdx);
     READ_INT(plot.all);
     if(parms->plot.all){
-	parms->plot.setup=1;
-	parms->plot.atm=1;
-	parms->plot.run=1;
+	parms->plot.setup=parms->plot.all;
+	parms->plot.atm=parms->plot.all;
+	parms->plot.run=parms->plot.all;
     }
     if(parms->plot.setup || parms->plot.atm || parms->plot.run || parms->plot.opdx || parms->plot.all){
 	draw_helper();
@@ -990,7 +987,12 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.mvmf);
     READ_INT(save.mvm);
 }
-
+static void readcfg_misreg(PARMS_T *parms){
+    readcfg_dblarr_nmax(&parms->misreg.pupil, 2, "misreg.pupil");
+    readcfg_strarr_nmax(&parms->misreg.tel2wfs, parms->nwfs, "misreg.tel2wfs");
+    readcfg_strarr_nmax(&parms->misreg.dm2wfs, parms->ndm*parms->nwfs, "misreg.dm2wfs");
+    readcfg_strarr_nmax(&parms->misreg.dm2sci, parms->ndm*parms->evl.nevl, "misreg.dm2sci");
+}
 /**
    Specify which variables to load from saved files (Usually from LAOS
    simulations) */
@@ -2433,6 +2435,7 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_dbg(parms);
     readcfg_gpu(parms);
     readcfg_save(parms);
+    readcfg_misreg(parms);
     readcfg_load(parms);
     parms->nsurf=readcfg_strarr(&parms->surf, "surf");
     parms->ntsurf=readcfg_strarr(&parms->tsurf,"tsurf");

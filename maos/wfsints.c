@@ -138,7 +138,7 @@ void wfsints(thread_t *thread_data){
 	    gy=gx+nsa;
 	}
     }
-    double *realamp=powfs[ipowfs].realamp[wfsind];
+    double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	const double dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;

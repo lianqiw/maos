@@ -269,7 +269,6 @@ typedef struct loc_t{
     locmap_t *restrict map; /**< point to the map used for identifying neihboring points.*/
     locstat_t *stat;/**<points to column statistics*/
 }loc_t;
-
 /**
    low left point of each subaperture.
    

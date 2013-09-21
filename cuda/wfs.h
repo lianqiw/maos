@@ -33,7 +33,7 @@ struct cullt_t{
 };
 typedef struct cuwloc_t{
     cupts_t *pts;   /**<location of lower left OPD point in each sa*/
-    culoc_t *loc;  /**<location of OPD points*/
+    culoc_t *loc;  /**<location of OPD points. for reconstruction purpose only.*/
     culoc_t *saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
@@ -46,6 +46,8 @@ class cuwfs_t{
   public:
     stream_t *stream;
     cupowfs_t *powfs;
+    culoc_t **loc_dm;  /**<Grid for ray tracing from DM to WFS*/
+    culoc_t *loc_tel;  /**<Grid for ray tracing from Telescope to WFS*/
     cusp *GS0;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
     float  *neasim;     /**<The noise equivalent angles for each subaperture.*/

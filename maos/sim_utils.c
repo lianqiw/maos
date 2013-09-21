@@ -122,9 +122,6 @@ static map_t **genscreen_do(SIM_T *simu){
 	double angle=simu->winddir->p[i];
 	screens[i]->vx=cos(angle)*atm->ws[i];
 	screens[i]->vy=sin(angle)*atm->ws[i];
-	/*misregistration */
-	screens[i]->ox+=parms->aper.misreg[0];
-	screens[i]->oy+=parms->aper.misreg[1];
     }
     return screens;
 }
@@ -849,16 +846,16 @@ static void init_simu_evl(SIM_T *simu){
 	    const int ind=ievl+nevl*ips;
 	    PROPDATA_T *data=&simu->evl_propdata_atm[ind];
 	    const double ht=parms->atm.ht[ips];
-	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
-	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	    data->displacex0=ht*parms->evl.thetax[ievl];
+	    data->displacey0=ht*parms->evl.thetay[ievl];
 	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(void*)1;/*need to update this in genscreen. */
 	    data->phiout=(void*)1;/*replace later in simulation. */
 	    data->ostat=aper->locs->stat;
-	    prop_index(data);
 	    tot=aper->locs->stat->ncol;
+	    prop_index(data);
 	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
 	}
@@ -866,8 +863,8 @@ static void init_simu_evl(SIM_T *simu){
 	    const int ind=ievl+nevl*idm;
 	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
 	    const double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
-	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	    data->displacex0=ht*parms->evl.thetax[ievl];
+	    data->displacey0=ht*parms->evl.thetay[ievl];
 	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
@@ -876,19 +873,28 @@ static void init_simu_evl(SIM_T *simu){
 		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;/*already accounted for in cachedm. */
 		data->cubic_iac=0;/*not needed */
-		data->ostat=aper->locs->stat;
-		tot=aper->locs->stat->ncol;
+		if(aper->locs_dm){
+		    data->locout=aper->locs_dm[ind];
+		    tot=data->locout->nloc;
+		}else{
+		    data->ostat=aper->locs->stat;
+		    tot=aper->locs->stat->ncol;
+		}
 	    }else{
 		if(simu->dmrealsq){
 		    data->mapin=simu->dmrealsq[idm];
 		}else{
-		    data->locin=recon->alocm[idm];
+		    data->locin=recon->aloc[idm];
 		    data->phiin=simu->dmreal->p[idm]->p;
 		}
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
-		data->locout=aper->locs;/*propagate to locs if no cachedm. */
-		tot=aper->locs->nloc;
+		if(aper->locs_dm){
+		    data->locout=aper->locs_dm[ind];
+		}else{
+		    data->locout=aper->locs;/*propagate to locs if no cachedm. */
+		}
+		tot=data->locout->nloc;
 	    }
 	    data->phiout=(void*)1;/*replace later in simulation. */
 	    prop_index(data);
@@ -1081,26 +1087,25 @@ static void init_simu_wfs(SIM_T *simu){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nthread=powfs[ipowfs].nthread;
+	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
-	const int ilocm=(simu->powfs[ipowfs].nlocm>1)?wfsind:0;
-
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht[ips];
 	    if(ht>hs){
 		error("Layer is above guide star\n");
 	    }
 	    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
-	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
-	    data->displacey0=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+	    data->displacex0=ht*parms->wfs[iwfs].thetax;
+	    data->displacey0=ht*parms->wfs[iwfs].thetay;
 	    data->scale=1.-ht/hs;
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(void*)1;/*need to update this in genscreen. */
 	    data->phiout=(void*)1;/*replace later in simulation. */
 	    int tot=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){/*misregistration. */
-		data->locout=powfs[ipowfs].locm[ilocm];
+	    if(powfs[ipowfs].loc_tel){/*misregistration. */
+		data->locout=powfs[ipowfs].loc_tel[wfsind];
 		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
@@ -1114,8 +1119,8 @@ static void init_simu_wfs(SIM_T *simu){
 	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 	    int tot;
-	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
-	    data->displacey0=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+	    data->displacex0=ht*parms->wfs[iwfs].thetax;
+	    data->displacey0=ht*parms->wfs[iwfs].thetay;
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
@@ -1128,15 +1133,15 @@ static void init_simu_wfs(SIM_T *simu){
 		if(simu->dmrealsq){
 		    data->mapin=simu->dmrealsq[idm];
 		}else{
-		    data->locin=recon->alocm[idm];
+		    data->locin=recon->aloc[idm];
 		    data->phiin=simu->dmreal->p[idm]->p;
 		}
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
 	    data->phiout=(void*)1;/*replace later in simulation */
-	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){/*misregistration. */
-		data->locout=powfs[ipowfs].locm[ilocm];
+	    if(powfs[ipowfs].loc_dm){/*misregistration. */
+		data->locout=powfs[ipowfs].loc_dm[wfsind+idm*nwfsp];
 		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;

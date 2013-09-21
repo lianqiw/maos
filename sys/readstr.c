@@ -28,7 +28,7 @@
    Obtain a string array value from the key.
  */
 int readstr_strarr(char ***res, /**<[out] Result*/
-		   int len,     /**<[out] Length of array*/
+		   int len,     /**<[in] Length of array*/
 		   const char *sdata /**<[in] Input string*/
 		   ){
     int count=0;
@@ -63,10 +63,10 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	    if(mark!=' '){
 		error("{%s}: Unmatched string\n", sdata);
 	    }else{
-		sdata4=sdataend;
+		sdata4=sdataend+1;
 	    }
 	}
-	if(sdata4>sdata2 && sdata4<=sdataend){/*found non-empty str*/
+	if(sdata4>sdata2){/*found non-empty str*/
 	    if(!len && count>=maxcount){
 		maxcount*=2;
 		*res=realloc(*res,sizeof(char*)*maxcount);
@@ -77,7 +77,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	}
 	count++;
 	sdata2=sdata4+1;
-	while(sdata2<sdataend && sdata2[0]==' '){
+	while(sdata2<sdataend && (sdata2[0]==' ' || sdata2[0]==';')){
 	    sdata2++;
 	}
     }
@@ -223,7 +223,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     }else{
 	/*warning2("Expecting array: {%s} should start with [\n", data); */
     }
-    if(strchr(startptr,']')){/*there is indeed ']' */
+    if(strchr(startptr,']')){/*there is indeed ']'. Handle operations after ] */
 	endptr=strchr(startptr,']')+1;
 	while(is_space(endptr[0]) || endptr[0]=='\''){
 	    if(endptr[0]=='\'') trans=1-trans;

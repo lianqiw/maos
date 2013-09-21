@@ -62,10 +62,6 @@ void prep_cachedm(SIM_T *simu){
 		    (parms, parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
 		     0, &nxout, &nyout, &oxout, &oyout, NULL, 2, 0,0,0,0);
 		simu->cachedm[idm][iscale]=mapnew(nxout, nyout, dx, dx, NULL);
-		simu->cachedm[idm][iscale]->ox=oxout
-		    +(simu->recon->alocm[idm]->locx[0]-simu->recon->aloc[idm]->locx[0]);
-		simu->cachedm[idm][iscale]->oy=oyout
-		    +(simu->recon->alocm[idm]->locy[0]-simu->recon->aloc[idm]->locy[0]);
 	    }
 	}
     }
@@ -91,7 +87,7 @@ void prep_cachedm(SIM_T *simu){
 	if(simu->dmrealsq){
 	    cpropdata[ic].mapin=simu->dmrealsq[idm];
 	}else{
-	    cpropdata[ic].locin=simu->recon->alocm[idm];
+	    cpropdata[ic].locin=simu->recon->aloc[idm];
 	    cpropdata[ic].phiin=simu->dmreal->p[idm]->p;
 	}
 	cpropdata[ic].mapout=simu->cachedm[idm][iscale];

@@ -34,7 +34,7 @@ cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, in
     int ipowfs=parms->wfs[iwfs].powfs;
     int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     loc=new culoc_t(powfs[ipowfs].loc);
-    cp2gpu(&amp, powfs[ipowfs].realamp[powfs[ipowfs].nlocm>1?wfsind:0], powfs[ipowfs].loc->nloc, 1);
+    cp2gpu(&amp, powfs[ipowfs].realamp->p[wfsind]);
     cp2gpu(&embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc, 1);
     embednx=embedny=powfs[ipowfs].nembed;
 }

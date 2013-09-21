@@ -392,7 +392,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
-	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc->p, cupowfs[ipowfs].llt->loc->nloc, 
+	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc,
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg[0], 
 		    parms->powfs[ipowfs].llt->misreg[1], 

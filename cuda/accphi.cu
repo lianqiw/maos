@@ -374,6 +374,7 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 	    if(dmcfg[idm].cubic && !(*cudm)[idm].cubic_cc){
 		(*cudm)[idm].cubic_cc=gpu_dmcubic_cc(dmcfg[idm].iac);
 	    }
+	    (*cudm)[idm].ht+=dmcfg[idm].vmisreg;
 	}
     }
 }
@@ -502,7 +503,7 @@ __global__ void prop_cubic(float *restrict out, const float *restrict in, const 
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, 
+void gpu_atm2loc(float *phiout, culoc_t *loc, const float hs, 
 		 const float thetax,const float thetay,
 		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream){
     cumap_t *cuatm=cudata->atm;
@@ -516,7 +517,8 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips].ox)/dx;
 	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips].oy)/dy;
 	const float scale=1.f-ht/hs;
-#define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
+	const int nloc=loc->nloc;
+#define COMM loc->p,loc->nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
 		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
@@ -531,7 +533,7 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 /**
    Ray tracing of dm
 */
-void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t *cudm, int ndm,
+void gpu_dm2loc(float *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
 		const float hs, const float thetax, const float thetay,
 		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream){
     if(fabs(dmalpha)<EPS) return;
@@ -543,7 +545,9 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 	const float dispx=(ht*thetax+mispx-cudm[idm].ox)/dx;
 	const float dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
 	const float scale=1.f-ht/hs;
-#define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
+	const float (*loc)[2]=locarr[idm]->p;
+	const int nloc=locarr[idm]->nloc;
+#define COMM loc, nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
 #define KARG cudm[idm].p->p,cudm[idm].nx,cudm[idm].ny, COMM
 	if (cudm[idm].cubic_cc){//128 is a good number for cubic. 
 	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc->p);

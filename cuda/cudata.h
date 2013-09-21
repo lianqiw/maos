@@ -44,7 +44,8 @@ typedef struct cudata_t{
     int nps; /**<number of phase screens*/
     int ndm; /**<number of DM.*/
     /*for perfevl */
-    float  (*plocs)[2];
+    culoc_t *plocs;
+    culoc_t ***plocs_dm;
     float   *pamp;
     int    **embed;
     cuccell *evlwvf;

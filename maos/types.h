@@ -30,6 +30,7 @@
 typedef struct APER_T{
     loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture
 			    for peformance evaluation.*/
+    loc_t **locs_dm;      /**<Distorted locs when mapped onto DM*/
     dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for
 			    performance evaluation*/
     dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
@@ -110,14 +111,14 @@ typedef struct POWFS_T{
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
     dmat *saa;          /**<Subaperture area*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
-    loc_t **locm;       /**<mis-registered loc, if any.*/
+    dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
+    loc_t **loc_dm;     /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
+    loc_t **loc_tel;  /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
+    dcell *amp_tel;   /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
+    dcell *saa_tel;        /**<mis-registered saa, if any*/
     loc_t *gloc;        /**<loc used to generate GP*/
-    dcell *saam;        /**<mis-registered saa, if any*/
-    dmat *amp;          /**<amplitude map, max at 1.*/
-    dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
     dmat  *gamp;        /**<amplitude defined on gloc*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
-    double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
     dcell *gradoff;     /**<Offset to grads to subtract from measurement. */
@@ -150,12 +151,11 @@ typedef struct POWFS_T{
     int pixpsay;        /**<number of detector pixels along y*/
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
-    int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
     int nsaimcc;         /**<number of saimcc*/
     int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
     /*The following are a few convenient pointers. */
-    double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
-    double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
+    dcell*realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
+    dcell*realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
     dmat *sumamp;       /**<sum of realamp*/
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
@@ -285,7 +285,6 @@ typedef struct RECON_T{
     long  *anloc;      /**<Size of each aloc*/
     long  *ngrad;      /**<Size of each grad for each wfs*/
     long **aembed;     /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
-    loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 

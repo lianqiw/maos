@@ -77,14 +77,12 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->amp=dnew(aper->locs->nloc, 1);
 	if(aper->ampground){
 	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp->p, 1,
-			   parms->evl.misreg[0]-parms->aper.misreg[0],
-			   parms->evl.misreg[1]-parms->aper.misreg[1],
+			   -parms->misreg.pupil[0], -parms->misreg.pupil[1],
 			   1, 0, 0, 0);
 	}else{
 	    warning2("Using locannular to create a gray pixel aperture\n");
 	    locannular(aper->amp->p, aper->locs,
-		       parms->aper.misreg[0]-parms->evl.misreg[0],
-		       parms->aper.misreg[1]-parms->evl.misreg[1],
+		       parms->misreg.pupil[0], parms->misreg.pupil[1],
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
@@ -106,6 +104,20 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
     loc_reduce(aper->locs, aper->amp, 1, NULL);
+    if(parms->misreg.dm2sci){
+	int nevl=parms->evl.nevl;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    for(int ievl=0; ievl<nevl; ievl++){
+		if(parms->misreg.dm2sci[ievl+idm*nevl]){
+		    if(!aper->locs_dm){
+			aper->locs_dm=calloc(parms->ndm*nevl, sizeof(loc_t*));
+		    }
+		    aper->locs_dm[ievl+idm*nevl]
+			=loctransform(aper->locs, parms->misreg.dm2sci[ievl+idm*nevl]);
+		}
+	    }
+	}
+    }
     /*Set the amp for plotting. */
     aper->amp1=ddup(aper->amp);
     /*normalize amp to sum to 1. */

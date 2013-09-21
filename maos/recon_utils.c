@@ -579,8 +579,9 @@ void focus_tracking_grads(SIM_T* simu){
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
+	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
-		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
+		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
 	    }
 	    //Average LPF focus
 	    focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
@@ -593,7 +594,8 @@ void focus_tracking_grads(SIM_T* simu){
 	    focusm/=nwfsllt;
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		if(!LGSfocus->p[iwfs]) continue;
-		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[iwfs], -focusm);
+		int ipowfs=parms->wfs[iwfs].powfs;
+		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], -focusm);
 	    }
 	}
     

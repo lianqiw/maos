@@ -1132,123 +1132,165 @@ loc_t *locdup(loc_t *loc){
     memcpy(new->locy,loc->locy,sizeof(double)*loc->nloc);
     return new;
 }
-
+/**Parse string representation of polynominal to array representation.*/
+static int parse_poly(double (**pcx)[3], const char *_ps){
+    char *ps=(char *)_ps;
+    int ncx=5;
+    *pcx=malloc(3*ncx*sizeof(double));
+    double (*cx)[3]=*pcx;
+    int icx=0;
+    char *endptr;
+    while(ps[0] && ps[0]!=';'){
+	cx[icx][0]=strtod(ps, &endptr);//coefficient
+	if(ps==endptr){
+	    if(ps[0]=='-'){
+		ps++;
+		cx[icx][0]=-1;
+	    }else if(ps[0]=='+'){
+		ps++;
+		cx[icx][0]=1;
+	    }
+	    if(ps[0]=='x' || ps[0]=='y'){
+		if(cx[icx][0]==0) cx[icx][0]=1;
+	    }else{
+		error("Unable to parse (%s). ps=(%s)\n", _ps, ps);
+	    }
+	}else{
+	    ps=endptr;
+	}
+	cx[icx][1]=cx[icx][2]=0;
+	while(ps[0]==' ') ps++;
+	if(ps[0]=='*') ps++;
+	while(ps[0]==' ') ps++;
+        //parse each term
+	while(ps[0]!=0 && ps[0]!='+' && ps[0]!='-' && ps[0]!=';'){
+	    if(ps[0]=='x' || ps[0]=='y'){
+		int iy=1;
+		if(ps[0]=='y'){
+		    iy=2;
+		}
+		ps++;
+		if(ps[0]=='^'){
+		    ps++;
+		    cx[icx][iy]+=strtol(ps, &endptr, 10);
+		    if(ps==endptr){
+			error("Unable to parse %s\n", _ps);
+		    }
+		    ps=endptr;
+		}else{
+		    cx[icx][iy]++;
+		}
+	    }else{
+		cx[icx][0]*=strtod(ps, &endptr);
+		if(ps==endptr){
+		    error("Unable to parse %s\n", _ps);
+		}
+		ps=endptr;
+	    }
+	    while(ps[0]==' ') ps++;
+	}
+	icx++;
+	if(ps[0]==';' || ps[0]==0){
+	    break;
+	}else if(ps[0]=='+' || ps[0]=='-'){
+	    if(ps[0]=='+') ps++;
+	    if(icx>=ncx){
+		ncx*=2;
+		cx=*pcx=realloc(*pcx, 3*ncx*sizeof(double));
+	    }
+	}else{
+	    error("Unable to parse (%s)\n", ps);
+	}
+    }
+    ncx=icx;
+    cx=*pcx=realloc(*pcx, 3*ncx*sizeof(double));
+    info2("%s is converted to:\n", _ps);
+    for(int j=0; j<3; j++){
+	for(int i=0; i<ncx; i++){
+	    info2("%8g ", cx[i][j]);
+	}
+	info2("\n");
+    }
+    return ncx;
+    
+}
 /**
    Transform coordinate. loc contains x,y; locm contains xm, ym.
+   polyn contains the formula
    xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
    ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
-
-   if shiftxy is set: the pure shift is taken out of transform and not
-   added. shiftxy is set to a 2-vector for [shiftx, shifty]. If the transform is
-   only pure shift, NULL is returned.
  */
-loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
-    if(coeff[0]->nx!=3 || coeff[1]->nx!=3){
-	error("Coeff is in wrong format\n");
-    }
-    PDMAT(coeff[0],cx);
-    PDMAT(coeff[1],cy);
-
+loc_t *loctransform(loc_t *loc, const char *_polyn){
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
     /*Test whether the transform is pure shift. */
-    int keepx=0, keepy=0;
-    int shift=1;
-    double shiftx=0, shifty=0;
+    loc_t *locm=locnew(loc->nloc, loc->dx, loc->dy);
+    double *restrict xm=locm->locx;
+    double *restrict ym=locm->locy;
+    //Parse from string to 3xn array
+    double (*cx)[3]=0, (*cy)[3]=0;
+    int ncx=0, ncy=0;
+    {
+	char *polyn=strdup(_polyn);
+	char *px=polyn;
+	char *py=strchr(polyn, ';');
+	if(py==polyn || !py) error("Wrong format '%s'\n", polyn);
+	py[0]='\0';
+	py++;
+	//info2("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
+	//Now parse the strings.
+	ncx=parse_poly(&cx, px);
+	ncy=parse_poly(&cy, py);
+	free(polyn); polyn=0;px=0; py=0;
+    }
+    int np=0;
     int nonint=0;
-    for(int ic=0; ic<coeff[0]->ny; ic++){
-	if(fabs(cx[ic][1]-(int)cx[ic][1])>EPS || fabs(cx[ic][2]-(int)cx[ic][2])>EPS){
-	    warning("There are non-integer powers\n");
+    for(int ic=0; ic<ncx; ic++){
+	int ocx=(int)round(cx[ic][1]);
+	int ocy=(int)round(cx[ic][2]);
+	if((cx[ic][1]-ocx)>EPS || (cx[ic][2]-ocy)>EPS){//not integer
 	    nonint=1;
 	}
-	if(fabs(cx[ic][0]-1)<EPS && fabs(cx[ic][1]-1)<EPS && fabs(cx[ic][2])<EPS){
-	    if(keepx==0){
-		keepx=1;
-	    }else{/*we only want 1 such column. */
-		warning("keepx is already 1\n");
-		shift=0;
-	    }
-	}else if(fabs(cx[ic][1])<EPS && fabs(cx[ic][2])<EPS){
-	    shiftx+=cx[ic][0];
-	    if(shiftxy) cx[ic][0]=0;/*remove the transform. */
-	}else{/*something we don't recognize. not pure shift. */
-	    /*warning("something we don't recognize\n"); */
-	    shift=0;
-	}
+	if(ocx>np) np=ocx;
+	if(ocy>np) np=ocy;
     }
-    if(keepx!=1) shift=0;
-    for(int ic=0; ic<coeff[1]->ny; ic++){
-	if(fabs(cy[ic][1]-(int)cy[ic][1])>EPS || fabs(cy[ic][2]-(int)cy[ic][2])>EPS){
-	    warning("There are non-integer powers\n");
+    for(int ic=0; ic<ncy; ic++){
+	int ocx=(int)round(cy[ic][1]);
+	int ocy=(int)round(cy[ic][2]);
+	if((cy[ic][1]-ocx)>EPS || (cy[ic][2]-ocy)>EPS){//not integer
 	    nonint=1;
 	}
-	if(fabs(cy[ic][0]-1)<EPS && fabs(cy[ic][1])<EPS && fabs(cy[ic][2]-1)<EPS){
-	    if(keepy==0){
-		keepy=1;
-	    }else{/*we only want 1 such column. */
-		warning("keepy is already 1\n");
-		shift=0;
+	if(ocx>np) np=ocx;
+	if(ocy>np) np=ocy;
+    }
+    np++; //max order of x or y +1
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	if(nonint){
+	    for(long ic=0; ic<ncx; ic++){
+		xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
 	    }
-	}else if(fabs(cy[ic][1])<EPS && fabs(cy[ic][2])<EPS){
-	    shifty+=cy[ic][0];
-	    if(shiftxy) cy[ic][0]=0;/*remove from the transform. */
-	}else{/*something we don't recognize. not pure shift. */
-	    /*warning("something we don't recognize\n"); */
-	    shift=0;
-	}
-    }
-    if(keepy!=1) shift=0;
-    if(shiftxy){
-	*shiftxy=calloc(2, sizeof(double));
-	(*shiftxy)[0]=shiftx;
-	(*shiftxy)[1]=shifty;
-    }
-    if(shift && shiftxy){/*pure shift, and shiftxy is set. */
-	info("The transform is pure shift by %g along x, %g along y\n", shiftx, shifty);
-	return NULL;
-    }else{
-	loc_t *locm=locnew(loc->nloc, loc->dx, loc->dy);
-	double *restrict xm=locm->locx;
-	double *restrict ym=locm->locy;
-
-	int np=0;
-	for(int ic=0; ic<coeff[0]->ny; ic++){
-	    if(cx[ic][1]>np) np=(int)cx[ic][1];
-	    if(cx[ic][2]>np) np=(int)cx[ic][2];
-	}
-	for(int ic=0; ic<coeff[1]->ny; ic++){
-	    if(cy[ic][1]>np) np=(int)cy[ic][1];
-	    if(cy[ic][2]>np) np=(int)cy[ic][2];
-	}
-	np++;
-	for(long iloc=0; iloc<loc->nloc; iloc++){
-	    if(nonint){
-		for(long ic=0; ic<coeff[0]->ny; ic++){
-		    xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
-		}
 		
-		for(long ic=0; ic<coeff[1]->ny; ic++){
-		    ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
-		}
-	    }else{/*faster method for integer powers (>10x speed up). */
-		double xp[np], yp[np];
-		xp[0]=1; yp[0]=1;
-		for(long ip=1; ip<np; ip++){
-		    xp[ip]=xp[ip-1]*x[iloc];
-		    yp[ip]=yp[ip-1]*y[iloc];
-		}
+	    for(long ic=0; ic<ncy; ic++){
+		ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
+	    }
+	}else{/*faster method for integer powers (>10x speed up). */
+	    double xp[np], yp[np];
+	    xp[0]=1; yp[0]=1;
+	    for(long ip=1; ip<np; ip++){
+		xp[ip]=xp[ip-1]*x[iloc];
+		yp[ip]=yp[ip-1]*y[iloc];
+	    }
 
-		for(long ic=0; ic<coeff[0]->ny; ic++){
-		    xm[iloc]+=cx[ic][0]*xp[(int)cx[ic][1]]*yp[(int)cx[ic][2]];
-		}
+	    for(long ic=0; ic<ncx; ic++){
+		xm[iloc]+=cx[ic][0]*xp[(int)cx[ic][1]]*yp[(int)cx[ic][2]];
+	    }
 
-		for(long ic=0; ic<coeff[1]->ny; ic++){
-		    ym[iloc]+=cy[ic][0]*xp[(int)cy[ic][1]]*yp[(int)cy[ic][2]];
-		}
+	    for(long ic=0; ic<ncy; ic++){
+		ym[iloc]+=cy[ic][0]*xp[(int)cy[ic][1]]*yp[(int)cy[ic][2]];
 	    }
 	}
-	return locm;
     }
+    return locm;
 }
 /**
    Shift a loc coordinate

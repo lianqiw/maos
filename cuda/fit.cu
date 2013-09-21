@@ -131,7 +131,7 @@ void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
     opdfit->m->zero(stream);
     if(!hxp){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
-	    gpu_atm2loc(opdfit->p[ifit]->p, floc->p, floc->nloc, INFINITY,
+	    gpu_atm2loc(opdfit->p[ifit]->p, floc, INFINITY,
 			dir[ifit].thetax, dir[ifit].thetay,
 			0, 0, grid->dt*grid->isim, 1, stream);
 	}

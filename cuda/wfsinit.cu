@@ -77,12 +77,27 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuwloc_t *cupowfs=cudata->powfs;
 	cuwfs_t *cuwfs=cudata->wfs;
-	int ipowfs=parms->wfs[iwfs].powfs;
-	int nsa=powfs[ipowfs].pts->nsa;
-	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	int iwfs0=parms->powfs[ipowfs].wfs[0];
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int nsa=powfs[ipowfs].pts->nsa;
+	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int iwfs0=parms->powfs[ipowfs].wfs[0];
+	const int nwfsp=parms->powfs[ipowfs].nwfs;
+	const int ndm=parms->ndm;
 	/*imcc for ztilt. */
 	cuwfs[iwfs].stream=new stream_t;
+	cuwfs[iwfs].loc_dm=new culoc_t*[ndm];
+	for(int idm=0; idm<ndm; idm++){
+	    if(powfs[ipowfs].loc_dm){
+		cuwfs[iwfs].loc_dm[idm]=new culoc_t(powfs[ipowfs].loc_dm[wfsind+idm*nwfsp]);
+	    }else{
+		cuwfs[iwfs].loc_dm[idm]=new culoc_t(powfs[ipowfs].loc);
+	    }
+	}
+	if(powfs[ipowfs].loc_tel){
+	    cuwfs[iwfs].loc_tel=new culoc_t(powfs[ipowfs].loc_tel[wfsind]);
+	}else{
+	    cuwfs[iwfs].loc_tel=new culoc_t(powfs[ipowfs].loc);
+	}
 	if(parms->powfs[ipowfs].fieldstop){
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, CUFFT_C2C));
 	    cufftSetStream(cuwfs[iwfs].plan_fs, *cuwfs[iwfs].stream);
@@ -105,19 +120,19 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	cudaDeviceSynchronize();
 	/*GS0 for gtilt. */
 	if(powfs[ipowfs].GS0){
-	    if(powfs[ipowfs].GS0->nx>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-		dsp *t=powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0];
-		cuwfs[iwfs].GS0=new cusp(t, 1);
-	    }else{
-		cuwfs[iwfs].GS0=cuwfs[iwfs0].GS0;
-	    }
+	    //if(powfs[ipowfs].GS0->nx>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+	    dsp *t=powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0];
+	    cuwfs[iwfs].GS0=new cusp(t, 1);
+	    //}else{
+	    //cuwfs[iwfs].GS0=cuwfs[iwfs0].GS0;
+	    //    }
 	}
 	/*wfs amplitude map on loc */
-	if(powfs[ipowfs].nlocm>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-	    cp2gpu(&cuwfs[iwfs].amp, powfs[ipowfs].realamp[powfs[ipowfs].nlocm>1?wfsind:0], powfs[ipowfs].loc->nloc, 1);
-	}else{
-	    cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
-	}
+	//if(powfs[ipowfs].loc_tel || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+	cp2gpu(&cuwfs[iwfs].amp, powfs[ipowfs].realamp->p[wfsind]);
+	//}else{
+	//cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
+	//}
 	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 	if(nea){
 	    cp2gpu(&cuwfs[iwfs].neasim, nea);

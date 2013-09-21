@@ -275,8 +275,6 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const int do_geom=!do_phy || save_gradgeom || do_pistatout;
     const float thetax=parms->wfs[iwfs].thetax;
     const float thetay=parms->wfs[iwfs].thetay;
-    const float mispx=powfs[ipowfs].misreg[wfsind][0];
-    const float mispy=powfs[ipowfs].misreg[wfsind][1];
     const float dtisim=parms->sim.dt*isim;
     float (*loc)[2]=cupowfs[ipowfs].loc->p;
     const int nloc=cupowfs[ipowfs].loc->nloc;
@@ -292,34 +290,34 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	curzero(phiout, stream);
     }
     if(parms->sim.idealwfs){
-	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
-		   hs, thetax, thetay, mispx, mispy, 1, stream);
+	gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
+		   hs, thetax, thetay, 0, 0, 1, stream);
     }else{
 	if(simu->atm){
-	    gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
+	    gpu_atm2loc(phiout->p, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, dtisim, 1, stream);
 	}
 	if(parms->sim.wfsalias){
-	    gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
-		       hs, thetax, thetay, mispx, mispy, -1, stream);
+	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
+		       hs, thetax, thetay, 0, 0, -1, stream);
 	}
     }
     if(save_opd){
 	cellarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
     }
     if(CL){
-	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, cudata->ndm,
-		   hs, thetax, thetay, mispx, mispy, -1, stream);
+	gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmreal, cudata->ndm,
+		   hs, thetax, thetay, 0, 0, -1, stream);
     }
     if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].skip){
 	const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
-	gpu_ngsmod2science(phiout, loc, recon->ngsmod, cleNGSm, 
+	gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc->p, recon->ngsmod, cleNGSm, 
 			   parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 			   -1, stream);
     }
     /*CUDA_SYNC_STREAM; */
     
     if(imoao>-1){
-	gpu_dm2loc(phiout->p, loc, nloc, cudata->dm_wfs[iwfs], 1,
+	gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
 		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
     if(simu->telws){
@@ -341,7 +339,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	cellarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
     }
     if(parms->plot.run>1){
-	const double *realamp=powfs[ipowfs].realamp[wfsind];
+	const double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
 	dmat *tmp=NULL;
 	cp2cpu(&tmp, phiout, stream);
 	drawopdamp("wfsopd",powfs[ipowfs].loc,tmp->p,realamp,NULL,

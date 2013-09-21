@@ -39,20 +39,21 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const double hs=parms->powfs[ipowfs].hs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-   
     for(int idm=0; idm<parms->ndm; idm++){
+	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
+	double *amp=powfs[ipowfs].realamp->p[wfsind]->p;
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
-	double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+	double dispx=ht*parms->wfs[iwfs].thetax;
+	double dispy=ht*parms->wfs[iwfs].thetay;
 	double scale=1.-ht/hs;
 	if(parms->dm[idm].cubic){
 	    prop_grid_cubic(simu->dmprojsq[idm],
-			    powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+			    loc, amp, opd->p, 
 			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
 			    0, 0);
 	}else{
 	    prop_grid(simu->dmprojsq[idm],
-		      powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+		      loc, amp, opd->p, 
 		      alpha, dispx, dispy, scale, 0,
 		      0, 0);
 	}
@@ -75,14 +76,6 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     if(simu->zoomint && simu->zoomint->p[iwfs]){
 	focus-=simu->zoomint->p[iwfs]->p[0];
 	simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
-    }
-    if(parms->sim.ahstfocus==3 && simu->Mint_lo->mint[0]){
-	/*In new ahst mode, the first plate scale mode contains focus for
-	  lgs. But it turns out to be not necessary to remove it because the
-	  HPF in the LGS path removed the influence of this focus mode. set
-	  sim.ahstfocus=3 to enable adjust opd directly (fake).*/
-	double scale=simu->recon->ngsmod->scale;
-	focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
     }
     return focus;
 }
@@ -365,7 +358,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
     const int do_geom=!do_phy || save_gradgeom || do_pistatout;
-    const double *realamp=powfs[ipowfs].realamp[wfsind];
+    const double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
     double *srot=(do_phy && parms->powfs[ipowfs].radpix)?
 	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
     dmat *gradcalc=NULL;
@@ -813,10 +806,11 @@ void wfsgrad_wrap(thread_t *info){
 	      lgs. But it turns out to be not necessary to remove it because the
 	      HPF in the LGS path removed the influence of this focus mode. set
 	      sim.ahstfocus=2 to enable adjust gradients.*/
+	    /*This operation is by RTC (model)*/
 	    double scale=simu->recon->ngsmod->scale;
 	    dmat *focus=dnew(1,1);
 	    focus->p[0]=-simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
-	    dmm(gradout, recon->GFall->p[iwfs], focus, "nn", 1);
+	    dmm(gradout, recon->GFall->p[ipowfs], focus, "nn", 1);
 	    dfree(focus);
 	}
 	if(parms->save.grad[iwfs]){

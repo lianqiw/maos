@@ -850,9 +850,6 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
     for(int idm=0; idm<parms->ndm; idm++){
 	double ht=parms->dm[idm].ht;
 	plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
-	if(parms->dm[idm].misreg){
-	    plotloc("FoV", parms, recon->alocm[idm], parms->dm[idm].ht, "alocm%d", idm);
-	}
     }
     for(int ips=0; ips<recon->npsr; ips++){
 	const double ht=recon->ht->p[ips];
@@ -864,9 +861,11 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
-	for(int ilocm=0; ilocm<powfs[ipowfs].nlocm; ilocm++){
-	    drawopd("ampm", powfs[ipowfs].loc, powfs[ipowfs].ampm->p[ilocm]->p,NULL,
-		    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
+	if(powfs[ipowfs].amp_tel){
+	    for(int wfsind=0; wfsind<powfs[ipowfs].nwfs; wfsind++){
+		drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind]->p,NULL,
+			"WFS Amplitude Map","x (m)","y (m)","powfs %d tel2wfs", ipowfs);
+	    }
 	}
     }
 }

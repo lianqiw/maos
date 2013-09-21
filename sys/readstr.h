@@ -32,7 +32,7 @@ INLINE int is_space(char c){
 }
 /*Check whether the current express ends. String end or newline is treated as end.*/
 INLINE int is_end(char c){
-    if(c=='\0' || c=='\n' || c=='\r' || c==';'){
+    if(c=='\0' || c=='\n' || c=='\r'){
 	return 1;
     }else{
 	return 0;

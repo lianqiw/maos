@@ -66,15 +66,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }
 	}
 	if(different){
-	    notf=parms->powfs[ipowfs].nwfs;
-	}else{
-	    notf=1;
+	    notf=MAX(notf, parms->powfs[ipowfs].nwfs);
 	}
 	has_ncpa=1;
-    }else if(powfs[ipowfs].nlocm){
-	notf=MAX(notf,powfs[ipowfs].nlocm);
-    }else{
-	notf=1;
+    }
+    if(powfs[ipowfs].loc_tel){
+	notf=MAX(notf,powfs[ipowfs].nwfs);
     }
     info2("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
@@ -94,8 +91,8 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    double thres=opdbias?1:1-1e-10;
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
-		   loc, powfs[ipowfs].realamp[iotf], opdbias, 
-		   powfs[ipowfs].realsaa[iotf],
+		   loc, powfs[ipowfs].realamp->p[iotf]->p, opdbias, 
+		   powfs[ipowfs].realsaa->p[iotf]->p,
 		   thres,wvl,dtheta,NULL,parms->atm.r0, parms->atm.l0, 
 		   ncompx, ncompy, nsa, 1);
 	}
@@ -166,7 +163,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	PCCELL(powfs[ipowfs].intstat->otf[iotf],otf);
 	powfs[ipowfs].intstat->sepsf[isepsf]=dcellnew(nsa,nwvl);
 	dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
-	const double *area=powfs[ipowfs].realsaa[isepsf];
+	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    const int notfx=otf[iwvl][0]->nx;
 	    const int notfy=otf[iwvl][0]->ny;
@@ -355,7 +352,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	double angleg=0;/*angle to derivative of i0 to r/a from x/y */
 	double anglegoff=0;
 	for(int ii0=0; ii0<ni0; ii0++){
-	    const double *area=powfs[ipowfs].realsaa[ii0];
+	    const double *area=powfs[ipowfs].realsaa->p[ii0]->p;
 	    int isepsf=ii0*isepsf_multiplier;
 	    int idtf=ii0*idtf_multiplier;
 	    int irot=ii0*irot_multiplier;
