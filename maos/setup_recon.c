@@ -362,20 +362,34 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    displace[0]=parms->wfsr[iwfs].thetax*ht;
 		    displace[1]=parms->wfsr[iwfs].thetay*ht;
 		}
+		int freeloc=0;
+		loc_t *loc;
+		if(parms->dbg.usegwr){
+		    loc=powfs[ipowfs].gloc;
+		}else{
+		    loc=ploc;
+		}
+		if(parms->misreg.recon_dm2wfs && parms->misreg.recon_dm2wfs[iwfs+idm*nwfs]){
+		    loc=loctransform(loc, parms->misreg.recon_dm2wfs[iwfs+idm*nwfs]);
+		    freeloc=1;
+		}
 		if(parms->dbg.usegwr){
 		    warning("todo: Fix and use mkg directly\n");
-		    dsp *H=mkh(recon->aloc[idm], powfs[ipowfs].gloc, NULL, 
+		    dsp *H=mkh(recon->aloc[idm], loc, NULL, 
 			       displace[0],displace[1],scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    GA[idm][iwfs]=spmulsp(recon->GWR->p[ipowfs], H);
 		    spfree(H);
 		}else{
-		    dsp *H=mkh(recon->aloc[idm], ploc, NULL, 
+		    dsp *H=mkh(recon->aloc[idm], loc, NULL, 
 			       displace[0],displace[1],scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    
 		    GA[idm][iwfs]=spmulsp(recon->GP->p[ipowfs], H);
 		    spfree(H);
+		}
+		if(freeloc){
+		    locfree(loc);
 		}
 	    }/*idm */
 	}

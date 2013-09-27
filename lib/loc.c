@@ -1204,13 +1204,6 @@ static int parse_poly(double (**pcx)[3], const char *_ps){
     }
     ncx=icx;
     cx=*pcx=realloc(*pcx, 3*ncx*sizeof(double));
-    info2("%s is converted to:\n", _ps);
-    for(int j=0; j<3; j++){
-	for(int i=0; i<ncx; i++){
-	    info2("%8g ", cx[i][j]);
-	}
-	info2("\n");
-    }
     return ncx;
     
 }

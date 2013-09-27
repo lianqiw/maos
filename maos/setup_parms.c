@@ -172,6 +172,7 @@ void free_parms(PARMS_T *parms){
     free_strarr(parms->misreg.tel2wfs, parms->nwfs);
     free_strarr(parms->misreg.dm2wfs, parms->ndm*parms->nwfs);
     free_strarr(parms->misreg.dm2sci, parms->ndm);
+    free_strarr(parms->misreg.recon_dm2wfs, parms->ndm*parms->nwfs);
     free(parms);
 }
 static inline int sum_intarr(int n, int *a){
@@ -992,6 +993,7 @@ static void readcfg_misreg(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->misreg.tel2wfs, parms->nwfs, "misreg.tel2wfs");
     readcfg_strarr_nmax(&parms->misreg.dm2wfs, parms->ndm*parms->nwfs, "misreg.dm2wfs");
     readcfg_strarr_nmax(&parms->misreg.dm2sci, parms->ndm*parms->evl.nevl, "misreg.dm2sci");
+    readcfg_strarr_nmax(&parms->misreg.recon_dm2wfs, parms->ndm*parms->nwfs, "misreg.recon_dm2wfs");
 }
 /**
    Specify which variables to load from saved files (Usually from LAOS

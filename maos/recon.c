@@ -256,12 +256,13 @@ void reconstruct(SIM_T *simu){
 		    tomofit(simu);/*tomography and fitting. */
 		    break;
 		case 1:
-		case 2:
 		    muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
 		    break;
+		default:
+		    error("recon.alg=%d is not recognized\n", parms->recon.alg);
 		}
 	    }
-	    if(parms->tomo.psol){//form error signal in PSOL mode
+	    if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
 		dcell *dmpsol;
 		if(parms->sim.idealfit){
 		    dmpsol=simu->dmcmdlast;

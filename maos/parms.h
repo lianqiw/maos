@@ -658,6 +658,7 @@ typedef struct MISREG_CFG_T{
     char **dm2wfs;   /**<Distortion from DM to each WFS. Displacement due to altitude should not be included here*/
     char **dm2sci;   /**<Distortion from DM to science. Not specified for individual science*/
     double* pupil;   /**<Misregistration of the telescope pupil*/
+    char **recon_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction*/
 }MISREG_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.

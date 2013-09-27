@@ -109,10 +109,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double dy=parms->dm[idm].dy;
 	    double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
-	    /*if(parms->fit.square && parms->gpu.fit==2 && guard<2*dx){
-		//need sufficient guard to avoid checking index. index checked now. no longer needed.
-		guard=2*dx;
-		}*/
 	    map_t *map;
 	    if(parms->dbg.dmfullfov){//DM covers full fov
 		double D=(parms->sim.fov/206265.*ht+parms->aper.d+guard*2);
@@ -341,7 +337,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	  that slaving is causing mis-measurement of a few edge
 	  actuators. First try to remove W1. Or lower the weight. Revert
 	  back.
-	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. We use sqrt() because 
+	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. 
 	*/
 	recon->actslave=slaving(recon->aloc, recon->actcpl,
 				recon->fitNW, recon->actstuck,

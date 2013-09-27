@@ -97,7 +97,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	recon->actcpl=genactcpl(recon->GAhi, NULL);
 	/*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
 	spcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
-				 recon->actstuck, recon->actfloat, 0.1, sqrt(maxeig));
+				 recon->actstuck, recon->actfloat, 0.1, maxeig);
 	if(parms->save.setup){
 	    if(NW){
 		dcellwrite(NW, "%s/lsrNW2",dirsetup);
