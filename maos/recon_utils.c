@@ -799,7 +799,7 @@ void shift_grad(SIM_T *simu){
     }else{
 	dcellcp(&simu->gradlastcl, simu->gradcl); 
     }
-    dcellcp(&simu->dmreallast, simu->dmreal);
+    dcellcp(&simu->dmcmdlast, simu->dmcmd);
     simu->reconisim = simu->isim;
 }
 

@@ -40,13 +40,14 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	*res=calloc(maxcount,sizeof(char*));
     }
     const char *sdataend=sdata+strlen(sdata)-1;
-    const char *sdata2;
-    if(sdata[0]!='[' || sdataend[0]!=']'){
-	/*spaces are already trimmed out.*/
-	warning2("{%s}: Should start with [ and end with ]\n", sdata);
-	sdata2=sdata;
-    }else{
-	sdata2=sdata+1;
+    const char *sdata2=sdata;
+    if(sdata[0]=='['){
+	sdata2++;
+	if(sdataend[0]==']'){
+	    sdataend--;
+	}else{
+	    error("Unmatched [");
+	}
     }
     /*skip spaces*/
     while(sdata2<sdataend && sdata2[0]==' '){

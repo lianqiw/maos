@@ -668,3 +668,85 @@ void add_psd2(dmat **out, const dmat *in){
 	dfree(tmp);
     }
 }
+
+/**
+   contains data related to DM hysterisis modeling for all the common DMs (not
+MOAO). let input be x, and output of each mode be y.  */
+struct HYST_T{
+    dmat *coeff;      /**<contains data from parms->dm.hyst*/
+    dmat *xlast;      /**<Record x from last time step*/
+    dmat *ylast;      /**<Record y from last time step*/
+    dmat *dxlast;     /**<Change of x*/
+    dmat *x0;         /**<Initial x (before dx changes sign)*/
+    dmat *y0;         /**<Initial y*/
+};
+/*
+  Hysteresis modeling. Create the hysteresis model
+*/
+HYST_T *hyst_new(dmat *coeff, int naloc){
+    HYST_T *hyst=calloc(1, sizeof(HYST_T));
+    int nhmod=coeff->ny;
+    if(coeff->nx!=3 || nhmod<1){
+	error("DM hystereis has wrong format. Expect 3 rows, but has %ldx%ld\n", coeff->nx, coeff->ny);
+    }
+    hyst->coeff=dref(coeff);
+    hyst->xlast=dnew(naloc,1);
+    hyst->ylast=dnew(nhmod,naloc);
+    hyst->dxlast=dnew(naloc,1);
+    hyst->x0=dnew(naloc,1);
+    hyst->y0=dnew(nhmod,naloc);
+    return hyst;
+}
+void hyst_free(HYST_T *hyst){
+    dfree(hyst->coeff);
+    dfree(hyst->xlast);
+    dfree(hyst->ylast);
+    dfree(hyst->dxlast);
+    dfree(hyst->x0);
+    dfree(hyst->y0);
+    free(hyst);
+}
+void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
+    	double *restrict x=dmcmd->p;
+	double *restrict xout=dmreal->p;
+	double *restrict xlast=hyst->xlast->p;
+	double *restrict dxlast=hyst->dxlast->p;
+	double *restrict x0=hyst->x0->p;
+	PDMAT(hyst->ylast, ylast);
+	PDMAT(hyst->y0, yy0);
+	PDMAT(hyst->coeff, coeff);
+	int nmod=hyst->coeff->ny;
+	int naloc=dmcmd->nx;
+	for(int ia=0; ia<naloc; ia++){
+	    double dx=x[ia]-xlast[ia];
+	    if(fabs(dx)>1e-14){/*There is change in command */
+		if(dx*dxlast[ia]<0){
+		    /*Changes in moving direction, change the initial condition */
+		    x0[ia]=xlast[ia];
+		    for(int imod=0; imod<nmod; imod++){
+			yy0[ia][imod]=ylast[ia][imod];
+		    }
+		}
+		double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
+		for(int imod=0; imod<nmod; imod++){
+		    const double alpha=alphasc*coeff[imod][1];
+		    const double alphabeta=alpha*coeff[imod][2];
+		    ylast[ia][imod]=x[ia]-alphabeta+(yy0[ia][imod]-x0[ia]+alphabeta)*exp(-(x[ia]-x0[ia])/alpha);
+		}
+		xlast[ia]=x[ia];
+		dxlast[ia]=dx;
+	    }/*else: no change in voltage, no change in output. */
+	    /*update output. */
+	    double y=0;
+	    for(int imod=0; imod<nmod; imod++){
+		y+=ylast[ia][imod]*coeff[imod][0];
+	    }
+	    xout[ia]=y;
+	}
+}
+void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
+    if(!hyst) return;
+    for(int idm=0; idm<dmcmd->nx*dmcmd->ny; idm++){
+	hyst_dmat(hyst[idm], dmreal->p[idm], dmcmd->p[idm]);
+    }
+}

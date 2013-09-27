@@ -61,4 +61,9 @@ double psd_inte2(dmat *psdin);
 dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstep);
 dmat* add_psd(const dmat *psd1, const dmat *psd2);
 void add_psd2(dmat **out, const dmat *in);
+typedef struct HYST_T HYST_T;
+HYST_T *hyst_new(dmat *coeff, int naloc);
+void hyst_free(HYST_T *in);
+void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd);
+void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
 #endif

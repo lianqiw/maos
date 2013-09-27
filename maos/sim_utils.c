@@ -1173,6 +1173,17 @@ static void init_simu_dm(SIM_T *simu){
     RECON_T *recon=simu->recon;
     SIM_SAVE_T *save=simu->save;
     const int seed=simu->seed;
+    /*Setup hysterisis */
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(parms->dm[idm].hyst){
+	    if(!simu->hyst){
+		simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
+	    }
+	    dmat *coeff=dread("%s",parms->dm[idm].hyst);
+	    simu->hyst[idm]=hyst_new(coeff, recon->aloc[idm]->nloc);
+	    dfree(coeff);
+	}
+    }
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
     simu->dmcmd=dcellnew3(parms->ndm,1, recon->anloc, NULL);
     simu->dmreal=dcellnew(parms->ndm,1);
@@ -1223,29 +1234,7 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->nuptpowfs){
 	simu->uptint=servo_new(NULL, parms->sim.apupt, 0, parms->sim.dthi, parms->sim.epupt);
     }
-    /*Setup hysterisis */
-    int anyhyst=0;
-    simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
-    for(int idm=0; idm<parms->ndm; idm++){
-	if(parms->dm[idm].hyst){
-	    simu->hyst[idm]=calloc(1, sizeof(HYST_T));
-	    simu->hyst[idm]->coeff=dread("%s",parms->dm[idm].hyst);
-	    int nhmod=simu->hyst[idm]->coeff->ny;
-	    if(simu->hyst[idm]->coeff->nx!=3 || nhmod<1){
-		error("DM hystereis file %s has wrong format. Expect 3 rows\n",parms->dm[idm].hyst);
-	    }
-	    int naloc=recon->aloc[idm]->nloc;
-	    simu->hyst[idm]->xlast=dnew(naloc,1);
-	    simu->hyst[idm]->ylast=dnew(nhmod,naloc);
-	    simu->hyst[idm]->dxlast=dnew(naloc,1);
-	    simu->hyst[idm]->x0=dnew(naloc,1);
-	    simu->hyst[idm]->y0=dnew(nhmod,naloc);
-	    anyhyst=1;
-	}
-    }
-    if(!anyhyst){
-	free(simu->hyst); simu->hyst=NULL;
-    }
+ 
 
     {/* History */
 	int dm_hist=0;
@@ -1529,15 +1518,7 @@ void free_simu(SIM_T *simu){
     }
     if(simu->hyst){
 	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->hyst[idm]){
-		dfree(simu->hyst[idm]->coeff);
-		dfree(simu->hyst[idm]->xlast);
-		dfree(simu->hyst[idm]->ylast);
-		dfree(simu->hyst[idm]->dxlast);
-		dfree(simu->hyst[idm]->x0);
-		dfree(simu->hyst[idm]->y0);
-	    }
-	    free(simu->hyst[idm]);
+	    hyst_free(simu->hyst[idm]);
 	}
 	free(simu->hyst);
     }

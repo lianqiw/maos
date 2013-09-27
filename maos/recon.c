@@ -117,9 +117,9 @@ static void calc_gradol(SIM_T *simu){
     RECON_T *recon=simu->recon;
     dcell *dmpsol;
     if(parms->dbg.psol && !parms->sim.idealfit){
-	dmpsol=simu->dmreal;
+	dmpsol=simu->dmcmd;
     }else{
-	dmpsol=simu->dmreallast;//2013-03-22
+	dmpsol=simu->dmcmdlast;//2013-03-22
     }
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -264,7 +264,7 @@ void reconstruct(SIM_T *simu){
 	    if(parms->tomo.psol){//form error signal in PSOL mode
 		dcell *dmpsol;
 		if(parms->sim.idealfit){
-		    dmpsol=simu->dmreallast;
+		    dmpsol=simu->dmcmdlast;
 		}else if(parms->sim.fuseint || parms->recon.split==1){
 		    dmpsol=simu->dmpsol[parms->hipowfs[0]];
 		}else{

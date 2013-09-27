@@ -430,17 +430,7 @@ typedef struct WFSINTS_T{
     const POWFS_T *powfs;
     int iwfs;
 }WFSINTS_T;
-/**
-   contains data related to DM hysterisis modeling for all the common DMs (not
-MOAO). let input be x, and output of each mode be y.  */
-typedef struct{
-    dmat *coeff;      /**<contains data from parms->dm.hyst*/
-    dmat *xlast;      /**<Record x from last time step*/
-    dmat *ylast;      /**<Record y from last time step*/
-    dmat *dxlast;     /**<Change of x*/
-    dmat *x0;         /**<Initial x (before dx changes sign)*/
-    dmat *y0;         /**<Initial y*/
-}HYST_T;
+
 /**
    contains all the run time data struct.
 */
@@ -498,11 +488,11 @@ typedef struct SIM_T{
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     /*DM commands.*/
-    dcell *dmcmd;      /**<This is the final command send to DM.*/
+    dcell *dmcmd;      /**<This is the command send to DM (known to RTC).*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
-    dcell *dmreallast; /**<The actual command for last time step.*/
+    dcell *dmcmdlast; /**<The command for last time step (known to RTC).*/
     map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/

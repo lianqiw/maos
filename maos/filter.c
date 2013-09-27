@@ -29,49 +29,7 @@
 /**
    Apply hysterisis. Input dmcmd is command to the DM and output dmreal is the
    actual position the DM goes to.  */
-void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
-    if(!hyst) return;
-    assert(dmcmd->ny==1);
-    for(int idm=0; idm<dmcmd->nx; idm++){
-	if(!hyst[idm]) continue;
-	double *restrict x=dmcmd->p[idm]->p;
-	double *restrict xout=dmreal->p[idm]->p;
-	double *restrict xlast=hyst[idm]->xlast->p;
-	double *restrict dxlast=hyst[idm]->dxlast->p;
-	double *restrict x0=hyst[idm]->x0->p;
-	PDMAT(hyst[idm]->ylast, ylast);
-	PDMAT(hyst[idm]->y0, yy0);
-	PDMAT(hyst[idm]->coeff, coeff);
-	int nmod=hyst[idm]->coeff->ny;
-	int naloc=dmcmd->p[idm]->nx;
-	for(int ia=0; ia<naloc; ia++){
-	    double dx=x[ia]-xlast[ia];
-	    if(fabs(dx)>1e-14){/*There is change in command */
-		if(dx*dxlast[ia]<0){
-		    /*Changes in moving direction, change the initial condition */
-		    x0[ia]=xlast[ia];
-		    for(int imod=0; imod<nmod; imod++){
-			yy0[ia][imod]=ylast[ia][imod];
-		    }
-		}
-		double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
-		for(int imod=0; imod<nmod; imod++){
-		    const double alpha=alphasc*coeff[imod][1];
-		    const double alphabeta=alpha*coeff[imod][2];
-		    ylast[ia][imod]=x[ia]-alphabeta+(yy0[ia][imod]-x0[ia]+alphabeta)*exp(-(x[ia]-x0[ia])/alpha);
-		}
-		xlast[ia]=x[ia];
-		dxlast[ia]=dx;
-	    }/*else: no change in voltage, no change in output. */
-	    /*update output. */
-	    double y=0;
-	    for(int imod=0; imod<nmod; imod++){
-		y+=ylast[ia][imod]*coeff[imod][0];
-	    }
-	    xout[ia]=y;
-	}
-    }
-}
+
 /**
    Add low order NGS modes to DM actuator commands for AHST and MVST
  */
@@ -254,7 +212,7 @@ void filter_cl(SIM_T *simu){
     }
     /*hysteresis. */
     if(simu->hyst){
-	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
   
     if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
@@ -316,7 +274,7 @@ void filter_ol(SIM_T *simu){
     }
     /*hysterisis. */
     if(simu->hyst){
-	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
     if(recon->actstuck){
 	act_stuck_cmd(recon->aloc, simu->dmreal, recon->actstuck);

@@ -41,7 +41,7 @@ volatile int maos_server_fd=-1;
    (of type APER_T), wfs (of type POWFS_T), and reconstructor (of type RECON_T)
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
-void maos(const PARMS_T *parms){    
+void maos(const PARMS_T *parms){
     TIC;tic;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
