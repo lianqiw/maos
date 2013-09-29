@@ -124,7 +124,7 @@ void X(cwpow)(X(mat) *A, double power);\
 void X(cwpow_thres)(X(mat) *A, double power, double thres);		\
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
 void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
-void X(svd_pow)(X(mat) *A, double power, int issym, double thres);\
+void X(svd_pow)(X(mat) *A, double power, double thres);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\

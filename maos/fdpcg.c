@@ -552,7 +552,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	  problem in GPU code causing a lot of pistion to accumulate and
 	  diverges the pcg. Use svd to truncate smaller eigen values.
 	*/
-	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, svd_thres);
+	csvd_pow(fdpcg->Mbinv->p[ib], -1, svd_thres);
     }
     if(parms->save.setup){
 	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);

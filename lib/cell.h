@@ -47,7 +47,7 @@ X(cell)* X(cellinvspd)(X(cell) *A);\
 X(cell)* X(cellinv)(X(cell) *A);\
 X(cell)* X(cellinvspd_each)(X(cell) *A);\
 X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
-X(cell)* X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres); \
+X(cell)* X(cellsvd_pow)(X(cell) *A, double power, double thres); \
 void X(cellcwpow)(X(cell)*A, double power);\
 X(mat) *X(cell2m)(const X(cell) *A);\
 X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim);\

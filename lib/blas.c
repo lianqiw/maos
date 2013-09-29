@@ -197,7 +197,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	X(write)(wt,"wt_isnan");
 	Y(spwrite)(Wsp, "Wsp_isnan");
     }
-    X(svd_pow)(cc,-1,0,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
+    X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
     /*Compute (A'*W*A)*A'*W */
     X(mm) (&out, cc, AtW, "nn", 1);
@@ -350,27 +350,14 @@ void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
-void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
-    int use_evd=0;
-    if(A->nx!=A->ny){
-	warning("dpow is only good for square arrays.\n");
-    }else if(issym){
-	use_evd=1;
-    }
+void X(svd_pow)(X(mat) *A, double power, double thres){
     XR(mat) *Sdiag=NULL;
     X(mat) *U=NULL;
     X(mat) *VT=NULL;
     double maxeig;
-    if(use_evd){
-	X(evd)(&U, &Sdiag, A);
-	/*eigen values below the threshold will not be used. the last is the biggest. */
-	maxeig=FABS(Sdiag->p[Sdiag->nx-1]);
-	VT=X(trans)(U);
-    }else{
-	X(svd)(&U, &Sdiag, &VT, A);
-	/*eigen values below the threshold will not be used. the first is the biggest. */
-	maxeig=FABS(Sdiag->p[0]);
-    }
+    X(svd)(&U, &Sdiag, &VT, A);
+    /*eigen values below the threshold will not be used. the first is the biggest. */
+    maxeig=FABS(Sdiag->p[0]);
     double thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
 	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
@@ -521,7 +508,7 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
 
     X(cell) *ata=NULL;
     X(cellmm)(&ata,wA,A,"tn",1);
-    X(cell) *iata=X(cellsvd_pow)(ata, -1, 0, 1e-14);
+    X(cell) *iata=X(cellsvd_pow)(ata, -1, 1e-14);
     X(cellfree)(ata);
     X(cell) *out=NULL;
     X(cellmm)(&out, iata, wA, "nt",1);
@@ -535,9 +522,9 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-X(cell) *X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres){
+X(cell) *X(cellsvd_pow)(X(cell) *A, double power, double thres){
     X(mat) *Ac=X(cell2m)(A);
-    X(svd_pow)(Ac, power, issym, thres);
+    X(svd_pow)(Ac, power, thres);
     X(cell)*B=NULL;
     X(2cell)(&B, Ac, A);
     X(celldropzero)(B,0);

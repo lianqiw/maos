@@ -244,11 +244,11 @@ static void test_svd(void){
     }else{
 	dwrite(A,"A.bin");
 	tic;
-	dsvd_pow(A, -1, 1, 1e-15);
+	dsvd_pow(A, -1, 1e-15);
 	toc("dsvd_pow");
 	dwrite(A,"AI.bin");
 	tic;
-	dsvd_pow(A, -1, 0, 1e-15);
+	dsvd_pow(A, -1, 1e-15);
 	toc("dsvd_pow svd");
 	dwrite(A,"A2.bin");
     }
@@ -266,7 +266,7 @@ void test_psd1d(){
 }
 static void test_svd2(void){
     cmat *A=cread("SVD.bin");
-    csvd_pow(A, -1, 0, 1.e-7);
+    csvd_pow(A, -1, 1.e-7);
     cwrite(A, "SVDI");
 }
 int main(int argc, char **argv){

@@ -66,4 +66,5 @@ HYST_T *hyst_new(dmat *coeff, int naloc);
 void hyst_free(HYST_T *in);
 void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd);
 void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
+void hyst_calib(HYST_T *hyst, int i);
 #endif

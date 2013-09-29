@@ -202,9 +202,9 @@ void muv_direct_prep(MUV_T *A, double svd){
     if(use_svd){/*Do SVD */
 	spfull(&A->MI, muvM, 1);
 	if(svd<1){/*use svd as threashold */
-	    dsvd_pow(A->MI, -1, 0, svd);
+	    dsvd_pow(A->MI, -1, svd);
 	}else{/*use a threshold good for lsr. */
-	    dsvd_pow(A->MI, -1, 0, 2e-4);
+	    dsvd_pow(A->MI, -1, 2e-4);
 	}
     }else{/*Do Cholesky decomposition. */
 	A->C=chol_factorize(muvM);
@@ -255,9 +255,9 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	if(use_svd){
 	    spfull(&A->MIB->p[ib], muvM, 1);
 	    if(svd<1){
-		dsvd_pow(A->MIB->p[ib], -1, 1, svd);
+		dsvd_pow(A->MIB->p[ib], -1, svd);
 	    }else{
-		dsvd_pow(A->MIB->p[ib], -1, 1, 2e-4);
+		dsvd_pow(A->MIB->p[ib], -1, 2e-4);
 	    }
 	}else{
 	    A->CB[ib]=chol_factorize(muvM);

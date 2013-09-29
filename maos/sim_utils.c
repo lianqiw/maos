@@ -1181,6 +1181,7 @@ static void init_simu_dm(SIM_T *simu){
 	    }
 	    dmat *coeff=dread("%s",parms->dm[idm].hyst);
 	    simu->hyst[idm]=hyst_new(coeff, recon->aloc[idm]->nloc);
+	    hyst_calib(simu->hyst[idm], idm);
 	    dfree(coeff);
 	}
     }
