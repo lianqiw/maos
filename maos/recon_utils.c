@@ -200,6 +200,7 @@ typedef struct Tomo_T{
     const dcell *xin;/*input */
     dcell *gg;/*intermediate gradient */
     dcell *xout;/*output */
+    int isR;/*Mark that we are right hand side.*/
 }Tomo_T;
 
 /**
@@ -308,7 +309,6 @@ static void Tomo_iprop_do(thread_t *info){
     SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
     map_t xmap;
-    /*for(int ips=0; ips<recon->HXWtomo->ny; ips++){ */
     for(int ips=info->start; ips<info->end; ips++){
 	if(parms->tomo.square && !parms->dbg.tomo_hxw){
 	    /*Do the ray tracing instead of using HXW. */
@@ -388,7 +388,7 @@ void TomoR(dcell **xout, const void *A,
     if(!*xout){
 	*xout=dcellnew(recon->npsr, 1);
     }
-    Tomo_T data={recon, alpha, NULL, gg, *xout};
+    Tomo_T data={recon, alpha, NULL, gg, *xout, 1};
     Tomo_nea(&data, recon->nthread, 1);
     Tomo_iprop(&data, recon->nthread);
     dcellfree(gg);
@@ -403,7 +403,7 @@ void TomoRt(dcell **gout, const void *A,
     if(!*gout){
 	*gout=dcellnew(recon->saneai->nx, 1);
     }
-    Tomo_T data={recon, alpha, xin, *gout, NULL};
+    Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
     Tomo_prop(&data, recon->nthread);
     /*Using Tomo_nea followed by TTFRt is equilvaent as using TTFR followed by Tomo_nea.*/
     TTFR(*gout, recon->TTF, recon->PTTF);
@@ -443,7 +443,7 @@ void TomoL(dcell **xout, const void *A,
     if(!*xout){
 	*xout=dcellnew(recon->npsr, 1);
     }
-    Tomo_T data={recon, alpha, xin, gg, *xout};
+    Tomo_T data={recon, alpha, xin, gg, *xout, 0};
   
     Tomo_prop(&data, recon->nthread);  
 #if test_TomoL

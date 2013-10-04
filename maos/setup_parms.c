@@ -66,10 +66,12 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     free(powfscfg->bkgrndfn);
 }
 void free_strarr(char **str, int n){
-    for(int i=0; i<n; i++){
-	free(str[i]);
+    if(str){
+	for(int i=0; i<n; i++){
+	    free(str[i]);
+	}
+	free(str);
     }
-    free(str);
 }
 
 /**
@@ -171,8 +173,10 @@ void free_parms(PARMS_T *parms){
     free(parms->misreg.pupil);
     free_strarr(parms->misreg.tel2wfs, parms->nwfs);
     free_strarr(parms->misreg.dm2wfs, parms->ndm*parms->nwfs);
-    free_strarr(parms->misreg.dm2sci, parms->ndm);
-    free_strarr(parms->misreg.recon_dm2wfs, parms->ndm*parms->nwfs);
+    free_strarr(parms->misreg.dm2sci, parms->ndm*parms->evl.nevl);
+    free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfs);
+    free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
+    free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
     free(parms);
 }
 static inline int sum_intarr(int n, int *a){
@@ -771,6 +775,10 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.glao);
     READ_INT(recon.split);
     READ_INT(recon.mvm);
+    parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
+    readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
+    readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
+    readcfg_strarr_nmax(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
 }
 /**
    Read in simulation parameters
@@ -993,7 +1001,6 @@ static void readcfg_misreg(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->misreg.tel2wfs, parms->nwfs, "misreg.tel2wfs");
     readcfg_strarr_nmax(&parms->misreg.dm2wfs, parms->ndm*parms->nwfs, "misreg.dm2wfs");
     readcfg_strarr_nmax(&parms->misreg.dm2sci, parms->ndm*parms->evl.nevl, "misreg.dm2sci");
-    readcfg_strarr_nmax(&parms->misreg.recon_dm2wfs, parms->ndm*parms->nwfs, "misreg.recon_dm2wfs");
 }
 /**
    Specify which variables to load from saved files (Usually from LAOS
@@ -1891,6 +1898,15 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->nmoao=0;
 	    free(parms->moao);
 	    parms->moao=NULL;
+	}
+    }
+    if(parms->recon.misreg_tel2wfs){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    if(parms->recon.misreg_tel2wfs[iwfs]){
+		warning("Set dbg.tomo_hxw=1\n");
+		parms->dbg.tomo_hxw=1;
+		parms->gpu.tomo=0;
+	    }
 	}
     }
 }

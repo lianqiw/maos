@@ -209,9 +209,16 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
-		HA[idm][ifit]=mkh(recon->aloc[idm], recon->floc, NULL,
+		loc_t *loc=recon->floc;
+		if(parms->recon.misreg_dm2sci && parms->recon.misreg_dm2sci[ifit+idm*nfit]){
+		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);
+		}
+		HA[idm][ifit]=mkh(recon->aloc[idm], loc, NULL,
 				  displace[0], displace[1], 
 				  scale,parms->dm[idm].cubic,parms->dm[idm].iac);
+		if(loc!=recon->floc){
+		    locfree(loc);
+		}
 	    }
 	}
 	toc2(" ");

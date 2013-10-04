@@ -65,6 +65,14 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     loc_create_stat(recon->ploc);
+    if(parms->recon.misreg_tel2wfs){
+	recon->ploc_tel=calloc(parms->nwfsr, sizeof(loc_t*));
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    if(parms->recon.misreg_tel2wfs[iwfs]){
+		recon->ploc_tel[iwfs]=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
+	    }
+	}
+    }
 }
 
 /**
@@ -198,13 +206,17 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		continue;
 	    }
 	    double  hs = parms->powfs[ipowfs].hs;
+	    loc_t *loc=recon->ploc;
+	    if(recon->ploc_tel && recon->ploc_tel[iwfs]){
+		loc=recon->ploc_tel[iwfs];
+	    }
 	    for(int ips=0; ips<npsr; ips++){
 		double  ht = recon->ht->p[ips];
 		double  scale=1. - ht/hs;
 		double  displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
-		HXW[ips][iwfs]=mkh(recon->xloc[ips], ploc, NULL, 
+		HXW[ips][iwfs]=mkh(recon->xloc[ips], loc, NULL, 
 				   displace[0],displace[1],scale,
 				   parms->tomo.cubic, parms->tomo.iac);
 	    }
@@ -369,8 +381,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		}else{
 		    loc=ploc;
 		}
-		if(parms->misreg.recon_dm2wfs && parms->misreg.recon_dm2wfs[iwfs+idm*nwfs]){
-		    loc=loctransform(loc, parms->misreg.recon_dm2wfs[iwfs+idm*nwfs]);
+		if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
+		    loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
 		    freeloc=1;
 		}
 		if(parms->dbg.usegwr){

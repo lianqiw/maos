@@ -266,6 +266,7 @@ typedef struct RECON_T{
 
     loc_t *ploc;       /**<Grid on pupil for tomography*/
     map_t *pmap;       /**<square grid of ploc.*/
+    loc_t **ploc_tel;   /**<Distorted ploc when mapped onto telescope pupil for each WFS*/
 
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/

@@ -716,6 +716,13 @@ HYST_T *hyst_new(dmat *coeff, int naloc){
     }
     return hyst;
 }
+void hyst_reset(HYST_T *hyst){
+    dzero(hyst->xlast);
+    dzero(hyst->ylast);
+    dzero(hyst->dxlast);
+    dzero(hyst->x0);
+    dzero(hyst->y0);
+}
 void hyst_free(HYST_T *hyst){
     dfree(hyst->coeff);
     dfree(hyst->xlast);
@@ -732,7 +739,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
     double *restrict dxlast=hyst->dxlast->p;
     double *restrict x0=hyst->x0->p;
     PDMAT(hyst->ylast, ylast);
-    PDMAT(hyst->y0, y0);
+    PDMAT(hyst->y0, py0);
     PDMAT(hyst->coeff, coeff);
     int nmod=hyst->coeff->ny;
     int naloc=dmcmd->nx;
@@ -744,7 +751,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 		/*Changes in moving direction, change the initial condition */
 		x0[ia]=xlast[ia];
 		for(int imod=0; imod<nmod; imod++){
-		    y0[ia][imod]=ylast[ia][imod];
+		    py0[ia][imod]=ylast[ia][imod];
 		}
 	    }
 	    double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
@@ -754,7 +761,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 	    for(int imod=0; imod<nmod; imod++){
 		const double alpha=alphasc*coeff[imod][1];
 		const double alphabeta=alpha*coeff[imod][2];
-		ylast[ia][imod]=xia-alphabeta+(y0[ia][imod]-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
+		ylast[ia][imod]=xia-alphabeta+(py0[ia][imod]-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
 	    }
 	    xlast[ia]=xia;
 	    dxlast[ia]=dx;
@@ -789,6 +796,7 @@ void hyst_calib(HYST_T *hyst, int ih){
 	hyst_dmat(hyst, real0, cmd0);
 	real->p[i]=real0->p[0];
     }
+    hyst_reset(hyst);
     hyst->xscale*=(dmax(cmd)-dmin(cmd))/(dmax(real)-dmin(real));
     warning("x would be multiplied by %g\n", hyst->xscale);
     dwrite(real, "hyst%d_real", ih);
@@ -798,6 +806,7 @@ void hyst_calib(HYST_T *hyst, int ih){
 	hyst_dmat(hyst, real0, cmd0);
 	real->p[i]=real0->p[0];
     }
+    hyst_reset(hyst);
     dwrite(real, "hyst%d_realcalib", ih);
     dfree(cmd);
     dfree(real);

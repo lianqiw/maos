@@ -122,7 +122,6 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     if(cuda_dedup){
 	(*cudata->memhash)[key]=*dest;
-	info2("memory at %p is copied to %p in gpu.\n", src, *dest);
     }
     if(stream==(cudaStream_t)0){
 	DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));

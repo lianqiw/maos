@@ -294,7 +294,6 @@ return cgres;
 }
 float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     if(_opdr){
-	warning("copying opdr\n");
 	cp2gpu(&opdr_vec, _opdr);
     }
 #ifdef DBG_RECON
@@ -592,7 +591,7 @@ void gpu_tomo(SIM_T *simu){
     if(parms->dbg.tomo){
 	curecon->tomo_test(simu);
     }else{
-	int copy2cpu=(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao));
+	int copy2cpu=(parms->plot.run>1 || !parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao));
 	simu->cgres->p[0]->p[simu->reconisim]=
 	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
 			  parms->tomo.psol?simu->gradlastol:simu->gradlastcl);

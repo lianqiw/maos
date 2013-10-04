@@ -412,6 +412,9 @@ typedef struct RECON_CFG_T{
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
     int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
+    char **misreg_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
+    char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
+    char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -658,7 +661,6 @@ typedef struct MISREG_CFG_T{
     char **dm2wfs;   /**<Distortion from DM to each WFS. Displacement due to altitude should not be included here*/
     char **dm2sci;   /**<Distortion from DM to science. Not specified for individual science*/
     double* pupil;   /**<Misregistration of the telescope pupil*/
-    char **recon_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction*/
 }MISREG_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
