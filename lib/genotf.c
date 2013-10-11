@@ -215,7 +215,7 @@ static void genotf_wrap(thread_t *info){
     const T_VALID *pval=data->pval;
     for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10 && info->ithread==0){
-	    info2("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa, info->end);
+  	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
 	}
 	const double *opdbiasi=NULL;
 	if(data->opdbias){

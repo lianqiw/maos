@@ -4,7 +4,7 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS="https://www.dropbox.com/sh/gygtam516wjy65s/aS4ju1lP2q https://project.tmt.org/~lianqiw/maos/"
+BASEURLS="http://project.tmt.org/~lianqiw/maos/"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -263,6 +263,7 @@ fi
 COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc " #-Mcache_align"
+OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse -fno-math-errno -ffinite-math-only -Qunused-arguments -Wl,-no_compact_unwind"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
@@ -283,7 +284,6 @@ AC_PROG_CC([$CC])
 AC_PROG_CXX([$CXX])
 AC_OPENMP
 AC_TYPE_SIZE_T #it sets CC if empty
-
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -316,7 +316,11 @@ case "${CC}" in
     fi
     ;;
   gcc*)
-    OPTIM=$OPTIM_GCC
+    if test -n $($CC -v|grep clang)  ;then
+        OPTIM=$OPTIM_CLANG
+    else
+	OPTIM=$OPTIM_GCC
+    fi
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
     if test -n $CC_VERSION ;then
@@ -337,6 +341,9 @@ case "${CC}" in
 	    gnu_inline="yes"
 	fi
     fi
+    ;;
+  clang)
+	CC=$OPTIM_CLANG
     ;;
   *) #Other compilears
     OPTIM="-O3"
@@ -369,10 +376,10 @@ download(){
    echo Will download one from the website.
    echo This library is only for non-commercial use.
    fn=$2
-   success=0;
+   success=0
    for BASEURL in $BASEURLS ; do
       if $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} ;then
-      	 success=1; 
+      	 success=1
 	 break;
       else
          AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
