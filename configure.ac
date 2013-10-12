@@ -245,10 +245,6 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-if test "x$win32" != "xyes" ;then
-    OPTSprof="-pthread"
-fi
-
 if test "x$use_duma" = "xyes" ;then	
     AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
     LDEXE="$LDEXE -lduma"
@@ -263,7 +259,7 @@ fi
 COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc " #-Mcache_align"
-OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse -Wl,-no_compact_unwind"
+OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
