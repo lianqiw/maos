@@ -280,36 +280,46 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
 
     if(parms->misreg.tel2wfs){
+	TIC;tic;
 	/*
 	  Misregistration/distortion from Telescope pupil to WFS pupil. The
 	  amplitude map after misregistration/distortion will be used for
 	  wavefront sensing.
 	  They are not used for wavefront reconstruction
 	*/
-
+	int isset=0;
+	powfs[ipowfs].loc_tel=calloc(nwfsp, sizeof(loc_t*));
+	powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
+	powfs[ipowfs].amp_tel=dcellnew(nwfsp, 1);
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-	    if(!parms->misreg.tel2wfs[iwfs]) continue;
-	    if(!powfs[ipowfs].loc_tel){
-		powfs[ipowfs].loc_tel=calloc(nwfsp, sizeof(loc_t*));
-		powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
-		powfs[ipowfs].amp_tel=dcellnew(nwfsp, 1);
-	    }
-	    powfs[ipowfs].loc_tel[jwfs]
-		=loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
-	    powfs[ipowfs].amp_tel->p[jwfs]
-		=mkwfsamp(powfs[ipowfs].loc_tel[jwfs], aper->ampground,
-			  -parms->misreg.pupil[0], -parms->misreg.pupil[1], 
-			  parms->aper.d, parms->aper.din);
-	    if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
-		if(nwfsp>1){
-		    error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
+	    if(parms->misreg.tel2wfs[iwfs])
+#pragma omp task shared(isset)
+	    {
+		isset=1;
+		powfs[ipowfs].loc_tel[jwfs]
+		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
+		powfs[ipowfs].amp_tel->p[jwfs]
+		    =mkwfsamp(powfs[ipowfs].loc_tel[jwfs], aper->ampground,
+			      -parms->misreg.pupil[0], -parms->misreg.pupil[1], 
+			      parms->aper.d, parms->aper.din);
+		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
+		    if(nwfsp>1){
+			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
+		    }
+		    wfspupmask(parms, powfs[ipowfs].loc_tel[jwfs],
+			       powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
 		}
-		wfspupmask(parms, powfs[ipowfs].loc_tel[jwfs],
-			   powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
+		powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
 	    }
-	    powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
-	    
+	}
+#pragma omp taskwait
+	toc("misreg.tel2wfs");
+	if(!isset){
+	    warning("isset=%d\n", isset);
+	    free(powfs[ipowfs].loc_tel); powfs[ipowfs].loc_tel=0;
+	    dcellfree(powfs[ipowfs].saa_tel); 
+	    dcellfree(powfs[ipowfs].amp_tel);
 	}
     }/*if misreg */
     count=0;
@@ -438,21 +448,31 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     dfree(ampi);
     if(parms->misreg.dm2wfs){
+	TIC;tic;
 	/*
 	  Misregistration/distortion from DM to WFS pupil. Not about telescope
 	  pupil. The distorted grid are used for ray tracing from DM to WFS.
 	  They are not used for wavefront reconstruction
 	*/
+	powfs[ipowfs].loc_dm=calloc(nwfsp*parms->ndm, sizeof(loc_t*));
+	int isset=0;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    for(int jwfs=0; jwfs<nwfsp; jwfs++){
+	    for(int jwfs=0; jwfs<nwfsp; jwfs++)
+#pragma omp task shared(isset)
+	    {
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(!parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]) continue;
-		if(!powfs[ipowfs].loc_dm){
-		    powfs[ipowfs].loc_dm=calloc(nwfsp*parms->ndm, sizeof(loc_t*));
+		if(parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]){
+		    powfs[ipowfs].loc_dm[jwfs+nwfsp*idm]
+			=loctransform(powfs[ipowfs].loc, parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]);
+		    isset=1;
 		}
-		powfs[ipowfs].loc_dm[jwfs+nwfsp*idm]
-		    =loctransform(powfs[ipowfs].loc, parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]);
 	    }
+	}
+#pragma omp taskwait
+	toc("misreg.dm2wfs");
+	if(!isset){
+	    warning("isset=%d\n", isset);
+	    free(powfs[ipowfs].loc_dm); powfs[ipowfs].loc_dm=0;
 	}
     }
     if(parms->save.setup){
@@ -466,15 +486,13 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(powfs[ipowfs].loc_tel){
 	    dcellwrite(powfs[ipowfs].saa_tel,"%s/powfs%d_saa_tel", dirsetup,ipowfs);
 	    dcellwrite(powfs[ipowfs].amp_tel,"%s/powfs%d_amp_tel", dirsetup,ipowfs);
-	    for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		locwrite(powfs[ipowfs].loc_tel[jwfs],"%s/powfs%d_loc_tel%d", dirsetup,ipowfs,jwfs);
-	    }
+	    locarrwrite(powfs[ipowfs].loc_tel, nwfsp, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
 	}
 	if(powfs[ipowfs].loc_dm){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		    locwrite(powfs[ipowfs].loc_dm[jwfs+nwfsp*idm],
-			     "%s/powfs%d_loc_dm%d_wfs%d", dirsetup,ipowfs,idm,jwfs);
+		    locarrwrite(powfs[ipowfs].loc_dm, parms->ndm*nwfsp,
+				"%s/powfs%d_loc_dm", dirsetup, ipowfs);
 		}
 	    }
 	}

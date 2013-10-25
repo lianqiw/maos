@@ -674,18 +674,19 @@ static void init_simu_evl(SIM_T *simu){
 		strncat(header, headeri, 800-strlen(header)-2);
 	    }
 	}
-	long nframepsf=1;
-	long nframecov=1;
-	if(parms->evl.psfmean>1){
+	//The saved PSF and COVs are padded by empty cells.
+	long nframepsf=parms->sim.end;
+	long nframecov=parms->sim.end;
+	/*if(parms->evl.psfmean>1){
 	    long nstep=(parms->sim.end-parms->evl.psfisim);
 	    nframepsf=nstep/parms->evl.psfmean;
 	    if(nstep > nframepsf*parms->evl.psfmean) nframepsf++;
-	}
+	    }
 	if(parms->evl.opdcov>1){
 	    long nstep=(parms->sim.end-parms->evl.psfisim);
 	    nframecov=nstep/parms->evl.opdcov;
 	    if(nstep > nframecov*parms->evl.opdcov) nframecov++;
-	}
+	    }*/
 	char strht[24];
 	if(parms->evl.psfmean){
 	    simu->evlpsfmean=dcellnew(parms->evl.nwvl,nevl);
@@ -724,7 +725,7 @@ static void init_simu_evl(SIM_T *simu){
 							parms->evl.thetay[ievl]*206265, strht);
 		}
 		if(parms->evl.psfhist){
-		    save->evlpsfhist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
+		    save->evlpsfhist[ievl]=cellarr_init(parms->sim.end, 1,
 							"evlpsfhist_%d_x%g_y%g%s.bin", seed,
 							parms->evl.thetax[ievl]*206265,
 							parms->evl.thetay[ievl]*206265,strht);
@@ -748,7 +749,7 @@ static void init_simu_evl(SIM_T *simu){
 							     parms->evl.thetay[ievl]*206265, strht);
 		}
 		if(parms->evl.psfhist){
-		    save->evlpsfhist_ngsr[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
+		    save->evlpsfhist_ngsr[ievl]=cellarr_init(parms->sim.end, 1,
 							     "evlpsfhist_ngsr_%d_x%g_y%g%s.bin", seed,
 							     parms->evl.thetax[ievl]*206265,
 							     parms->evl.thetay[ievl]*206265,strht);
@@ -812,7 +813,7 @@ static void init_simu_evl(SIM_T *simu){
 			strht[0]='\0';
 		    }
 	    
-		    save->ecovxx[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim-(parms->sim.closeloop?1:0), 1,
+		    save->ecovxx[ievl]=cellarr_init(parms->sim.end, 1,
 						    "ecovxx_%d_x%g_y%g%s.bin", seed,
 						    parms->evl.thetax[ievl]*206265,
 						    parms->evl.thetay[ievl]*206265,strht);

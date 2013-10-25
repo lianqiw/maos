@@ -365,18 +365,14 @@ int zfseek(file_t *fp, long offset, int whence){
 	offset=nb*bs;
     }
     if(fp->isgzip){
-	int res=gzseek((voidp)fp->p,offset,whence);
-	if(res<0)
-	    return 1;
-	else
-	    return 0;
+	return gzseek((voidp)fp->p,offset,whence)==-1?-1:0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }
 }
 
 int zfeof(file_t *fp){
-    return zfseek(fp, 1, SEEK_CUR)<0?-1:0;
+    return zfseek(fp, 1, SEEK_CUR);
 }
 /**
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.

@@ -213,9 +213,9 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	pp[nact]=count;
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
-	if(!disable_save){
+	/*if(!disable_save){
 	    spwrite(slave, "slave");
-	}
+	    }*/
 	actslave[idm][idm]=spmulsp(slavet, slave);
 	if(NW && 0){
 	    /*Now we need to make sure NW is in the NULL

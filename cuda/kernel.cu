@@ -281,8 +281,8 @@ __global__ void perm_i_do(float *restrict out, const float *restrict in, int *re
 }
 
 __global__ void embed_wvf_do(fcomplex *restrict wvf, 
-					const float *restrict opd, const float *restrict amp, 
-					const int *embed, const int nloc, const float wvl){
+			     const float *restrict opd, const float *restrict amp, 
+			     const int *embed, const int nloc, const float wvl){
     const float pi2l=2.f*M_PI/wvl;
     for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nloc; ix+=blockDim.x*gridDim.x){
 	float s,c;
@@ -295,7 +295,7 @@ __global__ void embed_wvf_do(fcomplex *restrict wvf,
    Embed or crop an array to another array. Preserve corner.
 */
 __global__ void corner2center_do(fcomplex *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
+				 const fcomplex *restrict in, int ninx, int niny){
     int nx,ny;
     ny=MIN(niny, nouty)>>1;
     nx=MIN(ninx, noutx)>>1;
@@ -315,7 +315,7 @@ __global__ void corner2center_do(fcomplex *restrict out, int noutx,  int nouty,
    Embed or crop an array to another array. Preserve corner.
 */
 __global__ void corner2center_abs2_do(float *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
+				      const fcomplex *restrict in, int ninx, int niny){
     int nx,ny;
     ny=MIN(niny, nouty)>>1;
     nx=MIN(ninx, noutx)>>1;

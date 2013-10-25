@@ -592,6 +592,9 @@ static int respond(int sock){
 	    if(irun){
 		if(irun->status.info!=S_QUEUED){
 		    kill(pid,SIGTERM);
+		    if(irun->status.info==S_WAIT){//wait up the process.
+			stwriteint(irun->sock, S_START);
+		    }
 		}else{
 		    running_remove(pid,S_KILLED);
 		}

@@ -105,17 +105,26 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
     loc_reduce(aper->locs, aper->amp, 1, NULL);
     if(parms->misreg.dm2sci){
+	int isset=0;
 	int nevl=parms->evl.nevl;
+	aper->locs_dm=calloc(parms->ndm*nevl, sizeof(loc_t*));
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int ievl=0; ievl<nevl; ievl++){
-		if(parms->misreg.dm2sci[ievl+idm*nevl]){
-		    if(!aper->locs_dm){
-			aper->locs_dm=calloc(parms->ndm*nevl, sizeof(loc_t*));
-		    }
+		if(parms->misreg.dm2sci[ievl+idm*nevl])
+#pragma omp task shared(isset)
+		{
 		    aper->locs_dm[ievl+idm*nevl]
 			=loctransform(aper->locs, parms->misreg.dm2sci[ievl+idm*nevl]);
+		    isset=1;
 		}
 	    }
+	}
+#pragma omp taskwait
+	if(!isset){
+	    warning("isset=%d\n", isset);
+	    free(aper->locs_dm);aper->locs_dm=0;
+	}else if(parms->save.setup){
+	    locarrwrite(aper->locs_dm, parms->ndm*parms->evl.nevl, "%s/locs_dm", dirsetup);
 	}
     }
     /*Set the amp for plotting. */
@@ -155,7 +164,11 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->embed=calloc(nwvl, sizeof(long*));
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
-	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2);
+	    if(iwvl>0 && aper->nembed[iwvl]==aper->nembed[0]){
+		aper->embed[iwvl]=aper->embed[0];
+	    }else{
+		aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2);
+	    }
 	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
 		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
 	    }
@@ -178,7 +191,9 @@ void free_aper(APER_T *aper, const PARMS_T *parms){
     dfree(aper->mod);
     if(aper->embed){
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-	    free(aper->embed[iwvl]);
+	    if(iwvl==0 || aper->embed[iwvl]!=aper->embed[0]){
+		free(aper->embed[iwvl]);
+	    }
 	}
 	free(aper->embed);
 	free(aper->nembed);

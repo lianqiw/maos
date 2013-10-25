@@ -412,15 +412,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     }
     free(fn);
     switch(nlhs){
-    case 2:
-	plhs[0]=readdata(fp, &plhs[1], start, howmany); break;
     case 1:
 	plhs[0]=readdata(fp, NULL, start, howmany); break;
+    case 2:
+	plhs[0]=readdata(fp, &plhs[1], start, howmany); break;
     default:
 	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,start] [,howmany]). [] means optional\n");
     }
     if(start==0 && howmany==0){
-	zfeof(fp);
+	int res=zfeof(fp);
+	if(res){
+	    warning("There is unread data: res=%d\n", res);
+	}
     }
     zfclose(fp);
 }

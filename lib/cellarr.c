@@ -43,7 +43,7 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
 #define cellarr_cell(type)					\
     void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){	\
 	if(!ca) error("cellarr is NULL\n");			\
-	if(ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
+	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
 	while(ca->cur<i) {type##cell##writedata(ca->fp, NULL);ca->cur++;}	\
 	{type##cell##writedata(ca->fp, A); ca->cur++;};			\
 	/*zflush(ca->fp);*//*is flush needed?*/				\
@@ -51,7 +51,7 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
 #define cellarr_mat(type)					\
     void cellarr_##type##mat(cellarr *ca, int i, const type##mat *A){	\
 	if(!ca) error("cellarr is NULL\n");			\
-	if(ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
+	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
 	while(ca->cur<i) {type##writedata(ca->fp, NULL);ca->cur++;}	\
 	{type##writedata(ca->fp, A); ca->cur++;};			\
 	/*zflush(ca->fp);*//*is flush needed?*/				\

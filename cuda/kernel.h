@@ -23,13 +23,6 @@ extern "C"
 #include "gpu.h"
 }
 #include "common.h"
-const int NG1D=64;
-const int NG2D=8;
-const int WRAP_SIZE=32; /*The wrap size is currently always 32 */
-const int REDUCE_WRAP=8;
-const int REDUCE_WRAP_LOG2=3;
-const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
-const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 __device__ inline float atomicAdd(float* address, float val)
 {
@@ -85,19 +78,19 @@ __global__ void sum2_do(float *restrict res, const float *a, const int n);
 __global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
 
 inline void inn_wrap(float *res_add, const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_add, a, b, n);
+    inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res_add, a, b, n);
 }
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+    sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 inline static void sum2_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    sum2_do<<<DIM(n, DIM_REDUCE), 0, stream>>>(res,a,n);
+    sum2_do<<<REDUCE(n), 0, stream>>>(res,a,n);
 }
 inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+    max_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 inline static void maxabs_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    maxabs_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+    maxabs_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 __global__ void embed_do(fcomplex *out, float *in, int nx);
 __global__ void extract_do(float *out, fcomplex *in, int nx);
@@ -120,5 +113,4 @@ __global__ void cwm_do(fcomplex *dest, float *from, int n);
 __global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl);
 __global__ void mvm_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
 __global__ void multimv_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
-
 #endif

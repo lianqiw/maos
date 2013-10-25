@@ -27,6 +27,13 @@ extern "C"
 #include <cusparse.h>
 #include <cufft.h>
 #include <cuComplex.h>
+const int NG1D=64;
+const int NG2D=8;
+const int WRAP_SIZE=32; /*The wrap size is currently always 32 */
+const int REDUCE_WRAP=8;
+const int REDUCE_WRAP_LOG2=3;
+const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
+const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
 #define fcomplex float2
 extern "C"{
     void cudaProfilerStart(void);
@@ -105,6 +112,7 @@ extern int nstream;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
+#define REDUCE(nsa) MIN((nsa+DIM_REDUCE-1)/DIM_REDUCE,NG1D), DIM_REDUCE
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 #define NTH2 16
 #else

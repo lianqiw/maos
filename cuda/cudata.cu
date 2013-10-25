@@ -64,7 +64,11 @@ void gpu_print_mem(const char *msg){
 long gpu_get_mem(void){
     size_t fr, tot;
     DO(cudaMemGetInfo(&fr, &tot));
-    return (long)fr;
+    if(tot-fr>500000000){//GPU used by some other process. do not use it.
+	return 0;
+    }else{
+	return (long)fr;
+    }
 }
 static int cmp_gpu_info(const long *a, const long *b){
     return b[1]>a[1]?1:0;
@@ -132,17 +136,24 @@ int gpu_init(int *gpus, int ngpu){
 	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
-	for(int ig=0; ig<ngpu_tot; ig++){
-	    gpu_info[ig][0]=ig;
-	    cudaSetDevice(ig);//this allocates context.
-	    gpu_info[ig][1]=gpu_get_mem();
-	    //cudaDeviceReset(); We already started simulation. Do not reset.
-	}
-	/*sort so that gpus with higest memory is in the front.*/
-	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
-	for(int igpu=0; igpu<ngpu_tot; igpu++){
-	    info2("GPU %d has mem %.1f GB\n", (int)gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
-	}
+	int gpu_valid_count;
+	do{
+	    for(int ig=0; ig<ngpu_tot; ig++){
+		gpu_info[ig][0]=ig;
+		cudaSetDevice(ig);//this allocates context.
+		gpu_info[ig][1]=gpu_get_mem();
+	    }
+	    /*sort so that gpus with higest memory is in the front.*/
+	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	    gpu_valid_count=0;
+	    for(int igpu=0; igpu<ngpu_tot; igpu++){
+		if(gpu_info[igpu][1]>=500000000){
+		    gpu_valid_count++;
+		}
+		info2("GPU %d has mem %.1f GB\n", (int)gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
+	    }
+	}while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
+
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
 	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
 		if(repeat){
