@@ -64,6 +64,14 @@ void gpu_print_mem(const char *msg){
 long gpu_get_mem(void){
     size_t fr, tot;
     DO(cudaMemGetInfo(&fr, &tot));
+    return (long)fr;
+}
+/**
+   Get available memory.
+*/
+static long gpu_get_idle_mem(void){
+    size_t fr, tot;
+    DO(cudaMemGetInfo(&fr, &tot));
     if(tot-fr>500000000){//GPU used by some other process. do not use it.
 	return 0;
     }else{
@@ -141,7 +149,7 @@ int gpu_init(int *gpus, int ngpu){
 	    for(int ig=0; ig<ngpu_tot; ig++){
 		gpu_info[ig][0]=ig;
 		cudaSetDevice(ig);//this allocates context.
-		gpu_info[ig][1]=gpu_get_mem();
+		gpu_info[ig][1]=gpu_get_idle_mem();
 	    }
 	    /*sort so that gpus with higest memory is in the front.*/
 	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);

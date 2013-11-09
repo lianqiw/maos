@@ -226,8 +226,8 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		spfull(&H, slavet, 1);
 		dmat *Hinv=dpinv(H,NULL,NULL);
 		dmat *mod=NULL;
-		dmm(&mod, Hinv, NW->p[idm], "nn", 1);
-		dmm(&NW->p[idm], H, mod,"nn", -1);
+		dmm(&mod, 0, Hinv, NW->p[idm], "nn", 1);
+		dmm(&NW->p[idm], 1, H, mod,"nn", -1);
 		dfree(H);
 		dfree(Hinv);
 		dfree(mod);

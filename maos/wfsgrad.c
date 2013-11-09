@@ -567,24 +567,14 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    /* In Physical optics mode, do integration and compute
 	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
-	    dmat **mtche=NULL;
-	    double *i0sum=NULL;
-	    
-	    if(parms->powfs[ipowfs].phytype==1){
-		if(powfs[ipowfs].intstat->mtche->ny==1){
-		    mtche=powfs[ipowfs].intstat->mtche->p;
-		    i0sum=powfs[ipowfs].intstat->i0sum->p;
-		}else{
-		    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
-		    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
-		}
+	    if(save_ints){
+		cellarr_dcell(simu->save->intsnf[iwfs], isim, ints);
 	    }
-	    double pixthetax=parms->powfs[ipowfs].radpixtheta;
-	    double pixthetay=parms->powfs[ipowfs].pixtheta;
-	    /*Rayleigh scattering (bkgrnd) */
-	    dmat **bkgrnd2=NULL;
-	    dmat **bkgrnd2c=NULL;
+	    const double rne=parms->powfs[ipowfs].rne;
+	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 	    if(noisy){/*add noise */
+		dmat **bkgrnd2=NULL;
+		dmat **bkgrnd2c=NULL;
 		if(powfs[ipowfs].bkgrnd){
 		    if(powfs[ipowfs].bkgrnd->ny==1){
 			bkgrnd2=powfs[ipowfs].bkgrnd->p;
@@ -599,28 +589,64 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 			bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
 		    }
 		}
-	    }
-	    /*output directly to simu->gradcl. replace */
-	    const double rne=parms->powfs[ipowfs].rne;
-	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-	    double *pgradx=(*gradout)->p;
-	    double *pgrady=pgradx+nsa;
-	    if(save_ints){
-		cellarr_dcell(simu->save->intsnf[iwfs], isim, ints);
-	    }
-	    for(int isa=0; isa<nsa; isa++){
-		/* TODO: Do something to remove negative pixels. shift image or
-		   mask out. This is important when bkgrndfnc is greater than
-		   1. */
-		/*the third element is strength, for maxapriori.*/
-		double geach[3]={0,0,1};
-		if(noisy){/*add noise */
+		for(int isa=0; isa<nsa; isa++){
 		    double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
 		    double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
 			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
 			     bkgrnd2i, bkgrnd2ic, rne);
 		}
+		if(save_ints){
+		    cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
+		}
+	    }
+	    if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
+		/*Collect statistics with dithering*/
+		DITHER_T *pd=simu->dither[iwfs];
+		const int nstat=parms->powfs[ipowfs].dither_nstat;
+		double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
+		angle+=pd->deltam;
+		dcelladd(&pd->im0, 1, ints, 1.);
+		dcelladd(&pd->imx, 1, ints, cos(angle));
+		dcelladd(&pd->imy, 1, ints, sin(angle));
+		pd->imc++;
+		//Output matched filter
+		if((isim-parms->powfs[ipowfs].dither_nskip+1)%(nstat*parms->powfs[ipowfs].dtrat)==0){
+		    if(pd->imc!=nstat){
+			warning("inconsistent: imcount=%d, nstat=%d\n", 
+				pd->imc, nstat);
+		    }
+		    warning2("Dither step%d, wfs%d: output statistics\n", isim, iwfs);
+		    dcellscale(pd->im0, 1./(pd->imc));
+		    dcellscale(pd->imx, 2./(pd->a2m*pd->imc));
+		    dcellscale(pd->imy, 2./(pd->a2m*pd->imc));
+		    dcellwrite(pd->im0, "wfs%d_i0_%d", iwfs, isim);
+		    dcellwrite(pd->imx, "wfs%d_gx_%d", iwfs, isim);
+		    dcellwrite(pd->imy, "wfs%d_gy_%d", iwfs, isim);
+		    dcellzero(pd->imx);
+		    dcellzero(pd->imy);
+		    dcellzero(pd->im0);
+		    pd->imc=0;
+		}
+	    }
+	    dmat **mtche=NULL;
+	    double *i0sum=NULL;
+	    if(parms->powfs[ipowfs].phytype==1){
+		if(powfs[ipowfs].intstat->mtche->ny==1){
+		    mtche=powfs[ipowfs].intstat->mtche->p;
+		    i0sum=powfs[ipowfs].intstat->i0sum->p;
+		}else{
+		    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+		    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
+		}
+	    }
+	    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+	    double pixthetay=parms->powfs[ipowfs].pixtheta;
+	    /*output directly to simu->gradcl. replace */
+	    double *pgradx=(*gradout)->p;
+	    double *pgrady=pgradx+nsa;
+	    for(int isa=0; isa<nsa; isa++){
+		double geach[3]={0,0,1};
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:{
 		    dmulvec(geach, mtche[isa],ints->p[isa]->p,1.);
@@ -661,9 +687,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		pgrady[isa]=geach[1];
 	    };/*isa */
 	
-	    if(save_ints){
-		cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
-	    }
+
 	    dcellzero(simu->ints[iwfs]);
 	}else{
 	    /* geomtric optics accumulation mode. scale and copy results to output. */
@@ -745,6 +769,9 @@ static void wfsgrad_save(SIM_T *simu){
 	}
     }
 }
+/**
+   Every operation here should be in the Simulator not the Controller 
+*/
 void wfsgrad_wrap(thread_t *info){
     SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
@@ -755,14 +782,10 @@ void wfsgrad_wrap(thread_t *info){
 	gpu_wfsgrad_iwfs(simu, iwfs);
     }else
 #endif
-	{
-	    wfsgrad_iwfs(simu, iwfs);
-	}
+	wfsgrad_iwfs(simu, iwfs);
 
     //Postprocessing gradients
-    const RECON_T *recon=simu->recon;
     const POWFS_T *powfs=simu->powfs;
-    const int nwfs=parms->nwfs;
     const int isim=simu->isim;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
@@ -771,47 +794,9 @@ void wfsgrad_wrap(thread_t *info){
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     dmat **gradout=&simu->gradcl->p[iwfs];
     if(dtrat_output){
-	if(do_phy){
-	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
-		if(!recon->PTT){
-		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
-		}
-		dmat *PTT=NULL;
-		if(parms->recon.glao){
-		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
-		}else{
-		    PTT=recon->PTT->p[iwfs+iwfs*nwfs];
-		}
-		if(!PTT){
-		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
-		}
-		/* Compute LGS Uplink error. */
-		dzero(simu->upterr->p[iwfs]);
-		dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
-		/* copy upterr to output. */
-		PDMAT(simu->upterrs->p[iwfs], pupterrs);
-		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
-		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
-	    }
-	    if(powfs[ipowfs].gradphyoff){
-		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
-	    }
-	
-	}
-	if(powfs[ipowfs].gradoff){
-	    dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
-	}
-	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[0]){
-	    /*In new ahst mode, the first plate scale mode contains focus for
-	      lgs. But it turns out to be not necessary to remove it because the
-	      HPF in the LGS path removed the influence of this focus mode. set
-	      sim.ahstfocus=2 to enable adjust gradients.*/
-	    /*This operation is by RTC (model)*/
-	    double scale=simu->recon->ngsmod->scale;
-	    dmat *focus=dnew(1,1);
-	    focus->p[0]=-simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
-	    dmm(gradout, recon->GFall->p[ipowfs], focus, "nn", 1);
-	    dfree(focus);
+	/*Gradient offset due to CoG*/
+	if(do_phy && powfs[ipowfs].gradphyoff){
+	    dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
 	}
 	if(parms->save.grad[iwfs]){
 	    cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);

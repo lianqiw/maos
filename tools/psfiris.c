@@ -272,8 +272,8 @@ int main(int argc, char *argv[]){
     int nploc=ploc->nloc;
     dmat *tmp=NULL;
     dmat *cc_opd=NULL;
-    dmm(&tmp, mode_ploc, cc_mode, "nn", 1);
-    dmm(&cc_opd, tmp, mode_ploc, "nt", 1);
+    dmm(&tmp,0, mode_ploc, cc_mode, "nn", 1);
+    dmm(&cc_opd, 0,tmp, mode_ploc, "nt", 1);
     dfree(cc_mode);
     dfree(mode_ploc);
     dfree(tmp);

@@ -1261,7 +1261,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    }
 	    info("CPU Usage: %.1f accphi", read_self_cpu()); toc2(" ");tic;
 	    
-	    dmm(&recon->ecnn->p[ievl], x1, x1, "nt", 1);
+	    dmm(&recon->ecnn->p[ievl], 0, x1, x1, "nt", 1);
 	    dfree(x1);
 	    info("CPU Usage: %.1f Mul   ", read_self_cpu()); toc2(" ");
 	    dwrite(recon->ecnn->p[ievl], "ecnn_x%g_y%g%s.bin", 
@@ -1375,7 +1375,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}
 	spmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
 		 recon->GFall->p[ipowfs],1);
-	dmm(&GMGngs,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
+	dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
     }
     dinvspd_inplace(GMGngs);
     /*A focus reconstructor from all NGS measurements.*/
@@ -1385,7 +1385,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!recon->GFall->p[ipowfs]) continue;
 	//NGS gradient to Focus mode reconstructor.
-	dmm(&RFngsg->p[iwfs],GMGngs, GMngs->p[iwfs],"nt",1);
+	dmm(&RFngsg->p[iwfs], 0, GMGngs, GMngs->p[iwfs],"nt",1);
     }
     dfree(GMGngs);
     dcellfree(GMngs);
@@ -1396,13 +1396,13 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *WF=NULL;/*WF=(W0-W1*W1')*Fsci*/
 	spmulmat(&WF, recon->W0, Fsci, 1);
 	dmat *W1F=NULL;
-	dmm(&W1F, recon->W1, Fsci, "tn", 1);
-	dmm(&WF,  recon->W1, W1F, "nn", -1);
+	dmm(&W1F, 0, recon->W1, Fsci, "tn", 1);
+	dmm(&WF, 1, recon->W1, W1F, "nn", -1);
 	dmat *FtWF=NULL;
-	dmm(&FtWF, Fsci, WF, "tn", 1);
+	dmm(&FtWF, 0, Fsci, WF, "tn", 1);
 	dinvspd_inplace(FtWF);
 	dmat *RFsci=NULL;
-	dmm(&RFsci, FtWF, WF, "nt", 1);
+	dmm(&RFsci, 0, FtWF, WF, "nt", 1);
 	dfree(FtWF); dfree(W1F); dfree(WF); dfree(Fsci); 
 	int ifit=parms->fit.indoa;//center fit direction
 	//Find the TTF OIWFS
@@ -1471,9 +1471,9 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *GMGtmp=NULL;
 	spmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
 		 recon->GFall->p[ipowfs], 1);
-	dmm(&GMGtmp, recon->GFall->p[ipowfs], GMtmp, "tn",1);
+	dmm(&GMGtmp, 0, recon->GFall->p[ipowfs], GMtmp, "tn",1);
 	dinvspd_inplace(GMGtmp);
-	dmm(&RFlgsg[iwfs][iwfs], GMGtmp, GMtmp, "nt", 1);
+	dmm(&RFlgsg[iwfs][iwfs], 0, GMGtmp, GMtmp, "nt", 1);
 
 	dfree(GMtmp);
 	dfree(GMGtmp);
@@ -1746,7 +1746,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dfree(TTploc);
 	for(int ix=0; ix<Qn->nx*Qn->ny; ix++){
 	    if(!Qn->p[ix]) continue;
-	    dmm(&Qntt->p[ix],PTTploc, Qn->p[ix],"nn",1);
+	    dmm(&Qntt->p[ix], 0, PTTploc, Qn->p[ix],"nn",1);
 	}
 	dcellwrite(Qntt,"%s/mvst_modptt", dirsetup);
 	dcellfree(Qn);

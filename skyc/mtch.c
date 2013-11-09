@@ -135,7 +135,7 @@ void mtch(dcell **mtche, dmat **sanea,
 	}
 	
 	dmat *tmp=dpinv(i0g, wt,NULL);
-	dmm(&(*mtche)->p[isa],i0m,tmp,"nn",1);
+	dmm(&(*mtche)->p[isa],0,i0m,tmp,"nn",1);
 	dfree(tmp);
 	dcwpow(wt,-1);
 	dmat *nea2=dtmcc((*mtche)->p[isa], wt);

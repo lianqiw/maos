@@ -314,12 +314,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
 #pragma omp taskwait
-	toc("misreg.tel2wfs");
 	if(!isset){
-	    warning("isset=%d\n", isset);
 	    free(powfs[ipowfs].loc_tel); powfs[ipowfs].loc_tel=0;
 	    dcellfree(powfs[ipowfs].saa_tel); 
 	    dcellfree(powfs[ipowfs].amp_tel);
+	}else{
+	    toc("misreg.tel2wfs");
 	}
     }/*if misreg */
     count=0;
@@ -469,10 +469,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
 #pragma omp taskwait
-	toc("misreg.dm2wfs");
 	if(!isset){
-	    warning("isset=%d\n", isset);
 	    free(powfs[ipowfs].loc_dm); powfs[ipowfs].loc_dm=0;
+	}else{
+	    toc("misreg.dm2wfs");
 	}
     }
     if(parms->save.setup){

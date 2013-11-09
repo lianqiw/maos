@@ -204,104 +204,175 @@ void recon_split(SIM_T *simu){
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.evlol) return;
+    if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
+    const int nwfs=parms->nwfs;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
-    if(simu->gradlastcl){
-	if(!parms->sim.idealfit){
-	    if(parms->sim.mffocus){
-		//high pass filter lgs focus to remove sodium range variation effect.
-		focus_tracking_grads(simu);
-	    }
-	    if(!parms->sim.evlol){
-		if(parms->sim.closeloop){
-		    calc_gradol(simu);
-		}else if(!simu->gradlastol){
-		    simu->gradlastol=dcellref(simu->gradlastcl);
-		}
-		save_gradol(simu);/*must be here since gradol is only calculated in this file. */
-	    }
-	
-	    if(parms->cn2.pair){
-		cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
-	    }/*if cn2est */
-	}
-	double tk_start=myclockd();
-	if(hi_output){
-	    if(parms->recon.mvm){
-		if(!simu->dmerr){
-		    simu->dmerr=dcellnew3(parms->ndm, 1, simu->recon->anloc, NULL);
-		}
-		if(parms->sim.mvmport){
-		    mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-		}else
-#if USE_CUDA
-		    if(parms->gpu.tomo && parms->gpu.fit){
-			gpu_recon_mvm(simu);
-		    }else
-#endif		
-			{
-			    if(!simu->dmerr){
-				simu->dmerr=dcellnew2(simu->dmcmd);
-			    }else{
-				dcellzero(simu->dmerr);
-			    }
-			    //This assumes skipped WFS are in the end. \todo: fix it if not.
-			    dmulvec(simu->dmerr->m->p, recon->MVM, (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
-			}
-	    }else{
-		switch(parms->recon.alg){
-		case 0:
-		    tomofit(simu);/*tomography and fitting. */
-		    break;
-		case 1:
-		    muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
-		    break;
-		default:
-		    error("recon.alg=%d is not recognized\n", parms->recon.alg);
-		}
-	    }
-	    if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
-		dcell *dmpsol;
-		if(parms->sim.idealfit){
-		    dmpsol=simu->dmcmdlast;
-		}else if(parms->sim.fuseint || parms->recon.split==1){
-		    dmpsol=simu->dmpsol[parms->hipowfs[0]];
-		}else{
-		    warning_once("Temporary solution\n");
-		    dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
-		}
-		dcelladd(&simu->dmerr, 1, dmpsol, -1);
-	    }
-	    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
-		remove_dm_ngsmod(simu, simu->dmerr);
-	    }
-	    if(parms->tomo.ahst_ttr && parms->recon.split){
-		remove_dm_tt(simu, simu->dmerr);
-	    }
-	}else{
-	    dcellfree(simu->dmerr);
-	}
-	/*low order reconstruction*/
-	if(parms->recon.split){
-	    recon_split(simu);
-	}
-	/*For PSF reconstruction.*/
-	if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	    psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
-		      simu->dmerr,  simu->Merr_lo);
+
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	/*New plate mode focus offset for LGS WFS. Not needed*/
+	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[1]){
+	    /*In new ahst mode, the first plate scale mode contains focus for
+	      lgs. But it turns out to be not necessary to remove it because the
+	      HPF in the LGS path removed the influence of this focus mode. set
+	      sim.ahstfocus=2 to enable adjust gradients.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    double focus=-simu->Mint_lo->mint[1]->p[0]->p[2]*(scale-1);
+	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
 	}
 
-	if(recon->moao){
-#if USE_CUDA
-	    if(parms->gpu.moao)
-		gpu_moao_recon(simu);
-	    else
-#endif
-		moao_recon(simu);
-	}
-	simu->tk_recon=myclockd()-tk_start;
-	save_recon(simu);/*Moved to inside. */
+	/*Uplink FSM*/
+	if(parms->powfs[ipowfs].usephy 
+	   && isim>=parms->powfs[ipowfs].phystep
+	   && parms->powfs[ipowfs].llt 
+	   && parms->powfs[ipowfs].trs
+	   && simu->gradlastcl->p[iwfs]){
+	    if(!recon->PTT){
+		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+	    }
+	    dmat *PTT=recon->PTT->p[parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*nwfs)];
+	    if(!PTT){
+		error("powfs %d has llt, but TT removal is empty\n", ipowfs);
+	    }
+	    /* Compute LGS Uplink error. */
+	    dmm(&simu->upterr->p[iwfs], 0, PTT, simu->gradlastcl->p[iwfs], "nn", 1);
+	    /* copy upterr to output. */
+	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
+	    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
+	    pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
+	    /* PLL loop. We hand coded frame of 240, and dll gain of 0.5 */
+	    const int nc=parms->powfs[ipowfs].dither_npll;
+	    const int nskip=parms->powfs[ipowfs].dither_nskip;//Loop delay
+	    if(parms->powfs[ipowfs].dither && isim>=nskip){
+		double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
+		DITHER_T *pd=simu->dither[iwfs];
+		angle+=pd->deltam;
+		double sd=sin(angle);
+		double cd=cos(angle);
+		double err=(-sd*simu->upterr->p[iwfs]->p[0]
+			    +cd*simu->upterr->p[iwfs]->p[1]);
+		err/=(parms->powfs[ipowfs].dither_amp*nc);
+		pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
+		//To estimate the actual dithering amplitude.
+		double *fsmcmd=simu->uptreal->p[iwfs]->p;
+		pd->ipv+=(fsmcmd[0]*cd+fsmcmd[1]*sd);
+		pd->qdv+=(fsmcmd[0]*sd-fsmcmd[1]*cd);
+		/*Update DLL loop measurement. The delay is about 0.2 of a
+		 * cycle, according to closed loop transfer function*/
+		if((isim-nskip+1)%(nc*parms->powfs[ipowfs].dtrat)==0){
+		    pd->deltam=pd->delta;
+		    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/nc;
+		    info2("PLL step%d, wfs%d: deltam=%.2f cycle, a2m=%.1f mas\n",
+			  isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
+		    pd->ipv=pd->qdv=0;
+		}
+	    }
+	}else{
+	    dfree(simu->upterr->p[iwfs]);
+	}/*LLT FSM*/
+    }/*for iwfs*/
+
+    /*high pass filter lgs focus to remove sodium range variation effect*/
+    if(parms->sim.mffocus){
+	focus_tracking_grads(simu);
     }
+
+    /*Gradient offset due to mainly NCPA calibration*/
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	if(simu->powfs[ipowfs].gradoff){
+	    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	    dadd(&simu->gradlastcl->p[iwfs], 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
+	}
+    }
+
+    if(parms->sim.closeloop){
+	calc_gradol(simu);
+    }else if(!simu->gradlastol){
+	simu->gradlastol=dcellref(simu->gradlastcl);
+    }
+    save_gradol(simu);/*must be here since gradol is only calculated in this file. */
+    if(parms->cn2.pair){
+	cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
+    }/*if cn2est */
+	
+    double tk_start=myclockd();
+    if(hi_output){
+	if(parms->recon.mvm){
+	    if(!simu->dmerr){
+		simu->dmerr=dcellnew3(parms->ndm, 1, simu->recon->anloc, NULL);
+	    }
+	    if(parms->sim.mvmport){
+		mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+	    }else
+#if USE_CUDA
+		if(parms->gpu.tomo && parms->gpu.fit){
+		    gpu_recon_mvm(simu);
+		}else
+#endif		
+		{
+		    if(!simu->dmerr){
+			simu->dmerr=dcellnew2(simu->dmcmd);
+		    }else{
+			dcellzero(simu->dmerr);
+		    }
+		    //This assumes skipped WFS are in the end. \todo: fix it if not.
+		    dmulvec(simu->dmerr->m->p, recon->MVM, 
+			    (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
+		}
+	}else{
+	    switch(parms->recon.alg){
+	    case 0:
+		tomofit(simu);/*tomography and fitting. */
+		break;
+	    case 1:
+		muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
+		break;
+	    default:
+		error("recon.alg=%d is not recognized\n", parms->recon.alg);
+	    }
+	}
+	if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
+	    dcell *dmpsol;
+	    if(parms->sim.idealfit){
+		dmpsol=simu->dmcmdlast;
+	    }else if(parms->sim.fuseint || parms->recon.split==1){
+		dmpsol=simu->dmpsol[parms->hipowfs[0]];
+	    }else{
+		warning_once("Temporary solution\n");
+		dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
+	    }
+	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
+	}
+	if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
+	    remove_dm_ngsmod(simu, simu->dmerr);
+	}
+	if(parms->tomo.ahst_ttr && parms->recon.split){
+	    remove_dm_tt(simu, simu->dmerr);
+	}
+    }else{
+	dcellfree(simu->dmerr);
+    }
+    /*low order reconstruction*/
+    if(parms->recon.split){
+	recon_split(simu);
+    }
+    /*For PSF reconstruction.*/
+    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
+	psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
+		  simu->dmerr,  simu->Merr_lo);
+    }
+
+    if(recon->moao){
+#if USE_CUDA
+	if(parms->gpu.moao)
+	    gpu_moao_recon(simu);
+	else
+#endif
+	    moao_recon(simu);
+    }
+    simu->tk_recon=myclockd()-tk_start;
+    save_recon(simu);/*Moved to inside. */
 }

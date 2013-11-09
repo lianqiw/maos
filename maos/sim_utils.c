@@ -1167,6 +1167,16 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->wfs_ints[iwfs]=calloc(parms->sim.nthread, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }
+
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].dither){
+	    if(!simu->dither){
+		simu->dither=calloc(nwfs, sizeof(DITHER_T*));
+	    }
+	    simu->dither[iwfs]=calloc(1, sizeof(DITHER_T));
+	}
+    }
 }
 
 static void init_simu_dm(SIM_T *simu){
@@ -1234,9 +1244,9 @@ static void init_simu_dm(SIM_T *simu){
     simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
 			    parms->sim.dtlo, parms->sim.eplo);
     if(parms->nuptpowfs){
-	simu->uptint=servo_new(NULL, parms->sim.apupt, 0, parms->sim.dthi, parms->sim.epupt);
+	simu->uptint=servo_new(NULL, parms->sim.apupt, parms->sim.alupt,
+			       parms->sim.dthi, parms->sim.epupt);
     }
- 
 
     {/* History */
 	int dm_hist=0;
@@ -1614,6 +1624,15 @@ void free_simu(SIM_T *simu){
     free(simu->ints);
     free(simu->wfspsfout);
     free(simu->pistatout);
+    if(simu->dither){
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(simu->dither[iwfs]){
+		warning("Delete the data: not implemented yet \n");
+		free(simu->dither[iwfs]);
+	    }
+	}
+	free(simu->dither);
+    }
     /*Close all files */
     
     cellarr_close_n(save->wfspsfout, nwfs);

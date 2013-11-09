@@ -147,6 +147,7 @@ typedef struct POWFS_CFG_T{
     double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
     double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
+    double radgx;   /*Create and/or use gx, gy along radial/azimuthal direction.*/
     double fieldstop;/**<size of field stop in arcsec.*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
@@ -214,6 +215,12 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
+    int dither;     /**<Turn on/off dithering*/
+    double dither_amp;/**<Dithering amptlidue to update centroid gain or matched filter.*/
+    double dither_gpll;/**<Gain of phase locked loop*/
+    int dither_nskip;/**<Skip steps for uplink loop to stable*/
+    int dither_npll; /**<Period for updating PLL.*/
+    int dither_nstat;/**<Period for updating statistics*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -444,10 +451,11 @@ typedef struct SIM_CFG_T{
     dmat *epdm;      /**<error gain for DM commands (high order)*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
-    int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
-    int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     dmat *apupt;     /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epupt;     /**<error gain for uplink pointing*/
+    int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
+    int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
+    int alupt;       /**<Additional latency (*sim.dt) of the uplink loop*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
     double lpfocus;  /**<derived: lpfocus=2*pi*fc/fs. fs=1./sim.dt*/
     double fov;      /**<The diameter of total fov in arcsec*/

@@ -240,6 +240,52 @@ void gpu_fieldstop(curmat *opd, float *amp, int *embed, int nembed,
     unwrap_phase_do<<<DIM2(wvf.nx, wvf.ny, 16),0,stream>>>
 	(wvf.p, opd->p, embed, opd->nx, wvl);
 }
+__global__ static void
+dither_acc_do(float *restrict *im0, float *restrict *imx, float *restrict *imy, 
+	      float *restrict const *pints, float cd, float sd, int pixpsa, int nsa){
+    for(int isa=blockIdx.x; isa<nsa; isa+=gridDim.x){
+	const float *ints=pints[isa];
+	float *restrict acc_ints=im0[isa];
+	float *restrict acc_intsx=imx[isa];
+	float *restrict acc_intsy=imy[isa];
+	for(int ipix=threadIdx.x; ipix<pixpsa; ipix+=blockDim.x){
+	    acc_ints[ipix]+=ints[ipix];
+	    acc_intsx[ipix]+=ints[ipix]*cd;
+	    acc_intsy[ipix]+=ints[ipix]*sd;
+	}
+    }
+}
+dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
+    im0=curcellnew(nsa,1,pixpsax,pixpsay);
+    imx=curcellnew(nsa,1,pixpsax,pixpsay);
+    imy=curcellnew(nsa,1,pixpsax,pixpsay);
+}
+void dither_t::reset(){
+    imc=0;
+    curcellzero(im0);
+    curcellzero(imx);
+    curcellzero(imy);
+}
+/**Accumulate for matched filter updating*/
+void dither_t::acc(curcell *ints, float angle, cudaStream_t stream){
+    const int nsa=ints->nx*ints->ny;
+    const int pixpsa=ints->p[0]->nx*ints->p[0]->ny;
+    dither_acc_do<<<ints->nx, pixpsa, 0, stream>>>
+	(im0->pm, imx->pm, imy->pm, ints->pm, cosf(angle), sinf(angle), pixpsa, nsa);
+    imc++;
+}
+/**Output for matched filter updating*/
+void dither_t::output(float a2m, int iwfs, int isim, cudaStream_t stream){
+    curcellscale(im0, 1./(imc), stream);
+    curcellscale(imx, 2./(a2m*imc), stream);
+    curcellscale(imy, 2./(a2m*imc), stream);
+    CUDA_SYNC_STREAM;
+    curcellwrite(im0, "wfs%d_i0_%d", iwfs, isim);
+    curcellwrite(imx, "wfs%d_gx_%d", iwfs, isim);
+    curcellwrite(imy, "wfs%d_gy_%d", iwfs, isim);
+    reset();
+}
+
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
@@ -400,6 +446,17 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		     rne, cuwfs[iwfs].custat);
 		ctoc("noise");
 	    }
+	    if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
+		double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
+		angle+=simu->dither[iwfs]->deltam;
+		cuwfs[iwfs].dither->acc(ints, angle, stream);
+		int nstat=parms->powfs[ipowfs].dither_nstat;
+		int dtrat=parms->powfs[ipowfs].dtrat;
+		if((isim-parms->powfs[ipowfs].dither_nskip+1)%(nstat*dtrat)==0){
+		    warning2("Dither step%d, wfs%d: output statistics\n", isim, iwfs);
+		    cuwfs[iwfs].dither->output((float)simu->dither[iwfs]->a2m, iwfs, isim, stream);
+		}
+	    }
 	    gradgpu=curnew(nsa*2, 1);
 	    switch(parms->powfs[ipowfs].phytypesim){
 	    case 1:
@@ -438,6 +495,9 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    default:
 		TO_IMPLEMENT;
 	    }
+	    /*if(parms->powfs[ipowfs].mtchupdate){
+		cuwfs[iwfs].mtchu->acc(ints, gradgpu, stream);
+		}*/
 	    if(save_ints){
 		cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 	    }

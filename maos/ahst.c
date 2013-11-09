@@ -344,7 +344,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     IMCC->p[0]=dref(ngsmod->IMCC_TT);
     dcell *Ptt=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
-	dmm(&(Ptt->p[idm]),IMCC->p[0],HatWHmt->p[idm],"nt",1);
+	dmm(&(Ptt->p[idm]),0,IMCC->p[0],HatWHmt->p[idm],"nt",1);
     }
     dcellfree(IMCC);
     dcellfree(modc);
@@ -884,7 +884,7 @@ void remove_dm_tt(SIM_T *simu, dcell *dmerr){
     const RECON_T *recon=simu->recon;
     for(int idm=0; idm<simu->parms->ndm; idm++){
 	dmat *utt=NULL;
-	dmm(&utt, recon->ngsmod->Ptt->p[idm], dmerr->p[idm], "nn", -1);
+	dmm(&utt,0, recon->ngsmod->Ptt->p[idm], dmerr->p[idm], "nn", -1);
 	double *ptt;
 	if(utt->nx==2){
 	    ptt=alloca(3*sizeof(double));

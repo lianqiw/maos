@@ -99,7 +99,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	nllt=0;
     }
     int irot_multiplier=nllt>1?1:0;
-
     int nmod=3;
     int mtchcrx=0;
     int mtchcry=0;
@@ -122,6 +121,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    error("Only constraint of 1 pixel is implemented\n");
 	}
     }
+    
     const int i0n=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
     dmat *i0m=dnew(2,nmod);
@@ -148,23 +148,43 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
 	sanea->p[ii0]=dnew(nsa,2);
 	PDMAT(sanea->p[ii0], psanea);
+	/*Derivative is along r/a or x/y*/
 	pi0m[0][0]=1;
 	pi0m[1][1]=1;
-
-	if(mtchcrx){/*constrained x(radial) */
-	    double shift=pixthetax*shiftx;
-	    pi0m[mtchcrx][0]=shift*kpx;/*kp is here to ensure good conditioning */
-	    pi0m[mtchcrx+1][0]=-shift*kpx;
-	}
-	if(mtchcry){/*constrained y(azimuthal). */
-	    double shift=pixthetay*shifty;
-	    pi0m[mtchcry][1]=shift*kpy;
-	    pi0m[mtchcry+1][1]=-shift*kpy;
+	if(!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx){
+	    if(mtchcrx){/*constrained x(radial) */
+		double shift=pixthetax*shiftx;
+		pi0m[mtchcrx][0]=shift*kpx;/*kp is here to ensure good conditioning */
+		pi0m[mtchcrx+1][0]=-shift*kpx;
+	    }
+	    if(mtchcry){/*constrained y(azimuthal). */
+		double shift=pixthetay*shifty;
+		pi0m[mtchcry][1]=shift*kpy;
+		pi0m[mtchcry+1][1]=-shift*kpy;
+	    }
 	}
 	double i0summax=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
 	for(int isa=0; isa<nsa; isa++){
+	    if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radgx){
+		/*The derivative is along x/y, but constraint is along r/a*/
+		double theta=srot[isa]; 
+		if(mtchcrx){/*constrained x(radial) */
+		    double shift=pixthetax*shiftx;
+		    pi0m[mtchcrx][0]=shift*kpx*cos(theta);/*kp is here to ensure good conditioning */
+		    pi0m[mtchcrx][1]=shift*kpx*sin(theta);/*kp is here to ensure good conditioning */
+		    pi0m[mtchcrx+1][0]=-pi0m[mtchcrx][0];
+		    pi0m[mtchcrx+1][1]=-pi0m[mtchcrx][1];
+		}
+		if(mtchcry){/*constrained y(azimuthal). */
+		    double shift=pixthetay*shifty;
+		    pi0m[mtchcry][0]=-shift*kpy*sin(theta);
+		    pi0m[mtchcry][1]= shift*kpy*cos(theta);
+		    pi0m[mtchcry+1][0]=-pi0m[mtchcry][0];
+		    pi0m[mtchcry+1][1]=-pi0m[mtchcry][1];
+		}
+	    }
 	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
 	    if(i0sum[ii0][isa]>i0summax){
 		i0summax=i0sum[ii0][isa];
@@ -236,7 +256,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		i0m->ny=3;
 	    }
 	    dmat *tmp=dpinv(i0g, wt, NULL);
-	    dmm(&mtche[ii0][isa],i0m, tmp, "nn", 1);
+	    dmm(&mtche[ii0][isa],0,i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
 		/*Put old values back. */
@@ -249,19 +269,20 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    dmat *nea2=dtmcc(mtche[ii0][isa], wt);
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
-	    if(parms->powfs[ipowfs].mtchcpl==0){
-		/*remove coupling between r/a measurements. */
+	    if(parms->powfs[ipowfs].mtchcpl==0 
+	       && (!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx)){
+		/*remove coupling between r/a (x/y) measurements. */
 		nea2->p[1]=nea2->p[2]=0;
 	    }
 	    psanea[0][isa]=nea2->p[0];
 	    psanea[1][isa]=nea2->p[3];
 		
-	    if(parms->powfs[ipowfs].radpix){
+	    if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
 		double theta=srot[isa]; 
 		drotvect(mtche[ii0][isa], theta);
 	    }
 	    if(parms->powfs[ipowfs].phytype==1){
-		if(parms->powfs[ipowfs].radpix){
+		if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
 		    double theta=srot[isa]; 
 		    drotvecnn(&saneaxy[ii0][isa], nea2, theta);
 		}else{

@@ -123,7 +123,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
 	    atm->p[j]=randn(&rstat);
 	}
 	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
-	dmm(&cov, vec, vec, "nt", 1);
+	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
     dwrite(cov,"cov.bin");
@@ -154,7 +154,7 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
 	vec->p[1]=pp[ofy+0][ofx+1];
 	vec->p[2]=pp[ofy+1][ofx+0];
 	vec->p[3]=pp[ofy+1][ofx+1];
-	dmm(&cov, vec, vec, "nt", 1);
+	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
     dwrite(cov,"cov.bin");
@@ -339,7 +339,7 @@ static void test_cxx(){
 	    fractal(atm->p, nx+1, ny+1, dx, r0, L0, ninit);
 	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
 	    dmat *atmvec=dref_reshape(sec, nx*ny, 1);
-	    dmm(&cxx, atmvec,atmvec,"nt",1);
+	    dmm(&cxx,1, atmvec,atmvec,"nt",1);
 	    dfree(atmvec);
 	    dfree(sec);
 	}
@@ -366,8 +366,8 @@ static void test_cxx(){
 		atmr->p[i]=creal(atm->p[i]);
 		atmi->p[i]=cimag(atm->p[i]);
 	    }
-	    dmm(&cxx, atmr,atmr,"nt",1);
-	    dmm(&cxx, atmi,atmi,"nt",1);
+	    dmm(&cxx,1, atmr,atmr,"nt",1);
+	    dmm(&cxx,1, atmi,atmi,"nt",1);
 	}
 	dscale(cxx, 1./nframe);
 	dwrite(cxx, "cxx_fft");

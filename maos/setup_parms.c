@@ -284,6 +284,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(str,bkgrndfnc);
     READ_POWFS_RELAX(dbl,pixblur);
     READ_POWFS_RELAX(dbl,radpixtheta);
+    READ_POWFS_RELAX(int,radgx);
     READ_POWFS_RELAX(dbl,fieldstop);
     READ_POWFS_RELAX(dbl,pixoffx);
     READ_POWFS_RELAX(dbl,pixoffy);
@@ -311,6 +312,12 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,i0scale);
     READ_POWFS_RELAX(dbl,sigscale);
     READ_POWFS_RELAX(int,moao);
+    READ_POWFS_RELAX(int,dither);
+    READ_POWFS_RELAX(dbl,dither_amp);
+    READ_POWFS_RELAX(int,dither_nskip);
+    READ_POWFS_RELAX(int,dither_npll);
+    READ_POWFS_RELAX(dbl,dither_gpll);
+    READ_POWFS_RELAX(int,dither_nstat);
 
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
@@ -398,7 +405,15 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].fieldstop>0 && (parms->powfs[ipowfs].fieldstop>10 || parms->powfs[ipowfs].fieldstop<1e-4)){
 	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, parms->powfs[ipowfs].fieldstop);
 	}
-	parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].fieldstop/206265.;
+	/*Senity check pixtheta*/
+	if(parms->powfs[ipowfs].pixtheta<0 || parms->powfs[ipowfs].pixtheta<1e-4){
+	    error("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+	}
+	parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
+	parms->powfs[ipowfs].fieldstop/=206265.;
+	if(parms->powfs[ipowfs].dither){
+	    parms->powfs[ipowfs].dither_amp*=parms->powfs[ipowfs].pixtheta;
+	}
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -784,18 +799,19 @@ static void readcfg_recon(PARMS_T *parms){
    Read in simulation parameters
 */
 static void readcfg_sim(PARMS_T *parms){
-    parms->sim.apupt=readcfg_dmat("sim.apupt");
-    parms->sim.epupt=readcfg_dmat("sim.epupt");
     READ_DBL(sim.fcfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
 
     parms->sim.apdm=readcfg_dmat("sim.apdm");
     parms->sim.epdm=readcfg_dmat("sim.epdm");
-    parms->sim.aldm=readcfg_int("sim.aldm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
+    parms->sim.apupt=readcfg_dmat("sim.apupt");
+    parms->sim.epupt=readcfg_dmat("sim.epupt");
+    parms->sim.aldm=readcfg_int("sim.aldm");
     parms->sim.allo=readcfg_int("sim.allo");
+    parms->sim.alupt=readcfg_int("sim.alupt");
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
@@ -1277,15 +1293,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->ntrspowfs++;
 	    }
 	}
-	/*should supply in arcsec. Was supplied in radian pre 2011-02-17. So we
-	  test magnitude and then apply conversion*/
-	if(parms->powfs[ipowfs].pixtheta<0){
-	    error("pixtheta < 0 option is deprecated (confusion if nwvl>1)\n");
-	}else if(parms->powfs[ipowfs].pixtheta>1e-4){
-	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
-	}else{
-	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
-	}
+
 	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
 	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
 	}else{

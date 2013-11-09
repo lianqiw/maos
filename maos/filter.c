@@ -240,18 +240,26 @@ void filter_cl(SIM_T *simu){
 	}
     }
     if(simu->upterr){
-	/*Copy to uptreal before servo_fitler because upterr is from gradients
-	  from the current step. The dmerr above is using gradlast so dmreal is
-	  done at last*/
-	dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+	int hasoutput=0;
 	for(int i=0; i<simu->upterr->nx; i++){
 	    if(simu->upterr->p[i]){
-		servo_filter(simu->uptint, simu->upterr);
-		break;
+		hasoutput=1;
 	    }
 	}
-	for(int i=0; i<simu->upterr->nx; i++){
-	    dfree(simu->upterr->p[i]);
+	if(hasoutput){
+	    servo_filter(simu->uptint, simu->upterr);
+	    /*upterr is from gradients from the last step.*/
+	    dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+	    /*Eject dithering command*/
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].dither){
+		    //Use isim+1 because the command is for next time step.
+		    double angle=M_PI*0.5*(simu->isim+1)/parms->powfs[ipowfs].dtrat;
+		    simu->uptreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
+		    simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
+		}
+	    }
 	}
     }
 }

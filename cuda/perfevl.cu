@@ -628,7 +628,7 @@ void gpu_perfevl(thread_t *info){
 	    }else{
 		dmat *tmp=NULL;
 		cp2cpu(&tmp, opdcopy, stream);
-		dmm(&simu->evlopdcovol, tmp, tmp, "nt", 1);
+		dmm(&simu->evlopdcovol, 1,tmp, tmp, "nt", 1);
 		dadd(&simu->evlopdmeanol, 1, tmp, 1);
 		dfree(tmp);
 	    }
@@ -684,7 +684,7 @@ void gpu_perfevl(thread_t *info){
 		}else{
 		    dmat *tmp=NULL;
 		    cp2cpu(&tmp, iopdevl, stream);
-		    dmm(&simu->evlopdcov->p[ievl], tmp, tmp, "nt", 1);
+		    dmm(&simu->evlopdcov->p[ievl], 1,tmp, tmp, "nt", 1);
 		    dadd(&simu->evlopdmean->p[ievl], 1, tmp, 1);
 		    dfree(tmp);
 		}
@@ -748,7 +748,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    }else{
 		dmat *tmp=NULL;
 		cp2cpu(&tmp, iopdevl, stream);
-		dmm(&simu->evlopdcov_ngsr->p[ievl], tmp, tmp, "nt", 1);
+		dmm(&simu->evlopdcov_ngsr->p[ievl], 1,tmp, tmp, "nt", 1);
 		dadd(&simu->evlopdmean_ngsr->p[ievl], 1, tmp, 1);
 		dfree(tmp);
 	    }

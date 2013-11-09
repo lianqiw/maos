@@ -217,7 +217,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 	memset(aster->gm->p+2*aster->gm->nx, 0, sizeof(double)*aster->gm->nx);
     }
     aster->dettf=dcell2m(dettf);
-    dmm(&aster->gmtt, aster->dettf, aster->gm, "nn", 1);
+    dmm(&aster->gmtt, 0, aster->dettf, aster->gm, "nn", 1);
     dcellfree(dettf);
 }
 /**
@@ -271,7 +271,7 @@ static dmat *calc_recon_error(const dmat *pgm,  /**<[in] the reconstructor*/
     dmat *tmp=NULL;
     dmulsp(&tmp,pgm,neasp, 1);
     spfree(neasp);
-    dmm(&psp,tmp,pgm,"nt",1);
+    dmm(&psp,0,tmp,pgm,"nt",1);
     dfree(tmp); 
     PDMAT(psp,ppsp); 
     PDMAT(mcc,pmcc);
@@ -369,7 +369,7 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	if(aster->nwfs>2 && parms->skyc.demote){
 	    /*Demote TTF to tt. */
 	    dmat *pgmtt=dpinv(aster->gmtt, neattm,NULL);
-	    dmm(&aster->pgmtt->p[idtrat], pgmtt, aster->dettf, "nn",1); dfree(pgmtt);
+	    dmm(&aster->pgmtt->p[idtrat], 0,pgmtt, aster->dettf, "nn",1); dfree(pgmtt);
 	    /*Replace the plate scale mode reconstructor from pgm. */
 	    for(int iy=0; iy<aster->pgmtt->p[idtrat]->ny; iy++){
 		for(int ix=2; ix<aster->pgmtt->p[idtrat]->nx; ix++){

@@ -58,7 +58,10 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	//check whether opdbias is different between wfs[0] and following.
 	int different=0;
 	for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-	    if(ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs])>1e-4){
+	    double diff=ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs]);
+	    if(diff>1e-4){
+		info("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n", 
+		     ipowfs, iwfs, ipowfs, diff);
 		different=1;
 	    }else{
 		info("powfs[%d].opdbias[%d] is same as powfs[%d].opdbias[0]\n", 

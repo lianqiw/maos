@@ -137,8 +137,7 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
 	dadd(&merr, 1, mreal, -1);/*form error; */
 	dcp(&mres->p[istep],merr);/*record error. */
-	dzero(grad);
-	dmm(&grad, aster->gm, merr, "nn", 1);
+	dmm(&grad, 0,aster->gm, merr, "nn", 1);
 	int itsa=0;
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -148,8 +147,7 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
 	    }
 	    itsa+=nsa*2;
 	}
-	dzero(merrm);
-	dmm(&merrm, pgm, grad, "nn", 1);
+	dmm(&merrm, 0, pgm, grad, "nn", 1);
 	
 	/*Servo filter. */
 	dcp(&mreal, mint);/*integrator output from last step. */
@@ -276,7 +274,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	
 	if(istep<parms->skyc.phystart){
 	    /*Ztilt, noise free simulation for acquisition. */
-	    dmm(&zgrad, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
+	    dmm(&zgrad, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    int itsa=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -291,8 +289,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	    }
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
-		dzero(merrm->p[0]);
-		dmm(&merrm->p[0], pgm, zgrad, "nn", 1);
+		dmm(&merrm->p[0],0, pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
 		dzero(zgrad);
 	    }
@@ -381,8 +378,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    }/*isa */
 		    itsa+=nsa*2;
 		}/*iwfs */
-		dzero(merrm->p[0]);
-		dmm(&merrm->p[0], pgm, grad, "nn", 1);
+		dmm(&merrm->p[0], 0, pgm, grad, "nn", 1);
 		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
 		switch(parms->skyc.servo){
 		case 1:

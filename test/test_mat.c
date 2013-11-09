@@ -15,7 +15,7 @@ static void test_dpinv(){
     dwrite(A,"A");
     dwrite(Ap,"Ap");
     dmat *ApA=NULL;
-    dmm(&ApA,Ap,A,"nn",1);
+    dmm(&ApA,0,Ap,A,"nn",1);
     dsp *spw=spnewdiag(w->nx, w->p, 1);
     dmat *Ap2=dpinv(A,NULL,spw);
     dwrite(w,"w");

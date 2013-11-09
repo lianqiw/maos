@@ -44,10 +44,10 @@
   Group operations related to BLAS/LAPACK to this file.
 */
 /**
-   compute matrix product using blas dgemm with beta=1;
+   compute matrix product using blas dgemm.;
    C=beta*C+ alpha *trans(A)*trans(B); if C exist.
 */
-void X(mm)(X(mat)**C0, const X(mat) *A, const X(mat) *B,   
+void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,   
 	   const char trans[2], const T alpha){
     if(!A || !B) return;
     int m,n,k,lda,ldb,ldc,k2;
@@ -75,7 +75,6 @@ void X(mm)(X(mat)**C0, const X(mat) *A, const X(mat) *B,
     lda=A->nx;
     ldb=B->nx;
     ldc=C->nx;
-    const T beta=1;
     Z(gemm)(&trans[0], &trans[1], &m,&n,&k,&alpha, 
 	    A->p, &lda, B->p, &ldb, &beta, C->p,&ldc);
 }
@@ -163,7 +162,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	    error("Both wt and Wsp are supplied. Not supported\n");
 	}
 	if(wt->ny==wt->nx){
-	    X(mm)(&AtW, A, wt, "tn", 1);
+	    X(mm)(&AtW, 0, A, wt, "tn", 1);
 	}else if(wt->ny==1){
 	    AtW=X(new)(A->ny,A->nx);
 	    PMAT(A,pA);
@@ -188,7 +187,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     }
     /*Compute cc=A'*W*A */
     X(mat) *cc=NULL;
-    X(mm) (&cc, AtW, A, "nn", 1);
+    X(mm) (&cc, 0, AtW, A, "nn", 1);
     /*Compute inv of cc */
     /*X(invspd_inplace)(cc); */
     if(X(isnan(cc))){
@@ -200,7 +199,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
     /*Compute (A'*W*A)*A'*W */
-    X(mm) (&out, cc, AtW, "nn", 1);
+    X(mm) (&out, 0, cc, AtW, "nn", 1);
     X(free)(AtW);
     X(free)(cc);
     return out;
@@ -381,9 +380,9 @@ void X(svd_pow)(X(mat) *A, double power, double thres){
     }
     X(zero)(A);
 #ifdef USE_COMPLEX
-    X(mm)(&A,VT,U,"cc",1);
+    X(mm)(&A,1,VT,U,"cc",1);
 #else
-    X(mm)(&A,VT,U,"tt",1);
+    X(mm)(&A,1,VT,U,"tt",1);
 #endif
     X(free)(U);
     X(free)(VT);
@@ -433,7 +432,7 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B,
 	for(int ix=0; ix<nx; ix++){
 	    for(int iz=0; iz<nz; iz++){
 		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
-		    X(mm)(&C->p[ix+iy*nx],A->p[ix*ax+iz*az], 
+		    X(mm)(&C->p[ix+iy*nx],1.d,A->p[ix*ax+iz*az], 
 			  B->p[iz*bz+iy*by],trans,alpha);
 		}
 	    }

@@ -392,8 +392,8 @@ void gpu_wfs_initsim(const PARMS_T *parms, const POWFS_T *powfs){
 	}*/
 }
 void gpu_wfs_seeing(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat){
-    cuda_wfs::cuwfs_t **cuwfs;
+    /*cuda_wfs::cuwfs_t **cuwfs;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	cuwfs[iwfs]->seeding(lrand(rstat));
-    }
+	}*/
 }

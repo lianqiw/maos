@@ -148,8 +148,8 @@ static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt
     dmat *xout=NULL;
     dmat *tmp=NULL;
     spmulmat(&xout, W0, xin, wt);
-    dmm(&tmp, W1, xin, "tn", -1);
-    dmm(&xout,W1, tmp, "nn", wt);
+    dmm(&tmp, 0, W1, xin, "tn", -1);
+    dmm(&xout, 1, W1, tmp, "nn", wt);
     dcp(&xin, xout);
     dfree(xout); dfree(tmp);
 }
@@ -182,10 +182,10 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 	    dmat *xout=NULL;
 	    dmat *tmp=NULL;
 	    spmulmat(&xout, W0, B->p[ind], wt->p[ievl]);
-	    dmm(&tmp, W1, B->p[ind], "tn", -1);
-	    dmm(&xout, W1, tmp, "nn", wt->p[ievl]);
+	    dmm(&tmp, 0, W1, B->p[ind], "tn", -1);
+	    dmm(&xout, 1, W1, tmp, "nn", wt->p[ievl]);
 	    for(int ix=0; ix<A->ny; ix++){
-		dmm(&res->p[ix+iy*res->nx], A->p[ix*nevl+ievl], xout, "tn", 1);
+		dmm(&res->p[ix+iy*res->nx], 1, A->p[ix*nevl+ievl], xout, "tn", 1);
 	    }
 	    dfree(xout);
 	    dfree(tmp);
@@ -756,7 +756,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			}
 		    }
 		}
-		dmm(&simu->ecov->p[ievl], xx, xx, "nt", 1);
+		dmm(&simu->ecov->p[ievl], 1, xx, xx, "nt", 1);
 		if(parms->dbg.ecovxx){
 		    cellarr_dmat(simu->save->ecovxx[ievl], simu->isim, xx);
 		}
@@ -782,22 +782,25 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 */
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->recon.glao){
-	/* Every the gradients in GLAO mode. */
-	if(simu->gradlastcl){
-	    dcellzero(simu->gradlastcl);
-	}else{
-	    simu->gradlastcl=dcellnew(parms->nwfsr, 1);
-	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    const double scale=1./parms->powfs[ipowfs].nwfs;
-	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
-		dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
+    if(parms->sim.evlol) return;
+    if(!parms->sim.idealfit){
+	if(parms->recon.glao){
+	    /* Every the gradients in GLAO mode. */
+	    if(simu->gradlastcl){
+		dcellzero(simu->gradlastcl);
+	    }else{
+		simu->gradlastcl=dcellnew(parms->nwfsr, 1);
 	    }
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		const double scale=1./parms->powfs[ipowfs].nwfs;
+		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		    dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
+		}
+	    }
+	}else{
+	    dcellcp(&simu->gradlastcl, simu->gradcl); 
 	}
-    }else{
-	dcellcp(&simu->gradlastcl, simu->gradcl); 
     }
     dcellcp(&simu->dmcmdlast, simu->dmcmd);
     simu->reconisim = simu->isim;

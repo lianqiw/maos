@@ -45,7 +45,7 @@ void save_gradol(SIM_T *simu){
 	    int iwfs1=parms->save.gcov[igcov*2];
 	    int iwfs2=parms->save.gcov[igcov*2+1];
 	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
-	    dmm(&simu->gcov->p[igcov], simu->gradlastol->p[iwfs1], simu->gradlastol->p[iwfs2],"nt",1);
+	    dmm(&simu->gcov->p[igcov], 1, simu->gradlastol->p[iwfs1], simu->gradlastol->p[iwfs2],"nt",1);
 	}
     }
 }

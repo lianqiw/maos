@@ -668,7 +668,7 @@ X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt){
 
 /**
    compute the relative difference betwee two vectors.
-   ||A-B||/||A|| using norm2. for debugging purpose.
+   sqrt(||A-B||/||A||) using norm2. for debugging purpose.
 */
 T X(diff)(const X(mat) *A, const X(mat) *B){
     X(mat) *C=NULL;

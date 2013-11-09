@@ -476,7 +476,7 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	    }
 	    dmat *Pkn2=NULL;
 	    /*this will zero out columns in the forward matrx */
-	    dmm(&Pkn2, Pkn, Pknwt, "nn", 1);
+	    dmm(&Pkn2, 0, Pkn, Pknwt, "nn", 1);
 	    /*will redo the estimation matrix. */
 	    dmat *iPkn2=dpinv(Pkn2, NULL, NULL);
 	    /*dwrite(wt,"wt");
@@ -485,9 +485,8 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	    dwrite(Pkn2,"Pkn2");
 	    dwrite(iPkn2,"iPkn2");
 	    exit(0);*/
-	    dzero(wt);
 	    /*compute the new result */
-	    dmm(&wt, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->nstep);
+	    dmm(&wt,0, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->nstep);
 	    dfree(iPkn2);
 	    dfree(Pkn2);
 	    nfdlast=nfd;

@@ -70,9 +70,9 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	pi->ny=1;
 	dmat *qi=dnew(ninit*ninit,1);
 #if INVERSE ==0
-	dmm(&qi, node->K, pi, "nn", 1);
+	dmm(&qi, 0, node->K, pi, "nn", 1);
 #else
-	dmm(&qi, node->KI, pi, "tn", 1);
+	dmm(&qi, 0, node->KI, pi, "tn", 1);
 #endif
 	/*reshape to square. */
 	qi->nx=ninit;
@@ -223,9 +223,9 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	pi->ny=1;
 	dmat *qi=dnew(ninit*ninit,1);
 #if INVERSE ==0
-	dmm(&qi, node->K, pi, "tn", 1);
+	dmm(&qi, 0, node->K, pi, "tn", 1);
 #else
-	dmm(&qi, node->KI, pi, "nn", 1);
+	dmm(&qi, 0, node->KI, pi, "nn", 1);
 #endif
 	/*reshape to square. */
 	qi->nx=ninit;

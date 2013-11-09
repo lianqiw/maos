@@ -121,7 +121,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	}
 #pragma omp taskwait
 	if(!isset){
-	    warning("isset=%d\n", isset);
 	    free(aper->locs_dm);aper->locs_dm=0;
 	}else if(parms->save.setup){
 	    locarrwrite(aper->locs_dm, parms->ndm*parms->evl.nevl, "%s/locs_dm", dirsetup);

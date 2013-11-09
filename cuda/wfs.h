@@ -40,8 +40,23 @@ typedef struct cuwloc_t{
     curmat *fieldstop;/**<*mask for field stop computation*/
     cullt_t *llt;
 }cupowfs_t;
-
-
+/**For matched filter update*/
+class dither_t{
+    int      imc;
+    curcell *im0;
+    curcell *imx;
+    curcell *imy;
+public:
+    dither_t(int nsa, int pixpsax, int pixpsay);
+    void reset();
+    void acc(curcell *ints, float angle, cudaStream_t stream);
+    void output(float a2m, int iwfs, int isim, cudaStream_t stream);
+    ~dither_t(){
+	delete im0;
+	delete imx;
+	delete imy;
+    }
+};
 class cuwfs_t{
   public:
     stream_t *stream;
@@ -77,6 +92,8 @@ class cuwfs_t{
     curmat *gradacc;    /**<For accumulating grads*/
     curcell *ints;       /**<For accumulating subaperture image.*/
     curcell *pistatout;  /**<For output pistatout*/
+    /*For matched filter update*/
+    dither_t *dither;
 };
 
 void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);

@@ -431,7 +431,20 @@ typedef struct WFSINTS_T{
     const POWFS_T *powfs;
     int iwfs;
 }WFSINTS_T;
-
+/**
+  data for dithering statistics collection
+*/
+typedef struct DITHER_T{ 
+    double delta; /**<PLL result*/
+    double deltam;/**<PLL result every many steps*/
+    double ipv;   /**<in plane value (dot product)*/
+    double qdv;   /**<out of plane value (cross product)*/
+    double a2m;   /**<actual dither amplitude*/
+    dcell *imx;   /**<accumulated cos()*im */
+    dcell *imy;   /**<accumulated sin()*im */
+    dcell *im0;   /**<accumulated im*/
+    int    imc;   /**<number of im accumulated*/
+}DITHER_T;
 /**
    contains all the run time data struct.
 */
@@ -580,7 +593,7 @@ typedef struct SIM_T{
 
     SIM_SAVE_T *save;  /**<Telemetry output*/
     STATUS_T *status;  /**<status report to scheduler.*/
-
+    DITHER_T **dither;
     /**For testing*/
     ccell *opdrhat;    /**<For wind estimation (testing)*/
     ccell *opdrhatlast;/**<for wind estimation.(testing)*/

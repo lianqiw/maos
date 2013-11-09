@@ -215,7 +215,7 @@ void perfevl_ievl(thread_t *info){
 	    opdevlcopy=dref(iopdevl);
 	}
 	if(parms->evl.opdcov){
-	    dmm(&simu->evlopdcovol, opdevlcopy, opdevlcopy, "nt", 1);
+	    dmm(&simu->evlopdcovol, 1, opdevlcopy, opdevlcopy, "nt", 1);
 	    dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
 	}/*opdcov*/
 	if(parms->evl.psfmean){
@@ -314,7 +314,7 @@ void perfevl_ievl(thread_t *info){
 		dadds(iopdevl, -pclmp[isim][0]);
 	    }
 	    if(parms->evl.opdcov){
-		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+		dmm(&simu->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
 		dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
 	    }/*opdcov */
 	    if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
@@ -455,7 +455,7 @@ static void perfevl_mean(SIM_T *simu){
 			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
 			}
 			if(parms->evl.opdcov){
-			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
+			    dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
 			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 			}
 			if(do_psf){

@@ -343,6 +343,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			cuwfs[iwfs].bkgrnd2c=cuwfs[iwfs0].bkgrnd2c;
 		    }	
 		}
+		if(parms->powfs[ipowfs].dither){
+		    cuwfs[iwfs].dither=new dither_t(nsa,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		}
 	    }
 	}/*if phy */
 	CUDA_SYNC_DEVICE;
@@ -365,6 +368,24 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	if(parms->powfs[ipowfs].usephy){
 	    curcellfree(cuwfs[iwfs].ints);
 	    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+	    /*if(parms->powfs[ipowfs].mtchupate){
+		cuwfs[iwfs].mtchu->reset();
+		if(curcellzero(cuwfs[iwfs].acc_ints)){
+		    curcellzero(cuwfs[iwfs].acc_ints);
+		    curcellzero(cuwfs[iwfs].acc_intsx);
+		    curcellzero(cuwfs[iwfs].acc_intsy);
+		    curzero(cuwfs[iwfs].acc_xx);
+		    curzero(cuwfs[iwfs].acc_xy);
+		    curzero(cuwfs[iwfs].acc_yy);
+		}else{
+		    cuwfs[iwfs].acc_ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		    cuwfs[iwfs].acc_intsx=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		    cuwfs[iwfs].acc_intsy=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		    cuwfs[iwfs].acc_xx=snew(nsa,1);
+		    cuwfs[iwfs].acc_xy=snew(nsa,1);
+		    cuwfs[iwfs].acc_yy=snew(nsa,1);
+		}
+		}*/
 	}
 	if(parms->powfs[ipowfs].pistatout){
 	    if(parms->powfs[ipowfs].pistatstc){

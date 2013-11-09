@@ -93,10 +93,10 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
 	MW->p[iloc+nloc*2]=amp[iloc]*locy[iloc];
     }
     /* MCC = - cci' *M' */
-    dmm(&MCC, mcc, M,  "tt", -1);
+    dmm(&MCC, 0, mcc, M,  "tt", -1);
     PDMAT(MCC, pMCC);
     /* Mtmp =  MW' * B  */
-    dmm(&Mtmp, MW, B0, "tn", 1);
+    dmm(&Mtmp, 0, MW, B0, "tn", 1);
     /*Remove tip/tilt from left side*/
     PDMAT(Mtmp, pMtmp);
     for(long iloc=0; iloc<nloc; iloc++){
@@ -111,8 +111,7 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
 	}
     }
     /* Mtmp = MW' * BP' */
-    dzero(Mtmp);
-    dmm(&Mtmp, MW, B2, "tt", 1);
+    dmm(&Mtmp, 0, MW, B2, "tt", 1);
     /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
 	double tmp1=pMCC[iloc][0];

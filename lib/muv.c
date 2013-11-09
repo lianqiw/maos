@@ -137,8 +137,8 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	PDCELL(A->U, AU);
 	for(int jb=0; jb<A->U->ny; jb++){
 	    dmat *tmp=NULL;
-	    dmm(&tmp, AV[jb][yb], xin->p[yb], "tn", -1);
-	    dmm(&(*xout)->p[xb], AU[jb][xb], tmp, "nn", alpha);
+	    dmm(&tmp, 0, AV[jb][yb], xin->p[yb], "tn", -1);
+	    dmm(&(*xout)->p[xb], 1, AU[jb][xb], tmp, "nn", alpha);
 	    dfree(tmp);
 	}
     }
@@ -158,23 +158,23 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
 */
 static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, dmat *U, dmat *V){
     if(MI){
-	dmm(Up, MI, U, "nn", 1);
+	dmm(Up, 1, MI, U, "nn", 1);
     }else{
 	chol_solve(Up,C,U);
     }
     dmat *UpV=NULL;
     /*UpV=(I-Up'*V)^{-1} */
-    dmm(&UpV,*Up,V,"tn",-1);
+    dmm(&UpV,0,*Up,V,"tn",-1);
     for(unsigned long ii=0; ii<UpV->ny; ii++){
 	UpV->p[ii+ii*UpV->nx]+=1;
     }
     dinv_inplace(UpV);
     dmat *VI=NULL;
     /*VI=V*UpV */
-    dmm(&VI,V,UpV,"nn",-1);
+    dmm(&VI,0,V,UpV,"nn",-1);
     dfree(UpV);
     if(MI){
-	dmm(Vp, MI, VI, "nn", 1);
+	dmm(Vp,1, MI, VI, "nn", 1);
     }else{
 	chol_solve(Vp,C,VI);
     }
@@ -217,7 +217,7 @@ void muv_direct_prep(MUV_T *A, double svd){
 	dfree(V);
 	dfree(U);
 	if(use_svd){
-	    dmm(&A->MI, A->Up, A->Vp, "nt", -1);
+	    dmm(&A->MI, 1, A->Up, A->Vp, "nt", -1);
 	    dfree(A->Up);
 	    dfree(A->Vp);
 	}
@@ -294,23 +294,22 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin){
     dmat *dotpt=NULL;
     if(A->Up && A->Vp){
-	dmm(&dotpt,A->Vp,xin,"tn",-1);
+	dmm(&dotpt,0,A->Vp,xin,"tn",-1);
     }
     if(A->MI){
 	if(*xout==xin){
 	    dmat *tmp=NULL;
-	    dmm(&tmp, A->MI, xin, "nn", 1);
+	    dmm(&tmp,0, A->MI, xin, "nn", 1);
 	    dcp(xout, tmp);
 	    dfree(tmp);
 	}else{
-	    dzero(*xout);
-	    dmm(xout, A->MI, xin, "nn", 1);
+	    dmm(xout,0, A->MI, xin, "nn", 1);
 	}
     }else{
 	chol_solve(xout,A->C,xin);
     }
     if(dotpt){
-	dmm(xout, A->Up, dotpt, "nn", 1);
+	dmm(xout, 1, A->Up, dotpt, "nn", 1);
 	dfree(dotpt);
     }
 }
@@ -323,7 +322,7 @@ void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
     if(A->MI){
 	dmat *x1=NULL;
 	dmulsp(&x1, A->MI, xin, 1);
-	dmm((void*)&xout, x1, A->MI, "nt", 1);
+	dmm((void*)&xout, 0, x1, A->MI, "nt", 1);
 	dfree(x1);
     }else{
 	dsp *x1=chol_spsolve(A->C, xin);
@@ -344,23 +343,22 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
     if(!xin) return;
     dmat *dotpt=NULL;
     if(A->UpB && A->VpB){
-	dmm(&dotpt,A->VpB->p[ib],xin,"tn",-1);
+	dmm(&dotpt,0,A->VpB->p[ib],xin,"tn",-1);
     }
     if(A->MIB){
 	if(*xout==xin){
 	    dmat *tmp=NULL;
-	    dmm(&tmp, A->MIB->p[ib], xin, "nn", 1);
+	    dmm(&tmp, 0,A->MIB->p[ib], xin, "nn", 1);
 	    dcp(xout, tmp);
 	    dfree(tmp);
 	}else{
-	    dzero(*xout);
-	    dmm(xout, A->MIB->p[ib], xin, "nn", 1);
+	    dmm(xout,0, A->MIB->p[ib], xin, "nn", 1);
 	}
     }else{
 	chol_solve(xout,A->CB[ib],xin);
     }
     if(dotpt){
-	dmm(xout,A->UpB->p[ib],dotpt,"nn",1);
+	dmm(xout,1,A->UpB->p[ib],dotpt,"nn",1);
 	dfree(dotpt);
     }
 }
