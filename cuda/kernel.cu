@@ -434,21 +434,17 @@ mvm_do(const float *restrict mvm, float *restrict a, const float *restrict g, in
 __global__ void 
 multimv_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng){
     extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
-    if(blockDim.x*gridDim.x<nset*nact){
-	//drop partial set
-	nset--;
-    }
-    const int iset=iact/nact;
+    const int ind=threadIdx.x+blockIdx.x*blockDim.x;//max at blockDim.x*gridDim.x
+    const int nset=(blockDim.x*gridDim.x)/nact;//total number of over runs
+    const int iset=ind/nact;
     if(iset>=nset) return;
-    iact=iact-nact*iset;
+    const int iact=ind-nact*iset;//actual actuator
     acc[threadIdx.x]=0;
+    /*This block handle grads from igi to ngi.*/
     const int igi=(iset*ng)/nset;
     const int ngi=((iset+1)*ng)/nset;
     for(int ig=igi; ig<ngi; ig++){
-	register float mvmi=mvm[nact*ig+iact];
-	acc[threadIdx.x]+=mvmi*g[ig];
+	acc[threadIdx.x]+=mvm[nact*ig+iact]*g[ig];
     }
     atomicAdd(&a[iact], acc[threadIdx.x]);
 }

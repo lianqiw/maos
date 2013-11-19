@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
 	ngpu=1;
 	gpus[0]=0;
     }
-    set_realtime(0,-20);
+    set_realtime(1,-20);
 
     int testcase=0;
     if(argc>1){
@@ -46,18 +46,22 @@ int main(int argc, char *argv[]){
     case 1:
     case 2:
     case 3:
-	for(int jgpu=1; jgpu<=1; jgpu++){
+    case 4:
+	for(int jgpu=2; jgpu<=2; jgpu++){
 	    switch(testcase){
 	    case 0:
 		mvmfull_iwfs(gpus, jgpu, nstep);
 		break;
 	    case 1:
-		mvm_iwfs(gpus, jgpu, nstep);
+		mvmfull_real(gpus, jgpu, nstep);
 		break;
 	    case 2:
-		mvm_only(gpus, jgpu, nstep);
+		mvm_iwfs(gpus, jgpu, nstep);
 		break;
 	    case 3:
+		mvm_only(gpus, jgpu, nstep);
+		break;
+	    case 4:
 		mvmfull_pipe("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
 		break;
 	    }

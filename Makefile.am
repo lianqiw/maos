@@ -8,10 +8,10 @@ if USE_CUDA
 SUBDIRS+=cuda
 endif
 SUBDIRS+=maos skyc tools
+SUBDIRS+=test
 if USE_MEX
 SUBDIRS+=mex
 endif
-SUBDIRS+=test
 include $(top_srcdir)/aminclude.am
 
 #dist-hook:

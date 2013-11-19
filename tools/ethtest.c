@@ -32,12 +32,9 @@
 #include <sys/mman.h>
 #include "../lib/aos.h"
 
-int nrep;
 int nbuf=65536;
 
 char *buf1, *buf2;
-int nstep=1;
-int nmax=1000;
 /**
    The following two routines overwrite the data when new data comes in. Just for testing jitter.
  */
@@ -73,23 +70,28 @@ int stread3(int sfd, void *p, size_t len, size_t buflen){
     return left?-1:0;
 }
 int server(int sock){
+    int nstep;
+    int nmin;
+    int nmax;
+    int nrep;
     if(stread(sock, &nstep, sizeof(int))
+       || stread(sock, &nmin, sizeof(int))
        || stread(sock, &nmax, sizeof(int))
        || stread(sock, &nrep, sizeof(int))){
 	return -1;
     }
-    info2("nstep=%d, nmax=%d, nrep=%d\n", nstep, nmax, nrep);
+    info2("nstep=%d, nmin=%d, nmax=%d, nrep=%d\n", nstep,nmin, nmax, nrep);
     buf2=malloc(nmax*nstep);
     //warm up
     for(int i=0; i<10; i++){
-	if(stread(sock, buf2, nmax*nstep) || stwrite(sock, buf2, 64)){
+	if(stread(sock, buf2, nmax) || stwrite(sock, buf2, 64)){
 	    close(sock);
 	    return -1;
 	}
     }
-    for(int len=1; len<=nmax; len++){
+    for(int len=nmin; len<=nmax; len+=nstep){
 	for(int irep=0; irep<nrep; irep++){
-	    if(stread(sock, buf2, len*nstep) || stwrite(sock, buf2, 64)){
+	    if(stread(sock, buf2, len) || stwrite(sock, buf2, 64)){
 		close(sock);
 		return -1;
 	    }
@@ -98,9 +100,10 @@ int server(int sock){
     return -1;
 }
 
-int client(const char *hostname, int port){
+int client(const char *hostname, int port, int nmin, int nmax, int nstep, int nrep){
     int sock=connect_port(hostname, port, 0, 1);
     if(sock<0 || stwriteint(sock, nstep) 
+       || stwriteint(sock, nmin)
        || stwriteint(sock, nmax)
        || stwriteint(sock, nrep)) {
 	warning("Unable to connecto to %s\n", hostname);
@@ -108,53 +111,76 @@ int client(const char *hostname, int port){
     }
     buf1=malloc(nmax*nstep);
     for(int i=0;i<10;i++){//warm up
-	stwrite(sock, buf1, nmax*nstep);
+	stwrite(sock, buf1, nmax);
 	stread(sock, buf1, 64);
 	usleep(500);
     }
     double tim1, tim2, tim3;
-    dmat *timing=dnew(nrep, nmax);
-    dmat *timing2=dnew(nrep, nmax);
-    for(int len=1; len<=nmax; len++){
+    int nlen=(nmax-nmin+nstep)/nstep;
+    dmat *timing=dnew(nrep, nlen);
+    dmat *timing2=dnew(nrep, nlen);
+    int ilen=-1;
+    for(int len=nmin; len<=nmax; len+=nstep){
+	ilen++;
 	info2("len=%d\n", len);
 	for(int irep=0; irep<nrep; irep++){
+	    if(irep%800==0){
+		info2("irep=%d of %d\n", irep, nrep);
+	    }
 	    usleep(500);
 	    tim1=myclockd();
-	    stwrite(sock, buf1, len*nstep);
+	    stwrite(sock, buf1, len);
 	    tim2=myclockd();
 	    stread(sock, buf1, 64);
 	    tim3=myclockd();
-	    timing->p[irep+(len-1)*nrep]=tim3-tim1;
-	    timing2->p[irep+(len-1)*nrep]=tim2-tim1;
+	    timing->p[irep+ilen*nrep]=tim3-tim1;
+	    timing2->p[irep+ilen*nrep]=tim2-tim1;
 	}
     }
     close(sock);
-    dwrite(timing, "timing_%d_%d", nstep, nmax);
-    dwrite(timing2, "timing2_%d_%d", nstep, nmax);
+    dwrite(timing, "pix_timing_%s_%d_%d_%d", myhostname(), nmin, nmax, nstep);
+    dwrite(timing2, "pix_timing2_%s_%d_%d_%d", myhostname(), nmin, nmax, nstep);
     info("done\n");
     return 0;
 }
-
-//server for mvmfull_iwfs
+//server for mvmfull_real
 int mvm_server(int sock){
-    int nact, nsa, sastep, pixpsa, nstep0;
-    int cmd[6];
-    if(streadintarr(sock, cmd, 6)){
+    int cmd[7];
+    if(streadintarr(sock, cmd, 7)){
 	return -1;
     }
-    nact=cmd[0];
-    nsa=cmd[1];
-    sastep=cmd[2];
-    pixpsa=cmd[3];
-    nstep=cmd[4];
-    nstep0=cmd[5];
-    info("nact=%d, nsa=%d, sastep=%d, pixpsa=%d, nstep=%d\n",
-	 nact, nsa, sastep, pixpsa, nstep);
-    smat *pix=snew(pixpsa, nsa);
+    int nact=cmd[0];
+    int nsa=cmd[1];
+    int sastep=cmd[2];
+    int totpix=cmd[3];
+    int pixpsa=totpix;
+    int nstep=cmd[4];
+    int nstep0=cmd[5];
+    int type=cmd[6];
+    info("type=%d, nact=%d, nsa=%d, sastep=%d, %s=%d, nstep=%d\n",type,
+	 nact, nsa, sastep, type==1?"pixpsa":"totpix", totpix, nstep);
+    int *saind=NULL;
+    if(type==1){//mvmfull_iwfs
+	totpix=pixpsa*nsa;
+    }else{//mvmfull_real
+	saind=malloc((nsa+1)*sizeof(int));
+	if(streadintarr(sock, saind, nsa+1)){
+	    return -1;
+	}
+    }
+    short *pix=malloc(sizeof(short)*totpix);
+    if(type==1){
+	rand_t rseed;
+	seed_rand(&rseed, 1);
+	for(int i=0; i<totpix; i++){
+	    pix[i]=(short)randu(&rseed);
+	}
+    }else{
+	if(stread(sock, pix, totpix*sizeof(short))){
+	    return -1;
+	}
+    }
     smat *dmres=snew(nact, 1);
-    rand_t rseed;
-    seed_rand(&rseed, 1);
-    srandn(pix, 20, &rseed);
     int ready;
     streadint(sock, &ready); //wait for client to be ready.
 #if __linux__
@@ -171,16 +197,30 @@ int mvm_server(int sock){
 	//info2("\rSend trigger ");
 #if __linux__
 	//scheduled start time of the frame.
-	tk=(double)ct.tv_sec+(double)ct.tv_nsec*1.e-9;
+	double tk0=(double)ct.tv_sec+(double)ct.tv_nsec*1.e-9;
 #else
 	tic;
 #endif
 	for(int isa=0; isa<nsa; isa+=sastep){
 #if __linux__
-	    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ct, NULL);
+	    if(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ct, NULL)){
+		warning("clock_nanosleep is interrupted\n");
+	    }
+	    if(isa==0){
+		tic;
+	    }
 #endif
-	    int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
-	    if(stwrite(sock, pix->p+isa*pixpsa, 2*nleft*pixpsa)){//2 byte data.
+	    int nleft;
+	    if(type==1){
+		nleft=((nsa-isa)<sastep?(nsa-isa):sastep)*pixpsa;
+	    }else{
+		if(nsa<isa+sastep){//terminate
+		    nleft=totpix-saind[isa];
+		}else{
+		    nleft=saind[isa+sastep]-saind[isa];
+		}
+	    }
+	    if(stwrite(sock, pix+(type==1?pixpsa*isa:saind[isa]), 2*nleft)){//2 byte data.
 		warning("failed: %s\n", strerror(errno));
 		return -1;
 	    }
@@ -197,6 +237,11 @@ int mvm_server(int sock){
 	    return -1;
 	}
 	ready=(int)(toc3*1e6);//mvm is finished.
+#if __linux__
+	if(nstep<100){
+	    info("tk=%.6f tic=%.6f, toc=%.6f, ready=%.6f\n", tk0, tk, myclockd(), ready*1e-6);
+	}
+#endif
 	if(stwriteint(sock, ready)){
 	    warning("write ready failed: %s\n", strerror(errno));
 	    return -1;
@@ -210,14 +255,13 @@ int mvm_server(int sock){
 	}
 #endif
 	if((istep & 0xFF) == 0xFF){
-	    info2("%d %d us\n", istep, ready);
+	    info2("%d %d us.\n", istep, ready);
 	}
 
     }
     info2("\n");
     return -1;
 }
-
 int main(int argc, char *argv[]){
     if(argc<3){
 	error2("Usage: \n\t./ethtest client hostname port \n\t./ethtest server port\n\t./ethtest mvm_server port\n");
@@ -231,28 +275,40 @@ int main(int argc, char *argv[]){
 	nbuf=strtol(NBUF, NULL, 10);
 	info("nbuf=%d\n", nbuf);
     }
-
+    char *ip=0;
+    if(argc>3){
+	ip=argv[3];
+    }
+    
     if(!strcmp(argv[1], "server")){
 	int port=strtol(argv[2], NULL, 10);
-	listen_port(port, NULL, server, 0, NULL, 1);
+	listen_port(port, ip, server, 0, NULL, 1);
     }else if(!strcmp(argv[1],"mvm_server")){
 	int port=strtol(argv[2], NULL, 10);
-	listen_port(port, NULL, mvm_server, 0, NULL, 1);	
+	listen_port(port, ip, mvm_server, 0, NULL, 1);
     }else{
 	if(argc<4){
-	    error("Usage: ./ethtest client hostname port [nstep] [nmax] [nrep]");
+	    error("Usage: ./ethtest client hostname port [nrep] [nmin] [nmax] [nstep]");
 	}
 	const char *host=argv[2];
 	int port=strtol(argv[3], NULL, 10);
+	int nstep=100;
+	int nmin=409584;
+	int nmax=409584;
+	int nrep=1000;
 	if(argc>4){
-	    nstep=strtol(argv[4], NULL, 10);
+	    nrep=strtol(argv[4], NULL, 10);
 	}
 	if(argc>5){
-	    nmax=strtol(argv[5], NULL, 10);
+	    nmin=strtol(argv[5], NULL, 10);
 	}
 	if(argc>6){
-	    nrep=strtol(argv[6], NULL, 10);
+	    nmax=strtol(argv[6], NULL, 10);
 	}
-	client(host, port);
+	if(argc>7){
+	    nstep=strtol(argv[7], NULL, 10);
+	}
+
+	client(host, port, nmin, nmax, nstep, nrep);
     }
 }

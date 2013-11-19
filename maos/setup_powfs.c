@@ -179,8 +179,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	offset = 0.0;
     }
     /*r2max: Maximum distance^2 from the center to keep a subaperture */
-    double r2max=pow(order/2+0.5, 2);
-    double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2-0.5,2):-1;
+    //double r2max=pow(order/2+0.5, 2);
+    //double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2-0.5,2):-1;
+    double r2max=pow(order*0.5, 2);
+    double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2,2):-1;
     /*the lower left *grid* coordinate of the subaperture */
     
     /*The coordinate of the subaperture (lower left coordinate) */
@@ -205,17 +207,20 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     /*Collect all the subapertures that are within the allowed radius*/
     for(int j=-order/2; j<=(order-1)/2; j++){
 	for(int i=-order/2; i<=(order-1)/2; i++){
-	    /*subaperture distance from the center*/
-	    double r2=pow(i+0.5+offset, 2)+pow(j+0.5+offset, 2);
-	    if(r2 <= r2max && r2 >=r2min){
-		powfs[ipowfs].pts->origx[count]=
-		    ((double)i+offset)*dxsa+dxoffset;
-		powfs[ipowfs].pts->origy[count]=
-		    ((double)j+offset)*dxsa+dxoffset;
-		powfs[ipowfs].saloc->locx[count]=
-		    ((double)i+offset)*dxsa;
-		powfs[ipowfs].saloc->locy[count]=
-		    ((double)j+offset)*dxsa;
+	    //Normalized coordinate in uniq of sa size
+	    double xc=((double)i+offset);
+	    double yc=((double)j+offset);
+	    //Radius of four corners.
+	    double r1=pow(xc+1,2)+pow(yc+1,2);
+	    double r2=pow(xc+1,2)+pow(yc,2);
+	    double r3=pow(xc,2)+pow(yc+1,2);
+	    double r4=pow(xc,2)+pow(yc,2);
+	    if(r1<r2max || r2<r2max || r3<r2max || r4<r2max||
+	       r1>r2min || r2>r2min || r3>r2min || r4>r2min){
+		powfs[ipowfs].pts->origx[count]=xc*dxsa+dxoffset;
+		powfs[ipowfs].pts->origy[count]=yc*dxsa+dxoffset;
+		powfs[ipowfs].saloc->locx[count]=xc*dxsa;
+		powfs[ipowfs].saloc->locy[count]=yc*dxsa;
 		count++;
 	    }
 	}

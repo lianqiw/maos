@@ -62,6 +62,7 @@ void test_gpu(void);
 void mvm_iwfs(int *gpus, int ngpu, int nstep);
 void mvm_only(int *gpus, int ngpu, int nstep);
 void mvmfull_iwfs(int *gpus, int ngpu, int nstep);
+void mvmfull_real(int *gpus, int ngpu, int nstep);
 void mvmfull_pipe(char *mvm1, char *mvm2, char *pix1, char *pix2, char *mtch, int *gpus, int ngpu, int nstep);
 void mvm_test(int igpu);
 #ifdef __cplusplus

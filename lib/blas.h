@@ -25,11 +25,11 @@
    The following are blas and lapack fortran function definitions. Notice that when
    generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack
    routines to be compatible when usual blas/lapack definitions. */
-void dgemm_(const char*, const char*,   
-	    const int*, const int*, const int*, const double*, 
-	    const double*, const int*, 
-	    const double*, const int*,    
-	    const double*, double*, const int*);
+void dgemm_(const char* tranA, const char* tranB,
+	    const int*nrow_C, const int*ncol_C, const int*ncol_opA, const double*alpha, 
+	    const double*A, const int*ldA, 
+	    const double*B, const int*ldB,    
+	    const double*beta, double*C, const int*ldC);
 void sgemm_(const char*, const char*,   
 	    const int*, const int*, const int*, const float*, 
 	    const float*, const int*, 
@@ -41,6 +41,24 @@ void zgemm_(const char*, const char*,
 	    const dcomplex*, const int*,    
 	    const dcomplex*, dcomplex*, const int*);
 
+void dgemv_(const char* tranA, 
+	    const int*nrowA, const int*ncolA, const double*alpha, 
+	    const double*A, const int*ldA, 
+	    const double*X, const int*incX, 
+	    const double*Beta,
+	    double*Y, const int*IncY);
+void sgemv_(const char* tranA, 
+	    const int*nrowA, const int*ncolA, const float*alpha, 
+	    const float*A, const int*ldA, 
+	    const float*X, const int*incX, 
+	    const float*Beta,
+	    float*Y, const int*IncY);
+void zgemv_(const char* tranA, 
+	    const int*nrowA, const int*ncolA, const dcomplex*alpha, 
+	    const dcomplex*A, const int*ldA, 
+	    const dcomplex*X, const int*incX, 
+	    const dcomplex*Beta,
+	    dcomplex*Y, const int*IncY);
 /*Lapack */
 void dposv_(const char*,const int*,const int*, double*,const int*,
 	    double*,const int*, int*);
