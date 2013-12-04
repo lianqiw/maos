@@ -432,7 +432,7 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B,
 	for(int ix=0; ix<nx; ix++){
 	    for(int iz=0; iz<nz; iz++){
 		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
-		    X(mm)(&C->p[ix+iy*nx],1.d,A->p[ix*ax+iz*az], 
+		    X(mm)(&C->p[ix+iy*nx],1.,A->p[ix*ax+iz*az], 
 			  B->p[iz*bz+iy*by],trans,alpha);
 		}
 	    }

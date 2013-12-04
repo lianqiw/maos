@@ -38,7 +38,7 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
-OPTScommon="-Wshadow -Wall " #-all-static will produce a static exe.
+OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
