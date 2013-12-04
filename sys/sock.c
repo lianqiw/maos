@@ -49,6 +49,7 @@
 #include <netdb.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/un.h>
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
@@ -149,7 +150,7 @@ static int bind_socket_local(char *sockpath){
 /**
    make a server port and bind to localhost on all addresses. AF_INET
 */
-static int bind_socket (uint16_t port){
+static int bind_socket (char *ip, uint16_t port){
     struct sockaddr_in name;
     /* Create the socket. */
     int sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
@@ -164,7 +165,11 @@ static int bind_socket (uint16_t port){
     /* Give the socket a name. */
     name.sin_family = AF_INET;
     name.sin_port = htons(port);
-    name.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(ip){
+	name.sin_addr.s_addr = inet_addr(ip);
+    }else{
+	name.sin_addr.s_addr = htonl(INADDR_ANY);
+    }
     int count=0;
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
 	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
@@ -198,6 +203,8 @@ static void signal_handler(int sig){
    timeout_fun is not NULL, it will be called when 1) connection is
    establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
    return at error.
+   if localpath is not null and start with /, open the local unix port also
+   if localpath is not null and contains ip address, only bind to that ip address
  */
 void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		 double timeout_sec, void (*timeout_fun)(), int nodelay){
@@ -206,24 +213,29 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     fd_set read_fd_set;
     fd_set active_fd_set;
     FD_ZERO (&active_fd_set);
-
+    char *ip=0;
     int sock_local=-1;
-    if(localpath){//also bind to AF_UNIX
-	sock_local = bind_socket_local(localpath);
-	if(sock_local==-1){
-	    info("bind to %s failed\n", localpath);
-	}else{
-	    if(!listen(sock_local, 1)){
-		FD_SET(sock_local, &active_fd_set);
+    if(localpath){
+	if(localpath[0]=='/'){
+	    //also bind to AF_UNIX
+	    sock_local = bind_socket_local(localpath);
+	    if(sock_local==-1){
+		info("bind to %s failed\n", localpath);
 	    }else{
-		perror("listen");
-		close(sock_local);
+		if(!listen(sock_local, 1)){
+		    FD_SET(sock_local, &active_fd_set);
+		}else{
+		    perror("listen");
+		    close(sock_local);
 		sock_local=-1;
+		}
 	    }
+	}else{
+	    ip=localpath;
 	}
     }
 
-    int sock = bind_socket (port);
+    int sock = bind_socket (ip, port);
     if(nodelay){//turn off tcp caching.
 	socket_tcp_nodelay(sock);
     }

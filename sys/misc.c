@@ -797,12 +797,13 @@ void maos_version(void){
    Set scheduling priorities for the process to enable real time behavior.
 */
 void set_realtime(int icpu, int niceness){
-    (void) icpu;
     //Set CPU affinity.
 #ifdef __linux__    
-    cpu_set_t cpuset={{0}};
-    CPU_SET(0, &cpuset);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+    if(icpu>0){
+	cpu_set_t cpuset={{0}};
+	CPU_SET(icpu, &cpuset);
+	sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+    }
     //lock data in memory, avoid swapping.
     mlockall(MCL_FUTURE | MCL_CURRENT);
 #endif
@@ -816,11 +817,11 @@ void set_realtime(int icpu, int niceness){
     //Set only if we are root.
     if(getuid()==0){
 	info2("Set priority to -20\n");
-	setpriority(PRIO_PROCESS, getpid(), -20);
+	setpriority(PRIO_PROCESS, getpid(), -20);//is this necessary?
 #ifdef __linux__
 	struct sched_param param;
 	sched_getparam(getpid(), &param);
-	param.sched_priority=sched_get_priority_max(SCHED_FIFO);
+	param.sched_priority=sched_get_priority_max(SCHED_FIFO)-1;
 	sched_setscheduler(getpid(), SCHED_FIFO, &param);
 #endif
     }else{

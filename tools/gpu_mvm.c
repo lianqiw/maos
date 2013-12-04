@@ -18,8 +18,6 @@
 
 /**
    \file gpu_mvm.c
-   Convert covariance matrices to OTF. Deprecated. Use the mex routine
-   genotfmex.c in mex/ folder instead for easy access in MATLAB.
   */
 #include "../lib/aos.h"
 #include "../cuda/gpu.h"

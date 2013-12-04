@@ -22,7 +22,7 @@
 /**
 \file mvmfull_iwfs.cu
 
-Test MVM for a single WFS. Using two GPUs, without networking.
+Test MVM for a single WFS. Using two GPUs. Optional using networking. ethtest is the server
 This is not part of maos executable. Called by test/test_gpu executable.
 
 
@@ -42,9 +42,9 @@ cassiopeia with single GTX590
 #define TIMING 0
 
 #if TIMING 
-unsigned int event_flag=cudaEventDefault;
+static unsigned int event_flag=cudaEventDefault;
 #else
-unsigned int event_flag=cudaEventDisableTiming;
+static unsigned int event_flag=cudaEventDisableTiming;
 #endif
 typedef struct{
     curmat *cumvm;//active mvm control matrix
@@ -85,25 +85,25 @@ typedef struct{
 static void __global__ mtch_do(const float *mtch, const float *pix, float *grad, int pixpsa, int nsa){
     extern __shared__ float cum[];//for cumulation and reduction
     float *cumi=cum+threadIdx.y*blockDim.x;//2 padding for easy reduction
-    int ig=threadIdx.y+blockDim.y*blockIdx.x;
-    const float *mtchi=mtch+ig*pixpsa;
-    const float *pixi=pix+ig/2*pixpsa;
-    if(ig>nsa*2) return;//over range
-    //sum 3 times for 90 pixels.
-    cumi[threadIdx.x]=0;
-    if(threadIdx.x<30){
-	cumi[threadIdx.x]=mtchi[threadIdx.x]*pixi[threadIdx.x]
-	    +mtchi[threadIdx.x+30]*pixi[threadIdx.x+30]
-	    +mtchi[threadIdx.x+60]*pixi[threadIdx.x+60];
-    }
-    //reduction
-    for(int step=16;step>0;step>>=1){
-	if(threadIdx.x<step){
-	    cumi[threadIdx.x]+=cumi[threadIdx.x+step];
+    for(int ig=threadIdx.y+blockDim.y*blockIdx.x; ig<nsa*2; ig+=blockDim.y*gridDim.x){
+	const float *mtchi=mtch+ig*pixpsa;
+	const float *pixi=pix+ig/2*pixpsa;
+	//sum 3 times for 90 pixels.
+	cumi[threadIdx.x]=0;
+	if(threadIdx.x<30){
+	    cumi[threadIdx.x]=mtchi[threadIdx.x]*pixi[threadIdx.x]
+		+mtchi[threadIdx.x+30]*pixi[threadIdx.x+30]
+		+mtchi[threadIdx.x+60]*pixi[threadIdx.x+60];
 	}
-    }
-    if(threadIdx.x==0){
-	grad[ig]=cumi[0];
+	//reduction
+	for(int step=16;step>0;step>>=1){
+	    if(threadIdx.x<step){
+		cumi[threadIdx.x]+=cumi[threadIdx.x+step];
+	    }
+	}
+	if(threadIdx.x==0){
+	    grad[ig]=cumi[0];
+	}
     }
 }
 /*
@@ -152,7 +152,6 @@ multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g
    
 */
 void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
-    int nsm=2;
     info("Using %d gpus. nstep=%d\n", ngpu, nstep);
     int nstep0=20;//for warm up
 #if 1
@@ -186,11 +185,12 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     int sock=-1;
     int ready=1;
 
-    int mtch_ngrid=50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
+    int mtch_ngrid=30;//50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
     const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap.
     const int mtch_dimy=12;//4 subapertures, 8 gradients
-
-
+    const int naeach=128;
+    int nover=14;
+    int nsm=2;
     {
 	char *MVM_NSM=getenv("MVM_NSM");
 	if(MVM_NSM){
@@ -201,6 +201,10 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	if(MVM_NGRID){
 	    mtch_ngrid=strtol(MVM_NGRID, NULL, 10);
 	    info2("mtch_ngrid is set to %d\n", mtch_ngrid);
+	}
+	char *MVM_NOVER=getenv("MVM_NOVER");
+	if(MVM_NOVER){
+	    nover=strtol(MVM_NOVER, NULL, 10);
 	}
     }
     const int sastep=mtch_dimy*mtch_ngrid/2;
@@ -215,14 +219,15 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    sock=connect_port(MVM_CLIENT, port, 0 ,1);
 	    if(sock!=-1) {
 		info2("Connected");
-		int cmd[6];
+		int cmd[7];
 		cmd[0]=nact;
 		cmd[1]=nsa;
 		cmd[2]=sastep;
 		cmd[3]=pixpsa2;
 		cmd[4]=nstep;
 		cmd[5]=nstep0;
-		if(stwriteintarr(sock, cmd, 6)){
+		cmd[6]=1;
+		if(stwriteintarr(sock, cmd, 7)){
 		    close(sock); sock=-1;
 		    warning("Failed: %s\n", strerror(errno));
 		}
@@ -290,7 +295,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	*/
     }
     smat *timing=snew(nstep, 1);
-    smat *timing_mvmu=snew(nstep, 1);
+    smat *timing_tot=snew(nstep, 1);
     smat *timing_sock=snew(nstep, 1);
     smat *result=snew(nstep, 1);
     cudaProfilerStart();
@@ -300,11 +305,17 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	close(sock); sock=-1;
     }
     info2("Ready\n");
+    int nblock;
     for(int jstep=-nstep0; jstep<nstep; jstep++){
 	//run 20 frames to warm up before timing.
 	int istep=jstep<0?0:jstep;
 	if(sock!=-1){//start signal
 	    timing_sock->p[istep]=0;
+	}
+	if(nover>0){
+	    nblock=(nact*nover+naeach-1)/naeach;
+	}else{
+	    nblock=(nact*(1+istep/50)+naeach-1)/naeach;
 	}
 	tic;
 #if TIMING
@@ -387,18 +398,9 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #if 0
 	    DO(cublasSgemv(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
-	    {
-		const int naeach=128;
-		int nover=1+istep/50;//14;
-		char *MVM_NOVER=getenv("MVM_NOVER");
-		if(MVM_NOVER){
-		    nover=strtol(MVM_NOVER, NULL, 10);
-		}
-		const int nblock=(nact*nover+naeach-1)/naeach;
-		multimv_do<<<nblock, naeach, sizeof(float)*naeach, datai->stream_a[datai->ism]>>>
-		    (datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
-		     nact, nleft*2);
-	    }
+	    multimv_do<<<nblock, naeach, sizeof(float)*naeach, datai->stream_a[datai->ism]>>>
+		(datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
+		 nact, nleft*2);
 #endif
 	    DO(cudaEventRecord(datai->event_w[datai->ism], datai->stream_a[datai->ism]));
 #if TIMING
@@ -499,7 +501,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    datai->stream_a[datai->ism].sync();
 	    datai->stream_mvm->sync();
 	}
-	timing_mvmu->p[istep]=toc3;
+	timing_tot->p[istep]=toc3;
 #if TIMING 
 	if(istep<100){
 	    for(int igpu=0; igpu<ngpu; igpu++){
@@ -541,7 +543,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     //swrite(dmres->p[0], "dmres");
 
     swrite(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    swrite(timing_mvmu, "timing_mvmu_%s_%dgpu", myhostname(), ngpu);
+    swrite(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
     swrite(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
     spageunlock(pix1, pix2, mvm1, mvm2, NULL);
     
@@ -552,7 +554,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     sfree(mtch);
     scellfree(dmres);
     sfree(timing);
-    sfree(timing_mvmu);
+    sfree(timing_tot);
     sfree(timing_sock);
     sfree(result);
     for(int igpu=0; igpu<ngpu; igpu++){

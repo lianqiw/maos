@@ -40,7 +40,7 @@ AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid ov
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
-   OPTScommon="$OPTScommon -Werror"
+   OPTScommon="$OPTScommon -Werror -Wno-unused-function"
 fi
 LDEXE="-lm -no-fast-install"
 OPTSextra=""
@@ -199,7 +199,7 @@ mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
 if test "$mkl_avail" = "yes" ;then
     #MKL is already downloaded. use it.
     if test -f "$mkl_lib" ;then
-       use_mkl_default="yes"
+       use_mkl_default="no"
     else
        use_mkl_default="no"
     fi
@@ -256,8 +256,8 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
-OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
+COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
+OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc " #-Mcache_align"
 OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
 OPTIM_OPENCC="-O3"
@@ -425,6 +425,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       LAPACK="$LAPACK ${mkldep}"
    fi
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
+   OPTIM_ICC="$OPTIM_ICC -static-intel"
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi

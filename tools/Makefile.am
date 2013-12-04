@@ -65,7 +65,7 @@ ___bin_gpu_mvm_SOURCES=gpu_mvm.c
 ___bin_gpu_mvm_LDADD=../cuda/libgpu.a $(LDADD) $(LDCUDA)
 endif
 
-PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest
+PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu
 ___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_slaving_SOURCES=slaving.c
 ___bin_cov2psf_SOURCES=cov2psf.c
@@ -74,5 +74,5 @@ ___bin_psfiris_SOURCES=psfiris.c
 ___bin_psfgc_SOURCES=psfgc.c
 ___bin_mk2dcov_SOURCES=mk2dcov.c
 ___bin_ethtest_SOURCES=ethtest.c
-
+___bin_mvm_cpu_SOURCES=mvm_cpu.c
 bin_PROGRAMS=$(PROGS)
