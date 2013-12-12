@@ -519,6 +519,7 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(dbl,guard);
     READ_DM_RELAX(dbl,stroke);
     READ_DM_RELAX(dbl,iastroke);
+    READ_DM_RELAX(str,iastrokefn);
     READ_DM_RELAX(dbl,vmisreg);
     READ_DM_RELAX(dbl,histbin);
     READ_DM_RELAX(int,histn);
@@ -1855,9 +1856,25 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke>0){
 	    parms->sim.dmclipia=1;
+	    if(parms->dm[idm].iastrokefn){
+		parms->dm[idm].iastrokescale=dread("%s", parms->dm[idm].iastrokefn);
+		if(parms->dm[idm].iastrokescale->ny!=2){
+		    error("iastrokescale has wrong number of columns. Expect 2, got %ld.\n", 
+			  parms->dm[idm].iastrokescale->ny);
+		}
+		long nx=parms->dm[idm].iastrokescale->nx;
+		//surface to OPD.
+		double dx=parms->dm[idm].iastrokescale->p[1]-parms->dm[idm].iastrokescale->p[0];
+		double dx2=(parms->dm[idm].iastrokescale->p[nx-1]-parms->dm[idm].iastrokescale->p[0]);
+		if(fabs((dx*(nx-1)-dx2))>dx*1e-3){
+		    error("iastrokescale is not linearly spaced\n");
+		}
+		normalize_max(parms->dm[idm].iastrokescale->p+nx, nx, parms->dm[idm].iastroke*2);
+		dwrite(parms->dm[idm].iastrokescale, "iastrokescale_%d", idm);
+	    }
 	}
     }
-    if(parms->save.dmpttr || parms->sim.dmclip || parms->sim.dmttcast){
+    if(parms->save.dmpttr || parms->sim.dmclip || parms->sim.dmclipia || parms->sim.dmttcast){
 	parms->sim.dmttcast=1;
 	if(!parms->sim.fuseint){
 	    error("Sorry, clipping only works in fuseint=1 mode\n");
@@ -2415,6 +2432,13 @@ static void check_parms(const PARMS_T *parms){
 	    if(strokemicron<1 || strokemicron>50){
 		warning("dm %d: stroke %g m is probably wrong\n",
 			i,parms->dm[i].stroke);
+	    }
+	}
+	if(isfinite(parms->dm[i].iastroke)){
+	    double strokemicron=parms->dm[i].iastroke*1e6;
+	    if(strokemicron<1 || strokemicron>50){
+		warning("dm %d: iastroke %g m is probably wrong\n",
+			i,parms->dm[i].iastroke);
 	    }
 	}
     }

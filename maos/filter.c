@@ -48,6 +48,37 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
+static inline int limit_diff(double *x1, double *x2, double thres, const dmat *scale){
+    double diff=*x2-*x1;
+    double mean=0.5*(*x1+*x2);
+    if(scale){
+	long nmax=scale->nx;
+	long nmax1=nmax-1;
+	double xminl=(scale->p[0]);
+	double xmaxl=(scale->p[nmax-1]);
+	double xsep=(xmaxl-xminl)/(double)(nmax1);
+	double xsep1=1./xsep;
+	double xx=(mean-xminl)*xsep1;
+	double *y=scale->p+nmax;
+	if(xx<0){
+	    thres=y[0];
+	}else if(xx>nmax1){
+	    thres=y[nmax1];
+	}else{
+	    long xxm=ifloor(xx);
+	    double xxw=xx-xxm;
+	    thres=xxw*y[xxm+1]+(1.-xxw)*y[xxm];
+	}
+	info2("thres@%10g: %10g\n", mean, thres);
+    }
+    if(fabs(diff)>thres){
+	double ratio=signbit(diff)?-.49:.49;
+	*x1=mean-thres*ratio;
+	*x2=mean+thres*ratio;
+    	return 1;
+    }
+    return 0;
+}
 static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.dmttcast && dmint){
@@ -87,6 +118,55 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 		}
 	    }
 	}
+	if(parms->sim.dmclipia){
+	    /*Clip interactuator stroke*/
+	    for(int idm=0; idm<parms->ndm; idm++){
+		/* Embed DM commands to a square array (borrow dmrealsq) */
+		int nx=simu->recon->anx[idm];
+		double (*dmr)[nx];
+		if(!parms->fit.square){
+		    const long *embed=simu->recon->aembed[idm];
+		    const double *pin=dmint->p[idm]->p;
+		    double *restrict pout=simu->dmrealsq[idm]->p;
+		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+			pout[embed[i]]=pin[i];
+		    }
+		    dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
+		}else{
+		    dmr=(double(*)[nx])dmint->p[idm]->p;
+		}
+
+		int count=0,trials=0;
+		do{
+		    count=0;
+		    const double iastroke=parms->dm[idm].iastroke*2;//surface to opd
+		    const dmat *iastrokescale=parms->dm[idm].iastrokescale;
+		    PDMAT(simu->recon->amap[idm],map);
+		    for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
+			for(int ix=0; ix<nx-1; ix++){
+			    if(map[iy][ix] && map[iy+1][ix]){
+				count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke, iastrokescale);
+			
+			    }
+			    if(map[iy][ix] && map[iy][ix+1]){
+				count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke, iastrokescale);
+			    }
+			}
+		    }
+		    trials++;
+		    if(count) info2("trial %2d: %d actuators over ia limit\n", trials, count);
+		}while(count>0);
+		if(!parms->fit.square){//copy data back
+		    const long *embed=simu->recon->aembed[idm];
+		    const double *pin=simu->dmrealsq[idm]->p;
+		    double *restrict pout=dmint->p[idm]->p;
+		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+			pout[i]=pin[embed[i]];
+		    } 
+		}
+	    }
+	}
+	/*This is after the integrator output and clipping*/
 	if(simu->dmhist){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		if(simu->dmhist->p[idm]){
@@ -314,46 +394,6 @@ void update_dm(SIM_T *simu){
 	    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
 		pout[embed[i]]=pin[i];
 	    }
-	}
-    }
-    if(parms->sim.dmclipia){
-	/*Clip interactuator stroke*/
-	for(int idm=0; idm<parms->ndm; idm++){
-	    int count=0;
-	    do{
-		count=0;
-		int nx=simu->recon->anx[idm];
-		const double thres=parms->dm[idm].iastroke*2;
-		PDMAT(simu->recon->amap[idm],map);
-		PDMAT(simu->dmrealsq[idm], dmr);
-		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
-		    for(int ix=0; ix<nx-1; ix++){
-			if(map[iy][ix] && map[iy+1][ix]){
-			    double diff=dmr[iy+1][ix]-dmr[iy][ix];
-			    if(fabs(diff)>thres){
-				double tmp=0.5*(dmr[iy+1][ix]+dmr[iy][ix]);
-				double scale=signbit(diff)?-.5:.5;
-				dmr[iy][ix]=tmp-thres*scale;
-				dmr[iy+1][ix]=tmp+thres*scale;
-				info("%g-->%g ", diff, dmr[iy+1][ix]-dmr[iy][ix]);
-				count++;
-			    }
-			}
-			if(map[iy][ix] && map[iy][ix+1]){
-			    double diff=dmr[iy][ix+1]-dmr[iy][ix];
-			    if(fabs(diff)>thres){
-				double tmp=0.5*(dmr[iy][ix+1]+dmr[iy][ix]);
-				double scale=signbit(diff)?-.5:.5;
-				dmr[iy][ix]=tmp-thres*scale;
-				dmr[iy][ix+1]=tmp+thres*scale;
-				info("%g-->%g ", diff, dmr[iy][ix+1]-dmr[iy][ix]);
-				count++;
-			    }
-			}
-		    }
-		}
-		if(count) info("%d actuators over ia limit\n", count);
-	    }while(count>0);
 	}
     }
 #if USE_CUDA

@@ -236,7 +236,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 	{
 	    int isim0;
 	    if(parms->sim.closeloop){
-		isim0=MAX(MAX(50, parms->sim.start), parms->sim.end/10);
+		if(parms->sim.end>100){
+		    isim0=MAX(50,parms->sim.end/10);
+		}else{
+		    isim0=MIN(20, parms->sim.end/2);
+		}
 	    }else{
 		isim0=0;
 	    }

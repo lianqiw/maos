@@ -1235,7 +1235,7 @@ X(mat)* X(linspace)(double min, double dx, long n){
 /**
    Check whether xin is linearly spaced
 */
-static int X(islinear)(X(mat)*xin){
+static int X(islinear)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=(xin->p[0]);
@@ -1250,7 +1250,7 @@ static int X(islinear)(X(mat)*xin){
 /**
    Check whether xin is logrithmically spaced
  */
-static int X(islog)(X(mat)*xin){
+static int X(islog)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=log10(xin->p[0]);
@@ -1266,7 +1266,7 @@ static int X(islog)(X(mat)*xin){
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
 */
-X(mat)* X(interp1linear)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
     if(!X(islinear)(xin)){
 	error("xin is not linearly spaced\n");
     }
@@ -1301,7 +1301,7 @@ X(mat)* X(interp1linear)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
    Interpolate using log(xin) and log(xnew)
    xin is the coordinate of yin. xnew is the coordinate of the output.
 */
-X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
     if(!X(islog)(xin)){
 	error("xin is not logrithmically spaced\n");
     }
@@ -1332,7 +1332,7 @@ X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     return ynew;
 }
 #ifndef USE_COMPLEX
-X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
     if(X(islinear)(xin)){
 	return X(interp1linear)(xin, yin, xnew);
     }else if(X(islog)(xin)){
