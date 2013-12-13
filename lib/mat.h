@@ -125,12 +125,14 @@ void X(cwpow_thres)(X(mat) *A, double power, double thres);		\
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
 void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
 void X(svd_pow)(X(mat) *A, double power, double thres);\
+void X(polyval)(X(mat) *A, XR(mat)*p);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\
 X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
+X(mat)* X(interp1_2)(const X(mat) *xyin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
 X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
 void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);\

@@ -135,13 +135,9 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long
 	error("psdin should have two columns\n");
     }
     double Ts=dt*dtrat;
-    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);  
     st->fny=0.5/Ts;
     dmat *nu=st->nu=dlogspace(-3,log10(0.5/dt),1000);
-    st->psd=dinterp1(psdf,psdval,nu);
-    dfree(psdf);
-    dfree(psdval);
+    st->psd=dinterp1(psdin, 0, nu);
     dcomplex pi2i=2*M_PI*I;
     if(st->Hsys || st->Hwfs || st->Hint || st->s){
 	error("Already initialized\n");
@@ -559,13 +555,9 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     if(psdin->ny!=2) error("psdin should have two columns\n");
     double df=1./(N*dt);
     dmat *f=dlinspace(df,df,N);
-    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
-    dmat *psd2=dinterp1(psdf,psdval,f);
+    dmat *psd2=dinterp1(psdin, 0, f);
     dfree(f);
     double sqdf=sqrt(df);
-    dfree(psdf);
-    dfree(psdval);
     cmat *psdc=cnew(N,1);
     cfft2plan(psdc, -1);
     for(long i=0; i<psd2->nx; i++){
@@ -630,15 +622,13 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     if(psdin->ny!=2){
 	error("psdin should have two columns\n");
     }
-    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
     long nstep=nextpow2(nstepin);
     double df=1./(dt*nstep);
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     double var=psd_inte2(psdin);
     info2("Input psd has variance of %g\n",var);
-    psd=dinterp1(psdx, psdy, fs);
+    psd=dinterp1(psdin, 0, fs);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
     cfft2plan(wshat, -1);
@@ -649,8 +639,6 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *out=NULL;
     creal2d(&out, 0, wshat, 1);
     cfree(wshat);
-    dfree(psdx);
-    dfree(psdy);
     dfree(psd);
     dfree(fs);
     dresize(out, nstepin, 1);
@@ -666,10 +654,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
    2013-03-24:only psd2 was added to to psd.*/
 static dmat *add_psd_nomatch(const dmat *psd1,const dmat *psd2){
     dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
-    dmat *psd2x=dnew_ref(psd2->nx, 1, psd2->p);
-    dmat *psd2y=dnew_ref(psd2->nx,1,psd2->p+psd2->nx);
-    dmat *p2ynew=dinterp1(psd2x,psd2y,nu1);
-    dfree(psd2x); dfree(psd2y);
+    dmat *p2ynew=dinterp1(psd2, 0, nu1);
     dmat *psd=dnew(nu1->nx,2);
     double *py=psd->p+psd->nx;
     const double *p1y=psd1->p+psd1->nx;

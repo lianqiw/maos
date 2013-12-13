@@ -243,9 +243,10 @@ typedef struct DM_CFG_T{
     double guard;   /**<extra DM actuator rings outside of aper.d*/
     double stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke$*/
     double iastroke;/**<Inter actuator stroke (surface)*/
-    dmat *iastrokescale;/**<Scale inter actuator based on command*/
-    char *iastrokefn;/**<file describes iastrokescale. 2 columns for interpolation. 
-			First column is OPD, second column is ratio, max renormalized to iastroke.*/
+    dcell *iastrokescale;/**<Scale inter actuator based on command*/
+    char  *iastrokefn;/**<file describes polynomials that convert opd to voltage
+		       * (first cell), and voltage to opd (second cell). The two
+		       * operations has to be strict inverse of each other*/
     double vmisreg; /**<vertical misregistration*/
     double ht;      /**<height conjugation range*/
     double dx;      /**<actuator separation along x (derived from order)*/

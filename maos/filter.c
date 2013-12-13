@@ -48,31 +48,11 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-static inline int limit_diff(double *x1, double *x2, double thres, const dmat *scale){
+static inline int limit_diff(double *x1, double *x2, double thres){
     double diff=*x2-*x1;
-    double mean=0.5*(*x1+*x2);
-    if(scale){
-	long nmax=scale->nx;
-	long nmax1=nmax-1;
-	double xminl=(scale->p[0]);
-	double xmaxl=(scale->p[nmax-1]);
-	double xsep=(xmaxl-xminl)/(double)(nmax1);
-	double xsep1=1./xsep;
-	double xx=(mean-xminl)*xsep1;
-	double *y=scale->p+nmax;
-	if(xx<0){
-	    thres=y[0];
-	}else if(xx>nmax1){
-	    thres=y[nmax1];
-	}else{
-	    long xxm=ifloor(xx);
-	    double xxw=xx-xxm;
-	    thres=xxw*y[xxm+1]+(1.-xxw)*y[xxm];
-	}
-	info2("thres@%10g: %10g\n", mean, thres);
-    }
     if(fabs(diff)>thres){
-	double ratio=signbit(diff)?-.49:.49;
+	double ratio=signbit(diff)?-.49999:.49999;
+	double mean=0.5*(*x1+*x2);
 	*x1=mean-thres*ratio;
 	*x2=mean+thres*ratio;
     	return 1;
@@ -83,7 +63,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.dmttcast && dmint){
 	/*
-	  Here we are simulation a Tip/Tilt Mirror by
+	  Here we are simulating a Tip/Tilt Mirror by
 	  casting global tip/tilt out from DM commands, do
 	  the saturation and histogram analysis. 
 	  
@@ -114,7 +94,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 				-parms->dm[idm].stroke,
 				parms->dm[idm].stroke);
 		if(nclip>0){
-		    info("DM %d: %d actuators clipped\n", idm, nclip);
+		    info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
 		}
 	    }
 	}
@@ -122,47 +102,68 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 	    /*Clip interactuator stroke*/
 	    for(int idm=0; idm<parms->ndm; idm++){
 		/* Embed DM commands to a square array (borrow dmrealsq) */
+		double iastroke;
 		int nx=simu->recon->anx[idm];
 		double (*dmr)[nx];
+		dmat *dm;
+		if(parms->dm[idm].iastrokescale){ //convert dm to voltage
+		    dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmint->p[idm]);
+		    iastroke=parms->dm[idm].iastroke;//voltage.
+		}else{
+		    dm=dmint->p[idm];
+		    iastroke=parms->dm[idm].iastroke*2;//surface to opd
+		}
 		if(!parms->fit.square){
 		    const long *embed=simu->recon->aembed[idm];
-		    const double *pin=dmint->p[idm]->p;
+		    const double *pin=dm->p;
 		    double *restrict pout=simu->dmrealsq[idm]->p;
 		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
 			pout[embed[i]]=pin[i];
 		    }
 		    dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
 		}else{
-		    dmr=(double(*)[nx])dmint->p[idm]->p;
+		    dmr=(double(*)[nx])dm->p;
 		}
-
+		
 		int count=0,trials=0;
 		do{
 		    count=0;
-		    const double iastroke=parms->dm[idm].iastroke*2;//surface to opd
-		    const dmat *iastrokescale=parms->dm[idm].iastrokescale;
 		    PDMAT(simu->recon->amap[idm],map);
 		    for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
-			for(int ix=0; ix<nx-1; ix++){
+			for(int ix=0; ix<nx; ix++){
 			    if(map[iy][ix] && map[iy+1][ix]){
-				count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke, iastrokescale);
-			
+				count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
 			    }
+			    
+			} 
+		    }
+		    for(int iy=0; iy<simu->recon->any[idm]; iy++){
+			for(int ix=0; ix<nx-1; ix++){
 			    if(map[iy][ix] && map[iy][ix+1]){
-				count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke, iastrokescale);
+				count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
 			    }
 			}
 		    }
 		    trials++;
-		    if(count) info2("trial %2d: %d actuators over ia limit\n", trials, count);
+		    if(trials==1 && count>0) {
+			info2("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
+		    }
 		}while(count>0);
+		if(trials>1){
+		    info2("trials=%d\n", trials);
+		}
 		if(!parms->fit.square){//copy data back
 		    const long *embed=simu->recon->aembed[idm];
 		    const double *pin=simu->dmrealsq[idm]->p;
-		    double *restrict pout=dmint->p[idm]->p;
+		    double *restrict pout=dm->p;
 		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
 			pout[i]=pin[embed[i]];
 		    } 
+		}
+		if(parms->dm[idm].iastrokescale){//convert back to opd
+		    dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
+		    dcp(&dmint->p[idm], dm2);
+		    dfree(dm); dfree(dm2);
 		}
 	    }
 	}

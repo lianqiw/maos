@@ -1857,20 +1857,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke>0){
 	    parms->sim.dmclipia=1;
 	    if(parms->dm[idm].iastrokefn){
-		parms->dm[idm].iastrokescale=dread("%s", parms->dm[idm].iastrokefn);
-		if(parms->dm[idm].iastrokescale->ny!=2){
-		    error("iastrokescale has wrong number of columns. Expect 2, got %ld.\n", 
-			  parms->dm[idm].iastrokescale->ny);
-		}
-		long nx=parms->dm[idm].iastrokescale->nx;
-		//surface to OPD.
-		double dx=parms->dm[idm].iastrokescale->p[1]-parms->dm[idm].iastrokescale->p[0];
-		double dx2=(parms->dm[idm].iastrokescale->p[nx-1]-parms->dm[idm].iastrokescale->p[0]);
-		if(fabs((dx*(nx-1)-dx2))>dx*1e-3){
-		    error("iastrokescale is not linearly spaced\n");
-		}
-		normalize_max(parms->dm[idm].iastrokescale->p+nx, nx, parms->dm[idm].iastroke*2);
-		dwrite(parms->dm[idm].iastrokescale, "iastrokescale_%d", idm);
+		parms->dm[idm].iastrokescale=dcellread("%s", parms->dm[idm].iastrokefn);
 	    }
 	}
     }
@@ -2434,7 +2421,7 @@ static void check_parms(const PARMS_T *parms){
 			i,parms->dm[i].stroke);
 	    }
 	}
-	if(isfinite(parms->dm[i].iastroke)){
+	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokescale){
 	    double strokemicron=parms->dm[i].iastroke*1e6;
 	    if(strokemicron<1 || strokemicron>50){
 		warning("dm %d: iastroke %g m is probably wrong\n",

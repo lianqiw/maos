@@ -1064,10 +1064,11 @@ int X(clip)(X(mat) *A, double min, double max){
     T *restrict Ap=A->p;
     int nclip=0;
     for(long i=0; i<A->nx *A->ny; i++){
-	if(REAL(Ap[i])>max) {
+	R Ar=REAL(Ap[i]);
+	if(Ar>max) {
 	    Ap[i]=max;
 	    nclip++;
-	}else if(REAL(Ap[i])<min) {
+	}else if(Ar<min) {
 	    Ap[i]=min;
 	    nclip++;
 	}
@@ -1156,7 +1157,23 @@ void X(cwpow_thres)(X(mat) *A, double power, double thres){
 	}
     }
 }
-
+/**
+   Compute polynomial functional value inplace
+ */
+void X(polyval)(X(mat) *A, XR(mat)*p){
+    if(p->nx==1 && p->ny>1){
+	p->nx=p->ny;
+	p->ny=1;
+    }
+    int np=p->nx;
+    for(long i=0; i<A->nx*A->ny; i++){
+	T tmp=0;
+	for(long ip=0; ip<np; ip++){
+	    tmp+=p->p[ip]*POW(A->p[i], np-ip-1);
+	}
+	A->p[i]=tmp;
+    }
+}
 /**
    add val to diagonal values of A.
 */
@@ -1285,10 +1302,12 @@ X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xne
     for(long iy=0; iy<ynew->ny; iy++){
 	for(long ix=0; ix<ynew->nx; ix++){
 	    double xx=((xnew->p[ix])-xminl)*xsep1;
-	    if(xx<0 || xx>nmax1){
-		pynew[iy][ix]=0;
+	    long xxm=ifloor(xx);
+	    if(xxm<0){
+		pynew[iy][ix]=pyin[iy][0];
+	    }else if(xxm>=nmax1){
+		pynew[iy][ix]=pyin[iy][nmax1];
 	    }else{
-		long xxm=ifloor(xx);
 		double xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
 	    }
@@ -1320,10 +1339,12 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
     for(long iy=0; iy<ynew->ny; iy++){
 	for(long ix=0; ix<ynew->nx; ix++){
 	    double xx=(log10(xnew->p[ix])-xminl)*xsep1;
-	    if(xx<0 || xx>nmax1){
-		pynew[iy][ix]=0;
+	    long xxm=ifloor(xx);
+	    if(xxm<0){
+		pynew[iy][ix]=pyin[iy][0];
+	    }else if(xxm>=nmax1){
+		pynew[iy][ix]=pyin[iy][nmax1];
 	    }else{
-		long xxm=ifloor(xx);
 		double xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
 	    }
@@ -1333,15 +1354,22 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 }
 #ifndef USE_COMPLEX
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
+    int free_xy=1;
+    X(mat)*ynew=NULL;
+    if(!yin){
+	yin=X(new_ref)(xin->nx, 1, xin->p+xin->nx);
+	xin=X(new_ref)(xin->nx, 1, xin->p);
+	free_xy=1;
+    }
     if(X(islinear)(xin)){
-	return X(interp1linear)(xin, yin, xnew);
+	ynew=X(interp1linear)(xin, yin, xnew);
     }else if(X(islog)(xin)){
-	return X(interp1log)(xin, yin, xnew);
+        ynew=X(interp1log)(xin, yin, xnew);
     }else{//arbitrary spacing
 	if(xin->ny!=1 || xnew->ny!=1){
 	    error("Either xin or xnew is in wrong format\n");
 	}
-	X(mat) *ynew=X(new)(xnew->nx, xnew->ny); 
+	ynew=X(new)(xnew->nx, xnew->ny); 
 	PMAT(yin, pyin);
 	PMAT(ynew, pynew);
 	int curpos=0;
@@ -1356,9 +1384,14 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 		pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
 	    }
 	}
-	return ynew;
     }
+    if(free_xy){
+	X(mat) *tmp=(X(mat)*)xin; X(free)(tmp);
+	tmp=(X(mat)*)yin; X(free)(tmp);
+    }
+    return ynew;
 }
+
 #endif
 #ifndef USE_COMPLEX
 /**

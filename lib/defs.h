@@ -30,6 +30,7 @@
 #ifndef USE_COMPLEX
 /*Double */
 #define X(A) d##A
+#define XR(A) d##A
 #define Y(A) A
 #define Z(A) d##A##_
 #define T double
@@ -52,6 +53,7 @@
 #else
 /*Double Complex */
 #define X(A) c##A
+#define XR(A) d##A
 #define Y(A) c##A
 #define Z(A) z##A##_ /*blas/lapack convention */
 #define T dcomplex
@@ -77,6 +79,7 @@
 /*Float */
 #ifndef USE_COMPLEX
 #define X(A) s##A
+#define XR(A) s##A
 #define Y(A) s##A
 #define Z(A) s##A##_
 #define T float
@@ -99,6 +102,7 @@
 #else
 /*Single Complex */
 #define X(A) z##A
+#define XR(A) s##A
 #define Y(A) z##A
 #define Z(A) c##A##_ /*blas/lapack convention */
 #define T fcomplex
