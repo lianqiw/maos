@@ -19,11 +19,11 @@
 #define SKYC_SIM_H
 dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms);
 void ngsmod2wvf(cmat *wvf, double wvl, const dmat *modm,
-		POWFS_S *powfs, int isa, double thetax, double thetay, 
+		const POWFS_S *powfs, int isa, double thetax, double thetay, 
 		const PARMS_S *parms);
-dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms);
-dmat* skysim_phy(dmat **mres, dmat *mideal, dmat *mideal_oa, double ngsol,
-		 ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms, 
-		 int idtrat, int noisy, int demotettf);
-void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int seldtrat, int isky);
+dcell* skysim_ztilt(const dmat *mideal, const ASTER_S *aster, const PARMS_S *parms);
+dmat* skysim_phy(dmat **mres, const dmat *mideal, const dmat *mideal_oa, double ngsol,
+		 ASTER_S *aster, const POWFS_S *powfs, const PARMS_S *parms, 
+		 int idtrat, int noisy);
+void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, int selaster, int seldtrat, int isky);
 #endif

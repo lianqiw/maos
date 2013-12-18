@@ -30,6 +30,7 @@ typedef struct SERVO_CALC_T{
     double sigman;  /**<[out] Noise variance*/
     double pmargin; /*phase margin. default: M_PI/4*/
     double fny;     /**Nyqust frequency for dtrat*/
+    double var_sig; /**Integration of PSD*/
     /*Output. */
     double res_sig; /**<[out] Residual signal*/
     double res_n;   /**<[out] Residual noise propagation*/
@@ -39,8 +40,14 @@ typedef struct SERVO_CALC_T{
     double T;
     int type;
 }SERVO_CALC_T;
+#define TWOPI 6.283185307179586
+/*Compute phase between -2pi, and 0*/
 INLINE double phase(dcomplex val){
-    return atan2(cimag(val), creal(val));
+    double ang=atan2(cimag(val), creal(val));
+    if(ang>0){
+	ang=ang-TWOPI;
+    }
+    return ang;
 }
 /**
    With given open loop transfer function, compute its cross over frequency and
@@ -51,10 +58,11 @@ INLINE double phase(dcomplex val){
    Tested OK: 2010-06-11
 */
 /*Determine the phase difference between Hol and -180 when abs(Hol)==1*/
-static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
-			       const dmat *nu, /**<[out] frequency grid*/
-			       const cmat *Hol /**<[in] open loop transfer function defined on nu*/
-			       ){
+static double phase_at_gain(double *fcross, /**<[out] Cross over frequency*/
+			    const dmat *nu, /**<[in] frequency grid*/
+			    const cmat *Hol, /**<[in] open loop transfer function defined on nu*/
+			    double gain/**<[in] compute phase at this gain*/
+    ){
     if(cabs(Hol->p[0])<1){
 	error("Hol is less than 1 from the beginning\n");
     }
@@ -63,10 +71,10 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
     double phi=0;
     for(long i=1; i<nu->nx; i++){
 	double val=cabs(Hol->p[i]);
-	if(val<1){
+	if(val<gain){
 	    double valpre=cabs(Hol->p[i-1]);
 	    double logvalpre=log10(valpre);/*positive. log10(val) is negative. */
-	    double rat=logvalpre/(logvalpre-log10(val));
+	    double rat=(logvalpre-log10(gain))/(logvalpre-log10(val));
 	    *fcross=pow(10,log10(nu->p[i-1])*(1-rat)+log10(nu->p[i])*rat);
 	    double phi0=phase(Hol->p[i-1]);
 	    double phi1=phase(Hol->p[i]);
@@ -80,8 +88,7 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
 	    break;
 	}
     }
-    if(!found){
-	warning("Hol does not decrease to 1.\n");
+    if(!found){/*warning("Hol does not decrease to 1.\n");*/
 	phi=phase(Hol->p[nu->nx-1]);
 	*fcross=nu->p[nu->nx-1];
     }
@@ -92,39 +99,50 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
 }
 
 /*Determine the ratio in dB between Hol and 1 when phase of Hol is -180*/
-static double servo_gain_margin(double *fcross, /**<[out] Cross over frequency*/
-			       const dmat *nu, /**<[out] frequency grid*/
-			       const cmat *Hol /**<[in] open loop transfer function defined on nu*/
+static double gain_at_phase(double *fcross, /**<[out] Cross over frequency*/
+			    const dmat *nu, /**<[in] frequency grid*/
+			    const cmat *Hol, /**<[in] open loop transfer function defined on nu*/
+			    double angle     /**<[in] compute gain at this phase*/
 			       ){
+    if(angle<-TWOPI || angle>0){
+	error("angle=%g is invalid\n", angle);
+    }
     long i;
-    //Skip leading terms if they are below -M_PI
+    //Skip leading terms if they are belowangle
     for(i=0; i<nu->nx; i++){
-	if(phase(Hol->p[i])<0){
+	if(phase(Hol->p[i])>angle){
 	    break;
 	}
     }
     int found=0;
-    double margin=0;
+    double gain=0;
     for(; i<nu->nx; i++){
 	double phi1=phase(Hol->p[i]);
-	if(phi1>0){
-	    phi1-=M_PI;/*how much above -pi. negative*/
-	    double phi0=phase(Hol->p[i-1])+M_PI;/*how much above -pi*/
-	    double rat=phi0/(phi0-phi1);
+	if(phi1<angle){
+	    double phi0=phase(Hol->p[i-1]);/*how much above -pi*/
+	    double rat=(phi0+M_PI)/(phi0-phi1);
 	    double val=cabs(Hol->p[i]);
 	    double valpre=cabs(Hol->p[i-1]);
 	    *fcross=nu->p[i-1]+(nu->p[i]-nu->p[i-1])*rat;
-	    margin=-20*log10(valpre+(val-valpre)*rat);
+	    gain=-20*log10(valpre+(val-valpre)*rat);
 	    found=1;
 	    break;
 	}
     }
-    if(!found){
-	warning("Hol never reach -180");
-	*fcross=nu->p[nu->nx-1];
-	margin=-20*log10(cabs(Hol->p[nu->nx-1]));
+    if(!found){/*Loop is unstable*/
+	*fcross=0;
+	gain=NAN;
     }
-    return margin;/**/
+    /*{
+	info2("gain=%g, angle=%g\n", gain, angle);
+	static int saved=0;
+	if(!saved){
+	    saved=1;
+	    cwrite(Hol, "Hol");
+	    dwrite(nu, "nu");
+	}
+	}*/
+    return gain;/**/
 }
 
 /**
@@ -138,7 +156,8 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long
     st->fny=0.5/Ts;
     dmat *nu=st->nu=dlogspace(-3,log10(0.5/dt),1000);
     st->psd=dinterp1(psdin, 0, nu);
-    dcomplex pi2i=2*M_PI*I;
+    st->var_sig=psd_inte2(psdin);
+    dcomplex pi2i=TWOPI*I;
     if(st->Hsys || st->Hwfs || st->Hint || st->s){
 	error("Already initialized\n");
     }
@@ -174,15 +193,31 @@ static void servo_calc_free(SERVO_CALC_T *st){
 }
 static int servo_isstable(dmat *nu, cmat *Hol){
     double fp, fg;
-    double pmargin=servo_phi_margin(&fp, nu, Hol);
-    double gmargin=servo_gain_margin(&fg, nu, Hol);
+    double pmargin=phase_at_gain(&fp, nu, Hol, 1);
+    double gmargin=gain_at_phase(&fg, nu, Hol, -M_PI);
     int isstable=pmargin>M_PI/4.1 && fp<fg && gmargin>0;
-    if(!isstable){
-	info("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
+    /*if(!isstable){
+       info2("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
 	     pmargin*180/M_PI, fp, gmargin, fg);
-    }
+	     }*/
     return isstable;
 }
+/*
+static double servo_calc_max_gain(SERVO_CALC_T *st, double pmargin){
+    if(!st->Hol){
+	st->Hol=cnew(st->nu->nx,1);
+    }
+    cadd(&st->Hol, 0, st->Hsys, 1);
+    double angle=pmargin-M_PI;
+    if(st->type==2){
+	ccwm(st->Hol, st->Hint);
+	angle-=M_PI/2.4;//allow more due to lead filter
+    }
+    double fcross;
+    double dB=gain_at_phase(&fcross, st->nu, st->Hol, angle);
+    double gain=isfinite(dB)?pow(10, dB/20):0;
+    return gain;
+    }*/
 /**
    Calculate total error. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
 */
@@ -192,7 +227,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	st->Hol=cnew(nu->nx,1);
     }
     /*Compute Hol with the first integrator and gain.*/
-    if(fabs(g0)>EPS){
+    if(g0>EPS){
 	st->g=g0;
     }
     cadd(&st->Hol, 0, st->Hsys, st->g);
@@ -201,10 +236,10 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	ccwm(st->Hol, st->Hint);/*multiply the second integrator*/
         if(fabs(g0)>EPS){/*figure out a, T from new g0*/
 	    double margin, fcross;
-	    margin=servo_phi_margin(&fcross, nu, st->Hol);/*see how much phase lead is needed*/
+	    margin=phase_at_gain(&fcross, nu, st->Hol, 1);/*see how much phase lead is needed*/
 	    double phineed=st->pmargin-margin;
 	    double a,T;
-	    if(phineed*2.4>M_PI){/*lead filter is not suitable*/
+	    if(phineed*2.2>M_PI){/*lead filter is not suitable*/
 		a=1;
 		T=0;
 	    }else{
@@ -232,7 +267,8 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
     for(int i=0; i<nu->nx; i++){
 	dcomplex Hol=st->Hol->p[i];
 	dcomplex Hrej=1./(1.+Hol);
-	res_sig+=psd->p[i]*creal(Hrej*conj(Hrej))*nu->p[i];
+	//The gain never reach below -50dB
+	res_sig+=psd->p[i]*creal(Hrej*conj(Hrej)+1e-5)*nu->p[i];
 	if(st->nu->p[i]<st->fny){
 	    //compute noise prop only within nyqust frequency
 	    dcomplex Hcl=Hol*Hrej;
@@ -246,14 +282,20 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
     res_sig*=dlognu;
     st->res_sig=res_sig;
     st->gain_n=sum_n/sum_1;
-    if(st->gain_n>1 || !servo_isstable(nu, st->Hol)){
-	st->gain_n=1000;//put a high penalty
-	st->res_n=10000*g0*(res_sig+st->sigman);
+    if(!servo_isstable(nu, st->Hol)){
+	st->gain_n=100;
+	/*put a high penalty to drive down the gain*/
+	st->res_n=10*(1+g0)*(st->var_sig+st->sigman);
+	/*warning2("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigman=%g\n",
+	  g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigman);*/
     }else{
-	st->res_n=st->sigman*st->gain_n;
+	if(st->gain_n>1){
+	    st->gain_n=pow(st->gain_n,3);/*a fudge factor to increase the penalty*/
+	}
+        st->res_n=st->sigman*st->gain_n;
+        /*info2("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigman=%g\n",
+         g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigman);*/
     }
-    /*info2("g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g\n",
-      g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n);*/
     return res_sig+st->res_n;
 }
 
@@ -290,12 +332,12 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     st.pmargin=pmargin;
 
     dcell *gm=dcellnew(sigman->nx, sigman->ny);
-    double g0_min=0.001;/*the minimum gain allowed.*/
-    double g0_max=2;/*Can be as much as 2 if dtrat>>1*/
-    
+    double g0_step=1e-6;
+    double g0_min=1e-6;/*the minimum gain allowed.*/
+    double g0_max=2.0;
     for(long ins=0; ins<sigman->nx*sigman->ny; ins++){
 	st.sigman=sigman->p[ins];
-	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, 1e-5);
+	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 	servo_calc_do(&st, g0);
 	gm->p[ins]=dnew(5,1);
 	gm->p[ins]->p[0]=st.g;
@@ -303,6 +345,8 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 	gm->p[ins]->p[2]=st.T;
 	gm->p[ins]->p[3]=st.res_sig;
 	gm->p[ins]->p[4]=st.res_n;
+	/*info2("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigman=%.1g\n",
+	  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigman);*/
     }/*for ins. */
     servo_calc_free(&st);
     return gm;
@@ -348,8 +392,7 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc){
     if(gain->nx!=3){
 	error("Wrong format in gain\n");
     }
-    double dt1=1./st->dt;
-    double gg,ga,gs;
+    double gg,e1a, e1;
     for(int ic=0; ic<merrc->nx*merrc->ny; ic++){
 	dmat *merr=merrc->p[ic];
 	dmat *mlead=st->mlead->p[ic];
@@ -370,26 +413,15 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc){
 	}else{
 	    error("Wrong format in gain\n");
 	}
-	/**2013-12-03: fix lead filter implementation. gg is relocated*/
-	if(indmul>0){
-	    for(int imod=0; imod<nmod; imod++){
-		int indm=imod * indmul;
-		gg=pgain[indm][0];
-		ga=pgain[indm][1];
-		gs=pgain[indm][2]*dt1;
-		mlead->p[imod] = (1./(2*ga*gs+1))*(mlead->p[imod]*(2*ga*gs-1)
-						   +gg*(merr->p[imod]*(2*gs+1)
-							-merrlast->p[imod]*(2*gs-1)));
-	    }
-	}else{
-	    gg=pgain[0][0];
-	    ga=pgain[0][1];
-	    gs=pgain[0][2]*dt1;
-	    for(int imod=0; imod<nmod; imod++){
-		mlead->p[imod] = (1./(2*ga*gs+1))*(mlead->p[imod]*(2*ga*gs-1)
-						   +gg*(merr->p[imod]*(2*gs+1)
-							-merrlast->p[imod]*(2*gs-1)));
-	    }
+	/**2013-12-03: fix lead filter implementation. gg is relocated
+	   2013-12-05: A more accurate and robust lead filter
+	 */
+	for(int imod=0; imod<nmod; imod++){
+	    int indm=imod * indmul;
+	    gg=pgain[indm][0];
+	    e1a=pgain[indm][1];
+	    e1=pgain[indm][2];
+	    mlead->p[imod] = e1a*mlead->p[imod]+gg*(1-e1a)/(1-e1)*(merr->p[imod]-e1*merrlast->p[imod]);
 	}
     }
     dcellcp(&st->merrlast, merrc);
@@ -418,9 +450,20 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     SERVO_T *st=calloc(1, sizeof(SERVO_T));
     st->nmint=ap?MAX(2,ap->nx):1;
     st->mint=calloc(st->nmint, sizeof(dcell));
-    st->ap=ap;
+    st->ap=dref(ap);
+    if(ep->nx!=3){//type I
+	st->ep=dref(ep);
+    }else{//type II. preprocess
+	st->ep=dnew(ep->nx, ep->ny);
+	for(int i=0; i<ep->ny; i++){
+	    st->ep->p[i*3]=ep->p[i*3];
+	    double a=ep->p[1+i*3];
+	    double T=ep->p[2+i*3];
+	    st->ep->p[1+i*3]=exp(-dt/(a*T));
+	    st->ep->p[2+i*3]=exp(-dt/T);
+	}
+    }
     st->dt=dt;
-    st->ep=ep;
     st->al=al;
     st->merrhist=calloc(st->al, sizeof(dcell*));
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
@@ -497,9 +540,10 @@ int servo_filter(SERVO_T *st, dcell *_merr){
 	servo_typeII_filter(st, merr);
 	break;
     default:
-	error("Invalid");
+	error("Invalid: st->ep->nx=%ld", st->ep->nx);
     }
     dcelladd(st->mint, 1, st->mpreint, 1);
+    dcellfree(merr);
     return 1;
 }
 
@@ -579,13 +623,16 @@ void servo_free(SERVO_T *st){
     dcellfree(st->mlead);
     dcellfree(st->merrlast);
     dcellfree(st->mpreint);
+    dcellfreearr(st->merrhist, st->al);
     dcellfreearr(st->mint, st->nmint);
+    dfree(st->ap);
+    dfree(st->ep);
     free(st);
 }
 /**
-   Integrated a PSF that defines on logrithmically spaced grid nu.
+   Integrated a PSF that defines on linear or logrithmically spaced grid nu.
 */
-double psd_inte(double *nu, double *psd, long n){
+double psd_inte(const double *nu, const double *psd, long n){
     double dnu=(nu[n-1]-nu[0])/(n-1);
     double dlognu=(log(nu[n-1])-log(nu[0]))/(n-1);
     double res_sig=0;
@@ -605,7 +652,7 @@ double psd_inte(double *nu, double *psd, long n){
 /**
    wraps psd_inte
 */
-double psd_inte2(dmat *psdin){
+double psd_inte2(const dmat *psdin){
     if(psdin->ny!=2){
 	error("psdin  should have two columns\n");
     }
@@ -697,7 +744,7 @@ void add_psd2(dmat **out, const dmat *in){
     if(!*out){
 	*out=ddup(in);
     }else{
-	dmat *tmp=ddup(*out);
+	dmat *tmp=*out;
 	*out=add_psd(tmp, in);
 	dfree(tmp);
     }

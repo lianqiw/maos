@@ -282,10 +282,26 @@ fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads){
     return fft;
 }
 
-/**
- * Free the plan in dcell
- */
 void fft2(fft_t *fft, int dir){
     assert(fft && abs(dir)==1);
     fftw_execute(fft->plan[dir+1]);
+}
+
+void dfft1plan_r2hc(dmat *A, int dir){
+    if(A->nx!=1 && A->ny!=1){
+	error("not supported\n");
+    }
+    assert(abs(dir)==1 && A && A->p);
+    if(!A->fft) A->fft=calloc(1, sizeof(fft_t));
+    int FFTW_FLAGS;
+    FFTW_FLAGS=FFTW_ESTIMATE;
+    LOCK_FFT;
+    if(!A->fft->plan[dir+1]){
+	if(dir==-1){
+	    A->fft->plan[dir+1]=fftw_plan_r2r_1d(A->nx*A->ny, A->p, A->p, FFTW_R2HC, FFTW_FLAGS);
+	}else{
+	    A->fft->plan[dir+1]=fftw_plan_r2r_1d(A->nx*A->ny, A->p, A->p, FFTW_HC2R, FFTW_FLAGS);
+	}
+    }
+    UNLOCK_FFT;
 }

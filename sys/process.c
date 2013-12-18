@@ -79,7 +79,7 @@ void init_process(void){
 	TEMP=stradd(temp,"/","maos-",USER,NULL);
 	mymkdir("%s",TEMP);
 	mymkdir("%s/.aos/",HOME);
-	register_deinit(NULL,(void*)TEMP);
+	//register_deinit(NULL,(void*)TEMP);
     }
 
     NCPU= get_ncpu();

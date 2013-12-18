@@ -26,48 +26,35 @@
 #include <errno.h>
 #include "../lib/aos.h"
 
-static int use_blas=0;
 static int use_trans=1;
 static void mvmt_do(const float *mvmt, float *g, float *dm, int nact, int ngleft, int ngtot){
-    if(use_blas){
-	float one=1.f; 
-	int ione=1;
-	sgemv_("t", &ngleft, &nact, &one,
-	       mvmt, &ngtot, g, &ione, &one, dm, &ione);
-    }else{
+ 
 #pragma omp parallel for
-	for(int ia=0; ia<nact; ia++){
-	    register float tmp=dm[ia];
+    for(int ia=0; ia<nact; ia++){
+	register float tmp=dm[ia];
 #ifdef __ICC
 #pragma unroll
-    __assume_aligned(mvmt,128);
-    __assume_aligned(g,128);
-    __assume_aligned(dm,128);
+	__assume_aligned(mvmt,128);
+	__assume_aligned(g,128);
+	__assume_aligned(dm,128);
 #endif
 #ifdef __ICC
 #pragma vector aligned
 #pragma ivdep
 #pragma simd vectorlength(16) assert
 #endif
-	    for(int ig=0; ig<ngleft; ig++){
-		tmp+=mvmt[ig+ia*ngtot]*g[ig];
-	    }
-	    dm[ia]=tmp;
+	for(int ig=0; ig<ngleft; ig++){
+	    tmp+=mvmt[ig+ia*ngtot]*g[ig];
 	}
+	dm[ia]=tmp;
     }
 }
 static void mvm_do(const float *mvm, float *g, float *dm, int nact, int ngleft){
-    if(use_blas){
-	float one=1.f;
-	int ione=1;
-	sgemv_("n", &nact, &ngleft, &one,
-	       mvm, &nact, g, &ione, &one, dm, &ione);
-    }else{
-	for(int ig=0; ig<ngleft; ig++){
+
+    for(int ig=0; ig<ngleft; ig++){
 #pragma omp parallel for
-	    for(int ia=0; ia<nact; ia++){
-		dm[ia]+=mvm[ia+ig*nact]*g[ig];
-	    }
+	for(int ia=0; ia<nact; ia++){
+	    dm[ia]+=mvm[ia+ig*nact]*g[ig];
 	}
     }
 }
@@ -148,16 +135,13 @@ int main(int argc, char *argv[]){
     if(getenv("MVM_SECT")){
 	sastep=nsa/strtol(getenv("MVM_SECT"), NULL, 10);
     }
-    if(getenv("MVM_BLAS")){
-	use_blas=strtol(getenv("MVM_BLAS"), NULL, 10);
-    }
     if(getenv("MVM_TRANS")){
 	use_trans=strtol(getenv("MVM_TRANS"), NULL, 10);
     }
     if(getenv("MVM_SASTEP")){
 	sastep=strtol(getenv("MVM_SASTEP"), NULL, 10);
     }
-    info2("use_blas=%d, use_trans=%d, nrep=%d, sastep=%d\n", use_blas, use_trans, nrep, sastep);
+    info2("use_trans=%d, nrep=%d, sastep=%d\n", use_trans, nrep, sastep);
     int sock=-1;
     char* MVM_CLIENT=getenv("MVM_CLIENT");
     if(MVM_CLIENT){

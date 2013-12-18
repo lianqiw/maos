@@ -170,7 +170,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		    double ratio=val->p[0]/avgpsf->p[ic]->p[0];
 		    /*info("strehl: bilinear: %g, cubic: %g\n", avgpsf->p[ic]->p[0],val->p[0]); */
 		    if(ratio<0){
-			warning("Ratio is less than zero.\n");
+			warning("Ratio=%g is less than zero.\n", ratio);
 			scale->p[ic]=1;
 		    }else{
 			dscale(avgpsf->p[ic], ratio);

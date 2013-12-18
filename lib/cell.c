@@ -126,7 +126,7 @@ void X(cellfree_do)(X(cell) *dc){
 	}else{
 	    free(dc->header);
 	}
-	free(dc->p);
+	free(dc->p);dc->p=0;
     }
     if(dc->m) X(free)(dc->m);
     free(dc);

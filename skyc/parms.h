@@ -92,7 +92,6 @@ typedef struct SKYC_S{
     int noisefull;   /**<use full noise insteaded servo filtered noise to regularize. =0*/
     int psd_scale;   /**<scale the PSD to equal to open loop error*/
     int noisy;       /**<noise simulations.*/
-    int demote;      /**<allow demote ttf or not.*/
     int ttfbrightest;/**<make ttf the brightest always.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
     int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/

@@ -64,7 +64,7 @@ void X(init)(X(mat)**A, long nx, long ny) ; \
 void X(free_keepdata)(X(mat) *A);\
 void X(free_do)(X(mat) *A, int keepdata);\
 void X(resize)(X(mat) *A, long nx, long ny);\
-X(mat) *X(ref)(X(mat) *in) CHECK_UNUSED_RESULT;\
+X(mat) *X(ref)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT;\
 X(mat) *X(refcols)(X(mat) *in, long icol, long ncol) CHECK_UNUSED_RESULT;\
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT;\
@@ -85,6 +85,7 @@ void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);\
 void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
 void X(scale)(X(mat) *A, T w);\
 T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;\
+T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);\
 void X(adds)(X(mat*)A, const T ac);\
 T X(inn)(const X(mat)*A, const X(mat) *B);			\
@@ -120,11 +121,14 @@ void X(shift2center)(X(mat) *A, double offsetx, double offsety);\
 int X(clip)(X(mat) *A, double min, double max);\
 void X(gramschmidt)(X(mat) *Mod, R *amp);	\
 void X(muldiag)(X(mat) *A, X(mat) *s);\
+void X(muldiag2)(X(mat) *A, X(mat) *s);\
 void X(cwpow)(X(mat) *A, double power);\
+void X(cwexp)(X(mat) *A, double alpha);\
 void X(cwpow_thres)(X(mat) *A, double power, double thres);		\
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
 void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
-void X(svd_pow)(X(mat) *A, double power, double thres);\
+void X(svd_pow)(X(mat) *A, double power, double thres);  \
+void X(expm)(X(mat) **out, double alpha, X(mat) *A, double beta); \
 void X(polyval)(X(mat) *A, XR(mat)*p);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\

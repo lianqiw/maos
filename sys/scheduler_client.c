@@ -197,7 +197,11 @@ static void launch_scheduler(void){
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){
     char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
+    if(TEMP[0]=='/'){
+	snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
+    }else{
+	snprintf(fn, PATH_MAX, "localhost");
+    }
     int sock=connect_port(fn, PORT, 0, 0);
     if(sock<0 && block){
 	/*start the scheduler if it is not running*/
@@ -433,6 +437,7 @@ char* call_addr2line(const char *buf){
    Convert backtrace address to source line.
  */
 void print_backtrace_symbol(void *const *buffer, int size){
+    static int connect_failed=0;
     char *cmdstr=NULL;
     char add[24];
     char *progname=get_job_progname(0);/*don't free pointer. */
@@ -444,7 +449,14 @@ void print_backtrace_symbol(void *const *buffer, int size){
     free(progname);
     for(int it=size-1; it>0; it--){
 	snprintf(add,24," %p",buffer[it]);
-	cmdstr=stradd(cmdstr, add, NULL);
+	char *tmp=cmdstr;
+	cmdstr=stradd(tmp, add, NULL);
+	free(tmp);
+    }
+    if(connect_failed){
+	info("%s\n", cmdstr);
+	free(cmdstr);
+	return;
     }
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     PNEW(mutex);//Only one thread can do this.
@@ -475,6 +487,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    close(sock);
 	}else{
 	    warning("Failed to connect to scheduler\n");
+	    connect_failed=1;
 	}
 #else
 	info2("MAOS_DISABLE_SCHEDULER is no 0\n");

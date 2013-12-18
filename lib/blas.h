@@ -20,83 +20,87 @@
 #define AOS_LIB_BLAS_H
 
 #include "../sys/sys.h"
+#include <stddef.h>
 /**
    \file blas.h
    The following are blas and lapack fortran function definitions. Notice that when
    generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack
-   routines to be compatible when usual blas/lapack definitions. */
+   routines to be compatible when usual blas/lapack definitions. 
+
+   2013-12-17: replaced int* by ptrdiff_t* to be compatible with blas/lapack that expect 64 bit integers. Still backward compatible with 32bit integers because only one number will be used and we are using little indians.
+*/
 void dgemm_(const char* tranA, const char* tranB,
-	    const int*nrow_C, const int*ncol_C, const int*ncol_opA, const double*alpha, 
-	    const double*A, const int*ldA, 
-	    const double*B, const int*ldB,    
-	    const double*beta, double*C, const int*ldC);
+	    const ptrdiff_t*nrow_C, const ptrdiff_t*ncol_C, const ptrdiff_t*ncol_opA, const double*alpha, 
+	    const double*A, const ptrdiff_t*ldA, 
+	    const double*B, const ptrdiff_t*ldB,    
+	    const double*beta, double*C, const ptrdiff_t*ldC);
 void sgemm_(const char*, const char*,   
-	    const int*, const int*, const int*, const float*, 
-	    const float*, const int*, 
-	    const float*, const int*,    
-	    const float*, float*, const int*);
+	    const ptrdiff_t*, const ptrdiff_t*, const ptrdiff_t*, const float*, 
+	    const float*, const ptrdiff_t*, 
+	    const float*, const ptrdiff_t*,    
+	    const float*, float*, const ptrdiff_t*);
 void zgemm_(const char*, const char*,   
-	    const int*, const int*, const int*, const dcomplex*, 
-	    const dcomplex*, const int*, 
-	    const dcomplex*, const int*,    
-	    const dcomplex*, dcomplex*, const int*);
+	    const ptrdiff_t*, const ptrdiff_t*, const ptrdiff_t*, const dcomplex*, 
+	    const dcomplex*, const ptrdiff_t*, 
+	    const dcomplex*, const ptrdiff_t*,    
+	    const dcomplex*, dcomplex*, const ptrdiff_t*);
 
 void dgemv_(const char* tranA, 
-	    const int*nrowA, const int*ncolA, const double*alpha, 
-	    const double*A, const int*ldA, 
-	    const double*X, const int*incX, 
+	    const ptrdiff_t*nrowA, const ptrdiff_t*ncolA, const double*alpha, 
+	    const double*A, const ptrdiff_t*ldA, 
+	    const double*X, const ptrdiff_t*incX, 
 	    const double*Beta,
-	    double*Y, const int*IncY);
+	    double*Y, const ptrdiff_t*IncY);
 void sgemv_(const char* tranA, 
-	    const int*nrowA, const int*ncolA, const float*alpha, 
-	    const float*A, const int*ldA, 
-	    const float*X, const int*incX, 
+	    const ptrdiff_t*nrowA, const ptrdiff_t*ncolA, const float*alpha, 
+	    const float*A, const ptrdiff_t*ldA, 
+	    const float*X, const ptrdiff_t*incX, 
 	    const float*Beta,
-	    float*Y, const int*IncY);
+	    float*Y, const ptrdiff_t*IncY);
 void zgemv_(const char* tranA, 
-	    const int*nrowA, const int*ncolA, const dcomplex*alpha, 
-	    const dcomplex*A, const int*ldA, 
-	    const dcomplex*X, const int*incX, 
+	    const ptrdiff_t*nrowA, const ptrdiff_t*ncolA, const dcomplex*alpha, 
+	    const dcomplex*A, const ptrdiff_t*ldA, 
+	    const dcomplex*X, const ptrdiff_t*incX, 
 	    const dcomplex*Beta,
-	    dcomplex*Y, const int*IncY);
+	    dcomplex*Y, const ptrdiff_t*IncY);
 /*Lapack */
-void dposv_(const char*,const int*,const int*, double*,const int*,
-	    double*,const int*, int*);
-void sposv_(const char*,const int*,const int*, float*,const int*,
-	    float*,const int*, int*);
-void zposv_(const char*,const int*,const int*, dcomplex*,const int*,
-	    dcomplex*,const int*, int*);
-void dger_ (int*,int*,double*,double*,int*,double*,int*,double*,int*);
-void dgesv_(int*,int*,double*,int*,int*,double*,int*,int*);
-void sger_ (int*,int*,float*,float*,int*,float*,int*,float*,int*);
-void sgesv_(int*,int*,float*,int*,int*,float*,int*,int*);
-void zgesv_(int*,int*,dcomplex*,int*,int*,dcomplex*,int*,int*);
-void dpotrf_(int *, int *, double *, int *, int *);
-void spotrf_(int *, int *, float *, int *, int *);
-void zpotrf_(int *, int *, dcomplex *, int *, int *);
+void dposv_(const char*,const ptrdiff_t*,const ptrdiff_t*, double*,const ptrdiff_t*,
+	    double*,const ptrdiff_t*, ptrdiff_t*);
+void sposv_(const char*,const ptrdiff_t*,const ptrdiff_t*, float*,const ptrdiff_t*,
+	    float*,const ptrdiff_t*, ptrdiff_t*);
+void zposv_(const char*,const ptrdiff_t*,const ptrdiff_t*, dcomplex*,const ptrdiff_t*,
+	    dcomplex*,const ptrdiff_t*, ptrdiff_t*);
+void dger_ (ptrdiff_t*,ptrdiff_t*,double*,double*,ptrdiff_t*,double*,ptrdiff_t*,double*,ptrdiff_t*);
+void dgesv_(ptrdiff_t*,ptrdiff_t*,double*,ptrdiff_t*,ptrdiff_t*,double*,ptrdiff_t*,ptrdiff_t*);
+void sger_ (ptrdiff_t*,ptrdiff_t*,float*,float*,ptrdiff_t*,float*,ptrdiff_t*,float*,ptrdiff_t*);
+void sgesv_(ptrdiff_t*,ptrdiff_t*,float*,ptrdiff_t*,ptrdiff_t*,float*,ptrdiff_t*,ptrdiff_t*);
+void zgesv_(ptrdiff_t*,ptrdiff_t*,dcomplex*,ptrdiff_t*,ptrdiff_t*,dcomplex*,ptrdiff_t*,ptrdiff_t*);
+void dpotrf_(char* , ptrdiff_t* , double *, ptrdiff_t* , ptrdiff_t* );
+void spotrf_(char* , ptrdiff_t* , float *, ptrdiff_t* , ptrdiff_t* );
+void zpotrf_(char* , ptrdiff_t* , dcomplex *, ptrdiff_t* , ptrdiff_t* );
 /* DGESVD prototype */
 extern void 
-dgesvd_(char* jobu, char* jobvt, int* m, int* n, double* a,
-	int* lda, double* s, double* u, int* ldu, double* vt, int* ldvt,
-	double* work, int* lwork, int* info );
+dgesvd_(char* jobu, char* jobvt, ptrdiff_t* m, ptrdiff_t* n, double* a,
+	ptrdiff_t* lda, double* s, double* u, ptrdiff_t* ldu, double* vt, ptrdiff_t* ldvt,
+	double* work, ptrdiff_t* lwork, ptrdiff_t* info );
 extern void 
-sgesvd_(char* jobu, char* jobvt, int* m, int* n, float* a,
-	int* lda, float* s, float* u, int* ldu, float* vt, int* ldvt,
-	float* work, int* lwork, int* info );
+sgesvd_(char* jobu, char* jobvt, ptrdiff_t* m, ptrdiff_t* n, float* a,
+	ptrdiff_t* lda, float* s, float* u, ptrdiff_t* ldu, float* vt, ptrdiff_t* ldvt,
+	float* work, ptrdiff_t* lwork, ptrdiff_t* info );
 extern void 
-zgesvd_(char* jobu, char* jobvt, int* m, int* n, dcomplex* a,
-	int* lda, double* s, dcomplex* u, int* ldu, dcomplex* vt, int* ldvt,
-	dcomplex* work, int* lwork, double *rwork, int* info );
+zgesvd_(char* jobu, char* jobvt, ptrdiff_t* m, ptrdiff_t* n, dcomplex* a,
+	ptrdiff_t* lda, double* s, dcomplex* u, ptrdiff_t* ldu, dcomplex* vt, ptrdiff_t* ldvt,
+	dcomplex* work, ptrdiff_t* lwork, double *rwork, ptrdiff_t* info );
 
-void dsyev_(char *jobz, char *uplo, int *n, double *a,
-	    int *lda, double *w, double *work, int *lwork,
-	    int *info);
-void ssyev_(char *jobz, char *uplo, int *n, float *a,
-	    int *lda, float *w, float *work, int *lwork,
-	    int *info);
-void zheev_(char *jobz, char *uplo, int *n, dcomplex *a,
-	    int *lda, double *w, dcomplex *work, int *lwork, double *rwork,
-	    int *info);
+void dsyev_(char *jobz, char *uplo, ptrdiff_t* n, double *a,
+	    ptrdiff_t* lda, double *w, double *work, ptrdiff_t* lwork,
+	    ptrdiff_t* info);
+void ssyev_(char *jobz, char *uplo, ptrdiff_t* n, float *a,
+	    ptrdiff_t* lda, float *w, float *work, ptrdiff_t* lwork,
+	    ptrdiff_t* info);
+void zheev_(char *jobz, char *uplo, ptrdiff_t* n, dcomplex *a,
+	    ptrdiff_t* lda, double *w, dcomplex *work, ptrdiff_t* lwork, double *rwork,
+	    ptrdiff_t* info);
 
 #if USE_MKL==1 && !defined(_OPENMP)
 void omp_set_num_threads(int n);

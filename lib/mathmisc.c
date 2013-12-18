@@ -205,8 +205,8 @@ float fltsum(float *p, long nx){
 /**
    inplace inversion of square SPD matrix. A=A^-1*/
 void invsq(long n, double *restrict A){
-    int N=n;
-    int info;
+    ptrdiff_t N=n;
+    ptrdiff_t info;
     char uplo='U';
     /*B is identity matrix*/
     double *B=calloc(N*N, sizeof(double));
@@ -464,17 +464,32 @@ double golden_section_search(golden_section_fun f, void *param,
     double f2=f(param, x2);
     double x3, f3;
     /*stop searching. */
-    while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4))){
+#undef DBG_GF
+    do{
 	x3=(x4-x2)*resphi+x2;
 	f3=f(param, x3);
+#ifdef DBG_GF 
+	double f1=f(param,x1);
+	double f4=f(param,x4);
+	info2("x=%.4g, %.4g, %.4g, %.4g\n", x1, x2, x3, x4);
+	info2("f=%.4g, %.4g, %.4g, %.4g\n", f1, f2, f3, f4);
+#endif
 	if(f3<f2){
 	    x1=x2;
 	    x2=x3;
+#ifdef  DBG_GF
+	    f1=f2;
+#endif
 	    f2=f3;
 	}else{
 	    x4=x1;
 	    x1=x3;
-	}	    
-    }
-    return 0.5*(x4+x1);
+#ifdef  DBG_GF
+	    f4=f1;
+	    f1=f3;
+#endif
+	}
+    }while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4)));
+    /*do not return x1 or x4 which may be in unstable region*/
+    return f2<f3?x2:x3;
 }

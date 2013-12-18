@@ -183,27 +183,6 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	}
     }
 }
-
-/**
-   Method to demote TTF. deprecated. 
- */
-static void setup_powfs_dettf(POWFS_S *powfs, const PARMS_S *parms){
-    for(long ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
-	const long nsa=parms->maos.nsa[ipowfs];
-	powfs[ipowfs].dettf=dnew(2,nsa*2);	
-	if(nsa==1){
-	    daddI(powfs[ipowfs].dettf, 1);
-	}else{
-	    PDMAT(powfs[ipowfs].dettf, ppdettf);
-	    double insa=1./nsa;
-	    for(long ig=0; ig<2; ig++){
-		for(long isa=0; isa<nsa; isa++){
-		    ppdettf[isa+nsa*ig][ig]=insa;
-		}
-	    }
-	}
-    }
-}
 /**
    Setup POWFS_S struct.
 */    
@@ -215,7 +194,6 @@ void setup_powfs(POWFS_S *powfs, const PARMS_S *parms){
     }
     setup_powfs_dtf(powfs, parms);
     read_powfs_locamp(powfs, parms);
-    setup_powfs_dettf(powfs,parms);
 }
 /**
    Release memory.
@@ -234,6 +212,5 @@ void free_powfs(POWFS_S *powfs, const PARMS_S *parms){
 	dfree(powfs[ipowfs].amp);
 	free(powfs[ipowfs].locxamp);
 	free(powfs[ipowfs].locyamp);
-	dfree(powfs[ipowfs].dettf);
     }
 }

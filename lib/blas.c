@@ -50,7 +50,7 @@
 void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,   
 	   const char trans[2], const T alpha){
     if(!A || !B) return;
-    int m,n,k,lda,ldb,ldc,k2;
+    ptrdiff_t m,n,k,lda,ldb,ldc,k2;
     if (trans[0]=='T' || trans[0]=='t' || trans[0]=='C' || trans[0]=='c'){
 	m=A->ny; k=A->nx;
     }else{
@@ -63,12 +63,12 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
 	n=B->ny;
 	k2=B->nx;
     }
-    if(k!=k2) error("dmm: Matrix doesn't match: A: %dx%d, B: %dx%d\n",
+    if(k!=k2) error("dmm: Matrix doesn't match: A: %ldx%ld, B: %ldx%ld\n",
 		    m, k, k2, n);
     if(!*C0){
 	*C0=X(new)(m,n); 
     }else if(m!=(*C0)->nx || n!=(*C0)->ny){
-	error("dmm: Matrix doesn't match: C: %dx%d, C0: %ldx%ld\n", 
+	error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
 	      m, n, (*C0)->nx, (*C0)->ny);
     }
     X(mat) *C=*C0;
@@ -88,7 +88,7 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
 void X(invspd_inplace)(X(mat) *A){
     if(!A) return;
     if(A->nx!=A->ny) error("Must be a square matrix");
-    int info=0, N=A->nx;
+    ptrdiff_t info=0, N=A->nx;
     const char uplo='U';
     /* B is identity matrix */
     T *B=calloc(N*N,sizeof(T));
@@ -97,7 +97,7 @@ void X(invspd_inplace)(X(mat) *A){
     Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
     if(info!=0){
 	X(write)(A,"posv");
-	error("posv_ failed, info=%d. data saved to posv.\n",info);
+	error("posv_ failed, info=%ld. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
     free(B);
@@ -122,16 +122,16 @@ X(mat)* X(invspd)(const X(mat) *A){
 void X(inv_inplace)(X(mat)*A){
     if(!A) return;
     if(A->nx!=A->ny) error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
-    int info=0, N=A->nx;
+    ptrdiff_t info=0, N=A->nx;
     T *B=calloc(N*N,sizeof(T));
     for(int i=0;i<N;i++){
 	B[i+i*N]=1;
     }
-    int *ipiv=calloc(N, sizeof(int));
+    ptrdiff_t *ipiv=calloc(N, sizeof(int));
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
 	X(write)(A,"gesv");
-	error("dgesv_ failed, info=%d. data saved to posv.\n",info);
+	error("dgesv_ failed, info=%ld. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
     free(B);
@@ -204,7 +204,46 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     X(free)(cc);
     return out;
 }
-
+/**
+   computes out=out*alpha+exp(A*beta) using scaling and squaring method.
+   Larger scaling is more accurate but sloower.
+*/
+void X(expm)(X(mat)**out, double alpha, X(mat) *A, double beta){
+    const int accuracy=10;
+    X(mat) *m_small=0;
+    X(mat) *m_exp1=0, *m_power=0, *m_power1=0;
+    //first determine the scaling needed
+    int scaling=0;
+    {
+	double norm=sqrt(X(norm2)(A));
+	scaling=(int)ceil(log2(abs(norm*beta*100)));
+	if(scaling<0) scaling=0;
+    }
+    X(add)(&m_small, 0, A, beta*exp2(-scaling));
+    X(mat)*result=X(new)(A->nx, A->ny);
+    X(addI)(result, 1);
+    X(cp)(&m_power, m_small);
+    double factorial_i=1.0;
+    for(int i=1; i<accuracy; i++){
+	factorial_i*=i;
+	//m_exp += M_power/factorial(i)
+	X(add)(&result, 1., m_power, 1./(factorial_i));
+	//m_power *= m_small;
+	X(mm)(&m_power1, 0, m_power, m_small, "nn", 1);
+	X(cp)(&m_power, m_power1);
+    }
+    //squaring step
+    for(int i=0; i<scaling; i++){
+	X(cp)(&m_exp1, result);
+	X(mm)(&result, 0, m_exp1, m_exp1, "nn", 1);
+    }
+    X(free)(m_small);
+    X(free)(m_exp1);
+    X(free)(m_power);
+    X(free)(m_power1);
+    X(add)(out, alpha, result, 1);
+    X(free)(result);
+}
 /**
    compute inv(dmcc(A, wt))
 */
@@ -233,13 +272,13 @@ X(mat)* X(chol)(const X(mat) *A){
     if(!A) return NULL;
     if(A->nx!=A->ny) error("dchol requires square matrix\n");
     X(mat) *B = X(dup)(A);
-    int uplo='L', n=B->nx, info;
-    Z(potrf)(&uplo, &n, B->p, &n, &info);
+    ptrdiff_t n=B->nx, info;
+    Z(potrf)("L", &n, B->p, &n, &info);
     if(info){
 	if(info<0){
-	    error("The %d-th parameter has an illegal value\n", -info);
+	    error("The %ld-th parameter has an illegal value\n", -info);
 	}else{
-	    error("The leading minor of order %d is not posite denifite\n", info);
+	    error("The leading minor of order %ld is not posite denifite\n", info);
 	}
     }else{/*Zero out the upper diagonal. For some reason they are not zero. */
 	PDMAT(B, Bp);
@@ -262,19 +301,19 @@ X(mat)* X(chol)(const X(mat) *A){
 */
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     char jobuv='S';
-    int M=(int)A->nx;
-    int N=(int)A->ny;
+    ptrdiff_t M=(int)A->nx;
+    ptrdiff_t N=(int)A->ny;
     /*if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
 	warning("Sdiag,U,VT should all be NULL. discard their value\n");
 	}*/
     X(mat) *tmp=X(dup)(A);
-    int nsvd=M<N?M:N;
+    ptrdiff_t nsvd=M<N?M:N;
     XR(mat) *s=XR(new)(nsvd,1);
     X(mat) *u=X(new)(M,nsvd);
     X(mat) *vt=X(new)(nsvd,N);
-    int lwork=-1;
+    ptrdiff_t lwork=-1;
     T work0[1];
-    int info=0;
+    ptrdiff_t info=0;
 #ifdef USE_COMPLEX
     R *rwork=malloc(nsvd*5*sizeof(R));
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
@@ -292,9 +331,9 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     if(info){
 	X(write)(A,"A_svd_failed");
 	if(info<0){
-	    error("The %d-th argument has an illegal value\n",info);
+	    error("The %ld-th argument has an illegal value\n",info);
 	}else{
-	    error("svd: dbdsqr doesn't converge. info is %d\n",info);
+	    error("svd: dbdsqr doesn't converge. info is %ld\n",info);
 	}
     }
     if(Sdiag) *Sdiag=s; else XR(free)(s);
@@ -315,10 +354,10 @@ void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
     *Sdiag=XR(new)(A->nx,1);
     char jobz=(char)(U?'V':'N');
     char uplo=(char)'U';
-    int lda=A->nx;
+    ptrdiff_t lda=A->nx;
     T worksize;
-    int lwork=-1;
-    int info;
+    ptrdiff_t lwork=-1;
+    ptrdiff_t info;
     X(mat) *atmp=X(dup)(A);
 #ifdef USE_COMPLEX
     R *rwork=malloc((3*A->nx-2)*sizeof(R));
@@ -336,16 +375,16 @@ void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
     if(info){
 	X(write)(A,"A_evd_failed");
 	if(info<0)
-	    error("The %dth argument had an illegal value\n", -info);
+	    error("The %ldth argument had an illegal value\n", -info);
 	else
-	    error("The %dth number of elements did not converge to zero\n", info);
+	    error("The %ldth number of elements did not converge to zero\n", info);
     }
     if(U) *U=atmp; else X(free)(atmp);
     free(work);
 }
 
 /**
-   computes pow(A,power) in place using svd or evd. if issym==1, use evd, otherwise use svd
+   computes pow(A,power) in place using svd.
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */

@@ -56,4 +56,5 @@
 #include "nr.h"
 #include "mkdtf.h"
 #include "psd.h"
+#include "kalman.h"
 #endif

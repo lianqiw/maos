@@ -22,6 +22,7 @@
    \file scheduler_client.h
    Contains routines that will be used to talk to the scheduler.
 */
+#include <stdint.h>
 extern int nhost;
 extern char** hosts;
 extern int hid;

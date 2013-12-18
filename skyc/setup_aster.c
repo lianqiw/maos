@@ -196,8 +196,6 @@ gradients. Similar to Z tilt since the mode is low order */
 void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *parms){
     /*2010-06-08: Tested against MATLAB skycoverage code. */
     aster->g=dcellnew(aster->nwfs,1);
-    dcell *dettf=dcellnew(aster->nwfs,aster->nwfs);
-    PDCELL(dettf, pdettf);
     if(parms->maos.nmod<5 || parms->maos.nmod>6){
 	error("Not compatible with the number of NGS modes\n");
     }
@@ -208,7 +206,6 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 	const long nsa=parms->maos.nsa[ipowfs];
 	aster->g->p[iwfs]=dref(star[istar].g->p[ipowfs]);
 	aster->tsa+=nsa;
-	pdettf[iwfs][iwfs]=ddup(powfs[ipowfs].dettf);
     }    
     aster->gm=dcell2m(aster->g);
     
@@ -216,9 +213,6 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 	//there is a single ttf wfs and defocus needs to be estimated. remove degeneracy
 	memset(aster->gm->p+2*aster->gm->nx, 0, sizeof(double)*aster->gm->nx);
     }
-    aster->dettf=dcell2m(dettf);
-    dmm(&aster->gmtt, 0, aster->dettf, aster->gm, "nn", 1);
-    dcellfree(dettf);
 }
 /**
    Copy information from star struct STAR_S to stars in asterism ASTER_S.
@@ -315,18 +309,13 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     int ndtrat=parms->skyc.ndtrat;
     if(aster->pgm){
 	dcellfree(aster->pgm);
-	dcellfree(aster->pgmtt);
 	dcellfree(aster->sigman);
 	dcellfree(aster->nea_tot);
     }
     aster->pgm=dcellnew(ndtrat,1);
-    aster->pgmtt=dcellnew(ndtrat,1);
     aster->sigman=dcellnew(ndtrat,1);
     aster->nea_tot=dcellnew(aster->nwfs,ndtrat);
     PDCELL(aster->nea_tot,nea_tot);
-    if(parms->skyc.demote){
-	aster->sigmantt=dcellnew(ndtrat,1);
-    }
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	int dtrat=parms->skyc.dtrats[idtrat];
 	dcell *nea=dcellnew(aster->nwfs, 1);
@@ -366,18 +355,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcwpow(neattm, -1);//inverse
 	/*Reconstructor */
 	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
-	if(aster->nwfs>2 && parms->skyc.demote){
-	    /*Demote TTF to tt. */
-	    dmat *pgmtt=dpinv(aster->gmtt, neattm,NULL);
-	    dmm(&aster->pgmtt->p[idtrat], 0,pgmtt, aster->dettf, "nn",1); dfree(pgmtt);
-	    /*Replace the plate scale mode reconstructor from pgm. */
-	    for(int iy=0; iy<aster->pgmtt->p[idtrat]->ny; iy++){
-		for(int ix=2; ix<aster->pgmtt->p[idtrat]->nx; ix++){
-		    int ind=ix+iy*aster->pgmtt->p[idtrat]->nx;
-		    aster->pgmtt->p[idtrat]->p[ind]=aster->pgm->p[idtrat]->p[ind];
-		}
-	    }
-	}
 	if(parms->skyc.dbg){
 	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
 	    dwrite(neattm,"%s/aster%d_neattm_dtrat%d",dirsetup,aster->iaster,dtrat);
@@ -385,11 +362,8 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcwpow(neam, -1); /* Measurement error. */
 	/*sigman is error due to noise. */
 	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
-	if(aster->nwfs>2 && parms->skyc.demote){
-	    aster->sigmantt->p[idtrat]
-		=calc_recon_error(aster->pgmtt->p[idtrat],neam,parms->maos.mcc);
-	}
 	dfree(neam);
+	dfree(neattm);
     }	
     if(parms->skyc.dbg){
 	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
@@ -397,7 +371,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dwrite(aster->gmtt, "%s/aster%d_gmtt",dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
-	dcellwrite(aster->pgmtt,  "%s/aster%d_pgmtt", dirsetup,aster->iaster);
 	dcellwrite(aster->nea_tot,  "%s/aster%d_nea_tot", dirsetup,aster->iaster);
 	dcellwrite(aster->sigman, "%s/aster%d_sigman", dirsetup,aster->iaster);
     }
@@ -410,17 +383,16 @@ static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
     const long nx=gainx->nx;
     const double xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
     const double xx=(log(sigma2)-log(gainx->p[0]))/xsep;
+    int ig;
     if(xx<0){/*too small. */
-	memcpy(out, gain->p[0]->p, sizeof(double)*5);
+	ig=0;
     }else if(xx>=nx-1){/*too big */
-	memcpy(out, gain->p[nx-1]->p, sizeof(double)*5);
+	ig=nx-1;
     }else{/*within the range */
-	const long xxm=ifloor(xx);
-	const double xxw=xx-xxm;
-	for(int i=0; i<5; i++){
-	    out[i]=xxw*gain->p[xxm+1]->p[i]+(1-xxw)*gain->p[xxm]->p[i];
-	}
+	ig=ifloor(xx);
+	/*2013-12-06: use one of the set, not interpolate*/
     }
+    memcpy(out, gain->p[ig]->p, sizeof(double)*5);
 }
 /**
    Optimize type II servo gains beased on measurement noise and signal PSD. We try to minimize
@@ -647,7 +619,6 @@ void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
 	dcellfree(aster[iaster].gain);
 	dcellfree(aster[iaster].pgm);
 	dcellfree(aster[iaster].nea_tot);
-	dcellfree(aster[iaster].pgmtt);
 	dcellfree(aster[iaster].sigman);
 	dfree(aster[iaster].res_ws);
 	dfree(aster[iaster].res_ngs);
@@ -655,9 +626,6 @@ void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
 	free(aster[iaster].wfs);
 	dcellfree(aster[iaster].g);
 	dfree(aster[iaster].gm);
-	dfree(aster[iaster].gmtt);
-	dfree(aster[iaster].dettf);
-	/*dfree(aster[iaster].pgm_qc); */
     }
     free(aster);
 }

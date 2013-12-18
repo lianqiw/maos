@@ -42,27 +42,38 @@ typedef enum{
     M_ZSP,
     M_CELL,
 }M_TYPE;
-#define MAT(T) \
-    T *restrict p; /**<The data pointer*/\
-    long nx;       /**< number of rows */\
-    long ny;       /**< number of columns */\
-    char *header;  /**<The header*/\
-    struct mmap_t *mmap;/**< not NULL if mmaped. unmap the mmaped memory*/
+
+/*
+  We use pointers for reference counter because different array
+  may use the same pointer, but with different nx or ny
+  partition. */
+
+#define ARR(T)						\
+    T *restrict p; /**<The data pointer*/		\
+    long nx;       /**< number of rows */		\
+    long ny;       /**< number of columns */		\
+    char *header;  /**<The header*/			\
+    struct mmap_t *mmap;/**< not NULL if mmaped.*/
+
+#define MAT(T)					\
+    ARR(T)					\
+    long *nref; /**< reference count */		\
+    struct fft_t *fft;
+
+#define CELL(T)					\
+    MAT(T)					\
+
 /**
    a double matrix object contains 2-d array of double numbers
 */
 typedef struct dmat{
     MAT(double)
-    long *nref; /**< reference count. We use pointers because different array
-		   may use the same pointer, but with different nx or ny
-		   partition. */
 }dmat;
 /**
    a single matrix object contains 2-d array of double numbers
 */
 typedef struct smat{
     MAT(float)
-    long *nref; /**< reference count */
 }smat;
 
 /**
@@ -70,8 +81,6 @@ typedef struct smat{
    double complex numbers. */
 typedef struct cmat{
     MAT(dcomplex)
-    long *nref;  /**< reference count */
-    struct fft_t *fft;
 }cmat;
 
 /**
@@ -79,36 +88,34 @@ typedef struct cmat{
    numbers. */
 typedef struct zmat{
     MAT(fcomplex)
-    long *nref;  /**< reference count */
-    struct fft_t *fft;
 }zmat;
 
 /**
    an 2-d block matrix of cmat.
  */
 typedef struct ccell{
-    MAT(cmat*)
+    CELL(cmat*)
     cmat *m; /*stores the continuous data*/
 }ccell;
 /**
    an 2-d block matrix of zmat.
  */
 typedef struct zcell{
-    MAT(zmat*)
+    CELL(zmat*)
     zmat *m;
 }zcell;
 /**
    an 2-d block matrix of dmat.
  */
 typedef struct dcell{
-    MAT(dmat*)
+    CELL(dmat*)
     dmat *m;
 }dcell;
 /**
    an 2-d block matrix of smat.
  */
 typedef struct scell{
-    MAT(smat*)
+    CELL(smat*)
     smat *m;
 }scell;
 
@@ -164,28 +171,28 @@ typedef struct zsp{
    an 2-d array of sparse.
  */
 typedef struct spcell{
-    MAT(dsp*)
+    CELL(dsp*)
 }spcell;
 
 /**
    an 2-d array of sparse.
  */
 typedef struct sspcell{
-    MAT(ssp*)
+    CELL(ssp*)
 }sspcell;
 
 /**
    an 2-d array of csp.
  */
 typedef struct cspcell{
-    MAT(csp*)
+    CELL(csp*)
 }cspcell;
 
 /**
    an 2-d array of csp.
  */
 typedef struct zspcell{
-    MAT(zsp*)
+    CELL(zsp*)
 }zspcell;
 
 /**
@@ -195,7 +202,6 @@ typedef struct zspcell{
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
     MAT(double)
-    long *nref;     /**< reference count */
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x*/
@@ -212,7 +218,6 @@ typedef struct map_t{
 */
 typedef struct rectmap_t{
     MAT(double)
-    long *nref;     /**< reference count */
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x (first dimension)*/
@@ -295,7 +300,7 @@ typedef struct pts_t{
    Cell of anything
 */
 typedef struct cell{
-    MAT(void*)
+    CELL(void*)
 }cell;
 
 #define AOS_CMAT(A) c##A

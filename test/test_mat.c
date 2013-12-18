@@ -254,7 +254,7 @@ static void test_svd(void){
     }
     exit(0);
 }
-void test_psd1d(){
+static void test_psd1d(){
     dmat *tmp=dnew(100,1);
     for(int i=0; i<100; i++){
 	tmp->p[i]=sin(i/10.);
@@ -269,7 +269,24 @@ static void test_svd2(void){
     csvd_pow(A, -1, 1.e-7);
     cwrite(A, "SVDI");
 }
+static void test_kalman(){
+    dmat *coeff0=dread("coeff0");
+    dmat *coeff=dread("coeff");
+    dmat *psd=dread("psd_tt");
+    info("sde_fit\n");
+    sde_fit(psd, coeff0, 0.1, 0, 1e5);
+    dmat *Gwfs=dnew(5,5);daddI(Gwfs,1);
+    dmat *Rwfs=dnew(5,5);
+    kalman_t *k=sde_kalman(coeff, 1./800, 50, Gwfs, Rwfs);
+    kalman_free(k);
+    dfree(coeff);
+    dfree(Gwfs);
+    dfree(Rwfs);
+    exit(0);
+}
 int main(int argc, char **argv){
+    exit_success=1;
+    test_kalman();
     test_svd2();
     test_svd();
     test_psd1d();

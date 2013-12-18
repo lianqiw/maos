@@ -34,4 +34,5 @@ void fft_free_plan(struct fft_t *fft);
 #define cfree_plan(A) if(A) fft_free_plan(A->fft)
 cmat *cffttreat(cmat *A);
 fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads);
+void dfft1plan_r2hc(dmat *out, int dir);
 #endif

@@ -141,7 +141,7 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 #undef NMAX
 #undef NRANSI
 /**
-  Search minimum along multiple dimenstions. scale is the size of the problem. x
+  Search minimum along multiple dimenstions. scale is the contains the scale of each dimension. x
   contains initial warm restart values.
 */
 int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){

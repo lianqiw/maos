@@ -59,7 +59,7 @@ static void addnoise(dmat *A, rand_t* rstat,
 void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 		double wvl,           /**<[in] the wavelength*/
 		const dmat *modm,     /**<[in] the NGS mode vector*/
-		POWFS_S *powfs,       /**<[in] the powfs configuration*/
+		const POWFS_S *powfs,       /**<[in] the powfs configuration*/
 		int isa,              /**<[in] index of subaperture*/
 		double thetax,        /**<[in] direction of WFS*/
 		double thetay,        /**<[in] direction of WFS*/
@@ -122,7 +122,7 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
    Written: 2010-06-09
    Tested OK: 2010-06-10
 */
-dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
+dcell* skysim_ztilt(const dmat *mideal, const ASTER_S *aster, const PARMS_S *parms){
     const double gain=parms->skyc.intgain;
     const int nmod=mideal->nx;
     dmat *mint=NULL;        /*integrator output. */
@@ -165,9 +165,9 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
        - 1: poisson and read out noise. 
        - 2: only poisson noise.   
 */
-dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol, 
-		 ASTER_S *aster, POWFS_S *powfs, 
-		 const PARMS_S *parms, int idtrat, int noisy, int demotettf){
+dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
+		 ASTER_S *aster, const POWFS_S *powfs, 
+		 const PARMS_S *parms, int idtrat, int noisy){
     int dtrat=parms->skyc.dtrats[idtrat];
     const int nmod=mideal->nx;
     PDMAT(mideal,pmideal);
@@ -177,7 +177,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dcell *merrm=dcellnew(1,1);
+    dcell *merrm=dcellnew(1,1);dcell *pmerrm=NULL;
     dmat *mres=dnew(nmod,aster->nstep);
     PDMAT(mres,pmres);
     PDMAT(parms->skyc.rnefs,rnefs);
@@ -203,18 +203,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	break;
     }
     SERVO_T *st2t=servo_new(merrm, NULL, 0, dtngs, gngs);
-    dfree(gngs);
     const long nwvl=parms->maos.nwvl;
-    dmat *pgm;
-    if(demotettf){
-	pgm=aster->pgmtt->p[idtrat];
-	if(!pgm){
-	    warning("Demoting is forbidden\n");
-	    pgm=aster->pgm->p[idtrat];
-	}
-    }else{
-	pgm=aster->pgm->p[idtrat];
-    }
+    const dmat *pgm=aster->pgm->p[idtrat];
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const long ncomp=parms->maos.ncomp[ipowfs];
@@ -292,8 +282,10 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		dmm(&merrm->p[0],0, pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
 		dzero(zgrad);
+		pmerrm=merrm;
+	    }else{
+		pmerrm=NULL;
 	    }
-	    servo_filter(st2t, merrm);//do even if merrm is zero. for additional latency
 	}else{
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const double thetax=aster->wfs[iwfs].thetax;
@@ -336,6 +328,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			}
 		
 			/*Add noise and apply matched filter. */
+#if _OPENMP >= 200805 
+#pragma omp critical 
+#endif
 			switch(noisy){
 			case 0:/*no noise at all. */
 			    break;
@@ -380,21 +375,15 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		}/*iwfs */
 		dmm(&merrm->p[0], 0, pgm, grad, "nn", 1);
 		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
-		switch(parms->skyc.servo){
-		case 1:
-		    dcelladd(st2t->mint, 1, merrm, 0.5);
-		    break;
-		case 2:
-		    servo_filter(st2t, merrm);
-		    break;
-		default:
-		    error("Invalid\n");
-		}
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		    dcellzero(psf[iwfs]);/*reset accumulation.*/
 		}
+		pmerrm=merrm;
+	    }else{
+		pmerrm=NULL;
 	    }/*if dtrat */
 	}/*if phystart */
+	servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
     }/*istep; */
     if(parms->skyc.dbg){
 	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
@@ -416,6 +405,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     ccellfree(wvfc);
     ccellfree(otf);
     servo_free(st2t);
+    dfree(gngs);
     free(psf);
     free(mtche);
     free(ints);
@@ -430,7 +420,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 
 /**
    Save NGS WFS and other information for later use in MAOS simulations.*/
-void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int seldtrat, int isky){
+void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, int selaster, int seldtrat, int isky){
     const PARMS_S* parms=simu->parms;
     const int nwvl=parms->maos.nwvl;
     char path[PATH_MAX];

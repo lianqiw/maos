@@ -67,9 +67,9 @@
    2012-12-14 note about focus mode.
    When maos.nmod=5, global focus residual is estimated using PSD.
    When maos.nmod>5, global focus residual is not estimated using PSD.
-         when skyc.addfocus==1, add focus to time series.
-	 when skyc.ahstfocus==1, use new 5+1 mode.
-	 if maos.mffocus==0, set skyc.addfocus to 0 because focus error is included in maos simulations.
+   when skyc.addfocus==1, add focus to time series.
+   when skyc.ahstfocus==1, use new 5+1 mode.
+   if maos.mffocus==0, set skyc.addfocus to 0 because focus error is included in maos simulations.
 */
 
 #include "skyc.h"
@@ -96,7 +96,6 @@ static void skysim_isky(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
     const dcell *stars=simu->stars;
     const int noisy=parms->skyc.noisy;
-    const int do_demote_end=parms->skyc.demote?2:1;
     const int seed_maos=simu->seed_maos;
     int nstar;
     int nstep;
@@ -125,7 +124,11 @@ static void skysim_isky(SIM_S *simu){
 	  domain simulations.
 	*/
 
-	for(int iaster=0; iaster<naster; iaster++){
+	for(int iaster=0; iaster<naster; iaster++)
+#if _OPENMP >= 200805
+#pragma omp task 
+#endif
+	{
 	    /*Parallelizing over aster gives same random stream. */
 	    seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
 	    /*Compute signal level. */
@@ -137,6 +140,9 @@ static void skysim_isky(SIM_S *simu){
 	    /*Optimize servo gains. */
 	    setup_aster_servo(simu, &aster[iaster], parms);
 	}
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
 	/*Select asters that have good performance. */
 	setup_aster_select(pres_geom[isky],aster, naster, star, 
 			   parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
@@ -150,16 +156,20 @@ static void skysim_isky(SIM_S *simu){
 	int selaster=0;
 	int seldtrat=0;
 	
-	for(int iaster=0; iaster<naster; iaster++){
+	for(int iaster=0; iaster<naster; iaster++)
+#if _OPENMP >= 200805
+#pragma omp task default(shared) firstprivate(iaster)
+#endif
+	{
 	    ASTER_S *asteri=&aster[iaster];
 	    asteri->nstep=nstep;
 	    if(parms->skyc.dbgaster>-1){
 		if(iaster!=parms->skyc.dbgaster){
-		    continue;
+		    goto skip1;
 		}
 	    }else{
 		if(!asteri->use){
-		    continue;
+		    goto skip1;
 		}
 	    }
 	    if(parms->skyc.verbose>1){
@@ -186,8 +196,11 @@ static void skysim_isky(SIM_S *simu){
 	    dmat *pmini=NULL;
 	    dmat *min_imres=NULL;
 	    int mdtrat=0;
-	    int demote=-1;
-	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++){
+	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++)
+#if _OPENMP >= 200805
+#pragma omp task default(shared) firstprivate(idtrat)
+#endif
+	    {
 		/*focus and windshake residual; */
 		double resadd=0;
 		if(!parms->skyc.addws){
@@ -198,35 +211,39 @@ static void skysim_isky(SIM_S *simu){
 		}
 		dmat *ires=NULL;
 		dmat *imres=NULL;
-		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
-		    ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol->p[0], 
-				    asteri, powfs, parms, idtrat, noisy, do_demote);
-		    if(ires){
+		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol->p[0], 
+				    asteri, powfs, parms, idtrat, noisy))){
+		    if(parms->skyc.verbose){
+			info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
+			      sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
+			      sqrt(ires->p[0]+resadd)*1e9);
+		    }
+		    /*Add windshake contribution. */
+		    double tot_1=ires->p[0] + resadd;	
+#if _OPENMP >= 200805 
+#pragma omp critical 
+#endif
+		    if(tot_1 < mini){
+			mini=tot_1;
+			mdtrat=idtrat;
+			dfree(pmini); pmini=dref(ires);
+			dfree(min_imres); min_imres=dref(imres);
 			if(parms->skyc.verbose){
-			    if(do_demote){
-				info2("  DemoteTTF: ");
-			    }
-			    info2("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat], 
+			    info2("Selected: %5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
 				  sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
 				  sqrt(ires->p[0]+resadd)*1e9);
 			}
-			/*Add windshake contribution. */
-			double tot_1=ires->p[0] + resadd;
-			if(tot_1 < mini){
-			    mini=tot_1;
-			    mdtrat=idtrat;
-			    demote=do_demote;
-			    dfree(pmini); pmini=dref(ires);
-			    dfree(min_imres); min_imres=dref(imres);
-			}
 		    }
+		    dfree(ires);
 		}
-		if(ires && parms->skyc.verbose){
-		    info2("\n");
-		}
-		dfree(ires);
 		dfree(imres);
 	    }
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
+#if _OPENMP >= 200805 
+#pragma omp critical 
+#endif	
 	    if(mini<skymini){
 		selaster=iaster;
 		skymini=mini;
@@ -244,7 +261,6 @@ static void skysim_isky(SIM_S *simu){
 		pres_oa[isky][0]=pres_oa[isky][1]+pres_oa[isky][3]+pres_oa[isky][4];
 		seldtrat = mdtrat;
 		simu->fss->p[isky]=parms->skyc.fss[mdtrat];
-		simu->demote->p[isky]=demote;
 		if(parms->skyc.verbose){
 		    info2("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n", 
 			  simu->fss->p[isky],
@@ -254,8 +270,11 @@ static void skysim_isky(SIM_S *simu){
 	    }
 	    dfree(pmini);
 	    dfree(min_imres);
+	  skip1:;
 	}/*iaster */
-
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
 	PDMAT(simu->sel->p[isky],psel);
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	    psel[iwfs][0]=aster[selaster].wfs[iwfs].thetax;
@@ -367,7 +386,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	PDMAT(parms->maos.mcc, MCC);
 	dmat *x=dtrans(simu->mideal);
 	for(int im=0; im<x->ny && im<5; im++){
-	    dmat *xi=dsub(x, 0, 0, im, 1);
+	    dmat *xi=dsub(x, 20, 0, im, 1);
 	    dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
 	    dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
 	    if(im<2){
@@ -472,9 +491,9 @@ static void skysim_prep_gain(SIM_S *simu){
 	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
 						 dtrat, parms->skyc.pmargin, sigma2, 2);
 	}
-	/*dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
-	  dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-	  dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);*/
+	dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+	dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
+	dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
     }
     toc2("servo_optim");
     simu->gain_x=dref(sigma2);
@@ -540,7 +559,6 @@ void skysim(const PARMS_S *parms){
 	simu->res_oa=dnew_mmap(5,nsky,NULL, "Res%d_%d_oa", seed_maos, parms->skyc.seed);
 	simu->res_geom=dnew_mmap(3,nsky,NULL, "Res%d_%d_geom", seed_maos, parms->skyc.seed);
 	simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, parms->skyc.seed);
-	simu->demote=dnew_mmap(nsky,1,NULL, "Res%d_%d_demote", seed_maos, parms->skyc.seed);
 	simu->gain  =dcellnewsame_mmap(nsky, 1, 3, parms->maos.nmod,
 				       NULL, "Res%d_%d_gain", seed_maos, parms->skyc.seed);
 	simu->sel   =dcellnewsame_mmap(nsky, 1, 2+parms->maos.nwvl, parms->skyc.nwfstot,
@@ -557,9 +575,14 @@ void skysim(const PARMS_S *parms){
 	}
 	simu->status->simstart=simu->isky_start;
 	simu->status->simend=simu->isky_end;
+#if _OPENMP >= 200805//parallel within each sky
+	int nthread=2;
+#else
+	int nthread=parms->skyc.nthread;
+#endif
 	if(simu->isky_start < simu->isky_end){
 	    simu->isky=simu->isky_start;
-	    CALL(skysim_isky, simu, parms->skyc.nthread,0);/*isky iteration. */
+	    CALL(skysim_isky, simu, nthread,0);/*isky iteration. */
 	}
 	if(parms->skyc.dbgsky<0){
 	    char fn[80];
@@ -573,16 +596,18 @@ void skysim(const PARMS_S *parms){
 	dfree(simu->res);
 	dfree(simu->res_oa);
 	dfree(simu->res_geom);
-	dcellfree(simu->mres);
-	dcellfree(simu->sel);
 	dfree(simu->fss);
+	dcellfree(simu->gain);
+	dcellfree(simu->sel);
+	dcellfree(simu->mres);
 	dfree(simu->mideal);
 	dfree(simu->mideal_oa);
 	dfree(simu->rmsol);
 	dfree(simu->psd_ws);
 	dfree(simu->psd_ngs);
 	dfree(simu->psd_ps);
-	dfree(simu->psd_ws);
+	dfree(simu->psd_tt);
+	dfree(simu->psd_focus);
 	/*Free the data used to do bicubic spline. */
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	    dcellfreearr(simu->bspstrehl[ipowfs], parms->maos.nsa[ipowfs]*parms->maos.nwvl);
@@ -595,6 +620,7 @@ void skysim(const PARMS_S *parms){
 	    dcellfreearr(simu->gain_ngs, parms->skyc.ndtrat);
 	    dcellfreearr(simu->gain_focus, parms->skyc.ndtrat);
 	}
+	dfree(simu->gain_x);
     }/*iseed_maos */
     free(simu->status);
     free_powfs(simu->powfs,parms);

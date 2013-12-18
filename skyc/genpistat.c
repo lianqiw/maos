@@ -280,6 +280,7 @@ void prep_bspstrehl(SIM_S *simu){
 			/*peak is in the corner */
 			strehlgrid->p[ic]->p[gx+ng+(gy+ng)*ng2]=tmp->p[ic]->p[0];
 		    }
+		    dcellfree(tmp);
 		}
 	    }
 	}

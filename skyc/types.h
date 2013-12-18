@@ -41,7 +41,6 @@ typedef struct POWFS_S{
     double *locxamp;   /**<dot(loc->locx,amp);*/
     double *locyamp;   /**<dot(loc->locy,amp);*/
     loc_t  *saloc;     /**<subaperture location*/
-    dmat   *dettf;     /**<matrix to demote TTF to TT*/
     double dxwvf;      /**<sampling for the wvf.*/
     int    nxwvf;      /**<number of points each subaps*/
 }POWFS_S;
@@ -116,10 +115,8 @@ typedef struct ASTER_S{
     /*The following are for each dtrat */
     dcell *nea_tot;    /**<total NEA: measurement + tilt anisoplanatism effects.*/
     dcell *pgm;        /**<mode reconstructor */
-    dcell *pgmtt;      /**<pgm with demote ttf.*/
     dcell *gain;       /**<type II gain vector*/
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
-    dcell *sigmantt;   /**<same as sigmn but for demoted ttf.*/
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
@@ -156,7 +153,6 @@ typedef struct SIM_S{
     dcell *sel;        /**<selected stars for each star field.*/
     dmat *fss;         /**<optimal sampling freq for each star field*/
     dcell *gain;       /**<optimal gains for each star field.*/
-    dmat *demote;      /**<demote TTF or not. deprecated. we don't demote anymore*/
     dmat *psd_ngs;     /**<PSD of NGS(tip/tilt + plate scale) modes*/
     dmat *psd_tt;      /**<PSD of Tip/tilt modes*/
     dmat *psd_ps;      /**<PSD of plate scale modes*/

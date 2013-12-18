@@ -77,8 +77,18 @@ dmat *psd1dt(dmat *v, long lseg, double dt){
     for(int i=0; i<psd->nx; i++){
 	psd2->p[i]=df*i;
     }
-    dscale(psd, 1./df);
+    dscale(psd, 1./df);//divide so the value is point, not integrated in a bin.
     memcpy(psd2->p+psd->nx, psd->p, psd->nx*psd->ny*sizeof(double));
     dfree(psd);
     return psd2;
+}
+
+/*Interpolate psd onto new f*/
+dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
+    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx); 
+    dmat *psd=dinterp1(psdf, psdval, fnew);
+    dfree(psdf);
+    dfree(psdval);
+    return psd;
 }

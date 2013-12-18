@@ -50,6 +50,7 @@
 #define DOT dotdbl
 #define POW pow
 #define LOG log
+#define EXP exp
 #else
 /*Double Complex */
 #define X(A) c##A
@@ -73,6 +74,7 @@
 #define DOT dotcmp
 #define POW cpow
 #define LOG clog
+#define EXP cexp
 #endif
 #else /*#define USE_SINGLE */
 #define XR(A) s##A
@@ -99,6 +101,7 @@
 #define DOT dotflt
 #define POW powf
 #define LOG logf
+#define EXP expf
 #else
 /*Single Complex */
 #define X(A) z##A
@@ -122,6 +125,7 @@
 #define DOT dotzmp
 #define POW cpowf
 #define LOG clogf
+#define EXP cexpf
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
 #endif/*#define MATTYPE */

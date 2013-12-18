@@ -138,9 +138,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 	free_extra=1;
     }
     if(free_extra){
-#ifdef USE_COMPLEX
-	cfree_plan(A);
-#endif
+	fft_free_plan(A->fft);
 	free(A->header);
     }
     free(A);
@@ -180,7 +178,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
 /**
    creat a X(mat) reference an existing X(mat). Use the reference carefully.
 */
-X(mat) *X(ref)(X(mat) *in){
+X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
     if(!out){
@@ -485,7 +483,17 @@ T X(sum)(const X(mat) *A){
     }
     return v;
 }
-
+/**
+   trace
+*/
+T X(trace)(const X(mat)*A){
+    T trace=0;
+    long n=MIN(A->nx, A->ny);
+    for(long i=0; i<n; i++){
+	trace+=A->p[i*(1+A->nx)];
+    }
+    return trace;
+}
 /**
    compute B=bc*B+ac*A
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
@@ -1134,7 +1142,19 @@ void X(muldiag)(X(mat) *A, X(mat) *s){
 	}
     }
 }
-
+/**
+   A=B*A*B, where diag(B)=s
+*/
+void X(muldiag2)(X(mat) *A, X(mat) *s){
+    assert(A->ny==s->nx && s->ny==1);
+    PMAT(A,pA);
+    const T *ps=s->p;
+    for(long iy=0; iy<A->ny; iy++){
+	for(long ix=0; ix<A->nx; ix++){
+	    pA[iy][ix]*=ps[iy]*ps[ix];
+	}
+    }
+}
 /**
    Raise all elements to power power
 */
@@ -1144,6 +1164,17 @@ void X(cwpow)(X(mat)*A, double power){
 	A->p[i]=POW(A->p[i],power);
     }
 }
+
+/**
+   compute exponential of all elements after scaling by alpha
+*/
+void X(cwexp)(X(mat)*A, double alpha){
+    if(!A) return;
+    for(long i=0; i<A->nx*A->ny; i++){
+	A->p[i]=EXP(A->p[i]*alpha);
+    }
+}
+
 /**
    Raise all elements above thres*maxabs(A) to pow power. Set others to zero.
 */
@@ -1354,7 +1385,7 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 }
 #ifndef USE_COMPLEX
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
-    int free_xy=1;
+    int free_xy=0;
     X(mat)*ynew=NULL;
     if(!yin){
 	yin=X(new_ref)(xin->nx, 1, xin->p+xin->nx);

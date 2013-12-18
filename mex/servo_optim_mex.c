@@ -36,4 +36,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[PL_GAIN]  = d2mx(gain->p[0]);
     dfree(sigma2);
     dcellfree(gain);
+    dfree(psd);
 }
