@@ -85,7 +85,6 @@
 #include "setup_star.h"
 #include "utils.h"
 #include "nafocus.h"
-#define VERBOSE 2
 
 /**
    The actual work horse that does the physical optics time domain simulation.
@@ -126,7 +125,7 @@ static void skysim_isky(SIM_S *simu){
 
 	for(int iaster=0; iaster<naster; iaster++)
 #if _OPENMP >= 200805
-#pragma omp task 
+#pragma omp task default(shared) firstprivate(iaster)
 #endif
 	{
 	    /*Parallelizing over aster gives same random stream. */
@@ -399,9 +398,6 @@ static void skysim_calc_psd(SIM_S *simu){
 	}
 	dfree(x);
 	simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
-	dwrite(simu->psd_tt, "psd_tt");
-	dwrite(simu->psd_ps, "psd_ps");
-	dwrite(simu->psd_ngs, "psd_ngs");
     }else{
 	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
 	simu->psd_ps=ddup(parms->skyc.psd_ps);
@@ -461,6 +457,9 @@ static void skysim_calc_psd(SIM_S *simu){
     //add windshake PSD to ngs/tt
     add_psd2(&simu->psd_ngs, simu->psd_ws);
     add_psd2(&simu->psd_tt, simu->psd_ws);
+    dwrite(simu->psd_tt, "psd_tt");
+    dwrite(simu->psd_ps, "psd_ps");
+    dwrite(simu->psd_ngs, "psd_ngs");
     if(parms->skyc.gsplit!=1){
 	add_psd2(&simu->psd_ngs, simu->psd_focus);
 	add_psd2(&simu->psd_ps, simu->psd_focus);
@@ -475,6 +474,7 @@ static void skysim_prep_gain(SIM_S *simu){
     simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
     simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
     simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    int servotype=parms->skyc.servo;
     if(parms->maos.nmod>5){
 	simu->gain_focus=calloc(parms->skyc.ndtrat, sizeof(dcell*));
     }
@@ -482,14 +482,14 @@ static void skysim_prep_gain(SIM_S *simu){
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	long dtrat=parms->skyc.dtrats[idtrat];
 	simu->gain_tt[idtrat]=servo_optim(simu->psd_tt, parms->maos.dt,
-					  dtrat, parms->skyc.pmargin, sigma2, 2);
+					  dtrat, parms->skyc.pmargin, sigma2, servotype);
 	simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
-					  dtrat, parms->skyc.pmargin, sigma2, 2);
+					  dtrat, parms->skyc.pmargin, sigma2, servotype);
 	simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs, parms->maos.dt,
-					   dtrat, parms->skyc.pmargin, sigma2, 2);
+					   dtrat, parms->skyc.pmargin, sigma2, servotype);
 	if(parms->maos.nmod>5){
 	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
-						 dtrat, parms->skyc.pmargin, sigma2, 2);
+						 dtrat, parms->skyc.pmargin, sigma2, servotype);
 	}
 	dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
 	dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
@@ -559,7 +559,8 @@ void skysim(const PARMS_S *parms){
 	simu->res_oa=dnew_mmap(5,nsky,NULL, "Res%d_%d_oa", seed_maos, parms->skyc.seed);
 	simu->res_geom=dnew_mmap(3,nsky,NULL, "Res%d_%d_geom", seed_maos, parms->skyc.seed);
 	simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, parms->skyc.seed);
-	simu->gain  =dcellnewsame_mmap(nsky, 1, 3, parms->maos.nmod,
+	int ng=parms->skyc.ngain;
+	simu->gain  =dcellnewsame_mmap(nsky, 1, ng, parms->maos.nmod,
 				       NULL, "Res%d_%d_gain", seed_maos, parms->skyc.seed);
 	simu->sel   =dcellnewsame_mmap(nsky, 1, 2+parms->maos.nwvl, parms->skyc.nwfstot,
 				       NULL,"Res%d_%d_sel", seed_maos, parms->skyc.seed);

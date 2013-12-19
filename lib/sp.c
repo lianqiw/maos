@@ -64,7 +64,7 @@ X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     sp->n=ny;
     sp->nzmax=nzmax;
     sp->nz=-1;
-    sp->nref=calloc(1,sizeof(T));
+    sp->nref=calloc(1,sizeof(int));
     sp->nref[0]=1;
     return sp;
 }
@@ -76,11 +76,11 @@ X(sp) *Y(spref)(X(sp) *A){
     if(!A) return NULL;
     X(sp) *out = calloc(1, sizeof(X(sp)));
     if(!A->nref){
-	A->nref=calloc(1, sizeof(long));
+	A->nref=calloc(1, sizeof(int));
 	A->nref[0]=1;
     }
     memcpy(out,A,sizeof(X(sp)));
-    out->nref[0]++;
+    atomicadd(out->nref,1);
     return out;
 }
 
@@ -188,7 +188,7 @@ void Y(spfree_do)(X(sp) *sp){
 	    warning("X(sp) was corrected incorrectly\n");
 	}
     }else{
-	sp->nref[0]--;
+	atomicadd(sp->nref, -1);
     }
     free(sp);
 }

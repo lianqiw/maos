@@ -57,7 +57,7 @@ typedef enum{
 
 #define MAT(T)					\
     ARR(T)					\
-    long *nref; /**< reference count */		\
+    int *nref; /**< reference count */		\
     struct fft_t *fft;
 
 #define CELL(T)					\
@@ -136,7 +136,7 @@ typedef enum CEMBED{
 			     nzmax) when nz!=-1 */			\
     spint *restrict i ;   /**< row indices, size nzmax */		\
     long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */ \
-    long *nref;           /**< reference counting like dmat */
+    int *nref;           /**< reference counting like dmat */
 
 /**
    a sparse array of double numbers stored in

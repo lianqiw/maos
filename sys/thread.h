@@ -187,4 +187,20 @@ INLINE void thread_new(thread_fun fun, void* arg){
 }
 void thread_block_signal();
 long thread_id(void);
+INLINE int cmpxchg(int *ptr, int old, int newval){
+    volatile int *__ptr = (volatile int *)(ptr);	
+    int __ret;                                     
+    __asm__ volatile( "lock; cmpxchg %2,%1"
+		      : "=a" (__ret), "+m" (*__ptr) 
+		      : "r" (newval), "0" (old)                     
+		      : "memory");				 
+    return __ret;
+}
+INLINE int atomicadd(int *ptr, int val){
+    int old;
+    do{
+	old=*ptr;
+    }while(cmpxchg(ptr, old, old+val)!=old);
+    return old+val;
+}
 #endif

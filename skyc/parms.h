@@ -131,6 +131,7 @@ typedef struct SKYC_S{
     int *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
     double *fss;     /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
+    int ngain;       /**<Number of parameters for gain*/
     int gsplit;      /**<use separate gains for tip/tilt and plate scale modes*/
     dmat *psd_ngs;   /**<PSD of NGS(tip/tilt + plate scale) modes*/
     dmat *psd_tt;    /**<PSD of Tip/tilt modes*/

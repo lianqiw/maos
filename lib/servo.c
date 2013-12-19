@@ -63,9 +63,9 @@ static double phase_at_gain(double *fcross, /**<[out] Cross over frequency*/
 			    const cmat *Hol, /**<[in] open loop transfer function defined on nu*/
 			    double gain/**<[in] compute phase at this gain*/
     ){
-    if(cabs(Hol->p[0])<1){
+    /*if(cabs(Hol->p[0])<gain){
 	error("Hol is less than 1 from the beginning\n");
-    }
+	}*/
 
     int found=0;
     double phi=0;
@@ -330,7 +330,15 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     st.pmargin=pmargin;
-
+    int ng=1;
+    switch(servo_type){
+    case 1:
+	ng=1;break;
+    case 2:
+	ng=3; break;
+    default:
+	error("Invalid servo_type=%d\n", servo_type);
+    }
     dcell *gm=dcellnew(sigman->nx, sigman->ny);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
@@ -339,12 +347,14 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 	st.sigman=sigman->p[ins];
 	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 	servo_calc_do(&st, g0);
-	gm->p[ins]=dnew(5,1);
+	gm->p[ins]=dnew(ng+2,1);
 	gm->p[ins]->p[0]=st.g;
-	gm->p[ins]->p[1]=st.a;
-	gm->p[ins]->p[2]=st.T;
-	gm->p[ins]->p[3]=st.res_sig;
-	gm->p[ins]->p[4]=st.res_n;
+	if(servo_type==2){
+	    gm->p[ins]->p[1]=st.a;
+	    gm->p[ins]->p[2]=st.T;
+	}
+	gm->p[ins]->p[ng]=st.res_sig;
+	gm->p[ins]->p[ng+1]=st.res_n;
 	/*info2("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigman=%.1g\n",
 	  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigman);*/
     }/*for ins. */
@@ -524,8 +534,19 @@ int servo_filter(SERVO_T *st, dcell *_merr){
     }
     switch(st->ep->nx){
     case 1://type I
-	if(st->ep->ny!=1) error("not supported\n");
-	dcelladd(&st->mpreint, 0, merr, st->ep->p[0]);//just record what is added.
+	if(st->ep->ny==1){
+	    dcelladd(&st->mpreint, 0, merr, st->ep->p[0]);//just record what is added.
+	}else{
+	    if(!st->mpreint){
+		st->mpreint=dcellnew2(merr);
+	    }
+	    for(int ic=0; ic<merr->nx; ic++){
+		assert(merr->p[ic]->nx==st->ep->ny);
+		for(long i=0; i<merr->p[ic]->nx; i++){
+		    st->mpreint->p[ic]->p[i]=st->ep->p[i]*merr->p[ic]->p[i];
+		}
+	    }
+	}
 	break;
     case 2:{//PID controller
 	if(st->ep->ny!=1) error("not supported\n");

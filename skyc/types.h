@@ -109,8 +109,6 @@ typedef struct ASTER_S{
     WFS_S *wfs;        /**<list of wfs for this asterism*/
     dcell *g;          /**<NGS mode to grad operator*/
     dmat *gm;          /**<matrix version of g.*/
-    dmat *dettf;       /**<demoting ttf operator.*/
-    dmat *gmtt;        /**<gm with ttf demotion.*/
 
     /*The following are for each dtrat */
     dcell *nea_tot;    /**<total NEA: measurement + tilt anisoplanatism effects.*/

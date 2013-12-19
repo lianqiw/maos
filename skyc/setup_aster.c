@@ -319,7 +319,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	int dtrat=parms->skyc.dtrats[idtrat];
 	dcell *nea=dcellnew(aster->nwfs, 1);
-	dcell *neatt=dcellnew(aster->nwfs, 1);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int istar=aster->wfs[iwfs].istar;
 	    const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -331,44 +330,26 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 		    error("gnea is empty\n");
 		}
 	    }
-	    const long nsa=parms->maos.nsa[ipowfs];
-	    if(nsa==1){
-		neatt->p[iwfs]=dref(nea->p[iwfs]);
-	    }else{
-		neatt->p[iwfs]=dnew(2,1);
-		for(long isa=0; isa<nsa; isa++){
-		    neatt->p[iwfs]->p[0]+=nea->p[iwfs]->p[isa];
-		    neatt->p[iwfs]->p[1]+=nea->p[iwfs]->p[isa+nsa];
-		}
-		neatt->p[iwfs]->p[0]/=nsa*nsa;
-		neatt->p[iwfs]->p[1]/=nsa*nsa;
-	    }
 	    nea_tot[idtrat][iwfs]=ddup(nea->p[iwfs]);/*in rad^2 */
 	    dcwpow(nea_tot[idtrat][iwfs],0.5);/*in rad */
 	}
 	
 	dmat *neam=dcell2m(nea);//measurement error covariance
 	dcellfree(nea); 
-	dcwpow(neam, -1);//inverse
-	dmat *neattm=dcell2m(neatt); 
-	dcellfree(neatt);
-	dcwpow(neattm, -1);//inverse
-	/*Reconstructor */
-	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
 	if(parms->skyc.dbg){
 	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
-	    dwrite(neattm,"%s/aster%d_neattm_dtrat%d",dirsetup,aster->iaster,dtrat);
 	}
+	dcwpow(neam, -1);//inverse
+	/*Reconstructor */
+	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
 	dcwpow(neam, -1); /* Measurement error. */
 	/*sigman is error due to noise. */
 	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
 	dfree(neam);
-	dfree(neattm);
     }	
     if(parms->skyc.dbg){
 	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
 	dwrite(aster->gm,   "%s/aster%d_gm",dirsetup,aster->iaster);
-	dwrite(aster->gmtt, "%s/aster%d_gmtt",dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->nea_tot,  "%s/aster%d_nea_tot", dirsetup,aster->iaster);
@@ -378,7 +359,7 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 /**
    Interpolate simu->gain.
 */
-static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
+static void interp_gain(double *out, const dcell *gain, const dmat *gainx,
 			double sigma2){
     const long nx=gainx->nx;
     const double xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
@@ -392,7 +373,7 @@ static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
 	ig=ifloor(xx);
 	/*2013-12-06: use one of the set, not interpolate*/
     }
-    memcpy(out, gain->p[ig]->p, sizeof(double)*5);
+    memcpy(out, gain->p[ig]->p, sizeof(double)*gain->p[ig]->nx);
 }
 /**
    Optimize type II servo gains beased on measurement noise and signal PSD. We try to minimize
@@ -431,12 +412,14 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	}
 	double res_ngs;/*residual error due to signal after servo rejection. */
 	double res_ngsn;/*residual error due to noise. */
-	aster->gain->p[idtrat]=dnew(3,nmod);
+	const int servotype=parms->skyc.servo;
+	const int ng=parms->skyc.ngain;
+	aster->gain->p[idtrat]=dnew(ng,nmod);
 	PDMAT(aster->gain->p[idtrat], pgain);
 	if(parms->skyc.gsplit){
-	    double pg_tt[5];
-	    double pg_ps[5];
-	    double pg_focus[5]={0};
+	    double pg_tt[ng+2];
+	    double pg_ps[ng+2];
+	    double pg_focus[ng+2];
 	    if(parms->skyc.interpg){
 		interp_gain(pg_tt, simu->gain_tt[idtrat], simu->gain_x, sigma_tt);
 		interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
@@ -447,46 +430,46 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 		dmat *sigma2=dnew(1,1); 
 		dcell *tmp;
 		sigma2->p[0]=sigma_tt;
-		tmp=servo_optim(simu->psd_tt, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
-		memcpy(pg_tt, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+		tmp=servo_optim(simu->psd_tt, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
+		memcpy(pg_tt, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
 
 		sigma2->p[0]=sigma_ps;
-		tmp=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
-		memcpy(pg_ps, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+		tmp=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
+		memcpy(pg_ps, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
 
 		if(nmod>5 && parms->skyc.gsplit==1){
 		    sigma2->p[0]=sigma_focus;
-		    tmp=servo_optim(simu->psd_focus, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
-		    memcpy(pg_focus, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+		    tmp=servo_optim(simu->psd_focus, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
+		    memcpy(pg_focus, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
 		}
 		dfree(sigma2);
 	    }
-	    res_ngs  = pg_tt[3] + pg_ps[3] + pg_focus[3];//residual mode
-	    res_ngsn = pg_tt[4] + pg_ps[4] + pg_focus[4];//error due to noise
+	    res_ngs  = pg_tt[ng] + pg_ps[ng] + pg_focus[ng];//residual mode
+	    res_ngsn = pg_tt[ng+1] + pg_ps[ng+1] + pg_focus[ng+1];//error due to noise
 	    for(int imod=0; imod<MIN(nmod,5); imod++){
-		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*3);
+		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*ng);
 	    }
 	    if(nmod>5){
 		if(parms->skyc.gsplit==1){
-		    memcpy(pgain[5], pg_focus, sizeof(double)*3);
+		    memcpy(pgain[5], pg_focus, sizeof(double)*ng);
 		}else{
-		    memcpy(pgain[5], pg_ps, sizeof(double)*3);
+		    memcpy(pgain[5], pg_ps, sizeof(double)*ng);
 		}
 	    }
 	}else{
-	    double pg_ngs[5];
+	    double pg_ngs[ng+2];
 	    if(parms->skyc.interpg){
 		interp_gain(pg_ngs, simu->gain_ngs[idtrat], simu->gain_x, sigma_ngs);
 	    }else{
 		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_ngs;
 		dcell *tmp;
-		tmp=servo_optim(simu->psd_ngs, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
-		memcpy(pg_ngs, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+		tmp=servo_optim(simu->psd_ngs, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
+		memcpy(pg_ngs, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
 	    }
-	    res_ngs=pg_ngs[3];
-	    res_ngsn=pg_ngs[4];
+	    res_ngs=pg_ngs[ng];
+	    res_ngsn=pg_ngs[ng+1];
 	    for(int imod=0; imod<nmod; imod++){
-		memcpy(pgain[imod], pg_ngs, sizeof(double)*3);
+		memcpy(pgain[imod], pg_ngs, sizeof(double)*ng);
 	    }
 	}
 	if(parms->skyc.noisefull){/*use full noise */
@@ -497,7 +480,7 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	pres_ngs[1][idtrat]=res_ngs;/*error due to signal */
 	pres_ngs[2][idtrat]=res_ngsn;/*error due to noise propagation. */
 
-	dmat *g_tt=dnew_ref(3,1,pgain[0]);
+	dmat *g_tt=dnew_ref(ng,1,pgain[0]);
 	double gain_n;
 	aster->res_ws->p[idtrat]=servo_residual(&gain_n, parms->skyc.psd_ws, 
 						parms->maos.dt, dtrat, g_tt, 2);

@@ -36,7 +36,8 @@ dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
     dmat *rmsol=dnew(2,1);
     rmsol->p[0]=rms/mideal->ny;
     rmsol->p[1]=rmstt/mideal->ny;
-    info2("Input time series: RMS WFE is NGS: %g nm, TT: %g nm, PS: %g nm\n", sqrt(rmsol->p[0])*1e9, sqrt(rmsol->p[1])*1e9, sqrt(rmsol->p[0]-rmsol->p[1])*1e9);
+    info2("Input time series: RMS WFE is NGS: %g nm, TT: %g nm, PS: %g nm\n", 
+	  sqrt(rmsol->p[0])*1e9, sqrt(rmsol->p[1])*1e9, sqrt(rmsol->p[0]-rmsol->p[1])*1e9);
     return rmsol;
 }
 
@@ -183,8 +184,11 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     PDMAT(parms->skyc.rnefs,rnefs);
     dmat *grad=dnew(aster->tsa*2,1);
     dmat *zgrad=dnew(aster->tsa*2,1);
-    dmat *grads=dnew(aster->tsa*2,aster->nstep);
-    dmat *zgrads=dnew(aster->tsa*2,aster->nstep);
+    dmat *grads=0, *zgrads=0;
+    if(parms->skyc.dbg){
+	grads=dnew(aster->tsa*2,aster->nstep);
+	zgrads=dnew(aster->tsa*2,aster->nstep);
+    }
     dcell **psf=calloc(aster->nwfs, sizeof(dcell*));
     ccell *wvf=ccellnew(aster->nwfs,1);
     ccell *wvfc=ccellnew(aster->nwfs,1);
@@ -192,17 +196,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
     const double dtngs=parms->maos.dt*dtrat;
-    dmat *gngs=0;
-    switch(parms->skyc.servo){
-    case 1:
-	gngs=dnew(1,1);
-	gngs->p[0]=0.3;
-	break;
-    case 2:
-	gngs=dref(aster->gain->p[idtrat]);
-	break;
-    }
-    SERVO_T *st2t=servo_new(merrm, NULL, 0, dtngs, gngs);
+    SERVO_T *st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtrat]);
     const long nwvl=parms->maos.nwvl;
     const dmat *pgm=aster->pgm->p[idtrat];
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -280,7 +274,9 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
 		dmm(&merrm->p[0],0, pgm, zgrad, "nn", 1);
-		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
+		if(parms->skyc.dbg){
+		    memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
+		}
 		dzero(zgrad);
 		pmerrm=merrm;
 	    }else{
@@ -374,7 +370,9 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    itsa+=nsa*2;
 		}/*iwfs */
 		dmm(&merrm->p[0], 0, pgm, grad, "nn", 1);
-		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
+		if(parms->skyc.dbg){
+		    memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
+		}
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		    dcellzero(psf[iwfs]);/*reset accumulation.*/
 		}
@@ -405,7 +403,6 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     ccellfree(wvfc);
     ccellfree(otf);
     servo_free(st2t);
-    dfree(gngs);
     free(psf);
     free(mtche);
     free(ints);

@@ -39,7 +39,6 @@
 #include "matbin.h"
 #include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
-
 /**
    Work horse function that creats the matrix object. if p is
    NULL, memory is allocated. Allocation for X(mat) objects
@@ -62,7 +61,7 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
 	    p=calloc((nx*ny), sizeof(T));
 	}
 	out->p=p;
-	out->nref=calloc(1, sizeof(T));
+	out->nref=calloc(1, sizeof(int));
 	out->nref[0]=1;
     }
     return out;
@@ -113,8 +112,8 @@ void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
     int free_extra=0;
     if(A->nref){
-	A->nref[0]--;
-	if(!A->nref[0]){
+	int nref=atomicadd(A->nref, -1);
+	if(!nref){
 	    if(A->header){
 		long count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
@@ -131,8 +130,8 @@ void X(free_do)(X(mat) *A, int keepdata){
 		}
 	    }
 	    free(A->nref);
-	}else if(A->nref[0]<0){
-	    error("The ref is less than 0. something wrong!!!:%ld\n",A->nref[0]);
+	}else if(nref<0){
+	    error("The ref is less than 0. something wrong!!!:%d\n",A->nref[0]);
 	}
     }else{
 	free_extra=1;
@@ -185,7 +184,7 @@ X(mat) *X(ref)(const X(mat) *in){
 	error("Allocation failed\n");
     }
     memcpy(out,in,sizeof(X(mat)));
-    if(out->nref) out->nref[0]++;
+    if(out->nref) atomicadd(out->nref, 1);
     return out;
 }
 /**

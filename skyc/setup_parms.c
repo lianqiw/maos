@@ -190,6 +190,14 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;
     }
+    switch(parms->skyc.servo){
+    case 1:
+	parms->skyc.ngain=1;break;
+    case 2:
+	parms->skyc.ngain=3; break;
+    default:
+	error("Invalid skyc.servo=%d\n", parms->skyc.servo);
+    }
     info("maos.mffocus=%d\n",  parms->maos.mffocus);
     info("skyc.addfocus=%d\n", parms->skyc.addfocus);
     info("skyc.addws=%d\n",    parms->skyc.addws);
