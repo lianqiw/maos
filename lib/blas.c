@@ -272,6 +272,10 @@ X(mat)* X(chol)(const X(mat) *A){
     if(!A) return NULL;
     if(A->nx!=A->ny) error("dchol requires square matrix\n");
     X(mat) *B = X(dup)(A);
+    if(A->nx==1){
+	B->p[0]=SQRT(B->p[0]);
+	return B;
+    }
     ptrdiff_t n=B->nx, info;
     Z(potrf)("L", &n, B->p, &n, &info);
     if(info){

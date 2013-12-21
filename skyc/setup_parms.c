@@ -97,7 +97,6 @@ static void setup_parms_skyc(PARMS_S *parms){
 
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
-    READ_INT(skyc.addfocus);
     READ_DBL(skyc.pmargin);
     READ_INT(skyc.psdcalc);
 }
@@ -169,14 +168,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
-    if(parms->maos.mffocus){//maos already does focus tracking
-	parms->skyc.addfocus=0;
-    }
     if(parms->maos.ahstfocus){
-	if(parms->skyc.addfocus==-1){//auto
-	    parms->skyc.addfocus=1;
-	    warning("skyc.addfocus is set to 1\n");
-	}
 	if(parms->skyc.addws==-1){//auto
 	    parms->skyc.addws=1;
 	}
@@ -184,13 +176,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    error("Conflicted parameters: maos.nmod should be >5 when maos.ahstfocus=1\n");
 	}
     }
-    if(parms->skyc.addfocus==-1){
-	parms->skyc.addfocus=0;
-    }
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;
     }
     switch(parms->skyc.servo){
+    case -1://LQG
+	parms->skyc.ngain=0; break;
     case 1:
 	parms->skyc.ngain=1;break;
     case 2:
@@ -199,12 +190,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	error("Invalid skyc.servo=%d\n", parms->skyc.servo);
     }
     info("maos.mffocus=%d\n",  parms->maos.mffocus);
-    info("skyc.addfocus=%d\n", parms->skyc.addfocus);
     info("skyc.addws=%d\n",    parms->skyc.addws);
-    if(parms->maos.nmod<=5 && parms->skyc.addfocus>0){
-	error("Cannot addfocus if nmod<=5\n");
-    }
-
     if(!parms->skyc.stars){
 	if(parms->skyc.keeporder){
 	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
@@ -332,7 +318,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	info2("Using constant read out noise of %g\n", parms->skyc.rne);
 	dset(parms->skyc.rnefs, parms->skyc.rne);
     }
-    parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
+    /*parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
     if(parms->maos.nmod<6){//Do not model focus in time series.
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	    int dtrat=parms->skyc.dtrats[idtrat];
@@ -345,7 +331,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 				     parms->skyc.na_alpha, 
 				     parms->skyc.na_beta),2);
 	}
-    }
+	}*/
     if(parms->skyc.npowfs != parms->maos.npowfs){
 	error("skyc.npowfs should match maos.npowfs\n");
     }
@@ -424,5 +410,5 @@ void free_parms(PARMS_S *parms){
     dfree(parms->maos.mcc_oa_tt);
     dfree(parms->maos.mcc_oa_tt2);
     dfree(parms->skyc.rnefs);
-    dfree(parms->skyc.resfocus);
+    //dfree(parms->skyc.resfocus);
 }

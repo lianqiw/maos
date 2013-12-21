@@ -114,6 +114,7 @@ typedef struct ASTER_S{
     dcell *nea_tot;    /**<total NEA: measurement + tilt anisoplanatism effects.*/
     dcell *pgm;        /**<mode reconstructor */
     dcell *gain;       /**<type II gain vector*/
+    dcell *neam;        /**<measurement error covariance matrix*/
     dcell *sigman;     /**<NGS, TT noise propagated from WFS measurement noise.*/
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
@@ -122,6 +123,7 @@ typedef struct ASTER_S{
     rand_t rand;  /**<random stream*/
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
+    kalman_t**kalman;
 }ASTER_S;
 /**
    A few simulation parameters.*/
@@ -131,7 +133,7 @@ typedef struct SIM_S{
     dcell *stars;      /**<randomly generated star fields.*/
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
-    dmat *rmsol;       /**<open loop error*/
+    double rmsol;       /**<open loop error*/
     STATUS_T *status;  /**<to report status to the scheduler*/
     STAR_S *star;      /**<STAR_S*/
     int iseed;         /**<Current seed index*/
@@ -168,5 +170,7 @@ typedef struct SIM_S{
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     double tk_0;       /**<initial star time*/
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
+    dmat *sdecoeff;    /**<sde coefficient*/
+    dcell *psdi;        /**<PSD of each mode computed from time series*/
 }SIM_S;
 #endif

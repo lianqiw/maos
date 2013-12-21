@@ -185,7 +185,12 @@ static void reccati(dmat **Mout, dmat **Pout,
     dfree(CPAt); dfree(CPCt); dfree(tmp);
 }
 /*Kalman filter based on SDE model*/
-kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs){
+kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
+		     double dthi, /**<Loop frequency*/
+		     int dtrat,   /**<WFS frequency as a fraction of loop*/
+		     dmat *Gwfs,  /**<WFS measurement from modes. Can be identity*/
+		     dmat *Rwfs,  /**<WFS measurement noise covariance*/
+		     dmat *Proj   /**<Project modes in statespace to DM/correction space*/){
     int nblock=coeff->ny;
     int order=coeff->nx-1;
     /*Ac is block diagonal matrix for continuous domain state evolution. 
@@ -198,8 +203,7 @@ kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs
     int nmod=nblock*order;/*number of modes in state*/
     dmat *Ac=dnew(nmod, nmod);
     dmat *Sigma_ep=dnew(nmod, nmod);
-    dmat *Pd=dnew(nblock, nmod);
-
+    dmat *Pd0=dnew(nblock, nmod);
     for(int iblock=0; iblock<nblock; iblock++){
 	double *pcoeff=coeff->p+(order+1)*iblock;
 	double *Aci=Ac->p+iblock*order*(nmod+1);
@@ -211,8 +215,15 @@ kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs
 	    }
 	}
 	si[0]=pow(pcoeff[order],2);
-	Pd->p[((iblock+1)*order-1)*nblock+iblock]=1;
+	Pd0->p[((iblock+1)*order-1)*nblock+iblock]=1;
     }
+    dmat *Pd=0; 
+    if(Proj){
+	dmm(&Pd, 0, Proj, Pd0, "nn", 1); 
+    }else{
+	Pd=dref(Pd0);
+    }
+    dfree(Pd0);
     dmat* Sigma_varep=0;/*state noise*/
     dmat* Sigma_zeta=0;/*state measurement noise*/
     dmat *AcI=ddup(Ac); 
@@ -288,6 +299,14 @@ kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs
     }
     dmat *P=0, *M=0;
     reccati(&M, &P, Ad, Sigma_varep, Cd, Rn);
+    {
+	/*computed estimation error in modes */
+	dmat *tmp1=0;
+	dmm(&tmp1, 0, Pd, P, "nn", 1);
+	dfree(P);
+	dmm(&P, 0, tmp1, Pd, "nt", 1);
+	dfree(tmp1);
+    }
     kalman_t *res=calloc(1, sizeof(kalman_t));
     res->Ad=Ad;
     res->Fd=Fd;
@@ -296,7 +315,10 @@ kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs
     res->FdM=FdM;
     res->M=M;
     res->P=P;
-
+    res->dthi=dthi;
+    res->dtrat=dtrat;
+    res->Gwfs=ddup(Gwfs);
+    res->Rwfs=ddup(Rwfs);
     dfree(Ac);
     dfree(Sigma_ep);
     dfree(Pd);
@@ -316,4 +338,88 @@ void kalman_free(kalman_t *kalman){
     dfree(kalman->FdM);
     dfree(kalman->M);
     dfree(kalman->P);
+    dfree(kalman->Gwfs);
+    dfree(kalman->Rwfs);
+    dfree(kalman->xhat);
+    dfree(kalman->xhat2);
+    dfree(kalman->xhat3);
+}
+/*Initialize kalman filter state*/
+void kalman_init(kalman_t *kalman){
+    if(!kalman->xhat){
+	kalman->xhat=dnew(kalman->Ad->nx, 1);
+	kalman->xhat2=dnew(kalman->Ad->nx, 1);
+	kalman->xhat3=dnew(kalman->Ad->nx, 1);
+    }else{
+	dzero(kalman->xhat);
+	dzero(kalman->xhat2);
+	dzero(kalman->xhat3);
+    }
+}
+/*Update state vector when there is a measurement. It modifies meas*/
+void kalman_update(kalman_t *kalman, dmat *meas){
+    /*differene between real and predicted measurement*/
+    dmm(&meas, 1, kalman->Cd, kalman->xhat, "nn", -1);
+    /*updated estimate*/
+    dmm(&kalman->xhat, 1, kalman->M, meas, "nn", 1);
+    dmm(&kalman->xhat2,0, kalman->AdM, kalman->xhat, "nn", 1);/*correction for this time step*/
+    dcp(&kalman->xhat3, kalman->xhat);
+    dmm(&kalman->xhat, 0, kalman->Ad, kalman->xhat3, "nn", 1);/*predicted state*/
+}
+/*Output correction*/
+void kalman_output(kalman_t *kalman, dmat **out, double alpha, double beta){
+    dcp(&kalman->xhat3, kalman->xhat2);
+    dmm(&kalman->xhat2, 0, kalman->AdM, kalman->xhat3, "nn", 1);
+    dmm(out, alpha, kalman->FdM, kalman->xhat2, "nn", beta);
+}
+/**
+   Test the performance of kalman filter (LQG controller). Derived from servo_test()
+*/
+dmat *kalman_test(kalman_t *kalman, dmat *input){
+    if(input->ny==1){/*single mode. each column is for a mode.*/
+	input->ny=input->nx;
+	input->nx=1;
+    }
+    int dtrat=kalman->dtrat;
+    const dmat *Gwfs=kalman->Gwfs;
+    dmat *rmsn=0;
+    if(dnorm2(kalman->Rwfs)>0){
+	rmsn=dchol(kalman->Rwfs);
+    }
+    double dtrat1=1./dtrat;
+    int nmod=input->nx;
+    PDMAT(input,pinput);
+    dmat *mres=ddup(input);
+    PDMAT(mres, pmres);
+    dmat *meas=0;
+    dmat *noise=dnew(Gwfs->nx, 1);
+    kalman_init(kalman);
+    rand_t rstat;
+    seed_rand(&rstat, 1);
+    dmat *ini=dnew_ref(Gwfs->nx,1,(double*)1);//wrapper
+    dmat *outi=dnew_ref(nmod, 1, (double*)1);//wraper
+    for(int istep=0; istep<input->ny; istep++){
+	ini->p=(double*)(pinput+istep);
+	outi->p=(double*)(pmres+istep);
+	kalman_output(kalman, &outi, 1, -1);
+	if((istep) % dtrat == 0){/*There is measurement from last step*/
+	    if(rmsn){
+		drandn(noise, 1, &rstat);
+		if(rmsn->nx>1){
+		    dmm(&meas, 1, rmsn, noise, "nn", 1);/*add measurement error*/
+		}else{
+		    dadd(&meas, 1, noise, rmsn->p[0]);
+		}
+	    }
+	    kalman_update(kalman, meas);
+	    dzero(meas);
+	}
+	dmm(&meas, 1, Gwfs, ini, "nn", dtrat1);/*OL measurement*/
+    }
+    dfree(rmsn);
+    dfree(meas);
+    dfree(noise);
+    dfree(ini);
+    dfree(outi);
+    return mres;
 }

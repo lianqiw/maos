@@ -13,11 +13,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     };
     enum{
 	PL_GAIN,
+	PL_EST,
 	PL_TOT,
     };
 
-    if(nlhs!=PL_TOT || nrhs!=P_TOT){
-	mexErrMsgTxt("Usage: gain=servo_optim(psd, dt, dtrat, sigman, servotype);\n"
+    if(nrhs!=P_TOT){
+	mexErrMsgTxt("Usage: [gain este]=servo_optim(psd, dt, dtrat, sigman, servotype);\n"
 		     "PSD psd should be in m^2/hz\n"
 		     "dt is the AO fundemental sampling period.\n"
 		     "dtrat is ratio of sampling period of the WFS over dt.\n"
@@ -32,9 +33,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dmat *sigma2 = dnew(1,1); 
     sigma2->p[0] = sigma;
     int servotype = (int)mxGetScalar(prhs[P_STYPE]);
-    dcell *gain   = servo_optim(psd,dt,dtrat,M_PI/4,sigma2,servotype);
-    plhs[PL_GAIN]  = d2mx(gain->p[0]);
+    dcell *res   = servo_optim(psd,dt,dtrat,M_PI/4,sigma2,servotype);
+    int ng=res->p[0]->nx-2;
+    dmat *gain=dnew(ng, 1);
+    memcpy(gain->p, res->p[0]->p, ng*sizeof(double));
+    dmat *est=dnew(1,1);
+    est->p[0]=res->p[0]->p[ng]+res->p[0]->p[ng+1];
+    plhs[PL_GAIN]  = d2mx(gain);
+    if(nlhs>PL_EST){
+	plhs[PL_EST] = d2mx(est);
+    }
     dfree(sigma2);
-    dcellfree(gain);
+    dcellfree(res);
+    dfree(gain);
+    dfree(est);
     dfree(psd);
 }

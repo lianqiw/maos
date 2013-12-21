@@ -614,29 +614,6 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
 }
 
 /**
-   Generate random time series using temporal PSD.
-*/
-dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
-    if(psdin->ny!=2) error("psdin should have two columns\n");
-    double df=1./(N*dt);
-    dmat *f=dlinspace(df,df,N);
-    dmat *psd2=dinterp1(psdin, 0, f);
-    dfree(f);
-    double sqdf=sqrt(df);
-    cmat *psdc=cnew(N,1);
-    cfft2plan(psdc, -1);
-    for(long i=0; i<psd2->nx; i++){
-	psdc->p[i]=sqrt(psd2->p[i])*sqdf*(randn(rstat)+I*randn(rstat));
-    }
-    cfft2(psdc,-1);
-    creal2d(&psd2,0,psdc,1);
-    cfree(psdc);
-    /*transpose. */
-    psd2->ny=psd2->nx;
-    psd2->nx=1;
-    return psd2;
-}
-/**
    Free SERVO_T struct
 */
 void servo_free(SERVO_T *st){

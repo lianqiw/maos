@@ -271,13 +271,17 @@ static void test_svd2(void){
 }
 static void test_kalman(){
     dmat *coeff0=dread("coeff0");
-    dmat *coeff=dread("coeff");
     dmat *psd=dread("psd_tt");
     info("sde_fit\n");
-    sde_fit(psd, coeff0, 0.1, 0, 1e5);
-    dmat *Gwfs=dnew(5,5);daddI(Gwfs,1);
-    dmat *Rwfs=dnew(5,5);
-    kalman_t *k=sde_kalman(coeff, 1./800, 50, Gwfs, Rwfs);
+    dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5);
+    dmat *Gwfs=dnew(1,1);daddI(Gwfs,1);
+    dmat *Rwfs=dnew(1,1);Rwfs->p[0]=1;
+    kalman_t *k=sde_kalman(coeff, 1./800, 50, Gwfs, Rwfs, 0);
+    rand_t rstat; seed_rand(&rstat, 1);
+    dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
+    dmat *res=kalman_test(k, ts);
+    dwrite(ts, "kalman_ts");
+    dwrite(res, "kalman_res");
     kalman_free(k);
     dfree(coeff);
     dfree(Gwfs);

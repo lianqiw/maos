@@ -26,19 +26,13 @@
 
 /**
    Compute Open loop NGS mode wavefront error from mode vectors.  */
-dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
-    double rms=0, rmstt=0;
+double calc_rms(const dmat *mideal, const dmat *mcc){
+    double rms=0;
     PDMAT(mideal, pmideal);
     for(long istep=0; istep<mideal->ny; istep++){
-	rms+=dwdot(pmideal[istep], parms->maos.mcc, pmideal[istep]);
-	rmstt+=dwdot2(pmideal[istep],parms->maos.mcc_tt,pmideal[istep]);
+	rms+=dwdot(pmideal[istep], mcc, pmideal[istep]);
     }
-    dmat *rmsol=dnew(2,1);
-    rmsol->p[0]=rms/mideal->ny;
-    rmsol->p[1]=rmstt/mideal->ny;
-    info2("Input time series: RMS WFE is NGS: %g nm, TT: %g nm, PS: %g nm\n", 
-	  sqrt(rmsol->p[0])*1e9, sqrt(rmsol->p[1])*1e9, sqrt(rmsol->p[0]-rmsol->p[1])*1e9);
-    return rmsol;
+    return rms/mideal->ny;
 }
 
 /**
@@ -196,7 +190,15 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
     const double dtngs=parms->maos.dt*dtrat;
-    SERVO_T *st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtrat]);
+    SERVO_T *st2t=0;
+    kalman_t *kalman=0;
+    dmat *mpsol=0;//for psol grad.
+    if(parms->skyc.servo>0){
+	st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtrat]);
+    }else{
+	kalman=aster->kalman[idtrat];
+	kalman_init(kalman);
+    }
     const long nwvl=parms->maos.nwvl;
     const dmat *pgm=aster->pgm->p[idtrat];
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -268,12 +270,23 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		}
 		itsa+=nsa*2;
 	    }
-	    if(st2t->mint[0]){
-		dcp(&mreal, st2t->mint[0]->p[0]);
+	    if(st2t){
+		if(st2t->mint[0]){
+		    dcp(&mreal, st2t->mint[0]->p[0]);
+		}
+	    }else{
+		kalman_output(kalman, &mreal, 0, 1);
+		dadd(&mpsol, 1, mreal, 1);
 	    }
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
-		dmm(&merrm->p[0],0, pgm, zgrad, "nn", 1);
+		if(kalman){
+		    dadd(&zgrad, 1, mpsol, 1./dtrat);//form PSOL grads.
+		    dzero(mpsol);
+		    dadd(&merrm->p[0], 0, zgrad, 1);//kalman takes grad directly
+		}else{
+		    dmm(&merrm->p[0],0, pgm, zgrad, "nn", 1);
+		}
 		if(parms->skyc.dbg){
 		    memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
 		}
@@ -302,7 +315,12 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    }/*isa */
 		}/*iwvl */
 	    }/*iwfs */
-	    dcp(&mreal, st2t->mint[0]->p[0]);
+	    if(st2t){
+		dcp(&mreal, st2t->mint[0]->p[0]);
+	    }else{
+		kalman_output(kalman, &mreal, 0, 1);
+		dadd(&mpsol, 1, mreal, 1);
+	    }
 	    if((istep+1) % dtrat == 0){/*has output */
 		phycount++;
 		/*Form detector image */
@@ -369,7 +387,13 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    }/*isa */
 		    itsa+=nsa*2;
 		}/*iwfs */
-		dmm(&merrm->p[0], 0, pgm, grad, "nn", 1);
+		if(kalman){
+		    dadd(&grad, 1, mpsol, 1./dtrat);
+		    dzero(mpsol);
+		    dadd(&merrm->p[0], 0, grad, 1);
+		}else{
+		    dmm(&merrm->p[0], 0, pgm, grad, "nn", 1);
+		}
 		if(parms->skyc.dbg){
 		    memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
 		}
@@ -381,7 +405,11 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		pmerrm=NULL;
 	    }/*if dtrat */
 	}/*if phystart */
-	servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
+	if(st2t){
+	    servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
+	}else if(pmerrm){
+	    kalman_update(kalman, pmerrm->p[0]);
+	}
     }/*istep; */
     if(parms->skyc.dbg){
 	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
@@ -389,6 +417,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     }
   
     dfree(mreal);
+    dfree(mpsol);
     dfree(merr);
     dcellfree(merrm);
     dfree(grad);

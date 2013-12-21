@@ -313,6 +313,7 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcellfree(aster->nea_tot);
     }
     aster->pgm=dcellnew(ndtrat,1);
+    aster->neam=dcellnew(ndtrat, 1);
     aster->sigman=dcellnew(ndtrat,1);
     aster->nea_tot=dcellnew(aster->nwfs,ndtrat);
     PDCELL(aster->nea_tot,nea_tot);
@@ -336,16 +337,16 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	
 	dmat *neam=dcell2m(nea);//measurement error covariance
 	dcellfree(nea); 
+	aster->neam->p[idtrat]=ddup(neam);
 	if(parms->skyc.dbg){
 	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
 	}
 	dcwpow(neam, -1);//inverse
 	/*Reconstructor */
 	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
-	dcwpow(neam, -1); /* Measurement error. */
-	/*sigman is error due to noise. */
-	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
 	dfree(neam);
+	/*sigman is error due to noise. */
+	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],aster->neam->p[idtrat],parms->maos.mcc);
     }	
     if(parms->skyc.dbg){
 	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
@@ -381,7 +382,7 @@ static void interp_gain(double *out, const dcell *gain, const dmat *gainx,
    \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu
    \f]
 */
-void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
+static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
     int ndtrat=parms->skyc.ndtrat;
     if(aster->gain){
 	dcellfree(aster->gain);
@@ -492,6 +493,29 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	dwrite(aster->res_ngs,"%s/aster%d_res_ngs",dirsetup,aster->iaster);
     }
 }
+static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
+    int ndtrat=parms->skyc.ndtrat;
+    aster->kalman=calloc(ndtrat, sizeof(kalman_t*));
+    aster->res_ngs=dnew(ndtrat,3);
+    PDMAT(aster->res_ngs, pres_ngs);
+    for(int idtrat=0; idtrat<ndtrat; idtrat++){
+	int dtrat=parms->skyc.dtrats[idtrat];
+	aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrat, aster->gm, 
+					 aster->neam->p[idtrat], 0);
+	dmat *res=kalman_test(aster->kalman[idtrat], simu->mideal);
+	pres_ngs[0][idtrat]=calc_rms(res, parms->maos.mcc);
+	if(parms->skyc.verbose){
+	    info("aster=%d, dtrat=%d, este=%g nm", aster->iaster, dtrat, sqrt(pres_ngs[0][idtrat])*1e9);
+	}
+    }
+}
+void setup_aster_controller(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
+    if(parms->skyc.servo<0){
+	setup_aster_kalman(simu, aster, parms);
+    }else{
+	setup_aster_servo(simu, aster, parms);
+    }
+}
 /**
    for sort incrementally.
  */
@@ -515,9 +539,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	    /*should not add res_ws here since res_ngs already includes that.*/
 	    double rms=aster[iaster].res_ngs->p[idtrat];
-	    if(parms->maos.nmod<6){
+	    /*if(parms->maos.nmod<6){
 		rms+=parms->skyc.resfocus->p[idtrat];
-	    }
+		}*/
 	    pres[iaster][idtrat]=rms;
 	    if(rms<mini){
 		mini=rms;
@@ -599,6 +623,14 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
     (void) parms;
     for(int iaster=0; iaster<naster; iaster++){
+	int ndtrat=parms->skyc.ndtrat;
+	if(aster[iaster].kalman){
+	    for(int i=0; i<ndtrat; i++){
+		kalman_free(aster[iaster].kalman[i]);
+	    }
+	    free(aster[iaster].kalman);
+	    aster[iaster].kalman=0;
+	}
 	dcellfree(aster[iaster].gain);
 	dcellfree(aster[iaster].pgm);
 	dcellfree(aster[iaster].nea_tot);
@@ -609,6 +641,7 @@ void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
 	free(aster[iaster].wfs);
 	dcellfree(aster[iaster].g);
 	dfree(aster[iaster].gm);
+	dcellfree(aster[iaster].neam);
     }
     free(aster);
 }

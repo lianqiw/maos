@@ -70,6 +70,7 @@
    when skyc.addfocus==1, add focus to time series.
    when skyc.ahstfocus==1, use new 5+1 mode.
    if maos.mffocus==0, set skyc.addfocus to 0 because focus error is included in maos simulations.
+   2013-12-20: removed skyc.addfocus option. The correct way to model focus is to use in maos presimulations
 */
 
 #include "skyc.h"
@@ -136,22 +137,22 @@ static void skysim_isky(SIM_S *simu){
 	    setup_aster_g(&aster[iaster], star, powfs, parms);
 	    /*Compute the reconstructor, nea, sigman */
 	    setup_aster_recon(&aster[iaster], star,parms);
-	    /*Optimize servo gains. */
-	    setup_aster_servo(simu, &aster[iaster], parms);
+	    /*Optimize controller. */
+	    setup_aster_controller(simu, &aster[iaster], parms);
 	}
 #if _OPENMP >= 200805
 #pragma omp taskwait
 #endif
 	/*Select asters that have good performance. */
 	setup_aster_select(pres_geom[isky],aster, naster, star, 
-			   parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
+			   parms->skyc.mtch?0.5*simu->rmsol:INFINITY,parms); 
 	/*Read in physical optics data (wvf) */
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();
 	/*
 	  Now begin time domain Physical Optics Simulations.
 	*/
-	double skymini=simu->rmsol->p[0];
+	double skymini=simu->rmsol;
 	int selaster=0;
 	int seldtrat=0;
 	
@@ -188,10 +189,10 @@ static void skysim_isky(SIM_S *simu){
 	    setup_aster_wvf(asteri, star, parms);
 	    /*Compute the reconstructor, nea, sigman */
 	    setup_aster_recon(asteri, star, parms);
-	    /*Optimize servo gains. */
-	    setup_aster_servo(simu, asteri, parms);
+	    /*Optimize controller again. */
+	    setup_aster_controller(simu, asteri, parms);
 
-	    double mini=simu->rmsol->p[0];
+	    double mini=simu->rmsol;
 	    dmat *pmini=NULL;
 	    dmat *min_imres=NULL;
 	    int mdtrat=0;
@@ -205,12 +206,12 @@ static void skysim_isky(SIM_S *simu){
 		if(!parms->skyc.addws){
 		    resadd+=asteri->res_ws->p[idtrat];
 		}
-		if(parms->maos.nmod<6){//no focus mode in time domain
+		/*if(parms->maos.nmod<6){//no focus mode in time domain
 		    resadd+=parms->skyc.resfocus->p[idtrat];
-		}
+		    }*/
 		dmat *ires=NULL;
 		dmat *imres=NULL;
-		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol->p[0], 
+		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
 				    asteri, powfs, parms, idtrat, noisy))){
 		    if(parms->skyc.verbose){
 			info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
@@ -250,7 +251,7 @@ static void skysim_isky(SIM_S *simu){
 		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
 		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
 		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
-		pres[isky][4]=parms->maos.nmod>5?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
+		//pres[isky][4]=parms->maos.nmod>5?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
 		/*On axis performance. */
 		pres_oa[isky][1]=pmini->p[2];
@@ -336,27 +337,6 @@ static void skysim_read_mideal(SIM_S *simu){
 */
 static void skysim_update_mideal(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
-    if(parms->skyc.addfocus && parms->maos.nmod>5){
-	warning("Incorrect and Deprecated; Please use sim.mffocus to simulation na focus variaiton in maos\n");
-	dmat *range=NULL;
-	if(parms->skyc.fnrange){
-	    range=dread("%s", parms->skyc.fnrange);
-	    info("Loading sodium range variation from %s\n", parms->skyc.fnrange);
-	    if(range->nx<simu->mideal->ny){
-		error("Time serials is not long enough. Need %ld, got %ld\n",
-		      simu->mideal->ny, range->nx);
-	    }
-	}else{
-	    range=nafocus_time(parms->skyc.na_alpha, parms->skyc.na_beta, 
-			       parms->maos.dt, simu->mideal->ny, &simu->rand);
-	}
-	dwrite(range, "narange_%d", parms->skyc.seed);
-	double scale=0.5*pow(1./parms->maos.hs, 2)*(1./(parms->maos.za));
-	for(int istep=0; istep<parms->maos.nstep; istep++){
-	    simu->mideal->p[5+istep*6]+=range->p[istep]*scale;
-	}
-	dfree(range);
-    }
     if(parms->skyc.addws){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
 	warning("Add tel wind shake time series to mideal\n");
@@ -379,7 +359,7 @@ static void skysim_update_mideal(SIM_S *simu){
    ones. Combine them with windshake.  */
 static void skysim_calc_psd(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
-    simu->rmsol=calc_rmsol(simu->mideal, parms);
+    simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
     simu->psd_ws=ddup(parms->skyc.psd_ws);
     if(parms->skyc.psdcalc){
 	PDMAT(parms->maos.mcc, MCC);
@@ -406,7 +386,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	double rms_ngs=psd_inte2(simu->psd_ngs);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
-	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
+	    double rms_ratio=simu->rmsol/rms_ngs;
 	    info2("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
 	    /*scale PSF in place. */
@@ -452,8 +432,7 @@ static void skysim_calc_psd(SIM_S *simu){
     }
     double rms_ws=psd_inte2(simu->psd_ws);
     info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
-    simu->rmsol->p[0]+=rms_ws;//testing
-    simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
+    simu->rmsol+=rms_ws;//testing
     //add windshake PSD to ngs/tt
     add_psd2(&simu->psd_ngs, simu->psd_ws);
     add_psd2(&simu->psd_tt, simu->psd_ws);
@@ -499,13 +478,48 @@ static void skysim_prep_gain(SIM_S *simu){
     simu->gain_x=dref(sigma2);
     dfree(sigma2);
 }
+
+static void skysim_prep_sde(SIM_S *simu){
+    const PARMS_S *parms=simu->parms;
+    if(!parms->skyc.psdcalc){
+	error("Only support skyc.psdcalc=1\n");
+    }
+    /*
+       Do not scale the time series by MCC. We are working in "radian space" for
+       kalman. kalman.P is multiplied to mcc to compute RMS WFE in nm.
+     */
+    dmat *x=dtrans(simu->mideal);
+    simu->psdi=dcellnew(x->ny, 1);
+    simu->sdecoeff=dnew(3,x->ny);
+    dmat *coeff0=dnew(3,1);//sde first guess
+    coeff0->p[0]=3; coeff0->p[1]=9; coeff0->p[2]=1;
+    for(int im=0; im<x->ny; im++){
+	dmat *xi=dsub(x, 20, 0, im, 1);
+	simu->psdi->p[im]=psd1dt(xi, xi->nx, parms->maos.dt);
+	dfree(xi);
+	if(im==0){
+	    //add windshake on first mode only
+	    add_psd2(&simu->psdi->p[im], simu->psd_ws);
+	}
+	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, 0.1, 0, INFINITY);
+	dmat *ci=dsub(simu->sdecoeff, 0, 0, im, 1);
+	dcp(&ci, coeff);
+	dfree(coeff);
+    }
+    
+    dfree(x);
+    dfree(coeff0);
+    dwrite(simu->sdecoeff, "coeff");
+    dcellwrite(simu->psdi, "psdi");
+    
+}
 /**
    Setup the stars fields and then calls skysim_isky() to handle each star field.
 */
 void skysim(const PARMS_S *parms){
-    if(parms->skyc.dbg){
+    /*if(parms->skyc.dbg){
 	dwrite(parms->skyc.resfocus, "%s/resfocus",dirsetup);
-    }
+	}*/
     const int npowfs=parms->maos.npowfs;
     SIM_S *simu=calloc(1, sizeof(SIM_S));
     simu->status=calloc(1, sizeof(STATUS_T));
@@ -528,12 +542,14 @@ void skysim(const PARMS_S *parms){
 	simu->status->iseed=iseed_maos;
 	prep_bspstrehl(simu);
 	skysim_read_mideal(simu);
-	skysim_calc_psd(simu);
-	info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
-	      sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
-	
-	if(parms->skyc.interpg){
-	    skysim_prep_gain(simu);
+	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
+	if(parms->skyc.servo<0){//LQG
+	    skysim_prep_sde(simu);
+	}else{
+	    skysim_calc_psd(simu);
+	    if(parms->skyc.interpg){
+		skysim_prep_gain(simu);
+	    }
 	}
 	/*generate star fields. */
 	if(parms->skyc.stars){
@@ -551,7 +567,7 @@ void skysim(const PARMS_S *parms){
 	}
 	sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
 	dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,parms->skyc.seed);
-	if(parms->skyc.addfocus || parms->skyc.addws){
+	if(parms->skyc.addws){
 	    skysim_update_mideal(simu);
 	}
 	int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
@@ -566,8 +582,8 @@ void skysim(const PARMS_S *parms){
 				       NULL,"Res%d_%d_sel", seed_maos, parms->skyc.seed);
 	simu->mres  =dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,
 				       NULL,"Res%d_%d_mres",  seed_maos, parms->skyc.seed);
-	dset(simu->res, simu->rmsol->p[0]);
-	dset(simu->res_oa, simu->rmsol->p[0]);
+	dset(simu->res, simu->rmsol);
+	dset(simu->res_oa, simu->rmsol);
 	simu->isky_start=parms->skyc.start;
 	simu->isky_end=nsky;
 	if(parms->skyc.dbgsky>-1){
@@ -603,12 +619,13 @@ void skysim(const PARMS_S *parms){
 	dcellfree(simu->mres);
 	dfree(simu->mideal);
 	dfree(simu->mideal_oa);
-	dfree(simu->rmsol);
 	dfree(simu->psd_ws);
 	dfree(simu->psd_ngs);
 	dfree(simu->psd_ps);
 	dfree(simu->psd_tt);
 	dfree(simu->psd_focus);
+	dcellfree(simu->psdi);
+	dfree(simu->sdecoeff);
 	/*Free the data used to do bicubic spline. */
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	    dcellfreearr(simu->bspstrehl[ipowfs], parms->maos.nsa[ipowfs]*parms->maos.nwvl);
