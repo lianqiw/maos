@@ -340,7 +340,7 @@ static void skysim_update_mideal(SIM_S *simu){
     if(parms->skyc.addws){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
 	warning("Add tel wind shake time series to mideal\n");
-	dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
+	dmat *telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 	/*telws is in m. need to convert to rad since mideal is in this unit. */
 	dwrite(telws, "telws_%d", parms->skyc.seed);
 	dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
@@ -359,8 +359,6 @@ static void skysim_update_mideal(SIM_S *simu){
    ones. Combine them with windshake.  */
 static void skysim_calc_psd(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
-    simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
-    simu->psd_ws=ddup(parms->skyc.psd_ws);
     if(parms->skyc.psdcalc){
 	PDMAT(parms->maos.mcc, MCC);
 	dmat *x=dtrans(simu->mideal);
@@ -430,12 +428,12 @@ static void skysim_calc_psd(SIM_S *simu){
 	dfree(psdi);
 	dfree(x);
     }
-    double rms_ws=psd_inte2(simu->psd_ws);
+    double rms_ws=psd_inte2(parms->skyc.psd_ws);
     info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
     simu->rmsol+=rms_ws;//testing
     //add windshake PSD to ngs/tt
-    add_psd2(&simu->psd_ngs, simu->psd_ws);
-    add_psd2(&simu->psd_tt, simu->psd_ws);
+    add_psd2(&simu->psd_ngs, parms->skyc.psd_ws);
+    add_psd2(&simu->psd_tt, parms->skyc.psd_ws);
     dwrite(simu->psd_tt, "psd_tt");
     dwrite(simu->psd_ps, "psd_ps");
     dwrite(simu->psd_ngs, "psd_ngs");
@@ -493,17 +491,17 @@ static void skysim_prep_sde(SIM_S *simu){
     simu->sdecoeff=dnew(3,x->ny);
     dmat *coeff0=dnew(3,1);//sde first guess
     coeff0->p[0]=3; coeff0->p[1]=9; coeff0->p[2]=1;
+    PDMAT(simu->sdecoeff, pcoeff);
     for(int im=0; im<x->ny; im++){
 	dmat *xi=dsub(x, 20, 0, im, 1);
 	simu->psdi->p[im]=psd1dt(xi, xi->nx, parms->maos.dt);
 	dfree(xi);
-	if(im==0){
+	if(im==0 && parms->skyc.psd_ws){
 	    //add windshake on first mode only
-	    add_psd2(&simu->psdi->p[im], simu->psd_ws);
+	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
 	}
-	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, 0.1, 0, INFINITY);
-	dmat *ci=dsub(simu->sdecoeff, 0, 0, im, 1);
-	dcp(&ci, coeff);
+	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, 0.1, 0, 100);
+	memcpy(pcoeff+im, coeff->p, coeff->nx*sizeof(double));
 	dfree(coeff);
     }
     
@@ -542,7 +540,8 @@ void skysim(const PARMS_S *parms){
 	simu->status->iseed=iseed_maos;
 	prep_bspstrehl(simu);
 	skysim_read_mideal(simu);
-	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
+	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
+    	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
 	if(parms->skyc.servo<0){//LQG
 	    skysim_prep_sde(simu);
 	}else{
@@ -619,7 +618,6 @@ void skysim(const PARMS_S *parms){
 	dcellfree(simu->mres);
 	dfree(simu->mideal);
 	dfree(simu->mideal_oa);
-	dfree(simu->psd_ws);
 	dfree(simu->psd_ngs);
 	dfree(simu->psd_ps);
 	dfree(simu->psd_tt);

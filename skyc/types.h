@@ -156,7 +156,6 @@ typedef struct SIM_S{
     dmat *psd_ngs;     /**<PSD of NGS(tip/tilt + plate scale) modes*/
     dmat *psd_tt;      /**<PSD of Tip/tilt modes*/
     dmat *psd_ps;      /**<PSD of plate scale modes*/
-    dmat *psd_ws;      /**<PSD of windshake*/
     dmat *psd_focus;   /**<PSD of focus error due to atmosphere and sodium layer*/
     dmat *gain_x;      /**<The sampled sigma in m2*/
     dcell **gain_ngs;  /**<TypeII gain and result of different sigman and different dtrat*/

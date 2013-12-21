@@ -255,18 +255,20 @@ void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 /**
   Estimate wavefront error propagated from measurement error. pgm is the reconstructor. ineam is the
   error inverse.
+  Compute trace(Mcc*(gm'*ineam*gm));
+  Equivalent to
+  trace(Mcc*(pgm*neam*pgm'))
 */
-static dmat *calc_recon_error(const dmat *pgm,  /**<[in] the reconstructor*/
+static dmat *calc_recon_error(const dmat *gm,   /**<[in] the reconstructor*/
 			      const dmat *ineam,/**<[in] the inverse of error covariance matrix*/
 			      const dmat *mcc   /**<[in] NGS mode covariance matrix.*/
 			      ){
-    dsp *neasp=spnewdiag(ineam->nx, ineam->p, 1);
+    dsp *ineasp=spnewdiag(ineam->nx, ineam->p, 1);
     dmat *psp=NULL;
     dmat *tmp=NULL;
-    dmulsp(&tmp,pgm,neasp, 1);
-    spfree(neasp);
-    dmm(&psp,0,tmp,pgm,"nt",1);
-    dfree(tmp); 
+    spmulmat(&tmp, ineasp, gm, 1);
+    dmm(&psp, 0, gm, tmp, "tn", 1);
+    spfree(ineasp);
     PDMAT(psp,ppsp); 
     PDMAT(mcc,pmcc);
     /*It is right for both ix, iy to stop at ib.*/
@@ -337,16 +339,18 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	
 	dmat *neam=dcell2m(nea);//measurement error covariance
 	dcellfree(nea); 
-	aster->neam->p[idtrat]=ddup(neam);
+	dsp *tmp=spnewdiag(neam->nx, neam->p, 1);
+	spfull(&aster->neam->p[idtrat], tmp, 1);//diagonal matrix
+	spfree(tmp);
 	if(parms->skyc.dbg){
 	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
 	}
 	dcwpow(neam, -1);//inverse
 	/*Reconstructor */
-	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
-	dfree(neam);
+	aster->pgm->p[idtrat]=dpinv(aster->gm, neam, NULL);
 	/*sigman is error due to noise. */
-	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],aster->neam->p[idtrat],parms->maos.mcc);
+	aster->sigman->p[idtrat]=calc_recon_error(aster->gm,neam,parms->maos.mcc);
+	dfree(neam);
     }	
     if(parms->skyc.dbg){
 	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
@@ -505,9 +509,19 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms
 	dmat *res=kalman_test(aster->kalman[idtrat], simu->mideal);
 	pres_ngs[0][idtrat]=calc_rms(res, parms->maos.mcc);
 	if(parms->skyc.verbose){
-	    info("aster=%d, dtrat=%d, este=%g nm", aster->iaster, dtrat, sqrt(pres_ngs[0][idtrat])*1e9);
+	    info("aster=%d, dtrat=%d, este=%g nm\n", aster->iaster, dtrat, sqrt(pres_ngs[0][idtrat])*1e9);
+	    dwrite(res, "aster%d_res_%d", aster->iaster, idtrat);
 	}
+	dfree(res);
+	{
+	    dwrite(simu->sdecoeff, "sdecoeff");
+	    dwrite(aster->neam->p[idtrat], "neam_%d", dtrat);
+	    dwrite(aster->gm, "gm");
+	    dwrite(simu->mideal, "mideal");
+	}
+	exit(0);
     }
+
 }
 void setup_aster_controller(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
     if(parms->skyc.servo<0){

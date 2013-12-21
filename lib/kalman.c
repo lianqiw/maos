@@ -113,7 +113,6 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
 	error("psd must contain nu and psd\n");
     }
     int nf=1024*4; /**array length for FFT*/
-    info("sdefit: nf=%d\n", nf);
     double maxf=psdin->p[psdin->nx-1];
     double df=maxf/(nf/2-1);
     double dt=1./maxf;
@@ -294,7 +293,7 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
 	/*compute Rn=Rn+Gwfs*Radd*Gwfs' */
 	dmat *tmp=0;
 	dmm(&tmp, 0, Radd, Gwfs, "nt", 1);
-	dmm(&Rn, 1, Gwfs, Radd, "nn", 1);
+	dmm(&Rn, 1, Gwfs, tmp, "nn", 1);
 	dfree(tmp);
     }
     dmat *P=0, *M=0;
@@ -396,7 +395,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     kalman_init(kalman);
     rand_t rstat;
     seed_rand(&rstat, 1);
-    dmat *ini=dnew_ref(Gwfs->nx,1,(double*)1);//wrapper
+    dmat *ini=dnew_ref(nmod,1,(double*)1);//wrapper
     dmat *outi=dnew_ref(nmod, 1, (double*)1);//wraper
     for(int istep=0; istep<input->ny; istep++){
 	ini->p=(double*)(pinput+istep);
