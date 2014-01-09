@@ -75,6 +75,7 @@ typedef struct MAOS_S{
 typedef struct SKYC_S{
     ZB_S zb;         /**<Sky background and zero magnitude flux*/
     int verbose;     /**<be verbose at output.*/
+    int reest;       /**<reestimate the error after gain estimation.*/
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
     int dbgaster;    /**<only run this asterism if not -1*/
@@ -137,7 +138,7 @@ typedef struct SKYC_S{
     dmat *psd_tt;    /**<PSD of Tip/tilt modes*/
     dmat *psd_ps;    /**<PSD of plate scale modes*/
     dmat *psd_ws;    /**<PSD of windshake*/
-
+    dmat *psd_focus; /**<PSD of residual focus due to sodium layer variation, propagated by LGS WFS*/
     double zc_f;     /**<focus zoom corrector frequency*/
     double zc_zeta;  /**<focus zoom corrector dampling */
     double na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/

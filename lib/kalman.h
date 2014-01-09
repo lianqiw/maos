@@ -11,6 +11,8 @@ typedef struct{
     dmat *Cd; /*From discrete state to WFS measurement*/
     dmat *AdM;/*discrete state propagation at dthi*/
     dmat *FdM;/*From discrete state to averaged mode for dthi*/
+    dmat *Qn;
+    dmat *Rn;
     dmat *M;  /*M is innovation gain.*/
     dmat *P;  /*Error covariance matrix*/
     double dthi;
@@ -21,6 +23,8 @@ typedef struct{
     dmat *xhat2;
     dmat *xhat3;
 }kalman_t;
+void reccati(dmat **Mout, dmat **Pout, 
+	     const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 kalman_t* sde_kalman(dmat *coeff, double dthi, int dtrat, dmat *Gwfs, dmat *Rwfs, dmat *Proj);
 void kalman_free(kalman_t *kalman);
 dmat *kalman_test(kalman_t *kalman, dmat *input);

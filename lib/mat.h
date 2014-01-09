@@ -120,8 +120,8 @@ void X(cog)(double *grad,const X(mat) *i0,double offsetx, double offsety, double
 void X(shift2center)(X(mat) *A, double offsetx, double offsety);\
 int X(clip)(X(mat) *A, double min, double max);\
 void X(gramschmidt)(X(mat) *Mod, R *amp);	\
-void X(muldiag)(X(mat) *A, X(mat) *s);\
-void X(muldiag2)(X(mat) *A, X(mat) *s);\
+void X(muldiag)(X(mat) *A, const X(mat) *s);\
+void X(muldiag2)(X(mat) *A, const X(mat) *s);\
 void X(cwpow)(X(mat) *A, double power);\
 void X(cwexp)(X(mat) *A, double alpha);\
 void X(cwpow_thres)(X(mat) *A, double power, double thres);		\

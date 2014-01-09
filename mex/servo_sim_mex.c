@@ -27,9 +27,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dmat *input = mx2d(prhs[P_INPUT]);
     double dt   = mxGetScalar(prhs[P_DT]);
     int dtrat  = (int)mxGetScalar(prhs[P_DTRAT]);
-    double sigma2n = mxGetScalar(prhs[P_SIGMAN]);/*m^2 */
+    dmat *sigma2n = mx2d(prhs[P_SIGMAN]);/*m^2 */
     dmat *gain = mx2d(prhs[P_GAIN]);/*m^2 */
     dmat *res   = servo_test(input, dt, dtrat, sigma2n, gain);
     plhs[PL_RES]= d2mx(res);
     dfree(res);
+    dfree(input);
+    dfree(sigma2n);
+    dgree(gain);
 }

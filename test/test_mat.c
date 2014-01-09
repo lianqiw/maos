@@ -288,8 +288,20 @@ static void test_kalman(){
     dfree(Rwfs);
     exit(0);
 }
+static void test_reccati(){
+    dmat *A=dread("test_A");
+    dmat *Qn=dread("test_Qn");
+    dmat *C=dread("test_C");
+    dmat *Rn=dread("test_Rn");
+    dmat *M=0, *P=0;
+    reccati(&M, &P, A, Qn, C, Rn);
+    dwrite(M, "test_M");
+    dwrite(P, "test_P");
+    exit(0);
+}
 int main(int argc, char **argv){
     exit_success=1;
+    test_reccati();
     test_kalman();
     test_svd2();
     test_svd();

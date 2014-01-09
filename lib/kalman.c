@@ -66,7 +66,7 @@ static int coeff_isgood(double *coeff, int ncoeff, double min, double max){
     for(int icoeff=0; icoeff<ncoeff; icoeff++){
 	if(coeff[icoeff]<min || coeff[icoeff]>max){
 	    //warning("coeff[%d]=%g, beyond [%g %g]\n", icoeff, coeff[icoeff], min, max);
-	    return coeff[icoeff];
+	    return 0;
 	}
     }
     return 1;
@@ -89,19 +89,21 @@ static double sde_diff_psd(double *coeff, void *pdata){
 */
 static double sde_diff_cov(double *coeff, void *pdata){
     sde_fit_t *data=pdata;
-    double check;
+    int check;
+    double diff;
     if(!(check=coeff_isgood(coeff, data->ncoeff*data->nmod, data->min, data->max))){
-	return (1+fabs(check))*1e50;
+	diff=(1+fabs(check))*1e50;
+    }else{
+	sde_psd(&data->cov_sde, data->f2, coeff, data->ncoeff, data->nmod);
+	do_fft(data->cov_sde);
+	dmat *cov1=dnew_ref(data->ncov, 1, data->cov_sde->p);
+	dmat *cov2=dnew_ref(data->ncov, 1, data->cov_in->p);
+	data->ratio=cov2->p[0]/cov1->p[0];
+	/*scale to same max value*/
+	dadd(&cov1, 1./cov1->p[0], cov2, -1./cov2->p[0]);
+	diff=dnorm2(cov1);
+	dfree(cov1); dfree(cov2);
     }
-    sde_psd(&data->cov_sde, data->f2, coeff, data->ncoeff, data->nmod);
-    do_fft(data->cov_sde);
-    dmat *cov1=dnew_ref(data->ncov, 1, data->cov_sde->p);
-    dmat *cov2=dnew_ref(data->ncov, 1, data->cov_in->p);
-    data->ratio=cov2->p[0]/cov1->p[0];
-    /*scale to same max value*/
-    dadd(&cov1, 1./cov1->p[0], cov2, -1./cov2->p[0]);
-    double diff=dnorm2(cov1);
-    dfree(cov1); dfree(cov2);
     return diff;
 }
 /**
@@ -155,33 +157,37 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     dfree(scale);
     return coeff;
 }
-static void reccati(dmat **Mout, dmat **Pout, 
-		    dmat *A, dmat *Qn, dmat *C, dmat *Rn){
+void reccati(dmat **Mout, dmat **Pout, 
+	     const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn){
     double diff=1, diff2=1, lastdiff=INFINITY;
-    dmat *P=dnew(A->nx, A->ny); daddI(P, 1);//Initialize P to identity
-    dmat *AP=0, *CP=0, *P2=0, *CPAt=0, *CPCt=0, *tmp=0;
-    while(diff>1e-13 && diff2>1e-12){
+    dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
+    dmat *AP=0, *CP=0, *P=0, *CPAt=0, *CPCt=0, *APCt=0, *tmp=0;
+    int count=0;
+    while(diff>1e-13 && diff2>1e-12 && count++<1000){
+	/*Notice that P may not be symmetric due to round off errors.*/
+	dcp(&P, P2);
 	dmm(&AP, 0, A, P, "nn", 1);
 	dmm(&CP, 0, C, P, "nn", 1);
 	dmm(&CPAt, 0, CP, A, "nt", 1);
+	dmm(&APCt, 0, AP, C, "nt", 1);
 	dmm(&CPCt, 0, CP, C, "nt", 1);
 	dadd(&CPCt, 1, Rn, 1);
-	dsvd_pow(CPCt, -1, 0);
-	dcp(&P2, Qn);
-	dmm(&P2, 1, AP, A, "nt", 1);
+	dsvd_pow(CPCt, -1, 1e-12);
+	dmm(&P2, 0, AP, A, "nt", 1);
 	dmm(&tmp, 0, CPCt, CPAt, "nn", 1);
-	dmm(&P2, 1, CPAt, tmp, "tn", -1);
+	dmm(&P2, 1, APCt, tmp, "nn", -1);
+	dadd(&P2, 1, Qn, 1);//new P
 	diff=dnorm2(P);
 	dadd(&P, 1, P2, -1);
 	diff=sqrt(dnorm2(P)/diff);
 	diff2=fabs(diff-lastdiff);
 	lastdiff=diff;
-	dcp(&P, P2);
+	//info2("diff=%g, diff2=%g\n", diff, diff2);
     }
     dmm(Mout, 0, CP, CPCt, "tn", 1);
     if(Pout) dcp(Pout, P);
     dfree(AP);dfree(CP); dfree(P); dfree(P2); 
-    dfree(CPAt); dfree(CPCt); dfree(tmp);
+    dfree(CPAt); dfree(CPCt); dfree(APCt); dfree(tmp);
 }
 /*Kalman filter based on SDE model*/
 kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
@@ -318,6 +324,8 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
     res->dtrat=dtrat;
     res->Gwfs=ddup(Gwfs);
     res->Rwfs=ddup(Rwfs);
+    res->Qn=dref(Sigma_varep);
+    res->Rn=dref(Rn);
     dfree(Ac);
     dfree(Sigma_ep);
     dfree(Pd);

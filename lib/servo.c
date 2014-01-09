@@ -27,7 +27,7 @@ typedef struct SERVO_CALC_T{
     cmat *Hwfs;
     dmat *nu;       /**<[out] The frequency*/
     dmat *psd;      /**<[out] The PSD defined on nu*/
-    double sigman;  /**<[out] Noise variance*/
+    double sigma2n;  /**<[out] Noise variance*/
     double pmargin; /*phase margin. default: M_PI/4*/
     double fny;     /**Nyqust frequency for dtrat*/
     double var_sig; /**Integration of PSD*/
@@ -285,16 +285,16 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
     if(!servo_isstable(nu, st->Hol)){
 	st->gain_n=100;
 	/*put a high penalty to drive down the gain*/
-	st->res_n=10*(1+g0)*(st->var_sig+st->sigman);
-	/*warning2("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigman=%g\n",
-	  g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigman);*/
+	st->res_n=10*(1+g0)*(st->var_sig+st->sigma2n);
+	/*warning2("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+		 g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
     }else{
 	if(st->gain_n>1){
 	    st->gain_n=pow(st->gain_n,3);/*a fudge factor to increase the penalty*/
 	}
-        st->res_n=st->sigman*st->gain_n;
-        /*info2("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigman=%g\n",
-         g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigman);*/
+        st->res_n=st->sigma2n*st->gain_n;
+        /*info2("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+	  g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
     }
     return res_sig+st->res_n;
 }
@@ -308,8 +308,8 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    Tested OK: 2010-06-11
 
    2011-01-17: The optimization process is quite slow, but the result is only
-   dependent on the sigman and fs. psdin does not change during the
-   simulation. Built a lookup table in skyc using various sigman and interpolate
+   dependent on the sigma2n and fs. psdin does not change during the
+   simulation. Built a lookup table in skyc using various sigma2n and interpolate
    to get ress, resn, and gain.
    
    2012-03-28: Cleaned up this routine. groupped similar calculations together. 
@@ -317,11 +317,11 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    
    2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);
 
-   sigman is a dmat array of all wanted sigman.
+   sigma2n is a dmat array of all wanted sigma2n.
    Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n]
 */
 dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
-		   const dmat* sigman, int servo_type){
+		   const dmat* sigma2n, int servo_type){
     /*The upper end must be nyquist freq so that noise transfer can be
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
@@ -339,12 +339,12 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     default:
 	error("Invalid servo_type=%d\n", servo_type);
     }
-    dcell *gm=dcellnew(sigman->nx, sigman->ny);
+    dcell *gm=dcellnew(sigma2n->nx, sigma2n->ny);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
     double g0_max=2.0;
-    for(long ins=0; ins<sigman->nx*sigman->ny; ins++){
-	st.sigman=sigman->p[ins];
+    for(long ins=0; ins<sigma2n->nx*sigma2n->ny; ins++){
+	st.sigma2n=sigma2n->p[ins];
 	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 	servo_calc_do(&st, g0);
 	gm->p[ins]=dnew(ng+2,1);
@@ -355,8 +355,8 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 	}
 	gm->p[ins]->p[ng]=st.res_sig;
 	gm->p[ins]->p[ng+1]=st.res_n;
-	/*info2("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigman=%.1g\n",
-	  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigman);*/
+	/*info2("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigma2n=%.1g\n",
+	  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigma2n);*/
     }/*for ins. */
     servo_calc_free(&st);
     return gm;
@@ -572,7 +572,7 @@ int servo_filter(SERVO_T *st, dcell *_merr){
 /**
    test type I/II filter with ideal measurement to make sure it is implemented correctly.
 */
-dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
+dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     if(input->ny==1){/*single mode. each column is for a mode.*/
 	input->ny=input->nx;
 	input->nx=1;
@@ -582,7 +582,10 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
     dmat *merr=dnew(nmod,1);
     dcell *mreal=dcellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
-    double sigma=sqrt(sigma2n);
+    dmat *sigman=NULL;
+    if(dnorm2(sigma2n)>0){
+	sigman=dchol(sigma2n);
+    }
     dcell *meas=dcellnew(1,1);
     dmat *noise=dnew(nmod, 1);
     SERVO_T *st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
@@ -601,11 +604,18 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
 	dcellcp(&mreal, st2t->mint[0]);
 	if((istep+1) % dtrat == 0){
 	    if(dtrat!=1) dscale(meas->p[0], 1./dtrat);
-	    drandn(noise, sigma, &rstat);
-	    dadd(&meas->p[0], 1, noise, 1);
+	    if(sigman){
+		drandn(noise, 1, &rstat);
+		if(sigman->nx>0){
+		    dmm(&meas->p[0], 1, sigman, noise, "nn", 1);
+		}else{
+		    dadd(&meas->p[0], 1, noise, sigman->p[0]);
+		}
+	    }
 	    servo_filter(st2t, meas);
 	}
     }
+    dfree(sigman);
     dfree(merr);
     dcellfree(mreal);
     dcellfree(meas);
@@ -663,7 +673,7 @@ double psd_inte2(const dmat *psdin){
 
 /**
    Convert PSD into time series.*/
-dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
+dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
     if(psdin->ny!=2){
 	error("psdin should have two columns\n");
     }
@@ -672,7 +682,6 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     double var=psd_inte2(psdin);
-    info2("Input psd has variance of %g\n",var);
     psd=dinterp1(psdin, 0, fs);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
@@ -688,7 +697,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dfree(fs);
     dresize(out, nstepin, 1);
     double var2=dinn(out,out)/out->nx;
-    info2("Time series has variance of %g\n",var2);
+    //info2("Input psd has variance of %g.\nTime series has variance of %g\n",var,var2);
     dscale(out, sqrt(var/var2));
     return out;
 }

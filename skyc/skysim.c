@@ -182,8 +182,9 @@ static void skysim_isky(SIM_S *simu){
 		}
 	    }
 	    if(parms->skyc.verbose){
-		info2("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz\n", iaster,
-		      sqrt(asteri->mresol)*1e9, parms->skyc.fss[asteri->mdtrat]);
+		info2("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
+		      sqrt(asteri->mresol)*1e9, parms->skyc.fss[asteri->mdtrat], 
+		      parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax]);
 	    }
 	    /*Copy wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
@@ -196,7 +197,7 @@ static void skysim_isky(SIM_S *simu){
 	    dmat *pmini=NULL;
 	    dmat *min_imres=NULL;
 	    int mdtrat=0;
-	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++)
+	    for(int idtrat=asteri->idtratmin; idtrat<=asteri->idtratmax; idtrat++)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(idtrat)
 #endif
@@ -206,9 +207,6 @@ static void skysim_isky(SIM_S *simu){
 		if(!parms->skyc.addws){
 		    resadd+=asteri->res_ws->p[idtrat];
 		}
-		/*if(parms->maos.nmod<6){//no focus mode in time domain
-		    resadd+=parms->skyc.resfocus->p[idtrat];
-		    }*/
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
@@ -251,7 +249,7 @@ static void skysim_isky(SIM_S *simu){
 		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
 		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
 		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
-		//pres[isky][4]=parms->maos.nmod>5?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
+		pres[isky][4]=0;/*always zero*/
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
 		/*On axis performance. */
 		pres_oa[isky][1]=pmini->p[2];
@@ -283,7 +281,9 @@ static void skysim_isky(SIM_S *simu){
 		psel[iwfs][iwvl+2]=aster[selaster].wfs[iwfs].mags->p[iwvl];
 	    }
 	}
-	dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
+	if(parms->skyc.servo>0){
+	    dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
+	}
 	if(parms->skyc.save){
 	    skysim_save(simu, aster, pres[isky], selaster, seldtrat, isky);
 	}
@@ -362,7 +362,7 @@ static void skysim_calc_psd(SIM_S *simu){
     if(parms->skyc.psdcalc){
 	PDMAT(parms->maos.mcc, MCC);
 	dmat *x=dtrans(simu->mideal);
-	for(int im=0; im<x->ny && im<5; im++){
+	for(int im=0; im<x->ny; im++){
 	    dmat *xi=dsub(x, 20, 0, im, 1);
 	    dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
 	    dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
@@ -370,6 +370,8 @@ static void skysim_calc_psd(SIM_S *simu){
 		add_psd2(&simu->psd_tt, psdi);
 	    }else if(im<5){
 		add_psd2(&simu->psd_ps, psdi);
+	    }else if(im==5){
+		add_psd2(&simu->psd_focus, psdi);
 	    }
 	    dfree(xi);
 	    dfree(psdi);
@@ -380,7 +382,8 @@ static void skysim_calc_psd(SIM_S *simu){
 	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
 	simu->psd_ps=ddup(parms->skyc.psd_ps);
 	simu->psd_tt=ddup(parms->skyc.psd_tt);
-	/*renormalize PSD */
+	simu->psd_focus=ddup(parms->skyc.psd_focus);
+	/*renormalize PSD*/
 	double rms_ngs=psd_inte2(simu->psd_ngs);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
@@ -398,49 +401,23 @@ static void skysim_calc_psd(SIM_S *simu){
 	    }
 	}
     }
+    //add focus PSD to ngs
+    add_psd2(&simu->psd_ngs, simu->psd_focus);
+
     double rms_ngs=psd_inte2(simu->psd_ngs);
     info2("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
     
-    if(parms->maos.nmod>5){
-	PDMAT(parms->maos.mcc, MCC);
-	dmat *x=dtrans(simu->mideal);
-	dmat *xi=dsub(x, 0, 0, 5, 1);/*focus PSD from mod5.*/
-	dscale(xi, sqrt(MCC[5][5]));/*convert to unit of m.*/
-	dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
-	double rms_focus_atm=psd_inte2(psdi);
-	info2("Atmosphere focus PSD integrates to %g nm\n", sqrt(rms_focus_atm)*1e9);
-	if(!parms->maos.mffocus){
-	    warning("Deprecated use\n");
-	    //add sodium focus PSD if we don't do focus tracking in maos
-	    double alpha=parms->skyc.na_alpha;
-	    /*convert height error to wfe*/
-	    double scale=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);
-	    double beta2=parms->skyc.na_beta*scale*scale;
-	    PDMAT(psdi, pp);
-	    for(int i=1; i<psdi->nx; i++){//skip DC.
-		pp[1][i]+=pow(pp[0][i], alpha)*beta2;
-	    }
-	    double rms_focus_na=psd_inte2(psdi)-rms_focus_atm;
-	    info2("Sodium focus PSD integrates to %g nm\n", sqrt(rms_focus_na)*1e9);
-	}
-	add_psd2(&simu->psd_focus, psdi);
-	dfree(xi);
-	dfree(psdi);
-	dfree(x);
-    }
     double rms_ws=psd_inte2(parms->skyc.psd_ws);
     info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
     simu->rmsol+=rms_ws;//testing
+ 
     //add windshake PSD to ngs/tt
     add_psd2(&simu->psd_ngs, parms->skyc.psd_ws);
     add_psd2(&simu->psd_tt, parms->skyc.psd_ws);
     dwrite(simu->psd_tt, "psd_tt");
     dwrite(simu->psd_ps, "psd_ps");
     dwrite(simu->psd_ngs, "psd_ngs");
-    if(parms->skyc.gsplit!=1){
-	add_psd2(&simu->psd_ngs, simu->psd_focus);
-	add_psd2(&simu->psd_ps, simu->psd_focus);
-    }
+    dwrite(simu->psd_focus, "psd_focus");
 }
 
 static void skysim_prep_gain(SIM_S *simu){
@@ -484,7 +461,7 @@ static void skysim_prep_sde(SIM_S *simu){
     }
     /*
        Do not scale the time series by MCC. We are working in "radian space" for
-       kalman. kalman.P is multiplied to mcc to compute RMS WFE in nm.
+       kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
      */
     dmat *x=dtrans(simu->mideal);
     simu->psdi=dcellnew(x->ny, 1);

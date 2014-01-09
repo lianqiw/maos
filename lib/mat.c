@@ -405,7 +405,7 @@ void X(set)(X(mat) *A, const T val){
 */
 R X(norm2)(const X(mat)*A){
     R out=0;
-    for(int i=0; i<A->nx; i++){
+    for(long i=0; i<A->nx*A->ny; i++){
 	out+=(R)(A->p[i]*CONJ(A->p[i]));
     }
     return out;
@@ -1131,7 +1131,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 /**
    A=A*B, where diag(B)=s
 */
-void X(muldiag)(X(mat) *A, X(mat) *s){
+void X(muldiag)(X(mat) *A, const X(mat) *s){
     assert(A->ny==s->nx && s->ny==1);
     PMAT(A,pA);
     const T *ps=s->p;
@@ -1144,7 +1144,7 @@ void X(muldiag)(X(mat) *A, X(mat) *s){
 /**
    A=B*A*B, where diag(B)=s
 */
-void X(muldiag2)(X(mat) *A, X(mat) *s){
+void X(muldiag2)(X(mat) *A, const X(mat) *s){
     assert(A->ny==s->nx && s->ny==1);
     PMAT(A,pA);
     const T *ps=s->p;

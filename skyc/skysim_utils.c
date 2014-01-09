@@ -26,13 +26,13 @@
 
 /**
    Compute Open loop NGS mode wavefront error from mode vectors.  */
-double calc_rms(const dmat *mideal, const dmat *mcc){
+double calc_rms(const dmat *mod, const dmat *mcc){
     double rms=0;
-    PDMAT(mideal, pmideal);
-    for(long istep=0; istep<mideal->ny; istep++){
-	rms+=dwdot(pmideal[istep], mcc, pmideal[istep]);
+    PDMAT(mod, pmod);
+    for(long istep=0; istep<mod->ny; istep++){
+	rms+=dwdot(pmod[istep], mcc, pmod[istep]);
     }
-    return rms/mideal->ny;
+    return rms/mod->ny;
 }
 
 /**
@@ -281,7 +281,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
 		if(kalman){
-		    dadd(&zgrad, 1, mpsol, 1./dtrat);//form PSOL grads.
+		    dmm(&zgrad, 1, aster->gm, mpsol, "nn", 1./dtrat);//form PSOL grads.
 		    dzero(mpsol);
 		    dadd(&merrm->p[0], 0, zgrad, 1);//kalman takes grad directly
 		}else{
@@ -388,7 +388,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    itsa+=nsa*2;
 		}/*iwfs */
 		if(kalman){
-		    dadd(&grad, 1, mpsol, 1./dtrat);
+		    dmm(&grad, 1, aster->gm, mpsol, "nn", 1./dtrat);
 		    dzero(mpsol);
 		    dadd(&merrm->p[0], 0, grad, 1);
 		}else{

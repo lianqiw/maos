@@ -35,6 +35,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.keeporder);
     READ_INT(skyc.interpg);
     READ_INT(skyc.verbose);
+    READ_INT(skyc.reest);
     READ_INT(skyc.save);
     READ_INT(skyc.start);
     READ_INT(skyc.nsky);
@@ -64,7 +65,6 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.limitnstep);
     READ_DBL(skyc.intgain);
     READ_DBL(skyc.rne);
-    READ_INT(skyc.noisefull);
     READ_DBL(skyc.imperrnm);
     READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
@@ -176,12 +176,16 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    error("Conflicted parameters: maos.nmod should be >5 when maos.ahstfocus=1\n");
 	}
     }
+    if(parms->skyc.servo<0){
+	parms->skyc.addws=1;
+    }
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;
     }
     switch(parms->skyc.servo){
     case -1://LQG
-	parms->skyc.ngain=0; break;
+	parms->skyc.ngain=0;
+	break;
     case 1:
 	parms->skyc.ngain=1;break;
     case 2:
@@ -351,6 +355,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_ps=dread("%s",temp); 
 	info2("Loading PSD of PS modes from %s\n", temp);
+	snprintf(temp,80, "PSD/PSD_FOCUS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
+	parms->skyc.psd_focus=dread("%s",temp); 
+	info2("Loading PSD of FOCUS modes from %s\n", temp);
     }else{
 	if(!parms->skyc.psd_scale){
 	    warning("Setting psd_scale to 1\n");
@@ -358,7 +365,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	}
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS.bin");
-	parms->skyc.psd_ngs=dread("%s",temp); 
+	parms->skyc.psd_ngs=dread("PSD/PSD_NGS.bin");
 	info2("Loading PSD of NGS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_TT.bin");
 	parms->skyc.psd_tt=dread("%s",temp); 
@@ -366,6 +373,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	snprintf(temp,80, "PSD/PSD_PS.bin");
 	parms->skyc.psd_ps=dread("%s",temp); 
 	info2("Loading PSD of PS modes from %s\n", temp);
+	snprintf(temp,80, "PSD/PSD_FOCUS.bin");
+	parms->skyc.psd_focus=dread("%s",temp); 
+	info2("Loading PSD of focus modes from %s\n", temp);
     }
     char fnconf[PATH_MAX];
     snprintf(fnconf, PATH_MAX, "skyc_%ld.conf", (long)getpid());
