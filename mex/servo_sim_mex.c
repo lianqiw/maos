@@ -34,5 +34,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dfree(res);
     dfree(input);
     dfree(sigma2n);
-    dgree(gain);
+    dfree(gain);
 }

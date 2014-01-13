@@ -83,12 +83,14 @@ dmat *psd1dt(dmat *v, long lseg, double dt){
     return psd2;
 }
 
-/*Interpolate psd onto new f*/
+/*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
-    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx); 
-    dmat *psd=dinterp1(psdf, psdval, fnew);
-    dfree(psdf);
-    dfree(psdval);
-    return psd;
+    dmat *f1=dsub(psdin, 0, 0, 0, 1);
+    dmat *psd1=dsub(psdin, 0, 0, 1, 1);
+    dmat *f2=ddup(fnew);
+    dcwlog(psd1);
+    dmat *psd2=dinterp1(f1, psd1, f2);
+    dfree(f1); dfree(f2); dfree(psd1);
+    dcwexp(psd2,1);
+    return psd2;
 }

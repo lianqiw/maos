@@ -19,6 +19,7 @@
 #include "psd.h"
 #include "nr.h"
 typedef struct{
+    double df;
     dmat *f1;
     dmat *f2;
     dmat *psd_in;
@@ -32,8 +33,10 @@ typedef struct{
     int nmod;
     int ncov;
 }sde_fit_t;
-static void do_fft(dmat *psd){
+static void psd2cov(dmat *psd, double df){
     dfft1plan_r2hc(psd, -1);
+    dscale(psd, df);
+    psd->p[0]=0;//zero dc. critical
     fft2(psd->fft, -1);
 }
 static void sde_psd(dmat **psd, dmat *f, double *coeff, int ncoeff, int nmod){
@@ -92,16 +95,19 @@ static double sde_diff_cov(double *coeff, void *pdata){
     int check;
     double diff;
     if(!(check=coeff_isgood(coeff, data->ncoeff*data->nmod, data->min, data->max))){
+	info("coeff is bad\n");
 	diff=(1+fabs(check))*1e50;
     }else{
 	sde_psd(&data->cov_sde, data->f2, coeff, data->ncoeff, data->nmod);
-	do_fft(data->cov_sde);
+	psd2cov(data->cov_sde, data->df);
 	dmat *cov1=dnew_ref(data->ncov, 1, data->cov_sde->p);
 	dmat *cov2=dnew_ref(data->ncov, 1, data->cov_in->p);
 	data->ratio=cov2->p[0]/cov1->p[0];
 	/*scale to same max value*/
 	dadd(&cov1, 1./cov1->p[0], cov2, -1./cov2->p[0]);
-	diff=dnorm2(cov1);
+	diff=dnorm2(cov1)/data->ncov;
+	/*dwrite(cov1, "diff");
+	  info("n=%d, diffrms=%g\n", data->ncov, diff);*/
 	dfree(cov1); dfree(cov2);
     }
     return diff;
@@ -132,18 +138,27 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     dmat *scale=dnew(ncoeff, nmod);dadd(&scale, 0, coeff0, 0.01);
     dmat *psd_sde=dnew(nf/2, 1);
     dmat *cov_sde=dnew(nf, 1);
-    do_fft(cov);
+    psd2cov(cov, df);
     int ncov=round(tmax_fit/dt);
     if(ncov>nf/2){
 	ncov=nf/2;
     }
-    sde_fit_t data={f1, f2, psd, cov, psd_sde, cov_sde, min, max, 0, ncoeff, nmod, ncov};
+    sde_fit_t data={df, f1, f2, psd, cov, psd_sde, cov_sde, min, max, 0, ncoeff, nmod, ncov};
     if(data.ncov>0){//covariance fitting
 	double tol=1e-15;
 	dminsearch(coeff->p, scale->p, ncoeff*nmod, tol, sde_diff_cov, &data);
 	for(int im=0; im<nmod; im++){
 	    coeff->p[(1+im)*ncoeff-1]*=sqrt(data.ratio);
 	}
+	/*
+	info("fitting done\n");
+	sde_diff_cov(coeff->p, &data);
+	
+	dwrite(data.cov_in, "cov_psd");
+	sde_psd(&data.cov_sde, data.f2, coeff->p, data.ncoeff, data.nmod);
+	dwrite(data.cov_sde, "psd_sde");
+	psd2cov(data.cov_sde, df);
+	dwrite(data.cov_sde, "cov_sde");*/
     }else{//PSD fitting
 	double tol=dnorm2(psd)*1e-15;
 	dminsearch(coeff->p, scale->p, ncoeff*nmod, tol, sde_diff_psd, &data);

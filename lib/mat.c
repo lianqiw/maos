@@ -1288,7 +1288,7 @@ static int X(islinear)(const X(mat)*xin){
     double xminl=(xin->p[0]);
     double xmaxl=(xin->p[nmax-1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-3){
+    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-10){
 	return 0;
     }else{
 	return 1;
@@ -1301,9 +1301,10 @@ static int X(islog)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=log10(xin->p[0]);
-    double xmaxl=log10(xin->p[nmax-1]);
+    double x1=log10(xin->p[1]);
+    double xmaxl=log10(xin->p[nmax1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(fabs(xsep+xminl-log10(xin->p[1]))>1.e-3){
+    if(!isfinite(xsep) || fabs(xsep+xminl-x1)>xsep*1.e-10){
 	return 0;
     }else{
 	return 1;
@@ -1404,11 +1405,12 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 	PMAT(ynew, pynew);
 	int curpos=0;
 	for(long ix=0; ix<ynew->nx; ix++){
-	    for(; curpos<xin->nx-1; curpos++){
+	    for(curpos=0; curpos<xin->nx-2; curpos++){
 		if(xnew->p[ix]>xin->p[curpos] && xnew->p[ix]<xin->p[curpos+1]){
 		    break;
 		}
 	    }
+	    
 	    double xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
 	    for(long iy=0; iy<ynew->ny; iy++){
 		pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
@@ -1857,6 +1859,14 @@ void X(cwlog10)(X(mat) *A){
     double ratio=1./log(10);
     for(long i=0; i<A->nx*A->ny; i++){
 	A->p[i]=LOG(A->p[i])*ratio;
+    }
+}
+/**
+   Do a component wise log10 on each element of A.
+*/
+void X(cwlog)(X(mat) *A){
+    for(long i=0; i<A->nx*A->ny; i++){
+	A->p[i]=LOG(A->p[i]);
     }
 }
 /**
