@@ -107,10 +107,12 @@ void mtch(dcell **mtche, dmat **sanea,
     PDMAT(i0m,pi0m);
     PDMAT(i0g,pi0g);
     dmat *wt=dnew(npixtot, 1);
-    
-    *mtche=dcellnew(nsa,1);
-    *sanea=dnew(nsa*2,1);
-    
+    if(!*mtche){
+	*mtche=dcellnew(nsa,1);
+    }
+    if(!*sanea){
+	*sanea=dnew(nsa*2,1);
+    }
     pi0m[0][0]=1;
     pi0m[1][1]=1;
 

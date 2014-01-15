@@ -75,7 +75,7 @@ typedef struct MAOS_S{
 typedef struct SKYC_S{
     ZB_S zb;         /**<Sky background and zero magnitude flux*/
     int verbose;     /**<be verbose at output.*/
-    int reest;       /**<reestimate the error after gain estimation.*/
+    //int reest;       /**<reestimate the error after gain estimation.*/
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
     int dbgaster;    /**<only run this asterism if not -1*/
@@ -151,6 +151,7 @@ typedef struct SKYC_S{
     char **fnpsf1;   /**<file name for additional otf to be interpolated and
 			multiplied to dtfq. 2 columns. first column is coordinate
 			of otf, and second column of value.*/
+    double sdetmax;  /**<tmax for SDE fitting*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

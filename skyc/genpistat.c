@@ -299,3 +299,165 @@ void prep_bspstrehl(SIM_S *simu){
     dfree(ynew);
     dfree(gg);
 }
+#include "mtch.h"
+/**Determine WFS nonlinearity.*/
+dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
+    const int npowfs=parms->maos.npowfs;
+    const int nwvl=parms->maos.nwvl;
+    double patfov=parms->skyc.patfov;
+    const double ngsgrid=parms->maos.ngsgrid;
+    dmat *siglevs=dlogspace(1, 2, 20);//dlinspace(10, 5, 20);
+    int nstep=1000;
+    rand_t rstat;
+    seed_rand(&rstat, 1);
+    long ng=round(patfov/2/ngsgrid)+1;
+    dcell **nonlin=calloc(npowfs, sizeof(dcell*));
+    for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	dcell *avgpi=0;
+	const long msa=parms->maos.msa[ipowfs];
+	const long nsa=parms->maos.nsa[ipowfs];
+	const long pixpsa=parms->skyc.pixpsa[ipowfs];
+	const double pixtheta=parms->skyc.pixtheta[ipowfs];
+	long pixpsas[nsa];
+	for(int isa=0; isa<nsa; isa++){
+	    pixpsas[isa]=pixpsa;
+	}
+	dcell *i0=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	dcell *gx=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	dcell *gy=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	dcell *i0s=dcellnew3(nsa,1, pixpsas, pixpsas);
+	dcell *gxs=dcellnew3(nsa,1, pixpsas, pixpsas);
+	dcell *gys=dcellnew3(nsa,1, pixpsas, pixpsas);
+	dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
+	dcell *mtche=0;
+	dmat *sanea=0;
+	ccell *otf1=ccellnew(nsa, nwvl);
+	ccell *otf2=ccellnew(nsa, nwvl);
+	long ncomp=parms->maos.ncomp[ipowfs];
+	for(int isa=0; isa<nsa; isa++){
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		otf1->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
+		otf2->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
+		cfft2plan(otf1->p[isa+iwvl*nsa], -1);
+		cfft2plan(otf2->p[isa+iwvl*nsa], 1);
+	    }
+	}
+	double dtheta[nwvl];
+	const int embfac=parms->maos.embfac[ipowfs];
+	const double dxsa=parms->maos.dxsa[ipowfs];
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    const double wvl=parms->maos.wvl[iwvl];
+	    dtheta[iwvl]=wvl/(dxsa*embfac);
+	}
+	dcell *nonxy=dcellnew(ng,1);
+	for(int ig=0; ig<ng; ig++){
+	    nonxy->p[ig]=dnew(siglevs->nx, 2);
+	    char fnpistat[PATH_MAX];
+	    int count=0;
+	    dcellzero(avgpi);
+	    for(int rx=-1; rx<=1; rx++){
+		for(int ry=-1; ry<=1; ry++){
+		    if((ig==0 && (abs(rx)+abs(ry))!=0) || (abs(rx)+abs(ry))!=1) continue;
+		    snprintf(fnpistat, PATH_MAX, "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
+			     dirstart,seed, msa, ig*ngsgrid*rx, ig*ngsgrid*ry);
+		    if(!zfexist(fnpistat)){
+			error("%s doesn't exist\n", fnpistat);
+		    }else{
+			info2("reading %s\n", fnpistat);
+			dcell *pistat=dcellread("%s", fnpistat);
+			dcelladd(&avgpi, 1, pistat, 1);
+			dcellfree(pistat);
+			count++;
+		    }
+		}
+	    }
+	    if(count>0){
+		PDCELL(avgpi, pavgpi);
+		dcellscale(avgpi, 1./count);
+		dcellzero(i0); dcellzero(gx); dcellzero(gy);
+		for(int isa=0; isa<nsa; isa++){
+		    /*Assume each WVL has same weighting*/
+		    for(long iwvl=0; iwvl<nwvl; iwvl++){
+			dcellwrite(avgpi, "avgpi");
+			psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
+			ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
+			cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
+		    }
+		}
+		/*Build matched filter for different siglevs and test linearity*/
+		for(int isig=0; isig<siglevs->nx; isig++){
+		    double sig=siglevs->p[isig];
+		    dcelladd(&i0s, 0, i0, sig);
+		    dcelladd(&gxs, 0, gx, sig);
+		    dcelladd(&gys, 0, gy, sig);
+		    mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
+		    /*dcellwrite(mtche, "mtche_%.0f", sig);
+		    dwrite(sanea, "sanea_%.0f", sig);
+		    dcellwrite(i0s, "i0s_%.0f", sig);
+		    dcellwrite(gxs, "gxs_%.0f", sig);
+		    dcellwrite(gys, "gys_%.0f", sig);*/
+#define SCAN 0
+		    double sxe=0,sye=0,neam=0;
+		    for(int isa=0; isa<nsa; isa++){
+			neam+=sanea->p[isa*2]+sanea->p[isa*2+1];
+#if SCAN
+			dmat *resp=dnew(nstep, 4);
+#endif
+			for(int istep=0; istep<nstep; istep++){
+			    dzero(is->p[isa]);
+#if SCAN
+			    double sx=pixtheta*istep/nstep;
+			    double sy=0;
+#else
+			    double sx=randn(&rstat)*sanea->p[isa*2];
+			    double sy=randn(&rstat)*sanea->p[isa*2+1];
+#endif
+			    double sout[2]={0,0};
+			    for(long iwvl=0; iwvl<nwvl; iwvl++){
+				ccp(&otf2->p[isa+iwvl*nsa], otf1->p[isa+iwvl*nsa]);
+				ctilt(otf2->p[isa+iwvl*nsa], sx/dtheta[iwvl], sy/dtheta[iwvl],0);
+				ccwm(otf2->p[isa+iwvl*nsa], powfs[ipowfs].dtf[iwvl].nominal);
+				cfft2i(otf2->p[isa+iwvl*nsa], 1);//turn to psd space
+				spmulcreal(is->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
+					   otf2->p[isa+iwvl*nsa]->p, sig);
+			    }
+			    dmulvec(sout, mtche->p[isa], is->p[isa]->p, 1);
+#if SCAN
+			    resp->p[istep]=sx;
+			    resp->p[istep+nstep]=sy;
+			    resp->p[istep+nstep*2]=sout[0];
+			    resp->p[istep+nstep*3]=sout[1];
+#else
+			    sxe+=(sx-sout[0])*(sx-sout[0]);
+			    sye+=(sy-sout[1])*(sy-sout[1]);
+#endif
+			}
+#if SCAN
+		    dwrite(resp, "powfs%d_sa%d_sig%g_response", ipowfs, isa, sig);
+#endif
+		    }//for isa
+		    nonxy->p[ig]->p[isig]=(neam/(nsa*2));
+		    nonxy->p[ig]->p[isig+siglevs->nx]=sqrt((sxe+sye)/(nstep*2*nsa));
+		}
+	    }
+	}//for ng
+	dcellwrite(nonxy, "powfs%d_nonxy", ipowfs);
+	dcellfree(avgpi);
+	dcellfree(i0);
+	dcellfree(gx);
+	dcellfree(gy);
+
+	dcellfree(i0s);
+	dcellfree(gxs);
+	dcellfree(gys);
+
+	dcellfree(is);
+	dcellfree(mtche);
+	dfree(sanea);
+	ccellfree(otf1);
+	ccellfree(otf2);
+	nonlin[ipowfs]=nonxy;
+    }//for ipowfs
+    dfree(siglevs);
+    return nonlin;
+}

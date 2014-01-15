@@ -95,7 +95,6 @@ static double sde_diff_cov(double *coeff, void *pdata){
     int check;
     double diff;
     if(!(check=coeff_isgood(coeff, data->ncoeff*data->nmod, data->min, data->max))){
-	info("coeff is bad\n");
 	diff=(1+fabs(check))*1e50;
     }else{
 	sde_psd(&data->cov_sde, data->f2, coeff, data->ncoeff, data->nmod);

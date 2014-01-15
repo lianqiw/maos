@@ -310,11 +310,14 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 /**
    Setup matched filter for stars.
  */
-static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar){
+static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar, dcell**nonlin){
     const long nwvl=parms->maos.nwvl;
     const long npowfs=parms->maos.npowfs;
     PDMAT(parms->skyc.rnefs,rnefs);
     for(int istar=0; istar<nstar; istar++){
+	double radius=sqrt(pow(star[istar].thetax,2)+pow(star[istar].thetay,2));
+	int igg=round(radius*206265/parms->maos.ngsgrid);
+	info("radius=%g as, igg=%d\n", radius*206265, igg);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
@@ -361,6 +364,18 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		mtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
 		     i0s, gxs, gys, pixtheta, rnefs[ipowfs][idtrat], 
 		     star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
+		/*Add nolinearity*/
+		if(nonlin){
+		    //add linearly not quadratically since the errors are related.
+		    dmat *nea_nonlin=dinterp1(nonlin[ipowfs]->p[igg], NULL, pistat->sanea->p[idtrat]);
+		    for(int i=0; i<nsa*2; i++){
+			info2("%g mas", pistat->sanea->p[idtrat]->p[i]*206265000);
+			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
+							    +pow(nea_nonlin->p[i],2));
+			info2("-->%g mas\n", pistat->sanea->p[idtrat]->p[i]*206265000);
+		    }
+		    dfree(nea_nonlin);
+		}
 		if(parms->skyc.dbg){
 		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
@@ -606,7 +621,7 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
     setup_star_read_pistat(simu, star, nstar, seed);
     setup_star_siglev(parms, star, nstar);
     setup_star_gnea(parms, star, nstar);
-    setup_star_mtch(parms, powfs, star, nstar);
+    setup_star_mtch(parms, powfs, star, nstar, simu->nonlin);
     setup_star_g(parms, powfs, star, nstar);
     int jstar=0;
     for(int istar=0; istar<nstar; istar++){

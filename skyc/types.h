@@ -171,5 +171,6 @@ typedef struct SIM_S{
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
     dmat *sdecoeff;    /**<sde coefficient*/
     dcell *psdi;        /**<PSD of each mode computed from time series*/
+    dcell **nonlin;     /**<nonlinearity*/
 }SIM_S;
 #endif

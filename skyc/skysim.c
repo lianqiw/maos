@@ -146,6 +146,7 @@ static void skysim_isky(SIM_S *simu){
 	/*Select asters that have good performance. */
 	setup_aster_select(pres_geom[isky],aster, naster, star, 
 			   parms->skyc.mtch?0.5*simu->rmsol:INFINITY,parms); 
+	double tk_2=myclockd();
 	/*Read in physical optics data (wvf) */
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();
@@ -309,10 +310,10 @@ static void skysim_isky(SIM_S *simu){
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
 	info2("Field %3d,%2d stars,%3d aster,%3.0f Hz: %6.2f %6.2f %6.2f nm "
-	      "Phy %3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
+	      "Sel %3.0fs Load %3.0fs Phy %3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
 	      isky, nstar, naster, simu->fss->p[isky],
 	      sqrt(pres[isky][0])*1e9, sqrt(pres[isky][1])*1e9, sqrt(pres[isky][2])*1e9,
-	      tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
+	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while */
 }
 
@@ -477,7 +478,7 @@ static void skysim_prep_sde(SIM_S *simu){
 	    //add windshake on first mode only
 	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
 	}
-	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, 0.1, 0, 100);
+	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, parms->skyc.sdetmax, 0, 1000);
 	memcpy(pcoeff+im, coeff->p, coeff->nx*sizeof(double));
 	dfree(coeff);
     }
@@ -516,6 +517,7 @@ void skysim(const PARMS_S *parms){
 	seed_rand(&simu->rand, parms->skyc.seed+parms->maos.zadeg);
 	simu->status->iseed=iseed_maos;
 	prep_bspstrehl(simu);
+	simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
 	skysim_read_mideal(simu);
 	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
     	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
@@ -614,6 +616,7 @@ void skysim(const PARMS_S *parms){
 	    dcellfreearr(simu->gain_focus, parms->skyc.ndtrat);
 	}
 	dfree(simu->gain_x);
+	dcellfreearr(simu->nonlin, parms->maos.npowfs);free(simu->nonlin);
     }/*iseed_maos */
     free(simu->status);
     free_powfs(simu->powfs,parms);

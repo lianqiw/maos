@@ -317,7 +317,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     aster->nea_tot=dcellnew(aster->nwfs,ndtrat);
     PDCELL(aster->nea_tot,nea_tot);
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
-	int dtrat=parms->skyc.dtrats[idtrat];
 	dcell *nea=dcellnew(aster->nwfs, 1);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int istar=aster->wfs[iwfs].istar;
@@ -339,9 +338,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dsp *tmp=spnewdiag(neam->nx, neam->p, 1);
 	spfull(&aster->neam->p[idtrat], tmp, 1);//diagonal matrix
 	spfree(tmp);
-	if(parms->skyc.dbg){
-	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
-	}
 	dcwpow(neam, -1);//inverse
 	/*Reconstructor */
 	aster->pgm->p[idtrat]=dpinv(aster->gm, neam, NULL);
@@ -352,8 +348,6 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     }	
     if(parms->skyc.dbg){
 	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
-	dwrite(aster->gm,   "%s/aster%d_gm",dirsetup,aster->iaster);
-	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->nea_tot,  "%s/aster%d_nea_tot", dirsetup,aster->iaster);
 	dcellwrite(aster->sigman, "%s/aster%d_sigman", dirsetup,aster->iaster);
@@ -467,7 +461,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	pres_ngs[0][idtrat]=res_ngs+res_ngsn;/*error due to signal and noise */
 	pres_ngs[1][idtrat]=res_ngs;/*error due to signal */
 	pres_ngs[2][idtrat]=res_ngsn;/*error due to noise propagation. */
-	if(parms->skyc.reest){//estiamte error in time domain
+	/*if(parms->skyc.reest){//estiamte error in time domain
 	    dmat *sigma2=dnew(nmod,nmod);PDMAT(sigma2, psigma2);
 	    PDMAT(parms->maos.mcc, pmcc);
 	    //convert noise into mode space from WFE space.
@@ -478,12 +472,10 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	    }
 	    dmat *res=servo_test(simu->mideal, parms->maos.dt, dtrat, sigma2, aster->gain->p[idtrat]);
 	    double rms=calc_rms(res,parms->maos.mcc);
-	    //info2("WFE: %g replaced by %g\n", sqrt(pres_ngs[0][idtrat])*1e9, sqrt(rms)*1e9);
-	    //dwrite(res, "res");exit(0);
 	    pres_ngs[0][idtrat]=rms;
 	    dfree(sigma2);
 	    dfree(res);
-	}
+	    }*/
 	dmat *g_tt=dnew_ref(ng,1,pgain[0]);
 	double gain_n;
 	aster->res_ws->p[idtrat]=servo_residual(&gain_n, parms->skyc.psd_ws, 
@@ -538,7 +530,7 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
     int master=-1;
     double mini;
     double minimum=INFINITY;
-    int dtrat_h=(parms->skyc.maxdtrat+1)/2;
+    //int dtrat_h=(parms->skyc.maxdtrat+1)/2;
     for(int iaster=0; iaster<naster; iaster++){
 	mini=maxerror;
 	aster[iaster].mdtrat=-1;
@@ -560,37 +552,39 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	}
 	if(aster[iaster].mdtrat!=-1){
 	    if(parms->skyc.maxdtrat>1){
-	    /*This is variance. allow a threshold */
-	    double thres=mini*3;
-	    double thres2=mini*3;
-	    if(thres>maxerror) thres=maxerror;
-	    if(thres2>maxerror) thres2=maxerror;
-	    /*Find upper and minimum good dtrats. */
-	    for(int idtrat=aster[iaster].mdtrat; idtrat<MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1); idtrat++){
-		if(pres[iaster][idtrat]<thres){
-		    aster[iaster].idtratmax=idtrat;
-		}else{
-		    break;
+		/*This is variance. allow a threshold */
+		double thres=mini*3;
+		double thres2=mini*3;
+		if(thres>maxerror) thres=maxerror;
+		if(thres2>maxerror) thres2=maxerror;
+		/*Find upper and minimum good dtrats. */
+		//MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1)
+		for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
+		    if(pres[iaster][idtrat]<thres){
+			aster[iaster].idtratmax=idtrat;
+		    }else{
+			break;
+		    }
 		}
-	    }
-	    for(int idtrat=aster[iaster].mdtrat; idtrat>=MAX(aster[iaster].mdtrat-dtrat_h, 0); idtrat--){
-		if(pres[iaster][idtrat]<thres2){
-		    aster[iaster].idtratmin=idtrat;
-		}else{
-		    break;
+		//MAX(aster[iaster].mdtrat-dtrat_h, 0)
+		for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
+		    if(pres[iaster][idtrat]<thres2){
+			aster[iaster].idtratmin=idtrat;
+		    }else{
+			break;
+		    }
 		}
-	    }
-
-	    /*if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat){
-	      int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
-		int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
-		int max2=floor(mid+parms->skyc.maxdtrat*0.5);
-		info("aster%d, min=%d, max=%d, mid=%d; mdtrat=%d, min2=%d, max2=%d\n", 
-		iaster, aster[iaster].idtratmin, aster[iaster].idtratmax, 
-		     mid, aster[iaster].mdtrat, min2, max2);
-		     aster[iaster].idtratmin=min2;
-		     aster[iaster].idtratmax=max2;
-		     }*/
+		
+		if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat){
+		    int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
+		    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
+		    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
+		    /*info("aster%d, min=%d, max=%d, mid=%d; mdtrat=%d, min2=%d, max2=%d\n", 
+			 iaster, aster[iaster].idtratmin, aster[iaster].idtratmax, 
+			 mid, aster[iaster].mdtrat, min2, max2);*/
+		    aster[iaster].idtratmin=min2;
+		    aster[iaster].idtratmax=max2;
+		}
 	    }else{
 		aster[iaster].idtratmin=aster[iaster].mdtrat;
 		aster[iaster].idtratmax=aster[iaster].mdtrat+1;

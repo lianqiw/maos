@@ -35,7 +35,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.keeporder);
     READ_INT(skyc.interpg);
     READ_INT(skyc.verbose);
-    READ_INT(skyc.reest);
+    //READ_INT(skyc.reest);
     READ_INT(skyc.save);
     READ_INT(skyc.start);
     READ_INT(skyc.nsky);
@@ -99,6 +99,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.addws);
     READ_DBL(skyc.pmargin);
     READ_INT(skyc.psdcalc);
+    READ_DBL(skyc.sdetmax);
 }
 /**
    Setup infromation output from maos run.
@@ -168,6 +169,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
+    if(parms->skyc.maxdtrat<=0){
+	parms->skyc.maxdtrat=parms->skyc.ndtrat;
+    }
     if(parms->maos.ahstfocus){
 	if(parms->skyc.addws==-1){//auto
 	    parms->skyc.addws=1;

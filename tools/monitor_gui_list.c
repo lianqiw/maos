@@ -58,9 +58,9 @@ enum{
     COL_ARGS,/*arguments*/
     COL_OUT, /*output folder*/
     COL_SEED,
-    COL_SEEDP,/*float */
+    COL_SEEDP,/*gint */
     COL_STEP,
-    COL_STEPP,/*float */
+    COL_STEPP,/*gint */
     COL_TIMING,
     COL_ALL,
     COL_REST,
@@ -111,6 +111,11 @@ static void list_update_progress(PROC_T *p){
     }else{
 	p->frac=0;
     }
+    if(p->frac>1){
+	p->frac=1;
+    }else if(p->frac<0){
+	p->frac=1;
+    }
     GtkTreeIter iter;
     list_get_iter(p, &iter);
 	    
@@ -129,8 +134,7 @@ static void list_update_progress(PROC_T *p){
 	snprintf(tmp,64,"%d/%d",p->status.iseed+1,p->status.nseed);
 	gtk_list_store_set(list, &iter, 
 			   COL_SEED, tmp, 
-			   COL_SEEDP,
-			   100*(double)(p->status.iseed+1.)/(double)p->status.nseed,
+			   COL_SEEDP, (100*(p->status.iseed+1)/p->status.nseed),
 			   -1);
 	p->iseed_old=p->status.iseed;
     }
@@ -155,7 +159,7 @@ static void list_update_progress(PROC_T *p){
 	snprintf(tmp,64, "%d/%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend, step, restm,rests,totm,tots);	
     }
     //snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
-    gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,p->frac*100, -1);
+    gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,(gint)(p->frac*100), -1);
     
     snprintf(tmp,64,"%.2f",p->status.clerrlo);
     gtk_list_store_set(list, &iter, COL_ERRLO,tmp, -1);
@@ -606,9 +610,9 @@ GtkWidget *new_page(int ihost){
 				    G_TYPE_STRING,/*ARGS */
 				    G_TYPE_STRING,/*OUT */
 				    G_TYPE_STRING,/*SEED */
-				    G_TYPE_FLOAT, /*SEEDP */
+				    G_TYPE_INT, /*SEEDP */
 				    G_TYPE_STRING,/*STEP */
-				    G_TYPE_FLOAT, /*STEPP */
+				    G_TYPE_INT, /*STEPP */
 				    G_TYPE_STRING,/*TIMING */
 				    G_TYPE_STRING,/*ALL */
 				    G_TYPE_STRING,/*REST */
