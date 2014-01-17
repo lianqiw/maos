@@ -105,8 +105,8 @@ static double sde_diff_cov(double *coeff, void *pdata){
 	/*scale to same max value*/
 	dadd(&cov1, 1./cov1->p[0], cov2, -1./cov2->p[0]);
 	diff=dnorm2(cov1)/data->ncov;
-	/*dwrite(cov1, "diff");
-	  info("n=%d, diffrms=%g\n", data->ncov, diff);*/
+	/*dwrite(cov1, "diff");*/
+	//info("n=%d, diffrms=%g, ratio=%g\n", data->ncov, diff, data->ratio);
 	dfree(cov1); dfree(cov2);
     }
     return diff;
@@ -119,7 +119,7 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     if(psdin->ny!=2){
 	error("psd must contain nu and psd\n");
     }
-    int nf=1024*4; /**array length for FFT*/
+    int nf=1024*32; /**array length for FFT. determines resolution in frequency*/
     double maxf=psdin->p[psdin->nx-1];
     double df=maxf/(nf/2-1);
     double dt=1./maxf;
@@ -134,7 +134,7 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     int ncoeff=coeff0->nx;
     int nmod=coeff0->ny;
     dmat *coeff=dnew(ncoeff, nmod);dcp(&coeff, coeff0);
-    dmat *scale=dnew(ncoeff, nmod);dadd(&scale, 0, coeff0, 0.01);
+    dmat *scale=dnew(ncoeff, nmod);dadd(&scale, 0, coeff0, 1);
     dmat *psd_sde=dnew(nf/2, 1);
     dmat *cov_sde=dnew(nf, 1);
     psd2cov(cov, df);
@@ -146,13 +146,12 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     if(data.ncov>0){//covariance fitting
 	double tol=1e-15;
 	dminsearch(coeff->p, scale->p, ncoeff*nmod, tol, sde_diff_cov, &data);
+	sde_diff_cov(coeff->p, &data);//needed to set data.ratio with latest result.
 	for(int im=0; im<nmod; im++){
 	    coeff->p[(1+im)*ncoeff-1]*=sqrt(data.ratio);
 	}
-	/*
-	info("fitting done\n");
+	/*info("fitting done\n");
 	sde_diff_cov(coeff->p, &data);
-	
 	dwrite(data.cov_in, "cov_psd");
 	sde_psd(&data.cov_sde, data.f2, coeff->p, data.ncoeff, data.nmod);
 	dwrite(data.cov_sde, "psd_sde");
