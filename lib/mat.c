@@ -1288,7 +1288,7 @@ static int X(islinear)(const X(mat)*xin){
     double xminl=(xin->p[0]);
     double xmaxl=(xin->p[nmax-1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-10){
+    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1304,7 +1304,7 @@ static int X(islog)(const X(mat)*xin){
     double x1=log10(xin->p[1]);
     double xmaxl=log10(xin->p[nmax1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(!isfinite(xsep) || fabs(xsep+xminl-x1)>xsep*1.e-10){
+    if(!isfinite(xsep) || fabs(xsep+xminl-x1)>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1393,10 +1393,13 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 	free_xy=1;
     }
     if(X(islinear)(xin)){
+	info("linear spacing\n");
 	ynew=X(interp1linear)(xin, yin, xnew);
     }else if(X(islog)(xin)){
+	info("log spacing\n");
         ynew=X(interp1log)(xin, yin, xnew);
     }else{//arbitrary spacing
+	info("arbitrary spacing\n");
 	if(xin->ny!=1 || xnew->ny!=1){
 	    error("Either xin or xnew is in wrong format\n");
 	}

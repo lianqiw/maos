@@ -106,7 +106,10 @@ static double sde_diff_cov(double *coeff, void *pdata){
 	dadd(&cov1, 1./cov1->p[0], cov2, -1./cov2->p[0]);
 	diff=dnorm2(cov1)/data->ncov;
 	/*dwrite(cov1, "diff");*/
-	//info("n=%d, diffrms=%g, ratio=%g\n", data->ncov, diff, data->ratio);
+	/*{
+	    static int count=0; count++;
+	    info("n=%d, diffrms=%g, ratio=%g\n", data->ncov, diff, data->ratio);
+	}*/
 	dfree(cov1); dfree(cov2);
     }
     return diff;
@@ -115,13 +118,19 @@ static double sde_diff_cov(double *coeff, void *pdata){
    Fit a PSD with SDE model. Use initial guess from coeff0 and return final
    answer in the same format.
 */
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max){
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max, double df){
     if(psdin->ny!=2){
 	error("psd must contain nu and psd\n");
     }
-    int nf=1024*32; /**array length for FFT. determines resolution in frequency*/
+    int nf;
     double maxf=psdin->p[psdin->nx-1];
-    double df=maxf/(nf/2-1);
+    if(df<EPS){
+	nf=1024*4; /**array length for FFT*/
+	df=maxf/(nf/2-1);
+    }else{
+	nf=round(maxf/df+1)*2;
+	info2("nf=%d\n", nf);
+    }
     double dt=1./maxf;
     dmat *f2=dnew(nf, 1);
     for(long i=0; i<nf/2; i++){
@@ -138,6 +147,11 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min
     dmat *psd_sde=dnew(nf/2, 1);
     dmat *cov_sde=dnew(nf, 1);
     psd2cov(cov, df);
+    if(!isfinite(cov->p[0])){
+	dmat *psd0=psdinterp1(psdin, f2);
+	dwrite(cov, "bad_cov");
+	dwrite(psd0, "bad_psd");
+    }
     int ncov=round(tmax_fit/dt);
     if(ncov>nf/2){
 	ncov=nf/2;

@@ -478,7 +478,7 @@ static void skysim_prep_sde(SIM_S *simu){
 	    //add windshake on first mode only
 	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
 	}
-	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, parms->skyc.sdetmax, 0, 1000);
+	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, parms->skyc.sdetmax, 0, 1000, 0);
 	memcpy(pcoeff+im, coeff->p, coeff->nx*sizeof(double));
 	dfree(coeff);
     }

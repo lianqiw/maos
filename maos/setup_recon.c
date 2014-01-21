@@ -1351,8 +1351,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     recon->GFlgs=dcellnew(parms->nwfsr, 1);
     recon->GFngs=dcellnew(parms->nwfsr, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
-	dmat *opd=dnew(powfs[ipowfs].gloc->nloc,1);
-	loc_add_focus(opd->p, powfs[ipowfs].gloc, 1);
+	dmat *opd=dnew(recon->ploc->nloc,1);
+	loc_add_focus(opd->p, recon->ploc, 1);
 	spmulmat(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 1);
 	dfree(opd);
     }

@@ -4,7 +4,7 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "fft.h"
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max);
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max, double df);
 typedef struct{
     dmat *Ad; /*discrete state propagation at dT*/
     dmat *Fd; /*From discrete state to averaged mode dT*/

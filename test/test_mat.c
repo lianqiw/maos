@@ -273,7 +273,7 @@ static void test_kalman(){
     dmat *coeff0=dread("coeff0");
     dmat *psd=dread("psd_tt");
     info("sde_fit\n");
-    dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5);
+    dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5, 0);
     dmat *Gwfs=dnew(1,1);daddI(Gwfs,1);
     dmat *Rwfs=dnew(1,1);Rwfs->p[0]=1;
     kalman_t *k=sde_kalman(coeff, 1./800, 50, Gwfs, Rwfs, 0);
