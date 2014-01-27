@@ -16,34 +16,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_KALMAN,
 	PL_TOT,
     };
-    
     if(nlhs!=PL_TOT || nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: kalman=sde_kalman_mex(coeff, dthi, dtrat, Gwfs, Rwfs)\n");
     }
     dmat *coeff  = mx2d(prhs[P_COEFF]);
     double dthi  = (double)mxGetScalar(prhs[P_DTHI]);
-    double dtrat = (double)mxGetScalar(prhs[P_DTRAT]);
-    dmat *Gwfs  = mx2d(prhs[P_GWFS]);
-    dmat *Rwfs  = mx2d(prhs[P_RWFS]);
-    dmat *Proj  = mx2d(prhs[P_PROJ]);
+    dmat *dtrat  = mx2d(prhs[P_DTRAT]);
+    dcell *Gwfs  = mx2dcell(prhs[P_GWFS]);
+    dcell *Rwfs  = mx2dcell(prhs[P_RWFS]);
+    dmat *Proj   = mx2d(prhs[P_PROJ]);
     kalman_t *kalman=sde_kalman(coeff, dthi, dtrat, Gwfs, Rwfs, Proj);
- 
-    int nfield=13;
-    const char *fieldnames[]={"Ad","Fd","Cd","AdM","FdM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
+    int nfield=12;
+    const char *fieldnames[]={"Ad","Cd","AdM","FdM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
     plhs[0]=mxCreateStructMatrix(1,1,nfield,fieldnames);
-    mxSetFieldByNumber(plhs[0], 0, 0, d2mx(kalman->Ad));
-    mxSetFieldByNumber(plhs[0], 0, 1, d2mx(kalman->Fd));
-    mxSetFieldByNumber(plhs[0], 0, 2, d2mx(kalman->Cd));
-    mxSetFieldByNumber(plhs[0], 0, 3, d2mx(kalman->AdM));
-    mxSetFieldByNumber(plhs[0], 0, 4, d2mx(kalman->FdM));
-    mxSetFieldByNumber(plhs[0], 0, 5, d2mx(kalman->Qn));
-    mxSetFieldByNumber(plhs[0], 0, 6, d2mx(kalman->Rn));
-    mxSetFieldByNumber(plhs[0], 0, 7, d2mx(kalman->M));
-    mxSetFieldByNumber(plhs[0], 0, 8, d2mx(kalman->P));
-    mxSetFieldByNumber(plhs[0], 0, 9, mxDuplicateArray(prhs[P_DTHI]));
-    mxSetFieldByNumber(plhs[0], 0, 10, mxDuplicateArray(prhs[P_DTRAT]));
-    mxSetFieldByNumber(plhs[0], 0, 11, mxDuplicateArray(prhs[P_GWFS]));
-    mxSetFieldByNumber(plhs[0], 0, 12,mxDuplicateArray(prhs[P_RWFS]));
+    int pos=0;
+    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->Ad));
+    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->Cd));
+    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->AdM));
+    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->FdM));
+    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->Qn));
+    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->Rn));
+    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->M));
+    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->P));
+    mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_DTHI]));
+    mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_DTRAT]));
+    mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_GWFS]));
+    mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_RWFS]));
     
     kalman_free(kalman);
 }

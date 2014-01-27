@@ -17,7 +17,6 @@
 */
 
 #define MAT_VERBOSE 0
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -65,11 +64,17 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
     }
     if(k!=k2) error("dmm: Matrix doesn't match: A: %ldx%ld, B: %ldx%ld\n",
 		    m, k, k2, n);
+    
     if(!*C0){
 	*C0=X(new)(m,n); 
     }else if(m!=(*C0)->nx || n!=(*C0)->ny){
-	error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
-	      m, n, (*C0)->nx, (*C0)->ny);
+	if((int)beta==0){
+	    X(free)(*C0);
+	    *C0=X(new)(m,n);
+	}else{
+	    error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
+		  m, n, (*C0)->nx, (*C0)->ny);
+	}
     }
     X(mat) *C=*C0;
     lda=A->nx;

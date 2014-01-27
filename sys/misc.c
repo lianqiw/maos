@@ -43,7 +43,6 @@
 #include "process.h"
 #include "misc.h"
 #include "path.h"
-
 /**
    Obtain the basename of a file. The returnned string must be freed.
 */
@@ -827,4 +826,15 @@ void set_realtime(int icpu, int niceness){
     }else{
 	warning("Please run program as setsid or as root to lift priority\n");
     }
+}
+quitfun_t quitfun=0;
+void default_quitfun(const char *msg){
+    (void)msg;
+    sync();
+    print_backtrace();
+    sync();
+    kill(getpid(), SIGTERM);
+}
+static __attribute__((constructor)) void init(){
+    quitfun=&default_quitfun;
 }

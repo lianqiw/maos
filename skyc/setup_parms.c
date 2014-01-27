@@ -100,6 +100,9 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.pmargin);
     READ_INT(skyc.psdcalc);
     READ_DBL(skyc.sdetmax);
+
+    READ_INT(skyc.multirate);
+    READ_DBL(skyc.snrmin);
 }
 /**
    Setup infromation output from maos run.

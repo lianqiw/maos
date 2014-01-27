@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <search.h>
-#include <assert.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>

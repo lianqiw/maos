@@ -269,7 +269,7 @@ void reconstruct(SIM_T *simu){
 		    pd->ipv=pd->qdv=0;
 		}
 	    }
-	}else{
+	}else if(simu->upterr){
 	    dfree(simu->upterr->p[iwfs]);
 	}/*LLT FSM*/
     }/*for iwfs*/

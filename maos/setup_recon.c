@@ -622,8 +622,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	   && parms->powfs[ipowfs].usephy
 	   && parms->powfs[ipowfs].order==1
 	   ){
-	//Neglecting WFS whos NEA is greater than twice pixel size in
-	//physical optics mode.
+	    //Neglecting WFS whos NEA is greater than twice pixel size in
+	    //physical optics mode.
 	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
 	    recon->saneai->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
 	    spfree(recon->saneal->p[iwfs+iwfs*parms->nwfsr]);
@@ -1274,7 +1274,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 /**
    Update assembled tomography matrix with new L2. Called from cn2est when new
    profiles are available.
-  */
+*/
 void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     setup_recon_tomo_prep(recon, parms); /*redo L2, invpsd */
 #if USE_CUDA

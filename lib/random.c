@@ -18,7 +18,6 @@
 
 #include <signal.h>
 #include <math.h>
-#include "../sys/sys.h"
 #include "random.h"
 /**
    Routine to generate random numbers.

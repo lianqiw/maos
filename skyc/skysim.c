@@ -135,10 +135,8 @@ static void skysim_isky(SIM_S *simu){
 	    setup_aster_copystar(&aster[iaster], star, parms);
 	    /*setup gradient operator. */
 	    setup_aster_g(&aster[iaster], star, powfs, parms);
-	    /*Compute the reconstructor, nea, sigman */
-	    setup_aster_recon(&aster[iaster], star,parms);
-	    /*Optimize controller. */
-	    setup_aster_controller(simu, &aster[iaster], parms);
+	    /*Compute the reconstructor, nea, sigman and optimize controller. */
+	    setup_aster_controller(simu, &aster[iaster], star, parms);
 	}
 #if _OPENMP >= 200805
 #pragma omp taskwait
@@ -189,10 +187,8 @@ static void skysim_isky(SIM_S *simu){
 	    }
 	    /*Copy wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
-	    /*Compute the reconstructor, nea, sigman */
-	    setup_aster_recon(asteri, star, parms);
-	    /*Optimize controller again. */
-	    setup_aster_controller(simu, asteri, parms);
+	    /*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
+	    //setup_aster_controller(simu, asteri, parms);
 
 	    double mini=simu->rmsol;
 	    dmat *pmini=NULL;

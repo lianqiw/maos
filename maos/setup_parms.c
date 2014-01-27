@@ -1313,7 +1313,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].phystep>=0
 	   &&(parms->powfs[ipowfs].phystep<parms->sim.end||parms->sim.end==0)){
 	    parms->powfs[ipowfs].usephy=1;
-	    parms->nuptpowfs++;
+	    parms->nphypowfs++;
 	}else{
 	    parms->powfs[ipowfs].usephy=0;
 	}

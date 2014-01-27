@@ -956,7 +956,7 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->ngsfocuslpf=dcellnew(1,1);
 	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
     }
-    if(parms->nuptpowfs){
+    if(parms->nphypowfs){
 	simu->upterr=dcellnew(nwfs,1);
 	simu->uptreal=dcellnew(nwfs,1);
     }
@@ -1243,7 +1243,7 @@ static void init_simu_dm(SIM_T *simu){
 			  parms->sim.dthi, parms->sim.epdm);
     simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
 			    parms->sim.dtlo, parms->sim.eplo);
-    if(parms->nuptpowfs){
+    if(parms->nphypowfs){
 	simu->uptint=servo_new(NULL, parms->sim.apupt, parms->sim.alupt,
 			       parms->sim.dthi, parms->sim.epupt);
     }

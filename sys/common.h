@@ -18,7 +18,9 @@
 
 #ifndef AOS_COMMON_H
 #define AOS_COMMON_H
-
+typedef void (*quitfun_t)(const char*);
+extern quitfun_t quitfun;
+void default_quitfun(const char *msg);
 /**
    \file common.h
    Every source file in this folder should include this file
@@ -30,7 +32,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
@@ -163,8 +164,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
 	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error: ",sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline);print_backtrace();sync(); \
-	    kill(getpid(), SIGTERM);})
+	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("error");})
 
 #define warning(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
@@ -179,7 +179,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    fprintf(stderr,"%s\033[00;00m", fline);}})
 
 #define info2(A...) fprintf(stderr, A)
-#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); print_backtrace(); sync();kill(getpid(), SIGKILL);})
+#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); quitfun("error");})
 #define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
 
 #define info3(A...) ({char fline[4096];char sect[4096];			\
@@ -191,8 +191,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
 	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error: ",myasctime(),sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline);print_backtrace(); \
-	    sync();kill(getpid(), SIGTERM);})
+	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("error");})
 
 #define warning3(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
@@ -200,7 +199,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(sect)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
-
+#define assert(A) if(!(A)) error("assertion failed: %s", #A)
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
 /**

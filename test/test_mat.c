@@ -270,22 +270,29 @@ static void test_svd2(void){
     cwrite(A, "SVDI");
 }
 static void test_kalman(){
-    dmat *coeff0=dread("coeff0");
-    dmat *psd=dread("psd_tt");
+    //dmat *psd=dread("MODE_TT");
     info("sde_fit\n");
-    dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5, 0);
-    dmat *Gwfs=dnew(1,1);daddI(Gwfs,1);
-    dmat *Rwfs=dnew(1,1);Rwfs->p[0]=1;
-    kalman_t *k=sde_kalman(coeff, 1./800, 50, Gwfs, Rwfs, 0);
+    //dmat *coeff0=dread("coeff0");
+    //dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5, 0);
+    dmat *coeff=dread("coeff");
+    //dmat *Gwfs=dnew(1,1);daddI(Gwfs,1);
+    //dmat *Rwfs=dnew(1,1);Rwfs->p[0]=1;
+    dcell *Gwfs=dcellread("Gwfs");
+    dcell *Rwfs=dcellread("Rwfs");
+    dmat *dtrat_wfs=dread("dtrat_wfs");
+    kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, Gwfs, Rwfs, 0);
+    dwrite(k->Ad, "mex_Ad");
+    dcellwrite(k->Cd, "mex_Cd");
+    dcellwrite(k->M, "mex_M");
+    dcellwrite(k->P, "mex_P");
     rand_t rstat; seed_rand(&rstat, 1);
-    dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
-    dmat *res=kalman_test(k, ts);
-    dwrite(ts, "kalman_ts");
-    dwrite(res, "kalman_res");
-    kalman_free(k);
-    dfree(coeff);
-    dfree(Gwfs);
-    dfree(Rwfs);
+    //dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
+    dmat *ts=dread("ts");
+    for(int i=0; i<100; i++){
+	dmat *res=kalman_test(k, ts);
+	dwrite(res, "kalman_res");
+	dfree(res);
+    }
     exit(0);
 }
 static void test_reccati(){
@@ -301,7 +308,7 @@ static void test_reccati(){
 }
 int main(int argc, char **argv){
     exit_success=1;
-    test_reccati();
+    //test_reccati();
     test_kalman();
     test_svd2();
     test_svd();

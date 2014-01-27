@@ -152,6 +152,8 @@ typedef struct SKYC_S{
 			multiplied to dtfq. 2 columns. first column is coordinate
 			of otf, and second column of value.*/
     double sdetmax;  /**<tmax for SDE fitting*/
+    int multirate;   /**<Each OIWFS can run at different dtrat*/
+    double snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

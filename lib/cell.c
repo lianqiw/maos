@@ -17,7 +17,6 @@
 */
 
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -57,7 +56,7 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     long tot=0;
     for(long i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
-	    tot+=A->p[i]->nx*A->p[i]->ny*sizeof(T);
+	    tot+=A->p[i]->nx*A->p[i]->ny;
 	}
     }
     out->m=X(new)(tot,1);
@@ -65,7 +64,7 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     for(int i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
 	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
-	    tot+=A->p[i]->nx*A->p[i]->ny*sizeof(T);
+	    tot+=A->p[i]->nx*A->p[i]->ny;
 	}
     }
     return out;
@@ -77,14 +76,14 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     X(cell) *out=X(cellnew)(nx,ny);
     long tot=0;
     for(long i=0; i<nx*ny; i++){
-	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+	tot+=nnx[i]*(nny?nny[i]:1);
     }
     if(!tot) return NULL;
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
 	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
-	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+	tot+=nnx[i]*(nny?nny[i]:1);
     }
     return out;
 }
@@ -95,13 +94,13 @@ X(cell) *X(cellnew3int)(long nx, long ny, int *nnx, int *nny){
     X(cell) *out=X(cellnew)(nx,ny);
     long tot=0;
     for(long i=0; i<nx*ny; i++){
-	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+	tot+=nnx[i]*(nny?nny[i]:1);
     }
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
 	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
-	tot+=nnx[i]*(nny?nny[i]:1)*sizeof(T);
+	tot+=nnx[i]*(nny?nny[i]:1);
     }
     return out;
 }

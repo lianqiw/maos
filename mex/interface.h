@@ -1,10 +1,17 @@
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
 #include <mex.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "../lib/aos.h"
+#ifdef __cplusplus
+}
+#endif
 #ifndef INLINE
 #define INLINE inline __attribute__((always_inline))
 #endif
+extern int donotquit;
 INLINE mxArray *dsp2mx(const dsp*A){
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
@@ -25,6 +32,15 @@ INLINE dsp *mx2dsp(const mxArray *A){
 INLINE mxArray *d2mx(const dmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
     memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
+    return out;
+}
+INLINE mxArray *dcell2mx(const dcell *A){
+    mxArray *out=mxCreateCellMatrix(A->nx,A->ny);
+    for(int i=0; i<A->nx*A->ny; i++){
+	if(A->p[i]){
+	    mxSetCell(out, i, d2mx(A->p[i]));
+	}
+    }
     return out;
 }
 INLINE mxArray *c2mx(const cmat *A){
@@ -71,6 +87,19 @@ INLINE dmat *mx2d(const mxArray *A){
     dmat *out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
     return out;
 }
+INLINE dcell *mx2dcell(const mxArray *A){
+    if(!mxIsCell(A)){
+	mexErrMsgTxt("A is not cell");
+    }
+    dcell *out=dcellnew(mxGetM(A), mxGetN(A));
+    for(int i=0; i<out->nx*out->ny; i++){
+	mxArray *Ai=mxGetCell(A, i);
+	if(Ai){
+	    out->p[i]=dnew_ref( mxGetM(Ai), mxGetN(Ai), mxGetPr(Ai));
+	}
+    }
+    return out;
+}
 INLINE char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=malloc(nlen);
@@ -89,6 +118,7 @@ static __attribute__((constructor)) void init(){
     if(!default_handler){
 	default_handler=signal(SIGTERM, mex_signal_handler);
     }
+    quitfun=mexErrMsgTxt;
 }
 static __attribute__((destructor)) void deinit(){
     if(default_handler){

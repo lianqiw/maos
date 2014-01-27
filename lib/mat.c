@@ -17,7 +17,6 @@
 */
 
 #define MAT_VERBOSE 0
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -504,7 +503,10 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    bc=0;/*no bother to accumulate. */
 	}
 	X(mat) *B=*B0;
-	assert(A->nx==B->nx && A->ny == B->ny);
+	if(A->nx!=B->nx || A->ny != B->ny){
+	    error("A is %ldx%ld, B is %ldx%ld. They should match\n",
+		  A->nx, A->ny, B->nx, B->ny);
+	}
 	if(fabs(bc)>EPS){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;

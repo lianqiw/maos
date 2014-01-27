@@ -315,6 +315,10 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     const long npowfs=parms->maos.npowfs;
     PDMAT(parms->skyc.rnefs,rnefs);
     for(int istar=0; istar<nstar; istar++){
+	if(!star[istar].idtrat){
+	    star[istar].idtrat=dnew(npowfs, 1);
+	    dset(star[istar].idtrat, -1);
+	}
 	double radius=sqrt(pow(star[istar].thetax,2)+pow(star[istar].thetay,2));
 	int igg=round(radius*206265/parms->maos.ngsgrid);
 	info("radius=%g as, igg=%d\n", radius*206265, igg);
@@ -376,9 +380,23 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    }
 		    dfree(nea_nonlin);
 		}
+		if(parms->skyc.gradnea){
+		    for(int i=0; i<nsa*2; i++){
+			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
+							    +pow(star[istar].pistat[ipowfs].gnea->p[idtrat]->p[i], 2));
+		    }
+		}
 		if(parms->skyc.dbg){
 		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
+		}
+		double nea_mean=sqrt(dnorm2(pistat->sanea->p[idtrat])/nsa);
+		double snr_mean=pixtheta/nea_mean;
+		if(snr_mean>parms->skyc.snrmin 
+		   && ((int)star[istar].idtrat->p[ipowfs]==-1
+		       || dtrat<parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){
+		    star[istar].idtrat->p[ipowfs]=idtrat;
+		    info("selected: snr_mean=%g, dtrat=%d\n", snr_mean, dtrat);
 		}
 	    }
 	    if(parms->skyc.dbg){
@@ -677,6 +695,7 @@ void free_istar(STAR_S *star, const PARMS_S *parms){
     dcellfree(star->siglev);
     dfree(star->siglevtot);
     dfree(star->bkgrnd);
+    dfree(star->idtrat);
 }
 /**
    Free array of STAR_S.

@@ -25,7 +25,6 @@
 #include <math.h>
 #include <string.h>
 #include <search.h>
-#include <assert.h>
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

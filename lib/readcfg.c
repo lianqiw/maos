@@ -325,6 +325,7 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    RENAME(sim.epngs, sim.eplo);
 	    RENAME(sim.apngs, sim.aplo);
 	    RENAME(dbg.splitlrt, tomo.splitlrt);
+	    RENAME(tomo.split_wt, tomo.ahst_wt);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);
