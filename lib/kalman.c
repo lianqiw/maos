@@ -416,6 +416,7 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
 	dcellfree(Rn);
 	dfree(Cdm);
     }
+    dfree(dtrats);
     dcellfree(Xi);
     dfree(Ac);
     dfree(Sigma_ep);
@@ -432,14 +433,17 @@ void kalman_free(kalman_t *kalman){
     dcellfree(kalman->Cd);
     dfree(kalman->AdM);
     dfree(kalman->FdM);
+    dfree(kalman->Qn);
     dcellfree(kalman->M);
     dcellfree(kalman->P);
     dfree(kalman->dtrat);
     dcellfree(kalman->Gwfs);
     dcellfree(kalman->Rwfs);
+    dcellfree(kalman->Rn);
     dfree(kalman->xhat);
     dfree(kalman->xhat2);
     dfree(kalman->xhat3);
+    free(kalman);
 }
 /*Initialize kalman filter state*/
 void kalman_init(kalman_t *kalman){
@@ -488,7 +492,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     long ngs[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ng=Gwfs->p[iwfs]->nx;
-	if(dnorm2(kalman->Rwfs->p[iwfs])>0){
+	if(dnorm2(kalman->Rwfs->p[iwfs+nwfs*iwfs])>0){
 	    dmat *tmp=dcell2m(kalman->Rwfs);
 	    rmsn->p[iwfs+nwfs*iwfs]=dchol(kalman->Rwfs->p[iwfs+nwfs*iwfs]);
 	    dfree(tmp);

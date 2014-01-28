@@ -124,6 +124,7 @@ typedef struct ASTER_S{
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
     kalman_t**kalman;
+    dmat *idtrats;
     dmat *dtrats;
     long *ngs;         /**<number of gradients for each wfs*/
 }ASTER_S;

@@ -199,7 +199,9 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(sect)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
+#ifndef assert
 #define assert(A) if(!(A)) error("assertion failed: %s", #A)
+#endif
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
 /**

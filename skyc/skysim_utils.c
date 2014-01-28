@@ -165,8 +165,11 @@ dcell* skysim_ztilt(const dmat *mideal, const ASTER_S *aster, const PARMS_S *par
 */
 dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
 		 ASTER_S *aster, const POWFS_S *powfs, 
-		 const PARMS_S *parms, int idtrat, int noisy){
-    int dtrat=parms->skyc.dtrats[idtrat];
+		 const PARMS_S *parms, int idtratc, int noisy){
+    int dtratc=0;
+    if(!parms->skyc.multirate){
+	dtratc=parms->skyc.dtrats[idtratc];
+    }
     const int nmod=mideal->nx;
     PDMAT(mideal,pmideal);
     PDMAT(mideal_oa, pmideal_oa);
@@ -195,25 +198,27 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcell **mtche=calloc(aster->nwfs, sizeof(dcell*));
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
-    const double dtngs=parms->maos.dt*dtrat;
     SERVO_T *st2t=0;
     kalman_t *kalman=0;
     dcell *mpsol=0;
     dmat *pgm=0;
     dmat *dtrats=0;
-    if(parms->skyc.servo>0){
-	st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtrat]);
-	pgm=aster->pgm->p[idtrat];
+    if(parms->skyc.multirate){
+	kalman=aster->kalman[0];
+	dtrats=aster->dtrats;
     }else{
-	if(parms->skyc.multirate){
-	    kalman=aster->kalman[0];
-	    dtrats=aster->dtrats;
+	if(parms->skyc.servo>0){
+	    const double dtngs=parms->maos.dt*dtratc;
+	    st2t=servo_new(merrm, NULL, 0, dtngs, aster->gain->p[idtratc]);
+	    pgm=aster->pgm->p[idtratc];
 	}else{
-	    kalman=aster->kalman[idtrat];
+	    kalman=aster->kalman[idtratc];
 	}
-	kalman_init(kalman);
     }
-    if(kalman) mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
+    if(kalman){
+	kalman_init(kalman);
+	mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
+    }
     const long nwvl=parms->maos.nwvl;
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -223,10 +228,10 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	wvfc->p[iwfs]=NULL;
 	psf[iwfs]=dcellnew(nsa,nwvl);
 	cfft2plan(wvf->p[iwfs], -1);
-	if(parms->skyc.servo<0 && parms->skyc.multirate){
-	    mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[(int)dtrats->p[iwfs]];
+	if(parms->skyc.multirate){
+	    mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[(int)aster->idtrats->p[iwfs]];
 	}else{
-	    mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[idtrat];
+	    mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[idtratc];
 	}
 	otf->p[iwfs]=cnew(ncomp,ncomp);
 	cfft2plan(otf->p[iwfs],-1);
@@ -241,11 +246,17 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     for(int istep=0; istep<aster->nstep; istep++){
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
 	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
+	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
+	if(mpsol){
+	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		dadd(&mpsol->p[iwfs], 1, mreal, 1);
+	    }
+	}
 	pmerrm=0;
 	if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
 	    if(res_ngs>ngsol*100){
-		//warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtrat], sqrt(res_ngs)*1e9); 
+		//warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtratc], sqrt(res_ngs)*1e9); 
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -272,20 +283,8 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		res->p[3]+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
 		res->p[5]+=dot_oa_tt;
 	    }
-	}
-	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
-	if(st2t){
-	    if(st2t->mint[0]){
-		dcp(&mreal, st2t->mint[0]->p[0]);
-	    }
-	}else{
-	    kalman_output(kalman, &mreal, 0, 1);
-	}
-	if(mpsol){
-	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		dadd(&mpsol->p[iwfs], 1, mreal, 1);
-	    }
-	}
+	}//if evl
+
 	if(istep<parms->skyc.phystart){
 	    /*Ztilt, noise free simulation for acquisition. */
 	    dmm(&zgrad, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
@@ -293,20 +292,16 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const long nsa=parms->maos.nsa[ipowfs];
-		for(long isa=0; isa<nsa*2; isa++){/*add ztilt. */
+		for(long isa=0; isa<nsa*2; isa++){
 		    zgrad->p[isa+itsa]+=aster->wfs[iwfs].ztiltout->p[istep]->p[isa];
 		}
 		itsa+=nsa*2;
 	    }
 	
-	    if(mpsol){
-		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    dadd(&mpsol->p[iwfs], 1, mreal, 1);
-		}
-	    }
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		if((istep+1) % (dtrats?(int)dtrats->p[iwfs]:dtrat)==0){
-		    dscale(zgradc->p[iwfs], 1./dtrat);
+		int dtrati=(dtrats?(int)dtrats->p[iwfs]:dtratc);
+		if((istep+1) % dtrati==0){
+		    dscale(zgradc->p[iwfs], 1./dtrati);
 		    dcp(&gradout->p[iwfs], zgradc->p[iwfs]);
 		    dzero(zgradc->p[iwfs]);
 		    pmerrm=merrm;
@@ -340,7 +335,15 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    double igrad[2];
 	    int itsa=0;
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		if((istep+1) % (dtrats?(int)dtrats->p[iwfs]:dtrat) == 0){/*has output */
+		int dtrati, idtrat;
+		if(dtrats){
+		    idtrat=aster->idtrats->p[iwfs];
+		    dtrati=dtrats->p[iwfs];
+		}else{
+		    idtrat=idtratc;
+		    dtrati=dtratc;
+		}
+		if((istep+1) % dtrati == 0){/*has output */
 		    dcellzero(ints[iwfs]);
 		    const int ipowfs=aster->wfs[iwfs].ipowfs;
 		    const long nsa=parms->maos.nsa[ipowfs];
@@ -363,7 +366,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			case 0:/*no noise at all. */
 			    break;
 			case 1:/*both poisson and read out noise. */
-			    addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrat,
+			    addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrati,
 				     1, rnefs[ipowfs][idtrat]);
 			    break;
 			case 2:/*there is still poisson noise. */
@@ -372,11 +375,11 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			default:
 			    error("Invalid noisy\n");
 			}
-			for(long ix=0; ix<ints[iwfs]->p[isa]->nx*ints[iwfs]->p[isa]->ny; ix++){
+			/*for(long ix=0; ix<ints[iwfs]->p[isa]->nx*ints[iwfs]->p[isa]->ny; ix++){
 			    if(ints[iwfs]->p[isa]->p[ix]<0){
 				ints[iwfs]->p[isa]->p[ix]=0;
 			    }
-			}
+			    }*/
 			igrad[0]=0;
 			igrad[1]=0;
 			double pixtheta=parms->skyc.pixtheta[ipowfs];
@@ -401,21 +404,31 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    dcp(&gradout->p[iwfs], gradc->p[iwfs]);
 		    pmerrm=merrm;
 		    itsa+=nsa*2;
-		}/*iwfs */
+		    dcellzero(psf[iwfs]);/*reset accumulation.*/
+		}/*if iwfs has output*/
 		
 		if(parms->skyc.dbg){
 		    memcpy(grads->p+istep*aster->tsa*2, gradout->m->p, sizeof(double)*aster->tsa*2);
 		}
-		dcellzero(psf[iwfs]);/*reset accumulation.*/
 	    }/*for wfs*/
 	}/*if phystart */
+
+	//output to mreal after using it to ensure two cycle delay.
+	if(st2t){
+	    if(st2t->mint[0]){
+		dcp(&mreal, st2t->mint[0]->p[0]);
+	    }
+	}else{
+	    kalman_output(kalman, &mreal, 0, 1);
+	}
 	if(kalman){//multirate
 	    int active_wfs=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		if((istep+1) % (dtrats?(int)dtrats->p[iwfs]:dtrat)==0){
+		int dtrati=(dtrats?(int)dtrats->p[iwfs]:dtratc);
+		if((istep+1) % dtrati==0){
 		    active_wfs++;
-		    dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrats->p[iwfs]);
-		    dzero(mpsol->p[0]);
+		    dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
+		    dzero(mpsol->p[iwfs]);
 		}
 	    }
 	    if(active_wfs){
@@ -431,8 +444,10 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	}
     }/*istep; */
     if(parms->skyc.dbg){
-	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
-	dwrite(grads,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrat);
+	int dtrati=(dtrats?(int)dtrats->p[0]:dtratc);
+	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
+	dwrite(grads,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
+	dwrite(mres,"%s/skysim_phy_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
     }
   
     dfree(mreal);
@@ -443,6 +458,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dfree(zgrad);
     dcellfree(gradc);
     dcellfree(zgradc);
+    dcellfree(gradout);
     dfree(grads);/*////////////remove this dmat after debugging */
     dfree(zgrads);/*////////////remove this dmat debugging */
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -456,9 +472,6 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     free(psf);
     free(mtche);
     free(ints);
-    if(parms->skyc.dbg){
-	dwrite(mres,"%s/skysim_phy_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
-    }
     /*dfree(mres); */
     *mresout=mres;
     dscale(res, 1./(aster->nstep-parms->skyc.evlstart));

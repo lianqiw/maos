@@ -314,6 +314,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     const long nwvl=parms->maos.nwvl;
     const long npowfs=parms->maos.npowfs;
     PDMAT(parms->skyc.rnefs,rnefs);
+    const double wvl_max=maxdbl(parms->maos.wvl, parms->maos.nwvl);
     for(int istar=0; istar<nstar; istar++){
 	if(!star[istar].idtrat){
 	    star[istar].idtrat=dnew(npowfs, 1);
@@ -321,10 +322,12 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	}
 	double radius=sqrt(pow(star[istar].thetax,2)+pow(star[istar].thetay,2));
 	int igg=round(radius*206265/parms->maos.ngsgrid);
-	info("radius=%g as, igg=%d\n", radius*206265, igg);
+	//info("radius=%g as, igg=%d\n", radius*206265, igg);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
-	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
+        const long pixpsa=parms->skyc.pixpsa[ipowfs];
+	    //size of PSF
+	    const double sigma_theta=wvl_max/parms->maos.dxsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
 	    pistat->i0=dcellnew(nsa,nwvl);
 	    pistat->gx=dcellnew(nsa,nwvl);
@@ -338,7 +341,6 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    PDCELL(pistat->i0, i0);
 	    PDCELL(pistat->gx, gx);
 	    PDCELL(pistat->gy, gy);
-
 	    for(long iwvl=0; iwvl<nwvl; iwvl++){
 		for(long isa=0; isa<nsa; isa++){
 		    double siglev=star[istar].siglev->p[ipowfs]->p[iwvl];
@@ -353,7 +355,9 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		}
 		 
 	    }
-
+	    if(parms->skyc.dbg){
+		dcellwrite(pistat->i0s, "%s/star%d_ipowfs%d_i0s", dirsetup,istar,ipowfs);
+	    }
 	    const double pixtheta=parms->skyc.pixtheta[ipowfs];
 	    int ndtrat=parms->skyc.ndtrat;
 	    pistat->mtche=calloc(ndtrat, sizeof(dcell*));
@@ -373,10 +377,10 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    //add linearly not quadratically since the errors are related.
 		    dmat *nea_nonlin=dinterp1(nonlin[ipowfs]->p[igg], NULL, pistat->sanea->p[idtrat]);
 		    for(int i=0; i<nsa*2; i++){
-			info2("%g mas", pistat->sanea->p[idtrat]->p[i]*206265000);
+			//info2("%g mas", pistat->sanea->p[idtrat]->p[i]*206265000);
 			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
 							    +pow(nea_nonlin->p[i],2));
-			info2("-->%g mas\n", pistat->sanea->p[idtrat]->p[i]*206265000);
+			//info2("-->%g mas\n", pistat->sanea->p[idtrat]->p[i]*206265000);
 		    }
 		    dfree(nea_nonlin);
 		}
@@ -390,16 +394,17 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
 		}
-		double nea_mean=sqrt(dnorm2(pistat->sanea->p[idtrat])/nsa);
-		double snr_mean=pixtheta/nea_mean;
+		double nea_mean=sqrt(dnorm2(pistat->sanea->p[idtrat])/(nsa*2));
+		double snr_mean=sigma_theta/nea_mean;
 		if(snr_mean>parms->skyc.snrmin 
-		   && ((int)star[istar].idtrat->p[ipowfs]==-1
-		       || dtrat<parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){
+		   && ((int)star[istar].idtrat->p[ipowfs]==-1 
+		   || dtrat<=parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){
 		    star[istar].idtrat->p[ipowfs]=idtrat;
-		    info("selected: snr_mean=%g, dtrat=%d\n", snr_mean, dtrat);
 		}
-	    }
+	    }//for idtrat
 	    if(parms->skyc.dbg){
+		info("star %d, powfs %d: dtrat=%d\n", istar, ipowfs,
+		     parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]]);
 		dcellwrite(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 			   dirsetup,istar,ipowfs);
 	    }/*idtrat */

@@ -1395,13 +1395,10 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 	free_xy=1;
     }
     if(X(islinear)(xin)){
-	info("linear spacing\n");
 	ynew=X(interp1linear)(xin, yin, xnew);
     }else if(X(islog)(xin)){
-	info("log spacing\n");
         ynew=X(interp1log)(xin, yin, xnew);
     }else{//arbitrary spacing
-	info("arbitrary spacing\n");
 	if(xin->ny!=1 || xnew->ny!=1){
 	    error("Either xin or xnew is in wrong format\n");
 	}

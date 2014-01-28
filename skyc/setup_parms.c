@@ -266,6 +266,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
 	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
     }
+    for(int idtrat=1; idtrat<parms->skyc.ndtrat; idtrat++){
+	if(parms->skyc.dtrats[idtrat]>=parms->skyc.dtrats[idtrat-1]){
+	    error("skyc.dtrats must be specified in descending order\n");
+	}
+    }
     parms->skyc.fss=calloc(parms->skyc.ndtrat, sizeof(double));
     parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
     if(parms->skyc.rne<0){
