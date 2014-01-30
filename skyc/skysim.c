@@ -123,7 +123,7 @@ static void skysim_isky(SIM_S *simu){
 	  a few combinations are kept for each star field for further time
 	  domain simulations.
 	*/
-
+	nstep=setup_star_read_ztilt(star,nstar,parms,seed_maos);
 	for(int iaster=0; iaster<naster; iaster++)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(iaster)
@@ -136,6 +136,7 @@ static void skysim_isky(SIM_S *simu){
 	    /*setup gradient operator. */
 	    setup_aster_g(&aster[iaster], star, powfs, parms);
 	    /*Compute the reconstructor, nea, sigman and optimize controller. */
+	    setup_aster_ztilt(&aster[iaster], star, parms);
 	    setup_aster_controller(simu, &aster[iaster], star, parms);
 	}
 #if _OPENMP >= 200805
@@ -185,7 +186,7 @@ static void skysim_isky(SIM_S *simu){
 		      sqrt(asteri->mresol)*1e9, parms->skyc.fss[asteri->mdtrat], 
 		      parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax]);
 	    }
-	    /*Copy wvf from star to aster */
+	    /*Assign wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
 	    /*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 	    //setup_aster_controller(simu, asteri, parms);
@@ -207,7 +208,7 @@ static void skysim_isky(SIM_S *simu){
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
-				    asteri, powfs, parms, idtrat, noisy))){
+				    asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart))){
 		    if(parms->skyc.verbose){
 			info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
 			      sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
@@ -513,7 +514,9 @@ void skysim(const PARMS_S *parms){
 	seed_rand(&simu->rand, parms->skyc.seed+parms->maos.zadeg);
 	simu->status->iseed=iseed_maos;
 	prep_bspstrehl(simu);
-	simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
+	if(parms->skyc.neanonlin){
+	    simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
+	}
 	skysim_read_mideal(simu);
 	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
     	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);

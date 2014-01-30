@@ -112,11 +112,11 @@ ARG_S *parse_args(int argc, const char *argv[]){
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
-    char *exefile=get_job_progname(0);
+    /*char *exefile=get_job_progname(0);
     if(remove("skyc-save")||link(exefile, "skyc-save")){
 	info2("Unable to link maos to maos-save\n");
     }
-    free(exefile);
+    free(exefile);*/
     return arg;
 }
 /**

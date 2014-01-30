@@ -77,7 +77,8 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.gsplit);
     READ_INT(skyc.evlstart);
     READ_INT(skyc.phystart);
-    READ_INT(skyc.gradnea);
+    READ_INT(skyc.neaaniso);
+    READ_INT(skyc.neanonlin);
     char *temp;
     temp=readcfg_str("skyc.psd_ws"); 
     parms->skyc.psd_ws=dread("%s",temp); free(temp);
@@ -393,7 +394,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     snprintf(fnconf, PATH_MAX, "skyc_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
 
-    if(parms->skyc.gradnea){
+    if(parms->skyc.neaaniso){
 	info2("Variance of the gradients in stored PSF is added to NEA\n");
     }
     info2("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);

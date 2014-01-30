@@ -21,9 +21,8 @@ double calc_rms(const dmat *mideal, const dmat *mcc);
 void ngsmod2wvf(cmat *wvf, double wvl, const dmat *modm,
 		const POWFS_S *powfs, int isa, double thetax, double thetay, 
 		const PARMS_S *parms);
-dcell* skysim_ztilt(const dmat *mideal, const ASTER_S *aster, const PARMS_S *parms);
 dmat* skysim_phy(dmat **mres, const dmat *mideal, const dmat *mideal_oa, double ngsol,
 		 ASTER_S *aster, const POWFS_S *powfs, const PARMS_S *parms, 
-		 int idtrat, int noisy);
+		 int idtrat, int noisy, int phystart);
 void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, int selaster, int seldtrat, int isky);
 #endif

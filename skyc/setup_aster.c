@@ -248,6 +248,16 @@ void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const int istar=aster->wfs[iwfs].istar;
 	aster->wfs[iwfs].wvfout=star[istar].wvfout[ipowfs];
+    }
+}
+/**
+   Copy time history of complex pupil function from STAR_S to ASTER_S.
+ */
+void setup_aster_ztilt(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
+    (void) parms;
+    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+	const int ipowfs=aster->wfs[iwfs].ipowfs;
+	const int istar=aster->wfs[iwfs].istar;
 	aster->wfs[iwfs].ztiltout=star[istar].ztiltout[ipowfs];
 	if(star[istar].goff){
 	    aster->wfs[iwfs].goff=star[istar].goff->p[ipowfs];
@@ -324,7 +334,22 @@ void setup_aster_kalman_nea(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	    }
 	    if(iwfs>0){
 		//make sure one wfs is multiple of the previous.
-		if(idtrat>aster->idtrats->p[iwfs-1]){
+		if(idtrat<aster->idtrats->p[iwfs-1]){
+		    //info("%ld: start from %d\n", pthread_self(), parms->skyc.dtrats[idtrat]);
+		    while(idtrat >-1 && (int)parms->skyc.dtrats[idtrat]
+			  % (int)aster->dtrats->p[iwfs-1]!=0){
+			idtrat--;
+			//info("%ld: try %d.lastwfs is %d\n", pthread_self(), parms->skyc.dtrats[idtrat], (int)aster->dtrats->p[iwfs-1]);
+		    }
+		    if(idtrat<0){//go backword until a suitable dtrat is found.
+			idtrat=0;
+			while((int)parms->skyc.dtrats[idtrat]
+			      % (int)aster->dtrats->p[iwfs-1]!=0){
+			    idtrat++;
+			    //info("%ld: try %d.lastwfs is %d\n", pthread_self(), parms->skyc.dtrats[idtrat], (int)aster->dtrats->p[iwfs-1]);
+			}
+		    }
+		}else if(idtrat>aster->idtrats->p[iwfs-1]){
 		    idtrat=aster->idtrats->p[iwfs-1];
 		}
 	    }
@@ -534,8 +559,11 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms
 	    dwrite(simu->mideal, "mideal");
 	    dcellwrite(aster->kalman[0]->M, "kalman_M_%d", iaster);
 	    }*/
-	dmat *res=kalman_test(aster->kalman[0], simu->mideal);
-	aster->res_ngs->p[0]=calc_rms(res, parms->maos.mcc);
+	/*dmat *res=kalman_test(aster->kalman[0], simu->mideal);
+	  aster->res_ngs->p[0]=calc_rms(res, parms->maos.mcc);*/
+	dmat *res=skysim_phy(NULL, simu->mideal, simu->mideal_oa, simu->rmsol, aster,
+			     0, parms, -1, 1, -1);
+	aster->res_ngs->p[0]=res->p[0];
 	if(parms->skyc.dbg) info("res_ngs=%g\n", aster->res_ngs->p[0]);
 	dfree(res);
     }else{
@@ -615,7 +643,7 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		//MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1)
 		for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
 		    if(pres[iaster][idtrat]<thres){
-			aster[iaster].idtratmax=idtrat;
+			aster[iaster].idtratmax=idtrat+1;
 		    }else{
 			break;
 		    }
@@ -628,16 +656,14 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 			break;
 		    }
 		}
-		
-		if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat){
-		    int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
+		/*prefer low frame rate to have good S/N*/
+		if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat+1){
+		    aster[iaster].idtratmax=aster[iaster].idtratmin+parms->skyc.maxdtrat+1;
+		    /*int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
 		    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
 		    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
-		    /*info("aster%d, min=%d, max=%d, mid=%d; mdtrat=%d, min2=%d, max2=%d\n", 
-			 iaster, aster[iaster].idtratmin, aster[iaster].idtratmax, 
-			 mid, aster[iaster].mdtrat, min2, max2);*/
 		    aster[iaster].idtratmin=min2;
-		    aster[iaster].idtratmax=max2;
+		    aster[iaster].idtratmax=max2;*/
 		}
 	    }else{
 		aster[iaster].idtratmin=aster[iaster].mdtrat;

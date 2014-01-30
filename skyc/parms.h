@@ -126,8 +126,9 @@ typedef struct SKYC_S{
     int phystart;    /**<time step to start physical optics*/
     int mtchcr;      /**<constraint in matched filter*/
     int mtch;        /**<matched filter*/
-    int gradnea;     /**<use additional measurement error caused by
-			anisoplanatism in regularization.*/
+    int neaaniso;     /**<use additional measurement error caused by
+			 anisoplanatism in regularization.*/
+    int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/
     int ndtrat;      /**<number of dtrat*/
     int *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
     double *fss;     /**<sampling frequency at each dtrat*/

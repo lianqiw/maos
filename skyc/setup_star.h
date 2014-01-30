@@ -21,5 +21,6 @@ STAR_S *setup_star(int *nstarout,SIM_S* simu, dmat *stars, int seed);
 void free_istar(STAR_S *star, const PARMS_S *parms);
 void free_star(STAR_S *star, int nstar, const PARMS_S *parms);
 long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed);
+long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int seed);
 void free_pistat(PISTAT_S *pistat, int npistat, const PARMS_S *parms);
 #endif

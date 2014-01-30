@@ -31,4 +31,5 @@ void setup_aster_read(ASTER_S *aster, const PARMS_S *parms, int seed);
 int  setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, double maxerror,
 			const PARMS_S *parms);
 void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms);
+void setup_aster_ztilt(ASTER_S *aster, STAR_S *star, const PARMS_S *parms);
 #endif

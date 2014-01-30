@@ -274,21 +274,20 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 		dmat *mean_grad=NULL, *mean_gradsq=NULL;
 		int count=0;
 		dmat *grad=dnew(nsa*2,1);
-		for(int istep=0; istep<pistat->grad->ny; istep++){
-		    if(istep>phystart){/*make sure same alignment. */
-			if(istep % dtrat == 0){
-			    dzero(grad);
-			}	
-			for(int isa=0; isa<nsa*2; isa++){
-			    grad->p[isa]+=pgrad[istep][isa];
-			}
-			if((istep+1) % dtrat == 0){/*has output */
-			    dscale(grad, 1./dtrat);
-			    count++;
-			    dadd(&mean_grad, 1, grad, 1);
-			    dcwpow(grad,2);
-			    dadd(&mean_gradsq, 1, grad, 1);
-			}
+		for(int istep=phystart; istep<pistat->grad->ny; istep++){
+		    /*make sure same alignment. */
+		    if(istep % dtrat == 0){
+			dzero(grad);
+		    }	
+		    for(int isa=0; isa<nsa*2; isa++){
+			grad->p[isa]+=pgrad[istep][isa];
+		    }
+		    if((istep+1) % dtrat == 0){/*has output */
+			dscale(grad, 1./dtrat);
+			count++;
+			dadd(&mean_grad, 1, grad, 1);
+			dcwpow(grad,2);
+			dadd(&mean_gradsq, 1, grad, 1);
 		    }
 		}
 		dscale(mean_grad, 1./count);
@@ -362,6 +361,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    int ndtrat=parms->skyc.ndtrat;
 	    pistat->mtche=calloc(ndtrat, sizeof(dcell*));
 	    pistat->sanea=dcellnew(ndtrat,1);
+	    pistat->sanea0=dcellnew(ndtrat,1);
 	    dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
 
 	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
@@ -372,6 +372,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		mtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
 		     i0s, gxs, gys, pixtheta, rnefs[ipowfs][idtrat], 
 		     star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
+		dcp(&pistat->sanea0->p[idtrat], pistat->sanea->p[idtrat]);
 		/*Add nolinearity*/
 		if(nonlin){
 		    //add linearly not quadratically since the errors are related.
@@ -384,7 +385,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    }
 		    dfree(nea_nonlin);
 		}
-		if(parms->skyc.gradnea){
+		if(parms->skyc.neaaniso){
 		    for(int i=0; i<nsa*2; i++){
 			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
 							    +pow(star[istar].pistat[ipowfs].gnea->p[idtrat]->p[i], 2));
@@ -462,22 +463,116 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 	}
     }
 }
+long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int seed){
+    const double ngsgrid=parms->maos.ngsgrid;
+    long nstep=0;
+    TIC;tic;
+    for(int istar=0; istar<nstar; istar++){
+	STAR_S *stari=&star[istar];
+	int npowfs=parms->maos.npowfs;
+	stari->ztiltout=calloc(npowfs, sizeof(dcell*));
+	const double thetax=stari->thetax*206265;/*in as */
+	const double thetay=stari->thetay*206265;
+
+	double thxnorm=thetax/ngsgrid;
+	double thynorm=thetay/ngsgrid;
+	long thxl=(long)floor(thxnorm);/*Used to be double, but -0 appears. */
+	long thyl=(long)floor(thynorm);
+	double wtx=thxnorm-thxl;
+	double wty=thynorm-thyl;
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    const int msa=parms->maos.msa[ipowfs];
+	    char *fnztilt[2][2]={{NULL,NULL},{NULL,NULL}};
+	    char *fngoff[2][2]={{NULL, NULL}, {NULL, NULL}};
+	    double wtsum=0;
+	    for(int ix=0; ix<2; ix++){
+		double thx=(thxl+ix)*ngsgrid;
+		for(int iy=0; iy<2; iy++){
+		    double thy=(thyl+iy)*ngsgrid;
+		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty));
+
+		    if(wtxi<0.01){
+			/*info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi); */
+			continue;
+		    }
+		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
+			     dirstart,seed,msa,thx,thy);
+		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_sa%d_x%g_y%g",
+			     dirstart,msa,thx,thy);
+		    if(!zfexist(fnztilt[iy][ix])){
+			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
+			fnztilt[iy][ix]=fngoff[iy][ix]=NULL;
+		    }else{
+			wtsum+=wtxi;
+		    }
+		}
+	    }
+	    if(wtsum<0.01){
+		error("PSF is not available for (%g,%g). wtsum=%g\n",thetax,thetay, wtsum);
+	    }
+	    /*Now do the actual reading */
+	    for(int ix=0; ix<2; ix++){
+		for(int iy=0; iy<2; iy++){
+		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty))/wtsum;
+		    if(fnztilt[iy][ix]){
+			file_t *fp_ztilt=zfopen(fnztilt[iy][ix],"rb");
+			header_t header;
+			read_header(&header, fp_ztilt);
+			if(!iscell(header.magic)){
+			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
+			}
+			nstep=header.nx;
+			free(header.str);
+			if(stari->nstep==0){
+			    stari->nstep=nstep;
+			}else{
+			    if(stari->nstep!=nstep){
+				error("Different type has different steps\n");
+			    }
+			}
+			if(!stari->ztiltout[ipowfs]){
+			    stari->ztiltout[ipowfs]=dcellnew(nstep,1);
+			}
+			dmat  **pztiltout=stari->ztiltout[ipowfs]->p;
+			for(long istep=0; istep<nstep; istep++){
+			    dmat *ztilti=dreaddata(fp_ztilt, 0);
+			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);/*(2nsa)*nstep dmat array */
+			    dfree(ztilti);
+			}
+			zfclose(fp_ztilt);
+		    }/* if(fnwvf) */
+		    if(fngoff[iy][ix] && zfexist(fngoff[iy][ix])){
+			if(!stari->goff){
+			    stari->goff=dcellnew(npowfs, 1);
+			}
+			dmat *tmp=dread("%s", fngoff[iy][ix]);
+			dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);
+			dfree(tmp);
+		    }
+		}/*iy */
+	    }/*ix */
+	}/*ipowfs */
+    }/*istar */
+    if(parms->skyc.verbose){
+	toc2("Reading PSF");
+    }
+    //close(fd);
+    return nstep;
+}
+
 /**
-   Read in asterism WFS wvf and ztilt.*/
+   Read in asterism WFS wvf.*/
 long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed){
     const double ngsgrid=parms->maos.ngsgrid;
     const int nwvl=parms->maos.nwvl;
     long nstep=0;
     TIC;tic;
-    //char fnlock[PATH_MAX];
-    //snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
-    /*Obtain exclusive lock before proceeding so that no two process will read concurrently. */
-    //int fd=lock_file(fnlock, 1, 0);
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
 	stari->wvfout=calloc(npowfs, sizeof(ccell**));
-	stari->ztiltout=calloc(npowfs, sizeof(dcell*));
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
@@ -494,8 +589,6 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		continue;
 	    }
 	    char *fnwvf[2][2]={{NULL,NULL},{NULL,NULL}};
-	    char *fnztilt[2][2]={{NULL,NULL},{NULL,NULL}};
-	    char *fngoff[2][2]={{NULL, NULL}, {NULL, NULL}};
 	    PISTAT_S *pistati=&stari->pistat[ipowfs];
 	    
 	    /*info2("Reading PSF for (%5.1f, %5.1f), ipowfs=%d\n",thetax,thetay,ipowfs); */
@@ -513,19 +606,11 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    fnwvf[iy][ix]=alloca(PATH_MAX*sizeof(char));
 		    snprintf(fnwvf[iy][ix],PATH_MAX,"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
-		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
-			     dirstart,seed,msa,thx,thy);
-		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_sa%d_x%g_y%g",
-			     dirstart,msa,thx,thy);
+	
 		    if(!zfexist(fnwvf[iy][ix])){
 			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
-			fnwvf[iy][ix]=fnztilt[iy][ix]=fngoff[iy][ix]=NULL;
+			fnwvf[iy][ix]=0;
 		    }else{
-			if(!zfexist(fnztilt[iy][ix])){
-			    error("%s exist, but %s does not\n", fnwvf[iy][ix],fnztilt[iy][ix]);
-			}
 			wtsum+=wtxi;
 		    }
 		}
@@ -555,7 +640,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			    stari->nstep=nstep;
 			}else{
 			    if(stari->nstep!=nstep){
-				error("Different WFS has different steps\n");
+				error("Different type has different steps\n");
 			    }
 			}
 		    
@@ -570,38 +655,6 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 			/*zfeof(fp_wvf); */
 			zfclose(fp_wvf);
-		    }
-		    if(fnztilt[iy][ix]){
-			file_t *fp_ztilt=zfopen(fnztilt[iy][ix],"rb");
-			header_t header;
-			read_header(&header, fp_ztilt);
-			if(!iscell(header.magic)){
-			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
-			}
-			nstep=header.nx;
-			free(header.str);
-			if(nstep > stari->nstep){
-			    nstep=stari->nstep;
-			    warning("Only read %ld steps\n",nstep);
-			}
-			if(!stari->ztiltout[ipowfs]){
-			    stari->ztiltout[ipowfs]=dcellnew(nstep,1);
-			}
-			dmat  **pztiltout=stari->ztiltout[ipowfs]->p;
-			for(long istep=0; istep<nstep; istep++){
-			    dmat *ztilti=dreaddata(fp_ztilt, 0);
-			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);/*(2nsa)*nstep dmat array */
-			    dfree(ztilti);
-			}
-			zfclose(fp_ztilt);
-		    }/* if(fnwvf) */
-		    if(fngoff[iy][ix] && zfexist(fngoff[iy][ix])){
-			if(!stari->goff){
-			    stari->goff=dcellnew(npowfs, 1);
-			}
-			dmat *tmp=dread("%s", fngoff[iy][ix]);
-			dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);
-			dfree(tmp);
 		    }
 		}/*iy */
 	    }/*ix */
@@ -725,6 +778,7 @@ void free_pistat(PISTAT_S *pistat, int npistat, const PARMS_S *parms){
 	dcellfree(pistat[ipistat].gxs);
 	dcellfree(pistat[ipistat].gys);
 	dcellfree(pistat[ipistat].sanea);
+	dcellfree(pistat[ipistat].sanea0);
 	dfree(pistat[ipistat].scale);
 	dfree(pistat[ipistat].grad);
 	dcellfree(pistat[ipistat].gnea);

@@ -57,7 +57,8 @@ typedef struct PISTAT_S{
     dcell *gxs;        /**<gradient of i0s*/
     dcell *gys;        /**<gradient of i0s*/
     dcell **mtche;     /**<matched filter estimator*/
-    dcell *sanea;      /**<noise equivalent angle*/
+    dcell *sanea;      /**<noise equivalent angle, including all effect*/
+    dcell *sanea0;     /**<noise equivalent angle due to photon noise alone*/
     dmat  *scale;      /**<extra scaling factor due to bicubic spline on strehl*/
 }PISTAT_S;
 /**
