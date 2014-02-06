@@ -1,11 +1,6 @@
 #ifdef __INTEL_COMPILER
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
-#include <mex.h>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "interface.h"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {

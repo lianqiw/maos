@@ -42,9 +42,21 @@ static void calc_pistat(GENPISTAT_S *data){
     const PARMS_S *parms=data->parms;
     POWFS_S *powfs=data->powfs;
     int icase=0;
-    char fnlock[PATH_MAX];
-    snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
-    while(LOCKADD(icase, data->icase, 1)<data->ncase){
+    const int ndtrat=9;
+    dmat *dtrats=dnew(ndtrat,1);
+    for(int i=0; i<ndtrat; i++){
+	dtrats->p[i]=(1<<i);
+    }
+    mymkdir("%s/pistat", dirstart);
+    mymkdir("%s/neaspec", dirstart);
+    while(LOCKADD(icase, data->icase, 1)<data->ncase)
+#if _OPENMP>=200805
+#pragma omp task default(shared) firstprivate(icase)
+#endif
+    {
+	if(icase==0){
+	    dwrite(dtrats, "%s/neaspec/neaspec_dtrats", dirstart);
+	}
 	double thetax=data->ngsgrid*data->cases[icase][0];
 	double thetay=data->ngsgrid*data->cases[icase][1];
 	long ipowfs=data->cases[icase][2];
@@ -59,17 +71,11 @@ static void calc_pistat(GENPISTAT_S *data){
 		 dirstart,seed, msa, thetax, thetay);
 	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fngstat,PATH_MAX,"%s/gstat/gstat_seed%ld_sa%ld_x%g_y%g",
+	snprintf(fngstat,PATH_MAX,"%s/neaspec/neaspec_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	if(!zfexist(fnwvf)){
-	    continue;
-	}
-	if(zfexist(fnpistat) && zfexist(fngstat)){
-	    /*warning("%s already exist, skip\n", fnpistat); */
-	}else{
+
+	if(zfexist(fnwvf) && (!zfexist(fnpistat) || !zfexist(fngstat))){
 	    dmat *mapply=dnew(2,1);
-	    mymkdir("%s/pistat", dirstart);
-	    mymkdir("%s/gstat", dirstart);
 	    TIC;tic;
 	    if(!zfexist(fnztilt)){
 		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
@@ -94,17 +100,25 @@ static void calc_pistat(GENPISTAT_S *data){
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
 	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
-	    dmat *gstat=dnew(nsa*2, nstep);/*original gradient at each time step. */
+	    dcell *neaspec=dcellnew(nsa*2, nwvl);
+	    dcell **avgpsf=calloc(nwvl, sizeof(dcell*));
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		avgpsf[iwvl]=dcellnew(ndtrat, nsa);
+	    }
+	    for(long ig=0; ig<2*nsa*nwvl; ig++){
+		neaspec->p[ig]=dnew(ndtrat, 1);
+	    }
+	    //dmat *gstat=dnew(nsa*2, nstep);/*original gradient at each time step. */
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=NULL;
 	    cfft2plan(wvf,-1);
 	    PDCELL(pistat, ppistat);
-	    PDMAT(gstat, pgstat);
+	    //PDMAT(gstat, pgstat);
 	    cmat *otf=cnew(ncomp,ncomp);
 	    cfft2plan(otf,1);
 	    cfft2plan(otf,-1);
 	    dmat *psf=NULL;
-	    double nwvli=1./(nwvl);
+	    //double nwvli=1./(nwvl);
 	    double dtheta[nwvl];
 	    const int embfac=parms->maos.embfac[ipowfs];
 	    const double dxsa=parms->maos.dxsa[ipowfs];
@@ -130,13 +144,32 @@ static void calc_pistat(GENPISTAT_S *data){
 			    cfft2(wvf,-1);
 			    cabs22d(&psf, 0, wvf, 1);//peak in corner.
 			    dfftshift(psf);//peak in center
-			    double pmax=dmax(psf);
+			    
+			    int nframe=istep-phystart+1;
+			    for(int idtrat=0; idtrat<ndtrat; idtrat++){
+				dmat **pavgpsf=&avgpsf[iwvl]->p[idtrat+isa*ndtrat];
+				dadd(pavgpsf, 1, psf, 1);
+				/*if(nframe==dtrats->p[ndtrat-1]){
+				  dwrite(*pavgpsf, "avgpsf_wvl%ld_isa%ld_idtrat%d", iwvl, isa, idtrat);
+				  if(idtrat+1==ndtrat && isa+1==nsa && iwvl+1==nwvl) exit(0);
+				  }*/
+				if(nframe%(int)dtrats->p[idtrat]==0){
+				    double grad[2]={0,0};
+				    double pmax=dmax(*pavgpsf);
+				    dcog(grad,*pavgpsf,0.5, 0.5, 0.4*pmax, 0.2*pmax);
+				    dzero(*pavgpsf);
+				    neaspec->p[isa+iwvl*nsa*2]->p[idtrat]+=pow(grad[0]*dtheta[iwvl],2);
+				    neaspec->p[isa+nsa+iwvl*nsa*2]->p[idtrat]+=pow(grad[1]*dtheta[iwvl],2);
+				}
+			    }
+			    
 			    double grad[2]={0,0};
-			    dcog(grad,psf,0.5, 0.5, 0.1*pmax, 0.1*pmax);
+			    double pmax=dmax(psf);
+			    dcog(grad,psf,0.5, 0.5, 0.5*pmax, 0.2*pmax);
 			    grad[0]*=dtheta[iwvl];//convert to Radian
 			    grad[1]*=dtheta[iwvl];
-			    pgstat[istep][isa]+=grad[0]*nwvli;//record the value
-			    pgstat[istep][isa+nsa]+=grad[1]*nwvli;
+			    /*pgstat[istep][isa]+=grad[0]*nwvli;//record the value
+			      pgstat[istep][isa+nsa]+=grad[1]*nwvli;*/
 			    pgmean[isa][0]+=grad[0];//record the average
 			    pgmean[isa][1]+=grad[1];
 			    //Then remove the CoG from the WVF and accumulate PSF.
@@ -152,6 +185,12 @@ static void calc_pistat(GENPISTAT_S *data){
 		ccellfree(wvfi);
 		dfree(ztilti);  
 	    }/*for istep */
+	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
+		int navg=(nstep-phystart)/dtrats->p[idtrat];
+		for(long ig=0; ig<2*nsa*nwvl; ig++){
+		    neaspec->p[ig]->p[idtrat]=sqrt(neaspec->p[ig]->p[idtrat]/navg);
+		}
+	    }
 	    zfeof(fp_wvf);
 	    zfeof(fp_ztilt);
 	    zfclose(fp_ztilt);
@@ -175,16 +214,23 @@ static void calc_pistat(GENPISTAT_S *data){
 		    creal2d(&psf,0,otf,1);
 		}
 	    }
+	    dfree(gmean);
 	    psf=NULL;
 	    /* Saved pistat should have peak on the corner */
 	    cfree(otf);
 	    dcellwrite(pistat, "%s",fnpistat);
-	    dwrite(gstat, "%s",fngstat);
+	    dcellwrite(neaspec, "%s",fngstat);
 	    dcellfree(pistat);
-	    dfree(gstat);
+	    dcellfree(neaspec);
+	    dcellfreearr(avgpsf, nwvl);
+	    //dfree(gstat);
 	    toc2("Processing %s:", fnwvf);
 	}/*if exist */
     }
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
+    dfree(dtrats);
 }
 
 void genpistat(const PARMS_S *parms, POWFS_S *powfs){
@@ -313,150 +359,157 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
     long ng=round(patfov/2/ngsgrid)+1;
     dcell **nonlin=calloc(npowfs, sizeof(dcell*));
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	dcell *avgpi=0;
-	const long msa=parms->maos.msa[ipowfs];
-	const long nsa=parms->maos.nsa[ipowfs];
-	const long pixpsa=parms->skyc.pixpsa[ipowfs];
-	const double pixtheta=parms->skyc.pixtheta[ipowfs];
-	long pixpsas[nsa];
-	for(int isa=0; isa<nsa; isa++){
-	    pixpsas[isa]=pixpsa;
-	}
-	dcell *i0=dcellnew3(nsa, 1, pixpsas, pixpsas);
-	dcell *gx=dcellnew3(nsa, 1, pixpsas, pixpsas);
-	dcell *gy=dcellnew3(nsa, 1, pixpsas, pixpsas);
-	dcell *i0s=dcellnew3(nsa,1, pixpsas, pixpsas);
-	dcell *gxs=dcellnew3(nsa,1, pixpsas, pixpsas);
-	dcell *gys=dcellnew3(nsa,1, pixpsas, pixpsas);
-	dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
-	dcell *mtche=0;
-	dmat *sanea=0;
-	ccell *otf1=ccellnew(nsa, nwvl);
-	ccell *otf2=ccellnew(nsa, nwvl);
-	long ncomp=parms->maos.ncomp[ipowfs];
-	for(int isa=0; isa<nsa; isa++){
+	char fnnonlin[PATH_MAX];
+	snprintf(fnnonlin, PATH_MAX, "%s/powfs%d_nonlin", dirstart, ipowfs);
+	if(zfexist(fnnonlin)){
+	    nonlin[ipowfs]=dcellread("%s", fnnonlin);
+	}else{
+	    dcell *avgpi=0;
+	    const long msa=parms->maos.msa[ipowfs];
+	    const long nsa=parms->maos.nsa[ipowfs];
+	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
+	    const double pixtheta=parms->skyc.pixtheta[ipowfs];
+	    long pixpsas[nsa];
+	    for(int isa=0; isa<nsa; isa++){
+		pixpsas[isa]=pixpsa;
+	    }
+	    dcell *i0=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	    dcell *gx=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	    dcell *gy=dcellnew3(nsa, 1, pixpsas, pixpsas);
+	    dcell *i0s=dcellnew3(nsa,1, pixpsas, pixpsas);
+	    dcell *gxs=dcellnew3(nsa,1, pixpsas, pixpsas);
+	    dcell *gys=dcellnew3(nsa,1, pixpsas, pixpsas);
+	    dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
+	    dcell *mtche=0;
+	    dmat *sanea=0;
+	    ccell *otf1=ccellnew(nsa, nwvl);
+	    ccell *otf2=ccellnew(nsa, nwvl);
+	    long ncomp=parms->maos.ncomp[ipowfs];
+	    for(int isa=0; isa<nsa; isa++){
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    otf1->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
+		    otf2->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
+		    cfft2plan(otf1->p[isa+iwvl*nsa], -1);
+		    cfft2plan(otf2->p[isa+iwvl*nsa], 1);
+		}
+	    }
+	    double dtheta[nwvl];
+	    const int embfac=parms->maos.embfac[ipowfs];
+	    const double dxsa=parms->maos.dxsa[ipowfs];
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		otf1->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
-		otf2->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
-		cfft2plan(otf1->p[isa+iwvl*nsa], -1);
-		cfft2plan(otf2->p[isa+iwvl*nsa], 1);
+		const double wvl=parms->maos.wvl[iwvl];
+		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
-	}
-	double dtheta[nwvl];
-	const int embfac=parms->maos.embfac[ipowfs];
-	const double dxsa=parms->maos.dxsa[ipowfs];
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    const double wvl=parms->maos.wvl[iwvl];
-	    dtheta[iwvl]=wvl/(dxsa*embfac);
-	}
-	dcell *nonxy=dcellnew(ng,1);
-	for(int ig=0; ig<ng; ig++){
-	    nonxy->p[ig]=dnew(siglevs->nx, 2);
-	    char fnpistat[PATH_MAX];
-	    int count=0;
-	    dcellzero(avgpi);
-	    for(int rx=-1; rx<=1; rx++){
-		for(int ry=-1; ry<=1; ry++){
-		    if((ig==0 && (abs(rx)+abs(ry))!=0) || (abs(rx)+abs(ry))!=1) continue;
-		    snprintf(fnpistat, PATH_MAX, "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
-			     dirstart,seed, msa, ig*ngsgrid*rx, ig*ngsgrid*ry);
-		    if(!zfexist(fnpistat)){
-			error("%s doesn't exist\n", fnpistat);
-		    }else{
-			info2("reading %s\n", fnpistat);
-			dcell *pistat=dcellread("%s", fnpistat);
-			dcelladd(&avgpi, 1, pistat, 1);
-			dcellfree(pistat);
-			count++;
-		    }
-		}
-	    }
-	    if(count>0){
-		PDCELL(avgpi, pavgpi);
-		dcellscale(avgpi, 1./count);
-		dcellzero(i0); dcellzero(gx); dcellzero(gy);
-		for(int isa=0; isa<nsa; isa++){
-		    /*Assume each WVL has same weighting*/
-		    for(long iwvl=0; iwvl<nwvl; iwvl++){
-			dcellwrite(avgpi, "avgpi");
-			psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
-			ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
-			cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
-		    }
-		}
-		/*Build matched filter for different siglevs and test linearity*/
-		for(int isig=0; isig<siglevs->nx; isig++){
-		    double sig=siglevs->p[isig];
-		    dcelladd(&i0s, 0, i0, sig);
-		    dcelladd(&gxs, 0, gx, sig);
-		    dcelladd(&gys, 0, gy, sig);
-		    mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
-		    /*dcellwrite(mtche, "mtche_%.0f", sig);
-		    dwrite(sanea, "sanea_%.0f", sig);
-		    dcellwrite(i0s, "i0s_%.0f", sig);
-		    dcellwrite(gxs, "gxs_%.0f", sig);
-		    dcellwrite(gys, "gys_%.0f", sig);*/
-#define SCAN 0
-		    double sxe=0,sye=0,neam=0;
-		    for(int isa=0; isa<nsa; isa++){
-			neam+=sanea->p[isa*2]+sanea->p[isa*2+1];
-#if SCAN
-			dmat *resp=dnew(nstep, 4);
-#endif
-			for(int istep=0; istep<nstep; istep++){
-			    dzero(is->p[isa]);
-#if SCAN
-			    double sx=pixtheta*istep/nstep;
-			    double sy=0;
-#else
-			    double sx=randn(&rstat)*sanea->p[isa*2];
-			    double sy=randn(&rstat)*sanea->p[isa*2+1];
-#endif
-			    double sout[2]={0,0};
-			    for(long iwvl=0; iwvl<nwvl; iwvl++){
-				ccp(&otf2->p[isa+iwvl*nsa], otf1->p[isa+iwvl*nsa]);
-				ctilt(otf2->p[isa+iwvl*nsa], sx/dtheta[iwvl], sy/dtheta[iwvl],0);
-				ccwm(otf2->p[isa+iwvl*nsa], powfs[ipowfs].dtf[iwvl].nominal);
-				cfft2i(otf2->p[isa+iwvl*nsa], 1);//turn to psd space
-				spmulcreal(is->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
-					   otf2->p[isa+iwvl*nsa]->p, sig);
-			    }
-			    dmulvec(sout, mtche->p[isa], is->p[isa]->p, 1);
-#if SCAN
-			    resp->p[istep]=sx;
-			    resp->p[istep+nstep]=sy;
-			    resp->p[istep+nstep*2]=sout[0];
-			    resp->p[istep+nstep*3]=sout[1];
-#else
-			    sxe+=(sx-sout[0])*(sx-sout[0]);
-			    sye+=(sy-sout[1])*(sy-sout[1]);
-#endif
+	    dcell *nonxy=dcellnew(ng,1);
+	    for(int ig=0; ig<ng; ig++){
+		nonxy->p[ig]=dnew(siglevs->nx, 2);
+		char fnpistat[PATH_MAX];
+		int count=0;
+		dcellzero(avgpi);
+		for(int rx=-1; rx<=1; rx++){
+		    for(int ry=-1; ry<=1; ry++){
+			if((ig==0 && (abs(rx)+abs(ry))!=0) || (abs(rx)+abs(ry))!=1) continue;
+			snprintf(fnpistat, PATH_MAX, "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
+				 dirstart,seed, msa, ig*ngsgrid*rx, ig*ngsgrid*ry);
+			if(!zfexist(fnpistat)){
+			    error("%s doesn't exist\n", fnpistat);
+			}else{
+			    info2("reading %s\n", fnpistat);
+			    dcell *pistat=dcellread("%s", fnpistat);
+			    dcelladd(&avgpi, 1, pistat, 1);
+			    dcellfree(pistat);
+			    count++;
 			}
-#if SCAN
-		    dwrite(resp, "powfs%d_sa%d_sig%g_response", ipowfs, isa, sig);
-#endif
-		    }//for isa
-		    nonxy->p[ig]->p[isig]=(neam/(nsa*2));
-		    nonxy->p[ig]->p[isig+siglevs->nx]=sqrt((sxe+sye)/(nstep*2*nsa));
+		    }
 		}
-	    }
-	}//for ng
-	dcellwrite(nonxy, "powfs%d_nonxy", ipowfs);
-	dcellfree(avgpi);
-	dcellfree(i0);
-	dcellfree(gx);
-	dcellfree(gy);
+		if(count>0){
+		    PDCELL(avgpi, pavgpi);
+		    dcellscale(avgpi, 1./count);
+		    dcellzero(i0); dcellzero(gx); dcellzero(gy);
+		    for(int isa=0; isa<nsa; isa++){
+			/*Assume each WVL has same weighting*/
+			for(long iwvl=0; iwvl<nwvl; iwvl++){
+			    dcellwrite(avgpi, "avgpi");
+			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
+			    ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
+			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
+			}
+		    }
+		    /*Build matched filter for different siglevs and test linearity*/
+		    for(int isig=0; isig<siglevs->nx; isig++){
+			double sig=siglevs->p[isig];
+			dcelladd(&i0s, 0, i0, sig);
+			dcelladd(&gxs, 0, gx, sig);
+			dcelladd(&gys, 0, gy, sig);
+			mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
+			/*dcellwrite(mtche, "mtche_%.0f", sig);
+			  dwrite(sanea, "sanea_%.0f", sig);
+			  dcellwrite(i0s, "i0s_%.0f", sig);
+			  dcellwrite(gxs, "gxs_%.0f", sig);
+			  dcellwrite(gys, "gys_%.0f", sig);*/
+#define SCAN 0
+			double sxe=0,sye=0,neam=0;
+			for(int isa=0; isa<nsa; isa++){
+			    neam+=sanea->p[isa*2]+sanea->p[isa*2+1];
+#if SCAN
+			    dmat *resp=dnew(nstep, 4);
+#endif
+			    for(int istep=0; istep<nstep; istep++){
+				dzero(is->p[isa]);
+#if SCAN
+				double sx=pixtheta*istep/nstep;
+				double sy=0;
+#else
+				double sx=randn(&rstat)*sanea->p[isa*2];
+				double sy=randn(&rstat)*sanea->p[isa*2+1];
+#endif
+				double sout[2]={0,0};
+				for(long iwvl=0; iwvl<nwvl; iwvl++){
+				    ccp(&otf2->p[isa+iwvl*nsa], otf1->p[isa+iwvl*nsa]);
+				    ctilt(otf2->p[isa+iwvl*nsa], sx/dtheta[iwvl], sy/dtheta[iwvl],0);
+				    ccwm(otf2->p[isa+iwvl*nsa], powfs[ipowfs].dtf[iwvl].nominal);
+				    cfft2i(otf2->p[isa+iwvl*nsa], 1);//turn to psd space
+				    spmulcreal(is->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
+					       otf2->p[isa+iwvl*nsa]->p, sig);
+				}
+				dmulvec(sout, mtche->p[isa], is->p[isa]->p, 1);
+#if SCAN
+				resp->p[istep]=sx;
+				resp->p[istep+nstep]=sy;
+				resp->p[istep+nstep*2]=sout[0];
+				resp->p[istep+nstep*3]=sout[1];
+#else
+				sxe+=(sx-sout[0])*(sx-sout[0]);
+				sye+=(sy-sout[1])*(sy-sout[1]);
+#endif
+			    }
+#if SCAN
+			    dwrite(resp, "powfs%d_sa%d_sig%g_response", ipowfs, isa, sig);
+#endif
+			}//for isa
+			nonxy->p[ig]->p[isig]=(neam/(nsa*2));
+			nonxy->p[ig]->p[isig+siglevs->nx]=sqrt((sxe+sye)/(nstep*2*nsa));
+		    }
+		}
+	    }//for ng
+	    dcellwrite(nonxy, "powfs%d_nonxy", ipowfs);
+	    dcellfree(avgpi);
+	    dcellfree(i0);
+	    dcellfree(gx);
+	    dcellfree(gy);
 
-	dcellfree(i0s);
-	dcellfree(gxs);
-	dcellfree(gys);
+	    dcellfree(i0s);
+	    dcellfree(gxs);
+	    dcellfree(gys);
 
-	dcellfree(is);
-	dcellfree(mtche);
-	dfree(sanea);
-	ccellfree(otf1);
-	ccellfree(otf2);
-	nonlin[ipowfs]=nonxy;
+	    dcellfree(is);
+	    dcellfree(mtche);
+	    dfree(sanea);
+	    ccellfree(otf1);
+	    ccellfree(otf2);
+	    nonlin[ipowfs]=nonxy;
+	    dcellwrite(nonxy, "%s", fnnonlin);
+	}
     }//for ipowfs
     dfree(siglevs);
     return nonlin;

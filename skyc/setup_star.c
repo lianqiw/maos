@@ -119,7 +119,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    const int msa=parms->maos.msa[ipowfs];
 	    const int nsa=parms->maos.nsa[ipowfs];
 	    dcell *avgpsf=NULL;
-	    dmat *grad=NULL;
+	    dcell *neaspec=NULL;
 	    double wtsum=0;
 	    for(int ix=0; ix<2; ix++){
 		double thx=(thxl+ix)*ngsgrid;
@@ -141,18 +141,18 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 			dcellfree(avgpsfi);
 			wtsum+=wtxi;
 			
-			snprintf(fn,PATH_MAX,"%s/gstat/gstat_seed%d_sa%d_x%g_y%g",
+			snprintf(fn,PATH_MAX,"%s/neaspec/neaspec_seed%d_sa%d_x%g_y%g",
 				 dirstart, seed, msa, thx, thy);
-			dmat *gradi=dread("%s",fn);
-			dadd(&grad, 1, gradi, wtxi);
-			dfree(gradi);
+			dcell *neaspeci=dcellread("%s",fn);
+			dcelladd(&neaspec, 1, neaspeci, wtxi);
+			dcellfree(neaspeci);
 		    }
 		}
 	    }
 	    if(wtsum<0.01){
 		warning("PISTAT is not available for (%g,%g) msa=%d\n",thetax,thetay,msa);
 	    }
-	    dscale(grad, 1./wtsum);
+	    dcellscale(neaspec, 1./wtsum);
 	    dcellscale(avgpsf, 1./wtsum);
 	    dmat *scale=NULL;
 	    if(parms->skyc.bspstrehl){
@@ -175,7 +175,6 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		    }else{
 			dscale(avgpsf->p[ic], ratio);
 			scale->p[ic]=ratio;
-			grad->p[ic]*=ratio;
 		    }
 		    dfree(val);
 		}
@@ -184,7 +183,16 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    }
 
 	    stari->pistat[ipowfs].psf=avgpsf;/*PSF is in corner. */
-	    stari->pistat[ipowfs].grad=grad;
+	    stari->pistat[ipowfs].neaspec=dcellnew(nsa*2, 1);
+	    for(int ig=0; ig<nsa*2; ig++){
+		dmat *tmp=0;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    dadd(&tmp, 0, neaspec->p[ig+nsa*2*iwvl], parms->skyc.wvlwt->p[iwvl]);
+		}
+		stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtratsd);
+		dfree(tmp);
+	    }
+	    dcellfree(neaspec);
 	    stari->pistat[ipowfs].scale=scale;
 	    {/* skip stars with large PSF.*/
 		int size=INT_MAX;
@@ -198,7 +206,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    }
 	    if(parms->skyc.dbg){
 		dcellwrite(avgpsf, "%s/avgpsf_star%d_ipowfs%d_psf",dirsetup,istar,ipowfs);
-		dwrite(grad, "%s/pistat_star%d_ipowfs%d_grad",dirsetup,istar,ipowfs);
+		dcellwrite(stari->pistat[ipowfs].neaspec, "%s/pistat_star%d_ipowfs%d_neaspec",dirsetup,istar,ipowfs);
 	    }
 	}
     }
@@ -255,57 +263,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 	}
     }
 }
-/**
-   Compute an additional gradient measurement noise that is caused by gradients
-   in ideal NGS mode corrected PSFs. This is to be treated as an additional
-   measurement error.  */
-static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
-    const long npowfs=parms->maos.npowfs;
-    const int phystart=parms->skyc.phystart;
-    for(int istar=0; istar<nstar; istar++){
-	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	    const long nsa=parms->maos.nsa[ipowfs];
-	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
-	    int ndtrat=parms->skyc.ndtrat;
-	    pistat->gnea=dcellnew(ndtrat, 1);
-	    PDMAT(pistat->grad, pgrad);
-	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats[idtrat];
-		dmat *mean_grad=NULL, *mean_gradsq=NULL;
-		int count=0;
-		dmat *grad=dnew(nsa*2,1);
-		for(int istep=phystart; istep<pistat->grad->ny; istep++){
-		    /*make sure same alignment. */
-		    if(istep % dtrat == 0){
-			dzero(grad);
-		    }	
-		    for(int isa=0; isa<nsa*2; isa++){
-			grad->p[isa]+=pgrad[istep][isa];
-		    }
-		    if((istep+1) % dtrat == 0){/*has output */
-			dscale(grad, 1./dtrat);
-			count++;
-			dadd(&mean_grad, 1, grad, 1);
-			dcwpow(grad,2);
-			dadd(&mean_gradsq, 1, grad, 1);
-		    }
-		}
-		dscale(mean_grad, 1./count);
-		dscale(mean_gradsq, 1./count);
-		dcwpow(mean_grad, 2);
-		/*variance=<gg>-<g><g> */
-		dadd(&pistat->gnea->p[idtrat], 1, mean_gradsq, 1);
-		dadd(&pistat->gnea->p[idtrat], 1, mean_grad, -1);
-		dfree(grad);
-		dfree(mean_grad);
-		dfree(mean_gradsq);
-	    }
-	    if(parms->skyc.dbg){
-		dcellwrite(pistat->gnea,"%s/star%d_ipowfs%d_gnea", dirsetup, istar, ipowfs);
-	    }
-	}
-    }
-}
+
 /**
    Setup matched filter for stars.
  */
@@ -313,7 +271,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     const long nwvl=parms->maos.nwvl;
     const long npowfs=parms->maos.npowfs;
     PDMAT(parms->skyc.rnefs,rnefs);
-    const double wvl_max=maxdbl(parms->maos.wvl, parms->maos.nwvl);
+ 
     for(int istar=0; istar<nstar; istar++){
 	if(!star[istar].idtrat){
 	    star[istar].idtrat=dnew(npowfs, 1);
@@ -324,9 +282,9 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	//info("radius=%g as, igg=%d\n", radius*206265, igg);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
-        const long pixpsa=parms->skyc.pixpsa[ipowfs];
+	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
 	    //size of PSF
-	    const double sigma_theta=wvl_max/parms->maos.dxsa[ipowfs];
+	    const double sigma_theta=parms->skyc.wvlmean/parms->maos.dxsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
 	    pistat->i0=dcellnew(nsa,nwvl);
 	    pistat->gx=dcellnew(nsa,nwvl);
@@ -388,16 +346,21 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		if(parms->skyc.neaaniso){
 		    for(int i=0; i<nsa*2; i++){
 			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
-							    +pow(star[istar].pistat[ipowfs].gnea->p[idtrat]->p[i], 2));
+							    +pow(star[istar].pistat[ipowfs].neaspec->p[i]->p[idtrat], 2));
 		    }
 		}
 		if(parms->skyc.dbg){
 		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
 		}
-		double nea_mean=sqrt(dnorm2(pistat->sanea->p[idtrat])/(nsa*2));
-		double snr_mean=sigma_theta/nea_mean;
-		if(snr_mean>parms->skyc.snrmin 
+#if 0
+		double nea=sqrt(dnorm2(pistat->sanea->p[idtrat])/(nsa*2));
+#else
+		double nea=dmax(pistat->sanea->p[idtrat]);
+#endif
+		double snr=sigma_theta/nea;
+		if(parms->skyc.verbose) info2("idtrat=%d, nea=%g, snr=%g\n", idtrat, nea*206265000, snr);
+		if(snr>parms->skyc.snrmin 
 		   && ((int)star[istar].idtrat->p[ipowfs]==-1 
 		   || dtrat<=parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){
 		    star[istar].idtrat->p[ipowfs]=idtrat;
@@ -696,7 +659,7 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
     const int npowfs=parms->maos.npowfs;
     setup_star_read_pistat(simu, star, nstar, seed);
     setup_star_siglev(parms, star, nstar);
-    setup_star_gnea(parms, star, nstar);
+    //setup_star_gnea(parms, star, nstar, simu->neaspec_dtrats);
     setup_star_mtch(parms, powfs, star, nstar, simu->nonlin);
     setup_star_g(parms, powfs, star, nstar);
     int jstar=0;
@@ -780,8 +743,8 @@ void free_pistat(PISTAT_S *pistat, int npistat, const PARMS_S *parms){
 	dcellfree(pistat[ipistat].sanea);
 	dcellfree(pistat[ipistat].sanea0);
 	dfree(pistat[ipistat].scale);
-	dfree(pistat[ipistat].grad);
-	dcellfree(pistat[ipistat].gnea);
+	dcellfree(pistat[ipistat].neaspec);
+	//dcellfree(pistat[ipistat].gnea);
 	int ndtrat=parms->skyc.ndtrat;
 	if(pistat[ipistat].mtche){
 	   for(int idtrat=0; idtrat<ndtrat; idtrat++){

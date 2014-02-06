@@ -54,6 +54,7 @@ X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     if(nx<0) nx=0;
     if(ny<0) ny=0;
     sp = calloc(1, sizeof(X(sp)));
+    sp->id=M_SPT;
     if(nzmax>0){
 	sp->p=malloc((ny+1)*sizeof(spint));
 	sp->i=malloc(nzmax*sizeof(spint));

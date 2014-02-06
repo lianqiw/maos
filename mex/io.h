@@ -3,8 +3,10 @@
 #include <complex.h>
 #include <zlib.h>
 #include <signal.h>
+#if __GNUC__ && defined(__STDC_UTF_16__)
+#undef __STDC_UTF_16__
+#endif
 #include <mex.h>
-#include <matrix.h>
 #include <stdint.h>
 #include <errno.h>
 #if !defined(MX_API_VER) || MX_API_VER < 0x07030000

@@ -60,22 +60,69 @@ PNEW(mutex_mem);
 
 static void *MROOT=NULL;
 static long long memcnt=0;
-
+static void *MSTATROOT=NULL;
 /*max depth in backtrace */
 #define DT 16
-typedef struct T_MEMKEY{
+typedef struct{
     void *p;
     void *func[DT];
     int nfunc;
     size_t size;
 }T_MEMKEY;
-
-static void print_usage(const void *key, VISIT value, int level){
+typedef struct{
+    void **func;
+    int nfunc;
+    size_t size;
+}T_STATKEY;
+static int stat_cmp(const void *a, const void *b){
+    const T_STATKEY *pa=a;
+    const T_STATKEY *pb=b;
+    if(pa->nfunc<pb->nfunc){
+	return -1;
+    }else if(pa->nfunc>pb->nfunc){
+	return 1;
+    }else{
+	for(int i=0; i<pa->nfunc; i++){
+	    if(pa->func[i]<pb->func[i]){
+		return -1;
+	    }else if(pa->func[i]>pb->func[i]){
+		return 1;
+	    }
+	}
+	return 0;
+    }
+}
+static void stat_usage(const void *key, VISIT value, int level){
     const T_MEMKEY* key2=*((const T_MEMKEY**)key);
     (void) level;
     if(value>1){
-	printf("%p: size %8zu B", key2->p, (key2->size));
-	print_backtrace_symbol(key2->func, key2->nfunc-2);
+	/*printf("%p: size %8zu B", key2->p, (key2->size));
+	  print_backtrace_symbol(key2->func, key2->nfunc-2);*/
+	void **found;
+	T_STATKEY key3;
+	key3.func=(void**)key2->func;
+	key3.nfunc=key2->nfunc-2;
+	if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
+	    T_STATKEY *keynew=calloc(1, sizeof(T_STATKEY));
+	    keynew->func=malloc(key3.nfunc*sizeof(void*));
+	    memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
+	    keynew->nfunc=key3.nfunc;
+	    keynew->size=key2->size;
+	    if(!tsearch(keynew, &MSTATROOT, stat_cmp)){
+		error("Error inserting to tree\n");
+	    }
+	}else{
+	    T_STATKEY *keynew=*found;
+	    keynew->size+=key2->size;
+	}
+    }
+}
+static void print_usage(const void *key, VISIT value, int level){
+    const T_STATKEY *key2=*((const T_STATKEY**)key);
+    (void) level;
+    if(value>1){
+	printf("size %8zu B", (key2->size));
+	print_backtrace_symbol(key2->func, key2->nfunc);
     }
 }
 typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
@@ -110,12 +157,8 @@ static __attribute__((destructor)) void deinit(){
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);
-	    if(memcnt<100000){
-		twalk(MROOT,print_usage);
-		warning("%lld allocated memory not freed!!!\n",memcnt);
-	    }else{
-		warning("Too many, will not print backtrace.\n");
-	    }
+	    twalk(MROOT,stat_usage);
+	    twalk(MSTATROOT, print_usage);
 	}else{
 	    info("All allocated memory are freed.\n");
 	    if(memcnt>0){

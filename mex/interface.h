@@ -1,5 +1,13 @@
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <complex.h>
+#if __GNUC__ && defined(__STDC_UTF_16__)
+#undef __STDC_UTF_16__
+#endif
 #include <mex.h>
 #ifdef __cplusplus
 extern "C" {

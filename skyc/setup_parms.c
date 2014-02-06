@@ -72,6 +72,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
     readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
     parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
+    parms->skyc.ndtrat_mr=readcfg_intarr(&parms->skyc.dtrats_mr,"skyc.dtrats_mr");
     READ_INT(skyc.seed);
     READ_INT(skyc.servo);
     READ_INT(skyc.gsplit);
@@ -173,6 +174,19 @@ PARMS_S *setup_parms(const ARG_S *arg){
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
+    {
+	double sum=0;
+	double wtsum=0; 
+	parms->skyc.wvlwt=dnew(parms->maos.nwvl, 1);
+	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
+	    double wt=parms->skyc.qe[iwvl]*parms->skyc.telthruput[iwvl];
+	    parms->skyc.wvlwt->p[iwvl]=wt;
+	    sum+=parms->maos.wvl[iwvl]*wt;
+	    wtsum+=wt;
+	}
+	parms->skyc.wvlmean=sum/wtsum;
+	normalize_sum(parms->skyc.wvlwt->p, parms->maos.nwvl, 1);
+    }
     if(parms->skyc.maxdtrat<=0){
 	parms->skyc.maxdtrat=parms->skyc.ndtrat;
     }
@@ -185,7 +199,18 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	}
     }
     if(parms->skyc.servo<0){
+	if(parms->skyc.dtrats){
+	    parms->skyc.ndtrat=parms->skyc.ndtrat_mr;
+	    parms->skyc.dtrats=parms->skyc.dtrats_mr;
+	}
 	parms->skyc.addws=1;
+    }else{
+	free(parms->skyc.dtrats_mr);
+	parms->skyc.dtrats_mr=0;
+    }
+    parms->skyc.dtratsd=dnew(parms->skyc.ndtrat, 1);
+    for(int i=0; i<parms->skyc.ndtrat; i++){
+	parms->skyc.dtratsd->p[i]=parms->skyc.dtrats[i];
     }
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;

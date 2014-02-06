@@ -36,7 +36,6 @@
 #define T double
 #define R double
 #define M_T M_DBL
-#define M_TT M_DMAT
 #define M_SPT64 M_SP64
 #define M_SPT32 M_SP32
 #define REAL(A) (A)
@@ -60,7 +59,6 @@
 #define T dcomplex
 #define R double
 #define M_T M_CMP
-#define M_TT M_CMAT
 #define M_SPT64 M_CSP64
 #define M_SPT32 M_CSP32
 #define REAL(A) creal(A)
@@ -87,7 +85,6 @@
 #define T float
 #define R float
 #define M_T M_FLT
-#define M_TT M_SMAT
 #define M_SPT64 M_SSP64
 #define M_SPT32 M_SSP32
 #define REAL(A) (A)
@@ -111,7 +108,6 @@
 #define T fcomplex
 #define R float
 #define M_T M_ZMP
-#define M_TT M_ZMAT
 #define M_SPT64 M_ZSP64
 #define M_SPT32 M_ZSP32
 #define REAL(A) crealf(A)

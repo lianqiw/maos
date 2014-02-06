@@ -184,7 +184,7 @@ static void skysim_isky(SIM_S *simu){
 	    if(parms->skyc.verbose){
 		info2("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
 		      sqrt(asteri->mresol)*1e9, parms->skyc.fss[asteri->mdtrat], 
-		      parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax]);
+		      parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax-1]);
 	    }
 	    /*Assign wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
@@ -195,7 +195,7 @@ static void skysim_isky(SIM_S *simu){
 	    dmat *pmini=NULL;
 	    dmat *min_imres=NULL;
 	    int mdtrat=0;
-	    for(int idtrat=asteri->idtratmin; idtrat<=asteri->idtratmax; idtrat++)
+	    for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(idtrat)
 #endif
@@ -271,6 +271,7 @@ static void skysim_isky(SIM_S *simu){
 #if _OPENMP >= 200805
 #pragma omp taskwait
 #endif
+	dset(simu->sel->p[isky], INFINITY);
 	PDMAT(simu->sel->p[isky],psel);
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	    psel[iwfs][0]=aster[selaster].wfs[iwfs].thetax;
@@ -505,7 +506,7 @@ void skysim(const PARMS_S *parms){
     simu->parms=parms;
     setup_powfs(simu->powfs, parms);
     genpistat(parms, simu->powfs); 
- 
+    simu->neaspec_dtrats=dread("%s/neaspec/neaspec_dtrats", dirstart);
     PINIT(simu->mutex_status);
     simu->tk_0=myclockd();
     for(int iseed_maos=0; iseed_maos<parms->maos.nseed; iseed_maos++){
@@ -518,7 +519,7 @@ void skysim(const PARMS_S *parms){
 	    simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
 	}
 	skysim_read_mideal(simu);
-	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc);
+	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
     	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
 	if(parms->skyc.servo<0){//LQG
 	    skysim_prep_sde(simu);
@@ -618,6 +619,7 @@ void skysim(const PARMS_S *parms){
 	dcellfreearr(simu->nonlin, parms->maos.npowfs);free(simu->nonlin);
     }/*iseed_maos */
     free(simu->status);
+    dfree(simu->neaspec_dtrats);
     free_powfs(simu->powfs,parms);
     free(simu->powfs);
     free(simu);

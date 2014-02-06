@@ -693,7 +693,7 @@ if test "x${use_mex}" = "xyes" ; then
        AM_CONDITIONAL(USE_MEX, false)
    fi
    if test x$use_icc = xyes ;then
-       LDMEX="${LDMEX} -static-intel"
+       LDMEX="${LDMEX} -shared-intel" #was -static-intel, but error
    fi
    MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE"
    AC_SUBST(MEXEXT)

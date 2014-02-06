@@ -26,13 +26,13 @@
 
 /**
    Compute Open loop NGS mode wavefront error from mode vectors.  */
-double calc_rms(const dmat *mod, const dmat *mcc){
+double calc_rms(const dmat *mod, const dmat *mcc, int istep0){
     double rms=0;
     PDMAT(mod, pmod);
-    for(long istep=0; istep<mod->ny; istep++){
+    for(long istep=istep0; istep<mod->ny; istep++){
 	rms+=dwdot(pmod[istep], mcc, pmod[istep]);
     }
-    return rms/mod->ny;
+    return rms/(mod->ny-istep0);
 }
 
 /**
@@ -274,7 +274,8 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    dscale(zgradc->p[iwfs], 1./dtrati);
 		    dcp(&gradout->p[iwfs], zgradc->p[iwfs]);
 		    if(noisy){
-			dmat *nea=aster->wfs[iwfs].pistat->sanea0->p[(int)aster->idtrats->p[iwfs]];
+			int idtrati=(dtrats?(int)aster->idtrats->p[iwfs]:idtratc);
+			dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
 			for(int i=0; i<nea->nx; i++){
 			    gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
 			}

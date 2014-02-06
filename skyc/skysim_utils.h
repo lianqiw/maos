@@ -17,7 +17,7 @@
 */
 #ifndef SKYC_SIM_H
 #define SKYC_SIM_H
-double calc_rms(const dmat *mideal, const dmat *mcc);
+double calc_rms(const dmat *mideal, const dmat *mcc, int istep0);
 void ngsmod2wvf(cmat *wvf, double wvl, const dmat *modm,
 		const POWFS_S *powfs, int isa, double thetax, double thetay, 
 		const PARMS_S *parms);

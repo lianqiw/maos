@@ -43,82 +43,6 @@ typedef enum{
     M_CELL,
 }M_TYPE;
 
-/*
-  We use pointers for reference counter because different array
-  may use the same pointer, but with different nx or ny
-  partition. */
-
-#define ARR(T)						\
-    T *restrict p; /**<The data pointer*/		\
-    long nx;       /**< number of rows */		\
-    long ny;       /**< number of columns */		\
-    char *header;  /**<The header*/			\
-    struct mmap_t *mmap;/**< not NULL if mmaped.*/
-
-#define MAT(T)					\
-    ARR(T)					\
-    int *nref; /**< reference count */		\
-    struct fft_t *fft;
-
-#define CELL(T)					\
-    MAT(T)					\
-
-/**
-   a double matrix object contains 2-d array of double numbers
-*/
-typedef struct dmat{
-    MAT(double)
-}dmat;
-/**
-   a single matrix object contains 2-d array of double numbers
-*/
-typedef struct smat{
-    MAT(float)
-}smat;
-
-/**
-   a double complex matrix object contains 2-d arrays of
-   double complex numbers. */
-typedef struct cmat{
-    MAT(dcomplex)
-}cmat;
-
-/**
-   a single precision complex matrix object contains 2-d arrays of float complex
-   numbers. */
-typedef struct zmat{
-    MAT(fcomplex)
-}zmat;
-
-/**
-   an 2-d block matrix of cmat.
- */
-typedef struct ccell{
-    CELL(cmat*)
-    cmat *m; /*stores the continuous data*/
-}ccell;
-/**
-   an 2-d block matrix of zmat.
- */
-typedef struct zcell{
-    CELL(zmat*)
-    zmat *m;
-}zcell;
-/**
-   an 2-d block matrix of dmat.
- */
-typedef struct dcell{
-    CELL(dmat*)
-    dmat *m;
-}dcell;
-/**
-   an 2-d block matrix of smat.
- */
-typedef struct scell{
-    CELL(smat*)
-    smat *m;
-}scell;
-
 typedef enum CEMBED{
     C_FULL,
     C_ABS2,
@@ -126,74 +50,66 @@ typedef enum CEMBED{
     C_ABS,
     C_LITERAL
 }CEMBED;
-#define SPMAT(T)\
-    T *restrict x ;       /**< numerical values, size nzmax */		\
-    union{long m;long nx;};	          /**< number of rows */	\
-    union{long n;long ny;};	          /**< number of columns */	\
-    char *header;         /**<header*/					\
-    long nzmax ;          /**< maximum number of entries */		\
-    spint *restrict p ;   /**< column pointers (size n+1) or col indices (size \
-			     nzmax) when nz!=-1 */			\
-    spint *restrict i ;   /**< row indices, size nzmax */		\
-    long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */ \
-    int *nref;           /**< reference counting like dmat */
 
-/**
-   a sparse array of double numbers stored in
-   compressed column format, i.e. MATLAB format */
-typedef struct dsp{
-    SPMAT(double)
-}dsp;
+/*
+  We use pointers for reference counter because different array
+  may use the same pointer, but with different nx or ny
+  partition. */
 
-/**
-   a sparse array of double numbers stored in
-   compressed column format, i.e. MATLAB format */
-typedef struct ssp{
-    SPMAT(float)
-}ssp;
+#define ARR(T)						\
+    long id;       /**< to identify the array type*/	\
+    T *restrict p; /**<The data pointer*/		\
+    long nx;       /**< number of rows */		\
+    long ny;       /**< number of columns */		\
+    char *header;  /**<The header*/			\
+    struct mmap_t *mmap;/**< not NULL if mmaped.*/	\
+    int *nref; /**< reference count */			\
+    struct fft_t *fft					
 
-/**
-   a sparse array of double complex numbers stored in
-   compressed column format */
-typedef struct csp{
-    SPMAT(dcomplex)
-}csp;
+#define MAT(T) struct{ \
+	ARR(T);	       \
+    }
 
-/**
-   a sparse array of double complex numbers stored in
-   compressed column format */
-typedef struct zsp{
-    SPMAT(fcomplex)
-}zsp;
+#define CELL(T) struct{		      \
+	ARR(T);			      \
+	T m;/*store continuous data*/ \
+    }
 
+#define SPMAT(T) struct{						\
+	long id;/**<to identify the array type*/			\
+	T *restrict x;       /**< numerical values, size nzmax */	\
+	union{long m;long nx;};	          /**< number of rows */	\
+	union{long n;long ny;};	          /**< number of columns */	\
+	char *header;         /**<header*/				\
+	long nzmax ;          /**< maximum number of entries */		\
+	spint *restrict p ;   /**< column pointers (size n+1) or col indices (size \
+				 nzmax) when nz!=-1 */			\
+	spint *restrict i ;   /**< row indices, size nzmax */		\
+	long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */ \
+	int *nref;           /**< reference counting like dmat */	\
+    }
 
-/**
-   an 2-d array of sparse.
- */
-typedef struct spcell{
-    CELL(dsp*)
-}spcell;
+typedef MAT(double) dmat;/*a double matrix object contains 2-d array of double numbers*/
+typedef MAT(float) smat;
+typedef MAT(dcomplex) cmat;
+typedef MAT(fcomplex) zmat;
 
-/**
-   an 2-d array of sparse.
- */
-typedef struct sspcell{
-    CELL(ssp*)
-}sspcell;
+typedef SPMAT(double) dsp;
+typedef SPMAT(float) ssp;
+typedef SPMAT(dcomplex) csp;
+typedef SPMAT(fcomplex) zsp;
 
-/**
-   an 2-d array of csp.
- */
-typedef struct cspcell{
-    CELL(csp*)
-}cspcell;
+typedef CELL(cmat*) ccell;
+typedef CELL(zmat*) zcell;
+typedef CELL(dmat*) dcell;
+typedef CELL(smat*) scell;
 
-/**
-   an 2-d array of csp.
- */
-typedef struct zspcell{
-    CELL(zsp*)
-}zspcell;
+typedef CELL(dsp*) spcell;
+typedef CELL(ssp*) sspcell;
+typedef CELL(csp*) cspcell;
+typedef CELL(zsp*) zspcell;
+
+typedef CELL(void*) cell;
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
@@ -201,7 +117,7 @@ typedef struct zspcell{
 */
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
-    MAT(double)
+    ARR(double);
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x*/
@@ -217,7 +133,7 @@ typedef struct map_t{
    Map with different x/y sampling. Can be cased to dmat
 */
 typedef struct rectmap_t{
-    MAT(double)
+    ARR(double);
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x (first dimension)*/
@@ -252,6 +168,7 @@ typedef struct locstatcol_t{
 
 /**
    Stores array of locstatcol_t
+
 */
 typedef struct locstat_t{
     locstatcol_t *cols; /**<Information about each column*/
@@ -266,6 +183,7 @@ typedef struct locstat_t{
    Struct for coordinates like plocs, xloc, aloc etc.
 */
 typedef struct loc_t{
+    long id;
     double *restrict locx;  /**< x coordinates of each point*/
     double *restrict locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
@@ -281,6 +199,7 @@ typedef struct loc_t{
    cast to loc_t
 */
 typedef struct pts_t{
+    long id;
     double *restrict origx; /**<The x origin of each subaperture*/
     double *restrict origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
@@ -295,13 +214,6 @@ typedef struct pts_t{
     double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
     int nx;        /**<number points in each col or row per subaperture*/
 }pts_t;
-
-/**
-   Cell of anything
-*/
-typedef struct cell{
-    CELL(void*)
-}cell;
 
 #define AOS_CMAT(A) c##A
 #define AOS_CSP(A)  c##A

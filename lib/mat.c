@@ -48,6 +48,7 @@
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     if(!nx || !ny) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
+    out->id=M_T;
     out->nx=nx;
     out->ny=ny;
     if(ref){/*the data does not belong to us. */
@@ -159,7 +160,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	if(nx*ny>A->nx*A->ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
-    }else{
+    }else{/*copy memory to preserve data*/
 	T *p=calloc(nx*ny,sizeof(T));
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;

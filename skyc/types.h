@@ -48,8 +48,9 @@ typedef struct POWFS_S{
    Struct for pixel intensity statistics*/
 typedef struct PISTAT_S{
     dcell *psf;        /**<short exposure PSF*/
-    dmat *grad;        /**<gradient in the averaged short exposure PSF*/
-    dcell *gnea;       /**<variance of grad due to uncorrected atmosphere, to be added to sanea in servo optimization.*/
+    //dmat *grad;        /**<gradient in the averaged short exposure PSF*/
+    dcell *neaspec;
+    //dcell *gnea;       /**<variance of grad due to uncorrected atmosphere, to be added to sanea in servo optimization.*/
     dcell *i0;         /**<normalized pixel intensity, doesn't contain siglev*/
     dcell *gx;         /**<gradient of i0*/
     dcell *gy;         /**<gradient of i0*/
@@ -176,5 +177,6 @@ typedef struct SIM_S{
     dmat *sdecoeff;    /**<sde coefficient*/
     dcell *psdi;        /**<PSD of each mode computed from time series*/
     dcell **nonlin;     /**<nonlinearity*/
+    dmat *neaspec_dtrats;
 }SIM_S;
 #endif

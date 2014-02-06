@@ -119,6 +119,7 @@ void rectmapfree_do(rectmap_t *map){
 */
 loc_t *locnew(long nloc,double dx, double dy){
     loc_t *loc=calloc(1, sizeof(loc_t));
+    loc->id=M_LOC64;
     loc->locx=calloc(nloc, sizeof(double));
     loc->locy=calloc(nloc, sizeof(double));
     loc->nloc=nloc;
@@ -131,6 +132,7 @@ loc_t *locnew(long nloc,double dx, double dy){
 */
 pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy){
     pts_t *pts=calloc(1, sizeof(pts_t));
+    pts->id=M_LOC64;
     pts->origx=calloc(nsa, sizeof(double));
     pts->origy=calloc(nsa, sizeof(double));
     pts->dsa=dsax;
@@ -253,10 +255,7 @@ loc_t* map2loc(map_t *map){
     const long ny=map->ny;
     PDMAT((dmat*)map,map0);
     long ix,iy;
-    loc_t *loc=calloc(1,sizeof(loc_t));;
-    loc->locx=malloc(sizeof(double)*nx*ny);
-    loc->locy=malloc(sizeof(double)*nx*ny);
-
+    loc_t *loc=locnew(nx*ny, dx, dy);
     long count=0;
     for(iy=0; iy<ny; iy++){
 	for(ix=0; ix<nx; ix++){
@@ -270,9 +269,6 @@ loc_t* map2loc(map_t *map){
     loc->locx=realloc(loc->locx, sizeof(double)*count);
     loc->locy=realloc(loc->locy, sizeof(double)*count);
     loc->nloc=count;
-    loc->dx=dx;
-    loc->dy=dy;
-    loc->map=NULL;
     return loc;
 }
 /**
@@ -319,12 +315,8 @@ long *d2embed(dmat *map){
    Create 1 dimensional loc with given vector.
 */
 loc_t *mk1dloc_vec(double *x, long nx){
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    loc->nloc=nx;
-    loc->dx=(x[nx-1]-x[0])/(nx-1);
-    loc->dy=loc->dx;
-    loc->locx=malloc(sizeof(double)*nx);
-    loc->locy=calloc(sizeof(double),nx);
+    double dx=(x[nx-1]-x[0])/(nx-1);
+    loc_t *loc=locnew(nx, dx, dx);
     memcpy(loc->locx, x, sizeof(double)*nx);
     return loc;
 }
@@ -332,12 +324,7 @@ loc_t *mk1dloc_vec(double *x, long nx){
    Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.
 */
 loc_t *mk1dloc(double x0, double dx, long nx){
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    loc->nloc=nx;
-    loc->dx=dx;
-    loc->dy=dx;
-    loc->locx=malloc(sizeof(double)*nx);
-    loc->locy=calloc(sizeof(double),nx);/*initialize to zero. */
+    loc_t *loc=locnew(nx, dx, dx);
     for(long ix=0; ix<nx; ix++){
 	loc->locx[ix]=x0+dx*ix;
     }
@@ -361,12 +348,7 @@ loc_t *mksqloc_auto(long nx, long ny, double dx, double dy){
    sampling dx, and at origin ox,oy */
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
     
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    loc->nloc=nx*ny;
-    loc->dx=dx;
-    loc->dy=dy;
-    loc->locx=malloc(sizeof(double)*loc->nloc);
-    loc->locy=malloc(sizeof(double)*loc->nloc);
+    loc_t *loc=locnew(nx*ny, dx, dy);
     long ix,iy;
     double (*locx)[nx]=(double(*)[nx])loc->locx;
     double (*locy)[nx]=(double(*)[nx])loc->locy;
@@ -385,12 +367,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
    pixel coordinates in a polar coordinate CCD.
 */
 loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, double theta){
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    loc->nloc=nx*ny;
-    loc->dx=dx;
-    loc->dy=dy;
-    loc->locx=malloc(sizeof(double)*loc->nloc);
-    loc->locy=malloc(sizeof(double)*loc->nloc);
+    loc_t *loc=locnew(nx*ny, dx, dy);
     long ix,iy;
     double (*locx)[nx]=(double(*)[nx])loc->locx;
     double (*locy)[nx]=(double(*)[nx])loc->locy;
@@ -1122,15 +1099,10 @@ void locrot(loc_t *loc, const double theta){
 /**
    duplicate a loc_t object; */
 loc_t *locdup(loc_t *loc){
-    loc_t *new=calloc(1,sizeof(loc_t));
-    new->locx=malloc(loc->nloc*sizeof(double));
-    new->locy=malloc(loc->nloc*sizeof(double));
-    new->nloc=loc->nloc;
-    new->dx=loc->dx;
-    new->dy=loc->dy;
-    memcpy(new->locx,loc->locx,sizeof(double)*loc->nloc);
-    memcpy(new->locy,loc->locy,sizeof(double)*loc->nloc);
-    return new;
+    loc_t *res=locnew(loc->nloc, loc->dx, loc->dy);
+    memcpy(res->locx,loc->locx,sizeof(double)*loc->nloc);
+    memcpy(res->locy,loc->locy,sizeof(double)*loc->nloc);
+    return res;
 }
 /**Parse string representation of polynominal to array representation.*/
 static int parse_poly(double (**pcx)[3], const char *_ps){

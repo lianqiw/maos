@@ -42,6 +42,7 @@ X(cell) *X(cellnew)(long nx, long ny){
     if(nx<0) nx=0;
     if(ny<0) ny=0;
     dc=calloc(1, sizeof(X(cell)));
+    dc->id=MCC_ANY;
     dc->nx=nx;
     dc->ny=ny;
     dc->p=calloc(nx*ny, sizeof(void*));

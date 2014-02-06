@@ -120,6 +120,8 @@ typedef struct SKYC_S{
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
     double *telthruput;/**<Telescope throughput at each wvl*/
     double *qe;      /**<quantum efficiency at each wvl.*/
+    double wvlmean;  /**<Mean wavelength*/
+    dmat *wvlwt;     /**<Weight for each wavelength*/
     int ngsalign;    /**<align NGS to the grid.*/
     int limitnstep;  /**<Limit the number of steps in each simulation*/
     int evlstart;    /**<time step to start evaluate performance*/
@@ -131,6 +133,9 @@ typedef struct SKYC_S{
     int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/
     int ndtrat;      /**<number of dtrat*/
     int *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
+    dmat *dtratsd;
+    int ndtrat_mr;
+    int *dtrats_mr;
     double *fss;     /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/

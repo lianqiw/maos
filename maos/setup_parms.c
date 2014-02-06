@@ -406,10 +406,13 @@ static void readcfg_powfs(PARMS_T *parms){
 	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, parms->powfs[ipowfs].fieldstop);
 	}
 	/*Senity check pixtheta*/
-	if(parms->powfs[ipowfs].pixtheta<0 || parms->powfs[ipowfs].pixtheta<1e-4){
-	    error("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+	if(parms->powfs[ipowfs].pixtheta<0){
+	    error("powfs%d: pixtheta should not be negative\n", ipowfs);
+	}else if(parms->powfs[ipowfs].pixtheta<1e-4){
+	    warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+	}else{
+	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
 	}
-	parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
 	parms->powfs[ipowfs].fieldstop/=206265.;
 	if(parms->powfs[ipowfs].dither){
 	    parms->powfs[ipowfs].dither_amp*=parms->powfs[ipowfs].pixtheta;

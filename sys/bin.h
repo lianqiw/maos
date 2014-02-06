@@ -47,14 +47,17 @@
 #define M_INT16  0x640B  /*int 16 array */
 
 #define M_SSP64  0x6430  /*single precision float + int64 */
-#define M_SSP32  0x6431  /*single precision float + int 32 */
+#define M_SSP32  0x6431  /*single precision float + int32 */
 #define M_ZSP64  0x6432  /*single precision complex + int64 */
 #define M_ZSP32  0x6433  /*single precision complex + int32 */
 
-/*The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type */
+/*The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type for storage */
 #define MCC_ANY  0x6421  /*cell of any thing */
 #define M_HEADER 0x6500  /*header. */
 #define M_SKIP   0x6600  /*the padding of magic number. */
+
+#define M_LOC64  0x6701  /*loc_t with double data*/
+
 #define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
 #define USE_ZLIB_H 0

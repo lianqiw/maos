@@ -1,6 +1,5 @@
 #include "random.h"
-#include <mex.h>
-#include <math.h>
+#include "interface.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
