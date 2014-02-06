@@ -45,7 +45,7 @@ class cumat{
 	if(nref){
 	    nref[0]--;
 	    if(nref[0]==0){
-		cudaFree(p);
+		DO(cudaFree(p));
 		delete nref;
 		if(header) free(header);
 	    }else if(nref[0]<0){

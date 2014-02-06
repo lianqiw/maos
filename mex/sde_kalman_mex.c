@@ -35,7 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->Qn));
     mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->Rn));
     mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->M));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(kalman->P));
+    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(kalman->P));
     mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_DTHI]));
     mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_DTRAT]));
     mxSetFieldByNumber(plhs[0], 0, pos++, mxDuplicateArray(prhs[P_GWFS]));

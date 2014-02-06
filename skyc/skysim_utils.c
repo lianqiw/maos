@@ -399,17 +399,17 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    kalman_output(kalman, &mreal, 0, 1);
 	}
 	if(kalman){//multirate
-	    int active_wfs=0;
+	    int indk=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		int dtrati=(dtrats?(int)dtrats->p[iwfs]:dtratc);
 		if((istep+1) % dtrati==0){
-		    active_wfs++;
+		    indk|=1<<iwfs;
 		    dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
 		    dzero(mpsol->p[iwfs]);
 		}
 	    }
-	    if(active_wfs){
-		kalman_update(kalman, gradout->m, active_wfs-1);
+	    if(indk){
+		kalman_update(kalman, gradout->m, indk);
 	    }
 	}else{
 	    if(st2t){

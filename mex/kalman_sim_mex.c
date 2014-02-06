@@ -21,7 +21,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     kalman->AdM=mx2d(mxGetField(prhs[P_KALMAN],0,"AdM"));
     kalman->FdM=mx2d(mxGetField(prhs[P_KALMAN],0,"FdM"));
     kalman->M=mx2dcell(mxGetField(prhs[P_KALMAN],0,"M"));
-    kalman->P=mx2dcell(mxGetField(prhs[P_KALMAN],0,"P"));
+    kalman->P=mx2d(mxGetField(prhs[P_KALMAN],0,"P"));
     kalman->dthi=(double)mxGetScalar(mxGetField(prhs[P_KALMAN],0,"dthi"));
     kalman->dtrat=mx2d(mxGetField(prhs[P_KALMAN],0,"dtrat"));
     kalman->Gwfs=mx2dcell(mxGetField(prhs[P_KALMAN],0,"Gwfs"));

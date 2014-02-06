@@ -145,25 +145,20 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	long nxn=parms->atm.nxn;
 	long nyn=parms->atm.nyn;
 	
-	long avail_min=0, avail_max=0;
+	long avail_min=LONG_MAX, avail_max=0;
 	for(int igpu=0; igpu<NGPU; igpu++){
 	    gpu_set(igpu);
 	    long availi=gpu_get_mem();
-	    if(igpu==0){
+	    if(avail_min>availi){
 		avail_min=availi;
+	    }
+	    if(avail_max<availi){
 		avail_max=availi;
-	    }else{
-		if(avail_min>availi){
-		    avail_min=availi;
-		}
-		if(avail_max<availi){
-		    avail_max=availi;
-		}
 	    }
 	}
 	long spare=300*1024*1024;
 	long need=spare+nps*sizeof(float)*nxn*nyn;
-	info2("Available memory is %ld (min) %ld (max). Min atm is %ldx%ld, need %ld\n", avail_min, avail_max, nxn, nyn, need);
+	info2("Available memory is %ld (min) %ld (max) MB. Min atm is %ldx%ld, need %ld\n", avail_min>>20, avail_max>>20, nxn, nyn, need);
 	if(avail_min<need){
 	    if(avail_max<need){
 		error("ALL GPUs does not have enough memory\n");
@@ -250,7 +245,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
 	for(int ips=0; ips<nps; ips++){
 	    if(next_atm[ips]){
-		cudaFreeHost(next_atm[ips]);
+		free(next_atm[ips]);
 		next_atm[ips]=NULL;
 	    }
 	    next_isim[ips]=isim;/*right now. */
@@ -272,7 +267,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	  stored in file.*/
 	if(isim>next_isim[ips]-100 && !next_atm[ips]){
 	    /*pinned memory is faster for copying to GPU. */
-	    cudaMallocHost(&(next_atm[ips]), sizeof(float)*nx0*ny0);
+	    next_atm[ips]=(float*)malloc(sizeof(float)*nx0*ny0);
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
 	    int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
@@ -306,14 +301,13 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
 		DO(cudaMemcpy(cuatm[ips].p, (float*)next_atm[ips],
-			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+			      nx0*ny0*sizeof(float), cudaMemcpyDefault));
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
 		     isim, ips, nx0, ny0, im, offx, offy);tic;
 	    }/*for im */
-	    cudaFreeHost(next_atm[ips]);
-	    next_atm[ips]=NULL;
+	    free(next_atm[ips]);
 	    /*Update next_isim. */
 	    long isim1, isim2;
 	    if(fabs(atm[ips]->vx)<EPS){

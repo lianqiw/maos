@@ -477,13 +477,13 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 	    idtrat=idtrat_limit;
 	}
 	if(iwfs>0){
-	    if(idtrat<aster->idtrats->p[iwfs-1]){
+	    if(idtrat<aster->idtrats->p[0]){
 		while(idtrat >-1 && (int)parms->skyc.dtrats[idtrat]
-		      % (int)aster->dtrats->p[iwfs-1]!=0){
+		      % (int)aster->dtrats->p[0]!=0){
 		    idtrat--;
 		}
-	    }else if(idtrat>aster->idtrats->p[iwfs-1]){
-		idtrat=aster->idtrats->p[iwfs-1];
+	    }else if(idtrat>aster->idtrats->p[0]){
+		idtrat=aster->idtrats->p[0];
 	    }
 	}
 	if(idtrat==-1){//star not usable/

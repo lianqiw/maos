@@ -284,7 +284,7 @@ static void test_kalman(){
     dwrite(k->Ad, "mex_Ad");
     dcellwrite(k->Cd, "mex_Cd");
     dcellwrite(k->M, "mex_M");
-    dcellwrite(k->P, "mex_P");
+    dwrite(k->P, "mex_P");
     rand_t rstat; seed_rand(&rstat, 1);
     //dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
     dmat *ts=dread("ts");
@@ -301,7 +301,7 @@ static void test_reccati(){
     dmat *C=dread("test_C");
     dmat *Rn=dread("test_Rn");
     dmat *M=0, *P=0;
-    reccati(&M, &P, A, Qn, C, Rn);
+    M=reccati(&P, A, Qn, C, Rn);
     dwrite(M, "test_M");
     dwrite(P, "test_P");
     exit(0);
