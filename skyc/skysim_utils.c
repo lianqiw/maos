@@ -275,7 +275,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    dcp(&gradout->p[iwfs], zgradc->p[iwfs]);
 		    if(noisy){
 			int idtrati=(dtrats?(int)aster->idtrats->p[iwfs]:idtratc);
-			dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
+			dmat *nea=aster->wfs[iwfs].pistat->sanea0->p[idtrati];
 			for(int i=0; i<nea->nx; i++){
 			    gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
 			}
@@ -409,7 +409,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		}
 	    }
 	    if(indk){
-		kalman_update(kalman, gradout->m, indk);
+		kalman_update(kalman, gradout->m, indk-1);
 	    }
 	}else{
 	    if(st2t){

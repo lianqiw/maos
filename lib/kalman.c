@@ -229,18 +229,14 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
     dmat *AP=0, *CP=0, *P=0, *CPAt=0, *CPCt=0, *APCt=0, *tmp=0;
     int count=0;
-    int ik=0;
+    int ik=-1;
     int nk=Cs->nx;
     while(diff>1e-13 && diff2>1e-12 && count++<1000){
-	while(!Cs->p[ik]){
-	    ik=(ik+1);
-	    if(ik>=nk){
-		ik=0;
-	    }
-	}
+	do{
+	    ik=(ik+1)%nk;
+	}while(!Cs->p[ik]);
 	dmat *C=Cs->p[ik];
 	dmat *Rn=Rns->p[ik];
-	ik++;
 	RECCATI_CALC;
 	diff=dnorm2(P);
 	dadd(&P, 1, P2, -1);
@@ -264,12 +260,12 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
 }
 
 /*Kalman filter based on SDE model*/
-kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
+kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 		     double dthi, /**<Loop frequency*/
-		     dmat *dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
-		     dcell *Gwfs,  /**<WFS measurement from modes. Can be identity*/
-		     dcell *Rwfs,  /**<WFS measurement noise covariance*/
-		     dmat *Proj   /**<Project modes in statespace to DM/correction space*/){
+		     const dmat *dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
+		     const dcell *Gwfs,  /**<WFS measurement from modes. Can be identity*/
+		     const dcell *Rwfs,  /**<WFS measurement noise covariance*/
+		     const dmat *Proj   /**<Project modes in statespace to DM/correction space*/){
     int nblock=coeff->ny;
     int order=coeff->nx-1;
     /*Ac is block diagonal matrix for continuous domain state evolution. 
@@ -305,9 +301,7 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
     dfree(Pd0);
     dmat *AcI=ddup(Ac); 
     dsvd_pow(AcI, -1, 0);
-    //make sure dtrat_wfs is column vector
-    dtrat_wfs->nx=dtrat_wfs->nx*dtrat_wfs->ny; 
-    dtrat_wfs->ny=1;
+    if(dtrat_wfs->ny!=1) error("dtrat_wfs should be column vector\n");
     const int nwfs=Gwfs->nx;
     int ndtrat=0;
     dmat *dtrats=dnew(nwfs, 1);//unique dtrats
@@ -397,8 +391,7 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
 	dfree(XiM);
 	dfree(tmp);
     }
-    int nkalman=1<<(dtrat_wfs->nx);
-    int dtrats_kalman[nkalman];
+    int nkalman=(1<<(dtrat_wfs->nx))-1;
     kalman_t *res=calloc(1, sizeof(kalman_t));
     res->Ad=Ad;
     res->AdM=AdM;
@@ -420,7 +413,7 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
 		indk|=1<<iwfs;/*this is how we compute the index into kalman*/
 	    }
 	}
-	if(indk && !res->Cd->p[indk]){
+	if(indk && !res->Cd->p[indk-1]){
 	    dcell *Rnadd=dcellnew(nwfs, 1);
 	    dcell *Cd=dcellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -446,18 +439,31 @@ kalman_t* sde_kalman(dmat *coeff, /**<SDE coefficients*/
 		    }
 		}
 	    }
-	
-	    dcell *Rn=dcelldup(Rwfs);
+	    dcell *Rn=0;
 	    /*compute Rn=Rwfs+Gwfs*Radd*Gwfs' */
 	    dcellmm(&Rn, Rnadd, Rnadd, "nt", 1);
-	    res->Rn->p[indk]=dcell2m(Rn);
-	    res->Cd->p[indk]=dcell2m(Cd);
+	    dcelladd(&Rn, 1, Rwfs, 1);
+	    res->Rn->p[indk-1]=dcell2m(Rn);
+	    res->Cd->p[indk-1]=dcell2m(Cd);
 	    dcellfree(Cd);
 	    dcellfree(Rnadd);
 	    dcellfree(Rn);
 	}
     }
     res->M=reccati_cell(&res->P, Ad, res->Qn, res->Cd, res->Rn);
+    /*{
+	int pid=(int)getpid();
+	info("dthi=%g\n", dthi);
+	dwrite(coeff, "kalman_coeff_%d", pid);
+	dwrite(dtrat_wfs, "kalman_dtrat_wfs_%d", pid);
+	dcellwrite(Gwfs, "kalman_Gwfs_%d", pid);
+	dcellwrite(Rwfs, "kalman_Rwfs_%d", pid);
+	dwrite(Proj, "kalman_Proj_%d", pid);
+	dwrite(Ad, "kalman_Ad_%d", pid);
+	dwrite(res->Qn, "kalman_Qn_%d", pid);
+	dcellwrite(res->Cd, "kalman_Cd_%d", pid);
+	dcellwrite(res->Rn, "kalman_Rn_%d", pid);
+	}*/
     {
 	/*convert estimation error in modes */
 	dmat *tmp1=0;
@@ -583,7 +589,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
 	    }
 	}
 	if(indk){
-	    kalman_update(kalman, meas->m, indk);
+	    kalman_update(kalman, meas->m, indk-1);
 	}
 	dcellmm(&acc, Gwfs, inic, "nn", 1);/*OL measurement*/
     }

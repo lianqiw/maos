@@ -24,7 +24,8 @@ typedef struct{
 }kalman_t;
 dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
-kalman_t* sde_kalman(dmat *coeff, double dthi, dmat* dtrat, dcell *Gwfs, dcell *Rwfs, dmat *Proj);
+kalman_t* sde_kalman(const dmat *coeff, double dthi, const dmat* dtrat, 
+		     const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 void kalman_free(kalman_t *kalman);
 dmat *kalman_test(kalman_t *kalman, dmat *input);
 void kalman_init(kalman_t *kalman);

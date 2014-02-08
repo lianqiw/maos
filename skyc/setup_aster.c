@@ -469,6 +469,9 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
     }
 }
 static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_limit){
+    if(parms->skyc.verbose){
+	info2("aster %d idtrat_limit=%d, idtrat=", aster->iaster, idtrat_limit);
+    }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int istar=aster->wfs[iwfs].istar;
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -502,7 +505,7 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 	    dset(aster->neam[0]->p[iwfs+aster->nwfs*iwfs], 0);
 	}
 	if(parms->skyc.verbose){
-	    info2("idtrat_limit=%d, idtrat[%d]=%d\n", idtrat_limit, iwfs, idtrat);
+	    info2("%d ", idtrat);
 	}
     }//for iwfs
 }
@@ -530,43 +533,48 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	for(int idtrat_limit=idtrat_wfs0; idtrat_limit>=0; idtrat_limit--){
 	    setup_aster_kalman_dtrat(aster, star, parms, idtrat_limit);
 	    aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam[0], 0);
-#if 0
 	    dmat *rests=0;
+#if 1   //more accurate
 	    dmat *res=skysim_phy(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->rmsol,
 				 aster, 0, parms, -1, 1, -1);
 	    double res0=res->p[0];
-	    dfree(rests);
 	    dfree(res);
 #else
-	    dmat *rest=kalman_test(aster->kalman[0], simu->mideal);
-	    double res0=calc_rms(rest, parms->maos.mcc, parms->skyc.evlstart);
-	    dfree(rest);
+	    rests=kalman_test(aster->kalman[0], simu->mideal);
+	    double res0=calc_rms(rests, parms->maos.mcc, parms->skyc.evlstart);
 #endif
+	    if(parms->skyc.dbg){
+		dwrite(rests, "isky%d_iaster%d_dtrat%d_rest", simu->isky, aster->iaster, idtrat_limit);
+	    }
+	    if(parms->skyc.verbose) info2("res0=%g, resmin=%g\n", sqrt(res0)*1e9, sqrt(resmin)*1e9);
+	    /*if(parms->skyc.dbg){
+		int iaster=aster->iaster;
+		dwrite(simu->sdecoeff, "%s/aster%d_coeff", dirsetup, iaster);
+		dwrite(aster->dtrats, "%s/aster%d_dtrats", dirsetup,iaster);
+		dcellwrite(aster->g, "%s/aster%d_Gwfs", dirsetup,iaster);
+		dcellwrite(aster->neam[0], "%s/aster%d_Rwfs", dirsetup,iaster);
+		dwrite(simu->mideal, "%s/mideal",dirsetup);
+		dcellwrite(aster->kalman[0]->M, "%s/aster%d_kalman_M", dirsetup,iaster);
+		dwrite(aster->kalman[0]->P, "%s/aster%d_kalman_P", dirsetup,iaster);
+		dwrite(rests,  "%s/aster%d_res",dirsetup, iaster);
+		exit(0);
+		}*/
+	    dfree(rests);
 	    if(res0<resmin){
-		if(parms->skyc.verbose) info("res0=%g, resmin=%g\n", res0, resmin);
 		resmin=res0;
 		kalman_free(kalman_min);
-		kalman_min=aster->kalman[0];aster->kalman[0]=0;
+		kalman_min=aster->kalman[0];
+		aster->kalman[0]=0;
 		idtrat_min=idtrat_limit;
 	    }else{
 		kalman_free(aster->kalman[0]);aster->kalman[0]=0;
-		if(isfinite(resmin)){//stop trying.
+		if(isfinite(resmin) && res0>resmin*2){//stop trying.
 		    break;
 		}
 	    }
-
-	    /*if(parms->skyc.dbg){
-	      int iaster=aster->iaster;
-	      dwrite(simu->sdecoeff, "%s/aster%d_coeff", dirsetup, iaster);
-	      dwrite(aster->dtrats, "%s/aster%d_dtrats", dirsetup,iaster);
-	      dcellwrite(aster->g, "%s/aster%d_Gwfs", dirsetup,iaster);
-	      dcellwrite(aster->neam[0], "%s/aster%d_Rwfs", dirsetup,iaster);
-	      dwrite(simu->mideal, "%s/mideal",dirsetup);
-	      dcellwrite(aster->kalman[0]->M, "%s/aster%d_kalman_M", dirsetup,iaster);
-	      dwrite(rests,  "%s/aster%d_res",dirsetup, iaster);
-	      }*/
 	}
 	setup_aster_kalman_dtrat(aster, star, parms, idtrat_min);
+	if(parms->skyc.verbose) info2("selected\n");
 	aster->res_ngs->p[0]=resmin;
 	aster->kalman[0]=kalman_min;
     }else{
@@ -646,42 +654,44 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    master=iaster;
 	    minimum=mini;
 	}
-	if(!parms->skyc.multirate && aster[iaster].mdtrat!=-1){
-	    if(parms->skyc.maxdtrat>1){
-		/*This is variance. allow a threshold */
-		double thres=mini*3;
-		double thres2=mini*3;
-		if(thres>maxerror) thres=maxerror;
-		if(thres2>maxerror) thres2=maxerror;
-		/*Find upper and minimum good dtrats. */
-		//MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1)
-		for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
-		    if(pres[iaster][idtrat]<thres){
-			aster[iaster].idtratmax=idtrat+1;
-		    }else{
-			break;
+	if(!parms->skyc.multirate){
+	    if(aster[iaster].mdtrat!=-1){
+		if(parms->skyc.maxdtrat>1){
+		    /*This is variance. allow a threshold */
+		    double thres=mini*3;
+		    double thres2=mini*3;
+		    if(thres>maxerror) thres=maxerror;
+		    if(thres2>maxerror) thres2=maxerror;
+		    /*Find upper and minimum good dtrats. */
+		    //MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1)
+		    for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
+			if(pres[iaster][idtrat]<thres){
+			    aster[iaster].idtratmax=idtrat+1;
+			}else{
+			    break;
+			}
 		    }
-		}
-		//MAX(aster[iaster].mdtrat-dtrat_h, 0)
-		for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
-		    if(pres[iaster][idtrat]<thres2){
-			aster[iaster].idtratmin=idtrat;
-		    }else{
-			break;
+		    //MAX(aster[iaster].mdtrat-dtrat_h, 0)
+		    for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
+			if(pres[iaster][idtrat]<thres2){
+			    aster[iaster].idtratmin=idtrat;
+			}else{
+			    break;
+			}
 		    }
+		    /*prefer low frame rate to have good S/N*/
+		    if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat+1){
+			aster[iaster].idtratmax=aster[iaster].idtratmin+parms->skyc.maxdtrat+1;
+			/*int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
+			  int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
+			  int max2=floor(mid+parms->skyc.maxdtrat*0.5);
+			  aster[iaster].idtratmin=min2;
+			  aster[iaster].idtratmax=max2;*/
+		    }
+		}else{
+		    aster[iaster].idtratmin=aster[iaster].mdtrat;
+		    aster[iaster].idtratmax=aster[iaster].idtratmin+1;
 		}
-		/*prefer low frame rate to have good S/N*/
-		if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat+1){
-		    aster[iaster].idtratmax=aster[iaster].idtratmin+parms->skyc.maxdtrat+1;
-		    /*int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
-		    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
-		    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
-		    aster[iaster].idtratmin=min2;
-		    aster[iaster].idtratmax=max2;*/
-		}
-	    }else{
-		aster[iaster].idtratmin=aster[iaster].mdtrat;
-		aster[iaster].idtratmax=aster[iaster].idtratmin+1;
 	    }
 	}else{//multirate
 	    aster[iaster].mdtrat=aster[iaster].idtrats->p[0];
@@ -696,7 +706,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
     }
     qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
     result[0]=minimum;
-    result[1]=parms->skyc.fss[aster[master].mdtrat];
+    if(aster[master].mdtrat!=-1){
+	result[1]=parms->skyc.fss[aster[master].mdtrat];
+    }
     int count=0;
     if(minimum<maxerror){
 	double thres=MIN(minimum*3, maxerror);

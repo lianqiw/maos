@@ -55,18 +55,30 @@ X(cell) *X(cellnew)(long nx, long ny){
 X(cell) *X(cellnew2)(const X(cell) *A){
     X(cell) *out=X(cellnew)(A->nx, A->ny);
     long tot=0;
+    int make_m=1;//Create m.
     for(long i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
 	    tot+=A->p[i]->nx*A->p[i]->ny;
+	}else{
+	    make_m=0;//There is missing cell. Do not create m to avoid memory corruption.
+	    break;
 	}
     }
-    out->m=X(new)(tot,1);
-    tot=0;
-    for(int i=0; i<A->nx*A->ny; i++){
-	if(A->p[i]){
-	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
-	    tot+=A->p[i]->nx*A->p[i]->ny;
+    if(make_m){
+	out->m=X(new)(tot,1);
+	tot=0;
+	for(int i=0; i<A->nx*A->ny; i++){
+	    if(A->p[i]){
+		out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
+		tot+=A->p[i]->nx*A->p[i]->ny;
+	    }
 	}
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    if(A->p[i]){
+		out->p[i]=X(new)(A->p[i]->nx, A->p[i]->ny);
+	    }
+	}	
     }
     return out;
 }

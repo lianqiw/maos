@@ -330,7 +330,6 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		mtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
 		     i0s, gxs, gys, pixtheta, rnefs[ipowfs][idtrat], 
 		     star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
-		dcp(&pistat->sanea0->p[idtrat], pistat->sanea->p[idtrat]);
 		/*Add nolinearity*/
 		if(nonlin){
 		    //add linearly not quadratically since the errors are related.
@@ -343,6 +342,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    }
 		    dfree(nea_nonlin);
 		}
+		dcp(&pistat->sanea0->p[idtrat], pistat->sanea->p[idtrat]);
 		if(parms->skyc.neaaniso){
 		    for(int i=0; i<nsa*2; i++){
 			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)
@@ -353,7 +353,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
 		}
-#if 0
+#if 1
 		double nea=sqrt(dnorm2(pistat->sanea->p[idtrat])/(nsa*2));
 #else
 		double nea=dmax(pistat->sanea->p[idtrat]);
