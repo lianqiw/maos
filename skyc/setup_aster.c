@@ -560,7 +560,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		exit(0);
 		}*/
 	    dfree(rests);
-	    if(res0<resmin){
+	    if(res0<sqrt(resmin*resmin-400)){//better by 20 nm
 		resmin=res0;
 		kalman_free(kalman_min);
 		kalman_min=aster->kalman[0];
@@ -601,9 +601,16 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    }
 	    aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, aster->neam[idtrat], 0);
 	    dfree(dtrats);
-	    dmat *res=kalman_test(aster->kalman[idtrat], simu->mideal);
-	    pres_ngs[0][idtrat]=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
+#if 1
+	    dmat *res=skysim_phy(0, simu->mideal, simu->mideal_oa, simu->rmsol, aster, 0, parms, idtrat, 1, -1);
+	    double rms=res?res->p[0]:simu->rmsol;
 	    dfree(res);
+#else
+	    dmat *res=kalman_test(aster->kalman[idtrat], simu->mideal);
+	    double rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
+	    dfree(res);
+#endif
+	    pres_ngs[0][idtrat]=rms;
 	}
     }
 }
@@ -703,6 +710,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		 iaster, aster[iaster].idtratmin, aster[iaster].idtratmax, 
 		 aster[iaster].mdtrat, sqrt(mini)*1e9);
 	}
+    }
+    if(parms->skyc.dbgsky>-1){
+	dwrite(imin, "sky%d_imin", parms->skyc.dbgsky);
     }
     qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
     result[0]=minimum;

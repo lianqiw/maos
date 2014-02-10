@@ -359,7 +359,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		double nea=dmax(pistat->sanea->p[idtrat]);
 #endif
 		double snr=sigma_theta/nea;
-		if(parms->skyc.verbose) info2("idtrat=%d, nea=%g, snr=%g\n", idtrat, nea*206265000, snr);
+		if(parms->skyc.verbose) info2("dtrat=%d, nea=%g, snr=%g\n", parms->skyc.dtrats[idtrat], nea*206265000, snr);
 		if(snr>parms->skyc.snrmin 
 		   && ((int)star[istar].idtrat->p[ipowfs]==-1 
 		   || dtrat<=parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){

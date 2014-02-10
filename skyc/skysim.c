@@ -307,10 +307,9 @@ static void skysim_isky(SIM_S *simu){
 	long laps_m=simu->status->laps/60-laps_h*60;
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
-	info2("Field %3d,%2d stars,%3d aster,%3.0f Hz: %6.2f %6.2f %6.2f nm "
-	      "Sel %3.0fs Load %3.0fs Phy %3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
-	      isky, nstar, naster, simu->fss->p[isky],
-	      sqrt(pres[isky][0])*1e9, sqrt(pres[isky][1])*1e9, sqrt(pres[isky][2])*1e9,
+	info2("Field%3d,%2d stars, aster %3d of %3d,%3.0f Hz: %6.2f nm "
+	      "Sel%3.0fs Load%3.0fs Phy%3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
+	      isky, nstar, selaster, naster, simu->fss->p[isky], sqrt(pres[isky][0])*1e9,
 	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while */
 }
