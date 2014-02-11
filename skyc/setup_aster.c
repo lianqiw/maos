@@ -470,7 +470,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 }
 static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_limit){
     if(parms->skyc.verbose){
-	info2("aster %d idtrat_limit=%d, idtrat=", aster->iaster, idtrat_limit);
+	info2("aster %d idtrat_limit=%3d, idtrat=", aster->iaster, parms->skyc.dtrats[idtrat_limit]);
     }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int istar=aster->wfs[iwfs].istar;
@@ -505,7 +505,7 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 	    dset(aster->neam[0]->p[iwfs+aster->nwfs*iwfs], 0);
 	}
 	if(parms->skyc.verbose){
-	    info2("%d ", idtrat);
+	    info2("%3d ", parms->skyc.dtrats[idtrat]);
 	}
     }//for iwfs
 }
@@ -524,13 +524,21 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	}
 	aster->dtrats=dnew(aster->nwfs, 1);
 	aster->idtrats=dnew(aster->nwfs, 1);
-	int idtrat_wfs0=(int)star[aster->wfs[0].istar].idtrat->p[aster->wfs[0].ipowfs];
+	int wfs0_max=(int)star[aster->wfs[0].istar].idtrat->p[aster->wfs[0].ipowfs];
+	//DO not allow the first WFS to go below 20 Hz. won't work.
+	while(parms->skyc.dtrats[wfs0_max]>40){
+	    wfs0_max++;
+	}
+	int wfs0_min=wfs0_max;
+	while(parms->skyc.dtrats[wfs0_min]<40){
+	    wfs0_min--;
+	}
 	aster->kalman=calloc(1, sizeof(kalman_t*));
 	double resmin=INFINITY;
 	kalman_t *kalman_min=0;
 	int idtrat_min=0;
 	//Try progressively lower sampling frequencies until performance starts to degrades
-	for(int idtrat_limit=idtrat_wfs0; idtrat_limit>=0; idtrat_limit--){
+	for(int idtrat_limit=wfs0_max; idtrat_limit>wfs0_min; idtrat_limit--){
 	    setup_aster_kalman_dtrat(aster, star, parms, idtrat_limit);
 	    aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam[0], 0);
 	    dmat *rests=0;
@@ -560,7 +568,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		exit(0);
 		}*/
 	    dfree(rests);
-	    if(res0<sqrt(resmin*resmin-400)){//better by 20 nm
+	    if(res0<resmin-400e-18){//better by 20 nm
 		resmin=res0;
 		kalman_free(kalman_min);
 		kalman_min=aster->kalman[0];
@@ -706,9 +714,10 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    aster[iaster].idtratmax=aster[iaster].idtratmin+1;
 	}
 	if(parms->skyc.verbose){
-	    info2("aster%d, min=%d, max=%d, mdtrat=%d res=%g nm\n", 
-		 iaster, aster[iaster].idtratmin, aster[iaster].idtratmax, 
-		 aster[iaster].mdtrat, sqrt(mini)*1e9);
+	    info2("aster%d, dtrats=[%d, %d], best:%d res=%.1f nm\n", 
+		  iaster, parms->skyc.dtrats[aster[iaster].idtratmin], 
+		  parms->skyc.dtrats[aster[iaster].idtratmax-1], 
+		  parms->skyc.dtrats[aster[iaster].mdtrat], sqrt(mini)*1e9);
 	}
     }
     if(parms->skyc.dbgsky>-1){

@@ -146,15 +146,11 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dmat *mres=dnew(nmod,nstep);
     PDMAT(mres,pmres);
     PDMAT(parms->skyc.rnefs,rnefs);
-    dcell *gradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
     dcell *zgradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
     dcell *gradout=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
-    dmat *grad=dref(gradc->m);
-    dmat *zgrad=dref(zgradc->m);
-    dmat *grads=0, *zgrads=0;
+    dmat *gradsave=0;
     if(parms->skyc.dbg){
-	grads=dnew(aster->tsa*2,nstep);
-	zgrads=dnew(aster->tsa*2,nstep);
+	gradsave=dnew(aster->tsa*2,nstep);
     }
    
     
@@ -163,7 +159,8 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcell *mpsol=0;
     dmat *pgm=0;
     dmat *dtrats=0;
-    if(parms->skyc.multirate){
+    int multirate=parms->skyc.multirate;
+    if(multirate){
 	kalman=aster->kalman[0];
 	dtrats=aster->dtrats;
     }else{
@@ -217,7 +214,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
 	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
 	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
-	if(mpsol){
+	if(mpsol){//collect averaged modes for PSOL.
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		dadd(&mpsol->p[iwfs], 1, mreal, 1);
 	    }
@@ -226,7 +223,6 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
 	    if(res_ngs>ngsol*100){
-		//warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtratc], sqrt(res_ngs)*1e9); 
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -257,37 +253,32 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 
 	if(istep<phystart || phystart<0){
 	    /*Ztilt, noise free simulation for acquisition. */
-	    dmm(&zgrad, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
-	    int itsa=0;
+	    dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const long nsa=parms->maos.nsa[ipowfs];
 		for(long isa=0; isa<nsa*2; isa++){
-		    zgrad->p[isa+itsa]+=aster->wfs[iwfs].ztiltout->p[istep]->p[isa];
+		    zgradc->p[iwfs]->p[isa]+=aster->wfs[iwfs].ztiltout->p[istep]->p[isa];
 		}
-		itsa+=nsa*2;
 	    }
 	
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati=(dtrats?(int)dtrats->p[iwfs]:dtratc);
+		int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
 		if((istep+1) % dtrati==0){
-		    dscale(zgradc->p[iwfs], 1./dtrati);
-		    dcp(&gradout->p[iwfs], zgradc->p[iwfs]);
+		    dadd(&gradout->p[iwfs], 0, zgradc->p[iwfs], 1./dtrati);
+		    dzero(zgradc->p[iwfs]);
 		    if(noisy){
-			int idtrati=(dtrats?(int)aster->idtrats->p[iwfs]:idtratc);
-			dmat *nea=aster->wfs[iwfs].pistat->sanea0->p[idtrati];
+			int idtrati=(multirate?(int)aster->idtrats->p[iwfs]:idtratc);
+			dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
 			for(int i=0; i<nea->nx; i++){
 			    gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
 			}
 		    }
-		    dzero(zgradc->p[iwfs]);
-		    pmerrm=merrm;
+		    pmerrm=merrm;//record output.
 		}
 	    }
-	    if(parms->skyc.dbg){
-		memcpy(zgrads->p+istep*aster->tsa*2, gradout->m->p, sizeof(double)*aster->tsa*2);
-	    }
 	}else{
+	    /*Accumulate PSF intensities*/
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const double thetax=aster->wfs[iwfs].thetax;
 		const double thetay=aster->wfs[iwfs].thetay;
@@ -303,22 +294,19 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			  thetax, thetay, parms);
 			cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
 			cfft2(wvf->p[iwfs],-1);
-			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);/*peak in corner. */
+			/*peak in corner. */
+			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);
 		    }/*isa */
 		}/*iwvl */
 	    }/*iwfs */
 	
-	    /*Form detector image */
+	    /*Form detector image from accumulated PSFs*/
 	    double igrad[2];
-	    int itsa=0;
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati, idtrat;
-		if(dtrats){
+		int dtrati=dtratc, idtrat=idtratc;
+		if(multirate){//multirate
 		    idtrat=aster->idtrats->p[iwfs];
 		    dtrati=dtrats->p[iwfs];
-		}else{
-		    idtrat=idtratc;
-		    dtrati=dtratc;
 		}
 		if((istep+1) % dtrati == 0){/*has output */
 		    dcellzero(ints[iwfs]);
@@ -352,11 +340,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			default:
 			    error("Invalid noisy\n");
 			}
-			/*for(long ix=0; ix<ints[iwfs]->p[isa]->nx*ints[iwfs]->p[isa]->ny; ix++){
-			    if(ints[iwfs]->p[isa]->p[ix]<0){
-				ints[iwfs]->p[isa]->p[ix]=0;
-			    }
-			    }*/
+		
 			igrad[0]=0;
 			igrad[1]=0;
 			double pixtheta=parms->skyc.pixtheta[ipowfs];
@@ -364,8 +348,6 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
 			}
 			if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
-			    /*double imax=dmax(ints[iwfs]->p[isa]);
-			      dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); */
 			    if(!parms->skyc.mtch){
 				warning2("fall back to cog\n");
 			    }else{
@@ -375,33 +357,27 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    igrad[0]*=pixtheta;
 			    igrad[1]*=pixtheta;
 			}
-			grad->p[isa+itsa]=igrad[0];
-			grad->p[isa+nsa+itsa]=igrad[1];
+			gradout->p[iwfs]->p[isa]=igrad[0];
+			gradout->p[iwfs]->p[isa+nsa]=igrad[1];
 		    }/*isa */
-		    dcp(&gradout->p[iwfs], gradc->p[iwfs]);
 		    pmerrm=merrm;
-		    itsa+=nsa*2;
 		    dcellzero(psf[iwfs]);/*reset accumulation.*/
 		}/*if iwfs has output*/
-		
-		if(parms->skyc.dbg){
-		    memcpy(grads->p+istep*aster->tsa*2, gradout->m->p, sizeof(double)*aster->tsa*2);
-		}
 	    }/*for wfs*/
 	}/*if phystart */
-
 	//output to mreal after using it to ensure two cycle delay.
-	if(st2t){
-	    if(st2t->mint[0]){
+	if(st2t){//Type I or II control.
+	    if(st2t->mint[0]){//has output.
 		dcp(&mreal, st2t->mint[0]->p[0]);
 	    }
-	}else{
+	}else{//LQG control
 	    kalman_output(kalman, &mreal, 0, 1);
 	}
-	if(kalman){//multirate
+	if(kalman){//LQG control
 	    int indk=0;
+	    //Form PSOL grads and obtain index to LQG M
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati=(dtrats?(int)dtrats->p[iwfs]:dtratc);
+		int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
 		if((istep+1) % dtrati==0){
 		    indk|=1<<iwfs;
 		    dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
@@ -411,19 +387,19 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    if(indk){
 		kalman_update(kalman, gradout->m, indk-1);
 	    }
-	}else{
-	    if(st2t){
-		if(pmerrm){
-		    dmm(&merrm->p[0], 0, pgm, gradout->m, "nn", 1);	
-		}
-		servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
+	}else if(st2t){
+	    if(pmerrm){
+		dmm(&merrm->p[0], 0, pgm, gradout->m, "nn", 1);	
 	    }
+	    servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
+	}
+	if(parms->skyc.dbg){
+	    memcpy(gradsave->p+istep*gradsave->nx, gradout->m->p, sizeof(double)*gradsave->nx);
 	}
     }/*istep; */
     if(parms->skyc.dbg){
-	int dtrati=(dtrats?(int)dtrats->p[0]:dtratc);
-	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
-	dwrite(grads,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
+	int dtrati=(multirate?(int)dtrats->p[0]:dtratc);
+	dwrite(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
 	dwrite(mres,"%s/skysim_phy_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
     }
   
@@ -431,13 +407,9 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcellfree(mpsol);
     dfree(merr);
     dcellfree(merrm);
-    dfree(grad);
-    dfree(zgrad);
-    dcellfree(gradc);
     dcellfree(zgradc);
     dcellfree(gradout);
-    dfree(grads);/*////////////remove this dmat after debugging */
-    dfree(zgrads);/*////////////remove this dmat debugging */
+    dfree(gradsave);
     if(hasphy){
 	dcellfreearr(psf, aster->nwfs);
 	dcellfreearr(ints, aster->nwfs);

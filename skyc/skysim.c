@@ -271,7 +271,7 @@ static void skysim_isky(SIM_S *simu){
 #if _OPENMP >= 200805
 #pragma omp taskwait
 #endif
-	dset(simu->sel->p[isky], INFINITY);
+	simu->sel->p[isky]->ny=aster[selaster].nwfs;
 	PDMAT(simu->sel->p[isky],psel);
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	    psel[iwfs][0]=aster[selaster].wfs[iwfs].thetax;
