@@ -49,6 +49,7 @@ static void calc_pistat(GENPISTAT_S *data){
     }
     mymkdir("%s/pistat", dirstart);
     mymkdir("%s/neaspec", dirstart);
+    mymkdir("%s/phygrad", dirstart);
     while(LOCKADD(icase, data->icase, 1)<data->ncase)
 #if _OPENMP>=200805
 #pragma omp task default(shared) firstprivate(icase)
@@ -63,38 +64,26 @@ static void calc_pistat(GENPISTAT_S *data){
 	long ncomp=parms->maos.ncomp[ipowfs];
 	long seed=data->cases[icase][3];
 	long msa=parms->maos.msa[ipowfs];/*in 1-d */
-	const long phystart=parms->skyc.phystart;
-	char fnwvf[PATH_MAX],fnztilt[PATH_MAX], fnpistat[PATH_MAX], fngstat[PATH_MAX];
+	const long avgstart=100;
+	char fnwvf[PATH_MAX], fnpistat[PATH_MAX], fnphygrad[PATH_MAX], fnneaspec[PATH_MAX];
 	snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g",
-		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fnztilt,PATH_MAX,"%s/ztiltout/ztiltout_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
 	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fngstat,PATH_MAX,"%s/neaspec/neaspec_seed%ld_sa%ld_x%g_y%g",
+	snprintf(fnphygrad,PATH_MAX,"%s/phygrad/phygrad_seed%ld_sa%ld_x%g_y%g",
+		 dirstart,seed, msa, thetax, thetay);
+	snprintf(fnneaspec,PATH_MAX,"%s/neaspec/neaspec_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
 
-	if(zfexist(fnwvf) && (!zfexist(fnpistat) || !zfexist(fngstat))){
+	if(zfexist(fnwvf) && (!zfexist(fnpistat) || !zfexist(fnphygrad) || !zfexist(fnneaspec))){
 	    dmat *mapply=dnew(2,1);
 	    TIC;tic;
-	    if(!zfexist(fnztilt)){
-		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
-	    }
 	    file_t *fp_wvf=zfopen(fnwvf,"rb");
 	    header_t header;
 	    read_header(&header, fp_wvf);
 	    long nstep=header.nx;
 	    if(!iscell(header.magic)){
 		error("expected data type: %u, got %u\n", (uint32_t)MCC_ANY, header.magic);
-	    }
-	    free(header.str); header.str=NULL;
-	    file_t *fp_ztilt=zfopen(fnztilt,"rb");
-	    read_header(&header, fp_ztilt);
-	    if(!iscell(header.magic)){
-		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
-	    } 
-	    if(nstep!=header.nx){
-		error("length of wvfout doesn't equal to length of ztiltout\n");
 	    }
 	    free(header.str); header.str=NULL;
 	    const int nsa=msa*msa;
@@ -108,17 +97,17 @@ static void calc_pistat(GENPISTAT_S *data){
 	    for(long ig=0; ig<2*nsa*nwvl; ig++){
 		neaspec->p[ig]=dnew(ndtrat, 1);
 	    }
-	    //dmat *gstat=dnew(nsa*2, nstep);/*original gradient at each time step. */
+	    dmat *phygrad=dnew(nsa*2, nstep);/*original gradient at each time step. */
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=NULL;
 	    cfft2plan(wvf,-1);
 	    PDCELL(pistat, ppistat);
-	    //PDMAT(gstat, pgstat);
+	    PDMAT(phygrad, pphygrad);
 	    cmat *otf=cnew(ncomp,ncomp);
 	    cfft2plan(otf,1);
 	    cfft2plan(otf,-1);
 	    dmat *psf=NULL;
-	    //double nwvli=1./(nwvl);
+	    double nwvli=1./(nwvl);
 	    double dtheta[nwvl];
 	    const int embfac=parms->maos.embfac[ipowfs];
 	    const double dxsa=parms->maos.dxsa[ipowfs];
@@ -131,76 +120,70 @@ static void calc_pistat(GENPISTAT_S *data){
 	    for(long istep=0; istep<nstep; istep++){
 		LOCK(data->mutex_read);
 		ccell *wvfi=ccellreaddata(fp_wvf, 0);
-		dmat *ztilti=dreaddata(fp_ztilt, 0);
 		UNLOCK(data->mutex_read);
 		PCCELL(wvfi,wvfout);
-		if(istep>=phystart){
-		    for(long iwvl=0; iwvl<nwvl; iwvl++){
-			double wvl=parms->maos.wvl[iwvl];
-			for(long isa=0; isa<nsa; isa++){
-			    //first compute PSF from WVF and compute CoG
-			    ccp(&wvfc, wvfout[iwvl][isa]);
-			    cembed(wvf,wvfc,0,C_FULL);
-			    cfft2(wvf,-1);
-			    cabs22d(&psf, 0, wvf, 1);//peak in corner.
-			    dfftshift(psf);//peak in center
+		for(long iwvl=0; iwvl<nwvl; iwvl++){
+		    double wvl=parms->maos.wvl[iwvl];
+		    for(long isa=0; isa<nsa; isa++){
+			//first compute PSF from WVF and compute CoG
+			ccp(&wvfc, wvfout[iwvl][isa]);
+			cembed(wvf,wvfc,0,C_FULL);
+			cfft2(wvf,-1);
+			cabs22d(&psf, 0, wvf, 1);//peak in corner.
+			dfftshift(psf);//peak in center
 			    
-			    int nframe=istep-phystart+1;
-			    for(int idtrat=0; idtrat<ndtrat; idtrat++){
-				dmat **pavgpsf=&avgpsf[iwvl]->p[idtrat+isa*ndtrat];
-				dadd(pavgpsf, 1, psf, 1);
-				/*if(nframe==dtrats->p[ndtrat-1]){
-				  dwrite(*pavgpsf, "avgpsf_wvl%ld_isa%ld_idtrat%d", iwvl, isa, idtrat);
-				  if(idtrat+1==ndtrat && isa+1==nsa && iwvl+1==nwvl) exit(0);
-				  }*/
-				if(nframe%(int)dtrats->p[idtrat]==0){
-				    double grad[2]={0,0};
-				    double pmax=dmax(*pavgpsf);
-				    dcog(grad,*pavgpsf,0.5, 0.5, 0.4*pmax, 0.2*pmax);
-				    dzero(*pavgpsf);
-				    neaspec->p[isa+iwvl*nsa*2]->p[idtrat]+=pow(grad[0]*dtheta[iwvl],2);
-				    neaspec->p[isa+nsa+iwvl*nsa*2]->p[idtrat]+=pow(grad[1]*dtheta[iwvl],2);
-				}
-			    }
-			    
-			    double grad[2]={0,0};
-			    double pmax=dmax(psf);
-			    dcog(grad,psf,0.5, 0.5, 0.5*pmax, 0.2*pmax);
-			    grad[0]*=dtheta[iwvl];//convert to Radian
-			    grad[1]*=dtheta[iwvl];
-			    /*pgstat[istep][isa]+=grad[0]*nwvli;//record the value
-			      pgstat[istep][isa+nsa]+=grad[1]*nwvli;*/
+			double grad[2]={0,0};
+			double pmax=dmax(psf);
+			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+			grad[0]*=dtheta[iwvl];//convert to Radian
+			grad[1]*=dtheta[iwvl];
+			pphygrad[istep][isa]+=grad[0]*nwvli;//record the value
+			pphygrad[istep][isa+nsa]+=grad[1]*nwvli;
+
+			if(istep>=avgstart){
 			    pgmean[isa][0]+=grad[0];//record the average
 			    pgmean[isa][1]+=grad[1];
 			    //Then remove the CoG from the WVF and accumulate PSF.
 			    mapply->p[0]=-grad[0];
 			    mapply->p[1]=-grad[1];
+			    int nframe=istep-avgstart+1;
+			    for(int idtrat=0; idtrat<ndtrat; idtrat++){
+				dmat **pavgpsf=&avgpsf[iwvl]->p[idtrat+isa*ndtrat];
+				dadd(pavgpsf, 1, psf, 1);
+				if(nframe%(int)dtrats->p[idtrat]==0){
+				    grad[0]=grad[1]=0;
+				    pmax=dmax(*pavgpsf);
+				    dcog(grad,*pavgpsf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+				    dzero(*pavgpsf);
+				    neaspec->p[isa+iwvl*nsa*2]->p[idtrat]+=pow(grad[0]*dtheta[iwvl],2);
+				    neaspec->p[isa+nsa+iwvl*nsa*2]->p[idtrat]+=pow(grad[1]*dtheta[iwvl],2);
+				}
+			    }
+		
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 			    cembed(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
 			    cabs22d(&ppistat[iwvl][isa], 1, wvf, 1);
 			}
 		    }
+		    
 		}
 		ccellfree(wvfi);
-		dfree(ztilti);  
 	    }/*for istep */
 	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
-		int navg=(nstep-phystart)/dtrats->p[idtrat];
+		int navg=(nstep-avgstart)/dtrats->p[idtrat];
 		for(long ig=0; ig<2*nsa*nwvl; ig++){
 		    neaspec->p[ig]->p[idtrat]=sqrt(neaspec->p[ig]->p[idtrat]/navg);
 		}
 	    }
 	    zfeof(fp_wvf);
-	    zfeof(fp_ztilt);
-	    zfclose(fp_ztilt);
 	    zfclose(fp_wvf);
 	    cfree(wvf);
 	    cfree(wvfc);
 	    dfree(mapply);
 	    dfree(psf);
-	    dscale(gmean, 1./(nwvl*(nstep-phystart)));
-	    dcellscale(pistat, 1./(nstep-phystart));	
+	    dscale(gmean, 1./(nwvl*(nstep-avgstart)));
+	    dcellscale(pistat, 1./(nstep-avgstart));	
 
 	    //Put back the average gradient to PSF.
 	    for(int isa=0; isa<nsa; isa++){
@@ -219,11 +202,12 @@ static void calc_pistat(GENPISTAT_S *data){
 	    /* Saved pistat should have peak on the corner */
 	    cfree(otf);
 	    dcellwrite(pistat, "%s",fnpistat);
-	    dcellwrite(neaspec, "%s",fngstat);
+	    dcellwrite(neaspec, "%s",fnneaspec);
+	    dwrite(phygrad, "%s",fnphygrad);
 	    dcellfree(pistat);
 	    dcellfree(neaspec);
 	    dcellfreearr(avgpsf, nwvl);
-	    //dfree(gstat);
+	    dfree(phygrad);
 	    toc2("Processing %s:", fnwvf);
 	}/*if exist */
     }

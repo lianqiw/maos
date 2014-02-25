@@ -148,7 +148,7 @@ void X(free_do)(X(mat) *A, int keepdata){
    whever possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
-    if(A->nref[0]>1){
+    if(!A->nref || A->nref[0]>1){
 	error("Resizing a referenced vector\n");
     }
     if(nx==0 || ny==0){

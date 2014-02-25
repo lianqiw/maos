@@ -105,25 +105,18 @@ __global__ static void calc_ngsmod_do( float *cc,
   Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
   where amp is the amptliude weighting.  */
 void calc_ptt(double *rmsout, double *coeffout, 
-		  const double ipcc, const dmat *imcc,
-		  const float (*restrict loc)[2], 
-		  const int nloc,
-		  const float *restrict phi,
-		  const float *restrict amp,
-		  cudaStream_t stream
-		  ){
-        /*sum with 16 blocks, each with 256 threads. */
-    float *cc;
-#if CUDAVER >=20
-    float ccb[4];
-#else
-    float *ccb;
-    cudaMallocHost(&ccb, 4*sizeof(float));
-#endif
-    cudaCalloc(cc, 4*sizeof(float), stream);
+	      const double ipcc, const dmat *imcc,
+	      const float (*restrict loc)[2], 
+	      const int nloc,
+	      const float *restrict phi,
+	      const float *restrict amp,
+	      float *cc, float *ccb,
+	      cudaStream_t stream
+    ){
+    /*sum with 16 blocks, each with 256 threads. */
+    cudaMemsetAsync(cc, 0, sizeof(float)*4, stream);
     calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
-    cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDeviceToHost, stream);
-    cudaFree(cc); cc=NULL;//this synchronizes
+    cudaMemcpy(ccb, cc, 4*sizeof(float), cudaMemcpyDeviceToHost);
     double coeff[3], tot;
     coeff[0]=ccb[0]; coeff[1]=ccb[1]; coeff[2]=ccb[2]; tot=ccb[3];
     if(coeffout){
@@ -134,11 +127,8 @@ void calc_ptt(double *rmsout, double *coeffout,
 	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
-	rmsout[2]=tot-ptt;/*PTTR	 */
+	rmsout[2]=tot-ptt;/*PTTR*/
     }
-#if CUDAVER <20
-    cudaFreeHost(ccb);
-#endif
 }
 void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 		 double *ngsmod_out, int nmod,
@@ -150,10 +140,10 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 		 const float *restrict phi,
 		 const float *restrict amp,
 		 const PARMS_T *parms,
+		 float *cc, float *ccb,
 		 cudaStream_t stream){
-    float *cc;
     double tot=0;
-    cudaCalloc(cc, 7*sizeof(float), stream);
+    cudaMemsetAsync(cc, 0, 7*sizeof(float), stream);
     if(nmod==2){/*single DM. */
 	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else if(nmod>=5){/*AHST mode */
@@ -161,9 +151,7 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     }else{
 	TO_IMPLEMENT;
     }
-    float ccb[7];
     cudaMemcpyAsync(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost, stream);
-    cudaFree(cc); 
     tot=ccb[nmod==2?3:6];
     
     double coeff[6];/*convert to double*/
@@ -347,6 +335,14 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 	if(!cudata->evlopd->p[ievl]){
 	    cudata->evlopd->p[ievl]=curnew(nloc, 1);
 	}
+	if(!cudata->evlcc){
+	    cudata->evlcc=curcellnew(nevl, 1);
+	}
+	cudata->evlcc->p[ievl]=curnew(7,1);
+	if(!cudata->evlccb){
+	    cudata->evlccb=scellnew(nevl,1);
+	}
+	cudata->evlccb->p[ievl]=snew(7,1);
     }
     
     if(parms->evl.opdcov && parms->gpu.psf && !parms->sim.evlol){
@@ -518,25 +514,22 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     if(parms->recon.split){						\
 	if(parms->ndm<=2){						\
 	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
-	    if(nmod==3){						\
-		calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod, \
-			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
-			    recon->ngsmod->scale, thetax, thetay,	\
-			    aper->ipcc, aper->imcc,			\
-			    cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, parms, stream); \
-	    }else{							\
-		calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod, \
-			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
-			    recon->ngsmod->scale, thetax, thetay,	\
-			    aper->ipcc, aper->imcc,			\
-			    cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, parms, stream); \
+	    calc_ngsmod(nmod==3?pclep[isim]:0, nmod==3?pclmp[isim]:0,	\
+			pcleNGSmp[isim],recon->ngsmod->nmod,		\
+			recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
+			recon->ngsmod->scale, thetax, thetay,		\
+			aper->ipcc, aper->imcc,				\
+			cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, parms, \
+			cudata->evlcc->p[ievl]->p,cudata->evlccb->p[ievl]->p, stream); \
+	    if(nmod!=3){						\
 		TO_IMPLEMENT;/*mode decomposition. */			\
 	    }								\
 	}								\
     }else{								\
 	if(nmod==3){							\
 	    calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,	\
-		     cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, stream); \
+		     cudata->plocs->p, nloc, iopdevl->p, cudata->pamp,	\
+		     cudata->evlcc->p[ievl]->p,cudata->evlccb->p[ievl]->p,stream); \
 	}else{								\
 	    TO_IMPLEMENT;						\
 	}								\
@@ -738,7 +731,8 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	if(parms->evl.psfpttr[ievl]){
 	    double ptt[3];
 	    calc_ptt(NULL, ptt,  aper->ipcc, aper->imcc,
-		     cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, stream);
+		     cudata->plocs->p, nloc, iopdevl->p, cudata->pamp, 
+		     cudata->evlcc->p[ievl]->p,cudata->evlccb->p[ievl]->p, stream);
 	    curaddptt(iopdevl, cudata->plocs->p, -ptt[0], -ptt[1], -ptt[2], stream);
 	}
 	if(parms->evl.opdcov){

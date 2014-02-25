@@ -257,7 +257,7 @@ void setup_aster_ztilt(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const int istar=aster->wfs[iwfs].istar;
-	aster->wfs[iwfs].ztiltout=star[istar].ztiltout[ipowfs];
+	aster->wfs[iwfs].ztiltout=star[istar].ztiltout->p[ipowfs];
 	if(star[istar].goff){
 	    aster->wfs[iwfs].goff=star[istar].goff->p[ipowfs];
 	}
@@ -468,31 +468,25 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	dwrite(aster->res_ngs,"%s/aster%d_res_ngs",dirsetup,aster->iaster);
     }
 }
-static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_limit){
+static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_wfs0){
     if(parms->skyc.verbose){
-	info2("aster %d idtrat_limit=%3d, idtrat=", aster->iaster, parms->skyc.dtrats[idtrat_limit]);
+	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, parms->skyc.dtrats[idtrat_wfs0]);
     }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-	const int istar=aster->wfs[iwfs].istar;
-	const int ipowfs=aster->wfs[iwfs].ipowfs;
-	int idtrat=(int)star[istar].idtrat->p[ipowfs];
-	if(idtrat>idtrat_limit){
-	    idtrat=idtrat_limit;
-	}
+	//const int istar=aster->wfs[iwfs].istar;
+	//const int ipowfs=aster->wfs[iwfs].ipowfs;
+	int idtrat=idtrat_wfs0;
 	if(iwfs>0){
-	    if(idtrat<aster->idtrats->p[0]){
-		while(idtrat >-1 && (int)parms->skyc.dtrats[idtrat]
-		      % (int)aster->dtrats->p[0]!=0){
-		    idtrat--;
-		}
-	    }else if(idtrat>aster->idtrats->p[0]){
-		idtrat=aster->idtrats->p[0];
+	    /*don't allow snr to fall below 3.*/
+	    while(idtrat>0 && (aster->wfs[iwfs].pistat->snr->p[idtrat]<3
+			       || (int)parms->skyc.dtrats[idtrat] % (int)aster->dtrats->p[0]!=0)){
+		idtrat--;
 	    }
 	}
-	if(idtrat==-1){//star not usable/
+	/*if(idtrat==-1){//star not usable/
 	    idtrat=0;
 	    dset(aster->g->p[iwfs], 0);//indicate measurement is not reliable.
-	}
+	    }*/
 	aster->idtrats->p[iwfs]=idtrat;
 	aster->dtrats->p[iwfs]=parms->skyc.dtrats[idtrat];
 	int ng=aster->g->p[iwfs]->nx;
@@ -524,14 +518,15 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	}
 	aster->dtrats=dnew(aster->nwfs, 1);
 	aster->idtrats=dnew(aster->nwfs, 1);
-	int wfs0_max=(int)star[aster->wfs[0].istar].idtrat->p[aster->wfs[0].ipowfs];
-	//DO not allow the first WFS to go below 20 Hz. won't work.
-	while(parms->skyc.dtrats[wfs0_max]>40){
-	    wfs0_max++;
-	}
-	int wfs0_min=wfs0_max;
-	while(parms->skyc.dtrats[wfs0_min]<40){
-	    wfs0_min--;
+	int wfs0_min=0, wfs0_max=0;
+	PISTAT_S *pistat0=&star[aster->wfs[0].istar].pistat[aster->wfs[0].ipowfs];
+	for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+	    if(wfs0_min==0 && pistat0->snr->p[idtrat]>3){
+		wfs0_min=idtrat;
+	    }
+	    if(pistat0->snr->p[idtrat]>=parms->skyc.snrmin->p[idtrat]){
+		wfs0_max=idtrat;
+	    }
 	}
 	aster->kalman=calloc(1, sizeof(kalman_t*));
 	double resmin=INFINITY;
@@ -545,7 +540,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 #if 1   //more accurate
 	    dmat *res=skysim_phy(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->rmsol,
 				 aster, 0, parms, -1, 1, -1);
-	    double res0=res->p[0];
+	    double res0=res?res->p[0]:simu->rmsol;
 	    dfree(res);
 #else
 	    rests=kalman_test(aster->kalman[0], simu->mideal);
@@ -555,20 +550,8 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		dwrite(rests, "isky%d_iaster%d_dtrat%d_rest", simu->isky, aster->iaster, idtrat_limit);
 	    }
 	    if(parms->skyc.verbose) info2("res0=%g, resmin=%g\n", sqrt(res0)*1e9, sqrt(resmin)*1e9);
-	    /*if(parms->skyc.dbg){
-		int iaster=aster->iaster;
-		dwrite(simu->sdecoeff, "%s/aster%d_coeff", dirsetup, iaster);
-		dwrite(aster->dtrats, "%s/aster%d_dtrats", dirsetup,iaster);
-		dcellwrite(aster->g, "%s/aster%d_Gwfs", dirsetup,iaster);
-		dcellwrite(aster->neam[0], "%s/aster%d_Rwfs", dirsetup,iaster);
-		dwrite(simu->mideal, "%s/mideal",dirsetup);
-		dcellwrite(aster->kalman[0]->M, "%s/aster%d_kalman_M", dirsetup,iaster);
-		dwrite(aster->kalman[0]->P, "%s/aster%d_kalman_P", dirsetup,iaster);
-		dwrite(rests,  "%s/aster%d_res",dirsetup, iaster);
-		exit(0);
-		}*/
 	    dfree(rests);
-	    if(res0<resmin-400e-18){//better by 20 nm
+	    if(res0<resmin-100e-18){//better by 10 nm
 		resmin=res0;
 		kalman_free(kalman_min);
 		kalman_min=aster->kalman[0];

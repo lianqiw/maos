@@ -275,7 +275,6 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     for(int istar=0; istar<nstar; istar++){
 	if(!star[istar].idtrat){
 	    star[istar].idtrat=dnew(npowfs, 1);
-	    dset(star[istar].idtrat, -1);
 	}
 	double radius=sqrt(pow(star[istar].thetax,2)+pow(star[istar].thetay,2));
 	int igg=round(radius*206265/parms->maos.ngsgrid);
@@ -320,6 +319,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    pistat->mtche=calloc(ndtrat, sizeof(dcell*));
 	    pistat->sanea=dcellnew(ndtrat,1);
 	    pistat->sanea0=dcellnew(ndtrat,1);
+	    pistat->snr=dnew(ndtrat,1);
 	    dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
 
 	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
@@ -359,16 +359,16 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		double nea=dmax(pistat->sanea->p[idtrat]);
 #endif
 		double snr=sigma_theta/nea;
-		if(parms->skyc.verbose) info2("dtrat=%d, nea=%g, snr=%g\n", parms->skyc.dtrats[idtrat], nea*206265000, snr);
-		if(snr>parms->skyc.snrmin 
-		   && ((int)star[istar].idtrat->p[ipowfs]==-1 
-		   || dtrat<=parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]])){
+		pistat->snr->p[idtrat]=snr;
+		if(parms->skyc.verbose) info2("dtrat=%3d, nea=%4.1f, snr=%4.1f\n",
+					      parms->skyc.dtrats[idtrat], nea*206265000, snr);
+		if(snr>parms->skyc.snrmin->p[parms->skyc.snrmin->nx==1?0:idtrat]){
 		    star[istar].idtrat->p[ipowfs]=idtrat;
 		}
 	    }//for idtrat
 	    if(parms->skyc.dbg){
-		info("star %d, powfs %d: dtrat=%d\n", istar, ipowfs,
-		     parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]]);
+		info2("star %2d optim: powfs %1d: dtrat=%3d\n", istar, ipowfs,
+		      parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]]);
 		dcellwrite(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 			   dirsetup,istar,ipowfs);
 	    }/*idtrat */
@@ -433,7 +433,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
-	stari->ztiltout=calloc(npowfs, sizeof(dcell*));
+	stari->ztiltout=dcellnew(npowfs, 1);
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
@@ -445,6 +445,8 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 	double wty=thynorm-thyl;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const int msa=parms->maos.msa[ipowfs];
+	    const int nsa=parms->maos.nsa[ipowfs];
+	    const int ng=nsa*2;
 	    char *fnztilt[2][2]={{NULL,NULL},{NULL,NULL}};
 	    char *fngoff[2][2]={{NULL, NULL}, {NULL, NULL}};
 	    double wtsum=0;
@@ -459,8 +461,14 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 			continue;
 		    }
 		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
-			     dirstart,seed,msa,thx,thy);
+		    if(parms->skyc.usephygrad){
+			warning_once("Using phygrad\n");
+			snprintf(fnztilt[iy][ix],PATH_MAX,"%s/phygrad/phygrad_seed%d_sa%d_x%g_y%g",
+				 dirstart,seed,msa,thx,thy);
+		    }else{
+			snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
+				 dirstart,seed,msa,thx,thy);
+		    }
 		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
 		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_sa%d_x%g_y%g",
 			     dirstart,msa,thx,thy);
@@ -483,26 +491,33 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 			file_t *fp_ztilt=zfopen(fnztilt[iy][ix],"rb");
 			header_t header;
 			read_header(&header, fp_ztilt);
-			if(!iscell(header.magic)){
-			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
-			}
-			nstep=header.nx;
-			free(header.str);
-			if(stari->nstep==0){
-			    stari->nstep=nstep;
-			}else{
-			    if(stari->nstep!=nstep){
-				error("Different type has different steps\n");
+			
+			if(iscell(header.magic)){
+			    // error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
+			    nstep=header.nx;
+			    free(header.str);
+			    if(stari->nstep==0){
+				stari->nstep=nstep;
+			    }else{
+				if(stari->nstep!=nstep){
+				    error("Different type has different steps\n");
+				}
 			    }
-			}
-			if(!stari->ztiltout[ipowfs]){
-			    stari->ztiltout[ipowfs]=dcellnew(nstep,1);
-			}
-			dmat  **pztiltout=stari->ztiltout[ipowfs]->p;
-			for(long istep=0; istep<nstep; istep++){
-			    dmat *ztilti=dreaddata(fp_ztilt, 0);
-			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);/*(2nsa)*nstep dmat array */
-			    dfree(ztilti);
+			    if(!stari->ztiltout->p[ipowfs]){
+				stari->ztiltout->p[ipowfs]=dnew(ng, nstep);
+			    }
+			    dmat  *ztiltout=stari->ztiltout->p[ipowfs];
+			    for(long istep=0; istep<nstep; istep++){
+				dmat *ztilti=dreaddata(fp_ztilt, 0);
+				for(int ig=0; ig<ng; ig++){
+				    ztiltout->p[ig+istep*ng]+=ztilti->p[ig]*wtxi;
+				}
+				dfree(ztilti);
+			    }
+			}else{
+			    dmat *tmp=dreaddata(fp_ztilt, &header);
+			    dadd(&stari->ztiltout->p[ipowfs], 1, tmp, wtxi );
+			    dfree(tmp);
 			}
 			zfclose(fp_ztilt);
 		    }/* if(fnwvf) */
@@ -703,12 +718,7 @@ void free_istar(STAR_S *star, const PARMS_S *parms){
 	}
 	free(star->wvfout);
     }
-    if(star->ztiltout){
-	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	    dcellfree(star->ztiltout[ipowfs]);
-	}
-	free(star->ztiltout);
-    }
+    dcellfree(star->ztiltout);
     dcellfree(star->goff);
     dcellfree(star->g);
     dfree(star->mags);
@@ -744,7 +754,7 @@ void free_pistat(PISTAT_S *pistat, int npistat, const PARMS_S *parms){
 	dcellfree(pistat[ipistat].sanea0);
 	dfree(pistat[ipistat].scale);
 	dcellfree(pistat[ipistat].neaspec);
-	//dcellfree(pistat[ipistat].gnea);
+	dfree(pistat[ipistat].snr);
 	int ndtrat=parms->skyc.ndtrat;
 	if(pistat[ipistat].mtche){
 	   for(int idtrat=0; idtrat<ndtrat; idtrat++){

@@ -15,12 +15,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     if(nlhs!=PL_TOT || nrhs!=P_TOT){
-	mexErrMsgTxt("Usage: kalman=sde_kalman_mex(coeff, dthi, dtrat, Gwfs, Rwfs)\n");
+	mexErrMsgTxt("Usage: kalman=sde_kalman_mex(coeff, dthi, dtrat, Gwfs, Rwfs, Proj)\n");
     }
     dmat *coeff  = mx2d(prhs[P_COEFF]);
     double dthi  = (double)mxGetScalar(prhs[P_DTHI]);
     dmat *dtrat  = mx2d(prhs[P_DTRAT]);
     dcell *Gwfs  = mx2dcell(prhs[P_GWFS]);
+    if(dtrat->ny>1){
+	if(dtrat->nx!=1){
+	    mexErrMsgTxt("dtrat has unknown format\n");
+	}
+	dtrat->nx=dtrat->ny;
+	dtrat->ny=1;
+    }
+    if(dtrat->nx!=Gwfs->nx){
+	if(dtrat->nx!=1){
+	    error("dtrat should have dimension %ldx1\n", Gwfs->nx);
+	}
+	dmat *dtrat2=dnew(Gwfs->nx, 1);
+	dset(dtrat2, dtrat->p[0]);
+	dfree(dtrat); dtrat=dtrat2;
+    }
     dcell *Rwfs  = mx2dcell(prhs[P_RWFS]);
     dmat *Proj   = mx2d(prhs[P_PROJ]);
     kalman_t *kalman=sde_kalman(coeff, dthi, dtrat, Gwfs, Rwfs, Proj);

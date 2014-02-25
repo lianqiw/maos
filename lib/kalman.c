@@ -207,7 +207,8 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
     dmat *AP=0, *CP=0, *P=0, *CPAt=0, *CPCt=0, *APCt=0, *tmp=0;
     int count=0;
-    while(diff>1e-13 && diff2>1e-12 && count++<1000){
+    double thres=sqrt(Qn->p[0])*1e-14;
+    while(diff>thres && diff2>thres && count++<1000){
 	RECCATI_CALC;//P2 has the new result.
 	diff=dnorm2(P);
 	dadd(&P, 1, P2, -1);
@@ -223,7 +224,7 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
     dfree(CPAt); dfree(CPCt); dfree(APCt); dfree(tmp);
     return Mout;
 }
-
+#if 1
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
     double diff=1, diff2=1, lastdiff=INFINITY;
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
@@ -231,7 +232,8 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
     int count=0;
     int ik=-1;
     int nk=Cs->nx;
-    while(diff>1e-13 && diff2>1e-12 && count++<1000){
+    double thres=sqrt(Qn->p[0])*1e-14;
+    while(diff>thres && diff2>thres && count++<1000){
 	do{
 	    ik=(ik+1)%nk;
 	}while(!Cs->p[ik]);
@@ -258,8 +260,19 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
     dfree(CPAt); dfree(CPCt); dfree(APCt); dfree(tmp);
     return Mout;
 }
-
-/*Kalman filter based on SDE model*/
+#else //the above one is slightly better.
+dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
+    dcell *Mout=dcellnew(Cs->nx, 1);
+    for(int ik=0; ik<Cs->nx; ik++){
+	if(Cs->p[ik]){
+	    Mout->p[ik]=reccati(Pout&&!*Pout?Pout:0, A, Qn, Cs->p[ik], Rns->p[ik]);
+	}
+    }
+    return Mout;
+}
+#endif
+/*Kalman filter based on SDE model
+ */
 kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 		     double dthi, /**<Loop frequency*/
 		     const dmat *dtrat_wfs,   /**<WFS frequency as a fraction of loop*/
@@ -301,34 +314,34 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     dfree(Pd0);
     dmat *AcI=ddup(Ac); 
     dsvd_pow(AcI, -1, 0);
-    if(dtrat_wfs->ny!=1) error("dtrat_wfs should be column vector\n");
     const int nwfs=Gwfs->nx;
+    if(dtrat_wfs->nx!=nwfs || dtrat_wfs->ny!=1){
+	error("dtrat_wfs should have size %ldx1\n", dtrat_wfs->nx);
+    }
     int ndtrat=0;
     dmat *dtrats=dnew(nwfs, 1);//unique dtrats
     int dtrat_prod=1;
-    if(dtrat_wfs->nx==1 || dtrat_wfs->nx==nwfs){
-	ndtrat=0;
-	for(int iwfs=0; iwfs<dtrat_wfs->nx; iwfs++){
-	    int found=0;
-	    for(int jdtrat=0; jdtrat<ndtrat; jdtrat++){
-		if((int)dtrats->p[jdtrat]==(int)dtrat_wfs->p[iwfs]){
-		    found=1; break;
-		}
-	    }
-	    if(!found){
-		dtrats->p[ndtrat++]=dtrat_wfs->p[iwfs];
-		dtrat_prod*=dtrat_wfs->p[iwfs];
+    ndtrat=0;
+    for(int iwfs=0; iwfs<dtrat_wfs->nx; iwfs++){
+	int found=0;
+	for(int jdtrat=0; jdtrat<ndtrat; jdtrat++){
+	    if((int)dtrats->p[jdtrat]==(int)dtrat_wfs->p[iwfs]){
+		found=1; break;
 	    }
 	}
-	dresize(dtrats, ndtrat, 1);
-	dsort(dtrats, 1);
-    }else{
-	error("dtrat_wfs is in wrong format. Should have length of either 1 or %d\n", nwfs);
+	if(!found){
+	    dtrats->p[ndtrat++]=dtrat_wfs->p[iwfs];
+	    dtrat_prod*=dtrat_wfs->p[iwfs];
+	}
     }
+    dresize(dtrats, ndtrat, 1);
+    dsort(dtrats, 1);
+
     const int dtrat_min=dtrats->p[0];
     dmat*  Sigma_varep=0;/*state noise in discrete space*/
     dcell* Sigma_zeta =dcellnew(ndtrat,1);/*state measurement noise*/
     dcell *Radd       =dcellnew(ndtrat,1);
+    dcell *Raddchol   =dcellnew(ndtrat,1);
     dcell *Xi=dcellnew(ndtrat,1);
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	/*Evaluate noise covariance matrix of discrete state, and measurement of the
@@ -363,10 +376,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dmat *tmp=0;
 	    dmm(&tmp, 0, Sigma_zeta->p[idtrat], Pd, "nt", 1);
 	    dmm(&Radd->p[idtrat], 0, Pd, tmp, "nn", 1);
-	    dfree(tmp);
-	    tmp=dchol(Radd->p[idtrat]);
-	    dfree(Radd->p[idtrat]);
-	    Radd->p[idtrat]=tmp; tmp=0;
+	    Raddchol->p[idtrat]=dchol(Radd->p[idtrat]);
 	}
 	{
 	    dmat *tmp=0;
@@ -414,7 +424,8 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    }
 	}
 	if(indk && !res->Cd->p[indk-1]){
-	    dcell *Rnadd=dcellnew(nwfs, 1);
+	    dcell *Rnaddchol=dcellnew(nwfs, 1);
+	    dcell *Rnadd=dcellnew(nwfs, nwfs);
 	    dcell *Cd=dcellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int dtrat=(int)dtrat_wfs->p[iwfs];
@@ -433,7 +444,10 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 			dmm(&Cd->p[iwfs], 1, Gwfs->p[iwfs], Fd, "nn", 1);
 			dfree(Fd);
 			//Here Radd is chol of covariance
-			dmm(&Rnadd->p[iwfs], 1, Gwfs->p[iwfs], Radd->p[jdtrat], "nn", 1);
+			dmm(&Rnaddchol->p[iwfs], 1, Gwfs->p[iwfs], Raddchol->p[jdtrat], "nn", 1);
+			dmat *tmp=0;
+			dmm(&tmp, 0, Gwfs->p[iwfs], Radd->p[jdtrat], "nn", 1);
+			dmm(&Rnadd->p[iwfs+iwfs*nwfs], 1, tmp, Gwfs->p[iwfs], "nt", 1);
 		    }else{
 			error("not found\n");
 		    }
@@ -441,12 +455,14 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    }
 	    dcell *Rn=0;
 	    /*compute Rn=Rwfs+Gwfs*Radd*Gwfs' */
-	    dcellmm(&Rn, Rnadd, Rnadd, "nt", 1);
+	    //dcellmm(&Rn, Rnaddchol, Rnaddchol, "nt", 1);
 	    dcelladd(&Rn, 1, Rwfs, 1);
+	    dcelladd(&Rn, 1, Rnadd, 1);/*This is better than Rnaddchol*/
 	    res->Rn->p[indk-1]=dcell2m(Rn);
 	    res->Cd->p[indk-1]=dcell2m(Cd);
 	    dcellfree(Cd);
 	    dcellfree(Rnadd);
+	    dcellfree(Rnaddchol);
 	    dcellfree(Rn);
 	}
     }
@@ -481,6 +497,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     dcellfree(Sigma_zeta);
     dfree(AcI);
     dcellfree(Radd);
+    dcellfree(Raddchol);
     return res;
 }
 void kalman_free(kalman_t *kalman){

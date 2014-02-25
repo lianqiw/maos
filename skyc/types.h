@@ -48,9 +48,7 @@ typedef struct POWFS_S{
    Struct for pixel intensity statistics*/
 typedef struct PISTAT_S{
     dcell *psf;        /**<short exposure PSF*/
-    //dmat *grad;        /**<gradient in the averaged short exposure PSF*/
-    dcell *neaspec;
-    //dcell *gnea;       /**<variance of grad due to uncorrected atmosphere, to be added to sanea in servo optimization.*/
+    dcell *neaspec;    /**<noise equivalent angle due to spec noise*/
     dcell *i0;         /**<normalized pixel intensity, doesn't contain siglev*/
     dcell *gx;         /**<gradient of i0*/
     dcell *gy;         /**<gradient of i0*/
@@ -61,6 +59,7 @@ typedef struct PISTAT_S{
     dcell *sanea;      /**<noise equivalent angle, including all effect*/
     dcell *sanea0;     /**<noise equivalent angle due to photon noise alone*/
     dmat  *scale;      /**<extra scaling factor due to bicubic spline on strehl*/
+    dmat  *snr;        /**<signal to noise ratio*/
 }PISTAT_S;
 /**
    Struct for WFS*/
@@ -74,7 +73,7 @@ typedef struct WFS_S{
     double siglevtot;  /**<sum of siglev*/
     double bkgrnd;     /**<background level per pixel at maos.dt*/
     ccell **wvfout;    /**<complex wavefront output from maos run*/
-    dcell *ztiltout;   /**<ztilt out from maos run*/
+    dmat *ztiltout;   /**<ztilt out from maos run*/
     dmat *goff;        /**<gradient offset for ncpa calibration*/
     PISTAT_S *pistat;  /**<information about pixel intensities. first got from
 			  star_t, then updated.*/
@@ -96,7 +95,7 @@ typedef struct STAR_S{
     PISTAT_S *pistat;  /**<pixel intensity statstics npowf*1*/
     dcell *g;          /**<gradient operator of size npowfs*1*/
     ccell ***wvfout;   /**<complex wavefront output from maos run, of size npowfs*1*/
-    dcell **ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
+    dcell *ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
     dcell *goff;       /**<gradient offset for NCPA calibration.*/
     int   nstep;       /**<number of time steps available.*/
     dmat* idtrat;       /**<prefered dtrat for minimum snr*/

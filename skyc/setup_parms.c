@@ -27,6 +27,7 @@
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
+#define READ_MAT(A) parms->A = readcfg_dmat(#A) /*read a key with double array. */
 
 static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.dbg);
@@ -104,7 +105,8 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.sdetmax);
 
     READ_INT(skyc.multirate);
-    READ_DBL(skyc.snrmin);
+    READ_MAT(skyc.snrmin);
+    READ_INT(skyc.usephygrad);
 }
 /**
    Setup infromation output from maos run.
@@ -429,6 +431,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	if(parms->skyc.verbose<1){
 	    parms->skyc.verbose=1;
 	}
+	parms->skyc.dbg=1;
 	parms->skyc.nthread=1;
 	parms->skyc.interpg=0;
     }

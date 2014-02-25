@@ -55,11 +55,13 @@ typedef struct cudata_t{
     curcell *evlpsfcl;
     curcell *evlpsfcl_ngsr;
     curcell *evlopdcov;
-    curmat *evlopdcovol;
+    curmat  *evlopdcovol;
     curcell *evlopdcov_ngsr;
     curcell *evlopdmean;
-    curmat *evlopdmeanol;
+    curmat  *evlopdmeanol;
     curcell *evlopdmean_ngsr;
+    curcell *evlcc;
+    scell   *evlccb;
     /*for wfsgrad */
     cuwloc_t *powfs;
     cuwfs_t *wfs;

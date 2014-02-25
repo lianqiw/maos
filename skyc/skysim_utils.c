@@ -256,9 +256,9 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
-		const long nsa=parms->maos.nsa[ipowfs];
-		for(long isa=0; isa<nsa*2; isa++){
-		    zgradc->p[iwfs]->p[isa]+=aster->wfs[iwfs].ztiltout->p[istep]->p[isa];
+		const long ng=parms->maos.nsa[ipowfs]*2;
+		for(long ig=0; ig<ng; ig++){
+		    zgradc->p[iwfs]->p[ig]+=aster->wfs[iwfs].ztiltout->p[istep*ng+ig];
 		}
 	    }
 	
