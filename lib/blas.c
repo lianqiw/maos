@@ -68,13 +68,9 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
     if(!*C0){
 	*C0=X(new)(m,n); 
     }else if(m!=(*C0)->nx || n!=(*C0)->ny){
-	if((int)beta==0){
-	    X(free)(*C0);
-	    *C0=X(new)(m,n);
-	}else{
-	    error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
-		  m, n, (*C0)->nx, (*C0)->ny);
-	}
+	//Resizing the array is dangerous as it may be part of a cell that has m array.
+	error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
+	      m, n, (*C0)->nx, (*C0)->ny);
     }
     X(mat) *C=*C0;
     lda=A->nx;
@@ -402,10 +398,9 @@ void X(svd_pow)(X(mat) *A, double power, double thres){
     XR(mat) *Sdiag=NULL;
     X(mat) *U=NULL;
     X(mat) *VT=NULL;
-    double maxeig;
     X(svd)(&U, &Sdiag, &VT, A);
     /*eigen values below the threshold will not be used. the first is the biggest. */
-    maxeig=FABS(Sdiag->p[0]);
+    double maxeig=FABS(Sdiag->p[0]);
     double thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
 	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
@@ -427,11 +422,10 @@ void X(svd_pow)(X(mat) *A, double power, double thres){
 	    p[ix]*=Sdiag->p[ix];
 	}
     }
-    X(zero)(A);
 #ifdef USE_COMPLEX
-    X(mm)(&A,1,VT,U,"cc",1);
+    X(mm)(&A,0,VT,U,"cc",1);
 #else
-    X(mm)(&A,1,VT,U,"tt",1);
+    X(mm)(&A,0,VT,U,"tt",1);
 #endif
     X(free)(U);
     X(free)(VT);

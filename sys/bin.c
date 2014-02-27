@@ -842,31 +842,34 @@ void write_timestamp(file_t *fp){
 
 /**
    Search and return the value correspond to key. NULL if not found. Do not free the
-   returned pointer. The key must be preceeded by space (isspace), and succeeded by = sign. */
+   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
+   and succeeded by = sign. */
 const char *search_header(const char *header, const char *key){
     if(!header) return NULL;
     const char *ans=NULL;
-    const char *ans_bak=NULL;
+    //const char *ans_bak=NULL;
     const char *val=header;
     while(val[0]!='\0' && (val=strstr(val, key))){
 	if(val>header){
 	    char prev=*(val-1);
 	    if(!isspace((int)prev) && prev!=';' && prev !=','){
-		ans_bak=val;
+		//ans_bak=val;
 		val=val+strlen(key);
 		continue;/*Invalid */
 	    }
 	}
 	val=val+strlen(key);
 	while(val[0]==' ') val++;
-	if(val[0] == '=' || val[0]==':'){
+	if(val[0] == '='){
 	    val++;
+	}else{
+	    continue;//invalid key
 	}
 	while(val[0]==' ') val++;
 	ans=val;
 	break;
     }
-    if(!ans) ans=ans_bak;
+    //if(!ans) ans=ans_bak;
     return ans;
 }
 /**

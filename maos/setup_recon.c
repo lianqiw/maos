@@ -681,7 +681,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	   || (parms->recon.split && !parms->powfs[ipowfs].lo)){
 	    info2("powfs %d has tip/tilt removed in tomography\n", ipowfs);
 	    if(parms->powfs[ipowfs].skip){
-		error("This POWFS %d should be included in Tomo.\n", ipowfs);
+		warning("POWFS %d is not included in Tomo.\n", ipowfs);
 	    }
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    dmat *TT=dnew(nsa*2,2);

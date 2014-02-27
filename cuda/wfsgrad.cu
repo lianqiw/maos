@@ -142,14 +142,14 @@ static inline __device__ uint32_t int2float(uint32_t f){
    Apply tCoG.
 */
 __global__ static void tcog_do(float *grad, const float *restrict ints, 
-			       int nx, int ny, float pixthetax, float pixthetay, int nsa, float (*cogcoeff)[2], float rne, float *srot){
+			       int nx, int ny, float pixthetax, float pixthetay, int nsa, float (*cogcoeff)[2], float *srot){
     __shared__ float sum[3];
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
     int isa=blockIdx.x;
     ints+=isa*nx*ny;
-    float cogthres=cogcoeff[isa][0]*rne;
-    float cogoff=cogcoeff[isa][1]*rne;
+    float cogthres=cogcoeff[isa][0];
+    float cogoff=cogcoeff[isa][1];
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 	    float im=ints[ix+iy*nx]-cogoff;
@@ -470,10 +470,9 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		int pixpsax=powfs[ipowfs].pixpsax;
 		int pixpsay=powfs[ipowfs].pixpsay;
 		float *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot:NULL;
-		float rnee=sqrt(rne*rne+bkgrnd);
 		tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 		    (gradgpu->p, ints->p[0]->p, 
-		     pixpsax, pixpsay, pixthetax, pixthetay, nsa, (float(*)[2])cuwfs[iwfs].cogcoeff, rnee, srot);
+		     pixpsax, pixpsay, pixthetax, pixthetay, nsa, (float(*)[2])cuwfs[iwfs].cogcoeff, srot);
 	    }
 		break;
 	    case 3:{
@@ -505,7 +504,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    
 	    /*send grad to CPU. */
 	    if(parms->powfs[ipowfs].phytypesim!=3){//3 is handled in cpu.
-		cp2cpu(&gradcl->p, 0, gradgpu->p, 1, nsa*2, stream);
+		cp2cpu(&gradcl, gradgpu, stream);
 	    }
 	    ctoc("dev2dbl");
 	    curcellzero(ints, stream);

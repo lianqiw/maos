@@ -46,18 +46,20 @@
    forward.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    if(!nx || !ny) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
+    if(nx==0 || ny==0){
+	return out;
+    }
     if(ref){/*the data does not belong to us. */
-	if(!p && nx!=0 && ny!=0){
+	if(!p){
 	    error("When ref is 1, p must not be NULL.\n");
 	}
 	out->p=p;
     }else{
-	if(!p && nx!=0 && ny!=0){
+	if(!p){
 	    p=calloc((nx*ny), sizeof(T));
 	}
 	out->p=p;
@@ -180,11 +182,12 @@ void X(resize)(X(mat) *A, long nx, long ny){
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
-    if(!out){
-	error("Allocation failed\n");
-    }
     memcpy(out,in,sizeof(X(mat)));
-    if(out->nref) atomicadd(out->nref, 1);
+    if(!in->nref){
+	warning("Referencing non-referrable data. This may cause error.\n");
+    }else{
+	atomicadd(in->nref, 1);
+    }
     return out;
 }
 /**
@@ -439,14 +442,15 @@ void X(show)(const X(mat) *A, const char *format, ...){
     format2fn;
     info2("Displaying content of %s:\n",fn);
     PMAT(A,p);
-    long colmax=10;
-    long icol,i,j;
-    for(icol=0; icol<ceil((double)A->ny/(double)colmax); icol++){
-	int ncol=(icol+1)*colmax;
+    int colmax=10;
+    int iset,i,j;
+    int nset=(A->ny+colmax-1)/colmax;
+    for(iset=0; iset<nset; iset++){
+	int ncol=(iset+1)*colmax;
 	if(ncol>A->ny) ncol=A->ny;
-	printf("Cols %ld to %d\n", icol, ncol-1);
+	printf("Cols %d to %d\n", iset, ncol-1);
 	for(j=0; j<A->nx; j++){
-	    for(i=icol*colmax; i<ncol; i++){
+	    for(i=iset*colmax; i<ncol; i++){
 		PRINT(p[i][j]);
 	    }
 	    printf("\n");

@@ -269,7 +269,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 	    }
 	}
-	if(!is_end(endptr[0])){
+	if(!is_end(endptr[0]) && endptr[0]!=';'){
 	    error("{%s}: There is garbage in the end of the string.\n", data);
 	    _Exit(1);
 	}

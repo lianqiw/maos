@@ -44,7 +44,7 @@
 #define SQRT(A) sqrt(A)
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
-#define PRINT(A) printf("%10.3e",A);
+#define PRINT(A) fprintf(stderr," %10.3e",A);
 #define CONJ(x) (x)
 #define DOT dotdbl
 #define POW pow
@@ -67,7 +67,7 @@
 #define SQRT(A) csqrt(A)
 #define RANDU(A) (randu(A)+I*randu(A))
 #define RANDN(A) (randn(A)+I*randn(A))
-#define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
+#define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",creal(A),cimag(A));
 #define CONJ(x) conj(x)
 #define DOT dotcmp
 #define POW cpow
@@ -93,7 +93,7 @@
 #define SQRT(A) sqrtf(A)
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
-#define PRINT(A) printf("%10.3e",A);
+#define PRINT(A) fprintf(stderr,"%10.3e",A);
 #define CONJ(x) (x)
 #define DOT dotflt
 #define POW powf
@@ -116,7 +116,7 @@
 #define SQRT(A) csqrtf(A)
 #define RANDU(A) ((float)randu(A)+I*(float)randu(A))
 #define RANDN(A) ((float)randn(A)+I*(float)randn(A))
-#define PRINT(A) printf("(%10.3e %10.3eI)",crealf(A),cimagf(A));
+#define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",crealf(A),cimagf(A));
 #define CONJ(x) conjf(x)
 #define DOT dotzmp
 #define POW cpowf

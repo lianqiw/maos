@@ -280,19 +280,20 @@ static void test_kalman(){
     dcell *Gwfs=dcellread("Gwfs");
     dcell *Rwfs=dcellread("Rwfs");
     dmat *dtrat_wfs=dread("dtrat_wfs");
-    kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, Gwfs, Rwfs, 0);
+    dmat *proj=dread("Proj");
+    kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, Gwfs, Rwfs, proj);
     dwrite(k->Ad, "mex_Ad");
     dcellwrite(k->Cd, "mex_Cd");
     dcellwrite(k->M, "mex_M");
     dwrite(k->P, "mex_P");
-    rand_t rstat; seed_rand(&rstat, 1);
+    /*rand_t rstat; seed_rand(&rstat, 1);
     //dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
     dmat *ts=dread("ts");
     for(int i=0; i<100; i++){
 	dmat *res=kalman_test(k, ts);
 	dwrite(res, "kalman_res");
 	dfree(res);
-    }
+	}*/
     exit(0);
 }
 static void test_reccati(){

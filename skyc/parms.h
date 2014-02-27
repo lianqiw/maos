@@ -89,7 +89,7 @@ typedef struct SKYC_S{
     int start;       /**<start number of sky field*/
     int nsky;        /**<number of sky field. 500.*/
     int seed;        /**<seed for generating asterism and random numbers.*/
-
+    int navg;        /**<Number of simulations to average*/
     int noisefull;   /**<use full noise insteaded servo filtered noise to regularize. =0*/
     int psd_scale;   /**<scale the PSD to equal to open loop error*/
     int noisy;       /**<noise simulations.*/

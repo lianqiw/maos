@@ -532,8 +532,10 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		if(pistatout){
 		    cudaMemcpyAsync(psfstat, psf, sizeof(fcomplex)*notf*notf*ksa, 
 				    MEMCPY_D2D, stream);
-		    sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
-			(psfstat, notf,notf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
+		    if(parms->powfs[ipowfs].pistatout==1){
+			sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
+			    (psfstat, notf,notf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
+		    }
 		    CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
 		    if(parms->sim.skysim){/*want peak in corner*/
 			sa_acc_real_do<<<ksa,dim3(16,16),0,stream>>>

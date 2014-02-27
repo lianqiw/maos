@@ -622,7 +622,21 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     servo_free(st2t);
     return mres;
 }
-
+void servo_reset(SERVO_T *st){
+    dcellzero(st->mlead);
+    dcellzero(st->merrlast);
+    dcellzero(st->mpreint);
+    if(st->merrhist){
+	for(int i=0; i<st->al; i++){
+	    dcellzero(st->merrhist[i]);
+	}
+    }
+    if(st->mint){
+	for(int i=0; i<st->nmint; i++){
+	    dcellzero(st->mint[i]);
+	}
+    }
+}
 /**
    Free SERVO_T struct
 */

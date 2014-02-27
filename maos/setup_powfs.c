@@ -1003,7 +1003,6 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     }
     /*(D/h)^2/(16*sqrt(3)) convert it from range to WFE in m but here we want
       focus mode, so just do 1/(2*h^2).*/
-    /*Convert range to focus. should not use parms->aper.d here since it is used later*/
     /*1./cos() is for zenith angle adjustment of the range.*/
     double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2)*(1./cos(parms->sim.za));
     dscale(powfs[ipowfs].focus, range2focus);
@@ -1482,14 +1481,13 @@ static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int
     dmat *ints2=dnew(ints->nx, ints->ny);
     double gnf[2]={0,0};
     double gny[2]={0,0};
-    double rne2=sqrt(rne*rne+bkgrnd);
-    dcog(gnf, ints, 0, 0, cogthres*rne2, cogoff*rne2);
+    dcog(gnf, ints, 0, 0, cogthres, cogoff);
     seed_rand(rstat, 1);/*reset the seed each time to make dminsearch work.*/
     nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
     for(int i=0; i<ntry; i++){
 	dcp(&ints2, ints);
 	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
-	dcog(gny, ints2, 0, 0, cogthres*rne2, cogoff*rne2);
+	dcog(gny, ints2, 0, 0, cogthres, cogoff);
 	double errx=gny[0]-gnf[0];
 	double erry=gny[1]-gnf[1];
 	nea[0]+=errx*errx;
@@ -1533,7 +1531,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-    const double rne2=sqrt(rne*rne+bkgrnd);
     const double bkgrndc=parms->powfs[ipowfs].bkgrndc;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int do_nea=0;
@@ -1604,7 +1601,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 
 		if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
 		    /*automatically figure out the optimal thres/offset for each subaperture.*/
-		    double coeff[2]={0., 2};
+		    double coeff[2]={1., 1.};
 		    double scale[2]={0.1,0.1};
 		    cogdata_t data={ints, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne, &rstat, 100};
 		    double ftol=0.0001;/*tolerance of nea^2 in pixel*/
@@ -1612,8 +1609,10 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    cogcoeff[isa][0]=coeff[0];
 		    cogcoeff[isa][1]=coeff[1];
 		    info("isa %d:, ncall=%3d, coeff=%g %g\n", isa, ncall, coeff[0], coeff[1]);
+		}else{
+		    cogcoeff[isa][0]=parms->powfs[ipowfs].cogthres;
+		    cogcoeff[isa][1]=parms->powfs[ipowfs].cogoff;
 		}
-		dcog(g, ints, 0, 0, cogcoeff[isa][0]*rne2, cogcoeff[isa][1]*rne2);
 		if(do_nea){
 		    dmat *nea=dnew(2,2);
 		    cog_nea(nea->p, ints, cogcoeff[isa][0], cogcoeff[isa][1], ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
@@ -1632,6 +1631,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dfree(nea);
 		}
 		if(gx){/*gradient offset*/
+		    dcog(g, ints, 0, 0, cogcoeff[isa][0], cogcoeff[isa][1]);
 		    g[0]*=pixthetax;
 		    g[1]*=pixthetay;
 		    if(srot){

@@ -334,7 +334,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
     READ_POWFS(int,dtrat);
-
+    READ_POWFS_RELAX(int,skip);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
@@ -1053,7 +1053,14 @@ static void readcfg_load(PARMS_T *parms){
    Process simulation parameters to find incompatibility.
 */
 static void setup_parms_postproc_sim(PARMS_T *parms){
+    if(disable_save){
+	parms->save.extra=0;
+    }
+
     if(parms->sim.skysim){
+	if(disable_save){
+	    error("sim.skysim requires saving. Please specify output folder\n");
+	}
 	if(parms->recon.alg!=0){
 	    error("skysim need MVR");
 	}
@@ -1416,22 +1423,23 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    "This is not recommended\n",ipowfs);
     }
 
-    parms->sim.dtrat_hi=1;
-    parms->sim.dtrat_lo=1;
+    parms->sim.dtrat_hi=0;
+    parms->sim.dtrat_lo=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dtrat>1){
-	    if(parms->powfs[ipowfs].lo){
-		if(parms->sim.dtrat_lo==1){
-		    parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
-		}else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
-		    error("We don't handle multiple framerate of the LO WFS yet\n");
-		}
-	    }else{
-		if(parms->sim.dtrat_hi==1){
-		    parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
-		}else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
-		    error("We don't handle multiple framerate of the LO WFS yet\n");
-		}
+	if(parms->powfs[ipowfs].lo){
+	    if(parms->sim.dtrat_lo==0){
+		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
+	    }else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
+		error("We don't handle multiple framerate of the LO WFS yet\n");
+	    }
+	}else{
+	    if(parms->powfs[ipowfs].skip){
+		continue;
+	    }
+	    if(parms->sim.dtrat_hi==0){
+		parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
+	    }else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
+		error("We don't handle multiple framerate of the LO WFS yet\n");
 	    }
 	}
     }
@@ -1713,7 +1721,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	/*find out the height to setup cone coordinate. */
 	if(parms->tomo.cone){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if (parms->powfs[ipowfs].lo){/*skip low order wfs */
+		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){/*skip low order wfs */
 		    continue;
 		}
 		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
@@ -1723,15 +1731,21 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 		    }else{
 			hs = parms->powfs[ipowfs].hs;
 		    }
+		}else if(!isfinite(hs)){
+		    error("Two high order POWFS with different hs found");
 		}
 	    }
 	}
 	parms->atmr.hs=hs;
+	info2("atmr.hs=%g\n", parms->atmr.hs);
     }
     {
 	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
 	double maxorder=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
+		continue;
+	    }
 	    if(parms->powfs[ipowfs].order>maxorder){
 		maxorder=parms->powfs[ipowfs].order;
 	    }
@@ -1831,8 +1845,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
-	}else{
-	    parms->powfs[ipowfs].skip=0;
 	}
 	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */

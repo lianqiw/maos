@@ -567,9 +567,10 @@ static void init_simu_evl(SIM_T *simu){
 	}else{
 	    simu->res = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
 	}
-	simu->ole     = dref(simu->res->p[0]);
-	simu->cle     = dref(simu->res->p[2]);
-	simu->clem    = dref(simu->res->p[3]);
+	//Do not reference. Just assign. Don't free.
+	simu->ole     = simu->res->p[0];
+	simu->cle     = simu->res->p[2];
+	simu->clem    = simu->res->p[3];
     }
 
     {/*USE MMAP for data that need to save at every time step */
@@ -1023,7 +1024,7 @@ static void init_simu_wfs(SIM_T *simu){
     if(parms->save.ngcov>0){
 	simu->gcov=dcellnew(parms->save.ngcov,1);
     }
-    int nstep=parms->sim.end-parms->sim.start;
+    int nstep=parms->sim.end;
     if(parms->save.wfsopd){
 	save->wfsopd=calloc(nwfs, sizeof(cellarr*));
 	save->wfsopdol=calloc(nwfs, sizeof(cellarr*));
@@ -1045,12 +1046,9 @@ static void init_simu_wfs(SIM_T *simu){
 	save->intsnf=calloc(nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    int phystep=parms->powfs[ipowfs].phystep;
-	    int nstep2=(parms->sim.end-phystep)/dtrat;
 	    if(parms->save.ints[iwfs] && parms->powfs[ipowfs].usephy){
-		save->intsny[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsny_%d.bin", iwfs, seed);
-		save->intsnf[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
+		save->intsny[iwfs]=cellarr_init(nstep,1, "wfs%d_intsny_%d.bin", iwfs, seed);
+		save->intsnf[iwfs]=cellarr_init(nstep,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
 	    }
 	}
     }
@@ -1061,9 +1059,9 @@ static void init_simu_wfs(SIM_T *simu){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.grad[iwfs]){
-		save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
+		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init((nstep-(parms->sim.closeloop?1:0))/dtrat,1, 
+		    save->gradol[iwfs]=cellarr_init(nstep,1, 
 						    "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
 	    }
@@ -1073,9 +1071,8 @@ static void init_simu_wfs(SIM_T *simu){
 	save->gradgeom=calloc(nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.gradgeom[iwfs]){
-		save->gradgeom[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+		save->gradgeom[iwfs]=cellarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 	    }
 	}
     }
@@ -1197,7 +1194,7 @@ static void init_simu_dm(SIM_T *simu){
 	}
     }
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
-    simu->dmcmd=dcellnew3(parms->ndm,1, recon->anloc, NULL);
+    simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
     if(parms->sim.dmproj){
@@ -1205,6 +1202,7 @@ static void init_simu_dm(SIM_T *simu){
 	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
     }
     for(int idm=0; idm<parms->ndm; idm++){
+	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	if(simu->hyst){
 	    simu->dmreal->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	}else{
@@ -1573,9 +1571,6 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
     dcellfree(simu->res);
-    dfree(simu->ole);
-    dfree(simu->cle);
-    dfree(simu->clem);
     dcellfree(simu->olep);
     dcellfree(simu->olmp);
     dcellfree(simu->clep);

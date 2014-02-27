@@ -33,6 +33,9 @@
    control.
 */
 static int mmap_open(char *fn, int rw){
+    if(rw && disable_save){
+	error("output directory is not specified\n");
+    }
     char *fn2=procfn(fn,rw?"w":"r",0);
     if(!fn2) return -1;
     if(fn2 && strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){

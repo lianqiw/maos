@@ -624,6 +624,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
     }else{
 	warning2("Disable saving when no -o is supplied.\n");
 	disable_save=1;
+	chdir("/root");//A place that is not writable.
     }
     return arg;
 }

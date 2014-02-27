@@ -75,6 +75,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
     parms->skyc.ndtrat_mr=readcfg_intarr(&parms->skyc.dtrats_mr,"skyc.dtrats_mr");
     READ_INT(skyc.seed);
+    READ_INT(skyc.navg);
     READ_INT(skyc.servo);
     READ_INT(skyc.gsplit);
     READ_INT(skyc.evlstart);

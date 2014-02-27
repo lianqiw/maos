@@ -209,10 +209,9 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 	aster->tsa+=nsa;
 	aster->ngs[iwfs]=nsa*2;
     }    
-    if(aster->nwfs==1 && parms->maos.nmod==6 && aster->g->p[0]->nx==8){
-	//there is a single ttf wfs and defocus needs to be estimated. remove degeneracy
-	memset(aster->g->p[0]->p+2*aster->g->p[0]->nx, 0, sizeof(double)*aster->g->p[0]->nx);
-    }
+    /*
+      aster->g is also used for simulation. Do not zero columns here.
+    */
     aster->gm=dcell2m(aster->g);
 }
 /**
@@ -310,6 +309,12 @@ void setup_aster_lsr(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     }
     aster->pgm=dcellnew(ndtrat,1);
     aster->sigman=dcellnew(ndtrat,1);
+    dmat *gm=ddup(aster->gm);
+    if(aster->nwfs==1 && parms->maos.nmod==6 && gm->nx==8){
+	info2("set 3rd column of gm to zero\n");
+	memset(gm->p+gm->nx*2, 0, sizeof(double)*gm->nx);
+    }
+
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	dcell *nea=dcellnew(aster->nwfs, 1);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -320,17 +325,18 @@ void setup_aster_lsr(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcellfree(nea); 
 	dcwpow(neam, -1);//inverse
 	/*Reconstructor */
-	aster->pgm->p[idtrat]=dpinv(aster->gm, neam, NULL);
+	aster->pgm->p[idtrat]=dpinv(gm, neam, NULL);
 	/*sigman is error due to noise. */
 	dcwpow(neam, -1);//inverse again
 	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
 	dfree(neam);
     }	
     if(parms->skyc.dbg){
-	dcellwrite(aster->g,"%s/aster%d_g",dirsetup,aster->iaster);
+	dwrite(gm,"%s/aster%d_gm",dirsetup,aster->iaster);
 	dcellwrite(aster->pgm,    "%s/aster%d_pgm", dirsetup,aster->iaster);
 	dcellwrite(aster->sigman, "%s/aster%d_sigman", dirsetup,aster->iaster);
     }
+    dfree(gm);
 }
 
 /**
@@ -473,8 +479,6 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, parms->skyc.dtrats[idtrat_wfs0]);
     }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-	//const int istar=aster->wfs[iwfs].istar;
-	//const int ipowfs=aster->wfs[iwfs].ipowfs;
 	int idtrat=idtrat_wfs0;
 	if(iwfs>0){
 	    /*don't allow snr to fall below 3.*/
@@ -483,10 +487,6 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 		idtrat--;
 	    }
 	}
-	/*if(idtrat==-1){//star not usable/
-	    idtrat=0;
-	    dset(aster->g->p[iwfs], 0);//indicate measurement is not reliable.
-	    }*/
 	aster->idtrats->p[iwfs]=idtrat;
 	aster->dtrats->p[iwfs]=parms->skyc.dtrats[idtrat];
 	int ng=aster->g->p[iwfs]->nx;
@@ -495,7 +495,7 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 		aster->neam[0]->p[iwfs+aster->nwfs*iwfs]->p[ig*(ng+1)]=
 		    pow(aster->wfs[iwfs].pistat->sanea->p[idtrat]->p[ig], 2);
 	    }
-	}else{
+	}else{//no star available
 	    dset(aster->neam[0]->p[iwfs+aster->nwfs*iwfs], 0);
 	}
 	if(parms->skyc.verbose){

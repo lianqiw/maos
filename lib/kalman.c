@@ -207,15 +207,18 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
     dmat *AP=0, *CP=0, *P=0, *CPAt=0, *CPCt=0, *APCt=0, *tmp=0;
     int count=0;
-    double thres=sqrt(Qn->p[0])*1e-14;
-    while(diff>thres && diff2>thres && count++<1000){
+    double thres=1e-14;
+    const int maxcount=10000;
+    while(diff>thres && diff2>thres && count++<maxcount){
 	RECCATI_CALC;//P2 has the new result.
 	diff=dnorm2(P);
 	dadd(&P, 1, P2, -1);
 	diff=sqrt(dnorm2(P)/diff);
 	diff2=fabs(diff-lastdiff);
 	lastdiff=diff;
-	//info2("diff=%g, diff2=%g\n", diff, diff2);
+    }
+    if(count>=maxcount){
+	warning_once("count=%d, diff=%g, diff2=%g, thres=%g\n", count, diff, diff2, thres);
     }
     dmat *Mout=0;
     dmm(&Mout, 0, CP, CPCt, "tn", 1);
@@ -226,14 +229,21 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
 }
 #if 1
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
+    int nk=Cs->nx;
+    dcell *Mout=dcellnew(nk, 1);
+    if(nk==1){
+	info2("nk=1\n");
+	Mout->p[0]=reccati(Pout&&!*Pout?Pout:0, A, Qn, Cs->p[0], Rns->p[0]);
+	return Mout;
+    }
     double diff=1, diff2=1, lastdiff=INFINITY;
     dmat *P2=dnew(A->nx, A->ny); daddI(P2, Qn->p[0]);//Initialize P to identity
     dmat *AP=0, *CP=0, *P=0, *CPAt=0, *CPCt=0, *APCt=0, *tmp=0;
     int count=0;
     int ik=-1;
-    int nk=Cs->nx;
-    double thres=sqrt(Qn->p[0])*1e-14;
-    while(diff>thres && diff2>thres && count++<1000){
+    const double thres=1e-14;
+    const int maxcount=10000;
+    while((diff>thres && diff2>thres) && count++<maxcount){
 	do{
 	    ik=(ik+1)%nk;
 	}while(!Cs->p[ik]);
@@ -245,9 +255,11 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
 	diff=sqrt(dnorm2(P)/diff);
 	diff2=fabs(diff-lastdiff);
 	lastdiff=diff;
-	//info2("diff=%g, diff2=%g\n", diff, diff2);
     }
-    dcell *Mout=dcellnew(nk, 1);
+    if(count>=maxcount){
+	warning_once("count=%d, diff=%g, diff2=%g, thres=%g\n", count, diff, diff2, thres);
+    }
+   
     for(ik=0; ik<nk; ik++){
 	dmat *C=Cs->p[ik];
 	dmat *Rn=Rns->p[ik];
@@ -408,7 +420,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     res->FdM=FdM;
     res->dthi=dthi;
     res->dtrat=ddup(dtrat_wfs);
-    res->Gwfs=dcelldup(Gwfs);
+    res->Gwfs=dcelldup(Gwfs);//Used for simulation. Do not mess with it.
     res->Rwfs=dcelldup(Rwfs);
     res->Rn=dcellnew(nkalman, 1);
     res->Qn=dref(Sigma_varep);
@@ -424,12 +436,20 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    }
 	}
 	if(indk && !res->Cd->p[indk-1]){
-	    dcell *Rnaddchol=dcellnew(nwfs, 1);
 	    dcell *Rnadd=dcellnew(nwfs, nwfs);
 	    dcell *Cd=dcellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		dmat *Gwfsi=0;//Use for reconstruction. Can change it.
+		//info("indk=%d, nmod=%d\n", indk, nmod);
+		if(indk==1 && nmod==12){//Our sky coverage case with single WFS
+		    //info2("Only 1 WFS. Make 3rd column of Gwfs zero\n");
+		    Gwfsi=ddup(Gwfs->p[iwfs]);
+		    memset(Gwfsi->p+2*Gwfsi->nx, 0, Gwfsi->nx*sizeof(double));
+		}else{
+		    Gwfsi=dref(Gwfs->p[iwfs]);
+		}
 		int dtrat=(int)dtrat_wfs->p[iwfs];
-		Cd->p[iwfs]=dnew(Gwfs->p[iwfs]->nx, Ac->ny);
+		Cd->p[iwfs]=dnew(Gwfsi->nx, Ac->ny);
 		if((istep+1) % dtrat == 0){
 		    //WFS active. Locate the index into Xi, Radd.
 		    int jdtrat;
@@ -441,28 +461,27 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 		    if(jdtrat<ndtrat){
 			dmat *Fd=0;
 			dmm(&Fd, 0, Pd, Xi->p[jdtrat], "nn", 1);
-			dmm(&Cd->p[iwfs], 1, Gwfs->p[iwfs], Fd, "nn", 1);
+			dmm(&Cd->p[iwfs], 1, Gwfsi, Fd, "nn", 1);
 			dfree(Fd);
 			//Here Radd is chol of covariance
-			dmm(&Rnaddchol->p[iwfs], 1, Gwfs->p[iwfs], Raddchol->p[jdtrat], "nn", 1);
 			dmat *tmp=0;
-			dmm(&tmp, 0, Gwfs->p[iwfs], Radd->p[jdtrat], "nn", 1);
-			dmm(&Rnadd->p[iwfs+iwfs*nwfs], 1, tmp, Gwfs->p[iwfs], "nt", 1);
+			dmm(&tmp, 0, Gwfsi, Radd->p[jdtrat], "nn", 1);
+			dmm(&Rnadd->p[iwfs+iwfs*nwfs], 1, tmp, Gwfsi, "nt", 1);
 		    }else{
 			error("not found\n");
 		    }
 		}
+		dfree(Gwfsi);
 	    }
 	    dcell *Rn=0;
 	    /*compute Rn=Rwfs+Gwfs*Radd*Gwfs' */
-	    //dcellmm(&Rn, Rnaddchol, Rnaddchol, "nt", 1);
 	    dcelladd(&Rn, 1, Rwfs, 1);
-	    dcelladd(&Rn, 1, Rnadd, 1);/*This is better than Rnaddchol*/
+	    dcelladd(&Rn, 1, Rnadd, 1);
+	   
 	    res->Rn->p[indk-1]=dcell2m(Rn);
 	    res->Cd->p[indk-1]=dcell2m(Cd);
 	    dcellfree(Cd);
 	    dcellfree(Rnadd);
-	    dcellfree(Rnaddchol);
 	    dcellfree(Rn);
 	}
     }

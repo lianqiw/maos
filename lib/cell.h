@@ -24,7 +24,6 @@
 X(cell) *X(cellnew)(long nx, long ny);\
 X(cell) *X(cellnew2)(const X(cell) *A);\
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny);\
-X(cell) *X(cellnew3int)(long nx, long ny, int *nnx, int *nny);\
 void X(cellinit)(X(cell) **A, long nx, long ny);\
 void X(cellzero)(X(cell) *dc);\
 void X(cellset)(X(cell)*dc, T alpha);\

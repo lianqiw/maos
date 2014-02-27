@@ -59,7 +59,7 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 		double thetax,        /**<[in] direction of WFS*/
 		double thetay,        /**<[in] direction of WFS*/
 		const PARMS_S *parms  /**<[in] the parms*/
-		){
+    ){
     const double *mod=modm->p;
     const dcomplex ik=2*M_PI/wvl*I;
     double dx=powfs->dxwvf;
@@ -116,9 +116,9 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
    Time domain physical simulation.
    
    noisy: 
-       - 0: no noise at all; 
-       - 1: poisson and read out noise. 
-       - 2: only poisson noise.   
+   - 0: no noise at all; 
+   - 1: poisson and read out noise. 
+   - 2: only poisson noise.   
 */
 dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
 		 ASTER_S *aster, const POWFS_S *powfs, 
@@ -210,193 +210,207 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }
 	}
     }
-    for(int istep=0; istep<nstep; istep++){
-	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
-	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
-	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
-	if(mpsol){//collect averaged modes for PSOL.
-	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		dadd(&mpsol->p[iwfs], 1, mreal, 1);
+    for(int irep=0; irep<parms->skyc.navg; irep++){
+	if(kalman){
+	    kalman_init(kalman);
+	}else{
+	    servo_reset(st2t);
+	}
+	dcellzero(zgradc);
+	dcellzero(gradout);
+	if(ints){
+	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		dcellzero(ints[iwfs]);
 	    }
 	}
-	pmerrm=0;
-	if(istep>=parms->skyc.evlstart){/*performance evaluation*/
-	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
-	    if(res_ngs>ngsol*100){
-		dfree(res); res=NULL;
-		break;
-	    }
-	    {
-		res->p[0]+=res_ngs;
-		res->p[1]+=dwdot2(merr->p,parms->maos.mcc_tt,merr->p);
-		double dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
-		double dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, pmideal[istep]);
-		double dot_res_oa=0;
-		for(int imod=0; imod<nmod; imod++){
-		    dot_res_oa+=merr->p[imod]*pmideal_oa[istep][imod];
-		}
-		res->p[2]+=dot_oa-2*dot_res_ideal+2*dot_res_oa;
-		res->p[4]+=dot_oa;
-	    }
-	    {
-		double dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
-		/*Notice that mcc_oa_tt2 is 2x5 marix. */
-		double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, pmideal[istep]);
-		double dot_res_oa_tt=0;
-		for(int imod=0; imod<2; imod++){
-		    dot_res_oa_tt+=merr->p[imod]*pmideal_oa[istep][imod];
-		}
-		res->p[3]+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
-		res->p[5]+=dot_oa_tt;
-	    }
-	}//if evl
-
-	if(istep<phystart || phystart<0){
-	    /*Ztilt, noise free simulation for acquisition. */
-	    dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
-	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		const int ipowfs=aster->wfs[iwfs].ipowfs;
-		const long ng=parms->maos.nsa[ipowfs]*2;
-		for(long ig=0; ig<ng; ig++){
-		    zgradc->p[iwfs]->p[ig]+=aster->wfs[iwfs].ztiltout->p[istep*ng+ig];
+	for(int istep=0; istep<nstep; istep++){
+	    memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
+	    dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
+	    memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
+	    if(mpsol){//collect averaged modes for PSOL.
+		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    dadd(&mpsol->p[iwfs], 1, mreal, 1);
 		}
 	    }
-	
-	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
-		if((istep+1) % dtrati==0){
-		    dadd(&gradout->p[iwfs], 0, zgradc->p[iwfs], 1./dtrati);
-		    dzero(zgradc->p[iwfs]);
-		    if(noisy){
-			int idtrati=(multirate?(int)aster->idtrats->p[iwfs]:idtratc);
-			dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
-			for(int i=0; i<nea->nx; i++){
-			    gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
-			}
+	    pmerrm=0;
+	    if(istep>=parms->skyc.evlstart){/*performance evaluation*/
+		double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
+		if(res_ngs>ngsol*100){
+		    dfree(res); res=NULL;
+		    break;
+		}
+		{
+		    res->p[0]+=res_ngs;
+		    res->p[1]+=dwdot2(merr->p,parms->maos.mcc_tt,merr->p);
+		    double dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
+		    double dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, pmideal[istep]);
+		    double dot_res_oa=0;
+		    for(int imod=0; imod<nmod; imod++){
+			dot_res_oa+=merr->p[imod]*pmideal_oa[istep][imod];
 		    }
-		    pmerrm=merrm;//record output.
+		    res->p[2]+=dot_oa-2*dot_res_ideal+2*dot_res_oa;
+		    res->p[4]+=dot_oa;
 		}
-	    }
-	}else{
-	    /*Accumulate PSF intensities*/
-	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		const double thetax=aster->wfs[iwfs].thetax;
-		const double thetay=aster->wfs[iwfs].thetay;
-		const int ipowfs=aster->wfs[iwfs].ipowfs;
-		const long nsa=parms->maos.nsa[ipowfs];
-		PCCELL(aster->wfs[iwfs].wvfout[istep],wvfout);
-		for(long iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvl=parms->maos.wvl[iwvl];
-		    for(long isa=0; isa<nsa; isa++){
-			ccp(&wvfc->p[iwfs], wvfout[iwvl][isa]);
-			/*Apply NGS mode error to PSF. */
-			ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs+ipowfs, isa,
-			  thetax, thetay, parms);
-			cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
-			cfft2(wvf->p[iwfs],-1);
-			/*peak in corner. */
-			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);
-		    }/*isa */
-		}/*iwvl */
-	    }/*iwfs */
+		{
+		    double dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
+		    /*Notice that mcc_oa_tt2 is 2x5 marix. */
+		    double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, pmideal[istep]);
+		    double dot_res_oa_tt=0;
+		    for(int imod=0; imod<2; imod++){
+			dot_res_oa_tt+=merr->p[imod]*pmideal_oa[istep][imod];
+		    }
+		    res->p[3]+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
+		    res->p[5]+=dot_oa_tt;
+		}
+	    }//if evl
+
+	    if(istep<phystart || phystart<0){
+		/*Ztilt, noise free simulation for acquisition. */
+		dmm(&zgradc->m, 1, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
+		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    const int ipowfs=aster->wfs[iwfs].ipowfs;
+		    const long ng=parms->maos.nsa[ipowfs]*2;
+		    for(long ig=0; ig<ng; ig++){
+			zgradc->p[iwfs]->p[ig]+=aster->wfs[iwfs].ztiltout->p[istep*ng+ig];
+		    }
+		}
 	
-	    /*Form detector image from accumulated PSFs*/
-	    double igrad[2];
-	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati=dtratc, idtrat=idtratc;
-		if(multirate){//multirate
-		    idtrat=aster->idtrats->p[iwfs];
-		    dtrati=dtrats->p[iwfs];
+		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
+		    if((istep+1) % dtrati==0){
+			dadd(&gradout->p[iwfs], 0, zgradc->p[iwfs], 1./dtrati);
+			dzero(zgradc->p[iwfs]);
+			if(noisy){
+			    int idtrati=(multirate?(int)aster->idtrats->p[iwfs]:idtratc);
+			    dmat *nea=aster->wfs[iwfs].pistat->sanea->p[idtrati];
+			    for(int i=0; i<nea->nx; i++){
+				gradout->p[iwfs]->p[i]+=nea->p[i]*randn(&aster->rand);
+			    }
+			}
+			pmerrm=merrm;//record output.
+		    }
 		}
-		if((istep+1) % dtrati == 0){/*has output */
-		    dcellzero(ints[iwfs]);
+	    }else{
+		/*Accumulate PSF intensities*/
+		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    const double thetax=aster->wfs[iwfs].thetax;
+		    const double thetay=aster->wfs[iwfs].thetay;
 		    const int ipowfs=aster->wfs[iwfs].ipowfs;
 		    const long nsa=parms->maos.nsa[ipowfs];
-		    for(long isa=0; isa<nsa; isa++){
-			for(long iwvl=0; iwvl<nwvl; iwvl++){
-			    double siglev=aster->wfs[iwfs].siglev->p[iwvl];
-			    ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
-			    cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
-			    ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
-			    cfft2(otf->p[iwfs], -1);
-			    spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
-				       otf->p[iwfs]->p, siglev);
-			}
+		    PCCELL(aster->wfs[iwfs].wvfout[istep],wvfout);
+		    for(long iwvl=0; iwvl<nwvl; iwvl++){
+			double wvl=parms->maos.wvl[iwvl];
+			for(long isa=0; isa<nsa; isa++){
+			    ccp(&wvfc->p[iwfs], wvfout[iwvl][isa]);
+			    /*Apply NGS mode error to PSF. */
+			    ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs+ipowfs, isa,
+				       thetax, thetay, parms);
+			    cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
+			    cfft2(wvf->p[iwfs],-1);
+			    /*peak in corner. */
+			    cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);
+			}/*isa */
+		    }/*iwvl */
+		}/*iwfs */
+	
+		/*Form detector image from accumulated PSFs*/
+		double igrad[2];
+		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    int dtrati=dtratc, idtrat=idtratc;
+		    if(multirate){//multirate
+			idtrat=aster->idtrats->p[iwfs];
+			dtrati=dtrats->p[iwfs];
+		    }
+		    if((istep+1) % dtrati == 0){/*has output */
+			dcellzero(ints[iwfs]);
+			const int ipowfs=aster->wfs[iwfs].ipowfs;
+			const long nsa=parms->maos.nsa[ipowfs];
+			for(long isa=0; isa<nsa; isa++){
+			    for(long iwvl=0; iwvl<nwvl; iwvl++){
+				double siglev=aster->wfs[iwfs].siglev->p[iwvl];
+				ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
+				cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
+				ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
+				cfft2(otf->p[iwfs], -1);
+				spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
+					   otf->p[iwfs]->p, siglev);
+			    }
 		
-			/*Add noise and apply matched filter. */
+			    /*Add noise and apply matched filter. */
 #if _OPENMP >= 200805 
 #pragma omp critical 
 #endif
-			switch(noisy){
-			case 0:/*no noise at all. */
-			    break;
-			case 1:/*both poisson and read out noise. */
-			    addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrati,
-				     1, rnefs[ipowfs][idtrat]);
-			    break;
-			case 2:/*there is still poisson noise. */
-			    addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 1, 0);
-			    break;
-			default:
-			    error("Invalid noisy\n");
-			}
-		
-			igrad[0]=0;
-			igrad[1]=0;
-			double pixtheta=parms->skyc.pixtheta[ipowfs];
-			if(parms->skyc.mtch){
-			    dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
-			}
-			if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
-			    if(!parms->skyc.mtch){
-				warning2("fall back to cog\n");
-			    }else{
-				warning_once("mtch is out of range\n");
+			    switch(noisy){
+			    case 0:/*no noise at all. */
+				break;
+			    case 1:/*both poisson and read out noise. */
+				addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrati,
+					 1, rnefs[ipowfs][idtrat]);
+				break;
+			    case 2:/*there is still poisson noise. */
+				addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 1, 0);
+				break;
+			    default:
+				error("Invalid noisy\n");
 			    }
-			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
-			    igrad[0]*=pixtheta;
-			    igrad[1]*=pixtheta;
-			}
-			gradout->p[iwfs]->p[isa]=igrad[0];
-			gradout->p[iwfs]->p[isa+nsa]=igrad[1];
-		    }/*isa */
-		    pmerrm=merrm;
-		    dcellzero(psf[iwfs]);/*reset accumulation.*/
-		}/*if iwfs has output*/
-	    }/*for wfs*/
-	}/*if phystart */
-	//output to mreal after using it to ensure two cycle delay.
-	if(st2t){//Type I or II control.
-	    if(st2t->mint[0]){//has output.
-		dcp(&mreal, st2t->mint[0]->p[0]);
-	    }
-	}else{//LQG control
-	    kalman_output(kalman, &mreal, 0, 1);
-	}
-	if(kalman){//LQG control
-	    int indk=0;
-	    //Form PSOL grads and obtain index to LQG M
-	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
-		int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
-		if((istep+1) % dtrati==0){
-		    indk|=1<<iwfs;
-		    dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
-		    dzero(mpsol->p[iwfs]);
+		
+			    igrad[0]=0;
+			    igrad[1]=0;
+			    double pixtheta=parms->skyc.pixtheta[ipowfs];
+			    if(parms->skyc.mtch){
+				dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
+			    }
+			    if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
+				if(!parms->skyc.mtch){
+				    warning2("fall back to cog\n");
+				}else{
+				    warning_once("mtch is out of range\n");
+				}
+				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
+				igrad[0]*=pixtheta;
+				igrad[1]*=pixtheta;
+			    }
+			    gradout->p[iwfs]->p[isa]=igrad[0];
+			    gradout->p[iwfs]->p[isa+nsa]=igrad[1];
+			}/*isa */
+			pmerrm=merrm;
+			dcellzero(psf[iwfs]);/*reset accumulation.*/
+		    }/*if iwfs has output*/
+		}/*for wfs*/
+	    }/*if phystart */
+	    //output to mreal after using it to ensure two cycle delay.
+	    if(st2t){//Type I or II control.
+		if(st2t->mint[0]){//has output.
+		    dcp(&mreal, st2t->mint[0]->p[0]);
 		}
+	    }else{//LQG control
+		kalman_output(kalman, &mreal, 0, 1);
 	    }
-	    if(indk){
-		kalman_update(kalman, gradout->m, indk-1);
+	    if(kalman){//LQG control
+		int indk=0;
+		//Form PSOL grads and obtain index to LQG M
+		for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    int dtrati=(multirate?(int)dtrats->p[iwfs]:dtratc);
+		    if((istep+1) % dtrati==0){
+			indk|=1<<iwfs;
+			dmm(&gradout->p[iwfs], 1, aster->g->p[iwfs], mpsol->p[iwfs], "nn", 1./dtrati);
+			dzero(mpsol->p[iwfs]);
+		    }
+		}
+		if(indk){
+		    kalman_update(kalman, gradout->m, indk-1);
+		}
+	    }else if(st2t){
+		if(pmerrm){
+		    dmm(&merrm->p[0], 0, pgm, gradout->m, "nn", 1);	
+		}
+		servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 	    }
-	}else if(st2t){
-	    if(pmerrm){
-		dmm(&merrm->p[0], 0, pgm, gradout->m, "nn", 1);	
+	    if(parms->skyc.dbg){
+		memcpy(gradsave->p+istep*gradsave->nx, gradout->m->p, sizeof(double)*gradsave->nx);
 	    }
-	    servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
-	}
-	if(parms->skyc.dbg){
-	    memcpy(gradsave->p+istep*gradsave->nx, gradout->m->p, sizeof(double)*gradsave->nx);
-	}
-    }/*istep; */
+	}/*istep; */
+    }
     if(parms->skyc.dbg){
 	int dtrati=(multirate?(int)dtrats->p[0]:dtratc);
 	dwrite(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
@@ -425,7 +439,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     }else{
 	dfree(mres);
     }
-    dscale(res, 1./(nstep-parms->skyc.evlstart));
+    dscale(res, 1./((nstep-parms->skyc.evlstart)*parms->skyc.navg));
     return res;
 }
 

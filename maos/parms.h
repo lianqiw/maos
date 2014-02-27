@@ -206,7 +206,7 @@ typedef struct POWFS_CFG_T{
 		       - 0: do nothing.
 		       - 1: apply gradient electronic offset. 
 		       - 2: apply ncpa to average pixel intensity i0, better than 1 */
-    int pistatout;  /**<output time averaged short exposure image.*/
+    int pistatout;  /**<output time averaged short exposure image. 1: shift to center, 2: do not shift*/
     int pistatstart;/**<time step to compute pistatout*/
     int pistatstc;  /**<1: shift to center using fft method. 0: use geometric gradients.*/
     int psfout;     /**<output time history of low order wfs PSF. never do this for LGS.*/

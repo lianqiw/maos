@@ -52,36 +52,49 @@ X(cell) *X(cellnew)(long nx, long ny){
 /**
    create an new X(cell) similar to A in shape
 */
+/*X(cell) *X(cellnew2s)(const X(cell) *A){
+    X(cell) *out=X(cellnew)(A->nx, A->ny);
+    for(int i=0; i<A->nx*A->ny; i++){
+	if(A->p[i]){
+	    out->p[i]=X(new)(A->p[i]->nx, A->p[i]->ny);
+	}
+    }	
+    return out;
+    }*/
+/**
+   create an new X(cell) similar to A in shape.
+   When a cell is empty, it is created with a (0,0) array and cannot be overriden.
+*/
 X(cell) *X(cellnew2)(const X(cell) *A){
     X(cell) *out=X(cellnew)(A->nx, A->ny);
     long tot=0;
-    int make_m=1;//Create m.
     for(long i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
 	    tot+=A->p[i]->nx*A->p[i]->ny;
-	}else{
-	    make_m=0;//There is missing cell. Do not create m to avoid memory corruption.
-	    break;
 	}
     }
-    if(make_m){
-	out->m=X(new)(tot,1);
-	tot=0;
-	for(int i=0; i<A->nx*A->ny; i++){
-	    if(A->p[i]){
-		out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
-		tot+=A->p[i]->nx*A->p[i]->ny;
-	    }
+    out->m=X(new)(tot,1);
+    tot=0;
+    for(int i=0; i<A->nx*A->ny; i++){
+	if(A->p[i]){
+	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
+	    tot+=A->p[i]->nx*A->p[i]->ny;
+	}else{
+	    out->p[i]=X(new)(0,0);//place holder to avoid been overriden.
 	}
-    }else{
-	for(int i=0; i<A->nx*A->ny; i++){
-	    if(A->p[i]){
-		out->p[i]=X(new)(A->p[i]->nx, A->p[i]->ny);
-	    }
-	}	
     }
     return out;
 }
+/**
+   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
+ */
+/*X(cell) *X(cellnew3s)(long nx, long ny, long *nnx, long *nny){
+    X(cell) *out=X(cellnew)(nx,ny);
+    for(long i=0; i<nx*ny; i++){
+	out->p[i]=X(new)(nnx[i], (nny?nny[i]:1));
+    }
+    return out;
+    }*/
 /**
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
  */
@@ -100,23 +113,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     }
     return out;
 }
-/**
-   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
- */
-X(cell) *X(cellnew3int)(long nx, long ny, int *nnx, int *nny){
-    X(cell) *out=X(cellnew)(nx,ny);
-    long tot=0;
-    for(long i=0; i<nx*ny; i++){
-	tot+=nnx[i]*(nny?nny[i]:1);
-    }
-    out->m=X(new)(tot,1);
-    tot=0;
-    for(long i=0; i<nx*ny; i++){
-	out->p[i]=X(new_ref)(nnx[i], (nny?nny[i]:1), out->m->p+tot);
-	tot+=nnx[i]*(nny?nny[i]:1);
-    }
-    return out;
-}
+
 /**
    Free a X(cell) object.
 */
@@ -160,8 +157,15 @@ void X(cellinit)(X(cell)**A, long nx, long ny){
 X(cell) *X(cellref)(const X(cell) *in){
     if(!in) return NULL;
     X(cell) *out=X(cellnew)(in->nx, in->ny);
-    for(int i=0; i<in->nx*in->ny; i++){
-	out->p[i]=X(ref)(in->p[i]);
+    if(in->m){
+	out->m=X(ref)(in->m);
+	for(int i=0; i<in->nx*in->ny; i++){
+	    out->p[i]=X(new_ref)(in->p[i]->nx, in->p[i]->ny, in->p[i]->p);
+	}
+    }else{
+	for(int i=0; i<in->nx*in->ny; i++){
+	    out->p[i]=X(ref)(in->p[i]);
+	}
     }
     return out;
 }
@@ -499,11 +503,12 @@ void X(celldropempty)(X(cell) **A0, int dim){
 */
 void X(celladd)(X(cell) **B0, double bc, const X(cell) *A,const double ac){
     if(A){
-	if(!*B0){
-	    *B0=X(cellnew2)(A); bc=0;
-	}
 	X(cell) *B=*B0;
-	assert(A->nx==B->nx && A->ny == B->ny);
+	if(!B){
+	    B=*B0=X(cellnew2)(A); bc=0;
+	}else{
+	    assert(A->nx==B->nx && A->ny == B->ny);
+	}
 	for(int i=0; i<A->nx*A->ny; i++){
 	    X(add)(&B->p[i], bc, A->p[i], ac);
 	}
@@ -539,9 +544,10 @@ void X(cellcwm)(X(cell) *B, const X(cell) *A){
 */
 X(mat) *X(cell2m)(const X(cell) *A){
     if(A->nx*A->ny==1){
-	return X(ref)(A->p[0]);
+	return X(dup)(A->p[0]);
     }
-    X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
+    PCELL(A, Ap);
+    //X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
     long nx,ny,*nxs,*nys;
     X(celldim)(A,&nx,&ny,&nxs,&nys);
     X(mat) *out=X(new)(nx,ny);
@@ -581,8 +587,9 @@ X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
     }
     long kr=0;
     X(cell) *B=X(cellnew)(ndim,1);
+    B->m=X(ref)(A);
     for(long ix=0; ix<ndim; ix++){
-	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);/*refrence the data.  */
+	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);
 	kr+=dims[ix];
     }
     return B;
