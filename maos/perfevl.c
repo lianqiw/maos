@@ -267,7 +267,10 @@ void perfevl_ievl(thread_t *info){
 		CALL_THREAD(simu->evl_prop_dm[ind], nthread, 0);
 	    }
 	}
-	
+	if(simu->ttmreal){
+	    double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
+	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
+	}
 	TIM(4);
 	if(imoao>-1){
 	    dmat **dmevl=simu->dm_evl->p;

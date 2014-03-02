@@ -51,7 +51,7 @@
 #include "monitor.h"
 /*DO not modify enum without modify list store*/
 enum{
-    COL_DATE,
+    COL_DATE=0,
     COL_PID,
     COL_FULL,/*full path+arguments+output*/
     COL_START,/*starting path*/
@@ -90,18 +90,7 @@ static void list_modify_color(PROC_T *p, const char *color){
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_COLOR, color,-1);
 }
-/*static void list_modify_status(PROC_T *p, const char *status){
-    GtkTreeIter iter;
-    GtkListStore *list=lists[p->hid];
-    list_get_iter(p, &iter);
-    gtk_list_store_set(list, &iter, COL_TIMING, status,-1);
-    }*/
-/*static void list_modify_progress(PROC_T *p, double prog){
-    GtkTreeIter iter;
-    GtkListStore *list=lists[p->hid];
-    list_get_iter(p, &iter);
-    gtk_list_store_set(list, &iter, COL_STEPP, prog,-1);
-    }*/
+
 static void list_update_progress(PROC_T *p){
     if(p->status.nseed==0) return;
     GtkListStore *list=lists[p->hid];
@@ -114,7 +103,7 @@ static void list_update_progress(PROC_T *p){
     if(p->frac>1){
 	p->frac=1;
     }else if(p->frac<0){
-	p->frac=1;
+	p->frac=0;
     }
     GtkTreeIter iter;
     list_get_iter(p, &iter);
@@ -139,18 +128,7 @@ static void list_update_progress(PROC_T *p){
 	p->iseed_old=p->status.iseed;
     }
     char tmp[64];
-    /*snprintf(tmp,64,"%5.2f", step); gtk_list_store_set(list, &iter, COL_TIMING,tmp, -1);
-    if(toth>99){
-	snprintf(tmp,64,"%ldh", resth);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
-	snprintf(tmp,64,"%ldh", toth);   gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
-    }else if(toth>0){
-	snprintf(tmp,64,"%ldh%02ld", resth, restm);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
-	snprintf(tmp,64,"%ldh%02ld", toth, totm);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
-    }else{
- 	snprintf(tmp,64,"%02ld:%02ld", restm, rests);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
-	snprintf(tmp,64,"%02ld:%02ld", totm, tots);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
-	}*/
-    
+  
     if(toth>99){
 	snprintf(tmp,64, "%d/%d %5.2fs %ldh/%ldh",p->status.isim+1,p->status.simend, step, resth,toth);
     }else if(toth>0){
@@ -158,8 +136,10 @@ static void list_update_progress(PROC_T *p){
     }else{
 	snprintf(tmp,64, "%d/%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend, step, restm,rests,totm,tots);	
     }
-    //snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
-    gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,(gint)(p->frac*100), -1);
+    gtk_list_store_set(list, &iter, 
+		       COL_STEP,tmp, 
+		       COL_STEPP,(gint)(p->frac*100), 
+		       -1);
     
     snprintf(tmp,64,"%.2f",p->status.clerrlo);
     gtk_list_store_set(list, &iter, COL_ERRLO,tmp, -1);
@@ -178,14 +158,14 @@ static void list_modify_reset(PROC_T *p){
     struct tm *tim=localtime(&p->status.timstart);
     strftime(sdate,80,"%m-%d %k:%M:%S",tim);
     gtk_list_store_set(list, &iter, 
-		       COL_PID,spid, 
 		       COL_DATE, sdate,
-		       COL_SEED,"",
-		       COL_SEEDP, 0.,
-		       COL_STEP,"",
-		       COL_STEPP, 0.,
-		       COL_ERRHI,"",
-		       COL_ERRLO,"",
+		       COL_PID, spid, 
+		       COL_SEED," ",
+		       COL_SEEDP, 0, //Don't use 0.
+		       COL_STEP," ",
+		       COL_STEPP, 0,
+		       COL_ERRHI," ",
+		       COL_ERRLO," ",
 		       -1);
     p->iseed_old=-1;
 }
@@ -250,8 +230,12 @@ gboolean refresh(PROC_T *p){
 			   COL_START, sstart?sstart:" ",
 			   COL_ARGS,  sargs?sargs:" ",
 			   COL_OUT,   sout?sout:" ",
+			   COL_ERRHI, " ",
+			   COL_ERRLO, " ",
 			   COL_SEED,  " ",
+			   COL_SEEDP, 0,
 			   COL_STEP,  " ",
+			   COL_STEPP, 0,
 			   -1);
 	free(sstart); free(sout); free(sargs);
 	GtkTreePath *tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(list), &iter);

@@ -274,7 +274,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		evlcover[ievl]=1;
 	    }
 	}else{
-	    readstr_intarr_nmax(&evlcover, nevl, strevl);
+	    readstr_intarr_relax(&evlcover, nevl, strevl);
 	}
 	int evlct=0;
 	for(int ievl=0; ievl<nevl; ievl++){
@@ -299,13 +299,13 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    if(nwfs>9 && parms->sim.skysim){
 		warning("There are many NGS stars. Replicate surface config from the 8th star\n");
-		readstr_intarr_nmax(&wfscover, 9, strwfs);
+		readstr_intarr_relax(&wfscover, 9, strwfs);
 		wfscover=realloc(wfscover, sizeof(int)*nwfs);
 		for(int i=9; i<nwfs; i++){
 		    wfscover[i]=wfscover[8];
 		}
 	    }else{
-		readstr_intarr_nmax(&wfscover, nwfs, strwfs);
+		readstr_intarr_relax(&wfscover, nwfs, strwfs);
 	    }
 	}
 	if(!stropdx){

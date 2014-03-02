@@ -391,8 +391,8 @@ typedef struct SIM_SAVE_T{
     cellarr *dmerr;
     cellarr *dmint;
     cellarr *dmfit;
-    cellarr *dmpttr;
     cellarr *dmreal;
+    dmat *ttmreal;
     cellarr *dmcmd;
     cellarr *dmproj;
     /*Low order modes */
@@ -506,6 +506,7 @@ typedef struct SIM_T{
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
+    dmat *ttmreal;
     dcell *dmcmdlast; /**<The command for last time step (known to RTC).*/
     map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm

@@ -347,12 +347,18 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		       hs, thetax, thetay, 0, 0, -1, stream);
 	}
     }
+    if(simu->telws){
+	float tt=simu->telws->p[isim];
+	float angle=simu->winddir?simu->winddir->p[0]:0;
+	curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
+    }
     if(save_opd){
 	cellarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
     }
     if(CL){
 	gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmreal, cudata->ndm,
 		   hs, thetax, thetay, 0, 0, -1, stream);
+	curaddptt(phiout, loc, 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
     }
     if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].skip){
 	const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
@@ -366,11 +372,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
 		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
-    if(simu->telws){
-	float tt=simu->telws->p[isim];
-	float angle=simu->winddir?simu->winddir->p[0]:0;
-	curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
-    }
+  
     if(parms->powfs[ipowfs].llt){
 	float focus=(float)wfsfocusadj(simu, iwfs);
 	if(fabsf(focus)>1e-20){

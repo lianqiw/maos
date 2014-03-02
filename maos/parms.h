@@ -460,8 +460,10 @@ typedef struct SIM_CFG_T{
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alupt;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    double fcttm;    /**<cross over frequency of tip/tilt split*/
+    double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    double lpfocus;  /**<derived: lpfocus=2*pi*fc/fs. fs=1./sim.dt*/
+    double lpfocus;  /**<derived: lpfocus=2*pi*fc*sim.dt*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
@@ -630,9 +632,6 @@ typedef struct SAVE_CFG_T{
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/
     int mvst;        /**<MVST computation intermediate matrices*/
-
-    /*run time special ones that need extra computation */
-    int dmpttr;      /**<save p/t/t removed dm act cmds at each time step*/
 
     /*run time */
     int atm;         /**<save atmosphere*/

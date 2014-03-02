@@ -410,6 +410,8 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    wfs_propdata->phiout=opd->p;
 	    CALL_THREAD(wfs_prop, nthread, 0);
 	}/*idm */
+	double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
+	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
     }
     if(parms->powfs[ipowfs].skip && parms->tomo.ahst_idealngs){
 	//apply ideal NGS modes to NGS WFS

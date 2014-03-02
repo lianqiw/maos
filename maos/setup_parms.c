@@ -804,6 +804,7 @@ static void readcfg_recon(PARMS_T *parms){
 */
 static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.fcfocus);
+    READ_DBL(sim.fcttm);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
 
@@ -977,7 +978,6 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.opdx);/*ATM propagated to XLOC */
     READ_INT(save.evlopd);/*Science OPD */
     READ_INT(save.dm);/*save DM commands */
-    READ_INT(save.dmpttr);
     readcfg_intarr_nmax(&parms->save.ints, parms->nwfs, "save.ints");
     readcfg_intarr_nmax(&parms->save.wfsopd, parms->nwfs, "save.wfsopd");
     readcfg_intarr_nmax(&parms->save.grad, parms->nwfs, "save.grad");
@@ -994,8 +994,6 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.opdr=1;
 	parms->save.opdx=1;
 	parms->save.evlopd=1;
-	parms->save.dmpttr=1;
-	
 	parms->save.run=1;/*see following */
     }
 
@@ -1449,6 +1447,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
     }
     parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dthi;
+    parms->sim.lpttm=2*M_PI*parms->sim.fcttm*parms->sim.dthi;
 }
 /**
    postproc atmosphere parameters.
@@ -1731,8 +1730,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 		    }else{
 			hs = parms->powfs[ipowfs].hs;
 		    }
-		}else if(!isfinite(hs)){
-		    error("Two high order POWFS with different hs found");
+		}else if(isfinite(hs)){
+		    error("Two high order POWFS with different hs found: %g and %g\n", 
+			  hs, parms->powfs[ipowfs].hs);
 		}
 	    }
 	}
@@ -1863,7 +1863,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     for(int idm=0; idm<parms->ndm; idm++){
-	if(parms->dm[idm].hist){
+	if(parms->dm[idm].hist || parms->dm[idm].iastroke){
 	    parms->sim.dmttcast=1;
 	}
 	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke>0){
@@ -1876,7 +1876,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    }
 	}
     }
-    if(parms->save.dmpttr || parms->sim.dmclip || parms->sim.dmclipia || parms->sim.dmttcast){
+    if(parms->sim.dmclip || parms->sim.dmclipia || parms->sim.dmttcast){
 	parms->sim.dmttcast=1;
 	if(!parms->sim.fuseint){
 	    error("Sorry, clipping only works in fuseint=1 mode\n");

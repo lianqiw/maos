@@ -59,136 +59,115 @@ static inline int limit_diff(double *x1, double *x2, double thres){
     }
     return 0;
 }
-static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
+/**
+   Send LPF TT to TTM
+*/
+static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
+    int ndm=dmcmd->nx;
+    double ptt1[3];
+    double totalptt[3]={0,0,0};
+    for(int idm=0; idm<ndm; idm++){
+	ptt1[0]=ptt1[1]=ptt1[2]=0;
+	loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
+		     recon->aimcc->p[idm],NULL,
+		     dmcmd->p[idm]->p);
+	loc_remove_ptt(dmcmd->p[idm]->p, 
+		       ptt1,recon->aloc[idm]);
+	totalptt[1]+=ptt1[1];
+	totalptt[2]+=ptt1[2];
+    }
+    ttm->p[0]=ttm->p[0]*(1-lp)+lp*totalptt[1];
+    ttm->p[1]=ttm->p[1]*(1-lp)+lp*totalptt[2];
+    totalptt[1]-=ttm->p[0];
+    totalptt[2]-=ttm->p[1];
+    loc_add_ptt(dmcmd->p[0]->p, totalptt, recon->aloc[0]);
+}
+
+static inline void clipdm(SIM_T *simu, dcell *dmcmd){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.dmttcast && dmint){
-	/*
-	  Here we are simulating a Tip/Tilt Mirror by
-	  casting global tip/tilt out from DM commands, do
-	  the saturation and histogram analysis. 
-	  
-	  We then add back the tip/tilt to the DM to
-	  simulate the DM tip/tilt stage, or in another
-	  word, to save a ray tracing from the tip/tilt
-	  mirror.
-	*/
-	int ndm=parms->ndm;
-	dcell *ptt=dcellnew(ndm,1);
-	const RECON_T *recon=simu->recon;
-	for(int idm=0; idm<ndm; idm++){
-	    ptt->p[idm]=dnew(3,1);
-	    double *ptt1=ptt->p[idm]->p;
-	    loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
-			 recon->aimcc->p[idm],NULL,
-			 dmint->p[idm]->p);
-	    loc_remove_ptt(dmint->p[idm]->p, 
-			   ptt1,recon->aloc[idm]);
-	}
-        /*
-	  clip integrator. This both limits the output and
-	  feeds back the clip since we are acting on the integrator directly.
-	*/
-	if(parms->sim.dmclip){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		int nclip=dclip(dmint->p[idm], 
-				-parms->dm[idm].stroke,
-				parms->dm[idm].stroke);
-		if(nclip>0){
-		    info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
-		}
+    if(!dmcmd) return;
+    /*
+      clip integrator. This both limits the output and
+      feeds back the clip since we are acting on the integrator directly.
+    */
+    if(parms->sim.dmclip){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    int nclip=dclip(dmcmd->p[idm], 
+			    -parms->dm[idm].stroke,
+			    parms->dm[idm].stroke);
+	    if(nclip>0){
+		info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
 	    }
 	}
-	if(parms->sim.dmclipia){
-	    /*Clip interactuator stroke*/
-	    for(int idm=0; idm<parms->ndm; idm++){
-		/* Embed DM commands to a square array (borrow dmrealsq) */
-		double iastroke;
-		int nx=simu->recon->anx[idm];
-		double (*dmr)[nx];
-		dmat *dm;
-		if(parms->dm[idm].iastrokescale){ //convert dm to voltage
-		    dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmint->p[idm]);
-		    iastroke=parms->dm[idm].iastroke;//voltage.
-		}else{
-		    dm=dmint->p[idm];
-		    iastroke=parms->dm[idm].iastroke*2;//surface to opd
+    }
+    if(parms->sim.dmclipia){
+	/*Clip interactuator stroke*/
+	for(int idm=0; idm<parms->ndm; idm++){
+	    /* Embed DM commands to a square array (borrow dmrealsq) */
+	    double iastroke;
+	    int nx=simu->recon->anx[idm];
+	    double (*dmr)[nx];
+	    dmat *dm;
+	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
+		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm]);
+		iastroke=parms->dm[idm].iastroke;//voltage.
+	    }else{
+		dm=dmcmd->p[idm];
+		iastroke=parms->dm[idm].iastroke*2;//surface to opd
+	    }
+	    if(!parms->fit.square){
+		const long *embed=simu->recon->aembed[idm];
+		const double *pin=dm->p;
+		double *restrict pout=simu->dmrealsq[idm]->p;
+		for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+		    pout[embed[i]]=pin[i];
 		}
-		if(!parms->fit.square){
-		    const long *embed=simu->recon->aembed[idm];
-		    const double *pin=dm->p;
-		    double *restrict pout=simu->dmrealsq[idm]->p;
-		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-			pout[embed[i]]=pin[i];
-		    }
-		    dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
-		}else{
-		    dmr=(double(*)[nx])dm->p;
-		}
+		dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
+	    }else{
+		dmr=(double(*)[nx])dm->p;
+	    }
 		
-		int count=0,trials=0;
-		do{
-		    count=0;
-		    PDMAT(simu->recon->amap[idm],map);
-		    for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
-			for(int ix=0; ix<nx; ix++){
-			    if(map[iy][ix] && map[iy+1][ix]){
-				count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
-			    }
-			    
-			} 
-		    }
-		    for(int iy=0; iy<simu->recon->any[idm]; iy++){
-			for(int ix=0; ix<nx-1; ix++){
-			    if(map[iy][ix] && map[iy][ix+1]){
-				count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
-			    }
+	    int count=0,trials=0;
+	    do{
+		count=0;
+		PDMAT(simu->recon->amap[idm],map);
+		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
+		    for(int ix=0; ix<nx; ix++){
+			if(map[iy][ix] && map[iy+1][ix]){
+			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
 			}
-		    }
-		    trials++;
-		    if(trials==1 && count>0) {
-			info2("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
-		    }
-		}while(count>0);
-		if(trials>1){
-		    info2("trials=%d\n", trials);
-		}
-		if(!parms->fit.square){//copy data back
-		    const long *embed=simu->recon->aembed[idm];
-		    const double *pin=simu->dmrealsq[idm]->p;
-		    double *restrict pout=dm->p;
-		    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-			pout[i]=pin[embed[i]];
+			    
 		    } 
 		}
-		if(parms->dm[idm].iastrokescale){//convert back to opd
-		    dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
-		    dcp(&dmint->p[idm], dm2);
-		    dfree(dm); dfree(dm2);
+		for(int iy=0; iy<simu->recon->any[idm]; iy++){
+		    for(int ix=0; ix<nx-1; ix++){
+			if(map[iy][ix] && map[iy][ix+1]){
+			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
+			}
+		    }
 		}
+		trials++;
+		if(trials==1 && count>0) {
+		    info2("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
+		}
+	    }while(count>0);
+	    if(trials>1){
+		info2("trials=%d\n", trials);
+	    }
+	    if(!parms->fit.square){//copy data back
+		const long *embed=simu->recon->aembed[idm];
+		const double *pin=simu->dmrealsq[idm]->p;
+		double *restrict pout=dm->p;
+		for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+		    pout[i]=pin[embed[i]];
+		} 
+	    }
+	    if(parms->dm[idm].iastrokescale){//convert back to opd
+		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
+		dcp(&dmcmd->p[idm], dm2);
+		dfree(dm); dfree(dm2);
 	    }
 	}
-	/*This is after the integrator output and clipping*/
-	if(simu->dmhist){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		if(simu->dmhist->p[idm]){
-		    dhistfill(&simu->dmhist->p[idm], dmint->p[idm],0,
-			      parms->dm[idm].histbin, parms->dm[idm].histn);
-		}
-	    }
-	}
-	if(parms->save.dmpttr){/*2 cycle delay. */
-	    cellarr_dcell(simu->save->dmpttr, simu->isim, dmint);
-	}
-	double totalptt[3]={0,0,0};
-	for(int idm=0; idm<ndm; idm++){
-	    totalptt[1]+=ptt->p[idm]->p[1];
-	    totalptt[2]+=ptt->p[idm]->p[2];
-	}
-	/*Add tip/tilt back to the ground DM only. */
-	loc_add_ptt(dmint->p[0]->p, totalptt, recon->aloc[0]);
-	dcellfree(ptt);
-    }else if(parms->save.dmpttr){
-	cellarr_dcell(simu->save->dmpttr, simu->isim, NULL);
     }
 }
 
@@ -221,6 +200,8 @@ void filter_cl(SIM_T *simu){
     if(parms->save.dm){
 	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
 	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
+	simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
+	simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
@@ -272,30 +253,40 @@ void filter_cl(SIM_T *simu){
 	}
     }
     if(parms->recon.split){ 
-	/*Low order in split tomography only. global focus mode is removed.*/
+	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
 	    /*accumulate to the main integrator.*/
 	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }
-    if(parms->sim.dmttcast){
-	cast_tt_do(simu, simu->dmint->mint[0]);
-    }
-
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
+    
     dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
     }
-    if(recon->dm_ncpa){
-	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
+    ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+    if(parms->sim.dmclip || parms->sim.dmclipia){
+	dcell *tmp=dcelldup(simu->dmcmd);
+	clipdm(simu, simu->dmcmd);
+	dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
+	dcelladd(&simu->dmint->mint[0], 1, tmp, -1);//remove from integrator (anti wind up)
+	dcellfree(tmp);
+    }
+    /*This is after the integrator output and clipping*/
+    if(simu->dmhist){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmhist->p[idm]){
+		dhistfill(&simu->dmhist->p[idm], simu->dmcmd->p[idm],0,
+			  parms->dm[idm].histbin, parms->dm[idm].histn);
+	    }
+	}
     }
     /*hysteresis. */
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
-  
     if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
 	dcelladd(&simu->zoomint, 1, simu->zoomerr, 1);
     }
@@ -348,7 +339,6 @@ void filter_cl(SIM_T *simu){
    filter DM commands in open loop mode by simply copy the output
  */
 void filter_ol(SIM_T *simu){
-    RECON_T *recon=simu->recon;
     assert(!simu->parms->sim.closeloop);
     if(simu->dmerr){
 	dcellcp(&simu->dmcmd, simu->dmerr);
@@ -358,21 +348,10 @@ void filter_ol(SIM_T *simu){
     if(simu->Merr_lo){
 	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
     }
-    if(simu->parms->sim.dmttcast){
-	cast_tt_do(simu, simu->dmcmd);
-    }
+    ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
     /*hysterisis. */
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
-    }
-    if(recon->actstuck){
-	act_stuck_cmd(recon->aloc, simu->dmreal, recon->actstuck);
-    }
-    if(recon->actinterp){
-	dcell *tmp=NULL;
-	spcellmulmat(&tmp, recon->actinterp, simu->dmreal, 1);
-	dcellcp(&simu->dmreal, tmp);
-	dcellfree(tmp);
     }
     if(simu->parms->save.dm){
 	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);

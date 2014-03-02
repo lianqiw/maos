@@ -824,7 +824,7 @@ static void init_simu_evl(SIM_T *simu){
     }
 
     if(parms->save.evlopd){
-	int nstep=parms->sim.end-parms->sim.start;
+	int nstep=parms->sim.end;
 	save->evlopdol=calloc(nevl, sizeof(cellarr*));
 	save->evlopdcl=calloc(nevl, sizeof(cellarr*));
 
@@ -1057,7 +1057,6 @@ static void init_simu_wfs(SIM_T *simu){
 	save->gradol=calloc(nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
@@ -1070,7 +1069,6 @@ static void init_simu_wfs(SIM_T *simu){
     if(parms->save.gradgeom && !parms->sim.idealfit){
 	save->gradgeom=calloc(nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->save.gradgeom[iwfs]){
 		save->gradgeom[iwfs]=cellarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 	    }
@@ -1196,6 +1194,7 @@ static void init_simu_dm(SIM_T *simu){
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
     simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
+    simu->ttmreal=dnew(2,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
@@ -1239,6 +1238,9 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
+    if(recon->dm_ncpa){
+	dcelladd(&simu->dmint->mint[0], 1, recon->dm_ncpa, 1);
+    }
     simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
 			    parms->sim.dtlo, parms->sim.eplo);
     if(parms->nphypowfs){
@@ -1270,31 +1272,28 @@ static void init_simu_dm(SIM_T *simu){
 				       NULL, NULL,"dmhist_%d.bin",simu->seed);
 	}
     }
-    int nstep=parms->sim.end-parms->sim.start;
+    int nstep=parms->sim.end;
     if(parms->save.dm){
 	int nrstep=nstep-(parms->sim.closeloop?1:0);
-	int nrsteplo=nstep/parms->sim.dtrat_lo-(parms->sim.closeloop?1:0);
 	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
 	save->dmint=cellarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	if(parms->recon.alg==0){
 	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){
+	    int nrsteplo=nstep/parms->sim.dtrat_lo-(parms->sim.closeloop?1:0);
 	    save->Merr_lo=cellarr_init(nrsteplo, 1, "Merr_lo_%d.bin", seed);
 	    if(!parms->sim.fuseint){
 		save->Mint_lo=cellarr_init(nrsteplo-1, 1, "Mint_lo_%d.bin", seed);
 	    }
-	}	
+	}
+	save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
 	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){
 	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
 	}
 
-    }
-  
-    if(parms->save.dmpttr){
-	save->dmpttr=cellarr_init(nstep, 1,"dmpttr_%d.bin", seed);
     }
 }
 
@@ -1306,7 +1305,7 @@ static void init_simu_moao(SIM_T *simu){
     const int nwfs=parms->nwfs;
     const int nevl=parms->evl.nevl;
     const int seed=simu->seed;
-    int nstep=parms->sim.end-parms->sim.start;
+    int nstep=parms->sim.end;
     int ny=parms->sim.closeloop && !parms->gpu.moao ? 2 : 1;
     if(!parms->gpu.wfs || ! parms->gpu.moao){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -1430,7 +1429,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    prep_cachedm(simu);
 	}
 	if(parms->recon.alg==0){
-	    int nstep=parms->sim.end-parms->sim.start;
+	    int nstep=parms->sim.end;
 	    if(parms->save.opdr){
 		save->opdr=cellarr_init(nstep-1,1, "opdr_%d.bin", seed);
 	    }
@@ -1552,6 +1551,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->opdr);
     dcellfree(simu->gngsmvst);
     dcellfree(simu->dmreal);
+    dfree(simu->ttmreal);
     maparrfree(simu->dmrealsq, parms->ndm);
     dcellfree(simu->dmproj);
     dcellfreearr(simu->dmpsol, parms->npowfs);
@@ -1635,8 +1635,8 @@ void free_simu(SIM_T *simu){
     cellarr_close(save->dmerr);
     cellarr_close(save->dmint);
     cellarr_close(save->dmfit);
-    cellarr_close(save->dmpttr);
     cellarr_close(save->dmreal);
+    dfree(save->ttmreal);
     cellarr_close(save->dmproj);
     cellarr_close(save->Merr_lo);
     cellarr_close(save->Mint_lo);
