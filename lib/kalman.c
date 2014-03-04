@@ -17,7 +17,6 @@
 */
 #include "kalman.h"
 #include "psd.h"
-#include "nr.h"
 typedef struct{
     double df;
     dmat *f1;
@@ -37,7 +36,7 @@ static void psd2cov(dmat *psd, double df){
     dfft1plan_r2hc(psd, -1);
     dscale(psd, df);
     psd->p[0]=0;//zero dc. critical
-    fft2(psd->fft, -1);
+    dfft1(psd, -1);
 }
 static void sde_psd(dmat **psd, dmat *f, double *coeff, int ncoeff, int nmod){
     if(!psd){

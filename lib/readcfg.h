@@ -25,7 +25,7 @@
    a value. The entries are maintained in a hash table. Each entry can be
    retrieved from the key.
 */
-#include "dmat.h"
+#include "mathdef.h"
 #define format2key				\
     char key[512];				\
     va_list ap;					\

@@ -17,8 +17,7 @@
 */
 
 #include "../sys/sys.h"
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "fft.h"
 #include "mathmisc.h"
 #include "loc.h"

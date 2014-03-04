@@ -18,7 +18,9 @@
 
 #ifndef AOS_LIB_SPBIN_H
 #define AOS_LIB_SPBIN_H
-#include "type.h"
+#ifndef AOS_LIB_MATH_H
+#error "Don't include this file directly"
+#endif
 
 #define AOS_SPBIN_DEF(X,Y,T)\
 void Y(spwritedata)(file_t *fp, const X(sp) *sp);\

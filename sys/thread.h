@@ -166,6 +166,10 @@ INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #define PNEW2(A) pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 
+extern pthread_mutex_t mutex_fftw;
+#define LOCK_FFT LOCK(mutex_fftw)
+#define UNLOCK_FFT UNLOCK(mutex_fftw)
+
 void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);
 

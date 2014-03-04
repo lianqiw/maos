@@ -545,8 +545,7 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
 	    "%s abs",fn);
     free(pr);
 }
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "loc.h"
 /*
   The following routines applies the imagesc_* functions onto

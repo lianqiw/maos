@@ -27,15 +27,8 @@
 #include "../sys/sys.h"
 #include "random.h"
 #include "mathmisc.h"
-#include "dsp.h"
-#include "ssp.h"
-#include "csp.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
-#include "zmat.h"
+#include "mathdef.h"
 #include "fft.h"
-#include "matbin.h"
 #include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 /**
@@ -139,7 +132,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 	free_extra=1;
     }
     if(free_extra){
-	fft_free_plan(A->fft);
+	X(fft_free_plan)(A->fft);
 	free(A->header);
     }
     free(A);
@@ -305,20 +298,27 @@ void X(arrfree)(X(mat) **As, int n){
     }
     free(As);
 }
+/**
+   Compute max, min and sum */
+void X(maxminsum)(const T *restrict p, long N,
+		  R *restrict max, R *restrict min, R *restrict sum){
+    R a,b,s;
+    long i;
+    a=MAG(p[0]); 
+    b=MAG(p[0]);
+    s=0;
+    for(i=1; i<N; i++){
+	R tmp=MAG(p[i]);
+	s+=tmp;
+	if(tmp>a) a=tmp;
+	if(tmp<b) b=tmp;
+    }
+    if(max)*max=a; 
+    if(min)*min=b; 
+    if(sum)*sum=s;
+}
 void X(maxmin)(const X(mat) *A, R*max, R*min){
-#ifdef USE_COMPLEX
-#ifdef USE_SINGLE
-    maxminfcmp(A->p,A->nx*A->ny,max,min,NULL);
-#else
-    maxmincmp(A->p,A->nx*A->ny,max,min,NULL);
-#endif
-#else
-#ifdef USE_SINGLE
-    maxminflt(A->p,A->nx*A->ny,max,min);
-#else
-    maxmindbl(A->p,A->nx*A->ny,max,min);
-#endif
-#endif    
+    X(maxminsum)(A->p,A->nx*A->ny,max,min,0);
 }
 /**
    find the maximum value of a X(mat) object
@@ -347,6 +347,7 @@ R X(maxabs)(const X(mat) *A){
     min=FABS(min);
     return max>min?max:min;
 }
+
 /**
    duplicate a X(mat) array
 */
@@ -512,7 +513,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    error("A is %ldx%ld, B is %ldx%ld. They should match\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	if(fabs(bc)>EPS){
+	if(FABS(bc)>EPS){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }
@@ -595,6 +596,135 @@ void X(cwm)(X(mat) *B, const X(mat) *A){
     assert(A->nx==B->nx && A->ny==B->ny);
     for(int i=0; i<A->nx*A->ny; i++){
 	B->p[i]*=A->p[i];
+    }
+}
+
+/**
+   component-wise multiply of three matrices.
+   A=A.*B.*C
+*/
+void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict B, const X(mat) *restrict C){
+    if(!B){
+	X(cwm)(A,C);
+    }else if (!C){
+	X(cwm)(A,B);
+    }else{
+	assert(A && B && C);
+	assert(A->nx==B->nx && A->nx==C->nx&&A->ny==B->ny && A->ny==C->ny);
+	/*component-wise multiply A=A.*B */
+	const long ntot=A->nx*A->ny;
+	for(long i=0; i<ntot; i++){
+	    A->p[i]=A->p[i]*B->p[i]*C->p[i];
+	}
+    }
+}
+
+/**
+   Component-wise multiply each column of A with B
+   A(:,i)=A(:,i).*B;
+ */
+void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B){
+    if (!B) return;
+    assert(A->nx==B->nx && B->ny==1);
+    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+    T *B1=B->p;
+    for(long iy=0; iy<A->ny; iy++){
+	for(long ix=0; ix<A->nx; ix++){
+	    As[iy][ix]*=B1[ix];
+	}
+    }
+}
+
+/**
+   component-wise multiply of columns of A with combination of B1 and B2:
+   A(:,i)=A(:,i)*(B1*wt1+B2*wt2);
+ */
+void X(cwmcol2)(X(mat) *restrict A, 
+	      const T *restrict B1, const R wt1,
+	      const T *restrict B2, const R wt2){
+    assert(A && A->p); 
+    assert(B1);
+    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+    if(B2){
+	for(long ix=0; ix<A->nx; ix++){
+	    T junk=B1[ix]*wt1+B2[ix]*wt2;
+	    for(long iy=0; iy<A->ny; iy++){
+		As[iy][ix]*=junk;
+	    }
+	}
+    }else{
+	for(long ix=0; ix<A->nx; ix++){
+	    T junk=B1[ix]*wt1;
+	    for(long iy=0; iy<A->ny; iy++){
+		As[iy][ix]*=junk;
+	    }
+	}
+    }
+}
+
+/**
+   component wise multiply of 2d complex matrix A,W and 1d vector B.
+   A(:,i)=A(:,i).*W(:,i).*B;
+*/
+void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,const X(mat) *restrict B){
+
+    if(!W){
+	X(cwmcol)(A,B);
+    }else{
+	assert(A->nx==B->nx&& A->nx==W->nx&&A->ny==W->ny&&B->ny==1);
+	T (*As)[A->nx]=(T(*)[A->nx])A->p;
+	T (*Ws)[W->nx]=(T(*)[W->nx])W->p;
+	T *B1=B->p;
+
+	for(long iy=0; iy<A->ny; iy++){
+	    for(long ix=0; ix<A->nx; ix++){
+		As[iy][ix]=As[iy][ix]*Ws[iy][ix]*B1[ix];
+	    }
+	}
+    }
+
+}
+/**
+   Component wise multiply each row of A with B.
+   A(i,:)=A(i,:)*B
+*/
+void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B){
+    if(!A || !B) return;
+    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+    T *B1=B->p;
+    assert(A->ny==B->nx && B->ny==1);
+    for(long iy=0; iy<A->ny; iy++){
+	T junk=B1[iy];
+	for(long ix=0; ix<A->nx; ix++){
+	    As[iy][ix]*=junk;
+	}
+    }
+}
+
+/**
+   component-wise multiply of rows of A with combination of B1 and B2:
+   A(i,:)=A(i,:).*(B1*wt1+B2*wt2);
+ */
+void X(cwmrow2)(X(mat) *restrict A, 
+	     const T *restrict B1, const R wt1,
+	     const T *restrict B2, const R wt2){
+    assert(A && A->p); 
+    assert(B1);
+    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+    if(B2){
+	for(long iy=0; iy<A->ny; iy++){
+	    T junk=B1[iy]*wt1+B2[iy]*wt2;
+	    for(long ix=0; ix<A->nx; ix++){
+		As[iy][ix]*=junk;
+	    }
+	}
+    }else{
+	for(long iy=0; iy<A->ny; iy++){
+	    T junk=B1[iy]*wt1;
+	    for(long ix=0; ix<A->nx; ix++){
+		As[iy][ix]*=junk;
+	    }
+	}
     }
 }
 
@@ -698,7 +828,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
    functions used in mkw.  creates slightly larger map.  add
    an filled circle.  cx,cy,r are in unit of pixels
 */
-void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val){
+void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
     int nres=100;
     const R res=(R)(1./nres);
     const R res1=(R)(1./nres);
@@ -720,11 +850,11 @@ void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, 
 		for(int jy=0; jy<nres; jy++){
 		    R iiy=iy+(jy-resm)*2*res;
 		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    R wty=1.-fabs(iy-iiy);
+		    R wty=1.-FABS(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
 			R iix=ix+(jx-resm)*2*res;
 			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			R wtx=1.-fabs(ix-iix);
+			R wtx=1.-FABS(ix-iix);
 			if(rr2r<r2){
 			    tot+=res2*wty*wtx;
 			}
@@ -739,33 +869,33 @@ void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, 
 /**
    Similar to X(circle), by multiply instead of add.
 */
-void X(circle_mul)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val){
+void X(circle_mul)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
     int nres=100;
-    const double res=1./(double)(nres);
-    const double res1=1./(double)(nres);
-    const double res2=res1*res1*4.;
-    double resm=(double)(nres-1)/2.;
-    double r2=r*r;
-    double r2l=(r-1.5)*(r-1.5);
-    double r2u=(r+2.5)*(r+2.5);
+    const R res=1./(R)(nres);
+    const R res1=1./(R)(nres);
+    const R res2=res1*res1*4.;
+    R resm=(R)(nres-1)/2.;
+    R r2=r*r;
+    R r2l=(r-1.5)*(r-1.5);
+    R r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy*dy-cy)*(iy*dy-cy);
+	R r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
-	    double val2=0;
+	    R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
+	    R val2=0;
 	    if(r2r<r2l) {
 		val2=val;
 	    }else if(r2r<r2u){
-		double tot=0.;
+		R tot=0.;
 		for(int jy=0; jy<nres; jy++){
-		    double iiy=iy+(jy-resm)*2*res;
-		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    double wty=1.-fabs(iy-iiy);
+		    R iiy=iy+(jy-resm)*2*res;
+		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
+		    R wty=1.-FABS(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
-			double iix=ix+(jx-resm)*2*res;
-			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			double wtx=1.-fabs(ix-iix);
+			R iix=ix+(jx-resm)*2*res;
+			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
+			R wtx=1.-FABS(ix-iix);
 			if(rr2r<r2)
 			    tot+=res2*wty*wtx;
 		    }
@@ -781,26 +911,26 @@ void X(circle_mul)(X(mat) *A, double cx, double cy, double dx, double dy, double
    Unlike X(circle), we don't use bilinear influence function, but use pure gray
    pixel instead. Also the values are black/white, no gray.
 */
-void X(circle_symbolic)(X(mat) *A, double cx, double cy, double dx, double dy, double r){
-    double r2=r*r;
-    double r2l=(r-1.5)*(r-1.5);
-    double r2u=(r+2.5)*(r+2.5);
+void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
+    R r2=r*r;
+    R r2l=(r-1.5)*(r-1.5);
+    R r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy*dy-cy)*(iy*dy-cy);
+	R r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
+	    R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
 	    if(r2r<r2l){
 	    	As[iy][ix]=1;
 	    }else if(r2r>r2u){
 		continue;//do not set to 0.
 	    }else{
-		for(double jy=-0.5; jy<1; jy++){
-		    double iiy=iy+jy;
-		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    for(double jx=-0.5; jx<1; jx++){
-			double iix=ix+jx;
-			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
+		for(R jy=-0.5; jy<1; jy++){
+		    R iiy=iy+jy;
+		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
+		    for(R jx=-0.5; jx<1; jx++){
+			R iix=ix+jx;
+			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
 			if(rr2r<r2){
 			    As[iy][ix]=1;
 			    continue;
@@ -925,10 +1055,10 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
    same as rotate coordinate theta CW.
    A(:,1) is x, A(:,2) is y.
 */
-void X(rotvec)(X(mat) *A, const double theta){
+void X(rotvec)(X(mat) *A, const R theta){
     if(A->ny!=2) error("Wrong dimension\n");
-    const double ctheta=cos(theta);
-    const double stheta=sin(theta);
+    const R ctheta=cos(theta);
+    const R stheta=sin(theta);
     PMAT(A,Ap);
     for(int i=0; i<A->nx; i++){
 	T tmp=Ap[0][i]*ctheta-Ap[1][i]*stheta;
@@ -942,10 +1072,10 @@ void X(rotvec)(X(mat) *A, const double theta){
    same as rotate coordinate theta CW.
    A(:,1) is x, A(:,2) is y.
 */
-void X(rotvect)(X(mat) *A, const double theta){
+void X(rotvect)(X(mat) *A, const R theta){
     if(A->nx!=2) error("Wrong dimension\n");
-    const double ctheta=cos(theta);
-    const double stheta=sin(theta);
+    const R ctheta=cos(theta);
+    const R stheta=sin(theta);
     PMAT(A,Ap);
     for(int i=0; i<A->ny; i++){
 	T tmp=Ap[i][0]*ctheta-Ap[i][1]*stheta;
@@ -959,7 +1089,7 @@ void X(rotvect)(X(mat) *A, const double theta){
    (coordinate rotate -theta CCW) or from ra to xy
    coordinate.  R*A*R';
 */
-void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta){
+void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
     assert(A->nx==2 && A->ny==2);
     if(!*B0) 
 	*B0=X(new)(2,2);
@@ -1005,10 +1135,10 @@ void X(mulvec3)(T *y, const X(mat) *A, const T *x){
    point (cog=0) from the physical center.
    all length are given in terms of pixel.
 */
-void X(cog)(double *grad,const X(mat) *im,double offsetx,
-	    double offsety, double thres, double bkgrnd){
-    double sum=0,sumx=0,sumy=0;
-    double iI;
+void X(cog)(R *grad,const X(mat) *im,R offsetx,
+	    R offsety, R thres, R bkgrnd){
+    R sum=0,sumx=0,sumy=0;
+    R iI;
     PMAT(im,pim);
     for(int iy=0; iy<im->ny; iy++){
 	for(int ix=0; ix<im->nx; ix++){
@@ -1020,9 +1150,9 @@ void X(cog)(double *grad,const X(mat) *im,double offsetx,
 	    }
 	}
     }
-    if(fabs(sum)>0){
-	grad[0]=sumx/sum-((double)(im->nx-1)*0.5+offsetx);
-	grad[1]=sumy/sum-((double)(im->ny-1)*0.5+offsety);
+    if(FABS(sum)>0){
+	grad[0]=sumx/sum-((R)(im->nx-1)*0.5+offsetx);
+	grad[1]=sumy/sum-((R)(im->ny-1)*0.5+offsety);
     }else{
 	grad[0]=0;
 	grad[1]=0;
@@ -1034,42 +1164,42 @@ void X(cog)(double *grad,const X(mat) *im,double offsetx,
    center+[offsetx,offsety] using cog and fft.
 */
 #ifndef USE_SINGLE
-void X(shift2center)(X(mat) *A, double offsetx, double offsety){
-    double grad[2];
-    double Amax=X(max)(A);
+void X(shift2center)(X(mat) *A, R offsetx, R offsety){
+    R grad[2];
+    R Amax=X(max)(A);
     X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
-    if(fabs(grad[0])>0.1 || fabs(grad[1])>0.1){
+    if(FABS(grad[0])>0.1 || FABS(grad[1])>0.1){
 	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
-	cmat *B=cnew(A->nx,A->ny);
-	cfft2plan(B,-1);
-	cfft2plan(B,1);
+	XC(mat) *B=XC(new)(A->nx,A->ny);
+	XC(fft2plan)(B,-1);
+	XC(fft2plan)(B,1);
 #ifdef USE_COMPLEX
-	ccp(&B,A);
+	XC(cp)(&B,A);
 #else
-	ccpd(&B,A);
+	XC(cpd)(&B,A);
 #endif
-	double scale=1./(A->nx*A->ny);
-	cfftshift(B);
-	cfft2(B,-1);
-	ctilt(B,-grad[0],-grad[1],0);
-	cfft2(B,1);
-	cfftshift(B);
-	cscale(B,scale);
+	R scale=1./(A->nx*A->ny);
+	XC(fftshift)(B);
+	XC(fft2)(B,-1);
+	XC(tilt)(B,-grad[0],-grad[1],0);
+	XC(fft2)(B,1);
+	XC(fftshift)(B);
+	XC(scale)(B,scale);
 #ifdef USE_COMPLEX
-	ccp(&A,B);
+	XC(cp)(&A,B);
 #else
-	creal2d(&A,0,B,1);
+	XC(real2d)(&A,0,B,1);
 #endif
 	X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
 	/*info("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
-	cfree(B);
+	XC(free)(B);
     }
 }
 #endif
 /**
    Limit numbers in A to within [min, max]. used for DM clipping.
 */
-int X(clip)(X(mat) *A, double min, double max){
+int X(clip)(X(mat) *A, R min, R max){
     if(!A) return 0;
     if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
     if(max<=min){
@@ -1164,7 +1294,7 @@ void X(muldiag2)(X(mat) *A, const X(mat) *s){
 /**
    Raise all elements to power power
 */
-void X(cwpow)(X(mat)*A, double power){
+void X(cwpow)(X(mat)*A, R power){
     if(!A) return;
     for(long i=0; i<A->nx*A->ny; i++){
 	A->p[i]=POW(A->p[i],power);
@@ -1174,7 +1304,7 @@ void X(cwpow)(X(mat)*A, double power){
 /**
    compute exponential of all elements after scaling by alpha
 */
-void X(cwexp)(X(mat)*A, double alpha){
+void X(cwexp)(X(mat)*A, R alpha){
     if(!A) return;
     for(long i=0; i<A->nx*A->ny; i++){
 	A->p[i]=EXP(A->p[i]*alpha);
@@ -1184,7 +1314,7 @@ void X(cwexp)(X(mat)*A, double alpha){
 /**
    Raise all elements above thres*maxabs(A) to pow power. Set others to zero.
 */
-void X(cwpow_thres)(X(mat) *A, double power, double thres){
+void X(cwpow_thres)(X(mat) *A, R power, R thres){
     thres*=X(maxabs)(A);
     for(long i=0; i<A->nx*A->ny; i++){
 	if(ABS(A->p[i])>thres){
@@ -1223,7 +1353,7 @@ void X(addI)(X(mat) *A, T val){
 	A->p[i+i*A->nx]+=val;
     } 
 }
-#ifndef USE_SINGLE
+
 /**
    y=y+alpha*x*A;
    implemented by transposing x,y index in sptmulmat implementation
@@ -1262,15 +1392,15 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	}
     }
 }
-#endif
+
 /**
    Create log spaced vector.
 */
-X(mat)* X(logspace)(double emin, double emax, long n){
+X(mat)* X(logspace)(R emin, R emax, long n){
     X(mat)* out=X(new)(n,1);
-    double esep=(emax-emin)/(n-1);
+    R esep=(emax-emin)/(n-1);
     for(long i=0; i<n; i++){
-	double ex=emin+esep*i;
+	R ex=emin+esep*i;
 	out->p[i]=pow(10, ex);
     }
     return out;
@@ -1279,7 +1409,7 @@ X(mat)* X(logspace)(double emin, double emax, long n){
 /**
    Create linearly spaced vector.
 */
-X(mat)* X(linspace)(double min, double dx, long n){
+X(mat)* X(linspace)(R min, R dx, long n){
     X(mat)* out=X(new)(n,1);
     for(long i=0; i<n; i++){
 	out->p[i]=min+dx*i;
@@ -1292,10 +1422,10 @@ X(mat)* X(linspace)(double min, double dx, long n){
 static int X(islinear)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
-    double xminl=(xin->p[0]);
-    double xmaxl=(xin->p[nmax-1]);
-    double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-3){
+    R xminl=(xin->p[0]);
+    R xmaxl=(xin->p[nmax-1]);
+    R xsep=(xmaxl-xminl)/(R)(nmax1);
+    if(FABS(xsep+xminl-xin->p[1])>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1307,11 +1437,11 @@ static int X(islinear)(const X(mat)*xin){
 static int X(islog)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
-    double xminl=log10(xin->p[0]);
-    double x1=log10(xin->p[1]);
-    double xmaxl=log10(xin->p[nmax1]);
-    double xsep=(xmaxl-xminl)/(double)(nmax1);
-    if(!isfinite(xsep) || fabs(xsep+xminl-x1)>xsep*1.e-3){
+    R xminl=log10(xin->p[0]);
+    R x1=log10(xin->p[1]);
+    R xmaxl=log10(xin->p[nmax1]);
+    R xsep=(xmaxl-xminl)/(R)(nmax1);
+    if(!isfinite(xsep) || FABS(xsep+xminl-x1)>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1330,23 +1460,23 @@ X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xne
     }
     long nmax=xin->nx;
     long nmax1=nmax-1;
-    double xminl=(xin->p[0]);
-    double xmaxl=(xin->p[nmax-1]);
-    double xsep=(xmaxl-xminl)/(double)(nmax1);
-    double xsep1=1./xsep;
+    R xminl=(xin->p[0]);
+    R xmaxl=(xin->p[nmax-1]);
+    R xsep=(xmaxl-xminl)/(R)(nmax1);
+    R xsep1=1./xsep;
     X(mat) *ynew=X(new)(xnew->nx, xnew->ny);
     PMAT(yin, pyin);
     PMAT(ynew, pynew);
     for(long iy=0; iy<ynew->ny; iy++){
 	for(long ix=0; ix<ynew->nx; ix++){
-	    double xx=((xnew->p[ix])-xminl)*xsep1;
+	    R xx=((xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
 		pynew[iy][ix]=pyin[iy][0];
 	    }else if(xxm>=nmax1){
 		pynew[iy][ix]=pyin[iy][nmax1];
 	    }else{
-		double xxw=xx-xxm;
+		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
 	    }
 	}
@@ -1367,23 +1497,23 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
     }
     long nmax=xin->nx;
     long nmax1=nmax-1;
-    double xminl=log10(xin->p[0]);
-    double xmaxl=log10(xin->p[nmax-1]);
-    double xsep=(xmaxl-xminl)/(double)(nmax1);
-    double xsep1=1./xsep;
+    R xminl=log10(xin->p[0]);
+    R xmaxl=log10(xin->p[nmax-1]);
+    R xsep=(xmaxl-xminl)/(R)(nmax1);
+    R xsep1=1./xsep;
     X(mat) *ynew=X(new)(xnew->nx, xnew->ny);
     PMAT(yin, pyin);
     PMAT(ynew, pynew);
     for(long iy=0; iy<ynew->ny; iy++){
 	for(long ix=0; ix<ynew->nx; ix++){
-	    double xx=(log10(xnew->p[ix])-xminl)*xsep1;
+	    R xx=(log10(xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
 		pynew[iy][ix]=pyin[iy][0];
 	    }else if(xxm>=nmax1){
 		pynew[iy][ix]=pyin[iy][nmax1];
 	    }else{
-		double xxw=xx-xxm;
+		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
 	    }
 	}
@@ -1418,7 +1548,7 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
 		}
 	    }
 	    
-	    double xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
+	    R xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
 	    for(long iy=0; iy<ynew->ny; iy++){
 		pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
 	    }
@@ -1441,66 +1571,7 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew){
    merge this definition with cembed in cmat.c
    }
 */
-void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
-    
-    const long ninx=B->nx;
-    const long niny=B->ny;
-    const long noutx=A->nx;
-    const long nouty=A->ny;
-    memset(A->p, 0, sizeof(T)*noutx*nouty);
-    if(fabs(theta)<1.e-10){/*no rotation. */
-	const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
-	const long skipy=(nouty-niny-1)/2;
-	long ixstart=0, ixend=ninx;
-	long iystart=0, iyend=niny;
-	if(skipx<0){
-	    ixstart=-skipx;
-	    ixend=ninx+skipx;
-	}
-	if(skipy<0){
-	    iystart=-skipy;
-	    iyend=niny+skipy;
-	}
-	PMAT(A, pA);
-	PMAT(B, pB);
-	for(long iy=iystart; iy<iyend; iy++){
-	    T *outi=&pA[skipy+iy][skipx+ixstart];
-	    T *ini =&pB[iy][ixstart];
-	    memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
-	}
-    }else{
-	PMAT(A, outs);
-	PMAT(B, ins);
-	const double ctheta=cos(theta);
-	const double stheta=sin(theta);
-	double x2,y2;
-	double x,y;
-	long ninx2=ninx/2;
-	long noutx2=noutx/2;
-	long niny2=niny/2;
-	long nouty2=nouty/2;
-	long ix2, iy2;
-	for(long iy=0; iy<nouty; iy++){ 
-	    y=(double)(iy-nouty2); 
-	    for(long ix=0; ix<noutx; ix++){ 
-		x=(double)(ix-noutx2); 
-		x2=x*ctheta+y*stheta+ninx2; 
-		y2=-x*stheta+y*ctheta+niny2; 
-		if(x2>0 && x2<ninx-1 && y2>0 && y2<niny-1){ 
-		    ix2=ifloor(x2); 
-		    iy2=ifloor(y2); 
-		    x2=x2-ix2; 
-		    y2=y2-iy2; 
-		    outs[iy][ix] =
-			ins[iy2][ix2]*((1.-x2)*(1.-y2))
-			+ins[iy2][ix2+1]*(x2*(1.-y2))
-			+ins[iy2+1][ix2]*((1-x2)*y2)
-			+ins[iy2+1][ix2+1]*(x2*y2); 
-		} 
-	    } 
-	} 
-    }
-}
+
 /*blend B into center of A with width of overlap. The center
   (size is B->nx-overlap, B->ny-overlap) of A is replaced by
   center of B . The overlapping area is blended*/
@@ -1524,22 +1595,22 @@ void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap){
     }
     PMAT(A, pA);
     PMAT(B, pB);
-    double wty, wtx;
+    R wty, wtx;
     for(long iy=0; iy<iylen; iy++){
 	T *outi=&pA[iystart+skipy+iy][ixstart+skipx];
 	T *ini =&pB[iystart+iy][ixstart];
 	if(iy<overlap){
-	    wty=(double)iy/(double)(overlap-1);
+	    wty=(R)iy/(R)(overlap-1);
 	}else if(iylen-iy-1<overlap){
-	    wty=(double)(iylen-iy-1)/(double)(overlap-1);
+	    wty=(R)(iylen-iy-1)/(R)(overlap-1);
 	}else{
 	    wty=1;
 	}
 	for(long ix=0; ix<ixlen; ix++){
 	    if(ix<overlap){
-		wtx=(double)ix/(double)(overlap-1);
+		wtx=(R)ix/(R)(overlap-1);
 	    }else if(ixlen-ix-1<overlap){
-		wtx=(double)(ixlen-ix-1)/(double)(overlap-1);
+		wtx=(R)(ixlen-ix-1)/(R)(overlap-1);
 	    }else{
 		wtx=1;
 	    }
@@ -1551,7 +1622,7 @@ void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap){
    For each entry in A, call repeatly to collect its histogram, centered at
    center, spaced by spacing, for n bins in total. center if at bin n/2.  */
 void X(histfill)(X(mat) **out, const X(mat)* A,
-		 double center, double spacing, int n){
+		 R center, R spacing, int n){
     if(!A || !A->p) return;
     int nn=A->nx*A->ny;
     if(!*out){
@@ -1559,7 +1630,7 @@ void X(histfill)(X(mat) **out, const X(mat)* A,
     }
     PMAT(*out,Op);
     const T *restrict Ap=A->p;
-    const double spacingi=1./spacing;
+    const R spacingi=1./spacing;
     const int noff=n/2;
     const int n1=n-1;
     for(long i=0; i<A->nx*A->ny; i++){
@@ -1635,7 +1706,7 @@ X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y){
     }
     X(mat) *coeff=X(new)(4,nx);
     T xsep=(px[nx-1]-px[0])/(nx-1);
-    double thres=ABS(xsep)*1.e-5;
+    R thres=ABS(xsep)*1.e-5;
   
     PMAT(coeff,pc);
     T ypriv,ynext;
@@ -1696,174 +1767,10 @@ X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew){
     return out;
 }
 /**
-   2D cubic spline interpolation preparation. x is the x coordinate vector of
- the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the
- 2-d grid.  It is upto the user to make sure that the coordinate is increasingly
- ordered and evenly spaced .
-
- The boundaries are handled in the same way is X(spline). i.e. replace 
- \f[f^\prime(0)=(f(1)-f(-1))/2\f] by
- \f[f^\prime(0)=(f(1)-f(0))\f]
- Otehr type of boundaries are handled in the same way.
-*/
-
-X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
-    const long nx=x->nx;
-    const long ny=y->nx;
-    assert(x->ny==1 && y->ny ==1 && z->nx==nx && z->ny==ny);
-    X(cell)*coeff=X(cellnew)(nx,ny);
-    PCELL(coeff,pc);
-  
-    PMAT(z,p);
-    T p00,p01,p02,p03,p10,p11,p12,p13,p20,p21,p22,p23,p30,p31,p32,p33;
-    for(long iy=0; iy<ny-1; iy++){
-	for(long ix=0; ix<nx-1; ix++){
-	    if(iy==0){
-		if(ix==0){
-		    p00=2*(2*p[iy][ix]-p[iy][ix+1])-(2*p[iy+1][ix]-p[iy+1][ix+1]);/*from a */
-		}else{
-		    p00=2*p[iy][ix-1]-p[iy+1][ix-1];/*from b */
-		}
-		p01=2*p[iy][ix]-p[iy+1][ix];
-		p02=2*p[iy][ix+1]-p[iy+1][ix+1];
-		if(ix==nx-2){
-		    p03=2*(p[iy][ix+1]*2-p[iy][ix])-(p[iy+1][ix+1]*2-p[iy+1][ix]);/*from n */
-		}else{
-		    p03=2*p[iy][ix+2]-p[iy+1][ix+2];/*from m */
-		}
-	    }else{
-		if(ix==0){
-		    p00=2*p[iy-1][ix]-p[iy-1][ix+1];/*a from b */
-		}else{
-		    p00=p[iy-1][ix-1];/*b */
-		}
-		p01=p[iy-1][ix];
-		p02=p[iy-1][ix+1];
-		if(ix==nx-2){
-		    p03=p[iy-1][ix+1]*2-p[iy-1][ix];/*n from m */
-		}else{
-		    p03=p[iy-1][ix+2];/*m */
-		}
-	    }
-	    if(ix==0){
-		p10=p[iy][ix]*2-p[iy][ix+1];/*from c */
-	    }else{
-		p10=p[iy][ix-1];/*c */
-	    }
-	    p11=p[iy][ix];
-	    p12=p[iy][ix+1];
-	    if(ix==nx-2){
-		p13=p[iy][ix+1]*2-p[iy][ix];/*from d */
-	    }else{
-		p13=p[iy][ix+2];/*d */
-	    }
-	    if(ix==0){
-		p20=p[iy+1][ix]*2-p[iy+1][ix+1];/*from e */
-	    }else{
-		p20=p[iy+1][ix-1];/*e */
-	    }
-	    p21=p[iy+1][ix];
-	    p22=p[iy+1][ix+1];
-	    if(ix==nx-2){
-		p23=p[iy+1][ix+1]*2-p[iy+1][ix];/*from f */
-	    }else{
-		p23=p[iy+1][ix+2];/*f */
-	    }
-	    if(iy==ny-2){
-		if(ix==0){
-		    p30=2*(p[iy+1][ix]*2-p[iy+1][ix+1])-(p[iy][ix]*2-p[iy][ix+1]);/*from h */
-		}else{
-		    p30=2*p[iy+1][ix-1]-p[iy][ix-1];/*from g */
-		}
-		p31=2*p[iy+1][ix]-p[iy][ix];
-		p32=2*p[iy+1][ix+1]-p[iy][ix+1];
-		if(ix==nx-2){
-		    p33=2*(2*p[iy+1][ix+1]-p[iy+1][ix])-(2*p[iy][ix+1]-p[iy][ix]);/*from j */
-		}else{
-		    p33=2*p[iy+1][ix+2]-p[iy][ix+2];/*from i */
-		}
-	    }else{
-		if(ix==0){
-		    p30=p[iy+2][ix]*2-p[iy+2][ix+1];/*h from g */
-		}else{
-		    p30=p[iy+2][ix-1];/*g */
-		}
-		p31=p[iy+2][ix];
-		p32=p[iy+2][ix+1];
-		if(ix==nx-2){
-		    p33=2*p[iy+2][ix+1]-p[iy+2][ix];/*j from i */
-		}else{
-		    p33=p[iy+2][ix+2];/*i */
-		}
-	    }
-	    pc[iy][ix] = X(new)(4,4);
-	    PMAT(pc[iy][ix],ppc);
-	    ppc[0][0] = p11;
-	    ppc[0][1] = -.5*p10 + .5*p12;
-	    ppc[0][2] = p10 - 2.5*p11 + 2*p12 - .5*p13;
-	    ppc[0][3] = -.5*p10 + 1.5*p11 - 1.5*p12 + .5*p13;
-	    ppc[1][0] = -.5*p01 + .5*p21;
-	    ppc[1][1] = .25*p00 - .25*p02 - .25*p20 + .25*p22;
-	    ppc[1][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + .5*p20 - 1.25*p21 + p22 - .25*p23;
-	    ppc[1][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .25*p20 + .75*p21 - .75*p22 + .25*p23;
-	    ppc[2][0] = p01 - 2.5*p11 + 2*p21 - .5*p31;
-	    ppc[2][1] = -.5*p00 + .5*p02 + 1.25*p10 - 1.25*p12 - p20 + p22 + .25*p30 - .25*p32;
-	    ppc[2][2] = p00 - 2.5*p01 + 2*p02 - .5*p03 - 2.5*p10 + 6.25*p11 - 5*p12 + 1.25*p13 + 2*p20 - 5*p21 + 4*p22 - p23 - .5*p30 + 1.25*p31 - p32 + .25*p33;
-	    ppc[2][3] = -.5*p00 + 1.5*p01 - 1.5*p02 + .5*p03 + 1.25*p10 - 3.75*p11 + 3.75*p12 - 1.25*p13 - p20 + 3*p21 - 3*p22 + p23 + .25*p30 - .75*p31 + .75*p32 - .25*p33;
-	    ppc[3][0] = -.5*p01 + 1.5*p11 - 1.5*p21 + .5*p31;
-	    ppc[3][1] = .25*p00 - .25*p02 - .75*p10 + .75*p12 + .75*p20 - .75*p22 - .25*p30 + .25*p32;
-	    ppc[3][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + 1.5*p10 - 3.75*p11 + 3*p12 - .75*p13 - 1.5*p20 + 3.75*p21 - 3*p22 + .75*p23 + .5*p30 - 1.25*p31 + p32 - .25*p33;
-	    ppc[3][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .75*p10 + 2.25*p11 - 2.25*p12 + .75*p13 + .75*p20 - 2.25*p21 + 2.25*p22 - .75*p23 - .25*p30 + .75*p31 - .75*p32 + .25*p33;
-
-	}
-    }
-    return coeff;
-}
-
-/**
-   Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew
-*/
-X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew){
-    const long nx=x->nx;
-    const long ny=y->nx;
-    T xmin=x->p[0];
-    T ymin=y->p[0];
-    T xsep1=(double)(nx-1)/(x->p[nx-1]-xmin);
-    T ysep1=(double)(ny-1)/(y->p[ny-1]-ymin);
-    assert(xnew->nx == ynew->nx && xnew->ny == ynew->ny);
-    X(mat)*zz=X(new)(xnew->nx, xnew->ny);
-    PCELL(coeff,pc);
-    for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-	double xm=REAL((xnew->p[ix]-xmin)*xsep1);
-	long xmf=floor(xm);
-	if(xmf<0) xmf=0;
-	if(xmf>nx-2) xmf=nx-2;
-	xm=xm-xmf;
-
-	double ym=REAL((ynew->p[ix]-ymin)*ysep1);
-	long ymf=floor(ym);
-	if(ymf<0) ymf=0;
-	if(ymf>ny-2) ymf=ny-2;
-	ym=ym-ymf;
-	
-	T xm2=xm *xm;
-	T xm3=xm2*xm;
-	T ym2=ym *ym;
-	T ym3=ym2*ym;
-	PMAT(pc[ymf][xmf],ppc);
-	zz->p[ix]= ppc[0][0] + ppc[0][1] * xm + ppc[0][2] * xm2 + ppc[0][3] * xm3 +
-	    ppc[1][0] * ym + ppc[1][1] * ym * xm + ppc[1][2] * ym * xm2 + ppc[1][3] * ym * xm3 +
-	    ppc[2][0] * ym2 + ppc[2][1] * ym2 * xm + ppc[2][2] * ym2 * xm2 + ppc[2][3] * ym2 * xm3 +
-	    ppc[3][0] * ym3 + ppc[3][1] * ym3 * xm + ppc[3][2] * ym3 * xm2 + ppc[3][3] * ym3 * xm3;
-
-    }
-    return zz;
-}
-/**
    Do a component wise log10 on each element of A.
 */
 void X(cwlog10)(X(mat) *A){
-    double ratio=1./log(10);
+    R ratio=1./log(10);
     for(long i=0; i<A->nx*A->ny; i++){
 	A->p[i]=LOG(A->p[i])*ratio;
     }
@@ -1882,9 +1789,9 @@ void X(cwlog)(X(mat) *A){
    reverse = 0 : from oin to out: out=out*alpha+in*beta
    reverse = 1 : from out to oin: in=in*beta+out*alpha
 */
-void X(embed_locstat)(X(mat) **restrict out, double alpha,
+void X(embed_locstat)(X(mat) **restrict out, R alpha,
 		      loc_t *restrict loc, 
-		      R *restrict oin, double beta, int reverse){
+		      R *restrict oin, R beta, int reverse){
     loc_create_stat(loc);
     locstat_t *restrict locstat=loc->stat;
     if(!*out){
@@ -1900,7 +1807,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	}
     }
     PMAT(*out, p);
-    double dx1=1./locstat->dx;
+    R dx1=1./locstat->dx;
     long xoff0=((*out)->nx - locstat->nrow +1)/2;
     long yoff0=((*out)->ny - locstat->ncol +1)/2;
 
@@ -1913,7 +1820,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	if(!reverse){
 	    if(oin){
 		const R *restrict oin2=oin+pos1;
-		if(fabs(alpha)>EPS){
+		if(FABS(alpha)>EPS){
 		    for(long ix=0; ix<pos2-pos1; ix++){
 			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;
 		    }
@@ -1923,7 +1830,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 		    }
 		}
 	    }else{
-		if(fabs(alpha)>EPS){
+		if(FABS(alpha)>EPS){
 		    for(long ix=0; ix<pos2-pos1; ix++){
 			dest[ix]=dest[ix]*alpha+beta;
 		    }
@@ -1935,7 +1842,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	    }
 	}else{
 	    R *restrict oin2=oin+pos1;
-	    if(fabs(beta)>EPS){
+	    if(FABS(beta)>EPS){
 		for(long ix=0; ix<pos2-pos1; ix++){
 		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);
 		}
@@ -1947,12 +1854,74 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	}
     }
 }
+
+void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
+    
+    const long ninx=B->nx;
+    const long niny=B->ny;
+    const long noutx=A->nx;
+    const long nouty=A->ny;
+    memset(A->p, 0, sizeof(T)*noutx*nouty);
+    if(FABS(theta)<1.e-10){/*no rotation. */
+	const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
+	const long skipy=(nouty-niny-1)/2;
+	long ixstart=0, ixend=ninx;
+	long iystart=0, iyend=niny;
+	if(skipx<0){
+	    ixstart=-skipx;
+	    ixend=ninx+skipx;
+	}
+	if(skipy<0){
+	    iystart=-skipy;
+	    iyend=niny+skipy;
+	}
+	PMAT(A, pA);
+	PMAT(B, pB);
+	for(long iy=iystart; iy<iyend; iy++){
+	    T *outi=&pA[skipy+iy][skipx+ixstart];
+	    T *ini =&pB[iy][ixstart];
+	    memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
+	}
+    }else{
+	PMAT(A, outs);
+	PMAT(B, ins);
+	const R ctheta=cos(theta);
+	const R stheta=sin(theta);
+	R x2,y2;
+	R x,y;
+	long ninx2=ninx/2;
+	long noutx2=noutx/2;
+	long niny2=niny/2;
+	long nouty2=nouty/2;
+	long ix2, iy2;
+	for(long iy=0; iy<nouty; iy++){ 
+	    y=(R)(iy-nouty2); 
+	    for(long ix=0; ix<noutx; ix++){ 
+		x=(R)(ix-noutx2); 
+		x2=x*ctheta+y*stheta+ninx2; 
+		y2=-x*stheta+y*ctheta+niny2; 
+		if(x2>0 && x2<ninx-1 && y2>0 && y2<niny-1){ 
+		    ix2=ifloor(x2); 
+		    iy2=ifloor(y2); 
+		    x2=x2-ix2; 
+		    y2=y2-iy2; 
+		    outs[iy][ix] =
+			ins[iy2][ix2]*((1.-x2)*(1.-y2))
+			+ins[iy2][ix2+1]*(x2*(1.-y2))
+			+ins[iy2+1][ix2]*((1-x2)*y2)
+			+ins[iy2+1][ix2+1]*(x2*y2); 
+		} 
+	    } 
+	} 
+    }
+}
+
 /**
    Calculate number of pixels having values larger than or equal to half of
 maximum. Useful to compute fwhm. */
 long X(fwhm)(X(mat) *A){
     if(!A) return 0;
-    double hm=0.5*X(max)(A);
+    R hm=0.5*X(max)(A);
     long fwhm=0;
     for(long ix=0; ix<A->nx*A->ny; ix++){
 	if(ABS(A->p[ix])>=hm){
@@ -1976,15 +1945,130 @@ static int sort_descend(const T*A, const T*B){
 void X(sort)(X(mat) *A, int ascend){
     for(int i=0; i<A->ny; i++){
 	if(ascend){
-	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+	    qsort(A->p+i*A->nx, A->nx, sizeof(R), 
 		  (int(*)(const void*,const void*))sort_ascend);
 	}else{
-	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+	    qsort(A->p+i*A->nx, A->nx, sizeof(R), 
 		  (int(*)(const void*,const void*))sort_descend);
 	}
     }
 }
+
+typedef struct{
+    X(mat) *enc; /**<Output*/
+    X(mat) *dvec;/**<Radius wanted*/
+    X(mat) *phat; /**<processed image.*/
+    int type;  
+}ENC_T;
+
+static void X(enc_thread)(thread_t *pdata){
+    ENC_T *data=pdata->data;
+    const X(mat) *dvec=data->dvec;
+    X(mat) *enc=data->enc;
+    PMAT(data->phat, ppsf);
+    int type=data->type;
+    const R *restrict dr=dvec->p;
+    const long ncomp2=data->phat->nx;
+    const long ncomp=ncomp2/2;
+    const R dk=1./ncomp2;
+    const R pi2=2*M_PI;
+    if(type==0){
+	X(mat) *ksinc=X(new)(dvec->nx, ncomp2);
+	PMAT(ksinc, pks);
+	/*Cache the data. */
+	for(long iy=0; iy<ncomp2; iy++){
+	    R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
+	    for(long ir=pdata->start; ir<pdata->end; ir++){
+		pks[iy][ir]=sinc(ky*dr[ir])*dr[ir];
+	    }
+	}
+	for(long iy=0; iy<ncomp2; iy++){
+	    for(long ix=0; ix<ncomp2; ix++){
+		for(long ir=pdata->start; ir<pdata->end; ir++){
+		    R s=pks[iy][ir]*pks[ix][ir];
+		    enc->p[ir]+=s*ppsf[iy][ix];
+		}
+	    }
+	}
+    }else{
+	for(long iy=0; iy<ncomp2; iy++){
+	    R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
+	    info("%ld of %ld for %ld\n", iy, ncomp2, dvec->nx);
+	    for(long ix=0; ix<ncomp2; ix++){
+		R kx=(ix<ncomp?ix:ix-ncomp2)*dk;
+		switch(type){
+		case -1: {/*azimuthal average. dr is radius */
+		    R k=sqrt(kx*kx+ky*ky);
+		    for(long ir=pdata->start; ir<pdata->end; ir++){
+			R s=j0(k*pi2*dr[ir]);
+			enc->p[ir]+=s*ppsf[iy][ix];
+		    }
+		} break;
+		case 0:
+		    break;
+		case 1: {/*Encircled energy. dr is diameter */
+		    R k=sqrt(kx*kx+ky*ky);
+		    for(long ir=pdata->start; ir<pdata->end; ir++){
+			const R r=dr[ir]*0.5;
+			const R tmp=k*pi2*r;
+			R s=j1(tmp)*r/k;
+			if(!ix && !iy) s=pi2*r*r;/*special case. */
+			enc->p[ir]+=s*ppsf[iy][ix];
+		    }
+		} break;
+		case 2:/*Enstripped energe in a slit. */
+		    error("To implement: Do FFT only along 1-d\n");
+		    break;
+		default:
+		    error("Not implemented\n");
+		}
+	    }
+	}
+    }
+}
+/**
+   Compute the enclosed energy or azimuthal average of a.
+*/
+X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
+	       X(mat) *dvec,/**<The diameter for enclosed energy, or radius for azimuthal average*/
+	       int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
+	       int nthread
+    ){
+    R rmax=dvec->p[dvec->nx-1];
+    long ncomp;
+    if(type==-1){
+	ncomp=nextfftsize(rmax*2);
+    }else{
+	ncomp=nextfftsize(rmax);
+    }
+    long ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
+    X(mat) *psfc;
+    if(ncomp_max > ncomp){
+	psfc=X(new)(ncomp, ncomp);
+	X(embed)(psfc, psf, 0);
+    }else{
+	ncomp=ncomp_max;
+	psfc=X(ref)(psf);
+    }
+    long ncomp2=ncomp*2;
+    XC(mat) *psf2=XC(new)(ncomp2, ncomp2);
+    XC(fft2plan)(psf2, -1);
+    XC(embedd)(psf2, psfc, 0);
+    X(free)(psfc);
+    XC(fftshift)(psf2);
+    XC(fft2)(psf2, -1);
+    X(mat) *phat=NULL;
+    XC(real2d)(&phat, 0, psf2, 1);
+    X(scale)(phat, pow((R)ncomp2,-2));
+    XC(free)(psf2);
+    X(mat) *enc=X(new)(dvec->nx, 1);    
+    ENC_T data={enc, dvec, phat, type};
+    thread_t info[nthread];
+    thread_prep(info, 0, dvec->nx, nthread, X(enc_thread), &data);
+    CALL_THREAD(info, nthread, 0);
+    X(free)(phat);
+    return enc;
+}
+
 #endif
-#ifndef USE_SINGLE
-#include "blas.c"
-#endif
+

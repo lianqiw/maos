@@ -29,7 +29,6 @@
 #include <signal.h>
 #include <limits.h>
 #include "readcfg.h"
-
 /**
    Routines to read .conf type config files. Each entry is composed of a key and
    a value. The entries are maintained in a hash table. Each entry can be

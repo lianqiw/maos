@@ -305,7 +305,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    /*Apply NGS mode error to PSF. */
 			    ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs+ipowfs, isa,
 				       thetax, thetay, parms);
-			    cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
+			    cembedc(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
 			    cfft2(wvf->p[iwfs],-1);
 			    /*peak in corner. */
 			    cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);

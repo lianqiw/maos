@@ -18,9 +18,17 @@
 
 #ifndef AOS_LIB_MAT_H
 #define AOS_LIB_MAT_H
+#ifndef AOS_LIB_MATH_H
+#error "Don't include this file directly"
+#endif
+
 #include "random.h"
-#include "type.h"
-void dembed(dmat *restrict A, dmat *restrict B, const double theta);
+#ifdef USE_SINGLE
+#define cabs2(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
+#else
+#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
+#endif
+
 #define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
 #define PDCELL(M,P)  dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
@@ -44,7 +52,6 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
-#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 #define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
 
@@ -52,7 +59,6 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define PZCELL(M,P)  zmat* (*restrict P)[(M)->nx]=(zmat*(*)[(M)->nx])(M)->p
 #define zfree(A)     ({zfree_do(A,0);A=NULL;})
 #define zcellfree(A) ({zcellfree_do(A);A=NULL;})
-#define zabs2(A)     (pow(crealf(A),2)+pow(cimagf(A),2))
 #define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
 #define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
 
@@ -75,6 +81,7 @@ X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(cp)(X(mat) **out0, const X(mat) *in);\
 X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(set)(X(mat) *A, const T val);\
+void X(maxminsum)(const T *restrict p, long N, R *restrict max, R *restrict min, R *restrict sum);\
 void X(maxmin)(const X(mat) *A, R*max, R*min);	\
 R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;\
@@ -93,6 +100,16 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 T X(wdot3)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 void X(cwm)(X(mat) *B, const X(mat) *A);\
+void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict B, const X(mat) *restrict C);\
+void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);\
+void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,const X(mat) *restrict B);\
+void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B);\
+void X(cwmcol2)(X(mat) *restrict A, \
+		const T *restrict B1, const R wt1,	\
+		const T *restrict B2, const R wt2);	\
+void X(cwmrow2)(X(mat) *restrict A,			\
+		const T *restrict B1, const R wt1,	\
+		const T *restrict B2, const R wt2);	\
 void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
 void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha);\
 void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha); \
@@ -106,49 +123,83 @@ X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp) CHECK_UNUSED_RESULT;\
 T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;\
-void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val); \
-void X(circle_mul)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val);\
-void X(circle_symbolic)(X(mat) *A, double cx, double cy, double dx, double dy, double r);\
+void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
+void X(circle_mul)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val);\
+void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);\
 void X(fftshift)(X(mat) *A);\
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B);\
 void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy);\
-void X(rotvec)(X(mat) *A, const double theta);\
-void X(rotvect)(X(mat) *A, const double theta);\
-void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta);\
+void X(rotvec)(X(mat) *A, const R theta);\
+void X(rotvect)(X(mat) *A, const R theta);\
+void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta);\
 void X(mulvec3)(T *y, const X(mat) *A, const T *x);\
-void X(cog)(double *grad,const X(mat) *i0,double offsetx, double offsety, double thres, double bkgrnd);\
-void X(shift2center)(X(mat) *A, double offsetx, double offsety);\
-int X(clip)(X(mat) *A, double min, double max);\
+void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd);\
+void X(shift2center)(X(mat) *A, R offsetx, R offsety);\
+int X(clip)(X(mat) *A, R min, R max);\
 void X(gramschmidt)(X(mat) *Mod, R *amp);	\
 void X(muldiag)(X(mat) *A, const X(mat) *s);\
 void X(muldiag2)(X(mat) *A, const X(mat) *s);\
-void X(cwpow)(X(mat) *A, double power);\
-void X(cwexp)(X(mat) *A, double alpha);\
-void X(cwpow_thres)(X(mat) *A, double power, double thres);		\
+void X(cwpow)(X(mat) *A, R power);\
+void X(cwexp)(X(mat) *A, R alpha);\
+void X(cwpow_thres)(X(mat) *A, R power, R thres);		\
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
-void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
-void X(svd_pow)(X(mat) *A, double power, double thres);  \
-void X(expm)(X(mat) **out, double alpha, X(mat) *A, double beta); \
+void X(svd_pow)(X(mat) *A, R power, R thres);  \
+void X(expm)(X(mat) **out, R alpha, X(mat) *A, R beta); \
 void X(polyval)(X(mat) *A, XR(mat)*p);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\
-X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
-X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
+X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;\
+X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1_2)(const X(mat) *xyin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
 X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT;\
 void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);\
-void X(histfill)(X(mat) **out, const X(mat)* A, double center, double spacing, int n);\
+void X(histfill)(X(mat) **out, const X(mat)* A, R center, R spacing, int n);\
 X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);\
 X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);\
 X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);\
-X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);\
-X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
 void X(cwlog10)(X(mat) *A);\
 void X(cwlog)(X(mat) *A);\
-void X(embed_locstat)(X(mat) **out, double alpha, loc_t *loc, R *oin, double beta, int reverse);\
+void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
+void X(embed_locstat)(X(mat) **out, R alpha, loc_t *loc, R *oin, R beta, int reverse);\
 long X(fwhm)(X(mat) *A);\
-void X(sort)(X(mat) *A, int ascend);
+void X(sort)(X(mat) *A, int ascend);\
+X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);\
+typedef T (*X(minsearch_fun))(T *x, void *info);			\
+int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *info);\
+void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);
+
+/*The following are only useful for cmat */
+#define AOS_CMAT_DEF(X,XR,Y,T,R)					\
+void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha); \
+void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha); \
+void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	\
+		  const int nopdx, const int nopdy,			\
+		  const R wvl, const R theta);				\
+void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta,CEMBED flag); \
+void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta);	\
+void X(embedscaleout)(X(mat) *restrict A, const X(mat) * in,		\
+		      R xoutscale,R youtscale,				\
+		      const R theta, CEMBED flag);			\
+void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag);	\
+void X(abstoreal)(X(mat) *A);						\
+void X(abs2toreal)(X(mat) *A);						\
+void X(cpd)(X(mat)**restrict A, const XR(mat) *restrict B);		\
+void X(real2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta);	\
+void X(abs22d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta);	\
+void X(cp)(X(mat)**restrict A0, const X(mat) *restrict B);		\
+void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct);	\
+void X(tilt)(X(mat) *otf, R sx, R sy, int pinct);			\
+void X(cogreal)(R *grad,const X(mat) *i0,R offsetx,			\
+		R offsety,R thres, R bkgrnd);				\
+void X(cogabs)(R *grad,const X(mat) *i0,R offsetx,			\
+	       R offsety,R thres, R bkgrnd);				\
+void X(inv_inplace)(X(mat)*A);						\
+void X(invspd_inplace)(X(mat) *A);					\
+void X(mulvec)(T *restrict y, const X(mat) * restrict A,		\
+	       const T *restrict x, const T alpha);
+
+
 #endif

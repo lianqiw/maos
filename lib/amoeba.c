@@ -17,10 +17,14 @@
 */
 #include <stdlib.h>
 #include "../sys/sys.h"
-#include "nr.h"
+#include "defs.h"
+#include "mathdef.h"
 #define NRANSI
 #define NR_END 1
 #define FREE_ARG char*
+#ifdef USE_COMPLEX
+#error "Do not use for complex numbers"
+#endif
 /**
    2-D mininum search using downhill simplex method.
  */
@@ -31,11 +35,11 @@
    Extrapolates by a factor fac through the face of the simplex across from the
    high point, tries it, and replaces the high point if the new point is better.
 */
-static double amotry(double **p, double y[], double psum[], int ndim,
-		     double (*funk)(double [], void *data), void *data, int ihi, double fac){
+static T amotry(T **p, T y[], T psum[], int ndim,
+		     T (*funk)(T [], void *data), void *data, int ihi, T fac){
     int j;
-    double fac1,fac2,ytry;
-    double ptry[ndim];
+    T fac1,fac2,ytry;
+    T ptry[ndim];
     fac1=(1.0-fac)/ndim;
     fac2=fac1-fac;
     for (j=0;j<ndim;j++) {
@@ -76,11 +80,11 @@ static double amotry(double **p, double y[], double psum[], int ndim,
    of a minimum function value, and nfunk gives the number of function
    evaluations taken.
  */
-void amoeba(double **p, double y[], int ndim, double ftol,
-	    double (*funk)(double [], void *data), void *data, int *nfunk){
+static void amoeba(T **p, T y[], int ndim, T ftol,
+		   T (*funk)(T [], void *data), void *data, int *nfunk){
     int i,ihi,ilo,inhi,j,mpts=ndim+1;
-    double rtol,sum,swap,ysave,ytry;
-    double psum[ndim];
+    T rtol,sum,swap,ysave,ytry;
+    T psum[ndim];
     *nfunk=0;
     GET_PSUM;
     for (;;) {
@@ -144,10 +148,10 @@ void amoeba(double **p, double y[], int ndim, double ftol,
   Search minimum along multiple dimenstions. scale is the contains the scale of each dimension. x
   contains initial warm restart values.
 */
-int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){
-    double pinit[nmod+1][nmod];
-    double *pinit2[nmod+1];
-    double yinit[nmod+1];
+int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *info){
+    T pinit[nmod+1][nmod];
+    T *pinit2[nmod+1];
+    T yinit[nmod+1];
     for(int i=0; i<nmod+1; i++){
 	pinit2[i]=pinit[i];
 	for(int j=0; j<nmod; j++){

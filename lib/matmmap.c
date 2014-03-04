@@ -21,11 +21,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "type.h"
-#include "matbin.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
-#include "zmat.h"
+#include "mathdef.h"
 #include "defs.h"
 /**
    Open a file for write with mmmap. We don't provide a access control here for

@@ -34,13 +34,7 @@
 
 #include "mathmisc.h"
 #include "type.h"
-#include "dsp.h" 
-#include "ssp.h"
-#include "csp.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
-#include "cell.h"
+#include "mathdef.h"
 #include "suitesparse.h"
 #include "defs.h"
 #include "suitesparse.c"
@@ -125,7 +119,7 @@ X(sp) *Y(spnew2)(const X(sp) *A){
    numbers with filling factor of 'fill'
 */
 X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, 
-		     double fill,rand_t *rstat){
+		     R fill,rand_t *rstat){
     if(fill>1) fill=1.;
     if(fill<0) fill=0.;
     const long nzmax=nx*ny;
@@ -136,7 +130,7 @@ X(sp)* Y(spnewrandu)(int nx, int ny, const T mean,
     spint *pi=A->i;
     T *px=A->x;
     long count=0;
-    double thres=1.-fill;
+    R thres=1.-fill;
     for(int icol=0; icol<A->n; icol++){
 	pp[icol]=count;
 	for(int irow=0; irow<A->m; irow++){
@@ -501,8 +495,7 @@ void Y(sptmulvec)(T *restrict y, const X(sp) *A,
 /**
  * Multiply a sparse matrix with the real part of a complex vector*/
 void Y(spmulcreal)(T *restrict y, const X(sp) *A, 
-		   const dcomplex * restrict x, 
-		   T alpha){
+		   const RI * restrict x, T alpha){
     /*y=y+alpha*A*creal(x); */
     if(A && x){
 	long icol, ix;
@@ -937,7 +930,7 @@ void Y(spcelladd)(Y(spcell) **A0, const Y(spcell) *B){
 /**
    Add alpha times identity to a sparse matrix
 */
-void Y(spaddI)(X(sp) **A, double alpha){
+void Y(spaddI)(X(sp) **A, R alpha){
     assert((*A)->m==(*A)->n);
     X(sp) *B=Y(spnewdiag)((*A)->m,NULL,alpha);
     Y(spadd)(A,B);
@@ -946,7 +939,7 @@ void Y(spaddI)(X(sp) **A, double alpha){
 /**
    Add alpha times identity to sparse array.
  */
-void Y(spcelladdI)(Y(spcell) *A, double alpha){
+void Y(spcelladdI)(Y(spcell) *A, R alpha){
     assert(A->nx==A->ny);
     for(int ii=0; ii<A->ny; ii++){
 	Y(spaddI)(&A->p[ii+ii*A->nx],alpha);
@@ -1156,7 +1149,6 @@ X(sp) *Y(spcell2sp)(const Y(spcell) *A){
     return out;
 }
 
-#include "matbin.h"
 /**
  * Sum elements of sparse array along dimension dim*/
 X(mat) *Y(spsum)(const X(sp) *A, int dim){
@@ -1242,28 +1234,16 @@ void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac,
 /**
    Drop elements that are EPS times the largest value.
 */
-void Y(spdroptol)(X(sp) *A, double thres){
+void Y(spdroptol)(X(sp) *A, R thres){
     if(thres<EPS) thres=EPS;
-    double maxv;
-#ifdef USE_COMPLEX
-#ifdef USE_SINGLE
-    maxminfcmp(A->x,A->nzmax,&maxv,NULL,NULL);
-#else
-    maxmincmp(A->x,A->nzmax,&maxv,NULL,NULL);
-#endif
-#else
-#ifdef USE_SINGLE
-    maxv=maxabsf(A->x, A->nzmax);
-#else   
-    maxv=maxabs(A->x, A->nzmax);
-#endif
-#endif
+    R maxv;
+    X(maxminsum)(A->x,A->nzmax,&maxv,NULL,NULL);
     Y(cs_droptol)(A, maxv*thres);
 }
 /**
    Drop elements that are EPS times the largest value.
 */
-void Y(spcelldroptol)(Y(spcell) *A, double thres){
+void Y(spcelldroptol)(Y(spcell) *A, R thres){
     for(int i=0; i<A->nx*A->ny; i++){
 	Y(spdroptol)(A->p[i], thres);
     }

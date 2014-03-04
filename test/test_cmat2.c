@@ -182,8 +182,6 @@ static void bench_ccwm(void){
     ccwm(A,B);
     toc("ccwm");
     tic;
-    ccwm2(A,B,1);
-    toc("ccwm2");
     cmat *D=cnew(N,1);
     crandn(D,3,&strand);
     cset(A,1);

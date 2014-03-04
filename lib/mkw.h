@@ -19,9 +19,7 @@
 #ifndef AOS_LIB_MKW_H
 #define AOS_LIB_MKW_H
 #include "loc.h"
-#include "dmat.h"
-#include "cmat.h"
-#include "dsp.h"
+#include "mathdef.h"
 /**
    \file mkw.h
    Contains functions that computes the bilinear weighting function W0, W1

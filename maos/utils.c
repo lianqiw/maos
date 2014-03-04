@@ -616,15 +616,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	if(chdir(arg->dirout)){
 	    error("Unable to chdir to %s\n", arg->dirout);
 	}
-        /*char *exefile=get_job_progname(0);
-	if(remove("maos-save")||link(exefile, "maos-save")){
-	    info2("Unable to link maos to maos-save\n");
-	}
-	free(exefile);*/
     }else{
 	warning2("Disable saving when no -o is supplied.\n");
 	disable_save=1;
-	chdir("/root");//A place that is not writable.
     }
     return arg;
 }

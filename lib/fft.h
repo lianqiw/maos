@@ -17,22 +17,26 @@
 */
 #ifndef AOS_LIB_FFT_H
 #define AOS_LIB_FFT_H
+#ifndef AOS_LIB_MATH_H
+#error "Don't include this file directly"
+#endif
 #include "type.h"
 /**
    \file fft.h
-   Routines to do FFT on cmat or dcell.
+   Routines to do FFT on X(mat) or dcell.
 */
 typedef struct fft_t fft_t;
-void fft2(fft_t *fft, int dir);
-void cfft2plan(cmat *A, int dir);
-void cfft2(cmat *A, int dir);
-void cfft2i(cmat *A, int dir);
-void cfft2s(cmat *A, int dir);
-void cfft2partialplan(cmat *A, int ncomp, int dir);
-void cfft2partial(cmat *A, int ncomp, int dir);
-void fft_free_plan(struct fft_t *fft);
-#define cfree_plan(A) if(A) fft_free_plan(A->fft)
-cmat *cffttreat(cmat *A);
-fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads);
-void dfft1plan_r2hc(dmat *out, int dir);
+#define AOS_FFT_DEF(X)						\
+    void X(fft_free_plan)(struct fft_t *fft);			\
+    void X(fft2plan)(X(mat) *A, int dir);			\
+    void X(fft2)(X(mat) *A, int dir);				\
+    void X(fft2i)(X(mat) *A, int dir);				\
+    void X(fft2s)(X(mat) *A, int dir);				\
+    void X(fft2partialplan)(X(mat) *A, int ncomp, int dir);	\
+    void X(fft2partial)(X(mat) *A, int ncomp, int dir);		\
+    X(mat) *X(ffttreat)(X(mat) *A);				\
+    void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads);	\
+    void X(cell_fft2)(X(cell) *dc, int dir);			\
+    void X(fft1plan_r2hc)(X(mat) *out, int dir);		\
+    void X(fft1)(X(mat) *A, int dir);
 #endif

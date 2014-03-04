@@ -23,13 +23,11 @@
 #include <dirent.h>
 #include "../sys/sys.h"
 #include "turbulence.h"
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "loc.h"
 #include "fft.h"
 #include "fractal.h"
 #include "mathmisc.h"
-#include "nr.h"
 #include "locbin.h"
 #include "cellarr.h"
 
@@ -104,7 +102,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     double dx=data->dx;
     dc->p[0] = dnew(nx, ny);
     dc->p[1] = dnew(nx, ny);
-    fft_t *fft=dcell_fft2plan(dc, -1, data->nthread);
+    dcell_fft2plan(dc, -1, data->nthread);
     double *restrict p1=dc->p[0]->p;
     double *restrict p2=dc->p[1]->p;
     char header[1024];
@@ -121,7 +119,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	    p2[i]=randn(rstat)*spect->p[i];/*imag */
 	}
 	double tk2=myclockd();
-	fft2(fft, -1);
+	dcell_fft2(dc, -1);
 	dscale(dc->p[0], sqrt(wt[ilayer]));
 	if(ilayer+1<nlayer){
 	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
@@ -143,7 +141,6 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	      ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy",tk4-tk3);
     }
     dcellfree(dc);
-    fft_free_plan(fft);
 }
 /**
  *   Generate turbulence screens all in memory
@@ -314,7 +311,7 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
 		cov->p[i]=vkcoeff0*r0f0p;
 	    }else{
 		r2pif0=r->p[i]*2*M_PI*f0;
-		bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
+		dbessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
 		cov->p[i]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
 	    }
 	}

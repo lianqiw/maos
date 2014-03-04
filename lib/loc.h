@@ -19,9 +19,7 @@
 #ifndef AOS_LIB_LOC_H
 #define AOS_LIB_LOC_H
 #include "type.h"
-#include "dmat.h"
-#include "cmat.h"
-#include "dsp.h"
+#include "mathdef.h"
 
 /**
    \file loc.h

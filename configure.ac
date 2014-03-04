@@ -45,25 +45,6 @@ fi
 LDEXE="-lm -no-fast-install"
 OPTSextra=""
 
-#Compile mex routines if MATLAB is detected
-use_mex_default="no"
-MEXDIR_AUTO=
-if test -n "$(which mex 2>/dev/null)" ;then
-   use_mex_default="yes"
-   MEX=$(which mex)
-   if test -L $MEX ;then
-      MEX=$(readlink $MEX)
-   fi
-   MEXDIR_AUTO=$(dirname $MEX)
-elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
-   for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-       if test -f $i/bin/mex ;then
-       	  MEXDIR_AUTO=${i}/bin
-          use_mex_default="yes"
-       fi
-   done
-fi
-
 #Compile CUDA branch if CUDA toolkit is detected
 use_cuda_default="no"
 CUDADIR_AUTO=
@@ -81,6 +62,7 @@ elif test -f /usr/local/cuda/bin/nvcc ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/usr/local/cuda/"
 fi
+
 
 #Enable the user to force 32 or 64 bit program
 AC_ARG_ENABLE(32,  [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
@@ -214,10 +196,10 @@ AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$en
 AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc="$use_icc_default"])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(long,  [  --disable-long  Disable long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
+AC_ARG_ENABLE(single,[  --enable-single Use single precision floating point numbers], [use_single="$enableval"], [use_single="auto"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
-AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
-AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
+
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
@@ -228,6 +210,50 @@ if test "$use_scheduler" = "no" ;then
    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
    AM_CONDITIONAL(USE_SCHEDULER, false)
 fi
+if test "$use_single" = "auto" ;then
+   if test "$use_cuda" = "yes" ;then
+       use_single="yes"
+   else
+       use_single="no"
+   fi
+fi
+if test "$use_single" = "yes" ; then
+#   AC_DEFINE(USE_SINGLE, [1], "Using single")
+   AM_CONDITIONAL(USE_SINGLE, true)
+else
+#   AC_DEFINE(USE_SINGLE, [0], "Using double")
+   AM_CONDITIONAL(USE_SINGLE, false)
+fi
+if test "$use_long" = "yes" ;then
+   if test "$cpu" = "64" ;then
+       use_long="yes"
+   else
+       use_long="no"
+   fi
+fi
+#Compile mex routines if MATLAB is detected and single is not enabled
+use_mex_default="no"
+if test "$use_single" = "no" ;then
+MEXDIR_AUTO=
+if test -n "$(which mex 2>/dev/null)" ;then
+   use_mex_default="yes"
+   MEX=$(which mex)
+   if test -L $MEX ;then
+      MEX=$(readlink $MEX)
+   fi
+   MEXDIR_AUTO=$(dirname $MEX)
+elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
+   for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+       if test -f $i/bin/mex ;then
+       	  MEXDIR_AUTO=${i}/bin
+          use_mex_default="yes"
+       fi
+   done
+fi
+fi
+AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
+AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
+
 #if test "x$use_cuda" = "xyes" ;then
 #   if test "x$use_icc" = "xauto" ;then
 #       AC_MSG_NOTICE([Disable auto icc when cuda is used])
@@ -467,13 +493,13 @@ fi
 if test "x$has_fftw_threads" = "xyes" ;then
     if test "x$has_fftw_omp" = "xyes" ;then
         AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")
-	LDFFT="$LDFFT -lfftw3" 
+	LDFFT="$LDFFT -lfftw3 -lfftw3f" 
     else
         AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
-        LDFFT="$LDFFT -lfftw3_threads -lfftw3"
+        LDFFT="$LDFFT -lfftw3_threads -lfftw3_threadsf -lfftw3 -lfftw3f"
     fi
 else
-    LDFFT="$LDFFT -lfftw3"
+    LDFFT="$LDFFT -lfftw3 -lfftw3f"
     AC_DEFINE(USE_FFTW_THREADS, [0], "We do not have FFTW3 threads")
 fi
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
@@ -548,7 +574,7 @@ AC_SUBST(MONN_CFLAGS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
-if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
+if test "$use_long" = "yes" ;then
    OPTScommon="$OPTScommon -DDLONG"
    CHOLSUFFIX="long"
    chol_fun=cholmod_l_factorize
@@ -626,6 +652,9 @@ if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 if test "x${use_mex}" = "xyes" ; then
+   if test "${use_single}" = "yes" ;then
+       AC_MSG_ERROR([cannot use single when compiling mex])
+   fi
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
        if test -f ${MEXDIR}/mex ;then

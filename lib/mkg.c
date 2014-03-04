@@ -38,10 +38,8 @@
 
 #include "mkg.h"
 #include "../sys/sys.h"
-#include "dsp.h"
 #include "loc.h"
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #endif
 
 #ifndef DEBUG

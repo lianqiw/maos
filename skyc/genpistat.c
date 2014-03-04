@@ -127,7 +127,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
 			ccp(&wvfc, wvfout[iwvl][isa]);
-			cembed(wvf,wvfc,0,C_FULL);
+			cembedc(wvf,wvfc,0,C_FULL);
 			cfft2(wvf,-1);
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
 			dfftshift(psf);//peak in center
@@ -161,7 +161,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    }
 		
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
-			    cembed(wvf,wvfc,0,C_FULL);
+			    cembedc(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
 			    cabs22d(&ppistat[iwvl][isa], 1, wvf, 1);
 			}

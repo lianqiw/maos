@@ -387,7 +387,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    /*look for a way to obtain this automatically. */
 	    const double eps=2.220446049250313e-16;
 	    double max;
-	    maxmincmp(psd->p,psd->nx*psd->ny,&max,NULL,NULL);
+	    cmaxmin(psd, &max, 0);
 	    max=max*sqrt(eps);
 	    for(long i=0; i<nx[ips]*ny[ips]; i++){
 		invpsd[offset+i]=creal(psd->p[i])+max;

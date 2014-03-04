@@ -16,226 +16,55 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define USE_COMPLEX
-#include "mat.c"
-#include "cell.c"
-#include "matbin.c"
-
 /*
-   The following are functions that are only useful for
-   cmat. notice that fma and modf are slower than native
-   functions.
+   The following are functions that are only useful for complex mat only
+   
+   notice that fma and modf are slower than native functions.
  */
 
-/**
-   compute minimum of abs of the numbers
-*/
-double cminabs(const cmat *A){
-    double max,min,sum;
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,&sum);
-    return min;
-}
-/**
-   compute sum of abs of the numbers
-*/
-double csumabs(const cmat *A){
-    double max,min,sum;
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,&sum);
-    return sum;
-}
-
-/**
-   component-wise multiply of three matrices.
-   A=A.*B.*C
-*/
-void ccwm3(cmat *restrict A, const cmat *restrict B, const cmat *restrict C){
-    if(!B){
-	ccwm(A,C);
-    }else if (!C){
-	ccwm(A,B);
-    }else{
-	assert(A && B && C);
-	assert(A->nx==B->nx && A->nx==C->nx&&A->ny==B->ny && A->ny==C->ny);
-	/*component-wise multiply A=A.*B */
-	const size_t ntot=A->nx*A->ny;
-	for(size_t i=0; i<ntot; i++){
-	    A->p[i]=A->p[i]*B->p[i]*C->p[i];
-	}
-    }
-}
-
-/**
-   component-wise multiply A=A.*B*alpha
-*/
-void ccwm2(cmat *restrict A, const cmat *restrict B, const double alpha){
-    assert(A && A->p);
-    const size_t ntot=A->nx*A->ny;
-    if(B){
-	if(fabs(alpha-1)>1.e-15){
-	    for(size_t i=0; i<ntot; i++){
-		A->p[i]*=B->p[i]*alpha;
-	    }
-	}else{
-	    for(size_t i=0; i<ntot; i++){
-		A->p[i]*=B->p[i];
-	    }
-	}
-    }else{
-	if(fabs(alpha-1)>1.e-15){	
-	    for(size_t i=0; i<ntot; i++){
-		A->p[i]*=alpha;
-	    }
-	}
-    }
-}
-/**
-   Component-wise multiply each column of A with B
-   A(:,i)=A(:,i).*B;
- */
-void ccwmcol(cmat *restrict A, const cmat *restrict B){
-    if (!B) return;
-    assert(A->nx==B->nx && B->ny==1);
-    dcomplex (*As)[A->nx]=(dcomplex(*)[A->nx])A->p;
-    dcomplex *B1=B->p;
-    for(unsigned long iy=0; iy<A->ny; iy++){
-	for(unsigned long ix=0; ix<A->nx; ix++){
-	    As[iy][ix]*=B1[ix];
-	}
-    }
-}
-
-/**
-   component wise multiply of 2d complex matrix A,W and 1d vector B.
-   A(:,i)=A(:,i).*W(:,i).*B;
-*/
-void ccwm3col(cmat *restrict A,const cmat *restrict W,const cmat *restrict B){
-
-    if(!W){
-	ccwmcol(A,B);
-    }else{
-	assert(A->nx==B->nx&& A->nx==W->nx&&A->ny==W->ny&&B->ny==1);
-	dcomplex (*As)[A->nx]=(dcomplex(*)[A->nx])A->p;
-	dcomplex (*Ws)[W->nx]=(dcomplex(*)[W->nx])W->p;
-	dcomplex *B1=B->p;
-
-	for(unsigned long iy=0; iy<A->ny; iy++){
-	    for(unsigned long ix=0; ix<A->nx; ix++){
-		As[iy][ix]=As[iy][ix]*Ws[iy][ix]*B1[ix];
-	    }
-	}
-    }
-}
-/**
-   Component wise multiply each row of A with B.
-   A(i,:)=A(i,:)*B
-*/
-void ccwmrow(cmat *restrict A, const cmat *restrict B){
-    if(!A || !B) return;
-    dcomplex (*As)[A->nx]=(dcomplex(*)[A->nx])A->p;
-    dcomplex *B1=B->p;
-    assert(A->ny==B->nx && B->ny==1);
-    for(int iy=0; iy<A->ny; iy++){
-	dcomplex junk=B1[iy];
-	for(int ix=0; ix<A->nx; ix++){
-	    As[iy][ix]*=junk;
-	}
-    }
-}
-/**
-   component-wise multiply of columns of A with combination of B1 and B2:
-   A(:,i)=A(:,i)*(B1*wt1+B2*wt2);
- */
-void ccwmcol2(cmat *restrict A, 
-	      const dcomplex *restrict B1, const double wt1,
-	      const dcomplex *restrict B2, const double wt2){
-    assert(A && A->p); 
-    assert(B1);
-    dcomplex (*As)[A->nx]=(dcomplex(*)[A->nx])A->p;
-    if(B2){
-	for(int ix=0; ix<A->nx; ix++){
-	    dcomplex junk=B1[ix]*wt1+B2[ix]*wt2;
-	    for(int iy=0; iy<A->ny; iy++){
-		As[iy][ix]*=junk;
-	    }
-	}
-    }else{
-	for(int ix=0; ix<A->nx; ix++){
-	    dcomplex junk=B1[ix]*wt1;
-	    for(int iy=0; iy<A->ny; iy++){
-		As[iy][ix]*=junk;
-	    }
-	}
-    }
-}
-/**
-   component-wise multiply of rows of A with combination of B1 and B2:
-   A(i,:)=A(i,:).*(B1*wt1+B2*wt2);
- */
-void ccwmrow2(cmat *restrict A, 
-	     const dcomplex *restrict B1, const double wt1,
-	     const dcomplex *restrict B2, const double wt2){
-    assert(A && A->p); 
-    assert(B1);
-    dcomplex (*As)[A->nx]=(dcomplex(*)[A->nx])A->p;
-    if(B2){
-	for(int iy=0; iy<A->ny; iy++){
-	    dcomplex junk=B1[iy]*wt1+B2[iy]*wt2;
-	    for(int ix=0; ix<A->nx; ix++){
-		As[iy][ix]*=junk;
-	    }
-	}
-    }else{
-	for(int iy=0; iy<A->ny; iy++){
-	    dcomplex junk=B1[iy]*wt1;
-	    for(int ix=0; ix<A->nx; ix++){
-		As[iy][ix]*=junk;
-	    }
-	}
-    }
-}
 /**
    component-wise multiply A with conjugate of B: A=A.*conj(B)*alpha;
  */
-void ccwmc(cmat *restrict A, const cmat *restrict B, const double alpha){
+void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha){
     assert(A && A->p);
-    const size_t ntot=A->nx*A->ny;
+    const long ntot=A->nx*A->ny;
     if(B){
-	if(fabs(alpha-1)>1.e-15){
-	    for(size_t i=0; i<ntot; i++){
+	if(FABS(alpha-1)>1.e-15){
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=conj(B->p[i])*alpha;
 	    }
 	}else{
-	    for(size_t i=0; i<ntot; i++){
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=conj(B->p[i]);
 	    }
 	}
     }else{
-	if(fabs(alpha-1)>1.e-15){	
-	    for(size_t i=0; i<ntot; i++){
+	if(FABS(alpha-1)>1.e-15){	
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
 	}
     }
 }
 /**
-   component multiply cmat A with dmat B. A=A.*B;
+   component multiply X(mat) A with XR(mat) B. A=A.*B;
  */
-void ccwmd(cmat *restrict A, const dmat *restrict B, const double alpha){
+void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha){
     assert(A && A->p);
-    const size_t ntot=A->nx*A->ny;
+    const long ntot=A->nx*A->ny;
     if(B){
-	if(fabs(alpha-1)>1.e-15){
-	    for(size_t i=0; i<ntot; i++){
+	if(FABS(alpha-1)>1.e-15){
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=B->p[i]*alpha;
 	    }
 	}else{
-	    for(size_t i=0; i<ntot; i++){
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=B->p[i];
 	    }
 	}
     }else{
-	if(fabs(alpha-1)>1.e-15){	
-	    for(size_t i=0; i<ntot; i++){
+	if(FABS(alpha-1)>1.e-15){	
+	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
 	}
@@ -250,28 +79,28 @@ void ccwmd(cmat *restrict A, const dmat *restrict B, const double alpha){
    without rotation takes 0.161 ms.
    with rotation takes 0.330 ms.
 */
-void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
-	       const int nopdx, const int nopdy, 
-	       const double wvl, const double theta){
-    dcomplex *psf=A->p;
+void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
+		  const int nopdx, const int nopdy, 
+		  const R wvl, const R theta){
+    T *psf=A->p;
     const int npsfx=A->nx;
     const int npsfy=A->ny;
  
-    dcomplex wvk=2.*M_PI/wvl*I;
-    memset(psf, 0, sizeof(dcomplex)*npsfx*npsfy);
-    if(fabs(theta)<1.e-10){/*no rotation. */
+    T wvk=2.*M_PI/wvl*I;
+    memset(psf, 0, sizeof(T)*npsfx*npsfy);
+    if(FABS(theta)<1.e-10){/*no rotation. */
 	const int skipx=(npsfx-nopdx)/2;
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
-	dcomplex *psf0=psf+skipy*npsfx+skipx;
+	T *psf0=psf+skipy*npsfx+skipx;
 	for(int iy=0; iy<nopdy; iy++){
-	    dcomplex *psfi=psf0+iy*npsfx;
-	    const double *opdi=opd+iy*nopdx;
-	    const double *ampi=amp+iy*nopdx;
+	    T *psfi=psf0+iy*npsfx;
+	    const R *opdi=opd+iy*nopdx;
+	    const R *ampi=amp+iy*nopdx;
 	    for(int ix=0; ix<nopdx; ix++){
 		/*sqrt(1-cos^2)!=sin due to sign problem.  */
-		psfi[ix]=ampi[ix]*cexp(wvk*opdi[ix]);
-		/*most time is spend in cexp. */
+		psfi[ix]=ampi[ix]*EXP(wvk*opdi[ix]);
+		/*most time is spend in EXP. */
 	    }
 	}
     }else{
@@ -283,19 +112,19 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
 	/*
 	  The original method of adding in to out is not right.
 	*/
-	dcomplex (*psfs)[npsfx]=(dcomplex(*)[npsfx])psf;
-	double (*amps)[nopdx]=(double(*)[nopdx])amp;
-	double (*opds)[nopdx]=(double(*)[nopdx])opd;
-	const double ctheta=cos(theta);
-	const double stheta=sin(theta);
-	double x2,y2;
-	double x,y;
+	T (*psfs)[npsfx]=(T(*)[npsfx])psf;
+	R (*amps)[nopdx]=(R(*)[nopdx])amp;
+	R (*opds)[nopdx]=(R(*)[nopdx])opd;
+	const R ctheta=cos(theta);
+	const R stheta=sin(theta);
+	R x2,y2;
+	R x,y;
 	int nopdx2=nopdx/2;
 	int npsfx2=npsfx/2;
 	int nopdy2=nopdy/2;
 	int npsfy2=npsfy/2;
 	int ix2, iy2;
-	double iopd,iamp;
+	R iopd,iamp;
 	const int maxr=iceil(sqrt(nopdx*nopdx+nopdy*nopdy));
 	int xskip=npsfx>maxr?(npsfx-maxr)/2:0;
 	int yskip=npsfy>maxr?(npsfy-maxr)/2:0;
@@ -318,49 +147,49 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
 			+amps[iy2][ix2+1]*(x2*(1.-y2))
 			+amps[iy2+1][ix2]*((1-x2)*y2)
 			+amps[iy2+1][ix2+1]*(x2*y2);
-		    psfs[iy][ix]=iamp*cexp(wvk*iopd);
+		    psfs[iy][ix]=iamp*EXP(wvk*iopd);
 		}
 	    }
 	}
     }
 }
-#define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(dcomplex)); /**<macro to do copying*/
+#define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(T)); /**<macro to do copying*/
 /**
    do a modules square and copy to real part of output
 */
-inline static void sq2cpy(dcomplex *out, const dcomplex *in, const size_t length){
-    for(size_t i=0; i<length; i++){
-	out[i]=cabs2(in[i]);
+inline static void sq2cpy(T *out, const T *in, const long length){
+    for(long i=0; i<length; i++){
+	out[i]=ABS2(in[i]);
     }
 }
 /**
    Copy the real part.
 */
-inline static void realcpy(dcomplex *out, const dcomplex *in, const size_t length){
-    for(size_t i=0; i<length; i++){
+inline static void realcpy(T *out, const T *in, const long length){
+    for(long i=0; i<length; i++){
 	out[i]=creal(in[i]);
     }
 }
 /**
    Copy the absolute value to output.
  */
-inline static void abscpy(dcomplex *out, const dcomplex *in, const size_t length){
-    for(size_t i=0; i<length; i++){
-	out[i]=cabs(in[i]);
+inline static void abscpy(T *out, const T *in, const long length){
+    for(long i=0; i<length; i++){
+	out[i]=ABS(in[i]);
     }
 }
-#define RA2XY(A) (creal(A)*(cos(cimag(A))+I*sin(cimag(A)))) /**<macro to convert r/a to x/y*/
-#define XY2RA(A) (cabs(A)+I*atan2(cimag(A),creal(A))) /**<macro to convert x/y to r/a*/
+#define RA2XY(A) (REAL(A)*(cos(IMAG(A))+I*sin(IMAG(A)))) /**<macro to convert r/a to x/y*/
+#define XY2RA(A) (ABS(A)+I*atan2(IMAG(A),REAL(A))) /**<macro to convert x/y to r/a*/
 
 
 /**
    Embed array B into A with rotation theta CW.  Current version, preferred */
-void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED flag)
+void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMBED flag)
 {
-    const dcomplex *restrict in=B->p;
+    const T *restrict in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    dcomplex *restrict out=A->p;
+    T *restrict out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
     /*
@@ -369,8 +198,8 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
       flag==1: copy abs2;
       flag==2: copy real only.
     */
-    memset(out, 0, sizeof(dcomplex)*noutx*nouty);
-    if(fabs(theta)<1.e-10){/*no rotation. */
+    memset(out, 0, sizeof(T)*noutx*nouty);
+    if(FABS(theta)<1.e-10){/*no rotation. */
 	const int skipx=(noutx-ninx)/2;
 	const int skipy=(nouty-niny)/2;
 	int ixstart=0, ixend=ninx;
@@ -383,10 +212,10 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	dcomplex *restrict out2=out+skipy*noutx+skipx;
+	T *restrict out2=out+skipy*noutx+skipx;
 	for(int iy=iystart; iy<iyend; iy++){
-	    dcomplex * outi=out2+iy*noutx;
-	    const dcomplex * ini=in+iy*ninx;
+	    T * outi=out2+iy*noutx;
+	    const T * ini=in+iy*ninx;
 	    switch(flag){/*this switch does not affect speed. */
 	    case C_FULL:
 		cmpcpy(outi+ixstart,ini+ixstart,(ixend-ixstart));
@@ -416,28 +245,28 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	  
 	  The original method of adding in to out is not right.
 	 */
-	dcomplex (*restrict outs)[noutx]=(dcomplex(*)[noutx])out;
-	dcomplex (*restrict ins)[ninx]=(dcomplex(*)[ninx])in;
-	const double ctheta=cos(theta);
-	const double stheta=sin(theta);
-	const double negstheta=-stheta;
-	/*const double negctheta=-ctheta; */
-	/*use long double to reduce accumulation error. but slow. error is on order of 1.e-14  */
-	double x2,y2;
-	double x4,y4;
-	double x3,y3,x31;
-	double noutx2=noutx>>1;
-	double nouty2=nouty>>1;
+	T (*restrict outs)[noutx]=(T(*)[noutx])out;
+	T (*restrict ins)[ninx]=(T(*)[ninx])in;
+	const R ctheta=cos(theta);
+	const R stheta=sin(theta);
+	const R negstheta=-stheta;
+	/*const R negctheta=-ctheta; */
+	/*use long R to reduce accumulation error. but slow. error is on order of 1.e-14  */
+	R x2,y2;
+	R x4,y4;
+	R x3,y3,x31;
+	R noutx2=noutx>>1;
+	R nouty2=nouty>>1;
 	int ix2, iy2;
 	
 #define DO_LOOP(AFTER,CMD)						\
 	x4=(ninx>>1)-noutx2*ctheta-nouty2*stheta;			\
 	y4=(niny>>1)+noutx2*stheta-nouty2*ctheta;			\
 	for(int iy=0; iy<nouty; iy++){					\
-	    double xbd1=-x4/ctheta; double xbd2=(ninx-1-x4)/ctheta;	\
-	    double ybd1=-y4/negstheta; double ybd2=(ninx-1-y4)/negstheta; \
-	    if(xbd1>xbd2){double tmp=xbd1; xbd1=xbd2; xbd2=tmp;}	\
-	    if(ybd1>ybd2){double tmp=ybd1; ybd1=ybd2; ybd2=tmp;}	\
+	    R xbd1=-x4/ctheta; R xbd2=(ninx-1-x4)/ctheta;	\
+	    R ybd1=-y4/negstheta; R ybd2=(ninx-1-y4)/negstheta; \
+	    if(xbd1>xbd2){R tmp=xbd1; xbd1=xbd2; xbd2=tmp;}	\
+	    if(ybd1>ybd2){R tmp=ybd1; ybd1=ybd2; ybd2=tmp;}	\
 	    int sx=iceil(fmax(xbd1,ybd1));				\
 	    int mx=1+ifloor(fmin(xbd2,ybd2));				\
 	    sx=sx>0?sx:0; mx=mx<noutx?mx:noutx;				\
@@ -462,13 +291,13 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	    DO_LOOP(,);
 	    break;
 	case C_ABS2:
-	    DO_LOOP(,cabs2);
+	    DO_LOOP(,ABS2);
 	    break;
 	case C_REAL:
-	    DO_LOOP(,creal);
+	    DO_LOOP(,REAL);
 	    break;
 	case C_ABS:
-	    DO_LOOP(,cabs);
+	    DO_LOOP(,ABS);
 	    break;
 	case C_LITERAL:
 	    DO_LOOP(RA2XY,XY2RA);
@@ -480,17 +309,17 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
     }
 }
 /**
-   Embed or crop a cmat into center of dmat. 
+   Embed or crop a X(mat) into center of XR(mat). 
  */
-void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
-    double *restrict in=B->p;
+void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
+    R *restrict in=B->p;
     long ninx=B->nx;
     long niny=B->ny;
-    dcomplex *out=A->p;
+    T *out=A->p;
     const long noutx=A->nx;
     const long nouty=A->ny;
-    memset(out, 0, sizeof(dcomplex)*noutx*nouty);
-    if(fabs(theta)<1.e-10){/*no rotation. */
+    memset(out, 0, sizeof(T)*noutx*nouty);
+    if(FABS(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
 	long ixstart=0, ixend=ninx;
@@ -503,30 +332,30 @@ void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	dcomplex *out2=out+skipy*noutx+skipx;
+	T *out2=out+skipy*noutx+skipx;
 	for(long iy=iystart; iy<iyend; iy++){
-	    dcomplex *outi=out2+iy*noutx;
-	    const double *ini=in+iy*ninx;
+	    T *outi=out2+iy*noutx;
+	    const R *ini=in+iy*ninx;
 	    for(long ix=ixstart; ix<ixend; ix++){
 		outi[ix]=ini[ix];
 	    }
 	}
     }else{
-	dcomplex (*outs)[noutx]=(void*)out;
-	double (*ins)[ninx]=(void*)in;
-	const double ctheta=cos(theta);
-	const double stheta=sin(theta);
-	double x2,y2;
-	double x,y;
+	T (*outs)[noutx]=(void*)out;
+	R (*ins)[ninx]=(void*)in;
+	const R ctheta=cos(theta);
+	const R stheta=sin(theta);
+	R x2,y2;
+	R x,y;
 	long ninx2=ninx/2;
 	long noutx2=noutx/2;
 	long niny2=niny/2;
 	long nouty2=nouty/2;
 	long ix2, iy2;
 	for(long iy=0; iy<nouty; iy++){ 
-	    y=(double)(iy-nouty2); 
+	    y=(R)(iy-nouty2); 
 	    for(long ix=0; ix<noutx; ix++){ 
-		x=(double)(ix-noutx2); 
+		x=(R)(ix-noutx2); 
 		x2=x*ctheta+y*stheta+ninx2; 
 		y2=-x*stheta+y*ctheta+niny2; 
 		if(x2>0 && x2<ninx-1 && y2>0 && y2<niny-1){ 
@@ -548,27 +377,27 @@ void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
 /**
    rotate (around fft center: (nx/2,ny/2)) CCW theta and embed in into A. 
 */
-void cembedscaleout(cmat *restrict A, const cmat *B, 
-		    double xoutscale,double youtscale,
-		    const double theta, CEMBED flag){
-    if(fabs(xoutscale-1)<1.e-10 && fabs(youtscale-1)<1.e-10){
-	cembed(A,B,theta,flag);
+void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B, 
+		      R xoutscale,R youtscale,
+		      const R theta, CEMBED flag){
+    if(FABS(xoutscale-1)<1.e-10 && FABS(youtscale-1)<1.e-10){
+	X(embedc)(A,B,theta,flag);
 	return;
     }
-    const dcomplex *in=B->p;
+    const T *in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    dcomplex *out=A->p;
+    T *out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
   
 
-    dcomplex (*outs)[noutx]=(dcomplex(*)[noutx])out;
-    dcomplex (*ins)[ninx]=(dcomplex(*)[ninx])in;
-    const double ctheta=cos(theta);
-    const double stheta=sin(theta);
-    double x2,y2;
-    double x,y;
+    T (*outs)[noutx]=(T(*)[noutx])out;
+    T (*ins)[ninx]=(T(*)[ninx])in;
+    const R ctheta=cos(theta);
+    const R stheta=sin(theta);
+    R x2,y2;
+    R x,y;
     int ninx2=ninx/2;
     int noutx2=noutx/2;
     int niny2=niny/2;
@@ -599,13 +428,13 @@ void cembedscaleout(cmat *restrict A, const cmat *B,
 	DO_LOOP(,);
 	break;
     case C_ABS2:
-	DO_LOOP(,cabs2);
+	DO_LOOP(,ABS2);
 	break;
     case C_REAL:
-	DO_LOOP(,creal);
+	DO_LOOP(,REAL);
 	break;
     case C_ABS:
-	DO_LOOP(,cabs);
+	DO_LOOP(,ABS);
 	break;
     case C_LITERAL:
 	DO_LOOP(RA2XY,XY2RA);
@@ -635,15 +464,15 @@ void cembedscaleout(cmat *restrict A, const cmat *B,
    \endverbatim
    }
 */
-void ccpcorner(cmat *A, const cmat *restrict B, CEMBED flag){
-    const size_t nx=A->nx;
-    const size_t ny=A->ny;
-    const size_t ninx=B->nx;
-    const size_t niny=B->ny;
-    dcomplex *psfout=A->p;
-    const dcomplex *restrict psfin=B->p;
+void X(cpcorner)(X(mat) *A, const X(mat) *restrict B, CEMBED flag){
+    const long nx=A->nx;
+    const long ny=A->ny;
+    const long ninx=B->nx;
+    const long niny=B->ny;
+    T *psfout=A->p;
+    const T *restrict psfin=B->p;
     assert((nx&1)==0 && (ny&1)==0 && (ninx&1)==0 && (niny&1)==0);
-    memset(psfout, 0, sizeof(dcomplex)*nx*ny);
+    memset(psfout, 0, sizeof(T)*nx*ny);
     const int ny2=(ny<niny)?ny/2:niny/2;
     const int nx2=(nx<ninx)?nx/2:ninx/2;
 
@@ -679,77 +508,75 @@ void ccpcorner(cmat *A, const cmat *restrict B, CEMBED flag){
    Put abs square of each element into its realpart.
    A=abs(A).^2;
 */
-void cabs2toreal(cmat *A){
+void X(abs2toreal)(X(mat) *A){
     for(int i=0; i<A->nx*A->ny; i++){
-	A->p[i]=cabs2(A->p[i]);
+	A->p[i]=ABS2(A->p[i]);
     }
 }
 /**
    Put abs of each elemnt into its realpart. A=abs(A);
 */
-void cabstoreal(cmat *A){
+void X(abstoreal)(X(mat) *A){
     /*put abs to real */
     for(int i=0; i<A->nx*A->ny; i++){
-	A->p[i]=cabs(A->p[i]);
+	A->p[i]=ABS(A->p[i]);
     }
 }
 /**
-   Copy a dmat into real part of cmat.
+   Copy a XR(mat) into real part of X(mat).
  */
-void ccpd(cmat**restrict A0, const dmat *restrict B){
-    cmat *restrict A=*A0;
+void X(cpd)(X(mat)**restrict A0, const XR(mat) *restrict B){
+    X(mat) *restrict A=*A0;
     if(!A){
-	*A0=A=cnew(B->nx, B->ny);
+	*A0=A=X(new)(B->nx, B->ny);
     }else{
 	assert((A->nx==B->nx && A->ny==B->ny));
     }
-    for(int i=0; i<B->nx*B->ny; i++){
+    for(long i=0; i<B->nx*B->ny; i++){
 	A->p[i]=B->p[i];
     }
 }
 /**
-   Copy real part of a cmat to dmat with optional scaling:
+   Copy real part of a X(mat) to XR(mat) with optional scaling:
    A0=A0.*alpha+real(B)*beta
 */
-void creal2d(dmat**restrict A0, double alpha,
-	     const cmat *restrict B, double beta){
-    dmat *restrict A=*A0;
+void X(real2d)(XR(mat)**restrict A0, R alpha,
+	       const X(mat) *restrict B, R beta){
+    XR(mat) *restrict A=*A0;
     if(!A){
-	*A0=A=dnew(B->nx, B->ny);
+	*A0=A=XR(new)(B->nx, B->ny);
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(fabs(alpha)<EPS){
-	memset(A->p, 0,sizeof(double)*B->nx*B->ny);
-	for(int i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=creal(B->p[i])*beta;
+    if(FABS(alpha)<EPS){
+	for(long i=0; i<B->nx*B->ny; i++){
+	    A->p[i]=REAL(B->p[i])*beta;
 	}
     }else{
-	for(int i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=A->p[i]*alpha+creal(B->p[i])*beta;
+	for(long i=0; i<B->nx*B->ny; i++){
+	    A->p[i]=A->p[i]*alpha+REAL(B->p[i])*beta;
 	}
     }
 }
 /**
-   Copy abs squared of a cmat to dmat with optional scaling:
+   Copy abs squared of a X(mat) to XR(mat) with optional scaling:
    A0=A0*alpha+abs(B).^2*beta;
  */
-void cabs22d(dmat**restrict A0, double alpha,
-	     const cmat *restrict B, double beta){
-    dmat *restrict A=*A0;
+void X(abs22d)(XR(mat)**restrict A0, R alpha,
+	     const X(mat) *restrict B, R beta){
+    XR(mat) *restrict A=*A0;
     if(!A){
-	*A0=A=dnew(B->nx, B->ny);
+	*A0=A=XR(new)(B->nx, B->ny);
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(fabs(alpha)<1.e-60){
-	memset(A->p, 0,sizeof(double)*B->nx*B->ny);
+    if(FABS(alpha)<1.e-60){
 	for(int i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=cabs2(B->p[i])*beta;
+	    A->p[i]=ABS2(B->p[i])*beta;
 	}
     }else{
 	for(int i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=A->p[i]*alpha+cabs2(B->p[i])*beta;
+	    A->p[i]=A->p[i]*alpha+ABS2(B->p[i])*beta;
 	}
     }
 }
@@ -763,24 +590,24 @@ void cabs22d(dmat**restrict A0, double alpha,
    pinct=1: peak is in center
    pinct=0: peak is in corner
 */
-void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
+void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     int nx=otf->nx;
     int ny=otf->ny;
-    double dux=1./(double)nx;
-    double duy=1./(double)ny;
-    dcomplex ux[nx];
-    dcomplex uy[ny];
-    dcomplex cx=cexp(-2*M_PI*I*dux*sx);
-    dcomplex cy=cexp(-2*M_PI*I*duy*sy);
-    PCMAT(otf, potf);
-    PCMAT(otfin, potfin);
+    R dux=1./(R)nx;
+    R duy=1./(R)ny;
+    T ux[nx];
+    T uy[ny];
+    T cx=EXP(-2*M_PI*I*dux*sx);
+    T cy=EXP(-2*M_PI*I*duy*sy);
+    PMAT(otf, potf);
+    PMAT(otfin, potfin);
     warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
-	ux[0]=cexp(-2*M_PI*I*dux*sx*(-nx/2));
+	ux[0]=EXP(-2*M_PI*I*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
-	uy[0]=cexp(-2*M_PI*I*duy*sy*(-ny/2));
+	uy[0]=EXP(-2*M_PI*I*duy*sy*(-ny/2));
 	for(int i=1; i<ny; i++){
 	    uy[i]=uy[i-1]*cy;
 	}
@@ -789,7 +616,7 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
 	for(int i=1; i<nx/2; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
-	ux[nx/2]=cexp(-2*M_PI*I*dux*sx*(-nx/2));
+	ux[nx/2]=EXP(-2*M_PI*I*dux*sx*(-nx/2));
 	for(int i=nx/2+1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
@@ -797,7 +624,7 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
 	for(int i=1; i<ny/2; i++){
 	    uy[i]=uy[i-1]*cy;
 	}
-	uy[ny/2]=cexp(-2*M_PI*I*duy*sy*(-ny/2));
+	uy[ny/2]=EXP(-2*M_PI*I*duy*sy*(-ny/2));
 	for(int i=ny/2+1; i<ny; i++){
 	    uy[i]=uy[i-1]*cy;
 	}
@@ -819,6 +646,6 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
 /**
    Inplace tilt the otf to make the image shift. 
 */
-void ctilt(cmat *otf, double sx, double sy, int pinct){
-    ctilt2(otf, otf, sx, sy, pinct);
+void X(tilt)(X(mat) *otf, R sx, R sy, int pinct){
+    X(tilt2)(otf, otf, sx, sy, pinct);
 }

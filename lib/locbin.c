@@ -17,8 +17,6 @@
 */
 
 #include "locbin.h"
-#include "matbin.h"
-#include "cell.h"
 
 /**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().

@@ -16,8 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "loc.h"
-#include "dmat.h"
-#include "dsp.h"
+#include "mathdef.h"
 #include "mathmisc.h"
 #include "slaving.h"
 #include "imat.h"

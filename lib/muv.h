@@ -18,10 +18,8 @@
 
 #ifndef AOS_LIB_MUV_H
 #define AOS_LIB_MUV_H
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "cell.h"
-#include "dsp.h"
 #include "chol.h"
 #include "pcg.h"
 /**

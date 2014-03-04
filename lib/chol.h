@@ -18,9 +18,7 @@
 
 #ifndef AOS_LIB_CHOL_H
 #define AOS_LIB_CHOL_H
-#include "dsp.h"
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 /**
    \file chol.h
    Wraps the CHOLESKY Library to provide a simple interface.*/

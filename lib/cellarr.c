@@ -17,10 +17,7 @@
 */
 #include <sys/file.h>
 #include "cellarr.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
-#include "zmat.h"
+#include "mathdef.h"
 
 /**
    Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell

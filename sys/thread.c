@@ -20,6 +20,7 @@
 /**
    Functions regarding to threading
 */
+PNEW2(mutex_fftw);
 /**
    Break out the job to be executed by multiple threads. 
    if interlaced==0: partition the job to consecutive segments.

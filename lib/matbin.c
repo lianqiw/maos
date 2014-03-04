@@ -21,11 +21,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "type.h"
-#include "matbin.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
-#include "zmat.h"
+#include "mathdef.h"
 #include "defs.h"
 /**
    Contains routines to write/read dense/sparse matrix into/from file.

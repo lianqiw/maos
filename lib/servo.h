@@ -19,8 +19,7 @@
 #ifndef SKYC_SERVO_H
 #define SKYC_SERVO_H
 
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "fft.h"
 #include "loc.h"
 /**

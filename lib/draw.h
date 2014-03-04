@@ -19,8 +19,7 @@
 #ifndef __DRAW_H
 #define __DRAW_H
 
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "loc.h"
 /**
    \file draw.h

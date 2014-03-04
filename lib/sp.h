@@ -18,12 +18,13 @@
 
 #ifndef AOS_LIB_SP_H
 #define AOS_LIB_SP_H
+#ifndef AOS_LIB_MATH_H
+#error "Don't include this file directly"
+#endif
 #include "random.h"
-#include "type.h"
 
 #define spfree(A)      {spfree_do(A); A=NULL;}
 #define spcellfree(A)  {spcellfree_do(A); A=NULL;}
-/*#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p */
 #define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
 
 #define sspfree(A)      {sspfree_do(A); A=NULL;}
@@ -34,13 +35,17 @@
 #define cspcellfree(A) {cspcellfree_do(A); A=NULL;}
 #define PCSPCELL(M,P)  csp* (*restrict P)[(M)->nx]=(csp*(*)[(M)->nx])(M)->p
 
-#define AOS_SP_DEF(X,Y,T) \
+#define zspfree(A)     {zspfree_do(A); A=NULL;}
+#define zspcellfree(A) {zspcellfree_do(A); A=NULL;}
+#define PZSPCELL(M,P)  zsp* (*restrict P)[(M)->nx]=(zsp*(*)[(M)->nx])(M)->p
+
+#define AOS_SP_DEF(X,Y,T,R,RI) \
 X(sp)* Y(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-void Y(spmove)(X(sp) *A, X(sp) *res);\
+void   Y(spmove)(X(sp) *A, X(sp) *res);\
 X(sp) *Y(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, double fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
+X(sp) *Y(spnewrandu)(int nx, int ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
 void Y(spsetnzmax)(X(sp) *sp, long nzmax);\
 void Y(spfree_do)(X(sp) *sp);\
 void Y(sparrfree)(X(sp) **sparr, int n);\
@@ -53,7 +58,7 @@ X(mat) *Y(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void Y(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
 void Y(spmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha, int nthread); \
 void Y(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
-void Y(spmulcreal)(T *restrict y, const X(sp) *A, const dcomplex * restrict x, T alpha);\
+void Y(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha);\
 void Y(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
 void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha); \
 void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
@@ -72,8 +77,8 @@ void Y(sptcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\
 X(sp) *Y(spadd2)(X(sp) *A,X(sp)*B,T a,T b) CHECK_UNUSED_RESULT;\
 void Y(spadd)(X(sp) **A0, const X(sp) *B);\
 void Y(spcelladd)(Y(spcell) **A0, const Y(spcell) *B);\
-void Y(spaddI)(X(sp) **A0, double alpha);\
-void Y(spcelladdI)(Y(spcell) *A0, double alpha);\
+void Y(spaddI)(X(sp) **A0, R alpha);\
+void Y(spcelladdI)(Y(spcell) *A0, R alpha);\
 X(sp) *Y(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
 X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
@@ -88,8 +93,8 @@ X(mat) *Y(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 X(mat) *Y(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 void Y(spclean)(X(sp) *A);\
 void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac, const T * restrict xc, T alpha);\
-void Y(spdroptol)(X(sp) *A, double thres);		\
-void Y(spcelldroptol)(Y(spcell) *A, double thres); \
+void Y(spdroptol)(X(sp) *A, R thres);		\
+void Y(spcelldroptol)(Y(spcell) *A, R thres); \
 void Y(spsort)(X(sp) *A);\
 void Y(spcellsort)(Y(spcell) *A);\
 void Y(spsym)(X(sp) *A);\
@@ -98,5 +103,4 @@ X(sp) *Y(spconvolvop)(X(mat) *A) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spperm)(X(sp) *A, int reverse, long *pcol, long *prow) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;\
 X(cell) *Y(spblockextract)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;
-
 #endif

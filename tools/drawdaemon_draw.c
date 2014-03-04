@@ -345,7 +345,7 @@ void update_limit(drawdata_t *drawdata){
 	double xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
 	double *ptsy=NULL;
 	if(pts->ny>1){/*x is supplied */
-	    maxmindbl(pts->p, pts->nx, &xmax, &xmin);
+	    dmaxminsum(pts->p, pts->nx, &xmax, &xmin, 0);
 	    ptsy=pts->p+pts->nx;
 	}else{/*x is index */
 	    xmin=0; xmax=(double)(pts->nx-1);
@@ -377,7 +377,7 @@ void update_limit(drawdata_t *drawdata){
 		}
 	    } 
 	}else{
-	    maxmindbl(ptsy, pts->nx, &ymax, &ymin);
+	    dmaxminsum(ptsy, pts->nx, &ymax, &ymin, 0);
 	}
 	if(xmin<xmin0) xmin0=xmin;
 	if(xmax>xmax0) xmax0=xmax;

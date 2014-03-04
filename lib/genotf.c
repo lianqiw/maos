@@ -16,8 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../sys/sys.h"
-#include "dmat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "mathmisc.h"
 #include "loc.h"
 #include "genotf.h"
@@ -391,8 +390,8 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
-    maxmindbl(locx, nloc, &xmax, &xmin);
-    maxmindbl(locy, nloc, &ymax, &ymin);  
+    dmaxminsum(locx, nloc, &xmax, &xmin, 0);
+    dmaxminsum(locy, nloc, &ymax, &ymin, 0);  
     double dx1=1./loc->dx;
     double dy1=1./loc->dy;
     long ncovx=(long) round((xmax-xmin)*dx1)*2;

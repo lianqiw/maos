@@ -23,9 +23,6 @@
 #include <unistd.h>
 #include "type.h"
 #include "spbin.h"
-#include "dsp.h"
-#include "csp.h"
-#include "ssp.h"
 #include "defs.h"
 /*
    Function to write sparse matrix data into file pointed using a file

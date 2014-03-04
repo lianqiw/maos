@@ -50,16 +50,8 @@ void invsq(long n, double *restrict A);
 long *invperm(long *p, long np);
 void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx);
 void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx);
-void maxmindbl(const double *restrict p, long N, 
-	       double *restrict max, double *restrict min);
-void maxminflt(const float *restrict p, long N, 
-	       float *restrict max, float *restrict min);
 void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min);
-void maxmincmp(const dcomplex *restrict p, long N,
-	       double *restrict max, double *restrict min, double *restrict sum);
-void maxminfcmp(const fcomplex *restrict p, long N,
-		float *restrict max, float *restrict min, float *restrict sum);
 void remove_piston(double *p, long n);
 long nextpow2(long n);
 long nextfftsize(long n);

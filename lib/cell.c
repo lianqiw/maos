@@ -26,13 +26,8 @@
 #include "../sys/sys.h"
 #include "random.h"
 
-#include "dmat.h"
-#include "cmat.h"
-#include "matbin.h"
-#include "dsp.h"
-#include "csp.h"
+#include "mathdef.h"
 #include "defs.h"
-
 
 /**
    create a new block matrix.
@@ -121,7 +116,7 @@ void X(cellfree_do)(X(cell) *dc){
     if(!dc) return;
     if(dc->p){
 	if(dc->header){
-	    double count=search_header_num(dc->header, "count");
+	    R count=search_header_num(dc->header, "count");
 	    if(!isnan(count) && count>0){
 		info("count=%g, scaling the data\n", count);
 		X(cellscale)(dc, 1./count);
@@ -138,6 +133,7 @@ void X(cellfree_do)(X(cell) *dc){
 	free(dc->p);dc->p=0;
     }
     if(dc->m) X(free)(dc->m);
+    X(fft_free_plan)(dc->fft);
     free(dc);
 }
 /**
@@ -239,8 +235,8 @@ X(cell) *X(celltrans)(const X(cell) *A){
 /**
    compute norm2.
 */
-double X(cellnorm2)(const X(cell) *A){
-    double out=0;
+R X(cellnorm2)(const X(cell) *A){
+    R out=0;
     for(int i=0; i<A->nx*A->ny; i++){
 	out+=X(norm2)(A->p[i]);
     }
@@ -250,7 +246,7 @@ double X(cellnorm2)(const X(cell) *A){
 /**
    scale each element of A.
 */
-void X(cellscale)(X(cell) *A, double w){
+void X(cellscale)(X(cell) *A, R w){
     if(!A) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	X(scale)(A->p[i],w);
@@ -501,7 +497,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 /**
    add one to another.  B=B*bc+A*ac
 */
-void X(celladd)(X(cell) **B0, double bc, const X(cell) *A,const double ac){
+void X(celladd)(X(cell) **B0, R bc, const X(cell) *A,const R ac){
     if(A){
 	X(cell) *B=*B0;
 	if(!B){
@@ -638,7 +634,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 /**
    drop empty blocks (zero). Size of B is not modified.
 */
-void X(celldropzero)(X(cell) *B, double thres){
+void X(celldropzero)(X(cell) *B, R thres){
     PCELL(B,Bp);
     for(long iy=0; iy<B->ny; iy++){
 	for(long ix=0; ix<B->nx; ix++){
@@ -664,18 +660,18 @@ void X(celldropzero)(X(cell) *B, double thres){
    compute ||A-B||/||A||
    use mean.
 */
-double X(celldiff)(const X(cell) *A, const X(cell) *B){
+R X(celldiff)(const X(cell) *A, const X(cell) *B){
     X(cell) *C=NULL;
     X(cellcp)(&C,A);
     X(celladd)(&C,1,B,-1);
-    double d=sqrt(X(cellnorm2)(C)*2/(X(cellnorm2)(C)+X(cellnorm2)(B)));
+    R d=sqrt(X(cellnorm2)(C)*2/(X(cellnorm2)(C)+X(cellnorm2)(B)));
     return isnan(d)?0:d;
 }
 
 /**
    clip a X(cell) array to max at 'max', min at 'min'
 */
-int X(cellclip)(X(cell) *Ac, double min, double max){
+int X(cellclip)(X(cell) *Ac, R min, R max){
     if(!Ac || !Ac->p) return 0;
     if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
     int nclip=0;
@@ -692,7 +688,7 @@ int X(cellclip)(X(cell) *Ac, double min, double max){
   \f$C0+=A*B*alpha\f$.
 */
 #ifndef USE_SINGLE
-void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alpha){
+void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, R alpha){
     if(!A || !B) return;
     int ax, az;
     int nx,ny,nz;
@@ -735,7 +731,7 @@ void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alp
 /**
    add a to diagonal elements of A;
 */
-void X(celladdI)(X(cell) *A, double a){
+void X(celladdI)(X(cell) *A, R a){
     if(A->nx!=A->ny) 
 	error("A must be symmetric\n");
     for(int ib=0; ib<A->nx; ib++){
@@ -746,7 +742,7 @@ void X(celladdI)(X(cell) *A, double a){
 /**
    raise each cell in the cell array to power of power.
 */
-void X(cellcwpow)(X(cell)*A, double power){
+void X(cellcwpow)(X(cell)*A, R power){
     for(long ib=0; ib<A->nx*A->ny; ib++){
 	X(cwpow)(A->p[ib],power);
     }
@@ -773,4 +769,169 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
 	}
     }
     return out;
+}
+
+/**
+   2D cubic spline interpolation preparation. x is the x coordinate vector of
+ the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the
+ 2-d grid.  It is upto the user to make sure that the coordinate is increasingly
+ ordered and evenly spaced .
+
+ The boundaries are handled in the same way is X(spline). i.e. replace 
+ \f[f^\prime(0)=(f(1)-f(-1))/2\f] by
+ \f[f^\prime(0)=(f(1)-f(0))\f]
+ Otehr type of boundaries are handled in the same way.
+*/
+
+X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
+    const long nx=x->nx;
+    const long ny=y->nx;
+    assert(x->ny==1 && y->ny ==1 && z->nx==nx && z->ny==ny);
+    X(cell)*coeff=X(cellnew)(nx,ny);
+    PCELL(coeff,pc);
+  
+    PMAT(z,p);
+    T p00,p01,p02,p03,p10,p11,p12,p13,p20,p21,p22,p23,p30,p31,p32,p33;
+    for(long iy=0; iy<ny-1; iy++){
+	for(long ix=0; ix<nx-1; ix++){
+	    if(iy==0){
+		if(ix==0){
+		    p00=2*(2*p[iy][ix]-p[iy][ix+1])-(2*p[iy+1][ix]-p[iy+1][ix+1]);/*from a */
+		}else{
+		    p00=2*p[iy][ix-1]-p[iy+1][ix-1];/*from b */
+		}
+		p01=2*p[iy][ix]-p[iy+1][ix];
+		p02=2*p[iy][ix+1]-p[iy+1][ix+1];
+		if(ix==nx-2){
+		    p03=2*(p[iy][ix+1]*2-p[iy][ix])-(p[iy+1][ix+1]*2-p[iy+1][ix]);/*from n */
+		}else{
+		    p03=2*p[iy][ix+2]-p[iy+1][ix+2];/*from m */
+		}
+	    }else{
+		if(ix==0){
+		    p00=2*p[iy-1][ix]-p[iy-1][ix+1];/*a from b */
+		}else{
+		    p00=p[iy-1][ix-1];/*b */
+		}
+		p01=p[iy-1][ix];
+		p02=p[iy-1][ix+1];
+		if(ix==nx-2){
+		    p03=p[iy-1][ix+1]*2-p[iy-1][ix];/*n from m */
+		}else{
+		    p03=p[iy-1][ix+2];/*m */
+		}
+	    }
+	    if(ix==0){
+		p10=p[iy][ix]*2-p[iy][ix+1];/*from c */
+	    }else{
+		p10=p[iy][ix-1];/*c */
+	    }
+	    p11=p[iy][ix];
+	    p12=p[iy][ix+1];
+	    if(ix==nx-2){
+		p13=p[iy][ix+1]*2-p[iy][ix];/*from d */
+	    }else{
+		p13=p[iy][ix+2];/*d */
+	    }
+	    if(ix==0){
+		p20=p[iy+1][ix]*2-p[iy+1][ix+1];/*from e */
+	    }else{
+		p20=p[iy+1][ix-1];/*e */
+	    }
+	    p21=p[iy+1][ix];
+	    p22=p[iy+1][ix+1];
+	    if(ix==nx-2){
+		p23=p[iy+1][ix+1]*2-p[iy+1][ix];/*from f */
+	    }else{
+		p23=p[iy+1][ix+2];/*f */
+	    }
+	    if(iy==ny-2){
+		if(ix==0){
+		    p30=2*(p[iy+1][ix]*2-p[iy+1][ix+1])-(p[iy][ix]*2-p[iy][ix+1]);/*from h */
+		}else{
+		    p30=2*p[iy+1][ix-1]-p[iy][ix-1];/*from g */
+		}
+		p31=2*p[iy+1][ix]-p[iy][ix];
+		p32=2*p[iy+1][ix+1]-p[iy][ix+1];
+		if(ix==nx-2){
+		    p33=2*(2*p[iy+1][ix+1]-p[iy+1][ix])-(2*p[iy][ix+1]-p[iy][ix]);/*from j */
+		}else{
+		    p33=2*p[iy+1][ix+2]-p[iy][ix+2];/*from i */
+		}
+	    }else{
+		if(ix==0){
+		    p30=p[iy+2][ix]*2-p[iy+2][ix+1];/*h from g */
+		}else{
+		    p30=p[iy+2][ix-1];/*g */
+		}
+		p31=p[iy+2][ix];
+		p32=p[iy+2][ix+1];
+		if(ix==nx-2){
+		    p33=2*p[iy+2][ix+1]-p[iy+2][ix];/*j from i */
+		}else{
+		    p33=p[iy+2][ix+2];/*i */
+		}
+	    }
+	    pc[iy][ix] = X(new)(4,4);
+	    PMAT(pc[iy][ix],ppc);
+	    ppc[0][0] = p11;
+	    ppc[0][1] = -.5*p10 + .5*p12;
+	    ppc[0][2] = p10 - 2.5*p11 + 2*p12 - .5*p13;
+	    ppc[0][3] = -.5*p10 + 1.5*p11 - 1.5*p12 + .5*p13;
+	    ppc[1][0] = -.5*p01 + .5*p21;
+	    ppc[1][1] = .25*p00 - .25*p02 - .25*p20 + .25*p22;
+	    ppc[1][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + .5*p20 - 1.25*p21 + p22 - .25*p23;
+	    ppc[1][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .25*p20 + .75*p21 - .75*p22 + .25*p23;
+	    ppc[2][0] = p01 - 2.5*p11 + 2*p21 - .5*p31;
+	    ppc[2][1] = -.5*p00 + .5*p02 + 1.25*p10 - 1.25*p12 - p20 + p22 + .25*p30 - .25*p32;
+	    ppc[2][2] = p00 - 2.5*p01 + 2*p02 - .5*p03 - 2.5*p10 + 6.25*p11 - 5*p12 + 1.25*p13 + 2*p20 - 5*p21 + 4*p22 - p23 - .5*p30 + 1.25*p31 - p32 + .25*p33;
+	    ppc[2][3] = -.5*p00 + 1.5*p01 - 1.5*p02 + .5*p03 + 1.25*p10 - 3.75*p11 + 3.75*p12 - 1.25*p13 - p20 + 3*p21 - 3*p22 + p23 + .25*p30 - .75*p31 + .75*p32 - .25*p33;
+	    ppc[3][0] = -.5*p01 + 1.5*p11 - 1.5*p21 + .5*p31;
+	    ppc[3][1] = .25*p00 - .25*p02 - .75*p10 + .75*p12 + .75*p20 - .75*p22 - .25*p30 + .25*p32;
+	    ppc[3][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + 1.5*p10 - 3.75*p11 + 3*p12 - .75*p13 - 1.5*p20 + 3.75*p21 - 3*p22 + .75*p23 + .5*p30 - 1.25*p31 + p32 - .25*p33;
+	    ppc[3][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .75*p10 + 2.25*p11 - 2.25*p12 + .75*p13 + .75*p20 - 2.25*p21 + 2.25*p22 - .75*p23 - .25*p30 + .75*p31 - .75*p32 + .25*p33;
+
+	}
+    }
+    return coeff;
+}
+
+/**
+   Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew
+*/
+X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew){
+    const long nx=x->nx;
+    const long ny=y->nx;
+    T xmin=x->p[0];
+    T ymin=y->p[0];
+    T xsep1=(R)(nx-1)/(x->p[nx-1]-xmin);
+    T ysep1=(R)(ny-1)/(y->p[ny-1]-ymin);
+    assert(xnew->nx == ynew->nx && xnew->ny == ynew->ny);
+    X(mat)*zz=X(new)(xnew->nx, xnew->ny);
+    PCELL(coeff,pc);
+    for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
+	R xm=REAL((xnew->p[ix]-xmin)*xsep1);
+	long xmf=floor(xm);
+	if(xmf<0) xmf=0;
+	if(xmf>nx-2) xmf=nx-2;
+	xm=xm-xmf;
+
+	R ym=REAL((ynew->p[ix]-ymin)*ysep1);
+	long ymf=floor(ym);
+	if(ymf<0) ymf=0;
+	if(ymf>ny-2) ymf=ny-2;
+	ym=ym-ymf;
+	
+	T xm2=xm *xm;
+	T xm3=xm2*xm;
+	T ym2=ym *ym;
+	T ym3=ym2*ym;
+	PMAT(pc[ymf][xmf],ppc);
+	zz->p[ix]= ppc[0][0] + ppc[0][1] * xm + ppc[0][2] * xm2 + ppc[0][3] * xm3 +
+	    ppc[1][0] * ym + ppc[1][1] * ym * xm + ppc[1][2] * ym * xm2 + ppc[1][3] * ym * xm3 +
+	    ppc[2][0] * ym2 + ppc[2][1] * ym2 * xm + ppc[2][2] * ym2 * xm2 + ppc[2][3] * ym2 * xm3 +
+	    ppc[3][0] * ym3 + ppc[3][1] * ym3 * xm + ppc[3][2] * ym3 * xm2 + ppc[3][3] * ym3 * xm3;
+
+    }
+    return zz;
 }

@@ -24,19 +24,21 @@
 /*
 Returns the modified Bessel functions ri = Iν , rk = Kν and their derivatives rip = Iν ,
 rkp = Kν , for positive x and for xnu = ν ≥ 0. The relative accuracy is within one or two
-significant digits of EPS. FPMIN is a number close to the machine’s smallest floating-point
+significant digits of MYEPS. FPMIN is a number close to the machine’s smallest floating-point
 number. All internal arithmetic is in double precision. To convert the entire routine to double
-precision, change the float declarations above to double and decrease EPS to 10−16 . Also
+precision, change the float declarations above to double and decrease MYEPS to 10−16 . Also
 convert the function beschb.
 */
 #include <math.h>
 #include "../sys/sys.h"
-#undef EPS
-#define EPS 1.0e-16
+#ifdef USE_COMPLEX
+#error "Do not use for complex numbers"
+#endif
+#undef MYEPS
+#define MYEPS 1.0e-16
 #define FPMIN 1.0e-30
 #define MAXIT 10000
 #define XMIN 2.0
-#define PI 3.141592653589793
 
 #define NUSE1 5
 #define NUSE2 5
@@ -45,9 +47,9 @@ convert the function beschb.
 #define NR_END 1
 #define FREE_ARG char*
 
-static double chebev(double a, double b, double c[], int m, double x)
+static T chebev(T a, T b, T c[], int m, T x)
 {
-	double d=0.0,dd=0.0,sv,y,y2;
+	T d=0.0,dd=0.0,sv,y,y2;
 	int j;
 
 	if ((x-a)*(x-b) > 0.0) nrerror("x not in range in routine chebev");
@@ -60,14 +62,14 @@ static double chebev(double a, double b, double c[], int m, double x)
 	return y*d-dd+0.5*c[0];
 }
 
-static void beschb(double x, double *gam1, double *gam2, double *gampl, double *gammi)
+static void beschb(T x, T *gam1, T *gam2, T *gampl, T *gammi)
 {
-    double xx;
-    static double c1[] = {
+    T xx;
+    static T c1[] = {
 	-1.142022680371172e0,6.516511267076e-3,
 	3.08709017308e-4,-3.470626964e-6,6.943764e-9,
 	3.6780e-11,-1.36e-13};
-    static double c2[] = {
+    static T c2[] = {
 	1.843740587300906e0,-0.076852840844786e0,
 	1.271927136655e-3,-4.971736704e-6,-3.3126120e-8,
 	2.42310e-10,-1.70e-13,-1.0e-15};
@@ -84,10 +86,10 @@ static void beschb(double x, double *gam1, double *gam2, double *gampl, double *
    Returns the modified Bessel functions ri = Iν , rk = Kν and their derivatives
    rip = Iν , rkp = Kν, for positive x and for xnu = ν ≥ 0. 
 */
-void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *rkp)
+void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp)
 {
 	int i,l,nl;
-	double a,a1,b,c,d,del,del1,delh,dels,e,f,fact,fact2,ff,gam1,gam2,
+	T a,a1,b,c,d,del,del1,delh,dels,e,f,fact,fact2,ff,gam1,gam2,
 		gammi,gampl,h,p,pimu,q,q1,q2,qnew,ril,ril1,rimu,rip1,ripl,
 		ritemp,rk1,rkmu,rkmup,rktemp,s,sum,sum1,x2,xi,xi2,xmu,xmu2;
 
@@ -108,7 +110,7 @@ void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *r
 		c=b+1.0/c;
 		del=c*d;
 		h=del*h;
-		if (fabs(del-1.0) < EPS) break;
+		if (fabs(del-1.0) < MYEPS) break;
 	}
 	if (i > MAXIT) nrerror("x too large in bessik; try asymptotic expansion");
 	ril=FPMIN;
@@ -125,11 +127,11 @@ void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *r
 	f=ripl/ril;
 	if (x < XMIN) {
 		x2=0.5*x;
-		pimu=PI*xmu;
-		fact = (fabs(pimu) < EPS ? 1.0 : pimu/sin(pimu));
+		pimu=M_PI*xmu;
+		fact = (fabs(pimu) < MYEPS ? 1.0 : pimu/sin(pimu));
 		d = -log(x2);
 		e=xmu*d;
-		fact2 = (fabs(e) < EPS ? 1.0 : sinh(e)/e);
+		fact2 = (fabs(e) < MYEPS ? 1.0 : sinh(e)/e);
 		beschb(xmu,&gam1,&gam2,&gampl,&gammi);
 		ff=fact*(gam1*cosh(e)+gam2*fact2*d);
 		sum=ff;
@@ -148,7 +150,7 @@ void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *r
 			sum += del;
 			del1=c*(p-i*ff);
 			sum1 += del1;
-			if (fabs(del) < fabs(sum)*EPS) break;
+			if (fabs(del) < fabs(sum)*MYEPS) break;
 		}
 		if (i > MAXIT) nrerror("bessk series failed to converge");
 		rkmu=sum;
@@ -176,11 +178,11 @@ void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *r
 			h += delh;
 			dels=q*delh;
 			s += dels;
-			if (fabs(dels/s) < EPS) break;
+			if (fabs(dels/s) < MYEPS) break;
 		}
 		if (i > MAXIT) nrerror("bessik: failure to converge in cf2");
 		h=a1*h;
-		rkmu=sqrt(PI/(2.0*x))*exp(-x)/s;
+		rkmu=sqrt(M_PI/(2.0*x))*exp(-x)/s;
 		rk1=rkmu*(xmu+x+0.5-h)*xi;
 	}
 	rkmup=xmu*xi*rkmu-rk1;
@@ -195,9 +197,9 @@ void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *r
 	*rk=rkmu;
 	*rkp=xnu*xi*rkmu-rk1;
 }
-#undef EPS
+#undef MYEPS
 #undef FPMIN
 #undef MAXIT
 #undef XMIN
-#undef PI
+
 /* (C) Copr. 1986-92 Numerical Recipes Software ?421.1-9. */

@@ -18,7 +18,9 @@
 
 #ifndef AOS_LIB_MATBIN_H
 #define AOS_LIB_MATBIN_H
-#include "type.h"
+#ifndef AOS_LIB_MATH_H
+#error "Don't include this file directly"
+#endif
 
 #define AOS_MATBIN_DEF(X,Y,T)\
 void X(writedata)(file_t *fp, const X(mat) *A);	\

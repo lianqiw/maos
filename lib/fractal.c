@@ -17,7 +17,6 @@
 */
 #include "fractal.h"
 #include "mathmisc.h"
-#include "nr.h"
 #include "turbulence.h"
 /**
    Implementation of the fractal operation for atmospheric turbulence screen

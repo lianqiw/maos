@@ -21,12 +21,8 @@
 #include <unistd.h>
 #include "../sys/sys.h"
 #include "loc.h"
-#include "cell.h"
-#include "dmat.h"
-#include "cmat.h"
-#include "dsp.h"
+#include "mathdef.h"
 #include "draw.h"
-#include "matbin.h"
 #include "mathmisc.h"
 
 /**
@@ -147,8 +143,8 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
 2 for fft.  */
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     double xmin,xmax,ymin,ymax;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
+    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin,0);
+    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin,0);
     const double dx_in1=1./loc->dx;
     const double dy_in1=1./loc->dy;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
@@ -205,8 +201,8 @@ void loc_create_map_npad(loc_t *loc, int npad){
     loc->map = calloc(1,sizeof(locmap_t));
     loc->map->npad = npad;/*just record the information. */
     double xmin,xmax,ymin,ymax;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
+    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin,0);
+    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin,0);
     int map_nx, map_ny;
     /*padding the map. normally don't need. */
     if(npad>0){
@@ -276,8 +272,8 @@ loc_t* map2loc(map_t *map){
 */
 map_t *loc2map(loc_t *loc){
     double xmax, xmin, ymax, ymin;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
+    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin, 0);
+    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin, 0);
     int nx=ceil((xmax-xmin)/loc->dx)+1;
     int ny=ceil((ymax-ymin)/loc->dy)+1;
     map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
@@ -1274,8 +1270,8 @@ loc_t *locshift(const loc_t *loc, double sx, double sy){
 */
 void loc_nxny(long *nx, long *ny, const loc_t *loc){
     double xmax, xmin, ymax, ymin;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
+    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin, 0);
+    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin, 0);
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
     *ny=(long)round((ymax-ymin)/loc->dy)+1;
 }

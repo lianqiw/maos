@@ -18,10 +18,7 @@
 #include <unistd.h>
 #include "../sys/sys.h"
 #include "cholmod.h"
-#include "dmat.h"
-#include "cmat.h"
-#include "dsp.h"
-#include "matbin.h"
+#include "mathdef.h"
 #include "chol.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A

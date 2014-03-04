@@ -215,7 +215,7 @@ void wfsints(thread_t *thread_data){
 		/*peak in corner. become WVF in center.*/
 		cfft2(fftpsfout,1);
 		/*output center of the complex pupil function.*/
-		cembed(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
+		cembedc(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
 	    }
 	    /* form PSF with peak in corner*/
 	    cabs2toreal(psf);
@@ -250,7 +250,7 @@ void wfsints(thread_t *thread_data){
 		    /* now we have PSF with peak in corner */
 		    if(srot){
 			cfftshift(psf);/*peak in center */
-			cembed(otf,psf,-srot[isa],C_REAL);/*notice otf and psf may have different size */
+			cembedc(otf,psf,-srot[isa],C_REAL);/*notice otf and psf may have different size */
 			cfftshift(otf);/*peak in corner */
 		    }else if(otf!=psf){/*copy the corner (peak)*/
 			ccpcorner(otf, psf, C_FULL);

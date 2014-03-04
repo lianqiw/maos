@@ -19,9 +19,7 @@
 #include "../sys/sys.h"
 
 #include "loc.h"
-#include "dmat.h"
-#include "cmat.h"
-#include "dsp.h"
+#include "mathdef.h"
 #include "mkz.h"
 
 /**

@@ -234,8 +234,6 @@ static void test_svd(void){
 	dsvd(&U, &S, &VT, A);
 	toc("dsvd");
 	tic;
-	devd(&U2, &S2, A);
-	toc("devd");
 	dwrite(U,"U.bin");
 	dwrite(S, "S.bin");
 	dwrite(VT,"VT.bin");

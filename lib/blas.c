@@ -28,14 +28,8 @@
 #include "random.h"
 
 #include "mathmisc.h"
-#include "dsp.h"
-#include "ssp.h"
-#include "csp.h"
-#include "dmat.h"
-#include "smat.h"
-#include "cmat.h"
+#include "mathdef.h"
 #include "fft.h"
-#include "matbin.h"
 #include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 
@@ -93,8 +87,9 @@ void X(invspd_inplace)(X(mat) *A){
     const char uplo='U';
     /* B is identity matrix */
     T *B=calloc(N*N,sizeof(T));
-    for(long i=0;i<N;i++)
+    for(long i=0;i<N;i++){
 	B[i+i*N]=1;
+    }
     Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
     if(info!=0){
 	X(write)(A,"posv");
@@ -209,14 +204,14 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
    Larger scaling is more accurate but sloower.
 */
-void X(expm)(X(mat)**out, double alpha, X(mat) *A, double beta){
+void X(expm)(X(mat)**out, R alpha, X(mat) *A, R beta){
     const int accuracy=10;
     X(mat) *m_small=0;
     X(mat) *m_exp1=0, *m_power=0, *m_power1=0;
     //first determine the scaling needed
     int scaling=0;
     {
-	double norm=sqrt(X(norm2)(A));
+	R norm=sqrt(X(norm2)(A));
 	scaling=(int)ceil(log2(abs(norm*beta*100)));
 	if(scaling<0) scaling=0;
     }
@@ -224,7 +219,7 @@ void X(expm)(X(mat)**out, double alpha, X(mat) *A, double beta){
     X(mat)*result=X(new)(A->nx, A->ny);
     X(addI)(result, 1);
     X(cp)(&m_power, m_small);
-    double factorial_i=1.0;
+    R factorial_i=1.0;
     for(int i=1; i<accuracy; i++){
 	factorial_i*=i;
 	//m_exp += M_power/factorial(i)
@@ -297,9 +292,6 @@ X(mat)* X(chol)(const X(mat) *A){
     return B;
 }
 
-
-
-
 /**
    Compute SVD of a general matrix A. 
    A=U*diag(S)*V';
@@ -351,57 +343,20 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #endif
 }
 
-/**
-   Compute the eigen values and, optionally, eigen vectors of a real symmetric
-matrix. Notice that here Sdiag is in ascending order, which is different from
-X(svd).  */
-void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
-    assert(A->nx==A->ny && A->nx>0);
-    *Sdiag=XR(new)(A->nx,1);
-    char jobz=(char)(U?'V':'N');
-    char uplo=(char)'U';
-    ptrdiff_t lda=A->nx;
-    T worksize;
-    ptrdiff_t lwork=-1;
-    ptrdiff_t info;
-    X(mat) *atmp=X(dup)(A);
-#ifdef USE_COMPLEX
-    R *rwork=malloc((3*A->nx-2)*sizeof(R));
-    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork,rwork, &info);
-    lwork=(int)worksize;
-    T *work=malloc(sizeof(T)*lwork);
-    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork,rwork, &info);
-    free(rwork);
-#else
-    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork, &info);
-    lwork=(int)worksize;
-    R *work=malloc(sizeof(R)*lwork);
-    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork, &info);
-#endif
-    if(info){
-	X(write)(A,"A_evd_failed");
-	if(info<0)
-	    error("The %ldth argument had an illegal value\n", -info);
-	else
-	    error("The %ldth number of elements did not converge to zero\n", info);
-    }
-    if(U) *U=atmp; else X(free)(atmp);
-    free(work);
-}
 
 /**
    computes pow(A,power) in place using svd.
    positive thres: Drop eigenvalues that are smaller than thres * max eigen value
    negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
-void X(svd_pow)(X(mat) *A, double power, double thres){
+void X(svd_pow)(X(mat) *A, R power, R thres){
     XR(mat) *Sdiag=NULL;
     X(mat) *U=NULL;
     X(mat) *VT=NULL;
     X(svd)(&U, &Sdiag, &VT, A);
     /*eigen values below the threshold will not be used. the first is the biggest. */
-    double maxeig=FABS(Sdiag->p[0]);
-    double thres0=fabs(thres)*maxeig;
+    R maxeig=FABS(Sdiag->p[0]);
+    R thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
 	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
 	    if(thres<0){/*compare adjacent eigenvalues*/
@@ -444,7 +399,7 @@ void X(svd_pow)(X(mat) *A, double power, double thres){
    removed beta.
 */
 void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B, 
-	       const char trans[2], const double alpha){
+	       const char trans[2], const R alpha){
     if(!A || !B) return;
     int ax, az;
     int nx,ny,nz;
@@ -564,7 +519,7 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-X(cell) *X(cellsvd_pow)(X(cell) *A, double power, double thres){
+X(cell) *X(cellsvd_pow)(X(cell) *A, R power, R thres){
     X(mat) *Ac=X(cell2m)(A);
     X(svd_pow)(Ac, power, thres);
     X(cell)*B=NULL;
@@ -579,7 +534,7 @@ X(cell) *X(cellsvd_pow)(X(cell) *A, double power, double thres){
    Apply tickholov regularization of relative thres to cell array by
    converting it to mat
 */
-void X(celltikcr)(X(cell) *A, double thres){
+void X(celltikcr)(X(cell) *A, R thres){
     X(mat) *Ab=X(cell2m)(A);
     X(tikcr)(Ab,thres);
     X(2cell)(&A,Ab,NULL);

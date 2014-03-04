@@ -182,7 +182,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    }else{
 			assert(sepsf->nx < lotf[iwvl]->nx);
 			cmat *tmp=cnew(sepsf->nx, sepsf->ny);
-			cembed(tmp, lotf[iwvl], 0,C_FULL);
+			cembedc(tmp, lotf[iwvl], 0,C_FULL);
 			ccwm(sepsf, tmp);
 			cfree(tmp);
 		    }
@@ -394,7 +394,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dcog(pgrad,psepsf[iwvl][isa],0.5,0.5,0.1*pmax,0.2*pmax);
 		}
 		ccpd(&sepsf,psepsf[iwvl][isa]);
-		cembed(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
+		cembedc(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
 
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF peak in corner */
@@ -406,7 +406,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    (*pccwm)(seotfk,petf[ietf][isa]);
 		}
 		/*seotfk has peak in corner */
-		ccwm2(seotfk,nominal,norm);/*NULL is handled correctly. */
+		if(nominal) ccwm(seotfk,nominal);
+		cscale(seotfk, norm);
 		ccp(&seotfj,seotfk);/*backup */
 		if(intstat->fotf){
 		    ccp(&intstat->fotf[isepsf]->p[iwvl*nsa+isa], seotfk);

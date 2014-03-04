@@ -201,23 +201,6 @@ float fltsum(float *p, long nx){
     return sum;
 }
 
-
-/**
-   inplace inversion of square SPD matrix. A=A^-1*/
-void invsq(long n, double *restrict A){
-    ptrdiff_t N=n;
-    ptrdiff_t info;
-    char uplo='U';
-    /*B is identity matrix*/
-    double *B=calloc(N*N, sizeof(double));
-    for(int i=0;i<N;i++)
-	B[i+i*N]=1;
-    
-    dposv_(&uplo,&N,&N,A,&N,B,&N,&info);
-    memcpy(A,B,N*N);
-    free(B);
-}
-
 /**
    add two double vectors: out=out*alpha+in*beta+theta
 */
@@ -287,51 +270,6 @@ void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *
     }
 }
 /**
- Compute max, min and sum of a double vector*/
-void maxmindbl(const double *restrict p, long N, 
-	       double *restrict max, double *restrict min){
-    if(N==0){
-	*max=0;
-	*min=0;
-	return;
-    }
-    double a,b;
-    long i;
-    a=-INFINITY;
-    b=INFINITY;
-    for(i=0; i<N; i++){
-	if(!isnan(p[i]) && p[i]>a) a=p[i];
-	if(!isnan(p[i]) && p[i]<b) b=p[i];
-    }
-    if(!isfinite(a)) a=0;
-    if(!isfinite(b)) b=0;
-    if(max) *max=a;
-    if(min) *min=b;
-}
-
-/**
-   Compute max, min and sum of a double vector*/
-void maxminflt(const float *restrict p, long N, 
-	       float *restrict max, float *restrict min){
-    if(N==0){
-	*max=0;
-	*min=0;
-	return;
-    }
-    float a,b;
-    long i;
-    a=-INFINITY;
-    b=INFINITY;
-    for(i=0; i<N; i++){
-	if(!isnan(p[i]) && p[i]>a) a=p[i];
-	if(!isnan(p[i]) && p[i]<b) b=p[i];
-    }
-    if(!isfinite(a)) a=0;
-    if(!isfinite(b)) b=0;
-    if(max) *max=a;
-    if(min) *min=b;
-}
-/**
  Compute max, min and sum of a long vector*/
 void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min){
@@ -345,45 +283,6 @@ void maxminlong(const long *restrict p, long N,
     }
     if(max)*max=a; 
     if(min)*min=b; 
-}
-/**
- Compute max, min and sum of a complex vector*/
-void maxmincmp(const dcomplex *restrict p, long N,
-	       double *restrict max, double *restrict min, double *restrict sum){
-    double a,b,s;
-    long i;
-    a=cabs(p[0]); 
-    b=cabs(p[0]);
-    s=0;
-    for(i=0; i<N; i++){
-	double tmp=cabs(p[i]);
-	s+=tmp;
-	if(tmp>a) a=tmp;
-	if(tmp<b) b=tmp;
-    }
-    if(max)*max=a; 
-    if(min)*min=b; 
-    if(sum)*sum=s;
-}
-
-/**
- Compute max, min and sum of a complex vector*/
-void maxminfcmp(const fcomplex *restrict p, long N,
-	       float *restrict max, float *restrict min, float *restrict sum){
-    float a,b,s;
-    long i;
-    a=cabs(p[0]); 
-    b=cabs(p[0]);
-    s=0;
-    for(i=0; i<N; i++){
-	float tmp=cabs(p[i]);
-	s+=tmp;
-	if(tmp>a) a=tmp;
-	if(tmp<b) b=tmp;
-    }
-    if(max)*max=a; 
-    if(min)*min=b; 
-    if(sum)*sum=s;
 }
 /**
    Remove piston from p of length n

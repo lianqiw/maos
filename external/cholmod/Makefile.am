@@ -34,26 +34,24 @@ AM_CFLAGS=-g -DUSE_MEM=0 -DHAVE_SSE2=1 -DNPARTITION
 else
 AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -DNPARTITION 
 endif
-if USE_LONG
-AM_CFLAGS+=-DDLONG
-endif
+AM_CFLAGS+= -I$(srcdir)/Include
+AM_LDFLAGS=-avoid-version -static
 if !WIN
 AM_CFLAGS+=-fPIC
 endif
+
 if COMP_CHOL
+
 if USE_LONG
+AM_CFLAGS+=-DDLONG
 lib_LTLIBRARIES=libcholmod_long.la
-libcholmod_long_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/Include
 libcholmod_long_la_SOURCES= $(CHOL_SRC)
-libcholmod_long_la_LIBADD =
-libcholmod_long_la_LDFLAGS= -avoid-version -static
 else
+AM_CFLAGS+=-DINT
 lib_LTLIBRARIES=libcholmod_int.la
-libcholmod_int_la_CFLAGS  = $(AM_CFLAGS) -I$(srcdir)/Include
 libcholmod_int_la_SOURCES = $(CHOL_SRC)
-libcholmod_int_la_LIBADD  =
-libcholmod_int_la_LDFLAGS = -avoid-version -static
 endif
+
 else
 EXTRA_DIST+=$(CHOL_SRC)
 endif
