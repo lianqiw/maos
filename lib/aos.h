@@ -16,18 +16,14 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __SUPPORT_H
-#define __SUPPORT_H
+#ifndef AOS_LIB_AOS_H
+#define AOS_LIB_AOS_H
 #include <unistd.h>
 #include "../sys/sys.h" 
-#include "blas.h"
-#include "random.h"
+#include "../math/mathdef.h"
+#include "type.h"
 #include "readcfg.h"
-#include "mathdef.h"
-#include "matbin.h"
-#include "cellarr.h"
 #include "locbin.h"
-#include "mathmisc.h"
 #include "loc.h"
 #include "draw.h"
 #include "accphi.h"
@@ -37,17 +33,14 @@
 #include "mkw.h"
 #include "turbulence.h"
 #include "proj.h"
-#include "chol.h"
 #include "laplacian.h"
 #include "pcg.h"
 #include "muv.h"
-#include "fft.h"
 #include "genotf.h"
 #include "fractal.h"
 #include "stfun.h"
 #include "servo.h"
 #include "slaving.h"
-#include "imat.h"
 #include "mkdtf.h"
 #include "psd.h"
 #include "kalman.h"

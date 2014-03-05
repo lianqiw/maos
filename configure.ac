@@ -638,6 +638,7 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
 		 sys/Makefile
+		 math/Makefile
 		 lib/Makefile
 		 tools/Makefile
 		 maos/Makefile 

@@ -18,9 +18,7 @@
 
 #ifndef AOS_LIB_MUV_H
 #define AOS_LIB_MUV_H
-#include "mathdef.h"
-#include "cell.h"
-#include "chol.h"
+#include "../math/mathdef.h"
 #include "pcg.h"
 /**
    \file muv.h

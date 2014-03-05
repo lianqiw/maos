@@ -15,8 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_LIB_STFUN_
-#define AOS_LIB_STFUN_
+#ifndef AOS_LIB_STFUN_H
+#define AOS_LIB_STFUN_H
+#include "../math/mathdef.h"
+#include "type.h"
+
 /**
    \file stfun.h
    Routine to compute structure function.

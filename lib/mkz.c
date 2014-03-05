@@ -19,7 +19,7 @@
 #include "../sys/sys.h"
 
 #include "loc.h"
-#include "mathdef.h"
+#include "../math/mathdef.h"
 #include "mkz.h"
 
 /**

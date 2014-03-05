@@ -15,11 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "../math/mathdef.h"
 #include "loc.h"
-#include "mathdef.h"
-#include "mathmisc.h"
 #include "slaving.h"
-#include "imat.h"
+
 /**
    Compute the actuator coupling coefficient to be used to identify non-coupled
    actuators. W1 is optional weighting function. The max value is 1.

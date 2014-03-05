@@ -17,7 +17,6 @@
 */
 #ifndef AOS_LIB_GENOTF_H
 #define AOS_LIB_GENOTF_H
-#include "type.h"
 #include "loc.h"
 /**
    \file genotf.h

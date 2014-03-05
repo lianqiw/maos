@@ -19,8 +19,7 @@
 #ifndef SKYC_SERVO_H
 #define SKYC_SERVO_H
 
-#include "mathdef.h"
-#include "fft.h"
+#include "../math/mathdef.h"
 #include "loc.h"
 /**
    \file servo.h

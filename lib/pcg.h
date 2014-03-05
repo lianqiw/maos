@@ -18,8 +18,8 @@
 
 #ifndef AOS_LIB_PCG_H
 #define AOS_LIB_PCG_H
-#include "mathdef.h"
-#include "cell.h"
+#include "../math/mathdef.h"
+
 /**
    \file pcg.h
    Implements preconditioned conjugate gradient method.

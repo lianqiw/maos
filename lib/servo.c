@@ -17,7 +17,6 @@
 */
 
 #include "servo.h"
-#include "mathmisc.h"
 
 typedef struct SERVO_CALC_T{
     cmat *s;

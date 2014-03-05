@@ -1,7 +1,7 @@
 if USE_LONG
-LDADD=../lib/libaos_long.la ../sys/libaosys.la $(LDOPTS)
+LDADD=../lib/libaos_long.la ../math/libaomath_long.la ../sys/libaosys.la $(LDOPTS)
 else
-LDADD=../lib/libaos_int.la ../sys/libaosys.la $(LDOPTS)
+LDADD=../lib/libaos_int.la ../math/libaomath_int.la ../sys/libaosys.la $(LDOPTS)
 endif
 AM_CFLAGS=$(OPTS)
 AM_LDFLAGS=$(LDEXE) 

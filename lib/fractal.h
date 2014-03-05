@@ -17,7 +17,6 @@
 */
 #ifndef AOS_LIB_FRACTAL_H
 #define AOS_LIB_FRACTAL_H
-#include "random.h"
 #include "loc.h"
 /**
    \file fractal.h

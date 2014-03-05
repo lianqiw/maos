@@ -130,6 +130,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc[ips]=map2loc(map);
+	    loc_create_stat(recon->xloc[ips]);
 	    recon->xmap[ips]=map;
 	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
 		  ips, map->nx,map->ny,dxr, recon->xloc[ips]->nloc);

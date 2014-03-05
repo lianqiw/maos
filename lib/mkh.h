@@ -19,7 +19,7 @@
 #ifndef AOS_LIB_MKH_H
 #define AOS_LIB_MKH_H
 #include "loc.h"
-#include "mathdef.h"
+#include "../math/mathdef.h"
 /**
    \file mkh.h
    Contains functions that create ray tracing operator

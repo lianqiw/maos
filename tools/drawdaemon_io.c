@@ -47,7 +47,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
     if(info[1]>info[0]){
 	min=info[0]; max=info[1];
     }else{
-	dmaxminsum(p, nx*ny, &max, &min, 0);
+	dmaxmin(p, nx*ny, &max, &min);
 	info[0]=min; info[1]=max;
     }
     if(color){/*colored */

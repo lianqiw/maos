@@ -81,8 +81,7 @@ X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(cp)(X(mat) **out0, const X(mat) *in);\
 X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(set)(X(mat) *A, const T val);\
-void X(maxminsum)(const T *restrict p, long N, R *restrict max, R *restrict min, R *restrict sum);\
-void X(maxmin)(const X(mat) *A, R*max, R*min);	\
+void X(maxmin)(const T *restrict p, long N, R *max, R *min);\
 R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
@@ -163,7 +162,6 @@ X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);\
 void X(cwlog10)(X(mat) *A);\
 void X(cwlog)(X(mat) *A);\
 void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta); \
-void X(embed_locstat)(X(mat) **out, R alpha, loc_t *loc, R *oin, R beta, int reverse);\
 long X(fwhm)(X(mat) *A);\
 void X(sort)(X(mat) *A, int ascend);\
 X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);\

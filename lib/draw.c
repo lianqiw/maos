@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <search.h>
 #include "../sys/sys.h"
-#include "mathmisc.h"
+#include "../math/mathdef.h"
 #include "draw.h"
 int DRAW_ID=0;
 int DRAW_DIRECT=0;
@@ -545,7 +545,7 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
 	    "%s abs",fn);
     free(pr);
 }
-#include "mathdef.h"
+#include "../math/mathdef.h"
 #include "loc.h"
 /*
   The following routines applies the imagesc_* functions onto
@@ -657,14 +657,14 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
-    double *opd0=calloc(nx*ny, sizeof(double));
+    dmat *opd0=dnew(nx,ny);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    int ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
 	    if(ii){
-		opd0[ix+iy*nx]=opd[ii-1];
+		opd0->p[ix+iy*nx]=opd[ii-1];
 	    }else{
-		opd0[ix+iy*nx]=NAN;
+		opd0->p[ix+iy*nx]=NAN;
 	    }
 	}
     }
@@ -673,8 +673,8 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
     limit[1]=loc->map->ox+loc->dx*(nx+npad-1/2);
     limit[2]=loc->map->oy+loc->dx*(npad-1/2);
     limit[3]=loc->map->oy+loc->dx*(ny+npad-1/2);
-    imagesc(fig,nx,ny, limit,zlim,opd0,  title, xlabel, ylabel,"%s",fn);
-    free(opd0);
+    imagesc(fig,nx,ny, limit,zlim,opd0->p,  title, xlabel, ylabel,"%s",fn);
+    dfree(opd0);
 }
 /**
    Plot opd*amp with coordinate loc. see imagesc()

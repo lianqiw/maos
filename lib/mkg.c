@@ -39,7 +39,7 @@
 #include "mkg.h"
 #include "../sys/sys.h"
 #include "loc.h"
-#include "mathdef.h"
+#include "../math/mathdef.h"
 #endif
 
 #ifndef DEBUG

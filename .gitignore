@@ -24,7 +24,7 @@ m4/ltsugar.m4
 external/mkl*
 external/fft*
 #Ignore files that are produced by `make`
-lib/tmp.c
+math/tmp.c
 *.o
 *.mex???
 *.bak

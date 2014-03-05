@@ -37,7 +37,7 @@ class cumat{
 	    own=1;
 	}
 	if(own){
-	    nref=new int[1];
+	    nref=new int;
 	    nref[0]=1;
 	}
     }

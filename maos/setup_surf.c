@@ -130,7 +130,7 @@ static void prop_surf_evl(thread_t *info){
     const int *evlcover=data->evlcover;
     const int isurf=data->isurf;
     const char *prt=" covers evl ";
-    char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -182,7 +182,7 @@ static void prop_surf_wfs(thread_t *info){
     const int *wfscover=data->wfscover;
     const int isurf=data->isurf;
     const char *prt=" covers WFS ";
-    char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -313,6 +313,8 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    opdxcover=(int)readstr_num(stropdx, NULL);
 	}
+	sdata.wfscover=wfscover;
+	sdata.evlcover=evlcover;
 	sdata.surf=surf;
 	sdata.opdxcover=opdxcover;
 	sdata.isurf=isurf;
@@ -327,6 +329,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     }
     free(evlcover);
     free(wfscover);
+    free(ncpacover);
 }
 
 /** We trace rays from Science focal plan OPD to ploc along evaluation

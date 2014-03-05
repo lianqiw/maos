@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "fractal.h"
-#include "mathmisc.h"
 #include "turbulence.h"
 /**
    Implementation of the fractal operation for atmospheric turbulence screen

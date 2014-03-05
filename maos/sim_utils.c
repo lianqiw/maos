@@ -1224,9 +1224,6 @@ static void init_simu_dm(SIM_T *simu){
 	    }
 	}
     }
-    if(recon->dm_ncpa){
-	dcelladd(&simu->dmreal, 1, recon->dm_ncpa, 1);
-    }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
 	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
@@ -1238,8 +1235,10 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
-    if(recon->dm_ncpa){
+    if(recon->dm_ncpa){//set the integrator and also initial output.
 	dcelladd(&simu->dmint->mint[0], 1, recon->dm_ncpa, 1);
+	dcellcp(&simu->dmreal, simu->dmint->mint[0]);
+	update_dm(simu);
     }
     simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
 			    parms->sim.dtlo, parms->sim.eplo);

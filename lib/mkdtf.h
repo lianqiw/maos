@@ -17,7 +17,6 @@
 */
 #ifndef AOS_LIB_DTF_H
 #define AOS_LIB_DTF_H
-#include "type.h"
 #include "loc.h"
 /**
    \file mkdtf.h

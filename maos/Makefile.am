@@ -19,9 +19,9 @@ if USE_CUDA
 ___bin_maos_LDADD+=../cuda/libgpu.a $(LDCUDA)
 endif
 if USE_LONG
-___bin_maos_LDADD+=../lib/libaos_long.la
+___bin_maos_LDADD+=../lib/libaos_long.la ../math/libaomath_long.la
 else
-___bin_maos_LDADD+=../lib/libaos_int.la
+___bin_maos_LDADD+=../lib/libaos_int.la ../math/libaomath_int.la
 endif
 ___bin_maos_LDADD+=../sys/libaosys.la 
 ___bin_maos_LDADD+=$(LDOPTS) 

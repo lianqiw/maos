@@ -30,7 +30,6 @@
 #include "mathmisc.h"
 #include "mathdef.h"
 #include "fft.h"
-#include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 
 /*

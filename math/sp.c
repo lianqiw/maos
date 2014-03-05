@@ -1237,7 +1237,7 @@ void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac,
 void Y(spdroptol)(X(sp) *A, R thres){
     if(thres<EPS) thres=EPS;
     R maxv;
-    X(maxminsum)(A->x,A->nzmax,&maxv,NULL,NULL);
+    X(maxmin)(A->x,A->nzmax,&maxv,NULL);
     Y(cs_droptol)(A, maxv*thres);
 }
 /**

@@ -17,9 +17,7 @@
 */
 
 #include "../sys/sys.h"
-#include "mathdef.h"
-#include "fft.h"
-#include "mathmisc.h"
+#include "../math/mathdef.h"
 #include "loc.h"
 #include "mkdtf.h"
 #include "mkh.h"

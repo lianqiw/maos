@@ -17,7 +17,6 @@
 */
 
 #include "mkw.h"
-#include "mathmisc.h"
 
 #define nres 50
 /**

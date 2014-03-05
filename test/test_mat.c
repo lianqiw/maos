@@ -229,7 +229,7 @@ static void test_svd(void){
     dmat *A=NULL;
     spfull(&A, a->p[0], 1);
     if(0){
-	dmat *U, *S, *VT, *U2, *S2;
+	dmat *U, *S, *VT;
 	tic;
 	dsvd(&U, &S, &VT, A);
 	toc("dsvd");
@@ -237,8 +237,6 @@ static void test_svd(void){
 	dwrite(U,"U.bin");
 	dwrite(S, "S.bin");
 	dwrite(VT,"VT.bin");
-	dwrite(U2,"U2.bin");
-	dwrite(S2,"S2.bin");
     }else{
 	dwrite(A,"A.bin");
 	tic;

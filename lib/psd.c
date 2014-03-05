@@ -16,8 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../sys/sys.h"
-#include "mathdef.h"
-#include "fft.h"
+#include "../math/mathdef.h"
 /**
    Compute the PSD from a sequence.
 */

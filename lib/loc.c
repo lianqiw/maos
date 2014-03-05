@@ -20,10 +20,9 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include "../sys/sys.h"
+#include "../math/mathdef.h"
 #include "loc.h"
-#include "mathdef.h"
 #include "draw.h"
-#include "mathmisc.h"
 
 /**
    Free pts_t data
@@ -143,8 +142,8 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
 2 for fft.  */
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     double xmin,xmax,ymin,ymax;
-    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin,0);
-    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin,0);
+    dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+    dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     const double dx_in1=1./loc->dx;
     const double dy_in1=1./loc->dy;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
@@ -201,8 +200,8 @@ void loc_create_map_npad(loc_t *loc, int npad){
     loc->map = calloc(1,sizeof(locmap_t));
     loc->map->npad = npad;/*just record the information. */
     double xmin,xmax,ymin,ymax;
-    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin,0);
-    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin,0);
+    dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+    dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     int map_nx, map_ny;
     /*padding the map. normally don't need. */
     if(npad>0){
@@ -272,8 +271,8 @@ loc_t* map2loc(map_t *map){
 */
 map_t *loc2map(loc_t *loc){
     double xmax, xmin, ymax, ymin;
-    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin, 0);
-    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin, 0);
+    dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+    dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     int nx=ceil((xmax-xmin)/loc->dx)+1;
     int ny=ceil((ymax-ymin)/loc->dy)+1;
     map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
@@ -1270,8 +1269,8 @@ loc_t *locshift(const loc_t *loc, double sx, double sy){
 */
 void loc_nxny(long *nx, long *ny, const loc_t *loc){
     double xmax, xmin, ymax, ymin;
-    dmaxminsum(loc->locx, loc->nloc, &xmax, &xmin, 0);
-    dmaxminsum(loc->locy, loc->nloc, &ymax, &ymin, 0);
+    dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
+    dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
     *ny=(long)round((ymax-ymin)/loc->dy)+1;
 }
@@ -1350,3 +1349,82 @@ void map_d_din(map_t *map, double *d, double *din){
     *d=sqrt(r2max)*2;
     *din=sqrt(r2min)*2;
 }
+
+/**
+   Embeding an OPD defined on loc to another array. *out is dmat or cmat depends
+   on iscomplex. Do the embeding using locstat to have best speed.
+   reverse = 0 : from oin to out: out=out*alpha+in*beta
+   reverse = 1 : from out to oin: in=in*beta+out*alpha
+*/
+#define LOC_EMBED_DEF(X, T, R, REAL)					\
+void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
+		      loc_t *restrict loc,				\
+		      R *restrict oin, double beta, int reverse){	\
+    locstat_t *restrict locstat=loc->stat;				\
+    if(!*out){								\
+	if(reverse == 0){						\
+	    *out=X(new)(locstat->nrow, locstat->ncol);			\
+	}else{								\
+	    error("For reverse embedding the array needs to be non-empty\n"); \
+	}								\
+    }else{								\
+	if((*out)->nx < locstat->nrow || (*out)->ny < locstat->ncol){	\
+	    error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n",	\
+		  (*out)->nx, (*out)->ny, locstat->nrow, locstat->ncol); \
+	}								\
+    }									\
+    T (*restrict p)[(*out)->nx]=(void *)(*out)->p;			\
+    double dx1=1./locstat->dx;						\
+    long xoff0=((*out)->nx - locstat->nrow +1)/2;			\
+    long yoff0=((*out)->ny - locstat->ncol +1)/2;			\
+									\
+    for(long icol=0; icol<locstat->ncol; icol++){			\
+	long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1); \
+	long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
+	long pos1=locstat->cols[icol].pos;				\
+	long pos2=locstat->cols[icol+1].pos;				\
+	T *restrict dest=&p[yoff+yoff0][xoff+xoff0];			\
+	if(!reverse){							\
+	    if(oin){							\
+		const R *restrict oin2=oin+pos1;			\
+		if(fabs(alpha)>EPS){					\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
+			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;		\
+		    }							\
+		}else{							\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
+			dest[ix]=oin2[ix]*beta;				\
+		    }							\
+		}							\
+	    }else{							\
+		if(fabs(alpha)>EPS){					\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
+			dest[ix]=dest[ix]*alpha+beta;			\
+		    }							\
+		}else{							\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
+			dest[ix]=beta;					\
+		    }							\
+		}							\
+	    }								\
+	}else{								\
+	    R *restrict oin2=oin+pos1;					\
+	    if(fabs(beta)>EPS){						\
+		for(long ix=0; ix<pos2-pos1; ix++){			\
+		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);	\
+		}							\
+	    }else{							\
+		for(long ix=0; ix<pos2-pos1; ix++){			\
+		    oin2[ix]=alpha*REAL(dest[ix]);			\
+		}							\
+	    }								\
+	}								\
+    }									\
+}
+
+#define REAL(A) (A)
+LOC_EMBED_DEF(AOS_DMAT, double, double, REAL)
+#undef REAL
+#define REAL(A) creal(A)
+LOC_EMBED_DEF(AOS_CMAT, dcomplex, double, REAL)
+#undef REAL

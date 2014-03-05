@@ -38,7 +38,7 @@ struct PROP_WRAP_T{
 	    PROP_WRAP_T *gpureverse;
 	    DO(cudaMalloc(&gpureverse, sizeof(PROP_WRAP_T)));
 	    reverse->togpu(gpureverse);
-	    free(reverse);
+	    delete reverse;
 	    reverse=gpureverse;
 	}
 	DO(cudaMemcpy(pgpu, this, sizeof(PROP_WRAP_T),cudaMemcpyHostToDevice));  

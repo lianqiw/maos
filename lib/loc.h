@@ -18,9 +18,8 @@
 
 #ifndef AOS_LIB_LOC_H
 #define AOS_LIB_LOC_H
+#include "../math/mathdef.h"
 #include "type.h"
-#include "mathdef.h"
-
 /**
    \file loc.h
    This file defines functions relates to pts_t, loc_t, map_t, etc.
@@ -97,4 +96,6 @@ void mapcircle_symbolic(map_t *map, double r);
 void map_d_din(map_t *map, double *d, double *din);
 void locresize(loc_t *loc, long nloc);
 #define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
+void dembed_locstat(dmat **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);
+void cembed_locstat(cmat **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);
 #endif

@@ -26,6 +26,11 @@
 #include "sp.h"
 #include "spbin.h"
 #include "fft.h"
+#include "chol.h"
+
+#include "imat.h"
+#include "cellarr.h"
+#include "mathmisc.h"
 //#ifdef USE_SINGLE
 //Single
 AOS_MAT_DEF(AOS_SMAT,AOS_SMAT,AOS_SSP,float,float)

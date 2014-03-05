@@ -29,7 +29,6 @@
 #include "mathmisc.h"
 #include "mathdef.h"
 #include "fft.h"
-#include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 /**
    Work horse function that creats the matrix object. if p is
@@ -299,33 +298,27 @@ void X(arrfree)(X(mat) **As, int n){
     free(As);
 }
 /**
-   Compute max, min and sum */
-void X(maxminsum)(const T *restrict p, long N,
-		  R *restrict max, R *restrict min, R *restrict sum){
-    R a,b,s;
+   Compute max, min and sum. Has to handle NAN nicely */
+void X(maxmin)(const T *restrict p, long N, R *max, R *min){
+    R a,b;
     long i;
-    a=MAG(p[0]); 
-    b=MAG(p[0]);
-    s=0;
-    for(i=1; i<N; i++){
+    a=-INFINITY;
+    b=INFINITY;
+    for(i=0; i<N; i++){
 	R tmp=MAG(p[i]);
-	s+=tmp;
 	if(tmp>a) a=tmp;
 	if(tmp<b) b=tmp;
     }
     if(max)*max=a; 
     if(min)*min=b; 
-    if(sum)*sum=s;
 }
-void X(maxmin)(const X(mat) *A, R*max, R*min){
-    X(maxminsum)(A->p,A->nx*A->ny,max,min,0);
-}
+
 /**
    find the maximum value of a X(mat) object
 */
 R X(max)(const X(mat) *A){
     R max,min;
-    X(maxmin)(A, &max, &min);
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return max;
 }
 
@@ -334,7 +327,7 @@ R X(max)(const X(mat) *A){
 */
 R X(min)(const X(mat) *A){
     R max,min;
-    X(maxmin)(A, &max, &min);
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     return min;
 }
 /**
@@ -342,7 +335,7 @@ R X(min)(const X(mat) *A){
 */
 R X(maxabs)(const X(mat) *A){
     R max,min;
-    X(maxmin)(A, &max, &min);
+    X(maxmin)(A->p, A->nx*A->ny, &max, &min);
     max=FABS(max);
     min=FABS(min);
     return max>min?max:min;
@@ -368,7 +361,9 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
 	    assert(in->nx==(*out0)->nx && in->ny == (*out0)->ny);
 	}
 	X(mat) *out=*out0;
-	memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
+	if(out->p!=in->p){
+	    memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
+	}
     }else{
 	X(zero)(*out0);
     }
@@ -1783,80 +1778,9 @@ void X(cwlog)(X(mat) *A){
 	A->p[i]=LOG(A->p[i]);
     }
 }
-/**
-   Embeding an OPD defined on loc to another array. *out is dmat or cmat depends
-   on iscomplex. Do the embeding using locstat to have best speed.
-   reverse = 0 : from oin to out: out=out*alpha+in*beta
-   reverse = 1 : from out to oin: in=in*beta+out*alpha
-*/
-void X(embed_locstat)(X(mat) **restrict out, R alpha,
-		      loc_t *restrict loc, 
-		      R *restrict oin, R beta, int reverse){
-    loc_create_stat(loc);
-    locstat_t *restrict locstat=loc->stat;
-    if(!*out){
-	if(reverse == 0){
-	    *out=X(new)(locstat->nrow, locstat->ncol);
-	}else{
-	    error("For reverse embedding the array needs to be non-empty\n");
-	}
-    }else{
-	if((*out)->nx < locstat->nrow || (*out)->ny < locstat->ncol){
-	    error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n",
-		  (*out)->nx, (*out)->ny, locstat->nrow, locstat->ncol);
-	}
-    }
-    PMAT(*out, p);
-    R dx1=1./locstat->dx;
-    long xoff0=((*out)->nx - locstat->nrow +1)/2;
-    long yoff0=((*out)->ny - locstat->ncol +1)/2;
-
-    for(long icol=0; icol<locstat->ncol; icol++){
-	long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1);
-	long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1);
-	long pos1=locstat->cols[icol].pos;
-	long pos2=locstat->cols[icol+1].pos;
-	T *restrict dest=&p[yoff+yoff0][xoff+xoff0];
-	if(!reverse){
-	    if(oin){
-		const R *restrict oin2=oin+pos1;
-		if(FABS(alpha)>EPS){
-		    for(long ix=0; ix<pos2-pos1; ix++){
-			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;
-		    }
-		}else{
-		    for(long ix=0; ix<pos2-pos1; ix++){
-			dest[ix]=oin2[ix]*beta;
-		    }
-		}
-	    }else{
-		if(FABS(alpha)>EPS){
-		    for(long ix=0; ix<pos2-pos1; ix++){
-			dest[ix]=dest[ix]*alpha+beta;
-		    }
-		}else{
-		    for(long ix=0; ix<pos2-pos1; ix++){
-			dest[ix]=beta;
-		    }
-		}
-	    }
-	}else{
-	    R *restrict oin2=oin+pos1;
-	    if(FABS(beta)>EPS){
-		for(long ix=0; ix<pos2-pos1; ix++){
-		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);
-		}
-	    }else{
-		for(long ix=0; ix<pos2-pos1; ix++){
-		    oin2[ix]=alpha*REAL(dest[ix]);
-		}
-	    }
-	}
-    }
-}
 
 void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
-    
+  
     const long ninx=B->nx;
     const long niny=B->ny;
     const long noutx=A->nx;

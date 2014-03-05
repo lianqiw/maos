@@ -3,7 +3,7 @@ SUBDIRS=
 if COMP_CHOL
 SUBDIRS+=external/cholmod
 endif
-SUBDIRS+=sys lib
+SUBDIRS+=sys math lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif
@@ -17,11 +17,11 @@ include $(top_srcdir)/aminclude.am
 #dist-hook:
 #	rm -rf $(distdir)/external $(distdir)/test
 
-all-local:$(srcdir)/lib/tmp.c
-$(srcdir)/lib/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c \
-	$(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c
-	@echo "#define USE_COMPLEX" > $(srcdir)/lib/tmp.c
-	@cat $(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c $(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c >> $(srcdir)/lib/tmp.c
+all-local:$(srcdir)/math/tmp.c
+$(srcdir)/math/tmp.c:$(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c \
+	$(srcdir)/math/spbin.c $(srcdir)/math/sp.c
+	@echo "#define USE_COMPLEX" > $(srcdir)/math/tmp.c
+	@cat $(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c $(srcdir)/math/spbin.c $(srcdir)/math/sp.c >> $(srcdir)/math/tmp.c
 
 EXTRA_DIST = doxygen.cfg docs 
 
@@ -64,6 +64,7 @@ config/maos/skyc_20.conf\
 config/maos/wfs_common.conf\
 config/maos/wfs_lgs_tt.conf\
 config/maos/wfs_lgs_ttf_tt.conf\
+config/maos/wfs_lgs_ttf_tt_twfs.conf\
 config/maos/wfs_ngs.conf\
 config/maos/default.conf\
 config/maos/change.log\

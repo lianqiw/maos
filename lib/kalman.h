@@ -1,8 +1,7 @@
 #ifndef AOS_LIB_KALMAN_H
 #define AOS_LIB_KALMAN_H
 
-#include "mathdef.h"
-#include "fft.h"
+#include "../math/mathdef.h"
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max, double df);
 typedef struct{
     dmat *Ad; /*discrete state propagation at dT*/

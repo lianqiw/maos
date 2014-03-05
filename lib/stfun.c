@@ -15,10 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "type.h"
+#include "../math/mathdef.h"
 #include "stfun.h"
-#include "mathdef.h"
-#include "fft.h"
 
 /**
    Data struct for structure function computation from digital data.

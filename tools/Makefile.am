@@ -1,9 +1,9 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDEXE)
 if USE_LONG
-LDADD=../lib/libaos_long.la ../sys/libaosys.la $(LDOPTS)
+LDADD=../lib/libaos_long.la ../math/libaomath_long.la ../sys/libaosys.la $(LDOPTS)
 else
-LDADD=../lib/libaos_int.la ../sys/libaosys.la $(LDOPTS)
+LDADD=../lib/libaos_int.la ../math/libaomath_int.la ../sys/libaosys.la $(LDOPTS)
 endif
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
