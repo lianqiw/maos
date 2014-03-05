@@ -26,44 +26,7 @@
    Without type conversion. Enable asynchrous transfer. It is asynchrous only if
    called allocated pinned memory.
 */
-/*
-template<typename M> inline
-void cp2gpu(M**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
-    if(!src) return;
-    uint64_t key=0;
-    if(cuda_dedup){
-	TIC;tic;
-	key=hashlittle(src, nx*ny*sizeof(M))<<32 | (nx*ny);
-	toc2("hashlittle");
-	iterator it=cudata->memhash.find(key);
-	if(it!=cudata->memhash.end()){//find
-	    info2("memory at %p is already at %p in gpu.\n", src, (void*)it);
-	    if(*dest){
-		warning("Free %p\n", *dest);
-		cudaFree(*dest);
-	    }
-	    *dest=(M*)it;
-	    return;
-	}
-    }
-    if(!*dest){
-	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
-    }
-    if(cuda_dedup){
-	cudata->memhash.insert(key, *dest);
-	info2("memory at %p is copied to %p in gpu.\n", src, *dest);
-    }
 
-    if(stream==(cudaStream_t)0){
-	DO(cudaMemcpy(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
-    }else{
-	DO(cudaMemcpyAsync(*dest, src, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
-    }
-}
-*/
-/**
-   With type conversion
-*/
 template<typename M, typename N> 
 inline void type_convert(M *out, const N* in, int nx){
     for(int i=0; i<nx; i++){
@@ -100,8 +63,6 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	key=hashlittle(src, nx*ny*sizeof(N), 0);
 	key=(key<<32) | (nx*ny);
 	if(cudata->memhash->count(key)){
-	    info2("memory at %p is already at %p in gpu.\n", src, 
-		  (*cudata->memhash)[key]);
 	    *dest=(M*)(*cudata->memhash)[key];
 	    return;
 	}

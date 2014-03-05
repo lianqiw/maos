@@ -27,14 +27,13 @@ namespace cuda_recon{
 class curecon_t;
 class curecon_geom;
 }
-
+struct cuperf_t;
 class cuwloc_t;
 class cuwfs_t;
 
-//using namespace cuda_recon;//temporary during code migration.
-//using cuda::curecon_t;
-//using cuda::curecon_geom;
 typedef struct cudata_t{ 
+    static int *evlgpu;
+    static int *wfsgpu;
     std::map<uint64_t, void*> *memhash;
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
@@ -44,27 +43,10 @@ typedef struct cudata_t{
     int nps; /**<number of phase screens*/
     int ndm; /**<number of DM.*/
     /*for perfevl */
-    culoc_t *plocs;
-    culoc_t ***plocs_dm;
-    float   *pamp;
-    int    **embed;
-    cuccell *evlwvf;
-    curcell *surfevl;
-    curcell *evlopd;
-    curcell *evlpsfol;
-    curcell *evlpsfcl;
-    curcell *evlpsfcl_ngsr;
-    curcell *evlopdcov;
-    curmat  *evlopdcovol;
-    curcell *evlopdcov_ngsr;
-    curcell *evlopdmean;
-    curmat  *evlopdmeanol;
-    curcell *evlopdmean_ngsr;
-    curcell *evlcc;
-    scell   *evlccb;
+    cuperf_t *perf;
     /*for wfsgrad */
     cuwloc_t *powfs;
-    cuwfs_t *wfs;
+    static cuwfs_t *wfs;
     /*for recon */
     cuda_recon::curecon_t *recon;
     /*for moao*/

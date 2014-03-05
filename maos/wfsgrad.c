@@ -73,9 +73,9 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 	const long nx=powfs[ipowfs].focus->nx;
 	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
     }
-    if(simu->zoomint && simu->zoomint->p[iwfs]){
-	focus-=simu->zoomint->p[iwfs]->p[0];
-	simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
+    if(simu->zoomint && parms->powfs[ipowfs].llt){
+	simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs];
+	focus-=simu->zoomint->p[iwfs];
     }
     return focus;
 }

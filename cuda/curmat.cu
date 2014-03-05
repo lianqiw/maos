@@ -298,7 +298,7 @@ void curcelladd(curcell **A, float* alpha1, const curcell *B, cudaStream_t strea
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     float out;
-    cudaMalloc(&res, sizeof(float));
+    DO(cudaMalloc(&res, sizeof(float)));
     cudaMemsetAsync(res, 0, sizeof(float), stream);
     inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
@@ -321,7 +321,7 @@ void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
 float curmax(const curmat *a, cudaStream_t stream){
     float out;
     float *res;
-    cudaMalloc(&res, sizeof(float));
+    DO(cudaMalloc(&res, sizeof(float)));
     cudaMemsetAsync(res, 0, sizeof(float), stream);
     int n=a->nx*a->ny;
     max_wrap(res, a->p, n, stream);
@@ -336,7 +336,7 @@ float curmax(const curmat *a, cudaStream_t stream){
 float curmaxabs(const curmat *a, cudaStream_t stream){
     float out;
     float *res;
-    cudaMalloc(&res, sizeof(float));
+    DO(cudaMalloc(&res, sizeof(float)));
     cudaMemsetAsync(res, 0, sizeof(float), stream);
     int n=a->nx*a->ny;
     maxabs_wrap(res, a->p, n, stream);
@@ -351,7 +351,7 @@ float curcellmax(const curcell *a, cudaStream_t stream){
     int n=a->nx*a->ny;
     float out;
     float *res;
-    cudaMalloc(&res, (n+1)*sizeof(float));
+    DO(cudaMalloc(&res, (n+1)*sizeof(float)));
     cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
     for(int i=0; i<n; i++){
 	int m=a->p[i]->nx*a->p[i]->ny;
@@ -371,7 +371,7 @@ float curcellmaxabs(const curcell *a, cudaStream_t stream){
     int n=a->nx*a->ny;
     float out;
     float *res;
-    cudaMalloc(&res, (n+1)*sizeof(float));
+    DO(cudaMalloc(&res, (n+1)*sizeof(float)));
     cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
     for(int i=0; i<n; i++){
 	int m=a->p[i]->nx*a->p[i]->ny;

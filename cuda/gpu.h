@@ -39,8 +39,6 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs);
 void gpu_wfsgrad_save(SIM_T *simu);
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs);
-
-void gpu_evlsurf2gpu(APER_T *aper);
 void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper);
 void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm);
 void gpu_perfevl(thread_t *info);

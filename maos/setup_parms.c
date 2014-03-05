@@ -73,7 +73,17 @@ void free_strarr(char **str, int n){
 	free(str);
     }
 }
-
+/**
+   Create first order low pass filter coeffcient from cross over frequency and sampling rate.
+*/
+static double fc2lp(double fc, double dt){
+    double lp=2*M_PI*fc*dt;
+    if(lp>1){
+	lp=1;
+    }
+    info2("fc=%g, lp=%g\n", fc, lp);
+    return lp;
+}
 /**
    Free the parms struct.
  */
@@ -1446,8 +1456,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     if(parms->sim.fcfocus<=0){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
     }
-    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dthi;
-    parms->sim.lpttm=2*M_PI*parms->sim.fcttm*parms->sim.dthi;
+    parms->sim.lpfocus=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
+    parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
 /**
    postproc atmosphere parameters.
@@ -1863,9 +1873,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     for(int idm=0; idm<parms->ndm; idm++){
-	if(parms->dm[idm].hist || parms->dm[idm].iastroke){
-	    parms->sim.dmttcast=1;
-	}
 	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke>0){
 	    parms->sim.dmclip=1;
 	}
@@ -1874,12 +1881,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    if(parms->dm[idm].iastrokefn){
 		parms->dm[idm].iastrokescale=dcellread("%s", parms->dm[idm].iastrokefn);
 	    }
-	}
-    }
-    if(parms->sim.dmclip || parms->sim.dmclipia || parms->sim.dmttcast){
-	parms->sim.dmttcast=1;
-	if(!parms->sim.fuseint){
-	    error("Sorry, clipping only works in fuseint=1 mode\n");
 	}
     }
     if(parms->sim.psfr){

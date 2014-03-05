@@ -156,7 +156,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		avail_max=availi;
 	    }
 	}
-	long spare=300*1024*1024;
+	long spare=100*1024*1024;//100 MB.
 	long need=spare+nps*sizeof(float)*nxn*nyn;
 	info2("Available memory is %ld (min) %ld (max) MB. Min atm is %ldx%ld, need %ld\n", avail_min>>20, avail_max>>20, nxn, nyn, need);
 	if(avail_min<need){
@@ -223,6 +223,9 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
 		cudata->atm[ips].p=new curmat(nx0, ny0);
+		cudata->atm[ips].nx=nx0;
+		cudata->atm[ips].ny=ny0;
+
 	    }
 	}/*for im */
     }/*if need_init; */
@@ -239,6 +242,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm[ips].vy=atm[ips]->vy;
 		cuatm[ips].ht=atm[ips]->h;
 		cuatm[ips].dx=atm[ips]->dx;
+		cuatm[ips].dy=atm[ips]->dx;
 		cuatm[ips].ox=INFINITY;/*place holder */
 		cuatm[ips].oy=INFINITY;
 	    }
@@ -300,8 +304,8 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cumap_t *cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips].p, (float*)next_atm[ips],
-			      nx0*ny0*sizeof(float), cudaMemcpyDefault));
+		DO(cudaMemcpy(cuatm[ips].p->p, (float*)next_atm[ips],
+			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
@@ -436,14 +440,14 @@ __global__ void prop_linear_wrap(float *restrict out, const float *restrict in, 
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
-	while(ix<0) ix=ix+nx; 
-	while(iy<0) iy=iy+ny;
-	while(ix>nx-1) ix=ix-nx; 
-	while(iy>ny-1) iy=iy-ny;
-	int ix1=(ix==nx-1)?0:ix+1;
-	int iy1=(iy==ny-1)?0:iy+1;
-	out[i]+=alpha*((in[iy*nx+ix]*(1-x)+in[iy*nx+ix1]*x)*(1-y)
-		       +(in[(iy1)*nx+ix]*(1-x)+in[(iy1)*nx+ix1]*x)*y);
+	while(ix<0) ix+=nx; 
+	while(iy<0) iy+=ny;
+	while(ix>nx-1) ix-=nx; 
+	while(iy>ny-1) iy-=ny;
+	int ix1=(ix==nx-1)?0:(ix+1);
+	int iy1=(iy==ny-1)?0:(iy+1);
+	out[i]+=alpha*((in[iy*nx+ix]*(1.f-x)+in[iy*nx+ix1]*x)*(1.f-y)
+		       +(in[(iy1)*nx+ix]*(1.f-x)+in[(iy1)*nx+ix1]*x)*y);
     }
 }
 

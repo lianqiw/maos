@@ -489,8 +489,6 @@ typedef struct SIM_CFG_T{
     int idealwfs;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
     int idealevl;    /**<Evaluate performance within DM range.*/
     /* A few derived parameters*/
-    int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
-			histogram and then add back*/
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */

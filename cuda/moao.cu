@@ -26,8 +26,7 @@ extern "C"
 #include "accphi.h"
 #include "pcg.h"
 #include "cudata.h"
-extern int *wfsgpu;
-extern int *evlgpu;
+#include "perf.h"
 
 namespace cuda_recon{
 cumoao_l::cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid)
@@ -120,7 +119,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	    int imoao=parms->powfs[ipowfs].moao;
 	    if(imoao<0) continue;
 	    MOAO_T *moao=recon->moao+imoao;
-	    gpu_set(wfsgpu[iwfs]);
+	    gpu_set(cudata_t::wfsgpu[iwfs]);
 	    if(parms->fit.square){
 		cp2gpu(&cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs]);
 	    }else{
@@ -133,7 +132,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	int imoao=parms->evl.moao;
 	MOAO_T *moao=recon->moao+imoao;
 	for(int ievl=0; ievl<nevl; ievl++){
-	    gpu_set(evlgpu[ievl]);
+	    gpu_set(cudata_t::evlgpu[ievl]);
 	    if(parms->fit.square){
 		cp2gpu(&cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl]);
 	    }else{

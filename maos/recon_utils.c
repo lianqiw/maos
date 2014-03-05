@@ -599,51 +599,37 @@ void focus_tracking_grads(SIM_T* simu){
 	    }
 	}
     
-	/* Next move with the trombone */
-	if(!simu->zoomerr){
-	    simu->zoomerr=dcellnew(parms->nwfs, 1);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(LGSfocus->p[iwfs]){
+		simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
+	    }
 	}
-	dcelladd(&simu->zoomavg, 1, LGSfocus, 1);
 	dcellfree(LGSfocus);
-	int isim=simu->reconisim;
-	if((isim+1)%parms->sim.zoomdtrat==0){
+	if((simu->reconisim+1)%parms->sim.zoomdtrat==0){
 	    //all lgs share the same trombone so take the average value.
 	    if(parms->sim.zoomshare){
 		int count=0;
-		dmat *zoomavg=NULL;
+		double zoomavg=0;
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		    int ipowfs=parms->wfs[iwfs].powfs;
 		    if(!parms->powfs[ipowfs].llt){
 			continue;
 		    }
-		    dadd(&zoomavg, 1, simu->zoomavg->p[iwfs], 1);
+		    zoomavg+=simu->zoomavg->p[iwfs];
 		    count++;
 		}
-		dscale(zoomavg, 1./count);
+		zoomavg/=count;
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		    int ipowfs=parms->wfs[iwfs].powfs;
 		    if(!parms->powfs[ipowfs].llt){
 			continue;
 		    }
-		    dcp(&simu->zoomavg->p[iwfs], zoomavg);
+		    simu->zoomavg->p[iwfs]=zoomavg;
 		}
-		dfree(zoomavg);
 	    }
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(!parms->powfs[ipowfs].llt){
-		    continue;
-		}
-		/*trombone averager has output. first dtrat is for averaging. second
-		  dtrat is for reducing gain. Notice that we do not zero zoomerr
-		  even if there is no output and divided the gain by dtrat. The
-		  second dtrat is for averaging the measurement over dtrat steps (we
-		  summed). This ensures the trombone moves smoothly.*/
-		double gain=parms->sim.zoomgain;
-		int dtrat=parms->sim.zoomdtrat;
-		dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));
-		dzero(simu->zoomavg->p[iwfs]);
-	    }
+	    int dtrat=parms->sim.zoomdtrat;
+	    dadd(&simu->zoomerr, 0, simu->zoomavg, 1./(dtrat*dtrat));
+	    dzero(simu->zoomavg);
 	}
     }
 }

@@ -437,7 +437,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
     /* Global TT, Diff-Focus projection. Modifed from previous kernel so that
        each thread handle the same subaperture as previous gradient operation to
        avoid synchronization */
-    if(datai->PTT && ptt){ //temp
+    if(datai->PTT && ptt){ 
 	float (*restrict PTT)[2]=(float(*)[2])datai->PTT;
 	gx[threadIdx.x]=0;
 	gy[threadIdx.x]=0;

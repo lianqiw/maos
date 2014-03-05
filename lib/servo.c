@@ -462,7 +462,7 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     st->ap=dref(ap);
     if(ep->nx!=3){//type I
 	st->ep=dref(ep);
-    }else{//type II. preprocess
+    }else{//type II. convert data format
 	st->ep=dnew(ep->nx, ep->ny);
 	for(int i=0; i<ep->ny; i++){
 	    st->ep->p[i*3]=ep->p[i*3];

@@ -248,19 +248,6 @@ __global__ static void sa_ccwmcol_do(fcomplex *otf, const int notfx, const int n
     }
 }
 /**
-   Take the real part. Notice we are using = instead of +=
-*/
-__global__ static void sa_realpart_do(float *out, const fcomplex*restrict in, int ninx, int niny){
-    const int isa=blockIdx.x;
-    in+=isa*ninx*niny;
-    out+=isa*ninx*niny;
-    for(int iy=threadIdx.y; iy<niny; iy+=blockDim.y){
-	for(int ix=threadIdx.x; ix<ninx; ix+=blockDim.x){
-	    out[ix+iy*ninx]=cuCrealf(in[ix+iy*ninx]);
-	}
-    }
-}
-/**
    Take the real part and accumulate to output
 */
 __global__ static void sa_acc_real_do(float *out, const fcomplex*restrict in, int ninx, int niny, float alpha){
@@ -279,7 +266,7 @@ __global__ static void sa_acc_real_do(float *out, const fcomplex*restrict in, in
 */
 __global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixpsay, 
 				 int pixoffx, int pixoffy, float pixthetax, float pixthetay,
-				 const float *restrict psfr, float dtheta, int notfx, int notfy,
+				 const fcomplex *restrict otf, float dtheta, int notfx, int notfy,
 				 const float *restrict srot, float alpha){
     float pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;
     float pyo=-(pixpsay*0.5-0.5+pixoffy)*pixthetay;
@@ -292,7 +279,7 @@ __global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixps
 	sincosf(srot[isa], &sx, &cx);
     }
     ints+=isa*pixpsax*pixpsay;
-    psfr+=isa*notfx*notfy;
+    otf+=isa*notfx*notfy;
     for(int iy=threadIdx.y; iy<pixpsay; iy+=blockDim.y){
 	float y0=iy*pixthetay+pyo;
 	for(int ix=threadIdx.x; ix<pixpsax; ix+=blockDim.x){
@@ -302,8 +289,10 @@ __global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixps
 	    int jx=floorf(x); x=x-jx;
 	    int jy=floorf(y); y=y-jy;
 	    if(jx>=0 && jx<notfx-1 && jy>=0 && jy<notfy-1){
-		ints[iy*pixpsax+ix]+=alpha*((psfr[jy*notfx+jx]*(1.-x)+psfr[jy*notfx+jx+1]*x)*(1.-y)
-					    +(psfr[(jy+1)*notfx+jx]*(1.-x)+psfr[(jy+1)*notfx+jx+1]*x)*y);
+		ints[iy*pixpsax+ix]+=alpha*((cuCrealf(otf[jy*notfx+jx])*(1.-x)
+					     +cuCrealf(otf[jy*notfx+jx+1])*x)*(1.-y)
+					    +(cuCrealf(otf[(jy+1)*notfx+jx])*(1.-x)
+					      +cuCrealf(otf[(jy+1)*notfx+jx+1])*x)*y);
 	    }
 	}
     }
@@ -369,25 +358,23 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     cuccell *wvfout=NULL;
     const int wvf_n=notf/2+2;//was notf/2
     if(parms->powfs[ipowfs].psfout){
-	wvfout=cuccellnew(nsa, nwvl, wvf_n, wvf_n);
+	wvfout=cuwfs[iwfs].wvfout;
     }
     float norm_psf=sqrt(powfs[ipowfs].areascale)/((float)powfs[ipowfs].pts->nx*nwvf);
     float norm_pistat=norm_psf*norm_psf/((float)notf*notf);
     float norm_ints=siglev*norm_psf*norm_psf/((float)ncompx*ncompy);
     /* Do msa subapertures in a batch to avoid using too much memory.*/
-    fcomplex *psf, *wvf, *otf, *psfout=NULL, *psfstat=NULL;
+    fcomplex *psf, *wvf, *otf, *psfstat=NULL;
 
     fcomplex *lotfc=NULL;
     fcomplex *lwvf=NULL;
-
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
-	lltopd=curnew(nlx, nlx);
+	lltopd=cuwfs[iwfs].lltopd;
 	if(cuwfs[iwfs].lltncpa){
-	    cudaMemcpyAsync(lltopd->p, cuwfs[iwfs].lltncpa, 
-			    sizeof(float)*nlx*nlx, MEMCPY_D2D, stream);
+	    curcp(&lltopd, cuwfs[iwfs].lltncpa, stream);
 	}else{
-	    cudaMemsetAsync(lltopd->p, 0, sizeof(float)*nlx*nlx, stream);
+	    curzero(lltopd, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
@@ -401,17 +388,15 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
 	    if(pistatout||parms->sim.uptideal){
 		//warning("Remove tip/tilt in uplink ideally\n");
-		float *lltg;
-		cudaCallocHost(lltg, 2*sizeof(float), stream);
-		cuztilt<<<1,dim3(16,16),0,stream>>>
-		    (lltg, lltopd->p, 1, 
-		     cupowfs[ipowfs].llt->pts->dxsa, 
-		     cupowfs[ipowfs].llt->pts->nxsa, cuwfs[iwfs].lltimcc,
-		     cupowfs[ipowfs].llt->pts->p, cuwfs[iwfs].lltamp, 1.f);
+		float *lltg=cuwfs[iwfs].lltg;
+		lltg[0]=lltg[1]=0;
+		cuztilt(lltg, lltopd->p, 1, 
+			cupowfs[ipowfs].llt->pts->dxsa, 
+			cupowfs[ipowfs].llt->pts->nxsa, cuwfs[iwfs].lltimcc,
+			cupowfs[ipowfs].llt->pts->p, cuwfs[iwfs].lltamp, 1.f, stream);
 		CUDA_SYNC_STREAM;
 		ttx=-lltg[0];
 		tty=-lltg[1];
-		cudaFreeHost(lltg);
 	    }else{
 		ttx=simu->uptreal->p[iwfs]->p[0];
 		tty=simu->uptreal->p[iwfs]->p[1];
@@ -436,9 +421,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	}
 	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
-	cudaMalloc(&lwvf, nlwvf*nlwvf*sizeof(fcomplex));
+	lwvf=cuwfs[iwfs].lltwvf->p;
 	if(nlwvf != notf){
-	    cudaMalloc(&lotfc, notf*notf*sizeof(fcomplex));
+	    lotfc=cuwfs[iwfs].lltotfc->p;
 	}else{
 	    lotfc=lwvf;
 	}
@@ -450,25 +435,23 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     /* Now begin physical optics preparation*/
     int isotf=(lltopd || pistatout);
     int msa=cuwfs[iwfs].msa;/* number of subaps to process at each time.*/
-    cudaMalloc(&wvf, sizeof(fcomplex)*nwvf*nwvf*msa);
+    wvf=cuwfs[iwfs].wvf->p;
     if(nwvf==notf){
 	psf=wvf;
     }else{
-	cudaMalloc(&psf, sizeof(fcomplex)*notf*notf*msa);
+	psf=cuwfs[iwfs].psf->p;
     }
     if(srot1 || ncompx!=notf || ncompy!=notf){
-	cudaMalloc(&otf, sizeof(fcomplex)*ncompx*ncompy*msa);
+	otf=cuwfs[iwfs].otf->p;
 	if(isotf){/*There is an additional pair of FFT.*/
 	    norm_ints/=((float)notf*notf);
 	}
     }else{
 	otf=psf;
     }
-    if(wvfout){
-	cudaMalloc(&psfout, sizeof(fcomplex)*notf*notf*msa);
-    }
+
     if(pistatout){
-	cudaMalloc(&psfstat, sizeof(fcomplex)*notf*notf*msa);
+	psfstat=cuwfs[iwfs].psfstat->p;
     }
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -515,11 +498,11 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_1");
 	    ctoc("psf");
 	    if(wvfout){
-		cudaMemsetAsync(psfout, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
-		CUFFT2(cuwfs[iwfs].plan2, psf, psfout, CUFFT_INVERSE);
+		curzero(cuwfs[iwfs].psfout, stream);
+		CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout->p, CUFFT_INVERSE);
 		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
 		    (wvfout->p[isa+nsa*iwvl]->p, wvf_n, wvf_n, 
-		     psfout, notf, notf, norm_psf/(notf*notf));
+		     cuwfs[iwfs].psfout->p, notf, notf, norm_psf/(notf*notf));
 	    }
 	    /* abs2 part to real, peak in corner */
 	    sa_abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
@@ -599,32 +582,16 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		/*back to spatial domain. */
 		CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_INVERSE);
 		ctoc("fft");
-		float *psfr;
-		DO(cudaMalloc(&psfr, sizeof(float)*ncompx*ncompy*ksa));
-		sa_realpart_do<<<ksa, dim3(16,16),0,stream>>>(psfr, otf, ncompx, ncompy);
-		ctoc("realpart");
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints->p[isa]->p, pixpsax, pixpsay, 
 		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
-		     pixthetax, pixthetay, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
+		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
 		ctoc("final");
-		DO(cudaFree(psfr));
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */
-    if(lltopd){
-	curfree(lltopd);
-	if(lwvf!=lotfc) cudaFree(lotfc);
-	cudaFree(lwvf);
-    }
-    if(otf!=psf) cudaFree(otf);
-    if(psf!=wvf) cudaFree(psf);
-    cudaFree(wvf);
-    if(psfstat)  cudaFree(psfstat);
     if(parms->powfs[ipowfs].psfout){
 	cellarr_cuccell(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
-	cuccellfree(wvfout);
-	cudaFree(psfout);
     }
 }

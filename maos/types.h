@@ -537,9 +537,9 @@ typedef struct SIM_T{
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
-    dcell *zoomavg;    /**<Trombone averager*/
-    dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
-    dcell *zoomint;    /**<Trombone integrator*/
+    dmat *zoomavg;    /**<Trombone averager*/
+    dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dmat *zoomint;    /**<Trombone integrator*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
     dcell *lgsfocus;   /**<LGS focus error time history*/
     /*science evaluation*/

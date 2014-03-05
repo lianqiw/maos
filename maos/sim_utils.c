@@ -653,6 +653,9 @@ static void init_simu_evl(SIM_T *simu){
 		nny[iwfs]=1;
 	    }
 	}
+	simu->zoomerr=dnew(parms->nwfs,1);
+	simu->zoomavg=dnew(parms->nwfs,1);
+	simu->zoomint=dnew(parms->nwfs,1);
 	if(disable_save){
 	    simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
 	    simu->lgsfocus=dcellnew3(parms->nwfs, 1, nnx, nny);
@@ -678,16 +681,6 @@ static void init_simu_evl(SIM_T *simu){
 	//The saved PSF and COVs are padded by empty cells.
 	long nframepsf=parms->sim.end;
 	long nframecov=parms->sim.end;
-	/*if(parms->evl.psfmean>1){
-	    long nstep=(parms->sim.end-parms->evl.psfisim);
-	    nframepsf=nstep/parms->evl.psfmean;
-	    if(nstep > nframepsf*parms->evl.psfmean) nframepsf++;
-	    }
-	if(parms->evl.opdcov>1){
-	    long nstep=(parms->sim.end-parms->evl.psfisim);
-	    nframecov=nstep/parms->evl.opdcov;
-	    if(nstep > nframecov*parms->evl.opdcov) nframecov++;
-	    }*/
 	char strht[24];
 	if(parms->evl.psfmean){
 	    simu->evlpsfmean=dcellnew(parms->evl.nwvl,nevl);
@@ -1060,8 +1053,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init(nstep,1, 
-						    "wfs%d_gradol_%d.bin", iwfs, seed);
+		    save->gradol[iwfs]=cellarr_init(nstep-1,1, "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
 	    }
 	}
@@ -1272,18 +1264,17 @@ static void init_simu_dm(SIM_T *simu){
 	}
     }
     int nstep=parms->sim.end;
+    int nrstep=nstep-(parms->sim.closeloop?1:0);
     if(parms->save.dm){
-	int nrstep=nstep-(parms->sim.closeloop?1:0);
 	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
 	save->dmint=cellarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	if(parms->recon.alg==0){
 	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){
-	    int nrsteplo=nstep/parms->sim.dtrat_lo-(parms->sim.closeloop?1:0);
-	    save->Merr_lo=cellarr_init(nrsteplo, 1, "Merr_lo_%d.bin", seed);
+	    save->Merr_lo=cellarr_init(nstep-parms->sim.dtrat_lo, 1, "Merr_lo_%d.bin", seed);
 	    if(!parms->sim.fuseint){
-		save->Mint_lo=cellarr_init(nrsteplo-1, 1, "Mint_lo_%d.bin", seed);
+		save->Mint_lo=cellarr_init(nstep-parms->sim.dtrat_lo, 1, "Mint_lo_%d.bin", seed);
 	    }
 	}
 	save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);

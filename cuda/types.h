@@ -100,7 +100,7 @@ class cucell{
 	    tmp[i]=p[i]?p[i]->p:NULL;
 	}
 	if(!pm){
-	    cudaMalloc(&pm, sizeof(T*)*nx*ny);
+	    DO(cudaMalloc(&pm, sizeof(T*)*nx*ny));
 	}
 	if(stream==(cudaStream_t)-1){
 	    cudaMemcpy(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);

@@ -98,7 +98,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 	    FDDATA[ips].scale=1.f;
 	}
     }
-    cudaMalloc(&fddata, sizeof(GPU_FDPCG_T)*nps);
+    DO(cudaMalloc(&fddata, sizeof(GPU_FDPCG_T)*nps));
     cudaMemcpy(fddata, FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
     delete [] FDDATA;
 }

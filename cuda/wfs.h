@@ -76,7 +76,7 @@ class cuwfs_t{
     float  **bkgrnd2c;  /**<calibration of background to subtract.*/
     float *cogcoeff;
     /*For LLT */
-    float  *lltncpa;    /**<NCPA for llt*/
+    curmat *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];
     float  *lltamp;
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
@@ -89,18 +89,30 @@ class cuwfs_t{
     int     custatb;/*allocated block */
     int     custatt;/*allocated thread */
     /*Run time data that changes */
+    curmat *phiout;
     curmat *gradacc;    /**<For accumulating grads*/
+    curmat *gradcalc;   /**<For outputing grads*/
+    curmat *lltopd;
+    float  *lltg;
+    cucmat *lltwvf;
+    cucmat *lltotfc;
+    cucmat *wvf;
+    cucmat *psf;
+    cucmat *otf;
     curcell *ints;       /**<For accumulating subaperture image.*/
     curcell *pistatout;  /**<For output pistatout*/
+    cuccell *wvfout;
+    cucmat *psfout;
+    cucmat *psfstat;
     /*For matched filter update*/
     dither_t *dither;
 };
 
 void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
 
-__global__ void cuztilt(float *restrict g, float *restrict opd, 
-			const int nsa, const float dx, const int nx, float (**imcc)[3],
-			const float (*orig)[2], const float*restrict amp, float alpha);
+void cuztilt(float *restrict g, float *restrict opd, 
+	     const int nsa, const float dx, const int nx, float (**imcc)[3],
+	     const float (*orig)[2], const float*restrict amp, float alpha, cudaStream_t stream);
 __global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
 			    const fcomplex *restrict in, int ninx, int niny);
 #endif

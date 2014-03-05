@@ -93,9 +93,6 @@ void maos(const PARMS_T *parms){
     if(parms->gpu.wfs && powfs){
 	gpu_wfssurf2gpu(parms, powfs);
     }
-    if(parms->gpu.evl){
-	gpu_evlsurf2gpu(aper);
-    }
     if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
 	gpu_setup_recon(parms, powfs, recon);
     }

@@ -150,7 +150,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
 
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
-
+long thread_id(void);
 /*
   use () to make the statements a single statement.
 */
@@ -162,7 +162,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 
 #define error(A...) ({char fline[4096];char sect[4096];			\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error: ",sect); \
+	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error(%ld): ",sect,thread_id()); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("error");})
 
@@ -189,7 +189,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 		      fprintf(stderr,"%s", fline);})
 #define error3(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error: ",myasctime(),sect); \
+	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error:(%ld) ",myasctime(),sect,thread_id()); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("error");})
 

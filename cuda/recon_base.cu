@@ -44,7 +44,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	spint *pi2=W0new->i;
 	double *px2=W0new->x;
 	int *full;
-	cudaMallocHost(&full, R_W0->n*sizeof(int));
+	DO(cudaMallocHost(&full, R_W0->n*sizeof(int)));
 	//#define W0_BW 1
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
@@ -187,7 +187,7 @@ map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
     nlayer=_nlayer;
     ndir=_ndir;
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
-    cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer*ndir);
+    DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer*ndir));
     for(int ilayer=0; ilayer<nlayer; ilayer++){
 	const float ht=in[ilayer].ht;
 	for(int idir=0; idir<ndir; idir++){
@@ -210,7 +210,7 @@ map_l2l::map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer){//input. 
     nlayer=_nlayer;
     ndir=0;//this is laye to layer.
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];
-    cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer);
+    DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer));
     for(int ilayer=0; ilayer<nlayer; ilayer++){
 	if(fabs(out[ilayer].ht-in[ilayer].ht)>EPS){
 	    error("Layer height mismatch\n");

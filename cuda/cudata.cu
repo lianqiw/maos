@@ -32,6 +32,9 @@ static __attribute((constructor)) void init(){
 __thread cudata_t *cudata=NULL;/*for current thread and current GPU */
 #endif
 
+int *cudata_t::evlgpu=0;
+int *cudata_t::wfsgpu=0;
+cuwfs_t *cudata_t::wfs=0;
 /**
    Get GPU info.
 */

@@ -25,6 +25,7 @@
 #include "fit.h"
 #include "recon.h"
 #include "cudata.h"
+#include "perf.h"
 #undef TIMING
 #define TIMING 0
 #if !TIMING
@@ -37,8 +38,6 @@
 #define toc_test(A) toc2(A);tic
 #endif
 #define CATCH_ERR 0
-extern int *wfsgpu;
-extern int *evlgpu;
 
 /*
   The caller must specify current GPU.
@@ -186,7 +185,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].moao==imoao){
-		    gpu_set(wfsgpu[iwfs]);
+		    gpu_set(cudata_t::wfsgpu[iwfs]);
 		    if(!cudata->dm_wfs){
 			cudata->dm_wfs=(cumap_t**)calloc(nwfs, sizeof(cumap_t*));
 		    }
@@ -195,7 +194,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	    }
 	    if(parms->evl.moao==imoao){
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		    gpu_set(evlgpu[ievl]);
+		    gpu_set(cudata_t::evlgpu[ievl]);
 		    if(!cudata->dm_evl){
 			cudata->dm_evl=(cumap_t**)calloc(parms->evl.nevl, sizeof(cumap_t*));
 		    }
@@ -342,6 +341,7 @@ float curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
 
 void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
     warning_once("MOAO temporal filter implemented with LPF\n");
+    const int *wfsgpu=cudata_t::wfsgpu;
     if(dm_wfs){
 	int nwfs=dm_wfs->nx;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -366,17 +366,17 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
     if(dm_evl){
 	const int nevl=dm_evl->nx;
 	for(int ievl=0; ievl<nevl; ievl++){
-	    if(evlgpu) gpu_set(evlgpu[ievl]);
+	    if(cudata_t::evlgpu) gpu_set(cudata_t::evlgpu[ievl]);
 	    stream_t stream;
 	    curmat *temp=0;
-	    if(evlgpu && evlgpu[ievl]!=gpu_recon){
+	    if(cudata_t::evlgpu && cudata_t::evlgpu[ievl]!=gpu_recon){
 		curcp(&temp, dm_evl->p[ievl], stream);
 	    }else{
 		temp=dm_evl->p[ievl]->ref();
 	    }
 	    float g=moao_gevl->p[ievl];
 	    curadd(&cudata->dm_evl[ievl]->p, 1-g, temp, g, stream);
-	    if(!evlgpu){
+	    if(!cudata_t::evlgpu){
 		cp2cpu(&_dm_evl->p[ievl], 0, cudata->dm_evl[ievl]->p, 1, stream);
 	    }
 	    delete temp;
@@ -564,7 +564,7 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
 	}
 	if(cudata->dm_wfs){
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		gpu_set(wfsgpu[iwfs]);
+		gpu_set(cudata_t::wfsgpu[iwfs]);
 		if(cudata->dm_wfs[iwfs]){
 		    cudata->dm_wfs[iwfs]->p->zero();
 		}
@@ -572,7 +572,7 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
 	}
 	if(cudata->dm_evl){
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		gpu_set(evlgpu[ievl]);
+		gpu_set(cudata_t::evlgpu[ievl]);
 		if(cudata->dm_evl[ievl]){
 		    cudata->dm_evl[ievl]->p->zero();
 		}

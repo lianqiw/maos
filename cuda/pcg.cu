@@ -124,7 +124,8 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     float *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
     if(!cg_data->diff){
-	cudaMallocHost(&cg_data->diff, sizeof(float)*(maxiter+1));//Only this enables async transfer
+	//Only this enables async transfer
+	DO(cudaMallocHost(&cg_data->diff, sizeof(float)*(maxiter+1)));
     }
     float *diff=cg_data->diff;
     memset(diff, 0, sizeof(float)*(maxiter+1));

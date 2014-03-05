@@ -190,7 +190,6 @@ INLINE void thread_new(thread_fun fun, void* arg){
     pthread_create(&temp, NULL, fun, arg);
 }
 void thread_block_signal();
-long thread_id(void);
 INLINE int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
     int __ret;                                     

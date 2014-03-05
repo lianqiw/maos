@@ -42,7 +42,7 @@ OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a sta
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror -Wno-unused-function"
 fi
-LDEXE="-lm -no-fast-install"
+LDEXE="-lm -no-fast-install -ldl"
 OPTSextra=""
 
 #Compile CUDA branch if CUDA toolkit is detected
@@ -442,7 +442,7 @@ if test ! "x$use_mkl" = "xyes" ;then
        fi
     fi
 fi
-if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
+if test "x$use_mkl" = "xyes" ;then 
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}.tar.bz2
    fi

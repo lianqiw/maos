@@ -27,6 +27,12 @@ extern "C"
 #include "cuwfs.h"
 #include "cudata.h"
 
+/**
+
+   This file is not finalized.
+
+
+ */
 namespace cuda_wfs{
 cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu)
     :iwfs(_iwfs),igpu(_igpu){
