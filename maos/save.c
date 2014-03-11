@@ -153,6 +153,12 @@ void save_recon(SIM_T *simu){
 	}
     }
     if(parms->save.dm){
+	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
+	if(simu->ttmreal){
+	    simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
+	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
+	}
 	cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	if(simu->dmint->mint[0]){
 	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint[0]);

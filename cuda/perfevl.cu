@@ -414,7 +414,9 @@ void gpu_perfevl(thread_t *info){
 	gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmreal, cudata->ndm, 
 		   parms->evl.hs[ievl], thetax, thetay,
 		   0,0,-1, stream);
-	curaddptt(iopdevl, cudata->perf->locs->p, 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
+	if(simu->ttmreal){
+	    curaddptt(iopdevl, cudata->perf->locs->p, 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
+	}
 	if(imoao!=-1){
 	    gpu_dm2loc(iopdevl->p, &cudata->perf->locs, cudata->dm_evl[ievl], 1,
 		       INFINITY, 0, 0, 0, 0, -1, stream);

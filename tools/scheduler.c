@@ -452,7 +452,7 @@ static void process_queue(void){
 		info2("process_queue: process waiting list ... ");
 		if(!irun){
 		    info2("all done\n");
-		    all_done=1;
+		    all_done=0;
 		}else{
 		    info2("start new job\n");
 		    int pid;

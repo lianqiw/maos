@@ -63,6 +63,7 @@ static inline int limit_diff(double *x1, double *x2, double thres){
    Send LPF TT to TTM
 */
 static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
+#if 1
     int ndm=dmcmd->nx;
     double ptt1[3];
     double totalptt[3]={0,0,0};
@@ -71,16 +72,31 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
 	loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
 		     recon->aimcc->p[idm],NULL,
 		     dmcmd->p[idm]->p);
+	ptt1[0]=0;//don't touch piston
 	loc_remove_ptt(dmcmd->p[idm]->p, 
 		       ptt1,recon->aloc[idm]);
-	totalptt[1]+=ptt1[1];
-	totalptt[2]+=ptt1[2];
+	for(int i=1; i<3; i++){
+	    totalptt[i]+=ptt1[i];
+	}
     }
     ttm->p[0]=ttm->p[0]*(1-lp)+lp*totalptt[1];
     ttm->p[1]=ttm->p[1]*(1-lp)+lp*totalptt[2];
     totalptt[1]-=ttm->p[0];
     totalptt[2]-=ttm->p[1];
     loc_add_ptt(dmcmd->p[0]->p, totalptt, recon->aloc[0]);
+#else
+    //Only touch ground DM
+    double ptt1[3]={0,0,0};
+    loc_calc_ptt(NULL,ptt1, recon->aloc[0],0,
+		 recon->aimcc->p[0],NULL,
+		 dmcmd->p[0]->p);
+    ttm->p[0]=ttm->p[0]*(1-lp)+lp*ptt1[1];
+    ttm->p[1]=ttm->p[1]*(1-lp)+lp*ptt1[2];
+    ptt1[0]=0;
+    ptt1[1]=ttm->p[0];
+    ptt1[2]=ttm->p[1];
+    loc_remove_ptt(dmcmd->p[0]->p, ptt1,recon->aloc[0]);
+#endif
 }
 
 static inline void clipdm(SIM_T *simu, dcell *dmcmd){
@@ -197,27 +213,11 @@ void filter_cl(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     assert(parms->sim.closeloop);
-    if(parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
-	simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
-	simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
-    }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
-    if(simu->dmerr){ /*High order. */
-	/*global focus is the 6th mode in ngsmod->Modes*/
-	if(parms->sim.mffocus){
-	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
-	    /*Do LPF on NGS focus measurement to drive global focus*/
-	    double lpfocus=parms->sim.lpfocus;
-	    simu->ngsfocuslpf->p[0]->p[5]=
-		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
-	}
-    }
-    /*Auto adjusting epdm if necessary*/
-    {
-	static int epdm_is_auto=0;
+  
+    {/*Auto adjusting epdm for testing different epdm*/
+    	static int epdm_is_auto=0;
 	if(simcfg->epdm->p[0]<0){
 	    epdm_is_auto=1;
 	    simcfg->epdm->p[0]=0.5;
@@ -231,8 +231,8 @@ void filter_cl(SIM_T *simu){
 	    }
 	}
     }
-    /*Do the servo filtering*/
     {
+	/*Do the servo filtering. First simulate a drop frame*/
 	int drop=0;
 	if(simu->dmerr && parms->sim.dtrat_skip){
 	    if(parms->sim.dtrat_skip>0){
@@ -248,9 +248,9 @@ void filter_cl(SIM_T *simu){
 	}
 	if(drop){
 	    warning("Drop a frame at step %d\n", simu->isim);
-	}else{//always run servo_filter even if dmerr is NULL.
-	    servo_filter(simu->dmint, simu->dmerr);
 	}
+	//always run servo_filter even if dmerr is NULL.
+	servo_filter(simu->dmint, drop?0:simu->dmerr);
     }
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
@@ -266,7 +266,9 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
     }
-    ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+    if(simu->ttmreal){
+	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+    }
     if(parms->sim.dmclip || parms->sim.dmclipia){
 	dcell *tmp=dcelldup(simu->dmcmd);
 	clipdm(simu, simu->dmcmd);
@@ -311,26 +313,18 @@ void filter_cl(SIM_T *simu){
 	    }
 	}
     }
-    if(simu->upterr){
-	int hasoutput=0;
-	for(int i=0; i<simu->upterr->nx; i++){
-	    if(simu->upterr->p[i]){
-		hasoutput=1;
-	    }
-	}
-	if(hasoutput){
-	    servo_filter(simu->uptint, simu->upterr);
-	    /*upterr is from gradients from the last step.*/
-	    dcellcp(&simu->uptreal, simu->uptint->mint[0]);
-	    /*Eject dithering command*/
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		const int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].dither){
-		    //Use isim+1 because the command is for next time step.
-		    double angle=M_PI*0.5*(simu->isim+1)/parms->powfs[ipowfs].dtrat;
-		    simu->uptreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
-		    simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
-		}
+    if(simu->uptint){
+	servo_filter(simu->uptint, simu->upterr);
+	/*upterr is from gradients from the last step.*/
+	dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+	/*Eject dithering command*/
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    const int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].dither){
+		//Use isim+1 because the command is for next time step.
+		double angle=M_PI*0.5*(simu->isim+1)/parms->powfs[ipowfs].dtrat;
+		simu->uptreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
+		simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
 	}
     }
@@ -348,7 +342,9 @@ void filter_ol(SIM_T *simu){
     if(simu->Merr_lo){
 	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
     }
-    ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
+    if(simu->ttmreal){
+	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
+    }
     /*hysterisis. */
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
@@ -411,4 +407,11 @@ void filter(SIM_T *simu){
     }
 #endif
     update_dm(simu);
+
+    dcellzero(simu->dmerr);
+    simu->dmerr=0;
+    dcellzero(simu->Merr_lo);
+    simu->Merr_lo=0;
+    dcellzero(simu->upterr);
+    simu->upterr=0;
 }

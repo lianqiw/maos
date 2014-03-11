@@ -631,10 +631,6 @@ void loc_create_stat_do(loc_t *loc){
     for(iloc=1; iloc<loc->nloc; iloc++){
 	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 /*a new column starts */
 	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
-	    if(colcount>=ncolmax){/*expand the memory. */
-		ncolmax*=2;
-		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
-	    }
 	    locstat->cols[colcount].pos=iloc;
 	    locstat->cols[colcount].xstart=locx[iloc];
 	    locstat->cols[colcount].ystart=locy[iloc];
@@ -645,6 +641,10 @@ void loc_create_stat_do(loc_t *loc){
 		locstat->xmin=locstat->cols[colcount].xstart;
 	    }
 	    colcount++;
+	    if(colcount>=ncolmax){/*expand the memory. */
+		ncolmax*=2;
+		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
+	    }
 	}
     }
     locstat->ncol=colcount;

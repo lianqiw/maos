@@ -153,7 +153,7 @@ void recon_split(SIM_T *simu){
     }
     /*Low order WFS has output */
     if(lo_output){
-	dcellzero(simu->Merr_lo);
+	simu->Merr_lo=simu->Merr_lo_store;
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
@@ -194,8 +194,6 @@ void recon_split(SIM_T *simu){
 	if(parms->sim.mffocus && parms->dbg.deltafocus){
 	    simu->ngsfocus+=simu->deltafocus->p[0]->p[0];
 	}
-    }else{
-	dcellfree(simu->Merr_lo);
     }
 }
 
@@ -212,31 +210,26 @@ void reconstruct(SIM_T *simu){
 
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	/*New plate mode focus offset for LGS WFS. Not needed*/
-	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[1]){
-	    /*In new ahst mode, the first plate scale mode contains focus for
-	      lgs. But it turns out to be not necessary to remove it because the
-	      HPF in the LGS path removed the influence of this focus mode. set
-	      sim.ahstfocus=2 to enable adjust gradients.*/
-	    double scale=simu->recon->ngsmod->scale;
-	    double focus=-simu->Mint_lo->mint[1]->p[0]->p[2]*(scale-1);
-	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
-	}
-
 	/*Uplink FSM*/
 	if(parms->powfs[ipowfs].usephy 
 	   && isim>=parms->powfs[ipowfs].phystep
 	   && parms->powfs[ipowfs].llt 
 	   && parms->powfs[ipowfs].trs
+	   && (isim+1)%parms->powfs[ipowfs].dtrat==0
 	   && simu->gradlastcl->p[iwfs]){
 	    if(!recon->PTT){
 		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
 	    }
-	    dmat *PTT=recon->PTT->p[parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*nwfs)];
+	    dmat *PTT=recon->PTT->p[parms->recon.glao
+				    ?(ipowfs+ipowfs*parms->npowfs)
+				    :(iwfs+iwfs*nwfs)];
 	    if(!PTT){
 		error("powfs %d has llt, but TT removal is empty\n", ipowfs);
 	    }
 	    /* Compute LGS Uplink error. */
+	    if(!simu->upterr){
+		simu->upterr=simu->upterr_store;
+	    }
 	    dmm(&simu->upterr->p[iwfs], 0, PTT, simu->gradlastcl->p[iwfs], "nn", 1);
 	    /* copy upterr to output. */
 	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
@@ -269,8 +262,6 @@ void reconstruct(SIM_T *simu){
 		    pd->ipv=pd->qdv=0;
 		}
 	    }
-	}else if(simu->upterr){
-	    dfree(simu->upterr->p[iwfs]);
 	}/*LLT FSM*/
     }/*for iwfs*/
 
@@ -300,10 +291,8 @@ void reconstruct(SIM_T *simu){
 	
     double tk_start=myclockd();
     if(hi_output){
+	simu->dmerr=simu->dmerr_store;
 	if(parms->recon.mvm){
-	    if(!simu->dmerr){
-		simu->dmerr=dcellnew3(parms->ndm, 1, simu->recon->anloc, NULL);
-	    }
 	    if(parms->sim.mvmport){
 		mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
 	    }else
@@ -313,11 +302,6 @@ void reconstruct(SIM_T *simu){
 		}else
 #endif		
 		{
-		    if(!simu->dmerr){
-			simu->dmerr=dcellnew2(simu->dmcmd);
-		    }else{
-			dcellzero(simu->dmerr);
-		    }
 		    //This assumes skipped WFS are in the end. \todo: fix it if not.
 		    dmulvec(simu->dmerr->m->p, recon->MVM, 
 			    (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
@@ -352,12 +336,20 @@ void reconstruct(SIM_T *simu){
 	if(parms->tomo.ahst_ttr && parms->recon.split){
 	    remove_dm_tt(simu, simu->dmerr);
 	}
-    }else{
-	dcellfree(simu->dmerr);
     }
     /*low order reconstruction*/
     if(parms->recon.split){
 	recon_split(simu);
+    }
+    if(simu->dmerr){ /*High order. */
+	/*global focus is the 6th mode in ngsmod->Modes*/
+	if(parms->sim.mffocus){
+	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
+	    /*Do LPF on NGS focus measurement to drive global focus*/
+	    double lpfocus=parms->sim.lpfocus;
+	    simu->ngsfocuslpf->p[0]->p[5]=
+		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
+	}
     }
     /*For PSF reconstruction.*/
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){

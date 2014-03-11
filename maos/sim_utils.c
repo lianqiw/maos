@@ -951,8 +951,17 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
     }
     if(parms->nphypowfs){
-	simu->upterr=dcellnew(nwfs,1);
+	simu->upterr_store=dcellnew(nwfs,1);
 	simu->uptreal=dcellnew(nwfs,1);
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].llt){
+		simu->upterr_store->p[iwfs]=dnew(2,1);
+		simu->uptreal->p[iwfs]=dnew(2,1);
+	    }
+	}
+	simu->uptint=servo_new(simu->upterr_store, parms->sim.apupt, parms->sim.alupt,
+			       parms->sim.dthi, parms->sim.epupt);
     }
   
     {/*MMAP the LGS uptlink error/command output */
@@ -1053,7 +1062,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init(nstep-1,1, "wfs%d_gradol_%d.bin", iwfs, seed);
+		    save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
 	    }
 	}
@@ -1186,10 +1195,13 @@ static void init_simu_dm(SIM_T *simu){
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
     simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
-    simu->ttmreal=dnew(2,1);
+    if(parms->sim.lpttm>EPS){
+	simu->ttmreal=dnew(2,1);
+    }
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
+	simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc, NULL);
 	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
     }
     for(int idm=0; idm<parms->ndm; idm++){
@@ -1232,13 +1244,13 @@ static void init_simu_dm(SIM_T *simu){
 	dcellcp(&simu->dmreal, simu->dmint->mint[0]);
 	update_dm(simu);
     }
-    simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.allo,
-			    parms->sim.dtlo, parms->sim.eplo);
-    if(parms->nphypowfs){
-	simu->uptint=servo_new(NULL, parms->sim.apupt, parms->sim.alupt,
-			       parms->sim.dthi, parms->sim.epupt);
+    if(parms->recon.split){
+	simu->Merr_lo_store=dcellnew(1,1);
+	simu->Merr_lo_store->p[0]=dnew(recon->ngsmod->nmod,1);
+	simu->Mint_lo=servo_new(simu->Merr_lo_store, 
+				parms->sim.aplo, parms->sim.allo,
+				parms->sim.dtlo, parms->sim.eplo);
     }
-
     {/* History */
 	int dm_hist=0;
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -1277,7 +1289,9 @@ static void init_simu_dm(SIM_T *simu){
 		save->Mint_lo=cellarr_init(nstep-parms->sim.dtrat_lo, 1, "Mint_lo_%d.bin", seed);
 	    }
 	}
-	save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
+	if(parms->sim.lpttm>EPS){
+	    save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
+	}
 	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){
@@ -1550,11 +1564,11 @@ void free_simu(SIM_T *simu){
     servo_free(simu->Mint_lo);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
-    dcellfree(simu->dmerr);
+    dcellfree(simu->dmerr_store);
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
-    dcellfree(simu->Merr_lo);
-    dcellfree(simu->upterr);
+    dcellfree(simu->Merr_lo_store);
+    dcellfree(simu->upterr_store);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
 

@@ -578,7 +578,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
     }else if(parms->tomo.ahst_wt==2){
-	/*Use aperture weighting. */
+	/*Use science based weighting. */
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
 	    tic;

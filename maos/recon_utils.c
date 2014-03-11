@@ -570,13 +570,28 @@ void FitL(dcell **xout, const void *A,
 void focus_tracking_grads(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    
+    /*New plate mode focus offset for LGS WFS. Not needed*/
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[1]
+	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
+	    /*In new ahst mode, the first plate scale mode contains focus for
+	      lgs. But it turns out to be not necessary to remove it because the
+	      HPF in the LGS path removed the influence of this focus mode. set
+	      sim.ahstfocus=2 to enable adjust gradients.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    double focus=-simu->Mint_lo->mint[1]->p[0]->p[2]*(scale-1);
+	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
+	}
+    }
+
     int hi_output=(!parms->sim.closeloop || (simu->isim+1)%parms->sim.dtrat_hi==0);
     if(hi_output){
 	dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
 	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
 	long nwfsllt=0; 
 	double focusm=0;
-
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
 	    int ipowfs=parms->wfs[iwfs].powfs;

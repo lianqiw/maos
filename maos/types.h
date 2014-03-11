@@ -519,14 +519,14 @@ typedef struct SIM_T{
     /*High order*/
     SERVO_T *dmint;    /**<dm integrator. (used of fuseint==1)*/
     dcell *dmfit;      /**<direct high order fit output*/
-    dcell *dmerr;      /**<high order dm error signal.*/
+    dcell *dmerr,*dmerr_store;      /**<high order dm error signal.*/
 
     /*Low order*/
-    dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
+    dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
-    dcell *upterr;     /**<uplink error*/
+    dcell *upterr,*upterr_store;     /**<uplink error*/
     dcell *uptreal;    /**<uplink real*/
     SERVO_T *uptint;    /**<uplink integrator output.*/
     dcell *upterrs;    /**<mmaped file to store upterr history*/

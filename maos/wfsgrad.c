@@ -410,8 +410,10 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    wfs_propdata->phiout=opd->p;
 	    CALL_THREAD(wfs_prop, nthread, 0);
 	}/*idm */
-	double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
-	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+	if(simu->ttmreal){
+	    double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
+	    loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+	}
     }
     if(parms->powfs[ipowfs].skip && parms->tomo.ahst_idealngs){
 	//apply ideal NGS modes to NGS WFS
@@ -422,7 +424,6 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
     if(imoao>-1){
 	dmat **dmwfs=simu->dm_wfs->p;
 	if(dmwfs[iwfs]){
-	    //info("iwfs %d: Adding MOAO correction\n", iwfs);
 	    /* No need to do mis registration here since the MOAO DM is attached
 	       to close to the WFS.*/
 	    if(parms->moao[imoao].cubic){

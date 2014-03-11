@@ -598,7 +598,7 @@ static void readcfg_atm(PARMS_T *parms){
     parms->atm.nps=readcfg_dblarr(&(parms->atm.ht),"atm.ht");
     readcfg_dblarr_n(&(parms->atm.wt),parms->atm.nps,"atm.wt");
     readcfg_dblarr_n(&(parms->atm.ws),parms->atm.nps,"atm.ws");
-    readcfg_dblarr_n(&(parms->atm.wddeg),parms->atm.nps,"atm.wddeg");
+    readcfg_dblarr_nmax(&(parms->atm.wddeg),parms->atm.nps,"atm.wddeg");
     for(int ih=0; ih<parms->atm.nps; ih++){
 	if(fabs(parms->atm.wddeg[ih])>1){
 	    warning("wddeg is not zero. Disable wdrand\n");
@@ -2535,12 +2535,14 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 #else
     use_cuda=0;
 #endif
-    if(parms->evl.tomo){
-	warning("evl.tomo in cuda not implemented yet.\n");
-	use_cuda=0;
-    }
-    if(parms->sim.end==0){
-	use_cuda=0;
+    if(use_cuda){
+	if(parms->evl.tomo){
+	    warning("evl.tomo in cuda not implemented yet.\n");
+	    use_cuda=0;
+	}
+	if(parms->sim.end==0){
+	    use_cuda=0;
+	}
     }
     if(use_cuda){
 	if(parms->sim.evlol){

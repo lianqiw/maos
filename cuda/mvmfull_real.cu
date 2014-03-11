@@ -197,7 +197,6 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     int port=20000;
     int sock=-1;
     int ready=1;
-    int comp_mtch=0;//flag for compute matched filter.
     int mtch_ngrid=50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
     const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap.
     const int mtch_dimy=12;//number of subapertures
@@ -253,7 +252,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     }
 
     const int nbuf=2;//two buffers for im0.
-    int dither_nsa=10;//each time step compute this many subapertures for matched filter
+    //int dither_nsa=10;//each time step compute this many subapertures for matched filter
     //int comp_mtch_done[ngpu];
     //float imc, a2m;//PLL results
     int nc=10;//each time copy nc column of mvm.
@@ -471,7 +470,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		}
 	    }
 	    mtch_down=0;//completed
-	  endhere:
+	  endhere:;
 	}
 	//Queue copying MVM matrix to second slot.
 	for(int igpu=0; igpu<ngpu; igpu++){

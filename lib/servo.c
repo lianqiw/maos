@@ -404,6 +404,7 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc){
     double gg,e1a, e1;
     for(int ic=0; ic<merrc->nx*merrc->ny; ic++){
 	dmat *merr=merrc->p[ic];
+	if(!merr) continue;
 	dmat *mlead=st->mlead->p[ic];
 	dmat *merrlast=st->merrlast->p[ic];
 	int nmod=0;/*error. */
@@ -423,7 +424,7 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc){
 	    error("Wrong format in gain\n");
 	}
 	/**2013-12-03: fix lead filter implementation. gg is relocated
-	   2013-12-05: A more accurate and robust lead filter
+	   2013-12-05: Implemented a more accurate and robust lead filter
 	 */
 	for(int imod=0; imod<nmod; imod++){
 	    int indm=imod * indmul;
@@ -540,6 +541,7 @@ int servo_filter(SERVO_T *st, dcell *_merr){
 		st->mpreint=dcellnew2(merr);
 	    }
 	    for(int ic=0; ic<merr->nx; ic++){
+		if(!merr->p[ic]) continue;
 		assert(merr->p[ic]->nx==st->ep->ny);
 		for(long i=0; i<merr->p[ic]->nx; i++){
 		    st->mpreint->p[ic]->p[i]=st->ep->p[i]*merr->p[ic]->p[i];

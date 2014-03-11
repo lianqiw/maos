@@ -717,7 +717,7 @@ typedef struct PARMS_T{
     int *hipowfs;    /**<List of high order powfs*/
     int ntrspowfs;   /**<Number of tile removed wfs types*/
     int nlowfs;      /**<Number of low order wfs.*/
-    int nphypowfs;   /**<Number of powfs with uplink loop*/
+    int nphypowfs;   /**<Number of powfs with local/uplink tip/tilt loop*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

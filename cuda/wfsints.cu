@@ -461,7 +461,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    int nlx=powfs[ipowfs].llt->pts->nx;
 	    int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 	    cudaMemsetAsync(lwvf, 0, sizeof(fcomplex)*nlwvf*nlwvf, stream);
-	    if(nlwvf<notf){
+	    if(lotfc!=lwvf){
 		cudaMemsetAsync(lotfc, 0, sizeof(fcomplex)*notf*notf, stream);
 	    }
 	    sa_embed_wvf_do<<<1,dim3(16,16),0,stream>>>
@@ -482,7 +482,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    int ksa=MIN(msa, nsa-isa);/*total number of subapertures left to do. */
 	    /*embed amp/opd to wvf */
 	    cudaMemsetAsync(wvf, 0, sizeof(fcomplex)*ksa*nwvf*nwvf, stream);
-	    if(notf>nwvf){
+	    if(psf!=wvf){
 		cudaMemsetAsync(psf, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
 	    }
 	    sa_embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
@@ -561,7 +561,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		    CUFFT(cuwfs[iwfs].plan3, otf,CUFFT_FORWARD);
 		    ctoc("fft to otf");
 		}
-		/*now we have otf. multiple with etf, dtf. */
+		/*now we have otf. multiply with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf){
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
