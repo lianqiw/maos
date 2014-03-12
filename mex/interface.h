@@ -74,15 +74,23 @@ INLINE loc_t *mx2loc(const mxArray *A){
 	if(fabs(loc->locy[2+iloc]-loc->locy[iloc])<1.e-10 
 	   && fabs(loc->locy[2+iloc]-loc->locy[1+iloc])<1.e-10
 	   && fabs(loc->locx[2+iloc]+loc->locx[iloc]-loc->locx[1+iloc]*2)<1.e-10){
-	    loc->dx=loc->locx[iloc+1]-loc->locx[iloc];
-	    found=1;
+	    loc->dx=fabs(loc->locx[iloc+1]-loc->locx[iloc]);
+	    found++;
 	    break;
 	}
     }
-    if(!found){
-	mexErrMsgTxt("Unable to determine dx");
+    for(iloc=0; iloc<loc->nloc-2; iloc++){
+	double diff=fabs(loc->locy[iloc+1]-loc->locy[iloc]);
+	if(diff>1.e-10){
+	    loc->dy=diff;
+	    found++;
+	    break;
+	}
     }
-    loc->dy=loc->dx;
+    if(found!=2){
+	info("found=%d\n", found);
+	mexErrMsgTxt("Unable to determine dx or dy");
+    }
     return loc;
 }
 

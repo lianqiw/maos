@@ -49,7 +49,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	    dx=INFINITY;
 	    for(long i=0; i<MIN(10,out->nloc-1); i++){/*we assume the rows are continuous. */
 		if(fabs(out->locy[i+1]-out->locy[i])<EPS){//same row
-		    double dxi=out->locx[i+1]-out->locx[i];
+		    double dxi=fabs(out->locx[i+1]-out->locx[i]);
 		    if(dxi<dx){
 			dx=dxi;
 		    }
@@ -60,7 +60,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	if(fabs(dy)<EPS || isnan(dy)){/*dy is not available. */
 	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
 		if(out->locy[i+1]>out->locy[i]){
-		    dy=out->locy[i+1]-out->locy[i];
+		    dy=fabs(out->locy[i+1]-out->locy[i]);
 		    break;
 		}
 	    }

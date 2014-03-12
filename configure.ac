@@ -130,7 +130,6 @@ AM_CONDITIONAL(WIN,    false)
 win32=no
 use_mkl="no"
 mkl_avail="no"
-mkl_avail="no"
 case "$host_os" in
 *linux*)
  AM_CONDITIONAL(LINUX, true)
@@ -140,7 +139,7 @@ case "$host_os" in
  use_static_default="no"
  wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
- mkldep="-liomp5"
+ mkldep="-lgomp"
  libsuffix=${cpu}
  system="linux"
  ldsuffix="so"
@@ -148,11 +147,11 @@ case "$host_os" in
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
- mkl_avail="yes"
+ mkl_avail="no"
  use_static_default="no"
  wget="curl --retry 1 -L --progress-bar"
  wgetoutput="--output"
- mkldep="-liomp5"
+ mkldep="-lgomp"
  libsuffix=fat
  system="apple"
  ldsuffix="dylib"
@@ -177,7 +176,7 @@ mklname=mkl${libsuffix}
 fftwname=fftw${libsuffix}
 zlibname=libz${libsuffix}
 AC_SUBST(ldsuffix)
-mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
+mkl_lib="${LIBDIR}/${mklname}/liblapack.so"
 if test "$mkl_avail" = "yes" ;then
     #MKL is already downloaded. use it.
     if test -f "$mkl_lib" ;then
@@ -446,7 +445,7 @@ if test "x$use_mkl" = "xyes" ;then
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}.tar.bz2
    fi
-   LAPACK="-L${LIBDIR}/${mklname} -lmkl -lm -pthread"
+   LAPACK="-L${LIBDIR}/${mklname} -Wl,-rpath,${LIBDIR}/${mklname} -lblas -llapack"
    if test -z "$OPENMP_CFLAGS" -o x$use_icc = xno ;then
       LAPACK="$LAPACK ${mkldep}"
    fi

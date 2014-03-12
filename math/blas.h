@@ -75,9 +75,4 @@ BLAS_DEF_REAL(BLAS_D,double)
 BLAS_DEF_REAL(BLAS_S,float)
 BLAS_DEF_COMP(BLAS_C,dcomplex,double)
 BLAS_DEF_COMP(BLAS_Z,fcomplex,float)
-
-
-#if USE_MKL==1 && !defined(_OPENMP)
-void omp_set_num_threads(int n);
-#endif
 #endif
