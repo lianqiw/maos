@@ -82,6 +82,7 @@ INLINE loc_t *mx2loc(const mxArray *A){
     if(!found){
 	mexErrMsgTxt("Unable to determine dx");
     }
+    loc->dy=loc->dx;
     return loc;
 }
 

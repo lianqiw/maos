@@ -514,7 +514,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		TO_IMPLEMENT;
 	    }
 
-	    if(save_ints){
+	    if(save_ints && noisy){
 		cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 	    }
 	    ctoc("mtche");

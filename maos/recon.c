@@ -205,11 +205,11 @@ void reconstruct(SIM_T *simu){
     if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    const int nwfs=parms->nwfs;
+    const int nwfs=parms->nwfsr;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
 
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs;
 	/*Uplink FSM*/
 	if(parms->powfs[ipowfs].usephy 
 	   && isim>=parms->powfs[ipowfs].phystep
@@ -271,8 +271,8 @@ void reconstruct(SIM_T *simu){
     }
 
     /*Gradient offset due to mainly NCPA calibration*/
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(simu->powfs[ipowfs].gradoff){
 	    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    dadd(&simu->gradlastcl->p[iwfs], 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);

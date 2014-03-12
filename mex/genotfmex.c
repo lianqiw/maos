@@ -26,12 +26,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     if(nlhs!=PL_TOT || nrhs !=P_TOT){
-	mexErrMsgTxt("Usage: otf=genotfmex(loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr)");
+	mexErrMsgTxt("Usage: otf=genotfmex(loc, amp, opdbias, area, thres, wvl, "
+		     "dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr)\n"
+		     "loc is for one subaperture. amp is for all subapertures.");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
     double *amp=mxGetPr(prhs[P_AMP]);
     double *opdbias=mxGetPr(prhs[P_OPDBIAS]);
-    double *area=mxGetPr(prhs[P_AREA]);
+    double *area=mxGetPr(prhs[P_AREA]); if(!area) error("area must not be null\n");
     double thres=mxGetScalar(prhs[P_THRES]);
     double wvl=mxGetScalar(prhs[P_WVL]);
     double dtheta=mxGetScalar(prhs[P_DTHETA]);

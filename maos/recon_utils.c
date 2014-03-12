@@ -572,8 +572,8 @@ void focus_tracking_grads(SIM_T* simu){
     const RECON_T *recon=simu->recon;
     
     /*New plate mode focus offset for LGS WFS. Not needed*/
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[1]
 	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
 	    /*In new ahst mode, the first plate scale mode contains focus for
@@ -592,9 +592,9 @@ void focus_tracking_grads(SIM_T* simu){
 	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
 	long nwfsllt=0; 
 	double focusm=0;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
-	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
 		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
 	    }
@@ -607,14 +607,14 @@ void focus_tracking_grads(SIM_T* simu){
 	}
 	if(parms->sim.mffocus==2){//remove LPF GLOBAL focus from each lgs
 	    focusm/=nwfsllt;
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!LGSfocus->p[iwfs]) continue;
-		int ipowfs=parms->wfs[iwfs].powfs;
+		int ipowfs=parms->wfsr[iwfs].powfs;
 		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[ipowfs], -focusm);
 	    }
 	}
     
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(LGSfocus->p[iwfs]){
 		simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
 	    }
@@ -625,8 +625,8 @@ void focus_tracking_grads(SIM_T* simu){
 	    if(parms->sim.zoomshare){
 		int count=0;
 		double zoomavg=0;
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		    int ipowfs=parms->wfs[iwfs].powfs;
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		    int ipowfs=parms->wfsr[iwfs].powfs;
 		    if(!parms->powfs[ipowfs].llt){
 			continue;
 		    }
@@ -634,8 +634,8 @@ void focus_tracking_grads(SIM_T* simu){
 		    count++;
 		}
 		zoomavg/=count;
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		    int ipowfs=parms->wfs[iwfs].powfs;
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		    int ipowfs=parms->wfsr[iwfs].powfs;
 		    if(!parms->powfs[ipowfs].llt){
 			continue;
 		    }

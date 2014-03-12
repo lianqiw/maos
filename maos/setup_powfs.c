@@ -1326,7 +1326,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 			cfftshift(petf[illt][isa]);/*peak in corner; */
 		    }
 		}else{
-		    warning("Wrong focus!\n");
+		    warning_once("Wrong focus!\n");
 		    if(use1d){
 			petf[illt][isa]=cnew(ncompx,1);
 		    }else{

@@ -212,7 +212,7 @@ if test "$use_scheduler" = "no" ;then
 fi
 if test "$use_single" = "auto" ;then
    if test "$use_cuda" = "yes" ;then
-       use_single="yes"
+       use_single="no"
    else
        use_single="no"
    fi

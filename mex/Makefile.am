@@ -1,12 +1,13 @@
-AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib
+AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math
 AM_LDFLAGS=-lfftw3 $(LDOPTS) $(LDMEX) -lm -static  #-lmwblas -lmwlapack -lm -static
 AM_LDFLAGS+=-Xcompiler -shared -no-fast-install
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 if USE_LONG
-LDADD=$(BUILD_DIR)/lib/libaos_long.la $(BUILD_DIR)/sys/libaosys.la 
+LDADD=$(BUILD_DIR)/lib/libaos_long.la $(BUILD_DIR)/math/libaomath_long.la
 else
-LDADD=$(BUILD_DIR)/lib/libaos_int.la $(BUILD_DIR)/sys/libaosys.la 
+LDADD=$(BUILD_DIR)/lib/libaos_int.la $(BUILD_DIR)/math/libaomath_int.la
 endif
+LDADD+=$(BUILD_DIR)/sys/libaosys.la 
 EXTRA_DIST=null.c io.c io.h interface.h  Makefile.mex
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 

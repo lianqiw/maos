@@ -945,7 +945,9 @@ void X(fftshift)(X(mat) *A){
     size_t i;
     const size_t nx=A->nx;
     const size_t ny=A->ny;
-    assert ((nx&1)==0);
+    if((nx&1)==1){
+	warning("nx=%ld is not multiple of 2\n", nx);
+    }
     const size_t nx2=nx/2;
     const size_t ny2=ny/2;
     const size_t nx2d=nx2*sizeof(T);

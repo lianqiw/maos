@@ -345,7 +345,8 @@ long nextfftsize(long n){
 	    n2=n;
 	}
 	n++; 
-    }while(n2>1);
+    }while(n2>1 || (n&1)==1);
+    info("nextfftsize(%ld)=%ld\n", n, n3);
     return n3;
 }
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */

@@ -225,9 +225,10 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		    recon->GP->p[ipowfs], powfs[ipowfs].saloc, recon->ploc);
 	    saptr->p[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
 	    if(GPf){
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfsind[jwfs];
-		    GP->p[iwfs]=GPf->ref();
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+		    if(ipowfs==parms->wfsr[iwfs].powfs){
+			GP->p[iwfs]=GPf->ref();
+		    }
 		}
 	    }
 	    if(GPp->p[ipowfs]){

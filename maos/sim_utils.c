@@ -1049,8 +1049,10 @@ static void init_simu_wfs(SIM_T *simu){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->save.ints[iwfs] && parms->powfs[ipowfs].usephy){
-		save->intsny[iwfs]=cellarr_init(nstep,1, "wfs%d_intsny_%d.bin", iwfs, seed);
 		save->intsnf[iwfs]=cellarr_init(nstep,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
+		if(parms->powfs[ipowfs].noisy){
+		    save->intsny[iwfs]=cellarr_init(nstep,1, "wfs%d_intsny_%d.bin", iwfs, seed);
+		}
 	    }
 	}
     }
@@ -1062,7 +1064,8 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, "wfs%d_gradol_%d.bin", iwfs, seed);
+		    save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, 
+						    "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
 	    }
 	}

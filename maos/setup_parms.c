@@ -184,7 +184,7 @@ void free_parms(PARMS_T *parms){
     free_strarr(parms->misreg.tel2wfs, parms->nwfs);
     free_strarr(parms->misreg.dm2wfs, parms->ndm*parms->nwfs);
     free_strarr(parms->misreg.dm2sci, parms->ndm*parms->evl.nevl);
-    free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfs);
+    free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr);
     free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
     free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
     free(parms);
@@ -1681,6 +1681,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     /*
       Setup the parameters used to do DM caching on a finer grid.
     */
+    int ncache_tot=0;
     for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
 	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	if(fabs(ht)<1.e-10){
@@ -1715,6 +1716,10 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	for(int iscale=0; iscale<nscale; iscale++){
 	    parms->dm[idm].dxcache[iscale]=scale[iscale];
 	}
+	ncache_tot+=nscale;
+    }
+    if(!ncache_tot){
+	parms->sim.cachedm=0;
     }
 }
 
@@ -1778,6 +1783,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
 	error("Only CG work with non L2 cxx.\n");
 	parms->tomo.cxx=0;
+    }
+    if(parms->nlowfs==0 && parms->recon.split){
+	parms->recon.split=0;
     }
     if(parms->recon.split==1 && !parms->sim.closeloop){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");

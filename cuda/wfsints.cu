@@ -219,7 +219,7 @@ __global__ static void sa_embed_rot_do(fcomplex *restrict out, const int noutx, 
    Multiple each OTF with another. 
 */
 __global__ static void sa_ccwm_do(fcomplex *otf, const int notfx, const int notfy, 
-			       fcomplex **lotfcs, int each){
+				  fcomplex **lotfcs, int each){
     const int isa=blockIdx.x;
     otf+=notfx*notfy*isa;
     const fcomplex *restrict lotfc=each?(fcomplex*)lotfcs:lotfcs[isa];
