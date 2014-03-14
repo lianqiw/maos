@@ -32,6 +32,7 @@
    */
 
 TIC;
+
 /**
    Compute number of ahst modes from number of DMs.
  */
@@ -481,9 +482,8 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
  */
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
 		  APER_T *aper, POWFS_T *powfs){
-    /*if(parms->recon.split!=1) error("Only work in split mode 1."); */
-
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
+    info("ngsmod=%p\n", ngsmod);
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
@@ -501,7 +501,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     ngsmod->nmod=ngsmod_nmod(ndm, hs);
     if(isfinite(hs) && (parms->sim.mffocus || parms->tomo.ahst_idealngs || parms->sim.ahstfocus)){
 	if(parms->ndm==1){
-	    error("Nod implemented\n");
+	    error("Not implemented\n");
 	}
 	ngsmod->nmod++;/*add a global focus mode.*/
     }
@@ -528,12 +528,12 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);
-    ngsmod->MCC_TT=dnew(2,2);
-    ngsmod->MCC_TT->p[0]=MCC[0][0];
-    ngsmod->MCC_TT->p[1]=MCC[0][1];
-    ngsmod->MCC_TT->p[2]=MCC[1][0];
-    ngsmod->MCC_TT->p[3]=MCC[1][1];
-    ngsmod->IMCC_TT=dinvspd(ngsmod->MCC_TT);
+    ngsmod->IMCC_TT=dnew(2,2);
+    ngsmod->IMCC_TT->p[0]=MCC[0][0];
+    ngsmod->IMCC_TT->p[1]=MCC[0][1];
+    ngsmod->IMCC_TT->p[2]=MCC[1][0];
+    ngsmod->IMCC_TT->p[3]=MCC[1][1];
+    dinvspd_inplace(ngsmod->IMCC_TT);
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_m(parms,recon);
     /*
@@ -542,7 +542,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Pngs=Rngs*GA
      */
     spcell *saneai=recon->saneai;
-    if(parms->recon.split==1 && !parms->sim.skysim){
+    if(parms->recon.split==1 && !parms->sim.skysim && parms->nlopowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
 	spcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
 	if(parms->nlowfs==1 && ngsmod->nmod>5){
@@ -848,6 +848,20 @@ void ngsmod2science(dmat *iopd, loc_t *loc, const NGSMOD_T *ngsmod,
 	    iopd->p[iloc]+=tmp*alpha;
 	}
     }
+}
+void ngsmod_free(NGSMOD_T *ngsmod){
+    if(!ngsmod) return;
+    info("ngsmod=%p\n", ngsmod);
+    dcellfree(ngsmod->GM);
+    dcellfree(ngsmod->Rngs);
+    dcellfree(ngsmod->Pngs);
+    dcellfree(ngsmod->Modes);
+    dfree(ngsmod->MCC);
+    dcellfree(ngsmod->MCCP);
+    dfree(ngsmod->IMCC);
+    dfree(ngsmod->IMCC_TT);
+    dcellfree(ngsmod->Ptt);
+    free(ngsmod);
 }
 
 /**

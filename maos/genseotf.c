@@ -90,12 +90,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
-	    double *opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]->p:NULL;
+	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    double thres=opdbias?1:1-1e-10;
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
-		   loc, powfs[ipowfs].realamp->p[iotf]->p, opdbias, 
-		   powfs[ipowfs].realsaa->p[iotf]->p,
+		   loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
+		   powfs[ipowfs].realsaa->p[iotf],
 		   thres,wvl,dtheta,NULL,parms->atm.r0, parms->atm.l0, 
 		   ncompx, ncompy, nsa, 1);
 	}
@@ -128,10 +128,9 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	double thres=1;
-	double one=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
-	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL, 
-		   &one, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, notf, notf, 1, 1);
+	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
+		   0, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, notf, notf, 1, 1);
 	}
     }/*iwvl */
     locfree(loc);

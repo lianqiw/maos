@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
     for(int iwvl=0; iwvl<argc-P_WVL; iwvl++){
 	double wvl=strtod(argv[iwvl+P_WVL], NULL);
 	double dtheta=wvl/(ncomp*loc->dx);
-	genotf(&otf, loc, amp->p, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
+	genotf(&otf, loc, amp, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
 	cwrite(otf, "%s_otf_%g.bin", argv[P_COV], wvl);
 	cfftshift(otf);
 	cfft2i(otf, 1);

@@ -133,7 +133,7 @@ void X(cellfree_do)(X(cell) *dc){
 	free(dc->p);dc->p=0;
     }
     if(dc->m) X(free)(dc->m);
-    X(fft_free_plan)(dc->fft);
+    if(dc->fft) X(fft_free_plan)(dc->fft);
     free(dc);
 }
 /**

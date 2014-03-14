@@ -66,9 +66,11 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     }
     loc_create_stat(recon->ploc);
     if(parms->recon.misreg_tel2wfs){
-	recon->ploc_tel=calloc(parms->nwfsr, sizeof(loc_t*));
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(parms->recon.misreg_tel2wfs[iwfs]){
+		if(!recon->ploc_tel){
+		    recon->ploc_tel=calloc(parms->nwfsr, sizeof(loc_t*));
+		}
 		recon->ploc_tel[iwfs]=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
 	    }
 	}
@@ -1999,7 +2001,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(!parms->powfs[ipowfs].hasGS0 && powfs[ipowfs].GS0){
+	if(!parms->powfs[ipowfs].needGS0 && powfs[ipowfs].GS0){
 	    spcellfree(powfs[ipowfs].GS0);
 	    powfs[ipowfs].GS0=NULL;
 	}
@@ -2134,18 +2136,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->W1); 
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
-    if(recon->ngsmod){
-	dcellfree(recon->ngsmod->GM);
-	dcellfree(recon->ngsmod->Rngs);
-	dcellfree(recon->ngsmod->Pngs);
-	dcellfree(recon->ngsmod->Modes);
-	dfree(recon->ngsmod->MCC);
-	dcellfree(recon->ngsmod->MCCP);
-	dfree(recon->ngsmod->IMCC);
-	dfree(recon->ngsmod->IMCC_TT);
-	dcellfree(recon->ngsmod->Ptt);
-	free(recon->ngsmod);
-    }
+    ngsmod_free(recon->ngsmod); recon->ngsmod=0;
 
     int npsr = recon->npsr;
     int ndm = parms->ndm;
@@ -2154,13 +2145,15 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     maparrfree(recon->xmap, npsr);
     free(recon->xnx);
     free(recon->xny);
+    free(recon->xnloc);
     free(recon->anx);
     free(recon->any);
     free(recon->anloc);
     free(recon->ngrad);
     locfree(recon->floc); 
     mapfree(recon->fmap);
-    locfree(recon->ploc); 
+    locfree(recon->ploc);
+    locarrfree(recon->ploc_tel, parms->nwfsr);
     mapfree(recon->pmap);
     for(int idm=0; idm<ndm; idm++){
 	free(recon->aembed[idm]);
@@ -2168,7 +2161,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     maparrfree(recon->amap, parms->ndm);
     maparrfree(recon->acmap, parms->ndm);
     free(recon->aembed);
-    free(recon->aloc);
+    locarrfree(recon->aloc, parms->ndm);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);
     spcellfree(recon->actslave);

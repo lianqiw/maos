@@ -262,7 +262,7 @@ int main(int argc, const char *argv[]){
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);
     THREAD_POOL_INIT(parms->sim.nthread);
-    setup_parms_running(parms, arg);
+    setup_parms_gpu(parms, arg);
     if(arg->server){
 	while(maos_server_fd<0){
 	    warning("Waiting for fd\n");

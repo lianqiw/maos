@@ -200,7 +200,7 @@ long thread_id(void);
 	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
 #ifndef assert
-#define assert(A) if(!(A)) error("assertion failed: %s", #A)
+#define assert(A) if(!(A)) error("assertion failed: %s\n", #A)
 #endif
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")

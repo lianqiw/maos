@@ -200,7 +200,7 @@ typedef struct POWFS_CFG_T{
 		       value, use constraint. introduced on 2011-02-21.*/
     double cogthres;/**<CoG threshold, relative to max(im)*/
     double cogoff;  /**<CoG offset to remove, relative to max(im). */
-    int hasGS0;     /**<need to compute GS0 (derived parameter)*/
+    int needGS0;    /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
     int ncpa_method;/**<Method to correct ncpa.
 		       - 0: do nothing.
@@ -715,7 +715,8 @@ typedef struct PARMS_T{
     int *lopowfs;    /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
     int *hipowfs;    /**<List of high order powfs*/
-    int ntrspowfs;   /**<Number of tile removed wfs types*/
+    int ntrpowfs;    /**<Number of tip/tilt removed wfs types*/
+    int ntipowfs;    /**<Number of tip/tilt include wfs types*/
     int nlowfs;      /**<Number of low order wfs.*/
     int nphypowfs;   /**<Number of powfs with local/uplink tip/tilt loop*/
 }PARMS_T;
@@ -737,7 +738,7 @@ typedef struct ARG_T{
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
-void setup_parms_running(PARMS_T *parms, ARG_T *arg);
+void setup_parms_gpu(PARMS_T *parms, ARG_T *arg);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
 /*convenient constants. used in utils.c */

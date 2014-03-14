@@ -25,9 +25,9 @@
 */
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the common aperture grid*/
-	    const double *amp,     /**<The amplitude map of all the (sub)apertures*/
-	    const double *opdbias, /**<The static OPD bias. */
-	    const double *area,    /**<normalized area of the (sub)apertures*/
+	    const dmat *amp,     /**<The amplitude map of all the (sub)apertures*/
+	    const dmat *opdbias, /**<The static OPD bias. */
+	    const dmat *area,    /**<normalized area of the (sub)apertures*/
 	    double thres,  /**<The threshold to consider a (sub)aperture as full*/
 	    double wvl,    /**<The wavelength. only needef if opdbias is not null*/
 	    double dtheta, /**<Sampling of PSF.*/

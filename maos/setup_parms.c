@@ -611,7 +611,6 @@ static void readcfg_atm(PARMS_T *parms){
    Read in atmosphere reconstruction parameters.
 */
 static void readcfg_atmr(PARMS_T *parms){
-  
     READ_DBL(atmr.r0z);
     if(parms->atmr.r0z<=0){
 	parms->atmr.r0z=parms->atm.r0z;
@@ -623,6 +622,7 @@ static void readcfg_atmr(PARMS_T *parms){
     parms->atmr.nps=readcfg_dblarr(&(parms->atmr.ht),"atmr.ht");
     readcfg_dblarr_n(&(parms->atmr.wt), parms->atmr.nps, "atmr.wt");
     readcfg_intarr_nmax(&(parms->atmr.os), parms->atmr.nps, "atmr.os");
+    READ_DBL(atmr.dx);
 }
 
 /**
@@ -665,6 +665,13 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     readcfg_intarr_nmax(&(parms->evl.psfr), parms->evl.nevl, "evl.psfr");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.wvl), "evl.wvl");
+    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+	if(parms->evl.wvl[iwvl]>0.1){
+	    warning("wvl should be supplied in unit of meter. scale %g by 1e-6\n",
+		    parms->evl.wvl[iwvl]);
+	    parms->evl.wvl[iwvl]*=1e-6;
+	}
+    }
     readcfg_intarr_nmax(&(parms->evl.psfgridsize), parms->evl.nwvl, "evl.psfgridsize");
     readcfg_intarr_nmax(&(parms->evl.psfsize), parms->evl.nwvl, "evl.psfsize");
     int ievl;
@@ -992,8 +999,13 @@ static void readcfg_save(PARMS_T *parms){
     readcfg_intarr_nmax(&parms->save.wfsopd, parms->nwfs, "save.wfsopd");
     readcfg_intarr_nmax(&parms->save.grad, parms->nwfs, "save.grad");
     readcfg_intarr_nmax(&parms->save.gradgeom, parms->nwfs, "save.gradgeom");
-  
+    if(disable_save){
+	parms->save.extra=0;
+    }
     if(parms->save.all){/*enables everything */
+	if(disable_save){
+	    error("please specify output directory\n");
+	}
 	warning("Enabling saving everything.\n");
 	/*The following 3 are for setup. */
 	parms->save.setup=1;
@@ -1061,17 +1073,13 @@ static void readcfg_load(PARMS_T *parms){
    Process simulation parameters to find incompatibility.
 */
 static void setup_parms_postproc_sim(PARMS_T *parms){
-    if(disable_save){
-	parms->save.extra=0;
-    }
-
     if(parms->sim.skysim){
 	if(disable_save){
 	    error("sim.skysim requires saving. Please specify output folder\n");
 	}
-	if(parms->recon.alg!=0){
+	/*if(parms->recon.alg!=0){
 	    error("skysim need MVR");
-	}
+	}*/
 	parms->tomo.ahst_idealngs=1;
 	if(parms->tomo.ahst_wt==1){//gradient weighting not available.
 	    /*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
@@ -1120,8 +1128,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	error("GLAO only works with 1 dm\n");
     }
     if(parms->recon.alg==1 && parms->recon.split==2){
-	info2("MVST does not work with least square reconstructor. Changed to AHST");
-	parms->recon.split=1;
+	error("MVST does not work with least square reconstructor.\n");
     }
     if(parms->sim.wfsalias){
 	if(parms->sim.idealwfs){
@@ -1194,8 +1201,6 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
 	}
-	//parms->atm.hmax*=secz;
-	//parms->atmr.hmax*=secz;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(isfinite(parms->powfs[ipowfs].hs)){
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
@@ -1287,10 +1292,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/*Figure out order of High order WFS if not specified.*/
 	if(parms->powfs[ipowfs].order==0){
-	    if(parms->ndm>0){
+	    if(parms->ndm>0 && !parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].order=parms->dm[0].order;
 	    }else{
-		error("Please specify powfs[%d].order in MOAO mode\n", ipowfs);
+		error("Please specify powfs[%d].order\n", ipowfs);
 	    }
 	}
 	if(parms->powfs[ipowfs].nwfs>0){
@@ -1301,18 +1306,38 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		if(parms->powfs[ipowfs].trs==1){
 		    error("Low order wfs should not be tilt removed\n");
 		}
+		if(parms->powfs[ipowfs].gtype_sim==0){
+		    warning("Low order POWFS %d is using gtilt in simulation. "
+			    "This is not recommended\n", ipowfs);
+		}
 	    }else{
 		parms->hipowfs[parms->nhipowfs]=ipowfs;
 		parms->nhipowfs++;
 	    }
 	    if(parms->powfs[ipowfs].trs){
-		if(parms->powfs[ipowfs].lo){
-		    error("WFS with tip/tilt removed should be high order\n");
+		if(!parms->powfs[ipowfs].llt){
+		    warning("WFS with tip/tilt removed should be LGS\n");
 		}
-		parms->ntrspowfs++;
+		if(parms->powfs[ipowfs].lo){
+		    warning("WFS with tip/tilt removed should be high order\n");
+		}
+		parms->ntrpowfs++;
+	    }else{
+		if(parms->powfs[ipowfs].llt){
+		    warning("WFS with tip/tilt include should not be LGS\n");
+		}
+		parms->ntipowfs++;
+	    }
+	    if(parms->powfs[ipowfs].llt){
+		if(!isfinite(parms->powfs[ipowfs].hs)){
+		    warning("powfs with llt should have finite hs\n");
+		}
+	    }else{
+		if(isfinite(parms->powfs[ipowfs].hs)){
+		    warning("powfs without llt should infinite hs\n");
+		}
 	    }
 	}
-
 	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
 	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
 	}else{
@@ -1323,9 +1348,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
 	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
-	    parms->powfs[ipowfs].hasGS0=1;
+	    parms->powfs[ipowfs].needGS0=1;
 	}else{
-	    parms->powfs[ipowfs].hasGS0=0;
+	    parms->powfs[ipowfs].needGS0=0;
 	}
 	/*Do we ever do physical optics.*/
 	if(parms->powfs[ipowfs].phystep>=0
@@ -1336,7 +1361,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].usephy=0;
 	}
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
-	    warning("powfs %d: there is sky background, but is using geometric wfs. background won't be effective.\n", ipowfs);
+	    warning("powfs %d: there is sky background, but is using geometric wfs. "
+		    "background won't be effective.\n", ipowfs);
 	} 
 	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf)){
 	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
@@ -1369,14 +1395,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].dtrat=1;
 	}
 	if(parms->sim.wfsalias){
-	    if(parms->powfs[ipowfs].noisy){
-		warning("powfs%d: wfsalias is set. make it noise free\n", ipowfs);
-		parms->powfs[ipowfs].noisy=0;
-	    }
-	    if(parms->powfs[ipowfs].phystep>=parms->sim.start || parms->powfs[ipowfs].phystep<parms->sim.end){
-		warning("powfs%d: wfsalias is set. make it geometric wfs since the mtched fitler won't work well\n", ipowfs);
-		parms->powfs[ipowfs].phystep=-1;
-	    }
+	    parms->powfs[ipowfs].noisy=0;
+	    parms->powfs[ipowfs].phystep=-1;
 	}
 	if(parms->powfs[ipowfs].mtchscl==-1){
 	    if(fabs(parms->powfs[ipowfs].sigscale-1)>EPS){
@@ -1386,56 +1406,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-
-    if(parms->recon.split){
-	if(parms->nlopowfs==0){
-	    if(parms->ntrspowfs>=parms->nhipowfs){
-		warning("There is no WFS controlling tip/tilt.\n");
-	    }else{
-		warning("Split reconstruction is enabled when there is no low order WFS. Will split the tip/tilt modes from high order wfs\n");
-	    }
-	}
-	if(parms->sim.skysim && (parms->nhipowfs==0 || parms->nlopowfs==0)){
-	    error("There is only high or low order WFS. can not do skycoverage presimulation\n");
-	}
-	if(!parms->nhipowfs){
-	    warning("There is no high order WFS!!!\n");
-	}
+    if(!parms->nhipowfs){
+	warning("There is no high order WFS!!!\n");
     }
-   
-    if((parms->recon.split) && parms->ndm==0){
-	warning("Disable split tomography since there is no common DM\n");
-	parms->recon.split=0;
-    }
-
-    if(parms->recon.glao){
-	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
-	parms->nwfsr=parms->npowfs;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    parms->wfsr[ipowfs].thetax=0;
-	    parms->wfsr[ipowfs].thetay=0;
-	    parms->wfsr[ipowfs].powfs=ipowfs;
-	    parms->powfs[ipowfs].nwfsr=1;
-	}
-    }else{/*Use same information as wfs. */
-	parms->wfsr = parms->wfs;
-	parms->nwfsr= parms->nwfs;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
-	}
-    }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].lo && parms->powfs[ipowfs].gtype_sim==0)
-	    warning("Low order POWFS %d is using gtilt in simulation. "
-		    "This is not recommended\n",ipowfs);
-    }
-
-    parms->sim.dtrat_hi=0;
-    parms->sim.dtrat_lo=0;
+    parms->sim.dtrat_hi=-1;
+    parms->sim.dtrat_lo=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].lo){
-	    if(parms->sim.dtrat_lo==0){
+	    if(parms->sim.dtrat_lo<0){
 		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
 	    }else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
 		error("We don't handle multiple framerate of the LO WFS yet\n");
@@ -1444,7 +1422,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(parms->powfs[ipowfs].skip){
 		continue;
 	    }
-	    if(parms->sim.dtrat_hi==0){
+	    if(parms->sim.dtrat_hi<0){
 		parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
 	    }else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
 		error("We don't handle multiple framerate of the LO WFS yet\n");
@@ -1460,12 +1438,47 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
 /**
+   The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
+*/
+static void setup_parms_postproc_siglev(PARMS_T *parms){
+    double sigscale=parms->sim.dt*800;
+    if(fabs(sigscale-1.)>EPS){
+	info2("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    double siglev=parms->wfs[iwfs].siglev;
+	    parms->wfs[iwfs].siglev=siglev*sigscale;
+	    info2("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+	} 
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    double bkgrnd=parms->powfs[ipowfs].bkgrnd;
+	    if(fabs(bkgrnd)>1.e-50){
+		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
+		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
+		      ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
+	    }
+	}
+    }
+    
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	sigscale=parms->powfs[ipowfs].sigscale;
+	if(fabs(sigscale-1)>0.5){
+	    warning("powfs[%d].sigscale=%g\n",ipowfs,sigscale);
+	}
+	double siglev=parms->wfs[iwfs].siglev;
+	parms->wfs[iwfs].siglevsim=siglev*sigscale;
+	if(fabs(sigscale-1)>1.e-12){
+	    warning("wfs%d: siglev in simulation scaled from %g to %g\n", 
+		    iwfs,siglev,parms->wfs[iwfs].siglevsim);
+	}
+    }
+}
+/**
    postproc atmosphere parameters.
    1) drop weak layers.
    2) find ground layer
 */
 static void setup_parms_postproc_atm(PARMS_T *parms){
-  
     /*
       Drop weak turbulence layers in simulation.
     */
@@ -1534,7 +1547,40 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
       We don't drop weak turbulence layers in reconstruction. Instead, we make
       it as least parms->tomo.minwt in setup_recon_tomo_prep
     */
- 
+    if(!parms->recon.glao){
+	/*Assign each turbulence layer to a corresponding reconstructon layer. Used
+	  to compute opdx in a simple minded way.*/
+	parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    double dist=INFINITY;
+	    int kpsr=-1;
+	    double ht=parms->atm.ht[ips];
+	    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+		double htr=parms->atmr.ht[ipsr];
+		double dist2=fabs(ht-htr);
+		if(dist2<dist){
+		    dist=dist2;
+		    kpsr=ipsr;
+		}
+	    }
+	    parms->atm.ipsr[ips]=kpsr;
+	    /*info("atm layer %d is maped to atmr %d\n", ips,kpsr); */
+	}
+    
+	/* Map reconstructed layers to input layers. for testing tomo.predict*/
+	parms->atmr.indps=calloc(parms->atmr.nps, sizeof(int));
+	for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+	    parms->atmr.indps[ipsr]=-1;
+	    for(int ips=0; ips<parms->atm.nps; ips++){
+		if(fabs(parms->atmr.ht[ipsr]-parms->atm.ht[ips])<1e-3){
+		    if(parms->atmr.indps[ipsr]>-1){
+			warning("One ipsr is mapped to multiple ips\n");
+		    }
+		    parms->atmr.indps[ipsr]=ips;
+		}
+	    }
+	}
+    }
     /*
       Find ground turbulence layer. The ray tracing can be shared between different directions.
     */
@@ -1678,6 +1724,17 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    error("ar must be positive\n");
 	}
     }
+    /*disable cache for low order systems. */
+    if(parms->sim.cachedm==1){
+	if(parms->evl.nevl<2 && parms->nwfs<2){
+	    parms->sim.cachedm=0;
+	    warning("cachedm disabled for SCAO\n");
+	}
+	if(parms->dbg.cmpgpu){
+	    parms->sim.cachedm=0;
+	    warning("cachedm disabled when comparing CPU against GPU\n");
+	}
+    }
     /*
       Setup the parameters used to do DM caching on a finer grid.
     */
@@ -1721,6 +1778,22 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     if(!ncache_tot){
 	parms->sim.cachedm=0;
     }
+    for(int i=0; i<parms->ndm; i++){
+	if(isfinite(parms->dm[i].stroke)){
+	    double strokemicron=parms->dm[i].stroke*1e6;
+	    if(strokemicron<1 || strokemicron>50){
+		warning("dm %d: stroke %g m is probably wrong\n",
+			i,parms->dm[i].stroke);
+	    }
+	}
+	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokescale){
+	    double strokemicron=parms->dm[i].iastroke*1e6;
+	    if(strokemicron<1 || strokemicron>50){
+		warning("dm %d: iastroke %g m is probably wrong\n",
+			i,parms->dm[i].iastroke);
+	    }
+	}
+    }
 }
 
 /**
@@ -1728,14 +1801,74 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
    simulation. First find out the guide star conjugate. Only 1
    altitude is allowed.
 */
-static void setup_parms_postproc_recon(PARMS_T *parms){    
+static void setup_parms_postproc_recon(PARMS_T *parms){
+    if((parms->recon.split) && parms->ndm==0){
+	warning("Disable split tomography since there is no common DM\n");
+	parms->recon.split=0;
+    }
+    if(parms->recon.split){
+	if(parms->nlopowfs==0){
+	    if(parms->ntrpowfs>=parms->nhipowfs){
+		warning("There is no WFS controlling tip/tilt.\n");
+	    }else{
+		warning("Split reconstruction is enabled when there is no low order WFS."
+			" Will split the tip/tilt modes from high order wfs\n");
+	    }
+	}
+	if(parms->sim.skysim && (parms->nhipowfs==0 || parms->nlopowfs==0)){
+	    error("There is only high or low order WFS. can not do skycoverage presimulation\n");
+	}
+	if(!parms->nlopowfs && parms->tomo.ahst_wt==1){
+	    warning("When there is no lowfs. Change ahst_wt from 1 to 3\n");
+	    parms->tomo.ahst_wt=3;
+	}
+    }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->recon.split && parms->powfs[ipowfs].lo){
+	    parms->powfs[ipowfs].skip=1;
+	}
+	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
+	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
+	    parms->powfs[ipowfs].psol=1;
+	}else{/*no focus tracking */
+	    if(parms->recon.alg==0){/*MV */
+		/*low order wfs in ahst mode does not need psol. */
+		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->tomo.psol){
+		    parms->powfs[ipowfs].psol=0;
+		}else{
+		    parms->powfs[ipowfs].psol=1;
+		}
+	    }else{
+		parms->powfs[ipowfs].psol=0;
+	    }
+	}
+    }
+  
+    if(parms->recon.glao){
+	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
+	parms->nwfsr=parms->npowfs;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->wfsr[ipowfs].thetax=0;
+	    parms->wfsr[ipowfs].thetay=0;
+	    parms->wfsr[ipowfs].powfs=ipowfs;
+	    parms->powfs[ipowfs].nwfsr=1;
+	}
+    }else{/*Use same information as wfs. */
+	parms->wfsr = parms->wfs;
+	parms->nwfsr= parms->nwfs;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+	}
+    }
+
     parms->recon.warm_restart = !parms->dbg.nocgwarm && parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     {
 	double hs=INFINITY;
 	/*find out the height to setup cone coordinate. */
 	if(parms->tomo.cone){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){/*skip low order wfs */
+		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
+		    /*skip wfs that does not participate in tomography*/
 		    continue;
 		}
 		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
@@ -1754,7 +1887,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->atmr.hs=hs;
 	info2("atmr.hs=%g\n", parms->atmr.hs);
     }
-    {
+    if(parms->atmr.dx<EPS){
 	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
 	double maxorder=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1777,16 +1910,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
-    if(parms->sim.ecnn){
-	parms->tomo.assemble=1;
-    }
-    if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
-	error("Only CG work with non L2 cxx.\n");
-	parms->tomo.cxx=0;
-    }
-    if(parms->nlowfs==0 && parms->recon.split){
-	parms->recon.split=0;
-    }
+
+
     if(parms->recon.split==1 && !parms->sim.closeloop){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");
     }
@@ -1797,11 +1922,23 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(!parms->recon.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;/*integrated tomo. only 1 integrator. */
     }
+
+    /*Tomography related*/
     if(parms->sim.closeloop && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done in open loop\n");
     }
     if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
+    }
+    if(parms->sim.ecnn || parms->load.tomo || parms->tomo.alg!=1 || parms->tomo.bgs){
+	parms->tomo.assemble=1;
+    }
+    if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
+	error("Only CG work with non L2 cxx.\n");
+	parms->tomo.cxx=0;
+    }
+    if(parms->recon.alg==0 && parms->tomo.predict==1 && parms->tomo.alg!=1){
+	error("Predictive tomography only works with CG. need to redo CBS/MVM after wind velocity is know.\n");
     }
     if(parms->tomo.alg==1 && parms->recon.alg==0){/*MVR with CG*/
 	if(parms->tomo.precond>1){
@@ -1830,10 +1967,32 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->tomo.splitlrt=0;
 	}
     }
+    if(parms->tomo.bgs && parms->tomo.precond){
+	error("Please implement the preconditioner for each block for BGS.\n");
+    }
+
+    /*DM Fitting related*/
     if(parms->fit.alg==1 && parms->fit.maxit==0){
 	int factor;
 	factor=parms->recon.warm_restart?1:10;
 	parms->fit.maxit=4*factor;
+    }
+    /*Fitting tip/tilt constraint is only intended for multi DM*/
+    if(parms->ndm<2 && parms->fit.lrt_tt){
+	parms->fit.lrt_tt=0;
+    }
+    if(parms->ndm>2 && parms->fit.lrt_tt==2){
+	warning("When there are more than 2 DMs, lrt_tt has to be 1 instead of 2. changed\n");
+	parms->fit.lrt_tt=1;
+    }
+    if(parms->fit.lrt_tt<0 || parms->fit.lrt_tt>2){
+	error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
+    }
+    if(parms->load.fit || parms->fit.alg!=1 || parms->fit.bgs){
+	parms->fit.assemble=1;
+    }
+    if(parms->fit.bgs && parms->fit.precond){
+	error("Please implement the preconditioner for each block for BGS.\n");
     }
     if(parms->lsr.alg==1 && parms->lsr.maxit==0){
 	int factor;
@@ -1860,26 +2019,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->load.mvmf=NULL;
 	}
     }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->recon.split && parms->powfs[ipowfs].lo){
-	    parms->powfs[ipowfs].skip=1;
-	}
-	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
-	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
-	    parms->powfs[ipowfs].psol=1;
-	}else{/*no focus tracking */
-	    if(parms->recon.alg==0){/*MV */
-		/*low order wfs in ahst mode does not need psol. */
-		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->tomo.psol){
-		    parms->powfs[ipowfs].psol=0;
-		}else{
-		    parms->powfs[ipowfs].psol=1;
-		}
-	    }else{
-		parms->powfs[ipowfs].psol=0;
-	    }
-	}
-    }
+ 
     for(int idm=0; idm<parms->ndm; idm++){
 	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke>0){
 	    parms->sim.dmclip=1;
@@ -1947,42 +2087,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
 }
 
-/**
-   The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
-*/
-static void setup_parms_postproc_siglev(PARMS_T *parms){
-    double sigscale=parms->sim.dt*800;
-    if(fabs(sigscale-1.)>EPS){
-	info2("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    double siglev=parms->wfs[iwfs].siglev;
-	    parms->wfs[iwfs].siglev=siglev*sigscale;
-	    info2("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
-	} 
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    double bkgrnd=parms->powfs[ipowfs].bkgrnd;
-	    if(fabs(bkgrnd)>1.e-50){
-		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
-		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
-		      ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
-	    }
-	}
-    }
-    
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	sigscale=parms->powfs[ipowfs].sigscale;
-	if(fabs(sigscale-1)>0.5){
-	    warning("powfs[%d].sigscale=%g\n",ipowfs,sigscale);
-	}
-	double siglev=parms->wfs[iwfs].siglev;
-	parms->wfs[iwfs].siglevsim=siglev*sigscale;
-	if(fabs(sigscale-1)>1.e-12){
-	    warning("wfs%d: siglev in simulation scaled from %g to %g\n", 
-		    iwfs,siglev,parms->wfs[iwfs].siglevsim);
-	}
-    }
-}
+
 /**
    postproc misc parameters.
 */
@@ -2046,41 +2151,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(parms->save.gcovp>parms->sim.end){
 	parms->save.gcovp=parms->sim.end;
     }
-    
-    /*Fitting tip/tilt constraint is only intended for multi DM*/
-    if(parms->ndm<2 && parms->fit.lrt_tt){
-	parms->fit.lrt_tt=0;
-    }
-    if(parms->ndm>2 && parms->fit.lrt_tt==2){
-	warning("When there are more than 2 DMs, lrt_tt has to be 1 instead of 2. changed\n");
-	parms->fit.lrt_tt=1;
-    }
-    if(parms->fit.lrt_tt<0 || parms->fit.lrt_tt>2){
-	error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
-    }
-    /*load.tomo==1 loads tomography matrix saved by LAOS for debugging purpose.*/
-    if(parms->load.tomo || parms->tomo.alg!=1 || parms->tomo.bgs){
-	parms->tomo.assemble=1;
-    }
-    if(parms->load.fit || parms->fit.alg!=1 || parms->fit.bgs){
-	parms->fit.assemble=1;
-    }
-    if(parms->tomo.bgs && parms->tomo.precond){
-	error("Please implement the preconditioner for each block for BGS.\n");
-    }
-    if(parms->fit.bgs && parms->fit.precond){
-	error("Please implement the preconditioner for each block for BGS.\n");
-    }
-    if(parms->recon.alg==0 && parms->tomo.predict==1 && parms->tomo.alg!=1){
-	error("Predictive tomography only works with CG. need to redo CBS/MVM after wind velocity is know.\n");
-    }
-    /*disable cache for low order systems. */
-    if(parms->evl.nevl<2){
-	if(parms->sim.cachedm==1){
-	    parms->sim.cachedm=0;
-	    warning("cachedm disabled for SCAO\n");
-	}
-    }
 
     if(parms->sim.mvmport){
 	if(!parms->sim.mvmport){
@@ -2091,40 +2161,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 
     if(parms->dbg.cmpgpu){
 	warning("Make cpu code follows gpu implementations.\n");
-	parms->sim.cachedm=0;
 	parms->tomo.square=1;
     }
-    /*Assign each turbulence layer to a corresponding reconstructon layer. Used
-      to compute opdx in a simple minded way.*/
-    parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
-    for(int ips=0; ips<parms->atm.nps; ips++){
-	double dist=INFINITY;
-	int kpsr=-1;
-	double ht=parms->atm.ht[ips];
-	for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-	    double htr=parms->atmr.ht[ipsr];
-	    double dist2=fabs(ht-htr);
-	    if(dist2<dist){
-		dist=dist2;
-		kpsr=ipsr;
-	    }
-	}
-	parms->atm.ipsr[ips]=kpsr;
-	/*info("atm layer %d is maped to atmr %d\n", ips,kpsr); */
-    }
-    /* Map reconstructed layers to input layers. for testing tomo.predict*/
-    parms->atmr.indps=calloc(parms->atmr.nps, sizeof(int));
-    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-	parms->atmr.indps[ipsr]=-1;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    if(fabs(parms->atmr.ht[ipsr]-parms->atm.ht[ips])<1e-3){
-		if(parms->atmr.indps[ipsr]>-1){
-		    warning("One ipsr is mapped to multiple ips\n");
-		}
-		parms->atmr.indps[ipsr]=ips;
-	    }
-	}
-    }
+  
     if(!parms->atm.frozenflow){
 	warning2("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
 	parms->evl.psfisim=parms->sim.start;
@@ -2414,56 +2453,6 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
 }
-/**
-   Limited sanity check of the parameters to prevent obvious mistakes.
-*/
-static void check_parms(const PARMS_T *parms){
-    int i;
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].llt){
-	    if(!isfinite(parms->powfs[ipowfs].hs)){
-		warning("powfs with llt should have finite hs\n");
-	    }
-	    if(parms->powfs[ipowfs].trs==0){
-		warning("powfs with llt should have trs=1. Will disable uplink ray tracing, but keep ETF.\n");
-	    }
-	}else{
-	    if(isfinite(parms->powfs[ipowfs].hs)){
-		warning("powfs without llt should infinite hs\n");
-	    }
-	    if(parms->powfs[ipowfs].trs==1){
-		warning("powfs without llt should have trs=0\n");
-	    }
-	}
-    }
-
-    for(i=0; i<parms->ndm; i++){
-	if(isfinite(parms->dm[i].stroke)){
-	    double strokemicron=parms->dm[i].stroke*1e6;
-	    if(strokemicron<1 || strokemicron>50){
-		warning("dm %d: stroke %g m is probably wrong\n",
-			i,parms->dm[i].stroke);
-	    }
-	}
-	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokescale){
-	    double strokemicron=parms->dm[i].iastroke*1e6;
-	    if(strokemicron<1 || strokemicron>50){
-		warning("dm %d: iastroke %g m is probably wrong\n",
-			i,parms->dm[i].iastroke);
-	    }
-	}
-    }
- 
-    if(parms->tomo.alg<0 || parms->tomo.alg>2){
-	error("parms->tomo.alg=%d is invalid\n", parms->tomo.alg);
-    }
-    if(parms->fit.alg<0 || parms->fit.alg>2){
-	error("parms->fit.alg=%d is invalid\n", parms->fit.alg);
-    }
-    if(parms->lsr.alg<0 || parms->lsr.alg>2){
-	error("parms->lsr.alg=%d is invalid\n", parms->lsr.alg);
-    }
-}
 
 /**
    This routine calles other routines in this file to setup the parms parameter
@@ -2522,13 +2511,12 @@ PARMS_T * setup_parms(ARG_T *arg){
     setup_parms_postproc_sim(parms);
     setup_parms_postproc_za(parms);
     setup_parms_postproc_wfs(parms);
+    setup_parms_postproc_siglev(parms);
     setup_parms_postproc_atm(parms);
     setup_parms_postproc_atm_size(parms);
     setup_parms_postproc_dm(parms);
     setup_parms_postproc_recon(parms);
-    setup_parms_postproc_siglev(parms);
     setup_parms_postproc_misc(parms, arg);
-    check_parms(parms);
     print_parms(parms);
     return parms;
 }
@@ -2536,7 +2524,7 @@ PARMS_T * setup_parms(ARG_T *arg){
    Additional setup_parms code to run when maos is running. It only contains GPU
    initialization code for the moment.
  */
-void setup_parms_running(PARMS_T *parms, ARG_T *arg){
+void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 #if USE_CUDA 
     if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
     use_cuda=gpu_init(arg->gpus, arg->ngpu);

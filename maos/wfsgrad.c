@@ -775,6 +775,150 @@ static void wfsgrad_save(SIM_T *simu){
 	}
     }
 }
+
+/*Fast steering mirror for each WFS*/
+void wfsgrad_fsm(SIM_T *simu, int iwfs){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    int isim=simu->isim;
+    /*Uplink FSM*/
+   
+    if(!recon->PTT){
+	error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+    }
+    dmat *PTT=recon->PTT->p[parms->recon.glao
+			    ?(ipowfs+ipowfs*parms->npowfs)
+			    :(iwfs+iwfs*parms->nwfs)];
+    if(!PTT){
+	error("powfs %d has FSM, but PTT is empty\n", ipowfs);
+    }
+    /* Compute LGS Uplink error. */
+    simu->upterr=simu->upterr_store;
+    dmm(&simu->upterr->p[iwfs], 0, PTT, simu->gradcl->p[iwfs], "nn", 1);
+    /* copy upterr to output. */
+    PDMAT(simu->upterrs->p[iwfs], pupterrs);
+    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
+    pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
+    /* PLL loop.*/
+    const int nc=parms->powfs[ipowfs].dither_npll;
+    const int nskip=parms->powfs[ipowfs].dither_nskip;//Loop delay
+    if(parms->powfs[ipowfs].dither && isim>=nskip){
+	double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
+	DITHER_T *pd=simu->dither[iwfs];
+	angle+=pd->deltam;
+	double sd=sin(angle);
+	double cd=cos(angle);
+	double err=(-sd*simu->upterr->p[iwfs]->p[0]
+		    +cd*simu->upterr->p[iwfs]->p[1]);
+	err/=(parms->powfs[ipowfs].dither_amp*nc);
+	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
+	//To estimate the actual dithering amplitude.
+	double *fsmcmd=simu->uptreal->p[iwfs]->p;
+	pd->ipv+=(fsmcmd[0]*cd+fsmcmd[1]*sd);
+	pd->qdv+=(fsmcmd[0]*sd-fsmcmd[1]*cd);
+	/*Update DLL loop measurement. The delay is about 0.2 of a
+	 * cycle, according to closed loop transfer function*/
+	if((isim-nskip+1)%(nc*parms->powfs[ipowfs].dtrat)==0){
+	    pd->deltam=pd->delta;
+	    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/nc;
+	    info2("PLL step%d, wfs%d: deltam=%.2f cycle, a2m=%.1f mas\n",
+		  isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
+	    pd->ipv=pd->qdv=0;
+	}
+    }/*LLT FSM*/
+}
+
+/**
+   Accomplish Two tasks:
+   
+   1) High pass filter lgs focus to remove sodium range variation effact.
+   2) Average LGS focus measurement to drive the trombone.
+   
+   We trust the focus measurement of the LGS WFS at high temporal frequency
+   where NGS cannot provide due to low frame rate. After the HPF on lgs
+   gradients, our system is NO LONGER affected by sodium layer variation.
+
+   if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely
+   removes the effect of differential focus. powfs.dfrs is no longer needed. (preferred).
+
+   if sim.mffocus==2: We apply a LPF on the average focus from six LGS WFS, and
+   then remove this value from all LGS WFS. The differential focus is still
+   present and powfs.dfrs need to be set to 1 to handle it in tomography. This
+   is the original focus tracking method.
+*/
+void wfsgrad_mffocus(SIM_T* simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    
+    /*New plate mode focus offset for LGS WFS. Not needed*/
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
+	   && simu->Mint_lo && simu->Mint_lo->mint[1]
+	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
+	    /*In new ahst mode, the first plate scale mode contains focus for
+	      lgs. But it turns out to be not necessary to remove it because the
+	      HPF in the LGS path removed the influence of this focus mode. set
+	      sim.ahstfocus=2 to enable adjust gradients.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    double focus=-simu->Mint_lo->mint[1]->p[0]->p[2]*(scale-1);
+	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
+	}
+    }
+
+    int hi_output=(!parms->sim.closeloop || (simu->isim+1)%parms->sim.dtrat_hi==0);
+    if(hi_output){
+	dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
+	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradcl,"nn",1);
+	long nwfsllt=0; 
+	double lpfocusm=0;
+	double lgsfocusm=0;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(!LGSfocus->p[iwfs]) continue;
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
+	    }
+	    lgsfocusm+=LGSfocus->p[iwfs]->p[0];
+	    //Average LPF focus
+	    lpfocusm+=simu->lgsfocuslpf->p[iwfs]; 
+	    nwfsllt++;
+	    //put LPF after using the value to put it off critical path.
+	    double lpfocus=parms->sim.lpfocus;
+	    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
+	    
+	}
+	lgsfocusm/=nwfsllt;
+	if(parms->sim.mffocus==2){//remove LPF GLOBAL focus from each lgs
+	    lpfocusm/=nwfsllt;
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		if(!LGSfocus->p[iwfs]) continue;
+		int ipowfs=parms->wfs[iwfs].powfs;
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -lpfocusm);
+	    }
+	}
+    
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(LGSfocus->p[iwfs]){
+		if(parms->sim.zoomshare){
+		    //all lgs share the same trombone so take the average value.
+		    simu->zoomavg->p[iwfs]+=lgsfocusm;
+		}else{
+		    simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
+		}
+	    }
+	}
+	dcellfree(LGSfocus);
+	/*zoom error is zero order hold even if no output from averager*/
+	if((simu->reconisim+1)%parms->sim.zoomdtrat==0){
+	    int dtrat=parms->sim.zoomdtrat;
+	    dadd(&simu->zoomerr, 0, simu->zoomavg, 1./(dtrat*dtrat));
+	    dzero(simu->zoomavg);
+	}
+    }
+}
+
 /**
    Every operation here should be in the Simulator not the Controller 
 */
@@ -801,8 +945,13 @@ void wfsgrad_wrap(thread_t *info){
     dmat **gradout=&simu->gradcl->p[iwfs];
     if(dtrat_output){
 	/*Gradient offset due to CoG*/
-	if(do_phy && powfs[ipowfs].gradphyoff){
-	    dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+	if(do_phy){
+	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
+		wfsgrad_fsm(simu, iwfs);
+	    }
+	    if(powfs[ipowfs].gradphyoff){
+		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+	    }
 	}
 	if(parms->save.grad[iwfs]){
 	    cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
@@ -819,6 +968,7 @@ void wfsgrad_wrap(thread_t *info){
 }
 /**
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
+   It also includes operations on Gradients before tomography.
 */
 void wfsgrad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -827,6 +977,10 @@ void wfsgrad(SIM_T *simu){
   
     /* call the task in parallel and wait for them to finish. It may be done in CPU or GPU.*/
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
+    if(parms->sim.mffocus){
+	/*high pass filter lgs focus to remove sodium range variation effect*/
+	wfsgrad_mffocus(simu);
+    }
 #if USE_CUDA
     if(parms->gpu.wfs){
 	gpu_wfsgrad_save(simu);

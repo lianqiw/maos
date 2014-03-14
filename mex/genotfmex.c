@@ -31,9 +31,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		     "loc is for one subaperture. amp is for all subapertures.");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
-    double *amp=mxGetPr(prhs[P_AMP]);
-    double *opdbias=mxGetPr(prhs[P_OPDBIAS]);
-    double *area=mxGetPr(prhs[P_AREA]); if(!area) error("area must not be null\n");
+    dmat *amp=mx2d(prhs[P_AMP]);
+    dmat *opdbias=mx2d(prhs[P_OPDBIAS]);
+    dmat *area=mx2d(prhs[P_AREA]);
     double thres=mxGetScalar(prhs[P_THRES]);
     double wvl=mxGetScalar(prhs[P_WVL]);
     double dtheta=mxGetScalar(prhs[P_DTHETA]);

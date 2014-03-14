@@ -177,7 +177,6 @@ typedef struct NGSMOD_T{
     double aper_fcp;/**<piston term in focus in plocs.*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
-    dmat *MCC_TT;   /**<cross coupling of the tip/tilt modes*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
     dmat *IMCC;     /**<inv of MCC.*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/

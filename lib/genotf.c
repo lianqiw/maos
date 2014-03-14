@@ -30,9 +30,9 @@ typedef struct T_VALID{
 typedef struct GENOTF_T{
     cmat **otf;
     loc_t *loc;     /**<the common aperture grid*/
-    const double *amp;    /**<The amplitude map of all the (sub)apertures*/
-    const double *opdbias;/**<The static OPD bias. */
-    const double *area;   /**<area of a (sub)aperture*/
+    const dmat *amp;    /**<The amplitude map of all the (sub)apertures*/
+    const dmat *opdbias;/**<The static OPD bias. */
+    const dmat *area;   /**<area of a (sub)aperture*/
     double thres;/**<threshold to consider an (sub)aperture as full*/
     double wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
@@ -182,8 +182,12 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		    tmp1*=amp[iloc1];
 		    tmp2*=amp[iloc2];
 		}
-		tmp3=opdbias?cexp(wvk*(opdbias[iloc1]-opdbias[iloc2])):1;
-		tmp+=tmp1*tmp2*tmp3;
+		if(opdbias){
+		    tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
+		    tmp+=tmp1*tmp2*tmp3;
+		}else{
+		    tmp+=tmp1*tmp2;
+		}
 	    }
 	    OTF[jm][im]=tmp*otfnorm;
 	}
@@ -203,27 +207,31 @@ static void genotf_wrap(thread_t *info){
     const double wvl=data->wvl;
     const long ncompx=data->ncompx;
     const long ncompy=data->ncompy;
-    const double *area=data->area;
+    const dmat *area=data->area;
     const double thres=data->thres;
     const cmat *otffull=data->otffull;
-    const double *amp=data->amp;
+    const dmat *amp=data->amp;
+    const dmat *opdbias=data->opdbias;
     const long pttr=data->pttr;
     const dmat *B=data->B;
     const T_VALID *pval=data->pval;
+    assert(!area || area->nx==nsa);
+    assert(!amp || amp->nx==nxsa*nsa);
+    assert(!opdbias || opdbias->nx==nxsa*nsa);
     for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10 && info->ithread==0){
   	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
 	}
 	const double *opdbiasi=NULL;
-	if(data->opdbias){
-	    opdbiasi=data->opdbias+isa*nxsa;
+	if(opdbias){
+	    opdbiasi=opdbias->p+isa*nxsa;
 	}else{
 	    opdbiasi=NULL;
 	}
-	if(otffull && (!area || area[isa]>thres)){
+	if(otffull && (!area || area->p[isa]>thres)){
 	    ccp(&otf[isa],otffull);/*just copy the full array */
-	}else if(!area || area[isa]>0){ 
-	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
+	}else if(!area || area->p[isa]>0){ 
+	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
 }
@@ -311,9 +319,9 @@ static dmat* genotfB(loc_t *loc, double r0, double L0){
 
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the aperture grid (same for all apertures)*/
-	    const double *amp,    /**<The amplitude map of all the (sub)apertures*/
-	    const double *opdbias,/**<The static OPD bias (complex part of amp). */
-	    const double *area,   /**<normalized area of the (sub)apertures*/
+	    const dmat *amp,    /**<The amplitude map of all the (sub)apertures*/
+	    const dmat *opdbias,/**<The static OPD bias (complex part of amp). */
+	    const dmat *area,   /**<normalized area of the (sub)apertures*/
 	    double thres,  /**<The threshold to consider a (sub)aperture as full*/
 	    double wvl,    /**<The wavelength. only needef if opdbias is not null*/
 	    double dtheta, /**<Sampling of PSF.*/
@@ -337,13 +345,13 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     if(!opdbias && nsa>1){
 	double maxarea=0;
 	for(long isa=0; isa<nsa; isa++){
-	    if(area[isa]>maxarea){
-		maxarea=area[isa];
+	    if(area->p[isa]>maxarea){
+		maxarea=area->p[isa];
 		isafull=isa;
 	    }
 	}
 	if(isafull>0){
-	    genotf_do(&otffull,pttr,ncompx,ncompy,loc,amp?amp+isafull*nloc:NULL,NULL,wvl,B,pval);
+	    genotf_do(&otffull,pttr,ncompx,ncompy,loc,amp?amp->p+isafull*nloc:NULL,NULL,wvl,B,pval);
 	}
     }
     

@@ -314,29 +314,26 @@ long nextfftsize(long n){
     const int nradix=4;
     const int radixs[]={2,3,5,7};
     int selected[4];
-    int divisible=0;
-    long n2, n3;
- 
+    long n2;/*division*/
+    long n3;/*accumulated value so far*/
+    info2("nextfftsize(%ld)", n);
     do{
 	n2=n;
 	n3=1;
 	memset(selected, 0, nradix*sizeof(int));
 	/*We only allow mix of two radices. More will slow down fft*/
-	do{
-	    divisible=0;
-	    for(int irad=0; irad<nradix; irad++){
-		int radix=radixs[irad];
-		int ratio=n2/radix;
-		if(ratio*radix==n2){/*no remainder*/
-		    selected[irad]=1;
-		    n2=ratio;
-		    n3*=radix;
-		    divisible=1;
-		}
+	for(int irad=0; irad<nradix; ){
+	    int radix=radixs[irad];
+	    int ratio=n2/radix;
+	    if(ratio*radix==n2){/*no remainder*/
+		selected[irad]=1;
+		n2=ratio;
+		n3*=radix;
+	    }else{
+		irad++;
 	    }
-	}while(divisible && n2>1);
-	/*If there is remainder not divisble by 2, 3, 5, or 7. Increase n2 by 1 and
-	  test again.*/
+	}
+	/*If there is remainder not divisble by 2, 3, 5, or 7. Increase n2 by 1 and test again.*/
 	int count=0;
 	for(int i=0; i<nradix; i++){
 	    count+=selected[i];
@@ -345,8 +342,8 @@ long nextfftsize(long n){
 	    n2=n;
 	}
 	n++; 
-    }while(n2>1 || (n&1)==1);
-    info("nextfftsize(%ld)=%ld\n", n, n3);
+    }while(n2>1 || (n3&1)==1);
+    info2("=%ld\n", n3);
     return n3;
 }
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */

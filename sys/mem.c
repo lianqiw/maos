@@ -70,6 +70,7 @@ typedef struct{
     size_t size;
 }T_MEMKEY;
 typedef struct{
+    void *p;
     void **func;
     int nfunc;
     size_t size;
@@ -77,25 +78,26 @@ typedef struct{
 static int stat_cmp(const void *a, const void *b){
     const T_STATKEY *pa=a;
     const T_STATKEY *pb=b;
+    int nfunc=MIN(pa->nfunc, pb->nfunc);
+    for(int i=0; i<nfunc; i++){
+	if(pa->func[i]<pb->func[i]){
+	    return -1;
+	}else if(pa->func[i]>pb->func[i]){
+	    return 1;
+	}
+    }
     if(pa->nfunc<pb->nfunc){
 	return -1;
     }else if(pa->nfunc>pb->nfunc){
 	return 1;
     }else{
-	for(int i=0; i<pa->nfunc; i++){
-	    if(pa->func[i]<pb->func[i]){
-		return -1;
-	    }else if(pa->func[i]>pb->func[i]){
-		return 1;
-	    }
-	}
 	return 0;
     }
 }
-static void stat_usage(const void *key, VISIT value, int level){
+static void stat_usage(const void *key, VISIT which, int level){
     const T_MEMKEY* key2=*((const T_MEMKEY**)key);
     (void) level;
-    if(value>1){
+    if(which==leaf || which==postorder){
 	/*printf("%p: size %8zu B", key2->p, (key2->size));
 	  print_backtrace_symbol(key2->func, key2->nfunc-2);*/
 	void **found;
@@ -104,6 +106,7 @@ static void stat_usage(const void *key, VISIT value, int level){
 	key3.nfunc=key2->nfunc-2;
 	if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
 	    T_STATKEY *keynew=calloc(1, sizeof(T_STATKEY));
+	    keynew->p=key2->p;
 	    keynew->func=malloc(key3.nfunc*sizeof(void*));
 	    memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 	    keynew->nfunc=key3.nfunc;
@@ -117,11 +120,11 @@ static void stat_usage(const void *key, VISIT value, int level){
 	}
     }
 }
-static void print_usage(const void *key, VISIT value, int level){
+static void print_usage(const void *key, VISIT which, int level){
     const T_STATKEY *key2=*((const T_STATKEY**)key);
     (void) level;
-    if(value>1){
-	printf("size %8zu B", (key2->size));
+    if(which==leaf || which==postorder){
+	info2("size %4zu B@%p", (key2->size), key2->p);
 	print_backtrace_symbol(key2->func, key2->nfunc);
     }
 }
@@ -179,7 +182,13 @@ static int key_cmp(const void *a, const void *b){
     else return 0;
 }
 static void memkey_add(void *p,size_t size){
-    if(!p) return;
+    if(!p){
+	if(size){
+	    error("memory allocation for %zu failed\n", size);
+	}
+	return;
+    }
+    meminfo("%p malloced with %lu bytes\n",p, size);
     LOCK(mutex_mem);
     T_MEMKEY *key=calloc(1,sizeof(T_MEMKEY));
     key->p=p;
@@ -191,7 +200,7 @@ static void memkey_add(void *p,size_t size){
     memcnt++;
     UNLOCK(mutex_mem);
 }
-static void memkey_update(void*p, size_t size){
+/*static void memkey_update(void*p, size_t size){
     if(!p) return;
     LOCK(mutex_mem);
     T_MEMKEY key;
@@ -205,11 +214,11 @@ static void memkey_update(void*p, size_t size){
     key0->nfunc=backtrace(key0->func,DT);
     meminfo("%p realloced with %lu bytes\n", p, size);
     UNLOCK(mutex_mem);
-}
+}*/
 static void memkey_del(void*p){
     if(!p) return;
     LOCK(mutex_mem);
-    void **found;
+    void **found=0;
     T_MEMKEY key;
     key.p=p;
     if((found=tfind(&key, &MROOT, key_cmp))){/*found. */
@@ -224,41 +233,19 @@ static void memkey_del(void*p){
 }
 void *CALLOC(size_t nmemb, size_t size){
     void *p=calloc(nmemb,size);
-    if(p){
-	memkey_add(p,size);
-    }else if(size!=0){
-	error("calloc for %zu, %zu failed\n",nmemb, size);
-    }
-    meminfo("%p calloced with %zu bytes\n",p,nmemb*size);
+    memkey_add(p,size);
     return p;
 }
 void *MALLOC(size_t size){
     void *p=malloc(size);
-    if(p){
-	memkey_add(p,size);
-    }else if(size!=0){
-	error("malloc for %zu failed\n",size);
-    }
-    meminfo("%p malloced with %lu bytes\n",p, size);
+    memkey_add(p,size);
     return p;
 }
 void *REALLOC(void*p0, size_t size){
     if(!p0) return MALLOC(size);
+    memkey_del(p0);
     void *p=realloc(p0,size);
-    if(p){
-	/*return p; */
-	if(p==p0){
-	    memkey_update(p,size);
-	}else{
-	    memkey_del(p0);
-	    memkey_add(p,size);
-	}
-    }else{
-	memkey_del(p0);
-	if(size!=0){
-	    error("realloc for size %zu failed\n",size);
-	}
-    }
+    memkey_add(p,size);
     return p;
 }
 void FREE(void *p){

@@ -27,8 +27,6 @@ void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
 void applyW(dcell *xin, const dsp *W0, const dmat *W1, const double *wt);
 dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 
 		const dmat *W1, const dmat *wt);
-void focus_tracking_grads(SIM_T*simu);
-
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha);
 void TomoRt(dcell **gout, const void *A, 

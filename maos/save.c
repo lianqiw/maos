@@ -107,7 +107,7 @@ void save_recon(SIM_T *simu){
 	}
 	dcellfree(dmlo);
     }
-    if(parms->plot.run && simu->Mint_lo->mint[0]){
+    if(parms->plot.run && simu->Mint_lo && simu->Mint_lo->mint[0]){
 	dcell *dmlo=NULL;
 	switch(simu->parms->recon.split){
 	case 1:

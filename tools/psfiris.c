@@ -71,7 +71,6 @@ static void psfiris_do(thread_t *info){
     dcell *psf_lgs=data->psf_lgs;
     dcell *output=data->output;
     char *msg=data->msg;
-    double area=1;
     cmat *otf=cnew(notf2, notf2);
     cfft2plan(otf,1);
     cfft2plan(otf,-1);
@@ -82,8 +81,8 @@ static void psfiris_do(thread_t *info){
     double wvl=wvls[iwvl]*1e-6;
     double dtheta=wvl/(notf1*dx1);/*nyquist sampling*/
     double dtheta2=wvl/(notf2*dx2);
-    genotf(&otf2, ploc, pamp->p, NULL, &area, 0, wvl, dtheta, cc_opd, 0, 0, notf1, notf1, 1, 0);
-    genotf(&otf0, ploc, pamp->p, NULL, &area, 0, wvl, dtheta, cc_zero, 0, 0, notf1, notf1, 1, 0);
+    genotf(&otf2, ploc, pamp, NULL, 0, 0, wvl, dtheta, cc_opd, 0, 0, notf1, notf1, 1, 0);
+    genotf(&otf0, ploc, pamp, NULL, 0, 0, wvl, dtheta, cc_zero, 0, 0, notf1, notf1, 1, 0);
     ccwdiv(otf2, otf0, 0);
     dmat *otf3=NULL;
     creal2d(&otf3, 0, otf2, 1);/*otf2 should be real. confirmed.*/

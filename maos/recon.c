@@ -145,7 +145,7 @@ void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    int lo_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_lo==0);
+    int lo_output=parms->nlopowfs && (!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_lo==0);
     if(parms->recon.split==2){
 	if(!parms->gpu.tomo){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
@@ -205,70 +205,10 @@ void reconstruct(SIM_T *simu){
     if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    const int nwfs=parms->nwfsr;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
-
-    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	const int ipowfs=parms->wfsr[iwfs].powfs;
-	/*Uplink FSM*/
-	if(parms->powfs[ipowfs].usephy 
-	   && isim>=parms->powfs[ipowfs].phystep
-	   && parms->powfs[ipowfs].llt 
-	   && parms->powfs[ipowfs].trs
-	   && (isim+1)%parms->powfs[ipowfs].dtrat==0
-	   && simu->gradlastcl->p[iwfs]){
-	    if(!recon->PTT){
-		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
-	    }
-	    dmat *PTT=recon->PTT->p[parms->recon.glao
-				    ?(ipowfs+ipowfs*parms->npowfs)
-				    :(iwfs+iwfs*nwfs)];
-	    if(!PTT){
-		error("powfs %d has llt, but TT removal is empty\n", ipowfs);
-	    }
-	    /* Compute LGS Uplink error. */
-	    if(!simu->upterr){
-		simu->upterr=simu->upterr_store;
-	    }
-	    dmm(&simu->upterr->p[iwfs], 0, PTT, simu->gradlastcl->p[iwfs], "nn", 1);
-	    /* copy upterr to output. */
-	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
-	    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
-	    pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
-	    /* PLL loop. We hand coded frame of 240, and dll gain of 0.5 */
-	    const int nc=parms->powfs[ipowfs].dither_npll;
-	    const int nskip=parms->powfs[ipowfs].dither_nskip;//Loop delay
-	    if(parms->powfs[ipowfs].dither && isim>=nskip){
-		double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
-		DITHER_T *pd=simu->dither[iwfs];
-		angle+=pd->deltam;
-		double sd=sin(angle);
-		double cd=cos(angle);
-		double err=(-sd*simu->upterr->p[iwfs]->p[0]
-			    +cd*simu->upterr->p[iwfs]->p[1]);
-		err/=(parms->powfs[ipowfs].dither_amp*nc);
-		pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
-		//To estimate the actual dithering amplitude.
-		double *fsmcmd=simu->uptreal->p[iwfs]->p;
-		pd->ipv+=(fsmcmd[0]*cd+fsmcmd[1]*sd);
-		pd->qdv+=(fsmcmd[0]*sd-fsmcmd[1]*cd);
-		/*Update DLL loop measurement. The delay is about 0.2 of a
-		 * cycle, according to closed loop transfer function*/
-		if((isim-nskip+1)%(nc*parms->powfs[ipowfs].dtrat)==0){
-		    pd->deltam=pd->delta;
-		    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/nc;
-		    info2("PLL step%d, wfs%d: deltam=%.2f cycle, a2m=%.1f mas\n",
-			  isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
-		    pd->ipv=pd->qdv=0;
-		}
-	    }
-	}/*LLT FSM*/
-    }/*for iwfs*/
-
+    
     /*high pass filter lgs focus to remove sodium range variation effect*/
-    if(parms->sim.mffocus){
-	focus_tracking_grads(simu);
-    }
+ 
 
     /*Gradient offset due to mainly NCPA calibration*/
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){

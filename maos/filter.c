@@ -314,8 +314,7 @@ void filter_cl(SIM_T *simu){
 	}
     }
     if(simu->uptint){
-	servo_filter(simu->uptint, simu->upterr);
-	/*upterr is from gradients from the last step.*/
+	/*upterr is from gradients from this time step.*/
 	dcellcp(&simu->uptreal, simu->uptint->mint[0]);
 	/*Eject dithering command*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -327,6 +326,7 @@ void filter_cl(SIM_T *simu){
 		simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
 	}
+	servo_filter(simu->uptint, simu->upterr);
     }
 }
 /**
