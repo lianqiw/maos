@@ -339,11 +339,11 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
     READ_POWFS(int,pixpsa);
-    READ_POWFS(dbl,mtchcr);
-    READ_POWFS(int,mtchstc);
-    READ_POWFS(int,phystep);
-    READ_POWFS(int,noisy);
-    READ_POWFS(int,dtrat);
+    READ_POWFS_RELAX(dbl,mtchcr);
+    READ_POWFS_RELAX(int,mtchstc);
+    READ_POWFS_RELAX(int,phystep);
+    READ_POWFS_RELAX(int,noisy);
+    READ_POWFS_RELAX(int,dtrat);
     READ_POWFS_RELAX(int,skip);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){

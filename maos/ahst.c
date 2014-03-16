@@ -483,7 +483,6 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
 		  APER_T *aper, POWFS_T *powfs){
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
-    info("ngsmod=%p\n", ngsmod);
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
@@ -851,7 +850,6 @@ void ngsmod2science(dmat *iopd, loc_t *loc, const NGSMOD_T *ngsmod,
 }
 void ngsmod_free(NGSMOD_T *ngsmod){
     if(!ngsmod) return;
-    info("ngsmod=%p\n", ngsmod);
     dcellfree(ngsmod->GM);
     dcellfree(ngsmod->Rngs);
     dcellfree(ngsmod->Pngs);
