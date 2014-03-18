@@ -316,7 +316,6 @@ long nextfftsize(long n){
     int selected[4];
     long n2;/*division*/
     long n3;/*accumulated value so far*/
-    info2("nextfftsize(%ld)", n);
     do{
 	n2=n;
 	n3=1;
@@ -343,7 +342,6 @@ long nextfftsize(long n){
 	}
 	n++; 
     }while(n2>1 || (n3&1)==1);
-    info2("=%ld\n", n3);
     return n3;
 }
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */

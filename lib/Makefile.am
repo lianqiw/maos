@@ -6,7 +6,7 @@ endif
 
 nobase_include_HEADERS=accphi.h locbin.h mkg.h readcfg.h \
   mkh.h aos.h mkw.h turbulence.h loc.h mkz.h proj.h laplacian.h pcg.h muv.h draw.h \
- genotf.h fractal.h stfun.h servo.h slaving.h mkdtf.h psd.h kalman.h 
+ genotf.h fractal.h stfun.h servo.h slaving.h mkdtf.h psd.h kalman.h type.h
 
 EXTRA_DIST=fractal_do.c prop_grid_stat.c prop_grid_pts.c prop_grid_map.c 
 

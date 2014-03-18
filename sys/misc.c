@@ -836,5 +836,7 @@ void default_quitfun(const char *msg){
     kill(getpid(), SIGTERM);
 }
 static __attribute__((constructor)) void init(){
-    quitfun=&default_quitfun;
+    if(!quitfun){//Don't override quitfun assigned by mex/interface.h
+	quitfun=&default_quitfun;
+    }
 }

@@ -682,7 +682,7 @@ static void init_simu_evl(SIM_T *simu){
 	long nframepsf=parms->sim.end;
 	long nframecov=parms->sim.end;
 	char strht[24];
-	if(parms->evl.psfmean){
+	if(parms->evl.psfmean && !parms->sim.evlol){
 	    simu->evlpsfmean=dcellnew(parms->evl.nwvl,nevl);
 	    simu->evlpsfmean->header=strdup(header);
 	    save->evlpsfmean=calloc(nevl, sizeof(cellarr*));
@@ -711,7 +711,7 @@ static void init_simu_evl(SIM_T *simu){
 	    }else{
 		strht[0]='\0';
 	    }
-	    if(parms->evl.psfngsr[ievl]!=2){
+	    if(parms->evl.psfngsr[ievl]!=2 && !parms->sim.evlol){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
 							"evlpsfcl_%d_x%g_y%g%s.fits", seed,
@@ -735,7 +735,7 @@ static void init_simu_evl(SIM_T *simu){
 							parms->evl.thetay[ievl]*206265, strht);
 		}
 	    }
-	    if(parms->evl.psfngsr[ievl]!=0){
+	    if(parms->evl.psfngsr[ievl]!=0 && !parms->sim.evlol){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean_ngsr[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
 							     "evlpsfcl_ngsr_%d_x%g_y%g%s.fits", seed,

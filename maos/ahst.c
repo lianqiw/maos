@@ -541,7 +541,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Pngs=Rngs*GA
      */
     spcell *saneai=recon->saneai;
-    if(parms->recon.split==1 && !parms->sim.skysim && parms->nlopowfs){
+    if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
 	spcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
 	if(parms->nlowfs==1 && ngsmod->nmod>5){

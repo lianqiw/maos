@@ -117,7 +117,8 @@ void cuztilt(float *restrict g, float *restrict opd,
    Apply matched filter. \todo this implementation relies on shared variable. It
 is probably causing competition.  */
 __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict mtches)[2], 
-				const float *restrict ints, const float *restrict i0sum, int pixpsa, int nsa){
+				const float *restrict ints, const float *restrict i0sum, 
+				int pixpsa, int nsa){
     extern __shared__ float g0[];
     float *g[3];
     for(int i=0; i<3; i++){
@@ -152,9 +153,12 @@ __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict
 
 static void mtche(float *restrict grad, float (*restrict *restrict mtches)[2], 
 		  const float *restrict ints, const float *restrict i0sum, 
-		  int pixpsa, int nsa, cudaStream_t stream){
-    mtche_do<<<nsa, 16, nsa*sizeof(float)*3, stream>>>
-	(grad, mtches, ints, i0sum, pixpsa, nsa);
+		  int pixpsa, int nsa, int msa, cudaStream_t stream){
+    for(int isa=0; isa<nsa; isa+=msa){
+	int ksa=MIN(msa, nsa-isa);
+	mtche_do<<<ksa, 16, ksa*sizeof(float)*3, stream>>>
+	    (grad+isa, mtches+isa, ints+pixpsa*isa, i0sum?i0sum+isa:0, pixpsa, nsa);
+    }
 }
 /**
    Apply tCoG.
@@ -481,7 +485,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    case 1:
 		mtche(gradcalc->p, cuwfs[iwfs].mtche, ints->p[0]->p, 
 		      parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum:NULL,
-		      pixpsa, nsa, stream);
+		      pixpsa, nsa, cuwfs[iwfs].msa, stream);
 		break;
 	    case 2:{
 		float pixthetax=(float)parms->powfs[ipowfs].radpixtheta;

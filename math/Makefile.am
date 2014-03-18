@@ -5,7 +5,7 @@ endif
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS= type.h  mathmisc.h random.h mathdef.h cell.h  suitesparse.h blas.h \
- matbin.h spbin.h cellarr.h chol.h  mat.h fft.h imat.h 
+ matbin.h spbin.h cellarr.h chol.h  mat.h sp.h fft.h imat.h 
 
 EXTRA_DIST=cell.c sp.c matbin.c matmmap.c spbin.c blas.c mat.c cmat.c \
  suitesparse.c  defs.h fft.c bessik.c amoeba.c

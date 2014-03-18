@@ -149,6 +149,7 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     }else if(nmod>=5){/*AHST mode */
 	calc_ngsmod_do<<<DIM(nloc,128),128*7*sizeof(float),stream>>>(cc, loc, nloc, phi, amp);
     }else{
+	info("nmod=%d\n", nmod);
 	TO_IMPLEMENT;
     }
     CUDA_SYNC_STREAM;

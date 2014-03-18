@@ -2014,6 +2014,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
    Free unused object in recon struct after preparation is done.
  */
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
+    if(!recon) return;
     spcellfree(recon->GWR);
     if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
 	/*We already assembled tomo matrix. don't need these matric any more. */

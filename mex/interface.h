@@ -28,18 +28,27 @@ INLINE mxArray *dsp2mx(const dsp*A){
     return out;
 }
 INLINE dsp *mx2dsp(const mxArray *A){
-    dsp *out=calloc(1, sizeof(dsp));
-    out->p=mxGetJc(A);
-    out->i=mxGetIr(A);
-    out->x=mxGetPr(A);
-    if(mxGetPi(A)){
-	mexErrMsgTxt("A is complex");
+    dsp *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=calloc(1, sizeof(dsp));
+	out->m=mxGetM(A);
+	out->n=mxGetN(A);
+	out->p=mxGetJc(A);
+	out->i=mxGetIr(A);
+	out->x=mxGetPr(A);
+	out->nzmax=mxGetNzmax(A);
+	if(mxGetPi(A)){
+	    mexErrMsgTxt("A is complex");
+	}
     }
     return out;
 }
 INLINE mxArray *d2mx(const dmat *A){
-    mxArray *out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
-    memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
+    mxArray *out=0;
+    if(A && A->nx && A->ny){
+	out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
+	memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
+    }
     return out;
 }
 INLINE mxArray *dcell2mx(const dcell *A){
@@ -101,18 +110,24 @@ INLINE dmat *mx2d(const mxArray *A){
     if(mxGetIr(A)){
 	mexErrMsgTxt("A is dsp");
     }
-    dmat *out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
+    dmat *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
+    }
     return out;
 }
 INLINE dcell *mx2dcell(const mxArray *A){
     if(!mxIsCell(A)){
 	mexErrMsgTxt("A is not cell");
     }
-    dcell *out=dcellnew(mxGetM(A), mxGetN(A));
-    for(int i=0; i<out->nx*out->ny; i++){
-	mxArray *Ai=mxGetCell(A, i);
-	if(Ai){
-	    out->p[i]=dnew_ref( mxGetM(Ai), mxGetN(Ai), mxGetPr(Ai));
+    dcell *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=dcellnew(mxGetM(A), mxGetN(A));
+	for(int i=0; i<out->nx*out->ny; i++){
+	    mxArray *Ai=mxGetCell(A, i);
+	    if(Ai && mxGetM(Ai) && mxGetN(Ai)){
+		out->p[i]=dnew_ref( mxGetM(Ai), mxGetN(Ai), mxGetPr(Ai));
+	    }
 	}
     }
     return out;
@@ -144,5 +159,4 @@ static __attribute__((destructor)) void deinit(){
 	signal(SIGTERM, SIG_DFL);
     }
 }
-
 #endif

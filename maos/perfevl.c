@@ -497,11 +497,12 @@ static void perfevl_save(SIM_T *simu){
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info2("Step %d: Output PSF\n", isim);
 	double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	{
+	if(!parms->sim.evlol){
 	    dcellscale(simu->evlpsfmean, scale);
 	    PDCELL(simu->evlpsfmean, pcl);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!simu->save->evlpsfmean[ievl]) continue;
+		if(!simu->save->evlpsfmean[ievl]
+		    ||!simu->evlpsfmean->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		    if(!pcl[ievl][iwvl]->header){
 			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
@@ -511,11 +512,12 @@ static void perfevl_save(SIM_T *simu){
 	    }
 	    dcellscale(simu->evlpsfmean, 1./scale);//scale it back;
 	}
-	{
+	if(!parms->sim.evlol){
 	    dcellscale(simu->evlpsfmean_ngsr, scale);
 	    PDCELL(simu->evlpsfmean_ngsr, pcl);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
+		if(!simu->save->evlpsfmean_ngsr[ievl]
+		    ||!simu->evlpsfmean_ngsr->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		    if(!pcl[ievl][iwvl]->header){
 			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
@@ -533,6 +535,7 @@ static void perfevl_save(SIM_T *simu){
 	    dcellscale(simu->evlpsfolmean, scale);
 	    dmat **pcl=simu->evlpsfolmean->p;
 	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		if(!simu->evlpsfolmean->p[iwvl]) continue;
 		if(!pcl[iwvl]->header){
 		    pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
 		}
