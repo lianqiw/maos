@@ -21,6 +21,7 @@
 #include <fftw3.h>
 #include "mathdef.h"
 #include "defs.h"
+#if !defined(USE_SINGLE) || HAS_FFTWF==1
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
  */
@@ -315,4 +316,17 @@ void X(fft1)(X(mat) *A, int dir){
     FFTW(execute)(A->fft->plan[dir+1]);
 }
 
-#endif
+#endif //#ifdef USE_COMPLEX
+#else
+void X(fft_free_plan)(fft_t *fft){
+    if(fft){
+	error("libfftw3f is not available\n");
+    }
+}
+void X(fft2plan)(X(mat) *A, int dir){
+    error("libfftw3f is not available\n");
+}
+void X(fft2)(X(mat) *A, int dir){
+    error("libfftw3f is not available\n");
+}
+#endif //!defined(USE_SINGLE) || HAS_FFTWF==1

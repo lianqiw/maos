@@ -482,6 +482,9 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
+AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
+AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
+
 AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="no")
 if test $use_fftw_threads = "yes" ;then
      AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
@@ -489,18 +492,22 @@ if test $use_fftw_threads = "yes" ;then
 else
      has_fftw_threads="no"
 fi
-if test "x$has_fftw_threads" = "xyes" ;then
-    if test "x$has_fftw_omp" = "xyes" ;then
-        AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")
-	LDFFT="$LDFFT -lfftw3 -lfftw3f" 
+if test "x$has_fftw_threads" = "xyes" -a "x$has_fftw_omp" = "xno" ;then
+    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+    if test x$has_fftwf = x1 ;then
+        LDFFT="$LDFFT -lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
     else
-        AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
-        LDFFT="$LDFFT -lfftw3_threads -lfftw3_threadsf -lfftw3 -lfftw3f"
+        LDFFT="$LDFFT -lfftw3_threads -lfftw3"
     fi
 else
-    LDFFT="$LDFFT -lfftw3 -lfftw3f"
-    AC_DEFINE(USE_FFTW_THREADS, [0], "We do not have FFTW3 threads")
+    AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
+    if test x$has_fftwf = x1 ;then
+        LDFFT="$LDFFT -lfftw3 -lfftw3f"
+    else
+        LDFFT="$LDFFT -lfftw3"
+    fi
 fi
+
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 AM_CONDITIONAL(DRAW,true) #for drawdaemon
 AM_CONDITIONAL(MON,true)  #for parital monitor without notify

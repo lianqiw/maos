@@ -192,7 +192,7 @@ int mvm_server(int sock){
     int int1_ns=readtime_ns/nsend;//interval between segment sending
     int int2_ns=frametime_ns-readtime_ns;//interval after last segment.
 #endif
-    TIC;
+    TIC;tic;
     for(int istep=-nstep0; istep<nstep; istep++){
 	//info2("\rSend trigger ");
 #if __linux__
