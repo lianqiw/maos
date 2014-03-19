@@ -28,6 +28,7 @@
    routines to be compatible when usual blas/lapack definitions. 
 
    2013-12-17: replaced int* by ptrdiff_t* to be compatible with blas/lapack that expect 64 bit integers. Still backward compatible with 32bit integers because only one number will be used and we are using little indians.
+   2014-03-19: replaced ptrdiff_t by long.
 */
 #define BLAS_DEF(X,T)							\
     void X(gemm)(const char* tranA, const char* tranB,			\

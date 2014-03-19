@@ -47,7 +47,6 @@ AM_CFLAGS+=-DDLONG
 lib_LTLIBRARIES=libcholmod_long.la
 libcholmod_long_la_SOURCES= $(CHOL_SRC)
 else
-AM_CFLAGS+=-DINT
 lib_LTLIBRARIES=libcholmod_int.la
 libcholmod_int_la_SOURCES = $(CHOL_SRC)
 endif

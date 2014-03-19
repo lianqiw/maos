@@ -680,10 +680,10 @@ void chol_free_do(spchol *A){
 	    MOD(free_factor)(&A->L, A->c);
 	    MOD(finish)(A->c);
 	    free(A->c);
-	    free(A);
 	}
-	free(A->Cp);
+	if(A->Cp) free(A->Cp);
 	if(A->Cl) spfree(A->Cl);
 	if(A->Cu) spfree(A->Cu);
+	free(A);
     }
 }

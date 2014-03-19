@@ -55,14 +55,14 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
 	n=B->ny;
 	k2=B->nx;
     }
-    if(k!=k2) error("dmm: Matrix doesn't match: A: %ldx%ld, B: %ldx%ld\n",
+    if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td\n",
 		    m, k, k2, n);
     
     if(!*C0){
 	*C0=X(new)(m,n); 
     }else if(m!=(*C0)->nx || n!=(*C0)->ny){
 	//Resizing the array is dangerous as it may be part of a cell that has m array.
-	error("dmm: Matrix doesn't match: C: %ldx%ld, C0: %ldx%ld\n", 
+	error("dmm: Matrix doesn't match: C: %tdx%td, C0: %ldx%ld\n", 
 	      m, n, (*C0)->nx, (*C0)->ny);
     }
     X(mat) *C=*C0;
@@ -92,7 +92,7 @@ void X(invspd_inplace)(X(mat) *A){
     Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
     if(info!=0){
 	X(write)(A,"posv");
-	error("posv_ failed, info=%ld. data saved to posv.\n",info);
+	error("posv_ failed, info=%td. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
     free(B);
@@ -126,7 +126,7 @@ void X(inv_inplace)(X(mat)*A){
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
 	X(write)(A,"gesv");
-	error("dgesv_ failed, info=%ld. data saved to posv.\n",info);
+	error("dgesv_ failed, info=%td. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
     free(B);
@@ -334,9 +334,9 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     if(info){
 	X(write)(A,"A_svd_failed");
 	if(info<0){
-	    error("The %ld-th argument has an illegal value\n",info);
+	    error("The %td-th argument has an illegal value\n",info);
 	}else{
-	    error("svd: dbdsqr doesn't converge. info is %ld\n",info);
+	    error("svd: dbdsqr doesn't converge. info is %td\n",info);
 	}
     }
     if(Sdiag) *Sdiag=s; else XR(free)(s);

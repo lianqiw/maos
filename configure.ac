@@ -139,7 +139,7 @@ case "$host_os" in
  use_static_default="no"
  wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
- mkldep="-lgomp"
+ mkldep=""
  libsuffix=${cpu}
  system="linux"
  ldsuffix="so"
@@ -151,7 +151,7 @@ case "$host_os" in
  use_static_default="no"
  wget="curl --retry 1 -L --progress-bar"
  wgetoutput="--output"
- mkldep="-lgomp"
+ mkldep=""
  libsuffix=fat
  system="apple"
  ldsuffix="dylib"

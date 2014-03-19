@@ -942,15 +942,15 @@ void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
    shift frequency components by n/2
 */
 void X(fftshift)(X(mat) *A){
-    size_t i;
-    const size_t nx=A->nx;
-    const size_t ny=A->ny;
+    long i;
+    const long nx=A->nx;
+    const long ny=A->ny;
     if((nx&1)==1){
 	warning("nx=%ld is not multiple of 2\n", nx);
     }
-    const size_t nx2=nx/2;
-    const size_t ny2=ny/2;
-    const size_t nx2d=nx2*sizeof(T);
+    const long nx2=nx/2;
+    const long ny2=ny/2;
+    const long nx2d=nx2*sizeof(T);
     T *tmp=(T*)malloc(nx2d);
     T *data=A->p;
     if(ny==1){
@@ -988,11 +988,11 @@ void X(fftshift)(X(mat) *A){
    \endverbatim
 */
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
-    const size_t nx=A->nx;
-    const size_t ny=A->ny;
+    const long nx=A->nx;
+    const long ny=A->ny;
     T *Ap=A->p;
-    const size_t ninx=B->nx;
-    const size_t niny=B->ny;
+    const long ninx=B->nx;
+    const long niny=B->ny;
     if(nx>ninx || ny>niny){
 	memset(Ap, 0, sizeof(T)*nx*ny);
     }
