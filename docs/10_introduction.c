@@ -1,18 +1,19 @@
 /**
-    \page page1 Introduction
+    \page page10 Introduction
 
-    This code is a complete new implementation of the MCAO simulator LAOS, which
-    was written in MATLAB language. The motivation to develop this software is
-    to create a multi-conjugate adaptive optics simulator that runs fast,
-    consumes less memory, and does the job without MATLAB, which is proprietary
-    and has a large memory footprint. The code is written in C language with a
-    function oriented design. The code is completely configurable through
-    configuration files. The code tries its best to check the configuration for
-    any apparent errors or conflicts. The configuration files are very readable
-    and easy to maintain. The final development goal is to make an efficient,
-    easy to use, general purpose adaptive optics simulator to help the
-    development of adaptive optics systems, particularly advanced, very high
-    order systems for TMT and other ELTs.
+    MAOS is a complete reimplementation of the algorithms in the original MCAO
+    simulator LAOS, which was written in MATLAB language and suffer
+    multi-threading limitations. The motivation to develop this software is to
+    create an adaptive optics simulator that runs fast, consumes less memory,
+    and does the job without MATLAB, which is proprietary and has a large memory
+    footprint. The code is written in C language with a function oriented
+    design. MAOS is completely configurable through configuration files. It
+    tries its best to check the configuration for any apparent errors or
+    conflicts. The configuration files are very readable and easy to
+    maintain. The final development goal is to make an efficient, easy to use,
+    general purpose adaptive optics simulator to help the development of
+    adaptive optics systems, particularly advanced, very high order systems for
+    TMT and other ELTs.
 
     Atmospheric turbulence is represented as one or multiple discrete screen(s)
     at different heights that evolves according to frozen flow with given wind
@@ -59,7 +60,7 @@
     run-time library.
 
     The multi-threading is achieved using Posix Threads (no MPI is
-    implemented). This parallelism works fairly well in multi-core, shared
+    implemented) or OpenMP. This parallelism works fairly well in multi-core, shared
     memory machines. For example, in a recently purchased desktop with Intel
     Core i5 quad-core processor at 2.66 GHz, the software (configured in a
     NFIRAOS split tomography mode with physical optics LGS and geometric best
@@ -70,13 +71,12 @@
     threads. The scaling with number of cores is fairly good. The memory
     consumption in the NFIRAOS baseline case is about 2 G.
 
-
-    
-    The code contains three main directories. The lib, maos, and skyc
-    directory. The directory lib contains routines that are not specific to the
-    simulations and can be adopted by other routines. The directory maos
-    contains routines that are specific the adaptive optics simulations. The
-    directory skyc contains routines for sky coverage postprocessing.
+    The code contains a few directories. The sys, math, lib, maos, and skyc
+    directory. The library directories sys, math and lib contains routines that
+    are not specific to the simulations and can be adopted by other
+    purposes. The directory maos contains routines that are specific the
+    adaptive optics simulations. The directory skyc contains routines for sky
+    coverage postprocessing.
 
 
  */

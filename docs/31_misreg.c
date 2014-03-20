@@ -1,5 +1,5 @@
 /**
-   \page page11 Misregistration
+   \page page31 Misregistration
 
    It is tricky to implement the misregistration of the deformable mirror and the WFS.
    

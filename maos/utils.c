@@ -449,7 +449,7 @@ void maos_signal_handler(int sig){
 static void print_usage(void){
     info2(
 "Usage: maos [OPTION...] [FILE]...\n"
-"maos is a simulation tool developed to simulate scao/mcao systems\n\n"
+"maos is a simulation tool developed to adaptive optics systems\n\n"
 "Examples:\n"
 "maos   # Run the default configuration of NFIRAOS: nfiaros.conf as the baseline.\n"
 "maos -c scao_ngs.conf -s 2 -n 2 -d -o scao_ngs override.conf chol.conf\n"
@@ -468,9 +468,9 @@ static void print_usage(void){
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 "-p, --path=dir    Add dir to the internal PATH\n"
 "-P, --pause       paulse simulation in the end of every time step\n"
-"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic"
-"-G, --ngpu=N'     Use a total of N gpus."
-"-r, --run=host    Run the job in another host."   
+"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
+"-G, --ngpu=N'     Use a total of N gpus.\n"
+"-r, --run=host    Run the job in another host.\n"
 	  );
     exit(0);
 }

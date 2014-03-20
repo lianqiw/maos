@@ -1,15 +1,13 @@
 /**
-   \page page4 Simulation Results
+   \page page40 Simulation Results
    
-   \section simu-results Simulation Results
-
-   MAOS will generate output in binary format \c .bin or zipped \c .bin.gz files
+   MAOS will generate output in binary format \c .bin files (which maybe gzipped)
    as described below. PSFs are written into fits files with extensions.
 
-   \subsection sect-matlab Reading Results in MATLAB
+   \section sect-matlab Reading Results in MATLAB
 
-   There are two MATLAB mex routines \c read and \c write
-   that can read and write \c .bin or \c .bin.gz files in MATLAB. The source of
+   There are two MATLAB `mex` routines \c read and \c write
+   that can read and write \c .bin or \c .fits files in MATLAB. The source of
    these mex routines are located in sub-folder \c mex. If \c mex is found in
    the system, this mex routines will be compiled automatically in the \c mex
    subfolder of the compiling folder. If it doesn't get compiled, please goto
@@ -17,7 +15,7 @@
    them. Copy \c write.mexa64 and \c read.mexa64 into a folder that is in your
    matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:
 
-\verbatim 
+   \verbatim 
    cle=read('Res_1'); 
 or cle=read('Res_1.bin'); 
 or cle=read('Res_1.bin.gz');
@@ -25,29 +23,30 @@ or cle=read('Res_1.bin.gz');
    
    write(cle,'Res_1');     will write the data to Res_1.bin.gz;
    write(cle,'Res_1.bin'); will write the data to Res_1.bin without compression.
-\endverbatim
+   \endverbatim
 
-If there is any problem in compling read.c and write.c, there are two matlab
-scripts in the scripts folder, readbin.m and writebin.m, that have most of
-functionality of read.c, write.c albeit a bit slower.
+   If there is any problem in compling read.c and write.c, there are two matlab
+   scripts in the scripts folder, readbin.m and writebin.m, that have most of
+   functionality of read.c, write.c albeit a bit slower and cannot handle
+   compressed files conveniently.
 
-The data are saved to the bin files in a moduler way. For a simple matrix (like
-double matrix or cell matrix), we first write a magic number (4 byte unsigned
-int) representing the data type, and then x and y dimension (two 8 byte unsigned
-ints), and finally the data itself (if it is cell, recursively write the data
-contained in the cell with the same method). 
+   The data are saved to the bin files in a moduler way. For a simple matrix (like
+   double matrix or cell matrix), we first write a magic number (4 byte unsigned
+   int) representing the data type, and then x and y dimension (two 8 byte unsigned
+   ints), and finally the data itself (if it is cell, recursively write the data
+   contained in the cell with the same method). 
 
-Each block of data may optionally be proceeded with a metadata header that
-describes the data, for example, the sampling of a loc_t grid. The surf OPD
-contains header information about the sampling, origin and height of the OPD
-array. 
+   Each block of data may optionally be proceeded with a metadata header that
+   describes the data, for example, the sampling of a loc_t grid. The surf OPD
+   contains header information about the sampling, origin and height of the OPD
+   array. 
 
-   \subsection sect-idl Reading Results in IDL
+   \section sect-idl Reading Results in IDL
 
    There are two idl scripts in the sub-folder \c script. They are readbin.pro
    for reading bin files, and writebin.pro for writing bin files.
 
-   \subsection sect-interpret Result Format
+   \section sect-interpret Result Format
 
    There will be several files created during simulation in the result folder. The
    number after underscore _ is the seed. For example, with seed 1 the following
@@ -61,7 +60,7 @@ results. i.e. res=read('Res_1');
           - Piston removed WFV
           - WFV in tip/tilt modes
           - Piston/tip/tilt removed WFV
-     - \c res{2} contains the residual wavefront variance after the tomography phase screen is directly applied as the correction in open loop mode. Empty is evl.tomo is zero.
+     - \c res{2} contains the residual wavefront variance after the tomography phase screen is directly applied as the correction in open loop mode. Empty if evl.tomo is zero.
      - \c res{3} contains the closed loop wavefront variance in row vectors. The rows are
           - Piston removed WFV
           - WVF in tip/tilt modes
@@ -93,7 +92,8 @@ results. i.e. res=read('Res_1');
 
  - \c maos_975.conf: The final effective arrays of the configurations for MAOS
    run with PID 975. Can be used to reproduce the simulation or check the
-   configurations.
+   configurations. Lines begin with # are defaults configurations while the rest
+   have been overriden.
 
  - \c sanea_sim_1: When wavefront sensors are running in physical optics
    mode, the average gradinet measurement error for that wavefront sensor is

@@ -1,5 +1,5 @@
 /**
-   \page page7 C Fundementals
+   \page page70 C Fundementals
 
    The user is required to have a good understanding of the C fundementals, like
    the pointer, to study and improve the code. Here we list a few to remind the
