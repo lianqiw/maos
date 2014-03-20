@@ -1,5 +1,12 @@
 var skyc_2types_8h =
 [
+    [ "DTF_S", "structDTF__S.html", "structDTF__S" ],
+    [ "POWFS_S", "structPOWFS__S.html", "structPOWFS__S" ],
+    [ "PISTAT_S", "structPISTAT__S.html", "structPISTAT__S" ],
+    [ "WFS_S", "structWFS__S.html", "structWFS__S" ],
+    [ "STAR_S", "structSTAR__S.html", "structSTAR__S" ],
+    [ "ASTER_S", "structASTER__S.html", "structASTER__S" ],
+    [ "SIM_S", "structSIM__S.html", "structSIM__S" ],
     [ "DTF_S", "skyc_2types_8h.html#afb2a19178abbf6d2bb0a906ab851fd63", null ],
     [ "POWFS_S", "skyc_2types_8h.html#a6644e0a17f55ea7c8e4eb60401eae628", null ],
     [ "PISTAT_S", "skyc_2types_8h.html#a29baabf31f1f63d6250a35eccf68e24a", null ],

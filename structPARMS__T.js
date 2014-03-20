@@ -20,6 +20,7 @@ var structPARMS__T =
     [ "gpu", "structPARMS__T.html#afa33a4594fad68933b4bc57ae0c8a39e", null ],
     [ "load", "structPARMS__T.html#a81b69d85af4c28961cc299c618dd4124", null ],
     [ "save", "structPARMS__T.html#ae8cbc9dfdcddc18df6c55c9a76edfdc2", null ],
+    [ "misreg", "structPARMS__T.html#ad6dc7f80e8f98ff9b861365624511fbb", null ],
     [ "npowfs", "structPARMS__T.html#a184dc967ffbedc29f2d48cd49889ddd2", null ],
     [ "nwfs", "structPARMS__T.html#ab6833beca5a29a5936d41ac934e66d24", null ],
     [ "nwfsr", "structPARMS__T.html#a742e596dc4dc79ec9c8e81f401edb388", null ],
@@ -32,6 +33,11 @@ var structPARMS__T =
     [ "fdlock", "structPARMS__T.html#a9056c1024a1abf5fac4ac86f7edaf195", null ],
     [ "pause", "structPARMS__T.html#a32b616b6267657a6244372f2bb91fdb4", null ],
     [ "nlopowfs", "structPARMS__T.html#a7bd7faa967ad53a257048dc75dfd5275", null ],
+    [ "lopowfs", "structPARMS__T.html#a5d0bbd591fae6c5f8930562fe0930246", null ],
     [ "nhipowfs", "structPARMS__T.html#a1010d5b79d1e8001e634dbef56126838", null ],
-    [ "ntrspowfs", "structPARMS__T.html#a8575e3c7763c10565bd78aeecefc7ce5", null ]
+    [ "hipowfs", "structPARMS__T.html#a356999be5db53ba3a75e0c741af58531", null ],
+    [ "ntrpowfs", "structPARMS__T.html#a09fbe6726b77c648da0188b879dc4c77", null ],
+    [ "ntipowfs", "structPARMS__T.html#a23782694c1d2eb80429a98e8327fe568", null ],
+    [ "nlowfs", "structPARMS__T.html#a5bcdb7586cfac68303dbe338d2ef9d49", null ],
+    [ "nphypowfs", "structPARMS__T.html#a814fdc65d3853115b2db47b546ad11bc", null ]
 ];

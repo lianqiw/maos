@@ -14,5 +14,6 @@ var structLLT__CFG__T =
     [ "n", "structLLT__CFG__T.html#a4b3cd998f117485fdcb8de6805fef38b", null ],
     [ "colprep", "structLLT__CFG__T.html#a5248186f49c163e6b557564e17125807", null ],
     [ "colsim", "structLLT__CFG__T.html#ab98cc62458a0880ce23196c961b11008", null ],
-    [ "colsimdtrat", "structLLT__CFG__T.html#ac8b3e202f9c4be878eb3a9a599c1de4f", null ]
+    [ "colsimdtrat", "structLLT__CFG__T.html#ac8b3e202f9c4be878eb3a9a599c1de4f", null ],
+    [ "ttrat", "structLLT__CFG__T.html#a6ae74a705e349030abaabec0a66a6802", null ]
 ];

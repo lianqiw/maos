@@ -2,7 +2,6 @@ var structPROC__T =
 [
     [ "hid", "structPROC__T.html#ab9fa936fe02f27f741c8060063cbee0a", null ],
     [ "pid", "structPROC__T.html#ad4b1bd534c31471cdf0e1b3b1fff6804", null ],
-    [ "done", "structPROC__T.html#ab22cd54587a5ed3958e30d9d231b8a9d", null ],
     [ "frac", "structPROC__T.html#a8a17036f4b6758c5a408f76191b92b64", null ],
     [ "oldinfo", "structPROC__T.html#af6a162d3a6b7895c1351b55f07b9d928", null ],
     [ "iseed_old", "structPROC__T.html#a87ebc324332c36bc12297b6f51e876c7", null ],

@@ -5,9 +5,7 @@ var structEVL__CFG__T =
     [ "wt", "structEVL__CFG__T.html#a1099d0a05e59fced8655347bbb50b9c8", null ],
     [ "wvl", "structEVL__CFG__T.html#ae36c873b00a4bbc1a3dae8a6aa1549fd", null ],
     [ "hs", "structEVL__CFG__T.html#a8985245eb2f190357d516a009ce7e42d", null ],
-    [ "misreg", "structEVL__CFG__T.html#a5473520b63210e46aaeb51f6c9c8fdb7", null ],
     [ "dx", "structEVL__CFG__T.html#ac168ca8161ee3edbf2009849e56a07a5", null ],
-    [ "ismisreg", "structEVL__CFG__T.html#ac7ea60988ef384d76575c1094912cb09", null ],
     [ "nwvl", "structEVL__CFG__T.html#aefa7d339640d46e883615e2de461ea60", null ],
     [ "psf", "structEVL__CFG__T.html#a653e8a6165a7a3a7918554c6482ddab0", null ],
     [ "psfr", "structEVL__CFG__T.html#ae0cb1a7c80ae99ece178077d010474a7", null ],
@@ -28,5 +26,6 @@ var structEVL__CFG__T =
     [ "indoa", "structEVL__CFG__T.html#a1a4adc47bdaa62f95418783e1506ac67", null ],
     [ "scalegroup", "structEVL__CFG__T.html#a73bc37fc71476060bed54a1e64a10ff5", null ],
     [ "moao", "structEVL__CFG__T.html#a529a8acf247028c9e66cbe87c6edd84e", null ],
-    [ "nthread", "structEVL__CFG__T.html#afa19617b851eb6165ef25dc5ad41822f", null ]
+    [ "nthread", "structEVL__CFG__T.html#afa19617b851eb6165ef25dc5ad41822f", null ],
+    [ "sock", "structEVL__CFG__T.html#a650d75113810b1a3d0875813ed1e60e1", null ]
 ];

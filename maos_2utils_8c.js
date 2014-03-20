@@ -2,14 +2,13 @@ var maos_2utils_8c =
 [
     [ "PSFCOMP_T", "maos_2utils_8c.html#a6ddefc7009bf723f3d8e13466a902f03", null ],
     [ "addnoise", "maos_2utils_8c.html#a25c26cc7bf98368cc8e5b86e7dff8849", null ],
-    [ "create_metapupil_wrap", "maos_2utils_8c.html#a8d09c1d4e25788f3c2bda232ef257eba", null ],
-    [ "create_metapupil", "maos_2utils_8c.html#a3f2c82d60281e9d95e31fd76d44ff113", null ],
+    [ "create_metapupil_wrap", "maos_2utils_8c.html#a2a7201760699d43c972676fda5146739", null ],
+    [ "create_metapupil", "maos_2utils_8c.html#a8ed593dee7ff9a98e27661ac68ede4bb", null ],
     [ "plotloc", "maos_2utils_8c.html#aa6846a7e8753720495fab427eb73a333", null ],
     [ "plotdir", "maos_2utils_8c.html#a17f83b9d00296996ebdaff0335ef4340", null ],
     [ "rename_file", "maos_2utils_8c.html#af83a1d1fc29af913013c954d41d34490", null ],
     [ "maos_signal_handler", "maos_2utils_8c.html#a6331baae7550213ee98a12f9c3bbc5ce", null ],
-    [ "print_usage", "maos_2utils_8c.html#a0edd37fe65f6a8b1e530370f6e6402f3", null ],
-    [ "parse_args", "maos_2utils_8c.html#acb9c938dc842d5c52a16c7443fdb4ae3", null ],
+    [ "parse_args", "maos_2utils_8c.html#aad91533fa7ecab0db34f47b51c55edd6", null ],
     [ "strehlcomp", "maos_2utils_8c.html#afac016dcc985dec7741db2ff6118f8de", null ],
     [ "psfcomp", "maos_2utils_8c.html#adb8db3a2777ac6e30bb47af9101324b8", null ],
     [ "psfcomp_iwvl", "maos_2utils_8c.html#aa25aba0a3101a4f153c4752b31513a91", null ],
@@ -20,5 +19,7 @@ var maos_2utils_8c =
     [ "calc_aniso", "maos_2utils_8c.html#a5c7b446004c896c4369a93a863815d77", null ],
     [ "calc_aniso2", "maos_2utils_8c.html#a066f38258e20d362d1e184a397697828", null ],
     [ "evl_header", "maos_2utils_8c.html#a42587bb89ea768b120b893036125bd92", null ],
-    [ "apply_fieldstop", "maos_2utils_8c.html#afc4d170177b3cdad0db1efefa5386bc7", null ]
+    [ "apply_fieldstop", "maos_2utils_8c.html#afc4d170177b3cdad0db1efefa5386bc7", null ],
+    [ "plot_setup", "maos_2utils_8c.html#a02d7d174efd394be9afc432ca1835071", null ],
+    [ "maos_daemon", "maos_2utils_8c.html#a67b318f91abca40a6ff8f35badd65338", null ]
 ];

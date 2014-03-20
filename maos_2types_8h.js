@@ -1,5 +1,22 @@
 var maos_2types_8h =
 [
+    [ "APER_T", "structAPER__T.html", "structAPER__T" ],
+    [ "DTF_T", "structDTF__T.html", "structDTF__T" ],
+    [ "ETF_T", "structETF__T.html", "structETF__T" ],
+    [ "LLT_T", "structLLT__T.html", "structLLT__T" ],
+    [ "INTSTAT_T", "structINTSTAT__T.html", "structINTSTAT__T" ],
+    [ "POWFS_T", "structPOWFS__T.html", "structPOWFS__T" ],
+    [ "NGSMOD_T", "structNGSMOD__T.html", "structNGSMOD__T" ],
+    [ "FDPCG_T", "structFDPCG__T.html", "structFDPCG__T" ],
+    [ "MOAO_T", "structMOAO__T.html", "structMOAO__T" ],
+    [ "INVPSD_T", "structINVPSD__T.html", "structINVPSD__T" ],
+    [ "FRACTAL_T", "structFRACTAL__T.html", "structFRACTAL__T" ],
+    [ "RECON_T", "structRECON__T.html", "structRECON__T" ],
+    [ "SIM_SAVE_T", "structSIM__SAVE__T.html", "structSIM__SAVE__T" ],
+    [ "WFSINTS_T", "structWFSINTS__T.html", "structWFSINTS__T" ],
+    [ "DITHER_T", "structDITHER__T.html", "structDITHER__T" ],
+    [ "SIM_T", "structSIM__T.html", "structSIM__T" ],
+    [ "GLOBAL_T", "structGLOBAL__T.html", "structGLOBAL__T" ],
     [ "CHECK_SAVE", "maos_2types_8h.html#a47895b22092692ba9ca782f61cc1d4b8", null ],
     [ "APER_T", "maos_2types_8h.html#a53adea59868cdc1d93de5534cd7e0a71", null ],
     [ "DTF_T", "maos_2types_8h.html#a523679af05f77572e36e8c6ad065e9b7", null ],
@@ -16,5 +33,7 @@ var maos_2types_8h =
     [ "RECON_T", "maos_2types_8h.html#a40599df85949ae30f0c5e1eb8375fb34", null ],
     [ "SIM_SAVE_T", "maos_2types_8h.html#a32c3f38753a77d36fc39bab39be167a8", null ],
     [ "WFSINTS_T", "maos_2types_8h.html#a194c7ae5bfb77c9b5265736325431c41", null ],
-    [ "SIM_T", "maos_2types_8h.html#a9b9c7a33c4979639dedfd723306451b0", null ]
+    [ "DITHER_T", "maos_2types_8h.html#a8879cba9fc733b72c347c61e9c36df6f", null ],
+    [ "SIM_T", "maos_2types_8h.html#a9b9c7a33c4979639dedfd723306451b0", null ],
+    [ "GLOBAL_T", "maos_2types_8h.html#a086cfc7eee52290007cd8da7560f6128", null ]
 ];

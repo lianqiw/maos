@@ -1,10 +1,10 @@
 var structSAVE__CFG__T =
 [
+    [ "extra", "structSAVE__CFG__T.html#a82958a1baed1061aa5d1d5980706c608", null ],
     [ "all", "structSAVE__CFG__T.html#a7df62648115ba52824f4ffe8dfe8c0da", null ],
     [ "setup", "structSAVE__CFG__T.html#a6eb5125b66e8369f1478f475c55cc220", null ],
     [ "recon", "structSAVE__CFG__T.html#a487426d82238f2159c7d6e9ec0b58ad3", null ],
     [ "mvst", "structSAVE__CFG__T.html#a76bd0e8cf3bef025b0b490f09d0f2f60", null ],
-    [ "dmpttr", "structSAVE__CFG__T.html#a22d270e374e3d951d8463542e3dac27b", null ],
     [ "atm", "structSAVE__CFG__T.html#a7e19a6b97476eaefd13dc838468042d4", null ],
     [ "run", "structSAVE__CFG__T.html#a34a4c23843708f2e41eae5d31718112a", null ],
     [ "opdr", "structSAVE__CFG__T.html#aa4595ac42f4762887f4e9cf9b4b926fb", null ],

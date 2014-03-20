@@ -7,9 +7,9 @@ var structdrawdata__t =
     [ "npts", "structdrawdata__t.html#a0b379cd248d62811c7f5813ea848721a", null ],
     [ "style", "structdrawdata__t.html#a9fbfc32417cd29cf9db821741f85f065", null ],
     [ "style_pts", "structdrawdata__t.html#abef94643d73e03a247fc26e3f6bb29d8", null ],
-    [ "nstyle", "structdrawdata__t.html#aa2850ef073c9f2f3c1ffe13b47278098", null ],
+    [ "nstyle", "structdrawdata__t.html#a11f27552dc31464cc2429f31e22203ef", null ],
     [ "cir", "structdrawdata__t.html#a5f4f58f9126e603e9f5d9f62e56689a7", null ],
-    [ "ncir", "structdrawdata__t.html#aac026e6809a5b2a19a556bb3c0aa3bc3", null ],
+    [ "ncir", "structdrawdata__t.html#af2231260d6b23de3a538a66a0cb90685", null ],
     [ "limit_data", "structdrawdata__t.html#a5cbf6d94e1481cf6232aaf7aca15409a", null ],
     [ "limit_cumu", "structdrawdata__t.html#a11514e0e88d86e510f5628120147f41a", null ],
     [ "limit", "structdrawdata__t.html#aa760b89922a4dec6c32464083e73441a", null ],
@@ -72,5 +72,7 @@ var structdrawdata__t =
     [ "cumuquadlast", "structdrawdata__t.html#a8a0a88c1995e0f4f093b2dcc59da8bc0", null ],
     [ "icumu", "structdrawdata__t.html#a6dbcaeb3d33acc4d6ff7e974ba8034ff", null ],
     [ "icumulast", "structdrawdata__t.html#afa50b35e81cdfebef741d34ec94f59fd", null ],
-    [ "cumulast", "structdrawdata__t.html#a7b4a32ac573ba53fd5c756b5f6c6bc7e", null ]
+    [ "cumulast", "structdrawdata__t.html#a7b4a32ac573ba53fd5c756b5f6c6bc7e", null ],
+    [ "time", "structdrawdata__t.html#a113140efada1e5f07fe39450460e2007", null ],
+    [ "dtime", "structdrawdata__t.html#a40d8e27279fb9b43d018017601c78d5f", null ]
 ];

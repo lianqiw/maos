@@ -1,6 +1,7 @@
 var structAPER__T =
 [
     [ "locs", "structAPER__T.html#ad64a2021ba3b67e880d3e045f2890bff", null ],
+    [ "locs_dm", "structAPER__T.html#ab667fb231c469d26a5110f27b6a328ec", null ],
     [ "amp", "structAPER__T.html#a8a75a5a31355eec7ea3fe4e8f3594de4", null ],
     [ "amp1", "structAPER__T.html#ae73e6eaec957a056d96d7d7cbd5e75d9", null ],
     [ "ampground", "structAPER__T.html#a77d0f908f2430868976cf33fcfe20558", null ],
@@ -12,5 +13,6 @@ var structAPER__T =
     [ "embed", "structAPER__T.html#a6f4824cf73e1c2e79afa1f6c63e4cce1", null ],
     [ "nembed", "structAPER__T.html#a0910293e3675e1f9812f8e1b56ae9830", null ],
     [ "fcp", "structAPER__T.html#af051a7aef05263d8ee294756d19e9f0d", null ],
-    [ "opdadd", "structAPER__T.html#a105ba5e08da145108abcd65a39d2a7a6", null ]
+    [ "opdadd", "structAPER__T.html#a105ba5e08da145108abcd65a39d2a7a6", null ],
+    [ "opdfloc", "structAPER__T.html#abcfe0561f5ca7bf3598c69a63b66822c", null ]
 ];

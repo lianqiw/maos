@@ -5,7 +5,5 @@ var structAPER__CFG__T =
     [ "rotdeg", "structAPER__CFG__T.html#abf64dffc1048f103b91ee16d94eee779", null ],
     [ "fnamp", "structAPER__CFG__T.html#a839e906a586c2d9152df418d24b46151", null ],
     [ "fnampuser", "structAPER__CFG__T.html#a7994143f2b421ef6e9951cbf578f5ae9", null ],
-    [ "misreg", "structAPER__CFG__T.html#a936c75ae14d85a80aee2c39683779f2c", null ],
-    [ "ismisreg", "structAPER__CFG__T.html#ad898e5bcaaf43c34578b97d13cc95724", null ],
     [ "pupmask", "structAPER__CFG__T.html#aad899c34bf5f8baf783e4ec044e99ed4", null ]
 ];

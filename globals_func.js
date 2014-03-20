@@ -1,7 +1,6 @@
 var globals_func =
 [
-    [ "_", "globals_func.html", null ],
-    [ "a", "globals_func_0x61.html", null ],
+    [ "a", "globals_func.html", null ],
     [ "b", "globals_func_0x62.html", null ],
     [ "c", "globals_func_0x63.html", null ],
     [ "d", "globals_func_0x64.html", null ],

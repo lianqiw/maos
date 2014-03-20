@@ -1,5 +1,9 @@
 var skyc_2parms_8h =
 [
+    [ "MAOS_S", "structMAOS__S.html", "structMAOS__S" ],
+    [ "SKYC_S", "structSKYC__S.html", "structSKYC__S" ],
+    [ "PARMS_S", "structPARMS__S.html", "structPARMS__S" ],
+    [ "ARG_S", "structARG__S.html", "structARG__S" ],
     [ "MAOS_S", "skyc_2parms_8h.html#a2ebbecbc781e80a359154a86ed9a26aa", null ],
     [ "SKYC_S", "skyc_2parms_8h.html#ae598abd8a10dbc679dbbe4c463c43116", null ],
     [ "PARMS_S", "skyc_2parms_8h.html#a5b0608b9aa1545f6714b1e9a1f50fde0", null ],

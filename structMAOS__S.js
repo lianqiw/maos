@@ -32,5 +32,8 @@ var structMAOS__S =
     [ "mcc_oa_tt", "structMAOS__S.html#a15ec163821fc7f7a296b22d7821a6b68", null ],
     [ "mcc_oa_tt2", "structMAOS__S.html#ad285a99e3d8d80eedaad29d15096a688", null ],
     [ "ngsgrid", "structMAOS__S.html#a06037f654ac7102ff15cbad4b18fbd8b", null ],
-    [ "nstep", "structMAOS__S.html#ae4293ccfd8185a8ffaa25495d4186269", null ]
+    [ "nstep", "structMAOS__S.html#ae4293ccfd8185a8ffaa25495d4186269", null ],
+    [ "ahstfocus", "structMAOS__S.html#a9fa9b463b878adea22cc4115abf21c68", null ],
+    [ "mffocus", "structMAOS__S.html#a75b0b3ddc6b0bab255b9fcd7d9634370", null ],
+    [ "fnrange", "structMAOS__S.html#ac62a6c6a057d4fafd45a9c6e2f9f0299", null ]
 ];
