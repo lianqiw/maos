@@ -10,13 +10,13 @@ fi
 
 echo > maos_check.stderr
 echo "D is ${D}m. DM order is $((D*2))."
-echo -n "LGS MCAO: "
+echo -n "LGS MCAO (split):"
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2]  2>>maos_check.stderr) nm
 
 echo -n "LGS MCAO (inte): "
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] recon.split=0 2>>maos_check.stderr) nm
 
-echo -n "LGS MCAO (FDPCG): "
+echo -n "LGS MCAO (FDPCG):"
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] tomo.precond=1 2>>maos_check.stderr) nm
 
 echo -n "LGS MCAO (CBS):  "
@@ -34,20 +34,20 @@ echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] evl.moao=0 moao.order=[$D] 2>>maos_
 echo -n "LGS GLAO:  "
 echo $(./maos aper.d=$D dm_single.conf dm.order=[$D*2] recon.glao=1 wfs_lgs_only.conf 2>>maos_check.stderr ) nm
 
-echo -n "NGS SCAO:         "
-echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_ngs.conf 2>>maos_check.stderr ) nm
+echo -n "NGS SCAO (inte):  "
+echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_ngs.conf recon.split=0 2>>maos_check.stderr ) nm
 
 echo -n "NGS SCAO (split): "
 echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_ngs.conf recon.split=1 2>>maos_check.stderr ) nm
 
-echo -n "NGS MCAO: "
-echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] -cmcao_ngs.conf 2>>maos_check.stderr ) nm
+echo -n "NGS MCAO (inte):  "
+echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] -cmcao_ngs.conf recon.split=0 2>>maos_check.stderr ) nm
 
 echo -n "NGS MCAO (split): "
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] -cmcao_ngs.conf recon.split=1 2>>maos_check.stderr ) nm
 
-echo -n "SCAO LGS: "
-echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_lgs.conf 2>>maos_check.stderr ) nm
+echo -n "SCAO LGS (split):"
+echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_lgs.conf recon.split=1 2>>maos_check.stderr ) nm
 
 echo -n "SCAO LGS (inte): "
 echo $(./maos aper.d=$D dm.order=[$D*2] -cscao_lgs.conf recon.split=0 2>>maos_check.stderr ) nm

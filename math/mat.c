@@ -306,8 +306,10 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     b=INFINITY;
     for(i=0; i<N; i++){
 	R tmp=MAG(p[i]);
-	if(tmp>a) a=tmp;
-	if(tmp<b) b=tmp;
+	if(!isnan(tmp)){
+	    if(tmp>a) a=tmp;
+	    if(tmp<b) b=tmp;
+	}
     }
     if(max)*max=a; 
     if(min)*min=b; 
@@ -477,7 +479,9 @@ T X(sum)(const X(mat) *A){
 	   point numbers.
 	*/
 	for(int i=0; i<A->nx*A->ny; i++){
-	    v+=p[i];
+	    if(!isnan(p[i])){
+		v+=p[i];
+	    }
 	}
     }
     return v;
@@ -1919,7 +1923,6 @@ static void X(enc_thread)(thread_t *pdata){
     }else{
 	for(long iy=0; iy<ncomp2; iy++){
 	    R ky=(iy<ncomp?iy:iy-ncomp2)*dk;
-	    info("%ld of %ld for %ld\n", iy, ncomp2, dvec->nx);
 	    for(long ix=0; ix<ncomp2; ix++){
 		R kx=(ix<ncomp?ix:ix-ncomp2)*dk;
 		switch(type){

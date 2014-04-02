@@ -669,10 +669,10 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
 	}
     }
     double limit[4];
-    limit[0]=loc->map->ox+loc->dx*(npad-1/2);
-    limit[1]=loc->map->ox+loc->dx*(nx+npad-1/2);
-    limit[2]=loc->map->oy+loc->dx*(npad-1/2);
-    limit[3]=loc->map->oy+loc->dx*(ny+npad-1/2);
+    limit[0]=loc->map->ox+fabs(loc->dx)*(npad-1/2);
+    limit[1]=loc->map->ox+fabs(loc->dx)*(nx+npad-1/2);
+    limit[2]=loc->map->oy+fabs(loc->dy)*(npad-1/2);
+    limit[3]=loc->map->oy+fabs(loc->dy)*(ny+npad-1/2);
     imagesc(fig,nx,ny, limit,zlim,opd0->p,  title, xlabel, ylabel,"%s",fn);
     dfree(opd0);
 }

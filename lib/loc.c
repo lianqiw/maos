@@ -219,13 +219,13 @@ void loc_create_map_npad(loc_t *loc, int npad){
     int map_nx, map_ny;
     /*padding the map. normally don't need. */
     if(npad>0){
-	xmin-=npad*loc->dx;
-	ymin-=npad*loc->dy;
-	xmax+=npad*loc->dx;
-	ymax+=npad*loc->dy;
+	xmin-=npad*fabs(loc->dx);
+	ymin-=npad*fabs(loc->dy);
+	xmax+=npad*fabs(loc->dx);
+	ymax+=npad*fabs(loc->dy);
     }
-    const double dx_in1=1./loc->dx;
-    const double dy_in1=1./loc->dy;
+    const double dx_in1=1./fabs(loc->dx);
+    const double dy_in1=1./fabs(loc->dy);
     map_nx=(int) ceil((xmax-xmin)*dx_in1)+1;
     map_ny=(int) ceil((ymax-ymin)*dy_in1)+1;
     loc->map->p=calloc(map_nx*map_ny,sizeof(long));
