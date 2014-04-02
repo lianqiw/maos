@@ -213,7 +213,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     }
     {
 	const int npowfs=parms->npowfs;
-	GPp=new cucell<short2>(npowfs, 1);
+	GPp=new cucell<short2>(nwfs, 1);
 	GP=new cuspcell(nwfs, 1);
 	GPscale=new float[npowfs];
 	saptr=new cucell<int>(npowfs, 1);
@@ -221,19 +221,24 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].skip) continue;
 	    cusp *GPf=NULL;
-	    prep_GP(&GPp->p[ipowfs], &GPscale[ipowfs], &GPf,
+	    cumat<short2> *GPpi=0;
+	    prep_GP(&GPpi, &GPscale[ipowfs], &GPf,
 		    recon->GP->p[ipowfs], powfs[ipowfs].saloc, recon->ploc);
 	    saptr->p[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
-	    if(GPf){
-		for(int iwfs=0; iwfs<nwfs; iwfs++){
-		    if(ipowfs==parms->wfsr[iwfs].powfs){
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		if(ipowfs==parms->wfsr[iwfs].powfs){
+		    if(GPpi){
+			GPp->p[iwfs]=GPpi->ref();
+		    }
+		    if(GPf){
 			GP->p[iwfs]=GPf->ref();
 		    }
 		}
 	    }
-	    if(GPp->p[ipowfs]){
+	    if(GPpi){
 		has_GPp=1;
 	    }
+	    delete GPpi;
 	    delete GPf;
 	}
 	if(!has_GPp){
@@ -272,7 +277,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
 	    GPDATA[iwfs].saptr=(int(*)[2])saptr->p[ipowfs]->p;
-	    GPDATA[iwfs].GPp=GPp?(short2*)GPp->p[ipowfs]->p:NULL;
+	    GPDATA[iwfs].GPp=(GPp && GPp->p[iwfs])?(short2*)GPp->p[iwfs]->p:NULL;
 	    GPDATA[iwfs].GPscale=GPscale[ipowfs];
 	    if(parms->powfs[ipowfs].trs){
 		GPDATA[iwfs].PTT=PTT->p[iwfs+iwfs*nwfs]->p;
@@ -516,17 +521,30 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    focus=-dfin[iwfs];
 	}
     }
-    const float *restrict g=gin[iwfs];
-    float *restrict map=wfsopd[iwfs];
+    float *restrict g=gin[iwfs];
+    float *restrict map=wfsopd?wfsopd[iwfs]:0;
     float GPscale=datai->GPscale;
-    const short2 *restrict pxy=datai->GPp;
     float ttx=0, tty=0;
     if(datai->PTT && ptt){
 	ttx=ttin[iwfs*2+0];
 	tty=ttin[iwfs*2+1];
     }
     const int nx=datai->nxp;
-    if(pos==1){
+    const short2 *restrict pxy=datai->GPp;
+
+    if(!pxy || !map){
+	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
+	    int ix=saptr[isa][0];
+	    int iy=saptr[isa][1];
+	    float cx=neai[isa][0];
+	    float cy=neai[isa][1];
+	    float cxy=neai[isa][2];
+	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
+	    g[isa]=cx*gx+cxy*gy;
+	    g[isa+nsa]=cxy*gx+cy*gy;
+	}
+    }else if(pos==1){
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	    int ix=saptr[isa][0];
 	    int iy=saptr[isa][1];
@@ -569,51 +587,12 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	}
     }
 }
-/*Only do tt, NEA. do not do GP'*/
-__global__ static void gpu_nea_do(GPU_GP_T *data, float *ttin, float *dfin, float **gin, int ptt){
-    const int iwfs=blockIdx.z;
-    const int nwfs=gridDim.z;
-    GPU_GP_T *datai=data+iwfs;
-    const int pos=datai->pos;
-    if(!pos) return;
-    const int step=blockDim.x * gridDim.x;
-    const int nsa=datai->nsa;
-    int (*saptr)[2]=datai->saptr;
-    const float (*restrict neai)[3]=datai->neai;
-    float dxp=datai->dxp;
-    float oxp=datai->oxp;
-    float oyp=datai->oyp;
-    float focus=0;
-    if(datai->PDF && ptt){
-	if(iwfs==0){
-	    for(int id=1; id<nwfs; id++){
-		focus+=dfin[id];
-	    }
-	}else{
-	    focus=-dfin[iwfs];
-	}
-    }
-    float *restrict g=gin[iwfs];
-    float ttx=ptt?ttin[iwfs*2+0]:0;
-    float tty=ptt?ttin[iwfs*2+1]:0;
-    for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
-	int ix=saptr[isa][0];
-	int iy=saptr[isa][1];
-	float cx=neai[isa][0];
-	float cy=neai[isa][1];
-	float cxy=neai[isa][2];
-	float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
-	float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
-	g[isa]=cx*gx+cxy*gy;
-	g[isa+nsa]=cxy*gx+cy*gy;
-    }
-}
+
 void cutomo_grid::do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream){
-    if(opdwfs && !GPp){
-	warning_once("do_gp: !GPp\n");
-	curzero(grad->m, stream);
+    if(opdwfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(!GP->p[iwfs]) continue;
+	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
+	    curzero(grad->p[iwfs], stream);
 	    cuspmul(grad->p[iwfs]->p, GP->p[iwfs], opdwfs->p[iwfs]->p, 1, 'n', 1, stream);
 	}
     }
@@ -622,21 +601,18 @@ void cutomo_grid::do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &strea
 	(gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs?opdwfs->pm:NULL, ptt);
 }
 void cutomo_grid::do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream){
-    if(opdwfs && GPp){
-	//Does  GP'*NEA*(1-TTDF)
+    if(opdwfs){
 	curzero(opdwfs->m, stream);
-	gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	    (gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
-    }else{
-	//Does NEA*(1-TTDF)
-	gpu_nea_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	    (gpdata, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
-	if(opdwfs){//Does GP'
-	    curzero(opdwfs->m, stream);
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(!GP->p[iwfs]) continue;
-		cuspmul(opdwfs->p[iwfs]->p, GP->p[iwfs], grad->p[iwfs]->p, 1, 't', 1, stream);
-	    }
+    }
+    //Does  GP'*NEA*(1-TTDF) if opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
+    gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
+	(gpdata, opdwfs?opdwfs->pm:0, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
+    
+    if(opdwfs){//Does GP' for GP with sparse
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
+	    curzero(opdwfs->p[iwfs], stream);
+	    cuspmul(opdwfs->p[iwfs]->p, GP->p[iwfs], grad->p[iwfs]->p, 1, 't', 1, stream);
 	}
     }
 }

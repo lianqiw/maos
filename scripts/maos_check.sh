@@ -13,6 +13,9 @@ echo "D is ${D}m. DM order is $((D*2))."
 echo -n "LGS MCAO: "
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2]  2>>maos_check.stderr) nm
 
+echo -n "LGS MCAO (inte): "
+echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] recon.split=0 2>>maos_check.stderr) nm
+
 echo -n "LGS MCAO (FDPCG): "
 echo $(./maos aper.d=$D dm.order=[$D*2 $D*2] tomo.precond=1 2>>maos_check.stderr) nm
 
