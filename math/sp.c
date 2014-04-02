@@ -261,7 +261,10 @@ int Y(spcheck)(const X(sp) *sp){
  * inplace scale X(sp) matrix elements.*/
 void Y(spscale)(X(sp) *A, const T beta){
     if(A){
-	for(long i=0; i<A->p[A->n]; i++){
+	if(A->nref[0]>1){
+	    error("spscale on referenced dsp\n");
+	}
+	for(long i=0; i<A->p[A->ny]; i++){
 	    A->x[i]*=beta;
 	}
     }

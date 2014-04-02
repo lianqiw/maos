@@ -224,7 +224,7 @@ int main(int argc, const char *argv[]){
     info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
     maos_version();
     if(getenv("MAOS_TOMOSCALE")){
-	TOMOSCALE=strtol(getenv("MAOS_TOMOSCALE"), NULL, 10);
+	TOMOSCALE=strtod(getenv("MAOS_TOMOSCALE"), NULL);
 	if(TOMOSCALE<=0){
 	    error("invalid TOMOSCALE=%g\n", TOMOSCALE);
 	}

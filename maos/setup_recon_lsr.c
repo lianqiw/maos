@@ -55,7 +55,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     info2("Building recon->LL\n");
     recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
-    double maxeig=pow(recon->neamhi * recon->aloc[0]->dx, -2);
+    double maxeig=pow(recon->neamhi * recon->aloc[0]->dx, -2)*TOMOSCALE;
     if(fabs(parms->lsr.tikcr)>EPS){
 	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);

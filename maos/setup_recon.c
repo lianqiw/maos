@@ -597,6 +597,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    sanea->p[iwfs+iwfs*nwfs] =spref( sanea->p[iwfs0+iwfs0*nwfs]);
 	    saneal->p[iwfs+iwfs*nwfs]=spref(saneal->p[iwfs0+iwfs0*nwfs]);
 	    saneai->p[iwfs+iwfs*nwfs]=spref(saneai->p[iwfs0+iwfs0*nwfs]);
+	}else{
+	    spscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
 	}
     }/*iwfs */
     
@@ -660,13 +662,11 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }
     recon->neamhi=sqrt(neamhi/counthi);
     info2("\n");
-
     if(parms->save.setup){
 	spcellwrite(recon->sanea, "%s/sanea",dirsetup);
 	spcellwrite(recon->saneal,"%s/saneal",dirsetup);
 	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
     }
-    spcellscale(recon->saneai, TOMOSCALE);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
 	    //warning("why free here crash maos?\n");
