@@ -36,7 +36,6 @@ fi
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
-AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
@@ -337,14 +336,14 @@ case "${CC}" in
     fi
     ;;
   gcc*)
-    if test -n $($CC -v|grep clang)  ;then
+    if test -n "$($CC -v 2>&1 |grep clang)"  ;then
         OPTIM=$OPTIM_CLANG
     else
 	OPTIM=$OPTIM_GCC
     fi
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
-    if test -n $CC_VERSION ;then
+    if test -n "$CC_VERSION" ;then
 	major=${CC_VERSION%%.*}
 	minor=${CC_VERSION%.*}
 	minor="${minor#4.}"
@@ -366,7 +365,7 @@ case "${CC}" in
   clang)
 	CC=$OPTIM_CLANG
     ;;
-  *) #Other compilears
+  *) #Other compilers
     OPTIM="-O3"
     ;;
 esac
@@ -693,12 +692,12 @@ if test "x${use_mex}" = "xyes" ; then
 	;;
 	mexmaci)
 		MEXLIB=maci
-		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -m32 -fexceptions"
+		MEXOPT="-O3 -DNDEBUG -fno-common -m32 -fexceptions" #omitted -no-cpp-precomp
 		mex_cpu=i386
 	;;
 	mexmaci64)
 		MEXLIB=maci64
-		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -fexceptions -arch x86_64"
+		MEXOPT="-O3 -DNDEBUG -fno-common -fexceptions -arch x86_64" #omitted -no-cpp-precomp
 		MEXOPT="${MEXOPT} -DDLONG"
 		mex_cpu=x86_64
 	;;
@@ -754,7 +753,10 @@ if test "$use_cuda" = "yes" ;then
        AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
    if test ! -x $NVCC ;then
-        AC_MSG_ERROR([nvcc not found])
+       AC_MSG_ERROR([nvcc not found])
+   fi
+   if test -n "$CC" ;then
+       NVCC="$NVCC -ccbin $(which $CC)"
    fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then

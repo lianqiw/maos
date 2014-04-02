@@ -156,8 +156,6 @@ static void
 setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
 		 APER_T *aper, int ipowfs){
     free_powfs_geom(powfs, parms, ipowfs);
-    double offset,dxoffset;
-    int count;
     int nwfsp=parms->powfs[ipowfs].nwfs;
     /*order of the system. 60 for TMT */
     const int order  = parms->powfs[ipowfs].order;
@@ -170,71 +168,81 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }else{
 	areafulli=4./M_PI;
     }
-    /*The threashold for normalized area (by areafulli) to keep subaperture. */
-    double thresarea=parms->powfs[ipowfs].saat;
-    /*Offset of the coordinate of the center most subaperture from the center. */
-    if(order & 1){/*odd */
-	offset = -0.5;
-    }else{
-	offset = 0.0;
-    }
-    /*r2max: Maximum distance^2 from the center to keep a subaperture */
-    //double r2max=pow(order/2+0.5, 2);
-    //double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2-0.5,2):-1;
-    double r2max=pow(order*0.5, 2);
-    double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2,2):-1;
-    /*the lower left *grid* coordinate of the subaperture */
-    
-    /*The coordinate of the subaperture (lower left coordinate) */
-    powfs[ipowfs].saloc=locnew(order*order, dxsa, dxsa);
+
     /*Number of OPD pixels in 1 direction in each
       subaperture. Make it even to do fft.*/
     int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
     const double dx=dxsa/nx;/*adjust dx. */
-    powfs[ipowfs].pts=ptsnew(order*order, dxsa, dxsa, nx, dx, dx);/*calloc(1, sizeof(pts_t)); */
-
-    if(fabs(parms->powfs[ipowfs].dx-powfs[ipowfs].pts->dx)>EPS)
-	warning("Adjusting dx from %g to %g\n",
-		parms->powfs[ipowfs].dx,powfs[ipowfs].pts->dx);
-    if(fabs(dxsa - nx * powfs[ipowfs].pts->dx)>EPS){
-	warning("nx=%d,dsa=%f,dx=%f for not agree\n", nx, dxsa, dx);
+    const double dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
+    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS)
+	warning("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
+    if(fabs(dxsa - nx * dx)>EPS){
+	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dxsa, dx);
     }
-    dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
-
     info2("There are %d points in each subapeture of %gm.\n", nx, dxsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
-    count = 0;
-    /*Collect all the subapertures that are within the allowed radius*/
-    for(int j=-order/2; j<=(order-1)/2; j++){
-	for(int i=-order/2; i<=(order-1)/2; i++){
-	    //Normalized coordinate in uniq of sa size
-	    double xc=((double)i+offset);
-	    double yc=((double)j+offset);
-	    //Radius of four corners.
-	    double r1=pow(xc+1,2)+pow(yc+1,2);
-	    double r2=pow(xc+1,2)+pow(yc,2);
-	    double r3=pow(xc,2)+pow(yc+1,2);
-	    double r4=pow(xc,2)+pow(yc,2);
-	    if(r1<r2max || r2<r2max || r3<r2max || r4<r2max||
-	       r1>r2min || r2>r2min || r3>r2min || r4>r2min){
-		powfs[ipowfs].pts->origx[count]=xc*dxsa+dxoffset;
-		powfs[ipowfs].pts->origy[count]=yc*dxsa+dxoffset;
-		powfs[ipowfs].saloc->locx[count]=xc*dxsa;
-		powfs[ipowfs].saloc->locy[count]=yc*dxsa;
-		count++;
+    if(parms->powfs[ipowfs].saloc){
+	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
+	if(fabs(powfs[ipowfs].saloc->dx-dxsa)>0.1*(powfs[ipowfs].saloc->dx+dxsa)){
+	    error("loaded saloc has dx=%g, while powfs.order implies %g\n",
+		  powfs[ipowfs].saloc->dx, dxsa);
+	}
+    }else{
+	/*The coordinate of the subaperture (lower left coordinate) */
+	powfs[ipowfs].saloc=locnew(order*order, dxsa, dxsa);
+	int count = 0;
+	/*Offset of the coordinate of the center most subaperture from the center. */
+	double offset;
+	if(order & 1){/*odd */
+	    offset = -0.5;
+	}else{
+	    offset = 0.0;
+	}
+	/*r2max: Maximum distance^2 from the center to keep a subaperture */
+	double r2max=pow(order*0.5, 2);
+	double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2,2):-1;
+	/*the lower left *grid* coordinate of the subaperture */
+
+	/*Collect all the subapertures that are within the allowed radius*/
+	for(int j=-order/2; j<=(order-1)/2; j++){
+	    for(int i=-order/2; i<=(order-1)/2; i++){
+		//Normalized coordinate in uniq of sa size
+		double xc=((double)i+offset);
+		double yc=((double)j+offset);
+		//Radius of four corners.
+		double r1=pow(xc+1,2)+pow(yc+1,2);
+		double r2=pow(xc+1,2)+pow(yc,2);
+		double r3=pow(xc,2)+pow(yc+1,2);
+		double r4=pow(xc,2)+pow(yc,2);
+		if(r1<r2max || r2<r2max || r3<r2max || r4<r2max||
+		   r1>r2min || r2>r2min || r3>r2min || r4>r2min){
+		    powfs[ipowfs].saloc->locx[count]=xc*dxsa;
+		    powfs[ipowfs].saloc->locy[count]=yc*dxsa;
+		    count++;
+		}
 	    }
 	}
+	powfs[ipowfs].saloc->nloc=count;
+	info("count=%d\n", count);
+    }
+    /*convert saloc to pts*/
+    powfs[ipowfs].pts=ptsnew(powfs[ipowfs].saloc->nloc, dxsa, dxsa, nx, dx, dx);
+    for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
+	powfs[ipowfs].pts->origx[isa]=powfs[ipowfs].saloc->locx[isa]+dxoffset;
+	powfs[ipowfs].pts->origy[isa]=powfs[ipowfs].saloc->locy[isa]+dxoffset;
     }
     /*Calculate the amplitude for each subaperture OPD point by ray tracing from
       the pupil amplitude map.*/
-    powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, aper->ampground, 
 			       parms->misreg.pupil[0],parms->misreg.pupil[1], 
 			       parms->aper.d, parms->aper.din);
+    /*The threashold for normalized area (by areafulli) to keep subaperture. */
+    double thresarea=parms->powfs[ipowfs].saat;
     dmat *ampi=NULL;
     if(parms->powfs[ipowfs].safill2d<1){
+	/*subaperture amplitude map to simulate lenslet fill factor*/
 	int nedge=1;
 	while ((nx-2*nedge)*(nx-2*nedge)>nx*nx*parms->powfs[ipowfs].safill2d){
 	    nedge++;
@@ -327,7 +335,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    toc("misreg.tel2wfs");
 	}
     }/*if misreg */
-    count=0;
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
       the are threshold*/
@@ -362,17 +369,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	saa=dref(powfs[ipowfs].saa);
     }
     if(dmax(saa)>1.01){
-	/*if(powfs[ipowfs].amp_tel){
-	    dcellwrite(powfs[ipowfs].amp_tel, "powfs%d_amp_tel", ipowfs);
-	    dcellwrite(powfs[ipowfs].saa_tel, "powfs%d_amp_saa", ipowfs);;
-	}
-	locwrite(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
-	dwrite(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
-	dwrite(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
-	*/
 	warning("The sa area maxes to %g, which should be leq 1 (misregistration can cause this).\n", 
 	      dmax(saa));
     }
+    int count=0;
     for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
 	if(saa->p[isa]>thresarea){
 	    /*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,

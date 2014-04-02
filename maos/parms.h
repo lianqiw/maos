@@ -116,6 +116,7 @@ typedef struct LLT_CFG_T{
 */
 typedef struct POWFS_CFG_T{
     double *wvl;   /**<list of wavelength*/
+    char *saloc;   /**<saloc override file*/
     char *piinfile;/**<input averaged pixel intensities for matched filter. NULL
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
@@ -509,6 +510,8 @@ typedef struct SIM_CFG_T{
     double *ncpa_wt;     /**<Weight for each point.*/
     double *ncpa_hs;     /**<Height of star.*/
     int ncpa_ndir;       /**<Number of points for NCPA calibration*/
+    char *dmadd;      /**<Containing dm vector to simulate turbulence (added to integrator output). 
+			 It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

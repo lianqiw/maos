@@ -266,6 +266,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		dmat *B=ddup((dmat*)surf);
 		dzero(surf);
 		dembed((dmat*)surf, B, parms->aper.rotdeg/180.*M_PI);
+		dfree(B);
 	    }
 	}
 	if(!strevl){

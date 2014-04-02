@@ -213,14 +213,16 @@ void muv_direct_prep(MUV_T *A, double svd){
     if(A->U && A->V){
 	dmat *U=dcell2m(A->U);
 	dmat *V=dcell2m(A->V);
-	muv_direct_prep_lowrank(&A->Up, &A->Vp, A->C, A->MI, U, V);
+	if(U && V && U->nx && U->ny){
+	    muv_direct_prep_lowrank(&A->Up, &A->Vp, A->C, A->MI, U, V);
+	    if(use_svd){
+		dmm(&A->MI, 1, A->Up, A->Vp, "nt", -1);
+		dfree(A->Up);
+		dfree(A->Vp);
+	    }
+	}
 	dfree(V);
 	dfree(U);
-	if(use_svd){
-	    dmm(&A->MI, 1, A->Up, A->Vp, "nt", -1);
-	    dfree(A->Up);
-	    dfree(A->Vp);
-	}
     }
     toc2("done.");
 }

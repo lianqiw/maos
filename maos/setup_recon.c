@@ -34,7 +34,11 @@
    which hands GLAO mode correctly.x 
 
    TOMOSCALE is used for RLM, RRM, in MVST for M, and in CUDA due to
-   limited dynamic range of single precision floating point numbers.*/
+   limited dynamic range of single precision floating point numbers.
+
+   2014-04-01: Scale saneai, cxx, zzt by TOMOSCALE.
+
+*/
 /**
    Setting up PLOC grid, which is a coarse sampled (usually halves the
    subaperture spacing) grid that defines the circular aperture for tomography.*/
@@ -645,6 +649,10 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    neatype="geom";
 	}
 	info2("%s(%.2f) ", neatype, recon->neam->p[iwfs]*206265000);
+    }
+    dscale(recon->neam, 1./sqrt(TOMOSCALE));
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].lo){
 	    neamhi+=pow(recon->neam->p[iwfs],2);
 	    counthi++;
@@ -658,7 +666,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	spcellwrite(recon->saneal,"%s/saneal",dirsetup);
 	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
     }
-   
+    spcellscale(recon->saneai, TOMOSCALE);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
 	    //warning("why free here crash maos?\n");
@@ -849,6 +857,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    if(parms->save.setup){
 		spcellwrite(recon->L2, "%s/L2",dirsetup);
 	    }
+	    spcellscale(recon->L2, sqrt(TOMOSCALE));
 	}
     }
     if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
@@ -927,6 +936,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	if(parms->save.setup){
 	    spcellwrite(recon->ZZT, "%s/ZZT",dirsetup);
 	}
+	spcellscale(recon->ZZT, TOMOSCALE);
     }
 }
 /**
@@ -994,7 +1004,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	  participate in tomography.
 	*/
 	spcell *GXtomoT=spcelltrans(recon->GXtomo);
-	recon->RR.M=spcellmulspcell(GXtomoT, saneai, TOMOSCALE);
+	recon->RR.M=spcellmulspcell(GXtomoT, saneai, 1);
 	PDSPCELL(recon->RR.M, RRM);
 	/*
 	  Tip/tilt and diff focus removal low rand terms for LGS WFS.
@@ -1011,7 +1021,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*single point piston constraint. no need tikholnov.*/
 	    info2("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
-		spscale(recon->ZZT->p[ips+ips*npsr], TOMOSCALE);
 		spadd(&RLM[ips][ips], recon->ZZT->p[ips+ips*npsr]);
 	    }
 	    spcellfree(recon->ZZT);
@@ -1023,7 +1032,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double tikcr=parms->tomo.tikcr;
 	    info2("Adding tikhonov constraint of %g to RLM\n",tikcr);
 	    info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	    spcelladdI(recon->RL.M, tikcr*maxeig*TOMOSCALE);
+	    spcelladdI(recon->RL.M, tikcr*maxeig);
 	}
 	/*add L2 and ZZT */
 	switch(parms->tomo.cxx){
@@ -1033,7 +1042,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
-		spscale(tmp, TOMOSCALE);
 		spadd(&RLM[ips][ips], tmp);
 		spfree(tmp);
 	    }
@@ -1567,7 +1575,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
 	    spfull(&neailo->p[iwfs*(1+parms->nwfsr)],
-		   recon->saneai->p[iwfs*(1+parms->nwfsr)], TOMOSCALE);
+		   recon->saneai->p[iwfs*(1+parms->nwfsr)], 1);
 	    spfull(&nealo->p[iwfs*(1+parms->nwfsr)],
 		   recon->sanea->p[iwfs*(1+parms->nwfsr)], 1);
 	}
@@ -2045,7 +2053,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	muv_direct_free(&recon->FL);
     }
 
-    if(parms->tomo.assemble){
+    if(recon->RR.M){
 	spcellfree(recon->GP);
 	spcellfree(recon->GP2);
     }
@@ -2071,7 +2079,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     if(!(parms->cn2.tomo && parms->recon.split==2)){/*mvst needs GXlo when updating. */
 	spcellfree(recon->GXlo);
     }
-    if(parms->tomo.alg!=1 || (parms->tomo.assemble || (parms->tomo.square && !parms->dbg.tomo_hxw))){
+    if(parms->tomo.square && !parms->dbg.tomo_hxw && recon->RR.M){
 	spcellfree(recon->HXWtomo);
     }
     if(parms->recon.mvm){

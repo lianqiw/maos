@@ -32,6 +32,7 @@
 */
 GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
+double TOMOSCALE=1e-12;
 const char *dirsetup=NULL;
 const char *dirskysim=NULL;
 volatile int maos_server_fd=-1;
@@ -211,7 +212,7 @@ static void maos_server(PARMS_T *parms){
 int main(int argc, const char *argv[]){
     char *scmd=argv2str(argc,argv," ");
     ARG_T* arg=parse_args(argc,argv);/*does chdir */
-
+    
     if(arg->detach){
 	daemonize();
     }else{
@@ -222,12 +223,18 @@ int main(int argc, const char *argv[]){
     info2("%s\n", scmd);
     info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
     maos_version();
+    if(getenv("MAOS_TOMOSCALE")){
+	TOMOSCALE=strtol(getenv("MAOS_TOMOSCALE"), NULL, 10);
+	if(TOMOSCALE<=0){
+	    error("invalid TOMOSCALE=%g\n", TOMOSCALE);
+	}
+    }
+    info2("TOMOSCALE=%g\n", TOMOSCALE);
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     global=calloc(1, sizeof(GLOBAL_T));
     global->parms=parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
-    
     /*register signal handler */
     register_signal_handler(maos_signal_handler);
  

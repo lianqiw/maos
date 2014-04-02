@@ -17,7 +17,7 @@
 */
 #include "cudata.h"
 int nstream=0;
-
+#define MEM_RESERVE 200000000
 int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
@@ -74,8 +74,10 @@ long gpu_get_mem(void){
 */
 static long gpu_get_idle_mem(void){
     size_t fr, tot;
-    DO(cudaMemGetInfo(&fr, &tot));
-    if(tot-fr>500000000){//GPU used by some other process. do not use it.
+    if(cudaMemGetInfo(&fr, &tot)){
+	fr=0; tot=0;
+    }
+    if(tot-fr>MEM_RESERVE){//GPU used by some other process. do not use it.
 	return 0;
     }else{
 	return (long)fr;
@@ -98,8 +100,6 @@ int gpu_init(int *gpus, int ngpu){
 	info2("No GPUs available. ans=%d\n", ans);
 	return 0;
     }
-    //sem_lock("/maos.gpu");
-    /*do not use sem_lock. if program terminators before unlock. subsequent programs cannot proceed.*/
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
     int fdlock=lock_file(fnlock, 1, 0);
@@ -120,7 +120,7 @@ int gpu_init(int *gpus, int ngpu){
 		goto end;
 	    }else{
 		if(gpus[ig]>=ngpu_tot){
-		    warning2("Skip GPU %d: not exist\n", gpus[ig]);
+		    error("GPU %d: not exist\n", gpus[ig]);
 		}else{
 		    GPUS[NGPU++]=gpus[ig];
 		    /* Enable the following to disallow use GPUs in multiple threads
@@ -151,22 +151,24 @@ int gpu_init(int *gpus, int ngpu){
 	do{
 	    for(int ig=0; ig<ngpu_tot; ig++){
 		gpu_info[ig][0]=ig;
-		cudaSetDevice(ig);//this allocates context.
-		gpu_info[ig][1]=gpu_get_idle_mem();
+		if(!cudaSetDevice(ig)){
+		    //this allocates context.
+		    gpu_info[ig][1]=gpu_get_idle_mem();
+		}
 	    }
 	    /*sort so that gpus with higest memory is in the front.*/
 	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
 	    gpu_valid_count=0;
 	    for(int igpu=0; igpu<ngpu_tot; igpu++){
-		if(gpu_info[igpu][1]>=500000000){
+		if(gpu_info[igpu][1]>=MEM_RESERVE){
 		    gpu_valid_count++;
 		}
 		info2("GPU %d has mem %.1f GB\n", (int)gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
 	    }
-	}while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
+	}while(0);//while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
 
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
-	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
+	    if(igpu==ngpu_tot || gpu_info[igpu][1]<MEM_RESERVE){
 		if(repeat){
 		    igpu=0; //reset to beginning.
 		}else{
@@ -186,12 +188,11 @@ int gpu_init(int *gpus, int ngpu){
 	    info2(" %d", GPUS[i]);
 	    gpu_set(i);
 	    //Reserve memory in GPU so the next maos will not pick this GPU.
-	    DO(cudaMalloc(&cudata->reserve, 500000000));
+	    DO(cudaMalloc(&cudata->reserve, MEM_RESERVE));
 	}
 	info2("\n");
     }
  end:
-    //sem_unlock("maos.gpu");
     close(fdlock);
     return NGPU;
 }

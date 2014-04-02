@@ -1231,6 +1231,16 @@ static void init_simu_dm(SIM_T *simu){
 	    }
 	}
     }
+    if(parms->sim.dmadd){
+	simu->dmadd=dcellread("%s", parms->sim.dmadd);
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmadd->p[idm] && simu->dmadd->p[idm]->nx!=simu->dmreal->p[idm]->nx){
+		if(!parms->fit.square || simu->dmadd->p[idm]->nx!=recon->amap[idm]->nx*recon->amap[idm]->ny){
+		    error("DM[%d]: dmadd does not match dm geometry\n", idm);
+		}
+	    }
+	}
+    }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
 	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
@@ -1242,10 +1252,8 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
-    if(recon->dm_ncpa){//set the integrator and also initial output.
+    if(recon->dm_ncpa){//set the integrator
 	dcelladd(&simu->dmint->mint[0], 1, recon->dm_ncpa, 1);
-	dcellcp(&simu->dmreal, simu->dmint->mint[0]);
-	update_dm(simu);
     }
     if(parms->recon.split){
 	simu->Merr_lo_store=dcellnew(1,1);
@@ -1374,7 +1382,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     const int nwfs=parms->nwfs;
     SIM_T *simu=calloc(1, sizeof(SIM_T));
     SIM_SAVE_T *save=simu->save=calloc(1, sizeof(SIM_SAVE_T));
-  
+    simu->isim=-1;
     simu->parms=parms;
     simu->powfs=powfs;
     simu->recon=recon;
@@ -1471,7 +1479,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	gpu_recon_reset(parms);
     }
 #endif
-    //filter(simu);//so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
+    filter(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
     return simu;
 }
 /**
@@ -1563,6 +1571,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmproj);
     dcellfreearr(simu->dmpsol, parms->npowfs);
     dcellfree(simu->dmcmd);
+    dcellfree(simu->dmadd);
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
     dcellfree(simu->gcov);

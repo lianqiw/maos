@@ -135,7 +135,22 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
     pts->nx=nx;
     pts->dx=dx;
     pts->dy=dy;
+    pts->nsa=nsa;
     return pts;
+}
+long *loc2map_embed(const loc_t *loc, const map_t *map){
+    const double ox=map->ox;
+    const double oy=map->oy;
+    const double dx_in1=1./map->dx;
+    const double dy_in1=1./map->dy;
+    const long nx=map->nx;
+    long *embed=calloc(loc->nloc, sizeof(long));
+    for(int iloc=0; iloc<loc->nloc; iloc++){
+	long ix=(long)round((loc->locx[iloc]-ox)*dx_in1);
+	long iy=(long)round((loc->locy[iloc]-oy)*dy_in1);
+	embed[iloc]=ix+iy*nx;
+    }
+    return embed;
 }
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
@@ -164,7 +179,6 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     xmin-=(mapn-nx)/2*loc->dx;
     ymin-=(mapn-ny)/2*loc->dy;
     long *embed=calloc(loc->nloc, sizeof(long));
-    
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
 	long iy=(long)round((loc->locy[iloc]-ymin)*dy_in1);
@@ -233,13 +247,6 @@ void loc_create_map_npad(loc_t *loc, int npad){
 }
 
 /**
-   Create an index array can put embed opd defined in loc from map2loc into
-   a square array of size nx*ny
-*/
-long *map2embed(map_t *amp){
-    return d2embed((dmat*)amp);
-}
-/**
    Convert a map to a loc that collects all positive entries. */
 loc_t* map2loc(map_t *map){
     const double dx=map->dx;
@@ -287,30 +294,12 @@ map_t *loc2map(loc_t *loc){
     }	
     return map;
 }
-/**
-   map is a square array of values of 0, or nonzero. 0 means that point is
-   missing. the returned vector of long integers can be used to embed an
-   irregular OPD into the square array of map->nx*map->ny. The OPDs only goes to
-   locations where the value is nonzero.  
-*/
-long *d2embed(dmat *map){
-    long *embed=malloc(sizeof(long)*map->nx*map->ny);
-    long count=0;
-    for(long i=0; i<map->nx*map->ny; i++){
-	if(map->p[i]>0){
-	    embed[count]=i;
-	    count++;
-	}
-    }
-    embed=realloc(embed, sizeof(long)*count);
-    return embed;
-}
 
 /**
    Create 1 dimensional loc with given vector.
 */
 loc_t *mk1dloc_vec(double *x, long nx){
-    double dx=(x[nx-1]-x[0])/(nx-1);
+    double dx=fabs((x[nx-1]-x[0])/(nx-1));
     loc_t *loc=locnew(nx, dx, dx);
     memcpy(loc->locx, x, sizeof(double)*nx);
     return loc;

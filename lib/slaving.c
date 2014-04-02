@@ -212,8 +212,8 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
 	/*if(!disable_save){
-	    spwrite(slave, "slave");
-	    }*/
+	  spwrite(slave, "slave");
+	  }*/
 	actslave[idm][idm]=spmulsp(slavet, slave);
 	if(NW && 0){
 	    /*Now we need to make sure NW is in the NULL
@@ -289,7 +289,7 @@ void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stu
 }
 /**
    Zero out rows of dead actuators in mode vector.
- */
+*/
 void act_zero(loc_t **aloc, const dcell *HB, const icell *dead){
     if(!dead || !HB) return;
     for(int idm=0; idm<dead->nx; idm++){
@@ -312,8 +312,8 @@ void act_zero(loc_t **aloc, const dcell *HB, const icell *dead){
 
 /**
    When some actuators are float, remove the corresponding column in HA and/or HB,
-and add to neigh boring actuators. This is implemented using a second matrix and
-do matrix addition.*/
+   and add to neigh boring actuators. This is implemented using a second matrix and
+   do matrix addition.*/
 void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat){
     if(!actfloat || ((!HA || !*HA) && !HB)) return;
     int ndm=actfloat->nx;
@@ -479,7 +479,7 @@ void act_stuck_cmd(loc_t **aloc, /**<[in] Actuator grid array*/
 }
 /**
    Create an interpreter that make floating actuators equal to their neighbors.
- */
+*/
 spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 			 const icell *actfloat/**<[in] List of floating actuators*/
 			 ){
@@ -551,92 +551,101 @@ spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
    Create an interpreter that make inactive actuators equal avearage of active
    neighbors if exist or all other neighbors.
 */
-spcell* act_inactive_interp(loc_t **aloc,     /**<[in] Actuator grid array*/
-			    const dcell *actcplc,/**<[in] Actuator coupling coefficiency*/
-			    const double thres /**<[in] Threshold of coupling to turn on interpolation*/
-			    ){
-    int ndm=actcplc->nx;
-    spcell *out=spcellnew(ndm, ndm);
-    for(int idm=0; idm<ndm; idm++){
-	const double *cpl=actcplc->p[idm]->p;
-	const double *cpl0 = cpl-1;
-	loc_create_map_npad(aloc[idm],1);
-	long (*map)[aloc[idm]->map->nx]=(void*)aloc[idm]->map->p;
-	double ox=aloc[idm]->map->ox;
-	double oy=aloc[idm]->map->oy;
-	double dx1=1./aloc[idm]->dx;
-	double dy1=1./aloc[idm]->dy;
-	const double *locx=aloc[idm]->locx;
-	const double *locy=aloc[idm]->locy;
-	long nact=aloc[idm]->nloc;
-	dsp *outit=spnew(nact, nact, nact*4);
-	double *px=outit->x;
-	spint *pp=outit->p;
-	spint *pi=outit->i;
-	long count=0;
-	for(long iact=0; iact<nact; iact++){
-	    pp[iact]=count;
-	    if(cpl[iact]<thres){
-		long mapx=(long)round((locx[iact]-ox)*dx1);
-		long mapy=(long)round((locy[iact]-oy)*dy1);
-		int count2=count;
-		double sum=0;
-		/*first, interpolate from neighbors of higher cpl*/
-		int near_active=0;
-		double thres2=0.1;
-		for(int idy=-1; idy<2; idy++){
-		    for(int idx=-1; idx<2; idx++){
-			if(abs(idx)+abs(idy)>1){
-			    continue;/*include self and neighbor*/
-			}
-			int kact1=map[mapy+idy][mapx+idx];
-			if(kact1 && cpl0[kact1]>=thres2){
-			    near_active++;
-			}
+dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
+		  const dmat *actcplc,/**<[in] Actuator coupling coefficiency*/
+		  const double thres  /**<[in] Threshold of coupling to turn on interpolation*/
+		  ){
+    dsp *out=0;
+    const double *cpl=actcplc->p;
+    const double *cpl0 = cpl-1;
+    loc_create_map_npad(aloc,1);
+    long (*map)[aloc->map->nx]=(void*)aloc->map->p;
+    double ox=aloc->map->ox;
+    double oy=aloc->map->oy;
+    double dx1=1./aloc->dx;
+    double dy1=1./aloc->dy;
+    const double *locx=aloc->locx;
+    const double *locy=aloc->locy;
+    long nact=aloc->nloc;
+    dsp *outit=spnew(nact, nact, nact*4);
+    double *px=outit->x;
+    spint *pp=outit->p;
+    spint *pi=outit->i;
+    long count=0;
+    for(long iact=0; iact<nact; iact++){
+	pp[iact]=count;
+	if(cpl[iact]<thres){
+	    long mapx=(long)round((locx[iact]-ox)*dx1);
+	    long mapy=(long)round((locy[iact]-oy)*dy1);
+	    int count2=count;
+	    double sum=0;
+	    /*first, interpolate from neighbors of higher cpl*/
+	    int near_active=0;
+	    double thres2=0.1;
+	    for(int idy=-1; idy<2; idy++){
+		for(int idx=-1; idx<2; idx++){
+		    if(abs(idx)+abs(idy)>1){
+			continue;/*include self and neighbor*/
+		    }
+		    int kact1=map[mapy+idy][mapx+idx];
+		    if(kact1 && cpl0[kact1]>=thres2){
+			near_active++;
 		    }
 		}
-		for(int idy=-1; idy<2; idy++){
-		    for(int idx=-1; idx<2; idx++){
-			if(abs(idx)+abs(idy)>1){
-			    continue;/*skip corner only*/
-			}
-			int kact1=map[mapy+idy][mapx+idx];
-			if(kact1){
-			    if(!near_active){
-				pi[count]=kact1-1;
-				sum+=(px[count]=1);
-				count++;
-			    }else if(cpl0[kact1] >=thres2){
-				pi[count]=kact1-1;
-				sum+=(px[count]=cpl0[kact1]);
-				count++;
-			    }
-			}
-		    }
-		}
-		if(count>count2){
-		    double scl=1./sum;
-		    for(;count2<count; count2++){
-			px[count2]*=scl;
-		    }
-		}
-	    }else{
-		/*just copy over data */
-		pi[count]=iact;
-		px[count]=1;
-		count++;
 	    }
+	    for(int idy=-1; idy<2; idy++){
+		for(int idx=-1; idx<2; idx++){
+		    if(abs(idx)+abs(idy)>1){
+			continue;/*skip corner only*/
+		    }
+		    int kact1=map[mapy+idy][mapx+idx];
+		    if(kact1){
+			if(!near_active){
+			    pi[count]=kact1-1;
+			    sum+=(px[count]=1);
+			    count++;
+			}else if(cpl0[kact1] >=thres2){
+			    pi[count]=kact1-1;
+			    sum+=(px[count]=cpl0[kact1]);
+			    count++;
+			}
+		    }
+		}
+	    }
+	    if(count>count2){
+		double scl=1./sum;
+		for(;count2<count; count2++){
+		    px[count2]*=scl;
+		}
+	    }
+	}else{
+	    /*just copy over data */
+	    pi[count]=iact;
+	    px[count]=1;
+	    count++;
 	}
-	pp[nact]=count;
-	out->p[idm+ndm*idm]=sptrans(outit);
-	spfree(outit);
     }
+    pp[nact]=count;
+    out=sptrans(outit);
+    spfree(outit);
+	
     /*The above interpolation only propagate the value one step. Multiple the
       interpolator a few times to propagate longer.*/
     for(int i=0; i<5; i++){
-	spcell*tmp=spcellmulspcell(out,out,1);
-	spcellfree(out);
+	dsp *tmp=spmulsp(out,out);
+	spfree(out);
 	out=tmp;
+    }
+    return out;
+}
+spcell* act_extrap(loc_t **aloc,     /**<[in] Actuator grid array*/
+		   const dcell *actcplc,/**<[in] Actuator coupling coefficiency*/
+		   const double thres /**<[in] Threshold of coupling to turn on interpolation*/
+		   ){
+    int ndm=actcplc->nx;
+    spcell *out=spcellnew(ndm, ndm);
+    for(int idm=0; idm<ndm; idm++){
+	out->p[idm+ndm*idm]=act_extrap_do(aloc[idm], actcplc->p[idm], thres);
     }
     return out;
 }

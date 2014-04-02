@@ -31,6 +31,7 @@
 #include "parms.h"
 #include "types.h"
 #include "utils.h"
+extern double TOMOSCALE;
 extern int exit_success;
 extern const char* dirsetup;
 extern const char *dirskysim;

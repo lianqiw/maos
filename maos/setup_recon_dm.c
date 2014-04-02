@@ -71,13 +71,13 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	}
 	mkw_annular(recon->floc, 0, 0, rin, parms->aper.d/2,
 		    &(recon->W0), &(recon->W1));
-	if(parms->save.setup){
-	    spwrite(recon->W0, "%s/W0",dirsetup);
-	    dwrite(recon->W1, "%s/W1",dirsetup);
-	}
-	if(parms->save.setup){
-	    locwrite(recon->floc, "%s/floc",dirsetup);
-	}
+    }
+    if(parms->save.setup){
+	spwrite(recon->W0, "%s/W0",dirsetup);
+	dwrite(recon->W1, "%s/W1",dirsetup);
+    }
+    if(parms->save.setup){
+	locwrite(recon->floc, "%s/floc",dirsetup);
     }
     loc_create_stat(recon->floc);
 }
@@ -100,6 +100,13 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	int naloc;
 	recon->aloc=locarrread(&naloc,"%s",fn);
 	if(naloc!=ndm) error("Invalid saved aloc");
+	for(int idm=0; idm<ndm; idm++){
+	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)
+	       >0.1*(parms->dm[idm].dx+recon->aloc[idm]->dx)){
+		warning("DM[%d]: loaded aloc has dx=%g while dm.order imply %g\n", idm, 
+			recon->aloc[idm]->dx, parms->dm[idm].dx);
+	    }
+	}
     }else{
 	recon->aloc=calloc(ndm, sizeof(loc_t*));
 	/*int nxmax=0, nymax=0; */
@@ -135,21 +142,19 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 		     recon->acmap[idm]->ox, recon->acmap[idm]->oy);
 	    }
 	}
-	if(parms->save.setup){
-	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
-	}
     }
     for(int idm=0; idm<parms->ndm; idm++){
 	if(!recon->amap[idm]){
 	    recon->amap[idm]=loc2map(recon->aloc[idm]);
 	    recon->amap[idm]->h=parms->dm[idm].ht;
 	}
-	recon->aembed[idm]=map2embed(recon->amap[idm]);
+	recon->aembed[idm]=loc2map_embed(recon->aloc[idm], recon->amap[idm]);
 	recon->amap[idm]->cubic=parms->dm[idm].cubic;
 	recon->amap[idm]->iac=parms->dm[idm].iac;
     }
 
-     if(parms->save.setup){
+    if(parms->save.setup){
+	locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	maparrwrite(recon->amap, parms->ndm,"%s/amap", dirsetup);
     }
     recon->aimcc=dcellnew(ndm,1);
@@ -222,9 +227,9 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	toc2(" ");
-	if(parms->save.setup){
-	    spcellwrite(recon->HA,"%s/HA",dirsetup);
-	}
+    }
+    if(parms->save.setup){
+	spcellwrite(recon->HA,"%s/HA",dirsetup);
     }
     recon->actcpl=genactcpl(recon->HA, recon->W1);
     if(recon->actstuck){
@@ -244,7 +249,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     }
     if(parms->fit.actinterp){
 	warning2("Apply slaving actuator operation\n");
-	spcell *interp2=act_inactive_interp(recon->aloc, recon->actcpl, 0.5);
+	spcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
 	spcelladd(&recon->actinterp, interp2);
 	spcellfree(interp2);
     }

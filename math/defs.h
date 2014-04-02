@@ -174,3 +174,4 @@
 #else
 #define M_SPT M_SPT32
 #endif
+#define isempty(A) (!(A) || !(A)->nx || !(A)->ny)

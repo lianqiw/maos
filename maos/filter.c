@@ -355,7 +355,29 @@ void filter_ol(SIM_T *simu){
     }
     /*moao DM is already taken care of automatically.*/
 }
-
+/**
+   Simulate turbulence on the DM
+*/
+void turb_dm(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    if(!simu->dmadd) return;
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(!simu->dmadd->p[idm]) continue;
+	double *restrict p2=simu->dmreal->p[idm]->p;
+	const int icol=(simu->isim+1)%simu->dmadd->p[idm]->ny;
+	const double *p=simu->dmadd->p[idm]->p+simu->dmadd->p[idm]->nx*icol;
+	if(simu->dmadd->p[idm]->nx==simu->dmreal->p[idm]->nx){//match
+	    for(long i=0; i<simu->dmadd->p[idm]->nx; i++){
+		p2[i]+=p[i];
+	    }
+	}else{
+	    long *embed=simu->recon->aembed[idm];
+	    for(long i=0; i<simu->dmadd->p[idm]->nx; i++){
+		p2[embed[i]]+=p[i];
+	    }
+	}	
+    }
+}
 /**
    Update various quantities upon updating dmreal.
 */
@@ -406,6 +428,7 @@ void filter(SIM_T *simu){
 	}
     }
 #endif
+    turb_dm(simu);
     update_dm(simu);
 
     dcellzero(simu->dmerr);

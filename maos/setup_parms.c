@@ -277,6 +277,7 @@ static void readcfg_powfs(PARMS_T *parms){
     if(nsiglev){
 	free(siglev);
     }
+    READ_POWFS_RELAX(str,saloc);
     READ_POWFS_RELAX(str,piinfile);
     READ_POWFS_RELAX(str,sninfile);
     READ_POWFS_RELAX(dbl,saat);
@@ -901,6 +902,7 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.ncpa_thetay[i]/=206265.;
     }
     normalize_sum(parms->sim.ncpa_wt, parms->sim.ncpa_ndir, 1);
+    READ_STR(sim.dmadd);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -1806,6 +1808,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if((parms->recon.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->recon.split=0;
+    }
+    if(parms->fit.square && parms->load.aloc){
+	warning("load.aloc contradicts with fit.square. disable fit.square\n");
+	parms->fit.square=0;
     }
     if(parms->recon.split){
 	if(parms->nlopowfs==0){

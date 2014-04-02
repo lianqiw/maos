@@ -64,14 +64,14 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     X(cell) *out=X(cellnew)(A->nx, A->ny);
     long tot=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	if(A->p[i]){
+	if(!isempty(A->p[i])){
 	    tot+=A->p[i]->nx*A->p[i]->ny;
 	}
     }
     out->m=X(new)(tot,1);
     tot=0;
     for(int i=0; i<A->nx*A->ny; i++){
-	if(A->p[i]){
+	if(!isempty(A->p[i])){
 	    out->p[i]=X(new_ref)(A->p[i]->nx, A->p[i]->ny, out->m->p+tot);
 	    tot+=A->p[i]->nx*A->p[i]->ny;
 	}else{
@@ -264,7 +264,7 @@ static void X(celldim)(const X(cell) *A, long *nx, long *ny,
     *ny=0;
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
-	    if(Ap[iy][ix]){
+	    if(!isempty(Ap[iy][ix])){
 		*nx+=Ap[iy][ix]->nx;
 		(*nxs)[ix]=Ap[iy][ix]->nx;
 		break;
@@ -273,7 +273,7 @@ static void X(celldim)(const X(cell) *A, long *nx, long *ny,
     }
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(Ap[iy][ix]){
+	    if(!isempty(Ap[iy][ix])){
 		*ny+=Ap[iy][ix]->ny;
 		(*nys)[iy]=Ap[iy][ix]->ny;
 		break;
@@ -300,7 +300,7 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    for(long icol=0; icol<nys[iy]; icol++){
 		long kr=0;
 		for(long ix=0; ix<A->nx; ix++){
-		    if(pA[iy][ix]){
+		    if(!isempty(pA[iy][ix])){
 			memcpy(out->p[iy]->p+icol*nx+kr,
 			       pA[iy][ix]->p+icol*nxs[ix],
 			       nxs[ix]*sizeof(T));
@@ -316,7 +316,7 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    out->p[ix]=X(new)(nxs[ix],ny);
 	    long kr=0;
 	    for(long iy=0; iy<A->ny; iy++){
-		if(pA[iy][ix]){
+		if(!isempty(pA[iy][ix])){
 		    memcpy(out->p[ix]->p+kr*nxs[ix],
 			   pA[iy][ix]->p,
 			   nxs[ix]*nys[iy]*sizeof(T));
@@ -428,15 +428,16 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int ix=0; ix<A->nx; ix++){
 	    keep[ix]=0;
 	    for(int iy=0; iy<A->ny; iy++){
-		if(pA[iy][ix]){
+		if(!isempty(pA[iy][ix])){
 		    keep[ix]=1;
 		    break;
 		}
 	    }
-	    if(keep[ix]==0)
+	    if(keep[ix]==0){
 		ndrop++;
+	    }
 	}
-	if(ndrop!=0){
+	if(ndrop){
 	    if(ndrop==A->nx){
 		X(cellfree)(A);
 		*A0=NULL;
@@ -467,7 +468,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int iy=0; iy<A->ny; iy++){
 	    int keep=0;
 	    for(int ix=0; ix<A->nx; ix++){
-		if(pA[iy][ix]){
+		if(!isempty(pA[iy][ix])){
 		    keep=1;
 		    break;
 		}
@@ -552,7 +553,7 @@ X(mat) *X(cell2m)(const X(cell) *A){
 	for(long icol=0; icol<nys[iy]; icol++){
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
-		if(Ap[iy][ix]){
+		if(!isempty(Ap[iy][ix])){
 		    memcpy(out->p+((icol+jcol)*nx+kr),
 			   Ap[iy][ix]->p+icol*nxs[ix],
 			   nxs[ix]*sizeof(T));

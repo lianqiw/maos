@@ -24,13 +24,12 @@
    \file loc.h
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
+
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
+long *loc2map_embed(const loc_t *loc, const map_t *map);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
-
-long *d2embed(dmat *map);
 loc_t * map2loc(map_t *amp);
-long* map2embed(map_t *amp);
 void rectmapfree_do(rectmap_t *map);
 #define rectmapfree(A) ({rectmapfree_do(A);A=NULL;})
 void mapfree_do(map_t *map);

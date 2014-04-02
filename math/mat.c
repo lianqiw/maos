@@ -354,7 +354,7 @@ X(mat) *X(dup)(const X(mat) *in){
    copy the values from one X(mat) to another.
 */
 void X(cp)(X(mat) **out0, const X(mat) *in){
-    if(in && in->nx!=0 && in->ny!=0){
+    if(in && in->nx && in->ny){
 	if(!*out0) 
 	    *out0=X(new)(in->nx, in->ny);
 	else{

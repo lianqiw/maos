@@ -375,6 +375,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 		L2=mklaplacian_map(nx[ips], ny[ips],
 				   recon->xloc[ips]->dx, recon->r0,
 				   recon->wt->p[ips]);
+		spscale(L2, sqrt(TOMOSCALE));
 	    }
 	    dsp *tmp=sptmulsp(L2, L2);
 	    spfree(L2);
@@ -414,7 +415,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
 
     /*make it sparse diagonal operator */
-    csp *Mhat=cspnewdiag(nxtot,invpsd,TOMOSCALE);/*parms->gpu.tomo?(TOMOSCALE):(1.));*/
+    csp *Mhat=cspnewdiag(nxtot,invpsd,1);
     free(invpsd);
 
     csp *Mmid=NULL;
@@ -470,7 +471,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
 	}
 	/*need to test this in spatial domain. */
-	cspscale(propx,sqrt(TOMOSCALE)/neai);/*prop is not real for off axis wfs. */
+	cspscale(propx,1./neai);/*prop is not real for off axis wfs. */
 	/*Compute propx'*Mmid*propx and add to Mhat; */
 	csp *tmp=cspmulsp(Mmid,propx);
 	csp *tmp2=csptmulsp(propx,tmp);

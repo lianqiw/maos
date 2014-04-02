@@ -514,7 +514,9 @@ typedef struct SIM_T{
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
-
+    dcell *dmadd;      /**<dm vector to simulate turbulence (added to integrator
+			  output).  #DM cells. In each cell, one colume is for
+			  each time step. Wraps over in the end*/
     /*High order*/
     SERVO_T *dmint;    /**<dm integrator. (used of fuseint==1)*/
     dcell *dmfit;      /**<direct high order fit output*/

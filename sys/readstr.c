@@ -401,16 +401,17 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 			  const char *data /**<[in] Input string*/
     ){
     int *ret2=0;
-    int len2=readstr_numarr((void**)(&ret2), 0,NULL,NULL, T_INT, data);
+    int len2=readstr_numarr((void**)(&ret2), 0, NULL,NULL, T_INT, data);
     if(len2==1){
-	for(int i=1; i<len; i++){
-	    (*ret)[i]=(*ret)[0];
+	for(int i=0; i<len; i++){
+	    (*ret)[i]=ret2[0];
 	}
     }else if(len2>=len){
-	for(int i=1; i<len; i++){
-	    (*ret)[i]=(*ret)[i];
+	for(int i=0; i<len; i++){
+	    (*ret)[i]=ret2[i];
 	}
     }else{
 	error("{%s}: Require %d numbers, but got %d\n", data, len, len2);
     }
+    free(ret2);
 }

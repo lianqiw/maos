@@ -59,14 +59,14 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	}
 	if(fabs(dy)<EPS || isnan(dy)){/*dy is not available. */
 	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
-		if(out->locy[i+1]>out->locy[i]){
+		if(fabs(out->locy[i+1]-out->locy[i])>EPS){
 		    dy=fabs(out->locy[i+1]-out->locy[i]);
 		    break;
 		}
 	    }
 	}
-	out->dx=dx;
-	out->dy=dy;
+	out->dx=fabs(dx);
+	out->dy=fabs(dy);
 	out->map=NULL;
     }
     return out;

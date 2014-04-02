@@ -120,7 +120,7 @@ static curmat *get_neai(dsp *nea){
 	for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 	    int ix=pi[ir];
 	    int isa=ic<nsa?ic:ic-nsa;
-	    float val=(float)px[ir]*TOMOSCALE;
+	    float val=(float)px[ir];
 	    if(ix==ic){/*diagonal part. */
 		if(ic==isa){/*x */
 		    neai[isa][0]=val;
