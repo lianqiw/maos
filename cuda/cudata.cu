@@ -152,7 +152,7 @@ int gpu_init(int *gpus, int ngpu){
 	    for(int ig=0; ig<ngpu_tot; ig++){
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){
-		    //this allocates context.
+		    //this allocates context and create a CPU thread for this GPU.
 		    gpu_info[ig][1]=gpu_get_idle_mem();
 		}
 	    }

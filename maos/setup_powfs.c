@@ -962,7 +962,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}/*illt */
 	cfree(nominal);
 	locfree(loc_psf);
-	if(parms->save.setup){
+	if(parms->save.setup>1){
 	    ccellwrite(powfs[ipowfs].dtf[iwvl].nominal,
 		       "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
 	    spcellwrite(powfs[ipowfs].dtf[iwvl].si,
@@ -1449,7 +1449,8 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	}
 	dcellwrite(powfs[ipowfs].srot, "%s/powfs%d_srot",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].srsa, "%s/powfs%d_srsa",dirsetup,ipowfs);
-
+    }
+    if(parms->save.setup>1){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		ccellwrite(powfs[ipowfs].etfprep[iwvl].p1, 
@@ -1860,7 +1861,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    }
 	    /*Generating short exposure images. */
 	    gensepsf(parms,powfs,ipowfs);
-	    if(parms->save.setup && intstat){
+	    if(parms->save.setup>1 && intstat){
 		dcellwrite(intstat->sepsf[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
 	    /*Free short exposure otf. */

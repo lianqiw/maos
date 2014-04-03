@@ -32,10 +32,16 @@
 */
 GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
-double TOMOSCALE=1e-12;
 const char *dirsetup=NULL;
 const char *dirskysim=NULL;
 volatile int maos_server_fd=-1;
+
+/** begin variable overridable by environment variable MAOS_ .  These are for
+ debugging maos itself. Not pertinent to a particular simulation*/
+double TOMOSCALE=1e-12;
+int PARALLEL=1;
+/** end*/
+
 /**
    This is the routine that calls various functions to do the simulation. maos()
    calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
@@ -169,6 +175,25 @@ static void maos_server(PARMS_T *parms){
     //todo:listening on socket for commands.
     //maos client mode: start maos server mode via scheduler.
 }
+static void read_env(){
+#define READ_ENV_INT(A,min,max)				\
+    if(getenv("MAOS_"#A)){				\
+	A=strtol(getenv("MAOS_"#A),NULL,10);		\
+	if(A>max || A<min){				\
+	    error("MAOS_%s: invalid range\n", #A);	\
+	}						\
+    }
+#define READ_ENV_DBL(A,min,max)				\
+    if(getenv("MAOS_"#A)){				\
+	A=strtod(getenv("MAOS_"#A),NULL);		\
+	if(A>max || A<min){				\
+	    error("MAOS_%s: invalid range\n", #A);	\
+	}						\
+    }
+    READ_ENV_DBL(TOMOSCALE,0,INFINITY);
+    READ_ENV_INT(PARALLEL,0,1);
+    info2("TOMOSCALE=%g\n", TOMOSCALE);
+}
 /**
    This is the standard entrance routine to the program.  It first calls
    setup_parms() to setup the simulation parameters and check for possible
@@ -222,14 +247,8 @@ int main(int argc, const char *argv[]){
     scheduler_start(scmd,arg->nthread,!arg->force);
     info2("%s\n", scmd);
     info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
+    read_env();
     maos_version();
-    if(getenv("MAOS_TOMOSCALE")){
-	TOMOSCALE=strtod(getenv("MAOS_TOMOSCALE"), NULL);
-	if(TOMOSCALE<=0){
-	    error("invalid TOMOSCALE=%g\n", TOMOSCALE);
-	}
-    }
-    info2("TOMOSCALE=%g\n", TOMOSCALE);
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     global=calloc(1, sizeof(GLOBAL_T));
@@ -294,7 +313,6 @@ int main(int argc, const char *argv[]){
     }else{
 	dirskysim=".";
     }
-
     /*Loads the main software*/
 #if _OPENMP>=200805
 #pragma omp parallel

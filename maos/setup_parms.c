@@ -879,7 +879,6 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.wfsalias);
     READ_INT(sim.idealwfs);
     READ_INT(sim.idealevl);
-    READ_INT(sim.parallel);
     READ_INT(sim.ahstfocus);
 
     READ_STR(sim.mvmhost);
@@ -2180,7 +2179,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
 	/*disable parallelizing the big loop. */
-	parms->sim.parallel=0;
+	extern int PARALLEL;
+	PARALLEL=0;
     }
     if(parms->evl.psfmean || parms->evl.psfhist){
 	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf);

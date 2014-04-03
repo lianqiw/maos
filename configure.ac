@@ -756,7 +756,7 @@ if test "$use_cuda" = "yes" ;then
        AC_MSG_ERROR([nvcc not found])
    fi
    if test -n "$CC" ;then
-       NVCC="$NVCC -ccbin $(which $CC)"
+       NVCC="$NVCC -ccbin $(which ${CC%% *})"
    fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
