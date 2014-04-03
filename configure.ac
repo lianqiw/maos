@@ -41,7 +41,7 @@ OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a sta
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror -Wno-unused-function"
 fi
-LDEXE="-lm -no-fast-install -ldl"
+LDEXE="-lm -no-fast-install -ldl -lpthread"
 OPTSextra=""
 
 #Compile CUDA branch if CUDA toolkit is detected
@@ -363,7 +363,7 @@ case "${CC}" in
     fi
     ;;
   clang)
-	CC=$OPTIM_CLANG
+	OPTIM=$OPTIM_CLANG
     ;;
   *) #Other compilers
     OPTIM="-O3"
@@ -736,6 +736,12 @@ if test "x${use_mex}" = "xyes" ; then
    AC_SUBST(MEXOPT)
 else
    AM_CONDITIONAL(USE_MEX, false)
+fi
+if test "$use_cuda" = "yes" ;then
+   if test -n "$($CC -v 2>&1 |grep -i clang)"  ;then
+      AC_MSG_NOTICE([NVCC does not support clang. Disable cuda])
+      use_cuda="no"
+   fi
 fi
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
