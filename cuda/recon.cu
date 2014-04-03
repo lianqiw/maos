@@ -464,6 +464,9 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     if(!simu->opdr){
 	cp2cpu(&simu->opdr, 0, opdr_vec, 1, 0);
     }
+    if(!simu->parms->gpu.tomo){
+	cp2gpu(&opdr_vec, simu->opdr);
+    }
     dcellwrite(simu->opdr, "opdr");
     muv(&rhsc, &recon->FR, simu->opdr, 1);
     dcellwrite(rhsc, "CPU_FitR");
@@ -474,7 +477,7 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     dcellzero(lc);
     for(int i=0; i<5; i++){
 	muv_solve(&lc, &recon->FL, NULL, rhsc);
-	dcellwrite(lc, "CPU_FitCG%d", i);
+	dcellwrite(lc, "CPU_FitSolve%d", i);
     }
     dcell *lhs=NULL;
     muv_trans(&lhs, &recon->FR, rhsc, 1);
@@ -494,7 +497,7 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     curcellzero(lg, stream);
     for(int i=0; i<5; i++){
 	FL->solve(&lg, rhsg, stream);
-	curcellwrite(lg, "GPU_FitCG%d", i);
+	curcellwrite(lg, "GPU_FitSolve%d", i);
     }
     curcell *lhsg=NULL;
     FR->Rt(&lhsg, 0, rhsg, 1, stream);

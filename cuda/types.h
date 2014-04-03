@@ -42,15 +42,10 @@ class cumat{
 	}
     }
     virtual ~cumat(){
-	if(nref){
-	    nref[0]--;
-	    if(nref[0]==0){
-		DO(cudaFree(p));
-		delete nref;
-		if(header) free(header);
-	    }else if(nref[0]<0){
-		error("Invalid nref=%d\n", nref[0]);
-	    }
+	if(nref && !atomicadd(nref, -1)){
+	    DO(cudaFree(p));
+	    delete nref;
+	    if(header) free(header);
 	}
 	p=NULL;
     }
@@ -66,7 +61,7 @@ class cumat{
     }
     cumat* ref(int vector=0){
 	if(!this) return NULL;
-	if(nref) nref[0]++;
+	if(nref) atomicadd(nref, 1);
 	cumat* res;
 	if(vector){
 	    res=new cumat<T>(nx*ny, 1, p, 0);
@@ -232,14 +227,11 @@ class cusp{
     //cusp():p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){}
     cusp(const dsp *in=0, int tocsr=1);
     ~cusp(){
-	if(nref){
-	    nref[0]--;
-	    if(nref[0]==0){
-		cudaFree(p);
-		cudaFree(i);
-		cudaFree(x);
-		delete nref;
-	    }
+	if(nref && !atomicadd(nref, -1)){
+	    cudaFree(p);
+	    cudaFree(i);
+	    cudaFree(x);
+	    delete nref;
 	}
     }
     void toCSR(){
@@ -257,7 +249,7 @@ class cusp{
     void trans();/*covnert to CSR mode by transpose*/
     cusp* ref(void){
 	if(!this) return NULL;
-	if(nref) nref[0]++;
+	if(nref) atomicadd(nref, 1);
 	cusp* res=(cusp*)malloc(sizeof(cusp));
 	memcpy(res, this, sizeof(*this));
 	return res;

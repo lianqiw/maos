@@ -111,7 +111,6 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     curcell *&z0=cg_data->z0;/*Is reference to r0 or preconditioned value. */
     curcell *&p0=cg_data->p0;
     curcell *&Ap=cg_data->Ap;
-    float residual=-1;/*Only useful if PRINT_RES is set*/
     int ntot=maxiter*2+3;
     if(!cg_data->store){
 	DO(cudaMalloc(&cg_data->store, ntot*sizeof(float)));
@@ -123,11 +122,10 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     float *rkzk=store; store+=maxiter+1;
     float *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
-    if(!cg_data->diff){
-	//Only this enables async transfer
+    if(!cg_data->diff){ //Only this enables async transfer
 	DO(cudaMallocHost(&cg_data->diff, sizeof(float)*(maxiter+1)));
     }
-    float *diff=cg_data->diff;
+    float *&diff=cg_data->diff;
     memset(diff, 0, sizeof(float)*(maxiter+1));
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
@@ -289,6 +287,7 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
 #endif
+    float residual=-1;/*Only useful if PRINT_RES is set*/
     residual=diff[maxiter];
 #if TIMING 
     DO(cudaEventElapsedTime(&times[15], event[0], event[15]));

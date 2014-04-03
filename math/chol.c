@@ -27,7 +27,7 @@
 #define MOD(A) cholmod_##A
 #define ITYPE CHOLMOD_INT
 #endif
-#define CHOL_SIMPLE 0
+#define CHOL_SIMPLE 1 //essential for chol_convert to work.
 
 /**
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
@@ -158,6 +158,9 @@ spchol* chol_factorize(dsp *A_in){
 */
 void chol_convert(spchol *A, int keep){
     if(!A || !A->L || A->Cp || A->Cl) return;
+#if ! CHOL_SIMPLE
+    error("chol_convert only work with CHOL_SIMPLE=1\n");
+#endif
     cholmod_factor *L=A->L;
     A->Cp=malloc(sizeof(spint)*A->L->n);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);

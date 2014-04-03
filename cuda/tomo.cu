@@ -679,7 +679,7 @@ void cutomo_grid::L(curcell **xout, float beta, const curcell *xin, float alpha,
     //opdwfs to opdx
     hx->backward(opdwfs->pm, opdx->pm, alpha, NULL, stream);
     RECORD(4);
-    /*This could be in parallel to above ones. */
+    /*This could be in parallel to hx->forward, do_gp, do_gpt*/
     gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>
 	(lap, opdx->pm, xin->pm, nwfs, alpha);
     RECORD(5);
@@ -689,6 +689,7 @@ void cutomo_grid::L(curcell **xout, float beta, const curcell *xin, float alpha,
 	  times[1], times[2], times[3], times[4], times[5]);
     EVENT_DEINIT;
 #endif
-    //overhead of TomoL 27 micro-seconds (timing without synchornization).
+    //overhead of TomoL is 27 micro-seconds (timing without synchornization).
+
 }
 }//namespace
