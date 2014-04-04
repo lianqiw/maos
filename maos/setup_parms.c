@@ -333,7 +333,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
-    READ_POWFS(dbl,dx);
+    READ_POWFS_RELAX(dbl,dx);
     READ_POWFS(dbl,pixtheta);
     READ_POWFS(str,fnllt);
     READ_POWFS(int,trs);
@@ -521,15 +521,34 @@ static void readcfg_wfs(PARMS_T *parms){
 */
 static void readcfg_dm(PARMS_T *parms){
     int ndm,i;
-    ndm=parms->ndm=readcfg_peek_n("dm.order");
+    ndm=parms->ndm=readcfg_peek_n("dm.ht");
     parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
     int* inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
-    READ_DM(dbl,order);
-    READ_DM_RELAX(dbl,ar);
     READ_DM(dbl,ht);
     READ_DM(dbl,offset);
+    READ_DM_RELAX(dbl,dx);
+    READ_DM_RELAX(dbl,ar);
+    READ_DM_RELAX(dbl,order);
+    int dx_override=readcfg_peek_override("dm.dx");
+    int order_override=readcfg_peek_override("dm.order");
+    for(int idm=0; idm<ndm; idm++){
+	if(order_override && dx_override){
+	    if(fabs(parms->dm[idm].order*parms->dm[idm].dx-parms->aper.d)
+	       >parms->aper.d*0.01){
+		error("both dm.order and dm.dx are specified. But they don't agree\n");
+	    }
+	}else if(dx_override){
+	    parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
+	}else{
+	    parms->dm[idm].order=parms->aper.d/parms->dm[idm].dx;
+	}
+	parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
+	if(parms->dm[idm].ar<=0){
+	    error("ar must be positive\n");
+	}
+    }
     READ_DM_RELAX(dbl,guard);
     READ_DM_RELAX(dbl,stroke);
     READ_DM_RELAX(dbl,iastroke);
@@ -1719,13 +1738,6 @@ static int arrind(double *arr, int *n, double val){
 */
 static void setup_parms_postproc_dm(PARMS_T *parms){
     int ndm=parms->ndm;
-    for(int idm=0; idm<ndm; idm++){
-	parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
-	parms->dm[idm].dy=parms->aper.d/parms->dm[idm].order*parms->dm[idm].ar;
-	if(parms->dm[idm].ar<=0){
-	    error("ar must be positive\n");
-	}
-    }
     /*disable cache for low order systems. */
     if(parms->sim.cachedm==1){
 	if(parms->evl.nevl<2 && parms->nwfs<2){

@@ -35,12 +35,20 @@
 static void
 setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
+    double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
 	recon->fmap=loc2map(recon->floc);
+	if(fabs(recon->fmap->dx-dxr)>dxr*0.01){
+	    warning("Loaded floc has unexpected sampling of %g, should be %g\n", 
+		    recon->floc->dx, dxr);
+	}
+	if(recon->fmap->nx*dxr<parms->aper.d){
+	    error("Loaded floc is too small: diameter is %g while aper.d is %g\n",
+		  recon->fmap->nx*dxr,parms->aper.d);
+	}
     }else{
-	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
 	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=create_metapupil_wrap 
 	    (parms,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
@@ -101,10 +109,15 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aloc=locarrread(&naloc,"%s",fn);
 	if(naloc!=ndm) error("Invalid saved aloc");
 	for(int idm=0; idm<ndm; idm++){
-	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)
-	       >0.1*(parms->dm[idm].dx+recon->aloc[idm]->dx)){
-		warning("DM[%d]: loaded aloc has dx=%g while dm.order imply %g\n", idm, 
-			recon->aloc[idm]->dx, parms->dm[idm].dx);
+	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)>0.01*parms->dm[idm].dx){
+		error("DM[%d]: loaded aloc has dx=%g while dm.dx=%g\n", idm, 
+		      recon->aloc[idm]->dx, parms->dm[idm].dx);
+	    }
+	    double max,min;
+	    dmaxmin(recon->aloc[idm]->locx,recon->aloc[idm]->nloc, &max, &min);
+	    if(max-min<parms->aper.d){
+		error("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n", 
+		      idm, max-min, parms->aper.d); 
 	    }
 	}
     }else{

@@ -45,11 +45,20 @@
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
+    double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
     if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 	char *fn=parms->load.ploc;
 	warning("Loading ploc from %s\n",fn);
 	recon->ploc=locread("%s",fn);
 	recon->pmap=loc2map(recon->ploc);
+	if(fabs(recon->ploc->dx-dxr)>dxr*0.01){
+	    warning("Loaded ploc has unexpected sampling of %g, should be %g\n",
+		    recon->ploc->dx, dxr);
+	}
+	if(recon->pmap->nx*dxr<parms->aper.d){
+	    error("Loaded ploc is too small, diameter is %g while aper.d is %g\n",
+		  recon->pmap->nx*dxr, parms->aper.d);
+	}
 	free(recon->pmap->p);
 	recon->pmap->p=NULL;
     }else{ 
@@ -57,7 +66,6 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  Create a circular PLOC with telescope diameter by calling
 	  create_metapupil with height of 0. We don't add any guard points. PLOC
 	  does not need to be follow XLOC in FDPCG.*/
-	double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
 	double guard=parms->tomo.guard*dxr;
 	map_t *pmap=create_metapupil_wrap(parms,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
@@ -100,6 +108,10 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    recon->xmap[ips]=loc2map(recon->xloc[ips]);
 	    free(recon->xmap[ips]->p); recon->xmap[ips]->p=NULL;
 	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
+	    double dxr=recon->dx->p[ips];
+	    if(fabs(recon->xloc[ips]->dx-dxr)>0.01*dxr){
+		warning("xloc[%d]: sampling is %g, expected %g\n", ips, recon->xloc[ips]->dx, dxr);
+	    }
 	}
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));

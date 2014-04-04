@@ -738,10 +738,17 @@ else
    AM_CONDITIONAL(USE_MEX, false)
 fi
 if test "$use_cuda" = "yes" ;then
-   if test -n "$($CC -v 2>&1 |grep -i clang)"  ;then
-      AC_MSG_NOTICE([NVCC does not support clang. Disable cuda])
-      use_cuda="no"
-   fi
+   #CUDA does not support clang and certain versions of icc. Use gcc
+   case "${CC}" in
+      icc*|clang*)
+      if test -z "$(which gcc)" -o -z "$(gcc -v 2>&1 | grep -i 'gcc version')"  ;then
+          AC_MSG_NOTICE([NVCC does not support ${CC%% *} and gcc is not found. Disable cuda])
+	  use_cuda="no"
+      else
+	  CUDA_CCBIN=$(which gcc)
+      fi
+      ;;
+   esac
 fi
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
@@ -761,8 +768,8 @@ if test "$use_cuda" = "yes" ;then
    if test ! -x $NVCC ;then
        AC_MSG_ERROR([nvcc not found])
    fi
-   if test -n "$CC" ;then
-       NVCC="$NVCC -ccbin $(which ${CC%% *})"
+   if test -n "$CUDA_CCBIN" ;then
+       NVCC="$NVCC -ccbin $CUDA_CCBIN"
    fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then

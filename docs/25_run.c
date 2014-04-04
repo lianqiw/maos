@@ -45,36 +45,36 @@
    key is the same.
    
    \section sect-exe Examples
-   With a 10 meter outer diameter, 1 meter inner diameter annular telescope, an order 20x20 system, the following shows how to run each AO mode:
+   With a 10 meter outer diameter, 1 meter inner diameter annular telescope, the defaule subaperture size is dm.dx=0.5, implying order 20x20 AO system. the following shows how to run each AO mode:
    
    - LGS MCAO 
 
    \verbatim
-   maos aper.d=[10 1] dm.order=[20 20] -o lgsmcao20
+   maos aper.d=[10 1] -o lgsmcao20
    \endverbatim
 
    - NGS MCAO
    
    \verbatim
-   maos -cmcao_ngs.conf aper.d=[10 1] dm.order=[20 20] -o ngsmcao20
+   maos -cmcao_ngs.conf aper.d=[10 1] -o ngsmcao20
    \endverbatim
 
    - NGS SCAO
     
    \verbatim
-   maos -cscao_ngs.conf aper.d=[10 1] dm.order=[20 20] -o ngsscao20 
+   maos -cscao_ngs.conf aper.d=[10 1] -o ngsscao20 
    \endverbatim
 
    - LGS SCAO
    
    \verbatim
-   maos -cscao_lgs.conf aper.d=[10 1] dm.order=[20 20] -o lgsscao20 
+   maos -cscao_lgs.conf aper.d=[10 1] -o lgsscao20 
    \endverbatim
    
    - LGS GLAO
    
    \verbatim
-   maos dm_single.conf aper.d=[10 1] dm.order=[20] wfs_lgs_only.conf recon.glao=1 -o lgsglao20
+   maos dm_single.conf aper.d=[10 1] wfs_lgs_only.conf recon.glao=1 -o lgsglao20
    \endverbatim
    
    \section sect-details Details
