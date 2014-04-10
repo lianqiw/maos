@@ -17,8 +17,8 @@
 */
 #include "solve.h"
 namespace cuda_recon{
-float cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
-    float ans;
+Real cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
+    Real ans;
     cgtmp.count++;
     if((ans=gpu_pcg(xout, this, precond, xin, &cgtmp,
 		    warm_restart, maxit, stream))>1){
@@ -29,7 +29,7 @@ float cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
     return ans;
 }
 
-void cumuv_t::Forward(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream){
+void cumuv_t::Forward(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
     if(!*out){
 	*out=curcellnew(nx, 1, nxs, (int*)NULL);
@@ -42,7 +42,7 @@ void cumuv_t::Forward(curcell **out, float beta, const curcell *in, float alpha,
 	curmv((*out)->m->p, 1, U, Vx->p, 'n', -alpha, stream);
     }
 }
-void cumuv_t::Trans(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream){
+void cumuv_t::Trans(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
     if(!*out){
 	*out=curcellnew(ny, 1, nys, (int*)NULL);
@@ -105,7 +105,7 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp)
 	cp2gpu(&Vp, _Vp);
     }
 }
-float cusolve_cbs::solve(curcell **xout, const curcell *xin, stream_t &stream){
+Real cusolve_cbs::solve(curcell **xout, const curcell *xin, stream_t &stream){
     if(!*xout) *xout=curcellnew(xin);
     if(Cl->type==SP_CSC){
 	chol_solve((*xout)->m->p, xin->m->p, stream);
@@ -122,11 +122,11 @@ float cusolve_cbs::solve(curcell **xout, const curcell *xin, stream_t &stream){
     return 0;
 }
 /*solve in place*/
-static __global__ void cuchol_solve_lower_do(float *restrict y, float *Cx, int *Cp, int *Ci, int n){
+static __global__ void cuchol_solve_lower_do(Real *restrict y, Real *Cx, int *Cp, int *Ci, int n){
     int id=threadIdx.x;
     int nd=blockDim.x;
-    extern __shared__ float sb[];
-    __shared__ float val;
+    extern __shared__ Real sb[];
+    __shared__ Real val;
     /*first solve L\y*/
     
     for(int icol=0; icol<n; icol++){
@@ -158,7 +158,7 @@ static __global__ void cuchol_solve_lower_do(float *restrict y, float *Cx, int *
 	__syncthreads();//this is necessary!
     }
 }
-void cusolve_cbs::chol_solve(float *out, const float *in, stream_t &stream){
+void cusolve_cbs::chol_solve(Real *out, const Real *in, stream_t &stream){
     if(!Cl || !Cp) error("Invalid\n");
     int n=Cl->nx;
     if(!y){
@@ -167,7 +167,7 @@ void cusolve_cbs::chol_solve(float *out, const float *in, stream_t &stream){
     perm_f_do<<<DIM(n, 256),0,stream>>>(y->p, in, Cp, n);
     //only 1 block for synchronization.
     const int NTH=256;
-    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(float),stream>>>(y->p, Cl->x, Cl->p, Cl->i, n); 
+    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y->p, Cl->x, Cl->p, Cl->i, n); 
     perm_i_do<<<DIM(n, 256),0,stream>>>(out, y->p, Cp, n);
     cudaStreamSynchronize(stream);
 }

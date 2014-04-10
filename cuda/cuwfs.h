@@ -39,7 +39,7 @@ class cufieldstop_t{
     curmat *fieldmask;      /**<mask for field stop computation*/
     cucmat *wvf;
     cufftHandle plan;  /**<FFT plan*/
-    float *wvl;
+    Real *wvl;
     int nwvl;
     cudaStream_t stream;
 public:
@@ -49,7 +49,7 @@ public:
 	DO(cufftPlan2d(&plan, fieldmask->nx, fieldmask->ny, CUFFT_C2C));
 	cufftSetStream(plan, stream);
 	wvf=new cucmat(fieldmask->nx, fieldmask->ny);
-	wvl=new float[nwvl];
+	wvl=new Real[nwvl];
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    wvl[iwvl]=_wvl[iwvl];
 	}
@@ -85,7 +85,7 @@ public:
 class cushwfs_t:public cuwfs_base{
 protected:
     const int nsa;
-    const float dxsa;
+    const Real dxsa;
     const int nxsa;
 public:
     cushwfs_t(wfscfg_t *wfscfg);
@@ -107,7 +107,7 @@ public:
     }
     virtual void addnoise();
     virtual void output();
-    virtual void calcg(curmat *opd, float ratio);
+    virtual void calcg(curmat *opd, Real ratio);
     virtual void acc(curmat *opd);
 };
 
@@ -117,7 +117,7 @@ class cullt_t{
     culoc_t *loc;/**<location of OPD points for laser launch telescope*/
     curmat *amp;
     curmat *ncpa;/**<Aberration*/
-    float (**imcc)[3];/**<Ztilt*/
+    Real (**imcc)[3];/**<Ztilt*/
     cufftHandle plan_wvf, plan_otf;
 public:
     cullt_t(wfscfg_t*);
@@ -127,14 +127,14 @@ class cushg_t:public cushgeom_t{
     cusp *GS0;
 public:
     cushg_t(wfscfg_t* wfscfg);
-    virtual void calcg(curmat* opd, float ratio);
+    virtual void calcg(curmat* opd, Real ratio);
 };
 /*SHWFS Z tilt*/
 class cushz_t:public cushgeom_t{
-    float (**imcc)[3];/**<For ztilt.*/
+    Real (**imcc)[3];/**<For ztilt.*/
 public:
     cushz_t(wfscfg_t* wfscfg);
-    virtual void calcg(curmat* opd, float ratio);
+    virtual void calcg(curmat* opd, Real ratio);
 };
 
 /*SHWFS Phy */
@@ -147,7 +147,7 @@ class cushphy_t:public cushwfs_t{
     int etfis1d;
     curmat *srot;//subaperture gradient vector rotation
     //noise
-    float bkgrnd, bkgrndc;
+    Real bkgrnd, bkgrndc;
     curmat *bkgrnd2; curmat *bkgrnd2c;
     //gradient operator
     curmat *mtche;

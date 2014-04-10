@@ -35,3 +35,4 @@ math/tmp.c
 scripts/*.app
 *.stackdump
 */.#*
+ar-lib

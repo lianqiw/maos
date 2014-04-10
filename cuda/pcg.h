@@ -26,8 +26,8 @@ typedef struct CGTMP_T{
     curcell *z0;
     curcell *p0;
     curcell *Ap;
-    float *store;
-    float *diff;
+    Real *store;
+    Real *diff;
     int count_fail, count;
     CGTMP_T(){
 	memset(this, 0, sizeof(CGTMP_T));
@@ -42,11 +42,11 @@ typedef struct CGTMP_T{
 	if(diff) cudaFreeHost(diff); diff=NULL;
     }
 }CGTMP_T;
-//typedef void (*G_CGFUN)(curcell**, float, const curcell*, float, stream_t &stream);
+//typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);
 //typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
 class cucg_t;
 class cucgpre_t;
-float gpu_pcg(curcell **x0, cucg_t *Amul, cucgpre_t *Mmul,
+Real gpu_pcg(curcell **x0, cucg_t *Amul, cucgpre_t *Mmul,
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter, 
 	      stream_t &stream, double cgthres=-1);
 }//namespace

@@ -28,27 +28,27 @@ typedef struct GPU_GP_T{
     int nwfs; //number of wfs in this group
     int jwfs; //wfs index in this group.
     int (*saptr)[2];//index in ploc for lower left corner of subaperture
-    float *PTT;
-    float *PDF;
-    float *PDFTT;
-    float dsa;
+    Real *PTT;
+    Real *PDF;
+    Real *PDFTT;
+    Real dsa;
     int nsa;
     short2 *GPp;
-    float GPscale;
+    Real GPscale;
     int pos;
     int nxp;
-    float dxp, dyp;/*pmap dx*/
-    float oxp, oyp;/*pmap origin*/
-    const float(*neai)[3];
+    Real dxp, dyp;/*pmap dx*/
+    Real oxp, oyp;/*pmap origin*/
+    const Real(*neai)[3];
     GPU_GP_T(){
 	memset(this, 0, sizeof(*this));	
     }
 }GPU_GP_T;
 struct LAP_T{
     int nxps,nyps;
-    float l2c;
+    Real l2c;
     int zzi;
-    float zzv;
+    Real zzv;
 };
 class cutomo_grid:public cusolve_r, public cucg_t{
     curecon_geom *grid;
@@ -64,7 +64,7 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     curcell *PDFTT;/**<Coupling between DF and TT*/
     cucell<int> *saptr;
     cucell<short2> *GPp;
-    float *GPscale;
+    Real *GPscale;
     cuspcell *GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
@@ -81,12 +81,12 @@ public:
     void do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream);
     cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
 		const POWFS_T *powfs=0, curecon_geom *_grid=0);
-    virtual void R(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream);
-    virtual void L(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream);
-    virtual void Rt(curcell **out, float beta, 
-		    const curcell *xin, float alpha, stream_t &stream);
+    virtual void R(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream);
+    virtual void L(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream);
+    virtual void Rt(curcell **out, Real beta, 
+		    const curcell *xin, Real alpha, stream_t &stream);
     ~cutomo_grid(){
 	if(!this) return;
 	delete opdwfs;

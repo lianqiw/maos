@@ -45,9 +45,9 @@ protected:
 public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     void do_hxp(const curcell *xin, stream_t &stream);
-    void do_hxpt(const curcell *xout, float alpha, stream_t &stream);
+    void do_hxpt(const curcell *xout, Real alpha, stream_t &stream);
     void do_ha(const curcell *xin, stream_t &stream);
-    void do_hat(curcell *xout,  float alpha, stream_t &stream);
+    void do_hat(curcell *xout,  Real alpha, stream_t &stream);
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
 	if(!this) return;
@@ -72,12 +72,12 @@ public:
 	delete [] hxp0;
 	delete [] hxp1;
     }
-    virtual void R(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream);
-    virtual void L(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream);
-    virtual void Rt(curcell **out, float beta, 
-		    const curcell *xin, float alpha, stream_t &stream);
+    virtual void R(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream);
+    virtual void L(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream);
+    virtual void Rt(curcell **out, Real beta, 
+		    const curcell *xin, Real alpha, stream_t &stream);
 };
 
 }//namespace

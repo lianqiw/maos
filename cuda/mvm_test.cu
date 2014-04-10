@@ -27,8 +27,8 @@ Make sure the results is correct first.
 Test using transpose.
 
 */
-typedef float ATYPE;
-typedef float GTYPE;
+typedef Real ATYPE;
+typedef Real GTYPE;
 
 #define tix threadIdx.x
 #define tiy threadIdx.y
@@ -44,15 +44,15 @@ typedef float GTYPE;
 /*
   y=A*x;
   Call with
-  blockmv<<<ngrid, dim(tnx, tny), (tny+tnx*tny)*sizeof(float), stream>>>()
+  blockmv<<<ngrid, dim(tnx, tny), (tny+tnx*tny)*sizeof(Real), stream>>>()
   with both tnx and tny must be power of two and be less than 32. tny must be 32.
 */
 
 __global__ static void
-blockmv(float *restrict y, const float *restrict A, const float *restrict x, const int nrow, const int ncol){
-    __shared__ float shared[BLOCKMV_TNX][BLOCKMV_TNY];
-    //float *sx=shared;//stores x in shared memory
-    register float *sy=&shared[tix][tiy];//stores non-reduced y in shared memory, transposed for easy reduction.
+blockmv(Real *restrict y, const Real *restrict A, const Real *restrict x, const int nrow, const int ncol){
+    __shared__ Real shared[BLOCKMV_TNX][BLOCKMV_TNY];
+    //Real *sx=shared;//stores x in shared memory
+    register Real *sy=&shared[tix][tiy];//stores non-reduced y in shared memory, transposed for easy reduction.
     register const int irow=(tnx*bix+tix);
     *sy=0;
 #if 1
@@ -105,31 +105,31 @@ blockmv(float *restrict y, const float *restrict A, const float *restrict x, con
 }
 /**
   Another version to increase the occpancy. 
-  multimv<<<ngrid, dim(tnx, tny), (tnx*tny)*sizeof(float), stream>>>()
+  multimv<<<ngrid, dim(tnx, tny), (tnx*tny)*sizeof(Real), stream>>>()
   tny can be any number. tnx is ~256/tny.
 */
 /*__global__ static void
-multimv(float *restrict y, const float *restrict A, const float *restrict x, const int nrow, const int ncol){
+multimv(Real *restrict y, const Real *restrict A, const Real *restrict x, const int nrow, const int ncol){
 
 }*/
 __global__ static void
-test_read(float *A, int nx, int ny){
-    //extern __shared__ float sh[];
+test_read(Real *A, int nx, int ny){
+    //extern __shared__ Real sh[];
     register const int irow=tnx*bix+tix;
-    float __shared__ sum;
+    Real __shared__ sum;
     sum=0;
     for(int i=0; i<ny; i++){
 	sum+=A[irow+i*nx];
     }
 }
 __global__ static void
-test_read_multi(float *A, int nx, int ny){
-    //extern __shared__ float sh[];
+test_read_multi(Real *A, int nx, int ny){
+    //extern __shared__ Real sh[];
     register int irow=tnx*bix+tix;
     const int nset=(tnx*bnx+nx-1)/nx;
     const int iset=irow/nx;
     irow=irow-iset*nx;
-    float __shared__ sum;
+    Real __shared__ sum;
     sum=0;
     for(int i=iset*ny/nset; i<(iset+1)*ny/nset; i++){
 	sum+=A[irow+i*nx];
@@ -150,15 +150,15 @@ void mvm_test(int igpu){
     //N=32*32;
     int iN=1200;
     iN=N;
-    smat *mvm=snew(M,N);
-    smat *x=snew(N,1);
+    X(mat) *mvm=X(new)(M,N);
+    X(mat) *x=X(new)(N,1);
     rand_t stat;
     seed_rand(&stat, 1);
     srandn(mvm, 1, &stat);
     srandn(x, 1, &stat);
     //swrite(mvm, "mvm");
     //swrite(x, "x");
-    smat *mvmt=strans(mvm);
+    X(mat) *mvmt=strans(mvm);
     curmat *cumvmt=NULL;
     curmat *cumvm=NULL;
     curmat *cux=NULL, *cuy=NULL;
@@ -169,9 +169,9 @@ void mvm_test(int igpu){
     stream_t stream[nstream];
     int nevent=nstream*2;
     event_t event[nevent];
-    float one=1.;
+    Real one=1.;
     //curwrite(cuy, "y0");
-    float tm;
+    Real tm;
     cudaProfilerStart();
     
     {
@@ -179,12 +179,12 @@ void mvm_test(int igpu){
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    DO(cublasSgemv(stream[0], CUBLAS_OP_N, M,nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, cuy->p, 1));
+	    DO(CUBL(gemv)(stream[0], CUBLAS_OP_N, M,nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, cuy->p, 1));
 	}
 	event[1].record(stream[0]);
 	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
-	info("cublasSgemv takes %.6f ms\n", tm);
+	info("cublas?gemv takes %.6f ms\n", tm);
 	curwrite(cuy, "y_cugemv");
     }
     {
@@ -204,7 +204,7 @@ void mvm_test(int igpu){
 		for(int i=0; i<N; i+=iN){
 		    int nleft=N-i;
 		    if(nleft>iN) nleft=iN;
-		    multimv_do<<<nblock, naeach, sizeof(float)*naeach, stream[is]>>>
+		    multimv_do<<<nblock, naeach, sizeof(Real)*naeach, stream[is]>>>
 			(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
 		    is=(is+1)%nstream;
 		}
@@ -226,7 +226,7 @@ void mvm_test(int igpu){
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    mvm_do<<<mp_count, naeach, sizeof(float)*naeach, stream[0]>>>
+	    mvm_do<<<mp_count, naeach, sizeof(Real)*naeach, stream[0]>>>
 		(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
 	}
 	event[1].record(stream[0]);
@@ -273,7 +273,7 @@ void mvm_test(int igpu){
 	//toc("sync");
 	cudaProfilerStop();
 	for(int is=0; is<nstream; is++){
-	    float tm1, tm2;
+	    Real tm1, tm2;
 	    DO(cudaEventElapsedTime(&tm1, event[0], event[2*is]));
 	    DO(cudaEventElapsedTime(&tm2, event[0], event[2*is+1]));
 	    info2("%.6f %.6f %.6f\n", tm1, tm2, tm2-tm1);
@@ -290,10 +290,10 @@ void mvm_test(int igpu){
 	int nthread=128;//192 or 256 are good values
 	for(N=4000; N>10; N=N/2){
 	    int i0;
-	    float t0=INFINITY;
+	    Real t0=INFINITY;
 	    for(nstream=2; nstream<=512; nstream+=2){
 		int nblock=M/nthread*nstream;
-		float tm0=0;
+		Real tm0=0;
 		for(int icase=0; icase<ncase; icase++){
 		    //A single stream, but different kernels does different columns.
 		    //nstream=256;

@@ -82,12 +82,12 @@ typedef struct{
 #endif
 }GPU_DATA_T;
 /*Does matched filter*/
-static void __global__ mtch_do(const float *mtch, const float *pix, float *grad, int pixpsa, int nsa){
-    extern __shared__ float cum[];//for cumulation and reduction
-    float *cumi=cum+threadIdx.y*blockDim.x;//2 padding for easy reduction
+static void __global__ mtch_do(const Real *mtch, const Real *pix, Real *grad, int pixpsa, int nsa){
+    extern __shared__ Real cum[];//for cumulation and reduction
+    Real *cumi=cum+threadIdx.y*blockDim.x;//2 padding for easy reduction
     for(int ig=threadIdx.y+blockDim.y*blockIdx.x; ig<nsa*2; ig+=blockDim.y*gridDim.x){
-	const float *mtchi=mtch+ig*pixpsa;
-	const float *pixi=pix+ig/2*pixpsa;
+	const Real *mtchi=mtch+ig*pixpsa;
+	const Real *pixi=pix+ig/2*pixpsa;
 	//sum 3 times for 90 pixels.
 	cumi[threadIdx.x]=0;
 	if(threadIdx.x<30){
@@ -108,8 +108,8 @@ static void __global__ mtch_do(const float *mtch, const float *pix, float *grad,
 }
 /*
 __global__ static void 
-multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
+multimv_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ Real acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     int nset=(blockDim.x*gridDim.x+nact-1)/nact;
     if(blockDim.x*gridDim.x<nset*nact){
@@ -123,20 +123,20 @@ multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g
     const int igi=(iset*ng)/nset;
     const int ngi=((iset+1)*ng)/nset;
     for(int ig=igi; ig<ngi; ig++){
-	register float mvmi=mvm[nact*ig+iact];
-	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
+	register Real mvmi=mvm[nact*ig+iact];
+	acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
     }
     atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
     }*/
 
-/*__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
+/*__global__ static void mvm_g_mul_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ Real acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
 	acc[threadIdx.x]=0;
 	for(int ig=0; ig<ng; ig++){
-	    register float mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*(float)(g[ig]);
+	    register Real mvmi=mvm[nact*ig+iact];
+	    acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
 	}
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
@@ -165,21 +165,21 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     int ng=nsa*2;
     const int pixpsa=90;//Change this need to change kernel mtch_do
     const int pixpsa2=71;//average number of pixels, used for 10GbE
-    smat *mvm1=snew(nact, ng);
-    smat *mvm2=snew(nact, ng);
-    smat *pix1=snew(pixpsa, nsa);
-    smat *pix2=snew(pixpsa, nsa);
-    smat *mtch=snew(pixpsa, ng);
+    X(mat) *mvm1=X(new)(nact, ng);
+    X(mat) *mvm2=X(new)(nact, ng);
+    X(mat) *pix1=X(new)(pixpsa, nsa);
+    X(mat) *pix2=X(new)(pixpsa, nsa);
+    X(mat) *mtch=X(new)(pixpsa, ng);
     rand_t srand;
     seed_rand(&srand, 1);
-    srandu(mvm1,1, &srand);
-    srandu(mvm2,1,&srand);
-    srandu(pix1,50, &srand);
-    srandu(pix2,50, &srand);
-    smat *mvm=mvm1;
-    smat *pix=pix2;
-    scell *dmres=scellnew(ngpu, 1);
-    spagelock(pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
+    X(randu)(mvm1,1, &srand);
+    X(randu)(mvm2,1,&srand);
+    X(randu)(pix1,50, &srand);
+    X(randu)(pix2,50, &srand);
+    X(mat) *mvm=mvm1;
+    X(mat) *pix=pix2;
+    X(cell) *dmres=X(cellnew)(ngpu, 1);
+    X(pagelock)(pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
 
     int port=20000;
     int sock=-1;
@@ -284,20 +284,20 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    cudaEventCreateWithFlags(&data[igpu].event_p[i],event_flag);
 	}
 	cudaEventCreateWithFlags(&data[igpu].event_pall,event_flag);
-	dmres->p[igpu]=snew(nact, 1);
-	spagelock(dmres->p[igpu], NULL);
+	dmres->p[igpu]=X(new)(nact, 1);
+	X(pagelock)(dmres->p[igpu], NULL);
 	/*
 	DO(cudaMemcpyAsync(data[igpu].pix->p, pix->p, 2*nsa*pixpsa,
 			   cudaMemcpyHostToDevice, *data[igpu].stream_p));
-	cudaMemcpyAsync(dmres->p[igpu]->p, data[igpu].act->p, nact*sizeof(float), 
+	cudaMemcpyAsync(dmres->p[igpu]->p, data[igpu].act->p, nact*sizeof(Real), 
 			cudaMemcpyDeviceToHost, data[igpu].stream_a[0]);
 	CUDA_SYNC_DEVICE;
 	*/
     }
-    smat *timing=snew(nstep, 1);
-    smat *timing_tot=snew(nstep, 1);
-    smat *timing_sock=snew(nstep, 1);
-    smat *result=snew(nstep, 1);
+    X(mat) *timing=X(new)(nstep, 1);
+    X(mat) *timing_tot=X(new)(nstep, 1);
+    X(mat) *timing_sock=X(new)(nstep, 1);
+    X(mat) *result=X(new)(nstep, 1);
     cudaProfilerStart();
     TIC;
     if(sock!=-1 && stwriteint(sock, ready)){
@@ -381,7 +381,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    DO(cudaEventRecord(datai->event0_g[datai->count], datai->stream_g[0]));    
 #endif
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
-		mtch_dimx*mtch_dimy*sizeof(float), datai->stream_g[0]>>>
+		mtch_dimx*mtch_dimy*sizeof(Real), datai->stream_g[0]>>>
 	       (datai->mtch->p+isa*2*pixpsa, datai->pix->p+isa*pixpsa, 
 		datai->grad->p+isa*2, pixpsa, nleft);
 	    //Record the event when matched filter is done
@@ -396,9 +396,9 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    DO(cudaEventRecord(datai->event0_a2[datai->count], datai->stream_a[datai->ism]));    
 #endif
 #if 0
-	    DO(cublasSgemv(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
+	    DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
-	    multimv_do<<<nblock, naeach, sizeof(float)*naeach, datai->stream_a[datai->ism]>>>
+	    multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream_a[datai->ism]>>>
 		(datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
 		 nact, nleft*2);
 #endif
@@ -430,7 +430,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		DO(cudaEventRecord(datai->event0_mvm, datai->stream_mvm[0]));	
 #endif
 		DO(cudaMemcpyAsync(datai->cumvm_next->p+datai->ic*mvm->nx, 
-				   mvm->p+datai->ic*mvm->nx, sizeof(float)*mvm->nx*nleft, 
+				   mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft, 
 				   cudaMemcpyHostToDevice, datai->stream_mvm[0]));
 #if TIMING
 		DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm[0]));
@@ -456,7 +456,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #if TIMING
 	    DO(cudaEventRecord(datai->event0_a, datai->stream_a[0]));
 #endif
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), cudaMemcpyDeviceToHost, datai->stream_a[0]);
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a[0]);
 #if TIMING
 	    DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 #endif
@@ -473,7 +473,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	}
 	if(sock!=-1){
 	    double tmp0=myclockd();
-	    if(stwrite(sock, dmres->p[0]->p, sizeof(float)*nact)){
+	    if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
 		warning("error write dmres: %s\n", strerror(errno));
 		close(sock); sock=-1;
 	    }
@@ -497,7 +497,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	for(int igpu=0; igpu<ngpu; igpu++){
 	    GPU_DATA_T *datai=&data[igpu];
 	    cudaSetDevice(datai->gpu);
-	    cudaMemsetAsync(datai->act->p, 0, nact*sizeof(float), datai->stream_a[datai->ism]);
+	    cudaMemsetAsync(datai->act->p, 0, nact*sizeof(Real), datai->stream_a[datai->ism]);
 	    datai->stream_a[datai->ism].sync();
 	    datai->stream_mvm->sync();
 	}
@@ -508,8 +508,8 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		cudaSetDevice(gpus[igpu]); 
 		GPU_DATA_T *datai=data+igpu;
 		const int count=datai->count;
-		smat *tim=snew(count*6+4,2);
-		PSMAT(tim,ptim);
+		X(mat) *tim=X(new)(count*6+4,2);
+		PX(MAT)(tim,ptim);
 		int ic;
 		for(ic=0; ic<count; ic++){
 		    cudaEventElapsedTime(&ptim[0][ic*6+0], datai->event0, datai->event0_p[ic]);//start of mtch
@@ -534,7 +534,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		ptim[1][ic*6+2]=5;
 		ptim[1][ic*6+3]=5;
 		swrite(tim, "timing2_%dgpu%d_step%d", ngpu, igpu, istep);
-		sfree(tim);
+		X(free)(tim);
 	    }
 	}
 #endif
@@ -542,21 +542,21 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     cudaProfilerStop();
     //swrite(dmres->p[0], "dmres");
 
-    swrite(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    swrite(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
-    swrite(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
-    spageunlock(pix1, pix2, mvm1, mvm2, NULL);
+    X(write)(timing, "timing_%s_%dgpu", myhostname(), ngpu);
+    X(write)(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
+    X(write)(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
+    X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
     
-    sfree(mvm1);
-    sfree(mvm2);
-    sfree(pix1);
-    sfree(pix2);
-    sfree(mtch);
-    scellfree(dmres);
-    sfree(timing);
-    sfree(timing_tot);
-    sfree(timing_sock);
-    sfree(result);
+    X(free)(mvm1);
+    X(free)(mvm2);
+    X(free)(pix1);
+    X(free)(pix2);
+    X(free)(mtch);
+    X(cellfree)(dmres);
+    X(free)(timing);
+    X(free)(timing_tot);
+    X(free)(timing_sock);
+    X(free)(result);
     for(int igpu=0; igpu<ngpu; igpu++){
 	cudaSetDevice(gpus[igpu]);
 	delete data[igpu].cumvm1;

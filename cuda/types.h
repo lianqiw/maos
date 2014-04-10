@@ -206,10 +206,10 @@ class cucell{
 	}
     }
 };
-typedef class cumat<float>    curmat;
-typedef class cumat<fcomplex> cucmat;
-typedef class cucell<float>  curcell;
-typedef class cucell<fcomplex>  cuccell;
+typedef class cumat<Real>    curmat;
+typedef class cumat<Comp> cucmat;
+typedef class cucell<Real>  curcell;
+typedef class cucell<Comp>  cuccell;
 enum TYPE_SP{
     SP_CSC,
     SP_CSR,
@@ -218,7 +218,7 @@ class cusp{
  public:
     int *p;
     int *i;
-    float *x;
+    Real *x;
     int nx;
     int ny;
     int nzmax;
@@ -271,13 +271,12 @@ class cuspcell{
     }
 };
 
-void cp2gpu(float (* restrict *dest)[2], const loc_t *src);
-typedef float(*float2p)[2];
+void cp2gpu(Real (* restrict *dest)[2], const loc_t *src);
 class culoc_t{
 public:
-    float (*p)[2];/*in device. */
-    float dx;
-    float dy;
+    Real (*p)[2];/*in device. */
+    Real dx;
+    Real dy;
     long nloc;
     culoc_t(loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
 	if(!in) return;
@@ -292,25 +291,25 @@ public:
 };
 class cupts_t:public culoc_t{
 public:
-    float dxsa;
-    float nxsa;
+    Real dxsa;
+    Real nxsa;
     cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
 	if(!in) return;
 	dxsa=in->dx;
 	nxsa=in->nx;
     }
 };
-curmat* gpu_dmcubic_cc(float iac);
+curmat* gpu_dmcubic_cc(Real iac);
 /**
    Specifies the grid.
 */
 class cugrid_t{
 public:
     long  nx, ny;
-    float ox, oy;
-    float dx, dy;
-    float ht;
-    float vx, vy;
+    Real ox, oy;
+    Real dx, dy;
+    Real ht;
+    Real vx, vy;
     curmat *cubic_cc; /*coefficients for cubic influence function. */
     void init(const map_t *in){
 	nx=in->nx;
@@ -342,11 +341,11 @@ public:
 	    memset(this, 0, sizeof(*this));
 	}
     }
-    cugrid_t(long nxi=0, long nyi=0,float oxi=0, float oyi=0, float dxi=0, float dyi=0, float hti=0, float vxi=0, float vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
-    cugrid_t scale(float sc)const{
+    cugrid_t(long nxi=0, long nyi=0,Real oxi=0, Real oyi=0, Real dxi=0, Real dyi=0, Real hti=0, Real vxi=0, Real vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
+    cugrid_t scale(Real sc)const{
 	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }
-    cugrid_t operator *(float sc)const{
+    cugrid_t operator *(Real sc)const{
 	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }
 };

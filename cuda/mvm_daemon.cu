@@ -72,7 +72,7 @@ typedef struct mvm_g_mul_t{
     GTYPE *g;/*full g*/
     ATYPE **ac;/*a for each gpu.*/
     ATYPE *a;/*final a*/
-    smat *mvm;
+    X(mat) *mvm;
     int *icols;
     int *kcols;
 }mvm_t;
@@ -86,14 +86,14 @@ int nleft;
 char *start;
 
 int sock_mvm;
-__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
+__global__ static void mvm_g_mul_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ Real acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
 	acc[threadIdx.x]=0;
 	for(int ig=0; ig<ng; ig++){
-	    register float mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*(float)(g[ig]);
+	    register Real mvmi=mvm[nact*ig+iact];
+	    acc[threadIdx.x]+=mvmi*(Real)(g[ig]);
 	}
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
@@ -120,7 +120,7 @@ static void mvm_thread(void* ithread0){
 	    if(ithread<NGPU){
 		gpu_set(ithread);
 	    }
-	    smat *mvm=mvm_data->mvm;
+	    X(mat) *mvm=mvm_data->mvm;
 	    cudata->mvm_stream=new stream_t;
 	    cp2gpu(&cudata->mvm_m, mvm, *cudata->mvm_stream);
 	    if(cudata->mvm_a){
@@ -144,9 +144,9 @@ static void mvm_thread(void* ithread0){
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
 	    
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, *cudata->mvm_stream>>>
 	      (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	    /*float one=1;
+	    /*Real one=1;
 	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
 	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
@@ -159,9 +159,9 @@ static void mvm_thread(void* ithread0){
 	    int k=MIN(ki, ki2);
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, *cudata->mvm_stream>>>
 	    (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	    /*float one=1;
+	    /*Real one=1;
 	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
 	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
@@ -221,8 +221,8 @@ static int respond(int sock){
 	mvm_data=(mvm_t*)calloc(1, sizeof(mvm_t));
 	mvm_data->nact=nact;
 	mvm_data->ngtot=ngtot;
-	mvm_data->mvm=snew(nact, ngtot);
-	stread(sock_mvm, mvm_data->mvm->p, (nact*ngtot)*sizeof(float));
+	mvm_data->mvm=X(new)(nact, ngtot);
+	stread(sock_mvm, mvm_data->mvm->p, (nact*ngtot)*sizeof(Real));
 	if(!thread_init_joined){
 	    pthread_join(thread_init, NULL);
 	    thread_init_joined=1;
@@ -261,7 +261,7 @@ static int respond(int sock){
 	}
 	toc22("copy mvm to gpu");
 	info2("done");
-	sfree(mvm_data->mvm);
+	X(free)(mvm_data->mvm);
     }
 	break;
     case GPU_MVM_G:{/*maos sends gradients*/

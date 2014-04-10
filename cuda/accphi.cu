@@ -29,9 +29,9 @@ extern "C"
 
    Change log:
 
-   1) memcpy failed for cc when declared with float cc[5] with invalid argument
+   1) memcpy failed for cc when declared with Real cc[5] with invalid argument
    when using cudaMemcpyDeviceToHost. Changed to cudaMemcpyDefault works. But
-   the consequency is that cc in kernel have only zero value. When use float*
+   the consequency is that cc in kernel have only zero value. When use Real*
    cc, the memcpy succeed, but cc is null in kernel. It seems we can only pass
    cc into the kernel.
 
@@ -44,7 +44,7 @@ extern "C"
 static int WRAP_ATM;
 
 /*
-  Question: when I declare CC as a float* here and initialize once, I get
+  Question: when I declare CC as a Real* here and initialize once, I get
   segmentation error due to cc appear as NULL using cuda-gdb.  
 
   Serious problem found: At time step 1, ray tracing through atm works well with
@@ -56,7 +56,7 @@ static int WRAP_ATM;
 
 typedef struct{
     int ips;
-    float *next_atm;
+    Real *next_atm;
     int nx0;
     int ny0;
     int offx;
@@ -92,21 +92,21 @@ static void atm_prep(atm_prep_t *data){
 	my=ny0;
     }
     PDMAT(atm, pin);
-    float (*pout)[nx0]=(float(*)[nx0])(data->next_atm);
+    Real (*pout)[nx0]=(Real(*)[nx0])(data->next_atm);
     for(int iy=0; iy<my; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(float)pin[iy+offy][ix+offx];
+	    pout[iy][ix]=(Real)pin[iy+offy][ix+offx];
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(float)pin[iy+offy][ix+offx-nxi];
+	    pout[iy][ix]=(Real)pin[iy+offy][ix+offx-nxi];
 	}
     }
     for(int iy=my; iy<ny0; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx];
+	    pout[iy][ix]=(Real)pin[iy+offy-nyi][ix+offx];
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
+	    pout[iy][ix]=(Real)pin[iy+offy-nyi][ix+offx-nxi];
 	}
     }
     toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
@@ -157,7 +157,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }
 	}
 	long spare=100*1024*1024;//100 MB.
-	long need=spare+nps*sizeof(float)*nxn*nyn;
+	long need=spare+nps*sizeof(Real)*nxn*nyn;
 	info2("Available memory is %ld (min) %ld (max) MB. Min atm is %ldx%ld, need %ld\n", avail_min>>20, avail_max>>20, nxn, nyn, need);
 	if(avail_min<need){
 	    if(avail_max<need){
@@ -180,7 +180,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    _Exit(0);
 	}else{
 	    /*we are able to host this amount. */
-	    long nxa=(long)roundf(sqrt((avail_min-spare)/nps/sizeof(float)));
+	    long nxa=(long)roundf(sqrt((avail_min-spare)/nps/sizeof(Real)));
 	    info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 		nx0=parms->atm.nx;
@@ -204,18 +204,18 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     WRAP_ATM=0;
     static int need_init=1;
     static int *next_isim=NULL;/*next time step to update this atmosphere. */
-    static float *next_ox=NULL;
-    static float *next_oy=NULL;
-    static float **next_atm=NULL;
+    static Real *next_ox=NULL;
+    static Real *next_oy=NULL;
+    static Real **next_atm=NULL;
     static pthread_t *next_threads=NULL;
     if(need_init){
 	need_init=0;
 	/*The atm in GPU is smaller than in CPU. */
 	next_isim=(int*)calloc(nps, sizeof(int));
-	next_ox=(float*)calloc(nps, sizeof(float));
-	next_oy=(float*)calloc(nps, sizeof(float));
+	next_ox=(Real*)calloc(nps, sizeof(Real));
+	next_oy=(Real*)calloc(nps, sizeof(Real));
 	next_threads=(pthread_t*)calloc(nps, sizeof(pthread_t));
-	next_atm=(float **)calloc(nps, sizeof(void*));
+	next_atm=(Real **)calloc(nps, sizeof(void*));
 
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
@@ -267,11 +267,11 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
     }
     for(int ips=0; ips<nps; ips++){
-	/*Load atmosphere to float memory in advance. This takes time if atm is
+	/*Load atmosphere to Real memory in advance. This takes time if atm is
 	  stored in file.*/
 	if(isim>next_isim[ips]-100 && !next_atm[ips]){
 	    /*pinned memory is faster for copying to GPU. */
-	    next_atm[ips]=(float*)malloc(sizeof(float)*nx0*ny0);
+	    next_atm[ips]=(Real*)malloc(sizeof(Real)*nx0*ny0);
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
 	    int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
@@ -304,8 +304,8 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cumap_t *cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips].p->p, (float*)next_atm[ips],
-			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+		DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
+			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
@@ -350,16 +350,16 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 /**
    Copy DM configurations to GPU.
 */
-curmat* gpu_dmcubic_cc(float iac){
-    float cc[5];
-    float cubicn=1.f/(1.f+2.f*iac);
+curmat* gpu_dmcubic_cc(Real iac){
+    Real cc[5];
+    Real cubicn=1.f/(1.f+2.f*iac);
     cc[0]=1.f*cubicn;
     cc[1]=(4.f*iac-2.5f)*cubicn; 
     cc[2]=(1.5f-3.f*iac)*cubicn;		       
     cc[3]=(2.f*iac-0.5f)*cubicn;			
     cc[4]=(0.5f-iac)*cubicn; 
     curmat *res=curnew(5,1);
-    cudaMemcpy(res->p, cc, 5*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(res->p, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
     return res;
 }
 /**
@@ -398,17 +398,17 @@ void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
     }
 }
 
-#define KARG_COMMON const float (*restrict loc)[2], const int nloc, const float dxi, const float dyi, const float dispx, const float dispy, const float alpha
+#define KARG_COMMON const Real (*restrict loc)[2], const int nloc, const Real dxi, const Real dyi, const Real dispx, const Real dispy, const Real alpha
 
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear(float *restrict out, const float *restrict in, const int nx, const int ny,
+__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny,
 			    KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dxi+dispx;
-	float y=loc[i][1]*dyi+dispy;
-	int ix=floorf(x);
-	int iy=floorf(y);
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
 	x=x-ix; y=y-iy;
 	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
 	    out[i]+= alpha*((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
@@ -417,28 +417,28 @@ __global__ void prop_linear(float *restrict out, const float *restrict in, const
     }
 }
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear_nocheck(float *restrict out, const float *restrict in, 
+__global__ void prop_linear_nocheck(Real *restrict out, const Real *restrict in, 
 				    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dxi+dispx;
-	float y=loc[i][1]*dyi+dispy;
-	int ix=floorf(x);
-	int iy=floorf(y);
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
 	x=x-ix; y=y-iy;
 	out[i]+=alpha*((in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
 		       +(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y);
     }
 }
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear_wrap(float *restrict out, const float *restrict in, const int nx, const int ny,
+__global__ void prop_linear_wrap(Real *restrict out, const Real *restrict in, const int nx, const int ny,
 				 KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dxi+dispx;
-	float y=loc[i][1]*dyi+dispy;
-	int ix=floorf(x);
-	int iy=floorf(y);
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
 	x=x-ix; y=y-iy;
 	while(ix<0) ix+=nx; 
 	while(iy<0) iy+=ny;
@@ -452,16 +452,16 @@ __global__ void prop_linear_wrap(float *restrict out, const float *restrict in, 
 }
 
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_cubic(float *restrict out, const float *restrict in, const int nx, const int ny,
-			   KARG_COMMON, const float *cc){
+__global__ void prop_cubic(Real *restrict out, const Real *restrict in, const int nx, const int ny,
+			   KARG_COMMON, const Real *cc){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dxi+dispx;
-	float y=loc[i][1]*dyi+dispy;
-	int ix=floorf(x); x=x-ix;
-	int iy=floorf(y); y=y-iy;
-	float fx[4],fy;
-	float sum=0;
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x); x=x-ix;
+	int iy=Z(floor)(y); y=y-iy;
+	Real fx[4],fy;
+	Real sum=0;
 	if(ix<1 || ix>nx-3 || iy<1 || iy>ny-3){
 	    continue;/*out of range. */
 	}
@@ -501,20 +501,20 @@ __global__ void prop_cubic(float *restrict out, const float *restrict in, const 
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(float *phiout, culoc_t *loc, const float hs, 
-		 const float thetax,const float thetay,
-		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream){
+void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, 
+		 const Real thetax,const Real thetay,
+		 const Real mispx, const Real mispy, const Real dtisim, const Real atmalpha, cudaStream_t stream){
     cumap_t *cuatm=cudata->atm;
-    if(fabs(atmalpha)<EPS) return;
+    if(Z(fabs)(atmalpha)<EPS) return;
     for(int ips=0; ips<cudata->nps; ips++){
-	const float dx=cuatm[ips].dx;
-	const float dy=cuatm[ips].dy;
-	const float ht=cuatm[ips].ht;
-	const float vx=cuatm[ips].vx;
-	const float vy=cuatm[ips].vy;
-	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips].ox)/dx;
-	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips].oy)/dy;
-	const float scale=1.f-ht/hs;
+	const Real dx=cuatm[ips].dx;
+	const Real dy=cuatm[ips].dy;
+	const Real ht=cuatm[ips].ht;
+	const Real vx=cuatm[ips].vx;
+	const Real vy=cuatm[ips].vy;
+	const Real dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips].ox)/dx;
+	const Real dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips].oy)/dy;
+	const Real scale=1.f-ht/hs;
 	const int nloc=loc->nloc;
 #define COMM loc->p,loc->nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
@@ -531,19 +531,19 @@ void gpu_atm2loc(float *phiout, culoc_t *loc, const float hs,
 /**
    Ray tracing of dm
 */
-void gpu_dm2loc(float *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
-		const float hs, const float thetax, const float thetay,
-		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream){
-    if(fabs(dmalpha)<EPS) return;
+void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
+		const Real hs, const Real thetax, const Real thetay,
+		const Real mispx, const Real mispy, const Real dmalpha, cudaStream_t stream){
+    if(Z(fabs)(dmalpha)<EPS) return;
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-	const float dx=cudm[idm].dx;
-	const float dy=cudm[idm].dy;
-	const float ht=cudm[idm].ht;
-	const float dispx=(ht*thetax+mispx-cudm[idm].ox)/dx;
-	const float dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
-	const float scale=1.f-ht/hs;
-	const float (*loc)[2]=locarr[idm]->p;
+	const Real dx=cudm[idm].dx;
+	const Real dy=cudm[idm].dy;
+	const Real ht=cudm[idm].ht;
+	const Real dispx=(ht*thetax+mispx-cudm[idm].ox)/dx;
+	const Real dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
+	const Real scale=1.f-ht/hs;
+	const Real (*loc)[2]=locarr[idm]->p;
 	const int nloc=locarr[idm]->nloc;
 #define COMM loc, nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
 #define KARG cudm[idm].p->p,cudm[idm].nx,cudm[idm].ny, COMM

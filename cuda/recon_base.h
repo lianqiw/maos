@@ -22,9 +22,9 @@
 
 namespace cuda_recon{
 struct dir_t{
-    float thetax;
-    float thetay;
-    float hs;
+    Real thetax;
+    Real thetay;
+    Real hs;
     int skip;
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
@@ -32,7 +32,7 @@ class W01_T{
     curmat *W1;    /**< The aperture weighting, piston removal*/
     cusp   *W0p;   /**< W0 for partial points*/
     cumat<int>*W0f;   /**< index for fully illuminated points.*/
-    float   W0v;   /**< maximum Value of W0*/
+    Real   W0v;   /**< maximum Value of W0*/
     int     nxx;   /**< First dimension of grid*/
     curmat *pis;   /**< Temporary data*/
 public:
@@ -43,7 +43,7 @@ public:
 	delete W0f;
 	delete pis;
     }
-    void apply(float *restrict out, const float *in, int ndir, stream_t &stream);
+    void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream);
 };
 
 /**
@@ -66,7 +66,7 @@ public:
     long *xnx, *xny;/*do not free*/
     long *anx, *any;/*do not free*/
     long *anloc, *ngrad;/*do not free*/
-    float dt; 
+    Real dt; 
     curecon_geom(const PARMS_T *parms=0, const RECON_T *recon=0);
     ~curecon_geom(){
 	delete[] xmap;
@@ -82,12 +82,12 @@ protected:
 public:
     map_ray():hdata(0),nlayer(0),ndir(0){};
     //from in to out
-    void forward(float **out, float **in,  float alpha, float *wt, stream_t &stream){
+    void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
 	gpu_prop_grid_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(16,16),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
     }
     //from out to in
-    void backward(float **out, float **in, float alpha, float *wt, stream_t &stream){
+    void backward(Real **out, Real **in, Real alpha, Real *wt, stream_t &stream){
 	gpu_prop_grid_do<<<dim3(4,4,nlayer),dim3(16,16),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
@@ -105,7 +105,7 @@ public:
 /*Ray tracing from one/multiple layers to one/multiple directions*/
 class map_l2d:public map_ray{
 public:
-    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugrid_t *in, int _nlayer, float dt=0);
+    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugrid_t *in, int _nlayer, Real dt=0);
 };
 
 /*Ray tracing from layer to layer, for caching.*/

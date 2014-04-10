@@ -23,14 +23,14 @@
 namespace cuda_recon{
 class cusolve_r{/*Interface for RHS*/
 public:
-    virtual void R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
-    virtual void Rt(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
+    virtual void R(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream)=0;
+    virtual void Rt(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream)=0;
     virtual ~cusolve_r(){}
 };
 
 class cusolve_l{/*Interface for LHS*/
 public:
-    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream)=0;
+    virtual Real solve(curcell **xout, const curcell *xin, stream_t &stream)=0;
     virtual ~cusolve_l(){}
 };
 
@@ -55,11 +55,11 @@ public:
 	delete precond;
     }
     /*Left hand side forward operaton*/
-    virtual void L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream)=0;
-    void operator()(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+    virtual void L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream)=0;
+    void operator()(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
 	L(xout, beta, xin, alpha, stream);
     }
-    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
+    virtual Real solve(curcell **xout, const curcell *xin, stream_t &stream);
     void P(curcell **xout, const curcell *xin, stream_t &stream){
 	if(precond){
 	    (*precond)(xout, xin, stream);
@@ -76,11 +76,11 @@ class cumuv_t{
  public:
     cumuv_t(const MUV_T *in=0);
     ~cumuv_t();
-    void Forward(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream);
-    void operator()(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream){
+    void Forward(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream);
+    void operator()(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream){
 	Forward(out, beta, in, alpha, stream);
     }
-    void Trans(curcell **out, float beta, const curcell *in, float alpha, stream_t &stream);
+    void Trans(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream);
 };
 
 class cusolve_sparse:public cusolve_r,public cucg_t{
@@ -93,16 +93,16 @@ public:
 	delete CR;
 	delete CL;
     }
-    virtual void R(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream){
+    virtual void R(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream){
 	CR->Forward(out, beta, xin, alpha, stream);
     }
-    virtual void L(curcell **out, float beta, 
-		   const curcell *xin, float alpha, stream_t &stream){
+    virtual void L(curcell **out, Real beta, 
+		   const curcell *xin, Real alpha, stream_t &stream){
 	CL->Forward(out, beta, xin, alpha, stream);
     }
-    virtual void Rt(curcell **out, float beta, 
-		    const curcell *xin, float alpha, stream_t &stream){
+    virtual void Rt(curcell **out, Real beta, 
+		    const curcell *xin, Real alpha, stream_t &stream){
 	CR->Trans(out, beta, xin, alpha, stream);
     }
 };
@@ -126,8 +126,8 @@ public:
 	delete y;
 	info2("cusolve_cbs::destructor\n");
     }
-    void chol_solve(float *out, const float *in,  stream_t &stream);
-    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream);
+    void chol_solve(Real *out, const Real *in,  stream_t &stream);
+    virtual Real solve(curcell **xout, const curcell *xin, stream_t &stream);
 };
 
 class cusolve_mvm:public cusolve_l{
@@ -139,7 +139,7 @@ public:
     ~cusolve_mvm(){
 	delete M;
     }
-    virtual float solve(curcell **xout, const curcell *xin, stream_t &stream){
+    virtual Real solve(curcell **xout, const curcell *xin, stream_t &stream){
 	if(!*xout) *xout=curcellnew(xin);
 	curmv((*xout)->m->p, 0., M, xin->m->p, 'n', 1., stream);
 	return 0;

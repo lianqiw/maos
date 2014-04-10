@@ -25,14 +25,14 @@ extern "C"
 /*
   Ray tracing with matched spacing. Reverse, from out to in. out is xloc, in is ploc.
 */
-__global__ static void prop_grid_match_do(float *restrict out, int nxo,
-					  const float *restrict in, int nxi, 
-					  float fracx, float fracy,
-					  float alpha, int nx, int ny){
+__global__ static void prop_grid_match_do(Real *restrict out, int nxo,
+					  const Real *restrict in, int nxi, 
+					  Real fracx, Real fracy,
+					  Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
-    float fracx1=1.f-fracx;
-    float fracy1=1.f-fracy;
+    Real fracx1=1.f-fracx;
+    Real fracy1=1.f-fracy;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
 	    out[ix+iy*nxo]+=
@@ -42,19 +42,19 @@ __global__ static void prop_grid_match_do(float *restrict out, int nxo,
     }
 }
 
-__global__ static void prop_grid_nomatch_do(float *restrict out, int nxo, 
-					    const float *restrict in, int nxi, 
-					    float dispx, float dispy, float xratio, float yratio,
-					    float alpha, int nx, int ny){
+__global__ static void prop_grid_nomatch_do(Real *restrict out, int nxo, 
+					    const Real *restrict in, int nxi, 
+					    Real dispx, Real dispy, Real xratio, Real yratio,
+					    Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
-	float jy;
-	float fracy=modff(dispy+iy*yratio, &jy);
+	Real jy;
+	Real fracy=Z(modf)(dispy+iy*yratio, &jy);
 	int ky=(int)jy;
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
-	    float jx;
-	    float fracx=modff(dispx+ix*xratio, &jx);
+	    Real jx;
+	    Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 	    int kx=(int)jx;
 	    out[ix+iy*nxo]+=
 		alpha*(+(in[kx+      ky*nxi]*(1.f-fracx)+
@@ -64,21 +64,21 @@ __global__ static void prop_grid_nomatch_do(float *restrict out, int nxo,
 	}
     }
 }
-__global__ static void prop_grid_nomatch_trans_do(const float *restrict out, int nxo, 
-						  float *restrict in, int nxi,
-						  float dispx, float dispy, float xratio, float yratio,
-						  float alpha, int nx, int ny){
+__global__ static void prop_grid_nomatch_trans_do(const Real *restrict out, int nxo, 
+						  Real *restrict in, int nxi,
+						  Real dispx, Real dispy, Real xratio, Real yratio,
+						  Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
-	float jy;
-	float fracy=modff(dispy+iy*yratio, &jy);
+	Real jy;
+	Real fracy=Z(modf)(dispy+iy*yratio, &jy);
 	int ky=(int)jy;
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
-	    float jx;
-	    float fracx=modff(dispx+ix*xratio, &jx);
+	    Real jx;
+	    Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 	    int kx=(int)jx;
-	    float temp=out[ix+iy*nxo]*alpha;
+	    Real temp=out[ix+iy*nxo]*alpha;
 	    atomicAdd(&in[kx+      ky*nxi], temp*(1.f-fracx)*(1.f-fracy));
 	    atomicAdd(&in[kx+1    +ky*nxi], temp*fracx*(1.f-fracy));
 	    atomicAdd(&in[kx+  (ky+1)*nxi], temp*(1.f-fracx)*fracy);
@@ -91,10 +91,10 @@ __global__ static void prop_grid_nomatch_trans_do(const float *restrict out, int
   Ray tracing with over sampling. Reverse, from out to in. out is xloc, in is
   ploc. confirmed to agree with HXW'.  */
 /*
-__global__ static void prop_grid_os2_trans_old_do(const float *restrict out, int nxout,
-						  float *restrict in, int nxin, 
-						  float fracx, float fracy,
-						  float alpha, int nx, int ny){
+__global__ static void prop_grid_os2_trans_old_do(const Real *restrict out, int nxout,
+						  Real *restrict in, int nxin, 
+						  Real fracx, Real fracy,
+						  Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     int ax=fracx<0.5f?0:1;
@@ -106,16 +106,16 @@ __global__ static void prop_grid_os2_trans_old_do(const float *restrict out, int
 	    for(int by=0; by<2; by++){
 		int iy2=iy*2+by;
 		int iy3=iy+ay*by;
-		float fracy2=fracy+(0.5f-ay)*by;
-		float fracy21=1.f-fracy2;
+		Real fracy2=fracy+(0.5f-ay)*by;
+		Real fracy21=1.f-fracy2;
 #pragma unroll 
 		for(int bx=0; bx<2; bx++){
 		    int ix2=ix*2+bx;
 		    int ix3=ix+ax*bx;
-		    float fracx2=fracx+(0.5f-ax)*bx;
-		    float fracx21=1.f-fracx2;
+		    Real fracx2=fracx+(0.5f-ax)*bx;
+		    Real fracx21=1.f-fracx2;
 		    if(ix2<nx && iy2<ny){
-			float a=out[ix2+(iy2)*nxout]*alpha;
+			Real a=out[ix2+(iy2)*nxout]*alpha;
 			atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
 			atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
 			atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
@@ -130,22 +130,22 @@ __global__ static void prop_grid_os2_trans_old_do(const float *restrict out, int
    Do a single column (along x).
 */
 
-__global__ static void prop_grid_os2_trans_col_do(float *restrict out, int nxout,
-						  float *restrict in, int nxin, 
-						  float fracx, float fracy2,
-						  float alpha, int nx){
+__global__ static void prop_grid_os2_trans_col_do(Real *restrict out, int nxout,
+						  Real *restrict in, int nxin, 
+						  Real fracx, Real fracy2,
+						  Real alpha, int nx){
     int stepx=blockDim.x*gridDim.x;
     int ax=fracx<0.5f?0:1;
     const int iy3=0;
-    float fracy21=1.f-fracy2;
+    Real fracy21=1.f-fracy2;
     for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
 	for(int bx=0; bx<2; bx++){
 	    int ix2=ix*2+bx;
 	    if(ix2<nx){
 		int ix3=ix+ax*bx;
-		float fracx2=fracx+(0.5f-ax)*bx;
-		float fracx21=1.f-fracx2;
-		float a = out[ix2]*alpha;
+		Real fracx2=fracx+(0.5f-ax)*bx;
+		Real fracx21=1.f-fracx2;
+		Real a = out[ix2]*alpha;
 		atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
 		atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
 		atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
@@ -157,22 +157,22 @@ __global__ static void prop_grid_os2_trans_col_do(float *restrict out, int nxout
 /**
    Do a single row (along y).
 */
-__global__ static void prop_grid_os2_trans_row_do(float *restrict out, int nxout,
-						  float *restrict in, int nxin, 
-						  float fracx2, float fracy,
-						  float alpha, int ny){
+__global__ static void prop_grid_os2_trans_row_do(Real *restrict out, int nxout,
+						  Real *restrict in, int nxin, 
+						  Real fracx2, Real fracy,
+						  Real alpha, int ny){
     int stepy=blockDim.y*gridDim.y;
     int ay=fracy<0.5f?0:1;
     const int ix3=0;
-    float fracx21=1.f-fracx2;
+    Real fracx21=1.f-fracx2;
     for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
 	for(int by=0; by<2; by++){
 	    int iy2=iy*2+by;
 	    if(iy2<ny){
 		int iy3=iy+ay*by;
-		float fracy2=fracy+(0.5f-ay)*by;
-		float fracy21=1.f-fracy2;
-		float a = out[iy2*nxout]*alpha;
+		Real fracy2=fracy+(0.5f-ay)*by;
+		Real fracy21=1.f-fracy2;
+		Real a = out[iy2*nxout]*alpha;
 		atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
 		atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
 		atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
@@ -189,11 +189,11 @@ __global__ static void prop_grid_os2_trans_row_do(float *restrict out, int nxout
    test, iy<ny, ix<nx; Then the last col/row is cachein left not merged.
 
 */
-__global__ static void prop_grid_os2_trans_share_do(float *restrict out, int nxout,
-						    float *restrict in, int nxin, 
-						    float fracx, float fracy,
-						    float alpha, int nx, int ny){
-    extern __shared__ float cachein[];/*caching. */
+__global__ static void prop_grid_os2_trans_share_do(Real *restrict out, int nxout,
+						    Real *restrict in, int nxin, 
+						    Real fracx, Real fracy,
+						    Real alpha, int nx, int ny){
+    extern __shared__ Real cachein[];/*caching. */
     const int ind=threadIdx.x+threadIdx.y*blockDim.x;
     cachein[ind]=0;
     __syncthreads();
@@ -206,19 +206,19 @@ __global__ static void prop_grid_os2_trans_share_do(float *restrict out, int nxo
 	    int ix2=ix*2;
 	    int iy2=iy*2;
 	    if(iy<ny && ix<nx){
-		float v_0_0=alpha*(+(+out[ix2+      iy2*nxout]*(1.f-fracx)
+		Real v_0_0=alpha*(+(+out[ix2+      iy2*nxout]*(1.f-fracx)
 				     +out[ix2+1+    iy2*nxout]*(0.5f-fracx))*(1.f-fracy)
 				   +(+out[ix2+  (iy2+1)*nxout]*(1.f-fracx)
 				     +out[ix2+1+(iy2+1)*nxout]*(0.5f-fracx))*(0.5f-fracy));
-		float v_1_0=alpha*(+(+out[ix2+      iy2*nxout]*(fracx)
+		Real v_1_0=alpha*(+(+out[ix2+      iy2*nxout]*(fracx)
 				     +out[ix2+1+    iy2*nxout]*(0.5f+fracx))*(1.f-fracy)
 				   +(+out[ix2+  (iy2+1)*nxout]*(fracx)
 				     +out[ix2+1+(iy2+1)*nxout]*(0.5f+fracx))*(0.5f-fracy));
-		float v_0_1=alpha*(+(+out[ix2+      iy2*nxout]*(1.f-fracx)
+		Real v_0_1=alpha*(+(+out[ix2+      iy2*nxout]*(1.f-fracx)
 				     +out[ix2+1+    iy2*nxout]*(0.5f-fracx))*(fracy)
 				   +(+out[ix2+  (iy2+1)*nxout]*(1.f-fracx)
 				     +out[ix2+1+(iy2+1)*nxout]*(0.5f-fracx))*(0.5f+fracy));
-		float v_1_1=alpha*(+(+out[ix2+      iy2*nxout]*(fracx)
+		Real v_1_1=alpha*(+(+out[ix2+      iy2*nxout]*(fracx)
 				     +out[ix2+1+    iy2*nxout]*(0.5f+fracx))*(fracy)
 				   +(+out[ix2+  (iy2+1)*nxout]*(fracx)
 				     +out[ix2+1+(iy2+1)*nxout]*(0.5f+fracx))*(0.5f+fracy));
@@ -259,19 +259,19 @@ __global__ static void prop_grid_os2_trans_share_do(float *restrict out, int nxo
 */
 void gpu_prop_grid(curmat *out, const cugrid_t &go,
 		   curmat *in, const cugrid_t &gi,
-		   float dispx, float dispy,
-		   float alpha, char trans, cudaStream_t stream){
+		   Real dispx, Real dispy,
+		   Real alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
-    const float uxi=1.f/gi.dx;
-    const float uyi=1.f/gi.dy;
-    float xratio=go.dx*uxi;
-    float yratio=go.dy*uyi;
+    const Real uxi=1.f/gi.dx;
+    const Real uyi=1.f/gi.dy;
+    Real xratio=go.dx*uxi;
+    Real yratio=go.dy*uyi;
     int match=0,match2=0;
     /*remove round off errors that causes trouble in nx, ny.*/
-    if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)){
+    if(Z(fabs)(xratio-1.f)<EPS && Z(fabs)(yratio-1.f)){
 	xratio=yratio=1.f;
 	match=1;
-    }else if(fabs(xratio-0.5f)<EPS && fabs(yratio-0.5f)){
+    }else if(Z(fabs)(xratio-0.5f)<EPS && Z(fabs)(yratio-0.5f)){
 	xratio=yratio=0.5f;
 	match2=1;
     }
@@ -283,29 +283,29 @@ void gpu_prop_grid(curmat *out, const cugrid_t &go,
     const int nyo=out->ny;
     const int nxi=in->nx;
     const int nyi=in->ny;
-    const float xratio1=1.f/xratio;
-    const float yratio1=1.f/yratio;
+    const Real xratio1=1.f/xratio;
+    const Real yratio1=1.f/yratio;
     /*offset of origin in input grid spacing. */
     dispx=(dispx-gi.ox+go.ox)*uxi;
     dispy=(dispy-gi.oy+go.oy)*uyi;
     int offx1=0, offy1=0;/*for output. fine sampling. */
     /*if output is bigger than input. */
     if(dispx<0){
-	offx1=(int)ceilf(-dispx*xratio1);
+	offx1=(int)Z(ceil)(-dispx*xratio1);
 	dispx+=offx1*xratio;
     }
     if(dispy<0){
-	offy1=(int)ceilf(-dispy*yratio1);
+	offy1=(int)Z(ceil)(-dispy*yratio1);
 	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-dispx-EPS)*xratio1);
-    int ny=(int)floorf((nyi-dispy-EPS)*yratio1);
+    int nx=(int)Z(floor)((nxi-dispx-EPS)*xratio1);
+    int ny=(int)Z(floor)((nyi-dispy-EPS)*yratio1);
     
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
-    int offx2=(int)floorf(dispx); dispx-=offx2;/*for input. coarse sampling. */
-    int offy2=(int)floorf(dispy); dispy-=offy2;
+    int offx2=(int)Z(floor)(dispx); dispx-=offx2;/*for input. coarse sampling. */
+    int offy2=(int)Z(floor)(dispy); dispy-=offy2;
     /*
       info("offx1=%d, offy1=%d, offx2=%d, offy2=%d\n", offx1, offy1, offx2, offy2);
       info("nxi=%d, nyi=%d, nxo=%d, nyo=%d\n", nxi, nyi, nxo, nyo);
@@ -351,7 +351,7 @@ void gpu_prop_grid(curmat *out, const cugrid_t &go,
 	    int ny2=ny>>1;
 	    
 #define BS 16 // cannot be 32. /
-	    prop_grid_os2_trans_share_do<<<DIM2(nx2, ny2, BS), (BS)*(BS)*sizeof(float), stream>>>
+	    prop_grid_os2_trans_share_do<<<DIM2(nx2, ny2, BS), (BS)*(BS)*sizeof(Real), stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, alpha, nx2, ny2);
@@ -375,22 +375,22 @@ void gpu_prop_grid(curmat *out, const cugrid_t &go,
 	}
     }
 }
-__global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo, 
-						  const float *restrict in, int nxi, 
-						  float dispx, float dispy, float xratio, float yratio, 
-						  float *cc, float alpha, int nx, int ny){
+__global__ static void prop_grid_cubic_nomatch_do(Real *restrict out, int nxo, 
+						  const Real *restrict in, int nxi, 
+						  Real dispx, Real dispy, Real xratio, Real yratio, 
+						  Real *cc, Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int my=blockIdx.y*blockDim.y+threadIdx.y; my<ny; my+=stepy){
-	float jy;
-	float y=modff(dispy+my*yratio, &jy);
+	Real jy;
+	Real y=Z(modf)(dispy+my*yratio, &jy);
 	int iy=(int)jy;
 	for(int mx=blockIdx.x*blockDim.x+threadIdx.x; mx<nx; mx+=stepx){
-	    float jx;
-	    float x=modff(dispx+mx*xratio, &jx);
+	    Real jx;
+	    Real x=Z(modf)(dispx+mx*xratio, &jx);
 	    int ix=(int)jx;
-	    float fx[4],fy;
-	    float sum=0;
+	    Real fx[4],fy;
+	    Real sum=0;
 	    /*cc need to be in device memory for sm_13 to work.*/
 	    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
 	    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
@@ -424,22 +424,22 @@ __global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo,
 	}
     }
 }
-__global__ static void prop_grid_cubic_nomatch_trans_do(const float *restrict out, int nxo,
-							float *restrict in, int nxi, 
-							float dispx, float dispy, float xratio, float yratio,
-							float *cc, float alpha, int nx, int ny){
+__global__ static void prop_grid_cubic_nomatch_trans_do(const Real *restrict out, int nxo,
+							Real *restrict in, int nxi, 
+							Real dispx, Real dispy, Real xratio, Real yratio,
+							Real *cc, Real alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int my=blockIdx.y*blockDim.y+threadIdx.y; my<ny; my+=stepy){
-	float jy;
-	float y=modff(dispy+my*yratio, &jy);
+	Real jy;
+	Real y=Z(modf)(dispy+my*yratio, &jy);
 	int iy=(int)jy;
 	for(int mx=blockIdx.x*blockDim.x+threadIdx.x; mx<nx; mx+=stepx){
-	    float jx;
-	    float x=modff(dispx+mx*xratio, &jx);
+	    Real jx;
+	    Real x=Z(modf)(dispx+mx*xratio, &jx);
 	    int ix=(int)jx;
-	    float fx[4],fy;
-	    float value=out[mx+my*nxo]*alpha;
+	    Real fx[4],fy;
+	    Real value=out[mx+my*nxo]*alpha;
 	    /*cc need to be in device memory for sm_13 to work.*/
 	    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
 	    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
@@ -479,46 +479,46 @@ __global__ static void prop_grid_cubic_nomatch_trans_do(const float *restrict ou
 */
 void gpu_prop_grid_cubic(curmat *out, const cugrid_t &go,
 			 curmat *in, const cugrid_t &gi,
-			 float dispx, float dispy, float *cc,
-			 float alpha, char trans, cudaStream_t stream){
+			 Real dispx, Real dispy, Real *cc,
+			 Real alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
-    const float uxi=1.f/gi.dx;
-    const float uyi=1.f/gi.dy;
-    float xratio=go.dx*uxi;
-    float yratio=go.dy*uyi;
+    const Real uxi=1.f/gi.dx;
+    const Real uyi=1.f/gi.dy;
+    Real xratio=go.dx*uxi;
+    Real yratio=go.dy*uyi;
     /*remove round off errors.*/
-    if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)<EPS){
+    if(Z(fabs)(xratio-1.f)<EPS && Z(fabs)(yratio-1.f)<EPS){
 	xratio=yratio=1.f;
-    }else if(fabs(xratio-0.5f)<EPS && fabs(yratio-0.5f)<EPS){
+    }else if(Z(fabs)(xratio-0.5f)<EPS && Z(fabs)(yratio-0.5f)<EPS){
 	xratio=yratio=0.5f;
     }
     const int nxo=out->nx;
     const int nyo=out->ny;
     const int nxi=in->nx;
     const int nyi=in->ny;
-    const float xratio1=1.f/xratio;
-    const float yratio1=1.f/yratio;
+    const Real xratio1=1.f/xratio;
+    const Real yratio1=1.f/yratio;
     /*offset of origin in input grid spacing. */
     dispx=(dispx-gi.ox+go.ox)*uxi;
     dispy=(dispy-gi.oy+go.oy)*uyi;
     int offx1=0, offy1=0;/*for output. fine sampling. */
     /*if output is bigger than input. */
     if(dispx<0){
-	offx1=(int)ceilf(-dispx*xratio1);
+	offx1=(int)Z(ceil)(-dispx*xratio1);
 	dispx+=offx1*xratio;
     }
     if(dispy<0){
-	offy1=(int)ceilf(-dispy*yratio1);
+	offy1=(int)Z(ceil)(-dispy*yratio1);
 	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-1-dispx-EPS)*xratio1)+1;
-    int ny=(int)floorf((nyi-1-dispy-EPS)*yratio1)+1;
+    int nx=(int)Z(floor)((nxi-1-dispx-EPS)*xratio1)+1;
+    int ny=(int)Z(floor)((nyi-1-dispy-EPS)*yratio1)+1;
 
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
-    int offx2=(int)floorf(dispx); dispx-=offx2;/*for input. coarse sampling. */
-    int offy2=(int)floorf(dispy); dispy-=offy2;
+    int offx2=(int)Z(floor)(dispx); dispx-=offx2;/*for input. coarse sampling. */
+    int offy2=(int)Z(floor)(dispy); dispy-=offy2;
     if(trans!='t'){
 	prop_grid_cubic_nomatch_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 	    (out->p+offy1*nxo+offx1, nxo,

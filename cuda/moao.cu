@@ -57,7 +57,7 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
     }
     rhs=curcellnew(1,1,amap->nx,amap->ny);
 }
-float cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream){
+Real cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream){
     static int count=-1; count++;
     for(int idir=0; idir<ndir; idir++){
 	opdfit->m->zero(stream);
@@ -70,7 +70,7 @@ float cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ai
     }
     return 0;
 }
-void cumoao_l::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cumoao_l::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(1, 1, amap->nx, amap->ny);
     }else{
@@ -95,11 +95,11 @@ void cumoao_l::L(curcell **xout, float beta, const curcell *xin, float alpha, st
 static void gpu_dm2gpu_embed(curmat *dmgpu, dmat *dmcpu, long *embed, int nx, int ny){
     assert(dmcpu->ny==1);
     double *pin=dmcpu->p;
-    float *pout=(float*)calloc(nx*ny, sizeof(float));
+    Real *pout=(Real*)calloc(nx*ny, sizeof(Real));
     for(int i=0; i<dmcpu->nx; i++){
 	pout[embed[i]]=pin[i];
     }
-    DO(cudaMemcpy(dmgpu->p, pout, nx*ny*sizeof(float), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(dmgpu->p, pout, nx*ny*sizeof(Real), cudaMemcpyHostToDevice));
     free(pout);
 }
 

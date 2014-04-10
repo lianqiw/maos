@@ -28,12 +28,12 @@ extern "C"
 namespace cuda_recon{
 
 /* dest = a/dest Do not use restric because dest and b maybe the same*/
-__global__ static void div_do(float *dest, const float * a){
+__global__ static void div_do(Real *dest, const Real * a){
     dest[0]=a[0]/dest[0];
     if(!isfinite(dest[0])) dest[0]=0;
 }
 /* dest = a/b;then b=a*/
-__global__ static void div_assign_do(float * dest, const float * a, float * b){
+__global__ static void div_assign_do(Real * dest, const Real * a, Real * b){
     dest[0]=a[0]/b[0];
     b[0]=a[0];
     if (!isfinite(dest[0])) dest[0]=0;
@@ -43,8 +43,8 @@ __global__ static void div_assign_do(float * dest, const float * a, float * b){
 /**
    res points to a scalar in device memory. **The caller has to zero it**
 */
-void curcellinn_add(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
-    //cudaMemsetAsync(res, 0,sizeof(float), stream);
+void curcellinn_add(Real *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
+    //cudaMemsetAsync(res, 0,sizeof(Real), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
 	inn_wrap(res, A->m->p, B->m->p, n, stream);
@@ -59,11 +59,11 @@ void curcellinn_add(float *restrict res, const curcell *A, const curcell *B, cud
 }
 
 /* dest = sqrt(a/b); */
-__global__ static void div_sqrt_do(float * dest, const float * a, const float * b){
+__global__ static void div_sqrt_do(Real * dest, const Real * a, const Real * b){
     dest[0]=sqrt(a[0]/b[0]);
 }
 /**Only use kernels to avoid synchronization*/
-static inline void pcg_residual(float *r0r0, float *rkzk, float *rr0, curcell *r0, 
+static inline void pcg_residual(Real *r0r0, Real *rkzk, Real *rr0, curcell *r0, 
 				int precond, cudaStream_t stream){
     if(precond){
 	/*r0r0=r0'*r0; */
@@ -76,7 +76,6 @@ static inline void pcg_residual(float *r0r0, float *rkzk, float *rr0, curcell *r
     }
 }
 int pcg_save=0;
-#define DEBUG_OPDR 0
 #define TIMING 0
 #define PRINT_RES 0
 
@@ -90,14 +89,14 @@ int pcg_save=0;
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
 */
-float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
+Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter,
 	      stream_t &stream, double cgthres){
 #if TIMING 
 #define NEVENT 16
 #define RECORD(i) DO(cudaEventRecord(event[i], stream))
     static cudaEvent_t event[NEVENT]={0};
-    float times[NEVENT];
+    Real times[NEVENT];
     if(!event[0]){
 	for(int i=0; i<NEVENT; i++){
 	    DO(cudaEventCreate(&event[i]));
@@ -113,20 +112,20 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     curcell *&Ap=cg_data->Ap;
     int ntot=maxiter*2+3;
     if(!cg_data->store){
-	DO(cudaMalloc(&cg_data->store, ntot*sizeof(float)));
+	DO(cudaMalloc(&cg_data->store, ntot*sizeof(Real)));
     }
-    float *store=cg_data->store;
-    DO(cudaMemsetAsync(store, 0, ntot*sizeof(float),stream));
-    float *rr0=store; store++;
-    float *bk  =store; store++;
-    float *rkzk=store; store+=maxiter+1;
-    float *ak  =store; store+=maxiter;
+    Real *store=cg_data->store;
+    DO(cudaMemsetAsync(store, 0, ntot*sizeof(Real),stream));
+    Real *rr0=store; store++;
+    Real *bk  =store; store++;
+    Real *rkzk=store; store+=maxiter+1;
+    Real *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
     if(!cg_data->diff){ //Only this enables async transfer
-	DO(cudaMallocHost(&cg_data->diff, sizeof(float)*(maxiter+1)));
+	DO(cudaMallocHost(&cg_data->diff, sizeof(Real)*(maxiter+1)));
     }
-    float *&diff=cg_data->diff;
-    memset(diff, 0, sizeof(float)*(maxiter+1));
+    Real *&diff=cg_data->diff;
+    memset(diff, 0, sizeof(Real)*(maxiter+1));
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
@@ -137,17 +136,13 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	curcellzero(*px, stream);
     }
     curcell *x0=*px;
-#if DEBUG_OPDR == 1
-    float maxx[maxiter+1];
-    float maxp[maxiter+1];
-#endif
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
 	if(k==maxiter){
 	    k=0;//reset 
 	    kover++;
-	    memset(diff, 0, sizeof(float)*(maxiter+1));
-	    DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(float),stream));
+	    memset(diff, 0, sizeof(Real)*(maxiter+1));
+	    DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(Real),stream));
 	}
 	if(k%500==0){/*initial or re-start every 500 steps*/
 	    RECORD(1);
@@ -190,10 +185,6 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
 
-#if DEBUG_OPDR
-	maxx[k]=curcellmax(x0, stream);
-	maxp[k]=curcellmax(p0, stream);
-#endif
 	curcelladd(&x0, p0, ak+k, 1.f, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
@@ -201,47 +192,6 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	    curcelladd(&r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
 	    RECORD(15);
-#if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
-	    maxx[k+1]=curcellmax(x0, stream);
-	    maxp[k+1]=curcellmax(p0, stream);
-	    if(maxiter==30){
-		static int counter=0;
-		warning_once("Remove after debugging\n");
-		float maxxax=curcellmax(x0, stream);
-	    CUDA_SYNC_STREAM;
-		if(maxxax>4e-6 || pcg_save){
-		    //CUDA_SYNC_STREAM;
-		    curcellwrite(b, "tomo_b_%d", counter);
-		    curcellwrite(x0, "tomo_x0_%d", counter);
-		    //curcellwrite(x0save, "tomo_x0save_%d", counter);
-		    //curcelladd(&x0save, p0, ak+k, 1, stream);
-		    //curcellwrite(x0save, "tomo_x0saveadd_%d", counter);
-		    gpu_write(ak, maxiter, 1, "tomo_ak_%d", counter);
-		    gpu_write(rkzk, maxiter+1, 1, "tomo_rz_%d", counter);
-		    curcellwrite(Ap, "tomo_Ap_%d", counter);
-		    curcellwrite(p0, "tomo_p0_%d", counter);
-		    curcellwrite(r0, "tomo_r0_%d", counter);
-		    writeflt(maxx, maxiter+1, 1, "tomo_mx_%d", counter);
-		    writeflt(maxp, maxiter+1, 1, "tomo_mp_%d", counter);
-		    counter++;
-		}
-	    }
-	    if(maxiter==4 ){
-		static int counter=0;
-		if(diff[k+1]>0.01){
-		    curcellwrite(b, "fit_b_%d", counter);
-		    curcellwrite(x0, "fit_x0_%d", counter);
-		    gpu_write(ak, maxiter, 1, "fit_ak_%d", counter);
-		    gpu_write(rkzk, maxiter+1, 1, "fit_rz_%d", counter);
-		    curcellwrite(Ap, "fit_Ap_%d", counter);
-		    curcellwrite(p0, "fit_p0_%d", counter);
-		    curcellwrite(r0, "fit_r0_%d", counter);
-		    writeflt(maxx, maxiter+1, 1, "fit_mx_%d", counter);
-		    writeflt(maxp, maxiter+1, 1, "fit_mp_%d", counter);
-		    counter++;
-		}
-	    }
-#endif
 #if TIMING 
 	    CUDA_SYNC_STREAM;
 	    for(int i=7; i<11; i++){
@@ -287,7 +237,7 @@ float gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
 #endif
-    float residual=-1;/*Only useful if PRINT_RES is set*/
+    Real residual=-1;/*Only useful if PRINT_RES is set*/
     residual=diff[maxiter];
 #if TIMING 
     DO(cudaEventElapsedTime(&times[15], event[0], event[15]));

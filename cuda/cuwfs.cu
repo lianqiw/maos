@@ -28,10 +28,7 @@ extern "C"
 #include "cudata.h"
 
 /**
-
    This file is not finalized.
-
-
  */
 namespace cuda_wfs{
 cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu)
@@ -116,7 +113,7 @@ void cushgeom_t::output(){
     error("To implement\n");
     gradacc->zero();
 }
-__global__ void add_geom_noise_do(float *restrict g, const float *restrict nea, 
+__global__ void add_geom_noise_do(Real *restrict g, const Real *restrict nea, 
 				  int nsa, curandState *restrict rstat);
 void cushgeom_t::addnoise(){
     add_geom_noise_do<<<rand->nb, rand->nt, 0, stream>>>
@@ -125,9 +122,9 @@ void cushgeom_t::addnoise(){
 void cushgeom_t::acc(curmat *opd){
     if(gradcalc->p!=gradacc->p){
 	calcg(opd, 1);
-	curadd(&gradacc, 1, gradcalc, 1.f/(float)dtrat, stream);
+	curadd(&gradacc, 1, gradcalc, 1.f/(Real)dtrat, stream);
     }else{
-	calcg(opd, 1.f/(float)dtrat);
+	calcg(opd, 1.f/(Real)dtrat);
     }
     error("To implement\n");
 }
@@ -138,7 +135,7 @@ cushg_t::cushg_t(wfscfg_t *wfscfg)
     const int wfsind=wfscfg->wfsind;
     GS0=new cusp(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0], 1);
 }
-void cushg_t::calcg(curmat *opd, float ratio){
+void cushg_t::calcg(curmat *opd, Real ratio){
     cuspmul(gradcalc->p, GS0, opd->p, 1, 'n', ratio, stream);
 }
 cushz_t::cushz_t(wfscfg_t *wfscfg)
@@ -149,11 +146,11 @@ cushz_t::cushz_t(wfscfg_t *wfscfg)
     void *_imcc[nsa];
     for(int isa=0; isa<nsa; isa++){
 	_imcc[isa]=NULL;
-	cp2gpu((float**)&(_imcc[isa]), powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
+	cp2gpu((Real**)&(_imcc[isa]), powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
     }
     cp2gpu(&imcc, _imcc, nsa, 1);
 }
-void cushz_t::calcg(curmat *opd, float ratio){
+void cushz_t::calcg(curmat *opd, Real ratio){
     error("need to implement. Decide where to put pts info.\n");
     /*cuztilt<<<nsa, dim3(16,16), 0, stream>>>
 	(gradcalc->p, opd->p, opd->nx, dxsa, nxsa, imcc,
@@ -172,8 +169,8 @@ cullt_t::cullt_t(wfscfg_t *wfscfg)
 	cp2gpu(&ncpa, powfs[ipowfs].llt->ncpa->p[powfs[ipowfs].llt->ncpa->nx>1?wfsind:0]);
     }
     {
-	float *_imcc[1]={0};
-	cp2gpu((float**)&_imcc[0], powfs[ipowfs].llt->imcc->p[0]);
+	Real *_imcc[1]={0};
+	cp2gpu((Real**)&_imcc[0], powfs[ipowfs].llt->imcc->p[0]);
 	cp2gpu(&imcc, _imcc, 1, 1);
     }
     cp2gpu(&amp, powfs[ipowfs].llt->amp);
@@ -230,7 +227,7 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
 	int notf2[2]={notf, notf};
 	/*limit the number of subapertures in each batch to less than 1024
 	  to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
-	msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;
+	msa=nsa>1024?((int)ceil((Real)nsa/(Real)(nsa/800))):nsa;
 	if(cufftPlanMany(&plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, msa)){
 	    error("CUFFT plan failed\n");
 	}
@@ -290,9 +287,9 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
     switch(parms->powfs[ipowfs].phytypesim){
     case 1:{//mtche
 	int icol=powfs[ipowfs].intstat->mtche->ny>1?wfsind:0;
-	smat *mtche0=concat_dmat(powfs[ipowfs].intstat->mtche->p+nsa*icol, nsa);
+	X(mat) *mtche0=concat_dmat(powfs[ipowfs].intstat->mtche->p+nsa*icol, nsa);
 	cp2gpu(&mtche, mtche0);
-	sfree(mtche0);
+	X(free)(mtche0);
 	icol=(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0);
 	cp2gpu(&i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*icol, nsa, 1);
     }
@@ -311,13 +308,13 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
     if(powfs[ipowfs].bkgrnd){
 	//Pixel specific background and correction
 	int icol=(powfs[ipowfs].bkgrnd->ny==1?wfsind:0);
-	smat *tmp=concat_dmat(powfs[ipowfs].bkgrnd->p+icol*nsa, nsa);
-	cp2gpu(&bkgrnd2, tmp);sfree(tmp);
+	X(mat) *tmp=concat_dmat(powfs[ipowfs].bkgrnd->p+icol*nsa, nsa);
+	cp2gpu(&bkgrnd2, tmp);X(free)(tmp);
     }
     if(powfs[ipowfs].bkgrndc){
 	int icol=(powfs[ipowfs].bkgrndc->ny==1?wfsind:0);
-	smat *tmp=concat_dmat(powfs[ipowfs].bkgrndc->p+icol*nsa, nsa);
-	cp2gpu(&bkgrnd2c, tmp);sfree(tmp);
+	X(mat) *tmp=concat_dmat(powfs[ipowfs].bkgrndc->p+icol*nsa, nsa);
+	cp2gpu(&bkgrnd2c, tmp);X(free)(tmp);
     }
     //runtime data
     ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);

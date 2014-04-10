@@ -38,13 +38,9 @@ template<>
 inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
     double (*tmp)[2]=(double(*)[2])in;
     for(int i=0; i<nx; i++){
-	out[i].x=(float)tmp[i][0];
-	out[i].y=(float)tmp[i][1];
+	out[i].x=(Real)tmp[i][0];
+	out[i].y=(Real)tmp[i][1];
     }
-}
-template<> /*This one should never be called. float complex is defined by C99*/
-inline void type_convert<float2, float complex>(float2* out, const float complex* in, int nx){
-    memcpy(out, in, sizeof(float2)*nx);
 }
 template<>
 inline void type_convert<float2, double2>(float2* out, const double2* in, int nx){
@@ -53,6 +49,15 @@ inline void type_convert<float2, double2>(float2* out, const double2* in, int nx
 	out[i].y=in[i].y;
     }
 }
+template<> 
+inline void type_convert<float2,fcomplex>(float2* out,const fcomplex* in,int nx){
+    memcpy(out, in, sizeof(Comp)*nx);
+}
+template<> 
+inline void type_convert<double2,dcomplex>(double2* out, const dcomplex* in, int nx){
+    memcpy(out, in, sizeof(Comp)*nx);
+}
+
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
 void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
@@ -111,11 +116,11 @@ cp2gpu(cumat<M>**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
 
 }
-inline void cp2gpu(float**dest, const smat*src, cudaStream_t stream=0){
+inline void cp2gpu(Real**dest, const X(mat)*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-inline void cp2gpu(curmat**dest, const smat*src, cudaStream_t stream=0){
+inline void cp2gpu(curmat**dest, const X(mat)*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
@@ -143,35 +148,30 @@ void cp2gpu(cumap_t **dest, map_t **source, int nps);
 void cp2gpu(cusp **dest, const dsp *src, int tocsr);
 void cp2gpu(cusp **dest, const spcell *src, int tocsr);
 void cp2gpu(cuspcell **dest, const spcell *src, int tocsr);
-void cp2gpu(float (* restrict *dest)[2], const loc_t *src);
+void cp2gpu(Real (* restrict *dest)[2], const loc_t *src);
 void cp2gpu(curcell *restrict *dest, const dcell *src);
 void cp2gpu(cuccell *restrict *dest, const ccell *src);
 
-void cuspmul (float *y, cusp *A, const float *x, int ncol, char trans,
-	      float alpha, cusparseHandle_t handle);
+void cuspmul (Real *y, cusp *A, const Real *x, int ncol, char trans,
+	      Real alpha, cusparseHandle_t handle);
 
-void gpu_write(const float *p, int nx, int ny, const char *format, ...);
-void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...);
+void gpu_write(const Real *p, int nx, int ny, const char *format, ...);
+void gpu_write(const Comp *p, int nx, int ny, const char *format, ...);
 void gpu_write(const int *p, int nx, int ny, const char *format, ...);
-void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
-void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(double * restrict *dest, double alpha, Real *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(float * restrict *dest, double alpha, Real *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(smat **out, float alpha, const curmat *in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void add2cpu(scell **out, float alpha, const curcell *in, float beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void cp2cpu(dmat **out, const curmat *in, cudaStream_t stream);
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream);
+void cp2cpu(cmat **out, const cucmat *in, cudaStream_t stream);
 void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream);
-void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(scell **out, const curcell *in, cudaStream_t stream);
+void cp2cpu(dcell **out, const curcell *in, cudaStream_t stream);
 void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream);
-inline void cp2cpu(dmat **out, const curmat *in, cudaStream_t stream){
-    cp2cpu(out, 0, in, 1, stream);
-}
-inline void cp2cpu(dcell **out, const curcell *in, cudaStream_t stream){
-    cp2cpu(out, 0, in, 1, stream);
-}
-inline void add2cpu(dmat **out, const curmat *in, cudaStream_t stream, pthread_mutex_t* mutex=0){
-    cp2cpu(out, 1, in, 1, stream, mutex);
-}
-inline void add2cpu(dcell **out, const curcell *in, cudaStream_t stream, pthread_mutex_t* mutex=0){
-    cp2cpu(out, 1, in, 1, stream, mutex);
-}
+void cp2cpu(ccell **out, const cuccell *in, cudaStream_t stream);
 void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream);
 void cellarr_cuc(struct cellarr *ca, int i, const cucmat *A, cudaStream_t stream);
 void cellarr_curcell(struct cellarr *ca, int i, const curcell *A, cudaStream_t stream);

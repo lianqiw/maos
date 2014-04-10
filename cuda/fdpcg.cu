@@ -93,7 +93,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 	FDDATA[ips].nx=grid->xnx[ips];
 	FDDATA[ips].ny=grid->xny[ips];
 	if(scale){
-	    FDDATA[ips].scale=1.f/sqrtf((float)(grid->xnx[ips]*grid->xny[ips]));
+	    FDDATA[ips].scale=1.f/sqrtf((Real)(grid->xnx[ips]*grid->xny[ips]));
 	}else{
 	    FDDATA[ips].scale=1.f;
 	}
@@ -111,36 +111,36 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
   Input and output may overlap for different blocks due to FFT based mirroring. So separate intput/output.
 */
 
-__global__ static void fdpcg_mul_block_sync_half(fcomplex *xout, const fcomplex *xin, fcomplex *Mi, int *restrict perm, int nb){
-    extern __shared__ fcomplex v[];
+__global__ static void fdpcg_mul_block_sync_half(Comp *xout, const Comp *xin, Comp *Mi, int *restrict perm, int nb){
+    extern __shared__ Comp v[];
     int bs=blockDim.x;//size of each block
-    fcomplex *vin=v+threadIdx.y*2*bs;//stores reordered input
-    fcomplex *vout=v+bs+threadIdx.y*2*bs;//stores output before reorder again
+    Comp *vin=v+threadIdx.y*2*bs;//stores reordered input
+    Comp *vout=v+bs+threadIdx.y*2*bs;//stores output before reorder again
     int nstep=blockDim.y*gridDim.x;
     for(int ib=blockIdx.x*blockDim.y+threadIdx.y; ib<nb; ib+=nstep){
-	const fcomplex *M=Mi+ib*bs*bs;
+	const Comp *M=Mi+ib*bs*bs;
 	const int ix=threadIdx.x;
 	const int pm=perm[ib*bs+ix];//last 2 bit are flags
 	const int pm2=abs(pm);
 	vin[ix]=xin[pm2];
 	if(pm<0){//last bit is on: doing conjugate
-	    vin[ix]=cuConjf(vin[ix]);
+	    vin[ix]=Z(cuConj)(vin[ix]);
 	}
 	vout[ix].x=vout[ix].y=0;
 	__syncthreads();//wait for loading of vin
 	for(int iy=0; iy<bs; iy++){
-	    vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
+	    vout[ix]=Z(cuCfma)(M[ix+iy*bs], vin[iy], vout[ix]);
 	}
 	if(pm<0){
-	    vout[ix]=cuConjf(vout[ix]);
+	    vout[ix]=Z(cuConj)(vout[ix]);
 	}
 	xout[pm2]=vout[ix];
     }
 }
-__device__ inline void do_scale(float &a, float b){
+__device__ inline void do_scale(Real &a, Real b){
     a*=b;
 }
-__device__ inline void do_scale(float2 &a, float b){
+__device__ inline void do_scale(Comp &a, Real b){
     a.x*=b;
     a.y*=b;
 }
@@ -149,7 +149,7 @@ fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
     int ips=blockIdx.z;
     int nx=fddata[ips].nx*fddata[ips].ny;
     int step=blockDim.x * gridDim.x; 
-    float scale=fddata[ips].scale;
+    Real scale=fddata[ips].scale;
     T *restrict x=xall[ips];
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
 	do_scale(x[i], scale);
@@ -201,7 +201,7 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 	cuccellwrite(xhat1, "fdg_fft");
 #endif
 
-    fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(fcomplex)*bs*2*nby, stream>>>
+    fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
 	(xhat2->m->p, xhat1->m->p, Mb->m->p, perm, nb);
     RECORD(2);
 #if DBG_FD

@@ -34,7 +34,33 @@ const int REDUCE_WRAP=8;
 const int REDUCE_WRAP_LOG2=3;
 const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
 const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
-#define fcomplex float2
+#if CUDA_DOUBLE == 1
+typedef double2 Comp;
+typedef double  Real;
+typedef dmat rmat;
+#define CUSP(A) cusparseD##A
+#define CUBL(A) cublasD##A
+#define X(A) d##A
+#define C(A) c##A
+#define Z(A) A
+#define cellarr_mat cellarr_dmat
+#define FFT_C2C cufftExecZ2Z
+#define FFT_C2R cufftExecZ2D
+#define FFT_R2C cufftExecD2Z
+#else
+typedef float2 Comp;
+typedef float Real;
+typedef smat rmat;
+#define CUSP(A) cusparseS##A
+#define CUBL(A) cublasS##A
+#define X(A) s##A
+#define C(A) z##A
+#define Z(A) A##f
+#define cellarr_mat cellarr_smat
+#define FFT_C2C cufftExecC2C
+#define FFT_C2R cufftExecC2R
+#define FFT_R2C cufftExecR2C
+#endif
 extern "C"{
     void cudaProfilerStart(void);
     void cudaProfilerStop(void);
@@ -45,14 +71,14 @@ extern "C"{
 #if DEBUG_MEM
 /*static int tot_mem=0; */
 #undef cudaMalloc
-inline int CUDAMALLOC(float **p, size_t size){
-    return cudaMalloc((float**)p,size);
+inline int CUDAMALLOC(Real **p, size_t size){
+    return cudaMalloc((Real**)p,size);
 }
-inline int CUDAFREE(float *p){
+inline int CUDAFREE(Real *p){
     return cudaFree(p);
 }
-#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((float**)p,size);})
-#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((float*)p);})
+#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((Real**)p,size);})
+#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((Real*)p);})
 #endif
 #define DO(A...) ({int ans=(int)(A); if(ans!=0){int igpu; cudaGetDevice(&igpu); error("GPU%d error %d, %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));}})
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
@@ -60,7 +86,7 @@ inline int CUDAFREE(float *p){
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-__host__ __device__ static __inline__ void cuCscalef(cuFloatComplex x, float a){
+__host__ __device__ static __inline__ void Z(cuCscale)(Comp x, Real a){
     x.x*=a;
     x.y*=a;
 }
@@ -143,7 +169,7 @@ extern pthread_mutex_t cufft_mutex;
 /*For timing asynchronous kernels*/
 #define EVENT_INIT(n)				\
     const int NEVENT=n;				\
-    float times[NEVENT];			\
+    Real times[NEVENT];			\
     cudaEvent_t event[NEVENT]={0};		\
     for(int i=0; i<NEVENT; i++){		\
 	DO(cudaEventCreate(&event[i]));		\
@@ -166,7 +192,7 @@ extern pthread_mutex_t cufft_mutex;
 extern const char *cufft_str[];
 #define CUFFT2(plan,in,out,dir) do{				\
 	LOCK_CUFFT;						\
-	int ans=cufftExecC2C(plan, in, out, dir);		\
+	int ans=FFT_C2C(plan, in, out, dir);		\
 	UNLOCK_CUFFT;						\
 	if(ans){						\
 	    error("cufft failed: %s\n", cufft_str[ans]);	\
@@ -174,7 +200,7 @@ extern const char *cufft_str[];
     }while(0)
 #define CUFFTR2C(plan,in,out) do{				\
 	LOCK_CUFFT;						\
-	int ans=cufftExecR2C(plan, in, out);			\
+	int ans=FFT_R2C(plan, in, out);			\
 	UNLOCK_CUFFT;						\
 	if(ans){						\
 	    error("cufft failed: %s\n", cufft_str[ans]);	\
@@ -182,7 +208,7 @@ extern const char *cufft_str[];
     }while(0)
 #define CUFFTC2R(plan,in,out) do{				\
 	LOCK_CUFFT;						\
-	int ans=cufftExecC2R(plan, in, out);			\
+	int ans=FFT_C2R(plan, in, out);			\
 	UNLOCK_CUFFT;						\
 	if(ans){						\
 	    error("cufft failed: %s\n", cufft_str[ans]);	\
@@ -241,21 +267,21 @@ typedef struct event_t{
 	return event;
     }
 }event_t;
-inline void spagelock(smat *A, ...){
+inline void X(pagelock)(X(mat) *A, ...){
     va_list ap;
     va_start(ap, A);
     do{
-	cudaHostRegister(A->p, A->nx*A->ny*sizeof(float), cudaHostRegisterPortable);
-	A=va_arg(ap, smat *);
+	cudaHostRegister(A->p, A->nx*A->ny*sizeof(Real), cudaHostRegisterPortable);
+	A=va_arg(ap, X(mat) *);
     }while(A);
     va_end(ap);
 }
-inline void spageunlock(smat *A, ...){
+inline void X(pageunlock)(X(mat) *A, ...){
     va_list ap;
     va_start(ap, A);
     do{
 	cudaHostUnregister(A->p);
-	A=va_arg(ap, smat *);
+	A=va_arg(ap, X(mat) *);
     }while(A);
     va_end(ap);
 }

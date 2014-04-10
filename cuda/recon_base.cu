@@ -48,7 +48,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	//#define W0_BW 1
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
-	W0v=(float)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
+	W0v=(Real)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
 	int count=0;
 	int count2=0;
 	for(int ic=0; ic<R_W0->n; ic++){
@@ -75,10 +75,10 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
    res_vec[i]+=sum_j(as[i][j]*b[j]);
 */
 __global__ void 
-inn_multi_do(float *res_vec, const float *as, const float *b, const int n){
-    extern __shared__ float sb[];
+inn_multi_do(Real *res_vec, const Real *as, const Real *b, const int n){
+    extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
-    const float *a=as+n*blockIdx.y;
+    const Real *a=as+n*blockIdx.y;
     int step=blockDim.x * gridDim.x ;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	sb[threadIdx.x]+=a[i]*b[i];
@@ -97,9 +97,9 @@ inn_multi_do(float *res_vec, const float *as, const float *b, const int n){
    a[i][j]=b[j]*beta1[i]*beta2;
 */
 __global__ void 
-assign_multi_do(float *as, const float *b, float *beta1, float beta2, int n){
-    float *a=as+blockIdx.y*n;
-    float beta=beta1[blockIdx.y]*beta2;
+assign_multi_do(Real *as, const Real *b, Real *beta1, Real beta2, int n){
+    Real *a=as+blockIdx.y*n;
+    Real beta=beta1[blockIdx.y]*beta2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]=b[i]*beta;
@@ -109,9 +109,9 @@ assign_multi_do(float *as, const float *b, float *beta1, float beta2, int n){
    Apply W for fully illuminated points. fully illuminated points are surrounded
    by partially illuminated points. So unexpected wrapover won't happen.  */
 __global__ void 
-apply_W0_do(float *outs, const float *ins, const int *W0f, float W0v, int nx, int ntot, int nW0f){
-    float *out=outs+blockIdx.y*ntot;
-    const float *in=ins+blockIdx.y*ntot;
+apply_W0_do(Real *outs, const Real *ins, const int *W0f, Real W0v, int nx, int ntot, int nW0f){
+    Real *out=outs+blockIdx.y*ntot;
+    const Real *in=ins+blockIdx.y*ntot;
     const int step=blockDim.x * gridDim.x;
     for(int k=blockIdx.x * blockDim.x + threadIdx.x; k<nW0f; k+=step){
 	int i=W0f[k];
@@ -120,7 +120,7 @@ apply_W0_do(float *outs, const float *ins, const int *W0f, float W0v, int nx, in
 		       +0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
     }
 }
-void W01_T::apply(float *restrict xout, const float *xin, int ndir, stream_t &stream){
+void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stream){
     if(!pis || pis->nx < ndir){
 	delete pis;
 	pis=curnew(ndir,1);
@@ -128,7 +128,7 @@ void W01_T::apply(float *restrict xout, const float *xin, int ndir, stream_t &st
 	pis->zero(stream);
     }
     //Apply W1: Piston removal
-    inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>
+    inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>
 	(pis->p, xin, W1->p, W1->nx);
     assign_multi_do<<<dim3(32, ndir), dim3(256), 0, stream>>>
 	(xout, W1->p, pis->p, -1, W1->nx);
@@ -183,19 +183,19 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 
 map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
 		 const cugrid_t *in, int _nlayer,//input. layers.
-		 float dt){//directions and star height.
+		 Real dt){//directions and star height.
     nlayer=_nlayer;
     ndir=_ndir;
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
     DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer*ndir));
     for(int ilayer=0; ilayer<nlayer; ilayer++){
-	const float ht=in[ilayer].ht;
+	const Real ht=in[ilayer].ht;
 	for(int idir=0; idir<ndir; idir++){
 	    if(!dir[idir].skip){
-		const float dispx=dir[idir].thetax*ht+in[ilayer].vx*dt;
-		const float dispy=dir[idir].thetay*ht+in[ilayer].vy*dt;
-		const float hs=dir[idir].hs;
-		const float scale=1.f-ht/hs;
+		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dt;
+		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dt;
+		const Real hs=dir[idir].hs;
+		const Real scale=1.f-ht/hs;
 		cugrid_t outscale=out*scale;
 		gpu_prop_grid_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
 				   dispx, dispy, in[ilayer].cubic_cc);
@@ -212,8 +212,8 @@ map_l2l::map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer){//input. 
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];
     DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer));
     for(int ilayer=0; ilayer<nlayer; ilayer++){
-	if(fabs(out[ilayer].ht-in[ilayer].ht)>EPS){
-	    error("Layer height mismatch\n");
+	if(Z(fabs)(out[ilayer].ht-in[ilayer].ht)>EPS){
+	    error("Layer height miX(mat)ch\n");
 	}
 	gpu_prop_grid_prep(hdata_cpu+ilayer, out[ilayer], in[ilayer],
 			   0, 0, in[ilayer].cubic_cc);

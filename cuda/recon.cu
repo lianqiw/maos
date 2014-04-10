@@ -140,8 +140,8 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	const int nevl=parms->evl.nevl;
 	moao=(cumoao_t**)calloc(nmoao, sizeof(cumoao_t*));
 	dm_moao=(curcell***)calloc(nmoao, sizeof(curcell**));
-	moao_gwfs=snew(nwfs, 1);
-	moao_gevl=snew(nevl, 1);
+	moao_gwfs=X(new)(nwfs, 1);
+	moao_gevl=X(new)(nevl, 1);
 	/*Pre-allocate moao output and assign to wfs or evl*/
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 	    if(!parms->moao[imoao].used) continue;
@@ -240,20 +240,20 @@ void curecon_t::reset(const PARMS_T *parms){
 }
 
 #define DBG_RECON 1
-float curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
+Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		      const dcell *_gradin){
     cp2gpu(&gradin, _gradin);
 #ifdef DBG_RECON
     curcellcp(&opdr_save, opdr, *cgstream);
 #endif
     RR->R(&tomo_rhs, 0, gradin, 1, *cgstream);
-    float cgres=RL->solve(&opdr, tomo_rhs, *cgstream);
+    Real cgres=RL->solve(&opdr, tomo_rhs, *cgstream);
 #ifdef DBG_RECON
-    static float cgres_last=INFINITY;
+    static Real cgres_last=INFINITY;
     int isimr=grid->isimr;
     if(isimr>5 || cgres>cgres_last*5){
-	float omax=curmax(opdr->m, *cgstream);
-	static float omax_last=INFINITY;
+	Real omax=curmax(opdr->m, *cgstream);
+	static Real omax_last=INFINITY;
 	if(omax>omax_last*5 || cgres>cgres_last*5){
 	    info("tomo cgres=%g cgres_last=%g. omax=%g, omax_last=%g\n", cgres, cgres_last, omax, omax_last);
 	    if(!disable_save){
@@ -263,7 +263,7 @@ float curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		curcellwrite(tomo_rhs, "tomo_rhs_%d", isimr);
 	    }
 	    curcellcp(&opdr, opdr_save, *cgstream);
-	    float newres=RL->solve(&opdr, tomo_rhs, *cgstream);
+	    Real newres=RL->solve(&opdr, tomo_rhs, *cgstream);
 	    info2("tomo[%d]: omax=%g, oldres=%g. newres=%g\n", 
 		  isimr, omax, cgres, newres);
 	    if(!disable_save){
@@ -276,12 +276,12 @@ float curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
     cgres_last=cgres;
 #endif
     if(_opdr){
-	cp2cpu(_opdr, 0, opdr_vec, 1, *cgstream);
+	cp2cpu(_opdr, opdr_vec, *cgstream);
     }
     if(GXL){
 	info("computing ngsmvst\n");
 	curcellmm(&gngsmvst, 0, GXL, opdr_vec, "nn", 1, *cgstream);
-	add2cpu(_gngsmvst, gngsmvst, *cgstream);
+	add2cpu(_gngsmvst, 1, gngsmvst, 1, *cgstream);
     }
     if(RFdfx){
 	info2("computing deltafocus\n");
@@ -291,7 +291,7 @@ float curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
     cgstream->sync();
 return cgres;
 }
-float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
+Real curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     if(_opdr){
 	cp2gpu(&opdr_vec, _opdr);
     }
@@ -299,9 +299,9 @@ float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     curcellcp(&dmfit_save, dmfit, *cgstream);
 #endif
     FR->R(&fit_rhs, 0, opdr, 1, *cgstream);
-    float cgres=FL->solve(&dmfit, fit_rhs, *cgstream);
+    Real cgres=FL->solve(&dmfit, fit_rhs, *cgstream);
 #ifdef DBG_RECON
-    static float cgres_last=INFINITY;
+    static Real cgres_last=INFINITY;
     int isimr=grid->isimr;
     if(cgres>cgres_last*5){
 	info("fit cgres=%g\n", cgres);
@@ -312,7 +312,7 @@ float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
 	    curcellwrite(fit_rhs, "fit_rhs_%d", isimr);
 	}
 	curcellcp(&dmfit, dmfit_save, *cgstream);
-	float newres=FL->solve(&dmfit, fit_rhs, *cgstream);
+	Real newres=FL->solve(&dmfit, fit_rhs, *cgstream);
 	info2("fit[%d]: oldres=%g. newres=%g\n", isimr, cgres, newres);
 	if(!disable_save){
 	    curcellwrite(dmfit, "fit_dmfitredo_%d", isimr);
@@ -321,11 +321,11 @@ float curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     }
     cgres_last=cgres;
 #endif
-    cp2cpu(_dmfit, 0, dmfit_vec, 1, *cgstream);
+    add2cpu(_dmfit, 0, dmfit_vec, 1, *cgstream);
     cgstream->sync();
     return cgres;
 }
-float curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
+Real curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
     if(_dmfit){
 	cp2gpu(&dmfit_vec, _dmfit);
     }
@@ -354,10 +354,10 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 	    }else{
 		temp=dm_wfs->p[iwfs]->ref();
 	    }
-	    float g=moao_gwfs->p[iwfs];
+	    Real g=moao_gwfs->p[iwfs];
 	    curadd(&cudata->dm_wfs[iwfs]->p, 1-g, temp, g, stream);
 	    if(!wfsgpu){//gpu.moao implies fit.square=1
-		cp2cpu(&_dm_wfs->p[iwfs], 0, cudata->dm_wfs[iwfs]->p, 1, stream);
+		cp2cpu(&_dm_wfs->p[iwfs], cudata->dm_wfs[iwfs]->p, stream);
 	    }
 	    delete temp;
 	}
@@ -374,10 +374,10 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 	    }else{
 		temp=dm_evl->p[ievl]->ref();
 	    }
-	    float g=moao_gevl->p[ievl];
+	    Real g=moao_gevl->p[ievl];
 	    curadd(&cudata->dm_evl[ievl]->p, 1-g, temp, g, stream);
 	    if(!cudata_t::evlgpu){
-		cp2cpu(&_dm_evl->p[ievl], 0, cudata->dm_evl[ievl]->p, 1, stream);
+		cp2cpu(&_dm_evl->p[ievl], cudata->dm_evl[ievl]->p, stream);
 	    }
 	    delete temp;
 	}
@@ -386,7 +386,7 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 void curecon_t::mvm(dcell **_dmerr, dcell *_gradin){
     cp2gpu(&gradin, _gradin);
     MVM->solve(&dmfit, gradin, *cgstream);
-    cp2cpu(_dmerr, 0, dmfit_vec, 1, *cgstream);
+    cp2cpu(_dmerr, dmfit_vec, *cgstream);
     cgstream->sync();
 }
 
@@ -462,7 +462,7 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     dcell *rhsc=NULL;
     dcell *lc=NULL;	
     if(!simu->opdr){
-	cp2cpu(&simu->opdr, 0, opdr_vec, 1, 0);
+	cp2cpu(&simu->opdr, opdr_vec, 0);
     }
     if(!simu->parms->gpu.tomo){
 	cp2gpu(&opdr_vec, simu->opdr);

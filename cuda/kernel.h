@@ -37,6 +37,18 @@ __device__ inline float atomicAdd(float* address, float val)
     return old;
 }
 #endif
+__device__ inline double atomicAdd(double* address, double val)
+{
+    double old = *address;
+    double assumed;
+    do {
+	assumed = old;
+	old = __longlong_as_double( atomicCAS((unsigned long long*)address,
+					      __double_as_longlong(assumed),
+					      __double_as_longlong(val + assumed)));
+    } while (assumed != old);
+    return old;
+}
 __device__ inline float atomicMax(float* address, float val)
 {
     float old = *address;
@@ -49,68 +61,79 @@ __device__ inline float atomicMax(float* address, float val)
     } while (assumed != old);
     return old;
 }
-
-__device__ inline float CABS2(fcomplex r){
-    const float a=cuCrealf(r);
-    const float b=cuCimagf(r);
+__device__ inline double atomicMax(double* address, double val)
+{
+    double old = *address;
+    double assumed;
+    do {
+	assumed = old;
+	old = __longlong_as_double( atomicCAS((unsigned long long*)address,
+					      __double_as_longlong(assumed),
+					      __double_as_longlong(val>assumed?val:assumed)));
+    } while (assumed != old);
+    return old;
+}
+__device__ inline Real CABS2(Comp r){
+    const Real a=Z(cuCreal)(r);
+    const Real b=Z(cuCimag)(r);
     return a*a+b*b;
 }
 
-__global__ void set_do(float *a, float alpha, int n);
-__global__ void scale_do(float *restrict in, int n, float alpha);
-__global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n, float pis, float tx, float ty);
-__global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2], int n, float focus);
-__global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
-			      float m0, float m1, float m2, float m3, float m4, float focus,
-			      float thetax, float thetay, float scale, float ht, float alpha);
+__global__ void set_do(Real *a, Real alpha, int n);
+__global__ void scale_do(Real *restrict in, int n, Real alpha);
+__global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real pis, Real tx, Real ty);
+__global__ void add_focus_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real focus);
+__global__ void add_ngsmod_do(Real *restrict opd, Real (*restrict loc)[2], int n, 
+			      Real m0, Real m1, Real m2, Real m3, Real m4, Real focus,
+			      Real thetax, Real thetay, Real scale, Real ht, Real alpha);
 
-__global__ void add_do(float *vec, float beta, int n);
-__global__ void addcabs2_do(float *restrict a, float alpha, const fcomplex *restrict b, float beta, int n);
-__global__ void add_do(float *restrict a, float *alpha1, float alpha2, const float *restrict b,  int n);
-__global__ void add_do(float *restrict a, const float *restrict b, float *beta1, float beta2, int n);
-__global__ void add_do(float *restrict a, float *alpha1, float alpha2, 
-		       const float *restrict b, float *beta1, float beta2, int n);
+__global__ void add_do(Real *vec, Real beta, int n);
+__global__ void addcabs2_do(Real *restrict a, Real alpha, const Comp *restrict b, Real beta, int n);
+__global__ void add_do(Real *restrict a, Real *alpha1, Real alpha2, const Real *restrict b,  int n);
+__global__ void add_do(Real *restrict a, const Real *restrict b, Real *beta1, Real beta2, int n);
+__global__ void add_do(Real *restrict a, Real *alpha1, Real alpha2, 
+		       const Real *restrict b, Real *beta1, Real beta2, int n);
 
-__global__ void max_do(float *restrict res, const float *a, const int n);
-__global__ void maxabs_do(float *restrict res, const float *a, const int n);
-__global__ void sum_do(float *restrict res, const float *a, const int n);
-__global__ void sum2_do(float *restrict res, const float *a, const int n);
-__global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
+__global__ void max_do(Real *restrict res, const Real *a, const int n);
+__global__ void maxabs_do(Real *restrict res, const Real *a, const int n);
+__global__ void sum_do(Real *restrict res, const Real *a, const int n);
+__global__ void sum2_do(Real *restrict res, const Real *a, const int n);
+__global__ void inn_do(Real *res_add, const Real *a, const Real *b, const int n);
 
-inline void inn_wrap(float *res_add, const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res_add, a, b, n);
+inline void inn_wrap(Real *res_add, const Real *a, const Real *b, const int n, cudaStream_t stream){
+    inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res_add, a, b, n);
 }
-inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+inline static void sum_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+    sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
-inline static void sum2_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+inline static void sum2_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
     sum2_do<<<REDUCE(n), 0, stream>>>(res,a,n);
 }
-inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    max_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+inline static void max_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+    max_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
-inline static void maxabs_wrap(float *res, const float * a, const int n, cudaStream_t stream){
-    maxabs_do<<<REDUCE(n), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+inline static void maxabs_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+    maxabs_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
-__global__ void embed_do(fcomplex *out, float *in, int nx);
-__global__ void extract_do(float *out, fcomplex *in, int nx);
-__global__ void perm_f_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
-__global__ void perm_i_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
-__global__ void perm_f_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
-__global__ void perm_i_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
-__global__ void embed_wvf_do(fcomplex *restrict wvf, 
-			     const float *restrict opd, const float *restrict amp, 
-			     const int *embed, const int nloc, const float wvl);
-__global__ void corner2center_do(fcomplex *restrict out, int noutx, int nouty,
-				 const fcomplex *restrict in, int ninx, int niny);
-__global__ void corner2center_abs2_do(float *restrict out, int noutx, int nouty,
-				      const fcomplex *restrict in, int ninx, int niny);
-__global__ void corner2center_abs2_atomic_do(float *restrict out, int noutx, int nouty,
-					     const fcomplex *restrict in, int ninx, int niny);
-__global__ void fftshift_do(fcomplex *wvf, const int nx, const int ny);
-__global__ void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty);
-__global__ void cwm_do(fcomplex *dest, float *from, int n);
-__global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl);
-__global__ void mvm_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
-__global__ void multimv_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
+__global__ void embed_do(Comp *out, Real *in, int nx);
+__global__ void extract_do(Real *out, Comp *in, int nx);
+__global__ void perm_f_do(Comp *restrict out, const Comp *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(Comp *restrict out, const Comp *restrict in, int *restrict perm, int nx);
+__global__ void perm_f_do(Real *restrict out, const Real *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(Real *restrict out, const Real *restrict in, int *restrict perm, int nx);
+__global__ void embed_wvf_do(Comp *restrict wvf, 
+			     const Real *restrict opd, const Real *restrict amp, 
+			     const int *embed, const int nloc, const Real wvl);
+__global__ void corner2center_do(Comp *restrict out, int noutx, int nouty,
+				 const Comp *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_do(Real *restrict out, int noutx, int nouty,
+				      const Comp *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_atomic_do(Real *restrict out, int noutx, int nouty,
+					     const Comp *restrict in, int ninx, int niny);
+__global__ void fftshift_do(Comp *wvf, const int nx, const int ny);
+__global__ void add_tilt_do(Real *opd, int nx, int ny, Real ox, Real oy, Real dx, Real ttx, Real tty);
+__global__ void cwm_do(Comp *dest, Real *from, int n);
+__global__ void unwrap_phase_do(Comp *wvf, Real *opd, int *embed, int n, Real wvl);
+__global__ void mvm_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
+__global__ void multimv_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
 #endif

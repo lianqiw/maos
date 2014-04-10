@@ -3,8 +3,8 @@
 /*
   y=A'*x where A is sparse. x, y are vectors
 */
-__global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
-    __shared__ float val;
+__global__ void cusptmul_do(Real *y, int icol, cusp *A, Real *x, Real alpha){
+    __shared__ Real val;
     if(threadIdx.x==0) val=0;
     int i=blockIdx.x * blockDim.x + threadIdx.x;
     int j=i+A->p[icol];
@@ -12,7 +12,7 @@ __global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
     if(threadIdx.x==0) y[icol]+=val*alpha;
 }
 
-__global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
+__global__ void cuspmul_do(Real *y, cusp *A, Real *x, Real alpha){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<A->ny; i+=step){
 	for(int j=A->p[i]; j<A->p[i+1]; j++){
@@ -24,8 +24,8 @@ in gpu_prop_grid_do()
 	int match2=fabs(xratio-0.5)<EPS && fabs(yratio-0.5)<EPS
 		    && fabs(dispx)<EPS && fabs(dispy)<EPS;
 		if(match2 && trans!='t' && 0){
-		    float fxv[4], fxm[4];
-		    float x;
+		    Real fxv[4], fxm[4];
+		    Real x;
 		    x=0;
 		    fxv[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
 		    fxv[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
@@ -36,7 +36,7 @@ in gpu_prop_grid_do()
 		    fxm[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
 		    fxm[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
 		    fxm[3]=x*x*(cc[3]+cc[4]*x);	
-		    float *fx, *fy;
+		    Real *fx, *fy;
 		    int pps_xmin=-datai->offpsx-1;
 		    int pps_ymin=-datai->offpsy-1;
 		    int pps_xmax=datai->nxps-datai->offpsx;
@@ -59,7 +59,7 @@ in gpu_prop_grid_do()
 				}else{
 				    fx=fxm;
 				}
-				float sum=0;
+				Real sum=0;
 #pragma unroll
 				for(int ky=-1; ky<3; ky++){
 				    int kyi=ky+iy;

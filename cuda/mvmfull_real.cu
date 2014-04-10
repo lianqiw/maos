@@ -50,7 +50,7 @@ typedef struct{
     curmat *gdm;/*add to grad*/
     curmat *act;
     curcell *actelse;
-    float FSMdelta; /*FSM actual angle difference from command.*/
+    Real FSMdelta; /*FSM actual angle difference from command.*/
     curcell *im0;
     int mtch_isa;
     int *saind;
@@ -74,17 +74,17 @@ typedef struct{
   threadIdx.y is for a few subapertures
   no need to sync threads as every 32 is in the same warp.
 */
-static void __global__ mtch_do(const float *mtch, const short *pix, const short *pixbias, float *grad,
+static void __global__ mtch_do(const Real *mtch, const short *pix, const short *pixbias, Real *grad,
 			       int *saind, int nsa){
-    extern __shared__ float cum[];//for cumulation and reduction
+    extern __shared__ Real cum[];//for cumulation and reduction
     for(int isa=threadIdx.y+blockDim.y*blockIdx.x; isa<nsa; isa+=blockDim.y*gridDim.x){
 	const int npix=saind[isa+1]-saind[isa];
-	float *cumx=cum+threadIdx.y*blockDim.x*2;
-	float *cumy=cumx+blockDim.x;
+	Real *cumx=cum+threadIdx.y*blockDim.x*2;
+	Real *cumy=cumx+blockDim.x;
 	const short *pixi=pix+saind[isa];
 	const short *pixbiasi=pixbias+saind[isa];
-	const float *mtchx=mtch+saind[isa]*2;
-	const float *mtchy=mtchx+npix;
+	const Real *mtchx=mtch+saind[isa]*2;
+	const Real *mtchy=mtchx+npix;
 	const int npix3=npix/3;
 	//sum 3 times for max 90 pixels.
 	int ipix=threadIdx.x;
@@ -115,8 +115,8 @@ static void __global__ mtch_do(const float *mtch, const short *pix, const short 
   Accumulate statistics
 */
 static void __global__ dither_acc_do(const short *pix,
-				     float *im0, float *imx, float *imy, 
-				     float cd, float sd, int totpix){
+				     Real *im0, Real *imx, Real *imy, 
+				     Real cd, Real sd, int totpix){
     for(int ipix=threadIdx.x+blockIdx.x*blockDim.x; ipix<totpix; ipix+=blockDim.x*gridDim.x){
 	short ii=pix[ipix];//-pixbias[ipix];
 	im0[ipix]+=ii;
@@ -150,49 +150,47 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     const int totpix=saind[nsa];
     const int nact=6981;//active subapertures.
     int ng=nsa*2;
-    smat *mvm1, *mvm2, *pix1, *pix2, *mtch, *ptt, *pixbias;
-    smat *im0;
+    X(mat) *mvm1, *mvm2, *pix1, *pix2, *mtch, *ptt, *pixbias;
+    X(mat) *im0;
     if(zfexist("mvm2.bin")){
-	mvm1=sread("mvm1");
-	mvm2=sread("mvm2");
-	pix1=sread("pix1");
-	pix2=sread("pix2");
-	mtch=sread("mtch");
-	ptt=sread("ptt");
-	pixbias=sread("pixbias");
+	mvm1=X(read)("mvm1");
+	mvm2=X(read)("mvm2");
+	pix1=X(read)("pix1");
+	pix2=X(read)("pix2");
+	mtch=X(read)("mtch");
+	ptt=X(read)("ptt");
+	pixbias=X(read)("pixbias");
     }else{
-	mvm1=snew(nact, ng);
-	mvm2=snew(nact, ng);
-	pix1=snew(totpix,1);
-	pix2=snew(totpix,1);
-	mtch=snew(totpix*2,1);
-	ptt=snew(ng, 2);
-	pixbias=snew(totpix, 1);
+	mvm1=X(new)(nact, ng);
+	mvm2=X(new)(nact, ng);
+	pix1=X(new)(totpix,1);
+	pix2=X(new)(totpix,1);
+	mtch=X(new)(totpix*2,1);
+	ptt=X(new)(ng, 2);
+	pixbias=X(new)(totpix, 1);
 	rand_t srand;
 	seed_rand(&srand, 1);
-	srandu(mvm1,1e-7,&srand);
-	srandu(mvm2,1e-7,&srand);
-	srandu(mtch, 1, &srand);
-	srandu(pix1,50, &srand);
-	memcpy(pix2->p, pix1->p, sizeof(float)*totpix);
-	srandu(ptt, 1, &srand);
+	X(randu)(mvm1,1e-7,&srand);
+	X(randu)(mvm2,1e-7,&srand);
+	X(randu)(mtch, 1, &srand);
+	X(randu)(pix1,50, &srand);
+	memcpy(pix2->p, pix1->p, sizeof(Real)*totpix);
+	X(randu)(ptt, 1, &srand);
 	//srandn(pixbias, 1, &srand);
     }
-    smat *mvm=mvm1;
-    smat *pix=pix2;
+    X(mat) *mvm=mvm1;
+    X(mat) *pix=pix2;
     //To receive statistics from GPU
-    im0=snew(totpix,3);
-    spagelock(im0, 0);
-    
+    im0=X(new)(totpix,3);
     if(nstep==1){//Verify accuracy
 	//We use half of the array as short.
 	do_write("pix", 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
 	do_write("pixbias", 1, sizeof(short), M_INT16, NULL, pixbias->p, totpix, 1);
-	swrite(mvm1, "mvm1");
-	swrite(mtch, "mtch");
+	X(write)(mvm1, "mvm1");
+	X(write)(mtch, "mtch");
     }
-    scell *dmres=scellnew(ngpu, 1);
-    spagelock(pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
+    X(cell) *dmres=X(cellnew)(ngpu, 1);
+    X(pagelock)(im0, pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
 
     int port=20000;
     int sock=-1;
@@ -254,7 +252,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     const int nbuf=2;//two buffers for im0.
     //int dither_nsa=10;//each time step compute this many subapertures for matched filter
     //int comp_mtch_done[ngpu];
-    //float imc, a2m;//PLL results
+    //Real imc, a2m;//PLL results
     int nc=10;//each time copy nc column of mvm.
     GPU_DATA_T *data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
     const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
@@ -289,13 +287,13 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    cudaEventCreateWithFlags(&data[igpu].event_p[i],event_flag);
 	}
 	cudaEventCreateWithFlags(&data[igpu].event_pall,event_flag);
-	dmres->p[igpu]=snew(nact, 1);
-	spagelock(dmres->p[igpu], NULL);
+	dmres->p[igpu]=X(new)(nact, 1);
+	X(pagelock)(dmres->p[igpu], NULL);
 	cp2gpu(&data[igpu].saind, saind, nsa+1, 1, 0);
     }
-    smat *timing=snew(nstep, 1);
-    smat *timing_tot=snew(nstep, 1);
-    smat *timing_sock=snew(nstep, 1);
+    X(mat) *timing=X(new)(nstep, 1);
+    X(mat) *timing_tot=X(new)(nstep, 1);
+    X(mat) *timing_sock=X(new)(nstep, 1);
     cudaProfilerStop();
     cudaProfilerStart();
     TIC;
@@ -311,7 +309,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     int mtch_down=0;
     int nset=(nsa+sastep-1)/sastep;
     char *copied_mtch=(char*)calloc(nset*3, sizeof(char));
-    float tim_tot=0, tim_min=INFINITY, tim_max=0;
+    Real tim_tot=0, tim_min=INFINITY, tim_max=0;
     for(int jstep=-nstep0; jstep<nstep; jstep++){
 	//run 20 frames to warm up before timing.
 	int istep=jstep<0?0:jstep;
@@ -382,7 +380,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    DO(cudaStreamWaitEvent(datai->stream_g[0], datai->event_p[datai->count], 0));
 
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
-		mtch_dimx*mtch_dimy*sizeof(float)*2, datai->stream_g[0]>>>
+		mtch_dimx*mtch_dimy*sizeof(Real)*2, datai->stream_g[0]>>>
 		(datai->mtch->p[ibuf_mtch]->p, datai->pix, datai->pixbias, 
 		 datai->grad->p+isa*2, datai->saind+isa, nsaleft);
 	    //Record the event when matched filter is done
@@ -399,10 +397,10 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    cudaStreamWaitEvent(datai->stream_a[datai->ism], datai->event_g[datai->count], 0);
 
 #if 0
-	    float one=1;
-	    DO(cublasSgemv(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nsaleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
+	    Real one=1;
+	    DO(CUBL(gemv)(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nsaleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
-	    multimv_do<<<nblock, naeach, sizeof(float)*naeach, datai->stream_a[datai->ism]>>>
+	    multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream_a[datai->ism]>>>
 		(datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
 		 nact, nsaleft*2);
 #endif
@@ -425,8 +423,8 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		npixleft=saind[isa+sastep]-saind[isa];
 	    }
 	    double theta=M_PI*0.5*istep+datai->FSMdelta;
-	    float cd=cos(theta);
-	    float sd=cos(theta);
+	    Real cd=cos(theta);
+	    Real sd=cos(theta);
 	    //Do not start before pixels are transported
 #if 0
 	    for(int ism=1; ism<nsm; ism++){//wait for MVM
@@ -463,7 +461,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    }
 		    DO(cudaMemcpyAsync(im0->p+saind[isa]+icol*totpix, 
 				       data[igpu].im0->p[ibuf_stat]->p+saind[isa]+icol*totpix,
-				       sizeof(float)*npixleft,
+				       sizeof(Real)*npixleft,
 				       cudaMemcpyDeviceToHost, stream));
 		    copied_mtch[iset]=1;
 		    if(nstep!=1) goto endhere;
@@ -487,7 +485,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    info2("step %d: gpu %d uploading mvm\n", istep, igpu);
 		}
 		DO(cudaMemcpyAsync(datai->cumvm_next->p+datai->ic*mvm->nx, 
-				   mvm->p+datai->ic*mvm->nx, sizeof(float)*mvm->nx*nsaleft, 
+				   mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nsaleft, 
 				   cudaMemcpyHostToDevice, datai->stream_p[0]));
 		
 		datai->ic+=nsaleft;
@@ -509,7 +507,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    for(int ism=1; ism<nsm; ism++){
 		DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 	    }
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), 
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(Real), 
 			    cudaMemcpyDeviceToHost, datai->stream_a[0]);
 	    curzero(datai->act, datai->stream_a[0]);
 	}
@@ -531,7 +529,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    for(int ism=1; ism<nsm; ism++){
 		DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 	    }
-	    cudaMemcpyAsync(data[0].actelse->p[igpu-1]->p, datai->act->p, nact*sizeof(float), 
+	    cudaMemcpyAsync(data[0].actelse->p[igpu-1]->p, datai->act->p, nact*sizeof(Real), 
 			    cudaMemcpyDeviceToDevice, datai->stream_a[0]);
 	}
 	if(ngpu>1){
@@ -543,8 +541,8 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
 		}
 		add_do<<<DIM(nact, 256), 0, datai->stream_a[0]>>>
-		    (datai->act->p, datai->actelse->p[0]->p, (float*)0, 1, nact);
-		cudaMemcpyAsync(dmres->p[0]->p, datai->act->p, nact*sizeof(float), 
+		    (datai->act->p, datai->actelse->p[0]->p, (Real*)0, 1, nact);
+		cudaMemcpyAsync(dmres->p[0]->p, datai->act->p, nact*sizeof(Real), 
 				cudaMemcpyDeviceToHost, datai->stream_a[0]);
 		datai->stream_a[0].sync();
 	    }else{
@@ -557,7 +555,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	 */
 	//usleep(50);//yield
 	if(nstep==1){//save result for verifying accuracy
-	    swrite(dmres->p[0], "dmres");
+	    X(write)(dmres->p[0], "dmres");
 	    for(int igpu=0; igpu<ngpu; igpu++){
 		cudaSetDevice(gpus[igpu]); 
 		cudaMemcpy(pix->p, data[igpu].pix, sizeof(short)*totpix, cudaMemcpyDefault);
@@ -589,7 +587,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	}
 	if(sock!=-1){
 	    double tmp0=myclockd();
-	    if(stwrite(sock, dmres->p[0]->p, sizeof(float)*nact)){
+	    if(stwrite(sock, dmres->p[0]->p, sizeof(Real)*nact)){
 		warning("error write dmres: %s\n", strerror(errno));
 		close(sock); sock=-1;
 		_Exit(1);
@@ -615,22 +613,21 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	}
     }
     cudaProfilerStop();
-    //swrite(dmres->p[0], "dmres");
+    //X(write)(dmres->p[0], "dmres");
     
-    swrite(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    swrite(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
-    swrite(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
-    spageunlock(pix1, pix2, mvm1, mvm2, NULL);
-    
-    sfree(mvm1);
-    sfree(mvm2);
-    sfree(pix1);
-    sfree(pix2);
-    sfree(mtch);
-    scellfree(dmres);
-    sfree(timing);
-    sfree(timing_tot);
-    sfree(timing_sock);
+    X(write)(timing, "timing_%s_%dgpu", myhostname(), ngpu);
+    X(write)(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
+    X(write)(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
+    X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
+    X(free)(mvm1);
+    X(free)(mvm2);
+    X(free)(pix1);
+    X(free)(pix2);
+    X(free)(mtch);
+    X(cellfree)(dmres);
+    X(free)(timing);
+    X(free)(timing_tot);
+    X(free)(timing_sock);
     for(int igpu=0; igpu<ngpu; igpu++){
 	cudaSetDevice(gpus[igpu]);
 	delete data[igpu].cumvm1;

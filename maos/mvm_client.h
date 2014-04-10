@@ -27,8 +27,13 @@
 typedef short GTYPE; //type used for gradients
 typedef short ATYPE; //type used for actuator commands
 #else
+#if CUDA_DOUBLE
+typedef double GTYPE;
+typedef double ATYPE;
+#else
 typedef float GTYPE;
 typedef float ATYPE;
+#endif
 #define GSCALE 1
 #define GSCALE1 1
 #define ASCALE 1

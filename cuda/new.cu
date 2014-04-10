@@ -24,8 +24,8 @@ const int REDUCE_WRAP=4;
 const int REDUCE_WRAP_LOG2=2;
 const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
 const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
-extern "C" __global__ void sum_do(float * res, const float *a, const int n){
-    extern __shared__ float sb[];
+extern "C" __global__ void sum_do(Real * res, const Real *a, const int n){
+    extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x ;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
@@ -44,15 +44,15 @@ extern "C" __global__ void sum_do(float * res, const float *a, const int n){
 /*
   In each block, we first do the reduction in each warp. This avoid syncthreads and if test. Then we copy results from each wrap to the first wrap and do the reduction again.
 */
-extern "C" __global__ void sum2_do(float * res, const float *a, const int n){
-    __shared__ float sb[REDUCE_WRAP*REDUCE_STRIDE];
+extern "C" __global__ void sum2_do(Real * res, const Real *a, const int n){
+    __shared__ Real sb[REDUCE_WRAP*REDUCE_STRIDE];
     const int idx=threadIdx.x;
     const int wrap=idx/WRAP_SIZE; //which wrap
     const int jdx=(WRAP_SIZE-1) & idx;//index within this wrap
-    volatile float *s=sb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
+    volatile Real *s=sb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
     s[-16]=0;
     //Read in vector from global mem
-    register float sum=0;
+    register Real sum=0;
     int step=blockDim.x * gridDim.x ;
     for(int i=blockIdx.x * blockDim.x + idx; i<n; i+=step){
 	sum+=a[i];
@@ -67,10 +67,10 @@ extern "C" __global__ void sum2_do(float * res, const float *a, const int n){
     }
     __syncthreads();//synchronize different wraps*/
     if(idx<REDUCE_WRAP){//use a few threads for reduce
-	float sum2=sb[REDUCE_STRIDE * idx + WRAP_SIZE/2 + WRAP_SIZE - 1];
+	Real sum2=sb[REDUCE_STRIDE * idx + WRAP_SIZE/2 + WRAP_SIZE - 1];
 	//reuse sb for size of REDUCE_WRAP+REDUCE_WRAP/2;
 	sb[idx]=0;
-	volatile float *s2 = sb + REDUCE_WRAP/2 + idx;
+	volatile Real *s2 = sb + REDUCE_WRAP/2 + idx;
 	s2[0]=sum2;
 #pragma unroll	
 	for(int i=0; i<REDUCE_WRAP_LOG2; i++){

@@ -23,8 +23,8 @@
 #define RAND_BLOCK 16
 #define RAND_THREAD 32
 struct cudtf_t{
-    fcomplex **nominal;/*array for each sa. */
-    fcomplex **etf;
+    Comp **nominal;/*array for each sa. */
+    Comp **etf;
     int etfis1d;
 };
 struct cullt_t{
@@ -49,8 +49,8 @@ class dither_t{
 public:
     dither_t(int nsa, int pixpsax, int pixpsay);
     void reset();
-    void acc(curcell *ints, float angle, cudaStream_t stream);
-    void output(float a2m, int iwfs, int isim, cudaStream_t stream);
+    void acc(curcell *ints, Real angle, cudaStream_t stream);
+    void output(Real a2m, int iwfs, int isim, cudaStream_t stream);
     ~dither_t(){
 	delete im0;
 	delete imx;
@@ -64,21 +64,21 @@ class cuwfs_t{
     culoc_t **loc_dm;  /**<Grid for ray tracing from DM to WFS*/
     culoc_t *loc_tel;  /**<Grid for ray tracing from Telescope to WFS*/
     cusp *GS0;         /**<For gtilt. is GS0t in col major */
-    float (**imcc)[3];  /**<For ztilt.*/
-    float  *neasim;     /**<The noise equivalent angles for each subaperture.*/
-    float  *amp;        /**<Amplitude map*/
+    Real (**imcc)[3];  /**<For ztilt.*/
+    Real  *neasim;     /**<The noise equivalent angles for each subaperture.*/
+    Real  *amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
     cudtf_t *dtf;       /**<array for each wvl.*/
-    float   *srot;      /**<angle to rotate PSF/OTF*/
-    float  (**mtche)[2]; /**<matched filter gradient operator.*/
-    float   *i0sum;     /**<sum of i0 for each subaperture.*/
-    float  **bkgrnd2;   /**<background as an image*/
-    float  **bkgrnd2c;  /**<calibration of background to subtract.*/
-    float *cogcoeff;
+    Real   *srot;      /**<angle to rotate PSF/OTF*/
+    Real  (**mtche)[2]; /**<matched filter gradient operator.*/
+    Real   *i0sum;     /**<sum of i0 for each subaperture.*/
+    Real  **bkgrnd2;   /**<background as an image*/
+    Real  **bkgrnd2c;  /**<calibration of background to subtract.*/
+    Real *cogcoeff;
     /*For LLT */
     curmat *lltncpa;    /**<NCPA for llt*/
-    float (**lltimcc)[3];
-    float  *lltamp;
+    Real (**lltimcc)[3];
+    Real  *lltamp;
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan_wvf, lltplan_otf;/**<FFTW plan for LLT*/
     curmat *opdadd;     /**<The ncpa and surface aberration.*/
@@ -93,7 +93,7 @@ class cuwfs_t{
     curmat *gradacc;    /**<For accumulating grads*/
     curmat *gradcalc;   /**<For outputing grads*/
     curmat *lltopd;
-    float  *lltg;
+    Real  *lltg;
     cucmat *lltwvf;
     cucmat *lltotfc;
     cucmat *wvf;
@@ -108,11 +108,11 @@ class cuwfs_t{
     dither_t *dither;
 };
 
-void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
+void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
 
-void cuztilt(float *restrict g, float *restrict opd, 
-	     const int nsa, const float dx, const int nx, float (**imcc)[3],
-	     const float (*orig)[2], const float*restrict amp, float alpha, cudaStream_t stream);
-__global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
-			    const fcomplex *restrict in, int ninx, int niny);
+void cuztilt(Real *restrict g, Real *restrict opd, 
+	     const int nsa, const Real dx, const int nx, Real (**imcc)[3],
+	     const Real (*orig)[2], const Real*restrict amp, Real alpha, cudaStream_t stream);
+__global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
+			    const Comp *restrict in, int ninx, int niny);
 #endif

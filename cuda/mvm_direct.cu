@@ -44,8 +44,8 @@ typedef struct{
     long ntotact;
     long ntotgrad;
     long ntotxloc;
-    smat *mvmc;
-    smat *mvmi;
+    X(mat) *mvmc;
+    X(mat) *mvmi;
 }MVM_IGPU_T;
 #define TIMING 0
 static void mvm_direct_igpu(thread_t *info){
@@ -68,7 +68,7 @@ static void mvm_direct_igpu(thread_t *info){
 #define RECORD(i) DO(cudaEventRecord(event[i], stream))
 #define NEVENT 4
     cudaEvent_t event[NEVENT]={0};
-    float times[NEVENT];
+    Real times[NEVENT];
     for(int i=0; i<NEVENT; i++){
 	DO(cudaEventCreate(&event[i]));
     }
@@ -86,20 +86,20 @@ static void mvm_direct_igpu(thread_t *info){
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);//right hand size
     curcell *opdr=NULL;//initialized later
     //curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
-    curcell *fitr=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL, (float*)1);//skip data allocation.
+    curcell *fitr=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL, (Real*)1);//skip data allocation.
     curmat *mvm=curnew(ntotact, info->end-info->start);
-    float *eye2; cudaMalloc(&eye2, sizeof(float)*2);
+    Real *eye2; cudaMalloc(&eye2, sizeof(Real)*2);
     dmat *residual=data->residual;
     dmat *residualfit=data->residualfit;
     {
-	float eye2c[2]={0,1.};
-	cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
+	Real eye2c[2]={0,1.};
+	cudaMemcpy(eye2, eye2c, sizeof(Real)*2, cudaMemcpyHostToDevice);
     }
     cuda_recon::curecon_t *curecon=cudata->recon;
     stream_t stream;
     if(parms->load.mvmf){
 	cudaMemcpyAsync(mvm->p, data->mvmc->p+info->start*ntotact, 
-			ntotact*(info->end-info->start)*sizeof(float), 
+			ntotact*(info->end-info->start)*sizeof(Real), 
 			cudaMemcpyHostToDevice, stream);
     }
     curmat *mvmi=NULL;
@@ -108,10 +108,10 @@ static void mvm_direct_igpu(thread_t *info){
 	mvmi=curnew(ntotxloc, info->end-info->start);
 	if(parms->load.mvmi){
 	    cudaMemcpyAsync(mvmi->p, data->mvmi->p+info->start*ntotxloc,
-			    ntotxloc*(info->end-info->start)*sizeof(float),
+			    ntotxloc*(info->end-info->start)*sizeof(Real),
 			    cudaMemcpyHostToDevice, stream);
 	}
-	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)1);
+	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (Real*)1);
     }else{
 	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
@@ -127,9 +127,9 @@ static void mvm_direct_igpu(thread_t *info){
 	    }
 	}
 	if(ig){
-	    cudaMemcpyAsync(grad->m->p+ig-1, eye2, 2*sizeof(float), cudaMemcpyDeviceToDevice, stream);
+	    cudaMemcpyAsync(grad->m->p+ig-1, eye2, 2*sizeof(Real), cudaMemcpyDeviceToDevice, stream);
 	}else{
-	    cudaMemcpyAsync(grad->m->p+ig, eye2+1, sizeof(float), cudaMemcpyDeviceToDevice, stream);
+	    cudaMemcpyAsync(grad->m->p+ig, eye2+1, sizeof(Real), cudaMemcpyDeviceToDevice, stream);
 	}
 	RECORD(1);
 	if(mvmi){
@@ -152,11 +152,11 @@ static void mvm_direct_igpu(thread_t *info){
 #endif	
     }
     DO(cudaMemcpyAsync(data->mvmc->p+info->start*ntotact, 
-		       mvm->p, ntotact*(info->end-info->start)*sizeof(float), 
+		       mvm->p, ntotact*(info->end-info->start)*sizeof(Real), 
 		       cudaMemcpyDeviceToHost, stream));
     if(parms->save.mvmi){
 	DO(cudaMemcpyAsync(data->mvmi->p+info->start*ntotxloc,
-			   mvmi->p, ntotxloc*(info->end-info->start)*sizeof(float),
+			   mvmi->p, ntotxloc*(info->end-info->start)*sizeof(Real),
 			   cudaMemcpyDeviceToHost, stream));
     }
     stream.sync();
@@ -199,19 +199,19 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    ntotgrad+=recon->ngrad[iwfs];
 	}
-	smat *mvmc=NULL;//control matrix output to CPU
+	X(mat) *mvmc=NULL;//control matrix output to CPU
 	if(parms->load.mvmf){
-	    mvmc=sread("%s", parms->load.mvmf);
+	    mvmc=X(read)("%s", parms->load.mvmf);
 	}else{
-	    mvmc=snew(ntotact, ntotgrad);
+	    mvmc=X(new)(ntotact, ntotgrad);
 	}
-	smat *mvmi=NULL;//intermediate result
+	X(mat) *mvmi=NULL;//intermediate result
 	if(parms->load.mvmi){
 	    TIC;tic; info2("Loading mvmi ...");
-	    mvmi=sread("%s", parms->load.mvmi);
+	    mvmi=X(read)("%s", parms->load.mvmi);
 	    toc2("done");
 	}else if(parms->save.mvmi){
-	    mvmi=snew(ntotxloc, ntotgrad);
+	    mvmi=X(new)(ntotxloc, ntotgrad);
 	}
 	dmat *residual=dnew(ntotgrad,1);
 	dmat *residualfit=dnew(ntotgrad, 1);
@@ -221,8 +221,8 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	    /*Each GPU cannot handle all the mvmi if just divide to NGPU
 	      runs. Do multiple pass to avoid memroy overflow. Assemes each GPU
 	      has more than 2G free space.*/
-	    int npass=iceil((double)ntotxloc*(double)ntotgrad*sizeof(float)/NGPU/2000000000);
-	    info("mul=%ld\n", ntotxloc*ntotgrad*sizeof(float));
+	    int npass=iceil((double)ntotxloc*(double)ntotgrad*sizeof(Real)/NGPU/2000000000);
+	    info("mul=%ld\n", ntotxloc*ntotgrad*sizeof(Real));
 	    info("NGPU=%d\n", NGPU);
 	    info("npass=%d\n", npass);
 	    nthread=NGPU*npass;
@@ -246,22 +246,21 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	dfree(residual);
 	dfree(residualfit);
 	if(parms->save.mvmf){
-	    swrite(mvmc, "mvmf.bin");
+	    X(write)(mvmc, "mvmf.bin");
 	}
 	if(parms->save.mvmi){
 	    TIC;tic; info2("Saving mvmi ...");
-	    swrite(mvmi, "mvmi.bin");
+	    X(write)(mvmi, "mvmi.bin");
 	    toc2("done");
 	}
-	sfree(mvmi);
+	X(free)(mvmi);
 	{
-	    //first convert from smat to dmat
 	    dmat *dmvmc=dnew(ntotact, ntotgrad);
 	    for(long i=0; i<ntotact*ntotgrad; i++){
 		dmvmc->p[i]=(double)mvmc->p[i];
 	    }
 	    recon->MVM=dmvmc;
-	    sfree(mvmc);
+	    X(free)(mvmc);
 	}
     }
 }

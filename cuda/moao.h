@@ -41,7 +41,7 @@ public:
 	delete opdfit2;
 	delete ha;
     }
-    virtual void L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream);
+    virtual void L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream);
 };
 
 class cumoao_t:public cumoao_l{
@@ -51,7 +51,7 @@ class cumoao_t:public cumoao_l{
     curcell *rhs;
 public:
     cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
-    float moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
+    Real moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
     ~cumoao_t(){
 	for(int idir=0; idir<ndir; idir++){
 	    delete hxp[idir];

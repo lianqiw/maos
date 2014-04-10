@@ -22,11 +22,11 @@
 struct PROP_WRAP_T{
     int offdir, offdirx, offdiry;
     int offps, offpsx, offpsy;
-    float *cc;
+    Real *cc;
     int nxdir,nydir;
     int nxps,nyps;
-    float dispx, dispy;
-    float xratio, yratio;
+    Real dispx, dispy;
+    Real xratio, yratio;
     int nx, ny;
     int isreverse;/*Indicate this is an reverse*/
     PROP_WRAP_T *reverse;/*store pointer for the reversely prepared data.*/
@@ -45,10 +45,10 @@ struct PROP_WRAP_T{
     }
 };
 __global__ void 
-gpu_prop_grid_do(PROP_WRAP_T *data, float **pdirs, float **ppss, 
-		 int ndir, int nps, float alpha1, float *alpha2, char trans);
+gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, 
+		 int ndir, int nps, Real alpha1, Real *alpha2, char trans);
 
 void gpu_prop_grid_prep(PROP_WRAP_T*res, 
 			const cugrid_t &g_dir, const cugrid_t &gi,
-			float dispx, float dispy, curmat *cc);
+			Real dispx, Real dispy, curmat *cc);
 #endif

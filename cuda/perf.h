@@ -24,7 +24,7 @@
 struct cuperf_t{
     static int *nembed;
     static int *psfsize;
-    static float *wvls;    
+    static Real *wvls;    
     static cudaStream_t *stream;
     static cublasHandle_t *handle;
     static cufftHandle *plan;
@@ -38,12 +38,12 @@ struct cuperf_t{
     static curcell *opdmean;
     static curcell *opdmean_ngsr;
     static curcell *cc;
-    static scell   *ccb;
+    static X(cell)   *ccb;
 
     pthread_mutex_t mutex;
     culoc_t *locs;
     culoc_t ***locs_dm;
-    float   *amp;
+    Real   *amp;
     int    **embed;
 
     cuccell *wvf;

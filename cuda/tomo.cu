@@ -32,7 +32,7 @@ namespace cuda_recon{
   We convert GP from sparse matrix to coefficients of pos==1 or 2. By doing so, we can also convert the type to integer to save memory transfer. Short2 is used without performance penalty.
   For partially illiminated subapertures, this conversion brings in approximation as we limite the influence of gradient from each subaperture to (pos*2-1)x(pos*2-1) points. The system performance is largely not affected.
 */
-void prep_GP(cumat<short2>**GPp, float *GPscale, cusp **GPf,
+void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
 	     const dsp *GP, const loc_t *saloc, const loc_t *ploc){
     if(!GP){ 
 	error("GP is required\n");
@@ -43,7 +43,7 @@ void prep_GP(cumat<short2>**GPp, float *GPscale, cusp **GPf,
 	const spint *pp=GPt->p;
 	const spint *pi=GPt->i;
 	const double *px=GPt->x;
-	//convert the max float to max 2 byte integer
+	//convert the max Real to max 2 byte integer
 	const double pxscale=floor(32767./maxabs(px, GPt->nzmax));
 	const int np1=pos+1;
 	const int np=np1*np1;
@@ -95,10 +95,10 @@ prep_saptr(loc_t *saloc, map_t *pmap){
     /*saloc mapped onto pmap*/
     int nsa=saloc->nloc;
     int (*saptr)[2]=new int[nsa][2];
-    const float dx1=1./pmap->dx;
-    const float dy1=1./pmap->dy;
-    const float ox=pmap->ox;
-    const float oy=pmap->oy;
+    const Real dx1=1./pmap->dx;
+    const Real dy1=1./pmap->dy;
+    const Real ox=pmap->ox;
+    const Real oy=pmap->oy;
     const double *salocx=saloc->locx;
     const double *salocy=saloc->locy;
     for(int isa=0; isa<nsa; isa++){
@@ -115,12 +115,12 @@ static curmat *get_neai(dsp *nea){
     spint *pi=nea->i;
     double *px=nea->x;
     int nsa=nea->ny/2;
-    float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
+    Real (*neai)[3]=(Real(*)[3])calloc(3*nsa, sizeof(Real));
     for(int ic=0; ic<nea->n; ic++){
 	for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 	    int ix=pi[ir];
 	    int isa=ic<nsa?ic:ic-nsa;
-	    float val=(float)px[ir];
+	    Real val=(Real)px[ir];
 	    if(ix==ic){/*diagonal part. */
 		if(ic==isa){/*x */
 		    neai[isa][0]=val;
@@ -135,7 +135,7 @@ static curmat *get_neai(dsp *nea){
 	}
     }
     curmat *neai_gpu=curnew(3, nsa);
-    DO(cudaMemcpy(neai_gpu->p, neai, 3*nsa*sizeof(float), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(neai_gpu->p, neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
     free(neai);
     return neai_gpu;
 }
@@ -150,7 +150,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	dir[iwfs].thetax=parms->wfsr[iwfs].thetax;
 	dir[iwfs].thetay=parms->wfsr[iwfs].thetay;
     }
-    float dt=parms->tomo.predict?parms->sim.dt*2:0;
+    Real dt=parms->tomo.predict?parms->sim.dt*2:0;
     if(dt>0){
 	info("dt=%g. vx[0]=%g\n", dt, grid->xmap[0].vx);
     }
@@ -158,7 +158,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
-	float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
+	Real tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
 	lapc[ips].nxps=recon->xmap[ips]->nx;
 	lapc[ips].nyps=recon->xmap[ips]->ny;
 	lapc[ips].l2c=tmp*tmp*TOMOSCALE;
@@ -215,7 +215,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	const int npowfs=parms->npowfs;
 	GPp=new cucell<short2>(nwfs, 1);
 	GP=new cuspcell(nwfs, 1);
-	GPscale=new float[npowfs];
+	GPscale=new Real[npowfs];
 	saptr=new cucell<int>(npowfs, 1);
 	int has_GPp=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -287,7 +287,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		GPDATA[iwfs].PDFTT=PDFTT->p[ipowfs]->p;
 	    }
 
-	    GPDATA[iwfs].neai=(const float(*)[3])neai->p[iwfs]->p;
+	    GPDATA[iwfs].neai=(const Real(*)[3])neai->p[iwfs]->p;
 	    GPDATA[iwfs].nsa=powfs[ipowfs].pts->nsa;
 	    GPDATA[iwfs].nxp=recon->pmap->nx;
 	    GPDATA[iwfs].dxp=recon->pmap->dx;
@@ -330,8 +330,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 /*
   If merge the operation in to gpu_prop_grid_do, need to do atomic
   operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(LAP_T *datai, float **outall, float **inall, int nwfs, float alpha){
-    float *restrict in, *restrict out;
+__global__ void gpu_laplacian_do(LAP_T *datai, Real **outall, Real **inall, int nwfs, Real alpha){
+    Real *restrict in, *restrict out;
     
     const int ips=blockIdx.z;
     in=inall[ips];
@@ -340,7 +340,7 @@ __global__ void gpu_laplacian_do(LAP_T *datai, float **outall, float **inall, in
     
     const int nx=datai->nxps;
     const int ny=datai->nyps;
-    const float alpha2=datai->l2c*alpha;
+    const Real alpha2=datai->l2c*alpha;
     const int stepx=blockDim.x*gridDim.x;
     const int stepy=blockDim.y*gridDim.y;
     const int nx1=nx-1;
@@ -375,10 +375,10 @@ __global__ void gpu_laplacian_do(LAP_T *datai, float **outall, float **inall, in
    Handles TTDF*GP
 */
 #define DIM_GP 128
-__global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, float *dfout, float **wfsopd, int ptt){
-    __shared__ float gx[DIM_GP];
-    __shared__ float gy[DIM_GP];
-    __shared__ float gdf[DIM_GP];
+__global__ static void gpu_gp_do(GPU_GP_T *data, Real **gout, Real *ttout, Real *dfout, Real **wfsopd, int ptt){
+    __shared__ Real gx[DIM_GP];
+    __shared__ Real gy[DIM_GP];
+    __shared__ Real gdf[DIM_GP];
     const int iwfs=blockIdx.z;
     const int nwfs=gridDim.z;
     GPU_GP_T *datai=data+iwfs;
@@ -387,10 +387,10 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
     const int nsa=datai->nsa;
     const int step=blockDim.x * gridDim.x;
     int (*restrict saptr)[2]=datai->saptr;
-    float *restrict g=gout[iwfs];
-    float GPscale=datai->GPscale;
+    Real *restrict g=gout[iwfs];
+    Real GPscale=datai->GPscale;
     if(datai->GPp && wfsopd){
-	const float *restrict map=wfsopd[iwfs];
+	const Real *restrict map=wfsopd[iwfs];
 	const short2 *restrict pxy=datai->GPp;
 	int nx=datai->nxp;
 	/*GP operation.*/
@@ -444,12 +444,12 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
        each thread handle the same subaperture as previous gradient operation to
        avoid synchronization */
     if(datai->PTT && ptt){ 
-	float (*restrict PTT)[2]=(float(*)[2])datai->PTT;
+	Real (*restrict PTT)[2]=(Real(*)[2])datai->PTT;
 	gx[threadIdx.x]=0;
 	gy[threadIdx.x]=0;
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
-	    float tmpx=PTT[isa][0]*g[isa];
-	    float tmpy=PTT[isa][1]*g[isa];
+	    Real tmpx=PTT[isa][0]*g[isa];
+	    Real tmpy=PTT[isa][1]*g[isa];
 	    gx[threadIdx.x]+=tmpx+PTT[isa+nsa][0]*g[isa+nsa];
 	    gy[threadIdx.x]+=tmpy+PTT[isa+nsa][1]*g[isa+nsa];
 	}
@@ -466,9 +466,9 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 	}
     }
     if(datai->PDF && ptt){
-	float *restrict PDF=datai->PDF;//the diagonal block
+	Real *restrict PDF=datai->PDF;//the diagonal block
 	const int ipowfs=datai->ipowfs;
-	float scale=-1./(datai->nwfs-1);//PDF*scale gives the off diagonal block
+	Real scale=-1./(datai->nwfs-1);//PDF*scale gives the off diagonal block
 	for(int irow=0; irow<nwfs; irow++){//skip first row
 	    if(data[irow].ipowfs!=ipowfs || data[irow].jwfs==0) continue;//different group or first wfs.
 	    gdf[threadIdx.x]=0;
@@ -498,7 +498,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
    Handles GP'*nea*(1-TTDF)
    Be carefulll about the ptt flag. It is always 1 for Right hand side, but may be zero for Left hand side.
 */
-__global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, float *dfin, float **gin, int ptt){
+__global__ static void gpu_gpt_do(GPU_GP_T *data, Real **wfsopd, Real *ttin, Real *dfin, Real **gin, int ptt){
     const int iwfs=blockIdx.z;
     const int nwfs=gridDim.z;
     GPU_GP_T *datai=data+iwfs;
@@ -507,11 +507,11 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
     const int step=blockDim.x * gridDim.x;
     const int nsa=datai->nsa;
     int (*saptr)[2]=datai->saptr;
-    const float (*restrict neai)[3]=datai->neai;
-    float dxp=datai->dxp;
-    float oxp=datai->oxp;
-    float oyp=datai->oyp;
-    float focus=0;
+    const Real (*restrict neai)[3]=datai->neai;
+    Real dxp=datai->dxp;
+    Real oxp=datai->oxp;
+    Real oyp=datai->oyp;
+    Real focus=0;
     if(datai->PDF && ptt){
 	if(iwfs==0){
 	    for(int id=1; id<nwfs; id++){
@@ -521,10 +521,10 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    focus=-dfin[iwfs];
 	}
     }
-    float *restrict g=gin[iwfs];
-    float *restrict map=wfsopd?wfsopd[iwfs]:0;
-    float GPscale=datai->GPscale;
-    float ttx=0, tty=0;
+    Real *restrict g=gin[iwfs];
+    Real *restrict map=wfsopd?wfsopd[iwfs]:0;
+    Real GPscale=datai->GPscale;
+    Real ttx=0, tty=0;
     if(datai->PTT && ptt){
 	ttx=ttin[iwfs*2+0];
 	tty=ttin[iwfs*2+1];
@@ -536,11 +536,11 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	    int ix=saptr[isa][0];
 	    int iy=saptr[isa][1];
-	    float cx=neai[isa][0];
-	    float cy=neai[isa][1];
-	    float cxy=neai[isa][2];
-	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
-	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
+	    Real cx=neai[isa][0];
+	    Real cy=neai[isa][1];
+	    Real cxy=neai[isa][2];
+	    Real gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    Real gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
 	    g[isa]=cx*gx+cxy*gy;
 	    g[isa+nsa]=cxy*gx+cy*gy;
 	}
@@ -548,12 +548,12 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	    int ix=saptr[isa][0];
 	    int iy=saptr[isa][1];
-	    float cx=neai[isa][0];
-	    float cy=neai[isa][1];
-	    float cxy=neai[isa][2];
-	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
-	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
-	    float tmp=cxy*gx;//save data
+	    Real cx=neai[isa][0];
+	    Real cy=neai[isa][1];
+	    Real cxy=neai[isa][2];
+	    Real gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    Real gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
+	    Real tmp=cxy*gx;//save data
 	    gx=GPscale*(cx*gx+cxy*gy);
 	    gy=GPscale*(tmp+cy*gy);
 	    const short2 *restrict pxy2=pxy+isa*4;
@@ -566,12 +566,12 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	    int ix=saptr[isa][0];
 	    int iy=saptr[isa][1];
-	    float cx=neai[isa][0];
-	    float cy=neai[isa][1];
-	    float cxy=neai[isa][2];
-	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
-	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
-	    float tmp=cxy*gx;
+	    Real cx=neai[isa][0];
+	    Real cy=neai[isa][1];
+	    Real cxy=neai[isa][2];
+	    Real gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    Real gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
+	    Real tmp=cxy*gx;
 	    gx=GPscale*(cx*gx+cxy*gy);
 	    gy=GPscale*(tmp+cy*gy);
 	    const short2 *restrict pxy2=pxy+isa*9;
@@ -620,7 +620,7 @@ void cutomo_grid::do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stre
   Tomography right hand size matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
 */
-void cutomo_grid::R(curcell **xout, float beta, const curcell *grad, float alpha, stream_t &stream){
+void cutomo_grid::R(curcell **xout, Real beta, const curcell *grad, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
@@ -631,7 +631,7 @@ void cutomo_grid::R(curcell **xout, float beta, const curcell *grad, float alpha
     hx->backward(opdwfs->pm, (*xout)->pm, alpha, NULL, stream);
 }
 
-void cutomo_grid::Rt(curcell **gout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cutomo_grid::Rt(curcell **gout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*gout){
 	*gout=curcellnew(nwfs, 1, grid->ngrad, (long*)NULL);
     }else{
@@ -652,7 +652,7 @@ void cutomo_grid::Rt(curcell **gout, float beta, const curcell *xin, float alpha
   1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
   2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
 */
-void cutomo_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cutomo_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{

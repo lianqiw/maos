@@ -53,7 +53,7 @@ private:
 public:
     int nmoao;
     cumoao_t **moao;/**<moao configurations for GPU*/
-    smat *moao_gwfs, *moao_gevl;
+    X(mat) *moao_gwfs, *moao_gevl;
     curcell ***dm_moao;/**<moao output*/
     curcell *dm_wfs;/**<moao results for wfs for warm restart*/
     curcell *dm_evl;/**<moao results for evl for warm restart*/
@@ -87,9 +87,9 @@ public:
     }
     void reset(const PARMS_T *parms);
     void update(const PARMS_T *parms, RECON_T *recon);
-    float tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
-    float fit(dcell **_dmfit, dcell *_opdr);
-    float moao_recon(dcell *_dmfit, dcell *_opdr);
+    Real tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
+    Real fit(dcell **_dmfit, dcell *_opdr);
+    Real moao_recon(dcell *_dmfit, dcell *_opdr);
     void moao_filter(dcell *_dm_wfs, dcell *_dm_evl);
     void mvm(dcell **_dmerr, dcell *_gradin);
     void tomo_test(SIM_T *simu);

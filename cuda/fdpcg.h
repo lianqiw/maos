@@ -22,7 +22,7 @@ namespace cuda_recon{
 typedef struct GPU_FDPCG_T{
     int nx;
     int ny;
-    float scale;
+    Real scale;
 }GPU_FDPCG_T;
 class curecon_geom;
 class cufdpcg_t:public cucgpre_t{

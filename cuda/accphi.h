@@ -19,22 +19,22 @@
 #define AOS_CUDA_ACCPHI_H
 #include "curmat.h"
 
-void gpu_atm2loc(float *phiout, culoc_t *loc, const float hs, const float thetax,const float thetay,
-		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream);
-void gpu_dm2loc(float *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
-		const float hs, const float thetax, const float thetay,
-		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream);
+void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,const Real thetay,
+		 const Real mispx, const Real mispy, const Real dtisim, const Real atmalpha, cudaStream_t stream);
+void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
+		const Real hs, const Real thetax, const Real thetay,
+		const Real mispx, const Real mispy, const Real dmalpha, cudaStream_t stream);
 
 void gpu_prop_grid(curmat *out, const cugrid_t &go,
 		   curmat *in, const cugrid_t &gi,
-		   float dispx, float dispy,
-		   float alpha, char trans, cudaStream_t stream);
+		   Real dispx, Real dispy,
+		   Real alpha, char trans, cudaStream_t stream);
 
 void gpu_prop_grid_cubic(curmat *out,const cugrid_t &go,
 			 curmat *in, const cugrid_t &gi,
-			 float dispx, float dispy, float *cc,
-			 float alpha, char trans, cudaStream_t stream);
-void gpu_ngsmod2science(curmat *opd, float (*restrict loc)[2],
+			 Real dispx, Real dispy, Real *cc,
+			 Real alpha, char trans, cudaStream_t stream);
+void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 
 			double alpha, cudaStream_t stream);

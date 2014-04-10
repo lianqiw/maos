@@ -194,11 +194,11 @@ AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$en
 AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc="$use_icc_default"])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(long,  [  --disable-long  Disable long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
-AC_ARG_ENABLE(single,[  --enable-single Use single precision floating point numbers], [use_single="$enableval"], [use_single="auto"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
 
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+AC_ARG_ENABLE(cuda-double, [  --enable-cuda-double   Enable cuda double precision], [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_WITH(gtk,  --with-gtk=DIR, [GTKDIR=${withval}], [GTKDIR=""])
@@ -207,20 +207,6 @@ AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
    AM_CONDITIONAL(USE_SCHEDULER, false)
-fi
-if test "$use_single" = "auto" ;then
-   if test "$use_cuda" = "yes" ;then
-       use_single="no"
-   else
-       use_single="no"
-   fi
-fi
-if test "$use_single" = "yes" ; then
-#   AC_DEFINE(USE_SINGLE, [1], "Using single")
-   AM_CONDITIONAL(USE_SINGLE, true)
-else
-#   AC_DEFINE(USE_SINGLE, [0], "Using double")
-   AM_CONDITIONAL(USE_SINGLE, false)
 fi
 if test "$use_long" = "yes" ;then
    if test "$cpu" = "64" ;then
@@ -231,7 +217,6 @@ if test "$use_long" = "yes" ;then
 fi
 #Compile mex routines if MATLAB is detected and single is not enabled
 use_mex_default="no"
-if test "$use_single" = "no" ;then
 MEXDIR_AUTO=
 if test -n "$(which mex 2>/dev/null)" ;then
    use_mex_default="yes"
@@ -247,7 +232,6 @@ elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
           use_mex_default="yes"
        fi
    done
-fi
 fi
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
@@ -384,6 +368,7 @@ else
     AC_DEFINE(DEBUG,[0],["Do not debug"])
     OPTScc="$OPTIM"
 fi
+AM_PROG_AR
 AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AC_PROG_CC_C99 #enable C99.
@@ -658,9 +643,6 @@ if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 if test "x${use_mex}" = "xyes" ; then
-   if test "${use_single}" = "yes" ;then
-       AC_MSG_ERROR([cannot use single when compiling mex])
-   fi
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
        if test -f ${MEXDIR}/mex ;then
@@ -754,6 +736,13 @@ if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
+   if test "$cuda_double" = "yes" ;then
+      AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
+      AM_CONDITIONAL(CUDA_DOUBLE, true)
+   else
+      AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
+      AM_CONDITIONAL(CUDA_DOUBLE, false)
+   fi
    AC_MSG_NOTICE([Enabling CUDA])
    LDCUDA=
    if test -n "$CUDADIR" ;then
@@ -824,6 +813,8 @@ if test "$use_cuda" = "yes" ;then
 else
    AM_CONDITIONAL(USE_CUDA, false)
    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
+   AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
+   AM_CONDITIONAL(CUDA_DOUBLE, false)
 fi
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
 AC_SUBST(LIBS)

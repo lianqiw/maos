@@ -29,7 +29,7 @@ extern "C"
 
 int   *cuperf_t::nembed=0;
 int   *cuperf_t::psfsize=0;
-float *cuperf_t::wvls=0;    
+Real *cuperf_t::wvls=0;    
 cudaStream_t    *cuperf_t::stream=0;
 cublasHandle_t  *cuperf_t::handle=0;
 cufftHandle     *cuperf_t::plan=0;
@@ -43,7 +43,7 @@ curcell *cuperf_t::opdcov_ngsr=0;
 curcell *cuperf_t::opdmean=0;
 curcell *cuperf_t::opdmean_ngsr=0;
 curcell *cuperf_t::cc=0;
-scell   *cuperf_t::ccb=0;
+X(cell)   *cuperf_t::ccb=0;
 
 /**
    Initialize perfevl
@@ -65,7 +65,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     if(parms->evl.psfmean || parms->evl.psfhist){
 	cuperf_t::nembed =(int*)  calloc(nwvl, sizeof(int));
 	cuperf_t::psfsize=(int*)  calloc(nwvl, sizeof(int));
-	cuperf_t::wvls   =(float*)calloc(nwvl, sizeof(float));
+	cuperf_t::wvls   =(Real*)calloc(nwvl, sizeof(Real));
     
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cuperf_t::nembed[iwvl]=(int)aper->nembed[iwvl];
@@ -127,10 +127,10 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     }
     cuperf_t::opd=curcellnew(nevl,1);
     cuperf_t::cc=curcellnew(nevl, 1);
-    cuperf_t::ccb=scellnew(nevl,1);
+    cuperf_t::ccb=X(cellnew)(nevl,1);
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
-	cuperf_t::ccb->p[ievl]=snew(7,1);
+	cuperf_t::ccb->p[ievl]=X(new)(7,1);
 	cuperf_t::cc->p[ievl]=curnew(7, 1);
 	cuperf_t::opd->p[ievl]=curnew(aper->locs->nloc, 1);
     }
@@ -255,16 +255,16 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 }
 /**
    Convert NGS mode vector to aperture grid for science directions.  */
-void gpu_ngsmod2science(curmat *opd, float (*restrict loc)[2],
+void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 
 			double alpha, cudaStream_t stream){
     if(ngsmod->nmod==2){
 	curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
     }else{
-	const float ht=ngsmod->ht;
-	const float scale=ngsmod->scale;
-	float focus;
+	const Real ht=ngsmod->ht;
+	const Real scale=ngsmod->scale;
+	Real focus;
 	if(ngsmod->nmod>5){
 	    focus=mod[5];
 	    if(!ngsmod->ahstfocus){

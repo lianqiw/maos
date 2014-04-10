@@ -46,7 +46,7 @@ static __attribute((constructor)) void init(){
 }
 
 /**
-   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
+   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use Real
    array. Allow multiple calling to override the data.  */
 void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     if(nps==0) return;
@@ -114,41 +114,11 @@ static const char *scsrmv_err[]={
     "Matrix type not supported"
 };
 
-//  Need debugging. result not correct.
-/*void cusp::trans(){
-  if(!p) return;
-  int ncol, nrow;
-  switch(type){
-  case SP_CSR:
-  nrow=nx;
-  ncol=ny;
-  break;
-  case SP_CSC:
-  nrow=ny;
-  ncol=nx;
-  break;
-  default:
-  nrow=0;ncol=0;
-  error("Invalid format\n");
-  }
-  float *xnew;
-  int *inew, *pnew;
-  cudaMalloc(&xnew, nzmax*sizeof(float));
-  cudaMalloc(&inew, nzmax*sizeof(int));
-  cudaMalloc(&pnew, (ncol+1)*sizeof(int));
-  stream_t stream;
-  cusparseScsr2csc(stream, nrow, ncol,
-  x, p, i, xnew, inew, pnew,
-  1, CUSPARSE_INDEX_BASE_ZERO);
-  cudaFree(x); x=xnew;
-  cudaFree(i); i=inew;
-  cudaFree(p); p=pnew;
-  }*/
 /*
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
 
-void cuspmul(float *y, cusp *A, const float *x, int ncolvec, char trans, float alpha, cusparseHandle_t handle){
+void cuspmul(Real *y, cusp *A, const Real *x, int ncolvec, char trans, Real alpha, cusparseHandle_t handle){
     cusparseOperation_t opr;
     int istrans=(trans=='t' || trans==1);
     if(A->type==SP_CSC){
@@ -170,14 +140,14 @@ void cuspmul(float *y, cusp *A, const float *x, int ncolvec, char trans, float a
     }
     int status;
     if(ncolvec==1){
-	status=cusparseScsrmv(handle, opr,
-			      nrow, ncol, alpha, spdesc,
-			      A->x, A->p, A->i, x, 1.f, y);
+	status=CUSP(csrmv)(handle, opr,
+			   nrow, ncol, alpha, spdesc,
+			   A->x, A->p, A->i, x, 1.f, y);
     }else{
 	int nlead=istrans?nrow:ncol;
-	status=cusparseScsrmm(handle, opr,
-			      nrow, ncolvec, ncol, alpha, spdesc,
-			      A->x, A->p, A->i, x, nlead, 1.f, y, nlead);
+	status=CUSP(csrmm)(handle, opr,
+			   nrow, ncolvec, ncol, alpha, spdesc,
+			   A->x, A->p, A->i, x, nlead, 1.f, y, nlead);
     }
     if(status!=0){
 	error("cusparseScsrmv(m) failed with status '%s'\n", scsrmv_err[status]);
@@ -187,13 +157,13 @@ void cuspmul(float *y, cusp *A, const float *x, int ncolvec, char trans, float a
 /**
    Convert a source loc_t to device memory.
 */
-void cp2gpu(float (* restrict *dest)[2], const loc_t *src){
-    float (*tmp)[2]=(float(*)[2])malloc(src->nloc*2*sizeof(float));
+void cp2gpu(Real (* restrict *dest)[2], const loc_t *src){
+    Real (*tmp)[2]=(Real(*)[2])malloc(src->nloc*2*sizeof(Real));
     for(int iloc=0; iloc<src->nloc; iloc++){
-	tmp[iloc][0]=(float)src->locx[iloc];
-	tmp[iloc][1]=(float)src->locy[iloc];
+	tmp[iloc][0]=(Real)src->locx[iloc];
+	tmp[iloc][1]=(Real)src->locy[iloc];
     }
-    cp2gpu((float**)dest, (float*)tmp, src->nloc*2, 1);
+    cp2gpu((Real**)dest, (Real*)tmp, src->nloc*2, 1);
     free(tmp);
 }
 
@@ -257,49 +227,38 @@ void cp2gpu(cuccell *restrict *dest, const ccell *src){
 	cp2gpu(&(*dest)->p[i], src->p[i]);
     }
 }
-/**
-   Convert device (float) array and add to host double.
-   dest = alpha * dest + beta *src;
-*/
-void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, 
-	    cudaStream_t stream, pthread_mutex_t *mutex){
-    CUDA_SYNC_STREAM;
-    float *tmp=(float*)malloc(n*sizeof(float));
-    DO(cudaMemcpy(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost));
-    if(!*dest){
-	*dest=(double*)malloc(sizeof(double)*n);
-    }
-    double *restrict p=*dest;
-    if(mutex) LOCK(*mutex);
-    for(int i=0; i<n; i++){
-	p[i]=p[i]*alpha+beta*tmp[i];
-    }
-    if(mutex) UNLOCK(*mutex);
-    free(tmp);
-}
+
 /*
-  Write float on gpu to file
-*/
-void gpu_write(const float *p, int nx, int ny, const char *format, ...){
+  Write Real on gpu to file
+*/ 
+void gpu_write(const Real *p, int nx, int ny, const char *format, ...){
     format2fn;
-    float *tmp=(float*)malloc(nx*ny*sizeof(float));
-    cudaMemcpy(tmp, p, nx*ny*sizeof(float), cudaMemcpyDeviceToHost);
+    Real *tmp=(Real*)malloc(nx*ny*sizeof(Real));
+    cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost);
+#if CUDA_DOUBLE
+    writedbl(tmp,nx,ny,"%s",fn);
+#else
     writeflt(tmp,nx,ny,"%s",fn);
+#endif
     free(tmp);
 }
 
 /*
-  Write float on gpu to file
+  Write Real on gpu to file
 */
-void gpu_write(const fcomplex *p, int nx, int ny, const char *format, ...){
+void gpu_write(const Comp *p, int nx, int ny, const char *format, ...){
     format2fn;
-    fcomplex *tmp=(fcomplex*)malloc(nx*ny*sizeof(fcomplex));
-    cudaMemcpy(tmp, p, nx*ny*sizeof(fcomplex), cudaMemcpyDeviceToHost);
-    writefcmp((float complex*)tmp,nx,ny,"%s",fn);
+    Comp *tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
+    cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost);
+#if CUDA_DOUBLE
+    writecmp((dcomplex*)tmp,nx,ny,"%s",fn);
+#else
+    writefcmp((fcomplex*)tmp,nx,ny,"%s",fn);
+#endif
     free(tmp);
 }
 /*
-  Write float on gpu to file
+  Write Real on gpu to file
 */
 void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     format2fn;
@@ -308,100 +267,173 @@ void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);
 }
+template <typename T, typename R, typename S>
+    inline void scale_add(T *p1, R alpha, S *p2, R beta, long n){
+    for(long i=0; i<n; i++){
+	p1[i]=p1[i]*alpha+p2[i]*beta;
+    }
+}
+template <>
+inline void scale_add<dcomplex, double, Comp>(dcomplex *p1, double alpha, Comp *p2, double beta, long n){
+    for(long i=0; i<n; i++){
+	p1[i]=p1[i]*alpha+(p2[i].x+I*p2[i].y)*beta;
+    }
+}
+template <>
+inline void scale_add<fcomplex, float, Comp>(fcomplex *p1, float alpha, Comp *p2, float beta, long n){
+    for(long i=0; i<n; i++){
+	p1[i]=p1[i]*alpha+(p2[i].x+I*p2[i].y)*beta;
+    }
+}
+/**
+   Convert device (Real) array and add to host double.
+   dest = alpha * dest + beta *src;
+*/
+template <typename R, typename T, typename S>
+static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
+		    cudaStream_t stream, pthread_mutex_t *mutex){
+    CUDA_SYNC_STREAM;
+    S *tmp=(S*)malloc(n*sizeof(S));
+    DO(cudaMemcpy(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost));
+    if(!*dest){
+	*dest=(T*)malloc(sizeof(T)*n);
+    }
+    T *restrict p=*dest;
+    if(mutex) LOCK(*mutex);
+    scale_add(p, alpha, tmp, beta, n);
+    if(mutex) UNLOCK(*mutex);
+    free(tmp);
+}
+#define add2cpu_mat(D, double, curmat)					\
+void add2cpu(D##mat **out, double alpha, const curmat *in, double beta,	\
+	     cudaStream_t stream, pthread_mutex_t *mutex){		\
+    if(!in){								\
+	if(*out) D##scale(*out, alpha);					\
+	return;								\
+    }									\
+    if(!*out) {								\
+	*out=D##new(in->nx, in->ny);					\
+    }else{								\
+	assert((*out)->nx*(*out)->ny==in->nx*in->ny);			\
+    }									\
+    add2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);\
+}
+add2cpu_mat(s, float, curmat)
+add2cpu_mat(d, double,curmat)
+add2cpu_mat(z, float, cucmat)
+add2cpu_mat(c, double,cucmat)
 
-void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
-    if(!in){
-	if(*out) dzero(*out);
-	return;
-    }
-    if(!*out) {
-	*out=dnew(in->nx, in->ny);
-    }else{
-	assert((*out)->nx*(*out)->ny==in->nx*in->ny);
-    }
-    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);
+#define add2cpu_cell(D, double, curcell)				\
+void add2cpu(D##cell **out, double alpha, const curcell *in, double beta, \
+	     cudaStream_t stream, pthread_mutex_t *mutex){		\
+    if(!in){								\
+	if(*out) D##cellscale(*out, alpha);				\
+	return;								\
+    }									\
+    if(!*out) {								\
+	*out=D##cellnew(in->nx, in->ny);				\
+    }else{								\
+	assert((*out)->nx*(*out)->ny==in->nx*in->ny);			\
+    }									\
+    for(int i=0; i<in->nx*in->ny; i++){					\
+	add2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex);	\
+    }									\
 }
-void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
-    if(!in){
-	if(*out) dcellzero(*out);
-	return;
+add2cpu_cell(d, double,curcell)
+add2cpu_cell(s, float, curcell)
+add2cpu_cell(c, double,cuccell)
+add2cpu_cell(z, float, cuccell)
+#define cp2cpu_same(dmat,dzero,dnew,double)				\
+    void cp2cpu(dmat **out, const cumat<double> *in, cudaStream_t stream){ \
+	if(!in) {							\
+	if(*out) dzero(*out);						\
+	return;								\
+    }									\
+    if(!*out) *out=dnew(in->nx, in->ny);				\
+    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(double),	\
+		       cudaMemcpyDeviceToHost, stream));		\
+    if(in->header) (*out)->header=strdup(in->header);			\
     }
-    if(!*out) *out=dcellnew(in->nx, in->ny);
-    for(int i=0; i<in->nx*in->ny; i++){
-	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex);
-    }
+
+cp2cpu_same(dmat,dzero,dnew,double)
+cp2cpu_same(cmat,czero,cnew,double2)
+cp2cpu_same(smat,szero,snew,float)
+cp2cpu_same(zmat,zzero,znew,float2)
+#if CUDA_DOUBLE == 0
+void cp2cpu(dmat **out, const curmat *in, cudaStream_t stream){
+    add2cpu(out, 0, in, 1, stream, 0);
 }
+void cp2cpu(cmat **out, const cucmat *in, cudaStream_t stream){
+    add2cpu(out, 0, in, 1, stream, 0);
+}
+#else
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream){
-    if(!in) {
-	if(*out) szero(*out);
-	return;
-    }
-    if(!*out) *out=snew(in->nx, in->ny);
-    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToHost, stream));
-    if(in->header) (*out)->header=strdup(in->header);
+    add2cpu(out, 0, in, 1, stream, 0);
 }
-
-
 void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream){
-    if(!in){
-	if(*out) zzero(*out);
-	return;
-    }
-    if(!*out) *out=znew(in->nx, in->ny);
-    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(fcomplex), cudaMemcpyDeviceToHost, stream));
-    if(in->header) (*out)->header=strdup(in->header);
+    add2cpu(out, 0, in, 1, stream, 0);
 }
-
-void cp2cpu(scell **out, const curcell *in, cudaStream_t stream){
-    if(!in){
-	if(*out) scellzero(*out);
-	return;
+#endif
+#define cp2cpu_cell(S, float)						\
+    void cp2cpu(S##cell **out, const cucell<float> *in, cudaStream_t stream){	\
+	if(!in){							\
+	    if(*out) S##cellzero(*out);					\
+	    return;							\
+	}								\
+	if(!*out) *out=S##cellnew(in->nx, in->ny);			\
+	for(int i=0; i<in->nx*in->ny; i++){				\
+	    cp2cpu(&(*out)->p[i], in->p[i], stream);			\
+	}								\
     }
-    if(!*out) *out=scellnew(in->nx, in->ny);
-    for(int i=0; i<in->nx*in->ny; i++){
-	cp2cpu(&(*out)->p[i], in->p[i], stream);
-    }
-}
-
-void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream){
-    if(!in){
-	if(*out) zcellzero(*out);
-	return;
-    }
-    if(!*out) *out=zcellnew(in->nx, in->ny);
-    for(int i=0; i<in->nx*in->ny; i++){
-	cp2cpu(&(*out)->p[i], in->p[i], stream);
-    }
-}
+cp2cpu_cell(s, Real)
+cp2cpu_cell(d, Real)
+cp2cpu_cell(c, Comp)
+cp2cpu_cell(z, Comp)
 
 void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream){
-    smat *tmp=NULL;
+    X(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
+#if CUDA_DOUBLE==1
+    cellarr_dmat(ca, i, tmp);
+#else
     cellarr_smat(ca, i, tmp);
-    sfree(tmp);
+#endif
+    X(free)(tmp);
 }
 
 void cellarr_cuc(struct cellarr *ca, int i, const cucmat *A, cudaStream_t stream){
-    zmat *tmp=NULL;
+    C(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
+#if CUDA_DOUBLE==1
+    cellarr_cmat(ca, i, tmp);
+#else
     cellarr_zmat(ca, i, tmp);
-    zfree(tmp);
+#endif
+    C(free)(tmp);
 }
 
 void cellarr_curcell(struct cellarr *ca, int i, const curcell *A, cudaStream_t stream){
-    scell *tmp=NULL;
+    X(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
+#if CUDA_DOUBLE==1
+    cellarr_dcell(ca, i, tmp);
+#else
     cellarr_scell(ca, i, tmp);
-    scellfree(tmp);
+#endif
+    X(cellfree)(tmp);
 }
 
 void cellarr_cuccell(struct cellarr *ca, int i, const cuccell *A, cudaStream_t stream){
-    zcell *tmp=NULL;
+    C(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
+#if CUDA_DOUBLE==1
+    cellarr_ccell(ca, i, tmp);
+#else
     cellarr_zcell(ca, i, tmp);
-    zcellfree(tmp);
+#endif
+    C(cellfree)(tmp);
 }

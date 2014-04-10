@@ -147,7 +147,7 @@ void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
 }
 /**
    do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
-void cufit_grid::do_hxpt(const curcell *xout, float alpha, stream_t &stream){
+void cufit_grid::do_hxpt(const curcell *xout, Real alpha, stream_t &stream){
     if(xcache){
 	xcache->m->zero(stream);
 	hxp1->backward(opdfit2->pm, xcache->pm, alpha, fitwt->p, stream);
@@ -176,7 +176,7 @@ void cufit_grid::do_ha(const curcell *xin, stream_t &stream){
 
 /**
    xout+=alpha*HA'*opdfit2*/
-void cufit_grid::do_hat(curcell *xout,  float alpha, stream_t &stream){
+void cufit_grid::do_hat(curcell *xout,  Real alpha, stream_t &stream){
     if(dmcache){ 
 	/*opdfit2->dmcache*/ 
 	dmcache->m->zero(stream); 
@@ -192,7 +192,7 @@ void cufit_grid::do_hat(curcell *xout,  float alpha, stream_t &stream){
 /*
   Right hand side operator. 
 */
-void cufit_grid::R(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cufit_grid::R(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(grid->ndm, 1, grid->anx, grid->any);
     }else{
@@ -202,7 +202,7 @@ void cufit_grid::R(curcell **xout, float beta, const curcell *xin, float alpha, 
     grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);//123 us
     do_hat(*xout, alpha, stream);//390 us
 }
-void cufit_grid::Rt(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cufit_grid::Rt(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
@@ -212,7 +212,7 @@ void cufit_grid::Rt(curcell **xout, float beta, const curcell *xin, float alpha,
     grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);
     do_hxpt(*xout, alpha, stream);
 }
-void cufit_grid::L(curcell **xout, float beta, const curcell *xin, float alpha, stream_t &stream){
+void cufit_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     const int ndm=grid->ndm;
     EVENT_INIT(6);
     EVENT_TIC(0);

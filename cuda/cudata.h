@@ -21,8 +21,8 @@
 #include "types.h"
 extern int gpu_recon;
 extern int NGPU;
-typedef float ATYPE;
-typedef float GTYPE;
+typedef Real ATYPE;
+typedef Real GTYPE;
 namespace cuda_recon{
 class curecon_t;
 class curecon_geom;

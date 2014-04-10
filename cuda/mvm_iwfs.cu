@@ -61,19 +61,19 @@ void mvm_only(int *gpus, int ngpu, int nstep){
 #endif
     int ng=nsa*2/ngpu;
     cudaSetDevice(gpus[0]);//only do one GPU.
-    smat *mvm1=snew(nact, ng);
-    smat *grad1=snew(ng, 1);
+    X(mat) *mvm1=X(new)(nact, ng);
+    X(mat) *grad1=X(new)(ng, 1);
     curmat *cumvm1=NULL, *cugrad1=NULL;
     cp2gpu(&cumvm1, mvm1);
     cp2gpu(&cugrad1, grad1);
     curmat *cuact=curnew(nact, 1);
     event_t event_mvm[nstep+1];
     stream_t stream_mvm;
-    float one=1; 
+    Real one=1; 
     for(int istep=0; istep<nstep; istep++){
 	DO(cudaEventRecord(event_mvm[istep], stream_mvm));
-	DO(cublasSgemv(stream_mvm, CUBLAS_OP_N, nact, ng, &one,
-		       cumvm1->p, nact, cugrad1->p, 1, &one, cuact->p, 1));
+	DO(CUBL(gemv)(stream_mvm, CUBLAS_OP_N, nact, ng, &one,
+		      cumvm1->p, nact, cugrad1->p, 1, &one, cuact->p, 1));
     }
     DO(cudaEventRecord(event_mvm[nstep], stream_mvm));
     stream_mvm.sync();
@@ -97,22 +97,22 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
     const int nsa=2700;//active
 #endif
     int ng=nsa*2;
-    smat *mvm1=snew(nact, ng);
-    smat *mvm2=snew(nact, ng);
+    X(mat) *mvm1=X(new)(nact, ng);
+    X(mat) *mvm2=X(new)(nact, ng);
 
-    smat *mvm=mvm1;
+    X(mat) *mvm=mvm1;
 
-    smat *grad1=snew(ng, 1);
-    smat *grad2=snew(ng, 1);
-    smat *grad=grad1;
+    X(mat) *grad1=X(new)(ng, 1);
+    X(mat) *grad2=X(new)(ng, 1);
+    X(mat) *grad=grad1;
     rand_t srand;
     seed_rand(&srand, 1);
-    srandu(mvm1, 1, &srand);
-    srandu(mvm2, 1,&srand);
-    srandu(grad1,1, &srand);
-    srandu(grad2,1, &srand);
-    scell *dmres=scellnew(ngpu, 1);
-    spagelock(mvm1, mvm2, grad1, grad2, dmres, NULL);
+    X(randu)(mvm1, 1, &srand);
+    X(randu)(mvm2, 1,&srand);
+    X(randu)(grad1,1, &srand);
+    X(randu)(grad2,1, &srand);
+    X(cell) *dmres=X(cellnew)(ngpu, 1);
+    X(pagelock)(mvm1, mvm2, grad1, grad2, dmres, NULL);
  
     int nc=10;//each time copy nc column of mvm.
     GPU_DATA_T *data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
@@ -137,13 +137,13 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	cudaEventCreateWithFlags(&data[igpu].event_mvm,cudaEventDisableTiming);
 	cudaEventCreateWithFlags(&data[igpu].event_gall,cudaEventDisableTiming);
 
-	dmres->p[igpu]=snew(nact, 1);
+	dmres->p[igpu]=X(new)(nact, 1);
 	//pthread_create(&threads[igpu], NULL, (thread_fun)mvm_cp, &data[igpu]);
     }
-    smat *timing_mvm=snew(2, nstep);
-    smat *timing=snew(nstep, 1);
-    smat *result=snew(nstep, 1);
-    float one=1; float zero=0; float *pbeta;
+    X(mat) *timing_mvm=X(new)(2, nstep);
+    X(mat) *timing=X(new)(nstep, 1);
+    X(mat) *result=X(new)(nstep, 1);
+    Real one=1; Real zero=0; Real *pbeta;
     TIC;
     for(int istep=0; istep<nstep; istep++){
 	tic;
@@ -170,7 +170,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	    cudaSetDevice(gpus[igpu]); 
 	    GPU_DATA_T *datai=&data[igpu];
 	    //One stream handling the memcpy
-	    DO(cudaMemcpyAsync(datai->grad->p+ig, grad->p+ig, sizeof(float)*nleft, 
+	    DO(cudaMemcpyAsync(datai->grad->p+ig, grad->p+ig, sizeof(Real)*nleft, 
 			       cudaMemcpyHostToDevice, datai->stream_g[0]));
 	    //Recored the event when the memcpy is finished
 	    DO(cudaEventRecord(datai->event_g[datai->count_g], datai->stream_g[0]));
@@ -183,7 +183,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		pbeta=&one;
 	    }
 	    //Another stream does the matrix vector multiplication. Wait for the event before executing.
-	    DO(cublasSgemv(datai->stream_a[0], CUBLAS_OP_N, nact, nleft, &one, datai->cumvm->p+nact*ig, nact, datai->grad->p+ig, 1, pbeta, datai->act->p, 1));
+	    DO(CUBL(gemv)(datai->stream_a[0], CUBLAS_OP_N, nact, nleft, &one, datai->cumvm->p+nact*ig, nact, datai->grad->p+ig, 1, pbeta, datai->act->p, 1));
 	    DO(cudaEventRecord(datai->event_a[1], datai->stream_a[0]));
 	    datai->count_g++;
 	}
@@ -194,7 +194,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	    //record event when all grads are copied so mvm copy can start.
 	    DO(cudaEventRecord(datai->event_gall, datai->stream_g[0]));
 	    //Copy DM commands back to CPU
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), cudaMemcpyDeviceToHost, datai->stream_a[0]);
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(Real), cudaMemcpyDeviceToHost, datai->stream_a[0]);
 	    if(datai->copy_mvm){
 		int done=0, nleft;
 		if(mvm->ny-datai->ic < nc){
@@ -205,7 +205,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		}
 		//wait for gradient transport to finish before copying mvm.
 		DO(cudaStreamWaitEvent(datai->stream_mvm[0], datai->event_gall, 0));
-		DO(cudaMemcpyAsync(datai->cumvm_next->p+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(float)*mvm->nx*nleft, 
+		DO(cudaMemcpyAsync(datai->cumvm_next->p+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nleft, 
 				   cudaMemcpyHostToDevice, datai->stream_mvm[0]));
 		DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm[0]));
 		datai->ic+=nleft;
@@ -242,8 +242,8 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	    info2("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[istep]*1e6);
 	}
     }
-    swrite(timing, "timing_%dgpu", ngpu);
-    swrite(timing_mvm, "timing_mvm_%dgpu", ngpu);
-    swrite(result, "result_%dgpu", ngpu);
-    spageunlock(mvm1, mvm2, grad1, grad2, dmres, NULL);
+    X(write)(timing, "timing_%dgpu", ngpu);
+    X(write)(timing_mvm, "timing_mvm_%dgpu", ngpu);
+    X(write)(result, "result_%dgpu", ngpu);
+    X(pageunlock)(mvm1, mvm2, grad1, grad2, dmres, NULL);
 }

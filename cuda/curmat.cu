@@ -25,7 +25,7 @@ extern "C"
 #include "utils.h"
 #include "kernel.h"
 
-void curset(curmat *A, float alpha, cudaStream_t stream){
+void curset(curmat *A, Real alpha, cudaStream_t stream){
     if(A && A->p){
 	set_do<<<DIM(A->nx*A->ny,256),0,stream>>>(A->p, alpha, A->nx*A->ny);
     }
@@ -40,7 +40,7 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 	}else{
 	    assert((*out)->nx * (*out)->ny == in->nx * in->ny);
 	}
-	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), MEMCPY_D2D, stream);
+	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(Real), MEMCPY_D2D, stream);
     }
 }
 void curcp(curmat **out, const curmat *in){
@@ -52,18 +52,18 @@ void curcp(curmat **out, const curmat *in){
 	}else{
 	    assert((*out)->nx * (*out)->ny == in->nx * in->ny);
 	}
-	cudaMemcpy((*out)->p, in->p, in->nx*in->ny*sizeof(float), MEMCPY_D2D);
+	cudaMemcpy((*out)->p, in->p, in->nx*in->ny*sizeof(Real), MEMCPY_D2D);
     }
 }
 
 /**
    out=out*beta+in*alpha;
 */
-void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stream){
+void curadd(curmat **out, Real alpha, curmat *in, Real beta, cudaStream_t stream){
     if(!in) return;
-    if(!*out || fabsf(alpha)<EPS){
+    if(!*out || Z(fabs)(alpha)<EPS){
 	curcp(out, in, stream);
-	if(fabs(beta-1)>EPS){
+	if(Z(fabs)(beta-1)>EPS){
 	    scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 		((*out)->p, in->nx*in->ny, beta);
 	}
@@ -76,20 +76,20 @@ void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stre
 /**
    out=out*beta+abs2(in)*alpha;
 */
-void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t stream){
+void curaddcabs2(curmat **out, Real alpha, cucmat *in, Real beta, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx,in->ny);
-    }else if(fabsf(alpha)<EPS){
+    }else if(Z(fabs)(alpha)<EPS){
 	curzero(*out, stream);
     }
     addcabs2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 	((*out)->p, alpha, in->p, beta, in->nx*in->ny);
 }
-void curscale(curmat *in, float alpha, cudaStream_t stream){
+void curscale(curmat *in, Real alpha, cudaStream_t stream){
     if(!in) return;
-    if(fabsf(alpha)<EPS) {
+    if(Z(fabs)(alpha)<EPS) {
 	curzero(in, stream);
-    }else if(fabsf(alpha-1.f)>EPS){
+    }else if(Z(fabs)(alpha-1.f)>EPS){
 	int n=in->nx*in->ny;
 	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
     }
@@ -98,7 +98,7 @@ void curscale(curmat *in, float alpha, cudaStream_t stream){
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, const char trans[2], float beta, cublasHandle_t handle){
+void curmm(curmat **C, Real alpha, const curmat *A, const curmat *B, const char trans[2], Real beta, cublasHandle_t handle){
     int m,n,k,k2;
     cublasOperation_t transa, transb;
     if(trans[0]=='t'){
@@ -125,14 +125,14 @@ void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, const char
 	assert((*C)->nx==m && (*C)->ny==n);
     }
     assert(k==k2);
-    DO(cublasSgemm(handle, transa, transb, m,n,k,
-		   &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
+    DO(CUBL(gemm)(handle, transa, transb, m,n,k,
+		 &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
 }
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, float beta, cublasHandle_t handle){
-    cublasSgemv(handle, (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
+void curmv(Real *c, Real alpha, const curmat *A, const Real *b, char trans, Real beta, cublasHandle_t handle){
+    CUBL(gemv)(handle, (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
 }
 void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B, 
 	       const char trans[2], const double beta, cublasHandle_t handle){
@@ -152,11 +152,11 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
     if(trans[1]=='n'||trans[0]=='N'){
 	ny=B->ny; 
 	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
+	if(nz!=B->nx) error("miX(mat)ch\n");
     }else{
 	ny=B->nx;
 	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
+	if(nz!=B->ny) error("miX(mat)ch\n");
     }
     if(!*C0){
 	*C0=curcellnew(nx,ny);
@@ -164,9 +164,9 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
 	assert((*C0)->nx==nx && (*C0)->ny==ny);
 	cudaStream_t stream;
 	cublasGetStream(handle, &stream);
-	if(fabs(alpha)<EPS){
+	if(Z(fabs)(alpha)<EPS){
 	    curcellzero(*C0, stream);
-	}else if(fabs(alpha-1)>EPS){
+	}else if(Z(fabs)(alpha-1)>EPS){
 	    curcellscale(*C0, alpha, stream);
 	}
     }
@@ -184,7 +184,7 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
 }
 /*Transpose a matrix in naive way. Faster way is to use shared memory and handle
   a block each time.*/
-__global__ void transpose(float *restrict out, const float *restrict in, int nx, int ny){
+__global__ void transpose(Real *restrict out, const Real *restrict in, int nx, int ny){
     const int stepx=blockDim.x * gridDim.x;
     const int stepy=blockDim.y * gridDim.y;
     const int ix0=threadIdx.x+blockDim.x*blockIdx.x;
@@ -207,7 +207,7 @@ curmat* curmat::trans(stream_t &stream){
 /*
   A=A*beta+B*alpha;
 */
-void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream){
+void curcelladd(curcell **A, Real beta, const curcell *B, Real alpha, cudaStream_t stream){
     if(!B) return;
     if(!*A){
 	*A=curcellnew(B);
@@ -223,7 +223,7 @@ void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStre
     }
 }
 
-void curadd(curmat *A, float beta, cudaStream_t stream){
+void curadd(curmat *A, Real beta, cudaStream_t stream){
     const int n=A->nx*A->ny;
     add_do<<<DIM(n, 256), 0, stream>>>(A->p, beta, n);
 }
@@ -235,7 +235,7 @@ void curadd(curmat *A, float beta, cudaStream_t stream){
 /**
    out=out+in*alpha; beta, alpha lives in device memory.
 */
-void curadd(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStream_t stream){
+void curadd(curmat **out, const curmat *in, Real *alpha, Real alpha2, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx, in->ny);
     }
@@ -247,7 +247,7 @@ void curadd(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStre
 /**
    A=A*beta+B*alpha; beta, alpha lives in device memory.
 */
-void curcelladd(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream){
+void curcelladd(curcell **A, const curcell *B, Real* alpha, Real alpha2, cudaStream_t stream){
     if(!B) return;
     if(!*A){
 	*A=curcellnew(B);
@@ -266,7 +266,7 @@ void curcelladd(curcell **A, const curcell *B, float* alpha, float alpha2, cudaS
 /**
    out=out*beta+in; beta, alpha lives in device memory.
 */
-void curadd(curmat **out, float *alpha1, const curmat *in, cudaStream_t stream){
+void curadd(curmat **out, Real *alpha1, const curmat *in, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx, in->ny);
     }
@@ -277,7 +277,7 @@ void curadd(curmat **out, float *alpha1, const curmat *in, cudaStream_t stream){
 /**
    A=A*alpha1+B*alpha; alpha1, alpha lives in device memory.
 */
-void curcelladd(curcell **A, float* alpha1, const curcell *B, cudaStream_t stream){
+void curcelladd(curcell **A, Real* alpha1, const curcell *B, cudaStream_t stream){
     if(!B) return;
     if(!*A){
 	*A=curcellnew(B);
@@ -295,13 +295,13 @@ void curcelladd(curcell **A, float* alpha1, const curcell *B, cudaStream_t strea
 
 
 
-float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
-    float *res;
-    float out;
-    DO(cudaMalloc(&res, sizeof(float)));
-    cudaMemsetAsync(res, 0, sizeof(float), stream);
+Real curinn(const curmat *a, const curmat *b, cudaStream_t stream){
+    Real *res;
+    Real out;
+    DO(cudaMalloc(&res, sizeof(Real)));
+    cudaMemsetAsync(res, 0, sizeof(Real), stream);
     inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);//this command is not synchrnous.
     return out;
 }
@@ -309,8 +309,8 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
 /**
    Sum all the elements in an array.
  */
-void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
+void cursum2(Real *restrict res, const curmat *a, cudaStream_t stream){
+    cudaMemsetAsync(res, 0,sizeof(Real), stream);
     sum_wrap(res, a->p, a->nx*a->ny, stream);
 }
 
@@ -318,14 +318,14 @@ void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
 /**
    Find the maximum value
 */
-float curmax(const curmat *a, cudaStream_t stream){
-    float out;
-    float *res;
-    DO(cudaMalloc(&res, sizeof(float)));
-    cudaMemsetAsync(res, 0, sizeof(float), stream);
+Real curmax(const curmat *a, cudaStream_t stream){
+    Real out;
+    Real *res;
+    DO(cudaMalloc(&res, sizeof(Real)));
+    cudaMemsetAsync(res, 0, sizeof(Real), stream);
     int n=a->nx*a->ny;
     max_wrap(res, a->p, n, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);
     return out;
 }
@@ -333,26 +333,26 @@ float curmax(const curmat *a, cudaStream_t stream){
 /**
    Find the maximum value
 */
-float curmaxabs(const curmat *a, cudaStream_t stream){
-    float out;
-    float *res;
-    DO(cudaMalloc(&res, sizeof(float)));
-    cudaMemsetAsync(res, 0, sizeof(float), stream);
+Real curmaxabs(const curmat *a, cudaStream_t stream){
+    Real out;
+    Real *res;
+    DO(cudaMalloc(&res, sizeof(Real)));
+    cudaMemsetAsync(res, 0, sizeof(Real), stream);
     int n=a->nx*a->ny;
     maxabs_wrap(res, a->p, n, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);
     return out;
 }
 /**
    Find the maximum value
 */
-float curcellmax(const curcell *a, cudaStream_t stream){
+Real curcellmax(const curcell *a, cudaStream_t stream){
     int n=a->nx*a->ny;
-    float out;
-    float *res;
-    DO(cudaMalloc(&res, (n+1)*sizeof(float)));
-    cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
+    Real out;
+    Real *res;
+    DO(cudaMalloc(&res, (n+1)*sizeof(Real)));
+    cudaMemsetAsync(res, 0,(n+1)*sizeof(Real), stream);
     for(int i=0; i<n; i++){
 	int m=a->p[i]->nx*a->p[i]->ny;
 	max_wrap(&res[i], a->p[i]->p, m, stream);
@@ -360,19 +360,19 @@ float curcellmax(const curcell *a, cudaStream_t stream){
     if(n>1) {
 	max_wrap(&res[n], res, n, stream);
     }
-    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);
     return out;
 }
 /**
    Find the maximum value
 */
-float curcellmaxabs(const curcell *a, cudaStream_t stream){
+Real curcellmaxabs(const curcell *a, cudaStream_t stream){
     int n=a->nx*a->ny;
-    float out;
-    float *res;
-    DO(cudaMalloc(&res, (n+1)*sizeof(float)));
-    cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
+    Real out;
+    Real *res;
+    DO(cudaMalloc(&res, (n+1)*sizeof(Real)));
+    cudaMemsetAsync(res, 0,(n+1)*sizeof(Real), stream);
     for(int i=0; i<n; i++){
 	int m=a->p[i]->nx*a->p[i]->ny;
 	maxabs_wrap(&res[i], a->p[i]->p, m, stream);
@@ -380,14 +380,14 @@ float curcellmaxabs(const curcell *a, cudaStream_t stream){
     if(n>1) {
 	maxabs_wrap(&res[n], res, n, stream);
     }
-    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(float), cudaMemcpyDeviceToHost, stream);
+    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost, stream);
     cudaFree(res);
     return out;
 }
 /**
    Scale elements
 */
-void curcellscale(curcell *A, float alpha, cudaStream_t stream){
+void curcellscale(curcell *A, Real alpha, cudaStream_t stream){
     if(!A) return;
     if(A->m){
 	curscale(A->m, alpha, stream);
