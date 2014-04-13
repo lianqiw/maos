@@ -71,11 +71,11 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 	DO(cufftPlanMany(&fft[ic], 2, ncomp, 
 			 nembed, 1, ncomp[0]*ncomp[1], 
 			 nembed, 1, ncomp[0]*ncomp[1], 
-			 CUFFT_R2C, fftips[ic+1]-fftips[ic]));
+			 FFT_T_R2C, fftips[ic+1]-fftips[ic]));
 	DO(cufftPlanMany(&ffti[ic], 2, ncomp, 
 			 nembed, 1, ncomp[0]*ncomp[1], 
 			 nembed, 1, ncomp[0]*ncomp[1],
-			 CUFFT_C2R, fftips[ic+1]-fftips[ic]));
+			 FFT_T_C2R, fftips[ic+1]-fftips[ic]));
     }
     xhat1=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
     xhat2=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);

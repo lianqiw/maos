@@ -177,7 +177,7 @@ cullt_t::cullt_t(wfscfg_t *wfscfg)
     {
     	int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 	int nlwvf2[2]={nlwvf, nlwvf};
-	if(cufftPlanMany(&plan_wvf, 2, nlwvf2, NULL, 1,0, NULL, 1, 0, CUFFT_C2C, 1)){
+	if(cufftPlanMany(&plan_wvf, 2, nlwvf2, NULL, 1,0, NULL, 1, 0, FFT_T_C2C, 1)){
 	    error("CUFFT plan failed\n");
 	}
 	cufftSetStream(plan_wvf, wfscfg->stream);
@@ -188,7 +188,7 @@ cullt_t::cullt_t(wfscfg_t *wfscfg)
 	    plan_otf=plan_wvf;
 	}else{
 	    int notf2[2]={notf, notf};
-	    if(cufftPlanMany(&plan_otf, 2, notf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, 1)){
+	    if(cufftPlanMany(&plan_otf, 2, notf2, NULL, 1, 0, NULL, 1, 0, FFT_T_C2C, 1)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(plan_otf, wfscfg->stream);
@@ -228,7 +228,7 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
 	/*limit the number of subapertures in each batch to less than 1024
 	  to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 	msa=nsa>1024?((int)ceil((Real)nsa/(Real)(nsa/800))):nsa;
-	if(cufftPlanMany(&plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, msa)){
+	if(cufftPlanMany(&plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, FFT_T_C2C, msa)){
 	    error("CUFFT plan failed\n");
 	}
 	cufftSetStream(plan1, stream);
@@ -236,7 +236,7 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
 	if(notf==nwvf){
 	    plan2=plan1;
 	}else{
-	    if(cufftPlanMany(&plan2, 2, notf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, msa)){
+	    if(cufftPlanMany(&plan2, 2, notf2, NULL, 1, 0, NULL, 1, 0, FFT_T_C2C, msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(plan2, stream);
@@ -244,7 +244,7 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
 	if(notf==ncompx && notf==ncompy){
 	    plan3=plan2;
 	}else{
-	    if(cufftPlanMany(&plan3, 2, ncomp2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, msa)){
+	    if(cufftPlanMany(&plan3, 2, ncomp2, NULL, 1, 0, NULL, 1, 0, FFT_T_C2C, msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(plan3, stream);

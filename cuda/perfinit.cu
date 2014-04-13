@@ -119,7 +119,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 		    cuperf_t::plan[iwvl+nwvl*ievl]=cuperf_t::plan[0+nwvl*ievl];
 		}else{
 		    DO(cufftPlan2d(&cuperf_t::plan[iwvl+nwvl*ievl],cuperf_t::nembed[iwvl],
-				   cuperf_t::nembed[iwvl],CUFFT_C2C));
+				   cuperf_t::nembed[iwvl],FFT_T_C2C));
 		    DO(cufftSetStream(cuperf_t::plan[iwvl+nwvl*ievl], cuperf_t::stream[ievl]));
 		}
 	    }/*for iwvl */

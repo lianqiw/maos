@@ -46,7 +46,7 @@ public:
     cufieldstop_t(dmat *_mask, double *_wvl, int _nwvl, cudaStream_t _stream)
 	:fieldmask(0), nwvl(_nwvl),stream(_stream){
 	cp2gpu(&fieldmask, _mask);
-	DO(cufftPlan2d(&plan, fieldmask->nx, fieldmask->ny, CUFFT_C2C));
+	DO(cufftPlan2d(&plan, fieldmask->nx, fieldmask->ny, FFT_T_C2C));
 	cufftSetStream(plan, stream);
 	wvf=new cucmat(fieldmask->nx, fieldmask->ny);
 	wvl=new Real[nwvl];
