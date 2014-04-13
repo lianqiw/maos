@@ -59,7 +59,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU (%d) mem used %ld MB (%s)\n",(int)(cudata-cudata_all),(long)(tot-fr)/1024/1024, msg);
+    info2("GPU (%d) mem used %ld MB (%s)\n",GPUS[cudata-cudata_all],(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -83,8 +83,11 @@ static long gpu_get_idle_mem(void){
 	return (long)fr;
     }
 }
-static int cmp_gpu_info(const long *a, const long *b){
+static int cmp_long2_descend(const long *a, const long *b){
     return b[1]>a[1]?1:0;
+}
+static int cmp_long2_ascend(const long *a, const long *b){
+    return a[1]>b[1]?1:0;
 }
 /**
    Initialize GPU. Return 1 if success.
@@ -103,11 +106,26 @@ int gpu_init(int *gpus, int ngpu){
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
     int fdlock=lock_file(fnlock, 1, 0);
+    /*
+      Create a mapping between CUDA device ordering and NVML ordering (nvidia-smi)
+    */
+    long gmap[ngpu_tot][2];
+    for(int ig=0; ig<ngpu_tot; ig++){
+	gmap[ig][0]=ig;
+	cudaDeviceProp properties;
+	if(!cudaSetDevice(ig) && !cudaGetDeviceProperties(&properties, ig)){
+	    gmap[ig][1]=properties.pciBusID;
+	}else{
+	    error("Error getting information for GPU %d\n", ig);
+	}
+    }
+    qsort(gmap, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_ascend);
+    
     NGPU=0;
     /*
       User specified exact GPUs to use. We check every entry. 
       If <0 is found, do not use any GPU.
-      If >=ngpu_tot is found, skip the GPU.
+      If >=ngpu_tot is found, skip the GPU and print warning.
       If duplicates are found, use only once.
      */
     if(gpus && ngpu>0){
@@ -120,9 +138,9 @@ int gpu_init(int *gpus, int ngpu){
 		goto end;
 	    }else{
 		if(gpus[ig]>=ngpu_tot){
-		    error("GPU %d: not exist\n", gpus[ig]);
+		    warning("GPU %d: not exist\n", gpus[ig]);
 		}else{
-		    GPUS[NGPU++]=gpus[ig];
+		    GPUS[NGPU++]=gmap[gpus[ig]][0];
 		    /* Enable the following to disallow use GPUs in multiple threads
 		      int j;
 		    for(j=0; j<NGPU; j++){
@@ -149,7 +167,8 @@ int gpu_init(int *gpus, int ngpu){
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 	int gpu_valid_count;
 	do{
-	    for(int ig=0; ig<ngpu_tot; ig++){
+	    for(int jg=0; jg<ngpu_tot; jg++){
+		int ig=gmap[jg][0];
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){
 		    //this allocates context and create a CPU thread for this GPU.
@@ -157,25 +176,25 @@ int gpu_init(int *gpus, int ngpu){
 		}
 	    }
 	    /*sort so that gpus with higest memory is in the front.*/
-	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
 	    gpu_valid_count=0;
-	    for(int igpu=0; igpu<ngpu_tot; igpu++){
-		if(gpu_info[igpu][1]>=MEM_RESERVE){
+	    for(int ig=0; ig<ngpu_tot; ig++){
+		if(gpu_info[ig][1]>=MEM_RESERVE){
 		    gpu_valid_count++;
 		}
-		info2("GPU %d has mem %.1f GB\n", (int)gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
+		info2("GPU %d has mem %.1f GB\n", (int)gpu_info[ig][0], gpu_info[ig][1]/1024/1024/1024.);
 	    }
 	}while(0);//while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
 
-	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
-	    if(igpu==ngpu_tot || gpu_info[igpu][1]<MEM_RESERVE){
+	for(int i=0, ig=0; i<ngpu; i++, ig++){
+	    if(ig==ngpu_tot || gpu_info[ig][1]<MEM_RESERVE){
 		if(repeat){
-		    igpu=0; //reset to beginning.
+		    ig=0; //reset to beginning.
 		}else{
 		    break; //stop
 		}
 	    }
-	    GPUS[NGPU++]=(int)gpu_info[igpu][0];
+	    GPUS[NGPU++]=(int)gpu_info[ig][0];
 	}
 	free(gpu_info);
     }
