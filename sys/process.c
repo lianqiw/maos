@@ -43,6 +43,7 @@ long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *TEMP=NULL;
 const char *USER=NULL;
+const char *EXEP=NULL;/*absolute path of the exe.*/
 /**
    Set the HOME, TEMP, USER names.
  */
@@ -80,6 +81,15 @@ void init_process(void){
 	mymkdir("%s",TEMP);
 	mymkdir("%s/.aos/",HOME);
 	//register_deinit(NULL,(void*)TEMP);
+    }
+    if(!EXEP){
+	EXEP=get_job_progname(0);
+	if(EXEP){
+	    char *tmp=strrchr(EXEP,'/');
+	    if(tmp){
+		*tmp=0;
+	    }
+	}
     }
 
     NCPU= get_ncpu();

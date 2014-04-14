@@ -140,37 +140,39 @@ char *find_file(const char *fn){
    Find the directory that hold the configuration files. name is "maos" for
 maos, "skyc" for skyc.  */
 char *find_config(const char *name){
-    const char *aos_config_path=getenv("AOS_CONFIG_PATH");
-    char *cwd=mygetcwd();
+    const char *maos_config_path=getenv("MAOS_CONFIG_PATH");
     char *config_path=NULL;
-    if(aos_config_path){
-	config_path=stradd(aos_config_path,"/",name,NULL);
+    if(maos_config_path){
+	config_path=stradd(maos_config_path,"/config/",name,NULL);
+	if(!exist(config_path)){
+	    free(config_path);
+	    config_path=stradd(maos_config_path,"/",name,NULL);
+	}
     }
     if(!exist(config_path) && exist(SRCDIR)){
 	/*If not specified, assume it is in the source tree*/
-	if(config_path) free(config_path);
+	free(config_path);
 	config_path=stradd(SRCDIR,"/config/",name,NULL);
     }
-
-    if(!exist(config_path)){
-	/*info("Configuration files not found in %s\n", config_path); */
+    
+    if(!exist(config_path) && EXEP){
+	/*If not found, try the folder that contains the exe*/
 	free(config_path);
-	config_path=stradd(cwd,"/config/",name,NULL);
+	config_path=stradd(EXEP,"/config/",name,NULL);
     }
-    if(!exist(config_path)){
+    if(!exist(config_path) && HOME){
+	/*If not found, try .aos folder*/
 	free(config_path);
-	/*info("Configuration files not found in %s\n", config_path); */
 	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
     }
- 
     if(!exist(config_path)){
 	free(config_path);
 	config_path=NULL;
 	warning2("Unable to determine the path to the configuration files.\n");
 	warning2("Tried %s/config/%s\n", SRCDIR, name);
-	warning2("Tried %s/config/%s\n", cwd, name);
+	warning2("Tried %s/config/%s\n", EXEP, name);
 	warning2("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
+	warning2("Please set env MAOS_CONFIG_PATH=/path/to/config");
     }
-    free(cwd);
     return config_path;
 }
