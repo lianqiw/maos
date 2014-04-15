@@ -154,6 +154,7 @@ case "$host_os" in
  libsuffix=fat
  system="apple"
  ldsuffix="dylib"
+ #set CFLAGS=-mmacosx-version-min=10.6 before calling configure for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
  ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
