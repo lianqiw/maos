@@ -23,6 +23,7 @@
 */
 
 #include <unistd.h>
+#include <sys/socket.h>
 #include "../sys/sys.h"
 #include "monitor.h"
 PROC_T **pproc;

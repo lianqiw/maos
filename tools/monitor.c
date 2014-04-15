@@ -39,6 +39,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
@@ -614,7 +616,7 @@ int main(int argc, char *argv[])
     if(argc>1){
 	hosts=realloc(hosts, sizeof(char*)*(nhost+(argc-1)));
 	for(int i=1; i<argc; i++){
-	    if(isalpha(argv[i][0])){
+	    if(isalnum((int)argv[i][0])){
 		hosts[nhost]=strdup(argv[i]);
 		nhost++;
 	    }

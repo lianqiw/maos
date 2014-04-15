@@ -1,7 +1,7 @@
 AC_PREREQ(2.57)
 AC_INIT(maos, 1.6.1, lianqiw@gmail.com)
-AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
-#silent building #disable this if automake is too old.
+AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
+#silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
 BASEURLS="http://project.tmt.org/~lianqiw/maos/"
@@ -37,9 +37,10 @@ fi
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
-OPTScommon="-Wshadow -Wall -Wno-unknown-pragmas" #-all-static will produce a static exe.
+#-all-static will produce a static exe.
+OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -Wno-deprecated-declarations" 
 if test "${USER}" = "lianqiw" ;then
-   OPTScommon="$OPTScommon -Werror -Wno-unused-function"
+   OPTScommon="$OPTScommon -Wshadow -Wall -Werror"
 fi
 LDEXE="-lm -no-fast-install -ldl -lpthread"
 OPTSextra=""
