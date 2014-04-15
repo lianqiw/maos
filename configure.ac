@@ -40,7 +40,7 @@ AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #-all-static will produce a static exe.
 OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -Wno-deprecated-declarations" 
 if test "${USER}" = "lianqiw" ;then
-   OPTScommon="$OPTScommon -Wshadow -Wall -Werror"
+   OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
 LDEXE="-lm -no-fast-install -ldl -lpthread"
 OPTSextra=""
