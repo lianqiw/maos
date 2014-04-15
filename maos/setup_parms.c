@@ -534,13 +534,14 @@ static void readcfg_dm(PARMS_T *parms){
     int dx_override=readcfg_peek_override("dm.dx");
     int order_override=readcfg_peek_override("dm.order");
     for(int idm=0; idm<ndm; idm++){
-	if(order_override && dx_override){
-	    if(fabs(parms->dm[idm].order*parms->dm[idm].dx-parms->aper.d)
-	       >parms->aper.d*0.01){
-		error("both dm.order and dm.dx are specified. But they don't agree\n");
+	if(order_override && parms->dm[idm].order>0){
+	    if(dx_override && parms->dm[idm].dx>0){
+		if(fabs(parms->dm[idm].order*parms->dm[idm].dx-parms->aper.d)>parms->aper.d*0.01){
+		    error("both dm.order and dm.dx are specified. But they don't agree\n");
+		}
+	    }else{
+		parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
 	    }
-	}else if(dx_override){
-	    parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
 	}else{
 	    parms->dm[idm].order=parms->aper.d/parms->dm[idm].dx;
 	}
