@@ -86,8 +86,11 @@ void init_process(void){
 	EXEP=get_job_progname(0);
 	if(EXEP){
 	    char *tmp=strrchr(EXEP,'/');
-	    if(tmp){
+	    if(EXEP[0]=='/' && tmp){
 		*tmp=0;
+	    }else{
+		free((void*)EXEP);
+		EXEP=mygetcwd();
 	    }
 	}
     }

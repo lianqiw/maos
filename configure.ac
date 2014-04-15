@@ -26,12 +26,12 @@ AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
-SRC_DIR=$(cd $srcdir && pwd)
+SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
-if test -d ${HOME} ;then
-    LIBDIR=${HOME}/.aos/lib
+if test -d "${HOME}" ;then
+    LIBDIR="${HOME}/.aos/lib"
 else
-    LIBDIR=${SRC_DIR}/external
+    LIBDIR="${SRC_DIR}/external"
 fi
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
@@ -50,15 +50,15 @@ use_cuda_default="no"
 CUDADIR_AUTO=
 if test -n "$(which nvcc 2>/dev/null)" ;then
    use_cuda_default="yes"
-   NVCC=$(which nvcc)
-   if test -L $NVCC ;then
-      NVCC=$(readlink $NVCC)
+   NVCC="$(which nvcc)"
+   if test -L "$NVCC" ;then
+      NVCC="$(readlink "$NVCC")"
    fi
-   CUDADIR_AUTO=$(dirname $(dirname ${NVCC}))
-elif test -f /opt/cuda/bin/nvcc ;then
+   CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
+elif test -f "/opt/cuda/bin/nvcc" ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/opt/cuda"
-elif test -f /usr/local/cuda/bin/nvcc ;then
+elif test -f "/usr/local/cuda/bin/nvcc" ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/usr/local/cuda/"
 fi
@@ -111,7 +111,7 @@ case ${host_cpu} in
    ;;
 esac   
 #Use icc if it exists in the system and user does not set CC
-if test -n "$(which icc 2>/dev/null)" -a -z "$CC" -a $cross_compile = no ;then	
+if test -n "$(which icc 2>/dev/null)" -a -z "$CC" -a "$cross_compile" = no ;then	
    use_icc_default="yes"
 else
    echo "Intel Compiler is not found."
@@ -222,15 +222,15 @@ use_mex_default="no"
 MEXDIR_AUTO=
 if test -n "$(which mex 2>/dev/null)" ;then
    use_mex_default="yes"
-   MEX=$(which mex)
-   if test -L $MEX ;then
-      MEX=$(readlink $MEX)
+   MEX="$(which mex)"
+   if test -L "$MEX" ;then
+      MEX="$(readlink "$MEX")"
    fi
-   MEXDIR_AUTO=$(dirname $MEX)
+   MEXDIR_AUTO="$(dirname "$MEX")"
 elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-       if test -f $i/bin/mex ;then
-       	  MEXDIR_AUTO=${i}/bin
+       if test -f "$i/bin/mex" ;then
+       	  MEXDIR_AUTO="${i}/bin"
           use_mex_default="yes"
        fi
    done
@@ -238,12 +238,6 @@ fi
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
 
-#if test "x$use_cuda" = "xyes" ;then
-#   if test "x$use_icc" = "xauto" ;then
-#       AC_MSG_NOTICE([Disable auto icc when cuda is used])
-#       use_icc="no"
-#   fi
-#fi
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -323,21 +317,21 @@ case "${CC}" in
     ;;
   gcc*)
     if test -n "$($CC -v 2>&1 |grep clang)"  ;then
-        OPTIM=$OPTIM_CLANG
+        OPTIM="$OPTIM_CLANG"
     else
-	OPTIM=$OPTIM_GCC
+	OPTIM="$OPTIM_GCC"
     fi
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
     if test -n "$CC_VERSION" ;then
-	major=${CC_VERSION%%.*}
-	minor=${CC_VERSION%.*}
+	major="${CC_VERSION%%.*}"
+	minor="${CC_VERSION%.*}"
 	minor="${minor#4.}"
 	echo major=$major minor=$minor
-	if test $major -lt 4 ;then
+	if test "$major" -lt 4 ;then
 	    AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	fi
-	if test $major -ge 4 -a $minor -ge 2;then
+	if test "$major" -ge 4 -a "$minor" -ge 2;then
 	    echo "Enabling -mtune=native"
 	    OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
 	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
@@ -349,7 +343,7 @@ case "${CC}" in
     fi
     ;;
   clang)
-	OPTIM=$OPTIM_CLANG
+	OPTIM="$OPTIM_CLANG"
     ;;
   *) #Other compilers
     OPTIM="-O3"
@@ -382,10 +376,10 @@ download(){
    echo The $1 library is not available in the system
    echo Will download one from the website.
    echo This library is only for non-commercial use.
-   fn=$2
+   fn="$2"
    success=0
    for BASEURL in $BASEURLS ; do
-      if $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} ;then
+      if $wget "${BASEURL}/${fn}" "$wgetoutput" "/tmp/${fn}" ;then
       	 success=1
 	 break;
       else
@@ -396,26 +390,26 @@ download(){
       AC_MSG_ERROR([Please download it manually and put in /tmp/${fn}])
    fi
    if test -n "$3" ;then
-      OUTDIR=$3
+      OUTDIR="$3"
    else
-      OUTDIR=${LIBDIR}
+      OUTDIR="${LIBDIR}"
    fi
-   if test ! -d ${OUTDIR} ;then
-      mkdir -p ${OUTDIR} || exit 1
+   if test ! -d "${OUTDIR}" ;then
+      mkdir -p "${OUTDIR}" || exit 1
    fi
-   tar -xf /tmp/${fn} -C ${OUTDIR}  || exit 1
-   rm -rf /tmp/${fn}
+   tar -xf "/tmp/${fn}" -C "${OUTDIR}"  || exit 1
+   rm -rf "/tmp/${fn}"
 }
 #Check for LAPACK library in the system
 if test ! "x$use_mkl" = "xyes" ;then
    if test -z "$LAPACK" ;then
        if test -n "$(pkg-config --libs blas lapack)" ;then
-           LAPACK=$(pkg-config --libs blas lapack)
+           LAPACK="$(pkg-config --libs blas lapack)"
        else
            LAPACK="-lblas -llapack"
        fi
    fi
-   echo Trying LAPACK=$LAPACK
+   echo Trying LAPACK="$LAPACK"
    AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
    AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
    if test  "x$has_lapack" = "xno" ;then
@@ -429,7 +423,7 @@ if test ! "x$use_mkl" = "xyes" ;then
 fi
 if test "x$use_mkl" = "xyes" ;then 
    if test ! -f "$mkl_lib"  ;then
-      download MKL ${mklname}.tar.bz2
+      download MKL "${mklname}.tar.bz2"
    fi
    LAPACK="-L${LIBDIR}/${mklname} -Wl,-rpath,${LIBDIR}/${mklname} -lblas -llapack"
    if test -z "$OPENMP_CFLAGS" -o x$use_icc = xno ;then
@@ -445,8 +439,8 @@ if test "$has_z" = "no" ;then
    if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install zlib library])
    fi
-   if test ! -d ${LIBDIR}/${zlibname} ;then
-      download ZLIB ${zlibname}.tar.bz2
+   if test ! -d "${LIBDIR}/${zlibname}" ;then
+      download ZLIB "${zlibname}.tar.bz2"
    fi
    LDZ="-L${LIBDIR}/${zlibname} -lz"
 else
@@ -460,8 +454,8 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install fftw library])
    fi	
-   if test ! -d ${LIBDIR}/${fftwname} ;then 
-       download FFTW ${fftwname}.tar.bz2
+   if test ! -d "${LIBDIR}/${fftwname}" ;then 
+       download FFTW "${fftwname}.tar.bz2"
    fi
    LDFFT="-L${LIBDIR}/${fftwname}"
    OPTScommon="$OPTScommon -I${LIBDIR}/${fftwname}"
@@ -472,7 +466,7 @@ AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
 
 AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="no")
-if test $use_fftw_threads = "yes" ;then
+if test "$use_fftw_threads" = "yes" ;then
      AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
      AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
 else
@@ -501,11 +495,11 @@ AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
 if test -n "$GTKDIR" ;then #User specified GTK directory
-   if test -d $GTKDIR/pkgconfig ;then
-      GTKDIR=$GTKDIR/../
+   if test -d "$GTKDIR/pkgconfig" ;then
+      GTKDIR="$GTKDIR/../"
    fi
-   if test -d $GTKDIR/lib/pkgconfig ;then
-      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig
+   if test -d "$GTKDIR/lib/pkgconfig" ;then
+      export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig"
    fi
 fi
 PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
@@ -546,7 +540,7 @@ AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
 AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
 AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
 if test "$comp_mon" = "yes" ;then
- if ! echo $MON_LIBS | grep -q gthread ;then
+ if ! echo "$MON_LIBS" | grep -q gthread ;then
    #OLD GLIB has GTHREAD separated
    PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
    if test -n "$GTHREAD_LIBS" ;then
@@ -584,8 +578,8 @@ if test "x$have_chol" = "xyes" ;then
     LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
-    if test ! -d ${SRC_DIR}/external/cholmod ;then
-        download CHOLMOD_SRC cholmod_src.tar.bz2 ${SRC_DIR}/external
+    if test ! -d "${SRC_DIR}/external/cholmod" ;then
+        download CHOLMOD_SRC cholmod_src.tar.bz2 "${SRC_DIR}/external"
     fi
     LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
     AM_CONDITIONAL(COMP_CHOL, true)
@@ -638,26 +632,26 @@ AC_CONFIG_FILES( [Makefile
 		 mex/Makefile
 		 cuda/Makefile
 		 ])
-if test -d ${srcdir}/test ;then
+if test -d "${srcdir}/test" ;then
 AC_CONFIG_FILES([test/Makefile])
 fi
-if test -d ${srcdir}/external/cholmod ;then
+if test -d "${srcdir}/external/cholmod" ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 if test "x${use_mex}" = "xyes" ; then
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
-       if test -f ${MEXDIR}/mex ;then
-           MEXDIR=${MEXDIR}
-       elif test -f ${MEXDIR}/bin/mex ;then
-           MEXDIR=${MEXDIR}/bin
+       if test -f "${MEXDIR}/mex" ;then
+           MEXDIR="${MEXDIR}"
+       elif test -f "${MEXDIR}/bin/mex" ;then
+           MEXDIR="${MEXDIR}/bin"
        else
            AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
        fi
    else
        AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
    fi
-   MEXEXT=$($MEXDIR/mexext)
+   MEXEXT="$($MEXDIR/mexext)"
    if test -z "$MEXEXT" ;then
        AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --disable-mex to disable mex.])
    fi
@@ -699,7 +693,7 @@ if test "x${use_mex}" = "xyes" ; then
 		AC_MSG_ERROR([Unknown mex extension "$MEXEXT"])
 	;;
    esac
-   if test $mex_cpu != $host_cpu ;then
+   if test "$mex_cpu" != "$host_cpu" ;then
        mex_lib="no"
    else       
        LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
@@ -726,10 +720,10 @@ if test "$use_cuda" = "yes" ;then
    case "${CC}" in
       icc*|clang*)
       if test -z "$(which gcc)" -o -z "$(gcc -v 2>&1 | grep -i 'gcc version')"  ;then
-          AC_MSG_NOTICE([NVCC does not support ${CC%% *} and gcc is not found. Disable cuda])
+          AC_MSG_NOTICE([NVCC does not support "${CC%% *}" and gcc is not found. Disable cuda])
 	  use_cuda="no"
       else
-	  CUDA_CCBIN=$(which gcc)
+	  CUDA_CCBIN="$(which gcc)"
       fi
       ;;
    esac
@@ -748,57 +742,57 @@ if test "$use_cuda" = "yes" ;then
    AC_MSG_NOTICE([Enabling CUDA])
    LDCUDA=
    if test -n "$CUDADIR" ;then
-       NVCC=$CUDADIR/bin/nvcc
-       if test ! -x $NVCC ;then
-       	  NVCC=$CUDADIR/nvcc
-	  CUDADIR=$(dirname $CUDADIR)
+       NVCC="$CUDADIR/bin/nvcc"
+       if test ! -x "$NVCC" ;then
+       	  NVCC="$CUDADIR/nvcc"
+	  CUDADIR="$(dirname $CUDADIR)"
        fi
    else
        AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
-   if test ! -x $NVCC ;then
+   if test ! -x "$NVCC" ;then
        AC_MSG_ERROR([nvcc not found])
    fi
    if test -n "$CUDA_CCBIN" ;then
        NVCC="$NVCC -ccbin $CUDA_CCBIN"
    fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
-   if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
-       CUDA_L=${CUDADIR}/lib${cpu}
-   elif test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
-       CUDA_L=${CUDADIR}/lib
+   if test -f "${CUDADIR}/lib${cpu}/libcudart.$ldsuffix" ;then
+       CUDA_L="${CUDADIR}/lib${cpu}"
+   elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
+       CUDA_L="${CUDADIR}/lib"
    fi
    if test -d "$CUDA_L" ;then
        LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
    else
        LDCUDA=
    fi
-   if test -f ${CUDADIR}/include/cuda.h ;then
+   if test -f "${CUDADIR}/include/cuda.h" ;then
        CUDAOPT="-I${CUDADIR}/include"
    else
        AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
-   cudaver=$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)
-   cudaver=${cudaver/.}
+   cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
+   cudaver="${cudaver/.}"
    echo CUDA toolkit is $cudaver
-   if test $cudaver -lt 40 ;then
+   if test "$cudaver" -lt 40 ;then
        AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
    fi
-   if test $cudaver -ge 40 ;then
+   if test "$cudaver" -ge 40 ;then
        CUDAOPT="$CUDAOPT -gencode arch=compute_20,code=sm_20"
    fi
-   if test $cudaver -ge 42 ;then
+   if test "$cudaver" -ge 42 ;then
        CUDAOPT="$CUDAOPT -gencode arch=compute_30,code=sm_30"
    fi
-   if test $cudaver -ge 50 ;then
+   if test "$cudaver" -ge 50 ;then
        CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
    fi
    if test -n "$OPENMP_CFLAGS";then
        CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
    fi
-   echo LDCUDA=$LDCUDA
-   echo CUDAOPT=$CUDAOPT
+   echo LDCUDA="$LDCUDA"
+   echo CUDAOPT="$CUDAOPT"
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
@@ -845,9 +839,6 @@ echo LDLIB=$LDLIB
 echo LDEXE=$LDEXE
 echo LDOPTS=$LDOPTS
 echo BIGENDIAN=$BIGENDIAN
-if test x$use_icc = xno -a x$system = xlinux -a $cross_compile = no ;then
-echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
-fi
 echo "*************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos ***"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos     ***"
