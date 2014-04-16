@@ -11,7 +11,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include"io.h"
+#include "io.h"
 static void write_timestamp(file_t *fp);
 
 static const char *myasctime(void){
@@ -279,7 +279,8 @@ void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, fil
     dcomplex *tmp=malloc(sizeof(dcomplex)*nmemb);
     long i;
     for(i=0; i<nmemb; i++){
-	tmp[i]=pr[i]+I*pi[i];
+	tmp[i].x=pr[i];
+	tmp[i].y=pi[i];
     }
     zfwrite(tmp, sizeof(dcomplex), nmemb, fp);
     free(tmp);
@@ -288,7 +289,8 @@ void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_
     fcomplex *tmp=malloc(sizeof(fcomplex)*nmemb);
     long i;
     for(i=0; i<nmemb; i++){
-	tmp[i]=pr[i]+I*pi[i];
+	tmp[i].x=pr[i];
+	tmp[i].y=pi[i];
     }
     zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
     free(tmp);
@@ -549,7 +551,8 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	if(page==0){
 	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
-		error("Fits header is not recognized: %s\n", line);
+		//info("Fits header is not recognized: %s\n", line);
+		return -1;
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0';
 	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");

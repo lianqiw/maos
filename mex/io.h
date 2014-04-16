@@ -1,10 +1,9 @@
 #ifndef _MEX_IO_H
 #define _MEX_IO_H
-#include <complex.h>
 #include <zlib.h>
 #include <signal.h>
 #if __GNUC__ && defined(__STDC_UTF_16__)
-#undef __STDC_UTF_16__
+typedef wchar_t char16_t;
 #endif
 #include <mex.h>
 #include <stdint.h>
@@ -12,8 +11,8 @@
 #if !defined(MX_API_VER) || MX_API_VER < 0x07030000
 typedef unsigned int mwIndex;
 #endif
-typedef double __complex__ dcomplex;
-typedef float __complex__ fcomplex;
+typedef struct {float x; float y;} fcomplex;
+typedef struct {double x; double y;} dcomplex;
 #define info(A...) fprintf(stderr,A)
 #define warning(A...)							\
     do{									\

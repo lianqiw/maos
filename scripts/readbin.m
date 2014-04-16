@@ -1,4 +1,6 @@
 function [res header]=readbin(fn0)
+%function [res header]=readbin(fn0)
+%if strcmp(fn(end-2:end),'.gz')
     fn=fn0;
     if length(fn)>6 &&strcmp(fn(end-6:end),'.bin.gz')%end with bin.gz
         if ~exist(fn,'file')
@@ -16,12 +18,6 @@ function [res header]=readbin(fn0)
     end
     if ~exist(fn)
         error(sprintf('%s not found\n', fn));
-    end
-    
-    if strcmp(fn(end-2:end),'.gz')
-        fprintf('uncompressing %s\n',fn);
-        system(sprintf('gunzip -f %s',fn));
-        fn=fn(1:end-3);
     end
     fid=fopen(fn,'rb');
     [res header]=readbin_do(fid);

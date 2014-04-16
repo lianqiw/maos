@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <complex.h>
-
 #include "io.h"
 mxArray *INVALID=(mxArray*)1;
 static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
@@ -221,8 +219,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
 		for(i=0; i<nzmax; i++){
-		    Pr[i]=creal(tmp[i]);
-		    Pi[i]=cimag(tmp[i]);
+		    Pr[i]=tmp[i].x;
+		    Pi[i]=tmp[i].y;
 		}
 		free(tmp);
 	    }
@@ -297,8 +295,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		double *Pi=mxGetPi(out);
 		long i;
 		for(i=0; i<nx*ny; i++){
-		    Pr[i]=creal(tmp[i]);
-		    Pi[i]=cimag(tmp[i]);
+		    Pr[i]=tmp[i].x;
+		    Pi[i]=tmp[i].y;
 		}
 		free(tmp);
 	    }
@@ -320,8 +318,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		float *Pi=(float*)mxGetPi(out);
 		long i;
 		for(i=0; i<nx*ny; i++){
-		    Pr[i]=(float)crealf(tmp[i]);
-		    Pi[i]=(float)cimagf(tmp[i]);
+		    Pr[i]=tmp[i].x;
+		    Pi[i]=tmp[i].y;
 		}
 		free(tmp);
 	    }
