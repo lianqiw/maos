@@ -48,17 +48,17 @@ OPTSextra=""
 #Compile CUDA branch if CUDA toolkit is detected
 use_cuda_default="no"
 CUDADIR_AUTO=
-if test -n "$(which nvcc 2>/dev/null)" ;then
+if test -n "`which nvcc 2>/dev/null`" ;then
    use_cuda_default="yes"
    NVCC="$(which nvcc)"
    if test -L "$NVCC" ;then
       NVCC="$(readlink "$NVCC")"
    fi
    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-elif test -f "/opt/cuda/bin/nvcc" ;then
+elif test -x "/opt/cuda/bin/nvcc" ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/opt/cuda"
-elif test -f "/usr/local/cuda/bin/nvcc" ;then
+elif test -x "/usr/local/cuda/bin/nvcc" ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/usr/local/cuda/"
 fi
@@ -111,7 +111,7 @@ case ${host_cpu} in
    ;;
 esac   
 #Use icc if it exists in the system and user does not set CC
-if test -n "$(which icc 2>/dev/null)" -a -z "$CC" -a "$cross_compile" = no ;then	
+if test -n "`which icc 2>/dev/null`" -a -z "$CC" -a "$cross_compile" = no ;then	
    use_icc_default="yes"
 else
    echo "Intel Compiler is not found."
@@ -220,16 +220,16 @@ fi
 #Compile mex routines if MATLAB is detected and single is not enabled
 use_mex_default="no"
 MEXDIR_AUTO=
-if test -n "$(which mex 2>/dev/null)" ;then
+if test -n "`which mex 2>/dev/null`" ;then
    use_mex_default="yes"
    MEX="$(which mex)"
    if test -L "$MEX" ;then
       MEX="$(readlink "$MEX")"
    fi
    MEXDIR_AUTO="$(dirname "$MEX")"
-elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
+elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-       if test -f "$i/bin/mex" ;then
+       if test -x "$i/bin/mex" ;then
        	  MEXDIR_AUTO="${i}/bin"
           use_mex_default="yes"
        fi
@@ -316,7 +316,7 @@ case "${CC}" in
     fi
     ;;
   gcc*)
-    if test -n "$($CC -v 2>&1 |grep clang)"  ;then
+    if test -n "`$CC -v 2>&1 |grep clang`" ;then
         OPTIM="$OPTIM_CLANG"
     else
 	OPTIM="$OPTIM_GCC"
@@ -403,9 +403,8 @@ download(){
 #Check for LAPACK library in the system
 if test ! "x$use_mkl" = "xyes" ;then
    if test -z "$LAPACK" ;then
-       if test -n "$(pkg-config --libs blas lapack)" ;then
-           LAPACK="$(pkg-config --libs blas lapack)"
-       else
+       LAPACK=`pkg-config --libs blas lapack`
+       if test -z "$LAPACK" ;then
            LAPACK="-lblas -llapack"
        fi
    fi
@@ -641,9 +640,9 @@ fi
 if test "x${use_mex}" = "xyes" ; then
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
-       if test -f "${MEXDIR}/mex" ;then
+       if test -x "${MEXDIR}/mex" ;then
            MEXDIR="${MEXDIR}"
-       elif test -f "${MEXDIR}/bin/mex" ;then
+       elif test -x "${MEXDIR}/bin/mex" ;then
            MEXDIR="${MEXDIR}/bin"
        else
            AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])

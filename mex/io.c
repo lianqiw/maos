@@ -1,4 +1,4 @@
-#ifdef __INTEL_COMPILER
+s#ifdef __INTEL_COMPILER
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
 #include <stdio.h>
@@ -551,7 +551,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	if(page==0){
 	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
-		//info("Fits header is not recognized: %s\n", line);
+		info("Garbage in fits file %s\n", fp->fn);
 		return -1;
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0';
