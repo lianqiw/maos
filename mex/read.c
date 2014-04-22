@@ -239,7 +239,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	}
 	break;
-    case M_FLT:/*float array. convert to double*/
+    case M_FLT:/*float array*/
 	if(start==-1){
 	    if(zfseek(fp, sizeof(float)*nx*ny, SEEK_CUR)){
 		error("Seek failed\n");
