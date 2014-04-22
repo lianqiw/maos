@@ -1,22 +1,24 @@
 function [res header]=readbin(fn)
 %function [res header]=readbin(fn)
-%MATLAB does not support transparent gunzip with fopen. So decompress file first
     if istype(fn, '.fits') || istype(fn, '.fits.gz')
         isfits=1;
     elseif istype(fn, '.bin') || istype(fn, '.bin.gz')
         isfits=0;
-    elseif exist([fn, '.bin'])
-        fn=[fn, '.bin'];
-        isfits=0;
-    elseif exist([fn, '.fits'])
-        fn=[fn, '.fits'];
-        isfits=1;
-    else
-        error('readbin only support .bin or .fits file');
     end
     if ~exist(fn)
-        error(sprintf('%s not found\n', fn));
+        if exist([fn, '.bin'])
+            fn=[fn, '.bin'];
+            isfits=0;
+        elseif exist([fn, '.fits'])
+            fn=[fn, '.fits'];
+            isfits=1;
+        else
+            error(sprintf('%s not found\n', fn));
+        end
     end
+
+    %MATLAB does not support transparent gunzip with fopen. 
+    %So try to decompress file first
     try
         fn2=gunzip(fn); fn2=fn2{1};
         if ~istype(fn, '.gz')
@@ -27,11 +29,11 @@ function [res header]=readbin(fn)
         fn=fn2;
     end
     if isfits
-        fid=fopen(fn,'rb','b');
+        fid=fopen(fn,'rb','b');%handle big endian
     else
         fid=fopen(fn,'rb');
     end
-    if isfits
+    if isfits %we assembly multiple arrays to a cell
         count=0;
         err=0;
         while ~feof(fid) && ~err
