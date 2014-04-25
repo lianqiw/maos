@@ -17,6 +17,10 @@ if USE_SCHEDULER
 PROGS+=../bin/scheduler
 ___bin_scheduler_SOURCES=scheduler.c
 ___bin_scheduler_LDADD=../sys/libaosys.la $(LDOPTS)
+if HAS_LWS
+___bin_scheduler_SOURCES+=scheduler_ws.c
+___bin_scheduler_LDADD+=-lwebsockets
+endif
 endif
 
 if LINUX

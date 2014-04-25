@@ -433,7 +433,7 @@ if test "x$use_mkl" = "xyes" ;then
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
-AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
+AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'],[$LDFLAGS])
 if test "$has_z" = "no" ;then
    if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install zlib library])
@@ -448,7 +448,7 @@ fi
 #Check for FFTW3 header and library.
 has_fftw='yes'
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
-AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
+AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'],[$LDFLAGS])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install fftw library])
@@ -587,6 +587,18 @@ fi
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
 
+#Check libwebsocket
+AM_CONDITIONAL(HAS_LWS, false)
+AC_CHECK_LIB([websockets], [libwebsocket_service], [have_lws="yes"], [have_lws="no"], [])
+if test "$have_lws" = "yes" ;then
+   AC_CHECK_HEADERS(["libwebsockets.h"], [], [header_lws="yes"])
+   if test "$header_lws"="yes"; then
+       AM_CONDITIONAL(HAS_LWS, true)
+       AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
+   else
+       AC_MSG_NOTICE(["libwebsocket library exists, not header libwebsocket.h is not found"])
+   fi
+fi
 AC_CHECK_HEADERS([unistd.h])
 LDLIB="$LDCHOL $LDFFT $LDZ -lm"
 LDOPTS="$LAPACK"
@@ -621,22 +633,6 @@ AC_ENABLE_SHARED
 AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
-AC_CONFIG_FILES( [Makefile
-		 sys/Makefile
-		 math/Makefile
-		 lib/Makefile
-		 tools/Makefile
-		 maos/Makefile 
-		 skyc/Makefile
-		 mex/Makefile
-		 cuda/Makefile
-		 ])
-if test -d "${srcdir}/test" ;then
-AC_CONFIG_FILES([test/Makefile])
-fi
-if test -d "${srcdir}/external/cholmod" ;then
-AC_CONFIG_FILES([external/cholmod/Makefile])
-fi
 if test "x${use_mex}" = "xyes" ; then
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
@@ -811,6 +807,24 @@ else
    AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
    AM_CONDITIONAL(CUDA_DOUBLE, false)
 fi
+
+AC_CONFIG_FILES( [Makefile
+		 sys/Makefile
+		 math/Makefile
+		 lib/Makefile
+		 tools/Makefile
+		 maos/Makefile 
+		 skyc/Makefile
+		 mex/Makefile
+		 cuda/Makefile
+		 ])
+if test -d "${srcdir}/test" ;then
+AC_CONFIG_FILES([test/Makefile])
+fi
+if test -d "${srcdir}/external/cholmod" ;then
+AC_CONFIG_FILES([external/cholmod/Makefile])
+fi
+
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
 AC_SUBST(LIBS)
 AC_OUTPUT

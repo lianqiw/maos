@@ -331,7 +331,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     close(sock);
     usleep(100);
     sync();
-    _Exit(1);
+    //_Exit(1);
 }
 /**
    Initialize sockaddr_in with hostname.

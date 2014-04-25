@@ -44,7 +44,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include "../sys/sys.h"
-
+#if HAS_LWS
+#include "scheduler_ws.h"
+#endif
 static char *scheduler_fnlog=NULL;
 /**
    Struct to hold information of running jobs.
@@ -452,7 +454,7 @@ static void process_queue(void){
 		info2("process_queue: process waiting list ... ");
 		if(!irun){
 		    info2("all done\n");
-		    all_done=0;
+		    all_done=1;
 		}else{
 		    info2("start new job\n");
 		    int pid;
@@ -776,6 +778,9 @@ static void scheduler_timeout(void){
 	monitor_send_load();
 	lasttime3=thistime;
     }
+#if HAS_LWS
+    ws_service();
+#endif    
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
@@ -806,14 +811,63 @@ static void monitor_remove(int sock){
 	}
     }
 }
-/*static MONITOR_T *monitor_get(int sock){
-    MONITOR_T *ic;
-    for(ic=pmonitor; ic; ic=ic->next){
-	if(ic->sock==sock)
-	    break;
+
+/**
+   Convert RUN_T to string for websocket
+*/
+#if HAS_LWS
+void html_convert(RUN_T *irun, char *path, char **dest, size_t *plen, long prepad, long postpad){
+    char temp[4096]={0};
+    size_t len;
+    if(path){
+	len=snprintf(temp, 4096, "%d&PATH&%s;", irun->pid, path);
+    }else{  
+	STATUS_T *st=&irun->status;
+	struct tm *tim=localtime(&(st->timstart));
+	char stime[80];
+	strftime(stime,80,"[%a %k:%M:%S]",tim);
+	len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
+		     "&%s&%.2f&%.2f" /*start time, errhi, errlo*/
+		     "&%d&%d&%d&%d" /*iseed, nseed, isim, nsim*/
+		     "&%ld&%ld&%.2f;" /*rest, tot, step timing*/
+		     , irun->pid, irun->pidnew, st->info,
+		     stime, st->clerrhi, st->clerrlo,
+		     st->iseed+1, st->nseed, st->isim+1, st->simend,
+		     st->rest, st->laps+st->rest, st->tot*st->scale);
     }
-    return ic;
-    }*/
+    if(!dest){
+	ws_push(temp, len);
+    }else{
+	*plen=len;
+	*dest=malloc(len+prepad+postpad);
+	memcpy(*dest+prepad, temp, len);
+    }
+}
+static void html_convert_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad, long postpad){
+    l_message *node=malloc(sizeof(l_message));
+    l_message *node2=malloc(sizeof(l_message));
+    node->next=node2;
+    node2->next=0;
+    html_convert(irun, irun->path, &node->payload, &node->len, prepad, postpad);
+    html_convert(irun, 0, &node2->payload, &node2->len, prepad, postpad);
+    if(*tail){
+	(*tail)->next=node;
+    }else{
+	*head=node;
+    }
+    *tail=node2;
+}
+
+void html_convert_all(l_message **head, l_message **tail, long prepad, long postpad){
+    *head=*tail=0;
+    for(RUN_T *irun=runned; irun; irun=irun->next){
+	html_convert_all_do(irun, head, tail, prepad, postpad);
+    }
+    for(RUN_T *irun=running; irun; irun=irun->next){
+	html_convert_all_do(irun, head, tail, prepad, postpad);
+    }
+}
+#endif
 static int monitor_send_do(RUN_T *irun, char *path, int sock){
     int cmd[3];
     cmd[1]=irun->pidnew;//Replaces hid(useless) by new pid as of 2013-04-01.
@@ -828,6 +882,9 @@ static int monitor_send_do(RUN_T *irun, char *path, int sock){
 }
 /* Notify alreadyed connected monitors job update. */
 static void monitor_send(RUN_T *irun,char*path){
+#if HAS_LWS
+    html_convert(irun, path, 0, 0, 0, 0);
+#endif
     MONITOR_T *ic;
  redo:
     for(ic=pmonitor; ic; ic=ic->next){
@@ -899,7 +956,13 @@ int main(){
 	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, myhostname());
 	scheduler_fnlog=strdup(slocal2);
     }
-    listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
+#if HAS_LWS
+    ws_start(PORT+100);
+#endif
+    listen_port(PORT, slocal, respond, 0.5, scheduler_timeout, 0);
     remove(slocal);
+#if HAS_LWS
+    ws_end();
+#endif
     exit(0);
 }

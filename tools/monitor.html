@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+	<meta charset=utf-8 http-equiv="Content-Language" content="en"/>
+	<title>Minimal Websocket test app</title>
+	<style type="text/css">
+	 .title { font-size:24pt; font: Arial; font-weight:normal; text-align:center; color:#000000; }
+	 .browser { font-size:18pt; font: Arial; font-weight:normal; text-align:center; color:#ffff00; vertical-align:middle; text-align:center; background:#d0b070; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px;}
+	 .group2 { width:600px; vertical-align:middle; text-align:center; background:#f0f0e0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
+	 .explain { vertical-align:middle; text-align:center; background:#f0f0c0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; color:#404000; }
+	 .content { vertical-align:top; text-align:center; background:#fffff0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
+	 .canvas { vertical-align:top; text-align:center; background:#efefd0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
+	 table.monitor{
+	     border-spacing:0 0;
+	     border-style:solid;
+	     border-color:black;
+	     border-width:2px 2px 1px 1px;
+	 }
+	 table.monitor tr td
+	 {
+	     border-width:0 0 1px 1px;
+	     border-style:solid;
+	     border-color:black;
+	 }
+	</style>
+    </head>
+
+    <body>
+	<header></header>
+	<article>
+	    <table width="100%">
+		<tr><td class="title">MAOS Monitor</td></tr>
+		<tr><td align="center" id="monitor_status">Not initialized</td></tr>
+	    </table>
+	    <table id="joblist" class="monitor" width="100%">
+		<tr>
+		    <td>Time</td>
+		    <td>PID</td>
+		    <td>Path</td>
+		    <td>Low</td>
+		    <td>High</td>
+		    <td>Seed</td>
+		    <td>Step</td>
+		    <td>Timing</td>
+		    <td> </td>
+		</tr>
+	    </table>
+	</article>
+
+	<script>
+
+	 var pos = 0;
+	 function sec2str(secstr){
+	     var sec=parseInt(secstr);
+	     var min=Math.floor(sec/60);
+	     var hr=Math.floor(min/60);
+	     return hr+':'+min;
+	 }
+	 function get_appropriate_ws_url()
+	 {
+	     var pcol;
+	     var u = document.URL;
+
+	     /*
+	      * We open the websocket encrypted if this page came on an
+	      * https:// url itself, otherwise unencrypted
+	      */
+
+	     if (u.substring(0, 5) == "https") {
+		 pcol = "wss://";
+		 u = u.substr(8);
+	     } else {
+		 pcol = "ws://";
+		 if (u.substring(0, 4) == "http")
+		 u = u.substr(7);
+	     }
+
+	     u = u.split('/');
+
+	     /* + "/xxx" bit is for IE10 workaround */
+
+	     return pcol + u[0] + "/xxx";
+	 }
+
+
+	 /* document.getElementById("number").textContent = get_appropriate_ws_url();*/
+
+	 /* maos-monitor protocol */
+
+	 var socket_lm;
+
+	 if (typeof MozWebSocket != "undefined") {
+	     socket_lm = new MozWebSocket(get_appropriate_ws_url(),
+					  "maos-monitor-protocol");
+	 } else {
+	     socket_lm = new WebSocket(get_appropriate_ws_url(),
+				       "maos-monitor-protocol");
+	 }
+
+
+	 try {
+	     socket_lm.onopen = function() {
+		 document.getElementById("monitor_status").style.color = "#40dd40";
+		 document.getElementById("monitor_status").textContent = "Connected";
+	     } 
+
+	     socket_lm.onmessage =function got_packet(msg) {
+		 j = msg.data.split(';');
+		 var joblist=document.getElementById("joblist");
+		 for (var f=0; f < j.length - 1; f++) {
+		     i = j[f].split('&');
+		     var row=null;
+		     for(var irow=0; irow<joblist.rows.length; irow++){
+			 if(joblist.rows[irow].cells[1].innerHTML == i[0]){
+			     row=joblist.rows[irow];
+			     break;
+			 }
+		     }
+		     if(!row){
+			 row=joblist.insertRow(-1);
+			 for(var j=0; j<9; j++){
+			     row.insertCell(-1);
+			 }
+			 row.cells[1].innerHTML=i[0];
+		     }
+		     if(i[1]=='PATH'){
+			 row.cells[2].innerHTML=i[2];
+		     }else{
+			 if(i[0]!=i[2]){
+			     row.cells[0].innerHTML=i[2];
+			 }
+			 row.cells[0].innerHTML=i[4];
+			 row.cells[3].innerHTML=i[6];
+			 row.cells[4].innerHTML=i[5];
+			 row.cells[5].innerHTML=i[7]+'/'+i[8];
+			 row.cells[6].innerHTML=i[9]+'/'+i[10];
+			 row.cells[7].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
+			 if(i[3]==2){
+			     row.cells[7].innerHTML="Waiting";
+			 }else if(i[3]==3){
+			     row.cells[7].innerHTML="Started";
+			 }else if(i[3]==4){
+			     row.cells[7].innerHTML="Queued";
+			 }
+		     }
+		 }
+	     }
+
+	     socket_lm.onclose = function(){
+		 document.getElementById("monitor_status").style.color = "#dd4040";
+		 document.getElementById("monitor_status").textContent = "Disconnected";
+	     }
+	 } catch(exception) {
+	     alert('<p>Error' + exception);  
+	 }
+	</script>
+
+    </body>
+</html>
