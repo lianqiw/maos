@@ -173,16 +173,16 @@ static int callback_http(struct libwebsocket_context *context,
 	if (strcmp(in, "/")) {
 	    strcat(buf, "/");
 	    strncat(buf, in, sizeof(buf) - strlen(resource_path));
-	} else /* default file to serve */
+	}else{ /* default file to serve */
 	    strcat(buf, "/monitor.html");
+	}
 	buf[sizeof(buf) - 1] = '\0';
 
 	/* refuse to serve files we don't understand */
 	mimetype = get_mimetype(buf);
 	if (!mimetype) {
 	    lwsl_err("Unknown mimetype for %s\n", buf);
-	    libwebsockets_return_http_status(context, wsi,
-					     HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, NULL);
+	    libwebsockets_return_http_status(context, wsi, HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, NULL);
 	    return -1;
 	}
 
@@ -204,16 +204,9 @@ static int callback_http(struct libwebsocket_context *context,
 	    lwsl_err(other_headers);
 	}
 
-	if (libwebsockets_serve_http_file(context, wsi, buf,
-					  mimetype, other_headers))
+	if (libwebsockets_serve_http_file(context, wsi, buf, mimetype, other_headers)){
 	    return -1; /* through completion or error, close the socket */
-
-	/*
-	 * notice that the sending of the file completes asynchronously,
-	 * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
-	 * it's done
-	 */
-
+	}
 	break;
 
     case LWS_CALLBACK_HTTP_BODY:
@@ -390,6 +383,7 @@ callback_maos_monitor(struct libwebsocket_context *context,
 	break;
 
     case LWS_CALLBACK_RECEIVE:
+	scheduler_handle_ws((char*)in, len);
 	//ws_push(in, len);
 	break;
 
@@ -422,7 +416,7 @@ static struct libwebsocket_protocols protocols[] = {
 	"maos-monitor-protocol",
 	callback_maos_monitor,
 	sizeof(struct per_session_data__maos_monitor),
-	10,
+	1024,                   /* max frame size / rx buffer */
     },
     { NULL, NULL, 0, 0 } /* terminator */
 };
@@ -435,9 +429,11 @@ int ws_start(short port){
 		"(C) Copyright 2010-2013 Andy Green <andy@warmcat.com> - "
 		"licensed under LGPL2.1\n");
     info.protocols = protocols;
-    info.extensions = libwebsocket_get_internal_extensions();/*this is critical. otherwise UTF-8 error in client.*/
+    info.extensions = libwebsocket_get_internal_extensions();
+    /*this is critical. otherwise UTF-8 error in client.*/
     info.gid = -1;
     info.uid = -1;
+    info.ka_time=100;
     context = libwebsocket_create_context(&info);
     if (!context){
 	lwsl_err("libwebsocket init failed\n");
@@ -448,12 +444,19 @@ int ws_start(short port){
 void ws_end(){
     if(context){
 	libwebsocket_context_destroy(context);
+	context=0;
 	lwsl_notice("libwebsockets-test-server exited cleanly\n");
     }
 }
-void ws_service(){
+int ws_service(){
     if(context){
-	libwebsocket_service(context, 50);
+	int ans=libwebsocket_service(context, 50);
+	if(ans<0){
+	    ws_end();
+	}
+	return ans;
+    }else{
+	return -1;
     }
 }
  void ws_push(const char *in, int len){

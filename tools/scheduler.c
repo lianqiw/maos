@@ -762,7 +762,49 @@ static int respond(int sock){
     }
     return ret;/*don't close the port yet. may be reused by the client. */
 }
-
+/*
+  handle requests from web browser via websockets
+*/
+void scheduler_handle_ws(char *in, size_t len){
+    char *sep=strchr(in, '&');
+    if(!sep){
+	warning("Invalid message: %s\n", in);
+	return;
+    }
+    *sep='\0';
+    int pid=strtol(in, 0, 10);
+    sep++;
+    char *tmp;
+    if((tmp=strchr(sep, '&'))){
+	*tmp='\0';
+    }
+    if((tmp=strchr(sep, ';'))){
+	*tmp='\0';
+    }
+    if(!strcmp(sep, "REMOVE")){
+	RUN_T*irun=runned_get(pid);
+	if(irun){
+	    runned_remove(pid);
+	}else{
+	    warning3("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+	}
+    }else if(!strcmp(sep, "KILL")){
+	RUN_T *irun=running_get(pid);
+	if(irun){
+	    if(irun->status.info!=S_QUEUED){
+		kill(pid,SIGTERM);
+		if(irun->status.info==S_WAIT){//wait up the process.
+		    stwriteint(irun->sock, S_START);
+		}
+	    }else{
+		running_remove(pid,S_KILLED);
+	    }
+	    info2("%5d term signal sent\n", pid);
+	}
+    }else{
+	warning("Unknown action: %s\n", sep);
+    }
+}
 static void scheduler_timeout(void){
     static int lasttime3=0;
     if(!all_done){
@@ -832,7 +874,7 @@ void html_convert(RUN_T *irun, char *path, char **dest, size_t *plen, long prepa
 		     "&%ld&%ld&%.2f;" /*rest, tot, step timing*/
 		     , irun->pid, irun->pidnew, st->info,
 		     stime, st->clerrhi, st->clerrlo,
-		     st->iseed+1, st->nseed, st->isim+1, st->simend,
+		     st->nseed==0?0:st->iseed+1, st->nseed, st->simend==0?0:st->isim+1, st->simend,
 		     st->rest, st->laps+st->rest, st->tot*st->scale);
     }
     if(!dest){
@@ -958,6 +1000,7 @@ int main(){
     }
 #if HAS_LWS
     ws_start(PORT+100);
+    ws_service();
 #endif
     listen_port(PORT, slocal, respond, 0.5, scheduler_timeout, 0);
     remove(slocal);

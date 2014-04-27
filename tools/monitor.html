@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
 	<meta charset=utf-8 http-equiv="Content-Language" content="en"/>
-	<title>Minimal Websocket test app</title>
+	<title>MAOS Monitor</title>
 	<style type="text/css">
 	 .title { font-size:24pt; font: Arial; font-weight:normal; text-align:center; color:#000000; }
 	 .browser { font-size:18pt; font: Arial; font-weight:normal; text-align:center; color:#ffff00; vertical-align:middle; text-align:center; background:#d0b070; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px;}
@@ -14,14 +14,41 @@
 	     border-spacing:0 0;
 	     border-style:solid;
 	     border-color:black;
-	     border-width:2px 2px 1px 1px;
+	     border-width:1px 1px 2px 2px;
 	 }
 	 table.monitor tr td
 	 {
-	     border-width:0 0 1px 1px;
+	     border-width:1px 1px 0 0;
 	     border-style:solid;
 	     border-color:black;
+	     vertical-align:middle;
+	     white-space:nowrap;
 	 }
+	 table.monitor td.tight{
+	     width:0px;
+	 }
+	 .progress {
+	     background: white;
+	     position: relative;
+	     text-align:left
+	 }
+
+	 .bar {
+	     background: #1070DD;
+	     color: white;
+	     height: 20px;
+	     vertical-align:middle
+	 } 
+	 span {
+	     position: absolute;
+	     top: 0px;
+	     vertical-align:middle
+	     z-index: 2;
+	     color: #000;
+	     text-align: center;
+	     width: 100%;
+	 }
+
 	</style>
     </head>
 
@@ -33,22 +60,60 @@
 		<tr><td align="center" id="monitor_status">Not initialized</td></tr>
 	    </table>
 	    <table id="joblist" class="monitor" width="100%">
+		<colgroup>
+		    <col span="2">
+		    <col span="1" style="width:100%">
+		    <col span="7">
+		</colgroup>
 		<tr>
-		    <td>Time</td>
-		    <td>PID</td>
-		    <td>Path</td>
-		    <td>Low</td>
-		    <td>High</td>
-		    <td>Seed</td>
-		    <td>Step</td>
-		    <td>Timing</td>
+		    <td align="center">Time</td>
+		    <td align="center">PID</td>
+		    <td align="Center">Path</td>
+		    <td align="Center">Out</td>
+		    <td align="center">Low</td>
+		    <td align="center">High</td>
+		    <td align="center">Seed</td>
+		    <td align="center">Step</td>
+		    <td align="center">Timing</td>
 		    <td> </td>
 		</tr>
 	    </table>
 	</article>
-
+	
 	<script>
 
+	 function new_progbar(width){
+	     var div1=document.createElement("div");
+	     div1.className="progress";
+	     div1.style.width=width;
+	     var div2=document.createElement("div");
+	     div2.className="bar";
+	     div2.style.width="0%";
+	     var span1=document.createElement("span");
+	     span1.innerHTML="test";
+	     div1.appendChild(div2);
+	     div1.appendChild(span1);
+	     return div1;
+	 }
+	 function progbar_set(progbar, i1, i2){
+	     frac=0;
+	     if(parseInt(i2)>0){
+		 frac=Math.round(parseInt(i1)/parseInt(i2)*100);
+	     }
+	     progbar.childNodes[0].style.width=frac+'%';
+	     progbar.childNodes[1].innerHTML=i1+'/'+i2;
+	 }
+	 function new_button(name){
+	     var button=document.createElement("input");
+	     button.type="image";
+	     button.src=name;
+	     button.setAttribute("url", name);
+	     return button;
+	 }
+	 var button_wait=new_button("button-wait.png")
+	 var button_ok=new_button("button-ok.png")
+	 var button_play=new_button("button-play.png");
+	 var button_err=new_button("button-err.png");
 	 var pos = 0;
 	 function sec2str(secstr){
 	     var sec=parseInt(secstr);
@@ -83,64 +148,130 @@
 	 }
 
 
-	 /* document.getElementById("number").textContent = get_appropriate_ws_url();*/
+	 /*document.getElementById("host_ip").textContent = document.URL.split('/')[2];*/
 
 	 /* maos-monitor protocol */
 
-	 var socket_lm;
-
-	 if (typeof MozWebSocket != "undefined") {
-	     socket_lm = new MozWebSocket(get_appropriate_ws_url(),
-					  "maos-monitor-protocol");
-	 } else {
-	     socket_lm = new WebSocket(get_appropriate_ws_url(),
-				       "maos-monitor-protocol");
+	 function setchild(cell, button){
+	     if(cell.firstChild){
+		 cell.replaceChild(button.cloneNode(false), cell.firstChild);
+	     }else{
+		 cell.appendChild(button.cloneNode(false));
+	     }
 	 }
-
-
-	 try {
+	 function websocket_start(){
+	     var socket_lm;
+	     if (typeof MozWebSocket != "undefined") {
+		 socket_lm = new MozWebSocket(get_appropriate_ws_url(), "maos-monitor-protocol");
+	     } else {
+		 socket_lm = new WebSocket(get_appropriate_ws_url(), "maos-monitor-protocol");
+	     }
 	     socket_lm.onopen = function() {
 		 document.getElementById("monitor_status").style.color = "#40dd40";
 		 document.getElementById("monitor_status").textContent = "Connected";
+		 var joblist=document.getElementById("joblist");
+		 var nrow=joblist.rows.length;
+		 for(irow=1; irow<nrow; irow++){
+		     joblist.deleteRow(-1);
+		 }
 	     } 
-
 	     socket_lm.onmessage =function got_packet(msg) {
 		 j = msg.data.split(';');
 		 var joblist=document.getElementById("joblist");
 		 for (var f=0; f < j.length - 1; f++) {
 		     i = j[f].split('&');
 		     var row=null;
-		     for(var irow=0; irow<joblist.rows.length; irow++){
+		     var irow;
+		     for(irow=0; irow<joblist.rows.length; irow++){
 			 if(joblist.rows[irow].cells[1].innerHTML == i[0]){
 			     row=joblist.rows[irow];
 			     break;
 			 }
 		     }
+		     if(i[3]==14){/*remove*/
+			 if(row){
+			     joblist.deleteRow(irow);
+			 }
+			 continue;
+		     }
 		     if(!row){
 			 row=joblist.insertRow(-1);
-			 for(var j=0; j<9; j++){
+			 for(var j=0; j<10; j++){
 			     row.insertCell(-1);
+			     row.cells[j].align="right";
 			 }
 			 row.cells[1].innerHTML=i[0];
+			 row.cells[6].appendChild(new_progbar("50px"));
+			 row.cells[7].appendChild(new_progbar("120px"));
 		     }
 		     if(i[1]=='PATH'){
-			 row.cells[2].innerHTML=i[2];
+			 var io=i[2].lastIndexOf("-o");
+			 if(io>-1){
+			     row.cells[3].innerHTML=i[2].substr(io+2).trim().split(' ')[0];
+			     row.cells[2].innerHTML=i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g," ");
+			 }else{
+			     row.cells[2].innerHTML=i[2];
+			 }
 		     }else{
 			 if(i[0]!=i[2]){
-			     row.cells[0].innerHTML=i[2];
+			     row.cells[1].innerHTML=i[2];
+			     i[0]=i[2];
 			 }
 			 row.cells[0].innerHTML=i[4];
-			 row.cells[3].innerHTML=i[6];
-			 row.cells[4].innerHTML=i[5];
-			 row.cells[5].innerHTML=i[7]+'/'+i[8];
-			 row.cells[6].innerHTML=i[9]+'/'+i[10];
-			 row.cells[7].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
-			 if(i[3]==2){
-			     row.cells[7].innerHTML="Waiting";
-			 }else if(i[3]==3){
-			     row.cells[7].innerHTML="Started";
-			 }else if(i[3]==4){
-			     row.cells[7].innerHTML="Queued";
+			 row.cells[4].innerHTML=i[6];
+			 row.cells[5].innerHTML=i[5];
+			 var frac=0;
+			 if(parseInt(i[8])>0){
+			     frac=Math.round(parseInt(i[7])/parseInt(i[8])*100);
+			 }
+			 progbar_set(row.cells[6].firstChild, i[7], i[8]);
+			 frac=0;
+			 if(parseInt(i[10])>0){
+			     frac=Math.round(parseInt(i[9])/parseInt(i[10])*100);
+			 }
+			 progbar_set(row.cells[7].firstChild, i[9], i[10]);
+			 if(i[3]==1 || i[3]>10){
+			     row.cells[8].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
+			 }
+			 if(row.cells[1].getAttribute("status")!=i[3]){
+			     row.cells[1].setAttribute("status", i[3]);
+			     var cell_tim=row.cells[8];
+			     var cell_btn=row.cells[9];
+			     if(i[3]==1){
+				 setchild(cell_btn, button_play);
+			     }else if(i[3]==2){
+				 cell_tim.innerHTML="Waiting";
+				 setchild(cell_btn, button_wait);
+			     }else if(i[3]==3){
+				 cell_tim.innerHTML="Started";
+				 setchild(cell_btn, button_play);
+			     }else if(i[3]==4){
+				 cell_tim.innerHTML="Queued";
+				 setchild(cell_btn, button_wait);
+			     }else if(i[3]==11){
+				 if(i[11]=='1'){
+				     cell_tim.innerHTML="Skipped";
+				 }
+				 setchild(cell_btn, button_ok);
+			     }else if(i[3]==12 || i[3]==15){
+				 setchild(cell_btn, button_err);
+				 row.cells[6].firstChild.style.background="red";
+				 row.cells[7].firstChild.style.background="red";
+			     }
+			     cell_btn.firstChild.setAttribute("pid", i[0]);
+			     cell_btn.firstChild.setAttribute("status", i[3]);
+			     cell_btn.firstChild.onclick=function(){
+				 pid=this.getAttribute("pid");
+				 status=this.getAttribute("status");
+				 if(status<10){
+				     if(window.confirm("Kill the job "+pid+"?")){
+					 socket_lm.send(pid+"&KILL;");
+				     }
+				 }else{
+				     socket_lm.send(pid+"&REMOVE;");
+				 }
+			     }
+
 			 }
 		     }
 		 }
@@ -149,10 +280,10 @@
 	     socket_lm.onclose = function(){
 		 document.getElementById("monitor_status").style.color = "#dd4040";
 		 document.getElementById("monitor_status").textContent = "Disconnected";
+		 //setTimeout(websocket_start(), 5000);
 	     }
-	 } catch(exception) {
-	     alert('<p>Error' + exception);  
-	 }
+	 } 
+	 websocket_start();
 	</script>
 
     </body>

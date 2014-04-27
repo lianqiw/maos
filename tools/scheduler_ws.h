@@ -19,7 +19,7 @@
 #define AOS_SCHEDULER_WS_H
 int ws_start(short port);
 void ws_end();
-void ws_service();
+int ws_service();
 struct l_message{
     char *payload;
     size_t len;
@@ -28,4 +28,5 @@ struct l_message{
 typedef struct l_message l_message;
 void ws_push(const char *in, int len);
 void html_convert_all(l_message **head, l_message **tail, long prepad, long postpad);
+void scheduler_handle_ws(char *in, size_t len);
 #endif
