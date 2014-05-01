@@ -50,6 +50,32 @@
 	 }
 
 	</style>
+	<script>
+	 var socket_lm;
+	 function clear_all(){
+	     var joblist=document.getElementById("joblist");
+	     for (irow=1; irow<joblist.rows.length; irow++){
+                 var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
+                 var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
+                 if(status>10){
+	             socket_lm.send(pid+"&REMOVE;");
+	         }
+	     }
+	 }
+	 function kill_all(){
+	     if(!window.confirm("Kill all jobs?")){
+	         return;
+	     }
+	     var joblist=document.getElementById("joblist");
+	     for (irow=1; irow<joblist.rows.length; irow++){
+                 var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
+                 var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
+                 if(status<10){
+	             socket_lm.send(pid+"&KILL;");
+	         }
+	     }
+	 }
+	</script>
     </head>
 
     <body>
@@ -58,6 +84,10 @@
 	    <table width="100%">
 		<tr><td class="title">MAOS Monitor</td></tr>
 		<tr><td align="center" id="monitor_status">Not initialized</td></tr>
+	    </table>
+	    <table>
+	      <tr><td><button onclick="clear_all()">Clear All</button></td>
+		<td><button onclick="kill_all()">Kill All</button></td></tr>
 	    </table>
 	    <table id="joblist" class="monitor" width="100%">
 		<colgroup>
@@ -68,8 +98,8 @@
 		<tr>
 		    <td align="center">Time</td>
 		    <td align="center">PID</td>
-		    <td align="Center">Path</td>
-		    <td align="Center">Out</td>
+		    <td align="center">Path</td>
+		    <td align="center">Out</td>
 		    <td align="center">Low</td>
 		    <td align="center">High</td>
 		    <td align="center">Seed</td>
@@ -110,6 +140,7 @@
 	     button.setAttribute("url", name);
 	     return button;
 	 }
+
 	 var button_wait=new_button("button-wait.png")
 	 var button_ok=new_button("button-ok.png")
 	 var button_play=new_button("button-play.png");
@@ -160,7 +191,6 @@
 	     }
 	 }
 	 function websocket_start(){
-	     var socket_lm;
 	     if (typeof MozWebSocket != "undefined") {
 		 socket_lm = new MozWebSocket(get_appropriate_ws_url(), "maos-monitor-protocol");
 	     } else {
@@ -182,7 +212,7 @@
 		     i = j[f].split('&');
 		     var row=null;
 		     var irow;
-		     for(irow=0; irow<joblist.rows.length; irow++){
+		     for(irow=1; irow<joblist.rows.length; irow++){
 			 if(joblist.rows[irow].cells[1].innerHTML == i[0]){
 			     row=joblist.rows[irow];
 			     break;

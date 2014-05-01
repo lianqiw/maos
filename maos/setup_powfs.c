@@ -1238,8 +1238,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	if(fabs(i0scale-1)>0.01){
 	    warning("Siglev is scaled by %g by sodium profile\n", i0scale);
 	}
-	if(i0scale<0.8 || i0scale>2){
-	    error("Check whether this is valid. Relax the restriction if desired.\n");
+	cellarr *fn_elong=0;
+	if(parms->save.setup>1){
+	    fn_elong=cellarr_init(nsa, nllt, "%s/powfs%d_elong.bin", setup, ipowfs);
 	}
 	for(int illt=0; illt<nllt; illt++){
 	    for(int isa=0; isa<nsa; isa++){
@@ -1279,6 +1280,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		      
 		    */
 		    cscale(etf,i0scale/etf2sum);
+		    if(fn_elong){
+			cellarr_cmat(fn_elong, illt*nsa+isa, etf);
+		    }
 		    cfftshift(etf);/*put peak in corner; */
 		    cfft2(etf, -1);
 		    if(use1d){
