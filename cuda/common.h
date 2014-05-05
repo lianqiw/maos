@@ -24,7 +24,7 @@ extern "C"
 }
 #include <cuda.h>
 #include <cublas_v2.h>
-#include <cusparse.h>
+#include <cusparse_v2.h>
 #include <cufft.h>
 #include <cuComplex.h>
 const int NG1D=64;
@@ -138,7 +138,7 @@ extern int nstream;
 #endif
 #undef TIMING
 #define HANDLE_NEW(handle,stream) ({DO(cublasCreate(&handle)); DO(cublasSetStream(handle, stream));})
-#define SPHANDLE_NEW(handle,stream) ({DO(cusparseCreate(&handle)); DO(cusparseSetKernelStream(handle, stream));})
+#define SPHANDLE_NEW(handle,stream) ({DO(cusparseCreate(&handle)); DO(cusparseSetStream(handle, stream));})
 #define HANDLE_DONE(handle) DO(cublasDestroy(handle))
 #define SPHANDLE_DONE(sphandle) DO(cusparseDestroy(sphandle))
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])

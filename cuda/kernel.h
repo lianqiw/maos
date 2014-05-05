@@ -19,7 +19,6 @@
 #define AOS_CUDA_KERNEL_H
 extern "C"
 {
-#include <cuda.h>
 #include "gpu.h"
 }
 #include "common.h"

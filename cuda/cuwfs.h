@@ -17,9 +17,6 @@
 */
 #ifndef AOS_CUDA_CUWFS_H
 #define AOS_CUDA_CUWFS_H
-#include <cusparse.h>
-#include <curand_kernel.h>
-#include <cufft.h>
 namespace cuda_wfs{
 /*Basic geometric information for WFS.*/
 struct wfscfg_t;

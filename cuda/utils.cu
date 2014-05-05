@@ -18,11 +18,7 @@
 #include "utils.h"
 #include "curmat.h"
 #include "cucmat.h"
-#include <errno.h>
 #include <pthread.h>
-#include <cublas_v2.h>
-#include <cusparse.h>
-#include <cufft.h>
 const char *cufft_str[]={
     "success", 
     "invalid plan",
@@ -139,15 +135,16 @@ void cuspmul(Real *y, cusp *A, const Real *x, int ncolvec, char trans, Real alph
 	error("Invalid type");
     }
     int status;
+    Real one=1.f;
     if(ncolvec==1){
 	status=CUSP(csrmv)(handle, opr,
-			   nrow, ncol, alpha, spdesc,
-			   A->x, A->p, A->i, x, 1.f, y);
+			   nrow, ncol, A->nzmax, &alpha, spdesc,
+			   A->x, A->p, A->i, x, &one, y);
     }else{
 	int nlead=istrans?nrow:ncol;
 	status=CUSP(csrmm)(handle, opr,
-			   nrow, ncolvec, ncol, alpha, spdesc,
-			   A->x, A->p, A->i, x, nlead, 1.f, y, nlead);
+			   nrow, ncolvec, ncol, A->nzmax, &alpha, spdesc,
+			   A->x, A->p, A->i, x, nlead, &one, y, nlead);
     }
     if(status!=0){
 	error("cusparseScsrmv(m) failed with status '%s'\n", scsrmv_err[status]);

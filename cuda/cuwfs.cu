@@ -19,9 +19,6 @@ extern "C"
 {
 #include "gpu.h"
 }
-#include <cuda.h>
-#include <cusparse.h>
-#include <cufft.h>
 #include "utils.h"
 #include "accphi.h"
 #include "cuwfs.h"

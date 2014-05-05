@@ -17,7 +17,6 @@
 */
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
-#include <cusparse.h>
 #include <cufft.h>
 
 #define RAND_BLOCK 16

@@ -17,15 +17,12 @@
 */
 extern "C"
 {
-#include <cuda.h>
 #include "gpu.h"
 #include "../maos/sim.h"
 }
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>
-#include <cusparse.h>
-#include <cufft.h>
 #include "wfs.h"
 #include "cudata.h"
 #undef TIMING

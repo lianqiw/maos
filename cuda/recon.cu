@@ -16,8 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cuda.h>
-
 #include "curmat.h"
 #include "cucmat.h"
 #include "utils.h"
@@ -239,7 +237,7 @@ void curecon_t::reset(const PARMS_T *parms){
    
 }
 
-#define DBG_RECON 1
+#define DBG_RECON 0
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		      const dcell *_gradin){
     cp2gpu(&gradin, _gradin);
@@ -250,8 +248,8 @@ Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
     Real cgres=RL->solve(&opdr, tomo_rhs, *cgstream);
 #ifdef DBG_RECON
     static Real cgres_last=INFINITY;
-    int isimr=grid->isimr;
-    if(isimr>5 || cgres>cgres_last*5){
+    if(cgres>MAX(cgres_last*5, EPS)){
+	int isimr=grid->isimr;
 	Real omax=curmax(opdr->m, *cgstream);
 	static Real omax_last=INFINITY;
 	if(omax>omax_last*5 || cgres>cgres_last*5){
@@ -302,8 +300,8 @@ Real curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     Real cgres=FL->solve(&dmfit, fit_rhs, *cgstream);
 #ifdef DBG_RECON
     static Real cgres_last=INFINITY;
-    int isimr=grid->isimr;
-    if(cgres>cgres_last*5){
+    if(cgres>MAX(cgres_last*5, EPS)){
+	int isimr=grid->isimr;
 	info("fit cgres=%g\n", cgres);
 	if(!disable_save){
 	    curcellwrite(opdr, "fit_opdr_%d", isimr);

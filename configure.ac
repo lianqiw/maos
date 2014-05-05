@@ -38,7 +38,7 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -Wno-deprecated-declarations" 
+OPTScommon="-Wno-unknown-pragmas -Wno-unused-function " #-Wno-deprecated-declarations" 
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
@@ -429,7 +429,9 @@ if test "x$use_mkl" = "xyes" ;then
       LAPACK="$LAPACK ${mkldep}"
    fi
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
-   OPTIM_ICC="$OPTIM_ICC -static-intel"
+   if test "x$use_icc" = "xyes" ;then
+       OPTIM="$OPTIM -static-intel"
+   fi
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
@@ -569,19 +571,19 @@ else
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
-#if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
-#   download CHOLMOD cholmod${libsuffix}.tar.bz2
-#fi
-AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
-if test "x$have_chol" = "xyes" ;then
-    LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"
-    AM_CONDITIONAL(COMP_CHOL, false)
+AM_CONDITIONAL(COMP_CHOL, false)
+AC_CHECK_LIB([cholmod], [${chol_fun}], [have_chol="yes"], [have_chol="no"])
+if test "$have_chol" = "yes" ;then
+   LDCHOL="-lcholmod"
 else
-    if test ! -d "${SRC_DIR}/external/cholmod" ;then
-        download CHOLMOD_SRC cholmod_src.tar.bz2 "${SRC_DIR}/external"
-    fi
-    LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
-    AM_CONDITIONAL(COMP_CHOL, true)
+AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
+if test "$have_chol" = "no" ;then
+   if test ! -d "${SRC_DIR}/external/cholmod" ;then
+      download CHOLMOD_SRC cholmod_src.tar.bz2 "${SRC_DIR}/external"
+   fi
+   LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
+   AM_CONDITIONAL(COMP_CHOL, true)
+fi
 fi
 # Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
 # use the cholmod in the system even if it is available because we want to

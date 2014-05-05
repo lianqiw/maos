@@ -17,7 +17,6 @@
 */
 extern "C"
 {
-#include <cuda.h>
 #include "../lib/aos.h"
 #include "gpu.h"
 }

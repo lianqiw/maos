@@ -17,8 +17,8 @@
 */
 #ifndef AOS_CUDA_UTILS_H
 #define AOS_CUDA_UTILS_H
-#include "common.h"
 #include <typeinfo>
+#include "common.h"
 #include "types.h"
 #include "cudata.h"
 
@@ -77,9 +77,6 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	from=(M*)malloc(sizeof(M)*nx*ny);
 	type_convert(from, src, nx*ny);
     }else{
-	if(typeid(M)!=typeid(N)){
-	    warning("No convert from %s to %s\n", typeid(M).name(), typeid(N).name());
-	}
 	from=(M*)(src);
     }
     //don't call previous cp2gpu() as it may call itself.
