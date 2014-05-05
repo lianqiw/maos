@@ -1240,7 +1240,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	}
 	cellarr *fn_elong=0;
 	if(parms->save.setup>1){
-	    fn_elong=cellarr_init(nsa, nllt, "%s/powfs%d_elong.bin", setup, ipowfs);
+	    fn_elong=cellarr_init(nsa, nllt, "%s/powfs%d_elong.bin", dirsetup, ipowfs);
 	}
 	for(int illt=0; illt<nllt; illt++){
 	    for(int isa=0; isa<nsa; isa++){
