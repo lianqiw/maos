@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.6.1, lianqiw@gmail.com)
+AC_INIT(maos, 1.7.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
@@ -28,11 +28,8 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
-if test -d "${HOME}" ;then
-    LIBDIR="${HOME}/.aos/lib"
-else
-    LIBDIR="${SRC_DIR}/external"
-fi
+CFLAGS="$CFLAGS -I${SRC_DIR}/external/include"
+LDFLAGS="$LDFLAGS -lm -L${SRC_DIR}/external/lib -Wl,-rpath,-L${SRC_DIR}/external/lib"
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -137,8 +134,6 @@ case "$host_os" in
  OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
  mkl_avail="yes"
  use_static_default="no"
- wget="wget -t1 --no-check-certificate"
- wgetoutput="-O"
  mkldep=""
  libsuffix=${cpu}
  system="linux"
@@ -149,8 +144,6 @@ case "$host_os" in
  AM_CONDITIONAL(DARWIN, true)
  mkl_avail="no"
  use_static_default="no"
- wget="curl --retry 1 -L --progress-bar"
- wgetoutput="--output"
  mkldep=""
  libsuffix=fat
  system="apple"
@@ -164,7 +157,7 @@ case "$host_os" in
  ;;
 *cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
- LAPACK="-lblas -llapack -lgfortran"
+ LAPACK="-lblas -llapack"
  win32=yes
  use_static_default=no #blas/lapack are linked statically, but others are still dynamic. ship those
  system="win"
@@ -173,29 +166,23 @@ case "$host_os" in
 *)
 AC_MSG_ERROR([Unrecognized OS])
 esac
-mklname=mkl${libsuffix}
-fftwname=fftw${libsuffix}
-zlibname=libz${libsuffix}
 AC_SUBST(ldsuffix)
-mkl_lib="${LIBDIR}/${mklname}/liblapack.so"
-if test "$mkl_avail" = "yes" ;then
-    #MKL is already downloaded. use it.
-    if test -f "$mkl_lib" ;then
-       use_mkl_default="no"
-    else
-       use_mkl_default="no"
-    fi
-    #We only have MKL redistributable for linux and MAC.
-    AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
-fi
 
+if test -n "`which wget 2>/dev/null`" ;then
+   wget="wget -t1 --no-check-certificate"
+   wgetoutput="-O"
+elif test -n "`which curl 2>/dev/null`" ;then
+   wget="curl --retry 1 -L --progress-bar"
+   wgetoutput="--output"
+else
+   wget="(echo wget/curl not found ; exit)"
+fi
 #Common configure options.
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
 AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc="$use_icc_default"])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(long,  [  --disable-long  Disable long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
 
@@ -210,13 +197,15 @@ if test "$use_scheduler" = "no" ;then
    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
    AM_CONDITIONAL(USE_SCHEDULER, false)
 fi
-if test "$use_long" = "yes" ;then
-   if test "$cpu" = "64" ;then
-       use_long="yes"
-   else
-       use_long="no"
-   fi
+if test "$cpu" = "64" ;then 
+   OPTScommon="$OPTScommon -DDLONG"
+   chol_fun=cholmod_l_factorize
+   AM_CONDITIONAL(USE_LONG, true)
+else
+   chol_fun=cholmod_factorize
+   AM_CONDITIONAL(USE_LONG, false)
 fi
+
 #Compile mex routines if MATLAB is detected and single is not enabled
 use_mex_default="no"
 MEXDIR_AUTO=
@@ -372,11 +361,12 @@ AC_PROG_CC_C99 #enable C99.
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
+#download LIBNANE file.tar.bz2 [outdir]
 download(){
    echo The $1 library is not available in the system
    echo Will download one from the website.
-   echo This library is only for non-commercial use.
    fn="$2"
+ if test ! -f /tmp/${fn} ;then
    success=0
    for BASEURL in $BASEURLS ; do
       if $wget "${BASEURL}/${fn}" "$wgetoutput" "/tmp/${fn}" ;then
@@ -386,83 +376,84 @@ download(){
          AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
       fi
    done
-   if test success -eq 0 ;then
+   if test $success -eq 0 ;then
       AC_MSG_ERROR([Please download it manually and put in /tmp/${fn}])
    fi
+ fi
    if test -n "$3" ;then
       OUTDIR="$3"
    else
-      OUTDIR="${LIBDIR}"
+      AC_MSG_ERROR([Please specify third argument])
    fi
    if test ! -d "${OUTDIR}" ;then
       mkdir -p "${OUTDIR}" || exit 1
    fi
    tar -xf "/tmp/${fn}" -C "${OUTDIR}"  || exit 1
-   rm -rf "/tmp/${fn}"
 }
+#compile LIBNAME srcfile.tar.gz [compile options]
+compile(){
+   echo Download and compile $1
+   name=$1
+   file=$2
+   shift
+   shift
+   opts="$@"
+   if test ! -d ${SRC_DIR}/external/$name ;then
+      download $name $file ${SRC_DIR}/external/$name
+   fi
+   fnlog=${SRC_DIR}/external/compile.log
+   if (cd ${SRC_DIR}/external/$name/* && \
+      (./configure "$@" --prefix=${SRC_DIR}/external > $fnlog || \
+      cmake -DCMAKE_INSTALL_PREFIX:PATH=${SRC_DIR}/external "$@" > $fnlog) && \
+      make -j4 install >> $fnlog) ;then
+      echo "Compiled $name successfully."
+   else
+      echo "Failed to compile $name. Please see $fnlog for details"
+      exit
+   fi
+}
+
 #Check for LAPACK library in the system
-if test ! "x$use_mkl" = "xyes" ;then
+if test -z "$LAPACK" ;then
+   LAPACK=`pkg-config --libs blas lapack`
    if test -z "$LAPACK" ;then
-       LAPACK=`pkg-config --libs blas lapack`
-       if test -z "$LAPACK" ;then
-           LAPACK="-lblas -llapack"
-       fi
+       LAPACK="-lblas -llapack"
    fi
-   echo Trying LAPACK="$LAPACK"
-   AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
-   AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
-   if test  "x$has_lapack" = "xno" ;then
-       if test "x$mkl_avail" = "xyes" ; then
-           use_mkl="yes"
-           AC_MSG_NOTICE([blas/lapack is not found. Download and use mkl])
-       else
-           AC_MSG_ERROR([Please install blas and lapack])
-       fi
-    fi
 fi
-if test "x$use_mkl" = "xyes" ;then 
-   if test ! -f "$mkl_lib"  ;then
-      download MKL "${mklname}.tar.bz2"
+AC_CHECK_LIB([blas],  [dgemm_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
+if test "$has_lapack" = "no" ;then
+   if test "$mkl_avail" = "yes" ;then
+       mklname=mkl${libsuffix}
+       download MKL "${mklname}.tar.bz2" /tmp/MKL
+       mv /tmp/MKL/*/*.* ${SRC_DIR}/external/lib
+       unset ac_cv_lib_blas_dgemm_
+       AC_CHECK_LIB([blas],  [dgemm_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
+   else
+       AC_MSG_ERROR([Please install blas/lapack])
    fi
-   LAPACK="-L${LIBDIR}/${mklname} -Wl,-rpath,${LIBDIR}/${mklname} -lblas -llapack"
-   if test -z "$OPENMP_CFLAGS" -o x$use_icc = xno ;then
-      LAPACK="$LAPACK ${mkldep}"
-   fi
-   AC_DEFINE(USE_MKL,[1],["MKL is used"])
-   if test "x$use_icc" = "xyes" ;then
-       OPTIM="$OPTIM -static-intel"
-   fi
-else
-   AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
-AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'],[$LDFLAGS])
+
+#Check for zlib
+AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
-   if test -z "$libsuffix" ;then
-      AC_MSG_ERROR([Please install zlib library])
-   fi
-   if test ! -d "${LIBDIR}/${zlibname}" ;then
-      download ZLIB "${zlibname}.tar.bz2"
-   fi
-   LDZ="-L${LIBDIR}/${zlibname} -lz"
-else
-   LDZ="-lz"
+   compile ZLIB zlib.tar.bz2 --static
+   unset ac_cv_lib_z_gzopen
+   AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
+LDZ="-lz"
+
 #Check for FFTW3 header and library.
 has_fftw='yes'
+AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
-AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'],[$LDFLAGS])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-   if test -z "$libsuffix" ;then
-      AC_MSG_ERROR([Please install fftw library])
-   fi	
-   if test ! -d "${LIBDIR}/${fftwname}" ;then 
-       download FFTW "${fftwname}.tar.bz2"
-   fi
-   LDFFT="-L${LIBDIR}/${fftwname}"
-   OPTScommon="$OPTScommon -I${LIBDIR}/${fftwname}"
-else
-   LDFFT=""
+   compile FFTW fftw.tar.bz2
+   unset ac_cv_lib_fftw3_fftw_execute
+   #compile FFTW fftw.tar.bz2 --enable-float 
+   AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
+LDFFT="-lfftw3"
 AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
 
@@ -487,6 +478,32 @@ else
     else
         LDFFT="$LDFFT -lfftw3"
     fi
+fi
+
+#Check for cholmod
+AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK])
+AC_CHECK_HEADERS([cholmod.h], [], [has_chol="no"])
+if test "$has_chol" = "no" ;then
+   compile CHOLMOD cholmod.tar.bz2
+   unset ac_cv_lib_cholmod_${chol_fun}
+   AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Invalid CHOLMOD library])], [$LAPACK])
+fi
+LDCHOL="-lcholmod"
+
+#Check for libwebsocket
+AM_CONDITIONAL(HAS_LWS, false)
+AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
+if test "$has_lws" = "no" ;then
+   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF
+   unset ac_cv_lib_websockets_libwebsocket_service
+   AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+fi
+if test "$has_lws" != "no" ;then
+   AM_CONDITIONAL(HAS_LWS, true)
+   AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
+else
+   AC_MSG_NOTICE(["libwebsocket library or header is not available"])
 fi
 
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
@@ -560,50 +577,10 @@ AC_SUBST(MONN_LIBS)
 AC_SUBST(MONN_CFLAGS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
-#Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
-if test "$use_long" = "yes" ;then
-   OPTScommon="$OPTScommon -DDLONG"
-   CHOLSUFFIX="long"
-   chol_fun=cholmod_l_factorize
-   AM_CONDITIONAL(USE_LONG, true)
-else
-   CHOLSUFFIX="int"
-   chol_fun=cholmod_factorize
-   AM_CONDITIONAL(USE_LONG, false)
-fi
-AM_CONDITIONAL(COMP_CHOL, false)
-AC_CHECK_LIB([cholmod], [${chol_fun}], [have_chol="yes"], [have_chol="no"])
-if test "$have_chol" = "yes" ;then
-   LDCHOL="-lcholmod"
-else
-AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
-if test "$have_chol" = "no" ;then
-   if test ! -d "${SRC_DIR}/external/cholmod" ;then
-      download CHOLMOD_SRC cholmod_src.tar.bz2 "${SRC_DIR}/external"
-   fi
-   LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
-   AM_CONDITIONAL(COMP_CHOL, true)
-fi
-fi
-# Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
-# use the cholmod in the system even if it is available because we want to
-# customize the dependency on blas/lapack.
 
-#Check libwebsocket
-AM_CONDITIONAL(HAS_LWS, false)
-AC_CHECK_LIB([websockets], [libwebsocket_service], [have_lws="yes"], [have_lws="no"], [])
-if test "$have_lws" = "yes" ;then
-   AC_CHECK_HEADERS(["libwebsockets.h"], [], [header_lws="yes"])
-   if test "$header_lws"="yes"; then
-       AM_CONDITIONAL(HAS_LWS, true)
-       AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
-   else
-       AC_MSG_NOTICE(["libwebsocket library exists, not header libwebsocket.h is not found"])
-   fi
-fi
 AC_CHECK_HEADERS([unistd.h])
-LDLIB="$LDCHOL $LDFFT $LDZ -lm"
-LDOPTS="$LAPACK"
+LDLIB=""
+LDOPTS="$LAPACK $LDCHOL $LDFFT $LDZ -lm"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
@@ -767,7 +744,7 @@ if test "$use_cuda" = "yes" ;then
    if test -f "${CUDADIR}/include/cuda.h" ;then
        CUDAOPT="-I${CUDADIR}/include"
    else
-       AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
+       AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
    cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
@@ -822,9 +799,6 @@ AC_CONFIG_FILES( [Makefile
 		 ])
 if test -d "${srcdir}/test" ;then
 AC_CONFIG_FILES([test/Makefile])
-fi
-if test -d "${srcdir}/external/cholmod" ;then
-AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml

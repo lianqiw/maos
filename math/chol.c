@@ -17,8 +17,11 @@
 */
 #include <unistd.h>
 #include "../sys/sys.h"
-#include "cholmod.h"
 #include "mathdef.h"
+#ifdef I
+#undef I
+#endif
+#include "cholmod.h"
 #include "chol.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A

@@ -18,13 +18,7 @@ ___bin_maos_LDADD=
 if USE_CUDA
 ___bin_maos_LDADD+=../cuda/libgpu.a $(LDCUDA)
 endif
-if USE_LONG
-___bin_maos_LDADD+=../lib/libaos_long.la ../math/libaomath_long.la
-else
-___bin_maos_LDADD+=../lib/libaos_int.la ../math/libaomath_int.la
-endif
-___bin_maos_LDADD+=../sys/libaosys.la 
-___bin_maos_LDADD+=$(LDOPTS) 
+___bin_maos_LDADD+=../lib/libaos.la ../math/libaomath.la ../sys/libaosys.la $(LDOPTS)
 #if USE_STATIC
 #config.o:../config.tar.gz
 #	objcopy --input binary --output $(objcopy_output) --binary-architecture $(objcopy_arch) ../config.tar.gz config.o

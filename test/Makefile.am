@@ -1,8 +1,4 @@
-if USE_LONG
-LDADD=../lib/libaos_long.la ../math/libaomath_long.la ../sys/libaosys.la $(LDOPTS)
-else
-LDADD=../lib/libaos_int.la ../math/libaomath_int.la ../sys/libaosys.la $(LDOPTS)
-endif
+LDADD=../lib/libaos.la ../math/libaomath.la ../sys/libaosys.la $(LDOPTS)
 AM_CFLAGS=$(OPTS)
 AM_LDFLAGS=$(LDEXE) 
 bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2		\

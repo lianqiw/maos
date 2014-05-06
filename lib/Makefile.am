@@ -1,4 +1,4 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/external/cholmod/Include
+AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
 if !WIN
 AM_CFLAGS+=-fPIC
 endif
@@ -14,14 +14,8 @@ AOS_SRC=readcfg.c loc.c locbin.c turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c p
 pcg.c muv.c draw.c genotf.c fractal.c stfun.c servo.c slaving.c mkdtf.c psd.c kalman.c
 
 
-if USE_LONG
-lib_LTLIBRARIES=libaos_long.la
-libaos_long_la_SOURCES=$(AOS_SRC)
-libaos_long_la_LIBADD=$(LDLIB)
-libaos_long_la_LDFLAGS = -avoid-version 
-else
-lib_LTLIBRARIES=libaos_int.la
-libaos_int_la_SOURCES=$(AOS_SRC)
-libaos_int_la_LIBADD=$(LDLIB)
-libaos_int_la_LDFLAGS = -avoid-version
-endif
+lib_LTLIBRARIES=libaos.la
+libaos_la_SOURCES=$(AOS_SRC)
+libaos_la_LIBADD=$(LDLIB)
+libaos_la_LDFLAGS = -avoid-version 
+

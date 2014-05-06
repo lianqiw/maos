@@ -21,8 +21,7 @@ m4/ltsugar.m4
 .svn
 *#
 #Ignore files that are not distributed.
-external/mkl*
-external/fft*
+external/*
 #Ignore files that are produced by `make`
 math/tmp.c
 *.o

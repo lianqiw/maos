@@ -1,8 +1,5 @@
 ACLOCAL_AMFLAGS=-I m4 --install
 SUBDIRS=
-if COMP_CHOL
-SUBDIRS+=external/cholmod
-endif
 SUBDIRS+=sys math lib
 if USE_CUDA
 SUBDIRS+=cuda
