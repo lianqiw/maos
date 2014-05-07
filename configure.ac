@@ -35,7 +35,7 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function " #-Wno-deprecated-declarations" 
+OPTScommon="-Wno-unknown-pragmas -Wno-unused-function" 
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
@@ -133,18 +133,13 @@ case "$host_os" in
  LDEXE="$LDEXE -lrt" #need real time library.
  OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
  mkl_avail="yes"
- use_static_default="no"
- mkldep=""
  libsuffix=${cpu}
  system="linux"
  ldsuffix="so"
- LDFLAGS="$LDFLAGS" #as-needed is conflicting with fftw3 openmp detection.
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
  mkl_avail="no"
- use_static_default="no"
- mkldep=""
  libsuffix=fat
  system="apple"
  ldsuffix="dylib"
@@ -159,7 +154,6 @@ case "$host_os" in
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack"
  win32=yes
- use_static_default=no #blas/lapack are linked statically, but others are still dynamic. ship those
  system="win"
  ldsuffix="dll"
  ;;
@@ -178,12 +172,11 @@ else
    wget="(echo wget/curl not found ; exit)"
 fi
 #Common configure options.
-AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
+AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
 AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc="$use_icc_default"])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
 
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
@@ -238,11 +231,6 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-if test "x$use_duma" = "xyes" ;then	
-    AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
-    LDEXE="$LDEXE -lduma"
-fi 
-
 if test x$use_oprof = "xyes" ;then
    OPTSprof="$OPTSprof -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 fi
@@ -251,7 +239,7 @@ fi
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
 COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc " #-Mcache_align"
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Wno-deprecated-declarations" #-Mcache_align"
 OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
@@ -580,7 +568,7 @@ AC_SUBST(GTK_LIBS)
 
 AC_CHECK_HEADERS([unistd.h])
 LDLIB=""
-LDOPTS="$LAPACK $LDCHOL $LDFFT $LDZ -lm"
+LDOPTS="$LDCHOL $LDFFT $LAPACK $LDZ -lm"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
