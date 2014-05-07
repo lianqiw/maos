@@ -4,37 +4,46 @@
 	<meta charset=utf-8 http-equiv="Content-Language" content="en"/>
 	<title>MAOS Monitor</title>
 	<style type="text/css">
-	 .title { font-size:24pt; font: Arial; font-weight:normal; text-align:center; color:#000000; }
-	 .browser { font-size:18pt; font: Arial; font-weight:normal; text-align:center; color:#ffff00; vertical-align:middle; text-align:center; background:#d0b070; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px;}
-	 .group2 { width:600px; vertical-align:middle; text-align:center; background:#f0f0e0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
-	 .explain { vertical-align:middle; text-align:center; background:#f0f0c0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; color:#404000; }
-	 .content { vertical-align:top; text-align:center; background:#fffff0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
-	 .canvas { vertical-align:top; text-align:center; background:#efefd0; padding:12px; -webkit-border-radius:10px; -moz-border-radius:10px; border-radius:10px; }
+	 .title { 
+	     font-size:24pt; 
+	     font: Arial; 
+	     font-weight:normal; 
+	     text-align:center; 
+	     color:#000; 
+	 }
+	 
 	 table.monitor{
 	     border-spacing:0 0;
 	     border-style:solid;
 	     border-color:black;
-	     border-width:1px 1px 2px 2px;
+	     border-width:2px 1px 1px 2px;
+	     table-layout:fixed;
+	     max-width:100%;
 	 }
-	 table.monitor tr td
+	 table.monitor tr td,th
 	 {
-	     border-width:1px 1px 0 0;
+	     border-width:0px 1px 1px 0;
 	     border-style:solid;
-	     border-color:black;
-	     vertical-align:middle;
-	 }
-	 table.monitor td.wrappable{
-	     white-space:normal;
-	 }
-	 table.monitor td.nowrap{
+	     border-color:#AAA;
+	     vertical-align:top;
 	     white-space:nowrap;
+	 }
+	 table.monitor tr th{
+	     border-width:0px 1px 1px 0;
+	     text-align: center;
+	 }
+	 table.monitor tr:nth-child(odd){
+	     background-color:#EEE
+	 }
+	 table.monitor tr .wrappable{
+	     width:100%;
+	     white-space:normal;
 	 }
 	 div.progress {
 	     background: white;
 	     position: relative;
-	     text-align:left
+	     text-align:left;
 	 }
-
 	 div.bar {
 	     background: #10DD10;
 	     color: white;
@@ -94,23 +103,18 @@
 		    <td><button onclick="kill_all()">Kill All</button></td>
 		</tr>
 	    </table>
-	    <table id="joblist" class="monitor" style="max-width:100%">
-		<colgroup>
-		    <col span="2">
-		    <col span="1" style="wrappable" width="100%">
-		    <col span="7">
-		</colgroup>
+	    <table id="joblist" class="monitor">
 		<tr>
-		    <td align="center">Time</td>
-		    <td align="center">PID</td>
-		    <td align="center">Path</td>
-		    <td align="center">Out</td>
-		    <td align="center">Low</td>
-		    <td align="center">High</td>
-		    <td align="center">Seed</td>
-		    <td align="center">Step</td>
-		    <td align="center">Timing</td>
-		    <td> </td>
+		    <th>Time</th>
+		    <th>PID</th>
+		    <th class="wrappable">Path</th>
+		    <th>Out</th>
+		    <th>Low</th>
+		    <th>High</th>
+		    <th>Seed</th>
+		    <th>Step</th>
+		    <th>Timing</th>
+		    <th> </th>
 		</tr>
 	    </table>
 	</article>
@@ -237,8 +241,6 @@
 			     row.cells[j].align="right";
 			     if(j==2){
 				 row.cells[j].className="wrappable";
-			     }else{
-				 row.cells[j].className="nowrap";
 			     }
 			 }
 			 row.cells[1].innerHTML=i[0];
@@ -321,7 +323,7 @@
 	     socket_lm.onclose = function(){
 		 document.getElementById("monitor_status").style.color = "#dd4040";
 		 document.getElementById("monitor_status").textContent = "Disconnected";
-		 //setTimeout(websocket_start(), 5000);
+		 setTimeout(websocket_start(), 5000);
 	     }
 	 } 
 	 websocket_start();
