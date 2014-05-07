@@ -102,7 +102,6 @@ typedef struct LLT_CFG_T{
     double *oy;    /**<see ox.*/
     double *misreg;
     int *i;        /**<Index into llt for this iwfs.*/
-    int smooth;    /**<smooth the sodium profile or not*/
     int n;         /**<number of launch telescopes in this powfs*/
     int colprep;   /**<starting column to use in fn for ETF in preparation of
 		      matched filter*/
@@ -567,6 +566,8 @@ typedef struct DBG_CFG_T{
     int dmfullfov;   /**<let DM cover full FoV (sim.fov)*/
     int tomo;        /**<Comparing tomography in GPU and CPU*/
     int fit;         /**<Comparing DM fitting in GPU and CPU*/
+    int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
+    int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

@@ -364,7 +364,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
-	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix); 
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix); 
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
@@ -965,7 +964,6 @@ static void readcfg_plot(PARMS_T *parms){
    Read in debugging parameters
 */
 static void readcfg_dbg(PARMS_T *parms){
-  
     READ_INT(dbg.psol);
     READ_INT(dbg.wamethod);
     READ_INT(dbg.atm);
@@ -987,6 +985,8 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.dmfullfov);
     READ_INT(dbg.tomo);
     READ_INT(dbg.fit);
+    READ_INT(dbg.na_smooth);
+    READ_INT(dbg.na_interp);
 }
 /**
    Read in GPU options

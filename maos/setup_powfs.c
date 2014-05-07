@@ -62,6 +62,8 @@
    leaking information from the "real world (simulation)" to our knowledge (RTC).
 */
 
+
+
 /**
    Free the powfs geometric parameters
 */
@@ -1018,7 +1020,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	error("The sodium profile input %s is in wrong fromat\n", fnprof);
     }
 
-    if(parms->powfs[0].llt->smooth){/*resampling the sodium profile by binning. */
+    if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
 	/*Make new sampling: */
 	double rsamax=dmax(powfs[ipowfs].srsamax);
 	double dthetamin=dmin(powfs[ipowfs].dtheta);
@@ -1028,7 +1030,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	/*minimum sampling required. */
 	double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	if(dxnew > dxin * 2){
-	    info2("Smoothing sodium profile\n");
+	    warning("Smoothing sodium profile\n");
 	    const long nxnew=ceil((Nain->p[nxin-1]-x0in)/dxnew);
 	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
 	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
@@ -1051,11 +1053,11 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    locfree(loc_out);
 	    dfree(Nain);
 	}else{
-	    warning("Not smoothing sodium profile\n");
+	    info2("Not smoothing sodium profile\n");
 	    powfs[ipowfs].sodium=Nain;
 	}
     }else{
-	warning("Not smoothing sodium profile\n");
+	info2("Not smoothing sodium profile\n");
 	powfs[ipowfs].sodium=Nain;
     }
     if(parms->save.setup){
@@ -1108,15 +1110,45 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	powfsetf=powfs[ipowfs].etfsim;
 	colskip=parms->powfs[ipowfs].llt->colsim;
     }
-    /*find maximum elongation.  */
-    /*Then test if # of pixels large enough. */
- 
+
+    if(!powfs[ipowfs].sodium){
+	error("Sodium profile is NULL\n");
+    }
+    dmat *sodium=powfs[ipowfs].sodium;
+    const int nhp=sodium->nx; 
+    const double hs=parms->powfs[ipowfs].hs;
+    //adjusting for the zenith angle;
+    double hpmin=0, dhp1=0;
+    if(parms->dbg.na_interp){
+	hpmin=sodium->p[0]/cos(parms->sim.za);
+	dhp1=cos(parms->sim.za)/(sodium->p[1]-sodium->p[0]);
+	/*assume linear spacing. check the assumption valid */
+	if(fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)*(sodium->p[1]-sodium->p[0]))>1.e-7){
+	    error("llt profile is not evenly spaced\n");
+	}
+    }
+
+    if(sodium->ny-1<colskip){
+	error("Invalid configuration. colprep or colsim is too big\n");
+    }
+    colstart=colskip+istep%(sodium->ny-1-colskip);
+    info2("Na using column %d in %s\n",colstart, mode==0?"preparation":"simulation");
+    /*points to the effective sodium profile. */
+    double* pp=sodium->p+nhp*(1+colstart);
+    const double* px=sodium->p;
+    /*the sum of pp determines the scaling of the pixel intensity. */
+    const double i0scale=dblsum(pp, nhp);
+    if(fabs(i0scale-1)>0.01){
+	warning("Siglev is scaled by %g by sodium profile\n", i0scale);
+    }
     assert(nwvl==1);/*sanity check. need to double check the code is nwvl!=1. */
     const double embfac=parms->powfs[ipowfs].embfac;
     /*setup elongation along radial direction. don't care azimuthal. */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	const double dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
+	const double dux=1./(dtheta*ncompx);
+	const double duy=1./(dtheta*ncompy);
 	/**
 	   fixme: should do integrate instead of just interpolating closest point. 
 	*/
@@ -1142,9 +1174,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      Use rotating psf/otf method to do radial
 	      pixel. ETF is 1D only. Good for off-axis
 	      launch, otherwise, ETF and DTF takes a lot of
-	      space for 6 LGS in NFIRAOS setup
-	      warning("Using rot psf/otf method to do radial
-	      pixel detector\n");
+	      space for 6 LGS in NFIRAOS setup.
 	    */
 	    warning("Rotate PSF to do radial format detector (preferred)\n");
 	    powfsetf[iwvl].p1=ccellnew(nsa,nllt);
@@ -1166,184 +1196,190 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    petf=(void*)powfsetf[iwvl].p2->p;
 	    use1d=0;
 	}
+
 	const int fuse_etf=(use1d==0);
-	cmat *etf=NULL;
-	int netf;
-	double dusc;
-	double dtetf;
-	int npad;
-	int nover;
-	if(use1d){
+	TIC;tic;
+	if(!parms->dbg.na_interp){
 	    /*
-	      2009-12-18:Thinking of padding here also to reduce aliasing. 
-	      result: helps little, not much.
+	      The ETF is computed as DFT
+	      ETF(k_i)=\sum_j exp(-2*\pi*I*k_i*{\theta}_j)P({\theta}_j)
+	      Where \theta_j is the radial coord of pixel j, and
+	      P({\theta}_j}=sodium(h_j) with h_j=rsa*hs/(rsa+hs*{\theta}_j)
+	      where hs is GS distance and rsa is subaperture to LLT distance
+	      We replace the above interpolation (and FFT) by doing summation directly
+	      ETF(k_i)=\sum_j exp(-2*\pi*I*k_i*(rsa/h_j-rsa/hs))P(h_j)
 	    */
-	    npad=2;/*zero padding to reduce aliasing? */
-	    nover=2;
-	    /*padding by x2. */
-	    netf=ncompx*nover*npad;
-	    dtetf=dtheta/nover;
-	}else{
-	    /*
-	      We padd the array to incrase the sampling of
-	      du. Don't shrink dtheta.  in use1d==0 case, du in
-	      etf is smaller.  so interpolation will be more
-	      accurate.
-	    */
-	    npad=2;
-	    nover=2;/*doesn't change a lot. reduce aliasing */
-	    /*padding by x2. */
-	    netf=ncompx*nover*npad;
-	    /*make du array bigger so that rotation is covered */
-	    dtetf=dtheta/nover;
-	}
-	dusc=(netf*dtetf)/(dtheta*ncompx);
-	etf=cnew(netf,1);
-	double *thetas=calloc(netf, sizeof(double));
-	int netf2=netf>>1;
-	/*Only interpolating the center part. the rest is padding. */
-	int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));
-	int etf1=etf0+(int)round(ncompx*(dtheta/dtetf));
-	if(etf0<0) error("Invalid configuration\n");
-	for(int it=etf0; it<etf1; it++){
-	    thetas[it]=(it-netf2)*dtetf;
-	}
-	cfft2plan(etf, -1);
-	if(!powfs[ipowfs].sodium){
-	    error("Sodium profile is NULL\n");
-	}
-	dmat *sodium=powfs[ipowfs].sodium;
-       	int nhp=sodium->nx; 
-
-	const double hs=parms->powfs[ipowfs].hs;
-	//adjusting for the zenith angle;
-	double hpmin=sodium->p[0]/cos(parms->sim.za);
-	double dhp1=1./(sodium->p[1]-sodium->p[0]);
-	/*assume linear spacing. check the assumption valid */
-	if(fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1)>1.e-7){
-	    error("llt profile is not evenly spaced:%g\n",
-		  fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1));
-	}
-	//adjusting for the zenith angle;
-	dhp1=dhp1*cos(parms->sim.za);
-	if(sodium->ny-1<colskip){
-	    error("Invalid configuration. colprep or colsim is too big\n");
-	}
-	colstart=colskip+istep%(sodium->ny-1-colskip);
-	info2("Na using column %d in %s\n",colstart, mode==0?"preparation":"simulation");
-	/*points to the effective sodium profile. */
-	double* pp=sodium->p+nhp*(1+colstart);
-	/*the sum of pp determines the scaling of the pixel intensity. */
-	double i0scale=dblsum(pp, nhp);
-	if(fabs(i0scale-1)>0.01){
-	    warning("Siglev is scaled by %g by sodium profile\n", i0scale);
-	}
-	cellarr *fn_elong=0;
-	if(parms->save.setup>1){
-	    fn_elong=cellarr_init(nsa, nllt, "%s/powfs%d_elong.bin", dirsetup, ipowfs);
-	}
-	for(int illt=0; illt<nllt; illt++){
-	    for(int isa=0; isa<nsa; isa++){
-		/*1d ETF along radius. */
-		double rsa=powfs[ipowfs].srsa->p[illt]->p[isa];
-		double etf2sum=0;
-		czero(etf);
-		for(int icomp=etf0; icomp<etf1; icomp++){
-		    /*peak in center */
-		    const double itheta=thetas[icomp];
-		    /*non linear mapping. */
-		    const double ih=hs*rsa/(rsa-itheta*hs);
-		    /*interpolating to get Na profile strenght. */
-		    /*this is bilinear interpolation. not good.  */
-		    /*need to do averaging */
-		    const double iih=(ih-hpmin)*dhp1;
-		    const int iihf=ifloor(iih);
-		    const double iihw=iih-iihf;
-		    if(iihf<0 || iihf>nhp-2){
-			etf->p[icomp]=0.;
-		    }else{
-			double tmp=pp[iihf]*(1.-iihw)+pp[iihf+1]*iihw;
-			/*neglected rsa1 due to renormalization. */
-			etf->p[icomp]=tmp;
-			etf2sum+=tmp;
-		    }
-		}
-		if(fabs(etf2sum)>1.e-20){
-		    /*2010-11-09:
-
-		      We used to normalize the etf before fft so that after fft
-		      it max to 1. The strength of original profile doesn't
-		      matter.
-		    
-		      Changed: We no longer normalize the etf, so we can model
-		      the variation of the intensity and meteor trails.
-		      
-		    */
-		    cscale(etf,i0scale/etf2sum);
-		    if(fn_elong){
-			cellarr_cmat(fn_elong, illt*nsa+isa, etf);
-		    }
-		    cfftshift(etf);/*put peak in corner; */
-		    cfft2(etf, -1);
-		    if(use1d){
-			if(npad==1 && nover==1){
-			    ccp(&petf[illt][isa],etf);
-			}else{
-			    cfftshift(etf);
-			    petf[illt][isa]=cnew(ncompx,1);
-			    dcomplex *etf1d=petf[illt][isa]->p;
-			    for(int icompx=0; icompx<ncompx; icompx++){
-				double ir=dusc*(icompx-ncompx2)+netf2;
-				int iir=ifloor(ir);
-				ir=ir-iir;
-				if(iir>=0 && iir<netf-1){
-				    etf1d[icompx]=etf->p[iir]*(1.-ir)
-					+etf->p[iir+1]*ir;
-				}/*else{etf1d[icompx]=0;}*/
-			    }
-			    cfftshift(petf[illt][isa]);
-			}
-		    }else{
-			/*Rotate the ETF. */
-			/*need to put peak in center. */
-			cfftshift(etf);
-			double theta=powfs[ipowfs].srot->p[illt]->p[isa];
-			double ct=cos(theta);
-			double st=sin(theta);
-			petf[illt][isa]=cnew(ncompx,ncompy);
-			dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p;
-			for(int icompy=0; icompy<ncompy; icompy++){
-			    double iy=(icompy-ncompy2);
-			    for(int icompx=0; icompx<ncompx; icompx++){
-				double ix=(icompx-ncompx2);
-				double ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
-				int iir=ifloor(ir);
-				ir=ir-iir;
-				if(iir>=0 && iir<netf-1){
-				    /*bilinear interpolation. */
-				    etf2d[icompy][icompx]=etf->p[iir]*(1.-ir)
-					+etf->p[iir+1]*ir;
-				}/*else{etf2d[icompy][icompx]=0;}*/
-			    }
-			}
-			cfftshift(petf[illt][isa]);/*peak in corner; */
-		    }
-		}else{
-		    warning_once("Wrong focus!\n");
+	    for(int illt=0; illt<nllt; illt++){
+		for(int isa=0; isa<nsa; isa++){
+		    /*1d ETF along radius. */
+		    double rsa=powfs[ipowfs].srsa->p[illt]->p[isa];
+		    double rsa_za=rsa*cos(parms->sim.za);
+		    /* No interpolation, no fft */
 		    if(use1d){
 			petf[illt][isa]=cnew(ncompx,1);
+			dcomplex *etf1d=petf[illt][isa]->p;
+			for(int icompx=0; icompx<ncompx; icompx++)
+#if _OPENMP >= 200805 
+#pragma omp task
+#endif
+			{
+			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+			    for(int ih=0; ih<nhp; ih++){
+				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium->p[ih]-rsa/hs)));
+				etf1d[icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
+			    }
+			}
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
 		    }else{
+			const double theta=powfs[ipowfs].srot->p[illt]->p[isa];
+			const double ct=cos(theta);
+			const double st=sin(theta);
 			petf[illt][isa]=cnew(ncompx,ncompy);
+			dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p; 
+			for(int icompy=0; icompy<ncompy; icompy++)
+#if _OPENMP >= 200805 
+#pragma omp task
+#endif
+			{
+			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
+			    for(int icompx=0; icompx<ncompx; icompx++){
+				const double kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
+				double kr=(ct*kx+st*ky);/*along radial*/
+				for(int ih=0; ih<nhp; ih++){
+				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
+				    etf2d[icompy][icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
+				}
+			    }
+			}
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
 		    }
-		    cset(petf[illt][isa],1);
-		}
-		if(fuse_etf){
-		    /*Fuse dtf into this 2d etf. */
+		}//isa
+	    }//illt
+	}else{
+	    const int npad=2;/*zero padding to reduce aliasing? */
+	    const int nover=2;/*enough size for rotation*/
+	    const int netf=ncompx*nover*npad;
+	    const double dtetf=dtheta/nover;
+	    const double dusc=(netf*dtetf)/(dtheta*ncompx);
+	    cmat *etf=cnew(netf,1);
+	    double *thetas=calloc(netf, sizeof(double));
+	    const int netf2=netf>>1;
+	    /*Only interpolating the center part. the rest is padding. */
+	    const int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));
+	    const int etf1=etf0+(int)round(ncompx*(dtheta/dtetf));
+	    if(etf0<0) error("Invalid configuration\n");
+	    for(int it=etf0; it<etf1; it++){
+		thetas[it]=(it-netf2)*dtetf;
+	    }
+	    cfft2plan(etf, -1);
+
+	    for(int illt=0; illt<nllt; illt++){
+		for(int isa=0; isa<nsa; isa++){
+		    /*1d ETF along radius. */
+		    double rsa=powfs[ipowfs].srsa->p[illt]->p[isa];
+		    double etf2sum=0;
+		    czero(etf);
+		    for(int icomp=etf0; icomp<etf1; icomp++){
+			/*peak in center */
+			const double itheta=thetas[icomp];
+			/*non linear mapping. changed from - to + on 2014-05-07.*/
+			const double ih=hs*rsa/(rsa+itheta*hs);
+			/*interpolating to get Na profile strenght. */
+			/*this is bilinear interpolation. not good. need to do averaging */
+			const double iih=(ih-hpmin)*dhp1;
+			const int iihf=ifloor(iih);
+			const double iihw=iih-iihf;
+			if(iihf<0 || iihf>nhp-2){
+			    etf->p[icomp]=0.;
+			}else{
+			    double tmp=pp[iihf]*(1.-iihw)+pp[iihf+1]*iihw;
+			    /*neglected rsa1 due to renormalization. */
+			    etf->p[icomp]=tmp;
+			    etf2sum+=tmp;
+			}
+		    }
+		    if(fabs(etf2sum)>1.e-20){
+			/*2010-11-09:
+
+			  We used to normalize the etf before fft so that after fft
+			  it max to 1. The strength of original profile doesn't
+			  matter.
+		    
+			  Changed: We no longer normalize the etf, so we can model
+			  the variation of the intensity and meteor trails.
+		      
+			*/
+			cscale(etf,i0scale/etf2sum);
+			cfftshift(etf);/*put peak in corner; */
+			cfft2(etf, -1);
+			if(use1d){
+			    if(npad==1 && nover==1){
+				ccp(&petf[illt][isa],etf);
+			    }else{
+				cfftshift(etf);
+				petf[illt][isa]=cnew(ncompx,1);
+				dcomplex *etf1d=petf[illt][isa]->p;
+				for(int icompx=0; icompx<ncompx; icompx++){
+				    double ir=dusc*(icompx-ncompx2)+netf2;
+				    int iir=ifloor(ir);
+				    ir=ir-iir;
+				    if(iir>=0 && iir<netf-1){
+					etf1d[icompx]=etf->p[iir]*(1.-ir)
+					    +etf->p[iir+1]*ir;
+				    }/*else{etf1d[icompx]=0;}*/
+				}
+				cfftshift(petf[illt][isa]);
+			    }
+			}else{
+			    /*Rotate the ETF. */
+			    /*need to put peak in center. */
+			    cfftshift(etf);
+			    double theta=powfs[ipowfs].srot->p[illt]->p[isa];
+			    double ct=cos(theta);
+			    double st=sin(theta);
+			    petf[illt][isa]=cnew(ncompx,ncompy);
+			    dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p;
+			    for(int icompy=0; icompy<ncompy; icompy++){
+				double iy=(icompy-ncompy2);
+				for(int icompx=0; icompx<ncompx; icompx++){
+				    double ix=(icompx-ncompx2);
+				    double ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
+				    int iir=ifloor(ir);
+				    ir=ir-iir;
+				    if(iir>=0 && iir<netf-1){
+					/*bilinear interpolation. */
+					etf2d[icompy][icompx]=etf->p[iir]*(1.-ir)
+					    +etf->p[iir+1]*ir;
+				    }/*else{etf2d[icompy][icompx]=0;}*/
+				}
+			    }
+			    cfftshift(petf[illt][isa]);/*peak in corner; */
+			}
+		    }else{
+			warning_once("Wrong focus!\n");
+			if(use1d){
+			    petf[illt][isa]=cnew(ncompx,1);
+			}else{
+			    petf[illt][isa]=cnew(ncompx,ncompy);
+			}
+			cset(petf[illt][isa],1);
+		    }
+		}//for isa
+	    }//for illt.
+	    cfree(etf);
+	    free(thetas);
+	}//if na_interp
+	toc2("ETF");
+	if(fuse_etf){
+	    for(int illt=0; illt<nllt; illt++){
+		for(int isa=0; isa<nsa; isa++){
 		    ccwm(petf[illt][isa], pnominal[illt][isa*mnominal]);
 		}
 	    }
-	}
-	if(fuse_etf){
 	    powfs[ipowfs].dtf[iwvl].fused=1;
 	    if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim
 	       && parms->powfs[ipowfs].llt->colsimdtrat==0){
@@ -1353,10 +1389,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		info2("DTF nominal is fused to ETF but kept\n");
 	    }
 	}	    
-	
-	cfree(etf);
-	free(thetas);
-    }
+    }//for iwvl
 }
 
 /**
