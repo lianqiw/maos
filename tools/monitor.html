@@ -22,24 +22,26 @@
 	     border-style:solid;
 	     border-color:black;
 	     vertical-align:middle;
+	 }
+	 table.monitor td.wrappable{
+	     white-space:normal;
+	 }
+	 table.monitor td.nowrap{
 	     white-space:nowrap;
 	 }
-	 table.monitor td.tight{
-	     width:0px;
-	 }
-	 .progress {
+	 div.progress {
 	     background: white;
 	     position: relative;
 	     text-align:left
 	 }
 
-	 .bar {
-	     background: #1070DD;
+	 div.bar {
+	     background: #10DD10;
 	     color: white;
 	     height: 20px;
 	     vertical-align:middle
 	 } 
-	 span {
+	 span.bar {
 	     position: absolute;
 	     top: 0px;
 	     vertical-align:middle
@@ -52,12 +54,12 @@
 	</style>
 	<script>
 	 var socket_lm;
-	 function clear_all(){
+	 function clear_all(kind){
 	     var joblist=document.getElementById("joblist");
 	     for (irow=1; irow<joblist.rows.length; irow++){
                  var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
-                 var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
-                 if(status>10){
+                 if((status==11 && kind==1) || (status>11 && kind==2)){
+                     var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
 	             socket_lm.send(pid+"&REMOVE;");
 	         }
 	     }
@@ -86,13 +88,16 @@
 		<tr><td align="center" id="monitor_status">Not initialized</td></tr>
 	    </table>
 	    <table>
-	      <tr><td><button onclick="clear_all()">Clear All</button></td>
-		<td><button onclick="kill_all()">Kill All</button></td></tr>
+		<tr>
+		    <td><button onclick="clear_all(1)">Clear Finished</button></td>
+		    <td><button onclick="clear_all(2)">Clear Crashed</button></td>
+		    <td><button onclick="kill_all()">Kill All</button></td>
+		</tr>
 	    </table>
-	    <table id="joblist" class="monitor" width="100%">
+	    <table id="joblist" class="monitor" style="max-width:100%">
 		<colgroup>
 		    <col span="2">
-		    <col span="1" style="width:100%">
+		    <col span="1" style="wrappable" width="100%">
 		    <col span="7">
 		</colgroup>
 		<tr>
@@ -120,6 +125,7 @@
 	     div2.className="bar";
 	     div2.style.width="0%";
 	     var span1=document.createElement("span");
+	     span1.className="bar";
 	     span1.innerHTML="test";
 	     div1.appendChild(div2);
 	     div1.appendChild(span1);
@@ -229,6 +235,11 @@
 			 for(var j=0; j<10; j++){
 			     row.insertCell(-1);
 			     row.cells[j].align="right";
+			     if(j==2){
+				 row.cells[j].className="wrappable";
+			     }else{
+				 row.cells[j].className="nowrap";
+			     }
 			 }
 			 row.cells[1].innerHTML=i[0];
 			 row.cells[6].appendChild(new_progbar("50px"));
