@@ -176,7 +176,10 @@ X(mat) *X(ref)(const X(mat) *in){
     X(mat) *out=calloc(1, sizeof(X(mat)));
     memcpy(out,in,sizeof(X(mat)));
     if(!in->nref){
-	warning("Referencing non-referrable data. This may cause error.\n");
+	extern quitfun_t quitfun;
+	if(quitfun==&default_quitfun){
+	    warning_once("Referencing non-referrable data. This may cause error.\n");
+	}
     }else{
 	atomicadd(in->nref, 1);
     }

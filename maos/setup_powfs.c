@@ -1030,7 +1030,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	/*minimum sampling required. */
 	double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	if(dxnew > dxin * 2){
-	    warning("Smoothing sodium profile\n");
+	    info2("Smoothing sodium profile\n");
 	    const long nxnew=ceil((Nain->p[nxin-1]-x0in)/dxnew);
 	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
 	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);

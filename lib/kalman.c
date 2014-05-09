@@ -438,11 +438,10 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dcell *Rnadd=dcellnew(nwfs, nwfs);
 	    dcell *Cd=dcellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		dmat *Gwfsi=0;//Use for reconstruction. Can change it.
-		//info("indk=%d, nmod=%d\n", indk, nmod);
-		if(indk==1 && nmod==12){//Our sky coverage case with single WFS
-		    //info2("Only 1 WFS. Make 3rd column of Gwfs zero\n");
-		    Gwfsi=ddup(Gwfs->p[iwfs]);
+		dmat *Gwfsi=0;//Use for reconstruction. 
+		if(indk==1 && nmod==12){
+	            /*Our sky coverage case with single WFS, make 3rd column zero*/
+	            Gwfsi=ddup(Gwfs->p[iwfs]);
 		    memset(Gwfsi->p+2*Gwfsi->nx, 0, Gwfsi->nx*sizeof(double));
 		}else{
 		    Gwfsi=dref(Gwfs->p[iwfs]);
