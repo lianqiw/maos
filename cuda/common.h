@@ -27,13 +27,14 @@ extern "C"
 #include <cusparse_v2.h>
 #include <cufft.h>
 #include <cuComplex.h>
-const int NG1D=64;
-const int NG2D=8;
-const int WRAP_SIZE=32; /*The wrap size is currently always 32 */
-const int REDUCE_WRAP=8;
-const int REDUCE_WRAP_LOG2=3;
-const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
-const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
+#include <complex>
+#define NG1D 64
+#define NG2D 8
+#define WRAP_SIZE 32
+#define REDUCE_WRAP 8
+#define REDUCE_WRAP_LOG2 3
+#define DIM_REDUCE (WRAP_SIZE*REDUCE_WRAP)
+#define REDUCE_STRIDE (WRAP_SIZE+WRAP_SIZE/2+1)
 #if CUDA_DOUBLE == 1
 typedef double2 Comp;
 typedef double  Real;

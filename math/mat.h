@@ -28,9 +28,15 @@
 #else
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 #endif
-
-#define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
-#define PDCELL(M,P)  dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
+#ifdef __clang__
+/*clang doesnot accept the gcc version in C++ mode*/
+#define PALL(T,A,pp) typedef T pp##_ptr[(A)->nx]; pp##_ptr *pp=(pp##_ptr*)(A)->p
+#else 
+/*clang version caused <anonymous> must be uninitailized error in cuda code.*/
+#define PALL(T,A,pp) T (*pp)[(A)->nx]=(T(*)[(A)->nx])(A)->p
+#endif
+#define PDMAT(M,P)   PALL(double,M,P)
+#define PDCELL(M,P)  PALL(dmat*,M,P)
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({dcellfree_do(A);A=NULL;})
@@ -38,8 +44,8 @@
 #define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
 #define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
 
-#define PSMAT(M,P)   float (*restrict P)[(M)->nx]=(float(*)[(M)->nx])(M)->p
-#define PSCELL(M,P)  smat* (*restrict P)[(M)->nx]=(smat*(*)[(M)->nx])(M)->p
+#define PSMAT(M,P)   PALL(float,M,P)
+#define PSCELL(M,P)  PALL(smat*,M,P)
 #define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
 #define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
 #define scellfree(A) ({scellfree_do(A);A=NULL;})
@@ -47,16 +53,16 @@
 #define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
 #define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
 
-#define PCMAT(M,P)   dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
-#define PCCELL(M,P)  cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
+#define PCMAT(M,P)   PALL(dcomplex,M,P)
+#define PCCELL(M,P)  PALL(cmat*,M,P)
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
 #define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
 
-#define PZMAT(M,P)   fcomplex (*restrict P)[(M)->nx]=(fcomplex(*)[(M)->nx])(M)->p
-#define PZCELL(M,P)  zmat* (*restrict P)[(M)->nx]=(zmat*(*)[(M)->nx])(M)->p
+#define PZMAT(M,P)   PALL(fcomplex,M,P)
+#define PZCELL(M,P)  PALL(zmat*,M,P) 
 #define zfree(A)     ({zfree_do(A,0);A=NULL;})
 #define zcellfree(A) ({zcellfree_do(A);A=NULL;})
 #define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
@@ -89,7 +95,7 @@ R X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(randu)(X(mat) *A, const T mean, rand_t *rstat);\
 void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);\
 void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
-void X(scale)(X(mat) *A, T w);\
+void X(scale)(X(mat) *A, R w);\
 T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);\

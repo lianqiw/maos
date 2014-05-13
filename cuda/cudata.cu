@@ -72,10 +72,11 @@ long gpu_get_mem(void){
 /**
    Get available memory.
 */
-static long gpu_get_idle_mem(void){
-    size_t fr, tot;
-    if(cudaMemGetInfo(&fr, &tot)){
-	fr=0; tot=0;
+static long gpu_get_idle_mem(int igpu){
+    size_t fr=0, tot=0;
+    int ans;
+    if((ans=cudaMemGetInfo(&fr, &tot))){
+	warning2("cudaMemGetInfo failed with error %d\n", ans);
     }
     if(tot-fr>MEM_RESERVE){//GPU used by some other process. do not use it.
 	return 0;
@@ -172,7 +173,7 @@ int gpu_init(int *gpus, int ngpu){
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){
 		    //this allocates context and create a CPU thread for this GPU.
-		    gpu_info[ig][1]=gpu_get_idle_mem();
+		    gpu_info[ig][1]=gpu_get_idle_mem(ig);
 		}
 	    }
 	    /*sort so that gpus with higest memory is in the front.*/

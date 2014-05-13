@@ -165,9 +165,9 @@
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
 
-#define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
-#define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
-#define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p
+#define PMAT(A,pp) PALL(T,A,pp)
+#define PCELL(A,pp) PALL(X(mat)*,A,pp)
+#define PSPCELL(A,pp) PALL(X(sp)*,A,pp)
 
 #ifdef DLONG
 #define M_SPT M_SPT64

@@ -112,7 +112,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 		long count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
 		    error("deprecated: count=%ld, scaling the data\n", count);
-		    X(scale)(A, (T)(1./count));
+		    X(scale)(A, (R)(1./count));
 		}
 	    }
 	    if(!keepdata && A->p){
@@ -462,7 +462,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
 /**
    scale each element of A by w
 */
-void X(scale)(X(mat) *A, T w){
+void X(scale)(X(mat) *A, R w){
     if(!A) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]*=w;

@@ -92,13 +92,14 @@ public:
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
     virtual ~map_ray(){
-	PROP_WRAP_T pcpu[ndir*nlayer];
+	PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
 	cudaMemcpy(&pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
 	for(int i=0; i<ndir*nlayer; i++){
 	    if(pcpu[i].reverse){
 		cudaFree(pcpu[i].reverse);
 	    }
 	}
+	delete [] pcpu;
 	cudaFree(hdata);
     }
 };

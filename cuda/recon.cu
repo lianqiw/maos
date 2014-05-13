@@ -36,12 +36,11 @@
 #define toc_test(A) toc2(A);tic
 #endif
 #define CATCH_ERR 0
-
 /*
   The caller must specify current GPU.
 */
 namespace cuda_recon{
-curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
+    curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
     :grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0),
      gradin(0),opdr(0),opdr_vec(0),opdr_save(0),tomo_rhs(0),
      dmfit(0), dmfit_vec(0),dmfit_save(0),fit_rhs(0),
@@ -62,7 +61,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
     }
     if(parms->recon.mvm){
 	if(!parms->gpu.tomo || !parms->gpu.fit){
-	    return; /*Use CPU to assemble MVM*/
+	    return; //Use CPU to assemble MVM
 	}
 	if(recon->MVM){//MVM already exists
 	    MVM=new cusolve_mvm(recon->MVM);
@@ -140,7 +139,7 @@ curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
 	dm_moao=(curcell***)calloc(nmoao, sizeof(curcell**));
 	moao_gwfs=X(new)(nwfs, 1);
 	moao_gevl=X(new)(nevl, 1);
-	/*Pre-allocate moao output and assign to wfs or evl*/
+	//Pre-allocate moao output and assign to wfs or evl
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 	    if(!parms->moao[imoao].used) continue;
 	    int ntot=nwfs+nevl;
@@ -236,7 +235,7 @@ void curecon_t::reset(const PARMS_T *parms){
     }
    
 }
-
+    
 #define DBG_RECON 0
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		      const dcell *_gradin){
@@ -393,7 +392,7 @@ void curecon_t::tomo_test(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     stream_t stream;
     RECON_T *recon=simu->recon;
-    /*Debugging. */
+    //Debugging. 
     dcell *rhsc=NULL;
     dcell *lc=NULL;
     dcell *rtc=NULL;
@@ -453,7 +452,7 @@ void curecon_t::tomo_test(SIM_T *simu){
     CUDA_SYNC_DEVICE;
     exit(0);
 }
-void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
+void curecon_t::fit_test(SIM_T *simu){	//Debugging. 
     gpu_set(gpu_recon);
     stream_t stream;
     const RECON_T *recon=simu->recon;
@@ -504,7 +503,8 @@ void curecon_t::fit_test(SIM_T *simu){	/*Debugging. */
     exit(0);
 }
 }//namespace
-using cuda_recon::curecon_t;
+
+typedef cuda_recon::curecon_t curecon_t;
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
@@ -527,7 +527,7 @@ void gpu_recon_free(){
     }
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
-    /*The following routine assemble MVM and put in recon->MVM*/
+    //The following routine assemble MVM and put in recon->MVM
     if(!parms->load.mvm){
 	if(parms->recon.mvm==1){
 	    gpu_setup_recon_mvm_trans(parms, recon, powfs);
@@ -556,7 +556,7 @@ void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
 	}
     }
 }
-void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
+void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);
 	curecon_t *curecon=cudata->recon;
@@ -611,7 +611,7 @@ void gpu_fit(SIM_T *simu){
 	simu->cgres->p[1]->p[simu->reconisim]=
 	    curecon->fit(&simu->dmfit, parms->gpu.tomo?NULL:simu->opdr);
     }
-    /*Don't free opdr. Needed for warm restart in tomo.*/
+    //Don't free opdr. Needed for warm restart in tomo.
 }
 void gpu_recon_mvm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -632,3 +632,4 @@ void gpu_moao_filter(SIM_T *simu){
     curecon_t *curecon=cudata->recon;
     curecon->moao_filter(simu->dm_wfs, simu->dm_evl);
 }
+

@@ -366,32 +366,6 @@ void gpu_perfevl(thread_t *info){
 		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	dfree(tmp);
     }
-    {
-	if(parms->recon.split){						
-	    if(parms->ndm<=2){						
-		PDMAT(simu->oleNGSmp->p[ievl], poleNGSmp);			
-		calc_ngsmod(nmod==3?polep[isim]:0, nmod==3?pclmp[isim]:0,	
-			    poleNGSmp[isim],recon->ngsmod->nmod,		
-			    recon->ngsmod->aper_fcp, recon->ngsmod->ht,	
-			    recon->ngsmod->scale, thetax, thetay,		
-			    aper->ipcc, aper->imcc,				
-			    cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp, parms, 
-			    cuperf_t::cc->p[ievl]->p,cuperf_t::ccb->p[ievl]->p, stream); 
-		if(nmod!=3){						
-		    TO_IMPLEMENT;/*mode decomposition. */			
-		}								
-	    }								
-	}else{								
-	    if(nmod==3){							
-		calc_ptt(polep[isim], pclmp[isim], aper->ipcc, aper->imcc,	
-			 cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp,	
-			 cuperf_t::cc->p[ievl]->p,cuperf_t::ccb->p[ievl]->p,stream); 
-	    }else{								
-		TO_IMPLEMENT;						
-	    }								
-	}
-
-    }
     PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
     if((parms->evl.psfmean  || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 

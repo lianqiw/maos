@@ -27,6 +27,7 @@ extern "C"
 #include "cucmat.h"
 #include "accphi.h"
 #include "cudata.h"
+
 /**
    \file mvm_trans.cu
    Compute the transpose of MVM control matrix in GPU colume by colume.
@@ -381,3 +382,4 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	if(FLI) free4async(FLI);
     }//if assemble in gpu
 }
+

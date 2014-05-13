@@ -252,29 +252,3 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
     }
     CUDA_SYNC_DEVICE;
 }
-/**
-   Convert NGS mode vector to aperture grid for science directions.  */
-void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
-			const NGSMOD_T *ngsmod, const double *mod, 
-			double thetax, double thetay, 
-			double alpha, cudaStream_t stream){
-    if(ngsmod->nmod==2){
-	curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
-    }else{
-	const Real ht=ngsmod->ht;
-	const Real scale=ngsmod->scale;
-	Real focus;
-	if(ngsmod->nmod>5){
-	    focus=mod[5];
-	    if(!ngsmod->ahstfocus){
-		focus+=mod[2]*(1.-scale);
-	    }
-	}else{
-	    focus=mod[2]*(1.-scale);
-	}
-	add_ngsmod_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>
-	    (opd->p, loc, opd->nx*opd->ny, 
-	     mod[0], mod[1], mod[2], mod[3], mod[4], focus,
-	     thetax, thetay, scale, ht, alpha);
-    }
-}

@@ -30,6 +30,9 @@ const char *cufft_str[]={
     "setup failed"
     "invalid size"
 };
+#ifndef I
+#define I (__extension__ 1.0iF)
+#endif
 static cusparseMatDescr_t spdesc=NULL;
 #if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
@@ -301,8 +304,8 @@ static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n,
     if(mutex) UNLOCK(*mutex);
     free(tmp);
 }
-#define add2cpu_mat(D, double, curmat)					\
-void add2cpu(D##mat **out, double alpha, const curmat *in, double beta,	\
+#define add2cpu_mat(D, double, Comp)					\
+void add2cpu(D##mat **out, double alpha, const cumat<Comp> *in, double beta,	\
 	     cudaStream_t stream, pthread_mutex_t *mutex){		\
     if(!in){								\
 	if(*out) D##scale(*out, alpha);					\
@@ -315,10 +318,10 @@ void add2cpu(D##mat **out, double alpha, const curmat *in, double beta,	\
     }									\
     add2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);\
 }
-add2cpu_mat(s, float, curmat)
-add2cpu_mat(d, double,curmat)
-add2cpu_mat(z, float, cucmat)
-add2cpu_mat(c, double,cucmat)
+add2cpu_mat(s, float, Real)
+add2cpu_mat(d, double,Real)
+add2cpu_mat(z, float, Comp)
+add2cpu_mat(c, double,Comp)
 
 #define add2cpu_cell(D, double, curcell)				\
 void add2cpu(D##cell **out, double alpha, const curcell *in, double beta, \

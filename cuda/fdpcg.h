@@ -36,7 +36,7 @@ class cufdpcg_t:public cucgpre_t{
     cuccell *xhat1, *xhat2;
     int nb, bs, nby, nbz; 
     int scale;
-    int ixskip;//skip the ix due to redundant
+    //int ixskip;//skip the ix due to redundant
     GPU_FDPCG_T *fddata;
 public:
     virtual ~cufdpcg_t(){

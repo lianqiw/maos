@@ -101,12 +101,8 @@ INLINE dcomplex cpow(dcomplex x, dcomplex z){
 INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   return cexpf(clogf(x)*z);
 }
-#elif defined(__APPLE__)
-#include <complex.h>
 #else
 #ifndef __cplusplus
-#include <complex.h>
-#else
 #include <complex.h>
 #endif
 #endif

@@ -121,7 +121,7 @@ double get_usage_cpu(void){
     double thistime=myclockd();
     static long user1, tot1;
     static double cent=1;
-    long user2, tot2;
+    long user2=0, tot2=0;
     if(thistime >=lasttime+2){/*information was too old. */
 	read_cpu_counter(&user1, &tot1);
 	usleep(50000);
@@ -175,4 +175,15 @@ void wait_cpu(int nthread){
     }
     close(fd);/*remove lock */
 }
+#if defined(__APPLE__)
+#include "process_apple.c"
+#elif defined(__linux__)
+#include "process_linux.c"
+#elif defined(__CYGWIN__)
+#include "process_cygwin.c"
+#elif defined(__FreeBSD__)||defined(__NetBSD__)
+#include "process_bsd.c"
+#else
+#error("Unknown plateform")
+#endif
 

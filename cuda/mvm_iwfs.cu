@@ -67,7 +67,7 @@ void mvm_only(int *gpus, int ngpu, int nstep){
     cp2gpu(&cumvm1, mvm1);
     cp2gpu(&cugrad1, grad1);
     curmat *cuact=curnew(nact, 1);
-    event_t event_mvm[nstep+1];
+    event_t *event_mvm=(event_t*)malloc(sizeof(event_t)*(nstep+1));
     stream_t stream_mvm;
     Real one=1; 
     for(int istep=0; istep<nstep; istep++){
@@ -83,6 +83,7 @@ void mvm_only(int *gpus, int ngpu, int nstep){
     }
     sscale(timing, 1e-3);
     swrite(timing, "timing_mvmonly_%dgpu", ngpu);
+    free(event_mvm);
 }
 //Timing only MVM.
 /**

@@ -237,12 +237,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			}
 			if(parms->powfs[ipowfs].llt){
 			    Comp *etf[nsa];
-			    cmat *(*petf)[nsa]=NULL;
+			    typedef cmat* petf_t[nsa];
+			    petf_t *petf;
 			    if(powfs[ipowfs].etfsim[iwvl].p1){
-				petf=(cmat *(*)[nsa])powfs[ipowfs].etfsim[iwvl].p1->p;
+				petf=(petf_t*)powfs[ipowfs].etfsim[iwvl].p1->p;
 				cuwfs[iwfs].dtf[iwvl].etfis1d=1;
 			    }else{
-				petf=(cmat *(*)[nsa])powfs[ipowfs].etfsim[iwvl].p2->p;
+				petf=(petf_t*)powfs[ipowfs].etfsim[iwvl].p2->p;
 				cuwfs[iwfs].dtf[iwvl].etfis1d=0;
 			    }
 			    cmat **petfi=petf[parms->powfs[ipowfs].llt->n>1?wfsind:0];
@@ -259,8 +260,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				tempi=temp+isa*ncx*ncy;
 				etf[isa]=temp2+isa*ncx*ncy;
 				for(int i=0; i<ncx*ncy; i++){
-				    tempi[i].x=creal(petfi[isa]->p[i]);
-				    tempi[i].y=cimag(petfi[isa]->p[i]);
+				    double *tmp=(double*)(petfi[isa]->p+i);
+				    tempi[i].x=tmp[0];
+				    tempi[i].y=tmp[1];
 				}
 			    }
 			    DO(cudaMemcpy(temp2, temp, sizeof(Comp)*nsa*ncx*ncy, cudaMemcpyHostToDevice));

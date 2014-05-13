@@ -3,9 +3,9 @@ AM_LDFLAGS=$(LDEXE)
 LDADD=../lib/libaos.la ../math/libaomath.la ../sys/libaosys.la $(LDOPTS)
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
-icon-finished.h icon-optics.h icon-waiting.h mouse_black.h  mouse_hand.h  mouse_white.h mygtk.h
-
-noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h $(ICONS)
+icon-finished.h icon-optics.h icon-waiting.h mouse_black.h mouse_hand.h mouse_white.h mygtk.h\
+button-err.png button-ok.png button-play.png button-wait.png icon-waiting.png monitor.png mouse_black.png mouse_hand.png mouse_white.png
+noinst_HEADERS=monitor.h drawdaemon.h scheduler_ws.h $(ICONS) 
 
 PROGS=
 
@@ -31,7 +31,7 @@ if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
-___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS)  -lgthread-2.0
+___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
 ___bin_calcenc_SOURCES=calcenc.c
@@ -39,11 +39,11 @@ endif
 
 if USE_SCHEDULER
 if MON
-if MONN  #FULL with notify
-MONITOR_FLAGS=$(MONN_CFLAGS)  $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY
+if MONN #FULL with notify
+MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MONN_LIBS) 
-else     #Monitor wihtout libnotify.
-MONITOR_FLAGS=$(MON_CFLAGS)  $(AM_CFLAGS) $(OPTScommon)
+else #Monitor wihtout libnotify.
+MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MON_LIBS) 
 endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table

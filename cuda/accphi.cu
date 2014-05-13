@@ -91,7 +91,8 @@ static void atm_prep(atm_prep_t *data){
 	my=ny0;
     }
     PDMAT(atm, pin);
-    Real (*pout)[nx0]=(Real(*)[nx0])(data->next_atm);
+    typedef Real pout_t[nx0];
+    pout_t *pout=(pout_t*)data->next_atm;
     for(int iy=0; iy<my; iy++){
 	for(int ix=0; ix<mx; ix++){
 	    pout[iy][ix]=(Real)pin[iy+offy][ix+offx];
@@ -554,4 +555,31 @@ void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
 #undef KARG
 #undef COMM
     }/*idm */
+}
+
+/**
+   Convert NGS mode vector to aperture grid for science directions.  */
+void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
+			const NGSMOD_T *ngsmod, const double *mod, 
+			double thetax, double thetay, 
+			double alpha, cudaStream_t stream){
+    if(ngsmod->nmod==2){
+	curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
+    }else{
+	const Real ht=ngsmod->ht;
+	const Real scale=ngsmod->scale;
+	Real focus;
+	if(ngsmod->nmod>5){
+	    focus=mod[5];
+	    if(!ngsmod->ahstfocus){
+		focus+=mod[2]*(1.-scale);
+	    }
+	}else{
+	    focus=mod[2]*(1.-scale);
+	}
+	add_ngsmod_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>
+	    (opd->p, loc, opd->nx*opd->ny, 
+	     mod[0], mod[1], mod[2], mod[3], mod[4], focus,
+	     thetax, thetay, scale, ht, alpha);
+    }
 }

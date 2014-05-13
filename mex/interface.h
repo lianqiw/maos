@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <complex.h>
-#if __GNUC__ && defined(__STDC_UTF_16__)
-#undef __STDC_UTF_16__
+#if defined(__APPLE__) && defined(__GNUC__) && defined(__STDC_UTF_16__)
+typedef uint16_t char16_t;
 #endif
 #include <mex.h>
 #ifdef __cplusplus

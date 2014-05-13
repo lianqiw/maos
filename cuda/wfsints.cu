@@ -402,9 +402,8 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		tty=simu->uptreal->p[iwfs]->p[1];
 	    }
 	    /* copy uptreal to output  */
-	    PDMAT(simu->uptcmds->p[iwfs], puptcmds);
-	    puptcmds[isim][0]=ttx;
-	    puptcmds[isim][1]=tty;
+	    simu->uptcmds->p[iwfs]->p[isim*2]=ttx;
+	    simu->uptcmds->p[iwfs]->p[isim*2+1]=tty;
 	}/*if uptreal */
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim];

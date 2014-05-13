@@ -182,6 +182,7 @@ AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [g
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_ENABLE(cuda-double, [  --enable-cuda-double   Enable cuda double precision], [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
+AC_ARG_WITH(ccbin, --with-ccbin=CC, [CCBIN=${withval}])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_WITH(gtk,  --with-gtk=DIR, [GTKDIR=${withval}], [GTKDIR=""])
 
@@ -240,7 +241,7 @@ fi
 COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Wno-deprecated-declarations" #-Mcache_align"
-OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
+OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse -Qunused-arguments"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
@@ -658,7 +659,7 @@ if test "x${use_mex}" = "xyes" ; then
    if test "$mex_cpu" != "$host_cpu" ;then
        mex_lib="no"
    else       
-       LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
+       LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lz"
        AC_CHECK_LIB([mex], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
    fi
    if test x$mex_lib = xyes ;then
@@ -676,19 +677,6 @@ if test "x${use_mex}" = "xyes" ; then
    AC_SUBST(MEXOPT)
 else
    AM_CONDITIONAL(USE_MEX, false)
-fi
-if test "$use_cuda" = "yes" ;then
-   #CUDA does not support clang and certain versions of icc. Use gcc
-   case "${CC}" in
-      icc*|clang*)
-      if test -z "$(which gcc)" -o -z "$(gcc -v 2>&1 | grep -i 'gcc version')"  ;then
-          AC_MSG_NOTICE([NVCC does not support "${CC%% *}" and gcc is not found. Disable cuda])
-	  use_cuda="no"
-      else
-	  CUDA_CCBIN="$(which gcc)"
-      fi
-      ;;
-   esac
 fi
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
@@ -715,9 +703,6 @@ if test "$use_cuda" = "yes" ;then
    if test ! -x "$NVCC" ;then
        AC_MSG_ERROR([nvcc not found])
    fi
-   if test -n "$CUDA_CCBIN" ;then
-       NVCC="$NVCC -ccbin $CUDA_CCBIN"
-   fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f "${CUDADIR}/lib${cpu}/libcudart.$ldsuffix" ;then
        CUDA_L="${CUDADIR}/lib${cpu}"
@@ -738,6 +723,11 @@ if test "$use_cuda" = "yes" ;then
    cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
    cudaver="${cudaver/.}"
    echo CUDA toolkit is $cudaver
+   if test -z "$CCBIN" ;then
+       CCBIN="$CC"
+       NVCC="$NVCC -ccbin ${CCBIN%% *}"
+   fi  
+   
    if test "$cudaver" -lt 40 ;then
        AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
    fi
@@ -758,13 +748,13 @@ if test "$use_cuda" = "yes" ;then
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
-       AM_CONDITIONAL(USE_CUDA, false)
        use_cuda="no"
-   else
-       AM_CONDITIONAL(USE_CUDA, true)
-       AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+fi
+if test "$use_cuda"="yes" ;then
+   AM_CONDITIONAL(USE_CUDA, true)
+   AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    AC_SUBST(CUDAOPT)
    AC_SUBST(LDCUDA)
    AC_SUBST(NVCC)
@@ -810,6 +800,7 @@ echo CC=$CC
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
+echo NVCC=$NVCC
 echo CUDAOPT=$CUDAOPT
 echo LDCUDA=$LDCUDA
 echo LDLIB=$LDLIB

@@ -23,13 +23,9 @@
    \file chol.h
    Wraps the CHOLESKY Library to provide a simple interface.*/
 
-#ifndef CHOLMOD_CORE_H
-typedef struct cholmod_factor_struct cholmod_factor;
-typedef struct cholmod_common_struct cholmod_common;
-#endif
 typedef struct spchol{
-    cholmod_factor *L;
-    cholmod_common *c;
+    struct cholmod_factor_struct *L;
+    struct cholmod_common_struct *c;
     dsp   *Cl;/*The sparse matrix (lower). A=Cl*CL' with reordering.*/
     dsp   *Cu;/*The sparse matrix (upper). A=Cu'*Cu with reordering. Cu==CL'*/
     spint *Cp;/*The Permutation vector.*/
