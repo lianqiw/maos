@@ -5,9 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <complex.h>
-#if defined(__APPLE__) && defined(__GNUC__) && defined(__STDC_UTF_16__)
+#include <stdint.h>
 typedef uint16_t char16_t;
-#endif
 #include <mex.h>
 #ifdef __cplusplus
 extern "C" {
