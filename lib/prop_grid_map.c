@@ -89,7 +89,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	SPLIT(dplocx,dplocx,nplocx);
 	/*loc_out and loc_in has the same grid sampling.*/
 	for(int icol=colstart; icol<colend; icol++)
-#if TRANSPOSE ==0 && USE_ICC==1 && _OPENMP >= 200805
+#if TRANSPOSE ==0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
 	    {
@@ -191,7 +191,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	    }/*end for icol*/
     }else{
 	for(int icol=colstart; icol<colend; icol++)
-#if TRANSPOSE ==0 && USE_ICC==1 && _OPENMP >= 200805
+#if TRANSPOSE ==0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
 	    {
@@ -309,7 +309,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 #else
     /*non optimized case. slower, but hopefully accurate*/
     for(int icol=colstart; icol<colend; icol++)
-#if TRANSPOSE ==0 && USE_ICC==1 && _OPENMP >= 200805
+#if TRANSPOSE ==0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
 	{
@@ -368,7 +368,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	}/*for icol*/
 #endif
     
-#if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
+#if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp taskwait
 #endif
 }/*function*/

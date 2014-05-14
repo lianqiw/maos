@@ -8,7 +8,7 @@
 
    \section sect-requirement Requirements
 
-    - C99 compliant compiler: GCC4 or ICC.
+    - C99 compliant compiler: GCC4, Intel ICC, or llvm-clang.
 
     - (Optional) GTK+ and Cairo. For drawdaemon and monitor.
 
@@ -47,11 +47,11 @@
     which will config the compiling folder with GCC compiler and default
     optimization flags and compile the code.
     
-    Intel C++ compiler icc will be automatically used if it exists in the system. To disable it, do the following
+    To use Intel C++ compiler,
 
     \verbatim
     cd ~/work/maos
-    $src_dir/configure --disable-icc
+    $src_dir/configure CC=icc
     make
     \endverbatim
     

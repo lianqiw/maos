@@ -32,13 +32,13 @@ static void mvmt_do(const float *mvmt, float *g, float *dm, int nact, int ngleft
 #pragma omp parallel for
     for(int ia=0; ia<nact; ia++){
 	register float tmp=dm[ia];
-#ifdef __ICC
+#ifdef __INTEL_COMPILER
 #pragma unroll
 	__assume_aligned(mvmt,128);
 	__assume_aligned(g,128);
 	__assume_aligned(dm,128);
 #endif
-#ifdef __ICC
+#ifdef __INTEL_COMPILER
 #pragma vector aligned
 #pragma ivdep
 #pragma simd vectorlength(16) assert

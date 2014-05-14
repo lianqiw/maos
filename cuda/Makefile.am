@@ -1,4 +1,4 @@
-WARN=-Xcompiler -Wall -Xcompiler -Wno-unused-value -Xcompiler -Wno-unused-function
+WARN=-Xcompiler -Wall -Xcompiler -Wno-unused-value -Xcompiler 
 AM_CFLAGS=$(WARN) $(CUDAOPT) 
 if DEBUG
 AM_CFLAGS+=-O0 -g

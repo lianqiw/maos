@@ -409,7 +409,7 @@ void prop_grid(ARGIN_GRID,
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP) {
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
 #endif
 	for(long iloc=jloc; iloc<end2; iloc++){
@@ -448,7 +448,7 @@ void prop_grid(ARGIN_GRID,
 		   +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
 	}
     }
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -471,7 +471,7 @@ void prop_nongrid(ARGIN_NONGRID,
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP){
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
 #endif
 	for(long iloc=jloc; iloc<end2; iloc++){
@@ -493,7 +493,7 @@ void prop_nongrid(ARGIN_NONGRID,
 	    LINEAR_ADD_NONGRID;
 	}
     }
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -521,7 +521,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	}else{
 	    nplocy1=nplocy+1;
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,dplocx,nplocx1)
 #endif
 	    for(int ix=0; ix<nxout; ix++){
@@ -536,7 +536,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	    LINEAR_ADD_NONGRID;
 	}
     }
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -556,7 +556,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
     RUNTIME_LINEAR;
  
     for(int isa=start; isa<end; isa++)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)
 #endif
 	{
@@ -586,7 +586,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 		}    
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -612,7 +612,7 @@ void prop_grid_cubic(ARGIN_GRID,
     RUNTIME_CUBIC;
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
 #endif
 	{
@@ -632,7 +632,7 @@ void prop_grid_cubic(ARGIN_GRID,
 		CUBIC_ADD_GRID;
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -654,7 +654,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)
 #endif
 	{
@@ -684,7 +684,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 		}
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -701,7 +701,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
 	{
@@ -720,7 +720,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 		}
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -740,7 +740,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP){
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
 #endif
 	for(long iloc=jloc; iloc<end2; iloc++){
@@ -761,7 +761,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	    CUBIC_ADD_NONGRID;
 	}
     }
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -778,7 +778,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)
 #endif
 	{
@@ -807,7 +807,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 		}
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;
@@ -824,7 +824,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
 	{
@@ -843,7 +843,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 		}
 	    }
 	}
-#if _OPENMP >= 200805 && USE_ICC==1
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
     WARN_MISSING;

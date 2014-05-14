@@ -107,13 +107,6 @@ case ${host_cpu} in
         AC_MSG_ERROR([Unrecognized host_cpu])
    ;;
 esac   
-#Use icc if it exists in the system and user does not set CC
-if test -n "`which icc 2>/dev/null`" -a -z "$CC" -a "$cross_compile" = no ;then	
-   use_icc_default="yes"
-else
-   echo "Intel Compiler is not found."
-   use_icc_default="no"
-fi
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
@@ -175,7 +168,6 @@ fi
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
-AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc="$use_icc_default"])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
 
@@ -238,25 +230,17 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd193 -wd981 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
+COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Wno-deprecated-declarations" #-Mcache_align"
 OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse -Qunused-arguments"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
-AM_CONDITIONAL(USE_ICC,false)
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
-    use_icc="no" #disable icc.
     debug="yes"
 else
     AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
-fi
-if test "x$use_icc" = "xyes" ;then
-    CC=icc
-    AC_DEFINE(USE_ICC,[1],["Intel Compiler is used"])
-else
-    AC_DEFINE(USE_ICC,[0],["Intel Compiler is used"])
 fi
 AC_PROG_CC([$CC])
 AC_PROG_CXX([$CXX])
@@ -270,12 +254,15 @@ AC_TYPE_SIZE_T #it sets CC if empty
 #in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
-case "${CC}" in	
-  icc*)
+cc_full=`which ${CC}`
+while test -L $cc_full ;do
+   cc_full=`readlink $cc_full`
+done
+case "${cc_full}" in	
+  *icc*)
     OPTIM="$OPTIM_ICC $COMMON_ICC"
     OPT_DEBUG="$OPT_DEBUG $COMMON_ICC"
     which icc 2>/dev/null|| AC_MSG_ERROR([icc is not found in path.])
-    AM_CONDITIONAL(USE_ICC,true)	
     #Test ICC version
     CC_VERSION=$($CC -dumpversion)
     if test -n "$CC_VERSION" ;then
@@ -293,7 +280,7 @@ case "${CC}" in
 	fi
     fi
     ;;
-  gcc*)
+  *gcc*)
     if test -n "`$CC -v 2>&1 |grep clang`" ;then
         OPTIM="$OPTIM_CLANG"
     else
@@ -320,7 +307,7 @@ case "${CC}" in
 	fi
     fi
     ;;
-  clang)
+  *clang*)
 	OPTIM="$OPTIM_CLANG"
     ;;
   *) #Other compilers
@@ -668,9 +655,6 @@ if test "x${use_mex}" = "xyes" ; then
        AC_MSG_NOTICE([mex library test failed. Disable mex])
        AM_CONDITIONAL(USE_MEX, false)
    fi
-   if test x$use_icc = xyes ;then
-       LDMEX="${LDMEX} -shared-intel" #was -static-intel, but error
-   fi
    MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE"
    AC_SUBST(MEXEXT)
    AC_SUBST(LDMEX)
@@ -786,7 +770,6 @@ echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
 echo host_os=$host_os
 echo use_mex=$use_mex
-echo use_icc=$use_icc
 echo use_cuda=$use_cuda
 echo use_static=$use_static
 echo Cross compile=$cross_compile
