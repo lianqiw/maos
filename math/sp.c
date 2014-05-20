@@ -401,9 +401,9 @@ void Y(spmulvec_thread)(T *restrict y, const X(sp) *A,
     thread_t mul[nthread];
     thread_t acc[nthread];
     thread_prep(mul, 0, A->n, nthread, Y(spmulvec_thread_do_mul), &data);
-    CALL_THREAD(mul, nthread, 1);
+    CALL_THREAD(mul, 1);
     thread_prep(acc, 0, A->m, nthread, Y(spmulvec_thread_do_acc), &data);
-    CALL_THREAD(acc, nthread, 1);
+    CALL_THREAD(acc, 1);
     for(int ithread=0; ithread<nthread; ithread++){
 	free(data.ytmp[ithread]);
     }
@@ -469,7 +469,7 @@ void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A,
     data.alpha=alpha;
     thread_t mul[A->n];
     thread_prep(mul, 0, A->n, A->n, Y(sptmulvec_thread_do), &data);
-    CALL_THREAD(mul, A->n, 1);
+    CALL_THREAD(mul, 1);
   
 }
 /**
@@ -745,7 +745,7 @@ static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A,
     data.alpha=alpha;
     thread_t mul[ntot];
     thread_prep(mul, 0, ntot, ntot, Y(spcellmulmat_thread_do), &data);
-    CALL_THREAD(mul,ntot, 1);
+    CALL_THREAD(mul, 1);
 }
 /**
  * threaded version of Y(spcellmulmat)*/
@@ -802,7 +802,7 @@ void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin,
     int tot=data.xout->nx;
     thread_t info[tot];
     thread_prep(info, 0, tot, tot, Y(spcellmulmat_each_do), &data);
-    CALL_THREAD(info,tot,1);
+    CALL_THREAD(info,1);
 }
 
 /**

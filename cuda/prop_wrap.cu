@@ -35,8 +35,7 @@ extern "C"
 
 __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
     int nn;
-    if(ndir==0){
-	//layer to layer. caching mechanism
+    if(ndir==0){//layer to layer. caching mechanism
 	assert(gridDim.z==nps);
 	nn=1;
     }else if(trans=='t'){
@@ -157,17 +156,17 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			fx[7]=(cc[3]+cc[4]*(1-xc2))*(1-xc2)*(1-xc2);
 
 			for(int my=iy0; my<nyin; my+=stepy){
-			    int ycent=2*my+offy;
+			    const int ycent=2*my+offy;
 			    for(int mx=ix0; mx<nxin; mx+=stepx){
 				Real sum=0;
-				int xcent=2*mx+offx;
+				const int xcent=2*mx+offx;
 #pragma unroll
 				for(int ky=-4; ky<4; ky++){
-				    int ky2=ky+ycent;
+				    const int ky2=ky+ycent;
 				    if(ky2>ymindir && ky2<ymaxdir){
 #pragma unroll
 					for(int kx=-4; kx<4; kx++){
-					    int kx2=kx+xcent;
+					    const int kx2=kx+xcent;
 					    if(kx2>xmindir && kx2<xmaxdir){
 						sum+=fy[ky+4]*fx[kx+4]*pdir[(kx2)+(ky2)*nxdir];
 					    }
@@ -189,8 +188,8 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			const int yminps=-datai->offpsy;
 			for(int my=iy0; my<ny; my+=stepy){
 			    Real jy;
-			    Real y=Z(modf)(dispy+my*yratio, &jy);
-			    int iy=(int)jy;	
+			    const Real y=Z(modf)(dispy+my*yratio, &jy);
+			    const int iy=(int)jy;	
 			    Real fy[4];
 			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
 			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
@@ -198,10 +197,10 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			    fy[3]=y*y*(cc[3]+cc[4]*y);		
 			    for(int mx=ix0; mx<nx; mx+=stepx){
 				Real jx;
-				Real x=Z(modf)(dispx+mx*xratio, &jx);
-				int ix=(int)jx;
+				const Real x=Z(modf)(dispx+mx*xratio, &jx);
+				const int ix=(int)jx;
+				const Real value=pdir[mx+my*nxdir]*alpha;
 				Real fx[4];
-				Real value=pdir[mx+my*nxdir]*alpha;
 				/*cc need to be in device memory for sm_13 to work.*/
 				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
 				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
@@ -227,8 +226,8 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 		    const int yminps=-datai->offpsy;
 		    for(int my=iy0; my<ny; my+=stepy){
 			Real jy;
-			Real y=Z(modf)(dispy+my*yratio, &jy);
-			int iy=(int)jy;	
+			const Real y=Z(modf)(dispy+my*yratio, &jy);
+			const int iy=(int)jy;	
 			Real fy[4];
 			fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
 			fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
@@ -237,8 +236,8 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 
 			for(int mx=ix0; mx<nx; mx+=stepx){
 			    Real jx;
-			    Real x=Z(modf)(dispx+mx*xratio, &jx);
-			    int ix=(int)jx;
+			    const Real x=Z(modf)(dispx+mx*xratio, &jx);
+			    const int ix=(int)jx;
 			    Real fx[4];
 			    Real sum=0;
 			    /*cc need to be in device memory for sm_13 to work.*/
@@ -261,14 +260,14 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 		}/*else trans*/
 	    }else if(trans=='t'){
 		for(int iy=iy0; iy<ny; iy+=stepy){
-		    Real temp;
-		    Real fracy=Z(modf)(dispy+iy*yratio, &temp);
-		    int ky=(int)temp;
+		    Real jy;
+		    const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
+		    const int ky=(int)jy;
 		    for(int ix=ix0; ix<nx; ix+=stepx){
 			Real jx;
-			Real fracx=Z(modf)(dispx+ix*xratio, &jx);
-			int kx=(int)jx;
-			Real temp=pdir[ix+iy*nxdir]*alpha;
+			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
+			const int kx=(int)jx;
+			const Real temp=pdir[ix+iy*nxdir]*alpha;
 			atomicAdd(&pps[kx+      ky*nxps], temp*(1.f-fracx)*(1.f-fracy));
 			atomicAdd(&pps[kx+1    +ky*nxps], temp*fracx*(1.f-fracy));
 			atomicAdd(&pps[kx+  (ky+1)*nxps], temp*(1.f-fracx)*fracy);
@@ -278,15 +277,13 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 	    }else{
 		for(int iy=iy0; iy<ny; iy+=stepy){
 		    Real jy;
-		    Real fracy=Z(modf)(dispy+iy*yratio, &jy);
-		    int ky=(int)jy;
+		    const Real fracy=Z(modf)(dispy+iy*yratio, &jy);
+		    const int ky=(int)jy;
 		    
 		    for(int ix=ix0; ix<nx; ix+=stepx){
-			Real fracx; int kx;
-			
 			Real jx;
-			fracx=Z(modf)(dispx+ix*xratio, &jx);
-			kx=(int)jx;
+			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
+			const int kx=(int)jx;
 			
 			pdir[ix+iy*nxdir]+=
 			    alpha*(+(pps[kx+      ky*nxps]*(1.f-fracx)+

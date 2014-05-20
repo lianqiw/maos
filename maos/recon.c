@@ -201,16 +201,14 @@ void recon_split(SIM_T *simu){
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
     
-    /*high pass filter lgs focus to remove sodium range variation effect*/
- 
-
-    /*Gradient offset due to mainly NCPA calibration*/
+    //Gradient offset due to mainly NCPA calibration
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(simu->powfs[ipowfs].gradoff){
@@ -224,12 +222,12 @@ void reconstruct(SIM_T *simu){
     }else if(!simu->gradlastol){
 	simu->gradlastol=dcellref(simu->gradlastcl);
     }
-    save_gradol(simu);/*must be here since gradol is only calculated in this file. */
+    save_gradol(simu);//must be here since gradol is only calculated in this file. 
     if(parms->cn2.pair){
 	cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
-    }/*if cn2est */
+    }//if cn2est 
 	
-    double tk_start=myclockd();
+
     if(hi_output){
 	simu->dmerr=simu->dmerr_store;
 	if(parms->recon.mvm){
@@ -249,7 +247,7 @@ void reconstruct(SIM_T *simu){
 	}else{
 	    switch(parms->recon.alg){
 	    case 0:
-		tomofit(simu);/*tomography and fitting. */
+		tomofit(simu);//tomography and fitting. 
 		break;
 	    case 1:
 		muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
@@ -270,28 +268,28 @@ void reconstruct(SIM_T *simu){
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
-	if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
+	if(!parms->sim.idealfit && parms->recon.split==1){//ahst 
 	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
 	if(parms->tomo.ahst_ttr && parms->recon.split){
 	    remove_dm_tt(simu, simu->dmerr);
 	}
     }
-    /*low order reconstruction*/
+    //low order reconstruction
     if(parms->recon.split){
 	recon_split(simu);
     }
-    if(simu->dmerr){ /*High order. */
-	/*global focus is the 6th mode in ngsmod->Modes*/
+    if(simu->dmerr){ //High order. 
+	//global focus is the 6th mode in ngsmod->Modes
 	if(parms->sim.mffocus){
 	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
-	    /*Do LPF on NGS focus measurement to drive global focus*/
+	    //Do LPF on NGS focus measurement to drive global focus
 	    double lpfocus=parms->sim.lpfocus;
 	    simu->ngsfocuslpf->p[0]->p[5]=
 		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
 	}
     }
-    /*For PSF reconstruction.*/
+    //For PSF reconstruction.
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
 		  simu->dmerr,  simu->Merr_lo);
@@ -305,6 +303,6 @@ void reconstruct(SIM_T *simu){
 #endif
 	    moao_recon(simu);
     }
+    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
-    save_recon(simu);/*Moved to inside. */
 }

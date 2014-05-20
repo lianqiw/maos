@@ -119,7 +119,7 @@ void calc_cachedm(SIM_T *simu){
 	    int iscale=simu->pcachedm[ic][1];
 	    dzero((dmat*)simu->cachedm[idm][iscale]);
 	    /*do the multi-threaded ray tracing */
-	    QUEUE_THREAD(group,simu->cachedm_prop[ic], simu->nthread, 1);
+	    QUEUE_THREAD(group,(simu->cachedm_prop[ic]), 1);
 	}
 	WAIT_THREAD(group);
     }

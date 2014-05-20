@@ -386,7 +386,7 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 	    CHOLSOLVE_T data={*x,A,y};
 	    thread_t info[NTHREAD];
 	    thread_prep(info, 0, y->ny, NTHREAD, chol_solve_each, &data);
-	    CALL_THREAD(info, NTHREAD, 1);
+	    CALL_THREAD(info, 1);
 	}
     } 
 }
@@ -609,7 +609,7 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	CHOL_LOWER_T data={C,y2};
 	thread_t info[NTHREAD];
 	thread_prep(info, 0, y2->ny, NTHREAD, chol_solve_lower_each, &data);
-	CALL_THREAD(info, NTHREAD, 1);
+	CALL_THREAD(info, 1);
     }
     chol_perm_b(x, perm, y2);
     if(*x!=y2) dfree(y2);
@@ -672,7 +672,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	CHOL_LOWER_T data={C,y2};
 	thread_t info[y2->ny];
 	thread_prep(info, 0, y2->ny, y2->ny, chol_solve_upper_each, &data);
-	CALL_THREAD(info, y2->ny, 1);
+	CALL_THREAD(info, 1);
     }
     chol_perm_b(x, perm, y2);
     if(*x!=y2) dfree(y2);

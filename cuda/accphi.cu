@@ -118,15 +118,23 @@ static void atm_prep(atm_prep_t *data){
 */
 static void gpu_atm2gpu_full(map_t **atm, int nps){
     if(!atm) return;
+    TIC;tic;
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
 	gpu_print_mem("atm in full");
-	TIC;tic;
 	cudata->nps=nps;
-	cp2gpu(&cudata->atm, atm, nps);
-	toc2("atm to gpu full");/*0.4 second. */
+	if(im==0){
+	    cp2gpu(&cudata->atm, atm, nps);
+	}else{
+	    cudata->atm=new cumap_t[nps];
+	    for(int ips=0; ips<nps; ips++){
+		cudata->atm[ips].init(&cudata_all[0].atm[ips]);
+		gpu2gpu(&cudata->atm[ips].p, cudata_all[0].atm[ips].p);
+	    }
+	}
 	gpu_print_mem("atm out");
     }
+    toc2("atm to gpu");
 }
 /**
    Transfer atmosphere or update atmosphere in GPU.
@@ -298,19 +306,25 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    TIC;tic;
 	    pthread_join(next_threads[ips], NULL);
 	    toc2("Step %d: Layer %d wait for transfering",isim, ips);
-	    for(int im=0; im<NGPU; im++){
+	    for(int im=0; im<NGPU; im++)
+	    {
 		tic;
 		gpu_set(im);
 		cumap_t *cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
-			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
+		if(im==0){
+		    DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
+				  nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
+		}else{
+		    gpu2gpu(&cuatm[ips].p, cudata_all[0].atm[ips].p);
+		}
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
 		     isim, ips, nx0, ny0, im, offx, offy);tic;
 	    }/*for im */
+
 	    free(next_atm[ips]);
 	    /*Update next_isim. */
 	    long isim1, isim2;

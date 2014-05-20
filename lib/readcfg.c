@@ -326,6 +326,8 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    RENAME(dbg.splitlrt, tomo.splitlrt);
 	    RENAME(tomo.split_wt, tomo.ahst_wt);
 	    RENAME(tomo.split, recon.split);
+	    RENAME(evl.opdcov, evl.cov);
+	    RENAME(evl.psfpttr, evl.pttr);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

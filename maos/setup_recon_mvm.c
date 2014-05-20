@@ -208,7 +208,7 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     int nthread=recon->nthread;
     thread_t info[nthread];
     thread_prep(info, 0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
-    CALL_THREAD(info, nthread, 1);
+    CALL_THREAD(info, 1);
     dcell *MVM=dcelltrans(MVMt);
     dcellfree(MVMt);
     recon->MVM=dcell2m(MVM);

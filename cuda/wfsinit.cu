@@ -32,8 +32,10 @@ extern "C"
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	cudata_t::wfsgpu[iwfs]=gpu_next();
-	if(NGPU>4 && cudata_t::wfsgpu[iwfs]==gpu_recon){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	cudata_t::wfsgpu[iwfs]=gpu_next(parms->powfs[ipowfs].usephy?1:0.3);
+	extern int PARALLEL;
+	if(PARALLEL && NGPU>4 && cudata_t::wfsgpu[iwfs]==gpu_recon){
 	    cudata_t::wfsgpu[iwfs]=gpu_next();
 	}
     }
@@ -441,8 +443,8 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 	if(!parms->powfs[ipowfs].noisy) continue;
 	int nsa=powfs[ipowfs].pts->nsa*2;
 	if(nsa<RAND_THREAD){
-	    cuwfs[iwfs].custatt=nsa;
-	    cuwfs[iwfs].custatb=1;
+	    cuwfs[iwfs].custatt=nsa;//number of threads
+	    cuwfs[iwfs].custatb=1;//number of blocks
 	}else if(nsa<RAND_THREAD*RAND_BLOCK){
 	    cuwfs[iwfs].custatt=RAND_THREAD;
 	    cuwfs[iwfs].custatb=nsa/RAND_THREAD+(nsa%RAND_THREAD)?1:0;

@@ -255,7 +255,7 @@ static void Tomo_prop_do(thread_t *info){
 void Tomo_prop(Tomo_T *data, int nthread){
     thread_t info[nthread];
     thread_prep(info, 0, data->gg->nx, nthread, Tomo_prop_do, data);
-    CALL_THREAD(info, nthread, 1);
+    CALL_THREAD(info, 1);
 }
 /**
    Speed up TomoL by gathering the second part of operations (GP') belonging to
@@ -294,7 +294,7 @@ static void Tomo_nea_do(thread_t *info){
 void Tomo_nea(Tomo_T *data, int nthread, int gpt){
     thread_t info[nthread];
     thread_prep(info, 0, data->gg->nx, nthread, gpt?Tomo_nea_gpt_do:Tomo_nea_do, data);
-    CALL_THREAD(info, nthread, 1);
+    CALL_THREAD(info, 1);
 }
 /**
    Speed up TomoL by gathering the third part of operations (GP') belonging to
@@ -368,7 +368,7 @@ static void Tomo_iprop_do(thread_t *info){
 void Tomo_iprop(Tomo_T *data, int nthread){
     thread_t info[nthread];
     thread_prep(info, 0, data->xout->nx, nthread, Tomo_iprop_do, data);
-    CALL_THREAD(info, nthread, 1);
+    CALL_THREAD(info, 1);
 }
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and

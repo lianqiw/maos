@@ -29,7 +29,7 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
 CFLAGS="$CFLAGS -I${SRC_DIR}/external/include"
-LDFLAGS="$LDFLAGS -lm -L${SRC_DIR}/external/lib -Wl,-rpath,-L${SRC_DIR}/external/lib"
+LDFLAGS="$LDFLAGS -lm -L${SRC_DIR}/external/lib -Wl,-rpath,${SRC_DIR}/external/lib"
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -52,6 +52,7 @@ if test -n "`which nvcc 2>/dev/null`" ;then
       NVCC="$(readlink "$NVCC")"
    fi
    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
+   unset NVCC
 elif test -x "/opt/cuda/bin/nvcc" ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/opt/cuda"
@@ -176,6 +177,7 @@ AC_ARG_ENABLE(cuda-double, [  --enable-cuda-double   Enable cuda double precisio
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, --with-ccbin=CC, [CCBIN=${withval}])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_ENABLE(websockets,[  --disable-websockets  Disable websockets (default: enabled)], [use_websockets="$enableval"], [use_websockets="yes"])
 AC_ARG_WITH(gtk,  --with-gtk=DIR, [GTKDIR=${withval}], [GTKDIR=""])
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
@@ -430,8 +432,8 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
 LDFFT="-lfftw3"
-AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
-AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
+#AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
+#AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
 
 AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="no")
 if test "$use_fftw_threads" = "yes" ;then
@@ -468,10 +470,11 @@ LDCHOL="-lcholmod"
 
 #Check for libwebsocket
 AM_CONDITIONAL(HAS_LWS, false)
+if test "$use_websockets" = "yes" ;then
 AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
 if test "$has_lws" = "no" ;then
-   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF
+   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_CLIENT -DLWS_WITHOUT_SERVER
    unset ac_cv_lib_websockets_libwebsocket_service
    AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 fi
@@ -480,6 +483,7 @@ if test "$has_lws" != "no" ;then
    AC_DEFINE(HAS_LWS, [1], "libwebsocket is available")
 else
    AC_MSG_NOTICE(["libwebsocket library or header is not available"])
+fi
 fi
 
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
@@ -662,17 +666,12 @@ if test "x${use_mex}" = "xyes" ; then
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
+
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
-   if test "$cuda_double" = "yes" ;then
-      AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
-      AM_CONDITIONAL(CUDA_DOUBLE, true)
-   else
-      AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
-      AM_CONDITIONAL(CUDA_DOUBLE, false)
-   fi
+ 
    AC_MSG_NOTICE([Enabling CUDA])
    LDCUDA=
    if test -n "$CUDADIR" ;then
@@ -736,7 +735,14 @@ if test "$use_cuda" = "yes" ;then
    fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
 fi
-if test "$use_cuda"="yes" ;then
+if test "$use_cuda" = "yes" ;then
+   if test "$cuda_double" = "yes" ;then
+      AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
+      AM_CONDITIONAL(CUDA_DOUBLE, true)
+   else
+      AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
+      AM_CONDITIONAL(CUDA_DOUBLE, false)
+   fi
    AM_CONDITIONAL(USE_CUDA, true)
    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    AC_SUBST(CUDAOPT)
@@ -744,9 +750,8 @@ if test "$use_cuda"="yes" ;then
    AC_SUBST(NVCC)
 else
    AM_CONDITIONAL(USE_CUDA, false)
-   AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
-   AC_DEFINE(CUDA_DOUBLE, [0], "Use single precision mode in cuda")
    AM_CONDITIONAL(CUDA_DOUBLE, false)
+   AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
 
 AC_CONFIG_FILES( [Makefile

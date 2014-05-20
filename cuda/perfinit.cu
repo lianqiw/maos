@@ -42,7 +42,9 @@ curcell *cuperf_t::opdcov_ngsr=0;
 curcell *cuperf_t::opdmean=0;
 curcell *cuperf_t::opdmean_ngsr=0;
 curcell *cuperf_t::cc=0;
-X(cell)   *cuperf_t::ccb=0;
+curcell *cuperf_t::coeff=0;
+Real **cuperf_t::ccb_cl=0;
+Real **cuperf_t::ccb_ol=0;
 
 /**
    Initialize perfevl
@@ -56,7 +58,8 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     cudata_t::evlgpu=(int*)calloc(nevl, sizeof(int));
     for(int ievl=0; ievl<nevl; ievl++){
 	cudata_t::evlgpu[ievl]=gpu_next();
-	if(NGPU>2 && cudata_t::evlgpu[ievl]==gpu_recon){
+	extern int PARALLEL;
+	if(PARALLEL && NGPU>2 && cudata_t::evlgpu[ievl]==gpu_recon){
 	    cudata_t::evlgpu[ievl]=gpu_next();
 	}
     }
@@ -79,6 +82,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	pthread_mutex_init(&cudata->perf->mutex, 0);
 	cudata->perf->locs=new culoc_t(aper->locs);
 	cp2gpu(&cudata->perf->amp, aper->amp);
+	cp2gpu(&cudata->perf->imcc, aper->imcc);
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    cudata->perf->embed    = (int**) calloc(nwvl, sizeof(int*));
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -126,15 +130,19 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     }
     cuperf_t::opd=curcellnew(nevl,1);
     cuperf_t::cc=curcellnew(nevl, 1);
-    cuperf_t::ccb=X(cellnew)(nevl,1);
+    cuperf_t::coeff=curcellnew(nevl, 1);
+    cuperf_t::ccb_ol=(Real**)malloc(sizeof(Real*)*nevl);
+    cuperf_t::ccb_cl=(Real**)malloc(sizeof(Real*)*nevl);
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
-	cuperf_t::ccb->p[ievl]=X(new)(7,1);
+	cuperf_t::ccb_ol[ievl]=(Real*)malloc4async(sizeof(Real)*7);
+	cuperf_t::ccb_cl[ievl]=(Real*)malloc4async(sizeof(Real)*7);
 	cuperf_t::cc->p[ievl]=curnew(7, 1);
+	cuperf_t::coeff->p[ievl]=curnew(7, 1);
 	cuperf_t::opd->p[ievl]=curnew(aper->locs->nloc, 1);
     }
     if(!parms->sim.evlol){
-	if(parms->evl.opdcov && parms->gpu.psf){
+	if(parms->evl.cov && parms->gpu.psf){
 	    cuperf_t::opdcov=curcellnew(nevl, 1);
 	    cuperf_t::opdmean=curcellnew(nevl, 1);
 	    cuperf_t::opdcov_ngsr=curcellnew(nevl, 1);
@@ -168,7 +176,7 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
     if(parms->evl.psfol){
 	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
-	    if(parms->evl.opdcov && parms->gpu.psf){ /*do OL opd cov*/
+	    if(parms->evl.cov && parms->gpu.psf){ /*do OL opd cov*/
 		initzero(&cudata->perf->opdcovol, nloc, nloc);
 		initzero(&cudata->perf->opdmeanol, nloc, 1);
 	    }
@@ -186,11 +194,7 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 	}
     }
 
-
-    
- 
-    
-    if(parms->evl.opdcov && parms->gpu.psf && !parms->sim.evlol){
+    if(parms->evl.cov && parms->gpu.psf && !parms->sim.evlol){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(parms->evl.psf[ievl]==0){
 		continue;

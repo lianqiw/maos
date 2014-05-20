@@ -32,6 +32,7 @@ class cuwloc_t;
 class cuwfs_t;
 
 typedef struct cudata_t{ 
+    int igpu;
     static int *evlgpu;
     static int *wfsgpu;
     std::map<uint64_t, void*> *memhash;
@@ -99,9 +100,15 @@ inline void gpu_set(int igpu){
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.
 */
-inline int gpu_next(){
-    static int cur=-1;
-    return cur=(cur+1)%NGPU;
+inline int gpu_next(float add=1){
+    static float cur=-1;
+    cur+=add;
+    int ans=(int)ceil(cur);
+    if(ans>=NGPU){
+	ans-=NGPU;
+	cur-=NGPU;
+    }
+    return ans;
 }
 
 #endif

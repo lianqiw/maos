@@ -61,6 +61,29 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     }
 }
 
+/**
+   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use Real
+   array. Allow multiple calling to override the data.  */
+void gpu2gpu(cumap_t **dest0, cumap_t *source, int nps){
+    if(nps==0) return;
+    if(!*dest0){
+	*dest0=new cumap_t[nps];
+	memcpy(*dest0, source, sizeof(cumap_t)*nps);
+	for(int ips=0; ips<nps; ips++){
+	    (*dest0)[ips].p=0;
+	    (*dest0)[ips].cubic_cc=0;
+	}	
+    }
+    cumap_t *dest=*dest0;
+    for(int ips=0; ips<nps; ips++){
+	if(source[ips].p){
+	    gpu2gpu(&dest[ips].p, source[ips].p);
+	}
+	if(source[ips].cubic_cc){
+	    gpu2gpu(&dest[ips].cubic_cc, source[ips].cubic_cc);
+	}
+    }
+}
 /*
   Convert a host dsp array to GPU sprase array.
 */
@@ -292,9 +315,8 @@ inline void scale_add<fcomplex, float, Comp>(fcomplex *p1, float alpha, Comp *p2
 template <typename R, typename T, typename S>
 static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
 		    cudaStream_t stream, pthread_mutex_t *mutex){
-    CUDA_SYNC_STREAM;
     S *tmp=(S*)malloc(n*sizeof(S));
-    DO(cudaMemcpy(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost));
+    DO(cudaMemcpyAsync(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
 	*dest=(T*)malloc(sizeof(T)*n);
     }

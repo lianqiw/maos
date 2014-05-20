@@ -659,7 +659,7 @@ ccell *psfcomp(const dmat *iopdevl, const double *amp,
     PSFCOMP_T data={psf2s, iopdevl, amp, embeds, nembeds, psfsize, nwvl, wvl};
     thread_t dopsf[nwvl];
     thread_prep(dopsf, 0, nwvl, nwvl, (thread_wrapfun)psfcomp_iwvl, &data);
-    CALL_THREAD(dopsf, nwvl, 0);
+    CALL_THREAD(dopsf, 0);
     return psf2s;
 }
 /**

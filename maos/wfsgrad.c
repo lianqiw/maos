@@ -320,7 +320,9 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
    physical optics mode.  */
 
-void wfsgrad_iwfs(SIM_T *simu, int iwfs){
+void wfsgrad_iwfs(thread_t *info){
+    SIM_T *simu=(SIM_T*)info->data;
+    int iwfs=info->start;
     const PARMS_T *parms=simu->parms;
     assert(iwfs<parms->nwfs);
     /*
@@ -352,7 +354,6 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const int save_opd =parms->save.wfsopd[iwfs];
     const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
-    const int nthread=powfs[ipowfs].nthread;
     /*The following depends on isim */
     /*const int dtrat_reset=(isim%dtrat==0); */
     const int dtrat_output=((isim+1)%dtrat==0);
@@ -391,7 +392,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;
 	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
 	    /* have to wait to finish before another phase screen. */
-	    CALL_THREAD(wfs_prop, nthread, 0);
+	    CALL_THREAD(wfs_prop, 0);
 	}
 	/* most expensive 0.10 per LGS for*/
 	if(parms->sim.wfsalias){
@@ -408,7 +409,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 	    wfs_propdata->phiout=opd->p;
-	    CALL_THREAD(wfs_prop, nthread, 0);
+	    CALL_THREAD(wfs_prop, 0);
 	}/*idm */
 	if(simu->ttmreal){
 	    double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
@@ -557,7 +558,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}
 	intsdata->opd=opd;
 	intsdata->lltopd=lltopd;
-	CALL_THREAD(simu->wfs_ints[iwfs], nthread, 0);
+	CALL_THREAD(simu->wfs_ints[iwfs], 0);
 	dfree(lltopd);
 	if(psfout){
 	    cellarr_ccell(psfoutcellarr, isim, psfout);
@@ -922,63 +923,64 @@ void wfsgrad_mffocus(SIM_T* simu){
 /**
    Every operation here should be in the Simulator not the Controller 
 */
-void wfsgrad_wrap(thread_t *info){
+void wfsgrad_post(thread_t *info){
     SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
-    int iwfs=info->start;
-    assert(info->end==info->start+1);/*only 1 WFS. */
 #if USE_CUDA
     if(parms->gpu.wfs){
-	gpu_wfsgrad_iwfs(simu, iwfs);
-    }else
+	gpu_wfsgrad_sync(info);
+    }
 #endif
-	wfsgrad_iwfs(simu, iwfs);
-
     //Postprocessing gradients
     const POWFS_T *powfs=simu->powfs;
     const int isim=simu->isim;
-    const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    const int dtrat=parms->powfs[ipowfs].dtrat;
-    const int dtrat_output=((isim+1)%dtrat==0);
-    const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
-    dmat **gradout=&simu->gradcl->p[iwfs];
-    if(dtrat_output){
-	/*Gradient offset due to CoG*/
-	if(do_phy){
-	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
-		wfsgrad_fsm(simu, iwfs);
+    for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int dtrat=parms->powfs[ipowfs].dtrat;
+	const int dtrat_output=((isim+1)%dtrat==0);
+	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
+	dmat **gradout=&simu->gradcl->p[iwfs];
+	if(dtrat_output){
+	    /*Gradient offset due to CoG*/
+	    if(do_phy){
+		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
+		    wfsgrad_fsm(simu, iwfs);
+		}
+		if(powfs[ipowfs].gradphyoff){
+		    dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+		}
 	    }
-	    if(powfs[ipowfs].gradphyoff){
-		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+	    if(parms->save.grad[iwfs]){
+		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
+	    }
+	    if(parms->plot.run){
+		drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
+			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
+			"x %d",  iwfs);
+		drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+powfs[ipowfs].pts->nsa, NULL,
+			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
+			"y %d",  iwfs);
 	    }
 	}
-	if(parms->save.grad[iwfs]){
-	    cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
-	}
-	if(parms->plot.run){
-	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
-		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
-		    "x %d",  iwfs);
-	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+powfs[ipowfs].pts->nsa, NULL,
-		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
-		    "y %d",  iwfs);
-	}
-    }
+    }//for iwfs
 }
 /**
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
    It also includes operations on Gradients before tomography.
 */
 void wfsgrad(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.idealfit || parms->sim.evlol) return;
-    double tk_start=myclockd();
-  
-    /* call the task in parallel and wait for them to finish. It may be done in CPU or GPU.*/
-    CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
+    // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
+    extern int PARALLEL;
+    if(!PARALLEL || parms->tomo.ahst_idealngs){
+	CALL_THREAD(simu->wfs_grad, 0);
+    }
+    CALL_THREAD(simu->wfs_grad_post, 0);
     if(parms->sim.mffocus){
-	/*high pass filter lgs focus to remove sodium range variation effect*/
+	//high pass filter lgs focus to remove sodium range variation effect
 	wfsgrad_mffocus(simu);
     }
 #if USE_CUDA

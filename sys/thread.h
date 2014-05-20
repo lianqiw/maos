@@ -45,6 +45,7 @@ struct thread_t{
     long start;
     long end;
     long ithread;/*which thread this is. */
+    long nthread;/*max number of threads*/
     thread_wrapfun fun;/*the function, takes data as argument */
     void *data;/*the data to pass to the function. */
 };
@@ -64,7 +65,7 @@ struct thread_t{
 /**
    Notice it is not effective to set the environment variables here.
 */
-#define THREAD_RUN_ONCE	1
+#define THREAD_YIELD	_Pragma("omp taskyield")
 INLINE void THREAD_POOL_INIT(int nthread){
     fprintf(stderr, "Using OpenMP version %d\n", _OPENMP);
     omp_set_num_threads(nthread);
@@ -81,33 +82,36 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
 /*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
 /*Don't turn the following into INLINE function becase task will be waited*/
 #define QUEUE(group,fun,arg,nthread,urgent)	\
-    (void)group;				\
+    (void) group; (void) urgent;		\
     for(int it=0; it<nthread; it++){		\
 	_Pragma("omp task untied")		\
 	fun(arg);				\
     }
 
 #define WAIT(group)				\
-    (void)group;				\
     _Pragma("omp taskwait")
 
 
 /*The following *_THREAD acts on thread_t array A*/
 
-#define QUEUE_THREAD(group,A,nthread,urgent)	\
-    (void)group;				\
-    for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task untied")		\
-	    A[it].fun(A+it);			\
+#define QUEUE_THREAD(group,A,urgent)		\
+    (void)group;(void)urgent;			\
+    for(int it=0; it<(A)[0].nthread; it++){	\
+	if((A)[it].fun){			\
+	    _Pragma("omp task untied")		\
+		(A)[it].fun((A)+it);		\
+        }					\
     }
 #define WAIT_THREAD(group)			\
     _Pragma("omp taskwait")
 /*Turn to inline function because nvcc concatenates _Pragma to } */
-INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
+INLINE void CALL_THREAD(thread_t *A, int urgent){
     (void) urgent;
-    for(int it=0; it<nthread; it++){		
+    for(int it=0; it<A[0].nthread; it++){		
+	if(A[it].fun){
 #pragma omp task untied
-	A[it].fun(A+it);				
+	    A[it].fun(A+it); 
+	}
     }
 #pragma omp taskwait
 }
@@ -132,9 +136,9 @@ INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
 /**
    Queue jobs to group. Do not wait
 */
-#define QUEUE_THREAD(group,A,nthread,urgent)			\
-    if((nthread)>1){						\
-	thread_pool_queue_many(&group,NULL,A,nthread,urgent);	\
+#define QUEUE_THREAD(group,A,urgent)			\
+    if((A[0].nthread)>1){						\
+	thread_pool_queue_many(&group,NULL,A[0].nthread,nthread,urgent); \
     }else{							\
 	(A)->fun(A);						\
     }
@@ -142,10 +146,10 @@ INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
 /**
    Queue jobs to a temp group. Wait for complete.
 */
-#define CALL_THREAD(A,nthread,urgent)		\
-    if((nthread)>1){				\
+#define CALL_THREAD(A,urgent)			\
+    if((A[0].nthread)>1){			\
 	long group=0;				\
-	QUEUE_THREAD(group,A,nthread,urgent);	\
+	QUEUE_THREAD(group,A,urgent);		\
 	WAIT_THREAD(group);			\
     }else{					\
 	(A)->fun(A);				\
@@ -156,7 +160,7 @@ INLINE void CALL_THREAD(thread_t *A, int nthread, int urgent){
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 
 #define THREAD_POOL_INIT(A) ({thread_pool_init(A);fprintf(stderr, "Using thread pool\n");})
-#define THREAD_RUN_ONCE thread_pool_do_job_once()
+#define THREAD_YIELD thread_pool_do_job_once()
 #endif
 
 #define LOCK(A) pthread_mutex_lock(&A)

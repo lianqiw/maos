@@ -98,35 +98,14 @@ __host__ __device__ static __inline__ void Z(cuCscale)(Comp x, Real a){
     x.y*=a;
 }
 inline void* malloc4async(int N){
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
     void *tmp;
     cudaMallocHost(&tmp, N);
     return tmp;
-#else
-    return malloc(N);
-#endif
 }
 inline void free4async(void *P){
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
     cudaFreeHost(P);
-#else
-    free(P);
-#endif
 }
-
-#define CONCURRENT 0
-#if CONCURRENT
-#define CUDA_SYNC_STREAM				\
-    while(cudaStreamQuery(stream)!=cudaSuccess){	\
-	if(THREAD_RUN_ONCE){/* no jobs to do*/		\
-	    cudaStreamSynchronize(stream);		\
-	    break;					\
-	}						\
-    }
-#else
 #define CUDA_SYNC_STREAM DO(cudaStreamSynchronize(stream))
-#endif
-
 #define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
 #define TIMING 0
 #if TIMING == 1

@@ -288,7 +288,7 @@ int main(int argc, char *argv[]){
     thread_t *info=calloc(nwvl, sizeof(thread_t));
     thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
-    CALL_THREAD(info, nwvl, 0);
+    CALL_THREAD(info, 0);
     info2(" done\n");
     dcellwrite(output, "%s", outfile);
 

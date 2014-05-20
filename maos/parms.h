@@ -297,9 +297,9 @@ typedef struct EVL_CFG_T{
 		       - 2: all directions and average them.*/
     int psfhist;    /**<output history of the psf (a lot of storage)*/
     int psfmean;    /**<output time averaged psf*/
-    int opdcov;     /**<save covairance of science OPD ,every this time step,
+    int cov;        /**<save covairance of science OPD ,every this time step,
 		       for directions where evl.psf is 1*/
-    int *psfpttr;   /**<remove p/t/t from psf. 1 number for each evl.*/
+    int *pttr;      /**<remove p/t/t from psf. 1 number for each evl.*/
     int *psfngsr;   /**<remove ngs modes from psf.*/
 
 

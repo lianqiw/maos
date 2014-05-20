@@ -136,8 +136,6 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
    Performance evaluation for each direction in parallel mode.  */
 void perfevl_ievl(thread_t *info){
     SIM_T *simu=info->data;
-    const int ievl=info->start;
-    assert(info->end==info->start+1);/*only one evl. */
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
@@ -147,190 +145,196 @@ void perfevl_ievl(thread_t *info){
     const int npsr=parms->atmr.nps;
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
-    const int nthread=parms->evl.nthread;
-    const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov) && isim>=parms->evl.psfisim && parms->evl.psf[ievl];
-    const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
-    dmat *iopdevl=dnew(aper->locs->nloc,1);
-    TIM(0);
-    /*Setup pointers for easy usage */
-    PDMAT(simu->olmp->p[ievl],polmp);/*OL mode for each dir */
-    PDMAT(simu->olep->p[ievl],polep);/*OL error for each dir */
-    PDMAT(simu->clmp->p[ievl],pclmp);
-    PDMAT(simu->clep->p[ievl],pclep);
-
-    /*atmosphere contribution. */
-    if(parms->sim.idealevl){
-	perfevl_ideal_atm(simu, iopdevl, ievl, 1);
-    }else if(simu->atm && !parms->sim.wfsalias){
-	if(simu->opdevlground){
-	    memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
+    dmat *iopdevl=0;
+    for(int ievl=info->start; ievl<info->end; ievl++){
+	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov)
+	    && isim>=parms->evl.psfisim && parms->evl.psf[ievl];
+	const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
+	if(!iopdevl){
+	    iopdevl=dnew(aper->locs->nloc,1);
 	}else{
 	    dzero(iopdevl);
 	}
-	/*fix me: the ray tracing of the same part must be performed in the same thread. */
-	for(int ips=0; ips<nps; ips++){
-	    if(ips!=simu->perfevl_iground || !simu->opdevlground){
-		int ind=ievl+parms->evl.nevl*ips;
-		simu->evl_propdata_atm[ind].phiout=iopdevl->p;
-		simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
-		simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-		CALL_THREAD(simu->evl_prop_atm[ind], nthread, 0);
-	    }
-	}
-    }
-    if(simu->telws){/*Wind shake */
-	double tmp=simu->telws->p[isim];
-	double angle=simu->winddir?simu->winddir->p[0]:0;
-	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-	loc_add_ptt(iopdevl->p, ptt, aper->locs);
-    }
-    /*Add surfaces along science path. prepared in setup_surf.c */
-    if(aper->opdadd && aper->opdadd->p[ievl]){
-	dadd(&iopdevl, 1, aper->opdadd->p[ievl], 1);
-    }
+	TIM(0);
+	/*Setup pointers for easy usage */
+	PDMAT(simu->olmp->p[ievl],polmp);/*OL mode for each dir */
+	PDMAT(simu->olep->p[ievl],polep);/*OL error for each dir */
+	PDMAT(simu->clmp->p[ievl],pclmp);
+	PDMAT(simu->clep->p[ievl],pclep);
 
-    TIM(1);
-    if(save_evlopd){
-	cellarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
-    }
-    if(parms->plot.run){
-	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
-		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
-    }
-    PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
-    /*evaluate time averaged open loop PSF. */
-    if((parms->evl.psfmean || parms->evl.opdcov)
-       && isim>=parms->evl.psfisim 
-       &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
-	/*Compute on axis OL psf. */
-	dmat *opdevlcopy=NULL;
-	if(parms->evl.psfpttr[ievl]){
-	    dcp(&opdevlcopy,iopdevl);
-	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
-	}else if(parms->evl.opdcov){
-	    dcp(&opdevlcopy,iopdevl);
-	    dadds(opdevlcopy, -polmp[isim][0]);
-	}else{
-	    opdevlcopy=dref(iopdevl);
-	}
-	if(parms->evl.opdcov){
-	    dmm(&simu->evlopdcovol, 1, opdevlcopy, opdevlcopy, "nt", 1);
-	    dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
-	}/*opdcov*/
-	if(parms->evl.psfmean){
-	    ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
-	    int nwvl=parms->evl.nwvl;
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
+	/*atmosphere contribution. */
+	if(parms->sim.idealevl){
+	    perfevl_ideal_atm(simu, iopdevl, ievl, 1);
+	}else if(simu->atm && !parms->sim.wfsalias){
+	    if(simu->opdevlground){
+		memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
+	    }else{
+		dzero(iopdevl);
 	    }
-	    if(parms->plot.run){
-		dmat *psftemp=NULL;
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		    ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
-			  "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
-		    dfree(psftemp);
+	    /*fix me: the ray tracing of the same part must be performed in the same thread. */
+	    for(int ips=0; ips<nps; ips++){
+		if(ips!=simu->perfevl_iground || !simu->opdevlground){
+		    int ind=ievl+parms->evl.nevl*ips;
+		    simu->evl_propdata_atm[ind].phiout=iopdevl->p;
+		    simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
+		    simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
+		    CALL_THREAD(simu->evl_prop_atm[ind], 0);
 		}
 	    }
-	    ccellfree(psf2s);
 	}
-	dfree(opdevlcopy);
-    }
-    if(parms->sim.evlol) goto end;
-    TIM(2);
-    if(parms->evl.tomo){
-	/*
-	  evaluate tomography performance: Apply ideal correction using
-	  tomography output directly.
-	*/
-	if(simu->opdr){
-	    for(int ipsr=0; ipsr<npsr; ipsr++){
-		double hl=parms->atmr.ht[ipsr];
-		double scale = 1. - hl/parms->evl.hs[ievl];
-		double displacex=parms->evl.thetax[ievl]*hl;
-		double displacey=parms->evl.thetay[ievl]*hl;
-		prop_nongrid(recon->xloc[ipsr], 
-			     simu->opdr->p[ipsr]->p,
-			     aper->locs, NULL, iopdevl->p, -1,
-			     displacex, displacey, scale, 0, 0);
-	    }
-	}
-    }else{
-	/* Apply dm correction. tip/tilt command is contained in DM commands */
-	if(simu->dmreal){
-	    int ndm=parms->ndm;
-	    for(int idm=0; idm<ndm; idm++){
-		int ind=ievl+parms->evl.nevl*idm;
-		simu->evl_propdata_dm[ind].phiout=iopdevl->p;
-		CALL_THREAD(simu->evl_prop_dm[ind], nthread, 0);
-	    }
-	}
-	if(simu->ttmreal){
-	    double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
+	if(simu->telws){/*Wind shake */
+	    double tmp=simu->telws->p[isim];
+	    double angle=simu->winddir?simu->winddir->p[0]:0;
+	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
 	}
-	TIM(4);
-	if(imoao>-1){
-	    dmat **dmevl=simu->dm_evl->p;
-	    if(dmevl[ievl]){
-		/**
-		   prop is faster than spmulvec. \fixme check definition of misreg
-		*/
-		if(parms->moao[imoao].cubic){
-		    prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl]->p,
-				       aper->locs, NULL, iopdevl->p, -1, 0,0,1,
-				       parms->moao[imoao].iac, 
-				       0,0);
-		}else{
-		    prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl]->p,
-				 aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
-		}
-	    }
+	/*Add surfaces along science path. prepared in setup_surf.c */
+	if(aper->opdadd && aper->opdadd->p[ievl]){
+	    dadd(&iopdevl, 1, aper->opdadd->p[ievl], 1);
 	}
-    }
-    if(parms->plot.run){
-	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
-		   "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
-    }
-    if(save_evlopd){
-	cellarr_dmat(simu->save->evlopdcl[ievl], isim, iopdevl);
-    }
 
-    /*Evaluate closed loop performance. */
-    PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
-    if(do_psf_cov){
-	if(parms->evl.psfngsr[ievl]!=0){
-	    /* even if psfpttr=1, referencing is ok.  Change to copy if
-	       incompatible in the future.*/
-	    simu->evlopd->p[ievl]=dref(iopdevl);
+	TIM(1);
+	if(save_evlopd){
+	    cellarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
 	}
-	if(parms->evl.psfngsr[ievl]!=2){/*ngsr==2 means only want ngsr. */
-	    /** opdcov does not have p/t/t removed. do it in postproc is necessary*/
-	    if(parms->evl.psfpttr[ievl]){
-		if(isim==parms->evl.psfisim && ievl==0){
-		    warning("Removing piston/tip/tilt from OPD.\n");
-		}
-		loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
-	    }else if(parms->evl.opdcov){/*remove piston */
-		dadds(iopdevl, -pclmp[isim][0]);
+	if(parms->plot.run){
+	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
+		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
+	}
+	PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
+	/*evaluate time averaged open loop PSF. */
+	if((parms->evl.psfmean || parms->evl.cov)
+	   && isim>=parms->evl.psfisim 
+	   &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
+	      ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+	    /*Compute on axis OL psf. */
+	    dmat *opdevlcopy=NULL;
+	    if(parms->evl.pttr[ievl]){
+		dcp(&opdevlcopy,iopdevl);
+		loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
+	    }else if(parms->evl.cov){
+		dcp(&opdevlcopy,iopdevl);
+		dadds(opdevlcopy, -polmp[isim][0]);
+	    }else{
+		opdevlcopy=dref(iopdevl);
 	    }
-	    if(parms->evl.opdcov){
-		dmm(&simu->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
-		dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
-	    }/*opdcov */
-	    if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
-		perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
-	    }/*do_psf */
+	    if(parms->evl.cov){
+		dmm(&simu->evlopdcovol, 1, opdevlcopy, opdevlcopy, "nt", 1);
+		dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
+	    }/*opdcov*/
+	    if(parms->evl.psfmean){
+		ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
+				     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+		int nwvl=parms->evl.nwvl;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
+		}
+		if(parms->plot.run){
+		    dmat *psftemp=NULL;
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+			ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
+			      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
+			dfree(psftemp);
+		    }
+		}
+		ccellfree(psf2s);
+	    }
+	    dfree(opdevlcopy);
 	}
-    }
-    TIM(5);
- end:
+	if(parms->sim.evlol) continue;
+	TIM(2);
+	if(parms->evl.tomo){
+	    /*
+	      evaluate tomography performance: Apply ideal correction using
+	      tomography output directly.
+	    */
+	    if(simu->opdr){
+		for(int ipsr=0; ipsr<npsr; ipsr++){
+		    double hl=parms->atmr.ht[ipsr];
+		    double scale = 1. - hl/parms->evl.hs[ievl];
+		    double displacex=parms->evl.thetax[ievl]*hl;
+		    double displacey=parms->evl.thetay[ievl]*hl;
+		    prop_nongrid(recon->xloc[ipsr], 
+				 simu->opdr->p[ipsr]->p,
+				 aper->locs, NULL, iopdevl->p, -1,
+				 displacex, displacey, scale, 0, 0);
+		}
+	    }
+	}else{
+	    /* Apply dm correction. tip/tilt command is contained in DM commands */
+	    if(simu->dmreal){
+		int ndm=parms->ndm;
+		for(int idm=0; idm<ndm; idm++){
+		    int ind=ievl+parms->evl.nevl*idm;
+		    simu->evl_propdata_dm[ind].phiout=iopdevl->p;
+		    CALL_THREAD(simu->evl_prop_dm[ind], 0);
+		}
+	    }
+	    if(simu->ttmreal){
+		double ptt[3]={0, -simu->ttmreal->p[0], -simu->ttmreal->p[1]};
+		loc_add_ptt(iopdevl->p, ptt, aper->locs);
+	    }
+	    TIM(4);
+	    if(imoao>-1){
+		dmat **dmevl=simu->dm_evl->p;
+		if(dmevl[ievl]){
+		    /**
+		       prop is faster than spmulvec. \fixme check definition of misreg
+		    */
+		    if(parms->moao[imoao].cubic){
+			prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl]->p,
+					   aper->locs, NULL, iopdevl->p, -1, 0,0,1,
+					   parms->moao[imoao].iac, 
+					   0,0);
+		    }else{
+			prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl]->p,
+				     aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
+		    }
+		}
+	    }
+	}
+	if(parms->plot.run){
+	    drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
+		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
+	}
+	if(save_evlopd){
+	    cellarr_dmat(simu->save->evlopdcl[ievl], isim, iopdevl);
+	}
+
+	/*Evaluate closed loop performance. */
+	PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
+	if(do_psf_cov){
+	    if(parms->evl.psfngsr[ievl]!=0){
+		/* even if psfpttr=1, referencing is ok.  Change to copy if
+		   incompatible in the future.*/
+		simu->evlopd->p[ievl]=dref(iopdevl);
+	    }
+	    if(parms->evl.psfngsr[ievl]!=2){/*ngsr==2 means only want ngsr. */
+		/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
+		if(parms->evl.pttr[ievl]){
+		    if(isim==parms->evl.psfisim && ievl==0){
+			warning("Removing piston/tip/tilt from OPD.\n");
+		    }
+		    loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
+		}else if(parms->evl.cov){/*remove piston */
+		    dadds(iopdevl, -pclmp[isim][0]);
+		}
+		if(parms->evl.cov){
+		    dmm(&simu->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
+		    dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
+		}/*opdcov */
+		if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
+		    perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
+		}/*do_psf */
+	    }
+	}
+	TIM(5);
 #if TIMING==1
-    info2("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f\n",
-	  ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4);
+	info2("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f\n",
+	      ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4);
 #endif
+    }
     dfree(iopdevl);
 }
 /**
@@ -434,7 +438,7 @@ static void perfevl_mean(SIM_T *simu){
 		simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nmod*isim]-tot2;/*PR-LGS */
 	    }
 	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
-	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.opdcov)){
+	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.cov)){
 		/*Only here if NGS mode removal flag is set (evl.psfngsr[ievl])*/
 		/*2013-01-23: Was using dot product before converting to modes. Fixed.*/
 #if USE_CUDA
@@ -450,14 +454,14 @@ static void perfevl_mean(SIM_T *simu){
 			ngsmod2science(iopdevl, aper->locs, recon->ngsmod, 
 				       parms->evl.thetax[ievl], parms->evl.thetay[ievl],
 				       pcleNGSm, -1);
-			if(parms->evl.psfpttr[ievl]){
+			if(parms->evl.pttr[ievl]){
 			    /*we cannot use clmp because the removed ngsmod
 			      has tip/tilt component*/
 			    double ptt[3];
 			    loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
 			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
 			}
-			if(parms->evl.opdcov){
+			if(parms->evl.cov){
 			    dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
 			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 			}
@@ -544,7 +548,7 @@ static void perfevl_save(SIM_T *simu){
 	    dcellscale(simu->evlpsfolmean, 1./scale);//scale it back;
 	}
     }
-    if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
+    if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info2("Step %d: Output opdcov\n", isim);
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
@@ -585,25 +589,31 @@ static void perfevl_save(SIM_T *simu){
    perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
     double tk_start=myclockd();
-    /*Cache the ground layer. */
     const PARMS_T *parms=simu->parms;
-    if(!(parms->gpu.evl)){
+    if(!(parms->gpu.evl)){ //Cache the ground layer. 
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
-	    simu->opdevlground=dnew(simu->aper->locs->nloc,1);
-	    const int ievl=0;/*doesn't matter for ground layer. */
+	    if(!simu->opdevlground){
+		simu->opdevlground=dnew(simu->aper->locs->nloc,1);
+	    }else{
+		dzero(simu->opdevlground);
+	    }
+	    const int ievl=0;//doesn't matter for ground layer. 
 	    int ind=ievl+parms->evl.nevl*ips;
 	    const int isim=simu->isim;
 	    const double dt=simu->dt;
 	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	    simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 	    simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-	    CALL_THREAD(simu->evl_prop_atm[ind], parms->evl.nthread, 0);
+	    CALL_THREAD(simu->evl_prop_atm[ind], 0);
 	}
     }
-    CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
-    if(!(parms->gpu.evl)){
-	dfree(simu->opdevlground);simu->opdevlground=NULL;
+    extern int PARALLEL;
+    if(!PARALLEL || !parms->gpu.evl){
+	CALL_THREAD(simu->perf_evl, 0);
+    }
+    if(simu->perf_evl_post){
+	CALL_THREAD(simu->perf_evl_post, 0);
     }
     perfevl_mean(simu);
 #if USE_CUDA

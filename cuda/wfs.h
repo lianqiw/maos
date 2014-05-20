@@ -19,8 +19,8 @@
 #define AOS_CUDA_WFS_H
 #include <cufft.h>
 
-#define RAND_BLOCK 16
-#define RAND_THREAD 32
+#define RAND_BLOCK 8
+#define RAND_THREAD 256
 struct cudtf_t{
     Comp **nominal;/*array for each sa. */
     Comp **etf;

@@ -41,6 +41,7 @@
 #include "../cuda/gpu.h"
 #endif
 #define TIMING_MEAN 0
+extern int PARALLEL;
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -55,9 +56,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
     if(parms->sim.skysim){
 	save_skyc(powfs,recon,parms);
     }
+    info2("PARALLEL=%d\n", PARALLEL);
     if(simstart>=simend) return;
     double tk_0=myclockd();
-    double ck_0,ck_end;
+    double ck_0, ck_end;
     double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	if(parms->fdlock && parms->fdlock[iseed]<0){
@@ -99,12 +101,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 #endif
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
-#if defined(__linux__)  && !defined(USE_CUDA)
-	double cpu_evl=0, cpu_wfs=0, cpu_recon=0, cpu_cachedm=0, cpu_all=0;
-#define READ_CPU(A) A=read_self_cpu()
-#else
-#define READ_CPU(A)
-#endif
 	for(int isim=simstart; isim<simend; isim++){
 	    if(isim+1==simend) draw_single=0;
 	    ck_0=myclockd();
@@ -150,7 +146,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		}
 #endif
 	    }
-	    extern int PARALLEL;
 	    if(PARALLEL){
 		/*
 		  We do the big loop in parallel to make better use the
@@ -160,10 +155,16 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		  presimulation case because perfevl updates dmreal before
 		  wfsgrad
 		*/
-		read_self_cpu();/*initialize CPU usage counter */
 		/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		long group=0;
 		QUEUE(group, reconstruct, simu, 1, 0);
+		if(parms->gpu.evl){
+		    QUEUE_THREAD(group, simu->perf_evl, 0);
+		}
+		if(!parms->tomo.ahst_idealngs){
+		    QUEUE_THREAD(group, simu->wfs_grad, 0);
+		}
+		WAIT(group);
 		QUEUE(group, perfevl, simu, 1, 0);
 		if(parms->tomo.ahst_idealngs){
 		    WAIT(group);
@@ -172,29 +173,20 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		WAIT(group);
 		shift_grad(simu);/*before filter() */
 		filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
-		READ_CPU(cpu_all);
 	    }else{/*do the big loop in serial mode. */
 		read_self_cpu();/*initialize CPU usage counter */
 		if(CL){
 		    perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-		    READ_CPU(cpu_evl);
 		    wfsgrad(simu);/*output grads to gradcl, gradol */
-		    READ_CPU(cpu_wfs);
 		    reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
-		    READ_CPU(cpu_recon);
 		    shift_grad(simu);
 		    filter(simu);
-		    READ_CPU(cpu_cachedm);
 		}else{/*in OL mode,  */
 		    wfsgrad(simu);
-		    READ_CPU(cpu_wfs);
 		    shift_grad(simu);
 		    reconstruct(simu);
-		    READ_CPU(cpu_recon);
 		    filter(simu);
-		    READ_CPU(cpu_cachedm);
 		    perfevl(simu);
-		    READ_CPU(cpu_evl);
 		}
 	    }
 	    ck_end=myclockd();
@@ -207,7 +199,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 	    simu->status->tot  =ck_end-ck_0;
 	    simu->status->wfs  =simu->tk_wfs;
 	    simu->status->recon=simu->tk_recon;
-	    simu->status->cache=simu->tk_cache;
+	    simu->status->other=simu->tk_cache;
 	    simu->status->eval =simu->tk_eval;
 	    simu->status->scale=1;
 
@@ -219,15 +211,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		scheduler_report(simu->status);
 #endif
 		print_progress(simu);
-#if defined(__linux__)  && !defined(USE_CUDA)
-		if(PARALLEL){
-		    info2("CPU Usage: %.2f\n", cpu_all);
-		}else{
-		    info2("CPU Usage: WFS:%.2f Recon:%.2f CACHE: %.2f EVAL:%.2f Mean:%.2f\n",
-			  cpu_wfs, cpu_recon, cpu_evl, cpu_cachedm,
-			      (cpu_wfs+cpu_recon+cpu_evl+cpu_cachedm)*0.25);
-		}
-#endif
 	    }
 	    if(parms->pause){
 		PAUSE;

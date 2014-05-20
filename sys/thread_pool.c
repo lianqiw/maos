@@ -314,7 +314,7 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
 	    thread_t *arg2=arg;
 	    job->fun=(thread_fun)(arg2[ijob].fun);
 	    job->arg=arg2+ijob;
-	    if(((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
+	    if(!job->fun || ((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
 		/*empty job. don't queue it. */
 		LOCK_DO(pool.mutex_pool);
 		job->next=pool.jobspool;

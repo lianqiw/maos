@@ -300,6 +300,15 @@ public:
     }
 };
 curmat* gpu_dmcubic_cc(Real iac);
+template <typename T>
+void gpu2gpu(cumat<T> **dest, cumat<T> *source){
+    if(!*dest){
+	*dest=new cumat<T>(source->nx, source->ny);
+    }else{
+	assert((*dest)->nx*(*dest)->ny==source->nx*source->ny);
+    }
+    cudaMemcpy((*dest)->p, source->p, sizeof(T)*source->nx*source->ny, cudaMemcpyDeviceToDevice);
+}
 /**
    Specifies the grid.
 */
@@ -327,21 +336,41 @@ public:
 	    cubic_cc=0;
 	}
     }
-    cugrid_t(cugrid_t *in){
+    void zero(){
+	nx=ny=0;
+	ox=oy=dx=dy=ht=vx=vy=0;
+	cubic_cc=0;
+    }
+    void init(const cugrid_t *in){
 	if(in){
-	    memcpy(this, in, sizeof(*this));
+	    nx=in->nx;
+	    ny=in->ny;
+	    ox=in->ox;
+	    oy=in->oy;
+	    dx=in->dx;
+	    dy=in->dy;
+	    ht=in->ht;
+	    vx=in->vx;
+	    vy=in->vy;
+	    if(in->cubic_cc){
+		gpu2gpu(&cubic_cc, in->cubic_cc);
+	    }
 	}else{
-	    memset(this, 0, sizeof(*this));
+	    zero();
 	}
+    }
+    cugrid_t(cugrid_t *in){
+	init(in);
     }
     cugrid_t(const map_t *in){
 	if(in){
 	    init(in);
 	}else{
-	    memset(this, 0, sizeof(*this));
+	    zero();
 	}
     }
     cugrid_t(long nxi=0, long nyi=0,Real oxi=0, Real oyi=0, Real dxi=0, Real dyi=0, Real hti=0, Real vxi=0, Real vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
+
     cugrid_t scale(Real sc)const{
 	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }

@@ -42,6 +42,16 @@ __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2],
 	opd[i]+=pis+loc[i][0]*tx+loc[i][1]*ty;
     }
 }
+__global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], 
+			   int n, Real*ptt, Real pis, Real tx, Real ty){
+    pis*=ptt[0];
+    tx*=ptt[1];
+    ty*=ptt[2];
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	opd[i]+=pis+loc[i][0]*tx+loc[i][1]*ty;
+    }
+}
 __global__ void add_focus_do(Real *restrict opd, Real (*restrict loc)[2], 
 			     int n, Real focus){
     const int step=blockDim.x * gridDim.x;

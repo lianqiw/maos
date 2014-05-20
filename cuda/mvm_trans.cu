@@ -326,7 +326,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    }
 	}
 	/*Do real MVM control matrix assemble in multiply CPU/GPU*/
-	CALL_THREAD(info, nthread, 1);
+	CALL_THREAD(info, 1);
 	/*Copy MVM control matrix results back*/
 	{
 	    gpu_set(gpu_recon);

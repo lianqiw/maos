@@ -23,8 +23,6 @@
 PNEW2(mutex_fftw);
 /**
    Break out the job to be executed by multiple threads. 
-   if interlaced==0: partition the job to consecutive segments.
-   if interlaced!=0:  different thread do the job interelaced.
 */
 void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data){
@@ -37,6 +35,7 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
     if(nt<=0) nt=1;/*added on 2011-04-28; */
     for(ithread=0; ithread<nthread; ithread++){
 	info[ithread].ithread=ithread;
+	info[ithread].nthread=nthread;
 	info[ithread].data=data;
 	info[ithread].fun=fun;
 	info[ithread].start=start;
@@ -50,6 +49,7 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
     }
     for(;ithread<nthread;ithread++){/*skip these threads. */
 	info[ithread].ithread=ithread;
+	info[ithread].nthread=nthread;
 	info[ithread].start=0;
 	info[ithread].end=0;
 	info[ithread].data=data;

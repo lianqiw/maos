@@ -57,15 +57,15 @@ void X(fft_free_plan)(fft_t *fft){
     }
     free(fft);
 }
+static void FFTW_THREADS(int n){
+#if USE_FFTW_THREADS == 1
+    FFTW(plan_with_nthreads)(n);
+    info2("Creating fft plan with %d threads ...", n);
+#endif
+}
 /**
    load FFT wisdom from file.
  */
-#if USE_FFTW_THREADS == 1
-#define FFTW_THREADS(n) FFTW(plan_with_nthreads)(n)
-#else
-#define FFTW_THREADS(n)
-#endif
-
 #ifdef USE_COMPLEX
 static char fnwisdom[64];
 static void load_wisdom(){
@@ -98,6 +98,7 @@ static void save_wisdom(){
     }
 }
 
+#include <dlfcn.h>
 /**
    executed before main(). FFTW website says "We should also mention one other
    restriction: if you save wisdom from a program using the multi-threaded FFTW,
@@ -105,7 +106,19 @@ static void save_wisdom(){
    (i.e. not calling fftw_init_threads)." So here we use different names.
  */
 static __attribute__((constructor))void init(){
-#if USE_FFTW_THREADS == 1
+#if !USE_FFTW_THREADS
+#if defined(USE_SINGLE)
+    void *libfftw_threads=dlopen("libfftwf-threads.so", RTLD_LAZY);
+#else
+    void *libfftw_threads=dlopen("libfftw-threads.so", RTLD_LAZY);
+#endif
+    if(libfftw_threads){
+	
+    }else{
+	warning("libfftw-threads not found\n");
+    }	
+#endif
+#if USE_FFTW_THREADS
     FFTW(init_threads)();
 #ifdef USE_SINGLE
     sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
@@ -277,7 +290,6 @@ void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
 	TIC;tic;
 	LOCK_FFT;
 	if(nthreads<1) nthreads=1;
-	info2("Creating fft plan with %d threads ...", nthreads);
 	FFTW_THREADS(nthreads);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);

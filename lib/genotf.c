@@ -373,7 +373,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.otffull=otffull;
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
-    CALL_THREAD(info, NCPU, 1);
+    CALL_THREAD(info, 1);
     cfree(otffull);
     if(!cov) dfree(B);
     free(pval[0].loc);

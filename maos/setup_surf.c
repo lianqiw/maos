@@ -319,12 +319,12 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	sdata.surf=surf;
 	sdata.opdxcover=opdxcover;
 	sdata.isurf=isurf;
-	CALL_THREAD(tdata_evl, nthread, 0);
+	CALL_THREAD(tdata_evl, 0);
 	if(powfs){
-	    CALL_THREAD(tdata_wfs, nthread, 0);
+	    CALL_THREAD(tdata_wfs, 0);
 	}
 	if(parms->sim.ncpa_calib){
-	    CALL_THREAD(tdata_ncpa, nthread, 0);
+	    CALL_THREAD(tdata_ncpa, 0);
 	}
 	mapfree(surf);
     }

@@ -59,7 +59,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU (%d) mem used %ld MB (%s)\n",GPUS[cudata-cudata_all],(long)(tot-fr)/1024/1024, msg);
+    info2("GPU (%d) mem used %ld MB (%s)\n",cudata->igpu,(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -108,7 +108,7 @@ int gpu_init(int *gpus, int ngpu){
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
     int fdlock=lock_file(fnlock, 1, 0);
     /*
-      Create a mapping between CUDA device ordering and NVML ordering (nvidia-smi)
+      Create a mapping between CUDA device ordering and NVML ordering (nvidia-smi).
     */
     long gmap[ngpu_tot][2];
     for(int ig=0; ig<ngpu_tot; ig++){
@@ -121,7 +121,7 @@ int gpu_init(int *gpus, int ngpu){
 	}
     }
     qsort(gmap, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_ascend);
-    
+    //now gmpa[igpu] is the cuda index of the nvml index igpu.
     NGPU=0;
     /*
       User specified exact GPUs to use. We check every entry. 
@@ -142,17 +142,6 @@ int gpu_init(int *gpus, int ngpu){
 		    warning("GPU %d: not exist\n", gpus[ig]);
 		}else{
 		    GPUS[NGPU++]=gmap[gpus[ig]][0];
-		    /* Enable the following to disallow use GPUs in multiple threads
-		      int j;
-		    for(j=0; j<NGPU; j++){
-			if(GPUS[j]==gpus[ig]){
-			    warning2("Skip GPU %d: duplicated\n", gpus[ig]);
-			    break;
-			}
-		    }
-		    if(j==NGPU){
-			GPUS[NGPU++]=gpus[ig];
-			}*/
 		}
 	    }
 	}
@@ -162,7 +151,7 @@ int gpu_init(int *gpus, int ngpu){
 	    repeat=0;
 	    ngpu=ngpu_tot;
 	}
-	GPUS=(int*)calloc(ngpu, sizeof(int));
+	GPUS=(int*)calloc(ngpu, sizeof(int));//stores CUDA index
 	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
@@ -205,12 +194,20 @@ int gpu_init(int *gpus, int ngpu){
 	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
-	    info2(" %d", GPUS[i]);
 	    gpu_set(i);
+	    for(int j=0; j<ngpu_tot; j++){
+		if(GPUS[i]==gmap[j][0]){
+		    cudata->igpu=j;
+		    break;
+		}
+	    }
+	    info2(" %d", cudata->igpu);
 	    //Reserve memory in GPU so the next maos will not pick this GPU.
 	    DO(cudaMalloc(&cudata->reserve, MEM_RESERVE));
 	}
 	info2("\n");
+
+
     }
  end:
     close(fdlock);

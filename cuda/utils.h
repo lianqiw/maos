@@ -149,6 +149,9 @@ void cp2gpu(Real (* restrict *dest)[2], const loc_t *src);
 void cp2gpu(curcell *restrict *dest, const dcell *src);
 void cp2gpu(cuccell *restrict *dest, const ccell *src);
 
+
+void gpu2gpu(cumap_t **dest0, cumap_t *source, int nps);
+
 void cuspmul (Real *y, cusp *A, const Real *x, int ncol, char trans,
 	      Real alpha, cusparseHandle_t handle);
 

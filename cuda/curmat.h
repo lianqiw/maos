@@ -70,4 +70,8 @@ Real curcellmaxabs(const curcell *a, cudaStream_t stream);
 inline void curaddptt(curmat *opd, Real (*loc)[2], Real pis, Real tx, Real ty, cudaStream_t stream){
     add_ptt_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>(opd->p, loc, opd->nx*opd->ny, pis, tx, ty);
 }
+inline void curaddptt(curmat *opd, Real (*loc)[2], Real *ptt, Real pis, Real tx, Real ty,  cudaStream_t stream){
+    add_ptt_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>(opd->p, loc, opd->nx*opd->ny, ptt, pis, tx, ty);
+}
+
 #endif

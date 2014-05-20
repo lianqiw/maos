@@ -81,6 +81,7 @@ __device__ inline Real CABS2(Comp r){
 __global__ void set_do(Real *a, Real alpha, int n);
 __global__ void scale_do(Real *restrict in, int n, Real alpha);
 __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real pis, Real tx, Real ty);
+__global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real *ptt, Real pis, Real tx, Real ty);
 __global__ void add_focus_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real focus);
 __global__ void add_ngsmod_do(Real *restrict opd, Real (*restrict loc)[2], int n, 
 			      Real m0, Real m1, Real m2, Real m3, Real m4, Real focus,

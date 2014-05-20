@@ -24,7 +24,7 @@ typedef struct STATUS_T{
     /*Individual timing */
     double wfs;
     double recon;
-    double cache;
+    double other;
     double eval;
     double tot;
     double scale;

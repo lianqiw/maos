@@ -110,7 +110,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.psfr);
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);
-    free(parms->evl.psfpttr);
+    free(parms->evl.pttr);
     free(parms->evl.psfngsr);
 
     free(parms->fit.thetax);
@@ -710,11 +710,11 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
-    readcfg_intarr_nmax(&parms->evl.psfpttr, parms->evl.nevl, "evl.psfpttr");
+    readcfg_intarr_nmax(&parms->evl.pttr, parms->evl.nevl, "evl.pttr");
     readcfg_intarr_nmax(&parms->evl.psfngsr, parms->evl.nevl, "evl.psfngsr");
     READ_INT(evl.psfmean); 
     READ_INT(evl.psfhist); 
-    READ_INT(evl.opdcov);/*Science OPD covariance. */
+    READ_INT(evl.cov);/*Science OPD covariance. */
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
     /*it is never good to parallelize the evl ray tracing because it is already so fast */
@@ -2190,7 +2190,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(parms->evl.psfisim<parms->sim.start){
 	parms->evl.psfisim=parms->sim.start;
     }
-    if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
+    if(parms->sim.closeloop==0 || parms->evl.tomo){
 	/*disable parallelizing the big loop. */
 	extern int PARALLEL;
 	PARALLEL=0;
@@ -2210,7 +2210,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
 	if(isfinite(parms->evl.hs[ievl]) && parms->evl.psfngsr[ievl]){
 	    parms->evl.psfngsr[ievl]=0;
-	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
+	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 	    }
 	}

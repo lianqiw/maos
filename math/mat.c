@@ -1997,7 +1997,7 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
     ENC_T data={enc, dvec, phat, type};
     thread_t info[nthread];
     thread_prep(info, 0, dvec->nx, nthread, X(enc_thread), &data);
-    CALL_THREAD(info, nthread, 0);
+    CALL_THREAD(info, 0);
     X(free)(phat);
     return enc;
 }

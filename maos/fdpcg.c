@@ -687,7 +687,7 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
 #if DBG_FD
     dcellwrite(xin, "fdc_xin");
 #endif
-    CALL_THREAD(info_fft, NTH, 1);
+    CALL_THREAD(info_fft, 1);
 #if DBG_FD
     ccellwrite(xhati, "fdc_fft");
 #endif
@@ -698,14 +698,14 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     /*permute xhat and put into xhat2 */
     cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm->p,nxtot);
     czero(xhat);
-    CALL_THREAD(info_mulblock, NTH, 1);
+    CALL_THREAD(info_mulblock, 1);
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm->p,nxtot);
 #if DBG_FD
     ccellwrite(xhat2i, "fdc_mul");
 #endif
 #endif
     /*Apply inverse FFT */
-    CALL_THREAD(info_ifft, NTH, 1);
+    CALL_THREAD(info_ifft, 1);
 #if DBG_FD
     dcellwrite(*xout, "fdc_xout"); 
 #endif

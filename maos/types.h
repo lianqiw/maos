@@ -569,7 +569,6 @@ typedef struct SIM_T{
     /*MOAO*/
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
     dcell *dm_evl;   /**<moao DM command computed for science field*/
-
     double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/
     double tk_cache;   /**<time spent in cachedm in this step*/
@@ -591,7 +590,9 @@ typedef struct SIM_T{
     thread_t  **wfs_ints;     /**<wrap of wfs_intsdata for threaded processing*/
 
     thread_t  *wfs_grad; /**to call wfsgrad_iwfs in threads.*/
+    thread_t  *wfs_grad_post; /**to call wfsgrad_iwfs in threads.*/
     thread_t  *perf_evl; /**to call perfevl_ievl in threads.*/
+    thread_t  *perf_evl_post; /**to call perfevl_ievl in threads.*/
 
     SIM_SAVE_T *save;  /**<Telemetry output*/
     STATUS_T *status;  /**<status report to scheduler.*/

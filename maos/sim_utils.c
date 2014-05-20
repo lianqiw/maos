@@ -665,7 +665,7 @@ static void init_simu_evl(SIM_T *simu){
 	}
     }    
 
-    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
+    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov){
 	char header[800];
 	header[0]='\0';
 	if(parms->evl.psfmean || parms->evl.psfhist ){
@@ -694,7 +694,7 @@ static void init_simu_evl(SIM_T *simu){
 	    save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
 	    save->evlpsfhist_ngsr=calloc(nevl, sizeof(cellarr*));
 	}
-	if(parms->evl.opdcov){
+	if(parms->evl.cov){
 	    simu->evlopdcov=dcellnew(nevl,1);
 	    simu->evlopdcov_ngsr=dcellnew(nevl,1);
 	    save->evlopdcov=calloc(nevl, sizeof(cellarr*));
@@ -724,7 +724,7 @@ static void init_simu_evl(SIM_T *simu){
 							parms->evl.thetax[ievl]*206265,
 							parms->evl.thetay[ievl]*206265,strht);
 		}
-		if(parms->evl.opdcov){
+		if(parms->evl.cov){
 		    save->evlopdcov[ievl]=cellarr_init(nframecov, 1,
 						       "evlopdcov_%d_x%g_y%g%s.bin", seed,
 						       parms->evl.thetax[ievl]*206265,
@@ -748,7 +748,7 @@ static void init_simu_evl(SIM_T *simu){
 							     parms->evl.thetax[ievl]*206265,
 							     parms->evl.thetay[ievl]*206265,strht);
 		}
-		if(parms->evl.opdcov){
+		if(parms->evl.cov){
 		    save->evlopdcov_ngsr[ievl]=cellarr_init(nframecov, 1,
 							    "evlopdcov_ngsr_%d_x%g_y%g%s.bin", seed,
 							    parms->evl.thetax[ievl]*206265,
@@ -767,7 +767,7 @@ static void init_simu_evl(SIM_T *simu){
 		simu->evlpsfolmean->header=strdup(header);
 		save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
 	    }
-	    if(parms->evl.opdcov){
+	    if(parms->evl.cov){
 		save->evlopdcovol=cellarr_init(nframecov, 1, "evlopdcovol_%d", seed);
 		save->evlopdmeanol=cellarr_init(nframecov, 1, "evlopdmean_%d", seed);
 	    }
@@ -1423,19 +1423,31 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 
     /* Select GPU or CPU for the tasks.*/
     simu->wfs_grad=calloc(nwfs, sizeof(thread_t));
-    thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_wrap, simu);
+    simu->wfs_grad_post=calloc(nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(nevl, sizeof(thread_t));
 #if USE_CUDA
     if(parms->gpu.evl){
-	thread_prep(simu->perf_evl, 0, nevl, nevl, gpu_perfevl, simu);
-    }else{
+	thread_prep(simu->perf_evl, 0, nevl, nevl, gpu_perfevl_queue, simu);
+	simu->perf_evl_post=calloc(nevl, sizeof(thread_t));
+	thread_prep(simu->perf_evl_post, 0, nevl, nevl, gpu_perfevl_sync, simu);
+    }else
 #endif
+    {
 	thread_prep(simu->perf_evl, 0, nevl, nevl, perfevl_ievl, simu);
-#if USE_CUDA
     }
-#endif
-    simu->nthread=parms->sim.nthread;
+#if USE_CUDA
+    if(parms->gpu.wfs){
+	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
+	thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
 
+    }else
+#endif
+    {
+	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
+	thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
+    }
+    simu->nthread=parms->sim.nthread;
+    
     if(!parms->sim.evlol){
 	init_simu_dm(simu);
 	init_simu_moao(simu);
@@ -1557,7 +1569,9 @@ void free_simu(SIM_T *simu){
     free(simu->evl_prop_dm);
     free(simu->evl_propdata_dm);
     free(simu->wfs_grad);
+    free(simu->wfs_grad_post);
     free(simu->perf_evl);
+    free(simu->perf_evl_post);
     free(simu->status);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradacc);
@@ -1728,10 +1742,10 @@ void print_progress(const SIM_T *simu){
 	}
 	info2("\033[00;00m\n");
     
-	info2("Timing: WFS:%5.2f Recon:%6.3f CACHE:%5.2f EVAL:%5.2f Tot:%6.3f Mean:%6.3f."
+	info2("Timing: WFS:%.3f Recon:%.3f EVAL:%.3f Other:%.3f Tot:%.3f Mean:%.3f."
 	      " Used %ld:%02ld, Left %ld:%02ld\n",
 	      status->wfs*tkmean, status->recon*tkmean, 
-	      status->cache*tkmean, status->eval*tkmean, 
+	      status->eval*tkmean, status->other*tkmean,
 	      status->tot*tkmean, status->mean*tkmean,
 	      lapsh,lapsm,resth,restm);
 	if(!isfinite(simu->cle->p[isim*nmod])){
