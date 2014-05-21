@@ -115,7 +115,7 @@ static __attribute__((constructor))void init(){
     if(libfftw_threads){
 	
     }else{
-	warning("libfftw-threads not found\n");
+	//warning("libfftw-threads not found\n");
     }	
 #endif
 #if USE_FFTW_THREADS

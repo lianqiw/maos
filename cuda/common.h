@@ -28,7 +28,7 @@ extern "C"
 #include <cufft.h>
 #include <cuComplex.h>
 #include <complex>
-#define NG1D 64
+#define NG1D 128
 #define NG2D 8
 #define WRAP_SIZE 32
 #define REDUCE_WRAP 8

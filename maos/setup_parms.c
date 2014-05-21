@@ -81,7 +81,6 @@ static double fc2lp(double fc, double dt){
     if(lp>1){
 	lp=1;
     }
-    info2("fc=%g, lp=%g\n", fc, lp);
     return lp;
 }
 /**
@@ -1904,7 +1903,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    }
 	}
 	parms->atmr.hs=hs;
-	info2("atmr.hs=%g\n", parms->atmr.hs);
     }
     if(parms->atmr.dx<EPS){
 	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */

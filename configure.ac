@@ -720,9 +720,9 @@ if test "$use_cuda" = "yes" ;then
    if test "$cudaver" -ge 42 ;then
        CUDAOPT="$CUDAOPT -gencode arch=compute_30,code=sm_30"
    fi
-   if test "$cudaver" -ge 50 ;then
-       CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
-   fi
+   #if test "$cudaver" -ge 50 ;then
+   #    CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
+   #fi
    if test -n "$OPENMP_CFLAGS";then
        CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
    fi

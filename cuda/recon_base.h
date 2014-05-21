@@ -83,12 +83,12 @@ public:
     map_ray():hdata(0),nlayer(0),ndir(0){};
     //from in to out
     void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
-	gpu_prop_grid_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(16,16),0,stream>>>
+	gpu_prop_grid_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
     }
     //from out to in
     void backward(Real **out, Real **in, Real alpha, Real *wt, stream_t &stream){
-	gpu_prop_grid_do<<<dim3(4,4,nlayer),dim3(16,16),0,stream>>>
+	gpu_prop_grid_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
     virtual ~map_ray(){

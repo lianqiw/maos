@@ -5,7 +5,7 @@ AM_CFLAGS+=-O0 -g
 else
 AM_CFLAGS+=-O3
 endif
-#AM_CFLAGS+=-Xptxas="-v" #for verbose 
+AM_CFLAGS+=-Xptxas="-v" #for verbose 
 #AM_CFLAGS+=-Xptxas -dlcm=cg
 AM_CFLAGS+=-lineinfo
 #AM_CFLAGS+=-Xcompiler -arch -Xcompiler x86_64

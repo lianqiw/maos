@@ -505,11 +505,11 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, Real **wfsopd, Real *ttin, Rea
     if(!pos) return;
     const int step=blockDim.x * gridDim.x;
     const int nsa=datai->nsa;
-    int (*saptr)[2]=datai->saptr;
+    int (*const saptr)[2]=datai->saptr;
     const Real (*restrict neai)[3]=datai->neai;
-    Real dxp=datai->dxp;
-    Real oxp=datai->oxp;
-    Real oyp=datai->oyp;
+    const Real dxp=datai->dxp;
+    const Real oxp=datai->oxp;
+    const Real oyp=datai->oyp;
     Real focus=0;
     if(datai->PDF && ptt){
 	if(iwfs==0){

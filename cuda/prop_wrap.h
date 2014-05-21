@@ -44,6 +44,28 @@ struct PROP_WRAP_T{
 	DO(cudaMemcpy(pgpu, this, sizeof(PROP_WRAP_T),cudaMemcpyHostToDevice));  
     }
 };
+#define PROP_WRAP_TX 32
+#define PROP_WRAP_NX 1
+typedef struct{
+    int ix0[PROP_WRAP_TX];
+    int iy0[PROP_WRAP_TX];
+    int stepx;
+    int stepy;
+    int nn;
+    int nx;
+    int ny;
+    int ndirx;
+    int ndiry;
+    int npsx;
+    Real *pps;
+    Real *pdir;
+    Real dispx;
+    Real dispy;
+    Real xratio;
+    Real yratio;//nohelp
+    Real fx[9];//9 to avoid bank conflict
+    Real fy[9];
+}gpu_prop_grid_shared_t;
 __global__ void 
 gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, 
 		 int ndir, int nps, Real alpha1, Real *alpha2, char trans);

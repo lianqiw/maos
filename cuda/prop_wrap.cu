@@ -31,25 +31,51 @@ extern "C"
   let WFS be dir (direction)
 
   alpha2: additional scaling defined on dimension dir.
-*/
 
-__global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
-    int nn;
-    if(ndir==0){//layer to layer. caching mechanism
-	assert(gridDim.z==nps);
-	nn=1;
-    }else if(trans=='t'){
-	assert(gridDim.z==nps);
-	nn=ndir;
-    }else{
-	assert(gridDim.z==ndir);
-	nn=nps;
+  Do not separate the function branches because each layer/wfs combination may use different branches.
+*/
+__global__ void 
+gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
+    __shared__ gpu_prop_grid_shared_t shared;
+    int &stepx=shared.stepx;
+    int &stepy=shared.stepy;
+    Real &dispx=shared.dispx;
+    Real &dispy=shared.dispy;
+    Real &xratio=shared.xratio;
+    Real &yratio=shared.yratio;
+    int &ndirx=shared.ndirx;
+    int &ndiry=shared.ndiry;
+    int &nx=shared.nx;
+    int &ny=shared.ny;
+    int &npsx=shared.npsx;
+    int &nn=shared.nn;
+    Real *&pps=shared.pps;
+    Real *&pdir=shared.pdir;
+    Real *const &fx=(Real*)shared.fx;
+    Real *const &fy=(Real*)shared.fy;
+
+    int &ix0=shared.ix0[threadIdx.x];
+    int &iy0=shared.iy0[threadIdx.y];
+
+    if(threadIdx.x==0 && threadIdx.y==0){
+	if(ndir==0){//layer to layer. caching mechanism
+	    assert(gridDim.z==nps);
+	    nn=1;
+	}else if(trans=='t'){
+	    assert(gridDim.z==nps);
+	    nn=ndir;
+	}else{
+	    assert(gridDim.z==ndir);
+	    nn=nps;
+	}
     }
-    const int ix0=blockIdx.x*blockDim.x+threadIdx.x;
-    const int iy0=blockIdx.y*blockDim.y+threadIdx.y;
-    const int stepx=blockDim.x*gridDim.x;
-    const int stepy=blockDim.y*gridDim.y;
-  
+    if(threadIdx.y==0){
+	ix0=blockIdx.x*blockDim.x+threadIdx.x;
+    }
+    if(threadIdx.x==0){
+	iy0=blockIdx.y*blockDim.y+threadIdx.y;
+    }
+    __syncthreads();//necessary here
     for(int ii=0; ii<nn; ii++){
 	PROP_WRAP_T *datai;
 	int ips, idir;
@@ -66,94 +92,109 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 	    }
 	    datai=data+idir+ndir*ips;
 	}
-	const bool match=Z(fabs)(datai->xratio-1.f)<EPS && Z(fabs)(datai->yratio-1.f)<EPS;
+	const int match=Z(fabs)(datai->xratio-1.f)<EPS && Z(fabs)(datai->yratio-1.f)<EPS;
 	if(!datai->cc && trans=='t' && match){
 	    datai=datai->reverse;
 	}
-	const int nx=datai->nx;
-	const int ny=datai->ny;
-	if(nx==0) continue;//skip empty wfs
-	Real *restrict pps=ppss[ips]+datai->offps;
-	Real *restrict pdir=pdirs[idir]+datai->offdir;
+	if(datai->nx==0) continue;//skip empty wfs
 	const Real alpha=alpha2?(alpha2[idir]*alpha1):alpha1;
 	const Real *cc=datai->cc;
-	const int nxdir=datai->nxdir;
-	const int nxps=datai->nxps;
+	__syncthreads();//necessary here because different warps may be doing different ii.
+	if(threadIdx.x==0 && threadIdx.y==0){
+	    stepx=blockDim.x*gridDim.x;
+	    stepy=blockDim.y*gridDim.y;
+	    dispx=datai->dispx;
+	    dispy=datai->dispy;
+	    xratio=datai->xratio;
+	    yratio=datai->yratio;
+	    ndirx=datai->nxdir;
+	    ndiry=datai->nydir;
+	    nx=datai->nx;
+	    ny=datai->ny;
+	    npsx=datai->nxps;
+	}
+	__syncthreads();
+	//For unknown reason, pdir, pps cannot be put in shared memory.
+	pdir=pdirs[idir]+datai->offdir;
+	pps=ppss[ips]+datai->offps;
 	if(!cc && match){
 	    //Matched bilinear propagation. always forward prop. 
-	    const Real fracx=datai->dispx;
-	    const Real fracy=datai->dispy;
-	    const Real fracx1=1.f-fracx;//this reduces register usage.
-	    const Real fracy1=1.f-fracy;
 	    /*During reverse operation, for different idir, the offo is
 	      different causing same thread to handle different memory in pdir
 	      for different idir. This causes problem with pdir synchronization/atomic operation*/
+	    const Real dispx1=1.-dispx;
+	    const Real dispy1=1.-dispy;
+
 	    if(trans=='t'){
 		for(int iy=iy0; iy<ny; iy+=stepy){
 		    for(int ix=ix0; ix<nx; ix+=stepx){
-			atomicAdd(&pps[ix+iy*nxps],
-				  alpha*(+(pdir[ix+    iy*nxdir]*fracx1+pdir[ix+1+    iy*nxdir]*fracx)*fracy1
-					 +(pdir[ix+(iy+1)*nxdir]*fracx1+pdir[ix+1+(iy+1)*nxdir]*fracx)*fracy));
+			atomicAdd(&pps[ix+iy*npsx],
+				  alpha*(+(pdir[ix+    iy*ndirx]*dispx1
+					   +pdir[ix+1+    iy*ndirx]*dispx)*dispy1
+					 +(pdir[ix+(iy+1)*ndirx]*dispx1
+					   +pdir[ix+1+(iy+1)*ndirx]*dispx)*dispy));
 		    }
 		}
 	    }else{
 		for(int iy=iy0; iy<ny; iy+=stepy){
 		    for(int ix=ix0; ix<nx; ix+=stepx){
-			pdir[ix+iy*nxdir]+=
-			    alpha*(+(pps[ix+    iy*nxps]*fracx1+pps[ix+1+    iy*nxps]*fracx)*fracy1
-				   +(pps[ix+(iy+1)*nxps]*fracx1+pps[ix+1+(iy+1)*nxps]*fracx)*fracy);
+			pdir[ix+iy*ndirx]+=
+			    alpha*(+(pps[ix+    iy*npsx]*dispx1
+				     +pps[ix+1+    iy*npsx]*dispx)*dispy1
+				   +(pps[ix+(iy+1)*npsx]*dispx1
+				     +pps[ix+1+(iy+1)*npsx]*dispx)*dispy);
 		    }
 		}
 	    }
 	}else{//Generic
-	    const Real xratio=datai->xratio;
-	    const Real yratio=datai->yratio;
-	    const Real dispx=datai->dispx;
-	    const Real dispy=datai->dispy;
 	    if(cc){
 		/* Question: For cubic spline, don't we have to test whether pps
 		   is within boundary?*/
-		const bool match2=Z(fabs)(datai->xratio-0.5f)<EPS && Z(fabs)(datai->yratio-.5f)<EPS;
 		if(trans=='t'){
-		    if(match2){//do without atomic operations.
+		    if(Z(fabs)(xratio-0.5f)<EPS && Z(fabs)(yratio-.5f)<EPS){
+			//do without atomic operations.
 			const int nxin=ceil(nx*xratio)+1;
 			const int nyin=ceil(ny*xratio)+1;
-			const int xmaxdir=datai->nxdir-datai->offdirx;
-			const int ymaxdir=datai->nydir-datai->offdiry;
+			const int xmaxdir=ndirx-datai->offdirx;
+			const int ymaxdir=ndiry-datai->offdiry;
 			const int xmindir=-datai->offdirx-1;
 			const int ymindir=-datai->offdiry-1;
 			int offx=0, offy=0;
-			Real xc=dispx, yc=dispy;
-			if(dispx>=0.5){
+			Real tcx=dispx;
+			Real tcy=dispy;
+			if(tcx>=0.5){
 			    offx=-1;
-			    xc=dispx-0.5f;
+			    tcx-=0.5f;
 			}
-			if(dispy>=0.5){
+			if(tcy>=0.5){
 			    offy=-1;
-			    yc=dispy-0.5f;
+			    tcy-=0.5f;
 			}
 		
-			const Real xc2=xc+0.5f;
-			const Real yc2=yc+0.5f;
-			Real fy[8], fx[8];
+			const Real tcx2=tcx+0.5f;
+			const Real tcy2=tcy+0.5f;
+			//Each thread has the same coefficients, so we use
+			// shared memory to store them to avoid register spill.
+			if(threadIdx.x==0 && threadIdx.y==0){
+			    fy[0]=(cc[3]+cc[4]*tcy)*tcy*tcy;
+			    fy[1]=(cc[3]+cc[4]*tcy2)*tcy2*tcy2;
+			    fy[2]=(cc[1]+cc[2]*(1-tcy))*(1-tcy)*(1-tcy)+cc[0];
+			    fy[3]=(cc[1]+cc[2]*(1-tcy2))*(1-tcy2)*(1-tcy2)+cc[0];
+			    fy[4]=(cc[1]+cc[2]*tcy)*tcy*tcy+cc[0];
+			    fy[5]=(cc[1]+cc[2]*tcy2)*tcy2*tcy2+cc[0];
+			    fy[6]=(cc[3]+cc[4]*(1-tcy))*(1-tcy)*(1-tcy);
+			    fy[7]=(cc[3]+cc[4]*(1-tcy2))*(1-tcy2)*(1-tcy2);
 
-			fy[0]=(cc[3]+cc[4]*yc)*yc*yc;
-			fy[1]=(cc[3]+cc[4]*yc2)*yc2*yc2;
-			fy[2]=(cc[1]+cc[2]*(1-yc))*(1-yc)*(1-yc)+cc[0];
-			fy[3]=(cc[1]+cc[2]*(1-yc2))*(1-yc2)*(1-yc2)+cc[0];
-			fy[4]=(cc[1]+cc[2]*yc)*yc*yc+cc[0];
-			fy[5]=(cc[1]+cc[2]*yc2)*yc2*yc2+cc[0];
-			fy[6]=(cc[3]+cc[4]*(1-yc))*(1-yc)*(1-yc);
-			fy[7]=(cc[3]+cc[4]*(1-yc2))*(1-yc2)*(1-yc2);
-
-			fx[0]=(cc[3]+cc[4]*xc)*xc*xc;
-			fx[1]=(cc[3]+cc[4]*xc2)*xc2*xc2;
-			fx[2]=(cc[1]+cc[2]*(1-xc))*(1-xc)*(1-xc)+cc[0];
-			fx[3]=(cc[1]+cc[2]*(1-xc2))*(1-xc2)*(1-xc2)+cc[0];
-			fx[4]=(cc[1]+cc[2]*xc)*xc*xc+cc[0];
-			fx[5]=(cc[1]+cc[2]*xc2)*xc2*xc2+cc[0];
-			fx[6]=(cc[3]+cc[4]*(1-xc))*(1-xc)*(1-xc);
-			fx[7]=(cc[3]+cc[4]*(1-xc2))*(1-xc2)*(1-xc2);
+			    fx[0]=(cc[3]+cc[4]*tcx)*tcx*tcx;
+			    fx[1]=(cc[3]+cc[4]*tcx2)*tcx2*tcx2;
+			    fx[2]=(cc[1]+cc[2]*(1-tcx))*(1-tcx)*(1-tcx)+cc[0];
+			    fx[3]=(cc[1]+cc[2]*(1-tcx2))*(1-tcx2)*(1-tcx2)+cc[0];
+			    fx[4]=(cc[1]+cc[2]*tcx)*tcx*tcx+cc[0];
+			    fx[5]=(cc[1]+cc[2]*tcx2)*tcx2*tcx2+cc[0];
+			    fx[6]=(cc[3]+cc[4]*(1-tcx))*(1-tcx)*(1-tcx);
+			    fx[7]=(cc[3]+cc[4]*(1-tcx2))*(1-tcx2)*(1-tcx2);
+			}
+			__syncthreads();
 
 			for(int my=iy0; my<nyin; my+=stepy){
 			    const int ycent=2*my+offy;
@@ -168,21 +209,21 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 					for(int kx=-4; kx<4; kx++){
 					    const int kx2=kx+xcent;
 					    if(kx2>xmindir && kx2<xmaxdir){
-						sum+=fy[ky+4]*fx[kx+4]*pdir[(kx2)+(ky2)*nxdir];
+						sum+=fy[ky+4]*fx[kx+4]*pdir[(kx2)+(ky2)*ndirx];
 					    }
 					}
 				    }
 				}
 				//Need atomic because different layers have different offset.
 				if(nn>1){
-				    atomicAdd(&pps[mx+my*nxps],sum*alpha);
+				    atomicAdd(&pps[mx+my*npsx],sum*alpha);
 				}else{
-				    pps[mx+my*nxps]+=sum*alpha;
+				    pps[mx+my*npsx]+=sum*alpha;
 				}
 			    }
 			}
 		    }else{
-			const int xmaxps=datai->nxps-datai->offpsx;
+			const int xmaxps=npsx-datai->offpsx;
 			const int ymaxps=datai->nyps-datai->offpsy;
 			const int xminps=-datai->offpsx;
 			const int yminps=-datai->offpsy;
@@ -190,71 +231,77 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			    Real jy;
 			    const Real y=Z(modf)(dispy+my*yratio, &jy);
 			    const int iy=(int)jy;	
-			    Real fy[4];
-			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
-			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
-			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));			
-			    fy[3]=y*y*(cc[3]+cc[4]*y);		
+			    if(threadIdx.x==0 && threadIdx.y==0){
+				fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
+				fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
+				fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
+				fy[3]=y*y*(cc[3]+cc[4]*y); 
+			    }
+			    __syncthreads();
 			    for(int mx=ix0; mx<nx; mx+=stepx){
 				Real jx;
 				const Real x=Z(modf)(dispx+mx*xratio, &jx);
 				const int ix=(int)jx;
-				const Real value=pdir[mx+my*nxdir]*alpha;
-				Real fx[4];
-				/*cc need to be in device memory for sm_13 to work.*/
-				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
-				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
-				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
-				fx[3]=x*x*(cc[3]+cc[4]*x);	
-	
+				const Real value=pdir[mx+my*ndirx]*alpha;
+				//cc need to be in device memory for sm_13 to work.
+				if(threadIdx.x==0 && threadIdx.y==0){
+				    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
+				    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
+				    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
+				    fx[3]=x*x*(cc[3]+cc[4]*x); 
+				}
+				__syncthreads();
 				const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 				const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
 				for(int ky=ky0; ky<ky1; ky++){
 				    int kx0=(xminps-ix)>-1?(xminps-ix):-1;
 				    int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
 				    for(int kx=kx0; kx<kx1; kx++){
-					atomicAdd(&pps[(iy+ky)*nxps+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
+					atomicAdd(&pps[(iy+ky)*npsx+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
 				    }
 				}
 			    }
 			}
 		    }
 		}else{
-		    const int xmaxps=datai->nxps-datai->offpsx;
+		    const int xmaxps=npsx-datai->offpsx;
 		    const int ymaxps=datai->nyps-datai->offpsy;
 		    const int xminps=-datai->offpsx;
 		    const int yminps=-datai->offpsy;
 		    for(int my=iy0; my<ny; my+=stepy){
 			Real jy;
 			const Real y=Z(modf)(dispy+my*yratio, &jy);
-			const int iy=(int)jy;	
-			Real fy[4];
-			fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y));			
-			fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y);			
-			fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y));			
-			fy[3]=y*y*(cc[3]+cc[4]*y);	
-
+			const int iy=(int)jy; 
+			if(threadIdx.x==0 && threadIdx.y==0){
+			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
+			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
+			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
+			    fy[3]=y*y*(cc[3]+cc[4]*y); 
+			}
+			__syncthreads();
 			for(int mx=ix0; mx<nx; mx+=stepx){
 			    Real jx;
 			    const Real x=Z(modf)(dispx+mx*xratio, &jx);
 			    const int ix=(int)jx;
-			    Real fx[4];
 			    Real sum=0;
-			    /*cc need to be in device memory for sm_13 to work.*/
-			    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
-			    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
-			    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
-			    fx[3]=x*x*(cc[3]+cc[4]*x);		
+			    //cc need to be in device memory for sm_13 to work.
+			    if(threadIdx.x==0 && threadIdx.y==0){
+				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
+				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
+				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
+				fx[3]=x*x*(cc[3]+cc[4]*x); 
+			    }
+			    __syncthreads();
 			    const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 			    const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
 			    for(int ky=ky0; ky<ky1; ky++){
 				int kx0=(xminps-ix)>-1?(xminps-ix):-1;
 				int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
 				for(int kx=kx0; kx<kx1; kx++){
-				    sum+=fx[kx+1]*fy[ky+1]*pps[(iy+ky)*nxps+(kx+ix)];
+				    sum+=fx[kx+1]*fy[ky+1]*pps[(iy+ky)*npsx+(kx+ix)];
 				}
 			    }
-			    pdir[mx+my*nxdir]+=sum*alpha;
+			    pdir[mx+my*ndirx]+=sum*alpha;
 			}
 		    }
 		}/*else trans*/
@@ -267,11 +314,11 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			Real jx;
 			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 			const int kx=(int)jx;
-			const Real temp=pdir[ix+iy*nxdir]*alpha;
-			atomicAdd(&pps[kx+      ky*nxps], temp*(1.f-fracx)*(1.f-fracy));
-			atomicAdd(&pps[kx+1    +ky*nxps], temp*fracx*(1.f-fracy));
-			atomicAdd(&pps[kx+  (ky+1)*nxps], temp*(1.f-fracx)*fracy);
-			atomicAdd(&pps[kx+1+(ky+1)*nxps], temp*fracx*fracy);
+			const Real temp=pdir[ix+iy*ndirx]*alpha;
+			atomicAdd(&pps[kx+      ky*npsx], temp*(1.f-fracx)*(1.f-fracy));
+			atomicAdd(&pps[kx+1    +ky*npsx], temp*fracx*(1.f-fracy));
+			atomicAdd(&pps[kx+  (ky+1)*npsx], temp*(1.f-fracx)*fracy);
+			atomicAdd(&pps[kx+1+(ky+1)*npsx], temp*fracx*fracy);
 		    }
 		}
 	    }else{
@@ -285,11 +332,11 @@ __global__ void gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, i
 			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 			const int kx=(int)jx;
 			
-			pdir[ix+iy*nxdir]+=
-			    alpha*(+(pps[kx+      ky*nxps]*(1.f-fracx)+
-				     pps[kx+1+    ky*nxps]*fracx)*(1.f-fracy)
-				   +(pps[kx  +(ky+1)*nxps]*(1.f-fracx)+
-				     pps[kx+1+(ky+1)*nxps]*fracx)*fracy);
+			pdir[ix+iy*ndirx]+=
+			    alpha*(+(pps[kx+      ky*npsx]*(1.f-fracx)+
+				     pps[kx+1+    ky*npsx]*fracx)*(1.f-fracy)
+				   +(pps[kx  +(ky+1)*npsx]*(1.f-fracx)+
+				     pps[kx+1+(ky+1)*npsx]*fracx)*fracy);
 		    }
 		}
 	    }
