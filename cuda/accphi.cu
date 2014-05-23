@@ -119,21 +119,20 @@ static void atm_prep(atm_prep_t *data){
 static void gpu_atm2gpu_full(map_t **atm, int nps){
     if(!atm) return;
     TIC;tic;
-    for(int im=0; im<NGPU; im++){
+    for(int im=0; im<NGPU; im++)
+#if _OPENMP >= 200805 
+#pragma omp task
+#endif
+    {
 	gpu_set(im);
 	gpu_print_mem("atm in full");
 	cudata->nps=nps;
-	if(im==0){
-	    cp2gpu(&cudata->atm, atm, nps);
-	}else{
-	    cudata->atm=new cumap_t[nps];
-	    for(int ips=0; ips<nps; ips++){
-		cudata->atm[ips].init(&cudata_all[0].atm[ips]);
-		gpu2gpu(&cudata->atm[ips].p, cudata_all[0].atm[ips].p);
-	    }
-	}
+	cp2gpu(&cudata->atm, atm, nps);
 	gpu_print_mem("atm out");
     }
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
     toc2("atm to gpu");
 }
 /**
@@ -274,7 +273,11 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }
 	}
     }
-    for(int ips=0; ips<nps; ips++){
+    for(int ips=0; ips<nps; ips++)
+#if _OPENMP >= 200805 
+#pragma omp task
+#endif
+    {
 	/*Load atmosphere to Real memory in advance. This takes time if atm is
 	  stored in file.*/
 	if(isim>next_isim[ips]-100 && !next_atm[ips]){
@@ -307,24 +310,25 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    pthread_join(next_threads[ips], NULL);
 	    toc2("Step %d: Layer %d wait for transfering",isim, ips);
 	    for(int im=0; im<NGPU; im++)
+#if _OPENMP >= 200805 
+#pragma omp task
+#endif
 	    {
 		tic;
 		gpu_set(im);
 		cumap_t *cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
-		if(im==0){
-		    DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
-				  nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
-		}else{
-		    gpu2gpu(&cuatm[ips].p, cudata_all[0].atm[ips].p);
-		}
+		DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
+			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
 		     isim, ips, nx0, ny0, im, offx, offy);tic;
 	    }/*for im */
-
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
 	    free(next_atm[ips]);
 	    /*Update next_isim. */
 	    long isim1, isim2;
@@ -357,8 +361,11 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
 	    info2("Step %d: next update layer %d in step %d\n", isim, ips, next_isim[ips]);
-	}
-    }
+}//if isim
+}//for ips
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
 }
 
 /**

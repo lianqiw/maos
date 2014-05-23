@@ -587,31 +587,31 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, Real **wfsopd, Real *ttin, Rea
     }
 }
 
-void cutomo_grid::do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream){
-    if(opdwfs){
+void cutomo_grid::do_gp(curcell *_grad, curcell *_opdwfs, int ptt2, stream_t &stream){
+    if(_opdwfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    curzero(grad->p[iwfs], stream);
-	    cuspmul(grad->p[iwfs]->p, GP->p[iwfs], opdwfs->p[iwfs]->p, 1, 'n', 1, stream);
+	    curzero(_grad->p[iwfs], stream);
+	    cuspmul(_grad->p[iwfs]->p, GP->p[iwfs], _opdwfs->p[iwfs]->p, 1, 'n', 1, stream);
 	}
     }
     curzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs?opdwfs->pm:NULL, ptt);
+	(gpdata, _grad->pm, ttf->p, ttf->p+nwfs*2, _opdwfs?_opdwfs->pm:NULL, ptt2);
 }
-void cutomo_grid::do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream){
-    if(opdwfs){
-	curzero(opdwfs->m, stream);
+void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &stream){
+    if(_opdwfs){
+	curzero(_opdwfs->m, stream);
     }
-    //Does  GP'*NEA*(1-TTDF) if opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
+    //Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata, opdwfs?opdwfs->pm:0, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
+	(gpdata, _opdwfs?_opdwfs->pm:0, ttf->p, ttf->p+nwfs*2, _grad->pm, ptt2);
     
-    if(opdwfs){//Does GP' for GP with sparse
+    if(_opdwfs){//Does GP' for GP with sparse
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    curzero(opdwfs->p[iwfs], stream);
-	    cuspmul(opdwfs->p[iwfs]->p, GP->p[iwfs], grad->p[iwfs]->p, 1, 't', 1, stream);
+	    curzero(_opdwfs->p[iwfs], stream);
+	    cuspmul(_opdwfs->p[iwfs]->p, GP->p[iwfs], _grad->p[iwfs]->p, 1, 't', 1, stream);
 	}
     }
 }
@@ -619,14 +619,14 @@ void cutomo_grid::do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stre
   Tomography right hand size matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
 */
-void cutomo_grid::R(curcell **xout, Real beta, const curcell *grad, Real alpha, stream_t &stream){
+void cutomo_grid::R(curcell **xout, Real beta, const curcell *_grad, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
 	curcellscale(*xout, beta, stream);
     }
-    do_gp(const_cast<curcell*>(grad), NULL, 1, stream);
-    do_gpt(opdwfs, const_cast<curcell*>(grad), 1, stream);
+    do_gp(const_cast<curcell*>(_grad), NULL, 1, stream);
+    do_gpt(opdwfs, const_cast<curcell*>(_grad), 1, stream);
     hx->backward(opdwfs->pm, (*xout)->pm, alpha, NULL, stream);
 }
 
@@ -636,11 +636,10 @@ void cutomo_grid::Rt(curcell **gout, Real beta, const curcell *xin, Real alpha, 
     }else{
 	curcellscale(*gout, beta, stream);
     }
-    curcell *grad=*gout;
     curzero(opdwfs->m, stream);
     hx->forward(opdwfs->pm, xin->pm, alpha, NULL, stream);
-    do_gp(grad, opdwfs, 1, stream);
-    do_gpt(NULL, grad, 1, stream);
+    do_gp(*gout, opdwfs, 1, stream);
+    do_gpt(NULL, *gout, 1, stream);
 }
 
 /*

@@ -252,12 +252,9 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	}
 	struct timeval timeout;
 	timeout.tv_sec=timeout_sec;
-	timeout.tv_usec=0;
-	struct timeval *timeout2;
-	timeout2=timeout_sec>0?&timeout:NULL;
-
+	timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
 	read_fd_set = active_fd_set;
-	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout2)<0){
+	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:NULL)<0){
 	    if(errno==EINTR){
 		warning("select failed: %s\n", strerror(errno));
 		continue;
@@ -320,6 +317,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     /* Error happened. We close all connections and this server socket.*/
     warning("listen_port exited\n");
     shutdown(sock, SHUT_RDWR);
+    FD_CLR(sock, &active_fd_set);
     for(int i=0; i<FD_SETSIZE; i++){
 	if(FD_ISSET(i, &active_fd_set)){
 	    shutdown(i, SHUT_RDWR);
@@ -328,32 +326,10 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	    FD_CLR(i, &active_fd_set);
 	}
     }
-    close(sock);
     usleep(100);
+    close(sock);
     sync();
-    //_Exit(1);
 }
-/**
-   Initialize sockaddr_in with hostname.
- */
-/*
-int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port){
-    struct hostent *hostinfo;
-    name->sin_family = AF_INET;
-    name->sin_port = htons(port);
-    hostinfo = gethostbyname (hostname);
-    if (hostinfo == NULL){
-	return -1;
-    }else{
-	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
-	if(addr){
-	    name->sin_addr = *addr;
-	    return 0;
-	}else{
-	    return -1;
-	}
-    }
-    }*/
 
 /**
   Connect to a host at port.

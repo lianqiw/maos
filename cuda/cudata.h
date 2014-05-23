@@ -19,7 +19,6 @@
 #define AOS_CUDA_DATA_H
 #include <map>
 #include "types.h"
-extern int gpu_recon;
 extern int NGPU;
 typedef Real ATYPE;
 typedef Real GTYPE;
@@ -33,6 +32,7 @@ class cuwfs_t;
 
 typedef struct cudata_t{ 
     int igpu;
+    static int recongpu;
     static int *evlgpu;
     static int *wfsgpu;
     std::map<uint64_t, void*> *memhash;

@@ -40,6 +40,9 @@ volatile int maos_server_fd=-1;
  debugging maos itself. Not pertinent to a particular simulation*/
 double TOMOSCALE=1e-12;
 int PARALLEL=1;
+int NO_WFS=0;
+int NO_EVL=0;
+int NO_RECON=0;
 /** end*/
 
 /**
@@ -179,6 +182,7 @@ static void read_env(){
 #define READ_ENV_INT(A,min,max)				\
     if(getenv("MAOS_"#A)){				\
 	A=strtol(getenv("MAOS_"#A),NULL,10);		\
+	info2(#A"=%d\n", A);				\
 	if(A>max || A<min){				\
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\
@@ -186,12 +190,16 @@ static void read_env(){
 #define READ_ENV_DBL(A,min,max)				\
     if(getenv("MAOS_"#A)){				\
 	A=strtod(getenv("MAOS_"#A),NULL);		\
+	info2(#A"=%g\n", A);				\
 	if(A>max || A<min){				\
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\
     }
     READ_ENV_DBL(TOMOSCALE,0,INFINITY);
     READ_ENV_INT(PARALLEL,0,1);
+    READ_ENV_INT(NO_WFS,0,1);
+    READ_ENV_INT(NO_EVL,0,1);
+    READ_ENV_INT(NO_RECON,0,1);
     info2("TOMOSCALE=%g\n", TOMOSCALE);
 }
 /**
@@ -287,8 +295,8 @@ int main(int argc, const char *argv[]){
     }
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);
-    THREAD_POOL_INIT(parms->sim.nthread);
     setup_parms_gpu(parms, arg);
+    THREAD_POOL_INIT(parms->sim.nthread);
     if(arg->server){
 	while(maos_server_fd<0){
 	    warning("Waiting for fd\n");
@@ -316,7 +324,8 @@ int main(int argc, const char *argv[]){
     /*Loads the main software*/
 #if _OPENMP>=200805
 #pragma omp parallel
-#pragma omp single nowait
+#pragma omp single 
+#pragma omp task untied final(parms->sim.nthread==1)
 #endif
     maos(parms);
     free_parms(parms);

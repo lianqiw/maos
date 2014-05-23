@@ -471,7 +471,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    angle+=simu->dither[iwfs]->deltam;
 		    cuwfs[iwfs].dither->acc(ints, angle, stream);
 		    int nstat=parms->powfs[ipowfs].dither_nstat;
-		    int dtrat=parms->powfs[ipowfs].dtrat;
 		    if((isim-parms->powfs[ipowfs].dither_nskip+1)%(nstat*dtrat)==0){
 			warning2("Dither step%d, wfs%d: output statistics\n", isim, iwfs);
 			cuwfs[iwfs].dither->output((Real)simu->dither[iwfs]->a2m, iwfs, isim, stream);
@@ -575,7 +574,6 @@ void gpu_wfsgrad_save(SIM_T *simu){
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	    gpu_set(cudata_t::wfsgpu[iwfs]);
 	    cuwfs_t *cuwfs=cudata_t::wfs;
-	    const PARMS_T *parms=simu->parms;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	    stream_t &stream=*cuwfs[iwfs].stream;
 	    if(cuwfs[iwfs].pistatout){

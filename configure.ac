@@ -1,10 +1,10 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.7.0, lianqiw@gmail.com)
+AC_INIT(maos, 1.7.1, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS="http://project.tmt.org/~lianqiw/maos/"
+BASEURLS="https://sourceforge.net/projects/lianqiw/files/external"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -28,8 +28,10 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
+DOWNLOAD_DIR="${SRC_DIR}/external/downloads"
+LIB_DIR="${SRC_DIR}/external/lib"
 CFLAGS="$CFLAGS -I${SRC_DIR}/external/include"
-LDFLAGS="$LDFLAGS -lm -L${SRC_DIR}/external/lib -Wl,-rpath,${SRC_DIR}/external/lib"
+LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -39,7 +41,7 @@ OPTScommon="-Wno-unknown-pragmas -Wno-unused-function"
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
-LDEXE="-lm -no-fast-install -ldl -lpthread"
+LDEXE="-no-fast-install -ldl -lpthread"
 OPTSextra=""
 
 #Compile CUDA branch if CUDA toolkit is detected
@@ -232,11 +234,12 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd-wd981 -wd1292 -wd10237 -diag-disable remark -vec-report=3"
+COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -diag-disable remark -vec-report=3"
+COMMON_GCC="-Wno-deprecated-declarations -static-libgcc"
+COMMON_CLANG= #"-Qunused-arguments"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Wno-deprecated-declarations" #-Mcache_align"
-OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse -Qunused-arguments"
-OPTIM_OPENCC="-O3"
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only  "
+OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
 OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
@@ -248,6 +251,10 @@ AC_PROG_CC([$CC])
 AC_PROG_CXX([$CXX])
 AC_OPENMP
 AC_TYPE_SIZE_T #it sets CC if empty
+
+if test -z "$OPENMP_CFLAGS" ;then
+   LDEXE="$LDEXE -lpthread"
+fi
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -256,15 +263,16 @@ AC_TYPE_SIZE_T #it sets CC if empty
 #in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
+CN=""
 cc_full=`which ${CC}`
 while test -L $cc_full ;do
    cc_full=`readlink $cc_full`
 done
 case "${cc_full}" in	
   *icc*)
-    OPTIM="$OPTIM_ICC $COMMON_ICC"
-    OPT_DEBUG="$OPT_DEBUG $COMMON_ICC"
-    which icc 2>/dev/null|| AC_MSG_ERROR([icc is not found in path.])
+    CN=icc
+    COMMON="$COMMON_ICC"
+    OPTIM="$OPTIM_ICC"
     #Test ICC version
     CC_VERSION=$($CC -dumpversion)
     if test -n "$CC_VERSION" ;then
@@ -284,9 +292,13 @@ case "${cc_full}" in
     ;;
   *gcc*)
     if test -n "`$CC -v 2>&1 |grep clang`" ;then
+        CN=clang
         OPTIM="$OPTIM_CLANG"
+	COMMON="$COMMON_CLANG"
     else
+        CN=gcc
 	OPTIM="$OPTIM_GCC"
+	COMMON="$COMMON_GCC"
     fi
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
@@ -310,12 +322,16 @@ case "${cc_full}" in
     fi
     ;;
   *clang*)
+        CN=clang
 	OPTIM="$OPTIM_CLANG"
+	COMMON="$COMMON_CLANG"
     ;;
   *) #Other compilers
-    OPTIM="-O3"
-    ;;
+     	OPTIM="-O3"
+        COMMON=""
+    ;;	
 esac
+AC_SUBST(CN)
 if test "$gnu_inline" = "yes" ;then
 INLINE="extern __inline __attribute__((gnu_inline, always_inline))" #C99
 else
@@ -325,11 +341,11 @@ AC_DEFINE_UNQUOTED(INLINE, $INLINE, [Portable definition of inline])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
-    OPTScc="$OPT_DEBUG"
+    OPTScc="$OPT_DEBUG $COMMON"
 else
     AM_CONDITIONAL(DEBUG,false)
     AC_DEFINE(DEBUG,[0],["Do not debug"])
-    OPTScc="$OPTIM"
+    OPTScc="$OPTIM $COMMON"
 fi
 AM_PROG_AR
 AC_PROG_CC_STDC
@@ -344,10 +360,15 @@ download(){
    echo The $1 library is not available in the system
    echo Will download one from the website.
    fn="$2"
- if test ! -f /tmp/${fn} ;then
+  if test -n "$3" ;then
+      OUTDIR="$3"
+   else
+      AC_MSG_ERROR([Please specify third argument])
+   fi
+   if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
    success=0
    for BASEURL in $BASEURLS ; do
-      if $wget "${BASEURL}/${fn}" "$wgetoutput" "/tmp/${fn}" ;then
+      if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
       	 success=1
 	 break;
       else
@@ -355,18 +376,13 @@ download(){
       fi
    done
    if test $success -eq 0 ;then
-      AC_MSG_ERROR([Please download it manually and put in /tmp/${fn}])
+      AC_MSG_ERROR([Please download it manually and put in ${DOWNLOAD_DIR}/${fn}])
    fi
- fi
-   if test -n "$3" ;then
-      OUTDIR="$3"
-   else
-      AC_MSG_ERROR([Please specify third argument])
    fi
    if test ! -d "${OUTDIR}" ;then
       mkdir -p "${OUTDIR}" || exit 1
    fi
-   tar -xf "/tmp/${fn}" -C "${OUTDIR}"  || exit 1
+   tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}"  || exit 1
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -380,6 +396,7 @@ compile(){
       download $name $file ${SRC_DIR}/external/$name
    fi
    fnlog=${SRC_DIR}/external/compile.log
+   echo "Compiling $name. Check $fnlog for details"
    if (cd ${SRC_DIR}/external/$name/* && \
       (./configure "$@" --prefix=${SRC_DIR}/external > $fnlog || \
       cmake -DCMAKE_INSTALL_PREFIX:PATH=${SRC_DIR}/external "$@" > $fnlog) && \
@@ -387,7 +404,6 @@ compile(){
       echo "Compiled $name successfully."
    else
       echo "Failed to compile $name. Please see $fnlog for details"
-      exit
    fi
 }
 
@@ -403,8 +419,10 @@ AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
 if test "$has_lapack" = "no" ;then
    if test "$mkl_avail" = "yes" ;then
        mklname=mkl${libsuffix}
-       download MKL "${mklname}.tar.bz2" /tmp/MKL
-       mv /tmp/MKL/*/*.* ${SRC_DIR}/external/lib
+       mkdir -p ${DOWNLOAD_DIR}
+       download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
+       mkdir -p ${LIB_DIR}
+       mv ${DOWNLOAD_DIR}/MKL/*/*.* ${LIB_DIR}
        unset ac_cv_lib_blas_dgemm_
        AC_CHECK_LIB([blas],  [dgemm_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
    else
@@ -420,7 +438,6 @@ if test "$has_z" = "no" ;then
    AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 LDZ="-lz"
-
 #Check for FFTW3 header and library.
 has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
@@ -459,12 +476,12 @@ else
 fi
 
 #Check for cholmod
-AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK])
+AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
 AC_CHECK_HEADERS([cholmod.h], [], [has_chol="no"])
 if test "$has_chol" = "no" ;then
    compile CHOLMOD cholmod.tar.bz2
    unset ac_cv_lib_cholmod_${chol_fun}
-   AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Invalid CHOLMOD library])], [$LAPACK])
+   AC_CHECK_LIB([cholmod], [${chol_fun}], [], [AC_MSG_ERROR([Invalid CHOLMOD library])], [$LAPACK -lm])
 fi
 LDCHOL="-lcholmod"
 
@@ -560,7 +577,7 @@ AC_SUBST(GTK_LIBS)
 
 AC_CHECK_HEADERS([unistd.h])
 LDLIB=""
-LDOPTS="$LDCHOL $LDFFT $LAPACK $LDZ -lm"
+LDOPTS="$LDCHOL $LDFFT $LAPACK $LDZ -lm $LDEXE"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
@@ -666,7 +683,7 @@ if test "x${use_mex}" = "xyes" ; then
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
-
+AM_CONDITIONAL(CCBIN_GCC, false)
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
@@ -708,9 +725,16 @@ if test "$use_cuda" = "yes" ;then
    echo CUDA toolkit is $cudaver
    if test -z "$CCBIN" ;then
        CCBIN="$CC"
+   fi
+   CCBIN="${CCBIN%% *}"
+   if test -n "$CCBIN" ;then
        NVCC="$NVCC -ccbin ${CCBIN%% *}"
-   fi  
-   
+   fi
+   case "$CCBIN" in 
+   	gcc*)
+	AM_CONDITIONAL(CCBIN_GCC, true)
+	;;			  
+   esac
    if test "$cudaver" -lt 40 ;then
        AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
    fi
@@ -723,9 +747,9 @@ if test "$use_cuda" = "yes" ;then
    #if test "$cudaver" -ge 50 ;then
    #    CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
    #fi
-   if test -n "$OPENMP_CFLAGS";then
-       CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
-   fi
+   #if test -n "$OPENMP_CFLAGS";then
+   #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
+   #fi
    echo LDCUDA="$LDCUDA"
    echo CUDAOPT="$CUDAOPT"
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])

@@ -122,27 +122,27 @@ class cucell{
 	}
 	p2pm();
     }
-    cucell(const long nx, const long ny, long mx, long my, T *pin=NULL){
-	init(nx, ny, mx, my, pin);
+    cucell(const long _nx, const long _ny, long mx, long my, T *pin=NULL){
+	init(_nx, _ny, mx, my, pin);
     }
     template <typename L>
-    void init(const long nx, const long ny, L *mx, L *my, T *pin=NULL){
-	init(nx,ny);
+    void init(const long _nx, const long _ny, L *mx, L *my, T *pin=NULL){
+	init(_nx,_ny);
 	long tot=0;
-	for(long i=0; i<nx*ny; i++){
+	for(long i=0; i<_nx*_ny; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
 	m=new cumat<T> (tot,1,pin,pin?0:1);
 	tot=0;
-	for(long i=0; i<nx*ny; i++){
+	for(long i=0; i<_nx*_ny; i++){
 	    p[i]=mx[i]?new cumat<T>(mx[i],(my?my[i]:1),m->p+tot, 0):NULL;
 	    tot+=mx[i]*(my?my[i]:1);
 	}
 	p2pm();
     }
     template <typename L>
-    cucell(const long nx, const long ny, L *mx, L *my, T *pin=NULL){
-	init(nx, ny, mx, my, pin);
+    cucell(const long _nx, const long _ny, L *mx, L *my, T *pin=NULL){
+	init(_nx, _ny, mx, my, pin);
     }
     cucell(const cucell<T>*in){
 	if(!in->m){

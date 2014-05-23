@@ -265,8 +265,7 @@ static int respond(int sock){
     }
 	break;
     case GPU_MVM_G:{/*maos sends gradients*/
-	int icol=cmd[1];/*starting column*/
-	assert(icol==0);
+	assert(cmd[1]==0);
 	int ngeach=cmd[2];
 	tim_cmd+=toc3; tic;
 	int ngtot=mvm_data->ngtot;
@@ -333,7 +332,7 @@ static int respond(int sock){
 }
 static void* gpu_mvm_gpu_init(void* A){
     (void)A;
-    gpu_init(NULL, 0);
+    gpu_init(NULL, 0, 0);
     DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
     struct cudaDeviceProp prop;
     DO(cudaGetDeviceProperties(&prop, 0));

@@ -286,7 +286,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		dfree(FLId);
 	    }
 	}
-	gpu_set(gpu_recon);
+	gpu_set(cudata_t::recongpu);
     	curmat *mvmt=curnew(ntotgrad, ntotact);
 	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
@@ -296,7 +296,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	/*Initialyze intermediate TomoL result array in GPU. Send intermediate
 	  TomoL results to GPU if load.mvmi is set.*/
 	if(mvmi){
-	    TIC;tic;
+	    tic;
 	    for(int i=0; i<NGPU; i++){
 		gpu_set(i);
 		mvmig->p[i]=curnew(ntotxloc, info[i].end-info[i].start);
@@ -312,7 +312,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	/*Initialyze intermediate FitL/FitR result array in GPU. Send
 	  intermediate FitL/FitR results to GPU if load.mvmf is set.*/
 	if(mvmf){
-	    TIC;tic;
+	    tic;
 	    for(int i=0; i<NGPU; i++){
 		gpu_set(i);
 		mvmfg->p[i]=curnew(ntotxloc, info[i].end-info[i].start);
@@ -329,8 +329,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	CALL_THREAD(info, 1);
 	/*Copy MVM control matrix results back*/
 	{
-	    gpu_set(gpu_recon);
-	    TIC;tic;
+	    gpu_set(cudata_t::recongpu);
+	    tic;
 	    stream_t stream;
 	    curmat *mvmtt=mvmt->trans(stream);
 	    stream.sync();

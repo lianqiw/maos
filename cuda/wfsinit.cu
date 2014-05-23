@@ -30,15 +30,7 @@ extern "C"
    Initialize other arrays
 */
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
-    cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
-	cudata_t::wfsgpu[iwfs]=gpu_next(parms->powfs[ipowfs].usephy?1:0.3);
-	extern int PARALLEL;
-	if(PARALLEL && NGPU>4 && cudata_t::wfsgpu[iwfs]==gpu_recon){
-	    cudata_t::wfsgpu[iwfs]=gpu_next();
-	}
-    }
+ 
     const int *wfsgpu=cudata_t::wfsgpu;
     cudata_t::wfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
     for(int im=0; im<NGPU; im++){
@@ -216,7 +208,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 
 		   || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    /*Need one per wfs in this powfs, or the first wfs. */
-		    int nwvl=parms->powfs[ipowfs].nwvl;
 		    cuwfs[iwfs].dtf=(cudtf_t*)calloc(nwvl, sizeof(cudtf_t));
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			int notfused=!powfs[ipowfs].dtf[iwvl].fused;

@@ -206,7 +206,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	}
 	X(mat) *mvmi=NULL;//intermediate result
 	if(parms->load.mvmi){
-	    TIC;tic; info2("Loading mvmi ...");
+	    tic; info2("Loading mvmi ...");
 	    mvmi=X(read)("%s", parms->load.mvmi);
 	    toc2("done");
 	}else if(parms->save.mvmi){
@@ -248,7 +248,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	    X(write)(mvmc, "mvmf.bin");
 	}
 	if(parms->save.mvmi){
-	    TIC;tic; info2("Saving mvmi ...");
+	    tic; info2("Saving mvmi ...");
 	    X(write)(mvmi, "mvmi.bin");
 	    toc2("done");
 	}

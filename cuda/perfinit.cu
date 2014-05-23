@@ -41,7 +41,8 @@ curcell *cuperf_t::opdcov=0;
 curcell *cuperf_t::opdcov_ngsr=0;
 curcell *cuperf_t::opdmean=0;
 curcell *cuperf_t::opdmean_ngsr=0;
-curcell *cuperf_t::cc=0;
+curcell *cuperf_t::cc_cl=0;
+curcell *cuperf_t::cc_ol=0;
 curcell *cuperf_t::coeff=0;
 Real **cuperf_t::ccb_cl=0;
 Real **cuperf_t::ccb_ol=0;
@@ -55,14 +56,6 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     }
     const int nevl=parms->evl.nevl;
     const int nwvl=parms->evl.nwvl;
-    cudata_t::evlgpu=(int*)calloc(nevl, sizeof(int));
-    for(int ievl=0; ievl<nevl; ievl++){
-	cudata_t::evlgpu[ievl]=gpu_next();
-	extern int PARALLEL;
-	if(PARALLEL && NGPU>2 && cudata_t::evlgpu[ievl]==gpu_recon){
-	    cudata_t::evlgpu[ievl]=gpu_next();
-	}
-    }
     /*The following lives in CPU. */
     if(parms->evl.psfmean || parms->evl.psfhist){
 	cuperf_t::nembed =(int*)  calloc(nwvl, sizeof(int));
@@ -129,7 +122,8 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	}
     }
     cuperf_t::opd=curcellnew(nevl,1);
-    cuperf_t::cc=curcellnew(nevl, 1);
+    cuperf_t::cc_cl=curcellnew(nevl, 1);
+    cuperf_t::cc_ol=curcellnew(nevl, 1);
     cuperf_t::coeff=curcellnew(nevl, 1);
     cuperf_t::ccb_ol=(Real**)malloc(sizeof(Real*)*nevl);
     cuperf_t::ccb_cl=(Real**)malloc(sizeof(Real*)*nevl);
@@ -137,7 +131,8 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	gpu_set(cudata_t::evlgpu[ievl]);
 	cuperf_t::ccb_ol[ievl]=(Real*)malloc4async(sizeof(Real)*7);
 	cuperf_t::ccb_cl[ievl]=(Real*)malloc4async(sizeof(Real)*7);
-	cuperf_t::cc->p[ievl]=curnew(7, 1);
+	cuperf_t::cc_cl->p[ievl]=curnew(7, 1);
+	cuperf_t::cc_ol->p[ievl]=curnew(7, 1);
 	cuperf_t::coeff->p[ievl]=curnew(7, 1);
 	cuperf_t::opd->p[ievl]=curnew(aper->locs->nloc, 1);
     }

@@ -87,7 +87,7 @@ inline int CUDAFREE(Real *p){
 #define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((Real**)p,size);})
 #define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((Real*)p);})
 #endif
-#define DO(A...) ({int ans=(int)(A); if(ans!=0){int igpu; cudaGetDevice(&igpu); error("GPU%d error %d, %s\n", igpu, ans, cudaGetErrorString((cudaError_t)ans));}})
+#define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){int _igpu; cudaGetDevice(&_igpu); error("GPU %d error %d, %s\n", _igpu, _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
 #define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
@@ -178,26 +178,26 @@ extern pthread_mutex_t cufft_mutex;
 extern const char *cufft_str[];
 #define CUFFT2(plan,in,out,dir) do{				\
 	LOCK_CUFFT;						\
-	int ans=FFT_C2C(plan, in, out, dir);		\
+	int _ans=FFT_C2C(plan, in, out, dir);		\
 	UNLOCK_CUFFT;						\
-	if(ans){						\
-	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	if(_ans){						\
+	    error("cufft failed: %s\n", cufft_str[_ans]);	\
 	}							\
     }while(0)
 #define CUFFTR2C(plan,in,out) do{				\
 	LOCK_CUFFT;						\
-	int ans=FFT_R2C(plan, in, out);			\
+	int _ans=FFT_R2C(plan, in, out);			\
 	UNLOCK_CUFFT;						\
-	if(ans){						\
-	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	if(_ans){						\
+	    error("cufft failed: %s\n", cufft_str[_ans]);	\
 	}							\
     }while(0)
 #define CUFFTC2R(plan,in,out) do{				\
 	LOCK_CUFFT;						\
-	int ans=FFT_C2R(plan, in, out);			\
+	int _ans=FFT_C2R(plan, in, out);			\
 	UNLOCK_CUFFT;						\
-	if(ans){						\
-	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	if(_ans){						\
+	    error("cufft failed: %s\n", cufft_str[_ans]);	\
 	}							\
     }while(0)
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)

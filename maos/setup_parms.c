@@ -2545,7 +2545,7 @@ PARMS_T * setup_parms(ARG_T *arg){
 void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 #if USE_CUDA 
     if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
-    use_cuda=gpu_init(arg->gpus, arg->ngpu);
+    use_cuda=gpu_init(arg->gpus, arg->ngpu, parms);
 #else
     use_cuda=0;
 #endif

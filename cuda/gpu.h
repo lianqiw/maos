@@ -27,7 +27,7 @@ extern "C"{
 #include "../maos/setup_recon.h"
 #include "../maos/fdpcg.h"
 void gpu_info(void);
-int  gpu_init(int *gpus, int ngpu);
+int  gpu_init(int *gpus, int ngpu, const PARMS_T *parms);
 void gpu_cleanup(void);
 void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim);
 void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);

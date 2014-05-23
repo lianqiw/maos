@@ -1,7 +1,6 @@
 SUBDIRS = . 
 #AM_CFLAGS mean CFLAGS from automake, it is used in addition to user CFLAGS if per target CFLAGS is not specified.
 AM_CFLAGS=$(OPTS)
-AM_LDFLAGS=$(LDEXE) 
 
 #the following libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later
 bin_PROGRAMS=../bin/maos 

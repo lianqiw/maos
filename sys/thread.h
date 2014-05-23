@@ -116,7 +116,7 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
 #pragma omp taskwait
 }
 
-#else //pthread directly.
+#else //using our thread_pool 
 
 #define QUEUE(group,fun,arg,nthread,urgent)				\
     thread_pool_queue_many(&group, (thread_fun)fun, (void*)arg, nthread, urgent); \
@@ -138,7 +138,7 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
 */
 #define QUEUE_THREAD(group,A,urgent)			\
     if((A[0].nthread)>1){						\
-	thread_pool_queue_many(&group,NULL,A[0].nthread,nthread,urgent); \
+	thread_pool_queue_many(&group,NULL,A,A[0].nthread,urgent); \
     }else{							\
 	(A)->fun(A);						\
     }

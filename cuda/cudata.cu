@@ -18,7 +18,6 @@
 #include "cudata.h"
 int nstream=0;
 #define MEM_RESERVE 200000000
-int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
 cudata_t *cudata_all=NULL;/*for all GPU. */
@@ -31,7 +30,7 @@ static __attribute((constructor)) void init(){
 #else
 __thread cudata_t *cudata=NULL;/*for current thread and current GPU */
 #endif
-
+int cudata_t::recongpu=0;
 int *cudata_t::evlgpu=0;
 int *cudata_t::wfsgpu=0;
 cuwfs_t *cudata_t::wfs=0;
@@ -85,10 +84,35 @@ static long gpu_get_idle_mem(int igpu){
     }
 }
 static int cmp_long2_descend(const long *a, const long *b){
-    return b[1]>a[1]?1:0;
+    if(b[1]>a[1]){
+	return 1;
+    }else if(a[1]>b[1]){
+	return -1;
+    }else{
+	return 0;
+    }
 }
 static int cmp_long2_ascend(const long *a, const long *b){
-    return a[1]>b[1]?1:0;
+    if(b[1]<a[1]){
+	return 1;
+    }else if(a[1]<b[1]){
+	return -1;
+    }else{
+	return 0;
+    }
+}
+struct task_t{
+    float timing;/*based on empirical data*/
+    int *dest;
+};
+static int task_cmp(const task_t *a, const task_t *b){
+    if(b->timing > a->timing){
+	return 1;
+    }else if(b->timing < a->timing){
+	return -1;
+    }else{
+	return 0;
+    }
 }
 /**
    Initialize GPU. Return 1 if success.
@@ -98,7 +122,7 @@ static int cmp_long2_ascend(const long *a, const long *b){
    when mix Tesla and GTX cards, the ordering the GPUs may be different in CUDA
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
-int gpu_init(int *gpus, int ngpu){
+int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
     int ans, ngpu_tot=0;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
 	info2("No GPUs available. ans=%d\n", ans);
@@ -189,12 +213,16 @@ int gpu_init(int *gpus, int ngpu){
 	free(gpu_info);
     }
     if(NGPU) {
-	gpu_recon=0;/*first gpu in GPUS*/
 	cudata_all=new cudata_t[NGPU];
 	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    gpu_set(i);
+	    for(int j=0; j<NGPU; j++){
+		if(j!=i){
+		    cudaDeviceEnablePeerAccess(j, 0);
+		}
+	    }
 	    for(int j=0; j<ngpu_tot; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;
@@ -206,8 +234,55 @@ int gpu_init(int *gpus, int ngpu){
 	    DO(cudaMalloc(&cudata->reserve, MEM_RESERVE));
 	}
 	info2("\n");
-
-
+	if(parms){
+	    /*Assign task to gpu evenly based on empirical data to maximum GPU
+	     * usage. We first gather together all the tasks and assign a timing
+	     * in ms to each. Sort all the tasks in descend order and then
+	     * iteratively assign each task to the minimally used GPU*/
+	    cudata_t::evlgpu=(int*)calloc(parms->evl.nevl, sizeof(int));
+	    cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
+	    struct task_t tasks[1+parms->evl.nevl+parms->nwfs];
+	    //recon
+	    int count=0;
+	    tasks[count].timing=20;//ms
+	    tasks[count].dest=&cudata_t::recongpu;
+	    count++;
+	    //evl
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		tasks[count].timing=4.7;//ms
+		tasks[count].dest=cudata_t::evlgpu+ievl;
+		count++;
+	    }
+	    //wfs
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		tasks[count].timing=parms->powfs[ipowfs].usephy?17:1.5;
+		tasks[count].dest=cudata_t::wfsgpu+iwfs;
+		count++;
+	    }
+	    qsort(tasks, count, sizeof(task_t), (int(*)(const void*, const void *))task_cmp);
+	    float timtot[NGPU];
+	    for(int igpu=0; igpu<NGPU; igpu++){
+		timtot[igpu]=0;
+	    }
+	    for(int it=0; it<count; it++){
+		int min_gpu=0; /*current gpu with minimum task*/
+		float min_val=INFINITY;
+		for(int igpu=0; igpu<NGPU; igpu++){
+		    if(timtot[igpu]<min_val){
+			min_val=timtot[igpu];
+			min_gpu=igpu;
+		    }
+		}
+		*tasks[it].dest=min_gpu;
+		timtot[min_gpu]+=tasks[it].timing;
+	    }
+	    if(parms->sim.nthread>NGPU){
+		((PARMS_T*)parms)->sim.nthread=NGPU+1;
+		NTHREAD=NGPU+1;
+		info2("Reset nthread to %d\n", NTHREAD);
+	    }
+	}
     }
  end:
     close(fdlock);

@@ -114,7 +114,7 @@ void tomofit(SIM_T *simu){
 */
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    RECON_T *recon=simu->recon;
+    const RECON_T *recon=simu->recon;
     dcell *dmpsol;
     if(parms->dbg.psol && !parms->sim.idealfit){
 	dmpsol=simu->dmcmd;
@@ -122,24 +122,36 @@ static void calc_gradol(SIM_T *simu){
 	dmpsol=simu->dmcmdlast;//2013-03-22
     }
     PDSPCELL(recon->GA, GA);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(!parms->powfs[ipowfs].psol) continue;
-	double alpha=1.;
-	if(simu->reconisim % parms->powfs[ipowfs].dtrat == 0){
-	    alpha=0; /*reset accumulation. */
-	}
-	dcelladd(&simu->dmpsol[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
-	    int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
-	    for(int indwfs=0; indwfs<nindwfs; indwfs++){
-		int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs[indwfs];
-		dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
-		for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
-		    spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], simu->dmpsol[ipowfs]->p[idm], 1);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++)
+  	if(parms->powfs[ipowfs].psol){
+	    double alpha=1.;
+	    if(simu->reconisim % parms->powfs[ipowfs].dtrat == 0){
+		alpha=0; /*reset accumulation. */
+	    }
+	    if(parms->powfs[ipowfs].dtrat!=1){
+		dcelladd(&simu->dmpsol[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
+	    }else if(!simu->dmpsol[ipowfs]){
+		simu->dmpsol[ipowfs]=dcellref(dmpsol);
+	    }
+	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
+		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
+		for(int indwfs=0; indwfs<nindwfs; indwfs++)
+#if _OPENMP >= 200805 
+#pragma omp task firstprivate(indwfs, alpha, ipowfs)
+#endif
+		{
+		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs[indwfs];
+		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
+		    for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
+			spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
+				 simu->dmpsol[ipowfs]->p[idm], 1);
+		    }
 		}
+#if _OPENMP >= 200805 
+#pragma omp taskwait
+#endif
 	    }
 	}
-    }
 }
 void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -185,7 +197,7 @@ void recon_split(SIM_T *simu){
 	}
 	    break;
 	default:
-	    error("Invalid parms->recon.split: %d",parms->recon.split);
+	    error("Invalid parms->recon.split: %d\n",parms->recon.split);
 	}
 	if(simu->Merr_lo && parms->sim.mffocus && parms->recon.split==1 && recon->ngsmod->nmod==6){
 	    /*the global focus is handled separately.*/
@@ -201,7 +213,6 @@ void recon_split(SIM_T *simu){
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
-    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
@@ -226,8 +237,6 @@ void reconstruct(SIM_T *simu){
     if(parms->cn2.pair){
 	cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
     }//if cn2est 
-	
-
     if(hi_output){
 	simu->dmerr=simu->dmerr_store;
 	if(parms->recon.mvm){
@@ -304,5 +313,6 @@ void reconstruct(SIM_T *simu){
 	    moao_recon(simu);
     }
     save_recon(simu);
+    extern double tk_start;
     simu->tk_recon=myclockd()-tk_start;
 }

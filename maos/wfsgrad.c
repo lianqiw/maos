@@ -970,7 +970,6 @@ void wfsgrad_post(thread_t *info){
    It also includes operations on Gradients before tomography.
 */
 void wfsgrad(SIM_T *simu){
-    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.idealfit || parms->sim.evlol) return;
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
@@ -989,5 +988,6 @@ void wfsgrad(SIM_T *simu){
     }else
 #endif
     wfsgrad_save(simu);
+    extern double tk_start;
     simu->tk_wfs=myclockd()-tk_start;
 }

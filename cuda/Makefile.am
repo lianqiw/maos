@@ -1,11 +1,14 @@
-WARN=-Xcompiler -Wall -Xcompiler -Wno-unused-value -Xcompiler 
+WARN=-Xcompiler "$(OPTS)"
+if CCBIN_GCC
+WARN+=-Xcompiler -Wno-unused-value
+endif
 AM_CFLAGS=$(WARN) $(CUDAOPT) 
 if DEBUG
 AM_CFLAGS+=-O0 -g
 else
-AM_CFLAGS+=-O3
+AM_CFLAGS+=-O3 -g
 endif
-AM_CFLAGS+=-Xptxas="-v" #for verbose 
+#AM_CFLAGS+=-Xptxas="-v" #for verbose 
 #AM_CFLAGS+=-Xptxas -dlcm=cg
 AM_CFLAGS+=-lineinfo
 #AM_CFLAGS+=-Xcompiler -arch -Xcompiler x86_64

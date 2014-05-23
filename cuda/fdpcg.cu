@@ -23,7 +23,6 @@
 #define TIMING 0
 namespace cuda_recon{
 void cufdpcg_t::update(FDPCG_T *fdpcg){
-    int nb=fdpcg->permhf->nx/fdpcg->bs;//half frequency range
     //copy or update Mb. 
     int nxsave=fdpcg->Mbinv->nx;
     fdpcg->Mbinv->nx=nb;
@@ -111,13 +110,13 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
   Input and output may overlap for different blocks due to FFT based mirroring. So separate intput/output.
 */
 
-__global__ static void fdpcg_mul_block_sync_half(Comp *xout, const Comp *xin, Comp *Mi, int *restrict perm, int nb){
+__global__ static void fdpcg_mul_block_sync_half(Comp *xout, const Comp *xin, Comp *Mi, int *restrict perm, int nbb){
     extern __shared__ Comp v[];
     int bs=blockDim.x;//size of each block
     Comp *vin=v+threadIdx.y*2*bs;//stores reordered input
     Comp *vout=v+bs+threadIdx.y*2*bs;//stores output before reorder again
     int nstep=blockDim.y*gridDim.x;
-    for(int ib=blockIdx.x*blockDim.y+threadIdx.y; ib<nb; ib+=nstep){
+    for(int ib=blockIdx.x*blockDim.y+threadIdx.y; ib<nbb; ib+=nstep){
 	const Comp *M=Mi+ib*bs*bs;
 	const int ix=threadIdx.x;
 	const int pm=perm[ib*bs+ix];//last 2 bit are flags

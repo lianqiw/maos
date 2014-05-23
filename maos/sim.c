@@ -49,7 +49,7 @@ extern int PARALLEL;
    performance, wfsgrad() to do wfs measurement, reconstruct() to do tomography
    and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls
    moao_recon() for MOAO DM fitting.  \callgraph */
-
+double tk_start;
 void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
@@ -74,7 +74,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 	    draw_single=0;
 	}
 	global->iseed=iseed;
-	double tk_start=myclockd();
+	double tk_1=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	global->simu=simu;
 	if(recon) recon->simu=simu;
@@ -146,6 +146,8 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		}
 #endif
 	    }
+	    extern int NO_RECON, NO_WFS, NO_EVL;
+	    tk_start=myclockd();
 	    if(PARALLEL){
 		/*
 		  We do the big loop in parallel to make better use the
@@ -157,43 +159,50 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		*/
 		/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		long group=0;
-		QUEUE(group, reconstruct, simu, 1, 0);
-		if(parms->gpu.evl){
+		if(parms->gpu.evl && !NO_EVL){
 		    QUEUE_THREAD(group, simu->perf_evl, 0);
 		}
-		if(!parms->tomo.ahst_idealngs){
+		if(!parms->tomo.ahst_idealngs && !NO_WFS){
 		    QUEUE_THREAD(group, simu->wfs_grad, 0);
 		}
+		if(!NO_RECON) QUEUE(group, reconstruct, simu, 1, 0);
 		WAIT(group);
-		QUEUE(group, perfevl, simu, 1, 0);
-		if(parms->tomo.ahst_idealngs){
-		    WAIT(group);
+		if(!NO_EVL) QUEUE(group, perfevl, simu, 1, 0);
+		if(!NO_WFS){
+		    if(parms->tomo.ahst_idealngs){
+			WAIT(group);
+		    }
+		    QUEUE(group, wfsgrad, simu, 1, 0);
 		}
-		QUEUE(group, wfsgrad, simu, 1, 0);
 		WAIT(group);
-		shift_grad(simu);/*before filter() */
-		filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
+		if(!NO_RECON){
+		    shift_grad(simu);/*before filter() */
+		    filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
+		}
 	    }else{/*do the big loop in serial mode. */
-		read_self_cpu();/*initialize CPU usage counter */
 		if(CL){
-		    perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-		    wfsgrad(simu);/*output grads to gradcl, gradol */
-		    reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
-		    shift_grad(simu);
-		    filter(simu);
+		    if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
+		    if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
+		    if(!NO_RECON) {
+			reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
+			shift_grad(simu);
+			filter(simu);
+		    }
 		}else{/*in OL mode,  */
-		    wfsgrad(simu);
-		    shift_grad(simu);
-		    reconstruct(simu);
-		    filter(simu);
-		    perfevl(simu);
+		    if(!NO_WFS) wfsgrad(simu);
+		    if(!NO_RECON) {
+			shift_grad(simu);
+			reconstruct(simu);
+			filter(simu);
+		    }
+		    if(!NO_EVL) perfevl(simu);
 		}
 	    }
 	    ck_end=myclockd();
 	    long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
 	    long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
-	    simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_start)*(iseed+1))/steps_done*steps_rest
-				      +(tk_atm-tk_start)*(parms->sim.nseed-iseed-1));
+	    simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
+				      +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
 	    simu->status->laps=(long)(ck_end-tk_0);
 	    simu->status->mean=(ck_end-tk_atm)/(double)(isim+1-simstart);
 	    simu->status->tot  =ck_end-ck_0;

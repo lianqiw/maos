@@ -137,11 +137,12 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 
 		for(irow=irows; irow<rowdiv; irow++){
 #if TRANSPOSE == 0
-		    phiout2[irow]+=alpha*
-			(bl*phicol2[irow+1]
-			 +br*phicol2[irow]
-			 +tl*phicol[irow+1]
-			 +tr*phicol[irow]);
+		    phiout2[irow]+=alpha*(
+			+br*phicol2[irow]
+			+bl*phicol2[irow+1]
+			+tr*phicol[irow]
+			+tl*phicol[irow+1]
+			);
 #else
 		    double tmp=alpha*phiout2[irow];
 		    phicol2[irow+1]+=tmp*bl;

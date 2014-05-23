@@ -37,7 +37,7 @@ struct cuperf_t{
     static curcell *opdcov_ngsr;
     static curcell *opdmean;
     static curcell *opdmean_ngsr;
-    static curcell *cc, *coeff;
+    static curcell *cc_ol, *cc_cl, *coeff;
     static Real **ccb_ol, **ccb_cl;
 
     pthread_mutex_t mutex;
