@@ -12,16 +12,43 @@ fi
 if test -z "$LIBS" ;then
    LIBS=" "
 fi
-AC_LANG([C])
 AC_CONFIG_MACRO_DIR([m4])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_HEADER([config.h])
 #defines host host_os host_cpu host_vendor etc
 AC_CANONICAL_HOST 
-#In darwin it reports wrong host_cpu (i386). The following is correct in Linux and SL.
-if which uname 2>/dev/null;then
-   host_cpu=$(uname -m)
+AC_LANG([C])
+AC_TYPE_SIZE_T #it sets CC if empty
+AC_PROG_CC([$CC])
+AM_PROG_AR
+AC_PROG_CC_STDC
+AM_PROG_CC_C_O
+AC_PROG_CC_C99 #enable C99.
+#AC_PROG_CXX([$CXX])
+AC_OPENMP
+#The following must be after AC_PROG_CC
+AC_PROG_MAKE_SET
+AC_PROG_INSTALL
+AC_ENABLE_SHARED
+AC_ENABLE_STATIC
+AC_PROG_LIBTOOL
+
+#Doxygen Features
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
+if test x$DX_FLAG_doc = x0 ;then
+   AM_CONDITIONAL(DO_DOXYGEN, false)
+else
+   AM_CONDITIONAL(DO_DOXYGEN, true)
 fi
+
 AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
 AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
@@ -29,9 +56,7 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
 DOWNLOAD_DIR="${SRC_DIR}/external/downloads"
-LIB_DIR="${SRC_DIR}/external/lib"
 CFLAGS="$CFLAGS -I${SRC_DIR}/external/include"
-LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -41,78 +66,11 @@ OPTScommon="-Wno-unknown-pragmas -Wno-unused-function"
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
-LDEXE="-no-fast-install -ldl -lpthread"
+LDEXE="-no-fast-install -ldl"
+if test -z "$OPENMP_CFLAGS" ;then
+   LDEXE="$LDEXE -lpthread"
+fi
 OPTSextra=""
-
-#Compile CUDA branch if CUDA toolkit is detected
-use_cuda_default="no"
-CUDADIR_AUTO=
-if test -n "`which nvcc 2>/dev/null`" ;then
-   use_cuda_default="yes"
-   NVCC="$(which nvcc)"
-   if test -L "$NVCC" ;then
-      NVCC="$(readlink "$NVCC")"
-   fi
-   CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-   unset NVCC
-elif test -x "/opt/cuda/bin/nvcc" ;then
-   use_cuda_default="yes"
-   CUDADIR_AUTO="/opt/cuda"
-elif test -x "/usr/local/cuda/bin/nvcc" ;then
-   use_cuda_default="yes"
-   CUDADIR_AUTO="/usr/local/cuda/"
-fi
-
-
-#Enable the user to force 32 or 64 bit program
-AC_ARG_ENABLE(32,  [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
-AC_ARG_ENABLE(64,  [  --enable-64   Compile 64 bit executables], [use_64="$enableval"], [use_64="no"])
-cross_compile="no"
-if test "$use_64" = "yes" ;then
-   case $host_cpu in
-      *86)
-         cross_compile="yes"
-      ;;
-   esac
-   host_cpu=x86_64
-elif test "$use_32" = "yes" ;then
-   case $host_cpu in
-      *64)
-         cross_compile="yes"
-      ;;
-   esac
-   host_cpu=i386
-fi
-case ${host_cpu} in 
-   *64)
-	host_cpu=x86_64
-        cpu="64"
-        CFLAGS="$CFLAGS -m64"
-        LDFLAGS="$LDFLAGS -m64"
-        CDEFINE="__x86_64__"
-	AC_DEFINE(X86_64, [1], "X86_64 Machine")
-	objcopy_output=elf64-x86-64
-	objcopy_arch=i386:x86-64
-	echo "CPU is 64 bit"
-   ;;
-   *86)
-	host_cpu=i386
-        cpu="32"
-	CFLAGS="$CFLAGS -m32"
-	LDFLAGS="$LDFLAGS -m32"
-        CDEFINE="__i386__"
-	AC_DEFINE(X86, [1], "I386 Machine")
-	objcopy_output=elf32-i386
-	objcopy_arch=i386
-	echo "CPU is 32 bit"
-   ;;
-   *)
-        AC_MSG_ERROR([Unrecognized host_cpu])
-   ;;
-esac   
-#Used for embedding conf folder in maos exe
-AC_SUBST(objcopy_output)
-AC_SUBST(objcopy_arch)
 
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
@@ -120,8 +78,6 @@ AM_CONDITIONAL(BSD,    false)
 AM_CONDITIONAL(DARWIN, false)
 AM_CONDITIONAL(WIN,    false)
 
-win32=no
-use_mkl="no"
 mkl_avail="no"
 case "$host_os" in
 *linux*)
@@ -149,7 +105,6 @@ case "$host_os" in
 *cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack"
- win32=yes
  system="win"
  ldsuffix="dll"
  ;;
@@ -158,6 +113,83 @@ AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_SUBST(ldsuffix)
 
+#Enable the user to force 32 or 64 bit program
+AC_ARG_ENABLE(64,  AS_HELP_STRING([--enable-64],[Force 64 (disable=32) bit executables]))
+
+if test "$enable_64" = "yes" ;then
+   host_cpu=x86_64
+elif test "$enable_64" = "no" ;then
+   host_cpu=i386
+else
+   host_cpu=$(uname -m)
+fi
+case ${host_cpu} in 
+   *64)
+	host_cpu=x86_64
+        cpu="64"
+	CFLAGS_CPU="-m64 -DDLONG"
+        CFLAGS="$CFLAGS $CFLAGS_CPU"
+        LDFLAGS="$LDFLAGS -m64"
+        CDEFINE="__x86_64__"
+	AC_DEFINE(X86_64, [1], "X86_64 Machine")
+	objcopy_output=elf64-x86-64
+	objcopy_arch=i386:x86-64
+	echo "CPU is 64 bit"
+   ;;
+   *86)
+	host_cpu=i386
+        cpu="32"
+	CFLAGS_CPU="-m32 -DDINT"
+	CFLAGS="$CFLAGS $CFLAGS_CPU"
+	LDFLAGS="$LDFLAGS -m32"
+        CDEFINE="__i386__"
+	AC_DEFINE(X86, [1], "I386 Machine")
+	objcopy_output=elf32-i386
+	objcopy_arch=i386
+	echo "CPU is 32 bit"
+   ;;
+   *)
+        AC_MSG_ERROR([Unrecognized host_cpu])
+   ;;
+esac   
+LIB_DIR="${SRC_DIR}/external/lib${cpu}"
+LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
+#Used for embedding conf folder in maos exe
+AC_SUBST(objcopy_output)
+AC_SUBST(objcopy_arch)
+
+#Try to discover CUDA install in the system
+CUDADIR_AUTO=
+if test -n "`which nvcc 2>/dev/null`" ;then
+   NVCC="$(which nvcc)"
+   if test -L "$NVCC" ;then
+      NVCC="$(readlink "$NVCC")"
+   fi
+   CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
+   unset NVCC
+elif test -x "/opt/cuda/bin/nvcc" ;then
+   CUDADIR_AUTO="/opt/cuda"
+elif test -x "/usr/local/cuda/bin/nvcc" ;then
+   CUDADIR_AUTO="/usr/local/cuda/"
+fi
+
+#Compile mex routines if MATLAB is detected and single is not enabled
+MEXDIR_AUTO=
+if test -n "`which mex 2>/dev/null`" ;then
+   MEX="$(which mex)"
+   if test -L "$MEX" ;then
+      MEX="$(readlink "$MEX")"
+   fi
+   MEXDIR_AUTO="$(dirname "$MEX")"
+elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
+   for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+       if test -x "$i/bin/mex" ;then
+       	  MEXDIR_AUTO="${i}/bin"
+       fi
+   done
+fi
+
+#Discover default download method
 if test -n "`which wget 2>/dev/null`" ;then
    wget="wget -t1 --no-check-certificate"
    wgetoutput="-O"
@@ -168,19 +200,18 @@ else
    wget="(echo wget/curl not found ; exit)"
 fi
 #Common configure options.
-AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static="no"])
-AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
-AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
-
-AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
-AC_ARG_ENABLE(cuda-double, [  --enable-cuda-double   Enable cuda double precision], [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
-AC_ARG_WITH(ccbin, --with-ccbin=CC, [CCBIN=${withval}])
-AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_ENABLE(websockets,[  --disable-websockets  Disable websockets (default: enabled)], [use_websockets="$enableval"], [use_websockets="yes"])
-AC_ARG_WITH(gtk,  --with-gtk=DIR, [GTKDIR=${withval}], [GTKDIR=""])
+AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
+AC_ARG_ENABLE(mem,   AS_HELP_STRING([--enable-mem],[Turn on memory management]),[use_mem="$enableval"],[use_mem="no"])
+AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
+AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
+AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],[Disable built in scheduler]), [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
+AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
+AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]))
+AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
@@ -188,34 +219,12 @@ if test "$use_scheduler" = "no" ;then
    AM_CONDITIONAL(USE_SCHEDULER, false)
 fi
 if test "$cpu" = "64" ;then 
-   OPTScommon="$OPTScommon -DDLONG"
    chol_fun=cholmod_l_factorize
    AM_CONDITIONAL(USE_LONG, true)
 else
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
-
-#Compile mex routines if MATLAB is detected and single is not enabled
-use_mex_default="no"
-MEXDIR_AUTO=
-if test -n "`which mex 2>/dev/null`" ;then
-   use_mex_default="yes"
-   MEX="$(which mex)"
-   if test -L "$MEX" ;then
-      MEX="$(readlink "$MEX")"
-   fi
-   MEXDIR_AUTO="$(dirname "$MEX")"
-elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
-   for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-       if test -x "$i/bin/mex" ;then
-       	  MEXDIR_AUTO="${i}/bin"
-          use_mex_default="yes"
-       fi
-   done
-fi
-AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
-AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
 
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
@@ -247,14 +256,7 @@ if test "x$use_mem" = "xyes" ;then
 else
     AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
 fi
-AC_PROG_CC([$CC])
-AC_PROG_CXX([$CXX])
-AC_OPENMP
-AC_TYPE_SIZE_T #it sets CC if empty
 
-if test -z "$OPENMP_CFLAGS" ;then
-   LDEXE="$LDEXE -lpthread"
-fi
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -264,7 +266,7 @@ fi
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
 CN=""
-cc_full=`which ${CC}`
+cc_full=`which ${CC%% *}`
 while test -L $cc_full ;do
    cc_full=`readlink $cc_full`
 done
@@ -347,10 +349,7 @@ else
     AC_DEFINE(DEBUG,[0],["Do not debug"])
     OPTScc="$OPTIM $COMMON"
 fi
-AM_PROG_AR
-AC_PROG_CC_STDC
-AM_PROG_CC_C_O
-AC_PROG_CC_C99 #enable C99.
+
 
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
@@ -360,14 +359,18 @@ download(){
    echo The $1 library is not available in the system
    echo Will download one from the website.
    fn="$2"
-  if test -n "$3" ;then
+   if test -n "$3" ;then
       OUTDIR="$3"
    else
       AC_MSG_ERROR([Please specify third argument])
    fi
+   if test ! -d ${DOWNLOAD_DIR} ;then
+      mkdir -p ${DOWNLOAD_DIR};
+   fi
    if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
    success=0
    for BASEURL in $BASEURLS ; do
+      echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
       if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
       	 success=1
 	 break;
@@ -398,7 +401,7 @@ compile(){
    fnlog=${SRC_DIR}/external/compile.log
    echo "Compiling $name. Check $fnlog for details"
    if (cd ${SRC_DIR}/external/$name/* && \
-      (./configure "$@" --prefix=${SRC_DIR}/external > $fnlog || \
+      (export CFLAGS="$CFLAGS_CPU"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${SRC_DIR}/external > $fnlog || \
       cmake -DCMAKE_INSTALL_PREFIX:PATH=${SRC_DIR}/external "$@" > $fnlog) && \
       make -j4 install >> $fnlog) ;then
       echo "Compiled $name successfully."
@@ -419,7 +422,6 @@ AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
 if test "$has_lapack" = "no" ;then
    if test "$mkl_avail" = "yes" ;then
        mklname=mkl${libsuffix}
-       mkdir -p ${DOWNLOAD_DIR}
        download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
        mkdir -p ${LIB_DIR}
        mv ${DOWNLOAD_DIR}/MKL/*/*.* ${LIB_DIR}
@@ -448,11 +450,10 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    #compile FFTW fftw.tar.bz2 --enable-float 
    AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
-LDFFT="-lfftw3"
-#AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
-#AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
+AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
+AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists)
 
-AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="no")
+AC_ARG_ENABLE(fftw-threads, AS_HELP_STRING([--disable-fftw-threads],[Disable FFTW threads]), use_fftw_threads="$enableval", use_fftw_threads="no")
 if test "$use_fftw_threads" = "yes" ;then
      AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
      AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
@@ -491,7 +492,7 @@ if test "$use_websockets" = "yes" ;then
 AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
 if test "$has_lws" = "no" ;then
-   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_CLIENT -DLWS_WITHOUT_SERVER
+   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_INSTALL_LIB_DIR="${LIB_DIR}" -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_CLIENT -DLWS_WITHOUT_SERVER
    unset ac_cv_lib_websockets_libwebsocket_service
    AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 fi
@@ -502,11 +503,11 @@ else
    AC_MSG_NOTICE(["libwebsocket library or header is not available"])
 fi
 fi
-
+AM_CONDITIONAL(DRAW,false) #for drawdaemon
+AM_CONDITIONAL(MON, false)  #for parital monitor without notify
+AM_CONDITIONAL(MONN,false) #for full monitor with notify
+if test "$with_gtk" != "no" ;then
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
-AM_CONDITIONAL(DRAW,true) #for drawdaemon
-AM_CONDITIONAL(MON,true)  #for parital monitor without notify
-AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
 if test -n "$GTKDIR" ;then #User specified GTK directory
@@ -519,16 +520,11 @@ if test -n "$GTKDIR" ;then #User specified GTK directory
 fi
 PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
-if test "$gtk_2" = "yes" -a  "$gtk_3" = "yes" ;then 
-   #both gtk2 & gtk3 exist in system. let use choose
-   AC_ARG_ENABLE(gtk-3, [  --enable-gtk-3  Using GTK+-3 ], [gtk_3="$enableval"], [gtk_3="no"])
-fi
-#The following will define MON_CFLAGS and MON_LIBS with their values in Makefile.in,
-#so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
+
 if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
    macint=gtk-mac-integration
 fi
-if test "$gtk_3" = "yes" ;then
+if test "$gtk_3" = "yes" -a "$with_gtk-3" != "no" ;then
    PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
@@ -565,6 +561,7 @@ if test "$comp_mon" = "yes" ;then
    fi
  fi
 fi
+
 #The following will substitute the variables name 
 AC_SUBST(DRAW_CFLAGS)
 AC_SUBST(DRAW_LIBS)
@@ -574,53 +571,26 @@ AC_SUBST(MONN_LIBS)
 AC_SUBST(MONN_CFLAGS)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
+fi
 
 AC_CHECK_HEADERS([unistd.h])
-LDLIB=""
 LDOPTS="$LDCHOL $LDFFT $LAPACK $LDZ -lm $LDEXE"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
 AC_SUBST(LDEXE)
-AC_SUBST(LDLIB)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
-#Doxygen Features
-DX_HTML_FEATURE(ON)
-DX_CHM_FEATURE(OFF)
-DX_CHI_FEATURE(OFF)
-DX_MAN_FEATURE(OFF)
-DX_RTF_FEATURE(OFF)
-DX_XML_FEATURE(OFF)
-DX_PDF_FEATURE(OFF)
-DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
-if test x$DX_FLAG_doc = x0 ;then
-   AM_CONDITIONAL(DO_DOXYGEN, false)
-else
-   AM_CONDITIONAL(DO_DOXYGEN, true)
-fi
-#The following must be after AC_PROG_CC
-AC_PROG_MAKE_SET
-AC_PROG_INSTALL
-AC_ENABLE_SHARED
-AC_ENABLE_STATIC
-AC_PROG_LIBTOOL
 
-if test "x${use_mex}" = "xyes" ; then
-   AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
-   if test -n "$MEXDIR" ;then
-       if test -x "${MEXDIR}/mex" ;then
-           MEXDIR="${MEXDIR}"
-       elif test -x "${MEXDIR}/bin/mex" ;then
-           MEXDIR="${MEXDIR}/bin"
-       else
-           AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
-       fi
+if test "$with_matlab" != "no" ;then
+   if test -x "${MEXDIR}/mex" ;then
+       MEXDIR="${MEXDIR}"
+   elif test -x "${MEXDIR}/bin/mex" ;then
+       MEXDIR="${MEXDIR}/bin"
    else
-       AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
+       AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-mex to disable])
    fi
    MEXEXT="$($MEXDIR/mexext)"
    if test -z "$MEXEXT" ;then
@@ -684,7 +654,7 @@ else
    AM_CONDITIONAL(USE_MEX, false)
 fi
 AM_CONDITIONAL(CCBIN_GCC, false)
-if test "$use_cuda" = "yes" ;then
+if test "$with_cuda" != "no" ;then
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
@@ -723,9 +693,6 @@ if test "$use_cuda" = "yes" ;then
    cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
    cudaver="${cudaver/.}"
    echo CUDA toolkit is $cudaver
-   if test -z "$CCBIN" ;then
-       CCBIN="$CC"
-   fi
    CCBIN="${CCBIN%% *}"
    if test -n "$CCBIN" ;then
        NVCC="$NVCC -ccbin ${CCBIN%% *}"
@@ -755,11 +722,11 @@ if test "$use_cuda" = "yes" ;then
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
-       use_cuda="no"
+       with_cuda="no"
    fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
 fi
-if test "$use_cuda" = "yes" ;then
+if test "$with_cuda" != "no" ;then
    if test "$cuda_double" = "yes" ;then
       AC_DEFINE(CUDA_DOUBLE, [1], "Use double precision mode in cuda")
       AM_CONDITIONAL(CUDA_DOUBLE, true)
@@ -798,27 +765,41 @@ AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR
 echo host_os=$host_os
-echo use_mex=$use_mex
-echo use_cuda=$use_cuda
+echo BIGENDIAN=$BIGENDIAN
 echo use_static=$use_static
-echo Cross compile=$cross_compile
+
+echo CC=$CC
+echo CFLAGS=$CFLAGS
+echo LDFLAGS=$LDFLAGS
+echo OPTS=$OPTS
+echo LDOPTS=$LDOPTS
+
+if test "$with_gtk" != "no" ;then
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
 echo DRAW_LIBS=$DRAW_LIBS
 echo GTK_LIBS=$GTK_LIBS
 echo Using GTK+-3=$gtk_3
-echo CC=$CC
-echo CFLAGS=$CFLAGS
-echo LDFLAGS=$LDFLAGS
-echo OPTS=$OPTS
+else
+echo "Without GTK"
+fi
+
+if test "$with_cuda" != "no" ;then
 echo NVCC=$NVCC
 echo CUDAOPT=$CUDAOPT
 echo LDCUDA=$LDCUDA
-echo LDLIB=$LDLIB
-echo LDEXE=$LDEXE
-echo LDOPTS=$LDOPTS
-echo BIGENDIAN=$BIGENDIAN
+else
+echo "Without CUDA support"
+fi
+if test "$with_matlab" != "no" ;then
+echo MEXDIR=$MEXDIR
+echo LDMEX=$LDMEX
+echo MEXOPT=$MEXOPT
+else
+echo "Without matlab support"
+fi
+
 echo "*************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos ***"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos     ***"
