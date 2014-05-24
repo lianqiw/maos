@@ -383,7 +383,7 @@ void turb_dm(SIM_T *simu){
 */
 void update_dm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(!parms->fit.square){
+    if(!parms->fit.square && simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 	for(int idm=0; idm<parms->ndm; idm++){
 	    long *embed=simu->recon->aembed[idm];

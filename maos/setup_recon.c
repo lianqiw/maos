@@ -50,7 +50,8 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	char *fn=parms->load.ploc;
 	warning("Loading ploc from %s\n",fn);
 	recon->ploc=locread("%s",fn);
-	recon->pmap=loc2map(recon->ploc);
+	double Dmin=parms->aper.d+parms->tomo.guard*dxr*2;
+	recon->pmap=loc2map(recon->ploc, Dmin, Dmin);
 	if(fabs(recon->ploc->dx-dxr)>dxr*0.01){
 	    warning("Loaded ploc has unexpected sampling of %g, should be %g\n",
 		    recon->ploc->dx, dxr);
@@ -105,7 +106,8 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	if(nxloc!=npsr) 
 	    error("Invalid saved file. npsr=%d, nxloc=%d\n",npsr,nxloc);
 	for(int ips=0; ips<npsr; ips++){
-	    recon->xmap[ips]=loc2map(recon->xloc[ips]);
+	    double Dmin=(parms->aper.d+parms->sim.fov*recon->ht->p[ips])+parms->tomo.guard*recon->dx->p[ips]*2;
+	    recon->xmap[ips]=loc2map(recon->xloc[ips], Dmin, Dmin);
 	    free(recon->xmap[ips]->p); recon->xmap[ips]->p=NULL;
 	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
 	    double dxr=recon->dx->p[ips];

@@ -886,7 +886,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
-    READ_DBL(sim.fov);
+    READ_DBL(sim.fov);parms->sim.fov/=206265;
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     READ_INT(sim.evlol);
     READ_INT(sim.noatm);
@@ -2629,6 +2629,9 @@ void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){
 	    error("BGS in GPU is not implemented yet\n");
+	}
+	if((parms->gpu.evl || parms->gpu.wfs) && parms->load.aloc){
+	    error("Cannot use dmrealsq and therefore GPU when loading aloc. Need to fix\n");
 	}
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));

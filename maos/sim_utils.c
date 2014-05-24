@@ -1201,7 +1201,9 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->sim.lpttm>EPS){
 	simu->ttmreal=dnew(2,1);
     }
+    //if(!parms->load.aloc){
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
+	//}
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
 	simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc, NULL);
@@ -1214,9 +1216,13 @@ static void init_simu_dm(SIM_T *simu){
 	}else{
 	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}
-	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	if(simu->dmrealsq){
+	    simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	    dset((dmat*)simu->dmrealsq[idm], NAN);
+	}
 	if(simu->dmprojsq){
 	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
+	    dset((dmat*)simu->dmprojsq[idm], NAN);
 	}
 	if(parms->fit.square){/*dmreal is already square.*/
 	    free(simu->dmrealsq[idm]->p);

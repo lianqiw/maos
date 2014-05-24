@@ -495,25 +495,33 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 	fy=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
 #pragma unroll
 	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*in[(iy-1)*nx+kx+ix];
+	    if(isfinite(in[(iy-1)*nx+kx+ix])){
+		sum+=fx[kx+1]*fy*in[(iy-1)*nx+kx+ix];
+	    }
 	}
 
 	fy=cc[0]+y*y*(cc[1]+cc[2]*y); 
 #pragma unroll
 	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*in[iy*nx+kx+ix];
+	    if(isfinite(in[iy*nx+kx+ix])){
+		sum+=fx[kx+1]*fy*in[iy*nx+kx+ix];
+	    }
 	}
-
+	
 	fy=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
 #pragma unroll
 	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*in[(iy+1)*nx+kx+ix];
+	    if(isfinite(in[(iy+1)*nx+kx+ix])){
+		sum+=fx[kx+1]*fy*in[(iy+1)*nx+kx+ix];
+	    }
 	}
 
 	fy=y*y*(cc[3]+cc[4]*y); 
 #pragma unroll
 	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*in[(iy+2)*nx+kx+ix];
+	    if(isfinite(in[(iy+2)*nx+kx+ix])){
+		sum+=fx[kx+1]*fy*in[(iy+2)*nx+kx+ix];
+	    }
 	}
 	out[i]+=sum*alpha;
     }

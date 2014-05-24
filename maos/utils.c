@@ -838,7 +838,7 @@ void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *field
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 		const APER_T *aper, const RECON_T *recon){
     if(!parms->plot.setup) return;
-    plotdir("FoV",parms,parms->sim.fov,"fov");/*plot wfs/evaluation direction */
+    plotdir("FoV",parms,parms->sim.fov*206265,"fov");/*plot wfs/evaluation direction */
     plotloc("FoV",parms,recon->ploc,0, "ploc");
     plotloc("FoV",parms,recon->floc,0, "floc");
     for(int idm=0; idm<parms->ndm; idm++){

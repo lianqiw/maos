@@ -274,14 +274,34 @@ loc_t* map2loc(map_t *map){
     return loc;
 }
 /**
-   convert loc to map.
+   convert loc to map, with optionally minimum size of Dx*Dy
 */
-map_t *loc2map(loc_t *loc){
+map_t *loc2map(loc_t *loc, double Dx, double Dy){
     double xmax, xmin, ymax, ymin;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
-    int nx=ceil((xmax-xmin)/loc->dx)+1;
-    int ny=ceil((ymax-ymin)/loc->dy)+1;
+    if(Dx>0){
+	if(xmin>-0.5*Dx){
+	    xmin-=ceil((xmin+0.5*Dx)/loc->dx);
+	    info2("xmin adjusted to %g. Dx=%g\n", xmin, Dx);
+	}
+	if(xmax<0.5*Dx){
+	    xmax+=ceil((0.5*Dx-xmax)/loc->dx);
+	    info2("xmax adjusted to %g. Dx=%g\n", xmax, Dx);
+	}
+    }
+    if(Dy>0){
+	if(ymin>-0.5*Dy){
+	    ymin-=ceil((ymin+0.5*Dy)/loc->dx);
+	    info2("ymin adjusted to %g. Dy=%g\n", ymin, Dy);
+	}
+	if(ymax<0.5*Dy){
+	    ymax+=ceil((0.5*Dy-ymax)/loc->dx);
+	    info2("ymax adjusted to %g. Dy=%g\n", ymax, Dy);
+	}
+    }
+    int nx=round((xmax-xmin)/loc->dx)+1;
+    int ny=round((ymax-ymin)/loc->dy)+1;
     map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
     map->ox=xmin;
     map->oy=ymin;

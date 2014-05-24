@@ -39,7 +39,8 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
-	recon->fmap=loc2map(recon->floc);
+	double Dmin=parms->aper.d+parms->tomo.guard*dxr*2;
+	recon->fmap=loc2map(recon->floc, Dmin, Dmin);
 	if(fabs(recon->fmap->dx-dxr)>dxr*0.01){
 	    warning("Loaded floc has unexpected sampling of %g, should be %g\n", 
 		    recon->floc->dx, dxr);
@@ -131,7 +132,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
 	    map_t *map;
 	    if(parms->dbg.dmfullfov){//DM covers full fov
-		double D=(parms->sim.fov/206265.*ht+parms->aper.d+guard*2);
+		double D=(parms->sim.fov*ht+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
 		map=mapnew(nx, ny, dx, dy, 0);
@@ -145,25 +146,32 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
-	    if(parms->fit.cachedm){
-		const double dx2=parms->atmr.dx/parms->fit.pos;
-		const double dy2=dx2;
-		recon->acmap[idm]=create_metapupil_wrap
-		    (parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
-		info("amap origin is %g, %g. acmap is %g, %g\n", 
-		     recon->amap[idm]->ox, recon->amap[idm]->oy,
-		     recon->acmap[idm]->ox, recon->acmap[idm]->oy);
-	    }
+	
 	}
     }
     for(int idm=0; idm<parms->ndm; idm++){
+	double ht=parms->dm[idm].ht;
+	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
+	double dx=parms->dm[idm].dx;
+	double dy=parms->dm[idm].dy;
 	if(!recon->amap[idm]){
-	    recon->amap[idm]=loc2map(recon->aloc[idm]);
+	    double guard=parms->dm[idm].guard*MAX(dx,dy);
+	    double Dmin=(parms->aper.d+parms->dm[idm].ht*parms->sim.fov)+guard*2;
+	    recon->amap[idm]=loc2map(recon->aloc[idm], Dmin, Dmin);
 	    recon->amap[idm]->h=parms->dm[idm].ht;
 	}
 	recon->aembed[idm]=loc2map_embed(recon->aloc[idm], recon->amap[idm]);
 	recon->amap[idm]->cubic=parms->dm[idm].cubic;
 	recon->amap[idm]->iac=parms->dm[idm].iac;
+	if(parms->fit.cachedm){
+	    const double dx2=parms->atmr.dx/parms->fit.pos;
+	    const double dy2=dx2;
+	    recon->acmap[idm]=create_metapupil_wrap
+		(parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
+	    info("amap origin is %g, %g. acmap is %g, %g\n", 
+		 recon->amap[idm]->ox, recon->amap[idm]->oy,
+		 recon->acmap[idm]->ox, recon->acmap[idm]->oy);
+	}
     }
 
     if(parms->save.setup){
