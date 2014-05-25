@@ -67,7 +67,7 @@ void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
 		   confined within the subaperture.
 		*/
 		if(zx<0 || zx>zmax || zy<0 || zy>zmax){
-		    warning("isa=%d, zxy=%d %d\n", isa, zx, zy);
+		    warning("isa=%d, G(%d, %d)=%g\n", isa, zx, zy, px[ir]);
 		}
 		if(zx<0) zx=0;
 		if(zx>zmax) zx=zmax;

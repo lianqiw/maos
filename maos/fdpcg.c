@@ -187,9 +187,9 @@ fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int s
 */
 static void 
 fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
-    long os=(long)(dsa/dx);
+    long os=(long)round(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
-	error("dsa must be multiple of dx");
+	error("dsa must be multiple of dx. dsa=%g, dx=%g, diff=%g\n", dsa, dx, fabs(dsa-dx*os));
     }
  
     double *wt=alloca(sizeof(double)*(os+1));
@@ -451,7 +451,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
 	double neai=recon->neam->p[iwfs];
-	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai);
+	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
 	    /*
 	      2010-05-28: The cone effect cancels with the cone

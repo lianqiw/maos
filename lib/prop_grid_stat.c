@@ -385,8 +385,12 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	}/*for icol*/
 #endif
     if(missing>0){
-	warning(" %d points not covered by input screen\n", missing);
-	print_backtrace();
+	static int warned=0;
+	if(!warned){
+	    warning(" %d points not covered by input screen\n", missing);
+	    print_backtrace();
+	    warned=1;
+	}
     }
 #if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp taskwait
