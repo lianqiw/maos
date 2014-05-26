@@ -5,6 +5,7 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
 BASEURLS="https://sourceforge.net/projects/lianqiw/files/external"
+BASEURLS="$BASEURLS http://project.tmt.org/~lianqiw/maos/external"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -72,47 +73,6 @@ if test -z "$OPENMP_CFLAGS" ;then
 fi
 OPTSextra=""
 
-#Check operating system.
-AM_CONDITIONAL(LINUX,  false)
-AM_CONDITIONAL(BSD,    false)
-AM_CONDITIONAL(DARWIN, false)
-AM_CONDITIONAL(WIN,    false)
-
-mkl_avail="no"
-case "$host_os" in
-*linux*)
- AM_CONDITIONAL(LINUX, true)
- LDEXE="$LDEXE -lrt" #need real time library.
- OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
- mkl_avail="yes"
- libsuffix=${cpu}
- system="linux"
- ldsuffix="so"
- ;;
-*darwin*)
- AM_CONDITIONAL(DARWIN, true)
- mkl_avail="no"
- libsuffix=fat
- system="apple"
- ldsuffix="dylib"
- #set CFLAGS=-mmacosx-version-min=10.6 before calling configure for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
- ;;
-*bsd*)
- AM_CONDITIONAL(BSD, true)
- system="bsd"
- ldsuffix="so"
- ;;
-*cygwin*|*mingw*)
- AM_CONDITIONAL(WIN, true)
- LAPACK="-lblas -llapack"
- system="win"
- ldsuffix="dll"
- ;;
-*)
-AC_MSG_ERROR([Unrecognized OS])
-esac
-AC_SUBST(ldsuffix)
-
 #Enable the user to force 32 or 64 bit program
 AC_ARG_ENABLE(64,  AS_HELP_STRING([--enable-64],[Force 64 (disable=32) bit executables]))
 
@@ -158,8 +118,49 @@ LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
 
+#Check operating system.
+AM_CONDITIONAL(LINUX,  false)
+AM_CONDITIONAL(BSD,    false)
+AM_CONDITIONAL(DARWIN, false)
+AM_CONDITIONAL(WIN,    false)
+
+mkl_avail="no"
+case "$host_os" in
+*linux*)
+ AM_CONDITIONAL(LINUX, true)
+ LDEXE="$LDEXE -lrt" #need real time library.
+ OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+ mkl_avail="yes"
+ libsuffix=${cpu}
+ system="linux"
+ ldsuffix="so"
+ ;;
+*darwin*)
+ AM_CONDITIONAL(DARWIN, true)
+ mkl_avail="no"
+ libsuffix=fat
+ system="apple"
+ ldsuffix="dylib"
+ #set CFLAGS=-mmacosx-version-min=10.6 before calling configure for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
+ ;;
+*bsd*)
+ AM_CONDITIONAL(BSD, true)
+ system="bsd"
+ ldsuffix="so"
+ ;;
+*cygwin*|*mingw*)
+ AM_CONDITIONAL(WIN, true)
+ LAPACK="-lblas -llapack"
+ system="win"
+ ldsuffix="dll"
+ ;;
+*)
+AC_MSG_ERROR([Unrecognized OS])
+esac
+AC_SUBST(ldsuffix)
+
 #Try to discover CUDA install in the system
-CUDADIR_AUTO=
+
 if test -n "`which nvcc 2>/dev/null`" ;then
    NVCC="$(which nvcc)"
    if test -L "$NVCC" ;then
@@ -171,6 +172,9 @@ elif test -x "/opt/cuda/bin/nvcc" ;then
    CUDADIR_AUTO="/opt/cuda"
 elif test -x "/usr/local/cuda/bin/nvcc" ;then
    CUDADIR_AUTO="/usr/local/cuda/"
+else
+   CUDADIR_AUTO=
+   with_cuda=no
 fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled
@@ -367,13 +371,20 @@ download(){
    if test ! -d ${DOWNLOAD_DIR} ;then
       mkdir -p ${DOWNLOAD_DIR};
    fi
-   if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
+if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
    success=0
    for BASEURL in $BASEURLS ; do
       echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
       if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
-      	 success=1
-	 break;
+         if test ! -d "${OUTDIR}" ;then
+             mkdir -p "${OUTDIR}" || exit 1
+         fi
+      	 if tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
+      	     success=1
+	     break;
+	 else
+	     AC_MSG_NOTICE([File download is not correct])
+	 fi
       else
          AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
       fi
@@ -381,11 +392,7 @@ download(){
    if test $success -eq 0 ;then
       AC_MSG_ERROR([Please download it manually and put in ${DOWNLOAD_DIR}/${fn}])
    fi
-   fi
-   if test ! -d "${OUTDIR}" ;then
-      mkdir -p "${OUTDIR}" || exit 1
-   fi
-   tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}"  || exit 1
+fi
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -492,7 +499,7 @@ if test "$use_websockets" = "yes" ;then
 AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
 if test "$has_lws" = "no" ;then
-   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_INSTALL_LIB_DIR="${LIB_DIR}" -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_CLIENT -DLWS_WITHOUT_SERVER
+   compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLWS_INSTALL_LIB_DIR="${LIB_DIR}" -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF
    unset ac_cv_lib_websockets_libwebsocket_service
    AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
 fi
@@ -584,6 +591,9 @@ AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 
+if test -z "$MEXDIR" ;then
+   with_matlab=no
+fi
 if test "$with_matlab" != "no" ;then
    if test -x "${MEXDIR}/mex" ;then
        MEXDIR="${MEXDIR}"
@@ -654,54 +664,74 @@ else
    AM_CONDITIONAL(USE_MEX, false)
 fi
 AM_CONDITIONAL(CCBIN_GCC, false)
+
+if test -z "$CUDADIR" ;then
+   with_cuda="no"
+fi
 if test "$with_cuda" != "no" ;then
+   if test -n "$with_cuda" ;then
+      user_enable_cuda=yes
+   fi
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
- 
    AC_MSG_NOTICE([Enabling CUDA])
-   LDCUDA=
-   if test -n "$CUDADIR" ;then
-       NVCC="$CUDADIR/bin/nvcc"
-       if test ! -x "$NVCC" ;then
-       	  NVCC="$CUDADIR/nvcc"
-	  CUDADIR="$(dirname $CUDADIR)"
-       fi
-   else
-       AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
-   fi
+   #Check for nvcc executable
+   NVCC="$CUDADIR/bin/nvcc"
    if test ! -x "$NVCC" ;then
-       AC_MSG_ERROR([nvcc not found])
+       NVCC="$CUDADIR/nvcc"
+       CUDADIR="$(dirname $CUDADIR)"
+       if test ! -x "$NVCC" ;then
+           AC_MSG_NOTICE([nvcc not found])
+	   with_cuda="no"
+       fi
    fi
-   AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
+   #Check cor cuda library
    if test -f "${CUDADIR}/lib${cpu}/libcudart.$ldsuffix" ;then
        CUDA_L="${CUDADIR}/lib${cpu}"
    elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
        CUDA_L="${CUDADIR}/lib"
+   else
+       CUDA_L=""
    fi
    if test -d "$CUDA_L" ;then
        LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
    else
        LDCUDA=
+       AC_MSG_NOTICE([CUDA library not found])
+       with_cuda="no"
    fi
+   AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LDCUDA])
+
+   #Check for cuda header
    if test -f "${CUDADIR}/include/cuda.h" ;then
        CUDAOPT="-I${CUDADIR}/include"
    else
-       AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
+       AC_CHECK_HEADERS([cuda.h], [] ,[AC_MSG_NOTICE([Header not found]);with_cuda="no"])
        CUDAOPT=
    fi
+   if test "$with_cuda" = "no" ;then
+       if test "$user_enable_cuda" = "yes" ;then
+       	  AC_MSG_ERROR([Specified cuda DIR is not valid])
+       else
+          AC_MSG_NOTICE([Cannot compile with cuda. Please use --with-cuda=DIR in configure to specify CUDA location or disable cuda use --without-cuda])
+       fi
+   fi
+fi
+if test "$with_cuda" != "no" ;then
+   AC_MSG_NOTICE([Use cuda in directory $CUDADIR])
    cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
    cudaver="${cudaver/.}"
    echo CUDA toolkit is $cudaver
-   CCBIN="${CCBIN%% *}"
-   if test -n "$CCBIN" ;then
+   if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
+       CCBIN="${CCBIN%% *}"
        NVCC="$NVCC -ccbin ${CCBIN%% *}"
+       case "$CCBIN" in 
+           gcc*)
+ 	   AM_CONDITIONAL(CCBIN_GCC, true)
+  	   ;;			  
+       esac
    fi
-   case "$CCBIN" in 
-   	gcc*)
-	AM_CONDITIONAL(CCBIN_GCC, true)
-	;;			  
-   esac
    if test "$cudaver" -lt 40 ;then
        AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
    fi
@@ -719,12 +749,9 @@ if test "$with_cuda" != "no" ;then
    #fi
    echo LDCUDA="$LDCUDA"
    echo CUDAOPT="$CUDAOPT"
-   AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
-   if test x$cuda_lib = xno ;then
-       AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
-       with_cuda="no"
-   fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+else
+   with_cuda="no"
 fi
 if test "$with_cuda" != "no" ;then
    if test "$cuda_double" = "yes" ;then
