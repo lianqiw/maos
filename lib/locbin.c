@@ -22,6 +22,7 @@
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
 loc_t *locreaddata(file_t *fp, header_t *header){
+    const double tol=1e-7;
     header_t header2;
     if(!header){
 	header=&header2;
@@ -30,8 +31,8 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     if(header->magic!=M_DBL){
 	error("magic=%x. Expect %x\n", header->magic, M_DBL);
     }
-    double dx=search_header_num(header->str,"dx");
-    double dy=search_header_num(header->str,"dy");
+    double dx=fabs(search_header_num(header->str,"dx"));
+    double dy=fabs(search_header_num(header->str,"dy"));
     free(header->str);
     long nx=header->nx;
     long ny=header->ny;
@@ -45,26 +46,29 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	zfread(out->locx, sizeof(double), nx, fp);
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
-	if(fabs(dx)<EPS || isnan(dx)){/*dx is not available. */
-	    dx=INFINITY;
-	    for(long i=0; i<MIN(10,out->nloc-1); i++){/*we assume the rows are continuous. */
-		if(fabs(out->locy[i+1]-out->locy[i])<EPS){//same row
-		    double dxi=fabs(out->locx[i+1]-out->locx[i]);
-		    if(dxi<dx){
-			dx=dxi;
-		    }
-		    break;
-		}
+	double dxd=INFINITY, dyd=INFINITY;
+	for(long i=0; i<out->nloc-1; i++){
+	    double dxi=fabs(out->locx[i+1]-out->locx[i]);
+	    if(dxi>tol && dxi+tol<dxd){
+		dxd=dxi;
+	    }
+	    double dyi=fabs(out->locy[i+1]-out->locy[i]);
+	    if(dyi>tol && dyi+tol<dyd){
+		dyd=dyi;
 	    }
 	}
-	if(fabs(dy)<EPS || isnan(dy)){/*dy is not available. */
-	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
-		if(fabs(out->locy[i+1]-out->locy[i])>EPS){
-		    dy=fabs(out->locy[i+1]-out->locy[i]);
-		    break;
-		}
-	    }
+	if(fabs(dx)<tol || isnan(dx)){
+	    dx=dxd;
+	}else if(fabs(dx-dxd)>tol){
+	    error("Specified dx=%.15g doesn't agree with data: %.15g\n", dx, dxd);
 	}
+
+	if(fabs(dy)<tol || isnan(dy)){
+	    dy=dyd;
+	}else if(fabs(dy-dyd)>tol){
+	    error("Specified dy=%.15g doesn't agree with data: %.15g\n", dy, dyd);
+	}
+
 	out->dx=fabs(dx);
 	out->dy=fabs(dy);
 	out->map=NULL;

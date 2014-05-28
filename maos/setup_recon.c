@@ -226,7 +226,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		//don't need HXW for low order wfs that does not participate in tomography. 
 		continue;
 	    }
-	    double  hs = parms->powfs[ipowfs].hs;
+	    double  hs = parms->wfs[iwfs].hs;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel[iwfs]){
 		loc=recon->ploc_tel[iwfs];
@@ -386,7 +386,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
 		continue;
 	    }
-	    double  hs = parms->powfs[ipowfs].hs;
+	    double  hs = parms->wfs[iwfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
 		double  ht = parms->dm[idm].ht;
 		double  scale=1. - ht/hs;

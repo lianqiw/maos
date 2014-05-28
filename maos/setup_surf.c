@@ -97,7 +97,7 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    locwfs=powfs[ipowfs].loc;
 	}
 	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfs, 
-		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->powfs[ipowfs].hs);
+		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
     }
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	rectmapfree(tsurf[itsurf]);
@@ -197,7 +197,7 @@ static void prop_surf_wfs(thread_t *info){
 	strcat(buf, buf2);
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	const double hs=parms->powfs[ipowfs].hs;
+	const double hs=parms->wfs[iwfs].hs;
 	const double scale=1.-hl/hs;
 	const double displacex=parms->wfs[iwfs].thetax*hl;
 	const double displacey=parms->wfs[iwfs].thetay*hl;

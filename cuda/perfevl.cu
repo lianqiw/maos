@@ -269,14 +269,14 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
 }
 #define PERFEVL_WFE_GPU(cc,ccb)						\
     if((parms->recon.split && recon->ngsmod->nmod==2)			\
-       || (!parms->recon.split && parms->ndm==1)){			\
+       || (!parms->recon.split && parms->evl.nmod==3)){			\
 	cudaMemsetAsync(cc, 0, 4*sizeof(Real), stream);			\
-	calc_ptt_do<<<DIM(nloc, TT_NBX), 0, stream>>>	\
+	calc_ptt_do<<<DIM(nloc, TT_NBX), 0, stream>>>			\
 	    (cc, cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp); \
 	cudaMemcpyAsync(ccb, cc, 4*sizeof(Real), cudaMemcpyDeviceToHost, stream); \
     }else if(parms->recon.split && parms->ndm==2){			\
 	cudaMemsetAsync(cc, 0, 7*sizeof(Real), stream);			\
-	calc_ngsmod_do<<<DIM(nloc,TT_NBX),0,stream>>>	\
+	calc_ngsmod_do<<<DIM(nloc,TT_NBX),0,stream>>>			\
 	    (cc, cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp);\
 	cudaMemcpyAsync(ccb, cc, 7*sizeof(Real), cudaMemcpyDeviceToHost, stream); \
     }else{								\

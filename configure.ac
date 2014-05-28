@@ -56,8 +56,6 @@ AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd "$srcdir" && pwd)
 BUILD_DIR=$(pwd)
-DOWNLOAD_DIR="${SRC_DIR}/external/downloads"
-CFLAGS="$CFLAGS -I${SRC_DIR}/external/include"
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
@@ -112,8 +110,6 @@ case ${host_cpu} in
         AC_MSG_ERROR([Unrecognized host_cpu])
    ;;
 esac   
-LIB_DIR="${SRC_DIR}/external/lib${cpu}"
-LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
@@ -158,6 +154,14 @@ case "$host_os" in
 AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_SUBST(ldsuffix)
+#TMP_DIR="${HOME}/.aos/" #temporary directory for compiling
+PRE_DIR="${HOME}/.aos/" #install compiled external libs to
+TMP_DIR="${BUILD_DIR}/external/"
+#PRE_DIR="${SRC_DIR}/external/"
+LIB_DIR="${PRE_DIR}/lib${libsuffix}"
+LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
+DOWNLOAD_DIR="${TMP_DIR}/downloads"
+CFLAGS="$CFLAGS -I${PRE_DIR}/include"
 
 #Try to discover CUDA install in the system
 
@@ -247,9 +251,9 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -diag-disable remark -vec-report=3"
+COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -diag-disable remark -vec-report=3"
 COMMON_GCC="-Wno-deprecated-declarations -static-libgcc"
-COMMON_CLANG= #"-Qunused-arguments"
+COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only  "
 OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
@@ -402,14 +406,14 @@ compile(){
    shift
    shift
    opts="$@"
-   if test ! -d ${SRC_DIR}/external/$name ;then
-      download $name $file ${SRC_DIR}/external/$name
+   if test ! -d ${TMP_DIR}/$name ;then
+      download $name $file ${TMP_DIR}/$name
    fi
-   fnlog=${SRC_DIR}/external/compile.log
+   fnlog=${TMP_DIR}/compile.log
    echo "Compiling $name. Check $fnlog for details"
-   if (cd ${SRC_DIR}/external/$name/* && \
-      (export CFLAGS="$CFLAGS_CPU"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${SRC_DIR}/external > $fnlog || \
-      cmake -DCMAKE_INSTALL_PREFIX:PATH=${SRC_DIR}/external "$@" > $fnlog) && \
+   if (cd ${TMP_DIR}/$name/* && \
+      (export CFLAGS="$CFLAGS_CPU"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
+      cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
       make -j4 install >> $fnlog) ;then
       echo "Compiled $name successfully."
    else

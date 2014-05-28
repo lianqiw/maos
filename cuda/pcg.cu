@@ -228,7 +228,7 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	      maxiter, k, times[8], times[9], times[10], times[11], times[12], times[13], times[14]);
 #endif
     }
-
+    if(z0==r0) z0=0;
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1

@@ -433,7 +433,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
-	    double  hs = parms->powfs[ipowfs].hs;
+	    double  hs = parms->wfs[iwfs].hs;
 	    for(int ips=0; ips<npsr; ips++){
 		spfree(HXWtomo[ips][iwfs]);
 		double  ht = recon->ht->p[ips];
@@ -1089,7 +1089,7 @@ static void init_simu_wfs(SIM_T *simu){
 	const int nthread=powfs[ipowfs].nthread;
 	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	const double hs=parms->powfs[ipowfs].hs;
+	const double hs=parms->wfs[iwfs].hs;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht[ips];
 	    if(ht>hs){

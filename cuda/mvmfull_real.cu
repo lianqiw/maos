@@ -266,7 +266,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	cudaMalloc(&data[igpu].pix, totpix*sizeof(short));
 	cudaMemset(&data[igpu].pix, 0, totpix*sizeof(short));
 	cudaMalloc(&data[igpu].pixbias, totpix*sizeof(short));
-	cudaMemcpy(&data[igpu].pixbias, (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
+	cudaMemcpy(data[igpu].pixbias, (short*)pixbias->p, totpix*sizeof(short), cudaMemcpyHostToDevice);
 	data[igpu].mtch=curcellnew(nbuf, 1, totpix*2,1);
 	cp2gpu(&data[igpu].mtch->p[0], mtch);
 	data[igpu].grad=curnew(ng, 1);

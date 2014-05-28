@@ -145,7 +145,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	}
     }
     qsort(gmap, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_ascend);
-    //now gmpa[igpu] is the cuda index of the nvml index igpu.
+    //now gmap[igpu] is the cuda index of the nvml index igpu.
     NGPU=0;
     /*
       User specified exact GPUs to use. We check every entry. 
@@ -181,26 +181,22 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 	int gpu_valid_count;
 	do{
-	    for(int jg=0; jg<ngpu_tot; jg++){
+	    gpu_valid_count=0;
+	    for(int jg=0; jg<ngpu_tot; jg++){//jg: nvml index. ig: cuda index
 		int ig=gmap[jg][0];
 		gpu_info[ig][0]=ig;
-		if(!cudaSetDevice(ig)){
-		    //this allocates context and create a CPU thread for this GPU.
+		if(!cudaSetDevice(ig)){//this allocates context and create a CPU thread for this GPU.
 		    gpu_info[ig][1]=gpu_get_idle_mem(ig);
+		    info2("GPU %d has mem %.1f GB\n", jg, gpu_info[ig][1]/1024/1024/1024.);
+		    if(gpu_info[ig][1]>=MEM_RESERVE){
+			gpu_valid_count++;
+		    }
 		}
-	    }
-	    /*sort so that gpus with higest memory is in the front.*/
-	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
-	    gpu_valid_count=0;
-	    for(int ig=0; ig<ngpu_tot; ig++){
-		if(gpu_info[ig][1]>=MEM_RESERVE){
-		    gpu_valid_count++;
-		}
-		info2("GPU %d has mem %.1f GB\n", (int)gpu_info[ig][0], gpu_info[ig][1]/1024/1024/1024.);
 	    }
 	}while(0);//while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
-
-	for(int i=0, ig=0; i<ngpu; i++, ig++){
+	/*sort so that gpus with higest memory is in the front.*/
+	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
+	for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
 	    if(ig==ngpu_tot || gpu_info[ig][1]<MEM_RESERVE){
 		if(repeat){
 		    ig=0; //reset to beginning.
@@ -218,11 +214,11 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    gpu_set(i);
-	    for(int j=0; j<NGPU; j++){
+	    /*for(int j=0; j<NGPU; j++){
 		if(j!=i){
 		    cudaDeviceEnablePeerAccess(j, 0);
 		}
-	    }
+		}*/
 	    for(int j=0; j<ngpu_tot; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;

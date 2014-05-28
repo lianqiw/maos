@@ -233,6 +233,8 @@ typedef struct WFS_CFG_T{
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
+    double hs;      /**height of star. Derived from powfs.hs or from input*/
+    double fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;      /**<powfs type*/
     int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }WFS_CFG_T;

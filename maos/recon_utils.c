@@ -220,7 +220,7 @@ static void Tomo_prop_do(thread_t *info){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
 	dmat *xx=dnew(recon->ploc->nloc, 1);
-	const double hs=parms->powfs[ipowfs].hs;
+	const double hs=parms->wfs[iwfs].hs;
 	for(int ips=0; ips<nps; ips++){
 	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
 		/*Do the ray tracing instead of using HXW. */
@@ -320,8 +320,7 @@ static void Tomo_iprop_do(thread_t *info){
 	    double ht=recon->ht->p[ips];
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
-		int ipowfs = parms->wfsr[iwfs].powfs;
-		const double hs=parms->powfs[ipowfs].hs;
+		const double hs=parms->wfs[iwfs].hs;
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;

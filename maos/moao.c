@@ -241,7 +241,7 @@ void moao_recon(SIM_T *simu){
 	    int imoao=parms->powfs[ipowfs].moao;
 	    dcell *rhsout=NULL;
 	    if(imoao<0) continue;
-	    double hs=parms->powfs[ipowfs].hs;
+	    double hs=parms->wfs[iwfs].hs;
 	    dmmoao->p[0]=(simu->dm_wfs->p[iwfs+iy*nwfs]);
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms,  imoao, 

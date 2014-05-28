@@ -87,22 +87,24 @@ class cucell{
     long nx;
     long ny;
     cumat<T> *m; /*contains the continuous data*/
-    T **pm; /*contains the data pointer in each cell.*/
+    T **pm; /*contains the data pointer in each cell in gpu.*/
+    T **pm_cpu;/*contains the data pointer in each cell in cpu.*/
     void p2pm(cudaStream_t stream=(cudaStream_t)-1){
 	if(!p) error("p must not be null\n");
-	T **tmp=(T**)malloc4async(nx*ny*sizeof(T*));
+	if(!pm_cpu){
+	    pm_cpu=(T**)malloc4async(nx*ny*sizeof(T*));
+	}
 	for(long i=0; i<nx*ny; i++){
-	    tmp[i]=p[i]?p[i]->p:NULL;
+	    pm_cpu[i]=p[i]?p[i]->p:NULL;
 	}
 	if(!pm){
 	    DO(cudaMalloc(&pm, sizeof(T*)*nx*ny));
 	}
 	if(stream==(cudaStream_t)-1){
-	    cudaMemcpy(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
+	    cudaMemcpy(pm, pm_cpu, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
 	}else{
-	    cudaMemcpyAsync(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
+	    cudaMemcpyAsync(pm, pm_cpu, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
 	}
-	free4async(tmp);
     }
     void init(const long nxi, const long nyi){
 	nx=nxi;
@@ -110,6 +112,7 @@ class cucell{
 	p=(cumat<T>**)calloc(nx*ny, sizeof(void*));
 	m=NULL;
 	pm=NULL;
+	pm_cpu=NULL;
     }
     cucell(const long nxi, const long nyi){
 	init(nxi, nyi);
@@ -178,7 +181,13 @@ class cucell{
 		}
 	    }
 	}
-	m->p=pnew;
+	if(m){
+	    if(m->nref){
+		free(m->nref);
+		m->nref=0;
+	    }
+	    m->p=pnew;
+	}
 	for(long i=0; i<nx*ny; i++){
 	    if(p[i]){
 		p[i]->p=pnew;

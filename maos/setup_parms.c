@@ -195,6 +195,13 @@ static inline int sum_intarr(int n, int *a){
     }
     return sum;
 }
+static inline int sum_dblarr(int n, double *a){
+    double sum=0;
+    for(int i=0; i<n; i++){
+	sum+=(a[i]!=0);
+    }
+    return sum;
+}
 
 #define MAX_STRLEN 80
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
@@ -458,6 +465,9 @@ static void readcfg_wfs(PARMS_T *parms){
 	parms->wfs[i].thetay/=206265.;
     }
     READ_WFS(int,powfs);
+    READ_WFS(dbl,hs);
+    READ_WFS_RELAX(dbl,fitwt);
+
     double *wvlwts=0;
     int nwvlwts=readcfg_dblarr(&wvlwts,"wfs.wvlwts");
     double *siglev=0;
@@ -786,29 +796,6 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.pos);
     READ_INT(fit.cachedm);
     READ_INT(fit.cachex);
-    int *fitwfs=NULL;
-    double *wfswt=NULL;
-    int nfitwfs=readcfg_intarr(&fitwfs, "fit.wfs");
-    readcfg_dblarr_nmax(&wfswt, nfitwfs, "fit.wfswt");
-    if(nfitwfs>0){
-	int nfit2=parms->fit.nfit+nfitwfs;
-	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double)*nfit2);
-	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double)*nfit2);
-	parms->fit.wt=realloc(parms->fit.wt, sizeof(double)*nfit2);
-	parms->fit.hs=realloc(parms->fit.hs, sizeof(double)*nfit2);
-	for(int ifitwfs=0; ifitwfs<nfitwfs; ifitwfs++){
-	    if(parms->nwfs<=fitwfs[ifitwfs]) continue;
-	    int iwfs=fitwfs[ifitwfs];
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    warning2("Including wfs %d with wt %g in fitting\n",
-		    iwfs, wfswt[ifitwfs]);
-	    parms->fit.thetax[parms->fit.nfit]=parms->wfs[iwfs].thetax;
-	    parms->fit.thetay[parms->fit.nfit]=parms->wfs[iwfs].thetay;
-	    parms->fit.hs[parms->fit.nfit]=parms->powfs[ipowfs].hs;
-	    parms->fit.wt[parms->fit.nfit]=wfswt[ifitwfs];
-	    parms->fit.nfit++;
-	}
-    }
 }
 /**
    Read LSR parameters.
@@ -1195,52 +1182,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	memcpy(parms->sim.ncpa_hs, parms->evl.hs, ndir*sizeof(double));
     }
 }
-/**
-   Scaling necessary values for non-zero zenith angle (za).
-   -# r0
-   -# turbulence height
-   -# WFS height
-   -# WFS siglev
-   -# reconstruction height.
-   
-   DM conjugation range is not changed!
-   2012-04-07: Relocated to beginning
-*/
-static void setup_parms_postproc_za(PARMS_T *parms){
-    /*
-      The input r0z is the r0 at zenith. Scale it if off zenith
-    */
-    parms->atm.r0=parms->atm.r0z*pow(cos(parms->sim.za),3./5.);
-    parms->atmr.r0=parms->atmr.r0z*pow(cos(parms->sim.za),3./5.);
 
-    if(fabs(parms->sim.za)>1.e-14){
-	warning("Scaling turbulence height and LGS hs to zenith angle %gdeg\n",
-		parms->sim.za*180./M_PI);
-	double cosz=cos(parms->sim.za);
-	double secz=1./cosz;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
-	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(isfinite(parms->powfs[ipowfs].hs)){
-		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
-		    double siglev=parms->wfs[iwfs].siglev;
-		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
-		    info("iwfs%d: siglev scaled from %g to %g\n", 
-			 iwfs,siglev,parms->wfs[iwfs].siglev);
-		    warning("Need to update to account for the transmittance\n");
-		}
-	    }
-	}
-	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
-	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    parms->atmr.ht[ips] *= secz;/*scale reconstructed atmospheric height. */
-	}
-	parms->cn2.hmax*=secz;
-    }
-}
 /**
    postproc various WFS parameters based on other input information
 
@@ -1299,6 +1241,30 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }
 	}
+
+	double wfs_hs=0;
+	for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+	    if(parms->wfs[iwfs].hs<=EPS){
+		parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
+		info2("wfs[%d].hs is set to %g\n", iwfs, parms->wfs[iwfs].hs);
+	    }else{
+		parms->sim.cachedm=0;
+		wfs_hs+=parms->wfs[iwfs].hs;
+	    }
+	}
+	wfs_hs/=parms->powfs[ipowfs].nwfs;
+	if(parms->powfs[ipowfs].hs<=EPS){
+	    if(wfs_hs>EPS){
+		parms->powfs[ipowfs].hs=wfs_hs;
+		warning2("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
+	    }else{
+		error("either wfs.wfs or powfs.hs has to be specified\n");
+	    }
+	}else if(fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
+	    warning2("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
+	}
+
     }
     parms->npowfs=jpowfs;
     if(jpowfs==0){
@@ -1459,6 +1425,53 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
 /**
+   Scaling necessary values for non-zero zenith angle (za).
+   -# r0
+   -# turbulence height
+   -# WFS height
+   -# WFS siglev
+   -# reconstruction height.
+   
+   DM conjugation range is not changed!
+   2012-04-07: Relocated to beginning
+*/
+static void setup_parms_postproc_za(PARMS_T *parms){
+    /*
+      The input r0z is the r0 at zenith. Scale it if off zenith
+    */
+    parms->atm.r0=parms->atm.r0z*pow(cos(parms->sim.za),3./5.);
+    parms->atmr.r0=parms->atmr.r0z*pow(cos(parms->sim.za),3./5.);
+
+    if(fabs(parms->sim.za)>1.e-14){
+	warning("Scaling turbulence height and LGS hs to zenith angle %gdeg\n",
+		parms->sim.za*180./M_PI);
+	double cosz=cos(parms->sim.za);
+	double secz=1./cosz;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
+	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
+	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		parms->wfs[iwfs].hs *= secz;
+		
+		if(isfinite(parms->wfs[iwfs].hs)){
+		    double siglev=parms->wfs[iwfs].siglev;
+		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
+		    info2("iwfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+		    warning2("Need to update to account for the transmittance\n");
+		}
+	    }
+	}
+	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
+	for(int ips=0; ips<parms->atmr.nps; ips++){
+	    parms->atmr.ht[ips] *= secz;/*scale reconstructed atmospheric height. */
+	}
+	parms->cn2.hmax*=secz;
+    }
+}
+/**
    The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
 */
 static void setup_parms_postproc_siglev(PARMS_T *parms){
@@ -1551,15 +1564,6 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atmr.ht[0]=parms->dm[0].ht;
 	parms->atmr.wt[0]=1;
 	parms->atmr.nps=1;
-	
-	parms->fit.nfit=1;
-	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double));
-	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double));
-	parms->fit.wt=realloc(parms->fit.wt, sizeof(double));
-	parms->fit.hs=realloc(parms->fit.hs, sizeof(double));
-	parms->fit.thetax[0]=0;
-	parms->fit.thetay[0]=0;
-	parms->fit.wt[0]=1;
     }
     normalize_sum(parms->atm.wt, parms->atm.nps, 1);
     normalize_sum(parms->atmr.wt, parms->atmr.nps, 1);
@@ -1682,9 +1686,6 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     parms->atm.nyn=Nmax;
     parms->atm.nxm=nextpow2(Nmax);
     parms->atm.nym=parms->atm.nxm;
-    if(parms->atm.l0 > parms->atm.nxm * parms->atm.dx){
-	warning("Atmospheric size is smaller than outer scale!\n");
-    }
     if(fabs(parms->atm.size[0])<EPS ||fabs(parms->atm.size[1])<EPS){
 	parms->atm.nx=parms->atm.nxm;
 	parms->atm.ny=parms->atm.nym;
@@ -1702,6 +1703,9 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     /*record the size of the atmosphere. */
     parms->atm.size[0]=parms->atm.nx*parms->atm.dx;
     parms->atm.size[1]=parms->atm.ny*parms->atm.dx;
+    if(parms->atm.l0 > parms->atm.size[0]){
+	warning("Atmospheric size is smaller than outer scale!\n");
+    }
     /*for screen evolving. */
     parms->atm.overx = calloc(parms->atm.nps, sizeof(long));
     parms->atm.overy = calloc(parms->atm.nps, sizeof(long));
@@ -1753,41 +1757,43 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
       Setup the parameters used to do DM caching on a finer grid.
     */
     int ncache_tot=0;
-    for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
-	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	if(fabs(ht)<1.e-10){
-	    parms->dm[idm].isground=1;
-	}
-	int nscale=0;
-	int nscalemax=parms->npowfs+parms->evl.nevl;/*maximum number of possible scalings */
-	double scale[nscalemax];
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    double dxscl=(1.-ht/parms->powfs[ipowfs].hs)*parms->powfs[ipowfs].dx;
-	    if(idm==0){
-		parms->powfs[ipowfs].scalegroup=calloc(ndm,sizeof(int));
+    if(parms->sim.cachedm){
+	for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
+	    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    if(fabs(ht)<1.e-10){
+		parms->dm[idm].isground=1;
 	    }
-	    if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
-		parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
-	    }else{
-		parms->powfs[ipowfs].scalegroup[idm]=-1;
+	    int nscale=0;
+	    int nscalemax=parms->npowfs+parms->evl.nevl;/*maximum number of possible scalings */
+	    double scale[nscalemax];
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		double dxscl=(1.-ht/parms->powfs[ipowfs].hs)*parms->powfs[ipowfs].dx;
+		if(idm==0){
+		    parms->powfs[ipowfs].scalegroup=calloc(ndm,sizeof(int));
+		}
+		if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
+		    parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
+		}else{
+		    parms->powfs[ipowfs].scalegroup[idm]=-1;
+		}
 	    }
-	}
-	/*evl; */
-	if(parms->dm[idm].dx>parms->evl.dx*10){
-	    if(idm==0){
-		parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int)); 
+	    /*evl; */
+	    if(parms->dm[idm].dx>parms->evl.dx*10){
+		if(idm==0){
+		    parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int)); 
+		}
+		for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
+		    double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->evl.dx;
+		    parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
+		}
 	    }
-	    for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->evl.dx;
-		parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
+	    parms->dm[idm].ncache=nscale;
+	    parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
+	    for(int iscale=0; iscale<nscale; iscale++){
+		parms->dm[idm].dxcache[iscale]=scale[iscale];
 	    }
+	    ncache_tot+=nscale;
 	}
-	parms->dm[idm].ncache=nscale;
-	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
-	for(int iscale=0; iscale<nscale; iscale++){
-	    parms->dm[idm].dxcache[iscale]=scale[iscale];
-	}
-	ncache_tot+=nscale;
     }
     if(!ncache_tot){
 	parms->sim.cachedm=0;
@@ -1868,14 +1874,50 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->wfsr[ipowfs].thetax=0;
 	    parms->wfsr[ipowfs].thetay=0;
+	    parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
 	    parms->wfsr[ipowfs].powfs=ipowfs;
 	    parms->powfs[ipowfs].nwfsr=1;
 	}
+	parms->fit.nfit=1;
+	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double));
+	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double));
+	parms->fit.wt=realloc(parms->fit.wt, sizeof(double));
+	parms->fit.hs=realloc(parms->fit.hs, sizeof(double));
+	parms->fit.thetax[0]=0;
+	parms->fit.thetay[0]=0;
+	parms->fit.wt[0]=1;
     }else{/*Use same information as wfs. */
 	parms->wfsr = parms->wfs;
 	parms->nwfsr= parms->nwfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+	}
+	int nwfsfit=0;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(parms->wfs[iwfs].fitwt>EPS){
+		nwfsfit++;
+	    }
+	}
+	if(nwfsfit){
+	    int nfit2=parms->fit.nfit+nwfsfit;
+	    parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double)*nfit2);
+	    parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double)*nfit2);
+	    parms->fit.wt=realloc(parms->fit.wt, sizeof(double)*nfit2);
+	    parms->fit.hs=realloc(parms->fit.hs, sizeof(double)*nfit2);
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		if(parms->wfs[iwfs].fitwt<EPS){
+		    continue;
+		}
+		warning2("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
+		parms->fit.thetax[parms->fit.nfit]=parms->wfs[iwfs].thetax;
+		parms->fit.thetay[parms->fit.nfit]=parms->wfs[iwfs].thetay;
+		parms->fit.hs[parms->fit.nfit]=parms->wfs[iwfs].hs;
+		parms->fit.wt[parms->fit.nfit]=parms->wfs[iwfs].fitwt;
+		parms->fit.nfit++;
+	    }
+	    if(nfit2!=parms->fit.nfit){
+		error("nfit2=%d, parms->fit.nfit=%d\n", nfit2, parms->fit.nfit);
+	    }
 	}
     }
 
@@ -2527,8 +2569,8 @@ PARMS_T * setup_parms(ARG_T *arg){
 	}
     }
     setup_parms_postproc_sim(parms);
-    setup_parms_postproc_za(parms);
     setup_parms_postproc_wfs(parms);
+    setup_parms_postproc_za(parms);
     setup_parms_postproc_siglev(parms);
     setup_parms_postproc_atm(parms);
     setup_parms_postproc_atm_size(parms);

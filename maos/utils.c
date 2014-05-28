@@ -100,14 +100,23 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 		      double offset, long* nxout, long* nyout,
 		      double *oxout, double *oyout, double**map, 
 		      double guard, long ninx, long niny, int pad,int square){
+    struct dir_t{
+	double thetax, thetay;
+	double hs;
+    };
     double R=parms->aper.d/2;
-    double maxx=0,maxy=0;
-    double sx,sy;/*temporary variables */
+    double minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
+    double sx1, sx2, sy1, sy2; /*temporary variables */
     int use_wfs_hi=1;
     int use_wfs_lo=1;
     int use_evl=1;
     int use_fit=1;
-   
+    const int ndir=parms->nwfs
+	+(use_evl?parms->evl.nevl:0)
+	+(use_fit?parms->fit.nfit:0)
+	+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
+    struct dir_t *dirs=calloc(ndir, sizeof(struct dir_t));
+    int count=0;
     /*find minimum map size to cover all the beams */
     for(int i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
@@ -115,49 +124,63 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 	   ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
 	    continue;
 	}
-	double hs=parms->powfs[ipowfs].hs;
-	sx=fabs(parms->wfs[i].thetax*ht)+(1.-ht/hs)*R;
-	sy=fabs(parms->wfs[i].thetay*ht)+(1.-ht/hs)*R;
-	if(sx>maxx) maxx=sx;
-	if(sy>maxy) maxy=sy;
+	dirs[count].thetax=parms->wfs[i].thetax;
+	dirs[count].thetay=parms->wfs[i].thetay;
+	dirs[count].hs=parms->wfs[i].hs;
+	count++;
     }
+    
+
     if(use_evl){
 	for(int i=0; i<parms->evl.nevl; i++){
-	    double hs=parms->evl.hs[i];
-	    sx=fabs(parms->evl.thetax[i]*ht)+(1.-ht/hs)*R;
-	    sy=fabs(parms->evl.thetay[i]*ht)+(1.-ht/hs)*R;
-	    if(sx>maxx) maxx=sx;
-	    if(sy>maxy) maxy=sy;
+	    dirs[count].hs=parms->evl.hs[i];
+	    dirs[count].thetax=parms->evl.thetax[i];
+	    dirs[count].thetay=parms->evl.thetay[i];
+	    count++;
 	}
     }
     if(use_fit){
 	for(int i=0; i<parms->fit.nfit; i++){
-	    double hs=parms->fit.hs[i];
-	    sx=fabs(parms->fit.thetax[i]*ht)+(1.-ht/hs)*R;
-	    sy=fabs(parms->fit.thetay[i]*ht)+(1.-ht/hs)*R;
-	    if(sx>maxx) maxx=sx;
-	    if(sy>maxy) maxy=sy;
+	    dirs[count].hs=parms->fit.hs[i];
+	    dirs[count].thetax=parms->fit.thetax[i];
+	    dirs[count].thetay=parms->fit.thetay[i];
+	    count++;
 	}
     }
     if(parms->sim.ncpa_calib){
 	for(int i=0; i<parms->sim.ncpa_ndir; i++){
-	    double hs=parms->sim.ncpa_hs[i];
-	    sx=fabs(parms->sim.ncpa_thetax[i]*ht)+(1.-ht/hs)*R;
-	    sy=fabs(parms->sim.ncpa_thetay[i]*ht)+(1.-ht/hs)*R;
-	    if(sx>maxx) maxx=sx;
-	    if(sy>maxy) maxy=sy;
+	    dirs[count].hs=parms->sim.ncpa_hs[i];
+	    dirs[count].thetax=parms->sim.ncpa_thetax[i];
+	    dirs[count].thetay=parms->sim.ncpa_thetay[i];
+	    count++;
 	}
     }
+    if(count<ndir){
+	warning("count=%d, ndir=%d\n", count, ndir);
+    }else if(count>ndir){
+	error("count=%d, ndir=%d\n", count, ndir);
+    }
+    for(int idir=0; idir<count; idir++){
+	sx1=(dirs[idir].thetax*ht)-(1.-ht/dirs[idir].hs)*R;
+	sx2=(dirs[idir].thetax*ht)+(1.-ht/dirs[idir].hs)*R;
+	sy1=(dirs[idir].thetay*ht)-(1.-ht/dirs[idir].hs)*R;
+	sy2=(dirs[idir].thetay*ht)+(1.-ht/dirs[idir].hs)*R;
+	if(sx1<minx) minx=sx1;
+	if(sx2>maxx) maxx=sx2;
+	if(sy1<miny) miny=sy1;
+	if(sy2>maxy) maxy=sy2;
+    }
     long nx,ny;
-    nx=(iceil((guard+maxx)/dx+offset))*2+1;
-    ny=(iceil((guard+maxy)/dy+offset))*2+1;
+    nx=(iceil((guard*2+maxx-minx)/dx+offset*2))+1;
+    ny=(iceil((guard*2+maxy-miny)/dy+offset*2))+1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
     }
     /*Make it square */
-    nx=(nx<ny)?ny:nx;
-    ny=nx;
+    if(square){
+	ny=nx=(nx<ny)?ny:nx;
+    }
     if(ninx>1){
 	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
 	nx=ninx;
@@ -167,17 +190,16 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 	ny=niny;
     }
     double ox,oy;
-    ox=((nx/2)-offset)*dx;
-    oy=((ny/2)-offset)*dy;
-
+    ox=(-(nx/2)+offset+round((maxx+minx)/(2*dx)))*dx;
+    oy=(-(ny/2)+offset+round((maxy+miny)/(2*dy)))*dy;
     if(nxout)
 	*nxout=nx;
     if(nyout)
 	*nyout=ny;
     if(oxout)
-	*oxout=-ox;
+	*oxout=ox;
     if(oyout)
-	*oyout=-oy;
+	*oyout=oy;
 
     if(map && square){/**Only want square grid*/
 	dmat *dmap=dnew(nx,ny);
@@ -185,43 +207,14 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 	dset(dmap,1);
 	dfree_keepdata(dmap);
     }else if(map){/*Want non square grid*/
+	double sx, sy;
 	dmat *dmap=dnew(nx,ny);
 	*map=dmap->p;
-	for(int i=0; i<parms->nwfs; i++){
-	    int ipowfs=parms->wfs[i].powfs;
-	    if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
-	       ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
-		continue;
-	    }
-	    sx=ox+(parms->wfs[i].thetax*ht);
-	    sy=oy+(parms->wfs[i].thetay*ht);
-	    double RR=R*(1.-ht/parms->powfs[ipowfs].hs)+guard;
+	for(int idir=0; idir<count; idir++){
+	    sx=-ox+(dirs[idir].thetax*ht);
+	    sy=-oy+(dirs[idir].thetay*ht);
+	    double RR=R*(1.-ht/dirs[idir].hs)+guard;
 	    dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
-	}
-
-	if(use_evl){
-	    for(int i=0; i<parms->evl.nevl; i++){
-		sx=ox+(parms->evl.thetax[i]*ht);
-		sy=oy+(parms->evl.thetay[i]*ht);
-		double RR=R+guard;
-		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
-	    }
-	}
-	if(use_fit){
-	    for(int i=0; i<parms->fit.nfit; i++){
-		sx=ox+(parms->fit.thetax[i]*ht);
-		sy=oy+(parms->fit.thetay[i]*ht);
-		double RR=R+guard;
-		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
-	    }
-	}
-	if(parms->sim.ncpa_calib){
-	    for(int i=0; i<parms->sim.ncpa_ndir; i++){
-		sx=ox+(parms->sim.ncpa_thetax[i]*ht);
-		sy=oy+(parms->sim.ncpa_thetay[i]*ht);
-		double RR=R+guard;
-		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
-	    }
 	}
 	for(int i=0; i<nx*ny; i++){
 	    dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
@@ -268,7 +261,7 @@ void plotloc(char *fig, const PARMS_T *parms,
     }
 
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	double hs=parms->powfs[parms->wfs[iwfs].powfs].hs;
+	double hs=parms->wfs[iwfs].hs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	cir[count][0]=parms->wfs[iwfs].thetax*ht;
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;

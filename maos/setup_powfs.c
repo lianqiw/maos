@@ -123,11 +123,11 @@ static void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs){
     long nloc=loc->nloc;
     dmat *ampmask=dnew(nloc, 1);
     double ht=parms->atm.hmax*0.7;
-    int ipowfs=parms->wfs[iwfs].powfs;
     for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 	int jpowfs=parms->wfs[jwfs].powfs;
 	if(parms->powfs[jpowfs].lo) continue;
-	double r=parms->aper.d*0.5*(1.-ht/parms->powfs[jpowfs].hs)/(1.-ht/parms->powfs[ipowfs].hs);
+	double hs=parms->wfs[iwfs].hs;
+	double r=parms->aper.d*0.5*(1.-ht/hs)/(1.-ht/hs);
 	double sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht;
 	double sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht;
 	loccircle(ampmask->p, loc, sx,sy, r, 1);
@@ -181,7 +181,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(fabs(dxsa - nx * dx)>EPS){
 	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dxsa, dx);
     }
-    info2("There are %d points in each subapeture of %gm.\n", nx, dxsa);
+    info2("There are %d points in each subaperture of %gm.\n", nx, dxsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
@@ -1976,7 +1976,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 	if(aloc && dm_ncpa){
 	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 		int iwfs0=parms->powfs[ipowfs].wfs[iwfs];
-		double hs=parms->powfs[ipowfs].hs;
+		double hs=parms->wfs[iwfs].hs;
 		double thetax=parms->wfs[iwfs0].thetax;
 		double thetay=parms->wfs[iwfs0].thetay;
 		if(!powfs[ipowfs].opdbias){

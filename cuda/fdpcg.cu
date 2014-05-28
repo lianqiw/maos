@@ -32,11 +32,10 @@ void cufdpcg_t::update(FDPCG_T *fdpcg){
 cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
     :grid(_grid),perm(0),Mb(0),fft(0),ffti(0),fftnc(0),fftips(0),
      xhat1(0),xhat2(0),nb(0),bs(0),nby(0),nbz(0),scale(0),fddata(0){
-    update(fdpcg);
-    grid=_grid;
     scale=fdpcg->scale;
     bs=fdpcg->bs;//linear size of each block.
     nb=fdpcg->permhf->nx/bs;//size of non-redundant block
+    update(fdpcg);
     cp2gpu(&perm, fdpcg->permhf->p, nb*bs, 1);
     int nps=grid->npsr;
     int count=0;
@@ -114,7 +113,7 @@ __global__ static void fdpcg_mul_block_sync_half(Comp *xout, const Comp *xin, Co
     extern __shared__ Comp v[];
     int bs=blockDim.x;//size of each block
     Comp *vin=v+threadIdx.y*2*bs;//stores reordered input
-    Comp *vout=v+bs+threadIdx.y*2*bs;//stores output before reorder again
+    Comp *vout=vin+bs;//stores output before reorder again
     int nstep=blockDim.y*gridDim.x;
     for(int ib=blockIdx.x*blockDim.y+threadIdx.y; ib<nbb; ib+=nstep){
 	const Comp *M=Mi+ib*bs*bs;

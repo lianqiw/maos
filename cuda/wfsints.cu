@@ -331,7 +331,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    const Real hs=parms->powfs[ipowfs].hs;
+    const Real hs=parms->wfs[iwfs].hs;
     const Real dtisim=parms->sim.dt*isim;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */

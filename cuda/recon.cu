@@ -159,7 +159,7 @@ namespace cuda_recon{
 		    moao_gwfs->p[iwfs]=parms->moao[imoao].gdm;
 		    dir[count].thetax=parms->wfs[iwfs].thetax;
 		    dir[count].thetay=parms->wfs[iwfs].thetay;
-		    dir[count].hs=parms->powfs[ipowfs].hs;
+		    dir[count].hs=parms->wfs[iwfs].hs;
 		    count++;
 		}
 	    }

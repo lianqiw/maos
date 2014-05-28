@@ -37,7 +37,7 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const double hs=parms->powfs[ipowfs].hs;
+    const double hs=parms->wfs[iwfs].hs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     for(int idm=0; idm<parms->ndm; idm++){
 	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
@@ -347,7 +347,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int nsa=powfs[ipowfs].pts->nsa;
     const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    const double hs=parms->powfs[ipowfs].hs;
+    const double hs=parms->wfs[iwfs].hs;
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int save_gradgeom=parms->save.gradgeom[iwfs];
