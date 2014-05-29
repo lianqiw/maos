@@ -1247,7 +1247,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
 	    if(parms->wfs[iwfs].hs<=EPS){
 		parms->wfs[iwfs].hs=parms->powfs[ipowfs].hs;
-		info2("wfs[%d].hs is set to %g\n", iwfs, parms->wfs[iwfs].hs);
 	    }else{
 		parms->sim.cachedm=0;
 		wfs_hs+=parms->wfs[iwfs].hs;
@@ -1261,7 +1260,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else{
 		error("either wfs.wfs or powfs.hs has to be specified\n");
 	    }
-	}else if(fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
+	}else if(wfs_hs>0 && fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
 	    warning2("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
 	}
 
@@ -2004,9 +2003,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->tomo.precond>1){
 	    error("Invalid preconditoner\n");
 	}
-	if(parms->tomo.precond==1 && parms->tomo.square!=1){
-	    warning("FDPCG prefers square XLOC.\n");
-	}
     }else{
 	parms->tomo.precond=0;/*No Preconditioner is available*/
     }
@@ -2395,9 +2391,9 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
     for(i=0; i<parms->nwfs; i++){
-	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec\n",
+	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km\n",
 	      i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
-	      parms->wfs[i].thetay*206265);
+	      parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3);
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
 	    error("wfs thetax or thetay is too large\n");
 	}

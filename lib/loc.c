@@ -601,6 +601,11 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
    Gather information about the starting of each column in loc.
  */
 void loc_create_stat_do(loc_t *loc){
+    /*First a sanity check to make sure loc is raster scanning along x*/
+    if(loc->nloc<2 || fabs(loc->locy[1]-loc->locy[0])>loc->dy*0.1){
+	warning("cannot create locstat for this loc\n");
+	return;
+    }
     locstat_t *locstat=calloc(1, sizeof(locstat_t));
     loc->stat=locstat;
     const double *locx=loc->locx;
@@ -619,11 +624,10 @@ void loc_create_stat_do(loc_t *loc){
     locstat->ymin=locstat->cols[colcount].ystart;
     locstat->xmin=locstat->cols[colcount].xstart;
     double xmax=locstat->cols[colcount].xstart;
-
     colcount++;
     for(iloc=1; iloc<loc->nloc; iloc++){
-	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 /*a new column starts */
-	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
+	if(fabs(locy[iloc]-locy[iloc-1])>1e-6 /*a new column starts */
+	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1e-6){
 	    locstat->cols[colcount].pos=iloc;
 	    locstat->cols[colcount].xstart=locx[iloc];
 	    locstat->cols[colcount].ystart=locy[iloc];
@@ -647,8 +651,9 @@ void loc_create_stat_do(loc_t *loc){
     if(xmax < locx[loc->nloc-1]){
 	xmax = locx[loc->nloc-1];
     }
-    locstat->nrow=(long)round((xmax-locstat->xmin)/dx)+1;
     locstat->cols=realloc(locstat->cols,(locstat->ncol+1)*sizeof(locstatcol_t));
+    locstat->ny=(long)round((locy[loc->nloc-1]-locstat->ymin)/dy)+1;
+    locstat->nx=(long)round((xmax-locstat->xmin)/dx)+1;
 }
 /**
    Create a gray pixel circular map in phi using coordinates defined in loc, center
@@ -1344,8 +1349,8 @@ void map_d_din(map_t *map, double *d, double *din){
 }
 
 /**
-   Embeding an OPD defined on loc to another array. *out is dmat or cmat depends
-   on iscomplex. Do the embeding using locstat to have best speed.
+   Embeding an OPD defined on loc to another array. 
+   Do the embeding using locstat to have best speed.
    reverse = 0 : from oin to out: out=out*alpha+in*beta
    reverse = 1 : from out to oin: in=in*beta+out*alpha
 */
@@ -1356,20 +1361,20 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
     locstat_t *restrict locstat=loc->stat;				\
     if(!*out){								\
 	if(reverse == 0){						\
-	    *out=X(new)(locstat->nrow, locstat->ncol);			\
+	    *out=X(new)(locstat->nx, locstat->ny);			\
 	}else{								\
 	    error("For reverse embedding the array needs to be non-empty\n"); \
 	}								\
     }else{								\
-	if((*out)->nx < locstat->nrow || (*out)->ny < locstat->ncol){	\
+	if((*out)->nx < locstat->nx || (*out)->ny < locstat->ny){	\
 	    error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n",	\
-		  (*out)->nx, (*out)->ny, locstat->nrow, locstat->ncol); \
+		  (*out)->nx, (*out)->ny, locstat->nx, locstat->ny); \
 	}								\
     }									\
     T (*restrict p)[(*out)->nx]=(void *)(*out)->p;			\
     double dx1=1./locstat->dx;						\
-    long xoff0=((*out)->nx - locstat->nrow +1)/2;			\
-    long yoff0=((*out)->ny - locstat->ncol +1)/2;			\
+    long xoff0=((*out)->nx - locstat->nx +1)/2;			\
+    long yoff0=((*out)->ny - locstat->ny +1)/2;			\
 									\
     for(long icol=0; icol<locstat->ncol; icol++){			\
 	long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1); \

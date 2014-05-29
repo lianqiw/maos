@@ -316,7 +316,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		error("Invalid combination\n");
 	    }
 	    info2("llt %d:\n",illt);
-	    info2("sa index: dist to llt  noise equivalent angle\n");
+	    info2("sa index   dist   noise equivalent angle\n");
 	    PDMAT(sanea->p[ii0], psanea);
 	    for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
 		int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];

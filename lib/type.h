@@ -68,7 +68,7 @@ typedef struct locstat_t{
     double xmin;        /**<Minimum x*/
     double ymin;        /**<Minimum y*/
     long   ncol;        /**<Number of consecutive columns found*/
-    long   nrow;        /**<Maximum number of rows*/
+    long   nx,ny;       /**<Size for embedding*/
 }locstat_t;
 /**
    Struct for coordinates like plocs, xloc, aloc etc.
