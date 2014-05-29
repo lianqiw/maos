@@ -70,7 +70,8 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{/* locs act as a pupil mask. no points outside will be evaluated. */
-	map_t *smap=create_metapupil_wrap(parms,0,parms->evl.dx,parms->evl.dx,0,0,0,0,0,0);
+	map_t *smap=0;
+	create_metapupil(&smap,0,0,parms,0,parms->evl.dx,parms->evl.dx,0,0,0,0,0,0);
 	aper->locs=map2loc(smap);
 	mapfree(smap);
     }

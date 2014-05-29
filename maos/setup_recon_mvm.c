@@ -223,20 +223,21 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	if(parms->load.mvm){
 	    recon->MVM=dread("%s", parms->load.mvm);
 	}
-	if(parms->gpu.tomo && parms->gpu.fit){
 #if USE_CUDA
+	if(parms->gpu.tomo && parms->gpu.fit){
 	    gpu_setup_recon_mvm(parms, recon, powfs);
+	}else 
 #endif
-	}else if(!parms->load.mvm){
-	    if(parms->load.mvmi){
-		error("Not handled yet.\n");
+	    if(!parms->load.mvm){
+		if(parms->load.mvmi){
+		    error("Not handled yet.\n");
+		}
+		if(parms->recon.alg==0){
+		    setup_recon_mvr_mvm(recon, parms, powfs);
+		}else{
+		    setup_recon_lsr_mvm(recon, parms, powfs);   
+		}
 	    }
-	    if(parms->recon.alg==0){
-		setup_recon_mvr_mvm(recon, parms, powfs);
-	    }else{
-		setup_recon_lsr_mvm(recon, parms, powfs);   
-	    }
-	}
 	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm)){
 	    dwrite(recon->MVM, "MVM.bin");
 	}

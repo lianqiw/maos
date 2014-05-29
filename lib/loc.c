@@ -138,20 +138,7 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
     pts->nsa=nsa;
     return pts;
 }
-long *loc2map_embed(const loc_t *loc, const map_t *map){
-    const double ox=map->ox;
-    const double oy=map->oy;
-    const double dx_in1=1./map->dx;
-    const double dy_in1=1./map->dy;
-    const long nx=map->nx;
-    long *embed=calloc(loc->nloc, sizeof(long));
-    for(int iloc=0; iloc<loc->nloc; iloc++){
-	long ix=(long)round((loc->locx[iloc]-ox)*dx_in1);
-	long iy=(long)round((loc->locy[iloc]-oy)*dy_in1);
-	embed[iloc]=ix+iy*nx;
-    }
-    return embed;
-}
+
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */
@@ -276,45 +263,42 @@ loc_t* map2loc(map_t *map){
 /**
    convert loc to map, with optionally minimum size of Dx*Dy
 */
-map_t *loc2map(loc_t *loc, double Dx, double Dy){
+map_t *loc2map(loc_t *loc, int nguard){
     double xmax, xmin, ymax, ymin;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
-    if(Dx>0){
-	if(xmin>-0.5*Dx){
-	    xmin-=ceil((xmin+0.5*Dx)/loc->dx);
-	    info2("xmin adjusted to %g. Dx=%g\n", xmin, Dx);
-	}
-	if(xmax<0.5*Dx){
-	    xmax+=ceil((0.5*Dx-xmax)/loc->dx);
-	    info2("xmax adjusted to %g. Dx=%g\n", xmax, Dx);
-	}
-    }
-    if(Dy>0){
-	if(ymin>-0.5*Dy){
-	    ymin-=ceil((ymin+0.5*Dy)/loc->dx);
-	    info2("ymin adjusted to %g. Dy=%g\n", ymin, Dy);
-	}
-	if(ymax<0.5*Dy){
-	    ymax+=ceil((0.5*Dy-ymax)/loc->dx);
-	    info2("ymax adjusted to %g. Dy=%g\n", ymax, Dy);
-	}
-    }
-    int nx=round((xmax-xmin)/loc->dx)+1;
-    int ny=round((ymax-ymin)/loc->dy)+1;
+    
+    int nx=round((xmax-xmin)/loc->dx)+nguard*2+1;
+    int ny=round((ymax-ymin)/loc->dy)+nguard*2+1;
     map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
-    map->ox=xmin;
-    map->oy=ymin;
+    map->ox=xmin-loc->dx*nguard;
+    map->oy=ymin-loc->dy*nguard;
     double dx_in1=1./loc->dx;
     double dy_in1=1./loc->dy;
     for(int iloc=0; iloc<loc->nloc; iloc++){
-	int ix=(int)round((loc->locx[iloc]-xmin)*dx_in1);
-	int iy=(int)round((loc->locy[iloc]-ymin)*dy_in1);
+	int ix=(int)round((loc->locx[iloc]-map->ox)*dx_in1);
+	int iy=(int)round((loc->locy[iloc]-map->oy)*dy_in1);
 	map->p[ix+iy*nx]=1.;
     }	
     return map;
 }
-
+/**
+   create embed index from loc to map.
+ */
+long *loc2map_embed(const loc_t *loc, const map_t *map){
+    const double ox=map->ox;
+    const double oy=map->oy;
+    const double dx_in1=1./map->dx;
+    const double dy_in1=1./map->dy;
+    const long nx=map->nx;
+    long *embed=calloc(loc->nloc, sizeof(long));
+    for(int iloc=0; iloc<loc->nloc; iloc++){
+	long ix=(long)round((loc->locx[iloc]-ox)*dx_in1);
+	long iy=(long)round((loc->locy[iloc]-oy)*dy_in1);
+	embed[iloc]=ix+iy*nx;
+    }
+    return embed;
+}
 /**
    Create 1 dimensional loc with given vector.
 */

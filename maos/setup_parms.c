@@ -465,7 +465,7 @@ static void readcfg_wfs(PARMS_T *parms){
 	parms->wfs[i].thetay/=206265.;
     }
     READ_WFS(int,powfs);
-    READ_WFS(dbl,hs);
+    READ_WFS_RELAX(dbl,hs);
     READ_WFS_RELAX(dbl,fitwt);
 
     double *wvlwts=0;
@@ -1676,8 +1676,9 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     int Nmax=0;
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
-	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,parms->atm.dx,0.5,
-			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,0,1);
+	create_metapupil(0,&nxout[ips],&nyout[ips],parms,parms->atm.ht[ips],
+			 parms->atm.dx,parms->atm.dx,0.5,
+			 parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }

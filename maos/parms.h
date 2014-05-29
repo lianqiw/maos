@@ -753,11 +753,8 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void create_metapupil(const PARMS_T *parms, double ht, double dx, double dy,
-		      double offset,long* nx, long* ny, double *ox, double *oy, 
-		      double **map,double guard, long ninx, long niny, int pad,int square);
-map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx, double dy,
-			     double offset,double guard,long ninx, long niny,
-			     int pad,int square);
+void create_metapupil(map_t **map, long* nx, long* ny, 
+		      const PARMS_T *parms, double ht, double dx, double dy,
+		      double offset,double guard, long ninx, long niny, int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

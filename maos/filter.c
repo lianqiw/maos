@@ -349,10 +349,6 @@ void filter_ol(SIM_T *simu){
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
-    if(simu->parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
-    }
     /*moao DM is already taken care of automatically.*/
 }
 /**
@@ -400,12 +396,6 @@ void update_dm(SIM_T *simu){
     }
 #endif
     calc_cachedm(simu);
-    if(parms->plot.run){ /*Moved from recon.c to here. */
-	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
-	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
-		    "Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
-	}
-    }
 }
 
 /**
@@ -418,6 +408,13 @@ void filter(SIM_T *simu){
 	filter_cl(simu);
     }else{
 	filter_ol(simu);
+    }
+    /*make floating actuators averag of neighbor.*/
+    if(simu->recon->actinterp){
+	dcell *tmp=NULL;
+	spcellmulmat(&tmp, simu->recon->actinterp, simu->dmreal, 1);
+	dcellcp(&simu->dmreal, tmp);
+	dcellfree(tmp);
     }
 #if USE_CUDA
     if(simu->recon->moao){

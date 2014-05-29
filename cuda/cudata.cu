@@ -214,11 +214,11 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    gpu_set(i);
-	    /*for(int j=0; j<NGPU; j++){
+	    for(int j=0; j<NGPU; j++){
 		if(j!=i){
 		    cudaDeviceEnablePeerAccess(j, 0);
 		}
-		}*/
+	    }
 	    for(int j=0; j<ngpu_tot; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;

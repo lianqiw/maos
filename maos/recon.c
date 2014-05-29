@@ -92,17 +92,7 @@ void tomofit(SIM_T *simu){
 	    simu->cgres->p[1]->p[isim]=muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
     }
 
-    /*zero stuck actuators*/
-    if(recon->actstuck){
-	act_stuck_cmd(recon->aloc, simu->dmfit, recon->actstuck);
-    }
-    /*make floating actuators averag of neighbor.*/
-    if(recon->actinterp){
-	dcell *tmp=NULL;
-	spcellmulmat(&tmp, recon->actinterp, simu->dmfit, 1);
-	dcellcp(&simu->dmfit, tmp);
-	dcellfree(tmp);
-    }
+ 
     dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 }
 /**
@@ -253,6 +243,9 @@ void reconstruct(SIM_T *simu){
 		    dmulvec(simu->dmerr->m->p, recon->MVM, 
 			    (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
 		}
+	    if(parms->plot.run){
+		dcellcp(&simu->dmfit, simu->dmerr);
+	    }
 	}else{
 	    switch(parms->recon.alg){
 	    case 0:
@@ -277,11 +270,16 @@ void reconstruct(SIM_T *simu){
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
+
 	if(!parms->sim.idealfit && parms->recon.split==1){//ahst 
 	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
 	if(parms->tomo.ahst_ttr && parms->recon.split){
 	    remove_dm_tt(simu, simu->dmerr);
+	}
+	/*zero stuck actuators*/
+	if(recon->actstuck){
+	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
     }
     //low order reconstruction

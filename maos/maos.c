@@ -94,6 +94,7 @@ void maos(const PARMS_T *parms){
 #if USE_CUDA
     extern int cuda_dedup;
     cuda_dedup=1;
+   
     if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
     }

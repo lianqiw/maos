@@ -277,7 +277,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
     
     //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
-    map_t *map=create_metapupil_wrap(parms, 0, dx, dx, 0, 0, 0, 0, 0, 0);
+    map_t *map=0;
+    create_metapupil(&map, 0, 0, parms, 0, dx, dx, 0, 0, 0, 0, 0, 0);
     powfs[ipowfs].gloc=map2loc(map); mapfree(map);
     //do not use misregistration since this is the model
     powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 

@@ -89,6 +89,16 @@ void save_recon(SIM_T *simu){
 			"Proj Hi %d",idm);
 	    }
 	}
+	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmrealsq){
+		drawmap("DM", simu->dmrealsq[idm],NULL,
+			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
+	    }else if(simu->dmreal){
+		drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
+			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
+	    }
+	}
     }
     if(parms->plot.run && simu->Merr_lo){
 	dcell *dmlo=NULL;

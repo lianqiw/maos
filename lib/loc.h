@@ -89,7 +89,7 @@ loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
 map_t *mapnew2(map_t *A);
-map_t *loc2map(loc_t *loc, double Dx, double Dy);
+map_t *loc2map(loc_t *loc, int nguard);
 void mapcircle(map_t *map, double r, double val);
 void mapcircle_symbolic(map_t *map, double r);
 void map_d_din(map_t *map, double *d, double *din);

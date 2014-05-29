@@ -69,22 +69,7 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
 	}
     }
 }
-/**
-   Calls create_metapupil is simplified interface by returning a map_t object.
- */
-map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx, double dy,
-			      double offset,double guard, long ninx,long niny,
-			      int pad,int square){
-    long nx, ny;
-    double ox, oy, *p;
-    create_metapupil(parms,ht,dx,dy,offset,&(nx),&(ny),
-		     &(ox),&(oy),&(p),guard, ninx, niny, pad,square);
-    map_t *amp=mapnew(nx, ny, dx, dy,p);
-    amp->ox=ox;
-    amp->oy=oy;
-    amp->h=ht;
-    return amp;
-}
+
 /**
    create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx,
    height of ht, that can cover all the WFS and science beams.  
@@ -96,10 +81,11 @@ map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx, double 
    
    pad: 1: round nx, ny to power of 2.  */
 
-void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
-		      double offset, long* nxout, long* nyout,
-		      double *oxout, double *oyout, double**map, 
-		      double guard, long ninx, long niny, int pad,int square){
+void create_metapupil(map_t **mapout, /**<[out] map*/
+		      long* nxout,  /**<[out] nx*/
+		      long* nyout,  /**<[out] ny*/
+		      const PARMS_T *parms, double ht,double dx,double dy,
+		      double offset, double guard, long ninx, long niny, int pad,int square){
     struct dir_t{
 	double thetax, thetay;
 	double hs;
@@ -161,65 +147,77 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 	error("count=%d, ndir=%d\n", count, ndir);
     }
     for(int idir=0; idir<count; idir++){
-	sx1=(dirs[idir].thetax*ht)-(1.-ht/dirs[idir].hs)*R;
-	sx2=(dirs[idir].thetax*ht)+(1.-ht/dirs[idir].hs)*R;
-	sy1=(dirs[idir].thetay*ht)-(1.-ht/dirs[idir].hs)*R;
-	sy2=(dirs[idir].thetay*ht)+(1.-ht/dirs[idir].hs)*R;
+	double RR=(1.-ht/dirs[idir].hs)*R+guard;
+	sx1=(dirs[idir].thetax*ht)-RR;
+	sx2=(dirs[idir].thetax*ht)+RR;
+	sy1=(dirs[idir].thetay*ht)-RR;
+	sy2=(dirs[idir].thetay*ht)+RR;
 	if(sx1<minx) minx=sx1;
 	if(sx2>maxx) maxx=sx2;
 	if(sy1<miny) miny=sy1;
 	if(sy2>maxy) maxy=sy2;
     }
-    long nx,ny;
-    nx=(iceil((guard*2+maxx-minx)/dx+offset*2))+1;
-    ny=(iceil((guard*2+maxy-miny)/dy+offset*2))+1;
-    if(pad){/*pad to power of 2 */
-	nx=1<<iceil(log2((double)nx));
-	ny=1<<iceil(log2((double)ny));
+    /*ajust central point offset*/
+    {
+	offset=offset-floor(offset);//between 0 and 1
+	double mind=minx/dx;
+	double adjust=mind-floor(mind)-offset;
+	if(adjust<0){
+	    adjust++;
+	}
+	minx-=adjust*dx;
+	mind=miny/dy;
+	adjust=mind-floor(mind)-offset;
+	if(adjust<0){
+	    adjust++;
+	}
+	miny-=adjust*dy;
     }
+    double ox=minx;
+    double oy=miny;
+    long nx=ceil((maxx-ox)/dx)+1;
+    long ny=ceil((maxy-oy)/dy)+1;
     /*Make it square */
     if(square){
 	ny=nx=(nx<ny)?ny:nx;
     }
+    if(pad){/*pad to power of 2 */
+	ninx=1<<iceil(log2((double)nx));
+	niny=1<<iceil(log2((double)ny));
+    }
     if(ninx>1){
 	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
+	ox=ox-(ninx-nx)/2*dx;
 	nx=ninx;
     }
     if(niny>1){
 	if(niny<ny)  warning("niny=%ld is too small. need %ld\n",niny, ny);
+	oy=oy-(niny-ny)/2*dy;
 	ny=niny;
     }
-    double ox,oy;
-    ox=(-(nx/2)+offset+round((maxx+minx)/(2*dx)))*dx;
-    oy=(-(ny/2)+offset+round((maxy+miny)/(2*dy)))*dy;
     if(nxout)
 	*nxout=nx;
     if(nyout)
 	*nyout=ny;
-    if(oxout)
-	*oxout=ox;
-    if(oyout)
-	*oyout=oy;
-
-    if(map && square){/**Only want square grid*/
-	dmat *dmap=dnew(nx,ny);
-	*map=dmap->p;
-	dset(dmap,1);
-	dfree_keepdata(dmap);
-    }else if(map){/*Want non square grid*/
-	double sx, sy;
-	dmat *dmap=dnew(nx,ny);
-	*map=dmap->p;
-	for(int idir=0; idir<count; idir++){
-	    sx=-ox+(dirs[idir].thetax*ht);
-	    sy=-oy+(dirs[idir].thetay*ht);
-	    double RR=R*(1.-ht/dirs[idir].hs)+guard;
-	    dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
+    if(mapout){
+	*mapout=mapnew(nx, ny, dx, dy, 0);
+	(*mapout)->ox=ox;
+	(*mapout)->oy=oy;
+	(*mapout)->h=ht;
+	dmat *dmap=(dmat*)(*mapout);
+	if(square){/**Only want square grid*/
+	    dset(dmap,1);
+	}else{/*Want non square grid*/
+	    for(int idir=0; idir<count; idir++){
+		double sx=-ox+(dirs[idir].thetax*ht);
+		double sy=-oy+(dirs[idir].thetay*ht);
+		double RR=R*(1.-ht/dirs[idir].hs)+guard;
+		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
+	    }
+	    for(int i=0; i<nx*ny; i++){
+		dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
+	    }
 	}
-	for(int i=0; i<nx*ny; i++){
-	    dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
-	}
-	dfree_keepdata(dmap);
     }
 }
 /**

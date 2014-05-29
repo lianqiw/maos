@@ -48,7 +48,6 @@ typedef struct{
 }MVM_IGPU_T;
 #define TIMING 0
 static void mvm_direct_igpu(thread_t *info){
-    info2("thread %ld started\n", info->ithread);
     int igpu=info->ithread;
     if(gpu_avail){
 	LOCK(gpu_mutex);
@@ -62,7 +61,7 @@ static void mvm_direct_igpu(thread_t *info){
     }
     if(igpu==-1) return;
     gpu_set(igpu);
-    info("Using GPU %d\n", igpu);
+    info2("thread %ld is using GPU %d\n", info->ithread, igpu);
 #if TIMING
 #define RECORD(i) DO(cudaEventRecord(event[i], stream))
 #define NEVENT 4

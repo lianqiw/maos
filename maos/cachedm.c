@@ -55,13 +55,10 @@ void prep_cachedm(SIM_T *simu){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    simu->cachedm[idm]=calloc(parms->dm[idm].ncache, sizeof(map_t*));
 	    for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
-		long nxout, nyout;
-		double oxout, oyout;
 		double dx=parms->dm[idm].dxcache[iscale];
-		create_metapupil
-		    (parms, parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
-		     0, &nxout, &nyout, &oxout, &oyout, NULL, 2, 0,0,0,0);
-		simu->cachedm[idm][iscale]=mapnew(nxout, nyout, dx, dx, NULL);
+		create_metapupil(&simu->cachedm[idm][iscale], 0, 0,
+				 parms, parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
+				 0, 2, 0,0,0,0);
 	    }
 	}
     }

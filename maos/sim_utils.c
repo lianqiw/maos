@@ -1201,12 +1201,10 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->sim.lpttm>EPS){
 	simu->ttmreal=dnew(2,1);
     }
-    //if(!parms->load.aloc){
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
-	//}
+    simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc, NULL);
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
-	simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc, NULL);
 	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
     }
     for(int idm=0; idm<parms->ndm; idm++){

@@ -157,7 +157,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 #if 1
     //const int nact=7673;//total
     const int nact=6981;//active
-    const int nsa=2895;//total. all subaps transported to GPU.
+    const int nsa=2896;//total. all subaps transported to GPU.
 #else
     const int nact=6981;//active
     const int nsa=2700;//active
