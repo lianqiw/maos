@@ -354,9 +354,7 @@ void prop_index(PROPDATA_T *propdata){
     for(int ky=-1; ky<3; ky++){					\
 	for(int kx=-1; kx<3; kx++){				\
 	    double tmp=phiin[ky+nplocy][kx+nplocx];		\
-	    if(isfinite(tmp)){					\
-	        sum+=fx[kx+1]*fy[ky+1]*tmp;			\
-	    }							\
+	    sum+=fx[kx+1]*fy[ky+1]*tmp;				\
 	}							\
     }								\
     phiout[iloc]+=sum*alpha;

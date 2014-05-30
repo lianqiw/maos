@@ -412,7 +412,7 @@ compile(){
    fnlog=${TMP_DIR}/compile.log
    echo "Compiling $name. Check $fnlog for details"
    if (cd ${TMP_DIR}/$name/* && \
-      (export CFLAGS="$CFLAGS_CPU"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
+      (export CFLAGS="$CFLAGS_CPU -O3"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
       cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
       make -j4 install >> $fnlog) ;then
       echo "Compiled $name successfully."
