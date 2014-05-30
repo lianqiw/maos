@@ -998,11 +998,13 @@ int main(){
 	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, myhostname());
 	scheduler_fnlog=strdup(slocal2);
     }
+    double timeout=0.5;
 #if HAS_LWS
     ws_start(PORT+100);
     ws_service();
+    timeout=0.001;//let lws do timeout
 #endif
-    listen_port(PORT, slocal, respond, 0.5, scheduler_timeout, 0);
+    listen_port(PORT, slocal, respond, timeout, scheduler_timeout, 0);
     remove(slocal);
 #if HAS_LWS
     ws_end();

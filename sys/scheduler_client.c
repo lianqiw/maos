@@ -257,7 +257,9 @@ int scheduler_listen(void(*fun)(int)){
    Called by maos to report a job start to scheduler.
  */
 int scheduler_start(char *path, int nthread, int waiting){
-    info2("Scheduler port is listening at %hd\n", PORT);
+#if HAS_LWS
+    info2("Web based job monitor can be accessed at http://localhost:%hd\n", PORT+100);
+#endif
     psock=scheduler_connect_self(1);
     if(psock==-1){
 	warning3("Failed to connect to scheduler\n");

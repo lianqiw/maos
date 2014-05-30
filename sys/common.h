@@ -175,7 +175,7 @@ long thread_id(void);
 	    fprintf(stderr,"%s\033[00;00m", fline);}})
 
 #define info2(A...) fprintf(stderr, A)
-#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); quitfun("error");})
+#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); quitfun("ERROR");})
 #define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
 
 #define info3(A...) ({char fline[4096];char sect[4096];			\
@@ -187,7 +187,7 @@ long thread_id(void);
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
 	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error:(%ld) ",myasctime(),sect,thread_id()); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("error");})
+	    fprintf(stderr,"%s\033[00;00m", fline); quitfun("ERROR");})
 
 #define warning3(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\

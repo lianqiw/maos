@@ -236,7 +236,7 @@ void curecon_t::reset(const PARMS_T *parms){
    
 }
     
-#define DBG_RECON 0
+#define DBG_RECON 1
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		      const dcell *_gradin){
     cp2gpu(&gradin, _gradin);

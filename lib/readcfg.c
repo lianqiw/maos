@@ -281,7 +281,7 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 		    error("__protect_end must appear after __protect_start, in the same file");
 		}
 	    }else{
-		error("Input (%s) is not valid\n", ssline);
+		error2("Input (%s) is not valid\n", ssline);
 	    }
 	    ssline[0]='\0';
 	    continue;

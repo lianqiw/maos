@@ -829,10 +829,11 @@ void set_realtime(int icpu, int niceness){
 }
 quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
-    (void)msg;
-    sync();
-    print_backtrace();
-    sync();
+    if(strncmp(msg, "ERROR", 5)){
+	sync();
+	print_backtrace();
+	sync();
+    }
     kill(getpid(), SIGTERM);
 }
 static __attribute__((constructor)) void init(){
