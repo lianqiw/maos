@@ -410,13 +410,12 @@ compile(){
    shift
    shift
    opts="$@"
-   if test ! -d ${TMP_DIR}/$name ;then
-      download $name $file ${TMP_DIR}/$name
-   fi
+   rm -rf ${TMP_DIR}/$name
+   download $name $file ${TMP_DIR}/$name
    fnlog=${TMP_DIR}/compile.log
    echo "Compiling $name. Check $fnlog for details"
-   if (cd ${TMP_DIR}/$name/* && \
-      (export CFLAGS="$CFLAGS_CPU -O3" ; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
+   if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_CPU -O3"  && \
+      (./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
       cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
       make -j4 install >> $fnlog) ;then
       echo "Compiled $name successfully."
@@ -426,40 +425,39 @@ compile(){
 }
 
 #Check for LAPACK library in the system
-if test -z "$LAPACK" ;then
+if test -z "$LAPACK" -a -n "`which pkg-config 2>/dev/null`" ;then
    LAPACK=`pkg-config --libs blas lapack`
-   if test -z "$LAPACK" ;then
-       LAPACK="-lblas -llapack"
-   fi
 fi
-AC_CHECK_LIB([blas],  [dgemm_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
-#Some system lib libblas.so.version without symbol links to libblas.so
+AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+#Some system has liblapack.so.? without symbol links to liblapack.so
+
 if test "$has_lapack" = "no" ;then
-   fn_blas=`ls /usr/lib${libsuffix}/libblas.so.?`
+   fn_lapack=`ls /usr/lib${libsuffix}/libblas.so.?`
    if test -n ${fn_blas} ;then
-       ln -s ${fn_blas%% *} ${LIB_DIR}/libblas.so
+       ln -sf ${fn_blas%% *} ${LIB_DIR}/libblas.so
    fi
    fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.?`
-    if test -n ${fn_lapack} ;then
-       ln -s ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
+   if test -n ${fn_lapack} ;then
+       ln -sf ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
    fi
+   unset nset ac_cv_lib_lapack_dposv_
+   AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 fi
-unset ac_cv_lib_blas_dgemm_
-unset nset ac_cv_lib_lapack_dposv_
-AC_CHECK_LIB([blas],  [dgemm_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
 if test "$has_lapack" = "no" ;then
    if test "$mkl_avail" = "yes" ;then
        mklname=mkl${libsuffix}
        download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
        mkdir -p ${LIB_DIR}
        mv ${DOWNLOAD_DIR}/MKL/*/*.* ${LIB_DIR}
-       unset ac_cv_lib_blas_dgemm_
-       AC_CHECK_LIB([blas],  [dgemm_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
+       unset nset ac_cv_lib_lapack_dposv_
+       AC_CHECK_LIB([lapack],[dposv_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
    else
        AC_MSG_ERROR([Please install blas/lapack])
    fi
+fi
+if test -z "$LAPACK" ;then
+   LAPACK="-lblas -llapack"
 fi
 
 #Check for zlib
