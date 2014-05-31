@@ -301,7 +301,7 @@ public:
 class cupts_t:public culoc_t{
 public:
     Real dxsa;
-    Real nxsa;
+    int nxsa;
     cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
 	if(!in) return;
 	dxsa=in->dx;

@@ -272,13 +272,13 @@ X(mat)* X(chol)(const X(mat) *A){
 	return B;
     }
     ptrdiff_t n=B->nx;
-    int info[2];//some take 4 byte, some take 8 byte in 64 bit machine.
-    Z(potrf)("L", &n, B->p, &n, (ptrdiff_t*)&info);
+    ptrdiff_t info[2];//some take 4 byte, some take 8 byte in 64 bit machine.
+    Z(potrf)("L", &n, B->p, &n, info);
     if(info[0]){
 	if(info[0]<0){
-	    error("The %d-th parameter has an illegal value\n", -info[0]);
+	    error("The %d-th parameter has an illegal value\n", -(int)info[0]);
 	}else{
-	    error("The leading minor of order %d is not posite denifite\n", info[0]);
+	    error("The leading minor of order %d is not posite denifite\n", (int)info[0]);
 	}
     }else{/*Zero out the upper diagonal. For some reason they are not zero. */
 	PDMAT(B, Bp);

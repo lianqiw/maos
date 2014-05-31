@@ -98,10 +98,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-		void *imcc[nsa];
+		Real *imcc[nsa];
 		for(int isa=0; isa<nsa; isa++){
 		    imcc[isa]=NULL;
-		    cp2gpu((Real**)&(imcc[isa]),
+		    cp2gpu(&(imcc[isa]),
 			   powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
 		}
 		DO(cudaMalloc(&cuwfs[iwfs].imcc, nsa*sizeof(void*)));

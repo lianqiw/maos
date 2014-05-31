@@ -35,8 +35,8 @@ libgpu_a_LIBADD=
 #The following does the depency generation/tracking and verbosity right.
 
 .cu.o:
-	$(AM_V_CC)$(NVCC) $(AM_CFLAGS) $(CFLAGS) -c -o $@ $<
+	$(AM_V_CC)$(NVCC) $(AM_CFLAGS) -c -o $@ $<
 	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(AM_CFLAGS) $(CFLAGS) -M $< > $(DEPDIR)/$*.Po
+	@$(NVCC) $(AM_CFLAGS) -M $< > $(DEPDIR)/$*.Po
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)

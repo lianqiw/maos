@@ -265,7 +265,7 @@ __global__ static void sa_acc_real_do(Real *out, const Comp*restrict in, int nin
    Output ints is sampled with pixpsax*pixpsay, at pixtheta.
 */
 __global__ static void sa_si_rot_do(Real *restrict ints, int pixpsax, int pixpsay, 
-				 int pixoffx, int pixoffy, Real pixthetax, Real pixthetay,
+				 Real pixoffx, Real pixoffy, Real pixthetax, Real pixthetay,
 				 const Comp *restrict otf, Real dtheta, int notfx, int notfy,
 				 const Real *restrict srot, Real alpha){
     Real pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;
@@ -583,7 +583,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		ctoc("fft");
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints->p[isa]->p, pixpsax, pixpsay, 
-		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
+		     (Real)parms->powfs[ipowfs].pixoffx, (Real)parms->powfs[ipowfs].pixoffy,
 		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
 		ctoc("final");

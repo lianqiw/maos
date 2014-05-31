@@ -235,7 +235,7 @@ static int respond(int sock){
 	mvm_data->ac=new ATYPE*[NGPU];
 	cudaMallocHost(&mvm_data->g, sizeof(GTYPE)*ngtot);
 	cudaMallocHost(&mvm_data->a, sizeof(ATYPE)*nact);
-	memset(mvm_data->a, 0., nact*sizeof(ATYPE));
+	memset(mvm_data->a, 0, nact*sizeof(ATYPE));
 	for(int ig=0; ig<NGPU; ig++){
 	    cudaMallocHost(&mvm_data->ac[ig], sizeof(ATYPE)*nact);
 	}

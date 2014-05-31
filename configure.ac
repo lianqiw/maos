@@ -22,9 +22,9 @@ AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 AC_PROG_CC([$CC])
 AM_PROG_AR
-AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AC_PROG_CC_C99 #enable C99.
+#AC_PROG_CC_STDC #redundant with above line
 #AC_PROG_CXX([$CXX])
 AC_OPENMP
 #The following must be after AC_PROG_CC
