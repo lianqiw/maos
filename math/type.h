@@ -82,8 +82,7 @@ typedef enum CEMBED{
 	union{long n;long ny;};	          /**< number of columns */	\
 	char *header;         /**<header*/				\
 	long nzmax ;          /**< maximum number of entries */		\
-	spint *restrict p ;   /**< column pointers (size n+1) or col indices (size \
-				 nzmax) when nz!=-1 */			\
+        spint *restrict p ;   /**< column pointers (size n+1) or col indices (size nzmax) when nz!=-1 */ \
 	spint *restrict i ;   /**< row indices, size nzmax */		\
 	long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */ \
 	int *nref;           /**< reference counting like dmat */	\

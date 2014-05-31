@@ -372,31 +372,35 @@ download(){
    else
       AC_MSG_ERROR([Please specify third argument])
    fi
-   if test ! -d ${DOWNLOAD_DIR} ;then
-      mkdir -p ${DOWNLOAD_DIR};
+   mkdir -p ${DOWNLOAD_DIR} || exit
+   retry=0
+while test ${retry} -le 2 ;do
+   if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
+       success=0
+       for BASEURL in $BASEURLS ; do
+           echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+           if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
+	       success=1
+	       break
+	   else
+               AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
+	   fi
+       done
+       if test $success -eq 0 ;then
+           AC_MSG_ERROR([Please download it manually and put in ${DOWNLOAD_DIR}/${fn}])
+       fi
    fi
-if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-   success=0
-   for BASEURL in $BASEURLS ; do
-      echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
-      if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
-         if test ! -d "${OUTDIR}" ;then
-             mkdir -p "${OUTDIR}" || exit 1
-         fi
-      	 if tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
-      	     success=1
-	     break;
-	 else
-	     AC_MSG_NOTICE([File download is not correct])
-	 fi
-      else
-         AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
-      fi
-   done
-   if test $success -eq 0 ;then
-      AC_MSG_ERROR([Please download it manually and put in ${DOWNLOAD_DIR}/${fn}])
+   if test -f ${DOWNLOAD_DIR}/${fn} ;then
+       mkdir -p "${OUTDIR}" || exit 1
+       if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
+           rm -rf ${DOWNLOAD_DIR}/${fn}
+	   retry=$((retry+1))
+	   AC_MSG_NOTICE([File download is not correct, retry])
+       else
+           break
+       fi
    fi
-fi
+done
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -412,7 +416,7 @@ compile(){
    fnlog=${TMP_DIR}/compile.log
    echo "Compiling $name. Check $fnlog for details"
    if (cd ${TMP_DIR}/$name/* && \
-      (export CFLAGS="$CFLAGS_CPU -O3"; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
+      (export CFLAGS="$CFLAGS_CPU -O3" ; ./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
       cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
       make -j4 install >> $fnlog) ;then
       echo "Compiled $name successfully."
@@ -428,6 +432,21 @@ if test -z "$LAPACK" ;then
        LAPACK="-lblas -llapack"
    fi
 fi
+AC_CHECK_LIB([blas],  [dgemm_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
+#Some system lib libblas.so.version without symbol links to libblas.so
+if test "$has_lapack" = "no" ;then
+   fn_blas=`ls /usr/lib${libsuffix}/libblas.so.?`
+   if test -n ${fn_blas} ;then
+       ln -s ${fn_blas%% *} ${LIB_DIR}/libblas.so
+   fi
+   fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.?`
+    if test -n ${fn_lapack} ;then
+       ln -s ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
+   fi
+fi
+unset ac_cv_lib_blas_dgemm_
+unset nset ac_cv_lib_lapack_dposv_
 AC_CHECK_LIB([blas],  [dgemm_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
 if test "$has_lapack" = "no" ;then
@@ -456,7 +475,7 @@ has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-   compile FFTW fftw.tar.bz2
+   compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads CFLAGS="$CFLAGS_CPU -O3 -std=gnu99"
    unset ac_cv_lib_fftw3_fftw_execute
    #compile FFTW fftw.tar.bz2 --enable-float 
    AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
