@@ -400,8 +400,9 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 			  int len,   /**<[in]  Max number of values to read.*/
 			  const char *data /**<[in] Input string*/
     ){
-    int *ret2=0;
-    int len2=readstr_numarr((void**)(&ret2), 0, NULL,NULL, T_INT, data);
+    void *ret0=0;
+    int len2=readstr_numarr(&ret0, 0, NULL,NULL, T_INT, data);
+    int *ret2=ret0;
     if(len2==1){
 	for(int i=0; i<len; i++){
 	    (*ret)[i]=ret2[0];
