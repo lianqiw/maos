@@ -147,54 +147,71 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 #endif
 	    }
 	    extern int NO_RECON, NO_WFS, NO_EVL;
-	    tk_start=myclockd();
 	    if(PARALLEL){
+		tk_start=myclockd();
 		/*
 		  We do the big loop in parallel to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
 		  last time step so that there is no confliction in data access.
-		  This parallelized mode can not be used in skycoverage
-		  presimulation case because perfevl updates dmreal before
-		  wfsgrad
 		*/
 		/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		long group=0;
 		if(parms->gpu.evl && !NO_EVL){
-		    QUEUE_THREAD(group, simu->perf_evl, 0);
+		    //Queue tasks on GPU, no stream sync is done
+		    QUEUE_THREAD(group, simu->perf_evl_pre, 0);
 		}
 		if(!parms->tomo.ahst_idealngs && !NO_WFS){
-		    QUEUE_THREAD(group, simu->wfs_grad, 0);
+		    //task for each wfs
+		    QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
 		}
-		if(!NO_RECON) QUEUE(group, reconstruct, simu, 1, 0);
-		WAIT(group);
-		if(!NO_EVL) QUEUE(group, perfevl, simu, 1, 0);
+		if(!NO_RECON){
+		    //don't put this first. It has cpu overhead in computing gradol
+		    QUEUE(group, reconstruct, simu, 1, 0);
+		}
+		if(!NO_EVL){
+		    if(parms->gpu.evl){
+			//wait for GPU tasks to be queued before calling sync
+			WAIT(group);
+		    }
+		    QUEUE(group, perfevl, simu, 1, 0);
+		}
 		if(!NO_WFS){
-		    if(parms->tomo.ahst_idealngs){
+		    if(parms->tomo.ahst_idealngs || (parms->gpu.wfs && !parms->gpu.evl)){
+			//in ahst_idealngs mode, weight for perfevl to finish.
+			//otherwise, wait for GPU tasks to be queued before calling sync
 			WAIT(group);
 		    }
 		    QUEUE(group, wfsgrad, simu, 1, 0);
 		}
-		WAIT(group);
 		if(!NO_RECON){
+		    //wait for all tasks to finish before modifying dmreal
+		    WAIT(group);
 		    shift_grad(simu);/*before filter() */
 		    filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		}
+		WAIT(group);
 	    }else{/*do the big loop in serial mode. */
 		if(CL){
+		    tk_start=myclockd();
 		    if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
+		    tk_start=myclockd();
 		    if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
+		    tk_start=myclockd();
 		    if(!NO_RECON) {
 			reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
 			shift_grad(simu);
 			filter(simu);
 		    }
 		}else{/*in OL mode,  */
+		    tk_start=myclockd();
 		    if(!NO_WFS) wfsgrad(simu);
+		    tk_start=myclockd();
 		    if(!NO_RECON) {
 			shift_grad(simu);
 			reconstruct(simu);
 			filter(simu);
 		    }
+		    tk_start=myclockd();
 		    if(!NO_EVL) perfevl(simu);
 		}
 	    }

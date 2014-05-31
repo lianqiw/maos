@@ -1424,30 +1424,28 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 
     /* Select GPU or CPU for the tasks.*/
-    simu->wfs_grad=calloc(nwfs, sizeof(thread_t));
+    simu->wfs_grad_pre=calloc(nwfs, sizeof(thread_t));
     simu->wfs_grad_post=calloc(nwfs, sizeof(thread_t));
-    simu->perf_evl=calloc(nevl, sizeof(thread_t));
+    simu->perf_evl_pre=calloc(nevl, sizeof(thread_t));
 #if USE_CUDA
     if(parms->gpu.evl){
-	thread_prep(simu->perf_evl, 0, nevl, nevl, gpu_perfevl_queue, simu);
+	thread_prep(simu->perf_evl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
 	simu->perf_evl_post=calloc(nevl, sizeof(thread_t));
 	thread_prep(simu->perf_evl_post, 0, nevl, nevl, gpu_perfevl_sync, simu);
     }else
 #endif
     {
-	thread_prep(simu->perf_evl, 0, nevl, nevl, perfevl_ievl, simu);
+	thread_prep(simu->perf_evl_pre, 0, nevl, nevl, perfevl_ievl, simu);
     }
 #if USE_CUDA
     if(parms->gpu.wfs){
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
-	thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
-
+	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
     }else
 #endif
     {
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
-	thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
+	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
     }
+    thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
     simu->nthread=parms->sim.nthread;
     
     if(!parms->sim.evlol){
@@ -1570,9 +1568,9 @@ void free_simu(SIM_T *simu){
     free(simu->evl_propdata_atm);
     free(simu->evl_prop_dm);
     free(simu->evl_propdata_dm);
-    free(simu->wfs_grad);
+    free(simu->wfs_grad_pre);
     free(simu->wfs_grad_post);
-    free(simu->perf_evl);
+    free(simu->perf_evl_pre);
     free(simu->perf_evl_post);
     free(simu->status);
     dcellfree(simu->gradcl);
