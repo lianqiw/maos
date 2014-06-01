@@ -426,17 +426,20 @@ compile(){
 
 #Check for LAPACK library in the system
 if test -z "$LAPACK" -a -n "`which pkg-config 2>/dev/null`" ;then
-   LAPACK=`pkg-config --libs blas lapack`
+   LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 fi
 AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 #Some system has liblapack.so.? without symbol links to liblapack.so
-
-if test "$has_lapack" = "no" ;then
-   fn_lapack=`ls /usr/lib${libsuffix}/libblas.so.?`
+if test "$has_blas" = "no" ;then
+   fn_blas=`ls /usr/lib${libsuffix}/libblas.so.?`
    if test -n ${fn_blas} ;then
        ln -sf ${fn_blas%% *} ${LIB_DIR}/libblas.so
    fi
+   unset nset ac_cv_lib_blas_dgemm_
+   AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+fi
+if test "$has_lapack" = "no" ;then
    fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.?`
    if test -n ${fn_lapack} ;then
        ln -sf ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
@@ -444,7 +447,7 @@ if test "$has_lapack" = "no" ;then
    unset nset ac_cv_lib_lapack_dposv_
    AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 fi
-if test "$has_lapack" = "no" ;then
+if test "$has_lapack" = "no" -o "$has_blas" ="no" ;then
    if test "$mkl_avail" = "yes" ;then
        mklname=mkl${libsuffix}
        download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
