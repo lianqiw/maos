@@ -21,10 +21,9 @@ AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 AC_PROG_CC([$CC])
-AM_PROG_AR
 AM_PROG_CC_C_O
-AC_PROG_CC_C99 #enable C99.
-#AC_PROG_CC_STDC #redundant with above line
+#AC_PROG_CC_STDC #enable the current c standard, which is c99 circa 2014
+AC_PROG_CC_C99  #enable C99
 #AC_PROG_CXX([$CXX])
 AC_OPENMP
 #The following must be after AC_PROG_CC
@@ -32,6 +31,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_ENABLE_SHARED
 AC_ENABLE_STATIC
+AM_PROG_AR
 AC_PROG_LIBTOOL
 
 #Doxygen Features
@@ -252,7 +252,7 @@ fi
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -diag-disable remark -vec-report=3"
-COMMON_GCC="-Wno-deprecated-declarations -static-libgcc"
+COMMON_GCC="-Wno-deprecated-declarations -static-libgcc -fms-extensions"
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only  "
@@ -380,13 +380,13 @@ while test ${retry} -le 2 ;do
        for BASEURL in $BASEURLS ; do
            echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
            if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
-	       success=1
 	       break
 	   else
+	       rm -rf ${DOWNLOAD_DIR}/${fn}
                AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 	   fi
        done
-       if test $success -eq 0 ;then
+       if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
            AC_MSG_ERROR([Please download it manually and put in ${DOWNLOAD_DIR}/${fn}])
        fi
    fi
