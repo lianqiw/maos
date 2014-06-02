@@ -256,8 +256,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
 	for(int ips=0; ips<nps; ips++){
 	    if(next_atm[ips]){
-		free(next_atm[ips]);
-		next_atm[ips]=NULL;
+		free(next_atm[ips]); next_atm[ips]=NULL;
 	    }
 	    next_isim[ips]=isim;/*right now. */
 	    /*copy from below. */
@@ -329,7 +328,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 #if _OPENMP >= 200805 
 #pragma omp taskwait
 #endif
-	    free(next_atm[ips]);
+	    free(next_atm[ips]);next_atm[ips]=0;
 	    /*Update next_isim. */
 	    long isim1, isim2;
 	    if(fabs(atm[ips]->vx)<EPS){
