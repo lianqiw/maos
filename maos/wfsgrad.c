@@ -974,7 +974,7 @@ void wfsgrad(SIM_T *simu){
     if(parms->sim.idealfit || parms->sim.evlol) return;
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
     extern int PARALLEL;
-    if(!PARALLEL || parms->tomo.ahst_idealngs){
+    if(!PARALLEL || parms->tomo.ahst_idealngs || !parms->gpu.wfs){
 	CALL_THREAD(simu->wfs_grad_pre, 0);
     }
     CALL_THREAD(simu->wfs_grad_post, 0);

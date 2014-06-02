@@ -160,7 +160,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		    //Queue tasks on GPU, no stream sync is done
 		    QUEUE_THREAD(group, simu->perf_evl_pre, 0);
 		}
-		if(!parms->tomo.ahst_idealngs && !NO_WFS){
+		if(!parms->tomo.ahst_idealngs && parms->gpu.wfs && !NO_WFS){
 		    //task for each wfs
 		    QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
 		}
