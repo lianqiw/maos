@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
 BASEURLS="https://sourceforge.net/projects/lianqiw/files/external"
-BASEURLS="$BASEURLS http://project.tmt.org/~lianqiw/maos/external"
+BASEURLS+=" http://project.tmt.org/~lianqiw/maos/external"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
     CFLAGS=" "
@@ -67,7 +67,7 @@ if test "${USER}" = "lianqiw" ;then
 fi
 LDEXE="-no-fast-install -ldl"
 if test -z "$OPENMP_CFLAGS" ;then
-    LDEXE="$LDEXE -lpthread"
+    LDEXE+=" -lpthread"
 fi
 OPTSextra=""
 
@@ -86,7 +86,7 @@ case ${host_cpu} in
 	host_cpu=x86_64
         cpu="64"
 	CFLAGS_CPU="-m64 -DDLONG"
-        LDFLAGS="$LDFLAGS -m64"
+        LDFLAGS+=" -m64"
         CDEFINE="__x86_64__"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
 	objcopy_output=elf64-x86-64
@@ -97,7 +97,7 @@ case ${host_cpu} in
 	host_cpu=i386
         cpu="32"
 	CFLAGS_CPU="-m32 -DDINT"
-	LDFLAGS="$LDFLAGS -m32"
+	LDFLAGS+=" -m32"
         CDEFINE="__i386__"
 	AC_DEFINE(X86, [1], "I386 Machine")
 	objcopy_output=elf32-i386
@@ -123,9 +123,9 @@ mkl_avail="no"
 case "$host_os" in
     *linux*)
 	AM_CONDITIONAL(LINUX, true)
-	LDEXE="$LDEXE -lrt" #need real time library.
+	LDEXE+=" -lrt" #need real time library.
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
-	CFLAGS_CPU="$CFLAGS_CPU -D_GLIBC_2_5_SOURCE"
+	CFLAGS_CPU+=" -D_GLIBC_2_5_SOURCE"
 	mkl_avail="yes"
 	libsuffix=${cpu}
 	system="linux"
@@ -138,7 +138,7 @@ case "$host_os" in
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_CPU="$CFLAGS_CPU -mmacosx-version-min=10.6"
+	CFLAGS_CPU+=" -mmacosx-version-min=10.6"
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -162,7 +162,7 @@ AC_SUBST(ldsuffix)
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS="$LDFLAGS -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_CPU -I${PRE_DIR}/include"
 
@@ -239,18 +239,18 @@ else
 fi
 
 if test "x$use_static" = "xyes" ;then
-    LDEXE="$LDEXE -all-static" #Enable all static build.
+    LDEXE+=" -all-static" #Enable all static build.
     AM_CONDITIONAL(USE_STATIC, true)
     AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
     #(cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
 else
-    LDEXE="$LDEXE -static" #show that we prefer static linking.
+    LDEXE+=" -static" #show that we prefer static linking.
     AM_CONDITIONAL(USE_STATIC, false)
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
 if test x$use_oprof = "xyes" ;then
-    OPTSprof="$OPTSprof -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+    OPTSprof+=" -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
@@ -293,11 +293,11 @@ case "${cc_full}" in
 	    minor=${CC_VERSION%.*}
 	    minor="${minor#4.}"
 	    if test $major -ge 12 ;then
-		OPTIM="$OPTIM -axSSE4.2"
+		OPTIM+=" -axSSE4.2"
             elif test $major -ge 11 ;then
-		OPTIM="$OPTIM -axSSE4.2"
+		OPTIM+=" -axSSE4.2"
             elif test $major -ge 10 ;then
-		OPTIM="$OPTIM -axS"
+		OPTIM+=" -axS"
 	    else
 		echo "icc version is old"
 	    fi
@@ -326,7 +326,7 @@ case "${cc_full}" in
 	    if test "$major" -ge 4 -a "$minor" -ge 2;then
 		#echo "Enabling -mtune=native"
 		#OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
-		OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
+		OPTIM+=" -ftree-vectorize " #introduced in GCC 4
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
 	    if test $major -eq 4 -a $minor -lt 5;then
@@ -431,6 +431,9 @@ compile(){
 if test -z "$LAPACK" -a -n "`which pkg-config 2>/dev/null`" ;then
     LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 fi
+if test -z "$LAPACK" ;then
+    LAPACK="-lblas -llapack"
+fi
 AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 #Some system has liblapack.so.? without symbol links to liblapack.so
@@ -462,9 +465,7 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
 	AC_MSG_ERROR([Please install blas/lapack])
     fi
 fi
-if test -z "$LAPACK" ;then
-    LAPACK="-lblas -llapack"
-fi
+
 
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
@@ -497,16 +498,16 @@ fi
 if test "x$has_fftw_threads" = "xyes" -a "x$has_fftw_omp" = "xno" ;then
     AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
     if test x$has_fftwf = x1 ;then
-        LDFFT="$LDFFT -lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
+        LDFFT+=" -lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
     else
-        LDFFT="$LDFFT -lfftw3_threads -lfftw3"
+        LDFFT+=" -lfftw3_threads -lfftw3"
     fi
 else
     AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
     if test x$has_fftwf = x1 ;then
-        LDFFT="$LDFFT -lfftw3 -lfftw3f"
+        LDFFT+=" -lfftw3 -lfftw3f"
     else
-        LDFFT="$LDFFT -lfftw3"
+        LDFFT+=" -lfftw3"
     fi
 fi
 

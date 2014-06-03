@@ -258,7 +258,7 @@ int scheduler_listen(void(*fun)(int)){
  */
 int scheduler_start(char *path, int nthread, int waiting){
 #if HAS_LWS
-    info2("Web based job monitor can be accessed at http://localhost:%hd\n", PORT+100);
+    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
 #endif
     psock=scheduler_connect_self(1);
     if(psock==-1){

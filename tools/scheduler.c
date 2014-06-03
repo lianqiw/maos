@@ -1000,7 +1000,7 @@ int main(){
     }
     double timeout=0.5;
 #if HAS_LWS
-    ws_start(PORT+100);
+    ws_start(PORT+1);
     ws_service();
     timeout=0.001;//let lws do timeout
 #endif
