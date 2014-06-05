@@ -180,22 +180,6 @@ static void maos_server(PARMS_T *parms){
     //maos client mode: start maos server mode via scheduler.
 }
 static void read_env(){
-#define READ_ENV_INT(A,min,max)				\
-    if(getenv("MAOS_"#A)){				\
-	A=strtol(getenv("MAOS_"#A),NULL,10);		\
-	info2(#A"=%d\n", A);				\
-	if(A>max || A<min){				\
-	    error("MAOS_%s: invalid range\n", #A);	\
-	}						\
-    }
-#define READ_ENV_DBL(A,min,max)				\
-    if(getenv("MAOS_"#A)){				\
-	A=strtod(getenv("MAOS_"#A),NULL);		\
-	info2(#A"=%g\n", A);				\
-	if(A>max || A<min){				\
-	    error("MAOS_%s: invalid range\n", #A);	\
-	}						\
-    }
     READ_ENV_DBL(TOMOSCALE,0,INFINITY);
     READ_ENV_INT(PARALLEL,0,1);
     READ_ENV_INT(NO_WFS,0,1);

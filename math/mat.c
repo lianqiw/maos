@@ -826,9 +826,9 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
 }
 
 /**
-   a new gray pixel map generation based on bilinear influence
-   functions used in mkw.  creates slightly larger map.  add
-   an filled circle.  cx,cy,r are in unit of pixels
+   a new gray pixel map generation based on bilinear influence functions used in
+   mkw.  creates slightly larger map.  add an filled circle.  cx,cy,r are in
+   unit of meter, dx,dy specify the unit of pixel along x or y dimension.
 */
 void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
     int nres=100;

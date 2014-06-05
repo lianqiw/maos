@@ -211,9 +211,8 @@ typedef struct FDPCG_T{
 */
 typedef struct MOAO_T{
     int used;         /**<Whether this MOAO is used or not*/
-    map_t *amap;      /**<Actuator map.*/
     loc_t *aloc;      /**<Actuator grid*/
-    long *aembed;     /**<index to embed phi on aloc to square geometry of amap_nx*amap_ny.*/
+    map_t *amap;      /**<Points to aloc->map*/
     spcell *HA;       /**<Propagator from this aloc to PLOC*/
     dcell *NW;        /**<null modes and constraints*/
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
@@ -284,7 +283,6 @@ typedef struct RECON_T{
     long  *any;        /**<Size of each amap*/
     long  *anloc;      /**<Size of each aloc*/
     long  *ngrad;      /**<Size of each grad for each wfs*/
-    long **aembed;     /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 

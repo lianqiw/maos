@@ -258,6 +258,13 @@ void reconstruct(SIM_T *simu){
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
 	    }
 	}
+	if(parms->tomo.psol && simu->recon->actinterp){
+	    /* Extrapolate to edge actuators the fitting output*/
+	    dcell *tmp=NULL;
+	    spcellmulmat(&tmp, simu->recon->actinterp, simu->dmerr, 1);
+	    dcellcp(&simu->dmerr, tmp);
+	    dcellfree(tmp);
+	}
 	if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
 	    dcell *dmpsol;
 	    if(parms->sim.idealfit){

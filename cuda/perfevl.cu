@@ -102,13 +102,6 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	    }
 	}
     }
-    /*if(threadIdx.x==0){
-#pragma unroll
-	for(int i=0; i<7; i++){
-	    atomicAdd(&cc[i], ccb[i][0]);
-	}
-	}*/
-    //2014-05-21: The following somehow cause error 77: illegal memory access
     if(threadIdx.x<7){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }

@@ -118,7 +118,7 @@ typedef struct{
 }record_t;
 #define ADDWT(A,B,C,D)				\
     XMAP(iphi,(A),(C));				\
-    if(iphi) wtsum+=(B)*(D);
+    if(iphi>0) wtsum+=(B)*(D);
 
 /**
    Returns the transpose of a average gradient operator that converts the OPDs defined
@@ -211,8 +211,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     poffset[0]+=dsa2*saorc;/*offset to SALOC to make it subaperture center.*/
     poffset[1]+=dsa2*saorc;
     
-    long (*pmaps)[ploc->map->nx]=(long (*)[ploc->map->nx])ploc->map->p;
-    long (*xmaps)[xloc->map->nx]=(long (*)[xloc->map->nx])xloc->map->p;
+    PDMAT(ploc->map, pmaps);
+    PDMAT(xloc->map, xmaps);
     double amp2[3][3];
     double wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
     double *wtalpha, *wtbeta;
@@ -306,8 +306,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	for (limy=CEIL(limy1)-OFF; limy<FLOOR(limy2)+OFF+1; limy++){
 	    for (limx=CEIL(limx1)-OFF; limx<FLOOR(limx2)+OFF+1; limx++){
 		PMAP(ipix,limx,limy);
-
-		if (ipix--){
+		if (ipix>0){
+		    ipix--;
 		    weight[0]=0;
 		    weight[1]=0;
 		    /*if amplitude map is defined, fetch the 3x3 map surrounding this point.*/
@@ -315,8 +315,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 			for(jtmp=0; jtmp<3; jtmp++){
 			    for(itmp=0; itmp<3; itmp++){
 				PMAP(ipix2,limx+itmp-1,limy+jtmp-1);
-				if(ipix2--){
-				    amp2[jtmp][itmp]=ampcopy[ipix2];
+				if(ipix2>0){
+				    amp2[jtmp][itmp]=ampcopy[ipix2-1];
 				}else{
 				    amp2[jtmp][itmp]=0;
 				}
@@ -418,7 +418,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				    wtsum/=scale;
 #define INTERP(A,B,C,D)							\
     XMAP(iphi,A,C);							\
-    if(iphi--){								\
+    if(iphi>0){								\
+	iphi--;								\
 	/*Check whether we already have the weight for this point.*/	\
 	if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)>TOL){			\
 	    /*info2("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/		\
@@ -465,16 +466,6 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	}
 	pp[iw][nsa]=count[iw];
 	spsetnzmax(GS0t[iw],count[iw]);
-    }
-    if(ploc->map){
-	free(ploc->map->p);
-	free(ploc->map);
-	ploc->map=NULL;
-    }
-    if(xloc->map){
-	free(xloc->map->p);
-	free(xloc->map);
-	xloc->map=NULL;
     }
     if(ampcopy!=amp)
 	free(ampcopy);

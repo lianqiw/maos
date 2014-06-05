@@ -255,6 +255,22 @@ long thread_id(void);
 #define CHECK_NULL_TERMINATED
 #endif
 
+#define READ_ENV_INT(A,min,max)				\
+    if(getenv("MAOS_"#A)){				\
+	A=strtol(getenv("MAOS_"#A),NULL,10);		\
+	info2(#A"=%d\n", A);				\
+	if(A>max || A<min){				\
+	    error("MAOS_%s: invalid range\n", #A);	\
+	}						\
+    }
+#define READ_ENV_DBL(A,min,max)				\
+    if(getenv("MAOS_"#A)){				\
+	A=strtod(getenv("MAOS_"#A),NULL);		\
+	info2(#A"=%g\n", A);				\
+	if(A>max || A<min){				\
+	    error("MAOS_%s: invalid range\n", #A);	\
+	}						\
+    }
 #include <string.h>
 
 #define PAUSE					\

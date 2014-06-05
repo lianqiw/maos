@@ -39,24 +39,20 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
-	recon->fmap=loc2map(recon->floc, parms->tomo.guard);
-	if(fabs(recon->fmap->dx-dxr)>dxr*0.01){
+	if(fabs(recon->floc->dx-dxr)>dxr*0.01){
 	    warning("Loaded floc has unexpected sampling of %g, should be %g\n", 
 		    recon->floc->dx, dxr);
-	}
-	if(recon->fmap->nx*dxr<parms->aper.d){
-	    error("Loaded floc is too small: diameter is %g while aper.d is %g\n",
-		  recon->fmap->nx*dxr,parms->aper.d);
 	}
     }else{
 	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=0;
 	create_metapupil(&fmap,0,0,parms,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
-	recon->fmap=fmap;
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
+	mapfree(fmap);
     }
-    free(recon->fmap->p); recon->fmap->p=NULL;
+    loc_create_map_npad(recon->floc, parms->fit.square?0:1);
+    recon->fmap=recon->floc->map;
     /*create the weighting W for bilinear influence function. See [Ellerbroek 2002] */
     if(parms->load.W){
 	if(!(zfexist("W0")&&zfexist("W1"))){
@@ -97,8 +93,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm==0) return;
     CALL_ONCE;
-    recon->amap=calloc(ndm, sizeof(map_t*));
-    recon->aembed=calloc(ndm, sizeof(long*));
     if(parms->fit.cachedm){
 	recon->acmap=calloc(ndm, sizeof(map_t*));
     }
@@ -109,18 +103,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aloc=locarrread(&ndm0,"%s",fn);
 	if(ndm0!=ndm) error("Invalid saved aloc");
 	for(int idm=0; idm<ndm; idm++){
-	    recon->amap[idm]=loc2map(recon->aloc[idm], parms->dm[idm].guard);
-	    recon->amap[idm]->h=parms->dm[idm].ht;
-	}
-	for(int idm=0; idm<ndm; idm++){
-	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)>0.01*parms->dm[idm].dx){
+	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)>1e-7){
 		error("DM[%d]: loaded aloc has dx=%g while dm.dx=%g\n", idm, 
 		      recon->aloc[idm]->dx, parms->dm[idm].dx);
 	    }
 	    double max,min;
 	    dmaxmin(recon->aloc[idm]->locx,recon->aloc[idm]->nloc, &max, &min);
 	    if(max-min<parms->aper.d){
-		error("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n", 
+		warning("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n", 
 		      idm, max-min, parms->aper.d); 
 	    }
 	}
@@ -134,7 +124,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
 	    map_t *map;
-	    if(parms->dbg.dmfullfov){//DM covers full fov
+	    if(parms->dbg.dmfullfov && !parms->fit.square){//DM covers full fov
 		double D=(parms->sim.fov*ht+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
@@ -147,15 +137,17 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
-	    recon->amap[idm]=map;
-	
+	    mapfree(map);
 	}
     }
+    recon->amap=calloc(parms->ndm, sizeof(map_t*));
     for(int idm=0; idm<parms->ndm; idm++){
 	double ht=parms->dm[idm].ht;
 	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	double dx=parms->dm[idm].dx;
-	recon->aembed[idm]=loc2map_embed(recon->aloc[idm], recon->amap[idm]);
+	loc_create_map_npad(recon->aloc[idm], parms->fit.square?0:1);
+	recon->amap[idm]=recon->aloc[idm]->map;
+	recon->amap[idm]->h=ht;
 	recon->amap[idm]->cubic=parms->dm[idm].cubic;
 	recon->amap[idm]->iac=parms->dm[idm].iac;
 	if(parms->fit.cachedm){
@@ -164,7 +156,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    create_metapupil(&recon->acmap[idm],0,0,
 			     parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
 	    info("amap origin is %g, %g. acmap is %g, %g\n", 
-		 recon->amap[idm]->ox, recon->amap[idm]->oy,
+		 recon->aloc[idm]->map->ox, recon->aloc[idm]->map->oy,
 		 recon->acmap[idm]->ox, recon->acmap[idm]->oy);
 	}
     }

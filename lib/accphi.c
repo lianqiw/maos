@@ -21,7 +21,6 @@
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
-#define ONLY_FULL 0 /**<set to 1 to be compatible with other props.*/
 #define USE_OPTIM 1 /**<Use the optimized version.*/
 
 /*
@@ -237,18 +236,20 @@ void prop_index(PROPDATA_T *propdata){
     if(done==0) error("Invalid\n");
 }
 
-#define PREPIN_NONGRID(npad, nskip)			\
+#define PREPIN_NONGRID(map_npad)			\
     /*padding to avoid test boundary*/			\
-    loc_create_map_npad(locin, npad);			\
+    loc_create_map_npad(locin, map_npad);		\
     const double dx_in1 = 1./locin->dx;			\
     const double dx_in2 = scale*dx_in1;			\
     const double dy_in1 = 1./locin->dy;			\
     const double dy_in2 = scale*dy_in1;			\
     displacex = (displacex-locin->map->ox)*dx_in1;	\
     displacey = (displacey-locin->map->oy)*dy_in1;	\
-    long (*map)[locin->map->nx]=(void*)(locin->map->p);	\
-    const int nxmax=locin->map->nx-nskip;		\
-    const int nymax=locin->map->ny-nskip;		\
+    PDMAT(locin->map, map);				\
+    const int nxmin=locin->npad;			\
+    const int nymin=locin->npad;			\
+    const int nxmax=locin->map->nx-nxmin-1;		\
+    const int nymax=locin->map->ny-nymin-1;		\
     /*-1 because we count from 1 in the map.*/		\
     const double *phiin0=phiin-1;			
 
@@ -283,19 +284,11 @@ void prop_index(PROPDATA_T *propdata){
     const int nxout=mapout->nx;			\
     if(!end) end=mapout->ny;
 
-#if ONLY_FULL == 1
 #define RUNTIME_LINEAR				\
     double dplocx, dplocy;			\
     int nplocx, nplocy, nplocx1, nplocy1;	\
     int missing=0;				\
-    long iphi1,iphi2,iphi3,iphi4;			
-#else
-#define RUNTIME_LINEAR				\
-    double dplocx, dplocy;			\
-    int nplocx, nplocy, nplocx1, nplocy1;	\
-    int missing=0;				\
-    long iphi=0;					
-#endif
+    long iphi;
 
 #define MAKE_CUBIC_PARAM			\
     double fx[4],fy[4];				\
@@ -310,29 +303,35 @@ void prop_index(PROPDATA_T *propdata){
     ({static int printed=0; if(missing>0 && !printed) {printed=1; warning("%d points not covered by input screen\n", missing); \
 	    print_backtrace(); }})
 
-#if ONLY_FULL == 1 
+
 #define LINEAR_ADD_NONGRID						\
-    iphi1=map[nplocy][nplocx];						\
-    iphi2=map[nplocy][nplocx1];						\
-    iphi3=map[nplocy1][nplocx];						\
-    iphi4=map[nplocy1][nplocx1];					\
-    if(iphi1 && iphi2 && iphi3 && iphi4){				\
-	phiout[iloc]+=alpha*(phiin0[iphi1]*(1.-dplocx)*(1.-dplocy));	\
-	phiout[iloc]+=alpha*(phiin0[iphi2]*(dplocx)*(1.-dplocy));	\
-	phiout[iloc]+=alpha*(phiin0[iphi3]*(1.-dplocx)*(dplocy));	\
-	phiout[iloc]+=alpha*(phiin0[iphi4]*(dplocx)*(dplocy));		\
-    }
-#else
-#define LINEAR_ADD_NONGRID						\
-    if((iphi=map[nplocy][nplocx]))					\
-	phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(1.-dplocy));	\
-    if((iphi=map[nplocy][nplocx1]))					\
-	phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(1.-dplocy));	\
-    if((iphi=map[nplocy1][nplocx]))					\
-	phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(dplocy));	\
-    if((iphi=map[nplocy1][nplocx1]))					\
-	phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(dplocy));
-#endif
+double tmp=0; double wt=0;						\
+wt=(1.-dplocx)*(1.-dplocy);						\
+if(wt>EPS){								\
+    if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);		\
+    else tmp=NAN;							\
+}									\
+wt=(dplocx)*(1.-dplocy);						\
+if(wt>EPS){								\
+    if((iphi=abs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+    else tmp=NAN;							\
+}									\
+wt=(1.-dplocx)*(dplocy);						\
+if(wt>EPS){								\
+    if((iphi=abs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
+    else tmp=NAN;							\
+}									\
+wt=(dplocx)*(dplocy);							\
+if(wt>EPS){								\
+    if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+    else tmp=NAN;							\
+}									\
+if(isfinite(tmp)){							\
+    /*We require all two points to be available. To extropolate */	\
+    /*outside enable extend during loc_create_map_npad*/		\
+    phiout[iloc]+=alpha*tmp;						\
+}
+
 
 #define RUNTIME_CUBIC					\
     register double dplocx, dplocy, dplocx0, dplocy0;	\
@@ -340,24 +339,24 @@ void prop_index(PROPDATA_T *propdata){
     int missing=0;					\
     MAKE_CUBIC_PARAM;					
 
-#define CUBIC_ADD_GRID						\
-    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);			\
-    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);			\
-    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);			\
-    fx[3]=dplocx*dplocx*(c3+c4*dplocx);				\
-								\
-    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);			\
-    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);			\
-    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);			\
-    fy[3]=dplocy*dplocy*(c3+c4*dplocy);				\
-    register double sum=0;					\
-    for(int ky=-1; ky<3; ky++){					\
-	for(int kx=-1; kx<3; kx++){				\
-	    double tmp=phiin[ky+nplocy][kx+nplocx];		\
-	    sum+=fx[kx+1]*fy[ky+1]*tmp;				\
-	}							\
-    }								\
-    phiout[iloc]+=sum*alpha;
+#define CUBIC_ADD_GRID					\
+    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);		\
+    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);		\
+    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);		\
+    fx[3]=dplocx*dplocx*(c3+c4*dplocx);			\
+							\
+    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);		\
+    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);		\
+    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);		\
+    fy[3]=dplocy*dplocy*(c3+c4*dplocy);			\
+    register double sum=0;				\
+    for(int ky=-1; ky<3; ky++){				\
+	for(int kx=-1; kx<3; kx++){			\
+	    double tmp=phiin[ky+nplocy][kx+nplocx];	\
+	    sum+=fx[kx+1]*fy[ky+1]*tmp;			\
+	}						\
+    }							\
+    if(isfinite(sum)) phiout[iloc]+=sum*alpha;
 
 #define CUBIC_ADD_NONGRID						\
     fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);				\
@@ -369,16 +368,21 @@ void prop_index(PROPDATA_T *propdata){
     fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);				\
     fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);				\
     fy[3]=dplocy*dplocy*(c3+c4*dplocy);					\
-									\
+    register double sum=0;						\
     for(int jy=-1; jy<3; jy++){						\
 	for(int jx=-1; jx<3; jx++){					\
-	    long iphi=map[jy+nplocy][jx+nplocx];			\
-	    if(iphi){							\
-		phiout[iloc]+=alpha*fx[jx+1]*fy[jy+1]*phiin0[iphi];	\
+	    long iphi;							\
+	    double wt=fx[jx+1]*fy[jy+1];				\
+	    if(wt>EPS|| 1){						\
+		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){		\
+		    sum+=alpha*fx[jx+1]*fy[jy+1]*phiin0[iphi];		\
+		}else{							\
+		    sum+=NAN;						\
+		}							\
 	    }								\
 	}								\
-    }
-
+    }									\
+    if(isfinite(sum)) phiout[iloc]+=sum;
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -400,7 +404,7 @@ void prop_grid(ARGIN_GRID,
 	       int wrap,           /**<[in] wrap input OPD or not*/
 	       long start,         /**<[in] First point to do*/
 	       long end            /**<[in] Last point to do*/
-	       ){
+    ){
     PREPIN_GRID(1);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
@@ -465,8 +469,8 @@ void prop_nongrid(ARGIN_NONGRID,
 		  ARG_PROP,
 		  long start,          /**<[in] First point to do*/
 		  long end             /**<[in] Last point to do*/
-		  ){
-    PREPIN_NONGRID(1,2);
+    ){
+    PREPIN_NONGRID(1);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
 #define STEP 1000
@@ -476,7 +480,6 @@ void prop_nongrid(ARGIN_NONGRID,
 #pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
 #endif
 	for(long iloc=jloc; iloc<end2; iloc++){
-	    //    for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
 		continue;/*skip points that has zero amplitude */
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
@@ -484,14 +487,14 @@ void prop_nongrid(ARGIN_NONGRID,
 	    
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
-		missing++;
-		continue;
-	    }else{
+	    if(nplocy>=nymin && nplocy<nymax && nplocx>=nxmin && nplocx<nxmax){
 		nplocx1=nplocx+1;
 		nplocy1=nplocy+1;
+		LINEAR_ADD_NONGRID;
+	    }else{
+		missing++;
+		continue;
 	    }
-	    LINEAR_ADD_NONGRID;
 	}
     }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
@@ -508,33 +511,32 @@ void prop_nongrid_map(ARGIN_NONGRID,
 		      ARG_PROP,
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
-		      ){
-    PREPIN_NONGRID(1,2);/*Do we need 2 in first? */
+    ){
+    PREPIN_NONGRID(1);
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
     for(int iy=start; iy<end; iy++)
-	{
+    {
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<0||nplocy>nymax){
-	    missing++;
-	    continue;
-	}else{
+	if(nplocy>=nymin && nplocy<nymax){
 	    nplocy1=nplocy+1;
-	}
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,dplocx,nplocx1)
 #endif
 	    for(int ix=0; ix<nxout; ix++){
-	    int iloc=ix+iy*nxout;
-	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-	    SPLIT(dplocx,dplocx,nplocx);
-	    if(nplocx<0||nplocx>nxmax){
-		missing++;
-		continue;
+		int iloc=ix+iy*nxout;
+		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		SPLIT(dplocx,dplocx,nplocx);
+		nplocx1=nplocx+1;
+		if(nplocx>=nxmin && nplocx<nxmax){
+		    LINEAR_ADD_NONGRID;
+		}else{
+		    missing++;
+		}
 	    }
-	    nplocx1=nplocx+1;
-	    LINEAR_ADD_NONGRID;
+	}else{
+	    missing++;
 	}
     }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
@@ -551,8 +553,8 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 		      ARG_PROP,
 		      long start,           /**<[in] First point to do*/
 		      long end              /**<[in] Last point to do*/
-		      ){
-    PREPIN_NONGRID(1,2);
+    ){
+    PREPIN_NONGRID(1);
     PREPOUT_PTS;
     RUNTIME_LINEAR;
  
@@ -560,17 +562,15 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)
 #endif
-	{
-	    const long iloc0=isa*pts->nx*pts->nx;
-	    const double ox=pts->origx[isa];
-	    const double oy=pts->origy[isa];
-	    for(int iy=0; iy<pts->nx; iy++){
-		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-		SPLIT(dplocy,dplocy,nplocy);
-		if(nplocy<0||nplocy>nymax){
-		    continue;
-		}
+    {
+	const long iloc0=isa*pts->nx*pts->nx;
+	const double ox=pts->origx[isa];
+	const double oy=pts->origy[isa];
+	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
+	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy>=nymin && nplocy<nymax){
 		nplocy1=nplocy+1;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
@@ -578,15 +578,18 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx<0||nplocx>nxmax){
-			missing++;
-			continue;
-		    }
 		    nplocx1=nplocx+1;
-		    LINEAR_ADD_NONGRID;
-		}    
+		    if(nplocx>=nxmin && nplocx<nxmax){
+			LINEAR_ADD_NONGRID;
+		    }else{
+			missing++;
+		    }
+		} 
+	    }else{
+		missing++;
 	    }
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -606,9 +609,9 @@ void prop_grid_cubic(ARGIN_GRID,
 		     double cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
 		     long start,         /**<[in] First point to do*/
 		     long end            /**<[in] Last point to do*/
-		     ){
+    ){
     (void)ampout;
-    PREPIN_GRID(3);
+    PREPIN_GRID(2);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
 #define STEP 1000
@@ -616,23 +619,22 @@ void prop_grid_cubic(ARGIN_GRID,
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
 #endif
-	{
-	    long end2=(jloc+STEP)<end?(jloc+STEP):end;
-	    for(long iloc=jloc; iloc<end2; iloc++){
-		//for(long iloc=start; iloc<end; iloc++){
-		dplocx=myfma(px[iloc],dx_in2,displacex);
-		dplocy=myfma(py[iloc],dy_in2,displacey);
-		SPLIT(dplocx,dplocx,nplocx);
-		SPLIT(dplocy,dplocy,nplocy);
-		if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
-		    missing++;
-		    continue;
-		}
+    {
+	long end2=(jloc+STEP)<end?(jloc+STEP):end;
+	for(long iloc=jloc; iloc<end2; iloc++){
+	    dplocx=myfma(px[iloc],dx_in2,displacex);
+	    dplocy=myfma(py[iloc],dy_in2,displacey);
+	    SPLIT(dplocx,dplocx,nplocx);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocx>=1&&nplocx<nxmax&&nplocy>=1&&nplocy<nymax){
 		dplocy0=1.-dplocy;
 		dplocx0=1.-dplocx;
 		CUBIC_ADD_GRID;
+	    }else{
+		missing++;
 	    }
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -650,26 +652,24 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 			 double cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
 			 long start,         /**<[in] First point to do*/
 			 long end            /**<[in] Last point to do*/
-			 ){
-    PREPIN_GRID(3);
+    ){
+    PREPIN_GRID(2);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)
 #endif
-	{
-	    const long iloc0=isa*pts->nx*pts->nx;
-	    const double ox=pts->origx[isa];
-	    const double oy=pts->origy[isa];
+    {
+	const long iloc0=isa*pts->nx*pts->nx;
+	const double ox=pts->origx[isa];
+	const double oy=pts->origy[isa];
 
-	    for(int iy=0; iy<pts->nx; iy++){
-		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-		SPLIT(dplocy,dplocy,nplocy);
-		if(nplocy<1||nplocy>nymax){
-		    continue;
-		}
+	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
+	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy>=1 && nplocy<nymax){
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
@@ -677,14 +677,18 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx<1||nplocx>nxmax){
-			continue;
+		    if(nplocx>=1 && nplocx<nxmax){
+			dplocx0=1.-dplocx;
+			CUBIC_ADD_GRID;
+		    }else{
+			missing++;
 		    }
-		    dplocx0=1.-dplocx;
-		    CUBIC_ADD_GRID;
 		}
+	    }else{
+		missing++;
 	    }
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -698,29 +702,33 @@ void prop_grid_map_cubic(ARGIN_GRID,
 			 ARG_PROP,
 			 double cubic_iac,
 			 long start, long end){
-    PREPIN_GRID(3);
+    PREPIN_GRID(2);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
-	{
-	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=1 && nplocy<=nymax){
-		dplocy0=1.-dplocy;
-		for(int ix=0; ix<nxout; ix++){
-		    int iloc=ix+iy*nxout;
-		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx>=1 && nplocx<=nxmax){
-			dplocx0=1.-dplocx;
-			CUBIC_ADD_GRID;
-		    }
+    {
+	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
+	SPLIT(dplocy,dplocy,nplocy);
+	if(nplocy>=1 && nplocy<nymax){
+	    dplocy0=1.-dplocy;
+	    for(int ix=0; ix<nxout; ix++){
+		int iloc=ix+iy*nxout;
+		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		SPLIT(dplocx,dplocx,nplocx);
+		if(nplocx>=1 && nplocx<nxmax){
+		    dplocx0=1.-dplocx;
+		    CUBIC_ADD_GRID;
+		}else{
+		    missing++;
 		}
 	    }
+	}else{
+	    missing++;
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -735,7 +743,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 			ARG_PROP,
 			double cubic_iac,
 			long start, long end){
-    PREPIN_NONGRID(2,3);
+    PREPIN_NONGRID(1);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
 #define STEP 1000
@@ -750,16 +758,16 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 		continue;/*skip points that has zero amplitude */
 	    dplocy=myfma(py[iloc],dy_in2,displacey);
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
-
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<1 || nplocy>nymax || nplocx<1 || nplocx>nxmax){
+	    if(nplocy>=nymin && nplocy<nymax 
+	       && nplocx>=nxmin && nplocx<nxmax){
+		dplocy0=1.-dplocy;
+		dplocx0=1.-dplocx;
+		CUBIC_ADD_NONGRID;
+	    }else{
 		missing++;
-		continue;
 	    }
-	    dplocy0=1.-dplocy;
-	    dplocx0=1.-dplocx;
-	    CUBIC_ADD_NONGRID;
 	}
     }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
@@ -775,24 +783,22 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 			    ARG_PROP,
 			    double cubic_iac, 
 			    long start, long end){
-    PREPIN_NONGRID(2,3);
+    PREPIN_NONGRID(1);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)
 #endif
-	{
-	    const long iloc0=isa*pts->nx*pts->nx;
-	    const double ox=pts->origx[isa];
-	    const double oy=pts->origy[isa];
-	    for(int iy=0; iy<pts->nx; iy++){
-		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-		SPLIT(dplocy,dplocy,nplocy);
-		if(nplocy<1||nplocy>nymax){
-		    continue;
-		}
+    {
+	const long iloc0=isa*pts->nx*pts->nx;
+	const double ox=pts->origx[isa];
+	const double oy=pts->origy[isa];
+	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
+	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy>=nymin && nplocy<nymax){
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
@@ -800,14 +806,18 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx<1||nplocx>nxmax){
-			continue;
+		    if(nplocx>=nxmin && nplocx<nxmax){
+		        dplocx0=1.-dplocx;
+		        CUBIC_ADD_NONGRID;
+		    }else{
+			missing++;
 		    }
-		    dplocx0=1.-dplocx;
-		    CUBIC_ADD_NONGRID;
 		}
+	    }else{
+		missing++;
 	    }
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -821,29 +831,33 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 			    ARG_PROP,
 			    double cubic_iac,
 			    long start, long end){
-    PREPIN_NONGRID(2,3);
+    PREPIN_NONGRID(1);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
-	{
-	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=1 && nplocy<=nymax){
-		dplocy0=1.-dplocy;
-		for(int ix=0; ix<nxout; ix++){
-		    int iloc=ix+iy*nxout;
-		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx>=1 && nplocx<=nxmax){
-			dplocx0=1.-dplocx;
-			CUBIC_ADD_NONGRID;
-		    }
+    {
+	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
+	SPLIT(dplocy,dplocy,nplocy);
+	if(nplocy>=nymin && nplocy<nymax){
+	    dplocy0=1.-dplocy;
+	    for(int ix=0; ix<nxout; ix++){
+		int iloc=ix+iy*nxout;
+		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		SPLIT(dplocx,dplocx,nplocx);
+		if(nplocx>=nxmin && nplocx<nxmax){
+		    dplocx0=1.-dplocx;
+		    CUBIC_ADD_NONGRID;
+		}else{
+		    missing++;
 		}
 	    }
+	}else{
+	    missing++;
 	}
+    }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait
 #endif
@@ -851,17 +865,20 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 }
 
 /**
-   the following routine is used to do down sampling by doing binning ray tracing
-   using reverse interplation.  locout is coarse sampling, locin is fine
+   The following routine is used to do down sampling by doing binning ray
+   tracing using reverse interplation.  locout is coarse sampling, locin is fine
    sampling. phiout is the destination OPD. The weightings are obtained by
    interpolating from locout to locin, but the OPD are reversed computed. Simply
-   replace prop_nongrid by prop_nongrid_reverse without changing arguments,
-   except removing start, end, will do the same ray tracing using reverse
-   interpolation (binning). ampout is not used.
+   replace prop_nongrid by prop_nongrid_bin without changing arguments, except
+   removing start, end, will do the same ray tracing using reverse interpolation
+   (binning). ampout is not used.
 
    2011-04-27: Revised usage of alpha, displacex/y so that the result agrees with
    prop_nongrid when used in the same situation. Report missing does not make
    sense here since locin is usually bigger than locout.
+
+   2014-06-04: Notice that this operation is not direct transpose of
+   prop_nongrid() to avoid accumulate bumps around the edge.
 */
 void prop_nongrid_bin(const loc_t *locin,
 		      const double* phiin,
@@ -873,13 +890,13 @@ void prop_nongrid_bin(const loc_t *locin,
 	error("This routine is designed for down sampling.\n");
     }
     (void) ampout;
-    loc_create_map_npad(locout,1);/*will only do once and save in locout. */
+    loc_create_map_npad(locout, 1);
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
-    const int wrapx1 = locout->map->nx;
-    const int wrapy1 = locout->map->ny;
-    const int nxmax = wrapx1-1;
-    const int nymax = wrapy1-1;
+    const int nxmin=locout->npad; 
+    const int nymin=locout->npad; 
+    const int nxmax=locout->map->nx-nxmin-1; 
+    const int nymax=locout->map->ny-nymin-1; 
     /*notice inverse of scale. */
     const double dx_out1 = 1./locout->dx;
     const double dx_out2 = (1./scale)*dx_out1;
@@ -892,13 +909,8 @@ void prop_nongrid_bin(const loc_t *locin,
     const double *py=locin->locy;
     /*Scale alpha to cancel out scaling */
     double alpha2 = alpha*(locin->dx/locout->dx/scale)*(locin->dy/locout->dy/scale);
-#if ONLY_FULL==1
     long iphi1,iphi2,iphi3,iphi4;
-#else
-    long iphi;
-#endif
-    long (*map)[locout->map->nx]
-	=(long(*)[locout->map->nx])(locout->map->p);
+    PDMAT(locout->map, map);
     /*-1 because we count from 1 in the map. */
     double *phiout0=phiout-1;
     for(long iloc=0; iloc<locin->nloc; iloc++){
@@ -907,33 +919,22 @@ void prop_nongrid_bin(const loc_t *locin,
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
-	    continue;
-	}else{
+	if(nplocy>=nymin && nplocy<nymax && nplocx>=nxmin && nplocx<nxmax){
 	    nplocx1=nplocx+1;
 	    nplocy1=nplocy+1;
+	
+	    /*only proceed if all four points exist, otherwise we run the risk
+	     * of accumulating edge results beyond the map to within the map. */
+	    iphi1=map[nplocy][nplocx];
+	    iphi2=map[nplocy][nplocx1];
+	    iphi3=map[nplocy1][nplocx];
+	    iphi4=map[nplocy1][nplocx1];
+	    if(iphi1>0 && iphi2>0 && iphi3>0 && iphi4>0){
+		phiout0[iphi1]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
+		phiout0[iphi2]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));
+		phiout0[iphi3]+=alpha2*(phiin[iloc]*(1.-dplocx)*(dplocy));
+		phiout0[iphi4]+=alpha2*(phiin[iloc]*(dplocx)*(dplocy));
+	    }
 	}
-
-#if ONLY_FULL == 1 /*only proceed if all four points exist. */
-	iphi1=map[nplocy][nplocx];
-	iphi2=map[nplocy][nplocx1];
-	iphi3=map[nplocy1][nplocx];
-	iphi4=map[nplocy1][nplocx1];
-	if(iphi1 && iphi2 && iphi3 && iphi4){
-	    phiout0[iphi1]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
-	    phiout0[iphi2]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));
-	    phiout0[iphi3]+=alpha2*(phiin[iloc]*(1.-dplocx)*(dplocy));
-	    phiout0[iphi4]+=alpha2*(phiin[iloc]*(dplocx)*(dplocy));
-	}
-#else	
-	if((iphi=map[nplocy][nplocx])) 
-	    phiout0[iphi]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
-	if((iphi=map[nplocy][nplocx1]))
-	    phiout0[iphi]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));
-	if((iphi=map[nplocy1][nplocx]))
-	    phiout0[iphi]+=alpha2*(phiin[iloc]*(1.-dplocx)*(dplocy));
-	if((iphi=map[nplocy1][nplocx1]))
-	    phiout0[iphi]+=alpha2*(phiin[iloc]*(dplocx)*(dplocy));
-#endif
     }
 }

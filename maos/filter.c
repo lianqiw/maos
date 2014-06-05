@@ -132,12 +132,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		iastroke=parms->dm[idm].iastroke*2;//surface to opd
 	    }
 	    if(!parms->fit.square){
-		const long *embed=simu->recon->aembed[idm];
-		const double *pin=dm->p;
-		double *restrict pout=simu->dmrealsq[idm]->p;
-		for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-		    pout[embed[i]]=pin[i];
-		}
+		loc_embed(simu->dmrealsq[idm], simu->recon->aloc[idm], dm->p);
 		dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
 	    }else{
 		dmr=(double(*)[nx])dm->p;
@@ -149,7 +144,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		PDMAT(simu->recon->amap[idm],map);
 		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			if(map[iy][ix] && map[iy+1][ix]){
+			if(map[iy][ix]>0 && map[iy+1][ix]>0){
 			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
 			}
 			    
@@ -157,7 +152,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		}
 		for(int iy=0; iy<simu->recon->any[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
-			if(map[iy][ix] && map[iy][ix+1]){
+			if(map[iy][ix]>0 && map[iy][ix+1]>0){
 			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
 			}
 		    }
@@ -171,12 +166,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		info2("trials=%d\n", trials);
 	    }
 	    if(!parms->fit.square){//copy data back
-		const long *embed=simu->recon->aembed[idm];
-		const double *pin=simu->dmrealsq[idm]->p;
-		double *restrict pout=dm->p;
-		for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-		    pout[i]=pin[embed[i]];
-		} 
+		loc_extract(simu->dmreal->p[idm], simu->recon->aloc[idm], simu->dmrealsq[idm]);
 	    }
 	    if(parms->dm[idm].iastrokescale){//convert back to opd
 		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
@@ -367,10 +357,7 @@ void turb_dm(SIM_T *simu){
 		p2[i]+=p[i];
 	    }
 	}else{
-	    long *embed=simu->recon->aembed[idm];
-	    for(long i=0; i<simu->dmadd->p[idm]->nx; i++){
-		p2[embed[i]]+=p[i];
-	    }
+	    loc_embed_add(simu->dmrealsq[idm], simu->recon->aloc[idm], p);
 	}	
     }
 }
@@ -382,12 +369,7 @@ void update_dm(SIM_T *simu){
     if(!parms->fit.square && simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 	for(int idm=0; idm<parms->ndm; idm++){
-	    long *embed=simu->recon->aembed[idm];
-	    double *pout=simu->dmrealsq[idm]->p;
-	    double *pin=simu->dmreal->p[idm]->p;
-	    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-		pout[embed[i]]=pin[i];
-	    }
+	    loc_embed(simu->dmrealsq[idm], simu->recon->aloc[idm], simu->dmreal->p[idm]->p);
 	}
     }
 #if USE_CUDA
@@ -409,8 +391,8 @@ void filter(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
-    /*make floating actuators averag of neighbor.*/
-    if(simu->recon->actinterp){
+    if(simu->recon->actinterp && !parms->tomo.psol){
+	/*make floating actuators averag of neighbor.*/
 	dcell *tmp=NULL;
 	spcellmulmat(&tmp, simu->recon->actinterp, simu->dmreal, 1);
 	dcellcp(&simu->dmreal, tmp);

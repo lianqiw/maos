@@ -132,12 +132,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		if(!parms->fit.square){
 		    /* Embed DM commands to a square array for fast ray tracing */
 		    for(int idm=0; idm<parms->ndm; idm++){
-			long *embed=simu->recon->aembed[idm];
-			double *pout=simu->dmprojsq[idm]->p;
-			double *pin=simu->dmproj->p[idm]->p;
-			for(long i=0; i<simu->dmproj->p[idm]->nx; i++){
-			    pout[embed[i]]=pin[i];
-			}
+			loc_embed(simu->dmprojsq[idm], recon->aloc[idm], simu->dmproj->p[idm]->p);
 		    }
 		}
 #if USE_CUDA

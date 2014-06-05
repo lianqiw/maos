@@ -26,9 +26,11 @@
  */
 
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
-long *loc2map_embed(const loc_t *loc, const map_t *map);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
+void loc_embed(map_t *dest, const loc_t *loc, const double *in);
+void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
+void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
 loc_t * map2loc(map_t *amp);
 void rectmapfree_do(rectmap_t *map);
 #define rectmapfree(A) ({rectmapfree_do(A);A=NULL;})
@@ -89,7 +91,6 @@ loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
 map_t *mapnew2(map_t *A);
-map_t *loc2map(loc_t *loc, int nguard);
 void mapcircle(map_t *map, double r, double val);
 void mapcircle_symbolic(map_t *map, double r);
 void map_d_din(map_t *map, double *d, double *din);

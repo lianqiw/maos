@@ -3,7 +3,7 @@ AM_LDFLAGS= $(LDMEX) -lm -static  -lfftw3 -lmwblas -lmwlapack
 AM_LDFLAGS+=-Xcompiler -shared -no-fast-install
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 LDADD=$(BUILD_DIR)/lib/libaos.la $(BUILD_DIR)/math/libaomath.la $(BUILD_DIR)/sys/libaosys.la
-EXTRA_DIST=null.c io.c io.h interface.h  Makefile.mex
+EXTRA_DIST=null.c io.c io.h interface.h  Makefile.mex compile.sh
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c

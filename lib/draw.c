@@ -623,8 +623,8 @@ void drawloc(char *fig, loc_t *loc, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
-    loc_create_map_npad(loc,0);
-    int npad=loc->map->npad;
+    loc_create_map(loc);
+    int npad=loc->npad;
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
@@ -651,17 +651,17 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char* format,...){
 
     format2fn;
-    loc_create_map_npad(loc,0);
+    loc_create_map(loc);
 
-    int npad=loc->map->npad;
+    int npad=loc->npad;
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
     dmat *opd0=dnew(nx,ny);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    int ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-	    if(ii){
+	    long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
+	    if(ii>0){
 		opd0->p[ix+iy*nx]=opd[ii-1];
 	    }else{
 		opd0->p[ix+iy*nx]=NAN;
@@ -684,23 +684,21 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, dou
 		const char* format,...){
     format2fn;
     (void)fig;
-    loc_create_map_npad(loc,0);
+    loc_create_map(loc);
 
-    int npad=loc->map->npad;
+    int npad=loc->npad;
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
+    double ampthres;
+    dmaxmin(amp, loc->nloc, &ampthres, 0);
+    ampthres*=0.5;
     double *opd0=calloc(nx*ny, sizeof(double));
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    int ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
-	    if(ii){
-		ii--;
-		if(fabs(amp[ii])<EPS){
-		    opd0[ix+iy*nx]=NAN;
-		}else{
-		    opd0[ix+iy*nx]=opd[ii]*amp[ii];
-		}
+	    long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm]-1;
+	    if(ii>-1 && amp[ii]>ampthres){
+		opd0[ix+iy*nx]=opd[ii];
 	    }else{
 		opd0[ix+iy*nx]=NAN;
 	    }

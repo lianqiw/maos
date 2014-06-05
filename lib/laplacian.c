@@ -126,7 +126,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     spint *pi=L2->i;
     double  *px=L2->x;
     double  *px0=L2->x;
-    long (*map)[loc->map->nx]=(long (*)[loc->map->nx])loc->map->p;
+    PDMAT(loc->map, map);
     double cf=laplacian_coef(r0, weight, loc->dx);
 #if USE_PARTIAL == 1
     double cfs[5];
@@ -137,19 +137,19 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 #endif
     for(iy=0; iy<loc->map->ny; iy++){
 	for(ix=0; ix<loc->map->nx; ix++){
-	    if (map[iy][ix]){
+	    if (map[iy][ix]>0){
 		*(pp++)=px-px0;
 #if USE_PARTIAL == 1
 		double *px1=px;
 		double *p1, *p2;
-		if(iy>0 && map[iy-1][ix]){
+		if(iy>0 && map[iy-1][ix]>0){
 		    *(pi++)=map[iy-1][ix]-1;
 		    *(px++)=0.25;
 		    p2=px-1;
 		}else{
 		    p2=NULL;
 		}
-		if(ix>0 && map[iy][ix-1]){
+		if(ix>0 && map[iy][ix-1]>0){
 		    *(pi++)=map[iy][ix-1]-1;
 		    *(px++)=0.25;
 		    p1=px-1;
@@ -158,7 +158,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		}
 		*(pi++)=map[iy][ix]-1;
 		*(px++)=-1;
-		if(ix<nx1 && map[iy][ix+1]){
+		if(ix<nx1 && map[iy][ix+1]>0){
 		    *(pi++)=map[iy][ix+1]-1;
 		    if(p1)
 			*(px++)=0.25;
@@ -170,7 +170,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		    else
 			warning("Point is isolated");
 		}
-		if(iy<ny1 && map[iy+1][ix]){
+		if(iy<ny1 && map[iy+1][ix]>0){
 		    *(pi++)=map[iy+1][ix]-1;
 		    if(p2)
 			*(px++)=0.25;
@@ -188,14 +188,14 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		}
 #else
 		int has_up,has_rt;
-		if(iy>0 && map[iy-1][ix] && iy<ny1 && map[iy+1][ix]){
+		if(iy>0 && map[iy-1][ix]>0 && iy<ny1 && map[iy+1][ix]>0){
 		    *(pi++)=map[iy-1][ix]-1;
 		    *(px++)=0.25*cf;
 		    has_up=1;
 		}else{
 		    has_up=0;
 		}
-		if(ix>0 && map[iy][ix-1] && ix<nx1 && map[iy][ix+1]){
+		if(ix>0 && map[iy][ix-1]>0 && ix<nx1 && map[iy][ix+1]>0){
 		    *(pi++)=map[iy][ix-1]-1;
 		    *(px++)=0.25*cf;
 		    has_rt=1;

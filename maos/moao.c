@@ -36,7 +36,6 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
 	locfree(recon->moao[imoao].aloc);
-	mapfree(recon->moao[imoao].amap);
 	spcellfree(recon->moao[imoao].HA);
 	dcellfree(recon->moao[imoao].NW);
 	spcellfree(recon->moao[imoao].actslave);
@@ -76,11 +75,11 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	map_t *map=0;
 	create_metapupil(&map,0,0,parms,0,dxr,dyr,0,0,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=map2loc(map);
-	recon->moao[imoao].aembed=loc2map_embed(recon->moao[imoao].aloc, map);
-	recon->moao[imoao].amap=map;
+	mapfree(map);
+	loc_create_map_npad(recon->moao[imoao].aloc,parms->fit.square?0:1);
+	recon->moao[imoao].amap=recon->moao[imoao].aloc->map;
 	recon->moao[imoao].amap->cubic=parms->moao[imoao].cubic;
 	recon->moao[imoao].amap->iac=parms->moao[imoao].iac;
-	free(map->p); map->p=NULL;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
 	recon->moao[imoao].HA=spcellnew(1,1);
@@ -156,8 +155,10 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 	const double ht = parms->atmr.ht[ipsr];
 	double scale=1.-ht/hs;
 	if(parms->tomo.square){
-	    recon->xmap[ipsr]->p=opdr->p[ipsr]->p;
-	    prop_grid_stat(recon->xmap[ipsr], recon->floc->stat, 
+	    map_t map;
+	    memcpy(&map, recon->xmap[ipsr], sizeof(map_t));
+	    map.p=opdr->p[ipsr]->p;
+	    prop_grid_stat(&map, recon->floc->stat, 
 			   xp->p[0]->p, 1, 
 			   thetax*ht, thetay*ht,scale, 0, 0, 0);
 	}else{

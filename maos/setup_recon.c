@@ -50,17 +50,10 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	char *fn=parms->load.ploc;
 	warning("Loading ploc from %s\n",fn);
 	recon->ploc=locread("%s",fn);
-	recon->pmap=loc2map(recon->ploc, parms->tomo.guard);
 	if(fabs(recon->ploc->dx-dxr)>dxr*0.01){
 	    warning("Loaded ploc has unexpected sampling of %g, should be %g\n",
 		    recon->ploc->dx, dxr);
 	}
-	if(recon->pmap->nx*dxr<parms->aper.d){
-	    error("Loaded ploc is too small, diameter is %g while aper.d is %g\n",
-		  recon->pmap->nx*dxr, parms->aper.d);
-	}
-	free(recon->pmap->p);
-	recon->pmap->p=NULL;
     }else{ 
 	/*
 	  Create a circular PLOC with telescope diameter by calling
@@ -71,12 +64,13 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	create_metapupil(&pmap, 0, 0, parms,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
-	recon->pmap = pmap;
-	free(pmap->p); pmap->p=NULL;
+	mapfree(pmap);
 	if(parms->save.setup){
 	    locwrite(recon->ploc, "%s/ploc",dirsetup);
 	}
     }
+    loc_create_map_npad(recon->ploc, parms->tomo.square?0:1);
+    recon->pmap=recon->ploc->map;
     loc_create_stat(recon->ploc);
     if(parms->recon.misreg_tel2wfs){
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
@@ -97,7 +91,6 @@ static void
 setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
     const int npsr=recon->npsr;
-    recon->xmap=calloc(npsr, sizeof(map_t*));
     if(parms->load.xloc){
 	char *fn=parms->load.xloc;
 	warning("Loading xloc from %s\n",fn);
@@ -106,9 +99,6 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	if(nxloc!=npsr) 
 	    error("Invalid saved file. npsr=%d, nxloc=%d\n",npsr,nxloc);
 	for(int ips=0; ips<npsr; ips++){
-	    recon->xmap[ips]=loc2map(recon->xloc[ips], parms->tomo.guard);
-	    free(recon->xmap[ips]->p); recon->xmap[ips]->p=NULL;
-	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
 	    double dxr=recon->dx->p[ips];
 	    if(fabs(recon->xloc[ips]->dx-dxr)>0.01*dxr){
 		warning("xloc[%d]: sampling is %g, expected %g\n", ips, recon->xloc[ips]->dx, dxr);
@@ -149,15 +139,9 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    create_metapupil(&map, 0, 0, parms,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc[ips]=map2loc(map);
 	    loc_create_stat(recon->xloc[ips]);
-	    recon->xmap[ips]=map;
 	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
 		  ips, map->nx,map->ny,dxr, recon->xloc[ips]->nloc);
-	    /*Free the data and nref so we are assign pointers to it. */
-	    free(recon->xmap[ips]->p);recon->xmap[ips]->p=NULL;
-	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
-	}
-	if(parms->save.setup){
-	    locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
+	    mapfree(map);
 	}
     }
     if(parms->gpu.fit==2 && parms->fit.cachex){//to cache x on grid matching floc.
@@ -172,11 +156,15 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    free(recon->xcmap[ips]->nref);recon->xcmap[ips]->nref=NULL;
 	}
     }
-    
+    recon->xmap=calloc(npsr, sizeof(map_t*));
     recon->xnx=calloc(recon->npsr, sizeof(long));
     recon->xny=calloc(recon->npsr, sizeof(long));
     recon->xnloc=calloc(recon->npsr, sizeof(long));
     for(long i=0; i<recon->npsr; i++){
+	/*Need to be one for laplacian_loc to work*/
+	loc_create_map_npad(recon->xloc[i], parms->tomo.square?0:1);
+	recon->xmap[i]=recon->xloc[i]->map;
+	recon->xmap[i]->h=recon->ht->p[i];
 	recon->xnx[i]=recon->xmap[i]->nx;
 	recon->xny[i]=recon->xmap[i]->ny;
 	recon->xnloc[i]=recon->xloc[i]->nloc;
@@ -185,6 +173,10 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     for(int ipsr=0; ipsr<npsr; ipsr++){
 	recon->xmcc->p[ipsr]=loc_mcc_ptt(recon->xloc[ipsr],NULL);
 	dinvspd_inplace(recon->xmcc->p[ipsr]);
+    }
+    if(parms->save.setup){
+	locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
+	maparrwrite(recon->xmap, recon->npsr, "%s/xmap",dirsetup);
     }
 }
 /**
@@ -2158,12 +2150,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
     ngsmod_free(recon->ngsmod); recon->ngsmod=0;
-
-    int npsr = recon->npsr;
-    int ndm = parms->ndm;
-   
-    locarrfree(recon->xloc, npsr);
-    maparrfree(recon->xmap, npsr);
+    locarrfree(recon->xloc, recon->npsr);
+    free(recon->xmap);//data is referenced
     free(recon->xnx);
     free(recon->xny);
     free(recon->xnloc);
@@ -2172,16 +2160,10 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     free(recon->anloc);
     free(recon->ngrad);
     locfree(recon->floc); 
-    mapfree(recon->fmap);
     locfree(recon->ploc);
     locarrfree(recon->ploc_tel, parms->nwfsr);
-    mapfree(recon->pmap);
-    for(int idm=0; idm<ndm; idm++){
-	free(recon->aembed[idm]);
-    }
-    maparrfree(recon->amap, parms->ndm);
+    free(recon->amap);//data is referenced
     maparrfree(recon->acmap, parms->ndm);
-    free(recon->aembed);
     locarrfree(recon->aloc, parms->ndm);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);

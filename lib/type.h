@@ -37,18 +37,6 @@ typedef struct rectmap_t{
 }rectmap_t;
 
 /**
-   map of locs. Convert any coordinate (x,y) to corresponding iloc that has the
-   coordinate.  */
-typedef struct locmap_t{
-    long *restrict p;       /**<The map, of size nx*ny*/
-    int nx;        /**<Number of points along x*/
-    int ny;        /**<Number of points along y*/
-    double ox;     /**<Origin of the map along x*/
-    double oy;     /**<Origin of the map along y*/
-    int npad;      /**<Padding along the boundary. just for checking. no need in computation.*/
-}locmap_t;
-
-/**
    Store starting x,y for each col
 */
 typedef struct locstatcol_t{
@@ -75,13 +63,14 @@ typedef struct locstat_t{
 */
 typedef struct loc_t{
     long id;
-    double *restrict locx;  /**< x coordinates of each point*/
-    double *restrict locy;  /**< y coordinates of each point*/
+    double *locx;  /**< x coordinates of each point*/
+    double *locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
     double dx;     /**< Sampling along x*/
     double dy;     /**< Sampling along y*/ 
-    locmap_t *restrict map; /**< point to the map used for identifying neihboring points.*/
     locstat_t *stat;/**<points to column statistics*/
+    map_t *map; /**< point to the map used for identifying neihboring points.*/
+    int npad;       /*padding when create map*/
 }loc_t;
 /**
    low left point of each subaperture.
@@ -91,16 +80,17 @@ typedef struct loc_t{
 */
 typedef struct pts_t{
     long id;
-    double *restrict origx; /**<The x origin of each subaperture*/
-    double *restrict origy; /**<The y origin of each subaperture*/
+    double *origx; /**<The x origin of each subaperture*/
+    double *origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
     union{
 	double dsa;    /**<side length of subaperture*/
 	double dsax;   /**<side length of subaperture*/
     };
     double dsay;   /**<side length of subaperture*/
-    locmap_t *restrict map; /**<treat pts_t as loc_t and compute the MAP*/
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
+    map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
+    int npad;      /*padding when create map*/
     double dx;     /**<sampling of points in each subaperture*/
     double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
     int nx;        /**<number points in each col or row per subaperture*/

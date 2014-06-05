@@ -91,12 +91,16 @@ void cumoao_l::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stre
 /*
   Embed and copy DM commands to GPU.
 */
-static void gpu_dm2gpu_embed(curmat *dmgpu, dmat *dmcpu, long *embed, int nx, int ny){
+static void gpu_dm2gpu_embed(curmat *dmgpu, dmat *dmcpu, loc_t *loc, int nx, int ny){
     assert(dmcpu->ny==1);
-    double *pin=dmcpu->p;
     Real *pout=(Real*)calloc(nx*ny, sizeof(Real));
-    for(int i=0; i<dmcpu->nx; i++){
-	pout[embed[i]]=pin[i];
+    map_t *map=loc->map;
+    double *pin=dmcpu->p-1;
+    for(long i=0; i<map->nx*map->ny; i++){
+	long iphi=map->p[i];
+	if(iphi){
+	    pout[i]=pin[iphi];
+	}
     }
     DO(cudaMemcpy(dmgpu->p, pout, nx*ny*sizeof(Real), cudaMemcpyHostToDevice));
     free(pout);
@@ -123,7 +127,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cp2gpu(&cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs]);
 	    }else{
 		gpu_dm2gpu_embed(cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs],
-				 moao->aembed, moao->amap->nx, moao->amap->ny);
+				 moao->aloc, moao->amap->nx, moao->amap->ny);
 	    }
 	}
     }
@@ -136,7 +140,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cp2gpu(&cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl]);
 	    }else{
 		gpu_dm2gpu_embed(cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl],
-				 moao->aembed, moao->amap->nx, moao->amap->ny);
+				 moao->aloc, moao->amap->nx, moao->amap->ny);
 	    }
 	}
     }

@@ -23,7 +23,6 @@
 #include "../math/mathdef.h"
 #include "loc.h"
 #include "draw.h"
-
 /**
    Free pts_t data
 */
@@ -46,8 +45,7 @@ void ptsfree_do(pts_t *pts){
 */
 void loc_free_map(loc_t *loc){
     if(loc->map){
-	free(loc->map->p);
-	free(loc->map);
+	mapfree(loc->map);
 	loc->map=NULL;
     }
 }
@@ -181,29 +179,28 @@ void loc_create_map(loc_t *loc){
 }
 PNEW(maplock);
 /**
-   Create a map for loc so that we can obtain the index in
-   loc by x,y coordinate. Useful in ray tracing (accphi.c)
+   Create a map for loc so that we can obtain the index in loc by x,y
+   coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid
+   region in the map is replaced with closest valid point. This extends the
+   coverage of the grid automatically.
 */
 void loc_create_map_npad(loc_t *loc, int npad){
     LOCK(maplock);
     if(loc->map){
-	if(loc->map->npad<npad){
-	    loc_free_map(loc);
-	}else{
-	    UNLOCK(maplock);
-	    return;
+	if(loc->npad<npad){
+	    warning("loc->map arealdy existed with npad=%d. will not redo for %d\n", loc->npad, npad);
 	}
+	UNLOCK(maplock);
+	return;
     }
     if(loc->nloc==0){
 	UNLOCK(maplock);
 	return;
     }
-    loc->map = calloc(1,sizeof(locmap_t));
-    loc->map->npad = npad;/*just record the information. */
+    loc->npad = npad;/*just record the information. */
     double xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
-    int map_nx, map_ny;
     /*padding the map. normally don't need. */
     if(npad>0){
 	xmin-=npad*fabs(loc->dx);
@@ -213,26 +210,137 @@ void loc_create_map_npad(loc_t *loc, int npad){
     }
     const double dx_in1=1./fabs(loc->dx);
     const double dy_in1=1./fabs(loc->dy);
-    map_nx=(int) ceil((xmax-xmin)*dx_in1)+1;
-    map_ny=(int) ceil((ymax-ymin)*dy_in1)+1;
-    loc->map->p=calloc(map_nx*map_ny,sizeof(long));
-    loc->map->nx=map_nx;
-    loc->map->ny=map_ny;
+    const int map_nx=(int) round((xmax-xmin)*dx_in1)+1;
+    const int map_ny=(int) round((ymax-ymin)*dy_in1)+1;
+    loc->map = mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
     loc->map->ox=xmin;
     loc->map->oy=ymin;
-    long (*pmap)[map_nx]=(long(*)[map_nx])loc->map->p;
-    const double *locx,*locy;
-    locx=loc->locx;
-    locy=loc->locy;
-    int ix,iy;
+    PDMAT(loc->map, pmap);
+    const double *locx=loc->locx;
+    const double *locy=loc->locy;
     for(long iloc=0; iloc<loc->nloc; iloc++){
-	ix=(int)round((locx[iloc]-xmin)*dx_in1);
-	iy=(int)round((locy[iloc]-ymin)*dy_in1);
+	int ix=(int)round((locx[iloc]-xmin)*dx_in1);
+	int iy=(int)round((locy[iloc]-ymin)*dy_in1);
 	pmap[iy][ix]=iloc+1;/*start from 1. */
+    }
+    static int LOC_EXTEND=-1;
+    if(LOC_EXTEND==-1){
+	LOC_EXTEND=1;
+	READ_ENV_INT(LOC_EXTEND, 0, 1);
+	info("LOC_EXTEND=%d\n", LOC_EXTEND);
+    }
+    if(LOC_EXTEND && loc->nloc<map_nx*map_ny){
+	int (*level)[map_nx]=calloc(map_nx*map_ny, sizeof(int));
+	for(int iy=0; iy<map_ny; iy++){
+	    for(int ix=0; ix<map_nx; ix++){
+		if(pmap[iy][ix]){
+		    level[iy][ix]=1;//indicate active.
+		}
+	    }
+	}
+	/*we do the interpolation with incremental level, for max of npad levels*/
+	for(int cur_level=1; cur_level<=MAX(1,npad); cur_level++){
+	    for(int iy=0; iy<map_ny; iy++){
+		for(int ix=0; ix<map_nx; ix++){
+		    if(!pmap[iy][ix]){
+			/*choose the minimum level of interpolation*/
+			int min_level=cur_level+1, min_jx=0, min_jy=0;
+			for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
+			    for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
+				if((abs(iy-jy)+abs(ix-jx))==1 && pmap[jy][jx]){//edge
+				    if(level[jy][jx]<min_level){
+					min_level=level[jy][jx];
+					min_jy=jy;
+					min_jx=jx;
+				    }
+				}
+			    }
+			}
+			for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
+			    for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
+				if((abs(iy-jy)+abs(ix-jx))==2 && pmap[jy][jx]){//corner
+				    if(level[jy][jx]<min_level){
+					min_level=level[jy][jx];
+					min_jy=jy;
+					min_jx=jx;
+				    }
+				}
+			    }
+			}
+			if(min_level!=cur_level+1){
+			    pmap[iy][ix]=-abs(pmap[min_jy][min_jx]);
+			    level[iy][ix]=min_level+1;
+			}
+		    }
+		}
+	    }
+	}
+	free(level);
     }
     UNLOCK(maplock);
 }
-
+/*
+  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
+  be used here for mapping.
+*/
+void loc_embed(map_t *dest, const loc_t *loc, const double *in){
+    map_t *map=loc->map;
+    if(!map){
+	error("map is null\n");
+    }
+    if(dest->nx!=map->nx || dest->ny!=map->ny){
+	error("dest and map doesn't agree\n");
+    }
+    const double *pin=in-1;//iphi count from 1
+    for(long i=0; i<map->nx*map->ny; i++){
+	long iphi=abs(map->p[i]);
+	if(iphi){
+	    dest->p[i]=pin[iphi];
+	}else{
+	    dest->p[i]=NAN;
+	}
+    }
+}
+/*
+  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
+  be used here for mapping.
+*/
+void loc_embed_add(map_t *dest, const loc_t *loc, const double *in){
+    map_t *map=loc->map;
+    if(!map){
+	error("map is null\n");
+    }
+    if(dest->nx!=map->nx || dest->ny!=map->ny){
+	error("dest and map doesn't agree\n");
+    }
+    const double *pin=in-1;//iphi count from 1
+    for(long i=0; i<map->nx*map->ny; i++){
+	long iphi=abs(map->p[i]);
+	if(iphi){
+	    dest->p[i]+=pin[iphi];
+	}
+    }
+}
+/*
+  Embed in into dest according to map defined in loc->map. Arbitraty map cannot
+  be used here for mapping.
+*/
+void loc_extract(dmat *dest, const loc_t *loc, map_t *in){
+    map_t *map=loc->map;
+    if(!map){
+	error("map is null\n");
+    }
+    if(dest->nx!=map->nx || dest->ny!=map->ny){
+	error("dest and map doesn't agree\n");
+    }
+    double *restrict pdest=dest->p-1;//iphi count from 1
+    for(long i=0; i<map->nx*map->ny; i++){
+	long iphi=map->p[i];
+	if(iphi>0){
+	    pdest[iphi]=in->p[i];
+	}
+    }
+}
 /**
    Convert a map to a loc that collects all positive entries. */
 loc_t* map2loc(map_t *map){
@@ -263,7 +371,7 @@ loc_t* map2loc(map_t *map){
 /**
    convert loc to map, with optionally minimum size of Dx*Dy
 */
-map_t *loc2map(loc_t *loc, int nguard){
+/*map_t *loc2map(loc_t *loc, int nguard){
     double xmax, xmin, ymax, ymin;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -281,11 +389,11 @@ map_t *loc2map(loc_t *loc, int nguard){
 	map->p[ix+iy*nx]=1.;
     }	
     return map;
-}
+    }*/
 /**
    create embed index from loc to map.
  */
-long *loc2map_embed(const loc_t *loc, const map_t *map){
+/*long *loc2map_embed(const loc_t *loc, const map_t *map){
     const double ox=map->ox;
     const double oy=map->oy;
     const double dx_in1=1./map->dx;
@@ -298,7 +406,7 @@ long *loc2map_embed(const loc_t *loc, const map_t *map){
 	embed[iloc]=ix+iy*nx;
     }
     return embed;
-}
+    }*/
 /**
    Create 1 dimensional loc with given vector.
 */
@@ -1056,6 +1164,9 @@ loc_t *pts2loc(pts_t *pts){
     long nxsa = nx*nx;
     double dx = pts->dx;
     double dy = pts->dy;
+    if(dy==0){
+	dy=dx;
+    }
     loc_t *loc = locnew(nsa*nxsa, dx, dy);
     for(int isa=0; isa<nsa; isa++){
 	const double origx = pts->origx[isa];

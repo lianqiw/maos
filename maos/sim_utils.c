@@ -1216,9 +1216,11 @@ static void init_simu_dm(SIM_T *simu){
 	}
 	if(simu->dmrealsq){
 	    simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	    dset((dmat*)simu->dmrealsq[idm], NAN);
 	}
 	if(simu->dmprojsq){
 	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
+	    dset((dmat*)simu->dmprojsq[idm], NAN);
 	}
 	if(parms->fit.square){/*dmreal is already square.*/
 	    free(simu->dmrealsq[idm]->p);

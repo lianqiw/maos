@@ -76,12 +76,12 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    /*notice offset of 1 because map start count at 1 */
 	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
-	    locmap_t *map=recon->aloc[idm]->map;
-	    long (*pmap)[map->nx]=(long(*)[map->nx])map->p;
+	    map_t *map=recon->aloc[idm]->map;
+	    PDMAT(map, pmap);
 	    for(long iy=0; iy<map->ny; iy++){
 		for(long ix=0; ix<map->nx; ix++){
 		    if(pmap[iy][ix]){
-			p[pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
+			p[(long)pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
 		    }
 		}
 	    }

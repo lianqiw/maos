@@ -22,12 +22,6 @@
 
 #include "loc.h"
 
-#define ONLY_FULL 0 /*1: comply with other propagators. */
-/*
-  ONLY_FULL==0: calc weights if not all points exist. preferred
-  ONLY_FULL==1: calc weights only if all points exist
- */
-
 static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac);
 /**
@@ -72,14 +66,11 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	return mkhb_cubic(locin, locout, ampout, displacex, displacey, scale, cubic_iac);
     }
   
-    loc_create_map_npad(locin,1);/*will only do once and save in locin. */
+    loc_create_map_npad(locin, 0);
     dsp *hback;
-    double dplocx, dplocy;
-    int nplocx, nplocy, nplocx1, nplocy1;
+    int nplocx, nplocy;
     long iloc;
     /*int missing=0; */
-    const int wrapx = locin->map->nx-1;
-    const int wrapy = locin->map->ny-1;
     const double dx_in1 = 1./locin->dx;
     const double dx_in2 = scale*dx_in1;
     const double dy_in1 = 1./locin->dy;
@@ -88,13 +79,13 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     displacey = (displacey-locin->map->oy)*dy_in1;
     const double *px=locout->locx;
     const double *py=locout->locy;
-#if ONLY_FULL==1
-    long iphi1,iphi2,iphi3,iphi4;
-#else
-    long iphi;
-#endif
     /*-1 because we count from 1 in the map. */
-    long (*map)[locin->map->nx] =(long(*)[locin->map->nx])(locin->map->p);
+    PDMAT(locin->map, map);
+    const int nxmin=locin->npad;
+    const int nymin=locin->npad;
+    const int nxmax=locin->map->nx-nxmin-1;
+    const int nymax=locin->map->ny-nxmin-1;
+
     /*transpose of hfor */
     long nzmax=locout->nloc*4;
     hback = spnew(locin->nloc, locout->nloc, nzmax);
@@ -103,6 +94,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     double *bx=hback->x;
     long count=0;
     double weight;
+    double fx[2], fy[2];
     /*double *phiin0=phiin-1; */
     for(iloc=0; iloc<locout->nloc; iloc++){
 	bp[iloc]=count;/*column index */
@@ -115,66 +107,40 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	    bi=hback->i;
 	    bx=hback->x;
 	}
-	dplocx=myfma(px[iloc],dx_in2,displacex);
-	dplocy=myfma(py[iloc],dy_in2,displacey);
+	fx[1]=myfma(px[iloc],dx_in2,displacex);
+	fy[1]=myfma(py[iloc],dy_in2,displacey);
 
-	SPLIT(dplocx,dplocx,nplocx);
-	SPLIT(dplocy,dplocy,nplocy);
-
-	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
-	    continue;
-	}
-	nplocx1=nplocx+1;
-	nplocy1=nplocy+1;
-#if ONLY_FULL == 1 /*only proceed if all four points exist. preferred */
-	iphi1=map[nplocy][nplocx];
-	iphi2=map[nplocy][nplocx1];
-	iphi3=map[nplocy1][nplocx];
-	iphi4=map[nplocy1][nplocx1];
-	if(iphi1-- && iphi2-- && iphi3-- && iphi4--){
-	    if((weight=(1.-dplocx)*(1.-dplocy))>EPS){
-		bi[count]=iphi1;
-		bx[count]=weight;
-		count++;
-	    }
-	    if((weight=(dplocx)*(1.-dplocy))>EPS){
-		bi[count]=iphi2;
-		bx[count]=weight;
-		count++;
-	    }
-	    if((weight=(1.-dplocx)*(dplocy))>EPS){
-		bi[count]=iphi3;
-		bx[count]=weight;
-		count++;
-	    }
-	    if((weight=(dplocx)*(dplocy))>EPS){
-		bi[count]=iphi4;
-		bx[count]=weight;
-		count++;
+	SPLIT(fx[1],fx[1],nplocx);
+	SPLIT(fy[1],fy[1],nplocy);
+	if(nplocy>=nymin && nplocy<nymax && nplocx>=nxmin && nplocx<nxmax){
+	    fx[0]=1.-fx[1];
+	    fy[0]=1.-fy[1];
+	    for(int iy=0; iy<2; iy++){
+		for(int ix=0; ix<2; ix++){
+		    if((weight=fx[ix]*fy[iy])>EPS){
+			long iphi;//look for duplicates
+			if((iphi=abs(map[nplocy+iy][nplocx+ix]))){
+			    int ic;
+			    for(ic=bp[iloc]; ic<count; ic++){
+				if(bi[ic]+1==iphi){
+				    bx[ic]+=weight;
+				    break;
+				}
+			    }
+			    if(ic==count){
+				bi[count]=iphi-1;
+				bx[count]=weight;
+				count++;
+			    }
+			}else{//some points are not available, declare invalid
+			    count=bp[iloc];
+			    goto skip_iloc;
+			}
+		    }
+		}
 	    }
 	}
-#else	
-	if((iphi=map[nplocy][nplocx]) && (weight=(1.-dplocx)*(1.-dplocy))>EPS){
-	    bi[count]=iphi-1;
-	    bx[count]=weight;
-	    count++;
-	}
-	if((iphi=map[nplocy][nplocx1]) && (weight=(dplocx)*(1.-dplocy))>EPS ){
-	    bi[count]=iphi-1;
-	    bx[count]=weight;
-	    count++;
-	}
-	if((iphi=map[nplocy1][nplocx]) && (weight=(1.-dplocx)*(dplocy))>EPS){
-	    bi[count]=iphi-1;
-	    bx[count]=weight;
-	    count++;
-	}
-	if((iphi=map[nplocy1][nplocx1]) && (weight=(dplocx)*(dplocy))>EPS){
-	    bi[count]=iphi-1;
-	    bx[count]=weight;
-	    count++;
-	}
-#endif
+      skip_iloc:;
     }
     bp[locout->nloc]=count;
     spsetnzmax(hback, count);
@@ -185,8 +151,9 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
 static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
-		double displacex, double displacey, double scale,double cubic_iac){
-    loc_create_map_npad(locin,2);
+		       double displacex, double displacey, double scale,double cubic_iac){
+    //Need two guard rings in case the output falls on the right/top most of the input point.
+    loc_create_map_npad(locin,1);
     dsp *hback;
     double dplocx, dplocy;
     int ix,iy;
@@ -203,8 +170,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const double *py=locout->locy;
     long iphi;
     /*-1 because we count from 1 in the map. */
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->ny])(locin->map->p);
+    PDMAT(locin->map, map);
     /*cubic */
     double fx[4],fy[4];
     const double cubicn=1./(1.+2.*cubic_iac);
@@ -221,8 +187,11 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     spint *bi=hback->i;
     double *bx=hback->x;
     long count=0;
-    const int nmapx3=locin->map->nx-3;
-    const int nmapy3=locin->map->ny-3;
+    const int nxmin=locin->npad;
+    const int nymin=locin->npad;
+    const int nxmax=locin->map->nx-nxmin-1;
+    const int nymax=locin->map->ny-nxmin-1;
+
     for(iloc=0; iloc<locout->nloc; iloc++){
 	bp[iloc]=count;
 	if(ampout && fabs(ampout[iloc])<EPS)
@@ -237,7 +206,8 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
-
+	//outside of rectangular bounding active region .
+	if(dplocx<nxmin || dplocx>=nxmax || dplocy<nymin || dplocy>=nymax) continue;
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
 	dplocy0=1.-dplocy;
@@ -253,20 +223,32 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 	fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
 	fy[3]=dplocy*dplocy*(c3+c4*dplocy); 
 
-	if(nplocy<1 || nplocy>nmapy3 || nplocx<1 || nplocx>nmapx3){
-	    continue;
-	}
-	for(iy=nplocy-1; iy<nplocy+3; iy++){
-	    for(ix=nplocx-1; ix<nplocx+3; ix++){
-		iphi=map[iy][ix];
-		double weight=fx[ix-nplocx+1]*fy[iy-nplocy+1];
-		if(iphi && weight>EPS){
-		    bi[count]=iphi-1;
-		    bx[count]=weight;
-		    count++;
+	for(iy=-1; iy<+3; iy++){
+	    for(ix=-1; ix<+3; ix++){
+		iphi=abs(map[iy+nplocy][ix+nplocx]);
+		double weight=fx[ix+1]*fy[iy+1];
+		if(weight>EPS || 1){
+		    if(iphi){
+			int ic;//look for duplicates
+			for(ic=bp[iloc]; ic<count; ic++){
+			    if(bi[ic]+1==iphi){
+				bx[ic]+=weight;
+				break;
+			    }
+			}
+			if(ic==count){
+			    bi[count]=iphi-1;
+			    bx[count]=weight;
+			    count++;
+			}
+		    }else{
+			count=bp[iloc];
+			goto skip_iloc;
+		    }
 		}
 	    }
 	}
+      skip_iloc:;
     }/*for */
     bp[locout->nloc]=count;
     spsetnzmax(hback, count);

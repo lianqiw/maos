@@ -342,8 +342,8 @@ static void test_accuracy(void){
     rand_t rstat;
     /*long m=2048, n=2048; */
     double dx=1./2.;
-    long m=(long)round(10/dx/16)*16;
-    long n=(long)round(20/dx/16)*16;
+    long m=(long)round(20/dx);
+    long n=(long)round(20/dx);
 
     seed_rand(&rstat, 2);
     int nlayer=1;
@@ -362,33 +362,43 @@ static void test_accuracy(void){
     screens=vonkarman_screen(&data);
     /*screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1); */
     map_t *screen=screens[0];
+    //mapcircle(screen, 15, 1e-5);
+    dset((dmat*)screen, 1);
     mapwrite(screen,"accphi_screen");
     /*loc for the map */
     loc_t *locin=mksqloc(m,n,dx,dx,screen->ox,screen->oy);
-
-    dmat *A=dnew(60,60);
-    dcircle(A,30,30,1,1,30,1);
-    dwrite(A,"accphi_A");
-    pts_t *pts=calloc(1,sizeof(pts_t));
-    map_t *maptmp=mapnew(A->nx, A->ny, 0.5, 0.5,A->p);
-    loc_t *tmp=map2loc(maptmp);
-    memcpy(pts,tmp,sizeof(loc_t));
-    free(tmp);
-    pts->dx=1./64.;
-    pts->nx=32;
-    loc_t *loc=pts2loc(pts);
     
+    loc_t *loc;
+    pts_t *pts;
+    {
+	dmat *A=dnew(60,60);
+	dcircle(A,30,30,1,1,30,1);
+	dwrite(A,"accphi_A");
+	pts=calloc(1,sizeof(pts_t));
+	map_t *maptmp=mapnew(A->nx, A->ny, dx, dx,A->p);
+	loc_t *tmp=map2loc(maptmp);
+	memcpy(pts,tmp,sizeof(loc_t));
+	free(tmp);
+	pts->dx=1./8.;
+	pts->dy=1./8.;
+	pts->nx=dx/(pts->dx);
+	loc=pts2loc(pts);
+    }
     loc_create_stat(loc);
     locstat_t *locstat=loc->stat;
     locwrite((loc_t*)pts,"accphi_pts");
     locwrite(loc,"accphi_loc");
+    locwrite(locin, "accphi_locin");
+    loc_create_map(locin);
+    map_t *screen2=mapnew2(locin->map);
+    loc_embed(screen2, locin, screen->p);
     double *phi_pts, *phi_loc, *phi_stat, *phi_pts1, *phi_stat1;
-    double *phi_loc2loc, *phi_h, *phi_cub, *phi_cubh;
+    double *phi_loc2loc, *phi_h, *phi_cub, *phi_cub2, *phi_cubh;
 
     double displacex,displacey,scale;
     displacex=0;
     displacey=0;
-    scale=1.2;/*.414065; */
+    scale=1.;/*.414065; */
     int ic;
     int wrap=0;
     int nc=1;
@@ -409,7 +419,7 @@ static void test_accuracy(void){
 		 displacex, displacey,scale,wrap);
 	    
 	    double diff1, diff2,diff3,diff11,diff31,diff131,
-		diff231,diff14,diff15,diff6;
+		diff231,diff14,diff15;
 	    diff1=0;
 	    diff2=0;
 	    diff3=0;
@@ -419,7 +429,6 @@ static void test_accuracy(void){
 	    diff231=0;
 	    diff14=0;
 	    diff15=0;
-	    diff6=0;
 
 	    phi_pts=calloc(loc->nloc, sizeof(double));
 	    phi_loc=calloc(loc->nloc, sizeof(double));
@@ -464,12 +473,19 @@ static void test_accuracy(void){
 
 	    phi_h=calloc(loc->nloc,sizeof(double));
 	    phi_cub=calloc(loc->nloc,sizeof(double));
+	    phi_cub2=calloc(loc->nloc,sizeof(double));
+	    double *phi_cub3=calloc(loc->nloc,sizeof(double));
 	    phi_cubh=calloc(loc->nloc, sizeof(double));
 	    tic;
 	    prop_nongrid_cubic(locin,screen->p,loc,NULL,phi_cub,-1,
 			       displacex, displacey, 
 			       scale, cubic,0,0);
 	    toc("nongrid, cubic\t");
+	    tic;
+	    prop_grid_cubic(screen, loc, NULL,phi_cub2, -1,displacex, displacey, scale,  cubic, 0,0);
+	    toc("grid, cubic\t");
+	    prop_grid_cubic(screen2, loc, NULL,phi_cub3, -1,displacex, displacey, scale,  cubic, 0,0);
+	    toc("grid2, cubic\t");
 	    tic;
 	    dsp *hfor=mkh(locin, loc, NULL,displacex, displacey, scale,0,0);
 	    toc("mkh\t\t\t");
@@ -485,7 +501,7 @@ static void test_accuracy(void){
 	    tic;
 	    spmulvec(phi_cubh, hforcubic,screen->p,-1);
 	    toc("cubic mul h\t\t");
-	    double diffc12=0,diff45=0;
+	    double diffc12=0,diff45=0,diff46=0,diff47=0;
 	    for(ii=0; ii<loc->nloc; ii++){
 		diff1+=fabs(phi_loc[ii]-phi_pts[ii]);
 		diff2+=fabs(phi_stat[ii]-phi_loc[ii]);
@@ -498,27 +514,34 @@ static void test_accuracy(void){
 		diff15+=fabs(phi_h[ii]-phi_pts[ii]);
 		diff45+=fabs(phi_loc2loc[ii]-phi_h[ii]);
 		diffc12+=fabs(phi_cub[ii]-phi_cubh[ii]);
+		diff46+=fabs(phi_cub[ii]-phi_cub2[ii]);
+		diff47+=fabs(phi_cub[ii]-phi_cub3[ii]);
 	    }
 	    info2("(pts-loc)=\t%g\n(loc-stat)=\t%g\n(stat-pts)=\t%g\n"
 		  "(pts-pts1)=\t%g\n(stat-stat1)=\t%g\n"
 		  "(loc2loc-pts)=\t%g\n(h-pts)=\t%g\n"
-		  "(loc2loc-h)=\t%g\n(cub-cub_h)=\t%g\n",
-		  diff1, diff2,diff3,diff11,diff31,diff14,diff15,diff45,diffc12);
+		  "(loc2loc-h)=\t%g\n(cub-cub_h)=\t%g\n"
+		  "(grid2cub-cub)=\t%g\n"
+		  "(grid2cub2-cub=\t%g\n"
+		  ,diff1, diff2,diff3,diff11,diff31,diff14,diff15,diff45,diffc12, 
+		  diff46, diff47);
 
-	    if(diff1>1.e-12||diff2>1.e-12||diff3>1.e-12||
-	       diff11>1.e-12||diff31>1.e-12||diff14>1.e-12||diff15>1.e-12||diff6>1.e-12
-	       ||diffc12>1.e-12 || diff45>0){
+	    /*if(diff1>1.e-12||diff2>1.e-12||diff3>1.e-12||
+	       diff11>1.e-12||diff31>1.e-12||diff14>1.e-12||diff15>1.e-12
+	       ||diffc12>1.e-12 || diff45>0 || diff46>0){*/
 		writedbl(phi_pts1,loc->nloc,1,"accphi_pts1.bin");
-		writedbl(phi_loc,loc->nloc,1,"accphi_loc.bin");
+		writedbl(phi_loc,loc->nloc,1,"accphi_loc0.bin");
 		writedbl(phi_stat,loc->nloc,1,"accphi_stat.bin");
 		writedbl(phi_stat1,loc->nloc,1,"accphi_stat1.bin");
 		writedbl(phi_loc2loc,loc->nloc,1,"accphi_loc2loc.bin");
 		writedbl(phi_h,loc->nloc,1,"accphi_h.bin");
 		writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
+		writedbl(phi_cub2,loc->nloc,1,"accphi_cub2.bin");
+		writedbl(phi_cub3,loc->nloc,1,"accphi_cub3.bin");
 		writedbl(phi_cubh,loc->nloc,1,"accphi_cubh.bin");
 		info("saved\n");
 		if(nc>1) getchar();
-	    }
+		//}
 	    writedbl(phi_pts,loc->nloc,1,"accphi_pts.bin");
 	    writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
 		
@@ -576,6 +599,7 @@ static void test_speed(int nthread){
     memcpy(pts,tmp,sizeof(loc_t));
     free(tmp);
     pts->dx=1./64.;
+    pts->dy=1./64.;
     pts->nx=32;
     loc_t *loc=pts2loc(pts);
     double *phi_pts=calloc(loc->nloc, sizeof(double));
@@ -661,7 +685,7 @@ int main(int argc, char** argv){
 	nthread=2;
     }
     THREAD_POOL_INIT(nthread);
-    test_speed(nthread);
+    //test_speed(nthread);
     
     test_accuracy();
 }
