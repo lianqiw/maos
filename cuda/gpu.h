@@ -58,7 +58,6 @@ void gpu_moao_recon(SIM_T *simu);
 void gpu_moao_filter(SIM_T *simu);
 void gpu_moao_2gpu(SIM_T *simu);
 void gpu_mvm_daemon(int port);
-void test_gpu(void);
 void mvm_iwfs(int *gpus, int ngpu, int nstep);
 void mvm_only(int *gpus, int ngpu, int nstep);
 void mvmfull_iwfs(int *gpus, int ngpu, int nstep);

@@ -271,6 +271,13 @@ long thread_id(void);
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\
     }
+#define DEF_ENV_FLAG(A,default_val)		\
+    static int A=-1;				\
+    if(A==-1){					\
+	A=default_val;				\
+	READ_ENV_INT(A, 0, 1);			\
+	info2("MAOS_"#A"=%d\n", A);		\
+    }
 #include <string.h>
 
 #define PAUSE					\

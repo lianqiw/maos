@@ -51,11 +51,10 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	constamp=1./(double)nloc;
     }
     *W0=spnew(nloc,nloc,9*nloc);
-    loc_create_map_npad(loc,1);/*pad by one */
-    
-    double ox=loc->map->ox;
-    double oy=loc->map->oy;
-    PDMAT(loc->map, map);
+    loc_create_map(loc);
+    map_t *map=loc->map;
+    const double ox=map->ox;
+    const double oy=map->oy;
     double idx=1./loc->dx;
     spint *W0p=(*W0)->p;
     spint *W0i=(*W0)->i;
@@ -76,14 +75,14 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	W0p[iloc]=count;
 	for(int jy=iy-1; jy<iy+2; jy++){
 	    for(int jx=ix-1;jx<ix+2; jx++){
-		int aloc1=map[jy][jx];
+		int aloc1=loc_map_get(map, jx, jy);
 		if(aloc1<=0) continue; else aloc1--;
 		double bamp=0; if(amp) bamp=amp[aloc1]; 
 		double wt=0;
 		if(abs(ix-jx)==1 && abs(iy-jy)==1){
 		    /*corner to corner */
-		    int bloc0=map[jy][ix]; 
-		    int bloc1=map[iy][jx]; 
+		    int bloc0=loc_map_get(map, ix, jy);
+		    int bloc1=loc_map_get(map, jx, iy);
 		    if(bloc0>0 && bloc1>0){
 			if(amp){
 			    wt+=(camp+bamp+amp0[bloc0]+amp0[bloc1])/144.;
@@ -94,8 +93,8 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 		}else if(abs(iy-jy)==1){
 		    /*neighbor, up/down */
 		    for(int ioff=-1; ioff<2; ioff+=2){
-			int bloc0=map[jy][ix+ioff];
-			int bloc1=map[iy][jx+ioff];
+			int bloc0=loc_map_get(map, ix+ioff, jy);
+			int bloc1=loc_map_get(map, jx+ioff, iy);
 			if(bloc0>0 && bloc1>0){
 			    if(amp){
 				wt+=(camp+bamp)/48.+(amp0[bloc0]+amp0[bloc1])/144.;
@@ -107,8 +106,8 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 		}else if(abs(ix-jx)==1){
 		    /*neighbor, left/right */
 		    for(int joff=-1; joff<2; joff+=2){
-			int bloc0=map[jy+joff][ix];
-			int bloc1=map[iy+joff][jx];
+			int bloc0=loc_map_get(map, ix, jy+joff);
+			int bloc1=loc_map_get(map, jx, iy+joff);
 			if(bloc0>0 && bloc1>0){
 			    if(amp){
 				wt+=(camp+bamp)/48.+(amp0[bloc0]+amp0[bloc1])/144.;
@@ -122,9 +121,9 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 		    /*loop over four corners; */
 		    for (int joff=-1; joff<2; joff+=2){
 			for(int ioff=-1; ioff<2; ioff+=2){
-			    int bloc0=map[iy+joff][ix]; 
-			    int bloc1=map[iy][ix+ioff];
-			    int cloc0=map[iy+joff][ix+ioff];
+			    int bloc0=loc_map_get(map, ix, iy+joff);
+			    int bloc1=loc_map_get(map, ix+ioff, iy);
+			    int cloc0=loc_map_get(map, ix+ioff, iy+joff);
 			    if(bloc0>0 && bloc1>0 && cloc0>0){
 				if(amp){
 				    wt+=camp/16.+(amp0[bloc0]+amp0[bloc1])/48.
@@ -165,7 +164,6 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	    p[i]*=sc;
 	}
     }
-    /*loc_free_map(loc);*/
 }
 /**
    calculate the integral of a box with two points on corner to corner.  inside
@@ -370,10 +368,10 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		  dmat **W1  /**<[out] dense  W1*/){
     long nloc=loc->nloc;
     *W0=spnew(nloc,nloc,9*nloc);
-    loc_create_map_npad(loc,1);/*pad by one */
-    double ox=loc->map->ox;
-    double oy=loc->map->oy;
-    PDMAT(loc->map, map);
+    loc_create_map(loc);
+    map_t *map=loc->map;
+    const double ox=map->ox;
+    const double oy=map->oy;
     spint *W0p=(*W0)->p;
     spint *W0i=(*W0)->i;
     double *W0x=(*W0)->x;
@@ -397,7 +395,7 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 	W0p[iloc]=count;
 	for(int jy=iy-1; jy<iy+2; jy++){
 	    for(int jx=ix-1;jx<ix+2; jx++){
-		int aloc1=map[jy][jx];
+		int aloc1=loc_map_get(map, jx, jy);
 		if(aloc1<=0) continue; else aloc1--;
 		/*
 		  We calculate the integration for different relative position

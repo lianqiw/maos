@@ -25,15 +25,6 @@ void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
 		const Real hs, const Real thetax, const Real thetay,
 		const Real mispx, const Real mispy, const Real dmalpha, cudaStream_t stream);
 
-void gpu_prop_grid(curmat *out, const cugrid_t &go,
-		   curmat *in, const cugrid_t &gi,
-		   Real dispx, Real dispy,
-		   Real alpha, char trans, cudaStream_t stream);
-
-void gpu_prop_grid_cubic(curmat *out,const cugrid_t &go,
-			 curmat *in, const cugrid_t &gi,
-			 Real dispx, Real dispy, Real *cc,
-			 Real alpha, char trans, cudaStream_t stream);
 void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 

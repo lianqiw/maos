@@ -385,20 +385,26 @@ static void test_accuracy(void){
 	loc=pts2loc(pts);
     }
     loc_create_stat(loc);
+    loc_create_map(loc);
     locstat_t *locstat=loc->stat;
     locwrite((loc_t*)pts,"accphi_pts");
     locwrite(loc,"accphi_loc");
     locwrite(locin, "accphi_locin");
-    loc_create_map(locin);
+    loc_create_map_npad(locin, 1);
+    mapwrite(locin->map, "accphi_locin_map");
+
     map_t *screen2=mapnew2(locin->map);
+    dset((dmat*)screen2, NAN);
     loc_embed(screen2, locin, screen->p);
+    mapwrite(screen2,"accphi_screen2");
+
     double *phi_pts, *phi_loc, *phi_stat, *phi_pts1, *phi_stat1;
     double *phi_loc2loc, *phi_h, *phi_cub, *phi_cub2, *phi_cubh;
 
     double displacex,displacey,scale;
     displacex=0;
-    displacey=0;
-    scale=1.;/*.414065; */
+    displacey=.1;
+    scale=1.2;/*.414065; */
     int ic;
     int wrap=0;
     int nc=1;
@@ -446,6 +452,10 @@ static void test_accuracy(void){
 	   
 
 	    tic;
+	    map_t *map2=mapnew2(loc->map);
+	    prop_grid_map(screen, map2, -1, displacex, displacey, scale, wrap, 0,0);
+	    toc("pts optim\t\t");
+	    tic;
 	    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 			  scale, wrap, 0,0);
 	    toc("pts optim\t\t");
@@ -492,12 +502,13 @@ static void test_accuracy(void){
 	    tic;
 	    spmulvec(phi_h,hfor, screen->p, -1);
 	    toc("mul h\t\t");
+	    spwrite(hfor, "accphi_hfor");
 	    spfree(hfor);
-	    
 	    dsp *hforcubic;
 	    tic;
 	    hforcubic=mkh(locin, loc, NULL, displacex, displacey, scale, 1, cubic);
 	    toc("mkh cubic \t\t");
+	    spwrite(hforcubic, "accphi_cub_hfor");
 	    tic;
 	    spmulvec(phi_cubh, hforcubic,screen->p,-1);
 	    toc("cubic mul h\t\t");
@@ -520,25 +531,27 @@ static void test_accuracy(void){
 	    info2("(pts-loc)=\t%g\n(loc-stat)=\t%g\n(stat-pts)=\t%g\n"
 		  "(pts-pts1)=\t%g\n(stat-stat1)=\t%g\n"
 		  "(loc2loc-pts)=\t%g\n(h-pts)=\t%g\n"
-		  "(loc2loc-h)=\t%g\n(cub-cub_h)=\t%g\n"
-		  "(grid2cub-cub)=\t%g\n"
-		  "(grid2cub2-cub=\t%g\n"
+		  "(loc2loc-h)=\t%g\n"
+		  "(cub:h-loc2loc)=\t%g\n"
+		  "(cub:map2loc-loc2loc)=\t%g\n"
+		  "(cub:locmap2loc-loc2loc=\t%g\n"
 		  ,diff1, diff2,diff3,diff11,diff31,diff14,diff15,diff45,diffc12, 
 		  diff46, diff47);
 
 	    /*if(diff1>1.e-12||diff2>1.e-12||diff3>1.e-12||
 	       diff11>1.e-12||diff31>1.e-12||diff14>1.e-12||diff15>1.e-12
 	       ||diffc12>1.e-12 || diff45>0 || diff46>0){*/
+	    mapwrite(map2, "accphi_map2map.bin");
 		writedbl(phi_pts1,loc->nloc,1,"accphi_pts1.bin");
 		writedbl(phi_loc,loc->nloc,1,"accphi_loc0.bin");
 		writedbl(phi_stat,loc->nloc,1,"accphi_stat.bin");
 		writedbl(phi_stat1,loc->nloc,1,"accphi_stat1.bin");
 		writedbl(phi_loc2loc,loc->nloc,1,"accphi_loc2loc.bin");
-		writedbl(phi_h,loc->nloc,1,"accphi_h.bin");
-		writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
-		writedbl(phi_cub2,loc->nloc,1,"accphi_cub2.bin");
-		writedbl(phi_cub3,loc->nloc,1,"accphi_cub3.bin");
-		writedbl(phi_cubh,loc->nloc,1,"accphi_cubh.bin");
+		writedbl(phi_h,loc->nloc,1,"accphi_loc2h.bin");
+		writedbl(phi_cub,loc->nloc,1,"accphi_cub_loc2loc.bin");
+		writedbl(phi_cub2,loc->nloc,1,"accphi_cub_map2loc.bin");
+		writedbl(phi_cub3,loc->nloc,1,"accphi_cub_locmap2loc.bin");
+		writedbl(phi_cubh,loc->nloc,1,"accphi_cub_loc2h.bin");
 		info("saved\n");
 		if(nc>1) getchar();
 		//}

@@ -116,17 +116,15 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
       Must set USE_PARTIAL to 1. Otherwise, the SCAO, NGS, Phy, NF, case is worse than LAOS.
       USE_PARTIAL == 1 gives identical results to LAOS (upto round off error)
      */
-    loc_create_map_npad(loc,1);/*must have padding of at least 1. */
+    loc_create_map(loc);
+    map_t *map=loc->map;
     dsp *L2;
     L2=spnew(loc->nloc,loc->nloc,loc->nloc*5);
     int ix,iy;
-    int nx1=loc->map->nx-1;
-    int ny1=loc->map->ny-1;
     spint *pp=L2->p;
     spint *pi=L2->i;
     double  *px=L2->x;
     double  *px0=L2->x;
-    PDMAT(loc->map, map);
     double cf=laplacian_coef(r0, weight, loc->dx);
 #if USE_PARTIAL == 1
     double cfs[5];
@@ -135,31 +133,37 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     cfs[3]=laplacian_coef4(r0, weight, loc->dx);
     cfs[4]=cf;
 #endif
-    for(iy=0; iy<loc->map->ny; iy++){
-	for(ix=0; ix<loc->map->nx; ix++){
-	    if (map[iy][ix]>0){
+    for(iy=0; iy<map->ny; iy++){
+	for(ix=0; ix<map->nx; ix++){
+	    long iphi0;
+	    if((iphi0=loc_map_get(map, ix, iy))>0){
 		*(pp++)=px-px0;
+		long iphiL=loc_map_get(map, ix-1, iy);
+		long iphiR=loc_map_get(map, ix+1, iy);
+		long iphiD=loc_map_get(map, ix, iy-1);
+		long iphiU=loc_map_get(map, ix, iy+1);
+		
 #if USE_PARTIAL == 1
 		double *px1=px;
 		double *p1, *p2;
-		if(iy>0 && map[iy-1][ix]>0){
-		    *(pi++)=map[iy-1][ix]-1;
+		if(iphiD>0){
+		    *(pi++)=iphiD-1;
 		    *(px++)=0.25;
 		    p2=px-1;
 		}else{
 		    p2=NULL;
 		}
-		if(ix>0 && map[iy][ix-1]>0){
-		    *(pi++)=map[iy][ix-1]-1;
+		if(iphiL>0){
+		    *(pi++)=iphiL-1;
 		    *(px++)=0.25;
 		    p1=px-1;
 		}else{
 		    p1=NULL;
 		}
-		*(pi++)=map[iy][ix]-1;
+		*(pi++)=iphi0-1;
 		*(px++)=-1;
-		if(ix<nx1 && map[iy][ix+1]>0){
-		    *(pi++)=map[iy][ix+1]-1;
+		if(iphiR>0){
+		    *(pi++)=iphiR-1;
 		    if(p1)
 			*(px++)=0.25;
 		    else
@@ -170,8 +174,8 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		    else
 			warning("Point is isolated");
 		}
-		if(iy<ny1 && map[iy+1][ix]>0){
-		    *(pi++)=map[iy+1][ix]-1;
+		if(iphiU>0){
+		    *(pi++)=iphiU-1;
 		    if(p2)
 			*(px++)=0.25;
 		    else
@@ -188,30 +192,30 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 		}
 #else
 		int has_up,has_rt;
-		if(iy>0 && map[iy-1][ix]>0 && iy<ny1 && map[iy+1][ix]>0){
-		    *(pi++)=map[iy-1][ix]-1;
+		if(iphiD>0 && iphiU>0){
+		    *(pi++)=iphiD-1;
 		    *(px++)=0.25*cf;
 		    has_up=1;
 		}else{
 		    has_up=0;
 		}
-		if(ix>0 && map[iy][ix-1]>0 && ix<nx1 && map[iy][ix+1]>0){
-		    *(pi++)=map[iy][ix-1]-1;
+		if(iphiL>0 && iphiR>0){
+		    *(pi++)=iphiL-1;
 		    *(px++)=0.25*cf;
 		    has_rt=1;
 		}else{
 		    has_rt=0;
 		}
 		if(has_rt || has_up){
-		    *(pi++)=map[iy][ix]-1;
+		    *(pi++)=iphi0-1;
 		    *(px++)=(-0.5*has_rt-0.5*has_up)*cf;
 		}
 		if(has_rt){
-		    *(pi++)=map[iy][ix+1]-1;
+		    *(pi++)=iphiR-1;
 		    *(px++)=0.25*cf;
 		}
 		if(has_up){
-		    *(pi++)=map[iy+1][ix]-1;
+		    *(pi++)=iphiU-1;
 		    *(px++)=0.25*cf;
 		}
 

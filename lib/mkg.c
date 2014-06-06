@@ -104,20 +104,12 @@ static const double TOL=1.e-14;
   dp1 above comes from the gradient.
 */
 
-#define PMAP(ipix,limx,limy)			\
-    {ipix=(limx>=0 && limx<ploc->map->nx	\
-	   && limy>=0 && limy<ploc->map->ny)?	\
-	    pmaps[limy][limx]:0;}
-#define XMAP(iphi,nplocx,nplocy)			\
-    {iphi=(nplocx>=0 && nplocx<xloc->map->nx		\
-	   && nplocy>=0 && nplocy<xloc->map->ny)?	\
-	    xmaps[nplocy][nplocx]:0;}
 typedef struct{
     long i;
     double x;
 }record_t;
 #define ADDWT(A,B,C,D)				\
-    XMAP(iphi,(A),(C));				\
+    iphi=loc_map_get(xloc->map, (A),(C));	\
     if(iphi>0) wtsum+=(B)*(D);
 
 /**
@@ -210,9 +202,6 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 
     poffset[0]+=dsa2*saorc;/*offset to SALOC to make it subaperture center.*/
     poffset[1]+=dsa2*saorc;
-    
-    PDMAT(ploc->map, pmaps);
-    PDMAT(xloc->map, xmaps);
     double amp2[3][3];
     double wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
     double *wtalpha, *wtbeta;
@@ -305,7 +294,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	*/
 	for (limy=CEIL(limy1)-OFF; limy<FLOOR(limy2)+OFF+1; limy++){
 	    for (limx=CEIL(limx1)-OFF; limx<FLOOR(limx2)+OFF+1; limx++){
-		PMAP(ipix,limx,limy);
+		ipix=loc_map_get(ploc->map, limx, limy);
 		if (ipix>0){
 		    ipix--;
 		    weight[0]=0;
@@ -314,7 +303,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		    if(amp){
 			for(jtmp=0; jtmp<3; jtmp++){
 			    for(itmp=0; itmp<3; itmp++){
-				PMAP(ipix2,limx+itmp-1,limy+jtmp-1);
+				ipix2=loc_map_get(ploc->map, limx+itmp-1,limy+jtmp-1);
 				if(ipix2>0){
 				    amp2[jtmp][itmp]=ampcopy[ipix2-1];
 				}else{
@@ -417,7 +406,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				if(!same)
 				    wtsum/=scale;
 #define INTERP(A,B,C,D)							\
-    XMAP(iphi,A,C);							\
+    iphi=loc_map_get(xloc->map, A,C);	                                \
     if(iphi>0){								\
 	iphi--;								\
 	/*Check whether we already have the weight for this point.*/	\

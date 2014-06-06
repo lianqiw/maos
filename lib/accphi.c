@@ -21,7 +21,6 @@
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
-#define USE_OPTIM 1 /**<Use the optimized version.*/
 
 /*
   The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
@@ -307,7 +306,7 @@ void prop_index(PROPDATA_T *propdata){
 #define LINEAR_ADD_NONGRID						\
 double tmp=0; double wt=0;						\
 wt=(1.-dplocx)*(1.-dplocy);						\
-if(wt>EPS){								\
+if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
     if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);		\
     else tmp=NAN;							\
 }									\
@@ -339,7 +338,7 @@ if(isfinite(tmp)){							\
     int missing=0;					\
     MAKE_CUBIC_PARAM;					
 
-#define CUBIC_ADD_GRID					\
+#define MAKE_CUBIC_COEFF				\
     fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);		\
     fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);		\
     fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);		\
@@ -348,41 +347,37 @@ if(isfinite(tmp)){							\
     fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);		\
     fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);		\
     fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);		\
-    fy[3]=dplocy*dplocy*(c3+c4*dplocy);			\
+    fy[3]=dplocy*dplocy*(c3+c4*dplocy);			
+
+#define CUBIC_ADD_GRID					\
     register double sum=0;				\
     for(int ky=-1; ky<3; ky++){				\
 	for(int kx=-1; kx<3; kx++){			\
-	    double tmp=phiin[ky+nplocy][kx+nplocx];	\
-	    sum+=fx[kx+1]*fy[ky+1]*tmp;			\
+	    double wt=fx[kx+1]*fy[ky+1];		\
+	    if(wt>EPS){					\
+		double tmp=phiin[ky+nplocy][kx+nplocx];	\
+		sum+=wt*tmp;				\
+	    }						\
 	}						\
     }							\
     if(isfinite(sum)) phiout[iloc]+=sum*alpha;
 
-#define CUBIC_ADD_NONGRID						\
-    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);				\
-    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);				\
-    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);				\
-    fx[3]=dplocx*dplocx*(c3+c4*dplocx);					\
-									\
-    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);				\
-    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);				\
-    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);				\
-    fy[3]=dplocy*dplocy*(c3+c4*dplocy);					\
-    register double sum=0;						\
-    for(int jy=-1; jy<3; jy++){						\
-	for(int jx=-1; jx<3; jx++){					\
-	    long iphi;							\
-	    double wt=fx[jx+1]*fy[jy+1];				\
-	    if(wt>EPS|| 1){						\
-		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){		\
-		    sum+=alpha*fx[jx+1]*fy[jy+1]*phiin0[iphi];		\
-		}else{							\
-		    sum+=NAN;						\
-		}							\
-	    }								\
-	}								\
-    }									\
-    if(isfinite(sum)) phiout[iloc]+=sum;
+#define CUBIC_ADD_NONGRID					\
+    register double sum=0;					\
+    for(int jy=-1; jy<3; jy++){					\
+	for(int jx=-1; jx<3; jx++){				\
+	    long iphi;						\
+	    double wt=fx[jx+1]*fy[jy+1];			\
+	    if(wt>EPS){						\
+		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){	\
+		    sum+=wt*phiin0[iphi];			\
+		}else{						\
+		    sum+=NAN;					\
+		}						\
+	    }							\
+	}							\
+    }								\
+    if(isfinite(sum)) phiout[iloc]+=sum*alpha;
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -418,14 +413,14 @@ void prop_grid(ARGIN_GRID,
 #pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
 #endif
 	for(long iloc=jloc; iloc<end2; iloc++){
-	    //for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
 		continue;/*skip points that has zero amplitude */
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
 	    dplocy=myfma(py[iloc],dy_in2,displacey);
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocx<0||nplocx>=nxmax||nplocy<0||nplocy>=nymax){
+	    if(dplocx<0||dplocx>nxmax||dplocy<0||dplocy>nymax){
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
+		//Handle top/right boundary correctly
 		if(wrap){
 		    while(nplocx<0)
 			nplocx+=nx;
@@ -436,16 +431,16 @@ void prop_grid(ARGIN_GRID,
 		    while(nplocy>nymax)
 			nplocy-=ny;
 		
-		    nplocx1=(nplocx==nxmax?0:nplocx+1);
-		    nplocy1=(nplocy==nymax?0:nplocy+1);
 		}else{
 		    missing++;
 		    continue;
 		}
 	    }else{
-		nplocx1=nplocx+1;
-		nplocy1=nplocy+1;
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
 	    }
+	    nplocx1=(nplocx==nxmax?0:nplocx+1);
+	    nplocy1=(nplocy==nymax?0:nplocy+1);
 	    phiout[iloc]+=alpha*
 		(+(phiin[nplocy][nplocx]*(1.-dplocx)
 		   +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
@@ -484,10 +479,9 @@ void prop_nongrid(ARGIN_NONGRID,
 		continue;/*skip points that has zero amplitude */
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
 	    dplocy=myfma(py[iloc],dy_in2,displacey);
-	    
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=nymin && nplocy<nymax && nplocx>=nxmin && nplocx<nxmax){
+	    if(dplocy>=nymin && dplocy<=nymax && dplocx>=nxmin && dplocx<=nxmax){
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
 		nplocx1=nplocx+1;
 		nplocy1=nplocy+1;
 		LINEAR_ADD_NONGRID;
@@ -518,8 +512,8 @@ void prop_nongrid_map(ARGIN_NONGRID,
     for(int iy=start; iy<end; iy++)
     {
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy>=nymin && nplocy<nymax){
+	if(dplocy>=nymin && dplocy<=nymax){
+	    SPLIT(dplocy,dplocy,nplocy);
 	    nplocy1=nplocy+1;
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp task private(nplocx,dplocx,nplocx1)
@@ -527,9 +521,9 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		nplocx1=nplocx+1;
-		if(nplocx>=nxmin && nplocx<nxmax){
+		if(dplocx>=nxmin && dplocx<=nxmax){
+		    SPLIT(dplocx,dplocx,nplocx);
+		    nplocx1=nplocx+1;
 		    LINEAR_ADD_NONGRID;
 		}else{
 		    missing++;
@@ -569,17 +563,17 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	for(int iy=0; iy<pts->nx; iy++){
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=nymin && nplocy<nymax){
+	    if(dplocy>=nymin && dplocy<=nymax){
+		SPLIT(dplocy,dplocy,nplocy);
 		nplocy1=nplocy+1;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
 		    if(ampout && fabs(ampout[iloc])<EPS)
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    SPLIT(dplocx,dplocx,nplocx);
-		    nplocx1=nplocx+1;
-		    if(nplocx>=nxmin && nplocx<nxmax){
+		    if(dplocx>=nxmin && dplocx<=nxmax){
+			SPLIT(dplocx,dplocx,nplocx);
+			nplocx1=nplocx+1;
 			LINEAR_ADD_NONGRID;
 		    }else{
 			missing++;
@@ -624,11 +618,12 @@ void prop_grid_cubic(ARGIN_GRID,
 	for(long iloc=jloc; iloc<end2; iloc++){
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
 	    dplocy=myfma(py[iloc],dy_in2,displacey);
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocx>=1&&nplocx<nxmax&&nplocy>=1&&nplocy<nymax){
+	    if(dplocx>=1&&dplocx<=nxmax&&dplocy>=1&&dplocy<=nymax){
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
 		dplocx0=1.-dplocx;
+		MAKE_CUBIC_COEFF;
 		CUBIC_ADD_GRID;
 	    }else{
 		missing++;
@@ -668,17 +663,18 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	for(int iy=0; iy<pts->nx; iy++){
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=1 && nplocy<nymax){
+	    if(dplocy>=1 && dplocy<=nymax){
+		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
 		    if(ampout && fabs(ampout[iloc])<EPS)
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx>=1 && nplocx<nxmax){
+		    if(dplocx>=1 && dplocx<=nxmax){
+			SPLIT(dplocx,dplocx,nplocx);
 			dplocx0=1.-dplocx;
+			MAKE_CUBIC_COEFF;
 			CUBIC_ADD_GRID;
 		    }else{
 			missing++;
@@ -711,15 +707,16 @@ void prop_grid_map_cubic(ARGIN_GRID,
 #endif
     {
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy>=1 && nplocy<nymax){
+	if(dplocy>=1 && dplocy<=nymax){
+	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx>=1 && nplocx<nxmax){
+		if(dplocx>=1 && dplocx<=nxmax){
+		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF;
 		    CUBIC_ADD_GRID;
 		}else{
 		    missing++;
@@ -758,12 +755,12 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 		continue;/*skip points that has zero amplitude */
 	    dplocy=myfma(py[iloc],dy_in2,displacey);
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=nymin && nplocy<nymax 
-	       && nplocx>=nxmin && nplocx<nxmax){
+	    if(dplocy>=nymin && dplocy<=nymax && dplocx>=nxmin && dplocx<=nxmax){
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
 		dplocx0=1.-dplocx;
+		MAKE_CUBIC_COEFF;
 		CUBIC_ADD_NONGRID;
 	    }else{
 		missing++;
@@ -797,17 +794,18 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	for(int iy=0; iy<pts->nx; iy++){
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy>=nymin && nplocy<nymax){
+	    if(dplocy>=nymin && dplocy<=nymax){
+		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
 		    if(ampout && fabs(ampout[iloc])<EPS)
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    SPLIT(dplocx,dplocx,nplocx);
-		    if(nplocx>=nxmin && nplocx<nxmax){
+		    if(dplocx>=nxmin && dplocx<=nxmax){
+			SPLIT(dplocx,dplocx,nplocx);
 		        dplocx0=1.-dplocx;
+			MAKE_CUBIC_COEFF;
 		        CUBIC_ADD_NONGRID;
 		    }else{
 			missing++;
@@ -840,15 +838,16 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 #endif
     {
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy>=nymin && nplocy<nymax){
+	if(dplocy>=nymin && dplocy<=nymax){
+	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx>=nxmin && nplocx<nxmax){
+		if(dplocx>=nxmin && dplocx<=nxmax){
+		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF;
 		    CUBIC_ADD_NONGRID;
 		}else{
 		    missing++;

@@ -23,7 +23,7 @@ extern "C"
 #include "accphi.h"
 #include "prop_wrap.h"
 /*
-  One kernel that handles multiple layers/directions.
+  One kernel that handles multiple layers/directions, linear or cubic
   Forward: Propagate from XLOC to WFS (Parallel across each WFS).  
   Backward (Transpose): Propagate from WFS to XLOC (Parallel across each Layer)
   
@@ -36,6 +36,7 @@ extern "C"
 */
 __global__ void 
 gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
+    /*Using shared memory to reduce register spill */
     __shared__ gpu_prop_grid_shared_t shared;
     int &stepx=shared.stepx;
     int &stepy=shared.stepy;
@@ -75,7 +76,7 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
     if(threadIdx.x==0){
 	iy0=blockIdx.y*blockDim.y+threadIdx.y;
     }
-    __syncthreads();//necessary here
+    __syncthreads();//necessary here because otherwise different wraps may modify the shared data.
     for(int ii=0; ii<nn; ii++){
 	PROP_WRAP_T *datai;
 	int ips, idir;
@@ -114,7 +115,6 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 	    npsx=datai->nxps;
 	}
 	__syncthreads();
-	//For unknown reason, pdir, pps cannot be put in shared memory.
 	pdir=pdirs[idir]+datai->offdir;
 	pps=ppss[ips]+datai->offps;
 	if(!cc && match){
@@ -208,8 +208,9 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 #pragma unroll
 					for(int kx=-4; kx<4; kx++){
 					    const int kx2=kx+xcent;
-					    if(kx2>xmindir && kx2<xmaxdir){
-						sum+=fy[ky+4]*fx[kx+4]*pdir[(kx2)+(ky2)*ndirx];
+					    Real wt;
+					    if(kx2>xmindir && kx2<xmaxdir && (wt=fy[ky+4]*fx[kx+4])>EPS){
+						sum+=wt*pdir[(kx2)+(ky2)*ndirx];
 					    }
 					}
 				    }
@@ -257,7 +258,10 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 				    int kx0=(xminps-ix)>-1?(xminps-ix):-1;
 				    int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
 				    for(int kx=kx0; kx<kx1; kx++){
-					atomicAdd(&pps[(iy+ky)*npsx+(kx+ix)], fx[kx+1]*fy[ky+1]*value);
+					Real wt;
+					if((wt=fx[kx+1]*fy[ky+1])>EPS){
+					    atomicAdd(&pps[(iy+ky)*npsx+(kx+ix)], wt*value);
+					}
 				    }
 				}
 			    }
@@ -298,7 +302,9 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 				int kx0=(xminps-ix)>-1?(xminps-ix):-1;
 				int kx1=(xmaxps-ix)< 3?(xmaxps-ix): 3;
 				for(int kx=kx0; kx<kx1; kx++){
-				    sum+=fx[kx+1]*fy[ky+1]*pps[(iy+ky)*npsx+(kx+ix)];
+				    Real wt;
+				    if((wt=fx[kx+1]*fy[ky+1])>EPS)
+					sum+=wt*pps[(iy+ky)*npsx+(kx+ix)];
 				}
 			    }
 			    pdir[mx+my*ndirx]+=sum*alpha;
@@ -315,10 +321,15 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 			const int kx=(int)jx;
 			const Real temp=pdir[ix+iy*ndirx]*alpha;
-			atomicAdd(&pps[kx+      ky*npsx], temp*(1.f-fracx)*(1.f-fracy));
-			atomicAdd(&pps[kx+1    +ky*npsx], temp*fracx*(1.f-fracy));
-			atomicAdd(&pps[kx+  (ky+1)*npsx], temp*(1.f-fracx)*fracy);
-			atomicAdd(&pps[kx+1+(ky+1)*npsx], temp*fracx*fracy);
+			Real wt;
+			if((wt=(1.f-fracx)*(1.f-fracy))>EPS)
+			    atomicAdd(&pps[kx+      ky*npsx], temp*wt);
+			if((wt=fracx*(1.f-fracy))>EPS)
+			    atomicAdd(&pps[kx+1    +ky*npsx], temp*wt);
+			if((wt=(1.f-fracx)*fracy)>EPS)
+			    atomicAdd(&pps[kx+  (ky+1)*npsx], temp*wt);
+			if((wt=fracx*fracy)>EPS)
+			    atomicAdd(&pps[kx+1+(ky+1)*npsx], temp*wt);
 		    }
 		}
 	    }else{
@@ -331,12 +342,22 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 			Real jx;
 			const Real fracx=Z(modf)(dispx+ix*xratio, &jx);
 			const int kx=(int)jx;
-			
-			pdir[ix+iy*ndirx]+=
+			Real tmp=0;
+			Real wt;
+			if((wt=1.f-fracy)>EPS){
+			    tmp+=(pps[kx+      ky*npsx]*(1.f-fracx)+
+				  pps[kx+1+    ky*npsx]*fracx)*wt;
+			}
+			if((wt=fracy)>EPS){
+			    tmp+=(pps[kx  +(ky+1)*npsx]*(1.f-fracx)+
+				  pps[kx+1+(ky+1)*npsx]*fracx)*wt;
+			}
+			pdir[ix+iy*ndirx]+=alpha*tmp;
+			/*pdir[ix+iy*ndirx]+=
 			    alpha*(+(pps[kx+      ky*npsx]*(1.f-fracx)+
 				     pps[kx+1+    ky*npsx]*fracx)*(1.f-fracy)
 				   +(pps[kx  +(ky+1)*npsx]*(1.f-fracx)+
-				     pps[kx+1+(ky+1)*npsx]*fracx)*fracy);
+				   pps[kx+1+(ky+1)*npsx]*fracx)*fracy);*/
 		    }
 		}
 	    }
@@ -425,4 +446,23 @@ void gpu_prop_grid_prep(PROP_WRAP_T*res,
     res->nx=nx;
     res->ny=ny;
     res->cc=cc?cc->p:NULL;
+}
+
+void gpu_prop_grid(cumap_t &out, cumap_t &in, Real dispx, Real dispy, Real alpha, curmat *cc, char trans){
+    PROP_WRAP_T wrap;
+    PROP_WRAP_T *wrap_gpu;
+    cudaMalloc(&wrap_gpu, sizeof(PROP_WRAP_T));
+    gpu_prop_grid_prep(&wrap, out, in, dispx, dispy, cc);
+    wrap.togpu(wrap_gpu);
+    Real **p;
+    cudaMalloc(&p, sizeof(Real*)*2);
+    Real *tmp[2]={out.p->p, in.p->p};
+    cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyDeviceToHost);
+    gpu_prop_grid_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
+	(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
+    cudaMemcpy(&wrap, wrap_gpu, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+    if(wrap.reverse){
+	cudaFree(wrap.reverse);
+    }
+    cudaFree(wrap_gpu);
 }

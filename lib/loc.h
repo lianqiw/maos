@@ -28,6 +28,14 @@
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
+/*Obtain an entry in the map, with boundary checking enforced*/
+INLINE long loc_map_get(map_t *map, long ix, long iy){
+    if(ix>=0 && ix<map->nx && iy>=0 && iy<map->ny){
+	return (long)map->p[ix+iy*map->nx];
+    }else{
+	return 0;
+    }
+}
 void loc_embed(map_t *dest, const loc_t *loc, const double *in);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);

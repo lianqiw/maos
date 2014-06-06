@@ -125,12 +125,12 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	if(nslave==0) {
 	    continue;
 	}
-	loc_create_map_npad(aloc[idm],1);
-	PDMAT(aloc[idm]->map, map);
-	double ox=aloc[idm]->map->ox;
-	double oy=aloc[idm]->map->oy;
-	double dx1=1./aloc[idm]->dx;
-	double dy1=1./aloc[idm]->dy;
+	loc_create_map(aloc[idm]);
+	map_t *map=aloc[idm]->map;
+	const double ox=map->ox;
+	const double oy=map->oy;
+	const double dx1=1./aloc[idm]->dx;
+	const double dy1=1./aloc[idm]->dy;
 	//dsp *slavet=spnew(nact,nslave,nslave*5);
 	dsp *slavet=spnew(nact,nact,nslave*5);
 	spint *pp=slavet->p;
@@ -148,16 +148,15 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	    }else if(actcpl[iact]<thres){/*slave actuators */
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dy1);
-		assert(map[mapy][mapx]==iact+1);
 		int near_active=0;//neighbor is more coupled
 		int near_exist=0;//neighbor exist
 		double thres2=MAX(0.1, actcpl[iact]);//was 0.1
-		for(int idy=-1; idy<2; idy++){
-		    for(int idx=-1; idx<2; idx++){
-			if(abs(idx+idy)!=1){
+		for(int iy=-1; iy<2; iy++){
+		    for(int ix=-1; ix<2; ix++){
+			if(abs(ix+iy)!=1){
 			    continue;/*skip self and corner */
 			}
-			int kact1=map[mapy+idy][mapx+idx];
+			int kact1=loc_map_get(map, mapx+ix, mapy+iy);
 			if(kact1>0 && !stuck[kact1-1]){
 			    near_exist++;
 			    if(actcpl0[kact1]>thres2){//better than this one.
@@ -180,12 +179,12 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		if(!near_active) value=-scl*0.1/near_exist;
 		double valsum=0;
 		/*part 1*/
-		for(int idy=-1; idy<2; idy++){
-		    for(int idx=-1; idx<2; idx++){
-			if(abs(idx+idy)!=1){
+		for(int iy=-1; iy<2; iy++){
+		    for(int ix=-1; ix<2; ix++){
+			if(abs(ix+iy)!=1){
 			    continue;//skip self and corner
 			}
-			int kact1=map[mapy+idy][mapx+idx];
+			int kact1=loc_map_get(map, mapx+ix, mapy+iy);
 			if(kact1>0 && !stuck[kact1-1]){
 			    if(!near_active){
 				valsum+=(px[count]=value);
@@ -324,10 +323,10 @@ void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!actfloat->p[idm]) continue;
-	loc_create_map_npad(aloc[idm],1);
-	PDMAT(aloc[idm]->map, map);
-	double ox=aloc[idm]->map->ox;
-	double oy=aloc[idm]->map->oy;
+	loc_create_map(aloc[idm]);
+	map_t *map=aloc[idm]->map;
+	double ox=map->ox;
+	double oy=map->oy;
 	double dx1=1./aloc[idm]->dx;
 	double dy1=1./aloc[idm]->dy;
 	const double *locx=aloc[idm]->locx;
@@ -354,12 +353,12 @@ void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat
 	    long mapx=(long)round((locx[iact]-ox)*dx1);
 	    long mapy=(long)round((locy[iact]-oy)*dy1);
 	    /*find all its neighbors. */
-	    for(int idy=-1; idy<2; idy++){
-		for(int idx=-1; idx<2; idx++){
-		    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
+	    for(int iy=-1; iy<2; iy++){
+		for(int ix=-1; ix<2; ix++){
+		    if((ix!=0 && iy!=0) || (ix==0 && iy==0)){
 			continue;/*skip center and corner */
 		    }
-		    int kact=map[mapy+idy][mapx+idx]-1;
+		    int kact=loc_map_get(map, mapx+ix, mapy+iy)-1;
 		    if(kact>-1){
 			if(!isfloat[kact]){
 			    indfloat[kact][nindfloat[kact]]=iact;
@@ -487,10 +486,10 @@ spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
     int ndm=actfloat->nx;
     spcell *out=spcellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
-	loc_create_map_npad(aloc[idm],1);
-	PDMAT(aloc[idm]->map, map);
-	double ox=aloc[idm]->map->ox;
-	double oy=aloc[idm]->map->oy;
+	loc_create_map(aloc[idm]);
+	map_t *map=aloc[idm]->map;
+	double ox=map->ox;
+	double oy=map->oy;
 	double dx1=1./aloc[idm]->dx;	
 	double dy1=1./aloc[idm]->dy;
 	const double *locx=aloc[idm]->locx;
@@ -519,7 +518,7 @@ spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 			if(abs(idx+idy)!=1){
 			    continue;/*skip center and corner */
 			}
-			int kact=map[mapy+idy][mapx+idx]-1;
+			int kact=loc_map_get(map, mapx+idx, mapy+idy)-1;
 			if(kact>-1){
 			    pi[count]=kact;
 			    px[count]=1.;
@@ -558,10 +557,10 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     dsp *out=0;
     const double *cpl=actcplc->p;
     const double *cpl0 = cpl-1;
-    loc_create_map_npad(aloc,1);
-    PDMAT(aloc->map, map);
-    double ox=aloc->map->ox;
-    double oy=aloc->map->oy;
+    loc_create_map(aloc);
+    map_t *map=aloc->map;
+    double ox=map->ox;
+    double oy=map->oy;
     double dx1=1./aloc->dx;
     double dy1=1./aloc->dy;
     const double *locx=aloc->locx;
@@ -582,23 +581,23 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
 	    /*first, interpolate from neighbors of higher cpl*/
 	    int near_active=0;
 	    double thres2=0.1;
-	    for(int idy=-1; idy<2; idy++){
-		for(int idx=-1; idx<2; idx++){
-		    if(abs(idx)+abs(idy)>1){
+	    for(int iy=-1; iy<2; iy++){
+		for(int ix=-1; ix<2; ix++){
+		    if(abs(ix)+abs(iy)>1){
 			continue;/*include self and neighbor*/
 		    }
-		    int kact1=map[mapy+idy][mapx+idx];
+		    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
 		    if(kact1>0 && cpl0[kact1]>=thres2){
 			near_active++;
 		    }
 		}
 	    }
-	    for(int idy=-1; idy<2; idy++){
-		for(int idx=-1; idx<2; idx++){
-		    if(abs(idx)+abs(idy)>1){
+	    for(int iy=-1; iy<2; iy++){
+		for(int ix=-1; ix<2; ix++){
+		    if(abs(ix)+abs(iy)>1){
 			continue;/*skip corner only*/
 		    }
-		    int kact1=map[mapy+idy][mapx+idx];
+		    int kact1=loc_map_get(map, mapx+ix, mapy+iy);
 		    if(kact1>0){
 			if(!near_active){
 			    pi[count]=kact1-1;

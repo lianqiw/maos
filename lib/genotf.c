@@ -259,7 +259,6 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
     long notfy2=notfy/2;
     double dx1=1./loc->dx;
     double dy1=1./loc->dy;
-    PDMAT(map, mapp);
     for(long jm=0; jm<notfy; jm++){
 	long jm2=(jm-notfy2);/*peak in the center */
 	/*long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner */
@@ -270,13 +269,11 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dy1);
 		long ix=(long)round((locx[iloc]+im2*xsep-map->ox)*dx1);
-		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
-		    long iloc2=(long)mapp[iy][ix];
-		    if(iloc2--){
-			pval0[count][0]=iloc;
-			pval0[count][1]=iloc2;
-			count++;
-		    }
+		long iloc2=(long)loc_map_get(map, ix, iy);
+		if(iloc2>0){
+		    pval0[count][0]=iloc;
+		    pval0[count][1]=iloc2-1;
+		    count++;
 		}
 	    }
 	    qval[jm][im].loc=pval0+count2;
@@ -411,7 +408,6 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     map_t *map=loc->map;
     long ncovx2=ncovx/2;
     long ncovy2=ncovy/2;
-    PDMAT(map, mapp);
     for(long jm=0; jm<ncovy; jm++){
 	long jm2=(jm-ncovy2);//peak in the center 
 	/*long jm2=jm<ncovy2?jm:jm-ncovy;//peak in the corner */
@@ -424,13 +420,11 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 		if(amp && amp[iloc]<ampthres) continue;
 		long iy=(long)round((locy[iloc]-map->oy)*dy1+jm2);
 		long ix=(long)round((locx[iloc]-map->ox)*dx1+im2);
-		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
-		    long iloc2=(long)mapp[iy][ix];
-		    if(iloc2--){
-			if(!amp || amp[iloc2]>=ampthres){
-			    acc+=pcov[iloc][iloc2];
-			    count++;
-			}
+		long iloc2=(long)loc_map_get(map, ix, iy);
+		if(iloc2>0){
+		    if(!amp || amp[iloc2]>=ampthres){
+			acc+=pcov[iloc][iloc2-1];
+			count++;
 		    }
 		}
 	    }

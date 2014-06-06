@@ -175,7 +175,7 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
    Create a map for loc with padding of 1. 
 */
 void loc_create_map(loc_t *loc){
-    loc_create_map_npad(loc,1);
+    loc_create_map_npad(loc,0);
 }
 PNEW(maplock);
 /**
@@ -188,7 +188,8 @@ void loc_create_map_npad(loc_t *loc, int npad){
     LOCK(maplock);
     if(loc->map){
 	if(loc->npad<npad){
-	    warning("loc->map arealdy existed with npad=%d. will not redo for %d\n", loc->npad, npad);
+	    print_backtrace();
+	    warning("loc->map arealdy existed with npad=%d. Cannot redo for %d\n", loc->npad, npad);
 	}
 	UNLOCK(maplock);
 	return;
@@ -223,13 +224,8 @@ void loc_create_map_npad(loc_t *loc, int npad){
 	int iy=(int)round((locy[iloc]-ymin)*dy_in1);
 	pmap[iy][ix]=iloc+1;/*start from 1. */
     }
-    static int LOC_EXTEND=-1;
-    if(LOC_EXTEND==-1){
-	LOC_EXTEND=1;
-	READ_ENV_INT(LOC_EXTEND, 0, 1);
-	info("LOC_EXTEND=%d\n", LOC_EXTEND);
-    }
-    if(LOC_EXTEND && loc->nloc<map_nx*map_ny){
+    DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
+    if(LOC_MAP_EXTEND && loc->nloc<map_nx*map_ny){
 	int (*level)[map_nx]=calloc(map_nx*map_ny, sizeof(int));
 	for(int iy=0; iy<map_ny; iy++){
 	    for(int ix=0; ix<map_nx; ix++){

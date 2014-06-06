@@ -1036,6 +1036,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
 	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
 	    dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
+	    spwrite(ht, "sodium_ht");
 	    powfs[ipowfs].sodium=dnew(nxnew, Nain->ny);
 	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
 			     

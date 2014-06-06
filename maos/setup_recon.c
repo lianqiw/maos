@@ -407,7 +407,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    dsp *H=mkh(recon->aloc[idm], loc, NULL, 
 			       displace[0],displace[1],scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
-		    
 		    GA[idm][iwfs]=spmulsp(recon->GP->p[ipowfs], H);
 		    spfree(H);
 		}

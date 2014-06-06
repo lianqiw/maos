@@ -36,14 +36,15 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     */
     long nsa=saloc->nloc;
     double dsa=saloc->dx;
-    loc_create_map(xloc);
     double dx1=1./xloc->dx;
     double dx2=scale*dx1;
     double dy1=1./xloc->dy;
     double dy2=scale*dy1;
     double poffset[2];
-    poffset[0]=(displace[0]-xloc->map->ox+saorc*dsa*0.5*scale)*dx1;
-    poffset[1]=(displace[1]-xloc->map->oy+saorc*dsa*0.5*scale)*dy1;
+    loc_create_map(xloc);
+    map_t *map=xloc->map;
+    poffset[0]=(displace[0]-map->ox+saorc*dsa*0.5*scale)*dx1;
+    poffset[1]=(displace[1]-map->oy+saorc*dsa*0.5*scale)*dy1;
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=calloc(nmax, sizeof(long));
@@ -54,11 +55,7 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     sloc->locy=calloc(nmax,sizeof(double));
     double *amploc=NULL;
     if(amp) amploc=calloc(nmax,sizeof(double));
-    PDMAT(xloc->map, xmaps);
-    const int nxmin=xloc->npad;
-    const int nymin=xloc->npad;
-    const int nxmax=xloc->map->nx-nxmin-1;
-    const int nymax=xloc->map->ny-nxmin-1;
+
     dsp*zax=spnew(xloc->nloc,nsa,xloc->nloc);
     dsp*zay=spnew(xloc->nloc,nsa,xloc->nloc);
     long xcount=0,ycount=0;
@@ -80,10 +77,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 	int count=0;
 	/*find points that belongs to this subaperture. */
 	for(int iy=iceil(scy-dsa2); iy<ifloor(scy+dsa2);iy++){
-	    if(iy<nymin || iy>=nymax) continue;
 	    for(int ix=iceil(scx-dsa2); ix<ifloor(scx+dsa2);ix++){
-		if(ix<nxmin || ix>=nxmax) continue;
-		int ii=xmaps[iy][ix];
+		int ii=loc_map_get(map, ix, iy);
 		if(ii>0){
 		    ii--;
 		    ind[count]=ii;
@@ -131,7 +126,6 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     spfree(zax);
     spfree(zay);
     if(amp) free(amploc);
-    /*loc_free_map(xloc);*/
     return ZAT;
 }
 /**

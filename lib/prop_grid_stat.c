@@ -48,7 +48,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	       int wrap,           /**<[in] wrap input OPD or not*/
 	       long colstart,      /**<[in] First column to do ray tracing*/
 	       long colend         /**<[in] Last column (exclusive) to do ray tracing*/
-	       ){
+    ){
     CONST_OUT double *phiout2=0;
     double dplocx=0, dplocy=0;
     int nplocx=0, nplocy=0;
@@ -74,10 +74,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     CONST_IN double *phiin  = mapin->p;
     const double xratio  = dxout*dx_in2;
     const double yratio  = dyout*dy_in2;
-#if USE_OPTIM == 1
-    if(fabs(xratio-1)<EPS && fabs(yratio-1)<EPS){
-	/*loc_out and loc_in has the same grid sampling.*/
-	for(icol=colstart; icol<colend; icol++)
+    DEF_ENV_FLAG(PROP_GRID_STAT_OPTIM, 1);
+    if(PROP_GRID_STAT_OPTIM){
+	if(fabs(xratio-1)<EPS && fabs(yratio-1)<EPS){
+	    /*loc_out and loc_in has the same grid sampling.*/
+	    for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
@@ -106,24 +107,16 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			irows=iceil(-dplocx);
 		    else
 			irows=0;
-		}
-		SPLIT(dplocx,dplocx,nplocx);
-
-		if(wrap){
-		    phicol  = phiin+nplocy*wrapx1+nplocx;
-		    phicol2 = phiin+(nplocy==wrapy?0:nplocy+1)*wrapx1+nplocx;
-		}else{
-		    if(nplocy<wrapy && nplocy>=0){
-			phicol=phiin+nplocy*wrapx1+nplocx;
-			phicol2=phiin+(nplocy+1)*wrapx1+nplocx;
-		    }else{
-			if(nplocy!=wrapy){
-			    missing+=collen;
-			}
+		    if(dplocx>wrapy) {
+			missing+=collen;
 			goto end1;
 		    }
 		}
- 
+		SPLIT(dplocx,dplocx,nplocx);
+
+		phicol  = phiin+nplocy*wrapx1+nplocx;
+		phicol2 = phiin+(nplocy==wrapy?0:nplocy+1)*wrapx1+nplocx;
+	 
 		bl=dplocx*dplocy;
 		br=(1.-dplocx)*dplocy;
 		tl=dplocx*(1-dplocy);
@@ -194,11 +187,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			rowdiv=rowdiv2;
 		    }
 		}
-    end1:;
+	      end1:;
 	    }/*end for icol*/
-    }else{
-	/*grid size of loc_in and loc_out doesn't agree*/
-	for(icol=colstart; icol<colend; icol++)
+	}else{
+	    /*grid size of loc_in and loc_out doesn't agree*/
+	    for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
@@ -313,12 +306,12 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			rowdiv=rowdiv2;
 		    }
 		}
-	    end2:;
+	      end2:;
 	    }/*end for icol*/
-    }/*fabs(dx_in2*dxout-1)<EPS*/
-#else
-    /*non optimized case. slower, but hopefully accurate*/
-    for(icol=colstart; icol<colend; icol++)
+	}/*fabs(dx_in2*dxout-1)<EPS*/
+    }else{
+	/*non optimized case. slower, but hopefully accurate*/
+	for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
 #pragma omp task
 #endif
@@ -383,7 +376,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 #endif		
 	    }/*for irow*/
 	}/*for icol*/
-#endif
+    }
     if(missing>0){
 	static int warned=0;
 	if(!warned){

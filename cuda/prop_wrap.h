@@ -73,4 +73,5 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss,
 void gpu_prop_grid_prep(PROP_WRAP_T*res, 
 			const cugrid_t &g_dir, const cugrid_t &gi,
 			Real dispx, Real dispy, curmat *cc);
+void gpu_prop_grid(cumap_t &out, cumap_t &in, Real dispx, Real dispy, Real alpha, curmat *cc, char trans);
 #endif
