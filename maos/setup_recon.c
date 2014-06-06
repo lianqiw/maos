@@ -216,19 +216,18 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		//don't need HXW for low order wfs that does not participate in tomography. 
 		continue;
 	    }
-	    double  hs = parms->wfs[iwfs].hs;
+	    const double  hs = parms->wfs[iwfs].hs;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel[iwfs]){
 		loc=recon->ploc_tel[iwfs];
 	    }
 	    for(int ips=0; ips<npsr; ips++){
-		double  ht = recon->ht->p[ips];
-		double  scale=1. - ht/hs;
-		double  displace[2];
-		displace[0]=parms->wfsr[iwfs].thetax*ht;
-		displace[1]=parms->wfsr[iwfs].thetay*ht;
+		const double  ht = recon->ht->p[ips];
+		const double  scale=1. - ht/hs;
+		const double dispx=parms->wfsr[iwfs].thetax*ht;
+		const double dispy=parms->wfsr[iwfs].thetay*ht;
 		HXW[ips][iwfs]=mkh(recon->xloc[ips], loc, NULL, 
-				   displace[0],displace[1],scale,
+				   dispx,dispy,scale,
 				   parms->tomo.cubic, parms->tomo.iac);
 	    }
 	}
@@ -262,14 +261,12 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
-	    double displace[2]={0,0};
 	    recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].gloc, powfs[ipowfs].gloc,
 					powfs[ipowfs].gamp->p, powfs[ipowfs].saloc,
-					1, 1, displace, 1);
+					1, 1, 0, 0, 1);
 	}else{
-	    double displace[2]={0,0};
 	    recon->GWR->p[ipowfs] = mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
-					(loc_t*)powfs[ipowfs].pts, 1,1,displace);
+					(loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 	}
     }
 }
@@ -303,17 +300,15 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    switch(parms->powfs[ipowfs].gtype_recon){
 	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
 		       using fine sampled powfs.gloc as intermediate plane*/
-		double displace[2]={0,0};
 		info2(" Gploc");
 		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
-				  powfs[ipowfs].saloc,1,1,displace,1);
+				  powfs[ipowfs].saloc,1,1,0,0,1);
 	    }
 		break;
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
 		       powfs.gloc as intermediate plane.*/
-		double displace[2]={0,0};
 		dsp* ZS0=mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
-			     (loc_t*)powfs[ipowfs].pts, 1,1,displace);
+			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
 		dsp *H=mkh(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p, 0,0,1,0,0);
 		GP->p[ipowfs]=spmulsp(ZS0,H);
@@ -380,10 +375,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    for(int idm=0; idm<ndm; idm++){
 		double  ht = parms->dm[idm].ht;
 		double  scale=1. - ht/hs;
-		double  displace[2]={0,0};
+		double  dispx=0, dispy=0;
 		if(!parms->recon.glao){
-		    displace[0]=parms->wfsr[iwfs].thetax*ht;
-		    displace[1]=parms->wfsr[iwfs].thetay*ht;
+		    dispx=parms->wfsr[iwfs].thetax*ht;
+		    dispy=parms->wfsr[iwfs].thetay*ht;
 		}
 		int freeloc=0;
 		loc_t *loc;
@@ -399,13 +394,13 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		if(parms->dbg.usegwr){
 		    warning("todo: Fix and use mkg directly\n");
 		    dsp *H=mkh(recon->aloc[idm], loc, NULL, 
-			       displace[0],displace[1],scale,
+			       dispx,dispy,scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    GA[idm][iwfs]=spmulsp(recon->GWR->p[ipowfs], H);
 		    spfree(H);
 		}else{
 		    dsp *H=mkh(recon->aloc[idm], loc, NULL, 
-			       displace[0],displace[1],scale,
+			       dispx,dispy,scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    GA[idm][iwfs]=spmulsp(recon->GP->p[ipowfs], H);
 		    spfree(H);
@@ -1445,11 +1440,10 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	for(int ips=0; ips<recon->npsr; ips++){
 	    const double ht = recon->ht->p[ips];
 	    const double scale=1.-ht/hs;
-	    double displace[2];
-	    displace[0]=parms->wfsr[iwfs_ttf].thetax*ht;
-	    displace[1]=parms->wfsr[iwfs_ttf].thetay*ht;
+	    const double dispx=parms->wfsr[iwfs_ttf].thetax*ht;
+	    const double dispy=parms->wfsr[iwfs_ttf].thetay*ht;
 	    dsp *HX_TTF=mkh(recon->xloc[ips], recon->floc, NULL,
-			    displace[0], displace[1], scale,
+			    dispx, dispy, scale,
 			    parms->tomo.cubic, parms->tomo.iac);
 	    dmulsp(&recon->RFdfx->p[ips], RFsci, HXF[ips][ifit], 1);
 	    dmulsp(&recon->RFdfx->p[ips], RFsci, HX_TTF, -1);
@@ -1458,11 +1452,10 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const double ht=parms->dm[idm].ht;
 	    const double scale=1.-ht/hs;
-	    double displace[2];
-	    displace[0]=parms->wfsr[iwfs_ttf].thetax*ht;
-	    displace[1]=parms->wfsr[iwfs_ttf].thetay*ht;
+	    const double dispx=parms->wfsr[iwfs_ttf].thetax*ht;
+	    const double dispy=parms->wfsr[iwfs_ttf].thetay*ht;
 	    dsp *HA_TTF=mkh(recon->aloc[idm], recon->floc, NULL,
-			    displace[0], displace[1], scale,
+			    dispx, dispy, scale,
 			    parms->dm[idm].cubic,parms->dm[idm].iac);
 	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA[idm][ifit], 1);
 	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA_TTF, -1);

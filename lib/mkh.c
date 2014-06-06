@@ -65,7 +65,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     if(cubic){
 	return mkhb_cubic(locin, locout, ampout, displacex, displacey, scale, cubic_iac);
     }
-      loc_create_map(locin);
+    loc_create_map(locin);
     dsp *hback;
     int nplocx, nplocy;
     long iloc;
@@ -142,7 +142,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     }
     bp[locout->nloc]=count;
     spsetnzmax(hback, count);
-    spdroptol(hback,1e-12);
+    spdroptol(hback,EPS);
     return hback;
 }
 /**
@@ -159,7 +159,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const double dx_in2 = scale*dx_in1;
     const double dy_in1 = 1./locin->dy;
     const double dy_in2 = scale*dy_in1;
-    if(!locin->map) loc_create_map_npad(locin, 1);
+    loc_create_map_npad(locin, 1);
     map_t *map=locin->map;
     displacex = (displacex-map->ox)*dx_in1;
     displacey = (displacey-map->oy)*dy_in1;
@@ -246,7 +246,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     }/*for */
     bp[locout->nloc]=count;
     spsetnzmax(hback, count);
-    spdroptol(hback,1e-12);
+    spdroptol(hback,EPS);
     if(missing>0){
 	warning("%d points not covered by input screen\n", missing);
     }

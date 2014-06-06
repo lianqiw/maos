@@ -58,7 +58,7 @@
 #define FLOOR(A) (fabs(A-round(A))<TOL?(int)round(A):(int)floor(A))
 #define DBLNZ(A) (fabs(A)>TOL)
 
-static const double TOL=1.e-14;
+static const double TOL=5.e-16;
 #define OFF 1 /*0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach. */
 
 /*
@@ -122,7 +122,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	   loc_t *saloc,    /**<Coordinate of the subapertures*/
 	   int saorc,       /**<0: saloc is the center of the subapertures. 1: saloc is the origin of the subapertures.*/
 	   double scale,    /**<cone effect*/
-	   double *displace,/**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	   double dispx,   /**<displacement due to beam angle (2 vector). similar as accphi routines*/
+	   double dispy,    /**<displacement due to beam angle (2 vector). similar as accphi routines*/
 	   int do_partial   /**<1: use points that are outside of by close to a subaperture. 0: do not use.*/
 	   )
 {
@@ -145,8 +146,6 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     double weight[2];
     double dx1,dx2;
     double dp1,dp2,poffset[2];
-    double displacex=0, displacey=0;
-   
     int nsa,isa;
     int limx, limy;
     int same;
@@ -179,8 +178,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	poffset[1]*=-dp1;
 
 	/*displace between PLOC(SALOC) and XLOC. Only used if same==0;*/
-	displacex=(displace[0]-xloc->map->ox)*dx1;
-	displacey=(displace[1]-xloc->map->oy)*dx1;	
+	dispx=(dispx-xloc->map->ox)*dx1;
+	dispy=(dispy-xloc->map->oy)*dx1;	
 	dp2=dp1;
 	if(fabs(scale-1)>1.e-10)
 	    info2("This is a bug in mkg to do three plane mkg when scale!=1\n");
@@ -190,8 +189,10 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	  misregistration as between SALOC and PLOC
 	*/
 	same=1;
-	poffset[0]=(displace[0]-ploc->map->ox)*dp1;
-	poffset[1]=(displace[1]-ploc->map->oy)*dp1;
+	poffset[0]=(dispx-ploc->map->ox)*dp1;
+	poffset[1]=(dispy-ploc->map->oy)*dp1;
+	dispx=0;
+	dispy=0;
 	dp2=dp1*scale;
     }
 
@@ -227,8 +228,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	ampcopy=malloc(sizeof(double)*ploc->nloc);
 	memcpy(ampcopy,amp,sizeof(double)*ploc->nloc);
 	for(ipix=0; ipix<ploc->nloc; ipix++){
-	    plocx=ploc->locx[ipix]*dx2+displacex;
-	    plocy=ploc->locy[ipix]*dx2+displacey;
+	    plocx=ploc->locx[ipix]*dx2+dispx;
+	    plocy=ploc->locy[ipix]*dx2+dispy;
 	    SPLIT(plocx,dplocx,nplocx);
 	    SPLIT(plocy,dplocy,nplocy);
 	    /*Find out whether this PLOC point has XLOC points associated,
@@ -386,8 +387,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				  points on XLOC that couples in to ipix.
 				*/
 
-				plocx=ploc->locx[ipix]*dx2+displacex;
-				plocy=ploc->locy[ipix]*dx2+displacey;
+				plocx=ploc->locx[ipix]*dx2+dispx;
+				plocy=ploc->locy[ipix]*dx2+dispy;
 				SPLIT(plocx,dplocx,nplocx);
 				SPLIT(plocy,dplocy,nplocy);
 				/*info2("weight[%d]=%g\n",iw,weight[iw]); */
@@ -464,7 +465,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     spfree(GS0t[1]); GS0t[1]=NULL;
     /*loc_free_map(ploc);
       loc_free_map(xloc);*/
-    spdroptol(GS0, 1e-7);/*drop small values. */
+    spdroptol(GS0, 5e-16);/*drop small values. */
     return GS0;
 }
 #ifndef MATLAB_MEX_FILE
@@ -472,9 +473,9 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
    Returns the transpose of mkgt()
  */
 dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
-	 int saorc, double scale, double *displace, int do_partial){
+	 int saorc, double scale, double dispx, double dispy, int do_partial){
     dsp *GS0T=mkgt(xloc, ploc, amp, saloc, 
-		   saorc, scale, displace, do_partial);
+		   saorc, scale, dispx, dispy, do_partial);
     dsp *GS0=sptrans(GS0T);
     spfree(GS0T);
     return GS0;

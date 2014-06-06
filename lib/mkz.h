@@ -24,7 +24,7 @@
    Contains function that creates ztilt gradient operator
 */
 dsp * mkzt(loc_t* xloc, double *amp,loc_t *saloc, 
-	      int saorc, double scale, double *displace);
+	   int saorc, double scale, double dispx, double dispy);
 dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
-	    int saorc, double scale, double *displace);
+	 int saorc, double scale, double dispx, double dispy);
 #endif

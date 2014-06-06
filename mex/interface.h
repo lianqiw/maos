@@ -20,6 +20,7 @@ extern "C" {
 #endif
 extern int donotquit;
 INLINE mxArray *dsp2mx(const dsp*A){
+    if(!A) return 0;
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
     memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
@@ -76,29 +77,20 @@ INLINE loc_t *mx2loc(const mxArray *A){
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;
-    int found=0;
-    int iloc;
-    for(iloc=0; iloc<loc->nloc-2; iloc++){
-	if(fabs(loc->locy[2+iloc]-loc->locy[iloc])<1.e-10 
-	   && fabs(loc->locy[2+iloc]-loc->locy[1+iloc])<1.e-10
-	   && fabs(loc->locx[2+iloc]+loc->locx[iloc]-loc->locx[1+iloc]*2)<1.e-10){
-	    loc->dx=fabs(loc->locx[iloc+1]-loc->locx[iloc]);
-	    found++;
-	    break;
+    const double tol=1e-7;
+    double dxd=INFINITY, dyd=INFINITY;
+    for(long i=0; i<loc->nloc-1; i++){
+	double dxi=fabs(loc->locx[i+1]-loc->locx[i]);
+	if(dxi>tol && dxi+tol<dxd){
+	    dxd=dxi;
+	}
+	double dyi=fabs(loc->locy[i+1]-loc->locy[i]);
+	if(dyi>tol && dyi+tol<dyd){
+	    dyd=dyi;
 	}
     }
-    for(iloc=0; iloc<loc->nloc-2; iloc++){
-	double diff=fabs(loc->locy[iloc+1]-loc->locy[iloc]);
-	if(diff>1.e-10){
-	    loc->dy=diff;
-	    found++;
-	    break;
-	}
-    }
-    if(found!=2){
-	info("found=%d\n", found);
-	mexErrMsgTxt("Unable to determine dx or dy");
-    }
+    loc->dx=dxd;
+    loc->dy=dyd;
     return loc;
 }
 

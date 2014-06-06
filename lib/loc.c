@@ -226,50 +226,79 @@ void loc_create_map_npad(loc_t *loc, int npad){
     }
     DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
     if(LOC_MAP_EXTEND && loc->nloc<map_nx*map_ny){
+	/*
+	  For cubic spline interpolation around the edge of the grid, we need
+	  "fake" actuators that take the value of its neighbor to avoid edge
+	  roll off by using zero for non-existing actuators. This is achieved by
+	  filling the vacant locations in the map to loc mapping with negative
+	  indices of active neighbor. The neighbors are selected according to 1)
+	  whether this is already a ghost actautor, 2) how far away is the
+	  neighbor, 3) how far away the neighbor is from the center.
+
+	  The ghost actuator mapping is tweaked to properly handle the boundary
+	  region where there are only three actuators. We treat these regions as active.
+
+	  A remain question is which neighbor's value to assume when there are
+	  two neighbors that are equally close by.
+	 */
 	int (*level)[map_nx]=calloc(map_nx*map_ny, sizeof(int));
 	for(int iy=0; iy<map_ny; iy++){
 	    for(int ix=0; ix<map_nx; ix++){
 		if(pmap[iy][ix]){
-		    level[iy][ix]=1;//indicate active.
+		    level[iy][ix]=0;//level of existence.
 		}
 	    }
 	}
 	/*we do the interpolation with incremental level, for max of npad levels*/
-	for(int cur_level=1; cur_level<=MAX(1,npad); cur_level++){
-	    for(int iy=0; iy<map_ny; iy++){
-		for(int ix=0; ix<map_nx; ix++){
-		    if(!pmap[iy][ix]){
-			/*choose the minimum level of interpolation*/
-			int min_level=cur_level+1, min_jx=0, min_jy=0;
-			for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
-			    for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
-				if((abs(iy-jy)+abs(ix-jx))==1 && pmap[jy][jx]){//edge
-				    if(level[jy][jx]<min_level){
-					min_level=level[jy][jx];
-					min_jy=jy;
-					min_jx=jx;
+	for(int cur_level=0; cur_level<=npad; cur_level++){
+	    int num_found;
+	    do{
+		num_found=0;
+		for(int iy=0; iy<map_ny; iy++){
+		    for(int ix=0; ix<map_nx; ix++){
+			if(!pmap[iy][ix]){
+			    int count=0;//count how many neighbors of lowest level
+			    /*choose the minimum level of interpolation*/
+			    int min_level=INT_MAX, min_jx=0, min_jy=0, min_sep=INT_MAX;
+			    double min_rad=INFINITY;
+			    for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
+				for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
+				    int sep=(abs(iy-jy)+abs(ix-jx));
+				    int iphi;
+				    if((sep==1 || sep==2) && (iphi=abs(pmap[jy][jx]))){//edge
+					double rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
+					if(level[jy][jx]<min_level){
+					    min_level=level[jy][jx];
+					    min_rad=rad;
+					    min_sep=sep;
+					    min_jy=jy;
+					    min_jx=jx;
+					    count=1;//reset to one
+					}else if(level[jy][jx]==min_level){
+					    count++;
+					    if(sep<min_sep){
+						min_sep=sep;
+						min_jy=jy;
+						min_jx=jx;
+					    }else if(sep==min_sep && rad<min_rad){
+						min_rad=rad;
+						min_jy=jy;
+						min_jx=jx;
+					    }
+					}
 				    }
 				}
 			    }
-			}
-			for(int jy=MAX(0, iy-1); jy<MIN(map_ny, iy+2); jy++){
-			    for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
-				if((abs(iy-jy)+abs(ix-jx))==2 && pmap[jy][jx]){//corner
-				    if(level[jy][jx]<min_level){
-					min_level=level[jy][jx];
-					min_jy=jy;
-					min_jx=jx;
-				    }
-				}
+			    if((min_level==cur_level && count==3) || min_level<cur_level){
+				//if level satisfy or even if three neighbor with higher level.
+				pmap[iy][ix]=-abs(pmap[min_jy][min_jx]);
+				level[iy][ix]=min_level+1;
+				num_found++;
 			    }
-			}
-			if(min_level!=cur_level+1){
-			    pmap[iy][ix]=-abs(pmap[min_jy][min_jx]);
-			    level[iy][ix]=min_level+1;
 			}
 		    }
 		}
-	    }
+	    }while(num_found);
 	}
 	free(level);
     }

@@ -27,7 +27,7 @@
    on xloc to subapertures defines on saloc.
  */
 dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc, 
-	   int saorc, double scale, double *displace)
+	   int saorc, double scale, double dispx, double dispy)
 {
     /*compute ztilt influence function from xloc to saloc
       saorc: SALOC is subaperture origin or center. 
@@ -40,11 +40,10 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     double dx2=scale*dx1;
     double dy1=1./xloc->dy;
     double dy2=scale*dy1;
-    double poffset[2];
     loc_create_map(xloc);
     map_t *map=xloc->map;
-    poffset[0]=(displace[0]-map->ox+saorc*dsa*0.5*scale)*dx1;
-    poffset[1]=(displace[1]-map->oy+saorc*dsa*0.5*scale)*dy1;
+    dispx=(dispx-map->ox+saorc*dsa*0.5*scale)*dx1;
+    dispy=(dispy-map->oy+saorc*dsa*0.5*scale)*dy1;
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=calloc(nmax, sizeof(long));
@@ -72,8 +71,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     double *slocy=sloc->locy;
     for(int isa=0; isa<nsa; isa++){
 	/*center of subaperture when mapped onto XLOC*/
-	double scx=saloc->locx[isa]*dx2+poffset[0];
-	double scy=saloc->locy[isa]*dy2+poffset[1];
+	double scx=saloc->locx[isa]*dx2+dispx;
+	double scy=saloc->locy[isa]*dy2+dispy;
 	int count=0;
 	/*find points that belongs to this subaperture. */
 	for(int iy=iceil(scy-dsa2); iy<ifloor(scy+dsa2);iy++){
@@ -133,9 +132,9 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
    on xloc to subapertures defines on saloc.
  */
 dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
-	      int saorc, double scale, double *displace)
+	 int saorc, double scale, double dispx, double dispy)
 {
-    dsp *zt=mkzt(xloc,amp,saloc,saorc,scale,displace);
+    dsp *zt=mkzt(xloc,amp,saloc,saorc,scale,dispx, dispy);
     dsp *z=sptrans(zt);
     spfree(zt);
     return z;
