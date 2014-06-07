@@ -71,17 +71,17 @@ long gpu_get_mem(void){
 /**
    Get available memory.
 */
-static long gpu_get_idle_mem(int igpu){
+static long gpu_get_free_mem(int igpu){
     size_t fr=0, tot=0;
     int ans;
     if((ans=cudaMemGetInfo(&fr, &tot))){
 	warning2("cudaMemGetInfo failed with error %d\n", ans);
     }
-    if(tot-fr>MEM_RESERVE){//GPU used by some other process. do not use it.
-	return 0;
-    }else{
-	return (long)fr;
-    }
+    //if(tot-fr>MEM_RESERVE){//GPU used by some other process. do not use it.
+    //	return 0;
+    //}else{
+    return (long)fr;
+    //}
 }
 static int cmp_long2_descend(const long *a, const long *b){
     if(b[1]>a[1]){
@@ -186,7 +186,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		int ig=gmap[jg][0];
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){//this allocates context and create a CPU thread for this GPU.
-		    gpu_info[ig][1]=gpu_get_idle_mem(ig);
+		    gpu_info[ig][1]=gpu_get_free_mem(ig);
 		    info2("GPU %d has mem %.1f GB\n", jg, gpu_info[ig][1]/1024/1024/1024.);
 		    if(gpu_info[ig][1]>=MEM_RESERVE){
 			gpu_valid_count++;

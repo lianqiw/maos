@@ -29,7 +29,7 @@ AC_OPENMP
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-AC_ENABLE_SHARED
+#AC_ENABLE_SHARED
 AC_ENABLE_STATIC
 AM_PROG_AR
 AC_PROG_LIBTOOL
@@ -162,7 +162,7 @@ AC_SUBST(ldsuffix)
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}"
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_CPU -I${PRE_DIR}/include"
 
@@ -255,7 +255,7 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -diag-disable remark -vec-report=3"
-COMMON_GCC="-Wno-deprecated-declarations -static-libgcc -fms-extensions"
+COMMON_GCC="-Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno" #-ffinite-math-only  "

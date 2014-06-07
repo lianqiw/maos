@@ -1,6 +1,6 @@
 WARN=-Xcompiler "$(OPTS)"
 if CCBIN_GCC
-WARN+=-Xcompiler -Wno-unused-value
+WARN+=-Xcompiler "-Wno-unused-value -D__STRICT_ANSI__"
 endif
 AM_CFLAGS=$(WARN) $(CUDAOPT) 
 if DEBUG
@@ -28,6 +28,7 @@ SRC_MVM= mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_real.cu mvmfull_pipe.cu mvm_daemon.
 SRC_WFS= wfsinit.cu wfsints.cu wfsgrad.cu
 SRCS=$(SRC_LIB) $(SRC_RECON) $(SRC_WFS) $(SRC_MVM) perfinit.cu perfevl.cu 
 #LTLIBRARIES does not work.
+#must include EXTRA_DIST in SOURCES, otherwise some automake tools are missing
 lib_LIBRARIES=libgpu.a
 libgpu_a_SOURCES=$(SRCS) $(EXTRA_DIST)
 libgpu_a_LIBADD=

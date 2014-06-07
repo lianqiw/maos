@@ -60,13 +60,13 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
 
     if(threadIdx.x==0 && threadIdx.y==0){
 	if(ndir==0){//layer to layer. caching mechanism
-	    assert(gridDim.z==nps);
+	    if(gridDim.z!=nps) return;
 	    nn=1;
 	}else if(trans=='t'){
-	    assert(gridDim.z==nps);
+	    if(gridDim.z!=nps) return;
 	    nn=ndir;
 	}else{
-	    assert(gridDim.z==ndir);
+	    if(gridDim.z!=ndir) return;
 	    nn=nps;
 	}
     }
