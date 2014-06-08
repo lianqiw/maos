@@ -164,7 +164,7 @@ TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-CFLAGS="$CFLAGS_EXTRA $CFLAGS_CPU -I${PRE_DIR}/include"
+CFLAGS="$CFLAGS_EXTRA $CFLAGS_CPU -I${PRE_DIR}/include -fPIC"
 
 #Try to discover CUDA install in the system
 
@@ -691,7 +691,6 @@ if test "$with_matlab" != "no" ;then
 else
     AM_CONDITIONAL(USE_MEX, false)
 fi
-AM_CONDITIONAL(CCBIN_GCC, false)
 
 if test -z "$CUDADIR" ;then
     with_cuda="no"
@@ -754,20 +753,15 @@ if test "$with_cuda" != "no" ;then
     if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
 	CCBIN="${CCBIN%% *}"
 	NVCC="$NVCC -ccbin ${CCBIN%% *}"
-	case "$CCBIN" in 
-            gcc*)
- 		AM_CONDITIONAL(CCBIN_GCC, true)
-  		;;			  
-	esac
     fi
     if test "$cudaver" -lt 40 ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
     fi
     if test "$cudaver" -ge 40 ;then
-	CUDAOPT="$CUDAOPT -gencode arch=compute_20,code=sm_20"
+	CUDAOPT+=" -gencode arch=compute_20,code=sm_20"
     fi
     if test "$cudaver" -ge 42 ;then
-	CUDAOPT="$CUDAOPT -gencode arch=compute_30,code=sm_30"
+	CUDAOPT+=" -gencode arch=compute_30,code=sm_30"
     fi
     #if test "$cudaver" -ge 50 ;then
     #    CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
@@ -775,6 +769,23 @@ if test "$with_cuda" != "no" ;then
     #if test -n "$OPENMP_CFLAGS";then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
     #fi
+    if test "$debug" = "yes" ;then
+        CUDAOPT+=" -O0"
+    else
+	CUDAOPT+=" -O3"
+    fi
+    CUDAOPT+=" -g -lineinfo -DHAVE_CONFIG_H -I.."
+    #CUDAOPT+="-Xptxas=-v -dlcm=cg"
+    if test "$cpu" = "64" ;then
+        CUDAOPT+=" -DDLONG"
+    fi
+    CCBIN_OPTS="$OPTS"
+    case "$CCBIN" in 
+        gcc*)
+	CCBIN_OPTS+=" -Wno-unused-value -D__STRICT_ANSI__"
+  	;;			  
+    esac
+    CUDAOPT+=" -Xcompiler \"$(OPTS)\""
     echo LDCUDA="$LDCUDA"
     echo CUDAOPT="$CUDAOPT"
     LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"

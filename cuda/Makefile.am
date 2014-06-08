@@ -1,22 +1,4 @@
-WARN=-Xcompiler "$(OPTS)"
-if CCBIN_GCC
-WARN+=-Xcompiler "-Wno-unused-value -D__STRICT_ANSI__"
-endif
-AM_CFLAGS=$(WARN) $(CUDAOPT) 
-if DEBUG
-AM_CFLAGS+=-O0 -g
-else
-AM_CFLAGS+=-O3 -g
-endif
-#AM_CFLAGS+=-Xptxas="-v" #for verbose 
-#AM_CFLAGS+=-Xptxas -dlcm=cg
-AM_CFLAGS+=-lineinfo
-#AM_CFLAGS+=-Xcompiler -arch -Xcompiler x86_64
-if USE_LONG
-AM_CFLAGS+=-DDLONG
-endif
-AM_CFLAGS+=-DHAVE_CONFIG_H -I..
-#AM_LDFLAGS=$(LDCUDA) -static
+AM_CFLAGS=$(CUDAOPT)
 #In the order of include:
 HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h prop_wrap.h
 HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h

@@ -77,11 +77,9 @@ static long gpu_get_free_mem(int igpu){
     if((ans=cudaMemGetInfo(&fr, &tot))){
 	warning2("cudaMemGetInfo failed with error %d\n", ans);
     }
-    //if(tot-fr>MEM_RESERVE){//GPU used by some other process. do not use it.
-    //	return 0;
-    //}else{
+    info2("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
+	  igpu, fr*9.3e-10, tot*9.3e-10);
     return (long)fr;
-    //}
 }
 static int cmp_long2_descend(const long *a, const long *b){
     if(b[1]>a[1]){
@@ -185,15 +183,15 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	    for(int jg=0; jg<ngpu_tot; jg++){//jg: nvml index. ig: cuda index
 		int ig=gmap[jg][0];
 		gpu_info[ig][0]=ig;
-		if(!cudaSetDevice(ig)){//this allocates context and create a CPU thread for this GPU.
+		if(!cudaSetDevice(ig)){
+		    //this allocates context and create a CPU thread for this GPU.
 		    gpu_info[ig][1]=gpu_get_free_mem(ig);
-		    info2("GPU %d has mem %.1f GB\n", jg, gpu_info[ig][1]/1024/1024/1024.);
 		    if(gpu_info[ig][1]>=MEM_RESERVE){
 			gpu_valid_count++;
 		    }
 		}
 	    }
-	}while(0);//while(gpu_valid_count<ngpu && gpu_valid_count<ngpu_tot && sleep(60));
+	}while(0);
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
 	for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
