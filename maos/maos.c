@@ -75,12 +75,20 @@ void maos(const PARMS_T *parms){
 	/*Setup DM fitting parameters so we can flatten the DM*/
 	setup_recon_dm(recon, parms);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
-	setup_surf(parms, aper, powfs, recon);
-	/*set up physical optics powfs data*/
-	setup_powfs_phy(parms, powfs);
+#if _OPENMP>=200805
+#pragma omp parallel
+#pragma omp single 
+#pragma omp task untied final(parms->sim.nthread==1)
+#endif
+	{
+	    setup_surf(parms, aper, powfs, recon);
+	    /*set up physical optics powfs data*/
+	    setup_powfs_phy(parms, powfs);
+	}
     }
 
     if(!parms->sim.evlol){
+	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
@@ -111,6 +119,11 @@ void maos(const PARMS_T *parms){
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){
+#if _OPENMP>=200805
+#pragma omp parallel
+#pragma omp single 
+#pragma omp task untied final(parms->sim.nthread==1)
+#endif
 	setup_recon_mvm(parms, recon, powfs);
     }
     /*
@@ -119,7 +132,12 @@ void maos(const PARMS_T *parms){
     */
 
     free_recon_unused(parms, recon);
-    toc2("Presimulation");sync();
+    toc2("Presimulation");
+#if _OPENMP>=200805
+#pragma omp parallel
+#pragma omp single 
+#pragma omp task untied final(parms->sim.nthread==1)
+#endif
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
@@ -306,12 +324,8 @@ int main(int argc, const char *argv[]){
     }else{
 	dirskysim=".";
     }
-    /*Loads the main software*/
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied final(parms->sim.nthread==1)
-#endif
+    /*do not use prallel single in maos(). It causes blas to run single threaded
+     * during preparation. Selective enable parallel for certain setup functions that doesn't use blas*/
     maos(parms);
     free_parms(parms);
     info2("Job finished at %s\n",myasctime());

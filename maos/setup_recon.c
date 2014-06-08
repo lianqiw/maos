@@ -69,7 +69,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	    locwrite(recon->ploc, "%s/ploc",dirsetup);
 	}
     }
-    loc_create_map_npad(recon->ploc, parms->tomo.square?0:1);
+    loc_create_map_npad(recon->ploc, parms->tomo.square?0:1,0,0);
     recon->pmap=recon->ploc->map;
     loc_create_stat(recon->ploc);
     if(parms->recon.misreg_tel2wfs){
@@ -91,6 +91,7 @@ static void
 setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
     const int npsr=recon->npsr;
+    long nin0=0;
     if(parms->load.xloc){
 	char *fn=parms->load.xloc;
 	warning("Loading xloc from %s\n",fn);
@@ -107,7 +108,6 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
 	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
-	long nin0=0;
 	/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
 	if(parms->tomo.nxbase){
 	    nin0=parms->tomo.nxbase;
@@ -161,8 +161,8 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     recon->xny=calloc(recon->npsr, sizeof(long));
     recon->xnloc=calloc(recon->npsr, sizeof(long));
     for(long i=0; i<recon->npsr; i++){
-	/*Need to be one for laplacian_loc to work*/
-	loc_create_map_npad(recon->xloc[i], parms->tomo.square?0:1);
+	loc_create_map_npad(recon->xloc[i], (nin0||parms->tomo.square)?0:1, 
+			    nin0*recon->os->p[i], nin0*recon->os->p[i]);
 	recon->xmap[i]=recon->xloc[i]->map;
 	recon->xmap[i]->h=recon->ht->p[i];
 	recon->xnx[i]=recon->xmap[i]->nx;

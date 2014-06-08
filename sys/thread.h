@@ -69,6 +69,7 @@ struct thread_t{
 INLINE void THREAD_POOL_INIT(int nthread){
     fprintf(stderr, "Using OpenMP version %d\n", _OPENMP);
     omp_set_num_threads(nthread);
+    omp_set_nested(0);//make sure nested is not enabled
 }
 INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
     (void)urgent;

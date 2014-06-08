@@ -26,7 +26,7 @@
  */
 
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
-void loc_create_map_npad(loc_t *loc, int npad);
+void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny);
 void loc_create_map(loc_t *loc);
 /*Obtain an entry in the map, with boundary checking enforced*/
 INLINE long loc_map_get(map_t *map, long ix, long iy){

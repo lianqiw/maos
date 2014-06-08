@@ -121,6 +121,14 @@ static int task_cmp(const task_t *a, const task_t *b){
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
 int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
+    if(gpus && ngpu>0){
+	for(int ig=0; ig<ngpu; ig++){
+	    if(gpus[ig]<0){
+		info2("CUDA is disabled by user.\n");
+		return 0;
+	    }
+	}
+    }
     int ans, ngpu_tot=0;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
 	info2("No GPUs available. ans=%d\n", ans);

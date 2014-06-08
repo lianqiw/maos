@@ -51,7 +51,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
 	mapfree(fmap);
     }
-    loc_create_map_npad(recon->floc, parms->fit.square?0:1);
+    loc_create_map_npad(recon->floc, parms->fit.square?0:1, 0, 0);
     recon->fmap=recon->floc->map;
     /*create the weighting W for bilinear influence function. See [Ellerbroek 2002] */
     if(parms->load.W){
@@ -145,7 +145,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	double ht=parms->dm[idm].ht;
 	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	double dx=parms->dm[idm].dx;
-	loc_create_map_npad(recon->aloc[idm], parms->fit.square?0:1);
+	loc_create_map_npad(recon->aloc[idm], parms->fit.square?0:1, 0, 0);
 	recon->amap[idm]=recon->aloc[idm]->map;
 	recon->amap[idm]->h=ht;
 	recon->amap[idm]->cubic=parms->dm[idm].cubic;

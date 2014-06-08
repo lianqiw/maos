@@ -175,7 +175,7 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
    Create a map for loc with padding of 1. 
 */
 void loc_create_map(loc_t *loc){
-    loc_create_map_npad(loc,0);
+    loc_create_map_npad(loc,0,0,0);
 }
 PNEW(maplock);
 /**
@@ -184,7 +184,7 @@ PNEW(maplock);
    region in the map is replaced with closest valid point. This extends the
    coverage of the grid automatically.
 */
-void loc_create_map_npad(loc_t *loc, int npad){
+void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
     LOCK(maplock);
     if(loc->map){
 	if(loc->npad<npad){
@@ -211,8 +211,18 @@ void loc_create_map_npad(loc_t *loc, int npad){
     }
     const double dx_in1=1./fabs(loc->dx);
     const double dy_in1=1./fabs(loc->dy);
-    const int map_nx=(int) round((xmax-xmin)*dx_in1)+1;
-    const int map_ny=(int) round((ymax-ymin)*dy_in1)+1;
+    int map_nx=(int) round((xmax-xmin)*dx_in1)+1;
+    int map_ny=(int) round((ymax-ymin)*dy_in1)+1;
+    if(nx && ny){
+	if(map_nx>nx || map_ny>ny){
+	    error("Specified size %dx%d is too small, need at least %dx%d\n", 
+		  nx, ny, map_nx, map_ny);
+	}
+	xmin-=(nx-map_nx)/2*loc->dx;
+	ymin-=(ny-map_ny)/2*loc->dy;
+	map_nx=nx;
+	map_ny=ny;
+    }
     loc->map = mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
     loc->map->ox=xmin;
     loc->map->oy=ymin;
@@ -232,7 +242,7 @@ void loc_create_map_npad(loc_t *loc, int npad){
 	  roll off by using zero for non-existing actuators. This is achieved by
 	  filling the vacant locations in the map to loc mapping with negative
 	  indices of active neighbor. The neighbors are selected according to 1)
-	  whether this is already a ghost actautor, 2) how far away is the
+	  whether this is already a ghost actuator, 2) how far away is the
 	  neighbor, 3) how far away the neighbor is from the center.
 
 	  The ghost actuator mapping is tweaked to properly handle the boundary

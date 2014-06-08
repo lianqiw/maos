@@ -159,7 +159,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const double dx_in2 = scale*dx_in1;
     const double dy_in1 = 1./locin->dy;
     const double dy_in2 = scale*dy_in1;
-    loc_create_map_npad(locin, 1);
+    loc_create_map_npad(locin, 1,0,0);
     map_t *map=locin->map;
     displacex = (displacex-map->ox)*dx_in1;
     displacey = (displacey-map->oy)*dy_in1;

@@ -237,7 +237,7 @@ void prop_index(PROPDATA_T *propdata){
 
 #define PREPIN_NONGRID(map_npad)			\
     /*padding to avoid test boundary*/			\
-    loc_create_map_npad(locin, map_npad);		\
+    loc_create_map_npad(locin, map_npad,0,0);		\
     const double dx_in1 = 1./locin->dx;			\
     const double dx_in2 = scale*dx_in1;			\
     const double dy_in1 = 1./locin->dy;			\
@@ -889,7 +889,7 @@ void prop_nongrid_bin(const loc_t *locin,
 	error("This routine is designed for down sampling.\n");
     }
     (void) ampout;
-    loc_create_map_npad(locout, 1);
+    loc_create_map_npad(locout, 1,0,0);
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
     const int nxmin=locout->npad; 

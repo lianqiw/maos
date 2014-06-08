@@ -390,7 +390,7 @@ static void test_accuracy(void){
     locwrite((loc_t*)pts,"accphi_pts");
     locwrite(loc,"accphi_loc");
     locwrite(locin, "accphi_locin");
-    loc_create_map_npad(locin, 1);
+    loc_create_map_npad(locin, 1, 0, 0);
     mapwrite(locin->map, "accphi_locin_map");
 
     map_t *screen2=mapnew2(locin->map);
