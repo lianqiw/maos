@@ -592,7 +592,11 @@ void gpu_tomo(SIM_T *simu){
     if(parms->dbg.tomo){
 	curecon->tomo_test(simu);
     }else{
-	int copy2cpu=(parms->plot.run>1 || !parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao));
+	int copy2cpu=(parms->plot.run>1 
+		      || !parms->gpu.fit 
+		      || parms->save.opdr 
+		      || (recon->moao && !parms->gpu.moao)
+		      || parms->evl.tomo);
 	simu->cgres->p[0]->p[simu->reconisim]=
 	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
 			  parms->tomo.psol?simu->gradlastol:simu->gradlastcl);

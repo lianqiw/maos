@@ -2583,27 +2583,14 @@ PARMS_T * setup_parms(ARG_T *arg){
  */
 void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 #if USE_CUDA 
-    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
-    use_cuda=gpu_init(arg->gpus, arg->ngpu, parms);
-#else
-    use_cuda=0;
-#endif
-    if(use_cuda){
-	if(parms->evl.tomo){
-	    warning("evl.tomo in cuda not implemented yet.\n");
-	    use_cuda=0;
-	}
-	if(parms->sim.end==0){
-	    use_cuda=0;
-	}
+    if(parms->sim.end==0){
+	use_cuda=0;
+    }else{
+	use_cuda=1;
     }
     if(use_cuda){
-	if(parms->sim.evlol){
-	    memset(&parms->gpu, 0, sizeof(GPU_CFG_T));
-	}
-	if(parms->sim.idealfit){
-	    parms->gpu.tomo=0;/*no need tomo.*/
-	    parms->fit.cachex=0;
+	if(parms->evl.tomo){
+	    parms->gpu.evl=0;
 	}
 	if(parms->recon.alg==0){/*MV*/
 	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
@@ -2618,6 +2605,29 @@ void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
 		parms->gpu.fit=0;
 	    }
+	}else if(parms->recon.alg==1){
+	    parms->gpu.tomo=0;
+	    parms->gpu.fit=0;
+	    if(parms->gpu.lsr){
+		warning("\n\nGPU reconstruction for LSR is not available yet\n");
+		parms->gpu.lsr=0;
+	    }
+	}
+    }
+    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
+    if(use_cuda) use_cuda=gpu_init(arg->gpus, arg->ngpu, parms);
+#else
+    use_cuda=0;
+#endif
+    if(use_cuda){
+	if(parms->sim.evlol){
+	    memset(&parms->gpu, 0, sizeof(GPU_CFG_T));
+	}
+	if(parms->sim.idealfit){
+	    parms->gpu.tomo=0;/*no need tomo.*/
+	    parms->fit.cachex=0;
+	}
+	if(parms->recon.alg==0){/*MV*/
 	    if(parms->sim.idealfit && parms->gpu.fit){
 		parms->gpu.fit=2;//In idealfit, FR is not assembled.
 	    }
@@ -2646,15 +2656,7 @@ void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 		    }
 		}
 	    }
-	}else if(parms->recon.alg==1){
-	    parms->gpu.tomo=0;
-	    parms->gpu.fit=0;
-	    if(parms->gpu.lsr){
-		warning("\n\nGPU reconstruction for LSR is not available yet\n");
-		parms->gpu.lsr=0;
-	    }
 	}
-
 	if(!parms->atm.frozenflow){
 	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
 	    parms->gpu.evl=0;
@@ -2669,11 +2671,11 @@ void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 	if(parms->gpu.tomo && parms->tomo.bgs){
 	    error("BGS in GPU is not implemented yet\n");
 	}
+	if(parms->gpu.fit!=2){
+	    parms->fit.cachedm=0;
+	    parms->fit.cachex=0;
+	}
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
-    }
-    if(parms->gpu.fit!=2){
-	parms->fit.cachedm=0;
-	parms->fit.cachex=0;
     }
 }

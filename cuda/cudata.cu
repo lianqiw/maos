@@ -134,6 +134,27 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	info2("No GPUs available. ans=%d\n", ans);
 	return 0;
     }
+    long mem_minimum=0;
+    if(parms){
+	if(parms->gpu.evl || parms->gpu.wfs){
+	    const int nps=parms->atm.nps;
+	    long nxn=parms->atm.nxn;
+	    long nyn=parms->atm.nyn;
+	    mem_minimum+=sizeof(Real)*nps*nxn*nyn;
+	}
+	if(parms->gpu.evl){
+	    mem_minimum+=sizeof(Real)*parms->evl.nevl*pow(parms->aper.d/parms->evl.dx, 2);
+	}
+	if(parms->gpu.wfs){
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*4;
+	    }
+	}
+	if(parms->gpu.tomo || parms->gpu.fit){
+	    mem_minimum+=sizeof(Real)*parms->atmr.nps*pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*4;
+	}
+	info2("CUDA: minimum memory requirement is %ld\n", mem_minimum);
+    }
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
     int fdlock=lock_file(fnlock, 1, 0);
@@ -194,23 +215,26 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		if(!cudaSetDevice(ig)){
 		    //this allocates context and create a CPU thread for this GPU.
 		    gpu_info[ig][1]=gpu_get_free_mem(ig);
-		    if(gpu_info[ig][1]>=MEM_RESERVE){
+		    if(gpu_info[ig][1]>=mem_minimum){
 			gpu_valid_count++;
 		    }
 		}
 	    }
 	}while(0);
-	/*sort so that gpus with higest memory is in the front.*/
-	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
-	for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
-	    if(ig==ngpu_tot || gpu_info[ig][1]<MEM_RESERVE){
-		if(repeat){
-		    ig=0; //reset to beginning.
-		}else{
-		    break; //stop
+	if(gpu_valid_count){
+	    /*sort so that gpus with higest memory is in the front.*/
+	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
+	    for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
+		if(ig<ngpu_tot && gpu_info[ig][1]>=mem_minimum){
+		    GPUS[NGPU++]=(int)gpu_info[ig][0];
+		}else if(ig==ngpu_tot || gpu_info[ig][1]<mem_minimum){
+		    if(NGPU && repeat){
+			ig=0; //reset to beginning.
+		    }else{
+			break; //stop
+		    }
 		}
 	    }
-	    GPUS[NGPU++]=(int)gpu_info[ig][0];
 	}
 	free(gpu_info);
     }
@@ -243,20 +267,29 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	     * iteratively assign each task to the minimally used GPU*/
 	    cudata_t::evlgpu=(int*)calloc(parms->evl.nevl, sizeof(int));
 	    cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
-	    struct task_t tasks[1+parms->evl.nevl+parms->nwfs];
+	    int ntask=(parms->gpu.tomo || parms->gpu.fit)?1:0+parms->gpu.evl?parms->evl.nevl:0+parms->gpu.wfs?parms->nwfs:0;
+	    if(ntask==0){
+		delete [] cudata_all;
+		free(GPUS);
+		NGPU=0;
+		return NGPU;
+	    }
+	    struct task_t tasks[ntask];
 	    //recon
 	    int count=0;
-	    tasks[count].timing=20;//ms
-	    tasks[count].dest=&cudata_t::recongpu;
-	    count++;
+	    if(parms->gpu.tomo || parms->gpu.fit){
+		tasks[count].timing=20;//ms
+		tasks[count].dest=&cudata_t::recongpu;
+		count++;
+	    }
 	    //evl
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    for(int ievl=0; parms->gpu.evl && ievl<parms->evl.nevl; ievl++){
 		tasks[count].timing=4.7;//ms
 		tasks[count].dest=cudata_t::evlgpu+ievl;
 		count++;
 	    }
 	    //wfs
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    for(int iwfs=0; parms->gpu.wfs && iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		tasks[count].timing=parms->powfs[ipowfs].usephy?17:1.5;
 		tasks[count].dest=cudata_t::wfsgpu+iwfs;
@@ -279,7 +312,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		*tasks[it].dest=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
 	    }
-	    if(parms->sim.nthread>NGPU){
+	    if(parms->sim.nthread>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		((PARMS_T*)parms)->sim.nthread=NGPU+1;
 		NTHREAD=NGPU+1;
 		info2("Reset nthread to %d\n", NTHREAD);

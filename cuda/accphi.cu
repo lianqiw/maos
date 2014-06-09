@@ -163,12 +163,12 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		avail_max=availi;
 	    }
 	}
-	long spare=100*1024*1024;//100 MB.
-	long need=spare+nps*sizeof(Real)*nxn*nyn;
-	info2("Available memory is %ld (min) %ld (max) MB. Min atm is %ldx%ld, need %ld\n", avail_min>>20, avail_max>>20, nxn, nyn, need);
+	long need=nps*sizeof(Real)*nxn*nyn;
+	info2("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
+	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
 	if(avail_min<need){
 	    if(avail_max<need){
-		error("ALL GPUs does not have enough memory\n");
+		error2("No GPU has enough memory\n");
 	    }else{
 		char *gcmd=NULL;
 		for(int igpu=0; igpu<NGPU; igpu++){
@@ -187,7 +187,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    _Exit(0);
 	}else{
 	    /*we are able to host this amount. */
-	    long nxa=(long)roundf(sqrt((avail_min-spare)/nps/sizeof(Real)));
+	    long nxa=(long)roundf(sqrt((avail_min)/nps/sizeof(Real)));
 	    info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 		nx0=parms->atm.nx;

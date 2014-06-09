@@ -440,6 +440,7 @@ char* call_addr2line(const char *buf){
    Convert backtrace address to source line.
  */
 void print_backtrace_symbol(void *const *buffer, int size){
+#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     static int connect_failed=0;
     char *cmdstr=NULL;
     char add[24];
@@ -461,7 +462,6 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	free(cmdstr);
 	return;
     }
-#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
     if(MAOS_DISABLE_SCHEDULER || is_scheduler){
@@ -497,11 +497,9 @@ void print_backtrace_symbol(void *const *buffer, int size){
 #endif
     }
     UNLOCK(mutex);
-#else
-    info2("Please call manually: %s\n",cmdstr);
-#endif
     sync();
     free(cmdstr);
+#endif
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
