@@ -2190,8 +2190,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		remove(fnpid);
 	    }
 	    scheduler_finish(0);
-	    raise(SIGUSR1);
-	    exit(1);
+	    raise(SIGTERM);
 	}
     }
     info2("There are %d valid simulation seeds: ",parms->sim.nseed);

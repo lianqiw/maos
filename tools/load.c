@@ -39,7 +39,6 @@ static void kill_matlab(int sig){
 	    kill(matlab_pid,SIGKILL);
 	}
     }
-    exit(EXIT_FAILURE);
 }
 int main(int argc, char **argv){
     if(argc!=2){

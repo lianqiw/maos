@@ -53,7 +53,6 @@ int mystrcmp(const char *a, const char *b);
 char *mystrndup(const char *A, int len);
 void cloexec(int fd);
 void mysleep(double sec);
-void mypause(void);
 long available_space(const char *path);
 /*strdup for static pointers or in constructor should be using this strdup0 to
   avoid reporting of unfreed mem.*/
@@ -82,4 +81,6 @@ int sem_lock(const char *key);
 int sem_unlock(const char *key);
 void maos_version(void);
 void set_realtime(int icpu, int niceness);
+void register_signal_handler(void(*)(int));
+void mypause(void);
 #endif

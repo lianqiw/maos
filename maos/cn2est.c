@@ -484,7 +484,8 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	    dwrite(Pkn,"Pkn");
 	    dwrite(Pkn2,"Pkn2");
 	    dwrite(iPkn2,"iPkn2");
-	    exit(0);*/
+	    EXIT;
+	    */
 	    /*compute the new result */
 	    dmm(&wt,0, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->nstep);
 	    dfree(iPkn2);

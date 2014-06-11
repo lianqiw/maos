@@ -156,16 +156,9 @@ void rename_file(int sig){
    Handles signals. 
  */
 void skyc_signal_handler(int sig){
-    psignal(sig, "skyc signal handler");
-    disable_signal_handler;
+    psignal(sig, "skyc");
     rename_file(sig);/*handles signal */
-    if(sig!=0){
-	print_backtrace();
-	fflush(NULL);
-	scheduler_finish(1);
-	kill(getpid(), sig);
-	_Exit(sig);
-    }
+    scheduler_finish(sig);
 }
 
 

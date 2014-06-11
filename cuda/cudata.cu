@@ -153,7 +153,11 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    mem_minimum+=sizeof(Real)*parms->atmr.nps*pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*4;
 	}
-	info2("CUDA: minimum memory requirement is %ld\n", mem_minimum);
+	if(mem_minimum==0){//gpu is disabled
+	    return 0;
+	}else{
+	    info2("CUDA: minimum memory requirement is %ld\n", mem_minimum);
+	}
     }
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);

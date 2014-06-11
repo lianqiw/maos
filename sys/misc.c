@@ -509,13 +509,6 @@ void mysleep(double sec){
 }
 
 /**
-   Pause
-*/
-void mypause(void){
-    info2("Press ENTER key to continue.\n");
-    while((getchar())!='\n');
-}
-/**
    Return available space of mounted file system in bytes.
 */
 long available_space(const char *path){
@@ -836,8 +829,68 @@ void default_quitfun(const char *msg){
     }
     kill(getpid(), SIGTERM);
 }
+void (*signal_handler)(int)=0;
+volatile sig_atomic_t fatal_error_in_progress=0;
+void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
+    (void)unused;
+    struct sigaction act={{0}};
+    act.sa_flags=0;
+    act.sa_handler=SIG_DFL;
+    sigaction(sig, &act, 0);
+    /*prevent recursive call of handler*/
+    if(sig==0){
+	info2("signal 0 caught. do nothing\n");
+	return;
+    }
+    if(fatal_error_in_progress){
+	return;
+    }
+    fatal_error_in_progress++;
+    if(signal_handler){
+	signal_handler(sig);
+    }else{
+	info2("Signal %d caught without active handler.\n", sig);
+    }
+    if(siginfo && siginfo->si_addr){
+	info2("Memory location: %p\n", siginfo->si_addr);
+    }
+    if(sig==SIGBUS || sig==SIGILL || sig==SIGSEGV || sig==SIGABRT){
+	print_backtrace();
+    }
+    act.sa_handler=SIG_DFL;
+    sigaction(sig, &act, 0);
+    raise(sig);
+}
 static __attribute__((constructor)) void init(){
     if(!quitfun){//Don't override quitfun assigned by mex/interface.h
 	quitfun=&default_quitfun;
     }
+    struct sigaction act={{0}};
+    act.sa_sigaction=default_signal_handler;
+    //act.sa_mask=SIGBUS|SIGILL|SIGSEGV|SIGINT|SIGTERM|SIGABRT|SIGHUP|SIGUSR1|SIGQUIT;
+    act.sa_flags=SA_SIGINFO;
+    sigaction(SIGBUS, &act, 0);
+    sigaction(SIGILL, &act, 0);
+    sigaction(SIGSEGV,&act, 0);
+    sigaction(SIGINT, &act, 0);
+    sigaction(SIGTERM,&act, 0);
+    sigaction(SIGABRT,&act, 0);
+    sigaction(SIGHUP, &act, 0);
+    sigaction(SIGUSR1,&act, 0);
+    sigaction(SIGQUIT,&act, 0);
+}
+
+/**
+   Register signal handler
+*/
+void register_signal_handler(void (*func)(int)){
+    signal_handler=func;
+}
+/**
+   Pause, waiting for user input
+*/
+void mypause(){
+    info2("Press Any Key to Continue:"); 
+    while(getchar()!=0x0a); 
+    info2("continuing...\n"); 
 }

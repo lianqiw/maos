@@ -234,7 +234,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 		print_progress(simu);
 	    }
 	    if(parms->pause){
-		PAUSE;
+		mypause();
 	    }
 	}/*isim */
 	{

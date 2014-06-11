@@ -122,14 +122,13 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define SEC2RAD 4.848136811095360e-06 //arcsec in unit of radian
 #define RAD2SEC 206264.8062470964 //radian in unit of arcsec
 #ifndef EPS
-#define EPS 1.e-14
+#define EPS 1.e-15
 #endif
 
 /**
    2010-01-03
    USE_MYFLOOR = 1 reduce timing by 2s
 */
-#define USE_MYFLOOR 1
 #if USE_MYFLOOR
 #define ifloor(A) (A<0?(int)(A)-1:(int)(A))
 #else
@@ -139,7 +138,6 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 
 #if defined(FP_FAST_FMA)
 #define myfma fma
-#error FP_FAST_FMA is defined . remove.
 #else
 #define myfma(x,y,z) (x)*(y)+z
 #endif
@@ -147,6 +145,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
 long thread_id(void);
+void print_backtrace();
 /*
   use () to make the statements a single statement.
 */
@@ -276,34 +275,6 @@ long thread_id(void);
     if(A==-1){					\
 	A=default_val;				\
 	READ_ENV_INT(A, 0, 1);			\
-	info2("MAOS_"#A"=%d\n", A);		\
     }
-#include <string.h>
-
-#define PAUSE					\
-    info2("Press Enter to continue:");		\
-    while(getchar()!=0x0a);			\
-    info2("continue...\n");
-
-#define register_signal_handler(func)	\
-    signal(SIGBUS, func);		\
-    signal(SIGILL, func);		\
-    signal(SIGSEGV,func);		\
-    signal(SIGINT, func);		\
-    signal(SIGTERM,func);		\
-    signal(SIGABRT,func);		\
-    signal(SIGUSR1,func);		\
-    signal(SIGQUIT,func)
-
-#define disable_signal_handler	\
-    signal(SIGBUS, SIG_DFL);	\
-    signal(SIGILL, SIG_DFL);	\
-    signal(SIGSEGV,SIG_DFL);	\
-    signal(SIGINT, SIG_DFL);	\
-    signal(SIGTERM,SIG_DFL);	\
-    signal(SIGABRT,SIG_DFL);	\
-    signal(SIGUSR1,SIG_DFL);	\
-    signal(SIGQUIT,SIG_DFL)
-void print_backtrace();
 #endif
 

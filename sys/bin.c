@@ -190,7 +190,7 @@ file_t* zfopen(const char *fn, char *mod){
     const char* fn2=fp->fn=procfn(fn,mod,1);
     if(!fp->fn){
 	error("%s does not exist for read\n", fn);
-	_exit(1);
+	raise(SIGABRT);
     }
 #if IO_TIMMING == 1
     gettimeofday(&(fp->tv1), NULL);
@@ -225,7 +225,7 @@ file_t* zfopen(const char *fn, char *mod){
     }
     if(fp->fd==-1){
 	error("Unable to open file %s for %s\n", fn2, mod[0]=='r'?"Reading":"Writing");
-	_exit(1);
+	raise(SIGABRT);
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     if(mod[0]=='w'){

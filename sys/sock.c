@@ -189,14 +189,11 @@ static int bind_socket (char *ip, uint16_t port){
 }
 
 static int quit_listen=0;
-static void signal_handler(int sig){
+static void scheduler_signal_handler(int sig){
     /*quit listening upon signal and do clean up.*/
-    if(sig){
-	disable_signal_handler;
-	psignal(sig, "scheduler");
-	print_backtrace();
-	quit_listen=1;
-    }
+    psignal(sig, "scheduler");
+    print_backtrace();
+    quit_listen=1;
 }
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
@@ -208,7 +205,7 @@ static void signal_handler(int sig){
  */
 void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		 double timeout_sec, void (*timeout_fun)(), int nodelay){
-    register_signal_handler(signal_handler);
+    register_signal_handler(scheduler_signal_handler);
 
     fd_set read_fd_set;
     fd_set active_fd_set;

@@ -351,6 +351,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
+    if(disable_save) return;
     char fnnew[256];
     char fnold[256];
     char suffix[16];
@@ -376,20 +377,23 @@ void rename_file(int sig){
     }
     snprintf(fnnew,256,"kill_%d",pid);
     if(exist(fnnew)) remove(fnnew);
-    
     snprintf(fnold,256,"run_%d.log",pid);
-    snprintf(fnnew,256,"run_%d.%s", pid,suffix);
-    rename(fnold,fnnew);
-    mysymlink(fnnew, "run_recent.log");
-    if(global->parms && sig!=0){
+    if(exist(fnold)) {
+	snprintf(fnnew,256,"run_%d.%s", pid,suffix);
+	rename(fnold,fnnew);
+	mysymlink(fnnew, "run_recent.log");
+    }
+    if(global->parms && global->parms->fdlock && sig!=0){
 	char fn[80];
 	const PARMS_T *parms=global->parms;
 	for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){
-	    if(parms->fdlock[iseed]>=0){
+	    if(parms->fdlock[iseed]>0){
 		close(parms->fdlock[iseed]);
 		int seed=parms->sim.seeds[iseed];
 		snprintf(fn, 80, "Res_%d.lock",seed);
-		(void) remove(fn);
+		if(exist(fn)){
+		    (void) remove(fn);
+		}
 	    }
 	}
     }
@@ -398,41 +402,12 @@ void rename_file(int sig){
    Handles signals.
  */
 void maos_signal_handler(int sig){
-    psignal(sig, "maos signal handler");
-    disable_signal_handler;
+    psignal(sig, "maos");
     rename_file(sig);/*handles signal */
     if(global->parms->sim.mvmport){
 	mvm_client_close();
     }
-    int backtrace=0;
-    if(sig!=0){
-	const char *msg="Unknown";
-	switch(sig){
-	case SIGBUS:
-	case SIGILL:
-	case SIGSEGV:
-	case SIGABRT:
-	    msg="Segmentation falt";
-	    backtrace=1;
-	    break;
-	case SIGKILL:
-	case SIGINT: /*Ctrl-C */
-	case SIGTERM:
-	case SIGQUIT: /*Ctrl-'\' */
-	    msg="Killed";
-	    break;
-	case SIGUSR1:/*user defined */
-	    msg="Quit";
-	    break;
-	}
-	info("%s", msg);
-	if(backtrace){
-	    print_backtrace();
-	}
-	scheduler_finish(sig);
-	kill(getpid(), sig);//kill again. signal handler is off
-	_Exit(sig);
-    }
+    scheduler_finish(sig);
 }
 /**
    Print out usage information.
