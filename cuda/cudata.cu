@@ -271,11 +271,14 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	     * iteratively assign each task to the minimally used GPU*/
 	    cudata_t::evlgpu=(int*)calloc(parms->evl.nevl, sizeof(int));
 	    cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
-	    int ntask=(parms->gpu.tomo || parms->gpu.fit)?1:0+parms->gpu.evl?parms->evl.nevl:0+parms->gpu.wfs?parms->nwfs:0;
+	    int ntask=0;
+	    if(parms->gpu.tomo || parms->gpu.fit) ntask++;
+	    if(parms->gpu.evl) ntask+=parms->evl.nevl;
+	    if(parms->gpu.wfs) ntask+=parms->nwfs;
 	    if(ntask==0){
 		delete [] cudata_all;
 		free(GPUS);
-		NGPU=0;
+		NGPU=0;GPUS=0;
 		return NGPU;
 	    }
 	    struct task_t *tasks=(task_t*)calloc(ntask, sizeof(task_t));
