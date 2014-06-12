@@ -51,5 +51,7 @@ map_t **fractal_screen(GENSCREEN_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 #define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);
-
+double calc_aniso(double r0, int nht, double *ht, double *wt);
+double calc_greenwood(double r0, int nps, double *ws, double *wt);
+double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);
 #endif

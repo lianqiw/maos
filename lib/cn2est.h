@@ -36,8 +36,7 @@ typedef struct CN2PAIR_T{
 /**
    contains the data related to Cn2 Estimation.
  */
-struct CN2EST_T{
-    int ipowfs;      /**<Which powfs to use.*/
+typedef struct CN2EST_T{
     int *wfscov;     /**<Whether this wfs participates in covariance computation.*/
     long nembed;      /**<size of array to embed the LGS gradients into*/
     long *embed;      /**<pointers to embed*/
@@ -48,31 +47,28 @@ struct CN2EST_T{
     dcell *cc;       /**<cross-covariance for each pair*/
     int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
     int ovs;         /**<Over sampling ratio in building the influence matrix*/
-    int nstep;       /**<number of time steps we have accumulated the covariance*/
-    int reset;       /**<do we reset cc every nstep*/
+    int count;       /**<number of time steps we have accumulated the covariance*/
     struct CN2PAIR_T *pair; /**<information about each pair*/
     dcell *Pkn;      /**<Cn2 Estimation forward matrix*/
     dcell *iPkn;     /**<Cn2 Estimation matrix.*/
     dcell *wt;       /**<Estimated weighting of the layers*/
     dcell *ht;       /**<Estimated Height of the layers*/
+    double hmax;     /**<maximum cn2 estimation when keepht!=2*/
     dmat *r0;        /**<Estimated r0*/
     /*the following are used to feed into reconstructor. */
     dmat *htrecon;   /**<layer heights for tomography*/
     dmat *os;        /**<over sampling factor of the layers in htrecon*/
     dmat *dx;        /**<sampling of each layer in reconstruction.*/
+    dmat *dmht;      /**<For theta_2 printing*/
     dcell *wtrecon;   /**<layer weights for tomography*/
     spcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
     double r0m;       /**<averaged r0 from all the pairs.>*/
-    double l0;        /**<currently takes value from parms.atmr.l0*/
-};
+    double l0;        /**<outer scale*/
+} CN2EST_T;
 
-#include "types.h"
-CN2EST_T* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
-void cn2est_cov(CN2EST_T *cn2est);
-void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms);
+CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat, 
+		     const double hs, dmat *htrecon, double hmax, int keepht, double l0);
+void cn2est_est(CN2EST_T *cn2est, int verbose, int reset);
 void cn2est_free(CN2EST_T *cn2est);
-void cn2est_embed(CN2EST_T *cn2est, dmat *grad, int iwfs);
-void cn2est_moveht(RECON_T *recon);
-void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms);
-void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim);
+void cn2est_push(CN2EST_T *cn2est, dcell *gradol);
 #endif

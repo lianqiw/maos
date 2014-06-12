@@ -21,7 +21,6 @@
 #include "recon.h"
 #include "fdpcg.h"
 #include "ahst.h"
-#include "cn2est.h"
 #include "recon_utils.h"
 #include "moao.h"
 #if USE_CUDA
@@ -1935,7 +1934,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     TIC;tic;
     recon->aper=aper;
     recon->powfs=powfs;
-    if(parms->cn2.npair){
+    if(parms->cn2.pair && parms->cn2.pair->nx>0){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can
 	  be fed to the tomography */
 	recon->cn2est=cn2est_prepare(parms,powfs);

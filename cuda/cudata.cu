@@ -156,7 +156,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{
-	    info2("CUDA: minimum memory requirement is %ld\n", mem_minimum);
+	    info2("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(double)(1024*1024*1024));
 	}
     }
     char fnlock[PATH_MAX];
@@ -278,7 +278,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		NGPU=0;
 		return NGPU;
 	    }
-	    struct task_t tasks[ntask];
+	    struct task_t *tasks=(task_t*)calloc(ntask, sizeof(task_t));
 	    //recon
 	    int count=0;
 	    if(parms->gpu.tomo || parms->gpu.fit){
@@ -313,7 +313,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 			min_gpu=igpu;
 		    }
 		}
-		*tasks[it].dest=min_gpu;
+		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
 	    }
 	    if(parms->sim.nthread>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
@@ -321,6 +321,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		NTHREAD=NGPU+1;
 		info2("Reset nthread to %d\n", NTHREAD);
 	    }
+	    free(tasks);
 	}
     }
  end:

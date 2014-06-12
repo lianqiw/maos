@@ -359,3 +359,38 @@ dmat *turbpsd_full(long nx,      /**<The size*/
     return psd;
 }
 
+/**
+   Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
+   weights.  */
+double calc_aniso(double r0, int nps, double *ht, double *wt){
+    double wh=0;
+    for(int ips=0; ips<nps; ips++){
+	wh+=pow(ht[ips],5./3.)*wt[ips];
+    }
+    return 0.3144*r0*pow(wh,-3./5.);
+}
+/**
+   Estimate Green wood frequency
+*/
+double calc_greenwood(double r0, int nps, double *ws, double *wt){
+    double wv=0;
+    for(int ips=0; ips<nps; ips++){
+	wv+=pow(fabs(ws[ips]), 5./3.)*wt[ips];
+    }
+    return 0.426/r0*pow(wv, 3./5.);
+}
+/**
+   Estimate generalized aniso angle theta2 from Fried parameter r0, and layer
+   height and weights, and deformable mirror conjugation heights hc1 hc2 of the
+   ground and altitude DMs. */
+double calc_aniso2(double r0, int nps, double *ht, double *wt, double hc1, double hc2){
+    double wh=0;
+    double hh=pow(hc2-hc1,5./3.);
+    for(int ips=0; ips<nps; ips++){
+	double t1=0.5*pow(fabs(ht[ips]-hc1),5./3.)+0.5*pow(fabs(ht[ips]-hc2),5./3.);
+	double t2=-0.25*hh-0.25/hh*pow(pow(fabs(ht[ips]-hc1),5./3.)-pow(fabs(ht[ips]-hc2),5./3.),2);
+	wh+=wt[ips]*(t1+t2);
+    }
+    return 0.3144*r0*pow(wh,-3./5.);
+}
+

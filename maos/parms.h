@@ -517,9 +517,8 @@ typedef struct SIM_CFG_T{
    Parameters for Cn square estimation.
 */
 typedef struct CN2EST_CFG_T{
-    int *pair;       /**<If non empty, paris of WFS to use for cn2
-			estimation. Empty: disable cn2 estimation*/
-    int npair;       /**<Derived: number of entries in cn2pair*/
+    dmat *pair;       /**<If non empty, paris of WFS to use for cn2
+			 estimation. Empty: disable cn2 estimation*/
     int step;        /**<do cn2 estimation every this time step*/
     int reset;       /**<reset the accumulated cn2 after every cn2step.*/
     int tomo;        /**<update tomography parameters if non zero*/

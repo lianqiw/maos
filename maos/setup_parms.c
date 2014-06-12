@@ -131,7 +131,7 @@ void free_parms(PARMS_T *parms){
     free(parms->sim.ncpa_wt);
     free(parms->sim.ncpa_hs);
     free(parms->sim.mvmhost);
-    free(parms->cn2.pair);
+    dfree(parms->cn2.pair);
     free(parms->save.gcov);
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	free(parms->surf[isurf]);
@@ -913,7 +913,7 @@ static void readcfg_sim(PARMS_T *parms){
  */
 static void readcfg_cn2(PARMS_T *parms){
 /*for Cn2 Estimation. */
-    parms->cn2.npair = readcfg_intarr(&parms->cn2.pair,"cn2.pair");
+    parms->cn2.pair = readcfg_dmat("cn2.pair");
     READ_INT(cn2.step);
     READ_INT(cn2.reset);
     READ_INT(cn2.tomo);
@@ -2276,32 +2276,17 @@ static void print_parms(const PARMS_T *parms){
 
     info2("\033[0;32mAperture\033[0;0m is %g m with sampling 1/%g m\n",
 	  parms->aper.d, 1/parms->evl.dx);
-    double wh=0;
-    double wv=0;
-    for(int ips=0; ips<parms->atm.nps; ips++){
-	wh+=pow(fabs(parms->atm.ht[ips]),5./3.)*parms->atm.wt[ips];
-	wv+=pow(fabs(parms->atm.ws[ips]),5./3.)*parms->atm.wt[ips];
-    }
-    double theta0z=0.3144*parms->atm.r0z*pow(wh,-3./5.);
-    double fgreen=0.426/parms->atm.r0z*pow(wv,3./5.);
-    double theta2z=0;
+    double fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws, parms->atm.wt);
+    double theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht, parms->atm.wt);
     
     info2("\033[0;32mTurbulence at zenith:\033[0;0m\n"
 	  "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
 	  "Anisoplanatic angle is %.2f\"",
 	  parms->atm.r0, parms->atm.l0, fgreen, theta0z*206265);
     if(parms->ndm==2){
-	double wf=0;
 	double H1=parms->dm[0].ht;
 	double H2=parms->dm[1].ht;
-	double HH=pow(H2-H1,5./3.);
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    double ht=parms->atm.ht[ips];
-	    double t1=0.5*pow(fabs(ht-H1),5./3.)+0.5*pow(fabs(ht-H2),5./3.);
-	    double t2=-0.25*HH-0.25/HH*pow(pow(fabs(ht-H1),5./3.)-pow(fabs(ht-H2),5./3.),2);
-	    wf+=parms->atm.wt[ips]*(t1+t2);
-	}
-	theta2z=0.3144*parms->atm.r0z*pow(wf,-3./5.);
+	double theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, parms->atm.ht, parms->atm.wt, H1, H2);
 	info2(", generalized is %.2f\"", theta2z*206265);
     }
     info2("\n");

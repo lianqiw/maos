@@ -15,50 +15,43 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "maos.h"
+#include "type.h"
 #include "cn2est.h"
-#include "setup_recon.h"
-
-
-/**
-   Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2
-Estimation. The result will be an average of them.  */
+#include "loc.h"
+#include "mkh.h"
+#include "turbulence.h"
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 
-CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
+CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat,
+		     const double hs, dmat *htrecon, double hmax, int keepht, double l0){
     info2("Cn2 estimation:");
     /*We need at least a pair */
-    if(!parms->cn2.pair || parms->cn2.npair==0) return NULL;
-    if(parms->cn2.npair%2==1){
-	error("parms->cn2.pair must have even number of entries\n");
+    if(!wfspair) return 0;
+    int npair=wfspair->nx*wfspair->ny;
+    if(!npair) return 0;
+    if(npair%2==1){
+	error("pair must have even number of entries\n");
     }
     /*>>1 is a short cut for /2 */
-    int nwfspair=parms->cn2.npair>>1;
+    int nwfspair=npair>>1;
     CN2EST_T *cn2est=calloc(1, sizeof(CN2EST_T));
     cn2est->nwfspair=nwfspair;
-    cn2est->reset=parms->cn2.reset;
+    int nwfs=wfstheta->nx;
     /*wfscov is a flag for wfs show whether wfs participates in covariance. */
-    cn2est->wfscov=calloc(parms->nwfs, sizeof(int));
-    int ipowfs=-1;
-    for(int ind=0; ind<parms->cn2.npair; ind++){
-	int iwfs=parms->cn2.pair[ind];
+    cn2est->wfscov=calloc(nwfs, sizeof(int));
+    for(int ind=0; ind<npair; ind++){
+	int iwfs=(int)wfspair->p[ind];
 	cn2est->wfscov[iwfs]=1;
-	if(ipowfs==-1){
-	    ipowfs=parms->wfs[iwfs].powfs;
-	}else if(ipowfs!=parms->wfs[iwfs].powfs){
-	    error("All wfs in parms->cn2.pair do not belong to the same powfs\n");
-	}
     }
-    cn2est->ipowfs=ipowfs;
     /*embed has dimension nembed*nembed. It is used to embed 1-d gradient vector
       to a 2-d map for each curvature and covariance compuation later.*/
-    cn2est->nembed=parms->powfs[ipowfs].order*2;
-    cn2est->embed=loc_create_embed(&cn2est->nembed, powfs[ipowfs].saloc, 2);
+    cn2est->nembed=0;
+    cn2est->embed=loc_create_embed(&cn2est->nembed, saloc, 2, 0);
     const int nx=cn2est->nembed;
     /*mask is a mask for valid subapertures that have enough area */
     int *mask=calloc(nx*nx,sizeof(int));
-    for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
-	if(powfs[ipowfs].saa->p[isa]>parms->cn2.saat){
+    for(int isa=0; isa<saloc->nloc; isa++){
+	if(saa->p[isa]>saat){
 	    mask[cn2est->embed[isa]]=1;/*use this subaperture */
 	}
     }
@@ -75,11 +68,11 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     }
     free(mask);
     /*2-d arrays to store x y gradient  and x y "curvature" */
-    cn2est->gxs=dcellnew(parms->nwfs, 1);/*stores gradient in 2-d map */
-    cn2est->gys=dcellnew(parms->nwfs, 1);
-    cn2est->cxs=dcellnew(parms->nwfs, 1);/*stores curvature in 2-d map. */
-    cn2est->cys=dcellnew(parms->nwfs, 1);
-    for(int ix=0; ix<parms->nwfs; ix++){
+    cn2est->gxs=dcellnew(nwfs, 1);/*stores gradient in 2-d map */
+    cn2est->gys=dcellnew(nwfs, 1);
+    cn2est->cxs=dcellnew(nwfs, 1);/*stores curvature in 2-d map. */
+    cn2est->cys=dcellnew(nwfs, 1);
+    for(int ix=0; ix<nwfs; ix++){
 	if(cn2est->wfscov[ix]){
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
 	    cn2est->gys->p[ix]=dnew(nx, nx);
@@ -92,44 +85,12 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
       cross-covariances conveniently during simulation.
      */
     /*first get a few constants */
-    const double hmax=parms->cn2.hmax;/*maximum height to estimate. */
-    const double dsa=powfs[ipowfs].pts->dsa;
-    const double hs=parms->powfs[ipowfs].hs;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const double dsa=saloc->dx;
+    const int nsa=saloc->nloc;
+
     /*determine the layer height used for tomography. */
-    if(parms->cn2.keepht){/*use atmr.ht */
-	const int nht=parms->atmr.nps;
-	cn2est->htrecon=dnew(nht,1);
-	cn2est->os=dnew(nht,1);
-	for(int iht=0; iht<nht; iht++){
-	    cn2est->htrecon->p[iht]=parms->atmr.ht[iht];
-	    cn2est->os->p[iht]=parms->atmr.os[iht];
-	}
-    }else{/*use linearly spaced number of layers between ground and hmax */
-	int nht=parms->cn2.nhtomo;
-	cn2est->htrecon=dnew(nht,1);
-	cn2est->os=dnew(nht,1);
-	if(nht<1) error("invalid nhtomo");
-	/*calculate the number of over sampled layers. */
-	int osc=0;
-	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    if(parms->atmr.os[ips]>1){
-		osc++;
-		if(parms->atmr.os[ips]!=2){
-		    error("os is not 2. adept this code to it.\n");
-		}
-	    }
-	}
-	double dht=parms->cn2.hmax/(double)(nht-1);
-	for(int iht=0; iht<nht; iht++){
-	    cn2est->htrecon->p[iht]=dht*iht;
-	    if(iht<osc){
-		cn2est->os->p[iht]=2;
-	    }else{
-		cn2est->os->p[iht]=1;
-	    }
-	}
-    }
+    cn2est->htrecon=ddup(htrecon);
+    cn2est->hmax=hmax; /*maximum cn2 estimation when keepht!=2*/
     cn2est->wtrecon=dcellnew(1,1);
     cn2est->wtrecon->p[0]=dnew_mmap(cn2est->htrecon->nx,1,NULL,"Res_Cn2_wtrecon");
     dwrite(cn2est->htrecon,"Res_Cn2_htrecon");
@@ -148,20 +109,21 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     cn2est->pair=calloc(nwfspair, sizeof(CN2PAIR_T));
     long nhtsx[nwfspair]; 
     long nhtsy[nwfspair];
+    PDMAT(wfstheta, pwfstheta);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	/*get pointer for this pair */
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
 	/*The WFS in this pair. */
-	int wfs0=parms->cn2.pair[iwfspair*2];
-	int wfs1=parms->cn2.pair[iwfspair*2+1];
+	int wfs0=wfspair->p[iwfspair*2];
+	int wfs1=wfspair->p[iwfspair*2+1];
 	if(wfs0==wfs1){
 	    error("must pair different wfs.\n");
 	}
 	pair->wfs0=wfs0;
 	pair->wfs1=wfs1;
 	/*The separation between the stars */
-	double dthetax=parms->wfs[wfs0].thetax-parms->wfs[wfs1].thetax;
-	double dthetay=parms->wfs[wfs0].thetay-parms->wfs[wfs1].thetay;
+	double dthetax=pwfstheta[0][wfs0]-pwfstheta[0][wfs1];
+	double dthetay=pwfstheta[1][wfs0]-pwfstheta[1][wfs1];
 	/*The direction of the WFS pair baseline vector */
 	double ang=atan2(dthetay, dthetax);
 	pair->beta=ang;
@@ -169,10 +131,12 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	pair->dtheta=sqrt(dthetax*dthetax+dthetay*dthetay);
 	/*The number of layers is determined */
 	int nht;
-	if(parms->cn2.keepht!=2){/*output to nature slodar heights.  */
-	    nht=(int)ceil(hmax*pair->dtheta/(dsa*(1-hmax/hs)))+1;
-	}else{ /*slodar output directly to layers used for tomography. may not work well */
+	if(keepht==2){
+	    /*slodar output directly to layers used for tomography. may not work well */
 	    nht=cn2est->htrecon->nx;
+	}else{
+	    /*output to nature slodar heights. and then bin to tomography layers */
+	    nht=(int)ceil(hmax*pair->dtheta/(dsa*(1-hmax/hs)))+1;
 	}
 	pair->nht=nht;
 	nhtsx[iwfspair]=nht;
@@ -251,7 +215,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
     cn2est->wtconvert=spcellnew(1,nwfspair);
-    cn2est->l0=parms->atmr.l0;
+    cn2est->l0=l0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
 	const int nsep=pair->nsep;
@@ -279,10 +243,10 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	for(int iht=0; iht<nht; iht++){
 	    /*the height of each layer */
 	     double hk;
-	    if(parms->cn2.keepht!=2){
-		hk=dsa*iht/(pair->dtheta+dsa*iht/hs);
-	    }else{
+	    if(keepht==2){
 		hk=cn2est->htrecon->p[iht];
+	    }else{
+		hk=dsa*iht/(pair->dtheta+dsa*iht/hs);
 	    }
 	    info2("%.2f ",hk*0.001);
 	    cn2est->ht->p[iwfspair]->p[iht]=hk;
@@ -357,51 +321,52 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	cfree(mxx);
 	cfree(myy);
     }/*iwfspair */
-    if(parms->save.setup){
-	dcellwrite(cn2est->iPkn,"%s/cn2_iPkn",dirsetup);
-	dcellwrite(cn2est->Pkn,"%s/cn2_Pkn",dirsetup);
-	dcellwrite(cn2est->ht,"%s/cn2_ht",dirsetup);
-	spcellwrite(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
-    }
     return cn2est;
 }/*cn2est_prepare */
 
 /**
-   Embed gradent vector to gradient map.
+   Embed gradent vector to gradient map 
 */
-void cn2est_embed(CN2EST_T *cn2est, dmat *grad, int iwfs){
-    if(!grad){
-	error("wfs %d: PSOL grads is required to do cn2 estimation\n", iwfs);
-    }
+static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
     long *embed=cn2est->embed;
-    const int nsa=grad->nx>>1;
-    /*Embed gradients in a 2-d array */
-    for(int isa=0; isa<nsa; isa++){
-	cn2est->gxs->p[iwfs]->p[embed[isa]]=grad->p[isa];
-	cn2est->gys->p[iwfs]->p[embed[isa]]=grad->p[isa+nsa];
-    }
-    /*Compute curvature of wavefront from gradients. */
-    PDMAT(cn2est->cxs->p[iwfs], curx);
-    PDMAT(cn2est->cys->p[iwfs], cury);
-    PDMAT(cn2est->gxs->p[iwfs], gx);
-    PDMAT(cn2est->gys->p[iwfs], gy);
-    const int ny=cn2est->cxs->p[iwfs]->ny;
-    const int nx=cn2est->cxs->p[iwfs]->nx;
-    for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    curx[iy][ix]=gx[iy][ix+1]+gx[iy][ix-1]-2*gx[iy][ix];/*gx along x */
-	    cury[iy][ix]=gy[iy+1][ix]+gy[iy-1][ix]-2*gy[iy][ix];/*gy along y */
+    for(int iwfs=0; iwfs<gradol->nx; iwfs++){
+	if(!cn2est->wfscov[iwfs]) continue;
+	dmat *grad=gradol->p[iwfs];
+	if(!grad){
+	    error("wfs %d: PSOL grads is required to do cn2 estimation\n", iwfs);
+	}
+	if(icol>=grad->ny){
+	    error("icol=%d is invalid\n", icol);
+	}
+	double *pgrad=grad->p+grad->nx*icol;
+	const int nsa=grad->nx>>1;
+	/*Embed gradients in a 2-d array */
+	for(int isa=0; isa<nsa; isa++){
+	    cn2est->gxs->p[iwfs]->p[embed[isa]]=pgrad[isa];
+	    cn2est->gys->p[iwfs]->p[embed[isa]]=pgrad[isa+nsa];
+	}
+	/*Compute curvature of wavefront from gradients. */
+	PDMAT(cn2est->cxs->p[iwfs], curx);
+	PDMAT(cn2est->cys->p[iwfs], cury);
+	PDMAT(cn2est->gxs->p[iwfs], gx);
+	PDMAT(cn2est->gys->p[iwfs], gy);
+	const int ny=cn2est->cxs->p[iwfs]->ny;
+	const int nx=cn2est->cxs->p[iwfs]->nx;
+	for(int iy=0; iy<ny; iy++){
+	    for(int ix=0; ix<nx; ix++){
+		curx[iy][ix]=gx[iy][ix+1]+gx[iy][ix-1]-2*gx[iy][ix];/*gx along x */
+		cury[iy][ix]=gy[iy+1][ix]+gy[iy-1][ix]-2*gy[iy][ix];/*gy along y */
+	    }
 	}
     }
 }
-
 /**
    Compute cross-covairance from gradient curvature
 */
-void cn2est_cov(CN2EST_T *cn2est){
+static void cn2est_cov(CN2EST_T *cn2est){
     /*accumulate cross-covariance of gradient curvature. */
     const int nwfspair=cn2est->nwfspair;
-    cn2est->nstep++;
+    cn2est->count++;
     /*for each wfs pair */
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	const int nsep=cn2est->pair[iwfspair].nsep;
@@ -430,15 +395,28 @@ void cn2est_cov(CN2EST_T *cn2est){
 	}/*isep */
     }/*iwfspair */
 }
+void cn2est_push(CN2EST_T *cn2est, dcell *gradol){
+    int ncol=0;
+    for(int iwfs=0; iwfs<gradol->nx; iwfs++){
+	if(!cn2est->wfscov[iwfs]) continue;
+	if(ncol==0) {
+	    ncol=gradol->p[iwfs]->ny;
+	}else if(ncol!=gradol->p[iwfs]->ny){
+	    error("different wfs has differnt number of columns\n");
+	}
+    }
+    for(int icol=0; icol<ncol; icol++){
+	cn2est_embed(cn2est, gradol, icol);
+	cn2est_cov(cn2est);
+    }
+}
+
 /**
    Do the Cn2 Estimation.
  */
-void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
-    if(parms->cn2.verbose){
-	info2("Cn2 is estimated with %d averages\n", cn2est->nstep);
-    }
+void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     dcellzero(cn2est->wt);
-    dcellmm(&cn2est->wt, cn2est->iPkn, cn2est->cc, "nn", 1./cn2est->nstep);
+    dcellmm(&cn2est->wt, cn2est->iPkn, cn2est->cc, "nn", 1./cn2est->count);
     double wtsumsum=0;
     const int nwfspair=cn2est->wt->nx;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
@@ -487,7 +465,7 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	    EXIT;
 	    */
 	    /*compute the new result */
-	    dmm(&wt,0, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->nstep);
+	    dmm(&wt,0, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->count);
 	    dfree(iPkn2);
 	    dfree(Pkn2);
 	    nfdlast=nfd;
@@ -499,11 +477,11 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	double r0=pow(wtsum,-3./5.);
 	cn2est->r0->p[iwfspair]=r0;
 	dscale(wt, 1./wtsum);
-	if(parms->cn2.verbose){
+	if(verbose){
 	    info2("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
-	    if(parms->ndm==2){
+	    if(cn2est->dmht && cn2est->dmht->nx==2){
 		info2("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
-						   parms->dm[0].ht,parms->dm[1].ht)*206265);
+						   cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	    }
 	    info2("wt=[");
 	    for(int iht=0; iht<wt->nx; iht++){
@@ -517,14 +495,14 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
     spcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
     /*only 1 cell. norm to sum to 1. */
     normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
-    if(parms->cn2.verbose){
+    if(verbose){
 	info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
 	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 			 cn2est->htrecon->p,cn2est->wtrecon->p[0]->p)*206265);
-	if(parms->ndm==2){
+	if(cn2est->dmht && cn2est->dmht->nx==2){
 	    info2("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 					       cn2est->htrecon->p,cn2est->wtrecon->p[0]->p,
-					       parms->dm[0].ht, parms->dm[1].ht)*206265);
+					       cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	}
 	info2("wt=[");
 	for(int iht=0; iht<cn2est->wtrecon->p[0]->nx; iht++){
@@ -533,63 +511,13 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	info2("]\n");
     }
     /*divide by the number of accumulated frames. */
-    if(cn2est->reset){
-	info("reset the covariance");
-	cn2est->nstep=0;/*reset the counter; */
+    if(reset){
+	if(verbose) info2("reset the covariance");
+	cn2est->count=0;/*reset the counter; */
 	dcellzero(cn2est->cc);/*reset the numbers. */
     }
 }
-/**
-   Implemented mechanism to move height of layers.
- */
-void cn2est_moveht(RECON_T *recon){
-    (void)recon;
-    /*CN2EST_T *cn2est=recon->cn2est; */
-    /*
-      Implemented mechanism to move height of layers. Need to redo HXF, GX, etc.
-    */
-    error("moveht not yet implemented");
-}
-/**
-   Update the tomographic reconstructor by updating L2.
- */
-void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
-    CN2EST_T *cn2est=recon->cn2est;
-    /*wtrecon is referenced so should be updated automaticaly. */
-    if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
-	warning("wtrecon is not referenced\n");
-	dfree(recon->wt);
-	recon->wt=dref(cn2est->wtrecon->p[0]);
-    }
-    recon->r0=cn2est->r0m;
-    recon->l0=cn2est->l0;
-    setup_recon_tomo_update(recon, parms);
-}
-/**
-   Wrapper of Cn2 Estimation operations in recon.c
-*/
-void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim){
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(recon->cn2est->wfscov[iwfs]){
-	    cn2est_embed(recon->cn2est, gradol->p[iwfs], iwfs);
-	}
-    }
-    CN2EST_T *cn2est=recon->cn2est;
-    cn2est_cov(cn2est);/*convert gradients to cross covariance. */
-    if((isim+1-parms->sim.start)%parms->cn2.step == 0){
-	/*dcellswrite(cn2est->cc, 1./cn2est->nstep, "cc_%d",isim+1);*/
-	cn2est_est(cn2est, parms);/*do the CN2 estimation */
-	if(parms->cn2.moveht){
-	    cn2est_moveht(recon);
-	}
-	if(parms->cn2.tomo){
-	    if(parms->cn2.verbose){
-		info2("Updating tomography weights\n");
-	    }
-	    cn2est_updatetomo(recon,parms);/*notice, cannot be parallel with tomofit(). */
-	}
-    }
-}
+
 /**
    Free all the data.
  */
@@ -613,6 +541,7 @@ void cn2est_free(CN2EST_T *cn2est){
     dcellfree(cn2est->iPkn);
     dcellfree(cn2est->wt);
     dcellfree(cn2est->ht);
+    dfree(cn2est->dmht);
     dfree(cn2est->r0);
     free(cn2est);
 }

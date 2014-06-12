@@ -25,7 +25,6 @@
 #include "mvm_client.h"
 #include "ahst.h"
 #include "moao.h"
-#include "cn2est.h"
 #include "save.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
@@ -225,7 +224,7 @@ void reconstruct(SIM_T *simu){
     }
     save_gradol(simu);//must be here since gradol is only calculated in this file. 
     if(parms->cn2.pair){
-	cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
+	cn2est_isim(recon, parms, simu->gradlastol);
     }//if cn2est 
     if(hi_output){
 	simu->dmerr=simu->dmerr_store;

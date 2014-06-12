@@ -544,7 +544,9 @@ dmat *readcfg_dmat(const char *format,...){
     }else{
         double **pval=&val;
 	readstr_numarr((void**)pval, 0, &nx, &ny,T_DBL, str);
-	return dnew_data(nx, ny, val);
+	dmat *res=(nx&&ny)?dnew_data(nx, ny, val):0;
+	if(!res) free(val);
+	return res;
     }
 }
 /**

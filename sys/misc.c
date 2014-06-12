@@ -829,8 +829,8 @@ void default_quitfun(const char *msg){
     }
     kill(getpid(), SIGTERM);
 }
-void (*signal_handler)(int)=0;
-volatile sig_atomic_t fatal_error_in_progress=0;
+static void (*signal_handler)(int)=0;
+static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
     struct sigaction act={{0}};
@@ -865,6 +865,12 @@ static __attribute__((constructor)) void init(){
     if(!quitfun){//Don't override quitfun assigned by mex/interface.h
 	quitfun=&default_quitfun;
     }
+}
+
+/**
+   Register signal handler
+*/
+void register_signal_handler(void (*func)(int)){
     struct sigaction act={{0}};
     act.sa_sigaction=default_signal_handler;
     //act.sa_mask=SIGBUS|SIGILL|SIGSEGV|SIGINT|SIGTERM|SIGABRT|SIGHUP|SIGUSR1|SIGQUIT;
@@ -878,12 +884,6 @@ static __attribute__((constructor)) void init(){
     sigaction(SIGHUP, &act, 0);
     sigaction(SIGUSR1,&act, 0);
     sigaction(SIGQUIT,&act, 0);
-}
-
-/**
-   Register signal handler
-*/
-void register_signal_handler(void (*func)(int)){
     signal_handler=func;
 }
 /**

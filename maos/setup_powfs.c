@@ -445,7 +445,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(parms->powfs[ipowfs].nwvl>1){
 	    error("Not implemented yet. need to do phase unwrap in wfsgrad.\n");
 	}
-	powfs[ipowfs].embed=loc_create_embed(&powfs[ipowfs].nembed, powfs[ipowfs].loc, 1);
+	powfs[ipowfs].embed=loc_create_embed(&powfs[ipowfs].nembed, powfs[ipowfs].loc, 1, 1);
 	long nembed=powfs[ipowfs].nembed;
 	powfs[ipowfs].fieldstop=dnew(nembed, nembed);
 	double dtheta=parms->powfs[ipowfs].wvl[0]/(powfs[ipowfs].loc->dx*nembed); 

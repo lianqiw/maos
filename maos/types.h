@@ -246,7 +246,6 @@ typedef struct FRACTAL_T{
     double  scale;     /**<An additional scaling factor*/
     long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
-typedef struct CN2EST_T CN2EST_T;
 
 /**
    contains data related to wavefront reconstruction and DM fitting.  */

@@ -257,10 +257,14 @@ fi
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -diag-disable remark -vec-report=3"
 COMMON_GCC="-Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
-OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 " #-static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno" #-ffinite-math-only  "
-OPTIM_CLANG="-O3 -DHAVE_SSE2=1 -msse2 -msse "
-OPT_DEBUG="-g -ggdb -O0 -DDEBUG_TRACE"
+OPTIM_ALL="-O3 -DHAVE_SSE2=1 -msse2 -msse"
+OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
+OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno" #-ffinite-math-only  "
+OPTIM_CLANG="$OPTIM_ALL"
+DEBUG_ALL="-g -O0 -DDEBUG_TRACE"
+DEBUG_ICC="$DEBUG_ALL"
+DEBUG_GCC="$DEBUG_ALL -ggdb"
+DEBUG_CLANG="$DEBUG_ALL"
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
     debug="yes"
@@ -286,6 +290,7 @@ case "${cc_full}" in
 	CN=icc
 	COMMON="$COMMON_ICC"
 	OPTIM="$OPTIM_ICC"
+	DEBUG="$DEBUG_ICC"
 	#Test ICC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
@@ -308,10 +313,12 @@ case "${cc_full}" in
             CN=clang
             OPTIM="$OPTIM_CLANG"
 	    COMMON="$COMMON_CLANG"
+	    DEBUG="$DEBUG_CLANG"
 	else
             CN=gcc
 	    OPTIM="$OPTIM_GCC"
 	    COMMON="$COMMON_GCC"
+	    DEBUG="$DEBUG_GCC"
 	fi
 	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
@@ -338,10 +345,12 @@ case "${cc_full}" in
         CN=clang
 	OPTIM="$OPTIM_CLANG"
 	COMMON="$COMMON_CLANG"
+	DEBUG="$DEBUG_CLANG"
 	;;
     *) #Other compilers
      	OPTIM="-O3"
         COMMON=""
+	DEBUG="-O0"
 	;;	
 esac
 AC_SUBST(CN)
@@ -354,7 +363,7 @@ AC_DEFINE_UNQUOTED(INLINE, $INLINE, [Portable definition of inline])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
-    OPTScc="$OPT_DEBUG $COMMON"
+    OPTScc="$DEBUG $COMMON"
 else
     AM_CONDITIONAL(DEBUG,false)
     AC_DEFINE(DEBUG,[0],["Do not debug"])
@@ -785,7 +794,7 @@ if test "$with_cuda" != "no" ;then
 	CCBIN_OPTS+=" -Wno-unused-value -D__STRICT_ANSI__"
   	;;			  
     esac
-    CUDAOPT+=" -Xcompiler \"$(OPTS)\""
+    CUDAOPT+=" -Xcompiler \"$CCBIN_OPTS\""
     echo LDCUDA="$LDCUDA"
     echo CUDAOPT="$CUDAOPT"
     LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"

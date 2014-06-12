@@ -140,7 +140,7 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */
-long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
+long *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad){
     double xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -149,25 +149,26 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
     long ny=(long)round((ymax-ymin)*dy_in1)+1;
     long nxy=(nx>ny?nx:ny)*oversize;/*minimum size */
-    long mapn;
+    if(fftpad){
+	nxy=nextfftsize(nxy);
+    }
     if(*nembed<=0){
-	mapn=nextfftsize(nxy);
-	*nembed=mapn;
+	*nembed=nxy;
     }else{
 	if(*nembed<(long)(nxy*0.6)){
 	    error("Supplied nembed %ld is too small, recommend %ld\n",*nembed, nxy);
 	}else if(*nembed<nxy){
 	    warning("Supplied nembed %ld maybe too small, recommend %ld\n",*nembed, nxy);
 	}
-	mapn=*nembed;
+	nxy=*nembed;
     }
-    xmin-=(mapn-nx)/2*loc->dx;
-    ymin-=(mapn-ny)/2*loc->dy;
+    xmin-=(nxy-nx)/2*loc->dx;
+    ymin-=(nxy-ny)/2*loc->dy;
     long *embed=calloc(loc->nloc, sizeof(long));
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
 	long iy=(long)round((loc->locy[iloc]-ymin)*dy_in1);
-	embed[iloc]=ix+iy*mapn;
+	embed[iloc]=ix+iy*nxy;
     }
     return embed;
 }

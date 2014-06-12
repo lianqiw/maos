@@ -107,6 +107,17 @@ INLINE dmat *mx2d(const mxArray *A){
     }
     return out;
 }
+INLINE dmat *mx2dvec(const mxArray *A){
+    dmat *out=mx2d(A);
+    if(out->nx==1){
+	out->nx=out->ny;
+	out->ny=1;
+    }else if(out->ny>1){
+	fprintf(stderr, "Size is %ldx%ld\n", out->nx, out->ny);
+	mexErrMsgTxt("Input is not a vector");
+    }
+    return out;
+}
 INLINE dcell *mx2dcell(const mxArray *A){
     if(!mxIsCell(A)){
 	mexErrMsgTxt("A is not cell");
@@ -129,6 +140,7 @@ INLINE char *mx2str(const mxArray *A){
     mxGetString(A, fn, nlen);
     return fn;
 }
+/*
 static void mex_signal_handler(int sig){
     if(sig){
 	mexErrMsgTxt("Signal caught.\n");
@@ -149,5 +161,5 @@ static __attribute__((destructor)) void deinit(){
     }else{
 	signal(SIGTERM, SIG_DFL);
     }
-}
+    }*/
 #endif

@@ -17,6 +17,7 @@
 */
 
 #include "recon_utils.h"
+#include "setup_recon.h"
 #include "ahst.h"
 #include "sim.h"
 /**
@@ -731,4 +732,134 @@ imat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     }
     dfree(dead);
     return out;
+}
+
+/**
+   Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2
+Estimation. The result will be an average of them.  */
+
+
+CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
+    dmat *pair=parms->cn2.pair;
+    int npair=pair->nx*pair->ny;
+    int ipowfs=-1;
+    for(int ind=0; ind<npair; ind++){
+	int iwfs=(int)pair->p[ind];
+	if(ipowfs==-1){
+	    ipowfs=parms->wfs[iwfs].powfs;
+	}else if(ipowfs!=parms->wfs[iwfs].powfs){
+	    error("All wfs in parms->cn2.pair do not belong to the same powfs\n");
+	}
+    }
+    dmat *wfstheta=dnew(parms->nwfs, 2);
+    PDMAT(wfstheta, ptheta);
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	ptheta[0][iwfs]=parms->wfs[iwfs].thetax;
+	ptheta[1][iwfs]=parms->wfs[iwfs].thetay;
+    }
+    dmat *ht=0;
+    if(parms->cn2.keepht){
+	ht=dnew(parms->atmr.nps, 1);
+	for(int iht=0; iht<ht->nx; iht++){
+	    ht->p[iht]=parms->atmr.ht[iht];
+	}
+    }else{
+	int nht=parms->cn2.nhtomo;
+	ht=dnew(nht,1);
+	double dht=parms->cn2.hmax/(double)(nht-1);
+	if(dht<=0) error("Invalid hmax or nhtomo\n");
+	for(int iht=0; iht<nht; iht++){
+	    ht->p[iht]=dht*iht;
+	}
+    }
+    const double hs=parms->powfs[ipowfs].hs;
+    CN2EST_T *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
+			     hs, ht, parms->cn2.hmax, parms->cn2.keepht, parms->atm.l0);
+    cn2est->os=dnew(ht->nx, 1);
+    if(!parms->cn2.keepht){
+	/*preserve the number of over sampled layers. */
+	int osc=0;
+	for(int ips=0; ips<parms->atmr.nps; ips++){
+	    if(parms->atmr.os[ips]>1){
+		osc++;
+		if(parms->atmr.os[ips]!=2){
+		    error("os is not 2. adept this code to it.\n");
+		}	
+	    }
+	}
+	for(int iht=0; iht<ht->nx; iht++){
+	    if(iht<osc){
+		cn2est->os->p[iht]=2;
+	    }else{
+		cn2est->os->p[iht]=1;
+	    }
+	}
+    }else{
+	for(int iht=0; iht<ht->nx; iht++){
+	    cn2est->os->p[iht]=parms->atmr.os[iht];
+	}
+    }
+    if(parms->cn2.verbose){
+	cn2est->dmht=dnew(parms->ndm, 1);
+	for(int idm=0; idm<parms->ndm; idm++){
+	    cn2est->dmht->p[idm]=parms->dm[idm].ht;
+	}
+    }
+    if(parms->save.setup){
+	dcellwrite(cn2est->iPkn,"%s/cn2_iPkn",dirsetup);
+	dcellwrite(cn2est->Pkn,"%s/cn2_Pkn",dirsetup);
+	dcellwrite(cn2est->ht,"%s/cn2_ht",dirsetup);
+	spcellwrite(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
+    }
+    dfree(wfstheta);
+    dfree(ht);
+    return cn2est;
+}
+/**
+   Implemented mechanism to move height of layers.
+ */
+static void cn2est_moveht(RECON_T *recon){
+    (void)recon;
+    /*CN2EST_T *cn2est=recon->cn2est; */
+    /*
+      Implemented mechanism to move height of layers. Need to redo HXF, GX, etc.
+    */
+    error("moveht not yet implemented");
+}
+/**
+   Update the tomographic reconstructor by updating L2.
+ */
+static void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
+    CN2EST_T *cn2est=recon->cn2est;
+    /*wtrecon is referenced so should be updated automaticaly. */
+    if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
+	warning("wtrecon is not referenced\n");
+	dfree(recon->wt);
+	recon->wt=dref(cn2est->wtrecon->p[0]);
+    }
+    recon->r0=cn2est->r0m;
+    recon->l0=cn2est->l0;
+    setup_recon_tomo_update(recon, parms);
+}
+
+/**
+   Wrapper of Cn2 Estimation operations in recon.c
+*/
+void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol){
+    CN2EST_T *cn2est=recon->cn2est;
+    cn2est_push(cn2est, gradol);
+    if(cn2est->count%parms->cn2.step == 0){
+	/*dcellswrite(cn2est->cc, 1./cn2est->count, "cc_%d",isim+1);*/
+	cn2est_est(cn2est, parms->cn2.verbose, parms->cn2.reset);/*do the CN2 estimation */
+	if(parms->cn2.moveht){
+	    cn2est_moveht(recon);
+	}
+	if(parms->cn2.tomo){
+	    if(parms->cn2.verbose){
+		info2("Updating tomography weights\n");
+	    }
+	    /*Changes recon parameters. cannot be parallel with tomofit(). */
+	    cn2est_updatetomo(recon, parms);
+	}
+    }
 }

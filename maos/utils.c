@@ -731,31 +731,6 @@ void embedc_out(const dcomplex *out, double *in, long nin, long *embed){
     }
 }
 
-/**
-   Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
-   weights.  */
-double calc_aniso(double r0, int nht, double *ht, double *wt){
-    double wh=0;
-    for(int iht=0; iht<nht; iht++){
-	wh+=pow(ht[iht],5./3.)*wt[iht];
-    }
-    return 0.3144*r0*pow(wh,-3./5.);
-}
-/**
-   Estimate generalized aniso angle theta2 from Fried parameter r0, and layer
-   height and weights, and deformable mirror conjugation heights hc1 hc2 of the
-   ground and altitude DMs. */
-double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2){
-    double wh=0;
-    double hh=pow(hc2-hc1,5./3.);
-    for(int iht=0; iht<nht; iht++){
-	double t1=0.5*pow(fabs(ht[iht]-hc1),5./3.)+0.5*pow(fabs(ht[iht]-hc2),5./3.);
-	double t2=-0.25*hh-0.25/hh*pow(pow(fabs(ht[iht]-hc1),5./3.)-pow(fabs(ht[iht]-hc2),5./3.),2);
-	wh+=wt[iht]*(t1+t2);
-    }
-    return 0.3144*r0*pow(wh,-3./5.);
-}
-
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
     char header[320];
     int nembed=aper->nembed[iwvl];

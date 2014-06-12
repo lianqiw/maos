@@ -169,7 +169,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    if(iwvl>0 && aper->nembed[iwvl]==aper->nembed[0]){
 		aper->embed[iwvl]=aper->embed[0];
 	    }else{
-		aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2);
+		aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2, 0);
 	    }
 	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
 		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
