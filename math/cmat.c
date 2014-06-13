@@ -309,7 +309,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
     }
 }
 /**
-   Embed or crop a X(mat) into center of XR(mat). 
+   Embed or crop a XR(mat) into center of X(mat). 
  */
 void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
     R *restrict in=B->p;

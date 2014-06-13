@@ -140,7 +140,7 @@ INLINE char *mx2str(const mxArray *A){
     mxGetString(A, fn, nlen);
     return fn;
 }
-/*
+
 static void mex_signal_handler(int sig){
     if(sig){
 	mexErrMsgTxt("Signal caught.\n");
@@ -161,5 +161,5 @@ static __attribute__((destructor)) void deinit(){
     }else{
 	signal(SIGTERM, SIG_DFL);
     }
-    }*/
+}
 #endif

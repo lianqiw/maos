@@ -806,8 +806,8 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }
     if(parms->save.setup){
-	dcellwrite(cn2est->iPkn,"%s/cn2_iPkn",dirsetup);
-	dcellwrite(cn2est->Pkn,"%s/cn2_Pkn",dirsetup);
+	dcellwrite(cn2est->iPnk,"%s/cn2_iPnk",dirsetup);
+	dcellwrite(cn2est->Pnk,"%s/cn2_Pnk",dirsetup);
 	dcellwrite(cn2est->ht,"%s/cn2_ht",dirsetup);
 	spcellwrite(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
     }

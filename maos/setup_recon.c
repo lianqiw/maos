@@ -1822,9 +1822,13 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	recon->os=dref(cn2est->os);
 	recon->wt=dref(cn2est->wtrecon->p[0]);
 	/*the following will be updated later in simulation. */
-	dset(recon->wt, 1./recon->wt->nx);/*evenly distributed.  */
-	recon->r0=0.15;/*random guess */
-	recon->l0=30;/*random guess */
+	if(parms->cn2.keepht){
+	    for(int ips=0; ips<recon->wt->nx; ips++){
+		recon->wt->p[ips]=parms->atmr.wt[ips];
+	    }
+	}else{
+	    dset(recon->wt, 1./recon->wt->nx);/*evenly distributed.  */
+	}
     }else{/*use input information from atmr */
 	recon->wt=dnew(parms->atmr.nps,1);
 	recon->ht=dnew(parms->atmr.nps,1);
@@ -1834,9 +1838,10 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	    recon->ht->p[ips]=parms->atmr.ht[ips];
 	    recon->os->p[ips]=parms->atmr.os[ips];
 	}
-	recon->r0=parms->atmr.r0;
-	recon->l0=parms->atmr.l0;
     }
+    recon->r0=parms->atmr.r0;
+    recon->l0=parms->atmr.l0;
+
     /*sampling of xloc */
     recon->dx=dnew(recon->ht->nx, 1);
     for(int iht=0; iht<recon->ht->nx; iht++){

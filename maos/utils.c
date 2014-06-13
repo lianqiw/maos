@@ -219,6 +219,7 @@ void create_metapupil(map_t **mapout, /**<[out] map*/
 	    }
 	}
     }
+    free(dirs);
 }
 /**
    Plot the projection of all the different FoVs on a certain grid. used in setup_recon

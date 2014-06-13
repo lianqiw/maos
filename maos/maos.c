@@ -328,6 +328,7 @@ int main(int argc, const char *argv[]){
      * during preparation. Selective enable parallel for certain setup functions that doesn't use blas*/
     maos(parms);
     free_parms(parms);
+    free(global);
     info2("Job finished at %s\n",myasctime());
     rename_file(0);
     scheduler_finish(0);

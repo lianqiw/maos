@@ -76,6 +76,7 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     dfree(powfs[ipowfs].saa);
     locfree(powfs[ipowfs].saloc);
     locfree(powfs[ipowfs].loc);
+    locfree(powfs[ipowfs].gloc);
     dfree(powfs[ipowfs].amp);
     if(powfs[ipowfs].loc_tel){
 	locarrfree(powfs[ipowfs].loc_tel, parms->powfs[ipowfs].nwfs);

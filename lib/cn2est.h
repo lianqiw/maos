@@ -22,8 +22,6 @@
    contains the data related to Cn2 Estimation for each WFS pair.
 */
 typedef struct CN2PAIR_T{
-    int (**sapair)[2];/**<record pair of subapertures to use for each separation for each wfs pair*/
-    int *nsapair;   /**<number of subaperture pairs for each separation for each wfs pair*/
     double dtheta;  /**<separation between the stars*/
     double beta;    /**<angle of separation between the stars*/
     int xstep;      /**<separation step of subapertures along x*/
@@ -40,17 +38,21 @@ typedef struct CN2EST_T{
     int *wfscov;     /**<Whether this wfs participates in covariance computation.*/
     long nembed;      /**<size of array to embed the LGS gradients into*/
     long *embed;      /**<pointers to embed*/
+    imat *mask;       /**<select subapertures that are both full and have neighbors to compute covariance*/
     dcell *gxs;      /**<gradient x*/
     dcell *gys;      /**<gradient y*/
-    dcell *cxs;      /**<curvature x*/
-    dcell *cys;      /**<curvature y*/
-    dcell *cc;       /**<cross-covariance for each pair*/
+    ccell *curi;     /**<For FFT*/
+    ccell *covc;     /**<Accumulation of FFT of Covariance in 2d*/
+    dcell *cov2;     /**<Covariance in 2d*/
+    dcell *cov1;     /**<Cut of cov2 along wfs separation*/
+    dmat *overlap;   /**<Number of overlapping subapertures*/
+    int nwfs;        /**<number of wfs*/
     int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
     int ovs;         /**<Over sampling ratio in building the influence matrix*/
     int count;       /**<number of time steps we have accumulated the covariance*/
     struct CN2PAIR_T *pair; /**<information about each pair*/
-    dcell *Pkn;      /**<Cn2 Estimation forward matrix*/
-    dcell *iPkn;     /**<Cn2 Estimation matrix.*/
+    dcell *Pnk;      /**<Cn2 Estimation forward matrix*/
+    dcell *iPnk;     /**<Cn2 Estimation matrix.*/
     dcell *wt;       /**<Estimated weighting of the layers*/
     dcell *ht;       /**<Estimated Height of the layers*/
     double hmax;     /**<maximum cn2 estimation when keepht!=2*/

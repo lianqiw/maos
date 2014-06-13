@@ -1,7 +1,7 @@
 #ifndef AOS_LIB_TYPE_H
 #define AOS_LIB_TYPE_H
 #include "../math/type.h"
-
+#include "../math/imat.h"
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
    on x/y. Can be casted to dmat

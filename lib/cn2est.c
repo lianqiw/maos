@@ -21,7 +21,7 @@
 #include "mkh.h"
 #include "turbulence.h"
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
-
+#define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat,
 		     const double hs, dmat *htrecon, double hmax, int keepht, double l0){
     info2("Cn2 estimation:");
@@ -37,10 +37,14 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     CN2EST_T *cn2est=calloc(1, sizeof(CN2EST_T));
     cn2est->nwfspair=nwfspair;
     int nwfs=wfstheta->nx;
+    cn2est->nwfs=nwfs;
     /*wfscov is a flag for wfs show whether wfs participates in covariance. */
     cn2est->wfscov=calloc(nwfs, sizeof(int));
     for(int ind=0; ind<npair; ind++){
 	int iwfs=(int)wfspair->p[ind];
+	if(iwfs>=nwfs){
+	    error("wfspair has invalid values: %d\n", iwfs);
+	}
 	cn2est->wfscov[iwfs]=1;
     }
     /*embed has dimension nembed*nembed. It is used to embed 1-d gradient vector
@@ -56,44 +60,55 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	}
     }
     int (*pmask)[nx]=(void*)mask;
-    int (*pmask2)[nx]=calloc(nx*nx,sizeof(int));
+    cn2est->mask=inew(nx,nx);
+    int (*pmask2)[nx]=(void*)cn2est->mask->p;
+    cmat *overlap=cnew(nx, nx);
+    cfft2plan(overlap, -1);
+    cfft2plan(overlap, 1);
+    PCMAT(overlap, pover);
     for(int iy=0; iy<nx; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    /*Only use a subaperture if we are able to make curvature. */
 	    if(pmask[iy][ix] && pmask[iy][ix+1] && pmask[iy][ix-1] &&
 	       pmask[iy+1][ix] && pmask[iy-1][ix]){
 		pmask2[iy][ix]=1;
+		pover[iy][ix]=1;
 	    }
 	}
     }
     free(mask);
+    cfft2(overlap, -1);
+    for(long i=0; i<nx*nx; i++){
+	overlap->p[i]=overlap->p[i]*conj(overlap->p[i]);
+    }
+    cfft2(overlap, 1);
+    cfftshift(overlap);
+    creal2d(&cn2est->overlap, 0, overlap, 1./(nx*nx));
+    cfree(overlap);
     /*2-d arrays to store x y gradient  and x y "curvature" */
     cn2est->gxs=dcellnew(nwfs, 1);/*stores gradient in 2-d map */
     cn2est->gys=dcellnew(nwfs, 1);
-    cn2est->cxs=dcellnew(nwfs, 1);/*stores curvature in 2-d map. */
-    cn2est->cys=dcellnew(nwfs, 1);
+    cn2est->curi=ccellnew(nwfs, 1);
     for(int ix=0; ix<nwfs; ix++){
 	if(cn2est->wfscov[ix]){
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
 	    cn2est->gys->p[ix]=dnew(nx, nx);
-	    cn2est->cxs->p[ix]=dnew(nx, nx);
-	    cn2est->cys->p[ix]=dnew(nx, nx);
+	    cn2est->curi->p[ix]=cnew(nx, nx);
+	    cfft2plan(cn2est->curi->p[ix], -1);
+	    cfft2plan(cn2est->curi->p[ix], 1);
 	}
     }
     /*
       Now we prepare indexes that can be used to compute gradient(curvature)
       cross-covariances conveniently during simulation.
-     */
+    */
     /*first get a few constants */
     const double dsa=saloc->dx;
-    const int nsa=saloc->nloc;
-
     /*determine the layer height used for tomography. */
     cn2est->htrecon=ddup(htrecon);
     cn2est->hmax=hmax; /*maximum cn2 estimation when keepht!=2*/
     cn2est->wtrecon=dcellnew(1,1);
     cn2est->wtrecon->p[0]=dnew_mmap(cn2est->htrecon->nx,1,NULL,"Res_Cn2_wtrecon");
-    dwrite(cn2est->htrecon,"Res_Cn2_htrecon");
     {
 	info2("htrecon=[");
 	for(int iht=0; iht<cn2est->htrecon->nx; iht++){
@@ -102,7 +117,9 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	info2("]km\n");
     }
     /*stores cross-covariance data during simulation */
-    cn2est->cc=dcellnew(nwfspair,1);
+    cn2est->covc=ccellnew(nwfspair,1);
+    cn2est->cov1=dcellnew(nwfspair,1);
+    cn2est->cov2=dcellnew(nwfspair,1);
     /*height of layers for each wfs pair of slodar output. */
     cn2est->ht=dcellnew(nwfspair,1);
     /*record sapair to use for each separation */
@@ -136,7 +153,13 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	    nht=cn2est->htrecon->nx;
 	}else{
 	    /*output to nature slodar heights. and then bin to tomography layers */
-	    nht=(int)ceil(hmax*pair->dtheta/(dsa*(1-hmax/hs)))+1;
+	    double xmin, xmax;
+	    dmaxmin(saloc->locx, saloc->nloc, &xmax, &xmin);
+	    double hm=(xmax-xmin)/((xmax-xmin)/hs+pair->dtheta);
+	    if(hm>hmax){
+		hm=hmax;
+	    }
+	    nht=(int)floor(hm*pair->dtheta/(dsa*(1-hm/hs)))+1;
 	}
 	pair->nht=nht;
 	nhtsx[iwfspair]=nht;
@@ -153,46 +176,23 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	  ystep=1;*/
 	double ang2=round(ang*2/M_PI)*M_PI/2;
 	/*either xstep or ystep is 0. the other one is 1 or -1 */
-	int xstep=(int)round(cos(ang2));/*integers */
-	int ystep=(int)round(sin(ang2));/*integers */
+	/*This is for building 1-d covariance directly. WHen ang2 is away from
+	 * axis, need to build 2-d covariance, rotate, and then cut 1d.*/
+	int xstep=round(cos(ang2));
+	int ystep=round(sin(ang2));
 	pair->xstep=xstep;
 	pair->ystep=ystep;
-	/*records the subaperture pairs to use for each subaperture
-	  separation. Used in wfsgrad.c.*/
-	pair->sapair  = calloc(nsep, sizeof(void*));
-	pair->nsapair = calloc(nsep, sizeof(int));
 	/*stores the cross-covariance of the curvature for x, and y grads. */
-	cn2est->cc->p[iwfspair]=dnew(nsep*2,1);
+	cn2est->cov1->p[iwfspair]=dnew(nsep,1);
+	cn2est->covc->p[iwfspair]=cnew(nx, nx);
+
 	info2("Pair %d: wfs %d and %d. dtheta=%4f\" nht=%d xstep=%d ystep=%d\n", 
 	     iwfspair, wfs0, wfs1, pair->dtheta*206265, nht, xstep, ystep);
-	for(int isep=0; isep<nsep; isep++){
-	    pair->sapair[isep]=calloc(nsa*2, sizeof(int));
-	    int count=0;
-	    for(int iy=0; iy<nx; iy++){
-		for(int ix=0; ix<nx; ix++){
-		    int xsep=isep*xstep;
-		    int ysep=isep*ystep;
-		    /*if both subapertures exist for the pair, record it. */
-		    if(pmask2[iy][ix] && pmask2[iy+ysep][ix+xsep]){
-			pair->sapair[isep][count][0]=ix+iy*nx;
-			pair->sapair[isep][count][1]=(ix+xsep)+(iy+ysep)*nx;
-			count++;
-		    }/*mask */
-		}/*ix */
-	    }/*iy */
-	    pair->sapair[isep]=realloc(pair->sapair[isep], sizeof(int)*2*count);
-	    if(count==0){
-		error("there is no overlapping for this sep: %d\n", isep);
-	    }
-	    pair->nsapair[isep]=count;
-	}/*isep */
     }/*iwfspair */
-    free(pmask2);
     /*stores estimated weight of layers during simulation and output to file finally. */
     cn2est->wt=dcellnew_mmap(nwfspair, 1, nhtsx, nhtsy, NULL, NULL, "Res_Cn2_wt");
     /*stores estimated r0 during simulation */
     cn2est->r0=dnew_mmap(nwfspair,1,NULL,"Res_Cn2_r0");
-    dcellwrite(cn2est->ht, "Res_Cn2_ht");
     /*
       Now we start to build the model that will be used to estimate Cn2 from the
       cross-covariance.
@@ -207,11 +207,11 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
       the aliasing effect. With larger ovs, we are using larger
       frequencies. That gets aliased into the results. Then how about padding?*/
     cn2est->ovs=2;
-    /*Pkn stores the opeator from layer weight to gradient curvature covariance
-      matrix. iPkn is the covariance of it. Each diagonal cell is for each WFS
+    /*Pnk stores the opeator from layer weight to gradient curvature covariance
+      matrix. iPnk is the covariance of it. Each diagonal cell is for each WFS
       pair.*/
-    cn2est->Pkn=dcellnew(nwfspair, nwfspair);
-    cn2est->iPkn=dcellnew(nwfspair,nwfspair);
+    cn2est->Pnk=dcellnew(nwfspair, nwfspair);
+    cn2est->iPnk=dcellnew(nwfspair,nwfspair);
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
     cn2est->wtconvert=spcellnew(1,nwfspair);
@@ -228,18 +228,17 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	const double df=1./(nm*dx);
 	const double l02=pow(cn2est->l0,-2);
 	/*initialize */
-	cmat *mxx=cnew(nm,nm);
-	cmat *myy=cnew(nm,nm);
+	cmat *mc=cnew(nm,nm);
 	/*create 2-d pointers */
-	PCMAT(mxx,pmxx);
-	PCMAT(myy,pmyy);
+	PCMAT(mc,pmc);
 	/*create FFT plans */
-	cfft2plan(mxx,1);
-	cfft2plan(myy,1);
+	cfft2plan(mc,1);
 	/*the forward operator from layer weights to cross-covariance */
- 	dmat *Pkn=dnew(nsep*2,nht);
-	PDMAT(Pkn, pPkn);
+ 	dmat *Pnk=dnew(nsep,nht);
+	PDMAT(Pnk, pPnk);
 	info2("Pair %d: hk=[", iwfspair);
+	double cb=cos(pair->beta);
+	double sb=sin(pair->beta);
 	for(int iht=0; iht<nht; iht++){
 	    /*the height of each layer */
 	     double hk;
@@ -273,53 +272,43 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 		    /*the turbulence PSD with outerscale */
 		    const double psd=psd_coef*pow((fx*fx+fy*fy)*zetan2+l02,-11./6.);
 		    /*gx diff is along x, gy diff is along y to form real curvature */
-		    const double curx=pow(2*(cos(2*M_PI*dsa*fx)-1),2);
-		    const double cury=pow(2*(cos(2*M_PI*dsa*fy)-1),2);
-		    const double pmmm=pow(sincfy*sincfx,2)*psd;
-		    pmxx[iy][ix]=fx*fx*pmmm*curx;/*x gradient */
-		    pmyy[iy][ix]=fy*fy*pmmm*cury;/*y gradient */
+		    const double cur=pow(2*fx*(cos(2*M_PI*dsa*fx)-1)+2*fy*(cos(2*M_PI*dsa*fy)-1),2);
+		    pmc[iy][ix]=pow(sincfy*sincfx,2)*psd*cur;
 		}/*ix */
 	    }/*iy */
 	    /*doing fft */
-	    cfft2(mxx,1);/*fft */
-	    cfft2(myy,1);
+	    cfft2(mc,1);/*fft */
 	    /*shift 0 freq to center. */
-	    cfftshift(mxx);
-	    cfftshift(myy);
+	    cfftshift(mc);
 	    
 	    for(int isep=0; isep<nsep; isep++){
 		/*Different from matlab prototype because I used interpolation. */
-		double xx=(iht*cos(pair->beta)-isep*pair->xstep)*cn2est->ovs + nm2;
-		double yy=(iht*sin(pair->beta)-isep*pair->ystep)*cn2est->ovs + nm2;
+		double xx=(iht-isep)*cb*cn2est->ovs + nm2;
+		double yy=(iht-isep)*sb*cn2est->ovs + nm2;
 #if INTERP_NEAREST
 		/*Do interpolation using nearest neighbor */
 		int ixx=(int)round(xx);
 		int iyy=(int)round(yy);
-		double imxx=creal(pmxx[iyy][ixx]);
-		double imyy=creal(pmyy[iyy][ixx]);
+		double imc=creal(pmc[iyy][ixx]);
 #else
 		/*Do interpolation using bilinear spline interp. */
 		int ixx=(int)floor(xx); xx=xx-ixx;
 		int iyy=(int)floor(yy); yy=yy-iyy;
-		double imxx=creal((pmxx[iyy][ixx]*(1-xx)+pmxx[iyy][ixx+1]*(xx))*(1-yy)
-				  +(pmxx[iyy+1][ixx]*(1-xx)+pmxx[iyy+1][ixx+1]*(xx))*yy);
-		double imyy=creal((pmyy[iyy][ixx]*(1-xx)+pmyy[iyy][ixx+1]*(xx))*(1-yy)
-				  +(pmyy[iyy+1][ixx]*(1-xx)+pmyy[iyy+1][ixx+1]*(xx))*yy);
+		double imc=creal((pmc[iyy][ixx]*(1-xx)+pmc[iyy][ixx+1]*(xx))*(1-yy)
+				 +(pmc[iyy+1][ixx]*(1-xx)+pmc[iyy+1][ixx+1]*(xx))*yy);
 #endif
-		pPkn[iht][isep]=imxx;
-		pPkn[iht][isep+nsep]=imyy;
+		pPnk[iht][isep]=imc;
 	    }
 	}
 	info2("]km\n");
 	/*
-	  iPkn is a block diagonal matrix for Cn2 Estimation.
+	  iPnk is a block diagonal matrix for Cn2 Estimation.
 	*/
-	cn2est->Pkn->p[iwfspair+iwfspair*nwfspair]=dref(Pkn);
-	cn2est->iPkn->p[iwfspair+iwfspair*nwfspair]=dpinv(Pkn,NULL,NULL);
+	cn2est->Pnk->p[iwfspair+iwfspair*nwfspair]=ddup(Pnk);
+	cn2est->iPnk->p[iwfspair+iwfspair*nwfspair]=dpinv(Pnk,0,0);
 	cn2est->wtconvert->p[iwfspair]=mkhbin1d(cn2est->ht->p[iwfspair],cn2est->htrecon);
-	dfree(Pkn);
-	cfree(mxx);
-	cfree(myy);
+	dfree(Pnk);
+	cfree(mc);
     }/*iwfspair */
     return cn2est;
 }/*cn2est_prepare */
@@ -346,18 +335,23 @@ static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
 	    cn2est->gys->p[iwfs]->p[embed[isa]]=pgrad[isa+nsa];
 	}
 	/*Compute curvature of wavefront from gradients. */
-	PDMAT(cn2est->cxs->p[iwfs], curx);
-	PDMAT(cn2est->cys->p[iwfs], cury);
+	PCMAT(cn2est->curi->p[iwfs], cur);
 	PDMAT(cn2est->gxs->p[iwfs], gx);
 	PDMAT(cn2est->gys->p[iwfs], gy);
-	const int ny=cn2est->cxs->p[iwfs]->ny;
-	const int nx=cn2est->cxs->p[iwfs]->nx;
+	int (*mask)[cn2est->nembed]=(void*)cn2est->mask->p;
+	const int ny=cn2est->curi->p[iwfs]->ny;
+	const int nx=cn2est->curi->p[iwfs]->nx;
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		curx[iy][ix]=gx[iy][ix+1]+gx[iy][ix-1]-2*gx[iy][ix];/*gx along x */
-		cury[iy][ix]=gy[iy+1][ix]+gy[iy-1][ix]-2*gy[iy][ix];/*gy along y */
+		if(mask[iy][ix]){
+		    cur[iy][ix]=gx[iy][ix+1]+gx[iy][ix-1]-2*gx[iy][ix]/*gx along x */
+			+gy[iy+1][ix]+gy[iy-1][ix]-2*gy[iy][ix];/*gy along y */
+		}else{
+		    cur[iy][ix]=0;//must set to zero.
+		}
 	    }
 	}
+	cfft2(cn2est->curi->p[iwfs], -1);
     }
 }
 /**
@@ -369,35 +363,22 @@ static void cn2est_cov(CN2EST_T *cn2est){
     cn2est->count++;
     /*for each wfs pair */
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
-	const int nsep=cn2est->pair[iwfspair].nsep;
-	double *ccx=cn2est->cc->p[iwfspair]->p;
-	double *ccy=cn2est->cc->p[iwfspair]->p+nsep;
 	const int wfs0=cn2est->pair[iwfspair].wfs0;
 	const int wfs1=cn2est->pair[iwfspair].wfs1;
-	const double *cxs1=cn2est->cxs->p[wfs0]->p;
-	const double *cxs2=cn2est->cxs->p[wfs1]->p;
-	const double *cys1=cn2est->cys->p[wfs0]->p;
-	const double *cys2=cn2est->cys->p[wfs1]->p;
-	
-	/*for each subaperture separation */
-	for(int isep=0; isep<nsep; isep++){
-	    const int nsapair=cn2est->pair[iwfspair].nsapair[isep];
-	    int (*const sapair)[2]=cn2est->pair[iwfspair].sapair[isep];
-	    double accx=0;
-	    double accy=0;
-	    /*for each pair of the subapertures */
-	    for(int isa=0; isa<nsapair; isa++){
-		accx+=cxs1[sapair[isa][0]]*cxs2[sapair[isa][1]];
-		accy+=cys1[sapair[isa][0]]*cys2[sapair[isa][1]];
-	    }/*isa */
-	    ccx[isep]+=accx/nsapair;
-	    ccy[isep]+=accy/nsapair;
-	}/*isep */
+	dcomplex *cur1=cn2est->curi->p[wfs0]->p;
+	dcomplex *cur2=cn2est->curi->p[wfs1]->p;
+	dcomplex *cov=cn2est->covc->p[iwfspair]->p;
+	for(long i=0; i<cn2est->nembed*cn2est->nembed; i++){
+	    cov[i]+=cur1[i]*conj(cur2[i]);
+	}
     }/*iwfspair */
 }
 void cn2est_push(CN2EST_T *cn2est, dcell *gradol){
     int ncol=0;
-    for(int iwfs=0; iwfs<gradol->nx; iwfs++){
+    if(gradol->nx<cn2est->nwfs){
+	error("Grad has less number of wfs than required %d\n", cn2est->nwfs);
+    }
+    for(int iwfs=0; iwfs<cn2est->nwfs; iwfs++){
 	if(!cn2est->wfscov[iwfs]) continue;
 	if(ncol==0) {
 	    ncol=gradol->p[iwfs]->ny;
@@ -415,64 +396,83 @@ void cn2est_push(CN2EST_T *cn2est, dcell *gradol){
    Do the Cn2 Estimation.
  */
 void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
-    dcellzero(cn2est->wt);
-    dcellmm(&cn2est->wt, cn2est->iPkn, cn2est->cc, "nn", 1./cn2est->count);
-    double wtsumsum=0;
+    info2("cn2est from %d measurements\n", cn2est->count);
+    cmat *covi=cnew(cn2est->nembed, cn2est->nembed);
+    dmat *covr=dnew(cn2est->nembed, cn2est->nembed);
+    PDMAT(covr, pcovr);
+    PDMAT(cn2est->overlap, pover);
     const int nwfspair=cn2est->wt->nx;
+    cfft2plan(covi, 1);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
-	dmat *Pkn=cn2est->Pkn->p[iwfspair+iwfspair*nwfspair];
+	cfft2plan(covi, 1);
+	cadd(&covi, 0, cn2est->covc->p[iwfspair], 1./(cn2est->count*cn2est->nembed*cn2est->nembed));
+	cfft2(covi, 1);
+	cfftshift(covi);
+	creal2d(&cn2est->cov2->p[iwfspair], 0, covi, 1);
+	//roate and embed;
+	dembed(covr, cn2est->cov2->p[iwfspair], M_PI-cn2est->pair[iwfspair].beta);
+	double *cc=cn2est->cov1->p[iwfspair]->p;
+	int off=cn2est->nembed/2;
+	for(int isep=0; isep<cn2est->pair[iwfspair].nsep; isep++){
+	    if(pover[off][off+isep]>=MIN_SA_OVERLAP){
+		cc[isep]=(double)pcovr[off][off+isep]/pover[off][off+isep];
+	    }else{
+		cc[isep]=0;
+	    }
+	}
+    }
+    cfree(covi);
+    dfree(covr);
+    dcellzero(cn2est->wt);
+    dcellmm(&cn2est->wt, cn2est->iPnk, cn2est->cov1, "nn", 1);
+    double wtsumsum=0;
+    DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
+    for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
+	dmat *Pnk=cn2est->Pnk->p[iwfspair+iwfspair*nwfspair];
 	dmat *wt=cn2est->wt->p[iwfspair];/*the layer weights. */
 	dmat *ht=cn2est->ht->p[iwfspair];
 	int nlayer=wt->nx;
-	dmat *Pknwt=dnew(nlayer,nlayer);/*to remove columns in Pkn if zero weights are returned */
+	dmat *Pnkwt=dnew(nlayer,nlayer);/*to remove columns in Pnk if zero weights are returned */
 	/*number of negative layers found. */
  	int nfd=0;
 	int nfdlast=0;
 	double wtsum;
-	dzero(Pknwt);
-	daddI(Pknwt,1);/*start with identity matrix */
+	dzero(Pnkwt);
+	daddI(Pnkwt,1);/*start with identity matrix */
     repeat:
 	nfd=0;
 	wtsum=0; 
 
 	for(int ix=0; ix<nlayer; ix++){
 	    const double val=wt->p[ix];
-	    if(val<0){
+	    if(val<-0.01){
 		/*negatives found. need to remove columns in the forward matrix
-		  Pkn and redo the estimation matrix iPkn*/
+		  Pnk and redo the estimation matrix iPnk*/
 		nfd++;
 		/*disable diagonal elements. */
-		Pknwt->p[ix*(1+nlayer)]=0;
+		Pnkwt->p[ix*(1+nlayer)]=0;
 	    }else{
 		wtsum+=val;
 	    }
 	}
-	if(nfd>nfdlast){
-	    /*info("nfd=%d\n",nfd); */
+	if(nfd>nfdlast && CN2EST_NO_NEGATIVE){
 	    if(fabs(wtsum)<1e-10){
 		error("No valid layers found\n");
 	    }
-	    dmat *Pkn2=NULL;
+	    dmat *Pnk2=NULL;
 	    /*this will zero out columns in the forward matrx */
-	    dmm(&Pkn2, 0, Pkn, Pknwt, "nn", 1);
+	    dmm(&Pnk2, 0, Pnk, Pnkwt, "nn", 1);
 	    /*will redo the estimation matrix. */
-	    dmat *iPkn2=dpinv(Pkn2, NULL, NULL);
-	    /*dwrite(wt,"wt");
-	    dwrite(Pknwt,"Pknwt");
-	    dwrite(Pkn,"Pkn");
-	    dwrite(Pkn2,"Pkn2");
-	    dwrite(iPkn2,"iPkn2");
-	    EXIT;
-	    */
+	    dmat *iPnk2=dpinv(Pnk2, NULL, NULL);
 	    /*compute the new result */
-	    dmm(&wt,0, iPkn2, cn2est->cc->p[iwfspair], "nn", 1./cn2est->count);
-	    dfree(iPkn2);
-	    dfree(Pkn2);
+	    dmm(&wt,0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
+	    dfree(iPnk2);
+	    dfree(Pnk2);
 	    nfdlast=nfd;
 	    /*repeat the computation of wtsum */
 	    goto repeat;
 	}
-	dfree(Pknwt);
+	dfree(Pnkwt);
 	wtsumsum+=wtsum;
 	double r0=pow(wtsum,-3./5.);
 	cn2est->r0->p[iwfspair]=r0;
@@ -485,7 +485,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	    }
 	    info2("wt=[");
 	    for(int iht=0; iht<wt->nx; iht++){
-		info2("%5f ", wt->p[iht]);
+		info2("%.4f ", wt->p[iht]);
 	    }
 	    info2("]\n");
 	}
@@ -506,7 +506,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	}
 	info2("wt=[");
 	for(int iht=0; iht<cn2est->wtrecon->p[0]->nx; iht++){
-	    info2("%5f ", cn2est->wtrecon->p[0]->p[iht]);
+	    info2("%.4f ", cn2est->wtrecon->p[0]->p[iht]);
 	}
 	info2("]\n");
     }
@@ -514,7 +514,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     if(reset){
 	if(verbose) info2("reset the covariance");
 	cn2est->count=0;/*reset the counter; */
-	dcellzero(cn2est->cc);/*reset the numbers. */
+	ccellzero(cn2est->covc);/*reset the numbers. */
     }
 }
 
@@ -524,21 +524,16 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 void cn2est_free(CN2EST_T *cn2est){
     if(!cn2est) return;
     free(cn2est->embed);
+    ifree(cn2est->mask);
     free(cn2est->wfscov);
-    for(int iwfspair=0;iwfspair<cn2est->nwfspair; iwfspair++){
-	for(int isep=0; isep<cn2est->pair[iwfspair].nsep; isep++){
-	    free(cn2est->pair[iwfspair].sapair[isep]);
-	}
-	free(cn2est->pair[iwfspair].sapair);
-	free(cn2est->pair[iwfspair].nsapair);
-    }
     free(cn2est->pair);
     dcellfree(cn2est->gxs);
     dcellfree(cn2est->gys);
-    dcellfree(cn2est->cxs);
-    dcellfree(cn2est->cys);
-    dcellfree(cn2est->cc);
-    dcellfree(cn2est->iPkn);
+    ccellfree(cn2est->curi);
+    ccellfree(cn2est->covc);
+    dcellfree(cn2est->cov1);
+    dcellfree(cn2est->cov2);
+    dcellfree(cn2est->iPnk);
     dcellfree(cn2est->wt);
     dcellfree(cn2est->ht);
     dfree(cn2est->dmht);

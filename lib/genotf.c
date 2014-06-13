@@ -380,7 +380,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 /**
    Average spatially the 4-d covariance function to create a 2-d covariance
    function. For OPD f defined on points x (2-d coordinate), the 4-d covariance
-   is simply <f'f> where f is vector form of the OPD and the average of over
+   is simply <f'f> where f is vector form of the OPD and the average is over
    time. The 2-d covariance is additionally averaged over all the points so that
    B(r)=<f(x)'f(x+r)>_x,t To compute B, we first figure out the number of
    overlapping pairs of points for each r and then compute the averaging. When
@@ -408,6 +408,12 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     map_t *map=loc->map;
     long ncovx2=ncovx/2;
     long ncovy2=ncovy/2;
+    long *map_x=malloc(sizeof(long)*loc->nloc);
+    long *map_y=malloc(sizeof(long)*loc->nloc);
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	map_x[iloc]=(long)round((locx[iloc]-map->ox)*dx1);
+	map_y[iloc]=(long)round((locy[iloc]-map->oy)*dy1);
+    }
     for(long jm=0; jm<ncovy; jm++){
 	long jm2=(jm-ncovy2);//peak in the center 
 	/*long jm2=jm<ncovy2?jm:jm-ncovy;//peak in the corner */
@@ -418,14 +424,12 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 	    double acc=0;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		if(amp && amp[iloc]<ampthres) continue;
-		long iy=(long)round((locy[iloc]-map->oy)*dy1+jm2);
-		long ix=(long)round((locx[iloc]-map->ox)*dx1+im2);
+		long ix=map_x[iloc]+im2;
+		long iy=map_y[iloc]+jm2;
 		long iloc2=(long)loc_map_get(map, ix, iy);
-		if(iloc2>0){
-		    if(!amp || amp[iloc2]>=ampthres){
-			acc+=pcov[iloc][iloc2-1];
-			count++;
-		    }
+		if(iloc2>0 && (!amp || amp[iloc2]>=ampthres)){
+		    acc+=pcov[iloc][iloc2-1];
+		    count++;
 		}
 	    }
 	    if(count>0){
@@ -437,4 +441,6 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 	    }
 	}
     }
+    free(map_x);
+    free(map_y);
 }

@@ -109,8 +109,6 @@ X(mat)* X(invspd)(const X(mat) *A){
     return out;
 }
 
-
-
 /**
    inplace invert a general square matrix using lapack dgesv_
 */

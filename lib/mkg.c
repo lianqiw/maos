@@ -465,7 +465,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     spfree(GS0t[1]); GS0t[1]=NULL;
     /*loc_free_map(ploc);
       loc_free_map(xloc);*/
-    spdroptol(GS0, 5e-16);/*drop small values. */
+    spdroptol(GS0, 1e-14);/*drop small values. */
     return GS0;
 }
 #ifndef MATLAB_MEX_FILE
