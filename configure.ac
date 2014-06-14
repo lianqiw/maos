@@ -223,6 +223,9 @@ AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), 
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]))
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
+if test -z "$MEXDIR" ;then
+    with_matlab=no
+fi
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
@@ -494,29 +497,35 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
-AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0],[$LDFFT])
+if test "$with_matlab" = "no" ;then
+    #cannot compile with single floating fft when compiling mex routines
+    has_fftwf=0
+else
+    AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
+fi
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
 
 AC_ARG_ENABLE(fftw-threads, AS_HELP_STRING([--disable-fftw-threads],[Disable FFTW threads]), use_fftw_threads="$enableval", use_fftw_threads="no")
 if test "$use_fftw_threads" = "yes" ;then
-    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
-    AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
+    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"])
+    AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"])
 else
     has_fftw_threads="no"
 fi
+
 if test "x$has_fftw_threads" = "xyes" -a "x$has_fftw_omp" = "xno" ;then
     AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
     if test x$has_fftwf = x1 ;then
-        LDFFT+=" -lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
+        LDFFT="-lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
     else
-        LDFFT+=" -lfftw3_threads -lfftw3"
+        LDFFT="-lfftw3_threads -lfftw3"
     fi
 else
     AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
     if test x$has_fftwf = x1 ;then
-        LDFFT+=" -lfftw3 -lfftw3f"
+        LDFFT="-lfftw3 -lfftw3f"
     else
-        LDFFT+=" -lfftw3"
+        LDFFT="-lfftw3"
     fi
 fi
 
@@ -628,9 +637,6 @@ AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 
-if test -z "$MEXDIR" ;then
-    with_matlab=no
-fi
 if test "$with_matlab" != "no" ;then
     if test -x "${MEXDIR}/mex" ;then
 	MEXDIR="${MEXDIR}"
