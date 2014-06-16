@@ -142,7 +142,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define myfma(x,y,z) (x)*(y)+z
 #endif
 #define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
-
+#define CHECK_NAN(A) (A==A)
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
 long thread_id(void);
 void print_backtrace();

@@ -164,7 +164,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    const double dy2=dx2;
 	    create_metapupil(&recon->acmap[idm],0,0,
 			     parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
-	    info("amap origin is %g, %g. acmap is %g, %g\n", 
+	    info2("amap origin is %g, %g. acmap is %g, %g\n", 
 		 recon->aloc[idm]->map->ox, recon->aloc[idm]->map->oy,
 		 recon->acmap[idm]->ox, recon->acmap[idm]->oy);
 	}

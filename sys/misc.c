@@ -866,6 +866,9 @@ static __attribute__((constructor)) void init(){
     if(!quitfun){//Don't override quitfun assigned by mex/interface.h
 	quitfun=&default_quitfun;
     }
+    if(CHECK_NAN(NAN)){
+	error("NAN check failed\n");
+    }
 }
 
 /**

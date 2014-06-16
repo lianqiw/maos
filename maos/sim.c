@@ -40,7 +40,6 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-#define TIMING_MEAN 0
 extern int PARALLEL;
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
@@ -102,6 +101,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){
+	    if(isim==simstart+1){//skip slow first step.
+		tk_atm=myclockd();
+	    }
 	    if(isim+1==simend) draw_single=0;
 	    ck_0=myclockd();
 	    simu->isim=isim;
@@ -216,7 +218,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
 	    simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
 				      +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
 	    simu->status->laps=(long)(ck_end-tk_0);
-	    simu->status->mean=(ck_end-tk_atm)/(double)(isim+1-simstart);
+	    simu->status->mean=(ck_end-tk_atm)/(double)(isim-simstart);
 	    simu->status->tot  =ck_end-ck_0;
 	    simu->status->wfs  =simu->tk_wfs;
 	    simu->status->recon=simu->tk_recon;

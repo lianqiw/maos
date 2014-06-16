@@ -307,7 +307,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	    if(wrap){
 		dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 	    }else if (dplocy<0 || dplocy>wrapy){
-		continue;
+		goto skip;
 	    }
 	    SPLIT(dplocy,dplocy,nplocy);
 	    const double dplocy1=1.-dplocy;
@@ -337,6 +337,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		phiin[nplocx + nplocy*wrapx1]+=tmp*(1-dplocx)*dplocy1;
 #endif		
 	    }/*for irow*/
+	  skip:;
 	}/*for icol*/
     }
 #if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805

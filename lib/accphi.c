@@ -21,7 +21,6 @@
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
-
 /*
   The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
 */
@@ -286,8 +285,7 @@ void prop_index(PROPDATA_T *propdata){
 #define RUNTIME_LINEAR				\
     double dplocx, dplocy;			\
     int nplocx, nplocy, nplocx1, nplocy1;	\
-    int missing=0;				\
-    long iphi;
+    int missing=0;				
 
 #define MAKE_CUBIC_PARAM			\
     double fx[4],fy[4];				\
@@ -304,7 +302,7 @@ void prop_index(PROPDATA_T *propdata){
 
 
 #define LINEAR_ADD_NONGRID						\
-double tmp=0; double wt=0;						\
+    long iphi; double tmp=0; double wt=0;				\
 wt=(1.-dplocx)*(1.-dplocy);						\
 if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
     if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);		\
@@ -325,7 +323,7 @@ if(wt>EPS){								\
     if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
     else tmp=NAN;							\
 }									\
-if(isfinite(tmp)){							\
+if(CHECK_NAN(tmp)){							\
     /*We require all two points to be available. To extropolate */	\
     /*outside enable extend during loc_create_map_npad*/		\
     phiout[iloc]+=alpha*tmp;						\
@@ -360,7 +358,7 @@ if(isfinite(tmp)){							\
 	    }						\
 	}						\
     }							\
-    if(isfinite(sum)) phiout[iloc]+=sum*alpha;
+    if(CHECK_NAN(sum)) phiout[iloc]+=sum*alpha;
 
 #define CUBIC_ADD_NONGRID					\
     register double sum=0;					\
@@ -377,7 +375,7 @@ if(isfinite(tmp)){							\
 	    }							\
 	}							\
     }								\
-    if(isfinite(sum)) phiout[iloc]+=sum*alpha;
+    if(CHECK_NAN(sum)) phiout[iloc]+=sum*alpha;
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -403,7 +401,6 @@ void prop_grid(ARGIN_GRID,
     PREPIN_GRID(1);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
-    (void)iphi;
     const int nx = mapin->nx;
     const int ny = mapin->ny;
 #define STEP 1000
@@ -445,7 +442,7 @@ void prop_grid(ARGIN_GRID,
 			  +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
 			+(phiin[nplocy1][nplocx]*(1.-dplocx)
 			  +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
-	    if(isfinite(tmp)){
+	    if(CHECK_NAN(tmp)){
 		phiout[iloc]+=alpha*tmp;
 	    }
 	}
