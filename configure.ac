@@ -438,16 +438,23 @@ compile(){
 	echo "Failed to compile $name. Please see $fnlog for details"
     fi
 }
-
-#Check for LAPACK library in the system
-if test -z "$LAPACK" -a -n "`which pkg-config 2>/dev/null`" ;then
-    LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
-fi
 if test -z "$LAPACK" ;then
     LAPACK="-lblas -llapack"
 fi
 AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
+    unset nset ac_cv_lib_blas_dgemm_
+    unset nset ac_cv_lib_lapack_dposv_
+    #Check for LAPACK library in the system
+    if test -n "`which pkg-config 2>/dev/null`" ;then
+	LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
+	if test -n "$LAPACK" ;then
+	    AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+	    AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+	fi
+    fi
+fi
 #Some system has liblapack.so.? without symbol links to liblapack.so
 if test "$has_blas" = "no" ;then
     fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
