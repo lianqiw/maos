@@ -71,17 +71,16 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->locs=locread("%s",fn);
     }else{/* locs act as a pupil mask. no points outside will be evaluated. */
 	map_t *smap=0;
-	create_metapupil(&smap,0,0,parms,0,parms->evl.dx,parms->evl.dx,0,0,0,0,0,0);
+	create_metapupil(&smap,0,0,parms,0,parms->evl.dx,parms->evl.dx,0,0.5,0,0,0,0);
 	aper->locs=map2loc(smap);
 	mapfree(smap);
     }
-    loc_create_stat(aper->locs);
     if(!aper->amp){
 	aper->amp=dnew(aper->locs->nloc, 1);
 	if(aper->ampground){
-	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp->p, 1,
-			   -parms->misreg.pupil[0], -parms->misreg.pupil[1],
-			   1, 0, 0, 0);
+	    prop_grid(aper->ampground, aper->locs, 0, aper->amp->p, 1,
+		      -parms->misreg.pupil[0], -parms->misreg.pupil[1],
+		      1, 0, 0, 0);
 	}else{
 	    warning2("Using locannular to create a gray pixel aperture\n");
 	    locannular(aper->amp->p, aper->locs,
@@ -104,9 +103,10 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	dfree(ampmask);
 	mapfree(mask);
     }else{/*apply an annular mask */
-	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
+	//locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
     loc_reduce(aper->locs, aper->amp, 1, NULL);
+    loc_create_stat(aper->locs);
     if(parms->misreg.dm2sci){
 	int isset=0;
 	int nevl=parms->evl.nevl;

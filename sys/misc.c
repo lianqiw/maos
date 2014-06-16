@@ -846,16 +846,17 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 	return;
     }
     fatal_error_in_progress++;
-    if(signal_handler){
-	signal_handler(sig);
-    }else{
-	info2("Signal %d caught without active handler.\n", sig);
-    }
     if(siginfo && siginfo->si_addr){
 	info2("Memory location: %p\n", siginfo->si_addr);
     }
     if(sig==SIGBUS || sig==SIGILL || sig==SIGSEGV || sig==SIGABRT){
 	print_backtrace();
+    }
+    if(signal_handler){
+	info2("Signal %d caught. Call signal handler.\n", sig);
+	signal_handler(sig);
+    }else{
+	info2("Signal %d caught without active handler.\n", sig);
     }
     act.sa_handler=SIG_DFL;
     sigaction(sig, &act, 0);

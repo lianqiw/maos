@@ -441,11 +441,13 @@ void prop_grid(ARGIN_GRID,
 	    }
 	    nplocx1=(nplocx==nxmax?0:nplocx+1);
 	    nplocy1=(nplocy==nymax?0:nplocy+1);
-	    phiout[iloc]+=alpha*
-		(+(phiin[nplocy][nplocx]*(1.-dplocx)
-		   +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
-		 +(phiin[nplocy1][nplocx]*(1.-dplocx)
-		   +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
+	    double tmp=(+(phiin[nplocy][nplocx]*(1.-dplocx)
+			  +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
+			+(phiin[nplocy1][nplocx]*(1.-dplocx)
+			  +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
+	    if(isfinite(tmp)){
+		phiout[iloc]+=alpha*tmp;
+	    }
 	}
     }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)

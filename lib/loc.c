@@ -918,8 +918,6 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
 
 void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
     int redo_stat=loc->stat?1:0;
-    loc_free_map(loc);/*remove the internal map before touchlong loc. */
-    loc_free_stat(loc);
     int nloc=loc->nloc; 
     int *skip=calloc(nloc,sizeof(int));
     if(cont){/*make sure loc is continuous. */
@@ -944,7 +942,6 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 		}
 	    }
 	}
-	loc_free_stat(loc);
     }else{
 	for(int iloc=0; iloc<nloc; iloc++){
 	    if(amp->p[iloc]<EPS){
@@ -952,6 +949,8 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 	    }
 	}
     }
+    loc_free_map(loc);/*remove the internal map before changing loc. */
+    loc_free_stat(loc);
     int count=0;
     for(int iloc=0; iloc<nloc; iloc++){
 	loc->locx[count]=loc->locx[iloc];

@@ -130,12 +130,15 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 
 		for(irow=irows; irow<rowdiv; irow++){
 #if TRANSPOSE == 0
-		    phiout2[irow]+=alpha*(
-			+br*phicol2[irow]
-			+bl*phicol2[irow+1]
-			+tr*phicol[irow]
-			+tl*phicol[irow+1]
-			);
+		    double tmp=(
+				+br*phicol2[irow]
+				+bl*phicol2[irow+1]
+				+tr*phicol[irow]
+				+tl*phicol[irow+1]
+				);
+		    if(isfinite(tmp)){
+			phiout2[irow]+=alpha*tmp;
+		    }
 #else
 		    double tmp=alpha*phiout2[irow];
 		    phicol2[irow+1]+=tmp*bl;
@@ -149,11 +152,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    while(rowdiv < collen){/*can wrap several times*/ 
 			irow=rowdiv;
 #if TRANSPOSE == 0
-			phiout2[irow]+=alpha*
-			    (bl*phicol2[irow-wrapx]
-			     +br*phicol2[irow]
-			     +tl*phicol[irow-wrapx]
-			     +tr*phicol[irow]);
+			double tmp=(bl*phicol2[irow-wrapx]
+				    +br*phicol2[irow]
+				    +tl*phicol[irow-wrapx]
+				    +tr*phicol[irow]);
+			if(isfinite(tmp)) phiout2[irow]+=alpha*tmp;
 #else
 			double tmp=alpha*phiout2[irow];
 			phicol2[irow-wrapx]+=tmp*bl;
@@ -171,11 +174,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 
 			for(irow=rowdiv; irow<rowdiv2; irow++){
 #if TRANSPOSE == 0
-			    phiout2[irow]+=alpha*
-				(+bl*phicol2[irow+1]
-				 +br*phicol2[irow]
-				 +tl*phicol[irow+1]
-				 +tr*phicol[irow]);
+			    tmp=(+bl*phicol2[irow+1]
+					+br*phicol2[irow]
+					+tl*phicol[irow+1]
+					+tr*phicol[irow]);
+			    if(isfinite(tmp)) phiout2[irow]+=alpha*tmp;
 #else
 			    double tmp2=alpha*phiout2[irow];
 			    phicol2[irow+1]+=tmp2*bl;
@@ -248,11 +251,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		for(irow=irows; irow<rowdiv; irow++){/*no wrap*/
 		    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
-		    phiout2[irow]+=alpha*
-			(+dplocy1*((1-dplocx0)*phicol[nplocx0]
-				   +dplocx0*phicol[nplocx0+1])
-			 +dplocy *((1-dplocx0)*phicol2[nplocx0]
-				   +dplocx0*phicol2[nplocx0+1]));
+		    double tmp=(+dplocy1*((1-dplocx0)*phicol[nplocx0]
+					  +dplocx0*phicol[nplocx0+1])
+				+dplocy *((1-dplocx0)*phicol2[nplocx0]
+					  +dplocx0*phicol2[nplocx0+1]));
+		    if(isfinite(tmp)) phiout2[irow]+=alpha*tmp;
 #else
 		    double tmp=phiout2[irow]*alpha;
 		    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -268,11 +271,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			while(dplocx<wrapx1 && rowdiv<collen){
 			    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
-			    phiout2[rowdiv]+=alpha*
-				(+dplocy1*((1-dplocx0)*phicol[nplocx0]
-					   +dplocx0*phicol[nplocx0-wrapx])
-				 +dplocy *((1-dplocx0)*phicol2[nplocx0]
-					   +dplocx0*phicol2[nplocx0-wrapx]));
+			    double tmp=(+dplocy1*((1-dplocx0)*phicol[nplocx0]
+						  +dplocx0*phicol[nplocx0-wrapx])
+					+dplocy *((1-dplocx0)*phicol2[nplocx0]
+						  +dplocx0*phicol2[nplocx0-wrapx]));
+			    if(isfinite(tmp)) phiout2[rowdiv]+=alpha*tmp;
 #else
 			    double tmp=phiout2[rowdiv]*alpha;
 			    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -289,11 +292,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			for(irow=rowdiv; irow<rowdiv2; irow++){
 			    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
-			    phiout2[irow]+=alpha*
-				(+dplocy1*((1-dplocx0)*phicol[nplocx0]
-					   +dplocx0*phicol[nplocx0+1])
-				 +dplocy *((1-dplocx0)*phicol2[nplocx0]
-					   +dplocx0*phicol2[nplocx0+1]));
+			    double tmp=(+dplocy1*((1-dplocx0)*phicol[nplocx0]
+						  +dplocx0*phicol[nplocx0+1])
+					+dplocy *((1-dplocx0)*phicol2[nplocx0]
+						  +dplocx0*phicol2[nplocx0+1]));
+			    if(isfinite(tmp)) phiout2[irow]+=alpha*tmp;
 #else
 			    double tmp=phiout2[irow]*alpha;
 			    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -362,11 +365,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    }
 		}
 #if TRANSPOSE == 0
-		phiout2[irow]+= alpha*
-		    (dplocx * (dplocy * phiin[(nplocx1) + (nplocy1)*wrapx1]
-			       +dplocy1 * phiin[(nplocx1) + nplocy*wrapx1])
-		     + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*wrapx1]
-				     +dplocy1 * phiin[nplocx + nplocy*wrapx1]));
+		double tmp=(dplocx * (dplocy * phiin[(nplocx1) + (nplocy1)*wrapx1]
+				      +dplocy1 * phiin[(nplocx1) + nplocy*wrapx1])
+			    + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*wrapx1]
+					    +dplocy1 * phiin[nplocx + nplocy*wrapx1]));
+		if(isfinite(tmp)) phiout2[irow]+= alpha*tmp;
 #else
 		double tmp=alpha*phiout2[irow];
 		phiin[(nplocx1) + (nplocy1)*wrapx1]+=tmp*dplocx*dplocy;

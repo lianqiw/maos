@@ -73,7 +73,7 @@ void maos(const PARMS_T *parms){
 	}
 	recon = setup_recon_init(parms);
 	/*Setup DM fitting parameters so we can flatten the DM*/
-	setup_recon_dm(recon, parms);
+	setup_recon_dm(recon, parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 #if _OPENMP>=200805
 #pragma omp parallel

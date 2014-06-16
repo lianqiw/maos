@@ -341,6 +341,8 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     if(aper->opdfloc){
 	xp=dcelldup(aper->opdfloc);
     }else{
+	error("opdfloc is not available\n");
+	//the following is wrong for two reasons: 1) ncpa_ndir may be different then evl.nevl, 2) ray tracing from locs to floc is not good because of edge effect.
 	xp=dcellnew(parms->sim.ncpa_ndir, 1);
 	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
 	    xp->p[ievl]=dnew(recon->floc->nloc,1);
@@ -592,12 +594,13 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	   gensei() reentrant. ok.
 	   genmtch() reentrant. ok
 	*/
-	dcellfree(aper->opdfloc);
     }
     if(parms->save.setup){
 	dcellwrite(aper->opdadd, "%s/surfevl.bin",  dirsetup);
+	dcellwrite(aper->opdfloc, "%s/surffloc.bin", dirsetup);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
     }
+    dcellfree(aper->opdfloc);
 }

@@ -97,7 +97,9 @@ void prop_grid_pts(ARGIN_GRID,
 			double *restrict phiin2=phiin[nplocy+jpix];
 			double *restrict phiout2=phioutsq[jpix];
 			for(ipix=sx; ipix<mx; ipix++){
-			    phiout2[ipix]+=alpha*phiin2[nplocx+ipix];
+			    if(isfinite(phiin2[nplocx+ipix])){
+				phiout2[ipix]+=alpha*phiin2[nplocx+ipix];
+			    }
 			}
 		    }
 		}else{	
@@ -111,11 +113,13 @@ void prop_grid_pts(ARGIN_GRID,
 			double *restrict phiin3=phiin[nplocy+jpix+1];
 			double *restrict phiout2=phioutsq[jpix];
 			for(ipix=sx; ipix<mx; ipix++){
-			    phiout2[ipix]+=
-				alpha*(+phiin2[nplocx+ipix]*w00
-				       +phiin2[nplocx+ipix+1]*w01
-				       +phiin3[nplocx+ipix]*w10
-				       +phiin3[nplocx+ipix+1]*w11);
+			    double tmp=(+phiin2[nplocx+ipix]*w00
+					+phiin2[nplocx+ipix+1]*w01
+					+phiin3[nplocx+ipix]*w10
+					+phiin3[nplocx+ipix+1]*w11);
+			    if(isfinite(tmp)){
+				phiout2[ipix]+=alpha*tmp;
+			    }
 			}
 		    }
 		}
@@ -154,29 +158,35 @@ void prop_grid_pts(ARGIN_GRID,
 		    }
 		    nplocx2=nplocx;
 		    for(ipix=0; ipix<mx; ipix++){
-			phioutsq[jpix][ipix]+=alpha*
-			    (phiin_1[nplocx2]*w00
+			double tmp=(phiin_1[nplocx2]*w00
 			     +phiin_1[nplocx2+1]*w01
 			     +phiin_2[nplocx2]*w10
 			     +phiin_2[nplocx2+1]*w11);
+			if(isfinite(tmp)){
+			    phioutsq[jpix][ipix]+=alpha*tmp;
+			}
 			nplocx2++;
 		    }
 		    if(mx<nx){
 			ipix=mx;
-			phioutsq[jpix][ipix]+=alpha*
-			    (phiin_1[nplocx2]*w00
-			     +phiin_1[nplocx2+1-ninx]*w01
-			     +phiin_2[nplocx2]*w10
-			     +phiin_2[nplocx2+1-ninx]*w11);
+			double tmp=(phiin_1[nplocx2]*w00
+				    +phiin_1[nplocx2+1-ninx]*w01
+				    +phiin_2[nplocx2]*w10
+				    +phiin_2[nplocx2+1-ninx]*w11);
+			if(isfinite(tmp)){
+			    phioutsq[jpix][ipix]+=alpha*tmp;
+			}
 			nplocx2++;
 
 			nplocx2-=ninx;
 			for(ipix=mx+1; ipix<nx; ipix++){
-			    phioutsq[jpix][ipix]+=alpha*
-				(phiin_1[nplocx2]*w00
+			    tmp=(phiin_1[nplocx2]*w00
 				 +phiin_1[nplocx2+1]*w01
 				 +phiin_2[nplocx2]*w10
 				 +phiin_2[nplocx2+1]*w11);
+			    if(isfinite(tmp)){
+				phioutsq[jpix][ipix]+=alpha*tmp;
+			    }
 			    nplocx2++;
 			}
 		    }
@@ -245,13 +255,15 @@ void prop_grid_pts(ARGIN_GRID,
 		    for(ipix=sx; ipix<mx; ipix++){
 			nplocx=nplocxs[ipix];
 			dplocx=dplocxs[ipix];
-			phiout2[ipix]+=alpha*
-			    (+(phiin2[nplocx]
-			       +(phiin2[nplocx+1]-phiin2[nplocx])*dplocx)
-			     *dplocy1
-			     +(phiin3[nplocx]
-			       +(phiin3[nplocx+1]-phiin3[nplocx])*dplocx)
-			     *dplocy);
+			double tmp=(+(phiin2[nplocx]
+				      +(phiin2[nplocx+1]-phiin2[nplocx])*dplocx)
+				    *dplocy1
+				    +(phiin3[nplocx]
+				      +(phiin3[nplocx+1]-phiin3[nplocx])*dplocx)
+				    *dplocy);
+			if(isfinite(tmp)){
+			    phiout2[ipix]+=alpha*tmp;
+			}
 		    }
 		    dplocy0+=yratio;
 		}
@@ -317,14 +329,15 @@ void prop_grid_pts(ARGIN_GRID,
 			nplocx=nplocxs[ipix];
 			nplocx2=nplocxs2[ipix];
 			dplocx=dplocxs[ipix];
-			phiout2[ipix]+=alpha*
-			    (+(phiin_1[nplocx]
-			       +(phiin_1[nplocx2]-phiin_1[nplocx])*dplocx)
-			     *dplocy1
-			     +(phiin_2[nplocx]
-			       +(phiin_2[nplocx2]-phiin_2[nplocx])*dplocx)
-			     *dplocy);
-			
+			double tmp=(+(phiin_1[nplocx]
+				      +(phiin_1[nplocx2]-phiin_1[nplocx])*dplocx)
+				    *dplocy1
+				    +(phiin_2[nplocx]
+				      +(phiin_2[nplocx2]-phiin_2[nplocx])*dplocx)
+				    *dplocy);
+			if(isfinite(tmp)){
+			    phiout2[ipix]+=alpha*tmp;
+			}
 		    }
 		    dplocy0+=yratio;
 		}

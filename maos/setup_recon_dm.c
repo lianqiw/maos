@@ -33,7 +33,7 @@
    Like ploc, but for DM fitting
 */
 static void
-setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
+setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
     CALL_ONCE;
     double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
@@ -50,6 +50,15 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
 	mapfree(fmap);
+	if(aper->ampground){
+	    /*restrict floc to within active pupil. Important for ncpa calibration
+	     * when surface are defined within active pupil only*/
+	    dmat *famp=dnew(recon->floc->nloc, 1);
+	    prop_grid(aper->ampground, recon->floc, 0, famp->p, 1,
+		      0, 0, 1, 0, 0, 0);
+	    loc_reduce(recon->floc, famp, 1, NULL);
+	    dfree(famp);
+	}
     }
     loc_create_map_npad(recon->floc, parms->fit.square?0:1, 0, 0);
     recon->fmap=recon->floc->map;
@@ -372,12 +381,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
 }
 
-void setup_recon_dm(RECON_T *recon, const PARMS_T *parms){
+void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
     CALL_ONCE;
     /*setup DM actuator grid */
     setup_recon_aloc(recon,parms);
     /*Grid for DM fitting*/
-    setup_recon_floc(recon,parms);
+    setup_recon_floc(recon,parms, aper);
     if(parms->recon.alg==0 || parms->sim.ncpa_calib){
 	setup_recon_HA(recon,parms);
 	fit_prep_lrt(recon, parms);

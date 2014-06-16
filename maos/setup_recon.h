@@ -21,7 +21,7 @@
 #include "maos.h"
 //Called by maos.c
 RECON_T *setup_recon_init(const PARMS_T *parms);
-void setup_recon_dm(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper);
 //Called by setup_recon.c
 void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
