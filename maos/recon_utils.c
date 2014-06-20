@@ -772,9 +772,12 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	    ht->p[iht]=dht*iht;
 	}
     }
-    const double hs=parms->powfs[ipowfs].hs;
+    dmat *hs=dnew(parms->nwfs, 1);
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	hs->p[iwfs]=parms->wfs[iwfs].hs;
+    }
     CN2EST_T *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
-			     hs, ht, parms->cn2.hmax, parms->cn2.keepht, parms->atm.l0);
+			     hs, ht, parms->cn2.keepht, parms->atm.l0);
     cn2est->os=dnew(ht->nx, 1);
     if(!parms->cn2.keepht){
 	/*preserve the number of over sampled layers. */
@@ -813,6 +816,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     }
     dfree(wfstheta);
     dfree(ht);
+    dfree(hs);
     return cn2est;
 }
 /**

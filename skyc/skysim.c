@@ -340,7 +340,6 @@ static void skysim_update_mideal(SIM_S *simu){
 	warning("Add tel wind shake time series to mideal\n");
 	dmat *telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 	/*telws is in m. need to convert to rad since mideal is in this unit. */
-	dwrite(telws, "telws_%d", parms->skyc.seed);
 	dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
 	PDMAT(simu->mideal, pm1); 
 	PDMAT(simu->mideal_oa, pm2);
@@ -412,10 +411,12 @@ static void skysim_calc_psd(SIM_S *simu){
     //add windshake PSD to ngs/tt
     add_psd2(&simu->psd_ngs, parms->skyc.psd_ws);
     add_psd2(&simu->psd_tt, parms->skyc.psd_ws);
-    dwrite(simu->psd_tt, "psd_tt");
-    dwrite(simu->psd_ps, "psd_ps");
-    dwrite(simu->psd_ngs, "psd_ngs");
-    dwrite(simu->psd_focus, "psd_focus");
+    if(parms->skyc.dbg){
+	dwrite(simu->psd_tt, "psd_tt");
+	dwrite(simu->psd_ps, "psd_ps");
+	dwrite(simu->psd_ngs, "psd_ngs");
+	dwrite(simu->psd_focus, "psd_focus");
+    }
 }
 
 static void skysim_prep_gain(SIM_S *simu){
@@ -443,9 +444,11 @@ static void skysim_prep_gain(SIM_S *simu){
 	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
 						 dtrat, parms->skyc.pmargin, sigma2, servotype);
 	}
-	dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
-	dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-	dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+	if(parms->skyc.dbg){
+	    dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+	    dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
+	    dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+	}
     }
     toc2("servo_optim");
     simu->gain_x=dref(sigma2);
@@ -482,9 +485,10 @@ static void skysim_prep_sde(SIM_S *simu){
     
     dfree(x);
     dfree(coeff0);
-    dwrite(simu->sdecoeff, "coeff");
-    dcellwrite(simu->psdi, "psdi");
-    
+    if(parms->skyc.dbg){
+	dwrite(simu->sdecoeff, "coeff");
+	dcellwrite(simu->psdi, "psdi");
+    }
 }
 /**
    Setup the stars fields and then calls skysim_isky() to handle each star field.

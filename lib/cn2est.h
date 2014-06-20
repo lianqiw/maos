@@ -24,9 +24,11 @@
 typedef struct CN2PAIR_T{
     double dtheta;  /**<separation between the stars*/
     double beta;    /**<angle of separation between the stars*/
+    double hsm;     /**<Mean hs of the wfs pair*/
     int xstep;      /**<separation step of subapertures along x*/
     int ystep;      /**<separation step of subapertures along y*.*/
-    int nht;        /**<number of height bins for each wfs pair*/ 
+    int iht0;       /**<starting iht, may be negative or 0, for minimum height*/
+    int iht1;       /**<ending iht (exclusive), for maximum height*/
     int nsep;       /**<number of subaperture separations to use. equal to nhs usually*/
     int wfs0;       /**<first wfs in this pair*/
     int wfs1;       /**<second wfs in this pair*/
@@ -46,6 +48,7 @@ typedef struct CN2EST_T{
     dcell *cov2;     /**<Covariance in 2d*/
     dcell *cov1;     /**<Cut of cov2 along wfs separation*/
     dmat *overlap;   /**<Number of overlapping subapertures*/
+    int nsa;         /**<Number of subapertures*/
     int nwfs;        /**<number of wfs*/
     int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
     int ovs;         /**<Over sampling ratio in building the influence matrix*/
@@ -69,7 +72,7 @@ typedef struct CN2EST_T{
 } CN2EST_T;
 
 CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat, 
-		     const double hs, dmat *htrecon, double hmax, int keepht, double l0);
+		     const dmat* hs, dmat *htrecon, int keepht, double l0);
 void cn2est_est(CN2EST_T *cn2est, int verbose, int reset);
 void cn2est_free(CN2EST_T *cn2est);
 void cn2est_push(CN2EST_T *cn2est, dcell *gradol);

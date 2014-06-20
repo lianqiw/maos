@@ -365,7 +365,9 @@ dmat *turbpsd_full(long nx,      /**<The size*/
 double calc_aniso(double r0, int nps, double *ht, double *wt){
     double wh=0;
     for(int ips=0; ips<nps; ips++){
-	wh+=pow(ht[ips],5./3.)*wt[ips];
+	if(wt[ips]>0.01){//only account for positive and significant layers, slodar may give negative results.
+	    wh+=pow(fabs(ht[ips]),5./3.)*wt[ips];
+	}
     }
     return 0.3144*r0*pow(wh,-3./5.);
 }

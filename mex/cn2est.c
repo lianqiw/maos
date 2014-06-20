@@ -12,7 +12,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	P_SAAT,
 	P_HS,
 	P_HT,
-	P_HMAX,
 	P_KEEPHT,
 	P_L0,
 	P_GRAD,
@@ -23,7 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     if(nlhs!=PL_TOT || nrhs !=P_TOT){
-	mexErrMsgTxt("Usage: res=cn2est(wfspair, wfstheta, saloc, saa, saat, hs, ht, hmax, keepht, L0, grad)");
+	mexErrMsgTxt("Usage: res=cn2est(wfspair, wfstheta, saloc, saa, saat, hs, ht, keepht, L0, grad)");
     }
     dmat *wfspair=mx2d(prhs[P_WFSPAIR]);
     dmat *wfstheta=mx2d(prhs[P_WFSTHETA]);
@@ -33,9 +32,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     loc_t *saloc=mx2loc(prhs[P_SALOC]);
     dmat *saa=mx2dvec(prhs[P_SAA]);
     double saat=mxGetScalar(prhs[P_SAAT]);
-    double hs=mxGetScalar(prhs[P_HS]);
+    dmat *hs=mx2dvec(prhs[P_HS]);
     dmat *htrecon=mx2dvec(prhs[P_HT]);
-    double hmax=mxGetScalar(prhs[P_HMAX]);
     int keepht=(int)mxGetScalar(prhs[P_KEEPHT]);
     double L0=mxGetScalar(prhs[P_L0]);
     dcell *grad=mx2dcell(prhs[P_GRAD]);
@@ -43,7 +41,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	grad->nx=grad->ny;
 	grad->ny=1;
     }
-    struct CN2EST_T *cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, hmax, keepht, L0);
+    struct CN2EST_T *cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, keepht, L0);
     cn2est_push(cn2est, grad);
     cn2est_est(cn2est, 1, 0);
 #define nfield 11
