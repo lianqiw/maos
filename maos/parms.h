@@ -529,6 +529,7 @@ typedef struct CN2EST_CFG_T{
 			effective if keepht=0*/
     int moveht;      /**<1: move the ht used for reconstructor to near strongest
 			layers. only effective if keepht=0.*/
+    int psol;        /**<Use pseudo open loop gradients. 0 to probe residual*/
     double hmax;     /**<maximum height to estimat*/
     double saat;     /**<subaperture area threashold to use in cn2 estimation*/
 }CN2EST_CFG_T;

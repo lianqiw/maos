@@ -849,9 +849,9 @@ static void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
 /**
    Wrapper of Cn2 Estimation operations in recon.c
 */
-void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol){
+void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
     CN2EST_T *cn2est=recon->cn2est;
-    cn2est_push(cn2est, gradol);
+    cn2est_push(cn2est, gradin);
     if(cn2est->count%parms->cn2.step == 0){
 	/*dcellswrite(cn2est->cc, 1./cn2est->count, "cc_%d",isim+1);*/
 	cn2est_est(cn2est, parms->cn2.verbose, parms->cn2.reset);/*do the CN2 estimation */

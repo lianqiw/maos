@@ -921,6 +921,7 @@ static void readcfg_cn2(PARMS_T *parms){
     READ_INT(cn2.keepht);
     READ_INT(cn2.nhtomo);
     READ_INT(cn2.moveht);
+    READ_INT(cn2.psol);
     READ_DBL(cn2.hmax);
     READ_DBL(cn2.saat);
     if(!parms->cn2.pair){/*we are not doing cn2 estimation. */
