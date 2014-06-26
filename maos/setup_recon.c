@@ -848,14 +848,11 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 			 recon->wt->p[ips]);
 		}
 	    }
-	    if(fabs(parms->tomo.cxxscale-1)>EPS){
-		spcellscale(recon->L2, parms->tomo.cxxscale);
-	    }
-	    if(parms->save.setup){
-		spcellwrite(recon->L2, "%s/L2",dirsetup);
-	    }
-	    spcellscale(recon->L2, sqrt(TOMOSCALE));
 	}
+	if(parms->save.setup){
+	    spcellwrite(recon->L2, "%s/L2",dirsetup);
+	}
+	spcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
     }
     if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
 	recon->invpsd=calloc(1, sizeof(INVPSD_T));
@@ -872,12 +869,14 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc[ips]->dx, r0i,
 				       recon->l0,-1);
-		dscale(invpsd->p[ips], pow((double)(nx*ny),-2)*parms->tomo.cxxscale);
-	    }
-	    if(parms->save.setup){
-		dcellwrite(invpsd, "%s/invpsd",dirsetup);
+		dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
 	    }
 	}
+	if(parms->save.setup){
+	    dcellwrite(recon->invpsd->invpsd, "%s/invpsd",dirsetup);
+	}
+	dcellscale(recon->invpsd->invpsd, sqrt(parms->tomo.cxxscale*TOMOSCALE));
+	
 	ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
 	    fftxopd->p[ips]=cnew(recon->xmap[ips]->nx, recon->xmap[ips]->ny);
@@ -893,7 +892,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->r0=parms->atmr.r0;
 	recon->fractal->l0=parms->atmr.l0;
 	recon->fractal->wt=parms->atmr.wt;
-	recon->fractal->scale=parms->tomo.cxxscale;
+	recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
 	recon->fractal->ninit=parms->tomo.ninit;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
@@ -933,7 +932,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	if(parms->save.setup){
 	    spcellwrite(recon->ZZT, "%s/ZZT",dirsetup);
 	}
-	spcellscale(recon->ZZT, TOMOSCALE);
+	spcellscale(recon->ZZT, parms->tomo.cxxscale*TOMOSCALE);
     }
 }
 /**

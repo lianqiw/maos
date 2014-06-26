@@ -375,7 +375,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 		L2=mklaplacian_map(nx[ips], ny[ips],
 				   recon->xloc[ips]->dx, recon->r0,
 				   recon->wt->p[ips]);
-		spscale(L2, sqrt(TOMOSCALE));
+		spscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	    }
 	    dsp *tmp=sptmulsp(L2, L2);
 	    spfree(L2);

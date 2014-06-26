@@ -160,7 +160,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	Real tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
 	lapc[ips].nxps=recon->xmap[ips]->nx;
 	lapc[ips].nyps=recon->xmap[ips]->ny;
-	lapc[ips].l2c=tmp*tmp*TOMOSCALE;
+	lapc[ips].l2c=tmp*tmp*parms->tomo.cxxscale*TOMOSCALE;
 	if(parms->tomo.piston_cr){
 	    lapc[ips].zzi=loccenter(recon->xloc[ips]);
 	    lapc[ips].zzv=lapc[ips].l2c*1e-6;
