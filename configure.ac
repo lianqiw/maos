@@ -29,7 +29,7 @@ AC_OPENMP
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-#AC_ENABLE_SHARED
+AC_DISABLE_SHARED
 AC_ENABLE_STATIC
 AM_PROG_AR
 AC_PROG_LIBTOOL
@@ -118,7 +118,7 @@ AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
 AM_CONDITIONAL(DARWIN, false)
 AM_CONDITIONAL(WIN,    false)
-
+LDLIB="-avoid-version"
 mkl_avail="no"
 case "$host_os" in
     *linux*)
@@ -489,7 +489,7 @@ fi
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
-    compile ZLIB zlib.tar.bz2 --static
+    compile ZLIB zlib.tar.bz2 --static 
     unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
@@ -801,13 +801,12 @@ if test "$with_cuda" != "no" ;then
     if test "$cpu" = "64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBIN_OPTS="$OPTS"
+    CCBINOPT="$OPTS"
     case "$CCBIN" in 
-        gcc*)
-	CCBIN_OPTS+=" -Wno-unused-value -D__STRICT_ANSI__"
+        *gcc*)
+	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
   	;;			  
     esac
-    CUDAOPT+=" -Xcompiler \"$CCBIN_OPTS\""
     echo LDCUDA="$LDCUDA"
     echo CUDAOPT="$CUDAOPT"
     LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
@@ -825,6 +824,7 @@ if test "$with_cuda" != "no" ;then
     AM_CONDITIONAL(USE_CUDA, true)
     AC_DEFINE(USE_CUDA, [1], "Has Cuda")
     AC_SUBST(CUDAOPT)
+    AC_SUBST(CCBINOPT)
     AC_SUBST(LDCUDA)
     AC_SUBST(NVCC)
 else
@@ -846,7 +846,7 @@ AC_CONFIG_FILES( [Makefile
 if test -d "${srcdir}/test" ;then
     AC_CONFIG_FILES([test/Makefile])
 fi
-
+LDFLAGS+=" -no-fast-install"
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
 AC_SUBST(LIBS)
 AC_OUTPUT

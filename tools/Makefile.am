@@ -1,5 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-LDADD=../lib/libaos.la ../math/libaomath.la ../sys/libaosys.la $(LDOPTS) 
+LDADD=../lib/libaos.la $(LDOPTS) 
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h icon-waiting.h mouse_black.h mouse_hand.h mouse_white.h mygtk.h\
@@ -56,12 +56,6 @@ ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c monitor_thread.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
-endif
-
-if USE_CUDA
-PROGS+=../bin/gpu_mvm
-___bin_gpu_mvm_SOURCES=gpu_mvm.c
-___bin_gpu_mvm_LDADD=../cuda/libgpu.a $(LDADD) $(LDCUDA)
 endif
 
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu

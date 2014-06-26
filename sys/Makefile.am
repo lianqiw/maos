@@ -1,7 +1,4 @@
 AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
-if !WIN
-AM_CFLAGS+=-fPIC
-endif
 
 nobase_include_HEADERS=mem.h process.h scheduler.h sock.h sockio.h thread.h	\
  daemonize.h scheduler_client.h sys.h thread_pool.h misc.h hashlittle.h path.h	\
@@ -13,5 +10,5 @@ SYS_SRC=daemonize.c misc.c process.c thread.c hashlittle.c mem.c path.c	\
 
 lib_LTLIBRARIES=libaosys.la
 libaosys_la_SOURCES=$(SYS_SRC)
-libaosys_la_LIBADD=$(LDLIB)
-libaosys_la_LDFLAGS = -avoid-version -static
+libaosys_la_LIBADD=
+libaosys_la_LDFLAGS = $(LDLIB)

@@ -1,7 +1,4 @@
 AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
-if !WIN
-AM_CFLAGS+=-fPIC
-endif
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS=accphi.h locbin.h mkg.h readcfg.h \
@@ -13,9 +10,8 @@ EXTRA_DIST=fractal_do.c prop_grid_stat.c prop_grid_pts.c prop_grid_map.c
 AOS_SRC=readcfg.c loc.c locbin.c turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c laplacian.c \
 pcg.c muv.c draw.c genotf.c fractal.c stfun.c servo.c slaving.c mkdtf.c psd.c kalman.c cn2est.c
 
-
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
-libaos_la_LIBADD=$(LDLIB)
-libaos_la_LDFLAGS = -avoid-version 
+libaos_la_LIBADD=../math/libaomath.la
+libaos_la_LDFLAGS = $(LDLIB)
 

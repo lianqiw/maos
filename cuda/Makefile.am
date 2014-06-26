@@ -1,4 +1,4 @@
-AM_CFLAGS=$(CUDAOPT)
+#AM_CFLAGS=$(CUDAOPT)
 #In the order of include:
 HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h prop_wrap.h
 HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
@@ -11,20 +11,32 @@ SRC_WFS= wfsinit.cu wfsints.cu wfsgrad.cu
 SRCS=$(SRC_LIB) $(SRC_RECON) $(SRC_WFS) $(SRC_MVM) perfinit.cu perfevl.cu 
 #LTLIBRARIES does not work.
 #must include EXTRA_DIST in SOURCES, otherwise some automake tools are missing
-lib_LIBRARIES=libgpu.a
-libgpu_a_SOURCES=$(SRCS) $(EXTRA_DIST)
-libgpu_a_LIBADD=
+#lib_LIBRARIES=libaogpu.a
+#libaogpu_a_SOURCES=$(SRCS) $(EXTRA_DIST)
+#libaogpu_a_LIBADD=
+lib_LTLIBRARIES=libaogpu.la
+libaogpu_la_SOURCES=$(SRCS) $(EXTRA_DIST)
+libaogpu_la_LIBADD=
+libaogpu_la_LDFLAGS=$(LDLIB)
 
-bin_PROGRAMS=../test/test_cuda
-___test_test_cuda_SOURCES=test.cu
+bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
+___test_test_cuda_SOURCES=test.cu 
 ___test_test_cuda_CFLAGS=$(OPTS)
-___test_test_cuda_LDADD=libgpu.a $(LDCUDA) ../lib/libaos.la ../math/libaomath.la ../sys/libaosys.la $(LDOPTS)
+___test_test_cuda_LDADD=libaogpu.la $(LDCUDA) ../lib/libaos.la $(LDOPTS)
+___bin_gpu_mvm_SOURCES=gpu_mvm.c
+___bin_gpu_mvm_CFLAGS=$(OPTS)
+___bin_gpu_mvm_LDADD=libaogpu.la $(LDCUDA) ../lib/libaos.la $(LDOPTS)
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:
-	$(AM_V_CC)$(NVCC) $(AM_CFLAGS) -c -o $@ $<
+	$(AM_V_CC)$(NVCC) $(CUDAOPT) -Xcompiler "$(CCBINOPT)" -c -o $@ $<
 	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(AM_CFLAGS) -M $< > $(DEPDIR)/$*.Po
+	@$(NVCC) $(CUDAOPT) -M $< > $(DEPDIR)/$*.Po
+
+.cu.lo:
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) --compiler-options "$(CCBINOPT) " -c $< -o $@ 
+	@$(NVCC) $(CUDAOPT) -M $< > $(DEPDIR)/$*.Po
+#	$(AM_V_CC)$(top_srcdir)/scripts/cudalt.py $@ $(NVCC) -c $(CUDAOPT) -Xcompiler \"$(CCBINOPT)\" $<
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)
 

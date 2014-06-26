@@ -1,7 +1,4 @@
 AM_CFLAGS=$(OPTS) -I$(top_srcdir)
-if !WIN
-AM_CFLAGS+=-fPIC
-endif
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS= type.h  mathmisc.h random.h mathdef.h cell.h  suitesparse.h blas.h \
@@ -14,5 +11,5 @@ AOMATH_SRC= dmath.c cmath.c smath.c zmath.c mathmisc.c random.c cellarr.c imat.c
 
 lib_LTLIBRARIES=libaomath.la
 libaomath_la_SOURCES=$(AOMATH_SRC)
-libaomath_la_LIBADD=$(LDLIB)
-libaomath_la_LDFLAGS = -avoid-version 
+libaomath_la_LIBADD=../sys/libaosys.la
+libaomath_la_LDFLAGS = $(LDLIB)
