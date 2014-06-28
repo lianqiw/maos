@@ -250,15 +250,23 @@ void perfevl_ievl(thread_t *info){
 	      tomography output directly.
 	    */
 	    if(simu->opdr){
+		map_t xmap;
 		for(int ipsr=0; ipsr<npsr; ipsr++){
 		    double hl=parms->atmr.ht[ipsr];
 		    double scale = 1. - hl/parms->evl.hs[ievl];
 		    double displacex=parms->evl.thetax[ievl]*hl;
 		    double displacey=parms->evl.thetay[ievl]*hl;
-		    prop_nongrid(recon->xloc[ipsr], 
-				 simu->opdr->p[ipsr]->p,
-				 aper->locs, NULL, iopdevl->p, -1,
-				 displacex, displacey, scale, 0, 0);
+		    if(parms->tomo.square){
+			memcpy(&xmap, recon->xmap[ipsr], sizeof(map_t));
+			xmap.p=simu->opdr->p[ipsr]->p;
+			prop_grid(&xmap, aper->locs, NULL, iopdevl->p, -1,
+				  displacex, displacey, scale, 0, 0, 0);
+		    }else{
+			prop_nongrid(recon->xloc[ipsr], 
+				     simu->opdr->p[ipsr]->p,
+				     aper->locs, NULL, iopdevl->p, -1,
+				     displacex, displacey, scale, 0, 0);
+		    }
 		}
 	    }
 	}else{
