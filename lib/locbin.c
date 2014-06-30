@@ -58,14 +58,14 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	    }
 	}
 	if(fabs(dx)<tol || isnan(dx)){
-	    dx=dxd;
-	}else if(fabs(dx-dxd)>tol){
+	    dx=dxd;//use value derived from data
+	}else if(fabs(dx-dxd)>tol && isfinite(dxd)){
 	    error("Specified dx=%.15g doesn't agree with data: %.15g\n", dx, dxd);
 	}
 
 	if(fabs(dy)<tol || isnan(dy)){
 	    dy=dyd;
-	}else if(fabs(dy-dyd)>tol){
+	}else if(fabs(dy-dyd)>tol && isfinite(dxd)){
 	    error("Specified dy=%.15g doesn't agree with data: %.15g\n", dy, dyd);
 	}
 
