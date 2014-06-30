@@ -36,18 +36,6 @@ double calc_rms(const dmat *mod, const dmat *mcc, int istep0){
 }
 
 /**
-   add photon and read out noise.  pcaclib part of bkgrnd is calibrated out.
-   set to 1 usually.  */
-static void addnoise(dmat *A, rand_t* rstat, 
-		     const double bkgrnd, const double pcalib, 
-		     const double rne){
-    for(int ix=0; ix<A->nx*A->ny; ix++){
-	A->p[ix]=randp(rstat,A->p[ix]+bkgrnd)
-	    -bkgrnd*pcalib+rne*randn(rstat);
-    }
-}
-
-/**
    convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function.
    Notice the the coordinate for each subaperture is different for TTF.
 */
@@ -344,11 +332,13 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    case 0:/*no noise at all. */
 				break;
 			    case 1:/*both poisson and read out noise. */
-				addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrati,
-					 1, rnefs[ipowfs][idtrat]);
+				{
+				    double bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
+				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,rnefs[ipowfs][idtrat]);
+				}
 				break;
 			    case 2:/*there is still poisson noise. */
-				addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 1, 0);
+				addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 0, 0,0,0);
 				break;
 			    default:
 				error("Invalid noisy\n");

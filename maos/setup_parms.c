@@ -1676,7 +1676,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     int Nmax=0;
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
-	create_metapupil(0,&nxout[ips],&nyout[ips],parms,parms->atm.ht[ips],
+	create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs, parms->aper.d,parms->atm.ht[ips],
 			 parms->atm.dx,parms->atm.dx,0.5,
 			 parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
@@ -2251,6 +2251,48 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 	    }
 	}
+    }
+    
+    {
+	//Collect all beam directions 
+	const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
+	parms->dirs=dnew(3, ndir);
+	PDMAT(parms->dirs, pdir);
+	int count=0;
+
+	for(int i=0; i<parms->nwfs; i++){
+	    pdir[count][0]=parms->wfs[i].thetax;
+	    pdir[count][1]=parms->wfs[i].thetay;
+	    pdir[count][2]=parms->wfs[i].hs;
+	    count++;
+	}
+    
+	for(int i=0; i<parms->evl.nevl; i++){
+	    pdir[count][0]=parms->evl.thetax[i];
+	    pdir[count][1]=parms->evl.thetay[i];
+	    pdir[count][2]=parms->evl.hs[i];
+	    count++;
+	}
+	for(int i=0; i<parms->fit.nfit; i++){
+	    pdir[count][0]=parms->fit.thetax[i];
+	    pdir[count][1]=parms->fit.thetay[i];
+	    pdir[count][2]=parms->fit.hs[i];
+	    count++;
+	}
+	if(parms->sim.ncpa_calib){
+	    for(int i=0; i<parms->sim.ncpa_ndir; i++){
+		pdir[count][0]=parms->sim.ncpa_thetax[i];
+		pdir[count][1]=parms->sim.ncpa_thetay[i];
+		pdir[count][2]=parms->sim.ncpa_hs[i];
+		count++;
+	    }
+	}
+	if(count<ndir){
+	    warning("count=%d, ndir=%d\n", count, ndir);
+	}else if(count>ndir){
+	    error("count=%d, ndir=%d\n", count, ndir);
+	}
+	dresize(parms->dirs, 3, count);
     }
 }
 

@@ -25,8 +25,8 @@ extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
 void addnoise(dmat *A, rand_t* rstat, 
-	      const double bkgrnd, const double pcalib, 
-	      const double *bkgrnd2, const double *bkgrnd2c,
+	      const double bkgrnd, const double bkgrndc, 
+	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
 	      const double rne);
 
 void plotloc(char *fig, const PARMS_T *parms, 

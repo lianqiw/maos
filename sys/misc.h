@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LIB_MISC_H
-#define AOS_LIB_MISC_H
+#ifndef AOS_SYS_MISC_H
+#define AOS_SYS_MISC_H
 #include "common.h"
 /**
    \file misc.h

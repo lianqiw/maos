@@ -33,7 +33,7 @@ static void test_ints(){
 		dmulvec(gnf, mtche->p[isa], im->p,1.);
 		gny[0]=0; gny[1]=0;
 		dcp(&imy, im);
-		addnoise(imy, &wfs_rand[iwfs], bkgrnd,1.,rne);
+		addnoise(imy, &wfs_rand[iwfs], bkgrnd, bkgrnd, 0,0,rne);
 		dmulvec(gny, mtche->p[isa], imy->p,1.);
 		pnea[isa][isim]=gny[0]-gnf[0];
 		pnea[isa+nsa][isim]=gny[1]-gnf[1];
@@ -66,7 +66,7 @@ static void test_i0(){
 	    dmulvec(gnf, mtche->p[isa], im->p,1.);
 	    gny[0]=0; gny[1]=0;
 	    dcp(&imy, im);
-	    addnoise(imy, &i0rand, bkgrnd,1.,rne);
+	    addnoise(imy, &i0rand, bkgrnd, bkgrnd,0,0,rne);
 	    dmulvec(gny, mtche->p[isa], imy->p,1.);
 	    pnea[isa][isim]=gny[0]-gnf[0];
 	    pnea[isa+nsa][isim]=gny[1]-gnf[1];

@@ -320,7 +320,7 @@ void draw_final(int reuse){
 void plot_points(char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 dcell *dc,          /**<If loc ismpety, use cell to plot curves*/
+		 dcell *dc,          /**<If loc isempty, use cell to plot curves*/
 		 const int32_t *style,/**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 const char *xylog,  /**<Whether use logscale for x, y*/

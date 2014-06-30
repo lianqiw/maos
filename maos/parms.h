@@ -724,6 +724,7 @@ typedef struct PARMS_T{
     int ntipowfs;    /**<Number of tip/tilt include wfs types*/
     int nlowfs;      /**<Number of low order wfs.*/
     int nphypowfs;   /**<Number of powfs with local/uplink tip/tilt loop*/
+    dmat *dirs;      /**<Collect for beam directions*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.
@@ -753,8 +754,5 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void create_metapupil(map_t **map, long* nx, long* ny, 
-		      const PARMS_T *parms, double ht, double dx, double dy,
-		      double offset,double guard, long ninx, long niny, int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

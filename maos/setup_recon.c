@@ -57,10 +57,10 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	/*
 	  Create a circular PLOC with telescope diameter by calling
 	  create_metapupil with height of 0. We don't add any guard points. PLOC
-	  does not need to be follow XLOC in FDPCG.*/
+	  does not need to follow XLOC in FDPCG.*/
 	double guard=parms->tomo.guard*dxr;
 	map_t *pmap=0;
-	create_metapupil(&pmap, 0, 0, parms,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
+	create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	mapfree(pmap);
@@ -116,7 +116,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		long nxi, nyi;
 		double dxr=recon->dx->p[ips];
-		create_metapupil(0, &nxi, &nyi, parms, recon->ht->p[ips], dxr, dxr, 0,
+		create_metapupil(0, &nxi, &nyi, parms->dirs, parms->aper.d, recon->ht->p[ips], dxr, dxr, 0,
 				 dxr*parms->tomo.guard, 0, 0, 0, 1);
 		nxi/=recon->os->p[ips];
 		nyi/=recon->os->p[ips];
@@ -135,7 +135,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=0;
-	    create_metapupil(&map, 0, 0, parms,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
+	    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc[ips]=map2loc(map);
 	    loc_create_stat(recon->xloc[ips]);
 	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
@@ -149,8 +149,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    const double ht=recon->ht->p[ips];
 	    double dxr=parms->atmr.dx/parms->fit.pos;
 	    const double guard=parms->tomo.guard*dxr;
-	    create_metapupil(&recon->xcmap[ips], 0, 0,
-			     parms,ht,dxr,dxr,0,guard,0,0,0,parms->fit.square);
+	    create_metapupil(&recon->xcmap[ips], 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	    free(recon->xcmap[ips]->p);recon->xcmap[ips]->p=NULL;
 	    free(recon->xcmap[ips]->nref);recon->xcmap[ips]->nref=NULL;
 	}

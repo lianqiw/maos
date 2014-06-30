@@ -1493,7 +1493,113 @@ void map_d_din(map_t *map, double *d, double *din){
     *d=sqrt(r2max)*2;
     *din=sqrt(r2min)*2;
 }
+/**
+   create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, dy,
+   height of ht, that can cover all the directions specified in dirs
 
+   offset: distance in pixel from the point closest to the origin to origin (right side).  
+   0: there is a point on the origin.  
+   1/2: the closest point to origin is 1/2 pixel.  
+   
+   pad!=0: round nx, ny to power of 2.  */
+
+void create_metapupil(map_t**mapout,/**<[out] map*/
+		      long* nxout,  /**<[out] nx*/
+		      long* nyout,  /**<[out] ny*/
+		      dmat *dirs,   /**<[in] All Directions to cover*/
+		      double D,     /**<[in] Diameter (meter)*/
+		      double ht,    /**<[in] Height (meter)*/
+		      double dx,    /**<[in] Sampling along x (meter)*/
+		      double dy,    /**<[in] Sampling along y (meter)*/
+		      double offset,/**<[in] Fractional offset of point closet from origin. between [0, 1)*/
+		      double guard, /**<[in] Width of guard area, in meter*/
+		      long ninx,    /**<[in] Suggested size along x*/
+		      long niny,    /**<[in] Suggested size along y*/
+		      int pad,      /**<[in] Increase nx, ny to power of 2*/
+		      int square    /**<[in] Full square/rectangular grid*/
+    ){
+    const double R=D/2;
+    double minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
+    double sx1, sx2, sy1, sy2; /*temporary variables */
+    if(dirs->nx<3 || dirs->ny<=0){ 
+	error("dirs should have no less than 3 rows and positive number of cols.\n");
+    }
+    PDMAT(dirs, pdir);
+    for(int idir=0; idir<dirs->ny; idir++){
+	double RR=(1.-ht/pdir[idir][2])*R+guard;
+	sx1=(pdir[idir][0]*ht)-RR;
+	sx2=(pdir[idir][0]*ht)+RR;
+	sy1=(pdir[idir][1]*ht)-RR;
+	sy2=(pdir[idir][1]*ht)+RR;
+	if(sx1<minx) minx=sx1;
+	if(sx2>maxx) maxx=sx2;
+	if(sy1<miny) miny=sy1;
+	if(sy2>maxy) maxy=sy2;
+    }
+    /*ajust central point offset*/
+    {
+	offset=offset-floor(offset);//between 0 and 1
+	double mind=minx/dx;
+	double adjust=mind-floor(mind)-offset;
+	if(adjust<0){
+	    adjust++;
+	}
+	minx-=adjust*dx;
+	mind=miny/dy;
+	adjust=mind-floor(mind)-offset;
+	if(adjust<0){
+	    adjust++;
+	}
+	miny-=adjust*dy;
+    }
+    double ox=minx;
+    double oy=miny;
+    long nx=ceil((maxx-ox)/dx)+1;
+    long ny=ceil((maxy-oy)/dy)+1;
+    /*Make it square */
+    if(square){
+	ny=nx=(nx<ny)?ny:nx;
+    }
+    if(pad){/*pad to power of 2 */
+	ninx=1<<iceil(log2((double)nx));
+	niny=1<<iceil(log2((double)ny));
+    }
+    if(ninx>1){
+	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
+	ox=ox-(ninx-nx)/2*dx;
+	nx=ninx;
+    }
+    if(niny>1){
+	if(niny<ny)  warning("niny=%ld is too small. need %ld\n",niny, ny);
+	oy=oy-(niny-ny)/2*dy;
+	ny=niny;
+    }
+    if(nxout)
+	*nxout=nx;
+    if(nyout)
+	*nyout=ny;
+    if(mapout){
+	*mapout=mapnew(nx, ny, dx, dy, 0);
+	(*mapout)->ox=ox;
+	(*mapout)->oy=oy;
+	(*mapout)->h=ht;
+	dmat *dmap=(dmat*)(*mapout);
+	if(square){/**Only want square grid*/
+	    dset(dmap,1);
+	}else{/*Want non square grid*/
+	    for(int idir=0; idir<dirs->ny; idir++){
+		double sx=-ox+(pdir[idir][0]*ht);
+		double sy=-oy+(pdir[idir][1]*ht);
+		double RR=R*(1.-ht/pdir[idir][2])+guard;
+		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
+	    }
+	    for(int i=0; i<nx*ny; i++){
+		dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
+	    }
+	}
+    }
+    free(dirs);
+}
 /**
    Embeding an OPD defined on loc to another array. 
    Do the embeding using locstat to have best speed.

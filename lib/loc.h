@@ -102,6 +102,8 @@ map_t *mapnew2(map_t *A);
 void mapcircle(map_t *map, double r, double val);
 void mapcircle_symbolic(map_t *map, double r);
 void map_d_din(map_t *map, double *d, double *din);
+void create_metapupil(map_t **map, long* nx, long* ny, dmat *dirs, double D, double ht, double dx, double dy, 
+		      double offset,double guard, long ninx, long niny, int pad,int square);
 void locresize(loc_t *loc, long nloc);
 #define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
 void dembed_locstat(dmat **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);

@@ -579,6 +579,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    const double rne=parms->powfs[ipowfs].rne;
 	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
+	    const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
 	    if(noisy){/*add noise */
 		dmat **bkgrnd2=NULL;
 		dmat **bkgrnd2c=NULL;
@@ -597,11 +598,10 @@ void wfsgrad_iwfs(thread_t *info){
 		    }
 		}
 		for(int isa=0; isa<nsa; isa++){
-		    double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
-		    double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
+		    dmat *bkgrnd2i=(bkgrnd2)?bkgrnd2[isa]:NULL;
+		    dmat *bkgrnd2ic=(bkgrnd2c)?bkgrnd2c[isa]:NULL;
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
-			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
-			     bkgrnd2i, bkgrnd2ic, rne);
+			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		}
 		if(save_ints){
 		    cellarr_dcell(simu->save->intsny[iwfs], isim, ints);

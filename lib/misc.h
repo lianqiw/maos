@@ -15,35 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef AOS_LIB_AOS_H
-#define AOS_LIB_AOS_H
-#include <unistd.h>
-#include "../sys/sys.h" 
+#ifndef AOS_LIB_MISC_H
+#define AOS_LIB_MISC_H
 #include "../math/mathdef.h"
-#include "type.h"
-#include "readcfg.h"
-#include "locbin.h"
-#include "loc.h"
-#include "draw.h"
-#include "accphi.h"
-#include "mkz.h"
-#include "mkg.h"
-#include "mkh.h"
-#include "mkw.h"
-#include "turbulence.h"
-#include "proj.h"
-#include "laplacian.h"
-#include "pcg.h"
-#include "muv.h"
-#include "genotf.h"
-#include "fractal.h"
-#include "stfun.h"
-#include "servo.h"
-#include "slaving.h"
-#include "mkdtf.h"
-#include "psd.h"
-#include "kalman.h"
-#include "cn2est.h"
-#include "misc.h"
+void addnoise(dmat *A, rand_t* rstat, 
+	      const double bkgrnd, const double bkgrndc, 
+	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
+	      const double rne);
 #endif

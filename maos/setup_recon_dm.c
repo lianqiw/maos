@@ -46,7 +46,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
     }else{
 	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=0;
-	create_metapupil(&fmap,0,0,parms,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
+	create_metapupil(&fmap,0,0,parms->dirs,parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
 	mapfree(fmap);
@@ -142,7 +142,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 		map->ox+=offset*dx;
 		mapcircle_symbolic(map, D*0.5);
 	    }else{
-		create_metapupil(&map,0,0,parms,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
+		create_metapupil(&map,0,0,parms->dirs, parms->aper.d,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
@@ -162,8 +162,8 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	if(parms->fit.cachedm){
 	    const double dx2=parms->atmr.dx/parms->fit.pos;
 	    const double dy2=dx2;
-	    create_metapupil(&recon->acmap[idm],0,0,
-			     parms,ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
+	    create_metapupil(&recon->acmap[idm],0,0, parms->dirs, parms->aper.d,
+			     ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
 	    info2("amap origin is %g, %g. acmap is %g, %g\n", 
 		 recon->aloc[idm]->map->ox, recon->aloc[idm]->map->oy,
 		 recon->acmap[idm]->ox, recon->acmap[idm]->oy);

@@ -279,7 +279,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     
     //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
     map_t *map=0;
-    create_metapupil(&map, 0, 0, parms, 0, dx, dx, 0, 0, 0, 0, 0, 0);
+    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
     powfs[ipowfs].gloc=map2loc(map); mapfree(map);
     //do not use misregistration since this is the model
     powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
@@ -1514,7 +1514,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 }
 /*compute cog NEA using Monte Carlo realizations of noise*/
 static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int ntry, 
-		    rand_t *rstat, double bkgrnd, double bkgrndc, double *bkgrnd2i, double *bkgrnd2ic, double rne
+		    rand_t *rstat, double bkgrnd, double bkgrndc, dmat *bkgrnd2i, dmat *bkgrnd2ic, double rne
 		    ){
     dmat *ints2=dnew(ints->nx, ints->ny);
     double gnf[2]={0,0};
@@ -1543,8 +1543,8 @@ typedef struct {
     dmat *ints;
     double bkgrnd;
     double bkgrndc;
-    double *bkgrnd2i;
-    double *bkgrnd2ic;
+    dmat *bkgrnd2i;
+    dmat *bkgrnd2ic;
     double rne;
     rand_t *rstat;
     int ntry;
@@ -1569,7 +1569,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-    const double bkgrndc=parms->powfs[ipowfs].bkgrndc;
+    const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int do_nea=0;
     if(parms->powfs[ipowfs].phytypesim==2){;
@@ -1634,8 +1634,8 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    double g[2]={0,0};
 	    for(int isa=0; isa<nsa; isa++){
 		dmat *ints=intstat->i0->p[isa+iwfs*nsa];/*equivalent noise*/
-		double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
-		double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
+		dmat *bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
+		dmat *bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
 
 		if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
 		    /*automatically figure out the optimal thres/offset for each subaperture.*/
