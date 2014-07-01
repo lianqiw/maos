@@ -176,7 +176,7 @@ static void maos_server(PARMS_T *parms){
 		parms->evl.sock=calloc(parms->evl.nevl, sizeof(int));
 	    }
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		parms->evl.sock[ievl]=msg[ievl+1]?-1:0;
+		parms->evl.sock->p[ievl]=msg[ievl+1]?-1:0;
 	    }
 	}break;
 	case MAOS_ASSIGN_RECON:{/*Specifies whether recon should be handled*/

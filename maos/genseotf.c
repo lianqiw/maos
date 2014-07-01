@@ -87,7 +87,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
  
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
@@ -125,7 +125,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	warning("LGS has multi-color!\n");
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	double thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
@@ -223,13 +223,13 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int nsepsf=intstat->nsepsf;
     int ni0=nllt<=1?nsepsf:nllt;
     if(ni0==1 && parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
-	int iwfs0=parms->powfs[ipowfs].wfs[0];
+	int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	double siglev0=parms->wfs[iwfs0].siglev;
-	double *wvlwts0=parms->wfs[iwfs0].wvlwts;
+	double *wvlwts0=parms->wfs[iwfs0].wvlwts->p;
 	for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs;jwfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    double siglev=parms->wfs[iwfs].siglev;
-	    double *wvlwts=parms->wfs[iwfs].wvlwts;
+	    double *wvlwts=parms->wfs[iwfs].wvlwts->p;
 	    if(fabs(siglev-siglev0)>EPS){
 		ni0=parms->powfs[ipowfs].nwfs;
 		warning("Different wfs for powfs %d has different siglev\n",ipowfs);
@@ -359,8 +359,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    int idtf=ii0*idtf_multiplier;
 	    int irot=ii0*irot_multiplier;
 	    int ietf=ii0*ietf_multiplier;
-	    int iwfs=parms->powfs[ipowfs].wfs[ii0];
-	    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
+	    int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
+	    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	    info2("iwvl=%d, iwfs=%d, wvlsig=%g\n",iwvl,iwfs,wvlsig);
 	    dmat *(*psepsf)[nsa]=(void*)intstat->sepsf[isepsf]->p;

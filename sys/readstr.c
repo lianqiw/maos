@@ -169,6 +169,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     case T_INT:
 	size=sizeof(int);
 	break;
+    case T_LONG:
+	size=sizeof(long);
+	break;
     case T_DBL:
 	size=sizeof(double);
 	break;
@@ -176,7 +179,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	error("Invalid type");
     }
     if(len==0){
-	if(!(*ret=malloc(size*nmax))){
+	if(!(*ret=calloc(size, nmax))){
 	    error("Failed to allocate memory for ret\n");
 	}
     }else{
@@ -305,6 +308,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	case T_INT:
 	    ((int*)(*ret))[count]=(int)res;
 	    break;
+	case T_LONG:
+	    ((long*)(*ret))[count]=(long)res;
+	    break;
 	case T_DBL:
 	    ((double*)(*ret))[count]=res;
 	    break;
@@ -345,6 +351,16 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	case T_INT:{
 	    int *from=(*ret);
 	    int *to=newer;
+	    for(int icol=0; icol<ncol; icol++){
+		for(int irow=0; irow<ncol; irow++){
+		    to[icol+ncol*irow]=from[irow+nrow*icol];
+		}
+	    }
+	}
+	    break;
+	case T_LONG:{
+	    long *from=(*ret);
+	    long *to=newer;
 	    for(int icol=0; icol<ncol; icol++){
 		for(int irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];

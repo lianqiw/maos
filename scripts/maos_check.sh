@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #Sanity check maos
 #NFIRAOS default

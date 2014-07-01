@@ -230,7 +230,7 @@ static void Tomo_prop_do(thread_t *info){
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
-		    int ips0=parms->atmr.indps[ips];
+		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
 		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
 		}
@@ -326,7 +326,7 @@ static void Tomo_iprop_do(thread_t *info){
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
-		    int ips0=parms->atmr.indps[ips];
+		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
 		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
 		}
@@ -491,14 +491,14 @@ void FitR(dcell **xout, const void *A,
 	const int nfit=parms->fit.nfit;
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs[ifit];
+	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<parms->atm.nps; ips++){
-		const double ht = parms->atm.ht[ips];
+		const double ht = parms->atm.ht->p[ips];
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
-		displace[1]=parms->fit.thetay[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
+		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
+		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
 		prop_grid(simu->atm[ips], recon->floc, NULL, xp->p[ifit]->p, 
 			  1, displace[0], displace[1], scale, 1, 0, 0);
 	    }
@@ -511,14 +511,14 @@ void FitR(dcell **xout, const void *A,
 	const int npsr=recon->npsr;
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs[ifit];
+	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<npsr; ips++){
 		const double ht = recon->ht->p[ips];
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax[ifit]*ht;
-		displace[1]=parms->fit.thetay[ifit]*ht;
+		displace[0]=parms->fit.thetax->p[ifit]*ht;
+		displace[1]=parms->fit.thetay->p[ifit]*ht;
 		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->floc, NULL, 
 			     xp->p[ifit]->p, 1, displace[0], displace[1], scale, 0, 0);
 	    }
@@ -619,8 +619,8 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 	loc_t *locs=simu->aper->locs;
 	dmat *xx = dnew(locs->nloc, 1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    double hs = parms->evl.hs[ievl];
-	    if(parms->evl.psfr[ievl]){
+	    double hs = parms->evl.hs->p[ievl];
+	    if(parms->evl.psfr->p[ievl]){
 		dzero(xx);
 		if(opdr){
 		    map_t xmap;
@@ -629,8 +629,8 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		    for(int ips=0; ips<npsr; ips++){
 			const double ht = recon->ht->p[ips];
 			double scale=1-ht/hs;
-			double dispx=parms->evl.thetax[ievl]*ht;
-			double dispy=parms->evl.thetay[ievl]*ht;
+			double dispx=parms->evl.thetax->p[ievl]*ht;
+			double dispy=parms->evl.thetay->p[ievl]*ht;
 			if(parms->tomo.square){/*square xloc */
 			    memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
 			    xmap.p=opdr->p[ips]->p;
@@ -646,8 +646,8 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		    for(int idm=0; idm<parms->ndm; idm++){
 			const double ht = parms->dm[idm].ht;
 			double scale=1.-ht/hs;
-			double dispx=parms->evl.thetax[ievl]*ht;
-			double dispy=parms->evl.thetay[ievl]*ht;
+			double dispx=parms->evl.thetax->p[ievl]*ht;
+			double dispy=parms->evl.thetay->p[ievl]*ht;
 			if(parms->dm[idm].cubic){
 			    prop_nongrid_cubic(recon->aloc[idm], dmadd->p[idm]->p, locs, NULL,
 					       xx->p, 1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
@@ -695,7 +695,7 @@ void shift_grad(SIM_T *simu){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const double scale=1./parms->powfs[ipowfs].nwfs;
 		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
 		    dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
 		}
 	    }
@@ -761,7 +761,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     if(parms->cn2.keepht){
 	ht=dnew(parms->atmr.nps, 1);
 	for(int iht=0; iht<ht->nx; iht++){
-	    ht->p[iht]=parms->atmr.ht[iht];
+	    ht->p[iht]=parms->atmr.ht->p[iht];
 	}
     }else{
 	int nht=parms->cn2.nhtomo;
@@ -783,9 +783,9 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	/*preserve the number of over sampled layers. */
 	int osc=0;
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    if(parms->atmr.os[ips]>1){
+	    if(parms->atmr.os->p[ips]>1){
 		osc++;
-		if(parms->atmr.os[ips]!=2){
+		if(parms->atmr.os->p[ips]!=2){
 		    error("os is not 2. adept this code to it.\n");
 		}	
 	    }
@@ -799,7 +799,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }else{
 	for(int iht=0; iht<ht->nx; iht++){
-	    cn2est->os->p[iht]=parms->atmr.os[iht];
+	    cn2est->os->p[iht]=parms->atmr.os->p[iht];
 	}
     }
     if(parms->cn2.verbose){

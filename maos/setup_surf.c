@@ -77,18 +77,18 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
-		  parms->evl.thetax[ievl], parms->evl.thetay[ievl], parms->evl.hs[ievl]);
+		  parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl], parms->evl.hs->p[ievl]);
     }
     if(parms->sim.ncpa_calib){
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
 	    tsurf2loc(tsurf, parms->ntsurf, aper->opdfloc->p[ifit], recon->floc, 
-		      parms->sim.ncpa_thetax[ifit], parms->sim.ncpa_thetay[ifit], parms->sim.ncpa_hs[ifit]);
+		      parms->sim.ncpa_thetax->p[ifit], parms->sim.ncpa_thetay->p[ifit], parms->sim.ncpa_hs->p[ifit]);
 	}
     }
 
     for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	loc_t *locwfs;
 	if(powfs[ipowfs].loc_tel){
 	    warning("We don't handle this case yet. Think carefully when to apply shift.\n");
@@ -143,9 +143,9 @@ static void prop_surf_evl(thread_t *info){
 	any=1;
 	snprintf(buf2, 6, "%d ", ievl);
 	strcat(buf, buf2);
-	const double displacex=parms->evl.thetax[ievl]*hl;
-	const double displacey=parms->evl.thetay[ievl]*hl;
-	const double scale=1-hl/parms->evl.hs[ievl];
+	const double displacex=parms->evl.thetax->p[ievl]*hl;
+	const double displacey=parms->evl.thetay->p[ievl]*hl;
+	const double scale=1-hl/parms->evl.hs->p[ievl];
 	prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
 		       1, displacex, displacey, scale, 0, 0, 0);
     }
@@ -165,9 +165,9 @@ static void prop_surf_ncpa(thread_t *info){
     const int *ncpacover=data->ncpacover;
     for(int idir=info->start; idir<info->end; idir++){
 	if(!ncpacover[idir]) continue;
-	const double displacex=parms->sim.ncpa_thetax[idir]*hl;
-	const double displacey=parms->sim.ncpa_thetay[idir]*hl;
-	const double scale=1.-hl/parms->sim.ncpa_hs[idir];
+	const double displacex=parms->sim.ncpa_thetax->p[idir]*hl;
+	const double displacey=parms->sim.ncpa_thetay->p[idir]*hl;
+	const double scale=1.-hl/parms->sim.ncpa_hs->p[idir];
 	prop_grid(surf, recon->floc, NULL, aper->opdfloc->p[idir]->p, 
 		  1, displacex, displacey, scale, 0, 0, 0);	
     }
@@ -196,7 +196,7 @@ static void prop_surf_wfs(thread_t *info){
 	snprintf(buf2, 6, "%d ", iwfs);
 	strcat(buf, buf2);
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
 	const double scale=1.-hl/hs;
 	const double displacex=parms->wfs[iwfs].thetax*hl;
@@ -223,7 +223,7 @@ static void prop_surf_wfs(thread_t *info){
 static void 
 setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info2("Setting up surface OPD (M1/M2/M3)\n");
-    if(fabs(parms->misreg.pupil[0])>EPS || fabs(parms->misreg.pupil[1])>EPS){
+    if(fabs(parms->misreg.pupil->p[0])>EPS || fabs(parms->misreg.pupil->p[1])>EPS){
 	warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 		"in maos because some surfaces may belong to instrument.\n");
     }
@@ -257,8 +257,8 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	const char *strwfs=search_header(surf->header, "SURFWFS");
 	const char *stropdx=search_header(surf->header, "SURFOPDX");
 	if(strname && (!strcmp(strname, "M1"))){
-	    surf->ox+=parms->misreg.pupil[0];
-	    surf->oy+=parms->misreg.pupil[1];
+	    surf->ox+=parms->misreg.pupil->p[0];
+	    surf->oy+=parms->misreg.pupil->p[1];
 	}
 	//pupil rotation. rotate the surface directly
 	if(strname && (!strcmp(strname, "M1") || !strcmp(strname, "M2"))){
@@ -350,7 +350,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
 			 recon->floc, NULL, xp->p[ievl]->p, 1, 0, 0, 1, 0, 0);
 	}
     }
-    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt);
+    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
     sptcellmulmat_thread(xout, recon->HA_ncpa, xp, 1);
     dcellfree(xp);
 }
@@ -360,7 +360,7 @@ void FitL_NCPA(dcell **xout, const void *A,
     const PARMS_T *parms=recon->parms;
     dcell *xp=NULL;
     spcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
-    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt);
+    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
     sptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
     dcellfree(xp);xp=NULL;
     dcellmm(&xp,recon->fitNW, xin, "tn", 1);
@@ -377,7 +377,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     PDSPCELL(recon->HA_ncpa,HA);
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
-	double hs=parms->sim.ncpa_hs[ievl];
+	double hs=parms->sim.ncpa_hs->p[ievl];
 	for(int idm=0; idm<ndm; idm++){
 	    if(parms->sim.ncpa_calib==2 && idm>0){
 		continue;
@@ -385,8 +385,8 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    const double ht=parms->dm[idm].ht;
 	    const double scale=1.-ht/hs;
 	    double displace[2];
-	    displace[0]=parms->sim.ncpa_thetax[ievl]*ht;
-	    displace[1]=parms->sim.ncpa_thetay[ievl]*ht;
+	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
+	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
 	    HA[idm][ievl]=mkh(recon->aloc[idm], recon->floc, NULL,
 			      displace[0], displace[1], 
 			      scale,parms->dm[idm].cubic,parms->dm[idm].iac);

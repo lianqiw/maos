@@ -54,25 +54,25 @@ void plotloc(char *fig, const PARMS_T *parms,
     cir=(double(*)[4])calloc(ncir*4,sizeof(double));
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	double hs=parms->evl.hs[ievl];
-	cir[count][0]=ht*parms->evl.thetax[ievl];
-	cir[count][1]=ht*parms->evl.thetay[ievl];
+	double hs=parms->evl.hs->p[ievl];
+	cir[count][0]=ht*parms->evl.thetax->p[ievl];
+	cir[count][1]=ht*parms->evl.thetay->p[ievl];
 	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
 	cir[count][3]=0xFF0000;/*rgb color */
 	count++;
     }
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	double hs=parms->fit.hs[ifit];
-	cir[count][0]=ht*parms->fit.thetax[ifit];
-	cir[count][1]=ht*parms->fit.thetay[ifit];
+	double hs=parms->fit.hs->p[ifit];
+	cir[count][0]=ht*parms->fit.thetax->p[ifit];
+	cir[count][1]=ht*parms->fit.thetay->p[ifit];
 	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
 	cir[count][3]=0xFF22DD;/*rgb color */
 	count++;
     }
     for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-	double hs=parms->sim.ncpa_hs[idir];
-	cir[count][0]=ht*parms->sim.ncpa_thetax[idir];
-	cir[count][1]=ht*parms->sim.ncpa_thetay[idir];
+	double hs=parms->sim.ncpa_hs->p[idir];
+	cir[count][0]=ht*parms->sim.ncpa_thetax->p[idir];
+	cir[count][1]=ht*parms->sim.ncpa_thetay->p[idir];
 	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
 	cir[count][3]=0x22FF00;/*rgb color */
 	count++;
@@ -118,29 +118,29 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     style[count]=(0xFF0000<<8)+(4<<4)+3;
     locs[count]=locnew(parms->evl.nevl, 0, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	locs[count]->locx[ievl]=parms->evl.thetax[ievl]*206265;
-	locs[count]->locy[ievl]=parms->evl.thetay[ievl]*206265;
+	locs[count]->locx[ievl]=parms->evl.thetax->p[ievl]*206265;
+	locs[count]->locy[ievl]=parms->evl.thetay->p[ievl]*206265;
     }
     count++;
 
     style[count]=(0xFF22DD<<8)+(4<<4)+3;
     locs[count]=locnew(parms->fit.nfit, 0, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	locs[count]->locx[ifit]=parms->fit.thetax[ifit]*206265;
-	locs[count]->locy[ifit]=parms->fit.thetay[ifit]*206265;
+	locs[count]->locx[ifit]=parms->fit.thetax->p[ifit]*206265;
+	locs[count]->locy[ifit]=parms->fit.thetay->p[ifit]*206265;
     }
     count++;
     style[count]=(0x22FF00<<8)+(4<<4)+3;
     locs[count]=locnew(parms->sim.ncpa_ndir, 0, 0);
     for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-	locs[count]->locx[ifit]=parms->sim.ncpa_thetax[ifit]*206265;
-	locs[count]->locy[ifit]=parms->sim.ncpa_thetay[ifit]*206265;
+	locs[count]->locx[ifit]=parms->sim.ncpa_thetax->p[ifit]*206265;
+	locs[count]->locy[ifit]=parms->sim.ncpa_thetay->p[ifit]*206265;
     }
     count++;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    locs[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
 	    locs[count]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
@@ -207,9 +207,9 @@ void rename_file(int sig){
 	char fn[80];
 	const PARMS_T *parms=global->parms;
 	for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){
-	    if(parms->fdlock[iseed]>0){
-		close(parms->fdlock[iseed]);
-		int seed=parms->sim.seeds[iseed];
+	    if(parms->fdlock->p[iseed]>0){
+		close(parms->fdlock->p[iseed]);
+		int seed=parms->sim.seeds->p[iseed];
 		snprintf(fn, 80, "Res_%d.lock",seed);
 		if(exist(fn)){
 		    (void) remove(fn);
@@ -408,153 +408,11 @@ ARG_T * parse_args(int argc, const char *argv[]){
     }
     return arg;
 }
-/**
-   Computes strehl from OPD without doing FFT. The strehl is simply 
-
-   \f$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) \f$
-
-   where A is the amplitude map.
- */
-cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl){
-    dcomplex i2pi=I*2*M_PI/wvl;
-    dcomplex strehl=0;
-    for(int iloc=0; iloc<iopdevl->nx; iloc++){
-	strehl+=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
-    }
-    cmat *psf2=cnew(1,1);
-    psf2->p[0]=strehl;
-    return psf2;
-}
-typedef struct PSFCOMP_T{
-    ccell *psf2s;/*output psf. */
-    const dmat *iopdevl;
-    const double *amp;
-    long **embeds;
-    const long *nembeds;
-    const int *psfsize;
-    const int nwvl;
-    const double *wvl;
-}PSFCOMP_T;
-/**
-   Call psfcomp_iwvl in parallel to compute PSF in each wvl.
-*/
-ccell *psfcomp(const dmat *iopdevl, const double *amp,
-	       long **embeds, const long *nembeds, const int *psfsize,
-	       const int nwvl, const double *wvl){
-    ccell *psf2s=ccellnew(nwvl, 1);
-    PSFCOMP_T data={psf2s, iopdevl, amp, embeds, nembeds, psfsize, nwvl, wvl};
-    thread_t dopsf[nwvl];
-    thread_prep(dopsf, 0, nwvl, nwvl, (thread_wrapfun)psfcomp_iwvl, &data);
-    CALL_THREAD(dopsf, 0);
-    return psf2s;
-}
-/**
-   Computes PSF from OPD by doing FFT. The PSF is computed as
-
-   \f$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]\f$
-
-   The peak value (center) in the computed PSF is normalized by the peak value
-   in the differaction limited PSF. In other words, the peak value in the
-   computed PSF is the Strehl. Keep this in mind when you compute enclosed
-   energy.
-*/
-void psfcomp_iwvl(thread_t *thdata){
-    PSFCOMP_T *data=thdata->data;
-    ccell *psf2s=data->psf2s;
-    const dmat *iopdevl=data->iopdevl;
-    const double *amp=data->amp;
-    long **embeds=data->embeds;
-    const long *nembeds=data->nembeds;
-    const int *psfsize=data->psfsize;
-    const double *wvl=data->wvl;
-    
-    for(int iwvl=thdata->start; iwvl<thdata->end; iwvl++){
-	if(psfsize[iwvl]==1){
-	    psf2s->p[iwvl]=strehlcomp(iopdevl, amp, wvl[iwvl]);
-	}else{
-	    long nembed=nembeds[iwvl];
-	    long *embed=embeds[iwvl];
-	    cmat *psf2=cnew(nembed,nembed);
-	    int use1d;
-	    int use1d_enable=0;
-	    if(psfsize[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
-		use1d=1;
-		cfft2partialplan(psf2, psfsize[iwvl], -1);
-	    }else{
-		use1d=0;
-		cfft2plan(psf2, -1);
-	    }
-	 
-	    /*
-	      //The following makes sum(psf)=1; 
-	      double psfnorm=1./(sqrt(aper->sumamp2)*aper->nembed);
-	    */
-	    
-	    /*
-	      since sum(aper->amp)=1, this makes psf normalized by diffraction
-	      limited PSF. max(psf) is strehl.
-	    */
-	    double psfnorm=1; 
-	    dcomplex i2pi=I*2*M_PI/wvl[iwvl];
-	    for(int iloc=0; iloc<iopdevl->nx; iloc++){
-		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
-	    }
-	    if(use1d==1){
-		cfft2partial(psf2, psfsize[iwvl], -1);
-	    }else{
-		cfft2(psf2,-1);
-	    }
-	    if(psfsize[iwvl]==nembed){/*just reference */
-		cfftshift(psf2);
-		psf2s->p[iwvl]=cref(psf2);
-	    }else{/*create a new array, smaller. */
-		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
-		ccpcorner2center(psf2s->p[iwvl], psf2);
-	    }
-	    if(fabs(psfnorm-1)>1.e-15) {
-		cscale(psf2s->p[iwvl], psfnorm);
-	    }
-	    cfree(psf2);
-	}
-    }
-}
-/**
-   Simple embed and accumulation. 
- */
-void embed_in(double *out, const double *in, long nin, long *embed){
-    for(long i=0; i<nin; i++){
-	out[embed[i]]+=in[i];
-    }
-}
-/**
-   Simple embed and accumulation
- */
-void embed_out(const double *out, double *in, long nin, long *embed){
-    for(long i=0; i<nin; i++){
-	in[i]+=out[embed[i]];
-    }
-}
-/**
-   Simple embed and accumulation.  for complex output
- */
-void embedc_in(dcomplex *out, const double *in, long nin, long *embed){
-    for(long i=0; i<nin; i++){
-	out[embed[i]]+=in[i];
-    }
-}
-/**
-   Simple embed and accumulation. for real output.
- */
-void embedc_out(const dcomplex *out, double *in, long nin, long *embed){
-    for(long i=0; i<nin; i++){
-	in[i]+=creal(out[embed[i]]);
-    }
-}
 
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
     char header[320];
-    int nembed=aper->nembed[iwvl];
-    double wvl=parms->evl.wvl[iwvl];
+    int nembed=aper->embed->nembed->p[iwvl];
+    double wvl=parms->evl.wvl->p[iwvl];
     double sumamp2=aper->sumamp2;
     int npos=parms->evl.psfmean;
     if(npos==1) {
@@ -569,13 +427,13 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     "PSF Sampling: %.15g arcsec\n"
 	     "PSF Sum to: %.15g\n"
 	     "Exposure: %gs\n", 
-	     ievl<0?0:parms->evl.thetax[ievl]*206265, ievl<0?0:parms->evl.thetay[ievl]*206265,
+	     ievl<0?0:parms->evl.thetax->p[ievl]*206265, ievl<0?0:parms->evl.thetay->p[ievl]*206265,
 	     parms->atm.r0, parms->atm.l0,
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
 }
-void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *fieldstop, double wvl){
+void apply_fieldstop(dmat *opd, dmat *amp, imat *embed, long nembed, dmat *fieldstop, double wvl){
     cmat *wvf=cnew(nembed, nembed);
     cfft2plan(wvf, -1); cfft2plan(wvf, 1);
     double kk=2*M_PI/wvl;
@@ -583,13 +441,13 @@ void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *field
     double wvlh=wvl*0.5;
     dcomplex i2pi=I*kk;
     for(int iloc=0; iloc<opd->nx; iloc++){
-	wvf->p[embed[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
+	wvf->p[embed->p[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
     }
     cfft2(wvf, -1);
     ccwmd(wvf, fieldstop, 1);
     cfft2(wvf, 1);
     for(int iloc=0; iloc<opd->nx; iloc++){
-	double val=carg(wvf->p[embed[iloc]])*kki;
+	double val=carg(wvf->p[embed->p[iloc]])*kki;
 	double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
 	if(diff<0) diff+=wvl;
 	opd->p[iloc]+=diff-wvlh;

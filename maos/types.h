@@ -41,8 +41,7 @@ typedef struct APER_T{
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
     double ipcc;         /**<piston term in imcc.*/
     double sumamp2;      /**<sum of amplitude squared*/
-    long **embed;        /**<Embedding index for PSF computing, one per wvl*/
-    long *nembed;        /**<dimension of embed.*/
+    locfft_t *embed;     /**<For computing FFT*/
     double fcp;          /**<piston correction in focus term.*/
     dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
     dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
@@ -161,9 +160,7 @@ typedef struct POWFS_T{
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
-    long *embed;        /**<Embedding index for field stop computing*/
-    long nembed;        /**<dimension of embed.*/
-    dmat *fieldstop;    /**<The field stop mask*/
+    locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
 }
 POWFS_T;
 

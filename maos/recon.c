@@ -53,9 +53,9 @@ void tomofit(SIM_T *simu){
     }else{
 	/*do tomography. */
 	int maxit=parms->tomo.maxit;
-	if(parms->dbg.ntomo_maxit){
-	    if(isim<parms->dbg.ntomo_maxit){
-		maxit=parms->dbg.tomo_maxit[isim];
+	if(parms->dbg.tomo_maxit->nx){
+	    if(isim<parms->dbg.tomo_maxit->nx){
+		maxit=parms->dbg.tomo_maxit->p[isim];
 		recon->RL.maxit=maxit;/*update maxit information */
 		info2("Running tomo.maxit=%d\n",maxit);
 	    }else{
@@ -75,7 +75,7 @@ void tomofit(SIM_T *simu){
 		dcellmm(&simu->deltafocus, recon->RFdfx, simu->opdr, "nn", 1);
 	    }
 	    if(parms->dbg.deltafocus==2){
-		dcell *dmpsol=simu->dmpsol[parms->hipowfs[0]];
+		dcell *dmpsol=simu->dmpsol[parms->hipowfs->p[0]];
 		//Compute the delta focus in closed loop.
 		dcellmm(&simu->deltafocus, recon->RFdfa, dmpsol, "nn", -1);
 	    }
@@ -129,7 +129,7 @@ static void calc_gradol(SIM_T *simu){
 #pragma omp task firstprivate(indwfs, alpha, ipowfs)
 #endif
 		{
-		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs[indwfs];
+		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
 			spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
@@ -212,7 +212,7 @@ void reconstruct(SIM_T *simu){
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(simu->powfs[ipowfs].gradoff){
-	    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	    dadd(&simu->gradlastcl->p[iwfs], 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
 	}
     }
@@ -269,7 +269,7 @@ void reconstruct(SIM_T *simu){
 	    if(parms->sim.idealfit){
 		dmpsol=simu->dmcmdlast;
 	    }else if(parms->sim.fuseint || parms->recon.split==1){
-		dmpsol=simu->dmpsol[parms->hipowfs[0]];
+		dmpsol=simu->dmpsol[parms->hipowfs->p[0]];
 	    }else{
 		warning_once("Temporary solution\n");
 		dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
@@ -304,7 +304,7 @@ void reconstruct(SIM_T *simu){
     }
     //For PSF reconstruction.
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
+	psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs->p[0]],
 		  simu->dmerr,  simu->Merr_lo);
     }
 

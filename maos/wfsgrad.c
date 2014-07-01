@@ -38,7 +38,7 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const double hs=parms->wfs[iwfs].hs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     for(int idm=0; idm<parms->ndm; idm++){
 	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
 	double *amp=powfs[ipowfs].realamp->p[wfsind]->p;
@@ -66,7 +66,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int isim=simu->isim;
     double focus=0;
     if(powfs[ipowfs].focus){
@@ -82,7 +82,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int nsa=powfs[ipowfs].pts->nsa;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
@@ -154,13 +154,13 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		gy=dgy*isep;
 		dzero(ints);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
+		    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 		    PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
 		    dsp *sis=psi[idtf][idtfsa];
-		    double wvl=parms->powfs[ipowfs].wvl[iwvl];
+		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    ctilt2(otf->p[iwvl], fotf->p[isa+nsa*iwvl], gx*dtheta1, gy*dtheta1, 0);
 		    cfft2(otf->p[iwvl], 1);
@@ -226,7 +226,7 @@ static double mapfun(double *x, mapdata_t *info){
     const POWFS_T *powfs=info->powfs;
     int iwfs=info->iwfs;
     int ipowfs=parms->wfs[iwfs].powfs;
-    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     int isa=info->isa;
     int nsa=fotf->nx;
     int nwvl=fotf->ny;
@@ -241,13 +241,13 @@ static double mapfun(double *x, mapdata_t *info){
     }
     dmat *ints2=dnew(ints->nx, ints->ny);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
+	double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 	    *parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
 	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
 	dsp *sis=psi[idtf][idtfsa];
-	double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
@@ -276,7 +276,7 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
 		double bkgrnd, double rne){
     int ipowfs=parms->wfs[iwfs].powfs;
-    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
@@ -346,13 +346,13 @@ void wfsgrad_iwfs(thread_t *info){
     const int imoao=parms->powfs[ipowfs].moao;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const double hs=parms->wfs[iwfs].hs;
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
-    const int save_gradgeom=parms->save.gradgeom[iwfs];
-    const int save_opd =parms->save.wfsopd[iwfs];
-    const int save_ints=parms->save.ints[iwfs];
+    const int save_gradgeom=parms->save.gradgeom->p[iwfs];
+    const int save_opd =parms->save.wfsopd->p[iwfs];
+    const int save_ints=parms->save.ints->p[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
     /*The following depends on isim */
     /*const int dtrat_reset=(isim%dtrat==0); */
@@ -446,8 +446,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     if(parms->powfs[ipowfs].fieldstop>0){
-	apply_fieldstop(opd, powfs[ipowfs].amp, powfs[ipowfs].embed, powfs[ipowfs].nembed, 
-			powfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0]);
+	locfft_fieldstop(powfs[ipowfs].fieldstop, opd, parms->powfs[ipowfs].wvlwts);
     }
 
     if(save_opd){
@@ -500,15 +499,15 @@ void wfsgrad_iwfs(thread_t *info){
 		lltopd=dnew(powfs[ipowfs].llt->pts->nx,
 			    powfs[ipowfs].llt->pts->nx);
 	    }
-	    const int illt=parms->powfs[ipowfs].llt->i[wfsind];
+	    const long illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	    if(atm){/*LLT OPD */
 		for(int ips=0; ips<nps; ips++){
 		    const double hl=atm[ips]->h;
 		    const double scale=1.-hl/hs;
-		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
-		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
-		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg[0];
-		    const double displacey=-atm[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg[1];
+		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
+		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
+		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
+		    const double displacey=-atm[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
 		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,NULL,
 				  lltopd->p,1,displacex,displacey,
 				  scale, 1., 0, 0);
@@ -936,7 +935,7 @@ void wfsgrad_post(thread_t *info){
     const int isim=simu->isim;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int dtrat_output=((isim+1)%dtrat==0);
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
@@ -951,7 +950,7 @@ void wfsgrad_post(thread_t *info){
 		    dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
 		}
 	    }
-	    if(parms->save.grad[iwfs]){
+	    if(parms->save.grad->p[iwfs]){
 		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){

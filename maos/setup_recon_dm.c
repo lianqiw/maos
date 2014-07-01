@@ -224,13 +224,13 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	PDSPCELL(recon->HA,HA);
 	info2("Generating HA ");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs[ifit];
+	    double hs=parms->fit.hs->p[ifit];
 	    for(int idm=0; idm<ndm; idm++){
 		const double ht=parms->dm[idm].ht;
 		const double scale=1.-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax[ifit]*ht;
-		displace[1]=parms->fit.thetay[ifit]*ht;
+		displace[0]=parms->fit.thetax->p[ifit]*ht;
+		displace[1]=parms->fit.thetay->p[ifit]*ht;
 		loc_t *loc=recon->floc;
 		if(parms->recon.misreg_dm2sci && parms->recon.misreg_dm2sci[ifit+idm*nfit]){
 		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);

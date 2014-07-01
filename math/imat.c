@@ -36,6 +36,12 @@ imat* inew(long nx, long ny){
     A->p=calloc(nx*ny, sizeof(long));
     return A;
 }
+void iresize(imat *A, long nx, long ny){
+    if(!A) return;
+    A->p=realloc(A->p, sizeof(long)*nx*ny);
+    A->nx=nx;
+    A->ny=ny;
+}
 /**
    Allocate a new icell.
  */
@@ -104,4 +110,12 @@ void iwrite(const imat *A, const char* format,...){
     file_t *fp=zfopen(fn,"wb");
     iwritedata(fp, A);
     zfclose(fp);
+}
+
+long isum(const imat *A){
+    long res=0;
+    for(long i=0; i<A->nx*A->ny; i++){
+	res+=A->p[i];
+    }
+    return res;
 }

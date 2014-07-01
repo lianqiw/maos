@@ -61,7 +61,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     
     for(int isa=0; isa<cn2est->nsa; isa++){
 	if(!saa || saa->p[isa]>saat){
-	    mask[cn2est->embed[isa]]=1;/*use this subaperture */
+	    mask[cn2est->embed->p[isa]]=1;/*use this subaperture */
 	}
     }
     int (*pmask)[nx]=(void*)mask;
@@ -321,7 +321,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
    Embed gradent vector to gradient map 
 */
 static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
-    long *embed=cn2est->embed;
+    long *embed=cn2est->embed->p;
     for(int iwfs=0; iwfs<gradol->nx; iwfs++){
 	if(!cn2est->wfscov[iwfs]) continue;
 	const int nsa=cn2est->nsa;
@@ -535,7 +535,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
  */
 void cn2est_free(CN2EST_T *cn2est){
     if(!cn2est) return;
-    free(cn2est->embed);
+    ifree(cn2est->embed);
     ifree(cn2est->mask);
     free(cn2est->wfscov);
     free(cn2est->pair);

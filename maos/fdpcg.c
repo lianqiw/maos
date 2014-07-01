@@ -106,7 +106,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
 static imat *
-fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int shift, int half){
+fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int shift, int half){
     long nx2[nps],ny2[nps];
     long noff[nps];
     long xloctot=0;
@@ -332,7 +332,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     loc_t *saloc=powfs[hipowfs].saloc;
     const long nps=recon->npsr;
     long pos=parms->tomo.pos;
-    const int* os=parms->atmr.os;
+    const long* os=parms->atmr.os->p;
     if(pos!=os[0]){
 	warning("pupil does not equal to ground layer over sampling. Debug required.\n");
     }
@@ -341,7 +341,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     const long nxp=nx[0]/os[0]*parms->tomo.pos;
     const long nyp=ny[0]/os[0]*parms->tomo.pos;
     const double dxp=recon->ploc->dx;
-    const double *ht=parms->atmr.ht;
+    const double *ht=parms->atmr.ht->p;
     long nxtot=0;
     int os0=os[0];
     int needscale=0;
@@ -449,7 +449,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     double dispy[nps];
     /* Mhat = Mhat + propx' * Mmid * propx */
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
-	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
+	int iwfs=parms->powfs[hipowfs].wfs->p[jwfs];
 	double neai=recon->neam->p[iwfs];
 	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
@@ -461,7 +461,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
 	    if(atm){
-		int ips0=parms->atmr.indps[ips]; 
+		int ips0=parms->atmr.indps->p[ips]; 
 		dispx[ips]+=atm[ips0]->vx*parms->sim.dt*2;
 		dispy[ips]+=atm[ips0]->vy*parms->sim.dt*2;
 	    }

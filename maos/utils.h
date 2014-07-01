@@ -24,10 +24,6 @@
 extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
-void addnoise(dmat *A, rand_t* rstat, 
-	      const double bkgrnd, const double bkgrndc, 
-	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
-	      const double rne);
 
 void plotloc(char *fig, const PARMS_T *parms, 
 	     loc_t *loc, double ht, char *format,...);
@@ -36,17 +32,11 @@ void maos_signal_handler(int sig);
 ARG_T* parse_args(int argc, const char *argv[]);
 cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
-	       long **embeds, const long *nembeds, const int *psfsize,
+	       const icell *embeds, const imat *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl);
 void psfcomp_iwvl(thread_t *tdata);
-void embed_in(double *out, const double *in, long nin, long *embed);
-void embed_out(const double *out, double *in, long nin, long *embed);
-void embedc_in(dcomplex *out, const double *in, long nin, long *embed);
-void embedc_out(const dcomplex *out, double *in, long nin, long *embed);
-
-void shift_inte(dmat *ap, dcell **inte);
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl);
-void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat* fieldstop, double wvl);
+void apply_fieldstop(dmat *opd, dmat *amp, imat *embed, long nembed, dmat* fieldstop, double wvl);
 void maos_daemon(int sock);
 void display_server(int sock);
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);

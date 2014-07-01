@@ -45,5 +45,6 @@
 #include "psd.h"
 #include "kalman.h"
 #include "cn2est.h"
+#include "locfft.h"
 #include "misc.h"
 #endif

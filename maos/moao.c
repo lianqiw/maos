@@ -152,7 +152,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
     xp->p[0]=dnew(recon->floc->nloc,1);
     
     for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-	const double ht = parms->atmr.ht[ipsr];
+	const double ht = parms->atmr.ht->p[ipsr];
 	double scale=1.-ht/hs;
 	if(parms->tomo.square){
 	    map_t map;
@@ -288,7 +288,7 @@ void moao_recon(SIM_T *simu){
 	    dcell *rhsout=NULL;
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms, imoao, 
-		      parms->evl.thetax[ievl], parms->evl.thetay[ievl],
+		      parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 		      INFINITY, simu->opdr, dmcommon, parms->plot.run?&rhsout:NULL, 1);
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,

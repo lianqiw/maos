@@ -43,8 +43,10 @@ enum{
     T_INT=1,
     T_DBL=2,
     T_STR=3,
+    T_LONG=4,
     T_INTARR=11,
     T_DBLARR=12,
+    T_LONGARR=14,
 };
 #ifndef INLINE
 #define INLINE inline __attribute__((always_inline))

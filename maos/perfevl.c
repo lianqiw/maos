@@ -51,12 +51,12 @@ static double *opdzlim=NULL;
 static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
-    const double hs = parms->evl.hs[ievl];
+    const double hs = parms->evl.hs->p[ievl];
   
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	double dispx=ht*parms->evl.thetax[ievl];
-	double dispy=ht*parms->evl.thetay[ievl];
+	double dispx=ht*parms->evl.thetax->p[ievl];
+	double dispy=ht*parms->evl.thetay->p[ievl];
 	double scale=1.-ht/hs;
 	loc_t *locs=aper->locs;
 	if(aper->locs_dm){
@@ -80,8 +80,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 			  dmat *iopdevl, int ievl){
     /* the OPD after this time will be tilt removed. Don't use for performance
        evaluation. */
-    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
-			 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+    ccell *psf2s=locfft_psf(aper->embed, iopdevl, parms->evl.psfsize);
     int nwvl=parms->evl.nwvl;
     if(parms->evl.psfmean){
 	PDCELL(evlpsfmean, pevlpsfmean);
@@ -100,7 +99,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 	    double xylim[4]={-12,12,-12,12};
 	    ddraw("CL PSF", psftemp, xylim, opdzlim, 
 		  "Science Closed Loop PSF", 
-		  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl[iwvl]*1e6);
+		  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 	    dfree(psftemp);
 	}
     }
@@ -148,7 +147,7 @@ void perfevl_ievl(thread_t *info){
     dmat *iopdevl=0;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov)
-	    && isim>=parms->evl.psfisim && parms->evl.psf[ievl];
+	    && isim>=parms->evl.psfisim && parms->evl.psf->p[ievl];
 	const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
 	if(!iopdevl){
 	    iopdevl=dnew(aper->locs->nloc,1);
@@ -206,10 +205,10 @@ void perfevl_ievl(thread_t *info){
 	if((parms->evl.psfmean || parms->evl.cov)
 	   && isim>=parms->evl.psfisim 
 	   &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-	      ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+	      ||(parms->evl.psfol==2 && parms->evl.psf->p[ievl]))){
 	    /*Compute on axis OL psf. */
 	    dmat *opdevlcopy=NULL;
-	    if(parms->evl.pttr[ievl]){
+	    if(parms->evl.pttr->p[ievl]){
 		dcp(&opdevlcopy,iopdevl);
 		loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	    }else if(parms->evl.cov){
@@ -223,8 +222,7 @@ void perfevl_ievl(thread_t *info){
 		dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
 	    }/*opdcov*/
 	    if(parms->evl.psfmean){
-		ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
-				     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+		ccell *psf2s=locfft_psf(aper->embed, opdevlcopy, parms->evl.psfsize);
 		int nwvl=parms->evl.nwvl;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
@@ -234,7 +232,7 @@ void perfevl_ievl(thread_t *info){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 			ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
-			      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
+			      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl->p[iwvl]*1e6);
 			dfree(psftemp);
 		    }
 		}
@@ -252,10 +250,10 @@ void perfevl_ievl(thread_t *info){
 	    if(simu->opdr){
 		map_t xmap;
 		for(int ipsr=0; ipsr<npsr; ipsr++){
-		    double hl=parms->atmr.ht[ipsr];
-		    double scale = 1. - hl/parms->evl.hs[ievl];
-		    double displacex=parms->evl.thetax[ievl]*hl;
-		    double displacey=parms->evl.thetay[ievl]*hl;
+		    double hl=parms->atmr.ht->p[ipsr];
+		    double scale = 1. - hl/parms->evl.hs->p[ievl];
+		    double displacex=parms->evl.thetax->p[ievl]*hl;
+		    double displacey=parms->evl.thetay->p[ievl]*hl;
 		    if(parms->tomo.square){
 			memcpy(&xmap, recon->xmap[ipsr], sizeof(map_t));
 			xmap.p=simu->opdr->p[ipsr]->p;
@@ -314,14 +312,14 @@ void perfevl_ievl(thread_t *info){
 	/*Evaluate closed loop performance. */
 	PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
 	if(do_psf_cov){
-	    if(parms->evl.psfngsr[ievl]!=0){
+	    if(parms->evl.psfngsr->p[ievl]!=0){
 		/* even if psfpttr=1, referencing is ok.  Change to copy if
 		   incompatible in the future.*/
 		simu->evlopd->p[ievl]=dref(iopdevl);
 	    }
-	    if(parms->evl.psfngsr[ievl]!=2){/*ngsr==2 means only want ngsr. */
+	    if(parms->evl.psfngsr->p[ievl]!=2){/*ngsr==2 means only want ngsr. */
 		/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
-		if(parms->evl.pttr[ievl]){
+		if(parms->evl.pttr->p[ievl]){
 		    if(isim==parms->evl.psfisim && ievl==0){
 			warning("Removing piston/tip/tilt from OPD.\n");
 		    }
@@ -360,7 +358,7 @@ static void perfevl_mean(SIM_T *simu){
 	int ind=imod+nmod*isim;
 	simu->ole->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
-	    double wt=parms->evl.wt[ievl];
+	    double wt=parms->evl.wt->p[ievl];
 	    simu->ole->p[ind]+=wt*simu->olep->p[ievl]->p[ind];
 	}
     }
@@ -372,7 +370,7 @@ static void perfevl_mean(SIM_T *simu){
 	int ind=imod+nmod*isim;
 	simu->cle->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
-	    double wt=parms->evl.wt[ievl];
+	    double wt=parms->evl.wt->p[ievl];
 	    simu->cle->p[ind]+=wt*simu->clep->p[ievl]->p[ind];
 	}
     }
@@ -395,7 +393,7 @@ static void perfevl_mean(SIM_T *simu){
 	    memset(poleNGSdot, 0, sizeof(double)*nngsmod);
 	    
 	    for(int ievl=0; ievl<nevl; ievl++){
-		double wt=parms->evl.wt[ievl];
+		double wt=parms->evl.wt->p[ievl];
 		double *pcleNGSdotp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
 		double *poleNGSdotp=simu->oleNGSmp->p[ievl]->p+isim*nngsmod;
 		for(int imod=0; imod<nngsmod; imod++){
@@ -457,13 +455,13 @@ static void perfevl_mean(SIM_T *simu){
 #endif
 		    const APER_T *aper=simu->aper;
 		    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-			if(!parms->evl.psf[ievl] || !parms->evl.psfngsr[ievl]) continue;
+			if(!parms->evl.psf->p[ievl] || !parms->evl.psfngsr->p[ievl]) continue;
 			dmat *iopdevl=simu->evlopd->p[ievl];
 			if(!iopdevl) continue;
 			ngsmod2science(iopdevl, aper->locs, recon->ngsmod, 
-				       parms->evl.thetax[ievl], parms->evl.thetay[ievl],
+				       parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 				       pcleNGSm, -1);
-			if(parms->evl.pttr[ievl]){
+			if(parms->evl.pttr->p[ievl]){
 			    /*we cannot use clmp because the removed ngsmod
 			      has tip/tilt component*/
 			    double ptt[3];

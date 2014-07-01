@@ -311,10 +311,10 @@ void gpu_perfevl_queue(thread_t *info){
 	gpu_set(cudata_t::evlgpu[ievl]);
 	//info2("thread %ld gpu %d ievl %d start\n", thread_id(), cudata->igpu, ievl);
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov) 
-	    && isim>=parms->evl.psfisim && parms->evl.psf[ievl]!=0;
+	    && isim>=parms->evl.psfisim && parms->evl.psf->p[ievl]!=0;
 	const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
-	const double thetax=parms->evl.thetax[ievl];
-	const double thetay=parms->evl.thetay[ievl];
+	const double thetax=parms->evl.thetax->p[ievl];
+	const double thetay=parms->evl.thetay->p[ievl];
  
 	cudaStream_t stream=cuperf_t::stream[ievl];
 	cublasHandle_t handle=cuperf_t::handle[ievl];
@@ -327,9 +327,9 @@ void gpu_perfevl_queue(thread_t *info){
 	}
 	if(parms->sim.idealevl){
 	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmproj, cudata->ndm,
-		       parms->evl.hs[ievl], thetax, thetay, 0,0,1, stream);
+		       parms->evl.hs->p[ievl], thetax, thetay, 0,0,1, stream);
 	}else if(simu->atm && !parms->sim.wfsalias){
-	    gpu_atm2loc(iopdevl->p, cudata->perf->locs, parms->evl.hs[ievl], thetax, thetay, 
+	    gpu_atm2loc(iopdevl->p, cudata->perf->locs, parms->evl.hs->p[ievl], thetax, thetay, 
 			0,0,isim*dt, 1, stream);
 	}
 	if(simu->telws){//Wind shake 
@@ -351,13 +351,13 @@ void gpu_perfevl_queue(thread_t *info){
 	if((parms->evl.psfmean  || parms->evl.cov)
 	   && isim>=parms->evl.psfisim 
 	   &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-	      ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+	      ||(parms->evl.psfol==2 && parms->evl.psf->p[ievl]))){
 	    //calculate Openloop PSF. we also test psfisim to synchronize with psfcl.
 	    curmat *opdcopy=NULL;
 	    curmv(cuperf_t::coeff->p[ievl]->p, 0, cudata->perf->imcc, 
 		  cuperf_t::cc_ol->p[ievl]->p, 'n', 1, handle);
 	    curcp(&opdcopy, iopdevl, stream);
-	    if(parms->evl.pttr[ievl]){//remove piston/tip/tilt
+	    if(parms->evl.pttr->p[ievl]){//remove piston/tip/tilt
 		curaddptt(opdcopy, cudata->perf->locs->p, cuperf_t::coeff->p[ievl]->p, -1,-1,-1,stream);
 	    }else{//remove piston only
 		curaddptt(opdcopy, cudata->perf->locs->p, cuperf_t::coeff->p[ievl]->p, -1, 0, 0, stream);
@@ -392,7 +392,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    TO_IMPLEMENT;
 	}else{
 	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmreal, cudata->ndm, 
-		       parms->evl.hs[ievl], thetax, thetay,
+		       parms->evl.hs->p[ievl], thetax, thetay,
 		       0,0,-1, stream);
 	    if(simu->ttmreal){
 		curaddptt(iopdevl, cudata->perf->locs->p, 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
@@ -414,10 +414,10 @@ void gpu_perfevl_queue(thread_t *info){
 	    dfree(tmp);
 	}
 	PERFEVL_WFE_GPU(cuperf_t::cc_cl->p[ievl]->p, cuperf_t::ccb_cl[ievl]);
-	if(do_psf_cov && parms->evl.psfngsr[ievl]!=2){//also do normal one.
+	if(do_psf_cov && parms->evl.psfngsr->p[ievl]!=2){//also do normal one.
 	    curmv(cuperf_t::coeff->p[ievl]->p, 0, cudata->perf->imcc, 
 		  cuperf_t::cc_cl->p[ievl]->p, 'n', 1, handle);
-	    if(parms->evl.pttr[ievl]){
+	    if(parms->evl.pttr->p[ievl]){
 		curaddptt(iopdevl, cudata->perf->locs->p, cuperf_t::coeff->p[ievl]->p, -1, -1, -1, stream);
 	    }else{
 		curaddptt(iopdevl, cudata->perf->locs->p, cuperf_t::coeff->p[ievl]->p, -1, 0, 0, stream);
@@ -472,8 +472,8 @@ void gpu_perfevl_sync(thread_t *info){
 	/*lock the mutex because iopdevl, evlwvf is allocated per GPU.*/
 	gpu_set(cudata_t::evlgpu[ievl]);
 	cudaStream_t stream=cuperf_t::stream[ievl];
-	const double thetax=parms->evl.thetax[ievl];
-	const double thetay=parms->evl.thetay[ievl];
+	const double thetax=parms->evl.thetax->p[ievl];
+	const double thetay=parms->evl.thetay->p[ievl];
 	/*Setup pointers for easy usage */
 	PDMAT(simu->clmp->p[ievl],pclmp);
 	PDMAT(simu->olmp->p[ievl],polmp);/*OL mode for each dir */
@@ -495,7 +495,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
     const int nloc=aper->locs->nloc;
     const int nwvl=parms->evl.nwvl;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	if(parms->evl.psfngsr[ievl]==0){
+	if(parms->evl.psfngsr->p[ievl]==0){
 	    continue;
 	}
 	warning("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
@@ -504,9 +504,9 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	cudaStream_t stream=cuperf_t::stream[ievl];
 	cublasHandle_t handle=cuperf_t::handle[ievl];
 	gpu_ngsmod2science(iopdevl, cudata->perf->locs->p, simu->recon->ngsmod, cleNGSm, 
-			   parms->evl.thetax[ievl], parms->evl.thetay[ievl],
+			   parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
 			   -1, stream);
-	if(parms->evl.pttr[ievl]){
+	if(parms->evl.pttr->p[ievl]){
 	    double ptt[3];
 	    calc_ptt_do<<<DIM(nloc,TT_NBX), 0, stream>>>	
 		(cuperf_t::cc_cl->p[ievl]->p, cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp); 
@@ -584,7 +584,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	if(cuperf_t::psfcl){
 	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->evl.psf[ievl] || parms->evl.psfngsr[ievl]==2) continue;
+		if(!parms->evl.psf->p[ievl] || parms->evl.psfngsr->p[ievl]==2) continue;
 		gpu_set(cudata_t::evlgpu[ievl]);
 		cudaStream_t stream=cuperf_t::stream[ievl];
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -601,7 +601,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	if(cuperf_t::psfcl_ngsr){
 	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->evl.psf[ievl] || !parms->evl.psfngsr[ievl]) continue;
+		if(!parms->evl.psf->p[ievl] || !parms->evl.psfngsr->p[ievl]) continue;
 		gpu_set(cudata_t::evlgpu[ievl]);
 		cudaStream_t stream=cuperf_t::stream[ievl];
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -620,7 +620,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	info2("Step %d: Output opdcov\n", isim);
 	double scale=1./(isim+1-parms->evl.psfisim);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psf[ievl]|| parms->evl.psfngsr[ievl]==2) continue;
+	    if(!parms->evl.psf->p[ievl]|| parms->evl.psfngsr->p[ievl]==2) continue;
 	    gpu_set(cudata_t::evlgpu[ievl]);
 	    cudaStream_t stream=cuperf_t::stream[ievl];
 	    curmat *pp;
@@ -638,7 +638,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	    }
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psf[ievl]|| !parms->evl.psfngsr[ievl]) continue;
+	    if(!parms->evl.psf->p[ievl]|| !parms->evl.psfngsr->p[ievl]) continue;
 	    gpu_set(cudata_t::evlgpu[ievl]);
 	    cudaStream_t stream=cuperf_t::stream[ievl];
 	    curmat *pp;

@@ -15,7 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file misc.c
+   
+   Miscellaneous routines.
+*/
 #include "misc.h"
 /**
    add photon and read out noise.  pcalib part of bkgrnd is calibrated

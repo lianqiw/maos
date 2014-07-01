@@ -519,7 +519,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs[0];
+	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];
 	int nsa=powfs[ipowfs].pts->nsa;
 	int do_ref=0;
 	if(parms->powfs[ipowfs].neareconfile){/*taks precedance */
@@ -547,7 +547,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		if(nnea==1){
 		    indsanea=0;
 		}else if(nnea==parms->powfs[ipowfs].nwfs){
-		    indsanea=parms->powfs[ipowfs].wfsind[iwfs];
+		    indsanea=parms->powfs[ipowfs].wfsind->p[iwfs];
 		}else{
 		    error("invalid\n");
 		}
@@ -706,7 +706,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		recon->TT->p[ipowfs*(parms->npowfs+1)]=ddup(TT);
 	    }else{
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    recon->TT->p[iwfs*(1+parms->nwfsr)]=ddup(TT);
 		}
 	    }
@@ -750,7 +750,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	       postive focus on first wfs. negative focus on diagnonal wfs.
 	    */
 	    for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		if(parms->powfs[ipowfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
@@ -890,7 +890,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->xloc=recon->xloc;
 	recon->fractal->r0=parms->atmr.r0;
 	recon->fractal->l0=parms->atmr.l0;
-	recon->fractal->wt=parms->atmr.wt;
+	recon->fractal->wt=parms->atmr.wt->p;
 	recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
 	recon->fractal->ninit=parms->tomo.ninit;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
@@ -1196,14 +1196,14 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    recon->sanea=spcellread("nt");
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psfr[ievl]) continue;
+	    if(!parms->evl.psfr->p[ievl]) continue;
 	    dcell *hxt=dcellnew(recon->npsr, 1);
-	    double hs=parms->evl.hs[ievl];
+	    double hs=parms->evl.hs->p[ievl];
 	    for(int ips=0; ips<recon->npsr; ips++){
 		const double ht=recon->ht->p[ips];
 		const double scale=1.-ht/hs;
-		const double dispx=parms->evl.thetax[ievl]*ht;
-		const double dispy=parms->evl.thetay[ievl]*ht;
+		const double dispx=parms->evl.thetax->p[ievl]*ht;
+		const double dispy=parms->evl.thetay->p[ievl]*ht;
 		dsp *HXT=mkhb(recon->xloc[ips], aper->locs, NULL,
 			      dispx, dispy, scale, 0, 0);
 		spfull(&hxt->p[ips], HXT, 1); spfree(HXT);
@@ -1239,11 +1239,11 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
 	recon->ecnn=dcellnew(parms->evl.nevl, 1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psfr[ievl]) continue;
+	    if(!parms->evl.psfr->p[ievl]) continue;
 	    tic;
 	    char strht[24];
-	    if(!isinf(parms->evl.hs[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
+	    if(!isinf(parms->evl.hs->p[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.hs->p[ievl]);
 	    }else{
 		strht[0]='\0';
 	    }
@@ -1253,12 +1253,12 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    PDMAT(t1, pt1);
 	    PDMAT(x1, px1);
 	    int ind=0;
-	    double hs=parms->evl.hs[ievl];
+	    double hs=parms->evl.hs->p[ievl];
 	    for(int ips=0; ips<recon->npsr; ips++){
 		const double ht=recon->ht->p[ips];
 		const double scale=1.-ht/hs;
-		const double dispx=parms->evl.thetax[ievl]*ht;
-		const double dispy=parms->evl.thetay[ievl]*ht;
+		const double dispx=parms->evl.thetax->p[ievl]*ht;
+		const double dispy=parms->evl.thetay->p[ievl]*ht;
 		for(int icol=0; icol<t1->ny; icol++){
 		    prop_nongrid(recon->xloc[ips], &pt1[icol][ind], aper->locs, NULL,
 				 px1[icol], 1, dispx, dispy, scale, 0, 0);
@@ -1271,8 +1271,8 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    dfree(x1);
 	    info("CPU Usage: %.1f Mul   ", read_self_cpu()); toc2(" ");
 	    dwrite(recon->ecnn->p[ievl], "ecnn_x%g_y%g%s.bin", 
-		   parms->evl.thetax[ievl]*206265,
-		   parms->evl.thetay[ievl]*206265, strht);
+		   parms->evl.thetax->p[ievl]*206265,
+		   parms->evl.thetay->p[ievl]*206265, strht);
 	}
 	dfree(t1);
     }
@@ -1682,7 +1682,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    dwrite(psd_ngs, "psd_ngs_servo");
 	    dmat *rss2=dnew(1,1); rss2->p[0]=rss;
-	    int dtrat=parms->powfs[parms->lopowfs[0]].dtrat;
+	    int dtrat=parms->powfs[parms->lopowfs->p[0]].dtrat;
 	    dcell *res=servo_optim(psd_ngs, parms->sim.dt, 
 				   dtrat, M_PI/4, rss2, 2); 
 	    dfree(rss2);
@@ -1822,7 +1822,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	/*the following will be updated later in simulation. */
 	if(parms->cn2.keepht){
 	    for(int ips=0; ips<recon->wt->nx; ips++){
-		recon->wt->p[ips]=parms->atmr.wt[ips];
+		recon->wt->p[ips]=parms->atmr.wt->p[ips];
 	    }
 	}else{
 	    dset(recon->wt, 1./recon->wt->nx);/*evenly distributed.  */
@@ -1832,9 +1832,9 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	recon->ht=dnew(parms->atmr.nps,1);
 	recon->os=dnew(parms->atmr.nps,1);
 	for(int ips=0; ips<recon->wt->nx; ips++){
-	    recon->wt->p[ips]=parms->atmr.wt[ips];
-	    recon->ht->p[ips]=parms->atmr.ht[ips];
-	    recon->os->p[ips]=parms->atmr.os[ips];
+	    recon->wt->p[ips]=parms->atmr.wt->p[ips];
+	    recon->ht->p[ips]=parms->atmr.ht->p[ips];
+	    recon->os->p[ips]=parms->atmr.os->p[ips];
 	}
     }
     recon->r0=parms->atmr.r0;

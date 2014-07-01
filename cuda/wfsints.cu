@@ -330,7 +330,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const Real hs=parms->wfs[iwfs].hs;
     const Real dtisim=parms->sim.dt*isim;
     const int nsa=powfs[ipowfs].pts->nsa;
@@ -376,13 +376,13 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	}else{
 	    curzero(lltopd, stream);
 	}
-	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
-	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
-	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
+	const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
+	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
+	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
 	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc,
 		    hs, thetaxl, thetayl, 
-		    parms->powfs[ipowfs].llt->misreg[0], 
-		    parms->powfs[ipowfs].llt->misreg[1], 
+		    parms->powfs[ipowfs].llt->misreg->p[0], 
+		    parms->powfs[ipowfs].llt->misreg->p[1], 
 		    dtisim, 1, stream);
 	Real ttx=0,tty=0;
 	if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
@@ -426,7 +426,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	}else{
 	    lotfc=lwvf;
 	}
-	if(parms->save.wfsopd[iwfs]){
+	if(parms->save.wfsopd->p[iwfs]){
 	    cellarr_cur(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
 	}
     }/*if has llt */
@@ -454,7 +454,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     }
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	Real wvl=parms->powfs[ipowfs].wvl[iwvl];
+	Real wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	Real dtheta=wvl/(nwvf*powfs[ipowfs].pts->dx);
 	if(lltopd){ /*First calculate LOTF */
 	    int nlx=powfs[ipowfs].llt->pts->nx;
@@ -585,7 +585,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		    (ints->p[isa]->p, pixpsax, pixpsay, 
 		     (Real)parms->powfs[ipowfs].pixoffx, (Real)parms->powfs[ipowfs].pixoffy,
 		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
-		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
+		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("final");
 	    }/*if ints. */
 	}/*for isa block loop */

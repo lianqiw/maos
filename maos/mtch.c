@@ -140,7 +140,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     double neaspeckle2=pow(neaspeckle,2);
     for(int ii0=0; ii0<ni0; ii0++){
-	int iwfs=parms->powfs[ipowfs].wfs[ii0];
+	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	double *srot=NULL;
 	if(powfs[ipowfs].srot){
 	    int irot=ii0*irot_multiplier;

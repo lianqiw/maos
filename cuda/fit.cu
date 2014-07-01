@@ -68,9 +68,9 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     }
     dir=new dir_t[nfit];
     for(int ifit=0; ifit<nfit; ifit++){
-	dir[ifit].thetax=parms->fit.thetax[ifit];
-	dir[ifit].thetay=parms->fit.thetay[ifit];
-	dir[ifit].hs=parms->fit.hs[ifit];
+	dir[ifit].thetax=parms->fit.thetax->p[ifit];
+	dir[ifit].thetay=parms->fit.thetay->p[ifit];
+	dir[ifit].hs=parms->fit.hs->p[ifit];
 	dir[ifit].skip=0;
     }
     /*Various*/

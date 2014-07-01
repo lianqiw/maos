@@ -15,30 +15,21 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_LIB_IMAT_H
-#define AOS_LIB_IMAT_H
-/**
-   \file imat.h
-   Routines for imat.
-*/
-typedef struct imat{
-    long nx;
-    long ny;
-    long *p;
-}imat;
 
-typedef struct icell{
-    long nx;
-    long ny;
-    imat **p;
-}icell;
+typedef struct{
+    const loc_t *loc; /*reference to the grid*/
+    const dmat *amp;  /*reference to the amplitude map*/
+    const dmat *wvl;  /*reference to the wavelength*/
+    imat  *nembed;/**<size of embedding array (square)*/
+    icell *embed; /**<embedding index*/
+    double ampsum;/**<sum(amp)*/
+    double ampnorm;/**<sum(amp.*amp)*/
+    dcell *fieldmask;/**<Masking the PSF in fourier domain*/
+    double fieldstop;
+}locfft_t;
 
-imat* inew(long nx, long ny);
-void iresize(imat *A, long nx, long ny);
-icell* icellnew(long nx, long ny);
-void ifree(imat *A);
-void icellfree(icell *A);
-void iwrite(const imat *A, const char *format, ...);
-void icellwrite(const icell *A, const char *format, ...);
-long isum(const imat *A);
-#endif
+locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const imat *fftsize,
+		      const dmat *wvl, double fieldstop); 
+void locfft_free(locfft_t *locfft);
+ccell* locfft_psf(locfft_t *locfft, dmat *opd, imat *psfsize);
+void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts);

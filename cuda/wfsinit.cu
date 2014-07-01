@@ -55,9 +55,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
 	    if(parms->powfs[ipowfs].fieldstop){
-		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc, 1);
-		cupowfs[ipowfs].nembed=powfs[ipowfs].nembed;
-		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop);
+		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].fieldstop->embed->p[0]->p, powfs[ipowfs].loc->nloc, 1);
+		cupowfs[ipowfs].nembed=powfs[ipowfs].fieldstop->nembed->p[0];
+		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop->fieldmask->p[0]);
 	    }
 	}
     }
@@ -71,8 +71,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nsa=powfs[ipowfs].pts->nsa;
 	const int nwvl=parms->powfs[ipowfs].nwvl;
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	const int iwfs0=parms->powfs[ipowfs].wfs[0];
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int ndm=parms->ndm;
 	/*imcc for ztilt. */
@@ -408,7 +408,7 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	gpu_set(cudata_t::wfsgpu[iwfs]);
 	cuwfs_t *cuwfs=cudata_t::wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
 	    cp2gpu(&cuwfs[iwfs].opdadd, powfs[ipowfs].opdadd->p[wfsind]);
 	    dfree(powfs[ipowfs].opdadd->p[wfsind]);/*no longer need it in CPU memory. */

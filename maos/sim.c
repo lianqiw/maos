@@ -61,9 +61,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon){
     double ck_0, ck_end;
     double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-	if(parms->fdlock && parms->fdlock[iseed]<0){
-	    warning("Another MAOS is already running. Skip seed %d\n", 
-		    parms->sim.seeds[iseed]);
+	if(parms->fdlock && parms->fdlock->p[iseed]<0){
+	    warning("Another MAOS is already running. Skip seed %ld\n", 
+		    parms->sim.seeds->p[iseed]);
 	    continue;
 	}
 	extern int draw_single;

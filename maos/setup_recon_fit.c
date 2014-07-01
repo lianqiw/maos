@@ -35,13 +35,13 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	recon->HXF=spcellnew(nfit, npsr);
 	PDSPCELL(recon->HXF,HXF);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs[ifit];
+	    double hs=parms->fit.hs->p[ifit];
 	    for(int ips=0; ips<npsr; ips++){
 		const double ht = recon->ht->p[ips];
 		const double scale=1.-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax[ifit]*ht;
-		displace[1]=parms->fit.thetay[ifit]*ht;
+		displace[0]=parms->fit.thetax->p[ifit]*ht;
+		displace[1]=parms->fit.thetay->p[ifit]*ht;
 		HXF[ips][ifit]=mkh(recon->xloc[ips], recon->floc, NULL,
 				   displace[0], displace[1], scale,
 				   parms->tomo.cubic, parms->tomo.iac);
@@ -247,7 +247,7 @@ void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
     /*copy over fitwt since we need a dmat */
     int nfit=parms->fit.nfit;
     recon->fitwt=dnew(nfit,1);
-    memcpy(recon->fitwt->p,parms->fit.wt,sizeof(double)*nfit);
+    dcp(&recon->fitwt,parms->fit.wt);
     
     /*always assemble fit matrix, faster if many directions */
     if(parms->fit.assemble){

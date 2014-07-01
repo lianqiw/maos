@@ -63,9 +63,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	cuperf_t::wvls   =(Real*)calloc(nwvl, sizeof(Real));
     
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cuperf_t::nembed[iwvl]=(int)aper->nembed[iwvl];
-	    cuperf_t::psfsize[iwvl]=parms->evl.psfsize[iwvl];
-	    cuperf_t::wvls[iwvl]=parms->evl.wvl[iwvl];
+	    cuperf_t::nembed[iwvl]=(int)aper->embed->nembed->p[iwvl];
+	    cuperf_t::psfsize[iwvl]=parms->evl.psfsize->p[iwvl];
+	    cuperf_t::wvls[iwvl]=parms->evl.wvl->p[iwvl];
 	}
     }
     /*The following lives in GPU. */
@@ -79,7 +79,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    cudata->perf->embed    = (int**) calloc(nwvl, sizeof(int*));
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cp2gpu(&cudata->perf->embed[iwvl], aper->embed[iwvl], aper->locs->nloc, 1);
+		cp2gpu(&cudata->perf->embed[iwvl], aper->embed->embed->p[iwvl]->p, aper->locs->nloc, 1);
 	    }
 	}
     }/*for igpu */
@@ -191,15 +191,15 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 
     if(parms->evl.cov && parms->gpu.psf && !parms->sim.evlol){
 	for(int ievl=0; ievl<nevl; ievl++){
-	    if(parms->evl.psf[ievl]==0){
+	    if(parms->evl.psf->p[ievl]==0){
 		continue;
 	    }
 	    gpu_set(cudata_t::evlgpu[ievl]);
-	    if(parms->evl.psfngsr[ievl]){
+	    if(parms->evl.psfngsr->p[ievl]){
 		initzero(&cuperf_t::opdcov_ngsr->p[ievl], nloc,nloc);
 		initzero(&cuperf_t::opdmean_ngsr->p[ievl], nloc,1);
 	    }
-	    if(parms->evl.psfngsr[ievl]!=2){
+	    if(parms->evl.psfngsr->p[ievl]!=2){
 		initzero(&cuperf_t::opdcov->p[ievl],nloc,nloc);
 		initzero(&cuperf_t::opdmean->p[ievl],nloc,1);
 	    }
@@ -232,16 +232,16 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 	}
 	if(!parms->sim.evlol){
 	    for(int ievl=0; ievl<nevl; ievl++){
-		if(parms->evl.psf[ievl]==0){
+		if(parms->evl.psf->p[ievl]==0){
 		    continue;
 		}
 		gpu_set(cudata_t::evlgpu[ievl]);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    if(parms->evl.psfngsr[ievl]){
+		    if(parms->evl.psfngsr->p[ievl]){
 			initzero(&cuperf_t::psfcl_ngsr->p[iwvl+nwvl*ievl], 
 				 cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 		    }
-		    if(parms->evl.psfngsr[ievl]!=2){
+		    if(parms->evl.psfngsr->p[ievl]!=2){
 			initzero(&cuperf_t::psfcl->p[iwvl+nwvl*ievl],
 				 cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 		    }

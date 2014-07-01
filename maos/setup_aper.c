@@ -79,12 +79,12 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->amp=dnew(aper->locs->nloc, 1);
 	if(aper->ampground){
 	    prop_grid(aper->ampground, aper->locs, 0, aper->amp->p, 1,
-		      -parms->misreg.pupil[0], -parms->misreg.pupil[1],
+		      -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1],
 		      1, 0, 0, 0);
 	}else{
 	    warning2("Using locannular to create a gray pixel aperture\n");
 	    locannular(aper->amp->p, aper->locs,
-		       parms->misreg.pupil[0], parms->misreg.pupil[1],
+		       parms->misreg.pupil->p[0], parms->misreg.pupil->p[1],
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
@@ -133,7 +133,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     aper->amp1=ddup(aper->amp);
     /*normalize amp to sum to 1. */
     normalize_sum(aper->amp->p, aper->locs->nloc, 1);
-   
+    aper->sumamp2=dnorm2(aper->amp);
     aper->mcc=loc_mcc_ptt(aper->locs, aper->amp->p);
     aper->ipcc=1./aper->mcc->p[0];/*piston inverse. should be 1 since amp is normlaized. */
     aper->imcc=dinvspd(aper->mcc);/*pttr inverse */
@@ -154,28 +154,16 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	dwrite(aper->amp, "%s/aper_amp",dirsetup);
 	dwrite(aper->mcc, "%s/aper_mcc",dirsetup);
     }
-    aper->sumamp2=0;
-    if(aper->amp){
-	for(long iloc=0; iloc<aper->locs->nloc; iloc++){
-	    aper->sumamp2+=pow(aper->amp->p[iloc],2);
-	}
-    }
+
     if(parms->evl.psfmean || parms->evl.psfhist){
-	const int nwvl=parms->evl.nwvl;
-	aper->nembed=calloc(nwvl, sizeof(long));
-	aper->embed=calloc(nwvl, sizeof(long*));
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
-	    if(iwvl>0 && aper->nembed[iwvl]==aper->nembed[0]){
-		aper->embed[iwvl]=aper->embed[0];
-	    }else{
-		aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2, 0);
-	    }
-	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
-		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
+	aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.psfgridsize, parms->evl.wvl, 0);
+	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+	    long nembed=aper->embed->nembed->p[iwvl];
+	    if(parms->evl.psfsize->p[iwvl]<1 || parms->evl.psfsize->p[iwvl] > nembed){
+		parms->evl.psfsize->p[iwvl] = nembed;
 	    }
 	    info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
-		  iwvl, aper->nembed[iwvl], aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]);
+		  iwvl, nembed, aper->sumamp2*nembed*nembed);
 	}
     }
     toc2("setup_aper");
@@ -191,15 +179,7 @@ void free_aper(APER_T *aper, const PARMS_T *parms){
     dfree(aper->imcc);
     dfree(aper->mcc);
     dfree(aper->mod);
-    if(aper->embed){
-	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-	    if(iwvl==0 || aper->embed[iwvl]!=aper->embed[0]){
-		free(aper->embed[iwvl]);
-	    }
-	}
-	free(aper->embed);
-	free(aper->nembed);
-    }
+    locfft_free(aper->embed);
     dcellfree(aper->opdadd);
     free(aper);
 }

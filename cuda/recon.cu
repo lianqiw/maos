@@ -171,9 +171,9 @@ namespace cuda_recon{
 		    dm_moao[imoao][count]=curcellnew(1,1, anx, any);
 		    dm_evl->p[ievl]=dm_moao[imoao][count]->p[0]->ref();
 		    moao_gevl->p[ievl]=parms->moao[imoao].gdm;
-		    dir[count].thetax=parms->evl.thetax[ievl];
-		    dir[count].thetay=parms->evl.thetay[ievl];
-		    dir[count].hs=parms->evl.hs[ievl];
+		    dir[count].thetax=parms->evl.thetax->p[ievl];
+		    dir[count].thetay=parms->evl.thetay->p[ievl];
+		    dir[count].hs=parms->evl.hs->p[ievl];
 		    count++;
 		}
 	    }
@@ -207,7 +207,7 @@ namespace cuda_recon{
 void curecon_t::update(const PARMS_T *parms, RECON_T *recon){
     if(parms->tomo.predict){
 	for(int ips=0; ips<recon->npsr; ips++){ 
-	    int ips0=parms->atmr.indps[ips]; 
+	    int ips0=parms->atmr.indps->p[ips]; 
 	    grid->xmap[ips].vx=cudata->atm[ips0].vx;
 	    grid->xmap[ips].vy=cudata->atm[ips0].vy;
 	}

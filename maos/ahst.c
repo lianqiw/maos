@@ -88,8 +88,8 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    PDMAT(mcc->p[ievl],MCC);
 	    if(fabs(wt[ievl])<1.e-12) continue;
-	    double thetax=parms->evl.thetax[ievl];
-	    double thetay=parms->evl.thetay[ievl];
+	    double thetax=parms->evl.thetax->p[ievl];
+	    double thetay=parms->evl.thetay->p[ievl];
 	    for(int iloc=0; iloc<nloc; iloc++){
 		double xx=x[iloc]*x[iloc];
 		double xy=x[iloc]*y[iloc];
@@ -136,7 +136,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
    weighting in PLOC.  */
 static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon, 
 			 APER_T *aper, int use_ploc){
-    const double *wt=parms->evl.wt;
+    const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
     loc_t *loc;
     double *amp=NULL;
@@ -152,8 +152,8 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
     spcell *Wa=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
-	double thetax=parms->evl.thetax[ievl];
-	double thetay=parms->evl.thetay[ievl];
+	double thetax=parms->evl.thetax->p[ievl];
+	double thetay=parms->evl.thetay->p[ievl];
 
 	spcell *Hat=spcellnew(ndm,1);
 	spcell *Ha=spcellnew(1,ndm);
@@ -190,7 +190,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     const double ht=ngsmod->ht;
     const double scale=ngsmod->scale;
     const double scale1=1.-scale;
-    const double *wt=parms->evl.wt;
+    const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
     const int nmod=ngsmod->nmod;
     loc_t *loc;
@@ -224,8 +224,8 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
-	double thetax=parms->evl.thetax[ievl];
-	double thetay=parms->evl.thetay[ievl];
+	double thetax=parms->evl.thetax->p[ievl];
+	double thetay=parms->evl.thetay->p[ievl];
 	if(nmod>=5){
 	    for(int iloc=0; iloc<nloc; iloc++){
 		double xx=x[iloc]*x[iloc];
@@ -290,7 +290,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon, 
 			    APER_T *aper, int use_ploc){
     NGSMOD_T *ngsmod=recon->ngsmod;
-    const double *wt=parms->evl.wt;
+    const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
     const int nmod=2;
     loc_t *loc;
@@ -321,8 +321,8 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
-	double thetax=parms->evl.thetax[ievl];
-	double thetay=parms->evl.thetay[ievl];
+	double thetax=parms->evl.thetax->p[ievl];
+	double thetay=parms->evl.thetay->p[ievl];
 	spcell *Hat=spcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
@@ -412,8 +412,8 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
 	    HM[imod][ievl]=dnew(nloc,1);
 	    for(int idm=0; idm<parms->ndm; idm++){
 		double ht=parms->dm[idm].ht;
-		double displacex=parms->evl.thetax[ievl]*ht;
-		double displacey=parms->evl.thetay[ievl]*ht;
+		double displacex=parms->evl.thetax->p[ievl]*ht;
+		double displacey=parms->evl.thetay->p[ievl]*ht;
 		prop_nongrid(aloc[idm], 
 			     dmt->p[idm]->p,
 			     aper->locs, NULL, HM[imod][ievl]->p,1,
@@ -441,8 +441,8 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
     double *y=aper->locs->locy;
     int nloc=aper->locs->nloc;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	double sx=parms->evl.thetax[ievl];
-	double sy=parms->evl.thetay[ievl];
+	double sx=parms->evl.thetax->p[ievl];
+	double sy=parms->evl.thetay->p[ievl];
 	for(int imod=0; imod<nmod; imod++){
 	    HM[imod][ievl]=dnew(nloc,1);
 	}
@@ -513,13 +513,13 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }
     ngsmod->scale=pow(1.-ngsmod->ht/ngsmod->hs,-2);
     /*modal cross coupling matrix along science*/
-    ngsmod->MCCP=ngsmod_mcc(parms,recon,aper, parms->evl.wt);
+    ngsmod->MCCP=ngsmod_mcc(parms,recon,aper, parms->evl.wt->p);
     if(ngsmod->MCCP->nx==1){
 	ngsmod->MCC=dref(ngsmod->MCCP->p[0]);
     }else{
 	ngsmod->MCC=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt[ievl]);
+	    dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt->p[ievl]);
 	}
     }
     if(parms->save.setup){
@@ -668,8 +668,8 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
     const double scale1=1.-scale;
     double coeff[6]={0,0,0,0,0,0};
     double tot=0;
-    const double thetax=parms->evl.thetax[ievl]; 
-    const double thetay=parms->evl.thetay[ievl]; 
+    const double thetax=parms->evl.thetax->p[ievl]; 
+    const double thetay=parms->evl.thetay->p[ievl]; 
     if(recon->ngsmod->nmod==2){
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 	    const double junk=amp[iloc]*opd[iloc];

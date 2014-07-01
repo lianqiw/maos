@@ -195,7 +195,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    if(parms->powfs[ipowfs].dfrs){//deprecated.	
 		/*We only use the first diagonal block for each powfs. The
 		  off diagonal is simply -1/(nlgswfs-1) times the diagonal block*/
-		int iwfs1=parms->powfs[ipowfs].wfs[1];//second wfs
+		int iwfs1=parms->powfs[ipowfs].wfs->p[1];//second wfs
 		cp2gpu(&PDF->p[ipowfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
 		if(parms->powfs[ipowfs].trs){
 		    /*coupling between TT and DF modes. 
@@ -251,7 +251,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	/*convert recon->saneai to gpu. */
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
 	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
 		neai->p[iwfs]=neai->p[iwfs0]->ref();
@@ -272,7 +272,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    if(parms->powfs[ipowfs].skip) continue;
 	    GPDATA[iwfs].ipowfs=ipowfs;
 	    GPDATA[iwfs].nwfs=parms->powfs[ipowfs].nwfsr;
-	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind[iwfs];//wfs index in this group
+	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];//wfs index in this group
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
 	    GPDATA[iwfs].saptr=(int(*)[2])saptr->p[ipowfs]->p;

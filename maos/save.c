@@ -42,8 +42,8 @@ void save_gradol(SIM_T *simu){
     if(parms->save.ngcov>0){
 	/*Outputing psol gradient covariance. */
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    int iwfs1=parms->save.gcov[igcov*2];
-	    int iwfs2=parms->save.gcov[igcov*2+1];
+	    int iwfs1=parms->save.gcov->p[igcov*2];
+	    int iwfs2=parms->save.gcov->p[igcov*2+1];
 	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
 	    dmm(&simu->gcov->p[igcov], 1, simu->gradlastol->p[iwfs1], simu->gradlastol->p[iwfs2],"nt",1);
 	}
@@ -184,8 +184,8 @@ void save_recon(SIM_T *simu){
     if(parms->save.ngcov>0 && CHECK_SAVE(parms->sim.start, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.gcovp)){
 	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    dswrite(simu->gcov->p[igcov], scale, "gcov_%d_wfs%d_%d_%d.bin", seed,
-		    parms->save.gcov[igcov*2], parms->save.gcov[igcov*2+1],
+	    dswrite(simu->gcov->p[igcov], scale, "gcov_%d_wfs%ld_%ld_%d.bin", seed,
+		    parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
 		    simu->reconisim+1);
 	}
     }
@@ -199,14 +199,14 @@ void save_recon(SIM_T *simu){
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!simu->ecov->p[ievl]) continue;
-		if(isfinite(parms->evl.hs[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
+		if(isfinite(parms->evl.hs->p[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.hs->p[ievl]);
 		}else{
 		    strht[0]='\0';
 		}
 		dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
-			parms->evl.thetax[ievl]*206265,
-			parms->evl.thetay[ievl]*206265, strht, nstep);
+			parms->evl.thetax->p[ievl]*206265,
+			parms->evl.thetay->p[ievl]*206265, strht, nstep);
 	    }
 	}
     }

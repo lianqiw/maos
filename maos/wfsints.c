@@ -46,9 +46,9 @@ void wfsints(thread_t *thread_data){
     const int isa_start=thread_data->start;
     const int isa_end=thread_data->end;
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
-    const int illt=hasllt?parms->powfs[ipowfs].llt->i[wfsind]:0;
+    const int illt=hasllt?parms->powfs[ipowfs].llt->i->p[wfsind]:0;
     const double *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
@@ -140,7 +140,7 @@ void wfsints(thread_t *thread_data){
     }
     double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	const double dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
 	/* uplink llt opd*/
 	if(lltopd){
@@ -196,7 +196,7 @@ void wfsints(thread_t *thread_data){
 	    /*embed amp/opd to complex wvf with a embedding factor of 2. */
 	    cembed_wvf(wvf,opd->p+ioffset, 
 		       realamp+ioffset,nopd,nopd,
-		       parms->powfs[ipowfs].wvl[iwvl],0);
+		       parms->powfs[ipowfs].wvl->p[iwvl],0);
 	    if(use1d){ /*use 1d fft */
 		cfft2partial(wvf,notf, -1);
 	    }else{
@@ -265,7 +265,7 @@ void wfsints(thread_t *thread_data){
 		/*max(otf) is 1 after multiply with norm. peak in corner  */
 		cfft2(otf,1);
 		/*Now peak in center because nominal is pre-treated.  */
-		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm_ints);
+		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts->p[iwvl]*norm_ints);
 	    }
 	}/*isa */
     }/*iwvl */

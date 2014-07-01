@@ -519,7 +519,57 @@ int readcfg_intarr(int **ret, const char *format,...){
     format2key;
     return readstr_numarr((void**)ret, 0,NULL,NULL, T_INT, store[getrecord(key, 1)].data);
 }
-
+/**
+   Read as an imat.
+ */
+imat *readcfg_imat_do(int n, char *key){
+    long *val=0;
+    long **ret=&val;
+    int nx, ny;
+    readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, store[getrecord(key, 1)].data);
+    imat *out=0;
+    out=inew(nx,ny);
+    memcpy(out->p, val, sizeof(long)*nx*ny);
+    free(val);
+    return out;
+}
+/**
+   Read as an imat. 
+ */
+imat *readcfg_imat(const char *format,...){
+    format2key;
+    return readcfg_imat_do(0, key);
+}
+/**
+   Read as an imat. Exactly n numbers if n>0
+ */
+imat *readcfg_imat_n(int n, const char *format,...){
+    format2key;
+    imat *out=readcfg_imat_do(n, key);
+    int nread=out->nx*out->ny;
+    if(n!=0 && nread!=n){
+	error("Need %d elements, got %d\n", n, nread);
+    }
+    return out;
+}
+/**
+   Read as an imat. A max of n numbers
+ */
+imat *readcfg_imat_nmax(int n, const char *format,...){
+    format2key;
+    imat *out=readcfg_imat_do(n, key);
+    int nread=out->nx*out->ny;
+    if(nread==1){
+	iresize(out, n, 1);
+	out->nx=n; out->ny=1;
+	for(int i=1; i<n; i++){
+	    out->p[i]=out->p[0];
+	}
+    }else if(nread!=0 && nread!=n){
+	error("Need %d elements, got %ld\n", n, out->nx*out->ny);
+    }
+    return out;
+}
 /**
    Read double array
 */
@@ -530,8 +580,7 @@ int readcfg_dblarr(double **ret, const char *format,...){
 /**
    Read as a dmat. It can be a file name or an array.
  */
-dmat *readcfg_dmat(const char *format,...){
-    format2key;
+dmat *readcfg_dmat_do(int n, char *key){
     double *val=NULL;
     int nx, ny;
     char *str=store[getrecord(key, 1)].data;
@@ -543,11 +592,47 @@ dmat *readcfg_dmat(const char *format,...){
 	free(fn);
     }else{
         double **pval=&val;
-	readstr_numarr((void**)pval, 0, &nx, &ny,T_DBL, str);
-	dmat *res=(nx&&ny)?dnew_data(nx, ny, val):0;
-	if(!res) free(val);
+	readstr_numarr((void**)pval, n, &nx, &ny,T_DBL, str);
+	if(!nx || !ny) {free(val); val=0;}
+	dmat *res=dnew_data(nx, ny, val);
 	return res;
     }
+}
+/**
+   Read as a dmat. It can be a file name or an array.
+ */
+dmat *readcfg_dmat(const char *format,...){
+    format2key;
+    return readcfg_dmat_do(0, key);
+}
+/**
+   Read as a dmat. It can be a file name or an array.
+ */
+dmat *readcfg_dmat_n(int n, const char *format,...){
+    format2key;
+    dmat *out=readcfg_dmat_do(n, key);
+    int nread=out->nx*out->ny;
+    if(n!=0 && nread!=n){
+	error("Need %d elements, got %d\n", n, nread);
+    }
+    return out;
+}
+/**
+   Read as a dmat. It can be a file name or an array.
+ */
+dmat *readcfg_dmat_nmax(int n, const char *format,...){
+    format2key;
+    dmat *out=readcfg_dmat_do(n, key);
+    int nread=out->nx*out->ny;
+    if(nread==1){
+	dresize(out, n, 1);
+	for(int i=1; i<n; i++){
+	    out->p[i]=out->p[0];
+	}
+    }else if(nread!=0 && nread!=n){
+	error("Need %d elements, got %ld\n", n, out->nx*out->ny);
+    }
+    return out;
 }
 /**
    Read string array of len elements

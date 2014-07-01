@@ -326,12 +326,12 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int imoao=parms->powfs[ipowfs].moao;
 	const int nsa=powfs[ipowfs].pts->nsa;
-	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
-	const int save_gradgeom=parms->save.gradgeom[iwfs];
-	const int save_opd =parms->save.wfsopd[iwfs];
-	const int save_ints=parms->save.ints[iwfs];
+	const int save_gradgeom=parms->save.gradgeom->p[iwfs];
+	const int save_opd =parms->save.wfsopd->p[iwfs];
+	const int save_ints=parms->save.ints->p[iwfs];
 	const int noisy=parms->powfs[ipowfs].noisy;
 	/*The following depends on isim */
 	const int dtrat_output=((isim+1)%dtrat==0);
@@ -403,7 +403,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(parms->powfs[ipowfs].fieldstop){
 	    gpu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed, cupowfs[ipowfs].nembed, 
-			  cupowfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0], cuwfs[iwfs].plan_fs, stream);
+			  cupowfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
 	}
 	if(save_opd){
 	    cellarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
@@ -545,7 +545,7 @@ void gpu_wfsgrad_sync(thread_t *info){
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int dtrat_output=((isim+1)%dtrat==0);
     if(dtrat_output){
-	const int save_gradgeom=parms->save.gradgeom[iwfs];
+	const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
 	curmat *gradacc=cuwfs[iwfs].gradacc;
 	curmat *gradcalc=cuwfs[iwfs].gradcalc;

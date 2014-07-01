@@ -32,7 +32,7 @@ cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, in
     :iwfs(_iwfs),igpu(_igpu){
     info("cuwfs_info[%d]\n", iwfs);
     int ipowfs=parms->wfs[iwfs].powfs;
-    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     loc=new culoc_t(powfs[ipowfs].loc);
     cp2gpu(&amp, powfs[ipowfs].realamp->p[wfsind]);
     cp2gpu(&embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc, 1);
@@ -80,7 +80,7 @@ struct wfscfg_t{
     stream_t& stream;
     wfscfg_t(const PARMS_T *_parms, const POWFS_T *_powfs, int _iwfs, stream_t&_stream)
 	:parms(_parms),powfs(_powfs),iwfs(_iwfs),ipowfs(parms->wfs[_iwfs].powfs),
-	 wfsind(parms->powfs[ipowfs].wfsind[_iwfs]), stream(_stream){};
+	 wfsind(parms->powfs[ipowfs].wfsind->p[_iwfs]), stream(_stream){};
     
 };
 cuwfs_base::cuwfs_base(wfscfg_t *wfscfg):
@@ -328,11 +328,11 @@ cuwfs_t::cuwfs_t(const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int igpu)
     gpu_set(igpu);
     wfsinfo=new cuwfs_info(parms, powfs, iwfs, igpu);
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     wfscfg_t wfscfg(parms, powfs, iwfs, stream);
     fieldstop=new cufieldstop_t(powfs[ipowfs].fieldstop, 
 				parms->powfs[ipowfs].wvl, parms->powfs[ipowfs].nwvl, stream);
-    int has_geom=(!parms->powfs[ipowfs].usephy || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout);
+    int has_geom=(!parms->powfs[ipowfs].usephy || parms->save.gradgeom->p[iwfs] || parms->powfs[ipowfs].pistatout);
     if(has_geom){
 	switch(parms->powfs[ipowfs].gtype_sim){
 	case 0://gtilt
