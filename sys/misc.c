@@ -362,7 +362,7 @@ char *stradd(const char* a, ...){
 */
 char *strnadd(int argc, const char *argv[], const char* delim){
     if(!argc) return NULL;
-    int slen=1;
+    int slen=1+strlen(delim);
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }

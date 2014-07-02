@@ -13,7 +13,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_MAP,
 	PL_TOT,
     };
-    if(nlhs!=PL_TOT || nrhs!=P_TOT){
+    if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: [map]=mkcirmap(nx, ny, cx, cy, radius)\n");
     }
     int nx=(int)mxGetScalar(prhs[P_NX]);

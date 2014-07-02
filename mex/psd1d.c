@@ -13,7 +13,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_PSD,
 	PL_TOT,
     }; 
-    if(nlhs!=PL_TOT || nrhs < P_TOT){
+    if(nrhs < P_TOT){
 	mexErrMsgTxt("Usage: psd=psd1d(data, lseg)");
     }
     

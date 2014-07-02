@@ -42,9 +42,6 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
-    if(nx==0 || ny==0){
-	return out;
-    }
     if(ref){/*the data does not belong to us. */
 	if(!p){
 	    error("When ref is 1, p must not be NULL.\n");
@@ -144,10 +141,6 @@ void X(free_do)(X(mat) *A, int keepdata){
 void X(resize)(X(mat) *A, long nx, long ny){
     if(!A->nref || A->nref[0]>1){
 	error("Resizing a referenced vector\n");
-    }
-    if(nx==0 || ny==0){
-	warning("resizing to (%ld, %ld). Free the vector.\n", nx,ny);
-	X(free)(A);
     }
     if(A->nx==nx || A->ny==1){
 	A->p=realloc(A->p, sizeof(T)*nx*ny);
@@ -1966,13 +1959,9 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
 	       int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
 	       int nthread
     ){
-    R rmax=dvec->p[dvec->nx-1];
+    R rmax=ceil(X(max)(dvec))+1;
     long ncomp;
-    if(type==-1){
-	ncomp=nextfftsize(rmax*2);
-    }else{
-	ncomp=nextfftsize(rmax);
-    }
+    ncomp=nextfftsize(rmax*2);//avoid wrapping
     long ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
     X(mat) *psfc;
     if(ncomp_max > ncomp){

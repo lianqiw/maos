@@ -179,7 +179,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	error("Invalid type");
     }
     if(len==0){
-	if(!(*ret=calloc(size, nmax))){
+	if(!(*ret=calloc(nmax, size))){
 	    error("Failed to allocate memory for ret\n");
 	}
     }else{
@@ -187,7 +187,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	if(*ret){
 	    memset(*ret, 0, size*len);
 	}else{
-	    *ret=calloc(size, len);
+	    *ret=calloc(len, size);
 	}
     }
     const char *startptr=data;
@@ -287,8 +287,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    if(len){
 		error("{%s}: Needs %d numbers, but more are supplied.\n", data, len);
 	    }else{
+		*ret=realloc(*ret, size*nmax*2);
+		memset(*ret+size*nmax, 0, size*nmax);
 		nmax*=2;
-		*ret=realloc(*ret, size*nmax);
 	    }
 	}
 	/*parse the string for a floating point number.  */
@@ -346,7 +347,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 
     if(trans && count>0){
 	info("Transposing %dx%d array\n", ncol, nrow);
-	void *newer=malloc(size*count);
+	void *newer=calloc(count, size);
 	switch(type){
 	case T_INT:{
 	    int *from=(*ret);

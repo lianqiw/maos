@@ -311,6 +311,7 @@ long nextpow2(long n){
    Find the next number suitable for FFT. Use radix of 2, 3, 5, 7
 */
 long nextfftsize(long n){
+    if(n==0) n=1;
     const int nradix=4;
     const int radixs[]={2,3,5,7};
     int selected[4];

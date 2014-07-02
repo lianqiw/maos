@@ -28,6 +28,7 @@ INLINE mxArray *dsp2mx(const dsp*A){
     return out;
 }
 INLINE dsp *mx2dsp(const mxArray *A){
+    if(!mxIsDouble(A)) error("Only double is supported\n");
     dsp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
 	out=calloc(1, sizeof(dsp));
@@ -73,6 +74,7 @@ INLINE mxArray *c2mx(const cmat *A){
 }
 
 INLINE loc_t *mx2loc(const mxArray *A){
+    if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
@@ -95,6 +97,7 @@ INLINE loc_t *mx2loc(const mxArray *A){
 }
 
 INLINE dmat *mx2d(const mxArray *A){
+    if(!mxIsDouble(A)) error("Only double is supported\n");
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");
     }

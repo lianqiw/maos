@@ -779,7 +779,6 @@ static void init_simu_evl(SIM_T *simu){
 	/*compute diffraction limited PSF. */
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
 	ccell *psf2s=locfft_psf(aper->embed, iopdevl, parms->evl.psfsize);
-	dfree(iopdevl);
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
@@ -788,6 +787,7 @@ static void init_simu_evl(SIM_T *simu){
 	ccellfree(psf2s);
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.fits",seed);
 	dcellfree(evlpsfdl);
+	dfree(iopdevl);
     }
 
     if(parms->sim.psfr){

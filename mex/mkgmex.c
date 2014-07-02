@@ -19,7 +19,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_H,
 	PL_TOT,
     };
-    if(nrhs!=P_TOT || nlhs!=PL_TOT){
+    if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: G=mkgmex(xloc, ploc, amp, saloc, scale, dispx, dispy, dopartial)\n");
     }
     loc_t *xloc=mx2loc(prhs[P_XLOC]);

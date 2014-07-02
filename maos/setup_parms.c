@@ -478,7 +478,7 @@ static void readcfg_wfs(PARMS_T *parms){
 	}else{
 	    memcpy(parms->wfs[i].wvlwts->p,wvlwts->p+count,sizeof(double)*nwvl);
 	    count+=nwvl;
-	    if(parms->powfs[ipowfs].wvlwts->p && powfs_wvlwts_override){
+	    if(parms->powfs[ipowfs].wvlwts && powfs_wvlwts_override){
 		error("when both powfs.wvlwts and wfs.wvlwts are overriden "
 		      "must set powfs.wvlwts=[]\n");
 	    }

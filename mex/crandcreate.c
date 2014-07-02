@@ -9,7 +9,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     unsigned int seed,nlem;
     rand_t *p;
-    if(nrhs!=1 || nlhs!=1){
+    if(nrhs!=1){
 	mexErrMsgTxt("Usage: stat=crandcreate(seed)");
     }
     seed=(unsigned int)mxGetScalar(prhs[0]);

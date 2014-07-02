@@ -51,6 +51,9 @@ void gpu_info(){
 	 prop.regsPerBlock,
 	 prop.warpSize);
 }
+int current_gpu(){
+    return cudata?cudata->igpu:-1;
+}
 /**
    Print memory consumption.
 */
@@ -58,7 +61,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU (%d) mem used %ld MB (%s)\n",cudata->igpu,(long)(tot-fr)/1024/1024, msg);
+    info2("GPU (%d) mem used %ld MB (%s)\n",current_gpu(),(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.

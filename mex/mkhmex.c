@@ -19,7 +19,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_H,
 	PL_TOT,
     };
-    if(nrhs!=P_TOT || nlhs!=PL_TOT){
+    if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: H=mkgmex(locin, locout, ampout, dispx, dispy, scale, cubic, cubic_iac)\n");
     }
     loc_t *locin=mx2loc(prhs[P_LOCIN]);

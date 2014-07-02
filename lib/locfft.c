@@ -69,8 +69,8 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
 void locfft_free(locfft_t *locfft){
     if(!locfft || !locfft->embed) return;
     for(int iwvl=locfft->embed->nx-1; iwvl>=0; iwvl--){
-	if(locfft->embed->p[iwvl]!=locfft->embed->p[0] || iwvl==0){
-	    ifree(locfft->embed->p[iwvl]);
+	if(locfft->embed->p[iwvl]==locfft->embed->p[0]){
+	    locfft->embed->p[iwvl]=0;
 	}
     }
     icellfree(locfft->embed);
@@ -144,12 +144,12 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, imat *psfsize){
 	    }
 	    if(psfsize->p[iwvl]==nembed){/*just reference */
 		cfftshift(psf2);
-		psf2s->p[iwvl]=cref(psf2);
+		psf2s->p[iwvl]=psf2;
 	    }else{/*create a new array, smaller. */
 		psf2s->p[iwvl]=cnew(psfsize->p[iwvl], psfsize->p[iwvl]);
 		ccpcorner2center(psf2s->p[iwvl], psf2);
+		cfree(psf2); 
 	    }
-	    cfree(psf2); 
 	}
 	double psfnorm;
 	if(PSF_SUM2ONE){/**PSF sum to one*/
@@ -161,6 +161,9 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, imat *psfsize){
 	    cscale(psf2s->p[iwvl], psfnorm);
 	}
     }
+#if _OPENMP>=200805
+#pragma omp taskwait
+#endif
     return psf2s;
 }
 /**

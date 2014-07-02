@@ -14,7 +14,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_H,
 	PL_TOT,
     };
-    if(nlhs!=PL_TOT || nrhs !=P_TOT){
+    if(nrhs !=P_TOT){
 	mexErrMsgTxt("Usage: H=act_extrap(loc, cpl, thres)\n"
 		     "loc: is nx2 coordinate of actuators\n"
 		     "cpl: is nx1 coupling of each actuator\n"

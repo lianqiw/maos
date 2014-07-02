@@ -14,7 +14,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_ENC,
 	PL_TOT,
     };
-    if(nlhs!=PL_TOT || nrhs !=P_TOT){
+    if(nrhs !=P_TOT){
 	mexErrMsgTxt("Usage: enc=calcenc(psf, diam, type)"
 		     "diam is The diameter for enclosed energy, or radius for azimuthal average"
 		     "Type can be: "
@@ -34,7 +34,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
     }
     int type=(int)mxGetScalar(prhs[P_TYPE]);
-    THREAD_POOL_INIT(NCPU); 
+    static int inited=0;
+    if(!inited){
+	THREAD_POOL_INIT(NCPU); 
+	inited=1;
+    }
     dmat *enc=denc(psf, diam, type, NCPU);
     plhs[PL_ENC]=d2mx(enc);
     dfree(psf);

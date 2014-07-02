@@ -351,9 +351,9 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 		/*same key found */
 		long istore=(long)(entryfind->data);
 		if(store[istore].protect>protect){
-		    info2("%s={%s} is protected. Will not be overriden by {%s}\n",
+		    /*info2("%s={%s} is protected. Will not be overriden by {%s}\n",
 			  (char*)entry.key, (char*)store[istore].data,
-			  (char*)store[nstore].data);
+			  (char*)store[nstore].data);*/
 		    free(store[nstore].key);
 		    free(store[nstore].data);
 		}else{
@@ -526,10 +526,12 @@ imat *readcfg_imat_do(int n, char *key){
     long *val=0;
     long **ret=&val;
     int nx, ny;
-    readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, store[getrecord(key, 1)].data);
+    int nread=readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, store[getrecord(key, 1)].data);
     imat *out=0;
     out=inew(nx,ny);
-    memcpy(out->p, val, sizeof(long)*nx*ny);
+    if(nread>0){
+	memcpy(out->p, val, sizeof(long)*nx*ny);
+    }
     free(val);
     return out;
 }
@@ -559,13 +561,14 @@ imat *readcfg_imat_nmax(int n, const char *format,...){
     format2key;
     imat *out=readcfg_imat_do(n, key);
     int nread=out->nx*out->ny;
-    if(nread==1){
+    if(nread<=1){
 	iresize(out, n, 1);
-	out->nx=n; out->ny=1;
-	for(int i=1; i<n; i++){
-	    out->p[i]=out->p[0];
+	if(nread==1){
+	    for(int i=1; i<n; i++){
+		out->p[i]=out->p[0];
+	    }
 	}
-    }else if(nread!=0 && nread!=n){
+    }else if(nread!=n){
 	error("Need %d elements, got %ld\n", n, out->nx*out->ny);
     }
     return out;
@@ -624,10 +627,10 @@ dmat *readcfg_dmat_nmax(int n, const char *format,...){
     format2key;
     dmat *out=readcfg_dmat_do(n, key);
     int nread=out->nx*out->ny;
-    if(nread==1){
+    if(nread<=1){
 	dresize(out, n, 1);
-	for(int i=1; i<n; i++){
-	    out->p[i]=out->p[0];
+	if(nread==1){
+	    dset(out, out->p[0]);
 	}
     }else if(nread!=0 && nread!=n){
 	error("Need %d elements, got %ld\n", n, out->nx*out->ny);

@@ -163,6 +163,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		avail_max=availi;
 	    }
 	}
+	avail_min-=64<<20; /*reserve 64 MiB*/
 	long need=nps*sizeof(Real)*nxn*nyn;
 	info2("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
 	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
@@ -187,7 +188,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    _Exit(0);
 	}else{
 	    /*we are able to host this amount. */
-	    long nxa=(long)roundf(sqrt((avail_min)/nps/sizeof(Real)));
+	    long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
 	    info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 		nx0=parms->atm.nx;
@@ -196,7 +197,8 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		nx0=nxa;
 		ny0=nxa;
 	    }
-	    info2("We will host %dx%d in GPU\n", nx0, ny0);
+	    info2("We will host %dx%d in GPU, taking %ld MiB\n", 
+		  nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 	}
     }
     /*The atm in GPU is the same as in CPU. */

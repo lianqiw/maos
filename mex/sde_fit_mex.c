@@ -15,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     
-    if(nlhs!=PL_TOT || nrhs<P_MIN){
+    if(nrhs<P_MIN){
 	mexErrMsgTxt("Usage: coeff=sde_fit_mex(psd, coeff0, tmax[, min, max, df])");
     }
     dmat *psd  = mx2d(prhs[P_PSD]);

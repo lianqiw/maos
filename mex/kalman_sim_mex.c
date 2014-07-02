@@ -11,7 +11,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     
-    if(nlhs!=PL_TOT || nrhs!=P_TOT){
+    if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: res=kalman_sim_mex(input, kalman)\n");
     }
     dmat *input=mx2d(prhs[P_INPUT]);

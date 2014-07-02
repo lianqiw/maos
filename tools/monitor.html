@@ -35,9 +35,10 @@
 	 table.monitor tr:nth-child(odd){
 	     background-color:#EEE
 	 }
-	 table.monitor tr .wrappable{
+	 table.monitor tr .expandable{
 	     width:100%;
 	     white-space:normal;
+	     text-align:left;
 	 }
 	 div.progress {
 	     background: white;
@@ -107,7 +108,7 @@
 		<tr>
 		    <th>Time</th>
 		    <th>PID</th>
-		    <th class="wrappable">Path</th>
+		    <th class="expandable">Path</th>
 		    <th>Out</th>
 		    <th>Low</th>
 		    <th>High</th>
@@ -240,7 +241,7 @@
 			     row.insertCell(-1);
 			     row.cells[j].align="right";
 			     if(j==2){
-				 row.cells[j].className="wrappable";
+				 row.cells[j].className="expandable";
 			     }
 			 }
 			 row.cells[1].innerHTML=i[0];
@@ -251,7 +252,20 @@
 			 var io=i[2].lastIndexOf("-o");
 			 if(io>-1){
 			     row.cells[3].innerHTML=i[2].substr(io+2).trim().split(' ')[0];
-			     row.cells[2].innerHTML=i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g," ");
+			     i[2]=i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g," ");
+			 }
+			 var slash;
+			 if(i[2].length>100){
+			     slash=i[2].indexOf("/maos ");
+			     if (slash==-1){
+				 slash=i[2].indexOf("/skyc ");
+			     }
+			 }else{
+			     slash=-1;
+			 }
+			 if(slash>-1){
+			     row.cells[2].innerHTML='<details><summary>'+i[2].substr(0, slash+1)+'</summary>'
+			     +i[2].substr(slash+1)+'</details>'
 			 }else{
 			     row.cells[2].innerHTML=i[2];
 			 }

@@ -15,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_COV2D,
 	PL_TOT,
     }; 
-    if(nlhs!=PL_TOT || nrhs !=P_TOT){
+    if(nrhs !=P_TOT){
 	mexErrMsgTxt("Usage: cov2d=mk2dcov(loc, amp, cov, normalization)");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
