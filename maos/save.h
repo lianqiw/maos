@@ -15,6 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "maos.h"
+#include "common.h"
 void save_gradol(SIM_T *simu);
 void save_recon(SIM_T *simu);

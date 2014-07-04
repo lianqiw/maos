@@ -22,7 +22,7 @@
   multiply to 2R to get zernike mode.
   2010-07-23: Added tikholnov regularization to Wa. 
 */
-#include "maos.h"
+#include "common.h"
 #include "ahst.h"
 
 /**

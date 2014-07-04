@@ -19,7 +19,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "maos.h"
+#include "common.h"
 TIC;
 #include "setup_aper.h"
 /**
@@ -171,7 +171,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 }
 /**
    Free the aper structure after simulation*/
-void free_aper(APER_T *aper, const PARMS_T *parms){
+void free_aper(const PARMS_T *parms, APER_T *aper){
     /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
     dfree(aper->amp);

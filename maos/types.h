@@ -596,7 +596,6 @@ typedef struct SIM_T{
     ccell *opdrhatlast;/**<for wind estimation.(testing)*/
 
     /*A few indicators*/
-    int nthread;       /**<number of threads*/
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
     int cachedm_n;     /**<length of pcachedm array*/
@@ -610,16 +609,16 @@ typedef struct SIM_T{
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
     double dt;         /**<System baseline clock period. 1/800 s*/
-    int last_report_time;/**<The time we lasted reported status to the scheduler.*/
+    double last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)+1>(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 
 typedef struct GLOBAL_T{
     const PARMS_T *parms;
-    const POWFS_T *powfs;
-    const APER_T *aper;
-    const RECON_T *recon;
-    const SIM_T *simu;
+    POWFS_T *powfs;
+    APER_T *aper;
+    RECON_T *recon;
+    SIM_T *simu;
     int iseed;
     int setupdone;
 }GLOBAL_T;

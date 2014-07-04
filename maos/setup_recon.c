@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "setup_recon.h"
 #include "recon.h"
 #include "fdpcg.h"
@@ -1923,7 +1923,7 @@ RECON_T *setup_recon_init(const PARMS_T *parms){
 	warning2("Do not use warm restart\n");
     }
     /*to be used in tomography. */
-    recon->nthread=parms->sim.nthread;
+    recon->nthread=NTHREAD;
     /*for recon->aloc dimension*/
     recon->ndm=parms->ndm;
     return recon;

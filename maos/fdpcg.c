@@ -36,7 +36,7 @@
 
  */
 
-#include "maos.h"
+#include "common.h"
 #include "fdpcg.h"
 #if USE_CUDA
 #define PRE_PERMUT 0

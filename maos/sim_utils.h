@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H
 void atm2xloc(dcell **opdx, const SIM_T *simu);

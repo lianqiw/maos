@@ -75,7 +75,7 @@ typedef struct ARGOPT_T{
     void *val;  /**<The the address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
 }ARGOPT_T;
-char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options);
+void parse_argopt(char *cmds, ARGOPT_T *options);
 int sig_block(int block);
 int sem_lock(const char *key);
 int sem_unlock(const char *key);

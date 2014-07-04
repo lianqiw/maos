@@ -222,10 +222,21 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 		 long protect             /**<[in]whether we protect the value*/
 		 ){
     if(!config_file) return;
-    if(!check_suffix(config_file, ".conf")){
-	error("config file '%s' doesn't end with .conf.\n", config_file);
-    }
     FILE *fd=NULL;
+    char *fn=NULL;
+    if(check_suffix(config_file, ".conf")){
+	fn=find_file(config_file);
+	if(!(fd=fopen(fn,"r"))){
+	    perror("fopen");
+	    usleep(10000);
+	    if(!(fd=fopen(fn,"r"))){//just try again.
+		error("Cannot open file %s for reading.\n",fn);
+	    }
+	}
+    }else{
+	parse_argopt((char*)config_file, NULL);
+    }
+    
     char *sline=NULL;
     char *var=NULL, *value=NULL;
     ENTRY entry;
@@ -238,19 +249,28 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	nstore=0;
 	nused=0;
     }
-    char *fn=find_file(config_file);
-    if(!(fd=fopen(fn,"r"))){
-	perror("fopen");
-	usleep(10000);
-	if(!(fd=fopen(fn,"r"))){//just try again.
-	    error("Cannot open file %s for reading.\n",fn);
-	}
-    }
+    
 #define MAXLN 40960
     char ssline[MAXLN];
     ssline[0]='\0';/*stores the available line. */
     char line[MAXLN];
-    while (fgets(line, MAXLN, fd)){
+    while(1){
+	if(fd){/*read from file*/
+	    if(!fgets(line, MAXLN, fd)) break;
+	}else{/*read from string*/
+	    char *p0=strchr(config_file, '\n');
+	    if(p0){
+		int len=p0-config_file;
+		if(len+1>MAXLN){
+		    error("Input line is too long. Please make MAXLN larger to accomodate.\n");
+		}
+		strncpy(line, config_file, len);
+		line[len]='\0';
+		config_file=p0+1;
+	    }else{
+		break;
+	    }
+	}
 	sline=squeeze(line);
 	if(!sline || is_end(sline[0]))/*skip empty lines. */
 	    continue;
@@ -392,9 +412,11 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    fclose(fd);
-    info2("loaded %3d (%3d new) records from %s\n",countnew+countold,countnew,fn);
-    free(fn);
+    if(fn){
+	fclose(fd);
+	info2("loaded %3d (%3d new) records from %s\n",countnew+countold,countnew,fn);
+	free(fn);
+    }
 #undef MAXLN
 }
 /**

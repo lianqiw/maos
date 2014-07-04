@@ -18,7 +18,6 @@
 
 #ifndef AOS_SIM_H
 #define AOS_SIM_H
-void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
 		double bkgrnd, double rne);
@@ -29,7 +28,7 @@ void prep_cachedm(SIM_T *simu);
 void calc_cachedm(SIM_T *simu);
 void filter_cl(SIM_T *simu);
 void filter_ol(SIM_T *simu);
-void filter(SIM_T *simu);
+void filter_dm(SIM_T *simu);
 void update_dm(SIM_T *simu);
 void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
 void wfsgrad(SIM_T *simu);

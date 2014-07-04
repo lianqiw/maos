@@ -16,11 +16,30 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_GENSEOTF_H
-#define AOS_GENSEOTF_H
-#include "common.h"
-void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void genselotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
-void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs);
+#ifndef __MAOS_COMMON_H
+#define __MAOS_COMMON_H
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+#include <math.h>
+#include <string.h>
+#include <search.h>
+
+#include "../lib/aos.h"
+#include "parms.h"
+#include "types.h"
+#include "utils.h"
+extern double TOMOSCALE;
+extern int exit_success;
+extern const char* dirsetup;
+extern const char *dirskysim;
+#define EXIT raise(SIGTERM)
+extern GLOBAL_T *global;
+#define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
+#define CALL_ONCE\
+    {static int count=0; count++; if(count>1) warning("This function should only be called once\n");}
+void maos(const PARMS_T *parms);
 #endif
+

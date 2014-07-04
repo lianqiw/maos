@@ -18,27 +18,20 @@
 
 #ifndef __MAOS_H
 #define __MAOS_H
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/times.h>
-#include <math.h>
-#include <string.h>
-#include <search.h>
+#include "common.h"
+#include "setup_powfs.h"
+#include "setup_recon.h"
+#include "setup_aper.h"
+#include "sim_utils.h"
+#include "setup_surf.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
+void maos_setup(const PARMS_T *parms);
+void maos_reset();
+void maos_sim();
+void maos_isim(int isim);
+SIM_T *maos_iseed(int iseed);
 
-#include "../lib/aos.h"
-#include "parms.h"
-#include "types.h"
-#include "utils.h"
-extern double TOMOSCALE;
-extern int exit_success;
-extern const char* dirsetup;
-extern const char *dirskysim;
-#define EXIT raise(SIGTERM)
-extern GLOBAL_T *global;
-#define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
-#define CALL_ONCE\
-    {static int count=0; count++; if(count>1) warning("This function should only be called once\n");}
 #endif
 

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 #include "ahst.h"
 #if USE_CUDA
@@ -383,7 +383,7 @@ void update_dm(SIM_T *simu){
 /**
    Does the servo filtering by calling filter_cl() or filter_ol()
  */
-void filter(SIM_T *simu){
+void filter_dm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
     if(parms->sim.closeloop){

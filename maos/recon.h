@@ -18,7 +18,7 @@
 
 #ifndef AOS_RECON_H
 #define AOS_RECON_H
-#include "maos.h"
+#include "common.h"
 
 void tomofit(SIM_T *simu);
 void lsr(SIM_T *simu);

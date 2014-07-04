@@ -29,7 +29,7 @@
    \todo find ways to factor in outerscale effect (use von karman spectrum
    instead of kolmogorov) */
 
-#include "maos.h"
+#include "common.h"
 #include "genseotf.h"
 
 /**

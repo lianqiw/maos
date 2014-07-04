@@ -504,7 +504,7 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
-if test "$with_matlab" = "no" ;then
+if test "$with_matlab" != "no" ;then
     #cannot compile with single floating fft when compiling mex routines
     has_fftwf=0
 else
@@ -697,8 +697,8 @@ if test "$with_matlab" != "no" ;then
     if test "$mex_cpu" != "$host_cpu" ;then
 	mex_lib="no"
     else       
-	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lz"
-	AC_CHECK_LIB([mex], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
+	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
     fi
     if test x$mex_lib = xyes ;then
 	AM_CONDITIONAL(USE_MEX, true)
@@ -801,7 +801,7 @@ if test "$with_cuda" != "no" ;then
     if test "$cpu" = "64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBINOPT="$OPTS"
+    CCBINOPT="$OPTS -fPIC"
     case "$CCBIN" in 
         *gcc*)
 	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"

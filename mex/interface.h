@@ -159,6 +159,7 @@ static __attribute__((constructor)) void init(){
     quitfun=mexErrMsgTxt;
 }
 static __attribute__((destructor)) void deinit(){
+    fprintf(stderr, "mex unloaded\n");
     if(default_handler){
 	signal(SIGTERM, default_handler);
     }else{

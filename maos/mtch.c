@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "mtch.h"
 /**
    \file maos/mtch.c

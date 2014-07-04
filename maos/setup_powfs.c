@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <math.h>
-#include "maos.h"
+#include "common.h"
 #include "setup_powfs.h"
 #include "mtch.h"
 #include "genseotf.h"
@@ -405,7 +405,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     dfree(saa);
 
     powfs[ipowfs].npts = count*nxsa;
-    powfs[ipowfs].nthread=count<parms->sim.nthread?count:parms->sim.nthread;
+    powfs[ipowfs].nthread=MIN(count, NTHREAD);
     ptsresize(powfs[ipowfs].pts, count);
     locresize(powfs[ipowfs].saloc, count);
     locresize(powfs[ipowfs].loc, count*nxsa);

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 #include "ahst.h"
 #include "sim_utils.h"

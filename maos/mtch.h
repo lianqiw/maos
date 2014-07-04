@@ -18,6 +18,6 @@
 
 #ifndef AOS_MTCH_H
 #define AOS_MTCH_H
-#include "maos.h"
+#include "common.h"
 void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs);
 #endif

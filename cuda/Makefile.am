@@ -36,7 +36,6 @@ ___bin_gpu_mvm_LDADD=libaogpu.la $(LDCUDA) ../lib/libaos.la $(LDOPTS)
 .cu.lo:
 	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) --compiler-options "$(CCBINOPT) " -c $< -o $@ 
 	@$(NVCC) $(CUDAOPT) -M $< > $(DEPDIR)/$*.Po
-#	$(AM_V_CC)$(top_srcdir)/scripts/cudalt.py $@ $(NVCC) -c $(CUDAOPT) -Xcompiler \"$(CCBINOPT)\" $<
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)
 

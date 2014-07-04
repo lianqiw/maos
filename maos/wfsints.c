@@ -18,7 +18,7 @@
 
 #include <math.h>
 #include <time.h>
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 #define TIMING 1
 /**

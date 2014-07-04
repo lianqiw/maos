@@ -1,14 +1,15 @@
-AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math
-AM_LDFLAGS= $(LDMEX) -lm -static  -lfftw3 -lmwblas -lmwlapack
-AM_LDFLAGS+=-Xcompiler -shared -no-fast-install
+AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
+AM_LDFLAGS=-no-fast-install -static -Xcompiler -shared 
+#LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
-LDADD=$(BUILD_DIR)/lib/libaos.la 
+LIBMX=-lcholmod $(LDMEX) -lmx -lmex -lmat -lfftw3 -lmwblas -lmwlapack -lz -lm -lstdc++ -ldl
+LDADD=../lib/libaos.la  $(LIBMX)
 EXTRA_DIST=null.c io.c io.h interface.h  Makefile.mex compile.sh
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
 
-bin_PROGRAMS=read write mkgmex mkhmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim_mex servo_sim_mex psd1d mkcirmap sde_fit_mex sde_kalman_mex kalman_sim_mex calcenc act_extrap cn2est
+bin_PROGRAMS=read write mkgmex mkhmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim_mex servo_sim_mex psd1d mkcirmap sde_fit_mex sde_kalman_mex kalman_sim_mex calcenc act_extrap cn2est maos
 
 #.c.o:
 #	$(MEX) $(AM_CFLAGS) -c $< 
@@ -27,3 +28,9 @@ write_SOURCES=write.c io.c
 write_CFLAGS=$(MEXOPT)
 write_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-fast-install
 write_LDADD=
+
+
+maos_LDADD=../maos/libmaos.la $(LIBMX)
+if USE_CUDA
+maos_LDADD+=$(LDCUDA)
+endif

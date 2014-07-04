@@ -20,7 +20,7 @@
    \file setup_surf.c
    Setup additional NCPA surface.
 */
-#include "maos.h"
+#include "common.h"
 #include "setup_surf.h"
 #include "recon_utils.h"
 #include "setup_powfs.h"

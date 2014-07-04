@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 /**
    \file maos/cachedm.c Contains routines that prepare and carry out DM shape
@@ -80,7 +80,7 @@ void prep_cachedm(SIM_T *simu){
     for(int ic=0; ic<simu->cachedm_n; ic++){
 	int idm=simu->pcachedm[ic][0];
 	int iscale=simu->pcachedm[ic][1];
-	simu->cachedm_prop[ic]=calloc(parms->sim.nthread, sizeof(thread_t));
+	simu->cachedm_prop[ic]=calloc(NTHREAD, sizeof(thread_t));
 	if(simu->dmrealsq){
 	    cpropdata[ic].mapin=simu->dmrealsq[idm];
 	}else{
@@ -98,7 +98,7 @@ void prep_cachedm(SIM_T *simu){
 	cpropdata[ic].cubic_iac=simu->parms->dm[idm].iac;
 	prop_index(&cpropdata[ic]);
 	thread_prep(simu->cachedm_prop[ic], 0, cpropdata[ic].mapout->ny, 
-		    simu->nthread, prop, (void*)&cpropdata[ic]);
+		    NTHREAD, prop, (void*)&cpropdata[ic]);
     }
 }
 

@@ -442,9 +442,9 @@ typedef struct SIM_CFG_T{
     int dtrat_skip;   /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
+    int pause;       /**<Pause at the end of every time step*/
     imat *seeds;      /**<simulation seeds*/
     int nseed;       /**<How many simulation seed*/
-    int nthread;     /**<Number of threads to run the simulation*/
     int closeloop;   /**<closed loop or open loop*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
@@ -714,7 +714,6 @@ typedef struct PARMS_T{
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
     int ntsurf;      /**<Number of tilted surfaces*/
     imat *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
-    int pause;       /**<Pause at the end of every time step*/
     int nlopowfs;    /**<Number of low order wfs types*/
     imat *lopowfs;    /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
@@ -733,7 +732,6 @@ typedef struct ARG_T{
     int override;    /**<Run simulation even if Res_${seed}.done exists*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
-    int pause;       /**<pause at the end of every time step*/
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
     int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
@@ -742,8 +740,8 @@ typedef struct ARG_T{
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
-PARMS_T* setup_parms(ARG_T *arg);
-void setup_parms_gpu(PARMS_T *parms, ARG_T *arg);
+PARMS_T* setup_parms(const char *main, const char *extra, int override);
+void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
 /*convenient constants. used in utils.c */

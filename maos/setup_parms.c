@@ -31,7 +31,7 @@
 #endif
 extern int use_cuda;
 /*
-  Don't include maos.h or types.h, so that we don't have to recompile
+  Don't include common.h or types.h, so that we don't have to recompile
   setup_parms.c when these files change.
  */
 /**
@@ -719,7 +719,7 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
     /*it is never good to parallelize the evl ray tracing because it is already so fast */
-    parms->evl.nthread=1;/*parms->sim.nthread; */
+    parms->evl.nthread=1;
     parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
 }
 /**
@@ -860,6 +860,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.dtrat_skip);
     READ_INT(sim.start);
     READ_INT(sim.end);
+    READ_INT(sim.pause);
     READ_STR(sim.wspsd);
     READ_INT(sim.wsseq);
     READ_INT(sim.cachedm);
@@ -2185,9 +2186,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 /**
    postproc misc parameters.
 */
-static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
-    parms->pause=arg->pause;
-    if(arg->dirout){
+static void setup_parms_postproc_misc(PARMS_T *parms, int override){
+    if(!disable_save){
 	/*Remove seeds that are already done. */
 	char fn[80];
 	int iseed=0; 
@@ -2195,7 +2195,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->fdlock=inew(parms->sim.nseed, 1);
 	for(iseed=0; iseed<parms->sim.nseed; iseed++){
 	    snprintf(fn, 80, "Res_%ld.done",parms->sim.seeds->p[iseed]);
-	    if(exist(fn) && !arg->override){
+	    if(exist(fn) && !override){
 		parms->fdlock->p[iseed]=-1;
 		warning2("Skip seed %ld because %s exist.\n", parms->sim.seeds->p[iseed], fn);
 	    }else{
@@ -2537,15 +2537,26 @@ static void print_parms(const PARMS_T *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T * setup_parms(ARG_T *arg){
-    info2("Main config file is %s\n",arg->conf);
-    open_config(arg->conf,NULL,0);/*main .conf file. */
-    open_config(arg->confcmd, NULL, 1);
-    remove(arg->confcmd);
-    free(arg->conf);
-    free(arg->confcmd);
+PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override){
+    if(!mainconf){
+	mainconf="default.conf";
+    }
+    info2("Main config file is %s\n", mainconf);
+
+    /*Setup PATH and result directory so that the config_path is in the back of path */
+    char *config_path=find_config("maos");
+    if(!config_path || !exist(config_path)){
+	error("Unable to find usable configuration file\n");
+    }
+    /*info2("Using config files found in %s\n", config_path); */
+    char *bin_path=stradd(config_path, "/bin", NULL);
+    addpath(config_path);
+    addpath(bin_path);
+    free(bin_path);
+    free(config_path);
+    open_config(mainconf,NULL,0);/*main .conf file. */
+    open_config(extraconf, NULL, 1);
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
-    parms->sim.nthread=arg->nthread;
     readcfg_aper(parms);
     readcfg_atm(parms);
     readcfg_powfs(parms);
@@ -2582,8 +2593,8 @@ PARMS_T * setup_parms(ARG_T *arg){
       Postprocess the parameters for integrity. The ordering of the following
       routines are critical.
     */
-    if(!arg->dirout){
-	if(parms->save.setup || parms->save.all || parms->sim.skysim){
+    if(disable_save){
+	if(parms->save.setup || parms->save.all || parms->sim.skysim || parms->evl.psfmean || parms->evl.psfhist){
 	    error("Please specify -o to enable saving to disk\n");
 	}
     }
@@ -2596,7 +2607,7 @@ PARMS_T * setup_parms(ARG_T *arg){
     setup_parms_postproc_atm_size(parms);
     setup_parms_postproc_dm(parms);
     setup_parms_postproc_recon(parms);
-    setup_parms_postproc_misc(parms, arg);
+    setup_parms_postproc_misc(parms, override);
     print_parms(parms);
     return parms;
 }
@@ -2604,7 +2615,7 @@ PARMS_T * setup_parms(ARG_T *arg){
    Additional setup_parms code to run when maos is running. It only contains GPU
    initialization code for the moment.
  */
-void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
+void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 #if USE_CUDA 
     if(parms->sim.end==0){
 	use_cuda=0;
@@ -2637,8 +2648,8 @@ void setup_parms_gpu(PARMS_T *parms, ARG_T *arg){
 	    }
 	}
     }
-    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
-    if(use_cuda) use_cuda=gpu_init(arg->gpus, arg->ngpu, parms);
+    if(parms->nwfs==1 && ngpu==0) ngpu=1;/*use a single gpu if there is only 1 wfs.*/
+    if(use_cuda) use_cuda=gpu_init(parms, gpus, ngpu);
 #else
     use_cuda=0;
 #endif

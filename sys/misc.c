@@ -523,7 +523,8 @@ long available_space(const char *path){
 /**
    Extract a string constant from the command line, and output the position
    where the string terminates.*/
-static char *cmd_string(char *input, char **end2){
+static char *cmd_string(char *start, char **end2){
+    char *input=start;
     char *end;
     while(isspace((int)input[0]) || input[0]=='\n') input++;
     if(input[0]=='\'' || input[0]== '"'){
@@ -534,21 +535,29 @@ static char *cmd_string(char *input, char **end2){
 	    error("String does not end\n");
 	}
     }else{
-	end=strchr(input, ' ');//string end at space
+	end=input;
+	while(!isspace((int)end[0]) && end[0]!='\n' && end[0]!='\0') end++;
     }
-    end[0]='\0';
+    int noteos=0;
+    if(end[0]!='\0'){
+	end[0]='\0';
+	noteos=1;
+    }
     char *out=strdup(input);
     memset(input, ' ', strlen(input));
-    end[0]=' ';
-    *end2=end+1;
+    if(noteos){
+	end[0]=' ';
+	*end2=end+1;
+    }else{
+	*end2=end;
+    }
     return out;
 }
 /**
    Parse command line arguments. Returns whatever is not yet parsed. Need to
    free the returned string. This is more relaxed than the built in getopd
 */
-char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
-    char *cmds=strnadd(argc-1, argv+1, " ");
+void parse_argopt(char *cmds, ARGOPT_T *options){
     char *cmds_end=cmds+(cmds?strlen(cmds):0);
     char *start=cmds;
     while(start<cmds_end){
@@ -558,6 +567,9 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    continue;
 	}
 	if(start[0]=='-'){
+	    if(!options){
+		error("options are not specified while command contains options.\n");
+	    }
 	    char *start0=start;
 	    char key='0';
 	    char *value;
@@ -717,7 +729,6 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    start++;
 	}
     }
-    return cmds;
 }
 #include <semaphore.h>
 /**

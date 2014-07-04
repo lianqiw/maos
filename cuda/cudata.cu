@@ -123,7 +123,7 @@ static int task_cmp(const task_t *a, const task_t *b){
    when mix Tesla and GTX cards, the ordering the GPUs may be different in CUDA
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
-int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
+int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     if(gpus && ngpu>0){
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
@@ -322,8 +322,7 @@ int gpu_init(int *gpus, int ngpu, const PARMS_T *parms){
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
 	    }
-	    if(parms->sim.nthread>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
-		((PARMS_T*)parms)->sim.nthread=NGPU+1;
+	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;
 		info2("Reset nthread to %d\n", NTHREAD);
 	    }

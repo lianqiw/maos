@@ -18,7 +18,7 @@
 
 #ifndef SETUP_RECON_H
 #define SETUP_RECON_H
-#include "maos.h"
+#include "common.h"
 //Called by maos.c
 RECON_T *setup_recon_init(const PARMS_T *parms);
 void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper);

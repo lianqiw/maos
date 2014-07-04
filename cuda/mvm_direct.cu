@@ -237,7 +237,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	}
 	CALL_THREAD(info, 1);
 	if(nthread>NGPU){
-	    THREAD_POOL_INIT(parms->sim.nthread);
+	    THREAD_POOL_INIT(NTHREAD);
 	    free(gpu_avail); gpu_avail=NULL;
 	}
 	toc("Assembly");tic;

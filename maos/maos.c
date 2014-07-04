@@ -15,17 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "maos.h"
-#include "setup_powfs.h"
-#include "setup_recon.h"
-#include "setup_aper.h"
-#include "sim.h"
-#include "sim_utils.h"
-#include "setup_surf.h"
-#if USE_CUDA
-#include "../cuda/gpu.h"
-#endif
 /**
    \file maos.c
    Contains main() and the entry into simulation maos()
@@ -34,7 +24,6 @@ GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
 const char *dirsetup=NULL;
 const char *dirskysim=NULL;
-volatile int maos_server_fd=-1;
 
 /** begin variable overridable by environment variable MAOS_ .  These are for
  debugging maos itself. Not pertinent to a particular simulation*/
@@ -44,33 +33,48 @@ int NO_WFS=0;
 int NO_EVL=0;
 int NO_RECON=0;
 /** end*/
-
-/**
-   This is the routine that calls various functions to do the simulation. maos()
-   calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
-   (of type APER_T), wfs (of type POWFS_T), and reconstructor (of type RECON_T)
-   structs and then hands control to sim(), which then stars the simulation.
-   \callgraph */
-void maos(const PARMS_T *parms){
+static void read_env(){
+    READ_ENV_DBL(TOMOSCALE,0,INFINITY);
+    READ_ENV_INT(PARALLEL,0,1);
+    READ_ENV_INT(NO_WFS,0,1);
+    READ_ENV_INT(NO_EVL,0,1);
+    READ_ENV_INT(NO_RECON,0,1);
+    info2("TOMOSCALE=%g\n", TOMOSCALE);
+}
+void maos_setup(const PARMS_T *parms){
     TIC;tic;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
+    read_env();
+    if(parms->save.setup){
+	dirsetup="setup";
+	mymkdir("%s",dirsetup);
+    }else{
+	dirsetup=".";
+    }
+    if(parms->sim.skysim){
+	dirskysim="skysim";
+	mymkdir("%s",dirskysim);
+    }else{
+	dirskysim=".";
+    }
+    THREAD_POOL_INIT(NTHREAD);
     aper  = setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     if(!parms->sim.evlol){
 	powfs = setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
-	if(parms->dbg.wfslinearity!=-1){
+	/*if(parms->dbg.wfslinearity!=-1){
 	    int iwfs=parms->dbg.wfslinearity;
 	    assert(iwfs>-1 || iwfs<parms->nwfs);
 	    info2("Studying wfslineariy for WFS %d\n", iwfs);
 	    wfslinearity(parms, powfs, iwfs);
 	    rename_file(0);
 	    scheduler_finish(0);
-	    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
+	    exit_success=1;//tell mem.c to print non-freed memory in debug mode. 
 	    exit(0);
-	}
+	}*/
 	recon = setup_recon_init(parms);
 	/*Setup DM fitting parameters so we can flatten the DM*/
 	setup_recon_dm(recon, parms, aper);
@@ -78,7 +82,7 @@ void maos(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(parms->sim.nthread==1)
+#pragma omp task untied final(NTHREAD)
 #endif
 	{
 	    setup_surf(parms, aper, powfs, recon);
@@ -92,6 +96,8 @@ void maos(const PARMS_T *parms){
 	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
+    global=calloc(1, sizeof(GLOBAL_T));
+    global->parms=parms;
     global->powfs=powfs;
     global->aper=aper;
     global->recon=recon;
@@ -122,7 +128,7 @@ void maos(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(parms->sim.nthread==1)
+#pragma omp task untied final(NTHREAD)
 #endif
 	setup_recon_mvm(parms, recon, powfs);
     }
@@ -133,206 +139,32 @@ void maos(const PARMS_T *parms){
 
     free_recon_unused(parms, recon);
     toc2("Presimulation");
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied final(parms->sim.nthread==1)
-#endif
-    sim(parms, powfs, aper, recon);
+}
+/**
+   This is the routine that calls various functions to do the simulation. maos()
+   calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
+   (of type APER_T), wfs (of type POWFS_T), and reconstructor (of type RECON_T)
+   structs and then hands control to sim(), which then stars the simulation.
+   \callgraph */
+void maos(const PARMS_T *parms){
+    maos_setup(parms);
+    maos_sim();
+    maos_reset();
+}
+
+void maos_reset(){
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
-    free_recon(parms, recon); recon=NULL;
-    free_powfs(parms, powfs); powfs=NULL;
-    free_aper(aper, parms); aper=NULL;
+    PARMS_T *parms=(PARMS_T*)global->parms;
+    free_simu(global->simu);
+    free_recon(parms,global->recon); 
+    free_powfs(parms,global->powfs); 
+    free_aper(parms, global->aper);
+    free_parms(parms);
 #if USE_CUDA
     if(use_cuda){
 	gpu_cleanup();
     }
 #endif
-}
-static void maos_server(PARMS_T *parms){
-    if(maos_server_fd<0){
-	error("Invalid maos_server_fd\n");
-	EXIT;
-    }
-    warning("maos running in server mode\n");
-    int msglen;
-    int sock=maos_server_fd;
-    while(!streadint(sock, &msglen)){
-	int ret=0;/*acknowledgement of the command. 0: accepted. otherwise: not understood*/
-	int *msg=alloca(sizeof(int)*msglen);
-	
-	if(streadintarr(sock, msg, msglen)){
-	    break;
-	}
-	switch(msg[0]){
-	case MAOS_ASSIGN_WFS:{/*Specifies which WFS to be handled*/
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		parms->wfs[iwfs].sock=msg[iwfs+1]?-1:0;
-	    }
-	}break;
-	case MAOS_ASSIGN_EVL:{/*Specifies which EVL to be handled*/
-	    if(!parms->evl.sock){
-		parms->evl.sock=calloc(parms->evl.nevl, sizeof(int));
-	    }
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		parms->evl.sock->p[ievl]=msg[ievl+1]?-1:0;
-	    }
-	}break;
-	case MAOS_ASSIGN_RECON:{/*Specifies whether recon should be handled*/
-	    parms->recon.sock=msg[1]?-1:0;
-	}break;
-	case MAOS_ASSIGN_DONE:{/*Now start configuration*/
-	    error("Not completed\n");
-	}break;
-	default:
-	    ret=1;
-	}/*switch*/
-
-	if(stwriteint(sock, ret)){
-	    break;
-	}
-    }
-    warning("maos_server exited\n");
-    //todo:listening on socket for commands.
-    //maos client mode: start maos server mode via scheduler.
-}
-static void read_env(){
-    READ_ENV_DBL(TOMOSCALE,0,INFINITY);
-    READ_ENV_INT(PARALLEL,0,1);
-    READ_ENV_INT(NO_WFS,0,1);
-    READ_ENV_INT(NO_EVL,0,1);
-    READ_ENV_INT(NO_RECON,0,1);
-    info2("TOMOSCALE=%g\n", TOMOSCALE);
-}
-/**
-   This is the standard entrance routine to the program.  It first calls
-   setup_parms() to setup the simulation parameters and check for possible
-   errors. It then waits for starting signal from the scheduler if in batch
-   mode. Finally it hands the control to maos() to start the actual simulation.
-
-   Call maos with overriding *.conf files or embed the overriding parameters in
-   the command line to override the default parameters, e.g.
-
-   <p><code>maos base.conf save.setup=1 'powfs.phystep=[0 100 100]'</code><p>
-
-   Any duplicate parameters will override the pervious specified value. The
-   configure file nfiraos.conf will be loaded as the master .conf unless a -c
-   switch is used with another .conf file. For scao simulations, call maos with
-   -c switch and the right base .conf file.
-   
-   <p><code>maos -c scao_ngs.conf override.conf</code><p>
-
-   for scao NGS simulations 
-
-   <p><code>maos -c scao_lgs.conf override.conf</code><p>
-
-   for scao LGS simulations.  With -c switch, nfiraos.conf will not be read,
-   instead scao_ngs.conf or scao_lgs.conf are read as the master config file.
-   Do not specify any parameter that are not understood by the code, otherwise
-   maos will complain and exit to prevent accidental mistakes.
-       
-   Generally you link the maos executable into a folder that is in your PATH
-   evironment or into the folder where you run simulations.
-
-   Other optional parameters:
-   \verbatim
-   -d          do detach from console and not exit when logged out
-   -s 2 -s 4   set seeds to [2 4]
-   -n 4        launch 4 threads.
-   -f          To disable job scheduler and force proceed
-   \endverbatim
-   In detached mode, drawing is automatically disabled.
-   \callgraph
-*/
-int main(int argc, const char *argv[]){
-    char *scmd=argv2str(argc,argv," ");
-    ARG_T* arg=parse_args(argc,argv);/*does chdir */
-    
-    if(arg->detach){
-	daemonize();
-    }else{
-	redirect();
-    }
-    /*Launch the scheduler and report about our process */
-    scheduler_start(scmd,arg->nthread,!arg->force);
-    info2("%s\n", scmd);
-    info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
-    read_env();
-    maos_version();
-    /*setting up parameters before asking scheduler to check for any errors. */
-    PARMS_T *parms=setup_parms(arg);
-    global=calloc(1, sizeof(GLOBAL_T));
-    global->parms=parms;
-    info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
-    /*register signal handler */
-    register_signal_handler(maos_signal_handler);
- 
-    if(!arg->force){
-	/*
-	  Ask job scheduler for permission to proceed. If no CPUs are
-	  available, will block until ones are available.
-	  if arg->force==1, will run immediately.
-	*/
-	info2("Waiting start signal from the scheduler ...\n");
-	int count=0;
-	while(scheduler_wait()&& count<60){
-	    /*Failed to wait. fall back to own checking.*/
-	    warning3("failed to get reply from scheduler. retry\n");
-	    sleep(10);
-	    count++;
-	    scheduler_start(scmd,arg->nthread,!arg->force);
-	}
-	if(count>=60){
-	    warning3("fall back to own checker\n");
-	    wait_cpu(arg->nthread);
-	}
-    }
-    if(!disable_save){
-	//Make the symlinks for running job only.
-	char fnpid[PATH_MAX];
-	snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
-	mysymlink(fnpid, "maos_recent.conf");
-	snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-	mysymlink(fnpid, "run_recent.log");
-    }
-    info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
-    thread_new((thread_fun)scheduler_listen, maos_daemon);
-    setup_parms_gpu(parms, arg);
-    THREAD_POOL_INIT(parms->sim.nthread);
-    if(arg->server){
-	while(maos_server_fd<0){
-	    warning("Waiting for fd\n");
-	    sleep(1);
-	}
-	maos_server(parms);
-	EXIT;
-    }
-    free(scmd);
-    free(arg->dirout);
-    free(arg->gpus);
-    free(arg);
-    if(parms->save.setup){
-	dirsetup="setup";
-	mymkdir("%s",dirsetup);
-    }else{
-	dirsetup=".";
-    }
-    if(parms->sim.skysim){
-	dirskysim="skysim";
-	mymkdir("%s",dirskysim);
-    }else{
-	dirskysim=".";
-    }
-    /*do not use prallel single in maos(). It causes blas to run single threaded
-     * during preparation. Selective enable parallel for certain setup functions that doesn't use blas*/
-    maos(parms);
-    free_parms(parms);
-    free(global);
-    info2("Job finished at %s\n",myasctime());
-    rename_file(0);
-    scheduler_finish(0);
-    draw_final(0);
-    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
-    return 0;
+    free(global); global=0;
 }

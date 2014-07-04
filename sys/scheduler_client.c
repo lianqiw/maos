@@ -293,19 +293,9 @@ int scheduler_wait(void){
 	return 0;
     }
 }
-static int done=0;
 /**
    Called by maos to notify scheduler the completion of a job */
 int scheduler_finish(int status){
-    static int last_status=0;
-    if(!done){
-	done=1;
-    }else{
-	warning("scheduler_finish is called with status %d after %d\n", 
-		status, last_status);
-	return 1;
-    }
-    last_status=status;
     if(psock==-1){
 	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
@@ -326,10 +316,6 @@ int scheduler_finish(int status){
 /**
    called by sim.c to report job status */
 int scheduler_report(STATUS_T *status){
-    if(done){
-	warning("scheduler_report called after scheduler_finish\n");
-	return 0;
-    }	
     if(psock==-1){
 	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);

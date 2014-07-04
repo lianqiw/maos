@@ -58,7 +58,8 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
-    char *cmds=parse_argopt(argc, argv, options);
+    char *cmds=strnadd(argc-1, argv+1, " ");
+    parse_argopt(cmds, options);
     if(!host && !arg->detach){//foreground running
 	arg->force=1;
     }else if(local || getenv("MAOS_DIRECT_LAUNCH")){

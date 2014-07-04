@@ -18,7 +18,7 @@
 
 #ifndef AOS_RECON_UTILS_H
 #define AOS_RECON_UTILS_H
-#include "maos.h"
+#include "common.h"
 
 void apply_L2(dcell **xout, const spcell *L2, const dcell *xin, double alpha, int nthread);
 void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);

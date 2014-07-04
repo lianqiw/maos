@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 #include "sim_utils.h"
 #include "ahst.h"

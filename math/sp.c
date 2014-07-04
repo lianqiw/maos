@@ -895,8 +895,8 @@ void Y(sptcellfull)(X(cell) **out0, const Y(spcell) *A, const T alpha){
 /**
  * Added two sparse matrices: return A*a+B*b*/
 X(sp) *Y(spadd2)(X(sp) *A,X(sp)*B,T a,T b){
-    X(sp) *C=Y(cs_add)(A,B,a,b);
-    Y(cs_dropzeros)(C);
+    X(sp) *C=Y(ss_add)(A,B,a,b);
+    Y(ss_dropzeros)(C);
     return C;
 }
 /**
@@ -911,8 +911,8 @@ void Y(spadd)(X(sp) **A0, const X(sp) *B){
 		error("X(sp) matrix mismatch: (%ldx%ld) vs (%ldx%ld\n",
 		      (*A0)->m, (*A0)->n, B->m, B->n);
 	    }
-	    X(sp) *res=Y(cs_add)(*A0,B,1.,1.);
-	    Y(cs_dropzeros)(res);
+	    X(sp) *res=Y(ss_add)(*A0,B,1.,1.);
+	    Y(ss_dropzeros)(res);
 	    /*move the data over. */
 	    Y(spmove)(*A0,res);/*move the data from res to A. */
 	}
@@ -952,8 +952,8 @@ void Y(spcelladdI)(Y(spcell) *A, R alpha){
  * Transpose a sparse array*/
 X(sp) *Y(sptrans)(const X(sp) *A){
     if(!A) return NULL;
-    X(sp) *res=Y(cs_transpose)(A,1);
-    Y(cs_dropzeros)(res);
+    X(sp) *res=Y(ss_transpose)(A,1);
+    Y(ss_dropzeros)(res);
     return res;
 }
 /**
@@ -961,8 +961,8 @@ X(sp) *Y(sptrans)(const X(sp) *A){
 X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B){		
     /*return C=(A*B) */
     if(!A || !B) return NULL;
-    X(sp) *C=Y(cs_multiply)(A, B);
-    Y(cs_dropzeros)(C);
+    X(sp) *C=Y(ss_multiply)(A, B);
+    Y(ss_dropzeros)(C);
     return C;
 }
 /**
@@ -973,7 +973,7 @@ X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B){
     X(sp) *At=Y(sptrans)(A);
     X(sp) *C=Y(spmulsp)(At, B);
     Y(spfree)(At);
-    Y(cs_dropzeros)(C);
+    Y(ss_dropzeros)(C);
     return C;
 }
 /**
@@ -982,7 +982,7 @@ void Y(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B,
 		 const T scale){
     /*return C=C+ alpha*(A*B) */
     if(!A || !B) return;
-    X(sp) *res=Y(cs_multiply)(A, B);
+    X(sp) *res=Y(ss_multiply)(A, B);
     if(ABS(scale-1.)>EPS){
 	Y(spscale)(res, scale);
     }
@@ -992,7 +992,7 @@ void Y(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B,
 	Y(spadd)(C0, res);
 	Y(spfree)(res);
     }
-    Y(cs_dropzeros)(*C0);
+    Y(ss_dropzeros)(*C0);
 }
 /**
  * Multiply two sparse cell*/
@@ -1214,7 +1214,7 @@ X(mat) *Y(spsumabs)(const X(sp) *A, int col){
 /**
    Clean up a sparse array by dropping zeros*/
 void Y(spclean)(X(sp) *A){
-    Y(cs_dropzeros)(A);
+    Y(ss_dropzeros)(A);
 }
 /**
  * Multiply a spcell with vectors*/
@@ -1241,7 +1241,7 @@ void Y(spdroptol)(X(sp) *A, R thres){
     if(thres<EPS) thres=EPS;
     R maxv;
     X(maxmin)(A->x,A->nzmax,&maxv,NULL);
-    Y(cs_droptol)(A, maxv*thres);
+    Y(ss_droptol)(A, maxv*thres);
 }
 /**
    Drop elements that are EPS times the largest value.

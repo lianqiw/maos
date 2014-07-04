@@ -29,7 +29,7 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>
-#include "maos.h"
+#include "common.h"
 #include "mvm_client.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
@@ -253,7 +253,6 @@ static void print_usage(void){
 "-c, --conf=FILE.conf\n"
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 "-p, --path=dir    Add dir to the internal PATH\n"
-"-P, --pause       paulse simulation in the end of every time step\n"
 "-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
 "-G, --ngpu=N'     Use a total of N gpus.\n"
 "-r, --run=host    Run the job in another host.\n"
@@ -276,24 +275,25 @@ ARG_T * parse_args(int argc, const char *argv[]){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
     char *host=NULL;
+    int nthread=0;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
 	{"override",'O',T_INT,0, &arg->override, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
-	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
+	{"nthread",'n',T_INT, 1, &nthread,NULL},
 	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},
 	{"ngpu",   'G',T_INT, 1, &arg->ngpu2, NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
-	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
 	{"run",    'r',T_STR, 1, &host, NULL},
 	{"server", 'S',T_INT, 0, &arg->server,NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
-    char *cmds=parse_argopt(argc, argv, options);
+    char *cmds=strnadd(argc-1, argv+1, " ");
+    parse_argopt(cmds, options);
     if((host || arg->detach) && !arg->dirout){
 	error("detach mode requires specifying -o\n");
     }
@@ -324,12 +324,15 @@ ARG_T * parse_args(int argc, const char *argv[]){
 #endif
     }
     free(host);
-    if(arg->nthread>NTHREAD || arg->nthread<=0){
-        arg->nthread=NTHREAD;
+    if(nthread<NTHREAD && nthread>0){
+        NTHREAD=nthread;
     }
-    NTHREAD=arg->nthread;
-    if(!arg->gpus || arg->ngpu==0){
-	arg->ngpu=arg->ngpu2;
+    if(arg->ngpu2>0){
+	if(!arg->gpus || arg->ngpu==0){
+	    arg->ngpu=arg->ngpu2;
+	}else{
+	    error("-g and -G cannot both be specified\n");
+	}
     }
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
@@ -349,53 +352,6 @@ ARG_T * parse_args(int argc, const char *argv[]){
     fclose(fptmp);
     arg->confcmd=strdup(fntmp);
     
-    if(arg->pause && arg->detach){
-	warning("-p and -d are both specified, disable -d\n");
-	arg->detach=0;
-    }
-
-    if(!arg->conf){ /*If -c is not specifid in path, will use default.conf*/
-	arg->conf=strdup("default.conf");
-    }
-    /*Setup PATH and result directory so that the config_path is in the back of path */
-    char *config_path=find_config("maos");
-#if USE_STATIC && 0
-    if(!exist(config_path)){
-	/*We are binding the config files in the executable, extract and use it. */
-	char *start=&_binary____config_tar_gz_start;
-	char *end=&_binary____config_tar_gz_end;
-	long len=end-start;
-	assert(len>0);
-	char fn[PATH_MAX];
-	mymkdir("%s/config-%d", TEMP, (int)getpid());
-	snprintf(fn, PATH_MAX, "%s/config-%d/config.tar.gz", TEMP, (int)getpid());
-	FILE *fp=fopen(fn, "w");
-	if(fp){
-	    fwrite(start, 1, end-start, fp);
-	    fclose(fp);
-	    snprintf(fn, PATH_MAX, "cd %s/config-%d/ && tar xf config.tar.gz", TEMP, (int)getpid());
-	    if(system(fn)<0){
-		perror("system");
-		warning("Unable to execute %s\n", fn);
-	    }else{
-		snprintf(fn, PATH_MAX, "%s/config-%d/config", TEMP, (int)getpid());
-		config_path=stradd(fn,"/maos",NULL);
-	    }
-	}else{
-	    warning("Unable to open %s\n", fn);
-	}
-    }
-#endif
-    if(!config_path || !exist(config_path)){
-	error("Unable to find usable configuration file\n");
-    }
-    /*info2("Using config files found in %s\n", config_path); */
-    char *bin_path=stradd(config_path, "/bin", NULL);
-    addpath(config_path);
-    addpath(bin_path);
-    free(bin_path);
-    free(config_path);
-
     addpath(".");
     if(arg->dirout){
 	mymkdir("%s",arg->dirout);
@@ -481,46 +437,4 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 	    }
 	}
     }
-}
-void maos_daemon(int sock){
-    //info2("maos_daemon is listening at %d\n", sock);
-    thread_block_signal();
-    int cmd[2];
-    while(!streadintarr(sock, cmd, 2)){
-	//info2("maos_daemon got %d at %d\n", cmd[0], sock);
-	switch(cmd[0]){
-	case MAOS_SERVER:
-	    {
-		extern int maos_server_fd;
-		if(streadfd(sock, &maos_server_fd)){
-		    warning("unable to read fd from %d\n", sock);
-		    maos_server_fd=-1;
-		    EXIT;
-		}else{
-		    warning("got fd=%d\n", maos_server_fd);
-		}
-	    }break;
-	case MAOS_DRAW:
-	    {
-		int fd;
-		if(streadfd(sock, &fd)){
-		    warning("unable to read fd from %d\n", sock);
-		    continue;
-		}else{
-		    warning("got fd=%d\n", fd);
-		}
-		draw_add(fd);
-		PARMS_T *parms=(PARMS_T*)global->parms;//cast away constness
-		parms->plot.setup=1;
-		parms->plot.run=1;
-		if(global->setupdone){//already plotted.
-		    plot_setup(global->parms, global->powfs, global->aper, global->recon);
-		}
-	    }break;
-	default:
-	    warning("unknown cmd %d\n", cmd[0]);
-	    break;
-	}
-    }
-    //info2("maos_daemon quit\n");
 }

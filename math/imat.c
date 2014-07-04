@@ -38,7 +38,6 @@ imat* inew(long nx, long ny){
 }
 void iresize(imat *A, long nx, long ny){
     if(!A) return;
-    info2("resize from %ldx%ld to %ldx%ld\n", A->nx, A->ny, nx, ny);
     A->p=realloc(A->p, sizeof(long)*nx*ny);
     if((nx*ny)>(A->nx*A->ny)){
 	memset(A->p+A->nx*A->ny, 0, sizeof(long)*((nx*ny)-(A->nx*A->ny)));

@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "maos.h"
+#include "common.h"
 #include "setup_recon.h"
 #include "mvm_client.h"
 #if USE_CUDA

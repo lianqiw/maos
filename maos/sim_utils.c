@@ -18,7 +18,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "maos.h"
+#include "common.h"
 #include "sim.h"
 #include "sim_utils.h"
 #include "setup_surf.h"
@@ -36,7 +36,6 @@ extern int disable_save;
 static map_t **genscreen_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
-    const int nthread=simu->nthread;
     TIC;
     map_t **screens;
     if(parms->dbg.atm == 0 || parms->dbg.atm == -1){
@@ -54,7 +53,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	    gs->nlayer = atm->nps;
 	    gs->ninit  = atm->ninit;
 	    gs->share  = atm->share;
-	    gs->nthread= nthread;
+	    gs->nthread= NTHREAD;
 	}
 	info2("Generating Atmospheric Screen...\n");
 	tic;
@@ -1163,7 +1162,7 @@ static void init_simu_wfs(SIM_T *simu){
 	data->iwfs=iwfs;
 	data->parms=parms;
 	data->powfs=powfs;
-	simu->wfs_ints[iwfs]=calloc(parms->sim.nthread, sizeof(thread_t));
+	simu->wfs_ints[iwfs]=calloc(NTHREAD, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }
 
@@ -1405,7 +1404,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->nseed=parms->sim.nseed;
     simu->status->simstart=parms->sim.start;
     simu->status->simend=parms->sim.end;
-    simu->status->nthread=parms->sim.nthread;
+    simu->status->nthread=NTHREAD;
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
 
@@ -1448,7 +1447,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
     }
     thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
-    simu->nthread=parms->sim.nthread;
     
     if(!parms->sim.evlol){
 	init_simu_dm(simu);
@@ -1493,13 +1491,14 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	gpu_recon_reset(parms);
     }
 #endif
-    filter(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
+    filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
     return simu;
 }
 /**
    Release memory of simu (of type SIM_T) and close files.
 */
 void free_simu(SIM_T *simu){
+    if(!simu) return;
     const PARMS_T *parms=simu->parms;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
@@ -1767,11 +1766,11 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.dt=%g\n",parms->sim.dt);
     fprintf(fp,"maos.zadeg=%g\n",zadeg);
     if(parms->ndm==2){
-	fprintf(fp,"maos.hc=%g\n",parms->dm[1].ht);
+	fprintf(fp,"common.hc=%g\n",parms->dm[1].ht);
     }else{
 	error("Invalid");
     }
-    fprintf(fp,"maos.hs=%g\n",recon->ngsmod->hs);
+    fprintf(fp,"common.hs=%g\n",recon->ngsmod->hs);
     fprintf(fp,"maos.nmod=%d\n",recon->ngsmod->nmod);
     fprintf(fp,"maos.D=%g\n",parms->aper.d);
     fprintf(fp,"maos.wvl=[");
