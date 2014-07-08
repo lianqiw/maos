@@ -258,17 +258,23 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	if(fd){/*read from file*/
 	    if(!fgets(line, MAXLN, fd)) break;
 	}else{/*read from string*/
+	    if(!config_file) break;
 	    char *p0=strchr(config_file, '\n');
+	    int len;
 	    if(p0){
-		int len=p0-config_file;
-		if(len+1>MAXLN){
-		    error("Input line is too long. Please make MAXLN larger to accomodate.\n");
-		}
-		strncpy(line, config_file, len);
-		line[len]='\0';
+		len=p0-config_file;
+	    }else{
+		len=strlen(config_file);
+	    }
+	    if(len+1>MAXLN){
+		error("Input line is too long. Please make MAXLN larger to accomodate.\n");
+	    }
+	    strncpy(line, config_file, len);
+	    line[len]='\0';
+	    if(p0){
 		config_file=p0+1;
 	    }else{
-		break;
+		config_file=0;
 	    }
 	}
 	sline=squeeze(line);

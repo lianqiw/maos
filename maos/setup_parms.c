@@ -2219,7 +2219,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    parms->sim.nseed=jseed;
 	}
 	if(parms->sim.nseed<1){
-	    warning("There are no seed to run. Use -O to override. Exit\n");
 	    if(!disable_save){//remove log and conf files
 		char fnpid[PATH_MAX];
 		snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
@@ -2228,7 +2227,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 		remove(fnpid);
 	    }
 	    scheduler_finish(0);
-	    raise(SIGTERM);
+	    error("There are no seed to run. Use -O to override. Exit\n");
 	}
     }
     info2("There are %d valid simulation seeds: ",parms->sim.nseed);

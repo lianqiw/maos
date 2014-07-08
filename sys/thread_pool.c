@@ -57,6 +57,7 @@
 #include "thread.h"
 #include "thread_pool.h"
 #include "process.h"
+
 #define USE_SPIN_LOCK 1
 #if USE_SPIN_LOCK == 1 && !defined(__INTEL_COMPILER)
 /*Important to be volatile, otherwise lockes up in Sandy Bridge CPUs */
@@ -396,7 +397,7 @@ void thread_pool_wait_all(void){
  *   Exit all threads and free thread pool.
  */
 void thread_pool_destroy(void){
-    if(!pool.inited) return;
+    if(atomicadd(&pool.inited, -1)!=0) return;
     thread_pool_wait_all();/*let all jobs finish. */
     /*tell all jobs to quit. */
     pool.quit=1;
@@ -419,13 +420,12 @@ void thread_pool_destroy(void){
     pthread_cond_destroy(&pool.jobdone);
     pthread_cond_destroy(&pool.exited);
     pthread_attr_destroy(&pool.attr);
-    pool.inited=0;
 }
 static __attribute__((destructor)) void deinit(){
+    info2("thread_pool destructor\n");
     thread_pool_destroy();
 }
 
 static __attribute__((constructor)) void init(){
     register_deinit(thread_pool_destroy,NULL);/*register to mem.c */
 }
-

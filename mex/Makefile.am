@@ -1,9 +1,8 @@
-AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
-AM_LDFLAGS=-no-fast-install -static -Xcompiler -shared 
+AM_CFLAGS=$(MEXOPT) -I$(SRC_DIR)/lib -I$(SRC_DIR)/math 
+AM_LDFLAGS=$(LDMEX)
 #LDFLAGS goes before LDADD. Must put maos libraries before matlab libraries.
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
-LIBMX=-lcholmod $(LDMEX) -lmx -lmex -lmat -lfftw3 -lmwblas -lmwlapack -lz -lm -lstdc++ -ldl
-LDADD=../lib/libaos.la  $(LIBMX)
+LDADD=../lib/libaos.la -lcholmod -lfftw3 $(LIBMEX) 
 EXTRA_DIST=null.c io.c io.h interface.h  Makefile.mex compile.sh
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
@@ -22,15 +21,14 @@ bin_PROGRAMS=read write mkgmex mkhmex crandcreate crandn crandp clrand mkwmex pr
 
 read_SOURCES=read.c io.c
 read_CFLAGS=$(MEXOPT)
-read_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-fast-install
-read_LDADD=
+read_LDADD=$(LIBMEX)
 write_SOURCES=write.c io.c
 write_CFLAGS=$(MEXOPT)
-write_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-fast-install
-write_LDADD=
+write_LDADD=$(LIBMEX)
 
 
-maos_LDADD=../maos/libmaos.la $(LIBMX)
+maos_LDADD=../maos/libmaos.la 
 if USE_CUDA
-maos_LDADD+=$(LDCUDA)
+maos_LDADD+=$(LIBCUDA) #must be before LIBMEX, otherwise linking error in debug mode
 endif
+maos_LDADD+=-lcholmod -lfftw3 $(LIBMEX) 

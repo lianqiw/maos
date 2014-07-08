@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
-TIC;
+static TIC;
 #include "setup_aper.h"
 /**
    \file setup_aper.c

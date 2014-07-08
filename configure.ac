@@ -60,8 +60,8 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
-#-all-static will produce a static exe.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function" 
+#-all-static will produce a static exe if all libraries are available in static linking mode.
+OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
 if test "${USER}" = "lianqiw" ;then
     OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
@@ -84,7 +84,6 @@ fi
 case ${host_cpu} in 
     *64)
 	host_cpu=x86_64
-        cpu="64"
 	CFLAGS_CPU="-m64 -DDLONG"
         LDFLAGS+=" -m64"
         CDEFINE="__x86_64__"
@@ -95,7 +94,6 @@ case ${host_cpu} in
 	;;
     *86)
 	host_cpu=i386
-        cpu="32"
 	CFLAGS_CPU="-m32 -DDINT"
 	LDFLAGS+=" -m32"
         CDEFINE="__i386__"
@@ -233,7 +231,7 @@ if test "$use_scheduler" = "no" ;then
     AM_CONDITIONAL(USE_SCHEDULER, false)
     use_websockets="no"
 fi
-if test "$cpu" = "64" ;then 
+if test "$host_cpu" = "x86_64" ;then 
     chol_fun=cholmod_l_factorize
     AM_CONDITIONAL(USE_LONG, true)
 else
@@ -639,7 +637,6 @@ OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
-AC_SUBST(LDEXE)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
@@ -659,24 +656,24 @@ if test "$with_matlab" != "no" ;then
     case $MEXEXT in
    	mexglx)
 	    MEXLIB=glnx86
-	    MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
+	    MEXOPT="$OPTS -fPIC -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
 	    MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
 	    mex_cpu=i386
 	    ;;
    	mexa64)
 	    MEXLIB=glnxa64
-	    MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m64 -fexceptions -fno-omit-frame-pointer"
+	    MEXOPT="$OPTS -fPIC -m64 -fexceptions -fno-omit-frame-pointer"
 	    MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
 	    mex_cpu=x86_64
 	    ;;
 	mexmaci)
 	    MEXLIB=maci
-	    MEXOPT="-O3 -DNDEBUG -fno-common -m32 -fexceptions" #omitted -no-cpp-precomp
+	    MEXOPT="$OPTS -fPIC -m32 -fexceptions" 
 	    mex_cpu=i386
 	    ;;
 	mexmaci64)
 	    MEXLIB=maci64
-	    MEXOPT="-O3 -DNDEBUG -fno-common -fexceptions -arch x86_64" #omitted -no-cpp-precomp
+	    MEXOPT="$OPTS -fPIC -m64 -fexceptions" 
 	    MEXOPT="${MEXOPT} -DDLONG"
 	    mex_cpu=x86_64
 	    ;;
@@ -697,8 +694,8 @@ if test "$with_matlab" != "no" ;then
     if test "$mex_cpu" != "$host_cpu" ;then
 	mex_lib="no"
     else       
-	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
-	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+	LIBMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
+	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LIBMEX])
     fi
     if test x$mex_lib = xyes ;then
 	AM_CONDITIONAL(USE_MEX, true)
@@ -706,8 +703,11 @@ if test "$with_matlab" != "no" ;then
 	AC_MSG_NOTICE([mex library test failed. Disable mex])
 	AM_CONDITIONAL(USE_MEX, false)
     fi
-    MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE"
+    MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
+    LIBMEX+=" -lmx -lmex -lmat -lmwblas -lmwlapack -lut -lstdc++ -lz -lm -ldl"
+    LDMEX="-no-fast-install -static -Xcompiler -shared"
     AC_SUBST(MEXEXT)
+    AC_SUBST(LIBMEX)
     AC_SUBST(LDMEX)
     AC_SUBST(MEXOPT)
 else
@@ -744,13 +744,13 @@ if test "$with_cuda" != "no" ;then
 	CUDA_L=""
     fi
     if test -d "$CUDA_L" ;then
-	LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
+	LIBCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
     else
-	LDCUDA=
+	LIBCUDA=
 	AC_MSG_NOTICE([CUDA library not found])
 	with_cuda="no"
     fi
-    AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LDCUDA])
+    AC_CHECK_LIB([cudart], [cudaSetDevice], [], [AC_MSG_NOTICE([libcudart not found]);with_cuda="no"], [$LIBCUDA])
 
     #Check for cuda header
     if test -f "${CUDADIR}/include/cuda.h" ;then
@@ -798,7 +798,7 @@ if test "$with_cuda" != "no" ;then
     fi
     CUDAOPT+=" -g -lineinfo -DHAVE_CONFIG_H -I.."
     #CUDAOPT+="-Xptxas=-v -dlcm=cg"
-    if test "$cpu" = "64" ;then
+    if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
     CCBINOPT="$OPTS -fPIC"
@@ -807,9 +807,7 @@ if test "$with_cuda" != "no" ;then
 	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
   	;;			  
     esac
-    echo LDCUDA="$LDCUDA"
-    echo CUDAOPT="$CUDAOPT"
-    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+    LIBCUDA+=" -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
 else
     with_cuda="no"
 fi
@@ -825,7 +823,7 @@ if test "$with_cuda" != "no" ;then
     AC_DEFINE(USE_CUDA, [1], "Has Cuda")
     AC_SUBST(CUDAOPT)
     AC_SUBST(CCBINOPT)
-    AC_SUBST(LDCUDA)
+    AC_SUBST(LIBCUDA)
     AC_SUBST(NVCC)
 else
     AM_CONDITIONAL(USE_CUDA, false)
@@ -876,13 +874,13 @@ fi
 if test "$with_cuda" != "no" ;then
     echo NVCC=$NVCC
     echo CUDAOPT=$CUDAOPT
-    echo LDCUDA=$LDCUDA
+    echo LIBCUDA=$LIBCUDA
 else
     echo "Without CUDA support"
 fi
 if test "$with_matlab" != "no" ;then
     echo MEXDIR=$MEXDIR
-    echo LDMEX=$LDMEX
+    echo LIBMEX=$LIBMEX
     echo MEXOPT=$MEXOPT
 else
     echo "Without matlab support"

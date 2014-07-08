@@ -488,6 +488,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	bitpix=-64;
 	break;
     default:
+	bitpix=0;
 	error("Data type is not yet supported.\n");
     }
     const int nh=36;

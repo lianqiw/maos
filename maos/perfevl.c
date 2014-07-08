@@ -595,6 +595,7 @@ static void perfevl_save(SIM_T *simu){
    Evaluate performance by calling perfevl_ievl in parallel and then calls
    perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(!(parms->gpu.evl)){ //Cache the ground layer. 
 	int ips=simu->perfevl_iground;
@@ -628,6 +629,5 @@ void perfevl(SIM_T *simu){
     }else
 #endif
 	perfevl_save(simu);
-    extern double tk_start;
     simu->tk_eval=myclockd()-tk_start;
 }

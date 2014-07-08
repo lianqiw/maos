@@ -151,6 +151,7 @@ static __attribute__((constructor)) void init(){
    Register routines to be called with mem.c is unloading (deinit).
  */
 static __attribute__((destructor)) void deinit(){
+    info2("mem.c destructor\n");
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
 	DEINIT=p1->next;
 	if(p1->fun) p1->fun();

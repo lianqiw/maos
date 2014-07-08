@@ -42,11 +42,12 @@
 #endif
 extern int PARALLEL;
 extern int draw_single;
-double tk_start;
 static double tk_0;
 static double tk_1;
 static double tk_atm=0;
 SIM_T *maos_iseed(int iseed){
+    if(iseed==0) tk_0=myclockd();
+    tk_1=myclockd();
     const PARMS_T *parms=global->parms;
     POWFS_T *powfs=global->powfs;
     APER_T  *aper =global->aper;
@@ -62,9 +63,7 @@ SIM_T *maos_iseed(int iseed){
 	draw_single=0;
     }
     global->iseed=iseed;
-    tk_1=myclockd();
     SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
-    global->simu=simu;
     if(recon) recon->simu=simu;
     if(parms->atm.frozenflow){
 	genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
@@ -104,6 +103,15 @@ void maos_isim(int isim){
     simu->isim=isim;
     simu->status->isim=isim;
     sim_update_etf(simu);
+#if _OPENMP>=200805
+    static int omp_warn=0;
+    if(!omp_warn){
+	omp_warn=1;
+	if(!omp_in_parallel()){
+	    warning("Not in parallel region. active_level=%d\n", omp_get_active_level());
+	}
+    }
+#endif
     if(parms->atm.frozenflow){
 	if(parms->atm.evolve){
 	    evolve_screen(simu);
@@ -141,7 +149,6 @@ void maos_isim(int isim){
     }
     extern int NO_RECON, NO_WFS, NO_EVL;
     if(PARALLEL){
-	tk_start=myclockd();
 	/*
 	  We do the big loop in parallel to make better use the
 	  CPUs. Notice that the reconstructor is working on grad from
@@ -185,26 +192,20 @@ void maos_isim(int isim){
 	WAIT(group);
     }else{/*do the big loop in serial mode. */
 	if(parms->sim.closeloop){
-	    tk_start=myclockd();
 	    if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-	    tk_start=myclockd();
 	    if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
-	    tk_start=myclockd();
 	    if(!NO_RECON) {
 		reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
 		shift_grad(simu);
 		filter_dm(simu);
 	    }
 	}else{/*in OL mode,  */
-	    tk_start=myclockd();
 	    if(!NO_WFS) wfsgrad(simu);
-	    tk_start=myclockd();
 	    if(!NO_RECON) {
 		shift_grad(simu);
 		reconstruct(simu);
 		filter_dm(simu);
 	    }
-	    tk_start=myclockd();
 	    if(!NO_EVL) perfevl(simu);
 	}
     }
@@ -254,12 +255,11 @@ void maos_sim(){
     }
     info2("PARALLEL=%d\n", PARALLEL);
     if(simstart>=simend) return;
-    tk_0=myclockd();
     double restot=0; long rescount=0;
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD)
+#pragma omp task untied final(NTHREAD==1)
 #endif
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	while(!(simu=maos_iseed(iseed))){

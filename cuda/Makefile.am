@@ -22,10 +22,10 @@ libaogpu_la_LDFLAGS=$(LDLIB)
 bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
 ___test_test_cuda_SOURCES=test.cu 
 ___test_test_cuda_CFLAGS=$(OPTS)
-___test_test_cuda_LDADD=libaogpu.la $(LDCUDA) ../lib/libaos.la $(LDOPTS)
+___test_test_cuda_LDADD=libaogpu.la $(LIBCUDA) ../lib/libaos.la $(LDOPTS)
 ___bin_gpu_mvm_SOURCES=gpu_mvm.c
 ___bin_gpu_mvm_CFLAGS=$(OPTS)
-___bin_gpu_mvm_LDADD=libaogpu.la $(LDCUDA) ../lib/libaos.la $(LDOPTS)
+___bin_gpu_mvm_LDADD=libaogpu.la $(LIBCUDA) ../lib/libaos.la $(LDOPTS)
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:

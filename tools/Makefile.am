@@ -21,15 +21,13 @@ endif
 if LINUX
 PROGS+=../bin/load ../bin/record_cpu
 ___bin_load_SOURCES=load.c
-___bin_load_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 ___bin_record_cpu_SOURCES=record_cpu.c
-___bin_record_CPU_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 endif
 
 if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
-___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
+___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS)
 ___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
@@ -39,10 +37,10 @@ endif
 if USE_SCHEDULER
 if MON
 if MONN #FULL with notify
-MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY
+MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) -DWITH_NOTIFY
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MONN_LIBS) 
 else #Monitor wihtout libnotify.
-MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
+MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS)
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MON_LIBS) 
 endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table

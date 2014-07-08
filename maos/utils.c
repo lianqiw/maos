@@ -259,14 +259,6 @@ static void print_usage(void){
 	  );
     exit(0);
 }
-  
-#if USE_STATIC
-static __attribute__((destructor)) void deinit(){
-    char tmp[PATH_MAX];
-    snprintf(tmp, PATH_MAX, "rm -rf %s/config-%ld/", TEMP, (long)getpid());
-    if(system(tmp)){}
-}
-#endif
 
 /**
    Parse command line arguments argc, argv

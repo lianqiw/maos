@@ -43,6 +43,7 @@ static void read_env(){
 }
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
+    global=calloc(1, sizeof(GLOBAL_T));
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
@@ -82,7 +83,7 @@ void maos_setup(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD)
+#pragma omp task untied final(NTHREAD==1)
 #endif
 	{
 	    setup_surf(parms, aper, powfs, recon);
@@ -96,7 +97,6 @@ void maos_setup(const PARMS_T *parms){
 	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    global=calloc(1, sizeof(GLOBAL_T));
     global->parms=parms;
     global->powfs=powfs;
     global->aper=aper;
@@ -128,7 +128,7 @@ void maos_setup(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD)
+#pragma omp task untied final(NTHREAD==1)
 #endif
 	setup_recon_mvm(parms, recon, powfs);
     }
@@ -155,6 +155,7 @@ void maos(const PARMS_T *parms){
 void maos_reset(){
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
+    if(!global) return;
     PARMS_T *parms=(PARMS_T*)global->parms;
     free_simu(global->simu);
     free_recon(parms,global->recon); 

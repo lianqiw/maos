@@ -833,8 +833,8 @@ void set_realtime(int icpu, int niceness){
 }
 quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
+    fprintf(stderr, "default_quitfun: %s\n", msg);
     if(strncmp(msg, "ERROR", 5)){
-	sync();
 	print_backtrace();
 	sync();
     }
@@ -874,9 +874,6 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     raise(sig);
 }
 static __attribute__((constructor)) void init(){
-    if(!quitfun){//Don't override quitfun assigned by mex/interface.h
-	quitfun=&default_quitfun;
-    }
     if(CHECK_NAN(NAN)){
 	error("NAN check failed\n");
     }

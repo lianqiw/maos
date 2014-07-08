@@ -30,10 +30,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double dispy=mxGetScalar(prhs[P_DISPY]);
     double scale=mxGetScalar(prhs[P_SCALE]);
     int do_partial=(int)mxGetScalar(prhs[P_DOPARTIAL]);
-    dsp *GS0T=mkgt(xloc, ploc, amp, saloc, 1, scale, dispx, dispy, do_partial);
-    mxArray *GS0T2=dsp2mx(GS0T);
-    mexCallMATLAB(1,plhs,1, &GS0T2,"transpose");
-    spfree(GS0T);
+    dsp *GS0=mkg(xloc, ploc, amp, saloc, 1, scale, dispx, dispy, do_partial);
+    plhs[0]=dsp2mx(GS0);
+    spfree(GS0);
     free(xloc);
     free(ploc);
     free(saloc);

@@ -24,5 +24,5 @@ bin_PROGRAMS=../bin/maos
 ___bin_maos_SOURCES=main.c
 ___bin_maos_LDADD=libmaos.la $(LDOPTS)
 if USE_CUDA
-___bin_maos_LDADD+=$(LDCUDA)
+___bin_maos_LDADD+=$(LIBCUDA)
 endif

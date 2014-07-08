@@ -1384,6 +1384,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     SIM_T *simu=calloc(1, sizeof(SIM_T));
+    global->simu=simu;
     SIM_SAVE_T *save=simu->save=calloc(1, sizeof(SIM_SAVE_T));
     simu->isim=-1;
     simu->parms=parms;
@@ -1499,6 +1500,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 */
 void free_simu(SIM_T *simu){
     if(!simu) return;
+    global->simu=0;
     const PARMS_T *parms=simu->parms;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;

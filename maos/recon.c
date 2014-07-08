@@ -202,6 +202,7 @@ void recon_split(SIM_T *simu){
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol || !simu->gradlastcl) return;
     RECON_T *recon=simu->recon;
@@ -317,6 +318,5 @@ void reconstruct(SIM_T *simu){
 	    moao_recon(simu);
     }
     save_recon(simu);
-    extern double tk_start;
     simu->tk_recon=myclockd()-tk_start;
 }

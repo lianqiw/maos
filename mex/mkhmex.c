@@ -33,12 +33,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if(ampout && ampout->nx!=locout->nloc){
 	error("ampout invalid\n");
     }
-    dsp *Hb=mkhb(locin, locout, ampout?ampout->p:0, dispx, dispy, scale, cubic, cubic_iac);
-    mapwrite(locin->map, "map");
-    mxArray *Hbmex=dsp2mx(Hb);
-    mexCallMATLAB(1,plhs,1, &Hbmex,"transpose");
+    dsp *H=mkh(locin, locout, ampout?ampout->p:0, dispx, dispy, scale, cubic, cubic_iac);
+    plhs[0]=dsp2mx(H);
     free(locin);
     free(locout);
     dfree(ampout);
-    spfree(Hb);
+    spfree(H);
 }

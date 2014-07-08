@@ -6,6 +6,7 @@
 #include <string.h>
 #include <complex.h>
 #include <stdint.h>
+#include <setjmp.h>
 typedef uint16_t char16_t;
 #include <mex.h>
 #ifdef __cplusplus
@@ -151,12 +152,22 @@ static void mex_signal_handler(int sig){
 	info("signal 0 caught\n");
     }
 }
+static jmp_buf *exception_env;
+static void mex_quitfun(const char *msg){
+    if(exception_env){
+	info2("longjmp\n");
+	longjmp(*exception_env, 1);
+    }else{
+	info2("mexerrmsg\n");
+	mexErrMsgTxt(msg);
+    }
+}
 static void(*default_handler)(int)=NULL;
 static __attribute__((constructor)) void init(){
     if(!default_handler){
 	default_handler=signal(SIGTERM, mex_signal_handler);
     }
-    quitfun=mexErrMsgTxt;
+    quitfun=mex_quitfun;
 }
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");

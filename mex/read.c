@@ -105,6 +105,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }else if(magic==M_SP64){
 		size=8;
 	    }else{
+		size=0;
 		error("Invalid magic\n");
 	    }
 	    uint64_t nzmax;
@@ -162,10 +163,13 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	{
 	    if(start==-1) error("Invalid use\n");
 	    size_t size;
-	    if(magic==M_CSP32){
-		size=4;
-	    }else if(magic==M_CSP64){
-		size=8;
+	    switch(magic){
+	    case M_CSP32:
+		size=4;break;
+	    case M_CSP64:
+		size=8;break;
+	    default:
+		size=0;
 	    }
 	    uint64_t nzmax;
 	    if(nx!=0 && ny!=0){
@@ -264,6 +268,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    case M_INT32: byte=4; id=mxINT32_CLASS; break;
 	    case M_INT16: byte=2; id=mxINT16_CLASS; break;
 	    case M_INT8:  byte=1; id=mxINT8_CLASS; break;
+	    default: id=0;
 	    }
 	    if(start==-1){
 		if(zfseek(fp, byte*nx*ny, SEEK_CUR)){
@@ -335,29 +340,29 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     start=start_save;
     if(!iscell && fp->isfits==1){/*fits file may contain extra extensions.*/
 	fp->isfits++;
-	int nx=0;
+	int icell=0;
 	mxArray **outarr=NULL;
 	mxArray **headerarr=NULL;
 	while(out){
-	    nx++;
-	    outarr=realloc(outarr, sizeof(mxArray*)*nx);
-	    headerarr=realloc(headerarr, sizeof(mxArray*)*nx);
+	    icell++;
+	    outarr=realloc(outarr, sizeof(mxArray*)*icell);
+	    headerarr=realloc(headerarr, sizeof(mxArray*)*icell);
 	    if(out==INVALID) out=NULL;
-	    outarr[nx-1]=out;
-	    if(header) headerarr[nx-1]=*header;
+	    outarr[icell-1]=out;
+	    if(header) headerarr[icell-1]=*header;
 	    int start2=0;
 	    if(howmany!=0){//selective reading.
-		if(nx<start || nx+1>start+howmany){
+		if(icell<start || icell+1>start+howmany){
 		    start2=-1;//don't read next data.
 		}
 	    }
 	    out=readdata(fp, header, start2, 0);
 	}
-	if(nx>1){/*set output.*/
-	    out=mxCreateCellMatrix(nx, 1);
-	    if(header) *header=mxCreateCellMatrix(nx, 1);
+	if(icell>1){/*set output.*/
+	    out=mxCreateCellMatrix(icell, 1);
+	    if(header) *header=mxCreateCellMatrix(icell, 1);
 	    int i;
-	    for(i=0; i<nx; i++){
+	    for(i=0; i<icell; i++){
 		mxSetCell(out, i, outarr[i]);
 		if(header) mxSetCell(*header, i, headerarr[i]);
 	    }

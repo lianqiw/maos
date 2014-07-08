@@ -31,7 +31,7 @@
    information, which hands GLAO mode correctly.
    */
 
-TIC;
+static TIC;
 
 /**
    Compute number of ahst modes from number of DMs.
