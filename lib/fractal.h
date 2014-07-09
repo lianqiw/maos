@@ -25,7 +25,7 @@
    generation and reconstruction.
 */
 #define ARGS double *p0, long nx, long ny, double dx, double r0, double L0, long ninit
-void fractal(ARGS);
+void fractal_do(ARGS);
 void fractal_inv(ARGS);
 void fractal_trans(ARGS);
 void fractal_inv_trans(ARGS);

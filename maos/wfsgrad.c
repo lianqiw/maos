@@ -559,6 +559,8 @@ void wfsgrad_iwfs(thread_t *info){
 	intsdata->lltopd=lltopd;
 	CALL_THREAD(simu->wfs_ints[iwfs], 0);
 	dfree(lltopd);
+	intsdata->opd=0;
+	intsdata->lltopd=0;
 	if(psfout){
 	    cellarr_ccell(psfoutcellarr, isim, psfout);
 	    cellarr_dmat(ztiltoutcellarr, isim, *gradacc);

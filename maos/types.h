@@ -247,10 +247,6 @@ typedef struct FRACTAL_T{
 /**
    contains data related to wavefront reconstruction and DM fitting.  */
 typedef struct RECON_T{
-    const PARMS_T *parms;/**<Save a const pointer of parms*/
-    const APER_T *aper;  /**<Save a const pointer to aper*/
-    const POWFS_T *powfs;/**<Save a const pointer to powfs*/
-    struct SIM_T *simu;  /**<Temporarily save a pointer to simu*/
     double r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
     double l0;         /**<l0 used in reconstruction. may get updated in cn2 estimation*/
     dmat *ht;          /**<height of the layers to do tomography.*/
@@ -420,8 +416,6 @@ typedef struct WFSINTS_T{
     const dmat *gradref;
     const dmat *opd;
     const dmat *lltopd;
-    const PARMS_T *parms;
-    const POWFS_T *powfs;
     int iwfs;
 }WFSINTS_T;
 /**

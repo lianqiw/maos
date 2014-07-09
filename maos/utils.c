@@ -248,7 +248,6 @@ static void print_usage(void){
 "-d, --detach      to detach from terminal and run in background\n"
 "-f, --force       force starting simulation without scheduler\n"
 "-n, --nthread=N   Use N threads, default is 1\n"
-"-s, --seed=N      Use seed N instead of the numbers specified in .conf files\n"
 "-o, --output=DIR  output the results to DIR.\n"
 "-c, --conf=FILE.conf\n"
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
@@ -265,7 +264,6 @@ static void print_usage(void){
  */
 ARG_T * parse_args(int argc, const char *argv[]){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
-    int *seeds=NULL; int nseed=0;
     char *host=NULL;
     int nthread=0;
     ARGOPT_T options[]={
@@ -278,7 +276,6 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},
 	{"ngpu",   'G',T_INT, 1, &arg->ngpu2, NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
-	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
 	{"run",    'r',T_STR, 1, &host, NULL},
 	{"server", 'S',T_INT, 0, &arg->server,NULL},
@@ -326,23 +323,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    error("-g and -G cannot both be specified\n");
 	}
     }
-    char fntmp[PATH_MAX];
-    snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
-    FILE *fptmp=fopen(fntmp,"w");
-    if(cmds){
-	fputs(cmds, fptmp);
-	free(cmds); cmds=NULL;
-    }
-    if(nseed){
-	fprintf(fptmp, "\nsim.seeds=[");
-	for(int iseed=0; iseed<nseed; iseed++){
-	    fprintf(fptmp, "%d ", seeds[iseed]);
-	}
-	fprintf(fptmp, "]\n");
-	free(seeds); seeds=NULL;
-    }
-    fclose(fptmp);
-    arg->confcmd=strdup(fntmp);
+    arg->confcmd=strdup(cmds);
     
     addpath(".");
     if(arg->dirout){

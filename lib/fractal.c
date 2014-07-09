@@ -142,7 +142,7 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
    To confirm that fractal_trans is right, compare u'Av with v'A'u, where ' is transpose. 
    u,v are two vectors (reshape to 2-d arrays when applying A, or A')
 */
-#define FRACTAL fractal
+#define FRACTAL fractal_do
 #define INVERSE 0
 #define TRANSPOSE 0
 #include "fractal_do.c"

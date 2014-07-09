@@ -213,8 +213,8 @@ typedef struct Tomo_T{
 static void Tomo_prop_do(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
-    const PARMS_T *parms=recon->parms;
-    SIM_T *simu=recon->simu;
+    const PARMS_T *parms=global->parms;
+    SIM_T *simu=global->simu;
     const int nps=recon->npsr;
     map_t xmap;/*make a temporary xmap for thread safety.*/
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
@@ -306,8 +306,8 @@ void Tomo_nea(Tomo_T *data, int nthread, int gpt){
 static void Tomo_iprop_do(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
-    const PARMS_T *parms=recon->parms;
-    SIM_T *simu=recon->simu;
+    const PARMS_T *parms=global->parms;
+    SIM_T *simu=global->simu;
     const int nps=recon->npsr;
     map_t xmap;
     for(int ips=info->start; ips<info->end; ips++){
@@ -437,7 +437,7 @@ void TomoL(dcell **xout, const void *A,
 #endif
 
     const RECON_T *recon=(const RECON_T *)A;
-    const PARMS_T *parms=recon->parms;
+    const PARMS_T *parms=global->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
     dcell *gg=dcellnew(parms->nwfsr, 1);
     if(!*xout){
@@ -485,8 +485,8 @@ void FitR(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     dcell *xp=NULL;
     if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
-	const PARMS_T *parms=recon->parms;
-	SIM_T *simu=recon->simu;
+	const PARMS_T *parms=global->parms;
+	SIM_T *simu=global->simu;
 	int isim=simu->reconisim;
 	const int nfit=parms->fit.nfit;
 	xp=dcellnew(nfit,1);
@@ -506,7 +506,7 @@ void FitR(dcell **xout, const void *A,
     }else if(recon->HXF){
 	spcellmulmat_thread(&xp, recon->HXF, xin, 1.);
     }else{/*Do the ray tracing from xloc to ploc */
-	const PARMS_T *parms=recon->parms;
+	const PARMS_T *parms=global->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
 	xp=dcellnew(nfit,1);

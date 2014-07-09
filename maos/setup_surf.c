@@ -336,7 +336,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 /** We trace rays from Science focal plan OPD to ploc along evaluation
     directions (type=1) or on axis only (type=2).*/
 static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
-    const PARMS_T *parms=recon->parms;
+    const PARMS_T *parms=global->parms;
     dcell *xp=NULL;
     if(aper->opdfloc){
 	xp=dcelldup(aper->opdfloc);
@@ -357,7 +357,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
 void FitL_NCPA(dcell **xout, const void *A, 
 	       const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
-    const PARMS_T *parms=recon->parms;
+    const PARMS_T *parms=global->parms;
     dcell *xp=NULL;
     spcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);

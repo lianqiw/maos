@@ -64,7 +64,7 @@ SIM_T *maos_iseed(int iseed){
     }
     global->iseed=iseed;
     SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
-    if(recon) recon->simu=simu;
+    global->simu=simu;
     if(parms->atm.frozenflow){
 	genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	if(parms->tomo.predict){

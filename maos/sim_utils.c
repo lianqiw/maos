@@ -1160,8 +1160,6 @@ static void init_simu_wfs(SIM_T *simu){
 	int tot=powfs[ipowfs].pts->nsa;
 	WFSINTS_T *data=simu->wfs_intsdata+iwfs;
 	data->iwfs=iwfs;
-	data->parms=parms;
-	data->powfs=powfs;
 	simu->wfs_ints[iwfs]=calloc(NTHREAD, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }

@@ -1916,7 +1916,6 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 RECON_T *setup_recon_init(const PARMS_T *parms){
     CALL_ONCE;
     RECON_T * recon = calloc(1, sizeof(RECON_T)); 
-    recon->parms=parms;
     if(parms->recon.warm_restart){
 	info2("Using warm restart\n");
     }else{
@@ -1935,8 +1934,6 @@ RECON_T *setup_recon_init(const PARMS_T *parms){
 void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     CALL_ONCE;
     TIC;tic;
-    recon->aper=aper;
-    recon->powfs=powfs;
     if(parms->cn2.pair && parms->cn2.pair->nx>0){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can
 	  be fed to the tomography */

@@ -236,7 +236,7 @@ static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
     for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 	drandn(dm, 1, data->rstat);
 	double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	fractal(dm->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
+	fractal_do(dm->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
 	remove_piston(dm->p, nx*ny);
 	cellarr_dmat(fc, ilayer, dm);
     }
@@ -260,7 +260,7 @@ static void fractal_screen_thread(GENSCREEN_T *data){
     UNLOCK(data->mutex_ilayer);
     double r0i=data->r0*pow(wt[ilayer], -3./5.);
     /*info("r0i=%g\n", r0i); */
-    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
+    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
 }

@@ -34,5 +34,5 @@ maos_LDADD+=-lcholmod -lfftw3 $(LIBMEX)
 
 
 BUILT_SOURCES=maos2mex.h
-maos2mex.h:../maos/parms.h ../maos/types.h ../scripts/parsec.py
-	$(SRC_DIR)/scripts/parsec.py $(SRC_DIR)/mex/maos2mex.h
+maos2mex.h:../maos/parms.h ../maos/types.h ../scripts/maos2mex.py
+	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR)/mex/maos2mex.h

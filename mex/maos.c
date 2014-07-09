@@ -24,10 +24,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	static int isim=0;
 	static int iseed=0;
 	char *cmd=0;//default action is sim
+	int free_cmd=1;
 	if(nrhs>0){
 	    cmd=mxArrayToString(prhs[0]);
 	}else{
-	    cmd=strdup("sim");
+	    cmd="sim";
+	    free_cmd=0;
 	}
 	if(!strcmp(cmd, "reset")){
 	    if(global) maos_reset();
@@ -74,6 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
 	    addpath(".");
 	    if(dirout){
+		info2("dirout=%s\n", dirout);
 		mymkdir("%s",dirout);
 		if(chdir(dirout)){
 		    error("Unable to chdir to %s\n", dirout);
@@ -138,19 +141,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	
 	if(!strcmp(cmd, "get")){
 	    char *valname=0;
+	    int free_valname=1;
 	    if(nrhs>1){
 		valname=mxArrayToString(prhs[1]);
 	    }else{
-		valname=strdup("simu");
+		valname="";
+		free_valname=0;
 	    }
-	    if(!strcmp(valname, "simu")){
-		info("Return simu\n");
-		plhs[0]=get_simu(global?global->simu:0);
+	    if(global){
+		plhs[0]=get_data(global->simu, valname);
+	    }else{
+		plhs[0]=mxCreateDoubleMatrix(0,0,mxREAL);
 	    }
-	    //free(valname);
+	    if(free_valname) mxFree(valname);
 	}
       end:;
-	//free(cmd);
+	if(free_cmd) mxFree(cmd);
     }
 }
     
