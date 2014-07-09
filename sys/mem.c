@@ -20,14 +20,9 @@
 #include <stdlib.h>
 #include <signal.h>
 int exit_success=0;
-void (*call_freepath)(void)=NULL;
-
-#define MEM_VERBOSE 0
 #include "mem.h"
 #include "thread.h"
-#if USE_MEM == 1
 #include "scheduler_client.h"
-#include "path.h"
 #include <math.h>
 #include <search.h>
 #include <string.h>
@@ -45,19 +40,23 @@ void (*call_freepath)(void)=NULL;
   where the call from eventually from ans is not useful.
   */
 
-
 #include "misc.h"
 #undef malloc
 #undef calloc
 #undef free
 #undef realloc
-PNEW(mutex_mem);
-#if MEM_VERBOSE == 1
-#define meminfo(A...) {printf(A);}
-#else
-#define meminfo(A...)
-#endif
+void *(*CALLOC)(size_t nmemb, size_t size)=0;
+void *(*MALLOC)(size_t size)=0;
+void *(*REALLOC)(void*p0, size_t size)=0;
+void  (*FREE)(void *p)=0;
+void *(*calloc_default)(size_t, size_t)=calloc;
+void *(*malloc_default)(size_t)=malloc;
+void *(*realloc_default)(void *, size_t)=realloc;
+void  (*free_default)(void *)=free;
 
+static int MEM_VERBOSE=0;
+static int MEM_DEBUG=0;
+PNEW(mutex_mem);
 static void *MROOT=NULL;
 static long long memcnt=0;
 static void *MSTATROOT=NULL;
@@ -134,45 +133,7 @@ typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
     struct T_DEINIT *next;
 }T_DEINIT;
 T_DEINIT *DEINIT=NULL;
-/**
-   Register a function or data to call or free upon exit
-*/
-void register_deinit(void (*fun)(void), void *data){
-    T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
-    node->fun=fun;
-    node->data=data;
-    node->next=DEINIT;
-    DEINIT=node;
-}
-static __attribute__((constructor)) void init(){
-    warning2("Memory management is in use\n");
-}
-/**
-   Register routines to be called with mem.c is unloading (deinit).
- */
-static __attribute__((destructor)) void deinit(){
-    info2("mem.c destructor\n");
-    for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
-	DEINIT=p1->next;
-	if(p1->fun) p1->fun();
-	if(p1->data) FREE(p1->data);
-	FREE(p1);
-    }
-    if(exit_success){
-	if(MROOT){
-	    warning("%lld allocated memory not freed!!!\n",memcnt);
-	    twalk(MROOT,stat_usage);
-	    twalk(MSTATROOT, print_usage);
-	}else{
-	    info("All allocated memory are freed.\n");
-	    if(memcnt>0){
-		warning("But memory count is still none zero: %lld\n",memcnt);
-	    }
-	}
-    }else{
-	info("exit_success=%d\n", exit_success);
-    }
-}
+
 static int key_cmp(const void *a, const void *b){
     void *p1,*p2;
     if(!a || !b) return 1; 
@@ -189,7 +150,9 @@ static void memkey_add(void *p,size_t size){
 	}
 	return;
     }
-    meminfo("%p malloced with %lu bytes\n",p, size);
+    if(MEM_VERBOSE){
+	info("%p malloced with %lu bytes\n",p, size);
+    }
     LOCK(mutex_mem);
     T_MEMKEY *key=calloc(1,sizeof(T_MEMKEY));
     key->p=p;
@@ -232,48 +195,91 @@ static void memkey_del(void*p){
     }
     UNLOCK(mutex_mem);
 }
-void *CALLOC(size_t nmemb, size_t size){
+static void *calloc_dbg(size_t nmemb, size_t size){
     void *p=calloc(nmemb,size);
     memkey_add(p,size);
     return p;
 }
-void *MALLOC(size_t size){
+static void *malloc_dbg(size_t size){
     void *p=malloc(size);
     memkey_add(p,size);
     return p;
 }
-void *REALLOC(void*p0, size_t size){
+static void *realloc_dbg(void*p0, size_t size){
     if(!p0) return MALLOC(size);
     memkey_del(p0);
     void *p=realloc(p0,size);
     memkey_add(p,size);
     return p;
 }
-void FREE(void *p){
+static void free_dbg(void *p){
     if(!p) return;
     memkey_del(p);
     free(p);
 }
-#endif
 
-#if USE_MEM == 1
-void mem_usage(void){
-    info2("There are %lld allocated memory not freed!!!\n",memcnt);
+/**
+   Register a function or data to call or free upon exit
+*/
+void register_deinit(void (*fun)(void), void *data){
+    T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
+    node->fun=fun;
+    node->data=data;
+    node->next=DEINIT;
+    DEINIT=node;
 }
-#endif
-#if USE_MEM == 1
-size_t memsize(void *p){
-    size_t tot=0;
-    if(p){
-	T_MEMKEY key,**key2;
-	key.p=p;
-	key2=tfind(&key,&MROOT,key_cmp);
-	if(key2){
-	    tot=(*key2)->size;
+static __attribute__((constructor)) void init(){
+    READ_ENV_INT(MEM_DEBUG, 0, 1);
+    READ_ENV_INT(MEM_VERBOSE, 0, 1);
+    if(!CALLOC){
+	if(MEM_DEBUG){
+	    CALLOC=calloc_dbg;
+	    MALLOC=malloc_dbg;
+	    REALLOC=realloc_dbg;
+	    FREE=free_dbg;
 	}else{
-	    tot=0;
+	    CALLOC=calloc_default;
+	    MALLOC=malloc_default;
+	    REALLOC=realloc_default;
+	    FREE=free_default;
 	}
     }
-    return tot;
+    void init_process(void);
+    void init_scheduler(void);
+    init_process();
+    init_scheduler();
+    if(CHECK_NAN(NAN)){
+	error("NAN check failed\n");
+    }
 }
-#endif
+/**
+   Register routines to be called with mem.c is unloading (deinit).
+ */
+static __attribute__((destructor)) void deinit(){
+    void freepath();
+    void thread_pool_destroy();
+    freepath();
+    thread_pool_destroy();
+    for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
+	DEINIT=p1->next;
+	if(p1->fun) p1->fun();
+	if(p1->data) FREE(p1->data);
+	FREE(p1);
+    }
+    if(MALLOC==malloc_dbg){
+	if(exit_success){
+	    if(MROOT){
+		warning("%lld allocated memory not freed!!!\n",memcnt);
+		twalk(MROOT,stat_usage);
+		twalk(MSTATROOT, print_usage);
+	    }else{
+		info("All allocated memory are freed.\n");
+		if(memcnt>0){
+		    warning("But memory count is still none zero: %lld\n",memcnt);
+		}
+	    }
+	}else{
+	    info("exit_success=%d\n", exit_success);
+	}
+    }
+}

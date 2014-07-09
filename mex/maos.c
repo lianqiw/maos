@@ -8,6 +8,7 @@
 
 #include "interface.h"
 #include "../maos/maos.h"
+#include "maos2mex.h"
 static __attribute__((destructor)) void deinit_maos(){
     maos_reset();
 }
@@ -22,20 +23,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	const PARMS_T *parms=0;
 	static int isim=0;
 	static int iseed=0;
-	char *cmd=" ";
+	char *cmd=0;//default action is sim
 	if(nrhs>0){
 	    cmd=mxArrayToString(prhs[0]);
+	}else{
+	    cmd=strdup("sim");
 	}
 	if(!strcmp(cmd, "reset")){
 	    if(global) maos_reset();
 	    iseed=0;
 	    isim=0;
-	    return;
+	    goto end;
 	}
 	if(!strcmp(cmd, "setup") || !global){
 	    if(global){
 		fprintf(stderr, "Already setup. Please call 'reset' first\n");
-		return;
+		goto end;
 	    }
 	    int override=0;
 	    char *conf=0;
@@ -58,12 +61,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		    {NULL, 0,0,0, NULL, NULL}
 		};
 		parse_argopt(conf, options);
-		if(dirout){
-		    mymkdir("%s",dirout);
-		    if(chdir(dirout)){
-			error("Unable to chdir to %s\n", dirout);
-		    }
-		}
 		if(nthread<NTHREAD && nthread>0){
 		    NTHREAD=nthread;
 		}
@@ -75,60 +72,85 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		    }
 		}
 	    }
-
 	    addpath(".");
+	    if(dirout){
+		mymkdir("%s",dirout);
+		if(chdir(dirout)){
+		    error("Unable to chdir to %s\n", dirout);
+		}
+	    }else{
+		warning2("Disable saving when no -o is supplied.\n");
+		disable_save=1;
+	    }
 	    parms=setup_parms(mainconf, conf, override);
+	    info2("setup_parms done\n");
 	    setup_parms_gpu((PARMS_T*)parms, gpus, ngpu);
 	    maos_setup(parms);//sets global
-	}else{
-	    parms=global->parms;
 	}
-
-	int nstep=1;
+	parms=global->parms;
 	if(!strcmp(cmd, "sim")){
+	    SIM_T *simu=global->simu;
+	    int nstep=1;
 	    if(nrhs>1){
 		if(!mxIsDouble(prhs[1])){
-		    error("The second parameter should be double\n");
+		    error("The second parameter should be an integer\n");
 		}
 		nstep=(int)mxGetScalar(prhs[1]);
 		if(nstep<=0){
 		    nstep=parms->sim.end-parms->sim.start;
 		}
 	    }
-	}
-	SIM_T *simu=global->simu;
-	if(iseed<parms->sim.nseed){
-	    if(!simu){
-		while(!(simu=maos_iseed(iseed))){
-		    iseed++;
-		    if(iseed==parms->sim.nseed){
-			info2("All seeds are finished\n");
-			return;
+	    if(iseed<parms->sim.nseed){
+		if(!simu){
+		    while(!(simu=maos_iseed(iseed))){
+			iseed++;
+			if(iseed==parms->sim.nseed){
+			    info2("All seeds are finished\n");
+			    goto end;
+			}
 		    }
+		    isim=parms->sim.start;
 		}
-		isim=parms->sim.start;
-	    }
-	    while(nstep--){
-		if(isim<parms->sim.end){
+		while(nstep--){
+		    if(isim<parms->sim.end){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
 #pragma omp task untied final(NTHREAD==1)
 #endif
-		    maos_isim(isim++);
-		}else{//one seed finished
-		    free_simu(simu);simu=0;
-		    iseed++;
-		    break;
+			maos_isim(isim);
+			isim++;
+		    }else{//one seed finished
+			free_simu(simu);simu=0;
+			iseed++;
+			break;
+		    }
+		    extern int utIsInterruptPending();
+		    if(utIsInterruptPending()){
+			info2("Simulation interrupted\n");
+			goto end;
+		    }
 		}
-		extern int utIsInterruptPending();
-		if(utIsInterruptPending()){
-		    info2("Simulation interrupted\n");
-		    return;
-		}
+	    }else{
+		info2("Simulation finished\n");
 	    }
-	}else{
-	    info2("Simulation finished\n");
 	}
+	
+	if(!strcmp(cmd, "get")){
+	    char *valname=0;
+	    if(nrhs>1){
+		valname=mxArrayToString(prhs[1]);
+	    }else{
+		valname=strdup("simu");
+	    }
+	    if(!strcmp(valname, "simu")){
+		info("Return simu\n");
+		plhs[0]=get_simu(global?global->simu:0);
+	    }
+	    //free(valname);
+	}
+      end:;
+	//free(cmd);
     }
 }
+    

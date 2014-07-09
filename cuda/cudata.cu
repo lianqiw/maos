@@ -156,6 +156,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    mem_minimum+=sizeof(Real)*parms->atmr.nps*pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*4;
 	}
+	mem_minimum*=2;
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{

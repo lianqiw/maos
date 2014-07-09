@@ -421,11 +421,3 @@ void thread_pool_destroy(void){
     pthread_cond_destroy(&pool.exited);
     pthread_attr_destroy(&pool.attr);
 }
-static __attribute__((destructor)) void deinit(){
-    info2("thread_pool destructor\n");
-    thread_pool_destroy();
-}
-
-static __attribute__((constructor)) void init(){
-    register_deinit(thread_pool_destroy,NULL);/*register to mem.c */
-}

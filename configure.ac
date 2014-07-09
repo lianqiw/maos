@@ -211,7 +211,6 @@ fi
 #Common configure options.
 AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(mem,   AS_HELP_STRING([--enable-mem],[Turn on memory management]),[use_mem="$enableval"],[use_mem="no"])
 AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
@@ -266,12 +265,6 @@ DEBUG_ALL="-g -O0 -DDEBUG_TRACE"
 DEBUG_ICC="$DEBUG_ALL"
 DEBUG_GCC="$DEBUG_ALL -ggdb"
 DEBUG_CLANG="$DEBUG_ALL"
-if test "x$use_mem" = "xyes" ;then
-    AC_DEFINE(USE_MEM,[1],["Use memory management"])
-    debug="yes"
-else
-    AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
-fi
 
 #inline definition:
 
@@ -704,7 +697,7 @@ if test "$with_matlab" != "no" ;then
 	AM_CONDITIONAL(USE_MEX, false)
     fi
     MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-    LIBMEX+=" -lmx -lmex -lmat -lmwblas -lmwlapack -lut -lstdc++ -lz -lm -ldl"
+    LIBMEX+=" $LAPACK -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
     LDMEX="-no-fast-install -static -Xcompiler -shared"
     AC_SUBST(MEXEXT)
     AC_SUBST(LIBMEX)

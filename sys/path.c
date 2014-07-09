@@ -95,9 +95,6 @@ void freepath(void){
 	free(ia);
     }
 }
-static __attribute__((constructor)) void init(){
-    register_deinit(freepath,NULL);
-}
 /**
    Try to find a file in path and return its absolute filename if exist, NULL
 otherwise.  */

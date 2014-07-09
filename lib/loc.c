@@ -66,7 +66,7 @@ void locfree_do(loc_t *loc){
     if(!loc) return;
     loc_free_stat(loc);
     loc_free_map(loc);
-    if(loc->locx){
+    if(!loc->ref){
 	free(loc->locx);
 	free(loc->locy);
     }

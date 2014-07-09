@@ -2582,12 +2582,12 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
       Output all the readed parms to a single file that can be used to reproduce
       the same simulation.
     */
+
     if(disable_save){
 	close_config(NULL);
     }else{
 	close_config("maos_%ld.conf", (long)getpid());
     }
-
     /*
       Postprocess the parameters for integrity. The ordering of the following
       routines are critical.

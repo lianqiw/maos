@@ -69,8 +69,9 @@ typedef struct loc_t{
     double dx;     /**< Sampling along x*/
     double dy;     /**< Sampling along y*/ 
     locstat_t *stat;/**<points to column statistics*/
-    map_t *map; /**< point to the map used for identifying neihboring points.*/
-    int npad;       /*padding when create map*/
+    map_t *map;    /**< point to the map used for identifying neihboring points.*/
+    int npad;      /*padding when create map*/
+    int ref;       /**<Data is referenced*/
 }loc_t;
 /**
    low left point of each subaperture.

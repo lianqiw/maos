@@ -110,8 +110,7 @@ static int myhostid(const char *host){
 
 
 /*Initialize hosts and associate an id number */
-static __attribute__((constructor))void init(){
-    init_process();/*the constructor in process.c may not have been called. */
+void init_scheduler(){
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;

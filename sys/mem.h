@@ -20,40 +20,22 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef USE_MEM
-#if defined(__INTEL_COMPILER) || !defined(DEBUG) || defined(NDEBUG)
-#define USE_MEM 0 /*backtrace is not compatible with icc. */
-#else
-#define USE_MEM 1 /*set to 0 disable memory management. */
-#endif
-#endif
-#if USE_MEM == 1
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-void *CALLOC(size_t nmemb, size_t size);
-void *MALLOC(size_t size);
-void *REALLOC(void*p0, size_t size);
-void  FREE(void *p);
+extern void *(*CALLOC)(size_t nmemb, size_t size);
+extern void *(*MALLOC)(size_t size);
+extern void *(*REALLOC)(void*p0, size_t size);
+extern void  (*FREE)(void *p);
 
 #define malloc MALLOC
 #define calloc CALLOC
 #define realloc REALLOC
 #define free FREE
 
-void mem_usage(void);
-size_t memsize(void *p);/*return allocated size */
 void register_deinit(void (*fun)(void), void *data);
-#else
-#undef malloc
-#undef calloc
-#undef realloc
-#undef free
-#define memsize(A) 0
-#define mem_usage(A)
-#define register_deinit(A,B)
-#endif
+
 extern int exit_success;
-extern void (*call_freepath)(void);
 #endif

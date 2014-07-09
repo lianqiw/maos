@@ -54,24 +54,24 @@
 #define RENAME(old,new) /*do nothing. */
 #define IGNORE(old)
 #endif
+static void *MROOT=NULL;
 
-static int MAX_ENTRY=1000;
 typedef struct STORE_T{
     char *key;
     char *data;
     long protect;
     long count;
 }STORE_T;
+static int key_cmp(const void *a, const void *b){
+    return strcmp(((STORE_T*)a)->key, ((STORE_T*)b)->key);
+}
+
 /*Keep record of all the strings so that we can check whether they have all been used. */
-static STORE_T *store=NULL;/*store the pointers. */
 static long nstore=0;/*number of total records */
 static long nused=0;/*number of read records */
 static int print_override=1;
 
 #define STRICT 1
-/*
-   We only use one hash table in the beginning of code. so the non-reentrant hsearch is fine.
-*/
 
 /**
    trim the spaces or coma before and after string.*/
@@ -161,55 +161,50 @@ static char *squeeze(char *line){
     }
     return sline;
 }
+static FILE *fpout=0;
+static void print_key(const void *key, VISIT which, int level){
+    const STORE_T *store=*((const STORE_T**)key);
+    (void)level;
+    if(which==leaf || which==postorder){
+	if(fpout){
+	    if(!store->protect){
+		fprintf(fpout, "#");
+	    }
+	    fprintf(fpout, "%s=", store->key);
+	    if(store->data && strcmp(store->data, "ignore")){
+		fprintf(fpout, "%s\n", store->data);
+	    }
+	}else{
+	    if(store->count==0){
+		error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+	    }else if(store->count!=1){
+		error("Key %s is used %ld times\n", store->key, store->count);
+	    }
+	}
+    }
+}
+static void delete_leaf(const void *key, VISIT which, int level){
+    const STORE_T *store=*((const STORE_T**)key);
+    (void)level;
+    if(which==leaf){
+	tdelete(store, &MROOT, key_cmp);
+    }
+}
 /**
-   End the read config process and output the effective config hash table into a
-   file for later reference.
+   Save all configs to file and check for unused config options.
  */
 void close_config(const char *format, ...){
     format2fn;
     const char *fnout=format?fn:NULL;
-    if(store){
-	info2("Used %ld of %ld supplied keys\n",nused,nstore);
-	if(fnout && strlen(fnout)>0){
-	    FILE *fp=fopen(fnout,"w");
-	    const char *pre;
-	    for(int i=0; i<nstore; i++){
-		if(store[i].protect){
-		    pre="";
-		}else{
-		    pre="#";//comment out default parameters
-		}
-		if(store[i].data){
-		    if(strcmp(store[i].data, "ignore")){
-			fprintf(fp,"%s%s=%s\n",pre,store[i].key,store[i].data);
-		    }
-		}else{
-		    fprintf(fp,"%s%s=\n",pre,store[i].key);
-		}
-	    }
-	    fclose(fp);
-	}
-	for(int i=0; i<nstore; i++){
-	    if(store[i].count==0){
-		//print_file("change.log");
-		error("key \"%s\" is not recognized, value is %s\n", store[i].key,store[i].data);
-	    }else if(store[i].count!=1){
-		/*this should not happen. */
-		error("Key %s is used %ld times\n", store[i].key,store[i].count);
-	    }
-#if defined(__linux__)
-	    /*Linux doesn't free the keys. but Mac does. */
-	    free(store[i].key);/*free key; */
-#endif
-	    if(store[i].data){
-		free(store[i].data);/*free value */
-	    }
-	}
-	hdestroy();
-	free(store);
-	store=NULL;
-    }else{
-	warning("Store is empty\n");
+    if(MROOT){
+	info2("Used %ld of %ld supplied keys\n",nused, nstore);
+	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
+	fpout=fopen(fnout,"w");
+	twalk(MROOT, print_key);
+	if(fpout) fclose(fpout); fpout=0;
+    }
+    while(MROOT){
+	twalk(MROOT, delete_leaf);
     }
 }
 /**
@@ -239,16 +234,9 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
     
     char *sline=NULL;
     char *var=NULL, *value=NULL;
-    ENTRY entry;
-    ENTRY *entryfind=NULL;
     int countnew=0;
     int countold=0;
-    if(!store){
-	hcreate(MAX_ENTRY);
-	store=calloc(MAX_ENTRY,sizeof(STORE_T));
-	nstore=0;
-	nused=0;
-    }
+    nused=0;
     
 #define MAXLN 40960
     char ssline[MAXLN];
@@ -355,65 +343,59 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    RENAME(evl.opdcov, evl.cov);
 	    RENAME(evl.psfpttr, evl.pttr);
 #endif
+	    if(value && !strcmp(value, "ignore")){
+		ssline[0]='\0';
+		continue;
+	    }
+	    STORE_T *store=calloc(1, sizeof(STORE_T));
 	    if(prefix){
-		entry.key=stradd(prefix,var,NULL);
+		store->key=stradd(prefix,var,NULL);
 	    }else{
-		entry.key=strdup(var);
+		store->key=strdup(var);
 	    }
-	    store[nstore].key=entry.key;
+
 	    if(value && strlen(value)>0){
-		store[nstore].data=strdup(value);
+		store->data=strdup(value);
 	    }else{
-		store[nstore].data=NULL;
+		store->data=NULL;
 	    }
-	    store[nstore].protect=protect;
-	    entry.data=(void*)nstore;/*record entry. */
-	    if(store[nstore].data && !strcmp(store[nstore].data, "ignore")){
-		store[nstore].count=1;/*Mark it as already consumed. */
-	    }else{
-		store[nstore].count=0;
-	    }
-	    if((entryfind=hsearch(entry,FIND))){
+	    store->protect=protect;
+	    store->count=0;
+
+	    void **entryfind=0;
+	    if((entryfind=tfind(store, &MROOT, key_cmp))){
 		/*same key found */
-		long istore=(long)(entryfind->data);
-		if(store[istore].protect>protect){
-		    /*info2("%s={%s} is protected. Will not be overriden by {%s}\n",
-			  (char*)entry.key, (char*)store[istore].data,
-			  (char*)store[nstore].data);*/
-		    free(store[nstore].key);
-		    free(store[nstore].data);
+		STORE_T *oldstore=*entryfind;
+		if(oldstore->protect>protect){
+		    free(store->key);
+		    free(store->data);
 		}else{
 		    if(print_override && 
-		       (((store[istore].data==NULL || store[nstore].data==NULL)
-			 &&(store[istore].data != store[nstore].data))||
-			((store[istore].data!=NULL && store[nstore].data!=NULL)
-			 &&strcmp((char*)store[istore].data,(char*)store[nstore].data)))){
+		       (((oldstore->data==NULL || store->data==NULL)
+			 &&(oldstore->data != store->data))||
+			((oldstore->data!=NULL && store->data!=NULL)
+			 &&strcmp(oldstore->data, store->data)))){
 			info2("Overriding %s:\t{%s}-->{%s}\n", 
-			      entry.key, (char*)store[istore].data,
-			      (char*)store[nstore].data);
+			      store->key, oldstore->data, store->data);
 		    }
 		    /*free old value */
-		    if(store[istore].data)
-			free(store[istore].data);
+		    if(oldstore->data) free(oldstore->data);
 		    /*copy pointer of new value. */
-		    store[istore].data=store[nstore].data;
-		    store[istore].protect=store[nstore].protect;
-		    store[istore].count=store[nstore].count;
+		    oldstore->data=store->data;
+		    oldstore->protect=store->protect;
+		    oldstore->count=store->count;
 		    /*free key. */
-		    free(store[nstore].key);
+		    free(store->key);
 		}
-		store[nstore].key=NULL;
-		store[nstore].data=NULL;
 		countold++;
+		free(store);
 	    }else{
 		/*new key */
-		entryfind=hsearch(entry,ENTER);
+		if(!tsearch(store, &MROOT, key_cmp)){
+		    error("Error inserting to tree\n");
+		}
 		countnew++;
 		nstore++;
-		if(nstore>MAX_ENTRY-2){
-		    MAX_ENTRY*=2;
-		    store=realloc(store,MAX_ENTRY*sizeof(STORE_T));
-		}
 	    }
 	}
 	ssline[0]='\0';
@@ -428,26 +410,24 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 /**
    Get the record number of a key.
  */
-static long getrecord(char *key, int mark){
-    long irecord;
-    ENTRY entry, *entryfind;
+static const STORE_T* getrecord(char *key, int mark){
+    STORE_T store;
+    void **found=0;
     strtrim(&key);
-    entry.key=key;
-    if((entryfind=hsearch(entry,FIND))){
-	irecord=(long)entryfind->data;
+    store.key=key;
+    if((found=tfind(&store, &MROOT, key_cmp))){
 	if(mark){
-	    if(store[irecord].count){
+	    if((*(STORE_T**)found)->count){
 		error("This record %s is already read\n",key);
 	    }
-	    store[irecord].count++;/*record read */
+	    (*(STORE_T**)found)->count++;
 	    nused++;
 	}
-    }else{
-	irecord=-1;
+    }else if(mark){
 	print_file("change.log");
 	error("Record %s not found\n",key);
     }
-    return irecord;
+    return found?(*found):0;
 }
 /**
    Check whether a have a record of a key.
@@ -455,21 +435,16 @@ static long getrecord(char *key, int mark){
 int readcfg_peek(const char *format,...){
     /*Check whether key exists */
     format2key;
-    ENTRY entry, *entryfind;
-    entry.key=key;
-    if((entryfind=hsearch(entry,FIND))){
-	return 1;
-    }else{
-	return 0;
-    }
+    return getrecord(key, 0)?1:0;
 }
 /**
    Check the size of an array input
 */
 int readcfg_peek_n(const char *format, ...){
     format2key;
-    long irecord=getrecord(key, 0);
-    const char *sdata=store[irecord].data;
+    const STORE_T *store=getrecord(key, 0);
+    if(!store) return 0;
+    const char *sdata=store->data;
     const char *startptr=strchr(sdata,'[');
     const char *endptr=strchr(sdata,']');
     if(!startptr) startptr=sdata;
@@ -496,11 +471,11 @@ int readcfg_peek_n(const char *format, ...){
 int readcfg_peek_override(const char *format,...){
     /*Check whether key exists */
     format2key;
-    long irecord=getrecord(key, 0);
-    if(irecord==-1){
+    const STORE_T *store=getrecord(key, 0);
+    if(!store){
 	return 0;
     }else{
-	return store[irecord].protect;
+	return store->protect;
     }
 }
 /**
@@ -509,9 +484,9 @@ int readcfg_peek_override(const char *format,...){
 char *readcfg_str(const char *format,...){
     format2key;
     char *data;
-    long irecord=getrecord(key, 1);
-    if(irecord!=-1){
-	const char *sdata=store[irecord].data;
+    const STORE_T *store=getrecord(key, 1);
+    if(store){
+	const char *sdata=store->data;
 	if(sdata && strlen(sdata)>0){
 	    data=strextract(sdata);
 	}else{
@@ -527,12 +502,12 @@ int readcfg_strarr(char ***res, const char *format,...){
    /*Read str array. */
     format2key;
     *res=NULL;/*initialize */
-    long irecord=getrecord(key, 1);
-    if(irecord==-1){/*record not found. */
+    const STORE_T *store=getrecord(key, 1);
+    if(!store){/*record not found. */
 	error("key '%s' not found\n", key);
 	return 0;
     }else{
-	const char *sdata=store[irecord].data;
+	const char *sdata=store->data;
 	if(!sdata){/*record is empty. */
 	    return 0;
 	}
@@ -545,7 +520,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 */
 int readcfg_intarr(int **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, 0,NULL,NULL, T_INT, store[getrecord(key, 1)].data);
+    return readstr_numarr((void**)ret, 0,NULL,NULL, T_INT, getrecord(key, 1)->data);
 }
 /**
    Read as an imat.
@@ -554,7 +529,7 @@ imat *readcfg_imat_do(int n, char *key){
     long *val=0;
     long **ret=&val;
     int nx, ny;
-    int nread=readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, store[getrecord(key, 1)].data);
+    int nread=readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, getrecord(key, 1)->data);
     imat *out=0;
     out=inew(nx,ny);
     if(nread>0){
@@ -606,7 +581,7 @@ imat *readcfg_imat_nmax(int n, const char *format,...){
 */
 int readcfg_dblarr(double **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, 0,NULL,NULL,T_DBL, store[getrecord(key, 1)].data);
+    return readstr_numarr((void**)ret, 0,NULL,NULL,T_DBL, getrecord(key, 1)->data);
 }
 /**
    Read as a dmat. It can be a file name or an array.
@@ -614,7 +589,7 @@ int readcfg_dblarr(double **ret, const char *format,...){
 dmat *readcfg_dmat_do(int n, char *key){
     double *val=NULL;
     int nx, ny;
-    char *str=store[getrecord(key, 1)].data;
+    char *str=getrecord(key, 1)->data;
     if((str[0]<='Z' && str[0]>='A')
        || (str[0]<='z' && str[0]>='a')
        ||(str[0]=='"' || str[0]=='\'')){
@@ -671,7 +646,7 @@ dmat *readcfg_dmat_nmax(int n, const char *format,...){
 void readcfg_strarr_n(char ***ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_strarr((char***)ret, len, store[getrecord(key, 1)].data))){
+    if(len!=(len2=readstr_strarr((char***)ret, len, getrecord(key, 1)->data))){
 	error("%s: Require %d elements, but got %d\n", key, len, len2);
     }
 }
@@ -680,7 +655,7 @@ void readcfg_strarr_n(char ***ret, int len, const char *format,...){
 */
 void readcfg_strarr_nmax(char ***ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_strarr((char***)ret, len, store[getrecord(key, 1)].data);
+    int len2=readstr_strarr((char***)ret, len, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0]?strdup((*ret)[0]):NULL;
@@ -695,7 +670,7 @@ void readcfg_strarr_nmax(char ***ret, int len, const char *format,...){
 void readcfg_intarr_n(int **ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_numarr((void**)ret, len, NULL,NULL,T_INT, store[getrecord(key, 1)].data))){
+    if(len!=(len2=readstr_numarr((void**)ret, len, NULL,NULL,T_INT, getrecord(key, 1)->data))){
 	error("%s: Need %d, got %d integers\n", key, len, len2);
     }
 }
@@ -704,7 +679,7 @@ void readcfg_intarr_n(int **ret, int len, const char *format,...){
 */
 void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_numarr((void**)ret, len,NULL,NULL, T_INT, store[getrecord(key, 1)].data);
+    int len2=readstr_numarr((void**)ret, len,NULL,NULL, T_INT, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];
@@ -719,7 +694,7 @@ void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
 void readcfg_dblarr_n(double **ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, T_DBL, store[getrecord(key, 1)].data))){
+    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, T_DBL, getrecord(key, 1)->data))){
 	error("%s: Need %d, got %d double\n", key, len, len2);
     }
 }
@@ -728,7 +703,7 @@ void readcfg_dblarr_n(double **ret, int len, const char *format,...){
 */
 void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_numarr((void**)ret, len, NULL,NULL,T_DBL, store[getrecord(key, 1)].data);
+    int len2=readstr_numarr((void**)ret, len, NULL,NULL,T_DBL, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];
@@ -742,7 +717,7 @@ void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
 */
 int readcfg_int( const char *format,...){
     format2key;
-    char *val=store[getrecord(key, 1)].data;
+    char *val=getrecord(key, 1)->data;
     char *endstr;
     int ans=(int)readstr_num(val, &endstr);
     if(endstr[0]!='\0'){
@@ -755,7 +730,7 @@ int readcfg_int( const char *format,...){
 */
 double readcfg_dbl(const char *format,...){
     format2key;
-    char *val=store[getrecord(key, 1)].data;
+    char *val=getrecord(key, 1)->data;
     char *endstr;
     double ans=readstr_num(val, &endstr);
     if(endstr[0]!='\0'){

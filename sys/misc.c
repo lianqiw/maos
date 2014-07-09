@@ -404,8 +404,6 @@ char *mystrndup(const char *A, int len){
     return B;
 }
 
-#if USE_MEM == 1
-#undef strdup
 /**
    declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles
 NULL pointer correctly.  */
@@ -419,7 +417,6 @@ char *mystrdup(const char *A){
 	return B;
     }
 }
-#endif
 /**
    Record the address of system strdup.
  */
@@ -872,11 +869,6 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     act.sa_handler=SIG_DFL;
     sigaction(sig, &act, 0);
     raise(sig);
-}
-static __attribute__((constructor)) void init(){
-    if(CHECK_NAN(NAN)){
-	error("NAN check failed\n");
-    }
 }
 
 /**

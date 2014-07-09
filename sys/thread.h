@@ -21,13 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifndef USE_MEM
-#if defined(__INTEL_COMPILER) || !defined(DEBUG) || defined(NDEBUG)
-#define USE_MEM 0
-#else
-#define USE_MEM 1 
-#endif
-#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif

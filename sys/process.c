@@ -110,9 +110,7 @@ void init_process(void){
     NMEM=0;/*do not know. */
 #endif
 }
-static __attribute__((constructor))void init(){
-    init_process();
-}
+
 /**
    Obtain the current usage level of CPU, between 0 and 1.
  */
