@@ -33,6 +33,7 @@ typedef struct cellarr{
     long tot;       /**<Total number of elements*/
 }cellarr;
 cellarr* cellarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
+void cellarr_push(cellarr *ca, int i, const void *A);
 void cellarr_dcell(cellarr *ca, int i, const dcell *A);
 void cellarr_scell(cellarr *ca, int i, const scell *A);
 void cellarr_ccell(cellarr *ca, int i, const ccell *A);

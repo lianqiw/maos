@@ -21,12 +21,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "../sys/sys.h"
 #include "../math/mathdef.h"
 #include "turbulence.h"
-#include "loc.h"
 #include "fractal.h"
-#include "locbin.h"
 
 /**
    Contains routines to generate atmospheric turbulence screens

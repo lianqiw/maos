@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_LAPLACIAN_C
 #define AOS_LIB_LAPLACIAN_C
-#include "loc.h"
+#include "../math/mathdef.h"
 /**
    \file laplacian.h
    Compute laplacian operator for turbulence covariance approximation.

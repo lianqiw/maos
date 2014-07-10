@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_ACCPHI_H
 #define AOS_LIB_ACCPHI_H
-#include "loc.h"
+#include "../math/mathdef.h"
 
 /**
    \file accphi.h

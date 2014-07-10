@@ -16,9 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../sys/sys.h"
-
-#include "loc.h"
 #include "../math/mathdef.h"
 #include "mkz.h"
 

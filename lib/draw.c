@@ -26,7 +26,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <search.h>
-#include "../sys/sys.h"
 #include "../math/mathdef.h"
 #include "draw.h"
 int DRAW_ID=0;
@@ -546,7 +545,7 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
     free(pr);
 }
 #include "../math/mathdef.h"
-#include "loc.h"
+#include "../math/mathdef.h"
 /*
   The following routines applies the imagesc_* functions onto
   dmat,cmat,loc,map,etc, data types. 

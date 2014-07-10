@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../math/mathdef.h"
-#include "loc.h"
+#include "../math/mathdef.h"
 #include "slaving.h"
 
 /**

@@ -20,9 +20,8 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include "../sys/sys.h"
-#include "../math/mathdef.h"
+#include "mathdef.h"
 #include "loc.h"
-#include "draw.h"
 /**
    Free pts_t data
 */

@@ -15,9 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "type.h"
+#include "../math/mathdef.h"
 #include "cn2est.h"
-#include "loc.h"
 #include "mkh.h"
 #include "turbulence.h"
 #define INTERP_NEAREST 0 /*set to 0 after debugging */

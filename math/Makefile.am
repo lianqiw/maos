@@ -2,12 +2,12 @@ AM_CFLAGS=$(OPTS) -I$(top_srcdir)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS= type.h  mathmisc.h random.h mathdef.h cell.h  suitesparse.h blas.h \
- matbin.h spbin.h cellarr.h chol.h  mat.h sp.h fft.h imat.h 
+ matbin.h spbin.h cellarr.h chol.h  mat.h sp.h fft.h imat.h loc.h locbin.h
 
-EXTRA_DIST=cell.c sp.c matbin.c matmmap.c spbin.c blas.c mat.c cmat.c \
+EXTRA_DIST=sp.c matbin.c matmmap.c spbin.c blas.c mat.c cmat.c \
  suitesparse.c  defs.h fft.c bessik.c amoeba.c
 
-AOMATH_SRC= dmath.c cmath.c smath.c zmath.c mathmisc.c random.c cellarr.c imat.c chol.c
+AOMATH_SRC= dmath.c cmath.c smath.c zmath.c mathmisc.c random.c cellarr.c imat.c chol.c loc.c locbin.c cell.c
 
 lib_LTLIBRARIES=libaomath.la
 libaomath_la_SOURCES=$(AOMATH_SRC)

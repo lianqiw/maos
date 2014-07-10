@@ -1024,12 +1024,7 @@ Y(spcell) *Y(spcellmulspcell)(const Y(spcell) *A,
 /**
  * Create a new sparse cell*/
 Y(spcell) *Y(spcellnew)(const long nx, const long ny){
-    Y(spcell) *spc;
-    spc=calloc(1, sizeof(spcell));
-    spc->nx=nx;
-    spc->ny=ny;
-    spc->p=calloc(nx*ny, sizeof(X(sp) *));
-    return spc;
+    return (Y(spcell)*) cellnew(nx, ny);
 }
 /**
  * Transpose a sparse cell*/

@@ -17,10 +17,8 @@
 */
 
 #include <math.h>
-#include "../sys/sys.h"
+#include "../math/mathdef.h"
 #include "mkh.h"
-
-#include "loc.h"
 
 static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac);

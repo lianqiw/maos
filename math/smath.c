@@ -1,7 +1,7 @@
 #define USE_SINGLE
 #undef USE_COMPLEX
 #include "mat.c"
-#include "cell.c"
+
 #include "blas.c"
 #include "matbin.c"
 #include "fft.c"

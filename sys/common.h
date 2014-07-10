@@ -198,7 +198,11 @@ void print_backtrace();
 	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
 #ifndef assert
+#if DEBUG
 #define assert(A) if(!(A)) error("assertion failed: %s\n", #A)
+#else
+#define assert(A)
+#endif
 #endif
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")

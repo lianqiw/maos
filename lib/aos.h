@@ -19,12 +19,8 @@
 #ifndef AOS_LIB_AOS_H
 #define AOS_LIB_AOS_H
 #include <unistd.h>
-#include "../sys/sys.h" 
 #include "../math/mathdef.h"
-#include "type.h"
 #include "readcfg.h"
-#include "locbin.h"
-#include "loc.h"
 #include "draw.h"
 #include "accphi.h"
 #include "mkz.h"

@@ -22,7 +22,7 @@
    \file turbulence.h
    Contains routines to generate atmospheric turbulence screens
  */
-#include "loc.h"
+#include "../math/mathdef.h"
 typedef struct GENSCREEN_T{
     rand_t *rstat;   /**<The random stream*/
     double *wt;      /**<The layer weights*/

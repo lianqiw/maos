@@ -20,7 +20,7 @@
 #define SKYC_SERVO_H
 
 #include "../math/mathdef.h"
-#include "loc.h"
+#include "../math/mathdef.h"
 /**
    \file servo.h
    Routines for servo optimization, filtering, etc.

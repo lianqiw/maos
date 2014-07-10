@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "mathdef.h"
 #include "locbin.h"
 
 /**
@@ -138,7 +139,7 @@ void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     zfclose(fp);
 }
 
-static void mapwritedata(file_t *fp, map_t *map){
+void mapwritedata(file_t *fp, map_t *map){
     if(map){
 	if(!map->header){
 	    char header[1024];

@@ -32,15 +32,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef MATLAB_MEX_FILE
-#include "../mex/mkgmex.h"
-#else
-
-#include "mkg.h"
-#include "../sys/sys.h"
-#include "loc.h"
 #include "../math/mathdef.h"
-#endif
+#include "mkg.h"
 
 #ifndef DEBUG
 #define DEBUG 0

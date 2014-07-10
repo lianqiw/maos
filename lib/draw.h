@@ -20,7 +20,7 @@
 #define __DRAW_H
 
 #include "../math/mathdef.h"
-#include "loc.h"
+#include "../math/mathdef.h"
 /**
    \file draw.h
    Contains functions for data visualization. 

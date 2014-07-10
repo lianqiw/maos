@@ -17,7 +17,6 @@
 */
 
 #include <math.h>
-#include "../sys/sys.h"
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/

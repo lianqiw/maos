@@ -52,8 +52,8 @@ void X(cellwritedata)(file_t *fp, const X(cell) *dc){
     header_t header={MCC_ANY, nx, ny, dc?dc->header:NULL};
     write_header(&header, fp);
     if(nx>0 && ny>0){
-	for(unsigned long iy=0; iy<ny; iy++){
-	    for(unsigned long ix=0; ix<nx; ix++){
+	for(long iy=0; iy<ny; iy++){
+	    for(long ix=0; ix<nx; ix++){
 		X(writedata)(fp, dc->p[ix+iy*nx]);
 	    }
 	}
@@ -135,7 +135,7 @@ X(cell)* X(cellreaddata)(file_t *fp, header_t *header){
 	if(!headerc){
 	    out->header=header->str; header->str=NULL;
 	}
-        for(unsigned long ix=0; ix<nx*ny; ix++){
+        for(long ix=0; ix<nx*ny; ix++){
 	    out->p[ix]=X(readdata)(fp, headerc);
 	}
     }else{/*fits format. need to read extensions*/

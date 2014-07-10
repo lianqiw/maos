@@ -34,16 +34,29 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
     write_header(&header, out->fp);
     return out;
 }
+
 /**
    Append a A of type type into the cellarr ca, at location i.
 */
+void cellarr_push(cellarr *ca, int i, const void *p){
+    if(!p) return;//nothing to be done
+    if(!ca) error("cellarr is NULL\n");
+    if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);
+    long id=*((long*)(p));
+    while(ca->cur<i) {
+	write_by_id(ca->fp, 0, id); 
+	ca->cur++;
+    }
+    write_by_id(ca->fp, p, 0); 
+    ca->cur++;
+}
+
 #define cellarr_cell(type)					\
     void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){	\
 	if(!ca) error("cellarr is NULL\n");			\
 	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
 	while(ca->cur<i) {type##cell##writedata(ca->fp, NULL);ca->cur++;}	\
 	{type##cell##writedata(ca->fp, A); ca->cur++;};			\
-	/*zflush(ca->fp);*//*is flush needed?*/				\
     }
 #define cellarr_mat(type)					\
     void cellarr_##type##mat(cellarr *ca, int i, const type##mat *A){	\
@@ -51,7 +64,6 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
 	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
 	while(ca->cur<i) {type##writedata(ca->fp, NULL);ca->cur++;}	\
 	{type##writedata(ca->fp, A); ca->cur++;};			\
-	/*zflush(ca->fp);*//*is flush needed?*/				\
     }
 
 cellarr_cell(d);

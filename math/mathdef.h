@@ -21,16 +21,27 @@
 #include "../sys/sys.h"
 #include "type.h"
 #include "mat.h"
-#include "matbin.h"
-#include "cell.h"
 #include "sp.h"
-#include "spbin.h"
 #include "fft.h"
+#include "matbin.h"
+#include "spbin.h"
+#include "cell.h"
 #include "chol.h"
-
 #include "imat.h"
 #include "cellarr.h"
 #include "mathmisc.h"
+#include "loc.h"
+#include "locbin.h"
+
+#define AOS_CMAT(A) c##A
+#define AOS_CSP(A)  c##A
+#define AOS_DMAT(A) d##A
+#define AOS_DSP(A)  A
+#define AOS_SSP(A)  s##A
+#define AOS_SMAT(A) s##A
+#define AOS_ZMAT(A) z##A
+#define AOS_ZSP(A)  z##A
+
 //#ifdef USE_SINGLE
 //Single
 AOS_MAT_DEF(AOS_SMAT,AOS_SMAT,AOS_SSP,float,float)
@@ -40,8 +51,8 @@ AOS_CMAT_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
 AOS_MATBIN_DEF(AOS_SMAT,AOS_SSP,float)
 AOS_MATBIN_DEF(AOS_ZMAT,AOS_ZSP,fcomplex)
 
-AOS_CELL_DEF(AOS_SMAT,AOS_SSP,float,float)
-AOS_CELL_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float)
+//AOS_CELL_DEF(AOS_SMAT,AOS_SSP,float,float)
+//AOS_CELL_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float)
 
 AOS_SP_DEF(AOS_SMAT,AOS_SSP,float,float,fcomplex)
 AOS_SP_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float,fcomplex)
@@ -59,8 +70,8 @@ AOS_MATBIN_DEF(AOS_DMAT,AOS_DSP,double)
 AOS_MATBIN_DEF(AOS_CMAT,AOS_CSP,dcomplex)
 AOS_CMAT_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
 
-AOS_CELL_DEF(AOS_DMAT,AOS_DSP,double,double)
-AOS_CELL_DEF(AOS_CMAT,AOS_CSP,dcomplex,double)
+//AOS_CELL_DEF(AOS_DMAT,AOS_DSP,double,double)
+//AOS_CELL_DEF(AOS_CMAT,AOS_CSP,dcomplex,double)
 
 AOS_SP_DEF(AOS_DMAT,AOS_DSP,double,double,dcomplex)
 AOS_SP_DEF(AOS_CMAT,AOS_CSP,dcomplex,double,dcomplex)
@@ -72,4 +83,5 @@ AOS_FFT_DEF(AOS_DMAT)
 AOS_FFT_DEF(AOS_CMAT)
 
 //#endif
+
 #endif

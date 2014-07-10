@@ -389,3 +389,4 @@ double golden_section_search(golden_section_fun f, void *param,
     /*do not return x1 or x4 which may be in unstable region*/
     return f2<f3?x2:x3;
 }
+
