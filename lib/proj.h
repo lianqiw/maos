@@ -22,7 +22,7 @@
    \file proj.h
    Project from a tilt surface to flat surface (M3).
  */
-void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
+void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 		    const loc_t *locout,const double ratiox, const double ratioy,
 		    const double *ampout, double* phiout, 
 		    double sc, double hs, double ht,

@@ -40,8 +40,8 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
 loc_t * map2loc(map_t *amp);
-void rectmapfree_do(rectmap_t *map);
-#define rectmapfree(A) ({rectmapfree_do(A);A=NULL;})
+void rmapfree_do(rmap_t *map);
+#define rmapfree(A) ({rmapfree_do(A);A=NULL;})
 void mapfree_do(map_t *map);
 #define mapfree(A) ({mapfree_do(A);A=NULL;})
 void maparrfree_do(map_t **map, int nmap);

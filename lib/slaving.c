@@ -61,7 +61,7 @@ dcell *genactcpl(const spcell *HA, const dmat *W1){
    contraint their values to be close to the ones that are active. We put an
    additional term in the fitting matrix to force this. Be careful with it when
    using tip/tilt constraint and cholesky back solve.  */
-spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
+spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 		const dcell *actcplc,/**<[in]Actuator coupling coefficiency*/
 		const dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
 		const icell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
@@ -82,7 +82,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
     int nslavetot=0;
     /*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
     for(int idm=0; idm<ndm; idm++){
-	int nact=aloc[idm]->nloc;
+	int nact=aloc->p[idm]->nloc;
 	int *stuck=calloc(nact, sizeof(int));
 	int *floated=calloc(nact, sizeof(int));
 	int nstuck=0;
@@ -125,19 +125,19 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	if(nslave==0) {
 	    continue;
 	}
-	loc_create_map(aloc[idm]);
-	map_t *map=aloc[idm]->map;
+	loc_create_map(aloc->p[idm]);
+	map_t *map=aloc->p[idm]->map;
 	const double ox=map->ox;
 	const double oy=map->oy;
-	const double dx1=1./aloc[idm]->dx;
-	const double dy1=1./aloc[idm]->dy;
+	const double dx1=1./aloc->p[idm]->dx;
+	const double dy1=1./aloc->p[idm]->dy;
 	//dsp *slavet=spnew(nact,nslave,nslave*5);
 	dsp *slavet=spnew(nact,nact,nslave*5);
 	spint *pp=slavet->p;
 	spint *pi=slavet->i;
 	double *px=slavet->x;
-	const double *locx=aloc[idm]->locx;
-	const double *locy=aloc[idm]->locy;
+	const double *locx=aloc->p[idm]->locx;
+	const double *locy=aloc->p[idm]->locy;
 	long count=0;
 	for(int iact=0; iact<nact; iact++){
 	    pp[iact]=count;
@@ -255,7 +255,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 /**
    When some actuators are stuck, remove the corresponding column in HA and/or HB
 */
-void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stuck){
+void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const icell *stuck){
     if(!stuck || (!HA && !HB)) return; 
     int ndm=stuck->nx;
     for(int idm=0; idm<ndm; idm++){
@@ -266,7 +266,7 @@ void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stu
 	    for(int ifit=0; ifit<HA->nx; ifit++){
 		spint *pp=HA->p[idm*HA->nx+ifit]->p;
 		double *px=HA->p[idm*HA->nx+ifit]->x;
-		assert(HA->p[idm*HA->nx+ifit]->n==aloc[idm]->nloc);
+		assert(HA->p[idm*HA->nx+ifit]->n==aloc->p[idm]->nloc);
 		for(int jact=0; jact<stuck->p[idm]->nx; jact++){
 		    int iact=stuck->p[idm]->p[jact];
 		    for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
@@ -277,7 +277,7 @@ void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stu
 	}else if(HB){
 	    for(int ifit=0; ifit<HB->nx; ifit++){
 		dmat *hb=HB->p[idm*HB->nx+ifit];
-		assert(hb->ny==aloc[idm]->nloc);
+		assert(hb->ny==aloc->p[idm]->nloc);
 		for(int jact=0; jact<stuck->p[idm]->nx; jact++){
 		    int iact=stuck->p[idm]->p[jact];
 		    memset(hb->p+hb->nx*iact, 0, sizeof(double)*hb->nx);
@@ -289,7 +289,7 @@ void act_stuck(loc_t **aloc, const spcell *HA, const dcell *HB, const icell *stu
 /**
    Zero out rows of dead actuators in mode vector.
 */
-void act_zero(loc_t **aloc, const dcell *HB, const icell *dead){
+void act_zero(loccell *aloc, const dcell *HB, const icell *dead){
     if(!dead || !HB) return;
     for(int idm=0; idm<dead->nx; idm++){
 	if(!dead->p[idm]){
@@ -297,7 +297,7 @@ void act_zero(loc_t **aloc, const dcell *HB, const icell *dead){
 	}
 	for(int imod=0; imod<HB->ny; imod++){
 	    dmat *hb=HB->p[idm+imod*HB->nx];
-	    assert(hb->nx==aloc[idm]->nloc);
+	    assert(hb->nx==aloc->p[idm]->nloc);
 	    PDMAT(hb, phb);
 	    for(int jact=0; jact<dead->p[idm]->nx; jact++){
 		int iact=dead->p[idm]->p[jact];
@@ -313,7 +313,7 @@ void act_zero(loc_t **aloc, const dcell *HB, const icell *dead){
    When some actuators are float, remove the corresponding column in HA and/or HB,
    and add to neigh boring actuators. This is implemented using a second matrix and
    do matrix addition.*/
-void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat){
+void act_float(loccell *aloc, spcell **HA, const dcell *HB, const icell *actfloat){
     if(!actfloat || ((!HA || !*HA) && !HB)) return;
     int ndm=actfloat->nx;
     spcell *dHA=NULL;
@@ -323,15 +323,15 @@ void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!actfloat->p[idm]) continue;
-	loc_create_map(aloc[idm]);
-	map_t *map=aloc[idm]->map;
+	loc_create_map(aloc->p[idm]);
+	map_t *map=aloc->p[idm]->map;
 	double ox=map->ox;
 	double oy=map->oy;
-	double dx1=1./aloc[idm]->dx;
-	double dy1=1./aloc[idm]->dy;
-	const double *locx=aloc[idm]->locx;
-	const double *locy=aloc[idm]->locy;
-	long nact=aloc[idm]->nloc;
+	double dx1=1./aloc->p[idm]->dx;
+	double dy1=1./aloc->p[idm]->dy;
+	const double *locx=aloc->p[idm]->locx;
+	const double *locy=aloc->p[idm]->locy;
+	long nact=aloc->p[idm]->nloc;
 	long ndead=actfloat->p[idm]->nx;
 	/*actuator that is floating */
 	long *isfloat=calloc(nact, sizeof(long));
@@ -454,7 +454,7 @@ void act_float(loc_t **aloc, spcell **HA, const dcell *HB, const icell *actfloat
 /**
    Make DM actuator commands zero at stuck actuator locations.
 */
-void act_stuck_cmd(loc_t **aloc, /**<[in] Actuator grid array*/
+void act_stuck_cmd(loccell *aloc, /**<[in] Actuator grid array*/
 		   const dcell *adm,   /**<[in,out] Actuator command to process*/
 		   const icell *stuck  /**<[in] List of stuck actuators*/
 		   ){
@@ -466,7 +466,7 @@ void act_stuck_cmd(loc_t **aloc, /**<[in] Actuator grid array*/
 	for(int iy=0; iy<adm->ny; iy++){
 	    dmat *pai=pa[iy][idm];
 	    PDMAT(pai, px);
-	    assert(pai->nx==aloc[idm]->nloc);
+	    assert(pai->nx==aloc->p[idm]->nloc);
 	    for(int icol=0; icol<pai->ny; icol++){
 		for(int jact=0; jact<stuck->p[idm]->nx; jact++){
 		    int iact=stuck->p[idm]->p[jact];
@@ -479,22 +479,22 @@ void act_stuck_cmd(loc_t **aloc, /**<[in] Actuator grid array*/
 /**
    Create an interpreter that make floating actuators equal to their neighbors.
 */
-spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
+spcell* act_float_interp(loccell *aloc,  /**<[in] Actuator grid array*/
 			 const icell *actfloat/**<[in] List of floating actuators*/
 			 ){
     if(!actfloat) return NULL;
     int ndm=actfloat->nx;
     spcell *out=spcellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
-	loc_create_map(aloc[idm]);
-	map_t *map=aloc[idm]->map;
+	loc_create_map(aloc->p[idm]);
+	map_t *map=aloc->p[idm]->map;
 	double ox=map->ox;
 	double oy=map->oy;
-	double dx1=1./aloc[idm]->dx;	
-	double dy1=1./aloc[idm]->dy;
-	const double *locx=aloc[idm]->locx;
-	const double *locy=aloc[idm]->locy;
-	long nact=aloc[idm]->nloc;
+	double dx1=1./aloc->p[idm]->dx;	
+	double dy1=1./aloc->p[idm]->dy;
+	const double *locx=aloc->p[idm]->locx;
+	const double *locy=aloc->p[idm]->locy;
+	long nact=aloc->p[idm]->nloc;
 	long ndead=actfloat->p[idm]?actfloat->p[idm]->nx:0;
 	/*actuator that is floating */
 	long *isfloat=calloc(nact, sizeof(long));
@@ -637,14 +637,14 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     }
     return out;
 }
-spcell* act_extrap(loc_t **aloc,     /**<[in] Actuator grid array*/
+spcell* act_extrap(loccell *aloc,     /**<[in] Actuator grid array*/
 		   const dcell *actcplc,/**<[in] Actuator coupling coefficiency*/
 		   const double thres /**<[in] Threshold of coupling to turn on interpolation*/
 		   ){
     int ndm=actcplc->nx;
     spcell *out=spcellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
-	out->p[idm+ndm*idm]=act_extrap_do(aloc[idm], actcplc->p[idm], thres);
+	out->p[idm+ndm*idm]=act_extrap_do(aloc->p[idm], actcplc->p[idm], thres);
     }
     return out;
 }

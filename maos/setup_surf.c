@@ -41,19 +41,19 @@
 /**
    Propagate tilt surface from star at hs, along direction (thetax, thetay), to loc.
 */
-static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs){
+static void tsurf2loc(rmapcell *tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs){
     for(int itsurf=0; itsurf<ntsurf; itsurf++){
-	const double alx=tsurf[itsurf]->txdeg/180*M_PI;
-	const double aly=tsurf[itsurf]->tydeg/180*M_PI;
-	const double ftel=tsurf[itsurf]->ftel;
-	const double fexit=tsurf[itsurf]->fexit;
-	const double fsurf=tsurf[itsurf]->fsurf;
+	const double alx=tsurf->p[itsurf]->txdeg/180*M_PI;
+	const double aly=tsurf->p[itsurf]->tydeg/180*M_PI;
+	const double ftel=tsurf->p[itsurf]->ftel;
+	const double fexit=tsurf->p[itsurf]->fexit;
+	const double fsurf=tsurf->p[itsurf]->fsurf;
 	const double mag=fexit/ftel;
 	const double scalex=-mag;
 	const double scaley=mag;
 	const double scaleopd=-2;
 	const double het=fexit-fsurf;/*distance between exit pupil and M3. */
-	rectmap_t *mapsurf=tsurf[itsurf];
+	rmap_t *mapsurf=tsurf->p[itsurf];
 
 	double d_img_focus=1./(1./ftel-1./hs)-ftel;
 	/*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
@@ -69,11 +69,11 @@ static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, do
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info("Setting up tilt surface (M3)\n");
-    rectmap_t **tsurf=calloc(parms->ntsurf, sizeof(rectmap_t*));
+    rmapcell *tsurf=cellnew(parms->ntsurf, 1);
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=parms->tsurf[itsurf];
 	info("Loading tilt surface from %s\n", fn);
-	tsurf[itsurf]=rectmapread("%s",fn); 
+	tsurf->p[itsurf]=rmapread("%s",fn); 
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
@@ -92,17 +92,14 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	loc_t *locwfs;
 	if(powfs[ipowfs].loc_tel){
 	    warning("We don't handle this case yet. Think carefully when to apply shift.\n");
-	    locwfs=powfs[ipowfs].loc_tel[wfsind];
+	    locwfs=powfs[ipowfs].loc_tel->p[wfsind];
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
 	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfs, 
 		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
     }
-    for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
-	rectmapfree(tsurf[itsurf]);
-    }
-    free(tsurf);
+    cellfree(tsurf);
 }
 
 typedef struct{
@@ -204,7 +201,7 @@ static void prop_surf_wfs(thread_t *info){
 
 	loc_t *locwfs;
 	if(powfs[ipowfs].loc_tel){
-	    locwfs=powfs[ipowfs].loc_tel[wfsind];
+	    locwfs=powfs[ipowfs].loc_tel->p[wfsind];
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
@@ -270,7 +267,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	}
 	if(!strevl){
-	    warning2("surf[%d] does not contain SURFEVL\n", isurf);
+	    warning2("surf->p[%d] does not contain SURFEVL\n", isurf);
 	    for(int ievl=0; ievl<nevl; ievl++){
 		evlcover[ievl]=1;
 	    }
@@ -293,7 +290,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    error("Not handled\n");
 	}
 	if(!strwfs){
-	    warning2("surf[%d] does not contain SURFWFS\n", isurf);
+	    warning2("surf->p[%d] does not contain SURFWFS\n", isurf);
 	    for(int iwfs=0;iwfs<nwfs; iwfs++){
 		wfscover[iwfs]=1;
 	    }
@@ -387,7 +384,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    double displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
-	    HA[idm][ievl]=mkh(recon->aloc[idm], recon->floc, NULL,
+	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, NULL,
 			      displace[0], displace[1], 
 			      scale,parms->dm[idm].cubic,parms->dm[idm].iac);
 	}

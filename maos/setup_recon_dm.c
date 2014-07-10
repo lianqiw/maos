@@ -103,28 +103,27 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     if(ndm==0) return;
     CALL_ONCE;
     if(parms->fit.cachedm){
-	recon->acmap=calloc(ndm, sizeof(map_t*));
+	recon->acmap=cellnew(ndm, 1);
     }
     if(parms->load.aloc){
 	char *fn=parms->load.aloc;
 	warning("Loading aloc from %s\n",fn);
-	int ndm0;
-	recon->aloc=locarrread(&ndm0,"%s",fn);
-	if(ndm0!=ndm) error("Invalid saved aloc");
+	recon->aloc=loccellread("%s",fn);
+	if(recon->aloc->nx!=ndm) error("Invalid saved aloc");
 	for(int idm=0; idm<ndm; idm++){
-	    if(fabs(parms->dm[idm].dx-recon->aloc[idm]->dx)>1e-7){
+	    if(fabs(parms->dm[idm].dx-recon->aloc->p[idm]->dx)>1e-7){
 		error("DM[%d]: loaded aloc has dx=%g while dm.dx=%g\n", idm, 
-		      recon->aloc[idm]->dx, parms->dm[idm].dx);
+		      recon->aloc->p[idm]->dx, parms->dm[idm].dx);
 	    }
 	    double max,min;
-	    dmaxmin(recon->aloc[idm]->locx,recon->aloc[idm]->nloc, &max, &min);
+	    dmaxmin(recon->aloc->p[idm]->locx,recon->aloc->p[idm]->nloc, &max, &min);
 	    if(max-min<parms->aper.d){
 		warning("DM[%d]: loaded aloc is too small: diameter is %g while aper.d is %g\n", 
 		      idm, max-min, parms->aper.d); 
 	    }
 	}
     }else{
-	recon->aloc=calloc(ndm, sizeof(loc_t*));
+	recon->aloc=cellnew(ndm, 1);
 	/*int nxmax=0, nymax=0; */
 	for(int idm=0; idm<ndm; idm++){
 	    double ht=parms->dm[idm].ht;
@@ -145,47 +144,47 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 		create_metapupil(&map,0,0,parms->dirs, parms->aper.d,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
-	    recon->aloc[idm]=map2loc(map);
+	    recon->aloc->p[idm]=map2loc(map);
 	    mapfree(map);
 	}
     }
-    recon->amap=calloc(parms->ndm, sizeof(map_t*));
+    recon->amap=cellnew(parms->ndm, 1);
     for(int idm=0; idm<parms->ndm; idm++){
 	double ht=parms->dm[idm].ht;
 	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	double dx=parms->dm[idm].dx;
-	loc_create_map_npad(recon->aloc[idm], parms->fit.square?0:1, 0, 0);
-	recon->amap[idm]=recon->aloc[idm]->map;
-	recon->amap[idm]->h=ht;
-	recon->amap[idm]->cubic=parms->dm[idm].cubic;
-	recon->amap[idm]->iac=parms->dm[idm].iac;
+	loc_create_map_npad(recon->aloc->p[idm], parms->fit.square?0:1, 0, 0);
+	recon->amap->p[idm]=recon->aloc->p[idm]->map;
+	recon->amap->p[idm]->h=ht;
+	recon->amap->p[idm]->cubic=parms->dm[idm].cubic;
+	recon->amap->p[idm]->iac=parms->dm[idm].iac;
 	if(parms->fit.cachedm){
 	    const double dx2=parms->atmr.dx/parms->fit.pos;
 	    const double dy2=dx2;
-	    create_metapupil(&recon->acmap[idm],0,0, parms->dirs, parms->aper.d,
+	    create_metapupil(&recon->acmap->p[idm],0,0, parms->dirs, parms->aper.d,
 			     ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
 	    info2("amap origin is %g, %g. acmap is %g, %g\n", 
-		 recon->aloc[idm]->map->ox, recon->aloc[idm]->map->oy,
-		 recon->acmap[idm]->ox, recon->acmap[idm]->oy);
+		 recon->aloc->p[idm]->map->ox, recon->aloc->p[idm]->map->oy,
+		 recon->acmap->p[idm]->ox, recon->acmap->p[idm]->oy);
 	}
     }
 
     if(parms->save.setup){
-	locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
-	maparrwrite(recon->amap, parms->ndm,"%s/amap", dirsetup);
+	cellwrite(recon->aloc,"%s/aloc",dirsetup);
+	cellwrite(recon->amap, "%s/amap", dirsetup);
     }
     recon->aimcc=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
-	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
+	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc->p[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
     recon->anx=calloc(ndm, sizeof(long));
     recon->any=calloc(ndm, sizeof(long));
     recon->anloc=calloc(ndm, sizeof(long));
     for(int idm=0; idm<ndm; idm++){
-	recon->anx[idm]=recon->amap[idm]->nx;
-	recon->any[idm]=recon->amap[idm]->ny;
-	recon->anloc[idm]=recon->aloc[idm]->nloc;
+	recon->anx[idm]=recon->amap->p[idm]->nx;
+	recon->any[idm]=recon->amap->p[idm]->ny;
+	recon->anloc[idm]=recon->aloc->p[idm]->nloc;
     }
     /*Dealing with stuck/floating actuators. */
     int anyfloat=0, anystuck=0;
@@ -197,14 +196,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->actstuck=icellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actstuck) continue;
-	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actstuck);
+	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
 	}
     }
     if(anyfloat){
 	recon->actfloat=icellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actfloat) continue;
-	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actfloat);
+	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);
 	}
     }
 }
@@ -235,7 +234,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 		if(parms->recon.misreg_dm2sci && parms->recon.misreg_dm2sci[ifit+idm*nfit]){
 		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);
 		}
-		HA[idm][ifit]=mkh(recon->aloc[idm], loc, NULL,
+		HA[idm][ifit]=mkh(recon->aloc->p[idm], loc, NULL,
 				  displace[0], displace[1], 
 				  scale,parms->dm[idm].cubic,parms->dm[idm].iac);
 		if(loc!=recon->floc){
@@ -300,14 +299,14 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
     if(nnw==0) return;
     for(int idm=0; idm<ndm; idm++){
-	int nloc=recon->aloc[idm]->nloc;
+	int nloc=recon->aloc->p[idm]->nloc;
 	recon->fitNW->p[idm]=dnew(nloc, nnw);
     }
     int inw=0;/*current column */
     if(parms->fit.lrt_piston){
 	info2("Adding piston cr to fit matrix\n");
 	for(int idm=0; idm<ndm; idm++){
-	    int nloc=recon->aloc[idm]->nloc;
+	    int nloc=recon->aloc->p[idm]->nloc;
 	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
 	    const double *cpl=recon->actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
@@ -324,15 +323,15 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	    info2("Adding TT cr on upper DMs to fit matrix.\n");
 	    factor=scl*2./parms->aper.d;
 	    for(int idm=1; idm<ndm; idm++){
-		int nloc=recon->aloc[idm]->nloc;
+		int nloc=recon->aloc->p[idm]->nloc;
 		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
 		double *p2x=p;
 		double *p2y=p+nloc;
 		const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
 		    if(cpl[iloc]>0.5){
-			p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
 		    }
 		}
 	    }
@@ -342,7 +341,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		error("Only ndm=2 case is implemented\n");
 	    }
 	    for(int idm=0; idm<ndm; idm++){
-		int nloc=recon->aloc[idm]->nloc;
+		int nloc=recon->aloc->p[idm]->nloc;
 		double *p=recon->fitNW->p[idm]->p+inw*nloc;
 		if(idm==0) factor=scl*2/parms->aper.d;
 		else if(idm==1) factor=-scl*2./parms->aper.d;
@@ -351,8 +350,8 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
 		    if(cpl[iloc]>0.5){
-			p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
 		    }
 		}
 	    }

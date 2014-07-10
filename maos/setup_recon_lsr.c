@@ -55,7 +55,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     info2("Building recon->LL\n");
     recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
-    double maxeig=pow(recon->neamhi * recon->aloc[0]->dx, -2);
+    double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(fabs(parms->lsr.tikcr)>EPS){
 	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
@@ -67,8 +67,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	NW=dcellnew(ndm,1);
 	int nmod=2;/*two modes. */
 	for(int idm=0; idm<ndm; idm++){
-	    loc_create_map(recon->aloc[idm]);
-	    const long nloc=recon->aloc[idm]->nloc;
+	    loc_create_map(recon->aloc->p[idm]);
+	    const long nloc=recon->aloc->p[idm]->nloc;
 	    NW->p[idm]=dnew(nloc, ndm*nmod);
 	    double *p=NW->p[idm]->p+nmod*idm*nloc;
 	    for(long iloc=0; iloc<nloc; iloc++){
@@ -76,7 +76,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    /*notice offset of 1 because map start count at 1 */
 	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
-	    map_t *map=recon->aloc[idm]->map;
+	    map_t *map=recon->aloc->p[idm]->map;
 	    PDMAT(map, pmap);
 	    for(long iy=0; iy<map->ny; iy++){
 		for(long ix=0; ix<map->nx; ix++){

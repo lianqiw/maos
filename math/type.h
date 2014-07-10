@@ -98,17 +98,6 @@ typedef SPMAT(float) ssp;
 typedef SPMAT(dcomplex) csp;
 typedef SPMAT(fcomplex) zsp;
 
-typedef CELL(cmat*) ccell;
-typedef CELL(zmat*) zcell;
-typedef CELL(dmat*) dcell;
-typedef CELL(smat*) scell;
-
-typedef CELL(dsp*) spcell;
-typedef CELL(ssp*) sspcell;
-typedef CELL(csp*) cspcell;
-typedef CELL(zsp*) zspcell;
-
-typedef CELL(void*) cell;
 
 
 /**
@@ -132,7 +121,7 @@ typedef struct map_t{
 /**
    Map with different x/y sampling. Can be cased to dmat
 */
-typedef struct rectmap_t{
+typedef struct rmap_t{
     ARR(double);
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
@@ -143,7 +132,7 @@ typedef struct rectmap_t{
     double ftel;    /**<Effective focal length of the telescope*/
     double fexit;   /**<The distance between the exit pupil and the focus*/
     double fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
-}rectmap_t;
+}rmap_t;
 
 /**
    Store starting x,y for each col
@@ -205,5 +194,35 @@ typedef struct pts_t{
     double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
     int nx;        /**<number points in each col or row per subaperture*/
 }pts_t;
+
+typedef CELL(cmat*) ccell;
+typedef CELL(zmat*) zcell;
+typedef CELL(dmat*) dcell;
+typedef CELL(smat*) scell;
+
+typedef CELL(dsp*) spcell;
+typedef CELL(ssp*) sspcell;
+typedef CELL(csp*) cspcell;
+typedef CELL(zsp*) zspcell;
+
+typedef CELL(ccell*) cccell;
+typedef CELL(zcell*) zccell;
+typedef CELL(dcell*) dccell;
+typedef CELL(scell*) sccell;
+
+typedef CELL(cccell*) ccccell;
+typedef CELL(zccell*) zcccell;
+typedef CELL(dccell*) dcccell;
+typedef CELL(sccell*) scccell;
+
+typedef CELL(map_t*) mapcell;
+typedef CELL(rmap_t*) rmapcell;
+typedef CELL(loc_t*) loccell;
+
+typedef CELL(mapcell*) mapccell;
+typedef CELL(rmapcell*) rmapccell;
+typedef CELL(loccell*) locccell;
+
+typedef CELL(void*) cell;
 
 #endif

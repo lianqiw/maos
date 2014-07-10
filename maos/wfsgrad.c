@@ -40,19 +40,19 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const double hs=parms->wfs[iwfs].hs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     for(int idm=0; idm<parms->ndm; idm++){
-	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
+	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
 	double *amp=powfs[ipowfs].realamp->p[wfsind]->p;
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	double dispx=ht*parms->wfs[iwfs].thetax;
 	double dispy=ht*parms->wfs[iwfs].thetay;
 	double scale=1.-ht/hs;
 	if(parms->dm[idm].cubic){
-	    prop_grid_cubic(simu->dmprojsq[idm],
+	    prop_grid_cubic(simu->dmprojsq->p[idm],
 			    loc, amp, opd->p, 
 			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
 			    0, 0);
 	}else{
-	    prop_grid(simu->dmprojsq[idm],
+	    prop_grid(simu->dmprojsq->p[idm],
 		      loc, amp, opd->p, 
 		      alpha, dispx, dispy, scale, 0,
 		      0, 0);
@@ -86,7 +86,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int nsa=powfs[ipowfs].pts->nsa;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
+    ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
     ccell *otf=ccellnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
@@ -280,7 +280,7 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
+    ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     double scale[3]={0.1*pixthetax, 0.1*pixthetay, 0.1};
     //info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
@@ -332,7 +332,7 @@ void wfsgrad_iwfs(thread_t *info){
     */
     /*input */
     
-    map_t **atm=simu->atm;
+    mapcell *atm=simu->atm;
     const RECON_T *recon=simu->recon;
     const POWFS_T *powfs=simu->powfs;
     /*output */
@@ -366,7 +366,7 @@ void wfsgrad_iwfs(thread_t *info){
     dmat *gradcalc=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
-    dcell *ints=simu->ints[iwfs];
+    dcell *ints=simu->ints->p[iwfs];
     dmat  *opd=dnew(npix,1);
 
     if(simu->telws){/*Wind shake */
@@ -389,8 +389,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 	    wfs_propdata->phiout=opd->p;
-	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;
-	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
+	    wfs_propdata->displacex1=-atm->p[ips]->vx*dt*isim;
+	    wfs_propdata->displacey1=-atm->p[ips]->vy*dt*isim;
 	    /* have to wait to finish before another phase screen. */
 	    CALL_THREAD(wfs_prop, 0);
 	}
@@ -428,11 +428,11 @@ void wfsgrad_iwfs(thread_t *info){
 	    /* No need to do mis registration here since the MOAO DM is attached
 	       to close to the WFS.*/
 	    if(parms->moao[imoao].cubic){
-		prop_nongrid_pts_cubic(recon->moao[imoao].aloc, dmwfs[iwfs]->p,
+		prop_nongrid_pts_cubic(recon->moao[imoao].aloc->p[0], dmwfs[iwfs]->p,
 				       powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
 				       parms->moao[imoao].iac, 0, 0);
 	    }else{
-		prop_nongrid_pts(recon->moao[imoao].aloc, dmwfs[iwfs]->p,
+		prop_nongrid_pts(recon->moao[imoao].aloc->p[0], dmwfs[iwfs]->p,
 				 powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
 				 0, 0);
 	    }
@@ -469,7 +469,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}//else: calculate first to gradcalc then add to gradacc
 	if(parms->powfs[ipowfs].gtype_sim==1){ /*compute ztilt. */
 	    pts_ztilt(&gradcalc,powfs[ipowfs].pts,
-		      powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0], 
+		      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
 	    spmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
@@ -483,7 +483,7 @@ void wfsgrad_iwfs(thread_t *info){
     cellarr *psfoutcellarr=NULL;
     cellarr *ztiltoutcellarr=NULL;
     if(parms->powfs[ipowfs].psfout){
-	psfout=simu->wfspsfout[iwfs];
+	psfout=simu->wfspsfout->p[iwfs];
 	psfoutcellarr=simu->save->wfspsfout[iwfs];
 	ztiltoutcellarr=simu->save->ztiltout[iwfs];
     }
@@ -502,13 +502,13 @@ void wfsgrad_iwfs(thread_t *info){
 	    const long illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	    if(atm){/*LLT OPD */
 		for(int ips=0; ips<nps; ips++){
-		    const double hl=atm[ips]->h;
+		    const double hl=atm->p[ips]->h;
 		    const double scale=1.-hl/hs;
 		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
 		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
-		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
-		    const double displacey=-atm[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
-		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,NULL,
+		    const double displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
+		    const double displacey=-atm->p[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
+		    prop_grid_pts(atm->p[ips],powfs[ipowfs].llt->pts,NULL,
 				  lltopd->p,1,displacex,displacey,
 				  scale, 1., 0, 0);
 		}
@@ -551,7 +551,7 @@ void wfsgrad_iwfs(thread_t *info){
 	WFSINTS_T *intsdata=simu->wfs_intsdata+iwfs;
 	intsdata->ints=ints;
 	intsdata->psfout=psfout;
-	intsdata->pistatout=simu->pistatout[iwfs];
+	intsdata->pistatout=simu->pistatout->p[iwfs];
 	if(parms->powfs[ipowfs].pistatout==1){
 	    intsdata->gradref=gradcalc;
 	}
@@ -696,7 +696,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    };/*isa */
 	
 
-	    dcellzero(simu->ints[iwfs]);
+	    dcellzero(simu->ints->p[iwfs]);
 	}else{
 	    /* geomtric optics accumulation mode. scale and copy results to output. */
 	    dcp(gradout,*gradacc);
@@ -752,10 +752,10 @@ static void wfsgrad_save(SIM_T *simu){
 		scale=(simu->isim+1)/dtrat;
 	    }
 	    if(scale<=0) continue;	    
-	    if(simu->pistatout && simu->pistatout[iwfs]){
+	    if(simu->pistatout && simu->pistatout->p[iwfs]){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
 		scale=1./(double)nstep;
-		dcell *pp=simu->pistatout[iwfs];
+		dcell *pp=simu->pistatout->p[iwfs];
 		dcellscale(pp,scale);
 		if(parms->sim.skysim){/*need peak in corner */
 		    for(long ic=0; ic<pp->nx*pp->ny; ic++){

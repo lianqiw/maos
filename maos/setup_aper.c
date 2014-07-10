@@ -110,13 +110,13 @@ APER_T * setup_aper(const PARMS_T *const parms){
     if(parms->misreg.dm2sci){
 	int isset=0;
 	int nevl=parms->evl.nevl;
-	aper->locs_dm=calloc(parms->ndm*nevl, sizeof(loc_t*));
+	aper->locs_dm=cellnew(parms->ndm, nevl);
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int ievl=0; ievl<nevl; ievl++){
 		if(parms->misreg.dm2sci[ievl+idm*nevl])
 #pragma omp task shared(isset)
 		{
-		    aper->locs_dm[ievl+idm*nevl]
+		    aper->locs_dm->p[ievl+idm*nevl]
 			=loctransform(aper->locs, parms->misreg.dm2sci[ievl+idm*nevl]);
 		    isset=1;
 		}
@@ -124,9 +124,9 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	}
 #pragma omp taskwait
 	if(!isset){
-	    free(aper->locs_dm);aper->locs_dm=0;
+	    cellfree(aper->locs_dm);
 	}else if(parms->save.setup){
-	    locarrwrite(aper->locs_dm, parms->ndm*parms->evl.nevl, "%s/locs_dm", dirsetup);
+	    cellwrite(aper->locs_dm, "%s/locs_dm", dirsetup);
 	}
     }
     /*Set the amp for plotting. */

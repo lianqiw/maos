@@ -15,17 +15,26 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   \file cell.h 
 
-#include "common.h"
-#ifndef AOS_SIM_UTILS_H
-#define AOS_SIM_UTILS_H
-void atm2xloc(dcell **opdx, const SIM_T *simu);
-void sim_update_etf(SIM_T *simu);
-void seeding(SIM_T *simu);
-SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, APER_T *aper,RECON_T *recon,int iseed);
-void free_simu(SIM_T *simu);
-void print_progress(const SIM_T *simu);
-void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms);
-void genscreen(SIM_T *simu);
-void setup_recon_HXW_predict(SIM_T *simu);
+   Function for a generic cell. The data those functions are passed
+   as void * to accomodate any cell type.
+   
+*/
+#ifndef AOS_LIB_CELL_H
+#define AOS_LIB_CELL_H
+#include "type.h"
+void* cellnew(long nx, long ny);
+void free_by_id(void* pix);
+void cellfree_do(void* dc);
+#define cellfree(A) ({cellfree_do(A); A=0;})
+
+void write_by_id(file_t *fd, const void* pix, long id);
+void cellwritedata(file_t *fp, const void* dc);
+void cellwrite(const void* dc, const char* format,...);
+
+void* readdata_by_id(file_t *fp, uint32_t id, header_t *header);
+void* cellreaddata(file_t *fp, uint32_t id, header_t *header);
+void* cellread(uint32_t id, const char *format, ...);
 #endif

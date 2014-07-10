@@ -112,37 +112,37 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     ngroup+=1;
-    loc_t **locs=calloc(ngroup, sizeof(loc_t*));
+    loccell *locs=cellnew(ngroup, 1);
     int32_t *style=calloc(ngroup, sizeof(int32_t));
     int count=0;
     style[count]=(0xFF0000<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->evl.nevl, 0, 0);
+    locs->p[count]=locnew(parms->evl.nevl, 0, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	locs[count]->locx[ievl]=parms->evl.thetax->p[ievl]*206265;
-	locs[count]->locy[ievl]=parms->evl.thetay->p[ievl]*206265;
+	locs->p[count]->locx[ievl]=parms->evl.thetax->p[ievl]*206265;
+	locs->p[count]->locy[ievl]=parms->evl.thetay->p[ievl]*206265;
     }
     count++;
 
     style[count]=(0xFF22DD<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->fit.nfit, 0, 0);
+    locs->p[count]=locnew(parms->fit.nfit, 0, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	locs[count]->locx[ifit]=parms->fit.thetax->p[ifit]*206265;
-	locs[count]->locy[ifit]=parms->fit.thetay->p[ifit]*206265;
+	locs->p[count]->locx[ifit]=parms->fit.thetax->p[ifit]*206265;
+	locs->p[count]->locy[ifit]=parms->fit.thetay->p[ifit]*206265;
     }
     count++;
     style[count]=(0x22FF00<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->sim.ncpa_ndir, 0, 0);
+    locs->p[count]=locnew(parms->sim.ncpa_ndir, 0, 0);
     for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-	locs[count]->locx[ifit]=parms->sim.ncpa_thetax->p[ifit]*206265;
-	locs[count]->locy[ifit]=parms->sim.ncpa_thetay->p[ifit]*206265;
+	locs->p[count]->locx[ifit]=parms->sim.ncpa_thetax->p[ifit]*206265;
+	locs->p[count]->locy[ifit]=parms->sim.ncpa_thetay->p[ifit]*206265;
     }
     count++;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
+	locs->p[count]=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    locs[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
-	    locs[count]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
+	    locs->p[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
+	    locs->p[count]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
 	if(isfinite(parms->powfs[ipowfs].hs)){
 	    style[count]=(0xFF8800<<8)+(4<<4)+2;
@@ -161,10 +161,10 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     double limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
-    plot_points(fig, ngroup, locs, NULL, style,limit,NULL,ncir,cir, NULL,
+    plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL,ncir,cir, NULL,
 		"Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
     free(cir);
-    locarrfree(locs, ngroup);
+    cellfree(locs);
     free(style);
 }
 /**
@@ -391,11 +391,11 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
     plotloc("FoV",parms,recon->floc,0, "floc");
     for(int idm=0; idm<parms->ndm; idm++){
 	double ht=parms->dm[idm].ht;
-	plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
+	plotloc("FoV", parms, recon->aloc->p[idm], ht, "aloc%d", idm);
     }
     for(int ips=0; ips<recon->npsr; ips++){
 	const double ht=recon->ht->p[ips];
-	plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
+	plotloc("FoV",parms,recon->xloc->p[ips],ht, "xloc%d",ips);
     }
     drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 	    "x (m)","y (m)","aper");

@@ -79,12 +79,12 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     locfree(powfs[ipowfs].gloc);
     dfree(powfs[ipowfs].amp);
     if(powfs[ipowfs].loc_tel){
-	locarrfree(powfs[ipowfs].loc_tel, parms->powfs[ipowfs].nwfs);
+	cellfree(powfs[ipowfs].loc_tel);
 	dcellfree(powfs[ipowfs].amp_tel);
 	dcellfree(powfs[ipowfs].saa_tel);
     }
     if(powfs[ipowfs].loc_dm){
-	locarrfree(powfs[ipowfs].loc_dm, parms->powfs[ipowfs].nwfs*parms->ndm);
+	cellfree(powfs[ipowfs].loc_dm);
     }
     dcellfree(powfs[ipowfs].realamp);
     dcellfree(powfs[ipowfs].realsaa);
@@ -305,7 +305,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	  They are not used for wavefront reconstruction
 	*/
 	int isset=0;
-	powfs[ipowfs].loc_tel=calloc(nwfsp, sizeof(loc_t*));
+	powfs[ipowfs].loc_tel=cellnew(nwfsp, 1);
 	powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
 	powfs[ipowfs].amp_tel=dcellnew(nwfsp, 1);
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
@@ -314,17 +314,17 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 #pragma omp task shared(isset)
 	    {
 		isset=1;
-		powfs[ipowfs].loc_tel[jwfs]
+		powfs[ipowfs].loc_tel->p[jwfs]
 		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
 		powfs[ipowfs].amp_tel->p[jwfs]
-		    =mkwfsamp(powfs[ipowfs].loc_tel[jwfs], aper->ampground,
+		    =mkwfsamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
 			      -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
 			      parms->aper.d, parms->aper.din);
 		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
 		    if(nwfsp>1){
 			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
 		    }
-		    wfspupmask(parms, powfs[ipowfs].loc_tel[jwfs],
+		    wfspupmask(parms, powfs[ipowfs].loc_tel->p[jwfs],
 			       powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
 		}
 		powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
@@ -332,7 +332,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 #pragma omp taskwait
 	if(!isset){
-	    free(powfs[ipowfs].loc_tel); powfs[ipowfs].loc_tel=0;
+	    cellfree(powfs[ipowfs].loc_tel);
 	    dcellfree(powfs[ipowfs].saa_tel); 
 	    dcellfree(powfs[ipowfs].amp_tel);
 	}else{
@@ -391,7 +391,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		if(powfs[ipowfs].saa_tel){
 		    for(int jwfs=0; jwfs<nwfsp; jwfs++){
 			MOVES(powfs[ipowfs].saa_tel->p[jwfs]->p, count, isa);
-			MOVEDLOC(powfs[ipowfs].loc_tel[jwfs], nxsa, count, isa);
+			MOVEDLOC(powfs[ipowfs].loc_tel->p[jwfs], nxsa, count, isa);
 			MOVED(powfs[ipowfs].amp_tel->p[jwfs]->p,nxsa, count, isa);
 		    }
 		}
@@ -413,7 +413,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     dresize(powfs[ipowfs].amp, count*nxsa, 1);
     if(powfs[ipowfs].loc_tel){
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
-	    locresize(powfs[ipowfs].loc_tel[jwfs], count*nxsa);
+	    locresize(powfs[ipowfs].loc_tel->p[jwfs], count*nxsa);
 	    dresize(powfs[ipowfs].amp_tel->p[jwfs], count*nxsa, 1);
 	    dresize(powfs[ipowfs].saa_tel->p[jwfs], count, 1);
 	}
@@ -458,7 +458,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	  pupil. The distorted grid are used for ray tracing from DM to WFS.
 	  They are not used for wavefront reconstruction
 	*/
-	powfs[ipowfs].loc_dm=calloc(nwfsp*parms->ndm, sizeof(loc_t*));
+	powfs[ipowfs].loc_dm=cellnew(nwfsp*parms->ndm, 1);
 	int isset=0;
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int jwfs=0; jwfs<nwfsp; jwfs++)
@@ -466,7 +466,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    {
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		if(parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]){
-		    powfs[ipowfs].loc_dm[jwfs+nwfsp*idm]
+		    powfs[ipowfs].loc_dm->p[jwfs+nwfsp*idm]
 			=loctransform(powfs[ipowfs].loc, parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]);
 		    isset=1;
 		}
@@ -474,7 +474,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 #pragma omp taskwait
 	if(!isset){
-	    free(powfs[ipowfs].loc_dm); powfs[ipowfs].loc_dm=0;
+	    cellfree(powfs[ipowfs].loc_dm);
 	}else{
 	    toc("misreg.dm2wfs");
 	}
@@ -490,13 +490,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(powfs[ipowfs].loc_tel){
 	    dcellwrite(powfs[ipowfs].saa_tel,"%s/powfs%d_saa_tel", dirsetup,ipowfs);
 	    dcellwrite(powfs[ipowfs].amp_tel,"%s/powfs%d_amp_tel", dirsetup,ipowfs);
-	    locarrwrite(powfs[ipowfs].loc_tel, nwfsp, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
+	    cellwrite(powfs[ipowfs].loc_tel, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
 	}
 	if(powfs[ipowfs].loc_dm){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		    locarrwrite(powfs[ipowfs].loc_dm, parms->ndm*nwfsp,
-				"%s/powfs%d_loc_dm", dirsetup, ipowfs);
+		    cellwrite(powfs[ipowfs].loc_dm, "%s/powfs%d_loc_dm", dirsetup, ipowfs);
 		}
 	    }
 	}
@@ -541,11 +540,11 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    warning("Ztilt for high order wfs is not good");
 	powfs[ipowfs].nsaimcc=MAX(1,(powfs[ipowfs].loc_tel?powfs[ipowfs].nwfs:1));
 	int nsaimcc=powfs[ipowfs].nsaimcc;
-	dcellfreearr(powfs[ipowfs].saimcc, nsaimcc);
-	powfs[ipowfs].saimcc=calloc(nsaimcc, sizeof(dcell*));
+	cellfree(powfs[ipowfs].saimcc);
+	powfs[ipowfs].saimcc=cellnew(nsaimcc, 1);
 	for(int imcc=0; imcc<nsaimcc; imcc++){
 	    dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].realamp->p[imcc]->p);
-	    powfs[ipowfs].saimcc[imcc]=dcellinvspd_each(mcc);
+	    powfs[ipowfs].saimcc->p[imcc]=dcellinvspd_each(mcc);
 	    dcellfree(mcc);
 	}
     }
@@ -1446,15 +1445,15 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     sumamp2=1./(sqrt(sumamp2));
     dscale(llt->amp, sumamp2);
     if(parms->powfs[ipowfs].llt->fnsurf){
-	int nlotf;
-	map_t **ncpa=maparrread(&nlotf, "%s",parms->powfs[ipowfs].llt->fnsurf);
+	cell *ncpa=mapcellread("%s",parms->powfs[ipowfs].llt->fnsurf);
+	int nlotf=ncpa->nx*ncpa->ny;
 	assert(nlotf==1 || nlotf==parms->powfs[ipowfs].nwfs);
 	llt->ncpa=dcellnew(nlotf, 1);
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    llt->ncpa->p[ilotf]=dnew(nx,nx);
-	    prop_grid_pts(ncpa[ilotf], llt->pts, NULL, llt->ncpa->p[ilotf]->p, 1, 0, 0, 1, 0, 0, 0);
+	    prop_grid_pts(ncpa->p[ilotf], llt->pts, NULL, llt->ncpa->p[ilotf]->p, 1, 0, 0, 1, 0, 0, 0);
 	}
-	maparrfree(ncpa, nlotf);
+	cellfree(ncpa);
     }
     /*find negative values in llt->amp and transfer then to surface error.*/
     for(int i=0; i<llt->amp->nx*llt->amp->ny; i++){
@@ -1723,15 +1722,15 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    /*load psf. 1 for each wavefront sensor. */
 	    info2("Using 1 sepsf for each wfs when loading sepsf\n");
 	    intstat->nsepsf=parms->powfs[ipowfs].nwfs;
-	    intstat->sepsf=calloc(intstat->nsepsf, sizeof(dcell*));
+	    intstat->sepsf=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		intstat->sepsf[jwfs]=dcellread("%s_wfs%d",parms->powfs[ipowfs].piinfile,iwfs);
-		double pmax=dmax(intstat->sepsf[jwfs]->p[0]);
-		if(intstat->sepsf[jwfs]->p[0]->p[0]>pmax*0.5){
+		dcell *sepsf=intstat->sepsf->p[jwfs]=dcellread("%s_wfs%d",parms->powfs[ipowfs].piinfile,iwfs);
+		double pmax=dmax(sepsf->p[0]);
+		if(sepsf->p[0]->p[0]>pmax*0.5){
 		    error("wfs %d:  psf must have peak at center, not corner.\n", iwfs);
 		}
-		if(intstat->sepsf[jwfs]->nx!=nsa){
+		if(sepsf->nx!=nsa){
 		    error("piinfile doesn't match\n");
 		}
 	    }
@@ -1798,7 +1797,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			TIC;tic;
 			genseotf(parms,powfs,ipowfs);
 			toc2("done");
-			ccellwritearr(intstat->otf, intstat->notf, 1, "%s", fnotf);
+			cellwrite(intstat->otf, "%s", fnotf);
 			close(fd);
 			remove(fnlock);
 		    }else{
@@ -1808,10 +1807,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			goto retry;
 		    }
 		}else{
-		    long nx, ny;
 		    info2("Reading WFS OTF from %s\n", fnotf);
-		    intstat->otf=ccellreadarr(&nx, &ny, "%s",fnotf);
-		    intstat->notf=nx*ny;
+		    intstat->otf=cccellread("%s",fnotf);
+		    intstat->notf=intstat->otf->nx*intstat->otf->ny;
 		    zftouch(fnotf);
 		}
 	    }
@@ -1895,17 +1893,17 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    /*Generating short exposure images. */
 	    gensepsf(parms,powfs,ipowfs);
 	    if(parms->save.setup>1 && intstat){
-		dcellwrite(intstat->sepsf[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
+		dcellwrite(intstat->sepsf->p[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
 	    /*Free short exposure otf. */
 	    if(!parms->sim.ncpa_calib){
 		ccellfree(intstat->lotf);
 	    }
-	    ccellfreearr(intstat->otf, intstat->notf);
+	    cellfree(intstat->otf);
 	}
 	/*generate short exposure i0,gx,gy from psf. */
 	gensei(parms,powfs,ipowfs);
-	dcellfreearr(intstat->sepsf,intstat->nsepsf);
+	cellfree(intstat->sepsf);
 	if(parms->save.setup){
 	    dcellwrite(intstat->i0,"%s/powfs%d_i0",dirsetup,ipowfs);
 	    dcellwrite(intstat->gx,"%s/powfs%d_gx",dirsetup,ipowfs);
@@ -1967,7 +1965,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 /*
   Setup gradient offset for calibration.
 */
-void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell *dm_ncpa){
+void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcell *dm_ncpa){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
 	if(aloc && dm_ncpa){
@@ -1989,11 +1987,11 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;
 		    if(parms->dm[idm].cubic){
-			prop_nongrid_pts_cubic(aloc[idm], dm_ncpa->p[idm]->p, 
+			prop_nongrid_pts_cubic(aloc->p[idm], dm_ncpa->p[idm]->p, 
 					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
 					       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 		    }else{
-			prop_nongrid_pts(aloc[idm], dm_ncpa->p[idm]->p, 
+			prop_nongrid_pts(aloc->p[idm], dm_ncpa->p[idm]->p, 
 					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
 					 -1, dispx, dispy, scale, 0, 0);
 		    }
@@ -2025,7 +2023,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 			double *realamp=powfs[ipowfs].realamp->p[iwfs]->p;
 			if(parms->powfs[ipowfs].gtype_sim==1){
 			    pts_ztilt(&powfs[ipowfs].gradoff->p[iwfs], powfs[ipowfs].pts,
-				      powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?iwfs:0], 
+				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?iwfs:0], 
 				      realamp, powfs[ipowfs].opdbias->p[iwfs]->p);
 			}else{
 			    spmulmat(&powfs[ipowfs].gradoff->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
@@ -2098,7 +2096,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	dcellfree(powfs[ipowfs].neasim);
 	if(powfs[ipowfs].intstat){
 	    INTSTAT_T *intstat=powfs[ipowfs].intstat;
-	    ccellfreearr(intstat->fotf, intstat->nsepsf);
+	    cellfree(intstat->fotf);
 	    dcellfree(intstat->mtche);
 	    dcellfree(intstat->saneaxyl);
 	    dcellfree(intstat->saneaxy);
@@ -2114,7 +2112,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    dcellfree(powfs[ipowfs].sprint);
 	}
 
-	dcellfreearr(powfs[ipowfs].saimcc, powfs[ipowfs].nsaimcc);
+	cellfree(powfs[ipowfs].saimcc);
 	if(powfs[ipowfs].llt){
 	    ptsfree(powfs[ipowfs].llt->pts);
 	    dfree(powfs[ipowfs].llt->amp);

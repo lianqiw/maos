@@ -113,9 +113,6 @@ void maos_isim(int isim){
     }
 #endif
     if(parms->atm.frozenflow){
-	if(parms->atm.evolve){
-	    evolve_screen(simu);
-	}
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    /*may need to copy another part */
@@ -138,12 +135,12 @@ void maos_isim(int isim){
 	if(!parms->fit.square){
 	    /* Embed DM commands to a square array for fast ray tracing */
 	    for(int idm=0; idm<parms->ndm; idm++){
-		loc_embed(simu->dmprojsq[idm], recon->aloc[idm], simu->dmproj->p[idm]->p);
+		loc_embed(simu->dmprojsq->p[idm], recon->aloc->p[idm], simu->dmproj->p[idm]->p);
 	    }
 	}
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
-	    gpu_dmproj2gpu(simu->dmprojsq, parms->ndm, NULL);
+	    gpu_dmproj2gpu(simu->dmprojsq, NULL);
 	}
 #endif
     }

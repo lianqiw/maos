@@ -30,7 +30,7 @@
 typedef struct APER_T{
     loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture
 			    for peformance evaluation.*/
-    loc_t **locs_dm;      /**<Distorted locs when mapped onto DM*/
+    loccell *locs_dm;    /**<Distorted locs when mapped onto DM*/
     dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for
 			    performance evaluation*/
     dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
@@ -63,7 +63,7 @@ typedef struct DTF_T{
 }DTF_T;
 /**
    contains the data associated with an elongation transfer function for a
-subaperture.  */
+subaperture. */
 typedef struct ETF_T{
     ccell *p1;          /**<Store the ETF along radial direction when radrot==1*/
     ccell *p2;          /**<Store the 2D ETF when radrot==0*/
@@ -74,7 +74,7 @@ typedef struct ETF_T{
 typedef struct LLT_T{
     loc_t *loc;          /**<The grid that defines the LLT pupil*/
     pts_t *pts;          /**<The LLT lower left grid point location*/
-    dmat  *amp;          /**<The amplitude defined on loc*/
+    dmat *amp;          /**<The amplitude defined on loc*/
     dcell *mcc;          /**<modal cross coupling matrix*/
     dcell *imcc;         /**<inverse of imcc*/
     dcell *ncpa;         /**<The LLT surface error*/
@@ -84,10 +84,10 @@ typedef struct LLT_T{
 physical optics wfs. */
 typedef struct INTSTAT_T{
     ccell *lotf;        /**<llt otf*/
-    ccell **otf;        /**<short exposure OTF. time consuming to calculate. */
-    ccell **fotf;       /**<The final optf before fft and multiply with si to
+    cccell *otf;        /**<short exposure OTF. time consuming to calculate. */
+    cccell *fotf;       /**<The final optf before fft and multiply with si to
 			   get i0. Used for MAP tracking.*/
-    dcell **sepsf;      /**<short expsoure PSF.*/
+    dccell *sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/
     dcell *gy;          /**<gradient of i0 along y*/
@@ -111,12 +111,12 @@ typedef struct POWFS_T{
     dmat *saa;          /**<Subaperture area*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
-    loc_t **loc_dm;     /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
-    loc_t **loc_tel;  /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
+    loccell *loc_dm;     /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
+    loccell *loc_tel;  /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
     dcell *amp_tel;   /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
     dcell *saa_tel;        /**<mis-registered saa, if any*/
     loc_t *gloc;        /**<loc used to generate GP*/
-    dmat  *gamp;        /**<amplitude defined on gloc*/
+    dmat *gamp;        /**<amplitude defined on gloc*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
@@ -129,7 +129,7 @@ typedef struct POWFS_T{
     ETF_T *etfsim;      /**<ETF for simulation.*/
     dmat *focus;        /**<additional focus error. (llt->fnrange)*/
     LLT_T *llt;         /**<uplink aperture parameters*/
-    dcell **saimcc;     /**<inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt.*/
+    dccell *saimcc;     /**<inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt.*/
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
@@ -189,7 +189,7 @@ typedef struct NGSMOD_T{
    contains data for Fourier Domain Preconditioner.
  */
 typedef struct FDPCG_T{
-    loc_t **xloc;  /**<record recon->xloc*/
+    loccell *xloc;  /**<record recon->xloc*/
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     imat *perm;    /**<Permutation vector to get block diagonal matrix*/
@@ -208,8 +208,8 @@ typedef struct FDPCG_T{
 */
 typedef struct MOAO_T{
     int used;         /**<Whether this MOAO is used or not*/
-    loc_t *aloc;      /**<Actuator grid*/
-    map_t *amap;      /**<Points to aloc->map*/
+    loccell *aloc;      /**<Actuator grid*/
+    mapcell *amap;      /**<Points to aloc->map*/
     spcell *HA;       /**<Propagator from this aloc to PLOC*/
     dcell *NW;        /**<null modes and constraints*/
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
@@ -225,9 +225,9 @@ typedef struct MOAO_T{
    A convenient wrap of the data to embed into MUV_T for applying invpsd to opds defined on xloc.
 */
 typedef struct INVPSD_T{
-    dcell  *invpsd;    /**<inverse of the turbulence PSF*/
-    ccell  *fftxopd;   /**<temporary array to apply inverse PSD in Fourier domain.*/
-    loc_t **xloc;      /**<points to recon->xloc*/
+    dcell *invpsd;    /**<inverse of the turbulence PSF*/
+    ccell *fftxopd;   /**<temporary array to apply inverse PSD in Fourier domain.*/
+    loccell *xloc;      /**<points to recon->xloc*/
     int     square;    /**<whether opd is on square xloc or not.*/
 }INVPSD_T;
 /**
@@ -235,8 +235,8 @@ typedef struct INVPSD_T{
    regularization to opds defined on xloc.
  */
 typedef struct FRACTAL_T{
-    dcell  *xopd;      /**<A square array to embed x on xloc into for fractal */
-    loc_t **xloc;      /**<points to recon->xloc*/
+    dcell *xopd;      /**<A square array to embed x on xloc into for fractal */
+    loccell *xloc;      /**<points to recon->xloc*/
     const double *wt;  /**<weight of each layer*/
     double  r0;        /**<The Fried parameter*/
     double  l0;        /**<The outer scale*/
@@ -245,7 +245,7 @@ typedef struct FRACTAL_T{
 }FRACTAL_T;
 
 /**
-   contains data related to wavefront reconstruction and DM fitting.  */
+   contains data related to wavefront reconstruction and DM fitting. */
 typedef struct RECON_T{
     double r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
     double l0;         /**<l0 used in reconstruction. may get updated in cn2 estimation*/
@@ -256,11 +256,11 @@ typedef struct RECON_T{
 
     loc_t *ploc;       /**<Grid on pupil for tomography*/
     map_t *pmap;       /**<square grid of ploc.*/
-    loc_t **ploc_tel;   /**<Distorted ploc when mapped onto telescope pupil for each WFS*/
+    loccell *ploc_tel;   /**<Distorted ploc when mapped onto telescope pupil for each WFS*/
 
-    loc_t **xloc;      /**<reconstructed atmosphere grid.*/
-    map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
-    map_t **xcmap;     /**<The map of xloc on non-cone coordinate, with floc sampling.*/
+    loccell *xloc;      /**<reconstructed atmosphere grid.*/
+    mapcell *xmap;      /**<The map of xloc (only if tomo.square is true)*/
+    mapcell *xcmap;     /**<The map of xloc on non-cone coordinate, with floc sampling.*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
     long *xnx;
     long *xny;
@@ -268,18 +268,18 @@ typedef struct RECON_T{
     map_t *fmap;       /**<Grid on pupil for DM fitting*/
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
-    loc_t **aloc;      /**<actuator grid*/
-    map_t **amap;      /**<square grid of actuators*/
-    map_t **acmap;     /**For caching DM to intermediate plane*/
-    long  *anx;        /**<Size of each amap*/
-    long  *any;        /**<Size of each amap*/
-    long  *anloc;      /**<Size of each aloc*/
-    long  *ngrad;      /**<Size of each grad for each wfs*/
+    loccell *aloc;      /**<actuator grid*/
+    mapcell *amap;      /**<square grid of actuators*/
+    mapcell *acmap;     /**For caching DM to intermediate plane*/
+    long *anx;        /**<Size of each amap*/
+    long *any;        /**<Size of each amap*/
+    long *anloc;      /**<Size of each aloc*/
+    long *ngrad;      /**<Size of each grad for each wfs*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
-    dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
+    dsp *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/
     dmat *fitwt;       /**<fit weighting in each direction.*/
     spcell *L2;        /**<Laplacian square regularization.*/
@@ -361,21 +361,21 @@ typedef struct RECON_T{
 
 typedef struct SIM_SAVE_T{
     /*cellarrs to save telemetry data.*/
-    cellarr** wfspsfout; /**<special file to save wfs psf history*/
-    cellarr** ztiltout;  /**<special file to save zernike wfs tilt history*/
+    cellarr **wfspsfout; /**<special file to save wfs psf history*/
+    cellarr **ztiltout;  /**<special file to save zernike wfs tilt history*/
     /*Evaluation directions PSF. */
-    cellarr*  evlpsfolmean;  /**<science field psf OL time average*/
-    cellarr** evlpsfmean;    /**<science field psf CL time average*/
-    cellarr** evlpsfhist;    /**<to save time history of science field psf*/
-    cellarr** evlopdcov;     /**<science field OPD covariance*/
-    cellarr** evlopdmean;    /**<science field OPD mean*/
-    cellarr* evlopdcovol;    /**<science field OPD covariance (open loop)*/
-    cellarr* evlopdmeanol;   /**<science field OPD mean (open loop)*/
-    cellarr** evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
-    cellarr** evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
-    cellarr** evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
-    cellarr** evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
-    cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
+    cellarr * evlpsfolmean;  /**<science field psf OL time average*/
+    cellarr **evlpsfmean;    /**<science field psf CL time average*/
+    cellarr **evlpsfhist;    /**<to save time history of science field psf*/
+    cellarr **evlopdcov;     /**<science field OPD covariance*/
+    cellarr **evlopdmean;    /**<science field OPD mean*/
+    cellarr *evlopdcovol;    /**<science field OPD covariance (open loop)*/
+    cellarr *evlopdmeanol;   /**<science field OPD mean (open loop)*/
+    cellarr **evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
+    cellarr **evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
+    cellarr **evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
+    cellarr **evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
+    cellarr **ecovxx;     /**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
     cellarr *dmerr;
     cellarr *dmint;
@@ -437,7 +437,7 @@ typedef struct DITHER_T{
 */
 typedef struct SIM_T{
     /*A few data structs generated in beginning of simulation*/
-    /* random stream. We maintain separate random streams for each purpose,
+    /*random stream. We maintain separate random streams for each purpose,
        derived from the same seed, so that multi-threading will produce same
        result */
     rand_t *wfs_rand;  /**<random stream for each wfs.*/
@@ -448,26 +448,25 @@ typedef struct SIM_T{
     rand_t *misc_rand; /**<For misc purposes*/
     /*Atmosphere*/
     GENSCREEN_T *genscreen;
-    map_t **atm;       /**<fine sampled simulation turbulence screens*/
-    map_t **atm2;      /**<another fine sampled simulation turbulence screen for evolving.*/
-    map_t ***cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
+    mapcell *atm;       /**<fine sampled simulation turbulence screens*/
+    mapccell *cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
 			  fast ray tracing to WFS and aper*/
     int (*pcachedm)[2];/**<information about cachedm struct.*/
     dmat *winddir;     /**<input wind direction*/
     
     /*Optional surface errors in M1, M2, or M3*/
-    rectmap_t **tsurf; /**<input tilted M3 surface read from parms->tsurf*/
-    map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
+    rmapcell *tsurf; /**<input tilted M3 surface read from parms->tsurf*/
+    mapcell *surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
 
     /*Telescope windshake time series and direction.*/
-    dmat  *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
+    dmat *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
     double telwsx;     /**<cos(ws_theta)*/
     double telwsy;     /**<sin(ws_theta)*/
 
     /*WFS data for each time step. Each has a cell for each wfs*/
-    dcell **ints;      /**<WFS subaperture images.*/
-    ccell **wfspsfout; /**<output WFS PSF history.*/
-    dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
+    dccell *ints;      /**<WFS subaperture images.*/
+    cccell *wfspsfout; /**<output WFS PSF history.*/
+    dccell *pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
@@ -495,11 +494,11 @@ typedef struct SIM_T{
 			  system, not in reconstruction since it is unknown.*/
     dmat *ttmreal;
     dcell *dmcmdlast; /**<The command for last time step (known to RTC).*/
-    map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
+    mapcell *dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/
-    map_t **dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
-    dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
+    mapcell *dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
+    dccell *dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
     dcell *dmadd;      /**<dm vector to simulate turbulence (added to integrator
@@ -523,7 +522,7 @@ typedef struct SIM_T{
 
     /*focus tracking loop*/
     dcell *deltafocus; /**<focus difference between science and ngs estimated from opdr*/
-    dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
+    dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomavg;    /**<Trombone averager*/
@@ -533,7 +532,7 @@ typedef struct SIM_T{
     dcell *lgsfocus;   /**<LGS focus error time history*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
-    dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
+    dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
     dcell *evlopdcov;     /**<science field opd covariance*/
@@ -569,18 +568,18 @@ typedef struct SIM_T{
     PROPDATA_T *evl_propdata_atm;
     PROPDATA_T *evl_propdata_dm;
     thread_t **cachedm_prop;   /**<wrapped cachedm_propdata for threading*/
-    thread_t  **wfs_prop_dm;   /**<wrap of wfs_propdata_dm for threaded ray tracing*/
-    thread_t  **wfs_prop_atm;  /**<wrap of wfs_propdata_atm for threaded ray tracing*/
-    thread_t  **evl_prop_atm;
-    thread_t  **evl_prop_dm;
+    thread_t **wfs_prop_dm;   /**<wrap of wfs_propdata_dm for threaded ray tracing*/
+    thread_t **wfs_prop_atm;  /**<wrap of wfs_propdata_atm for threaded ray tracing*/
+    thread_t **evl_prop_atm;
+    thread_t **evl_prop_dm;
 
     WFSINTS_T *wfs_intsdata;  /**<wrap of data for wfsints.c*/
-    thread_t  **wfs_ints;     /**<wrap of wfs_intsdata for threaded processing*/
+    thread_t **wfs_ints;     /**<wrap of wfs_intsdata for threaded processing*/
 
-    thread_t  *wfs_grad_pre;  /**to call wfsgrad_iwfs or gpu_wfsgrad_queue in threads.*/
-    thread_t  *wfs_grad_post; /**to call wfsgrad_post in threads.*/
-    thread_t  *perf_evl_pre;  /**to call perfevl_ievl or gpu_perfevl_queue in threads.*/
-    thread_t  *perf_evl_post; /**to call gpu_perfevl_sync in threads.*/
+    thread_t *wfs_grad_pre;  /**to call wfsgrad_iwfs or gpu_wfsgrad_queue in threads.*/
+    thread_t *wfs_grad_post; /**to call wfsgrad_post in threads.*/
+    thread_t *perf_evl_pre;  /**to call perfevl_ievl or gpu_perfevl_queue in threads.*/
+    thread_t *perf_evl_post; /**to call gpu_perfevl_sync in threads.*/
 
     SIM_SAVE_T *save;  /**<Telemetry output*/
     STATUS_T *status;  /**<status report to scheduler.*/

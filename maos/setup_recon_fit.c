@@ -42,7 +42,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht;
 		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		HXF[ips][ifit]=mkh(recon->xloc[ips], recon->floc, NULL,
+		HXF[ips][ifit]=mkh(recon->xloc->p[ips], recon->floc, NULL,
 				   displace[0], displace[1], scale,
 				   parms->tomo.cubic, parms->tomo.iac);
 	    }
@@ -109,7 +109,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dmat **FRV=recon->FR.V->p;  
 	
 	    for(int ips=0; ips<npsr; ips++){
-		int nloc=recon->xloc[ips]->nloc;
+		int nloc=recon->xloc->p[ips]->nloc;
 		FRV[ips]=dnew(nloc,nfit);
 		for(int ifit=0; ifit<nfit; ifit++){
 		    /*notice the sqrt. */
@@ -133,7 +133,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	dmat **FRU=recon->FR.U->p;
 	
 	for(int idm=0; idm<ndm; idm++){    
-	    int nloc=recon->aloc[idm]->nloc;
+	    int nloc=recon->aloc->p[idm]->nloc;
 	    FRU[idm]=dnew(nloc, nfit);
 	    for(int ifit=0; ifit<nfit; ifit++){
 		/*notice the sart. */
@@ -178,7 +178,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	      scaling is due to ray tracing between different sampling freq.*/
 	    int nact=0;
 	    for(int idm=0; idm<parms->ndm; idm++){
-		nact+=recon->aloc[idm]->nloc;
+		nact+=recon->aloc->p[idm]->nloc;
 	    }
 	    double maxeig=4./nact;
 	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);

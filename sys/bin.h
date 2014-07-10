@@ -154,4 +154,11 @@ spint *readspint(file_t *fp, long* nx, long* ny);
 void mmap_unref(struct mmap_t *in);
 struct mmap_t *mmap_new(int fd, void *p, long n);
 mmap_t*mmap_ref(mmap_t *in);
+int mmap_open(char *fn, int rw);
+void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header);
+void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **header0);
+typedef void*(*READFUN)(file_t*, header_t *header);
+typedef void (*WRITEFUN)(file_t*, const void*);
+void *readbin(READFUN readfun, const char *format, ...);
+void writebin(WRITEFUN writefun, const void *out, const char *format, ...);
 #endif

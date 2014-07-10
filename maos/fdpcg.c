@@ -318,7 +318,7 @@ fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx
 /**
   Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information.
 */
-FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs, map_t **atm){
+FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs, mapcell *atm){
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].lo){
@@ -373,7 +373,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 		L2=spref(recon->L2->p[ips+nps*ips]);
 	    }else{/*L2 is for non square xloc. need to build L2 for square xloc. */
 		L2=mklaplacian_map(nx[ips], ny[ips],
-				   recon->xloc[ips]->dx, recon->r0,
+				   recon->xloc->p[ips]->dx, recon->r0,
 				   recon->wt->p[ips]);
 		spscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	    }
@@ -462,8 +462,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
 	    if(atm){
 		int ips0=parms->atmr.indps->p[ips]; 
-		dispx[ips]+=atm[ips0]->vx*parms->sim.dt*2;
-		dispy[ips]+=atm[ips0]->vy*parms->sim.dt*2;
+		dispx[ips]+=atm->p[ips0]->vx*parms->sim.dt*2;
+		dispy[ips]+=atm->p[ips0]->vy*parms->sim.dt*2;
 	    }
 	}
 	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
@@ -593,7 +593,7 @@ static void fdpcg_fft(thread_t *info){
 	      cembed_locstat takes 0.000037
 	    */
 	    czero(xhati->p[ips]);
-	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
+	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc->p[ips],  xin->p[ips]->p, 1, 0);
 	}
 	if(fdpcg->scale){
 	    cfft2s(xhati->p[ips],-1);
@@ -635,7 +635,7 @@ static void fdpcg_ifft(thread_t *info){
 	    }
 	}else{
 	    dzero(xout->p[ips]);
-	    cembed_locstat(&xhat2i->p[ips], 1, fdpcg->xloc[ips], xout->p[ips]->p, 0, 1);
+	    cembed_locstat(&xhat2i->p[ips], 1, fdpcg->xloc->p[ips], xout->p[ips]->p, 0, 1);
 	}
     }
 }

@@ -39,7 +39,7 @@ static inline double cosangle(double a[3], double b[3]){
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
 }
 
-void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
+void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 		    const loc_t *locout,const double ratiox, const double ratioy,
 		    const double *ampout, double* phiout, 
 		    double sc, double hs, double ht,

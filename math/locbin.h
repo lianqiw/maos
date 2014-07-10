@@ -32,16 +32,16 @@ loc_t ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
 
 map_t *mapread(const char *format,...) CHECK_ARG(1);
 map_t *mapreaddata(file_t *fp, header_t *header);
-rectmap_t *rectmapread(const char *format,...) CHECK_ARG(1);
-rectmap_t **rectmaparrread(int *nlayer, const char *format, ...);
+rmap_t *rmapread(const char *format,...) CHECK_ARG(1);
+rmap_t **rmaparrread(int *nlayer, const char *format, ...);
 void mapwritedata(file_t *fp, map_t *map);
 void mapwrite(map_t *map, const char *format,...) CHECK_ARG(2);
 void maparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);
 map_t **maparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
 
 map_t* d2map(dmat *in);
-map_t**dcell2map(int *nlayer, dcell *in);
-rectmap_t* d2rectmap(dmat *in);
-rectmap_t **dcell2rectmap(int *nlayer, dcell *in);
+mapcell *dcell2map(dcell *in);
+rmap_t* d2rmap(dmat *in);
+rmap_t **dcell2rmap(int *nlayer, dcell *in);
 
 #endif

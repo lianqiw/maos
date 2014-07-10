@@ -36,7 +36,7 @@ typedef struct GENSCREEN_T{
     long share;      /**<Use file backend for sharing of atmosphere*/
     long nthread;    /**<Number of threads to use*/
     /*The following are private data. do not set when call. */
-    map_t **screen;  /**<The destination screen pointer*/
+    mapcell *screen;  /**<The destination screen pointer*/
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
     long ilayer;     /**<Current layer*/
     long method;     /**<The method*/
@@ -44,10 +44,10 @@ typedef struct GENSCREEN_T{
 }GENSCREEN_T;
 
 extern int genscreen_keep_unused;
-map_t** genscreen_from_spect(GENSCREEN_T *data);
-map_t** vonkarman_screen(GENSCREEN_T *data);
-map_t** biharmonic_screen(GENSCREEN_T *data);
-map_t **fractal_screen(GENSCREEN_T *data);
+mapcell* genscreen_from_spect(GENSCREEN_T *data);
+mapcell* vonkarman_screen(GENSCREEN_T *data);
+mapcell* biharmonic_screen(GENSCREEN_T *data);
+mapcell *fractal_screen(GENSCREEN_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 #define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);

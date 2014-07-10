@@ -75,7 +75,7 @@ void tomofit(SIM_T *simu){
 		dcellmm(&simu->deltafocus, recon->RFdfx, simu->opdr, "nn", 1);
 	    }
 	    if(parms->dbg.deltafocus==2){
-		dcell *dmpsol=simu->dmpsol[parms->hipowfs->p[0]];
+		dcell *dmpsol=simu->dmpsol->p[parms->hipowfs->p[0]];
 		//Compute the delta focus in closed loop.
 		dcellmm(&simu->deltafocus, recon->RFdfa, dmpsol, "nn", -1);
 	    }
@@ -118,9 +118,9 @@ static void calc_gradol(SIM_T *simu){
 		alpha=0; /*reset accumulation. */
 	    }
 	    if(parms->powfs[ipowfs].dtrat!=1){
-		dcelladd(&simu->dmpsol[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	    }else if(!simu->dmpsol[ipowfs]){
-		simu->dmpsol[ipowfs]=dcellref(dmpsol);
+		dcelladd(&simu->dmpsol->p[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
+	    }else if(!simu->dmpsol->p[ipowfs]){
+		simu->dmpsol->p[ipowfs]=dcellref(dmpsol);
 	    }
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
@@ -131,9 +131,9 @@ static void calc_gradol(SIM_T *simu){
 		{
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
-		    for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
+		    for(int idm=0; idm<parms->ndm && simu->dmpsol->p[ipowfs]; idm++){
 			spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
-				 simu->dmpsol[ipowfs]->p[idm], 1);
+				 simu->dmpsol->p[ipowfs]->p[idm], 1);
 		    }
 		}
 #if _OPENMP >= 200805 
@@ -270,7 +270,7 @@ void reconstruct(SIM_T *simu){
 	    if(parms->sim.idealfit){
 		dmpsol=simu->dmcmdlast;
 	    }else if(parms->sim.fuseint || parms->recon.split==1){
-		dmpsol=simu->dmpsol[parms->hipowfs->p[0]];
+		dmpsol=simu->dmpsol->p[parms->hipowfs->p[0]];
 	    }else{
 		warning_once("Temporary solution\n");
 		dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
@@ -305,7 +305,7 @@ void reconstruct(SIM_T *simu){
     }
     //For PSF reconstruction.
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs->p[0]],
+	psfr_calc(simu, simu->opdr, simu->dmpsol->p[parms->hipowfs->p[0]],
 		  simu->dmerr,  simu->Merr_lo);
     }
 

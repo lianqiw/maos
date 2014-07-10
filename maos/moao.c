@@ -35,7 +35,7 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     if(!recon || !recon->moao) return;
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
-	locfree(recon->moao[imoao].aloc);
+	cellfree(recon->moao[imoao].aloc);
 	spcellfree(recon->moao[imoao].HA);
 	dcellfree(recon->moao[imoao].NW);
 	spcellfree(recon->moao[imoao].actslave);
@@ -74,37 +74,39 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double dyr=parms->aper.d/order*parms->moao[imoao].ar;
 	map_t *map=0;
 	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,0,0,0,0,0,parms->fit.square);
-	recon->moao[imoao].aloc=map2loc(map);
+	recon->moao[imoao].aloc=cellnew(1,1); 
+	recon->moao[imoao].aloc->p[0]=map2loc(map);
 	mapfree(map);
-	loc_create_map_npad(recon->moao[imoao].aloc,parms->fit.square?0:1,0,0);
-	recon->moao[imoao].amap=recon->moao[imoao].aloc->map;
-	recon->moao[imoao].amap->cubic=parms->moao[imoao].cubic;
-	recon->moao[imoao].amap->iac=parms->moao[imoao].iac;
-	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
+	loc_create_map_npad(recon->moao[imoao].aloc->p[0],parms->fit.square?0:1,0,0);
+	recon->moao[imoao].amap=cellnew(1,1);
+	recon->moao[imoao].amap->p[0]=recon->moao[imoao].aloc->p[0]->map;
+	recon->moao[imoao].amap->p[0]->cubic=parms->moao[imoao].cubic;
+	recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
+	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
 	recon->moao[imoao].HA=spcellnew(1,1);
-	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc, recon->floc, NULL, 0, 0, 1, 
+	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, NULL, 0, 0, 1, 
 					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
 	if(parms->moao[imoao].actstuck){
 	    recon->moao[imoao].actstuck=icellnew(1,1);
-	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actstuck);
-	    act_stuck(&recon->moao[imoao].aloc, recon->moao[imoao].HA, NULL, recon->moao[imoao].actstuck);
+	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
+	    act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, NULL, recon->moao[imoao].actstuck);
 	}
 	if(parms->moao[imoao].actfloat){
 	    recon->moao[imoao].actfloat=icellnew(1,1);
-	    recon->moao[imoao].actfloat->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actfloat);
-	    act_float(&recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
+	    recon->moao[imoao].actfloat->p[0]=act_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actfloat);
+	    act_float(recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
 	}
 
 	if(parms->moao[imoao].lrt_ptt){
 	    recon->moao[imoao].NW=dcellnew(1,1);
-	    long nloc=recon->moao[imoao].aloc->nloc;
+	    long nloc=recon->moao[imoao].aloc->p[0]->nloc;
 	    recon->moao[imoao].NW->p[0]=dnew(nloc,3);
 	    PDMAT(recon->moao[imoao].NW->p[0], pNW);
 	    double scl=1./nloc;
 	    double scl2=scl*2./parms->aper.d;
-	    const double *locx=recon->moao[imoao].aloc->locx;
-	    const double *locy=recon->moao[imoao].aloc->locy;
+	    const double *locx=recon->moao[imoao].aloc->p[0]->locx;
+	    const double *locy=recon->moao[imoao].aloc->p[0]->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		/*We don't want piston/tip/tilt on the mems. */
 		pNW[0][iloc]=scl;/*piston; */
@@ -116,7 +118,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].W1=dref(recon->W1);
 	if(parms->moao[imoao].actslave){
 	    recon->moao[imoao].actcpl=genactcpl(recon->moao[imoao].HA, recon->moao[imoao].W1);
-	    recon->moao[imoao].actslave=slaving(&recon->moao[imoao].aloc, 
+	    recon->moao[imoao].actslave=slaving(recon->moao[imoao].aloc, 
 						recon->moao[imoao].actcpl,
 						recon->moao[imoao].NW,
 						recon->moao[imoao].actstuck,
@@ -125,13 +127,13 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 						1./recon->floc->nloc);
 	}
 	if(parms->save.setup){
-	    locwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
+	    cellwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
 	    spcellwrite(recon->moao[imoao].HA, "%s/moao%d_HA",dirsetup,imoao);
 	    dcellwrite(recon->moao[imoao].NW, "%s/moao%d_NW",dirsetup,imoao);
 	    spcellwrite(recon->moao[imoao].actslave, "%s/moao%d_actslave",dirsetup,imoao);
 	}
 	if(parms->plot.setup){
-	    plotloc("FoV",parms,recon->moao[imoao].aloc,0,"moao_aloc");
+	    plotloc("FoV",parms,recon->moao[imoao].aloc->p[0], 0,"moao_aloc");
 	}
     }/*imoao */
 }
@@ -156,13 +158,13 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 	double scale=1.-ht/hs;
 	if(parms->tomo.square){
 	    map_t map;
-	    memcpy(&map, recon->xmap[ipsr], sizeof(map_t));
+	    memcpy(&map, recon->xmap->p[ipsr], sizeof(map_t));
 	    map.p=opdr->p[ipsr]->p;
 	    prop_grid_stat(&map, recon->floc->stat, 
 			   xp->p[0]->p, 1, 
 			   thetax*ht, thetay*ht,scale, 0, 0, 0);
 	}else{
-	    prop_nongrid(recon->xloc[ipsr], opdr->p[ipsr]->p,
+	    prop_nongrid(recon->xloc->p[ipsr], opdr->p[ipsr]->p,
 			 recon->floc, NULL, xp->p[0]->p, 1, 
 			 thetax*ht, thetay*ht, scale, 0, 0);
 	}
@@ -170,7 +172,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht;
 	double scale=1.-ht/hs;
-	prop_nongrid_cubic(recon->aloc[idm], dmcommon->p[idm]->p,
+	prop_nongrid_cubic(recon->aloc->p[idm], dmcommon->p[idm]->p,
 			   recon->floc, NULL, xp->p[0]->p, -1, 
 			   thetax*ht, thetay*ht, scale, 
 			   parms->dm[idm].iac, 0, 0);
@@ -269,7 +271,7 @@ void moao_recon(SIM_T *simu){
 	    if(parms->plot.run){
 		drawopd("MOAO WFS RHS", recon->floc, rhsout->p[0]->p, NULL,
 			"MOAO for WFS","x (m)", "y(m)", "Wfs rhs %d", iwfs);
-		drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
+		drawopd("MOAO WFS", recon->moao[imoao].aloc->p[0], dmmoao->p[0]->p,NULL,
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
@@ -313,7 +315,7 @@ void moao_recon(SIM_T *simu){
 	    if(parms->plot.run){
 		drawopd("MOAO EVL RHS", recon->floc, rhsout->p[0]->p, NULL,
 			"MOAO for WFS","x (m)", "y(m)", "Evl %d", ievl);
-		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
+		drawopd("MOAO EVL", recon->moao[imoao].aloc->p[0], dmmoao->p[0]->p,NULL,
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){

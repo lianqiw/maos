@@ -348,7 +348,7 @@ static void test_accuracy(void){
     seed_rand(&rstat, 2);
     int nlayer=1;
     double wt[1]={1};
-    map_t **screens;
+    mapcell *screens;
     GENSCREEN_T data;
     memset(&data, 0, sizeof(GENSCREEN_T));
     data.rstat=&rstat;
@@ -361,7 +361,7 @@ static void test_accuracy(void){
     data.nlayer=nlayer;
     screens=vonkarman_screen(&data);
     /*screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1); */
-    map_t *screen=screens[0];
+    map_t *screen=screens->p[0];
     //mapcircle(screen, 15, 1e-5);
     dset((dmat*)screen, 1);
     mapwrite(screen,"accphi_screen");
@@ -588,7 +588,7 @@ static void test_speed(int nthread){
     seed_rand(&rstat, 2);
     int nlayer=1;
     double wt[1]={1};
-    map_t **screens;
+    mapcell *screens;
     GENSCREEN_T data;
     memset(&data, 0,sizeof(GENSCREEN_T));
     data.rstat=&rstat;
@@ -602,7 +602,7 @@ static void test_speed(int nthread){
     screens=vonkarman_screen(&data);
     /*screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1); */
     info("\n");
-    map_t *screen=screens[0];
+    map_t *screen=screens->p[0];
     double dsa=0.1;
     dmat *A=dnew(30/dsa,30/dsa);
     dcircle(A,30,30,1,1,15/dsa,1);

@@ -1035,6 +1035,26 @@ spint *readspint(file_t *fp, long* nx, long* ny){
     return out;
 }
 /**
+   A wrapper for opening file to read*/
+void *readbin(READFUN readfun, const char *format, ...){
+    format2fn;
+    file_t *fp=zfopen(fn, "rb");
+    void *out=readfun(fp, 0);
+    zfeof(fp);
+    zfclose(fp);
+    return out;
+}
+
+/**
+   A wrapper for opening file to write*/
+void writebin(WRITEFUN writefun, const void *out, const char *format, ...){
+    format2fn;
+    file_t *fp=zfopen(fn, "wb");
+    writefun(fp, out);
+    zfeof(fp);
+    zfclose(fp);
+}
+/**
    Unreference the mmaped memory. When the reference drops to zero, unmap it.
  */
 void mmap_unref(struct mmap_t *in){
@@ -1066,3 +1086,97 @@ mmap_t*mmap_ref(mmap_t *in){
     in->nref++;
     return in;
 }
+
+/**
+   Open a file for write with mmmap. We don't provide a access control here for
+   generic usage of the function. Lock on a special dummy file for access
+   control.
+*/
+int mmap_open(char *fn, int rw){
+    if(rw && disable_save){
+	error("output directory is not specified\n");
+    }
+    char *fn2=procfn(fn,rw?"w":"r",0);
+    if(!fn2) return -1;
+    if(fn2 && strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
+	error("new_mmap does not support gzip\n");
+    }
+    int fd;
+    if(rw){
+	fd=open(fn2, O_RDWR|O_CREAT, 0600);
+	if(fd!=-1 && ftruncate(fd, 0)){/*truncate the file. */
+	    error("Unable to ftruncate file to 0 size\n");
+	}
+    }else{
+	fd=open(fn2, O_RDONLY);
+    }
+    /*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
+    if(fd==-1 && rw){
+	perror("open");
+	error("Unable to create file %s\n", fn2);
+    }
+ 
+    free(fn2);
+    return fd;
+}
+
+/**
+   Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
+*/
+void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header){
+    char *p=*p0;
+    /*Always have a header to align the data. */
+    if(header){
+	uint64_t nlen=bytes_header(header)-24;
+	((uint32_t*)p)[0]=(uint32_t)M_HEADER; p+=4;
+	((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
+	*header0=p;
+	memcpy(p, header, strlen(header)+1); p+=nlen;
+	((uint64_t*)p)[0]=(uint64_t)nlen; p+=8;
+	((uint32_t*)p)[0]=(uint32_t)M_HEADER;p+=4;
+    }else{
+	*header0=NULL;
+    }
+    ((uint32_t*)p)[0]=(uint32_t)M_SKIP; p+=4;
+    ((uint32_t*)p)[0]=(uint32_t)magic; p+=4;
+    ((uint64_t*)p)[0]=(uint64_t)nx; p+=8;
+    ((uint64_t*)p)[0]=(uint64_t)ny; p+=8;
+    *p0=p;
+}
+
+/**
+   Initialize the dimension from the header in the mmaped file.
+*/
+void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **header0){
+    char *p=*p0;
+    char *header=NULL;
+    while(((uint32_t*)p)[0]==M_HEADER){
+	p+=4;
+	long nlen=((uint64_t*)p)[0];p+=8;
+	header=p;
+	p+=nlen;
+	if(nlen == ((uint64_t*)p)[0]){
+	    p+=8;
+	    if(((uint32_t*)p)[0]==M_HEADER){
+		p+=4;
+	    }else{
+		header=NULL;
+	    }
+	}else{
+	    header=NULL;
+	}
+	if(!header){
+	    error("Parse head failed\n");
+	}
+    }
+    if(!header){
+	p=*p0;
+    }
+    if(((uint32_t*)p)[0]==M_SKIP) p+=4;
+    *magic=((uint32_t*)p)[0]; p+=4;
+    *nx=((uint64_t*)p)[0]; p+=8;
+    *ny=((uint64_t*)p)[0]; p+=8;
+    *p0=p;
+    if(header0) *header0=header;
+}
+

@@ -162,7 +162,7 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    /*from DM to ploc (plocs) science beam */
-	    Hat->p[idm]=mkhb(recon->aloc[idm], loc, NULL, displacex,displacey,1.,0,0);
+	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
 	    Ha->p[idm]=sptrans(Hat->p[idm]);
 	    spmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
@@ -261,7 +261,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		Hat->p[idm]=spref(HatGround);
 	    }else{
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc[idm], loc, NULL, displacex,displacey,1.,0,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
 		if(parms->dm[idm].isground){
 		    HatGround=spref(Hat->p[idm]);
 		}
@@ -330,7 +330,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacey=thetay*hc;
 	    if(!parms->dm[idm].isground || !HatGround){
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc[idm], loc, NULL, displacex,displacey,1.,0,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
 		if(parms->dm[idm].isground){
 		    HatGround=spref(Hat->p[idm]);
 		}
@@ -365,7 +365,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     M->p[0]=dnew(nmod,1);
     dcell *mod=dcellnew(ndm,1);
     dcell *dmt=dcellnew(ndm,1);
-    loc_t **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc->p;
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
 	mod->p[idm]=dnew(aloc[idm]->nloc,nmod);
@@ -391,7 +391,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
     /*Build NGS mod in science direction using accphi */
     NGSMOD_T *ngsmod=recon->ngsmod;
-    loc_t **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc->p;
     const int ndm=parms->ndm;
     dcell *dmt=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
@@ -564,7 +564,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    for(int idm=0; idm<ndm; idm++){
 		dcell *Matt=dcellnew(ndm,1);
 		dcell *GaM=NULL;
-		Matt->p[idm]=loc2mat(recon->aloc[idm],0);
+		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
 		spcellmulmat(&GaM, recon->GAlo, Matt, 1);
 		dcell *tmp=dcellpinv(GaM, NULL,saneai);
 		dcell *tmp2=NULL;
@@ -588,7 +588,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    */
 	    int nact=0;
 	    for(int idm=0; idm<parms->ndm; idm++){
-		nact+=recon->aloc[idm]->nloc;
+		nact+=recon->aloc->p[idm]->nloc;
 	    }
 	    double maxeig=4./nact;
 	    spcelladdI(ngsmod->Wa, 1e-9*maxeig);
@@ -599,7 +599,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    if(parms->tomo.ahst_ttr){
 		ngsmod->Ptt=dcellnew(parms->ndm,1);
 		for(int idm=0; idm<ndm; idm++){
-		    dmat *Matt=loc2mat(recon->aloc[idm],0);
+		    dmat *Matt=loc2mat(recon->aloc->p[idm],0);
 		    ngsmod->Ptt->p[idm]=dpinv(Matt, NULL, ngsmod->Wa->p[idm+idm*ndm]);
 		    dfree(Matt);
 		}
@@ -620,7 +620,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	if(parms->tomo.ahst_ttr){
 	    ngsmod->Ptt=dcellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
-		dmat *Matt=loc2mat(recon->aloc[idm],0);
+		dmat *Matt=loc2mat(recon->aloc->p[idm],0);
 		ngsmod->Ptt->p[idm]=dpinv(Matt, NULL,NULL);
 		dfree(Matt);
 	    }
@@ -737,7 +737,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     double scale=recon->ngsmod->scale;
     /*The MCC_fcp depends weakly on the aperture sampling. */
     double MCC_fcp=recon->ngsmod->aper_fcp;
-    loc_t **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc->p;
     /*convert mode vector and add to dm commands */
     const int ndm=recon->ndm;
     if(!*dmc){
@@ -745,7 +745,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!(*dmc)->p[idm]){
-	    (*dmc)->p[idm]=dnew(recon->aloc[idm]->nloc, 1);
+	    (*dmc)->p[idm]=dnew(recon->aloc->p[idm]->nloc, 1);
 	}
     }
 
@@ -904,7 +904,7 @@ void remove_dm_tt(SIM_T *simu, dcell *dmerr){
 	}else{
 	    ptt=utt->p;
 	}
-	loc_add_ptt(dmerr->p[idm]->p, ptt, recon->aloc[idm]);
+	loc_add_ptt(dmerr->p[idm]->p, ptt, recon->aloc->p[idm]);
 	info("Adding P/T/T %g m %f %f mas to dm %d\n",
 	     ptt[0],ptt[1]*206265000,ptt[2]*206265000,idm);
 	dfree(utt);

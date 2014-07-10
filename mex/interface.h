@@ -101,6 +101,34 @@ INLINE mxArray *ccell2mx(const ccell *A){
     }
     return out;
 }
+mxArray *any2mx(const void *A_){
+    mxArray *out=0;
+    const cell *A=A_;
+    long id=A?(A->id):0;
+    switch(id){
+    case MCC_ANY:
+	out=mxCreateCellMatrix(A->nx, A->ny);
+	for(int i=0; i<A->nx*A->ny; i++){
+	    if(A->p[i]) mxSetCell(out, i, any2mx(A->p[i]));
+	}
+	break;
+    case M_DBL:
+	out=d2mx(A_);
+	break;
+    case M_CMP:
+	out=c2mx(A_);
+	break;
+    case M_LOC64:
+	out=loc2mx(A_);
+	break;
+    case M_SP64:
+	out=dsp2mx(A_);
+	break;
+    default:
+	out=mxCreateCellMatrix(0,0);
+    }
+    return out;
+}
 INLINE mxArray *str2mx(const char *str){
     return mxCreateString(str);
 }

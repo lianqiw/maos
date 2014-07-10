@@ -64,7 +64,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
 	    dfree(xini);
 	}else{
 	    czero(fftxopd->p[ips]);
-	    cembed_locstat(&fftxopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
+	    cembed_locstat(&fftxopd->p[ips], 0, extra->xloc->p[ips], xin->p[ips]->p, alpha, 0);
 	}
 	cfft2(fftxopd->p[ips],-1);
 	ccwmd(fftxopd->p[ips], invpsd->p[ips], 1);
@@ -75,7 +75,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
 	    creal2d(&xouti,1,fftxopd->p[ips],alpha);
 	    dfree(xouti);
 	}else{
-	    cembed_locstat(&fftxopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
+	    cembed_locstat(&fftxopd->p[ips], 1, extra->xloc->p[ips], (*xout)->p[ips]->p, 1, 1);
 	}
     }
 }
@@ -101,13 +101,13 @@ void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, 
 	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
 	dzero(extra->xopd->p[ips]);
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
-	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, 
+	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc->p[ips], xin->p[ips]->p, 
 		       alpha*extra->scale, 0);
 	fractal_inv(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-		    extra->xloc[ips]->dx, r0i, extra->l0, extra->ninit);
+		    extra->xloc->p[ips]->dx, r0i, extra->l0, extra->ninit);
 	fractal_inv_trans(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-			  extra->xloc[ips]->dx, r0i, extra->l0, extra->ninit);
-	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
+			  extra->xloc->p[ips]->dx, r0i, extra->l0, extra->ninit);
+	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc->p[ips], (*xout)->p[ips]->p, 1, 1);
     }
 }
 
@@ -231,11 +231,11 @@ static void Tomo_prop_do(thread_t *info){
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
-		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
+		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
 		}
 		double scale=1. - ht/hs;
-		memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 		xmap.p=data->xin->p[ips]->p;
 		prop_grid_stat(&xmap, recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
@@ -314,9 +314,9 @@ static void Tomo_iprop_do(thread_t *info){
 	if(parms->tomo.square && !parms->dbg.tomo_hxw){
 	    /*Do the ray tracing instead of using HXW. */
 	    if(!data->xout->p[ips]){
-		data->xout->p[ips]=dnew(recon->xloc[ips]->nloc, 1);
+		data->xout->p[ips]=dnew(recon->xloc->p[ips]->nloc, 1);
 	    }
-	    memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+	    memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 	    xmap.p=data->xout->p[ips]->p;
 	    double ht=recon->ht->p[ips];
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
@@ -327,8 +327,8 @@ static void Tomo_iprop_do(thread_t *info){
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
-		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
+		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
 		}
 		double scale=1. - ht/hs;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
@@ -497,9 +497,9 @@ void FitR(dcell **xout, const void *A,
 		const double ht = parms->atm.ht->p[ips];
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
-		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
-		prop_grid(simu->atm[ips], recon->floc, NULL, xp->p[ifit]->p, 
+		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*simu->dt;
+		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*simu->dt;
+		prop_grid(simu->atm->p[ips], recon->floc, NULL, xp->p[ifit]->p, 
 			  1, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
@@ -519,7 +519,7 @@ void FitR(dcell **xout, const void *A,
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht;
 		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->floc, NULL, 
+		prop_nongrid(recon->xloc->p[ips], xin->p[ips]->p, recon->floc, NULL, 
 			     xp->p[ifit]->p, 1, displace[0], displace[1], scale, 0, 0);
 	    }
 	}
@@ -632,12 +632,12 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double dispx=parms->evl.thetax->p[ievl]*ht;
 			double dispy=parms->evl.thetay->p[ievl]*ht;
 			if(parms->tomo.square){/*square xloc */
-			    memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+			    memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 			    xmap.p=opdr->p[ips]->p;
 			    prop_grid_stat(&xmap, locs->stat, xx->p, 1, 
 					   dispx, dispy, scale, 0, 0, 0);
 			}else{
-			    prop_nongrid(recon->xloc[ips], opdr->p[ips]->p, locs, NULL,
+			    prop_nongrid(recon->xloc->p[ips], opdr->p[ips]->p, locs, NULL,
 					 xx->p, 1, dispx, dispy, scale, 0, 0);
 			}
 		    }
@@ -649,10 +649,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double dispx=parms->evl.thetax->p[ievl]*ht;
 			double dispy=parms->evl.thetay->p[ievl]*ht;
 			if(parms->dm[idm].cubic){
-			    prop_nongrid_cubic(recon->aloc[idm], dmadd->p[idm]->p, locs, NULL,
+			    prop_nongrid_cubic(recon->aloc->p[idm], dmadd->p[idm]->p, locs, NULL,
 					       xx->p, 1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 			}else{
-			    prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, locs, NULL,
+			    prop_nongrid(recon->aloc->p[idm], dmadd->p[idm]->p, locs, NULL,
 					 xx->p, 1, dispx, dispy, scale, 0, 0);
 			}
 		    }

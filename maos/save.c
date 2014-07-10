@@ -57,34 +57,34 @@ void save_recon(SIM_T *simu){
 	if(parms->recon.alg==0){
 	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
 		if(simu->opdr->p[i]){
-		    drawopd("opdr", recon->xloc[i], simu->opdr->p[i]->p, NULL,
+		    drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, NULL,
 			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
 		}
 	    }
 	    for(int i=0; simu->dmfit && i<simu->dmfit->nx; i++){
 		if(simu->dmfit->p[i]){
-		    drawopd("DM", recon->aloc[i], simu->dmfit->p[i]->p,NULL,
+		    drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p,NULL,
 			    "DM Fitting Output","x (m)", "y (m)","Fit %d",i);
 		}
 	    }
 	}
 	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
 	    if(simu->dmerr->p[idm]){
-		drawopd("DM",recon->aloc[idm], simu->dmerr->p[idm]->p,NULL,
+		drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
 			"DM Error Signal (Hi)","x (m)","y (m)",
 			"Err Hi %d",idm);
 	    }
 	}
 	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
 	    if(simu->dmint->mint[0]->p[idm]){
-		drawopd("DM",recon->aloc[idm], simu->dmint->mint[0]->p[idm]->p,NULL,
+		drawopd("DM",recon->aloc->p[idm], simu->dmint->mint[0]->p[idm]->p,NULL,
 			"DM Integrator (Hi)","x (m)","y (m)",
 			"Int Hi %d",idm);
 	    }
 	}
 	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
 	    if(simu->dmproj->p[idm]){
-		drawopd("DM",recon->aloc[idm], simu->dmproj->p[idm]->p,NULL,
+		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
 			"ATM to DM Projection (Hi)","x (m)","y (m)",
 			"Proj Hi %d",idm);
 	    }
@@ -92,10 +92,10 @@ void save_recon(SIM_T *simu){
 	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
 	for(int idm=0; idm<parms->ndm; idm++){
 	    if(simu->dmrealsq){
-		drawmap("DM", simu->dmrealsq[idm],NULL,
+		drawmap("DM", simu->dmrealsq->p[idm],NULL,
 			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
 	    }else if(simu->dmreal){
-		drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
+		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
 			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
 	    }
 	}
@@ -111,7 +111,7 @@ void save_recon(SIM_T *simu){
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
+	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,NULL,
 		    "DM Error Signal (Lo)","x (m)","y (m)",
 		    "Err Lo %d",idm);
 	}
@@ -128,7 +128,7 @@ void save_recon(SIM_T *simu){
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
+	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,NULL,
 		    "DM Integrator (Lo)","x (m)","y (m)",
 		    "Int Lo %d",idm);
 	}
@@ -152,7 +152,7 @@ void save_recon(SIM_T *simu){
 	    if(parms->plot.opdx){ /*draw opdx */
 		for(int i=0; i<opdx->nx; i++){
 		    if(opdx->p[i]){
-			drawopd("opdx", recon->xloc[i], opdx->p[i]->p, NULL,
+			drawopd("opdx", recon->xloc->p[i], opdx->p[i]->p, NULL,
 				"Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
 		    }
 		}

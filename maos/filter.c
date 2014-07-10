@@ -69,12 +69,12 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
     double totalptt[3]={0,0,0};
     for(int idm=0; idm<ndm; idm++){
 	ptt1[0]=ptt1[1]=ptt1[2]=0;
-	loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
+	loc_calc_ptt(NULL,ptt1, recon->aloc->p[idm],0,
 		     recon->aimcc->p[idm],NULL,
 		     dmcmd->p[idm]->p);
 	ptt1[0]=0;//don't touch piston
 	loc_remove_ptt(dmcmd->p[idm]->p, 
-		       ptt1,recon->aloc[idm]);
+		       ptt1,recon->aloc->p[idm]);
 	for(int i=1; i<3; i++){
 	    totalptt[i]+=ptt1[i];
 	}
@@ -83,11 +83,11 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
     ttm->p[1]=ttm->p[1]*(1-lp)+lp*totalptt[2];
     totalptt[1]-=ttm->p[0];
     totalptt[2]-=ttm->p[1];
-    loc_add_ptt(dmcmd->p[0]->p, totalptt, recon->aloc[0]);
+    loc_add_ptt(dmcmd->p[0]->p, totalptt, recon->aloc->p[0]);
 #else
     //Only touch ground DM
     double ptt1[3]={0,0,0};
-    loc_calc_ptt(NULL,ptt1, recon->aloc[0],0,
+    loc_calc_ptt(NULL,ptt1, recon->aloc->p[0],0,
 		 recon->aimcc->p[0],NULL,
 		 dmcmd->p[0]->p);
     ttm->p[0]=ttm->p[0]*(1-lp)+lp*ptt1[1];
@@ -95,7 +95,7 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
     ptt1[0]=0;
     ptt1[1]=ttm->p[0];
     ptt1[2]=ttm->p[1];
-    loc_remove_ptt(dmcmd->p[0]->p, ptt1,recon->aloc[0]);
+    loc_remove_ptt(dmcmd->p[0]->p, ptt1,recon->aloc->p[0]);
 #endif
 }
 
@@ -132,8 +132,8 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		iastroke=parms->dm[idm].iastroke*2;//surface to opd
 	    }
 	    if(!parms->fit.square){
-		loc_embed(simu->dmrealsq[idm], simu->recon->aloc[idm], dm->p);
-		dmr=(double(*)[nx])simu->dmrealsq[idm]->p;
+		loc_embed(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], dm->p);
+		dmr=(double(*)[nx])simu->dmrealsq->p[idm]->p;
 	    }else{
 		dmr=(double(*)[nx])dm->p;
 	    }
@@ -141,7 +141,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    int count=0,trials=0;
 	    do{
 		count=0;
-		PDMAT(simu->recon->amap[idm],map);
+		PDMAT(simu->recon->amap->p[idm],map);
 		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
 			if(map[iy][ix]>0 && map[iy+1][ix]>0){
@@ -166,7 +166,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		info2("trials=%d\n", trials);
 	    }
 	    if(!parms->fit.square){//copy data back
-		loc_extract(simu->dmreal->p[idm], simu->recon->aloc[idm], simu->dmrealsq[idm]);
+		loc_extract(simu->dmreal->p[idm], simu->recon->aloc->p[idm], simu->dmrealsq->p[idm]);
 	    }
 	    if(parms->dm[idm].iastrokescale){//convert back to opd
 		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
@@ -357,7 +357,7 @@ void turb_dm(SIM_T *simu){
 		p2[i]+=p[i];
 	    }
 	}else{
-	    loc_embed_add(simu->dmrealsq[idm], simu->recon->aloc[idm], p);
+	    loc_embed_add(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], p);
 	}	
     }
 }
@@ -369,12 +369,12 @@ void update_dm(SIM_T *simu){
     if(!parms->fit.square && simu->dmrealsq){
 	/* Embed DM commands to a square array for fast ray tracing */
 	for(int idm=0; idm<parms->ndm; idm++){
-	    loc_embed(simu->dmrealsq[idm], simu->recon->aloc[idm], simu->dmreal->p[idm]->p);
+	    loc_embed(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p);
 	}
     }
 #if USE_CUDA
     if(parms->gpu.wfs || parms->gpu.evl){
-	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm,NULL);
+	gpu_dmreal2gpu(simu->dmrealsq, NULL);
     }
 #endif
     calc_cachedm(simu);

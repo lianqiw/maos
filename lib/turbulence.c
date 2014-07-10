@@ -137,7 +137,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     dcellfree(dc);
 }
 /**
- *   Generate turbulence screens all in memory
+ *  Generate turbulence screens all in memory
  */
 static void spect_screen_do(GENSCREEN_T *data){
     spect_screen_save(NULL, data);
@@ -147,10 +147,10 @@ static void spect_screen_do(GENSCREEN_T *data){
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-static map_t** create_screen(GENSCREEN_T *data, 
-			     void (*funsave)(cellarr *fc, GENSCREEN_T *data),
-			     void (*funmem)(GENSCREEN_T *data)){
-    map_t **screen;
+static mapcell* create_screen(GENSCREEN_T *data, 
+			   void (*funsave)(cellarr *fc, GENSCREEN_T *data),
+			   void (*funmem)(GENSCREEN_T *data)){
+    mapcell* screen;
     long nlayer=data->nlayer;
     char *fnatm=NULL;
     if(data->share){/*shared with file */
@@ -188,18 +188,16 @@ static map_t** create_screen(GENSCREEN_T *data,
 		}
 	    }
 	}
-	int nlayer2;
-	screen=dcell2map(&nlayer2, in);
-	assert(nlayer==nlayer2);
+	screen=dcell2map(in);
 	dcellfree(in);
 	free(fnatm);
     }else{
-  	screen=calloc(nlayer,sizeof(map_t*));
+  	screen=cellnew(nlayer, 1);
 	long nx = data->nx;
 	long ny = data->ny;
 	double dx = data->dx;
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
-	    screen[ilayer]=mapnew(nx, ny, dx, dx, NULL);
+	    screen->p[ilayer]=mapnew(nx, ny, dx, dx, NULL);
 	}
 	data->screen=screen;
 	funmem(data);
@@ -207,20 +205,20 @@ static map_t** create_screen(GENSCREEN_T *data,
     return screen;
 }
 /**
- *   Generate vonkarman screens from turbulence statistics.
+ *  Generate vonkarman screens from turbulence statistics.
  */
-map_t** vonkarman_screen(GENSCREEN_T *data){
+mapcell* vonkarman_screen(GENSCREEN_T *data){
     data->method=T_VONKARMAN;
-    map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
+    mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
     return(screen);
 }
 
 /**
- *  Generate screens from PSD with power of 12/3 instead of 11/3.
+ * Generate screens from PSD with power of 12/3 instead of 11/3.
  */
-map_t** biharmonic_screen(GENSCREEN_T *data){
+mapcell* biharmonic_screen(GENSCREEN_T *data){
     data->method=T_BIHARMONIC;
-    map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
+    mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
     return(screen);
 }
 /**
@@ -241,11 +239,11 @@ static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
 }
 static void fractal_screen_thread(GENSCREEN_T *data){
     rand_t *rstat=data->rstat;
-    map_t** screen=data->screen;
     const double *wt=data->wt;
+    map_t **screen=(map_t**)data->screen->p;
     long nx=screen[0]->nx;
     long ny=screen[0]->ny;
- repeat:
+  repeat:
     LOCK(data->mutex_ilayer);
     int ilayer=data->ilayer;
     data->ilayer++;
@@ -270,15 +268,15 @@ static void fractal_screen_do(GENSCREEN_T *data){
  * Generate Fractal screens. Not good statistics.
  */
 
-map_t **fractal_screen(GENSCREEN_T *data){
+mapcell *fractal_screen(GENSCREEN_T *data){
     data->method=T_FRACTAL;
     return create_screen(data, fractal_screen_save, fractal_screen_do);
 }
 
 /**
- *  Compute the covariance for separation of r, and put the values in cov. In
- *  kolmogorov spectrum, the variance are defined as half of the structure
- *  function between two points separated by rmax.
+ * Compute the covariance for separation of r, and put the values in cov. In
+ * kolmogorov spectrum, the variance are defined as half of the structure
+ * function between two points separated by rmax.
  */
 
 dmat* turbcov(dmat *r, double rmax, double r0, double L0){

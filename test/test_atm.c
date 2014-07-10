@@ -26,7 +26,7 @@ int main(){
     data.wt=wt;
     data.nlayer=nlayer;
     data.nthread=nthread;
-    map_t **map=vonkarman_screen(&data);
+    mapcell *map=vonkarman_screen(&data);
     /*map_t **map=genscreen_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread); */
-    maparrwrite(map, nlayer, "atm.bin");
+    cellwrite(map, "atm.bin");
 }

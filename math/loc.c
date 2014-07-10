@@ -101,9 +101,9 @@ void maparrfree_do(map_t **map, int nmap){
 }
 
 /**
-   Free rectmap_t data
+   Free rmap_t data
 */
-void rectmapfree_do(rectmap_t *map){
+void rmapfree_do(rmap_t *map){
     dfree_do((dmat*)map, 0);
 }
 /**

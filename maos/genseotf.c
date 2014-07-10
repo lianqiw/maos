@@ -78,12 +78,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     info2("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
-	ccellfreearr(powfs[ipowfs].intstat->otf, powfs[ipowfs].intstat->notf);
+	cellfree(powfs[ipowfs].intstat->otf);
     }
     powfs[ipowfs].intstat->notf=notf;
-    powfs[ipowfs].intstat->otf=calloc(notf, sizeof(ccell*));
+    powfs[ipowfs].intstat->otf=cellnew(notf, 1);
     for(int iotf=0; iotf<notf; iotf++){
-	powfs[ipowfs].intstat->otf[iotf]=ccellnew(nsa,nwvl);
+	powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa,nwvl);
     }
  
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -93,7 +93,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    double thres=opdbias?1:1-1e-10;
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
-	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
+	    genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
 		   loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		   powfs[ipowfs].realsaa->p[iotf],
 		   thres,wvl,dtheta,NULL,parms->atm.r0, parms->atm.l0, 
@@ -155,16 +155,16 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     assert(powfs[ipowfs].intstat->nsepsf==1 
 	   || powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);
     if(powfs[ipowfs].intstat->sepsf){
-	dcellfreearr(powfs[ipowfs].intstat->sepsf, powfs[ipowfs].intstat->nsepsf);
+	cellfree(powfs[ipowfs].intstat->sepsf);
     }
-    powfs[ipowfs].intstat->sepsf=calloc(powfs[ipowfs].intstat->nsepsf, sizeof(dcell*));
+    powfs[ipowfs].intstat->sepsf=cellnew(powfs[ipowfs].intstat->nsepsf, 1);
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
 	int ilotf=nlotf>1?isepsf:0;
 	cmat **lotf=nlotf>0?powfs[ipowfs].intstat->lotf->p+ilotf*nwvl:NULL;
-	PCCELL(powfs[ipowfs].intstat->otf[iotf],otf);
-	powfs[ipowfs].intstat->sepsf[isepsf]=dcellnew(nsa,nwvl);
-	dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
+	PCCELL(powfs[ipowfs].intstat->otf->p[iotf],otf);
+	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
+	PDCELL(powfs[ipowfs].intstat->sepsf->p[isepsf], psepsf);
 	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    const int notfx=otf[iwvl][0]->nx;
@@ -265,15 +265,15 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(intstat->i0);
     dcellfree(intstat->gx);
     dcellfree(intstat->gy);
-    ccellfreearr(intstat->fotf, nsepsf);
+    cellfree(intstat->fotf);
 
     intstat->i0=dcellnew(nsa,ni0);
     intstat->gx=dcellnew(nsa,ni0);
     intstat->gy=dcellnew(nsa,ni0);
     if(parms->powfs[ipowfs].phytypesim==3 || (parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)){
-	intstat->fotf=calloc(nsepsf, sizeof(ccell*));
+	intstat->fotf=cellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
-	    intstat->fotf[i]=ccellnew(nsa,nwvl);
+	    intstat->fotf->p[i]=ccellnew(nsa,nwvl);
 	}
     }
     /* subaperture rotation angle. */
@@ -320,7 +320,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
 	double norm=1./(double)(ncompx*ncompy);
-	const int npsf=intstat->sepsf[0]->p[0]->nx;
+	const int npsf=intstat->sepsf->p[0]->p[0]->nx;
 	cmat *sepsf=cnew(npsf,npsf);
 	cfft2plan(sepsf,-1);
 
@@ -363,7 +363,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	    info2("iwvl=%d, iwfs=%d, wvlsig=%g\n",iwvl,iwfs,wvlsig);
-	    dmat *(*psepsf)[nsa]=(void*)intstat->sepsf[isepsf]->p;
+	    PDCELL(intstat->sepsf->p[isepsf], psepsf);
 	    double pgrad[2];
 	    cmat **nominals=NULL;
 	    if(!powfs[ipowfs].dtf[iwvl].fused){/*may be null if fused to etf */
@@ -409,7 +409,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cscale(seotfk, norm);
 		ccp(&seotfj,seotfk);/*backup */
 		if(intstat->fotf){
-		    ccp(&intstat->fotf[isepsf]->p[iwvl*nsa+isa], seotfk);
+		    ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
 		cfft2(seotfk,1);/*peak in center. */
 		/*no need fftshift becaose nominal is pre-treated */

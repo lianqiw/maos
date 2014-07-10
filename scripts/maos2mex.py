@@ -88,13 +88,10 @@ def var2mx(mexname, cname, ctype):
         ctype=ctype[0:-1]
         if ctype[-2:]=='_t':
             ctype=ctype[0:-2];
-        if ctype=='map':
-            ctype='dmat'
-            ccast='(const dmat*)'
-        if ctype=='dmat' or ctype=='cmat':
-            fun_c=ctype[0]
-        elif ctype=='loc' or ctype=='dcell' or ctype=='ccell':
-            fun_c=ctype
+        if ctype=='map' or ctype[1:]=='mat' or ctype[-4:]=='cell' or ctype=='loc' or ctype=='pts':
+            fun_c='any'
+        elif ctype=='char':
+            fun_c='str'
         else:
             fun_c=''
         if len(fun_c)>0:

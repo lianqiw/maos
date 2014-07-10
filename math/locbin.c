@@ -76,16 +76,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     }
     return out;
 }
-/**
-   Read a loc_t from file. dx is contained in header
-*/
-loc_t *locread(const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn, "rb");
-    loc_t *loc=locreaddata(fp, NULL);
-    zfclose(fp);
-    return loc;
-}
+
 /**
    Read an array of loc_t form file.
  */
@@ -121,12 +112,6 @@ void locwritedata(file_t *fp, const loc_t *loc){
 	zfwrite(loc->locy, sizeof(double),loc->nloc,fp);
     }
 }
-void locwrite(const loc_t *loc, const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"wb");
-    locwritedata(fp, loc);
-    zfclose(fp);
-}
 
 void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     format2fn;
@@ -150,22 +135,6 @@ void mapwritedata(file_t *fp, map_t *map){
     }
     dmat *in=(dmat*) map;
     dwritedata(fp, in);
-}
-void mapwrite(map_t *map, const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"wb");
-    mapwritedata(fp, map);
-    zfclose(fp);
-}
-void maparrwrite(map_t ** map, int nmap, const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"wb");
-    header_t header={MCC_ANY, nmap, 1, NULL};
-    write_header(&header, fp);
-    for(int imap=0; imap<nmap; imap++){
-	mapwritedata(fp, map[imap]);
-    }
-    zfclose(fp);
 }
 
 /**
@@ -205,14 +174,13 @@ map_t* d2map(dmat *in){
 /**
  * convert a mmap'ed dcell to map_t array
  */
-map_t **dcell2map(int *nlayer, dcell *in){
-    *nlayer=in->nx*in->ny;
-    map_t **map=calloc(in->nx*in->ny, sizeof(map_t*));
+mapcell *dcell2map(dcell *in){
+    mapcell *map=cellnew(in->nx, in->ny);
     for(long i=0; i<in->nx*in->ny; i++){
 	if(!in->p[i]->header){
 	    in->p[i]->header=strdup(in->header);
 	}
-	map[i]=d2map(in->p[i]);
+	map->p[i]=d2map(in->p[i]);
     }
     return map;
 }
@@ -220,18 +188,19 @@ map_t **dcell2map(int *nlayer, dcell *in){
 /**
  * Read map_t from file
  */
-map_t *mapread(const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn,"rb");
-    header_t header;
-    read_header(&header, fp);
+map_t *mapreaddata(file_t *fp, header_t *header){
+    header_t header2;
+    if(!header){
+	header=&header2;
+	read_header(header, fp);
+    }
     map_t *map=NULL;
-    if(header.magic==M_DBL){
-	dmat *in=dreaddata(fp, &header);
+    if(header->magic==M_DBL){
+	dmat *in=dreaddata(fp, header);
 	map=d2map(in);
 	dfree(in);
-    }else if(iscell(header.magic)){/*old format. */
-	dcell *in=dcellreaddata(fp, &header);
+    }else if(iscell(header->magic)){/*old format. */
+	dcell *in=dcellreaddata(fp, header);
 	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
 	    error("Map should be square\n");
 	}
@@ -248,35 +217,18 @@ map_t *mapread(const char *format, ...){
 	map->ny=ampg->ny;
 	dcellfree(in);
 	dfree_keepdata(ampg);
-	if(map->ox/map->dx*2+map->nx > 2
-	   ||map->oy/map->dy*2+map->ny > 2){
-	    warning("Ampground %s is not centered.\n",fn);
-	}
     }else{
-	error("Invalid format. magic=%u\n", header.magic);
+	error("Invalid format. magic=%u\n", header->magic);
     }
     zfclose(fp);
     return map;
 }
 
 /**
- * Read map_t arr from file
- */
-
-map_t **maparrread(int *nlayer, const char *format, ...){
-    format2fn;
-    dcell *in=dcellread("%s", fn);
-    map_t **map=dcell2map(nlayer, in);
-    dcellfree(in);
-    return map;
-}
-
-
-/**
    convert a dmat to map_t.
 */
-rectmap_t* d2rectmap(dmat *in){
-    rectmap_t *map=realloc(dref(in), sizeof(rectmap_t));
+rmap_t* d2rmap(dmat *in){
+    rmap_t *map=realloc(dref(in), sizeof(rmap_t));
     char *header=in->header;
     if(!in->header){
 	error("this dmat has no header\n");
@@ -299,32 +251,21 @@ rectmap_t* d2rectmap(dmat *in){
 /**
  * convert a mmap'ed dcell to map_t array
  */
-rectmap_t **dcell2rectmap(int *nlayer, dcell *in){
+rmap_t **dcell2rmap(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
-    rectmap_t **map=calloc(in->nx*in->ny, sizeof(rectmap_t*));
+    rmap_t **map=calloc(in->nx*in->ny, sizeof(rmap_t*));
     for(long i=0; i<in->nx*in->ny; i++){
-	map[i]=d2rectmap(in->p[i]);
+	map[i]=d2rmap(in->p[i]);
     }
     return map;
 }
 /**
  * Readrtectmap_t from file
  */
-rectmap_t *rectmapread(const char *format, ...){
+rmap_t *rmapread(const char *format, ...){
     format2fn;
     dmat *in=dread("%s", fn);
-    rectmap_t *map=d2rectmap(in);
+    rmap_t *map=d2rmap(in);
     dfree(in);
-    return map;
-}
-
-/**
- * Read rectmap_t arr from file
- */
-rectmap_t **rectmaparrread(int *nlayer, const char *format, ...){
-    format2fn;
-    dcell *in=dcellread("%s", fn);
-    rectmap_t **map=dcell2rectmap(nlayer, in);
-    dcellfree(in);
     return map;
 }

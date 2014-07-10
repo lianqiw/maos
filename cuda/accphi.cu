@@ -138,7 +138,8 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
 /**
    Transfer atmosphere or update atmosphere in GPU.
 */
-void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
+void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
+    map_t **atm=atmc->p;
     if(!atm) return;
     if(parms->atm.evolve){
 	TO_IMPLEMENT;
@@ -398,25 +399,25 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 	}
     }
 }
-void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
+void gpu_dmreal2gpu(mapcell *dmreal, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++)
 #if _OPENMP >= 200805
 #pragma omp task
 #endif
     {
 	gpu_set(im);
-	cudata->ndm=ndm;
-	gpu_dm2gpu(&cudata->dmreal, dmreal, ndm, dmcfg);
+	cudata->ndm=dmreal->nx;
+	gpu_dm2gpu(&cudata->dmreal, dmreal->p, dmreal->nx, dmcfg);
     }
 #if _OPENMP >= 200805
 #pragma omp taskwait
 #endif
 }
-void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
+void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cudata->ndm=ndm;
-	gpu_dm2gpu(&cudata->dmproj, dmproj, ndm, dmcfg);
+	cudata->ndm=dmproj->nx;
+	gpu_dm2gpu(&cudata->dmproj, dmproj->p, dmproj->nx, dmcfg);
     }
 }
 

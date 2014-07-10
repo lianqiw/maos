@@ -12,7 +12,7 @@ static void test_grid_proj(){
     double bx=tmp->p[0];
     double by=tmp->p[1];
     dfree(tmp);
-    rectmap_t *mapin=calloc(1, sizeof(rectmap_t));
+    rmap_t *mapin=calloc(1, sizeof(rmap_t));
     mapin->p=junk->p;
     mapin->ox=X->p[0];
     mapin->oy=Y->p[0];

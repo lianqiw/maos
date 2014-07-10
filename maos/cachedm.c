@@ -51,12 +51,12 @@ void prep_cachedm(SIM_T *simu){
 	return;
     }
     if(!simu->cachedm){
-	simu->cachedm=calloc(parms->ndm, sizeof(map_t**));
+	simu->cachedm=cellnew(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
-	    simu->cachedm[idm]=calloc(parms->dm[idm].ncache, sizeof(map_t*));
+	    simu->cachedm->p[idm]=cellnew(parms->dm[idm].ncache, 1);
 	    for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
 		double dx=parms->dm[idm].dxcache->p[iscale];
-		create_metapupil(&simu->cachedm[idm][iscale], 0, 0, parms->dirs, parms->aper.d,
+		create_metapupil(&simu->cachedm->p[idm]->p[iscale], 0, 0, parms->dirs, parms->aper.d,
 				 parms->dm[idm].ht+parms->dm[idm].vmisreg, dx, dx,
 				 0, 2, 0,0,0,0);
 	    }
@@ -82,12 +82,12 @@ void prep_cachedm(SIM_T *simu){
 	int iscale=simu->pcachedm[ic][1];
 	simu->cachedm_prop[ic]=calloc(NTHREAD, sizeof(thread_t));
 	if(simu->dmrealsq){
-	    cpropdata[ic].mapin=simu->dmrealsq[idm];
+	    cpropdata[ic].mapin=simu->dmrealsq->p[idm];
 	}else{
-	    cpropdata[ic].locin=simu->recon->aloc[idm];
+	    cpropdata[ic].locin=simu->recon->aloc->p[idm];
 	    cpropdata[ic].phiin=simu->dmreal->p[idm]->p;
 	}
-	cpropdata[ic].mapout=simu->cachedm[idm][iscale];
+	cpropdata[ic].mapout=simu->cachedm->p[idm]->p[iscale];
 	cpropdata[ic].alpha=1;
 	cpropdata[ic].displacex0=0;
 	cpropdata[ic].displacey0=0;
@@ -114,7 +114,7 @@ void calc_cachedm(SIM_T *simu){
 	for(int ic=0; ic<simu->cachedm_n; ic++){
 	    int idm=simu->pcachedm[ic][0];
 	    int iscale=simu->pcachedm[ic][1];
-	    dzero((dmat*)simu->cachedm[idm][iscale]);
+	    dzero((dmat*)simu->cachedm->p[idm]->p[iscale]);
 	    /*do the multi-threaded ray tracing */
 	    QUEUE_THREAD(group,(simu->cachedm_prop[ic]), 1);
 	}
