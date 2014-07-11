@@ -23,7 +23,7 @@
    Contains routines to generate atmospheric turbulence screens
  */
 #include "../math/mathdef.h"
-typedef struct GENSCREEN_T{
+typedef struct GENATM_T{
     rand_t *rstat;   /**<The random stream*/
     double *wt;      /**<The layer weights*/
     double r0;       /**<The Fried Parameter*/
@@ -41,13 +41,12 @@ typedef struct GENSCREEN_T{
     long ilayer;     /**<Current layer*/
     long method;     /**<The method*/
     pthread_mutex_t mutex_ilayer;/**<Mutex lock*/
-}GENSCREEN_T;
+}GENATM_T;
 
-extern int genscreen_keep_unused;
-mapcell* genscreen_from_spect(GENSCREEN_T *data);
-mapcell* vonkarman_screen(GENSCREEN_T *data);
-mapcell* biharmonic_screen(GENSCREEN_T *data);
-mapcell *fractal_screen(GENSCREEN_T *data);
+mapcell* genatm_from_spect(GENATM_T *data);
+mapcell* vonkarman_screen(GENATM_T *data);
+mapcell* biharmonic_screen(GENATM_T *data);
+mapcell *fractal_screen(GENATM_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 #define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);

@@ -223,6 +223,9 @@ typedef CELL(mapcell*) mapccell;
 typedef CELL(rmapcell*) rmapccell;
 typedef CELL(loccell*) locccell;
 
-typedef CELL(void*) cell;
+typedef struct cell{
+    ARR(struct cell*);
+    struct cell *m;
+}cell;
 
 #endif

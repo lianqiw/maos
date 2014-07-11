@@ -368,7 +368,10 @@ void wfsgrad_iwfs(thread_t *info){
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints->p[iwfs];
     dmat  *opd=dnew(npix,1);
-
+    if(isim%dtrat==0){
+	dcellzero(ints);
+	dzero(*gradacc);
+    }
     if(simu->telws){/*Wind shake */
 	double tmp=simu->telws->p[isim];
 	double angle=simu->winddir?simu->winddir->p[0]:0;
@@ -694,9 +697,6 @@ void wfsgrad_iwfs(thread_t *info){
 		pgradx[isa]=geach[0];
 		pgrady[isa]=geach[1];
 	    };/*isa */
-	
-
-	    dcellzero(simu->ints->p[iwfs]);
 	}else{
 	    /* geomtric optics accumulation mode. scale and copy results to output. */
 	    dcp(gradout,*gradacc);
@@ -720,7 +720,6 @@ void wfsgrad_iwfs(thread_t *info){
 		    ggy[isa]+=erry;
 		}
 	    }
-	    dzero(*gradacc);
 	}
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
@@ -857,14 +856,14 @@ void wfsgrad_mffocus(SIM_T* simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
-	   && simu->Mint_lo && simu->Mint_lo->mint[1]
+	   && simu->Mint_lo && simu->Mint_lo->mint->p[1]
 	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
 	    /*In new ahst mode, the first plate scale mode contains focus for
 	      lgs. But it turns out to be not necessary to remove it because the
 	      HPF in the LGS path removed the influence of this focus mode. set
 	      sim.ahstfocus=2 to enable adjust gradients.*/
 	    double scale=simu->recon->ngsmod->scale;
-	    double focus=-simu->Mint_lo->mint[1]->p[0]->p[2]*(scale-1);
+	    double focus=-simu->Mint_lo->mint->p[1]->p[0]->p[2]*(scale-1);
 	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
 	}
     }

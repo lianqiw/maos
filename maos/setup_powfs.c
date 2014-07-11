@@ -1445,7 +1445,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     sumamp2=1./(sqrt(sumamp2));
     dscale(llt->amp, sumamp2);
     if(parms->powfs[ipowfs].llt->fnsurf){
-	cell *ncpa=mapcellread("%s",parms->powfs[ipowfs].llt->fnsurf);
+	mapcell *ncpa=mapcellread("%s",parms->powfs[ipowfs].llt->fnsurf);
 	int nlotf=ncpa->nx*ncpa->ny;
 	assert(nlotf==1 || nlotf==parms->powfs[ipowfs].nwfs);
 	llt->ncpa=dcellnew(nlotf, 1);
@@ -1810,6 +1810,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		    info2("Reading WFS OTF from %s\n", fnotf);
 		    intstat->otf=cccellread("%s",fnotf);
 		    intstat->notf=intstat->otf->nx*intstat->otf->ny;
+		    if(!intstat->notf) error("Invalid otf\n");
 		    zftouch(fnotf);
 		}
 	    }
@@ -1854,10 +1855,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			remove(fnllock);
 			goto retry2;
 		    }
-		    intstat->lotf=ccellread("%s",fnlotf);
-		    zftouch(fnlotf);
 		}else{
 		    intstat->lotf=ccellread("%s",fnlotf);
+		    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 		    zftouch(fnlotf);
 		    info2("Reading WFS LLT OTF from %s\n", fnlotf);
 		}

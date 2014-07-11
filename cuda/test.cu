@@ -77,7 +77,7 @@ void test_prop(){
     map_t *mapin=mapnew(30, 30, 0.5, 0.5, 0);
     map_t *mapout=mapnew(200, 200, 0.1, 0.1, 0);
     dset((dmat*)mapin, 1);
-    dwrite((dmat*)mapin, "prop_mapin_cpu");
+    dwrite(mapin, "prop_mapin_cpu");
     cumap_t cumapin(mapin);
     cumap_t cumapout(mapout);
     cp2gpu(&cumapin.p, (dmat*)mapin);
@@ -88,7 +88,7 @@ void test_prop(){
     gpu_prop_grid(cumapout, cumapin, dispx, dispy, alpha, 0, 'n');
     curwrite(cumapout.p, "prop_mapout");
     prop_grid_map(mapin, mapout, alpha, dispx, dispy, 1, 0, 0, 0);
-    dwrite((dmat*)mapout, "prop_mapout_cpu");
+    dwrite(mapout, "prop_mapout_cpu");
     mapin->cubic=1;
     mapin->iac=0.3;
 }

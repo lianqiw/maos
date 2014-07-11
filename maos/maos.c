@@ -153,6 +153,7 @@ void maos(const PARMS_T *parms){
 }
 
 void maos_reset(){
+    info2("maos_reset\n");
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
     if(!global) return;

@@ -370,8 +370,8 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }/*if phystart */
 	    //output to mreal after using it to ensure two cycle delay.
 	    if(st2t){//Type I or II control.
-		if(st2t->mint[0]){//has output.
-		    dcp(&mreal, st2t->mint[0]->p[0]);
+		if(st2t->mint->p[0]){//has output.
+		    dcp(&mreal, st2t->mint->p[0]->p[0]);
 		}
 	    }else{//LQG control
 		kalman_output(kalman, &mreal, 0, 1);

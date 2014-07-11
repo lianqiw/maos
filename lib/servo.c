@@ -448,8 +448,8 @@ static void servo_init(SERVO_T *st, dcell *merr){
 	st->mlead=dcellnew2(merr);
 	st->merrlast=dcellnew2(merr);
     }
-    for(int i=0; i<st->nmint; i++){
-	st->mint[i]=dcellnew2(merr); 
+    for(int i=0; i<st->mint->nx; i++){
+	st->mint->p[i]=dcellnew2(merr); 
     }
     st->initialized=1;
 }
@@ -458,8 +458,7 @@ static void servo_init(SERVO_T *st, dcell *merr){
 */
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep){
     SERVO_T *st=calloc(1, sizeof(SERVO_T));
-    st->nmint=ap?MAX(2,ap->nx):1;
-    st->mint=calloc(st->nmint, sizeof(dcell));
+    st->mint=cellnew(ap?MAX(2,ap->nx):1, 1);
     st->ap=dref(ap);
     if(ep->nx!=3){//type I
 	st->ep=dref(ep);
@@ -475,7 +474,7 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     }
     st->dt=dt;
     st->al=al;
-    st->merrhist=calloc(st->al, sizeof(dcell*));
+    st->merrhist=cellnew(st->al, 1);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
     }
@@ -488,12 +487,12 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
 static void servo_shift_ap(SERVO_T *st){
     const dmat *ap=st->ap;
     if(!ap) return; //no need to shift.
-    if(st->nmint<ap->nx){
-	st->nmint=ap->nx;
-	st->mint=realloc(st->mint, sizeof(dcell*));
+    if(st->mint->nx<ap->nx){
+	st->mint->nx=ap->nx;
+	st->mint->p=realloc(st->mint->p, sizeof(dcell*));
     }
     if(!st->initialized) return;
-    dcell **inte=st->mint;
+    dcell **inte=st->mint->p;
     dcell *tmp=NULL;
     dcell *keepjunk=inte[ap->nx-1];
     for(int iap=ap->nx-1; iap>=0; iap--){
@@ -511,11 +510,11 @@ static dcell*servo_shift_al(SERVO_T *st, dcell *merr){
     if(!st->al){
 	return dcellref(merr);
     }else{
-	dcell *out=st->merrhist[0];
+	dcell *out=st->merrhist->p[0];
 	for(int i=0; i<st->al-1; i++){
-	    st->merrhist[i]=st->merrhist[i+1];
+	    st->merrhist->p[i]=st->merrhist->p[i+1];
 	}
-	st->merrhist[st->al-1]=dcelldup(merr);
+	st->merrhist->p[st->al-1]=dcelldup(merr);
 	return out;
     }
 }
@@ -564,7 +563,7 @@ int servo_filter(SERVO_T *st, dcell *_merr){
     default:
 	error("Invalid: st->ep->nx=%ld", st->ep->nx);
     }
-    dcelladd(st->mint, 1, st->mpreint, 1);
+    dcelladd(st->mint->p, 1, st->mpreint, 1);
     dcellfree(merr);
     return 1;
 }
@@ -602,7 +601,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
 	    dzero(meas->p[0]);
 	}
 	dadd(&meas->p[0], 1, merr, 1);/*average the error. */
-	dcellcp(&mreal, st2t->mint[0]);
+	dcellcp(&mreal, st2t->mint->p[0]);
 	if((istep+1) % dtrat == 0){
 	    if(dtrat!=1) dscale(meas->p[0], 1./dtrat);
 	    if(sigman){
@@ -629,12 +628,12 @@ void servo_reset(SERVO_T *st){
     dcellzero(st->mpreint);
     if(st->merrhist){
 	for(int i=0; i<st->al; i++){
-	    dcellzero(st->merrhist[i]);
+	    dcellzero(st->merrhist->p[i]);
 	}
     }
     if(st->mint){
-	for(int i=0; i<st->nmint; i++){
-	    dcellzero(st->mint[i]);
+	for(int i=0; i<st->mint->nx; i++){
+	    dcellzero(st->mint->p[i]);
 	}
     }
 }
@@ -646,8 +645,8 @@ void servo_free(SERVO_T *st){
     dcellfree(st->mlead);
     dcellfree(st->merrlast);
     dcellfree(st->mpreint);
-    dcellfreearr(st->merrhist, st->al);
-    dcellfreearr(st->mint, st->nmint);
+    cellfree(st->merrhist);
+    cellfree(st->mint);
     dfree(st->ap);
     dfree(st->ep);
     free(st);

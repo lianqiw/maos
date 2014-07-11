@@ -37,7 +37,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	const int ndm=parms->ndm;
 	const int nwfs=parms->nwfsr;
 	int ntotgrad=0;
-	long *ngrad=recon->ngrad;
+	long *ngrad=recon->ngrad->p;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    ntotgrad+=powfs[ipowfs].saloc->nloc*2;
@@ -47,7 +47,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
 		for(int idm=0; idm<ndm; idm++){
-		    MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
+		    MVM->p[idm+ndm*iwfs]=dnew(recon->anloc->p[idm], powfs[ipowfs].saloc->nloc*2);
 		}
 	    }
 	}
@@ -117,7 +117,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
     dcell *RLT=NULL;
     dcell *RRT=NULL;
     dmat *eye=dnew(ntotact, 1);
-    dcell *eyec=d2cellref(eye, recon->anloc, ndm);
+    dcell *eyec=d2cellref(eye, recon->anloc->p, ndm);
     long (*curp)[2]=data->curp;
     dcell *MVMt=data->MVMt;
     int nthread=recon->nthread;
@@ -184,23 +184,23 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     const int nwfs=parms->nwfsr;
     long ntotact=0;
     for(int idm=0; idm<ndm; idm++){
-	ntotact+=recon->anloc[idm];
+	ntotact+=recon->anloc->p[idm];
     }
     long (*curp)[2]=malloc(ntotact*2*sizeof(long));
     int nact=0;
     for(int idm=0; idm<ndm; idm++){
-	for(int iact=0; iact<recon->anloc[idm]; iact++){
+	for(int iact=0; iact<recon->anloc->p[idm]; iact++){
 	    curp[nact+iact][0]=idm;
 	    curp[nact+iact][1]=iact;
 	}
-	nact+=recon->anloc[idm];
+	nact+=recon->anloc->p[idm];
     }
     dcell *MVMt=dcellnew(nwfs, ndm);
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
-		MVMt->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc[idm]);
+		MVMt->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc->p[idm]);
 	    }
 	}
     }

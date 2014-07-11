@@ -50,9 +50,9 @@ namespace cuda_recon{
     cgstream = new stream_t;
     if(parms->gpu.fit || parms->recon.mvm || parms->gpu.moao){
 	if(parms->fit.square){
-	    dmfit=curcellnew(parms->ndm, 1, recon->anx, recon->any);
+	    dmfit=curcellnew(parms->ndm, 1, recon->anx->p, recon->any->p);
 	}else{
-	    dmfit=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
+	    dmfit=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL);
 	}
 	dmfit_vec=curcellnew(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -115,9 +115,9 @@ namespace cuda_recon{
     }
     if((parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
 	if(parms->tomo.square){
-	    opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	    opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
 	}else{
-	    opdr=curcellnew(recon->npsr, 1, recon->xnloc, (long*)NULL);
+	    opdr=curcellnew(recon->npsr, 1, recon->xnloc->p, (long*)NULL);
 	}
 	opdr_vec=curcellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){

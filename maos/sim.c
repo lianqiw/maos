@@ -66,7 +66,7 @@ SIM_T *maos_iseed(int iseed){
     SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
     global->simu=simu;
     if(parms->atm.frozenflow){
-	genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
+	genatm(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	if(parms->tomo.predict){
 	    if(recon->HXWtomo){
 		setup_recon_HXW_predict(simu);
@@ -120,7 +120,7 @@ void maos_isim(int isim){
 	}
 #endif
     }else{
-	genscreen(simu);
+	genatm(simu);
 	/*re-seed the atmosphere in case atm is loaded from shm/file */
 	seed_rand(simu->atm_rand, lrand(simu->init_rand));
     }
@@ -235,7 +235,7 @@ void maos_isim(int isim){
 
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
-   simulation struct. Then calls genscreen() to generate atmospheric turbulence
+   simulation struct. Then calls genatm() to generate atmospheric turbulence
    screens. Then for every time step, it calls perfevl() to evaluate
    performance, wfsgrad() to do wfs measurement, reconstruct() to do tomography
    and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls

@@ -128,7 +128,8 @@
     typedef T (*X(minsearch_fun))(T *x, void *info);			\
     int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *info); \
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
-    X(cell) *X(cellnew)(long nx, long ny);				\
+    X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y);\
+    X(cell) *X(cellnew)(long nx, long ny); \
     X(cell) *X(cellnew2)(const X(cell) *A);				\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny);	\
     void X(cellinit)(X(cell) **A, long nx, long ny);			\

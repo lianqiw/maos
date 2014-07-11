@@ -349,8 +349,8 @@ static void test_accuracy(void){
     int nlayer=1;
     double wt[1]={1};
     mapcell *screens;
-    GENSCREEN_T data;
-    memset(&data, 0, sizeof(GENSCREEN_T));
+    GENATM_T data;
+    memset(&data, 0, sizeof(GENATM_T));
     data.rstat=&rstat;
     data.nx=m;
     data.ny=n;
@@ -589,8 +589,8 @@ static void test_speed(int nthread){
     int nlayer=1;
     double wt[1]={1};
     mapcell *screens;
-    GENSCREEN_T data;
-    memset(&data, 0,sizeof(GENSCREEN_T));
+    GENATM_T data;
+    memset(&data, 0,sizeof(GENATM_T));
     data.rstat=&rstat;
     data.nx=m;
     data.ny=n;

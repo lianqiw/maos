@@ -178,13 +178,13 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc->p[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
-    recon->anx=calloc(ndm, sizeof(long));
-    recon->any=calloc(ndm, sizeof(long));
-    recon->anloc=calloc(ndm, sizeof(long));
+    recon->anx=inew(ndm, 1);
+    recon->any=inew(ndm, 1);
+    recon->anloc=inew(ndm, 1);
     for(int idm=0; idm<ndm; idm++){
-	recon->anx[idm]=recon->amap->p[idm]->nx;
-	recon->any[idm]=recon->amap->p[idm]->ny;
-	recon->anloc[idm]=recon->aloc->p[idm]->nloc;
+	recon->anx->p[idm]=recon->amap->p[idm]->nx;
+	recon->any->p[idm]=recon->amap->p[idm]->ny;
+	recon->anloc->p[idm]=recon->aloc->p[idm]->nloc;
     }
     /*Dealing with stuck/floating actuators. */
     int anyfloat=0, anystuck=0;

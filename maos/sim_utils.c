@@ -33,16 +33,16 @@
 /*static double opdzlim[2]={-3e-5,3e-5}; */
 static double *opdzlim=NULL;
 extern int disable_save;
-static mapcell *genscreen_do(SIM_T *simu){
+static mapcell *genatm_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
     TIC;
     mapcell *screens;
     if(parms->dbg.atm == 0 || parms->dbg.atm == -1){
-	GENSCREEN_T *gs=simu->genscreen;
+	GENATM_T *gs=simu->atmcfg;
 	if(!gs){
-	    simu->genscreen=calloc(1, sizeof(GENSCREEN_T));/*the data for generating screens. */
-	    gs=simu->genscreen;
+	    simu->atmcfg=calloc(1, sizeof(GENATM_T));/*the data for generating screens. */
+	    gs=simu->atmcfg;
 	    gs->rstat  = simu->atm_rand;
 	    gs->wt     = atm->wt->p;
 	    gs->r0     = atm->r0;
@@ -189,9 +189,9 @@ static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
     }
 }
 /**
-   wrap of the generic vonkarman_genscreen to generate turbulence screens. Wind
+   wrap of the generic vonkarman_genatm to generate turbulence screens. Wind
    velocities are set for each screen.  \callgraph */
-void genscreen(SIM_T *simu){ 
+void genatm(SIM_T *simu){ 
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&(simu->parms->atm);
     if(simu->atm){
@@ -229,7 +229,7 @@ void genscreen(SIM_T *simu){
 	simu->atm = mapcellread("%s",fn);
 	if(simu->atm->nx!=atm->nps) error("ATM Mismatch\n");
     }else{
-	simu->atm=genscreen_do(simu);
+	simu->atm=genatm_do(simu);
     }
     if(simu->parms->save.atm){
 	cellwrite(simu->atm,"atm_%d.bin",simu->seed);
@@ -242,7 +242,7 @@ void genscreen(SIM_T *simu){
 	}
     }
   
-    info2("After genscreen:\t%.2f MiB\n",get_job_mem()/1024.);
+    info2("After genatm:\t%.2f MiB\n",get_job_mem()/1024.);
 
     if(!parms->atm.frozenflow && parms->sim.closeloop){
 	warning("Creating new screen in CL mode will not work\n");
@@ -693,7 +693,7 @@ static void init_simu_evl(SIM_T *simu){
 	    data->scale=1-ht/parms->evl.hs->p[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=(void*)1;/*need to update this in genscreen. */
+	    data->mapin=(void*)1;/*need to update this in genatm. */
 	    data->phiout=(void*)1;/*replace later in simulation. */
 	    data->ostat=aper->locs->stat;
 	    tot=aper->locs->stat->ncol;
@@ -948,7 +948,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    data->scale=1.-ht/hs;
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=(void*)1;/*need to update this in genscreen. */
+	    data->mapin=(void*)1;/*need to update this in genatm. */
 	    data->phiout=(void*)1;/*replace later in simulation. */
 	    int tot=0;
 	    if(powfs[ipowfs].loc_tel){/*misregistration. */
@@ -1047,9 +1047,9 @@ static void init_simu_dm(SIM_T *simu){
 	simu->ttmreal=dnew(2,1);
     }
     simu->dmrealsq=cellnew(parms->ndm, 1);
-    simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc, NULL);
+    simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc->p, NULL);
     if(parms->sim.dmproj){
-	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc, NULL);
+	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc->p, NULL);
 	simu->dmprojsq=cellnew(parms->ndm, 1);
     }
     for(int idm=0; idm<parms->ndm; idm++){
@@ -1102,7 +1102,7 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
     if(recon->dm_ncpa){//set the integrator
-	dcelladd(&simu->dmint->mint[0], 1, recon->dm_ncpa, 1);
+	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
     }
     if(parms->recon.split){
 	simu->Merr_lo_store=dcellnew(1,1);
@@ -1357,9 +1357,9 @@ void free_simu(SIM_T *simu){
     free(simu->telws_rand);
     free(simu->misc_rand);
     dfree(simu->telws);
-    if(simu->genscreen){
-	dfree(simu->genscreen->spect);
-	free(simu->genscreen);
+    if(simu->atmcfg){
+	dfree(simu->atmcfg->spect);
+	free(simu->atmcfg);
     }
     cellfree(simu->atm);
 

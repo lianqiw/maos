@@ -76,8 +76,8 @@ void save_recon(SIM_T *simu){
 	    }
 	}
 	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-	    if(simu->dmint->mint[0]->p[idm]){
-		drawopd("DM",recon->aloc->p[idm], simu->dmint->mint[0]->p[idm]->p,NULL,
+	    if(simu->dmint->mint->p[0]->p[idm]){
+		drawopd("DM",recon->aloc->p[idm], simu->dmint->mint->p[0]->p[idm]->p,NULL,
 			"DM Integrator (Hi)","x (m)","y (m)",
 			"Int Hi %d",idm);
 	    }
@@ -117,14 +117,14 @@ void save_recon(SIM_T *simu){
 	}
 	dcellfree(dmlo);
     }
-    if(parms->plot.run && simu->Mint_lo && simu->Mint_lo->mint[0]){
+    if(parms->plot.run && simu->Mint_lo && simu->Mint_lo->mint->p[0]){
 	dcell *dmlo=NULL;
 	switch(simu->parms->recon.split){
 	case 1:
-	    ngsmod2dm(&dmlo, recon, simu->Mint_lo->mint[0], 1);
+	    ngsmod2dm(&dmlo, recon, simu->Mint_lo->mint->p[0], 1);
 	    break;
 	case 2:
-	    dcellmm(&dmlo, simu->recon->MVModes, simu->Mint_lo->mint[0], "nn", 1);
+	    dcellmm(&dmlo, simu->recon->MVModes, simu->Mint_lo->mint->p[0], "nn", 1);
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
@@ -170,13 +170,13 @@ void save_recon(SIM_T *simu){
 	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
 	}
 	cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
-	if(simu->dmint->mint[0]){
-	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint[0]);
+	if(simu->dmint->mint->p[0]){
+	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
 	}
 	if(simu->Merr_lo){
 	    cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
-	    if(!parms->sim.fuseint && simu->Mint_lo->mint[0]){
-		cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint[0]);
+	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+		cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
 	    }
 	}
     }

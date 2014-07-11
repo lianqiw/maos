@@ -225,12 +225,12 @@ void moao_recon(SIM_T *simu){
     }else{/*Take integrator output, remove NGS modes if any. */
 	if(parms->sim.closeloop){
 	    if(parms->sim.fuseint){
-		dcellcp(&dmcommon, simu->dmint->mint[0]);
+		dcellcp(&dmcommon, simu->dmint->mint->p[0]);
 		if(parms->recon.split==1){
 		    remove_dm_ngsmod(simu, dmcommon);
 		}
 	    }else{
-		dcellcp(&dmcommon, simu->dmint->mint[0]);
+		dcellcp(&dmcommon, simu->dmint->mint->p[0]);
 	    }
 	}else{
 	    dcellcp(&dmcommon, simu->dmerr);

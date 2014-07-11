@@ -8,7 +8,7 @@ EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
 
-bin_PROGRAMS=read write mkgmex mkhmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim_mex servo_sim_mex psd1d mkcirmap sde_fit_mex sde_kalman_mex kalman_sim_mex calcenc act_extrap cn2est maos
+bin_PROGRAMS=read write mkgmex mkhmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim_mex servo_sim_mex psd1d mkcirmap sde_fit_mex sde_kalman_mex kalman_sim_mex calcenc act_extrap cn2est maos aolib
 
 #.c.o:
 #	$(MEX) $(AM_CFLAGS) -c $< 
@@ -33,6 +33,9 @@ endif
 maos_LDADD+=-lcholmod -lfftw3 $(LIBMEX) 
 
 
-BUILT_SOURCES=maos2mex.h
+BUILT_SOURCES=maos2mex.h aolib.c
 maos2mex.h:../maos/parms.h ../maos/types.h ../scripts/maos2mex.py
-	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR)/mex/maos2mex.h
+	$(SRC_DIR)/scripts/maos2mex.py $(SRC_DIR) $(SRC_DIR)/mex/maos2mex.h
+aolib.c:../maos/parms.h ../maos/types.h ../scripts/aolib.py
+	$(SRC_DIR)/scripts/aolib.py $(SRC_DIR) $(SRC_DIR)/mex/aolib.c
+

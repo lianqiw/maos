@@ -34,37 +34,51 @@ INLINE mxArray *loc2mx(const loc_t*loc){
 }
 INLINE mxArray *dsp2mx(const dsp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxREAL);
-#if REFERENCE
-    mxArray *out=mxCreateSparse(0, 0, 0, mxREAL);
-    mxSetPr(out, A->x);
-    mxSetJc(out, A->p);
-    mxSetIr(out, A->i);
-    mxSetM(out, A->nx);
-    mxSetN(out, A->ny);
-    mxSetNzmax(out, A->nzmax);
-    if(A->nref) A->nref[0]++;
-#else
-    mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
-    memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-    memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
-    memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
-#endif
+    mxArray *out=0;
+    if(REFERENCE){
+	out=mxCreateSparse(0, 0, 0, mxREAL);
+	mxSetPr(out, A->x);
+	mxSetJc(out, A->p);
+	mxSetIr(out, A->i);
+	mxSetM(out, A->nx);
+	mxSetN(out, A->ny);
+	mxSetNzmax(out, A->nzmax);
+	if(A->nref) A->nref[0]++;
+    }else{
+	out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
+	memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
+	memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
+	memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
+    }
     return out;
 }
-
+INLINE mxArray *csp2mx(const csp*A){
+    if(!A) return mxCreateSparse(0, 0, 0, mxCOMPLEX);
+    mxArray *out=0;
+    out=mxCreateSparse(A->m,A->n,A->nzmax,mxCOMPLEX);
+    memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
+    memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
+    double *pr=mxGetPr(out);
+    double *pi=mxGetPi(out);
+    for(long i=0; i<A->nzmax; i++){
+	pr[i]=creal(A->x[i]);
+	pi[i]=cimag(A->x[i]);
+    }
+    return out;
+}
 INLINE mxArray *d2mx(const dmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=0;
-#if REFERENCE
-    out=mxCreateDoubleMatrix(0,0,mxREAL);
-    mxSetPr(out, A->p);
-    mxSetM(out, A->nx);
-    mxSetN(out, A->ny);
-    if(A->nref) A->nref[0]++;
-#else
-    out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
-    memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
-#endif
+    if(REFERENCE && !A->mmap && A->nref){
+	out=mxCreateDoubleMatrix(0,0,mxREAL);
+	mxSetPr(out, A->p);
+	mxSetM(out, A->nx);
+	mxSetN(out, A->ny);
+	if(A->nref) A->nref[0]++;
+    }else{
+	out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
+	memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
+    }
     return out;
 }
 INLINE mxArray *c2mx(const cmat *A){
@@ -236,7 +250,7 @@ static void mex_quitfun(const char *msg){
     }
 }
 static void(*default_handler)(int)=NULL;
-/*static void *calloc_mex(size_t nmemb, size_t size){
+static void *calloc_mex(size_t nmemb, size_t size){
     void *p=mxCalloc(nmemb, size);
     mexMakeMemoryPersistent(p);
     return p;
@@ -250,16 +264,21 @@ static void *realloc_mex(void *p, size_t size){
     p=mxRealloc(p, size);
     mexMakeMemoryPersistent(p);
     return p;
-    }*/
+}
+static void free_mex(void*p){
+    mxFree(p);
+}
 static __attribute__((constructor)) void init(){
     if(!default_handler){
 	default_handler=signal(SIGTERM, mex_signal_handler);
     }
     quitfun=mex_quitfun;
-    /*CALLOC=calloc_mex;
-    MALLOC=malloc_mex;
-    REALLOC=realloc_mex;
-    FREE=mxFree;*/
+    if(REFERENCE){
+	CALLOC=calloc_mex;
+	MALLOC=malloc_mex;
+	REALLOC=realloc_mex;
+	FREE=free_mex;
+    }
 }
 static __attribute__((destructor)) void deinit(){
     fprintf(stderr, "mex unloaded\n");

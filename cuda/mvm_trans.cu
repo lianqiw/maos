@@ -78,9 +78,9 @@ static void mvm_trans_igpu(thread_t *info){
     const Real *FLI=data->FLI;
     if(!FLI && !load_mvmf){
 	if(parms->fit.square){
-	    eyec=curcellnew(ndm, 1, recon->anx, recon->any);
+	    eyec=curcellnew(ndm, 1, recon->anx->p, recon->any->p);
 	}else{
-	    eyec=curcellnew(ndm, 1, recon->anloc, (long*)0);
+	    eyec=curcellnew(ndm, 1, recon->anloc->p, (long*)0);
 	}
     }
     curcell *dmfit=NULL;
@@ -88,12 +88,12 @@ static void mvm_trans_igpu(thread_t *info){
 	if(parms->fit.square){
 	    dmfit=curcellnew(grid->ndm, 1, grid->anx, grid->any);
 	}else{
-	    dmfit=curcellnew(grid->ndm, 1, recon->anloc, (long*)0);
+	    dmfit=curcellnew(grid->ndm, 1, recon->anloc->p, (long*)0);
 	}
     }
-    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (Real*)(mvmf?1L:0L));
-    curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (Real*)(mvmi?1L:0L));
-    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)0, (Real*)1);
+    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)(mvmf?1L:0L));
+    curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)(mvmi?1L:0L));
+    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad->p, (long*)0, (Real*)1);
     if(ntotact==0){
 	error("ntotact=0;\n");
     }
@@ -193,24 +193,24 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	int ntotxloc=0;
 	const int ndm=parms->ndm;
 	for(int idm=0; idm<ndm; idm++){
-	    ntotact+=recon->anloc[idm];
+	    ntotact+=recon->anloc->p[idm];
 	} 
 	for(int ips=0; ips<recon->npsr; ips++){
 	    ntotxloc+=recon->xloc->p[ips]->nloc;
 	}
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    ntotgrad+=recon->ngrad[iwfs];
+	    ntotgrad+=recon->ngrad->p[iwfs];
 	}
 	
 
 	long (*curp)[2]=(long(*)[2])malloc(ntotact*2*sizeof(long));
 	int nact=0;
 	for(int idm=0; idm<ndm; idm++){
-	    for(int iact=0; iact<recon->anloc[idm]; iact++){
+	    for(int iact=0; iact<recon->anloc->p[idm]; iact++){
 		curp[nact+iact][0]=idm;
 		curp[nact+iact][1]=iact;
 	    }
-	    nact+=recon->anloc[idm];
+	    nact+=recon->anloc->p[idm];
 	}   
 
 	X(mat) *residual=NULL;

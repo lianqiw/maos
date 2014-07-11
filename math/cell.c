@@ -70,17 +70,41 @@ void cellfree_do(void *dc_){
     if(dc->fft) dfft_free_plan(dc->fft);
     free(dc);
 }
-void write_by_id(file_t *fp, const void *pix, long id){
-    if(!id && !pix){
-	error("cannot deterine id\n");
-    }if(!id){
+void writedata_by_id(file_t *fp, const void *pix, long id){
+    if(pix){
 	id=*((long*)(pix));
-    }else if(pix){
-	assert(id==*((long*)(pix)));
+    }else if(!id){
+	error("cannot deterine id\n");
     }
     switch(id){
-    case MCC_ANY:
-	cellwritedata(fp, pix);break;
+    case MCC_ANY:{
+	const cell *dc=pix;
+	uint64_t nx=0;
+	uint64_t ny=0;
+	if(dc){
+	    nx=dc->nx;
+	    ny=dc->ny;
+	}
+	id=0;/*determine id first for empty cell*/
+	if(nx && ny){
+	    for(int ix=0; ix<nx*ny; ix++){
+		if(dc->p[ix]){
+		    id=*((long*)(dc->p[ix]));
+		}
+	    }
+	    if(!id){
+		nx=0; ny=0;
+	    }
+	}
+	header_t header={MCC_ANY, nx, ny, dc?dc->header:NULL};
+	write_header(&header, fp);
+	if(id){
+	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
+		writedata_by_id(fp, dc->p[ix], id);
+	    }
+	}
+    }
+	break;
     case M_DBL:
 	dwritedata(fp, pix);break;
     case M_CMP:
@@ -98,89 +122,73 @@ void write_by_id(file_t *fp, const void *pix, long id){
     }
 }
 
-/**
-   Free a cell object.
-*/
-void cellwritedata(file_t *fp, const void *dc_){
-    cell* dc=(cell*)dc_;
-    if(dc && dc->id!=MCC_ANY) error("Invalid use\n");
-    uint64_t nx=0;
-    uint64_t ny=0;
-    if(dc){
-	nx=dc->nx;
-	ny=dc->ny;
-    }
-    header_t header={MCC_ANY, nx, ny, dc?dc->header:NULL};
-    write_header(&header, fp);
-    if(nx && ny){
-	for(int ix=0; ix<dc->nx*dc->ny; ix++){
-	    write_by_id(fp, dc->p[ix], 0);
-	}
-    }
-}
-void cellwrite(const void *dc, const char* format,...){
+void write_by_id(const void *dc, long id, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    cellwritedata(fp,dc);
+    writedata_by_id(fp, dc, id);
     zfclose(fp);
 }
-void *readdata_by_id(file_t *fp, uint32_t id, header_t *header){
+void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
     header_t header2;
     if(!header){
 	header=&header2;
 	read_header(header, fp);
     }
-    if(iscell(header->magic)){
-	return cellreaddata(fp, id, header);
-    }
-    if(!id) id=header->magic;
-    switch(id){
-    case M_DBL: return dreaddata(fp, header);break;
-    case M_FLT: return sreaddata(fp, header);break;
-    case M_CMP: return creaddata(fp, header);break;
-    case M_ZMP: return zreaddata(fp, header);break;
-    case M_LOC64: return locreaddata(fp, header); break;
-    case M_MAP64: return mapreaddata(fp, header); break;
-    default:error("id=%ux\n", id);
+
+    if(zfisfits(fp) || level==0){
+	switch(level){
+	case 0:/*read a mat*/
+	    if(!id) id=header->magic;
+	    switch(id){
+	    case M_DBL: return dreaddata(fp, header);break;
+	    case M_FLT: return sreaddata(fp, header);break;
+	    case M_CMP: return creaddata(fp, header);break;
+	    case M_ZMP: return zreaddata(fp, header);break;
+	    case M_LOC64: return locreaddata(fp, header); break;
+	    case M_MAP64: return mapreaddata(fp, header); break;
+	    default:error("id=%lx\n", id);
+	    }
+	    break;
+	case 1:{/*read a cell from fits*/
+	    int maxlen=10;
+	    void **tmp=malloc(maxlen*sizeof(void*));
+	    int nx=0;
+	    do{
+		if(nx>=maxlen){
+		    maxlen*=2;
+		    tmp=realloc(tmp, sizeof(void*)*maxlen);
+		}
+		tmp[nx++]=readdata_by_id(fp, id, 0, header);
+	    }while(!read_header2(header, fp));
+	    cell *dcout=cellnew(nx, 1);
+	    memcpy(dcout->p, tmp, sizeof(void*)*nx);
+	    free(tmp);
+	    return dcout;
+	}
+	    break;
+	default:
+	    error("Only support zero or one level of cell when reading fits file\n");
+	}
+    }else{
+	if(!iscell(header->magic)){
+	    error("Traying to read cell from non cell data\n");
+	}else{
+	    long nx=header->nx;
+	    long ny=header->ny;
+	    cell *dcout=cellnew(nx, ny);
+	    for(long i=0; i<nx*ny; i++){
+		dcout->p[i]=readdata_by_id(fp, id, level-1, 0);
+	    }
+	    return dcout;
+	}
     }
     return 0;
 }
-void* cellreaddata(file_t *fp, uint32_t id, header_t *header){
-    header_t header2;
-    if(!header){
-	header=&header2;
-	read_header(header, fp);
-    }
-    long nx,ny;
-    header_t *headerc=check_cell(header, &nx, &ny);//return null if is cell.
-    cell *out;
-    if(!headerc || !zfisfits(fp)){/*genuine cell array or mat data.*/
-	out=cellnew((long)nx,(long)ny);
-	if(!headerc){
-	    out->header=header->str; header->str=NULL;
-	}
-        for(long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=readdata_by_id(fp, id, headerc);
-	}
-    }else{/*fits format. need to read extensions*/
-	if(ny!=1) error("inconsistent\n");
-	void **tmp=calloc(nx, sizeof(void*));
-	tmp[nx-1]=readdata_by_id(fp, id, headerc);
-	while(!read_header2(headerc, fp)){
-	    nx++;
-	    tmp=realloc(tmp, nx*sizeof(void*));
-	    tmp[nx-1]=readdata_by_id(fp, id, headerc);
-	}
-	out=cellnew(nx, 1);
-	memcpy(out->p, tmp, sizeof(void*)*nx);
-	free(tmp);
-    }
-    return out;
-}
-void* cellread(uint32_t id, const char *format, ...){
+
+void* read_by_id(long id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    void *out=cellreaddata(fp, id, 0);
+    void *out=readdata_by_id(fp, id, level, 0);
     zfeof(fp);
     zfclose(fp);
     return out;

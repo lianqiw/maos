@@ -835,7 +835,7 @@ void default_quitfun(const char *msg){
 	print_backtrace();
 	sync();
     }
-    kill(getpid(), SIGTERM);
+    raise(SIGUSR1);
 }
 static void (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;

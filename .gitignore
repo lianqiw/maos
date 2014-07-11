@@ -35,4 +35,4 @@ scripts/*.app
 *.stackdump
 */.#*
 ar-lib
-mex/maos2mex.h
+*.pyc

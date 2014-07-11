@@ -44,21 +44,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     struct CN2EST_T *cn2est=cn2est_new(wfspair, wfstheta, saloc, saa, saat, hs, htrecon, keepht, L0);
     cn2est_push(cn2est, grad);
     cn2est_est(cn2est, 1, 0);
-#define nfield 11
-    const char *fieldnames[nfield]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","overlap","cov2","cov1"};
+#define nfield 12
+    const char *fieldnames[nfield]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlap","cov2","cov1"};
     int pos=0;
     plhs[0]=mxCreateStructMatrix(1,1,nfield,fieldnames);
-    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(cn2est->htrecon));
-    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(cn2est->wtrecon->p[0]));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->htrecon));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->wtrecon->p[0]));
     mxSetFieldByNumber(plhs[0], 0, pos++, mxCreateDoubleScalar(cn2est->r0m));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->ht));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->wt));
-    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(cn2est->r0));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->Pnk));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->iPnk));
-    mxSetFieldByNumber(plhs[0], 0, pos++, d2mx(cn2est->overlap));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->cov2));
-    mxSetFieldByNumber(plhs[0], 0, pos++, dcell2mx(cn2est->cov1));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->ht));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->wt));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->r0));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->Pnk));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->iPnk));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->wtconvert));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->overlap));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->cov2));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->cov1));
 
     dfree(wfspair);
     dfree(wfstheta);

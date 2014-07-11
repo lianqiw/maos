@@ -336,8 +336,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(pos!=os[0]){
 	warning("pupil does not equal to ground layer over sampling. Debug required.\n");
     }
-    long* nx=recon->xnx;
-    long* ny=recon->xny;
+    long* nx=recon->xnx->p;
+    long* ny=recon->xny->p;
     const long nxp=nx[0]/os[0]*parms->tomo.pos;
     const long nyp=ny[0]/os[0]*parms->tomo.pos;
     const double dxp=recon->ploc->dx;
@@ -660,8 +660,8 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     cmat *xhat2=cnew(nxtot,1);
     ccell *xhati=ccellnew(nps,1);/*references the data in xhat. */
     ccell *xhat2i=ccellnew(nps,1);
-    long* nx=recon->xnx;
-    long* ny=recon->xny;
+    long* nx=recon->xnx->p;
+    long* ny=recon->xny->p;
     long offset=0;
     for(int ips=0; ips<nps; ips++){
 	xhati->p[ips]=cnew_ref(nx[ips],ny[ips],xhat->p+offset);

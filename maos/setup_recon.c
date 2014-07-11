@@ -155,17 +155,17 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     recon->xmap=cellnew(npsr, 1);
-    recon->xnx=calloc(recon->npsr, sizeof(long));
-    recon->xny=calloc(recon->npsr, sizeof(long));
-    recon->xnloc=calloc(recon->npsr, sizeof(long));
+    recon->xnx=inew(recon->npsr, 1);
+    recon->xny=inew(recon->npsr, 1);
+    recon->xnloc=inew(recon->npsr, 1);
     for(long i=0; i<recon->npsr; i++){
 	loc_create_map_npad(recon->xloc->p[i], (nin0||parms->tomo.square)?0:1, 
 			    nin0*recon->os->p[i], nin0*recon->os->p[i]);
 	recon->xmap->p[i]=recon->xloc->p[i]->map;
 	recon->xmap->p[i]->h=recon->ht->p[i];
-	recon->xnx[i]=recon->xmap->p[i]->nx;
-	recon->xny[i]=recon->xmap->p[i]->ny;
-	recon->xnloc[i]=recon->xloc->p[i]->nloc;
+	recon->xnx->p[i]=recon->xmap->p[i]->nx;
+	recon->xny->p[i]=recon->xmap->p[i]->ny;
+	recon->xnloc->p[i]=recon->xloc->p[i]->nloc;
     }
     recon->xmcc=dcellnew(npsr,1);
     for(int ipsr=0; ipsr<npsr; ipsr++){
@@ -1956,11 +1956,11 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	    }
 	}   
     }
-    recon->ngrad=calloc(parms->nwfsr, sizeof(long));
+    recon->ngrad=inew(parms->nwfsr, 1);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){
-	    recon->ngrad[iwfs]=powfs[ipowfs].saloc->nloc*2;
+	    recon->ngrad->p[iwfs]=powfs[ipowfs].saloc->nloc*2;
 	}
     }
     /*setup pupil coarse grid for gradient operator*/
@@ -2143,13 +2143,13 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     ngsmod_free(recon->ngsmod); recon->ngsmod=0;
     cellfree(recon->xloc);
     free(recon->xmap);//data is referenced
-    free(recon->xnx);
-    free(recon->xny);
-    free(recon->xnloc);
-    free(recon->anx);
-    free(recon->any);
-    free(recon->anloc);
-    free(recon->ngrad);
+    ifree(recon->xnx);
+    ifree(recon->xny);
+    ifree(recon->xnloc);
+    ifree(recon->anx);
+    ifree(recon->any);
+    ifree(recon->anloc);
+    ifree(recon->ngrad);
     locfree(recon->floc); 
     locfree(recon->ploc);
     cellfree(recon->ploc_tel);

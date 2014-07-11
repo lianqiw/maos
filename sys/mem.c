@@ -19,16 +19,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
+#include <math.h>
+#include <search.h>
+#include <execinfo.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 int exit_success=0;
 #include "mem.h"
 #include "thread.h"
 #include "scheduler_client.h"
-#include <math.h>
-#include <search.h>
-#include <string.h>
-#include <execinfo.h>
-#include <sys/stat.h>
-#include <unistd.h>
+
 /*
   Record allocated memory and their size.  Warn if some memory is not freed.
   Notice that the pointer return by tsearch and the pointer passwd to the
@@ -104,9 +106,9 @@ static void stat_usage(const void *key, VISIT which, int level){
 	key3.func=(void**)key2->func;
 	key3.nfunc=key2->nfunc-2;
 	if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
-	    T_STATKEY *keynew=calloc(1, sizeof(T_STATKEY));
+	    T_STATKEY *keynew=calloc_default(1, sizeof(T_STATKEY));
 	    keynew->p=key2->p;
-	    keynew->func=malloc(key3.nfunc*sizeof(void*));
+	    keynew->func=malloc_default(key3.nfunc*sizeof(void*));
 	    memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 	    keynew->nfunc=key3.nfunc;
 	    keynew->size=key2->size;
@@ -154,7 +156,7 @@ static void memkey_add(void *p,size_t size){
 	info("%p malloced with %lu bytes\n",p, size);
     }
     LOCK(mutex_mem);
-    T_MEMKEY *key=calloc(1,sizeof(T_MEMKEY));
+    T_MEMKEY *key=calloc_default(1,sizeof(T_MEMKEY));
     key->p=p;
     key->size=size;
     key->nfunc=backtrace(key->func,DT);
@@ -196,26 +198,26 @@ static void memkey_del(void*p){
     UNLOCK(mutex_mem);
 }
 static void *calloc_dbg(size_t nmemb, size_t size){
-    void *p=calloc(nmemb,size);
+    void *p=calloc_default(nmemb,size);
     memkey_add(p,size);
     return p;
 }
 static void *malloc_dbg(size_t size){
-    void *p=malloc(size);
+    void *p=malloc_default(size);
     memkey_add(p,size);
     return p;
 }
 static void *realloc_dbg(void*p0, size_t size){
-    if(!p0) return MALLOC(size);
+    if(!p0) return malloc_dbg(size);
     memkey_del(p0);
-    void *p=realloc(p0,size);
+    void *p=realloc_default(p0,size);
     memkey_add(p,size);
     return p;
 }
 static void free_dbg(void *p){
     if(!p) return;
     memkey_del(p);
-    free(p);
+    free_default(p);
 }
 
 /**

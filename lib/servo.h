@@ -33,9 +33,8 @@ typedef struct SERVO_T{
     dcell *mlead;       /**<lead filter temporary storage*/
     dcell *merrlast;    /**<recorded errro signal from last step*/
     dcell *mpreint;     /**<first integrator or other value.*/
-    dcell **merrhist;    /**<Keep a short history of merr*/
-    dcell **mint;       /**<second integrator. It is array to accomodate multiple ap's*/
-    int nmint;          /**<number of cells in mint*/
+    dccell *merrhist;    /**<Keep a short history of merr*/
+    dccell *mint;       /**<second integrator. It is array to accomodate multiple ap's*/
     int initialized;   /**<is this data initialized*/
     int al;       /**<Additional latency*/
     /*Servo parameters.*/

@@ -37,7 +37,7 @@ enum{
 /**
  * hash the data to get a unique file name
  */
-static char *get_fnatm(GENSCREEN_T *data){
+static char *get_fnatm(GENATM_T *data){
     uint32_t key;
     key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
     key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
@@ -71,7 +71,7 @@ static char *get_fnatm(GENSCREEN_T *data){
  * Geneate the screens sequentially and appends to file if fc is not
  * NULL. Handles large screens well without using the full storage.
  */
-static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
+static void spect_screen_save(cellarr *fc, GENATM_T *data){
     if(!data->spect){
 	info2("Generating spect..."); TIC; tic;
 	switch(data->method){
@@ -139,7 +139,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 /**
  *  Generate turbulence screens all in memory
  */
-static void spect_screen_do(GENSCREEN_T *data){
+static void spect_screen_do(GENATM_T *data){
     spect_screen_save(NULL, data);
 }
 /**
@@ -147,9 +147,9 @@ static void spect_screen_do(GENSCREEN_T *data){
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-static mapcell* create_screen(GENSCREEN_T *data, 
-			   void (*funsave)(cellarr *fc, GENSCREEN_T *data),
-			   void (*funmem)(GENSCREEN_T *data)){
+static mapcell* create_screen(GENATM_T *data, 
+			   void (*funsave)(cellarr *fc, GENATM_T *data),
+			   void (*funmem)(GENATM_T *data)){
     mapcell* screen;
     long nlayer=data->nlayer;
     char *fnatm=NULL;
@@ -207,7 +207,7 @@ static mapcell* create_screen(GENSCREEN_T *data,
 /**
  *  Generate vonkarman screens from turbulence statistics.
  */
-mapcell* vonkarman_screen(GENSCREEN_T *data){
+mapcell* vonkarman_screen(GENATM_T *data){
     data->method=T_VONKARMAN;
     mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
     return(screen);
@@ -216,7 +216,7 @@ mapcell* vonkarman_screen(GENSCREEN_T *data){
 /**
  * Generate screens from PSD with power of 12/3 instead of 11/3.
  */
-mapcell* biharmonic_screen(GENSCREEN_T *data){
+mapcell* biharmonic_screen(GENATM_T *data){
     data->method=T_BIHARMONIC;
     mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
     return(screen);
@@ -224,7 +224,7 @@ mapcell* biharmonic_screen(GENSCREEN_T *data){
 /**
  * Generate one screen at a time and save to file
  */
-static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
+static void fractal_screen_save(cellarr *fc, GENATM_T *data){
     long nx=data->nx;
     long ny=data->ny;
     dmat *dm = dnew(data->nx, data->ny);
@@ -237,7 +237,7 @@ static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
     }
     dfree(dm);
 }
-static void fractal_screen_thread(GENSCREEN_T *data){
+static void fractal_screen_thread(GENATM_T *data){
     rand_t *rstat=data->rstat;
     const double *wt=data->wt;
     map_t **screen=(map_t**)data->screen->p;
@@ -259,7 +259,7 @@ static void fractal_screen_thread(GENSCREEN_T *data){
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
 }
-static void fractal_screen_do(GENSCREEN_T *data){
+static void fractal_screen_do(GENATM_T *data){
     PINIT(data->mutex_ilayer);
     CALL(fractal_screen_thread, data, data->nthread,1);
 }
@@ -268,7 +268,7 @@ static void fractal_screen_do(GENSCREEN_T *data){
  * Generate Fractal screens. Not good statistics.
  */
 
-mapcell *fractal_screen(GENSCREEN_T *data){
+mapcell *fractal_screen(GENATM_T *data){
     data->method=T_FRACTAL;
     return create_screen(data, fractal_screen_save, fractal_screen_do);
 }

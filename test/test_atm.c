@@ -15,8 +15,8 @@ int main(){
     double dx=1./64.;
     int m=4096*2;
     THREAD_POOL_INIT(nthread);
-    GENSCREEN_T data;
-    memset(&data, 0, sizeof(GENSCREEN_T));
+    GENATM_T data;
+    memset(&data, 0, sizeof(GENATM_T));
     data.rstat=&rstat;
     data.nx=m;
     data.ny=m;
@@ -27,6 +27,6 @@ int main(){
     data.nlayer=nlayer;
     data.nthread=nthread;
     mapcell *map=vonkarman_screen(&data);
-    /*map_t **map=genscreen_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread); */
+    /*map_t **map=genatm_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread); */
     cellwrite(map, "atm.bin");
 }

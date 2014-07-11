@@ -173,7 +173,7 @@ void recon_split(SIM_T *simu){
 	    dcellzero(simu->gngsmvst);/*reset accumulation. */
 	    dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
 	    if(parms->tomo.psol){
-		dcell *Mpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
+		dcell *Mpsol_lo=simu->Mint_lo->mint->p[parms->dbg.psol?0:1];
 		dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 	    }
 	    if(parms->sim.mffocus){
@@ -273,7 +273,7 @@ void reconstruct(SIM_T *simu){
 		dmpsol=simu->dmpsol->p[parms->hipowfs->p[0]];
 	    }else{
 		warning_once("Temporary solution\n");
-		dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
+		dmpsol=simu->dmint->mint->p[parms->dbg.psol?0:1];
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}

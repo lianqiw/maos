@@ -203,7 +203,7 @@ void rename_file(int sig){
 	rename(fnold,fnnew);
 	mysymlink(fnnew, "run_recent.log");
     }
-    if(global->parms && global->parms->fdlock && sig!=0){
+    if(global && global->parms && global->parms->fdlock && sig!=0){
 	char fn[80];
 	const PARMS_T *parms=global->parms;
 	for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){

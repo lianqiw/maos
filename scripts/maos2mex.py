@@ -1,49 +1,21 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import re
 import sys
-import time
-fp=list();
+import maos
+if len(sys.argv)>2:
+    srcdir=sys.argv[1];
+    fnout=sys.argv[2];
+else:
+    srcdir='/Users/lianqiw/work/programming/aos'
+    fnout='../mex/maos2mex.h'
+
 simu_all=list();
-fp.append(open('/Users/lianqiw/work/programming/aos/maos/parms.h','r'));
-fp.append(open('/Users/lianqiw/work/programming/aos/maos/types.h','r'));
-structs=dict()
-for fpi in fp:
-    ln=fpi.read();
-    fpi.close();
-    while True:
-        start=ln.find('#')
-        end=ln.find('\n', start)
-        if start==-1 or end==-1:
-            break
-        ln=ln[0:start]+ln[end+1:]
 
-    while True:
-        start=ln.find('/*')
-        end=ln.find('*/', start)
-        if start==-1 or end==-1:
-            break
-        ln=ln[0:start]+ln[end+2:]
-        ln=ln.replace('\n','')
+headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
+          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h']
 
-    ln=ln.replace('*','* ') #add space after *
-    ln=re.sub(r'[ ]*[*]','*', ln) #remove space before *
-    ln=re.sub(r'[ ]+',' ', ln) #remove double space
-    end=0
-    while True:
-        struct=ln.find('struct', end)
-        if struct==-1:
-            break
-        struct=struct+len('struct ')
-        start=ln.find('{', struct)
-        name=ln[struct:start];
-        end=ln.find('}', start)
-        structs[name]=dict()
-        fields=ln[start+1:end].split(';')
-        for fi in fields:
-            tmp=fi.replace('struct','').replace('const','').lstrip().rstrip().split(' ');
-            if len(tmp)==2:
-                structs[name][tmp[1]]=tmp[0]
+structs=maos.parse_structs(srcdir, headlist)
+
 simu=dict()
 simu_type=dict()
 simu=structs['SIM_T']
@@ -67,7 +39,8 @@ def replace_struct(struct, level):
         if val in rdone:
             pass #avoid repeat
         elif val in structs:
-            rdone[val]=1
+            if val=='parms' or val=='recon' or val=='aper' or val=='powfs':
+                rdone[val]=1
             struct[key]=[val0, structs[val]]
             if type(structs[val])==type(dict()): #other types
                 todo[level].append(struct[key][1])
@@ -84,12 +57,15 @@ for level in range(5):
 def var2mx(mexname, cname, ctype):
     out=""
     ans=1
+    ctype0=ctype
     if ctype[-1]=='*':
         ccast=''
         ctype=ctype[0:-1]
+        if cname=='simu->atm':
+            return ''
         if ctype[-2:]=='_t':
             ctype=ctype[0:-2];
-        if ctype=='map' or ctype[1:]=='mat' or ctype[-4:]=='cell' or ctype=='loc' or ctype=='pts':
+        if ctype=='map' or ctype[1:]=='mat' or ctype[-4:]=='cell' or ctype=='loc' or ctype=='pts' or ctype[1:]=='sp':
             fun_c='any'
         elif ctype=='char':
             fun_c='str'
@@ -98,13 +74,13 @@ def var2mx(mexname, cname, ctype):
         if len(fun_c)>0:
             return mexname+"="+fun_c+'2mx('+ccast+cname+');'
         else:
-            print("//unknown1 type "+cname+":"+ctype+'*')
+            print("//unknown1 type "+cname+":"+ctype0)
             return ''
     else:
-        if ctype=='int' or ctype=='double':
+        if ctype=='int' or ctype=='double' or ctype=='long':
             return mexname+'=mxCreateDoubleScalar('+cname+');'
         else:
-            print("//unknown2 type "+cname+":"+ctype)
+            print("//unknown2 type "+cname+":"+ctype0)
             return ''
 
 fundefs=dict()
@@ -157,6 +133,7 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
         stind='i_n'
     else:
         stind='0'
+    funbody=list()
     for key in struct: 
         valtype=struct[key]
         ans=""
@@ -167,9 +144,9 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
         else:
             ans+=var2mx("\ttmp2", childpointer+key, valtype)
         if len(ans)>0:
-            fundef+=ans;
-            fundef+="i=mxAddField(tmp, \""+key+"\");"
-            fundef+="mxSetFieldByNumber(tmp, "+stind+", i, tmp2);\n"
+            funbody.append(ans+"i=mxAddField(tmp, \""+key+"\");mxSetFieldByNumber(tmp, "+stind+", i, tmp2);")
+    funbody.sort()
+    fundef+="\n".join(funbody)
     if nvar!="1":
         fundef+="}\n"
     fundef+="\treturn tmp;\n}\n"
@@ -192,10 +169,7 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
 
 struct2mx("SIM_T*", "1", "","","", "simu", simu)
 
-if len(sys.argv)>1:
-    fnout=sys.argv[1]
-else:
-    fnout='../mex/maos2mex.h'
+
 fc=open(fnout,'w')
 keys=funheaders.keys()
 keys=sorted(keys, key=lambda item: (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item))

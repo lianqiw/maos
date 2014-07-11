@@ -2873,3 +2873,37 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
     }
     return zz;
 }
+/**
+   Trapzoidal integration
+*/
+X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
+    if(!y) return 0;
+    if(x && x->nx!=y->nx){
+	error("First dimension of x must match y\n");
+    }
+    X(mat)*out=X(new)(1, y->ny);
+    for(long icol=0; icol<y->nx; icol++){
+	T *py=y->p+y->nx*icol;
+	T *px=0;
+	if(x){
+	    if(x->ny==y->ny){
+		px=x->p+x->nx*icol;
+	    }else{
+		px=x->p;
+	    }
+	}
+	T ans=0;
+	if(px){
+	    for(long i=0; i<y->nx-1; i++){
+		ans+=(px[i+1]-px[i])*(py[i+1]+py[i]);
+	    }
+	}else{
+	    for(long i=0; i<y->nx; i++){
+		ans+=py[i];
+	    }
+	    ans=(ans*2-py[0]-py[y->nx-1]);
+	}
+	out->p[icol]=ans*0.5;
+    }
+    return out;
+}

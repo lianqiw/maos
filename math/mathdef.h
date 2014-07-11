@@ -129,16 +129,51 @@ AOS_FFT_DEF(AOS_CMAT)
 //#endif
 
 //#define dread(A...) readbin((READFUN)dreaddata, A)
-#define mapread(A...) readbin((READFUN)mapreaddata, A)
-#define locread(A...) readbin((READFUN)locreaddata, A)
-#define mapwrite(out, A...) writebin((WRITEFUN)mapwritedata, out, A)
-#define locwrite(out, A...) writebin((WRITEFUN)locwritedata, out, A)
+#define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
+#define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
+#define mapcellread(A...) (mapcell*)read_by_id(M_MAP64, 1, A)
 
-#define mapcellread(A...) cellread(M_MAP64, A)
-#define loccellread(A...) cellread(M_LOC64, A)
-#define dccellread(A...) cellread(M_DBL, A)
-#define dcccellread(A...) cellread(M_DBL, A)
-#define cccellread(A...) cellread(M_CMP, A)
-#define ccccellread(A...) cellread(M_CMP, A)
+#define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)
+#define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
+#define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
+
+#define dwrite(out, A...) write_by_id((void*)out, M_DBL, A)
+#define dread(A...)    (dmat*)read_by_id(M_DBL, 0, A)
+#define dcellreaddata(fp, header) (dcell*)readdata_by_id(fp, M_DBL, 1, header)
+#define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
+#define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
+#define dcccellread(A...) (dcccell*)read_by_id(M_DBL, 3, A)
+
+#define swrite(out, A...) write_by_id((void*)out, M_FLT, A)
+#define sread(A...)    (smat*)read_by_id(M_FLT, 0, A)
+#define scellreaddata(fp, header) (scell*)readdata_by_id(fp, M_FLT, 1, header)
+#define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
+#define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
+#define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
+
+#define cwrite(out, A...) write_by_id((void*)out, M_CMP, A)
+#define cread(A...)    (cmat*)read_by_id(M_CMP, 0, A)
+#define ccellreaddata(fp, header) (ccell*)readdata_by_id(fp, M_CMP, 1, header)
+#define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
+#define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
+#define ccccellread(A...) (ccccell*)read_by_id(M_CMP, 3, A)
+
+#define zwrite(out, A...) write_by_id((void*)out, M_ZMP, A)
+#define zread(A...)    (zmat*)read_by_id(M_ZMP, 0, A)
+#define zcellreaddata(fp, header) (zcell*)readdata_by_id(fp, M_ZMP, 1, header)
+#define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
+#define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
+#define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
+
+#define cellwrite(out, A...) write_by_id((void*)out, MCC_ANY, A)
+#define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, MCC_ANY)
+#define dcellwrite cellwrite
+#define ccellwrite cellwrite
+#define scellwrite cellwrite
+#define zcellwrite cellwrite
+#define dcellwritedata cellwritedata
+#define ccellwritedata cellwritedata
+#define scellwritedata cellwritedata
+#define zcellwritedata cellwritedata
 
 #endif

@@ -433,7 +433,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     dcellzero(cn2est->wt);
     dcellmm(&cn2est->wt, cn2est->iPnk, cn2est->cov1, "nn", 1);
     double wtsumsum=0;
-    DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 0);//DON'T DO BY DEFAULT
+    DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	double wtsum=0;
 	dmat *wt=cn2est->wt->p[iwfspair];//the layer weights. 
@@ -444,36 +444,28 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	    //This should not be done because noise causing small negative and postive values. 
 	    //If we simply remove negative values, it will bias the r0.
 	    dmat *Pnk=cn2est->Pnk->p[iwfspair+iwfspair*nwfspair];
-	    dmat *Pnkwt=dnew(nlayer,nlayer);//to remove columns in Pnk if negative weights are returned 
+	    dmat *Pnkwt=dnew(nlayer, 1);//to remove columns in Pnk if negative weights are returned 
 	    //number of negative layers found. 
 	    int nfd=0;
-	    int nfdlast=0;
-
-	    dzero(Pnkwt);
-	    daddI(Pnkwt,1);//start with identity matrix 
+	    dset(Pnkwt, 1);
 	  repeat:
 	    nfd=0;
 	    for(int ix=0; ix<nlayer; ix++){
 		const double val=wt->p[ix];
-		if(val<-0.01){
-		    //negatives found. need to remove columns in the forward matrix
+		if(val<0 && Pnkwt->p[ix]>0){
+		    //negatives found. Remove columns in the forward matrix to disable this point.
 		    //Pnk and redo the estimation matrix iPnk
 		    nfd++;
 		    //disable diagonal elements. 
-		    Pnkwt->p[ix*(1+nlayer)]=0;
+		    Pnkwt->p[ix]=0;
 		}
 	    }
-	    if(nfd>nfdlast){
-		dmat *Pnk2=NULL;
-		//this will zero out columns in the forward matrx 
-		dmm(&Pnk2, 0, Pnk, Pnkwt, "nn", 1);
-		//will redo the estimation matrix. 
-		dmat *iPnk2=dpinv(Pnk2, NULL, NULL);
+	    if(nfd>0){
+		if(nfd) info2("Ignore %d negative points. set MAOS_CN2EST_NO_NEGATIVE=0 to disable.\n", nfd);
+		dmat *iPnk2=dpinv(Pnk, Pnkwt, NULL);
 		//compute the new result 
-		dmm(&wt,0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
+		dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
 		dfree(iPnk2);
-		dfree(Pnk2);
-		nfdlast=nfd;
 		goto repeat;
 	    }
 	    dfree(Pnkwt);

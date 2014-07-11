@@ -121,7 +121,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    /* Embed DM commands to a square array (borrow dmrealsq) */
 	    double iastroke;
-	    int nx=simu->recon->anx[idm];
+	    int nx=simu->recon->anx->p[idm];
 	    double (*dmr)[nx];
 	    dmat *dm;
 	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
@@ -142,7 +142,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    do{
 		count=0;
 		PDMAT(simu->recon->amap->p[idm],map);
-		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
+		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
 			if(map[iy][ix]>0 && map[iy+1][ix]>0){
 			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
@@ -150,7 +150,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 			    
 		    } 
 		}
-		for(int iy=0; iy<simu->recon->any[idm]; iy++){
+		for(int iy=0; iy<simu->recon->any->p[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
 			if(map[iy][ix]>0 && map[iy][ix+1]>0){
 			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
@@ -246,15 +246,15 @@ void filter_cl(SIM_T *simu){
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
 	    /*accumulate to the main integrator.*/
-	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
+	    addlow2dm(&simu->dmint->mint->p[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     
-    dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
+    dcellcp(&simu->dmcmd,simu->dmint->mint->p[0]);
     if(!parms->sim.fuseint){
-	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
+	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
     if(simu->ttmreal){
 	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
@@ -263,7 +263,7 @@ void filter_cl(SIM_T *simu){
 	dcell *tmp=dcelldup(simu->dmcmd);
 	clipdm(simu, simu->dmcmd);
 	dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
-	dcelladd(&simu->dmint->mint[0], 1, tmp, -1);//remove from integrator (anti wind up)
+	dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
 	dcellfree(tmp);
     }
     /*This is after the integrator output and clipping*/
@@ -305,7 +305,7 @@ void filter_cl(SIM_T *simu){
     }
     if(simu->uptint){
 	/*upterr is from gradients from this time step.*/
-	dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+	dcellcp(&simu->uptreal, simu->uptint->mint->p[0]);
 	/*Eject dithering command*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;

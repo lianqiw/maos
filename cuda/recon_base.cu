@@ -162,8 +162,8 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 	for(int ipsr=0; ipsr<npsr; ipsr++){
 	    xmap[ipsr].init(recon->xmap->p[ipsr]);
 	}
-	xnx=recon->xnx;
-	xny=recon->xny;
+	xnx=recon->xnx->p;
+	xny=recon->xny->p;
     }
     if(parms->fit.cachex){
 	xcmap=new cugrid_t[npsr];
@@ -172,10 +172,10 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 	}
     }
     W01=new W01_T(recon->W0, recon->W1, fmap.nx);
-    anx=recon->anx;
-    any=recon->any;
-    anloc=recon->anloc;
-    ngrad=recon->ngrad;
+    anx=recon->anx->p;
+    any=recon->any->p;
+    anloc=recon->anloc->p;
+    ngrad=recon->ngrad->p;
     dt=parms->sim.dt;
     delay=2;//2 frame delay
 }

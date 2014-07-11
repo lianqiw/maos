@@ -381,10 +381,10 @@ static void perfevl_mean(SIM_T *simu){
 	    /* convert cleNGSm into mode and put NGS mode WVE into clem. */
 	    int nngsmod=recon->ngsmod->nmod;
 	    
-	    if(simu->corrNGSm && simu->Mint_lo->mint[0] && isim<parms->sim.end-1){
+	    if(simu->corrNGSm && simu->Mint_lo->mint->p[0] && isim<parms->sim.end-1){
 		double *pcorrNGSm=simu->corrNGSm->p+(isim+1)*nngsmod;
 		for(int imod=0; imod<nngsmod; imod++){
-		    pcorrNGSm[imod]=simu->Mint_lo->mint[0]->p[0]->p[imod];
+		    pcorrNGSm[imod]=simu->Mint_lo->mint->p[0]->p[0]->p[imod];
 		}
 	    }
 	    double pcleNGSdot[nngsmod];

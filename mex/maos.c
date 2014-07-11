@@ -23,13 +23,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	const PARMS_T *parms=0;
 	static int isim=0;
 	static int iseed=0;
+	int nstep=0;
 	char *cmd=0;//default action is sim
-	int free_cmd=1;
+	int free_cmd=0;
 	if(nrhs>0){
 	    cmd=mxArrayToString(prhs[0]);
+	    free_cmd=1;
 	}else{
 	    cmd="sim";
-	    free_cmd=0;
 	}
 	if(!strcmp(cmd, "reset")){
 	    if(global) maos_reset();
@@ -73,6 +74,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			error("-g and -G cannot both be specified\n");
 		    }
 		}
+		if(nrhs>2){
+		    if(!mxIsDouble(prhs[2])){
+			error("The second parameter should be an integer\n");
+		    }
+		    nstep=(int)mxGetScalar(prhs[2]);
+		}
 	    }
 	    addpath(".");
 	    if(dirout){
@@ -92,17 +99,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	parms=global->parms;
 	if(!strcmp(cmd, "sim")){
-	    SIM_T *simu=global->simu;
-	    int nstep=1;
 	    if(nrhs>1){
 		if(!mxIsDouble(prhs[1])){
 		    error("The second parameter should be an integer\n");
 		}
 		nstep=(int)mxGetScalar(prhs[1]);
-		if(nstep<=0){
-		    nstep=parms->sim.end-parms->sim.start;
-		}
 	    }
+	}
+	if(nstep<0){
+	    nstep=parms->sim.end-parms->sim.start;
+	}
+	if(nstep>0){
+	    SIM_T *simu=global->simu;
 	    if(iseed<parms->sim.nseed){
 		if(!simu){
 		    while(!(simu=maos_iseed(iseed))){
@@ -138,16 +146,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		info2("Simulation finished\n");
 	    }
 	}
-	
+	int free_valname=0;
+	char *valname=NULL;
 	if(!strcmp(cmd, "get")){
-	    char *valname=0;
-	    int free_valname=1;
 	    if(nrhs>1){
+		free_valname=1;
 		valname=mxArrayToString(prhs[1]);
 	    }else{
 		valname="";
-		free_valname=0;
 	    }
+	}else if(nlhs>0){
+	    valname="simu";
+	}
+	if(valname){
 	    if(global){
 		plhs[0]=get_data(global->simu, valname);
 	    }else{

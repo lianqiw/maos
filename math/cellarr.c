@@ -44,27 +44,20 @@ void cellarr_push(cellarr *ca, int i, const void *p){
     if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);
     long id=*((long*)(p));
     while(ca->cur<i) {
-	write_by_id(ca->fp, 0, id); 
+	writedata_by_id(ca->fp, 0, id); 
 	ca->cur++;
     }
-    write_by_id(ca->fp, p, 0); 
+    writedata_by_id(ca->fp, p, 0); 
     ca->cur++;
 }
 
 #define cellarr_cell(type)					\
-    void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){	\
-	if(!ca) error("cellarr is NULL\n");			\
-	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
-	while(ca->cur<i) {type##cell##writedata(ca->fp, NULL);ca->cur++;}	\
-	{type##cell##writedata(ca->fp, A); ca->cur++;};			\
-    }
+    void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){ \
+	cellarr_push(ca, i, A);}					\
+
 #define cellarr_mat(type)					\
     void cellarr_##type##mat(cellarr *ca, int i, const type##mat *A){	\
-	if(!ca) error("cellarr is NULL\n");			\
-	if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
-	while(ca->cur<i) {type##writedata(ca->fp, NULL);ca->cur++;}	\
-	{type##writedata(ca->fp, A); ca->cur++;};			\
-    }
+	cellarr_push(ca, i, A);}
 
 cellarr_cell(d);
 cellarr_cell(s);

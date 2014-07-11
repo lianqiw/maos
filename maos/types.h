@@ -262,19 +262,19 @@ typedef struct RECON_T{
     mapcell *xmap;      /**<The map of xloc (only if tomo.square is true)*/
     mapcell *xcmap;     /**<The map of xloc on non-cone coordinate, with floc sampling.*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
-    long *xnx;
-    long *xny;
-    long *xnloc;
+    imat *xnx;         /**<A convenient reference of the size of each xloc*/
+    imat *xny;         /**<A convenient reference of the size of each xloc*/
+    imat *xnloc;       /**<A convenient reference of the size of each xloc*/
     map_t *fmap;       /**<Grid on pupil for DM fitting*/
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loccell *aloc;      /**<actuator grid*/
     mapcell *amap;      /**<square grid of actuators*/
     mapcell *acmap;     /**For caching DM to intermediate plane*/
-    long *anx;        /**<Size of each amap*/
-    long *any;        /**<Size of each amap*/
-    long *anloc;      /**<Size of each aloc*/
-    long *ngrad;      /**<Size of each grad for each wfs*/
+    imat *anx;        /**<Size of each amap*/
+    imat *any;        /**<Size of each amap*/
+    imat *anloc;      /**<Size of each aloc*/
+    imat *ngrad;      /**<Size of each grad for each wfs*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 
@@ -447,7 +447,7 @@ typedef struct SIM_T{
     rand_t *init_rand; /**<random stream to initialize other streams*/
     rand_t *misc_rand; /**<For misc purposes*/
     /*Atmosphere*/
-    GENSCREEN_T *genscreen;
+    GENATM_T *atmcfg;
     mapcell *atm;       /**<fine sampled simulation turbulence screens*/
     mapccell *cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
 			  fast ray tracing to WFS and aper*/

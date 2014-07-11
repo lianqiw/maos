@@ -80,11 +80,11 @@ static void mvm_direct_igpu(thread_t *info){
     const long ntotact=data->ntotact;
     const long ntotgrad=data->ntotgrad;
     const long ntotxloc=data->ntotxloc;
-    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)NULL);//the I
-    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);//right hand size
+    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad->p, (long*)NULL);//the I
+    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);//right hand size
     curcell *opdr=NULL;//initialized later
-    //curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
-    curcell *fitr=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL, (Real*)1);//skip data allocation.
+    //curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL);
+    curcell *fitr=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL, (Real*)1);//skip data allocation.
     curmat *mvm=curnew(ntotact, info->end-info->start);
     Real *eye2; cudaMalloc(&eye2, sizeof(Real)*2);
     dmat *residual=data->residual;
@@ -109,9 +109,9 @@ static void mvm_direct_igpu(thread_t *info){
 			    ntotxloc*(info->end-info->start)*sizeof(Real),
 			    cudaMemcpyHostToDevice, stream);
 	}
-	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (Real*)1);
+	opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p, (Real*)1);
     }else{
-	opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
     }
     TIC;tic;
     curcell *tomo_rhs=NULL, *fit_rhs=NULL;
@@ -189,13 +189,13 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	long ntotxloc=0;
 	const int ndm=parms->ndm;
 	for(int idm=0; idm<ndm; idm++){
-	    ntotact+=recon->anloc[idm];
+	    ntotact+=recon->anloc->p[idm];
 	} 
 	for(int ips=0; ips<recon->npsr; ips++){
 	    ntotxloc+=recon->xloc->p[ips]->nloc;
 	}
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    ntotgrad+=recon->ngrad[iwfs];
+	    ntotgrad+=recon->ngrad->p[iwfs];
 	}
 	X(mat) *mvmc=NULL;//control matrix output to CPU
 	if(parms->load.mvmf){

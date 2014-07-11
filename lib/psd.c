@@ -87,6 +87,31 @@ dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
     dmat *f2=ddup(fnew);
     dcwlog(psd1);
     dmat *psd2=dinterp1(f1, psd1, f2);
+    dmat *t1=dtrapz(f1, psd1);
+    dmat *t2=dtrapz(f2, psd2);
+    if(fabs(t1->p[0]-t2->p[0])>t1->p[0]*10){
+	warning("psd interpolation failed. int1=%g, int2=%g\n", t1->p[0], t2->p[0]);
+	double f_max=0, psd_max=0;
+	for(long i=0; i<f1->nx; i++){
+	    if(psd1->p[i]>psd_max){
+		f_max=f1->p[i];
+		psd_max=psd1->p[i];
+	    }
+	}
+	double f_diff=INFINITY;
+	long i_close=0;
+	for(long i=0; i<f2->nx; i++){
+	    if(fabs(f2->p[i]-f_max)<f_diff){
+		f_diff=fabs(f2->p[i]-f_max);
+		i_close=i;
+	    }
+	}
+	psd2->p[i_close]=psd_max;
+	dfree(t2);
+	t2=dtrapz(f2, psd2);
+	warning("psd interpolation redo: int1=%g, int2=%g\n", t1->p[0], t2->p[0]);
+    }
+    dscale(psd2, t1->p[0]/t2->p[0]);
     dfree(f1); dfree(f2); dfree(psd1);
     dcwexp(psd2,1);
     return psd2;
