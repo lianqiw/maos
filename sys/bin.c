@@ -1040,7 +1040,6 @@ void *readbin(READFUN readfun, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "rb");
     void *out=readfun(fp, 0);
-    zfeof(fp);
     zfclose(fp);
     return out;
 }
@@ -1051,7 +1050,6 @@ void writebin(WRITEFUN writefun, const void *out, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     writefun(fp, out);
-    zfeof(fp);
     zfclose(fp);
 }
 /**

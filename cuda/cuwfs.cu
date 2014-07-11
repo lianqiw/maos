@@ -143,7 +143,7 @@ cushz_t::cushz_t(wfscfg_t *wfscfg)
     void *_imcc[nsa];
     for(int isa=0; isa<nsa; isa++){
 	_imcc[isa]=NULL;
-	cp2gpu((Real**)&(_imcc[isa]), powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
+	cp2gpu((Real**)&(_imcc[isa]), powfs[ipowfs].saimcc->p[powfs[ipowfs].saimcc->nx>1?wfsind:0]->p[isa]);
     }
     cp2gpu(&imcc, _imcc, nsa, 1);
 }

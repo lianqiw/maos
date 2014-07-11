@@ -77,27 +77,6 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     return out;
 }
 
-/**
-   Read an array of loc_t form file.
- */
-loc_t ** locarrread(int *nloc, const char*format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"rb");
-    header_t header;
-    read_header(&header, fp);
-    long nx,ny;
-    header_t *headerc=check_cell(&header, &nx, &ny);
-    *nloc=nx*ny;
-    loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
-    if(!headerc){
-	free(header.str);
-    }
-    for(long ix=0; ix<nx*ny; ix++){
-	locarr[ix]=locreaddata(fp, headerc);
-    }
-    zfclose(fp);
-    return locarr;
-}
 void locwritedata(file_t *fp, const loc_t *loc){
     char str[80];
     snprintf(str,80,"dx=%.15g;\ndy=%.15g;\n",loc->dx,loc->dy);
@@ -111,17 +90,6 @@ void locwritedata(file_t *fp, const loc_t *loc){
 	zfwrite(loc->locx, sizeof(double),loc->nloc,fp);
 	zfwrite(loc->locy, sizeof(double),loc->nloc,fp);
     }
-}
-
-void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"wb");
-    header_t header={MCC_ANY, nloc, 1, NULL};
-    write_header(&header, fp);
-    for(unsigned long iloc=0; iloc<nloc; iloc++){
-	locwritedata(fp, loc[iloc]);
-    }
-    zfclose(fp);
 }
 
 void mapwritedata(file_t *fp, map_t *map){
@@ -220,7 +188,6 @@ map_t *mapreaddata(file_t *fp, header_t *header){
     }else{
 	error("Invalid format. magic=%u\n", header->magic);
     }
-    zfclose(fp);
     return map;
 }
 

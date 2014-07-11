@@ -192,7 +192,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	    ntotact+=recon->anloc[idm];
 	} 
 	for(int ips=0; ips<recon->npsr; ips++){
-	    ntotxloc+=recon->xloc[ips]->nloc;
+	    ntotxloc+=recon->xloc->p[ips]->nloc;
 	}
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    ntotgrad+=recon->ngrad[iwfs];

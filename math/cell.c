@@ -130,10 +130,9 @@ void *readdata_by_id(file_t *fp, uint32_t id, header_t *header){
 	header=&header2;
 	read_header(header, fp);
     }
-    uint64_t nx, ny;
-    nx=header->nx;
-    ny=header->ny;
-    if(!nx || !ny) return NULL;
+    if(iscell(header->magic)){
+	return cellreaddata(fp, id, header);
+    }
     if(!id) id=header->magic;
     switch(id){
     case M_DBL: return dreaddata(fp, header);break;
@@ -142,7 +141,7 @@ void *readdata_by_id(file_t *fp, uint32_t id, header_t *header){
     case M_ZMP: return zreaddata(fp, header);break;
     case M_LOC64: return locreaddata(fp, header); break;
     case M_MAP64: return mapreaddata(fp, header); break;
-    default:return cellreaddata(fp, id, header);break;
+    default:error("id=%ux\n", id);
     }
     return 0;
 }

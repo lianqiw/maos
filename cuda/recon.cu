@@ -146,8 +146,8 @@ namespace cuda_recon{
 	    int count=0;
 	    dir_t dir[ntot];
 	    dm_moao[imoao]=(curcell**)calloc(ntot, sizeof(curcell*));
-	    int anx=recon->moao[imoao].amap->nx;
-	    int any=recon->moao[imoao].amap->ny;
+	    int anx=recon->moao[imoao].amap->p[0]->nx;
+	    int any=recon->moao[imoao].amap->p[0]->ny;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].moao==imoao){
@@ -186,7 +186,7 @@ namespace cuda_recon{
 		    if(!cudata->dm_wfs){
 			cudata->dm_wfs=(cumap_t**)calloc(nwfs, sizeof(cumap_t*));
 		    }
-		    cudata->dm_wfs[iwfs]=new cumap_t(recon->moao[imoao].amap); 
+		    cudata->dm_wfs[iwfs]=new cumap_t(recon->moao[imoao].amap->p[0]); 
 		}
 	    }
 	    if(parms->evl.moao==imoao){
@@ -195,7 +195,7 @@ namespace cuda_recon{
 		    if(!cudata->dm_evl){
 			cudata->dm_evl=(cumap_t**)calloc(parms->evl.nevl, sizeof(cumap_t*));
 		    }
-		    cudata->dm_evl[ievl]=new cumap_t(recon->moao[imoao].amap); 
+		    cudata->dm_evl[ievl]=new cumap_t(recon->moao[imoao].amap->p[0]); 
 		}
 	    }
 	    gpu_set(cudata_t::recongpu);

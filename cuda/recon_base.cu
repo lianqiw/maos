@@ -155,12 +155,12 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     /*Setup various grid*/
     amap=new cugrid_t[ndm];
     for(int idm=0; idm<ndm; idm++){
-	amap[idm].init(recon->amap[idm]);
+	amap[idm].init(recon->amap->p[idm]);
     }
     if(!parms->sim.idealfit){
 	xmap=new cugrid_t[npsr];
 	for(int ipsr=0; ipsr<npsr; ipsr++){
-	    xmap[ipsr].init(recon->xmap[ipsr]);
+	    xmap[ipsr].init(recon->xmap->p[ipsr]);
 	}
 	xnx=recon->xnx;
 	xny=recon->xny;
@@ -168,7 +168,7 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     if(parms->fit.cachex){
 	xcmap=new cugrid_t[npsr];
 	for(int ipsr=0; ipsr<npsr; ipsr++){
-	    xcmap[ipsr].init(recon->xcmap[ipsr]);
+	    xcmap[ipsr].init(recon->xcmap->p[ipsr]);
 	}
     }
     W01=new W01_T(recon->W0, recon->W1, fmap.nx);

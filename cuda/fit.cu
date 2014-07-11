@@ -60,7 +60,7 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     if(parms->fit.cachedm){
 	acmap=new cumap_t[ndm];
 	for(int idm=0; idm<ndm; idm++){
-	    acmap[idm].init(recon->acmap[idm]);
+	    acmap[idm].init(recon->acmap->p[idm]);
 	}
     }
     if(parms->sim.idealfit){

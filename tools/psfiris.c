@@ -234,8 +234,8 @@ int main(int argc, char *argv[]){
     }
   
     info2("NGS mode wavefront error: \nTip/tilt:%g nm PS: %g nm\n", sqrt(tt)*1e9, sqrt(ps)*1e9);
-    int naloc;
-    loc_t **aloc=locarrread(&naloc, "setup/setup/aloc");
+    loccell *aloc=loccellread("setup/setup/aloc");
+    int naloc=aloc->nx;
     dcell *mode_aloc=dcellread("setup/setup/ahst_Modes");
     int nmod=mode_aloc->p[0]->ny;
     
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]){
     dmat *mode_ploc=dnew(ploc->nloc, nmod);
     for(int imod=0; imod<nmod; imod++){
 	for(int ialoc=0; ialoc<naloc; ialoc++){
-	    prop_nongrid_cubic(aloc[ialoc], mode_aloc->p[ialoc]->p+imod*mode_aloc->p[ialoc]->nx, 
+	    prop_nongrid_cubic(aloc->p[ialoc], mode_aloc->p[ialoc]->p+imod*mode_aloc->p[ialoc]->nx, 
 			       ploc, pamp->p, mode_ploc->p+ploc->nloc*imod, 
 			       1, thetax[idir]/206265., thetay[idir]/206265., 1, 0.3, 0, 0);
 	}
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]){
 	dfree(dtmp);
     }
     dfree(pwt);
-    locarrfree(aloc, naloc);
+    cellfree(aloc);
     dcellfree(mode_aloc);
     dmat *cc_mode=dnew(5,5);
     PDMAT(cc_mode, pcc_mode);

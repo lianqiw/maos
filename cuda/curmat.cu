@@ -123,7 +123,7 @@ void curmm(curmat **C, Real alpha, const curmat *A, const curmat *B, const char 
     }else{
 	assert((*C)->nx==m && (*C)->ny==n);
     }
-    assert(k==k2);
+    if(k!=k2) error("Matrix mismatch\n");
     DO(CUBL(gemm)(handle, transa, transb, m,n,k,
 		 &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
 }

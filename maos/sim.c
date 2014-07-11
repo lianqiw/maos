@@ -105,7 +105,7 @@ void maos_isim(int isim){
     sim_update_etf(simu);
 #if _OPENMP>=200805
     static int omp_warn=0;
-    if(!omp_warn){
+    if(NTHREAD>1 && !omp_warn){
 	omp_warn=1;
 	if(!omp_in_parallel()){
 	    warning("Not in parallel region. active_level=%d\n", omp_get_active_level());

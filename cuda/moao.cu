@@ -31,7 +31,7 @@ namespace cuda_recon{
 cumoao_l::cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid)
     :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
      NW(0),dotNW(0),amap(0),actslave(0),opdfit(0),opdfit2(0),ha(0){
-    amap=new cugrid_t(moao->amap);
+    amap=new cugrid_t(moao->amap->p[0]);
     if(moao->NW){
 	cp2gpu(&NW, moao->NW->p[0]);
 	dotNW=curnew(NW->ny, 1);
@@ -127,7 +127,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cp2gpu(&cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs]);
 	    }else{
 		gpu_dm2gpu_embed(cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs],
-				 moao->aloc, moao->amap->nx, moao->amap->ny);
+				 moao->aloc->p[0], moao->amap->p[0]->nx, moao->amap->p[0]->ny);
 	    }
 	}
     }
@@ -140,7 +140,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cp2gpu(&cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl]);
 	    }else{
 		gpu_dm2gpu_embed(cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl],
-				 moao->aloc, moao->amap->nx, moao->amap->ny);
+				 moao->aloc->p[0], moao->amap->p[0]->nx, moao->amap->p[0]->ny);
 	    }
 	}
     }

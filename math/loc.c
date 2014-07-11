@@ -276,6 +276,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 				    int sep=(abs(iy-jy)+abs(ix-jx));
 				    int iphi;
 				    if((sep==1 || sep==2) && (iphi=abs(pmap[jy][jx]))){//edge
+					iphi--;
 					double rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
 					if(level[jy][jx]<min_level){
 					    min_level=level[jy][jx];
@@ -948,8 +949,6 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 	    }
 	}
     }
-    loc_free_map(loc);/*remove the internal map before changing loc. */
-    loc_free_stat(loc);
     int count=0;
     for(int iloc=0; iloc<nloc; iloc++){
 	loc->locx[count]=loc->locx[iloc];
@@ -957,9 +956,7 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 	amp->p[count]=amp->p[iloc];
 	if(!skip[iloc]) count++;
     }
-    loc->locx=realloc(loc->locx,sizeof(double)*count);
-    loc->locy=realloc(loc->locy,sizeof(double)*count);
-    loc->nloc=count;
+    locresize(loc, count);
     dresize(amp, count, 1);
     if(redo_stat){
 	loc_create_stat(loc);
@@ -974,8 +971,6 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
    Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using
    a spcell, to compute the coupling which is modified accordingly.  */
 void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
-    loc_free_map(loc);
-    loc_free_stat(loc);
     int nloc=loc->nloc;
     dmat *sum=NULL;
     for(int isp=0; isp<spc->nx*spc->ny; isp++){
@@ -1031,8 +1026,6 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
    Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20.  use single sparse
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
-    loc_free_map(loc);/*remove the internal map before touchlong loc. */
-    loc_free_stat(loc);
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
 	error("Mismatch dimension\n");

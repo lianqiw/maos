@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import re
 import sys
 import time
@@ -63,9 +64,9 @@ def replace_struct(struct, level):
         else:
             ispointer=0
 
-        if rdone.has_key(val):
+        if val in rdone:
             pass #avoid repeat
-        elif structs.has_key(val):
+        elif val in structs:
             rdone[val]=1
             struct[key]=[val0, structs[val]]
             if type(structs[val])==type(dict()): #other types
@@ -97,13 +98,13 @@ def var2mx(mexname, cname, ctype):
         if len(fun_c)>0:
             return mexname+"="+fun_c+'2mx('+ccast+cname+');'
         else:
-            print "//unknown1 type "+cname+":"+ctype+'*'
+            print("//unknown1 type "+cname+":"+ctype+'*')
             return ''
     else:
         if ctype=='int' or ctype=='double':
             return mexname+'=mxCreateDoubleScalar('+cname+');'
         else:
-            print "//unknown2 type "+cname+":"+ctype
+            print("//unknown2 type "+cname+":"+ctype)
             return ''
 
 fundefs=dict()
@@ -197,19 +198,19 @@ else:
     fnout='../mex/maos2mex.h'
 fc=open(fnout,'w')
 keys=funheaders.keys()
-keys.sort()
+keys=sorted(keys, key=lambda item: (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item))
 for key in keys:
-    print>>fc, funheaders[key]
+    print(funheaders[key], file=fc)
 keys=fundefs.keys()
-keys.sort()
+keys=sorted(keys, key=lambda item: (int(item.partition(' ')[0]) if item[0].isdigit() else float('inf'), item))
 for key in keys:
-    print>>fc, fundefs[key]
-print>>fc, "static void get_data_help(){\n",
+    print(fundefs[key], file=fc)
+print("static void get_data_help(){\n", end="", file=fc)
 for key in funcalls:
-    print>>fc,"\tinfo2(\""+key+"=maos('get','"+key+"')\\n\");"
-print>>fc,"}\n"
-print>>fc, "static mxArray *get_data(SIM_T *simu, char *key){\n\t",
+    print("\tinfo2(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
+print("}", file=fc)
+print("static mxArray *get_data(SIM_T *simu, char *key){\n\t", end="", file=fc)
 for key in funcalls:
-    print>>fc, "if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse",
-print>>fc,"{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}"
+    print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
+print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)
 fc.close()

@@ -91,8 +91,8 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	cudata->perf->locs_dm[ievl]=new culoc_t*[parms->ndm];
 	for(int idm=0; idm<parms->ndm; idm++){
 	    loc_t *loc_dm;
-	    if(aper->locs_dm && aper->locs_dm[ievl+idm*nevl]){
-		loc_dm=aper->locs_dm[ievl+idm*nevl];
+	    if(aper->locs_dm && aper->locs_dm->p[ievl+idm*nevl]){
+		loc_dm=aper->locs_dm->p[ievl+idm*nevl];
 	    }else{
 		loc_dm=aper->locs;
 	    }

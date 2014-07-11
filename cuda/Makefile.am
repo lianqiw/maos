@@ -31,11 +31,11 @@ ___bin_gpu_mvm_LDADD=libaogpu.la $(LIBCUDA) ../lib/libaos.la $(LDOPTS)
 .cu.o:
 	$(AM_V_CC)$(NVCC) $(CUDAOPT) -Xcompiler "$(CCBINOPT)" -c -o $@ $<
 	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(CUDAOPT) -M $< > $(DEPDIR)/$*.Po
+	@$(NVCC) $(CUDAOPT) -M $< -MT $@ > $(DEPDIR)/$*.Po
 
 .cu.lo:
 	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(NVCC) $(CUDAOPT) --compiler-options "$(CCBINOPT) " -c $< -o $@ 
-	@$(NVCC) $(CUDAOPT) -M $< > $(DEPDIR)/$*.Po
+	@$(NVCC) $(CUDAOPT) -M $< -MT $@ > $(DEPDIR)/$*.Po
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)
 

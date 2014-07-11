@@ -124,8 +124,12 @@ case "$host_os" in
 	LDEXE+=" -lrt" #need real time library.
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
 	CFLAGS_CPU+=" -D_GLIBC_2_5_SOURCE"
+	if test "${host_cpu}" = "x86_64" ;then
+	    libsuffix="64"
+	else
+	    libsuffix="32"
+	fi
 	mkl_avail="yes"
-	libsuffix=${cpu}
 	system="linux"
 	ldsuffix="so"
 	;;
@@ -729,8 +733,8 @@ if test "$with_cuda" != "no" ;then
 	fi
     fi
     #Check cor cuda library
-    if test -f "${CUDADIR}/lib${cpu}/libcudart.$ldsuffix" ;then
-	CUDA_L="${CUDADIR}/lib${cpu}"
+    if test -f "${CUDADIR}/lib${libsuffix}/libcudart.$ldsuffix" ;then
+	CUDA_L="${CUDADIR}/lib${libsuffix}"
     elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
 	CUDA_L="${CUDADIR}/lib"
     else
