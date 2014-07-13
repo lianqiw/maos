@@ -84,14 +84,14 @@ def parse_func(srcdir, structs, files):
                 funtype=defs[0]
                 funname=defs[1]
             else:
-                print defs
+                print(defs)
             funarg=list()
             for arg in args:
                 argpair=arg.lstrip().rstrip().split(' ')
                 if len(argpair)==2:
                     funarg.append(argpair)
                 else:
-                    print argpair
+                    print(argpair)
             if len(funname)>0:
                 funcs[funname]=[funtype, funarg]
             end=closep+1;
