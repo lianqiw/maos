@@ -465,6 +465,11 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 		dmat *iPnk2=dpinv(Pnk, Pnkwt, NULL);
 		//compute the new result 
 		dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
+		for(int ix=0; ix<nlayer; ix++){
+		    if(Pnkwt->p[ix]==0){
+			wt->p[ix]=0;
+		    }
+		}
 		dfree(iPnk2);
 		goto repeat;
 	    }

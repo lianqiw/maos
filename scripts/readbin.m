@@ -19,6 +19,7 @@ function [res header]=readbin(fn)
 
     %MATLAB does not support transparent gunzip with fopen. 
     %So try to decompress file first
+    
     try
         fn2=gunzip(fn); fn2=fn2{1};
         if ~istype(fn, '.gz')
@@ -72,10 +73,12 @@ function [magic, nx, ny, header]=readfits_header(fid)
         if page==0
             res=fread(fid, 80, 'char*1=>char*1')';
             if length(res)==0 || feof(fid)
+                END=1
                 break;
             end
             if ~strcmp(res(1:6), 'SIMPLE') && ~strcmp(res(1:16), 'XTENSION= ''IMAGE')
                 disp('Garbage in fits file');
+                END=1
                 break;
             end
             res=fread(fid, 80, 'char*1=>char*1')';
@@ -262,6 +265,6 @@ function [res header err]=readbin_do(fid, isfits)
             Pi=P(2,:)';
             P=Pr+1i*Pi;
         end
-        res=sparse(Ir,Ic,P,nx,ny);
+        res=sparse(double(Ir),Ic,P,nx,ny);
     end
     
