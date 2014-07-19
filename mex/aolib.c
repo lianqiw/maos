@@ -21,7 +21,7 @@ void dtrapz_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 void zernike_index_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     if(nrhs!=1) mexErrMsgTxt("Expect 1 arguments\n");
     int nr=(int)mxGetScalar(prhs[0]);
-    imat* zernike_index_out=zernike_index(nr);
+    lmat* zernike_index_out=zernike_index(nr);
     plhs[0]=any2mx(zernike_index_out);
 }
 void psdinterp1_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){

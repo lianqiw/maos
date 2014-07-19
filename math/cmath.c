@@ -2,6 +2,7 @@
 #undef  USE_SINGLE
 #define USE_COMPLEX
 #include "mat.c"
+#include "matmath.c" 
 
 #include "blas.c"
 #include "matbin.c"

@@ -109,9 +109,9 @@ dmat* zernike(loc_t *loc, double R, int nr){
    return zernike index of radial mode ir, and azimuthal mode im. Maximum radial
    order is nr (inclusive)
  */
-imat *zernike_index(int nr){
+lmat *zernike_index(int nr){
     if(nr<0) return 0;
-    imat *out=inew(nr+1, nr+1);
+    lmat *out=lnew(nr+1, nr+1);
     for(long ix=0; ix<(nr+1)*(nr+1); ix++){
 	out->p[ix]=-1;
     }
@@ -140,7 +140,7 @@ dmat *zernike_turb_cov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
     dmat *res=dnew(nmod, nmod);
     PDMAT(res, pres);
-    imat *zind=zernike_index(nr);
+    lmat *zind=zernike_index(nr);
     for(int ir=0; ir<=nr; ir++){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
@@ -179,6 +179,6 @@ dmat *zernike_turb_cov(int nr){
 	    }
 	}
     }
-    ifree(zind);
+    lfree(zind);
     return res;
 }

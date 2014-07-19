@@ -22,23 +22,13 @@
 #error "Don't include this file directly"
 #endif
 
-#define AOS_MATBIN_DEF(X,Y,T)\
-void X(writedata)(file_t *fp, const X(mat) *A);	\
-void X(cellwritedata)(file_t *fp, const X(cell) *dc);\
-X(mat) *X(readdata)(file_t *fp, header_t *header); \
-X(cell)* X(cellreaddata)(file_t *fp, header_t *header); \
-void X(write)(const X(mat) *A, const char *format,...) CHECK_ARG(2); \
-void X(cellwrite)(const X(cell) *dc, const char *format,...) CHECK_ARG(2); \
-X(mat)* X(read)(const char *format,...) CHECK_ARG(1);\
-X(cell)* X(cellread)(const char *format,...) CHECK_ARG(1);\
-X(cell)**X(cellreadarr)(long *nxout, long *nyout, const char *format,...) CHECK_ARG(3); \
-void X(cellwritearr)(X(cell)**A,long nxin, long nyin, const char *format,...) CHECK_ARG(4); \
-void X(cellswrite)(X(cell) *A, double scale, const char *format, ...) CHECK_ARG(3); \
-void X(swrite)(X(mat) *A, double scale, const char *format, ...) CHECK_ARG(3);\
-X(mat) *X(new_mmap)(long nx, long ny, const char *header, const char *format,...) CHECK_ARG(4); \
-X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, const char *header1, const char*header2[],const char *format,...) CHECK_ARG(7); \
-X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, const char *header, const char *format,...) CHECK_ARG(6); \
-X(mat*) X(read_mmap)(const char *format, ...);\
-X(cell*) X(cellread_mmap)(const char *format, ...);
+#define AOS_MATBIN_DEF(X,T)						\
+    void X(writedata)(file_t *fp, const X(mat) *A);			\
+    X(mat) *X(readdata)(file_t *fp, header_t *header);			\
+    X(mat) *X(new_mmap)(long nx, long ny, const char *header, const char *format,...) CHECK_ARG(4); \
+    X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, const char *header1, const char*header2[],const char *format,...) CHECK_ARG(7); \
+    X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, const char *header, const char *format,...) CHECK_ARG(6); \
+    X(mat*) X(read_mmap)(const char *format, ...);			\
+    X(cell*) X(cellread_mmap)(const char *format, ...);
 
 #endif

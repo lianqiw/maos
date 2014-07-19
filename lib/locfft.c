@@ -27,14 +27,14 @@
 
 locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
 		      const dmat *amp,        /**<[in] The amplitude*/
-		      const imat *fftsize,    /**<[in] The suggested size for FFT*/
+		      const lmat *fftsize,    /**<[in] The suggested size for FFT*/
 		      const dmat *wvl,        /**<[in] The wavelength*/
 		      double fieldstop        /**<[in] Size of field stop (radian) if used*/
     ){
     const int nwvl=wvl->nx*wvl->ny;
     locfft_t *locfft=calloc(sizeof(locfft_t), 1);
-    locfft->embed=icellnew(nwvl, 1);
-    locfft->nembed=inew(nwvl, 1);
+    locfft->embed=lcellnew(nwvl, 1);
+    locfft->nembed=lnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	if(iwvl==0 || (fftsize && fftsize->p[iwvl]>0 && fftsize->p[iwvl]!=locfft->nembed->p[0])){
 	    locfft->nembed->p[iwvl]=fftsize->p[iwvl];
@@ -72,8 +72,8 @@ void locfft_free(locfft_t *locfft){
 	    locfft->embed->p[iwvl]=0;
 	}
     }
-    icellfree(locfft->embed);
-    ifree(locfft->nembed);
+    lcellfree(locfft->embed);
+    lfree(locfft->nembed);
     dcellfree(locfft->fieldmask);
 }
 /**
@@ -105,7 +105,7 @@ static cmat *strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
    
    Extract center part of psfsize.
 */
-ccell* locfft_psf(locfft_t *locfft, dmat *opd, imat *psfsize){
+ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
     long nwvl=locfft->wvl->nx*locfft->wvl->ny;
     ccell *psf2s=ccellnew(nwvl, 1);
     DEF_ENV_FLAG(PSF_SUM2ONE, 0);
@@ -173,7 +173,7 @@ void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
     ccell *wvfs=ccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int nembed=locfft->nembed->p[iwvl];
-	imat *embed=locfft->embed->p[iwvl];
+	lmat *embed=locfft->embed->p[iwvl];
 	cmat *wvf=cnew(nembed, nembed);
 	wvfs->p[iwvl]=wvf;
 	cfft2plan(wvf, -1); cfft2plan(wvf, 1);
@@ -197,7 +197,7 @@ void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
 	double wvlh=wvl*0.5;
 	double kki=wvl/(2*M_PI);
 	cmat *wvf=wvfs->p[iwvl];
-	imat *embed=locfft->embed->p[iwvl];
+	lmat *embed=locfft->embed->p[iwvl];
 	for(int iloc=0; iloc<opd->nx; iloc++){
 	    double val=carg(wvf->p[embed->p[iloc]])*kki;
 	    if(fabs(val-opd->p[iloc])>wvlh){//need phase unwrapping

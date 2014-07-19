@@ -192,8 +192,8 @@ typedef struct FDPCG_T{
     loccell *xloc;  /**<record recon->xloc*/
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
-    imat *perm;    /**<Permutation vector to get block diagonal matrix*/
-    imat *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
+    lmat *perm;    /**<Permutation vector to get block diagonal matrix*/
+    lmat *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
     int square;    /**<Whether xloc is square*/
@@ -218,8 +218,8 @@ typedef struct MOAO_T{
 			 of FoV and need to be slaved.*/
     spcell *actslave; /**<Slaving operator for actuators not illuminated*/
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
-    icell *actstuck;  /**<stuck actuators*/
-    icell *actfloat;  /**<floating actuators*/
+    lcell *actstuck;  /**<stuck actuators*/
+    lcell *actfloat;  /**<floating actuators*/
 }MOAO_T;
 /**
    A convenient wrap of the data to embed into MUV_T for applying invpsd to opds defined on xloc.
@@ -262,21 +262,21 @@ typedef struct RECON_T{
     mapcell *xmap;      /**<The map of xloc (only if tomo.square is true)*/
     mapcell *xcmap;     /**<The map of xloc on non-cone coordinate, with floc sampling.*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
-    imat *xnx;         /**<A convenient reference of the size of each xloc*/
-    imat *xny;         /**<A convenient reference of the size of each xloc*/
-    imat *xnloc;       /**<A convenient reference of the size of each xloc*/
+    lmat *xnx;         /**<A convenient reference of the size of each xloc*/
+    lmat *xny;         /**<A convenient reference of the size of each xloc*/
+    lmat *xnloc;       /**<A convenient reference of the size of each xloc*/
     map_t *fmap;       /**<Grid on pupil for DM fitting*/
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loccell *aloc;      /**<actuator grid*/
     mapcell *amap;      /**<square grid of actuators*/
     mapcell *acmap;     /**For caching DM to intermediate plane*/
-    imat *anx;        /**<Size of each amap*/
-    imat *any;        /**<Size of each amap*/
-    imat *anloc;      /**<Size of each aloc*/
-    imat *ngrad;      /**<Size of each grad for each wfs*/
-    icell *actfloat;   /**<floating actuators*/
-    icell *actstuck;   /**<stuck actuators*/
+    lmat *anx;        /**<Size of each amap*/
+    lmat *any;        /**<Size of each amap*/
+    lmat *anloc;      /**<Size of each aloc*/
+    lmat *ngrad;      /**<Size of each grad for each wfs*/
+    lcell *actfloat;   /**<floating actuators*/
+    lcell *actstuck;   /**<stuck actuators*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/

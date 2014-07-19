@@ -15,16 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include "type.h"
 #include "mathdef.h"
 #include "defs.h"
 /**
-   Contains routines to write/read dense/sparse matrix into/from file.
+   basic routines
 */
 
 /**
@@ -79,32 +74,4 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     }
     return out;
 }
-/**
-   Scale a dcell array and save to file.
-*/
-void X(cellswrite)(X(cell) *A, double scale, const char *format, ...){
-    format2fn;
-    X(cell) *tmp=NULL;
-    if(scale<1.e-14){
-	error("scale=%g\n",scale);
-    }
-    X(celladd)(&tmp, 0, A, scale);
-    X(cellwrite)(tmp,"%s",fn);
-    X(cellfree)(tmp);
-}
-
-/**
-   Scale a dcell array and save to file.
-*/
-void X(swrite)(X(mat) *A, double scale, const char *format, ...){
-    format2fn;
-    X(mat) *tmp=NULL;
-    if(scale<1.e-14){
-	error("scale=%g\n",scale);
-    }
-    X(add)(&tmp, 0, A, scale);
-    X(write)(tmp,"%s",fn);
-    X(free)(tmp);
-}
-
 #include "matmmap.c"

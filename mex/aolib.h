@@ -18,5 +18,5 @@
 
 dmat *dtrapz(const dmat *x, const dmat *y);
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
-imat *zernike_index(int nr);
+lmat *zernike_index(int nr);
 dmat *zernike_turb_cov(int nr);

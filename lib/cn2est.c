@@ -64,7 +64,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	}
     }
     int (*pmask)[nx]=(void*)mask;
-    cn2est->mask=inew(nx,nx);
+    cn2est->mask=lnew(nx,nx);
     int (*pmask2)[nx]=(void*)cn2est->mask->p;
     cmat *overlap=cnew(nx, nx);
     cfft2plan(overlap, -1);
@@ -531,8 +531,8 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
  */
 void cn2est_free(CN2EST_T *cn2est){
     if(!cn2est) return;
-    ifree(cn2est->embed);
-    ifree(cn2est->mask);
+    lfree(cn2est->embed);
+    lfree(cn2est->mask);
     free(cn2est->wfscov);
     free(cn2est->pair);
     dcellfree(cn2est->gxs);

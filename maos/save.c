@@ -183,18 +183,21 @@ void save_recon(SIM_T *simu){
     const int seed=simu->seed;
     if(parms->save.ngcov>0 && CHECK_SAVE(parms->sim.start, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.gcovp)){
 	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
+	dcellscale(simu->gcov, scale);
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    dswrite(simu->gcov->p[igcov], scale, "gcov_%d_wfs%ld_%ld_%d.bin", seed,
-		    parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
-		    simu->reconisim+1);
+	    dwrite(simu->gcov->p[igcov], "gcov_%d_wfs%ld_%ld_%d.bin", seed,
+		   parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
+		   simu->reconisim+1);
 	}
+	dcellscale(simu->gcov, 1./scale);
     }
     if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
 	info2("Output PSF Recon Telemetry\n");
 	long nstep=simu->reconisim+1-parms->evl.psfisim;
 	double scale=1./nstep;
+	dcellscale(simu->ecov, scale);
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
-	    dcellswrite(simu->ecov, scale, "ecov_%d_%ld", seed, nstep);
+	    dcellwrite(simu->ecov, "ecov_%d_%ld", seed, nstep);
 	}else{/*deprecated */
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -204,10 +207,11 @@ void save_recon(SIM_T *simu){
 		}else{
 		    strht[0]='\0';
 		}
-		dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
-			parms->evl.thetax->p[ievl]*206265,
-			parms->evl.thetay->p[ievl]*206265, strht, nstep);
+		dwrite(simu->ecov->p[ievl], "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
+		       parms->evl.thetax->p[ievl]*206265,
+		       parms->evl.thetay->p[ievl]*206265, strht, nstep);
 	    }
 	}
+	dcellscale(simu->ecov, 1./scale);//scale back to continuous accumulation
     }
 }

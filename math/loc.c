@@ -139,7 +139,7 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */
-imat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad){
+lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad){
     double xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -163,7 +163,7 @@ imat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad)
     }
     xmin-=(nxy-nx)/2*loc->dx;
     ymin-=(nxy-ny)/2*loc->dy;
-    imat *embed=inew(loc->nloc, 1);
+    lmat *embed=lnew(loc->nloc, 1);
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
 	long iy=(long)round((loc->locy[iloc]-ymin)*dy_in1);

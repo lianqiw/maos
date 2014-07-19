@@ -23,12 +23,12 @@
    Routines to compute interpolation matrices for stuck and floating actuators.
  */
 dcell *genactcpl(const spcell *HA, const dmat *W1);
-spcell *slaving(loccell *aloc, const dcell *actcpl, const dcell *NW, const icell *actstuck, const icell *actfloat, const double thres, const double scl);
-void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const icell *stuck);
-void act_zero(loccell *aloc, const dcell *HB, const icell *dead);
-void act_float(loccell *aloc, spcell **HA, const dcell *HB, const icell *actfloat);
-void act_stuck_cmd(loccell *aloc, const dcell *adm, const icell *stuck);
-spcell* act_float_interp(loccell *aloc, const icell *actfloat);
+spcell *slaving(loccell *aloc, const dcell *actcpl, const dcell *NW, const lcell *actstuck, const lcell *actfloat, const double thres, const double scl);
+void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const lcell *stuck);
+void act_zero(loccell *aloc, const dcell *HB, const lcell *dead);
+void act_float(loccell *aloc, spcell **HA, const dcell *HB, const lcell *actfloat);
+void act_stuck_cmd(loccell *aloc, const dcell *adm, const lcell *stuck);
+spcell* act_float_interp(loccell *aloc, const lcell *actfloat);
 dsp* act_extrap_do(loc_t *aloc,const dmat *actcpl, const double scl);
 spcell* act_extrap(loccell *aloc,const dcell *actcpl, const double scl);
 #endif

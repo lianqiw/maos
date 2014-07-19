@@ -523,15 +523,15 @@ int readcfg_intarr(int **ret, const char *format,...){
     return readstr_numarr((void**)ret, 0,NULL,NULL, T_INT, getrecord(key, 1)->data);
 }
 /**
-   Read as an imat.
+   Read as an lmat.
  */
-imat *readcfg_imat_do(int n, char *key){
+lmat *readcfg_lmat_do(int n, char *key){
     long *val=0;
     long **ret=&val;
     int nx, ny;
     int nread=readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, getrecord(key, 1)->data);
-    imat *out=0;
-    out=inew(nx,ny);
+    lmat *out=0;
+    out=lnew(nx,ny);
     if(nread>0){
 	memcpy(out->p, val, sizeof(long)*nx*ny);
     }
@@ -539,18 +539,18 @@ imat *readcfg_imat_do(int n, char *key){
     return out;
 }
 /**
-   Read as an imat. 
+   Read as an lmat. 
  */
-imat *readcfg_imat(const char *format,...){
+lmat *readcfg_lmat(const char *format,...){
     format2key;
-    return readcfg_imat_do(0, key);
+    return readcfg_lmat_do(0, key);
 }
 /**
-   Read as an imat. Exactly n numbers if n>0
+   Read as an lmat. Exactly n numbers if n>0
  */
-imat *readcfg_imat_n(int n, const char *format,...){
+lmat *readcfg_lmat_n(int n, const char *format,...){
     format2key;
-    imat *out=readcfg_imat_do(n, key);
+    lmat *out=readcfg_lmat_do(n, key);
     int nread=out->nx*out->ny;
     if(n!=0 && nread!=n){
 	error("Need %d elements, got %d\n", n, nread);
@@ -558,14 +558,14 @@ imat *readcfg_imat_n(int n, const char *format,...){
     return out;
 }
 /**
-   Read as an imat. A max of n numbers
+   Read as an lmat. A max of n numbers
  */
-imat *readcfg_imat_nmax(int n, const char *format,...){
+lmat *readcfg_lmat_nmax(int n, const char *format,...){
     format2key;
-    imat *out=readcfg_imat_do(n, key);
+    lmat *out=readcfg_lmat_do(n, key);
     int nread=out->nx*out->ny;
     if(nread<=1){
-	iresize(out, n, 1);
+	lresize(out, n, 1);
 	if(nread==1){
 	    for(int i=1; i<n; i++){
 		out->p[i]=out->p[0];

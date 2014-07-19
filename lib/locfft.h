@@ -20,16 +20,16 @@ typedef struct{
     const loc_t *loc; /*reference to the grid*/
     const dmat *amp;  /*reference to the amplitude map*/
     const dmat *wvl;  /*reference to the wavelength*/
-    imat  *nembed;/**<size of embedding array (square)*/
-    icell *embed; /**<embedding index*/
+    lmat *nembed;/**<size of embedding array (square)*/
+    lcell *embed; /**<embedding index*/
     double ampsum;/**<sum(amp)*/
     double ampnorm;/**<sum(amp.*amp)*/
     dcell *fieldmask;/**<Masking the PSF in fourier domain*/
     double fieldstop;
 }locfft_t;
 
-locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const imat *fftsize,
+locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const lmat *fftsize,
 		      const dmat *wvl, double fieldstop); 
 void locfft_free(locfft_t *locfft);
-ccell* locfft_psf(locfft_t *locfft, dmat *opd, imat *psfsize);
+ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize);
 void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts);

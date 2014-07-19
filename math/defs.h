@@ -56,8 +56,16 @@
 #undef PSPCELL
 #undef M_SPT
 #endif
+#ifdef USE_LONG
+#define T long
+#define X(A) l##A
+#define FABS(A) abs(A)
+#define M_T M_LONG
+#define PRINT(A) fprintf(stderr," %ld",A);
+#else //if USE_LONG
 
 #define MAT_TYPE
+/*Double precision*/
 #ifndef USE_SINGLE
 #define XR(A) d##A
 #define XC(A) c##A
@@ -110,7 +118,8 @@
 #define LOG clog
 #define EXP cexp
 #endif
-#else /*#define USE_SINGLE */
+#else 
+/*Single Precision*/
 #define XR(A) s##A
 #define XC(A) z##A
 #define R float
@@ -164,9 +173,6 @@
 #define EXP cexpf
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
-
-#define PMAT(A,pp) PALL(T,A,pp)
-#define PCELL(A,pp) PALL(X(mat)*,A,pp)
 #define PSPCELL(A,pp) PALL(X(sp)*,A,pp)
 
 #ifdef DLONG
@@ -174,4 +180,9 @@
 #else
 #define M_SPT M_SPT32
 #endif
+
+#endif //if USE_LONG
+
+#define PMAT(A,pp) PALL(T,A,pp)
+#define PCELL(A,pp) PALL(X(mat)*,A,pp)
 #define isempty(A) (!(A) || !(A)->nx || !(A)->ny)

@@ -64,8 +64,8 @@ dcell *genactcpl(const spcell *HA, const dmat *W1){
 spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 		const dcell *actcplc,/**<[in]Actuator coupling coefficiency*/
 		const dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
-		const icell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
-		const icell *actfloat,/**<[in]List of stuck actuators that will be slaved, but not have value constrained.*/
+		const lcell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
+		const lcell *actfloat,/**<[in]List of stuck actuators that will be slaved, but not have value constrained.*/
 		const double thres,  /**<[in]The threshold that an actuator is deemed slave*/
 		const double sclsq   /**<[in]The square of scaling of the overall strength*/
 		){
@@ -255,7 +255,7 @@ spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 /**
    When some actuators are stuck, remove the corresponding column in HA and/or HB
 */
-void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const icell *stuck){
+void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const lcell *stuck){
     if(!stuck || (!HA && !HB)) return; 
     int ndm=stuck->nx;
     for(int idm=0; idm<ndm; idm++){
@@ -289,7 +289,7 @@ void act_stuck(loccell *aloc, const spcell *HA, const dcell *HB, const icell *st
 /**
    Zero out rows of dead actuators in mode vector.
 */
-void act_zero(loccell *aloc, const dcell *HB, const icell *dead){
+void act_zero(loccell *aloc, const dcell *HB, const lcell *dead){
     if(!dead || !HB) return;
     for(int idm=0; idm<dead->nx; idm++){
 	if(!dead->p[idm]){
@@ -313,7 +313,7 @@ void act_zero(loccell *aloc, const dcell *HB, const icell *dead){
    When some actuators are float, remove the corresponding column in HA and/or HB,
    and add to neigh boring actuators. This is implemented using a second matrix and
    do matrix addition.*/
-void act_float(loccell *aloc, spcell **HA, const dcell *HB, const icell *actfloat){
+void act_float(loccell *aloc, spcell **HA, const dcell *HB, const lcell *actfloat){
     if(!actfloat || ((!HA || !*HA) && !HB)) return;
     int ndm=actfloat->nx;
     spcell *dHA=NULL;
@@ -456,7 +456,7 @@ void act_float(loccell *aloc, spcell **HA, const dcell *HB, const icell *actfloa
 */
 void act_stuck_cmd(loccell *aloc, /**<[in] Actuator grid array*/
 		   const dcell *adm,   /**<[in,out] Actuator command to process*/
-		   const icell *stuck  /**<[in] List of stuck actuators*/
+		   const lcell *stuck  /**<[in] List of stuck actuators*/
 		   ){
     if(!adm || !stuck) return;
     PDCELL(adm, pa);
@@ -480,7 +480,7 @@ void act_stuck_cmd(loccell *aloc, /**<[in] Actuator grid array*/
    Create an interpreter that make floating actuators equal to their neighbors.
 */
 spcell* act_float_interp(loccell *aloc,  /**<[in] Actuator grid array*/
-			 const icell *actfloat/**<[in] List of floating actuators*/
+			 const lcell *actfloat/**<[in] List of floating actuators*/
 			 ){
     if(!actfloat) return NULL;
     int ndm=actfloat->nx;

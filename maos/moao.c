@@ -41,8 +41,8 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	spcellfree(recon->moao[imoao].actslave);
 	spfree(recon->moao[imoao].W0);
 	dfree(recon->moao[imoao].W1);
-	icellfree(recon->moao[imoao].actstuck);
-	icellfree(recon->moao[imoao].actfloat);
+	lcellfree(recon->moao[imoao].actstuck);
+	lcellfree(recon->moao[imoao].actfloat);
     }
     free(recon->moao);
     recon->moao=NULL;
@@ -88,12 +88,12 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, NULL, 0, 0, 1, 
 					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
 	if(parms->moao[imoao].actstuck){
-	    recon->moao[imoao].actstuck=icellnew(1,1);
+	    recon->moao[imoao].actstuck=lcellnew(1,1);
 	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
 	    act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, NULL, recon->moao[imoao].actstuck);
 	}
 	if(parms->moao[imoao].actfloat){
-	    recon->moao[imoao].actfloat=icellnew(1,1);
+	    recon->moao[imoao].actfloat=lcellnew(1,1);
 	    recon->moao[imoao].actfloat->p[0]=act_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actfloat);
 	    act_float(recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
 	}

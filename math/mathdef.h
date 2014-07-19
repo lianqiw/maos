@@ -21,13 +21,13 @@
 #include "../sys/sys.h"
 #include "type.h"
 #include "mat.h"
+#include "matmath.h"
 #include "sp.h"
 #include "fft.h"
 #include "matbin.h"
 #include "spbin.h"
 #include "cell.h"
 #include "chol.h"
-#include "imat.h"
 #include "cellarr.h"
 #include "mathmisc.h"
 #include "loc.h"
@@ -77,15 +77,16 @@
 #define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
 #define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
 
-#define PIMAT(M,P)   PALL(long,M,P)
-#define PICELL(M,P)  PALL(imat*,M,P) 
-#define ifree(A)     ({ifree_do(A,0);A=NULL;})
-#define icellfree(A) ({cellfree_do(A);A=NULL;})
-#define izero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
-#define ihash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(long), key)
+#define PLMAT(M,P)   PALL(long,M,P)
+#define PLCELL(M,P)  PALL(lmat*,M,P) 
+#define lfree(A)     ({lfree_do(A,0);A=NULL;})
+#define lcellfree(A) ({cellfree_do(A);A=NULL;})
+#define lzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
+#define lhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(long), key)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
 
+#define AOS_LMAT(A) l##A
 #define AOS_CMAT(A) c##A
 #define AOS_CSP(A)  c##A
 #define AOS_DMAT(A) d##A
@@ -97,15 +98,17 @@
 
 //#ifdef USE_SINGLE
 //Single
-AOS_MAT_DEF(AOS_SMAT,AOS_SMAT,AOS_SSP,float,float)
-AOS_MAT_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
-AOS_CMAT_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
+AOS_MAT_DEF(AOS_SMAT,float)
+AOS_MAT_DEF(AOS_ZMAT,fcomplex)
 
-AOS_MATBIN_DEF(AOS_SMAT,AOS_SSP,float)
-AOS_MATBIN_DEF(AOS_ZMAT,AOS_ZSP,fcomplex)
+AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,AOS_SSP,float,float)
+AOS_MATMATH_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
 
-//AOS_CELL_DEF(AOS_SMAT,AOS_SSP,float,float)
-//AOS_CELL_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float)
+AOS_CMATMATH_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
+
+AOS_MATBIN_DEF(AOS_SMAT,float)
+AOS_MATBIN_DEF(AOS_ZMAT,fcomplex)
+
 
 AOS_SP_DEF(AOS_SMAT,AOS_SSP,float,float,fcomplex)
 AOS_SP_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float,fcomplex)
@@ -117,14 +120,16 @@ AOS_FFT_DEF(AOS_SMAT)
 AOS_FFT_DEF(AOS_ZMAT)
 //#else
 //Double
-AOS_MAT_DEF(AOS_DMAT,AOS_DMAT,AOS_DSP,double,double)
-AOS_MAT_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
-AOS_MATBIN_DEF(AOS_DMAT,AOS_DSP,double)
-AOS_MATBIN_DEF(AOS_CMAT,AOS_CSP,dcomplex)
-AOS_CMAT_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
+AOS_MAT_DEF(AOS_DMAT,double)
+AOS_MAT_DEF(AOS_CMAT,dcomplex)
 
-//AOS_CELL_DEF(AOS_DMAT,AOS_DSP,double,double)
-//AOS_CELL_DEF(AOS_CMAT,AOS_CSP,dcomplex,double)
+AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,AOS_DSP,double,double)
+AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
+
+AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
+
+AOS_MATBIN_DEF(AOS_DMAT,double)
+AOS_MATBIN_DEF(AOS_CMAT,dcomplex)
 
 AOS_SP_DEF(AOS_DMAT,AOS_DSP,double,double,dcomplex)
 AOS_SP_DEF(AOS_CMAT,AOS_CSP,dcomplex,double,dcomplex)
@@ -136,6 +141,8 @@ AOS_FFT_DEF(AOS_DMAT)
 AOS_FFT_DEF(AOS_CMAT)
 
 //#endif
+AOS_MAT_DEF(AOS_LMAT, long)
+AOS_MATBIN_DEF(AOS_LMAT,long)
 
 //#define dread(A...) readbin((READFUN)dreaddata, A)
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
@@ -178,13 +185,13 @@ AOS_FFT_DEF(AOS_CMAT)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
 #define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
 
-#define iwrite(out, A...) write_by_id((void*)out, M_LONG, A)
-#define iread(A...) (imat*)read_by_id(M_LONG, 0, A)
-#define icellnew (icell*)cellnew
-#define icellreaddata(fp, header) (icell*)readdata_by_id(fp, M_LONG, 1, header)
-#define icellread(A...) (icell*)read_by_id(M_LONG, 1, A)
-#define iccellread(A...) (iccell*)read_by_id(M_LONG, 2, A)
-#define icccellread(A...) (icccell*)read_by_id(M_LONG, 3, A)
+#define lwrite(out, A...) write_by_id((void*)out, M_LONG, A)
+#define lread(A...) (lmat*)read_by_id(M_LONG, 0, A)
+#define lcellnew (lcell*)cellnew
+#define lcellreaddata(fp, header) (lcell*)readdata_by_id(fp, M_LONG, 1, header)
+#define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
+#define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
+#define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
 
 #define cellwrite(out, A...) write_by_id((void*)out, MCC_ANY, A)
 #define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, MCC_ANY)

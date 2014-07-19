@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "type.h"

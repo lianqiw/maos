@@ -41,13 +41,13 @@ typedef struct ATM_CFG_T{
     dmat *ws;   /**<wind speed of each layer*/
     dmat *wddeg;/**<wind direction of each layer*/
     dmat *size; /**<size of atm in meter, [0 0]: automatic*/
-    imat *overx;  /**<maximum pixel distance in x direction the beam can be without wrapping*/
-    imat *overy;  /**<maximum pixel distance in y direction the beam can be without wrapping*/
+    lmat *overx;  /**<maximum pixel distance in x direction the beam can be without wrapping*/
+    lmat *overy;  /**<maximum pixel distance in y direction the beam can be without wrapping*/
     mapcell *(*fun)(GENATM_T*); /**<Points to the function used to generated atmosphere. (derived)*/
     int nps;      /**<number of phase screens*/
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/
-    imat *ipsr;    /**<corresponding reconstruction layer*/
+    lmat *ipsr;    /**<corresponding reconstruction layer*/
     int nx;       /**<turbulence screen size along x*/
     int ny;       /**<turbulence screen size along y*/
     int nxm;      /**<minimum turbulence screen size along x for fft*/
@@ -72,8 +72,8 @@ typedef struct ATMR_CFG_T{
     dmat *ht;   /**<height of each layer*/
     dmat *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
-    imat *indps;   /**<Mapping atmr.ps to atm.ps*/
-    imat *os;      /**<over sampling factor of xloc over actuator spacing */
+    lmat *indps;   /**<Mapping atmr.ps to atm.ps*/
+    lmat *os;      /**<over sampling factor of xloc over actuator spacing */
     int nps;      /**<number of phase screens*/
 }ATMR_CFG_T;
 /**
@@ -101,7 +101,7 @@ typedef struct LLT_CFG_T{
     dmat *ox;    /**<location x of LLT center wrt telescope aperture center*/
     dmat *oy;    /**<see ox.*/
     dmat *misreg;
-    imat *i;        /**<Index into llt for this iwfs.*/
+    lmat *i;        /**<Index into llt for this iwfs.*/
     int n;         /**<number of launch telescopes in this powfs*/
     int colprep;   /**<starting column to use in fn for ETF in preparation of
 		      matched filter*/
@@ -161,8 +161,8 @@ typedef struct POWFS_CFG_T{
     int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
     int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
-    imat *wfs;       /**<array of wfs belongs to this powfs*/
-    imat *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
+    lmat *wfs;       /**<array of wfs belongs to this powfs*/
+    lmat *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
     int nwfsr;      /**<number of wfs for reconstruction belonging to this powfs*/
     int neaphy;     /**<use nea from physical optical precomputation in geometric simulations.*/
@@ -213,7 +213,7 @@ typedef struct POWFS_CFG_T{
     int dtrat;      /**<ratio of sample period over fast loop (LGS)*/
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
-    imat *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
+    lmat *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
     int dither;     /**<Turn on/off dithering*/
     double dither_amp;/**<Dithering amptlidue to update centroid gain or matched filter.*/
@@ -286,8 +286,8 @@ typedef struct EVL_CFG_T{
     dmat *hs;     /**<height of each science object*/
     double dx;     /**<sampling of aperture for evaluation*/
     int nwvl;       /**<Number of wavelength*/
-    imat *psf;       /**<1: participate in psf evaluation.*/
-    imat *psfr;      /**<1: participate in psf reconstruction telemetry*/
+    lmat *psf;       /**<1: participate in psf evaluation.*/
+    lmat *psfr;      /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
     int rmax;       /**<max radial mode for performance evaluation. 
 		       - 0: piston only
@@ -301,25 +301,25 @@ typedef struct EVL_CFG_T{
     int psfmean;    /**<output time averaged psf*/
     int cov;        /**<save covairance of science OPD ,every this time step,
 		       for directions where evl.psf is 1*/
-    imat *pttr;      /**<remove p/t/t from psf. 1 number for each evl.*/
-    imat *psfngsr;   /**<remove ngs modes from psf.*/
+    lmat *pttr;      /**<remove p/t/t from psf. 1 number for each evl.*/
+    lmat *psfngsr;   /**<remove ngs modes from psf.*/
 
 
     int psfisim;    /**<time step to start psfmean.*/
-    imat *psfsize;    /**<save this number of pixels of the center of the psf. 1
+    lmat *psfsize;    /**<save this number of pixels of the center of the psf. 1
 			number for each wvl.*/
-    imat *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
+    lmat *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
 			speed and enough padding. Determines the sampling of the
 			generated PSF. 0 or negative for automatic. 1 number for
 			each wvl.*/
     int nevl;       /**<Number of evaluation directions. (derived)*/
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
-    imat *scalegroup;/**<scale group for dm cache. havenumber of nevl*dm
+    lmat *scalegroup;/**<scale group for dm cache. havenumber of nevl*dm
 		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
     int nthread;    /**<number of threads for evaluation parallelization*/
-    imat *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
+    lmat *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }EVL_CFG_T;
 
 /**
@@ -443,7 +443,7 @@ typedef struct SIM_CFG_T{
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int pause;       /**<Pause at the end of every time step*/
-    imat *seeds;      /**<simulation seeds*/
+    lmat *seeds;      /**<simulation seeds*/
     int nseed;       /**<How many simulation seed*/
     int closeloop;   /**<closed loop or open loop*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
@@ -552,7 +552,7 @@ typedef struct DBG_CFG_T{
     int atm;         /**<test special atmosphere*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
-    imat *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
+    lmat *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
     int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
     int useopdr;     /**<use opdr in psf reconstruction*/
@@ -647,10 +647,10 @@ typedef struct SAVE_CFG_T{
       Scalar input: 1: both, 2: high order only, 3: lo only
       Vector input: Equal to the number of WFS.
     */
-    imat *wfsopd;      /**<save WFS OPD:*/
-    imat *ints;        /**<save WFS subaperture image*/
-    imat *grad;        /**<save WFS gradients*/
-    imat *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
+    lmat *wfsopd;      /**<save WFS OPD:*/
+    lmat *ints;        /**<save WFS subaperture image*/
+    lmat *grad;        /**<save WFS gradients*/
+    lmat *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
     /*The following are derived from above. */
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/
     int wfsopdlo;    /**<save low order WFS OPD(derived)*/
@@ -663,7 +663,7 @@ typedef struct SAVE_CFG_T{
 
     int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
     int ngcov;       /**<number of pairs of gradient covariance to compute*/
-    imat *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
+    lmat *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
 
     int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
@@ -713,11 +713,11 @@ typedef struct PARMS_T{
     int nsurf;       /**<Number of OPD surfaces*/
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
     int ntsurf;      /**<Number of tilted surfaces*/
-    imat *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    lmat *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int nlopowfs;    /**<Number of low order wfs types*/
-    imat *lopowfs;    /**<List of low order powfs*/
+    lmat *lopowfs;    /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
-    imat *hipowfs;    /**<List of high order powfs*/
+    lmat *hipowfs;    /**<List of high order powfs*/
     int ntrpowfs;    /**<Number of tip/tilt removed wfs types*/
     int ntipowfs;    /**<Number of tip/tilt include wfs types*/
     int nlowfs;      /**<Number of low order wfs.*/

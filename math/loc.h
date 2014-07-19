@@ -25,7 +25,7 @@
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
 
-imat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad);
+lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad);
 void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny);
 void loc_create_map(loc_t *loc);
 /*Obtain an entry in the map, with boundary checking enforced*/

@@ -362,7 +362,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
 }
-void apply_fieldstop(dmat *opd, dmat *amp, imat *embed, long nembed, dmat *fieldstop, double wvl){
+void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *fieldstop, double wvl){
     cmat *wvf=cnew(nembed, nembed);
     cfft2plan(wvf, -1); cfft2plan(wvf, 1);
     double kk=2*M_PI/wvl;

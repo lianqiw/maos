@@ -710,7 +710,7 @@ void shift_grad(SIM_T *simu){
 /**
    Parse the input dead actuator location to actuator indices based on aloc.
 */
-imat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
+lmat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 		    const char *fndead /**<[in] File containing dead actuators*/
 		    ){
     dmat *dead=dread("%s", fndead);
@@ -723,7 +723,7 @@ imat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     double oy=aloc->map->oy;
     double dx1=1./aloc->dx;
     PDMAT(dead, ps);
-    imat *out=inew(dead->nx, 1);
+    lmat *out=lnew(dead->nx, 1);
     for(long jact=0; jact<dead->nx; jact++){
 	long mapx=(long)round((ps[0][jact]-ox)*dx1);
 	long mapy=(long)round((ps[1][jact]-oy)*dx1);
@@ -853,7 +853,6 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
     CN2EST_T *cn2est=recon->cn2est;
     cn2est_push(cn2est, grad);
     if(cn2est->count%parms->cn2.step == 0){
-	/*dcellswrite(cn2est->cc, 1./cn2est->count, "cc_%d",isim+1);*/
 	cn2est_est(cn2est, parms->cn2.verbose, parms->cn2.reset);/*do the CN2 estimation */
 	if(parms->cn2.moveht){
 	    cn2est_moveht(recon);

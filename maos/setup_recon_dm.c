@@ -178,9 +178,9 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc->p[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
-    recon->anx=inew(ndm, 1);
-    recon->any=inew(ndm, 1);
-    recon->anloc=inew(ndm, 1);
+    recon->anx=lnew(ndm, 1);
+    recon->any=lnew(ndm, 1);
+    recon->anloc=lnew(ndm, 1);
     for(int idm=0; idm<ndm; idm++){
 	recon->anx->p[idm]=recon->amap->p[idm]->nx;
 	recon->any->p[idm]=recon->amap->p[idm]->ny;
@@ -193,14 +193,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	if(parms->dm[idm].actfloat) anyfloat=1;
     }
     if(anystuck){
-	recon->actstuck=icellnew(parms->ndm, 1);
+	recon->actstuck=lcellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actstuck) continue;
 	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
 	}
     }
     if(anyfloat){
-	recon->actfloat=icellnew(parms->ndm, 1);
+	recon->actfloat=lcellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actfloat) continue;
 	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);

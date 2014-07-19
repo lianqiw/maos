@@ -105,7 +105,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    shift=1: apply a fftshift with permutation vector.
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
-static imat *
+static lmat *
 fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int shift, int half){
     long nx2[nps],ny2[nps];
     long noff[nps];
@@ -126,7 +126,7 @@ fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int 
     if(half){
 	xloctot=(adimx2+1)*adimy*bs;//about half of xloctot.
     }
-    imat *perm=inew(xloctot, 1);
+    lmat *perm=lnew(xloctot, 1);
     long count=0;
     /*We select the positive x frequencies first and negative x frequencies
       later so that in GPU, when at os0 or os6, we only need to do postive
@@ -513,19 +513,19 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     info2("fdpcg: Block size is %d, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     fdpcg->scale=needscale;
-    imat *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
+    lmat *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
     csp *Mhatp=cspperm(Mhat,0,perm->p,perm->p);/*forward permutation. */
     cspfree(Mhat);
-    ifree(perm);
+    lfree(perm);
 
     perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
     if(parms->save.setup){
-	iwrite(perm, "%s/fdpcg_perm", dirsetup);
+	lwrite(perm, "%s/fdpcg_perm", dirsetup);
     }
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm->p);/*revert permutation */
-    ifree(perm); perm=NULL;
+    lfree(perm); perm=NULL;
     cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
@@ -536,7 +536,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->gpu.tomo){
 	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
 	if(parms->save.setup>1){
-	    iwrite(fdpcg->permhf, "%s/fdpcg_permhf", dirsetup);
+	    lwrite(fdpcg->permhf, "%s/fdpcg_permhf", dirsetup);
 	}
     }
     
@@ -722,7 +722,7 @@ void fdpcg_free(FDPCG_T *fdpcg){
     if(!fdpcg) return;
     cspfree(fdpcg->Minv);
     if(fdpcg->Mbinv){
-        ifree(fdpcg->perm);
+        lfree(fdpcg->perm);
         ccellfree(fdpcg->Mbinv);
     }
     free(fdpcg);

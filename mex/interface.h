@@ -94,7 +94,7 @@ INLINE mxArray *c2mx(const cmat *A){
     }
     return out;
 }
-INLINE mxArray *imat2mx(const imat *A){
+INLINE mxArray *lmat2mx(const lmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out;
     if(sizeof(long)==8){
@@ -149,10 +149,10 @@ mxArray *any2mx(const void *A_){
 	out=dsp2mx(A_);
 	break;
     case M_INT64:
-	out=imat2mx(A_);
+	out=lmat2mx(A_);
 	break;
     case M_INT32:
-	out=imat2mx(A_);
+	out=lmat2mx(A_);
 	break;
     default:
 	out=mxCreateCellMatrix(0,0);

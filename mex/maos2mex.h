@@ -1463,23 +1463,23 @@ static mxArray *get_wfs_propdata_dm(const PROPDATA_T* wfs_propdata_dm){
 }
 
 static void get_data_help(){
-	info2("powfs=maos('get','powfs')\n");
+	info2("dmint=maos('get','dmint')\n");
+	info2("aper=maos('get','aper')\n");
+	info2("atmcfg=maos('get','atmcfg')\n");
+	info2("simu=maos('get','simu')\n");
+	info2("recon=maos('get','recon')\n");
 	info2("uptint=maos('get','uptint')\n");
 	info2("parms=maos('get','parms')\n");
-	info2("simu=maos('get','simu')\n");
-	info2("atmcfg=maos('get','atmcfg')\n");
-	info2("aper=maos('get','aper')\n");
-	info2("dmint=maos('get','dmint')\n");
-	info2("recon=maos('get','recon')\n");
+	info2("powfs=maos('get','powfs')\n");
 }
 static mxArray *get_data(SIM_T *simu, char *key){
-	if(!strcmp(key, "powfs")) return get_powfs(simu->powfs, simu->parms->npowfs);
+	if(!strcmp(key, "dmint")) return get_dmint(simu->dmint);
+	else if(!strcmp(key, "aper")) return get_aper(simu->aper);
+	else if(!strcmp(key, "atmcfg")) return get_atmcfg(simu->atmcfg);
+	else if(!strcmp(key, "simu")) return get_simu(simu);
+	else if(!strcmp(key, "recon")) return get_recon(simu->recon);
 	else if(!strcmp(key, "uptint")) return get_uptint(simu->uptint);
 	else if(!strcmp(key, "parms")) return get_parms(simu->parms);
-	else if(!strcmp(key, "simu")) return get_simu(simu);
-	else if(!strcmp(key, "atmcfg")) return get_atmcfg(simu->atmcfg);
-	else if(!strcmp(key, "aper")) return get_aper(simu->aper);
-	else if(!strcmp(key, "dmint")) return get_dmint(simu->dmint);
-	else if(!strcmp(key, "recon")) return get_recon(simu->recon);
+	else if(!strcmp(key, "powfs")) return get_powfs(simu->powfs, simu->parms->npowfs);
 	else {get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}
 }
