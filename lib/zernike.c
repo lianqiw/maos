@@ -133,7 +133,8 @@ imat *zernike_index(int nr){
    Covariance of zernike modes in Kolmogorov Turbulence. Only modes with the
    same m have non-zero covariance.
 
-   Verified against values in J.Y.Wang 1978, table II(a)
+   Based on Eq 3.14 in Adaptive Optics in Astronomy (Roddier 1999).
+   Verified against values in J.Y.Wang 1978, table II(a,b).
 */
 dmat *zernike_turb_cov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
