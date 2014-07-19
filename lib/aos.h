@@ -42,5 +42,6 @@
 #include "kalman.h"
 #include "cn2est.h"
 #include "locfft.h"
+#include "zernike.h"
 #include "misc.h"
 #endif

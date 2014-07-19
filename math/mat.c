@@ -1990,9 +1990,6 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
 
 #endif
 
-X(cell) *X(cellnew)(long nx, long ny){
-    return (X(cell*)) cellnew(nx, ny);
-}
 /**
    create an new X(cell) similar to A in shape.
    When a cell is empty, it is created with a (0,0) array and cannot be overriden.
@@ -2046,33 +2043,6 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     return out;
 }
 
-/**
-   Free a X(cell) object.
-*/
-void X(cellfree_do)(X(cell) *dc){
-    if(!dc) return;
-    if(dc->p){
-	if(dc->header){
-	    R count=search_header_num(dc->header, "count");
-	    if(!isnan(count) && count>0){
-		info("count=%g, scaling the data\n", count);
-		X(cellscale)(dc, 1./count);
-	    }
-	}
-	for(int ix=0; ix<dc->nx*dc->ny; ix++){
-	    X(free)(dc->p[ix]);
-	}
-	if(dc->mmap){
-	    mmap_unref(dc->mmap);
-	}else{
-	    free(dc->header);
-	}
-	free(dc->p);dc->p=0;
-    }
-    if(dc->m) X(free)(dc->m);
-    if(dc->fft) X(fft_free_plan)(dc->fft);
-    free(dc);
-}
 /**
    check the size of matrix if exist. Otherwise create it
 */

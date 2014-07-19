@@ -20,18 +20,22 @@ funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
 fpout=open(fnout,'w')
 print('#ifdef __INTEL_COMPILER\n#undef _GNU_SOURCE\n#endif\n#include "interface.h"\n', file=fpout)
 
-for funname in funcs:
+for funname in funcs: #loop over functions
     funtype=funcs[funname][0]
     funargs=funcs[funname][1]
     print (funname, funtype,funargs)
     fundef='void '+funname+'_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){\n'
     fundef+='    if(nrhs!='+str(len(funargs))+') mexErrMsgTxt(\"Expect '+str(len(funargs))+' arguments\\n");\n'
     count=0
-    for arg in funargs:
+    for arg in funargs: #get data from matlab
         argtype=arg[0]
         argname=arg[1]
         if argtype=='dmat*':
             fundef+='    '+argtype+' '+argname+'=mx2d(prhs['+str(count)+']);\n'
+        elif argtype=='int' or argtype=='long' or argtype=='double':
+            fundef+='    '+argtype+' '+argname+'=('+argtype+')mxGetScalar(prhs['+str(count)+']);\n'
+        else:
+            fundef+='Unknown ' + argtype
         count=count+1
     fundef+='    '+funtype+' '+funname+'_out='+funname+"("
     for arg in funargs:

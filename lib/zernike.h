@@ -15,8 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-dmat *dtrapz(const dmat *x, const dmat *y);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
+#ifndef AOS_LIB_ZERNIKE_H
+#define AOS_LIB_ZERNIKE_H
+#include "../math/mathdef.h"
+dmat* zernike(loc_t *loc, double R, int nr);
 imat *zernike_index(int nr);
 dmat *zernike_turb_cov(int nr);
+#endif

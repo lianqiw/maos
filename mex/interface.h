@@ -94,7 +94,17 @@ INLINE mxArray *c2mx(const cmat *A){
     }
     return out;
 }
-
+INLINE mxArray *imat2mx(const imat *A){
+    if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
+    mxArray *out;
+    if(sizeof(long)==8){
+	out=mxCreateNumericMatrix(A->nx, A->ny,mxINT64_CLASS,mxREAL);
+    }else{
+	out=mxCreateNumericMatrix(A->nx, A->ny,mxINT32_CLASS,mxREAL);
+    }
+    memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(long));
+    return out;
+}
 INLINE mxArray *dcell2mx(const dcell *A){
     if(!A) return mxCreateCellMatrix(0,0);
     mxArray *out=mxCreateCellMatrix(A->nx,A->ny);
@@ -137,6 +147,12 @@ mxArray *any2mx(const void *A_){
 	break;
     case M_SP64:
 	out=dsp2mx(A_);
+	break;
+    case M_INT64:
+	out=imat2mx(A_);
+	break;
+    case M_INT32:
+	out=imat2mx(A_);
 	break;
     default:
 	out=mxCreateCellMatrix(0,0);

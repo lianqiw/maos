@@ -31,10 +31,16 @@
  */
 imat* inew(long nx, long ny){
     imat *A=calloc(1, sizeof(imat));
+    A->id=M_LONG;
     A->nx=nx;
     A->ny=ny;
     A->p=calloc(nx*ny, sizeof(long));
     return A;
+}
+void ifree_do(imat *A, int keepdata){
+    if(!A) return;
+    if(!keepdata) free(A->p);
+    free(A);
 }
 void iresize(imat *A, long nx, long ny){
     if(!A) return;
@@ -45,74 +51,19 @@ void iresize(imat *A, long nx, long ny){
     A->nx=nx;
     A->ny=ny;
 }
-/**
-   Allocate a new icell.
- */
-icell* icellnew(long nx, long ny){
-    icell *A=calloc(1, sizeof(icell));
-    A->nx=nx;
-    A->ny=ny;
-    A->p=calloc(nx*ny, sizeof(imat*));
-    return A;
-}
-/**
-   Free a imat.
- */
-void ifree(imat *A){
-    if(A) {
-	free(A->p);
-	free(A);
-    }
-}
-/**
-   Free a icell
-*/
-void icellfree(icell *A){
-    if(A){
-	for(long i=0; i<A->nx*A->ny; i++){
-	    ifree(A->p[i]);
-	}
-	free(A);
-    }
-}
+
 void iwritedata(file_t *fp, const imat *A){
     uint64_t nx=0, ny=0;
     if(A){
 	nx=(uint64_t)A->nx;
 	ny=(uint64_t)A->ny;
     }
-    do_write(fp, 0, sizeof(long), M_INT64, NULL, A?A->p:NULL, nx, ny);
+    do_write(fp, 0, sizeof(long), M_LONG, NULL, A?A->p:NULL, nx, ny);
 }
-/**
-   Function to write cell array of dense matrix data. into a file pointer
-   Generally used by library developer
-*/
-void icellwritedata(file_t *fp, const icell *dc){
-    uint64_t nx=0;
-    uint64_t ny=0;
-    if(dc){
-	nx=dc->nx;
-	ny=dc->ny;
-    }
-    header_t header={MCC_ANY, nx, ny, NULL};
-    write_header(&header, fp);
-    if(nx>0 && ny>0){
-	for(unsigned long iy=0; iy<ny; iy++){
-	    for(unsigned long ix=0; ix<nx; ix++){
-		iwritedata(fp, dc->p[ix+iy*nx]);
-	    }
-	}
-    }
-}
-/**
-   User callable function to write dense matrix into a file. Usage:
-   iwrite(A,"A") for double matrix.
-*/
-void iwrite(const imat *A, const char* format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"wb");
-    iwritedata(fp, A);
-    zfclose(fp);
+imat *ireaddata(file_t *fp, header_t *header){
+    (void)fp; (void)header;
+    error("Please do int conversion\n");
+    return 0;
 }
 
 long isum(const imat *A){

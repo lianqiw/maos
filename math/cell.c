@@ -113,6 +113,8 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
 	swritedata(fp, pix);break;
     case M_ZMP:
 	zwritedata(fp, pix);break;
+    case M_LONG:
+	iwritedata(fp, pix);break;
     case M_LOC64:
 	locwritedata(fp, pix);break;
     case M_MAP64:
@@ -144,6 +146,7 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    case M_FLT: return sreaddata(fp, header);break;
 	    case M_CMP: return creaddata(fp, header);break;
 	    case M_ZMP: return zreaddata(fp, header);break;
+	    case M_LONG: return ireaddata(fp, header);break;
 	    case M_LOC64: return locreaddata(fp, header); break;
 	    case M_MAP64: return mapreaddata(fp, header); break;
 	    default:error("id=%lx\n", id);

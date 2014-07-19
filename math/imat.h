@@ -21,24 +21,11 @@
    \file imat.h
    Routines for imat.
 */
-typedef struct imat{
-    long nx;
-    long ny;
-    long *p;
-}imat;
-
-typedef struct icell{
-    long nx;
-    long ny;
-    imat **p;
-}icell;
-
+#include "type.h"
 imat* inew(long nx, long ny);
 void iresize(imat *A, long nx, long ny);
-icell* icellnew(long nx, long ny);
-void ifree(imat *A);
-void icellfree(icell *A);
-void iwrite(const imat *A, const char *format, ...);
-void icellwrite(const icell *A, const char *format, ...);
+void ifree_do(imat *A, int keepdata);
+void iwritedata(file_t *fp, const imat *A);
+imat *ireaddata(file_t *fp, header_t *header);
 long isum(const imat *A);
 #endif

@@ -92,6 +92,7 @@ typedef MAT(double) dmat;/*a double matrix object contains 2-d array of double n
 typedef MAT(float) smat;
 typedef MAT(dcomplex) cmat;
 typedef MAT(fcomplex) zmat;
+typedef MAT(long) imat;
 
 typedef SPMAT(double) dsp;
 typedef SPMAT(float) ssp;
@@ -199,6 +200,7 @@ typedef CELL(cmat*) ccell;
 typedef CELL(zmat*) zcell;
 typedef CELL(dmat*) dcell;
 typedef CELL(smat*) scell;
+typedef CELL(imat*) icell;
 
 typedef CELL(dsp*) spcell;
 typedef CELL(ssp*) sspcell;
@@ -209,11 +211,13 @@ typedef CELL(ccell*) cccell;
 typedef CELL(zcell*) zccell;
 typedef CELL(dcell*) dccell;
 typedef CELL(scell*) sccell;
+typedef CELL(icell*) iccell;
 
 typedef CELL(cccell*) ccccell;
 typedef CELL(zccell*) zcccell;
 typedef CELL(dccell*) dcccell;
 typedef CELL(sccell*) scccell;
+typedef CELL(iccell*) icccell;
 
 typedef CELL(map_t*) mapcell;
 typedef CELL(rmap_t*) rmapcell;

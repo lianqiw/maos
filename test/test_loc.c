@@ -125,7 +125,7 @@ static void test_loc_reduce_spcell(void){
     }
 static void test_zernike(){
     loc_t *loc=locread("loc_circle.bin");
-    dmat *mod=loc_zernike(loc,1,10);
+    dmat *mod=zernike(loc,1,10);
     locwrite(loc,"loc");
     dwrite(mod,"mod");
     dgramschmidt(mod,NULL);

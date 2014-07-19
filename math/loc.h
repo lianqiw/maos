@@ -88,7 +88,6 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout);
 void loc_reduce_spcell(loc_t *loc, spcell *sp, int dim, int cont);
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont);
 
-dmat* loc_zernike(loc_t *loc, double R, int nr);
 void loc_add_focus(double *opd, loc_t *loc, double val);
 dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);

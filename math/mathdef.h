@@ -48,7 +48,7 @@
 #define PDCELL(M,P)  PALL(dmat*,M,P)
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
-#define dcellfree(A) ({dcellfree_do(A);A=NULL;})
+#define dcellfree(A) ({cellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
 #define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
 #define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
@@ -57,7 +57,7 @@
 #define PSCELL(M,P)  PALL(smat*,M,P)
 #define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
 #define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
-#define scellfree(A) ({scellfree_do(A);A=NULL;})
+#define scellfree(A) ({cellfree_do(A);A=NULL;})
 #define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
 #define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
 #define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
@@ -65,7 +65,7 @@
 #define PCMAT(M,P)   PALL(dcomplex,M,P)
 #define PCCELL(M,P)  PALL(cmat*,M,P)
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
-#define ccellfree(A) ({ccellfree_do(A);A=NULL;})
+#define ccellfree(A) ({cellfree_do(A);A=NULL;})
 #define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
 #define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
@@ -73,9 +73,18 @@
 #define PZMAT(M,P)   PALL(fcomplex,M,P)
 #define PZCELL(M,P)  PALL(zmat*,M,P) 
 #define zfree(A)     ({zfree_do(A,0);A=NULL;})
-#define zcellfree(A) ({zcellfree_do(A);A=NULL;})
+#define zcellfree(A) ({cellfree_do(A);A=NULL;})
 #define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
 #define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
+
+#define PIMAT(M,P)   PALL(long,M,P)
+#define PICELL(M,P)  PALL(imat*,M,P) 
+#define ifree(A)     ({ifree_do(A,0);A=NULL;})
+#define icellfree(A) ({cellfree_do(A);A=NULL;})
+#define izero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
+#define ihash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(long), key)
+
+#define cellfree(A) ({cellfree_do(A); A=0;})
 
 #define AOS_CMAT(A) c##A
 #define AOS_CSP(A)  c##A
@@ -139,6 +148,7 @@ AOS_FFT_DEF(AOS_CMAT)
 
 #define dwrite(out, A...) write_by_id((void*)out, M_DBL, A)
 #define dread(A...)    (dmat*)read_by_id(M_DBL, 0, A)
+#define dcellnew (dcell*)cellnew
 #define dcellreaddata(fp, header) (dcell*)readdata_by_id(fp, M_DBL, 1, header)
 #define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
 #define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
@@ -146,6 +156,7 @@ AOS_FFT_DEF(AOS_CMAT)
 
 #define swrite(out, A...) write_by_id((void*)out, M_FLT, A)
 #define sread(A...)    (smat*)read_by_id(M_FLT, 0, A)
+#define scellnew (scell*)cellnew
 #define scellreaddata(fp, header) (scell*)readdata_by_id(fp, M_FLT, 1, header)
 #define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
@@ -153,6 +164,7 @@ AOS_FFT_DEF(AOS_CMAT)
 
 #define cwrite(out, A...) write_by_id((void*)out, M_CMP, A)
 #define cread(A...)    (cmat*)read_by_id(M_CMP, 0, A)
+#define ccellnew (ccell*)cellnew
 #define ccellreaddata(fp, header) (ccell*)readdata_by_id(fp, M_CMP, 1, header)
 #define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
 #define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
@@ -160,17 +172,28 @@ AOS_FFT_DEF(AOS_CMAT)
 
 #define zwrite(out, A...) write_by_id((void*)out, M_ZMP, A)
 #define zread(A...)    (zmat*)read_by_id(M_ZMP, 0, A)
+#define zcellnew (zcell*)cellnew
 #define zcellreaddata(fp, header) (zcell*)readdata_by_id(fp, M_ZMP, 1, header)
 #define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
 #define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
 
+#define iwrite(out, A...) write_by_id((void*)out, M_LONG, A)
+#define iread(A...) (imat*)read_by_id(M_LONG, 0, A)
+#define icellnew (icell*)cellnew
+#define icellreaddata(fp, header) (icell*)readdata_by_id(fp, M_LONG, 1, header)
+#define icellread(A...) (icell*)read_by_id(M_LONG, 1, A)
+#define iccellread(A...) (iccell*)read_by_id(M_LONG, 2, A)
+#define icccellread(A...) (icccell*)read_by_id(M_LONG, 3, A)
+
 #define cellwrite(out, A...) write_by_id((void*)out, MCC_ANY, A)
 #define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, MCC_ANY)
+#define icellwrite cellwrite
 #define dcellwrite cellwrite
 #define ccellwrite cellwrite
 #define scellwrite cellwrite
 #define zcellwrite cellwrite
+#define icellwritedata cellwritedata
 #define dcellwritedata cellwritedata
 #define ccellwritedata cellwritedata
 #define scellwritedata cellwritedata
