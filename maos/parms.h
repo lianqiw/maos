@@ -418,6 +418,8 @@ typedef struct RECON_CFG_T{
 		       - 0: integrated tomography
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
+    int modal;       /**0: zonal, 1:zernike modes, 2: KL modes*/
+    int modr;        /**<Maximum radial mode in modal controller*/
     int warm_restart; /**<Warm restart in CG*/
     int mvm;        /**<Use the various algorithms recon.alg to assemble a control
 		       matrix to multiply to gradients to get DM commands. If

@@ -1047,15 +1047,15 @@ static void init_simu_dm(SIM_T *simu){
 	simu->ttmreal=dnew(2,1);
     }
     simu->dmrealsq=cellnew(parms->ndm, 1);
-    simu->dmerr_store=dcellnew3(parms->ndm,1, recon->anloc->p, NULL);
+    simu->dmerr_store=dcellnew3(parms->ndm,1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc->p, NULL);
 	simu->dmprojsq=cellnew(parms->ndm, 1);
     }
     for(int idm=0; idm<parms->ndm; idm++){
-	simu->dmcmd->p[idm]=dnew(recon->aloc->p[idm]->nloc,1);
+	simu->dmcmd->p[idm]=dnew(recon->anloc->p[idm],1);
 	if(simu->hyst){
-	    simu->dmreal->p[idm]=dnew(recon->aloc->p[idm]->nloc,1);
+	    simu->dmreal->p[idm]=dnew(recon->anloc->p[idm],1);
 	}else{
 	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}

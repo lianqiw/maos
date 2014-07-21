@@ -1664,7 +1664,7 @@ void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, R alpha){
 	az=1; ax=A->nx;
 	nz=A->nx;
     }
-    if(trans[1]=='n'||trans[0]=='N'){
+    if(trans[1]=='n'||trans[1]=='N'){
 	ny=B->ny; 
 	bz=1; by=B->nx;
 	if(nz!=B->nx) error("mismatch\n");

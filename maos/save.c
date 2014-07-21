@@ -68,11 +68,13 @@ void save_recon(SIM_T *simu){
 		}
 	    }
 	}
-	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-	    if(simu->dmerr->p[idm]){
-		drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
-			"DM Error Signal (Hi)","x (m)","y (m)",
-			"Err Hi %d",idm);
+	if(!parms->recon.modal){
+	    for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+		if(simu->dmerr->p[idm]){
+		    drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
+			    "DM Error Signal (Hi)","x (m)","y (m)",
+			    "Err Hi %d",idm);
+		}
 	    }
 	}
 	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
@@ -82,7 +84,7 @@ void save_recon(SIM_T *simu){
 			"Int Hi %d",idm);
 	    }
 	}
-	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
+    	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
 	    if(simu->dmproj->p[idm]){
 		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
 			"ATM to DM Projection (Hi)","x (m)","y (m)",
@@ -91,10 +93,7 @@ void save_recon(SIM_T *simu){
 	}
 	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
 	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmrealsq){
-		drawmap("DM", simu->dmrealsq->p[idm],NULL,
-			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
-	    }else if(simu->dmreal){
+	    if(simu->dmreal){
 		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
 			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
 	    }

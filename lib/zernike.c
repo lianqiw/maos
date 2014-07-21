@@ -109,7 +109,7 @@ dmat* zernike(loc_t *loc, double R, int nr){
    return zernike index of radial mode ir, and azimuthal mode im. Maximum radial
    order is nr (inclusive)
  */
-lmat *zernike_index(int nr){
+static lmat *zernike_index(int nr){
     if(nr<0) return 0;
     lmat *out=lnew(nr+1, nr+1);
     for(long ix=0; ix<(nr+1)*(nr+1); ix++){
@@ -135,8 +135,10 @@ lmat *zernike_index(int nr){
 
    Based on Eq 3.14 in Adaptive Optics in Astronomy (Roddier 1999).
    Verified against values in J.Y.Wang 1978, table II(a,b).
+
+   Notice that (D/r0)^(5/3) has been factored out.
 */
-dmat *zernike_turb_cov(int nr){
+dmat *zernike_cov_kolmogorov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
     dmat *res=dnew(nmod, nmod);
     PDMAT(res, pres);
@@ -154,6 +156,7 @@ dmat *zernike_turb_cov(int nr){
 		ictc=ict0+1;
 	    }
 	    for(int jr=0; jr<=ir; jr++){
+		if(ir==0 || jr==0) continue;//ignore piston
 		long jct0=zind->p[im+jr*(nr+1)];
 		long jcts=0, jctc=0;
 		if((jct0)%2==1){
@@ -179,6 +182,39 @@ dmat *zernike_turb_cov(int nr){
 	    }
 	}
     }
+    //pres[0][0]=0; //piston covariance
     lfree(zind);
     return res;
+}
+
+/**
+   Diagnolize the covariance matrix and transform the mode.
+*/
+dmat *diag_mod_cov(dmat *mz, /**<Modes in zernike space*/
+		   dmat *cov /**<Covariance of zernike modes in kolmogorov (or any other)*/
+    ){
+    dmat *U=0, *Vt=0, *S=0;
+    dsvd(&U, &S, &Vt, cov);
+    dmat *kl=0;
+    dmm(&kl, 0, mz, U, "nn", 1);
+    dfree(U);
+    dfree(Vt);
+    dfree(S);
+    return kl;
+}
+
+/**
+   Create Karhunen-Loeve modes for which each mode is statistically independent
+   in Kolmogorov spectrum. It first compute the covariance of zernike modes in
+   kolmogorov spectrum, and then diagnolize the covariance of these modes using
+   SVD and use the Unitery matrix to transform the zernike modes. Notice the
+   ordering of the master zernike modes may be reordering in the SVD process.
+ */
+dmat *KL_kolmogorov(loc_t *loc, double R, int nr){
+    dmat *cov=zernike_cov_kolmogorov(nr);
+    dmat *modz=zernike(loc, R, nr);
+    dmat *modkl=diag_mod_cov(modz, cov);
+    dfree(cov);
+    dfree(modz);
+    return modkl;
 }

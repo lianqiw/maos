@@ -80,6 +80,11 @@ void thread_block_signal(){
     sigfillset(&set);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 }
+#if _OPENMP
+long thread_id(){
+    return (long)omp_get_thread_num();
+}
+#else
 #ifdef __linux__
 #include <sys/types.h>
 #include <sys/syscall.h>
@@ -90,4 +95,5 @@ long thread_id(){
 long thread_id(){
     return (long)pthread_self();
 }
+#endif
 #endif

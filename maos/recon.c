@@ -278,7 +278,7 @@ void reconstruct(SIM_T *simu){
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
 
-	if(!parms->sim.idealfit && parms->recon.split==1){//ahst 
+	if(parms->recon.alg!=1 && !parms->sim.idealfit && parms->recon.split==1){//ahst 
 	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
 	if(parms->tomo.ahst_ttr && parms->recon.split){

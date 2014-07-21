@@ -169,10 +169,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
 
-    if(parms->save.setup){
-	cellwrite(recon->aloc,"%s/aloc",dirsetup);
-	cellwrite(recon->amap, "%s/amap", dirsetup);
-    }
     recon->aimcc=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc->p[idm], NULL);
@@ -204,6 +200,34 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actfloat) continue;
 	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);
+	}
+    }
+    if(parms->recon.modal){
+	if(parms->recon.modr<=0){
+	    error("Please specify recon.modr\n");
+	}
+	recon->amod=dcellnew(ndm, 1);
+	recon->anmod=lnew(ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    switch(parms->recon.modal){
+	    case 1:
+		recon->amod->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d*0.5, parms->recon.modr);
+		break;
+	    case 2:
+		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], parms->aper.d*0.5, abs(parms->recon.modr)); 
+		break;
+	    default:
+		error("Invalid recon.modal");
+	    }	    
+	    recon->anmod->p[idm]=recon->amod->p[idm]->ny;
+	}
+	
+    }
+    if(parms->save.setup){
+	cellwrite(recon->aloc,"%s/aloc",dirsetup);
+	cellwrite(recon->amap, "%s/amap", dirsetup);
+	if(parms->recon.modal){
+	    cellwrite(recon->amod, "%s/amod", dirsetup);
 	}
     }
 }

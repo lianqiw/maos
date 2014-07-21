@@ -362,7 +362,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
     }else{
 	info2("Generating GA ");TIC;tic;
-	recon->GA= spcellnew(nwfs, ndm);
+	recon->GA=spcellnew(nwfs, ndm);
 	PDSPCELL(recon->GA,GA);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
@@ -427,14 +427,44 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    spcellwrite(recon->GA,"%s/GA_float",dirsetup);
 	}
     }
+    int nlo=parms->nlopowfs;
+    if(parms->recon.modal){
+	spcell *GA=recon->GA;
+	spcellfree(recon->GM);
+	spcellfree(recon->GMlo);
+	spcellfree(recon->GMhi);
+	recon->GM=spcellnew(nwfs, ndm);
+	recon->GMlo=spcellnew(nwfs, ndm);
+	recon->GMhi=spcellnew(nwfs, ndm);
+	for(int idm=0; idm<ndm; idm++){
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		int ipowfs = parms->wfsr[iwfs].powfs;
+		dmat *tmp=0;
+		spmulmat(&tmp, GA->p[iwfs+idm*nwfs], recon->amod->p[idm], 1);
+		recon->GM->p[iwfs+idm*nwfs]=d2sp(tmp);
+		dfree(tmp);
+		if(parms->powfs[ipowfs].lo
+		   || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
+		    recon->GMlo->p[iwfs+idm*nwfs]=spref(recon->GM->p[iwfs+idm*nwfs]);
+		}
+		if(!parms->powfs[ipowfs].skip){
+		    recon->GMhi->p[iwfs+idm*nwfs]=spref(recon->GM->p[iwfs+idm*nwfs]);
+		}
+	    }
+	}
+	if(parms->save.setup){
+	    spcellwrite(recon->GM, "%s/GM", dirsetup);
+	}
+    }
     /*Create GAlo that only contains GA for low order wfs */
     spcellfree(recon->GAlo);
+    spcellfree(recon->GAhi);
     recon->GAlo=spcellnew(recon->GA->nx, recon->GA->ny);
     recon->GAhi=spcellnew(recon->GA->nx, recon->GA->ny);
     PDSPCELL(recon->GAlo,GAlo);
     PDSPCELL(recon->GAhi,GAhi);
     PDSPCELL(recon->GA,GA);
-    int nlo=parms->nlopowfs;
+
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;

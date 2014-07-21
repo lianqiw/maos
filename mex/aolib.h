@@ -18,5 +18,7 @@
 
 dmat *dtrapz(const dmat *x, const dmat *y);
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
-lmat *zernike_index(int nr);
-dmat *zernike_turb_cov(int nr);
+dmat* zernike(loc_t *loc, double R, int nr);
+dmat *zernike_cov_kolmogorov(int nr);
+dmat *diag_mod_cov(dmat *mz, dmat *cov);
+dmat *KL_kolmogorov(loc_t *loc, double R, int nr);

@@ -277,6 +277,8 @@ typedef struct RECON_T{
     lmat *ngrad;      /**<Size of each grad for each wfs*/
     lcell *actfloat;   /**<floating actuators*/
     lcell *actstuck;   /**<stuck actuators*/
+    dcell *amod;       /**<Zernike/KL modes defined on aloc for modal control*/
+    lmat *anmod;       /**<Sizeof of amod*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/
@@ -304,6 +306,9 @@ typedef struct RECON_T{
     spcell *GA;        /**<actuator to wfs grad.*/
     spcell *GAlo;      /**<GA of low order WFS.*/
     spcell *GAhi;      /**<GA of high order WFS.*/
+    spcell *GM;        /**<Mode to wfs grad. Full matrix stored as sparse for compliance with GA*/
+    spcell *GMlo;      /**<GM for low order WFS.*/
+    spcell *GMhi;      /**<GM for high order WFS.*/
     spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
     spcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/

@@ -221,26 +221,38 @@ void filter_cl(SIM_T *simu){
 	    }
 	}
     }
-    {
-	/*Do the servo filtering. First simulate a drop frame*/
-	int drop=0;
-	if(simu->dmerr && parms->sim.dtrat_skip){
-	    if(parms->sim.dtrat_skip>0){
-		if((simu->isim+1)%parms->sim.dtrat_skip==0){//evenly
-		    drop=1;
-		}
-	    }else if(parms->sim.dtrat_skip<0){//use random draws
-		double tmp=randu(simu->misc_rand);
-		if(tmp*(-parms->sim.dtrat_skip)<1.){
-		    drop=1;
-		}
+    
+    /*Do the servo filtering. First simulate a drop frame*/
+    int drop=0;
+    if(simu->dmerr && parms->sim.dtrat_skip){
+	if(parms->sim.dtrat_skip>0){
+	    if((simu->isim+1)%parms->sim.dtrat_skip==0){//evenly
+		drop=1;
+	    }
+	}else if(parms->sim.dtrat_skip<0){//use random draws
+	    double tmp=randu(simu->misc_rand);
+	    if(tmp*(-parms->sim.dtrat_skip)<1.){
+		drop=1;
 	    }
 	}
-	if(drop){
-	    warning("Drop a frame at step %d\n", simu->isim);
+    }
+    dcell *dmerr=0;
+    if(drop){
+	warning("Drop a frame at step %d\n", simu->isim);
+    }else if(simu->dmerr){
+	if(parms->recon.modal){
+	    dmerr=dcellnew(parms->ndm, 1);
+	    for(int idm=0; idm<parms->ndm; idm++){
+		dmm(&dmerr->p[idm], 0, recon->amod->p[idm], simu->dmerr->p[idm], "nn", 1);
+	    }
+	}else{
+	    dmerr=simu->dmerr;
 	}
-	//always run servo_filter even if dmerr is NULL.
-	servo_filter(simu->dmint, drop?0:simu->dmerr);
+    }
+    //always run servo_filter even if dmerr is NULL.
+    servo_filter(simu->dmint, dmerr);
+    if(parms->recon.modal && dmerr){
+	dcellfree(dmerr);
     }
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
@@ -391,7 +403,7 @@ void filter_dm(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
-    if(simu->recon->actinterp && !parms->tomo.psol){
+    if(!parms->recon.modal && simu->recon->actinterp && !parms->tomo.psol){
 	/*make floating actuators averag of neighbor.*/
 	dcell *tmp=NULL;
 	spcellmulmat(&tmp, simu->recon->actinterp, simu->dmreal, 1);

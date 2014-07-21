@@ -346,9 +346,6 @@ static void delete_page_event(GtkWidget *widget, GdkEventButton *event, drawdata
 }
 #endif
 static GtkWidget *subnb_label_new(drawdata_t **drawdatawrap){
-    drawdata_t *drawdata=*drawdatawrap;
-    const gchar *str=drawdata->name;
-    GtkWidget *label;
     GtkWidget *out;
     out=gtk_hbox_new(FALSE, 0);
 #if defined(__linux__)
@@ -378,7 +375,9 @@ static GtkWidget *subnb_label_new(drawdata_t **drawdatawrap){
 #endif
 
     /* create label for tab */
-    label = gtk_label_new(str);
+    drawdata_t *drawdata=*drawdatawrap;
+    const gchar *str=drawdata->name;
+    GtkWidget *label = gtk_label_new(str);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 0, 0);
     gtk_label_set_width_chars(GTK_LABEL(label), 12);
@@ -721,7 +720,7 @@ gboolean addpage(gpointer indata){
 	GtkWidget *subnb=gtk_notebook_new();
 	subnbs=g_slist_append(subnbs,subnb);
 	nsubnb++;
-	gtk_container_set_border_width(GTK_CONTAINER(subnb),2);
+	//gtk_container_set_border_width(GTK_CONTAINER(subnb),0);
 #if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 24
 	gtk_notebook_set_group_name(GTK_NOTEBOOK(subnb), "secondlevel");
 #elif GTK_MINOR_VERSION >=12	
@@ -1232,8 +1231,10 @@ static void tool_font_set(GtkFontButton *btn){
     /*get font_size in device unit (dots, pixels); */
     if(pango_font_description_get_size_is_absolute(pfd)){
 	font_size=(double)size/(double)PANGO_SCALE;
+	fprintf(stderr, "absolute: font_size=%g\n", font_size);
     }else{
-	gdouble dpi=gdk_screen_get_resolution(gtk_widget_get_screen(curwindow));
+	gdouble dpi=gdk_screen_get_resolution(gdk_screen_get_default());
+	if(dpi<0) dpi=96;
 	font_size=(double)size/(double)PANGO_SCALE*(double)dpi/72.;
     }
     SP_XL=font_size*2.4+8;
@@ -1316,38 +1317,57 @@ GtkWidget *create_window(){
     }
     gtk_window_set_title(GTK_WINDOW(window), title);
 #if GTK_MAJOR_VERSION>=3
-
     const gchar *all_style="*{"
 	"padding:0;\n"
-	"border-radius:0;\n"
-	"border-width:1;\n"
-	"font:Sans 8;\n"
-	"-GtkToolbar-button-releaf:2\n"
+	"border-radius:4;\n"
+	"font:Sans 10;\n"
+	"-GtkToolbar-button-relief:1\n"
+	"background-color:#FFFFFF;"
+	"border-width:1;"
+	"}"
+	".toolbar{"
+	"padding: 1;"
+	"}"
+	".hbox{"
+	"background-color:#FF0000"
+	"}"
+	".button{"
+	"-GtkButton-default-border : 0px;\n"
+                "-GtkButton-default-outside-border : 0px;\n" 
+                "-GtkButton-inner-border: 0px;\n" 
+                "-GtkWidget-focus-line-width : 0px;\n" 
+                "-GtkWidget-focus-padding : 0px;\n" 
+                "padding: 0px;\n" 
+	"}"
+	".notebook *{"
+	"border-width:0 0 0 0;"
+	"padding: 0;"
 	"}"
 	".notebook{"
-	"-GtkNotebook-tab-overlap: 0;"
+	"-GtkNotebook-tab-overlap: 2;"
 	"-GtkNotebook-tab-curvature: 0;"
 	"-GtkWidget-focus-line-width: 0;"
+	"border-width:0 0 0 0;"
+	"padding: 0;"
 	"}"
 	".notebook tab{"
-	"-adwaita-focus-border-radius: 0;"
 	"border-width: 0;"
-	"padding: 0 0 0;"
+	"padding: 4 5 0 5;" //top, right, bottom, left
 	"background-color:@theme_bg_color;"
 	"background-image:none;"
 	"}"
-	".notebook tab:active{"
-	"-adwaita-focus-border-radius: 0;"
-	"border-width: 1;"
-	"padding: 0 0 0;"
-	"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#FFFFFF), to (#FFFFFF));"
+	"GtkNotebook tab:active{"
+	"border-width: 1 1 0 1;"
+	"padding: 3 4 0 4;"
+	"background-color:#FFFFFF;"
+	"background-image:none;"
 	"}";
     GtkCssProvider *provider_default=gtk_css_provider_new();
     gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
     GtkStyleContext *all_context=gtk_widget_get_style_context(window);
     GdkScreen *screen=gtk_style_context_get_screen(all_context);
     gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
-					      GTK_STYLE_PROVIDER_PRIORITY_USER);
+    GTK_STYLE_PROVIDER_PRIORITY_USER);
 #endif
 
     GtkWidget *toolbar=gtk_toolbar_new();
@@ -1414,7 +1434,7 @@ GtkWidget *create_window(){
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
     GtkWidget *topnb=gtk_notebook_new();
-    gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
+    //gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
 #if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 24
     gtk_notebook_set_group_name(GTK_NOTEBOOK(topnb), "toplevel");
 #elif GTK_MINOR_VERSION >= 12

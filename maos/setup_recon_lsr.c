@@ -31,30 +31,27 @@
 */
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     CALL_ONCE;
-    spcell *GAlsr;
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
-
-    if(parms->recon.split){
-	/*high order wfs only in split mode. */
-	GAlsr=recon->GAhi;
-    }else{
-	/*all wfs in integrated mode. */
-	GAlsr=recon->GA;
+    spcell *GAlsr;
+    spcell *GAM=parms->recon.modal?recon->GM:recon->GA;
+    if(parms->recon.split){ //high order wfs only in split mode. 
+	GAlsr=parms->recon.modal?recon->GMhi:recon->GAhi;
+    }else{ //all wfs in integrated mode. 
+	GAlsr=GAM;
     }
     spcell *GAlsrT=spcelltrans(GAlsr);
     info2("Building recon->LR\n");
     recon->LR.M=spcellmulspcell(GAlsrT, recon->saneai, 1);
     spcellfree(GAlsrT);
-    /*
-      Tip/tilt and diff focus removal low rand terms for LGS WFS.
-    */
+    // Tip/tilt and diff focus removal low rand terms for LGS WFS.
     if(recon->TTF){
 	spcellmulmat(&recon->LR.U, recon->LR.M, recon->TTF, 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
     info2("Building recon->LL\n");
     recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
+    
     double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(fabs(parms->lsr.tikcr)>EPS){
 	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
@@ -62,50 +59,52 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	spcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
-    if(parms->lsr.alg!=2){
-	/* Not SVD, need low rank terms for piston/waffle mode constraint. */
-	NW=dcellnew(ndm,1);
-	int nmod=2;/*two modes. */
-	for(int idm=0; idm<ndm; idm++){
-	    loc_create_map(recon->aloc->p[idm]);
-	    const long nloc=recon->aloc->p[idm]->nloc;
-	    NW->p[idm]=dnew(nloc, ndm*nmod);
-	    double *p=NW->p[idm]->p+nmod*idm*nloc;
-	    for(long iloc=0; iloc<nloc; iloc++){
-		p[iloc]=1;/*piston mode */
-	    }
-	    /*notice offset of 1 because map start count at 1 */
-	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
-	    map_t *map=recon->aloc->p[idm]->map;
-	    PDMAT(map, pmap);
-	    for(long iy=0; iy<map->ny; iy++){
-		for(long ix=0; ix<map->nx; ix++){
-		    if(pmap[iy][ix]){
-			p[(long)pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
+    if(!parms->recon.modal){
+	if(parms->lsr.alg!=2){
+	    /* Not SVD, need low rank terms for piston/waffle mode constraint. */
+	    NW=dcellnew(ndm,1);
+	    int nmod=2;/*two modes. */
+	    for(int idm=0; idm<ndm; idm++){
+		loc_create_map(recon->aloc->p[idm]);
+		const long nloc=recon->aloc->p[idm]->nloc;
+		NW->p[idm]=dnew(nloc, ndm*nmod);
+		double *p=NW->p[idm]->p+nmod*idm*nloc;
+		for(long iloc=0; iloc<nloc; iloc++){
+		    p[iloc]=1;/*piston mode */
+		}
+		/*notice offset of 1 because map start count at 1 */
+		p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
+		map_t *map=recon->aloc->p[idm]->map;
+		PDMAT(map, pmap);
+		for(long iy=0; iy<map->ny; iy++){
+		    for(long ix=0; ix<map->nx; ix++){
+			if(pmap[iy][ix]){
+			    p[(long)pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
+			}
 		    }
 		}
 	    }
-	}
-	/*scale it to match the magnitude of LL.M */
-	dcellscale(NW, sqrt(maxeig));
-	if(parms->save.setup){
-	    dcellwrite(NW, "%s/lsrNW",dirsetup);
-	}
-    }
-    if(parms->lsr.actslave){
-	dcellfree(recon->actcpl);
-	recon->actcpl=genactcpl(recon->GAhi, NULL);
-	/*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
-	spcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
-				 recon->actstuck, recon->actfloat, 0.1, maxeig);
-	if(parms->save.setup){
-	    if(NW){
-		dcellwrite(NW, "%s/lsrNW2",dirsetup);
+	    /*scale it to match the magnitude of LL.M */
+	    dcellscale(NW, sqrt(maxeig));
+	    if(parms->save.setup){
+		dcellwrite(NW, "%s/lsrNW",dirsetup);
 	    }
-	    spcellwrite(actslave,"%s/actslave", dirsetup);
 	}
-	spcelladd(&recon->LL.M, actslave);
-	spcellfree(actslave);
+	if(parms->lsr.actslave){
+	    dcellfree(recon->actcpl);
+	    recon->actcpl=genactcpl(recon->GAhi, NULL);
+	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
+	    spcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
+				     recon->actstuck, recon->actfloat, 0.1, maxeig);
+	    if(parms->save.setup){
+		if(NW){
+		    dcellwrite(NW, "%s/lsrNW2",dirsetup);
+		}
+		spcellwrite(actslave,"%s/actslave", dirsetup);
+	    }
+	    spcelladd(&recon->LL.M, actslave);
+	    spcellfree(actslave);
+	}
     }
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
     dcell *ULo=dcellnew(ndm,nwfs);
@@ -113,8 +112,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dcell *VLo=dcellnew(ndm,nwfs);
     PDCELL(VLo, pVLo);
     PDSPCELL(recon->LR.M, LRM);
-    PDSPCELL(recon->GA, GA);
-
+    PDSPCELL(GAM, GA);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
@@ -127,12 +125,12 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
     dcell *GPTTDF=NULL;
-    sptcellmulmat(&GPTTDF, recon->GA, recon->LR.V, 1);
+    sptcellmulmat(&GPTTDF, GAM, recon->LR.V, 1);
     recon->LL.V=dcellcat(GPTTDF, VLo, 2);
     dcellfree(GPTTDF);
     dcellfree(ULo);
     dcellfree(VLo);
-    if(NW){
+    if(!parms->recon.modal && NW){
 	info2("Create piston and check board modes that are in NULL space of GA.\n");
 	/*add to low rank terms. */
 	dcell *tmp=recon->LL.U;

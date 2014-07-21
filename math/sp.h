@@ -70,6 +70,7 @@ void Y(sptcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T a
 void Y(spcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
 void Y(sptcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
 void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin, T alpha, int trans); \
+X(sp) *X(2sp)(X(mat)*A);\
 void Y(spfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void Y(sptfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void Y(spcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\

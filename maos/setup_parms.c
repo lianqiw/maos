@@ -809,6 +809,8 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.glao);
     READ_INT(recon.split);
     READ_INT(recon.mvm);
+    READ_INT(recon.modal);
+    READ_INT(recon.modr);
     parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
     readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
@@ -1133,6 +1135,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     }
     if(parms->recon.alg==1 && parms->recon.split==2){
 	error("MVST does not work with least square reconstructor.\n");
+    }
+    if(parms->recon.alg==0 && parms->recon.modal){
+	error("Modal control is not yet implemented for MV reconstructor\n");
     }
     if(parms->sim.wfsalias){
 	if(parms->sim.idealwfs){

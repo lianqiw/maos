@@ -32,6 +32,8 @@ for funname in funcs: #loop over functions
         argname=arg[1]
         if argtype=='dmat*':
             fundef+='    '+argtype+' '+argname+'=mx2d(prhs['+str(count)+']);\n'
+        elif argtype=='loc_t*':
+            fundef+='    '+argtype+' '+argname+'=mx2loc(prhs['+str(count)+']);\n'
         elif argtype=='int' or argtype=='long' or argtype=='double':
             fundef+='    '+argtype+' '+argname+'=('+argtype+')mxGetScalar(prhs['+str(count)+']);\n'
         else:

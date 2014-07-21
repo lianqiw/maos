@@ -645,6 +645,8 @@ static mxArray *get_parms_recon(const RECON_CFG_T* recon){
 	mxArray *tmp2;
 	tmp2=mxCreateDoubleScalar(recon->alg);i=mxAddField(tmp, "alg");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=mxCreateDoubleScalar(recon->glao);i=mxAddField(tmp, "glao");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=mxCreateDoubleScalar(recon->modal);i=mxAddField(tmp, "modal");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=mxCreateDoubleScalar(recon->modalr);i=mxAddField(tmp, "modalr");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=mxCreateDoubleScalar(recon->mvm);i=mxAddField(tmp, "mvm");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=mxCreateDoubleScalar(recon->sock);i=mxAddField(tmp, "sock");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=mxCreateDoubleScalar(recon->split);i=mxAddField(tmp, "split");mxSetFieldByNumber(tmp, 0, i, tmp2);
@@ -923,6 +925,9 @@ static mxArray *get_recon(const RECON_T* recon){
 	tmp2=any2mx(recon->GFall);i=mxAddField(tmp, "GFall");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->GFlgs);i=mxAddField(tmp, "GFlgs");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->GFngs);i=mxAddField(tmp, "GFngs");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=any2mx(recon->GM);i=mxAddField(tmp, "GM");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=any2mx(recon->GMhi);i=mxAddField(tmp, "GMhi");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=any2mx(recon->GMlo);i=mxAddField(tmp, "GMlo");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->GP);i=mxAddField(tmp, "GP");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->GP2);i=mxAddField(tmp, "GP2");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->GWR);i=mxAddField(tmp, "GWR");mxSetFieldByNumber(tmp, 0, i, tmp2);
@@ -969,7 +974,9 @@ static mxArray *get_recon(const RECON_T* recon){
 	tmp2=any2mx(recon->aimcc);i=mxAddField(tmp, "aimcc");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->aloc);i=mxAddField(tmp, "aloc");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->amap);i=mxAddField(tmp, "amap");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=any2mx(recon->amod);i=mxAddField(tmp, "amod");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->anloc);i=mxAddField(tmp, "anloc");mxSetFieldByNumber(tmp, 0, i, tmp2);
+	tmp2=any2mx(recon->anmod);i=mxAddField(tmp, "anmod");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->anx);i=mxAddField(tmp, "anx");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->any);i=mxAddField(tmp, "any");mxSetFieldByNumber(tmp, 0, i, tmp2);
 	tmp2=any2mx(recon->dm_ncpa);i=mxAddField(tmp, "dm_ncpa");mxSetFieldByNumber(tmp, 0, i, tmp2);

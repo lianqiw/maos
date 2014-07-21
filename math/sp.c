@@ -831,6 +831,20 @@ void Y(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
 	}
     }
 }
+X(sp) *X(2sp)(X(mat)*A){
+    if(!A) return 0;
+    X(sp) *out=Y(spnew)(A->nx, A->ny, A->nx*A->ny);
+    out->p[0]=0;
+    for(long icol=0; icol<A->ny; icol++){
+	out->p[icol+1]=(icol+1)*A->nx;
+	for(long irow=0; irow<A->nx; irow++){
+	    long ix=out->p[icol]+irow;
+	    out->i[ix]=irow;
+	}
+    }
+    memcpy(out->x, A->p, sizeof(T)*A->nx*A->ny);
+    return out;
+}
 /** 
  * Convert the transpose of a sparse matrix into dense matrix and add to output:
  * out0=out0+full(A')*alpha;*/
