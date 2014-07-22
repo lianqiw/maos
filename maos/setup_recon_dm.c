@@ -209,12 +209,17 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->amod=dcellnew(ndm, 1);
 	recon->anmod=lnew(ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
+	    double ht=parms->dm[idm].ht;
+	    double dx=parms->dm[idm].dx;
+	    double dy=parms->dm[idm].dy;
+	    double guard=parms->dm[idm].guard*MAX(dx,dy);
+	    double D=(parms->sim.fov*ht+parms->aper.d+guard*2);
 	    switch(parms->recon.modal){
 	    case 1:
-		recon->amod->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d*0.5, parms->recon.modr);
+		recon->amod->p[idm]=zernike(recon->aloc->p[idm], D,  parms->recon.modr);
 		break;
 	    case 2:
-		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], parms->aper.d*0.5, abs(parms->recon.modr)); 
+		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], D, abs(parms->recon.modr)); 
 		break;
 	    default:
 		error("Invalid recon.modal");

@@ -53,7 +53,7 @@ static dmat *genRnm(dmat *locr, int ir, int im){
    nr=2 is quadratic modes
    
 */
-dmat* zernike(loc_t *loc, double R, int nr){
+dmat* zernike(loc_t *loc, double D, int nr){
     if(nr<0) error("Invalid nr\n");
     int nmod=(nr+1)*(nr+2)/2;
     const long nloc=loc->nloc;
@@ -63,7 +63,7 @@ dmat* zernike(loc_t *loc, double R, int nr){
     dmat *restrict locs=dnew(nloc,1);
     const double *restrict locx=loc->locx;
     const double *restrict locy=loc->locy;
-    const double R1=1./R;
+    const double R1=2./D;
     for(long iloc=0; iloc<nloc; iloc++){
 	locr->p[iloc]=sqrt(pow(locx[iloc],2)+pow(locy[iloc],2))*R1;
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
@@ -210,9 +210,9 @@ dmat *diag_mod_cov(dmat *mz, /**<Modes in zernike space*/
    SVD and use the Unitery matrix to transform the zernike modes. Notice the
    ordering of the master zernike modes may be reordering in the SVD process.
  */
-dmat *KL_kolmogorov(loc_t *loc, double R, int nr){
+dmat *KL_kolmogorov(loc_t *loc, double D, int nr){
     dmat *cov=zernike_cov_kolmogorov(nr);
-    dmat *modz=zernike(loc, R, nr);
+    dmat *modz=zernike(loc, D, nr);
     dmat *modkl=diag_mod_cov(modz, cov);
     dfree(cov);
     dfree(modz);

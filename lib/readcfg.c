@@ -174,12 +174,11 @@ static void print_key(const void *key, VISIT which, int level){
 	    if(store->data && strcmp(store->data, "ignore")){
 		fprintf(fpout, "%s\n", store->data);
 	    }
-	}else{
-	    if(store->count==0){
-		error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
-	    }else if(store->count!=1){
-		error("Key %s is used %ld times\n", store->key, store->count);
-	    }
+	}
+	if(store->count==0){
+	    error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+	}else if(store->count!=1){
+	    error("Key %s is used %ld times\n", store->key, store->count);
 	}
     }
 }
@@ -199,7 +198,6 @@ void close_config(const char *format, ...){
     if(MROOT){
 	info2("Used %ld of %ld supplied keys\n",nused, nstore);
 	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
-	fpout=fopen(fnout,"w");
 	twalk(MROOT, print_key);
 	if(fpout) fclose(fpout); fpout=0;
     }
