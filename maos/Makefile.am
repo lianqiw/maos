@@ -12,7 +12,7 @@ libmaos_la_SOURCES=maos.c setup_parms.c utils.c setup_powfs.c setup_aper.c	\
 setup_recon.c setup_recon_dm.c setup_recon_fit.c setup_recon_lsr.c		\
 setup_recon_mvm.c sim.c recon.c fdpcg.c wfsgrad.c perfevl.c wfsints.c		\
 genseotf.c mtch.c cachedm.c filter.c ahst.c sim_utils.c setup_surf.c		\
-recon_utils.c moao.c save.c mvm_client.c
+recon_utils.c moao.c save.c mvm_client.c pywfs.c
 #The following must be specified like this. do not use LDAOS set in configure.ac that causes linking to be not performed when lib is updated.
 libmaos_la_LIBADD=
 if USE_CUDA

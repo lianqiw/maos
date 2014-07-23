@@ -80,7 +80,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 			  dmat *iopdevl, int ievl){
     /* the OPD after this time will be tilt removed. Don't use for performance
        evaluation. */
-    ccell *psf2s=locfft_psf(aper->embed, iopdevl, parms->evl.psfsize);
+    ccell *psf2s=locfft_psf(aper->embed, iopdevl, parms->evl.psfsize, 0);
     int nwvl=parms->evl.nwvl;
     if(parms->evl.psfmean){
 	PDCELL(evlpsfmean, pevlpsfmean);
@@ -222,7 +222,7 @@ void perfevl_ievl(thread_t *info){
 		dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
 	    }/*opdcov*/
 	    if(parms->evl.psfmean){
-		ccell *psf2s=locfft_psf(aper->embed, opdevlcopy, parms->evl.psfsize);
+		ccell *psf2s=locfft_psf(aper->embed, opdevlcopy, parms->evl.psfsize, 0);
 		int nwvl=parms->evl.nwvl;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);

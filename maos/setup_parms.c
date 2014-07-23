@@ -328,7 +328,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_npll);
     READ_POWFS_RELAX(dbl,dither_gpll);
     READ_POWFS_RELAX(int,dither_nstat);
-
+    
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
@@ -344,7 +344,10 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,phystep);
     READ_POWFS_RELAX(int,noisy);
     READ_POWFS_RELAX(int,dtrat);
-    READ_POWFS_RELAX(int,skip);
+    READ_POWFS_RELAX(int,skip); 
+    READ_POWFS_RELAX(int,type);
+    READ_POWFS_RELAX(dbl,modulate);
+    READ_POWFS_RELAX(dbl,fov);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
@@ -426,6 +429,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].dither){
 	    parms->powfs[ipowfs].dither_amp*=parms->powfs[ipowfs].pixtheta;
 	}
+	parms->powfs[ipowfs].modulate/=206265.;
+	parms->powfs[ipowfs].fov/=206265.;
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);

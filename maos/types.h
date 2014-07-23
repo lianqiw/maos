@@ -101,6 +101,15 @@ typedef struct INTSTAT_T{
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
 }INTSTAT_T;
+typedef struct PYWFS_T{
+    /*Every above are used for SHWFS. Every below are used for PyWFS*/
+    loc_t *loc;        /**<Pupil plane grid*/
+    dmat  *amp;        /**<Pupil plane amplitude map*/
+    locfft_t *locfft;  /**<First fft to form PSF*/
+    cmat *psfquad;     /**<Second fft for each quadrant separately*/
+    cmat *nominal;     /**<For sampling results onto detector*/
+    dsp *si;           /**<For sampling results onto detector*/
+}PYWFS_T;
 /**
    contains the data associated with a certain type of WFS. not
 necessarily physical optics WFS.x */
@@ -115,8 +124,6 @@ typedef struct POWFS_T{
     loccell *loc_tel;  /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
     dcell *amp_tel;   /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
     dcell *saa_tel;        /**<mis-registered saa, if any*/
-    loc_t *gloc;        /**<loc used to generate GP*/
-    dmat *gamp;        /**<amplitude defined on gloc*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
@@ -161,6 +168,7 @@ typedef struct POWFS_T{
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
+    PYWFS_T *pywfs;     /**<For pyramid WFS*/
 }
 POWFS_T;
 
@@ -279,6 +287,9 @@ typedef struct RECON_T{
     lcell *actstuck;   /**<stuck actuators*/
     dcell *amod;       /**<Zernike/KL modes defined on aloc for modal control*/
     lmat *anmod;       /**<Sizeof of amod*/
+
+    loccell *gloc;        /**<loc used to generate GP*/
+    dcell *gamp;        /**<amplitude defined on gloc*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/

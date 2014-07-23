@@ -156,6 +156,7 @@ typedef struct POWFS_CFG_T{
     double siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
+    int type;    /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
     int trs;        /**<tip/tilt removal flag. True for LGS, False for NGS*/
     int dfrs;       /**<differential focus removal flag. True for LGS, False for NGS*/
     int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
@@ -221,6 +222,10 @@ typedef struct POWFS_CFG_T{
     int dither_nskip;/**<Skip steps for uplink loop to stable*/
     int dither_npll; /**<Period for updating PLL.*/
     int dither_nstat;/**<Period for updating statistics*/
+
+    /*Options for Pywfs*/
+    double modulate;/**<Pyramid modulation diamter in arcsec*/
+    double fov;     /**<Pyramid WFS FoV, equivalent to fieldstop, but for PyWFS only*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs

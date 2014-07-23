@@ -23,6 +23,7 @@
 #include "ahst.h"
 #include "recon_utils.h"
 #include "moao.h"
+#include "setup_powfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -82,7 +83,29 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
 }
+static void
+setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+      //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
+    recon->gloc=cellnew(parms->npowfs, 1);
+    recon->gamp=cellnew(parms->npowfs, 1);
 
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	map_t *map=0;
+	double dx=parms->powfs[ipowfs].dx;
+	create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
+	recon->gloc->p[ipowfs]=map2loc(map); 
+	mapfree(map);
+	//do not use misregistration since this is the model
+	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
+				     0,0, parms->aper.d, parms->aper.din);
+	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], 1, NULL);
+	
+	if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
+	    int iwfs=parms->powfs[ipowfs].wfs->p[0];
+	    wfspupmask(parms, recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], iwfs);
+	}
+    }
+}
 /**
    Setup the tomography grids xloc which is used for Tomography.
 */
@@ -259,11 +282,11 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
-	    recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].gloc, powfs[ipowfs].gloc,
-					powfs[ipowfs].gamp->p, powfs[ipowfs].saloc,
+	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
+					recon->gamp->p[ipowfs]->p, powfs[ipowfs].saloc,
 					1, 1, 0, 0, 1);
 	}else{
-	    recon->GWR->p[ipowfs] = mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
+	    recon->GWR->p[ipowfs] = mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 					(loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 	}
     }
@@ -299,16 +322,16 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
 		       using fine sampled powfs.gloc as intermediate plane*/
 		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
+		GP->p[ipowfs]=mkg(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 				  powfs[ipowfs].saloc,1,1,0,0,1);
 	    }
 		break;
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
 		       powfs.gloc as intermediate plane.*/
-		dsp* ZS0=mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
+		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p, 0,0,1,0,0);
+		dsp *H=mkh(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p, 0,0,1,0,0);
 		GP->p[ipowfs]=spmulsp(ZS0,H);
 		spfree(H);
 		spfree(ZS0);
@@ -381,7 +404,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		int freeloc=0;
 		loc_t *loc;
 		if(parms->dbg.usegwr){
-		    loc=powfs[ipowfs].gloc;
+		    loc=recon->gloc->p[ipowfs];
 		}else{
 		    loc=ploc;
 		}
@@ -1995,6 +2018,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     }
     /*setup pupil coarse grid for gradient operator*/
     setup_recon_ploc(recon,parms);
+    setup_recon_gloc(recon,parms, aper);
     /*Gradient operators*/
     setup_recon_GWR(recon, parms, powfs);
     setup_recon_GP(recon, parms, powfs);
@@ -2026,11 +2050,8 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     default:
 	error("recon.alg=%d is not recognized\n", parms->recon.alg);
     }
- 
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locfree(powfs[ipowfs].gloc);
-	dfree(powfs[ipowfs].gamp);
-    }
+    cellfree(recon->gloc);
+    cellfree(recon->gamp);
 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -2202,6 +2223,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);
+    cellfree(recon->gloc);
+    cellfree(recon->gamp);
     free(recon);
 }
 

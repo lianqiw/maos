@@ -37,20 +37,19 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
     locfft->nembed=lnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	if(iwvl==0 || (fftsize && fftsize->p[iwvl]>0 && fftsize->p[iwvl]!=locfft->nembed->p[0])){
-	    locfft->nembed->p[iwvl]=fftsize->p[iwvl];
+	    locfft->nembed->p[iwvl]=fftsize?fftsize->p[iwvl]:0;
 	    locfft->embed->p[iwvl]=loc_create_embed(&locfft->nembed->p[iwvl], loc, 2, 1);
 	}else{
 	    locfft->embed->p[iwvl]=locfft->embed->p[0];
 	    locfft->nembed->p[iwvl]=locfft->nembed->p[0];
 	}
     }
-    locfft->wvl=wvl;
+    locfft->wvl=dref_reshape(wvl, nwvl, 1);
     locfft->amp=amp;
     locfft->loc=loc;
-    if(fieldstop==0){
-	locfft->ampsum=dsum(amp);
-	locfft->ampnorm=dnorm2(amp);
-    }else{
+    locfft->ampsum=dsum(amp);
+    locfft->ampnorm=dnorm2(amp);
+    if(fieldstop){
 	locfft->fieldstop=fieldstop;
 	locfft->fieldmask=dcellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -75,6 +74,7 @@ void locfft_free(locfft_t *locfft){
     lcellfree(locfft->embed);
     lfree(locfft->nembed);
     dcellfree(locfft->fieldmask);
+    dfree(locfft->wvl);
 }
 /**
    Computes strehl from OPD without doing FFT. The strehl is simply 
@@ -105,16 +105,15 @@ static cmat *strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
    
    Extract center part of psfsize.
 */
-ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
-    long nwvl=locfft->wvl->nx*locfft->wvl->ny;
+ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
+    long nwvl=locfft->wvl->nx;
     ccell *psf2s=ccellnew(nwvl, 1);
-    DEF_ENV_FLAG(PSF_SUM2ONE, 0);
     for(int iwvl=0; iwvl<nwvl; iwvl++)
 #if _OPENMP>=200805
 #pragma omp task
 #endif
     {
-	if(psfsize->p[iwvl]==1){
+	if(psfsize && psfsize->p[iwvl]==1){
 	    psf2s->p[iwvl]=strehlcomp(opd, locfft->amp, locfft->wvl->p[iwvl]);
 	}else{
 	    long nembed=locfft->nembed->p[iwvl];
@@ -124,7 +123,7 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
 
 	    int use1d;
 	    int use1d_enable=0;
-	    if(psfsize->p[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
+	    if(psfsize && psfsize->p[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
 		use1d=1;
 		cfft2partialplan(psf2, psfsize->p[iwvl], -1);
 	    }else{
@@ -141,7 +140,7 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
 	    }else{
 		cfft2(psf2,-1);
 	    }
-	    if(psfsize->p[iwvl]==nembed){/*just reference */
+	    if(!psfsize || psfsize->p[iwvl]==nembed){/*just reference */
 		cfftshift(psf2);
 		psf2s->p[iwvl]=psf2;
 	    }else{/*create a new array, smaller. */
@@ -151,8 +150,8 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
 	    }
 	}
 	double psfnorm;
-	if(PSF_SUM2ONE){/**PSF sum to one*/
-	    psfnorm=1./(locfft->ampsum*sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
+	if(sum2one){
+	    psfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 	}else{/**PSF max is strehl*/
 	    psfnorm=1./locfft->ampsum;
 	}
@@ -169,7 +168,7 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize){
    Apply a field stop
 */
 void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
-    int nwvl=locfft->wvl->nx*locfft->wvl->ny;
+    int nwvl=locfft->wvl->nx;
     ccell *wvfs=ccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int nembed=locfft->nembed->p[iwvl];

@@ -147,7 +147,7 @@ X(mat) *X(ref)(const X(mat) *in){
 /**
    create an new X(mat) reference another with different shape.
 */
-X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny){
+X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
     X(mat) *out=X(ref)(in);
     if(in->nx*in->ny!=nx*ny){
 	error("Must not change number of elements\n");
@@ -161,7 +161,7 @@ X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny){
    creat a new X(mat) referencing columns in existing
    X(mat). reference counted. not used
 */
-X(mat)* X(refcols)(X(mat) *in, long icol, long ncol){
+X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->nx=in->nx;
     out->ny=ncol;

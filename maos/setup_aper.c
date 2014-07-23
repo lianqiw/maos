@@ -76,17 +76,10 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	mapfree(smap);
     }
     if(!aper->amp){
-	aper->amp=dnew(aper->locs->nloc, 1);
-	if(aper->ampground){
-	    prop_grid(aper->ampground, aper->locs, 0, aper->amp->p, 1,
-		      -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1],
-		      1, 0, 0, 0);
-	}else{
-	    warning2("Using locannular to create a gray pixel aperture\n");
-	    locannular(aper->amp->p, aper->locs,
-		       parms->misreg.pupil->p[0], parms->misreg.pupil->p[1],
-		       parms->aper.d*0.5,parms->aper.din*0.5,1);
-	}
+	/*Use negative misreg.pupil because it is the misreg of telescope entrace, not our pupil.*/
+	aper->amp=mkamp(aper->locs, aper->ampground, 
+			-parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
+			parms->aper.d, parms->aper.din);
     }
     if(parms->aper.pupmask){
 	map_t *mask=mapread("%s",parms->aper.pupmask);

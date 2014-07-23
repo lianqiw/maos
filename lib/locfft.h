@@ -19,7 +19,7 @@
 typedef struct{
     const loc_t *loc; /*reference to the grid*/
     const dmat *amp;  /*reference to the amplitude map*/
-    const dmat *wvl;  /*reference to the wavelength*/
+    dmat *wvl;  /*reference to the wavelength*/
     lmat *nembed;/**<size of embedding array (square)*/
     lcell *embed; /**<embedding index*/
     double ampsum;/**<sum(amp)*/
@@ -31,5 +31,5 @@ typedef struct{
 locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const lmat *fftsize,
 		      const dmat *wvl, double fieldstop); 
 void locfft_free(locfft_t *locfft);
-ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize);
+ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one);
 void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts);

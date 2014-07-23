@@ -16,11 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <math.h>
 #include "common.h"
 #include "setup_powfs.h"
 #include "mtch.h"
@@ -76,7 +71,6 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     dfree(powfs[ipowfs].saa);
     locfree(powfs[ipowfs].saloc);
     locfree(powfs[ipowfs].loc);
-    locfree(powfs[ipowfs].gloc);
     dfree(powfs[ipowfs].amp);
     if(powfs[ipowfs].loc_tel){
 	cellfree(powfs[ipowfs].loc_tel);
@@ -108,20 +102,8 @@ static dmat *wfsamp2saa(dmat *wfsamp, long nxsa){
     }
     return saa;
 }
-/**
-   Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). 
-*/
-static dmat *mkwfsamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din){
-    dmat *amp=dnew(loc->nloc, 1);
-    if(ampground){
-	prop_grid(ampground, loc, NULL, amp->p, 1, misregx, misregy,1,0,0,0);
-    }else{
-	locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
-    }
-    return amp;
-}
 
-static void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs){
+void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs){
     long nloc=loc->nloc;
     dmat *ampmask=dnew(nloc, 1);
     double ht=parms->atm.hmax*0.7;
@@ -238,9 +220,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       the pupil amplitude map.*/
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
-    powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, aper->ampground, 
-			       parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
-			       parms->aper.d, parms->aper.din);
+    powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
+			    parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
+			    parms->aper.d, parms->aper.din);
     /*The threashold for normalized area (by areafulli) to keep subaperture. */
     double thresarea=parms->powfs[ipowfs].saat;
     dmat *ampi=NULL;
@@ -278,22 +260,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
  
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
     
-    //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
-    map_t *map=0;
-    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-    powfs[ipowfs].gloc=map2loc(map); mapfree(map);
-    //do not use misregistration since this is the model
-    powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
-				0,0, parms->aper.d, parms->aper.din);
-    loc_reduce(powfs[ipowfs].gloc, powfs[ipowfs].gamp, 1, NULL);
-
+  
     if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
 	if(nwfsp>1){
 	    error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
 	}
 	int iwfs=parms->powfs[ipowfs].wfs->p[0];
 	wfspupmask(parms, powfs[ipowfs].loc, powfs[ipowfs].amp, iwfs);
-	wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, iwfs);
+
     }
 
     if(parms->misreg.tel2wfs){
@@ -317,9 +291,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		powfs[ipowfs].loc_tel->p[jwfs]
 		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
 		powfs[ipowfs].amp_tel->p[jwfs]
-		    =mkwfsamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
-			      -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
-			      parms->aper.d, parms->aper.din);
+		    =mkamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
+			   -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
+			   parms->aper.d, parms->aper.din);
 		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
 		    if(nwfsp>1){
 			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
@@ -482,8 +456,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(parms->save.setup){
 	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
-	locwrite(powfs[ipowfs].gloc,"%s/powfs%d_gloc", dirsetup, ipowfs);
-	dwrite(powfs[ipowfs].gamp,"%s/powfs%d_gamp", dirsetup, ipowfs);
 	dwrite(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
 	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
@@ -972,8 +944,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	dcomplex *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
 	dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 
-	/*The following is used in genseotf to compute shifted
-	  i0.  not used currently*/
+	/*The following is used in genseotf to compute shifted i0.*/
 	for(int ix=0; ix<ncompx; ix++){
 	    int jx=ix<ncompx2?ix:(ix-ncompx);
 	    Ux[ix]=-2.*I*M_PI*jx*dux;
@@ -2047,9 +2018,16 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     POWFS_T *powfs=calloc(parms->npowfs, sizeof(POWFS_T));
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	info2("\n\033[0;32mSetting up powfs %d geom\033[0;0m\n\n", ipowfs);
-	setup_powfs_geom(powfs,parms,aper,ipowfs);
-        setup_powfs_grad(powfs,parms,ipowfs);
+	if(parms->powfs[ipowfs].type==0){
+	    info2("\n\033[0;32mSetting up powfs %d geom\033[0;0m\n\n", ipowfs);
+	    setup_powfs_geom(powfs,parms,aper,ipowfs);
+	    setup_powfs_grad(powfs,parms,ipowfs);
+	}else if(parms->powfs[ipowfs].type==1){
+	    info2("\n\033[0;32mSetting up powfs %d in Pyramid mode\033[0;0m\n\n", ipowfs);
+	    setup_pywfs(powfs, parms, aper, ipowfs);
+	}else{
+	    error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
+	}
     }
     toc("setup_powfs_init");
     return powfs;
@@ -2058,6 +2036,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
+	if(parms->powfs[ipowfs].type!=0) continue;
 	info2("\n\033[0;32mSetting up powfs %d PO WFS\033[0;0m\n\n", ipowfs);
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].psfout
@@ -2084,62 +2063,69 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     }/*ipowfs */
     toc("setup_powfs_phy");
 }
+void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
+    free_powfs_geom(powfs, parms, ipowfs);
+    free_powfs_dtf(powfs, parms, ipowfs);
+    spcellfree(powfs[ipowfs].GS0);
+    dcellfree(powfs[ipowfs].neasim);
+    if(powfs[ipowfs].intstat){
+	INTSTAT_T *intstat=powfs[ipowfs].intstat;
+	cellfree(intstat->fotf);
+	dcellfree(intstat->mtche);
+	dcellfree(intstat->saneaxyl);
+	dcellfree(intstat->saneaxy);
+	dcellfree(intstat->saneaixy);
+	dfree(intstat->i0sum);
+	free(intstat);
+	powfs[ipowfs].intstat=NULL;
+    }
+    if(parms->powfs[ipowfs].llt){
+	dcellfree(powfs[ipowfs].srot);
+	dcellfree(powfs[ipowfs].srsa);
+	dfree(powfs[ipowfs].srsamax);
+	dcellfree(powfs[ipowfs].sprint);
+    }
+
+    cellfree(powfs[ipowfs].saimcc);
+    if(powfs[ipowfs].llt){
+	ptsfree(powfs[ipowfs].llt->pts);
+	dfree(powfs[ipowfs].llt->amp);
+	locfree(powfs[ipowfs].llt->loc);
+	dcellfree(powfs[ipowfs].llt->mcc);
+	dcellfree(powfs[ipowfs].llt->imcc);
+	dcellfree(powfs[ipowfs].llt->ncpa);
+	free(powfs[ipowfs].llt);
+    }
+    dfree(powfs[ipowfs].sodium);
+    if(powfs[ipowfs].etfprep){
+	if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
+	    for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
+		ccellfree(powfs[ipowfs].etfsim[iwvl].p1);
+		ccellfree(powfs[ipowfs].etfsim[iwvl].p2);
+	    }
+	    free(powfs[ipowfs].etfsim);
+	}
+	for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
+	    ccellfree(powfs[ipowfs].etfprep[iwvl].p1);
+	    ccellfree(powfs[ipowfs].etfprep[iwvl].p2);
+	}
+	free(powfs[ipowfs].etfprep);
+    }
+    dcellfree(powfs[ipowfs].opdadd);
+    dcellfree(powfs[ipowfs].opdbias);
+    dcellfree(powfs[ipowfs].gradoff);
+}
 /**
    Free all parameters of powfs at the end of simulation.
 */
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
     int ipowfs;
     for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	free_powfs_geom(powfs, parms, ipowfs);
-	free_powfs_dtf(powfs, parms, ipowfs);
-	spcellfree(powfs[ipowfs].GS0);
-	dcellfree(powfs[ipowfs].neasim);
-	if(powfs[ipowfs].intstat){
-	    INTSTAT_T *intstat=powfs[ipowfs].intstat;
-	    cellfree(intstat->fotf);
-	    dcellfree(intstat->mtche);
-	    dcellfree(intstat->saneaxyl);
-	    dcellfree(intstat->saneaxy);
-	    dcellfree(intstat->saneaixy);
-	    dfree(intstat->i0sum);
-	    free(intstat);
-	    powfs[ipowfs].intstat=NULL;
+	if(parms->powfs[ipowfs].type==0){
+	    free_powfs_shwfs(parms, powfs, ipowfs);
+	}else if(parms->powfs[ipowfs].type==1){
+	    pywfs_free(powfs[ipowfs].pywfs);
 	}
-	if(parms->powfs[ipowfs].llt){
-	    dcellfree(powfs[ipowfs].srot);
-	    dcellfree(powfs[ipowfs].srsa);
-	    dfree(powfs[ipowfs].srsamax);
-	    dcellfree(powfs[ipowfs].sprint);
-	}
-
-	cellfree(powfs[ipowfs].saimcc);
-	if(powfs[ipowfs].llt){
-	    ptsfree(powfs[ipowfs].llt->pts);
-	    dfree(powfs[ipowfs].llt->amp);
-	    locfree(powfs[ipowfs].llt->loc);
-	    dcellfree(powfs[ipowfs].llt->mcc);
-	    dcellfree(powfs[ipowfs].llt->imcc);
-	    dcellfree(powfs[ipowfs].llt->ncpa);
-	    free(powfs[ipowfs].llt);
-	}
-	dfree(powfs[ipowfs].sodium);
-	if(powfs[ipowfs].etfprep){
-	    if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
-		for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
-		    ccellfree(powfs[ipowfs].etfsim[iwvl].p1);
-		    ccellfree(powfs[ipowfs].etfsim[iwvl].p2);
-		}
-		free(powfs[ipowfs].etfsim);
-	    }
-	    for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
-		ccellfree(powfs[ipowfs].etfprep[iwvl].p1);
-		ccellfree(powfs[ipowfs].etfprep[iwvl].p2);
-	    }
-	    free(powfs[ipowfs].etfprep);
-	}
-	dcellfree(powfs[ipowfs].opdadd);
-	dcellfree(powfs[ipowfs].opdbias);
-	dcellfree(powfs[ipowfs].gradoff);
     }
     free(powfs);
 }

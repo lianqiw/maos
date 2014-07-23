@@ -26,4 +26,8 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void test_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, 
 		     int ipowfs, int mode, int istep);
+void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs);
+void setup_pywfs(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
+void pywfs_free(PYWFS_T *pywfs);
+void pywfs_fft(dcell **pupim, POWFS_T *powfs, const PARMS_T *parms, int ipowfs, dmat *opd);
 #endif

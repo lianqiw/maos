@@ -77,7 +77,7 @@ void maos_setup(const PARMS_T *parms){
 	    exit(0);
 	}*/
 	recon = setup_recon_init(parms);
-	/*Setup DM fitting parameters so we can flatten the DM*/
+	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
 	setup_recon_dm(recon, parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 #if _OPENMP>=200805
