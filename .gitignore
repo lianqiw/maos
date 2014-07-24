@@ -37,4 +37,4 @@ scripts/*.app
 ar-lib
 *.pyc
 mex/maos2mex.h
-mex/aolib.h
+mex/aolib.c

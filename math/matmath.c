@@ -1522,7 +1522,7 @@ X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
 	error("First dimension of x must match y\n");
     }
     X(mat)*out=X(new)(1, y->ny);
-    for(long icol=0; icol<y->nx; icol++){
+    for(long icol=0; icol<y->ny; icol++){
 	T *py=y->p+y->nx*icol;
 	T *px=0;
 	if(x){
@@ -1535,7 +1535,8 @@ X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
 	T ans=0;
 	if(px){
 	    for(long i=0; i<y->nx-1; i++){
-		ans+=(px[i+1]-px[i])*(py[i+1]+py[i]);
+		//notice use of abs here.
+		ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
 	    }
 	}else{
 	    for(long i=0; i<y->nx; i++){

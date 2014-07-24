@@ -179,16 +179,12 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     if(ny<=0){
 	ny=in->ny-sy;
     }
-    X(mat)*out=X(new)(nx, ny);
     if(sx+nx>in->nx || sy+ny>in->ny){
 	error("Invalid parameter range\n");
     }
-    PMAT(in, pin);
-    PMAT(out, pout);
+    X(mat)*out=X(new)(nx, ny);
     for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    pout[iy][ix]=pin[iy+sy][ix+sx];
-	}
+	memcpy(out->p+iy*out->nx, in->p+(iy+sy)*in->nx+sx, sizeof(T)*nx); 
     }
     return out;
 }
