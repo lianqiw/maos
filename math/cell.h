@@ -26,7 +26,6 @@
 #define AOS_LIB_CELL_H
 #include "type.h"
 void* cellnew(long nx, long ny);
-void free_by_id(void* pix);
 void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, long id);
 void write_by_id(const void* dc, long id, const char* format,...);

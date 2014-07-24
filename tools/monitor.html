@@ -66,25 +66,33 @@
 	 var socket_lm;
 	 function clear_all(kind){
 	     var joblist=document.getElementById("joblist");
+	     cmd=[];
 	     for (irow=1; irow<joblist.rows.length; irow++){
                  var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
                  if((status==11 && kind==1) || (status>11 && kind==2)){
                      var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
-	             socket_lm.send(pid+"&REMOVE;");
+		     cmd[cmd.length]=pid+"&REMOVE;";
 	         }
+	     }
+	     for(icmd=0; icmd<cmd.length; icmd++){
+		 socket_lm.send(cmd[icmd]);
 	     }
 	 }
 	 function kill_all(){
 	     if(!window.confirm("Kill all jobs?")){
 	         return;
 	     }
+	     cmd=[];
 	     var joblist=document.getElementById("joblist");
 	     for (irow=1; irow<joblist.rows.length; irow++){
                  var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
                  var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
                  if(status<10){
-	             socket_lm.send(pid+"&KILL;");
+		     cmd[cmd.length]=pid+"&KILL;";
 	         }
+	     }
+	     for(icmd=0; icmd<cmd.length; icmd++){
+		 socket_lm.send(cmd[icmd]);
 	     }
 	 }
 	</script>

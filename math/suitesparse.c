@@ -125,6 +125,7 @@ static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT t
 {
     cs *A = ss_calloc (1, sizeof (cs)) ;    /* allocate the cs struct */
     if (!A) return (NULL) ;                 /* out of memory */
+    A->id = M_SPT;
     A->m = m ;                              /* define dimensions and nzmax */
     A->n = n ;
     A->nzmax = nzmax = SS_MAX (nzmax, 1) ;

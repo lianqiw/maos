@@ -1406,6 +1406,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dtrat_hi=-1;
     parms->sim.dtrat_lo=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].llt){
+	    error("Pyramid WFS is not available for LGS WFS\n");
+	}
 	if(!parms->powfs[ipowfs].trs){
 	    if(parms->sim.dtrat_lo<0){
 		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;

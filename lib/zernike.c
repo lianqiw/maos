@@ -20,7 +20,7 @@
 /**
    Generating Zernike Rnm for radial order ir, azimuthal or im.  used by loc_zernike.
    */
-static dmat *genRnm(dmat *locr, int ir, int im){
+static dmat *genRnm(const dmat *locr, int ir, int im){
     if(ir<0 || im < 0|| im>ir || (ir-im)%2!=0)
 	error("Invalid ir, im (%d, %d)\n", ir, im);
     
@@ -53,7 +53,7 @@ static dmat *genRnm(dmat *locr, int ir, int im){
    nr=2 is quadratic modes
    
 */
-dmat* zernike(loc_t *loc, double D, int nr){
+dmat* zernike(const loc_t *loc, double D, int nr){
     if(nr<0) error("Invalid nr\n");
     int nmod=(nr+1)*(nr+2)/2;
     const long nloc=loc->nloc;
@@ -190,8 +190,8 @@ dmat *zernike_cov_kolmogorov(int nr){
 /**
    Diagnolize the covariance matrix and transform the mode.
 */
-dmat *diag_mod_cov(dmat *mz, /**<Modes in zernike space*/
-		   dmat *cov /**<Covariance of zernike modes in kolmogorov (or any other)*/
+dmat *diag_mod_cov(const dmat *mz, /**<Modes in zernike space*/
+		   const dmat *cov /**<Covariance of zernike modes in kolmogorov (or any other)*/
     ){
     dmat *U=0, *Vt=0, *S=0;
     dsvd(&U, &S, &Vt, cov);
@@ -210,7 +210,7 @@ dmat *diag_mod_cov(dmat *mz, /**<Modes in zernike space*/
    SVD and use the Unitery matrix to transform the zernike modes. Notice the
    ordering of the master zernike modes may be reordering in the SVD process.
  */
-dmat *KL_kolmogorov(loc_t *loc, double D, int nr){
+dmat *KL_kolmogorov(const loc_t *loc, double D, int nr){
     dmat *cov=zernike_cov_kolmogorov(nr);
     dmat *modz=zernike(loc, D, nr);
     dmat *modkl=diag_mod_cov(modz, cov);

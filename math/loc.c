@@ -161,8 +161,8 @@ lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad)
 	}
 	nxy=*nembed;
     }
-    xmin-=(nxy-nx)/2*loc->dx;
-    ymin-=(nxy-ny)/2*loc->dy;
+    xmin-=(nxy-nx+1)/2*loc->dx;//odd -> pad on left
+    ymin-=(nxy-ny+1)/2*loc->dy;
     lmat *embed=lnew(loc->nloc, 1);
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);

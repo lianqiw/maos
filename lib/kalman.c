@@ -231,7 +231,6 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
     int nk=Cs->nx;
     dcell *Mout=dcellnew(nk, 1);
     if(nk==1){
-	info2("nk=1\n");
 	Mout->p[0]=reccati(Pout&&!*Pout?Pout:0, A, Qn, Cs->p[0], Rns->p[0]);
 	return Mout;
     }

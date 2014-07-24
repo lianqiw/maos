@@ -193,8 +193,8 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
 #define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
 
-#define cellwrite(out, A...) write_by_id((void*)out, MCC_ANY, A)
-#define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, MCC_ANY)
+#define cellwrite(out, A...) write_by_id((void*)out, 0, A)
+#define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, 0)
 #define icellwrite cellwrite
 #define dcellwrite cellwrite
 #define ccellwrite cellwrite

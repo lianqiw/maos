@@ -83,15 +83,13 @@ void locfft_free(locfft_t *locfft){
    
    where A is the amplitude map.
 */
-static cmat *strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
+static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
     dcomplex i2pi=I*2*M_PI/wvl;
     dcomplex strehl=0;
     for(int iloc=0; iloc<iopdevl->nx; iloc++){
 	strehl+=amp->p[iloc]*cexp(i2pi*iopdevl->p[iloc]);
     }
-    cmat *psf2=cnew(1,1);
-    psf2->p[0]=strehl;
-    return psf2;
+    return strehl;
 }
 /**
    Computes PSF from OPD by FFT. The PSF is computed as
@@ -105,16 +103,21 @@ static cmat *strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
    
    Extract center part of psfsize.
 */
-ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
+void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
     long nwvl=locfft->wvl->nx;
-    ccell *psf2s=ccellnew(nwvl, 1);
+    if(!*psf2s){
+	*psf2s=ccellnew(nwvl, 1);
+    }
     for(int iwvl=0; iwvl<nwvl; iwvl++)
 #if _OPENMP>=200805
 #pragma omp task
 #endif
     {
 	if(psfsize && psfsize->p[iwvl]==1){
-	    psf2s->p[iwvl]=strehlcomp(opd, locfft->amp, locfft->wvl->p[iwvl]);
+	    if(!(*psf2s)->p[iwvl]){
+		(*psf2s)->p[iwvl]=cnew(1,1);
+	    }
+	    (*psf2s)->p[iwvl]->p[0]=strehlcomp(opd, locfft->amp, locfft->wvl->p[iwvl]);
 	}else{
 	    long nembed=locfft->nembed->p[iwvl];
 	    long *embed=locfft->embed->p[iwvl]->p;
@@ -140,12 +143,14 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
 	    }else{
 		cfft2(psf2,-1);
 	    }
-	    if(!psfsize || psfsize->p[iwvl]==nembed){/*just reference */
+	    if(!(*psf2s)->p[iwvl] && (!psfsize || psfsize->p[iwvl]==nembed)){/*just reference */
 		cfftshift(psf2);
-		psf2s->p[iwvl]=psf2;
+		(*psf2s)->p[iwvl]=psf2;
 	    }else{/*create a new array, smaller. */
-		psf2s->p[iwvl]=cnew(psfsize->p[iwvl], psfsize->p[iwvl]);
-		ccpcorner2center(psf2s->p[iwvl], psf2);
+		if(!(*psf2s)->p[iwvl]){
+		    (*psf2s)->p[iwvl]=cnew(psfsize->p[iwvl], psfsize->p[iwvl]);
+		}
+		ccpcorner2center((*psf2s)->p[iwvl], psf2);
 		cfree(psf2); 
 	    }
 	}
@@ -156,13 +161,12 @@ ccell* locfft_psf(locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
 	    psfnorm=1./locfft->ampsum;
 	}
 	if(fabs(psfnorm-1)>1.e-15) {
-	    cscale(psf2s->p[iwvl], psfnorm);
+	    cscale((*psf2s)->p[iwvl], psfnorm);
 	}
     }
 #if _OPENMP>=200805
 #pragma omp taskwait
 #endif
-    return psf2s;
 }
 /**
    Apply a field stop

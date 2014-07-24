@@ -103,12 +103,15 @@ typedef struct INTSTAT_T{
 }INTSTAT_T;
 typedef struct PYWFS_T{
     /*Every above are used for SHWFS. Every below are used for PyWFS*/
+    double modulate;   /**<Amount of modulation in radian*/
+    long order;        /**<Order*/
+    dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/
     locfft_t *locfft;  /**<First fft to form PSF*/
-    cmat *psfquad;     /**<Second fft for each quadrant separately*/
+    ccell *pyramid;    /**<OPD of pyramid. Angular size of clear aperture is different*/
     cmat *nominal;     /**<For sampling results onto detector*/
-    dsp *si;           /**<For sampling results onto detector*/
+    spcell *si;           /**<For sampling results onto detector*/
 }PYWFS_T;
 /**
    contains the data associated with a certain type of WFS. not

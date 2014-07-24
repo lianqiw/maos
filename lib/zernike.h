@@ -18,8 +18,8 @@
 #ifndef AOS_LIB_ZERNIKE_H
 #define AOS_LIB_ZERNIKE_H
 #include "../math/mathdef.h"
-dmat* zernike(loc_t *loc, double D, int nr);
+dmat* zernike(const loc_t *loc, double D, int nr);
 dmat *zernike_cov_kolmogorov(int nr);
-dmat *diag_mod_cov(dmat *mz, dmat *cov);
-dmat *KL_kolmogorov(loc_t *loc, double D, int nr);
+dmat *diag_mod_cov(const dmat *mz, const dmat *cov);
+dmat *KL_kolmogorov(const loc_t *loc, double D, int nr);
 #endif

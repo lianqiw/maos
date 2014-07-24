@@ -625,7 +625,8 @@ static void init_simu_evl(SIM_T *simu){
     if(parms->evl.psfmean || parms->evl.psfhist){
 	/*compute diffraction limited PSF. */
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
-	ccell *psf2s=locfft_psf(aper->embed, iopdevl, parms->evl.psfsize, 0);
+	ccell *psf2s=0;
+	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);

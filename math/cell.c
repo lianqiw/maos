@@ -28,53 +28,69 @@ void *cellnew(long nx, long ny){
     dc->p=calloc(nx*ny, sizeof(void*));
     return dc;
 }
-void free_by_id(void *pix){
+/**
+   free a mat or cell object.
+*/
+void cellfree_do(void *pix){
     if(!pix) return;
     long id=*((long*)(pix));
     switch(id & 0xFFFF){
-    case MCC_ANY:
-	cellfree_do(pix);break;
+    case MCC_ANY:{
+	cell *dc=(cell*)pix;
+	if(dc->p){
+	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
+		cellfree_do(dc->p[ix]);
+	    }
+	    if(dc->mmap){
+		mmap_unref(dc->mmap);
+	    }else{
+		free(dc->header);
+	    }
+	    free(dc->p);dc->p=0;
+	}
+	if(dc->m) cellfree_do(dc->m);
+	if(dc->fft) dfft_free_plan(dc->fft);
+	free(dc);
+    }break;
     case M_DBL:
-	dfree(pix);break;
+	dfree_do(pix,0);break;
     case M_CMP:
-	cfree(pix);break;
+	cfree_do(pix,0);break;
     case M_FLT:
-	sfree(pix);break;
+	sfree_do(pix,0);break;
     case M_ZMP:
-	zfree(pix);break;
+	zfree_do(pix,0);break;
     case M_LOC64:
-	locfree(pix);break;
+	locfree_do(pix);break;
+    case M_SP32:
+    case M_SP64:
+	spfree_do(pix);break;
+    case M_SSP32:
+    case M_SSP64:
+	sspfree_do(pix);break;
+    case M_CSP32:
+    case M_CSP64:
+	cspfree_do(pix);break;
+    case M_ZSP64:
+    case M_ZSP32:
+	zspfree_do(pix);break;
     default:
 	error("Unknown id=%lx\n", id);
     }
 }
-/**
-   Free a cell object.
-*/
-void cellfree_do(void *dc_){
-    cell *dc=(cell*)dc_;
-    if(dc && dc->id!=MCC_ANY) error("Invalid use\n");
-    if(!dc_) return;
-    if(dc->p){
-	for(int ix=0; ix<dc->nx*dc->ny; ix++){
-	    free_by_id(dc->p[ix]);
-	}
-	if(dc->mmap){
-	    mmap_unref(dc->mmap);
-	}else{
-	    free(dc->header);
-	}
-	free(dc->p);dc->p=0;
-    }
-    if(dc->m) free_by_id(dc->m);
-    if(dc->fft) dfft_free_plan(dc->fft);
-    free(dc);
-}
+
 void writedata_by_id(file_t *fp, const void *pix, long id){
     if(pix){
-	id=*((long*)(pix));
+	if(!id){
+	    id=*((long*)(pix));
+	}else if (id!=MCC_ANY){
+	    long id2=*((long*)(pix));
+	    if((id & id2)!=id || (id & id2) != id2){
+		error("id=%ld, id2=%ld, mismatch\n", id, id2);
+	    }
+	}
     }else if(!id){
-	error("cannot deterine id\n");
+	id=MCC_ANY;//default for empty array
     }
     switch(id){
     case MCC_ANY:{
@@ -90,6 +106,9 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
 	    for(int ix=0; ix<nx*ny; ix++){
 		if(dc->p[ix]){
 		    id=*((long*)(dc->p[ix]));
+		    if(!id){
+			error("id is not set\n");
+		    }
 		}
 	    }
 	    if(!id){
@@ -100,25 +119,37 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
 	write_header(&header, fp);
 	if(id){
 	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
-		writedata_by_id(fp, dc->p[ix], id);
+		writedata_by_id(fp, dc->p[ix], 0);
 	    }
 	}
     }
 	break;
     case M_DBL:
-	dwritedata(fp, pix);break;
+	dwritedata(fp, (dmat*)pix);break;
     case M_CMP:
-	cwritedata(fp, pix);break;
+	cwritedata(fp, (cmat*)pix);break;
     case M_FLT:
-	swritedata(fp, pix);break;
+	swritedata(fp, (smat*)pix);break;
     case M_ZMP:
-	zwritedata(fp, pix);break;
+	zwritedata(fp, (zmat*)pix);break;
     case M_LONG:
-	lwritedata(fp, pix);break;
+	lwritedata(fp, (lmat*)pix);break;
     case M_LOC64:
-	locwritedata(fp, pix);break;
+	locwritedata(fp, (loc_t*)pix);break;
     case M_MAP64:
 	mapwritedata(fp, (map_t*)pix);break;
+    case M_SP32:
+    case M_SP64:
+	spwritedata(fp, (dsp*)pix);break;
+    case M_SSP32:
+    case M_SSP64:
+	sspwritedata(fp, (ssp*)pix);break;
+    case M_CSP32:
+    case M_CSP64:
+	cspwritedata(fp, (csp*)pix);break;
+    case M_ZSP64:
+    case M_ZSP32:
+	zspwritedata(fp, (zsp*)pix);break;	
     default:
 	error("Unknown id=%lx\n", id);
     }
@@ -149,6 +180,18 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    case M_LONG: return lreaddata(fp, header);break;
 	    case M_LOC64: return locreaddata(fp, header); break;
 	    case M_MAP64: return mapreaddata(fp, header); break;
+	    case M_SP32:
+	    case M_SP64:
+		return spreaddata(fp, header);break;
+	    case M_SSP32:
+	    case M_SSP64:
+		return sspreaddata(fp, header);break;
+	    case M_CSP32:
+	    case M_CSP64:
+		return cspreaddata(fp, header);break;
+	    case M_ZSP64:
+	    case M_ZSP32:
+		return zspreaddata(fp, header);break;	
 	    default:error("id=%lx\n", id);
 	    }
 	    break;

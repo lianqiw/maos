@@ -2024,7 +2024,7 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
 	    setup_powfs_grad(powfs,parms,ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){
 	    info2("\n\033[0;32mSetting up powfs %d in Pyramid mode\033[0;0m\n\n", ipowfs);
-	    setup_pywfs(powfs, parms, aper, ipowfs);
+	    pywfs_setup(powfs, parms, aper, ipowfs);
 	}else{
 	    error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
 	}
