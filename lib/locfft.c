@@ -48,7 +48,7 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
     locfft->amp=amp;
     locfft->loc=loc;
     locfft->ampsum=dsum(amp);
-    locfft->ampnorm=dnorm2(amp);
+    locfft->ampnorm=dsumsq(amp);
     if(fieldstop){
 	locfft->fieldstop=fieldstop;
 	locfft->fieldmask=dcellnew(nwvl, 1);

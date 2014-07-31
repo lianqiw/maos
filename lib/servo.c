@@ -583,7 +583,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     dcell *mreal=dcellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
     dmat *sigman=NULL;
-    if(dnorm2(sigma2n)>0){
+    if(dnorm(sigma2n)>0){
 	sigman=dchol(sigma2n);
     }
     dcell *meas=dcellnew(1,1);

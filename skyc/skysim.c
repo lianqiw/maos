@@ -467,8 +467,6 @@ static void skysim_prep_sde(SIM_S *simu){
     dmat *x=dtrans(simu->mideal);
     simu->psdi=dcellnew(x->ny, 1);
     simu->sdecoeff=dnew(3,x->ny);
-    dmat *coeff0=dnew(3,1);//sde first guess
-    coeff0->p[0]=3; coeff0->p[1]=9; coeff0->p[2]=1;
     PDMAT(simu->sdecoeff, pcoeff);
     for(int im=0; im<x->ny; im++){
 	dmat *xi=dsub(x, 20, 0, im, 1);
@@ -478,13 +476,15 @@ static void skysim_prep_sde(SIM_S *simu){
 	    //add windshake on first mode only
 	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
 	}
-	dmat *coeff=sde_fit(simu->psdi->p[im], coeff0, parms->skyc.sdetmax, 0, 1000, 0);
+	dmat *coeff=sde_fit(simu->psdi->p[im], NULL, parms->skyc.sdetmax);
+	if(coeff->ny>1){
+	    error("Please handle this case\n");
+	}
 	memcpy(pcoeff+im, coeff->p, coeff->nx*sizeof(double));
 	dfree(coeff);
     }
     
     dfree(x);
-    dfree(coeff0);
     if(parms->skyc.dbg){
 	dwrite(simu->sdecoeff, "coeff");
 	dcellwrite(simu->psdi, "psdi");

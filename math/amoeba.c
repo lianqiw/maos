@@ -36,7 +36,7 @@
    high point, tries it, and replaces the high point if the new point is better.
 */
 static T amotry(T **p, T y[], T psum[], int ndim,
-		     T (*funk)(T [], void *data), void *data, int ihi, T fac){
+		     T (*funk)(const T [], void *data), void *data, int ihi, T fac){
     int j;
     T fac1,fac2,ytry;
     T ptry[ndim];
@@ -81,7 +81,7 @@ static T amotry(T **p, T y[], T psum[], int ndim,
    evaluations taken.
  */
 static void amoeba(T **p, T y[], int ndim, T ftol,
-		   T (*funk)(T [], void *data), void *data, int *nfunk){
+		   T (*funk)(const T [], void *data), void *data, int *nfunk){
     int i,ihi,ilo,inhi,j,mpts=ndim+1;
     T rtol,sum,swap,ysave,ytry;
     T psum[ndim];
@@ -161,6 +161,9 @@ int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *i
 	    pinit[i][i-1]+=scale[i-1];
 	}
 	yinit[i]=fun(pinit[i], info);
+	if(!isfinite(yinit[i])){
+	    warning("yinit[%d]=%g\n",i, yinit[i]);
+	}
     }
     int ncall=0;
     amoeba(pinit2, yinit, nmod, ftol, fun, info, &ncall);

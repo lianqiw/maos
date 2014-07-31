@@ -21,7 +21,7 @@
 */
 //#define W_J(i,N2) (1-pow((double)(i-N2)/(double)N2, 2))
 #define W_J(i,N2) 1
-dmat *psd1d(dmat *v, /**<[in] The data sequency*/
+dmat *psd1d(dmat *v, /**<[in] The data sequence*/
 	   long lseg /**<[in] The length of overlapping segments*/
 	   ){
     long lseg2=lseg>>1;
@@ -82,37 +82,69 @@ dmat *psd1dt(dmat *v, long lseg, double dt){
 
 /*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
-    dmat *f1=dsub(psdin, 0, 0, 0, 1);
-    dmat *psd1=dsub(psdin, 0, 0, 1, 1);
-    dmat *f2=ddup(fnew);
+    dmat *f1=drefcols(psdin, 0, 1);
+    dmat *psd1=dsub(psdin, 0, 0, 1, 1);//copy
+    dmat *f2=dref(fnew);
+    double t1=dtrapz(f1, psd1);
     dcwlog(psd1);
     dmat *psd2=dinterp1(f1, psd1, f2);
-    dmat *t1=dtrapz(f1, psd1);
-    dmat *t2=dtrapz(f2, psd2);
-    if(fabs(t1->p[0]-t2->p[0])>fabs(t1->p[0]*10)){
-	warning("psd interpolation failed. int_orig=%g, int_interp=%g\n", t1->p[0], t2->p[0]);
-	double f_max=0, psd_max=0;
-	for(long i=0; i<f1->nx; i++){
-	    if(psd1->p[i]>psd_max){
-		f_max=f1->p[i];
-		psd_max=psd1->p[i];
-	    }
-	}
-	double f_diff=INFINITY;
-	long i_close=0;
-	for(long i=0; i<f2->nx; i++){
-	    if(fabs(f2->p[i]-f_max)<f_diff){
-		f_diff=fabs(f2->p[i]-f_max);
-		i_close=i;
-	    }
-	}
-	psd2->p[i_close]=psd_max;
-	dfree(t2);
-	t2=dtrapz(f2, psd2);
-	warning("psd interpolation failed. int_orig=%g, int_interp=%g\n", t1->p[0], t2->p[0]);
-    }
-    dscale(psd2, t1->p[0]/t2->p[0]);
-    dfree(f1); dfree(f2); dfree(psd1);
     dcwexp(psd2,1);
+    double t2=dtrapz(f2, psd2);
+    if(fabs(t1-t2)>fabs(0.5*(t1+t2)*2)){
+	warning("psd interpolation failed. int_orig=%g, int_interp=%g\n", t1, t2);
+    }
+    //Don't scale psd2 as it may have overlapping frequency regions
+    dfree(f1); dfree(f2); dfree(psd1);
     return psd2;
+}
+
+dmat *psd_vibid(const dmat *psdin){
+    double *f=psdin->p;
+    double *psd=psdin->p+psdin->nx;
+    dmat *y=dsub(psdin, 0, 0, 1, 1);
+    dcwlog10(y);
+    const double gain=0.01;
+    const double gain2=0.1;
+    int inpeak=0;
+    double ym=0, yn=0;
+    int nmaxp=100;
+    dmat *res=dnew(4, nmaxp);
+    double thres=100e-18;
+    double sumxy, sumy, sum;
+    int count=0;
+    for(long i=1; i<psdin->nx-1; i++){
+	if(f[i]<1) continue;
+	if(!inpeak){
+	    ym=(1.-gain)*ym+y->p[i]*gain;
+	    yn=(1.-gain2)*yn+fabs(y->p[i]-y->p[i-1])*gain2;
+	    if(y->p[i+1]>ym+yn*4){//beginning of peak
+		inpeak=1;
+		res->p[2+count*4]=i;
+		sumxy=f[i]*psd[i];//for CoG
+		sumy=psd[i];//for CoG
+		sum=0;//integration
+	    }
+	}else{
+	    //continuation of peak
+	    sumxy+=f[i]*psd[i];
+	    sumy+=psd[i];
+	    sum+=(f[i]-f[i-1])*(psd[i]+psd[i-1]);
+	    if(y->p[i+1]<ym+yn){//end of peak
+		inpeak=0;
+		if(sum*0.5>thres){
+		    res->p[0+count*4]=sumxy/sumy;
+		    res->p[1+count*4]=sum*0.5;
+		    res->p[3+count*4]=i+1;
+		    count++;
+		    if(count==nmaxp){
+			nmaxp*=2;
+			dresize(res, 4, nmaxp);
+		    }
+		}
+	    }
+	}
+    }
+    dfree(y);
+    dresize(res, 4, count);
+    return res;
 }

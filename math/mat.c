@@ -17,12 +17,6 @@
 */
 
 #define MAT_VERBOSE 0
-/*#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include <unistd.h>
-#include <sys/mman.h>*/
 #include "../sys/sys.h"
 #include "random.h"
 #include "mathdef.h"
@@ -162,11 +156,7 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
    X(mat). reference counted. not used
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
-    X(mat) *out=calloc(1, sizeof(X(mat)));
-    out->nx=in->nx;
-    out->ny=ncol;
-    out->p=in->p+icol*out->nx;
-    return out;
+    return X(new_ref)(in->nx, ncol, in->p+icol*in->nx);
 }
 
 /**
@@ -190,7 +180,7 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
 }
 /**
    Resize a matrix by adding or removing columns or rows. Data is kept
-   whever possible.
+   whenever possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
     if(!A->nref || A->nref[0]>1){

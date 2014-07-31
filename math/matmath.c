@@ -91,14 +91,20 @@ R X(maxabs)(const X(mat) *A){
 }
 
 /**
-   compute the norm2 of A
+   compute the sum of A.*A
 */
-R X(norm2)(const X(mat)*A){
+R X(sumsq)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
 	out+=(R)(A->p[i]*CONJ(A->p[i]));
     }
     return out;
+}
+/**
+   compute the norm(2) of A
+*/
+R X(norm)(const X(mat)*A){
+    return sqrt(X(sumsq)(A));
 }
 
 /**
@@ -406,7 +412,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(mat) *C=NULL;
     X(cp)(&C,A);
     X(add)(&C,1,B,-1);
-    T d=SQRT(X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B)));
+    T d=SQRT(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
     X(free)(C);
     return isnan(d)?0:d;
 }
@@ -1516,12 +1522,12 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
 /**
    Trapzoidal integration
 */
-X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
+T X(trapz)(const X(mat)*x, const X(mat)*y){
     if(!y) return 0;
     if(x && x->nx!=y->nx){
 	error("First dimension of x must match y\n");
     }
-    X(mat)*out=X(new)(1, y->ny);
+    T out=0;
     for(long icol=0; icol<y->ny; icol++){
 	T *py=y->p+y->nx*icol;
 	T *px=0;
@@ -1536,7 +1542,7 @@ X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
 	if(px){
 	    for(long i=0; i<y->nx-1; i++){
 		//notice use of abs here.
-		ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
+		ans+=ABS(px[i+1]-px[i])*(py[i+1]+py[i]);
 	    }
 	}else{
 	    for(long i=0; i<y->nx; i++){
@@ -1544,7 +1550,7 @@ X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
 	    }
 	    ans=(ans*2-py[0]-py[y->nx-1]);
 	}
-	out->p[icol]=ans*0.5;
+	out+=ans*0.5;
     }
     return out;
 }
@@ -1552,10 +1558,10 @@ X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y){
 /**
    compute norm2.
 */
-R X(cellnorm2)(const X(cell) *A){
+R X(cellnorm)(const X(cell) *A){
     R out=0;
     for(int i=0; i<A->nx*A->ny; i++){
-	out+=X(norm2)(A->p[i]);
+	out+=X(norm)(A->p[i]);
     }
     return out;
 }
@@ -1627,7 +1633,7 @@ R X(celldiff)(const X(cell) *A, const X(cell) *B){
     X(cell) *C=NULL;
     X(cellcp)(&C,A);
     X(celladd)(&C,1,B,-1);
-    R d=sqrt(X(cellnorm2)(C)*2/(X(cellnorm2)(C)+X(cellnorm2)(B)));
+    R d=sqrt(X(cellnorm)(C)*2/(X(cellnorm)(C)+X(cellnorm)(B)));
     return isnan(d)?0:d;
 }
 

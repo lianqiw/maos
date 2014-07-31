@@ -2,7 +2,7 @@
 #define AOS_LIB_KALMAN_H
 
 #include "../math/mathdef.h"
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, double min, double max, double df);
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
 typedef struct{
     dmat *Ad; /*discrete state propagation at dT*/
     dcell *Cd; /*From discrete state to WFS measurement*/

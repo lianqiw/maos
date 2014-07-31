@@ -68,9 +68,9 @@
 	     var joblist=document.getElementById("joblist");
 	     cmd=[];
 	     for (irow=1; irow<joblist.rows.length; irow++){
-                 var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
+                 var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
                  if((status==11 && kind==1) || (status>11 && kind==2)){
-                     var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
+                     var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
 		     cmd[cmd.length]=pid+"&REMOVE;";
 	         }
 	     }
@@ -85,8 +85,8 @@
 	     cmd=[];
 	     var joblist=document.getElementById("joblist");
 	     for (irow=1; irow<joblist.rows.length; irow++){
-                 var status=joblist.rows[irow].cells[9].firstChild.getAttribute("status");
-                 var pid=joblist.rows[irow].cells[9].firstChild.getAttribute("pid");
+                 var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
+                 var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
                  if(status<10){
 		     cmd[cmd.length]=pid+"&KILL;";
 	         }
@@ -129,7 +129,19 @@
 	</article>
 	
 	<script>
-
+	 var cols={
+	     TIME:0,
+	     PID:1,
+	     PATH:2,
+	     OUT:3,
+	     LOW:4,
+	     HIGH:5,
+	     SEED:6,
+	     STEP:7,
+	     TIMING:8,
+	     ICON:9,
+	     TOT:10,
+	 }
 	 function new_progbar(width){
 	     var div1=document.createElement("div");
 	     div1.className="progress";
@@ -232,7 +244,7 @@
 		     var row=null;
 		     var irow;
 		     for(irow=1; irow<joblist.rows.length; irow++){
-			 if(joblist.rows[irow].cells[1].innerHTML == i[0]){
+			 if(joblist.rows[irow].cells[cols.PID].innerHTML == i[0]){
 			     row=joblist.rows[irow];
 			     break;
 			 }
@@ -245,21 +257,21 @@
 		     }
 		     if(!row){
 			 row=joblist.insertRow(-1);
-			 for(var j=0; j<10; j++){
+			 for(var j=0; j<cols.TOT; j++){
 			     row.insertCell(-1);
 			     row.cells[j].align="right";
-			     if(j==2){
-				 row.cells[j].className="expandable";
+			     if(j==cols.PATH){
+				 row.cells[cols.PATH].className="expandable";
 			     }
 			 }
-			 row.cells[1].innerHTML=i[0];
-			 row.cells[6].appendChild(new_progbar("50px"));
-			 row.cells[7].appendChild(new_progbar("120px"));
+			 row.cells[cols.PID].innerHTML=i[0];
+			 row.cells[cols.SEED].appendChild(new_progbar("50px"));
+			 row.cells[cols.STEP].appendChild(new_progbar("120px"));
 		     }
-		     if(i[1]=='PATH'){
+		     if(i[1]=='PATH'){//Only path is sent
 			 var io=i[2].lastIndexOf("-o");
 			 if(io>-1){
-			     row.cells[3].innerHTML=i[2].substr(io+2).trim().split(' ')[0];
+			     row.cells[cols.OUT].innerHTML=i[2].substr(io+2).trim().split(' ')[0];
 			     i[2]=i[2].replace(/[ \t]+-o[ \t]+[^ \t]+/g," ");
 			 }
 			 var slash;
@@ -269,36 +281,35 @@
 			     slash=-1;
 			 }
 			 if(slash>-1){
-			     row.cells[2].innerHTML='<details><summary>'+i[2].substr(0, slash+1)+'</summary>'
-			     +i[2].substr(slash+1)+'</details>'
+			     row.cells[cols.PATH].innerHTML='<details><summary>'+i[2].substr(0, slash+1)+'</summary>'+i[2].substr(slash+1)+'</details>'
 			 }else{
-			     row.cells[2].innerHTML=i[2];
+			     row.cells[cols.PATH].innerHTML=i[2];
 			 }
-		     }else{
+		     }else{//status update
 			 if(i[0]!=i[2]){
-			     row.cells[1].innerHTML=i[2];
+			     row.cells[cols.PID].innerHTML=i[2];
 			     i[0]=i[2];
 			 }
-			 row.cells[0].innerHTML=i[4];
-			 row.cells[4].innerHTML=i[6];
-			 row.cells[5].innerHTML=i[5];
+			 row.cells[cols.TIME].innerHTML=i[4];
+			 row.cells[cols.LOW].innerHTML=i[6];
+			 row.cells[cols.HIGH].innerHTML=i[5];
 			 var frac=0;
 			 if(parseInt(i[8])>0){
 			     frac=Math.round(parseInt(i[7])/parseInt(i[8])*100);
 			 }
-			 progbar_set(row.cells[6].firstChild, i[7], i[8]);
+			 progbar_set(row.cells[cols.SEED].firstChild, i[7], i[8]);
 			 frac=0;
 			 if(parseInt(i[10])>0){
 			     frac=Math.round(parseInt(i[9])/parseInt(i[10])*100);
 			 }
-			 progbar_set(row.cells[7].firstChild, i[9], i[10]);
+			 progbar_set(row.cells[cols.STEP].firstChild, i[9], i[10]);
 			 if(i[3]==1 || i[3]>10){
-			     row.cells[8].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
+			     row.cells[cols.TIMING].innerHTML=i[13]+'s '+sec2str(i[11])+'/'+sec2str(i[12]);
 			 }
-			 if(row.cells[1].getAttribute("status")!=i[3]){
-			     row.cells[1].setAttribute("status", i[3]);
-			     var cell_tim=row.cells[8];
-			     var cell_btn=row.cells[9];
+			 if(row.cells[cols.PID].getAttribute("status")!=i[3]){
+			     row.cells[cols.PID].setAttribute("status", i[3]);
+			     var cell_tim=row.cells[cols.TIMING];
+			     var cell_btn=row.cells[cols.ICON];
 			     if(i[3]==1){
 				 setchild(cell_btn, button_play);
 			     }else if(i[3]==2){
@@ -317,8 +328,8 @@
 				 setchild(cell_btn, button_ok);
 			     }else if(i[3]==12 || i[3]==15){
 				 setchild(cell_btn, button_err);
-				 row.cells[6].firstChild.style.background="red";
-				 row.cells[7].firstChild.style.background="red";
+				 row.cells[cols.SEED].firstChild.style.background="red";
+				 row.cells[cols.STEP].firstChild.style.background="red";
 			     }
 			     cell_btn.firstChild.setAttribute("pid", i[0]);
 			     cell_btn.firstChild.setAttribute("status", i[3]);

@@ -27,7 +27,8 @@
     R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
-    R X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
+    R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
+    R X(norm)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     void X(randu)(X(mat) *A, const T mean, rand_t *rstat);		\
     void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);		\
     void X(scale)(X(mat) *A, R w);					\
@@ -102,12 +103,12 @@
     long X(fwhm)(X(mat) *A);						\
     void X(sort)(X(mat) *A, int ascend);				\
     X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);	\
-    typedef T (*X(minsearch_fun))(T *x, void *info);			\
+    typedef T (*X(minsearch_fun))(const T *x, void *info);		\
     int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *info); \
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
-    X(mat)* X(trapz)(const X(mat)*x, const X(mat)*y);			\
+    T X(trapz)(const X(mat)*x, const X(mat)*y);				\
 									\
-    R X(cellnorm2)(const X(cell) *in);					\
+    R X(cellnorm)(const X(cell) *in);					\
     void X(cellscale)(X(cell) *A, R w);					\
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(cellinn)(const X(cell)*A, const X(cell)*B);			\

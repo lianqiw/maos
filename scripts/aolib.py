@@ -44,12 +44,23 @@ for funname in funcs: #loop over functions
         argname=arg[1]
         fundef+=argname+","
     fundef=fundef[0:-1]+');\n'
-    fundef+='    plhs[0]=any2mx('+funname+'_out);\n'
+    if funtype[-1]=='*':
+        fundef+='    plhs[0]=any2mx('+funname+'_out);\n'
+    elif funtype=='double':
+        fundef+='    plhs[0]=mxCreateDoubleScalar('+funname+'_out);\n'
+    else:
+        fundef+='    plhs[0]=Unknown('+funname+'_out);\n'
     for arg in funargs:
         argtype=arg[0]
         argname=arg[1]
         if argtype=='dmat*':
             fundef+='    dfree('+argname+');\n'
+        elif argtype=='cmat*':
+            fundef+='    cfree('+argname+');\n'
+    if funtype=='dmat*':
+        fundef+='    dfree('+funname+'_out);\n'
+    elif funtype=='cmat*':
+        fundef+='    cfree('+funname+'_out);\n'
     fundef+='}'
     print(fundef, file=fpout)
 

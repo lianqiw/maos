@@ -354,7 +354,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 			       dirsetup,istar,ipowfs,dtrat);
 		}
 #if 1
-		double nea=sqrt(dnorm2(pistat->sanea->p[idtrat])/(nsa*2));
+		double nea=sqrt(dsumsq(pistat->sanea->p[idtrat])/(nsa*2));
 #else
 		double nea=dmax(pistat->sanea->p[idtrat]);
 #endif
