@@ -17,11 +17,14 @@
 */
 #include "kalman.h"
 #include "psd.h"
+int KALMAN_IN_SKYC=0;
 typedef struct{
     double df;
     dmat *freq;
     dmat *psdcov_in;
     dmat *psdcov_sde;
+    double diffscale;
+    int count;
     int ncoeff;
     int nmod;
     int ncov;
@@ -39,29 +42,48 @@ static void psd2cov(dmat *psd, double df){
    Computes PSD of SDE with coefficients (coeff) and frequency (f)
  */
 static void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, int nmod){
+    int order=ncoeff-1;
     if(!psd){
 	*psd=dnew(f->nx,1);
-    }else{
+    }else if(order!=2){
 	dzero(*psd);
     }
     dmat *ppsd=*psd;
-    int order=ncoeff-1;
-    dcomplex twopii=2*M_PI*I;
-    for(int is=1; is<f->nx; is++){
-	dcomplex s=f->p[is]*twopii;
+    if(order==2){//special version for order 2. faster.
+	double twopi=2*M_PI;
 	for(int im=0; im<nmod; im++){
-	    dcomplex denom=cpow(s, order);
-	    for(int ic=0; ic<order-1; ic++){
-		denom+=coeff[ic+im*ncoeff]*cpow(s, order-ic-1);
-	    }
-	    denom+=coeff[order-1+im*ncoeff];
-	    double val=pow(coeff[order+im*ncoeff],2)/cabs2(denom);
+	    double c1sq=pow(coeff[0+im*3],2);
+	    double c2=coeff[1+im*3];
+	    double sigma2=pow(coeff[2+im*3],2);
+	    double *pp;
 	    if(ppsd->ny==nmod){//seperate
-		ppsd->p[is+im*f->nx]=val;
+		pp=ppsd->p+im*f->nx;
 	    }else{
-		ppsd->p[is]+=val;
+		pp=ppsd->p;
 	    }
-	}	
+	    for(int is=0; is<f->nx; is++){
+		double omega2=pow(f->p[is]*twopi, 2);
+		pp[is]=sigma2/(pow(omega2-c2, 2)+c1sq*omega2);
+	    }
+	}
+    }else{
+	dcomplex twopii=2*M_PI*I;
+	for(int is=0; is<f->nx; is++){
+	    dcomplex s=f->p[is]*twopii;
+	    for(int im=0; im<nmod; im++){
+		dcomplex denom=cpow(s, order);
+		for(int ic=0; ic<order-1; ic++){
+		    denom+=coeff[ic+im*ncoeff]*cpow(s, order-ic-1);
+		}
+		denom+=coeff[order-1+im*ncoeff];
+		double val=pow(coeff[order+im*ncoeff],2)/cabs2(denom);
+		if(ppsd->ny==nmod){//seperate
+		    ppsd->p[is+im*f->nx]=val;
+		}else{
+		    ppsd->p[is]+=val;
+		}
+	    }	
+	}
     }
 }
 static double coeff_isbad(const double *coeff, int ncoeff){
@@ -79,28 +101,38 @@ static double sde_diff(const double *coeff, void *pdata){
     sde_fit_t *data=pdata;
     double check;
     double diff;
+    data->count++;
     if((check=coeff_isbad(coeff, data->ncoeff*data->nmod))){
-	diff=(check)*1e50;
+	diff=(check)*10+10;
     }else{
 	sde_psd(&data->psdcov_sde, data->freq, coeff, data->ncoeff, data->nmod);
 	if(!data->ncov){
 	    dadd(&data->psdcov_sde, 1, data->psdcov_in, -1);
+	    /*Must use dnorm here. dsumabs does not work well for peaks when
+	     * initial guess of c1 is not close.*/
 	    diff=dnorm(data->psdcov_sde);
 	}else{
 	    psd2cov(data->psdcov_sde, data->df);
-	    dmat *cov1=dnew_ref(data->ncov, 1, data->psdcov_sde->p);
-	    dmat *cov2=dnew_ref(data->ncov, 1, data->psdcov_in->p);
-	    dadd(&cov1, 1, cov2, -1);
-	    diff=dnorm(cov1);
-	    dfree(cov1); dfree(cov2);
+	    diff=0;
+	    double scale1=1./(data->psdcov_sde->p[0]);
+	    double scale2=1./(data->psdcov_in->p[0]);
+	    for(long i=0; i<data->ncov; i++){
+		double val1=data->psdcov_sde->p[i]*scale1;
+		double val2=data->psdcov_in->p[i]*scale2;
+		diff+=fabs(val1*(val1-val2));
+	    }
 	}
+    }
+    diff*=data->diffscale;
+    if(!isfinite(diff)){
+	error("Diff is not finite\n");
     }
     return diff;
 }
 /**
    Scale the third coefficient (sigma) to have the same energy
 */
-static void sde_scale_coeff(dmat *coeff, const dmat *psdcov_in, dmat *psdcov_sde, const dmat *freq, int ncov){
+static void sde_scale_coeff(dmat *coeff, double var_in, dmat *psdcov_sde, const dmat *freq, int ncov){
     for(int iy=0; iy<coeff->ny; iy++){
 	if(coeff->p[2+iy*3]<=0){
 	    coeff->p[2+iy*3]=1;
@@ -110,9 +142,8 @@ static void sde_scale_coeff(dmat *coeff, const dmat *psdcov_in, dmat *psdcov_sde
     sde_psd(&psdcov_sde, freq, coeff->p, coeff->nx, coeff->ny);
     if(ncov){
 	psd2cov(psdcov_sde, freq->p[1]-freq->p[0]);
-	ratio=sqrt(psdcov_in->p[0]/psdcov_sde->p[0]);
+	ratio=sqrt(var_in/psdcov_sde->p[0]);
     }else{
-	double var_in=dtrapz(freq, psdcov_in);
 	double var_sde=dtrapz(freq, psdcov_sde);
 	ratio=sqrt(var_in/var_sde);
     }
@@ -124,17 +155,23 @@ static void sde_scale_coeff(dmat *coeff, const dmat *psdcov_in, dmat *psdcov_sde
    Fit a PSD with SDE model. Use initial guess from coeff0 and return final
    answer in the same format.
 */
-static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
+static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     if(psdin->ny!=2){
 	error("psd must contain nu and psd\n");
     }
     double df=0.01;//ensure we can sample narrow peaks when interpolating psd
     dmat *freq=0, *psdcov_in=0, *psdcov_sde=0;
     int ncov=0;
+    double var_in=0;//strength of input
+    double diffscale;//scale the diff
+    /* 2014-07-31: Always upsample the PSD to 0.01 Hz sampling. Otherwise SDE
+       PSD may have unresolved peaks, causing fitting to misbehave.
+    */
+    double maxf=psdin->p[psdin->nx-1];
     if(tmax_fit>0){//Use covariance fit
 	//Create Frequency vector
-	double maxf=psdin->p[psdin->nx-1];
-	long nf=round(maxf/df+1)*2;
+	long nf=round(maxf/df)*2;
+	ncov=MIN(round(tmax_fit*maxf), nf/2);
 	freq=dnew(nf, 1);
 	for(long i=0; i<nf/2; i++){
 	    freq->p[i]=df*i;
@@ -142,39 +179,63 @@ static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 	}
 	psdcov_in=psdinterp1(psdin, freq);
 	psd2cov(psdcov_in, df);
+	var_in=psdcov_in->p[0];
+	dmat *cov_in2=dnew_ref(ncov, 1, psdcov_in->p);
+	diffscale=1;//./dsumabs(cov_in2);
+	dfree(cov_in2);
+
 	if(!isfinite(psdcov_in->p[0])){
 	    warning("covariance is not finite at 0\n");
 	    dwrite(psdcov_in, "bad_cov");
 	}
 	psdcov_sde=dnew(nf, 1);
-	ncov=MIN(round(tmax_fit*maxf), nf/2);
     }else{//Use PSD fit
-	freq=drefcols(psdin, 0, 1);//Use the original freq in psd
-	psdcov_in=drefcols(psdin, 1, 1);//original PSD;
+	if(psdin->p[1]-psdin->p[0]<df*2){
+	    freq=drefcols(psdin, 0, 1);
+	    psdcov_in=drefcols(psdin, 1, 1);
+	}else{
+	    double minf=psdin->p[0];
+	    long nf=round((maxf-minf)/df);
+	    freq=dnew(nf, 1);
+	    for(long i=0; i<nf; i++){
+		freq->p[i]=minf+df*i;
+	    }
+	    psdcov_in=psdinterp1(psdin, freq);
+	}
 	psdcov_sde=dnew(freq->nx, 1);
+	var_in=dtrapz(freq, psdcov_in);
+	diffscale=1./dsumabs(psdcov_in);
     }
-
     int ncoeff=coeff0->nx;
     int nmod=coeff0->ny;
     dmat *coeff=dnew(ncoeff, nmod);dcp(&coeff, coeff0);
     if(coeff->p[2]<=0){
-	sde_scale_coeff(coeff, psdcov_in, psdcov_sde, freq, tmax_fit>0?1:0);
+	sde_scale_coeff(coeff, var_in, psdcov_sde, freq, tmax_fit>0?1:0);
     }
-    dmat *scale=dnew(ncoeff, nmod);dadd(&scale, 0, coeff, 0.1);
-    sde_fit_t data={df, freq, psdcov_in, psdcov_sde, ncoeff, nmod, ncov};
-    double tol;
-    if(ncov>0){//covariance fitting
-	tol=psdcov_in->p[0]*1e-15;
-    }else{//PSD fitting
-	tol=dnorm(psdcov_in)*1e-15;
-    }
-    dminsearch(coeff->p, scale->p, ncoeff*nmod, tol, sde_diff, &data);
+    
+    sde_fit_t data={df, freq, psdcov_in, psdcov_sde, diffscale, 0, ncoeff, nmod, ncov};
+    double diff0=sde_diff(coeff->p, &data);
+    double tol=1e-10;
+    dminsearch(coeff->p, ncoeff*nmod, tol, sde_diff, &data);
     //Scale to make sure total energy is preserved.
-    sde_scale_coeff(coeff, psdcov_in, psdcov_sde, freq, ncov);
+    sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
+    double diff1=sde_diff(coeff->p, &data);
+    info2("sde_fit: %d interations: %g->%g\n", data.count, diff0, diff1);
+    if(diff1>0.2){
+	warning("Failed to converge\n");
+    }
     dfree(freq);
     dfree(psdcov_in);
     dfree(psdcov_sde);
-    dfree(scale);
+    return coeff;
+}
+static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
+    dmat *coeff=sde_fit_do2(psdin, coeff0, tmax_fit);
+    if(coeff->p[0]>10 && tmax_fit>0){
+	info2("Redo with PSD fitting\n");
+	dfree(coeff);
+	coeff=sde_fit_do2(psdin, coeff0, 0);
+    }
     return coeff;
 }
 /**
@@ -201,10 +262,11 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 	dmat *coeffi=dnew(3,1);
 	dmat *psd2=ddup(psdin);
 	if(vibs && vibs->ny>0){
-	    for(int ivb=0; ivb<vibs->ny; ivb++){
-		int fi=vibs->p[ivb*4+0];
-		int i1=vibs->p[ivb*4+2];
-		int i2=vibs->p[ivb*4+3]+1;
+	    info("\nnvib=%ld\n", vibs->ny);
+	    for(int ivib=0; ivib<vibs->ny; ivib++){
+		double fi=vibs->p[ivib*4+0];
+		int i1=vibs->p[ivib*4+2];
+		int i2=vibs->p[ivib*4+3]+1;
 		if(i2-i1<3){
 		    i2++;
 		    i1--;
@@ -213,18 +275,19 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 		coeffi->p[0]=1;
 		coeffi->p[1]=pow(2*M_PI*fi,2);
 		coeffi->p[2]=0;//sde_fit_do will figure it out.
-		coeffs->p[ivb]=sde_fit_do(psdi, coeffi, tmax_fit);
-		if(sqrt(fabs(coeffi->p[1]-coeffs->p[ivb]->p[1]))>2*M_PI){
-		    warning("Fitting failed for %d\n", ivb);
-		    dwrite(psdi, "psdi_%d", ivb);
-		    dwrite(coeffi, "coeffi_%d", ivb);
+		coeffs->p[ivib]=sde_fit_do(psdi, coeffi, tmax_fit);
+		if(sqrt(fabs(coeffi->p[1]-coeffs->p[ivib]->p[1]))>2*M_PI){
+		    warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
+			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
+		    dwrite(psdi, "psdi_%d", ivib);
+		    dwrite(coeffi, "coeffi_%d", ivib);
+		    dwrite(coeffs->p[ivib], "coeffo_%d", ivib);
 		}
 		double* psd2p=psd2->p+psd2->nx;
 		for(int i=i1; i<i2; i++){//replace the peak by a linear interpolation
 		    psd2p[i]=(psd2p[i1-1]*(i2+1-i)+psd2p[i2+1]*(i-(i1-1)))/(i2-i1+2);
 		}
 	    }
-	    dwrite(psd2, "psd2_mod");
 	    dfree(vibs);
 	}
 	coeffi->p[0]=1;
@@ -265,9 +328,9 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
     const int maxcount=10000;
     while(diff>thres && diff2>thres && count++<maxcount){
 	RECCATI_CALC;//P2 has the new result.
-	diff=dnorm(P);
+	diff=dsumsq(P);
 	dadd(&P, 1, P2, -1);
-	diff=sqrt(dnorm(P)/diff);
+	diff=sqrt(dsumsq(P)/diff);
 	diff2=fabs(diff-lastdiff);
 	lastdiff=diff;
     }
@@ -303,9 +366,9 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
 	dmat *C=Cs->p[ik];
 	dmat *Rn=Rns->p[ik];
 	RECCATI_CALC;
-	diff=dnorm(P);
+	diff=dsumsq(P);
 	dadd(&P, 1, P2, -1);
-	diff=sqrt(dnorm(P)/diff);
+	diff=sqrt(dsumsq(P)/diff);
 	diff2=fabs(diff-lastdiff);
 	lastdiff=diff;
     }
@@ -493,7 +556,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dcell *Cd=dcellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		dmat *Gwfsi=0;//Use for reconstruction. 
-		if(indk==1 && nmod==12){
+		if(indk==1 && nmod==12 && KALMAN_IN_SKYC){
 	            /*Our sky coverage case with single WFS, make 3rd column zero*/
 	            Gwfsi=ddup(Gwfs->p[iwfs]);
 		    memset(Gwfsi->p+2*Gwfsi->nx, 0, Gwfsi->nx*sizeof(double));
@@ -623,7 +686,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     long ngs[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ng=Gwfs->p[iwfs]->nx;
-	if(dnorm(kalman->Rwfs->p[iwfs+nwfs*iwfs])>0){
+	if(dsumsq(kalman->Rwfs->p[iwfs+nwfs*iwfs])>0){
 	    rmsn->p[iwfs]=dchol(kalman->Rwfs->p[iwfs+nwfs*iwfs]);
 	    noise->p[iwfs]=dnew(ng, 1);
 	}

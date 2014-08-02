@@ -145,10 +145,10 @@ static void amoeba(T **p, T y[], int ndim, T ftol,
 #undef NMAX
 #undef NRANSI
 /**
-  Search minimum along multiple dimenstions. scale is the contains the scale of each dimension. x
+  Search minimum along multiple dimenstions. scale contains the scale of each dimension. x
   contains initial warm restart values.
 */
-int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *info){
+int X(minsearch)(T *x, int nmod, T ftol, X(minsearch_fun) fun, void *info){
     T pinit[nmod+1][nmod];
     T *pinit2[nmod+1];
     T yinit[nmod+1];
@@ -157,8 +157,8 @@ int X(minsearch)(T *x, T *scale, int nmod, T ftol, X(minsearch_fun) fun, void *i
 	for(int j=0; j<nmod; j++){
 	    pinit[i][j]=x[j];
 	}
-	if(i>0){
-	    pinit[i][i-1]+=scale[i-1];
+	if(i<nmod){
+	    pinit[i][i]*=1.15;//15% perturbation
 	}
 	yinit[i]=fun(pinit[i], info);
 	if(!isfinite(yinit[i])){

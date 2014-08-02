@@ -4,11 +4,11 @@ SUBDIRS+=sys math lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif
-SUBDIRS+=maos skyc tools
-SUBDIRS+=test
+SUBDIRS+=maos skyc
 if USE_MEX
 SUBDIRS+=mex
 endif
+SUBDIRS+=tools test 
 include $(top_srcdir)/aminclude.am
 
 #dist-hook:

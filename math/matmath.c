@@ -89,7 +89,16 @@ R X(maxabs)(const X(mat) *A){
     min=FABS(min);
     return max>min?max:min;
 }
-
+/**
+   compute the sum of abs(A)
+*/
+R X(sumabs)(const X(mat)*A){
+    R out=0;
+    for(long i=0; i<A->nx*A->ny; i++){
+	out+=ABS(A->p[i]);
+    }
+    return out;
+}
 /**
    compute the sum of A.*A
 */

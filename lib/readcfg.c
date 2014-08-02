@@ -173,6 +173,8 @@ static void print_key(const void *key, VISIT which, int level){
 	    fprintf(fpout, "%s=", store->key);
 	    if(store->data && strcmp(store->data, "ignore")){
 		fprintf(fpout, "%s\n", store->data);
+	    }else{
+		fprintf(fpout, "\n");
 	    }
 	}
 	if(store->count==0){

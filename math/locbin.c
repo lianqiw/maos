@@ -66,7 +66,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 
 	if(fabs(dy)<tol || isnan(dy)){
 	    dy=dyd;
-	}else if(fabs(dy-dyd)>tol && isfinite(dxd)){
+	}else if(fabs(dy-dyd)>tol && isfinite(dyd)){
 	    error("Specified dy=%.15g doesn't agree with data: %.15g\n", dy, dyd);
 	}
 

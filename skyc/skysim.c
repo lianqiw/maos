@@ -461,9 +461,9 @@ static void skysim_prep_sde(SIM_S *simu){
 	error("Only support skyc.psdcalc=1\n");
     }
     /*
-       Do not scale the time series by MCC. We are working in "radian space" for
-       kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
-     */
+      Do not scale the time series by MCC. We are working in "radian space" for
+      kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
+    */
     dmat *x=dtrans(simu->mideal);
     simu->psdi=dcellnew(x->ny, 1);
     simu->sdecoeff=dnew(3,x->ny);
@@ -485,7 +485,7 @@ static void skysim_prep_sde(SIM_S *simu){
     }
     
     dfree(x);
-    if(parms->skyc.dbg){
+    if(parms->skyc.dbg || 1){
 	dwrite(simu->sdecoeff, "coeff");
 	dcellwrite(simu->psdi, "psdi");
     }
@@ -512,6 +512,8 @@ void skysim(const PARMS_S *parms){
     simu->neaspec_dtrats=dread("%s/neaspec/neaspec_dtrats", dirstart);
     PINIT(simu->mutex_status);
     simu->tk_0=myclockd();
+    extern int KALMAN_IN_SKYC;
+    KALMAN_IN_SKYC=1; //handle deficient measurement case when there is a single WFS to measure 6 modes.
     for(int iseed_maos=0; iseed_maos<parms->maos.nseed; iseed_maos++){
 	simu->iseed=iseed_maos;
 	int seed_maos=simu->seed_maos=parms->maos.seeds[iseed_maos];/*loop over seed */

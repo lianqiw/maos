@@ -208,7 +208,7 @@ void X(expm)(X(mat)**out, R alpha, X(mat) *A, R beta){
     //first determine the scaling needed
     int scaling=0;
     {
-	R norm=sqrt(X(norm)(A));
+	R norm=sqrt(X(sumsq)(A));
 	scaling=(int)ceil(log2(abs(norm*beta*100)));
 	if(scaling<0) scaling=0;
     }
