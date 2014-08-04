@@ -565,6 +565,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	}
 	if(start[0]=='-'){
 	    if(!options){
+		info2("cmds=\"%s\"", cmds);
 		error("options are not specified while command contains options.\n");
 	    }
 	    char *start0=start;

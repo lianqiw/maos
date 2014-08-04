@@ -168,6 +168,10 @@ static void setup_parms_maos(PARMS_S *parms){
 }
 
 PARMS_S *setup_parms(const ARG_S *arg){
+    /*Setup PATH and result directory */
+    char *config_path=find_config("skyc");
+    addpath(config_path);
+    free(config_path);
     open_config(arg->conf,NULL,0);
     open_config(arg->confcmd,NULL,1);
     remove(arg->confcmd);
@@ -277,8 +281,6 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    warning("There are no seed to run. Use -O to override. Exit\n");
 	    {//remove log and conf files
 		char fnpid[PATH_MAX];
-		snprintf(fnpid, PATH_MAX, "skyc_%d.conf", (int)getpid());
-		remove(fnpid);
 		snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
 		remove(fnpid);
 	    }
@@ -414,9 +416,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	parms->skyc.psd_focus=dread("%s",temp); 
 	info2("Loading PSD of focus modes from %s\n", temp);
     }
-    char fnconf[PATH_MAX];
-    snprintf(fnconf, PATH_MAX, "skyc_%ld.conf", (long)getpid());
-    close_config("%s",fnconf);
+    close_config("skyc_recent.conf");
 
     if(parms->skyc.neaaniso){
 	info2("Variance of the gradients in stored PSF is added to NEA\n");

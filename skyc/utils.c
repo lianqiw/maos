@@ -103,21 +103,11 @@ ARG_S *parse_args(int argc, const char *argv[]){
     if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
 	arg->conf=strdup("maos.conf");
     }
-    /*Setup PATH and result directory */
-    char *config_path=find_config("skyc");
-    addpath(config_path);
-    free(config_path);
-
-    mymkdir("%s",arg->dirout);
     addpath(".");
+    mymkdir("%s",arg->dirout);
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
-    /*char *exefile=get_job_progname(0);
-    if(remove("skyc-save")||link(exefile, "skyc-save")){
-	info2("Unable to link maos to maos-save\n");
-    }
-    free(exefile);*/
     return arg;
 }
 /**
@@ -144,9 +134,10 @@ void rename_file(int sig){
     case SIGQUIT: /*Ctrl-'\' */
 	sprintf(suffix,"killed");
 	break;
+    default:
+	sprintf(suffix,"unknown");
+	break;
     }
-    snprintf(fnnew,256,"kill_%d",pid);
-    if(exist(fnnew)) remove(fnnew);
     
     snprintf(fnold,256,"run_%d.log",pid);
     snprintf(fnnew,256,"run_%d.%s",pid,suffix);
@@ -161,5 +152,3 @@ void skyc_signal_handler(int sig){
     rename_file(sig);/*handles signal */
     scheduler_finish(sig);
 }
-
-

@@ -221,7 +221,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
     sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
     double diff1=sde_diff(coeff->p, &data);
     info2("sde_fit: %d interations: %g->%g\n", data.count, diff0, diff1);
-    if(diff1>0.2){
+    if(diff1>0.2 && diff1>diff0*0.75){
 	warning("Failed to converge\n");
     }
     dfree(freq);
