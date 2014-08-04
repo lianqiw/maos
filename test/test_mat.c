@@ -292,7 +292,7 @@ static void test_kalman(){
 	}*/
     exit(0);
 }
-static void test_reccati(){
+/*static void test_reccati(){
     dmat *A=dread("test_A");
     dmat *Qn=dread("test_Qn");
     dmat *C=dread("test_C");
@@ -302,9 +302,17 @@ static void test_reccati(){
     dwrite(M, "test_M");
     dwrite(P, "test_P");
     exit(0);
+}*/
+static void test_expm(){
+    dmat *A=dread("expm_in");
+    dmat *B=0;
+    dexpm(&B, 1, A, 1);
+    dwrite(B, "expm_out");
+    exit(0);
 }
 int main(int argc, char **argv){
     exit_success=1;
+    test_expm();
     //test_reccati();
     test_kalman();
     test_svd2();

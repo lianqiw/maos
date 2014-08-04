@@ -207,7 +207,7 @@ static void skysim_isky(SIM_S *simu){
 		}
 		dmat *ires=NULL;
 		dmat *imres=NULL;
-		if((ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
+		if((ires=skysim_sim(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
 				    asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart))){
 		    if(parms->skyc.verbose){
 			info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
@@ -433,7 +433,7 @@ static void skysim_prep_gain(SIM_S *simu){
     }
     TIC;tic;
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-	long dtrat=parms->skyc.dtrats[idtrat];
+	long dtrat=parms->skyc.dtrats->p[idtrat];
 	simu->gain_tt[idtrat]=servo_optim(simu->psd_tt, parms->maos.dt,
 					  dtrat, parms->skyc.pmargin, sigma2, servotype);
 	simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 

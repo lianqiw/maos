@@ -189,7 +189,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    dadd(&tmp, 0, neaspec->p[ig+nsa*2*iwvl], parms->skyc.wvlwt->p[iwvl]);
 		}
-		stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtratsd);
+		stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats);
 		dfree(tmp);
 	    }
 	    dcellfree(neaspec);
@@ -323,7 +323,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
 
 	    for(int idtrat=0; idtrat<ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats[idtrat];
+		int dtrat=parms->skyc.dtrats->p[idtrat];
 		dcelladd(&i0s, 0, pistat->i0s, dtrat);
 		dcelladd(&gxs, 0, pistat->gxs, dtrat);
 		dcelladd(&gys, 0, pistat->gys, dtrat);
@@ -361,14 +361,14 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		double snr=sigma_theta/nea;
 		pistat->snr->p[idtrat]=snr;
 		if(parms->skyc.verbose) info2("dtrat=%3d, nea=%4.1f, snr=%4.1f\n",
-					      parms->skyc.dtrats[idtrat], nea*206265000, snr);
+					      (int)parms->skyc.dtrats->p[idtrat], nea*206265000, snr);
 		if(snr>parms->skyc.snrmin->p[parms->skyc.snrmin->nx==1?0:idtrat]){
 		    star[istar].idtrat->p[ipowfs]=idtrat;
 		}
 	    }//for idtrat
 	    if(parms->skyc.dbg){
 		info2("star %2d optim: powfs %1d: dtrat=%3d\n", istar, ipowfs,
-		      parms->skyc.dtrats[(int)star[istar].idtrat->p[ipowfs]]);
+		      (int)parms->skyc.dtrats->p[(int)star[istar].idtrat->p[ipowfs]]);
 		dcellwrite(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 			   dirsetup,istar,ipowfs);
 	    }/*idtrat */

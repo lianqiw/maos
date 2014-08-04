@@ -132,10 +132,8 @@ typedef struct SKYC_S{
 			 anisoplanatism in regularization.*/
     int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/
     int ndtrat;      /**<number of dtrat*/
-    int *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
-    dmat *dtratsd;
-    int ndtrat_mr;
-    int *dtrats_mr;
+    dmat *dtrats;     /**<ratio between NGS and LGS WFS sampling period*/
+    dmat *dtrats_mr; /**<For multirate*/
     double *fss;     /**<sampling frequency at each dtrat*/
     int servo;       /**<servo type of NGS LOOP. 2: type II*/
     int ngain;       /**<Number of parameters for gain*/

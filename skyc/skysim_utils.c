@@ -108,12 +108,12 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
    - 1: poisson and read out noise. 
    - 2: only poisson noise.   
 */
-dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
+dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, double ngsol, 
 		 ASTER_S *aster, const POWFS_S *powfs, 
 		 const PARMS_S *parms, int idtratc, int noisy, int phystart){
     int dtratc=0;
     if(!parms->skyc.multirate){
-	dtratc=parms->skyc.dtrats[idtratc];
+	dtratc=parms->skyc.dtrats->p[idtratc];
     }
     int hasphy;
     if(phystart>-1 && phystart<aster->nstep){
@@ -404,7 +404,7 @@ dmat *skysim_phy(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     if(parms->skyc.dbg){
 	int dtrati=(multirate?(int)dtrats->p[0]:dtratc);
 	dwrite(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
-	dwrite(mres,"%s/skysim_phy_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
+	dwrite(mres,"%s/skysim_sim_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
     }
   
     dfree(mreal);
@@ -519,10 +519,10 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" ]\n");
 	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\"]\n");
 	fprintf(fp, "powfs.phyusenea=[0 1]\n");
-	fprintf(fp, "powfs.dtrat=[1 %d]\n", parms->skyc.dtrats[seldtrat]);
+	fprintf(fp, "powfs.dtrat=[1 %d]\n", (int)parms->skyc.dtrats->p[seldtrat]);
 	fprintf(fp, "powfs.bkgrnd=[0 %.2f]\n", bkgrnd);
 	fprintf(fp, "powfs.rne=[3 %.2f]\n", rne);
-	fprintf(fp, "powfs.phystep=[0 %ld]\n", (long)50+parms->skyc.dtrats[seldtrat]*20);
+	fprintf(fp, "powfs.phystep=[0 %ld]\n", 50+(long)parms->skyc.dtrats->p[seldtrat]*20);
 	fprintf(fp, "powfs.noisy=[1 1 ]\n");
 	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000]\n", parms->skyc.pixtheta[1]*206265000);
 	fprintf(fp, "powfs.pixpsa=[6 %d]\n", parms->skyc.pixpsa[0]);
@@ -539,13 +539,13 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" \"pistat\"]\n");
 	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\" \"nea_tot\"]\n");
 	fprintf(fp, "powfs.phyusenea=[0 1 1]\n");
-	fprintf(fp, "powfs.dtrat=[1 %d %d]\n", parms->skyc.dtrats[seldtrat],
-		parms->skyc.dtrats[seldtrat]);
+	fprintf(fp, "powfs.dtrat=[1 %d %d]\n", (int)parms->skyc.dtrats->p[seldtrat],
+		(int)parms->skyc.dtrats->p[seldtrat]);
 	fprintf(fp, "powfs.bkgrnd=[0 %.2f %.2f]\n", bkgrnd, bkgrnd);
 	fprintf(fp, "powfs.rne=[3 %.2f %.2f]\n", rne,rne);
 	fprintf(fp, "powfs.phystep=[0 %ld %ld]\n", 
-		(long)50+parms->skyc.dtrats[seldtrat]*20, 
-		(long)50+parms->skyc.dtrats[seldtrat]*20);
+		50+(long)parms->skyc.dtrats->p[seldtrat]*20, 
+		50+(long)parms->skyc.dtrats->p[seldtrat]*20);
 	fprintf(fp, "powfs.noisy=[1 1 1]\n");
 	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000 %g/206265000]\n",
 		parms->skyc.pixtheta[0]*206265000,

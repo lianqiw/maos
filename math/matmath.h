@@ -80,7 +80,7 @@
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
     void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
     void X(svd_pow)(X(mat) *A, R power, R thres);			\
-    void X(expm)(X(mat) **out, R alpha, X(mat) *A, R beta);		\
+    void X(expm)(X(mat) **out, R alpha, const X(mat) *A, R beta);	\
     void X(polyval)(X(mat) *A, XR(mat)*p);				\
     void X(addI)(X(mat) *A, T val);					\
     void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\

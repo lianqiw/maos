@@ -72,8 +72,8 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.mtch);
     readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
     readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
-    parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
-    parms->skyc.ndtrat_mr=readcfg_intarr(&parms->skyc.dtrats_mr,"skyc.dtrats_mr");
+    parms->skyc.dtrats=readcfg_dmat("skyc.dtrats");
+    parms->skyc.dtrats_mr=readcfg_dmat("skyc.dtrats_mr");
     READ_INT(skyc.seed);
     READ_INT(skyc.navg);
     READ_INT(skyc.servo);
@@ -202,19 +202,15 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	}
     }
     if(parms->skyc.servo<0){
-	if(parms->skyc.dtrats){
-	    parms->skyc.ndtrat=parms->skyc.ndtrat_mr;
-	    parms->skyc.dtrats=parms->skyc.dtrats_mr;
-	}
 	parms->skyc.addws=1;
+    }
+    if(parms->skyc.servo<0 && parms->skyc.multirate){
+	dfree(parms->skyc.dtrats);
+	parms->skyc.dtrats=parms->skyc.dtrats_mr;
     }else{
-	free(parms->skyc.dtrats_mr);
-	parms->skyc.dtrats_mr=0;
+	dfree(parms->skyc.dtrats_mr);
     }
-    parms->skyc.dtratsd=dnew(parms->skyc.ndtrat, 1);
-    for(int i=0; i<parms->skyc.ndtrat; i++){
-	parms->skyc.dtratsd->p[i]=parms->skyc.dtrats[i];
-    }
+    parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;
     }
@@ -296,7 +292,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
     }
     for(int idtrat=1; idtrat<parms->skyc.ndtrat; idtrat++){
-	if(parms->skyc.dtrats[idtrat]>=parms->skyc.dtrats[idtrat-1]){
+	if(parms->skyc.dtrats->p[idtrat]>=parms->skyc.dtrats->p[idtrat-1]){
 	    error("skyc.dtrats must be specified in descending order\n");
 	}
     }
@@ -312,7 +308,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    const double linetime=2;//time to read a line in us
 	    const double frametime=3;//time to read a frame in us
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats[idtrat];
+		int dtrat=parms->skyc.dtrats->p[idtrat];
 		parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
 	    }
 	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
@@ -322,7 +318,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		double t1=nsa*(pixeltime*N*N+linetime*N+frametime);
 		double t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
 		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		    int dtrat=parms->skyc.dtrats[idtrat];
+		    int dtrat=parms->skyc.dtrats->p[idtrat];
 		    double dt=parms->maos.dt*dtrat*1e6;
 		    int coadd=floor((dt-t2*nsa)/t1);//number of coadds possible.
 		    if(coadd<=32 && dtrat<=10){//at high frame rate, read out only 1 subaperture's guard window each time.
@@ -343,7 +339,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    }
 	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats[idtrat];
+		int dtrat=parms->skyc.dtrats->p[idtrat];
 		double fs=1./(parms->maos.dt*dtrat);
 		parms->skyc.fss[idtrat]=fs;
 		info2("%5.1f Hz: ", fs);
@@ -366,7 +362,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     /*parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
     if(parms->maos.nmod<6){//Do not model focus in time series.
 	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-	    int dtrat=parms->skyc.dtrats[idtrat];
+	    int dtrat=parms->skyc.dtrats->p[idtrat];
 	    double fs=1./(parms->maos.dt*dtrat);
 	    
 	    parms->skyc.resfocus->p[idtrat]=

@@ -199,17 +199,18 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 }
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
-   Larger scaling is more accurate but sloower.
+   Larger scaling is more accurate but slower. Tested against matlab expm
 */
-void X(expm)(X(mat)**out, R alpha, X(mat) *A, R beta){
-    const int accuracy=10;
+void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
+    const int accuracy=10;//How many terms in Taylor expansion to evaluate
+    const double threshold=10;
     X(mat) *m_small=0;
     X(mat) *m_exp1=0, *m_power=0, *m_power1=0;
     //first determine the scaling needed
     int scaling=0;
     {
-	R norm=sqrt(X(sumsq)(A));
-	scaling=(int)ceil(log2(abs(norm*beta*100)));
+	R norm=sqrt(X(norm)(A));
+	scaling=(int)ceil(log2(abs(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
     X(add)(&m_small, 0, A, beta*exp2(-scaling));

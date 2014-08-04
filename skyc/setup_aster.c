@@ -376,7 +376,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
     aster->res_ngs=dnew(ndtrat,3);
     PDMAT(aster->res_ngs, pres_ngs);
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
-	int dtrat=parms->skyc.dtrats[idtrat];
+	int dtrat=parms->skyc.dtrats->p[idtrat];
 	double sigma_ngs= aster->sigman->p[idtrat]->p[0];
 	double sigma_tt = aster->sigman->p[idtrat]->p[1];
 	double sigma_ps = sigma_ngs-sigma_tt;
@@ -476,19 +476,20 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 }
 static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_wfs0){
     if(parms->skyc.verbose){
-	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, parms->skyc.dtrats[idtrat_wfs0]);
+	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, 
+	      (int)parms->skyc.dtrats->p[idtrat_wfs0]);
     }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	int idtrat=idtrat_wfs0;
 	if(iwfs>0){
 	    /*don't allow snr to fall below 3.*/
 	    while(idtrat>0 && (aster->wfs[iwfs].pistat->snr->p[idtrat]<3
-			       || (int)parms->skyc.dtrats[idtrat] % (int)aster->dtrats->p[0]!=0)){
+			       || (int)parms->skyc.dtrats->p[idtrat] % (int)aster->dtrats->p[0]!=0)){
 		idtrat--;
 	    }
 	}
 	aster->idtrats->p[iwfs]=idtrat;
-	aster->dtrats->p[iwfs]=parms->skyc.dtrats[idtrat];
+	aster->dtrats->p[iwfs]=parms->skyc.dtrats->p[idtrat];
 	int ng=aster->g->p[iwfs]->nx;
 	if(idtrat>-1){
 	    for(int ig=0; ig<ng; ig++){
@@ -499,7 +500,7 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S
 	    dset(aster->neam[0]->p[iwfs+aster->nwfs*iwfs], 0);
 	}
 	if(parms->skyc.verbose){
-	    info2("%3d ", parms->skyc.dtrats[idtrat]);
+	    info2("%3d ", (int)parms->skyc.dtrats->p[idtrat]);
 	}
     }//for iwfs
 }
@@ -538,7 +539,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam[0], 0);
 	    dmat *rests=0;
 #if 1   //more accurate
-	    dmat *res=skysim_phy(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->rmsol,
+	    dmat *res=skysim_sim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->rmsol,
 				 aster, 0, parms, -1, 1, -1);
 	    double res0=res?res->p[0]:simu->rmsol;
 	    dfree(res);
@@ -574,8 +575,10 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	aster->res_ngs=dnew(ndtrat,3);
 	PDMAT(aster->res_ngs, pres_ngs);
 	aster->kalman=calloc(ndtrat, sizeof(kalman_t*));
+	dmat *dtrats=dnew(aster->nwfs,1);
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	    //assemble neam
+	    //TIC;tic;
 	    aster->neam[idtrat]=dcellnew(aster->nwfs, aster->nwfs);
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		dmat *tmp=ddup(aster->wfs[iwfs].pistat->sanea->p[idtrat]);/*in rad */
@@ -585,15 +588,14 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		dfree(tmp); spfree(tmp2);
 	    }
 
-	    int dtrat=parms->skyc.dtrats[idtrat];
-	    dmat *dtrats=dnew(aster->nwfs,1);
+	    int dtrat=parms->skyc.dtrats->p[idtrat];
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		dtrats->p[iwfs]=dtrat;
 	    }
 	    aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, aster->neam[idtrat], 0);
-	    dfree(dtrats);
+	    //toc("kalman");
 #if 1
-	    dmat *res=skysim_phy(0, simu->mideal, simu->mideal_oa, simu->rmsol, aster, 0, parms, idtrat, 1, -1);
+	    dmat *res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->rmsol, aster, 0, parms, idtrat, 1, -1);
 	    double rms=res?res->p[0]:simu->rmsol;
 	    dfree(res);
 #else
@@ -601,8 +603,10 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    double rms=calc_rms(res, parms->maos.mcc, parms->skyc.evlstart);
 	    dfree(res);
 #endif
+	    //toc("estimate");
 	    pres_ngs[0][idtrat]=rms;
 	}
+	dfree(dtrats);
     }
 }
 void setup_aster_controller(SIM_S *simu, ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
@@ -698,9 +702,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	}
 	if(parms->skyc.verbose){
 	    info2("aster%d, dtrats=[%d, %d], best:%d res=%.1f nm\n", 
-		  iaster, parms->skyc.dtrats[aster[iaster].idtratmin], 
-		  parms->skyc.dtrats[aster[iaster].idtratmax-1], 
-		  parms->skyc.dtrats[aster[iaster].mdtrat], sqrt(mini)*1e9);
+		  iaster, (int)parms->skyc.dtrats->p[aster[iaster].idtratmin], 
+		  (int)parms->skyc.dtrats->p[aster[iaster].idtratmax-1], 
+		  (int)parms->skyc.dtrats->p[aster[iaster].mdtrat], sqrt(mini)*1e9);
 	}
     }
     if(parms->skyc.dbgsky>-1){

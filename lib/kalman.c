@@ -181,7 +181,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
 	psd2cov(psdcov_in, df);
 	var_in=psdcov_in->p[0];
 	dmat *cov_in2=dnew_ref(ncov, 1, psdcov_in->p);
-	diffscale=1;//./dsumabs(cov_in2);
+	diffscale=pow(cov_in2->p[0],2)/dsumsq(cov_in2);
 	dfree(cov_in2);
 
 	if(!isfinite(psdcov_in->p[0])){
@@ -464,7 +464,6 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     }
     dresize(dtrats, ndtrat, 1);
     dsort(dtrats, 1);
-
     const int dtrat_min=dtrats->p[0];
     dmat*  Sigma_varep=0;/*state noise in discrete space*/
     dcell* Sigma_zeta =dcellnew(ndtrat,1);/*state measurement noise*/
@@ -473,7 +472,7 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     dcell *Xi=dcellnew(ndtrat,1);
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	/*Evaluate noise covariance matrix of discrete state, and measurement of the
-	 * state*/
+	 * state. This block takes most of the preparation step*/
 	int dtrat=(int)dtrats->p[idtrat];
 	double dT=dthi*dtrat;
 	int nsec=dtrat*10;
