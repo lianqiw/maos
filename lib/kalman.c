@@ -114,12 +114,12 @@ static double sde_diff(const double *coeff, void *pdata){
 	}else{
 	    psd2cov(data->psdcov_sde, data->df);
 	    diff=0;
-	    double scale1=1./(data->psdcov_sde->p[0]);
-	    double scale2=1./(data->psdcov_in->p[0]);
+	    double scale1=1./(data->psdcov_in->p[0]);
+	    double scale2=1./(data->psdcov_sde->p[0]);
 	    for(long i=0; i<data->ncov; i++){
-		double val1=data->psdcov_sde->p[i]*scale1;
-		double val2=data->psdcov_in->p[i]*scale2;
-		diff+=fabs(val1*(val1-val2));
+		double val1=data->psdcov_in->p[i]*scale2;
+		double val2=data->psdcov_sde->p[i]*scale1;
+		diff+=fabs(val1-val2);
 	    }
 	}
     }
@@ -140,13 +140,14 @@ static void sde_scale_coeff(dmat *coeff, double var_in, dmat *psdcov_sde, const 
     }
     double ratio;
     sde_psd(&psdcov_sde, freq, coeff->p, coeff->nx, coeff->ny);
+    double var_sde;
     if(ncov){
-	psd2cov(psdcov_sde, freq->p[1]-freq->p[0]);
-	ratio=sqrt(var_in/psdcov_sde->p[0]);
+	psd2cov(psdcov_sde, freq->p[2]-freq->p[1]);
+	var_sde=psdcov_sde->p[0];
     }else{
-	double var_sde=dtrapz(freq, psdcov_sde);
-	ratio=sqrt(var_in/var_sde);
+	var_sde=dtrapz(freq, psdcov_sde);
     }
+    ratio=sqrt(var_in/var_sde);
     for(int iy=0; iy<coeff->ny; iy++){
 	coeff->p[2+iy*3]*=ratio;
     }
@@ -177,11 +178,11 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
 	    freq->p[i]=df*i;
 	    freq->p[i+nf/2]=df*(nf/2-i);
 	}
-	psdcov_in=psdinterp1(psdin, freq);
+	psdcov_in=psdinterp1(psdin, freq, 1);
 	psd2cov(psdcov_in, df);
 	var_in=psdcov_in->p[0];
 	dmat *cov_in2=dnew_ref(ncov, 1, psdcov_in->p);
-	diffscale=pow(cov_in2->p[0],2)/dsumsq(cov_in2);
+	diffscale=cov_in2->p[0]/dsumabs(cov_in2);
 	dfree(cov_in2);
 
 	if(!isfinite(psdcov_in->p[0])){
@@ -200,7 +201,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
 	    for(long i=0; i<nf; i++){
 		freq->p[i]=minf+df*i;
 	    }
-	    psdcov_in=psdinterp1(psdin, freq);
+	    psdcov_in=psdinterp1(psdin, freq, 1);
 	}
 	psdcov_sde=dnew(freq->nx, 1);
 	var_in=dtrapz(freq, psdcov_in);
@@ -219,6 +220,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
     dminsearch(coeff->p, ncoeff*nmod, tol, sde_diff, &data);
     //Scale to make sure total energy is preserved.
     sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
+
     double diff1=sde_diff(coeff->p, &data);
     info2("sde_fit: %d interations: %g->%g\n", data.count, diff0, diff1);
     if(diff1>0.2 && diff1>diff0*0.75){
@@ -232,7 +234,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
 static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     dmat *coeff=sde_fit_do2(psdin, coeff0, tmax_fit);
     if(coeff->p[0]>10 && tmax_fit>0){
-	info2("Redo with PSD fitting\n");
+	info2("Redo with PSD fitting. c1=%g\n", coeff->p[0]);
 	dfree(coeff);
 	coeff=sde_fit_do2(psdin, coeff0, 0);
     }
@@ -276,12 +278,17 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 		coeffi->p[1]=pow(2*M_PI*fi,2);
 		coeffi->p[2]=0;//sde_fit_do will figure it out.
 		coeffs->p[ivib]=sde_fit_do(psdi, coeffi, tmax_fit);
-		if(sqrt(fabs(coeffi->p[1]-coeffs->p[ivib]->p[1]))>2*M_PI){
-		    warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
-			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
+		if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI){
 		    dwrite(psdi, "psdi_%d", ivib);
 		    dwrite(coeffi, "coeffi_%d", ivib);
 		    dwrite(coeffs->p[ivib], "coeffo_%d", ivib);
+		    if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI*5){
+			error("Fitting failed for %d, Freq=%g, %g\n", ivib, 
+			      sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
+		    }else{
+			warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
+			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
+		    }
 		}
 		double* psd2p=psd2->p+psd2->nx;
 		for(int i=i1; i<i2; i++){//replace the peak by a linear interpolation

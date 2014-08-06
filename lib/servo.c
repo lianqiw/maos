@@ -154,7 +154,7 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long
     double Ts=dt*dtrat;
     st->fny=0.5/Ts;
     dmat *nu=st->nu=dlogspace(-3,log10(0.5/dt),1000);
-    st->psd=dinterp1(psdin, 0, nu);
+    st->psd=dinterp1(psdin, 0, nu, 1e-40);
     st->var_sig=psd_inte2(psdin);
     dcomplex pi2i=TWOPI*I;
     if(st->Hsys || st->Hwfs || st->Hint || st->s){
@@ -696,7 +696,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     double var=psd_inte2(psdin);
-    psd=dinterp1(psdin, 0, fs);
+    psd=dinterp1(psdin, 0, fs, 1e-40);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
     cfft2plan(wshat, -1);
@@ -722,7 +722,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
    2013-03-24:only psd2 was added to to psd.*/
 static dmat *add_psd_nomatch(const dmat *psd1,const dmat *psd2){
     dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
-    dmat *p2ynew=dinterp1(psd2, 0, nu1);
+    dmat *p2ynew=dinterp1(psd2, 0, nu1, 1e-40);
     dmat *psd=dnew(nu1->nx,2);
     double *py=psd->p+psd->nx;
     const double *p1y=psd1->p+psd1->nx;

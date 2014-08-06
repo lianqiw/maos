@@ -17,11 +17,10 @@
 */
 
 double dtrapz(const dmat *x, const dmat *y);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
+dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
 dmat* zernike(loc_t *loc, double R, int nr);
 dmat *zernike_cov_kolmogorov(int nr);
 dmat *diag_mod_cov(dmat *mz, dmat *cov);
 dmat *KL_kolmogorov(loc_t *loc, double R, int nr);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
 dmat *psd_vibid(const dmat *psdin);
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);

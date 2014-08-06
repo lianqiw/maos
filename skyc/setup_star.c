@@ -189,7 +189,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    dadd(&tmp, 0, neaspec->p[ig+nsa*2*iwvl], parms->skyc.wvlwt->p[iwvl]);
 		}
-		stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats);
+		stari->pistat[ipowfs].neaspec->p[ig]=dinterp1(simu->neaspec_dtrats, tmp, parms->skyc.dtrats, 0);
 		dfree(tmp);
 	    }
 	    dcellfree(neaspec);
@@ -333,7 +333,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		/*Add nolinearity*/
 		if(nonlin){
 		    //add linearly not quadratically since the errors are related.
-		    dmat *nea_nonlin=dinterp1(nonlin[ipowfs]->p[igg], NULL, pistat->sanea->p[idtrat]);
+		    dmat *nea_nonlin=dinterp1(nonlin[ipowfs]->p[igg], NULL, pistat->sanea->p[idtrat], 0);
 		    for(int i=0; i<nsa*2; i++){
 			//info2("%g mas", pistat->sanea->p[idtrat]->p[i]*206265000);
 			pistat->sanea->p[idtrat]->p[i]=sqrt(pow(pistat->sanea->p[idtrat]->p[i],2)

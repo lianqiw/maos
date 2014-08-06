@@ -81,14 +81,20 @@ dmat *psd1dt(dmat *v, long lseg, double dt){
 }
 
 /*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
+dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     dmat *f1=drefcols(psdin, 0, 1);
     dmat *psd1=dsub(psdin, 0, 0, 1, 1);//copy
     dmat *f2=dref(fnew);
     double t1=dtrapz(f1, psd1);
-    dcwlog(psd1);
-    dmat *psd2=dinterp1(f1, psd1, f2);
-    dcwexp(psd2,1);
+    double ydefault=1e-40;
+    if(uselog){
+	dcwlog(psd1);
+	ydefault=log(ydefault);
+    }
+    dmat *psd2=dinterp1(f1, psd1, f2, ydefault);
+    if(uselog){
+	dcwexp(psd2,1);
+    }
     double t2=dtrapz(f2, psd2);
     if(fabs(t1-t2)>fabs(0.5*(t1+t2)*2)){
 	warning("psd interpolation failed. int_orig=%g, int_interp=%g\n", t1, t2);
@@ -97,48 +103,63 @@ dmat *psdinterp1(const dmat *psdin, const dmat *fnew){
     dfree(f1); dfree(f2); dfree(psd1);
     return psd2;
 }
-
+/**
+   Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.
+ */
 dmat *psd_vibid(const dmat *psdin){
     double *f=psdin->p;
     double *psd=psdin->p+psdin->nx;
     dmat *y=dsub(psdin, 0, 0, 1, 1);
-    dcwlog10(y);
-    const double gain=0.01;
-    const double gain2=0.1;
+    const double gain=0.1;
+    const double gain2=0.05;
     int inpeak=0;
+    double ym0=y->p[1];
+    double yn0=fabs(y->p[1]-y->p[0]);
     double ym=0, yn=0;
     int nmaxp=100;
     dmat *res=dnew(4, nmaxp);
-    double thres=100e-18;
+    PDMAT(res, pres);
+    double thres=25e-18;/*threshold: 5 nm*/
     double sumxy, sumy, sum;
     int count=0;
     for(long i=1; i<psdin->nx-1; i++){
-	if(f[i]<1) continue;
 	if(!inpeak){
-	    ym=(1.-gain)*ym+y->p[i]*gain;
-	    yn=(1.-gain2)*yn+fabs(y->p[i]-y->p[i-1])*gain2;
-	    if(y->p[i+1]>ym+yn*4){//beginning of peak
+	    //second order LPF
+	    ym0=(1.-gain)*ym0+y->p[i]*gain; 
+	    ym=(1.-gain)*ym+ym0*gain;
+	    double diff=y->p[i]-y->p[i-1];
+	    if(diff>0){
+		yn0=(1.-gain2)*yn0+diff*gain2; 
+		yn=(1.-gain2)*yn+yn0*gain2;
+	    }
+	    if(y->p[i+1]>ym+yn*5 && f[i]>1){//beginning of peak
 		inpeak=1;
-		res->p[2+count*4]=i;
-		sumxy=f[i]*psd[i];//for CoG
-		sumy=psd[i];//for CoG
-		sum=0;//integration
+		if(count>0 && f[i] < f[(int)pres[count-1][3]] + 0.1){
+		    //combine with last peak if within 1 Hz.
+		    count--;
+		}else{
+		    pres[count][2]=i;
+		    sumxy=f[i]*psd[i];//for CoG
+		    sumy=psd[i];//for CoG
+		    sum=0;//integration
+		}
 	    }
 	}else{
 	    //continuation of peak
 	    sumxy+=f[i]*psd[i];
 	    sumy+=psd[i];
 	    sum+=(f[i]-f[i-1])*(psd[i]+psd[i-1]);
-	    if(y->p[i+1]<ym+yn){//end of peak
+	    if(y->p[i]<ym+yn && y->p[i+1]<ym+yn){//end of peak
 		inpeak=0;
 		if(sum*0.5>thres){
-		    res->p[0+count*4]=sumxy/sumy;
-		    res->p[1+count*4]=sum*0.5;
-		    res->p[3+count*4]=i+1;
+		    pres[count][0]=sumxy/sumy;
+		    pres[count][1]=sum*0.5;
+		    pres[count][3]=i;
 		    count++;
 		    if(count==nmaxp){
 			nmaxp*=2;
 			dresize(res, 4, nmaxp);
+			pres=(void*)res->p;
 		    }
 		}
 	    }

@@ -125,7 +125,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    double (*dmr)[nx];
 	    dmat *dm;
 	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
-		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm]);
+		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm], NAN);
 		iastroke=parms->dm[idm].iastroke;//voltage.
 	    }else{
 		dm=dmcmd->p[idm];
@@ -169,7 +169,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		loc_extract(simu->dmreal->p[idm], simu->recon->aloc->p[idm], simu->dmrealsq->p[idm]);
 	    }
 	    if(parms->dm[idm].iastrokescale){//convert back to opd
-		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm);
+		dmat *dm2=dinterp1(parms->dm[idm].iastrokescale->p[1], 0, dm, NAN);
 		dcp(&dmcmd->p[idm], dm2);
 		dfree(dm); dfree(dm2);
 	    }

@@ -95,7 +95,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		}
 		info("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
 		dwrite(psf2x, "powfs%d_psf2x_%d", ipowfs,iwvl);
-		dmat *psf2=dinterp1(psf1x, psf1y, psf2x);
+		dmat *psf2=dinterp1(psf1x, psf1y, psf2x, 0);
 		normalize_sum(psf2->p, psf2->nx*psf2->ny, 1);
 		psf2->nx=ncomp; psf2->ny=ncomp;
 		dwrite(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);

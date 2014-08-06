@@ -23,6 +23,6 @@
 */
 dmat *psd1d(dmat *v, long lseg );
 dmat *psd1dt(dmat *v, long lseg, double dt);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew);
+dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
 dmat *psd_vibid(const dmat *psdin);
 #endif

@@ -89,10 +89,10 @@
     void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha); \
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;	\
-    X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
+    X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
     X(mat)* X(interp1_2)(const X(mat) *xyin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
-    X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
-    X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew) CHECK_UNUSED_RESULT; \
+    X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
+    X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \
     void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);	\
     void X(histfill)(X(mat) **out, const X(mat)* A, R center, R spacing, int n); \
     X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);			\
