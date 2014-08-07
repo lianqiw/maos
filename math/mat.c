@@ -40,7 +40,7 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
 	}
 	out->p=p;
     }else{
-	if(!p){
+	if(!p && nx && ny){
 	    p=calloc((nx*ny), sizeof(T));
 	}
 	out->p=p;

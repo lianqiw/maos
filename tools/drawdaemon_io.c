@@ -61,7 +61,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	    offset=0.5;
 	}
 	for(int i=0; i<nx*ny; i++){
-	    if(isnan(p[i])){
+	    if(is_nan(p[i])){
 		pi[i]=0;
 	    }else{
 		double x=(p[i]-min)*scale+offset;

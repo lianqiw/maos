@@ -139,8 +139,8 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
    Transfer atmosphere or update atmosphere in GPU.
 */
 void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
+    if(!atmc) return;
     map_t **atm=atmc->p;
-    if(!atm) return;
     if(parms->atm.evolve){
 	TO_IMPLEMENT;
 	/*test whether screen changed. transfer if changed. */
@@ -436,7 +436,7 @@ __global__ void prop_linear(Real *restrict out, const Real *restrict in, const i
 	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
 	    Real tmp=alpha*((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
 			    +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
-	    if(CHECK_NAN(tmp)) out[i]+= tmp;
+	    if(not_nan(tmp)) out[i]+= tmp;
 	}
     }
 }
@@ -518,7 +518,7 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 	for(int kx=-1; kx<3; kx++){
 	    sum+=fx[kx+1]*fy*in[(iy+2)*nx+kx+ix];
 	}
-	if(CHECK_NAN(sum)){
+	if(not_nan(sum)){
 	    out[i]+=sum*alpha;
 	}
     }

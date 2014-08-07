@@ -365,23 +365,15 @@ static void Y(spmulvec_thread_do_acc)(thread_t *info){
     
     T alpha = data->alpha;
     long nc = data->nthread;
-    if(ABS(alpha-1.)<EPS){
-	for(long ix=info->start; ix<info->end; ix++){
-	    T tmp=0;
-	    for(long ic=0; ic<nc; ic++){
-		tmp+=ytmp[ic][ix];
-	    }
-	    y[ix]+=tmp;
+   
+    for(long ix=info->start; ix<info->end; ix++){
+	T tmp=0;
+	for(long ic=0; ic<nc; ic++){
+	    tmp+=ytmp[ic][ix];
 	}
-    }else{
-	for(long ix=info->start; ix<info->end; ix++){
-	    T tmp=0;
-	    for(long ic=0; ic<nc; ic++){
-		tmp+=ytmp[ic][ix];
-	    }
-	    y[ix]+=alpha*tmp;
-	}
+	y[ix]+=alpha*tmp;
     }
+    
 }
 /**
    Multiply a sparse with a vector using multithread. Speed up is not signicant
@@ -417,18 +409,12 @@ void Y(spmulvec)(T *restrict y, const X(sp) *A,
     if(A && x){
 	long icol, ix;
 	assert(y);
-	if(ABS(alpha-1.)<EPS){
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=A->x[ix]*x[icol];
-		}
+
+	for(icol=0; icol<A->n; icol++){
+	    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
 	    }
-	}else{
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
-		}
-	    }
+	    
 	}
     }
 }
@@ -441,19 +427,13 @@ static void Y(sptmulvec_thread_do)(thread_t *info){
     const T *restrict x = data->x;
     T *restrict y = data->y;
     const T alpha=data->alpha;
-    if(ABS(alpha-1.)<EPS){
-	for(long icol=icol_min; icol<icol_max; icol++){
-	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		y[icol]+=CONJ(A->x[ix])*x[A->i[ix]];
-	    }
-	}
-    }else{
-	for(long icol=icol_min; icol<icol_max; icol++){
-	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		y[icol]+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
-	    }
+   
+    for(long icol=icol_min; icol<icol_max; icol++){
+	for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+	    y[icol]+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
 	}
     }
+    
     return;
 }
 /**
@@ -480,18 +460,12 @@ void Y(sptmulvec)(T *restrict y, const X(sp) *A,
 	/*y=y+alpha*A'*x; */
 	assert(y);
 	long icol, ix;
-	if(ABS(alpha-1.)<EPS){
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[icol]+=CONJ(A->x[ix])*x[A->i[ix]];
-		}
+
+	for(icol=0; icol<A->n; icol++){
+	    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		y[icol]+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
 	    }
-	}else{
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[icol]+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
-		}
-	    }
+	   
 	}
     }
 }
@@ -502,19 +476,13 @@ void Y(spmulcreal)(T *restrict y, const X(sp) *A,
     /*y=y+alpha*A*creal(x); */
     if(A && x){
 	long icol, ix;
-	if(ABS(alpha-1.)<EPS){
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=A->x[ix]*creal(x[icol]);
-		}
-	    }
-	}else{
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=alpha*A->x[ix]*creal(x[icol]);
-		}
+
+	for(icol=0; icol<A->n; icol++){
+	    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		y[A->i[ix]]+=alpha*A->x[ix]*creal(x[icol]);
 	    }
 	}
+
     }
 }
 /**
@@ -538,20 +506,11 @@ void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x,
 	    int jcol;
 	    PMAT(y,Y);
 	    PMAT(x,X);
-	    if(ABS(alpha-1.)<EPS){
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->ny; jcol++){
-			    Y[jcol][A->i[ix]]+=A->x[ix]*X[jcol][icol];
-			}
-		    }
-		}
-	    }else{
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->ny; jcol++){
-			    Y[jcol][A->i[ix]]+=alpha*A->x[ix]*X[jcol][icol];
-			}
+	 
+	    for(icol=0; icol<A->n; icol++){
+		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		    for(jcol=0; jcol<y->ny; jcol++){
+			Y[jcol][A->i[ix]]+=alpha*A->x[ix]*X[jcol][icol];
 		    }
 		}
 	    }
@@ -577,20 +536,11 @@ void Y(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha)
 	    int jcol;
 	    PMAT(x,X);
 	    PMAT(y,Y);
-	    if(ABS(alpha-1.)<EPS){
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->ny; jcol++){
-			    Y[jcol][icol]+=CONJ(A->x[ix])*X[jcol][A->i[ix]];
-			}
-		    }
-		}
-	    }else{
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->ny; jcol++){
-			    Y[jcol][icol]+=alpha*CONJ(A->x[ix])*X[jcol][A->i[ix]];
-			}
+	  
+	    for(icol=0; icol<A->n; icol++){
+		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		    for(jcol=0; jcol<y->ny; jcol++){
+			Y[jcol][icol]+=alpha*CONJ(A->x[ix])*X[jcol][A->i[ix]];
 		    }
 		}
 	    }

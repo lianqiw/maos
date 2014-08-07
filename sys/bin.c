@@ -890,7 +890,7 @@ double search_header_num(const char *header, const char *key){
 */
 double search_header_num_valid(const char *header, const char *key){
     double val=search_header_num(header, key);
-    if(isnan(val)){
+    if(is_nan(val)){
 	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
     }
     return val;

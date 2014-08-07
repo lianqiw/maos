@@ -529,14 +529,13 @@ lmat *readcfg_lmat_do(int n, char *key){
     long *val=0;
     long **ret=&val;
     int nx, ny;
-    int nread=readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, getrecord(key, 1)->data);
-    lmat *out=0;
-    out=lnew(nx,ny);
-    if(nread>0){
-	memcpy(out->p, val, sizeof(long)*nx*ny);
+    readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, getrecord(key, 1)->data);
+    lmat *res=0;
+    if(!nx || !ny){
+	free(val); val=0;
     }
-    free(val);
-    return out;
+    res=lnew_data(nx,ny, val);
+    return res;
 }
 /**
    Read as an lmat. 
@@ -551,7 +550,7 @@ lmat *readcfg_lmat(const char *format,...){
 lmat *readcfg_lmat_n(int n, const char *format,...){
     format2key;
     lmat *out=readcfg_lmat_do(n, key);
-    int nread=out->nx*out->ny;
+    int nread=out?(out->nx*out->ny):0;
     if(n!=0 && nread!=n){
 	error("Need %d elements, got %d\n", n, nread);
     }
@@ -563,7 +562,7 @@ lmat *readcfg_lmat_n(int n, const char *format,...){
 lmat *readcfg_lmat_nmax(int n, const char *format,...){
     format2key;
     lmat *out=readcfg_lmat_do(n, key);
-    int nread=out->nx*out->ny;
+    long nread=out?(out->nx*out->ny):0;
     if(nread<=1){
 	lresize(out, n, 1);
 	if(nread==1){
@@ -572,7 +571,7 @@ lmat *readcfg_lmat_nmax(int n, const char *format,...){
 	    }
 	}
     }else if(nread!=n){
-	error("Need %d elements, got %ld\n", n, out->nx*out->ny);
+	error("Need %d elements, got %ld\n", n, nread);
     }
     return out;
 }
@@ -599,8 +598,11 @@ dmat *readcfg_dmat_do(int n, char *key){
     }else{
         double **pval=&val;
 	readstr_numarr((void**)pval, n, &nx, &ny,T_DBL, str);
-	if(!nx || !ny) {free(val); val=0;}
-	dmat *res=dnew_data(nx, ny, val);
+	dmat *res=0;
+	if(!nx || !ny) {
+	    free(val); val=0;
+	}
+	res=dnew_data(nx, ny, val);
 	return res;
     }
 }
@@ -617,9 +619,9 @@ dmat *readcfg_dmat(const char *format,...){
 dmat *readcfg_dmat_n(int n, const char *format,...){
     format2key;
     dmat *out=readcfg_dmat_do(n, key);
-    int nread=out->nx*out->ny;
+    long nread=out?(out->nx*out->ny):0;
     if(n!=0 && nread!=n){
-	error("Need %d elements, got %d\n", n, nread);
+	error("Need %d elements, got %ld\n", n, nread);
     }
     return out;
 }
@@ -629,14 +631,14 @@ dmat *readcfg_dmat_n(int n, const char *format,...){
 dmat *readcfg_dmat_nmax(int n, const char *format,...){
     format2key;
     dmat *out=readcfg_dmat_do(n, key);
-    int nread=out->nx*out->ny;
+    long nread=out?(out->nx*out->ny):0;
     if(nread<=1){
 	dresize(out, n, 1);
 	if(nread==1){
 	    dset(out, out->p[0]);
 	}
     }else if(nread!=0 && nread!=n){
-	error("Need %d elements, got %ld\n", n, out->nx*out->ny);
+	error("Need %d elements, got %ld\n", n, nread);
     }
     return out;
 }

@@ -360,12 +360,12 @@ void FitL_NCPA(dcell **xout, const void *A,
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
     sptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
     dcellfree(xp);xp=NULL;
-    dcellmm(&xp,recon->fitNW, xin, "tn", 1);
+    /*dcellmm(&xp,recon->fitNW, xin, "tn", 1);
     dcellmm(xout,recon->fitNW, xp, "nn", alpha);
     dcellfree(xp);
     if(recon->actslave){
 	spcellmulmat(xout, recon->actslave, xin, 1);
-    }
+	}*/
 }
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;

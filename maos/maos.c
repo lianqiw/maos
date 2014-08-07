@@ -44,6 +44,7 @@ static void read_env(){
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
     global=calloc(1, sizeof(GLOBAL_T));
+    global->parms=parms;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
@@ -61,10 +62,10 @@ void maos_setup(const PARMS_T *parms){
 	dirskysim=".";
     }
     THREAD_POOL_INIT(NTHREAD);
-    aper  = setup_aper(parms);
+    global->aper=aper=setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     if(!parms->sim.evlol){
-	powfs = setup_powfs_init(parms, aper);
+	global->powfs=powfs=setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
 	/*if(parms->dbg.wfslinearity!=-1){
 	    int iwfs=parms->dbg.wfslinearity;
@@ -76,7 +77,7 @@ void maos_setup(const PARMS_T *parms){
 	    exit_success=1;//tell mem.c to print non-freed memory in debug mode. 
 	    exit(0);
 	}*/
-	recon = setup_recon_init(parms);
+	global->recon=recon=setup_recon_init(parms);
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
 	setup_recon_dm(recon, parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
@@ -97,10 +98,6 @@ void maos_setup(const PARMS_T *parms){
 	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    global->parms=parms;
-    global->powfs=powfs;
-    global->aper=aper;
-    global->recon=recon;
     global->setupdone=1;
     if(parms->plot.setup){
 	plot_setup(parms, powfs, aper, recon);

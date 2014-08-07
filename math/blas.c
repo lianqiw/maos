@@ -41,7 +41,7 @@
 */
 void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,   
 	   const char trans[2], const T alpha){
-    if(!A || !B) return;
+    if(!A || !B || A->nx==0 || B->nx==0) return;
     ptrdiff_t m,n,k,lda,ldb,ldc,k2;
     if (trans[0]=='T' || trans[0]=='t' || trans[0]=='C' || trans[0]=='c'){
 	m=A->ny; k=A->nx;

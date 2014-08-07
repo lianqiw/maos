@@ -33,6 +33,7 @@
 /*static double opdzlim[2]={-3e-5,3e-5}; */
 static double *opdzlim=NULL;
 extern int disable_save;
+int DM_NCPA=1;
 static mapcell *genatm_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
@@ -1102,8 +1103,12 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmpsol=cellnew(parms->npowfs, 1);
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
-    if(recon->dm_ncpa){//set the integrator
-	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
+    READ_ENV_INT(DM_NCPA, 0, 2);
+    if(DM_NCPA==1){
+	if(recon->dm_ncpa){//set the integrator
+	    warning_once("Preload integrator with NCPA");
+	    dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
+	}
     }
     if(parms->recon.split){
 	simu->Merr_lo_store=dcellnew(1,1);

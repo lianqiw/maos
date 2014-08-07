@@ -1951,7 +1951,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    powfs[ipowfs].opdbias->p[iwfs]=dnew(powfs[ipowfs].npts, 1);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
-		    if(!dm_ncpa->p[idm]) continue;
+		    if(!dm_ncpa->p[idm] || dm_ncpa->p[idm]->nx==0) continue;
 		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 		    double scale=1.-ht/hs;
 		    double dispx=ht*thetax;
@@ -1984,7 +1984,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		}
 		dfree(mcc);
 	    }
-	    if(parms->powfs[ipowfs].ncpa_method==1){
+	    if(parms->powfs[ipowfs].ncpa_method==1){//gradient offset
 		if(!powfs[ipowfs].gradoff){
 		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs,1);
 		}

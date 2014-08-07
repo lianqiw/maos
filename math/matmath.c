@@ -38,7 +38,7 @@ void X(scale)(X(mat) *A, R w){
  */
 int X(isnan)(const X(mat)*A){
     for(long i=0; i<A->nx*A->ny; i++){
-	if(isnan(A->p[i])){
+	if(is_nan(A->p[i])){
 	    return 1;
 	}
     }
@@ -53,7 +53,7 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     b=INFINITY;
     for(i=0; i<N; i++){
 	R tmp=MAG(p[i]);
-	if(!isnan(tmp)){
+	if(!is_nan(tmp)){
 	    if(tmp>a) a=tmp;
 	    if(tmp<b) b=tmp;
 	}
@@ -147,7 +147,7 @@ T X(inn)(const X(mat)*A, const X(mat) *B){
     for(int i=0; i<A->nx*A->ny; i++){
 	out+=A->p[i]*B->p[i];
     }
-    if(isnan(out)){
+    if(is_nan(out)){
 	error("NaN found\n");
     }
     return out;
@@ -338,7 +338,7 @@ void X(cwdiv)(X(mat) *B, const X(mat) *A, T value){
     assert(A->nx==B->nx && A->ny==B->ny);
     for(int i=0; i<A->nx*A->ny; i++){
 	B->p[i]/=A->p[i];
-	if(isnan(REAL(B->p[i]))) B->p[i]=value;
+	if(is_nan(REAL(B->p[i]))) B->p[i]=value;
     }
 }
 /**
@@ -423,7 +423,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(add)(&C,1,B,-1);
     T d=SQRT(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
     X(free)(C);
-    return isnan(d)?0:d;
+    return is_nan(d)?0:d;
 }
 /**
    a new gray pixel map generation based on bilinear influence functions used in
@@ -585,8 +585,9 @@ void X(rotvect)(X(mat) *A, const R theta){
 */
 void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
     assert(A->nx==2 && A->ny==2);
-    if(!*B0) 
+    if(!*B0){
 	*B0=X(new)(2,2);
+    }
     X(mat) *B=*B0;
     assert(B->nx==2 && B->ny==2);
     const T ctheta=cos(theta);
@@ -856,7 +857,7 @@ void X(addI)(X(mat) *A, T val){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
-    if(A){
+    if(A && A->nx){
 	if(!*B0){
 	    *B0=X(new)(A->nx, A->ny); 
 	    bc=0;/*no bother to accumulate. */
@@ -881,7 +882,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
    Add a scalar to matrix
 */
 void X(adds)(X(mat*)A, const T ac){
-    if(!A) return;
+    if(!A || !A->nx) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]+=ac;
     }
@@ -1004,9 +1005,9 @@ X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xne
 	    R xx=((xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
-		pynew[iy][ix]=isnan(y0)?pyin[iy][0]:y0;
+		pynew[iy][ix]=is_nan(y0)?pyin[iy][0]:y0;
 	    }else if(xxm>=nmax1){
-		pynew[iy][ix]=isnan(y0)?pyin[iy][nmax1]:y0;
+		pynew[iy][ix]=is_nan(y0)?pyin[iy][nmax1]:y0;
 	    }else{
 		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
@@ -1041,9 +1042,9 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, 
 	    R xx=(log10(xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
-		pynew[iy][ix]=isnan(y0)?pyin[iy][0]:y0;
+		pynew[iy][ix]=is_nan(y0)?pyin[iy][0]:y0;
 	    }else if(xxm>=nmax1){
-		pynew[iy][ix]=isnan(y0)?pyin[iy][nmax1]:y0;
+		pynew[iy][ix]=is_nan(y0)?pyin[iy][nmax1]:y0;
 	    }else{
 		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
@@ -1081,7 +1082,7 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
 		    break;
 		}
 	    }
-	    if(found || isnan(y0)){
+	    if(found || is_nan(y0)){
 		R xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
 		for(long iy=0; iy<ynew->ny; iy++){
 		    pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
@@ -1650,7 +1651,7 @@ R X(celldiff)(const X(cell) *A, const X(cell) *B){
     X(cellcp)(&C,A);
     X(celladd)(&C,1,B,-1);
     R d=sqrt(X(cellnorm)(C)*2/(X(cellnorm)(C)+X(cellnorm)(B)));
-    return isnan(d)?0:d;
+    return is_nan(d)?0:d;
 }
 
 /**

@@ -250,7 +250,7 @@ static __attribute__((constructor)) void init(){
     void init_scheduler(void);
     init_process();
     init_scheduler();
-    if(CHECK_NAN(NAN)){
+    if(not_nan(NAN)){
 	error("NAN check failed\n");
     }
 }

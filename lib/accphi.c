@@ -322,7 +322,7 @@ if(wt>EPS){								\
     if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
     else tmp=NAN;							\
 }									\
-if(CHECK_NAN(tmp)){							\
+if(not_nan(tmp)){							\
     /*We require all two points to be available. To extropolate */	\
     /*outside enable extend during loc_create_map_npad*/		\
     phiout[iloc]+=alpha*tmp;						\
@@ -357,7 +357,7 @@ if(CHECK_NAN(tmp)){							\
 	    }						\
 	}						\
     }							\
-    if(CHECK_NAN(sum)) phiout[iloc]+=sum*alpha;
+    if(not_nan(sum)) phiout[iloc]+=sum*alpha;
 
 #define CUBIC_ADD_NONGRID					\
     register double sum=0;					\
@@ -374,7 +374,7 @@ if(CHECK_NAN(tmp)){							\
 	    }							\
 	}							\
     }								\
-    if(CHECK_NAN(sum)) phiout[iloc]+=sum*alpha;
+    if(not_nan(sum)) phiout[iloc]+=sum*alpha;
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -441,7 +441,7 @@ void prop_grid(ARGIN_GRID,
 			  +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
 			+(phiin[nplocy1][nplocx]*(1.-dplocx)
 			  +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
-	    if(CHECK_NAN(tmp)){
+	    if(not_nan(tmp)){
 		phiout[iloc]+=alpha*tmp;
 	    }
 	}

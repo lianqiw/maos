@@ -268,8 +268,13 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    extern int DM_NCPA;
+    if(DM_NCPA==2 && recon->dm_ncpa){
+	warning_once("Add NCPA after integrator\n");
+	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
+    }
     if(simu->ttmreal){
-	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
     if(parms->sim.dmclip || parms->sim.dmclipia){
 	dcell *tmp=dcelldup(simu->dmcmd);
@@ -343,6 +348,11 @@ void filter_ol(SIM_T *simu){
     }
     if(simu->Merr_lo){
 	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
+    }
+    extern int DM_NCPA;
+    if(DM_NCPA && simu->recon->dm_ncpa){
+	warning_once("Add NCPA after integrator\n");
+	dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
     }
     if(simu->ttmreal){
 	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
