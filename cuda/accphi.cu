@@ -198,7 +198,7 @@ void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
 		nx0=nxa;
 		ny0=nxa;
 	    }
-	    info2("We will host %dx%d in GPU, taking %ld MiB\n", 
+	    info2("We will host %dx%d in GPU, taking %zd MiB\n", 
 		  nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 	}
     }
@@ -436,7 +436,7 @@ __global__ void prop_linear(Real *restrict out, const Real *restrict in, const i
 	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
 	    Real tmp=alpha*((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
 			    +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
-	    if(not_nan(tmp)) out[i]+= tmp;
+	    add_valid(out[i], tmp);
 	}
     }
 }
@@ -518,9 +518,7 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 	for(int kx=-1; kx<3; kx++){
 	    sum+=fx[kx+1]*fy*in[(iy+2)*nx+kx+ix];
 	}
-	if(not_nan(sum)){
-	    out[i]+=sum*alpha;
-	}
+	add_valid(out[i], sum*alpha);
     }
 }
 

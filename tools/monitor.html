@@ -240,6 +240,7 @@
 		 j = msg.data.split(';');
 		 var joblist=document.getElementById("joblist");
 		 for (var f=0; f < j.length - 1; f++) {
+		     console.log(j[f])
 		     i = j[f].split('&');
 		     var row=null;
 		     var irow;
@@ -294,6 +295,7 @@
 			 row.cells[cols.LOW].innerHTML=i[6];
 			 row.cells[cols.HIGH].innerHTML=i[5];
 			 var frac=0;
+			 console.log(i[8]);
 			 if(parseInt(i[8])>0){
 			     frac=Math.round(parseInt(i[7])/parseInt(i[8])*100);
 			 }

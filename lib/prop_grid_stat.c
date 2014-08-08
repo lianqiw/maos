@@ -136,9 +136,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 				+tr*phicol[irow]
 				+tl*phicol[irow+1]
 				);
-		    if(not_nan(tmp)){
-			phiout2[irow]+=alpha*tmp;
-		    }
+		    add_valid(phiout2[irow], alpha*tmp);
 #else
 		    double tmp=alpha*phiout2[irow];
 		    phicol2[irow+1]+=tmp*bl;
@@ -156,7 +154,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 				    +br*phicol2[irow]
 				    +tl*phicol[irow-wrapx]
 				    +tr*phicol[irow]);
-			if(not_nan(tmp)) phiout2[irow]+=alpha*tmp;
+			add_valid(phiout2[irow], alpha*tmp);
 #else
 			double tmp=alpha*phiout2[irow];
 			phicol2[irow-wrapx]+=tmp*bl;
@@ -178,7 +176,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 					+br*phicol2[irow]
 					+tl*phicol[irow+1]
 					+tr*phicol[irow]);
-			    if(not_nan(tmp)) phiout2[irow]+=alpha*tmp;
+			    add_valid(phiout2[irow], alpha*tmp);
 #else
 			    double tmp2=alpha*phiout2[irow];
 			    phicol2[irow+1]+=tmp2*bl;
@@ -255,7 +253,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 					  +dplocx0*phicol[nplocx0+1])
 				+dplocy *((1-dplocx0)*phicol2[nplocx0]
 					  +dplocx0*phicol2[nplocx0+1]));
-		    if(not_nan(tmp)) phiout2[irow]+=alpha*tmp;
+		    add_valid(phiout2[irow], alpha*tmp);
 #else
 		    double tmp=phiout2[irow]*alpha;
 		    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -275,7 +273,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 						  +dplocx0*phicol[nplocx0-wrapx])
 					+dplocy *((1-dplocx0)*phicol2[nplocx0]
 						  +dplocx0*phicol2[nplocx0-wrapx]));
-			    if(not_nan(tmp)) phiout2[rowdiv]+=alpha*tmp;
+			    add_valid(phiout2[rowdiv], alpha*tmp);
 #else
 			    double tmp=phiout2[rowdiv]*alpha;
 			    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -296,7 +294,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 						  +dplocx0*phicol[nplocx0+1])
 					+dplocy *((1-dplocx0)*phicol2[nplocx0]
 						  +dplocx0*phicol2[nplocx0+1]));
-			    if(not_nan(tmp)) phiout2[irow]+=alpha*tmp;
+			    add_valid(phiout2[irow], alpha*tmp);
 #else
 			    double tmp=phiout2[irow]*alpha;
 			    phicol[nplocx0]+=tmp*dplocy1*(1-dplocx0);
@@ -369,7 +367,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 				      +dplocy1 * phiin[(nplocx1) + nplocy*wrapx1])
 			    + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*wrapx1]
 					    +dplocy1 * phiin[nplocx + nplocy*wrapx1]));
-		if(not_nan(tmp)) phiout2[irow]+= alpha*tmp;
+		add_valid(phiout2[irow], alpha*tmp);
 #else
 		double tmp=alpha*phiout2[irow];
 		phiin[(nplocx1) + (nplocy1)*wrapx1]+=tmp*dplocx*dplocy;

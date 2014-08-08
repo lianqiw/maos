@@ -263,18 +263,18 @@ void filter_cl(SIM_T *simu){
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
-    
     dcellcp(&simu->dmcmd,simu->dmint->mint->p[0]);
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    if(simu->ttmreal){
+	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+    }
+    dcellcp(&simu->dmpsol, simu->dmcmd);
     extern int DM_NCPA;
     if(DM_NCPA==2 && recon->dm_ncpa){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
-    }
-    if(simu->ttmreal){
-	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
     if(parms->sim.dmclip || parms->sim.dmclipia){
 	dcell *tmp=dcelldup(simu->dmcmd);

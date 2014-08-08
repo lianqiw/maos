@@ -950,6 +950,10 @@ void wfsgrad_post(thread_t *info){
 		    dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
 		}
 	    }
+	    //Gradient offset due to mainly NCPA calibration
+	    if(simu->powfs[ipowfs].gradoff){
+		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
+	    }
 	    if(parms->save.grad->p[iwfs]){
 		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }

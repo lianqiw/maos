@@ -953,7 +953,6 @@ static void readcfg_plot(PARMS_T *parms){
    Read in debugging parameters
 */
 static void readcfg_dbg(PARMS_T *parms){
-    READ_INT(dbg.psol);
     READ_INT(dbg.wamethod);
     READ_INT(dbg.atm);
     READ_INT(dbg.mvstlimit);

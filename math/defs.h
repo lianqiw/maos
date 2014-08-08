@@ -55,6 +55,8 @@
 #undef PCELL
 #undef PSPCELL
 #undef M_SPT
+#undef COS
+#undef SIN
 #endif
 #ifdef USE_LONG
 #define T long
@@ -73,6 +75,8 @@
 #define RI dcomplex
 #define FFTW(A) fftw_##A
 #define FABS(A) fabs(A)
+#define COS(A) cos(A)
+#define SIN(A) sin(A)
 #ifndef USE_COMPLEX
 /*Double */
 #define X(A) d##A
@@ -117,6 +121,7 @@
 #define POW cpow
 #define LOG clog
 #define EXP cexp
+#define EXPI(A) (cos(A)+I*sin(A))
 #endif
 #else 
 /*Single Precision*/
@@ -126,6 +131,8 @@
 #define RI fcomplex
 #define FFTW(A) fftwf_##A
 #define FABS(A) fabsf(A)
+#define COS(A) cosf(A)
+#define SIN(A) sinf(A)
 /*Float */
 #ifndef USE_COMPLEX
 #define X(A) s##A
@@ -171,6 +178,7 @@
 #define POW cpowf
 #define LOG clogf
 #define EXP cexpf
+#define EXPI(A) (cosf(A)+I*sinf(A))
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
 #define PSPCELL(A,pp) PALL(X(sp)*,A,pp)

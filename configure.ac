@@ -84,7 +84,8 @@ fi
 case ${host_cpu} in 
     *64)
 	host_cpu=x86_64
-	CFLAGS_CPU="-m64 -DDLONG"
+	CFLAGS_CPU="-m64"
+	CFLAGS_ARCH="-m64 -DDLONG"
         LDFLAGS+=" -m64"
         CDEFINE="__x86_64__"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
@@ -94,7 +95,8 @@ case ${host_cpu} in
 	;;
     *86)
 	host_cpu=i386
-	CFLAGS_CPU="-m32 -DDINT"
+	CFLAGS_CPU="-m32"
+	CFLAGS_ARCH="-m32 -DDINT"
 	LDFLAGS+=" -m32"
         CDEFINE="__i386__"
 	AC_DEFINE(X86, [1], "I386 Machine")
@@ -123,7 +125,7 @@ case "$host_os" in
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
-	CFLAGS_CPU+=" -D_GLIBC_2_5_SOURCE"
+	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
 	else
@@ -140,7 +142,7 @@ case "$host_os" in
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_CPU+=" -mmacosx-version-min=10.6"
+	CFLAGS_ARCH+=" -mmacosx-version-min=10.6"
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -166,7 +168,7 @@ TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-CFLAGS="$CFLAGS_EXTRA $CFLAGS_CPU -I${PRE_DIR}/include -fPIC"
+CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include -fPIC"
 
 #Try to discover CUDA install in the system
 
@@ -424,7 +426,7 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_CPU -O3"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_ARCH -O3"  && \
 	(./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
 	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
 	make -j4 install >> $fnlog) ;then
@@ -434,19 +436,40 @@ compile(){
     fi
 }
 if test -z "$LAPACK" ;then
-    LAPACK="-lblas -llapack"
+    if test -f ${LIB_DIR}/libmkl_core.${ldsuffix} ;then
+	LAPACK="-lmkl_core"
+	if test -n "$OPENMP_CFLAGS" ;then
+	    if test "$CN" = "icc" ;then
+		LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
+	    elif test "$CN" = "gcc" ;then
+		LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+	    else
+		LAPACK+=" -lmkl_sequential -lpthread"
+	    fi
+	else
+	    LAPACK+=" -lmkl_sequential -lpthread"
+	fi
+	if test "$host_cpu" = "x86_64" ;then
+	    LAPACK+=" -lmkl_intel_lp64"
+	else
+	    LAPACK+=" -lmkl_intel"
+	fi
+    else
+	LAPACK="-lblas -llapack"
+    fi
+    echo LAPACK=$LAPACK
 fi
-AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
-AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
-    unset nset ac_cv_lib_blas_dgemm_
-    unset nset ac_cv_lib_lapack_dposv_
+    unset nset ac_cv_lib_m_dgemm_
+    unset nset ac_cv_lib_m_dposv_
     #Check for LAPACK library in the system
     if test -n "`which pkg-config 2>/dev/null`" ;then
 	LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 	if test -n "$LAPACK" ;then
-	    AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
-	    AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 	fi
     fi
 fi
@@ -456,16 +479,16 @@ if test "$has_blas" = "no" ;then
     if test -n ${fn_blas} ;then
 	ln -sf ${fn_blas%% *} ${LIB_DIR}/libblas.so
     fi
-    unset nset ac_cv_lib_blas_dgemm_
-    AC_CHECK_LIB([blas],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+    unset nset ac_cv_lib_m_dgemm_
+    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 fi
 if test "$has_lapack" = "no" ;then
     fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
     if test -n ${fn_lapack} ;then
 	ln -sf ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
     fi
-    unset nset ac_cv_lib_lapack_dposv_
-    AC_CHECK_LIB([lapack],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+    unset nset ac_cv_lib_m_dposv_
+    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 fi
 if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
     if test "$mkl_avail" = "yes" ;then
@@ -473,8 +496,8 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
 	download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
 	mkdir -p ${LIB_DIR}
 	mv ${DOWNLOAD_DIR}/MKL/*/*.* ${LIB_DIR}
-	unset nset ac_cv_lib_lapack_dposv_
-	AC_CHECK_LIB([lapack],[dposv_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
+	unset nset ac_cv_lib_m_dposv_
+	AC_CHECK_LIB([m],[dposv_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
     else
 	AC_MSG_ERROR([Please install blas/lapack])
     fi
@@ -494,7 +517,7 @@ has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads CFLAGS="$CFLAGS_CPU -O3 -std=gnu99"
+    compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads CFLAGS="$CFLAGS_ARCH -O3 -std=gnu99"
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
@@ -695,14 +718,15 @@ if test "$with_matlab" != "no" ;then
 	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LIBMEX])
     fi
     if test x$mex_lib = xyes ;then
+    	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
+	LIBMEX+=" $LAPACK -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
+	LDMEX="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else
+	with_matlab="no"
 	AC_MSG_NOTICE([mex library test failed. Disable mex])
 	AM_CONDITIONAL(USE_MEX, false)
     fi
-    MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-    LIBMEX+=" $LAPACK -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
-    LDMEX="-no-fast-install -static -Xcompiler -shared"
     AC_SUBST(MEXEXT)
     AC_SUBST(LIBMEX)
     AC_SUBST(LDMEX)
@@ -769,9 +793,10 @@ if test "$with_cuda" != "no" ;then
     cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
     cudaver="${cudaver/.}"
     echo CUDA toolkit is $cudaver
+    NVCC+=" $CFLAGS_CPU"
     if test -n "$CCBIN" -a "$with_ccbin" != "no" ;then
 	CCBIN="${CCBIN%% *}"
-	NVCC="$NVCC -ccbin ${CCBIN%% *}"
+	NVCC+=" -ccbin ${CCBIN%% *}"
     fi
     if test "$cudaver" -lt 40 ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])

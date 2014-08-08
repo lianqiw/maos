@@ -20,6 +20,7 @@
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
+
 /*
   The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
 */
@@ -302,31 +303,29 @@ void prop_index(PROPDATA_T *propdata){
 
 #define LINEAR_ADD_NONGRID						\
     long iphi; double tmp=0; double wt=0;				\
-wt=(1.-dplocx)*(1.-dplocy);						\
-if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
-    if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);		\
-    else tmp=NAN;							\
-}									\
-wt=(dplocx)*(1.-dplocy);						\
-if(wt>EPS){								\
-    if((iphi=abs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
-    else tmp=NAN;							\
-}									\
-wt=(1.-dplocx)*(dplocy);						\
-if(wt>EPS){								\
-    if((iphi=abs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
-    else tmp=NAN;							\
-}									\
-wt=(dplocx)*(dplocy);							\
-if(wt>EPS){								\
-    if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
-    else tmp=NAN;							\
-}									\
-if(not_nan(tmp)){							\
+    wt=(1.-dplocx)*(1.-dplocy);						\
+    if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
+	if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
+	else tmp+=invalid_val;						\
+    }									\
+    wt=(dplocx)*(1.-dplocy);						\
+    if(wt>EPS){								\
+	if((iphi=abs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+	else tmp+=invalid_val;						\
+    }									\
+    wt=(1.-dplocx)*(dplocy);						\
+    if(wt>EPS){								\
+	if((iphi=abs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
+	else tmp+=invalid_val;						\
+    }									\
+    wt=(dplocx)*(dplocy);						\
+    if(wt>EPS){								\
+	if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+	else tmp+=invalid_val;						\
+    }									\
     /*We require all two points to be available. To extropolate */	\
     /*outside enable extend during loc_create_map_npad*/		\
-    phiout[iloc]+=alpha*tmp;						\
-}
+    add_valid(phiout[iloc],alpha*tmp); 
 
 
 #define RUNTIME_CUBIC					\
@@ -357,7 +356,7 @@ if(not_nan(tmp)){							\
 	    }						\
 	}						\
     }							\
-    if(not_nan(sum)) phiout[iloc]+=sum*alpha;
+    add_valid(phiout[iloc],sum*alpha);
 
 #define CUBIC_ADD_NONGRID					\
     register double sum=0;					\
@@ -369,12 +368,12 @@ if(not_nan(tmp)){							\
 		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){	\
 		    sum+=wt*phiin0[iphi];			\
 		}else{						\
-		    sum+=NAN;					\
+		    sum+=invalid_val;					\
 		}						\
 	    }							\
 	}							\
     }								\
-    if(not_nan(sum)) phiout[iloc]+=sum*alpha;
+    add_valid(phiout[iloc],sum*alpha);
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -441,10 +440,8 @@ void prop_grid(ARGIN_GRID,
 			  +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
 			+(phiin[nplocy1][nplocx]*(1.-dplocx)
 			  +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
-	    if(not_nan(tmp)){
-		phiout[iloc]+=alpha*tmp;
+	    add_valid(phiout[iloc],alpha*tmp);
 	    }
-	}
     }
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER)
 #pragma omp taskwait

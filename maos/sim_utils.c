@@ -1063,11 +1063,11 @@ static void init_simu_dm(SIM_T *simu){
 	}
 	if(simu->dmrealsq){
 	    simu->dmrealsq->p[idm]=mapnew2(recon->amap->p[idm]);
-	    dset((dmat*)simu->dmrealsq->p[idm], NAN);
+	    dset((dmat*)simu->dmrealsq->p[idm], invalid_val);
 	}
 	if(simu->dmprojsq){
 	    simu->dmprojsq->p[idm]=mapnew2(recon->amap->p[idm]);
-	    dset((dmat*)simu->dmprojsq->p[idm], NAN);
+	    dset((dmat*)simu->dmprojsq->p[idm], invalid_val);
 	}
 	if(parms->fit.square){/*dmreal is already square.*/
 	    free(simu->dmrealsq->p[idm]->p);
@@ -1100,7 +1100,7 @@ static void init_simu_dm(SIM_T *simu){
 	}
     }
 #endif
-    simu->dmpsol=cellnew(parms->npowfs, 1);
+    simu->wfspsol=cellnew(parms->npowfs, 1);
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
     READ_ENV_INT(DM_NCPA, 0, 2);
@@ -1429,7 +1429,7 @@ void free_simu(SIM_T *simu){
     dfree(simu->ttmreal);
     cellfree(simu->dmrealsq);
     dcellfree(simu->dmproj);
-    cellfree(simu->dmpsol);
+    cellfree(simu->wfspsol);
     dcellfree(simu->dmcmd);
     dcellfree(simu->dmadd);
     servo_free(simu->dmint);

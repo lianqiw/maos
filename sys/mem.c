@@ -153,7 +153,7 @@ static void memkey_add(void *p,size_t size){
 	return;
     }
     if(MEM_VERBOSE){
-	info("%p malloced with %lu bytes\n",p, size);
+	info("%p malloced with %zu bytes\n",p, size);
     }
     LOCK(mutex_mem);
     T_MEMKEY *key=calloc_default(1,sizeof(T_MEMKEY));

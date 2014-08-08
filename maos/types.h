@@ -507,6 +507,7 @@ typedef struct SIM_T{
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     /*DM commands.*/
+    dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmcmd;      /**<This is the command send to DM (known to RTC).*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
@@ -517,7 +518,7 @@ typedef struct SIM_T{
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/
     mapcell *dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
-    dccell *dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
+    dccell *wfspsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
     dcell *dmadd;      /**<dm vector to simulate turbulence (added to integrator

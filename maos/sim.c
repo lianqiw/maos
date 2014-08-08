@@ -225,9 +225,7 @@ void maos_isim(int isim){
 	/*we don't print out or report too frequently. */
 	simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
-	if(quitfun==&default_quitfun){//we are standalone.
-	    scheduler_report(simu->status);
-	}
+	scheduler_report(simu->status);
 #endif
 	print_progress(simu);
     }

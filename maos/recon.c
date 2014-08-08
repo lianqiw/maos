@@ -75,7 +75,7 @@ void tomofit(SIM_T *simu){
 		dcellmm(&simu->deltafocus, recon->RFdfx, simu->opdr, "nn", 1);
 	    }
 	    if(parms->dbg.deltafocus==2){
-		dcell *dmpsol=simu->dmpsol->p[parms->hipowfs->p[0]];
+		dcell *dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
 		//Compute the delta focus in closed loop.
 		dcellmm(&simu->deltafocus, recon->RFdfa, dmpsol, "nn", -1);
 	    }
@@ -105,11 +105,8 @@ static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     dcell *dmpsol;
-    if(parms->dbg.psol && !parms->sim.idealfit){
-	dmpsol=simu->dmcmd;
-    }else{
-	dmpsol=simu->dmcmdlast;//2013-03-22
-    }
+    dmpsol=simu->dmpsol;
+    if(parms->sim.idealfit) return;
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++)
   	if(parms->powfs[ipowfs].psol){
@@ -118,9 +115,9 @@ static void calc_gradol(SIM_T *simu){
 		alpha=0; /*reset accumulation. */
 	    }
 	    if(parms->powfs[ipowfs].dtrat!=1){
-		dcelladd(&simu->dmpsol->p[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	    }else if(!simu->dmpsol->p[ipowfs]){
-		simu->dmpsol->p[ipowfs]=dcellref(dmpsol);
+		dcelladd(&simu->wfspsol->p[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
+	    }else if(!simu->wfspsol->p[ipowfs]){
+		simu->wfspsol->p[ipowfs]=dcellref(dmpsol);
 	    }
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
@@ -131,9 +128,9 @@ static void calc_gradol(SIM_T *simu){
 		{
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
-		    for(int idm=0; idm<parms->ndm && simu->dmpsol->p[ipowfs]; idm++){
+		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
 			spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
-				 simu->dmpsol->p[ipowfs]->p[idm], 1);
+				 simu->wfspsol->p[ipowfs]->p[idm], 1);
 		    }
 		}
 #if _OPENMP >= 200805 
@@ -173,7 +170,7 @@ void recon_split(SIM_T *simu){
 	    dcellzero(simu->gngsmvst);/*reset accumulation. */
 	    dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
 	    if(parms->tomo.psol){
-		dcell *Mpsol_lo=simu->Mint_lo->mint->p[parms->dbg.psol?0:1];
+		dcell *Mpsol_lo=simu->Mint_lo->mint->p[0];
 		dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 	    }
 	    if(parms->sim.mffocus){
@@ -208,15 +205,6 @@ void reconstruct(SIM_T *simu){
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
-    
-    //Gradient offset due to mainly NCPA calibration
-    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	const int ipowfs=parms->wfsr[iwfs].powfs;
-	if(simu->powfs[ipowfs].gradoff){
-	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	    dadd(&simu->gradlastcl->p[iwfs], 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
-	}
-    }
 
     if(parms->sim.closeloop){
 	calc_gradol(simu);
@@ -268,12 +256,12 @@ void reconstruct(SIM_T *simu){
 	if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
 	    dcell *dmpsol;
 	    if(parms->sim.idealfit){
-		dmpsol=simu->dmcmdlast;
+		dmpsol=simu->dmpsol;
 	    }else if(parms->sim.fuseint || parms->recon.split==1){
-		dmpsol=simu->dmpsol->p[parms->hipowfs->p[0]];
+		dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
 	    }else{
 		warning_once("Temporary solution\n");
-		dmpsol=simu->dmint->mint->p[parms->dbg.psol?0:1];
+		dmpsol=simu->dmint->mint->p[0];
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
@@ -305,7 +293,7 @@ void reconstruct(SIM_T *simu){
     }
     //For PSF reconstruction.
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	psfr_calc(simu, simu->opdr, simu->dmpsol->p[parms->hipowfs->p[0]],
+	psfr_calc(simu, simu->opdr, simu->wfspsol->p[parms->hipowfs->p[0]],
 		  simu->dmerr,  simu->Merr_lo);
     }
 

@@ -413,9 +413,6 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	    cp2gpu(&cuwfs[iwfs].opdadd, powfs[ipowfs].opdadd->p[wfsind]);
 	    dfree(powfs[ipowfs].opdadd->p[wfsind]);/*no longer need it in CPU memory. */
 	}
-	if(powfs[ipowfs].gradoff && powfs[ipowfs].gradoff->p[wfsind]){
-	    cp2gpu(&cuwfs[iwfs].gradoff, powfs[ipowfs].gradoff->p[wfsind]);
-	}	
     }
 }
 __global__ static void setup_rand(curandState *rstat, int seed){

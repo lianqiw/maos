@@ -81,8 +81,6 @@ class cuwfs_t{
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan_wvf, lltplan_otf;/**<FFTW plan for LLT*/
     curmat *opdadd;     /**<The ncpa and surface aberration.*/
-    //curmat *gradphyoff; /**<The gradient offset for CoG*/
-    curmat *gradoff;    /**<The gradient offset for ncpa_method=1.*/
     /*For random number of this wfs. */
     struct curandStateXORWOW *custat;
     int     custatb;/*allocated block */

@@ -86,7 +86,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
     const int npsfx=A->nx;
     const int npsfy=A->ny;
  
-    T wvk=2.*M_PI/wvl*I;
+    R wvk=2.*M_PI/wvl;
     memset(psf, 0, sizeof(T)*npsfx*npsfy);
     if(FABS(theta)<1.e-10){/*no rotation. */
 	const int skipx=(npsfx-nopdx)/2;
@@ -99,7 +99,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 	    const R *ampi=amp+iy*nopdx;
 	    for(int ix=0; ix<nopdx; ix++){
 		/*sqrt(1-cos^2)!=sin due to sign problem.  */
-		psfi[ix]=ampi[ix]*EXP(wvk*opdi[ix]);
+		psfi[ix]=ampi[ix]*EXPI(wvk*opdi[ix]);
 		/*most time is spend in EXP. */
 	    }
 	}
@@ -147,7 +147,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 			+amps[iy2][ix2+1]*(x2*(1.-y2))
 			+amps[iy2+1][ix2]*((1-x2)*y2)
 			+amps[iy2+1][ix2+1]*(x2*y2);
-		    psfs[iy][ix]=iamp*EXP(wvk*iopd);
+		    psfs[iy][ix]=iamp*EXPI(wvk*iopd);
 		}
 	    }
 	}
@@ -597,17 +597,17 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     R duy=1./(R)ny;
     T ux[nx];
     T uy[ny];
-    T cx=EXP(-2*M_PI*I*dux*sx);
-    T cy=EXP(-2*M_PI*I*duy*sy);
+    T cx=EXPI(-2*M_PI*dux*sx);
+    T cy=EXPI(-2*M_PI*duy*sy);
     PMAT(otf, potf);
     PMAT(otfin, potfin);
     warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
-	ux[0]=EXP(-2*M_PI*I*dux*sx*(-nx/2));
+	ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
-	uy[0]=EXP(-2*M_PI*I*duy*sy*(-ny/2));
+	uy[0]=EXPI(-2*M_PI*duy*sy*(-ny/2));
 	for(int i=1; i<ny; i++){
 	    uy[i]=uy[i-1]*cy;
 	}
@@ -616,7 +616,7 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
 	for(int i=1; i<nx/2; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
-	ux[nx/2]=EXP(-2*M_PI*I*dux*sx*(-nx/2));
+	ux[nx/2]=EXPI(-2*M_PI*dux*sx*(-nx/2));
 	for(int i=nx/2+1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;
 	}
@@ -624,7 +624,7 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
 	for(int i=1; i<ny/2; i++){
 	    uy[i]=uy[i-1]*cy;
 	}
-	uy[ny/2]=EXP(-2*M_PI*I*duy*sy*(-ny/2));
+	uy[ny/2]=EXPI(-2*M_PI*duy*sy*(-ny/2));
 	for(int i=ny/2+1; i<ny; i++){
 	    uy[i]=uy[i-1]*cy;
 	}

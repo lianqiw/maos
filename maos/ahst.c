@@ -659,9 +659,9 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 		     const RECON_T *recon, const APER_T *aper, 
 		     const double *opd, int ievl){
 
-    const double *amp=aper->amp->p;
-    const double *locx=aper->locs->locx;
-    const double *locy=aper->locs->locy;
+    const double *restrict amp=aper->amp->p;
+    const double *restrict locx=aper->locs->locx;
+    const double *restrict locy=aper->locs->locy;
     const double MCC_fcp=recon->ngsmod->aper_fcp;
     const double ht=recon->ngsmod->ht;
     const double scale=recon->ngsmod->scale;
@@ -684,9 +684,9 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 	    const double junk=amp[iloc]*opd[iloc];
 	    tot+=junk*opd[iloc];
+	    coeff[0]+=junk;
 	    const double junkx=locx[iloc]*junk;
 	    const double junky=locy[iloc]*junk;
-	    coeff[0]+=junk;
 	    coeff[1]+=junkx;
 	    coeff[2]+=junky;
 	    coeff[3]+=locx[iloc]*junkx;//xx

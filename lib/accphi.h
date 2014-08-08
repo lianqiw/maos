@@ -139,4 +139,5 @@ void prop_nongrid_bin(const loc_t *locin,
 		      const double *ampout,
 		      double* phiout,
 		      ARG_PROP);
+
 #endif

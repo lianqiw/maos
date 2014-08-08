@@ -348,11 +348,44 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     if(dmax(saa)>1.01){
 	warning("The sa area maxes to %g, which should be leq 1 (misregistration can cause this).\n", 
-	      dmax(saa));
+		dmax(saa));
+    }
+    if(!parms->powfs[ipowfs].lo){
+	//Disable subapertures that doesn't have at least two close neighbors on its side
+	loc_t *ptsloc=(loc_t*)powfs[ipowfs].pts;
+	loc_create_map(ptsloc);
+	double dx1=1./ptsloc->dx;
+	double dy1=1./ptsloc->dy;
+	int disabled=0;
+	do{
+	    disabled=0;
+	    for(long isa=0; isa<ptsloc->nloc; isa++){
+		if(saa->p[isa]>thresarea){
+		    long ix=round((ptsloc->locx[isa]-ptsloc->map->ox)*dx1);
+		    long iy=round((ptsloc->locy[isa]-ptsloc->map->oy)*dy1);
+		    int ncount=0;
+		    for(int jx=-1; jx<2; jx++){
+			for(int jy=-1; jy<2; jy++){
+			    if(abs(jx+jy)==1){
+				long jsa=loc_map_get(ptsloc->map, ix+jx, iy+jy);
+				if(jsa && saa->p[jsa-1]>thresarea){
+				    ncount++;
+				}
+			    }
+			}
+		    }
+		    if(ncount<=1){
+			saa->p[isa]=0;
+			disabled++;
+		    }
+		}
+	    }
+	}while(disabled);
+	loc_free_map(ptsloc);
     }
     int count=0;
     for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-	if(saa->p[isa]>thresarea){
+	if(saa->p[isa]>=thresarea){
 	    /*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,
 	      ampm, saloc area is already normalized that maxes to 1. The MOVE*
 	      are defined in the beginining of this file.*/

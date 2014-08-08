@@ -146,6 +146,16 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
 #define not_nan(A) (A==A)
 #define is_nan(A) (!(A==A))
+
+#define ANTI_ROLLOFF 1 /**<Prevent Edge roll off during interpolation*/
+#if ANTI_ROLLOFF
+#define invalid_val NAN
+#define add_valid(dest, A) if(A==A) dest+=A
+#else
+#define invalid_val 0
+#define add_valid(dest, A)  dest+=A
+#endif
+
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
 long thread_id(void);
 void print_backtrace();

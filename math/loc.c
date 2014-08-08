@@ -333,7 +333,7 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in){
 	if(iphi){
 	    dest->p[i]=pin[iphi];
 	}else{
-	    dest->p[i]=NAN;
+	    dest->p[i]=invalid_val;
 	}
     }
 }

@@ -554,7 +554,6 @@ typedef struct PLOT_CFG_T{
    contains input parameters for debugging.
 */
 typedef struct DBG_CFG_T{
-    int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int atm;         /**<test special atmosphere*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
