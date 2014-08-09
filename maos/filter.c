@@ -281,6 +281,7 @@ void filter_cl(SIM_T *simu){
 	clipdm(simu, simu->dmcmd);
 	dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
 	dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
+	dcelladd(&simu->dmpsol, 1, tmp, -1);//also feed to PSOL (is this really necessary?)
 	dcellfree(tmp);
     }
     /*This is after the integrator output and clipping*/

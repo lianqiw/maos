@@ -96,7 +96,7 @@ case ${host_cpu} in
     *86)
 	host_cpu=i386
 	CFLAGS_CPU="-m32"
-	CFLAGS_ARCH="-m32 -DDINT"
+	CFLAGS_ARCH="-m32 -DDINT -D_FILE_OFFSET_BITS=64"
 	LDFLAGS+=" -m32"
         CDEFINE="__i386__"
 	AC_DEFINE(X86, [1], "I386 Machine")
