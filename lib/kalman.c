@@ -279,15 +279,14 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 		coeffi->p[2]=0;//sde_fit_do will figure it out.
 		coeffs->p[ivib]=sde_fit_do(psdi, coeffi, tmax_fit);
 		if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI){
+		    warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
+			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
 		    dwrite(psdi, "psdi_%d", ivib);
 		    dwrite(coeffi, "coeffi_%d", ivib);
 		    dwrite(coeffs->p[ivib], "coeffo_%d", ivib);
 		    if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI*5){
-			error("Fitting failed for %d, Freq=%g, %g\n", ivib, 
-			      sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
-		    }else{
-			warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
-			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
+			dcp(&coeffs->p[ivib], coeffi);
+			warning("Use input\n");
 		    }
 		}
 		double* psd2p=psd2->p+psd2->nx;
