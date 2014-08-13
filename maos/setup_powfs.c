@@ -1966,22 +1966,24 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     disable_save=disable_save_save;//put it back.
 }
 /*
-  Setup gradient offset for calibration.
+  Setup gradient offset for calibration. opdadd is the wavefront aberration in
+  WFS due to optics, without DM correction. opdbias is the wavefront aberration
+  in WFS after DM system flat is applied.
 */
 void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcell *dm_ncpa){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
 	if(aloc && dm_ncpa){
-	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		int iwfs0=parms->powfs[ipowfs].wfs->p[iwfs];
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		double hs=parms->wfs[iwfs].hs;
-		double thetax=parms->wfs[iwfs0].thetax;
-		double thetay=parms->wfs[iwfs0].thetay;
+		double thetax=parms->wfs[iwfs].thetax;
+		double thetay=parms->wfs[iwfs].thetay;
 		if(!powfs[ipowfs].opdbias){
 		    powfs[ipowfs].opdbias=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		}
-		if(!powfs[ipowfs].opdbias->p[iwfs]){
-		    powfs[ipowfs].opdbias->p[iwfs]=dnew(powfs[ipowfs].npts, 1);
+		if(!powfs[ipowfs].opdbias->p[jwfs]){
+		    powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(!dm_ncpa->p[idm] || dm_ncpa->p[idm]->nx==0) continue;
@@ -1991,11 +1993,11 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    double dispy=ht*thetay;
 		    if(parms->dm[idm].cubic){
 			prop_nongrid_pts_cubic(aloc->p[idm], dm_ncpa->p[idm]->p, 
-					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
+					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
 					       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 		    }else{
 			prop_nongrid_pts(aloc->p[idm], dm_ncpa->p[idm]->p, 
-					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
+					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
 					 -1, dispx, dispy, scale, 0, 0);
 		    }
 		}
@@ -2008,12 +2010,12 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		  opdadd. Does not need to be very accurate.*/
 		dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
 		dinvspd_inplace(mcc);
-		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    double ptt[3]={0,0,0};
 		    loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
-				 powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[iwfs]->p);
-		    loc_remove_ptt(powfs[ipowfs].opdbias->p[iwfs]->p, ptt, powfs[ipowfs].loc);
-		    loc_remove_ptt(powfs[ipowfs].opdadd->p[iwfs]->p, ptt, powfs[ipowfs].loc);
+				 powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[jwfs]->p);
+		    loc_remove_ptt(powfs[ipowfs].opdbias->p[jwfs]->p, ptt, powfs[ipowfs].loc);
+		    loc_remove_ptt(powfs[ipowfs].opdadd->p[jwfs]->p, ptt, powfs[ipowfs].loc);
 		}
 		dfree(mcc);
 	    }
@@ -2021,16 +2023,16 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		if(!powfs[ipowfs].gradoff){
 		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs,1);
 		}
-		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		    if(powfs[ipowfs].opdbias->p[iwfs]){
-			double *realamp=powfs[ipowfs].realamp->p[iwfs]->p;
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    if(powfs[ipowfs].opdbias->p[jwfs]){
+			double *realamp=powfs[ipowfs].realamp->p[jwfs]->p;
 			if(parms->powfs[ipowfs].gtype_sim==1){
-			    pts_ztilt(&powfs[ipowfs].gradoff->p[iwfs], powfs[ipowfs].pts,
-				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?iwfs:0], 
-				      realamp, powfs[ipowfs].opdbias->p[iwfs]->p);
+			    pts_ztilt(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pts,
+				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
+				      realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
 			}else{
-			    spmulmat(&powfs[ipowfs].gradoff->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
-				     powfs[ipowfs].opdbias->p[iwfs],1);
+			    spmulmat(&powfs[ipowfs].gradoff->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
+				     powfs[ipowfs].opdbias->p[jwfs],1);
 			}
 		    }
 		}
