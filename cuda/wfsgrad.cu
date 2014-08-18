@@ -152,7 +152,7 @@ static void mtche(Real *restrict grad, Real (*restrict *restrict mtches)[2],
 		  int pixpsa, int nsa, int msa, cudaStream_t stream){
     for(int isa=0; isa<nsa; isa+=msa){
 	int ksa=MIN(msa, nsa-isa);
-	mtche_do<<<ksa, 16, ksa*sizeof(Real)*3, stream>>>
+	mtche_do<<<ksa, 16, 16*3*sizeof(Real), stream>>>
 	    (grad+isa, mtches+isa, ints+pixpsa*isa, i0sum?i0sum+isa:0, pixpsa, nsa);
     }
 }

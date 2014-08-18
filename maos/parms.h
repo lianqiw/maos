@@ -737,7 +737,6 @@ typedef struct ARG_T{
     int detach;      /**<Detach from the command line and run in background*/
     int override;    /**<Run simulation even if Res_${seed}.done exists*/
     int force;       /**<For start, bypassing scheduler*/
-    int nthread;     /**<Number of threads*/
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
     int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/

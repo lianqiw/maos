@@ -159,9 +159,9 @@ int main(int argc, const char *argv[]){
 	redirect();
     }
     /*Launch the scheduler and report about our process */
-    scheduler_start(scmd,arg->nthread,!arg->force);
+    scheduler_start(scmd,NTHREAD,!arg->force);
     info2("%s\n", scmd);
-    info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
+    info2("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
     maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->override);
@@ -186,11 +186,11 @@ int main(int argc, const char *argv[]){
 	    warning3("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
-	    scheduler_start(scmd,arg->nthread,!arg->force);
+	    scheduler_start(scmd,NTHREAD,!arg->force);
 	}
 	if(count>=60){
 	    warning3("fall back to own checker\n");
-	    wait_cpu(arg->nthread);
+	    wait_cpu(NTHREAD);
 	}
     }
     if(!disable_save){
