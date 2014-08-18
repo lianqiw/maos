@@ -22,11 +22,11 @@
 #include "blas.h"
 
 /**
-   Compute the factorial. Overflow LONG if n>20, so we use double as output.*/
-double factorial(long n){
+   Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
+double factorial(long n1, long n2){
     double fact=1;
-    while(n>1){
-	fact*=n--;
+    while(n2>=n1){
+	fact*=n2--;
     }
     if(!isfinite(fact)){
 	error("Factorial overflows\n");

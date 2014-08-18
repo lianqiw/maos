@@ -54,8 +54,8 @@ void ptsfree_do(pts_t *pts);
 #define ptsfree(A) ({ptsfree_do(A);A=NULL;})
 void locarrfree_do(loc_t **loc, int nloc);
 #define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
-
-int loccenter(loc_t *loc);
+double loc_diam(const loc_t *loc);
+int loccenter(const loc_t *loc);
 loc_t *locnew(long nloc, double dx, double dy);
 pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy);
 void loc_calc_ptt(double *out, double *coeffout, 

@@ -24,7 +24,7 @@
    \file mathmisc.h
    A few math routines
 */
-double factorial(long n);
+double factorial(long n1, long n2);
 void normalize_sum(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 

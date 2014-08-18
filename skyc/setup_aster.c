@@ -28,27 +28,11 @@
    Routines to handle asterisms.
  */
 /**
-   Computes the number of possibilities of selection k items from n items \f$C_n^k\f$.
+   Computes the number of possibilities of selection k items from n items \f$C_n^k\f$:
+   factorial(n)/(factorial(k)*factorial(n-k)); 
 */
 static long comb_select(long n, long k){
-    /*number of possibilities of selecting k from n. */
-    if(k>n||k<0) {
-	error("Invalid argument\n");
-	return -1;
-    } else {
-	/*compute factorial(n)/factorial(n-k) will overflow if n>=21 */
-	/*we use double */
-	double res=1;
-	long nk=n-k;
-	while(n>nk){
-	    res*=n--;
-	}
-	double fk=1;
-	while(k>1){
-	    fk*=k--;
-	}
-	return (long)round(res/fk);
-    }/* return factorial(n)/(factorial(k)*factorial(n-k)); */
+    return (long)round(factorial(n-k+1, n)/factorial(1, k));
 }
 /**
    initialize an initial combination composed a vector of non-negative numbers 0,1,2,...

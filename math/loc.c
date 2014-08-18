@@ -517,10 +517,23 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
     return loc;
 }
 /**
+   Estimate the diameter of loc
+*/
+double loc_diam(const loc_t *loc){
+    double R2max=0;
+    for(long i=0; i<loc->nloc; i++){
+	double R2=loc->locx[i]*loc->locx[i]+loc->locy[i]*loc->locy[i];
+	if(R2max<R2){
+	    R2max=R2;
+	}
+    }
+    return sqrt(R2max)*2;
+}
+/**
    Find the point that closes to origin (0,0) in loc. Useful in single point
    piston constraint in creating reconstructor.
 */
-int loccenter(loc_t *loc){
+int loccenter(const loc_t *loc){
     int ipix,jpix=0;
     double r2,r2min=INFINITY;
     

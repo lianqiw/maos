@@ -21,5 +21,5 @@
 dmat* zernike(const loc_t *loc, double D, int nr);
 dmat *zernike_cov_kolmogorov(int nr);
 dmat *diag_mod_cov(const dmat *mz, const dmat *cov);
-dmat *KL_kolmogorov(const loc_t *loc, double D, int nr);
+dmat *KL_kolmogorov(const loc_t *loc, double D, int nr, int nr2);
 #endif

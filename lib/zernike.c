@@ -27,7 +27,7 @@ static dmat *genRnm(const dmat *locr, int ir, int im){
     const long nloc=locr->nx;
     dmat *Rnm=dnew(nloc,1);
     for(int s=0; s<=(ir-im)/2; s++){
-	double coeff=pow(-1,s)*factorial(ir-s)/factorial(s)/factorial((ir+im)/2-s)/factorial((ir-im)/2-s);
+	double coeff=pow(-1,s)*factorial((ir+im)/2-s+1, ir-s)/factorial(1,s)/factorial(1,(ir-im)/2-s);
 	int power=ir-2*s;
 	if(power==0){
 	    for(long iloc=0; iloc<nloc; iloc++){
@@ -54,6 +54,14 @@ static dmat *genRnm(const dmat *locr, int ir, int im){
    
 */
 dmat* zernike(const loc_t *loc, double D, int nr){
+    double D2=loc_diam(loc);
+    if(D<=0){
+	D=D2;
+    }else if(fabs(D-D2)>loc->dx*10){
+	error("specified diameter is incorrect\n");
+    }else if(fabs(D-D2)>loc->dx*2){
+	warning("specified diameter is incorrect\n");
+    }
     if(nr<0) error("Invalid nr\n");
     int nmod=(nr+1)*(nr+2)/2;
     const long nloc=loc->nloc;
@@ -209,11 +217,25 @@ dmat *diag_mod_cov(const dmat *mz, /**<Modes in zernike space*/
    kolmogorov spectrum, and then diagnolize the covariance of these modes using
    SVD and use the Unitery matrix to transform the zernike modes. Notice the
    ordering of the master zernike modes may be reordering in the SVD process.
+
+   Since each KL mode is linear combination of zenike modes with same m, but
+   equal or HIGHER radial order, we have to compute more zernike modes to have
+   better accuracy. nr2 controls this overshoot.
  */
-dmat *KL_kolmogorov(const loc_t *loc, double D, int nr){
-    dmat *cov=zernike_cov_kolmogorov(nr);
-    dmat *modz=zernike(loc, D, nr);
+dmat *KL_kolmogorov(const loc_t *loc, double D, int nr, int nr2){
+    if(nr2<=0){
+	nr2=nr*2;
+    }else if(nr2<nr){
+	error("nr2=%d cannot be smaller than nr=%d\n", nr2, nr);
+    }
+    dmat *cov=zernike_cov_kolmogorov(nr2);
+    dmat *modz=zernike(loc, D, nr2);
     dmat *modkl=diag_mod_cov(modz, cov);
+    if(nr2>nr){
+	dmat *modkl2=dsub(modkl, 0, 0, 0, (nr+1)*(nr+2)/2);
+	dfree(modkl);
+	modkl=modkl2;
+    }
     dfree(cov);
     dfree(modz);
     return modkl;
