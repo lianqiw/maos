@@ -2503,7 +2503,7 @@ static void print_parms(const PARMS_T *parms){
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
 	}
-	switch(parms->tomo.alg){
+	switch(parms->lsr.alg){
 	case 0:
 	    info2("Cholesky back solve ");
 	    break;
@@ -2548,7 +2548,7 @@ static void print_parms(const PARMS_T *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override){
+PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     if(!mainconf){
 	mainconf="default.conf";
     }

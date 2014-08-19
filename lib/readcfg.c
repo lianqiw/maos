@@ -212,24 +212,24 @@ void close_config(const char *format, ...){
    a hash table. A key can be protected. If a key is not protected, newer
    entries with the same key will override a previous entry.
  */
-void open_config(const char* config_file, /**<[in]The .conf file to read*/
-		 const char* prefix,      /**<[in]if not NULL, prefix the key with this.*/
-		 long protect             /**<[in]whether we protect the value*/
+void open_config(char* config_file, /**<[in]The .conf file to read*/
+		 const char* prefix,/**<[in]if not NULL, prefix the key with this.*/
+		 long protect       /**<[in]whether we protect the value*/
 		 ){
     if(!config_file) return;
     FILE *fd=NULL;
     char *fn=NULL;
     if(check_suffix(config_file, ".conf")){
 	fn=find_file(config_file);
+    }
+    if(fn){
 	if(!(fd=fopen(fn,"r"))){
 	    perror("fopen");
-	    usleep(10000);
-	    if(!(fd=fopen(fn,"r"))){//just try again.
-		error("Cannot open file %s for reading.\n",fn);
-	    }
+	    error("Cannot open file %s for reading.\n",fn);
 	}
     }else{
-	parse_argopt((char*)config_file, NULL);
+	parse_argopt(config_file, NULL);
+	fn=config_file;
     }
     
     char *sline=NULL;
@@ -400,9 +400,9 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    if(fn){
+    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fn);
+    if(fd){
 	fclose(fd);
-	info2("loaded %3d (%3d new) records from %s\n",countnew+countold,countnew,fn);
 	free(fn);
     }
 #undef MAXLN

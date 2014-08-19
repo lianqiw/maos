@@ -563,11 +563,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    start++;
 	    continue;
 	}
-	if(start[0]=='-'){
-	    if(!options){
-		info2("cmds=\"%s\"", cmds);
-		error("options are not specified while command contains options.\n");
-	    }
+	if(options && start[0]=='-'){
 	    char *start0=start;
 	    char key='0';
 	    char *value;
@@ -602,7 +598,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		}
 	    }
 	    if(iopt==-1){
-		continue;/*what don't want this key. */
+		continue;/*we don't want this key. */
 	    }
 	    if((options[iopt].opt & 1) == 1){
 		value=start;

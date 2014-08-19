@@ -745,7 +745,7 @@ typedef struct ARG_T{
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
-PARMS_T* setup_parms(const char *main, const char *extra, int override);
+PARMS_T* setup_parms(char *main, char *extra, int override);
 void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
