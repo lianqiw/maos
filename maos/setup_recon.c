@@ -2095,7 +2095,6 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	spcellfree(recon->RR.M);
 	dcellfree(recon->RR.U);
 	dcellfree(recon->RR.V);
-	warning("Freeing RR.M. \n");
     }else{
 	dcellfree(recon->TTF);
 	dcellfree(recon->PTTF);

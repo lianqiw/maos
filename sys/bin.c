@@ -206,7 +206,9 @@ file_t* zfopen(const char *fn, char *mod){
     case 'w':/*write */
     case 'a':
 	if(disable_save){
-	    error("output directory is not specified\n");
+	    warning("output directory is not specified so saving is disabled.\n");
+	    free(fp->fn); free(fp);
+	    return 0;
 	}
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
@@ -916,6 +918,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
     }else{
 	fp=(file_t*) fpn;
     }
+    if(!fp) return;
     write_header(&header, fp);
     if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
     if(isfn) zfclose(fp);
@@ -1049,6 +1052,7 @@ void *readbin(READFUN readfun, const char *format, ...){
 void writebin(WRITEFUN writefun, const void *out, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
+    if(!fp) return;
     writefun(fp, out);
     zfclose(fp);
 }

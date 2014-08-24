@@ -137,7 +137,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc->p[idm]=map2loc(map);
-	    mapwrite(map, "%s/map", dirsetup);warning("debug");
 	    mapfree(map);
 	}
     }
