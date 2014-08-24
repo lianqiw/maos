@@ -65,9 +65,9 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	mapfree(pmap);
-	if(parms->save.setup){
-	    locwrite(recon->ploc, "%s/ploc",dirsetup);
-	}
+    }
+    if(parms->save.setup){
+	locwrite(recon->ploc, "%s/ploc",dirsetup);
     }
     loc_create_map_npad(recon->ploc, parms->tomo.square?0:1,0,0);
     recon->pmap=recon->ploc->map;
@@ -253,9 +253,9 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	toc2(" ");
-	if(parms->save.setup){
-	    spcellwrite(recon->HXW, "%s/HXW",dirsetup);
-	}
+    }
+    if(parms->save.setup){
+	spcellwrite(recon->HXW, "%s/HXW",dirsetup);
     }
     spcellfree(recon->HXWtomo);
     recon->HXWtomo=spcellnew(recon->HXW->nx, recon->HXW->ny);
@@ -307,7 +307,8 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    if(GP->p[ipowfs]->m!=nsa*2 || GP->p[ipowfs]->n!=nploc){
-		error("Wrong saved GP\n");
+		error("Wrong saved GP: size is %ldx%ld, need %dx%d\n",
+		      GP->p[ipowfs]->nx, GP->p[ipowfs]->ny, nsa*2, nploc);
 	    }
 	}
     }else{
@@ -342,9 +343,9 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
 	toc2(" ");
-	if(parms->save.setup){
-	    spcellwrite(GP,"%s/GP",dirsetup);
-	}
+    }
+    if(parms->save.setup){
+	spcellwrite(GP,"%s/GP",dirsetup);
     }
     /*assign GP for powfs to recon->GP for each wfs */
     recon->GP=GP;
@@ -431,10 +432,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		}
 	    }/*idm */
 	}
-	if(parms->save.setup){
-	    spcellwrite(recon->GA, "%s/GA",dirsetup);
-	}
     	toc2(" ");
+    }
+    if(parms->save.setup){
+	spcellwrite(recon->GA, "%s/GA",dirsetup);
     }
     if(recon->actstuck){
 	warning2("Apply stuck actuators to GA\n");
@@ -1143,7 +1144,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	dcelldropempty(&recon->RL.U,2);
 	dcelldropempty(&recon->RL.V,2);
 
-	long nll=0,nlr=0;
 	if(recon->RL.U){
 	    /* balance UV. may not be necessary. Just to compare well against
 	       laos. */
@@ -1152,14 +1152,23 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double val=laplacian_coef(r0,1,dx);/*needs to be a constant */
 	    dcellscale(recon->RL.U, 1./val);
 	    dcellscale(recon->RL.V, val);
-	    /*collect statistics.*/
-	    PDCELL(recon->RR.U,RRU);
-	    PDCELL(recon->RL.U,RLU);
+	}
+	/*collect statistics.*/
+	long nll=0,nlr=0;
+	if(recon->RR.U){
+	    int nx=recon->RR.U->nx;
 	    for(int i=0; i<recon->RR.U->ny;i++){
-		if(RRU[i][0]) nlr+=RRU[i][0]->ny;
+		if(recon->RR.U->p[i*nx]){
+		    nlr+=recon->RR.U->p[i*nx]->ny;
+		}
 	    }
+	}
+	if(recon->RL.U){
+	    int nx=recon->RL.U->nx;
 	    for(int i=0; i<recon->RL.U->ny;i++){
-		if(RLU[i][0]) nll+=RLU[i][0]->ny;
+		if(recon->RL.U->p[i*nx]){
+		    nll+=recon->RL.U->p[i*nx]->ny;
+		}
 	    }
 	}
 	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr,nll);
@@ -1195,11 +1204,16 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 
     if(parms->save.recon){
        	if(recon->RL.C){
-	    if(parms->save.recon>1) chol_convert(recon->RL.C, 1);
+	    chol_convert(recon->RL.C, 1);
 	    chol_save(recon->RL.C,"%s/RLC.bin",dirsetup);
 	}
-	if(recon->RL.MI)
+	if(recon->RL.MI){
 	    dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
+	}
+	if(recon->RL.Up){
+	    dwrite(recon->RL.Up,"%s/RLUp",dirsetup); 
+	    dwrite(recon->RL.Vp,"%s/RLVp",dirsetup); 
+	}
 	if(recon->RL.CB){
 	    for(int ib=0; ib<recon->RL.nb; ib++){
 		chol_save(recon->RL.CB[ib],"%s/RLCB_%d.bin",dirsetup, ib);
@@ -2070,11 +2084,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     if(!recon) return;
     spcellfree(recon->GWR);
-    if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
-	/*We already assembled tomo matrix. don't need these matric any more. */
-	dcellfree(recon->TTF);
-	dcellfree(recon->PTTF);
-    }
     /* Free arrays that will no longer be used after reconstruction setup is done. */
     spcellfree(recon->sanea); 
     spcellfree(recon->saneal);
@@ -2086,6 +2095,10 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	spcellfree(recon->RR.M);
 	dcellfree(recon->RR.U);
 	dcellfree(recon->RR.V);
+	warning("Freeing RR.M. \n");
+    }else{
+	dcellfree(recon->TTF);
+	dcellfree(recon->PTTF);
     }
     if(parms->fit.alg!=1 && !parms->fit.bgs){
 	spcellfree(recon->FL.M);

@@ -41,11 +41,8 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     if(nx==0 || ny==0){
 	out=NULL;
     }else{
-	out=calloc(1, sizeof(loc_t));
-	out->nloc=nx;
-	out->locx=malloc(sizeof(double)*nx);
+	out=locnew(nx, 0, 0);
 	zfread(out->locx, sizeof(double), nx, fp);
-	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
 	double dxd=INFINITY, dyd=INFINITY;
 	for(long i=0; i<out->nloc-1; i++){
@@ -172,19 +169,13 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
 	    error("Map should be square\n");
 	}
-	map=calloc(1, sizeof(map_t));
-	map->dx=in->p[0]->p[0];
-	map->dy=map->dx;
+	map=mapnew(in->p[1]->nx, in->p[1]->ny, 
+		   in->p[0]->p[0], in->p[0]->p[0], in->p[1]->p);
 	map->ox=in->p[0]->p[2];
 	map->oy=in->p[0]->p[3];
 	map->h=in->p[0]->p[4];
-    
-	dmat *ampg=dref(in->p[1]);
-	map->p=ampg->p;
-	map->nx=ampg->nx;
-	map->ny=ampg->ny;
+	dfree_keepdata(in->p[1]);
 	dcellfree(in);
-	dfree_keepdata(ampg);
     }else{
 	error("Invalid format. magic=%u\n", header->magic);
     }

@@ -68,7 +68,7 @@ static static void cmat_correctness(static void){
 	}
     }
     cfft2plan(A,-1);
-    dcircle(D, 40,32, 10,1);
+    dcircle(D, 40,32, 10, 1);
     ddraw("test_cmat",D,"Pupil");
     cembed_wvf(A,P->p,D->p,D->nx,D->ny,2,M_PI*0.25);
     cdraw("test_cmat",A,"Pupil");

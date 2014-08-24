@@ -1017,15 +1017,15 @@ static void readcfg_save(PARMS_T *parms){
 	}
 	warning("Enabling saving everything.\n");
 	/*The following 3 are for setup. */
-	parms->save.setup=1;
-	parms->save.recon=1;
-	parms->save.mvst=1;
+	if(!parms->save.setup) parms->save.setup=parms->save.all;
+	if(!parms->save.recon) parms->save.recon=parms->save.all;
+	parms->save.mvst=parms->save.all;
 	/*The following are run time information that are not enabled by
 	  save.run because they take a lot of space*/
-	parms->save.opdr=1;
-	parms->save.opdx=1;
-	parms->save.evlopd=1;
-	parms->save.run=1;/*see following */
+	parms->save.opdr=parms->save.all;
+	parms->save.opdx=parms->save.all;
+	parms->save.evlopd=parms->save.all;
+	parms->save.run=parms->save.all;/*see following */
     }
 
     if(parms->save.run){
@@ -2684,12 +2684,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 		warning("GPU fitting=2 requires fit.square=1. Changed\n");
 		parms->fit.square=1;
 	    }
-	    int moao_used=0;
-	    if(parms->evl.moao>=0) moao_used++;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].moao>=0) moao_used++;
-	    }
-	    if(moao_used>0){
+	    if(parms->nmoao>0){
 		if(parms->gpu.moao || parms->gpu.fit){
 		    if(!parms->fit.square){
 			info2("GPU moao=1 requires fit.square=1. Changed\n");
@@ -2711,6 +2706,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->sim.cachedm=0; /*No need in CUDA. */
 	}
 	if(parms->gpu.tomo || parms->gpu.fit==2){
+	    /*Tomography RHS in cuda requries full grid.*/
 	    parms->tomo.square=1;
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){

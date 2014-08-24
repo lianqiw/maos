@@ -61,8 +61,7 @@
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
-    void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val);	\
-    void X(circle_mul)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val);	\
+    void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
     void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);	\
     void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy);	\
     void X(rotvec)(X(mat) *A, const R theta);				\

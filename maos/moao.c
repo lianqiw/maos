@@ -51,11 +51,11 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
    Prepare the propagation H matrix for MOAO and compute the reconstructor. We
    only need a reconstructor for every different MOAO type.  */
 void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
+    const int nmoao=parms->nmoao;
+    if(nmoao==0) return;
     if(parms->recon.alg!=0){
 	error("Moao only works in recon.alg=0 mode MVR\n");
     }
-    const int nmoao=parms->nmoao;
-    if(nmoao==0) return;
     if(recon->moao){
 	free_recon_moao(recon, parms);
     }

@@ -85,7 +85,7 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
 	    id=*((long*)(pix));
 	}else if (id!=MCC_ANY){
 	    long id2=*((long*)(pix));
-	    if((id & id2)!=id || (id & id2) != id2){
+	    if((id & id2)!=id && (id & id2) != id2){
 		error("id=%ld, id2=%ld, mismatch\n", id, id2);
 	    }
 	}

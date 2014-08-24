@@ -50,15 +50,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
 	mapfree(fmap);
-	if(aper->ampground){
-	    /*restrict floc to within active pupil. Important for ncpa calibration
-	     * when surface are defined within active pupil only*/
-	    dmat *famp=dnew(recon->floc->nloc, 1);
-	    prop_grid(aper->ampground, recon->floc, 0, famp->p, 1,
-		      0, 0, 1, 0, 0, 0);
-	    loc_reduce(recon->floc, famp, 1, NULL);
-	    dfree(famp);
-	}
+	/*Do not restrict fmap to within active pupil. */
     }
     loc_create_map_npad(recon->floc, parms->fit.square?0:1, 0, 0);
     recon->fmap=recon->floc->map;
@@ -145,6 +137,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc->p[idm]=map2loc(map);
+	    mapwrite(map, "%s/map", dirsetup);warning("debug");
 	    mapfree(map);
 	}
     }
@@ -332,11 +325,11 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
-	    const double *cpl=recon->actcpl->p[idm]->p;
+	    //const double *cpl=recon->actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
-		if(cpl[iloc]>0.5){
-		    p[iloc]=scl;
-		}
+		//if(cpl[iloc]>0.5){
+		p[iloc]=scl;
+		//}
 	    }
 	}
 	inw+=ndm;
@@ -351,12 +344,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
 		double *p2x=p;
 		double *p2y=p+nloc;
-		const double *cpl=recon->actcpl->p[idm]->p;
+		//const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    if(cpl[iloc]>0.5){
-			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    }
+		    //if(cpl[iloc]>0.5){
+		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
+		    //}
 		}
 	    }
 	}else if(lrt_tt==2){/*Canceling TT. only valid for 2 DMs */
@@ -371,12 +364,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		else if(idm==1) factor=-scl*2./parms->aper.d;
 		double *p2x=p;
 		double *p2y=p+nloc;
-		const double *cpl=recon->actcpl->p[idm]->p;
+		//const double *cpl=recon->actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    if(cpl[iloc]>0.5){
-			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    }
+		    //if(cpl[iloc]>0.5){
+		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
+		    //}
 		}
 	    }
 
@@ -393,7 +386,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	*/
 	recon->actslave=slaving(recon->aloc, recon->actcpl,
 				recon->fitNW, recon->actstuck,
-				recon->actfloat, .5, 1./recon->floc->nloc);
+				recon->actfloat, .1, 1./recon->floc->nloc);
 	if(parms->save.setup){
 	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);

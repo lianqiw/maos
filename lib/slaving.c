@@ -63,7 +63,7 @@ dcell *genactcpl(const spcell *HA, const dmat *W1){
    using tip/tilt constraint and cholesky back solve.  */
 spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 		const dcell *actcplc,/**<[in]Actuator coupling coefficiency*/
-		const dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
+		dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
 		const lcell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
 		const lcell *actfloat,/**<[in]List of stuck actuators that will be slaved, but not have value constrained.*/
 		const double thres,  /**<[in]The threshold that an actuator is deemed slave*/
@@ -210,35 +210,30 @@ spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	pp[nact]=count;
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
-	/*if(!disable_save){
-	  spwrite(slave, "slave");
-	  }*/
 	actslave[idm][idm]=spmulsp(slavet, slave);
-	if(NW && 0){
+	if(NW && NW->p[idm]){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
 	      the tip/tilt constraints. NW=NW-slavet*inv(slavet)*NW */
-	    if(NW->p[idm]){
-		dmat *H=NULL;
-		spfull(&H, slavet, 1);
-		dmat *Hinv=dpinv(H,NULL,NULL);
-		dmat *mod=NULL;
-		dmm(&mod, 0, Hinv, NW->p[idm], "nn", 1);
-		dmm(&NW->p[idm], 1, H, mod,"nn", -1);
-		dfree(H);
-		dfree(Hinv);
-		dfree(mod);
-		if(nfloat || nstuck){/*Remove corresponding rows in NW */
-		    PDMAT(NW->p[idm], pNW);
-		    for(int iy=0; iy<NW->p[idm]->ny; iy++){
-			for(int jact=0; jact<nstuck; jact++){
-			    int iact=actstuck->p[idm]->p[jact];
-			    pNW[iy][iact]=0;
-			}
-			for(int jact=0; jact<nfloat; jact++){
-			    int iact=actfloat->p[idm]->p[jact];
-			    pNW[iy][iact]=0;
-			}
+	    dmat *H=NULL;
+	    spfull(&H, slavet, 1);
+	    dmat *Hinv=dpinv(H,NULL,NULL);
+	    dmat *mod=NULL;
+	    dmm(&mod, 0, Hinv, NW->p[idm], "nn", 1);
+	    dmm(&NW->p[idm], 1, H, mod,"nn", -1);
+	    dfree(H);
+	    dfree(Hinv);
+	    dfree(mod);
+	    if(nfloat || nstuck){/*Remove corresponding rows in NW */
+		PDMAT(NW->p[idm], pNW);
+		for(int iy=0; iy<NW->p[idm]->ny; iy++){
+		    for(int jact=0; jact<nstuck; jact++){
+			int iact=actstuck->p[idm]->p[jact];
+			pNW[iy][iact]=0;
+		    }
+		    for(int jact=0; jact<nfloat; jact++){
+			int iact=actfloat->p[idm]->p[jact];
+			pNW[iy][iact]=0;
 		    }
 		}
 	    }

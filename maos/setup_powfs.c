@@ -121,7 +121,97 @@ void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs){
     }
     dfree(ampmask);
 }
+static void
+sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea, int reduce_isolated){
+    dmat *saa=NULL;
+    if(powfs[ipowfs].saa_tel){
+	warning_once("Todo: Improve to allow different sa for same wfs type\n");
+	const double scale=1./(double)powfs[ipowfs].saa_tel->nx;
+	for(int i=0; i<powfs[ipowfs].saa_tel->nx; i++){
+	    dadd(&saa, 1, powfs[ipowfs].saa_tel->p[i], scale);
+	}
+    }else{
+	saa=ddup(powfs[ipowfs].saa);
+    }
+    if(dmax(saa)>1.01){
+	warning("The sa area maxes to %g, which should be leq 1 (misregistration can cause this).\n", 
+		dmax(saa));
+    }
+    if(reduce_isolated){
+	//Disable subapertures that doesn't have at least two close neighbors on its side
+	loc_t *ptsloc=(loc_t*)powfs[ipowfs].pts;
+	loc_create_map(ptsloc);
+	double dx1=1./ptsloc->dx;
+	double dy1=1./ptsloc->dy;
+	int disabled=0;
+	do{
+	    disabled=0;
+	    for(long isa=0; isa<ptsloc->nloc; isa++){
+		if(saa->p[isa]>thresarea){
+		    long ix=round((ptsloc->locx[isa]-ptsloc->map->ox)*dx1);
+		    long iy=round((ptsloc->locy[isa]-ptsloc->map->oy)*dy1);
+		    int ncount=0;
+		    for(int jx=-1; jx<2; jx++){
+			for(int jy=-1; jy<2; jy++){
+			    if(abs(jx+jy)==1){
+				long jsa=loc_map_get(ptsloc->map, ix+jx, iy+jy);
+				if(jsa && saa->p[jsa-1]>thresarea){
+				    ncount++;
+				}
+			    }
+			}
+		    }
+		    if(ncount<=1){
+			saa->p[isa]=0;
+			disabled++;
+		    }
+		}
+	    }
+	}while(disabled);
+	loc_free_map(ptsloc);
+    }
+    int count=0;
+    const int nxsa=powfs[ipowfs].pts->nx * powfs[ipowfs].pts->nx;
+    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+	if(saa->p[isa]>=thresarea){
+	    /*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,
+	      ampm, saloc area is already normalized that maxes to 1. The MOVE*
+	      are defined in the beginining of this file.*/
+	    if(count!=isa){
+		MOVEPTS(powfs[ipowfs].pts,  count, isa);
+		MOVES(powfs[ipowfs].saa->p, count, isa);
+		MOVELOC(powfs[ipowfs].saloc, count, isa);
+		MOVEDLOC(powfs[ipowfs].loc, nxsa, count, isa);
+		MOVED(powfs[ipowfs].amp->p, nxsa, count, isa);
+		if(powfs[ipowfs].saa_tel){
+		    for(int jwfs=0; jwfs<powfs[ipowfs].saa_tel->nx; jwfs++){
+			MOVES(powfs[ipowfs].saa_tel->p[jwfs]->p, count, isa);
+			MOVEDLOC(powfs[ipowfs].loc_tel->p[jwfs], nxsa, count, isa);
+			MOVED(powfs[ipowfs].amp_tel->p[jwfs]->p,nxsa, count, isa);
+		    }
+		}
+	    }
+	    count++;
+	}
+    }
+    if(count==0){
+	error("there are no subapertures above threshold.\n");
+    }
+    dfree(saa);
 
+    ptsresize(powfs[ipowfs].pts, count);
+    locresize(powfs[ipowfs].saloc, count);
+    locresize(powfs[ipowfs].loc, count*nxsa);
+    dresize(powfs[ipowfs].saa, count, 1);
+    dresize(powfs[ipowfs].amp, count*nxsa, 1);
+    if(powfs[ipowfs].loc_tel){
+	for(int jwfs=0; jwfs<powfs[ipowfs].saa_tel->nx; jwfs++){
+	    locresize(powfs[ipowfs].loc_tel->p[jwfs], count*nxsa);
+	    dresize(powfs[ipowfs].amp_tel->p[jwfs], count*nxsa, 1);
+	    dresize(powfs[ipowfs].saa_tel->p[jwfs], count, 1);
+	}
+    }	
+}
 /**
    setting up subaperture geometry.
    
@@ -336,95 +426,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dscale(powfs[ipowfs].saa, areafulli);
 	dcellscale(powfs[ipowfs].saa_tel, areafulli);
     }
-    dmat *saa=NULL;
-    if(powfs[ipowfs].saa_tel){
-	warning_once("Todo: Improve to allow different sa for same wfs type\n");
-	const double scale=1./(double) nwfsp;
-	for(int i=0; i<nwfsp; i++){
-	    dadd(&saa, 1, powfs[ipowfs].saa_tel->p[0], scale);
-	}
-    }else{
-	saa=dref(powfs[ipowfs].saa);
+    if(!parms->powfs[ipowfs].saloc){
+	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
-    if(dmax(saa)>1.01){
-	warning("The sa area maxes to %g, which should be leq 1 (misregistration can cause this).\n", 
-		dmax(saa));
-    }
-    if(!parms->powfs[ipowfs].lo){
-	//Disable subapertures that doesn't have at least two close neighbors on its side
-	loc_t *ptsloc=(loc_t*)powfs[ipowfs].pts;
-	loc_create_map(ptsloc);
-	double dx1=1./ptsloc->dx;
-	double dy1=1./ptsloc->dy;
-	int disabled=0;
-	do{
-	    disabled=0;
-	    for(long isa=0; isa<ptsloc->nloc; isa++){
-		if(saa->p[isa]>thresarea){
-		    long ix=round((ptsloc->locx[isa]-ptsloc->map->ox)*dx1);
-		    long iy=round((ptsloc->locy[isa]-ptsloc->map->oy)*dy1);
-		    int ncount=0;
-		    for(int jx=-1; jx<2; jx++){
-			for(int jy=-1; jy<2; jy++){
-			    if(abs(jx+jy)==1){
-				long jsa=loc_map_get(ptsloc->map, ix+jx, iy+jy);
-				if(jsa && saa->p[jsa-1]>thresarea){
-				    ncount++;
-				}
-			    }
-			}
-		    }
-		    if(ncount<=1){
-			saa->p[isa]=0;
-			disabled++;
-		    }
-		}
-	    }
-	}while(disabled);
-	loc_free_map(ptsloc);
-    }
-    int count=0;
-    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-	if(saa->p[isa]>=thresarea){
-	    /*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,
-	      ampm, saloc area is already normalized that maxes to 1. The MOVE*
-	      are defined in the beginining of this file.*/
-	    if(count!=isa){
-		MOVEPTS(powfs[ipowfs].pts,  count, isa);
-		MOVES(powfs[ipowfs].saa->p, count, isa);
-		MOVELOC(powfs[ipowfs].saloc, count, isa);
-		MOVEDLOC(powfs[ipowfs].loc, nxsa, count, isa);
-		MOVED(powfs[ipowfs].amp->p, nxsa, count, isa);
-		if(powfs[ipowfs].saa_tel){
-		    for(int jwfs=0; jwfs<nwfsp; jwfs++){
-			MOVES(powfs[ipowfs].saa_tel->p[jwfs]->p, count, isa);
-			MOVEDLOC(powfs[ipowfs].loc_tel->p[jwfs], nxsa, count, isa);
-			MOVED(powfs[ipowfs].amp_tel->p[jwfs]->p,nxsa, count, isa);
-		    }
-		}
-	    }
-	    count++;
-	}
-    }
-    if(count==0){
-	error("there are no subapertures above threshold.\n");
-    }
-    dfree(saa);
-
-    powfs[ipowfs].npts = count*nxsa;
-    powfs[ipowfs].nthread=MIN(count, NTHREAD);
-    ptsresize(powfs[ipowfs].pts, count);
-    locresize(powfs[ipowfs].saloc, count);
-    locresize(powfs[ipowfs].loc, count*nxsa);
-    dresize(powfs[ipowfs].saa, count, 1);
-    dresize(powfs[ipowfs].amp, count*nxsa, 1);
-    if(powfs[ipowfs].loc_tel){
-	for(int jwfs=0; jwfs<nwfsp; jwfs++){
-	    locresize(powfs[ipowfs].loc_tel->p[jwfs], count*nxsa);
-	    dresize(powfs[ipowfs].amp_tel->p[jwfs], count*nxsa, 1);
-	    dresize(powfs[ipowfs].saa_tel->p[jwfs], count, 1);
-	}
-    }	
+    powfs[ipowfs].npts = powfs[ipowfs].pts->nsa*nxsa;
+    powfs[ipowfs].nthread=MIN(powfs[ipowfs].pts->nsa, NTHREAD);
     powfs[ipowfs].realamp=dcellnew(nwfsp, 1);
     powfs[ipowfs].realsaa=dcellnew(nwfsp, 1);
     powfs[ipowfs].sumamp=dnew(nwfsp, 1);

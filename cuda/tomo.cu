@@ -616,7 +616,7 @@ void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &s
     }
 }
 /*
-  Tomography right hand size matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
+  Tomography right hand side matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
 */
 void cutomo_grid::R(curcell **xout, Real beta, const curcell *_grad, Real alpha, stream_t &stream){

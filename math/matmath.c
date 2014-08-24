@@ -431,7 +431,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
    unit of meter, dx,dy specify the unit of pixel along x or y dimension.
 */
 void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
-    int nres=100;
+    int nres=10;
     const R res=(R)(1./nres);
     const R res1=(R)(1./nres);
     const R res2=(R)(res1*res1*4.);
@@ -468,55 +468,14 @@ void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
 	}
     }
 }
-/**
-   Similar to X(circle), by multiply instead of add.
-*/
-void X(circle_mul)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
-    int nres=100;
-    const R res=1./(R)(nres);
-    const R res1=1./(R)(nres);
-    const R res2=res1*res1*4.;
-    R resm=(R)(nres-1)/2.;
-    R r2=r*r;
-    R r2l=(r-1.5)*(r-1.5);
-    R r2u=(r+2.5)*(r+2.5);
-    PMAT(A,As);
-    for(int iy=0; iy<A->ny; iy++){
-	R r2y=(iy*dy-cy)*(iy*dy-cy);
-	for(int ix=0; ix<A->nx; ix++){
-	    R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
-	    R val2=0;
-	    if(r2r<r2l) {
-		val2=val;
-	    }else if(r2r<r2u){
-		R tot=0.;
-		for(int jy=0; jy<nres; jy++){
-		    R iiy=iy+(jy-resm)*2*res;
-		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    R wty=1.-FABS(iy-iiy);
-		    for(int jx=0; jx<nres; jx++){
-			R iix=ix+(jx-resm)*2*res;
-			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			R wtx=1.-FABS(ix-iix);
-			if(rr2r<r2)
-			    tot+=res2*wty*wtx;
-		    }
-		}
-		val2=tot*val;
-	    }
-	    As[iy][ix]*=val2;
-	}
-    }
-}
 
 /**
-   Unlike X(circle), we don't use bilinear influence function, but use pure gray
-   pixel instead. Also the values are black/white, no gray.
+   Mark valid grid points. If any direct neighbor of a point is within r, make the point valid.
 */
 void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
     R r2=r*r;
-    R r2l=(r-1.5)*(r-1.5);
-    R r2u=(r+2.5)*(r+2.5);
+    R r2l=(r-1.5)*(r-1.5);//lower limit
+    R r2u=(r+2.5)*(r+2.5);//upper limit
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
 	R r2y=(iy*dy-cy)*(iy*dy-cy);
@@ -524,16 +483,14 @@ void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
 	    R r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
 	    if(r2r<r2l){
 	    	As[iy][ix]=1;
-	    }else if(r2r>r2u){
-		continue;//do not set to 0.
-	    }else{
-		for(R jy=-0.5; jy<1; jy++){
+	    }else if(r2r<r2u){
+		for(R jy=-1; jy<=1; jy++){
 		    R iiy=iy+jy;
 		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    for(R jx=-0.5; jx<1; jx++){
+		    for(R jx=-1; jx<=1; jx++){
 			R iix=ix+jx;
 			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			if(rr2r<r2){
+			if(rr2r<=r2){
 			    As[iy][ix]=1;
 			    continue;
 			}

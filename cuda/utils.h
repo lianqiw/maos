@@ -105,7 +105,9 @@ template<typename M, typename N> inline void
 cp2gpu(cumat<M>**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
     if(*dest){
-	assert((*dest)->nx*(*dest)->ny==nx*ny);
+	if((*dest)->nx*(*dest)->ny!=nx*ny){
+	    error("cumat is %ldx%ld, input is %dx%d\n", (*dest)->nx, (*dest)->ny, nx, ny);
+	}
 	cp2gpu(&((*dest)->p), src, nx, ny, stream);
     }else{
 	M *p=NULL;
