@@ -449,15 +449,15 @@ void ws_end(){
     }
 }
 int ws_service(){
+    /*returns immediately if no task is pending.*/
     if(context){
-	int ans=libwebsocket_service(context, 500);
+	int ans=libwebsocket_service(context, 0);
 	if(ans<0){
 	    ws_end();
 	    context=0;
 	}
 	return ans;
     }else{
-	usleep(500);
 	return -1;
     }
 }

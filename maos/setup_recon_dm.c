@@ -383,9 +383,11 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	  back.
 	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. 
 	*/
+	TIC;tic;
 	recon->actslave=slaving(recon->aloc, recon->actcpl,
 				recon->fitNW, recon->actstuck,
-				recon->actfloat, .1, 1./recon->floc->nloc);
+				recon->actfloat, parms->fit.actthres, 1./recon->floc->nloc);
+	toc("slaving");
 	if(parms->save.setup){
 	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);

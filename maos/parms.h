@@ -377,6 +377,7 @@ typedef struct FIT_CFG_T{
     dmat *hs;      /**<height of target in each direction*/
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
+    double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int actinterp;   /**<interpolate actuator results to non-active actuators after DM fitting. turn on when inter-actuator-stroke study.*/
     int nfit;        /**<Number of DM fit directions */

@@ -211,10 +211,14 @@ spcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
 	actslave[idm][idm]=spmulsp(slavet, slave);
-	if(NW && NW->p[idm]){
+	if(NW && NW->p[idm] && 0){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
-	      the tip/tilt constraints. NW=NW-slavet*inv(slavet)*NW */
+	      the tip/tilt constraints. NW=NW-slavet*inv(slavet)*NW 
+
+	      2014-08-26: This step has no performance difference and is slow
+	      for large DMs. Disable.
+	    */
 	    dmat *H=NULL;
 	    spfull(&H, slavet, 1);
 	    dmat *Hinv=dpinv(H,NULL,NULL);

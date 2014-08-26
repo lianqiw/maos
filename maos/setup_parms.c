@@ -781,6 +781,7 @@ static void readcfg_fit(PARMS_T *parms){
     READ_DBL(fit.tikcr);
     READ_DBL(fit.svdthres);
     READ_INT(fit.actslave);
+    READ_DBL(fit.actthres);
     READ_INT(fit.actinterp);
     READ_INT(fit.lrt_piston);
     READ_INT(fit.lrt_tt);

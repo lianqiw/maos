@@ -806,12 +806,21 @@ void scheduler_handle_ws(char *in, size_t len){
     }
 }
 static void scheduler_timeout(void){
-    static int lasttime3=0;
+    static double lasttime=0;
+    static double lasttime3=0;
     if(!all_done){
 	process_queue();
     }
+#if HAS_LWS
+    ws_service();
+#endif
+    double thistime=myclockd();
+    if(thistime<lasttime+0.01){
+	/*both scheduler and websocket are idle.*/
+	sleep(1);
+    }
+    lasttime=thistime;
     /*Report CPU usage every 3 seconds. */
-    int thistime=myclocki();
     if(thistime>=(lasttime3+3)){
 	if(running>0){
 	    check_jobs();
@@ -820,9 +829,8 @@ static void scheduler_timeout(void){
 	monitor_send_load();
 	lasttime3=thistime;
     }
-#if HAS_LWS
-    ws_service();
-#endif    
+    
+
 }
 
 /*The following routines maintains the MONITOR_T linked list. */
@@ -1002,7 +1010,7 @@ int main(){
 #if HAS_LWS
     ws_start(PORT+1);
     ws_service();
-    timeout=0.001;//let lws do timeout
+    timeout=0.001;//let lws do timeout. don't use 0 which blocks
 #endif
     listen_port(PORT, slocal, respond, timeout, scheduler_timeout, 0);
     remove(slocal);
