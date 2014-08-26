@@ -232,4 +232,11 @@ typedef struct cell{
     struct cell *m;
 }cell;
 
+/*A method to simulate operator overloading for indexing arrys*/
+#define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
+#define IND1(A,i) A->p[i]
+#define IND2(A,ix,iy) A->p[ix+A->nx*iy]
+#define IND_GET(_0,_1,_2,_3,NAME,...) NAME
+#define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
+
 #endif
