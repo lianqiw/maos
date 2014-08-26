@@ -34,7 +34,6 @@
 */
 static void
 setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
-    CALL_ONCE;
     double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
@@ -93,7 +92,6 @@ static void
 setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm==0) return;
-    CALL_ONCE;
     if(parms->fit.cachedm){
 	recon->acmap=cellnew(ndm, 1);
     }
@@ -228,7 +226,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static void
 setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     if(parms->load.HA && zfexist(parms->load.HA)){
 	warning("Loading saved HA\n");
 	recon->HA=spcellread("%s",parms->load.HA);
@@ -296,7 +293,6 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
    DMs. Becareful with tip/tilt contraint when using CBS.  */
 static void 
 fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     const int ndm=parms->ndm;
     if(ndm>=3) warning("Low rank terms for 3 or more dms are not tested\n");
     recon->fitNW=dcellnew(ndm,1);
@@ -399,7 +395,6 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 }
 
 void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
-    CALL_ONCE;
     /*setup DM actuator grid */
     setup_recon_aloc(recon,parms);
     /*Grid for DM fitting*/

@@ -24,7 +24,6 @@
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static void
 setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     if(parms->load.HXF && zfexist(parms->load.HXF)){
 	warning("Loading saved HXF\n");
 	recon->HXF=spcellread("%s",parms->load.HXF);
@@ -68,7 +67,6 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 */
 static void
 setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     const int nfit=parms->fit.nfit;
     const int ndm=parms->ndm;
     if(ndm==0) return;
@@ -239,7 +237,6 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 }
 
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     TIC;tic;
     if(!parms->sim.idealfit){
 	/*In idealfit, xloc has high sampling. We avoid HXF. */

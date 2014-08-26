@@ -18,6 +18,7 @@
 
 #include "common.h"
 #include "sim_utils.h"
+#include "maos.h"
 int maos_server_fd=-1;
 
 static void maos_server(PARMS_T *parms){

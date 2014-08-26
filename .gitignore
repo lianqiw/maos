@@ -38,3 +38,4 @@ ar-lib
 *.pyc
 mex/maos2mex.h
 mex/aolib.c
+.nfs*

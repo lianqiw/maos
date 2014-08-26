@@ -29,6 +29,17 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
+#undef TIMING
+#define TIMING 0
+#if !TIMING
+#define TIC_tm
+#define tic_tm
+#define toc_tm(A)
+#else
+#define TIC_tm TIC
+#define tic_tm tic
+#define toc_tm(A) toc2(A);tic
+#endif
 /**
    \file recon.c Wavefront reconstruction and DM fitting routines. 
 
@@ -62,13 +73,14 @@ void tomofit(SIM_T *simu){
 		error("Out of range\n");
 	    }
 	}
+	TIC_tm; tic_tm;
 #if USE_CUDA
 	if(parms->gpu.tomo && parms->ndm!=0){
 	    gpu_tomo(simu);
 	}else
 #endif
 	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-	
+	toc_tm("Tomography");
 	if(parms->dbg.deltafocus){
 	    if(simu->opdr && recon->RFdfx){
 		//Compute the delta focus in open loop.
@@ -81,16 +93,16 @@ void tomofit(SIM_T *simu){
 	    }
 	}
     }
-    
     if(parms->ndm>0){
+	TIC_tm; tic_tm;
 #if USE_CUDA
 	if(parms->gpu.fit){
 	    gpu_fit(simu);
 	}else
 #endif
 	    simu->cgres->p[1]->p[isim]=muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
+	toc_tm("Fitting");
     }
-
  
     dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 }

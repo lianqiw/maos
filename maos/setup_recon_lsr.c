@@ -30,7 +30,6 @@
    We use the tomograhy parameters for lsr, since lsr is simply "tomography" onto DM directly.
 */
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    CALL_ONCE;
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
     spcell *GAlsr;

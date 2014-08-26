@@ -44,7 +44,6 @@
    subaperture spacing) grid that defines the circular aperture for tomography.*/
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
     if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 	char *fn=parms->load.ploc;
@@ -111,7 +110,6 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 */
 static void 
 setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     const int npsr=recon->npsr;
     long nin0=0;
     if(parms->load.xloc){
@@ -277,7 +275,6 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 */
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    CALL_ONCE;
     if(!parms->dbg.usegwr) return;
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -296,7 +293,6 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void
 setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    CALL_ONCE;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     spcell *GP=NULL;
@@ -360,7 +356,6 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void
 setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    CALL_ONCE;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
@@ -507,7 +502,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void 
 setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
     recon->GX=spcellnew(nwfs, npsr);
@@ -562,7 +556,6 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 */
 static void
 setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
-    CALL_ONCE;
     const int nwfs=parms->nwfsr;
     spcellfree(recon->sanea);
     spcellfree(recon->saneai);
@@ -733,7 +726,6 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 static void
 setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_ttr) return;
-    CALL_ONCE;
     int nwfs=parms->nwfsr;
     recon->TT=dcellnew(nwfs,nwfs);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -781,7 +773,6 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 static void
 setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_dfr) return;
-    CALL_ONCE;
     if(recon->DF){ 
 	dcellfree(recon->DF);
 	dcellfree(recon->PDF);
@@ -826,7 +817,6 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 static void
 setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
-    CALL_ONCE;
     setup_recon_TTR(recon,parms,powfs);
     setup_recon_DFR(recon,parms,powfs);
     if(recon->DF){
@@ -1015,7 +1005,6 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 
 */
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     /*if not cg or forced, build explicitly the tomography matrix. */
     int npsr=recon->npsr;
     int nwfs=parms->nwfsr;
@@ -1403,7 +1392,6 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
 setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
-    CALL_ONCE;
     int ilgs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -1609,7 +1597,6 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 
 void
 setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
-    CALL_ONCE;
     TIC;tic;
     /*
       Notice that: Solve Fitting on Uw and using FUw to form Rngs gives
@@ -1877,7 +1864,6 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
    
 */
 void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
-    CALL_ONCE;
     TIC;tic;
     if(parms->cn2.tomo){
 	/*Use cn2 estimation results for tomography. Use its ht to build
@@ -1981,7 +1967,6 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
    Simple Initialization first
 */
 RECON_T *setup_recon_init(const PARMS_T *parms){
-    CALL_ONCE;
     RECON_T * recon = calloc(1, sizeof(RECON_T)); 
     if(parms->recon.warm_restart){
 	info2("Using warm restart\n");
@@ -1999,7 +1984,6 @@ RECON_T *setup_recon_init(const PARMS_T *parms){
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
 void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
-    CALL_ONCE;
     TIC;tic;
     if(parms->cn2.pair && parms->cn2.pair->nx>0){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can
@@ -2154,7 +2138,6 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
    Free the recon struct.
 */
 void free_recon(const PARMS_T *parms, RECON_T *recon){
-    CALL_ONCE;
     if(!recon) return;
     free_recon_moao(recon, parms);
     dfree(recon->ht);

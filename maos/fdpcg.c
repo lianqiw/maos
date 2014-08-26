@@ -44,7 +44,17 @@
 #define PRE_PERMUT 0 /*1: apply permutation to the inverse of the sparse matrix.
 		       0: apply permutation to the vectors: faster*/
 #endif
-
+#undef TIMING
+#define TIMING 0
+#if !TIMING
+#define TIC_tm
+#define tic_tm
+#define toc_tm(A)
+#else
+#define TIC_tm TIC
+#define tic_tm tic
+#define toc_tm(A) toc2(A);tic
+#endif
 /**
    Create aperture selection function that selects the gradients for valid
    subapertures from ground layer xloc (or ploc).  
@@ -646,9 +656,7 @@ static void fdpcg_ifft(thread_t *info){
    via xout=IFFT(M*FFT(xin));
  */
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
-    //static int count=-1; count++; //temp
-    //dcellwrite(xin, "fdpcg_xin_%d", count);
-    //dcellwrite(*xout, "fdpcg_xout1_%d", count);
+    TIC_tm; tic_tm;
     const RECON_T *recon=(RECON_T*)A;
     if(xin->ny!=1){
 	error("Invalid\n");
@@ -713,6 +721,7 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     ccellfree(xhat2i);
     cfree(xhat);
     cfree(xhat2);
+    toc_tm("fdpcg")
 }
     
 /**

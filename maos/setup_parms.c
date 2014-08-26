@@ -2367,7 +2367,7 @@ static void print_parms(const PARMS_T *parms){
 	info2("powfs %d: Order %2d, %sGS at %3.3g km. Thres %g%%",
 	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
 	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
-	int lrt=(parms->recon.split || parms->tomo.splitlrt);
+	int lrt=(parms->recon.split && parms->tomo.splitlrt);
 	if(parms->powfs[i].trs){
 	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
 	    if(!parms->powfs[i].llt){

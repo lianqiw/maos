@@ -32,6 +32,6 @@ void maos_reset();
 void maos_sim();
 void maos_isim(int isim);
 SIM_T *maos_iseed(int iseed);
-
+void maos(const PARMS_T *parms);
 #endif
 

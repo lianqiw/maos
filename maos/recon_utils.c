@@ -20,6 +20,17 @@
 #include "setup_recon.h"
 #include "ahst.h"
 #include "sim.h"
+#undef TIMING
+#define TIMING 0
+#if !TIMING
+#define TIC_tm
+#define tic_tm
+#define toc_tm(A)
+#else
+#define TIC_tm TIC
+#define tic_tm tic
+#define toc_tm(A) toc2(A);tic
+#endif
 /**
    \file recon_utils.c
    Reusable utilities for wavefront reconstruction and DM fitting.
@@ -380,7 +391,7 @@ void Tomo_iprop(Tomo_T *data, int nthread){
 
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *gin, const double alpha){
-    
+    TIC_tm;tic_tm;
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
     dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
@@ -392,6 +403,7 @@ void TomoR(dcell **xout, const void *A,
     Tomo_nea(&data, recon->nthread, 1);
     Tomo_iprop(&data, recon->nthread);
     dcellfree(gg);
+    toc_tm("TomoR");
 }
 
 /**
@@ -429,7 +441,7 @@ void TomoRt(dcell **gout, const void *A,
 #define test_TomoL 0
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha){
-
+    TIC_tm;tic_tm;
 #if test_TomoL
     static int count=-1; count++;//temp
     dcellwrite(xin, "cpu_tomo_xin_%d", count);//temp
@@ -474,6 +486,7 @@ void TomoL(dcell **xout, const void *A,
 #if test_TomoL
     dcellwrite(*xout, "cpu_tomo_xout_%d", count);//temp
 #endif
+    toc_tm("TomoL");
 }
 
 /**
