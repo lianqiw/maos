@@ -114,41 +114,19 @@ ARG_S *parse_args(int argc, const char *argv[]){
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
-    char fnnew[256];
-    char fnold[256];
-    char suffix[16];
-    int pid=getpid();
-    switch(sig){
-    case 0:
-	sprintf(suffix,"done");
-	break;
-    case SIGBUS:
-    case SIGILL:
-    case SIGSEGV:
-    case SIGABRT:
-	sprintf(suffix,"err");
-	break;
-    case SIGKILL:
-    case SIGINT: /*Ctrl-C */
-    case SIGTERM:
-    case SIGQUIT: /*Ctrl-'\' */
-	sprintf(suffix,"killed");
-	break;
-    default:
-	sprintf(suffix,"unknown");
-	break;
+    if(sig==0){
+	rename("run_recent.log", "run_done.log");
+	mysymlink("run_done.log", "run_recent.log");
+	rename("skyc_recent.conf", "skyc_done.conf");
+	mysymlink("skyc_done.conf", "skyc_recent.conf");
     }
-    
-    snprintf(fnold,256,"run_%d.log",pid);
-    snprintf(fnnew,256,"run_%d.%s",pid,suffix);
-    rename(fnold,fnnew);
-    mysymlink(fnnew, "run_recent.log");
 }
 /**
    Handles signals. 
  */
-void skyc_signal_handler(int sig){
+int skyc_signal_handler(int sig){
     psignal(sig, "skyc");
     rename_file(sig);/*handles signal */
     scheduler_finish(sig);
+    return 0;
 }

@@ -153,7 +153,6 @@ static void maos_daemon(int sock){
 int main(int argc, const char *argv[]){
     char *scmd=argv2str(argc,argv," ");
     ARG_T* arg=parse_args(argc,argv);/*does chdir */
-    
     if(arg->detach){
 	daemonize();
     }else{
@@ -193,14 +192,6 @@ int main(int argc, const char *argv[]){
 	    warning3("fall back to own checker\n");
 	    wait_cpu(NTHREAD);
 	}
-    }
-    if(!disable_save){
-	//Make the symlinks for running job only.
-	char fnpid[PATH_MAX];
-	snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
-	mysymlink(fnpid, "maos_recent.conf");
-	snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-	mysymlink(fnpid, "run_recent.log");
     }
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);

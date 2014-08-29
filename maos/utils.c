@@ -173,36 +173,11 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
 void rename_file(int sig){
     draw_final(1);
     if(disable_save) return;
-    char fnnew[256];
-    char fnold[256];
-    char suffix[16];
-    int pid=getpid();
-    switch(sig){
-    case 0:
-	sprintf(suffix,"done");
-	break;
-    case SIGBUS:
-    case SIGILL:
-    case SIGSEGV:
-    case SIGABRT:
-	sprintf(suffix,"err");
-	break;
-    case SIGKILL:
-    case SIGINT: /*Ctrl-C */
-    case SIGTERM:
-    case SIGQUIT: /*Ctrl-'\' */
-	sprintf(suffix,"killed");
-	break;
-    default:
-	sprintf(suffix,"unknown");
-    }
-    snprintf(fnnew,256,"kill_%d",pid);
-    if(exist(fnnew)) remove(fnnew);
-    snprintf(fnold,256,"run_%d.log",pid);
-    if(exist(fnold)) {
-	snprintf(fnnew,256,"run_%d.%s", pid,suffix);
-	rename(fnold,fnnew);
-	mysymlink(fnnew, "run_recent.log");
+    if(sig==0){
+	rename("run_recent.log", "run_done.log");
+	mysymlink("run_done.log", "run_recent.log");
+	rename("maos_recent.conf", "maos_done.conf");
+	mysymlink("maos_done.conf", "maos_recent.conf");
     }
     if(global && global->parms && global->parms->fdlock && sig!=0){
 	char fn[80];
@@ -222,13 +197,14 @@ void rename_file(int sig){
 /**
    Handles signals.
  */
-void maos_signal_handler(int sig){
+int maos_signal_handler(int sig){
     psignal(sig, "maos");
     rename_file(sig);/*handles signal */
     if(global->parms->sim.mvmport){
 	mvm_client_close();
     }
     scheduler_finish(sig);
+    return 0;
 }
 /**
    Print out usage information.
@@ -301,7 +277,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	int locally=0;
 	if(!host){
 	    locally=1;
-	    host=strdup(myhostname());
+	    host=strdup("localhost");
 	}
 	if(scheduler_launch_exe(host, argc, argv)){
 	    warning("Launch locally\n");

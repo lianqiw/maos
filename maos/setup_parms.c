@@ -2232,13 +2232,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    parms->sim.nseed=jseed;
 	}
 	if(parms->sim.nseed<1){
-	    if(!disable_save){//remove log and conf files
-		char fnpid[PATH_MAX];
-		snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
-		remove(fnpid);
-		snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-		remove(fnpid);
-	    }
 	    scheduler_finish(0);
 	    error("There are no seed to run. Use -O to override. Exit\n");
 	}
@@ -2599,7 +2592,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     if(disable_save){
 	close_config(NULL);
     }else{
-	close_config("maos_%ld.conf", (long)getpid());
+	close_config("maos_recent.conf");
     }
     /*
       Postprocess the parameters for integrity. The ordering of the following

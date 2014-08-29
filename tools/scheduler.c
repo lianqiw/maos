@@ -807,19 +807,25 @@ void scheduler_handle_ws(char *in, size_t len){
 }
 static void scheduler_timeout(void){
     static double lasttime=0;
-    static double lasttime3=0;
-    if(!all_done){
-	process_queue();
-    }
+    static double lasttime1=0;//every 1 second
+    static double lasttime3=0;//every 3 seconds
+
 #if HAS_LWS
     ws_service();
 #endif
     double thistime=myclockd();
     if(thistime<lasttime+0.01){
 	/*both scheduler and websocket are idle.*/
-	sleep(1);
+	usleep(10000);//sleep 10ms
     }
     lasttime=thistime;
+    /*Process job every 1 second*/
+    if(thistime>=(lasttime1+1)){
+	if(!all_done){
+	    process_queue();
+	}
+	lasttime1=thistime;
+    }
     /*Report CPU usage every 3 seconds. */
     if(thistime>=(lasttime3+3)){
 	if(running>0){

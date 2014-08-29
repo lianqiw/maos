@@ -834,10 +834,11 @@ void default_quitfun(const char *msg){
     }
     raise(SIGUSR1);
 }
-static void (*signal_handler)(int)=0;
+static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
+    int cancel_action=0;
     struct sigaction act={{0}};
     act.sa_flags=0;
     act.sa_handler=SIG_DFL;
@@ -859,19 +860,23 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     }
     if(signal_handler){
 	info2("Signal %d caught. Call signal handler.\n", sig);
-	signal_handler(sig);
+	if(signal_handler(sig)){
+	    cancel_action=1; 
+	}
     }else{
 	info2("Signal %d caught without active handler.\n", sig);
     }
-    act.sa_handler=SIG_DFL;
-    sigaction(sig, &act, 0);
-    raise(sig);
+    if(!cancel_action){
+	act.sa_handler=SIG_DFL;
+	sigaction(sig, &act, 0);
+	raise(sig);
+    }
 }
 
 /**
    Register signal handler
 */
-void register_signal_handler(void (*func)(int)){
+void register_signal_handler(int (*func)(int)){
     struct sigaction act={{0}};
     act.sa_sigaction=default_signal_handler;
     //act.sa_mask=SIGBUS|SIGILL|SIGSEGV|SIGINT|SIGTERM|SIGABRT|SIGHUP|SIGUSR1|SIGQUIT;

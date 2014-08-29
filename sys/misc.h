@@ -79,6 +79,6 @@ int sem_lock(const char *key);
 int sem_unlock(const char *key);
 void maos_version(void);
 void set_realtime(int icpu, int niceness);
-void register_signal_handler(void(*)(int));
+void register_signal_handler(int(*)(int));
 void mypause(void);
 #endif

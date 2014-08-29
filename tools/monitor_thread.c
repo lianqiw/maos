@@ -137,6 +137,7 @@ static void host_added(int ihost, int sock){
 static void host_removed(int sock){
     int ihost=host_from_sock(sock);
     if(ihost==-1) return;
+    shutdown(sock, SHUT_WR);
     close(sock);
     LOCK(mhost);
     nhostup--;
@@ -239,7 +240,7 @@ static int respond(int sock){
 	if(cmd[1]>-1 && cmd[1]<nhost){
 	    pthread_t tmp;
 	    pthread_create(&tmp, NULL, (void*(*)(void*))add_host, GINT_TO_POINTER(cmd[1]));
-	}else if(cmd[2]==-2){
+	}else if(cmd[1]==-2){
 	    return -2;
 	}
 	break;
@@ -292,7 +293,7 @@ void listen_host(){
     }
     for(int i=0; i<FD_SETSIZE; i++){
 	if(FD_ISSET(i, &active_fd_set)){
-	    shutdown(i, SHUT_RDWR);
+	    shutdown(i, SHUT_WR);
 	    usleep(100);
 	    close(i);
 	    FD_CLR(i, &active_fd_set);

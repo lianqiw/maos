@@ -285,9 +285,8 @@ static void redirect2fn(const char *fn){
 void redirect(void){
     extern int disable_save;
     if(disable_save) return;
-    char *fn=malloc(PATH_MAX);
-    pid_t pid=getpid();
-    snprintf(fn,PATH_MAX,"run_%d.log",pid);
+    const char *fn="run_recent.log";
+    (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
@@ -313,7 +312,6 @@ void redirect(void){
 	    redirect2fd(pfd[1]);
 	}
     }
-    register_deinit(NULL,fn);
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.
@@ -332,14 +330,6 @@ void daemonize(void){ /* Fork off the parent process */
     umask(0077);
     detached=1;/*we are in detached mode, disable certain print outs.*/
     redirect();
-    /*char fn[256];
-    snprintf(fn,256,"kill_%d",pid);
-    FILE *fp=fopen(fn,"w");
-    if(fp){
-	fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
-	fclose(fp);
-    }
-    chmod(fn,00700);*/
 }
 /**
    fork and launch exe as specified in cmd. cmd should composed of the path to

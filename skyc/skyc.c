@@ -68,14 +68,6 @@ int main(int argc, const char *argv[]){
 	    wait_cpu(arg->nthread);
 	}
     }
-    {
-	//Make the symlinks for running job only.
-	char fnpid[PATH_MAX];
-	snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
-	mysymlink(fnpid, "maos_recent.conf");
-	snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
-	mysymlink(fnpid, "run_recent.log");
-    }
     info2("Simulation started at %s in %s.\n",myasctime(),myhostname());
     free(scmd);
     free(arg->dirout);

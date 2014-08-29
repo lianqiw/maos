@@ -31,7 +31,7 @@
 #include <limits.h>
 #include "../sys/sys.h"
 long matlab_pid;
-static void kill_matlab(int sig){
+static int kill_matlab(int sig){
     if(sig!=0){
 	kill(matlab_pid,SIGTERM);
 	sleep(10);
@@ -39,6 +39,7 @@ static void kill_matlab(int sig){
 	    kill(matlab_pid,SIGKILL);
 	}
     }
+    return 0;
 }
 int main(int argc, char **argv){
     if(argc!=2){

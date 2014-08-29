@@ -82,13 +82,16 @@ static void socket_tcp_keepalive(int sock){
     }
 }
 static void socket_nopipe(int sock){
-#ifdef SO_NOSIGPIPE
     const int one=1;
+#ifdef SO_NOSIGPIPE
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
 #elif ! defined(__linux__)
     signal(SIGPIPE, SIG_IGN);
 #endif
-    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
+    if(!setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(int))){
+	perror("setsockopt");
+	warning("set REUSEADDR failed\n");
+    }
 }
 /**
    Set socket to unblocking mode
@@ -188,12 +191,13 @@ static int bind_socket (char *ip, uint16_t port){
     return sock;
 }
 
-static int quit_listen=0;
-static void scheduler_signal_handler(int sig){
+static volatile int quit_listen=0;
+static int scheduler_signal_handler(int sig){
     /*quit listening upon signal and do clean up.*/
     psignal(sig, "scheduler");
-    print_backtrace();
+    if(sig!=15) print_backtrace();
     quit_listen=1;
+    return 1;
 }
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
@@ -243,9 +247,21 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 
     FD_SET (sock, &active_fd_set);
  
-    while(!quit_listen){
+    while(quit_listen!=2){
 	if(timeout_fun){
 	    timeout_fun();
+	}
+	if(quit_listen==1){
+	    shutdown(sock, SHUT_RDWR);
+	    shutdown(sock_local, SHUT_RDWR);
+	    /*Notice client to shutdown*/
+	    for(int i=0; i<FD_SETSIZE; i++){
+		if(FD_ISSET(i, &active_fd_set)){
+		    shutdown(i, SHUT_WR);
+		}
+	    }
+	    usleep(1000);
+	    quit_listen=2;
 	}
 	struct timeval timeout;
 	timeout.tv_sec=timeout_sec;
@@ -283,7 +299,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		    struct sockaddr_un clientname;
 		    int port2=accept(i, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
-			warning("accept failed: %s. @%d\n", strerror(errno), i);
+			warning("accept failed: %s. sock %d\n", strerror(errno), i);
 			FD_CLR(i, &active_fd_set);
 			break;
 		    }
@@ -301,10 +317,8 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
 			    warning2("close port %d\n", i);
+			    shutdown(i, SHUT_RDWR);
 			    close(i);
-			}else{
- 			    warning2("shutdown port %d for reading\n", i);
-			    shutdown(i, SHUT_RD);
 			}
 		    }
 		}
@@ -313,12 +327,11 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     }
     /* Error happened. We close all connections and this server socket.*/
     warning("listen_port exited\n");
-    shutdown(sock, SHUT_RDWR);
-    FD_CLR(sock, &active_fd_set);
     for(int i=0; i<FD_SETSIZE; i++){
 	if(FD_ISSET(i, &active_fd_set)){
+	    info("sock %d is still connected\n", i);
 	    shutdown(i, SHUT_RDWR);
-	    usleep(100);
+	    usleep(1000);
 	    close(i);
 	    FD_CLR(i, &active_fd_set);
 	}
