@@ -489,12 +489,18 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     if(ndm==2 && fabs(parms->dm[0].ht)>1.e-10){
 	error("Error configuration. First DM is not on ground\n");
     }
-    double hs=INFINITY;
+    double hs=NAN;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(isfinite(parms->powfs[ipowfs].hs)){
-	    if(isfinite(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-5) 
-		error("There are multiple LGS type with different hs.\n");
+	if(parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip) continue;
+	if(isnan(hs)){
 	    hs=parms->powfs[ipowfs].hs;
+	}else{
+	    if(isfinite(hs) || isfinite(parms->powfs[ipowfs].hs)){
+		if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
+		    //High order GS at different altitude.
+		    hs=INFINITY; break;
+		}
+	    }
 	}
     }
     ngsmod->nmod=ngsmod_nmod(ndm, hs);

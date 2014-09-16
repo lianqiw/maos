@@ -1975,27 +1975,31 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 
     parms->recon.warm_restart = !parms->dbg.nocgwarm && parms->atm.frozenflow && !(parms->dbg.tomo_maxit && parms->dbg.tomo_maxit->nx>0);
     {
-	double hs=INFINITY;
+	double hs=NAN;
 	/*find out the height to setup cone coordinate. */
 	if(parms->tomo.cone){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		/*skip wfs that does not participate in tomography*/
 		if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
-		    /*skip wfs that does not participate in tomography*/
 		    continue;
 		}
 		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
-		if(isfinite(parms->powfs[ipowfs].hs)){/*at finite. */
-		    if(isfinite(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-6){
-			error("Two high order POWFS with different hs found");
-		    }else{
-			hs = parms->powfs[ipowfs].hs;
+		if(isnan(hs)){
+		    hs=parms->powfs[ipowfs].hs;
+		}else{
+		    if(isfinite(hs) || isfinite(parms->powfs[ipowfs].hs)){
+			if(fabs(hs-parms->powfs[ipowfs].hs)>1000){
+			    warning("Two high order POWFS with different hs found: %g and %g\n", 
+				    hs, parms->powfs[ipowfs].hs);
+			    if(parms->powfs[ipowfs].hs>hs){
+				hs=parms->powfs[ipowfs].hs;
+			    }
+			}
 		    }
-		}else if(isfinite(hs)){
-		    error("Two high order POWFS with different hs found: %g and %g\n", 
-			  hs, parms->powfs[ipowfs].hs);
 		}
 	    }
 	}
+	if(isnan(hs)) hs=INFINITY;
 	parms->atmr.hs=hs;
     }
     if(parms->atmr.dx<EPS){
