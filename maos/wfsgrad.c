@@ -344,10 +344,8 @@ void wfsgrad_iwfs(thread_t *info){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int imoao=parms->powfs[ipowfs].moao;
     const int nsa=powfs[ipowfs].pts->nsa;
-    const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const double hs=parms->wfs[iwfs].hs;
-    const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int save_gradgeom=parms->save.gradgeom->p[iwfs];
     const int save_opd =parms->save.wfsopd->p[iwfs];
@@ -366,7 +364,8 @@ void wfsgrad_iwfs(thread_t *info){
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints->p[iwfs];
-    dmat  *opd=dnew(npix,1);
+    dmat  *opd=simu->wfsopd->p[iwfs];
+    dzero(opd);
     if(isim%dtrat==0){
 	dcellzero(ints);
 	dzero(*gradacc);
@@ -569,9 +568,6 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     TIM(2);
-
-    dfree(opd);
-
     if(dtrat_output){
 	if(do_phy){
 	    /* In Physical optics mode, do integration and compute

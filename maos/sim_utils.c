@@ -762,6 +762,7 @@ static void init_simu_wfs(SIM_T *simu){
     save->wfspsfout=calloc(nwfs,sizeof(cellarr*));
     save->ztiltout =calloc(nwfs,sizeof(cellarr*));
     simu->gradcl=dcellnew(nwfs,1);
+    simu->wfsopd=dcellnew(nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
@@ -778,6 +779,7 @@ static void init_simu_wfs(SIM_T *simu){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	simu->wfsopd->p[iwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 	if(parms->powfs[ipowfs].usephy){
 	    simu->ints->p[iwfs]=dcellnew(nsa,1);
 	    for(int isa=0; isa<nsa; isa++){
@@ -1419,6 +1421,7 @@ void free_simu(SIM_T *simu){
     free(simu->perf_evl_pre);
     free(simu->perf_evl_post);
     free(simu->status);
+    dcellfree(simu->wfsopd);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);

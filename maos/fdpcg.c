@@ -664,16 +664,14 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     const long nps=recon->npsr;
     FDPCG_T *fdpcg=recon->fdpcg;
     long nxtot=fdpcg->nxtot;
-    cmat *xhat=cnew(nxtot,1);
-    cmat *xhat2=cnew(nxtot,1);
-    ccell *xhati=ccellnew(nps,1);/*references the data in xhat. */
-    ccell *xhat2i=ccellnew(nps,1);
+    ccell *xhati=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
+    ccell *xhat2i=ccellnew3(nps, 1, recon->xnx->p, recon->xny->p);
+    cmat *xhat=cref(xhati->m);
+    cmat *xhat2=cref(xhat2i->m);
     long* nx=recon->xnx->p;
     long* ny=recon->xny->p;
     long offset=0;
     for(int ips=0; ips<nps; ips++){
-	xhati->p[ips]=cnew_ref(nx[ips],ny[ips],xhat->p+offset);
-	xhat2i->p[ips]=cnew_ref(nx[ips],ny[ips],xhat2->p+offset);
 	cfft2plan(xhati->p[ips],-1);
 	cfft2plan(xhat2i->p[ips],1);
 	offset+=nx[ips]*ny[ips];

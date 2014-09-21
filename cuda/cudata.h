@@ -35,7 +35,8 @@ typedef struct cudata_t{
     static int recongpu;
     static int *evlgpu;
     static int *wfsgpu;
-    std::map<uint64_t, void*> *memhash;
+    std::map<uint64_t, void*> *memhash;/*For reuse constant GPU memory*/
+    std::map<void*, void*> *memcache;/*For reuse temp array for type conversion.*/
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
     cumap_t *atm;   /**<atmosphere: array of cumap_t */
@@ -62,6 +63,7 @@ typedef struct cudata_t{
     cudata_t(){
 	memset(this, 0, sizeof(cudata_t));
 	memhash=new std::map<uint64_t, void*>;
+	memcache=new std::map<void*, void*>;
     }
 }cudata_t;
 class cudata_t;

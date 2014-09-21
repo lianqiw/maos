@@ -206,12 +206,15 @@ typedef struct FDPCG_T{
     lmat *perm;    /**<Permutation vector to get block diagonal matrix*/
     lmat *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
-    /*xhat, xhat2 has been removed for thread safety issues.*/
     int square;    /**<Whether xloc is square*/
     int scale;     /**<Do we need to scale after fft.*/
     long nbx;      /**<Basic frequency range in x*/
     long nby;      /**<Basic frequency range in y nb=nbx*nby.*/
     long bs;       /**<Size of each diagonal block.*/
+    /*Temperary Data used during execution*/
+    /*Cannot save xhat here because we may be calling fdpcg from multiple
+     * threads simultanously during assembly of control matrix*/
+    //ccell *xhat, *xhat2, /**<FFT of each xout and multiplied. */
 }FDPCG_T;
 
 /**
@@ -483,6 +486,7 @@ typedef struct SIM_T{
     double telwsy;     /**<sin(ws_theta)*/
 
     /*WFS data for each time step. Each has a cell for each wfs*/
+    dcell *wfsopd;     /**<WFS Ray tracing result*/
     dccell *ints;      /**<WFS subaperture images.*/
     cccell *wfspsfout; /**<output WFS PSF history.*/
     dccell *pistatout; /**<WFS time averaged tip/tilt removed PSF*/

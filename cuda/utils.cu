@@ -315,7 +315,16 @@ inline void scale_add<fcomplex, float, Comp>(fcomplex *p1, float alpha, Comp *p2
 template <typename R, typename T, typename S>
 static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
 		    cudaStream_t stream, pthread_mutex_t *mutex){
-    S *tmp=(S*)malloc(n*sizeof(S));
+    extern int cuda_dedup;
+    S *tmp=0;
+    if(!cuda_dedup && cudata->memcache->count((void*)src)){
+	tmp=(S*)(*cudata->memcache)[(void*)src];
+    }else{
+	tmp=(S*)malloc(n*sizeof(S));
+	if(!cuda_dedup){
+	    (*cudata->memcache)[(void*)src]=(void*)tmp;
+	}
+    }
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
 	*dest=(T*)malloc(sizeof(T)*n);
@@ -324,7 +333,9 @@ static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n,
     if(mutex) LOCK(*mutex);
     scale_add(p, alpha, tmp, beta, n);
     if(mutex) UNLOCK(*mutex);
-    free(tmp);
+    if(cuda_dedup) {
+	free(tmp);
+    }
 }
 #define add2cpu_mat(D, double, Comp)					\
 void add2cpu(D##mat **out, double alpha, const cumat<Comp> *in, double beta,	\

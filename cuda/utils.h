@@ -21,7 +21,7 @@
 #include "common.h"
 #include "types.h"
 #include "cudata.h"
-
+extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
 /**
    Without type conversion. Enable asynchrous transfer. It is asynchrous only if
    called allocated pinned memory.
@@ -35,27 +35,15 @@ inline void type_convert(M *out, const N* in, int nx){
 }
 
 template<>
-inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
-    double (*tmp)[2]=(double(*)[2])in;
-    for(int i=0; i<nx; i++){
-	out[i].x=(Real)tmp[i][0];
-	out[i].y=(Real)tmp[i][1];
-    }
-}
-template<>
-inline void type_convert<float2, double2>(float2* out, const double2* in, int nx){
+inline void type_convert<float2, double2>(float2*out, const double2* in, int nx){
     for(int i=0; i<nx; i++){
 	out[i].x=in[i].x;
 	out[i].y=in[i].y;
     }
 }
-template<> 
-inline void type_convert<float2,fcomplex>(float2* out,const fcomplex* in,int nx){
-    memcpy(out, in, sizeof(Comp)*nx);
-}
-template<> 
-inline void type_convert<double2,dcomplex>(double2* out, const dcomplex* in, int nx){
-    memcpy(out, in, sizeof(Comp)*nx);
+template<>
+inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
+    type_convert(out, (const double2*)in, nx);
 }
 
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
@@ -63,7 +51,6 @@ template<typename M, typename N>
 void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
     uint64_t key=0;
-    extern int cuda_dedup;
     if(cuda_dedup && !*dest){
 	key=hashlittle(src, nx*ny*sizeof(N), 0);
 	key=(key<<32) | (nx*ny);
@@ -72,35 +59,39 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	    return;
 	}
     }
-    M* from;
-    if(sizeof(M)!=sizeof(N)){
-	from=(M*)malloc(sizeof(M)*nx*ny);
-	type_convert(from, src, nx*ny);
-    }else{
-	from=(M*)(src);
-    }
-    //don't call previous cp2gpu() as it may call itself.
     if(!*dest){
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
     }
     if(cuda_dedup){
 	(*cudata->memhash)[key]=*dest;
     }
+    M* from=0;
+    if(sizeof(M)!=sizeof(N)){
+	if(!cuda_dedup && cudata->memcache->count((void*)(*dest))){
+	    /*We cache the array used for the conversion. It is important that
+	     * no gpu memory is allocated/freed at every cycle*/
+	    from=(M*)(*cudata->memcache)[(void*)(*dest)];
+	}else{
+	    from=(M*)malloc(sizeof(M)*nx*ny);
+	    if(!cuda_dedup){
+		(*cudata->memcache)[(void*)*dest]=(void*)from;
+	    }
+	}
+	type_convert(from, src, nx*ny);
+    }else{
+	from=(M*)(src);
+    }
+
     if(stream==(cudaStream_t)0){
 	DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
     }else{
 	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
-    if((void*)from !=(void*)src) free(from);
-}
-/*template<typename M> inline
-void cp2gpu(cumat<M>**dest, const M*src, int nx, int ny, cudaStream_t stream=0){
-    if(!src) return;
-    if(!*dest){
-	*dest=new cumat<M>(nx, ny);
+    if((void*)from !=(void*)src && cuda_dedup) {
+	free(from);
     }
-    cp2gpu(&((*dest)->p), src, nx, ny, stream);
-}*/
+}
+
 template<typename M, typename N> inline void
 cp2gpu(cumat<M>**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src) return;
