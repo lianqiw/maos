@@ -93,7 +93,8 @@ int scheduler_recv_socket(int *sfd){
 }
 #else
 uint16_t PORT=0;
-char** hosts;
+#define MAX_HOST 1024
+char* hosts[MAX_HOST];
 int nhost;
 int hid;
 static int myhostid(const char *host){
@@ -129,9 +130,9 @@ void init_scheduler(){
     }
     nhost=0;
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
+    memset(hosts, 0, MAX_HOST);
     if(exist(fn)){
 	nhost=64;
-	hosts=malloc(nhost*sizeof(char*));
 	FILE *fp=fopen(fn,"r");
 	int ihost=0;
 	if(fp){
@@ -140,14 +141,12 @@ void init_scheduler(){
 		if(strlen(line)>0 && line[0]!='#'){
 		    hosts[ihost]=strdup0(line);
 		    ihost++;
-		    if(ihost>=nhost){
-			nhost*=2;
-			hosts=realloc(hosts,nhost*sizeof(char*));
+		    if(ihost>=MAX_HOST-1){
+			break;
 		    }
 		}
 	    }
 	    fclose(fp);
-	    hosts=realloc(hosts,(ihost+1)*sizeof(char*));
 	    nhost=ihost;
 	}else{
 	    error("failed to open file %s\n",fn);
@@ -155,12 +154,10 @@ void init_scheduler(){
     }
     hid=myhostid(myhostname());
     if(hid==-1){
-	hosts=realloc(hosts, sizeof(char*)*(nhost+1));
 	hosts[nhost]=strdup0(myhostname());/*use local machine */
 	hid=nhost;
 	nhost++;
     }
-    register_deinit(NULL,hosts);
 }
 
 /**
@@ -213,22 +210,16 @@ static int scheduler_connect_self(int block){
 static int psock=-1;
 
 static void scheduler_report_path(char *path){
-    static char *path_save=NULL;
+    static char path_save[PATH_MAX];
+    path_save[0]=0;
     if(psock==-1){
 	return;
     }
     if(path){
-	if(path_save){
-	    path_save=realloc(path_save, strlen(path)+1);
-	    strcpy(path_save, path);
-	}else{
-	    path_save=strdup(path);
-	    register_deinit(NULL, path_save);
-	}
+	strcpy(path_save, path);
     }else{
-	if(!path_save){
-	    path_save=strdup("unknown");
-	    register_deinit(NULL, path_save);
+	if(!path_save[0]){
+	    strcpy(path_save, "unknown");
 	}
     }
     int cmd[2];

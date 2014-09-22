@@ -22,6 +22,7 @@
 #include "types.h"
 #include "cudata.h"
 extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
+extern int cuda_cache;
 /**
    Without type conversion. Enable asynchrous transfer. It is asynchrous only if
    called allocated pinned memory.
@@ -67,13 +68,13 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     M* from=0;
     if(sizeof(M)!=sizeof(N)){
-	if(!cuda_dedup && cudata->memcache->count((void*)(*dest))){
+	if(cuda_cache && cudata->memcache->count((void*)(*dest))){
 	    /*We cache the array used for the conversion. It is important that
 	     * no gpu memory is allocated/freed at every cycle*/
 	    from=(M*)(*cudata->memcache)[(void*)(*dest)];
 	}else{
 	    from=(M*)malloc(sizeof(M)*nx*ny);
-	    if(!cuda_dedup){
+	    if(cuda_cache){
 		(*cudata->memcache)[(void*)*dest]=(void*)from;
 	    }
 	}
@@ -87,7 +88,7 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }else{
 	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
-    if((void*)from !=(void*)src && cuda_dedup) {
+    if((void*)from !=(void*)src && !cuda_cache) {
 	free(from);
     }
 }

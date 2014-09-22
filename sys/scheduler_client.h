@@ -24,7 +24,7 @@
 */
 #include <stdint.h>
 extern int nhost;
-extern char** hosts;
+extern char* hosts[];
 extern int hid;
 extern uint16_t PORT;
 /*called by maos */

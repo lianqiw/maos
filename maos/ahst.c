@@ -482,6 +482,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
  */
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
 		  APER_T *aper, POWFS_T *powfs){
+    if(recon->ngsmod) error("recon->ngsmod is not empty\n");
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	

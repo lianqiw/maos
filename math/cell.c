@@ -25,8 +25,30 @@ void *cellnew(long nx, long ny){
     dc->id=MCC_ANY;
     dc->nx=nx;
     dc->ny=ny;
-    dc->p=calloc(nx*ny, sizeof(void*));
+    if(nx*ny>0){
+	dc->p=calloc(nx*ny, sizeof(void*));
+    }
     return dc;
+}
+void cellresize(void *in, long nx, long ny){
+    cell *A=(cell*)in;
+    if(A->nx==nx || A->ny==1){
+	A->p=realloc(A->p, sizeof(cell*)*nx*ny);
+	if(nx*ny>A->nx*A->ny){
+	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(cell*));
+	}
+    }else{
+	cell **p=calloc(nx*ny, sizeof(cell*));
+	long minx=A->nx<nx?A->nx:nx;
+	long miny=A->ny<ny?A->ny:ny;
+	for(long iy=0; iy<miny; iy++){
+	    memcpy(p+iy*nx, A->p+iy*A->nx, sizeof(cell*)*minx);
+	}
+	free(A->p);
+	A->p=p;
+    }
+    A->nx=nx;
+    A->ny=ny;
 }
 /**
    free a mat or cell object.
@@ -41,15 +63,17 @@ void cellfree_do(void *pix){
 	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
 		cellfree_do(dc->p[ix]);
 	    }
-	    if(dc->mmap){
-		mmap_unref(dc->mmap);
-	    }else{
-		free(dc->header);
-	    }
+	    memset(dc->p, 0, sizeof(void*)*dc->nx*dc->ny);
 	    free(dc->p);dc->p=0;
+	}
+	if(dc->mmap){
+	    mmap_unref(dc->mmap);
+	}else{
+	    free(dc->header);
 	}
 	if(dc->m) cellfree_do(dc->m);
 	if(dc->fft) dfft_free_plan(dc->fft);
+	memset(dc, 0, sizeof(cell));
 	free(dc);
     }break;
     case M_DBL:
@@ -162,36 +186,36 @@ void write_by_id(const void *dc, long id, const char* format,...){
     zfclose(fp);
 }
 void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
-    header_t header2;
+    header_t header2={0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
     }
-
+    void *out=0;
     if(zfisfits(fp) || level==0){
 	switch(level){
 	case 0:/*read a mat*/
 	    if(!id) id=header->magic;
 	    switch(id){
-	    case M_DBL: return dreaddata(fp, header);break;
-	    case M_FLT: return sreaddata(fp, header);break;
-	    case M_CMP: return creaddata(fp, header);break;
-	    case M_ZMP: return zreaddata(fp, header);break;
-	    case M_LONG: return lreaddata(fp, header);break;
-	    case M_LOC64: return locreaddata(fp, header); break;
-	    case M_MAP64: return mapreaddata(fp, header); break;
+	    case M_DBL: out=dreaddata(fp, header);break;
+	    case M_FLT: out=sreaddata(fp, header);break;
+	    case M_CMP: out=creaddata(fp, header);break;
+	    case M_ZMP: out=zreaddata(fp, header);break;
+	    case M_LONG: out=lreaddata(fp, header);break;
+	    case M_LOC64: out=locreaddata(fp, header); break;
+	    case M_MAP64: out=mapreaddata(fp, header); break;
 	    case M_SP32:
 	    case M_SP64:
-		return spreaddata(fp, header);break;
+		out=spreaddata(fp, header);break;
 	    case M_SSP32:
 	    case M_SSP64:
-		return sspreaddata(fp, header);break;
+		out=sspreaddata(fp, header);break;
 	    case M_CSP32:
 	    case M_CSP64:
-		return cspreaddata(fp, header);break;
+		out=cspreaddata(fp, header);break;
 	    case M_ZSP64:
 	    case M_ZSP32:
-		return zspreaddata(fp, header);break;	
+		out=zspreaddata(fp, header);break;	
 	    default:error("id=%lx\n", id);
 	    }
 	    break;
@@ -205,11 +229,12 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 		    tmp=realloc(tmp, sizeof(void*)*maxlen);
 		}
 		tmp[nx++]=readdata_by_id(fp, id, 0, header);
+		free(header->str);header->str=0;
 	    }while(!read_header2(header, fp));
 	    cell *dcout=cellnew(nx, 1);
 	    memcpy(dcout->p, tmp, sizeof(void*)*nx);
 	    free(tmp);
-	    return dcout;
+	    out=dcout;
 	}
 	    break;
 	default:
@@ -225,10 +250,11 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    for(long i=0; i<nx*ny; i++){
 		dcout->p[i]=readdata_by_id(fp, id, level-1, 0);
 	    }
-	    return dcout;
+	    out=dcout;
 	}
     }
-    return 0;
+    free(header->str);header->str=0;
+    return out;
 }
 
 void* read_by_id(long id, int level, const char *format, ...){

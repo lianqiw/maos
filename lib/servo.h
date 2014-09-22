@@ -47,7 +47,7 @@ dcell* servo_optim(const dmat *psdin, double dt, long dtrat,  double pmargin,
 cmat *servo_Hol(const dmat *nu, double dt, double dtrat, const dmat *gain);
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type);
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep);
-int servo_filter(SERVO_T *st, dcell *merr);
+int servo_filter(SERVO_T *st, const dcell *merr);
 dmat* servo_test(dmat *mideal, double dtngs, int dtrat, dmat* sigma2n, dmat *gain);
 void servo_reset(SERVO_T *st);
 void servo_free(SERVO_T *st);

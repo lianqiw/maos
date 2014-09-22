@@ -1905,9 +1905,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		dcellwrite(intstat->sepsf->p[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
 	    /*Free short exposure otf. */
-	    if(!parms->sim.ncpa_calib){
-		ccellfree(intstat->lotf);
-	    }
+	    //if(!parms->sim.ncpa_calib){
+	    ccellfree(intstat->lotf);
+		//}
 	    cellfree(intstat->otf);
 	}
 	/*generate short exposure i0,gx,gy from psf. */

@@ -56,11 +56,12 @@ void *(*malloc_default)(size_t)=malloc;
 void *(*realloc_default)(void *, size_t)=realloc;
 void  (*free_default)(void *)=free;
 
-static int MEM_VERBOSE=0;
-static int MEM_DEBUG=0;
+int MEM_VERBOSE=0;
+int MEM_DEBUG=0;
 PNEW(mutex_mem);
 static void *MROOT=NULL;
-static long long memcnt=0;
+static long  memcnt=0;
+static double memalloc=0,memfree=0;
 static void *MSTATROOT=NULL;
 /*max depth in backtrace */
 #define DT 16
@@ -152,50 +153,56 @@ static void memkey_add(void *p,size_t size){
 	}
 	return;
     }
-    if(MEM_VERBOSE){
-	info("%p malloced with %zu bytes\n",p, size);
-    }
-    LOCK(mutex_mem);
+ 
     T_MEMKEY *key=calloc_default(1,sizeof(T_MEMKEY));
     key->p=p;
     key->size=size;
     key->nfunc=backtrace(key->func,DT);
+    LOCK(mutex_mem);
+    if(tfind(key, &MROOT, key_cmp)){
+	warning("%p already exists\n", p);
+    }
     if(!tsearch(key, &MROOT, key_cmp)){
-	error("Error inserting to tree\n");
+	warning("Error inserting to tree\n");
     }
     memcnt++;
-    UNLOCK(mutex_mem);
-}
-/*static void memkey_update(void*p, size_t size){
-    if(!p) return;
-    LOCK(mutex_mem);
-    T_MEMKEY key;
-    key.p=p;
-    void **found;
-    if(!(found=tfind(&key, &MROOT, key_cmp))){
-	error("Record not found for memkey_update %p\n",p);
+    memalloc+=size;
+    UNLOCK(mutex_mem);    
+    if(MEM_VERBOSE==1){
+	info("%p malloced with %zu bytes\n",p, size);
+    }else if(MEM_VERBOSE==2 && size>1024){
+	info2("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
     }
-    T_MEMKEY*key0=*found;
-    key0->size=size;
-    key0->nfunc=backtrace(key0->func,DT);
-    meminfo("%p realloced with %lu bytes\n", p, size);
-    UNLOCK(mutex_mem);
-}*/
+
+}
+
 static void memkey_del(void*p){
     if(!p) return;
-    LOCK(mutex_mem);
     void **found=0;
     T_MEMKEY key;
     key.p=p;
-    if((found=tfind(&key, &MROOT, key_cmp))){/*found. */
+    LOCK(mutex_mem);
+    found=tfind(&key, &MROOT, key_cmp);
+    if(found){
 	T_MEMKEY* key1=*found;/*the address of allocated T_MEMKEY. */
-	if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
-	    error("Error deleting old record\n");
-	}
-	free(key1);
+	memfree+=key1->size;
 	memcnt--;
+	if(MEM_VERBOSE==1){
+	    info2("%p freed with %zu bytes\n",p, key1->size);
+	}else if(MEM_VERBOSE==2 && key1->size>1024){
+	    info2("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+	}
+	if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
+	    warning("Error deleting old record\n");
+	}
+	UNLOCK(mutex_mem);
+	free_default(key1);
+    }else{
+	UNLOCK(mutex_mem);
+	warning("%p not found\n", p);
+	print_backtrace();
     }
-    UNLOCK(mutex_mem);
+
 }
 static void *calloc_dbg(size_t nmemb, size_t size){
     void *p=calloc_default(nmemb,size);
@@ -224,26 +231,55 @@ static void free_dbg(void *p){
    Register a function or data to call or free upon exit
 */
 void register_deinit(void (*fun)(void), void *data){
-    T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
-    node->fun=fun;
-    node->data=data;
-    node->next=DEINIT;
-    DEINIT=node;
+    if(MALLOC==malloc_dbg){
+	T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
+	node->fun=fun;
+	node->data=data;
+	LOCK(mutex_mem);
+	node->next=DEINIT;
+	DEINIT=node;
+	UNLOCK(mutex_mem);
+    }
+}
+void malloc_dbg_enable(){
+    CALLOC=calloc_dbg;
+    MALLOC=malloc_dbg;
+    REALLOC=realloc_dbg;
+    FREE=free_dbg;
+}
+void malloc_dbg_disable(){
+    int print_alloc=0;
+    if(MALLOC==malloc_dbg){
+	print_alloc=1;
+    }
+    CALLOC=calloc_default;
+    MALLOC=malloc_default;
+    REALLOC=realloc_default;
+    FREE=free_default;
+    if(print_alloc){
+	if(MROOT){
+	    warning("%ld (%.3f MB) allocated memory not freed!!!\n",
+		    memcnt, (memalloc-memfree)/1024./1024.);
+	    twalk(MROOT,stat_usage);
+	    twalk(MSTATROOT, print_usage);
+	}else{
+	    info("All allocated memory are freed.\n");
+	    if(memcnt>0){
+		warning("But memory count is still none zero: %ld\n",memcnt);
+	    }
+	}
+	info2("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
+	info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
+    }
 }
 static __attribute__((constructor)) void init(){
     READ_ENV_INT(MEM_DEBUG, 0, 1);
     READ_ENV_INT(MEM_VERBOSE, 0, 1);
     if(!CALLOC){
 	if(MEM_DEBUG){
-	    CALLOC=calloc_dbg;
-	    MALLOC=malloc_dbg;
-	    REALLOC=realloc_dbg;
-	    FREE=free_dbg;
+	    malloc_dbg_enable();
 	}else{
-	    CALLOC=calloc_default;
-	    MALLOC=malloc_default;
-	    REALLOC=realloc_default;
-	    FREE=free_default;
+	    malloc_dbg_disable();
 	}
     }
     void init_process(void);
@@ -270,16 +306,7 @@ static __attribute__((destructor)) void deinit(){
     }
     if(MALLOC==malloc_dbg){
 	if(exit_success){
-	    if(MROOT){
-		warning("%lld allocated memory not freed!!!\n",memcnt);
-		twalk(MROOT,stat_usage);
-		twalk(MSTATROOT, print_usage);
-	    }else{
-		info("All allocated memory are freed.\n");
-		if(memcnt>0){
-		    warning("But memory count is still none zero: %lld\n",memcnt);
-		}
-	    }
+	    malloc_dbg_disable();
 	}else{
 	    info("exit_success=%d\n", exit_success);
 	}

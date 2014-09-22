@@ -43,8 +43,8 @@ extern int NTHREAD; /**<Number of hyper threads. may be larger than NCPU*/
 extern int TCK;
 extern long NMEM;
 extern const char *HOME;/*the user home */
-extern const char *TEMP;/*the temporary folder */
 extern const char *USER;/*the user name */
-extern const char *EXEP;/*the exe path*/
+extern char TEMP[];/*the temporary folder */
+extern char EXEP[];/*the exe path*/
 int get_ncpu(void);
 #endif

@@ -249,10 +249,16 @@ char *mygetcwd(void){
    Translate a path into absolute path.
 */
 char *myabspath(const char *path){
+    if(!path) return 0;
 #if _BSD_SOURCE || _XOPEN_SOURCE >= 500
-    return realpath(path, NULL);
+    char rpath[PATH_MAX];
+    if(realpath(path, rpath)){
+	return strdup(rpath);
+    }else{
+	return 0;
+    }
 #else
-    char *cpath=mygetcwd();
+    char *cpath=mygetcwd();//save current cwd.
     if(chdir(path)){
        error("path %s doesn't exist\n",path);
     }
@@ -417,10 +423,6 @@ char *mystrdup(const char *A){
 	return B;
     }
 }
-/**
-   Record the address of system strdup.
- */
-char* (*strdup0)(const char *)=strdup;
 
 
 /**
@@ -900,3 +902,6 @@ void mypause(){
     while(getchar()!=0x0a); 
     info2("continuing...\n"); 
 }
+
+#undef strdup
+char* (*strdup0)(const char *)=strdup;

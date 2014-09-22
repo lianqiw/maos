@@ -79,7 +79,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dmat *mapply=dnew(2,1);
 	    TIC;tic;
 	    file_t *fp_wvf=zfopen(fnwvf,"rb");
-	    header_t header;
+	    header_t header={0};
 	    read_header(&header, fp_wvf);
 	    long nstep=header.nx;
 	    if(!iscell(header.magic)){

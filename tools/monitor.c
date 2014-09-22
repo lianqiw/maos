@@ -614,11 +614,13 @@ int main(int argc, char *argv[])
     }
 #endif
     if(argc>1){
-	hosts=realloc(hosts, sizeof(char*)*(nhost+(argc-1)));
 	for(int i=1; i<argc; i++){
 	    if(isalnum((int)argv[i][0])){
 		hosts[nhost]=strdup(argv[i]);
 		nhost++;
+		if(nhost>=1024){
+		    break;
+		}
 	    }
 	}
     }else if(nhost==1){

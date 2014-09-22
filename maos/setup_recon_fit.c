@@ -215,9 +215,10 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }
  
     if(parms->save.recon){
-       	if(recon->FL.C)
+       	if(recon->FL.C){
 	    chol_convert(recon->FL.C, 1);
 	    chol_save(recon->FL.C,"%s/FLC.bin",dirsetup);
+	}
 	if(recon->FL.MI)
 	    dwrite(recon->FL.MI,"%s/FLMI", dirsetup);
 	if(recon->FL.Up)

@@ -16,8 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sys/stat.h>
-#include <sys/types.h>
 #include "common.h"
 #include "sim.h"
 #include "sim_utils.h"
@@ -400,7 +398,9 @@ static void init_simu_evl(SIM_T *simu){
     SIM_SAVE_T *save=simu->save;
     simu->evlopd=dcellnew(nevl, 1);
     simu->perfevl_iground=parms->atm.iground;
-
+    if(!disable_save){
+	simu->timing=dnew_mmap(5, nsim, NULL, "Timing_%d.bin", seed);
+    }
     {/*MMAP the main result file */
 	long nnx[4]={nmod,nmod,nmod,nmod};
 	long nny[4]={nsim,nsim,nsim,nsim};
@@ -1421,6 +1421,7 @@ void free_simu(SIM_T *simu){
     free(simu->perf_evl_pre);
     free(simu->perf_evl_post);
     free(simu->status);
+    dfree(simu->opdevlground);
     dcellfree(simu->wfsopd);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradacc);
@@ -1429,6 +1430,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->opdr);
     dcellfree(simu->gngsmvst);
     dcellfree(simu->dmreal);
+    dcellfree(simu->dmpsol);
     dfree(simu->ttmreal);
     cellfree(simu->dmrealsq);
     dcellfree(simu->dmproj);
@@ -1446,10 +1448,11 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->upterr_store);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
-
+    dcellfree(simu->cgres);
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
     dcellfree(simu->res);
+    dfree(simu->timing);
     dcellfree(simu->olep);
     dcellfree(simu->olmp);
     dcellfree(simu->clep);
@@ -1506,7 +1509,8 @@ void free_simu(SIM_T *simu){
     cellarr_close(save->dmerr);
     cellarr_close(save->dmint);
     cellarr_close(save->dmfit);
-    cellarr_close(save->dmreal);
+    cellarr_close(save->dmreal);    
+    cellarr_close(save->dmcmd);
     dfree(save->ttmreal);
     cellarr_close(save->dmproj);
     cellarr_close(save->Merr_lo);

@@ -34,7 +34,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
     }
     double dx=fabs(search_header_num(header->str,"dx"));
     double dy=fabs(search_header_num(header->str,"dy"));
-    free(header->str);
+    free(header->str);header->str=0;
     long nx=header->nx;
     long ny=header->ny;
     loc_t *out;
@@ -132,7 +132,6 @@ map_t* d2map(dmat *in){
     if(is_nan(map->h)) map->h=0;
     if(is_nan(map->vx)) map->vx=0;
     if(is_nan(map->vy)) map->vy=0;
-    map->header=strdup(header);
     return map;
 }
 
@@ -142,7 +141,7 @@ map_t* d2map(dmat *in){
 mapcell *dcell2map(dcell *in){
     mapcell *map=cellnew(in->nx, in->ny);
     for(long i=0; i<in->nx*in->ny; i++){
-	if(!in->p[i]->header){
+	if(!in->p[i]->header && in->header){
 	    in->p[i]->header=strdup(in->header);
 	}
 	map->p[i]=d2map(in->p[i]);
@@ -154,7 +153,7 @@ mapcell *dcell2map(dcell *in){
  * Read map_t from file
  */
 map_t *mapreaddata(file_t *fp, header_t *header){
-    header_t header2;
+    header_t header2={0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -179,6 +178,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
     }else{
 	error("Invalid format. magic=%u\n", header->magic);
     }
+    free(header->str);header->str=0;
     return map;
 }
 

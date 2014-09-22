@@ -37,7 +37,7 @@ char *get_job_progname(int pid){
     char buf[PATH_MAX];
     size_t cb = sizeof(buf);
     sysctl(mib, 4, buf, &cb, NULL, 0);
-    return strdup0(buf);
+    return strdup(buf);
 }
 int get_job_mem(void){/*return in KiB */
     int mem;

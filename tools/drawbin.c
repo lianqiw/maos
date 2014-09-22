@@ -20,7 +20,7 @@
    draw square map.
  */
 static void draw_map(file_t *fp, int id){
-    header_t header;
+    header_t header={0};
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
@@ -48,7 +48,7 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
     char *suf=strstr(name, ".bin");
     if(!suf) suf=strstr(name, ".fits");
     if(suf) suf[0]='\0';
-    header_t header1, header2;
+    header_t header1={0}, header2={0};
     read_header(&header1, fp1);
     read_header(&header2, fp2);
     if(iscell(header1.magic) && iscell(header2.magic)){ /*cells */
@@ -76,7 +76,7 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
    A recursive loc drawing routine
 */
 static void draw_loc(file_t *fp, int id){
-    header_t header;
+    header_t header={0};
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");

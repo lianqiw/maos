@@ -97,7 +97,7 @@ void X(free_do)(X(mat) *A, int keepdata){
     if(A->nref){
 	int nref=atomicadd(A->nref, -1);
 	if(!nref){
-	    if(!keepdata && A->p){
+	    if(!keepdata){
 		if(A->mmap){/*data is mmap'ed. */
 		    mmap_unref(A->mmap);
 		}else{
@@ -925,7 +925,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	      nx,ny,A->nx,A->ny);
     }
     if(!*B){
-	*B=X(cellnew2)(ref);
+	*B=X(cellnew)(ref->nx, ref->ny);
 	PCELL((*B),Bp);
 	for(long iy=0; iy<ref->ny; iy++){
 	    for(long ix=0; ix<ref->nx; ix++){

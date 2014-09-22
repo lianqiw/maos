@@ -673,7 +673,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(recon->neam->p[iwfs]>pixtheta*4 
 	   && parms->powfs[ipowfs].usephy
 	   && parms->powfs[ipowfs].order==1
-	   ){
+	    ){
 	    //Neglecting WFS whos NEA is greater than twice pixel size in
 	    //physical optics mode.
 	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
@@ -1949,18 +1949,6 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	recon->RL.warm  = parms->recon.warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
-    if(parms->recon.split){
-	/*split tomography */
-	if(parms->ndm<=2){
-	    /*setup the ngsmode in both ahst and mvst mode  */
-	    setup_ngsmod(parms,recon,aper,powfs);
-	}else if(parms->recon.split==1){
-	    error("Not implemented");
-	}
-	if(!parms->sim.idealfit && parms->recon.split==2){/*Need to be after fit */
-	    setup_recon_mvst(recon, parms);
-	}
-    }
     toc2("setup_recon_tomo");
 }
 /**
@@ -2029,9 +2017,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }
-    if(parms->recon.split){
-	setup_ngsmod(parms,recon,aper,powfs);
-    }
     switch(parms->recon.alg){
     case 0:{
 	setup_recon_tomo(recon, parms, powfs, aper);
@@ -2050,7 +2035,13 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     }
     cellfree(recon->gloc);
     cellfree(recon->gamp);
-
+    if(parms->recon.split){
+	/*split tomography */
+	setup_ngsmod(parms,recon,aper,powfs);
+	if(!parms->sim.idealfit && parms->recon.split==2 && parms->recon.alg==0){/*Need to be after fit */
+	    setup_recon_mvst(recon, parms);
+	}
+    }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(!parms->powfs[ipowfs].needGS0 && powfs[ipowfs].GS0){
@@ -2139,6 +2130,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 */
 void free_recon(const PARMS_T *parms, RECON_T *recon){
     if(!recon) return;
+    ngsmod_free(recon->ngsmod); recon->ngsmod=0;
     free_recon_moao(recon, parms);
     dfree(recon->ht);
     dfree(recon->os);
@@ -2186,9 +2178,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->W1); 
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
-    ngsmod_free(recon->ngsmod); recon->ngsmod=0;
     cellfree(recon->xloc);
-    free(recon->xmap);//data is referenced
+    free(recon->xmap->p); free(recon->xmap);//data is referenced
     lfree(recon->xnx);
     lfree(recon->xny);
     lfree(recon->xnloc);
@@ -2199,7 +2190,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     locfree(recon->floc); 
     locfree(recon->ploc);
     cellfree(recon->ploc_tel);
-    free(recon->amap);//data is referenced
+    free(recon->amap->p);free(recon->amap);//data is referenced
     cellfree(recon->acmap);
     cellfree(recon->aloc);
     lcellfree(recon->actstuck);

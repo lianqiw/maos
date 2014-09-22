@@ -245,7 +245,7 @@ spchol *chol_read(const char *format, ...){
     format2fn;
     spchol *A=calloc(1, sizeof(spchol));
     file_t *fp=zfopen(fn, "rb");
-    header_t header;
+    header_t header={0};
     read_header(&header, fp);
     if(!iscell(header.magic)){
 	error("%s does not contain cell array\n", fn);
@@ -292,7 +292,7 @@ spchol *chol_read(const char *format, ...){
 #undef READ_SIZE_T
 #undef READ_INT
 	long nx, ny;
-	header_t header2;
+	header_t header2={0};
 #define READSPINT(A,N) L->A=readspint(fp, &nx, &ny);			\
 	if((N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
 #define READDBL(A,N) read_header(&header2,fp);				\

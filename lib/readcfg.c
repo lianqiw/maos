@@ -185,10 +185,13 @@ static void print_key(const void *key, VISIT which, int level){
     }
 }
 static void delete_leaf(const void *key, VISIT which, int level){
-    const STORE_T *store=*((const STORE_T**)key);
     (void)level;
     if(which==leaf){
+	STORE_T *store=*((STORE_T**)key);
 	tdelete(store, &MROOT, key_cmp);
+	free(store->key);
+	free(store->data);
+	free(store);
     }
 }
 /**

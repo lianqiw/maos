@@ -209,17 +209,25 @@ void maos_isim(int isim){
     double ck_end=myclockd();
     long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
     long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
-    simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
-			      +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
+    if(isim!=simstart){
+	simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
+				  +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
+	simu->status->mean=(ck_end-tk_atm)/(double)(isim-simstart);
+    }
     simu->status->laps=(long)(ck_end-tk_0);
-    simu->status->mean=(ck_end-tk_atm)/(double)(isim-simstart);
     simu->status->tot  =ck_end-ck_0;
     simu->status->wfs  =simu->tk_wfs;
     simu->status->recon=simu->tk_recon;
     simu->status->other=simu->tk_cache;
     simu->status->eval =simu->tk_eval;
     simu->status->scale=1;
-
+    if(simu->timing){
+	simu->timing->p[isim*simu->timing->nx]=get_job_mem();
+	simu->timing->p[isim*simu->timing->nx+1]=simu->status->tot;
+	simu->timing->p[isim*simu->timing->nx+2]=simu->status->wfs;
+	simu->timing->p[isim*simu->timing->nx+3]=simu->status->recon;
+	simu->timing->p[isim*simu->timing->nx+4]=simu->status->eval;
+    }
     double this_time=myclockd();
     if(this_time>simu->last_report_time+1 || isim+1==simend || parms->sim.pause){
 	/*we don't print out or report too frequently. */

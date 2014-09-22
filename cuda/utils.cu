@@ -38,6 +38,7 @@ static cusparseMatDescr_t spdesc=NULL;
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
 int cuda_dedup=0;//1: allow memory deduplication. Useful during setup for const memory.
+int cuda_cache=0;//1: allow caching data used for data conversion between CPU/GPU.
 static __attribute((constructor)) void init(){
     DO(cusparseCreateMatDescr(&spdesc));
     cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -315,13 +316,12 @@ inline void scale_add<fcomplex, float, Comp>(fcomplex *p1, float alpha, Comp *p2
 template <typename R, typename T, typename S>
 static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
 		    cudaStream_t stream, pthread_mutex_t *mutex){
-    extern int cuda_dedup;
     S *tmp=0;
-    if(!cuda_dedup && cudata->memcache->count((void*)src)){
+    if(cuda_cache && cudata->memcache->count((void*)src)){
 	tmp=(S*)(*cudata->memcache)[(void*)src];
     }else{
 	tmp=(S*)malloc(n*sizeof(S));
-	if(!cuda_dedup){
+	if(cuda_cache){
 	    (*cudata->memcache)[(void*)src]=(void*)tmp;
 	}
     }
@@ -333,7 +333,7 @@ static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n,
     if(mutex) LOCK(*mutex);
     scale_add(p, alpha, tmp, beta, n);
     if(mutex) UNLOCK(*mutex);
-    if(cuda_dedup) {
+    if(!cuda_cache) {
 	free(tmp);
     }
 }

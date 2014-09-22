@@ -41,12 +41,12 @@ int NTHREAD=0;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
 int TCK=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
-const char *TEMP=NULL;
 const char *USER=NULL;
-const char *EXEP=NULL;/*absolute path of the exe.*/
+char TEMP[PATH_MAX];
+char EXEP[PATH_MAX];/*absolute path of the exe.*/
 /**
    Set the HOME, TEMP, USER names.
- */
+*/
 void init_process(void){
 #if defined(__CYGWIN__)
     cygwin_internal(CW_SYNC_WINENV);
@@ -77,20 +77,26 @@ void init_process(void){
 	HOME=getenv("HOME");
 	const char *temp="/tmp";
 #endif
-	TEMP=stradd(temp,"/","maos-",USER,NULL);
+	strcpy(TEMP, temp);
+	strcat(TEMP, "/maos-");
+	strcat(TEMP, USER);
 	mymkdir("%s",TEMP);
 	mymkdir("%s/.aos/",HOME);
-	//register_deinit(NULL,(void*)TEMP);
-    }
-    if(!EXEP){
-	EXEP=get_job_progname(0);
-	if(EXEP){
-	    char *tmp=strrchr(EXEP,'/');
-	    if(EXEP[0]=='/' && tmp){
-		*tmp=0;
+
+	{/*PATH to executable*/
+	    char *exepath=get_job_progname(0);
+	    if(exepath){
+		char *tmp=strrchr(exepath,'/');
+		if(exepath[0]=='/' && tmp){
+		    *tmp=0;
+		}else{
+		    free((void*)exepath);
+		    exepath=mygetcwd();
+		}
+		strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]='0';
+		free(exepath);
 	    }else{
-		free((void*)EXEP);
-		EXEP=mygetcwd();
+		EXEP[0]=0;
 	    }
 	}
     }
@@ -113,7 +119,7 @@ void init_process(void){
 
 /**
    Obtain the current usage level of CPU, between 0 and 1.
- */
+*/
 double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();
@@ -162,7 +168,7 @@ int get_cpu_avail(void){
 }
 /**
    Wait for available CPUs in case scheduler is not available.
- */
+*/
 void wait_cpu(int nthread){
     char fnlock[64];
     snprintf(fnlock,64,"%s/aos.lock", getenv("HOME"));

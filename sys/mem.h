@@ -36,6 +36,7 @@ extern void  (*FREE)(void *p);
 #define free FREE
 
 void register_deinit(void (*fun)(void), void *data);
-
+void malloc_dbg_enable();
+void malloc_dbg_disable();
 extern int exit_success;
 #endif

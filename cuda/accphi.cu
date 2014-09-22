@@ -119,6 +119,8 @@ static void atm_prep(atm_prep_t *data){
 static void gpu_atm2gpu_full(map_t **atm, int nps){
     if(!atm) return;
     TIC;tic;
+    int cuda_cache_save=cuda_cache;
+    cuda_cache=0;
     for(int im=0; im<NGPU; im++)
 #if _OPENMP >= 200805 
 #pragma omp task
@@ -133,6 +135,7 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
 #if _OPENMP >= 200805 
 #pragma omp taskwait
 #endif
+    cuda_cache=cuda_cache_save;
     toc2("atm to gpu");
 }
 /**

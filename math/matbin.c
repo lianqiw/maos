@@ -38,7 +38,7 @@ void X(writedata)(file_t *fp, const X(mat) *A){
    Function to read dense matrix into memory from file pointer. Generally used
    by library developer.  */
 X(mat) *X(readdata)(file_t *fp, header_t *header){
-    header_t header2;
+    header_t header2={0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -46,7 +46,10 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     uint64_t nx, ny;
     nx=header->nx;
     ny=header->ny;
-    if(!nx || !ny) return NULL;
+    if(!nx || !ny) {
+	free(header->str);
+	return NULL;
+    }
     X(mat) *out;
     out=X(new)((long)nx,(long)ny);
     out->header=header->str; header->str=NULL;

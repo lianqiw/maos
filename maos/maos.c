@@ -104,8 +104,9 @@ void maos_setup(const PARMS_T *parms){
     }
 #if USE_CUDA
     extern int cuda_dedup;
+    extern int cuda_cache;
     cuda_dedup=1;
-   
+    cuda_cache=0;
     if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
     }
@@ -119,6 +120,7 @@ void maos_setup(const PARMS_T *parms){
 	gpu_setup_recon(parms, powfs, recon);
     }
     cuda_dedup=0;
+    cuda_cache=1;
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){
@@ -150,7 +152,6 @@ void maos(const PARMS_T *parms){
 }
 
 void maos_reset(){
-    info2("maos_reset\n");
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
     if(!global) return;

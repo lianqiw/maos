@@ -300,7 +300,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    error("-g and -G cannot both be specified\n");
 	}
     }
-    arg->confcmd=strdup(cmds);
+    arg->confcmd=cmds;
     
     addpath(".");
     if(arg->dirout){

@@ -25,7 +25,7 @@
 #include "process.h"
 #include "path.h"
 #include "misc.h"
-
+#include "thread.h"
 /**
    This file contains function managing the searching path for files, behaves
    like PATH in POSIX systems.*/
@@ -38,7 +38,7 @@ typedef struct PATH_T{
     struct PATH_T *next;
 }PATH_T;
 static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
-
+PNEW(mutex_path);
 /**
    Add a directory to path.
 */
@@ -50,8 +50,10 @@ void addpath(const char*path){
     }
     PATH_T *node=calloc(1,sizeof(PATH_T));
     node->path=abspath;
+    LOCK(mutex_path);
     node->next=PATH;
     PATH=node;
+    UNLOCK(mutex_path);
 }
 
 /**
@@ -60,6 +62,7 @@ void addpath(const char*path){
 void rmpath(const char *path){
     char *abspath=myabspath(path);
     PATH_T *ia,*ib=NULL;
+    LOCK(mutex_path);
     for(ia=PATH;ia;ia=ia->next){
 	if(!strcmp(ia->path,abspath)){/*found */
 	    if(ib){/*there is parent node */
@@ -74,6 +77,7 @@ void rmpath(const char *path){
 	    ib=ia;
 	}
     }
+    UNLOCK(mutex_path);
     free(abspath);
 }
 /**
@@ -89,11 +93,13 @@ void printpath(void){
    Empty the path.
 */
 void freepath(void){
+    LOCK(mutex_path);
     for(PATH_T *ia=PATH;ia;ia=PATH){
 	PATH=ia->next;
 	free(ia->path);
 	free(ia);
     }
+    UNLOCK(mutex_path);
 }
 /**
    Try to find a file in path and return its absolute filename if exist, NULL
@@ -152,7 +158,7 @@ char *find_config(const char *name){
 	config_path=stradd(SRCDIR,"/config/",name,NULL);
     }
     
-    if(!exist(config_path) && EXEP){
+    if(!exist(config_path) && EXEP[0]){
 	/*If not found, try the folder that contains the exe*/
 	free(config_path);
 	config_path=stradd(EXEP,"/config/",name,NULL);

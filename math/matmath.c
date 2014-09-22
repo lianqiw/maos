@@ -27,8 +27,12 @@
 */
 void X(scale)(X(mat) *A, R w){
     if(!A) return;
-    for(int i=0; i<A->nx*A->ny; i++){
-	A->p[i]*=w;
+    if(w==0){
+	memset(A->p, 0, sizeof(T)*A->nx*A->ny);
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    A->p[i]*=w;
+	}
     }
 }
 

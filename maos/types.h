@@ -510,6 +510,7 @@ typedef struct SIM_T{
     dcell *cleNGSmp;   /**<(M'*w*phi);*/
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
+    dmat *timing;      /**<Timing and memory using for each step*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmcmd;      /**<This is the command send to DM (known to RTC).*/

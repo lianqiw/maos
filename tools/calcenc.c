@@ -56,7 +56,7 @@ static void calcenc(const char *fn, double dstep, double rmax, int type, int nth
     file_t *fp=zfopen(fn, "r");
     file_t *fpout=zfopen(fnout, "w");
     info2("%s --> %s\n", fn, fnout);
-    header_t header;
+    header_t header={0};
     read_header(&header, fp);
     if(iscell(header.magic)){//cell array.
 	write_header(&header, fpout);

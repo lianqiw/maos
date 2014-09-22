@@ -46,14 +46,14 @@ char *get_job_progname(int pid){
     if(pid>0){
 	char buf[PATH_MAX];
 	if(proc_pidpath(pid, buf, sizeof(buf))>0){
-	    progname=strdup0(buf);
+	    progname=strdup(buf);
 	}
     }else{
 	char path[PATH_MAX],path2[PATH_MAX];
 	uint32_t size=sizeof(path);
 	if(_NSGetExecutablePath(path,&size)==0){
 	    if(realpath(path,path2)){
-		progname=strdup0(path2);
+		progname=strdup(path2);
 	    }
 	}
     }

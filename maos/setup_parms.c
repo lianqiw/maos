@@ -186,6 +186,8 @@ void free_parms(PARMS_T *parms){
     free_strarr(parms->recon.misreg_dm2wfs, parms->ndm*parms->nwfsr);
     free_strarr(parms->recon.misreg_dm2sci, parms->ndm*parms->fit.nfit);
     free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
+    dfree(parms->dirs);
+    lfree(parms->dbg.tomo_maxit);
     free(parms);
 }
 static inline int sum_intarr(int n, long *a){

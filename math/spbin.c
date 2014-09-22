@@ -52,7 +52,7 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
    library developer.
   */
 X(sp) *Y(spreaddata)(file_t *fp, header_t *header){
-    header_t header2;
+    header_t header2={0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -141,7 +141,7 @@ X(sp)* Y(spread)(const char *format,...){
 Y(spcell) *Y(spcellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    header_t header;
+    header_t header={0};
     read_header(&header, fp);
     header_t *headerc=NULL;
     long nx, ny;

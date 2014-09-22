@@ -393,7 +393,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
 static inline void 
-servo_typeII_filter(SERVO_T *st, dcell *merrc){
+servo_typeII_filter(SERVO_T *st, const dcell *merrc){
     if(!merrc) return;
     const dmat *gain=st->ep;
     PDMAT(gain,pgain);
@@ -437,7 +437,7 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc){
     dcellcp(&st->merrlast, merrc);
     dcelladd(&st->mpreint,1, st->mlead, 1);
 }
-static void servo_init(SERVO_T *st, dcell *merr){
+static void servo_init(SERVO_T *st, const dcell *merr){
     if(!merr || st->initialized){
 	error("merr must be valid and SERVO_T must be not yet initialized\n");
     }
@@ -458,8 +458,16 @@ static void servo_init(SERVO_T *st, dcell *merr){
 */
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep){
     SERVO_T *st=calloc(1, sizeof(SERVO_T));
-    st->mint=cellnew(ap?MAX(2,ap->nx):1, 1);
-    st->ap=dref(ap);
+    if(ap){
+	st->ap=ddup(ap);
+    }else{
+	st->ap=dnew(2,1);
+	st->ap->p[0]=1;
+    }
+    if(st->ap->nx<2){
+	dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
+    }
+    st->mint=cellnew(st->ap->nx, 1);
     if(ep->nx!=3){//type I
 	st->ep=dref(ep);
     }else{//type II. convert data format
@@ -474,7 +482,7 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     }
     st->dt=dt;
     st->al=al;
-    st->merrhist=cellnew(st->al, 1);
+    st->merrhist=cellnew(st->al+1, 1);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
     }
@@ -488,44 +496,43 @@ static void servo_shift_ap(SERVO_T *st){
     const dmat *ap=st->ap;
     if(!ap) return; //no need to shift.
     if(st->mint->nx<ap->nx){
-	st->mint->nx=ap->nx;
-	st->mint->p=realloc(st->mint->p, sizeof(dcell*));
+	cellresize(st->mint, ap->nx, 1);
     }
     if(!st->initialized) return;
     dcell **inte=st->mint->p;
-    dcell *tmp=NULL;
-    dcell *keepjunk=inte[ap->nx-1];
-    for(int iap=ap->nx-1; iap>=0; iap--){
-	dcelladd(&tmp,1,inte[iap],ap->p[iap]);
-	if(iap>0){
-	    inte[iap]=inte[iap-1];/*shifting */
-	}else{
-	    inte[iap]=tmp;/*new command. */
-	}
+    dcell *cyclic=inte[ap->nx-1];
+    dcellscale(cyclic, ap->p[ap->nx-1]);
+    for(int iap=ap->nx-2; iap>=0; iap--){
+	dcelladd(&cyclic,1,inte[iap],ap->p[iap]);
     }
-    dcellfree(keepjunk);
+    for(int iap=ap->nx-1; iap>0; iap--){
+	inte[iap]=inte[iap-1];/*shifting */
+    }
+    inte[0]=cyclic;/*new command. */
 }
 /*A FIFO queue to add delay*/
-static dcell*servo_shift_al(SERVO_T *st, dcell *merr){
+static const dcell*servo_shift_al(SERVO_T *st, const dcell *merr){
     if(!st->al){
-	return dcellref(merr);
+	return merr;
     }else{
-	dcell *out=st->merrhist->p[0];
-	for(int i=0; i<st->al-1; i++){
+	long nhist=st->merrhist->nx;
+	dcell *cycle=st->merrhist->p[0];
+	for(int i=0; i<nhist-1; i++){
 	    st->merrhist->p[i]=st->merrhist->p[i+1];
 	}
-	st->merrhist->p[st->al-1]=dcelldup(merr);
-	return out;
+	st->merrhist->p[nhist-1]=cycle;
+	dcelladd(&st->merrhist->p[nhist-1], 0, merr, 1);
+	return st->merrhist->p[0];
     }
 }
 /**
    Applies type I or type II filter based on number of entries in gain.
 */
-int servo_filter(SERVO_T *st, dcell *_merr){
+int servo_filter(SERVO_T *st, const dcell *_merr){
     if(!st->initialized && _merr){
 	servo_init(st, _merr);
     }
-    dcell *merr=servo_shift_al(st, _merr);
+    const dcell *merr=servo_shift_al(st, _merr);
     if(!merr) return 0;
     servo_shift_ap(st);
     if(!st->mint){
@@ -564,7 +571,6 @@ int servo_filter(SERVO_T *st, dcell *_merr){
 	error("Invalid: st->ep->nx=%ld", st->ep->nx);
     }
     dcelladd(st->mint->p, 1, st->mpreint, 1);
-    dcellfree(merr);
     return 1;
 }
 
@@ -627,7 +633,7 @@ void servo_reset(SERVO_T *st){
     dcellzero(st->merrlast);
     dcellzero(st->mpreint);
     if(st->merrhist){
-	for(int i=0; i<st->al; i++){
+	for(int i=0; i<st->merrhist->nx; i++){
 	    dcellzero(st->merrhist->p[i]);
 	}
     }
