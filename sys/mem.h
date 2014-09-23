@@ -37,6 +37,6 @@ extern void  (*FREE)(void *p);
 
 void register_deinit(void (*fun)(void), void *data);
 void malloc_dbg_enable();
-void malloc_dbg_disable();
+int malloc_dbg_disable(int print);
 extern int exit_success;
 #endif

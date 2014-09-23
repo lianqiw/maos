@@ -537,7 +537,7 @@ typedef struct SIM_T{
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
-    
+    dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
     dcell *upterr,*upterr_store;     /**<uplink error*/
     dcell *uptreal;    /**<uplink real*/

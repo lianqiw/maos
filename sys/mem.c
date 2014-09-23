@@ -170,6 +170,7 @@ static void memkey_add(void *p,size_t size){
     UNLOCK(mutex_mem);    
     if(MEM_VERBOSE==1){
 	info("%p malloced with %zu bytes\n",p, size);
+	print_backtrace();
     }else if(MEM_VERBOSE==2 && size>1024){
 	info2("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
     }
@@ -247,16 +248,16 @@ void malloc_dbg_enable(){
     REALLOC=realloc_dbg;
     FREE=free_dbg;
 }
-void malloc_dbg_disable(){
-    int print_alloc=0;
+int malloc_dbg_disable(int print){
+    int dbg_enabled=0;
     if(MALLOC==malloc_dbg){
-	print_alloc=1;
+	dbg_enabled=1;
     }
     CALLOC=calloc_default;
     MALLOC=malloc_default;
     REALLOC=realloc_default;
     FREE=free_default;
-    if(print_alloc){
+    if(dbg_enabled && print){
 	if(MROOT){
 	    warning("%ld (%.3f MB) allocated memory not freed!!!\n",
 		    memcnt, (memalloc-memfree)/1024./1024.);
@@ -271,21 +272,24 @@ void malloc_dbg_disable(){
 	info2("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
 	info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
     }
+    return dbg_enabled;
 }
 static __attribute__((constructor)) void init(){
     READ_ENV_INT(MEM_DEBUG, 0, 1);
-    READ_ENV_INT(MEM_VERBOSE, 0, 1);
+    READ_ENV_INT(MEM_VERBOSE, 0, 2);
     if(!CALLOC){
 	if(MEM_DEBUG){
 	    malloc_dbg_enable();
 	}else{
-	    malloc_dbg_disable();
+	    malloc_dbg_disable(0);
 	}
     }
     void init_process(void);
-    void init_scheduler(void);
     init_process();
+#ifndef MAOS_DISABLE_SCHEDULER
+    void init_scheduler(void);
     init_scheduler();
+#endif
     if(not_nan(NAN)){
 	error("NAN check failed\n");
     }
@@ -306,7 +310,7 @@ static __attribute__((destructor)) void deinit(){
     }
     if(MALLOC==malloc_dbg){
 	if(exit_success){
-	    malloc_dbg_disable();
+	    malloc_dbg_disable(1);
 	}else{
 	    info("exit_success=%d\n", exit_success);
 	}

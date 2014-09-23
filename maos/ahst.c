@@ -881,20 +881,20 @@ void ngsmod_free(NGSMOD_T *ngsmod){
    if nmod==6: make sure the global focus mode is not removed from LGS result.
 */
 void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
+    if(!dmerr) return;
     const RECON_T *recon=simu->recon;
-    dcell *Mngs=NULL;
-    dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
+    dcellzero(simu->Mngs);
+    dcellmm(&simu->Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
     //zero out global focus mode if any.
-    if(Mngs && recon->ngsmod->nmod>5){
+    if(recon->ngsmod->nmod>5){
 	if(simu->parms->sim.ahstfocus){
 	    const double scale=recon->ngsmod->scale;
-	    Mngs->p[0]->p[5]=Mngs->p[0]->p[2]*(1-scale);
+	    simu->Mngs->p[0]->p[5]=simu->Mngs->p[0]->p[2]*(1-scale);
 	}else{
-	    Mngs->p[0]->p[5]=0;
+	    simu->Mngs->p[0]->p[5]=0;
 	}
     }
-    ngsmod2dm(&dmerr,recon, Mngs,-1);
-    dcellfree(Mngs);
+    ngsmod2dm(&dmerr,recon, simu->Mngs,-1);
 }
 /**
    Removal tip/tilt on invidual DMs. Be careful about the roll off near the

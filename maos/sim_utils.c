@@ -1439,6 +1439,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmadd);
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
+    dcellfree(simu->Mngs);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
     dcellfree(simu->dmerr_store);

@@ -416,6 +416,8 @@ char* call_addr2line(const char *buf){
    Convert backtrace address to source line.
  */
 void print_backtrace_symbol(void *const *buffer, int size){
+    //disable memory debugging as this code may be called from within malloc_dbg
+    int memdbg=malloc_dbg_disable(0);
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     static int connect_failed=0;
     char *cmdstr=NULL;
@@ -476,6 +478,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
     sync();
     free(cmdstr);
 #endif
+    if(memdbg) malloc_dbg_enable();
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
