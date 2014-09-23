@@ -885,7 +885,7 @@ void html_convert(RUN_T *irun, char *path, char **dest, size_t *plen, long prepa
 	len=snprintf(temp, 4096, "%d&STATUS&%d&%d" /*pid, key, pidnew, status*/
 		     "&%s&%.2f&%.2f" /*start time, errhi, errlo*/
 		     "&%d&%d&%d&%d" /*iseed, nseed, isim, nsim*/
-		     "&%ld&%ld&%.2f;" /*rest, tot, step timing*/
+		     "&%ld&%ld&%.3f;" /*rest, tot, step timing*/
 		     , irun->pid, irun->pidnew, st->info,
 		     stime, st->clerrhi, st->clerrlo,
 		     st->nseed==0?0:st->iseed+1, st->nseed, st->simend==0?0:st->isim+1, st->simend,
