@@ -250,13 +250,14 @@ void thread_pool_init(int nthread){
  */
 void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     /*Add the job to the head if urgent>0, otherwise to the tail. */
-    jobs_t *job;
+    jobs_t *job=0;
+    LOCK_DO(pool.mutex_pool);
     if(pool.jobspool){/*take it from the pool. */
-	LOCK_DO(pool.mutex_pool);
 	job=pool.jobspool;
 	pool.jobspool=pool.jobspool->next;
-	LOCK_UN(pool.mutex_pool);
-    }else{
+    }
+    LOCK_UN(pool.mutex_pool);
+    if(!job){
 	job=malloc(sizeof(jobs_t));
     }
     job->fun=fun;

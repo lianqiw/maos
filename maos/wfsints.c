@@ -109,8 +109,6 @@ void wfsints(thread_t *thread_data){
 	cfft2plan(lwvf,1);
 	if(nlwvf != notf){
 	    lotfc=cnew(notf,notf);
-	    cfft2plan(lotfc,-1);
-	    cfft2plan(lotfc,1);
 	}else{
 	    lotfc=lwvf;
 	}
@@ -275,7 +273,7 @@ void wfsints(thread_t *thread_data){
     cfree(psftmp);
     cfree(fftpsfout);
     if(lltopd){
-	if(lotfc!=lwvf) cfree(lotfc);
+	if(lwvf!=lotfc) cfree(lotfc);
 	cfree(lwvf);
     }
 }

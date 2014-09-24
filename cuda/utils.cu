@@ -52,9 +52,9 @@ void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
 	*dest0=new cumap_t[nps];
-    }
-    for(int ips=0; ips<nps; ips++){
-	(*dest0)[ips].init(source[ips]);
+        for(int ips=0; ips<nps; ips++){
+	    (*dest0)[ips].init(source[ips]);
+	}
     }
     cumap_t *dest=*dest0;
     for(int ips=0; ips<nps; ips++){

@@ -56,8 +56,8 @@ void *(*malloc_default)(size_t)=malloc;
 void *(*realloc_default)(void *, size_t)=realloc;
 void  (*free_default)(void *)=free;
 
-int MEM_VERBOSE=0;
-int MEM_DEBUG=0;
+static int MEM_VERBOSE=0;
+static int MEM_DEBUG=0;
 PNEW(mutex_mem);
 static void *MROOT=NULL;
 static long  memcnt=0;
@@ -216,8 +216,7 @@ static void *malloc_dbg(size_t size){
     return p;
 }
 static void *realloc_dbg(void*p0, size_t size){
-    if(!p0) return malloc_dbg(size);
-    memkey_del(p0);
+    if(p0) memkey_del(p0);
     void *p=realloc_default(p0,size);
     memkey_add(p,size);
     return p;

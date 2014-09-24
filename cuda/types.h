@@ -339,6 +339,9 @@ public:
 	ht=in->h;
 	vx=in->vx;
 	vy=in->vy;
+	if(cubic_cc){
+	    delete cubic_cc;
+	}
 	if(in->cubic){
 	    cubic_cc=gpu_dmcubic_cc(in->iac);
 	}else{
@@ -379,7 +382,9 @@ public:
 	}
     }
     cugrid_t(long nxi=0, long nyi=0,Real oxi=0, Real oyi=0, Real dxi=0, Real dyi=0, Real hti=0, Real vxi=0, Real vyi=0,curmat *_cubic_cc=0):nx(nxi),ny(nyi),ox(oxi),oy(oyi),dx(dxi),dy(dyi),ht(hti),vx(vxi),vy(vyi),cubic_cc(_cubic_cc){}
-
+    ~cugrid_t(){
+	delete cubic_cc;
+    }
     cugrid_t scale(Real sc)const{
 	return cugrid_t(nx,ny,ox*sc,oy*sc,dx*sc,dy*sc,ht,vx,vy,cubic_cc);
     }

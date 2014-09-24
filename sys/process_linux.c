@@ -59,23 +59,17 @@ char *get_job_progname(int pid){
  */
 int get_job_mem(void){
     int mem;
-    pid_t pid=getpid();
-    char fn[80];
     FILE* pfile;
-    sprintf(fn,"/proc/%d/status",pid);
-    if ((pfile=fopen(fn,"r"))!=NULL){
-#define nmax 800
-	char line[nmax];
-	for (int i=15;i>0;i--) {
-	    if(!fgets(line, nmax, pfile)) error("Error in read\n");
+    static int pagesize=0;//in kB
+    if(!pagesize){
+	pagesize=getpagesize()/1024;
+    }
+    if ((pfile=fopen("/proc/self/statm","r"))){
+	if(fscanf(pfile, "%*d %d", &mem)!=1){
+	    warning("failed to read statm\n");
 	}
-	char field[80], unit[4];
-	sscanf(line, "%s %d %s", field, &mem, unit);
-	if (mystrcmp(unit,"kB")) {
-	    error("Unknown unit\n");
-	}
+	mem*=pagesize;
 	fclose(pfile);
-#undef nmax
     } else {
 	mem=0;
     }

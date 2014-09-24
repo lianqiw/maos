@@ -149,13 +149,15 @@ static __attribute__((destructor))void deinit(){
  */
 void X(fft2plan)(X(mat) *A, int dir){
     assert(abs(dir)==1 && A && A->p);
-    if(!A->fft) A->fft=calloc(1, sizeof(fft_t));
-    int FFTW_FLAGS;
-    if(A->nx<1024){
-	FFTW_FLAGS=FFTW_MEASURE;
-    }else{
-	FFTW_FLAGS=FFTW_ESTIMATE;
+    if(!A->fft) {
+	A->fft=calloc(1, sizeof(fft_t));
     }
+    int FFTW_FLAGS;
+    //if(A->nx<1024){
+//	FFTW_FLAGS=FFTW_MEASURE;
+    //  }else{
+    FFTW_FLAGS=FFTW_ESTIMATE;
+    //}
     if(A->fft->plan[dir+1]) return;
     LOCK_FFT;
     /*!!fft uses row major mode. so need to reverse order */
@@ -177,11 +179,11 @@ void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     const int nx=A->nx;
     const int ny=A->ny;
     int FFTW_FLAGS;
-    if(A->nx<1024){
-	FFTW_FLAGS=FFTW_MEASURE;
-    }else{
-	FFTW_FLAGS=FFTW_ESTIMATE;
-    }
+    //if(A->nx<1024){
+///	FFTW_FLAGS=FFTW_MEASURE;
+    // }else{
+    FFTW_FLAGS=FFTW_ESTIMATE;
+    //}
     if(A->fft->plan1d[dir+1]) return;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
