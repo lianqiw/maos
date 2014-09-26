@@ -27,6 +27,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dmat *wfspair=mx2d(prhs[P_WFSPAIR]);
     dmat *wfstheta=mx2d(prhs[P_WFSTHETA]);
     if(maxabs(wfstheta->p, wfstheta->nx*wfstheta->ny)>1){
+	dmat *tmp=wfstheta;
+	wfstheta=ddup(tmp);
+	dfree(tmp);
+	//Don't scale the matlab one.
 	dscale(wfstheta, 1./206265);
     }
     loc_t *saloc=mx2loc(prhs[P_SALOC]);
