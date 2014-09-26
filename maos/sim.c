@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <malloc.h>
 
 #include "common.h"
 #include "recon.h"
@@ -270,17 +269,10 @@ void maos_sim(){
 	    iseed++;
 	}
 	for(int isim=simstart; isim<simend; isim++){
-	    /*if(isim==3){
-		(void)(memalign(0, -1)+1);//turn on memory debugging
-		}*/
 	    maos_isim(isim);
 	    if(parms->sim.pause){
 		mypause();
 	    }
-	    
-	    /*if(isim==simend-2){
-		(void)(memalign(0, -2)+1);//stop memory debugging and report stat.
-		}*/
 	}/*isim */
 	{
 	    /*Compute average performance*/
