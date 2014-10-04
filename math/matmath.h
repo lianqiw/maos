@@ -21,9 +21,9 @@
 #ifndef AOS_LIB_MATH_H
 #error "Don't include this file directly"
 #endif
-#define AOS_MATMATH_DEF(X,XR,Y,T,R)					\
+#define AOS_MATMATH_DEF(X,XR,T,R)					\
     int X(isnan)(const X(mat)*A);					\
-       void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
+    void X(maxmin)(const T *restrict p, long N, R *max, R *min);	\
     R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
@@ -117,14 +117,14 @@
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp); \
+    X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const X(spcell) *Wsp); \
     X(cell)* X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\
     R X(celldiff)(const X(cell) *A, const X(cell) *B);			\
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
     void X(celltikcr)(X(cell) *A, R thres);				\
-    void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, R alpha); \
+    void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
     void X(celladdI)(X(cell) *A, R a);					\
     void X(celladd)(X(cell) **B0, R bc, const X(cell) *A,const R ac);	\
     X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
@@ -132,7 +132,7 @@
     X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);
 
 /*The following are only useful for cmat */
-#define AOS_CMATMATH_DEF(X,XR,Y,T,R)					\
+#define AOS_CMATMATH_DEF(X,XR,T,R)					\
     void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha); \
     void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha); \
     void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,	\

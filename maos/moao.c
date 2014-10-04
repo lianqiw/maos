@@ -36,10 +36,10 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
 	cellfree(recon->moao[imoao].aloc);
-	spcellfree(recon->moao[imoao].HA);
+	dspcellfree(recon->moao[imoao].HA);
 	dcellfree(recon->moao[imoao].NW);
-	spcellfree(recon->moao[imoao].actslave);
-	spfree(recon->moao[imoao].W0);
+	dspcellfree(recon->moao[imoao].actslave);
+	dspfree(recon->moao[imoao].W0);
 	dfree(recon->moao[imoao].W1);
 	lcellfree(recon->moao[imoao].actstuck);
 	lcellfree(recon->moao[imoao].actfloat);
@@ -84,7 +84,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
-	recon->moao[imoao].HA=spcellnew(1,1);
+	recon->moao[imoao].HA=dspcellnew(1,1);
 	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, NULL, 0, 0, 1, 
 					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
 	if(parms->moao[imoao].actstuck){
@@ -114,7 +114,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 		pNW[2][iloc]=scl2*locy[iloc];/*tilt */
 	    }
 	}
-	recon->moao[imoao].W0=spref(recon->W0);
+	recon->moao[imoao].W0=dspref(recon->W0);
 	recon->moao[imoao].W1=dref(recon->W1);
 	if(parms->moao[imoao].actslave){
 	    recon->moao[imoao].actcpl=genactcpl(recon->moao[imoao].HA, recon->moao[imoao].W1);
@@ -128,9 +128,9 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	}
 	if(parms->save.setup){
 	    cellwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
-	    spcellwrite(recon->moao[imoao].HA, "%s/moao%d_HA",dirsetup,imoao);
+	    dspcellwrite(recon->moao[imoao].HA, "%s/moao%d_HA",dirsetup,imoao);
 	    dcellwrite(recon->moao[imoao].NW, "%s/moao%d_NW",dirsetup,imoao);
-	    spcellwrite(recon->moao[imoao].actslave, "%s/moao%d_actslave",dirsetup,imoao);
+	    dspcellwrite(recon->moao[imoao].actslave, "%s/moao%d_actslave",dirsetup,imoao);
 	}
 	if(parms->plot.setup){
 	    plotloc("FoV",parms,recon->moao[imoao].aloc->p[0], 0,"moao_aloc");
@@ -182,7 +182,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
     }
     double wt=1;
     applyW(xp, recon->moao[imoao].W0, recon->moao[imoao].W1, &wt);
-    sptcellmulmat(xout, recon->moao[imoao].HA, xp, alpha);
+    dsptcellmulmat(xout, recon->moao[imoao].HA, xp, alpha);
     dcellfree(xp);
 }
 /**
@@ -198,14 +198,14 @@ moao_FitL(dcell **xout, const void *A,
     const MOAO_T *moao=(const MOAO_T *)A;
     dcell *xp=NULL;
     double wt=1;
-    spcellmulmat(&xp, moao->HA, xin, 1.);
+    dspcellmulmat(&xp, moao->HA, xin, 1.);
     applyW(xp, moao->W0, moao->W1, &wt);
-    sptcellmulmat(xout, moao->HA, xp, alpha);
+    dsptcellmulmat(xout, moao->HA, xp, alpha);
     dcellfree(xp);xp=NULL;
     dcellmm(&xp, moao->NW, xin, "tn", 1);
     dcellmm(xout,moao->NW, xp, "nn", alpha);
     dcellfree(xp);
-    spcellmulmat(xout, moao->actslave, xin, alpha);
+    dspcellmulmat(xout, moao->actslave, xin, alpha);
 }
 /**
    moao_recon happens after the common DM fitting and its integrator output

@@ -208,7 +208,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     const int npsr=recon->npsr;
     if(parms->load.HXW){
 	warning2("Loading saved HXW\n");
-	recon->HXW=spcellread("%s",parms->load.HXW);
+	recon->HXW=dspcellread("%s",parms->load.HXW);
 	if(recon->HXW->nx!=nwfs || recon->HXW->ny!=npsr){
 	    error("Wrong saved HXW\n");
 	}
@@ -226,7 +226,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	}
     }else{
 	info2("Generating HXW");TIC;tic;
-	recon->HXW=spcellnew(nwfs,npsr);
+	recon->HXW=dspcellnew(nwfs,npsr);
 	PDSPCELL(recon->HXW,HXW);
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
@@ -253,17 +253,17 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	toc2(" ");
     }
     if(parms->save.setup){
-	spcellwrite(recon->HXW, "%s/HXW",dirsetup);
+	dspcellwrite(recon->HXW, "%s/HXW",dirsetup);
     }
-    spcellfree(recon->HXWtomo);
-    recon->HXWtomo=spcellnew(recon->HXW->nx, recon->HXW->ny);
+    dspcellfree(recon->HXWtomo);
+    recon->HXWtomo=dspcellnew(recon->HXW->nx, recon->HXW->ny);
     PDSPCELL(recon->HXWtomo,HXWtomo);
     PDSPCELL(recon->HXW,HXW);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    for(int ips=0; ips<npsr; ips++){
-		HXWtomo[ips][iwfs]=spref(HXW[ips][iwfs]);
+		HXWtomo[ips][iwfs]=dspref(HXW[ips][iwfs]);
 	    }
 	} 
     }
@@ -276,7 +276,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(!parms->dbg.usegwr) return;
-    recon->GWR=spcellnew(parms->npowfs, 1);
+    recon->GWR=dspcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
 	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
@@ -295,10 +295,10 @@ static void
 setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
-    spcell *GP=NULL;
+    dspcell *GP=NULL;
     if(parms->load.GP){
 	warning2("Loading saved GP\n");
-	GP=spcellread("%s",parms->load.GP);
+	GP=dspcellread("%s",parms->load.GP);
 	int nploc=ploc->nloc;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    int nsa=powfs[ipowfs].pts->nsa;
@@ -308,7 +308,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
     }else{
-	GP=spcellnew(parms->npowfs, 1);
+	GP=dspcellnew(parms->npowfs, 1);
 	info2("Generating GP with ");TIC;tic;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -329,9 +329,9 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
 		dsp *H=mkh(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p, 0,0,1,0,0);
-		GP->p[ipowfs]=spmulsp(ZS0,H);
-		spfree(H);
-		spfree(ZS0);
+		GP->p[ipowfs]=dspmulsp(ZS0,H);
+		dspfree(H);
+		dspfree(ZS0);
 	    }
 		break;
 	    default:
@@ -341,14 +341,14 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	toc2(" ");
     }
     if(parms->save.setup){
-	spcellwrite(GP,"%s/GP",dirsetup);
+	dspcellwrite(GP,"%s/GP",dirsetup);
     }
     /*assign GP for powfs to recon->GP for each wfs */
     recon->GP=GP;
-    recon->GP2=spcellnew(nwfs,1);
+    recon->GP2=dspcellnew(nwfs,1);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
-	recon->GP2->p[iwfs]=spref(recon->GP->p[ipowfs]);
+	recon->GP2->p[iwfs]=dspref(recon->GP->p[ipowfs]);
     }
 }
 /**
@@ -359,10 +359,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
-    spcellfree(recon->GA);
+    dspcellfree(recon->GA);
     if(parms->load.GA){
 	warning2("Loading saved GA\n");
-	recon->GA=spcellread("GA");
+	recon->GA=dspcellread("GA");
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
 	    error("Wrong saved GA\n");
 	PDSPCELL(recon->GA,GA);
@@ -381,7 +381,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
     }else{
 	info2("Generating GA ");TIC;tic;
-	recon->GA=spcellnew(nwfs, ndm);
+	recon->GA=dspcellnew(nwfs, ndm);
 	PDSPCELL(recon->GA,GA);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
@@ -413,14 +413,14 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
 			       dispx,dispy,scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
-		    GA[idm][iwfs]=spmulsp(recon->GWR->p[ipowfs], H);
-		    spfree(H);
+		    GA[idm][iwfs]=dspmulsp(recon->GWR->p[ipowfs], H);
+		    dspfree(H);
 		}else{
 		    dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
 			       dispx,dispy,scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
-		    GA[idm][iwfs]=spmulsp(recon->GP->p[ipowfs], H);
-		    spfree(H);
+		    GA[idm][iwfs]=dspmulsp(recon->GP->p[ipowfs], H);
+		    dspfree(H);
 		}
 		if(freeloc){
 		    locfree(loc);
@@ -430,56 +430,56 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     	toc2(" ");
     }
     if(parms->save.setup){
-	spcellwrite(recon->GA, "%s/GA",dirsetup);
+	dspcellwrite(recon->GA, "%s/GA",dirsetup);
     }
     if(recon->actstuck){
 	warning2("Apply stuck actuators to GA\n");
 	act_stuck(recon->aloc, recon->GA, NULL, recon->actstuck);
     	if(parms->save.setup){
-	    spcellwrite(recon->GA,"%s/GA_stuck",dirsetup);
+	    dspcellwrite(recon->GA,"%s/GA_stuck",dirsetup);
 	}
     }
     if(recon->actfloat){
 	warning2("Apply float actuators to GA\n");
 	act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
 	if(parms->save.setup){
-	    spcellwrite(recon->GA,"%s/GA_float",dirsetup);
+	    dspcellwrite(recon->GA,"%s/GA_float",dirsetup);
 	}
     }
     int nlo=parms->nlopowfs;
     if(parms->recon.modal){
-	spcell *GA=recon->GA;
-	spcellfree(recon->GM);
-	spcellfree(recon->GMlo);
-	spcellfree(recon->GMhi);
-	recon->GM=spcellnew(nwfs, ndm);
-	recon->GMlo=spcellnew(nwfs, ndm);
-	recon->GMhi=spcellnew(nwfs, ndm);
+	dspcell *GA=recon->GA;
+	dspcellfree(recon->GM);
+	dspcellfree(recon->GMlo);
+	dspcellfree(recon->GMhi);
+	recon->GM=dspcellnew(nwfs, ndm);
+	recon->GMlo=dspcellnew(nwfs, ndm);
+	recon->GMhi=dspcellnew(nwfs, ndm);
 	for(int idm=0; idm<ndm; idm++){
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs = parms->wfsr[iwfs].powfs;
 		dmat *tmp=0;
-		spmulmat(&tmp, GA->p[iwfs+idm*nwfs], recon->amod->p[idm], 1);
+		dspmulmat(&tmp, GA->p[iwfs+idm*nwfs], recon->amod->p[idm], 1);
 		recon->GM->p[iwfs+idm*nwfs]=d2sp(tmp);
 		dfree(tmp);
 		if(parms->powfs[ipowfs].lo
 		   || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
-		    recon->GMlo->p[iwfs+idm*nwfs]=spref(recon->GM->p[iwfs+idm*nwfs]);
+		    recon->GMlo->p[iwfs+idm*nwfs]=dspref(recon->GM->p[iwfs+idm*nwfs]);
 		}
 		if(!parms->powfs[ipowfs].skip){
-		    recon->GMhi->p[iwfs+idm*nwfs]=spref(recon->GM->p[iwfs+idm*nwfs]);
+		    recon->GMhi->p[iwfs+idm*nwfs]=dspref(recon->GM->p[iwfs+idm*nwfs]);
 		}
 	    }
 	}
 	if(parms->save.setup){
-	    spcellwrite(recon->GM, "%s/GM", dirsetup);
+	    dspcellwrite(recon->GM, "%s/GM", dirsetup);
 	}
     }
     /*Create GAlo that only contains GA for low order wfs */
-    spcellfree(recon->GAlo);
-    spcellfree(recon->GAhi);
-    recon->GAlo=spcellnew(recon->GA->nx, recon->GA->ny);
-    recon->GAhi=spcellnew(recon->GA->nx, recon->GA->ny);
+    dspcellfree(recon->GAlo);
+    dspcellfree(recon->GAhi);
+    recon->GAlo=dspcellnew(recon->GA->nx, recon->GA->ny);
+    recon->GAhi=dspcellnew(recon->GA->nx, recon->GA->ny);
     PDSPCELL(recon->GAlo,GAlo);
     PDSPCELL(recon->GAhi,GAhi);
     PDSPCELL(recon->GA,GA);
@@ -489,10 +489,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo
 	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
-		GAlo[idm][iwfs]=spref(GA[idm][iwfs]);
+		GAlo[idm][iwfs]=dspref(GA[idm][iwfs]);
 	    }
 	    if(!parms->powfs[ipowfs].skip){
-		GAhi[idm][iwfs]=spref(GA[idm][iwfs]);		
+		GAhi[idm][iwfs]=dspref(GA[idm][iwfs]);		
 	    }
 	}
     }
@@ -504,44 +504,44 @@ static void
 setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
-    recon->GX=spcellnew(nwfs, npsr);
+    recon->GX=dspcellnew(nwfs, npsr);
     PDSPCELL(recon->GX,GX);
     PDSPCELL(recon->HXW,HXW);
     info2("Generating GX ");TIC;tic;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc */
 	for(int ips=0; ips<npsr; ips++){
-	    GX[ips][iwfs]=spmulsp(recon->GP2->p[iwfs], HXW[ips][iwfs]);
+	    GX[ips][iwfs]=dspmulsp(recon->GP2->p[iwfs], HXW[ips][iwfs]);
 	}/*ips */
     }
     toc2(" ");
-    spcellfree(recon->GXlo);
-    spcellfree(recon->GXtomo);
-    spcellfree(recon->GXfocus);
+    dspcellfree(recon->GXlo);
+    dspcellfree(recon->GXtomo);
+    dspcellfree(recon->GXfocus);
     
-    recon->GXtomo=spcellnew(recon->GX->nx, recon->GX->ny);
+    recon->GXtomo=dspcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXtomo,GXtomo);
 
-    recon->GXlo=spcellnew(recon->GX->nx, recon->GX->ny);
+    recon->GXlo=dspcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXlo, GXlo);
 
-    recon->GXfocus=spcellnew(recon->GX->nx, recon->GX->ny);
+    recon->GXfocus=dspcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXfocus,GXfocus);
     int nlo=parms->nlopowfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	for(int ips=0; ips<npsr; ips++){
 	    if(!parms->powfs[ipowfs].skip){/*for tomography */
-		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
+		GXtomo[ips][iwfs]=dspref(GX[ips][iwfs]);
 	    }
 	    if(parms->powfs[ipowfs].lo 
 	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
 		/*for low order wfs or extracted t/t for high order ngs wfs.*/
-		GXlo[ips][iwfs]=spref(GX[ips][iwfs]);
+		GXlo[ips][iwfs]=dspref(GX[ips][iwfs]);
 	    }
 	    /*for focus tracking. */
 	    if(parms->dbg.deltafocus){
-		GXfocus[ips][iwfs]=spref(GX[ips][iwfs]);
+		GXfocus[ips][iwfs]=dspref(GX[ips][iwfs]);
 		if(!GX[ips][iwfs]){
 		    warning("GX[%d][%d] should not be empty\n", ips, iwfs);
 		}
@@ -557,12 +557,12 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     const int nwfs=parms->nwfsr;
-    spcellfree(recon->sanea);
-    spcellfree(recon->saneai);
-    spcellfree(recon->saneal);
-    spcell *sanea=recon->sanea=spcellnew(nwfs,nwfs);
-    spcell *saneal=recon->saneal=spcellnew(nwfs,nwfs);
-    spcell *saneai=recon->saneai=spcellnew(nwfs,nwfs);
+    dspcellfree(recon->sanea);
+    dspcellfree(recon->saneai);
+    dspcellfree(recon->saneal);
+    dspcell *sanea=recon->sanea=dspcellnew(nwfs,nwfs);
+    dspcell *saneal=recon->saneal=dspcellnew(nwfs,nwfs);
+    dspcell *saneai=recon->saneai=dspcellnew(nwfs,nwfs);
     info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
@@ -575,11 +575,11 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		error("Supplied NEA is too small\n");
 	    }
 	    /*rad */
-	    saneal->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+	    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 	    dcwpow(nea, 2);/*rad^2 */
-	    sanea->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+	    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 	    dcwpow(nea,-1);/*rad^-2 */
-	    saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+	    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 	    dfree(nea);
 	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
 		 !parms->powfs[ipowfs].phyusenea){
@@ -626,22 +626,22 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    double tmp=neasq/area[i];
 		    neap[0][i]=neap[1][i]=tmp;
 		}
-		sanea->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 		dcwpow(nea, -1);
-		saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 		dcwpow(nea, -0.5);
-		saneal->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 		dfree(nea);
 	    }else{
 		do_ref=1;
 	    }
 	}
 	if(do_ref){
-	    sanea->p[iwfs+iwfs*nwfs] =spref( sanea->p[iwfs0+iwfs0*nwfs]);
-	    saneal->p[iwfs+iwfs*nwfs]=spref(saneal->p[iwfs0+iwfs0*nwfs]);
-	    saneai->p[iwfs+iwfs*nwfs]=spref(saneai->p[iwfs0+iwfs0*nwfs]);
+	    sanea->p[iwfs+iwfs*nwfs] =dspref( sanea->p[iwfs0+iwfs0*nwfs]);
+	    saneal->p[iwfs+iwfs*nwfs]=dspref(saneal->p[iwfs0+iwfs0*nwfs]);
+	    saneai->p[iwfs+iwfs*nwfs]=dspref(saneai->p[iwfs0+iwfs0*nwfs]);
 	}else{
-	    spscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
+	    dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
 	}
     }/*iwfs */
     
@@ -652,7 +652,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
 	const int nsa=powfs[ipowfs].pts->nsa;
-	dmat *sanea_iwfs=spdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
+	dmat *sanea_iwfs=dspdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	double area_thres;
 	if(nsa>4){
 	    area_thres=0.9*parms->powfs[ipowfs].safill2d;
@@ -676,12 +676,12 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    ){
 	    //Neglecting WFS whos NEA is greater than twice pixel size in
 	    //physical optics mode.
-	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
-	    recon->saneai->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
-	    spfree(recon->saneal->p[iwfs+iwfs*parms->nwfsr]);
-	    recon->saneal->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
-	    spfree(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
-	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL, pixtheta*1e4);
+	    dspfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->saneai->p[iwfs+iwfs*parms->nwfsr]=dspnewdiag(nsa*2,NULL,0);
+	    dspfree(recon->saneal->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->saneal->p[iwfs+iwfs*parms->nwfsr]=dspnewdiag(nsa*2,NULL,0);
+	    dspfree(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=dspnewdiag(nsa*2,NULL, pixtheta*1e4);
 	    recon->neam->p[iwfs]=INFINITY;
 	}
 	char *neatype;
@@ -706,9 +706,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     recon->neamhi=sqrt(neamhi/counthi);
     info2("\n");
     if(parms->save.setup){
-	spcellwrite(recon->sanea, "%s/sanea",dirsetup);
-	spcellwrite(recon->saneal,"%s/saneal",dirsetup);
-	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
+	dspcellwrite(recon->sanea, "%s/sanea",dirsetup);
+	dspcellwrite(recon->saneal,"%s/saneal",dirsetup);
+	dspcellwrite(recon->saneai,"%s/saneai",dirsetup);
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
@@ -857,10 +857,10 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     free_cxx(recon);
     if(parms->tomo.assemble){
 	/*We need the old copy of L2 when we update the turbulence profile. */
-	spcellfree(recon->L2save);
+	dspcellfree(recon->L2save);
 	recon->L2save=recon->L2;
     }else{
-	spcellfree(recon->L2);
+	dspcellfree(recon->L2);
     }
     recon->L2=NULL;
     /*When layers get a weight less than 1%, we put it at 1% to avoid
@@ -873,12 +873,12 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     /*test_cxx(recon, parms); */
     if(parms->tomo.cxx==0){
 	if(parms->load.cxx){
-	    recon->L2=spcellread("%s",parms->load.cxx);
+	    recon->L2=dspcellread("%s",parms->load.cxx);
 	    if(recon->L2->nx!=npsr || recon->L2->ny!=npsr){
 		error("Wrong format of loaded L2\n");
 	    }
 	}else{
-	    recon->L2=spcellnew(npsr,npsr);
+	    recon->L2=dspcellnew(npsr,npsr);
 	    for(int ips=0; ips<npsr; ips++){
 		if(parms->tomo.square){/*periodic bc */
 		    recon->L2->p[ips+npsr*ips]=mklaplacian_map
@@ -893,9 +893,9 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	if(parms->save.setup){
-	    spcellwrite(recon->L2, "%s/L2",dirsetup);
+	    dspcellwrite(recon->L2, "%s/L2",dirsetup);
 	}
-	spcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
+	dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
     }
     if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
 	recon->invpsd=calloc(1, sizeof(INVPSD_T));
@@ -947,8 +947,8 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     if(parms->tomo.piston_cr){
 	/*when add constraint, make sure the order of
 	  magnitude are at the same range.*/
-	spcellfree(recon->ZZT);
-	recon->ZZT=spcellnew(npsr,npsr);
+	dspcellfree(recon->ZZT);
+	recon->ZZT=dspcellnew(npsr,npsr);
 	for(int ips=0; ips<npsr; ips++){
 	    double r0=recon->r0;
 	    double dx=recon->xloc->p[ips]->dx;
@@ -959,7 +959,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    int icenter=loccenter(recon->xloc->p[ips]);
 	    int nloc=recon->xloc->p[ips]->nloc;
 	    dsp *ZZT=recon->ZZT->p[ips+npsr*ips]
-		=spnew(nloc,nloc,1);
+		=dspnew(nloc,nloc,1);
 	    int icol;
 	    int count=0;
 	    for(icol=0; icol<nloc; icol++){
@@ -973,9 +973,9 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    ZZT->p[nloc]=count;
 	}
 	if(parms->save.setup){
-	    spcellwrite(recon->ZZT, "%s/ZZT",dirsetup);
+	    dspcellwrite(recon->ZZT, "%s/ZZT",dirsetup);
 	}
-	spcellscale(recon->ZZT, parms->tomo.cxxscale*TOMOSCALE);
+	dspcellscale(recon->ZZT, parms->tomo.cxxscale*TOMOSCALE);
     }
 }
 /**
@@ -1016,14 +1016,14 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.tomo){
 	/*right hand side. */
 	warning("Loading saved recon->RR\n");
-	recon->RR.M=spcellread("RRM");
+	recon->RR.M=dspcellread("RRM");
 	if(recon->has_ttr){
 	    recon->RR.U=dcellread("RRU");
 	    recon->RR.V=dcellread("RRV");
 	}
 	/*Left hand side */
 	warning("Loading saved recon->RL\n");
-	recon->RL.M=spcellread("RLM");
+	recon->RL.M=dspcellread("RLM");
 	recon->RL.U=dcellread("RLU");
 	recon->RL.V=dcellread("RLV");
 	if(parms->tomo.alg==0 && zfexist("RLC")){
@@ -1035,33 +1035,33 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	info2("Building recon->RR\n");
 	PDSPCELL(recon->GX,GX);
-	const spcell *saneai=recon->saneai;
+	const dspcell *saneai=recon->saneai;
 	/*
 	  Reconstruction Right hand side matrix. In split tomography mode, low
 	  order NGS are skipped. recon->GXtomo contains GXs that only
 	  participate in tomography.
 	*/
-	spcell *GXtomoT=spcelltrans(recon->GXtomo);
-	recon->RR.M=spcellmulspcell(GXtomoT, saneai, 1);
+	dspcell *GXtomoT=dspcelltrans(recon->GXtomo);
+	recon->RR.M=dspcellmulspcell(GXtomoT, saneai, 1);
 	PDSPCELL(recon->RR.M, RRM);
 	/*
 	  Tip/tilt and diff focus removal low rand terms for LGS WFS.
 	*/
 	if(recon->TTF){
-	    spcellmulmat(&recon->RR.U, recon->RR.M, recon->TTF, 1);
+	    dspcellmulmat(&recon->RR.U, recon->RR.M, recon->TTF, 1);
 	    recon->RR.V=dcelltrans(recon->PTTF);
 	}
  
 	info2("Building recon->RL\n"); /*left hand side matrix */
-	recon->RL.M=spcellmulspcell(recon->RR.M,recon->GXtomo,1);
+	recon->RL.M=dspcellmulspcell(recon->RR.M,recon->GXtomo,1);
 	PDSPCELL(recon->RL.M,RLM);
 	if(parms->tomo.piston_cr){ 
 	    /*single point piston constraint. no need tikholnov.*/
 	    info2("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
-		spadd(&RLM[ips][ips], recon->ZZT->p[ips+ips*npsr]);
+		dspadd(&RLM[ips][ips], recon->ZZT->p[ips+ips*npsr]);
 	    }
-	    spcellfree(recon->ZZT);
+	    dspcellfree(recon->ZZT);
 	}
 	/*Apply tikholnov regularization.*/
 	if(fabs(parms->tomo.tikcr)>1.e-15){
@@ -1070,18 +1070,18 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double tikcr=parms->tomo.tikcr;
 	    info2("Adding tikhonov constraint of %g to RLM\n",tikcr);
 	    info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	    spcelladdI(recon->RL.M, tikcr*maxeig);
+	    dspcelladdI(recon->RL.M, tikcr*maxeig);
 	}
 	/*add L2 and ZZT */
 	switch(parms->tomo.cxx){
 	case 0:/*Add L2'*L2 to RL.M */
 	    for(int ips=0; ips<npsr; ips++){
-		dsp* tmp=sptmulsp(recon->L2->p[ips+npsr*ips], recon->L2->p[ips+npsr*ips]);
+		dsp* tmp=dsptmulsp(recon->L2->p[ips+npsr*ips], recon->L2->p[ips+npsr*ips]);
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
-		spadd(&RLM[ips][ips], tmp);
-		spfree(tmp);
+		dspadd(&RLM[ips][ips], tmp);
+		dspfree(tmp);
 	    }
 	    break;
 	case 1:/*Need to apply invpsd separately */
@@ -1094,7 +1094,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 
 	/*Symmetricize, remove values below 1e-15*max and sort RLM (optional). */
-	/*spcellsym(recon->RL.M); */
+	/*dspcellsym(recon->RL.M); */
 
 	/*Low rank terms for low order wfs. Only in Integrated tomography. */
 	dcell *ULo=dcellnew(npsr,nwfs);
@@ -1108,15 +1108,15 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    if(parms->powfs[ipowfs].lo){
 		for(int ips=0; ips<npsr; ips++){
-		    spfull(&pULo[iwfs][ips], RRM[iwfs][ips],-1);
-		    sptfull(&pVLo[iwfs][ips], GX[ips][iwfs],1);
+		    dspfull(&pULo[iwfs][ips], RRM[iwfs][ips],-1);
+		    dsptfull(&pVLo[iwfs][ips], GX[ips][iwfs],1);
 		}
 	    }
 	}
 	if(!parms->recon.split || parms->tomo.splitlrt || parms->recon.split==2){
 	    recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 	    dcell *GPTTDF=NULL;
-	    sptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
+	    dsptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
 	    recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 	    dcellfree(GPTTDF);
 	}else{
@@ -1162,15 +1162,15 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr,nll);
 	if(parms->save.recon){
-	    spcellwrite(recon->RR.M,"%s/RRM",dirsetup);
+	    dspcellwrite(recon->RR.M,"%s/RRM",dirsetup);
 	    dcellwrite(recon->RR.U,"%s/RRU",dirsetup);
 	    dcellwrite(recon->RR.V,"%s/RRV",dirsetup);
 
-	    spcellwrite(recon->RL.M,"%s/RLM.bin",dirsetup);/*disable compression */
+	    dspcellwrite(recon->RL.M,"%s/RLM.bin",dirsetup);/*disable compression */
 	    dcellwrite(recon->RL.U,"%s/RLU",dirsetup);
 	    dcellwrite(recon->RL.V,"%s/RLV",dirsetup); 
 	}
-	spcellfree(GXtomoT);
+	dspcellfree(GXtomoT);
     }
     if((parms->tomo.alg==0 || parms->tomo.alg==2) && parms->tomo.bgs ){
 	/* We need cholesky decomposition in CBS or MVST method. */
@@ -1248,8 +1248,8 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    warning("Overriding sanea\n");
 	    warning("Overriding sanea\n");
 	    warning("Overriding sanea\n");
-	    spcellfree(recon->sanea);
-	    recon->sanea=spcellread("nt");
+	    dspcellfree(recon->sanea);
+	    recon->sanea=dspcellread("nt");
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psfr->p[ievl]) continue;
@@ -1262,7 +1262,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 		const double dispy=parms->evl.thetay->p[ievl]*ht;
 		dsp *HXT=mkhb(recon->xloc->p[ips], aper->locs, NULL,
 			      dispx, dispy, scale, 0, 0);
-		spfull(&hxt->p[ips], HXT, 1); spfree(HXT);
+		dspfull(&hxt->p[ips], HXT, 1); dspfree(HXT);
 	    }
 	    dcell *t1=NULL;
 	    info("CPU Usage: %.1f HXT   ", read_self_cpu()); toc2(" ");tic;
@@ -1274,7 +1274,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
 	    dcell *t2=NULL;
 		
-	    spcellmulmat(&t2, recon->sanea, p, 1); 
+	    dspcellmulmat(&t2, recon->sanea, p, 1); 
 	    dcell *t3=NULL;
 	    dcellmm(&t3, p, t2, "tn", 1);
 	    dcellfree(p); dcellfree(t2);
@@ -1355,18 +1355,18 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 	PDSPCELL(recon->RL.M,RLM);
 	const int npsr=recon->npsr;
 	for(int ips=0; ips<npsr; ips++){
-	    dsp* LL=sptmulsp(recon->L2->p[ips+npsr*ips], 
+	    dsp* LL=dsptmulsp(recon->L2->p[ips+npsr*ips], 
 			     recon->L2->p[ips+npsr*ips]);
-	    dsp *LLold=sptmulsp(recon->L2save->p[ips+npsr*ips], 
+	    dsp *LLold=dsptmulsp(recon->L2save->p[ips+npsr*ips], 
 				recon->L2save->p[ips+npsr*ips]);
 	    if(!LL){
 		error("L2 is empty!!\n");
 	    }
-	    dsp *LLdiff=spadd2(LL,LLold,1,-1);/*adjustment to RLM */
-	    spadd(&RLM[ips][ips], LLdiff);
-	    spfree(LLdiff);
-	    spfree(LL);
-	    spfree(LLold);
+	    dsp *LLdiff=dspadd2(LL,LLold,1,-1);/*adjustment to RLM */
+	    dspadd(&RLM[ips][ips], LLdiff);
+	    dspfree(LLdiff);
+	    dspfree(LL);
+	    dspfree(LLold);
 	}
     }
 
@@ -1414,7 +1414,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
 	dmat *opd=dnew(recon->ploc->nloc,1);
 	loc_add_focus(opd->p, recon->ploc, 1);
-	spmulmat(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 1);
+	dspmulmat(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 1);
 	dfree(opd);
     }
 
@@ -1434,7 +1434,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}else{
 	    continue;
 	}
-	spmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+	dspmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
 		 recon->GFall->p[ipowfs],1);
 	dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
     }
@@ -1455,7 +1455,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *Fsci=dnew(recon->floc->nloc, 1);
 	loc_add_focus(Fsci->p, recon->floc, 1);
 	dmat *WF=NULL;/*WF=(W0-W1*W1')*Fsci*/
-	spmulmat(&WF, recon->W0, Fsci, 1);
+	dspmulmat(&WF, recon->W0, Fsci, 1);
 	dmat *W1F=NULL;
 	dmm(&W1F, 0, recon->W1, Fsci, "tn", 1);
 	dmm(&WF, 1, recon->W1, W1F, "nn", -1);
@@ -1499,7 +1499,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 			    parms->tomo.cubic, parms->tomo.iac);
 	    dmulsp(&recon->RFdfx->p[ips], RFsci, HXF[ips][ifit], 1);
 	    dmulsp(&recon->RFdfx->p[ips], RFsci, HX_TTF, -1);
-	    spfree(HX_TTF);
+	    dspfree(HX_TTF);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const double ht=parms->dm[idm].ht;
@@ -1511,7 +1511,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 			    parms->dm[idm].cubic,parms->dm[idm].iac);
 	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA[idm][ifit], 1);
 	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA_TTF, -1);
-	    spfree(HA_TTF);
+	    dspfree(HA_TTF);
 	}
 	dfree(RFsci);
     }
@@ -1528,7 +1528,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	    continue;
 	dmat *GMtmp=NULL;
 	dmat *GMGtmp=NULL;
-	spmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+	dspmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
 		 recon->GFall->p[ipowfs], 1);
 	dmm(&GMGtmp, 0, recon->GFall->p[ipowfs], GMtmp, "tn",1);
 	dinvspd_inplace(GMGtmp);
@@ -1556,7 +1556,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 
    Definition:
 
-   - \f$G_{lgs}\f$ is LGS gradient operator from xloc, contained in recon->GXtomo as spcell
+   - \f$G_{lgs}\f$ is LGS gradient operator from xloc, contained in recon->GXtomo as dspcell
    - \f$G_{ngs}\f$ is NGS gradient operator from xloc, contained in recon->GXL as dense matrix
    - \f$C_{lgs}, C_{ngs}\f$ is the LGS, and NGS measurement noise covariance matrix.
    - \f$\hat{x}_{lgs}\f$ is LGS tomography output
@@ -1614,16 +1614,16 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     }
  
     dcellfree(recon->GXL);
-    spcellfull(&recon->GXL, recon->GXlo, 1);
+    dspcellfull(&recon->GXL, recon->GXlo, 1);
     //NEA of low order WFS.
     dcell *neailo=dcellnew(parms->nwfsr, parms->nwfsr);
     dcell *nealo=dcellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
-	    spfull(&neailo->p[iwfs*(1+parms->nwfsr)],
+	    dspfull(&neailo->p[iwfs*(1+parms->nwfsr)],
 		   recon->saneai->p[iwfs*(1+parms->nwfsr)], 1);
-	    spfull(&nealo->p[iwfs*(1+parms->nwfsr)],
+	    dspfull(&nealo->p[iwfs*(1+parms->nwfsr)],
 		   recon->sanea->p[iwfs*(1+parms->nwfsr)], 1);
 	}
     }
@@ -1695,7 +1695,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcell *QwQc=NULL;
     {
 	dcell *Q=NULL;/*the NGS modes in ploc. */
-	spcellmulmat(&Q, recon->HA, FUw, 1);
+	dspcellmulmat(&Q, recon->HA, FUw, 1);
 	QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
 	dcellfree(Q);
     }
@@ -1786,7 +1786,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
-    spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
+    dspcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
     dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);
     dcellfree(neailo);
     dcellfree(nealo);
@@ -1797,7 +1797,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcellfree(Uw);
     if(parms->save.setup){
 	dcell *Qn=NULL;
-	spcellmulmat(&Qn, recon->HA, recon->MVModes, 1);
+	dspcellmulmat(&Qn, recon->HA, recon->MVModes, 1);
 	dcell *Qntt=dcellnew(Qn->nx,Qn->ny);
 	dmat *TTploc=loc2mat(recon->floc,1);/*TT mode. need piston mode too! */
 	dmat *PTTploc=dpinv(TTploc,NULL,recon->W0);/*TT projector. no need w1 since we have piston. */
@@ -1838,7 +1838,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     /*
     if(parms->save.setup){
 	dcell *QQ=NULL;
-	spcellmulmat(&QQ, recon->HA, recon->MVModes,1);
+	dspcellmulmat(&QQ, recon->HA, recon->MVModes,1);
 	dcell *MCC=calcWmcc(QQ,QQ,recon->W0,recon->W1,recon->fitwt);
 	dcellwrite(MCC,"%s/mvst_MCC",dirsetup);
     
@@ -1907,7 +1907,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
     if(!parms->sim.idealfit){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
-	spcellfree(recon->HXW);/*only keep HXWtomo for tomography */
+	dspcellfree(recon->HXW);/*only keep HXWtomo for tomography */
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
 	setup_recon_tomo_prep(recon,parms);
@@ -2045,7 +2045,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(!parms->powfs[ipowfs].needGS0 && powfs[ipowfs].GS0){
-	    spcellfree(powfs[ipowfs].GS0);
+	    dspcellfree(powfs[ipowfs].GS0);
 	    powfs[ipowfs].GS0=NULL;
 	}
     }
@@ -2058,16 +2058,16 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
  */
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     if(!recon) return;
-    spcellfree(recon->GWR);
+    dspcellfree(recon->GWR);
     /* Free arrays that will no longer be used after reconstruction setup is done. */
-    spcellfree(recon->sanea); 
-    spcellfree(recon->saneal);
+    dspcellfree(recon->sanea); 
+    dspcellfree(recon->saneal);
     if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
 	/*We no longer need RL.M,U,V */
-	spcellfree(recon->RL.M);
+	dspcellfree(recon->RL.M);
 	dcellfree(recon->RL.U);
 	dcellfree(recon->RL.V);
-	spcellfree(recon->RR.M);
+	dspcellfree(recon->RR.M);
 	dcellfree(recon->RR.U);
 	dcellfree(recon->RR.V);
     }else{
@@ -2075,7 +2075,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->PTTF);
     }
     if(parms->fit.alg!=1 && !parms->fit.bgs){
-	spcellfree(recon->FL.M);
+	dspcellfree(recon->FL.M);
 	dcellfree(recon->FL.U);
 	dcellfree(recon->FL.V);
     }
@@ -2087,33 +2087,33 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     }
 
     if(recon->RR.M){
-	spcellfree(recon->GP);
-	spcellfree(recon->GP2);
+	dspcellfree(recon->GP);
+	dspcellfree(recon->GP2);
     }
 
     /*The following have been used in fit matrix. */
     if(parms->fit.assemble || parms->gpu.fit){
 	dcellfree(recon->fitNW);
-	spcellfree(recon->actslave);
+	dspcellfree(recon->actslave);
     }
     /* when sim.dmproj=1, we need these matrices to use in FR.Mfun*/
     if(recon->FR.M && !parms->sim.dmproj && parms->fit.assemble && !parms->gpu.moao && !parms->sim.ncpa_calib){
-	spfree(recon->W0); 
+	dspfree(recon->W0); 
 	dfree(recon->W1); 
-	spcellfree(recon->HA); 
-	spcellfree(recon->HXF); 
+	dspcellfree(recon->HA); 
+	dspcellfree(recon->HXF); 
     }
     /*
       The following arrys are not used after preparation is done.
     */
-    spcellfree(recon->GX);
-    spcellfree(recon->GXtomo);/*we use HXWtomo instead. faster */
-    spcellfree(recon->GXfocus);
+    dspcellfree(recon->GX);
+    dspcellfree(recon->GXtomo);/*we use HXWtomo instead. faster */
+    dspcellfree(recon->GXfocus);
     if(!(parms->cn2.tomo && parms->recon.split==2)){/*mvst needs GXlo when updating. */
-	spcellfree(recon->GXlo);
+	dspcellfree(recon->GXlo);
     }
     if(parms->tomo.square && !parms->dbg.tomo_hxw && recon->RR.M){
-	spcellfree(recon->HXWtomo);
+	dspcellfree(recon->HXWtomo);
     }
     if(parms->recon.mvm){
 	muv_free(&recon->RR);
@@ -2141,16 +2141,16 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->MVFM);
     dcellfree(recon->MVModes);
     dcellfree(recon->xmcc);
-    spcellfree(recon->GX);
-    spcellfree(recon->GP);
-    spcellfree(recon->GP2);
-    spcellfree(recon->GXfocus);
-    spcellfree(recon->GA); 
-    spcellfree(recon->GAlo);
-    spcellfree(recon->GAhi);
+    dspcellfree(recon->GX);
+    dspcellfree(recon->GP);
+    dspcellfree(recon->GP2);
+    dspcellfree(recon->GXfocus);
+    dspcellfree(recon->GA); 
+    dspcellfree(recon->GAlo);
+    dspcellfree(recon->GAhi);
     dcellfree(recon->GXL);
-    spcellfree(recon->L2);
-    spcellfree(recon->L2save);
+    dspcellfree(recon->L2);
+    dspcellfree(recon->L2save);
     free_cxx(recon);
     dcellfree(recon->TT);
     dcellfree(recon->PTT);
@@ -2169,12 +2169,12 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->RFngsx);
     dcellfree(recon->RFdfx);
     dcellfree(recon->RFdfa);
-    spcellfree(recon->ZZT);
-    spcellfree(recon->HXF); 
-    spcellfree(recon->HXW);
-    spcellfree(recon->HXWtomo);
-    spcellfree(recon->HA); 
-    spfree(recon->W0); 
+    dspcellfree(recon->ZZT);
+    dspcellfree(recon->HXF); 
+    dspcellfree(recon->HXW);
+    dspcellfree(recon->HXWtomo);
+    dspcellfree(recon->HA); 
+    dspfree(recon->W0); 
     dfree(recon->W1); 
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
@@ -2195,7 +2195,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     cellfree(recon->aloc);
     lcellfree(recon->actstuck);
     lcellfree(recon->actfloat);
-    spcellfree(recon->actslave);
+    dspcellfree(recon->actslave);
     dcellfree(recon->actcpl);
     dcellfree(recon->aimcc);/*used in filter.c */
     muv_free(&recon->RR);
@@ -2205,7 +2205,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     muv_free(&recon->LR);
     muv_free(&recon->LL);
     dfree(recon->MVM);
-    spcellfree(recon->saneai);
+    dspcellfree(recon->saneai);
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);

@@ -56,7 +56,7 @@ typedef struct APER_T{
 */
 typedef struct DTF_T{
     ccell *nominal;      /**<The FFT of the pixel functions*/
-    spcell *si;          /**<The pixel selection*/
+    dspcell *si;          /**<The pixel selection*/
     cmat *Ux;            /**<Special frequency vector along x*/
     cmat *Uy;            /**<Special frequency vector along y*/
     int fused;           /**<Whether the DTF has been fused to ETF*/
@@ -111,7 +111,7 @@ typedef struct PYWFS_T{
     locfft_t *locfft;  /**<First fft to form PSF*/
     ccell *pyramid;    /**<OPD of pyramid. Angular size of clear aperture is different*/
     cmat *nominal;     /**<For sampling results onto detector*/
-    spcell *si;           /**<For sampling results onto detector*/
+    dspcell *si;           /**<For sampling results onto detector*/
 }PYWFS_T;
 /**
    contains the data associated with a certain type of WFS. not
@@ -144,7 +144,7 @@ typedef struct POWFS_T{
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
     /*Geometric gradient */
-    spcell *GS0;        /**<gtilt (average gradient) on ampm*/
+    dspcell *GS0;        /**<gtilt (average gradient) on ampm*/
     dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
     /*Matched filter */
@@ -192,7 +192,7 @@ typedef struct NGSMOD_T{
     dcell *Pngs;    /**<Project DM command to NGS modes */
     dcell *Modes;   /**<DM vector for the modes*/
     dcell *Ptt;     /**<Invidual DM tip/tilt removal.*/
-    spcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
+    dspcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahstfocus;  /**<records parms->sim.ahstfocus*/
 }NGSMOD_T;
@@ -224,13 +224,13 @@ typedef struct MOAO_T{
     int used;         /**<Whether this MOAO is used or not*/
     loccell *aloc;      /**<Actuator grid*/
     mapcell *amap;      /**<Points to aloc->map*/
-    spcell *HA;       /**<Propagator from this aloc to PLOC*/
+    dspcell *HA;       /**<Propagator from this aloc to PLOC*/
     dcell *NW;        /**<null modes and constraints*/
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
     dsp *W0;          /**<Weighting matrix on PLOC. same as recon->W0*/
     dcell *actcpl;    /**<actuator coupling factor. 0 means actuator is outside
 			 of FoV and need to be slaved.*/
-    spcell *actslave; /**<Slaving operator for actuators not illuminated*/
+    dspcell *actslave; /**<Slaving operator for actuators not illuminated*/
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     lcell *actstuck;  /**<stuck actuators*/
     lcell *actfloat;  /**<floating actuators*/
@@ -301,49 +301,49 @@ typedef struct RECON_T{
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/
     dmat *fitwt;       /**<fit weighting in each direction.*/
-    spcell *L2;        /**<Laplacian square regularization.*/
-    spcell *L2save;    /**<save old L2 to update the tomography matrix.*/
+    dspcell *L2;        /**<Laplacian square regularization.*/
+    dspcell *L2save;    /**<save old L2 to update the tomography matrix.*/
     INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
     FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
-    spcell *GWR;       /**<gradient of wfs for recon: gtilt or ztilt (on amp) depending on gtype_recon.*/
-    spcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each powfs.*/
-    spcell *GP2;        /**<Gradient operator from HXW. GX=GP*H for each wfs, referenced from GP.*/
-    spcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
-    spcell *HXWtomo;   /**<Like GXtomo*/
-    spcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
-    spcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
-    spcell *GXlo;      /**<GX for low order WFs*/
-    spcell *GXfocus;   /**<GX used for focus tracking.*/
+    dspcell *GWR;       /**<gradient of wfs for recon: gtilt or ztilt (on amp) depending on gtype_recon.*/
+    dspcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each powfs.*/
+    dspcell *GP2;        /**<Gradient operator from HXW. GX=GP*H for each wfs, referenced from GP.*/
+    dspcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
+    dspcell *HXWtomo;   /**<Like GXtomo*/
+    dspcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
+    dspcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
+    dspcell *GXlo;      /**<GX for low order WFs*/
+    dspcell *GXfocus;   /**<GX used for focus tracking.*/
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
     dcell *MVRngs;     /**<NGS recon for MV split tomography*/
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
     dcell *MVGM;       /**<NGS WFS gradient operator from MVST Modes.*/
     dcell *MVFM;       /**<NGS Focus reconstructed from MVST Modes.*/
-    spcell *GA;        /**<actuator to wfs grad.*/
-    spcell *GAlo;      /**<GA of low order WFS.*/
-    spcell *GAhi;      /**<GA of high order WFS.*/
-    spcell *GM;        /**<Mode to wfs grad. Full matrix stored as sparse for compliance with GA*/
-    spcell *GMlo;      /**<GM for low order WFS.*/
-    spcell *GMhi;      /**<GM for high order WFS.*/
-    spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
-    spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
-    spcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
+    dspcell *GA;        /**<actuator to wfs grad.*/
+    dspcell *GAlo;      /**<GA of low order WFS.*/
+    dspcell *GAhi;      /**<GA of high order WFS.*/
+    dspcell *GM;        /**<Mode to wfs grad. Full matrix stored as sparse for compliance with GA*/
+    dspcell *GMlo;      /**<GM for low order WFS.*/
+    dspcell *GMhi;      /**<GM for high order WFS.*/
+    dspcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
+    dspcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
+    dspcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/
     dcell *PDF;        /**<pinv of DF. to use in RTC.*/
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
-    spcell *ZZT;       /**<single point piston constraint in tomography.*/
+    dspcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *fitNW;      /**<null modes for DM fit.*/
     dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
-    spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
-    spcell *actinterp; /**<Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. */
+    dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
+    dspcell *actinterp; /**<Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. */
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
-    spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
-    spcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
-    spcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
+    dspcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
+    dspcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
+    dspcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
     dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/

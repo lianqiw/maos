@@ -20,7 +20,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dmat *W1;
     mkw_circular(loc,0,0,R,&W0,&W1);
     plhs[PL_W0]=dsp2mx(W0);
-    spfree(W0);
+    dspfree(W0);
     plhs[PL_W1]=d2mx(W1);
     dfree(W1);
 }

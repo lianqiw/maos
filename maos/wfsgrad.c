@@ -164,7 +164,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    ctilt2(otf->p[iwvl], fotf->p[isa+nsa*iwvl], gx*dtheta1, gy*dtheta1, 0);
 		    cfft2(otf->p[iwvl], 1);
-		    spmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
+		    dspmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
 		}
 		//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
 		double g[3]={gx+pixthetax*0.1,gy+pixthetay*0.1,1};
@@ -251,7 +251,7 @@ static double mapfun(double *x, mapdata_t *info){
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
-	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
+	dspmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
     }
  
     double sigma=0;
@@ -473,7 +473,7 @@ void wfsgrad_iwfs(thread_t *info){
 		      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    spmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	    dspmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
 	}
 	if(gradcalc->p!=(*gradacc)->p){
 	    dadd(gradacc, 1, gradcalc, 1);

@@ -38,7 +38,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	spint *pp=R_W0->p;
 	spint *pi=R_W0->i;
 	double *px=R_W0->x;
-	dsp *W0new=spnew(R_W0->m, R_W0->n, R_W0->nzmax);
+	dsp *W0new=dspnew(R_W0->m, R_W0->n, R_W0->nzmax);
 	spint *pp2=W0new->p;
 	spint *pi2=W0new->i;
 	double *px2=W0new->x;
@@ -66,7 +66,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	W0new->nzmax=count;
 	W0p=new cusp(W0new, 1);
 	cp2gpu(&W0f, full, count2, 1);
-	spfree(W0new);
+	dspfree(W0new);
 	cudaFreeHost(full);
     }
 }

@@ -26,12 +26,12 @@ static void
 setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.HXF && zfexist(parms->load.HXF)){
 	warning("Loading saved HXF\n");
-	recon->HXF=spcellread("%s",parms->load.HXF);
+	recon->HXF=dspcellread("%s",parms->load.HXF);
     }else{
 	info2("Generating HXF");TIC;tic;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	recon->HXF=spcellnew(nfit, npsr);
+	recon->HXF=dspcellnew(nfit, npsr);
 	PDSPCELL(recon->HXF,HXF);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
@@ -47,7 +47,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	if(parms->save.setup){
-	    spcellwrite(recon->HXF,"%s/HXF",dirsetup);
+	    dspcellwrite(recon->HXF,"%s/HXF",dirsetup);
 	}
 	toc2(" ");
     }
@@ -70,7 +70,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     const int nfit=parms->fit.nfit;
     const int ndm=parms->ndm;
     if(ndm==0) return;
-    spcell *HATc=spcelltrans(recon->HA);
+    dspcell *HATc=dspcelltrans(recon->HA);
     PDSPCELL(HATc, HAT);
     PDSPCELL(recon->HA,HA);
 
@@ -82,25 +82,25 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    error("FRM, FRU, FRV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FR\n");
-	recon->FR.M=spcellread("FRM");
+	recon->FR.M=dspcellread("FRM");
 	recon->FR.U=dcellread("FRU");
 	recon->FR.V=dcellread("FRV");
     }else{
 	if(recon->HXF){
 	    info2("Building recon->FR\n");
-	    recon->FR.M=spcellnew(ndm, npsr);
+	    recon->FR.M=dspcellnew(ndm, npsr);
 	    PDSPCELL(recon->FR.M, FRM);
 	    PDSPCELL(recon->HXF, HXF);
 
 	    for(int ips=0; ips<npsr; ips++){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		    dsp *tmp=spmulsp(recon->W0, HXF[ips][ifit]);
+		    dsp *tmp=dspmulsp(recon->W0, HXF[ips][ifit]);
 		    for(int idm=0; idm<ndm; idm++){
-			spmulsp2(&FRM[ips][idm],HAT[ifit][idm], tmp, 
+			dspmulsp2(&FRM[ips][idm],HAT[ifit][idm], tmp, 
 				 recon->fitwt->p[ifit]);
 		    }
-		    spfree(tmp);
+		    dspfree(tmp);
 		}
 	    }
 	    recon->FR.V=dcellnew(npsr, 1);
@@ -112,13 +112,13 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    /*notice the sqrt. */
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		    sptmulvec(FRV[ips]->p+ifit*nloc, 
+		    dsptmulvec(FRV[ips]->p+ifit*nloc, 
 			      HXF[ips][ifit], recon->W1->p, 
 			      sqrt(recon->fitwt->p[ifit]));
 		}
 	    }
 	    if(parms->save.recon){
-		spcellwrite(recon->FR.M,"%s/FRM",dirsetup);
+		dspcellwrite(recon->FR.M,"%s/FRM",dirsetup);
 		dcellwrite(recon->FR.V,"%s/FRV",dirsetup);
 	    }
 	}else{
@@ -136,7 +136,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		/*notice the sart. */
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		sptmulvec(FRU[idm]->p+ifit*nloc, 
+		dsptmulvec(FRU[idm]->p+ifit*nloc, 
 			  HA[idm][ifit], recon->W1->p,
 			  sqrt(recon->fitwt->p[ifit]));
 	    }
@@ -151,25 +151,25 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    error("FLM, FLU, FLV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FL\n");
-	recon->FL.M=spcellread("FLM");
+	recon->FL.M=dspcellread("FLM");
 	recon->FL.U=dcellread("FLU");
 	recon->FL.V=dcellread("FLV");
     }else{
 	info2("Building recon->FL\n");
-	recon->FL.M=spcellnew(ndm, ndm);
+	recon->FL.M=dspcellnew(ndm, ndm);
 	dsp *(*FLM)[ndm]=(dsp*(*)[ndm])recon->FL.M->p;
 	for(int idm=0; idm<ndm; idm++){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		dsp *tmp=spmulsp(recon->W0, HA[idm][ifit]);
+		dsp *tmp=dspmulsp(recon->W0, HA[idm][ifit]);
 		for(int jdm=0; jdm<ndm; jdm++){
-		    spmulsp2(&FLM[idm][jdm],HAT[ifit][jdm], tmp,
+		    dspmulsp2(&FLM[idm][jdm],HAT[ifit][jdm], tmp,
 			     recon->fitwt->p[ifit]);
 		}
-		spfree(tmp);
+		dspfree(tmp);
 	    }
 	}
-	spcellfree(HATc);
+	dspcellfree(HATc);
 	if(fabs(parms->fit.tikcr)>1.e-15){
 	    double tikcr=parms->fit.tikcr;
 	    /*Estimated from the formula.  1/nloc is due to W0, the other
@@ -181,7 +181,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double maxeig=4./nact;
 	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
 	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
-	    spcelladdI(recon->FL.M,tikcr*maxeig);
+	    dspcelladdI(recon->FL.M,tikcr*maxeig);
 	}
 
 	{/*Low rank terms. */
@@ -192,13 +192,13 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcellfree(tmp);
 	}
 	if(recon->actslave){
-	    spcelladd(&recon->FL.M, recon->actslave);
+	    dspcelladd(&recon->FL.M, recon->actslave);
 	}
-	/*spcellsym(recon->FL.M); */
+	/*dspcellsym(recon->FL.M); */
 	info2("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",
 	      recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
 	if(parms->save.recon){
-	    spcellwrite(recon->FL.M,"%s/FLM.bin",dirsetup);
+	    dspcellwrite(recon->FL.M,"%s/FLM.bin",dirsetup);
 	    dcellwrite(recon->FL.U,"%s/FLU",dirsetup);
 	    dcellwrite(recon->FL.V,"%s/FLV",dirsetup);
 	}

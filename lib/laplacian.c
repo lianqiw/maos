@@ -70,7 +70,7 @@ void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight,
 /**
    build laplacian on square map using periodic conditions*/
 dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
-    dsp *L2=spnew(nx*ny,nx*ny,nx*ny*5);
+    dsp *L2=dspnew(nx*ny,nx*ny,nx*ny*5);
     int iy,ix;
     spint *pp=L2->p;
     spint *pi=L2->i;
@@ -93,8 +93,8 @@ dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
 	}
     }
     *(pp++)=px-px0;
-    dsp *L2r=sptrans(L2);
-    spfree(L2);
+    dsp *L2r=dsptrans(L2);
+    dspfree(L2);
     return L2r;
 }
 /**
@@ -119,7 +119,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     loc_create_map(loc);
     map_t *map=loc->map;
     dsp *L2;
-    L2=spnew(loc->nloc,loc->nloc,loc->nloc*5);
+    L2=dspnew(loc->nloc,loc->nloc,loc->nloc*5);
     int ix,iy;
     spint *pp=L2->p;
     spint *pi=L2->i;
@@ -227,8 +227,8 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     if(px-px0 > L2->nzmax){
 	error("Over flow happened\n");
     }
-    spsetnzmax(L2,px-px0);
-    dsp *L2r=sptrans(L2);
-    spfree(L2);
+    dspsetnzmax(L2,px-px0);
+    dsp *L2r=dsptrans(L2);
+    dspfree(L2);
     return L2r;
 }

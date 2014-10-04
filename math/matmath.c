@@ -862,7 +862,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	X(mat) *y=*yout;
 	assert(x->nx==y->nx && x->ny==A->m);
 	if(x->nx==1){
-	    Y(sptmulvec)(y->p, A, x->p, alpha);
+	    X(sptmulvec)(y->p, A, x->p, alpha);
 	}else{
 	    int jcol;
 	    PMAT(y,Y); PMAT(x,X);
@@ -1634,7 +1634,7 @@ int X(cellclip)(X(cell) *Ac, R min, R max){
   \f$C0+=A*B*alpha\f$.
 */
 
-void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, R alpha){
+void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha){
     if(!A || !B) return;
     int ax, az;
     int nx,ny,nz;

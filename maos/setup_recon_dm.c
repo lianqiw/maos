@@ -59,7 +59,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 	    error("W0 or W1 not exist\n");
 	}
 	warning("Loading W0, W1");
-	recon->W0=spread("W0");
+	recon->W0=dspread("W0");
 	recon->W1=dread("W1");
     }else{
 	/*
@@ -77,7 +77,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 		    &(recon->W0), &(recon->W1));
     }
     if(parms->save.setup){
-	spwrite(recon->W0, "%s/W0",dirsetup);
+	dspwrite(recon->W0, "%s/W0",dirsetup);
 	dwrite(recon->W1, "%s/W1",dirsetup);
     }
     if(parms->save.setup){
@@ -228,11 +228,11 @@ static void
 setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.HA && zfexist(parms->load.HA)){
 	warning("Loading saved HA\n");
-	recon->HA=spcellread("%s",parms->load.HA);
+	recon->HA=dspcellread("%s",parms->load.HA);
     }else{
 	const int nfit=parms->fit.nfit;
 	const int ndm=parms->ndm;
-	recon->HA=spcellnew(nfit, ndm);
+	recon->HA=dspcellnew(nfit, ndm);
 	PDSPCELL(recon->HA,HA);
 	info2("Generating HA ");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
@@ -258,14 +258,14 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	toc2(" ");
     }
     if(parms->save.setup){
-	spcellwrite(recon->HA,"%s/HA",dirsetup);
+	dspcellwrite(recon->HA,"%s/HA",dirsetup);
     }
     recon->actcpl=genactcpl(recon->HA, recon->W1);
     if(recon->actstuck){
 	warning2("Apply stuck actuators to HA\n");
 	act_stuck(recon->aloc, recon->HA, NULL, recon->actstuck);
     	if(parms->save.setup){
-	    spcellwrite(recon->HA,"%s/HA_stuck",dirsetup);
+	    dspcellwrite(recon->HA,"%s/HA_stuck",dirsetup);
 	}
     }
     if(recon->actfloat){
@@ -273,17 +273,17 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
 	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
 	if(parms->save.setup){
-	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
+	    dspcellwrite(recon->HA,"%s/HA_float",dirsetup);
 	}
     }
     if(parms->fit.actinterp){
 	warning2("Apply slaving actuator operation\n");
-	spcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
-	spcelladd(&recon->actinterp, interp2);
-	spcellfree(interp2);
+	dspcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
+	dspcelladd(&recon->actinterp, interp2);
+	dspcellfree(interp2);
     }
     if(parms->save.setup && recon->actinterp){
-	spcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
+	dspcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
     }
 }
 
@@ -386,7 +386,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	toc("slaving");
 	if(parms->save.setup){
 	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
-	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);
+	    dspcellwrite(recon->actslave,"%s/actslave",dirsetup);
 	}
     }
     if(parms->save.setup){

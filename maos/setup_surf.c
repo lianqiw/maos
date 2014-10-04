@@ -348,7 +348,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
 	}
     }
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-    sptcellmulmat_thread(xout, recon->HA_ncpa, xp, 1);
+    dsptcellmulmat_thread(xout, recon->HA_ncpa, xp, 1);
     dcellfree(xp);
 }
 void FitL_NCPA(dcell **xout, const void *A, 
@@ -356,21 +356,21 @@ void FitL_NCPA(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     dcell *xp=NULL;
-    spcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
+    dspcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-    sptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
+    dsptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
     dcellfree(xp);xp=NULL;
     /*dcellmm(&xp,recon->fitNW, xin, "tn", 1);
     dcellmm(xout,recon->fitNW, xp, "nn", alpha);
     dcellfree(xp);
     if(recon->actslave){
-	spcellmulmat(xout, recon->actslave, xin, 1);
+	dspcellmulmat(xout, recon->actslave, xin, 1);
 	}*/
 }
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
-    recon->HA_ncpa=spcellnew(nevl, ndm);
+    recon->HA_ncpa=dspcellnew(nevl, ndm);
     PDSPCELL(recon->HA_ncpa,HA);
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
@@ -391,7 +391,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     }
     toc2(" ");
     if(parms->save.setup){
-	spcellwrite(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
+	dspcellwrite(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
     }
 }
 void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
@@ -579,7 +579,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
 	    dcellfree(rhs);
 	    dcellwrite(recon->dm_ncpa, "dm_ncpa");
-	    spcellfree(recon->HA_ncpa);
+	    dspcellfree(recon->HA_ncpa);
 	}
 	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
 	/* to do 

@@ -88,14 +88,14 @@ static void psfiris_do(thread_t *info){
     double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(ncomp*ncomp);
     if(npix>0){
 	ccell *dtf=NULL;
-	spcell *si=NULL;
+	dspcell *si=NULL;
 	mkdtf(&dtf, &si, ncomp, ncomp, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, NULL);
 	ccwm(otf, dtf->p[0]);
 	cfft2(otf,-1);
 	output->p[ipsf]=dnew(npix, npix);
-	spmulcreal(output->p[ipsf]->p, si->p[0], otf->p, impst/sumpsf);
+	dspmulcreal(output->p[ipsf]->p, si->p[0], otf->p, impst/sumpsf);
 	ccellfree(dtf);
-	spcellfree(si);
+	dspcellfree(si);
     }else{
 	cfft2(otf, -1);
 	cfftshift(otf);

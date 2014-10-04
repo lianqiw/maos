@@ -88,33 +88,29 @@
 
 #define AOS_LMAT(A) l##A
 #define AOS_CMAT(A) c##A
-#define AOS_CSP(A)  c##A
 #define AOS_DMAT(A) d##A
-#define AOS_DSP(A)  A
-#define AOS_SSP(A)  s##A
 #define AOS_SMAT(A) s##A
 #define AOS_ZMAT(A) z##A
-#define AOS_ZSP(A)  z##A
 
 //#ifdef USE_SINGLE
 //Single
 AOS_MAT_DEF(AOS_SMAT,float)
 AOS_MAT_DEF(AOS_ZMAT,fcomplex)
 
-AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,AOS_SSP,float,float)
-AOS_MATMATH_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
+AOS_MATMATH_DEF(AOS_SMAT,AOS_SMAT,float,float)
+AOS_MATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float)
 
-AOS_CMATMATH_DEF(AOS_ZMAT,AOS_SMAT,AOS_ZSP,fcomplex,float)
+AOS_CMATMATH_DEF(AOS_ZMAT,AOS_SMAT,fcomplex,float)
 
 AOS_MATBIN_DEF(AOS_SMAT,float)
 AOS_MATBIN_DEF(AOS_ZMAT,fcomplex)
 
 
-AOS_SP_DEF(AOS_SMAT,AOS_SSP,float,float,fcomplex)
-AOS_SP_DEF(AOS_ZMAT,AOS_ZSP,fcomplex,float,fcomplex)
+AOS_SP_DEF(AOS_SMAT,float,float,fcomplex)
+AOS_SP_DEF(AOS_ZMAT,fcomplex,float,fcomplex)
 
-AOS_SPBIN_DEF(AOS_SMAT,AOS_SSP,float)
-AOS_SPBIN_DEF(AOS_ZMAT,AOS_ZSP,fcomplex)
+AOS_SPBIN_DEF(AOS_SMAT,float)
+AOS_SPBIN_DEF(AOS_ZMAT,fcomplex)
 
 AOS_FFT_DEF(AOS_SMAT)
 AOS_FFT_DEF(AOS_ZMAT)
@@ -123,19 +119,19 @@ AOS_FFT_DEF(AOS_ZMAT)
 AOS_MAT_DEF(AOS_DMAT,double)
 AOS_MAT_DEF(AOS_CMAT,dcomplex)
 
-AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,AOS_DSP,double,double)
-AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
+AOS_MATMATH_DEF(AOS_DMAT,AOS_DMAT,double,double)
+AOS_MATMATH_DEF(AOS_CMAT,AOS_DMAT,dcomplex,double)
 
-AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
+AOS_CMATMATH_DEF(AOS_CMAT,AOS_DMAT,dcomplex,double)
 
 AOS_MATBIN_DEF(AOS_DMAT,double)
 AOS_MATBIN_DEF(AOS_CMAT,dcomplex)
 
-AOS_SP_DEF(AOS_DMAT,AOS_DSP,double,double,dcomplex)
-AOS_SP_DEF(AOS_CMAT,AOS_CSP,dcomplex,double,dcomplex)
+AOS_SP_DEF(AOS_DMAT,double,double,dcomplex)
+AOS_SP_DEF(AOS_CMAT,dcomplex,double,dcomplex)
 
-AOS_SPBIN_DEF(AOS_DMAT,AOS_DSP,double)
-AOS_SPBIN_DEF(AOS_CMAT,AOS_CSP,dcomplex)
+AOS_SPBIN_DEF(AOS_DMAT,double)
+AOS_SPBIN_DEF(AOS_CMAT,dcomplex)
 
 AOS_FFT_DEF(AOS_DMAT)
 AOS_FFT_DEF(AOS_CMAT)

@@ -380,19 +380,19 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    cfft2plan(psd,-1);
 	    dsp *L2;
 	    if(parms->tomo.square){
-		L2=spref(recon->L2->p[ips+nps*ips]);
+		L2=dspref(recon->L2->p[ips+nps*ips]);
 	    }else{/*L2 is for non square xloc. need to build L2 for square xloc. */
 		L2=mklaplacian_map(nx[ips], ny[ips],
 				   recon->xloc->p[ips]->dx, recon->r0,
 				   recon->wt->p[ips]);
-		spscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
+		dspscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	    }
-	    dsp *tmp=sptmulsp(L2, L2);
-	    spfree(L2);
+	    dsp *tmp=dsptmulsp(L2, L2);
+	    dspfree(L2);
 	    for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){/*first column of tmp to psf. */
 		psd->p[tmp->i[irow]]=tmp->x[irow];
 	    }
-	    spfree(tmp);
+	    dspfree(tmp);
 	    cfft2(psd,-1);
 	    cfftshift(psd);
 	    /*look for a way to obtain this automatically. */

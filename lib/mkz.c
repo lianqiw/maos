@@ -52,8 +52,8 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     double *amploc=NULL;
     if(amp) amploc=calloc(nmax,sizeof(double));
 
-    dsp*zax=spnew(xloc->nloc,nsa,xloc->nloc);
-    dsp*zay=spnew(xloc->nloc,nsa,xloc->nloc);
+    dsp*zax=dspnew(xloc->nloc,nsa,xloc->nloc);
+    dsp*zay=dspnew(xloc->nloc,nsa,xloc->nloc);
     long xcount=0,ycount=0;
     spint *xpp=zax->p;
     spint *xpi=zax->i;
@@ -116,11 +116,11 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     locfree(sloc);
     free(ind);
 
-    spsetnzmax(zax,xcount);
-    spsetnzmax(zay,ycount);
-    dsp*ZAT=spcat(zax,zay,1);
-    spfree(zax);
-    spfree(zay);
+    dspsetnzmax(zax,xcount);
+    dspsetnzmax(zay,ycount);
+    dsp*ZAT=dspcat(zax,zay,1);
+    dspfree(zax);
+    dspfree(zay);
     if(amp) free(amploc);
     return ZAT;
 }
@@ -132,7 +132,7 @@ dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc,
 	 int saorc, double scale, double dispx, double dispy)
 {
     dsp *zt=mkzt(xloc,amp,saloc,saorc,scale,dispx, dispy);
-    dsp *z=sptrans(zt);
-    spfree(zt);
+    dsp *z=dsptrans(zt);
+    dspfree(zt);
     return z;
 }

@@ -39,9 +39,9 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
     if(A->M){
 	if(!xin) return;
 	if(xin->ny>1){
-	    spcellmulmat_thread(xout, A->M, xin, alpha);
+	    dspcellmulmat_thread(xout, A->M, xin, alpha);
 	}else{
-	    spcellmulmat(xout, A->M, xin, alpha);
+	    dspcellmulmat(xout, A->M, xin, alpha);
 	}
 	if(A->U && A->V){
 	    dcell *tmp=NULL;
@@ -65,9 +65,9 @@ void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha
     if(A->M){
 	if(!xin) return;
 	if(xin->ny>1){
-	    sptcellmulmat_thread(xout, A->M, xin, alpha);
+	    dsptcellmulmat_thread(xout, A->M, xin, alpha);
 	}else{
-	    sptcellmulmat(xout, A->M, xin, alpha);
+	    dsptcellmulmat(xout, A->M, xin, alpha);
 	}
 	if(A->U && A->V){
 	    dcell *tmp=NULL;
@@ -89,13 +89,13 @@ void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha
    Apply the sparse plus low rank computation to xin with scaling of alpha to
    sparse cell array. \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.
  */
-void muv_sp(dcell **xout, const void *B, const spcell *xin, const double alpha){
+void muv_sp(dcell **xout, const void *B, const dspcell *xin, const double alpha){
     const MUV_T *A=B;
     if(!A->M) error("Not implemented\n");
     if(!xin) return;
-    spcell *xout2=spcellmulspcell(A->M, xin, 1);
-    spcellfull(xout, xout2, alpha);
-    spcellfree(xout2);
+    dspcell *xout2=dspcellmulspcell(A->M, xin, 1);
+    dspcellfull(xout, xout2, alpha);
+    dspcellfree(xout2);
     if(A->U && A->V){
 	dcell *tmp=NULL;
 	dcell *VT=dcelltrans(A->V);
@@ -131,7 +131,7 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     if(!*xout){
 	*xout=dcellnew(A->M->nx, xin->ny);
     }
-    spmulmat(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], alpha);
+    dspmulmat(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], alpha);
     if(A->V && A->U){
 	PDCELL(A->V, AV);
 	PDCELL(A->U, AU);
@@ -197,10 +197,10 @@ void muv_direct_prep(MUV_T *A, double svd){
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
     TIC;tic;
     muv_direct_free(A);
-    dsp *muvM=spcell2sp(A->M);
+    dsp *muvM=dspcell2sp(A->M);
     info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->m, muvM->n);
     if(use_svd){/*Do SVD */
-	spfull(&A->MI, muvM, 1);
+	dspfull(&A->MI, muvM, 1);
 	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, svd);
 	}else{/*use a threshold good for lsr. */
@@ -209,7 +209,7 @@ void muv_direct_prep(MUV_T *A, double svd){
     }else{/*Do Cholesky decomposition. */
 	A->C=chol_factorize(muvM);
     }
-    spfree(muvM);
+    dspfree(muvM);
     if(A->U && A->V){
 	dmat *U=dcell2m(A->U);
 	dmat *V=dcell2m(A->V);
@@ -255,7 +255,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 	dsp *muvM=A->M->p[ib+ib*nb];
 	if(use_svd){
-	    spfull(&A->MIB->p[ib], muvM, 1);
+	    dspfull(&A->MIB->p[ib], muvM, 1);
 	    if(svd<1){
 		dsvd_pow(A->MIB->p[ib], -1, svd);
 	    }else{
@@ -328,12 +328,12 @@ void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
 	dfree(x1);
     }else{
 	dsp *x1=chol_spsolve(A->C, xin);
-	dsp *x1t=sptrans(x1); 
-	spfree(x1);
+	dsp *x1t=dsptrans(x1); 
+	dspfree(x1);
 	dsp *x2=chol_spsolve(A->C, x1t);
-	spfree(x1t);
-	xout=sptrans(x2); 
-	spfree(x2);
+	dspfree(x1t);
+	xout=dsptrans(x2); 
+	dspfree(x2);
     }
     return xout;
 }
@@ -501,7 +501,7 @@ void muv_direct_diag_free(MUV_T *A){
    Free MUV_T struct
 */
 void muv_free(MUV_T *A){
-    spcellfree(A->M);
+    dspcellfree(A->M);
     dcellfree(A->U);
     dcellfree(A->V);
     if(A->extra){

@@ -500,17 +500,17 @@ static void test_accuracy(void){
 	    dsp *hfor=mkh(locin, loc, NULL,displacex, displacey, scale,0,0);
 	    toc("mkh\t\t\t");
 	    tic;
-	    spmulvec(phi_h,hfor, screen->p, -1);
+	    dspmulvec(phi_h,hfor, screen->p, -1);
 	    toc("mul h\t\t");
-	    spwrite(hfor, "accphi_hfor");
-	    spfree(hfor);
+	    dspwrite(hfor, "accphi_hfor");
+	    dspfree(hfor);
 	    dsp *hforcubic;
 	    tic;
 	    hforcubic=mkh(locin, loc, NULL, displacex, displacey, scale, 1, cubic);
 	    toc("mkh cubic \t\t");
-	    spwrite(hforcubic, "accphi_cub_hfor");
+	    dspwrite(hforcubic, "accphi_cub_hfor");
 	    tic;
-	    spmulvec(phi_cubh, hforcubic,screen->p,-1);
+	    dspmulvec(phi_cubh, hforcubic,screen->p,-1);
 	    toc("cubic mul h\t\t");
 	    double diffc12=0,diff45=0,diff46=0,diff47=0;
 	    for(ii=0; ii<loc->nloc; ii++){

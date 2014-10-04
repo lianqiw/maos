@@ -38,7 +38,7 @@ void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
     }
     int pos=(int)round(saloc->dx/ploc->dx);
     if(pos==1 || pos==2){//normally true
-	dsp *GPt=sptrans(GP);
+	dsp *GPt=dsptrans(GP);
 	const spint *pp=GPt->p;
 	const spint *pi=GPt->i;
 	const double *px=GPt->x;
@@ -80,7 +80,7 @@ void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
 		}
 	    }
 	}
-	spfree(GPt);
+	dspfree(GPt);
 	*GPp=new cumat<short2>(np, nsa);
 	cudaMemcpy((*GPp)->p, partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
 	*GPscale=1./pxscale;

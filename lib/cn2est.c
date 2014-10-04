@@ -219,7 +219,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     cn2est->iPnk=dcellnew(nwfspair,nwfspair);
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
-    cn2est->wtconvert=spcellnew(1,nwfspair);
+    cn2est->wtconvert=dspcellnew(1,nwfspair);
     cn2est->l0=l0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
@@ -500,7 +500,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     }
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
     dcellzero(cn2est->wtrecon);
-    spcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
+    dspcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
     /*only 1 cell. norm to sum to 1. */
     normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){

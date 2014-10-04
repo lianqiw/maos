@@ -50,7 +50,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
     }else{
 	constamp=1./(double)nloc;
     }
-    *W0=spnew(nloc,nloc,9*nloc);
+    *W0=dspnew(nloc,nloc,9*nloc);
     loc_create_map(loc);
     map_t *map=loc->map;
     const double ox=map->ox;
@@ -148,7 +148,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	W1p[iloc]=wt2;
     }/*iloc */
     W0p[nloc]=count;
-    spsetnzmax(*W0,count);
+    dspsetnzmax(*W0,count);
     double sumW1=dsum(*W1);
     if(fabs(sumW1-1)>1.e-12){
 	double sc=1./sumW1;
@@ -367,7 +367,7 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		  dsp **W0,  /**<[out] sparse W0*/
 		  dmat **W1  /**<[out] dense  W1*/){
     long nloc=loc->nloc;
-    *W0=spnew(nloc,nloc,9*nloc);
+    *W0=dspnew(nloc,nloc,9*nloc);
     loc_create_map(loc);
     map_t *map=loc->map;
     const double ox=map->ox;
@@ -425,7 +425,7 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 	W1p[iloc]=wt2*sc;
     }/*iloc */
     W0p[nloc]=count;
-    spsetnzmax(*W0,count);
+    dspsetnzmax(*W0,count);
     double sumW1=dsum(*W1);
     if(fabs(sumW1-1)>1.e-12){
 	sc=1./sumW1;
@@ -472,10 +472,10 @@ void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
 	double sc=1./dsum(*W1);
 	dscale(*W1, sc);
 	/*cancel the factor applied in mkw_circular and apply the new factor */
-	*W0 = spadd2(W0o, W0i, sc/sco, -sc/sci);
+	*W0 = dspadd2(W0o, W0i, sc/sco, -sc/sci);
 
-	spfree(W0o);
-	spfree(W0i);
+	dspfree(W0o);
+	dspfree(W0i);
 	dfree(W1i);
     }
 }

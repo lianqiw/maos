@@ -50,8 +50,8 @@ dsp* mkh(loc_t *locin, loc_t *locout, const double *ampout,
 	 double displacex, double displacey, double scale,
 	 int cubic, double cubic_iac){
     dsp *Hb=mkhb(locin, locout, ampout,displacex, displacey, scale, cubic, cubic_iac);
-    dsp *H=sptrans(Hb);
-    spfree(Hb);
+    dsp *H=dsptrans(Hb);
+    dspfree(Hb);
     return H;
 }
 /**
@@ -84,7 +84,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     const int nymax=map->ny-nxmin-1;
     /*transpose of hfor */
     long nzmax=locout->nloc*4;
-    hback = spnew(locin->nloc, locout->nloc, nzmax);
+    hback = dspnew(locin->nloc, locout->nloc, nzmax);
     spint *bp=hback->p;
     spint *bi=hback->i;
     double *bx=hback->x;
@@ -97,7 +97,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	    continue;
 	if(count+5>nzmax){
 	    nzmax*=2;
-	    spsetnzmax(hback, nzmax);
+	    dspsetnzmax(hback, nzmax);
 	    bp=hback->p;
 	    bi=hback->i;
 	    bx=hback->x;
@@ -139,8 +139,8 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
       skip_iloc:;
     }
     bp[locout->nloc]=count;
-    spsetnzmax(hback, count);
-    spdroptol(hback,EPS);
+    dspsetnzmax(hback, count);
+    dspdroptol(hback,EPS);
     return hback;
 }
 /**
@@ -174,7 +174,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const double c4=(0.5-cubic_iac)*cubicn;
     double dplocx0, dplocy0;
     long nzmax=locout->nloc*16;
-    hback = spnew(locin->nloc, locout->nloc, nzmax);
+    hback = dspnew(locin->nloc, locout->nloc, nzmax);
   
     spint *bp=hback->p;
     spint *bi=hback->i;
@@ -190,7 +190,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 	    continue;
 	if(count+17>nzmax){
 	    nzmax*=2;
-	    spsetnzmax(hback, nzmax);
+	    dspsetnzmax(hback, nzmax);
 	    bp=hback->p;
 	    bi=hback->i;
 	    bx=hback->x;
@@ -243,8 +243,8 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
       skip_iloc:;
     }/*for */
     bp[locout->nloc]=count;
-    spsetnzmax(hback, count);
-    spdroptol(hback,EPS);
+    dspsetnzmax(hback, count);
+    dspdroptol(hback,EPS);
     if(missing>0){
 	warning("%d points not covered by input screen\n", missing);
     }
@@ -261,7 +261,7 @@ dsp *mkhbin1d(dmat *xin, dmat *xout){
 	error("We require both xin and xout to be only one column\n");
     }
     int iout=0;
-    dsp *hbin=spnew(xout->nx, xin->nx, xin->nx*2);
+    dsp *hbin=dspnew(xout->nx, xin->nx, xin->nx*2);
     int count=0;
     for(int iin=0; iin<xin->nx; iin++){
 	hbin->p[iin]=count;

@@ -1,7 +1,7 @@
 #include "../lib/aos.h"
 /*
 int main(){
-    spcell *FLM=spcellread("FLM.bin");
+    dspcell *FLM=dspcellread("FLM.bin");
     dsp *F=FLM->p[0];
     spchol *Fchol=chol_factorize(F);
  
@@ -17,17 +17,17 @@ int main(){
     chol_free(Fchol);
     dfree(x);
     dfree(y);
-    spcellfree(FLM);
+    dspcellfree(FLM);
 }
 */
 TIC;
 int main(int argc, char* argv[]){
-    /*dsp *RLMc1=spread("RLMc_old.bin"); */
+    /*dsp *RLMc1=dspread("RLMc_old.bin"); */
     if(argc!=2){
 	error("Need 1 argument\n");
     }
-    spcell *RLM=spcellread("%s",argv[1]);
-    dsp *RLMc=spcell2sp(RLM);
+    dspcell *RLM=dspcellread("%s",argv[1]);
+    dsp *RLMc=dspcell2sp(RLM);
     tic;info2("chol ...");
     spchol *R1=chol_factorize(RLMc);
     toc("done");
@@ -59,6 +59,6 @@ int main(int argc, char* argv[]){
     dwrite(x2,"x2");
     dwrite(x3,"x3");
     chol_free(R1);
-    spfree(RLMc);
-    spcellfree(RLM);
+    dspfree(RLMc);
+    dspcellfree(RLM);
 }

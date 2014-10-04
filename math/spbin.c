@@ -29,7 +29,7 @@
    pointer. Generally used by library developer.  We do not convert data during
    saving, but rather do the conversion during reading.
 */
-void Y(spwritedata)(file_t *fp, const X(sp) *sp){
+void X(spwritedata)(file_t *fp, const X(sp) *sp){
     header_t header={M_SPT, 0, 0, NULL};
     if(sp && sp->nzmax){
 	header.nx=sp->m;
@@ -38,7 +38,7 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
     }
     write_header(&header, fp);
     if(sp && sp->nzmax){
-	Y(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
+	X(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
 	uint64_t nzmax;
 	nzmax=sp->p[sp->n];/*don't use sp->nzmax, which maybe larger than actual */
 	zfwritelarr(fp, 1, &nzmax);
@@ -51,7 +51,7 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.
   */
-X(sp) *Y(spreaddata)(file_t *fp, header_t *header){
+X(sp) *X(spreaddata)(file_t *fp, header_t *header){
     header_t header2={0};
     if(!header){
 	header=&header2;
@@ -75,7 +75,7 @@ X(sp) *Y(spreaddata)(file_t *fp, header_t *header){
 	}
 	zfread(&nzmax,sizeof(uint64_t),1,fp);
 	if(nzmax!=0){
-	    out=Y(spnew)(m,n,nzmax);
+	    out=X(spnew)(m,n,nzmax);
 	    out->header=header->str; header->str=NULL;
 	    readspintdata(fp, magic2, out->p, n+1);
 	    readspintdata(fp, magic2, out->i, nzmax);
@@ -89,21 +89,21 @@ X(sp) *Y(spreaddata)(file_t *fp, header_t *header){
 /**
    User callable function to write sparse matrix into file. 
 
-   Usage: spwrite(A,"A.bin");
+   Usage: dspwrite(A,"A.bin");
 */
-void Y(spwrite)(const X(sp) *sp, const char *format,...){
+void X(spwrite)(const X(sp) *sp, const char *format,...){
     format2fn;
     /*write the sparse matrix to file to later load from matlab */
     file_t *fp=zfopen(fn,"wb");
-    Y(spwritedata)(fp, sp);
+    X(spwritedata)(fp, sp);
     /*don't worry about the warning of 0x401ee45 in valgrind. That is the IO  */
     zfclose(fp);
 }
 /**
    User callable function to write cell array of sparse matrix into file. 
 
-   Usage: spcellwrite(A,"A.bin"); */
-void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
+   Usage: dspcellwrite(A,"A.bin"); */
+void X(spcellwrite)(const X(spcell) *spc, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     header_t header={MCC_ANY, 0, 0, NULL};
@@ -116,7 +116,7 @@ void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
     if(spc){
 	for(unsigned long iy=0; iy<spc->ny; iy++){
 	    for(unsigned long ix=0; ix<spc->nx; ix++){
-		Y(spwritedata)(fp, spc->p[ix+iy*spc->nx]);
+		X(spwritedata)(fp, spc->p[ix+iy*spc->nx]);
 	    }
 	}
     }
@@ -125,20 +125,20 @@ void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
 /**
    User callable function to read sparse metrix from file. 
 
-   Usage: A=spread("A.bin");*/
-X(sp)* Y(spread)(const char *format,...){
+   Usage: A=dspread("A.bin");*/
+X(sp)* X(spread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    X(sp) *out=Y(spreaddata)(fp, 0);
+    X(sp) *out=X(spreaddata)(fp, 0);
     zfeof(fp);
     zfclose(fp);
     return out;
 }
 /**
    User callable function to read cell array of sparse matrix
-   from file. Usage: A=spcellread("A.bin");
+   from file. Usage: A=dspcellread("A.bin");
  */
-Y(spcell) *Y(spcellread)(const char *format,...){
+X(spcell) *X(spcellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     header_t header={0};
@@ -154,11 +154,11 @@ Y(spcell) *Y(spcellread)(const char *format,...){
 	nx=header.nx;
 	ny=header.ny;
     }
-    Y(spcell) *out;
-    out=Y(spcellnew)(nx,ny);
+    X(spcell) *out;
+    out=X(spcellnew)(nx,ny);
     out->header=header.str; header.str=NULL;
     for(unsigned long ix=0; ix<nx*ny; ix++){
-	out->p[ix]=Y(spreaddata)(fp, headerc);
+	out->p[ix]=X(spreaddata)(fp, headerc);
     }
     zfeof(fp);
     zfclose(fp);

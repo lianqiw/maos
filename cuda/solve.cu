@@ -61,7 +61,7 @@ cumuv_t::cumuv_t(const MUV_T *in)
     :M(0),U(0),V(0),Vx(0),nx(0),ny(0),nxs(0),nys(0){
     if(!in) return;
     if(M || !in->M) error("in->M should not be NULL and M should be NULL\n");
-    dsp *Mc=spcell2sp(in->M);
+    dsp *Mc=dspcell2sp(in->M);
     dmat *Uc=dcell2m(in->U);
     dmat *Vc=dcell2m(in->V);
     nx=in->M->nx;
@@ -77,7 +77,7 @@ cumuv_t::cumuv_t(const MUV_T *in)
     M=new cusp(Mc, 1);
     cp2gpu(&U, Uc);
     cp2gpu(&V, Vc);
-    spfree(Mc); dfree(Uc); dfree(Vc);
+    dspfree(Mc); dfree(Uc); dfree(Vc);
     Vx=curnew(V->ny, 1);
 }
 cumuv_t::~cumuv_t(){

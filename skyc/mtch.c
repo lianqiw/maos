@@ -38,7 +38,7 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     ccwm(otf, dtf->nominal);
     ccp(&otfsave, otf);
     cfft2(otf, 1);/*turn back. */
-    spmulcreal(i0->p, dtf->si, otf->p, 1);
+    dspmulcreal(i0->p, dtf->si, otf->p, 1);
     ccp(&otf, otfsave);
     PCMAT(otf, potf);
     PCMAT(otfsave, potfsave);
@@ -51,8 +51,8 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     }
     cfft2(otf, 1);//was 1, changed to -1 on 1/29/2013
     cfft2(otfsave, 1);//was 1, changed to -1 on 1/29/2013
-    spmulcreal(gx->p,dtf->si,otf->p,1);
-    spmulcreal(gy->p,dtf->si,otfsave->p,1);
+    dspmulcreal(gx->p,dtf->si,otf->p,1);
+    dspmulcreal(gy->p,dtf->si,otfsave->p,1);
     cfree(otf); cfree(otfsave);
 }
 

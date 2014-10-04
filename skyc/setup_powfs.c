@@ -134,7 +134,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    if(parms->skyc.dbg){
 		cwrite(powfs[ipowfs].dtf[iwvl].nominal,
 		       "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
-		spwrite(powfs[ipowfs].dtf[iwvl].si,
+		dspwrite(powfs[ipowfs].dtf[iwvl].si,
 			"%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);
 	    }
 	    powfs[ipowfs].dtf[iwvl].U=cnew(ncomp,1);
@@ -204,7 +204,7 @@ void free_powfs(POWFS_S *powfs, const PARMS_S *parms){
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 	    cfree(powfs[ipowfs].dtf[iwvl].U);
 	    cfree(powfs[ipowfs].dtf[iwvl].nominal);
-	    spfree(powfs[ipowfs].dtf[iwvl].si);
+	    dspfree(powfs[ipowfs].dtf[iwvl].si);
 	}
 	free(powfs[ipowfs].dtf);
 	locfree(powfs[ipowfs].loc);

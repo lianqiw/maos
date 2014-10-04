@@ -32,30 +32,30 @@
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
-    spcell *GAlsr;
-    spcell *GAM=parms->recon.modal?recon->GM:recon->GA;
+    dspcell *GAlsr;
+    dspcell *GAM=parms->recon.modal?recon->GM:recon->GA;
     if(parms->recon.split){ //high order wfs only in split mode. 
 	GAlsr=parms->recon.modal?recon->GMhi:recon->GAhi;
     }else{ //all wfs in integrated mode. 
 	GAlsr=GAM;
     }
-    spcell *GAlsrT=spcelltrans(GAlsr);
+    dspcell *GAlsrT=dspcelltrans(GAlsr);
     info2("Building recon->LR\n");
-    recon->LR.M=spcellmulspcell(GAlsrT, recon->saneai, 1);
-    spcellfree(GAlsrT);
+    recon->LR.M=dspcellmulspcell(GAlsrT, recon->saneai, 1);
+    dspcellfree(GAlsrT);
     // Tip/tilt and diff focus removal low rand terms for LGS WFS.
     if(recon->TTF){
-	spcellmulmat(&recon->LR.U, recon->LR.M, recon->TTF, 1);
+	dspcellmulmat(&recon->LR.U, recon->LR.M, recon->TTF, 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
     info2("Building recon->LL\n");
-    recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
+    recon->LL.M=dspcellmulspcell(recon->LR.M, GAlsr, 1);
     
     double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(fabs(parms->lsr.tikcr)>EPS){
 	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	spcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
+	dspcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
     if(!parms->recon.modal){
@@ -93,16 +93,16 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    dcellfree(recon->actcpl);
 	    recon->actcpl=genactcpl(recon->GAhi, NULL);
 	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
-	    spcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
+	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
 				     recon->actstuck, recon->actfloat, 0.1, maxeig);
 	    if(parms->save.setup){
 		if(NW){
 		    dcellwrite(NW, "%s/lsrNW2",dirsetup);
 		}
-		spcellwrite(actslave,"%s/actslave", dirsetup);
+		dspcellwrite(actslave,"%s/actslave", dirsetup);
 	    }
-	    spcelladd(&recon->LL.M, actslave);
-	    spcellfree(actslave);
+	    dspcelladd(&recon->LL.M, actslave);
+	    dspcellfree(actslave);
 	}
     }
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
@@ -118,13 +118,13 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    continue;
 	}
 	for(int idm=0; idm<ndm; idm++){
-	    spfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);
-	    sptfull(&pVLo[iwfs][idm], GA[idm][iwfs],1);
+	    dspfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);
+	    dsptfull(&pVLo[iwfs][idm], GA[idm][iwfs],1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
     dcell *GPTTDF=NULL;
-    sptcellmulmat(&GPTTDF, GAM, recon->LR.V, 1);
+    dsptcellmulmat(&GPTTDF, GAM, recon->LR.V, 1);
     recon->LL.V=dcellcat(GPTTDF, VLo, 2);
     dcellfree(GPTTDF);
     dcellfree(ULo);
@@ -143,9 +143,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     if(parms->lsr.fnreg){
 	warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);
-	spcell *tmp=spcellread("%s", parms->lsr.fnreg);
-	spcelladd(&recon->LL.M, tmp);
-	spcellfree(tmp);
+	dspcell *tmp=dspcellread("%s", parms->lsr.fnreg);
+	dspcelladd(&recon->LL.M, tmp);
+	dspcellfree(tmp);
     }
     recon->LL.alg = parms->lsr.alg;
     recon->LL.bgs = parms->lsr.bgs;
@@ -157,10 +157,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dcelldropempty(&recon->LL.U,2);
     dcelldropempty(&recon->LL.V,2);
     if(parms->save.recon){
-	spcellwrite(recon->LR.M,"%s/LRM",dirsetup);
+	dspcellwrite(recon->LR.M,"%s/LRM",dirsetup);
 	dcellwrite(recon->LR.U,"%s/LRU",dirsetup);
 	dcellwrite(recon->LR.V,"%s/LRV",dirsetup);
-	spcellwrite(recon->LL.M,"%s/LLM.bin",dirsetup);/*disable compression */
+	dspcellwrite(recon->LL.M,"%s/LLM.bin",dirsetup);/*disable compression */
 	dcellwrite(recon->LL.U,"%s/LLU",dirsetup);
 	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
     }
@@ -173,7 +173,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		else
 		    dwrite(recon->LL.MI, "%s/LLMI.bin", dirsetup);
 	    }
-	    spcellfree(recon->LL.M);
+	    dspcellfree(recon->LL.M);
 	    dcellfree(recon->LL.U);
 	    dcellfree(recon->LL.V);	
 	}else{

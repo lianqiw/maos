@@ -206,7 +206,7 @@ void pywfs_fft(dcell **pupim, PYWFS_T *pywfs, dmat *opd){
 	if(!(*pupim)->p[i]){
 	    (*pupim)->p[i]=dnew(pywfs->order, pywfs->order);
 	}
-	spmulcreal((*pupim)->p[i]->p, pywfs->si->p[i], otf->p, 1./(ncomp*ncomp));
+	dspmulcreal((*pupim)->p[i]->p, pywfs->si->p[i], otf->p, 1./(ncomp*ncomp));
     }
     cellfree(psfs);
     dfree(pupraw);
@@ -219,6 +219,6 @@ void pywfs_free(PYWFS_T *pywfs){
     locfft_free(pywfs->locfft);
     cellfree(pywfs->pyramid);
     cfree(pywfs->nominal);
-    spcellfree(pywfs->si);
+    dspcellfree(pywfs->si);
 
 }

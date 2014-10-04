@@ -38,5 +38,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     free(locin);
     free(locout);
     dfree(ampout);
-    spfree(H);
+    dspfree(H);
 }

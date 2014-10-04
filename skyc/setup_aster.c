@@ -567,9 +567,9 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		dmat *tmp=ddup(aster->wfs[iwfs].pistat->sanea->p[idtrat]);/*in rad */
 		dcwpow(tmp, 2);
-		dsp *tmp2=spnewdiag(tmp->nx, tmp->p, 1);
-		spfull(&aster->neam[idtrat]->p[iwfs+aster->nwfs*iwfs], tmp2,1);
-		dfree(tmp); spfree(tmp2);
+		dsp *tmp2=dspnewdiag(tmp->nx, tmp->p, 1);
+		dspfull(&aster->neam[idtrat]->p[iwfs+aster->nwfs*iwfs], tmp2,1);
+		dfree(tmp); dspfree(tmp2);
 	    }
 
 	    int dtrat=parms->skyc.dtrats->p[idtrat];

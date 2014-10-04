@@ -36,7 +36,7 @@ typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const doub
  */
 typedef struct MUV_T{
     /*The forward computation can be done by the following 3 matrices, togetehr with exfun, extra (data) */
-    spcell *M;     /**<block sparse matrix*/
+    dspcell *M;     /**<block sparse matrix*/
     dcell  *U;     /**<low rank terms U*/
     dcell  *V;     /**<low rank terms V*/
     EXFUN exfun;   /**<Optionally attach an extra function that applies extra data*/
@@ -68,7 +68,7 @@ typedef struct MUV_T{
 
 void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);
 void muv_trans(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_sp(dcell **xout, const void *B, const spcell *xin, const double alpha);
+void muv_sp(dcell **xout, const void *B, const dspcell *xin, const double alpha);
 void muv_ib(dcell **xout, const void *A, const dcell *xin, const double alpha);
 void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin);
 void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin);

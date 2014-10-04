@@ -85,7 +85,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dfree(eye);
     }else{
 	dcell *LR=NULL;
-	spcellfull(&LR, recon->LR.M, 1);
+	dspcellfull(&LR, recon->LR.M, 1);
 	if(recon->LR.U && recon->LR.V){
 	    dcellmm(&LR, recon->LR.U, recon->LR.V, "nt", -1);
 	}

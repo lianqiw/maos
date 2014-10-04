@@ -453,7 +453,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 				    ctilt(otf2->p[isa+iwvl*nsa], sx/dtheta[iwvl], sy/dtheta[iwvl],0);
 				    ccwm(otf2->p[isa+iwvl*nsa], powfs[ipowfs].dtf[iwvl].nominal);
 				    cfft2i(otf2->p[isa+iwvl*nsa], 1);//turn to psd space
-				    spmulcreal(is->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
+				    dspmulcreal(is->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
 					       otf2->p[isa+iwvl*nsa]->p, sig);
 				}
 				dmulvec(sout, mtche->p[isa], is->p[isa]->p, 1);

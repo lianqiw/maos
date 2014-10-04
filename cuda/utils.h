@@ -138,8 +138,8 @@ void cp2gpu(M**dest, const zmat*src){
 }
 void cp2gpu(cumap_t **dest, map_t **source, int nps);
 void cp2gpu(cusp **dest, const dsp *src, int tocsr);
-void cp2gpu(cusp **dest, const spcell *src, int tocsr);
-void cp2gpu(cuspcell **dest, const spcell *src, int tocsr);
+void cp2gpu(cusp **dest, const dspcell *src, int tocsr);
+void cp2gpu(cuspcell **dest, const dspcell *src, int tocsr);
 void cp2gpu(Real (* restrict *dest)[2], const loc_t *src);
 void cp2gpu(curcell *restrict *dest, const dcell *src);
 void cp2gpu(cuccell *restrict *dest, const ccell *src);

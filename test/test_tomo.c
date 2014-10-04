@@ -6,7 +6,7 @@ void TomoR(dcell **xout, const void *A,
     dcellcp(&x2, xin);
     TTFR(x2, recon->TTF, recon->PTTF);
     dcell *x3=NULL;
-    spcellmulmat_thread(&x3,recon->saneai, x2, 1,recon->nthread);
+    dspcellmulmat_thread(&x3,recon->saneai, x2, 1,recon->nthread);
     sptcellmulmat_thread(xout,recon->G0tomo,x3,alpha,recon->nthread);
     dcellfree(x2);
     dcellfree(x3);
@@ -16,10 +16,10 @@ void TomoL(dcell **xout, const void *A,
 
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
-    spcellmulmat_thread(&gg, recon->G0tomo, xin, 1.,recon->nthread);
+    dspcellmulmat_thread(&gg, recon->G0tomo, xin, 1.,recon->nthread);
     TTFR(gg, recon->TTF, recon->PTTF);
     dcell *gg2=NULL;
-    spcellmulmat_thread(&gg2, recon->saneai, gg,1,recon->nthread);
+    dspcellmulmat_thread(&gg2, recon->saneai, gg,1,recon->nthread);
     sptcellmulmat_thread(xout,recon->G0tomo,gg2,alpha,recon->nthread);
     dcellfree(gg);
     dcellfree(gg2);
@@ -47,7 +47,7 @@ void MUV(dcell **xout, const void *A,
     */
     const MUV_T *muv=(const MUV_T *)A;
 
-    spcellmulmat(xout, muv->M, xin, alpha);
+    dspcellmulmat(xout, muv->M, xin, alpha);
     dcell *tmp=NULL;
     dcellmm(&tmp,muv->V, xin, "tn", -1.);
     dcellmm(xout,muv->U, tmp, "nn", alpha);
@@ -62,7 +62,7 @@ static int test_tomo(){
     info("Tomo\n");
     dcell *grad=dcellread("grad.bin");
     MUV_T RR;
-    RR.M=spcellread("RRM.bin"); 
+    RR.M=dspcellread("RRM.bin"); 
     RR.U=dcellread("RRU.bin");
     RR.V=dcellread("RRV.bin");
     tic;
@@ -71,7 +71,7 @@ static int test_tomo(){
     toc("");
     dcellwrite(rhs,"rhs.bin");
     MUV_T RL;
-    RL.M=spcellread("RLM.bin");
+    RL.M=dspcellread("RLM.bin");
     RL.U=dcellread("RLU.bin");
     RL.V=dcellread("RLV.bin");
     dcell *junk=NULL;
@@ -82,12 +82,12 @@ static int test_tomo(){
     toc("");
     dcellwrite(junk,"MUV1.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
-    recon->G0=spcellread("G0.bin");
+    recon->G0=dspcellread("G0.bin");
     recon->TT=dcellread("TT.bin");
     recon->PTT=dcellread("PTT.bin");
-    recon->L2=spcellread("L2.bin");
-    recon->ZZT=spcellread("ZZT.bin");
-    recon->saneai=spcellread("saneai.bin");
+    recon->L2=dspcellread("L2.bin");
+    recon->ZZT=dspcellread("ZZT.bin");
+    recon->saneai=dspcellread("saneai.bin");
     tic;
     dcell *rhs2=NULL;
     TomoR(&rhs2, recon, grad, 1);
@@ -107,11 +107,11 @@ static int test_fit(){
     info("Fit\n");
     dcell *opdr=dcellread("opdr.bin");
     MUV_T FR;
-    FR.M=spcellread("FRM.bin");
+    FR.M=dspcellread("FRM.bin");
     FR.U=dcellread("FRU.bin");
     FR.V=dcellread("FRV.bin");
     MUV_T FL;
-    FL.M=spcellread("FLM.bin");
+    FL.M=dspcellread("FLM.bin");
     FL.U=dcellread("FLU.bin");
     FL.V=dcellread("FLV.bin");
     dcell *rhs=NULL;
@@ -127,10 +127,10 @@ static int test_fit(){
     dcellwrite(rhs,"fit_rhs1.bin");
     dcellwrite(MUV_f,"MUV_f.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
-    recon->HX=spcellread("HX.bin");
-    recon->HA=spcellread("HA.bin");
+    recon->HX=dspcellread("HX.bin");
+    recon->HA=dspcellread("HA.bin");
     recon->W1=dread("W1.bin");
-    recon->W0=spread("W0.bin");
+    recon->W0=dspread("W0.bin");
     recon->NW=dcellread("NW.bin");
     recon->fitwt=dread("fitwt.bin");
     dcell *rhs2=NULL;

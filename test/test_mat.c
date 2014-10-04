@@ -16,12 +16,12 @@ static void test_dpinv(){
     dwrite(Ap,"Ap");
     dmat *ApA=NULL;
     dmm(&ApA,0,Ap,A,"nn",1);
-    dsp *spw=spnewdiag(w->nx, w->p, 1);
+    dsp *spw=dspnewdiag(w->nx, w->p, 1);
     dmat *Ap2=dpinv(A,NULL,spw);
     dwrite(w,"w");
-    spwrite(spw,"spw");
+    dspwrite(spw,"spw");
     dwrite(Ap2,"Ap2");
-    dfree(A); dfree(w); dfree(Ap); dfree(ApA); spfree(spw); dfree(Ap2);
+    dfree(A); dfree(w); dfree(Ap); dfree(ApA); dspfree(spw); dfree(Ap2);
 }
 TIC;
 static void test_dcp(){
@@ -119,7 +119,7 @@ static void test_hist(){
 }
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin");
-    spcell *saneai=spcellread("saneai.bin");
+    dspcell *saneai=dspcellread("saneai.bin");
     dcell *PTT=dcellpinv(TT,NULL,saneai);
     dcellwrite(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
@@ -225,9 +225,9 @@ static void test_spline_2d(void){
     exit(0);
 }
 static void test_svd(void){
-    spcell *a=spcellread("SVD");
+    dspcell *a=dspcellread("SVD");
     dmat *A=NULL;
-    spfull(&A, a->p[0], 1);
+    dspfull(&A, a->p[0], 1);
     if(0){
 	dmat *U, *S, *VT;
 	tic;

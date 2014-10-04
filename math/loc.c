@@ -982,13 +982,13 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 }
 /**
    Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using
-   a spcell, to compute the coupling which is modified accordingly.  */
-void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
+   a dspcell, to compute the coupling which is modified accordingly.  */
+void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
     int nloc=loc->nloc;
     dmat *sum=NULL;
     for(int isp=0; isp<spc->nx*spc->ny; isp++){
 	if(spc->p[isp]){
-	    dmat* sum0=spsumabs(spc->p[isp],3-dim);
+	    dmat* sum0=dspsumabs(spc->p[isp],3-dim);
 	    dadd(&sum,1,sum0,1);
 	    dfree(sum0);
 	}
@@ -1042,7 +1042,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
 	error("Mismatch dimension\n");
-    dmat* sum=spsumabs(sp,3-dim);
+    dmat* sum=dspsumabs(sp,3-dim);
     int *skip;
     loc_reduce(loc, sum, cont, &skip);
     dfree(sum);

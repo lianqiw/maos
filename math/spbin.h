@@ -22,11 +22,11 @@
 #error "Don't include this file directly"
 #endif
 
-#define AOS_SPBIN_DEF(X,Y,T)\
-void Y(spwritedata)(file_t *fp, const X(sp) *sp);\
-X(sp) *Y(spreaddata)(file_t *fp, header_t *header);		     \
-void Y(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
-void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...) CHECK_ARG(2);\
-X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\
-Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);
+#define AOS_SPBIN_DEF(X,T)\
+void X(spwritedata)(file_t *fp, const X(sp) *sp);\
+X(sp) *X(spreaddata)(file_t *fp, header_t *header);		     \
+void X(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
+void X(spcellwrite)(const X(spcell) *spc, const char *format,...) CHECK_ARG(2);\
+X(sp)* X(spread)(const char *format,...) CHECK_ARG(1);\
+X(spcell) *X(spcellread)(const char *format,...) CHECK_ARG(1);
 #endif

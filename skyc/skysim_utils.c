@@ -320,7 +320,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 				cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 				ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
 				cfft2(otf->p[iwfs], -1);
-				spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
+				dspmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
 					   otf->p[iwfs]->p, siglev);
 			    }
 		

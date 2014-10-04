@@ -281,7 +281,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int ips=0; ips<npsr; ips++){
-		spfree(HXWtomo[ips][iwfs]);
+		dspfree(HXWtomo[ips][iwfs]);
 		double  ht = recon->ht->p[ips];
 		double  scale=1. - ht/hs;
 		double  displace[2];

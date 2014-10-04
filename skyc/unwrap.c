@@ -28,7 +28,7 @@ static dmat* gen_unwrap(long nx, long ny){
     /*	cmat *out=cread(fn); */
     /*	return out; */
     /*} */
-    dsp *Ht=spnew(nx*ny,nx*ny*2, nx*ny*2*2);/*forward */
+    dsp *Ht=dspnew(nx*ny,nx*ny*2, nx*ny*2*2);/*forward */
     long count=0;
     spint *pp=Ht->p;
     spint *pi=Ht->i;
@@ -90,13 +90,13 @@ static dmat* gen_unwrap(long nx, long ny){
     pp[col]=count;
     
     info("col=%ld,count=%ld\n",col,count);
-    spsetnzmax(Ht,count);
-    /*spwrite(Ht,"Ht"); */
-    dsp *H=sptrans(Ht);
-    /*spwrite(H,"H"); */
-    dsp *HtH=spmulsp(Ht,H);
+    dspsetnzmax(Ht,count);
+    /*dspwrite(Ht,"Ht"); */
+    dsp *H=dsptrans(Ht);
+    /*dspwrite(H,"H"); */
+    dsp *HtH=dspmulsp(Ht,H);
     dmat *cHtH=NULL;
-    spfull(&cHtH,HtH,1);
+    dspfull(&cHtH,HtH,1);
     /*dwrite(cHtH,"cHtH"); */
     /*caddI(cHtH,1e-9); */
     dmat *IcHtH=dinv(cHtH);
@@ -106,9 +106,9 @@ static dmat* gen_unwrap(long nx, long ny){
     /*dwrite(out,"HI"); */
     dfree(IcHtH);
     dfree(cHtH);
-    spfree(HtH);
-    spfree(H);
-    spfree(Ht);
+    dspfree(HtH);
+    dspfree(H);
+    dspfree(Ht);
     dwrite(out,"%s",fn);
     return out;
 }

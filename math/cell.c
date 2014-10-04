@@ -88,7 +88,7 @@ void cellfree_do(void *pix){
 	locfree_do(pix);break;
     case M_SP32:
     case M_SP64:
-	spfree_do(pix);break;
+	dspfree_do(pix);break;
     case M_SSP32:
     case M_SSP64:
 	sspfree_do(pix);break;
@@ -164,7 +164,7 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
 	mapwritedata(fp, (map_t*)pix);break;
     case M_SP32:
     case M_SP64:
-	spwritedata(fp, (dsp*)pix);break;
+	dspwritedata(fp, (dsp*)pix);break;
     case M_SSP32:
     case M_SSP64:
 	sspwritedata(fp, (ssp*)pix);break;
@@ -206,7 +206,7 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    case M_MAP64: out=mapreaddata(fp, header); break;
 	    case M_SP32:
 	    case M_SP64:
-		out=spreaddata(fp, header);break;
+		out=dspreaddata(fp, header);break;
 	    case M_SSP32:
 	    case M_SSP64:
 		out=sspreaddata(fp, header);break;

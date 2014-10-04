@@ -37,12 +37,12 @@ int main(int argc, char **argv){
     }
     loccell *aloc=cellnew(1,1);
     aloc->p[0]=locread("%s",argv[1]);
-    dsp *ha=spread("%s",argv[2]);
+    dsp *ha=dspread("%s",argv[2]);
     double thres=argc>3?strtod(argv[3],NULL):0.5;
-    spcell*has=spcellnew(1,1); has->p[0]=ha;
+    dspcell*has=dspcellnew(1,1); has->p[0]=ha;
     dcell *actcpl=genactcpl(has, NULL);
-    spcell *slave=slaving(aloc, actcpl, NULL, NULL, NULL, thres, 1);
+    dspcell *slave=slaving(aloc, actcpl, NULL, NULL, NULL, thres, 1);
     dcellfree(actcpl);
-    spwrite(slave->p[0],"slaving");
-    spcellfree(slave);
+    dspwrite(slave->p[0],"slaving");
+    dspcellfree(slave);
 }

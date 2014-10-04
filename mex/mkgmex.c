@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int do_partial=(int)mxGetScalar(prhs[P_DOPARTIAL]);
     dsp *GS0=mkg(xloc, ploc, amp, saloc, 1, scale, dispx, dispy, do_partial);
     plhs[0]=dsp2mx(GS0);
-    spfree(GS0);
+    dspfree(GS0);
     free(xloc);
     free(ploc);
     free(saloc);

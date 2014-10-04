@@ -413,7 +413,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		}
 		cfft2(seotfk,1);/*peak in center. */
 		/*no need fftshift becaose nominal is pre-treated */
-		spmulcreal(i0[ii0][isa]->p,si,seotfk->p, wvlsig);
+		dspmulcreal(i0[ii0][isa]->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
 		dcomplex(*X)[ncompx]
 		    =(dcomplex(*)[ncompx])(seotfk->p);
@@ -430,9 +430,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    }
 		}
 		cfft2(seotfk,1);
-		spmulcreal(gx[ii0][isa]->p,si,seotfk->p, wvlsig);
+		dspmulcreal(gx[ii0][isa]->p,si,seotfk->p, wvlsig);
 		cfft2(seotfj,1);
-		spmulcreal(gy[ii0][isa]->p,si,seotfj->p, wvlsig);
+		dspmulcreal(gy[ii0][isa]->p,si,seotfj->p, wvlsig);
 		if(i0scale){
 		    double scale=area[isa]/dsum(i0[ii0][isa]);
 		    dscale(i0[ii0][isa],scale);

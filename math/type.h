@@ -202,7 +202,7 @@ typedef CELL(dmat*) dcell;
 typedef CELL(smat*) scell;
 typedef CELL(lmat*) lcell;
 
-typedef CELL(dsp*) spcell;
+typedef CELL(dsp*) dspcell;
 typedef CELL(ssp*) sspcell;
 typedef CELL(csp*) cspcell;
 typedef CELL(zsp*) zspcell;

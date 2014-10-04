@@ -23,8 +23,8 @@
 #endif
 #include "random.h"
 
-#define spfree(A)      {spfree_do(A); A=NULL;}
-#define spcellfree(A)  {spcellfree_do(A); A=NULL;}
+#define dspfree(A)      {dspfree_do(A); A=NULL;}
+#define dspcellfree(A)  {dspcellfree_do(A); A=NULL;}
 #define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
 
 #define sspfree(A)      {sspfree_do(A); A=NULL;}
@@ -39,69 +39,69 @@
 #define zspcellfree(A) {zspcellfree_do(A); A=NULL;}
 #define PZSPCELL(M,P)  zsp* (*restrict P)[(M)->nx]=(zsp*(*)[(M)->nx])(M)->p
 
-#define AOS_SP_DEF(X,Y,T,R,RI) \
-X(sp)* Y(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-void   Y(spmove)(X(sp) *A, X(sp) *res);\
-X(sp) *Y(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spnewrandu)(int nx, int ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
-void Y(spsetnzmax)(X(sp) *sp, long nzmax);\
-void Y(spfree_do)(X(sp) *sp);\
-void Y(sparrfree)(X(sp) **sparr, int n);\
-void Y(spdisp)(const X(sp) *sp);\
-int Y(spcheck)(const X(sp) *sp);\
-void Y(spscale)(X(sp) *A, const T beta);\
-void Y(spcellscale)(Y(spcell) *A, const T beta);\
-X(sp)* Y(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\
-X(mat) *Y(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-void Y(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
-void Y(spmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha, int nthread); \
-void Y(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
-void Y(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha);\
-void Y(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
-void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha); \
-void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
-void Y(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
-T Y(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\
-T Y(spcellwdinn)(const X(cell) *y, const Y(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
-void Y(spcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
-void Y(sptcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
-void Y(spcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
-void Y(sptcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
-void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin, T alpha, int trans); \
+#define AOS_SP_DEF(X,T,R,RI) \
+X(sp)* X(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;\
+X(sp) *X(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\
+X(sp) *X(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
+void   X(spmove)(X(sp) *A, X(sp) *res);\
+X(sp) *X(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
+X(sp) *X(spnewrandu)(int nx, int ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
+void X(spsetnzmax)(X(sp) *sp, long nzmax);\
+void X(spfree_do)(X(sp) *sp);\
+void X(sparrfree)(X(sp) **sparr, int n);\
+void X(spdisp)(const X(sp) *sp);\
+int X(spcheck)(const X(sp) *sp);\
+void X(spscale)(X(sp) *A, const T beta);\
+void X(spcellscale)(X(spcell) *A, const T beta);\
+X(sp)* X(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\
+X(mat) *X(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
+void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
+void X(spmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha, int nthread); \
+void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
+void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha);\
+void X(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
+void X(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha); \
+void X(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
+void X(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
+T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\
+T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
+void X(spcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
+void X(sptcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
+void X(spcellmulmat_thread)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
+void X(sptcellmulmat_thread)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
+void X(spcellmulmat_each)(X(cell) **xout, X(spcell) *A, X(cell) *xin, T alpha, int trans); \
 X(sp) *X(2sp)(X(mat)*A);\
-void Y(spfull)(X(mat) **out0, const X(sp) *A, const T f);\
-void Y(sptfull)(X(mat) **out0, const X(sp) *A, const T f);\
-void Y(spcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\
-void Y(sptcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\
-X(sp) *Y(spadd2)(X(sp) *A,X(sp)*B,T a,T b) CHECK_UNUSED_RESULT;\
-void Y(spadd)(X(sp) **A0, const X(sp) *B);\
-void Y(spcelladd)(Y(spcell) **A0, const Y(spcell) *B);\
-void Y(spaddI)(X(sp) **A0, R alpha);\
-void Y(spcelladdI)(Y(spcell) *A0, R alpha);\
-X(sp) *Y(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
-X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
-void Y(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const T scale);\
-Y(spcell) *Y(spcellmulspcell)(const Y(spcell) *A, const Y(spcell) *B, const T scale) CHECK_UNUSED_RESULT;\
-Y(spcell) *Y(spcellnew)(const long nx, const long ny) CHECK_UNUSED_RESULT;\
-Y(spcell) *Y(spcelltrans)(const Y(spcell) *spc) CHECK_UNUSED_RESULT;\
-void Y(spcellfree_do)(Y(spcell) *spc);\
-X(sp) *Y(spcat)(const X(sp) *A, const X(sp) *B, int type) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spcell2sp)(const Y(spcell) *A) CHECK_UNUSED_RESULT;\
-X(mat) *Y(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
-X(mat) *Y(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
-void Y(spclean)(X(sp) *A);\
-void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac, const T * restrict xc, T alpha);\
-void Y(spdroptol)(X(sp) *A, R thres);		\
-void Y(spcelldroptol)(Y(spcell) *A, R thres); \
-void Y(spsort)(X(sp) *A);\
-void Y(spcellsort)(Y(spcell) *A);\
-void Y(spsym)(X(sp) *A);\
-void Y(spcellsym)(Y(spcell) *A);\
-X(sp) *Y(spconvolvop)(X(mat) *A) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spperm)(X(sp) *A, int reverse, long *pcol, long *prow) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;\
-X(cell) *Y(spblockextract)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;
+void X(spfull)(X(mat) **out0, const X(sp) *A, const T f);\
+void X(sptfull)(X(mat) **out0, const X(sp) *A, const T f);\
+void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const T f);\
+void X(sptcellfull)(X(cell) **out0, const X(spcell) *A, const T f);\
+X(sp) *X(spadd2)(X(sp) *A,X(sp)*B,T a,T b) CHECK_UNUSED_RESULT;\
+void X(spadd)(X(sp) **A0, const X(sp) *B);\
+void X(spcelladd)(X(spcell) **A0, const X(spcell) *B);\
+void X(spaddI)(X(sp) **A0, R alpha);\
+void X(spcelladdI)(X(spcell) *A0, R alpha);\
+X(sp) *X(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\
+X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
+X(sp) *X(sptmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
+void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const T scale);\
+X(spcell) *X(spcellmulspcell)(const X(spcell) *A, const X(spcell) *B, const T scale) CHECK_UNUSED_RESULT;\
+X(spcell) *X(spcellnew)(const long nx, const long ny) CHECK_UNUSED_RESULT;\
+X(spcell) *X(spcelltrans)(const X(spcell) *spc) CHECK_UNUSED_RESULT;\
+void X(spcellfree_do)(X(spcell) *spc);\
+X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int type) CHECK_UNUSED_RESULT;\
+X(sp) *X(spcell2sp)(const X(spcell) *A) CHECK_UNUSED_RESULT;\
+X(mat) *X(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
+X(mat) *X(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
+void X(spclean)(X(sp) *A);\
+void X(spcellmulvec)(T *restrict yc, const X(spcell) *Ac, const T * restrict xc, T alpha);\
+void X(spdroptol)(X(sp) *A, R thres);		\
+void X(spcelldroptol)(X(spcell) *A, R thres); \
+void X(spsort)(X(sp) *A);\
+void X(spcellsort)(X(spcell) *A);\
+void X(spsym)(X(sp) *A);\
+void X(spcellsym)(X(spcell) *A);\
+X(sp) *X(spconvolvop)(X(mat) *A) CHECK_UNUSED_RESULT;\
+X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow) CHECK_UNUSED_RESULT;\
+X(sp) *X(spinvbdiag)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;\
+X(cell) *X(spblockextract)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;
 #endif

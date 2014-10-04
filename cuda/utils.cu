@@ -94,7 +94,7 @@ cusp::cusp(const dsp *src_csc, int tocsr)
     dsp *src=const_cast<dsp*>(src_csc);
     if(tocsr){
 	type=SP_CSR;
-	src=sptrans(src_csc);
+	src=dsptrans(src_csc);
     }else{
 	type=SP_CSC;
     }
@@ -106,17 +106,17 @@ cusp::cusp(const dsp *src_csc, int tocsr)
     cp2gpu(&i, src->i, src->nzmax, 1);
     cp2gpu(&x, src->x, src->nzmax, 1);
     if(tocsr){
-	spfree(src);
+	dspfree(src);
     }
     nref=new int[1];
     nref[0]=1;
 }
-void cp2gpu(cusp **dest0, const spcell *srcc, int tocsr){
-    dsp *src=spcell2sp(srcc);
+void cp2gpu(cusp **dest0, const dspcell *srcc, int tocsr){
+    dsp *src=dspcell2sp(srcc);
     *dest0=new cusp(src, tocsr);
-    spfree(src);
+    dspfree(src);
 }
-void cp2gpu(cuspcell **dest0, const spcell *src, int tocsr){
+void cp2gpu(cuspcell **dest0, const dspcell *src, int tocsr){
     if(!src) return;
     if(!*dest0){
 	*dest0=cuspcellnew(src->nx, src->ny);

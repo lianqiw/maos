@@ -35,7 +35,7 @@
 /**
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
 */
-static cholmod_sparse *sp2chol(const dsp *A){
+static cholmod_sparse *dsp2chol(const dsp *A){
     cholmod_sparse *B=calloc(1, sizeof(cholmod_sparse));
     B->nrow=A->m;
     B->ncol=A->n;
@@ -57,7 +57,7 @@ static cholmod_sparse *sp2chol(const dsp *A){
 */
 static dsp *chol2sp(const cholmod_sparse *B){
     dsp *A;
-    A=spnew(B->nrow, B->ncol, 0);
+    A=dspnew(B->nrow, B->ncol, 0);
     A->p=B->p;
     A->i=B->i;
     A->x=B->x;
@@ -89,7 +89,7 @@ spchol* chol_factorize(dsp *A_in){
     spchol *out=calloc(1, sizeof(spchol));
     out->c=calloc(1, sizeof(cholmod_common));
     MOD(start)(out->c);
-    cholmod_sparse *A=sp2chol(A_in);
+    cholmod_sparse *A=dsp2chol(A_in);
     out->c->status=CHOLMOD_OK;
 #if CHOL_SIMPLE
 	out->c->final_super=0;/*we want a simplicity result. */
@@ -135,7 +135,7 @@ spchol* chol_factorize(dsp *A_in){
 	warning2("Converted to our format.");
 	cholmod_factor *L=out->L;
 	out->Cp=L->Perm; L->Perm=NULL;
-	dsp *C=out->Cl=spnew(L->n, L->n, 0);
+	dsp *C=out->Cl=dspnew(L->n, L->n, 0);
 	C->p=L->p;L->p=NULL;
 	C->i=L->i;L->i=NULL;
 	C->x=L->x;L->x=NULL;
@@ -193,7 +193,7 @@ void chol_save(spchol *A, const char *format,...){
     if(C){/*Save our easy to use format. */
 	header_t header={MCC_ANY, 2, 1, NULL};
 	write_header(&header, fp);
-	spwritedata(fp, C);
+	dspwritedata(fp, C);
 	do_write(fp, 0, sizeof(spint), M_SPINT, "Cp", A->Cp, C->m, 1);
     }else if(A->L){/*Save native cholmod format. */
 	cholmod_factor *L=A->L;
@@ -253,8 +253,8 @@ spchol *chol_read(const char *format, ...){
     long ncx=header.nx;
     long ncy=header.ny;;
     if(ncx*ncy==2){/*Contains Cl(Cu) and Perm */
-	dsp *C=spreaddata(fp, 0);
-	int type=spcheck(C);
+	dsp *C=dspreaddata(fp, 0);
+	int type=dspcheck(C);
 	if(type & 1){
 	    A->Cl=C;
 	}else if(type & 2){
@@ -396,11 +396,11 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 */
 dsp *chol_spsolve(spchol *A, const dsp *y){
     assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
-    cholmod_sparse *y2=sp2chol(y);
+    cholmod_sparse *y2=dsp2chol(y);
     cholmod_sparse *x2=MOD(spsolve)(CHOLMOD_A,A->L,y2,A->c);
     if(!x2) error("chol_solve failed\n");
     if(x2->z) error("why is this?\n");
-    dsp *x=spnew(x2->nrow, x2->ncol, 0);
+    dsp *x=dspnew(x2->nrow, x2->ncol, 0);
     x->p=x2->p;
     x->i=x2->i;
     x->x=x2->x;
@@ -630,7 +630,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	    chol_convert(C, 1);
 	}
 	info2("Transposing C->Cl");
-	C->Cu=sptrans(C->Cl);
+	C->Cu=dsptrans(C->Cl);
     }
     dsp *A=C->Cu;
     spint *perm=C->Cp;
@@ -688,8 +688,8 @@ void chol_free_do(spchol *A){
 	    free(A->c);
 	}
 	if(A->Cp) free(A->Cp);
-	if(A->Cl) spfree(A->Cl);
-	if(A->Cu) spfree(A->Cu);
+	if(A->Cl) dspfree(A->Cl);
+	if(A->Cu) dspfree(A->Cu);
 	free(A);
     }
 }

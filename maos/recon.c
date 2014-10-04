@@ -141,7 +141,7 @@ static void calc_gradol(SIM_T *simu){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
-			spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
+			dspmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
 				 simu->wfspsol->p[ipowfs]->p[idm], 1);
 		    }
 		}
@@ -261,7 +261,7 @@ void reconstruct(SIM_T *simu){
 	if(parms->tomo.psol && simu->recon->actinterp){
 	    /* Extrapolate to edge actuators the fitting output*/
 	    dcell *tmp=NULL;
-	    spcellmulmat(&tmp, simu->recon->actinterp, simu->dmerr, 1);
+	    dspcellmulmat(&tmp, simu->recon->actinterp, simu->dmerr, 1);
 	    dcellcp(&simu->dmerr, tmp);
 	    dcellfree(tmp);
 	}

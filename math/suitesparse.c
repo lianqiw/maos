@@ -187,7 +187,7 @@ static SS_INT ss_scatter (const cs *A, SS_INT j, SS_ENTRY beta, SS_INT *w, SS_EN
 
 /**
  C = A*B */
-cs* Y(ss_multiply) (const cs *A, const cs *B)
+cs* X(ss_multiply) (const cs *A, const cs *B)
 {
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values, *Bi ;
     SS_ENTRY *x, *Bx, *Cx ;
@@ -223,7 +223,7 @@ cs* Y(ss_multiply) (const cs *A, const cs *B)
 
 /**
  C = alpha*A + beta*B */
-cs* Y(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
+cs* X(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
 {
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values ;
     SS_ENTRY *x, *Bx, *Cx ;
@@ -288,7 +288,7 @@ static SS_INT ss_nonzero (SS_INT i, SS_INT j, SS_ENTRY aij, void *other)
 /**
    drop zeros in the sparse matrix.
  */
-SS_INT Y(ss_dropzeros) (cs *A)
+SS_INT X(ss_dropzeros) (cs *A)
 {
     return (ss_fkeep (A, &ss_nonzero, NULL)) ;  /* keep all nonzero entries */
 }
@@ -304,7 +304,7 @@ static SS_INT ss_tol (SS_INT i, SS_INT j, SS_ENTRY aij, void *tol)
 /**
    drop values below threashold of tol.
 */ 
-SS_INT Y(ss_droptol) (cs *A, double tol)
+SS_INT X(ss_droptol) (cs *A, double tol)
 {
     return (ss_fkeep (A, &ss_tol, &tol)) ;    /* keep all large entries */
 }
@@ -324,7 +324,7 @@ static double ss_cumsum (SS_INT *p, SS_INT *c, SS_INT n)
     return (nz2) ;                  /* return sum (c [0..n-1]) */
 }
 
-cs* Y(ss_transpose) (const cs *A, SS_INT values)
+cs* X(ss_transpose) (const cs *A, SS_INT values)
 {
     SS_INT p, q, j, *Cp, *Ci, n, m, *Ap, *Ai, *w ;
     SS_ENTRY *Cx, *Ax ;

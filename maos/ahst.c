@@ -134,7 +134,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
    Ha is from ALOC to PLOCS and W is the amplitude weighting in PLOCS when
    use_ploc==0. Otherwise, Ha is from ALOC to PLOC and W is the amplitude
    weighting in PLOC.  */
-static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon, 
+static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon, 
 			 APER_T *aper, int use_ploc){
     const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
@@ -149,28 +149,28 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	amp=aper->amp->p;
 	loc=aper->locs;
     }
-    spcell *Wa=NULL;
+    dspcell *Wa=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
 
-	spcell *Hat=spcellnew(ndm,1);
-	spcell *Ha=spcellnew(1,ndm);
+	dspcell *Hat=dspcellnew(ndm,1);
+	dspcell *Ha=dspcellnew(1,ndm);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    /*from DM to ploc (plocs) science beam */
 	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
-	    Ha->p[idm]=sptrans(Hat->p[idm]);
-	    spmuldiag(Hat->p[idm], amp, wt[ievl]);
+	    Ha->p[idm]=dsptrans(Hat->p[idm]);
+	    dspmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
-	spcell *HatHai=spcellmulspcell(Hat,Ha,1);
-	spcelladd(&Wa, HatHai);
-	spcellfree(Hat);
-	spcellfree(Ha);
-	spcellfree(HatHai);
+	dspcell *HatHai=dspcellmulspcell(Hat,Ha,1);
+	dspcelladd(&Wa, HatHai);
+	dspcellfree(Hat);
+	dspcellfree(Ha);
+	dspcellfree(HatHai);
     }
     if(use_ploc){
 	free(amp);
@@ -251,26 +251,26 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	spcell *Hat=spcellnew(ndm,1);
+	dspcell *Hat=dspcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    if(parms->dm[idm].isground && HatGround){
 		info("Reusing HatGround\n");
-		Hat->p[idm]=spref(HatGround);
+		Hat->p[idm]=dspref(HatGround);
 	    }else{
 		/*from DM to ploc (plocs) science beam */
 		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
 		if(parms->dm[idm].isground){
-		    HatGround=spref(Hat->p[idm]);
+		    HatGround=dspref(Hat->p[idm]);
 		}
 	    }
 	}
-	spcellmulmat(&HatWHmt,Hat,modc,wt[ievl]);
-	spcellfree(Hat);
+	dspcellmulmat(&HatWHmt,Hat,modc,wt[ievl]);
+	dspcellfree(Hat);
     }
-    spfree(HatGround);
+    dspfree(HatGround);
     dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC);
     dcell *Pngs=NULL;
@@ -323,7 +323,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
-	spcell *Hat=spcellnew(ndm,1);
+	dspcell *Hat=dspcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -332,14 +332,14 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 		/*from DM to ploc (plocs) science beam */
 		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
 		if(parms->dm[idm].isground){
-		    HatGround=spref(Hat->p[idm]);
+		    HatGround=dspref(Hat->p[idm]);
 		}
 	    }else{
-		Hat->p[idm]=spref(HatGround);
+		Hat->p[idm]=dspref(HatGround);
 	    }
-	    spmulmat(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],wt[ievl]);
+	    dspmulmat(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],wt[ievl]);
 	}
-	spcellfree(Hat);
+	dspcellfree(Hat);
     }
     dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC_TT);
@@ -547,10 +547,10 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
        Pngs=Rngs*GA
      */
-    spcell *saneai=recon->saneai;
+    dspcell *saneai=recon->saneai;
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
-	spcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
+	dspcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
 	if(parms->nlowfs==1 && ngsmod->nmod>5){
 	    /*There is only one wfs, remove first plate scale mode*/
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -572,7 +572,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		dcell *Matt=dcellnew(ndm,1);
 		dcell *GaM=NULL;
 		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
-		spcellmulmat(&GaM, recon->GAlo, Matt, 1);
+		dspcellmulmat(&GaM, recon->GAlo, Matt, 1);
 		dcell *tmp=dcellpinv(GaM, NULL,saneai);
 		dcell *tmp2=NULL;
 		dcellmulsp(&tmp2,tmp,recon->GAlo, 1);
@@ -598,7 +598,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		nact+=recon->aloc->p[idm]->nloc;
 	    }
 	    double maxeig=4./nact;
-	    spcelladdI(ngsmod->Wa, 1e-9*maxeig);
+	    dspcelladdI(ngsmod->Wa, 1e-9*maxeig);
 	    
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,ngsmod->Wa);
@@ -654,7 +654,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	dcellwrite(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
 	dcellwrite(recon->ngsmod->Ptt, "%s/ahst_Ptt", dirsetup);
 	dcellwrite(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
-	spcellwrite(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
+	dspcellwrite(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
     }
     
 }

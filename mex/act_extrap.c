@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     dsp *H=act_extrap_do(loc, cpl, thres);
     plhs[PL_H]=dsp2mx(H);
-    spfree(H);
+    dspfree(H);
     dfree(cpl);
     loc->locx=loc->locy=0;
     locfree(loc);

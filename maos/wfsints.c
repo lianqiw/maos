@@ -263,7 +263,7 @@ void wfsints(thread_t *thread_data){
 		/*max(otf) is 1 after multiply with norm. peak in corner  */
 		cfft2(otf,1);
 		/*Now peak in center because nominal is pre-treated.  */
-		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts->p[iwvl]*norm_ints);
+		dspmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts->p[iwvl]*norm_ints);
 	    }
 	}/*isa */
     }/*iwvl */

@@ -77,7 +77,7 @@ void readrand(rand_t *rstat, const char *format,...){
 
 #define COMBINE_BITS(x, y) \
 			(((x) & UPPER_MASK) | ((y) & LOWER_MASK))
-#define MATRIX_MULTIPLY(original, new) \
+#define MATRIX_MULTIPLX(original, new) \
 			((original) ^ ((new) >> 1) \
 			  ^ matrix_decider[(new) & 0x1])
 #define KNUTH_MULTIPLIER_OLD \
@@ -142,16 +142,16 @@ void mts_refresh(register mt_state* state /**< State for the PRNG */
 	value2 = state_ptr[1];
 	value1 = COMBINE_BITS(value1, value2);
 	state_ptr[2] =
-	  MATRIX_MULTIPLY(state_ptr[-RECURRENCE_OFFSET + 2], value1);
+	  MATRIX_MULTIPLX(state_ptr[-RECURRENCE_OFFSET + 2], value1);
 	value1 = state_ptr[0];
 	value2 = COMBINE_BITS(value2, value1);
 	state_ptr[1] =
-	  MATRIX_MULTIPLY(state_ptr[-RECURRENCE_OFFSET + 1], value2);
+	  MATRIX_MULTIPLX(state_ptr[-RECURRENCE_OFFSET + 1], value2);
 	}
     value2 = *--state_ptr;
     value1 = COMBINE_BITS(value1, value2);
     state_ptr[1] =
-      MATRIX_MULTIPLY(state_ptr[-RECURRENCE_OFFSET + 1], value1);
+      MATRIX_MULTIPLX(state_ptr[-RECURRENCE_OFFSET + 1], value1);
 
     for (i = (RECURRENCE_OFFSET - 1) / 2;  --i >= 0;  )
 	{
@@ -159,12 +159,12 @@ void mts_refresh(register mt_state* state /**< State for the PRNG */
 	value1 = state_ptr[1];
 	value2 = COMBINE_BITS(value2, value1);
 	state_ptr[2] =
-	  MATRIX_MULTIPLY(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET + 2],
+	  MATRIX_MULTIPLX(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET + 2],
 	    value2);
 	value2 = state_ptr[0];
 	value1 = COMBINE_BITS(value1, value2);
 	state_ptr[1] =
-	  MATRIX_MULTIPLY(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET + 1],
+	  MATRIX_MULTIPLX(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET + 1],
 	    value1);
 	}
 
@@ -175,7 +175,7 @@ void mts_refresh(register mt_state* state /**< State for the PRNG */
      */
     value1 = COMBINE_BITS(value2, state->statevec[MT_STATE_SIZE - 1]);
     *state_ptr =
-      MATRIX_MULTIPLY(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET], value1);
+      MATRIX_MULTIPLX(state_ptr[MT_STATE_SIZE - RECURRENCE_OFFSET], value1);
 
     /*
      * Now that refresh is complete, reset the state pointer to allow more

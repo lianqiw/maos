@@ -260,7 +260,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     long count[2];
     for(iw=0; iw<2; iw++){
 	nzmax[iw]=nsa*(dsa/dx)*16;/*four row in each side. */
-	GS0t[iw]=spnew(xloc->nloc, nsa, nzmax[iw]);
+	GS0t[iw]=dspnew(xloc->nloc, nsa, nzmax[iw]);
 	pp[iw]=GS0t[iw]->p; 
 	pi[iw]=GS0t[iw]->i; 
 	px[iw]=GS0t[iw]->x;
@@ -363,7 +363,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		    for(iw=0; iw<2; iw++){
 			if(count[iw]+4>nzmax[iw]){
 			    nzmax[iw]=nzmax[iw]*2;
-			    spsetnzmax(GS0t[iw], nzmax[iw]);
+			    dspsetnzmax(GS0t[iw], nzmax[iw]);
 			    pp[iw]=GS0t[iw]->p; 
 			    pi[iw]=GS0t[iw]->i; 
 			    px[iw]=GS0t[iw]->x;
@@ -448,17 +448,17 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	    error("Over flow\n");/*should never happen */
 	}
 	pp[iw][nsa]=count[iw];
-	spsetnzmax(GS0t[iw],count[iw]);
+	dspsetnzmax(GS0t[iw],count[iw]);
     }
     if(ampcopy!=amp)
 	free(ampcopy);
     /*concatenate x and y gradient operators together. */
-    dsp *GS0=spcat(GS0t[0], GS0t[1],1);
-    spfree(GS0t[0]); GS0t[0]=NULL;
-    spfree(GS0t[1]); GS0t[1]=NULL;
+    dsp *GS0=dspcat(GS0t[0], GS0t[1],1);
+    dspfree(GS0t[0]); GS0t[0]=NULL;
+    dspfree(GS0t[1]); GS0t[1]=NULL;
     /*loc_free_map(ploc);
       loc_free_map(xloc);*/
-    spdroptol(GS0, 1e-14);/*drop small values. */
+    dspdroptol(GS0, 1e-14);/*drop small values. */
     return GS0;
 }
 #ifndef MATLAB_MEX_FILE
@@ -469,8 +469,8 @@ dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc,
 	 int saorc, double scale, double dispx, double dispy, int do_partial){
     dsp *GS0T=mkgt(xloc, ploc, amp, saloc, 
 		   saorc, scale, dispx, dispy, do_partial);
-    dsp *GS0=sptrans(GS0T);
-    spfree(GS0T);
+    dsp *GS0=dsptrans(GS0T);
+    dspfree(GS0T);
     return GS0;
 }
 #endif

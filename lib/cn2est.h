@@ -66,7 +66,7 @@ typedef struct CN2EST_T{
     dmat *dx;        /**<sampling of each layer in reconstruction.*/
     dmat *dmht;      /**<For theta_2 printing*/
     dcell *wtrecon;   /**<layer weights for tomography*/
-    spcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
+    dspcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
     double r0m;       /**<averaged r0 from all the pairs.>*/
     double l0;        /**<outer scale*/
 } CN2EST_T;

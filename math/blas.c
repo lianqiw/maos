@@ -187,7 +187,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	X(write)(cc,"cc_isnan");
 	X(write)(A,"A_isnan");
 	X(write)(wt,"wt_isnan");
-	Y(spwrite)(Wsp, "Wsp_isnan");
+	X(spwrite)(Wsp, "Wsp_isnan");
     }
     X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
@@ -489,7 +489,7 @@ X(cell)* X(cellinvspd_each)(X(cell) *A){
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
 X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
 		     const X(cell) *wt,   /**<[in] Use a dense matrix for weighting*/
-		     const Y(spcell) *Wsp /**<[in] Use a sparse matrix for weighting*/
+		     const X(spcell) *Wsp /**<[in] Use a sparse matrix for weighting*/
 		     ){
     if(!A) return NULL;
     X(cell) *wA=NULL;
@@ -502,7 +502,7 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
     }else{
 	if(Wsp){
 	    assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
-	    Y(spcellmulmat)(&wA,Wsp,A,1);
+	    X(spcellmulmat)(&wA,Wsp,A,1);
 	}else{
 	    wA=X(cellref)(A);
 	}
