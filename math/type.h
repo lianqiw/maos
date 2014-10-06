@@ -26,23 +26,6 @@
    Don't use ulong for dimensions because subtracting a bigger ulong from a
    smaller ulong overflows.  */
 
-
-/*
-  Separate definition of struct with typedef. Put definition of struct in a
-  private file and typedef in a public interface to hide the struct from the
-  user */
-typedef enum{
-    M_DMAT=1,
-    M_SMAT,
-    M_CMAT,
-    M_ZMAT,
-    M_DSP,
-    M_SSP,
-    M_CSP,
-    M_ZSP,
-    M_CELL,
-}M_TYPE;
-
 typedef enum CEMBED{
     C_FULL,
     C_ABS2,

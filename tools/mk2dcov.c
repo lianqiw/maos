@@ -45,10 +45,10 @@ int main(int argc, char *argv[]){
 	normalize_max(amp->p, amp->nx, 1);
     }
     dcell *cov=dcellread("%s",argv[P_COV]);
-    dcell *cov2d=dcellnew(cov->nx, cov->ny);
+    dcell *cov2d=cellnew(cov->nx, cov->ny);
     int norm=(int)strtol(argv[P_NORM], NULL, 10);
     for(int i=0; i<cov->nx*cov->ny; i++){
 	mk2dcov(&cov2d->p[i], loc, amp?amp->p:NULL, 0.5, cov->p[i], norm);
     }
-    dcellwrite(cov2d, "%s", argv[P_RES]); 
+    writebin(cov2d, "%s", argv[P_RES]); 
 }

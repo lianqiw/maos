@@ -51,11 +51,11 @@ void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
     if(*pnominal){
 	ccellfree(*pnominal);
     }
-    *pnominal=ccellnew(nsa,1);
+    *pnominal=cellnew(nsa,1);
     if(*psi){
 	dspcellfree(*psi);
     }
-    *psi=dspcellnew(nsa,1);
+    *psi=cellnew(nsa,1);
     cmat *nominal=cnew(ncompx, ncompy);
     cfft2plan(nominal,-1);	
     cfft2plan(nominal,1);

@@ -902,7 +902,7 @@ double search_header_num_valid(const char *header, const char *key){
    represents the data type. Then write two numbers representing the
    dimension. Finally write the data itself.
  */
-void do_write(const void *fpn,     /**<[in] The file pointer*/
+void writearr(const void *fpn,     /**<[in] The file pointer*/
 	      const int isfn,      /**<[in] Is this a filename or already opened file*/
 	      const size_t size,   /**<[in] Size of each element*/
 	      const uint32_t magic,/**<[in] The magic number. see bin.h*/ 
@@ -928,49 +928,49 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 */
 void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
 }
 /**
    Write a double array of size nx*ny to file.
 */
 void writeflt(const float *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
 }
 /**
    Write a double complex array of size nx*ny to file.
 */
 void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(dcomplex), M_CMP, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(dcomplex), M_CMP, NULL, p, nx, ny);
 }
 /**
    Write a float complex array of size nx*ny to file.
 */
 void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(fcomplex), M_ZMP, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(fcomplex), M_ZMP, NULL, p, nx, ny);
 }
 /**
    Write a int array of size nx*ny to file.
  */
 void writeint(const int *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
 }
 /**
    Write a long array of size nx*ny to file.
  */
 void writelong(const long *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
 }
 /**
    Write spint array of size nx*ny to file. 
  */
 void writespint(const spint *p, long nx, long ny, const char *format,...){
     format2fn;
-    do_write(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
+    writearr(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
 }
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     uint32_t size=0;
@@ -1037,25 +1037,7 @@ spint *readspint(file_t *fp, long* nx, long* ny){
     }
     return out;
 }
-/**
-   A wrapper for opening file to read*/
-void *readbin(READFUN readfun, const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn, "rb");
-    void *out=readfun(fp, 0);
-    zfclose(fp);
-    return out;
-}
 
-/**
-   A wrapper for opening file to write*/
-void writebin(WRITEFUN writefun, const void *out, const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn, "wb");
-    if(!fp) return;
-    writefun(fp, out);
-    zfclose(fp);
-}
 /**
    Unreference the mmaped memory. When the reference drops to zero, unmap it.
  */

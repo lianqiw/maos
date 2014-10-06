@@ -215,6 +215,5 @@ int main(int argc, const char *argv[]){
     info2("Job finished at %s\n",myasctime());
     rename_file(0);
     scheduler_finish(0);
-    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
     return 0;
 }

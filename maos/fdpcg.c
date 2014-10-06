@@ -447,8 +447,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     /*Ray tracing operator for each WFS */
     if(parms->save.setup){
 	cspwrite(sel,"%s/fdpcg_sel",dirsetup);
-	cwrite(gx,"%s/fdpcg_gx",dirsetup);
-	cwrite(gy,"%s/fdpcg_gy",dirsetup);
+	writebin(gx,"%s/fdpcg_gx",dirsetup);
+	writebin(gy,"%s/fdpcg_gy",dirsetup);
 	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
 	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
     }
@@ -552,7 +552,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
     if(parms->save.setup){
-	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
+	writebin(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
     }
     double svd_thres=1e-7;
     info2("FDPCG SVD Threshold is %g\n", svd_thres);
@@ -566,7 +566,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	csvd_pow(fdpcg->Mbinv->p[ib], -1, svd_thres);
     }
     if(parms->save.setup){
-	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);
+	writebin(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);
     }
 #endif
     cspfree(Mhatp);
@@ -691,11 +691,11 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     /*apply forward FFT */
 #define DBG_FD 0
 #if DBG_FD
-    dcellwrite(xin, "fdc_xin");
+    writebin(xin, "fdc_xin");
 #endif
     CALL_THREAD(info_fft, 1);
 #if DBG_FD
-    ccellwrite(xhati, "fdc_fft");
+    writebin(xhati, "fdc_fft");
 #endif
 #if PRE_PERMUT
     czero(xhat2);
@@ -707,13 +707,13 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     CALL_THREAD(info_mulblock, 1);
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm->p,nxtot);
 #if DBG_FD
-    ccellwrite(xhat2i, "fdc_mul");
+    writebin(xhat2i, "fdc_mul");
 #endif
 #endif
     /*Apply inverse FFT */
     CALL_THREAD(info_ifft, 1);
 #if DBG_FD
-    dcellwrite(*xout, "fdc_xout"); 
+    writebin(*xout, "fdc_xout"); 
 #endif
     ccellfree(xhati);
     ccellfree(xhat2i);

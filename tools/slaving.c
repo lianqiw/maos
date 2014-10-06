@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     aloc->p[0]=locread("%s",argv[1]);
     dsp *ha=dspread("%s",argv[2]);
     double thres=argc>3?strtod(argv[3],NULL):0.5;
-    dspcell*has=dspcellnew(1,1); has->p[0]=ha;
+    dspcell*has=cellnew(1,1); has->p[0]=ha;
     dcell *actcpl=genactcpl(has, NULL);
     dspcell *slave=slaving(aloc, actcpl, NULL, NULL, NULL, thres, 1);
     dcellfree(actcpl);

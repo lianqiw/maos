@@ -129,7 +129,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dcell *merrm=dcellnew(1,1);dcell *pmerrm=NULL;
+    dcell *merrm=cellnew(1,1);dcell *pmerrm=NULL;
     const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;
     dmat *mres=dnew(nmod,nstep);
     PDMAT(mres,pmres);
@@ -162,18 +162,18 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     }
     if(kalman){
 	kalman_init(kalman);
-	mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
+	mpsol=cellnew(aster->nwfs, 1); //for psol grad.
     }
     const long nwvl=parms->maos.nwvl;
     dcell **psf=0, **mtche=0, **ints=0;
     ccell *wvf=0,*wvfc=0, *otf=0;
     if(hasphy){
 	psf=calloc(aster->nwfs, sizeof(dcell*));
-	wvf=ccellnew(aster->nwfs,1);
-	wvfc=ccellnew(aster->nwfs,1);
+	wvf=cellnew(aster->nwfs,1);
+	wvfc=cellnew(aster->nwfs,1);
 	mtche=calloc(aster->nwfs, sizeof(dcell*));
 	ints=calloc(aster->nwfs, sizeof(dcell*));
-	otf=ccellnew(aster->nwfs,1);
+	otf=cellnew(aster->nwfs,1);
     
 	for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -181,7 +181,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    wvf->p[iwfs]=cnew(ncomp,ncomp);
 	    wvfc->p[iwfs]=NULL;
-	    psf[iwfs]=dcellnew(nsa,nwvl);
+	    psf[iwfs]=cellnew(nsa,nwvl);
 	    cfft2plan(wvf->p[iwfs], -1);
 	    if(parms->skyc.multirate){
 		mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[(int)aster->idtrats->p[iwfs]];
@@ -191,7 +191,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    otf->p[iwfs]=cnew(ncomp,ncomp);
 	    cfft2plan(otf->p[iwfs],-1);
 	    cfft2plan(otf->p[iwfs],1);
-	    ints[iwfs]=dcellnew(nsa,1);
+	    ints[iwfs]=cellnew(nsa,1);
 	    int pixpsa=parms->skyc.pixpsa[ipowfs];
 	    for(long isa=0; isa<nsa; isa++){
 		ints[iwfs]->p[isa]=dnew(pixpsa,pixpsa);
@@ -403,8 +403,8 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     }
     if(parms->skyc.dbg){
 	int dtrati=(multirate?(int)dtrats->p[0]:dtratc);
-	dwrite(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
-	dwrite(mres,"%s/skysim_sim_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
+	writebin(gradsave,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrati);
+	writebin(mres,"%s/skysim_sim_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrati);
     }
   
     dfree(mreal);
@@ -446,18 +446,18 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	for(int ic=0; ic<sepsf->nx*sepsf->ny; ic++){
 	    dfftshift(sepsf->p[ic]);/*put peak in center. required by MAOS. */
 	}
-	dcellwrite(sepsf, "%s/pistat_wfs%d",path,iwfs+6);
+	writebin(sepsf, "%s/pistat_wfs%d",path,iwfs+6);
 	dcellfree(sepsf);
-	dwrite(aster->wfs[iwfs].pistat->sanea->p[seldtrat], "%s/nea_tot_wfs%d",path,iwfs+6);
-	dwrite(aster[selaster].wfs[iwfs].pistat->sanea->p[seldtrat], 
+	writebin(aster->wfs[iwfs].pistat->sanea->p[seldtrat], "%s/nea_tot_wfs%d",path,iwfs+6);
+	writebin(aster[selaster].wfs[iwfs].pistat->sanea->p[seldtrat], 
 	       "%s/nea_wfs%d",path,iwfs+6);
-	dcellwrite(aster[selaster].wfs[iwfs].pistat->sanea, 
+	writebin(aster[selaster].wfs[iwfs].pistat->sanea, 
 		   "%s/neafull_wfs%d",path,iwfs+6);
     }
-    dwrite(aster[selaster].gain->p[seldtrat], "%s/gain",path);
-    dwrite(simu->mres->p[isky], "%s/mres",path);
-    dwrite(simu->psd_tt,"%s/psd_tt",path);
-    dwrite(simu->psd_ps,"%s/psd_ps",path);
+    writebin(aster[selaster].gain->p[seldtrat], "%s/gain",path);
+    writebin(simu->mres->p[isky], "%s/mres",path);
+    writebin(simu->psd_tt,"%s/psd_tt",path);
+    writebin(simu->psd_ps,"%s/psd_ps",path);
     char fnconf[PATH_MAX];
     snprintf(fnconf,PATH_MAX,"%s/base.conf",path);
     FILE *fp=fopen(fnconf,"w");

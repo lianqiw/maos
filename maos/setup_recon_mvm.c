@@ -42,7 +42,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    ntotgrad+=powfs[ipowfs].saloc->nloc*2;
 	}
-	MVM=dcellnew(ndm, nwfs);
+	MVM=cellnew(ndm, nwfs);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
@@ -158,10 +158,10 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	    }
 	}
 	/*{
-	    dcellwrite(FLI, "cpu_dmfit_%ld", iact);
-	    dcellwrite(FRT, "cpu_opdx_%ld", iact);
-	    dcellwrite(RLT, "cpu_opdr_%ld", iact);
-	    dcellwrite(RRT, "cpu_grad_%ld", iact);
+	    writebin(FLI, "cpu_dmfit_%ld", iact);
+	    writebin(FRT, "cpu_opdx_%ld", iact);
+	    writebin(RLT, "cpu_opdr_%ld", iact);
+	    writebin(RRT, "cpu_grad_%ld", iact);
 	    }*/
     }
     dcellfree(FLI);
@@ -195,7 +195,7 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
 	nact+=recon->anloc->p[idm];
     }
-    dcell *MVMt=dcellnew(nwfs, ndm);
+    dcell *MVMt=cellnew(nwfs, ndm);
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
@@ -239,7 +239,7 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 		}
 	    }
 	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm)){
-	    dwrite(recon->MVM, "MVM.bin");
+	    writebin(recon->MVM, "MVM.bin");
 	}
 	if(parms->sim.mvmport){
 	    mvm_client_send_m(parms, recon->MVM);

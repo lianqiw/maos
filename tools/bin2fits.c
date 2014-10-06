@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
 		temp->p[i]->header=strdup(header[i]);
 	    }
 	}
-	dcellwrite(temp, "%s", fn2);
+	writebin(temp, "%s", fn2);
 	dcellfree(temp);
     }
 }

@@ -341,8 +341,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    toc2("MVM copy to CPU");
 	}
 	curfree(mvmt);
-	X(write)(residual, "MVM_RL_residual");
-	X(write)(residualfit, "MVM_FL_residual");
+	writebin(residual, "MVM_RL_residual");
+	writebin(residualfit, "MVM_FL_residual");
 	
 	if(parms->save.mvmi){
 	    for(int i=0; i<NGPU; i++){
@@ -350,7 +350,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		cudaMemcpy(mvmi->p+info[i].start*ntotxloc, mvmig->p[i]->p,  
 			   sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyDeviceToHost);
 	    }
-	    X(write)(mvmi, "MVM_Tomo.bin");
+	    writebin(mvmi, "MVM_Tomo.bin");
 	}
 	if(parms->save.mvmf){
 	    for(int i=0; i<NGPU; i++){
@@ -358,7 +358,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		cudaMemcpy(mvmf->p+info[i].start*ntotxloc, mvmfg->p[i]->p,  
 			   sizeof(Real)*ntotxloc*(info[i].end-info[i].start), cudaMemcpyDeviceToHost);
 	    }
-	    X(write)(mvmf, "MVM_FitL.bin");
+	    writebin(mvmf, "MVM_FitL.bin");
 	}
 	if(mvmig){
 	    for(int i=0; i<NGPU; i++){

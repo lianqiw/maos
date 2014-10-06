@@ -91,7 +91,7 @@ void X(invspd_inplace)(X(mat) *A){
     }
     Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
     if(info!=0){
-	X(write)(A,"posv");
+	writebin(A,"posv");
 	error("posv_ failed, info=%td. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
@@ -123,7 +123,7 @@ void X(inv_inplace)(X(mat)*A){
     ptrdiff_t *ipiv=calloc(N, sizeof(int));
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
-	X(write)(A,"gesv");
+	writebin(A,"gesv");
 	error("dgesv_ failed, info=%td. data saved to posv.\n",info);
     }
     memcpy(A->p, B, sizeof(T)*N*N);
@@ -184,9 +184,9 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     /*Compute inv of cc */
     /*X(invspd_inplace)(cc); */
     if(X(isnan(cc))){
-	X(write)(cc,"cc_isnan");
-	X(write)(A,"A_isnan");
-	X(write)(wt,"wt_isnan");
+	writebin(cc,"cc_isnan");
+	writebin(A,"A_isnan");
+	writebin(wt,"wt_isnan");
 	X(spwrite)(Wsp, "Wsp_isnan");
     }
     X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
@@ -331,7 +331,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #endif
     free(work1);
     if(info){
-	X(write)(A,"A_svd_failed");
+	writebin(A,"A_svd_failed");
 	if(info<0){
 	    error("The %td-th argument has an illegal value\n",info);
 	}else{
@@ -428,7 +428,7 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B,
 	if(nz!=B->ny) error("mismatch\n");
     }
     if(!*C0){
-	*C0=X(cellnew)(nx,ny);
+	*C0=cellnew(nx,ny);
     }
     X(cell) *C=*C0;
     for(int iy=0; iy<ny; iy++){

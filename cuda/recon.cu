@@ -254,7 +254,7 @@ Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 	if(omax>omax_last*5 || cgres>cgres_last*5){
 	    info("tomo cgres=%g cgres_last=%g. omax=%g, omax_last=%g\n", cgres, cgres_last, omax, omax_last);
 	    if(!disable_save){
-		dcellwrite(_gradin, "tomo_gradin_%d", isimr);
+		writebin(_gradin, "tomo_gradin_%d", isimr);
 		curcellwrite(opdr_save, "tomo_opdrlast_%d", isimr);
 		curcellwrite(opdr, "tomo_opdr_%d", isimr);
 		curcellwrite(tomo_rhs, "tomo_rhs_%d", isimr);
@@ -400,27 +400,27 @@ void curecon_t::tomo_test(SIM_T *simu){
     curcell *lg=NULL;
     curcell *rtg=NULL;
     muv(&rhsc, &recon->RR, simu->gradlastol, 1);
-    dcellwrite(rhsc, "CPU_TomoR");
+    writebin(rhsc, "CPU_TomoR");
     muv_trans(&rtc, &recon->RR, rhsc, 1);
-    dcellwrite(rtc, "CPU_TomoRt");
+    writebin(rtc, "CPU_TomoRt");
     if(parms->tomo.alg==1){
 	muv(&lc, &recon->RL, rhsc, 1);
-	dcellwrite(lc, "CPU_TomoL");
+	writebin(lc, "CPU_TomoL");
 	muv(&lc, &recon->RL, rhsc, -1);
-	dcellwrite(lc, "CPU_TomoL2");
+	writebin(lc, "CPU_TomoL2");
 	if(parms->tomo.precond==1){
 	    dcell *lp=NULL;
 	    fdpcg_precond(&lp, recon, rhsc);
-	    dcellwrite(lp, "CPU_TomoP");
+	    writebin(lp, "CPU_TomoP");
 	    fdpcg_precond(&lp, recon, rhsc);
-	    dcellwrite(lp, "CPU_TomoP2");
+	    writebin(lp, "CPU_TomoP2");
 	    dcellfree(lp);
 	}
     }
     dcellzero(lc);
     for(int i=0; i<5; i++){
 	muv_solve(&lc, &recon->RL, NULL, rhsc);
-	dcellwrite(lc, "CPU_TomoCG%d", i);
+	writebin(lc, "CPU_TomoCG%d", i);
     }
 	
     cp2gpu(&gradin, simu->gradlastol);
@@ -464,21 +464,21 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
     if(!simu->parms->gpu.tomo){
 	cp2gpu(&opdr_vec, simu->opdr);
     }
-    dcellwrite(simu->opdr, "opdr");
+    writebin(simu->opdr, "opdr");
     muv(&rhsc, &recon->FR, simu->opdr, 1);
-    dcellwrite(rhsc, "CPU_FitR");
+    writebin(rhsc, "CPU_FitR");
     muv(&lc, &recon->FL, rhsc, 1);
-    dcellwrite(lc, "CPU_FitL");
+    writebin(lc, "CPU_FitL");
     muv(&lc, &recon->FL, rhsc, -1);
-    dcellwrite(lc, "CPU_FitL2");
+    writebin(lc, "CPU_FitL2");
     dcellzero(lc);
     for(int i=0; i<5; i++){
 	muv_solve(&lc, &recon->FL, NULL, rhsc);
-	dcellwrite(lc, "CPU_FitSolve%d", i);
+	writebin(lc, "CPU_FitSolve%d", i);
     }
     dcell *lhs=NULL;
     muv_trans(&lhs, &recon->FR, rhsc, 1);
-    dcellwrite(lhs, "CPU_FitRt");
+    writebin(lhs, "CPU_FitRt");
 
     curcell *rhsg=NULL;
     curcell *lg=NULL;

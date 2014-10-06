@@ -248,7 +248,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(surf->ny<2 || surf->nx<2){
 	    error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
 	}
-	//dwrite((dmat*)surf, "surf_%d", isurf);
+	//writebin((dmat*)surf, "surf_%d", isurf);
 	const char *strname=search_header(surf->header, "SURFNAME");
 	const char *strevl=search_header(surf->header, "SURFEVL");
 	const char *strwfs=search_header(surf->header, "SURFWFS");
@@ -340,7 +340,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     }else{
 	error("opdfloc is not available\n");
 	//the following is wrong for two reasons: 1) ncpa_ndir may be different then evl.nevl, 2) ray tracing from locs to floc is not good because of edge effect.
-	xp=dcellnew(parms->sim.ncpa_ndir, 1);
+	xp=cellnew(parms->sim.ncpa_ndir, 1);
 	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
 	    xp->p[ievl]=dnew(recon->floc->nloc,1);
 	    prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
@@ -370,7 +370,7 @@ void FitL_NCPA(dcell **xout, const void *A,
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
-    recon->HA_ncpa=dspcellnew(nevl, ndm);
+    recon->HA_ncpa=cellnew(nevl, ndm);
     PDSPCELL(recon->HA_ncpa,HA);
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
@@ -391,7 +391,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     }
     toc2(" ");
     if(parms->save.setup){
-	dspcellwrite(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
+	writebin(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
     }
 }
 void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
@@ -469,7 +469,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    dfree(ampw);
 	    dscale(opdi, err/sqrt(var));
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		if(!powfs[ipowfs].opdadd->p[jwfs]){
@@ -495,7 +495,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
 	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    const int nx=powfs[ipowfs].pts->nx;
 	    const int nxsa=nx*nx;
@@ -525,20 +525,20 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     if(parms->nsurf || parms->ntsurf){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
 		}
 	    }
 	}
 	if(!aper->opdadd){
-	    aper->opdadd=dcellnew(parms->evl.nevl,1);
+	    aper->opdadd=cellnew(parms->evl.nevl,1);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
 	    }
 	}
 	if(!aper->opdfloc && parms->sim.ncpa_calib){
-	    aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
+	    aper->opdfloc=cellnew(parms->sim.ncpa_ndir,1);
 	    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
 		aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 	    }
@@ -578,7 +578,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    int maxit=40;
 	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
 	    dcellfree(rhs);
-	    dcellwrite(recon->dm_ncpa, "dm_ncpa");
+	    writebin(recon->dm_ncpa, "dm_ncpa");
 	    dspcellfree(recon->HA_ncpa);
 	}
 	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
@@ -593,10 +593,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	*/
     }
     if(parms->save.setup){
-	dcellwrite(aper->opdadd, "%s/surfevl.bin",  dirsetup);
-	dcellwrite(aper->opdfloc, "%s/surffloc.bin", dirsetup);
+	writebin(aper->opdadd, "%s/surfevl.bin",  dirsetup);
+	writebin(aper->opdfloc, "%s/surffloc.bin", dirsetup);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
+	    writebin(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
     }
     dcellfree(aper->opdfloc);

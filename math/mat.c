@@ -23,11 +23,9 @@
 #include "defs.h"/*Defines T, X, etc */
 
 /**
-   Work horse function that creats the matrix object. if p is
-   NULL, memory is allocated. Allocation for X(mat) objects
-   should always be created directly or indirectly through
-   X(new_do) so that changing data structure is straight
-   forward.
+   The only function that actually creats the matrix object. It ensures that all
+   fields are properly initialized. If p is NULL, memory is allocated. If ref is
+   true, p is treated as external resource and is not reference counted.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     X(mat) *out=calloc(1, sizeof(X(mat)));
@@ -50,17 +48,16 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     return out;
 }
 /**
-   Creat a X(mat) object to reference an already existing
-   vector.  free the X(mat) object won't free the existing
-   vector.
+   Creat a X(mat) object to reference an already existing vector.  Free the
+   X(mat) object won't free the existing vector.
 */
 X(mat) *X(new_ref)(long nx, long ny, T *p){
     return X(new_do)(nx,ny,p,1);
 }
 
 /**
-   Creat a X(mat) object with already allocated memory
-   chunk. the memory is freed when the X(mat) is freed.
+   Creat a X(mat) object with already allocated memory chunk. the memory is
+   freed when the X(mat) is freed.
 */
 X(mat) *X(new_data)(long nx, long ny, T *p){
     return X(new_do)(nx,ny,p,0);
@@ -73,7 +70,7 @@ X(mat) *X(new)(long nx, long ny){
     return X(new_do)(nx,ny,NULL,0);
 }
 /**
-   check the size of matrix if exist. Otherwise create it
+   check the size of matrix if exist. Otherwise create it.
 */
 void X(init)(X(mat)**A, long nx, long ny){
     if(*A){
@@ -83,10 +80,12 @@ void X(init)(X(mat)**A, long nx, long ny){
     }
 }
 /**
-   Free the X(mat), but keep the data.
-*/
-void X(free_keepdata)(X(mat) *A){
-    X(free_do)(A,1);
+   cast a cell object to X(mat)
+ */
+X(mat) *X(mat_cast)(cell *A){
+    if(!A) return 0;
+    assert(A->id==M_T);
+    return (X(mat)*)A;
 }
 /**
    free a X(mat) object. if keepdata!=0, will not free A->p.
@@ -122,6 +121,13 @@ void X(free_do)(X(mat) *A, int keepdata){
 }
 
 /**
+   Free the X(mat), but keep the data.
+*/
+void X(free_keepdata)(X(mat) *A){
+    X(free_do)(A,1);
+}
+
+/**
    creat a X(mat) reference an existing X(mat). Use the reference carefully.
 */
 X(mat) *X(ref)(const X(mat) *in){
@@ -131,7 +137,7 @@ X(mat) *X(ref)(const X(mat) *in){
     if(!in->nref){
 	extern quitfun_t quitfun;
 	if(quitfun==&default_quitfun){
-	    warning_once("Referencing non-referrable data. This may cause error.\n");
+	    warning_once("Referencing non-referenced data. This may cause error.\n");
 	}
     }else{
 	atomicadd(in->nref, 1);
@@ -160,7 +166,7 @@ X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
 }
 
 /**
-   Create a new sub matrix of nx*ny starting from(sx,sy)
+   Create a new sub matrix of nx*ny starting from(sx,sy) and copy the data.
 */
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     if(nx<=0){
@@ -179,8 +185,8 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     return out;
 }
 /**
-   Resize a matrix by adding or removing columns or rows. Data is kept
-   whenever possible.
+   Resize a matrix by adding or removing columns or rows. Data is kept whenever
+   possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
     if(!A->nref || A->nref[0]>1){
@@ -206,7 +212,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
 }
 
 /**
-   concatenate two matrixes into 1 along dimension "dim"
+   Concatenate two matrixes into 1 along dimension "dim"
 */
 X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
     if(!in2){
@@ -250,6 +256,20 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
     return out;
 }
 
+/**
+   copy the values from one X(mat) to another.
+*/
+void X(cp)(X(mat) **out0, const X(mat) *in){
+    if(in && in->nx && in->ny){
+	X(init)(out0, in->nx, in->ny);
+	X(mat) *out=*out0;
+	if(out->p!=in->p){
+	    memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
+	}
+    }else{
+	X(zero)(*out0);
+    }
+}
 
 /**
    duplicate a X(mat) array
@@ -258,25 +278,6 @@ X(mat) *X(dup)(const X(mat) *in){
     X(mat) *out=NULL;
     X(cp)(&out, in);
     return out;
-}
-
-/**
-   copy the values from one X(mat) to another.
-*/
-void X(cp)(X(mat) **out0, const X(mat) *in){
-    if(in && in->nx && in->ny){
-	if(!*out0) 
-	    *out0=X(new)(in->nx, in->ny);
-	else{
-	    assert(in->nx==(*out0)->nx && in->ny == (*out0)->ny);
-	}
-	X(mat) *out=*out0;
-	if(out->p!=in->p){
-	    memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
-	}
-    }else{
-	X(zero)(*out0);
-    }
 }
 
 /**
@@ -354,7 +355,7 @@ T X(sum)(const X(mat) *A){
     return v;
 }
 /**
-   trace
+   compute the trace (sum of diagonal elements)
 */
 T X(trace)(const X(mat)*A){
     T trace=0;
@@ -401,8 +402,8 @@ void X(fftshift)(X(mat) *A){
 }
 
 /**
-   reorder B
-   and embed/crop into center of A 
+   reorder B and embed/crop into center of A .
+
    \verbatim
    4 * * 3
    * * * *
@@ -450,9 +451,7 @@ void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
    \endverbatim
 */
 void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
-    if(!*B0){
-	*B0=X(new)(A->nx, A->ny);
-    }
+    X(init)(B0, A->nx, A->ny);
     X(mat) *B=*B0;
 
     const int nx=A->nx; 
@@ -474,13 +473,23 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 	memcpy(B->p, A->p, sizeof(T)*nx*ny);
     }
 }
-
+/**
+   cast a cell object to X(cell)
+ */
+X(cell) *X(cell_cast)(cell *A){
+    if(!A) return 0;
+    assert(A->id==MCC_ANY);
+    for(int i=0; i<A->nx*A->ny; i++){
+	assert(!A->p[i] || A->p[i]->id==M_T);
+    }
+    return (X(cell)*)A;
+}
 /**
    create an new X(cell) similar to A in shape.
    When a cell is empty, it is created with a (0,0) array and cannot be overriden.
 */
 X(cell) *X(cellnew2)(const X(cell) *A){
-    X(cell) *out=X(cellnew)(A->nx, A->ny);
+    X(cell) *out=cellnew(A->nx, A->ny);
     long tot=0;
     for(long i=0; i<A->nx*A->ny; i++){
 	if(!isempty(A->p[i])){
@@ -501,9 +510,9 @@ X(cell) *X(cellnew2)(const X(cell) *A){
 }
 /**
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
- */
+*/
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
-    X(cell) *out=X(cellnew)(nx,ny);
+    X(cell) *out=cellnew(nx,ny);
     long tot=0;
     for(long i=0; i<nx*ny; i++){
 	tot+=nnx[i]*(nny?nny[i]:1);
@@ -525,7 +534,7 @@ void X(cellinit)(X(cell)**A, long nx, long ny){
     if(*A){
 	assert((*A)->nx == nx && (*A)->ny==ny);
     }else{
-	*A=X(cellnew)(nx, ny);
+	*A=cellnew(nx, ny);
     }
 }
 /**
@@ -534,7 +543,7 @@ void X(cellinit)(X(cell)**A, long nx, long ny){
 */
 X(cell) *X(cellref)(const X(cell) *in){
     if(!in) return NULL;
-    X(cell) *out=X(cellnew)(in->nx, in->ny);
+    X(cell) *out=cellnew(in->nx, in->ny);
     if(in->m){
 	out->m=X(ref)(in->m);
 	for(int i=0; i<in->nx*in->ny; i++){
@@ -603,7 +612,7 @@ void X(cellset)(X(cell)*dc, T val){
 */
 X(cell) *X(celltrans)(const X(cell) *A){
     if(!A) return NULL;
-    X(cell) *B=X(cellnew)(A->ny, A->nx);
+    X(cell) *B=cellnew(A->ny, A->nx);
     X(mat)* (*Bp)[B->nx]=(void*)B->p;
     X(mat)* (*Ap)[A->nx]=(void*)A->p;
     for(int ix=0; ix<A->nx; ix++){
@@ -645,7 +654,7 @@ static void X(celldim)(const X(cell) *A, long *nx, long *ny,
 }
 
 /**
-   reduce nx*ny cell matrix to 1*ny if dim=1 and nx*1 if dim=2
+   reduce nx*ny cell matrix to 1*ny if dim=1 and nx*1 if dim=2 by merging the cells.
 */
 X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     if(!A) return NULL;
@@ -655,7 +664,7 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     if(nx==0 || ny==0) return NULL;
     PCELL(A,pA);
     if(dim==1){
-	out=X(cellnew)(1, A->ny);
+	out=cellnew(1, A->ny);
 	for(long iy=0; iy<A->ny; iy++){
 	    if(nys[iy]==0) continue;
 	    out->p[iy]=X(new)(nx,nys[iy]);
@@ -672,7 +681,7 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    }
 	}
     }else if(dim==2){
-	out=X(cellnew)(A->nx,1);
+	out=cellnew(A->nx,1);
 	for(long ix=0; ix<A->nx; ix++){
 	    if(nxs[ix]==0) continue;
 	    out->p[ix]=X(new)(nxs[ix],ny);
@@ -695,7 +704,7 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 }
 
 /**
-   concatenate two cell matrices along dimenstion 'dim'
+   concatenate two cell matrices along dimenstion 'dim'.
 */
 X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
     if(!A){
@@ -718,7 +727,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 	    error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	out=X(cellnew)(A->nx+B->nx, A->ny);
+	out=cellnew(A->nx+B->nx, A->ny);
 	PCELL(out,pout);
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<A->nx; ix++){
@@ -734,7 +743,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 	    error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n", 
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	out=X(cellnew)(A->nx, A->ny+B->ny);
+	out=cellnew(A->nx, A->ny+B->ny);
 	PCELL(out,pout);
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<A->nx; ix++){
@@ -769,7 +778,7 @@ X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim){
     if(A->nx!=B->nx || A->ny!=B->ny){
 	error("Mismatch: (%ld %ld), (%ld %ld)\n",A->nx, A->ny, B->nx, B->ny);
     }
-    X(cell) *out=X(cellnew)(A->nx, A->ny);
+    X(cell) *out=cellnew(A->nx, A->ny);
     for(long ix=0; ix<A->nx*A->ny; ix++){
 	out->p[ix]=X(cat)(A->p[ix], B->p[ix], dim);
     }
@@ -777,7 +786,7 @@ X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim){
 }
 
 /**
-   drop empty rows or columns. (size of *A0 is changed.
+   drop empty rows or columns. size of *A0 is changed.
 */
 void X(celldropempty)(X(cell) **A0, int dim){
     X(cell) *A=*A0;
@@ -904,7 +913,7 @@ X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
 	error("Shape doesn't agree. nx=%ld, nx=%ld\n", nx,A->nx);
     }
     long kr=0;
-    X(cell) *B=X(cellnew)(ndim,1);
+    X(cell) *B=cellnew(ndim,1);
     B->m=X(ref)(A);
     for(long ix=0; ix<ndim; ix++){
 	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);
@@ -925,7 +934,7 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	      nx,ny,A->nx,A->ny);
     }
     if(!*B){
-	*B=X(cellnew)(ref->nx, ref->ny);
+	*B=cellnew(ref->nx, ref->ny);
 	PCELL((*B),Bp);
 	for(long iy=0; iy<ref->ny; iy++){
 	    for(long ix=0; ix<ref->nx; ix++){
@@ -965,7 +974,7 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
     if(ny<=0){
 	ny=in->ny-sy;
     }
-    X(cell)*out=X(cellnew)(nx, ny);
+    X(cell)*out=cellnew(nx, ny);
     if(sx+nx>in->nx || sy+ny>in->ny){
 	error("Invalid parameter range\n");
     }

@@ -16,7 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "mathdef.h"
+/**
+   \file cell.c
+*/
 
+/**
+   Create a generic cell array.
+*/
 void *cellnew(long nx, long ny){
     cell *dc;
     if(nx<0) nx=0;
@@ -30,19 +36,37 @@ void *cellnew(long nx, long ny){
     }
     return dc;
 }
+/**
+   Resize a generic cell array.
+*/
 void cellresize(void *in, long nx, long ny){
     cell *A=(cell*)in;
     if(A->nx==nx || A->ny==1){
-	A->p=realloc(A->p, sizeof(cell*)*nx*ny);
-	if(nx*ny>A->nx*A->ny){
-	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(cell*));
+	int nold=A->nx*A->ny;
+	int nnew=nx*ny;
+	if(nnew<nold && iscell(A->id)){
+	    for(int i=nnew; i<nold; i++){
+		cellfree_do(A->p[i]);
+	    }
+	}
+	A->p=realloc(A->p, sizeof(cell*)*nnew);
+	if(nnew>nold){
+	    memset(A->p+nold, 0, (nnew-nold)*sizeof(cell*));
 	}
     }else{
 	cell **p=calloc(nx*ny, sizeof(cell*));
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
 	for(long iy=0; iy<miny; iy++){
-	    memcpy(p+iy*nx, A->p+iy*A->nx, sizeof(cell*)*minx);
+	    for(long ix=0; ix<minx; ix++){
+		p[ix+iy*nx]=A->p[ix+iy*A->nx];
+		A->p[ix+iy*A->nx]=0;
+	    }
+	}
+	if(iscell(A->id)){
+	    for(long i=0; i<A->nx*A->ny; i++){
+		cellfree_do(A->p[i]);
+	    }
 	}
 	free(A->p);
 	A->p=p;
@@ -53,12 +77,12 @@ void cellresize(void *in, long nx, long ny){
 /**
    free a mat or cell object.
 */
-void cellfree_do(void *pix){
-    if(!pix) return;
-    long id=*((long*)(pix));
+void cellfree_do(void *A){
+    if(!A) return;
+    long id=*((long*)(A));
     switch(id & 0xFFFF){
     case MCC_ANY:{
-	cell *dc=(cell*)pix;
+	cell *dc=(cell*)A;
 	if(dc->p){
 	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
 		cellfree_do(dc->p[ix]);
@@ -77,38 +101,34 @@ void cellfree_do(void *pix){
 	free(dc);
     }break;
     case M_DBL:
-	dfree_do(pix,0);break;
+	dfree_do(A,0);break;
     case M_CMP:
-	cfree_do(pix,0);break;
+	cfree_do(A,0);break;
     case M_FLT:
-	sfree_do(pix,0);break;
+	sfree_do(A,0);break;
     case M_ZMP:
-	zfree_do(pix,0);break;
+	zfree_do(A,0);break;
     case M_LOC64:
-	locfree_do(pix);break;
-    case M_SP32:
-    case M_SP64:
-	dspfree_do(pix);break;
-    case M_SSP32:
-    case M_SSP64:
-	sspfree_do(pix);break;
-    case M_CSP32:
-    case M_CSP64:
-	cspfree_do(pix);break;
-    case M_ZSP64:
-    case M_ZSP32:
-	zspfree_do(pix);break;
+	locfree_do(A);break;
+    case M_DSP:
+	dspfree_do(A);break;
+    case M_SSP:
+	sspfree_do(A);break;
+    case M_CSP:
+	cspfree_do(A);break;
+    case M_ZSP:
+	zspfree_do(A);break;
     default:
 	error("Unknown id=%lx\n", id);
     }
 }
 
-void writedata_by_id(file_t *fp, const void *pix, long id){
-    if(pix){
+void writedata_by_id(file_t *fp, const void *A, long id){
+    if(A){
 	if(!id){
-	    id=*((long*)(pix));
+	    id=*((long*)(A));
 	}else if (id!=MCC_ANY){
-	    long id2=*((long*)(pix));
+	    long id2=*((long*)(A));
 	    if((id & id2)!=id && (id & id2) != id2){
 		error("id=%ld, id2=%ld, mismatch\n", id, id2);
 	    }
@@ -118,7 +138,7 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
     }
     switch(id){
     case MCC_ANY:{
-	const cell *dc=pix;
+	const cell *dc=A;
 	uint64_t nx=0;
 	uint64_t ny=0;
 	if(dc){
@@ -149,40 +169,36 @@ void writedata_by_id(file_t *fp, const void *pix, long id){
     }
 	break;
     case M_DBL:
-	dwritedata(fp, (dmat*)pix);break;
+	writebindata(fp, (dmat*)A);break;
     case M_CMP:
-	cwritedata(fp, (cmat*)pix);break;
+	writebindata(fp, (cmat*)A);break;
     case M_FLT:
-	swritedata(fp, (smat*)pix);break;
+	writebindata(fp, (smat*)A);break;
     case M_ZMP:
-	zwritedata(fp, (zmat*)pix);break;
+	writebindata(fp, (zmat*)A);break;
     case M_LONG:
-	lwritedata(fp, (lmat*)pix);break;
+	lwritedata(fp, (lmat*)A);break;
     case M_LOC64:
-	locwritedata(fp, (loc_t*)pix);break;
+	locwritedata(fp, (loc_t*)A);break;
     case M_MAP64:
-	mapwritedata(fp, (map_t*)pix);break;
-    case M_SP32:
-    case M_SP64:
-	dspwritedata(fp, (dsp*)pix);break;
-    case M_SSP32:
-    case M_SSP64:
-	sspwritedata(fp, (ssp*)pix);break;
-    case M_CSP32:
-    case M_CSP64:
-	cspwritedata(fp, (csp*)pix);break;
-    case M_ZSP64:
-    case M_ZSP32:
-	zspwritedata(fp, (zsp*)pix);break;	
+	mapwritedata(fp, (map_t*)A);break;
+    case M_DSP:
+	dspwritedata(fp, (dsp*)A);break;
+    case M_SSP:
+	sspwritedata(fp, (ssp*)A);break;
+    case M_CSP:
+	cspwritedata(fp, (csp*)A);break;
+    case M_ZSP:
+	zspwritedata(fp, (zsp*)A);break;	
     default:
 	error("Unknown id=%lx\n", id);
     }
 }
 
-void write_by_id(const void *dc, long id, const char* format,...){
+void write_by_id(const void *A, long id, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    writedata_by_id(fp, dc, id);
+    writedata_by_id(fp, A, id);
     zfclose(fp);
 }
 void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
@@ -192,6 +208,9 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	read_header(header, fp);
     }
     void *out=0;
+    if(level<0 && !iscell(header->magic)){
+	level=0;
+    }
     if(zfisfits(fp) || level==0){
 	switch(level){
 	case 0:/*read a mat*/
@@ -204,17 +223,13 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    case M_LONG: out=lreaddata(fp, header);break;
 	    case M_LOC64: out=locreaddata(fp, header); break;
 	    case M_MAP64: out=mapreaddata(fp, header); break;
-	    case M_SP32:
-	    case M_SP64:
+	    case M_DSP32: case M_DSP64: /**Possible to read mismatched integer*/
 		out=dspreaddata(fp, header);break;
-	    case M_SSP32:
-	    case M_SSP64:
+	    case M_SSP32: case M_SSP64:
 		out=sspreaddata(fp, header);break;
-	    case M_CSP32:
-	    case M_CSP64:
+	    case M_CSP32: case M_CSP64:
 		out=cspreaddata(fp, header);break;
-	    case M_ZSP64:
-	    case M_ZSP32:
+	    case M_ZSP64: case M_ZSP32:
 		out=zspreaddata(fp, header);break;	
 	    default:error("id=%lx\n", id);
 	    }
@@ -242,11 +257,12 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	}
     }else{
 	if(!iscell(header->magic)){
-	    error("Traying to read cell from non cell data\n");
+	    error("Trying to read cell from non cell data\n");
 	}else{
 	    long nx=header->nx;
 	    long ny=header->ny;
 	    cell *dcout=cellnew(nx, ny);
+	    dcout->header=header->str; header->str=0;
 	    for(long i=0; i<nx*ny; i++){
 		dcout->p[i]=readdata_by_id(fp, id, level-1, 0);
 	    }
@@ -264,4 +280,18 @@ void* read_by_id(long id, int level, const char *format, ...){
     zfeof(fp);
     zfclose(fp);
     return out;
+}
+
+void* readbin(const char *format, ...){
+    format2fn;
+    return read_by_id(0, -1, "%s", fn);
+}
+
+void writebin(const void *A, const char *format, ...){
+    format2fn;
+    write_by_id(A, 0, "%s", fn);
+}
+
+void writebindata(file_t *fp, const void *A){
+    writedata_by_id(fp, A, 0);
 }

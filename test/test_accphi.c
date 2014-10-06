@@ -373,7 +373,7 @@ static void test_accuracy(void){
     {
 	dmat *A=dnew(60,60);
 	dcircle(A,30,30,1,1,30,1);
-	dwrite(A,"accphi_A");
+	writebin(A,"accphi_A");
 	pts=calloc(1,sizeof(pts_t));
 	map_t *maptmp=mapnew(A->nx, A->ny, dx, dx,A->p);
 	loc_t *tmp=map2loc(maptmp);

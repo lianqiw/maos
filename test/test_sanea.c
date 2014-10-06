@@ -39,7 +39,7 @@ static void test_ints(){
 		pnea[isa+nsa][isim]=gny[1]-gnf[1];
 	    }
 	}
-	dwrite(nea,"test_sanea_wfs%d.bin",iwfs);
+	writebin(nea,"test_sanea_wfs%d.bin",iwfs);
     }
 }
 /*
@@ -72,7 +72,7 @@ static void test_i0(){
 	    pnea[isa+nsa][isim]=gny[1]-gnf[1];
 	}
     }
-    dwrite(nea,"test_sanea_i0.bin");
+    writebin(nea,"test_sanea_i0.bin");
     }*/
 int main(){
     test_ints();

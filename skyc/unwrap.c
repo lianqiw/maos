@@ -97,19 +97,19 @@ static dmat* gen_unwrap(long nx, long ny){
     dsp *HtH=dspmulsp(Ht,H);
     dmat *cHtH=NULL;
     dspfull(&cHtH,HtH,1);
-    /*dwrite(cHtH,"cHtH"); */
+    /*writebin(cHtH,"cHtH"); */
     /*caddI(cHtH,1e-9); */
     dmat *IcHtH=dinv(cHtH);
-    /*dwrite(IcHtH,"IcHtH"); */
+    /*writebin(IcHtH,"IcHtH"); */
     dmat *out=NULL;
     dmulsp(&out, IcHtH, Ht, 1);
-    /*dwrite(out,"HI"); */
+    /*writebin(out,"HI"); */
     dfree(IcHtH);
     dfree(cHtH);
     dspfree(HtH);
     dspfree(H);
     dspfree(Ht);
-    dwrite(out,"%s",fn);
+    writebin(out,"%s",fn);
     return out;
 }
 
@@ -133,7 +133,7 @@ static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phir
     }
     /*toc("assemble");tic; */
     dzero(phirecon);
-    /*dwrite(diff,"diff"); */
+    /*writebin(diff,"diff"); */
     dmulvec(phirecon->p, unwrap, diff->p, 1);
     /*toc("mul");tic; */
     /*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
@@ -180,7 +180,7 @@ static void convert_wvf(GENPISTAT_S *data){
     cellarr *phase=cellarr_init(nstep,1,"%s",fnphase);
     const int nsa=msa*msa;
     const int nwvl=parms->maos.nwvl;
-    ccell *phi=ccellnew(nsa,nwvl);
+    ccell *phi=cellnew(nsa,nwvl);
     const long npsf=ncomp/2;
     dmat *phirecon=dnew(npsf,npsf);
     dmat *diff=dnew(npsf*2,npsf);
@@ -207,7 +207,7 @@ static void convert_wvf(GENPISTAT_S *data){
 }
   /*convert wvf of a+bi to log(a+bi) for interpolation. */
     /*
-    data->unwrap=dcellnew(parms->maos.npowfs,1);
+    data->unwrap=cellnew(parms->maos.npowfs,1);
     for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	long ncomp=parms->maos.ncomp[ipowfs];
 	data->unwrap->p[ipowfs]=gen_unwrap(ncomp/2,ncomp/2);
@@ -231,9 +231,9 @@ static void convert_wvf(GENPISTAT_S *data){
 	dmat *diff=dnew(npsf*2,npsf);
 	dmat *phirecon=dnew(npsf,npsf);
 	do_unwrap(phi,wvf,data->unwrap->p[0],diff,phirecon);
-	cwrite(wvf,"wvf");
-	cwrite(phi,"phi");
-	dwrite(opd,"opd");
+	writebin(wvf,"wvf");
+	writebin(phi,"phi");
+	writebin(opd,"opd");
 	/*	exit(0); */
 	}
     data->icase=0;

@@ -61,7 +61,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
     int nloc=plocs->nloc;
     double *amp=aper->amp->p;
     const int nmod=ngsmod->nmod;
-    dcell *mcc=dcellnew(parms->evl.nevl,1);
+    dcell *mcc=cellnew(parms->evl.nevl,1);
     PDMAT(aper->mcc,aMCC);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	mcc->p[ievl]=dnew(nmod,nmod);
@@ -155,8 +155,8 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
 
-	dspcell *Hat=dspcellnew(ndm,1);
-	dspcell *Ha=dspcellnew(1,ndm);
+	dspcell *Hat=cellnew(ndm,1);
+	dspcell *Ha=cellnew(1,ndm);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -210,7 +210,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     y=loc->locy;
     nloc=loc->nloc;
 
-    dcell *modc=dcellnew(1,1);/*W*Hm*M */
+    dcell *modc=cellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
     PDMAT(modc->p[0],mod);
     for(int iloc=0; iloc<nloc; iloc++){
@@ -220,7 +220,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     const double MCC_fcp=ngsmod->aper_fcp;
     /*dc component of the focus mod. subtract during evaluation. */
     /*this is not precisely R^2/2 due to obscuration */
-    dcell *HatWHmt=dcellnew(ndm,1);
+    dcell *HatWHmt=cellnew(ndm,1);
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
@@ -251,7 +251,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	dspcell *Hat=dspcellnew(ndm,1);
+	dspcell *Hat=cellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -271,7 +271,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	dspcellfree(Hat);
     }
     dspfree(HatGround);
-    dcell *IMCC=dcellnew(1,1);
+    dcell *IMCC=cellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC);
     dcell *Pngs=NULL;
     dcellmm(&Pngs,IMCC,HatWHmt,"nt",1);
@@ -310,20 +310,20 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     y=loc->locy;
     nloc=loc->nloc;
 
-    dcell *modc=dcellnew(1,1);/*W*Hm*M */
+    dcell *modc=cellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
     PDMAT(modc->p[0],mod);
     for(int iloc=0; iloc<nloc; iloc++){
 	mod[0][iloc]=x[iloc]*amp[iloc];
 	mod[1][iloc]=y[iloc]*amp[iloc];
     }
-    dcell *HatWHmt=dcellnew(ndm,1);
+    dcell *HatWHmt=cellnew(ndm,1);
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
-	dspcell *Hat=dspcellnew(ndm,1);
+	dspcell *Hat=cellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -341,9 +341,9 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	}
 	dspcellfree(Hat);
     }
-    dcell *IMCC=dcellnew(1,1);
+    dcell *IMCC=cellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC_TT);
-    dcell *Ptt=dcellnew(ndm,1);
+    dcell *Ptt=cellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
 	dmm(&(Ptt->p[idm]),0,IMCC->p[0],HatWHmt->p[idm],"nt",1);
     }
@@ -361,10 +361,10 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod; 
     int ndm=parms->ndm;
     int nmod=ngsmod->nmod;
-    dcell *M=dcellnew(1,1);
+    dcell *M=cellnew(1,1);
     M->p[0]=dnew(nmod,1);
-    dcell *mod=dcellnew(ndm,1);
-    dcell *dmt=dcellnew(ndm,1);
+    dcell *mod=cellnew(ndm,1);
+    dcell *dmt=cellnew(ndm,1);
     loc_t **aloc=recon->aloc->p;
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
@@ -393,14 +393,14 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
     NGSMOD_T *ngsmod=recon->ngsmod;
     loc_t **aloc=recon->aloc->p;
     const int ndm=parms->ndm;
-    dcell *dmt=dcellnew(ndm,1);
+    dcell *dmt=cellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
     }
-    dcell *M=dcellnew(1,1);
+    dcell *M=cellnew(1,1);
     const int nmod=ngsmod->nmod;
     M->p[0]=dnew(nmod,1);
-    dcell *HMC=dcellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
+    dcell *HMC=cellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
     PDCELL(HMC,HM);
     int nloc=aper->locs->nloc;
     for(int imod=0; imod<nmod; imod++){
@@ -435,7 +435,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
     const double scale1=1.-scale;
     const int nmod=ngsmod->nmod;
     const double MCC_fcp=recon->ngsmod->aper_fcp;
-    dcell *HMC=dcellnew(parms->evl.nevl,nmod);
+    dcell *HMC=cellnew(parms->evl.nevl,nmod);
     PDCELL(HMC,HM);
     double *x=aper->locs->locx;
     double *y=aper->locs->locy;
@@ -530,7 +530,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     if(parms->save.setup){
-	dwrite(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
+	writebin(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);
@@ -567,9 +567,9 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	/*Use gradient weighting. */
 	dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
 	if(parms->tomo.ahst_ttr){
-	    ngsmod->Ptt=dcellnew(parms->ndm,1);
+	    ngsmod->Ptt=cellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
-		dcell *Matt=dcellnew(ndm,1);
+		dcell *Matt=cellnew(ndm,1);
 		dcell *GaM=NULL;
 		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
 		dspcellmulmat(&GaM, recon->GAlo, Matt, 1);
@@ -604,7 +604,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,ngsmod->Wa);
 	    toc("Pngs");
 	    if(parms->tomo.ahst_ttr){
-		ngsmod->Ptt=dcellnew(parms->ndm,1);
+		ngsmod->Ptt=cellnew(parms->ndm,1);
 		for(int idm=0; idm<ndm; idm++){
 		    dmat *Matt=loc2mat(recon->aloc->p[idm],0);
 		    ngsmod->Ptt->p[idm]=dpinv(Matt, NULL, ngsmod->Wa->p[idm+idm*ndm]);
@@ -625,7 +625,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
 	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,NULL);
 	if(parms->tomo.ahst_ttr){
-	    ngsmod->Ptt=dcellnew(parms->ndm,1);
+	    ngsmod->Ptt=cellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
 		dmat *Matt=loc2mat(recon->aloc->p[idm],0);
 		ngsmod->Ptt->p[idm]=dpinv(Matt, NULL,NULL);
@@ -649,12 +649,12 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }
     if(parms->save.setup){
 	/*ahst stands for ad hoc split tomography */
-    	dcellwrite(recon->ngsmod->GM,  "%s/ahst_GM",  dirsetup);
-	dcellwrite(recon->ngsmod->Rngs,"%s/ahst_Rngs",dirsetup);
-	dcellwrite(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
-	dcellwrite(recon->ngsmod->Ptt, "%s/ahst_Ptt", dirsetup);
-	dcellwrite(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
-	dspcellwrite(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
+    	writebin(recon->ngsmod->GM,  "%s/ahst_GM",  dirsetup);
+	writebin(recon->ngsmod->Rngs,"%s/ahst_Rngs",dirsetup);
+	writebin(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
+	writebin(recon->ngsmod->Ptt, "%s/ahst_Ptt", dirsetup);
+	writebin(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
+	writebin(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
     }
     
 }
@@ -748,7 +748,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     /*convert mode vector and add to dm commands */
     const int ndm=recon->ndm;
     if(!*dmc){
-	*dmc=dcellnew(ndm,1);
+	*dmc=cellnew(ndm,1);
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!(*dmc)->p[idm]){

@@ -69,7 +69,7 @@ static int test_tomo(){
     dcell *rhs=NULL;
     MUV(&rhs, &RR, grad, 1);
     toc("");
-    dcellwrite(rhs,"rhs.bin");
+    writebin(rhs,"rhs.bin");
     MUV_T RL;
     RL.M=dspcellread("RLM.bin");
     RL.U=dcellread("RLU.bin");
@@ -80,7 +80,7 @@ static int test_tomo(){
 	MUV(&junk, &RL, rhs, 1);
     } 
     toc("");
-    dcellwrite(junk,"MUV1.bin");
+    writebin(junk,"MUV1.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
     recon->G0=dspcellread("G0.bin");
     recon->TT=dcellread("TT.bin");
@@ -92,12 +92,12 @@ static int test_tomo(){
     dcell *rhs2=NULL;
     TomoR(&rhs2, recon, grad, 1);
     toc("");
-    dcellwrite(rhs2,"rhs2.bin");
+    writebin(rhs2,"rhs2.bin");
     dcell *junk2=NULL;
     tic;
     TomoL(&junk2, recon, rhs, 1);
     toc("");
-    dcellwrite(junk2,"TomoL1.bin");
+    writebin(junk2,"TomoL1.bin");
     info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
     info("Diff between lhs is %g\n", dcelldiff(junk,junk2));
 
@@ -124,8 +124,8 @@ static int test_fit(){
     for(int i=0; i<10; i++)
 	MUV(&MUV_f, &FL, rhs, 1);
     toc("");
-    dcellwrite(rhs,"fit_rhs1.bin");
-    dcellwrite(MUV_f,"MUV_f.bin");
+    writebin(rhs,"fit_rhs1.bin");
+    writebin(MUV_f,"MUV_f.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
     recon->HX=dspcellread("HX.bin");
     recon->HA=dspcellread("HA.bin");
@@ -138,13 +138,13 @@ static int test_fit(){
     for(int i=0; i<10; i++)
 	FitR(&rhs2, recon, opdr, 1);
     toc("");
-    dcellwrite(rhs2,"fit_rhs2.bin");
+    writebin(rhs2,"fit_rhs2.bin");
     tic;
     dcell *FitL_f=NULL;
     for(int i=0; i<10; i++)
 	FitL(&FitL_f, recon, rhs2, 1);
     toc("");
-    dcellwrite(FitL_f,"FitL_f.bin");
+    writebin(FitL_f,"FitL_f.bin");
     info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
     info("Diff between lhs is %g\n", dcelldiff(MUV_f, FitL_f));
     dcellfree(rhs);

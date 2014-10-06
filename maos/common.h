@@ -32,7 +32,7 @@
 #include "types.h"
 #include "utils.h"
 extern double TOMOSCALE;
-extern int exit_success;
+extern int exit_fail;
 extern const char* dirsetup;
 extern const char *dirskysim;
 #define EXIT raise(SIGTERM)

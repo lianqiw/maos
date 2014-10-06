@@ -533,18 +533,18 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		ptim[1][ic*6+1]=4;
 		ptim[1][ic*6+2]=5;
 		ptim[1][ic*6+3]=5;
-		swrite(tim, "timing2_%dgpu%d_step%d", ngpu, igpu, istep);
+		writebin(tim, "timing2_%dgpu%d_step%d", ngpu, igpu, istep);
 		X(free)(tim);
 	    }
 	}
 #endif
     }
     cudaProfilerStop();
-    //swrite(dmres->p[0], "dmres");
+    //writebin(dmres->p[0], "dmres");
 
-    X(write)(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    X(write)(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
-    X(write)(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing, "timing_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
     X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
     
     X(free)(mvm1);

@@ -412,10 +412,10 @@ static void skysim_calc_psd(SIM_S *simu){
     add_psd2(&simu->psd_ngs, parms->skyc.psd_ws);
     add_psd2(&simu->psd_tt, parms->skyc.psd_ws);
     if(parms->skyc.dbg){
-	dwrite(simu->psd_tt, "psd_tt");
-	dwrite(simu->psd_ps, "psd_ps");
-	dwrite(simu->psd_ngs, "psd_ngs");
-	dwrite(simu->psd_focus, "psd_focus");
+	writebin(simu->psd_tt, "psd_tt");
+	writebin(simu->psd_ps, "psd_ps");
+	writebin(simu->psd_ngs, "psd_ngs");
+	writebin(simu->psd_focus, "psd_focus");
     }
 }
 
@@ -445,9 +445,9 @@ static void skysim_prep_gain(SIM_S *simu){
 						 dtrat, parms->skyc.pmargin, sigma2, servotype);
 	}
 	if(parms->skyc.dbg){
-	    dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
-	    dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-	    dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+	    writebin(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+	    writebin(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
+	    writebin(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
 	}
     }
     toc2("servo_optim");
@@ -465,7 +465,7 @@ static void skysim_prep_sde(SIM_S *simu){
       kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
     */
     dmat *x=dtrans(simu->mideal);
-    simu->psdi=dcellnew(x->ny, 1);
+    simu->psdi=cellnew(x->ny, 1);
     simu->sdecoeff=dnew(3,x->ny);
     PDMAT(simu->sdecoeff, pcoeff);
     for(int im=0; im<x->ny; im++){
@@ -486,8 +486,8 @@ static void skysim_prep_sde(SIM_S *simu){
     
     dfree(x);
     if(parms->skyc.dbg || 1){
-	dwrite(simu->sdecoeff, "coeff");
-	dcellwrite(simu->psdi, "psdi");
+	writebin(simu->sdecoeff, "coeff");
+	writebin(simu->psdi, "psdi");
     }
 }
 /**
@@ -495,7 +495,7 @@ static void skysim_prep_sde(SIM_S *simu){
 */
 void skysim(const PARMS_S *parms){
     /*if(parms->skyc.dbg){
-	dwrite(parms->skyc.resfocus, "%s/resfocus",dirsetup);
+	writebin(parms->skyc.resfocus, "%s/resfocus",dirsetup);
 	}*/
     const int npowfs=parms->maos.npowfs;
     SIM_S *simu=calloc(1, sizeof(SIM_S));
@@ -549,7 +549,7 @@ void skysim(const PARMS_S *parms){
 	    simu->stars->ny=1;
 	}
 	sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
-	dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,parms->skyc.seed);
+	writebin(simu->stars, "Res%d_%d_stars",simu->seed_maos,parms->skyc.seed);
 	if(parms->skyc.addws){
 	    skysim_update_mideal(simu);
 	}

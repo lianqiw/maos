@@ -11,7 +11,7 @@ static void test_w1(){
     mkw_amp(loc,amp,&W0,&W1);
     info("Sum W1=%g",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
-    dwrite(W1,"W1");
+    writebin(W1,"W1");
     dspwrite(W0,"W0");
     locwrite(loc,"loc");
 }
@@ -32,7 +32,7 @@ static void test_wploc(){
     mkw_amp(loc,amp,&W0,&W1);
     info("Sum W1=%g\n",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
-    dwrite(W1,"pW1");
+    writebin(W1,"pW1");
     dspwrite(W0,"pW0");
 }
 static void test_wcir(){
@@ -42,7 +42,7 @@ static void test_wcir(){
     mkw_circular(loc,0,0,10,&W0,&W1);
     locwrite(loc,"loc");
     dspwrite(W0,"W0");
-    dwrite(W1,"W1");
+    writebin(W1,"W1");
 }
 static void test_int_reg(){
     int n=100;
@@ -101,7 +101,7 @@ void test_loc_reduce_sp(void){
     dspcell *G0=dspcellread("G0.bin");
     loc_reduce_sp(xloc[0],G0->p[0],2,1);
     locarrwrite(xloc,nloc,"xloc2");
-    dspcellwrite(G0,"G02.bin");
+    writebin(G0,"G02.bin");
     locarrfree(xloc,nloc);
     dspcellfree(G0);
     G0=dspcellread("G0.bin");
@@ -120,23 +120,23 @@ static void test_loc_reduce_spcell(void){
     dspcell *G0t=dspcelltrans(G0);
     loc_reduce_spcell(xloc[0],G0t,1,1);
     dspcell *G04=dspcelltrans(G0t);
-    dspcellwrite(G04,"G05.bin");
+    writebin(G04,"G05.bin");
     locarrwrite(xloc,nloc,"xloc5");
     }
 static void test_zernike(){
     loc_t *loc=locread("loc_circle.bin");
     dmat *mod=zernike(loc,1,10);
     locwrite(loc,"loc");
-    dwrite(mod,"mod");
+    writebin(mod,"mod");
     dgramschmidt(mod,NULL);
-    dwrite(mod,"mod_norm");
+    writebin(mod,"mod_norm");
     }
 static void test_embed(){
     loc_t *loc=mkcirloc(10, 1./64);
     locwrite(loc, "loccir");
     dmat *opd=dnew(645,645);
     dembed_locstat(&opd, loc, NULL);
-    dwrite(opd, "locopd");
+    writebin(opd, "locopd");
     }*/
 int main(){
     /*  

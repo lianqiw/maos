@@ -187,7 +187,7 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
 
 	if(!isfinite(psdcov_in->p[0])){
 	    warning("covariance is not finite at 0\n");
-	    dwrite(psdcov_in, "bad_cov");
+	    writebin(psdcov_in, "bad_cov");
 	}
 	psdcov_sde=dnew(nf, 1);
     }else{//Use PSD fit
@@ -260,7 +260,7 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     }else{
 	//Do vibration identification
 	dmat *vibs=psd_vibid(psdin);
-	dcell *coeffs=dcellnew(1, vibs?(1+vibs->ny):1);
+	dcell *coeffs=cellnew(1, vibs?(1+vibs->ny):1);
 	dmat *coeffi=dnew(3,1);
 	dmat *psd2=ddup(psdin);
 	if(vibs && vibs->ny>0){
@@ -281,9 +281,9 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 		if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI){
 		    warning("Fitting failed for %d, Freq=%g, %g\n", ivib, 
 			    sqrt(coeffi->p[1])/(2*M_PI), sqrt(coeffs->p[ivib]->p[1])/(2*M_PI));
-		    dwrite(psdi, "psdi_%d", ivib);
-		    dwrite(coeffi, "coeffi_%d", ivib);
-		    dwrite(coeffs->p[ivib], "coeffo_%d", ivib);
+		    writebin(psdi, "psdi_%d", ivib);
+		    writebin(coeffi, "coeffi_%d", ivib);
+		    writebin(coeffs->p[ivib], "coeffo_%d", ivib);
 		    if(fabs(sqrt(coeffi->p[1])-sqrt(coeffs->p[ivib]->p[1]))>2*M_PI*5){
 			dcp(&coeffs->p[ivib], coeffi);
 			warning("Use input\n");
@@ -353,7 +353,7 @@ dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const d
 #if 1
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
     int nk=Cs->nx;
-    dcell *Mout=dcellnew(nk, 1);
+    dcell *Mout=cellnew(nk, 1);
     if(nk==1){
 	Mout->p[0]=reccati(Pout&&!*Pout?Pout:0, A, Qn, Cs->p[0], Rns->p[0]);
 	return Mout;
@@ -396,7 +396,7 @@ dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs,
 }
 #else //the above one is slightly better.
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *Cs, const dcell *Rns){
-    dcell *Mout=dcellnew(Cs->nx, 1);
+    dcell *Mout=cellnew(Cs->nx, 1);
     for(int ik=0; ik<Cs->nx; ik++){
 	if(Cs->p[ik]){
 	    Mout->p[ik]=reccati(Pout&&!*Pout?Pout:0, A, Qn, Cs->p[ik], Rns->p[ik]);
@@ -472,10 +472,10 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     dsort(dtrats, 1);
     const int dtrat_min=dtrats->p[0];
     dmat*  Sigma_varep=0;/*state noise in discrete space*/
-    dcell* Sigma_zeta =dcellnew(ndtrat,1);/*state measurement noise*/
-    dcell *Radd       =dcellnew(ndtrat,1);
-    dcell *Raddchol   =dcellnew(ndtrat,1);
-    dcell *Xi=dcellnew(ndtrat,1);
+    dcell* Sigma_zeta =cellnew(ndtrat,1);/*state measurement noise*/
+    dcell *Radd       =cellnew(ndtrat,1);
+    dcell *Raddchol   =cellnew(ndtrat,1);
+    dcell *Xi=cellnew(ndtrat,1);
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	/*Evaluate noise covariance matrix of discrete state, and measurement of the
 	 * state. This block takes most of the preparation step*/
@@ -543,9 +543,9 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
     res->dtrat=ddup(dtrat_wfs);
     res->Gwfs=dcelldup(Gwfs);//Used for simulation. Do not mess with it.
     res->Rwfs=dcelldup(Rwfs);
-    res->Rn=dcellnew(nkalman, 1);
+    res->Rn=cellnew(nkalman, 1);
     res->Qn=dref(Sigma_varep);
-    res->Cd=dcellnew(nkalman, 1);
+    res->Cd=cellnew(nkalman, 1);
     
     /*Loop over first set of steps to find needed kalman filter.*/
     for(int istep=0; istep<dtrat_prod; istep++){
@@ -557,8 +557,8 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    }
 	}
 	if(indk && !res->Cd->p[indk-1]){
-	    dcell *Rnadd=dcellnew(nwfs, nwfs);
-	    dcell *Cd=dcellnew(nwfs, 1);
+	    dcell *Rnadd=cellnew(nwfs, nwfs);
+	    dcell *Cd=cellnew(nwfs, 1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		dmat *Gwfsi=0;//Use for reconstruction. 
 		if(indk==1 && nmod==12 && KALMAN_IN_SKYC){
@@ -686,8 +686,8 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     }
     dcell *Gwfs=kalman->Gwfs;
     const int nwfs=Gwfs->nx;
-    dcell *rmsn=dcellnew(nwfs,1);
-    dcell *noise=dcellnew(nwfs,1);
+    dcell *rmsn=cellnew(nwfs,1);
+    dcell *noise=cellnew(nwfs,1);
     long ngs[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ng=Gwfs->p[iwfs]->nx;
@@ -707,7 +707,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     rand_t rstat;
     seed_rand(&rstat, 1);
     dmat *outi=dnew_ref(nmod, 1, (double*)1);//wraper
-    dcell *inic=dcellnew(1,1); inic->p[0]=dnew_ref(nmod,1,(double*)1);//wrapper
+    dcell *inic=cellnew(1,1); inic->p[0]=dnew_ref(nmod,1,(double*)1);//wrapper
     dmat *ini=inic->p[0];
     for(int istep=0; istep<input->ny; istep++){
 	ini->p=(double*)(pinput+istep);

@@ -99,7 +99,7 @@ void mapwritedata(file_t *fp, map_t *map){
 	}
     }
     dmat *in=(dmat*) map;
-    dwritedata(fp, in);
+    writebindata(fp, in);
 }
 
 /**

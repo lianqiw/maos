@@ -43,12 +43,10 @@
 X(sp)* X(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;\
 X(sp) *X(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *X(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-void   X(spmove)(X(sp) *A, X(sp) *res);\
 X(sp) *X(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *X(spnewrandu)(int nx, int ny, const T mean, R fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
 void X(spsetnzmax)(X(sp) *sp, long nzmax);\
 void X(spfree_do)(X(sp) *sp);\
-void X(sparrfree)(X(sp) **sparr, int n);\
 void X(spdisp)(const X(sp) *sp);\
 int X(spcheck)(const X(sp) *sp);\
 void X(spscale)(X(sp) *A, const T beta);\
@@ -61,10 +59,12 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
 void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha);\
 void X(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
 void X(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha); \
+void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha); \
 void X(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
 void X(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
 T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\
 T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
+void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
 void X(spcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
 void X(sptcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
 void X(spcellmulmat_thread)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
@@ -85,7 +85,6 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
 X(sp) *X(sptmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
 void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const T scale);\
 X(spcell) *X(spcellmulspcell)(const X(spcell) *A, const X(spcell) *B, const T scale) CHECK_UNUSED_RESULT;\
-X(spcell) *X(spcellnew)(const long nx, const long ny) CHECK_UNUSED_RESULT;\
 X(spcell) *X(spcelltrans)(const X(spcell) *spc) CHECK_UNUSED_RESULT;\
 void X(spcellfree_do)(X(spcell) *spc);\
 X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int type) CHECK_UNUSED_RESULT;\

@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int exit_success=0;
+int exit_fail=0;
 #include "mem.h"
 #include "thread.h"
 #include "scheduler_client.h"
@@ -308,10 +308,10 @@ static __attribute__((destructor)) void deinit(){
 	FREE(p1);
     }
     if(MALLOC==malloc_dbg){
-	if(exit_success){
+	if(!exit_fail){
 	    malloc_dbg_disable(1);
 	}else{
-	    info("exit_success=%d\n", exit_success);
+	    info("exit_fail=%d\n", exit_fail);
 	}
     }
 }

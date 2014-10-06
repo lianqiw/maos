@@ -33,7 +33,7 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
     ){
     const int nwvl=wvl->nx*wvl->ny;
     locfft_t *locfft=calloc(sizeof(locfft_t), 1);
-    locfft->embed=lcellnew(nwvl, 1);
+    locfft->embed=cellnew(nwvl, 1);
     locfft->nembed=lnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	if(iwvl==0 || (fftsize && fftsize->p[iwvl]>0 && fftsize->p[iwvl]!=locfft->nembed->p[0])){
@@ -51,7 +51,7 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
     locfft->ampnorm=dsumsq(amp);
     if(fieldstop){
 	locfft->fieldstop=fieldstop;
-	locfft->fieldmask=dcellnew(nwvl, 1);
+	locfft->fieldmask=cellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    int nembed=locfft->nembed->p[iwvl];
 	    locfft->fieldmask->p[iwvl]=dnew(nembed, nembed);
@@ -106,7 +106,7 @@ static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wv
 void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
     long nwvl=locfft->wvl->nx;
     if(!*psf2s){
-	*psf2s=ccellnew(nwvl, 1);
+	*psf2s=cellnew(nwvl, 1);
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++)
 #if _OPENMP>=200805
@@ -173,7 +173,7 @@ void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int s
 */
 void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
     int nwvl=locfft->wvl->nx;
-    ccell *wvfs=ccellnew(nwvl, 1);
+    ccell *wvfs=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int nembed=locfft->nembed->p[iwvl];
 	lmat *embed=locfft->embed->p[iwvl];

@@ -137,8 +137,8 @@ static double gain_at_phase(double *fcross, /**<[out] Cross over frequency*/
 	static int saved=0;
 	if(!saved){
 	    saved=1;
-	    cwrite(Hol, "Hol");
-	    dwrite(nu, "nu");
+	    writebin(Hol, "Hol");
+	    writebin(nu, "nu");
 	}
 	}*/
     return gain;/**/
@@ -338,7 +338,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     default:
 	error("Invalid servo_type=%d\n", servo_type);
     }
-    dcell *gm=dcellnew(sigma2n->nx, sigma2n->ny);
+    dcell *gm=cellnew(sigma2n->nx, sigma2n->ny);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
     double g0_max=2.0;
@@ -586,13 +586,13 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     int nmod=input->nx;
     PDMAT(input,pinput);
     dmat *merr=dnew(nmod,1);
-    dcell *mreal=dcellnew(1,1);
+    dcell *mreal=cellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
     dmat *sigman=NULL;
     if(dnorm(sigma2n)>0){
 	sigman=dchol(sigma2n);
     }
-    dcell *meas=dcellnew(1,1);
+    dcell *meas=cellnew(1,1);
     dmat *noise=dnew(nmod, 1);
     SERVO_T *st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
     rand_t rstat;
@@ -907,15 +907,15 @@ void hyst_calib(HYST_T *hyst, int ih){
     hyst_reset(hyst);
     hyst->xscale*=(dmax(cmd)-dmin(cmd))/(dmax(real)-dmin(real));
     warning("x would be multiplied by %g\n", hyst->xscale);
-    dwrite(real, "hyst%d_real", ih);
-    dwrite(cmd,  "hyst%d_cmd", ih);
+    writebin(real, "hyst%d_real", ih);
+    writebin(cmd,  "hyst%d_cmd", ih);
     for(int i=0; i<N; i++){
 	cmd0->p[0]=cmd->p[i];
 	hyst_dmat(hyst, real0, cmd0);
 	real->p[i]=real0->p[0];
     }
     hyst_reset(hyst);
-    dwrite(real, "hyst%d_realcalib", ih);
+    writebin(real, "hyst%d_realcalib", ih);
     dfree(cmd);
     dfree(real);
     dfree(cmd0);

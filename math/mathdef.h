@@ -148,58 +148,73 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
-
-#define dwrite(out, A...) write_by_id((void*)out, M_DBL, A)
-#define dread(A...)    (dmat*)read_by_id(M_DBL, 0, A)
+/** Read needs type checking, so don't use autoread/cellread*/
+#define dread(A...)    dmat_cast((cell*)read_by_id(M_DBL, 0, A))
 #define dcellnew (dcell*)cellnew
-#define dcellreaddata(fp, header) (dcell*)readdata_by_id(fp, M_DBL, 1, header)
+#define dcellreaddata(fp, header) dcell_cast((cell*)readdata_by_id(fp, M_DBL, 1, header))
 #define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
 #define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
 #define dcccellread(A...) (dcccell*)read_by_id(M_DBL, 3, A)
 
-#define swrite(out, A...) write_by_id((void*)out, M_FLT, A)
-#define sread(A...)    (smat*)read_by_id(M_FLT, 0, A)
+#define sread(A...)    smat_cast((cell*)read_by_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
-#define scellreaddata(fp, header) (scell*)readdata_by_id(fp, M_FLT, 1, header)
+#define scellreaddata(fp, header) scell_cast((cell*)readdata_by_id(fp, M_FLT, 1, header))
 #define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
 #define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
 
-#define cwrite(out, A...) write_by_id((void*)out, M_CMP, A)
-#define cread(A...)    (cmat*)read_by_id(M_CMP, 0, A)
+#define cread(A...)    cmat_cast((cell*)read_by_id(M_CMP, 0, A))
 #define ccellnew (ccell*)cellnew
-#define ccellreaddata(fp, header) (ccell*)readdata_by_id(fp, M_CMP, 1, header)
+#define ccellreaddata(fp, header) ccell_cast((cell*)readdata_by_id(fp, M_CMP, 1, header))
 #define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
 #define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
 #define ccccellread(A...) (ccccell*)read_by_id(M_CMP, 3, A)
 
-#define zwrite(out, A...) write_by_id((void*)out, M_ZMP, A)
-#define zread(A...)    (zmat*)read_by_id(M_ZMP, 0, A)
+#define zread(A...)    zmat_cast((cell*)read_by_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew
-#define zcellreaddata(fp, header) (zcell*)readdata_by_id(fp, M_ZMP, 1, header)
+#define zcellreaddata(fp, header) zcell_cast((cell*)readdata_by_id(fp, M_ZMP, 1, header))
 #define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
 #define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
 
-#define lwrite(out, A...) write_by_id((void*)out, M_LONG, A)
-#define lread(A...) (lmat*)read_by_id(M_LONG, 0, A)
+#define lread(A...) lmat_cast((cell*)read_by_id(M_LONG, 0, A))
 #define lcellnew (lcell*)cellnew
-#define lcellreaddata(fp, header) (lcell*)readdata_by_id(fp, M_LONG, 1, header)
+#define lcellreaddata(fp, header) lcell_cast((cell*)readdata_by_id(fp, M_LONG, 1, header))
 #define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
 #define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
 
-#define cellwrite(out, A...) write_by_id((void*)out, 0, A)
-#define cellwritedata(fp, out) writedata_by_id(fp, (void*)out, 0)
-#define icellwrite cellwrite
-#define dcellwrite cellwrite
-#define ccellwrite cellwrite
-#define scellwrite cellwrite
-#define zcellwrite cellwrite
-#define icellwritedata cellwritedata
-#define dcellwritedata cellwritedata
-#define ccellwritedata cellwritedata
-#define scellwritedata cellwritedata
-#define zcellwritedata cellwritedata
+#define dspread(A...) (dsp*)read_by_id(M_DSP, 0, A)
+#define dspcellread(A...) (dspcell*)read_by_id(M_DSP, 1, A)
+#define sspread(A...) (ssp*)read_by_id(M_SSP, 0, A)
+#define sspcellread(A...) (sspcell*)read_by_id(M_SSP, 1, A)
+#define cspread(A...) (csp*)read_by_id(M_CSP, 0, A)
+#define cspcellread(A...) (cspcell*)read_by_id(M_CSP, 1, A)
+#define zspread(A...) (zsp*)read_by_id(M_ZSP, 0, A)
+#define zspcellread(A...) (zspcell*)read_by_id(M_ZSP, 1, A)
+
+#define writebin writebin
+#define writebin writebin
+#define writebin writebin
+#define writebin writebin
+#define lwrite writebin
+#define iwritebin writebin
+#define writebinbin writebin
+#define writebinbin writebin
+#define writebinbin writebin
+#define writebinbin writebin
+#define iwritebindata writebindata
+#define writebinbindata writebindata
+#define writebinbindata writebindata
+#define writebinbindata writebindata
+#define writebinbindata writebindata
+#define dspwrite writebin
+#define cspwrite writebin
+#define sspwrite writebin
+#define zspwrite writebin
+#define dspwritebin writebin
+#define cspwritebin writebin
+#define sspwritebin writebin
+#define zspwritebin writebin
 
 #endif

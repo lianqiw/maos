@@ -853,6 +853,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     if(fatal_error_in_progress){
 	return;
     }
+    extern int exit_fail;
+    exit_fail=1;
     fatal_error_in_progress++;
     if(siginfo && siginfo->si_addr){
 	info2("Memory location: %p\n", siginfo->si_addr);
@@ -881,7 +883,6 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
 void register_signal_handler(int (*func)(int)){
     struct sigaction act={{0}};
     act.sa_sigaction=default_signal_handler;
-    //act.sa_mask=SIGBUS|SIGILL|SIGSEGV|SIGINT|SIGTERM|SIGABRT|SIGHUP|SIGUSR1|SIGQUIT;
     act.sa_flags=SA_SIGINFO;
     sigaction(SIGBUS, &act, 0);
     sigaction(SIGILL, &act, 0);

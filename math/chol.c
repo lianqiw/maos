@@ -194,7 +194,7 @@ void chol_save(spchol *A, const char *format,...){
 	header_t header={MCC_ANY, 2, 1, NULL};
 	write_header(&header, fp);
 	dspwritedata(fp, C);
-	do_write(fp, 0, sizeof(spint), M_SPINT, "Cp", A->Cp, C->m, 1);
+	writearr(fp, 0, sizeof(spint), M_SPINT, "Cp", A->Cp, C->m, 1);
     }else if(A->L){/*Save native cholmod format. */
 	cholmod_factor *L=A->L;
 	char str[1024];
@@ -219,21 +219,21 @@ void chol_save(spchol *A, const char *format,...){
 	nc=L->is_super?7:8;
 	header_t header={MCC_ANY, nc, 1, str};
 	write_header(&header, fp);
-	do_write(fp, 0, sizeof(spint), M_SPINT, "Perm", L->Perm, L->n, 1);
-	do_write(fp, 0, sizeof(spint), M_SPINT, "ColCount", L->ColCount, L->n, 1);
+	writearr(fp, 0, sizeof(spint), M_SPINT, "Perm", L->Perm, L->n, 1);
+	writearr(fp, 0, sizeof(spint), M_SPINT, "ColCount", L->ColCount, L->n, 1);
 	if(L->is_super==0){/*Simplicity */
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "p", L->p, L->n+1, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "i", L->i, L->nzmax, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "nz", L->nz, L->n, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "next", L->next, L->n+2, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "prev", L->prev, L->n+2, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "p", L->p, L->n+1, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "i", L->i, L->nzmax, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "nz", L->nz, L->n, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "next", L->next, L->n+2, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "prev", L->prev, L->n+2, 1);
 	}else{
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "super", L->super, L->nsuper+1, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "pi", L->pi, L->nsuper+1, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
-	    do_write(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "super", L->super, L->nsuper+1, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "pi", L->pi, L->nsuper+1, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
+	    writearr(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
 	}
-	do_write(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
+	writearr(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
     }
     zfclose(fp);
 }

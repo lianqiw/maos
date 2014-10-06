@@ -241,7 +241,7 @@ void filter_cl(SIM_T *simu){
 	warning("Drop a frame at step %d\n", simu->isim);
     }else if(simu->dmerr){
 	if(parms->recon.modal){
-	    dmerr=dcellnew(parms->ndm, 1);
+	    dmerr=cellnew(parms->ndm, 1);
 	    for(int idm=0; idm<parms->ndm; idm++){
 		dmm(&dmerr->p[idm], 0, recon->amod->p[idm], simu->dmerr->p[idm], "nn", 1);
 	    }

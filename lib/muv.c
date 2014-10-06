@@ -129,7 +129,7 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     assert(A->M);/*Don't support A->Mfun yet.  */
     PDSPCELL(A->M, AM);
     if(!*xout){
-	*xout=dcellnew(A->M->nx, xin->ny);
+	*xout=cellnew(A->M->nx, xin->ny);
     }
     dspmulmat(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], alpha);
     if(A->V && A->U){
@@ -248,7 +248,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     int nb=A->M->nx;
     A->nb=nb;
     if(use_svd){
-	A->MIB=dcellnew(nb,1);
+	A->MIB=cellnew(nb,1);
     }else{
 	A->CB=calloc(nb, sizeof(spchol*));
     }
@@ -273,8 +273,8 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	dcell *V2=dcellreduce(A->V, 2);
 	dcellfree(A->V); A->V=V2;
 
-	A->UpB=dcellnew(A->U->nx, A->U->ny);	
-	A->VpB=dcellnew(A->V->nx, A->V->ny);	
+	A->UpB=cellnew(A->U->nx, A->U->ny);	
+	A->VpB=cellnew(A->V->nx, A->V->ny);	
 	for(int ib=0; ib<nb; ib++){
 	    muv_direct_prep_lowrank(&A->UpB->p[ib], 
 				    &A->VpB->p[ib], 
@@ -369,7 +369,7 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
 void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin){
     if(!xin) return;
     if(xin->nx*xin->ny==1){/*there is only one cell. */
-	if(!*xout) *xout=dcellnew(1,1);
+	if(!*xout) *xout=cellnew(1,1);
 	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);
     }else{
 	dmat *xin2=dcell2m(xin);
@@ -396,8 +396,8 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
     dcell *x0=*px; /*Just a convenient pointer. */
     dcell *c0=dcellnew2(b);/*Auxillary array */
     MUV_IB_T B={A,-1,-1};
-    dcell *x0b=dcellnew(nb,1);
-    dcell *c0b=dcellnew(nb,1);
+    dcell *x0b=cellnew(nb,1);
+    dcell *c0b=cellnew(nb,1);
     if(A->pfun){
 	warning("We don't handle preconditioner yet\n");
     }

@@ -77,7 +77,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     /*memset(map, 0, msize); */
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header1);
-    X(cell) *out=X(cellnew)(nx,ny);
+    X(cell) *out=cellnew(nx,ny);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header0;
     for(long ix=0; ix<nx*ny; ix++){
@@ -113,7 +113,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
     }
     char *map0=map;
     /*memset(map, 0, msize); */
-    X(cell) *out=X(cellnew)(nx,ny);
+    X(cell) *out=cellnew(nx,ny);
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);
     out->mmap=mmap_new(fd, map0, msize);
@@ -184,7 +184,7 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     if(!iscell(magic)){
 	error("We want a cell array, File has %d\n", (int)magic);
     }
-    X(cell) *out=X(cellnew)(nx, ny);
+    X(cell) *out=cellnew(nx, ny);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header;
     for(long ix=0; ix<nx*ny; ix++){

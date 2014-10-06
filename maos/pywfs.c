@@ -56,7 +56,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
     }
     long ncomp2=ncomp/2;
-    pywfs->pyramid=ccellnew(nwvl, 1);
+    pywfs->pyramid=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
 	PCMAT(pywfs->pyramid->p[iwvl], pp);
@@ -133,12 +133,12 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	exit(0);
     }
     if(parms->save.setup){
-	cellwrite(pywfs->loc, "pywfs_loc");
-	cellwrite(pywfs->amp, "pywfs_amp");
-	cellwrite(pywfs->locfft->embed, "pywfs_embed");
-	cellwrite(pywfs->pyramid, "pyramid");
-	cellwrite(nominal, "nominal");
-	cellwrite(pywfs->si, "si");
+	writebin(pywfs->loc, "pywfs_loc");
+	writebin(pywfs->amp, "pywfs_amp");
+	writebin(pywfs->locfft->embed, "pywfs_embed");
+	writebin(pywfs->pyramid, "pyramid");
+	writebin(nominal, "nominal");
+	writebin(pywfs->si, "si");
     }
 }
 /**
@@ -195,7 +195,7 @@ void pywfs_fft(dcell **pupim, PYWFS_T *pywfs, dmat *opd){
 	}//for iwvl
     }//for ipos
     if(!(*pupim)){
-	(*pupim)=dcellnew(2, 2);
+	(*pupim)=cellnew(2, 2);
     }
 
     ccpd(&otf, pupraw);

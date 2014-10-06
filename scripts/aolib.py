@@ -19,6 +19,32 @@ funcs=maos.parse_func(srcdir, structs, ['mex/aolib.h'])
 
 fpout=open(fnout,'w')
 print('#ifdef __INTEL_COMPILER\n#undef _GNU_SOURCE\n#endif\n#include "interface.h"\n', file=fpout)
+def handle_type(argtype):
+    if argtype=='dmat*':
+        mx2c='mx2d'
+        c2mx='any2mx'
+        free_c='dfree'
+    elif argtype=='loc_t*':
+        mx2c='mx2loc'
+        c2mx='loc2mx'
+        free_c='locfree'
+    elif argtype=='int' or argtype=='long' or argtype=='double':
+        mx2c='('+argtype+')mxGetScalar'
+        c2mx='mxCreateDoubleScalar'
+        free_c=''
+    elif argtype=='char*':
+        mx2c='mx2str'
+        c2mx='str2mx'
+        free_c='free'
+    elif argtype=='void*' or argtype=='cell*':
+        mx2c='mx2any'
+        c2mx='any2mx'
+        free_c='cellfree'
+    else:
+        mx2c='unknown'
+        c2mx='unknown'
+        free_c=''
+    return (mx2c, c2mx,free_c)
 
 for funname in funcs: #loop over functions
     funtype=funcs[funname][0]
@@ -26,41 +52,30 @@ for funname in funcs: #loop over functions
     print (funname, funtype,funargs)
     fundef='void '+funname+'_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){\n'
     fundef+='    if(nrhs!='+str(len(funargs))+') mexErrMsgTxt(\"Expect '+str(len(funargs))+' arguments\\n");\n'
+    fundef_free=''
     count=0
     for arg in funargs: #get data from matlab
         argtype=arg[0]
         argname=arg[1]
-        if argtype=='dmat*':
-            fundef+='    '+argtype+' '+argname+'=mx2d(prhs['+str(count)+']);\n'
-        elif argtype=='loc_t*':
-            fundef+='    '+argtype+' '+argname+'=mx2loc(prhs['+str(count)+']);\n'
-        elif argtype=='int' or argtype=='long' or argtype=='double':
-            fundef+='    '+argtype+' '+argname+'=('+argtype+')mxGetScalar(prhs['+str(count)+']);\n'
-        else:
-            fundef+='Unknown ' + argtype
+        mx2c, c2mx, free_c=handle_type(argtype)
+        fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n'
+        if len(free_c)>0:
+            fundef_free+='    '+free_c+'('+argname+');\n'
         count=count+1
-    fundef+='    '+funtype+' '+funname+'_out='+funname+"("
+    if funtype=='void':
+        fundef+='    '+funname+"("
+    else:
+        fundef+='    '+funtype+' '+funname+'_out='+funname+"("
     for arg in funargs:
         argname=arg[1]
         fundef+=argname+","
     fundef=fundef[0:-1]+');\n'
-    if funtype[-1]=='*':
-        fundef+='    plhs[0]=any2mx('+funname+'_out);\n'
-    elif funtype=='double':
-        fundef+='    plhs[0]=mxCreateDoubleScalar('+funname+'_out);\n'
-    else:
-        fundef+='    plhs[0]=Unknown('+funname+'_out);\n'
-    for arg in funargs:
-        argtype=arg[0]
-        argname=arg[1]
-        if argtype=='dmat*':
-            fundef+='    dfree('+argname+');\n'
-        elif argtype=='cmat*':
-            fundef+='    cfree('+argname+');\n'
-    if funtype=='dmat*':
-        fundef+='    dfree('+funname+'_out);\n'
-    elif funtype=='cmat*':
-        fundef+='    cfree('+funname+'_out);\n'
+    mx2c, c2mx, free_c=handle_type(funtype)
+    if funtype !='void':
+        fundef+='    plhs[0]='+c2mx+'('+funname+'_out);\n'
+    if len(free_c)>0:
+        fundef+='    '+free_c+'('+funname+'_out);\n'
+    fundef+=fundef_free
     fundef+='}'
     print(fundef, file=fpout)
 

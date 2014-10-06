@@ -24,9 +24,5 @@
 
 #define AOS_SPBIN_DEF(X,T)\
 void X(spwritedata)(file_t *fp, const X(sp) *sp);\
-X(sp) *X(spreaddata)(file_t *fp, header_t *header);		     \
-void X(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
-void X(spcellwrite)(const X(spcell) *spc, const char *format,...) CHECK_ARG(2);\
-X(sp)* X(spread)(const char *format,...) CHECK_ARG(1);\
-X(spcell) *X(spcellread)(const char *format,...) CHECK_ARG(1);
+X(sp) *X(spreaddata)(file_t *fp, header_t *header);
 #endif

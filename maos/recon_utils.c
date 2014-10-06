@@ -187,7 +187,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 
     assert(wt->nx==B->nx && wt->ny==1 && A->nx == B->nx);
     const int nevl=B->nx;
-    dcell *res=dcellnew(A->ny, B->ny);
+    dcell *res=cellnew(A->ny, B->ny);
     for(int iy=0; iy<B->ny; iy++){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    int ind=iy*nevl+ievl;
@@ -397,7 +397,7 @@ void TomoR(dcell **xout, const void *A,
     dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
     TTFR(gg, recon->TTF, recon->PTTF);
     if(!*xout){
-	*xout=dcellnew(recon->npsr, 1);
+	*xout=cellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, NULL, gg, *xout, 1};
     Tomo_nea(&data, recon->nthread, 1);
@@ -413,7 +413,7 @@ void TomoRt(dcell **gout, const void *A,
 	    const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     if(!*gout){
-	*gout=dcellnew(recon->saneai->nx, 1);
+	*gout=cellnew(recon->saneai->nx, 1);
     }
     Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
     Tomo_prop(&data, recon->nthread);
@@ -445,9 +445,9 @@ void TomoL(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
-    dcell *gg=dcellnew(parms->nwfsr, 1);
+    dcell *gg=cellnew(parms->nwfsr, 1);
     if(!*xout){
-	*xout=dcellnew(recon->npsr, 1);
+	*xout=cellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, xin, gg, *xout, 0};
   
@@ -484,7 +484,7 @@ void FitR(dcell **xout, const void *A,
 	SIM_T *simu=global->simu;
 	int isim=simu->reconisim;
 	const int nfit=parms->fit.nfit;
-	xp=dcellnew(nfit,1);
+	xp=cellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -504,7 +504,7 @@ void FitR(dcell **xout, const void *A,
 	const PARMS_T *parms=global->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	xp=dcellnew(nfit,1);
+	xp=cellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -685,7 +685,7 @@ void shift_grad(SIM_T *simu){
 	    if(simu->gradlastcl){
 		dcellzero(simu->gradlastcl);
 	    }else{
-		simu->gradlastcl=dcellnew(parms->nwfsr, 1);
+		simu->gradlastcl=cellnew(parms->nwfsr, 1);
 	    }
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const double scale=1./parms->powfs[ipowfs].nwfs;
@@ -803,10 +803,10 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }
     if(parms->save.setup){
-	dcellwrite(cn2est->iPnk,"%s/cn2_iPnk",dirsetup);
-	dcellwrite(cn2est->Pnk,"%s/cn2_Pnk",dirsetup);
-	dcellwrite(cn2est->ht,"%s/cn2_ht",dirsetup);
-	dspcellwrite(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
+	writebin(cn2est->iPnk,"%s/cn2_iPnk",dirsetup);
+	writebin(cn2est->Pnk,"%s/cn2_Pnk",dirsetup);
+	writebin(cn2est->ht,"%s/cn2_ht",dirsetup);
+	writebin(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
     }
     dfree(wfstheta);
     dfree(ht);

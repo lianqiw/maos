@@ -75,7 +75,7 @@ static void test_cov(){/*not good */
     dmat *denom=dnew((N+1)*3,(N+1)*3);
     dmat *cov=dnew((N+1)*3,(N+1)*3);
     creal2d(&denom, 0, atmhat, 1);
-    dwrite(denom, "denom.bin");
+    writebin(denom, "denom.bin");
     
     dzero(atmhattot);
     for(long i=0; i<nframe; i++){
@@ -93,14 +93,14 @@ static void test_cov(){/*not good */
 	if(i==0 || (i+1)%10==0){
 	    dscale(atmhattot, 1./(i+1));
 	    ccpd(&atmhat, atmhattot);
-	    dwrite(atmhattot, "atm_psf_%ld.bin",i+1);
+	    writebin(atmhattot, "atm_psf_%ld.bin",i+1);
 	    cfft2i(atmhat, 1);
 	    cfftshift(atmhat);
 	    creal2d(&cov, 0, atmhat, 1);
 	    for(long k=0; k<cov->nx*cov->ny; k++){
 		cov->p[k]/=denom->p[k];
 	    }
-	    dwrite(cov, "atm_cov_%ld.bin",i+1);
+	    writebin(cov, "atm_cov_%ld.bin",i+1);
 	}
     }
 }
@@ -126,7 +126,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
-    dwrite(cov,"cov.bin");
+    writebin(cov,"cov.bin");
 }
 static void test_part(){/**Compute the covariance of 4 points with various separation.*/
     rand_t rstat;
@@ -157,7 +157,7 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
-    dwrite(cov,"cov.bin");
+    writebin(cov,"cov.bin");
 }
 
 static void test_stfun(){
@@ -173,7 +173,7 @@ static void test_stfun(){
     if(L0<9000){
 	dmat *rr=dlinspace(0, N*dx, N);
 	dmat *covvk=turbcov(rr, sqrt(2)*N*dx, r0, L0);
-	dwrite(covvk, "cov_vk");
+	writebin(covvk, "cov_vk");
 	dfree(rr);
 	dfree(covvk);
     }
@@ -194,7 +194,7 @@ static void test_stfun(){
 	}
 	cellarr_close(save);
 	dmat *st=stfun_finalize(data);
-	dwrite(st, "stfun_fractal.bin");
+	writebin(st, "stfun_fractal.bin");
 	ddraw("fractal", st, NULL,NULL, "Atmosphere","x","y","stfun");
     }
     /*exit(0); */
@@ -221,7 +221,7 @@ static void test_stfun(){
 		info("%ld of %ld\n", ii, nframe);
 	}
 	dmat *st=stfun_finalize(data);
-	dwrite(st, "stfun_fft.bin");
+	writebin(st, "stfun_fft.bin");
 	ddraw("fft", st, NULL,NULL, "Atmosphere","x","y","stfun");
     }
 	
@@ -266,11 +266,11 @@ static void test_psd(){
 	}
 	dscale(hattot, 1./nframe);
 	dfftshift(hattot);
-	dwrite(hattot, "PSD_fractal");
+	writebin(hattot, "PSD_fractal");
     }
     {
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
-	dwrite(spect, "spect");
+	writebin(spect, "spect");
 	cmat *hat=cnew(nx*ratio, ny*ratio);
 	cfft2plan(hat, -1);
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
@@ -312,7 +312,7 @@ static void test_psd(){
 	}
 	dscale(hattot, 1./nframe);
 	dfftshift(hattot);
-	dwrite(hattot, "PSD_fft");
+	writebin(hattot, "PSD_fft");
     }
 }
 /*
@@ -344,7 +344,7 @@ static void test_cxx(){
 	    dfree(sec);
 	}
 	dscale(cxx, 1./nframe);
-	dwrite(cxx, "cxx_fractal");
+	writebin(cxx, "cxx_fractal");
 	dfree(cxx);
 	mapfree(atm);
     }
@@ -370,7 +370,7 @@ static void test_cxx(){
 	    dmm(&cxx,1, atmi,atmi,"nt",1);
 	}
 	dscale(cxx, 1./nframe);
-	dwrite(cxx, "cxx_fft");
+	writebin(cxx, "cxx_fft");
 	dfree(cxx);
 	dfree(atmr);
 	dfree(atmi);
@@ -379,7 +379,7 @@ static void test_cxx(){
     loc_t *loc=mksqloc_auto(16,16,1./4,1./4);
     locwrite(loc,"loc");
     dmat *B=stfun_kolmogorov(loc, r0);
-    dwrite(B, "B_theory");
+    writebin(B, "B_theory");
 }
 int main(){
     int ind=0;

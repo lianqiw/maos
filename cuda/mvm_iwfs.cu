@@ -82,7 +82,7 @@ void mvm_only(int *gpus, int ngpu, int nstep){
 	cudaEventElapsedTime(timing->p+istep, event_mvm[istep], event_mvm[istep+1]);
     }
     sscale(timing, 1e-3);
-    swrite(timing, "timing_mvmonly_%dgpu", ngpu);
+    writebin(timing, "timing_mvmonly_%dgpu", ngpu);
     free(event_mvm);
 }
 //Timing only MVM.
@@ -243,8 +243,8 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	    info2("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[istep]*1e6);
 	}
     }
-    X(write)(timing, "timing_%dgpu", ngpu);
-    X(write)(timing_mvm, "timing_mvm_%dgpu", ngpu);
-    X(write)(result, "result_%dgpu", ngpu);
+    writebin(timing, "timing_%dgpu", ngpu);
+    writebin(timing_mvm, "timing_mvm_%dgpu", ngpu);
+    writebin(result, "result_%dgpu", ngpu);
     X(pageunlock)(mvm1, mvm2, grad1, grad2, dmres, NULL);
 }

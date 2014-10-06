@@ -94,23 +94,23 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		    }
 		}
 		info("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
-		dwrite(psf2x, "powfs%d_psf2x_%d", ipowfs,iwvl);
+		writebin(psf2x, "powfs%d_psf2x_%d", ipowfs,iwvl);
 		dmat *psf2=dinterp1(psf1x, psf1y, psf2x, 0);
 		normalize_sum(psf2->p, psf2->nx*psf2->ny, 1);
 		psf2->nx=ncomp; psf2->ny=ncomp;
-		dwrite(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
+		writebin(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
 		cmat *otf2=cnew(ncomp, ncomp);
 		cfft2plan(otf2, -1);
 		ccpd(&otf2, psf2);//peak in center
 		cfftshift(otf2);//peak in corner
 		cfft2(otf2, -1);
 		cfftshift(otf2);//peak in center
-		cwrite(otf2, "powfs%d_otf2_%d", ipowfs, iwvl);
-		cwrite(nominal, "powfs%d_dtf%d_nominal_0",ipowfs,iwvl);
+		writebin(otf2, "powfs%d_otf2_%d", ipowfs, iwvl);
+		writebin(nominal, "powfs%d_dtf%d_nominal_0",ipowfs,iwvl);
 		for(int i=0; i<ncomp*ncomp; i++){
 		    nominal->p[i]*=otf2->p[i];
 		}
-		cwrite(nominal, "powfs%d_dtf%d_nominal_1",ipowfs,iwvl);
+		writebin(nominal, "powfs%d_dtf%d_nominal_1",ipowfs,iwvl);
 		dfree(psf1x);
 		dfree(psf1y);
 		dfree(psf2x);
@@ -132,7 +132,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    powfs[ipowfs].dtf[iwvl].si=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 	    locfree(loc_psf);
 	    if(parms->skyc.dbg){
-		cwrite(powfs[ipowfs].dtf[iwvl].nominal,
+		writebin(powfs[ipowfs].dtf[iwvl].nominal,
 		       "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
 		dspwrite(powfs[ipowfs].dtf[iwvl].si,
 			"%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);

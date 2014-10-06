@@ -12,15 +12,15 @@ static void test_dpinv(){
     dmat *w=dnew(10,1);
     dset(w,2);
     dmat *Ap=dpinv(A,w,NULL);
-    dwrite(A,"A");
-    dwrite(Ap,"Ap");
+    writebin(A,"A");
+    writebin(Ap,"Ap");
     dmat *ApA=NULL;
     dmm(&ApA,0,Ap,A,"nn",1);
     dsp *spw=dspnewdiag(w->nx, w->p, 1);
     dmat *Ap2=dpinv(A,NULL,spw);
-    dwrite(w,"w");
+    writebin(w,"w");
     dspwrite(spw,"spw");
-    dwrite(Ap2,"Ap2");
+    writebin(Ap2,"Ap2");
     dfree(A); dfree(w); dfree(Ap); dfree(ApA); dspfree(spw); dfree(Ap2);
 }
 TIC;
@@ -57,19 +57,19 @@ static void test_dcircle(){
     dmat *A=dnew(100,100);
     double r=45;
     dcircle(A,50,50,1,1,r,1);
-    dwrite(A,"dcircle_linear");
+    writebin(A,"dcircle_linear");
     dzero(A);
-    dwrite(A,"dcircle");
+    writebin(A,"dcircle");
     double r2=sqrt(dsum(A)/M_PI);
     info("r=%g, r2=%g\n",r,r2);
 }
 static void test_d2cell(){
     dcell *A=dcellread("bcell.bin");
     dmat *A2=dcell2m(A);
-    dwrite(A2,"bcell2m.bin");
+    writebin(A2,"bcell2m.bin");
     dcell *B=NULL;
     d2cell(&B,A2,A);
-    dcellwrite(B,"bcell2m2cell.bin");
+    writebin(B,"bcell2m2cell.bin");
     dcellfree(A);
     dfree(A2);
 
@@ -80,7 +80,7 @@ static void test_d2cell(){
     }
     A2=dcell2m(A);
     dcell *B2=d2cellref(A2,dims,A->nx);
-    dcellwrite(B2,"ccell2m2cell2.bin");
+    writebin(B2,"ccell2m2cell2.bin");
     
 }
 static void test_dshift2center(){
@@ -99,9 +99,9 @@ static void test_clip(){
     rand_t rstat;
     seed_rand(&rstat,1);
     drandn(A,1,&rstat);
-    dwrite(A,"A1");
+    writebin(A,"A1");
     dclip(A,-0.5, 0.5);
-    dwrite(A,"A2");
+    writebin(A,"A2");
     /*exit(0); */
 }
 static void test_hist(){
@@ -114,19 +114,19 @@ static void test_hist(){
 	drandn(A, 1, &rstat);
 	dhistfill(&B, A, 0, 0.1, 100);
     }
-    dwrite(B,"hist");
+    writebin(B,"hist");
     /*exit(0); */
 }
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin");
     dspcell *saneai=dspcellread("saneai.bin");
     dcell *PTT=dcellpinv(TT,NULL,saneai);
-    dcellwrite(PTT,"TT_pinv.bin");
+    writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
 	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx], NULL,saneai->p[i+i*TT->nx]);
     }
-    dcellwrite(PTT2,"TT2_pinv.bin");
+    writebin(PTT2,"TT2_pinv.bin");
     /*exit(0); */
 }
 static void test_dcellcat(int argc, char**argv){
@@ -136,8 +136,8 @@ static void test_dcellcat(int argc, char**argv){
     dcell *A=dcellread("%s",argv[1]);
     dcell *B=dcellreduce(A,1);
     dcell *C=dcellreduce(A,2);
-    dcellwrite(B,"B");
-    dcellwrite(C,"C");
+    writebin(B,"B");
+    writebin(C,"C");
     exit(0);
 }
 static void test_save(void){/*passed */
@@ -146,14 +146,14 @@ static void test_save(void){/*passed */
     rand_t rstat;
     seed_rand(&rstat,1);
     drandn(a,1,&rstat);
-    dwrite(a,"a2.bin");
+    writebin(a,"a2.bin");
     long nnx[6]={2,3,4,5,6,0};
     long nny[6]={3,4,2,5,6,3};
     dcell *b=dcellnew_mmap(2,3, nnx, nny, NULL,NULL,"ac.bin");
     for(int ix=0; ix<b->nx*b->ny; ix++){
 	drandn(b->p[ix], 1, &rstat);
     }
-    dcellwrite(b, "ac2.bin");
+    writebin(b, "ac2.bin");
     dcellfree(b);
     dfree(a);
     exit(0);
@@ -173,12 +173,12 @@ static void test_spline(void){
     dmat *coeff=dspline_prep(x,y);
     dmat *y2=dspline_eval(coeff,x,x2);
     dmat *y3=dspline(x,y,x2);
-    dwrite(x,"x");
-    dwrite(y,"y");
-    dwrite(x2,"x2");
-    dwrite(y2,"y2");
-    dwrite(y3,"y3");
-    dwrite(coeff,"coeff");
+    writebin(x,"x");
+    writebin(y,"y");
+    writebin(x2,"x2");
+    writebin(y2,"y2");
+    writebin(y3,"y3");
+    writebin(coeff,"coeff");
     exit(0);
 }
 static void test_spline_2d(void){
@@ -214,14 +214,14 @@ static void test_spline_2d(void){
     dcell *coeff=dbspline_prep(x,y,z);
     dmat *z22=dbspline_eval(coeff,x,y,xnew,ynew);
 
-    dwrite(x,"x");
-    dwrite(y,"y");
-    dwrite(z,"z");
+    writebin(x,"x");
+    writebin(y,"y");
+    writebin(z,"z");
 
-    dwrite(xnew,"xnew");
-    dwrite(ynew,"ynew");
-    dwrite(z22,"z22");
-    dcellwrite(coeff,"coeff");
+    writebin(xnew,"xnew");
+    writebin(ynew,"ynew");
+    writebin(z22,"z22");
+    writebin(coeff,"coeff");
     exit(0);
 }
 static void test_svd(void){
@@ -234,19 +234,19 @@ static void test_svd(void){
 	dsvd(&U, &S, &VT, A);
 	toc("dsvd");
 	tic;
-	dwrite(U,"U.bin");
-	dwrite(S, "S.bin");
-	dwrite(VT,"VT.bin");
+	writebin(U,"U.bin");
+	writebin(S, "S.bin");
+	writebin(VT,"VT.bin");
     }else{
-	dwrite(A,"A.bin");
+	writebin(A,"A.bin");
 	tic;
 	dsvd_pow(A, -1, 1e-15);
 	toc("dsvd_pow");
-	dwrite(A,"AI.bin");
+	writebin(A,"AI.bin");
 	tic;
 	dsvd_pow(A, -1, 1e-15);
 	toc("dsvd_pow svd");
-	dwrite(A,"A2.bin");
+	writebin(A,"A2.bin");
     }
     exit(0);
 }
@@ -256,14 +256,14 @@ static void test_psd1d(){
 	tmp->p[i]=sin(i/10.);
     }
     dmat *psd=psd1d(tmp, 10);
-    dwrite(tmp, "tmp");
-    dwrite(psd, "psd");
+    writebin(tmp, "tmp");
+    writebin(psd, "psd");
     exit(0);
 }
 static void test_svd2(void){
     cmat *A=cread("SVD.bin");
     csvd_pow(A, -1, 1.e-7);
-    cwrite(A, "SVDI");
+    writebin(A, "SVDI");
 }
 static void test_kalman(){
     //dmat *psd=dread("MODE_TT");
@@ -278,16 +278,16 @@ static void test_kalman(){
     dmat *dtrat_wfs=dread("dtrat_wfs");
     dmat *proj=dread("Proj");
     kalman_t *k=sde_kalman(coeff, 1./800, dtrat_wfs, Gwfs, Rwfs, proj);
-    dwrite(k->Ad, "mex_Ad");
-    dcellwrite(k->Cd, "mex_Cd");
-    dcellwrite(k->M, "mex_M");
-    dwrite(k->P, "mex_P");
+    writebin(k->Ad, "mex_Ad");
+    writebin(k->Cd, "mex_Cd");
+    writebin(k->M, "mex_M");
+    writebin(k->P, "mex_P");
     /*rand_t rstat; seed_rand(&rstat, 1);
     //dmat *ts=psd2time(psd, &rstat, 1./800, 5000);
     dmat *ts=dread("ts");
     for(int i=0; i<100; i++){
 	dmat *res=kalman_test(k, ts);
-	dwrite(res, "kalman_res");
+	writebin(res, "kalman_res");
 	dfree(res);
 	}*/
     exit(0);
@@ -299,19 +299,18 @@ static void test_kalman(){
     dmat *Rn=dread("test_Rn");
     dmat *M=0, *P=0;
     M=reccati(&P, A, Qn, C, Rn);
-    dwrite(M, "test_M");
-    dwrite(P, "test_P");
+    writebin(M, "test_M");
+    writebin(P, "test_P");
     exit(0);
 }*/
 static void test_expm(){
     dmat *A=dread("expm_in");
     dmat *B=0;
     dexpm(&B, 1, A, 1);
-    dwrite(B, "expm_out");
+    writebin(B, "expm_out");
     exit(0);
 }
 int main(int argc, char **argv){
-    exit_success=1;
     test_expm();
     //test_reccati();
     test_kalman();
@@ -333,5 +332,4 @@ int main(int argc, char **argv){
     test_dref();
 
     test_dcp();
-    exit_success=1;
 }

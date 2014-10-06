@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
     int servotype=(int)strtol(argv[P_STYPE],NULL,10);
     dcell *gain=servo_optim(psd,dt,dtrat,M_PI/4,sigma2,servotype);
-    dwrite(gain->p[0],"%s",argv[P_OUT]);
+    writebin(gain->p[0],"%s",argv[P_OUT]);
     double gain_n;
     double res=servo_residual(&gain_n, psd, dt, dtrat,  gain->p[0], servotype);
     info2("sigma res=%g, noise prop=%g. signal res=%g noise prop=%g\n", 

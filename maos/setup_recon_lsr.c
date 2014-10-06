@@ -61,7 +61,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(!parms->recon.modal){
 	if(parms->lsr.alg!=2){
 	    /* Not SVD, need low rank terms for piston/waffle mode constraint. */
-	    NW=dcellnew(ndm,1);
+	    NW=cellnew(ndm,1);
 	    int nmod=2;/*two modes. */
 	    for(int idm=0; idm<ndm; idm++){
 		loc_create_map(recon->aloc->p[idm]);
@@ -86,7 +86,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    /*scale it to match the magnitude of LL.M */
 	    dcellscale(NW, sqrt(maxeig));
 	    if(parms->save.setup){
-		dcellwrite(NW, "%s/lsrNW",dirsetup);
+		writebin(NW, "%s/lsrNW",dirsetup);
 	    }
 	}
 	if(parms->lsr.actslave){
@@ -97,18 +97,18 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 				     recon->actstuck, recon->actfloat, 0.1, maxeig);
 	    if(parms->save.setup){
 		if(NW){
-		    dcellwrite(NW, "%s/lsrNW2",dirsetup);
+		    writebin(NW, "%s/lsrNW2",dirsetup);
 		}
-		dspcellwrite(actslave,"%s/actslave", dirsetup);
+		writebin(actslave,"%s/actslave", dirsetup);
 	    }
 	    dspcelladd(&recon->LL.M, actslave);
 	    dspcellfree(actslave);
 	}
     }
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
-    dcell *ULo=dcellnew(ndm,nwfs);
+    dcell *ULo=cellnew(ndm,nwfs);
     PDCELL(ULo, pULo);
-    dcell *VLo=dcellnew(ndm,nwfs);
+    dcell *VLo=cellnew(ndm,nwfs);
     PDCELL(VLo, pVLo);
     PDSPCELL(recon->LR.M, LRM);
     PDSPCELL(GAM, GA);
@@ -157,12 +157,12 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dcelldropempty(&recon->LL.U,2);
     dcelldropempty(&recon->LL.V,2);
     if(parms->save.recon){
-	dspcellwrite(recon->LR.M,"%s/LRM",dirsetup);
-	dcellwrite(recon->LR.U,"%s/LRU",dirsetup);
-	dcellwrite(recon->LR.V,"%s/LRV",dirsetup);
-	dspcellwrite(recon->LL.M,"%s/LLM.bin",dirsetup);/*disable compression */
-	dcellwrite(recon->LL.U,"%s/LLU",dirsetup);
-	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
+	writebin(recon->LR.M,"%s/LRM",dirsetup);
+	writebin(recon->LR.U,"%s/LRU",dirsetup);
+	writebin(recon->LR.V,"%s/LRV",dirsetup);
+	writebin(recon->LL.M,"%s/LLM.bin",dirsetup);/*disable compression */
+	writebin(recon->LL.U,"%s/LLU",dirsetup);
+	writebin(recon->LL.V,"%s/LLV",dirsetup); 
     }
     if(parms->lsr.alg==0 || parms->lsr.alg==2){
 	if(!parms->lsr.bgs){
@@ -171,7 +171,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		if(recon->LL.C)
 		    chol_save(recon->LL.C, "%s/LLC.bin", dirsetup);
 		else
-		    dwrite(recon->LL.MI, "%s/LLMI.bin", dirsetup);
+		    writebin(recon->LL.MI, "%s/LLMI.bin", dirsetup);
 	    }
 	    dspcellfree(recon->LL.M);
 	    dcellfree(recon->LL.U);
@@ -183,7 +183,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    if(recon->LL.CB)
 			chol_save(recon->LL.CB[ib],"%s/LLCB_%d.bin",dirsetup, ib);
 		    else
-			dwrite(recon->LL.MI,"%s/LLMIB_%d.bin", dirsetup, ib);
+			writebin(recon->LL.MI,"%s/LLMIB_%d.bin", dirsetup, ib);
 		}
 	    }
 	    /*Don't free M, U, V */

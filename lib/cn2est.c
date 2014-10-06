@@ -96,9 +96,9 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     creal2d(&cn2est->overlap, 0, overlap, 1./(nx*nx));
     cfree(overlap);
     /*2-d arrays to store x y gradient  and x y "curvature" */
-    cn2est->gxs=dcellnew(nwfs, 1);/*stores gradient in 2-d map */
-    cn2est->gys=dcellnew(nwfs, 1);
-    cn2est->curi=ccellnew(nwfs, 1);
+    cn2est->gxs=cellnew(nwfs, 1);/*stores gradient in 2-d map */
+    cn2est->gys=cellnew(nwfs, 1);
+    cn2est->curi=cellnew(nwfs, 1);
     for(int ix=0; ix<nwfs; ix++){
 	if(cn2est->wfscov[ix]){
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
@@ -116,7 +116,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     const double dsa=saloc->dx;
     /*determine the layer height used for tomography. */
     cn2est->htrecon=ddup(htrecon);
-    cn2est->wtrecon=dcellnew(1,1);
+    cn2est->wtrecon=cellnew(1,1);
     cn2est->wtrecon->p[0]=dnew_mmap(cn2est->htrecon->nx,1,NULL,"Res_Cn2_wtrecon");
     {
 	info2("htrecon=[");
@@ -126,11 +126,11 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	info2("]km\n");
     }
     /*stores cross-covariance data during simulation */
-    cn2est->covc=ccellnew(nwfspair,1);
-    cn2est->cov1=dcellnew(nwfspair,1);
-    cn2est->cov2=dcellnew(nwfspair,1);
+    cn2est->covc=cellnew(nwfspair,1);
+    cn2est->cov1=cellnew(nwfspair,1);
+    cn2est->cov2=cellnew(nwfspair,1);
     /*height of layers for each wfs pair of slodar output. */
-    cn2est->ht=dcellnew(nwfspair,1);
+    cn2est->ht=cellnew(nwfspair,1);
     /*record sapair to use for each separation */
     cn2est->pair=calloc(nwfspair, sizeof(CN2PAIR_T));
     long nhtsx[nwfspair]; 
@@ -215,11 +215,11 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     /*Pnk stores the opeator from layer weight to gradient curvature covariance
       matrix. iPnk is the covariance of it. Each diagonal cell is for each WFS
       pair.*/
-    cn2est->Pnk=dcellnew(nwfspair, nwfspair);
-    cn2est->iPnk=dcellnew(nwfspair,nwfspair);
+    cn2est->Pnk=cellnew(nwfspair, nwfspair);
+    cn2est->iPnk=cellnew(nwfspair,nwfspair);
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
-    cn2est->wtconvert=dspcellnew(1,nwfspair);
+    cn2est->wtconvert=cellnew(1,nwfspair);
     cn2est->l0=l0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;

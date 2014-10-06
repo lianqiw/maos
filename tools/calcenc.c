@@ -70,7 +70,7 @@ static void calcenc(const char *fn, double dstep, double rmax, int type, int nth
 		enc=denc(psf, dvec, type, nthread);
 		dfree(dvec);
 	    }
-	    dwritedata(fpout, enc);
+	    writebindata(fpout, enc);
 	    dfree(psf); dfree(enc);
 	}
     }else{//fits file. many dmats without a cell.
@@ -89,12 +89,12 @@ static void calcenc(const char *fn, double dstep, double rmax, int type, int nth
 	    encs[nenc-1]=enc;
 	    dfree(psf);
 	}while(!read_header2(&header, fp));
-	dcell *encs2=dcellnew(nenc, 1);
+	dcell *encs2=cellnew(nenc, 1);
 	memcpy(encs2->p, encs, sizeof(dmat*)*nenc);
 	if(nenc==1){
-	    dwritedata(fpout, encs2->p[0]);
+	    writebindata(fpout, encs2->p[0]);
 	}else{
-	    dcellwritedata(fpout, encs2);
+	    writebindata(fpout, encs2);
 	}
 	dcellfree(encs2);
     }

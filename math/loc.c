@@ -573,7 +573,7 @@ dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
 dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
     const int nmod=3;
     const int nsa=pts->nsa;
-    dcell *mcc=dcellnew(nsa,1);
+    dcell *mcc=cellnew(nsa,1);
     for(int isa=0; isa<nsa; isa++){
 	const double origy=pts->origy[isa];
 	const double origx=pts->origx[isa];

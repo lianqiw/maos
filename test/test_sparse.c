@@ -55,13 +55,13 @@ static void test_spsum(){//passed
     dspcell *FLMc=dspcellread("FLM.bin");
     dsp *FLM=FLMc->p[0];
     dmat *sum1=dspsum(FLM,1);
-    dwrite(sum1,"sum_1");   dfree(sum1);
+    writebin(sum1,"sum_1");   dfree(sum1);
     sum1=dspsum(FLM,2);
-    dwrite(sum1,"sum_2");   dfree(sum1);
+    writebin(sum1,"sum_2");   dfree(sum1);
     sum1=dspsumabs(FLM,1);
-    dwrite(sum1,"sumabs_1"); dfree(sum1);
+    writebin(sum1,"sumabs_1"); dfree(sum1);
     sum1=dspsumabs(FLM,2);
-    dwrite(sum1,"sumabs_2"); dfree(sum1);
+    writebin(sum1,"sumabs_2"); dfree(sum1);
     dspcellfree(FLMc);
     }*/
 /*static void test_L2(){
@@ -81,8 +81,8 @@ static void test_spmul(){
     tic;
     dspmulvec(y->p,A,x->p,1);
     toc("mul");
-    dwrite(x,"x"); 
-    dwrite(y,"y");
+    writebin(x,"x"); 
+    writebin(y,"y");
     dzero(y);
     tic;
     dspmulvec(y->p,A,x->p,1);
@@ -92,7 +92,7 @@ static void test_spmul(){
     tic;
     spmulvec_mkl(y->p,A,x->p,1);
     toc("mul_mkl");
-    dwrite(y,"y_mkl");
+    writebin(y,"y_mkl");
     */
     dzero(y);
     tic;
@@ -102,7 +102,7 @@ static void test_spmul(){
     tic;
     dspmulvec_thread(y->p, A, x->p, 1, 2);
     toc("mul_thread 2");
-    dwrite(y,"y2");
+    writebin(y,"y2");
     tic;
     dspmulvec_thread(y->p, A, x->p, 1, 2);
     toc("mul_thread 2");
@@ -116,14 +116,14 @@ static void test_spmul(){
     tic;
     dsptmulvec(x->p, A, y->p, 1);
     toc("sptmul");
-    dwrite(x,"x");
+    writebin(x,"x");
     tic;
     dsptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 1");
     tic;
     dsptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 2");
-    dwrite(x,"x2");
+    writebin(x,"x2");
     dzero(x);
     tic;
     dsptmulvec_thread(x->p, A, y->p, 1);

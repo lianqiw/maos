@@ -244,11 +244,11 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	dfree(residual);
 	dfree(residualfit);
 	if(parms->save.mvmf){
-	    X(write)(mvmc, "mvmf.bin");
+	    writebin(mvmc, "mvmf.bin");
 	}
 	if(parms->save.mvmi){
 	    tic; info2("Saving mvmi ...");
-	    X(write)(mvmi, "mvmi.bin");
+	    writebin(mvmi, "mvmi.bin");
 	    toc2("done");
 	}
 	X(free)(mvmi);

@@ -184,10 +184,10 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     im0=X(new)(totpix,3);
     if(nstep==1){//Verify accuracy
 	//We use half of the array as short.
-	do_write("pix", 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
-	do_write("pixbias", 1, sizeof(short), M_INT16, NULL, pixbias->p, totpix, 1);
-	X(write)(mvm1, "mvm1");
-	X(write)(mtch, "mtch");
+	writearr("pix", 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
+	writearr("pixbias", 1, sizeof(short), M_INT16, NULL, pixbias->p, totpix, 1);
+	writebin(mvm1, "mvm1");
+	writebin(mtch, "mtch");
     }
     X(cell) *dmres=X(cellnew)(ngpu, 1);
     X(pagelock)(im0, pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
@@ -555,13 +555,13 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	 */
 	//usleep(50);//yield
 	if(nstep==1){//save result for verifying accuracy
-	    X(write)(dmres->p[0], "dmres");
+	    writebin(dmres->p[0], "dmres");
 	    for(int igpu=0; igpu<ngpu; igpu++){
 		cudaSetDevice(gpus[igpu]); 
 		cudaMemcpy(pix->p, data[igpu].pix, sizeof(short)*totpix, cudaMemcpyDefault);
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "pix_gpu%d", igpu);
-		do_write(fn, 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
+		writearr(fn, 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
 		curwrite(data[igpu].grad, "grad_gpu%d", igpu);
 	    }
 	}
@@ -613,11 +613,11 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	}
     }
     cudaProfilerStop();
-    //X(write)(dmres->p[0], "dmres");
+    //writebin(dmres->p[0], "dmres");
     
-    X(write)(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    X(write)(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
-    X(write)(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing, "timing_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
     X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
     X(free)(mvm1);
     X(free)(mvm2);

@@ -23,7 +23,7 @@
 
 
 /**
-   scale each element of A by w
+   scale each element of A by w.
 */
 void X(scale)(X(mat) *A, R w){
     if(!A) return;
@@ -38,7 +38,7 @@ void X(scale)(X(mat) *A, R w){
 
 
 /**
- * Check for Nan in elements
+ * Check for NaN in elements
  */
 int X(isnan)(const X(mat)*A){
     for(long i=0; i<A->nx*A->ny; i++){
@@ -49,7 +49,8 @@ int X(isnan)(const X(mat)*A){
     return 0;
 }
 /**
-   Compute max, min and sum. Has to handle NAN nicely */
+   Compute max, min and sum. Has to handle NAN nicely. Complex values are
+   converted into magnitude during comparison. */
 void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     R a,b;
     long i;
@@ -168,6 +169,9 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 	    res+=pw[j][i]*a[i]*b[j];
 	}
     }
+    if(is_nan(res)){
+	error("NaN found\n");
+    }
     return res;
 }
 
@@ -229,7 +233,7 @@ void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict B, const X(mat) *restric
 /**
    Component-wise multiply each column of A with B
    A(:,i)=A(:,i).*B;
- */
+*/
 void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B){
     if (!B) return;
     assert(A->nx==B->nx && B->ny==1);
@@ -245,10 +249,10 @@ void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B){
 /**
    component-wise multiply of columns of A with combination of B1 and B2:
    A(:,i)=A(:,i)*(B1*wt1+B2*wt2);
- */
+*/
 void X(cwmcol2)(X(mat) *restrict A, 
-	      const T *restrict B1, const R wt1,
-	      const T *restrict B2, const R wt2){
+		const T *restrict B1, const R wt1,
+		const T *restrict B2, const R wt2){
     assert(A && A->p); 
     assert(B1);
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
@@ -311,10 +315,10 @@ void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B){
 /**
    component-wise multiply of rows of A with combination of B1 and B2:
    A(i,:)=A(i,:).*(B1*wt1+B2*wt2);
- */
+*/
 void X(cwmrow2)(X(mat) *restrict A, 
-	     const T *restrict B1, const R wt1,
-	     const T *restrict B2, const R wt2){
+		const T *restrict B1, const R wt1,
+		const T *restrict B2, const R wt2){
     assert(A && A->p); 
     assert(B1);
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
@@ -336,8 +340,8 @@ void X(cwmrow2)(X(mat) *restrict A,
 }
 
 /**
-   Component wise division B=B./A. 0/0 is replace by value;
- */
+   Component wise division B=B./A. 0/0 is replace by 'value';
+*/
 void X(cwdiv)(X(mat) *B, const X(mat) *A, T value){
     assert(A->nx==B->nx && A->ny==B->ny);
     for(int i=0; i<A->nx*A->ny; i++){
@@ -367,6 +371,19 @@ void X(mulvec)(T *restrict y, const X(mat) * restrict A,
 	    }
 	}
     }
+}
+
+/**
+   T matrix vector multiply optimized for just
+   three values.  y=A*x;
+*/
+void X(mulvec3)(T *y, const X(mat) *A, const T *x){
+    assert(A->nx==3 && A->ny==3);
+    PMAT(A,Ap);
+    /*calculate y=A*x for 3. */
+    y[0]=Ap[0][0]*x[0]+Ap[1][0]*x[1]+Ap[2][0]*x[2];
+    y[1]=Ap[0][1]*x[0]+Ap[1][1]*x[1]+Ap[2][1]*x[2];
+    y[2]=Ap[0][2]*x[0]+Ap[1][2]*x[1]+Ap[2][2]*x[2];
 }
 
 /**
@@ -430,9 +447,11 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     return is_nan(d)?0:d;
 }
 /**
-   a new gray pixel map generation based on bilinear influence functions used in
-   mkw.  creates slightly larger map.  add an filled circle.  cx,cy,r are in
-   unit of meter, dx,dy specify the unit of pixel along x or y dimension.
+   Generate a new gray pixel map based on bilinear influence functions used in
+   mkw.  It creates slightly larger map than an filled circle.  The Center and
+   Radius cx,cy,r are in unit of meter, The sampling dx,dy specify spacing of
+   the points in meter along x or y dimension. Each full point received value of
+   'val'
 */
 void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
     int nres=10;
@@ -474,7 +493,8 @@ void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
 }
 
 /**
-   Mark valid grid points. If any direct neighbor of a point is within r, make the point valid.
+   Mark valid grid points. If any direct neighbor of a point is within r, make
+   the point valid. Parameters are the same as X(circle).
 */
 void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
     R r2=r*r;
@@ -506,9 +526,8 @@ void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r){
 }
 
 /**
-   rotate the column vectors CCW.
-   same as rotate coordinate theta CW.
-   A(:,1) is x, A(:,2) is y.
+   rotate the column vectors CCW, equivalent as rotate coordinate theta CW. 
+   A is nx2 while A(:,1) is x, A(:,2) is y.
 */
 void X(rotvec)(X(mat) *A, const R theta){
     if(A->ny!=2) error("Wrong dimension\n");
@@ -523,9 +542,8 @@ void X(rotvec)(X(mat) *A, const R theta){
 }
 
 /**
-   rotate the row vectors CCW.
-   same as rotate coordinate theta CW.
-   A(:,1) is x, A(:,2) is y.
+   rotate the row vectors CCW. same as rotate coordinate theta CW.
+   A is 2xn A(:,1) is x, A(:,2) is y.
 */
 void X(rotvect)(X(mat) *A, const R theta){
     if(A->nx!=2) error("Wrong dimension\n");
@@ -569,20 +587,6 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
     Bp[1][1]=stheta*tmp[0][1]+ctheta*tmp[1][1];
 
 }
-
-/**
-   T matrix vector multiply optimized for just
-   three values.  y=A*x;
-*/
-void X(mulvec3)(T *y, const X(mat) *A, const T *x){
-    assert(A->nx==3 && A->ny==3);
-    PMAT(A,Ap);
-    /*calculate y=A*x for 3. */
-    y[0]=Ap[0][0]*x[0]+Ap[1][0]*x[1]+Ap[2][0]*x[2];
-    y[1]=Ap[0][1]*x[0]+Ap[1][1]*x[1]+Ap[2][1]*x[2];
-    y[2]=Ap[0][2]*x[0]+Ap[1][2]*x[1]+Ap[2][2]*x[2];
-}
-
 
 /**
    Compute thresholded center of gravity. The threshold
@@ -658,7 +662,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 /**
    OrthNormalize column vector in Mod, with weighting from vector amp.
    <Mod|wt|Mod> is equal to sum(wt).
-   2010-07-21: Bug found: The result is not orthonormal. cause: nonvalid is not initialized to 0.
+   2010-07-21: Bug found: The result was not orthonormal. cause: nonvalid was not initialized to 0.
 */
 void X(gramschmidt)(X(mat) *Mod, R *amp){
     const int nmod=Mod->ny;
@@ -752,7 +756,7 @@ void X(muldiag2)(X(mat) *A, const X(mat) *s){
     }
 }
 /**
-   Raise all elements to power power
+   Raise all elements to power 'power'
 */
 void X(cwpow)(X(mat)*A, R power){
     if(!A) return;
@@ -786,7 +790,7 @@ void X(cwpow_thres)(X(mat) *A, R power, R thres){
 }
 /**
    Compute polynomial functional value inplace
- */
+*/
 void X(polyval)(X(mat) *A, XR(mat)*p){
     if(p->nx==1 && p->ny>1){
 	p->nx=p->ny;
@@ -848,44 +852,6 @@ void X(adds)(X(mat*)A, const T ac){
 	A->p[i]+=ac;
     }
 }
-/**
-   y=y+alpha*x*A;
-   implemented by transposing x,y index in sptmulmat implementation
-   TESTED OK.
-*/
-void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
-    if(A&&x){
-	long icol, ix;
-	if(!*yout){
-	    *yout=X(new)(x->nx, A->n);
-	}
-	X(mat) *y=*yout;
-	assert(x->nx==y->nx && x->ny==A->m);
-	if(x->nx==1){
-	    X(sptmulvec)(y->p, A, x->p, alpha);
-	}else{
-	    int jcol;
-	    PMAT(y,Y); PMAT(x,X);
-	    if(ABS(alpha-1.)<1.e-100){
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->nx; jcol++){
-			    Y[icol][jcol]+=A->x[ix]*X[A->i[ix]][jcol];
-			}
-		    }
-		}
-	    }else{
-		for(icol=0; icol<A->n; icol++){
-		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(jcol=0; jcol<y->nx; jcol++){
-			    Y[icol][jcol]+=alpha*A->x[ix]*X[A->i[ix]][jcol];
-			}
-		    }
-		}
-	    }
-	}
-    }
-}
 
 /**
    Create log spaced vector.
@@ -927,7 +893,7 @@ static int X(islinear)(const X(mat)*xin){
 }
 /**
    Check whether xin is logrithmically spaced
- */
+*/
 static int X(islog)(const X(mat)*xin){
     long nmax=xin->nx;
     long nmax1=nmax-1;
@@ -1064,15 +1030,6 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
 
 #endif
 #ifndef USE_COMPLEX
-/**
-   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
-   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
-   \todo{
-   merge this definition with cembed in cmat.c
-   }
-*/
-
 /*blend B into center of A with width of overlap. The center
   (size is B->nx-overlap, B->ny-overlap) of A is replaced by
   center of B . The overlapping area is blended*/
@@ -1126,9 +1083,7 @@ void X(histfill)(X(mat) **out, const X(mat)* A,
 		 R center, R spacing, int n){
     if(!A || !A->p) return;
     int nn=A->nx*A->ny;
-    if(!*out){
-	*out=X(new)(n,nn);
-    }
+    X(init)(out, n, nn);
     PMAT(*out,Op);
     const T *restrict Ap=A->p;
     const R spacingi=1./spacing;
@@ -1238,7 +1193,7 @@ X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y){
 }
 /**
    Evluate the cubic spline represented by nx5 matrix coeff, at location array xnew.
- */
+*/
 X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat) *xnew){
     assert(coeff->nx==4);
     const long nx=coeff->ny;
@@ -1284,6 +1239,14 @@ void X(cwlog)(X(mat) *A){
 	A->p[i]=LOG(A->p[i]);
     }
 }
+/**
+   embed a ninx*niny matrix in into A with optional rotation by -theta CCW
+   (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
+   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
+   \todo{
+   merge this definition with cembed in cmat.c
+   }
+*/
 
 void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
   
@@ -1348,7 +1311,7 @@ void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
 
 /**
    Calculate number of pixels having values larger than or equal to half of
-maximum. Useful to compute fwhm. */
+   maximum. Useful to compute fwhm. */
 long X(fwhm)(X(mat) *A){
     if(!A) return 0;
     R hm=0.5*X(max)(A);
@@ -1371,7 +1334,7 @@ static int sort_descend(const T*A, const T*B){
 }
 /*
   Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
- */
+*/
 void X(sort)(X(mat) *A, int ascend){
     for(int i=0; i<A->ny; i++){
 	if(ascend){
@@ -1628,51 +1591,6 @@ int X(cellclip)(X(cell) *Ac, R min, R max){
     return nclip;
 }
 
-/**
-   Multiply a cell with a sparse cell.
-
-  \f$C0+=A*B*alpha\f$.
-*/
-
-void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha){
-    if(!A || !B) return;
-    int ax, az;
-    int nx,ny,nz;
-    int bz, by;
-    const char trans[2]="nn";
-    if(trans[0]=='n'||trans[0]=='N'){
-	nx=A->nx; 
-	ax=1; az=A->nx;
-	nz=A->ny;
-    }else{ 
-	nx=A->ny;
-	az=1; ax=A->nx;
-	nz=A->nx;
-    }
-    if(trans[1]=='n'||trans[1]=='N'){
-	ny=B->ny; 
-	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
-    }else{
-	ny=B->nx;
-	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
-    }
-    if(!*C0){
-	*C0=X(cellnew)(nx,ny);
-    }
-    X(cell) *C=*C0;
-    for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    for(int iz=0; iz<nz; iz++){
-		if(A->p[ix*ax+iz*az] && B->p[iz*bz+iy*by]){
-		    X(mulsp)(&C->p[ix+iy*nx],A->p[ix*ax+iz*az], 
-			     B->p[iz*bz+iy*by],alpha);
-		}
-	    }
-	}
-    }
-}
 
 /**
    add one to another.  B=B*bc+A*ac
@@ -1713,21 +1631,21 @@ void X(cellcwpow)(X(cell)*A, R power){
 
 /**
    2D cubic spline interpolation preparation. x is the x coordinate vector of
- the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the
- 2-d grid.  It is upto the user to make sure that the coordinate is increasingly
- ordered and evenly spaced .
+   the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the
+   2-d grid.  It is upto the user to make sure that the coordinate is increasingly
+   ordered and evenly spaced .
 
- The boundaries are handled in the same way is X(spline). i.e. replace 
- \f[f^\prime(0)=(f(1)-f(-1))/2\f] by
- \f[f^\prime(0)=(f(1)-f(0))\f]
- Otehr type of boundaries are handled in the same way.
+   The boundaries are handled in the same way is X(spline). i.e. replace 
+   \f[f^\prime(0)=(f(1)-f(-1))/2\f] by
+   \f[f^\prime(0)=(f(1)-f(0))\f]
+   Otehr type of boundaries are handled in the same way.
 */
 
 X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
     const long nx=x->nx;
     const long ny=y->nx;
     assert(x->ny==1 && y->ny ==1 && z->nx==nx && z->ny==ny);
-    X(cell)*coeff=X(cellnew)(nx,ny);
+    X(cell)*coeff=cellnew(nx,ny);
     PCELL(coeff,pc);
   
     PMAT(z,p);

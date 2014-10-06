@@ -85,7 +85,6 @@
     void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
     void X(adds)(X(mat*)A, const T ac);					\
     void X(tikcr)(X(mat) *A, T thres);					\
-    void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha); \
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(linspace)(R min, R dx, long n) CHECK_UNUSED_RESULT;	\
     X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0) CHECK_UNUSED_RESULT; \

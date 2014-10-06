@@ -74,7 +74,6 @@ void maos_setup(const PARMS_T *parms){
 	    wfslinearity(parms, powfs, iwfs);
 	    rename_file(0);
 	    scheduler_finish(0);
-	    exit_success=1;//tell mem.c to print non-freed memory in debug mode. 
 	    exit(0);
 	}*/
 	global->recon=recon=setup_recon_init(parms);

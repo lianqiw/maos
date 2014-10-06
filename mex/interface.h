@@ -145,7 +145,7 @@ mxArray *any2mx(const void *A_){
     case M_LOC64:
 	out=loc2mx(A_);
 	break;
-    case M_SP64:
+    case M_DSP64:
 	out=dsp2mx(A_);
 	break;
     case M_INT64:
@@ -231,11 +231,27 @@ INLINE dcell *mx2dcell(const mxArray *A){
     }
     dcell *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
-	out=dcellnew(mxGetM(A), mxGetN(A));
+	out=cellnew(mxGetM(A), mxGetN(A));
 	for(int i=0; i<out->nx*out->ny; i++){
 	    mxArray *Ai=mxGetCell(A, i);
-	    if(Ai && mxGetM(Ai) && mxGetN(Ai)){
-		out->p[i]=dnew_ref(mxGetM(Ai), mxGetN(Ai), mxGetPr(Ai));
+	    out->p[i]=mx2d(Ai);
+	}
+    }
+    return out;
+}
+static void *mx2any(const mxArray *A){
+    if(!mxIsCell(A)){
+	mexErrMsgTxt("A is not cell");
+    }
+    cell *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=cellnew(mxGetM(A), mxGetN(A));
+	for(int i=0; i<out->nx*out->ny; i++){
+	    mxArray *Ai=mxGetCell(A, i);
+	    if(mxIsCell(Ai)){
+		out->p[i]=mx2any(Ai);
+	    }else{
+		out->p[i]=(void*)mx2d(Ai);
 	    }
 	}
     }

@@ -237,7 +237,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	tic;
     }
     cudaProfilerStop();
-    X(write)(timing, "timing_%dgpu", ngpu);
-    X(write)(result, "result_%dgpu", ngpu);
+    writebin(timing, "timing_%dgpu", ngpu);
+    writebin(result, "result_%dgpu", ngpu);
     X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
 }

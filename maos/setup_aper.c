@@ -119,7 +119,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(!isset){
 	    cellfree(aper->locs_dm);
 	}else if(parms->save.setup){
-	    cellwrite(aper->locs_dm, "%s/locs_dm", dirsetup);
+	    writebin(aper->locs_dm, "%s/locs_dm", dirsetup);
 	}
     }
     /*Set the amp for plotting. */
@@ -135,17 +135,17 @@ APER_T * setup_aper(const PARMS_T *const parms){
     if(parms->evl.rmax!=1){
 	aper->mod=zernike(aper->locs, parms->aper.d, parms->evl.rmax);
 	if(parms->save.setup){
-	    dwrite(aper->mod,"%s/aper_mode",dirsetup);
+	    writebin(aper->mod,"%s/aper_mode",dirsetup);
 	}
 	dgramschmidt(aper->mod, aper->amp->p);
 	if(parms->save.setup){
-	    dwrite(aper->mod,"%s/aper_mode_gramschmidt",dirsetup);
+	    writebin(aper->mod,"%s/aper_mode_gramschmidt",dirsetup);
 	}
     }
     if(parms->save.setup){
 	locwrite(aper->locs, "%s/aper_locs",dirsetup);
-	dwrite(aper->amp, "%s/aper_amp",dirsetup);
-	dwrite(aper->mcc, "%s/aper_mcc",dirsetup);
+	writebin(aper->amp, "%s/aper_amp",dirsetup);
+	writebin(aper->mcc, "%s/aper_mcc",dirsetup);
     }
 
     if(parms->evl.psfmean || parms->evl.psfhist){

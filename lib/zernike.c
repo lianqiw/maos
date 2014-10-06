@@ -86,7 +86,7 @@ dmat* zernike(const loc_t *loc, double D, int nr){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
 	    dmat *Rnm=genRnm(locr, ir, im);
-	    /*dwrite(Rnm,"Rnm_%d_%d",ir,im); */
+	    /*writebin(Rnm,"Rnm_%d_%d",ir,im); */
 	    if(im==0){
 		double coeff=sqrt(ir+1.);
 		double *restrict pmod=MOD->p+nloc*cmod;

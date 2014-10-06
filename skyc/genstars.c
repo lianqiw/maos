@@ -74,7 +74,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     }
     long ntot=catalog->nx;
     long nsky0=0;
-    dcell *res=dcellnew(nsky,1);
+    dcell *res=cellnew(nsky,1);
     PDMAT(catalog, pcatalog);
     double fov22=pow(fov/2/206265,2);
 

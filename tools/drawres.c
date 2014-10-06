@@ -178,14 +178,14 @@ int main(int argc, char *argv[]){
     }
     info2("\n");
 
-    dcell *resolhi=dcellnew(npath,nseed);
-    dcell *resollo=dcellnew(npath,nseed);
-    dcell *reshi=dcellnew(npath,nseed);
-    dcell *reslo=dcellnew(npath,nseed);
-    dcell *reshim=dcellnew(npath,1);
-    dcell *reslom=dcellnew(npath,1);
-    dcell *resolhim=dcellnew(npath,1);
-    dcell *resollom=dcellnew(npath,1);
+    dcell *resolhi=cellnew(npath,nseed);
+    dcell *resollo=cellnew(npath,nseed);
+    dcell *reshi=cellnew(npath,nseed);
+    dcell *reslo=cellnew(npath,nseed);
+    dcell *reshim=cellnew(npath,1);
+    dcell *reslom=cellnew(npath,1);
+    dcell *resolhim=cellnew(npath,1);
+    dcell *resollom=cellnew(npath,1);
     const char *xlabel, *ylabel;
     dmat *ysky=NULL;
     const char* xylog;
@@ -199,8 +199,8 @@ int main(int argc, char *argv[]){
 	xlabel="Wavefront Error (nm)";
     }
 
-    /*dcell *upterr=dcellnew(npath, nseed);
-      dcell *uptcmd=dcellnew(npath, nseed);*/
+    /*dcell *upterr=cellnew(npath, nseed);
+      dcell *uptcmd=cellnew(npath, nseed);*/
     for(int ipath=0; ipath<npath; ipath++){
 	int seedcount=0;
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -408,7 +408,7 @@ int main(int argc, char *argv[]){
     }
     draw_final(1);
     /*
-      dcellwrite(upterr, "upterr");
+      writebin(upterr, "upterr");
       if(upterr && upterr->p[0]){
       for(int iseed=0; iseed<nseed; iseed++){
 

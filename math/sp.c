@@ -93,22 +93,6 @@ X(sp) *X(spdup)(const X(sp) *A){
 }
 
 /**
-   move the matrix from res to A.
-*/
-void X(spmove)(X(sp) *A, X(sp) *res){
-    if(!res || !A) 
-	error("Trying to move an NULL matrix\n");
-    if(A->x){
-	free(A->x); 
-	free(A->i); 
-	free(A->p); 
-	free(A->nref);
-    }
-    memcpy(A,res,sizeof(X(sp)));
-    free(res);
-}
-
-/**
    Create a new X(sp) matrix of the same size as A.
 */
 X(sp) *X(spnew2)(const X(sp) *A){
@@ -186,17 +170,7 @@ void X(spfree_do)(X(sp) *sp){
     }
     free(sp);
 }
-/**
- * free a X(sp) array*/
-void X(sparrfree)(X(sp) **sparr, int n){
-    int i;
-    if(sparr){
-	for(i=0; i<n; i++){
-	    X(spfree)(sparr[i]);
-	}
-	free(sparr); 
-    }
-}
+
 /**
  * Display a X(sp) array*/
 void X(spdisp)(const X(sp) *sp){
@@ -485,8 +459,46 @@ void X(spmulcreal)(T *restrict y, const X(sp) *A,
 
     }
 }
+
 /**
- * Multiply a sparse matrix X(sp) with a dense matrix X(mat)
+   y=y+alpha*x*A;
+   implemented by transposing x,y index in sptmulmat implementation
+   TESTED OK.
+*/
+void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
+    if(A&&x){
+	long icol, ix;
+	X(init)(yout, x->nx, A->n);
+	X(mat) *y=*yout;
+	assert(x->nx==y->nx && x->ny==A->m);
+	if(x->nx==1){
+	    X(sptmulvec)(y->p, A, x->p, alpha);
+	}else{
+	    int jcol;
+	    PMAT(y,Y); PMAT(x,X);
+	    if(ABS(alpha-1.)<1.e-100){
+		for(icol=0; icol<A->n; icol++){
+		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+			for(jcol=0; jcol<y->nx; jcol++){
+			    Y[icol][jcol]+=A->x[ix]*X[A->i[ix]][jcol];
+			}
+		    }
+		}
+	    }else{
+		for(icol=0; icol<A->n; icol++){
+		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+			for(jcol=0; jcol<y->nx; jcol++){
+			    Y[icol][jcol]+=alpha*A->x[ix]*X[A->i[ix]][jcol];
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+/**
+ * Multiply a sparse matrix X(sp) with a dense matrix X(mat): y+=alpha*A*x;
  */
 void X(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, 
 		 const T alpha){
@@ -588,6 +600,51 @@ T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x){
     }
     return res;
 }
+/**
+   Multiply a cell with a sparse cell.
+
+   \f$C0+=A*B*alpha\f$.
+*/
+
+void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha){
+    if(!A || !B) return;
+    int ax, az;
+    int nx,ny,nz;
+    int bz, by;
+    const char trans[2]="nn";
+    if(trans[0]=='n'||trans[0]=='N'){
+	nx=A->nx; 
+	ax=1; az=A->nx;
+	nz=A->ny;
+    }else{ 
+	nx=A->ny;
+	az=1; ax=A->nx;
+	nz=A->nx;
+    }
+    if(trans[1]=='n'||trans[1]=='N'){
+	ny=B->ny; 
+	bz=1; by=B->nx;
+	if(nz!=B->nx) error("mismatch\n");
+    }else{
+	ny=B->nx;
+	by=1; bz=B->nx;
+	if(nz!=B->ny) error("mismatch\n");
+    }
+    if(!*C0){
+	*C0=cellnew(nx,ny);
+    }
+    X(cell) *C=*C0;
+    for(int iy=0; iy<ny; iy++){
+	for(int ix=0; ix<nx; ix++){
+	    for(int iz=0; iz<nz; iz++){
+		if(A->p[ix*ax+iz*az] && B->p[iz*bz+iy*by]){
+		    X(mulsp)(&C->p[ix+iy*nx],A->p[ix*ax+iz*az], 
+			     B->p[iz*bz+iy*by],alpha);
+		}
+	    }
+	}
+    }
+}
 
 #define SPCELLMULMAT_DO						\
     for(int iz=0; iz<nz; iz++){					\
@@ -614,7 +671,7 @@ static void X(spcellmulmat2)(X(cell) **C0, const X(spcell)*A, const X(cell)*B,
     assert(nz==B->nx);
     
     if(!*C0){
-	*C0=X(cellnew)(nx,ny);
+	*C0=cellnew(nx,ny);
     }
     X(cell) *C=*C0;
     assert(C->nx==nx && C->ny==ny);
@@ -680,7 +737,7 @@ static void X(spcellmulmat_thread2)(X(cell) **C0, const X(spcell)*A,
     assert(nz==B->nx);
     
     if(!*C0){
-	*C0=X(cellnew)(nx,ny);
+	*C0=cellnew(nx,ny);
     }
     X(cell) *C=*C0;
     if(C->nx!=nx || C->ny!=ny) error("Mismatch\n");
@@ -740,7 +797,7 @@ static void X(spcellmulmat_each_do)(thread_t *info){
 void X(spcellmulmat_each)(X(cell) **xout, X(spcell) *A, X(cell) *xin, 
 			  T alpha, int trans){
     if(!*xout){
-	*xout=X(cellnew)(xin->nx, xin->ny);
+	*xout=cellnew(xin->nx, xin->ny);
     }
     assert(xin->ny==1);
     EACH_T data;
@@ -826,7 +883,7 @@ void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const T alpha){
     if(!A) return;
     X(cell) *out=*out0;
     if(!out){
-	out=*out0=X(cellnew)(A->nx, A->ny);
+	out=*out0=cellnew(A->nx, A->ny);
     }else{
 	assert(out->nx==A->nx && out->ny==A->ny);
     }
@@ -844,7 +901,7 @@ void X(sptcellfull)(X(cell) **out0, const X(spcell) *A, const T alpha){
     if(!A) return;
     X(cell) *out=*out0;
     if(!out){
-	out=*out0=X(cellnew)(A->ny, A->nx);
+	out=*out0=cellnew(A->ny, A->nx);
     }else{
 	assert(out->nx==A->ny && out->ny==A->nx);
     }
@@ -877,8 +934,8 @@ void X(spadd)(X(sp) **A0, const X(sp) *B){
 	    }
 	    X(sp) *res=X(ss_add)(*A0,B,1.,1.);
 	    X(ss_dropzeros)(res);
-	    /*move the data over. */
-	    X(spmove)(*A0,res);/*move the data from res to A. */
+	    X(spfree)(*A0);
+	    *A0=res; res=0;
 	}
     }
 }
@@ -887,7 +944,7 @@ void X(spadd)(X(sp) **A0, const X(sp) *B){
 void X(spcelladd)(X(spcell) **A0, const X(spcell) *B){
     if(B){
 	if(!*A0){
-	    *A0=X(spcellnew)(B->nx, B->ny);
+	    *A0=cellnew(B->nx, B->ny);
 	}
 	for(int i=0; i<B->nx*B->ny; i++){
 	    X(spadd)(&((*A0)->p[i]), B->p[i]);
@@ -966,7 +1023,7 @@ X(spcell) *X(spcellmulspcell)(const X(spcell) *A,
     /*return C=A*B; */
     if(!A || !B) return NULL;
     if(A->ny!=B->nx) error("mismatch\n");
-    X(spcell) *C=X(spcellnew)(A->nx, B->ny);
+    X(spcell) *C=cellnew(A->nx, B->ny);
     PSPCELL(A,Ap);
     PSPCELL(B,Bp);
     PSPCELL(C,Cp);
@@ -985,11 +1042,7 @@ X(spcell) *X(spcellmulspcell)(const X(spcell) *A,
     }
     return C;
 }
-/**
- * Create a new sparse cell*/
-X(spcell) *X(spcellnew)(const long nx, const long ny){
-    return (X(spcell)*) cellnew(nx, ny);
-}
+
 /**
  * Transpose a sparse cell*/
 X(spcell) *X(spcelltrans)(const X(spcell) *spc){
@@ -997,7 +1050,7 @@ X(spcell) *X(spcelltrans)(const X(spcell) *spc){
     long nx,ny;
     nx=spc->nx;
     ny=spc->ny;
-    X(spcell) *spct=X(spcellnew)(ny,nx);
+    X(spcell) *spct=cellnew(ny,nx);
     
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
@@ -1443,7 +1496,7 @@ X(cell) *X(spblockextract)(const X(sp) *A, long bs){
 	error("Must be a square matrix\n");
     }
     long nb=A->m/bs;
-    X(cell) *out=X(cellnew)(nb,1);
+    X(cell) *out=cellnew(nb,1);
     for(long ib=0;ib<nb; ib++){
 	long is=ib*bs;/*starting col */
 	out->p[ib]=X(new)(bs,bs);

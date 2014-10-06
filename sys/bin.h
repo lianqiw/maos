@@ -34,13 +34,13 @@
 #define IO_TIMMING 0
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
 #define M_CSP64  0x6400  /*sparse complex */
-#define M_SP64   0x6401  /*sparse */
+#define M_DSP64  0x6401  /*sparse double*/
 #define M_DBL    0x6402  /*double */
 #define M_INT64  0x6403  /*int 64 array */
 #define M_CMP    0x6404  /*complex array */
 #define M_INT32  0x6405  /*int 32 array */
-#define M_CSP32  0x6406  /*sparse complex 32 bit */
-#define M_SP32   0x6407  /*sparse 32 bit */
+#define M_CSP32  0x6406  /*sparse complex with 32 bit integer */
+#define M_DSP32  0x6407  /*sparse double  with 32 bit integer*/
 #define M_FLT    0x6408  /*single precision float. */
 #define M_ZMP    0x6409  /*single precision complex */
 #define M_INT8   0x640A  /*int 8  array */
@@ -66,6 +66,19 @@
 #else
 #define M_LONG M_INT64 // 64 bit long
 #endif
+#ifdef DLONG 
+#define M_DSP M_DSP64
+#define M_CSP M_CSP64
+#define M_SSP M_SSP64
+#define M_ZSP M_ZSP64
+#else
+#define M_DSP M_DSP32
+#define M_CSP M_CSP32
+#define M_SSP M_SSP32
+#define M_ZSP M_ZSP32
+#endif
+
+
 #define USE_ZLIB_H 0
 #if USE_ZLIB_H
 #include <zlib.h> /*zlib.h in ubuntu sucks */
@@ -145,7 +158,7 @@ INLINE header_t *check_cell(header_t *header, long *nx, long *ny){
 void zfwritelarr(file_t* fp,int count, ...);
 void zfreadlarr(file_t* fp,int count, ...);
 
-void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
+void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
@@ -162,8 +175,4 @@ mmap_t*mmap_ref(mmap_t *in);
 int mmap_open(char *fn, int rw);
 void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header);
 void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **header0);
-typedef void*(*READFUN)(file_t*, header_t *header);
-typedef void (*WRITEFUN)(file_t*, const void*);
-void *readbin(READFUN readfun, const char *format, ...);
-void writebin(WRITEFUN writefun, const void *out, const char *format, ...);
 #endif

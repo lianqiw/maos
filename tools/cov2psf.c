@@ -54,12 +54,12 @@ int main(int argc, char *argv[]){
 	double wvl=strtod(argv[iwvl+P_WVL], NULL);
 	double dtheta=wvl/(ncomp*loc->dx);
 	genotf(&otf, loc, amp, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
-	cwrite(otf, "%s_otf_%g.bin", argv[P_COV], wvl);
+	writebin(otf, "%s_otf_%g.bin", argv[P_COV], wvl);
 	cfftshift(otf);
 	cfft2i(otf, 1);
 	cfftshift(otf);
 	creal2d(&psf, 0, otf, 1);
-	dwrite(psf, "%s_psf_%g.bin", argv[P_COV], wvl);
+	writebin(psf, "%s_psf_%g.bin", argv[P_COV], wvl);
     }
     cfree(otf);
     dfree(psf);

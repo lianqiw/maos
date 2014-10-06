@@ -90,7 +90,7 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
     dmat *spect   = data->spect;
     double* wt    = data->wt;
     int nlayer    = data->nlayer;
-    dcell *dc     = dcellnew(2,1);
+    dcell *dc     = cellnew(2,1);
     long nx = data->nx;
     long ny = data->ny;
     double dx=data->dx;

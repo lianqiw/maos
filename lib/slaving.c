@@ -25,7 +25,7 @@
 */
 dcell *genactcpl(const dspcell *HA, const dmat *W1){
     int ndm=HA->ny;
-    dcell *actcplc=dcellnew(ndm, 1);
+    dcell *actcplc=cellnew(ndm, 1);
     for(int idm=0; idm<ndm; idm++){
 	for(int ifit=0; ifit<HA->nx; ifit++){
 	    dsp *ha=HA->p[ifit+idm*HA->nx];
@@ -77,7 +77,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	error("scl=%g is too small\n", scl);
     }
     int ndm=actcplc?actcplc->nx:actfloat->nx;
-    dspcell *actslavec=dspcellnew(ndm, ndm);/*block diagonal. */
+    dspcell *actslavec=cellnew(ndm, ndm);/*block diagonal. */
     PDSPCELL(actslavec, actslave);
     int nslavetot=0;
     /*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
@@ -318,7 +318,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
     dspcell *dHA=NULL;
     if(HA && *HA){
 	int nfit=(*HA)->nx;
-	dHA=dspcellnew(nfit,ndm);
+	dHA=cellnew(nfit,ndm);
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!actfloat->p[idm]) continue;
@@ -483,7 +483,7 @@ dspcell* act_float_interp(loccell *aloc,  /**<[in] Actuator grid array*/
     ){
     if(!actfloat) return NULL;
     int ndm=actfloat->nx;
-    dspcell *out=dspcellnew(ndm, ndm);
+    dspcell *out=cellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
 	loc_create_map(aloc->p[idm]);
 	map_t *map=aloc->p[idm]->map;
@@ -641,7 +641,7 @@ dspcell* act_extrap(loccell *aloc,     /**<[in] Actuator grid array*/
 		    const double thres /**<[in] Threshold of coupling to turn on interpolation*/
     ){
     int ndm=actcplc->nx;
-    dspcell *out=dspcellnew(ndm, ndm);
+    dspcell *out=cellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
 	out->p[idm+ndm*idm]=act_extrap_do(aloc->p[idm], actcplc->p[idm], thres);
     }

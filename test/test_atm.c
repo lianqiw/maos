@@ -28,5 +28,5 @@ int main(){
     data.nthread=nthread;
     mapcell *map=vonkarman_screen(&data);
     /*map_t **map=genatm_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread); */
-    cellwrite(map, "atm.bin");
+    writebin(map, "atm.bin");
 }

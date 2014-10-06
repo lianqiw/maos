@@ -27,10 +27,10 @@ template <typename T, uint32_t magic>
 	T *tmp=(T*)malloc(A->nx*A->ny*sizeof(T));
 	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(T), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-	do_write(fp, 0, sizeof(T), magic, NULL, tmp, A->nx, A->ny);
+	writearr(fp, 0, sizeof(T), magic, NULL, tmp, A->nx, A->ny);
 	free(tmp);
     }else{
-	do_write(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
+	writearr(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
     }
 }
 template <typename T, uint32_t magic>

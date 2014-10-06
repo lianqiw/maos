@@ -44,7 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     const int ncompy=mxGetScalar(prhs[P_NCOMPY]);
     const int nsa=mxGetScalar(prhs[P_NSA]);
     const int pttr=mxGetScalar(prhs[P_PTTR]);
-    ccell *otf=ccellnew(nsa,1);
+    ccell *otf=cellnew(nsa,1);
     genotf(otf->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr);
     mwSize dims[2];
     dims[0]=nsa;

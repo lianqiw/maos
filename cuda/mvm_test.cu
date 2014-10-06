@@ -156,8 +156,8 @@ void mvm_test(int igpu){
     seed_rand(&stat, 1);
     srandn(mvm, 1, &stat);
     srandn(x, 1, &stat);
-    //swrite(mvm, "mvm");
-    //swrite(x, "x");
+    //writebin(mvm, "mvm");
+    //writebin(x, "x");
     X(mat) *mvmt=strans(mvm);
     curmat *cumvmt=NULL;
     curmat *cumvm=NULL;

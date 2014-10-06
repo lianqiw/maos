@@ -83,7 +83,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     powfs[ipowfs].intstat->notf=notf;
     powfs[ipowfs].intstat->otf=cellnew(notf, 1);
     for(int iotf=0; iotf<notf; iotf++){
-	powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa,nwvl);
+	powfs[ipowfs].intstat->otf->p[iotf]=cellnew(nsa,nwvl);
     }
  
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -119,7 +119,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(powfs[ipowfs].intstat->lotf){
 	ccellfree(powfs[ipowfs].intstat->lotf);
     }
-    powfs[ipowfs].intstat->lotf=ccellnew(nwvl,nlotf);
+    powfs[ipowfs].intstat->lotf=cellnew(nwvl,nlotf);
     PCCELL(powfs[ipowfs].intstat->lotf, lotf);
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
@@ -163,7 +163,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	int ilotf=nlotf>1?isepsf:0;
 	cmat **lotf=nlotf>0?powfs[ipowfs].intstat->lotf->p+ilotf*nwvl:NULL;
 	PCCELL(powfs[ipowfs].intstat->otf->p[iotf],otf);
-	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
+	powfs[ipowfs].intstat->sepsf->p[isepsf]=cellnew(nsa,nwvl);
 	PDCELL(powfs[ipowfs].intstat->sepsf->p[isepsf], psepsf);
 	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -267,13 +267,13 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(intstat->gy);
     cellfree(intstat->fotf);
 
-    intstat->i0=dcellnew(nsa,ni0);
-    intstat->gx=dcellnew(nsa,ni0);
-    intstat->gy=dcellnew(nsa,ni0);
+    intstat->i0=cellnew(nsa,ni0);
+    intstat->gx=cellnew(nsa,ni0);
+    intstat->gy=cellnew(nsa,ni0);
     if(parms->powfs[ipowfs].phytypesim==3 || (parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)){
 	intstat->fotf=cellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
-	    intstat->fotf->p[i]=ccellnew(nsa,nwvl);
+	    intstat->fotf->p[i]=cellnew(nsa,nwvl);
 	}
     }
     /* subaperture rotation angle. */

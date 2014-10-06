@@ -37,7 +37,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
 	    pxsel[iy][ix]=1;
 	}
     }
-    cwrite(xsel,"xsel0");
+    writebin(xsel,"xsel0");
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
@@ -52,7 +52,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
 	    }
 	}
     }
-    cwrite(xsel,"xsel1");
+    writebin(xsel,"xsel1");
     csp *sel=cspconvolvop(xsel);
     cfree(xsel);
     return sel;
@@ -261,8 +261,8 @@ int main(){
     writelong(perm, nperm,1,"perm");
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,256,256,xloc->dx,saloc->dx);/*tested ok. */
-    cwrite(gx,"gx");
-    cwrite(gy,"gy");
+    writebin(gx,"gx");
+    writebin(gy,"gy");
     double dispx[nps],dispy[nps];
 
     double r0=0.198749305619780;
@@ -276,7 +276,7 @@ int main(){
 	    invpsd[offset+i]=tmp->p[i];
 	}
 	offset+=256*256;
-	dwrite(tmp,"invpsd_%ld",ips);
+	writebin(tmp,"invpsd_%ld",ips);
 	dfree(tmp);
     }
     int load=0;

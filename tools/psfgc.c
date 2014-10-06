@@ -249,7 +249,7 @@ int main(int argc, char *argv[]){
 	/*don't change sumpsf after blending.*/
 	dcellfree(psf_large);
     }
-    dcell *output=dcellnew(nwvl,nexp);
+    dcell *output=cellnew(nwvl,nexp);
     info2("%d: ", nwvl);
     psfiris_t data={notf, nwvl, dx, sumpsf, npix, pixsize, pixoffx, pixoffy, blur, imperr, wvls, psf_lgs, output, msg};
     thread_t *info=calloc(npsf, sizeof(thread_t));
@@ -257,11 +257,10 @@ int main(int argc, char *argv[]){
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);
     info2(" done\n");
-    dcellwrite(output, "%s", outfile);
+    writebin(output, "%s", outfile);
 
     dcellfree(psf_lgs);
     dcellfree(output);
     free(outfile);
     free(wvls);
-    exit_success=1;
 }

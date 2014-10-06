@@ -242,14 +242,14 @@ int main(int argc, char *argv[]){
     float timmean=timtot/nstep;
     info2("Timing is mean %.3f, max %.3f min %.3f. BW is %.1f of 51.2GB/s\n",
 	  timmean*1e3, timmax*1e3, timmin*1e3, nrep*(nact*ng+nact+ng)*sizeof(float)/timmean/(1024*1024*1024));
-    swrite(timing, "cpu_timing_%s", myhostname());
+    writebin(timing, "cpu_timing_%s", myhostname());
     if(nstep==1){
-	do_write("cpu_pix", 1, sizeof(short), M_INT16, NULL, pix, totpix, 1);
-	do_write("cpu_pixbias", 1, sizeof(short), M_INT16, NULL, pixbias, totpix, 1);
-	swrite(dm, "cpu_dm");
-	swrite(grad, "cpu_grad");
-	swrite(mvm, "cpu_mvm");
-	swrite(mtch, "cpu_mtch");
+	writearr("cpu_pix", 1, sizeof(short), M_INT16, NULL, pix, totpix, 1);
+	writearr("cpu_pixbias", 1, sizeof(short), M_INT16, NULL, pixbias, totpix, 1);
+	writebin(dm, "cpu_dm");
+	writebin(grad, "cpu_grad");
+	writebin(mvm, "cpu_mvm");
+	writebin(mtch, "cpu_mtch");
     }
    
 }

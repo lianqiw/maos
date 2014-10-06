@@ -298,9 +298,9 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	dfree(V);
 	dfree(SdiagI);
     }
-    dwrite(*U,"U");
-    dwrite(*VT,"VT");
-    dwrite(*Sdiag,"Sdiag");
+    writebin(*U,"U");
+    writebin(*VT,"VT");
+    writebin(*Sdiag,"Sdiag");
     free(value);
 }
 /*

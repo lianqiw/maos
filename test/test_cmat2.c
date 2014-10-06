@@ -76,10 +76,10 @@ static static void cmat_correctness(static void){
     cdraw("test_cmat",A,"PSF");
     cfftshift(A,C_ABS2);
     cdraw("test_cmat",A,"A PSF shifted");
-    cwrite(A,"PSF");
+    writebin(A,"PSF");
     cmat *B=cnew(64,64);
     cembed(B,A,M_PI*0.75,C_FULL);
-    cwrite(B,"PSFrot");
+    writebin(B,"PSFrot");
     cdraw("test_cmat",B,"B embed");
     cembedscaleout(B,A,0.5,1,M_PI*0.75,C_FULL);
     cdraw("test_cmat",B,"B embedscale");
@@ -150,17 +150,17 @@ static void test_ctilt(){
     cmat *C=cnew(N,N);
     ccircle(C,N/2,N/2,N/4,1);
     cdraw("test_cmat",C,"Cir");
-    cwrite(C,"C_psf");
+    writebin(C,"C_psf");
     cfft2plan(C,-1);
     cfft2plan(C,1);
     cfft2(C,-1);
     /*cfftshift(C,C_FULL); */
-    cwrite(C,"C_otf");
+    writebin(C,"C_otf");
     ctilt(C,0.1,0.1,0);
-    cwrite(C,"C_otf_tilt");
+    writebin(C,"C_otf_tilt");
     /*cfftshift(C,C_FULL); */
     cfft2(C,1);
-    cwrite(C,"C_psf_shift");
+    writebin(C,"C_psf_shift");
     cscale(C,1./(N*N));
     cdraw("test_cmat",C,"shift");
 }
@@ -189,7 +189,7 @@ static void bench_ccwm(void){
     ccwmcol(A,D);
     ccwm(A,B);
     toc("ccwm&ccwmcol");
-    cwrite(A,"A1.bin");
+    writebin(A,"A1.bin");
     tic;
     ccwmcol(A,D);
     ccwm(A,B);
@@ -198,7 +198,7 @@ static void bench_ccwm(void){
     tic;
     ccwm3col(A,B,D);
     toc("ccwm3col");
-    cwrite(A,"A2.bin");
+    writebin(A,"A2.bin");
     tic;
     ccwm3col(A,B,D);
     toc("ccwm3col");
@@ -208,11 +208,11 @@ static void bench_ccwm(void){
     ccwm(E,A);
     ccwm(E,B);
     toc("ccwm twice");
-    cwrite(E,"E.bin");
+    writebin(E,"E.bin");
     tic;
     ccwm3(E,A,B);
     toc("ccwm3");
-    cwrite(E,"E2.bin");
+    writebin(E,"E2.bin");
 }
 /*TIC; */
 #if 0

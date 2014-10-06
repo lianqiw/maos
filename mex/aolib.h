@@ -24,3 +24,5 @@ dmat *diag_mod_cov(dmat *mz, dmat *cov);
 dmat *KL_kolmogorov(loc_t *loc, double D, int nr, int nr2);
 dmat *psd_vibid(const dmat *psdin);
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
+cell* readbin(const char *fn);
+void  writebin(const cell* dc, const char* fn);

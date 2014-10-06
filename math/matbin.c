@@ -31,7 +31,7 @@ void X(writedata)(file_t *fp, const X(mat) *A){
 	nx=(uint64_t)A->nx;
 	ny=(uint64_t)A->ny;
     }
-    do_write(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, nx, ny);
+    writearr(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, nx, ny);
 }
 
 /**

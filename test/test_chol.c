@@ -11,8 +11,8 @@ int main(){
     drandu(y,1,&rrand);
     dmat *x=NULL;
     chol_solve(&x,Fchol,y);
-    dwrite(y,"y");
-    dwrite(x,"x");
+    writebin(y,"y");
+    writebin(x,"x");
     chol_save(Fchol,"Chol");
     chol_free(Fchol);
     dfree(x);
@@ -54,10 +54,10 @@ int main(int argc, char* argv[]){
     toc("cholmod");tic;
     chol_solve(&x, R1, y);
     toc("cholmod");tic;
-    dwrite(y,"y");
-    dwrite(x,"x");
-    dwrite(x2,"x2");
-    dwrite(x3,"x3");
+    writebin(y,"y");
+    writebin(x,"x");
+    writebin(x2,"x2");
+    writebin(x3,"x3");
     chol_free(R1);
     dspfree(RLMc);
     dspcellfree(RLM);

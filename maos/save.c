@@ -184,7 +184,7 @@ void save_recon(SIM_T *simu){
 	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
 	dcellscale(simu->gcov, scale);
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    dwrite(simu->gcov->p[igcov], "gcov_%d_wfs%ld_%ld_%d.bin", seed,
+	    writebin(simu->gcov->p[igcov], "gcov_%d_wfs%ld_%ld_%d.bin", seed,
 		   parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
 		   simu->reconisim+1);
 	}
@@ -196,7 +196,7 @@ void save_recon(SIM_T *simu){
 	double scale=1./nstep;
 	dcellscale(simu->ecov, scale);
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
-	    dcellwrite(simu->ecov, "ecov_%d_%ld", seed, nstep);
+	    writebin(simu->ecov, "ecov_%d_%ld", seed, nstep);
 	}else{/*deprecated */
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -206,7 +206,7 @@ void save_recon(SIM_T *simu){
 		}else{
 		    strht[0]='\0';
 		}
-		dwrite(simu->ecov->p[ievl], "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
+		writebin(simu->ecov->p[ievl], "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
 		       parms->evl.thetax->p[ievl]*206265,
 		       parms->evl.thetay->p[ievl]*206265, strht, nstep);
 	    }

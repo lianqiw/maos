@@ -183,7 +183,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    }
 
 	    stari->pistat[ipowfs].psf=avgpsf;/*PSF is in corner. */
-	    stari->pistat[ipowfs].neaspec=dcellnew(nsa*2, 1);
+	    stari->pistat[ipowfs].neaspec=cellnew(nsa*2, 1);
 	    for(int ig=0; ig<nsa*2; ig++){
 		dmat *tmp=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -205,8 +205,8 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		}
 	    }
 	    if(parms->skyc.dbg){
-		dcellwrite(avgpsf, "%s/avgpsf_star%d_ipowfs%d_psf",dirsetup,istar,ipowfs);
-		dcellwrite(stari->pistat[ipowfs].neaspec, "%s/pistat_star%d_ipowfs%d_neaspec",dirsetup,istar,ipowfs);
+		writebin(avgpsf, "%s/avgpsf_star%d_ipowfs%d_psf",dirsetup,istar,ipowfs);
+		writebin(stari->pistat[ipowfs].neaspec, "%s/pistat_star%d_ipowfs%d_neaspec",dirsetup,istar,ipowfs);
 	    }
 	}
     }
@@ -221,7 +221,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
     const double r2=pow(parms->skyc.patfov/206265./2.,2);
     PDMAT(parms->skyc.rnefs,rnefs);
     for(int istar=0; istar<nstar; istar++){
-	star[istar].siglev=dcellnew(npowfs, 1);
+	star[istar].siglev=cellnew(npowfs, 1);
 	star[istar].bkgrnd=dnew(npowfs,1);
 	star[istar].siglevtot=dnew(npowfs,1);
 	/*Normalized angular distance */
@@ -285,13 +285,13 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    //size of PSF
 	    const double sigma_theta=parms->skyc.wvlmean/parms->maos.dxsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
-	    pistat->i0=dcellnew(nsa,nwvl);
-	    pistat->gx=dcellnew(nsa,nwvl);
-	    pistat->gy=dcellnew(nsa,nwvl);
+	    pistat->i0=cellnew(nsa,nwvl);
+	    pistat->gx=cellnew(nsa,nwvl);
+	    pistat->gy=cellnew(nsa,nwvl);
 	    
-	    pistat->i0s=dcellnew(nsa,1);
-	    pistat->gxs=dcellnew(nsa,1);
-	    pistat->gys=dcellnew(nsa,1);
+	    pistat->i0s=cellnew(nsa,1);
+	    pistat->gxs=cellnew(nsa,1);
+	    pistat->gys=cellnew(nsa,1);
 
 	    PDCELL(pistat->psf, psf);
 	    PDCELL(pistat->i0, i0);
@@ -312,13 +312,13 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		 
 	    }
 	    if(parms->skyc.dbg){
-		dcellwrite(pistat->i0s, "%s/star%d_ipowfs%d_i0s", dirsetup,istar,ipowfs);
+		writebin(pistat->i0s, "%s/star%d_ipowfs%d_i0s", dirsetup,istar,ipowfs);
 	    }
 	    const double pixtheta=parms->skyc.pixtheta[ipowfs];
 	    int ndtrat=parms->skyc.ndtrat;
 	    pistat->mtche=calloc(ndtrat, sizeof(dcell*));
-	    pistat->sanea=dcellnew(ndtrat,1);
-	    pistat->sanea0=dcellnew(ndtrat,1);
+	    pistat->sanea=cellnew(ndtrat,1);
+	    pistat->sanea0=cellnew(ndtrat,1);
 	    pistat->snr=dnew(ndtrat,1);
 	    dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
 
@@ -350,7 +350,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    }
 		}
 		if(parms->skyc.dbg){
-		    dcellwrite(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
+		    writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
 		}
 #if 1
@@ -369,7 +369,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    if(parms->skyc.dbg){
 		info2("star %2d optim: powfs %1d: dtrat=%3d\n", istar, ipowfs,
 		      (int)parms->skyc.dtrats->p[(int)star[istar].idtrat->p[ipowfs]]);
-		dcellwrite(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
+		writebin(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 			   dirsetup,istar,ipowfs);
 	    }/*idtrat */
 	    dcellfree(i0s);
@@ -391,7 +391,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
     const int nmod=parms->maos.nmod;
     assert(nmod>=5 && nmod<=6);
     for(int istar=0; istar<nstar; istar++){
-	star[istar].g=dcellnew(npowfs, 1);
+	star[istar].g=cellnew(npowfs, 1);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    const double thetax=star[istar].thetax;
@@ -422,7 +422,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 	    }
 	}
 	if(parms->skyc.dbg){
-	    dcellwrite(star[istar].g,"%s/star%d_g",dirsetup,istar);
+	    writebin(star[istar].g,"%s/star%d_g",dirsetup,istar);
 	}
     }
 }
@@ -433,7 +433,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
-	stari->ztiltout=dcellnew(npowfs, 1);
+	stari->ztiltout=cellnew(npowfs, 1);
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
@@ -523,7 +523,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 		    }/* if(fnwvf) */
 		    if(fngoff[iy][ix] && zfexist(fngoff[iy][ix])){
 			if(!stari->goff){
-			    stari->goff=dcellnew(npowfs, 1);
+			    stari->goff=cellnew(npowfs, 1);
 			}
 			dmat *tmp=dread("%s", fngoff[iy][ix]);
 			dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);

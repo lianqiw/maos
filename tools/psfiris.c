@@ -282,7 +282,7 @@ int main(int argc, char *argv[]){
     
     dcell *psf_lgs=dcellread("za%d_%dp/evlpsfcl_ngsr_1_x%g_y%g.fits", za, prof, thetax[idir], thetay[idir]);
     
-    dcell *output=dcellnew(nwvl,1);
+    dcell *output=cellnew(nwvl,1);
     info2("%d: ", nwvl);
     psfiris_t data={npix, notf1, notf2, dx1, dx2, pixsize, pixoffx, pixoffy, blur, ploc, pamp, cc_opd, cc_zero, imperr, wvls, psf_lgs, output, msg};
     thread_t *info=calloc(nwvl, sizeof(thread_t));
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]){
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);
     info2(" done\n");
-    dcellwrite(output, "%s", outfile);
+    writebin(output, "%s", outfile);
 
     locfree(ploc);
     dfree(pamp);
@@ -299,5 +299,4 @@ int main(int argc, char *argv[]){
     dcellfree(psf_lgs);
     dcellfree(output);
     free(outfile);
-    exit_success=1;
 }

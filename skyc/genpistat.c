@@ -56,7 +56,7 @@ static void calc_pistat(GENPISTAT_S *data){
 #endif
     {
 	if(icase==0){
-	    dwrite(dtrats, "%s/neaspec/neaspec_dtrats", dirstart);
+	    writebin(dtrats, "%s/neaspec/neaspec_dtrats", dirstart);
 	}
 	double thetax=data->ngsgrid*data->cases[icase][0];
 	double thetay=data->ngsgrid*data->cases[icase][1];
@@ -88,11 +88,11 @@ static void calc_pistat(GENPISTAT_S *data){
 	    free(header.str); header.str=NULL;
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
-	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
-	    dcell *neaspec=dcellnew(nsa*2, nwvl);
+	    dcell *pistat=cellnew(nsa, nwvl);/*pixel intensity mean(I) */
+	    dcell *neaspec=cellnew(nsa*2, nwvl);
 	    dcell **avgpsf=calloc(nwvl, sizeof(dcell*));
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		avgpsf[iwvl]=dcellnew(ndtrat, nsa);
+		avgpsf[iwvl]=cellnew(ndtrat, nsa);
 	    }
 	    for(long ig=0; ig<2*nsa*nwvl; ig++){
 		neaspec->p[ig]=dnew(ndtrat, 1);
@@ -201,9 +201,9 @@ static void calc_pistat(GENPISTAT_S *data){
 	    psf=NULL;
 	    /* Saved pistat should have peak on the corner */
 	    cfree(otf);
-	    dcellwrite(pistat, "%s",fnpistat);
-	    dcellwrite(neaspec, "%s",fnneaspec);
-	    dwrite(phygrad, "%s",fnphygrad);
+	    writebin(pistat, "%s",fnpistat);
+	    writebin(neaspec, "%s",fnneaspec);
+	    writebin(phygrad, "%s",fnphygrad);
 	    dcellfree(pistat);
 	    dcellfree(neaspec);
 	    dcellfreearr(avgpsf, nwvl);
@@ -291,7 +291,7 @@ void prep_bspstrehl(SIM_S *simu){
 	long msa=parms->maos.msa[ipowfs];
 	long nsa=parms->maos.nsa[ipowfs];
 	long nwvl=parms->maos.nwvl;
-	dcell *strehlgrid = dcellnew(nsa,nwvl);
+	dcell *strehlgrid = cellnew(nsa,nwvl);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    strehlgrid->p[ic]=dnew(ng2,ng2);
 	}
@@ -316,11 +316,11 @@ void prep_bspstrehl(SIM_S *simu){
 	}
 
 	simu->bspstrehl[ipowfs]=calloc(nsa*nwvl, sizeof(dcell*));
-	dcellwrite(strehlgrid, "strehlgrid_%d",ipowfs);
+	writebin(strehlgrid, "strehlgrid_%d",ipowfs);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    simu->bspstrehl[ipowfs][ic]=dbspline_prep(gg,gg,strehlgrid->p[ic]);
 	    dmat *strehlnew=dbspline_eval(simu->bspstrehl[ipowfs][ic],gg,gg,xnew,ynew);
-	    dwrite(strehlnew, "strehlnew_%d_%ld", ipowfs, ic);
+	    writebin(strehlnew, "strehlnew_%d_%ld", ipowfs, ic);
 	    dfree(strehlnew);
 	}
 	dcellfree(strehlgrid);
@@ -366,8 +366,8 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 	    dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
 	    dcell *mtche=0;
 	    dmat *sanea=0;
-	    ccell *otf1=ccellnew(nsa, nwvl);
-	    ccell *otf2=ccellnew(nsa, nwvl);
+	    ccell *otf1=cellnew(nsa, nwvl);
+	    ccell *otf2=cellnew(nsa, nwvl);
 	    long ncomp=parms->maos.ncomp[ipowfs];
 	    for(int isa=0; isa<nsa; isa++){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -384,7 +384,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		const double wvl=parms->maos.wvl[iwvl];
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
-	    dcell *nonxy=dcellnew(ng,1);
+	    dcell *nonxy=cellnew(ng,1);
 	    for(int ig=0; ig<ng; ig++){
 		nonxy->p[ig]=dnew(siglevs->nx, 2);
 		char fnpistat[PATH_MAX];
@@ -413,7 +413,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    for(int isa=0; isa<nsa; isa++){
 			/*Assume each WVL has same weighting*/
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
-			    dcellwrite(avgpi, "avgpi");
+			    writebin(avgpi, "avgpi");
 			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
 			    ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
 			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
@@ -426,11 +426,11 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			dcelladd(&gxs, 0, gx, sig);
 			dcelladd(&gys, 0, gy, sig);
 			mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
-			/*dcellwrite(mtche, "mtche_%.0f", sig);
-			  dwrite(sanea, "sanea_%.0f", sig);
-			  dcellwrite(i0s, "i0s_%.0f", sig);
-			  dcellwrite(gxs, "gxs_%.0f", sig);
-			  dcellwrite(gys, "gys_%.0f", sig);*/
+			/*writebin(mtche, "mtche_%.0f", sig);
+			  writebin(sanea, "sanea_%.0f", sig);
+			  writebin(i0s, "i0s_%.0f", sig);
+			  writebin(gxs, "gxs_%.0f", sig);
+			  writebin(gys, "gys_%.0f", sig);*/
 #define SCAN 0
 			double sxe=0,sye=0,neam=0;
 			for(int isa=0; isa<nsa; isa++){
@@ -468,7 +468,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 #endif
 			    }
 #if SCAN
-			    dwrite(resp, "powfs%d_sa%d_sig%g_response", ipowfs, isa, sig);
+			    writebin(resp, "powfs%d_sa%d_sig%g_response", ipowfs, isa, sig);
 #endif
 			}//for isa
 			nonxy->p[ig]->p[isig]=(neam/(nsa*2));
@@ -476,7 +476,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    }
 		}
 	    }//for ng
-	    dcellwrite(nonxy, "powfs%d_nonxy", ipowfs);
+	    writebin(nonxy, "powfs%d_nonxy", ipowfs);
 	    dcellfree(avgpi);
 	    dcellfree(i0);
 	    dcellfree(gx);
@@ -492,7 +492,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 	    ccellfree(otf1);
 	    ccellfree(otf2);
 	    nonlin[ipowfs]=nonxy;
-	    dcellwrite(nonxy, "%s", fnnonlin);
+	    writebin(nonxy, "%s", fnnonlin);
 	}
     }//for ipowfs
     dfree(siglevs);

@@ -87,7 +87,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int nsa=powfs[ipowfs].pts->nsa;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
-    ccell *otf=ccellnew(nwvl,1);
+    ccell *otf=cellnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
 	cfft2plan(otf->p[iwvl], 1);
@@ -197,7 +197,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		pgnf[isa+nsa][isep]=g[1]/pixthetay;
 	    }
 	}/*for isa*/
-	dwrite(gnf, "wfslinearity_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+	writebin(gnf, "wfslinearity_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
     }
     dfree(ints);
     ccellfree(otf);
@@ -231,7 +231,7 @@ static double mapfun(double *x, mapdata_t *info){
     int nsa=fotf->nx;
     int nwvl=fotf->ny;
     if(!otf){
-	info->otf=ccellnew(nwvl,1);
+	info->otf=cellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    info->otf->p[iwvl]=cnew(info->fotf->p[0]->nx, info->fotf->p[0]->ny);
 	    cfft2plan(info->otf->p[iwvl], 1);
@@ -626,9 +626,9 @@ void wfsgrad_iwfs(thread_t *info){
 		    dcellscale(pd->im0, 1./(pd->imc));
 		    dcellscale(pd->imx, 2./(pd->a2m*pd->imc));
 		    dcellscale(pd->imy, 2./(pd->a2m*pd->imc));
-		    dcellwrite(pd->im0, "wfs%d_i0_%d", iwfs, isim);
-		    dcellwrite(pd->imx, "wfs%d_gx_%d", iwfs, isim);
-		    dcellwrite(pd->imy, "wfs%d_gy_%d", iwfs, isim);
+		    writebin(pd->im0, "wfs%d_i0_%d", iwfs, isim);
+		    writebin(pd->imx, "wfs%d_gx_%d", iwfs, isim);
+		    writebin(pd->imy, "wfs%d_gy_%d", iwfs, isim);
 		    dcellzero(pd->imx);
 		    dcellzero(pd->imy);
 		    dcellzero(pd->im0);
@@ -755,7 +755,7 @@ static void wfsgrad_save(SIM_T *simu){
 		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
 			dfftshift(pp->p[ic]);
 		    }
-		    dcellwrite(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+		    writebin(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 			       dirskysim,simu->seed,
 			       parms->powfs[ipowfs].order,
 			       parms->wfs[iwfs].thetax*206265,
@@ -764,7 +764,7 @@ static void wfsgrad_save(SIM_T *simu){
 			dfftshift(pp->p[ic]);
 		    }
 		}else{/*need peak in center */
-		    dcellwrite(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+		    writebin(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}
 		dcellscale(pp,1./scale);
 	    }

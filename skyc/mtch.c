@@ -108,7 +108,7 @@ void mtch(dcell **mtche, dmat **sanea,
     PDMAT(i0g,pi0g);
     dmat *wt=dnew(npixtot, 1);
     if(!*mtche){
-	*mtche=dcellnew(nsa,1);
+	*mtche=cellnew(nsa,1);
     }
     if(!*sanea){
 	*sanea=dnew(nsa*2,1);

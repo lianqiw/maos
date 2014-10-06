@@ -40,7 +40,7 @@
 #else
 #define DEBUG_SAVE 1
 #endif
-#define skyc_done(A) ({scheduler_finish(A);skyc_signal_handler(A);exit_success=1;if(A!=0) exit(A);})
+#define skyc_done(A) ({scheduler_finish(A);skyc_signal_handler(A);if(A!=0) exit(A);})
 #include "../lib/aos.h"
 extern char *dirsetup;
 extern char *dirstart;
