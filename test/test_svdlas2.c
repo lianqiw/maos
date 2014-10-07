@@ -143,9 +143,9 @@ static const dsp* A2=NULL;
  **************************************************************/
 static void opb(long n, double *x, double *y){
     dmat *tmp=dnew(A2->m, 1);
-    dspmulvec(tmp->p, A2, x, 1);
+    dspmulvec(tmp->p, A2, x, 'n',1);
     memset(y, 0, sizeof(double)*A2->n);
-    dsptmulvec(y, A2, tmp->p, 1);
+    dspmulvec(y, A2, tmp->p, 't',1);
     dfree(tmp);
     mxvcount +=2;
 }
@@ -233,7 +233,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    /*opa(&xv1[id], &xv1[ida]); */
 	    mxvcount+=1;
 	    memset(&xv1[ida], 0, sizeof(double)*nrow);
-	    dspmulvec(&xv1[ida], A, &xv1[id], 1);
+	    dspmulvec(&xv1[ida], A, &xv1[id],'n', 1);
 	    double tmp1 = 1.0 / tmp0;
 	    dscal(nrow, tmp1, &xv1[ida], 1);
 	    xnorm *= tmp1;
@@ -291,7 +291,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	free(xv2);
 	*VT=dtrans(V);
 	*U=NULL;
-	dspmulmat(U, A, V, 1);
+	dspmm(U, A, V, 'n',1);
 	dmat *SdiagI=ddup(*Sdiag); 
 	dcwpow(SdiagI, -1);
 	dmuldiag(*U, SdiagI);

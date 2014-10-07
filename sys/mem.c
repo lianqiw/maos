@@ -22,7 +22,9 @@
 #include <string.h>
 #include <math.h>
 #include <search.h>
+#ifndef __CYGWIN__
 #include <execinfo.h>
+#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -157,7 +159,9 @@ static void memkey_add(void *p,size_t size){
     T_MEMKEY *key=calloc_default(1,sizeof(T_MEMKEY));
     key->p=p;
     key->size=size;
+#ifndef __CYGWIN__
     key->nfunc=backtrace(key->func,DT);
+#endif
     LOCK(mutex_mem);
     if(tfind(key, &MROOT, key_cmp)){
 	warning("%p already exists\n", p);

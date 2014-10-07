@@ -348,7 +348,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
 	}
     }
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-    dsptcellmulmat_thread(xout, recon->HA_ncpa, xp, 1);
+    dcellmm(xout, recon->HA_ncpa, xp, "tn", 1);
     dcellfree(xp);
 }
 void FitL_NCPA(dcell **xout, const void *A, 
@@ -356,15 +356,15 @@ void FitL_NCPA(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     dcell *xp=NULL;
-    dspcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
+    dcellmm(&xp, recon->HA_ncpa, xin, "nn", 1.);
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
-    dsptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
+    dcellmm(xout, recon->HA_ncpa, xp, "tn", alpha);
     dcellfree(xp);xp=NULL;
     /*dcellmm(&xp,recon->fitNW, xin, "tn", 1);
     dcellmm(xout,recon->fitNW, xp, "nn", alpha);
     dcellfree(xp);
     if(recon->actslave){
-	dspcellmulmat(xout, recon->actslave, xin, 1);
+	dcellmm(xout, recon->actslave, xin, "nn", 1);
 	}*/
 }
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){

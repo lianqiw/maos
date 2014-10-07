@@ -1051,7 +1051,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 		double *pout=powfs[ipowfs].sodium->p + nxnew*icol;
 		/*preserve sum of input profile */
 		double Nasum=dblsum(pin, nxin);
-		dspmulvec(pout, ht, pin, 1);
+		dspmulvec(pout, ht, pin, 'n', 1);
 		normalize_sum(pout, nxnew, Nasum);
 	    }
 	    dspfree(ht);
@@ -2037,8 +2037,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
 				      realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
 			}else{
-			    dspmulmat(&powfs[ipowfs].gradoff->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
-				     powfs[ipowfs].opdbias->p[jwfs],1);
+			    dspmm(&powfs[ipowfs].gradoff->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
+				      powfs[ipowfs].opdbias->p[jwfs],'n',1);
 			}
 		    }
 		}

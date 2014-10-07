@@ -473,7 +473,7 @@ void wfsgrad_iwfs(thread_t *info){
 		      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    dspmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	    dspmm(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,'n',1);
 	}
 	if(gradcalc->p!=(*gradacc)->p){
 	    dadd(gradacc, 1, gradcalc, 1);

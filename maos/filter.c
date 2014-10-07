@@ -417,7 +417,7 @@ void filter_dm(SIM_T *simu){
     if(!parms->recon.modal && simu->recon->actinterp && !parms->tomo.psol){
 	/*make floating actuators averag of neighbor.*/
 	dcell *tmp=NULL;
-	dspcellmulmat(&tmp, simu->recon->actinterp, simu->dmreal, 1);
+	dcellmm(&tmp, simu->recon->actinterp, simu->dmreal, "nn", 1);
 	dcellcp(&simu->dmreal, tmp);
 	dcellfree(tmp);
     }

@@ -392,59 +392,6 @@ void X(svd_pow)(X(mat) *A, R power, R thres){
     XR(free)(Sdiag);
 }
 
-
-
-/**
-   Compute A*B and add to C0.
-   C=C+trans(A)*trans(B)*alpha
-       
-   2009-11-09: There was initially a beta parameter
-   It was implemented wrongly for beta!=1 because for every 
-   call to dmm, the already accumulated ones are scaled.
-   removed beta.
-*/
-void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B, 
-	       const char trans[2], const R alpha){
-    if(!A || !B) return;
-    int ax, az;
-    int nx,ny,nz;
-    int bz, by;
-    if(trans[0]=='n'||trans[0]=='N'){
-	nx=A->nx; 
-	ax=1; az=A->nx;
-	nz=A->ny;
-    }else{ 
-	nx=A->ny;
-	az=1; ax=A->nx;
-	nz=A->nx;
-    }
-    if(trans[1]=='n'||trans[0]=='N'){
-	ny=B->ny; 
-	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
-    }else{
-	ny=B->nx;
-	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
-    }
-    if(!*C0){
-	*C0=cellnew(nx,ny);
-    }
-    X(cell) *C=*C0;
-    for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    for(int iz=0; iz<nz; iz++){
-		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
-		    X(mm)(&C->p[ix+iy*nx],1.,A->p[ix*ax+iz*az], 
-			  B->p[iz*bz+iy*by],trans,alpha);
-		}
-	    }
-	}
-    }
-}
-
-
-
 /**
    Inplace Invert a SPD matrix. It is treated as a block matrix
 */
@@ -502,7 +449,7 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
     }else{
 	if(Wsp){
 	    assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
-	    X(spcellmulmat)(&wA,Wsp,A,1);
+	    X(cellmm)(&wA,Wsp,A,"nn",1);
 	}else{
 	    wA=X(cellref)(A);
 	}

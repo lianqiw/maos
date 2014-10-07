@@ -112,8 +112,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    /*notice the sqrt. */
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		    dsptmulvec(FRV[ips]->p+ifit*nloc, 
-			      HXF[ips][ifit], recon->W1->p, 
+		    dspmulvec(FRV[ips]->p+ifit*nloc, 
+			      HXF[ips][ifit], recon->W1->p, 't',
 			      sqrt(recon->fitwt->p[ifit]));
 		}
 	    }
@@ -136,8 +136,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		/*notice the sart. */
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		dsptmulvec(FRU[idm]->p+ifit*nloc, 
-			  HA[idm][ifit], recon->W1->p,
+		dspmulvec(FRU[idm]->p+ifit*nloc, 
+			  HA[idm][ifit], recon->W1->p,'t',
 			  sqrt(recon->fitwt->p[ifit]));
 	    }
 	}

@@ -267,7 +267,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	dspcellmulmat(&HatWHmt,Hat,modc,wt[ievl]);
+	dcellmm(&HatWHmt,Hat,modc,"nn",wt[ievl]);
 	dspcellfree(Hat);
     }
     dspfree(HatGround);
@@ -337,7 +337,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	    }else{
 		Hat->p[idm]=dspref(HatGround);
 	    }
-	    dspmulmat(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],wt[ievl]);
+	    dspmm(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],'n',wt[ievl]);
 	}
 	dspcellfree(Hat);
     }
@@ -550,7 +550,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     dspcell *saneai=recon->saneai;
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
-	dspcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
+	dcellmm(&ngsmod->GM, recon->GAlo, ngsmod->Modes, "nn", 1);
 	if(parms->nlowfs==1 && ngsmod->nmod>5){
 	    /*There is only one wfs, remove first plate scale mode*/
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -572,7 +572,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		dcell *Matt=cellnew(ndm,1);
 		dcell *GaM=NULL;
 		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
-		dspcellmulmat(&GaM, recon->GAlo, Matt, 1);
+		dcellmm(&GaM, recon->GAlo, Matt, "nn", 1);
 		dcell *tmp=dcellpinv(GaM, NULL,saneai);
 		dcell *tmp2=NULL;
 		dcellmulsp(&tmp2,tmp,recon->GAlo, 1);

@@ -10,4 +10,5 @@
 #include "fft.c"
 
 #include "sp.c"
+#include "spmm.c"
 #include "spbin.c"

@@ -54,23 +54,15 @@ void X(spcellscale)(X(spcell) *A, const T beta);\
 X(sp)* X(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\
 X(mat) *X(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
-void X(spmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha, int nthread); \
-void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
-void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha);\
-void X(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
-void X(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha); \
+void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha); \
+void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha); \
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha); \
-void X(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
-void X(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha);\
+void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, char trans, const T alpha); \
 T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\
 T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
-void X(spcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
-void X(sptcellmulmat)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
-void X(spcellmulmat_thread)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
-void X(sptcellmulmat_thread)(X(cell) **C, const X(spcell)*A, const X(cell)*B, const T alpha);\
-void X(spcellmulmat_each)(X(cell) **xout, X(spcell) *A, X(cell) *xin, T alpha, int trans); \
-X(sp) *X(2sp)(X(mat)*A);\
+void X(cellmm)(X(cell) **C0, const void *A_, const X(cell) *B, const char trans[2], const R alpha); \
+X(sp) *X(2sp)(X(mat)*A);					\
 void X(spfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void X(sptfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const T f);\
@@ -92,7 +84,6 @@ X(sp) *X(spcell2sp)(const X(spcell) *A) CHECK_UNUSED_RESULT;\
 X(mat) *X(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 X(mat) *X(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 void X(spclean)(X(sp) *A);\
-void X(spcellmulvec)(T *restrict yc, const X(spcell) *Ac, const T * restrict xc, T alpha);\
 void X(spdroptol)(X(sp) *A, R thres);		\
 void X(spcelldroptol)(X(spcell) *A, R thres); \
 void X(spsort)(X(sp) *A);\

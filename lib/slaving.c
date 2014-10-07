@@ -31,7 +31,7 @@ dcell *genactcpl(const dspcell *HA, const dmat *W1){
 	    dsp *ha=HA->p[ifit+idm*HA->nx];
 	    if(!ha) continue;
 	    if(W1){
-		dsptmulmat(&actcplc->p[idm], ha, W1, 1);
+		dspmm(&actcplc->p[idm], ha, W1, 't', 1);
 	    }else{
 		dmat *tmp=dspsumabs(ha, 1);
 		tmp->nx=tmp->ny; tmp->ny=1;

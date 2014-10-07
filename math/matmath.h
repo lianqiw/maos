@@ -112,7 +112,6 @@
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(cellinn)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\
-    void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B, const char trans[2], const R alpha); \
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\

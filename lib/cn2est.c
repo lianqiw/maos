@@ -500,7 +500,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     }
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
     dcellzero(cn2est->wtrecon);
-    dspcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
+    dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
     /*only 1 cell. norm to sum to 1. */
     normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){

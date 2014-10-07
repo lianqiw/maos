@@ -42,8 +42,8 @@
 void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, 
 	      double alpha, int nthread){
     dcell *xx=NULL;
-    dspcellmulmat_thread(&xx, L2, xin, 1.);
-    dsptcellmulmat_thread(xout, L2, xx, alpha);
+    dcellmm(&xx, L2, xin, "nn", 1.);
+    dcellmm(xout, L2, xx, "tn", alpha);
     dcellfree(xx);
 }
 /**
@@ -159,7 +159,7 @@ static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt
     }
     dmat *xout=NULL;
     dmat *tmp=NULL;
-    dspmulmat(&xout, W0, xin, wt);
+    dspmm(&xout, W0, xin, 'n', wt);
     dmm(&tmp, 0, W1, xin, "tn", -1);
     dmm(&xout, 1, W1, tmp, "nn", wt);
     dcp(&xin, xout);
@@ -193,7 +193,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 	    int ind=iy*nevl+ievl;
 	    dmat *xout=NULL;
 	    dmat *tmp=NULL;
-	    dspmulmat(&xout, W0, B->p[ind], wt->p[ievl]);
+	    dspmm(&xout, W0, B->p[ind], 'n', wt->p[ievl]);
 	    dmm(&tmp, 0, W1, B->p[ind], "tn", -1);
 	    dmm(&xout, 1, W1, tmp, "nn", wt->p[ievl]);
 	    for(int ix=0; ix<A->ny; ix++){
@@ -252,11 +252,11 @@ static void Tomo_prop_do(thread_t *info){
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
 		PDSPCELL(recon->HXWtomo,HXW);
-		dspmulmat(&xx, HXW[ips][iwfs], data->xin->p[ips], 1);
+		dspmm(&xx, HXW[ips][iwfs], data->xin->p[ips], 'n', 1);
 	    }
 	}
 	/*Apply the gradient operation */
-	dspmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, 1);
+	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, 'n', 1);
 	dfree(xx);
 	/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
     }
@@ -282,9 +282,9 @@ static void Tomo_nea_gpt_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmulmat(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 1);
+	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 'n', 1);
 	dfree(data->gg->p[iwfs]); /*We reuse gg. */
-	dsptmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, data->alpha);
+	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, 't', data->alpha);
 	dfree(gg2);
     }
 }
@@ -296,7 +296,7 @@ static void Tomo_nea_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmulmat(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 1);
+	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 'n', 1);
 	dcp(&data->gg->p[iwfs], gg2);
 	dfree(gg2);
     }
@@ -348,15 +348,15 @@ static void Tomo_iprop_do(thread_t *info){
 	}else{
 	    PDSPCELL(recon->HXWtomo,HXW);
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		dsptmulmat(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 1);
+		dspmm(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 't', 1);
 	    }
 	}
 	if(data->xin){/*data->xin is empty when called from TomoR */
 	    switch(recon->cxx){
 	    case 0:{/*L2 */
 		dmat *xx=NULL;
-		dspmulmat(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips], 1);
-		dsptmulmat(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, data->alpha);
+		dspmm(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips],'n', 1);
+		dspmm(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, 't', data->alpha);
 		dfree(xx);
 	    }
 		break;
@@ -368,7 +368,7 @@ static void Tomo_iprop_do(thread_t *info){
 		break;
 	    }
 	    if(recon->ZZT){
-		dsptmulmat(&data->xout->p[ips], recon->ZZT->p[ips+ips*nps], data->xin->p[ips], data->alpha);
+		dspmm(&data->xout->p[ips], recon->ZZT->p[ips+ips*nps], data->xin->p[ips], 't', data->alpha);
 	    }
 	}
     }
@@ -499,7 +499,7 @@ void FitR(dcell **xout, const void *A,
 	    }
 	}
     }else if(recon->HXF){
-	dspcellmulmat_thread(&xp, recon->HXF, xin, 1.);
+	dcellmm(&xp, recon->HXF, xin, "nn", 1.);
     }else{/*Do the ray tracing from xloc to ploc */
 	const PARMS_T *parms=global->parms;
 	const int nfit=parms->fit.nfit;
@@ -520,7 +520,7 @@ void FitR(dcell **xout, const void *A,
 	}
     }
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
-    dsptcellmulmat_thread(xout, recon->HA, xp, alpha);
+    dcellmm(xout, recon->HA, xp, "tn", alpha);
     dcellfree(xp);
 }
 /**
@@ -531,15 +531,15 @@ void FitL(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     dcell *xp=NULL;
-    dspcellmulmat_thread(&xp, recon->HA, xin, 1.);
+    dcellmm(&xp, recon->HA, xin, "nn", 1.);
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
-    dsptcellmulmat_thread(xout, recon->HA, xp, alpha);
+    dcellmm(xout, recon->HA, xp, "tn", alpha);
     dcellfree(xp);xp=NULL;
     dcellmm(&xp,recon->fitNW, xin, "tn", 1);
     dcellmm(xout,recon->fitNW, xp, "nn", alpha);
     dcellfree(xp);
     if(recon->actslave){
-	dspcellmulmat(xout, recon->actslave, xin, alpha);
+	dcellmm(xout, recon->actslave, xin, "nn", alpha);
     }
 }
 

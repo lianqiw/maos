@@ -38,11 +38,7 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_T *A = B;
     if(A->M){
 	if(!xin) return;
-	if(xin->ny>1){
-	    dspcellmulmat_thread(xout, A->M, xin, alpha);
-	}else{
-	    dspcellmulmat(xout, A->M, xin, alpha);
-	}
+	dcellmm(xout, A->M, xin, "nn", alpha);
 	if(A->U && A->V){
 	    dcell *tmp=NULL;
 	    dcellmm(&tmp,A->V, xin, "tn", -1.);
@@ -64,11 +60,7 @@ void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha
     const MUV_T *A = B;
     if(A->M){
 	if(!xin) return;
-	if(xin->ny>1){
-	    dsptcellmulmat_thread(xout, A->M, xin, alpha);
-	}else{
-	    dsptcellmulmat(xout, A->M, xin, alpha);
-	}
+	dcellmm(xout, A->M, xin, "tn", alpha);
 	if(A->U && A->V){
 	    dcell *tmp=NULL;
 	    dcellmm(&tmp,A->U, xin, "tn", -1.);
@@ -131,7 +123,7 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     if(!*xout){
 	*xout=cellnew(A->M->nx, xin->ny);
     }
-    dspmulmat(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], alpha);
+    dspmm(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], 'n', alpha);
     if(A->V && A->U){
 	PDCELL(A->V, AV);
 	PDCELL(A->U, AU);

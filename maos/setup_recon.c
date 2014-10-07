@@ -459,7 +459,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs = parms->wfsr[iwfs].powfs;
 		dmat *tmp=0;
-		dspmulmat(&tmp, GA->p[iwfs+idm*nwfs], recon->amod->p[idm], 1);
+		dspmm(&tmp, GA->p[iwfs+idm*nwfs], recon->amod->p[idm], 'n',1);
 		recon->GM->p[iwfs+idm*nwfs]=d2sp(tmp);
 		dfree(tmp);
 		if(parms->powfs[ipowfs].lo
@@ -1048,7 +1048,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	  Tip/tilt and diff focus removal low rand terms for LGS WFS.
 	*/
 	if(recon->TTF){
-	    dspcellmulmat(&recon->RR.U, recon->RR.M, recon->TTF, 1);
+	    dcellmm(&recon->RR.U, recon->RR.M, recon->TTF, "nn", 1);
 	    recon->RR.V=dcelltrans(recon->PTTF);
 	}
  
@@ -1116,7 +1116,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	if(!parms->recon.split || parms->tomo.splitlrt || parms->recon.split==2){
 	    recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 	    dcell *GPTTDF=NULL;
-	    dsptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
+	    dcellmm(&GPTTDF, recon->GX, recon->RR.V, "tn", 1);
 	    recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 	    dcellfree(GPTTDF);
 	}else{
@@ -1274,7 +1274,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
 	    info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
 	    dcell *t2=NULL;
 		
-	    dspcellmulmat(&t2, recon->sanea, p, 1); 
+	    dcellmm(&t2, recon->sanea, p, "nn", 1); 
 	    dcell *t3=NULL;
 	    dcellmm(&t3, p, t2, "tn", 1);
 	    dcellfree(p); dcellfree(t2);
@@ -1414,7 +1414,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
 	dmat *opd=dnew(recon->ploc->nloc,1);
 	loc_add_focus(opd->p, recon->ploc, 1);
-	dspmulmat(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 1);
+	dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 'n', 1);
 	dfree(opd);
     }
 
@@ -1434,8 +1434,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}else{
 	    continue;
 	}
-	dspmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 recon->GFall->p[ipowfs],1);
+	dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+		  recon->GFall->p[ipowfs],'n',1);
 	dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
     }
     dinvspd_inplace(GMGngs);
@@ -1455,7 +1455,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *Fsci=dnew(recon->floc->nloc, 1);
 	loc_add_focus(Fsci->p, recon->floc, 1);
 	dmat *WF=NULL;/*WF=(W0-W1*W1')*Fsci*/
-	dspmulmat(&WF, recon->W0, Fsci, 1);
+	dspmm(&WF, recon->W0, Fsci, 'n',1);
 	dmat *W1F=NULL;
 	dmm(&W1F, 0, recon->W1, Fsci, "tn", 1);
 	dmm(&WF, 1, recon->W1, W1F, "nn", -1);
@@ -1528,8 +1528,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	    continue;
 	dmat *GMtmp=NULL;
 	dmat *GMGtmp=NULL;
-	dspmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 recon->GFall->p[ipowfs], 1);
+	dspmm(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+		  recon->GFall->p[ipowfs], 'n', 1);
 	dmm(&GMGtmp, 0, recon->GFall->p[ipowfs], GMtmp, "tn",1);
 	dinvspd_inplace(GMGtmp);
 	dmm(&RFlgsg[iwfs][iwfs], 0, GMGtmp, GMtmp, "nt", 1);
@@ -1695,7 +1695,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcell *QwQc=NULL;
     {
 	dcell *Q=NULL;/*the NGS modes in ploc. */
-	dspcellmulmat(&Q, recon->HA, FUw, 1);
+	dcellmm(&Q, recon->HA, FUw, "nn", 1);
 	QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
 	dcellfree(Q);
     }
@@ -1786,7 +1786,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
-    dspcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
+    dcellmm(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
     dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);
     dcellfree(neailo);
     dcellfree(nealo);
@@ -1797,7 +1797,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcellfree(Uw);
     if(parms->save.setup){
 	dcell *Qn=NULL;
-	dspcellmulmat(&Qn, recon->HA, recon->MVModes, 1);
+	dcellmm(&Qn, recon->HA, recon->MVModes, "nn", 1);
 	dcell *Qntt=cellnew(Qn->nx,Qn->ny);
 	dmat *TTploc=loc2mat(recon->floc,1);/*TT mode. need piston mode too! */
 	dmat *PTTploc=dpinv(TTploc,NULL,recon->W0);/*TT projector. no need w1 since we have piston. */
@@ -1838,7 +1838,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     /*
     if(parms->save.setup){
 	dcell *QQ=NULL;
-	dspcellmulmat(&QQ, recon->HA, recon->MVModes,1);
+	dcellmm(&QQ, recon->HA, recon->MVModes,"nn", 1);
 	dcell *MCC=calcWmcc(QQ,QQ,recon->W0,recon->W1,recon->fitwt);
 	writebin(MCC,"%s/mvst_MCC",dirsetup);
     

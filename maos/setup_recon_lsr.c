@@ -45,7 +45,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dspcellfree(GAlsrT);
     // Tip/tilt and diff focus removal low rand terms for LGS WFS.
     if(recon->TTF){
-	dspcellmulmat(&recon->LR.U, recon->LR.M, recon->TTF, 1);
+	dcellmm(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
     info2("Building recon->LL\n");
@@ -124,7 +124,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
     dcell *GPTTDF=NULL;
-    dsptcellmulmat(&GPTTDF, GAM, recon->LR.V, 1);
+    dcellmm(&GPTTDF, GAM, recon->LR.V, "tn", 1);
     recon->LL.V=dcellcat(GPTTDF, VLo, 2);
     dcellfree(GPTTDF);
     dcellfree(ULo);
