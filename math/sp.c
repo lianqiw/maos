@@ -68,6 +68,24 @@ X(sp) *X(spref)(X(sp) *A){
     atomicadd(out->nref,1);
     return out;
 }
+/**
+   move the matrix from res to A without change value of A itself.
+*/
+void X(spmove)(X(sp) *A, X(sp) *res){
+    if(!res || !A) 
+	error("Trying to move an NULL matrix\n");
+    if(A->nref){
+	int nref=atomicadd(A->nref, -1);
+	if(!nref){
+	    free(A->x); 
+	    free(A->i); 
+	    free(A->p); 
+	    free(A->nref);
+	}
+    }
+    memcpy(A,res,sizeof(X(sp)));
+    memset(res, 0, sizeof(X(sp)));
+}
 
 /**
    copy a X(sp) matrix to another.
@@ -762,25 +780,25 @@ void X(spcellsort)(X(spcell) *A){
    symmetricize a X(sp) matrix and drop values below a
    threshold. 
 */
-void X(spsym)(X(sp) *A){
-    X(sp) *B=X(sptrans)(A);
-    X(spadd)(&A,B);
-    X(spscale)(A,0.5);
+void X(spsym)(X(sp) **A){
+    X(sp) *B=X(sptrans)(*A);
+    X(spadd)(A,B);
+    X(spscale)(*A,0.5);
     X(spfree)(B);
-    X(spdroptol)(A,EPS);
-    X(spsort)(A);/*This is important to make chol work. */
+    X(spdroptol)(*A,EPS);
+    X(spsort)(*A);/*This is important to make chol work. */
 }
 /**
    symmetricize a X(sp) cell and drop values below a
    threshold. 
 */
-void X(spcellsym)(X(spcell) *A){
-    X(spcell) *B=X(spcelltrans)(A);
-    X(spcelladd)(&A,B);
+void X(spcellsym)(X(spcell) **A){
+    X(spcell) *B=X(spcelltrans)(*A);
+    X(spcelladd)(A,B);
     X(spcellfree)(B);
-    X(spcellscale)(A,0.5);
-    X(spcelldroptol)(A,EPS);
-    X(spcellsort)(A);
+    X(spcellscale)(*A,0.5);
+    X(spcelldroptol)(*A,EPS);
+    X(spcellsort)(*A);
 }
 
 /**

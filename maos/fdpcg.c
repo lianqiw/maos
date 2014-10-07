@@ -490,11 +490,10 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cspadd(&Mhat,tmp2);
 	cspfree(tmp2);
     }
-  
     cspfree(Mmid);
     cspdroptol(Mhat,EPS);
-    cspsym(Mhat);
-    
+    cspsym(&Mhat);
+
     if(!needscale){  /*scale Mhat to avoid scaling FFT. */
 	cmat *sc=cnew(nxtot, 1);
 	dcomplex *psc=sc->p;

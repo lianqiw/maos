@@ -123,10 +123,11 @@ void cellfree_do(void *A){
     }
 }
 
-void writedata_by_id(file_t *fp, const void *A, long id){
+void writedata_by_id(file_t *fp, const void *A_, long id){
+    const cell *A=(const cell*)A_;
     if(A){
 	if(!id){
-	    id=*((long*)(A));
+	    id=A->id;
 	}else if (id!=MCC_ANY){
 	    long id2=*((long*)(A));
 	    if((id & id2)!=id && (id & id2) != id2){
@@ -138,44 +139,43 @@ void writedata_by_id(file_t *fp, const void *A, long id){
     }
     switch(id){
     case MCC_ANY:{
-	const cell *dc=A;
 	uint64_t nx=0;
 	uint64_t ny=0;
-	if(dc){
-	    nx=dc->nx;
-	    ny=dc->ny;
+	if(A){
+	    nx=A->nx;
+	    ny=A->ny;
 	}
 	id=0;/*determine id first for empty cell*/
 	if(nx && ny){
 	    for(int ix=0; ix<nx*ny; ix++){
-		if(dc->p[ix]){
-		    id=*((long*)(dc->p[ix]));
+		if(A->p[ix]){
+		    id=A->p[ix]->id;
 		    if(!id){
 			error("id is not set\n");
 		    }
 		}
 	    }
-	    if(!id){
+	    if(!id){//empty cell
 		nx=0; ny=0;
 	    }
 	}
-	header_t header={MCC_ANY, nx, ny, dc?dc->header:NULL};
+	header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
 	write_header(&header, fp);
 	if(id){
-	    for(int ix=0; ix<dc->nx*dc->ny; ix++){
-		writedata_by_id(fp, dc->p[ix], 0);
+	    for(int ix=0; ix<A->nx*A->ny; ix++){
+		writedata_by_id(fp, A->p[ix], 0);
 	    }
 	}
     }
 	break;
     case M_DBL:
-	writebindata(fp, (dmat*)A);break;
+	dwritedata(fp, (dmat*)A);break;
     case M_CMP:
-	writebindata(fp, (cmat*)A);break;
+	cwritedata(fp, (cmat*)A);break;
     case M_FLT:
-	writebindata(fp, (smat*)A);break;
+	swritedata(fp, (smat*)A);break;
     case M_ZMP:
-	writebindata(fp, (zmat*)A);break;
+	zwritedata(fp, (zmat*)A);break;
     case M_LONG:
 	lwritedata(fp, (lmat*)A);break;
     case M_LOC64:

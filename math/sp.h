@@ -88,8 +88,8 @@ void X(spdroptol)(X(sp) *A, R thres);		\
 void X(spcelldroptol)(X(spcell) *A, R thres); \
 void X(spsort)(X(sp) *A);\
 void X(spcellsort)(X(spcell) *A);\
-void X(spsym)(X(sp) *A);\
-void X(spcellsym)(X(spcell) *A);\
+void X(spsym)(X(sp) **A);\
+void X(spcellsym)(X(spcell) **A);\
 X(sp) *X(spconvolvop)(X(mat) *A) CHECK_UNUSED_RESULT;\
 X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow) CHECK_UNUSED_RESULT;\
 X(sp) *X(spinvbdiag)(const X(sp) *A, long bs) CHECK_UNUSED_RESULT;\

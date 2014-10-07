@@ -35,7 +35,6 @@ map_t *mapreaddata(file_t *fp, header_t *header);
 rmap_t *rmapread(const char *format,...) CHECK_ARG(1);
 rmap_t **rmaparrread(int *nlayer, const char *format, ...);
 void mapwritedata(file_t *fp, map_t *map);
-void mapwrite(map_t *map, const char *format,...) CHECK_ARG(2);
 void maparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);
 map_t **maparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
 
