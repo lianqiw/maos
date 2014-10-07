@@ -124,7 +124,7 @@ case "$host_os" in
     *linux*)
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
-	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
 	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
@@ -137,6 +137,7 @@ case "$host_os" in
 	;;
     *darwin*)
 	AM_CONDITIONAL(DARWIN, true)
+	CFLAGS_EXTRA="-fPIC"
 	mkl_avail="no"
 	libsuffix=fat
 	system="apple"
@@ -168,7 +169,7 @@ TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include -fPIC"
+CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 
 #Try to discover CUDA install in the system
 
