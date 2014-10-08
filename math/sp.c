@@ -53,6 +53,24 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
     sp->nref[0]=1;
     return sp;
 }
+static void X(spfree_content)(X(sp) *sp){
+    if(!sp) return;
+    if(sp->nref){
+	int nref=atomicadd(sp->nref, -1);
+	if(!nref){
+	    free(sp->x);
+	    free(sp->p);
+	    free(sp->i);
+	    free(sp->nref);
+	}
+    }
+}
+/**
+ * free a X(sp) matrix*/
+void X(spfree_do)(X(sp) *sp){
+    X(spfree_content)(sp);
+    free(sp);
+}
 
 /**
    reference a sparse object.
@@ -74,15 +92,7 @@ X(sp) *X(spref)(X(sp) *A){
 void X(spmove)(X(sp) *A, X(sp) *res){
     if(!res || !A) 
 	error("Trying to move an NULL matrix\n");
-    if(A->nref){
-	int nref=atomicadd(A->nref, -1);
-	if(!nref){
-	    free(A->x); 
-	    free(A->i); 
-	    free(A->p); 
-	    free(A->nref);
-	}
-    }
+    X(spfree_content)(A);
     memcpy(A,res,sizeof(X(sp)));
     memset(res, 0, sizeof(X(sp)));
 }
@@ -157,27 +167,6 @@ void X(spsetnzmax)(X(sp) *sp, long nzmax){
 	sp->x=realloc(sp->x, sizeof(T)*nzmax);
 	sp->nzmax=nzmax;
     }
-}
-/**
- * free a X(sp) matrix*/
-void X(spfree_do)(X(sp) *sp){
-    if(!sp) return;
-    if(!sp->nref || sp->nref[0]<=1){
-	if(sp->nref[0]!=1){
-	    warning("nref should nevre be less than 1\n");
-	}
-	free(sp->x);
-	free(sp->p);
-	free(sp->i);
-	if(sp->nref){
-	    free(sp->nref);
-	}else{
-	    warning("X(sp) was corrected incorrectly\n");
-	}
-    }else{
-	atomicadd(sp->nref, -1);
-    }
-    free(sp);
 }
 
 /**
@@ -486,8 +475,8 @@ void X(spadd)(X(sp) **A0, const X(sp) *B){
 	    }
 	    X(sp) *res=X(ss_add)(*A0,B,1.,1.);
 	    X(ss_dropzeros)(res);
-	    X(spfree)(*A0);
-	    *A0=res; res=0;
+	    X(spmove)(*A0, res);
+	    X(spfree)(res);
 	}
     }
 }

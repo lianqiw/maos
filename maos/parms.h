@@ -593,8 +593,9 @@ typedef struct GPU_CFG_T{
    contains input parameters for each MOAO type.
 */
 typedef struct MOAO_CFG_T{
+    double dx;       /**<Spacing of MOAO DM act*/
+    double order;    /**<Order of this MOAO*/
     int used;        /**<This moao is used*/
-    int order;       /**<Order of this MOAO*/
     int cubic;       /**<Whether use cubic influence function*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
@@ -602,6 +603,7 @@ typedef struct MOAO_CFG_T{
     double stroke;   /**<Stroke of the MOAO DM*/
     double gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
     double ar;       /**<Aspect ratio dy/dx*/
+    double guard;
     char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
 }MOAO_CFG_T;

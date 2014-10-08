@@ -586,13 +586,40 @@ static void readcfg_dm(PARMS_T *parms){
    Read in MOAO parameters.
 */
 static void readcfg_moao(PARMS_T *parms){
-    int nmoao,i;
-    nmoao=parms->nmoao=readcfg_peek_n("moao.order");
+    int ndx=readcfg_peek_n("moao.dx");
+    int nod=readcfg_peek_n("moao.order");
+    int nmoao;
+    if(ndx>=nod){
+	nmoao=ndx;
+	if(nod!=1 && nod!=nmoao){
+	    error("moao.order is invalid\n");
+	}
+    }else{
+	nmoao=nod;
+    }
+    int i;
+    parms->nmoao=nmoao;
     parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
     int *inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
-    READ_MOAO(int,order);
+    READ_MOAO_RELAX(dbl,dx);
+    READ_MOAO_RELAX(dbl,order);
+    int dx_override=readcfg_peek_override("moao.dx");
+    int order_override=readcfg_peek_override("moao.order");
+    for(int imoao=0; imoao<nmoao; imoao++){
+	if(order_override && parms->moao[imoao].order>0){
+	    if(dx_override && parms->moao[imoao].dx>0){
+		if(fabs(parms->moao[imoao].order*parms->moao[imoao].dx-parms->aper.d)>parms->aper.d*0.01){
+		    error("both moao.order and moao.dx are specified. But they don't agree\n");
+		}
+	    }else{
+		parms->moao[imoao].dx=parms->aper.d/parms->moao[imoao].order;
+	    }
+	}else{
+	    parms->moao[imoao].order=parms->aper.d/parms->moao[imoao].dx;
+	}
+    }
     READ_MOAO_RELAX(int,cubic);
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,gdm);
@@ -600,6 +627,7 @@ static void readcfg_moao(PARMS_T *parms){
     READ_MOAO_RELAX(dbl,ar);
     READ_MOAO_RELAX(int,actslave);
     READ_MOAO_RELAX(int,lrt_ptt);
+    READ_MOAO_RELAX(dbl,guard);
     READ_MOAO_RELAX(str,actstuck);
     READ_MOAO_RELAX(str,actfloat);
     free(inttmp);

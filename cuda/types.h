@@ -341,11 +341,10 @@ public:
 	vy=in->vy;
 	if(cubic_cc){
 	    delete cubic_cc;
+	    cubic_cc=0;
 	}
 	if(in->cubic){
 	    cubic_cc=gpu_dmcubic_cc(in->iac);
-	}else{
-	    cubic_cc=0;
 	}
     }
     void zero(){
@@ -372,10 +371,12 @@ public:
 	}
     }
     cugrid_t(cugrid_t *in){
+	cubic_cc=0;
 	init(in);
     }
     cugrid_t(const map_t *in){
 	if(in){
+	    cubic_cc=0;
 	    init(in);
 	}else{
 	    zero();

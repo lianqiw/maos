@@ -62,18 +62,12 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
     recon->moao=calloc(nmoao, sizeof(MOAO_T));
     for(int imoao=0; imoao<nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
-	int order=parms->moao[imoao].order;
-	if(order==0){
-	    if(parms->ndm>0){
-		order=parms->dm[0].order;/*inherits. */
-	    }else{
-		error("Please specify the order of the moao DM\n");
-	    }
-	}
-	double dxr=parms->aper.d/order;
-	double dyr=parms->aper.d/order*parms->moao[imoao].ar;
+	double dxr=parms->moao[imoao].dx;
+	double dyr=dxr*parms->moao[imoao].ar;
 	map_t *map=0;
-	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,0,0,0,0,0,parms->fit.square);
+	double offset=((int)round(parms->moao[imoao].order)%2)*0.5;
+	double guard=parms->moao[imoao].guard*MAX(dxr, dyr);
+	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,offset,guard,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=cellnew(1,1); 
 	recon->moao[imoao].aloc->p[0]=map2loc(map);
 	mapfree(map);
@@ -295,8 +289,10 @@ void moao_recon(SIM_T *simu){
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
-	    /*writebin(rhs->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
-	      writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);*/
+	    /*{
+		writebin(rhs->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
+		writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);
+		}*/
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
@@ -322,7 +318,7 @@ void moao_recon(SIM_T *simu){
 		cellarr_dmat(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
-	dmmoao->p[0]=NULL;
+	    dmmoao->p[0]=NULL;
 	}/*ievl */
 	dcellfree(dmmoao);
     }

@@ -425,7 +425,7 @@ void filter_dm(SIM_T *simu){
     if(simu->recon->moao){
 	if(parms->gpu.moao){
 	    gpu_moao_filter(simu);
-	}else{
+	}else if(parms->gpu.wfs || parms->gpu.evl){//copy DM commands to GPU
 	    gpu_moao_2gpu(simu);
 	}
     }
@@ -434,7 +434,7 @@ void filter_dm(SIM_T *simu){
     update_dm(simu);
 
     dcellzero(simu->dmerr);
-    simu->dmerr=0;
+    simu->dmerr=0;//mark no output.
     dcellzero(simu->Merr_lo);
     simu->Merr_lo=0;
     dcellzero(simu->upterr);

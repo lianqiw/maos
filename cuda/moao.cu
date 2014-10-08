@@ -57,7 +57,6 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
     rhs=curcellnew(1,1,amap->nx,amap->ny);
 }
 Real cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream){
-    static int count=-1; count++;
     for(int idir=0; idir<ndir; idir++){
 	opdfit->m->zero(stream);
 	hxp[idir]->forward(opdfit->pm, xin->pm, 1.f, NULL, stream);//tomography	
@@ -66,6 +65,14 @@ Real cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain
 	rhs->m->zero(stream);
 	ha->backward(opdfit2->pm, rhs->pm, 1, NULL, stream);
 	solve(&xout[idir], rhs, stream);
+	/*{
+	    static int ic=-1; ic++;
+	    curcellwrite(xout[idir], "xout_%d", ic);
+	    curcellwrite(rhs, "rhs_%d", ic);
+	    curcellwrite(xin, "xin_%d", ic);
+	    curcellwrite(ain, "ain_%d", ic);
+	    curcellwrite(opdfit, "opd_%d", ic);
+	    }*/
     }
     return 0;
 }
@@ -123,6 +130,12 @@ void gpu_moao_2gpu(SIM_T *simu){
 	    if(imoao<0) continue;
 	    MOAO_T *moao=recon->moao+imoao;
 	    gpu_set(cudata_t::wfsgpu[iwfs]);
+	    if(!cudata->dm_wfs){
+		cudata->dm_wfs=(cumap_t**)calloc(nwfs, sizeof(cumap_t*));
+	    }
+	    if(!cudata->dm_wfs[iwfs]){
+		cudata->dm_wfs[iwfs]=new cumap_t(recon->moao[imoao].amap->p[0]); 
+	    }
 	    if(parms->fit.square){
 		cp2gpu(&cudata->dm_wfs[iwfs]->p, simu->dm_wfs->p[iwfs]);
 	    }else{
@@ -136,6 +149,12 @@ void gpu_moao_2gpu(SIM_T *simu){
 	MOAO_T *moao=recon->moao+imoao;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    gpu_set(cudata_t::evlgpu[ievl]);
+	    if(!cudata->dm_evl){
+		cudata->dm_evl=(cumap_t**)calloc(nevl, sizeof(cumap_t*));
+	    }
+	    if(!cudata->dm_evl[ievl]){
+		cudata->dm_evl[ievl]=new cumap_t(recon->moao[imoao].amap->p[0]); 
+	    }
 	    if(parms->fit.square){
 		cp2gpu(&cudata->dm_evl[ievl]->p, simu->dm_evl->p[ievl]);
 	    }else{
