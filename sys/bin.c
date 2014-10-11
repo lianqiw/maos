@@ -162,7 +162,7 @@ PNEW(lock);
 /**
    Open a bin file from a fd that may be a socket.
 */
-file_t* zfdopen(int sock, char *mod){
+file_t* zfdopen(int sock, const char *mod){
     file_t* fp=calloc(1, sizeof(file_t));
     fp->isgzip=0;
     fp->fd=sock;
@@ -184,7 +184,7 @@ int disable_save=0;
    file name ends with .bin or .fits, will not be gzipped. If the file has no
    suffix, the file will be gzipped and .bin is appened to file name.
  */
-file_t* zfopen(const char *fn, char *mod){
+file_t* zfopen(const char *fn, const char *mod){
     LOCK(lock);
     file_t* fp=calloc(1, sizeof(file_t));
     const char* fn2=fp->fn=procfn(fn,mod,1);

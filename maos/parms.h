@@ -729,8 +729,9 @@ typedef struct PARMS_T{
     lmat *hipowfs;    /**<List of high order powfs*/
     int ntrpowfs;    /**<Number of tip/tilt removed wfs types*/
     int ntipowfs;    /**<Number of tip/tilt include wfs types*/
-    int nlowfs;      /**<Number of low order wfs.*/
     int nphypowfs;   /**<Number of powfs with local/uplink tip/tilt loop*/
+    int nlowfs;      /**<Number of low order wfs.*/
+    int nhiwfs;      /**<Number of high order wfs*/
     dmat *dirs;      /**<Collect for beam directions*/
 }PARMS_T;
 /**

@@ -295,7 +295,7 @@ static int open_drawdaemon(){
 
 /* Search whether fig is already in list. Return 1 if found. Insert if not found
    and return 0.*/
-static int check_figfn(list_t **head, char *fig, char *fn){
+static int check_figfn(list_t **head, const char *fig, const char *fn){
     list_t *child;
     int found1=list_search(head, &child, fig);
     int found2=list_search(&child->child, NULL, fn);
@@ -316,7 +316,7 @@ void draw_final(int reuse){
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
-void plot_points(char *fig,          /**<Category of the figure*/
+void plot_points(const char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
 		 dcell *dc,          /**<If loc isempty, use cell to plot curves*/
@@ -399,7 +399,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	}
 	if(xylog){
 	    STWRITEINT(DRAW_XYLOG);
-	    STWRITE(xylog, sizeof(char)*2);
+	    STWRITE(xylog, sizeof(const char)*2);
 	}
 	if(format){
 	    STWRITEINT(DRAW_NAME);
@@ -423,7 +423,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 /**
    Draw an image.
 */
-void imagesc(char *fig, /**<Category of the figure*/
+void imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
 	     const double *limit, /**<x min, xmax, ymin and ymax*/
@@ -481,7 +481,7 @@ void imagesc(char *fig, /**<Category of the figure*/
 /**
    Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit, const double *zlim,
+void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     if(disable_draw) return;
@@ -502,7 +502,7 @@ void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit, const doub
 /**
    Draw the OPD of abs and phase of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,const double *zlim,
+void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
     if(disable_draw) return;
@@ -530,7 +530,7 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,const doubl
 /**
    Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc()
 */
-void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const double *zlim,
+void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...){
     if(disable_draw) return;
@@ -562,7 +562,7 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
    imagesc.  . see imagesc()
 */
 
-void ddraw(char *fig, const dmat *A, double *xylim, double *zlim,
+void ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
@@ -572,7 +572,7 @@ void ddraw(char *fig, const dmat *A, double *xylim, double *zlim,
 /**
    Mapping the absolution value of complex array. see imagesc()
 */
-void cdrawabs(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...){
   
@@ -583,7 +583,7 @@ void cdrawabs(char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    Mapping the real/imaginary part of complex array. see imagesc()
 */
-void cdrawri(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     
@@ -594,7 +594,7 @@ void cdrawri(char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    Mapping the absolute and phase of complex array. see imagesc()
 */
-void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
@@ -604,7 +604,7 @@ void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
 /**
    like ddraw, acting on map object. see imagesc()
 */
-void drawmap(char *fig, const map_t *map,  double *zlim,
+void drawmap(const char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
@@ -618,7 +618,7 @@ void drawmap(char *fig, const map_t *map,  double *zlim,
 /**
    Plot the loc on the screen. see imagesc()
 */
-void drawloc(char *fig, loc_t *loc, double *zlim,
+void drawloc(const char *fig, loc_t *loc, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
@@ -645,7 +645,7 @@ void drawloc(char *fig, loc_t *loc, double *zlim,
 /**
    Plot the opd using coordinate loc. see imagesc()
 */
-void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
+void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
 
@@ -678,7 +678,7 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
 /**
    Plot opd*amp with coordinate loc. see imagesc()
 */
-void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
+void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;

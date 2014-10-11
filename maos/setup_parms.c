@@ -1335,6 +1335,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else{
 		parms->hipowfs->p[parms->nhipowfs]=ipowfs;
 		parms->nhipowfs++;
+		parms->nhiwfs+=parms->powfs[ipowfs].nwfs;
 	    }
 	    if(parms->powfs[ipowfs].trs){
 		if(!parms->powfs[ipowfs].llt){
@@ -1596,9 +1597,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->atmr.nps=nps;
     }
-    if(parms->recon.glao && parms->recon.alg==0){
-	/*GLAO mode. reconstruct only a single layer near the DM. Using only 1 fitting direction on axis.*/
-	warning2("In GLAO Mode, use 1 tomography grid near the ground dm and 1 on axis fitting direction\n");
+    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0){
+	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
+	warning2("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
 	dresize(parms->atmr.wt, 1, 1);
 	parms->atmr.os->nx=1;

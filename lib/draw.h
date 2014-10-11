@@ -30,45 +30,45 @@ extern int DRAW_DIRECT;
 void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);
-void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
+void imagesc(const char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
-void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit, const double *zlim,
+void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, 
 		    const char *format,...) CHECK_ARG(10);
-void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit, const double *zlim,
+void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...) CHECK_ARG(10);
-void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const double *zlim,
+void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...) CHECK_ARG(10);
-void plot_points(char *fig, long ngroup, loc_t **loc, dcell *dc,
+void plot_points(const char *fig, long ngroup, loc_t **loc, dcell *dc,
 		 const int32_t *style, const double *limit, const char *xylog, int ncir, double(*pcir)[4], 
 		 char **legend, const char *title, const char *xlabel, const char *ylabel,
 		 const char *format,...) CHECK_ARG(14);
-void ddraw(char *fig, const dmat *A, double *xylim, double *zlim,
+void ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...) CHECK_ARG(8);
-void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char*format,...) CHECK_ARG(8);
-void cdrawabs(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...) CHECK_ARG(8);
-void cdrawri(char *fig, const cmat *A, double *xylim, double *zlim,
+void cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char*format,...) CHECK_ARG(8);
 
-void drawmap(char *fig, const map_t *map,  double *zlim,
+void drawmap(const char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(7);
-void drawloc(char *fig, loc_t *loc,  double *zlim,
+void drawloc(const char *fig, loc_t *loc,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...) CHECK_ARG(7);
-void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
+void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel, 
 	     const char* format,...) CHECK_ARG(8);
-void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
+void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...) CHECK_ARG(9);
 enum{
