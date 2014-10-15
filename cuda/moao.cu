@@ -28,9 +28,10 @@ extern "C"
 #include "perf.h"
 
 namespace cuda_recon{
-cumoao_l::cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid)
+cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid)
     :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-     NW(0),dotNW(0),amap(0),actslave(0),opdfit(0),opdfit2(0),ha(0){
+     NW(0),dotNW(0),amap(0),actslave(0),opdfit(0),opdfit2(0),ha(0),ndir(_ndir){
+
     amap=new cugrid_t(moao->amap->p[0]);
     if(moao->NW){
 	cp2gpu(&NW, moao->NW->p[0]);
@@ -44,10 +45,7 @@ cumoao_l::cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid)
     ha=new map_l2d(grid->fmap, &dir0, 1, amap, 1);
     opdfit=curcellnew(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcellnew(1,1,grid->fmap.nx,grid->fmap.ny);
-}
 
-cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid)
-    :cumoao_l(parms,moao,_grid),ndir(_ndir){
     hxp=new map_ray*[ndir];
     hap=new map_ray*[ndir];
     for(int idir=0; idir<ndir; idir++){
@@ -76,7 +74,7 @@ Real cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain
     }
     return 0;
 }
-void cumoao_l::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
+void cumoao_t::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
     if(!*xout){
 	*xout=curcellnew(1, 1, amap->nx, amap->ny);
     }else{

@@ -71,16 +71,16 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     map_ray *hx;
     GPU_GP_T *gpdata;
     LAP_T *lap;
-public:
     void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
+    void do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream);
+    void do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream);
+public:
+    cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
+		const POWFS_T *powfs=0, curecon_geom *_grid=0);
     void init_hx(const PARMS_T *parms, const RECON_T *recon);
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
     }
-    void do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream);
-    void do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream);
-    cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
-		const POWFS_T *powfs=0, curecon_geom *_grid=0);
     virtual void R(curcell **out, Real beta, 
 		   const curcell *xin, Real alpha, stream_t &stream);
     virtual void L(curcell **out, Real beta, 

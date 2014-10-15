@@ -42,12 +42,12 @@ protected:
     /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
     PROP_WRAP_T *hapdata;//for moao
     PROP_WRAP_T *hadata,*ha0data,*ha1data;*/
-public:
-    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     void do_hxp(const curcell *xin, stream_t &stream);
     void do_hxpt(const curcell *xout, Real alpha, stream_t &stream);
     void do_ha(const curcell *xin, stream_t &stream);
     void do_hat(curcell *xout,  Real alpha, stream_t &stream);
+public:
+    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
 	if(!this) return;

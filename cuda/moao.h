@@ -21,8 +21,8 @@
 #include "solve.h"
 #include "recon_base.h"
 namespace cuda_recon{
-class cumoao_l:public cucg_t{
-protected:
+class cumoao_t:private cucg_t{
+private:
     curecon_geom *grid;
     curmat *NW, *dotNW;
     cugrid_t *amap;
@@ -30,9 +30,16 @@ protected:
     curcell *opdfit;
     curcell *opdfit2;
     map_ray *ha;
+
+    map_ray **hxp;
+    map_ray **hap;
+    int ndir;
+    curcell *rhs;
 public:
-    cumoao_l(const PARMS_T *parms, MOAO_T *moao, curecon_geom *_grid);
-    virtual ~cumoao_l(){
+    virtual void L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream);
+    Real moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
+    cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
+    ~cumoao_t(){
 	delete NW;
 	delete dotNW;
 	delete amap;
@@ -40,19 +47,6 @@ public:
 	delete opdfit;
 	delete opdfit2;
 	delete ha;
-    }
-    virtual void L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream);
-};
-
-class cumoao_t:public cumoao_l{
-    map_ray **hxp;
-    map_ray **hap;
-    int ndir;
-    curcell *rhs;
-public:
-    cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
-    Real moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
-    ~cumoao_t(){
 	for(int idir=0; idir<ndir; idir++){
 	    delete hxp[idir];
 	    delete hap[idir];
