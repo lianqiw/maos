@@ -75,8 +75,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
 
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
-    cfft2plan(nominal, -1);
-    cfft2plan(nominal, 1);
+    //cfft2plan(nominal, -1);
+    //cfft2plan(nominal, 1);
     PCMAT(nominal, pn);
     long npix=pywfs->order;
     double pixmeter=parms->aper.d/npix;//size of detector pixel in meter
@@ -162,8 +162,8 @@ void pywfs_fft(dcell **pupim, PYWFS_T *pywfs, dmat *opd){
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
-    cfft2plan(otf, -1);
-    cfft2plan(otf, 1);
+    //cfft2plan(otf, -1);
+    //cfft2plan(otf, 1);
     dmat *pupraw=dnew(ncomp, ncomp);
     for(int ipos=0; ipos<pos_n; ipos++){
 	double theta=2*M_PI*ipos/pos_n;

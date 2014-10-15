@@ -75,8 +75,8 @@ static void psfiris_do(thread_t *info){
     char *msg=data->msg;
     int ncomp=psf_lgs->p[0]->nx;
     cmat *otf=cnew(ncomp, ncomp);
-    cfft2plan(otf,1);
-    cfft2plan(otf,-1);
+    //cfft2plan(otf,1);
+    //cfft2plan(otf,-1);
     info2("%d ",ipsf);
     /*first create OTF of tt/ps modes on coarse sampling.*/
     double wvl=wvls[iwvl];

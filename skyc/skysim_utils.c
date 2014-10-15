@@ -182,15 +182,15 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    wvf->p[iwfs]=cnew(ncomp,ncomp);
 	    wvfc->p[iwfs]=NULL;
 	    psf[iwfs]=cellnew(nsa,nwvl);
-	    cfft2plan(wvf->p[iwfs], -1);
+	    //cfft2plan(wvf->p[iwfs], -1);
 	    if(parms->skyc.multirate){
 		mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[(int)aster->idtrats->p[iwfs]];
 	    }else{
 		mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[idtratc];
 	    }
 	    otf->p[iwfs]=cnew(ncomp,ncomp);
-	    cfft2plan(otf->p[iwfs],-1);
-	    cfft2plan(otf->p[iwfs],1);
+	    //cfft2plan(otf->p[iwfs],-1);
+	    //cfft2plan(otf->p[iwfs],1);
 	    ints[iwfs]=cellnew(nsa,1);
 	    int pixpsa=parms->skyc.pixpsa[ipowfs];
 	    for(long isa=0; isa<nsa; isa++){

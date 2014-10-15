@@ -90,8 +90,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     ccell *otf=cellnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
-	cfft2plan(otf->p[iwvl], 1);
-	cfft2plan(otf->p[iwvl], -1);
+	//cfft2plan(otf->p[iwvl], 1);
+	//cfft2plan(otf->p[iwvl], -1);
     }
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -234,8 +234,8 @@ static double mapfun(double *x, mapdata_t *info){
 	info->otf=cellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    info->otf->p[iwvl]=cnew(info->fotf->p[0]->nx, info->fotf->p[0]->ny);
-	    cfft2plan(info->otf->p[iwvl], 1);
-	    cfft2plan(info->otf->p[iwvl], -1);
+	    //cfft2plan(info->otf->p[iwvl], 1);
+	    //cfft2plan(info->otf->p[iwvl], -1);
 	}
 	otf=info->otf;
     }

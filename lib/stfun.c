@@ -41,11 +41,11 @@ stfun_t *stfun_init(long nx, long ny, double *amp){
     A->hat2=cnew(nx*2, ny*2);
     A->hattot=cnew(nx*2, ny*2);
 
-    cfft2plan(A->hat0, -1);
-    cfft2plan(A->hat0, 1);
-    cfft2plan(A->hat1, -1);
-    cfft2plan(A->hat2, -1);
-    cfft2plan(A->hattot, 1);
+    //cfft2plan(A->hat0, -1);
+    //cfft2plan(A->hat0, 1);
+    //cfft2plan(A->hat1, -1);
+    //cfft2plan(A->hat2, -1);
+    //cfft2plan(A->hattot, 1);
 
     dmat *damp;
     if(amp){

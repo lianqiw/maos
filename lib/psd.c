@@ -38,7 +38,7 @@ dmat *psd1d(dmat *v, /**<[in] The data sequence*/
     long ncol=v->ny;
     dmat *psd=dnew(lseg2+1, ncol);
     cmat *hat=cnew(lseg, 1);
-    cfft2plan(hat, -1);
+    //cfft2plan(hat, -1);
     for(long icol=0; icol<ncol; icol++){
 	double *ppsd=psd->p+icol*(lseg2+1);
 	for(int iseg=0; iseg<nseg; iseg++){

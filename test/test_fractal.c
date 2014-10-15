@@ -63,8 +63,8 @@ static void test_cov(){/*not good */
     map_t *atm=mapnew(nx, ny, dx,dx, NULL);
     cmat *atmhat=cnew((N+1)*3,(N+1)*3);
     dmat *atmhattot=dnew((N+1)*3,(N+1)*3);
-    cfft2plan(atmhat,-1);
-    cfft2plan(atmhat, 1);
+    //cfft2plan(atmhat,-1);
+    //cfft2plan(atmhat, 1);
     dset((dmat*)atm,1);
     cembedd(atmhat, (dmat*)atm, 0);
     cfft2(atmhat, -1);
@@ -202,7 +202,7 @@ static void test_stfun(){
 	stfun_t *data=stfun_init(nx, ny, NULL);
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	cmat *atm=cnew(nx, ny);
-	cfft2plan(atm, -1);
+	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
 	dmat *atmi=dnew(atm->nx, atm->ny);
 	spect->p[0]=0;
@@ -243,7 +243,7 @@ static void test_psd(){
     if(1){
 	map_t *atm=mapnew(nx+1, ny+1, dx,dx, NULL);
 	cmat *hat=cnew(nx*ratio, ny*ratio);
-	cfft2plan(hat, -1);
+	//cfft2plan(hat, -1);
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
 	PCMAT(hat, phat);
 	PDMAT(atm, patm);
@@ -272,10 +272,10 @@ static void test_psd(){
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	writebin(spect, "spect");
 	cmat *hat=cnew(nx*ratio, ny*ratio);
-	cfft2plan(hat, -1);
+	//cfft2plan(hat, -1);
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
 	cmat *atm=cnew(nx, ny);
-	cfft2plan(atm, -1);
+	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
 	dmat *atmi=dnew(atm->nx, atm->ny);
 	PCMAT(hat, phat);
@@ -353,7 +353,7 @@ static void test_cxx(){
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	spect->p[0]=spect->p[1];
 	cmat *atm=cnew(nx, ny);
-	cfft2plan(atm, -1);
+	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(nx*ny,1);
 	dmat *atmi=dnew(nx*ny,1);
 	for(long ii=0; ii<nframe; ii+=2){

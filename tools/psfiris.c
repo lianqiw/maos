@@ -72,8 +72,8 @@ static void psfiris_do(thread_t *info){
     dcell *output=data->output;
     char *msg=data->msg;
     cmat *otf=cnew(notf2, notf2);
-    cfft2plan(otf,1);
-    cfft2plan(otf,-1);
+    //cfft2plan(otf,1);
+    //cfft2plan(otf,-1);
     info2("%d ",iwvl);
     /*first create OTF of tt/ps modes on coarse sampling.*/
     cmat *otf0=NULL;

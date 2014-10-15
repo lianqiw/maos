@@ -51,8 +51,8 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    const double du2=du*du;
 	    const double dupth=du*pixtheta;
 	    cmat *nominal=cnew(ncomp,ncomp);
-	    cfft2plan(nominal,-1);
-	    cfft2plan(nominal,1);
+	    //cfft2plan(nominal,-1);
+	    //cfft2plan(nominal,1);
 	    PCMAT(nominal,pn);
 	    const double theta=0;
 	    const double ct=cos(theta);
@@ -100,7 +100,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		psf2->nx=ncomp; psf2->ny=ncomp;
 		writebin(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
 		cmat *otf2=cnew(ncomp, ncomp);
-		cfft2plan(otf2, -1);
+		//cfft2plan(otf2, -1);
 		ccpd(&otf2, psf2);//peak in center
 		cfftshift(otf2);//peak in corner
 		cfft2(otf2, -1);

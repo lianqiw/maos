@@ -923,8 +923,8 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	ccell* fftxopd=recon->invpsd->fftxopd=cellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
 	    fftxopd->p[ips]=cnew(recon->xmap->p[ips]->nx, recon->xmap->p[ips]->ny);
-	    cfft2plan(fftxopd->p[ips],-1);
-	    cfft2plan(fftxopd->p[ips],1);
+	    //cfft2plan(fftxopd->p[ips],-1);
+	    //cfft2plan(fftxopd->p[ips],1);
 	}
 	recon->invpsd->xloc = recon->xloc;
 	recon->invpsd->square = parms->tomo.square;

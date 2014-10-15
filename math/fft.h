@@ -28,11 +28,9 @@
 typedef struct fft_t fft_t;
 #define AOS_FFT_DEF(X)						\
     void X(fft_free_plan)(struct fft_t *fft);			\
-    void X(fft2plan)(X(mat) *A, int dir);			\
     void X(fft2)(X(mat) *A, int dir);				\
     void X(fft2i)(X(mat) *A, int dir);				\
     void X(fft2s)(X(mat) *A, int dir);				\
-    void X(fft2partialplan)(X(mat) *A, int ncomp, int dir);	\
     void X(fft2partial)(X(mat) *A, int ncomp, int dir);		\
     X(mat) *X(ffttreat)(X(mat) *A);				\
     void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads);	\

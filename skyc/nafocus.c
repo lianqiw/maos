@@ -123,7 +123,7 @@ dmat *nafocus_time(double alpha,/**<[in] parameter of sodium layer height PSD.*/
 		   double dt, long nstep, rand_t *rstat){
     double df=1./(nstep*dt);
     cmat *psd=cnew(nstep, 1);
-    cfft2plan(psd, -1);
+    //cfft2plan(psd, -1);
     for(int i=1; i<nstep; i++){
 	psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*(randn(rstat)+I*randn(rstat));
     }

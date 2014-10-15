@@ -30,9 +30,9 @@
 void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     cmat *otf=cnew(psf->nx, psf->ny);
     cmat *otfsave=cnew(psf->nx, psf->ny);
-    cfft2plan(otf, 1);
-    cfft2plan(otf, -1);
-    cfft2plan(otfsave,1);
+    //cfft2plan(otf, 1);
+    //cfft2plan(otf, -1);
+    //cfft2plan(otfsave,1);
     ccpd(&otf, psf);/*loaded psf has peak in corner */
     cfft2i(otf, -1);/*turn to OTF, peak in corner. was 1, turn to -1 on 1/30/2013 */
     ccwm(otf, dtf->nominal);

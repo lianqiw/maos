@@ -632,8 +632,8 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     if(FABS(grad[0])>0.1 || FABS(grad[1])>0.1){
 	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(mat) *B=XC(new)(A->nx,A->ny);
-	XC(fft2plan)(B,-1);
-	XC(fft2plan)(B,1);
+	//XC(fft2plan)(B,-1);
+	//XC(fft2plan)(B,1);
 #ifdef USE_COMPLEX
 	XC(cp)(&B,A);
 #else
@@ -1440,7 +1440,7 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
     }
     long ncomp2=ncomp*2;
     XC(mat) *psf2=XC(new)(ncomp2, ncomp2);
-    XC(fft2plan)(psf2, -1);
+    //XC(fft2plan)(psf2, -1);
     XC(embedd)(psf2, psfc, 0);
     X(free)(psfc);
     XC(fftshift)(psf2);

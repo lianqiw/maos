@@ -128,10 +128,10 @@ void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int s
 	    int use1d_enable=0;
 	    if(psfsize && psfsize->p[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
 		use1d=1;
-		cfft2partialplan(psf2, psfsize->p[iwvl], -1);
+		//cfft2partialplan(psf2, psfsize->p[iwvl], -1);
 	    }else{
 		use1d=0;
-		cfft2plan(psf2, -1);
+		//cfft2plan(psf2, -1);
 	    }
 
 	    dcomplex i2pi=I*2*M_PI/locfft->wvl->p[iwvl];
@@ -179,7 +179,7 @@ void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
 	lmat *embed=locfft->embed->p[iwvl];
 	cmat *wvf=cnew(nembed, nembed);
 	wvfs->p[iwvl]=wvf;
-	cfft2plan(wvf, -1); cfft2plan(wvf, 1);
+	//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
 	double wvl=locfft->wvl->p[iwvl];
 	dcomplex i2pi=2*M_PI/wvl*I;
 	const double *amp=locfft->amp->p;

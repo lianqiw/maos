@@ -67,8 +67,8 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     cn2est->mask=lnew(nx,nx);
     int (*pmask2)[nx]=(void*)cn2est->mask->p;
     cmat *overlap=cnew(nx, nx);
-    cfft2plan(overlap, -1);
-    cfft2plan(overlap, 1);
+    //cfft2plan(overlap, -1);
+    //cfft2plan(overlap, 1);
     PCMAT(overlap, pover);
     int iymin=nx,iymax=0,ixmin=nx,ixmax=0;
     for(int iy=0; iy<nx; iy++){
@@ -104,8 +104,8 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
 	    cn2est->gys->p[ix]=dnew(nx, nx);
 	    cn2est->curi->p[ix]=cnew(nx, nx);
-	    cfft2plan(cn2est->curi->p[ix], -1);
-	    cfft2plan(cn2est->curi->p[ix], 1);
+	    //cfft2plan(cn2est->curi->p[ix], -1);
+	    //cfft2plan(cn2est->curi->p[ix], 1);
 	}
     }
     /*
@@ -236,7 +236,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	/*create 2-d pointers */
 	PCMAT(mc,pmc);
 	/*create FFT plans */
-	cfft2plan(mc,1);
+	//cfft2plan(mc,1);
 	/*the forward operator from layer weights to cross-covariance */
  	dmat *Pnk=dnew(nsep, nsep);
 	PDMAT(Pnk, pPnk);
@@ -408,9 +408,9 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     PDMAT(covr, pcovr);
     PDMAT(cn2est->overlap, pover);
     const int nwfspair=cn2est->wt->nx;
-    cfft2plan(covi, 1);
+    //cfft2plan(covi, 1);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
-	cfft2plan(covi, 1);
+	//cfft2plan(covi, 1);
 	cadd(&covi, 0, cn2est->covc->p[iwfspair], 1./(cn2est->count*cn2est->nembed*cn2est->nembed));
 	cfft2(covi, 1);
 	cfftshift(covi);

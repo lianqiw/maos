@@ -147,18 +147,14 @@ static __attribute__((destructor))void deinit(){
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
  */
-void X(fft2plan)(X(mat) *A, int dir){
+static void X(fft2plan)(X(mat) *A, int dir){
     assert(abs(dir)==1 && A && A->p);
     if(!A->fft) {
 	A->fft=calloc(1, sizeof(fft_t));
-    }
+    }else if(A->fft->plan[dir+1]) return;
+    
     int FFTW_FLAGS;
-    //if(A->nx<1024){
-//	FFTW_FLAGS=FFTW_MEASURE;
-    //  }else{
-    FFTW_FLAGS=FFTW_ESTIMATE;
-    //}
-    if(A->fft->plan[dir+1]) return;
+    FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
     LOCK_FFT;
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
@@ -173,18 +169,15 @@ void X(fft2plan)(X(mat) *A, int dir){
 /**
    make plans for cfft2partial
 */
-void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
+static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     assert(abs(dir)==1);
-    if(!A->fft)  A->fft=calloc(1, sizeof(fft_t));
+    if(!A->fft){
+	A->fft=calloc(1, sizeof(fft_t));
+    } else if(A->fft->plan1d[dir+1]) return;
     const int nx=A->nx;
     const int ny=A->ny;
     int FFTW_FLAGS;
-    //if(A->nx<1024){
-///	FFTW_FLAGS=FFTW_MEASURE;
-    // }else{
     FFTW_FLAGS=FFTW_ESTIMATE;
-    //}
-    if(A->fft->plan1d[dir+1]) return;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
     /*along columns for all columns. */
@@ -213,8 +206,9 @@ void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
 void X(fft2)(X(mat) *A, int dir){
     assert(abs(dir)==1); assert(A && A->p);
     /*do 2d FFT on A. */
-    /*can not do planning here because planning will override the data. */
-    if(!A->fft || !A->fft->plan[dir+1]) error("Please run cfft2plan first\n");
+    if(!A->fft || !A->fft->plan[dir+1]) {
+	X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
+    }
     FFTW(execute)(A->fft->plan[dir+1]);
 }
 
@@ -243,9 +237,11 @@ void X(fft2s)(X(mat) *A, int dir){/*symmetrical cfft2. */
 void X(fft2partial)(X(mat) *A, int ncomp, int dir){
     assert(abs(dir)==1);
     assert(A && A->p);
-    if(!A->fft) error("Please run cfft2partialplan first\n");
+    if(!A->fft){
+	X(fft2partialplan)(A, ncomp, dir);
+    }
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1];
-    if(!plan1d) error("Please run cfft2partialplan first\n");
+    if(!plan1d) error("Please run //cfft2partialplan first\n");
     if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
     for(int i=0; i<3; i++){
 	FFTW(execute)(plan1d->plan[i]);
@@ -336,9 +332,6 @@ void X(fft_free_plan)(fft_t *fft){
     if(fft){
 	error("libfftw3f is not available\n");
     }
-}
-void X(fft2plan)(X(mat) *A, int dir){
-    error("libfftw3f is not available\n");
 }
 void X(fft2)(X(mat) *A, int dir){
     error("libfftw3f is not available\n");

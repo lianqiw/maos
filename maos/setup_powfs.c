@@ -927,8 +927,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	/*both nominal and si depends on wavelength.*/
 	dsp*(*sis)[ndtf]=(void*)powfs[ipowfs].dtf[iwvl].si->p;
 	cmat *nominal=cnew(ncompx,ncompy);
-	cfft2plan(nominal,-1);
-	cfft2plan(nominal,1);
+	//cfft2plan(nominal,-1);
+	//cfft2plan(nominal,1);
 	PCMAT(nominal,pn);
 	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
 	double theta=0;
@@ -1281,7 +1281,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    for(int it=etf0; it<etf1; it++){
 		thetas[it]=(it-netf2)*dtetf;
 	    }
-	    cfft2plan(etf, -1);
+	    //cfft2plan(etf, -1);
 
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
@@ -1879,7 +1879,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		if(parms->save.setup){
 		    lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "%s/powfs%d_llt_psf", dirsetup, ipowfs);
 		}
-		cfft2plan(psfhat, 1);
+		//cfft2plan(psfhat, 1);
 		for(int illt=0; illt<intstat->lotf->ny; illt++){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			const double dx=powfs[ipowfs].llt->pts->dx;

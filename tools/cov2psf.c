@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     long pttr=strtol(argv[P_PTTR], NULL, 10);
     cmat *otf=otf=cnew(ncomp, ncomp);
     dmat *psf=NULL;
-    cfft2plan(otf, 1);
+    //cfft2plan(otf, 1);
     for(int iwvl=0; iwvl<argc-P_WVL; iwvl++){
 	double wvl=strtod(argv[iwvl+P_WVL], NULL);
 	double dtheta=wvl/(ncomp*loc->dx);

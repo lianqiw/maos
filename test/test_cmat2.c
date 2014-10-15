@@ -67,7 +67,7 @@ static static void cmat_correctness(static void){
 	    P->p[ix+iy*P->nx]=ix*0.25;
 	}
     }
-    cfft2plan(A,-1);
+    //cfft2plan(A,-1);
     dcircle(D, 40,32, 10, 1);
     ddraw("test_cmat",D,"Pupil");
     cembed_wvf(A,P->p,D->p,D->nx,D->ny,2,M_PI*0.25);
@@ -89,7 +89,7 @@ static static void test_sq2(){
     cmat *restrict C=cnew(N,N);
     cmat *restrict D=cnew(N,N);
     ccircle(C,N/2,N/2,N/4,1);
-    cfft2plan(C,-1);
+    //cfft2plan(C,-1);
     cfft2(C,-1);
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
@@ -130,7 +130,7 @@ static static void test_cwm(){
     cmat *restrict C=cnew(N,N);
     cmat * D=cnew(N,N);
     ccircle(C,N/2,N/2,N/4,1);
-    cfft2plan(C,-1);
+    //cfft2plan(C,-1);
     cfft2(C,-1);
     ccp(&D,C);
     tic;
@@ -151,8 +151,8 @@ static void test_ctilt(){
     ccircle(C,N/2,N/2,N/4,1);
     cdraw("test_cmat",C,"Cir");
     writebin(C,"C_psf");
-    cfft2plan(C,-1);
-    cfft2plan(C,1);
+    //cfft2plan(C,-1);
+    //cfft2plan(C,1);
     cfft2(C,-1);
     /*cfftshift(C,C_FULL); */
     writebin(C,"C_otf");

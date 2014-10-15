@@ -705,7 +705,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
     psd=dinterp1(psdin, 0, fs, 1e-40);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
-    cfft2plan(wshat, -1);
+    //cfft2plan(wshat, -1);
     for(long i=0; i<nstep; i++){
 	wshat->p[i]=sqrt(psd->p[i]*df)*(randn(rstat)+I*randn(rstat));
     }

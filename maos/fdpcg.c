@@ -71,7 +71,7 @@ static csp*
 fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
-    cfft2plan(xsel,-1);
+    //cfft2plan(xsel,-1);
     PCMAT(xsel,pxsel);
     double dx1=1./dx;
     long offx=nx/2;
@@ -377,7 +377,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     case 0:/*forward matrix uses biharmonic approx. We use here also. */
 	for(long ips=0; ips<nps; ips++){
 	    cmat *psd=cnew(nx[ips],ny[ips]);
-	    cfft2plan(psd,-1);
+	    //cfft2plan(psd,-1);
 	    dsp *L2;
 	    if(parms->tomo.square){
 		L2=dspref(recon->L2->p[ips+nps*ips]);
@@ -671,8 +671,8 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     long* ny=recon->xny->p;
     long offset=0;
     for(int ips=0; ips<nps; ips++){
-	cfft2plan(xhati->p[ips],-1);
-	cfft2plan(xhat2i->p[ips],1);
+	//cfft2plan(xhati->p[ips],-1);
+	//cfft2plan(xhat2i->p[ips],1);
 	offset+=nx[ips]*ny[ips];
     }
     if(!*xout){

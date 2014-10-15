@@ -25,7 +25,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
 	warning("xloc is not square. The code may not work\n");
     }
     cmat *xsel=cnew(nx,ny);
-    cfft2plan(xsel,-1);
+    //cfft2plan(xsel,-1);
     PCMAT(xsel,pxsel);
     double dx1=1./xloc->dx;
     long offx=-xloc->locx[0]*dx1+saloc->dx*0.5*dx1;

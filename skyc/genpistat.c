@@ -100,12 +100,12 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dmat *phygrad=dnew(nsa*2, nstep);/*original gradient at each time step. */
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=NULL;
-	    cfft2plan(wvf,-1);
+	    //cfft2plan(wvf,-1);
 	    PDCELL(pistat, ppistat);
 	    PDMAT(phygrad, pphygrad);
 	    cmat *otf=cnew(ncomp,ncomp);
-	    cfft2plan(otf,1);
-	    cfft2plan(otf,-1);
+	    //cfft2plan(otf,1);
+	    //cfft2plan(otf,-1);
 	    dmat *psf=NULL;
 	    double nwvli=1./(nwvl);
 	    double dtheta[nwvl];
@@ -373,8 +373,8 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    otf1->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
 		    otf2->p[isa+iwvl*nsa]=cnew(ncomp, ncomp);
-		    cfft2plan(otf1->p[isa+iwvl*nsa], -1);
-		    cfft2plan(otf2->p[isa+iwvl*nsa], 1);
+		    //cfft2plan(otf1->p[isa+iwvl*nsa], -1);
+		    //cfft2plan(otf2->p[isa+iwvl*nsa], 1);
 		}
 	    }
 	    double dtheta[nwvl];

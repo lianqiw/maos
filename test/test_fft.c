@@ -12,8 +12,8 @@ int main(){
     int i;
     for(i=2; i<nlen; i++){
 	data[i]=cnew(nlen,nlen);
-	cfft2plan(data[i],-1);
-	cfft2plan(data[i],1);
+	//cfft2plan(data[i],-1);
+	//cfft2plan(data[i],1);
 	crandn(data[i],20,&stat);
     }
     char fn[64];
@@ -51,7 +51,7 @@ static int test_fft_speed_small(){
     seed_rand(&stat,1);
     for(int ii=0; ii<nis; ii++){
 	ac->p[ii]=cnew(is[ii],is[ii]);
-	cfft2plan(ac->p[ii],-1);
+	//cfft2plan(ac->p[ii],-1);
 	crandn(ac->p[ii],20,&stat);
     }
     TIC;
@@ -82,7 +82,7 @@ static void test_fft_speed(){
 	info2("size %4d: ",is[ii]);
 	tic;
 	ac->p[ii]=cnew(is[ii],is[ii]);
-	cfft2plan(ac->p[ii],-1);
+	//cfft2plan(ac->p[ii],-1);
 	crandn(ac->p[ii],20,&stat);
 	toc("plan");
     }
@@ -120,8 +120,8 @@ static void test_fft_special(){
 	info2("size %4d: ",is[ii]);
 	tic;
 	ac->p[ii]=cnew(is[ii],is[ii]);
-	cfft2plan(ac->p[ii],-1);
-	cfft2partialplan(ac->p[ii],512,-1);
+	//cfft2plan(ac->p[ii],-1);
+	//cfft2partialplan(ac->p[ii],512,-1);
 	crandn(ac->p[ii],20,&rstat);
 	toc("plan");
     }
