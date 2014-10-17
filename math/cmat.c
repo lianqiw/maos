@@ -93,7 +93,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
 	T *psf0=psf+skipy*npsfx+skipx;
-	OMPTASK_FOR(iy, 0, nopdy){
+	for(long iy=0; iy<nopdy; iy++){
 	    T *psfi=psf0+iy*npsfx;
 	    const R *opdi=opd+iy*nopdx;
 	    const R *ampi=amp+iy*nopdx;
@@ -103,7 +103,6 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 		/*most time is spend in EXP. */
 	    }
 	}
-	OMPTASK_END;
     }else{
 	/*rotated for LGS. */
 	/*rotate image CCW to -theta. coordinate rotate in reverse way. */
@@ -125,7 +124,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 	const int maxr=iceil(sqrt(nopdx*nopdx+nopdy*nopdy));
 	const int xskip=npsfx>maxr?(npsfx-maxr)/2:0;
 	const int yskip=npsfy>maxr?(npsfy-maxr)/2:0;
-	OMPTASK_FOR(iy, yskip, npsfy-yskip){
+	for(long iy=yskip; iy<npsfy-yskip; iy++){
 	    R y=iy-npsfy2;
 	    for(int ix=xskip; ix<npsfx-xskip; ix++){
 		R x=ix-npsfx2;
@@ -148,7 +147,6 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 		}
 	    }
 	}
-	OMPTASK_END;
     }
 }
 #define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(T)); /**<macro to do copying*/

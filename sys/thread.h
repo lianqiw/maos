@@ -207,14 +207,14 @@ INLINE int atomicadd(int *ptr, int val){
 }
 #endif
 
-#if _OPENMP >= 200805 && defined(__INTEL_COMPILER) && 0
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER) 
 #define OMPTASK_FOR(index, start, end, extra...)	\
     long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
     for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\
     if(omp_end>end) omp_end=end;			\
-    DO_PRAGMA(omp task extra)				\
+    DO_PRAGMA(omp task untied extra)			\
     for(long index=omp_start; index<omp_end; index++)
 #define OMPTASK_END } _Pragma("omp taskwait")
 #else

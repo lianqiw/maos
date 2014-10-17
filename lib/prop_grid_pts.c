@@ -15,6 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/*
+   Do not use OMPTASK_FOR in this file. Not helpful with performance
+*/
+
 /**
    Propagate OPD defines on grid mapin to subapertures.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
@@ -46,7 +51,7 @@ void prop_grid_pts(ARGIN_GRID,
     if(!saend) saend=pts->nsa;
     DEF_ENV_FLAG(PROP_GRID_PTS_OPTIM, 1);
     if(PROP_GRID_PTS_OPTIM && fabs(dx_in2*dxout-1)<EPS && fabs(dy_in2*dyout-1)<EPS){
-	OMPTASK_FOR(isa, sastart, saend){
+	for(long isa=sastart; isa<saend; isa++){
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
@@ -183,12 +188,11 @@ void prop_grid_pts(ARGIN_GRID,
 	    }	    
 	  end1:;
 	}/*for isa*/
-	OMPTASK_END;
     }else{ /*different spacing. or non optim*/
 	const double xratio = dxout*dx_in2;
 	const double yratio = dyout*dy_in2;
 	const double (*phiin)[ninx]=(const double(*)[ninx])(mapin->p);
-	OMPTASK_FOR(isa, sastart, saend){
+	for(long isa=sastart; isa<saend; isa++){
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
@@ -324,6 +328,5 @@ void prop_grid_pts(ARGIN_GRID,
 		}
 	    }/*wrap*/
 	}/*end isa*/
-	OMPTASK_END;
     }
 }

@@ -47,7 +47,7 @@ void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha
  op(A)=A  if trans=='n'
  op(A)=A' if trans=='t'
  op(A)=CONJ(A') if trans=='c'
- */
+*/
 void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha){
     if(A && x){
 	assert(y);
@@ -58,21 +58,23 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
 		}
 	    }
 	}else if(trans=='t'){
-	    for(long icol=0; icol<A->n; icol++){
+	    OMPTASK_FOR(icol, 0, A->n){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    tmp+=alpha*(A->x[ix])*x[A->i[ix]];
 		}
-		    y[icol]+=tmp;
-		}
+		y[icol]+=tmp;
+	    }
+	    OMPTASK_END;
 	}else if(trans=='c'){
-	    for(long icol=0; icol<A->n; icol++){
+	    OMPTASK_FOR(icol, 0, A->n){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    tmp+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
 		}
 		y[icol]+=tmp;
 	    }
+	    OMPTASK_END;
 	}else{
 	    error("Invalid trans=%c\n", trans);
 	}
@@ -119,7 +121,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
    op(A)=A  if trans=='n'
    op(A)=A' if trans=='t'
    op(A)=CONJ(A') if trans=='c'
- */
+*/
 void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, char trans, const T alpha){
     if(A&&x){
 	/* y=y+alpha*A*x; */
@@ -150,21 +152,23 @@ void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, char trans, const T
 		    }
 		}
 	    }else if(trans=='t'){
-		for(long icol=0; icol<A->n; icol++){
+		OMPTASK_FOR(icol, 0, A->n){
 		    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 			for(long jcol=0; jcol<y->ny; jcol++){
 			    Y[jcol][icol]+=alpha*(A->x[ix])*X[jcol][A->i[ix]];
 			}
 		    }
 		}
+		OMPTASK_END;
 	    }else if(trans=='c'){
-		for(long icol=0; icol<A->n; icol++){
+		OMPTASK_FOR(icol, 0, A->n){
 		    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 			for(long jcol=0; jcol<y->ny; jcol++){
 			    Y[jcol][icol]+=alpha*CONJ(A->x[ix])*X[jcol][A->i[ix]];
 			}
 		    }
 		}
+		OMPTASK_END;
 	    }else{
 		error("Invalid trans=%c\n", trans);
 	    }
@@ -300,8 +304,8 @@ X(spcell) *X(spcellmulspcell)(const X(spcell) *A,
 */
 /*
   2009-11-09: There was initially a beta parameter It was implemented wrongly
-   for beta!=1 because for every call to dmm, the already accumulated ones are
-   scaled.  removed beta.
+  for beta!=1 because for every call to dmm, the already accumulated ones are
+  scaled.  removed beta.
 */
 void X(cellmm)(X(cell) **C0, const void *A_, const X(cell) *B, const char trans[2], const R alpha){
     const cell *A=(cell*)A_;
