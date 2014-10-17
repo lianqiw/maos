@@ -21,7 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
+#define DO_PRAGMA(A...) _Pragma(#A)
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -205,4 +205,20 @@ INLINE int atomicadd(int *ptr, int val){
     }while(cmpxchg(ptr, old, old+val)!=old);
     return old+val;
 }
+#endif
+
+#if _OPENMP >= 200805 && defined(__INTEL_COMPILER) && 0
+#define OMPTASK_FOR(index, start, end, extra...)	\
+    long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
+    for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
+    long omp_start=start+omp_sect*omp_j;		\
+    long omp_end=omp_start+omp_sect;			\
+    if(omp_end>end) omp_end=end;			\
+    DO_PRAGMA(omp task extra)				\
+    for(long index=omp_start; index<omp_end; index++)
+#define OMPTASK_END } _Pragma("omp taskwait")
+#else
+#define OMPTASK_FOR(index,start,end, extra...)	\
+    for(long index=start; index<end; index++)
+#define OMPTASK_END 
 #endif

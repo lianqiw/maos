@@ -93,7 +93,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
 	T *psf0=psf+skipy*npsfx+skipx;
-	for(int iy=0; iy<nopdy; iy++){
+	OMPTASK_FOR(iy, 0, nopdy){
 	    T *psfi=psf0+iy*npsfx;
 	    const R *opdi=opd+iy*nopdx;
 	    const R *ampi=amp+iy*nopdx;
@@ -103,6 +103,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 		/*most time is spend in EXP. */
 	    }
 	}
+	OMPTASK_END;
     }else{
 	/*rotated for LGS. */
 	/*rotate image CCW to -theta. coordinate rotate in reverse way. */
@@ -117,33 +118,29 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 	R (*opds)[nopdx]=(R(*)[nopdx])opd;
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
-	R x2,y2;
-	R x,y;
-	int nopdx2=nopdx/2;
-	int npsfx2=npsfx/2;
-	int nopdy2=nopdy/2;
-	int npsfy2=npsfy/2;
-	int ix2, iy2;
-	R iopd,iamp;
+	const int nopdx2=nopdx/2;
+	const int npsfx2=npsfx/2;
+	const int nopdy2=nopdy/2;
+	const int npsfy2=npsfy/2;
 	const int maxr=iceil(sqrt(nopdx*nopdx+nopdy*nopdy));
-	int xskip=npsfx>maxr?(npsfx-maxr)/2:0;
-	int yskip=npsfy>maxr?(npsfy-maxr)/2:0;
-	for(int iy=yskip; iy<npsfy-yskip; iy++){
-	    y=iy-npsfy2;
+	const int xskip=npsfx>maxr?(npsfx-maxr)/2:0;
+	const int yskip=npsfy>maxr?(npsfy-maxr)/2:0;
+	OMPTASK_FOR(iy, yskip, npsfy-yskip){
+	    R y=iy-npsfy2;
 	    for(int ix=xskip; ix<npsfx-xskip; ix++){
-		x=ix-npsfx2;
-		x2=x*ctheta+y*stheta+nopdx2;
-		y2=-x*stheta+y*ctheta+nopdy2;
+		R x=ix-npsfx2;
+		R x2=x*ctheta+y*stheta+nopdx2;
+		R y2=-x*stheta+y*ctheta+nopdy2;
 		if(x2>0 && x2<nopdx-1 && y2>0 && y2<nopdy-1){
-		    ix2=ifloor(x2);
-		    iy2=ifloor(y2);
+		    int ix2=ifloor(x2);
+		    int iy2=ifloor(y2);
 		    x2=x2-ix2;
 		    y2=y2-iy2;
-		    iopd=opds[iy2][ix2]*(1.-x2)*(1.-y2)
+		    R iopd=opds[iy2][ix2]*(1.-x2)*(1.-y2)
 			+opds[iy2][ix2+1]*(x2*(1.-y2))
 			+opds[iy2+1][ix2]*((1-x2)*y2)
 			+opds[iy2+1][ix2+1]*(x2*y2);
-		    iamp=amps[iy2][ix2]*(1.-x2)*(1.-y2)
+		    R iamp=amps[iy2][ix2]*(1.-x2)*(1.-y2)
 			+amps[iy2][ix2+1]*(x2*(1.-y2))
 			+amps[iy2+1][ix2]*((1-x2)*y2)
 			+amps[iy2+1][ix2+1]*(x2*y2);
@@ -151,6 +148,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 		}
 	    }
 	}
+	OMPTASK_END;
     }
 }
 #define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(T)); /**<macro to do copying*/

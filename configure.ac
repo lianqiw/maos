@@ -264,9 +264,9 @@ fi
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -diag-disable remark -vec-report=3"
 COMMON_GCC="-Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
-OPTIM_ALL="-O3 -DHAVE_SSE2=1 -msse2 -msse"
+OPTIM_ALL="-O3  "
 OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
-OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno"
+OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno -mtune=native"
 OPTIM_CLANG="$OPTIM_ALL"
 DEBUG_ALL="-g -O0 -DDEBUG_TRACE"
 DEBUG_ICC="$DEBUG_ALL"
@@ -298,14 +298,12 @@ case "${cc_full}" in
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION%.*}
 	    minor="${minor#4.}"
-	    if test $major -ge 12 ;then
-		OPTIM+=" -axSSE4.2"
+	    if test $major -ge 13 ;then
+		OPTIM+=" -axCORE-AVX2"
             elif test $major -ge 11 ;then
 		OPTIM+=" -axSSE4.2"
-            elif test $major -ge 10 ;then
+	    elif test $major -ge 10; then
 		OPTIM+=" -axS"
-	    else
-		echo "icc version is old"
 	    fi
 	fi
 	;;

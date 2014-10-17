@@ -46,11 +46,7 @@ void prop_grid_pts(ARGIN_GRID,
     if(!saend) saend=pts->nsa;
     DEF_ENV_FLAG(PROP_GRID_PTS_OPTIM, 1);
     if(PROP_GRID_PTS_OPTIM && fabs(dx_in2*dxout-1)<EPS && fabs(dy_in2*dyout-1)<EPS){
-        for(int isa=sastart; isa<saend; isa++)
-#if defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp task
-#endif
-	{	
+	OMPTASK_FOR(isa, sastart, saend){
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
@@ -187,15 +183,12 @@ void prop_grid_pts(ARGIN_GRID,
 	    }	    
 	  end1:;
 	}/*for isa*/
+	OMPTASK_END;
     }else{ /*different spacing. or non optim*/
 	const double xratio = dxout*dx_in2;
 	const double yratio = dyout*dy_in2;
 	const double (*phiin)[ninx]=(const double(*)[ninx])(mapin->p);
-	for(int isa=sastart; isa<saend; isa++)
-#if defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp task
-#endif
-	{
+	OMPTASK_FOR(isa, sastart, saend){
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
@@ -331,8 +324,6 @@ void prop_grid_pts(ARGIN_GRID,
 		}
 	    }/*wrap*/
 	}/*end isa*/
+	OMPTASK_END;
     }
-#if defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 }

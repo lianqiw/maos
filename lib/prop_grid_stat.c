@@ -52,7 +52,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     CONST_OUT double *phiout2=0;
     double dplocx=0, dplocy=0;
     int nplocx=0, nplocy=0;
-    int icol=0,irow=0;
+    int irow=0;
     long offset=0;
     int collen=0;
     int missing=0;
@@ -78,11 +78,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     if(PROP_GRID_STAT_OPTIM){
 	if(fabs(xratio-1)<EPS && fabs(yratio-1)<EPS){
 	    /*loc_out and loc_in has the same grid sampling.*/
-	    for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp task
-#endif
-	    {
+	    OMPTASK_FOR(icol, colstart, colend){
 		/*grid size of loc_in and loc_out agree*/
 		CONST_IN double *phicol, *phicol2;
 		double bl,br,tl,tr;
@@ -190,13 +186,10 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		}
 	      end1:;
 	    }/*end for icol*/
+	    OMPTASK_END;
 	}else{
 	    /*grid size of loc_in and loc_out doesn't agree*/
-	    for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp task
-#endif
-	    {
+	    OMPTASK_FOR(icol, colstart, colend){
 		CONST_IN double *phicol, *phicol2;
 		double dplocx0;
 		int nplocx0;
@@ -309,14 +302,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		}
 	      end2:;
 	    }/*end for icol*/
+	    OMPTASK_END;
 	}/*fabs(dx_in2*dxout-1)<EPS*/
     }else{
 	/*non optimized case. slower, but hopefully accurate*/
-	for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp task
-#endif
-	{
+	OMPTASK_FOR(icol, colstart, colend){
 	    double dplocx0;
 	    int nplocy1, nplocx1;
 
@@ -378,6 +368,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    }/*for irow*/
 	  skip:;
 	}/*for icol*/
+	OMPTASK_END;
     }
     if(missing>0){
 	static int warned=0;
@@ -387,7 +378,4 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    warned=1;
 	}
     }
-#if TRANSPOSE == 0 && defined(__INTEL_COMPILER) && _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 }/*function*/
