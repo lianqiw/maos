@@ -80,7 +80,7 @@ SIM_T *maos_iseed(int iseed){
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
 	/*put here to avoid messing up timing due to transfering. */
-	gpu_atm2gpu(simu->atm, parms, iseed, parms->sim.start);/*takes 0.4s for NFIRAOS. */
+	gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, parms->sim.start);/*takes 0.4s for NFIRAOS. */
 	if(parms->tomo.predict){
 	    gpu_update_recon(parms, recon);
 	}
@@ -116,7 +116,7 @@ void maos_isim(int isim){
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    /*may need to copy another part */
-	    gpu_atm2gpu(simu->atm, parms, iseed, isim);
+	    gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
 	}
 #endif
     }else{

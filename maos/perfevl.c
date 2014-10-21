@@ -140,6 +140,7 @@ void perfevl_ievl(thread_t *info){
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
     const int isim=simu->isim;
+    const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
     const int nmod=parms->evl.nmod;
     const int nps=parms->atm.nps;
     const int npsr=parms->atmr.nps;
@@ -178,6 +179,7 @@ void perfevl_ievl(thread_t *info){
 		    simu->evl_propdata_atm[ind].phiout=iopdevl->p;
 		    simu->evl_propdata_atm[ind].displacex1=-simu->atm->p[ips]->vx*isim*dt;
 		    simu->evl_propdata_atm[ind].displacey1=-simu->atm->p[ips]->vy*isim*dt;
+		    simu->evl_propdata_atm[ind].alpha=atmscale;
 		    CALL_THREAD(simu->evl_prop_atm[ind], 0);
 		}
 	    }
@@ -611,9 +613,11 @@ void perfevl(SIM_T *simu){
 	    int ind=ievl+parms->evl.nevl*ips;
 	    const int isim=simu->isim;
 	    const double dt=simu->dt;
+	    const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	    simu->evl_propdata_atm[ind].displacex1=-simu->atm->p[ips]->vx*isim*dt;
 	    simu->evl_propdata_atm[ind].displacey1=-simu->atm->p[ips]->vy*isim*dt;
+	    simu->evl_propdata_atm[ind].alpha=atmscale;
 	    CALL_THREAD(simu->evl_prop_atm[ind], 0);
 	}
     }

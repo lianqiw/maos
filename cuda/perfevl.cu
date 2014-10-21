@@ -304,7 +304,6 @@ void gpu_perfevl_queue(thread_t *info){
     const RECON_T *recon=simu->recon;
     const int isim=simu->isim;
     const int imoao=parms->evl.moao;
-    const double dt=simu->dt;
     const int nloc=aper->locs->nloc;
     const int nwvl=parms->evl.nwvl;
     for(int ievl=info->start; ievl<info->end; ievl++){
@@ -330,7 +329,7 @@ void gpu_perfevl_queue(thread_t *info){
 		       parms->evl.hs->p[ievl], thetax, thetay, 0,0,1, stream);
 	}else if(simu->atm && !parms->sim.wfsalias){
 	    gpu_atm2loc(iopdevl->p, cudata->perf->locs, parms->evl.hs->p[ievl], thetax, thetay, 
-			0,0,isim*dt, 1, stream);
+			0,0,parms->sim.dt,isim, 1, stream);
 	}
 	if(simu->telws){//Wind shake 
 	    Real tt=simu->telws->p[isim];

@@ -694,16 +694,26 @@ double psd_inte2(const dmat *psdin){
 /**
    Convert PSD into time series.*/
 dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
-    if(psdin->ny!=2){
-	error("psdin should have two columns\n");
+    if(!psdin){
+	error("psdin cannot be null\n");
     }
     long nstep=nextpow2(nstepin);
     double df=1./(dt*nstep);
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
-    double var=psd_inte2(psdin);
-    psd=dinterp1(psdin, 0, fs, 1e-40);
-    psd->p[0]=0;/*disable pistion. */
+    if(psdin->nx*psdin->ny==2){//[alpha, beta] discribes power law
+	psd=dnew(nstep, 1);
+	double alpha=psdin->p[0];
+	double beta=psdin->p[1];
+	for(long i=1; i<nstep; i++){
+	    psd->p[i]=beta*pow(i*df, alpha);
+	}
+    }else if(psdin->ny==2){
+	psd=dinterp1(psdin, 0, fs, 1e-40);
+	psd->p[0]=0;/*disable pistion. */
+    }else{
+	error("psdin is invalid format.\n");
+    }
     cmat *wshat=cnew(nstep, 1);
     //cfft2plan(wshat, -1);
     for(long i=0; i<nstep; i++){
@@ -716,9 +726,6 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dfree(psd);
     dfree(fs);
     dresize(out, nstepin, 1);
-    double var2=dinn(out,out)/out->nx;
-    //info2("Input psd has variance of %g.\nTime series has variance of %g\n",var,var2);
-    dscale(out, sqrt(var/var2));
     return out;
 }
 

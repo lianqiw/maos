@@ -34,6 +34,7 @@ int cudata_t::recongpu=0;
 int *cudata_t::evlgpu=0;
 int *cudata_t::wfsgpu=0;
 cuwfs_t *cudata_t::wfs=0;
+dmat *cudata_t::atmscale=0;
 /**
    Get GPU info.
 */

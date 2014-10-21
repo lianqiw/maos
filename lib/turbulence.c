@@ -125,9 +125,9 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
 		cellarr_dmat(fc, ilayer+1, dc->p[1]);
 	    }
 	}else{
-	    dcp((dmat**)&data->screen[ilayer], dc->p[0]);
+	    dcp((dmat**)&data->screen->p[ilayer], dc->p[0]);
 	    if(ilayer+1<nlayer){
-		dcp((dmat**)&data->screen[ilayer+1], dc->p[1]);
+		dcp((dmat**)&data->screen->p[ilayer+1], dc->p[1]);
 	    }
 	}
 	double tk4=myclockd();
@@ -161,7 +161,16 @@ static mapcell* create_screen(GENATM_T *data,
 	while(!in){
 	    if(exist(fnatm)){
 		info2("Reading %s\n", fnatm);
-		in=dcellread_mmap(fnatm);
+		long totsize_g=(nlayer*data->nx*data->ny*sizeof(double))>>30;
+		extern int NNUMA;
+		if(NNUMA>1 && totsize_g<8 && 0){
+		    /*If there is more than one numa memory node available and
+		     * memory size of less than 8GB, read to memory instead of mmap*/
+		    /* Not useful to prevent QPI memory access. disabled*/
+		    in=dcellread(fnatm);
+		}else{
+		    in=dcellread_mmap(fnatm);
+		}
 	    }else{
 		char fnlock[PATH_MAX];
 		snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);

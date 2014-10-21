@@ -36,6 +36,7 @@ typedef struct ATM_CFG_T{
     double l0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
     double hmax;  /**<maximum in ht*/
+    dmat *r0logpsd; /**<[alpha beta]: PSD of log(r0) is beta*f^alpha. f is in hz.*/
     dmat *ht;   /**<height of each layer*/
     dmat *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     dmat *ws;   /**<wind speed of each layer*/
@@ -60,6 +61,7 @@ typedef struct ATM_CFG_T{
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/
+    int r0evolve; /**<Evolve r0 according to r0logpsd*/
 }ATM_CFG_T;
 /**
    contains input parameters for the atmospheric reconstruction.  */

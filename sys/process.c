@@ -33,9 +33,13 @@
 #include "misc.h"
 #include "process.h"
 #include "daemonize.h"
+#ifdef HAVE_NUMA_H
+#include <numa.h>
+#endif
 /**
    A few routines handles process resource.
 */
+int NNUMA=1; /*Number of numa nodes*/
 int NCPU=0;
 int NTHREAD=0;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
 int TCK=0;
@@ -103,6 +107,9 @@ void init_process(void){
 
     NCPU= get_ncpu();
     NTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
+#ifdef HAVE_NUMA_H
+    NNUMA=numa_num_configured_nodes();
+#endif
     TCK = sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");

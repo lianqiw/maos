@@ -141,7 +141,7 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
 /**
    Transfer atmosphere or update atmosphere in GPU.
 */
-void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
+void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms, int iseed, int isim){
     if(!atmc) return;
     map_t **atm=atmc->p;
     if(parms->atm.evolve){
@@ -151,6 +151,10 @@ void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
     const int nps=parms->atm.nps;
     static int nx0=0,ny0=0;
     static int iseed0=-1;
+    if(iseed0!=iseed && atmscale){
+	dfree(cudata_t::atmscale);
+	if(atmscale) cudata_t::atmscale=ddup(atmscale);
+    }
     if(!nx0){
 	/*The minimum size to cover the meta-pupil*/
 	long nxn=parms->atm.nxn;
@@ -246,6 +250,7 @@ void gpu_atm2gpu(mapcell *atmc, const PARMS_T *parms, int iseed, int isim){
     const double dx=parms->atm.dx;
     if(iseed0!=iseed){/*A new seed or initialization update vx, vy, ht, etc. */
 	iseed0=iseed;
+
     	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
 	    cumap_t *cuatm=cudata->atm;
@@ -528,19 +533,21 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, 
-		 const Real thetax,const Real thetay,
-		 const Real mispx, const Real mispy, const Real dtisim, const Real atmalpha, cudaStream_t stream){
+void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,const Real thetay,
+		 const Real mispx, const Real mispy, const Real dt, const int isim, Real atmalpha, cudaStream_t stream){
     cumap_t *cuatm=cudata->atm;
     if(Z(fabs)(atmalpha)<EPS) return;
+    if(cudata_t::atmscale){
+	atmalpha*=cudata_t::atmscale->p[isim];
+    }
     for(int ips=0; ips<cudata->nps; ips++){
 	const Real dx=cuatm[ips].dx;
 	const Real dy=cuatm[ips].dy;
 	const Real ht=cuatm[ips].ht;
 	const Real vx=cuatm[ips].vx;
 	const Real vy=cuatm[ips].vy;
-	const Real dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips].ox)/dx;
-	const Real dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips].oy)/dy;
+	const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
+	const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
 	const Real scale=1.f-ht/hs;
 	const int nloc=loc->nloc;
 #define COMM loc->p,loc->nloc,scale/dx,scale/dy, dispx, dispy, atmalpha

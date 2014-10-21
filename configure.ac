@@ -502,7 +502,7 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
     fi
 fi
 
-
+AC_CHECK_HEADERS([numa.h], [LDFLAGS+=" -lnuma"], [])
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then

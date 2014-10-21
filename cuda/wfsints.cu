@@ -332,7 +332,6 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const Real hs=parms->wfs[iwfs].hs;
-    const Real dtisim=parms->sim.dt*isim;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
     const int ncompy=powfs[ipowfs].ncompy;
@@ -383,7 +382,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg->p[0], 
 		    parms->powfs[ipowfs].llt->misreg->p[1], 
-		    dtisim, 1, stream);
+		    parms->sim.dt, isim, 1, stream);
 	Real ttx=0,tty=0;
 	if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
 	    if(pistatout||parms->sim.uptideal){

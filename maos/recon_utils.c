@@ -483,6 +483,7 @@ void FitR(dcell **xout, const void *A,
 	const PARMS_T *parms=global->parms;
 	SIM_T *simu=global->simu;
 	int isim=simu->reconisim;
+	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	const int nfit=parms->fit.nfit;
 	xp=cellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
@@ -495,7 +496,7 @@ void FitR(dcell **xout, const void *A,
 		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*simu->dt;
 		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*simu->dt;
 		prop_grid(simu->atm->p[ips], recon->floc, NULL, xp->p[ifit]->p, 
-			  1, displace[0], displace[1], scale, 1, 0, 0);
+			  atmscale, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
     }else if(recon->HXF){

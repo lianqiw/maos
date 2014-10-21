@@ -29,7 +29,7 @@ extern "C"{
 void gpu_info(void);
 int  gpu_init(const PARMS_T *parms, int *gpus, int ngpu);
 void gpu_cleanup(void);
-void gpu_atm2gpu(mapcell *atm, const PARMS_T *parms, int iseed, int isim);
+void gpu_atm2gpu(const mapcell *atm, const dmat *atmscale, const PARMS_T *parms, int iseed, int isim);
 void gpu_dmreal2gpu(mapcell *dmreal, DM_CFG_T *dmcfg);
 void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg);
 

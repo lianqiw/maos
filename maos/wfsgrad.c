@@ -338,6 +338,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int CL=parms->sim.closeloop;
     const int isim=simu->isim;
     const int nps=parms->atm.nps;
+    const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
     const double dt=simu->dt;
     TIM(0);
     /*The following are truly constants for this powfs */
@@ -392,6 +393,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    wfs_propdata->phiout=opd->p;
 	    wfs_propdata->displacex1=-atm->p[ips]->vx*dt*isim;
 	    wfs_propdata->displacey1=-atm->p[ips]->vy*dt*isim;
+	    wfs_propdata->alpha=atmscale;
 	    /* have to wait to finish before another phase screen. */
 	    CALL_THREAD(wfs_prop, 0);
 	}
@@ -510,7 +512,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
 		    const double displacey=-atm->p[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
 		    prop_grid_pts(atm->p[ips],powfs[ipowfs].llt->pts,NULL,
-				  lltopd->p,1,displacex,displacey,
+				  lltopd->p,atmscale,displacex,displacey,
 				  scale, 1., 0, 0);
 		}
 	    }

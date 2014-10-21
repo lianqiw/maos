@@ -471,6 +471,7 @@ typedef struct SIM_T{
     /*Atmosphere*/
     GENATM_T *atmcfg;
     mapcell *atm;       /**<fine sampled simulation turbulence screens*/
+    dmat *atmscale;     /**<Scale atmosphere during ray tracing to simulate r0 variation.*/
     mapccell *cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
 			  fast ray tracing to WFS and aper*/
     int (*pcachedm)[2];/**<information about cachedm struct.*/

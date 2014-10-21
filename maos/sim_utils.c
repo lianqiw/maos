@@ -242,11 +242,13 @@ void genatm(SIM_T *simu){
     }
   
     info2("After genatm:\t%.2f MiB\n",get_job_mem()/1024.);
-
-    if(!parms->atm.frozenflow && parms->sim.closeloop){
-	warning("Creating new screen in CL mode will not work\n");
-	warning("Creating new screen in CL mode will not work\n");
-	warning("Creating new screen in CL mode will not work\n");
+    if(parms->atm.r0evolve){
+	simu->atmscale=psd2time(parms->atm.r0logpsd, simu->atm_rand, parms->sim.dt, parms->sim.end);
+	const double r02wt=(-5./3.);//layer weight is prop to r0^(-5/3)
+	for(long i=0; i<simu->atmscale->nx; i++){
+	    simu->atmscale->p[i]=exp((simu->atmscale->p[i])*r02wt);//convert to cn2dh
+	}
+	writebin(simu->atmscale, "atmscale_%d", simu->seed);
     }
     if(simu->wfs_prop_atm){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1370,7 +1372,7 @@ void free_simu(SIM_T *simu){
 	free(simu->atmcfg);
     }
     cellfree(simu->atm);
-
+    dfree(simu->atmscale);
     if(parms->sim.cachedm && !parms->sim.evlol){
 	cellfree(simu->cachedm);
 	free(simu->pcachedm);

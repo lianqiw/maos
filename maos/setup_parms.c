@@ -647,6 +647,8 @@ static void readcfg_atm(PARMS_T *parms){
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
     READ_INT(atm.share);
+    READ_INT(atm.r0evolve);
+    parms->atm.r0logpsd=readcfg_dmat("atm.r0logpsd");
     parms->atm.size=readcfg_dmat_n(2, "atm.size");
     parms->atm.ht=readcfg_dmat("atm.ht");
     parms->atm.nps=parms->atm.ht->nx;

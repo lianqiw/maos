@@ -340,7 +340,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int do_geom=!do_phy || save_gradgeom || do_pistatout;
 	const Real thetax=parms->wfs[iwfs].thetax;
 	const Real thetay=parms->wfs[iwfs].thetay;
-	const Real dtisim=parms->sim.dt*isim;
 	Real (*loc)[2]=cupowfs[ipowfs].loc->p;
 	const int nloc=cupowfs[ipowfs].loc->nloc;
 	/*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
@@ -362,7 +361,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		       hs, thetax, thetay, 0, 0, 1, stream);
 	}else{
 	    if(simu->atm){
-		gpu_atm2loc(phiout->p, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, dtisim, 1, stream);
+		gpu_atm2loc(phiout->p, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	    }
 	    if(parms->sim.wfsalias){
 		gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,

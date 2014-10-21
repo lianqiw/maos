@@ -40,6 +40,7 @@ typedef struct cudata_t{
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
     cumap_t *atm;   /**<atmosphere: array of cumap_t */
+    static dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
     cumap_t *dmreal;/**<DM: array of cumap_t */
     cumap_t *dmproj;/**<DM: array of cumap_t */
     int nps; /**<number of phase screens*/
