@@ -911,7 +911,7 @@ static int X(islog)(const X(mat)*xin){
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
 */
-X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0){
+X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T ydefault){
     if(!X(islinear)(xin)){
 	error("xin is not linearly spaced\n");
     }
@@ -932,9 +932,9 @@ X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xne
 	    R xx=((xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
-		pynew[iy][ix]=is_nan(y0)?pyin[iy][0]:y0;
+		pynew[iy][ix]=is_nan(ydefault)?pyin[iy][0]:ydefault;
 	    }else if(xxm>=nmax1){
-		pynew[iy][ix]=is_nan(y0)?pyin[iy][nmax1]:y0;
+		pynew[iy][ix]=is_nan(ydefault)?pyin[iy][nmax1]:ydefault;
 	    }else{
 		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
@@ -948,7 +948,7 @@ X(mat)* X(interp1linear)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xne
    Interpolate using log(xin) and log(xnew)
    xin is the coordinate of yin. xnew is the coordinate of the output.
 */
-X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0){
+X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T ydefault){
     if(!X(islog)(xin)){
 	error("xin is not logrithmically spaced\n");
     }
@@ -969,9 +969,9 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, 
 	    R xx=(log10(xnew->p[ix])-xminl)*xsep1;
 	    long xxm=ifloor(xx);
 	    if(xxm<0){
-		pynew[iy][ix]=is_nan(y0)?pyin[iy][0]:y0;
+		pynew[iy][ix]=is_nan(ydefault)?pyin[iy][0]:ydefault;
 	    }else if(xxm>=nmax1){
-		pynew[iy][ix]=is_nan(y0)?pyin[iy][nmax1]:y0;
+		pynew[iy][ix]=is_nan(ydefault)?pyin[iy][nmax1]:ydefault;
 	    }else{
 		R xxw=xx-xxm;
 		pynew[iy][ix]=xxw*pyin[iy][xxm+1]+(1.-xxw)*pyin[iy][xxm];
@@ -981,7 +981,7 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, 
     return ynew;
 }
 #ifndef USE_COMPLEX
-X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y0){
+X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T ydefault){
     int free_xy=0;
     X(mat)*ynew=NULL;
     if(!yin){
@@ -990,9 +990,9 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
 	free_xy=1;
     }
     if(X(islinear)(xin)){
-	ynew=X(interp1linear)(xin, yin, xnew, y0);
+	ynew=X(interp1linear)(xin, yin, xnew, ydefault);
     }else if(X(islog)(xin)){
-        ynew=X(interp1log)(xin, yin, xnew, y0);
+        ynew=X(interp1log)(xin, yin, xnew, ydefault);
     }else{//arbitrary spacing
 	if(xin->ny!=1 || xnew->ny!=1){
 	    error("Either xin or xnew is in wrong format\n");
@@ -1009,14 +1009,14 @@ X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T y
 		    break;
 		}
 	    }
-	    if(found || is_nan(y0)){
+	    if(found || is_nan(ydefault)){
 		R xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
 		for(long iy=0; iy<ynew->ny; iy++){
 		    pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
 		}
 	    }else{
 		for(long iy=0; iy<ynew->ny; iy++){
-		    pynew[iy][ix]=y0;
+		    pynew[iy][ix]=ydefault;
 		}
 	    }
 	}

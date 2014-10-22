@@ -82,7 +82,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     double pixmeter=parms->aper.d/npix;//size of detector pixel in meter
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
     double du=1./(dx2*ncomp);
-    double dup=pixmeter*du;
+    double dupix=pixmeter*du;
     double pdmeter=pow(pixmeter/dx2, 2);
     double pixblur=parms->powfs[ipowfs].pixblur;
     double e0b=-2*pow(M_PI*pixblur*pixmeter*du, 2);
@@ -90,7 +90,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
 	    int jx=ix-ncomp2; 
-	    pn[iy][ix]=sinc(jy*dup)*sinc(jx*dup)*pdmeter;
+	    pn[iy][ix]=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
 	    if(pixblur){
 		pn[iy][ix]*=exp(e0b*(jx*jx+jy*jy));
 	    }

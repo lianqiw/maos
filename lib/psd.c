@@ -113,26 +113,26 @@ dmat *psd_vibid(const dmat *psdin){
     const double gain=0.1;
     const double gain2=0.05;
     int inpeak=0;
-    double ym0=y->p[1];
-    double yn0=fabs(y->p[1]-y->p[0]);
-    double ym=0, yn=0;
+    double ylpf0=y->p[1];
+    double dylpf0=fabs(y->p[1]-y->p[0]);
+    double ylpf=0, dylpf=0;
     int nmaxp=100;
     dmat *res=dnew(4, nmaxp);
     PDMAT(res, pres);
     double thres=25e-18;/*threshold: 5 nm*/
-    double sumxy, sumy, sum;
+    double sumxy=0, sumy=0, sum=0;
     int count=0;
     for(long i=1; i<psdin->nx-1; i++){
 	if(!inpeak){
 	    //second order LPF
-	    ym0=(1.-gain)*ym0+y->p[i]*gain; 
-	    ym=(1.-gain)*ym+ym0*gain;
+	    ylpf0=(1.-gain)*ylpf0+y->p[i]*gain; 
+	    ylpf=(1.-gain)*ylpf+ylpf0*gain;
 	    double diff=y->p[i]-y->p[i-1];
 	    if(diff>0){
-		yn0=(1.-gain2)*yn0+diff*gain2; 
-		yn=(1.-gain2)*yn+yn0*gain2;
+		dylpf0=(1.-gain2)*dylpf0+diff*gain2; 
+		dylpf=(1.-gain2)*dylpf+dylpf0*gain2;
 	    }
-	    if(y->p[i+1]>ym+yn*5 && f[i]>1){//beginning of peak
+	    if(y->p[i+1]>ylpf+dylpf*5 && f[i]>1){//beginning of peak
 		inpeak=1;
 		if(count>0 && f[i] < f[(int)pres[count-1][3]] + 0.1){
 		    //combine with last peak if within 1 Hz.
@@ -149,7 +149,7 @@ dmat *psd_vibid(const dmat *psdin){
 	    sumxy+=f[i]*psd[i];
 	    sumy+=psd[i];
 	    sum+=(f[i]-f[i-1])*(psd[i]+psd[i-1]);
-	    if(y->p[i]<ym+yn && y->p[i+1]<ym+yn){//end of peak
+	    if(y->p[i]<ylpf+dylpf && y->p[i+1]<ylpf+dylpf){//end of peak
 		inpeak=0;
 		if(sum*0.5>thres){
 		    pres[count][0]=sumxy/sumy;

@@ -31,7 +31,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_DISABLE_SHARED
 AC_ENABLE_STATIC
-AM_PROG_AR
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_LIBTOOL
 
 #Doxygen Features
@@ -152,7 +152,6 @@ case "$host_os" in
 	;;
     *cygwin*|*mingw*)
 	AM_CONDITIONAL(WIN, true)
-	LAPACK="-lblas -llapack"
 	system="win"
 	ldsuffix="dll"
 	;;
@@ -264,9 +263,9 @@ fi
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 COMMON_GCC="-Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
-OPTIM_ALL="-O3  "
+OPTIM_ALL="-O3 "
 OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
-OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno -mtune=native"
+OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno"
 OPTIM_CLANG="$OPTIM_ALL"
 DEBUG_ALL="-g -O0 -DDEBUG_TRACE"
 DEBUG_ICC="$DEBUG_ALL"
@@ -305,6 +304,9 @@ case "${cc_full}" in
 	    elif test $major -ge 10; then
 		OPTIM+=" -axS"
 	    fi
+	    if test $major -lt 11 ;then
+		unset OPENMP_CFLAGS
+	    fi
 	fi
 	;;
     *gcc*)
@@ -337,6 +339,10 @@ case "${cc_full}" in
 	    #GCC4.3 changed meaning of inline to C99
 	    if test $major -eq 4 -a $minor -lt 5;then
 		gnu_inline="yes"
+	    fi
+	    #GCC introduced openmp task in 4.4
+	    if test $major -lt 4 -o $minor -lt 4 ;then
+		unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
@@ -425,7 +431,7 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_ARCH -O3"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_ARCH -O3 -fPIC"  && \
 	(./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
 	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
 	make -j4 install >> $fnlog) ;then
@@ -434,30 +440,31 @@ compile(){
 	echo "Failed to compile $name. Please see $fnlog for details"
     fi
 }
-if test -z "$LAPACK" ;then
-    if test -f ${LIB_DIR}/libmkl_core.${ldsuffix} ;then
-	LAPACK="-lmkl_core"
-	if test -n "$OPENMP_CFLAGS" ;then
-	    if test "$CN" = "icc" ;then
-		LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
-	    elif test "$CN" = "gcc" ;then
-		LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
-	    else
-		LAPACK+=" -lmkl_sequential -lpthread"
-	    fi
+#Check whether MKL is available. Prefer it.
+MKL="-lm -lmkl_sequential -lpthread"
+AC_CHECK_LIB([mkl_core],[dgemm_],[has_mkl=yes],[has_mkl=no],[$MKL])
+if test "$has_mkl" = "yes" ;then
+    LAPACK="-lmkl_core"
+    if test -n "$OPENMP_CFLAGS" ;then
+	if test "$CN" = "icc" ;then
+	    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
+	elif test "$CN" = "gcc" ;then
+	    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
 	else
 	    LAPACK+=" -lmkl_sequential -lpthread"
 	fi
-	if test "$host_cpu" = "x86_64" ;then
-	    LAPACK+=" -lmkl_intel_lp64"
-	else
-	    LAPACK+=" -lmkl_intel"
-	fi
     else
-	LAPACK="-lblas -llapack"
+	LAPACK+=" -lmkl_sequential -lpthread"
     fi
-    echo LAPACK=$LAPACK
+    if test "$host_cpu" = "x86_64" ;then
+	LAPACK+=" -lmkl_intel_lp64"
+    else
+	LAPACK+=" -lmkl_intel"
+    fi
+else
+    LAPACK="-lblas -llapack"
 fi
+echo LAPACK=$LAPACK
 AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
@@ -506,7 +513,7 @@ AC_CHECK_HEADERS([numa.h], [LDFLAGS+=" -lnuma"], [])
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
-    compile ZLIB zlib.tar.bz2 --static 
+    compile ZLIB zlib.tar.bz2 --static
     unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi

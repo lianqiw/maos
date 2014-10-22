@@ -232,6 +232,7 @@ static void genotf_wrap(thread_t *info){
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
+    info2("done\n");
 }
 /**
    Generate pairs of overlapping points for structure function.  
