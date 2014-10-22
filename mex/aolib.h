@@ -26,3 +26,4 @@ dmat *psd_vibid(const dmat *psdin);
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
 cell* readbin(const char *fn);
 void  writebin(const cell* dc, const char* fn);
+dmat* psd2time(const dmat *psdin, rand_t *seed, double dt, int nstepin);

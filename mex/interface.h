@@ -263,7 +263,12 @@ INLINE char *mx2str(const mxArray *A){
     mxGetString(A, fn, nlen);
     return fn;
 }
-
+INLINE rand_t *mx2rand(const mxArray *A){
+    int seed=(int)mxGetScalar(A);
+    rand_t *out=malloc(sizeof(rand_t));
+    seed_rand(out, seed);
+    return out;
+}
 static void mex_signal_handler(int sig){
     if(sig){
 	mexErrMsgTxt("Signal caught.\n");

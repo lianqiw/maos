@@ -40,6 +40,10 @@ def handle_type(argtype):
         mx2c='mx2any'
         c2mx='any2mx'
         free_c='cellfree'
+    elif argtype=='rand_t*':
+        mx2c='mx2rand'
+        c2mx=''
+        free_c='free'
     else:
         mx2c='unknown'
         c2mx='unknown'
