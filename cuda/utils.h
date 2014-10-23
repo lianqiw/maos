@@ -68,6 +68,7 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     M* from=0;
     if(sizeof(M)!=sizeof(N)){
+	if(cuda_cache) LOCK(cudata->memmutex);
 	if(cuda_cache && cudata->memcache->count((void*)(*dest))){
 	    /*We cache the array used for the conversion. It is important that
 	     * no gpu memory is allocated/freed at every cycle*/
@@ -90,6 +91,9 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     if((void*)from !=(void*)src && !cuda_cache) {
 	free(from);
+    }
+    if(cuda_cache && sizeof(M)!=sizeof(N)){
+	UNLOCK(cudata->memmutex);
     }
 }
 

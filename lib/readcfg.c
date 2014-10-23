@@ -17,7 +17,7 @@
 */
 
 /*
-  read the config file, parse the tokens and store into a hash table. 
+  read the config file, parse the tokens and store into a binary tree. 
   then user can query tokens using read_int, read_double, or read_array
 */
 #include <stdlib.h>
@@ -31,7 +31,7 @@
 #include "readcfg.h"
 /**
    Routines to read .conf type config files. Each entry is composed of a key and
-   a value. The entries are maintained in a hash table. Each entry can be
+   a value. The entries are maintained in a tree. Each entry can be
    retrieved from the key.
 */
 /**
@@ -303,6 +303,11 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    ssline[0]='\0';
 	    continue;
 	}
+	int append=0;
+	if(eql[-1]=='+'){
+	    append=1;//append to key
+	    eql[-1]='\0';
+	}
 	eql[0]='\0';
 	var=ssline;
 	value=eql+1;
@@ -365,32 +370,46 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    store->protect=protect;
 	    store->count=0;
 
-	    void **entryfind=0;
-	    if((entryfind=tfind(store, &MROOT, key_cmp))){
+	    void **entryfind=tfind(store, &MROOT, key_cmp);
+	    if(entryfind){ 
 		/*same key found */
 		STORE_T *oldstore=*entryfind;
-		if(oldstore->protect>protect){
-		    free(store->key);
-		    free(store->data);
-		}else{
-		    if(print_override && 
-		       (((oldstore->data==NULL || store->data==NULL)
-			 &&(oldstore->data != store->data))||
-			((oldstore->data!=NULL && store->data!=NULL)
-			 &&strcmp(oldstore->data, store->data)))){
-			info2("Overriding %s:\t{%s}-->{%s}\n", 
-			      store->key, oldstore->data, store->data);
+		if(append){
+		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
+		    const char *olddata=oldstore->data;
+		    const char *newdata=store->data;
+		    const int nolddata=strlen(olddata);
+		    const int nnewdata=strlen(newdata);
+		    if(olddata[0]!='[' || olddata[nolddata-1]!=']'){
+			error("olddata='%s' should be encapsulated by bare [].\n", olddata);
+		    }else if(newdata[0]!='[' || newdata[nnewdata-1]!=']'){
+			error("newdata='%s' should be encapsulated by bare [].\n", newdata);
+		    }else{
+			oldstore->data=realloc(oldstore->data, (nolddata+nnewdata));
+			oldstore->data[nolddata-1]=' ';
+			strncat(oldstore->data, newdata+1, nnewdata-1);
 		    }
-		    /*free old value */
-		    if(oldstore->data) free(oldstore->data);
-		    /*copy pointer of new value. */
-		    oldstore->data=store->data;
-		    oldstore->protect=store->protect;
-		    oldstore->count=store->count;
-		    /*free key. */
-		    free(store->key);
+		}else{
+		    if(oldstore->protect<=protect){
+			if(print_override && 
+			   (((oldstore->data==NULL || store->data==NULL)
+			     &&(oldstore->data != store->data))||
+			    ((oldstore->data!=NULL && store->data!=NULL)
+			     &&strcmp(oldstore->data, store->data)))){
+			    info2("Overriding %s:\t{%s}-->{%s}\n", 
+				  store->key, oldstore->data, store->data);
+			}
+			/*free old value */
+			free(oldstore->data);
+			/*move pointer of new value. */
+			oldstore->data=store->data; store->data=0;
+			oldstore->protect=store->protect;
+			oldstore->count=store->count;
+		    }
 		}
 		countold++;
+		free(store->data);
+		free(store->key);
 		free(store);
 	    }else{
 		/*new key */

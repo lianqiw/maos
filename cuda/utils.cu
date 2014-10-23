@@ -317,6 +317,7 @@ template <typename R, typename T, typename S>
 static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
 		    cudaStream_t stream, pthread_mutex_t *mutex){
     S *tmp=0;
+    if(cuda_cache) LOCK(cudata->memmutex);
     if(cuda_cache && cudata->memcache->count((void*)src)){
 	tmp=(S*)(*cudata->memcache)[(void*)src];
     }else{
@@ -336,6 +337,7 @@ static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n,
     if(!cuda_cache) {
 	free(tmp);
     }
+    if(cuda_cache) UNLOCK(cudata->memmutex);
 }
 #define add2cpu_mat(D, double, Comp)					\
 void add2cpu(D##mat **out, double alpha, const cumat<Comp> *in, double beta,	\
