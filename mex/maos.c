@@ -127,7 +127,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD==1)
+#pragma omp task untied if(NTHREAD>1)
 #endif
 			maos_isim(isim);
 			isim++;

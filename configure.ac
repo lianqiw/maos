@@ -33,7 +33,6 @@ AC_DISABLE_SHARED
 AC_ENABLE_STATIC
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_LIBTOOL
-
 #Doxygen Features
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
@@ -170,8 +169,15 @@ LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 
+die(){
+    shift
+    echo "Error:$@"
+    exit
+}
 #Try to discover CUDA install in the system
-
+if ! which which >/dev/null 2>&1;then
+    die "Please install 'which'"
+fi
 if test -n "`which nvcc 2>/dev/null`" ;then
     NVCC="$(which nvcc)"
     if test -L "$NVCC" ;then
@@ -205,14 +211,14 @@ elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
 fi
 
 #Discover default download method
-if test -n "`which wget 2>/dev/null`" ;then
+if test -x "`which wget 2>/dev/null`" ;then
     wget="wget -t1 --no-check-certificate"
     wgetoutput="-O"
-elif test -n "`which curl 2>/dev/null`" ;then
+elif test -x "`which curl 2>/dev/null`" ;then
     wget="curl --retry 1 -L --progress-bar"
     wgetoutput="--output"
 else
-    wget="(echo wget/curl not found ; exit)"
+    wget="die wget/curl not found ; "
 fi
 #Common configure options.
 AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
@@ -389,7 +395,7 @@ download(){
     else
 	AC_MSG_ERROR([Please specify third argument])
     fi
-    mkdir -p ${DOWNLOAD_DIR} || exit
+    mkdir -p ${DOWNLOAD_DIR} || die "failed to mkdir"
     retry=0
     while test ${retry} -le 2 ;do
 	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
@@ -408,7 +414,7 @@ download(){
 	    fi
 	fi
 	if test -f ${DOWNLOAD_DIR}/${fn} ;then
-	    mkdir -p "${OUTDIR}" || exit 1
+	    mkdir -p "${OUTDIR}" || die "failed to mkdir"
 	    if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
 		rm -rf ${DOWNLOAD_DIR}/${fn}
 		retry=$((retry+1))
@@ -426,7 +432,6 @@ compile(){
     file=$2
     shift
     shift
-    opts="$@"
     rm -rf ${TMP_DIR}/$name
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
@@ -440,33 +445,36 @@ compile(){
 	echo "Failed to compile $name. Please see $fnlog for details"
     fi
 }
-#Check whether MKL is available. Prefer it.
-MKL="-lm -lmkl_sequential -lpthread"
-AC_CHECK_LIB([mkl_core],[dgemm_],[has_mkl=yes],[has_mkl=no],[$MKL])
-if test "$has_mkl" = "yes" ;then
-    LAPACK="-lmkl_core"
-    if test -n "$OPENMP_CFLAGS" ;then
-	if test "$CN" = "icc" ;then
-	    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
-	elif test "$CN" = "gcc" ;then
-	    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
-	else
-	    LAPACK+=" -lmkl_sequential -lpthread"
-	fi
+
+#First use MKL if available. 
+LAPACK="-lmkl_core"
+if test -n "$OPENMP_CFLAGS" ;then
+    if test "$CN" = "icc" ;then
+	LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
+    elif test "$CN" = "gcc" ;then
+	LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
     else
 	LAPACK+=" -lmkl_sequential -lpthread"
     fi
-    if test "$host_cpu" = "x86_64" ;then
-	LAPACK+=" -lmkl_intel_lp64"
-    else
-	LAPACK+=" -lmkl_intel"
-    fi
 else
-    LAPACK="-lblas -llapack"
+    LAPACK+=" -lmkl_sequential -lpthread"
 fi
-echo LAPACK=$LAPACK
-AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+if test "$host_cpu" = "x86_64" ;then
+    LAPACK+=" -lmkl_intel_lp64"
+else
+    LAPACK+=" -lmkl_intel"
+fi
+echo trying LAPACK=$LAPACK
 AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+if test "$has_lapack" = "no" ;then
+    LAPACK="-lblas -llapack"
+    echo trying LAPACK=$LAPACK
+
+    unset nset ac_cv_lib_m_dgemm_
+    unset nset ac_cv_lib_m_dposv_
+    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+fi
 if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
     unset nset ac_cv_lib_m_dgemm_
     unset nset ac_cv_lib_m_dposv_
@@ -482,16 +490,16 @@ fi
 #Some system has liblapack.so.? without symbol links to liblapack.so
 if test "$has_blas" = "no" ;then
     fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
-    if test -n ${fn_blas} ;then
-	ln -sf ${fn_blas%% *} ${LIB_DIR}/libblas.so
+    if test -n "${fn_blas}" ;then
+	ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
     fi
     unset nset ac_cv_lib_m_dgemm_
     AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 fi
 if test "$has_lapack" = "no" ;then
     fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
-    if test -n ${fn_lapack} ;then
-	ln -sf ${fn_lapack%% *} ${LIB_DIR}/liblapack.so
+    if test -n "${fn_lapack}" ;then
+	ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
     fi
     unset nset ac_cv_lib_m_dposv_
     AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
@@ -523,7 +531,7 @@ has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads CFLAGS="$CFLAGS_ARCH -O3 -std=gnu99"
+    compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads 
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])

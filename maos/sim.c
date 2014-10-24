@@ -262,7 +262,7 @@ void maos_sim(){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD==1)
+#pragma omp task untied if(NTHREAD>=1)
 #endif
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	while(!(simu=maos_iseed(iseed))){

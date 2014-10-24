@@ -12,7 +12,7 @@ SUBDIRS+=tools test
 include $(top_srcdir)/aminclude.am
 
 #dist-hook:
-#	rm -rf $(distdir)/external $(distdir)/test
+#	rm -rf $(distdir)/configure.ac 
 
 all-local:$(srcdir)/math/tmp.c
 $(srcdir)/math/tmp.c:$(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c \

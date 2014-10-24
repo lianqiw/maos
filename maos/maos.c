@@ -83,7 +83,7 @@ void maos_setup(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD==1)
+#pragma omp task untied if(NTHREAD>1)
 #endif
 	{
 	    setup_surf(parms, aper, powfs, recon);
@@ -126,7 +126,7 @@ void maos_setup(const PARMS_T *parms){
 #if _OPENMP>=200805
 #pragma omp parallel
 #pragma omp single 
-#pragma omp task untied final(NTHREAD==1)
+#pragma omp task untied if(NTHREAD>1)
 #endif
 	setup_recon_mvm(parms, recon, powfs);
     }
