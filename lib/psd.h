@@ -21,8 +21,15 @@
    \file psd.h
    Compute the PSD from a sequence.
 */
-dmat *psd1d(dmat *v, long lseg );
-dmat *psd1dt(dmat *v, long lseg, double dt);
+dmat *psd1d(const dmat *v, long lseg );
+dmat *psd1dt(const dmat *v, long lseg, double dt);
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
 dmat *psd_vibid(const dmat *psdin);
+dmat *psdt2s(const dmat *psdt, double vmean);
+dmat *psds2t(const dmat *psdt, double vmean);
+double psd_inte(const double *nu, const double *psd, long n);
+double psd_inte2(const dmat *psdin);
+dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstep);
+dmat* add_psd(const dmat *psd1, const dmat *psd2);
+void add_psd2(dmat **out, const dmat *in);
 #endif

@@ -16,16 +16,21 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-double dtrapz(const dmat *x, const dmat *y);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
-dmat* zernike(loc_t *loc, double D, int nr);
-dmat *zernike_cov_kolmogorov(int nr);
-dmat *diag_mod_cov(dmat *mz, dmat *cov);
-dmat *KL_kolmogorov(loc_t *loc, double D, int nr, int nr2);
-dmat *psd_vibid(const dmat *psdin);
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
-cell* readbin(const char *fn);
-void  writebin(const cell* dc, const char* fn);
-dmat* psd2time(const dmat *psdin, rand_t *seed, double dt, int nstepin);
-dmat *psdt2s(const dmat *psdt, double vmean);
-dmat *psds2t(const dmat *psdt, double vmean);
+/**
+   \file hyst.h
+   Routines for hysteresis modeling
+*/
+
+#ifndef SKYC_HYST_H
+#define SKYC_HYST_H
+
+#include "../math/mathdef.h"
+
+typedef struct HYST_T HYST_T;
+HYST_T *hyst_new(dmat *coeff, int naloc);
+void hyst_reset(HYST_T *hyst);
+void hyst_free(HYST_T *in);
+void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd);
+void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
+void hyst_calib(HYST_T *hyst, int i);
+#endif

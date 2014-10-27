@@ -27,7 +27,7 @@
 
 /**
    Contains routines to generate atmospheric turbulence screens
- */
+*/
 enum{
     T_VONKARMAN=0,
     T_FRACTAL,
@@ -48,7 +48,9 @@ static char *get_fnatm(GENATM_T *data){
     key=hashlittle(&data->ny, sizeof(long), key);
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
-
+    if(data->r0logpsds){
+	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->ny, key);
+    }
     char diratm[PATH_MAX];
     snprintf(diratm,PATH_MAX,"%s/.aos/atm", HOME);
     if(!exist(diratm)) mymkdir("%s", diratm);
@@ -68,18 +70,18 @@ static char *get_fnatm(GENATM_T *data){
 }
 
 /**
- * Geneate the screens sequentially and appends to file if fc is not
+ * Geneate the screens two layer at a time and appends to file if fc is not
  * NULL. Handles large screens well without using the full storage.
  */
-static void spect_screen_save(cellarr *fc, GENATM_T *data){
+static void spect_screen_do(cellarr *fc, GENATM_T *data){
     if(!data->spect){
 	info2("Generating spect..."); TIC; tic;
 	switch(data->method){
 	case T_VONKARMAN:
-	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,0.5);
+	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,-11./3., 0.5);
 	    break;
 	case T_BIHARMONIC:
-	    data->spect=turbpsd_full(data->nx,data->ny,data->dx,data->r0,data->l0,-2,0.5); 
+	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,-4.,0.5); 
 	    break;
 	case T_FRACTAL:
 	    break;
@@ -96,7 +98,6 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
     double dx=data->dx;
     dc->p[0] = dnew(nx, ny);
     dc->p[1] = dnew(nx, ny);
-    dcell_fft2plan(dc, -1, data->nthread);
     double *restrict p1=dc->p[0]->p;
     double *restrict p2=dc->p[1]->p;
     char header[1024];
@@ -106,6 +107,27 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
 	     ox, oy, dx, 0., 0., 0.);
     dc->p[0]->header=strdup(header);
     dc->p[1]->header=strdup(header);
+    //For create spatially varying r0
+    dmat *spect2=0;
+    dcell *dc2=0;
+    rand_t rstat2;//don't consume rstat
+    if(data->r0logpsds){
+	double slope=data->r0logpsds->p[0];
+	double strength=data->r0logpsds->p[1]*(5./3.);//strength of log(wt)
+	double fmin=0, fmax=0;
+	if(data->r0logpsds->nx>2){//low frequency end is converted to outscale
+	    fmin=data->r0logpsds->p[2];
+	}
+	if(data->r0logpsds->nx>3){
+	    fmax=data->r0logpsds->p[3];
+	}
+	spect2=spatial_psd(nx, ny, dx, strength, fmin, fmax, slope, 0.5);
+	dc2=cellnew(2,1);
+	dc2->p[0] = dnew(nx, ny);
+	dc2->p[1] = dnew(nx, ny);
+	seed_rand(&rstat2, rstat->statevec[0]);
+	writebin(spect2, "spect_r0log");
+    }
     for(int ilayer=0; ilayer<nlayer; ilayer+=2){
 	double tk1=myclockd();
 	for(long i=0; i<nx*ny; i++){
@@ -117,6 +139,21 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
 	dscale(dc->p[0], sqrt(wt[ilayer]));
 	if(ilayer+1<nlayer){
 	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
+	}
+	if(dc2){
+	    for(long i=0; i<nx*ny; i++){
+		dc2->p[0]->p[i]=randn(&rstat2)*spect2->p[i];/*real */
+		dc2->p[1]->p[i]=randn(&rstat2)*spect2->p[i];/*imag */
+	    }
+	    dcell_fft2(dc2, -1);
+	    dcwexp(dc2->p[0], 1);
+	    dcwm(dc->p[0], dc2->p[0]);
+	    writebin(dc2->p[0], "scale_%d", ilayer);
+	    if(ilayer+1<nlayer){
+		dcwexp(dc2->p[1], 1);
+		dcwm(dc->p[1], dc2->p[1]);
+		writebin(dc2->p[1], "scale_%d", ilayer+1);
+	    }
 	}
 	double tk3=myclockd();
 	if(fc){/*save to file. */
@@ -135,21 +172,48 @@ static void spect_screen_save(cellarr *fc, GENATM_T *data){
 	      ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy",tk4-tk3);
     }
     dcellfree(dc);
+    if(dc2){
+	dcellfree(dc2);
+	dfree(spect2);
+    }
 }
+
 /**
- *  Generate turbulence screens all in memory
+ * Generate one screen at a time and save to file
  */
-static void spect_screen_do(GENATM_T *data){
-    spect_screen_save(NULL, data);
+static void fractal_screen_do(cellarr *fc, GENATM_T *data){
+    const long nx=data->nx;
+    const long ny=data->ny;
+    if(fc){
+	dmat *screen = dnew(data->nx, data->ny);
+	for(int ilayer=0; ilayer<data->nlayer; ilayer++){
+	    drandn(screen, 1, data->rstat);
+	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
+	    fractal_do(screen->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
+	    remove_piston(screen->p, nx*ny);
+	    cellarr_dmat(fc, ilayer, screen);
+	}
+	dfree(screen);
+    }else{
+	map_t **screen=(map_t**)data->screen->p;
+	for(int ilayer=0; ilayer<data->nlayer; ilayer++){
+	    drandn((dmat*)screen[ilayer], 1, data->rstat);
+	}
+	OMPTASK_FOR(ilayer, 0, data->nlayer){
+	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
+	    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
+	    remove_piston(screen[ilayer]->p, nx*ny);
+	}
+	OMPTASK_END;
+    }
 }
+
 /**
  * Generates multiple screens from spectrum. Note that if data->share=1, the
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-static mapcell* create_screen(GENATM_T *data, 
-			   void (*funsave)(cellarr *fc, GENATM_T *data),
-			   void (*funmem)(GENATM_T *data)){
+static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM_T *data)){
     mapcell* screen;
     long nlayer=data->nlayer;
     char *fnatm=NULL;
@@ -182,7 +246,7 @@ static mapcell* create_screen(GENATM_T *data,
 		    int disable_save_save=disable_save;
 		    disable_save=0;//temporarily disable this feature.
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fntmp); 
-		    funsave(fc, data);
+		    atmfun(fc, data);
 		    disable_save=disable_save_save;
 		    cellarr_close(fc);
 		    if(rename(fntmp, fnatm)){
@@ -209,7 +273,7 @@ static mapcell* create_screen(GENATM_T *data,
 	    screen->p[ilayer]=mapnew(nx, ny, dx, dx, NULL);
 	}
 	data->screen=screen;
-	funmem(data);
+	atmfun(0, data);
     }
     return screen;
 }
@@ -218,7 +282,7 @@ static mapcell* create_screen(GENATM_T *data,
  */
 mapcell* vonkarman_screen(GENATM_T *data){
     data->method=T_VONKARMAN;
-    mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
+    mapcell *screen=create_screen(data, spect_screen_do);
     return(screen);
 }
 
@@ -227,59 +291,16 @@ mapcell* vonkarman_screen(GENATM_T *data){
  */
 mapcell* biharmonic_screen(GENATM_T *data){
     data->method=T_BIHARMONIC;
-    mapcell *screen=create_screen(data, spect_screen_save, spect_screen_do);
+    mapcell *screen=create_screen(data, spect_screen_do);
     return(screen);
-}
-/**
- * Generate one screen at a time and save to file
- */
-static void fractal_screen_save(cellarr *fc, GENATM_T *data){
-    long nx=data->nx;
-    long ny=data->ny;
-    dmat *dm = dnew(data->nx, data->ny);
-    for(int ilayer=0; ilayer<data->nlayer; ilayer++){
-	drandn(dm, 1, data->rstat);
-	double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	fractal_do(dm->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
-	remove_piston(dm->p, nx*ny);
-	cellarr_dmat(fc, ilayer, dm);
-    }
-    dfree(dm);
-}
-static void fractal_screen_thread(GENATM_T *data){
-    rand_t *rstat=data->rstat;
-    const double *wt=data->wt;
-    map_t **screen=(map_t**)data->screen->p;
-    long nx=screen[0]->nx;
-    long ny=screen[0]->ny;
-  repeat:
-    LOCK(data->mutex_ilayer);
-    int ilayer=data->ilayer;
-    data->ilayer++;
-    if(ilayer>=data->nlayer){
-	UNLOCK(data->mutex_ilayer);
-	return;
-    }
-    drandn((dmat*)screen[ilayer], 1, rstat);
-    UNLOCK(data->mutex_ilayer);
-    double r0i=data->r0*pow(wt[ilayer], -3./5.);
-    /*info("r0i=%g\n", r0i); */
-    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
-    remove_piston(screen[ilayer]->p, nx*ny);
-    goto repeat;
-}
-static void fractal_screen_do(GENATM_T *data){
-    PINIT(data->mutex_ilayer);
-    CALL(fractal_screen_thread, data, data->nthread,1);
 }
 
 /**
  * Generate Fractal screens. Not good statistics.
  */
-
 mapcell *fractal_screen(GENATM_T *data){
     data->method=T_FRACTAL;
-    return create_screen(data, fractal_screen_save, fractal_screen_do);
+    return create_screen(data, fractal_screen_do);
 }
 
 /**
@@ -321,45 +342,41 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
 }
 
 /**
- * Compute the turbulence spectrum at size nx*ny, with spacing dx. Notice that
- * the zero frequency component is in the corner psd->p[0].
+   Creates 2-d PSD at size nx*ny: psd=(strength*(f^2+L0^-2)^(slope/2))^power.
+   Zero frequency component is in the corner psd->p[0].
  */
-
-dmat *turbpsd_full(long nx,      /**<The size*/
-		   long ny,      /**<The size*/
-		   double dx,    /**<The sampling of spatial coordinate.*/
-		   double r0,    /**<The Fried parameter*/
-		   double L0,    /**<The outer scale*/
-		   double slope, /**<should be -11/6 for von karman or kolmogorov
-				    screens, or -2 for biharmonic screen (just
-				    testing only).*/
-		   double power  /**< optionally do a power of psd.*/
-		   ){
-    if(nx & 1 || ny & 1){
-	warning("Screen is odd size.");
-    }
-    slope*=power;
+dmat *spatial_psd(long nx,      /**<The size*/
+		  long ny,      /**<The size*/
+		  double dx,    /**<The sampling of spatial coordinate.*/
+		  double strength,    /**<The Fried parameter*/
+		  double fmin,  /**<Low end frequency cut off*/
+		  double fmax,  /**<High end frequency cut off*/
+		  double slope, /**<should be -11/3 for von karman or kolmogorov
+				   screens, or -4 for biharmonic screen (just
+				   testing only).*/
+		  double power  /**< optionally do a power of psd.*/
+    ){
+    if(slope==0) slope=-11./3.;//Kolmogorov
+    slope*=power/2.;
+    if(fmax==0) fmax=INFINITY;
     const double dfx=1./(nx*dx);
     const double dfy=1./(ny*dx);
-    const double dfx2=dfx*dfx;
-    const double L02=pow(L0,-2);
-    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy),power);
+    const double fmin2=fmin*fmin;
+    const double fmax2=fmax*fmax;
+    const double scrnstr=pow(strength*(dfx*dfy),power);
     const int nx2=nx/2;
     const int ny2=ny/2;
     dmat *psd=dnew(nx,ny);
-    for(int i=0;i<ny;i++){
-	double r2y=pow((i<ny2?i:i-ny)*dfy,2);/* to avoid fft shifting. */
-	double *psd1=psd->p+i*nx;
-	for(int j=0;j<nx2;j++){
-	    double r2x=j*j*dfx2;
-	    psd1[j] = pow(r2x+r2y+L02,slope)*scrnstr;
-	}
-	for(int j=nx2;j<nx;j++){
-	    double r2x=(j-nx)*(j-nx)*dfx2;
-	    psd1[j] = pow(r2x+r2y+L02,slope)*scrnstr;
+    for(int iy=0;iy<ny;iy++){
+	double r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
+	for(int ix=0;ix<nx;ix++){
+	    double r2=pow((ix<nx2?ix:ix-nx)*dfx,2)+r2y;
+	    if(r2<=fmax2){
+		psd->p[ix+iy*nx] = pow(r2+fmin2,slope)*scrnstr;
+	    }
 	}
     }
-    if(!isfinite(L0)) psd->p[0]=0;  //remove infinite piston mode if l0 is infinity.
+    if(fmin==0) psd->p[0]=0;  //remove infinite piston mode if fmin is zero (L0 is inf).
     return psd;
 }
 

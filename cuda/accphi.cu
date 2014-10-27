@@ -144,10 +144,6 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
 void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms, int iseed, int isim){
     if(!atmc) return;
     map_t **atm=atmc->p;
-    if(parms->atm.evolve){
-	TO_IMPLEMENT;
-	/*test whether screen changed. transfer if changed. */
-    }
     const int nps=parms->atm.nps;
     static int nx0=0,ny0=0;
     static int iseed0=-1;

@@ -551,7 +551,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     if(parms->nsurf>0){
 	setup_surf_perp(parms, aper, powfs, recon);
     }
-    toc("surf prop");
+    toc2("surf prop");
     /**
        note about idealfit: No need to pass surfaces to DM fitting
        routine. These are already contained in dm_ncpa which got to add to the

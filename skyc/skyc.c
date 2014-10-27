@@ -74,11 +74,7 @@ int main(int argc, const char *argv[]){
     free(arg);
     THREAD_POOL_INIT(parms->skyc.nthread);
     /*Loads the main software*/
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single
-#endif
-    skysim(parms);
+    OMPTASK_SINGLE skysim(parms);
     free_parms(parms);
     free(dirsetup);
     free(dirstart);

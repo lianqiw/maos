@@ -80,11 +80,7 @@ void maos_setup(const PARMS_T *parms){
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
 	setup_recon_dm(recon, parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied if(NTHREAD>1)
-#endif
+	OMPTASK_SINGLE
 	{
 	    setup_surf(parms, aper, powfs, recon);
 	    /*set up physical optics powfs data*/
@@ -123,12 +119,8 @@ void maos_setup(const PARMS_T *parms){
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied if(NTHREAD>1)
-#endif
-	setup_recon_mvm(parms, recon, powfs);
+	OMPTASK_SINGLE
+	    setup_recon_mvm(parms, recon, powfs);
     }
     /*
       Before entering real simulation, make sure to delete all variables that
@@ -146,7 +138,8 @@ void maos_setup(const PARMS_T *parms){
    \callgraph */
 void maos(const PARMS_T *parms){
     maos_setup(parms);
-    maos_sim();
+    OMPTASK_SINGLE
+	maos_sim();
     maos_reset();
 }
 

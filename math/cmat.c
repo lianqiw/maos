@@ -597,7 +597,7 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     T cy=EXPI(-2*M_PI*duy*sy);
     PMAT(otf, potf);
     PMAT(otfin, potfin);
-    warning_once("Consider caching ux, uy\n");
+    //warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
 	ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){

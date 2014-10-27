@@ -268,7 +268,7 @@ X(mat) *X(ffttreat)(X(mat) *A){
  * Create a fftw plan based on a 2 element X(mat) cell array that contains
  * real/imaginary parts respectively
  */
-void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
+static void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
     assert(abs(dir)==1);
     if(dc->nx*dc->ny!=2){
 	error("X(cell) of two elements is required\n");
@@ -298,7 +298,10 @@ void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
     dc->fft=fft;
 }
 void X(cell_fft2)(X(cell) *dc, int dir){
-    assert(dc->fft && abs(dir)==1);
+    assert(abs(dir)==1);
+    if(!dc->fft || !dc->fft->plan[dir+1]){
+	X(cell_fft2plan)(dc, dir, NTHREAD);
+    }
     FFTW(execute)(dc->fft->plan[dir+1]);
 }
 

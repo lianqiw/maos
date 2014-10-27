@@ -200,7 +200,7 @@ static void test_stfun(){
     /*exit(0); */
     {
 	stfun_t *data=stfun_init(nx, ny, NULL);
-	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100, 0, 0.5);
 	cmat *atm=cnew(nx, ny);
 	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
@@ -269,7 +269,7 @@ static void test_psd(){
 	writebin(hattot, "PSD_fractal");
     }
     {
-	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100, 0, 0.5);
 	writebin(spect, "spect");
 	cmat *hat=cnew(nx*ratio, ny*ratio);
 	//cfft2plan(hat, -1);
@@ -350,7 +350,7 @@ static void test_cxx(){
     }
     {
 	dmat *cxx=dnew(N*N,N*N);
-	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100, 0, 0.5);
 	spect->p[0]=spect->p[1];
 	cmat *atm=cnew(nx, ny);
 	//cfft2plan(atm, -1);

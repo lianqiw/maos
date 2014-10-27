@@ -7,14 +7,14 @@ int main(){
     rand_t bstat;
     seed_rand(&bstat,1);
     seed_rand(&rstat,lrand(&bstat));
-    int nthread=6;
     int nlayer=2;
     double wt[7]={0.2887, 0.17795, 0.06602, 0.07833, 0.1405, 0.1216, 0.1269};
     double r0=0.1987; 
     double L0=30;
     double dx=1./64.;
     int m=4096*2;
-    THREAD_POOL_INIT(nthread);
+    NTHREAD=6;
+    THREAD_POOL_INIT(NTHREAD);
     GENATM_T data;
     memset(&data, 0, sizeof(GENATM_T));
     data.rstat=&rstat;
@@ -25,8 +25,6 @@ int main(){
     data.l0=L0;
     data.wt=wt;
     data.nlayer=nlayer;
-    data.nthread=nthread;
     mapcell *map=vonkarman_screen(&data);
-    /*map_t **map=genatm_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread); */
     writebin(map, "atm.bin");
 }

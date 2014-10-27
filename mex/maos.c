@@ -124,12 +124,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		while(nstep--){
 		    if(isim<parms->sim.end){
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied if(NTHREAD>1)
-#endif
-			maos_isim(isim);
+			OMPTASK_SINGLE maos_isim(isim);
 			isim++;
 		    }else{//one seed finished
 			free_simu(simu);simu=0;

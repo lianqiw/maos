@@ -609,9 +609,10 @@ int readcfg_dblarr(double **ret, const char *format,...){
  */
 dmat *readcfg_dmat_do(int n, char *key){
     double *val=NULL;
-    int nx, ny;
     char *str=getrecord(key, 1)->data;
-    if((str[0]<='Z' && str[0]>='A')
+    if(!str){
+	return 0;
+    }else if((str[0]<='Z' && str[0]>='A')
        || (str[0]<='z' && str[0]>='a')
        ||(str[0]=='"' || str[0]=='\'')){
 	char *fn=strextract(str);
@@ -619,6 +620,7 @@ dmat *readcfg_dmat_do(int n, char *key){
 	free(fn);
     }else{
         double **pval=&val;
+	int nx, ny;
 	readstr_numarr((void**)pval, n, &nx, &ny,T_DBL, str);
 	dmat *res=0;
 	if(!nx || !ny) {

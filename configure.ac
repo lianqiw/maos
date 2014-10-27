@@ -733,7 +733,7 @@ if test "$with_matlab" != "no" ;then
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-	LIBMEX+=" $LAPACK -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
+	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
 	LDMEX="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else

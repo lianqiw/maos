@@ -36,6 +36,7 @@
 #include "fractal.h"
 #include "stfun.h"
 #include "servo.h"
+#include "hyst.h"
 #include "slaving.h"
 #include "mkdtf.h"
 #include "psd.h"

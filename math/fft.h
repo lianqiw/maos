@@ -33,7 +33,6 @@ typedef struct fft_t fft_t;
     void X(fft2s)(X(mat) *A, int dir);				\
     void X(fft2partial)(X(mat) *A, int ncomp, int dir);		\
     X(mat) *X(ffttreat)(X(mat) *A);				\
-    void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads);	\
     void X(cell_fft2)(X(cell) *dc, int dir);			\
     void X(fft1plan_r2hc)(X(mat) *out, int dir);		\
     void X(fft1)(X(mat) *A, int dir);

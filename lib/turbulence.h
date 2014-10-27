@@ -21,7 +21,7 @@
 /**
    \file turbulence.h
    Contains routines to generate atmospheric turbulence screens
- */
+*/
 #include "../math/mathdef.h"
 typedef struct GENATM_T{
     rand_t *rstat;   /**<The random stream*/
@@ -34,13 +34,11 @@ typedef struct GENATM_T{
     long nlayer;     /**<The number of layers*/
     long ninit;      /**<In Fractal method, the size of initial screen*/
     long share;      /**<Use file backend for sharing of atmosphere*/
-    long nthread;    /**<Number of threads to use*/
+    dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)*/
     /*The following are private data. do not set when call. */
     mapcell *screen;  /**<The destination screen pointer*/
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
-    long ilayer;     /**<Current layer*/
     long method;     /**<The method*/
-    pthread_mutex_t mutex_ilayer;/**<Mutex lock*/
 }GENATM_T;
 
 mapcell* genatm_from_spect(GENATM_T *data);
@@ -48,8 +46,15 @@ mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);
 mapcell *fractal_screen(GENATM_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
-dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
-#define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);
+dmat *spatial_psd(long nx, long ny, double dx, double strength, 
+		  double fmin, double fmax, double slope, double power);
+INLINE double r02strength(double r0){
+    return 0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
+}
+INLINE dmat* turbpsd(long nx, long ny, double dx, double r0, double l0, double slope, double power){
+    return spatial_psd(nx, ny, dx, r02strength(r0), 1./l0, INFINITY, slope, power);
+}
+
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_greenwood(double r0, int nps, double *ws, double *wt);
 double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);

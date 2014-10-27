@@ -383,7 +383,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	recon->actslave=slaving(recon->aloc, recon->actcpl,
 				recon->fitNW, recon->actstuck,
 				recon->actfloat, parms->fit.actthres, 1./recon->floc->nloc);
-	toc("slaving");
+	toc2("slaving");
 	if(parms->save.setup){
 	    writebin(recon->actcpl, "%s/actcpl", dirsetup);
 	    writebin(recon->actslave,"%s/actslave",dirsetup);

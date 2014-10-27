@@ -52,16 +52,4 @@ dmat* servo_test(dmat *mideal, double dtngs, int dtrat, dmat* sigma2n, dmat *gai
 void servo_reset(SERVO_T *st);
 void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
-double psd_inte(const double *nu, const double *psd, long n);
-double psd_inte2(const dmat *psdin);
-dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstep);
-dmat* add_psd(const dmat *psd1, const dmat *psd2);
-void add_psd2(dmat **out, const dmat *in);
-typedef struct HYST_T HYST_T;
-HYST_T *hyst_new(dmat *coeff, int naloc);
-void hyst_reset(HYST_T *hyst);
-void hyst_free(HYST_T *in);
-void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd);
-void hyst_dcell(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
-void hyst_calib(HYST_T *hyst, int i);
 #endif

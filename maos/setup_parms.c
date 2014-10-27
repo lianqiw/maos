@@ -99,7 +99,8 @@ void free_parms(PARMS_T *parms){
     lfree(parms->atm.overx);
     lfree(parms->atm.overy);
     lfree(parms->atmr.indps);
-
+    dfree(parms->atm.r0logpsdt);
+    dfree(parms->atm.r0logpsds);
     dfree(parms->evl.thetax);
     dfree(parms->evl.thetay);
     dfree(parms->evl.wvl);
@@ -645,12 +646,12 @@ static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
     READ_INT(atm.fractal);
-    READ_INT(atm.evolve);
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
     READ_INT(atm.share);
     READ_INT(atm.r0evolve);
-    parms->atm.r0logpsd=readcfg_dmat("atm.r0logpsd");
+    parms->atm.r0logpsdt=readcfg_dmat("atm.r0logpsdt");
+    parms->atm.r0logpsds=readcfg_dmat("atm.r0logpsds");
     parms->atm.size=readcfg_dmat_n(2, "atm.size");
     parms->atm.ht=readcfg_dmat("atm.ht");
     parms->atm.nps=parms->atm.ht->nx;
@@ -1686,13 +1687,8 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	warning("There is no ground layer\n");
     }
     parms->atm.frozenflow = (parms->atm.frozenflow || parms->sim.closeloop);
-    if(parms->atm.fractal && !parms->atm.evolve && parms->atm.frozenflow){
-	warning("atm.fractal requires atm.evolve=1, changed\n");
-	parms->atm.evolve=1;
-    }
-    if((!parms->atm.frozenflow || parms->dbg.atm>0) && parms->atm.evolve){
-	warning("Disable atm.evolve since there is no frozenflow or in debug atm mode.\n");
-	parms->atm.evolve=0;/*disable evolve in open loop mode. */
+    if(!parms->atm.frozenflow || parms->dbg.atm>0){
+	parms->atm.r0evolve=0;/*disable r0 evolution*/
     }
     if(parms->dbg.atm==0){
 	if(parms->atm.fractal){

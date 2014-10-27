@@ -400,7 +400,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    dcellfree(powfs[ipowfs].saa_tel); 
 	    dcellfree(powfs[ipowfs].amp_tel);
 	}else{
-	    toc("misreg.tel2wfs");
+	    toc2("misreg.tel2wfs");
 	}
     }/*if misreg */
     /*Go over all the subapertures, calculate the normalized
@@ -489,7 +489,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(!isset){
 	    cellfree(powfs[ipowfs].loc_dm);
 	}else{
-	    toc("misreg.dm2wfs");
+	    toc2("misreg.dm2wfs");
 	}
     }
     if(parms->save.setup){
@@ -2069,7 +2069,7 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
 	    error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
 	}
     }
-    toc("setup_powfs_init");
+    toc2("setup_powfs_init");
     return powfs;
 }
 void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
@@ -2101,7 +2101,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	    setup_powfs_mtch(powfs,parms,ipowfs);
 	}
     }/*ipowfs */
-    toc("setup_powfs_phy");
+    toc2("setup_powfs_phy");
 }
 void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     free_powfs_geom(powfs, parms, ipowfs);

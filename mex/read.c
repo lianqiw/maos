@@ -5,22 +5,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include "io.h"
-mxArray *INVALID=(mxArray*)1;
+mxArray *SKIPPED=(mxArray*)(1);
 static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     /*
       if start!=0 || howmany!=0 and data is cell, will only read cell from start to start+howmany
       if data is not cell and start==-1, will skip the data.
       Only the first call to readdata will possibly have howmany!=0
      */
-    uint32_t magic;
-    mxArray *out=NULL;
-    long nx,ny;
     if(fp->eof) return NULL;
     header_t header2;
     if(read_header2(&header2, fp)){
 	return NULL;
     }
-    magic=header2.magic;
+    uint32_t magic=header2.magic;
     if(magic==0){//end of file or empty file
 	fp->eof=1;
 	return NULL;
@@ -32,15 +29,15 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    *header=mxCreateString("");
     }
     free(header2.str); header2.str=NULL;
-    nx=header2.nx;
-    ny=header2.ny;
+    long nx=header2.nx;
+    long ny=header2.ny;
     int start_save=start;
     if(iscell(magic)){
-	if(iscell(magic) && start!=-1 && howmany==0){
+	if(start!=-1 && howmany==0){
 	    if(start!=0){
 		error("Invalid use\n");
 	    }
-	    howmany=nx*ny;
+	    howmany=nx*ny-start;
 	}
     }else if(fp->isfits){
 	if(howmany!=0){
@@ -56,6 +53,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     }
     int iscell=0;
     if(fp->eof) return NULL;
+    mxArray *out=NULL;
     switch(magic){
     case MCC_ANY:
     case MCC_DBL:
@@ -82,7 +80,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		if(fp->eof){
 		    break;
 		}
-		if(tmp>0){
+		if(tmp && tmp!=SKIPPED){
 		    mxSetCell(out, ix, tmp);
 		}
 		if(header3){
@@ -235,7 +233,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    if(zfseek(fp, sizeof(double)*nx*ny, SEEK_CUR)){
 		error("Seek failed\n");
 	    }
-	    out=INVALID;
+	    out=SKIPPED;
 	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
 	    if(nx!=0 && ny!=0){
@@ -248,7 +246,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    if(zfseek(fp, sizeof(float)*nx*ny, SEEK_CUR)){
 		error("Seek failed\n");
 	    }
-	    out=INVALID;
+	    out=SKIPPED;
 	}else{
 	    mwSize nxy[2]={nx,ny};
 	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxREAL);
@@ -274,7 +272,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		if(zfseek(fp, byte*nx*ny, SEEK_CUR)){
 		    error("Seek failed\n");
 		}
-		out=INVALID;
+		out=SKIPPED;
 	    }else{
 		out=mxCreateNumericMatrix(nx,ny,id,mxREAL);
 		if(nx!=0 && ny!=0){
@@ -290,7 +288,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    if(zfseek(fp, 16*nx*ny, SEEK_CUR)){
 		error("Seek failed\n");
 	    }
-	    out=INVALID;
+	    out=SKIPPED;
 	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
@@ -312,7 +310,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    if(zfseek(fp, 8*nx*ny, SEEK_CUR)){
 		error("Seek failed\n");
 	    }
-	    out=INVALID;
+	    out=SKIPPED;
 	}else{
 	    mwSize nxy[2]={nx, ny};
 	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxCOMPLEX);
@@ -347,7 +345,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    icell++;
 	    outarr=realloc(outarr, sizeof(mxArray*)*icell);
 	    headerarr=realloc(headerarr, sizeof(mxArray*)*icell);
-	    if(out==INVALID) out=NULL;
+	    if(out==SKIPPED) out=NULL;
 	    outarr[icell-1]=out;
 	    if(header) headerarr[icell-1]=*header;
 	    int start2=0;
@@ -384,21 +382,23 @@ static char *mx2str(const mxArray *A){
     mxGetString(A, fn, nlen);
     return fn;
 }
-
+void usage(){
+    mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,howmany] [, start]). [] means optional\n");
+}
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
     char *fn=NULL;
     int start=0, howmany=0;
     switch(nrhs){
     case 3:
-	howmany=(long)mxGetScalar(prhs[2]);//do not break
+	start=(long)mxGetScalar(prhs[2]);//starting block to read. matlab index.
     case 2:
-	start=(long)mxGetScalar(prhs[1]);//starting block to read. matlab index.
+	howmany=(long)mxGetScalar(prhs[1]);//do not break
     case 1:
 	fn=mx2str(prhs[0]);
 	break;
     default:
-	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,start] [,howmany]). [] means optional\n");
+	usage();
     }
     if(howmany>0){
 	if(start>0){
@@ -415,12 +415,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     }
     free(fn);
     switch(nlhs){
+    case 0:
     case 1:
 	plhs[0]=readdata(fp, NULL, start, howmany); break;
     case 2:
 	plhs[0]=readdata(fp, &plhs[1], start, howmany); break;
     default:
-	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,start] [,howmany]). [] means optional\n");
+	usage();
     }
     if(start==0 && howmany==0){
 	int res=zfeof(fp);

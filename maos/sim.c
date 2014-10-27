@@ -40,6 +40,9 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
+#if HAVE_NUMA_H
+#include <numa.h>
+#endif
 extern int PARALLEL;
 extern int draw_single;
 static double tk_0;
@@ -259,15 +262,13 @@ void maos_sim(){
     info2("PARALLEL=%d\n", PARALLEL);
     if(simstart>=simend) return;
     double restot=0; long rescount=0;
-#if _OPENMP>=200805
-#pragma omp parallel
-#pragma omp single 
-#pragma omp task untied if(NTHREAD>=1)
-#endif
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	while(!(simu=maos_iseed(iseed))){
 	    iseed++;
 	}
+#ifdef HAVE_NUMA_H
+	numa_set_localalloc();
+#endif
 	for(int isim=simstart; isim<simend; isim++){
 	    maos_isim(isim);
 	    if(parms->sim.pause){

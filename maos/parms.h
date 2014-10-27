@@ -36,7 +36,8 @@ typedef struct ATM_CFG_T{
     double l0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
     double hmax;  /**<maximum in ht*/
-    dmat *r0logpsd; /**<[alpha beta]: PSD of log(r0) is beta*f^alpha. f is in hz.*/
+    dmat *r0logpsds; /**<[alpha beta]: temporal PSD of log(r0) is beta*f^alpha. f is in hz.*/
+    dmat *r0logpsdt; /**<[alpha beta]: spatial  PSD of log(r0) is beta*f^alpha. f is in m.*/
     dmat *ht;   /**<height of each layer*/
     dmat *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     dmat *ws;   /**<wind speed of each layer*/
@@ -56,8 +57,6 @@ typedef struct ATM_CFG_T{
     int nxn;      /**<minimum turbulence screen size along to cover meta pupil*/
     int nyn;      /**<minimum turbulence screen size along to cover meta pupil*/
     int fractal;  /**<1: Use fractal method to generate atmosphere screen.*/
-    int evolve;   /**<evolve the atm in additional to frozen flow. developed for
-		     fractal since it does not wrap.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/

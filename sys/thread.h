@@ -217,8 +217,18 @@ INLINE int atomicadd(int *ptr, int val){
     DO_PRAGMA(omp task untied extra)			\
     for(long index=omp_start; index<omp_end; index++)
 #define OMPTASK_END } _Pragma("omp taskwait")
+
 #else
 #define OMPTASK_FOR(index,start,end, extra...)	\
     for(long index=start; index<end; index++)
 #define OMPTASK_END 
+#endif
+
+#if _OPENMP >= 200805
+#define OMPTASK_SINGLE				\
+    DO_PRAGMA(omp parallel)			\
+    DO_PRAGMA(omp single )			\
+    DO_PRAGMA(omp task untied if(NTHREAD>1))	
+#else
+#define OMPTASK_SINGLE
 #endif

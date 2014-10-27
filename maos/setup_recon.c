@@ -911,7 +911,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		long ny=recon->xmap->p[ips]->ny;
 		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc->p[ips]->dx, r0i,
-				       recon->l0,-1);
+				       recon->l0, 0, -1);
 		dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
 	    }
 	}

@@ -52,7 +52,10 @@ static mapcell *genatm_do(SIM_T *simu){
 	    gs->nlayer = atm->nps;
 	    gs->ninit  = atm->ninit;
 	    gs->share  = atm->share;
-	    gs->nthread= NTHREAD;
+	    if((parms->atm.r0evolve & 1) == 1){
+		info("Scaling turbulence screen spatially\n");
+		gs->r0logpsds=atm->r0logpsds;
+	    }
 	}
 	info2("Generating Atmospheric Screen...\n");
 	tic;
@@ -242,8 +245,9 @@ void genatm(SIM_T *simu){
     }
   
     info2("After genatm:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->atm.r0evolve){
-	simu->atmscale=psd2time(parms->atm.r0logpsd, simu->atm_rand, parms->sim.dt, parms->sim.end);
+    if((parms->atm.r0evolve&2)==2){
+	info("Scaling OPD temporarily\n");
+	simu->atmscale=psd2time(parms->atm.r0logpsdt, simu->atm_rand, parms->sim.dt, parms->sim.end);
 	const double r02wt=(-5./3.);//layer weight is prop to r0^(-5/3)
 	for(long i=0; i<simu->atmscale->nx; i++){
 	    simu->atmscale->p[i]=exp((simu->atmscale->p[i])*r02wt);//convert to cn2dh
