@@ -60,7 +60,11 @@ void X(fft_free_plan)(fft_t *fft){
 static void FFTW_THREADS(int n){
 #if USE_FFTW_THREADS == 1
     FFTW(plan_with_nthreads)(n);
-    info2("Creating fft plan with %d threads ...", n);
+    if(n>1){
+	info2("Creating fft plan with %d threads ...", n);
+    }else{
+	info2("Reset fft to %d threads\n", n);
+    }
 #endif
 }
 /**

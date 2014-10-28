@@ -106,15 +106,6 @@ void maos_isim(int isim){
     simu->isim=isim;
     simu->status->isim=isim;
     sim_update_etf(simu);
-#if _OPENMP>=200805
-    static int omp_warn=0;
-    if(NTHREAD>1 && !omp_warn){
-	omp_warn=1;
-	if(!omp_in_parallel()){
-	    warning("Not in parallel region. active_level=%d\n", omp_get_active_level());
-	}
-    }
-#endif
     if(parms->atm.frozenflow){
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
@@ -127,86 +118,89 @@ void maos_isim(int isim){
 	/*re-seed the atmosphere in case atm is loaded from shm/file */
 	seed_rand(simu->atm_rand, lrand(simu->init_rand));
     }
-    if(parms->sim.dmproj){
-	/* teporarily disable FR.M so that Mfun is used.*/
-	dspcell *FRM=recon->FR.M; recon->FR.M=NULL; 
-	muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
-	recon->FR.M=FRM;/*set FR.M back*/
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
-	}
-	if(!parms->fit.square){
-	    /* Embed DM commands to a square array for fast ray tracing */
-	    for(int idm=0; idm<parms->ndm; idm++){
-		loc_embed(simu->dmprojsq->p[idm], recon->aloc->p[idm], simu->dmproj->p[idm]->p);
+    OMPTASK_SINGLE
+    {
+	if(parms->sim.dmproj){
+	    /* teporarily disable FR.M so that Mfun is used.*/
+	    dspcell *FRM=recon->FR.M; recon->FR.M=NULL; 
+	    muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
+	    recon->FR.M=FRM;/*set FR.M back*/
+	    if(parms->save.dm){
+		cellarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
 	    }
-	}
+	    if(!parms->fit.square){
+		/* Embed DM commands to a square array for fast ray tracing */
+		for(int idm=0; idm<parms->ndm; idm++){
+		    loc_embed(simu->dmprojsq->p[idm], recon->aloc->p[idm], simu->dmproj->p[idm]->p);
+		}
+	    }
 #if USE_CUDA
-	if(parms->gpu.evl || parms->gpu.wfs){
-	    gpu_dmproj2gpu(simu->dmprojsq, NULL);
-	}
+	    if(parms->gpu.evl || parms->gpu.wfs){
+		gpu_dmproj2gpu(simu->dmprojsq, NULL);
+	    }
 #endif
-    }
-    extern int NO_RECON, NO_WFS, NO_EVL;
-    if(PARALLEL){
-	/*
-	  We do the big loop in parallel to make better use the
-	  CPUs. Notice that the reconstructor is working on grad from
-	  last time step so that there is no confliction in data access.
-	*/
-	/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
-	long group=0;
-	if(parms->gpu.evl && !NO_EVL){
-	    //Queue tasks on GPU, no stream sync is done
-	    QUEUE_THREAD(group, simu->perf_evl_pre, 0);
 	}
-	if(!parms->tomo.ahst_idealngs && parms->gpu.wfs && !NO_WFS){
-	    //task for each wfs
-	    QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
-	}
-	if(!NO_RECON){
-	    //don't put this first. It has cpu overhead in computing gradol
-	    QUEUE(group, reconstruct, simu, 1, 0);
-	}
-	if(!NO_EVL){
-	    if(parms->gpu.evl){
-		//wait for GPU tasks to be queued before calling sync
-		WAIT(group);
+	extern int NO_RECON, NO_WFS, NO_EVL;
+	if(PARALLEL){
+	    /*
+	      We do the big loop in parallel to make better use the
+	      CPUs. Notice that the reconstructor is working on grad from
+	      last time step so that there is no confliction in data access.
+	    */
+	    /*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
+	    long group=0;
+	    if(parms->gpu.evl && !NO_EVL){
+		//Queue tasks on GPU, no stream sync is done
+		QUEUE_THREAD(group, simu->perf_evl_pre, 0);
 	    }
-	    QUEUE(group, perfevl, simu, 1, 0);
-	}
-	if(!NO_WFS){
-	    if(parms->tomo.ahst_idealngs || (parms->gpu.wfs && !parms->gpu.evl)){
-		//in ahst_idealngs mode, weight for perfevl to finish.
-		//otherwise, wait for GPU tasks to be queued before calling sync
-		WAIT(group);
+	    if(!parms->tomo.ahst_idealngs && parms->gpu.wfs && !NO_WFS){
+		//task for each wfs
+		QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
 	    }
-	    QUEUE(group, wfsgrad, simu, 1, 0);
-	}
-	if(!NO_RECON){
-	    //wait for all tasks to finish before modifying dmreal
+	    if(!NO_RECON){
+		//don't put this first. It has cpu overhead in computing gradol
+		QUEUE(group, reconstruct, simu, 1, 0);
+	    }
+	    if(!NO_EVL){
+		if(parms->gpu.evl){
+		    //wait for GPU tasks to be queued before calling sync
+		    WAIT(group);
+		}
+		QUEUE(group, perfevl, simu, 1, 0);
+	    }
+	    if(!NO_WFS){
+		if(parms->tomo.ahst_idealngs || (parms->gpu.wfs && !parms->gpu.evl)){
+		    //in ahst_idealngs mode, weight for perfevl to finish.
+		    //otherwise, wait for GPU tasks to be queued before calling sync
+		    WAIT(group);
+		}
+		QUEUE(group, wfsgrad, simu, 1, 0);
+	    }
+	    if(!NO_RECON){
+		//wait for all tasks to finish before modifying dmreal
+		WAIT(group);
+		shift_grad(simu);/*before filter() */
+		filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
+	    }
 	    WAIT(group);
-	    shift_grad(simu);/*before filter() */
-	    filter_dm(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
-	}
-	WAIT(group);
-    }else{/*do the big loop in serial mode. */
-	if(parms->sim.closeloop){
-	    if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-	    if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
-	    if(!NO_RECON) {
-		reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
-		shift_grad(simu);
-		filter_dm(simu);
+	}else{/*do the big loop in serial mode. */
+	    if(parms->sim.closeloop){
+		if(!NO_EVL) perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
+		if(!NO_WFS) wfsgrad(simu);/*output grads to gradcl, gradol */
+		if(!NO_RECON) {
+		    reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
+		    shift_grad(simu);
+		    filter_dm(simu);
+		}
+	    }else{/*in OL mode,  */
+		if(!NO_WFS) wfsgrad(simu);
+		if(!NO_RECON) {
+		    shift_grad(simu);
+		    reconstruct(simu);
+		    filter_dm(simu);
+		}
+		if(!NO_EVL) perfevl(simu);
 	    }
-	}else{/*in OL mode,  */
-	    if(!NO_WFS) wfsgrad(simu);
-	    if(!NO_RECON) {
-		shift_grad(simu);
-		reconstruct(simu);
-		filter_dm(simu);
-	    }
-	    if(!NO_EVL) perfevl(simu);
 	}
     }
     double ck_end=myclockd();

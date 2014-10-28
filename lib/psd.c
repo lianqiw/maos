@@ -271,6 +271,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
 	long i0=1, imax=nstep;
 	if(psdin->nx>2){
 	    i0=(long)round(psdin->p[2]/df);
+	    if(i0<1) i0=1;
 	}
 	if(psdin->nx>3){
 	    imax=(long)round(psdin->p[3]/df);

@@ -1031,6 +1031,13 @@ static void init_simu_wfs(SIM_T *simu){
 	    simu->dither[iwfs]=calloc(1, sizeof(DITHER_T));
 	}
     }
+    if(simu->recon->cn2est && !disable_save){
+	simu->cn2est=dcellnew(2,1);
+	int ncn2=(parms->sim.end-1)/parms->cn2.step;
+	long nnx[2]={ncn2, ncn2};
+	long nny[2]={1, recon->cn2est->htrecon->nx};
+	simu->cn2est=dcellnew_mmap(2, 1, nnx, nny, NULL, NULL, "Rescn2_%d.bin", seed);
+    }
 }
 
 static void init_simu_dm(SIM_T *simu){
@@ -1435,6 +1442,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->gradlastol);
     dcellfree(simu->opdr);
     dcellfree(simu->gngsmvst);
+    dcellfree(simu->cn2est);
     dcellfree(simu->dmreal);
     dcellfree(simu->dmpsol);
     dfree(simu->ttmreal);

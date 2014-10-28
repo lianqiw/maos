@@ -117,7 +117,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     /*determine the layer height used for tomography. */
     cn2est->htrecon=ddup(htrecon);
     cn2est->wtrecon=cellnew(1,1);
-    cn2est->wtrecon->p[0]=dnew_mmap(cn2est->htrecon->nx,1,NULL,"Res_Cn2_wtrecon");
+    cn2est->wtrecon->p[0]=dnew(cn2est->htrecon->nx,1);
     {
 	info2("htrecon=[");
 	for(int iht=0; iht<cn2est->htrecon->nx; iht++){
@@ -195,9 +195,9 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	      iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);
     }/*iwfspair */
     /*stores estimated weight of layers during simulation and output to file finally. */
-    cn2est->wt=dcellnew_mmap(nwfspair, 1, nhtsx, nhtsy, NULL, NULL, "Res_Cn2_wt");
+    cn2est->wt=dcellnew3(nwfspair, 1, nhtsx, nhtsy);
     /*stores estimated r0 during simulation */
-    cn2est->r0=dnew_mmap(nwfspair,1,NULL,"Res_Cn2_r0");
+    cn2est->r0=dnew(nwfspair,1);
     /*
       Now we start to build the model that will be used to estimate Cn2 from the
       cross-covariance.
@@ -440,9 +440,9 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	dmat *ht=cn2est->ht->p[iwfspair];
 	int nlayer=wt->nx;
 	if(CN2EST_NO_NEGATIVE){
-	    //The following tries to remove negative heights. 
-	    //This should not be done because noise causing small negative and postive values. 
-	    //If we simply remove negative values, it will bias the r0.
+	    /*The following tries to remove negative heights. 
+	      This should not be done because noise causing small negative and postive values. 
+	      If we simply remove negative values, it will bias the r0.*/
 	    dmat *Pnk=cn2est->Pnk->p[iwfspair+iwfspair*nwfspair];
 	    dmat *Pnkwt=dnew(nlayer, 1);//to remove columns in Pnk if negative weights are returned 
 	    //number of negative layers found. 

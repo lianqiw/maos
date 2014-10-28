@@ -495,7 +495,7 @@ typedef struct SIM_T{
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
-
+    dcell *cn2est;     /**<Cn2 Estimation Result*/
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/
@@ -556,6 +556,7 @@ typedef struct SIM_T{
     dmat *zoomint;    /**<Trombone integrator*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
     dcell *lgsfocus;   /**<LGS focus error time history*/
+
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
@@ -568,9 +569,11 @@ typedef struct SIM_T{
     dcell *evlpsfmean_ngsr;    /**<science field psf time average with NGS mode removed.*/
     dcell *evlopdcov_ngsr;     /**<science field opd covariance with NGS mode removed.*/
     dcell *evlopdmean_ngsr;    /**<science field opd mean with NGS mode removed.*/
+
     /*Optinal telemetry saving for PSF reconstruction.*/
     dcell *ecov;       /**<covariance of Hx*x-Ha*a for science directions.*/
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
+
     /*save performance results to file using mmap*/
     dcell *clep;       /**<CL error per direction.*/
     dcell *clmp;       /**<CL mode coefficient per direction.*/

@@ -138,8 +138,7 @@ void maos_setup(const PARMS_T *parms){
    \callgraph */
 void maos(const PARMS_T *parms){
     maos_setup(parms);
-    OMPTASK_SINGLE
-	maos_sim();
+    maos_sim();
     maos_reset();
 }
 

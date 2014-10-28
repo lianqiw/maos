@@ -124,7 +124,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}
 		while(nstep--){
 		    if(isim<parms->sim.end){
-			OMPTASK_SINGLE maos_isim(isim);
+			maos_isim(isim);
 			isim++;
 		    }else{//one seed finished
 			free_simu(simu);simu=0;

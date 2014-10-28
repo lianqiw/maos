@@ -387,8 +387,6 @@ fi
 #AC_F77_FUNC(dposv)
 #download LIBNANE file.tar.bz2 [outdir]
 download(){
-    echo The $1 library is not available in the system
-    echo Will download one from the website.
     fn="$2"
     if test -n "$3" ;then
 	OUTDIR="$3"
@@ -399,6 +397,7 @@ download(){
     retry=0
     while test ${retry} -le 2 ;do
 	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
+	    echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
 	    success=0
 	    for BASEURL in $BASEURLS ; do
 		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
@@ -414,6 +413,7 @@ download(){
 	    fi
 	fi
 	if test -f ${DOWNLOAD_DIR}/${fn} ;then
+	    echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
 	    mkdir -p "${OUTDIR}" || die "failed to mkdir"
 	    if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
 		rm -rf ${DOWNLOAD_DIR}/${fn}
@@ -437,8 +437,8 @@ compile(){
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_ARCH -O3 -fPIC"  && \
-	(./configure --libdir=${LIB_DIR} "$@"  --prefix=${PRE_DIR} > $fnlog || \
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} "$@" > $fnlog) && \
+	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} > $fnlog || \
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ > $fnlog) && \
 	make -j4 install >> $fnlog) ;then
 	echo "Compiled $name successfully."
     else
@@ -531,7 +531,7 @@ has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --disable-openmp --enable-threads 
+    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
@@ -544,20 +544,28 @@ else
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
 
-AC_ARG_ENABLE(fftw-threads, AS_HELP_STRING([--disable-fftw-threads],[Disable FFTW threads]), use_fftw_threads="$enableval", use_fftw_threads="no")
+AC_ARG_ENABLE(fftw-threads, AS_HELP_STRING([--disable-fftw-threads],[Disable FFTW threads]), use_fftw_threads="$enableval", use_fftw_threads="yes")
 if test "$use_fftw_threads" = "yes" ;then
-    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"])
-    AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"])
-else
-    has_fftw_threads="no"
+    if test -z "$OPENMP_CFLAGS" ;then
+	AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"], [-pthreads])
+    else
+	AC_CHECK_LIB([fftw3_omp], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"], [$OPENMP_CFLAGS])
+    fi
 fi
 
-if test "x$has_fftw_threads" = "xyes" -a "x$has_fftw_omp" = "xno" ;then
+if test "$has_fftw_threads" = "yes" -a -z "$OPENMP_CFLAGS" ;then
     AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
     if test x$has_fftwf = x1 ;then
         LDFFT="-lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
     else
         LDFFT="-lfftw3_threads -lfftw3"
+    fi
+elif test "$has_fftw_omp" = "yes" -a -n "$OPENMP_CFLAGS" ;then
+    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+    if test x$has_fftwf = x1 ;then
+        LDFFT="-lfftw3_omp -lfftw3 -lfftw3f_omp -lfftw3f"
+    else
+        LDFFT="-lfftw3_omp -lfftw3"
     fi
 else
     AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")

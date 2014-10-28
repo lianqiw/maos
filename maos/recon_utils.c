@@ -847,8 +847,17 @@ static void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
     CN2EST_T *cn2est=recon->cn2est;
     cn2est_push(cn2est, grad);
+    static int icn2=-1;
     if(cn2est->count%parms->cn2.step == 0){
-	cn2est_est(cn2est, parms->cn2.verbose, parms->cn2.reset);/*do the CN2 estimation */
+	icn2++;
+	int nset=cn2est->count/parms->cn2.step;
+	int reset=parms->cn2.reset && (nset%parms->cn2.reset)==0;
+	cn2est_est(cn2est, parms->cn2.verbose, reset);/*do the CN2 estimation */
+	if(global->simu->cn2est){
+	    global->simu->cn2est->p[0]->p[icn2]=cn2est->r0m;
+	    memcpy(global->simu->cn2est->p[1]->p+icn2*cn2est->htrecon->nx,cn2est->wtrecon->p[0]->p, 
+		   cn2est->htrecon->nx*sizeof(double));
+	}
 	if(parms->cn2.moveht){
 	    cn2est_moveht(recon);
 	}

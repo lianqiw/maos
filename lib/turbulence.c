@@ -130,7 +130,7 @@ static void spect_screen_do(cellarr *fc, GENATM_T *data){
     }
     for(int ilayer=0; ilayer<nlayer; ilayer+=2){
 	double tk1=myclockd();
-	for(long i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){//don't parallelize this one
 	    p1[i]=randn(rstat)*spect->p[i];/*real */
 	    p2[i]=randn(rstat)*spect->p[i];/*imag */
 	}
@@ -367,6 +367,7 @@ dmat *spatial_psd(long nx,      /**<The size*/
     const int nx2=nx/2;
     const int ny2=ny/2;
     dmat *psd=dnew(nx,ny);
+#pragma omp parallel for
     for(int iy=0;iy<ny;iy++){
 	double r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
 	for(int ix=0;ix<nx;ix++){

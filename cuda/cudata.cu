@@ -324,10 +324,10 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
 	    }
-	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
+	    /*if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;
 		info2("Reset nthread to %d\n", NTHREAD);
-	    }
+		}*/
 	    free(tasks);
 	}
     }
