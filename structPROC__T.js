@@ -1,0 +1,26 @@
+var structPROC__T =
+[
+    [ "hid", "structPROC__T.html#ab9fa936fe02f27f741c8060063cbee0a", null ],
+    [ "pid", "structPROC__T.html#ad4b1bd534c31471cdf0e1b3b1fff6804", null ],
+    [ "frac", "structPROC__T.html#a8a17036f4b6758c5a408f76191b92b64", null ],
+    [ "oldinfo", "structPROC__T.html#af6a162d3a6b7895c1351b55f07b9d928", null ],
+    [ "iseed_old", "structPROC__T.html#a87ebc324332c36bc12297b6f51e876c7", null ],
+    [ "path", "structPROC__T.html#a662f301b5c55d58b4924b1bc7c187f68", null ],
+    [ "status", "structPROC__T.html#af0255709206943b60a35ec42373d5593", null ],
+    [ "entry_start", "structPROC__T.html#ad933ff5d18490d8fbff5e338e2d3df52", null ],
+    [ "entry_pid", "structPROC__T.html#a06d435ea9f280bbc52b659f2ac37996b", null ],
+    [ "entry_path", "structPROC__T.html#a6ea9d494cd459781a72c11e1863d80d7", null ],
+    [ "entry_errlo", "structPROC__T.html#a38805e11cbddadfabc3f5aac1180ce7a", null ],
+    [ "entry_errhi", "structPROC__T.html#ac3a4c19ae1a60a4b4a93eae6d931a06e", null ],
+    [ "entry_iseed", "structPROC__T.html#a94a3e943a25fd7b91f5cbe63e27868f5", null ],
+    [ "entry_timing", "structPROC__T.html#a976a4751f4aae3ed1970863b61ae95a4", null ],
+    [ "hbox", "structPROC__T.html#a437a033851961bbff1c0d6848fea6487", null ],
+    [ "vbox", "structPROC__T.html#aecac729161d591ad759aa5a3e19223a4", null ],
+    [ "label", "structPROC__T.html#a0f99bb74e63232f5cb76a19b6ca2e660", null ],
+    [ "btn", "structPROC__T.html#a135e916ff4f9998046265ff57bf52718", null ],
+    [ "btnimage", "structPROC__T.html#a6a72512023713a2970de90eed0e751a5", null ],
+    [ "time3", "structPROC__T.html#aa4fbdfd4e8e8c3cd0f62ac21953f7c49", null ],
+    [ "row", "structPROC__T.html#aa912ae681b37929bd9aca3c5066543e9", null ],
+    [ "btnhandler", "structPROC__T.html#ad457b83f909070364086c46f4d8791eb", null ],
+    [ "next", "structPROC__T.html#aaa4db026fbe30b3520e8370deafca76c", null ]
+];
