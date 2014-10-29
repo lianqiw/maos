@@ -171,7 +171,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
-    draw_final(1);
+    draw_final(0);
     if(disable_save) return;
     if(sig==0){
 	rename("run_recent.log", "run_done.log");

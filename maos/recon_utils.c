@@ -680,7 +680,12 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
-    if(!parms->sim.idealfit){
+    simu->reconisim = simu->isim;
+    if(parms->sim.idealfit || parms->sim.idealtomo){
+	if(parms->sim.closeloop){//no delay due to measurement.
+	    simu->reconisim = simu->isim+1;
+	}
+    }else{
 	if(parms->recon.glao){
 	    /* Every the gradients in GLAO mode. */
 	    if(simu->gradlastcl){
@@ -699,7 +704,6 @@ void shift_grad(SIM_T *simu){
 	    dcellcp(&simu->gradlastcl, simu->gradcl); 
 	}
     }
-    simu->reconisim = simu->isim;
 }
 
 /**

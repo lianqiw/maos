@@ -133,7 +133,7 @@ void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
 	for(int ifit=0; ifit<nfit; ifit++){
 	    gpu_atm2loc(opdfit->p[ifit]->p, floc, INFINITY,
 			dir[ifit].thetax, dir[ifit].thetay,
-			0, 0, grid->dt, grid->isim, 1, stream);
+			0, 0, grid->dt, grid->reconisim, 1, stream);
 	}
     }else{
 	if(xcache){//caching

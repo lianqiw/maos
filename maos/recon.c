@@ -100,7 +100,9 @@ void tomofit(SIM_T *simu){
 	    gpu_fit(simu);
 	}else
 #endif
+	{
 	    simu->cgres->p[1]->p[isim]=muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
+	}
 	toc_tm("Fitting");
     }
  
@@ -118,7 +120,7 @@ static void calc_gradol(SIM_T *simu){
     const RECON_T *recon=simu->recon;
     dcell *dmpsol;
     dmpsol=simu->dmpsol;
-    if(parms->sim.idealfit) return;
+    if(!simu->gradlastcl) return;
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++)
   	if(parms->powfs[ipowfs].psol){
@@ -133,11 +135,7 @@ static void calc_gradol(SIM_T *simu){
 	    }
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
-		for(int indwfs=0; indwfs<nindwfs; indwfs++)
-#if _OPENMP >= 200805 
-#pragma omp task firstprivate(indwfs, alpha, ipowfs)
-#endif
-		{
+		OMPTASK_FOR(indwfs, 0, nindwfs, firstprivate(indwfs, alpha, ipowfs)){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
@@ -145,9 +143,7 @@ static void calc_gradol(SIM_T *simu){
 				  simu->wfspsol->p[ipowfs]->p[idm], 'n', 1);
 		    }
 		}
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
+		OMPTASK_END;
 	    }
 	}
 }
@@ -213,21 +209,23 @@ void recon_split(SIM_T *simu){
 void reconstruct(SIM_T *simu){
     double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.evlol || !simu->gradlastcl) return;
+    if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
-
-    if(parms->sim.closeloop){
-	calc_gradol(simu);
-    }else if(!simu->gradlastol){
-	simu->gradlastol=dcellref(simu->gradlastcl);
+    if(simu->gradlastcl){
+	if(parms->sim.closeloop){
+	    calc_gradol(simu);
+	}else if(!simu->gradlastol){
+	    simu->gradlastol=dcellref(simu->gradlastcl);
+	}
+	save_gradol(simu);//must be here since gradol is only calculated in this file. 
+    
+	if(parms->cn2.pair){
+	    cn2est_isim(recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl);
+	}//if cn2est 
     }
-    save_gradol(simu);//must be here since gradol is only calculated in this file. 
-    if(parms->cn2.pair){
-	cn2est_isim(recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl);
-    }//if cn2est 
-    if(hi_output){
+    if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
 	if(parms->recon.mvm){
 	    if(parms->sim.mvmport){
@@ -265,9 +263,9 @@ void reconstruct(SIM_T *simu){
 	    dcellcp(&simu->dmerr, tmp);
 	    dcellfree(tmp);
 	}
-	if(parms->recon.alg==0 && parms->tomo.psol){//form error signal in PSOL mode
+	if(parms->recon.alg==0 && parms->tomo.psol && parms->sim.closeloop){//form error signal in PSOL mode
 	    dcell *dmpsol;
-	    if(parms->sim.idealfit){
+	    if(parms->sim.idealfit || parms->sim.idealtomo){
 		dmpsol=simu->dmpsol;
 	    }else if(parms->sim.fuseint || parms->recon.split==1){
 		dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
@@ -278,22 +276,24 @@ void reconstruct(SIM_T *simu){
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
 
-	if(parms->recon.alg!=1 && !parms->sim.idealfit && parms->recon.split==1){//ahst 
-	    remove_dm_ngsmod(simu, simu->dmerr);
+	if(parms->recon.split){
+	    if(parms->recon.alg==0){//ahst 
+		remove_dm_ngsmod(simu, simu->dmerr);
+	    }
+	    if(parms->tomo.ahst_ttr){
+		remove_dm_tt(simu, simu->dmerr);
+	    }
 	}
-	if(parms->tomo.ahst_ttr && parms->recon.split){
-	    remove_dm_tt(simu, simu->dmerr);
-	}
-	/*zero stuck actuators*/
-	if(recon->actstuck){
+	
+	if(recon->actstuck){//zero stuck actuators
 	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
     }
-    //low order reconstruction
-    if(parms->recon.split){
+    
+    if(parms->recon.split){//low order reconstruction
 	recon_split(simu);
     }
-    if(simu->dmerr){ //High order. 
+    if(simu->dmerr && simu->gradlastcl){ //High order. 
 	//global focus is the 6th mode in ngsmod->Modes
 	if(parms->sim.mffocus){
 	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
@@ -303,8 +303,8 @@ void reconstruct(SIM_T *simu){
 		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
 	}
     }
-    //For PSF reconstruction.
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
+	//For PSF reconstruction.
 	psfr_calc(simu, simu->opdr, simu->wfspsol->p[parms->hipowfs->p[0]],
 		  simu->dmerr,  simu->Merr_lo);
     }

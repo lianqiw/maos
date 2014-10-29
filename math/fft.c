@@ -57,13 +57,13 @@ void X(fft_free_plan)(fft_t *fft){
     }
     free(fft);
 }
-static void FFTW_THREADS(int n){
+static void FFTW_THREADS(long n){
 #if USE_FFTW_THREADS == 1
-    FFTW(plan_with_nthreads)(n);
-    if(n>1){
-	info2("Creating fft plan with %d threads ...", n);
+    if(n>1024*1024){
+	info2("Creating fft plan with %d threads\n", NTHREAD);
+	FFTW(plan_with_nthreads)(NTHREAD);
     }else{
-	info2("Reset fft to %d threads\n", n);
+	FFTW(plan_with_nthreads)(1);
     }
 #endif
 }
@@ -110,18 +110,21 @@ static void save_wisdom(){
    (i.e. not calling fftw_init_threads)." So here we use different names.
  */
 static __attribute__((constructor))void init(){
+    /*
 #if !USE_FFTW_THREADS
 #if defined(USE_SINGLE)
     void *libfftw_threads=dlopen("libfftwf-threads.so", RTLD_LAZY);
 #else
     void *libfftw_threads=dlopen("libfftw-threads.so", RTLD_LAZY);
-#endif
+    #endif
     if(libfftw_threads){
 	
     }else{
 	//warning("libfftw-threads not found\n");
     }	
+    
 #endif
+    */
 #if USE_FFTW_THREADS
     FFTW(init_threads)();
 #ifdef USE_SINGLE
@@ -156,10 +159,10 @@ static void X(fft2plan)(X(mat) *A, int dir){
     if(!A->fft) {
 	A->fft=calloc(1, sizeof(fft_t));
     }else if(A->fft->plan[dir+1]) return;
-    
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
     LOCK_FFT;
+    FFTW_THREADS(A->nx*A->ny);
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
 	A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, A->p, A->p, dir, FFTW_FLAGS);
@@ -184,6 +187,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     FFTW_FLAGS=FFTW_ESTIMATE;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
+    FFTW_THREADS(A->nx*A->ny);
     /*along columns for all columns. */
     plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
 					A->p,NULL,1,nx,
@@ -272,7 +276,7 @@ X(mat) *X(ffttreat)(X(mat) *A){
  * Create a fftw plan based on a 2 element X(mat) cell array that contains
  * real/imaginary parts respectively
  */
-static void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
+static void X(cell_fft2plan)(X(cell) *dc, int dir){
     assert(abs(dir)==1);
     if(dc->nx*dc->ny!=2){
 	error("X(cell) of two elements is required\n");
@@ -291,11 +295,9 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
     if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
-	if(nthreads<1) nthreads=1;
-	FFTW_THREADS(nthreads);
+	FFTW_THREADS(nx*ny);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
-	FFTW_THREADS(1);
 	UNLOCK_FFT;
 	toc2("done");
     }
@@ -304,7 +306,7 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir, int nthreads){
 void X(cell_fft2)(X(cell) *dc, int dir){
     assert(abs(dir)==1);
     if(!dc->fft || !dc->fft->plan[dir+1]){
-	X(cell_fft2plan)(dc, dir, NTHREAD);
+	X(cell_fft2plan)(dc, dir);
     }
     FFTW(execute)(dc->fft->plan[dir+1]);
 }

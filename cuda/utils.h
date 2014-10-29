@@ -55,16 +55,31 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(cuda_dedup && !*dest){
 	key=hashlittle(src, nx*ny*sizeof(N), 0);
 	key=(key<<32) | (nx*ny);
+	LOCK(cudata->memmutex);
 	if(cudata->memhash->count(key)){
 	    *dest=(M*)(*cudata->memhash)[key];
-	    return;
+	    (*cudata->memcount)[*dest]++;
 	}
+	UNLOCK(cudata->memmutex);
+	if(*dest) return;
+    }else if(!cuda_dedup && *dest){
+	//Avoid overriding previously referenced memory
+	LOCK(cudata->memmutex);
+	if(cudata->memcount->count(*dest) && (*cudata->memcount)[*dest]>1){
+	    info("Deferencing data: %p\n", *dest);
+	    (*cudata->memcount)[*dest]--;
+	    *dest=0;
+	}
+	UNLOCK(cudata->memmutex);
     }
     if(!*dest){
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
-    }
-    if(cuda_dedup){
-	(*cudata->memhash)[key]=*dest;
+	if(cuda_dedup){
+	    LOCK(cudata->memmutex);
+	    (*cudata->memhash)[key]=*dest;
+	    (*cudata->memcount)[*dest]=1;
+	    UNLOCK(cudata->memmutex);
+	}
     }
     M* from=0;
     if(sizeof(M)!=sizeof(N)){
@@ -177,4 +192,8 @@ void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream
 void cellarr_cuc(struct cellarr *ca, int i, const cucmat *A, cudaStream_t stream);
 void cellarr_curcell(struct cellarr *ca, int i, const curcell *A, cudaStream_t stream);
 void cellarr_cuccell(struct cellarr *ca, int i, const cuccell *A, cudaStream_t stream);
+void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat *opd, cudaStream_t stream, 
+		    const double *amp, double *zlim,
+		    const char *title, const char *xlabel, const char *ylabel,
+		    const char* format,...) CHECK_ARG(10);
 #endif

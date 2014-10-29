@@ -17,6 +17,13 @@
 */
 #ifndef AOS_CUDA_CUWFS_H
 #define AOS_CUDA_CUWFS_H
+
+
+/**
+   This file is work in progress and is not used.
+ */
+
+
 namespace cuda_wfs{
 /*Basic geometric information for WFS.*/
 struct wfscfg_t;

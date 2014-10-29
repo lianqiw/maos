@@ -2013,7 +2013,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
     setup_recon_TTFR(recon,parms,powfs);
-    if(parms->sim.mffocus || parms->sim.ahstfocus){
+    if(parms->sim.mffocus || parms->sim.ahstfocus || parms->dither){
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }

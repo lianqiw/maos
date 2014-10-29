@@ -267,10 +267,10 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    dcellcp(&simu->dmpsol, simu->dmcmd);
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
-    dcellcp(&simu->dmpsol, simu->dmcmd);
     extern int DM_NCPA;
     if(DM_NCPA==2 && recon->dm_ncpa){
 	warning_once("Add NCPA after integrator\n");
@@ -297,7 +297,7 @@ void filter_cl(SIM_T *simu){
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
-    if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
+    if(simu->zoomerr){/*gain was already applied on zoomerr*/
 	dadd(&simu->zoomint, 1, simu->zoomerr, parms->sim.zoomgain);
     }
     if(recon->moao && !parms->gpu.moao){

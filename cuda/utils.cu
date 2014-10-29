@@ -472,3 +472,17 @@ void cellarr_cuccell(struct cellarr *ca, int i, const cuccell *A, cudaStream_t s
 #endif
     C(cellfree)(tmp);
 }
+
+void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat *opd, cudaStream_t stream, 
+		    const double *amp, double *zlim,
+		    const char *title, const char *xlabel, const char *ylabel,
+		    const char* format,...){
+    format2fn;
+    int current=draw_current(fig, fn);
+    if(current){
+	dmat *tmp=NULL;
+	cp2cpu(&tmp, opd, stream); 
+	drawopdamp(fig, loc, tmp->p, amp, zlim, title, xlabel, ylabel, "%s", fn);
+	dfree(tmp);
+    }
+}

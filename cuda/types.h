@@ -78,6 +78,9 @@ class cumat{
     T&operator ()(int ix, int iy){
 	return p[ix+nx*iy];
     }
+    T *col(int icol){
+	return p+nx*icol;
+    }
 };
 
 template <typename T>

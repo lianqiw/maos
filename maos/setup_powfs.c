@@ -1077,6 +1077,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 */
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep){
     if(!parms->powfs[ipowfs].llt) return;
+    TIC;tic;
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int nllt=parms->powfs[ipowfs].llt->n;
@@ -1103,18 +1104,18 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
 	    info2("Simulation and reconstruction using same etf\n");
 	    return;
-	}
-	if(powfs[ipowfs].etfsim){
-	    info2("Free previous etfsim\n");
-	    for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
-		ccellfree(powfs[ipowfs].etfsim[iwvl].p1);
-		ccellfree(powfs[ipowfs].etfsim[iwvl].p2);
+	}else{
+	    if(powfs[ipowfs].etfsim){
+		for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
+		    ccellfree(powfs[ipowfs].etfsim[iwvl].p1);
+		    ccellfree(powfs[ipowfs].etfsim[iwvl].p2);
+		}
+		free(powfs[ipowfs].etfsim);
 	    }
-	    free(powfs[ipowfs].etfsim);
+	    powfs[ipowfs].etfsim=calloc(nwvl, sizeof(ETF_T));
+	    powfsetf=powfs[ipowfs].etfsim;
+	    colskip=parms->powfs[ipowfs].llt->colsim;
 	}
-	powfs[ipowfs].etfsim=calloc(nwvl, sizeof(ETF_T));
-	powfsetf=powfs[ipowfs].etfsim;
-	colskip=parms->powfs[ipowfs].llt->colsim;
     }
 
     if(!powfs[ipowfs].sodium){
@@ -1204,7 +1205,6 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	}
 
 	const int fuse_etf=(use1d==0);
-	TIC;tic;
 	if(!parms->dbg.na_interp){
 	    /*
 	      The ETF is computed as DFT
@@ -1224,31 +1224,21 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		    if(use1d){
 			petf[illt][isa]=cnew(ncompx,1);
 			dcomplex *etf1d=petf[illt][isa]->p;
-			for(int icompx=0; icompx<ncompx; icompx++)
-#if _OPENMP >= 200805 
-#pragma omp task
-#endif
-			{
+			OMPTASK_FOR(icompx, 0, ncompx){
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
 				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium->p[ih]-rsa/hs)));
 				etf1d[icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
 			    }
 			}
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
+			OMPTASK_END
 		    }else{
 			const double theta=powfs[ipowfs].srot->p[illt]->p[isa];
 			const double ct=cos(theta);
 			const double st=sin(theta);
 			petf[illt][isa]=cnew(ncompx,ncompy);
 			dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p; 
-			for(int icompy=0; icompy<ncompy; icompy++)
-#if _OPENMP >= 200805 
-#pragma omp task
-#endif
-			{
+			OMPTASK_FOR(icompy, 0, ncompy){
 			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
 			    for(int icompx=0; icompx<ncompx; icompx++){
 				const double kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
@@ -1259,9 +1249,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 				}
 			    }
 			}
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
+			OMPTASK_END
 		    }
 		}//isa
 	    }//illt
@@ -1379,7 +1367,6 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    cfree(etf);
 	    free(thetas);
 	}//if na_interp
-	toc2("ETF");
 	if(fuse_etf){
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
@@ -1394,8 +1381,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    }else{
 		info2("DTF nominal is fused to ETF but kept\n");
 	    }
-	}	    
+	}
     }//for iwvl
+    toc2("ETF");
 }
 
 /**
@@ -1723,9 +1711,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat=calloc(1, sizeof(INTSTAT_T));
     if(parms->load.i0){
 	warning("Loading i0, gx, gy\n");
-	intstat->i0=dcellread("powfs%d_i0",ipowfs);
-	intstat->gx=dcellread("powfs%d_gx",ipowfs);
-	intstat->gy=dcellread("powfs%d_gy",ipowfs);
+	intstat->i0=dcellread("%s/powfs%d_i0",parms->load.i0, ipowfs);
+	intstat->gx=dcellread("%s/powfs%d_gx",parms->load.i0, ipowfs);
+	intstat->gy=dcellread("%s/powfs%d_gy",parms->load.i0, ipowfs);
     }else{
 	if(parms->powfs[ipowfs].piinfile){
 	    /*load psf. 1 for each wavefront sensor. */
@@ -1791,7 +1779,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
-			 parms->atm.r0, parms->atm.l0, 
+			 parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
 			 powfs[ipowfs].pts->dsa,nsa,
 			 1./powfs[ipowfs].pts->dx, 
 			 parms->powfs[ipowfs].nwvl,
@@ -1840,7 +1828,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			 "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
 			 "nwvl%d_%g_embfac%d_v2", 
 			 HOME, fnprefix,
-			 parms->atm.r0, parms->atm.l0, 
+			 parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
 			 powfs[ipowfs].llt->pts->dsa,
 			 1./powfs[ipowfs].llt->pts->dx,
 			 parms->powfs[ipowfs].llt->widthp,
@@ -1931,7 +1919,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    writebin(powfs[ipowfs].intstat->mtche, "%s/powfs%d_mtche",dirsetup,ipowfs);
 	}
     }
-    if(parms->powfs[ipowfs].phytype==2 || parms->powfs[ipowfs].phytypesim==2){
+    if(parms->powfs[ipowfs].phytype==2 || parms->powfs[ipowfs].phytypesim==2 || parms->powfs[ipowfs].dither){
 	setup_powfs_cog(parms, powfs, ipowfs);
     }
     intstat->saneaxyl=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//cholesky decomposition
@@ -2081,6 +2069,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
+	   ||parms->powfs[ipowfs].dither
 	   ||parms->powfs[ipowfs].neaphy){
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);

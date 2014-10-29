@@ -22,8 +22,8 @@
 #define RAND_BLOCK 8
 #define RAND_THREAD 256
 struct cudtf_t{
-    Comp **nominal;/*array for each sa. */
-    Comp **etf;
+    cucmat *nominal;/*array for each sa. */
+    cucmat *etf;
     int etfis1d;
 };
 struct cullt_t{
@@ -42,16 +42,14 @@ typedef struct cuwloc_t{
 /**For matched filter update*/
 class dither_t{
     int      imc;
-    curcell *im0;
+    curcell *imb;
     curcell *imx;
     curcell *imy;
 public:
     dither_t(int nsa, int pixpsax, int pixpsay);
-    void reset();
-    void acc(curcell *ints, Real angle, cudaStream_t stream);
-    void output(Real a2m, int iwfs, int isim, cudaStream_t stream);
+    void acc(DITHER_T *dither, curcell *ints, Real angle, int nstat, cudaStream_t stream);
     ~dither_t(){
-	delete im0;
+	delete imb;
 	delete imx;
 	delete imy;
     }
@@ -69,8 +67,8 @@ class cuwfs_t{
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
     cudtf_t *dtf;       /**<array for each wvl.*/
     Real   *srot;      /**<angle to rotate PSF/OTF*/
-    Real  (**mtche)[2]; /**<matched filter gradient operator.*/
-    Real   *i0sum;     /**<sum of i0 for each subaperture.*/
+    curmat *mtche;     /**<matched filter gradient operator.*/
+    curmat *i0sum;     /**<sum of i0 for each subaperture.*/
     Real  **bkgrnd2;   /**<background as an image*/
     Real  **bkgrnd2c;  /**<calibration of background to subtract.*/
     Real *cogcoeff;

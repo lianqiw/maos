@@ -339,12 +339,9 @@ void gpu_perfevl_queue(thread_t *info){
 	if(save_evlopd){
 	    cellarr_cur(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 	}
-	if(parms->plot.run>1){
-	    dmat *tmp=NULL;
-	    cp2cpu(&tmp, iopdevl, stream);
-	    drawopdamp("OL", aper->locs, tmp->p, aper->amp1->p, NULL,
-		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
-	    dfree(tmp);
+	if(parms->plot.run){
+	    drawopdamp_gpu("OL", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
+			   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	}
 	PERFEVL_WFE_GPU(cuperf_t::cc_ol->p[ievl]->p, cuperf_t::ccb_ol[ievl]);
 	if((parms->evl.psfmean  || parms->evl.cov)
@@ -405,12 +402,9 @@ void gpu_perfevl_queue(thread_t *info){
 	    cellarr_cur(simu->save->evlopdcl[ievl], isim, iopdevl, stream);
 	}
 
-	if(parms->plot.run>1){
-	    dmat *tmp=NULL;
-	    cp2cpu(&tmp, iopdevl, stream);
-	    drawopdamp("CL", aper->locs,tmp->p , aper->amp1->p, NULL,
-		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
-	    dfree(tmp);
+	if(parms->plot.run){
+	    drawopdamp_gpu("CL", aper->locs,iopdevl, stream , aper->amp1->p, NULL,
+			   "Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 	}
 	PERFEVL_WFE_GPU(cuperf_t::cc_cl->p[ievl]->p, cuperf_t::ccb_cl[ievl]);
 	if(do_psf_cov && parms->evl.psfngsr->p[ievl]!=2){//also do normal one.

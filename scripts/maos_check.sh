@@ -25,6 +25,12 @@ echo $(./maos $args aper.d=$D dm.order=[$D*2 $D*2] tomo.precond=1 2>>maos_check.
 echo -n "LGS MCAO (CBS):  "
 echo $(./maos $args aper.d=$D dm.order=[$D*2 $D*2] tomo.alg=0 fit.alg=0 2>>maos_check.stderr) nm
 
+echo -n "idealfit in cpu"
+echo $(./maos $args aper.d=$D sim.idealfit=1 -g-1 2>>maos_check.stderr) nm
+
+echo -n "idealtomo in cpu"
+echo $(./maos $args aper.d=$D sim.idealtomo=1 -g-1 2>>maos_check.stderr) nm
+
 if [ $D -le 10 ];then
 echo -n "LGS MCAO (SVD):  "
 echo $(./maos $args aper.d=$D dm.order=[$D*2 $D*2] tomo.alg=2 fit.alg=2 2>>maos_check.stderr) nm

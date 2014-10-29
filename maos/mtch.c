@@ -80,6 +80,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 
     intstat->mtche=cellnew(nsa,ni0);
     dcell *sanea=cellnew(ni0,1);
+    
     intstat->i0sum=dnew(nsa,ni0);
     PDCELL(intstat->i0,i0s);
     PDCELL(intstat->gx,gxs);
@@ -303,9 +304,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }/*ii0 */
     info2("Matched filter sanea:\n");
     if(powfs[ipowfs].sprint){/*print nea for select subapertures.*/
-	if(parms->powfs[ipowfs].llt->n!=ni0){
-	    warning("nllt!=ni0\n");
-	}
 	for(int ii0=0; ii0<ni0; ii0++){
 	    int illt=0;
 	    if(ni0==parms->powfs[ipowfs].llt->n){

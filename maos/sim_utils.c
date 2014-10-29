@@ -344,21 +344,25 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 */
 void sim_update_etf(SIM_T *simu){
     int isim=simu->isim;
+    if(isim<=0) return;
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
-    if(isim>0){
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    /* Update ETF if necessary. */
-	    if((parms->powfs[ipowfs].usephy
-		||parms->powfs[ipowfs].psfout
-		||parms->powfs[ipowfs].pistatout) 
-	       && parms->powfs[ipowfs].llt
-	       && parms->powfs[ipowfs].llt->colsimdtrat>0
-	       && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
-		warning("powfs %d: Updating ETF\n",ipowfs);
-		setup_powfs_etf(powfs,parms,ipowfs,1,
-				isim/parms->powfs[ipowfs].llt->colsimdtrat);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	/* Update ETF if necessary. */
+	if((parms->powfs[ipowfs].usephy
+	    ||parms->powfs[ipowfs].psfout
+	    ||parms->powfs[ipowfs].pistatout) 
+	   && parms->powfs[ipowfs].llt
+	   && parms->powfs[ipowfs].llt->colsimdtrat>0
+	   && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
+	    info2("Step %d: powfs %d: Updating ETF\n",isim, ipowfs);
+	    setup_powfs_etf(powfs,parms,ipowfs,1,
+			    isim/parms->powfs[ipowfs].llt->colsimdtrat);
+#if USE_CUDA
+	    if(parms->gpu.wfs){
+		gpu_wfsgrad_update_etf(parms, powfs);
 	    }
+#endif
 	}
     }
 }
@@ -493,31 +497,6 @@ static void init_simu_evl(SIM_T *simu){
 	    warning("Error link\n");
 	}
     }
-
-    if(parms->sim.mffocus){
-	long nnx[parms->nwfs];
-	long nny[parms->nwfs];
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(!parms->powfs[ipowfs].llt){
-		nnx[iwfs]=0;
-		nny[iwfs]=0;
-	    }else{
-		nnx[iwfs]=parms->sim.end;
-		nny[iwfs]=1;
-	    }
-	}
-	simu->zoomerr=dnew(parms->nwfs,1);
-	simu->zoomavg=dnew(parms->nwfs,1);
-	simu->zoomint=dnew(parms->nwfs,1);
-	if(disable_save){
-	    simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
-	    simu->lgsfocus=dcellnew3(parms->nwfs, 1, nnx, nny);
-	}else{
-	    simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
-	    simu->lgsfocus=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszlgsfocus_%d.bin", seed);
-	}
-    }    
 
     if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov){
 	char header[800];
@@ -913,25 +892,27 @@ static void init_simu_wfs(SIM_T *simu){
 	    }
 	}
     }
-    if(parms->save.grad && !parms->sim.idealfit){
-	save->gradcl=calloc(nwfs, sizeof(cellarr*));
-	save->gradol=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->save.grad->p[iwfs]){
-		save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
-		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, 
-						    "wfs%d_gradol_%d.bin", iwfs, seed);
+    if(!parms->sim.idealfit && !parms->sim.idealtomo){
+	if(parms->save.grad){
+	    save->gradcl=calloc(nwfs, sizeof(cellarr*));
+	    save->gradol=calloc(nwfs, sizeof(cellarr*));
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->save.grad->p[iwfs]){
+		    save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
+		    if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
+			save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, 
+							"wfs%d_gradol_%d.bin", iwfs, seed);
+		    }
 		}
 	    }
 	}
-    }
-    if(parms->save.gradgeom && !parms->sim.idealfit){
-	save->gradgeom=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(parms->save.gradgeom->p[iwfs]){
-		save->gradgeom[iwfs]=cellarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+	if(parms->save.gradgeom){
+	    save->gradgeom=calloc(nwfs, sizeof(cellarr*));
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		if(parms->save.gradgeom->p[iwfs]){
+		    save->gradgeom[iwfs]=cellarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+		}
 	    }
 	}
     }
@@ -1021,14 +1002,51 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->wfs_ints[iwfs]=calloc(NTHREAD, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }
-
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	if(parms->powfs[ipowfs].dither){
-	    if(!simu->dither){
-		simu->dither=calloc(nwfs, sizeof(DITHER_T*));
+    if(parms->dither || parms->sim.mffocus){
+	simu->zoomerr=dnew(parms->nwfs,1);
+	simu->zoomint=dnew(parms->nwfs,1);
+	if(parms->sim.mffocus){
+	    simu->zoomavg=dnew(parms->nwfs, 1);
+	}
+	if(!disable_save){
+	    long nnx[parms->nwfs];
+	    long nny[parms->nwfs];
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].dither && parms->powfs[ipowfs].llt){
+		    nnx[iwfs]=parms->sim.end;
+		    nny[iwfs]=1;
+		}else{
+		    nnx[iwfs]=0;
+		    nny[iwfs]=0;
+		}
 	    }
-	    simu->dither[iwfs]=calloc(1, sizeof(DITHER_T));
+	    simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
+	}
+	
+    }
+    if(parms->dither){
+	simu->dither=calloc(nwfs, sizeof(DITHER_T*));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].dither){
+		simu->dither[iwfs]=calloc(1, sizeof(DITHER_T));
+	    }
+	}
+	if(parms->save.extra){
+	    long nnx[nwfs];
+	    long nny[nwfs];
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].dither){
+		    nnx[iwfs]=2;
+		    nny[iwfs]=(nsim-parms->powfs[ipowfs].dither_pllskip)/(parms->powfs[ipowfs].dtrat*parms->powfs[ipowfs].dither_npll);
+		}else{
+		    nnx[iwfs]=0;
+		    nny[iwfs]=0;
+		}
+	    }
+	    simu->resdither = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resdither_%d.bin", seed);
 	}
     }
     if(simu->recon->cn2est && !disable_save){
@@ -1511,7 +1529,12 @@ void free_simu(SIM_T *simu){
     if(simu->dither){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(simu->dither[iwfs]){
-		warning("Delete the data: not implemented yet \n");
+		cellfree(simu->dither[iwfs]->imx);
+		cellfree(simu->dither[iwfs]->imy);
+		cellfree(simu->dither[iwfs]->imb);
+		cellfree(simu->dither[iwfs]->i0);
+		cellfree(simu->dither[iwfs]->gx);
+		cellfree(simu->dither[iwfs]->gy);
 		free(simu->dither[iwfs]);
 	    }
 	}

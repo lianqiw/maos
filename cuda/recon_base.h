@@ -56,7 +56,7 @@ public:
 class curecon_geom{
 public:
     int npsr, ndm;
-    int delay, isim, isimr;
+    int delay, isim, reconisim;
     cugrid_t *xmap;/*Grid of xmap*/
     cugrid_t *xcmap;
     cugrid_t *amap;

@@ -30,6 +30,7 @@ extern int DRAW_DIRECT;
 void draw_helper(void);
 int draw_add(int fd);
 void draw_final(int reuse);
+int draw_current(const char *fig, const char *fn);
 void imagesc(const char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);

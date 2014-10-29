@@ -49,7 +49,7 @@ static char *get_fnatm(GENATM_T *data){
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
     if(data->r0logpsds){
-	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->ny, key);
+	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->nx, key);
     }
     char diratm[PATH_MAX];
     snprintf(diratm,PATH_MAX,"%s/.aos/atm", HOME);

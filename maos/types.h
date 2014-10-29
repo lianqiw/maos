@@ -451,8 +451,10 @@ typedef struct DITHER_T{
     double a2m;   /**<actual dither amplitude*/
     dcell *imx;   /**<accumulated cos()*im */
     dcell *imy;   /**<accumulated sin()*im */
-    dcell *im0;   /**<accumulated im*/
-    int    imc;   /**<number of im accumulated*/
+    dcell *imb;   /**<accumulated im for drift mode comuptation*/
+    dcell *i0;    /**<accumulated imb for matched filter*/
+    dcell *gx;    /**<accumulated imx for matched filter*/
+    dcell *gy;    /**<accumulated imy for matched filter*/
 }DITHER_T;
 /**
    contains all the run time data struct.
@@ -512,6 +514,7 @@ typedef struct SIM_T{
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     dmat *timing;      /**<Timing and memory using for each step*/
+    dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmcmd;      /**<This is the command send to DM (known to RTC).*/
@@ -551,12 +554,11 @@ typedef struct SIM_T{
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
-    dmat *zoomavg;    /**<Trombone averager*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomint;    /**<Trombone integrator*/
+    dmat *zoomavg;    /**<Trombone averager from gradients*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
-    dcell *lgsfocus;   /**<LGS focus error time history*/
-
+    
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

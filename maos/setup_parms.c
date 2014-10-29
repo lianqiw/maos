@@ -314,7 +314,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,gtype_recon);
     READ_POWFS_RELAX(int,phytype);
     READ_POWFS_RELAX(int,phytypesim);
-
+    READ_POWFS_RELAX(dbl,r0);
+    READ_POWFS_RELAX(dbl,l0);
     READ_POWFS_RELAX(dbl,mtchcra);
     READ_POWFS_RELAX(int,mtchcpl);
     READ_POWFS_RELAX(int,mtchscl);
@@ -327,10 +328,12 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,moao);
     READ_POWFS_RELAX(int,dither);
     READ_POWFS_RELAX(dbl,dither_amp);
+    READ_POWFS_RELAX(int,dither_pllskip);
     READ_POWFS_RELAX(int,dither_nskip);
     READ_POWFS_RELAX(int,dither_npll);
     READ_POWFS_RELAX(dbl,dither_gpll);
-    READ_POWFS_RELAX(int,dither_nstat);
+    READ_POWFS_RELAX(int,dither_ndrift);
+    READ_POWFS_RELAX(int,dither_nmtch);
     
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
@@ -353,90 +356,97 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,fov);
     READ_POWFS(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
+	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
+	if(!isfinite(powfsi->hs) && powfsi->fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
-	    free(parms->powfs[ipowfs].fnllt);
-	    parms->powfs[ipowfs].fnllt=NULL;
+	    free(powfsi->fnllt);
+	    powfsi->fnllt=NULL;
 	}
-	if(parms->powfs[ipowfs].fnllt){
+	if(powfsi->fnllt){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
-	    open_config(parms->powfs[ipowfs].fnllt,prefix,0);
-	    parms->powfs[ipowfs].llt=calloc(1, sizeof(LLT_CFG_T));
-	    parms->powfs[ipowfs].llt->d=readcfg_dbl("%sllt.d",prefix);
-	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
-	    parms->powfs[ipowfs].llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
-	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
-	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
-	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
-	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
-	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix); 
-	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
-	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
-	    parms->powfs[ipowfs].llt->misreg=readcfg_dmat_n(2, "%sllt.misreg",prefix);
-	    parms->powfs[ipowfs].llt->ox=readcfg_dmat("%sllt.ox",prefix);
-	    parms->powfs[ipowfs].llt->oy=readcfg_dmat("%sllt.oy",prefix);
-	    parms->powfs[ipowfs].llt->n=parms->powfs[ipowfs].llt->ox->nx;
+	    open_config(powfsi->fnllt,prefix,0);
+	    powfsi->llt=calloc(1, sizeof(LLT_CFG_T));
+	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
+	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
+	    powfsi->llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
+	    powfsi->llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
+	    powfsi->llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
+	    powfsi->llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
+	    powfsi->llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
+	    powfsi->llt->colprep=readcfg_int("%sllt.colprep",prefix); 
+	    powfsi->llt->colsim=readcfg_int("%sllt.colsim",prefix);
+	    powfsi->llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
+	    powfsi->llt->misreg=readcfg_dmat_n(2, "%sllt.misreg",prefix);
+	    powfsi->llt->ox=readcfg_dmat("%sllt.ox",prefix);
+	    powfsi->llt->oy=readcfg_dmat("%sllt.oy",prefix);
+	    powfsi->llt->n=powfsi->llt->ox->nx;
 	}else{/*there is no LLT. */
-	    parms->powfs[ipowfs].llt=NULL;
-	    if(isfinite(parms->powfs[ipowfs].hs)){
+	    powfsi->llt=NULL;
+	    if(isfinite(powfsi->hs)){
 		warning2("powfs%d has finite hs at %g but no llt specified\n",
-			ipowfs, parms->powfs[ipowfs].hs);
+			ipowfs, powfsi->hs);
 	    }
-	    if(parms->powfs[ipowfs].radpix){
+	    if(powfsi->radpix){
 		warning2("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
-		parms->powfs[ipowfs].radpix=0;
+		powfsi->radpix=0;
 	    }
 	}
-	if(parms->powfs[ipowfs].radrot && !parms->powfs[ipowfs].radpix){
-	    parms->powfs[ipowfs].radrot=0;
+	if(powfsi->radrot && !powfsi->radpix){
+	    powfsi->radrot=0;
 	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
 	}
-	if(parms->powfs[ipowfs].llt && !parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].mtchcpl){
-	    parms->powfs[ipowfs].mtchcpl=1;
+	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
+	    powfsi->mtchcpl=1;
 	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	}
-	if(parms->powfs[ipowfs].phytypesim==-1){
-	    parms->powfs[ipowfs].phytypesim=parms->powfs[ipowfs].phytype;
+	if(powfsi->phytypesim==-1){
+	    powfsi->phytypesim=powfsi->phytype;
 	}
 	/*round phystep to be multiple of dtrat. */
-	if(parms->powfs[ipowfs].phystep>0){
-	    parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
-		*parms->powfs[ipowfs].dtrat;
+	if(powfsi->phystep>0){
+	    powfsi->phystep=(powfsi->phystep/powfsi->dtrat)
+		*powfsi->dtrat;
 	}
-	if(parms->powfs[ipowfs].mtchcra==-1){
-	    parms->powfs[ipowfs].mtchcra=parms->powfs[ipowfs].mtchcr;
+	if(powfsi->mtchcra==-1){
+	    powfsi->mtchcra=powfsi->mtchcr;
 	}
-	if(parms->powfs[ipowfs].phytypesim==1 || parms->powfs[ipowfs].phytype==1){
-	    int pixpsay=parms->powfs[ipowfs].pixpsa;
-	    int pixpsax=parms->powfs[ipowfs].radpix;
+	if(powfsi->phytypesim==1 || powfsi->phytype==1){
+	    int pixpsay=powfsi->pixpsa;
+	    int pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
-	    if(pixpsax*pixpsay<4 && (parms->powfs[ipowfs].mtchcr>0
-				     || parms->powfs[ipowfs].mtchcra>0)){
+	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0
+				     || powfsi->mtchcra>0)){
 		warning("Disable constraint matched filte for quadcell\n");
-		parms->powfs[ipowfs].mtchcr=0;
-		parms->powfs[ipowfs].mtchcra=0;
+		powfsi->mtchcr=0;
+		powfsi->mtchcra=0;
 	    }
 	}
-	if(parms->powfs[ipowfs].fieldstop>0 && (parms->powfs[ipowfs].fieldstop>10 || parms->powfs[ipowfs].fieldstop<1e-4)){
-	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, parms->powfs[ipowfs].fieldstop);
+	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
+	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	}
 	/*Senity check pixtheta*/
-	if(parms->powfs[ipowfs].pixtheta<0){
-	    double wvlmax=dmax(parms->powfs[ipowfs].wvl);
-	    double dsa=parms->aper.d/parms->powfs[ipowfs].order;
-	    parms->powfs[ipowfs].pixtheta=abs(parms->powfs[ipowfs].pixtheta)*wvlmax/dsa;
-	}else if(parms->powfs[ipowfs].pixtheta<1e-4){
+	if(powfsi->pixtheta<0){
+	    double wvlmax=dmax(powfsi->wvl);
+	    double dsa=parms->aper.d/powfsi->order;
+	    powfsi->pixtheta=abs(powfsi->pixtheta)*wvlmax/dsa;
+	}else if(powfsi->pixtheta<1e-4){
 	    warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
 	}else{
-	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
+	    powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	}
-	parms->powfs[ipowfs].fieldstop/=206265.;
-	if(parms->powfs[ipowfs].dither){
-	    parms->powfs[ipowfs].dither_amp*=parms->powfs[ipowfs].pixtheta;
+	powfsi->fieldstop/=206265.;
+	if(powfsi->dither){
+	    parms->dither=1;
+	    powfsi->dither_amp*=powfsi->pixtheta;
+	    if(powfsi->dither_nskip<10*powfsi->dither_npll+powfsi->dither_pllskip){
+		powfsi->dither_nskip=10*powfsi->dither_npll+powfsi->dither_pllskip;
+	    }
+	    powfsi->dither_ndrift*=powfsi->dither_npll;
+	    powfsi->dither_nmtch*=powfsi->dither_ndrift;
 	}
-	parms->powfs[ipowfs].modulate/=206265.;
-	parms->powfs[ipowfs].fov/=206265.;
+	powfsi->modulate/=206265.;
+	powfsi->fov/=206265.;
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -1040,6 +1050,7 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.opdx);/*ATM propagated to XLOC */
     READ_INT(save.evlopd);/*Science OPD */
     READ_INT(save.dm);/*save DM commands */
+    READ_INT(save.dither);
     parms->save.ints=readcfg_lmat_nmax(parms->nwfs, "save.ints");
     parms->save.wfsopd=readcfg_lmat_nmax(parms->nwfs, "save.wfsopd");
     parms->save.grad=readcfg_lmat_nmax(parms->nwfs, "save.grad");
@@ -1108,12 +1119,12 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.mvm);
     READ_STR(load.mvmi);
     READ_STR(load.mvmf);
+    READ_STR(load.i0);
     READ_INT(load.mvst);
     READ_INT(load.GS0);
     READ_INT(load.tomo);
     READ_INT(load.fit);
     READ_INT(load.W);
-    READ_INT(load.i0);
 }
 /**
    Process simulation parameters to find incompatibility.
@@ -1153,7 +1164,10 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	}
 	parms->sim.end=parms->dbg.tomo_maxit->nx;
     }
-    if(parms->sim.idealfit){
+    if(parms->sim.idealfit || parms->sim.idealtomo){
+	if(parms->sim.idealfit && parms->sim.idealtomo){
+	    warning("idealfit takes precedence over idealtomo\n");
+	}
 	if(parms->recon.alg!=0){
 	    warning("idealfit only works in recon.alg=0 mode. changed\n");
 	    parms->recon.alg=0;
@@ -1165,6 +1179,12 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	if(parms->recon.mvm){
 	    warning("idealfit cannot be used with recon.mvm. changed\n");
 	    parms->recon.mvm=0;
+	}
+	if(parms->sim.wfsalias){
+	    error("wfsalias and idealtomo/idealfit conflicts\n");
+	}
+	if(parms->sim.idealwfs){
+	    error("idealwfs and idealtomo/idealfit conflicts\n");
 	}
     }
     if(parms->sim.evlol){
@@ -1187,17 +1207,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    error("sim.wfsalias conflicts with sim.idealevl. Do not enable both.\n");
 	}
     }
-    if(parms->sim.idealtomo){
-	if(parms->sim.wfsalias){
-	    error("wfsalias and idealtomo conflicts\n");
-	}
-	if(parms->sim.idealfit){
-	    error("idealfit and idealtomo conflicts\n");
-	}
-	if(parms->sim.idealwfs){
-	    error("idealwfs and idealtomo conflicts\n");
-	}
-    }
+    
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
@@ -1382,8 +1392,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].needGS0=0;
 	}
 	/*Do we ever do physical optics.*/
-	if(parms->powfs[ipowfs].phystep>=0
-	   &&(parms->powfs[ipowfs].phystep<parms->sim.end||parms->sim.end==0)){
+	if(parms->powfs[ipowfs].phystep>=0&&(parms->powfs[ipowfs].phystep<parms->sim.end||parms->sim.end==0)){
 	    parms->powfs[ipowfs].usephy=1;
 	    parms->nphypowfs++;
 	}else{
@@ -1931,6 +1940,12 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].r0<=0){
+	    parms->powfs[ipowfs].r0=parms->atm.r0;
+	}
+	if(parms->powfs[ipowfs].l0<=0){
+	    parms->powfs[ipowfs].l0=parms->atm.l0;
+	}
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
 	}
@@ -2700,6 +2715,9 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	if(parms->sim.idealfit){
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	    parms->fit.cachex=0;
+	}
+	if(parms->sim.idealtomo){
+	    parms->gpu.tomo=0;
 	}
 	if(parms->recon.alg==0){/*MV*/
 	    if(parms->sim.idealfit && parms->gpu.fit){

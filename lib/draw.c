@@ -123,19 +123,21 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
     listening=0;
 }
 
-static int list_search(list_t **head, list_t **node, const char *key){
-    list_t *p;
+static int list_search(list_t **head, list_t **node, const char *key, int add){
+    list_t *p=0;
     for(p=*head; p; p=p->next){
 	if(!strcmp(p->key, key)){
 	    break;
 	}
     }
     int ans=p?1:0;
-    if(!p){
-	p=calloc(1, sizeof(list_t));
-	p->key=strdup(key);
-	p->next=*head;
-	*head=p;
+    if(add){
+	if(!p){
+	    p=calloc(1, sizeof(list_t));
+	    p->key=strdup(key);
+	    p->next=*head;
+	    *head=p;
+	}
     }
     if(node) *node=p;
     return ans;
@@ -295,10 +297,13 @@ static int open_drawdaemon(){
 
 /* Search whether fig is already in list. Return 1 if found. Insert if not found
    and return 0.*/
-static int check_figfn(list_t **head, const char *fig, const char *fn){
-    list_t *child;
-    int found1=list_search(head, &child, fig);
-    int found2=list_search(&child->child, NULL, fn);
+static int check_figfn(list_t **head, const char *fig, const char *fn, int add){
+    list_t *child=0;
+    int found1=list_search(head, &child, fig, add);
+    int found2=0;
+    if(child){
+	found2=list_search(&child->child, NULL, fn, add);
+    }
     return found1 && found2;
 }
 /**
@@ -312,6 +317,22 @@ void draw_final(int reuse){
 	draw_remove(sock_draw, reuse);
     }
     UNLOCK(lock);
+}
+
+/**
+   Check whether what we are drawing is current page.
+*/
+int draw_current(const char *fig, const char *fn){
+    int current=0;
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+	char **figfn=sock_draws[ifd].figfn;
+	if(sock_draws[ifd].pause) continue;
+	if(draw_single && check_figfn(&sock_draws[ifd].list, fig, fn, 0)
+	   && figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))) continue;
+	current=1;
+    }
+    return current;
 }
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
@@ -344,7 +365,7 @@ void plot_points(const char *fig,          /**<Category of the figure*/
 	char **figfn=sock_draws[ifd].figfn;
 	if(sock_draws[ifd].pause) continue;
 	if(draw_single && figfn[0] && figfn[1] &&
-	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
+	   check_figfn(&sock_draws[ifd].list, fig, fn, 1) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;
 	}
@@ -420,6 +441,7 @@ void plot_points(const char *fig,          /**<Category of the figure*/
  end:
     UNLOCK(lock); 
 }
+
 /**
    Draw an image.
 */
@@ -446,7 +468,7 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	char **figfn=sock_draws[ifd].figfn;
 	if(sock_draws[ifd].pause) continue;
 	if(draw_single && figfn[0] && figfn[1] && 
-	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
+	   check_figfn(&sock_draws[ifd].list, fig, fn, 1) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;
 	}

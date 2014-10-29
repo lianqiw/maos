@@ -236,7 +236,7 @@ void curecon_t::reset(const PARMS_T *parms){
    
 }
     
-#define DBG_RECON 1
+#define DBG_RECON 0
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 		      const dcell *_gradin){
     cp2gpu(&gradin, _gradin);
@@ -248,23 +248,23 @@ Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 #if DBG_RECON
     static Real cgres_last=INFINITY;
     if(cgres>MAX(cgres_last*5, EPS)){
-	int isimr=grid->isimr;
+	int isim=grid->reconisim;
 	Real omax=curmax(opdr->m, *cgstream);
 	static Real omax_last=INFINITY;
 	if(omax>omax_last*5 || cgres>cgres_last*5){
 	    info("tomo cgres=%g cgres_last=%g. omax=%g, omax_last=%g\n", cgres, cgres_last, omax, omax_last);
 	    if(!disable_save){
-		writebin(_gradin, "tomo_gradin_%d", isimr);
-		curcellwrite(opdr_save, "tomo_opdrlast_%d", isimr);
-		curcellwrite(opdr, "tomo_opdr_%d", isimr);
-		curcellwrite(tomo_rhs, "tomo_rhs_%d", isimr);
+		writebin(_gradin, "tomo_gradin_%d", isim);
+		curcellwrite(opdr_save, "tomo_opdrlast_%d", isim);
+		curcellwrite(opdr, "tomo_opdr_%d", isim);
+		curcellwrite(tomo_rhs, "tomo_rhs_%d", isim);
 	    }
 	    curcellcp(&opdr, opdr_save, *cgstream);
 	    Real newres=RL->solve(&opdr, tomo_rhs, *cgstream);
 	    info2("tomo[%d]: omax=%g, oldres=%g. newres=%g\n", 
-		  isimr, omax, cgres, newres);
+		  isim, omax, cgres, newres);
 	    if(!disable_save){
-		curcellwrite(opdr, "tomo_opdrredo_%d", isimr);
+		curcellwrite(opdr, "tomo_opdrredo_%d", isim);
 	    }
 	    cgres=newres;
 	}
@@ -300,19 +300,19 @@ Real curecon_t::fit(dcell **_dmfit, dcell *_opdr){
 #if DBG_RECON
     static Real cgres_last=INFINITY;
     if(cgres>MAX(cgres_last*5, EPS)){
-	int isimr=grid->isimr;
+	int isim=grid->reconisim;
 	info("fit cgres=%g, cgres_last=%g\n", cgres, cgres_last);
 	if(!disable_save){
-	    curcellwrite(opdr, "fit_opdr_%d", isimr);
-	    curcellwrite(dmfit_save, "fit_dmfitlast_%d", isimr);
-	    curcellwrite(dmfit, "fit_dmfit_%d", isimr);
-	    curcellwrite(fit_rhs, "fit_rhs_%d", isimr);
+	    curcellwrite(opdr, "fit_opdr_%d", isim);
+	    curcellwrite(dmfit_save, "fit_dmfitlast_%d", isim);
+	    curcellwrite(dmfit, "fit_dmfit_%d", isim);
+	    curcellwrite(fit_rhs, "fit_rhs_%d", isim);
 	}
 	curcellcp(&dmfit, dmfit_save, *cgstream);
 	Real newres=FL->solve(&dmfit, fit_rhs, *cgstream);
-	info2("fit[%d]: oldres=%g. newres=%g\n", isimr, cgres, newres);
+	info2("fit[%d]: oldres=%g. newres=%g\n", isim, cgres, newres);
 	if(!disable_save){
-	    curcellwrite(dmfit, "fit_dmfitredo_%d", isimr);
+	    curcellwrite(dmfit, "fit_dmfitredo_%d", isim);
 	}
 	cgres=newres;
     }
@@ -458,10 +458,10 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
     const RECON_T *recon=simu->recon;
     dcell *rhsc=NULL;
     dcell *lc=NULL;	
-    if(!simu->opdr){
+    if(!simu->opdr && opdr_vec){
 	cp2cpu(&simu->opdr, opdr_vec, 0);
     }
-    if(!simu->parms->gpu.tomo){
+    if(!simu->parms->gpu.tomo && simu->opdr){
 	cp2gpu(&opdr_vec, simu->opdr);
     }
     writebin(simu->opdr, "opdr");
@@ -477,9 +477,10 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 	writebin(lc, "CPU_FitSolve%d", i);
     }
     dcell *lhs=NULL;
-    muv_trans(&lhs, &recon->FR, rhsc, 1);
-    writebin(lhs, "CPU_FitRt");
-
+    if(!simu->parms->fit.square){
+	muv_trans(&lhs, &recon->FR, rhsc, 1);
+	writebin(lhs, "CPU_FitRt");
+    }
     curcell *rhsg=NULL;
     curcell *lg=NULL;
     FR->R(&rhsg, 0.f, opdr, 1.f, stream);
@@ -495,7 +496,7 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
     for(int i=0; i<5; i++){
 	FL->solve(&lg, rhsg, stream);
 	curcellwrite(lg, "GPU_FitSolve%d", i);
-    }
+    }    
     curcell *lhsg=NULL;
     FR->Rt(&lhsg, 0, rhsg, 1, stream);
     curcellwrite(lhsg, "GPU_FitRt");
@@ -586,7 +587,7 @@ void gpu_tomo(SIM_T *simu){
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
-    curecon->grid->isimr=simu->reconisim;
+    curecon->grid->reconisim=simu->reconisim;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     if(parms->dbg.tomo){
@@ -607,7 +608,7 @@ void gpu_fit(SIM_T *simu){
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
-    curecon->grid->isimr=simu->reconisim;
+    curecon->grid->reconisim=simu->reconisim;
     const PARMS_T *parms=simu->parms;
     if(parms->dbg.fit){
 	curecon->fit_test(simu);

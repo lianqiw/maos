@@ -192,6 +192,8 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
+    double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.l0 is not set*/
+    double l0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.l0 is not set*/
     double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
     double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
@@ -220,10 +222,11 @@ typedef struct POWFS_CFG_T{
     int dither;     /**<Turn on/off dithering*/
     double dither_amp;/**<Dithering amptlidue to update centroid gain or matched filter.*/
     double dither_gpll;/**<Gain of phase locked loop*/
-    int dither_nskip;/**<Skip steps for uplink loop to stable*/
-    int dither_npll; /**<Period for updating PLL.*/
-    int dither_nstat;/**<Period for updating statistics*/
-
+    int dither_pllskip;/**<Skip steps for uplink loop to stable*/
+    int dither_nskip;/**<Skip steps for PLL loop to stable*/
+    int dither_npll;  /**<Number of simulations steps for updating PLL.*/
+    int dither_ndrift;/**<Number of PLL periods for updating drift mode computation*/
+    int dither_nmtch; /**<Number of drift periods for updating matched filter*/
     /*Options for Pywfs*/
     double modulate;/**<Pyramid modulation diamter in arcsec*/
     double fov;     /**<Pyramid WFS FoV, equivalent to fieldstop, but for PyWFS only*/
@@ -627,12 +630,12 @@ typedef struct LOAD_CFG_T{
     char *mvm;       /**<load mvm from.*/
     char *mvmi;      /**<load mvmi from.*/
     char *mvmf;      /**<load mvmf from.*/
+    char *i0;        /**<load i0 for powfs from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
-    int i0;          /**<if 1, load i0 for powfs*/
 }LOAD_CFG_T;
 /**
    contains input parameters for saving variables.
@@ -652,7 +655,7 @@ typedef struct SAVE_CFG_T{
     int opdx;        /**<save ATM propagated to XLOC for each time step*/
     int dm;          /**<save computed DM actuator commands for each time step*/
     int evlopd;      /**<save science OPD for each time step*/
-
+    int dither;      /**<save estimated matched filter from dithering*/
     /*for WFS. Converted from scalar or vector input.
       Scalar input: 1: both, 2: high order only, 3: lo only
       Vector input: Equal to the number of WFS.
@@ -734,6 +737,7 @@ typedef struct PARMS_T{
     int nlowfs;      /**<Number of low order wfs.*/
     int nhiwfs;      /**<Number of high order wfs*/
     dmat *dirs;      /**<Collect for beam directions*/
+    int dither;      /**<Some WFS is doing dithering*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

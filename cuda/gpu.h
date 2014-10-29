@@ -35,6 +35,8 @@ void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg);
 
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs);
 void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs);
+void gpu_wfsgrad_update_etf(const PARMS_T *parms, const POWFS_T *powfs);
+void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs);
 void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat);
 void gpu_wfsgrad_queue(thread_t *info);
 void gpu_wfsgrad_sync(thread_t *info);

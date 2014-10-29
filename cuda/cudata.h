@@ -36,6 +36,7 @@ typedef struct cudata_t{
     static int *evlgpu;
     static int *wfsgpu;
     std::map<uint64_t, void*> *memhash;/*For reuse constant GPU memory*/
+    std::map<void *, int> *memcount; /*Store count of reused memory*/
     std::map<void*, void*> *memcache;/*For reuse temp array for type conversion.*/
     pthread_mutex_t memmutex;
     /**<for accphi */
@@ -65,6 +66,7 @@ typedef struct cudata_t{
     cudata_t(){
 	memset(this, 0, sizeof(cudata_t));
 	memhash=new std::map<uint64_t, void*>;
+	memcount=new std::map<void*, int>;
 	memcache=new std::map<void*, void*>;
 	pthread_mutex_init(&memmutex, 0);
     }

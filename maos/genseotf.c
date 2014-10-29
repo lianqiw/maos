@@ -96,7 +96,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
 		   loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		   powfs[ipowfs].realsaa->p[iotf],
-		   thres,wvl,dtheta,NULL,parms->atm.r0, parms->atm.l0, 
+		   thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
 		   ncompx, ncompy, nsa, 1);
 	}
     }/*iwvl */
@@ -130,7 +130,8 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
-		   0, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, notf, notf, 1, 1);
+		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0,
+		   notf, notf, 1, 1);
 	}
     }/*iwvl */
     locfree(loc);

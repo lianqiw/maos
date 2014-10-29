@@ -112,7 +112,7 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 /**
    Apply matched filter. \todo this implementation relies on shared variable. It
 is probably causing competition.  */
-__global__ static void mtche_do(Real *restrict grad, Real (*restrict *restrict mtches)[2], 
+__global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
 				const Real *restrict ints, const Real *restrict i0sum, 
 				int pixpsa, int nsa){
     extern __shared__ Real g0[];
@@ -123,7 +123,7 @@ __global__ static void mtche_do(Real *restrict grad, Real (*restrict *restrict m
     }
     int isa=blockIdx.x;
     ints+=isa*pixpsa;
-    const Real (*const restrict mtche)[2]=mtches[isa];
+    const Real (*const restrict mtche)[2]=mtches+pixpsa*isa;
  
     for (int ipix=threadIdx.x; ipix<pixpsa; ipix+=blockDim.x){
 	g[0][threadIdx.x]+=mtche[ipix][0]*ints[ipix];
@@ -147,13 +147,13 @@ __global__ static void mtche_do(Real *restrict grad, Real (*restrict *restrict m
     }
 }
 
-static void mtche(Real *restrict grad, Real (*restrict *restrict mtches)[2], 
+static void mtche(Real *restrict grad, Real (*mtches)[2],
 		  const Real *restrict ints, const Real *restrict i0sum, 
 		  int pixpsa, int nsa, int msa, cudaStream_t stream){
     for(int isa=0; isa<nsa; isa+=msa){
 	int ksa=MIN(msa, nsa-isa);
 	mtche_do<<<ksa, 16, 16*3*sizeof(Real), stream>>>
-	    (grad+isa, mtches+isa, ints+pixpsa*isa, i0sum?i0sum+isa:0, pixpsa, nsa);
+	    (grad+isa, mtches+pixpsa*isa, ints+pixpsa*isa, i0sum?i0sum+isa:0, pixpsa, nsa);
     }
 }
 /**
@@ -259,11 +259,11 @@ void gpu_fieldstop(curmat *opd, Real *amp, int *embed, int nembed,
 	(wvf.p, opd->p, embed, opd->nx, wvl);
 }
 __global__ static void
-dither_acc_do(Real *restrict *im0, Real *restrict *imx, Real *restrict *imy, 
+dither_acc_do(Real *restrict *imb, Real *restrict *imx, Real *restrict *imy, 
 	      Real *restrict const *pints, Real cd, Real sd, int pixpsa, int nsa){
     for(int isa=blockIdx.x; isa<nsa; isa+=gridDim.x){
 	const Real *ints=pints[isa];
-	Real *restrict acc_ints=im0[isa];
+	Real *restrict acc_ints=imb[isa];
 	Real *restrict acc_intsx=imx[isa];
 	Real *restrict acc_intsy=imy[isa];
 	for(int ipix=threadIdx.x; ipix<pixpsa; ipix+=blockDim.x){
@@ -274,34 +274,26 @@ dither_acc_do(Real *restrict *im0, Real *restrict *imx, Real *restrict *imy,
     }
 }
 dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
-    im0=curcellnew(nsa,1,pixpsax,pixpsay);
+    imb=curcellnew(nsa,1,pixpsax,pixpsay);
     imx=curcellnew(nsa,1,pixpsax,pixpsay);
     imy=curcellnew(nsa,1,pixpsax,pixpsay);
 }
-void dither_t::reset(){
-    imc=0;
-    curcellzero(im0);
-    curcellzero(imx);
-    curcellzero(imy);
-}
+
 /**Accumulate for matched filter updating*/
-void dither_t::acc(curcell *ints, Real angle, cudaStream_t stream){
+void dither_t::acc(DITHER_T *dither, curcell *ints, Real angle, int ndrift, cudaStream_t stream){
     const int nsa=ints->nx*ints->ny;
     const int pixpsa=ints->p[0]->nx*ints->p[0]->ny;
     dither_acc_do<<<ints->nx, pixpsa, 0, stream>>>
-	(im0->pm, imx->pm, imy->pm, ints->pm, cosf(angle), sinf(angle), pixpsa, nsa);
+	(imb->pm, imx->pm, imy->pm, ints->pm, cosf(angle), sinf(angle), pixpsa, nsa);
     imc++;
-}
-/**Output for matched filter updating*/
-void dither_t::output(Real a2m, int iwfs, int isim, cudaStream_t stream){
-    curcellscale(im0, 1./(imc), stream);
-    curcellscale(imx, 2./(a2m*imc), stream);
-    curcellscale(imy, 2./(a2m*imc), stream);
-    CUDA_SYNC_STREAM;
-    curcellwrite(im0, "wfs%d_i0_%d", iwfs, isim);
-    curcellwrite(imx, "wfs%d_gx_%d", iwfs, isim);
-    curcellwrite(imy, "wfs%d_gy_%d", iwfs, isim);
-    reset();
+    if(imc%ndrift==0){
+	cp2cpu(&dither->imb, imb, stream);
+	cp2cpu(&dither->imx, imx, stream);
+	cp2cpu(&dither->imy, imy, stream);
+	curcellzero(imb);
+	curcellzero(imx);
+	curcellzero(imy);
+    }
 }
 
 /**
@@ -407,13 +399,10 @@ void gpu_wfsgrad_queue(thread_t *info){
 	if(save_opd){
 	    cellarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
 	}
-	if(parms->plot.run>1){
+	if(parms->plot.run){
 	    const double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
-	    dmat *tmp=NULL;
-	    cp2cpu(&tmp, phiout, stream);
-	    drawopdamp("wfsopd",powfs[ipowfs].loc,tmp->p,realamp,NULL,
-		       "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-	    dfree(tmp);
+	    drawopdamp_gpu("wfsopd",powfs[ipowfs].loc,phiout,stream,realamp,NULL,
+			   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
 	}
 	if(do_geom){
 	    double ratio;
@@ -442,7 +431,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	if(parms->powfs[ipowfs].psfout){
 	    cellarr_cur(simu->save->ztiltout[iwfs], simu->isim, gradcalc, stream);
 	}
-	if(do_phy || parms->powfs[ipowfs].psfout || do_pistatout){/*physical optics */
+	if(do_phy || parms->powfs[ipowfs].psfout || parms->powfs[ipowfs].dither || do_pistatout){/*physical optics */
 	    gpu_wfsints(simu, phiout->p, gradref, iwfs, isim, stream);
 	}/*do phy */
 	ctoc("grad");
@@ -468,18 +457,14 @@ void gpu_wfsgrad_queue(thread_t *info){
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
 		    double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
 		    angle+=simu->dither[iwfs]->deltam;
-		    cuwfs[iwfs].dither->acc(ints, angle, stream);
-		    int nstat=parms->powfs[ipowfs].dither_nstat;
-		    if((isim-parms->powfs[ipowfs].dither_nskip+1)%(nstat*dtrat)==0){
-			warning2("Dither step%d, wfs%d: output statistics\n", isim, iwfs);
-			cuwfs[iwfs].dither->output((Real)simu->dither[iwfs]->a2m, iwfs, isim, stream);
-		    }
+		    int ndrift=parms->powfs[ipowfs].dither_ndrift;
+		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, angle, ndrift, stream);
 		}
 		curzero(gradcalc, stream);
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
-		    mtche(gradcalc->p, cuwfs[iwfs].mtche, ints->p[0]->p, 
-			  parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum:NULL,
+		    mtche(gradcalc->p, (Real(*)[2])(cuwfs[iwfs].mtche->p), ints->p[0]->p, 
+			  parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum->p:NULL,
 			  pixpsa, nsa, cuwfs[iwfs].msa, stream);
 		    break;
 		case 2:{
@@ -490,7 +475,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot:NULL;
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 			(gradcalc->p, ints->p[0]->p, 
-			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, (Real(*)[2])cuwfs[iwfs].cogcoeff, srot);
+			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
+			 (Real(*)[2])cuwfs[iwfs].cogcoeff, srot);
 		}
 		    break;
 		case 3:{
@@ -531,6 +517,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	ctoc("done");
     }//for iwfs
 }
+
 void gpu_wfsgrad_sync(thread_t *info){
     int iwfs=info->start;
     SIM_T *simu=(SIM_T*)info->data;

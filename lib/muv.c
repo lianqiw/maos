@@ -36,8 +36,7 @@
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_T *A = B;
-    if(A->M){
-	if(!xin) return;
+    if(A->M && xin){
 	dcellmm(xout, A->M, xin, "nn", alpha);
 	if(A->U && A->V){
 	    dcell *tmp=NULL;
@@ -431,7 +430,7 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
 double muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
 	       const MUV_T *L,/**<[in] Contain info about the left hand side matrix A*/
 	       const MUV_T *R,/**<[in] Contain info about the right hand side matrix B*/
-	       dcell *b       /**<[in] The right hand side vector to solve*/ 
+	       dcell *b       /**<[in] The right hand side vector to solve. mull is special case*/ 
 	       ){
     dcell *rhs=NULL;
     double res=0;

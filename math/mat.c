@@ -982,7 +982,7 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
     PCELL(out, pout);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    pout[iy][ix]=pin[iy+sy][ix+sx];
+	    pout[iy][ix]=X(ref)(pin[iy+sy][ix+sx]);
 	}
     }
     return out;
