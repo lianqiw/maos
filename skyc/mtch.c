@@ -136,7 +136,7 @@ void mtch(dcell **mtche, dmat **sanea,
 	    wt->p[ipix]=1./(rne*rne+bkgrnd+i0->p[isa]->p[ipix]+psfvar*i0->p[isa]->p[ipix]);
 	}
 	
-	dmat *tmp=dpinv(i0g, wt,NULL);
+	dmat *tmp=dpinv(i0g, wt);
 	dmm(&(*mtche)->p[isa],0,i0m,tmp,"nn",1);
 	dfree(tmp);
 	dcwpow(wt,-1);

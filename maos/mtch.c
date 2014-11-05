@@ -155,7 +155,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	if(!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx){
 	    if(mtchcrx){/*constrained x(radial) */
 		double shift=pixthetax*shiftx;
-		pi0m[mtchcrx][0]=shift*kpx;/*kp is here to ensure good conditioning */
+		/*kp is here to ensure good conditioning */
+		pi0m[mtchcrx][0]=shift*kpx;
 		pi0m[mtchcrx+1][0]=-shift*kpx;
 	    }
 	    if(mtchcry){/*constrained y(azimuthal). */
@@ -173,8 +174,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		double theta=srot[isa]; 
 		if(mtchcrx){/*constrained x(radial) */
 		    double shift=pixthetax*shiftx;
-		    pi0m[mtchcrx][0]=shift*kpx*cos(theta);/*kp is here to ensure good conditioning */
-		    pi0m[mtchcrx][1]=shift*kpx*sin(theta);/*kp is here to ensure good conditioning */
+		    pi0m[mtchcrx][0]=shift*kpx*cos(theta);
+		    pi0m[mtchcrx][1]=shift*kpx*sin(theta);
 		    pi0m[mtchcrx+1][0]=-pi0m[mtchcrx][0];
 		    pi0m[mtchcrx+1][1]=-pi0m[mtchcrx][1];
 		}
@@ -186,6 +187,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    pi0m[mtchcry+1][1]=-pi0m[mtchcry][1];
 		}
 	    }
+
 	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
 	    if(i0sum[ii0][isa]>i0summax){
 		i0summax=i0sum[ii0][isa];
@@ -215,9 +217,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    adddbl(pi0g[2], 1, bkgrnd2, i0n, 1, bkgrnd_res);
 	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
 	    if(mtchcrx && !crdisable){
-		/*
-		  constrained matched filter. compute separately for each wfs.
-		*/
 		mki0shx(pi0g[mtchcrx],pi0g[mtchcrx+1],i0s[ii0][isa],kpx);
 		if(sub_i0){
 		    adddbl(pi0g[mtchcrx],1,i0s[ii0][isa]->p, i0n, -kpx, 0);
@@ -256,7 +255,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		i0g->ny=3;
 		i0m->ny=3;
 	    }
-	    dmat *tmp=dpinv(i0g, wt, NULL);
+	    dmat *tmp=dpinv(i0g, wt);
 	    dmm(&mtche[ii0][isa],0,i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
@@ -279,11 +278,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    psanea[1][isa]=nea2->p[3];
 		
 	    if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
+		//Rotate matched filter to produce grads in (x/y).
 		double theta=srot[isa]; 
 		drotvect(mtche[ii0][isa], theta);
 	    }
 	    if(parms->powfs[ipowfs].phytype==1){
 		if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
+		    //Rotate NEA to (x/y)
 		    double theta=srot[isa]; 
 		    drotvecnn(&saneaxy[ii0][isa], nea2, theta);
 		}else{

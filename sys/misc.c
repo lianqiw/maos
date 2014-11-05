@@ -829,7 +829,7 @@ void set_realtime(int icpu, int niceness){
 }
 quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
-    fprintf(stderr, "default_quitfun: %s\n", msg);
+    sync();
     if(strncmp(msg, "ERROR", 5)){
 	print_backtrace();
 	sync();

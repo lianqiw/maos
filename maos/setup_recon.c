@@ -759,7 +759,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dfree(TT);
 	}
     }
-    recon->PTT=dcellpinv(recon->TT,NULL,recon->saneai);
+    recon->PTT=dcellpinv(recon->TT,recon->saneai);
     if(parms->save.setup){
 	writebin(recon->TT, "%s/TT",dirsetup);
 	writebin(recon->PTT, "%s/PTT",dirsetup);
@@ -805,7 +805,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dfree(DF);
 	}
     }
-    recon->PDF=dcellpinv(recon->DF, NULL, recon->saneai);
+    recon->PDF=dcellpinv(recon->DF,recon->saneai);
     if(parms->save.setup){
 	writebin(recon->DF, "%s/DF",dirsetup);
 	writebin(recon->PDF, "%s/PDF",dirsetup);
@@ -824,7 +824,7 @@ setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }else{
 	recon->TTF=dcellref(recon->TT);
     }
-    recon->PTTF=dcellpinv(recon->TTF, NULL, recon->saneai);
+    recon->PTTF=dcellpinv(recon->TTF,recon->saneai);
     if(parms->save.setup){
 	writebin(recon->TTF, "%s/TTF",dirsetup);
 	writebin(recon->PTTF, "%s/PTTF",dirsetup);
@@ -1392,17 +1392,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
 setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
-    int ilgs=-1;
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].llt){
-	    if(ilgs==-1){
-		ilgs=ipowfs;
-	    }else{
-		warning("There are multiple LGS type\n");
-	    }
-	}
-    }
+    int ilgs=parms->ilgspowfs;
     if(ilgs==-1){
 	warning("There are no LGS with llt. \n");
 	return;
@@ -1411,13 +1401,14 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     recon->GFall=cellnew(parms->npowfs, 1);
     recon->GFlgs=cellnew(parms->nwfsr, 1);
     recon->GFngs=cellnew(parms->nwfsr, 1);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
+    {
 	dmat *opd=dnew(recon->ploc->nloc,1);
 	loc_add_focus(opd->p, recon->ploc, 1);
-	dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 'n', 1);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
+	    dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, 'n', 1);
+	}
 	dfree(opd);
     }
-
     if(parms->save.setup){
 	writebin(recon->GFall,"%s/GFall",dirsetup);
     }
@@ -1429,7 +1420,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
       together to construct a single focus measurement*/
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1){
+	if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1 && parms->powfs[ipowfs].skip!=2){
 	    info2("wfs %d will be used to track focus\n", iwfs);
 	}else{
 	    continue;
@@ -1520,22 +1511,11 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
       because each LGS may have different range error.
     */
     recon->RFlgsg=cellnew(parms->nwfsr, parms->nwfsr);
-    PDCELL(recon->RFlgsg, RFlgsg);
-  
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(!parms->powfs[ipowfs].llt)
-	    continue;
-	dmat *GMtmp=NULL;
-	dmat *GMGtmp=NULL;
-	dspmm(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		  recon->GFall->p[ipowfs], 'n', 1);
-	dmm(&GMGtmp, 0, recon->GFall->p[ipowfs], GMtmp, "tn",1);
-	dinvspd_inplace(GMGtmp);
-	dmm(&RFlgsg[iwfs][iwfs], 0, GMGtmp, GMtmp, "nt", 1);
-
-	dfree(GMtmp);
-	dfree(GMGtmp);
+	if(parms->powfs[ipowfs].llt){
+	    recon->RFlgsg->p[iwfs*(parms->nwfsr+1)]=dpinv(recon->GFall->p[ipowfs],recon->saneai->p[iwfs+parms->nwfsr*iwfs]);
+	}
     }
   
     if(parms->save.setup){
@@ -1547,6 +1527,35 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     }
 }
 
+/**
+   Setup reconstructor for TWFS
+*/
+static void
+setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
+    recon->GRall=cellnew(parms->npowfs, 1);
+    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, 15, 1);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
+	    dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, 'n', 1);
+	}
+    }
+    dcell *GRtwfs=cellnew(parms->nwfsr, 1);
+    dspcell *neai=cellnew(parms->nwfsr, parms->nwfsr);
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip==2){//twfs
+	    GRtwfs->p[iwfs]=dref(recon->GRall->p[ipowfs]);
+	    neai->p[iwfs+iwfs*parms->nwfsr]=dspref(recon->saneai->p[iwfs+parms->nwfsr*iwfs]);
+	}
+    }
+    recon->RRtwfs=dcellpinv(GRtwfs, neai);
+    cellfree(GRtwfs);
+    cellfree(neai);
+    if(parms->save.setup){
+	writebin(recon->GRall, "%s/GRall", dirsetup);
+	writebin(recon->RRtwfs, "%s/RRtwfs", dirsetup);
+    }
+}
 
 /**
    compute the MVST split tomography NGS mode reconstructor.
@@ -1800,7 +1809,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcellmm(&Qn, recon->HA, recon->MVModes, "nn", 1);
 	dcell *Qntt=cellnew(Qn->nx,Qn->ny);
 	dmat *TTploc=loc2mat(recon->floc,1);/*TT mode. need piston mode too! */
-	dmat *PTTploc=dpinv(TTploc,NULL,recon->W0);/*TT projector. no need w1 since we have piston. */
+	dmat *PTTploc=dpinv(TTploc,recon->W0);/*TT projector. no need w1 since we have piston. */
 	dfree(TTploc);
 	for(int ix=0; ix<Qn->nx*Qn->ny; ix++){
 	    if(!Qn->p[ix]) continue;
@@ -2017,6 +2026,10 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }
+    if(parms->itpowfs!=-1){
+	/*setup Truth wfs*/
+	setup_recon_twfs(recon,powfs,parms);
+    }
     switch(parms->recon.alg){
     case 0:{
 	setup_recon_tomo(recon, parms, powfs, aper);
@@ -2169,6 +2182,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->RFngsx);
     dcellfree(recon->RFdfx);
     dcellfree(recon->RFdfa);
+    dcellfree(recon->GRall);
+    dcellfree(recon->RRtwfs);
     dspcellfree(recon->ZZT);
     dspcellfree(recon->HXF); 
     dspcellfree(recon->HXW);

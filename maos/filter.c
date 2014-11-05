@@ -180,7 +180,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 /**
    Update DM command for next cycle using info from last cycle (two cycle delay)
 in closed loop mode */
-void filter_cl(SIM_T *simu){
+static void filter_cl(SIM_T *simu){
     /*
       2009-11-02: Moved to the end of isim loop to update
       for next step.  only need to cache a single dmerrlast
@@ -340,7 +340,7 @@ void filter_cl(SIM_T *simu){
 /**
    filter DM commands in open loop mode by simply copy the output
  */
-void filter_ol(SIM_T *simu){
+static void filter_ol(SIM_T *simu){
     assert(!simu->parms->sim.closeloop);
     if(simu->dmerr){
 	dcellcp(&simu->dmcmd, simu->dmerr);

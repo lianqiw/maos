@@ -157,7 +157,8 @@ typedef struct POWFS_CFG_T{
     double siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
-    int type;    /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
+    int type;       /**<WFS type: 0: SHWFS, 1:Pyramid WFS*/
+    int step;       /**<frame to start using WFS*/
     int trs;        /**<tip/tilt removal flag. True for LGS, False for NGS*/
     int dfrs;       /**<differential focus removal flag. True for LGS, False for NGS*/
     int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
@@ -185,7 +186,7 @@ typedef struct POWFS_CFG_T{
 		       - 1: ztilt.*/
     int phytype;    /**<physical optics type. 1: mtch, 2: tcog, 3: MAP*/
     int phytypesim; /**<physical optics type for simulation. -1 to follow phytype*/
-    int phystep;    /**<frames to start using physical optics. 
+    int phystep;    /**<frame to start using physical optics. 
 		       -  0: means from frame 0.
 		       - >0: need to compute GS0 to calculate geometric optics
 		       - -1: never, doesn't need to compute DTF
@@ -738,6 +739,10 @@ typedef struct PARMS_T{
     int nhiwfs;      /**<Number of high order wfs*/
     dmat *dirs;      /**<Collect for beam directions*/
     int dither;      /**<Some WFS is doing dithering*/
+    int ilgspowfs;     /**<Index of LGS WFS*/
+    int itpowfs;       /**<Index of twfs*/
+    int step_lo;     /**<Enabling step for low order wfs*/
+    int step_hi;     /**<Enabling step for high order wfs*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

@@ -151,7 +151,7 @@ void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    int lo_output=parms->ntipowfs && (!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_lo==0);
+    int lo_output=parms->ntipowfs && (!parms->sim.closeloop || (isim+1-parms->step_lo)%parms->sim.dtrat_lo==0);
     if(parms->recon.split==2){
 	if(!parms->gpu.tomo){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
@@ -212,7 +212,7 @@ void reconstruct(SIM_T *simu){
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
+    const int hi_output=(!parms->sim.closeloop || (isim+1-parms->step_hi)%parms->sim.dtrat_hi==0);
     if(simu->gradlastcl){
 	if(parms->sim.closeloop){
 	    calc_gradol(simu);
@@ -296,11 +296,11 @@ void reconstruct(SIM_T *simu){
     if(simu->dmerr && simu->gradlastcl){ //High order. 
 	//global focus is the 6th mode in ngsmod->Modes
 	if(parms->sim.mffocus){
-	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
 	    //Do LPF on NGS focus measurement to drive global focus
 	    double lpfocus=parms->sim.lpfocus;
 	    simu->ngsfocuslpf->p[0]->p[5]=
 		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
+	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
 	}
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){

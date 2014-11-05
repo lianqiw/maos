@@ -114,7 +114,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     {
 	dcell *pupim=0;
 	int nn=3;
-	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 3);
+	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
 	cellarr *pupsave=cellarr_init(nn,opds->ny,"pupim");
 	for(int im=0; im<opds->ny; im++){
 	    for(int j=0; j<nn; j++){

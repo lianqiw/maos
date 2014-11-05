@@ -1566,7 +1566,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int do_nea=0;
     if(parms->powfs[ipowfs].phytypesim==2){;
-	powfs[ipowfs].gradphyoff=cellnew(nwfs, 1);
+	powfs[ipowfs].gradoffcog=cellnew(nwfs, 1);
     }
     rand_t rstat;
     double neaspeckle2=0;
@@ -1617,9 +1617,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 
 	    double *restrict gx=NULL;
 	    double *restrict gy=NULL;
-	    if(powfs[ipowfs].gradphyoff){
-		powfs[ipowfs].gradphyoff->p[iwfs]=dnew(nsa*2,1);
-		gx=powfs[ipowfs].gradphyoff->p[iwfs]->p;
+	    if(powfs[ipowfs].gradoffcog){
+		powfs[ipowfs].gradoffcog->p[iwfs]=dnew(nsa*2,1);
+		gx=powfs[ipowfs].gradoffcog->p[iwfs]->p;
 		gy=gx+nsa;
 	    }
 	    intstat->cogcoeff->p[iwfs]=dnew(2,nsa);
@@ -1677,15 +1677,15 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		}
 	    }
 	}else{
-	    if(powfs[ipowfs].gradphyoff){
-		powfs[ipowfs].gradphyoff->p[iwfs]=dref(powfs[ipowfs].gradphyoff->p[0]);
+	    if(powfs[ipowfs].gradoffcog){
+		powfs[ipowfs].gradoffcog->p[iwfs]=dref(powfs[ipowfs].gradoffcog->p[0]);
 	    }
 	    powfs[ipowfs].intstat->cogcoeff->p[iwfs]=dref(powfs[ipowfs].intstat->cogcoeff->p[0]);
 	}
     }
     if(parms->save.setup){
-	if(powfs[ipowfs].gradphyoff){
-	    writebin(powfs[ipowfs].gradphyoff, "%s/powfs%d_gradphyoff", dirsetup, ipowfs);
+	if(powfs[ipowfs].gradoffcog){
+	    writebin(powfs[ipowfs].gradoffcog, "%s/powfs%d_gradoffcog", dirsetup, ipowfs);
 	}
 	if(sanea){
 	    writebin(sanea, "%s/powfs%d_sanea", dirsetup, ipowfs);
@@ -2143,6 +2143,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(powfs[ipowfs].opdadd);
     dcellfree(powfs[ipowfs].opdbias);
     dcellfree(powfs[ipowfs].gradoff);
+    dcellfree(powfs[ipowfs].gradoffcog);
 }
 /**
    Free all parameters of powfs at the end of simulation.

@@ -11,13 +11,13 @@ static void test_dpinv(){
     drandn(A,1,&rstat);
     dmat *w=dnew(10,1);
     dset(w,2);
-    dmat *Ap=dpinv(A,w,NULL);
+    dmat *Ap=dpinv(A,w);
     writebin(A,"A");
     writebin(Ap,"Ap");
     dmat *ApA=NULL;
     dmm(&ApA,0,Ap,A,"nn",1);
     dsp *spw=dspnewdiag(w->nx, w->p, 1);
-    dmat *Ap2=dpinv(A,NULL,spw);
+    dmat *Ap2=dpinv(A,spw);
     writebin(w,"w");
     dspwrite(spw,"spw");
     writebin(Ap2,"Ap2");
@@ -120,11 +120,11 @@ static void test_hist(){
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin");
     dspcell *saneai=dspcellread("saneai.bin");
-    dcell *PTT=dcellpinv(TT,NULL,saneai);
+    dcell *PTT=dcellpinv(TT,saneai);
     writebin(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
-	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx], NULL,saneai->p[i+i*TT->nx]);
+	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx],saneai->p[i+i*TT->nx]);
     }
     writebin(PTT2,"TT2_pinv.bin");
     /*exit(0); */

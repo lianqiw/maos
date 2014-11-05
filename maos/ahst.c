@@ -561,7 +561,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,saneai);
+	ngsmod->Rngs=dcellpinv(ngsmod->GM,saneai);
     }
     if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
@@ -573,7 +573,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		dcell *GaM=NULL;
 		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
 		dcellmm(&GaM, recon->GAlo, Matt, "nn", 1);
-		dcell *tmp=dcellpinv(GaM, NULL,saneai);
+		dcell *tmp=dcellpinv(GaM,saneai);
 		dcell *tmp2=NULL;
 		dcellmulsp(&tmp2,tmp,recon->GAlo, 1);
 		ngsmod->Ptt->p[idm]=dref(tmp2->p[idm]);
@@ -601,13 +601,13 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    dspcelladdI(ngsmod->Wa, 1e-9*maxeig);
 	    
 	    toc("Wa");
-	    ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,ngsmod->Wa);
+	    ngsmod->Pngs=dcellpinv(ngsmod->Modes,ngsmod->Wa);
 	    toc("Pngs");
 	    if(parms->tomo.ahst_ttr){
 		ngsmod->Ptt=cellnew(parms->ndm,1);
 		for(int idm=0; idm<ndm; idm++){
 		    dmat *Matt=loc2mat(recon->aloc->p[idm],0);
-		    ngsmod->Ptt->p[idm]=dpinv(Matt, NULL, ngsmod->Wa->p[idm+idm*ndm]);
+		    ngsmod->Ptt->p[idm]=dpinv(Matt, ngsmod->Wa->p[idm+idm*ndm]);
 		    dfree(Matt);
 		}
 	    }
@@ -623,12 +623,12 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
     }else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
-	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,NULL);
+	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL);
 	if(parms->tomo.ahst_ttr){
 	    ngsmod->Ptt=cellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
 		dmat *Matt=loc2mat(recon->aloc->p[idm],0);
-		ngsmod->Ptt->p[idm]=dpinv(Matt, NULL,NULL);
+		ngsmod->Ptt->p[idm]=dpinv(Matt,NULL);
 		dfree(Matt);
 	    }
 	}

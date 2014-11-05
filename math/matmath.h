@@ -59,7 +59,7 @@
     X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
     X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT; \
-    X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp) CHECK_UNUSED_RESULT; \
+    X(mat) *X(pinv)(const X(mat) *A, const void *W) CHECK_UNUSED_RESULT; \
     T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;	\
     void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val); \
     void X(circle_symbolic)(X(mat) *A, R cx, R cy, R dx, R dy, R r);	\
@@ -115,7 +115,7 @@
     X(cell)* X(cellinvspd)(X(cell) *A);					\
     X(cell)* X(cellinv)(X(cell) *A);					\
     X(cell)* X(cellinvspd_each)(X(cell) *A);				\
-    X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const X(spcell) *Wsp); \
+    X(cell)* X(cellpinv)(const X(cell) *A, const void *W);		\
     X(cell)* X(cellsvd_pow)(X(cell) *A, R power, R thres);		\
     void X(cellcwpow)(X(cell)*A, R power);				\
     void X(celldropzero)(X(cell) *B, R thres);				\

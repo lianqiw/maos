@@ -47,31 +47,34 @@ static dmat *genRnm(const dmat *locr, int ir, int im){
 }
 
 /**
-   Create Zernike modes on loc with radius R and radial order upto nr
+   Create Zernike modes on loc with diameter D and radial order upto nr
    nr=0 is piston
    nr=1 is tip/tilt
    nr=2 is quadratic modes
+   if nopiston is set, skip piston mode.
+   if onlyr is set, only radial mode is used.
    
 */
-dmat* zernike(const loc_t *loc, double D, int nr){
+dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
     int nr3=(int)floor((sqrt(loc->nloc*8+1)-3)*0.5);
-    if(nr>nr3){
-	warning("Reduce nr=%d to %d\n", nr, nr3);	
-	nr=nr3;
+    if(rmax>nr3){
+	warning("Reduce rmax=%d to %d\n", rmax, nr3);	
+	rmax=nr3;
     }
     double D2=loc_diam(loc);
     if(D<=0){
 	D=D2;
-    }else if(fabs(D-D2)>loc->dx*10){
-	error("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
-    }else if(fabs(D-D2)>loc->dx*2){
+    }else if(fabs(D-D2)>D*0.5){
+	writebin(loc, "loc_wrongD");
 	warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
     }
-    if(nr<0) error("Invalid nr\n");
-    int nmod=(nr+1)*(nr+2)/2;
+    if(rmin>=rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
     const long nloc=loc->nloc;
-    dmat *restrict MOD=dnew(nloc,nmod);
-    
+    int nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
+    if(onlyr){
+	nmod=rmax-rmin;
+    }
+    dmat *restrict opd=dnew(nloc,nmod);
     dmat *restrict locr=dnew(nloc,1);
     dmat *restrict locs=dnew(nloc,1);
     const double *restrict locx=loc->locx;
@@ -82,28 +85,27 @@ dmat* zernike(const loc_t *loc, double D, int nr){
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
     }
     int cmod=0;
-    for(int ir=0; ir<=nr; ir++){
+    for(int ir=rmin; ir<=rmax; ir++){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
 	    dmat *Rnm=genRnm(locr, ir, im);
-	    /*writebin(Rnm,"Rnm_%d_%d",ir,im); */
-	    if(im==0){
+	    if(im==0){/*Radial*/
 		double coeff=sqrt(ir+1.);
-		double *restrict pmod=MOD->p+nloc*cmod;
+		double *restrict pmod=opd->p+nloc*cmod;
 		for(long iloc=0; iloc<nloc; iloc++){
 		    pmod[iloc]=Rnm->p[iloc]*coeff;
 		}
 		cmod++;
-	    }else{
+	    }else if(!onlyr){
 		double coeff=sqrt(2*(ir+1.));
 		double *restrict pmodc;
 		double *restrict pmods;
 		if((cmod+1) % 2 == 1){
-		    pmods=MOD->p+nloc*cmod;
-		    pmodc=MOD->p+nloc*(cmod+1);
+		    pmods=opd->p+nloc*cmod;
+		    pmodc=opd->p+nloc*(cmod+1);
 		}else{
-		    pmodc=MOD->p+nloc*cmod;
-		    pmods=MOD->p+nloc*(cmod+1);
+		    pmodc=opd->p+nloc*cmod;
+		    pmods=opd->p+nloc*(cmod+1);
 		}
 		for(long iloc=0; iloc<nloc; iloc++){
 		    pmods[iloc]=Rnm->p[iloc]*coeff*sin(im*locs->p[iloc]);
@@ -114,9 +116,14 @@ dmat* zernike(const loc_t *loc, double D, int nr){
 	    dfree(Rnm);
 	}
     }
+    if(nmod>cmod){
+	dresize(opd, nloc, cmod);
+    }else if(nmod<cmod){
+	error("over flow\n");
+    }
     dfree(locr);
     dfree(locs);
-    return MOD;
+    return opd;
 }
 /**
    return zernike index of radial mode ir, and azimuthal mode im. Maximum radial
@@ -243,7 +250,7 @@ dmat *KL_kolmogorov(const loc_t *loc, double D, int nr, int nr2){
 	nr=nr3;
     }
     dmat *cov=zernike_cov_kolmogorov(nr2);
-    dmat *modz=zernike(loc, D, nr2);
+    dmat *modz=zernike(loc, D, 0, nr2, 0);
     dmat *modkl=diag_mod_cov(modz, cov);
     if(nr2>nr){
 	dmat *modkl2=dsub(modkl, 0, 0, 0, (nr+1)*(nr+2)/2);

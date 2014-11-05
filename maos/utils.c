@@ -402,3 +402,238 @@ dmat *mkamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double
     }
     return amp;
 }
+
+void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    const int nwvl=parms->powfs[ipowfs].nwvl;
+    const int nsa=powfs[ipowfs].pts->nsa;
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+    ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
+    ccell *otf=cellnew(nwvl,1);
+    for(int iwvl=0; iwvl<nwvl; iwvl++){
+	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
+	//cfft2plan(otf->p[iwvl], 1);
+	//cfft2plan(otf->p[iwvl], -1);
+    }
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    dmat **mtche=NULL;
+    if(parms->powfs[ipowfs].phytypesim==1){
+	if(powfs[ipowfs].intstat->mtche->ny==1){
+	    mtche=powfs[ipowfs].intstat->mtche->p;
+	}else{
+	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+	}
+    }
+    double *srot=NULL;
+    if(parms->powfs[ipowfs].radpix){
+	srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
+    }
+
+    const int nsep=20;
+    const double dg=0.1;
+    double gx=0, gy=0, dgx=0, dgy=0;
+    dmat *ints=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+    double theta=0, cx=1, sx=0;
+    dmat *gnf=dnew(nsep,nsa*2);
+    PDMAT(gnf,pgnf);
+    char *dirs[]={"x", "y", "diag"};
+    char *types[]={"","MF", "CoG", "MAP"};
+    if(parms->powfs[ipowfs].mtchcr){
+	types[1]="MFC";
+    }
+    int radrot=parms->powfs[ipowfs].radrot;
+    int type=parms->powfs[ipowfs].phytypesim;
+    for(int dir=0; dir<3; dir++){
+	dzero(gnf);
+	for(int isa=0; isa<nsa; isa++){
+	    switch(dir){
+	    case 0:
+		dgx=dg*pixthetax;
+		dgy=0;
+		break;
+	    case 1:
+		dgx=0;
+		dgy=dg*pixthetay;
+		break;
+	    case 2:
+		dgx=sqrt(0.5)*dg*pixthetax;
+		dgy=sqrt(0.5)*dg*pixthetay;
+		break;
+	    }
+	    if(srot){
+		theta=srot[isa];
+		cx=cos(theta);
+		sx=sin(theta);
+	    }
+	    if(srot && !radrot){/*rot the vector from r/a to x/y*/
+		double tmp=dgx*cx-dgy*sx;
+		dgy=dgx*sx+dgy*cx;
+		dgx=tmp;
+	    }
+	    for(int isep=0; isep<nsep; isep++){
+		gx=dgx*isep;
+		gy=dgy*isep;
+		dzero(ints);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
+		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
+		    PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
+		    dsp *sis=psi[idtf][idtfsa];
+		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+		    ctilt2(otf->p[iwvl], fotf->p[isa+nsa*iwvl], gx*dtheta1, gy*dtheta1, 0);
+		    cfft2(otf->p[iwvl], 1);
+		    dspmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
+		}
+		//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
+		double g[3]={gx+pixthetax*0.1,gy+pixthetay*0.1,1};
+		switch(type){
+		case 1:{/*(constraint) Matched filter*/
+		    dmulvec(g, mtche[isa], ints->p,1.);
+		}
+		    break;
+		case 2:{/*tCoG*/
+		    dcog(g,ints,0.,0.,
+			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
+			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+		    g[0]*=pixthetax;
+		    g[1]*=pixthetay;
+		}
+		    break;
+		case 3:{/*MAP*/
+		    maxapriori(g, ints, parms, powfs, iwfs, isa, 1, 0, 1);
+		}
+		    break;
+		default:
+		    error("Invalid");
+		}
+		if(srot){/*rotate from xy to r/a*/
+		    double tmp=g[0]*cx+g[1]*sx;
+		    g[1]=-g[0]*sx+g[1]*cx;
+		    g[0]=tmp;
+		}
+		pgnf[isa][isep]=g[0]/pixthetax;
+		pgnf[isa+nsa][isep]=g[1]/pixthetay;
+	    }
+	}/*for isa*/
+	writebin(gnf, "wfslinearity_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+    }
+    dfree(ints);
+    ccellfree(otf);
+}
+
+typedef struct {
+    const PARMS_T *parms;
+    const POWFS_T *powfs;
+    dmat *ints;
+    ccell *fotf;
+    ccell *otf;//temporary.
+    double bkgrnd;
+    double rne;
+    int noisy;
+    int iwfs;
+    int isa;
+}mapdata_t;
+/**
+  The function to evaluate the result at x.
+*/
+static double mapfun(double *x, mapdata_t *info){
+    dmat *ints=info->ints;
+    ccell *fotf=info->fotf;
+    ccell *otf=info->otf;
+    const PARMS_T *parms=info->parms;
+    const POWFS_T *powfs=info->powfs;
+    int iwfs=info->iwfs;
+    int ipowfs=parms->wfs[iwfs].powfs;
+    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    int isa=info->isa;
+    int nsa=fotf->nx;
+    int nwvl=fotf->ny;
+    if(!otf){
+	info->otf=cellnew(nwvl,1);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    info->otf->p[iwvl]=cnew(info->fotf->p[0]->nx, info->fotf->p[0]->ny);
+	    //cfft2plan(info->otf->p[iwvl], 1);
+	    //cfft2plan(info->otf->p[iwvl], -1);
+	}
+	otf=info->otf;
+    }
+    dmat *ints2=dnew(ints->nx, ints->ny);
+    for(int iwvl=0; iwvl<nwvl; iwvl++){
+	double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
+	    *parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+	PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
+	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
+	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
+	dsp *sis=psi[idtf][idtfsa];
+	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
+	cfft2(info->otf->p[iwvl], 1);
+	dspmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
+    }
+ 
+    double sigma=0;
+    if(info->noisy){
+	double noise=info->rne*info->rne+info->bkgrnd;
+	for(int i=0; i<ints->nx*ints->ny; i++){
+	    sigma+=pow(ints->p[i]-ints2->p[i],2)/(ints2->p[i]+noise);
+	}
+    }else{
+	for(int i=0; i<ints->nx*ints->ny; i++){
+	    sigma+=pow(ints->p[i]-ints2->p[i],2);
+	}
+    }
+    /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);*/
+    dfree(ints2);
+    return sigma;
+}
+/**
+   Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;
+*/
+void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+		const POWFS_T *powfs, int iwfs, int isa, int noisy,
+		double bkgrnd, double rne){
+    int ipowfs=parms->wfs[iwfs].powfs;
+    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+    ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
+    mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
+    //info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
+    int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, (dminsearch_fun)mapfun, &data);
+    ccellfree(data.otf);
+    /* convert to native format along x/y or r/a to check for overflow*/
+    if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radrot){
+	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	double cx=cos(theta);
+	double sx=sin(theta);
+	double tmp=g[0]*cx+g[1]*sx;
+	g[1]=-g[0]*sx+g[1]*cx;
+	g[0]=tmp;
+    }
+    double gx=g[0]/pixthetax*2./ints->nx;
+    double gy=g[1]/pixthetay*2./ints->ny;
+    if(fabs(gx)>0.55||fabs(gy)>0.55){
+	warning2("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
+	gx=gx-floor(gx+0.5);
+	gy=gy-floor(gy+0.5);
+	warning2("gx=%6.3f, gy=%6.3f\n", gx, gy);
+	g[0]=pixthetax*ints->nx/2*gx;
+	g[1]=pixthetay*ints->ny/2*gy;
+    }
+    //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
+    if(parms->powfs[ipowfs].radpix){
+	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	double cx=cos(theta);
+	double sx=sin(theta);
+	double tmp=g[0]*cx-g[1]*sx;
+	g[1]=g[0]*sx+g[1]*cx;
+	g[0]=tmp;
+    }
+}

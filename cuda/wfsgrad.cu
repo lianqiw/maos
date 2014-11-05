@@ -341,13 +341,15 @@ void gpu_wfsgrad_queue(thread_t *info){
 	curmat *gradacc=cuwfs[iwfs].gradacc;
 	curmat *gradcalc=cuwfs[iwfs].gradcalc;
 	curmat *gradref=0;
-
+	if((isim-parms->powfs[ipowfs].step)%dtrat==0){
+	    curcellzero(cuwfs[iwfs].ints, stream);
+	    curzero(cuwfs[iwfs].gradacc, stream);
+	}
 	if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
 	    curcp(&phiout, cuwfs[iwfs].opdadd, stream);
 	}else{
 	    curzero(phiout, stream);
 	}
-	curzero(cuwfs[iwfs].gradcalc, stream);
 	if(parms->sim.idealwfs){
 	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
 		       hs, thetax, thetay, 0, 0, 1, stream);
@@ -408,6 +410,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    double ratio;
 	    if(do_pistatout && dtrat>1){
 		gradref=gradcalc; 
+		curzero(gradcalc, stream);
 		ratio=1;
 	    }else{
 		gradref=gradacc;
@@ -436,7 +439,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}/*do phy */
 	ctoc("grad");
 	if(dtrat_output){
-	    if(do_phy){
+	    Real rne=0, bkgrnd=0;
+	    if(do_phy || parms->powfs[ipowfs].dither){
 		/*signal level was already multiplied in ints. */
 		curcell *ints=cuwfs[iwfs].ints;
 		const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
@@ -444,7 +448,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    cellarr_curcell(simu->save->intsnf[iwfs], simu->isim, ints, stream);
 		}
 		ctoc("mtche");
-		Real rne=0, bkgrnd=0;
 		if(noisy){
 		    rne=parms->powfs[ipowfs].rne;
 		    bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
@@ -460,7 +463,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    int ndrift=parms->powfs[ipowfs].dither_ndrift;
 		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, angle, ndrift, stream);
 		}
+	    }
+	    if(do_phy){
 		curzero(gradcalc, stream);
+		curcell *ints=cuwfs[iwfs].ints;
+		const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
 		    mtche(gradcalc->p, (Real(*)[2])(cuwfs[iwfs].mtche->p), ints->p[0]->p, 
@@ -502,8 +509,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 		}
 		ctoc("mtche");
-		/*send grad to CPU. */
-		curcellzero(ints, stream);
 	    }else{
 		if(noisy && !parms->powfs[ipowfs].usephy){
 		    add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
@@ -545,7 +550,6 @@ void gpu_wfsgrad_sync(thread_t *info){
 	    }
 	}else{
 	    cp2cpu(&gradcl, gradacc, stream);
-	    curzero(gradacc, stream);
 	    if(save_gradgeom){
 		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim, NULL, stream);
 	    }

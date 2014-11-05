@@ -352,6 +352,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dtrat);
     READ_POWFS_RELAX(int,skip); 
     READ_POWFS_RELAX(int,type);
+    READ_POWFS_RELAX(int,step);
     READ_POWFS_RELAX(dbl,modulate);
     READ_POWFS_RELAX(dbl,fov);
     READ_POWFS(int,nwfs);
@@ -988,7 +989,6 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.all);
     if(parms->plot.all){
 	parms->plot.setup=parms->plot.all;
-	parms->plot.atm=parms->plot.all;
 	parms->plot.run=parms->plot.all;
     }
     if(parms->plot.setup || parms->plot.atm || parms->plot.run || parms->plot.opdx || parms->plot.all){
@@ -1325,6 +1325,39 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n", 
 	      parms->nwfs, wfscount);
     }
+
+    //Match TWFS to LGS POWFS
+    parms->itpowfs=-1;
+    parms->ilgspowfs=-1;
+    for(int lgspowfs=0; lgspowfs<parms->npowfs; lgspowfs++){
+	if(parms->powfs[lgspowfs].llt){
+	    if(parms->ilgspowfs==-1){
+		parms->ilgspowfs=lgspowfs;
+	    }else{
+		warning("There are multiple LGS type. parms->ilgspowfs points to the first one\n");
+	    }
+	}
+    }
+    for(int tpowfs=0; tpowfs<parms->npowfs; tpowfs++){
+	if(parms->powfs[tpowfs].skip==2){//TWFS
+	    parms->itpowfs=tpowfs;
+	    int lgspowfs=parms->ilgspowfs;
+	    if(lgspowfs!=-1){
+		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
+		//Set TWFS integration start time to LGS matched filter acc step
+		if(parms->powfs[lgspowfs].dither){
+		    if(parms->powfs[tpowfs].dtrat<1){
+			parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
+			warning("powfs %d step is set to %d\n", ipowfs, parms->powfs[lgspowfs].dither_nskip);
+			int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
+			parms->powfs[tpowfs].dtrat=mtchdtrat;
+			warning("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
+		    }
+		}
+	    }
+	}
+    }
+
     parms->hipowfs=lnew(parms->npowfs, 1);
     parms->lopowfs=lnew(parms->npowfs, 1);
     for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1451,7 +1484,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     parms->sim.dtrat_hi=-1;
     parms->sim.dtrat_lo=-1;
+    parms->step_lo=-1;
+    parms->step_hi=-1;
     for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].skip==2) continue;
 	if(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].llt){
 	    error("Pyramid WFS is not available for LGS WFS\n");
 	}
@@ -1461,6 +1497,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
 		error("We don't handle multiple framerate of the Tilt included WFS yet\n");
 	    }
+	    if(parms->step_lo<0){
+		parms->step_lo=parms->powfs[ipowfs].step;
+	    }else if(parms->step_lo!=parms->powfs[ipowfs].step){
+		error("Different low order WFS has different enabling step\n");
+	    }
 	}
 	if(!parms->powfs[ipowfs].lo){
 	    if(!parms->powfs[ipowfs].skip){
@@ -1468,6 +1509,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
 		}else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
 		    error("We don't handle multiple framerate of the LO WFS yet\n");
+		}
+		if(parms->step_hi<0){
+		    parms->step_hi=parms->powfs[ipowfs].step;
+		}else if(parms->step_hi!=parms->powfs[ipowfs].step){
+		    error("Different high order WFS has different enabling step\n");
 		}
 	    }
 	}

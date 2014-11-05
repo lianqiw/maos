@@ -308,7 +308,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	  iPnk is a block diagonal matrix for Cn2 Estimation.
 	*/
 	cn2est->Pnk->p[iwfspair+iwfspair*nwfspair]=dref(Pnk);
-	cn2est->iPnk->p[iwfspair+iwfspair*nwfspair]=dpinv(Pnk,0,0);
+	cn2est->iPnk->p[iwfspair+iwfspair*nwfspair]=dpinv(Pnk,0);
 	cn2est->wtconvert->p[iwfspair]=mkhbin1d(cn2est->ht->p[iwfspair],cn2est->htrecon);
 	dfree(Pnk);
 	cfree(mc);
@@ -462,7 +462,8 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	    }
 	    if(nfd>0){
 		if(nfd) info2("Ignore %d negative points. set MAOS_CN2EST_NO_NEGATIVE=0 to disable.\n", nfd);
-		dmat *iPnk2=dpinv(Pnk, Pnkwt, NULL);
+
+		dmat *iPnk2=dpinv(Pnk, Pnkwt);
 		//compute the new result 
 		dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
 		for(int ix=0; ix<nlayer; ix++){

@@ -133,7 +133,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     /*piston term correction in focus mode */
     aper->fcp=(aper->mcc->p[aper->mcc->nx+1]+aper->mcc->p[2*(aper->mcc->nx+1)])*aper->ipcc;
     if(parms->evl.rmax!=1){
-	aper->mod=zernike(aper->locs, parms->aper.d, parms->evl.rmax);
+	aper->mod=zernike(aper->locs, parms->aper.d, 0, parms->evl.rmax, 0);
 	if(parms->save.setup){
 	    writebin(aper->mod,"%s/aper_mode",dirsetup);
 	}

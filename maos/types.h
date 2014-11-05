@@ -169,7 +169,7 @@ typedef struct POWFS_T{
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
-    dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
+    dcell *gradoffcog;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     PYWFS_T *pywfs;     /**<For pyramid WFS*/
 }
@@ -369,6 +369,10 @@ typedef struct RECON_T{
     dcell *RFngsa;     /**<focus reconstruction for all TTF NGS from dm*/
     dcell *RFdfx;      /**<delta focus reconstruction for science-ngs from opdr.*/
     dcell *RFdfa;      /**<delta focus reconstruction for science-ngs from dm.*/
+
+    dcell *GRall;      /**<Radial order zernike to gradient*/
+    dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
+
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
@@ -455,6 +459,7 @@ typedef struct DITHER_T{
     dcell *i0;    /**<accumulated imb for matched filter*/
     dcell *gx;    /**<accumulated imx for matched filter*/
     dcell *gy;    /**<accumulated imy for matched filter*/
+    dmat  *goff;  /**<accumulated gradient offset.*/
 }DITHER_T;
 /**
    contains all the run time data struct.

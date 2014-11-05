@@ -146,37 +146,39 @@ X(mat)* X(inv)(const X(mat) *A){
    compute the pseudo inverse of matrix A with weigthing of full matrix W or
    sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
    for diagonal weighting.  B=inv(A'*W*A)*A'*W; */
-X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
+X(mat) *X(pinv)(const X(mat) *A, const void *W){
     if(!A) return NULL;
     X(mat) *AtW=NULL;
     /*Compute AtW=A'*W */
-    if(wt){
-	if(Wsp){
-	    error("Both wt and Wsp are supplied. Not supported\n");
-	}
-	if(wt->ny==wt->nx){
-	    X(mm)(&AtW, 0, A, wt, "tn", 1);
-	}else if(wt->ny==1){
-	    AtW=X(new)(A->ny,A->nx);
-	    PMAT(A,pA);
-	    PMAT(AtW,pAtW);
-	    T *w=wt->p;
-	    for(long iy=0; iy<A->ny; iy++){
-		for(long ix=0;ix<A->nx; ix++){
-		    pAtW[ix][iy]=pA[iy][ix]*w[ix];
+    if(W){
+	long id=((cell*)W)->id;
+	if(id==M_T){//dense
+	    const X(mat)* wt=(X(mat)*)W;
+	    if(wt->ny==wt->nx){
+		X(mm)(&AtW, 0, A, wt, "tn", 1);
+	    }else if(wt->ny==1){
+		AtW=X(new)(A->ny,A->nx);
+		PMAT(A,pA);
+		PMAT(AtW,pAtW);
+		T *w=wt->p;
+		for(long iy=0; iy<A->ny; iy++){
+		    for(long ix=0;ix<A->nx; ix++){
+			pAtW[ix][iy]=pA[iy][ix]*w[ix];
+		    }
 		}
+	    }else{
+		error("Invalid format\n");
 	    }
-	}else{
-	    error("Invalid format\n");
-	}
-    }else{
-	if(Wsp){
+	}else if(id==M_SPT){//sparse
+	    const X(sp)* Wsp=(X(sp)*)W;
 	    X(mat)*At = X(trans)(A);
 	    X(mulsp)(&AtW, At, Wsp, 1);
 	    X(free)(At);
 	}else{
-	    AtW=X(trans)(A);
+	    error("Unrecognized id=%ld\n", id);
 	}
+    }else{
+	AtW=X(trans)(A);
     }
     /*Compute cc=A'*W*A */
     X(mat) *cc=NULL;
@@ -186,8 +188,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     if(X(isnan(cc))){
 	writebin(cc,"cc_isnan");
 	writebin(A,"A_isnan");
-	writebin(wt,"wt_isnan");
-	X(spwrite)(Wsp, "Wsp_isnan");
+	writebin(W,"W_isnan");
     }
     X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
@@ -434,25 +435,15 @@ X(cell)* X(cellinvspd_each)(X(cell) *A){
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
    sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
-		     const X(cell) *wt,   /**<[in] Use a dense matrix for weighting*/
-		     const X(spcell) *Wsp /**<[in] Use a sparse matrix for weighting*/
-		     ){
+X(cell)* X(cellpinv)(const X(cell) *A, /**<[in] The matrix to pseudo invert*/
+		     const void *W    /**<[in] The weighting matrix. dense or sparse*/
+    ){
     if(!A) return NULL;
     X(cell) *wA=NULL;
-    if(wt){
-	if(Wsp){
-	    error("Both wt and Wsp are specified.\n");
-	}
-	assert(wt->nx==A->nx && wt->ny==A->nx);
-	X(cellmm)(&wA, wt, A, "nn",1);
+    if(W){
+	X(cellmm)(&wA, W, A, "nn",1);
     }else{
-	if(Wsp){
-	    assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
-	    X(cellmm)(&wA,Wsp,A,"nn",1);
-	}else{
-	    wA=X(cellref)(A);
-	}
+	wA=X(cellref)(A);
     }
 
     X(cell) *ata=NULL;

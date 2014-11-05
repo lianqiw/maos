@@ -309,7 +309,7 @@ void setup_aster_lsr(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcellfree(nea); 
 	dcwpow(neam, -1);//inverse
 	/*Reconstructor */
-	aster->pgm->p[idtrat]=dpinv(gm, neam, NULL);
+	aster->pgm->p[idtrat]=dpinv(gm, neam);
 	/*sigman is error due to noise. */
 	dcwpow(neam, -1);//inverse again
 	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
