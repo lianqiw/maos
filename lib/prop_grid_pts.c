@@ -17,7 +17,7 @@
 */
 
 /*
-   Do not use OMPTASK_FOR in this file. Not helpful with performance
+   Do not use ICCTASK_FOR in this file. Not helpful with performance
 */
 
 /**

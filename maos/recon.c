@@ -135,7 +135,7 @@ static void calc_gradol(SIM_T *simu){
 	    }
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
-		OMPTASK_FOR(indwfs, 0, nindwfs, firstprivate(indwfs, alpha, ipowfs)){
+		OMPTASK_FOR(indwfs, 0, nindwfs, firstprivate(alpha, ipowfs)){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){

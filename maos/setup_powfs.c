@@ -372,11 +372,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].loc_tel=cellnew(nwfsp, 1);
 	powfs[ipowfs].saa_tel=cellnew(nwfsp, 1);
 	powfs[ipowfs].amp_tel=cellnew(nwfsp, 1);
+#pragma omp parallel for shared(isset)
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    if(parms->misreg.tel2wfs[iwfs])
-#pragma omp task shared(isset)
-	    {
+	    if(parms->misreg.tel2wfs[iwfs]){
 		isset=1;
 		powfs[ipowfs].loc_tel->p[jwfs]
 		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
@@ -394,7 +393,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
 	    }
 	}
-#pragma omp taskwait
 	if(!isset){
 	    cellfree(powfs[ipowfs].loc_tel);
 	    dcellfree(powfs[ipowfs].saa_tel); 
@@ -473,10 +471,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	*/
 	powfs[ipowfs].loc_dm=cellnew(nwfsp*parms->ndm, 1);
 	int isset=0;
+#pragma omp parallel for collapse(2) shared(isset)
 	for(int idm=0; idm<parms->ndm; idm++){
-	    for(int jwfs=0; jwfs<nwfsp; jwfs++)
-#pragma omp task shared(isset)
-	    {
+	    for(int jwfs=0; jwfs<nwfsp; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		if(parms->misreg.dm2wfs[iwfs+idm*parms->nwfs]){
 		    powfs[ipowfs].loc_dm->p[jwfs+nwfsp*idm]
@@ -485,7 +482,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		}
 	    }
 	}
-#pragma omp taskwait
 	if(!isset){
 	    cellfree(powfs[ipowfs].loc_dm);
 	}else{
@@ -1028,14 +1024,15 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 
     if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
 	/*Make new sampling: */
-	double rsamax=dmax(powfs[ipowfs].srsamax);
-	double dthetamin=dmin(powfs[ipowfs].dtheta);
+	const double rsamax=dmax(powfs[ipowfs].srsamax);
+	const double dthetamin=dmin(powfs[ipowfs].dtheta);
 	const double x0in=Nain->p[0];
 	const long nxin=Nain->nx;
-	double dxin=(Nain->p[nxin-1]-x0in)/(nxin-1);
+	const double dxin=(Nain->p[nxin-1]-x0in)/(nxin-1);
 	/*minimum sampling required. */
-	double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
+	const double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	if(dxnew > dxin * 2){
+	    TIC;tic;
 	    info2("Smoothing sodium profile\n");
 	    const long nxnew=ceil((Nain->p[nxin-1]-x0in)/dxnew);
 	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
@@ -1043,7 +1040,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
 	    powfs[ipowfs].sodium=dnew(nxnew, Nain->ny);
 	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
-			     
+#pragma omp parallel for
 	    for(long icol=1; icol<Nain->ny; icol++){
 		/*input profile */
 		double *pin=Nain->p + nxin * icol;
@@ -1058,6 +1055,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    locfree(loc_in);
 	    locfree(loc_out);
 	    dfree(Nain);
+	    toc2("Smoothing sodium profile");
 	}else{
 	    info2("Not smoothing sodium profile\n");
 	    powfs[ipowfs].sodium=Nain;
@@ -1224,21 +1222,22 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		    if(use1d){
 			petf[illt][isa]=cnew(ncompx,1);
 			dcomplex *etf1d=petf[illt][isa]->p;
-			OMPTASK_FOR(icompx, 0, ncompx){
+#pragma omp parallel for
+			for(int icompx=0; icompx<ncompx; icompx++){
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
 				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium->p[ih]-rsa/hs)));
 				etf1d[icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
 			    }
 			}
-			OMPTASK_END
 		    }else{
 			const double theta=powfs[ipowfs].srot->p[illt]->p[isa];
 			const double ct=cos(theta);
 			const double st=sin(theta);
 			petf[illt][isa]=cnew(ncompx,ncompy);
 			dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p; 
-			OMPTASK_FOR(icompy, 0, ncompy){
+#pragma omp parallel for
+			for(int icompy=0; icompy<ncompy; icompy++){
 			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
 			    for(int icompx=0; icompx<ncompx; icompx++){
 				const double kx=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
@@ -1249,7 +1248,6 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 				}
 			    }
 			}
-			OMPTASK_END
 		    }
 		}//isa
 	    }//illt

@@ -114,12 +114,12 @@ void maos_isim(int isim){
 	}
 #endif
     }else{
+	//Do not put this one inside omp parallel
 	genatm(simu);
 	/*re-seed the atmosphere in case atm is loaded from shm/file */
 	seed_rand(simu->atm_rand, lrand(simu->init_rand));
     }
-    OMPTASK_SINGLE
-    {
+    OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
 	    /* teporarily disable FR.M so that Mfun is used.*/
 	    dspcell *FRM=recon->FR.M; recon->FR.M=NULL; 

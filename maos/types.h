@@ -137,6 +137,7 @@ typedef struct POWFS_T{
     dmat *sodium;       /**<Loaded and downsampled sodium profile from the file.*/
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
+    ETF_T *etfsim2;     /**<Second ETF for interpolation during simulation.*/
     dmat *focus;        /**<additional focus error. (llt->fnrange)*/
     LLT_T *llt;         /**<uplink aperture parameters*/
     dccell *saimcc;     /**<inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt.*/

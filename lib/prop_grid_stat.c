@@ -79,7 +79,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     if(PROP_GRID_STAT_OPTIM){
 	if(fabs(xratio-1)<EPS && fabs(yratio-1)<EPS){
 	    /*loc_out and loc_in has the same grid sampling.*/
-	    OMPTASK_FOR(icol, colstart, colend){
+	    ICCTASK_FOR(icol, colstart, colend){
 		/*grid size of loc_in and loc_out agree*/
 		CONST_IN double *phicol, *phicol2;
 		double bl,br,tl,tr;
@@ -187,10 +187,10 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		}
 	      end1:;
 	    }/*end for icol*/
-	    OMPTASK_END;
+	    ICCTASK_END;
 	}else{
 	    /*grid size of loc_in and loc_out doesn't agree*/
-	    OMPTASK_FOR(icol, colstart, colend){
+	    ICCTASK_FOR(icol, colstart, colend){
 		CONST_IN double *phicol, *phicol2;
 		double dplocx0;
 		int nplocx0;
@@ -303,11 +303,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		}
 	      end2:;
 	    }/*end for icol*/
-	    OMPTASK_END;
+	    ICCTASK_END;
 	}/*fabs(dx_in2*dxout-1)<EPS*/
     }else{
 	/*non optimized case. slower, but hopefully accurate*/
-	OMPTASK_FOR(icol, colstart, colend){
+	ICCTASK_FOR(icol, colstart, colend){
 	    double dplocx0;
 	    int nplocy1, nplocx1;
 
@@ -369,7 +369,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    }/*for irow*/
 	  skip:;
 	}/*for icol*/
-	OMPTASK_END;
+	ICCTASK_END;
     }
     if(missing>0){
 	static int warned=0;

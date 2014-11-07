@@ -106,8 +106,8 @@ inline void* malloc4async(int N){
 inline void free4async(void *P){
     cudaFreeHost(P);
 }
-#define CUDA_SYNC_STREAM DO(cudaStreamSynchronize(stream))
-#define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
+#define CUDA_SYNC_STREAM ({DO(cudaGetLastError());DO(cudaStreamSynchronize(stream));})
+#define CUDA_SYNC_DEVICE ({DO(cudaGetLastError());DO(cudaDeviceSynchronize());})
 #define TIMING 0
 #if TIMING == 1
 extern int nstream;

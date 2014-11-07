@@ -219,6 +219,7 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 /*assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.*/
 void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
+    OMPTASK_SINGLE
     if(parms->recon.mvm){
 	if(parms->load.mvm){
 	    recon->MVM=dread("%s", parms->load.mvm);
