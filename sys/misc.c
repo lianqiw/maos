@@ -834,12 +834,13 @@ void default_quitfun(const char *msg){
 	print_backtrace();
 	sync();
     }
-    raise(SIGUSR1);
+    quit();
 }
 static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
+    info2("default_singal_handler: sig=%d\n", sig);sync();
     int cancel_action=0;
     struct sigaction act={{0}};
     act.sa_flags=0;
@@ -847,7 +848,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     sigaction(sig, &act, 0);
     /*prevent recursive call of handler*/
     if(sig==0){
-	info2("signal 0 caught. do nothing\n");
+	info2("Signal 0 caught. do nothing\n");
+	sync();
 	return;
     }
     if(fatal_error_in_progress){
@@ -856,7 +858,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     extern int exit_fail;
     exit_fail=1;
     fatal_error_in_progress++;
-    if(siginfo && siginfo->si_addr){
+    if(sig != SIGABRT && siginfo && siginfo->si_addr){
 	info2("Memory location: %p\n", siginfo->si_addr);
     }
     if(sig==SIGBUS || sig==SIGILL || sig==SIGSEGV || sig==SIGABRT){
@@ -870,7 +872,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     }else{
 	info2("Signal %d caught without active handler.\n", sig);
     }
-    if(!cancel_action){
+    sync();
+    if(!cancel_action){//Propagate signal to default handler.
 	act.sa_handler=SIG_DFL;
 	sigaction(sig, &act, 0);
 	raise(sig);
@@ -903,6 +906,9 @@ void mypause(){
     while(getchar()!=0x0a); 
     info2("continuing...\n"); 
 }
-
+void quit(){
+    sync();
+    abort();
+}
 #undef strdup
 char* (*strdup0)(const char *)=strdup;

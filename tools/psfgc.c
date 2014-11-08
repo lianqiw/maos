@@ -87,15 +87,17 @@ static void psfiris_do(thread_t *info){
     cfft2(otf, 1);
     double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(ncomp*ncomp);
     if(npix>0){
-	ccell *dtf=NULL;
-	dspcell *si=NULL;
-	mkdtf(&dtf, &si, ncomp, ncomp, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, NULL);
-	ccwm(otf, dtf->p[0]);
+	dmat *wvlmat=dnew(1,1);
+	wvlmat->p[0]=wvl;
+	double dxsa=30;//30 meter
+	double embfac=wvl/dtheta/dxsa;
+	info("embfac=%g\n", embfac);
+	DTF_T *dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0, 0);
+	ccwm(otf, dtf->nominal->p[0]);
 	cfft2(otf,-1);
 	output->p[ipsf]=dnew(npix, npix);
-	dspmulcreal(output->p[ipsf]->p, si->p[0], otf->p, impst/sumpsf);
-	ccellfree(dtf);
-	dspcellfree(si);
+	dspmulcreal(output->p[ipsf]->p, dtf->si->p[0], otf->p, impst/sumpsf);
+	dtf_free(dtf, 1);
     }else{
 	cfft2(otf, -1);
 	cfftshift(otf);

@@ -38,16 +38,17 @@
     T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     T X(wdot3)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     void X(cwm)(X(mat) *B, const X(mat) *A);				\
-    void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict B, const X(mat) *restrict C); \
+    void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2);\
+    void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W , const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B);	\
-    void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,const X(mat) *restrict B); \
+    void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, const X(mat) *restrict B1, const R wt1, const X(mat) *restrict B2, const R wt2); \
     void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B);	\
     void X(cwmcol2)(X(mat) *restrict A,					\
-		    const T *restrict B1, const R wt1,			\
-		    const T *restrict B2, const R wt2);			\
+		    const X(mat) *restrict B1, const R wt1,		\
+		    const X(mat) *restrict B2, const R wt2);		\
     void X(cwmrow2)(X(mat) *restrict A,					\
-		    const T *restrict B1, const R wt1,			\
-		    const T *restrict B2, const R wt2);			\
+		    const X(mat) *restrict B1, const R wt1,		\
+		    const X(mat) *restrict B2, const R wt2);		\
     void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
     void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha); \
     void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha); \

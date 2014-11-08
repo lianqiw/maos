@@ -344,7 +344,6 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 */
 void sim_update_etf(SIM_T *simu){
     int isim=simu->isim;
-    if(isim<=0) return;
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -356,8 +355,9 @@ void sim_update_etf(SIM_T *simu){
 	   && parms->powfs[ipowfs].llt->colsimdtrat>0
 	   && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
 	    info2("Step %d: powfs %d: Updating ETF\n",isim, ipowfs);
-	    setup_powfs_etf(powfs,parms,ipowfs,1,
-			    isim/parms->powfs[ipowfs].llt->colsimdtrat);
+	    int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+	    setup_powfs_etf(powfs,parms,ipowfs,1, isim/dtrat);
+	    setup_powfs_etf(powfs,parms,ipowfs,2, isim/dtrat+1);
 #if USE_CUDA
 	    if(parms->gpu.wfs){
 		gpu_wfsgrad_update_etf(parms, powfs);

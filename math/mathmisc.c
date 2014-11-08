@@ -183,7 +183,7 @@ float maxabsf(const float *p, long n){
 }
 /**
    Compute the sum of double vector*/
-double dblsum(double *p, long nx){
+double dblsum(const double *p, long nx){
     double sum=0;
     for(long ix=0; ix<nx; ix++){
 	sum+=p[ix];
@@ -193,7 +193,7 @@ double dblsum(double *p, long nx){
 
 /**
    Compute the sum of double vector*/
-float fltsum(float *p, long nx){
+float fltsum(const float *p, long nx){
     float sum=0;
     for(long ix=0; ix<nx; ix++){
 	sum+=p[ix];

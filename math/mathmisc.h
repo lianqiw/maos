@@ -39,8 +39,8 @@ double maxdbl(const double *p, long n);
 double maxabs(const double *p, long n);
 float maxabsf(const float *p, long n);
 
-double dblsum(double *p, long nx);
-float fltsum(float *p, long nx);
+double dblsum(const double *p, long nx);
+float fltsum(const float *p, long nx);
 #define sinc(x) (fabs(x)<1.e-5?1:sin(M_PI*x)/(M_PI*x))
 
 void adddbl(double *restrict out, double alpha, 

@@ -201,31 +201,66 @@ T X(wdot3)(const T *a, const X(mat) *w, const T *b){
 }
 
 /**
-   Compute component wise multiply B=B.*A
+   Compute component wise multiply A=A.*B
 */
-void X(cwm)(X(mat) *B, const X(mat) *A){
-    assert(A->nx==B->nx && A->ny==B->ny);
-    for(int i=0; i<A->nx*A->ny; i++){
-	B->p[i]*=A->p[i];
+void X(cwm)(X(mat) *A, const X(mat) *B){
+    assert(B->nx==A->nx && B->ny==A->ny);
+    for(int i=0; i<B->nx*B->ny; i++){
+	A->p[i]*=B->p[i];
+    }
+}
+/**
+   Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
+*/
+void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2){
+    int has_b1=B1 && ABS(wt1)>EPS;
+    int has_b2=B2 && ABS(wt2)>EPS;
+    if(has_b1 && has_b2){
+	assert(A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
+	for(long i=0; i<B1->nx*B1->ny; i++){
+	    A->p[i]*=(B1->p[i]*wt1+B2->p[i]*wt2);
+	}
+    }else if(has_b1){
+	assert(A->nx*A->ny==B1->nx*B1->ny);
+	for(long i=0; i<B1->nx*B1->ny; i++){
+	    A->p[i]*=B1->p[i]*wt1;
+	}
+    }else if(has_b2){
+	assert(A->nx*A->ny==B2->nx*B2->ny);
+	for(long i=0; i<B2->nx*B2->ny; i++){
+	    A->p[i]*=B2->p[i]*wt2;
+	}
     }
 }
 
+
 /**
    component-wise multiply of three matrices.
-   A=A.*B.*C
+   A=A.*W.*(B1*wt1+B2*wt2)
 */
-void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict B, const X(mat) *restrict C){
-    if(!B){
-	X(cwm)(A,C);
-    }else if (!C){
-	X(cwm)(A,B);
+void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W,
+	     const X(mat) *restrict B1, R wt1, const X(mat) *restrict B2, R wt2){
+    assert(A);
+    if(!W){
+	X(cwm2)(A, B1, wt1, B2, wt2);
     }else{
-	assert(A && B && C);
-	assert(A->nx==B->nx && A->nx==C->nx&&A->ny==B->ny && A->ny==C->ny);
-	/*component-wise multiply A=A.*B */
-	const long ntot=A->nx*A->ny;
-	for(long i=0; i<ntot; i++){
-	    A->p[i]=A->p[i]*B->p[i]*C->p[i];
+	int has_b1=B1 && ABS(wt1)>EPS;
+	int has_b2=B2 && ABS(wt2)>EPS;
+	if(has_b1 && has_b2){
+	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
+	    for(long i=0; i<B1->nx*B1->ny; i++){
+		A->p[i]*=W->p[i]*(B1->p[i]*wt1+B2->p[i]*wt2);
+	    }
+	}else if(has_b1){
+	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B1->nx*B1->ny);
+	    for(long i=0; i<B1->nx*B1->ny; i++){
+		A->p[i]*=W->p[i]*B1->p[i]*wt1;
+	    }
+	}else if(has_b2){
+	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B2->nx*B2->ny);
+	    for(long i=0; i<B2->nx*B2->ny; i++){
+		A->p[i]*=W->p[i]*B2->p[i]*wt2;
+	    }
 	}
     }
 }
@@ -251,25 +286,32 @@ void X(cwmcol)(X(mat) *restrict A, const X(mat) *restrict B){
    A(:,i)=A(:,i)*(B1*wt1+B2*wt2);
 */
 void X(cwmcol2)(X(mat) *restrict A, 
-		const T *restrict B1, const R wt1,
-		const T *restrict B2, const R wt2){
-    assert(A && A->p); 
-    assert(B1);
+		const X(mat) *restrict B1, const R wt1,
+		const X(mat) *restrict B2, const R wt2){
+    if(!A || !A->p){
+	error("A cannot be empty\n");
+    }
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
-    if(B2){
+    int has_b1=B1 && ABS(wt1)>EPS;
+    int has_b2=B2 && ABS(wt2)>EPS;
+    if(has_b1 && has_b2){
+	assert(A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	for(long ix=0; ix<A->nx; ix++){
-	    T junk=B1[ix]*wt1+B2[ix]*wt2;
+	    T junk=B1->p[ix]*wt1+B2->p[ix]*wt2;
 	    for(long iy=0; iy<A->ny; iy++){
 		As[iy][ix]*=junk;
 	    }
 	}
-    }else{
+    }else if(has_b1){
+	assert(A->nx==B1->nx && B1->ny==1);
 	for(long ix=0; ix<A->nx; ix++){
-	    T junk=B1[ix]*wt1;
+	    T junk=B1->p[ix]*wt1;
 	    for(long iy=0; iy<A->ny; iy++){
 		As[iy][ix]*=junk;
 	    }
 	}
+    }else if(has_b2){
+	X(cwmcol2)(A, B2, wt2, B1, wt1);
     }
 }
 
@@ -277,23 +319,41 @@ void X(cwmcol2)(X(mat) *restrict A,
    component wise multiply of 2d complex matrix A,W and 1d vector B.
    A(:,i)=A(:,i).*W(:,i).*B;
 */
-void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,const X(mat) *restrict B){
-
+void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W, 
+		const X(mat) *restrict B1, const R wt1,
+		const X(mat) *restrict B2, const R wt2){
+    
     if(!W){
-	X(cwmcol)(A,B);
-    }else{
-	assert(A->nx==B->nx&& A->nx==W->nx&&A->ny==W->ny&&B->ny==1);
-	T (*As)[A->nx]=(T(*)[A->nx])A->p;
-	T (*Ws)[W->nx]=(T(*)[W->nx])W->p;
-	T *B1=B->p;
-
-	for(long iy=0; iy<A->ny; iy++){
-	    for(long ix=0; ix<A->nx; ix++){
-		As[iy][ix]=As[iy][ix]*Ws[iy][ix]*B1[ix];
+	X(cwmcol2)(A, B1, wt1, B2, wt2);
+    }else {
+	int has_b1=B1 && ABS(wt1)>EPS;
+	int has_b2=B2 && ABS(wt2)>EPS;
+	if(has_b1 && has_b2){
+	    assert(A->nx*A->ny==W->nx*W->ny && A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
+	    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+	    T (*Ws)[W->nx]=(T(*)[W->nx])W->p;
+	    T *B1p=B1->p;
+	    T *B2p=B2->p;
+	    for(long iy=0; iy<A->ny; iy++){
+		for(long ix=0; ix<A->nx; ix++){
+		    As[iy][ix]=As[iy][ix]*Ws[iy][ix]*(B1p[ix]*wt1+B2p[ix]*wt2);
+		}
 	    }
+	}else if(has_b1){
+	    assert(A->nx*A->ny==W->nx*W->ny && A->nx==B1->nx && B1->ny==1);
+	    T (*As)[A->nx]=(T(*)[A->nx])A->p;
+	    T (*Ws)[W->nx]=(T(*)[W->nx])W->p;
+	    T *B1p=B1->p;
+
+	    for(long iy=0; iy<A->ny; iy++){
+		for(long ix=0; ix<A->nx; ix++){
+		    As[iy][ix]=As[iy][ix]*Ws[iy][ix]*B1p[ix]*wt1;
+		}
+	    }
+	}else if(has_b2){
+	    X(cwm3col)(A, W, B2, wt2, B1, wt1);
 	}
     }
-
 }
 /**
    Component wise multiply each row of A with B.
@@ -317,25 +377,28 @@ void X(cwmrow)(X(mat) *restrict A, const X(mat) *restrict B){
    A(i,:)=A(i,:).*(B1*wt1+B2*wt2);
 */
 void X(cwmrow2)(X(mat) *restrict A, 
-		const T *restrict B1, const R wt1,
-		const T *restrict B2, const R wt2){
+		const X(mat) *restrict B1, const R wt1,
+		const X(mat) *restrict B2, const R wt2){
     assert(A && A->p); 
-    assert(B1);
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
-    if(B2){
+    if(B1 && B2){
+	assert(A->ny==B1->nx && A->ny==B2->nx && B1->ny==1 && B2->ny==1);
 	for(long iy=0; iy<A->ny; iy++){
-	    T junk=B1[iy]*wt1+B2[iy]*wt2;
+	    T junk=B1->p[iy]*wt1+B2->p[iy]*wt2;
 	    for(long ix=0; ix<A->nx; ix++){
 		As[iy][ix]*=junk;
 	    }
 	}
-    }else{
+    }else if(B1){
+	assert(A->ny==B1->nx && B1->ny==1);
 	for(long iy=0; iy<A->ny; iy++){
-	    T junk=B1[iy]*wt1;
+	    T junk=B1->p[iy]*wt1;
 	    for(long ix=0; ix<A->nx; ix++){
 		As[iy][ix]*=junk;
 	    }
 	}
+    }else if(B2){
+	X(cwmrow2)(A, B2, wt2, B1, wt1);
     }
 }
 

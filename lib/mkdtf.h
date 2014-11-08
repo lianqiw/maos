@@ -20,21 +20,63 @@
 #include "../math/mathdef.h"
 /**
    \file mkdtf.h
-   Routine to generate detector transfer function.
+   Routine to generate detector transfer function and elongation transfer function due to sodium layer.
 */
-void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
-	   dspcell **psi,     /**<[out] to be applied after IFFT of the final OTF*/
-	   int ncompx,       /**<[in] size of OTF FFT*/
-	   int ncompy,       /**<[in] size of OTF FFT*/
-	   double dtheta,    /**<[in] sampling of PSF*/
-	   int pixpsax,      /**<[in] number of pixels along x dimension*/
-	   int pixpsay,      /**<[in] number of pixels along y dimension*/
-	   double pixthetax, /**<[in] size of pixel along x dimension*/
-	   double pixthetay, /**<[in] size of pixel along y dimension*/
-	   double pixoffx,   /**<[in] offset of the image from the center of detector.*/
-	   double pixoffy,   /**<[in] offset of the image from the center of detector*/
-	   double blurx,     /**<[in] blurring as a percentage of pixel*/
-	   double blury,     /**<[in] blurring as a percentage of pixel*/
-	   dmat* theta       /**<[in] angle of rotation of each subaps for polar ccd. NULL for  geometry.*/
-	   );
+
+/**
+   contains the data associated with a detector transfer function for a
+   subaperture. The PSF is computed as
+   \f$\textrm{PSF}=\frac{1}{N^2\sum(\textrm{amp}^2)}|\textrm{fftshift}\mathcal{F}[A
+   \exp(-\frac{2\pi}{\lambda}\textrm{opd})]|^2\f$.  The subaperture image is
+   computed as
+   \f$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\f$
+*/
+typedef struct DTF_T{
+    ccell *nominal;      /**<The FFT of the pixel functions*/
+    dspcell *si;         /**<The pixel selection*/
+    double wvl;          /**<Wavelength*/
+    double dtheta;       /**<Sampling of PSF*/
+    cmat *Ux;            /**<Special frequency vector along x*/
+    cmat *Uy;            /**<Special frequency vector along y*/
+    double dxsa;         /**<Subaperture size*/
+    long ncompx;         /**<FFT size along x*/
+    long ncompy;         /**<FFT size along y*/
+    int radpix;          /**<1: Pixels are along radial/azimuthal direction*/
+    int radrot;          /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
+    int fused;           /**<Whether the DTF has been fused to ETF*/
+}DTF_T;
+
+typedef struct ETF_T{
+    ccell *p1;           /**<Store the ETF along radial direction when radrot==1*/
+    ccell *p2;           /**<Store the 2D ETF when radrot==0*/
+}ETF_T;
+
+DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
+	     double dxsa,/**<Subaperture size*/
+	     double embfac,/**<Embedding factor (2)*/
+	     long ncompx,/**<FFT size along x*/
+	     long ncompy,/**<FFT size along y*/
+	     long pixpsax,/**<Number of pixels along x(r)*/
+	     long pixpsay,/**<Number of pixels along y(a)*/
+	     double pixthetax,/**<Pixel size along x (r)*/
+	     double pixthetay,/**<Pixel size along y (a)*/
+	     double pixoffx,  /**<offset of image center from center of detector*/
+	     double pixoffy,  /**<offset of image center from center of detector*/
+	     double pixblur,  /**<Pixel blur (fraction of pixel)*/
+	     dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
+	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
+    );
+ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
+	     double hs,    /**<Guide star focus range*/
+	     dmat *sodium, /**<The sodium profile. First column is coordinate.*/
+	     int icol,     /**<Which sodium profile to use*/
+	     int nwvl,     /**<Number of wavelength*/
+	     dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     dcell *srsa,  /**<Subaperture to LLT distance*/
+	     double za,    /**<Zenith angle*/
+	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
+    );
+void dtf_free(DTF_T *dtfs, int nwvl);
+void etf_free(ETF_T *etfs, int nwvl);
 #endif

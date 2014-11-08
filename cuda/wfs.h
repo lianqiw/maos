@@ -24,6 +24,7 @@
 struct cudtf_t{
     cucmat *nominal;/*array for each sa. */
     cucmat *etf;
+    cucmat *etf2;
     int etfis1d;
 };
 struct cullt_t{

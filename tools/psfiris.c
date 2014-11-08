@@ -105,15 +105,16 @@ static void psfiris_do(thread_t *info){
     double sumpsf=otf->p[0];
     double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(notf2*notf2);
     if(npix>0){
-	ccell *dtf=NULL;
-	dspcell *si=NULL;
-	mkdtf(&dtf, &si, notf2, notf2, dtheta2, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize,  NULL);
-	ccwm(otf, dtf->p[0]);
+	dmat *wvlmat=dnew(1,1);
+	wvlmat->p[0]=wvl;
+	double dxsa=30;//30 meter
+	double embfac=wvl/dtheta2/dxsa;
+	DTF_T *dtf=mkdtf(wvlmat, dxsa, embfac, notf2, notf2, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0, 0);
+	ccwm(otf, dtf->nominal->p[0]);
 	cfft2(otf,-1);
 	output->p[iwvl]=dnew(npix, npix);
-	dspmulcreal(output->p[iwvl]->p, si->p[0], otf->p, impst/sumpsf);
-	ccellfree(dtf);
-	dspcellfree(si);
+	dspmulcreal(output->p[iwvl]->p, dtf->si->p[0], otf->p, impst/sumpsf);
+	dtf_free(dtf, 1);
     }else{
 	cfft2(otf, -1);
 	cfftshift(otf);
@@ -289,7 +290,6 @@ int main(int argc, char *argv[]){
     thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);
-    info2(" done\n");
     writebin(output, "%s", outfile);
 
     locfree(ploc);

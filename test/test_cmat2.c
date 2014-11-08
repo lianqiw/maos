@@ -196,11 +196,11 @@ static void bench_ccwm(void){
     toc("ccwm&ccwmcol");
     cset(A,1);
     tic;
-    ccwm3col(A,B,D);
+    ccwm3col(A,B,D,1,0,0);
     toc("ccwm3col");
     writebin(A,"A2.bin");
     tic;
-    ccwm3col(A,B,D);
+    ccwm3col(A,B,D,1,0,0);
     toc("ccwm3col");
     cmat *E=cnew(N,N);
     czero(E);
@@ -210,7 +210,7 @@ static void bench_ccwm(void){
     toc("ccwm twice");
     writebin(E,"E.bin");
     tic;
-    ccwm3(E,A,B);
+    ccwm3(E,A,B,1,0,0);
     toc("ccwm3");
     writebin(E,"E2.bin");
 }

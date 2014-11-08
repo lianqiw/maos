@@ -46,28 +46,7 @@ typedef struct APER_T{
     dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
     dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
 }APER_T;
-/**
-   contains the data associated with a detector transfer function for a
-   subaperture. The PSF is computed as
-   \f$\textrm{PSF}=\frac{1}{N^2\sum(\textrm{amp}^2)}|\textrm{fftshift}\mathcal{F}[A
-   \exp(-\frac{2\pi}{\lambda}\textrm{opd})]|^2\f$.  The subaperture image is
-   computed as
-   \f$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]\f$
-*/
-typedef struct DTF_T{
-    ccell *nominal;      /**<The FFT of the pixel functions*/
-    dspcell *si;          /**<The pixel selection*/
-    cmat *Ux;            /**<Special frequency vector along x*/
-    cmat *Uy;            /**<Special frequency vector along y*/
-    int fused;           /**<Whether the DTF has been fused to ETF*/
-}DTF_T;
-/**
-   contains the data associated with an elongation transfer function for a
-subaperture. */
-typedef struct ETF_T{
-    ccell *p1;          /**<Store the ETF along radial direction when radrot==1*/
-    ccell *p2;          /**<Store the 2D ETF when radrot==0*/
-}ETF_T;
+
 /**
    contains the data associated with a LLT uplink path.
  */
@@ -444,6 +423,7 @@ typedef struct WFSINTS_T{
     const dmat *opd;
     const dmat *lltopd;
     int iwfs;
+    int isim;
 }WFSINTS_T;
 /**
   data for dithering statistics collection

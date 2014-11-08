@@ -171,15 +171,28 @@ void wfsints(thread_t *thread_data){
 	    si=powfs[ipowfs].dtf[iwvl].si->p[0];
 	}
 	/* elongation due to uplink projection */
-	cmat *(*petf)[nsa]=NULL;
-	void (*pccwm)(cmat*,const cmat*,const cmat*)=NULL;
+	cmat *(*petf1)[nsa]=NULL;
+	cmat *(*petf2)[nsa]=NULL;
+	double etf1wt=1;
+	double etf2wt=0;
+	void (*pccwm3)(cmat*,const cmat*,const cmat*,double,const cmat*, double)=NULL;
 	if(hasllt){
 	    if(powfs[ipowfs].etfsim[iwvl].p1){
-		petf=(void*)powfs[ipowfs].etfsim[iwvl].p1->p;
-		pccwm=ccwm3col;
+		petf1=(void*)powfs[ipowfs].etfsim[iwvl].p1->p;
+		pccwm3=ccwm3col;
 	    }else{
-		petf=(void*)powfs[ipowfs].etfsim[iwvl].p2->p;
-		pccwm=ccwm3;
+		petf1=(void*)powfs[ipowfs].etfsim[iwvl].p2->p;
+		pccwm3=ccwm3;
+	    }
+	    if(parms->powfs[ipowfs].llt->colsimdtrat>0){
+		if(powfs[ipowfs].etfsim2[iwvl].p1){
+		    petf2=(void*)powfs[ipowfs].etfsim2[iwvl].p1->p;
+		}else{
+		    petf2=(void*)powfs[ipowfs].etfsim2[iwvl].p2->p;
+		}
+		const int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+		etf2wt=(double)(data->isim%dtrat)/(double)dtrat;
+		etf1wt=1.-etf2wt;
 	    }
 	}
 	/* now big loop over subapertures */
@@ -256,7 +269,7 @@ void wfsints(thread_t *thread_data){
 		    cfft2(otf,-1);/*turn to OTF. peak in corner */
 		}
 		if(hasllt){/*has llt, multiply with DTF and ETF.*/
-		    (*pccwm)(otf,nominal,petf[illt][isa]);
+		    (*pccwm3)(otf,nominal,petf1[illt][isa], etf1wt, petf2?petf2[illt][isa]:0, etf2wt);
 		}else{/*no uplink, multiply with DTF only.*/
 		    ccwm(otf,nominal);
 		}

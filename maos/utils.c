@@ -637,4 +637,3 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 	g[0]=tmp;
     }
 }
-

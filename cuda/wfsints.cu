@@ -232,6 +232,26 @@ __global__ static void sa_ccwm_do(Comp *otfs, const int notfx, const int notfy,
     }
 }
 /**
+   Multiple each OTF with another. 
+*/
+__global__ static void sa_ccwm_do(Comp *otfs, const int notfx, const int notfy, 
+				   const Comp *dtfs1, Real wt1, const Comp *dtfs2, Real wt2, int each){
+    const int isa=blockIdx.x;
+    int offset=notfx*notfy*isa;
+    Comp *restrict otf=otfs+offset;
+    const Comp *dtf1=each?dtfs1:(dtfs1+offset);
+    const Comp *dtf2=each?dtfs2:(dtfs2+offset);
+    Comp temp;
+    for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
+	const int skip=iy*notfx;
+	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
+	    temp.x=Z(cuCreal)(dtf1[ix+skip])*wt1+Z(cuCreal)(dtf2[ix+skip])*wt2;
+	    temp.y=Z(cuCimag)(dtf1[ix+skip])*wt1+Z(cuCimag)(dtf2[ix+skip])*wt2;
+	    otf[ix+skip]=Z(cuCmul)(otf[ix+skip], temp);
+	}
+    }
+}
+/**
    Multiple an otf with another 1-d otf along each column
 */
 __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
@@ -243,6 +263,26 @@ __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notf
 	Comp *restrict otf2=otf+iy*notfx;
 	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
 	    otf2[ix]=Z(cuCmul)(otf2[ix], etf[ix]);
+	}
+    }
+}
+
+/**
+   Multiple an otf with another 1-d otf along each column
+*/
+__global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notfy,
+				     const Comp *etfs1, Real wt1, const Comp *etfs2, Real wt2, int each){
+    const int isa=blockIdx.x;
+    Comp *restrict otf=otfs+notfy*notfx*isa;
+    const Comp *restrict etf1=each?etfs1:(etfs1+isa*notfx);
+    const Comp *restrict etf2=each?etfs2:(etfs2+isa*notfx);
+    Comp temp;
+    for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
+	Comp *restrict otf2=otf+iy*notfx;
+	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
+	    temp.x=Z(cuCreal)(etf1[ix])*wt1+Z(cuCreal)(etf2[ix])*wt2;
+	    temp.y=Z(cuCimag)(etf1[ix])*wt1+Z(cuCimag)(etf2[ix])*wt2;
+	    otf2[ix]=Z(cuCmul)(otf2[ix], temp);
 	}
     }
 }
@@ -559,7 +599,20 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		    ctoc("fft to otf");
 		}
 		/*now we have otf. multiply with etf, dtf. */
-		if(cuwfs[iwfs].dtf[iwvl].etf){
+		if(cuwfs[iwfs].dtf[iwvl].etf2){
+		    ctoc("before ccwm");
+		    const int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+		    Real wt2=(Real)(isim%dtrat)/(double)dtrat;
+		    Real wt1=1.-wt2;
+		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
+			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2->col(isa), wt2, 0);
+		    }else{
+			sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2->col(isa), wt2, 0);
+		    }
+		    ctoc("ccwm2");
+		}else if(cuwfs[iwfs].dtf[iwvl].etf){
 		    ctoc("before ccwm");
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>

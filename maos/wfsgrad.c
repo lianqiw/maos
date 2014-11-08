@@ -330,6 +330,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	intsdata->opd=opd;
 	intsdata->lltopd=lltopd;
+	intsdata->isim=isim;
 	CALL_THREAD(simu->wfs_ints[iwfs], 0);
 	dfree(lltopd);
 	intsdata->opd=0;

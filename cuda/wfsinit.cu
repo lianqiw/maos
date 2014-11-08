@@ -56,6 +56,20 @@ static dmat *concat_dcell_as_vector(dcell *input){
     }
     return output;
 }
+static void etf2gpu(cucmat **cuetf, ETF_T *etf, int icol, int *etfis1d){
+    ccell *etfc=0;
+    if(etf->p1){
+	etfc=ccellsub(etf->p1, 0, 0, icol, 1);
+	*etfis1d=1;
+    }else{
+	etfc=ccellsub(etf->p2, 0, 0, icol, 1);
+	*etfis1d=0;
+    }
+    cmat *etfm=concat_ccell_as_vector(etfc);
+    cp2gpu(cuetf, etfm);
+    cfree(etfm);
+    ccellfree(etfc);
+}
 /**
    Initialize or update etf.
 */
@@ -73,19 +87,13 @@ void gpu_wfsgrad_update_etf(const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    if(parms->powfs[ipowfs].llt){
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
-			    ccell *etfc=0;
 			    int icol=parms->powfs[ipowfs].llt->n>1?wfsind:0;
-			    if(powfs[ipowfs].etfsim[iwvl].p1){
-				etfc=ccellsub(powfs[ipowfs].etfsim[iwvl].p1, 0, 0, icol, 1);
-				cuwfs[iwfs].dtf[iwvl].etfis1d=1;
-			    }else{
-				etfc=ccellsub(powfs[ipowfs].etfsim[iwvl].p2, 0, 0, icol, 1);
-				cuwfs[iwfs].dtf[iwvl].etfis1d=0;
+			    if(powfs[ipowfs].etfsim){
+				etf2gpu(&cuwfs[iwfs].dtf[iwvl].etf, &powfs[ipowfs].etfsim[iwvl], icol, &cuwfs[iwfs].dtf[iwvl].etfis1d);
 			    }
-			    cmat *etf=concat_ccell_as_vector(etfc);
-			    cp2gpu(&cuwfs[iwfs].dtf[iwvl].etf, etf);
-			    ccellfree(etfc);
-			    cfree(etf);
+			    if(powfs[ipowfs].etfsim2){
+				etf2gpu(&cuwfs[iwfs].dtf[iwvl].etf2, &powfs[ipowfs].etfsim2[iwvl], icol, &cuwfs[iwfs].dtf[iwvl].etfis1d);
+			    }
 			}
 		    }
 		}
