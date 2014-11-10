@@ -150,7 +150,7 @@ double get_usage_cpu(void){
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
-    cent=cent*NTHREAD/NCPU;/*discount hyperthreading. */
+    //cent=cent*NTHREAD/NCPU;/*discount hyperthreading. */
     return cent;
 }
 /**

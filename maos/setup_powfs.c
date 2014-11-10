@@ -981,7 +981,6 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	}else if(mode==1){
 	    etf_free(powfs[ipowfs].etfsim, nwvl);
 	    if(istep!=0 && powfs[ipowfs].etfsim2){//cycle through
-		warning2("reuse etfsim2 for etcsim\n");
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
 		return;

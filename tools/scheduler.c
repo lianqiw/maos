@@ -960,7 +960,7 @@ static void monitor_send_load(void){
     cmd[1]=hid;
     int memi=(int)(mem*100);
     int cpui=(int)(usage_cpu*100);
-    cmd[2]=memi | (cpui << 16);
+    cmd[2]=(memi & 0xFFFF) | (cpui << 16);
 
     for(ic=pmonitor; ic; ic=ic2){
 	ic2=ic->next;

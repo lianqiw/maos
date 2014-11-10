@@ -333,7 +333,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const Real thetax=parms->wfs[iwfs].thetax;
 	const Real thetay=parms->wfs[iwfs].thetay;
 	Real (*loc)[2]=cupowfs[ipowfs].loc->p;
-	const int nloc=cupowfs[ipowfs].loc->nloc;
 	/*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
 	stream_t &stream=*cuwfs[iwfs].stream;
 	dmat *gradcl=simu->gradcl->p[iwfs];
@@ -363,7 +362,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 	}
 	if(simu->telws){
-	    Real tt=simu->telws->p[isim];
+	    Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
 	    Real angle=simu->winddir?simu->winddir->p[0]:0;
 	    curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
 	}
@@ -377,7 +376,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 		curaddptt(phiout, loc, 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
 	    }
 	}
-	if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].skip){
+
+	if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].lo){
+
 	    const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
 	    gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc->p, recon->ngsmod, cleNGSm, 
 			       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
@@ -391,6 +392,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	if(parms->powfs[ipowfs].llt){
 	    Real focus=(Real)wfsfocusadj(simu, iwfs);
 	    if(Z(fabs)(focus)>1e-20){
+		const int nloc=cupowfs[ipowfs].loc->nloc;
 		add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout->p, loc, nloc, focus);
 	    }
 	}

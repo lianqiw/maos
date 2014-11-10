@@ -85,7 +85,6 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     for(int iotf=0; iotf<notf; iotf++){
 	powfs[ipowfs].intstat->otf->p[iotf]=cellnew(nsa,nwvl);
     }
- 
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta=wvl/(dxsa*embfac);
@@ -93,11 +92,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    double thres=opdbias?1:1-1e-10;
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
-	    genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
-		   loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
-		   powfs[ipowfs].realsaa->p[iotf],
-		   thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
-		   ncompx, ncompy, nsa, 1);
+	    OMPTASK_SINGLE
+		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
+		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
+		       powfs[ipowfs].realsaa->p[iotf],
+		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+		       ncompx, ncompy, nsa, 1);
 	}
     }/*iwvl */
     locfree(loc);
@@ -171,8 +171,6 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    const int notfx=otf[iwvl][0]->nx;
 	    const int notfy=otf[iwvl][0]->ny;
 	    cmat *sepsf=cnew(notfx,notfy);
-	    //cfft2plan(sepsf,1);
-	    
 	    for(int isa=0; isa<nsa; isa++){
 		double norm=area[isa]/((double)(notfx*notfy));
 		ccp(&sepsf,otf[iwvl][isa]);/*peak in center */
@@ -314,17 +312,12 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    =powfs[ipowfs].dtf[iwvl].si->nx>1?1:0;
 	cmat *seotfj=cnew(ncompx,ncompy);
 	cmat *seotfk=cnew(ncompx,ncompy);
-	//cfft2plan(seotfk,-1);
-	//cfft2plan(seotfk,1);
-	//cfft2plan(seotfj,1);
 	dcomplex *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
 	dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
 	double norm=1./(double)(ncompx*ncompy);
 	const int npsf=intstat->sepsf->p[0]->p[0]->nx;
 	cmat *sepsf=cnew(npsf,npsf);
-	//cfft2plan(sepsf,-1);
-
 	const cmat *(*petf)[nsa]=NULL;
 	void (*pccwm)(cmat*,const cmat*)=NULL;
 	int rotpsf=0;

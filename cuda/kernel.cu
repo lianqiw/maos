@@ -63,7 +63,7 @@ __global__ void add_ngsmod_do(Real *restrict opd, Real (*restrict loc)[2], int n
 			      Real m0, Real m1, Real m2, Real m3, Real m4, Real focus,
 			      Real thetax, Real thetay, Real scale, Real ht, Real alpha
 			      ){
-    Real scale1=1.f-scale;
+    const Real scale1=1.f-scale;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	Real x=loc[i][0];

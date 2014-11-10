@@ -543,6 +543,7 @@ typedef struct SIM_T{
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/
+    dmat *zoomreal;   /**<Trombone real position*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
     
     /*science evaluation*/

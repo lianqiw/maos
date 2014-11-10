@@ -183,15 +183,18 @@ if test -n "`which nvcc 2>/dev/null`" ;then
     if test -L "$NVCC" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
+else
+    for nvcc in "/opt/cuda/default/bin/nvcc" "/opt/cuda/bin/nvcc" "/usr/local/cuda/" ;do
+	if test -x "$nvcc" ;then
+	    NVCC="$nvcc"
+	    break;
+	fi
+    done
+    unset nvcc
+fi
+if test -n "$NVCC" ;then
     CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
     unset NVCC
-elif test -x "/opt/cuda/bin/nvcc" ;then
-    CUDADIR_AUTO="/opt/cuda"
-elif test -x "/usr/local/cuda/bin/nvcc" ;then
-    CUDADIR_AUTO="/usr/local/cuda/"
-else
-    CUDADIR_AUTO=
-    with_cuda=no
 fi
 
 #Compile mex routines if MATLAB is detected and single is not enabled

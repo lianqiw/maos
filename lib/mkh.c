@@ -20,7 +20,7 @@
 #include "../math/mathdef.h"
 #include "mkh.h"
 
-static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
+static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const dmat *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac);
 /**
    Create ray tracing operator from coordinate locin to locout.  Locin is
@@ -46,7 +46,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
    that it sums to 1.
 
  */
-dsp* mkh(loc_t *locin, loc_t *locout, const double *ampout,
+dsp* mkh(loc_t *locin, loc_t *locout, const dmat *ampout,
 	 double displacex, double displacey, double scale,
 	 int cubic, double cubic_iac){
     dsp *Hb=mkhb(locin, locout, ampout,displacex, displacey, scale, cubic, cubic_iac);
@@ -57,7 +57,7 @@ dsp* mkh(loc_t *locin, loc_t *locout, const double *ampout,
 /**
    Create transpose of mkh() result.
 */
-dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
+dsp* mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 	  double displacex, double displacey, double scale,
 	  int cubic, double cubic_iac){
     if(cubic){
@@ -93,7 +93,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     /*double *phiin0=phiin-1; */
     for(iloc=0; iloc<locout->nloc; iloc++){
 	bp[iloc]=count;/*column index */
-	if(ampout && fabs(ampout[iloc])<EPS)
+	if(ampout && fabs(ampout->p[iloc])<EPS)
 	    continue;
 	if(count+5>nzmax){
 	    nzmax*=2;
@@ -146,7 +146,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
-static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
+static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const dmat *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac){
     dsp *hback;
     double dplocx, dplocy;
@@ -186,7 +186,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const int nymax=map->ny-nxmin-1;
     for(iloc=0; iloc<locout->nloc; iloc++){
 	bp[iloc]=count;
-	if(ampout && fabs(ampout[iloc])<EPS)
+	if(ampout && fabs(ampout->p[iloc])<EPS)
 	    continue;
 	if(count+17>nzmax){
 	    nzmax*=2;

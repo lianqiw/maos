@@ -1348,10 +1348,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		if(parms->powfs[lgspowfs].dither){
 		    if(parms->powfs[tpowfs].dtrat<1){
 			parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
-			warning("powfs %d step is set to %d\n", ipowfs, parms->powfs[lgspowfs].dither_nskip);
+			warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[lgspowfs].dither_nskip);
 			int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
 			parms->powfs[tpowfs].dtrat=mtchdtrat;
-			warning("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
+			warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
 		    }
 		}
 	    }

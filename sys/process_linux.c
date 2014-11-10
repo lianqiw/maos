@@ -220,17 +220,32 @@ double get_usage_mem(void){
     long membuf;
     long memcache;
     fp=fopen("/proc/meminfo","r");
-    if(!fp || fscanf(fp, "%*s %ld %*s", &memtot)!=1 ||
-       fscanf(fp, "%*s %ld %*s", &memfree)!=1 ||
-       fscanf(fp, "%*s %ld %*s", &membuf)!=1 ||
-       fscanf(fp, "%*s %ld %*s", &memcache)!=1){
-	warning("failed to read meminfo\n");
-	fclose(fp);
-	return 0;
+    char line[1024];
+    if(!fp) return 0;
+    int count=0;
+    while(fgets(line, sizeof(line), fp) && count<4){
+	if(!mystrcmp(line, "MemTotal:")){
+	    if(sscanf(line, "%*s %ld %*s", &memtot)!=1) break;
+	    count++;
+	}else if(!mystrcmp(line, "MemFree:")){
+	    if(sscanf(line, "%*s %ld %*s", &memfree)!=1) break;
+	    count++;
+	}else if(!mystrcmp(line, "Buffers:")){
+	    if(sscanf(line, "%*s %ld %*s", &membuf)!=1) break;
+	    count++;
+	}else if(!mystrcmp(line, "Cached:")){
+	    if(sscanf(line, "%*s %ld %*s", &memcache)!=1) break;
+	    count++;
+	}
     }
     fclose(fp);
-    mem=(double)(memtot-(memfree+membuf+memcache))/(double)memtot;
-    return mem;
+    if(count!=4){
+	warning("failed to read meminfo\n");
+	return 0;
+    }else{
+	mem=(double)(memtot-(memfree+membuf+memcache))/(double)memtot;
+	return mem;
+    }
 }
 
 /**

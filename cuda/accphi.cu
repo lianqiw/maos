@@ -167,7 +167,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		avail_max=availi;
 	    }
 	}
-	avail_min-=64<<20; /*reserve 64 MiB*/
+	avail_min-=256<<20; /*reserve 256 MiB*/
 	long need=nps*sizeof(Real)*nxn*nyn;
 	info2("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
 	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);

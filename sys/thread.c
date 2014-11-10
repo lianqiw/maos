@@ -30,9 +30,8 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
     if(end<=start && nthread>1){
 	error("start=%ld, end=%ld. end need to be larger than start\n",start, end);
     }
-    long nt=(end-start)/nthread;
+    long nt=(end-start+nthread-1)/nthread;
     long ithread;
-    if(nt<=0) nt=1;/*added on 2011-04-28; */
     for(ithread=0; ithread<nthread; ithread++){
 	info[ithread].ithread=ithread;
 	info[ithread].nthread=nthread;

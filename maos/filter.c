@@ -298,6 +298,7 @@ static void filter_cl(SIM_T *simu){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
     if(simu->zoomerr){/*gain was already applied on zoomerr*/
+    dcp(&simu->zoomreal, simu->zoomint);
 	dadd(&simu->zoomint, 1, simu->zoomerr, parms->sim.zoomgain);
     }
     if(recon->moao && !parms->gpu.moao){

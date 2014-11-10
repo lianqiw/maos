@@ -1013,7 +1013,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    long nny[parms->nwfs];
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].dither && parms->powfs[ipowfs].llt){
+		if(parms->powfs[ipowfs].llt){
 		    nnx[iwfs]=parms->sim.end;
 		    nny[iwfs]=1;
 		}else{

@@ -218,6 +218,7 @@ static void genotf_wrap(thread_t *info){
     assert(!opdbias || opdbias->nx*opdbias->ny==nxsa*nsa);
     for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10 && info->ithread==0){
+	    //info2("%3ld%%\b\b\b\b\b\b\b", (isa-info->start)*100/(info->end-info->start));
   	    info2("%6ld of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa*(nsa/info->end), nsa);
 	}
 	const double *opdbiasi=NULL;
@@ -232,7 +233,7 @@ static void genotf_wrap(thread_t *info){
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
-    if(!detached && nsa>10) info2("done\n");
+    if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
 }
 /**
    Generate pairs of overlapping points for structure function.  

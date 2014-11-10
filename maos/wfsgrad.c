@@ -74,11 +74,11 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 	const long nx=powfs[ipowfs].focus->nx;
 	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
     }
-    if(simu->zoomint && parms->powfs[ipowfs].llt){
-	if(simu->zoompos){
-	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs];
+    if(simu->zoomreal && parms->powfs[ipowfs].llt){
+	if(simu->zoompos && simu->zoompos->p[iwfs]){
+	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
 	}
-	focus-=simu->zoomint->p[iwfs];
+	focus-=simu->zoomreal->p[iwfs];
     }
     return focus;
 }
@@ -308,10 +308,10 @@ void wfsgrad_iwfs(thread_t *info){
 		puptcmds[isim][1]=tty;
 	    }
 	    if(simu->telws){
-		double tmp=simu->telws->p[isim];
+		double tmp=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
 		double angle=simu->winddir?simu->winddir->p[0]:0;
-		ttx+=tmp*cos(angle)*parms->powfs[ipowfs].llt->ttrat;
-		tty+=tmp*sin(angle)*parms->powfs[ipowfs].llt->ttrat;
+		ttx+=tmp*cos(angle);
+		tty+=tmp*sin(angle);
 	    }
 	    if(ttx !=0 || tty != 0){ /* add tip/tilt to llt opd */
 		double ptt[3]={0, ttx, tty};
@@ -772,7 +772,6 @@ void wfsgrad_mffocus(SIM_T* simu){
 		   (!parms->powfs[ipowfs].dither || parms->powfs[ipowfs].phytype!=1)){
 		    //For those WFS that dither and run mtch, use focus error from ib instead
 		    simu->zoomerr->p[iwfs]=simu->zoomavg->p[iwfs]/(dtrat*dtrat);
-		    info("avg: zoomerr[%d]=%g\n", iwfs, simu->zoomerr->p[iwfs]);
 		}
 	    }
 	    dzero(simu->zoomavg);
@@ -849,8 +848,6 @@ static void dither_update(SIM_T *simu){
 		    sum+=simu->zoomerr->p[iwfs];
 		}
 		sum/=(double)nwfs;
-		info2("Step %d: Average zoom corrector error signal for powfs %d=%g\n",
-		     simu->isim, ipowfs, sum);
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    simu->zoomerr->p[iwfs]=sum;

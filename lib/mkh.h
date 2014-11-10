@@ -24,10 +24,10 @@
    \file mkh.h
    Contains functions that create ray tracing operator
 */
-dsp * mkhb(loc_t *locin, loc_t *locout, const double *ampout,
+dsp * mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 	   double displacex, double displacey,double scale,
 	   int cubic, double cubic_iac);
-dsp * mkh(loc_t *locin, loc_t *locout, const double *ampout,
+dsp * mkh(loc_t *locin, loc_t *locout, const dmat *ampout,
 	  double displacex, double displacey,double scale,
 	  int cubic, double cubic_iac);
 dsp *mkhbin1d(dmat *xin, dmat *xout);		   

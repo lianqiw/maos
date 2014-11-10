@@ -328,7 +328,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p, 0,0,1,0,0);
+		dsp *H=mkh(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs], 0,0,1,0,0);
 		GP->p[ipowfs]=dspmulsp(ZS0,H);
 		dspfree(H);
 		dspfree(ZS0);

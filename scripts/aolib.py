@@ -24,6 +24,10 @@ def handle_type(argtype):
         mx2c='mx2d'
         c2mx='any2mx'
         free_c='dfree'
+    elif argtype=='dsp*':
+        mx2c='mx2dsp'
+        c2mx='dsp2mx'
+        free_c='dspfree'
     elif argtype=='loc_t*':
         mx2c='mx2loc'
         c2mx='loc2mx'
@@ -36,7 +40,7 @@ def handle_type(argtype):
         mx2c='mx2str'
         c2mx='str2mx'
         free_c='free'
-    elif argtype=='void*' or argtype=='cell*':
+    elif argtype=='void*' or argtype=='cell*' or argtype=='dcell*' or argtype=='ccell*':
         mx2c='mx2any'
         c2mx='any2mx'
         free_c='cellfree'
