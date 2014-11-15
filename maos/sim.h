@@ -28,7 +28,7 @@ void wfsgrad(SIM_T *simu);
 void wfsints(thread_t *thread_data);
 void wfsgrad_iwfs(thread_t *info);
 void wfsgrad_post(thread_t *info);
-double wfsfocusadj(SIM_T *simu, int iwfs);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
+
 #endif

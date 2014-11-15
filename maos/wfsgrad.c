@@ -60,28 +60,6 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	}
     }
 }
-/**
-   Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
-*/
-double wfsfocusadj(SIM_T *simu, int iwfs){
-    const PARMS_T *parms=simu->parms;
-    const POWFS_T *powfs=simu->powfs;
-    const int ipowfs=parms->wfs[iwfs].powfs;
-    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-    const int isim=simu->isim;
-    double focus=0;
-    if(powfs[ipowfs].focus){
-	const long nx=powfs[ipowfs].focus->nx;
-	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
-    }
-    if(simu->zoomreal && parms->powfs[ipowfs].llt){
-	if(simu->zoompos && simu->zoompos->p[iwfs]){
-	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
-	}
-	focus-=simu->zoomreal->p[iwfs];
-    }
-    return focus;
-}
 
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
@@ -382,11 +360,11 @@ void wfsgrad_iwfs(thread_t *info){
 	    if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
 		/*Collect statistics with dithering*/
 		DITHER_T *pd=simu->dither[iwfs];
-		double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
-		angle+=pd->deltam;
+		double cs, ss;
+		dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
 		dcelladd(&pd->imb, 1, ints, 1.);
-		dcelladd(&pd->imx, 1, ints, cos(angle));
-		dcelladd(&pd->imy, 1, ints, sin(angle));
+		dcelladd(&pd->imx, 1, ints, cs);
+		dcelladd(&pd->imy, 1, ints, ss);
 	    }
 	}
 	if(do_phy){
@@ -551,13 +529,23 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     /* PLL loop.*/
     if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_pllskip){
 	DITHER_T *pd=simu->dither[iwfs];
-	//angle is dithering signal angle. deltam is delay due to Hcl
-	const double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
-	double sd=sin(angle+pd->deltam);
-	double cd=cos(angle+pd->deltam);
-	//difference between estimation and measured beam angle
-	double err=(-sd*simu->upterr->p[iwfs]->p[0]
-		    +cd*simu->upterr->p[iwfs]->p[1])/(parms->powfs[ipowfs].dither_amp);
+	double err, cd, sd;
+	if(0){
+	    dither_position(&cd, &sd, parms, ipowfs, isim, pd->deltam);
+	    //Use angle of expdected averaged position during integration, correlate with error signal
+	    err=(-sd*(simu->upterr->p[iwfs]->p[0])
+		 +cd*(simu->upterr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
+	}else{
+	    //Use angle of dither command, correlate with command
+	    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+	    const double angle=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat)+pd->deltam;   
+	    cd=cos(angle);
+	    sd=sin(angle);
+	
+	    //difference between estimation and measured beam angle
+	    err=(-sd*(-simu->uptreal->p[iwfs]->p[0])
+		 +cd*(-simu->uptreal->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
+	}
 	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
 	/*2014-10-31: 
 	  To estimate the actual dithering amplitude.
@@ -596,7 +584,7 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 #if USE_SUM
 	    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/npll;
 	    if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
-		info2("PLL step%d, wfs%d: deltam=%.2f cycle, a2m=%.1f mas\n",
+		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%.1f mas\n",
 		      isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
 	    }
 	    pd->ipv=pd->qdv=0;
@@ -623,7 +611,6 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	    }
 	    dmat *ibgrad=dnew(nsa*2, 1);
 	    double scale1=1./ndrift;
-	    double scale2=2./(pd->a2m*ndrift);
 	    dcellscale(pd->imb, scale1);
 	    double *gx=ibgrad->p;
 	    double *gy=ibgrad->p+nsa;
@@ -663,6 +650,7 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 		dfree(focus);
 	    }
 	    dfree(ibgrad);
+	    double scale2=scale1*2./(pd->a2m);
 	    dcelladd(&pd->i0, 1, pd->imb, 1);//imb was already scaled
 	    dcelladd(&pd->gx, 1, pd->imx, scale2);
 	    dcelladd(&pd->gy, 1, pd->imy, scale2);
@@ -836,6 +824,7 @@ static void dither_update(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].dither) continue;
+	if((simu->isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
 	const int nacc=(simu->isim-parms->powfs[ipowfs].dither_nskip+1)/parms->powfs[ipowfs].dtrat;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int ndrift=parms->powfs[ipowfs].dither_ndrift;
@@ -872,17 +861,17 @@ static void dither_update(SIM_T *simu){
 		powfs[ipowfs].intstat->gy=dcellnew(nsa, nwfs);
 	    
 	    }
+	    double scale1=(double)parms->powfs[ipowfs].dither_ndrift/(double)parms->powfs[ipowfs].dither_nmtch;
+	    double scale2=dither_scale(parms, ipowfs);
 	    for(int jwfs=0; jwfs<nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		//End of accumulation
 		DITHER_T *pd=simu->dither[iwfs];
 		//Scale the output due to accumulation
-		double scale1=(double)parms->powfs[ipowfs].dither_ndrift
-		    /(double)parms->powfs[ipowfs].dither_nmtch;
 		for(int isa=0; isa<nsa; isa++){
 		    dadd(powfs[ipowfs].intstat->i0->p+isa+jwfs*nsa, 0, pd->i0->p[isa], scale1);
-		    dadd(powfs[ipowfs].intstat->gx->p+isa+jwfs*nsa, 0, pd->gx->p[isa], scale1);
-		    dadd(powfs[ipowfs].intstat->gy->p+isa+jwfs*nsa, 0, pd->gy->p[isa], scale1);
+		    dadd(powfs[ipowfs].intstat->gx->p+isa+jwfs*nsa, 0, pd->gx->p[isa], scale1*scale2);
+		    dadd(powfs[ipowfs].intstat->gy->p+isa+jwfs*nsa, 1, pd->gy->p[isa], scale1*scale2);
 		}
 		dcellzero(pd->i0);
 		dcellzero(pd->gx);

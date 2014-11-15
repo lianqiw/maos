@@ -637,3 +637,51 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 	g[0]=tmp;
     }
 }
+
+/**
+   Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
+*/
+double wfsfocusadj(SIM_T *simu, int iwfs){
+    const PARMS_T *parms=simu->parms;
+    const POWFS_T *powfs=simu->powfs;
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    const int isim=simu->isim;
+    double focus=0;
+    if(powfs[ipowfs].focus){
+	const long nx=powfs[ipowfs].focus->nx;
+	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+    }
+    if(simu->zoomreal && parms->powfs[ipowfs].llt){
+	if(simu->zoompos && simu->zoompos->p[iwfs]){
+	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
+	}
+	focus-=simu->zoomreal->p[iwfs];
+    }
+    return focus;
+}
+/**
+   Expected averaged position of dithering signal during WFS integration
+*/
+void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam){
+    //adjust for delay due to propagation
+    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+    //adjust to get delay at beginning of integration
+    const int adjust2=parms->powfs[ipowfs].dtrat-1;
+    const double angle=M_PI*0.5*((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)+deltam;
+    const double angle2=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat)+deltam;
+    const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
+    const double beta=1+delay+floor(-delay);
+    //use average of two places during accumulation
+    *cs=beta*cos(angle)+(1-beta)*cos(angle2);
+    *ss=beta*sin(angle)+(1-beta)*sin(angle2);
+}
+/**
+   Scale factor
+*/
+double dither_scale(const PARMS_T *parms, int ipowfs){
+    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+    const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
+    const double beta=1+delay+floor(-delay);
+    return 1./(beta*beta+(1-beta)*(1-beta));
+}

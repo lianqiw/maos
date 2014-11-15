@@ -429,8 +429,9 @@ typedef struct WFSINTS_T{
   data for dithering statistics collection
 */
 typedef struct DITHER_T{ 
-    double delta; /**<PLL result*/
-    double deltam;/**<PLL result every many steps*/
+    double delta; /**<PLL estimation of servo lag (only) at every time step*/
+    double deltam;/**<Average of delta*/
+    double delay; /**<Diference of delay from 2 frame due to beam propagation*/
     double ipv;   /**<in plane value (dot product)*/
     double qdv;   /**<out of plane value (cross product)*/
     double a2m;   /**<actual dither amplitude*/

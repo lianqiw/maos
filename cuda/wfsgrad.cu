@@ -280,11 +280,11 @@ dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
 }
 
 /**Accumulate for matched filter updating*/
-void dither_t::acc(DITHER_T *dither, curcell *ints, Real angle, int ndrift, cudaStream_t stream){
+void dither_t::acc(DITHER_T *dither, curcell *ints, Real cs, Real ss, int ndrift, cudaStream_t stream){
     const int nsa=ints->nx*ints->ny;
     const int pixpsa=ints->p[0]->nx*ints->p[0]->ny;
     dither_acc_do<<<ints->nx, pixpsa, 0, stream>>>
-	(imb->pm, imx->pm, imy->pm, ints->pm, cosf(angle), sinf(angle), pixpsa, nsa);
+	(imb->pm, imx->pm, imy->pm, ints->pm, cs, ss, pixpsa, nsa);
     imc++;
     if(imc%ndrift==0){
 	cp2cpu(&dither->imb, imb, stream);
@@ -460,10 +460,10 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    ctoc("noise");
 		}
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
-		    double angle=M_PI*0.5*isim/parms->powfs[ipowfs].dtrat;
-		    angle+=simu->dither[iwfs]->deltam;
+		    double cs, ss;
+		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
 		    int ndrift=parms->powfs[ipowfs].dither_ndrift;
-		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, angle, ndrift, stream);
+		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, cs, ss, ndrift, stream);
 		}
 	    }
 	    if(do_phy){

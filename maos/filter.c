@@ -325,12 +325,15 @@ static void filter_cl(SIM_T *simu){
     if(simu->uptint){
 	/*upterr is from gradients from this time step.*/
 	dcellcp(&simu->uptreal, simu->uptint->mint->p[0]);
-	/*Eject dithering command*/
+	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].dither){
+		//adjust delay due to propagation
+		const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
-		double angle=M_PI*0.5*(simu->isim+1)/parms->powfs[ipowfs].dtrat;
+		//minus adjust for delay
+		double angle=M_PI*0.5*((simu->isim-adjust+1)/parms->powfs[ipowfs].dtrat);
 		simu->uptreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }

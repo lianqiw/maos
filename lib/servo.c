@@ -521,7 +521,11 @@ static const dcell*servo_shift_al(SERVO_T *st, const dcell *merr){
 	    st->merrhist->p[i]=st->merrhist->p[i+1];
 	}
 	st->merrhist->p[nhist-1]=cycle;
-	dcelladd(&st->merrhist->p[nhist-1], 0, merr, 1);
+	if(!merr){
+	    dcellfree(st->merrhist->p[nhist-1]);
+	}else{
+	    dcelladd(&st->merrhist->p[nhist-1], 0, merr, 1);
+	}
 	return st->merrhist->p[0];
     }
 }

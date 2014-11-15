@@ -48,7 +48,7 @@ class dither_t{
     curcell *imy;
 public:
     dither_t(int nsa, int pixpsax, int pixpsay);
-    void acc(DITHER_T *dither, curcell *ints, Real angle, int nstat, cudaStream_t stream);
+    void acc(DITHER_T *dither, curcell *ints, Real cs, Real ss, int nstat, cudaStream_t stream);
     ~dither_t(){
 	delete imb;
 	delete imx;

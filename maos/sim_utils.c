@@ -796,7 +796,7 @@ static void init_simu_wfs(SIM_T *simu){
 		simu->uptreal->p[iwfs]=dnew(2,1);
 	    }
 	}
-	simu->uptint=servo_new(simu->upterr_store, parms->sim.apupt, parms->sim.alupt,
+	simu->uptint=servo_new(simu->uptreal, parms->sim.apupt, parms->sim.alupt,
 			       parms->sim.dthi, parms->sim.epupt);
     }
   
