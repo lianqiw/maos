@@ -672,16 +672,8 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
     const double angle2=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat)+deltam;
     const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
     const double beta=1+delay+floor(-delay);
-    //use average of two places during accumulation
-    *cs=beta*cos(angle)+(1-beta)*cos(angle2);
-    *ss=beta*sin(angle)+(1-beta)*sin(angle2);
-}
-/**
-   Scale factor
-*/
-double dither_scale(const PARMS_T *parms, int ipowfs){
-    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
-    const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
-    const double beta=1+delay+floor(-delay);
-    return 1./(beta*beta+(1-beta)*(1-beta));
+    const double scale=1./(beta*beta+(1-beta)*(1-beta));
+    //use average of two places during accumulation and scale
+    *cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
+    *ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
 }

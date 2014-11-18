@@ -1374,7 +1374,8 @@ GtkWidget *create_window(){
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),GTK_ICON_SIZE_MENU);
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 
-    GtkToolItem *item=gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
+    GtkToolItem *item=gtk_tool_button_new(NULL, "Save_As");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "document-save-as");
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
     g_signal_connect(item,"clicked",G_CALLBACK(tool_save),NULL);
     item=gtk_separator_tool_item_new();
@@ -1393,24 +1394,32 @@ GtkWidget *create_window(){
 	
     item=gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_IN);
+
+    item=gtk_tool_button_new(NULL, "Zoom_In");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-in");
     g_signal_connect(item,"clicked",G_CALLBACK(tool_zoom),GINT_TO_POINTER(1));
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_FIT);
+
+    item=gtk_tool_button_new(NULL, "Best_Fit");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-fit-best");
     g_signal_connect(item,"clicked",G_CALLBACK(tool_zoom),GINT_TO_POINTER(0));
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_OUT);
+
+    item=gtk_tool_button_new(NULL, "Zoom_Out");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-out");
     g_signal_connect(item,"clicked",G_CALLBACK(tool_zoom),GINT_TO_POINTER(-1));
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
     item=gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_PROPERTIES);
+    item=gtk_tool_button_new(NULL, "_Properties");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "document-properties");
     g_signal_connect(item,"clicked",G_CALLBACK(tool_property),NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_COPY);
+    item=gtk_tool_button_new(NULL, "_Copy");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "edit-copy");
     g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_cumu_click), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
@@ -1425,11 +1434,14 @@ GtkWidget *create_window(){
 		     G_CALLBACK(tool_font_set),NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_toggle_tool_button_new_from_stock(GTK_STOCK_MEDIA_PAUSE);
+    item=gtk_tool_button_new(NULL, "P_ause");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "media-playback-pause");
     g_signal_connect(item, "toggled", G_CALLBACK(togglebutton_pause), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_STOP);
+
+    item=gtk_tool_button_new(NULL, "_Stop");
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "media-playback-stop");
     g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_stop), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 

@@ -233,7 +233,7 @@ AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websocke
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
-AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]))
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 if test -z "$MEXDIR" ;then
     with_matlab=no
@@ -270,7 +270,8 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_GCC="-Wno-deprecated-declarations -fms-extensions -static-libgcc"
+COMMON_GCC="-fms-extensions -static-libgcc"
+COMMON_GCC+=" -Wno-deprecated-declarations" 
 COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
 OPTIM_ALL="-O3 "
 OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
@@ -627,7 +628,7 @@ if test "$with_gtk" != "no" ;then
     if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
 	macint=gtk-mac-integration
     fi
-    if test "$gtk_3" = "yes" -a "$with_gtk-3" != "no" ;then
+    if test "$gtk_3" = "yes" -a "$use_gtk_3" != "no" ;then
 	PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
 	PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
 	PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])

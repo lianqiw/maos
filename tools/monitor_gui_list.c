@@ -488,36 +488,30 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
     menuitem=gtk_separator_menu_item_new();
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     if(nsel>0){
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_CANCEL, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Kill selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Kill selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(kill_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Restart selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Restart selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(restart_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Plot selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Plot selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(plot_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
 	menuitem=gtk_separator_menu_item_new();
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_CLEAR, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Clear selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Clear selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(clear_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_COPY, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Copy selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Copy cmdline selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_COPY, NULL);
-	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Copy path of selected jobs");
+	menuitem=gtk_menu_item_new_with_label("Copy path of selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selectedpath_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
     }

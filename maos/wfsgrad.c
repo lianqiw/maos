@@ -529,24 +529,14 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     /* PLL loop.*/
     if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_pllskip){
 	DITHER_T *pd=simu->dither[iwfs];
-	double err, cd, sd;
-	if(0){
+	{
+	    double err, cd, sd;
 	    dither_position(&cd, &sd, parms, ipowfs, isim, pd->deltam);
 	    //Use angle of expdected averaged position during integration, correlate with error signal
 	    err=(-sd*(simu->upterr->p[iwfs]->p[0])
 		 +cd*(simu->upterr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
-	}else{
-	    //Use angle of dither command, correlate with command
-	    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
-	    const double angle=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat)+pd->deltam;   
-	    cd=cos(angle);
-	    sd=sin(angle);
-	
-	    //difference between estimation and measured beam angle
-	    err=(-sd*(-simu->uptreal->p[iwfs]->p[0])
-		 +cd*(-simu->uptreal->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
+	    pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
 	}
-	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
 	/*2014-10-31: 
 	  To estimate the actual dithering amplitude.
 
@@ -558,23 +548,26 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	  (upterr) because the amplitude of FSM error signal is affected by the
 	  gain of the current gradient estimation algorithm and is therefore
 	  should not be used.
-
-	  Notice that it doesn't matter whether (cd, sd) are computed from angle
-	  or angle + deltam, as long as detalm is const during the averaging
-	  period. 
 	*/
+	{
+	    //Don't use cd, sd above, which doesnot have unit amplitude.
+	    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+	    const double angle=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat);
+	    double cs=cos(angle);
+	    double ss=sin(angle);
 #define USE_SUM 1
-	double *fsmpos=simu->uptreal->p[iwfs]->p;
-	double ipv=(fsmpos[0]*cd+fsmpos[1]*sd);
-	double qdv=(fsmpos[0]*sd-fsmpos[1]*cd);
+	    double *fsmpos=simu->uptreal->p[iwfs]->p;
+	    double ipv=(fsmpos[0]*cs+fsmpos[1]*ss);
+	    double qdv=(fsmpos[0]*ss-fsmpos[1]*cs);
 #if USE_SUM
-	pd->ipv+=ipv;
-	pd->qdv+=qdv;
+	    pd->ipv+=ipv;
+	    pd->qdv+=qdv;
 #else
-	double gpll=parms->powfs[ipowfs].dither_gpll;
-	pd->ipv=pd->ipv*(1-gpll)+ipv*gpll;
-	pd->qdv=pd->qdv*(1-gpll)+qdv*gpll;
+	    double gpll=parms->powfs[ipowfs].dither_gpll;
+	    pd->ipv=pd->ipv*(1-gpll)+ipv*gpll;
+	    pd->qdv=pd->qdv*(1-gpll)+qdv*gpll;
 #endif
+	}
 	/*Update DLL loop measurement. The delay is about 0.2 of a
 	 * cycle, according to closed loop transfer function*/
 	const int npll=parms->powfs[ipowfs].dither_npll;
@@ -862,7 +855,6 @@ static void dither_update(SIM_T *simu){
 	    
 	    }
 	    double scale1=(double)parms->powfs[ipowfs].dither_ndrift/(double)parms->powfs[ipowfs].dither_nmtch;
-	    double scale2=dither_scale(parms, ipowfs);
 	    for(int jwfs=0; jwfs<nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		//End of accumulation
@@ -870,8 +862,8 @@ static void dither_update(SIM_T *simu){
 		//Scale the output due to accumulation
 		for(int isa=0; isa<nsa; isa++){
 		    dadd(powfs[ipowfs].intstat->i0->p+isa+jwfs*nsa, 0, pd->i0->p[isa], scale1);
-		    dadd(powfs[ipowfs].intstat->gx->p+isa+jwfs*nsa, 0, pd->gx->p[isa], scale1*scale2);
-		    dadd(powfs[ipowfs].intstat->gy->p+isa+jwfs*nsa, 1, pd->gy->p[isa], scale1*scale2);
+		    dadd(powfs[ipowfs].intstat->gx->p+isa+jwfs*nsa, 0, pd->gx->p[isa], scale1);
+		    dadd(powfs[ipowfs].intstat->gy->p+isa+jwfs*nsa, 0, pd->gy->p[isa], scale1);
 		}
 		dcellzero(pd->i0);
 		dcellzero(pd->gx);

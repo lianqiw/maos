@@ -69,7 +69,6 @@ static int key_cmp(const void *a, const void *b){
 /*Keep record of all the strings so that we can check whether they have all been used. */
 static long nstore=0;/*number of total records */
 static long nused=0;/*number of read records */
-static int print_override=1;
 
 #define STRICT 1
 
@@ -209,6 +208,7 @@ void close_config(const char *format, ...){
     while(MROOT){
 	twalk(MROOT, delete_leaf);
     }
+    nused=0;
 }
 /**
    Start the read config process by opening .conf files and fill the entries in
@@ -222,16 +222,27 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
     if(!config_file) return;
     FILE *fd=NULL;
     char *fn=NULL;
+    int print_override=1;
     if(check_suffix(config_file, ".conf")){
-	fn=find_file(config_file);
-    }
-    if(fn){
-	if(!(fd=fopen(fn,"r"))){
+	if(exist(config_file)){
+	    fn=strdup(config_file);
+	}else{
+	    fn=find_file(config_file);
+	    print_override=0;
+	}
+	if(!fn || !(fd=fopen(fn,"r"))){
 	    perror("fopen");
 	    error("Cannot open file %s for reading.\n",fn);
 	}
     }else{
 	parse_argopt(config_file, NULL);
+	char *end; 
+	//Remove trailing space
+	for(end=config_file+strlen(config_file); end>=config_file; end--){
+	    if(isspace((int)*end)) *end='\0'; 
+	    else break;
+	}
+	if(end<config_file) return;
 	fn=config_file;
     }
     
@@ -239,7 +250,6 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
     char *var=NULL, *value=NULL;
     int countnew=0;
     int countold=0;
-    nused=0;
     
 #define MAXLN 40960
     char ssline[MAXLN];
@@ -298,7 +308,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 		    error("__protect_end must appear after __protect_start, in the same file");
 		}
 	    }else{
-		error2("Input (%s) is not valid\n", ssline);
+		error("Input (%s) is not valid\n", ssline);
 	    }
 	    ssline[0]='\0';
 	    continue;
@@ -321,9 +331,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
-		print_override=0;
 		open_config(embeded,prefix,protect);
-		print_override=1;
 		free(embeded);
 	    }
 	}else{
@@ -396,7 +404,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 			     &&(oldstore->data != store->data))||
 			    ((oldstore->data!=NULL && store->data!=NULL)
 			     &&strcmp(oldstore->data, store->data)))){
-			    info2("Overriding %s:\t{%s}-->{%s}\n", 
+			    info2("Overriding %-20s\t{%s}-->{%s}\n", 
 				  store->key, oldstore->data, store->data);
 			}
 			/*free old value */
@@ -745,11 +753,14 @@ int readcfg_int( const char *format,...){
     format2key;
     char *val=getrecord(key, 1)->data;
     char *endstr;
-    int ans=(int)readstr_num(val, &endstr);
+    double ans=readstr_num(val, &endstr);
+    if(fabs(ans-(int)ans)>EPS){
+	warning("Floating point number supplied while integer is needed: %s=%s\n", key, val);
+    }
     if(endstr[0]!='\0'){
 	error("Garbage found in %s=%s.\n", key, val);
     }
-    return ans;
+    return (int)ans;
 }
 /**
    Read double

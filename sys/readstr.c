@@ -308,9 +308,15 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	/*assign the value to appropriate array. convert to int if necessary. */
 	switch(type){
 	case T_INT:
+	    if(fabs(res-(int)res)>EPS){
+		warning("Floating point number supplied while integer is needed: {%s}\n", data);
+	    }
 	    ((int*)(*ret))[count]=(int)res;
 	    break;
 	case T_LONG:
+	    if(fabs(res-(long)res)>EPS){
+		warning("Floating point number supplied while long integer is needed: {%s}\n", data);
+	    }
 	    ((long*)(*ret))[count]=(long)res;
 	    break;
 	case T_DBL:

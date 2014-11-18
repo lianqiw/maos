@@ -444,7 +444,9 @@ static void readcfg_powfs(PARMS_T *parms){
 		powfsi->dither_nskip=10*powfsi->dither_npll+powfsi->dither_pllskip;
 	    }
 	    powfsi->dither_ndrift*=powfsi->dither_npll;
-	    powfsi->dither_nmtch*=powfsi->dither_ndrift;
+	    powfsi->dither_nmtch*=powfsi->dither_npll;
+	    powfsi->dither_pllskip*=powfsi->dtrat;
+	    powfsi->dither_nskip*=powfsi->dtrat;
 	}
 	powfsi->modulate/=206265.;
 	powfsi->fov/=206265.;

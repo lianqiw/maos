@@ -41,5 +41,4 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
 double wfsfocusadj(SIM_T *simu, int iwfs);
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam);
-double dither_scale(const PARMS_T *parms, int ipowfs);
 #endif
