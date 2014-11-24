@@ -67,15 +67,6 @@ void maos_setup(const PARMS_T *parms){
     if(!parms->sim.evlol){
 	global->powfs=powfs=setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
-	/*if(parms->dbg.wfslinearity!=-1){
-	    int iwfs=parms->dbg.wfslinearity;
-	    assert(iwfs>-1 || iwfs<parms->nwfs);
-	    info2("Studying wfslineariy for WFS %d\n", iwfs);
-	    wfslinearity(parms, powfs, iwfs);
-	    rename_file(0);
-	    scheduler_finish(0);
-	    exit(0);
-	}*/
 	global->recon=recon=setup_recon_init(parms);
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
 	setup_recon_dm(recon, parms, aper);
@@ -83,12 +74,18 @@ void maos_setup(const PARMS_T *parms){
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data*/
 	setup_powfs_phy(parms, powfs);
-    }
-
-    if(!parms->sim.evlol){
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
+	if(parms->dbg.wfslinearity!=-1){
+	    int iwfs=parms->dbg.wfslinearity;
+	    assert(iwfs>-1 || iwfs<parms->nwfs);
+	    info2("Studying wfslineariy for WFS %d\n", iwfs);
+	    wfslinearity(parms, powfs, iwfs);
+	    rename_file(0);
+	    scheduler_finish(0);
+	    exit(0);
+	}
     }
     global->setupdone=1;
     if(parms->plot.setup){
@@ -133,9 +130,13 @@ void maos_setup(const PARMS_T *parms){
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){
+    info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),myhostname());
     maos_setup(parms);
+    if(parms->sim.end<=parms->sim.start) return;
+    info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),myhostname());
     maos_sim();
     maos_reset();
+    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),myhostname());
 }
 
 void maos_reset(){

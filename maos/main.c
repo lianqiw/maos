@@ -193,7 +193,6 @@ int main(int argc, const char *argv[]){
 	    wait_cpu(NTHREAD);
 	}
     }
-    info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);
     setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     if(arg->server){
@@ -210,9 +209,9 @@ int main(int argc, const char *argv[]){
     free(arg);
 
     /*do not use prallel single in maos(). It causes blas to run single threaded
-     * during preparation. Selective enable parallel for certain setup functions that doesn't use blas*/
+     * during preparation. Selective enable parallel for certain setup functions
+     * that doesn't use blas*/
     maos(parms);
-    info2("Job finished at %s\n",myasctime());
     rename_file(0);
     scheduler_finish(0);
     return 0;

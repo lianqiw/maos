@@ -38,6 +38,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <ctype.h>
+#include <stdint.h>
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -789,7 +790,11 @@ void maos_version(void){
 #endif
     info2("Source: %s\n", SRCDIR);
     info2("BUILD: %s\n", BUILDDIR);
-    info2("Launched at %s in %s.\n",myasctime(),myhostname());
+    info2("Launched at %s in %s with PID %ld.\n",myasctime(),myhostname(), (long)getpid());
+#if HAS_LWS
+    extern uint16_t PORT;
+    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+#endif
 }
 
 /**

@@ -30,4 +30,4 @@ dmat* psd2time(const dmat *psdin, rand_t *seed, double dt, int nstepin);
 dmat *psdt2s(const dmat *psdt, double vmean);
 dmat *psds2t(const dmat *psdt, double vmean);
 dsp * mkh(loc_t *locin, loc_t *locout, const dmat *ampout, double displacex, double displacey,double scale, int cubic, double cubic_iac);
-
+void dsvd_pow(dmat *A, double power, double thres);

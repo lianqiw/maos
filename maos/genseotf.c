@@ -265,24 +265,28 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(intstat->gx);
     dcellfree(intstat->gy);
     cellfree(intstat->fotf);
+    cellfree(intstat->potf);
 
     intstat->i0=cellnew(nsa,ni0);
     intstat->gx=cellnew(nsa,ni0);
     intstat->gy=cellnew(nsa,ni0);
-    if(parms->powfs[ipowfs].phytypesim==3 || (parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)){
+    if(parms->powfs[ipowfs].phytypesim==3 ){
 	intstat->fotf=cellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
 	    intstat->fotf->p[i]=cellnew(nsa,nwvl);
+	}
+    }
+    if(parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs){
+	intstat->potf=cellnew(nsepsf, 1);
+	for(int i=0; i<nsepsf; i++){
+	    intstat->potf->p[i]=cellnew(nsa,nwvl);
 	}
     }
     /* subaperture rotation angle. */
     PDCELL(intstat->i0, i0);
     PDCELL(intstat->gx, gx);
     PDCELL(intstat->gy, gy);
-    /*
-    dmat* (*i0)[nsa]=(dmat*(*)[nsa])intstat->i0->p;
-    dmat* (*gx)[nsa]=(dmat*(*)[nsa])intstat->gx->p;
-    dmat* (*gy)[nsa]=(dmat*(*)[nsa])intstat->gy->p;*/
+  
     /*
       Notice, the generation of shifted i0s are not accurate
       because the PSF is not enough to cover the size.
@@ -395,12 +399,15 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
 
-		if(nllt){/*elongation. */
-		    (*pccwm)(seotfk,petf[ietf][isa]);
-		}
 		/*seotfk has peak in corner */
 		if(nominal) ccwm(seotfk,nominal);
 		cscale(seotfk, norm);
+		if(intstat->potf){
+		    ccp(&intstat->potf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
+		}
+		if(nllt){/*elongation. */
+		    (*pccwm)(seotfk,petf[ietf][isa]);
+		}
 		ccp(&seotfj,seotfk);/*backup */
 		if(intstat->fotf){
 		    ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);

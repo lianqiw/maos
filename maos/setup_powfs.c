@@ -729,18 +729,12 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	ncompx=4*(int)round(0.25*pixpsax*pixthetax/dtheta);
 	ncompy=4*(int)round(0.25*pixpsay*pixthetay/dtheta);
 	
-	if(!parms->powfs[ipowfs].radrot){
-	    /*Follow laos method, need square  */
-	    ncompx=ncompx>ncompy?ncompx:ncompy;
-	    ncompy=ncompx;
-	}else{
-	    /*Found that: Must set ncompx==ncompy for
-	      rotationg either psf or otf. reduce aliasing
-	      and scattering of image intensities.
-	    */
-	    ncompx=ncompx>ncompy?ncompx:ncompy;
-	    ncompy=ncompx;
-	}
+	/*
+	  Found that: Must set ncompx==ncompy even for rotationg either psf or
+	  otf. reduce aliasing and scattering of image intensities.
+	*/
+	ncompx=ncompx>ncompy?ncompx:ncompy;
+	ncompy=ncompx;
 	/*A few manual optimizations. */
 	if(ncompx==ncompy){
 	    if(ncompx>8 && ncompx<16){
@@ -1516,15 +1510,13 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		cfree(psfhat);
 		dfree(psf);
 	    }
-	    /*Generating short exposure images. */
+	    /*Generating short exposure psfs for both uplink and downlink turbulence effect. */
 	    gensepsf(parms,powfs,ipowfs);
 	    if(parms->save.setup>1 && intstat){
 		writebin(intstat->sepsf->p[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
 	    /*Free short exposure otf. */
-	    //if(!parms->sim.ncpa_calib){
 	    ccellfree(intstat->lotf);
-		//}
 	    cellfree(intstat->otf);
 	}
 	/*generate short exposure i0,gx,gy from psf. */
@@ -1596,7 +1588,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcell *dm_ncpa){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
-	if(aloc && dm_ncpa){
+	if(aloc && dm_ncpa){//apply DM figure to powfs surface
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		double hs=parms->wfs[iwfs].hs;
@@ -1626,7 +1618,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		}
 	    }
 	}
-	//if opdadd is null, but dm_ncpa is not, there will be opdbias.
+	//if opdadd is null, but dm_ncpa is not, there will still be opdbias.
 	if(powfs[ipowfs].opdbias){
 	    if(parms->sim.ncpa_ttr){
 		/*remove average tilt from opdbias and same amount from
@@ -1731,6 +1723,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(powfs[ipowfs].intstat){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat;
 	cellfree(intstat->fotf);
+	cellfree(intstat->potf);
 	dcellfree(intstat->mtche);
 	dcellfree(intstat->saneaxyl);
 	dcellfree(intstat->saneaxy);

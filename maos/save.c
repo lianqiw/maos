@@ -168,14 +168,18 @@ void save_recon(SIM_T *simu){
 	    simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
 	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
 	}
-	cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
-	if(simu->dmint->mint->p[0]){
-	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
-	}
-	if(simu->Merr_lo){
-	    cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
-	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
-		cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
+	if(!parms->sim.closeloop || simu->isim>0){
+	    if(simu->dmerr){
+		cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
+	    }
+	    if(simu->dmint->mint->p[0]){
+		cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
+	    }
+	    if(simu->Merr_lo){
+		cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
+		if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+		    cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
+		}
 	    }
 	}
     }

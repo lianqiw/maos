@@ -409,12 +409,11 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int nsa=powfs[ipowfs].pts->nsa;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
+    ccell *potf=intstat->potf->p[intstat->nsepsf>1?wfsind:0];
+    cmat *potf2=0;
     ccell *otf=cellnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
-	//cfft2plan(otf->p[iwvl], 1);
-	//cfft2plan(otf->p[iwvl], -1);
+	otf->p[iwvl]=cnew(potf->p[0]->nx, potf->p[0]->ny);
     }
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -426,55 +425,86 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
 	}
     }
+    int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
     double *srot=NULL;
-    if(parms->powfs[ipowfs].radpix){
+    const cmat ***petf=NULL;
+    void (*pccwm)(cmat*,const cmat*)=NULL;
+    if(nllt){
 	srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
+	petf=calloc(nwvl, sizeof(void*));
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    if(powfs[ipowfs].etfsim[iwvl].p1){
+		pccwm=ccwmcol;
+		if(powfs[ipowfs].etfsim[iwvl].p1->ny==1)
+		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p1->p;
+		else
+		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p1->p+wfsind*nsa;
+	    }else{
+		pccwm=ccwm;
+		if(powfs[ipowfs].etfsim[iwvl].p2->ny==1)
+		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p2->p;
+		else
+		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p2->p+wfsind*nsa;
+	    }
+	}
     }
 
-    const int nsep=20;
+    const int nsep=41;
     const double dg=0.1;
     double gx=0, gy=0, dgx=0, dgy=0;
     dmat *ints=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
     double theta=0, cx=1, sx=0;
-    dmat *gnf=dnew(nsep,nsa*2);
-    PDMAT(gnf,pgnf);
-    char *dirs[]={"x", "y", "diag"};
+    double isep0=-(nsep-1)*0.5;
+    dmat *xg=dlinspace(isep0*dg, dg, nsep);
+    writebin(xg, "wfslinearity_wfs%d_sep", iwfs);
+    dfree(xg);
+    dmat *gnfra=0;
+    if(srot){
+	gnfra=dnew(nsep,nsa*2);
+    }
+    dmat *gnfxy=dnew(nsep,nsa*2);
+    PDMAT(gnfxy,pgnfxy);
+    PDMAT(gnfra,pgnfra);
+    const int ndir=4;
+    char *dirs[]={"x", "y", "r", "a"};
     char *types[]={"","MF", "CoG", "MAP"};
     if(parms->powfs[ipowfs].mtchcr){
 	types[1]="MFC";
     }
-    int radrot=parms->powfs[ipowfs].radrot;
     int type=parms->powfs[ipowfs].phytypesim;
-    for(int dir=0; dir<3; dir++){
-	dzero(gnf);
+    for(int dir=0; dir<ndir; dir++){
+	dzero(gnfra);
+	dzero(gnfxy);
 	for(int isa=0; isa<nsa; isa++){
-	    switch(dir){
-	    case 0:
-		dgx=dg*pixthetax;
-		dgy=0;
-		break;
-	    case 1:
-		dgx=0;
-		dgy=dg*pixthetay;
-		break;
-	    case 2:
-		dgx=sqrt(0.5)*dg*pixthetax;
-		dgy=sqrt(0.5)*dg*pixthetay;
-		break;
-	    }
+	    info2("isa=%4d\b\b\b\b\b\b\b\b", nsa);
 	    if(srot){
 		theta=srot[isa];
 		cx=cos(theta);
 		sx=sin(theta);
 	    }
-	    if(srot && !radrot){/*rot the vector from r/a to x/y*/
-		double tmp=dgx*cx-dgy*sx;
-		dgy=dgx*sx+dgy*cx;
-		dgx=tmp;
+	    switch(dir){
+	    case 0://x
+		dgx=dg*pixthetax;
+		dgy=0;
+		break;
+	    case 1://y
+		dgx=0;
+		dgy=dg*pixthetay;
+		break;
+	    case 2://r
+		dgx=cx*dg*pixthetax;
+		dgy=sx*dg*pixthetax;
+		break;
+	    case 3://a
+		dgx=-sx*dg*pixthetay;
+		dgy=cx*dg*pixthetay;
+		break;
+	    default:
+		error("Invalid dir\n");
 	    }
 	    for(int isep=0; isep<nsep; isep++){
-		gx=dgx*isep;
-		gy=dgy*isep;
+		gx=dgx*(isep+isep0);
+		gy=dgy*(isep+isep0);
 		dzero(ints);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
@@ -485,18 +515,25 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    dsp *sis=psi[idtf][idtfsa];
 		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
-		    ctilt2(otf->p[iwvl], fotf->p[isa+nsa*iwvl], gx*dtheta1, gy*dtheta1, 0);
+		    if(petf){
+			ccp(&potf2, potf->p[isa+nsa*iwvl]);
+			(*pccwm)(potf2,petf[iwvl][isa]);
+		    }else{
+			potf2=potf->p[isa+nsa*iwvl];
+		    }
+		    ctilt2(otf->p[iwvl], potf2, gx*dtheta1, gy*dtheta1, 0);
 		    cfft2(otf->p[iwvl], 1);
 		    dspmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
 		}
 		//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
-		double g[3]={gx+pixthetax*0.1,gy+pixthetay*0.1,1};
+		double g[3]={0,0,0};
+		//notice that all the following gives gradients in x/y coord only.
 		switch(type){
-		case 1:{/*(constraint) Matched filter*/
+		case 1:{/*(constraint) Matched filter give gradients along x/y*/
 		    dmulvec(g, mtche[isa], ints->p,1.);
 		}
 		    break;
-		case 2:{/*tCoG*/
+		case 2:{/*tCoG gives gradients along r/a*/
 		    dcog(g,ints,0.,0.,
 			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
 			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
@@ -504,26 +541,45 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    g[1]*=pixthetay;
 		}
 		    break;
-		case 3:{/*MAP*/
+		case 3:{/*MAP gives gradient along r/a(?)*/
+		    g[0]=gx+pixthetax*0.1;
+		    g[1]=gy+pixthetay*0.1;
+		    g[2]=1;
 		    maxapriori(g, ints, parms, powfs, iwfs, isa, 1, 0, 1);
 		}
 		    break;
 		default:
 		    error("Invalid");
 		}
-		if(srot){/*rotate from xy to r/a*/
-		    double tmp=g[0]*cx+g[1]*sx;
-		    g[1]=-g[0]*sx+g[1]*cx;
-		    g[0]=tmp;
+		if(type==1 || !srot){
+		    pgnfxy[isa][isep]=g[0]/pixthetax;
+		    pgnfxy[isa+nsa][isep]=g[1]/pixthetay;
+		    
+		    if(srot){/*obtain gradients in r/a coord*/
+			pgnfra[isa][isep]=(g[0]*cx+g[1]*sx)/pixthetax;
+			pgnfra[isa+nsa][isep]=(-g[0]*sx+g[1]*cx)/pixthetay;
+		    }
+		}else{
+		    pgnfra[isa][isep]=g[0]/pixthetax;
+		    pgnfra[isa+nsa][isep]=g[1]/pixthetay;
+		    pgnfxy[isa][isep]=(g[0]*cx-g[1]*sx)/pixthetax;
+		    pgnfxy[isa+nsa][isep]=(g[0]*sx+g[1]*cx)/pixthetay;
 		}
-		pgnf[isa][isep]=g[0]/pixthetax;
-		pgnf[isa+nsa][isep]=g[1]/pixthetay;
 	    }
 	}/*for isa*/
-	writebin(gnf, "wfslinearity_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+	writebin(gnfxy, "wfslinearity_xy_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+	if(srot){
+	    writebin(gnfra, "wfslinearity_ra_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+	}
     }
+    dfree(gnfxy);
+    dfree(gnfra);
     dfree(ints);
     ccellfree(otf);
+    if(petf){
+	free(petf);
+	cfree(potf2);
+    }
 }
 
 typedef struct {

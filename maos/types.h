@@ -66,6 +66,7 @@ typedef struct INTSTAT_T{
     cccell *otf;        /**<short exposure OTF. time consuming to calculate. */
     cccell *fotf;       /**<The final optf before fft and multiply with si to
 			   get i0. Used for MAP tracking.*/
+    cccell *potf;       /**<Point source otf. potf.*etf=fotf*/
     dccell *sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/

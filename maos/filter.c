@@ -267,12 +267,17 @@ static void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	//Record dmpsol for this time step for each powfs before updating it (z^-1).
+	//Do not reference the data, even for dtrat==1
+	double alpha=(simu->isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
+	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
+    }
     dcellcp(&simu->dmpsol, simu->dmcmd);
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
-    extern int DM_NCPA;
-    if(DM_NCPA==2 && recon->dm_ncpa){
+    if(!parms->dbg.ncpa_preload && recon->dm_ncpa){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }

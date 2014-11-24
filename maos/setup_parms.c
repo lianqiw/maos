@@ -1023,6 +1023,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.fit);
     READ_INT(dbg.na_smooth);
     READ_INT(dbg.na_interp);
+    READ_INT(dbg.ncpa_preload);
 }
 /**
    Read in GPU options
@@ -1045,7 +1046,7 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.setup);
     READ_INT(save.recon);
     READ_INT(save.mvst);
-
+    READ_INT(save.ncpa);
     READ_INT(save.atm);/*Save atmosphere */
     READ_INT(save.run);
     READ_INT(save.opdr);/*reconstructed OPD on XLOC */
@@ -1075,6 +1076,7 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.opdx=parms->save.all;
 	parms->save.evlopd=parms->save.all;
 	parms->save.run=parms->save.all;/*see following */
+	parms->save.ncpa=parms->save.all;
     }
 
     if(parms->save.run){
@@ -1127,6 +1129,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_INT(load.tomo);
     READ_INT(load.fit);
     READ_INT(load.W);
+    READ_INT(load.ncpa);
 }
 /**
    Process simulation parameters to find incompatibility.

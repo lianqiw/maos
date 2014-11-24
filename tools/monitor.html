@@ -61,21 +61,101 @@
 	     width: 100%;
 	 }
 
+	 /* for tab*/
+	 {
+	     -webkit-box-sizing: border-box;
+	     -moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	 }
+	 .tabs {
+	     width: 100%;
+	     margin: auto;
+	     overflow: hidden;   
+	     background: #F9F9F9;
+	 }
+	 .tabs ul {
+	     list-style: none;
+	     overflow: hidden;
+	     padding: 0;
+	     margin: 0;      
+	 }
+	 .tabs li a {
+	     /*width:10%;  */
+	     color: #444444;
+	     display: block;
+	     float: left;
+	     font-weight:bold;   
+	     padding: 10px;
+	     text-align: center;
+	     text-decoration: none;
+	     border:none;
+	     border-left:1px solid #d9d9d9;
+	     border-bottom:1px solid #d9d9d9;    
+	 }
+	 .tabs li a:hover {
+	     color: #7d7d7d; 
+	     background:#FFFFFF;
+	 }
+	 .tabs li:first-child a {
+	     border-left:none;
+	 }
+	 .tabs li a.active {
+	     background:#FFFFFF;
+	     border:none;
+	     border-left:1px solid #d9d9d9;
+	     border-bottom:1px solid #FFFFFF;    
+	 }
+	 .tabs li:first-child a.active {
+	     border:none;
+	     border-bottom:1px solid #FFFFFF;    
+	 }
+	 .tabs li:last-child a.active {
+	     border:none;
+	     border-left:1px solid #d9d9d9;  
+	     border-bottom:1px solid #FFFFFF;    
+	 }
+
 	</style>
+    </head>
+
+    <body>
+	<header></header>
+	<article>
+	    <table width="100%">
+		<tr><td class="title">MAOS Monitor</td></tr>
+	    </table>
+	    <table>
+		<tr>
+		    <td><button onclick="clear_all(0)">Clear Finished</button></td>
+		    <td><button onclick="clear_all(1)">Clear Skipped</button></td>
+		    <td><button onclick="clear_all(2)">Clear Crashed</button></td>
+		    <td><button onclick="kill_all()">Kill All</button></td>
+		</tr>
+	    </table>
+	    <div class="tabs">
+		<ul>
+		    <li><a name="tab" id="tab_1" href="javascript:void(0)" onclick="tabs(1)" class="active">localhost</a></li>
+		    <li><a name="tab" id="tab_2" href="javascript:void(0)" onclick="tabs(2)">taurus:10001</a></li>
+		</ul>
+	    </div>
+	</article>
+	
 	<script>
-	 var socket_lm;
+	 var hostname;//current active hostname
+	 var socket_lms={};
 	 function clear_all(kind){
-	     var joblist=document.getElementById("joblist");
+	     var joblist=document.getElementById("joblist_"+hostname.split(":")[0]);
 	     cmd=[];
 	     for (irow=1; irow<joblist.rows.length; irow++){
                  var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
-                 if((status==11 && kind==1) || (status>11 && kind==2)){
+		 var timing=joblist.rows[irow].cells[cols.TIMING].innerHTML;
+                 if((status==11 && kind==0)|| (timing=='Skipped') || (status>11 && kind==2)){
                      var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
 		     cmd[cmd.length]=pid+"&REMOVE;";
 	         }
 	     }
 	     for(icmd=0; icmd<cmd.length; icmd++){
-		 socket_lm.send(cmd[icmd]);
+		 socket_lms[hostname].send(cmd[icmd]);
 	     }
 	 }
 	 function kill_all(){
@@ -83,7 +163,7 @@
 	         return;
 	     }
 	     cmd=[];
-	     var joblist=document.getElementById("joblist");
+	     var joblist=document.getElementById("joblist_"+hostname.split(":")[0]);
 	     for (irow=1; irow<joblist.rows.length; irow++){
                  var status=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("status");
                  var pid=joblist.rows[irow].cells[cols.ICON].firstChild.getAttribute("pid");
@@ -92,43 +172,11 @@
 	         }
 	     }
 	     for(icmd=0; icmd<cmd.length; icmd++){
-		 socket_lm.send(cmd[icmd]);
+		 socket_lms[hostname].send(cmd[icmd]);
 	     }
 	 }
-	</script>
-    </head>
+	 var pcol;
 
-    <body>
-	<header></header>
-	<article>
-	    <table width="100%">
-		<tr><td class="title">MAOS Monitor</td></tr>
-		<tr><td align="center" id="monitor_status">Not initialized</td></tr>
-	    </table>
-	    <table>
-		<tr>
-		    <td><button onclick="clear_all(1)">Clear Finished</button></td>
-		    <td><button onclick="clear_all(2)">Clear Crashed</button></td>
-		    <td><button onclick="kill_all()">Kill All</button></td>
-		</tr>
-	    </table>
-	    <table id="joblist" class="monitor">
-		<tr>
-		    <th>Time</th>
-		    <th>PID</th>
-		    <th class="expandable">Path</th>
-		    <th>Out</th>
-		    <th>Low</th>
-		    <th>High</th>
-		    <th>Seed</th>
-		    <th>Step</th>
-		    <th>Timing</th>
-		    <th> </th>
-		</tr>
-	    </table>
-	</article>
-	
-	<script>
 	 var cols={
 	     TIME:0,
 	     PID:1,
@@ -183,16 +231,14 @@
 	     var hr=Math.floor(min/60);
 	     return hr+':'+min;
 	 }
-	 function get_appropriate_ws_url()
+	 function get_hostname()
 	 {
-	     var pcol;
-	     var u = document.URL;
 
 	     /*
 	      * We open the websocket encrypted if this page came on an
 	      * https:// url itself, otherwise unencrypted
 	      */
-
+	     u=document.URL;
 	     if (u.substring(0, 5) == "https") {
 		 pcol = "wss://";
 		 u = u.substr(8);
@@ -205,15 +251,10 @@
 	     u = u.split('/');
 
 	     /* + "/xxx" bit is for IE10 workaround */
-
-	     return pcol + u[0] + "/xxx";
+	     return u[0];
 	 }
 
-
-	 /*document.getElementById("host_ip").textContent = document.URL.split('/')[2];*/
-
 	 /* maos-monitor protocol */
-
 	 function setchild(cell, button){
 	     if(cell.firstChild){
 		 cell.replaceChild(button.cloneNode(false), cell.firstChild);
@@ -221,16 +262,24 @@
 		 cell.appendChild(button.cloneNode(false));
 	     }
 	 }
-	 function websocket_start(){
+	 function websocket_start(hostname){
+	     var socket_lm;
+	     var hostname2=hostname.split(':')[0];
+	     var joblist=document.getElementById("joblist_"+hostname2);
+	     if(!joblist) return 0;
 	     if (typeof MozWebSocket != "undefined") {
-		 socket_lm = new MozWebSocket(get_appropriate_ws_url(), "maos-monitor-protocol");
+		 socket_lm = new MozWebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
 	     } else {
-		 socket_lm = new WebSocket(get_appropriate_ws_url(), "maos-monitor-protocol");
+		 socket_lm = new WebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
 	     }
 	     socket_lm.onopen = function() {
-		 document.getElementById("monitor_status").style.color = "#40dd40";
-		 document.getElementById("monitor_status").textContent = "Connected";
-		 var joblist=document.getElementById("joblist");
+		 var tabs=document.getElementsByName("tab");
+		 for(var i=0; i<tabs.length; i++){
+		     if(tabs[i].innerHTML==hostname){
+			 tabs[i].style.color="#40dd40";
+			 break;
+		     }
+		 }
 		 var nrow=joblist.rows.length;
 		 for(irow=1; irow<nrow; irow++){
 		     joblist.deleteRow(-1);
@@ -238,9 +287,10 @@
 	     } 
 	     socket_lm.onmessage =function got_packet(msg) {
 		 j = msg.data.split(';');
-		 var joblist=document.getElementById("joblist");
+		 //console.log(msg.data);
+		 //pid, STATUS/PATH, pidnew, status, start time, errhi, errlo, iseed, nseed, isim, nsim, rest, tot, step timing
 		 for (var f=0; f < j.length - 1; f++) {
-		     console.log(j[f])
+
 		     i = j[f].split('&');
 		     var row=null;
 		     var irow;
@@ -295,7 +345,6 @@
 			 row.cells[cols.LOW].innerHTML=i[6];
 			 row.cells[cols.HIGH].innerHTML=i[5];
 			 var frac=0;
-			 console.log(i[8]);
 			 if(parseInt(i[8])>0){
 			     frac=Math.round(parseInt(i[7])/parseInt(i[8])*100);
 			 }
@@ -312,7 +361,7 @@
 			     row.cells[cols.PID].setAttribute("status", i[3]);
 			     var cell_tim=row.cells[cols.TIMING];
 			     var cell_btn=row.cells[cols.ICON];
-			     if(i[3]==1){
+			     if(i[3]==1){//running
 				 setchild(cell_btn, button_play);
 			     }else if(i[3]==2){
 				 cell_tim.innerHTML="Waiting";
@@ -323,12 +372,12 @@
 			     }else if(i[3]==4){
 				 cell_tim.innerHTML="Queued";
 				 setchild(cell_btn, button_wait);
-			     }else if(i[3]==11){
-				 if(i[11]=='1'){
+			     }else if(i[3]==11){//finished
+				 if(i[10]=='0'){
 				     cell_tim.innerHTML="Skipped";
 				 }
 				 setchild(cell_btn, button_ok);
-			     }else if(i[3]==12 || i[3]==15){
+			     }else if(i[3]==12 || i[3]==15){//crashed or killed
 				 setchild(cell_btn, button_err);
 				 row.cells[cols.SEED].firstChild.style.background="red";
 				 row.cells[cols.STEP].firstChild.style.background="red";
@@ -355,10 +404,61 @@
 	     socket_lm.onclose = function(){
 		 document.getElementById("monitor_status").style.color = "#dd4040";
 		 document.getElementById("monitor_status").textContent = "Disconnected";
-		 setTimeout(websocket_start(), 5000);
+		 setTimeout(websocket_start(document.URL), 5000);
 	     }
-	 } 
-	 websocket_start();
+	     return socket_lm;
+	 }
+
+
+	 function tabs(selectedtab) {    
+	     // tabs
+	     var s_tab = "tab_" + selectedtab;       
+	     var tabs = document.getElementsByName("tab");
+	     for(var x=0; x<tabs.length; x++) {
+		 if (tabs[x].id == s_tab) {
+		     tabs[x].className = "active"; 
+		     if(x==0 && tabs[x].innerHTML=='localhost') {
+			 tabs[x].innerHTML=get_hostname();
+		     }
+		     hostname=tabs[x].innerHTML;
+		 } else {
+		     tabs[x].className = "";
+		 }
+	     }
+	     console.log(hostname);
+	     // contents
+	     var s_tab_content = "tab_content_" + selectedtab;   
+	     var contents = document.getElementsByClassName("tab_content");
+	     var found=0;
+	     for(var x=0; x<contents.length; x++) {
+		 if (contents[x].id == s_tab_content) {
+		     contents[x].style.display = "block";                        
+		     found=1;
+		 } else {
+		     contents[x].style.display = "none";
+		 }
+	     }   
+	     if(found==0){
+		 //Create a div for containing host data
+		 newdiv=document.createElement('div');
+		 newdiv.name="tab_content";
+		 newdiv.id=s_tab_content;
+		 newdiv.className="tab_content"
+		 //Create a table for containing jobs
+		 newtable=document.createElement('table');
+		 newtable.id="joblist_"+hostname.split(':')[0];
+		 newtable.className="monitor"
+		 newtable.innerHTML=' <tr> <th>Time</th> <th>PID</th> <th class="expandable">Path</th> <th>Out</th> <th>Low</th> <th>High</th> <th>Seed</th> <th>Step</th> <th>Timing</th> <th> </th> </tr>'
+		 newdiv.appendChild(newtable);
+		 document.body.appendChild(newdiv);
+	     }
+	     if(typeof hostname !='undefined' && typeof socket_lms[hostname]=='undefined'){
+		 socket_lms[hostname]=websocket_start(hostname);
+	     }
+	 }
+
+	 tabs(1)
+	 
 	</script>
 
     </body>

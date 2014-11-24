@@ -1136,12 +1136,9 @@ static void init_simu_dm(SIM_T *simu){
     simu->wfspsol=cellnew(parms->npowfs, 1);
     simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
-    READ_ENV_INT(DM_NCPA, 0, 2);
-    if(DM_NCPA==1){
-	if(recon->dm_ncpa){//set the integrator
-	    warning_once("Preload integrator with NCPA");
-	    dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
-	}
+    if(parms->dbg.ncpa_preload && recon->dm_ncpa){//set the integrator
+	warning_once("Preload integrator with NCPA\n");
+	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
     }
     if(parms->recon.split){
 	simu->Merr_lo_store=cellnew(1,1);

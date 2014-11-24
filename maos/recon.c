@@ -118,24 +118,12 @@ void tomofit(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    dcell *dmpsol;
-    dmpsol=simu->dmpsol;
-    if(!simu->gradlastcl) return;
     PDSPCELL(recon->GA, GA);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++)
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
   	if(parms->powfs[ipowfs].psol){
-	    double alpha=1.;
-	    if(simu->reconisim % parms->powfs[ipowfs].dtrat == 0){
-		alpha=0; /*reset accumulation. */
-	    }
-	    if(parms->powfs[ipowfs].dtrat!=1){
-		dcelladd(&simu->wfspsol->p[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	    }else if(!simu->wfspsol->p[ipowfs]){
-		simu->wfspsol->p[ipowfs]=dcellref(dmpsol);
-	    }
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 		int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
-		OMPTASK_FOR(indwfs, 0, nindwfs, firstprivate(alpha, ipowfs)){
+		OMPTASK_FOR(indwfs, 0, nindwfs){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
@@ -146,6 +134,7 @@ static void calc_gradol(SIM_T *simu){
 		OMPTASK_END;
 	    }
 	}
+    }
 }
 void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;

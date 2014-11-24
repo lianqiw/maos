@@ -522,44 +522,64 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 #include "mtch.h"
 #include "genseotf.h"
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    if(parms->nsurf || parms->ntsurf){
+    if(parms->load.ncpa){
+	if(parms->nsurf || parms->ntsurf){
+	    error("Please disable surf and tsurf when load.ncpa is set\n");
+	}
+	aper->opdadd=dcellread("surfevl.bin");
+	aper->opdfloc=dcellread("surffloc.bin");
+	if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
+	    error("opdadd is in wrong format\n");
+	}
+	if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
+	    error("opdfloc is in wrong foramt\n");
+	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+	    powfs[ipowfs].opdadd=dcellread("surfpowfs_%d.bin", ipowfs);
+	    if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
+		error("surfpowfs_%d is in wrong format\n", ipowfs);
+	    }
+	}
+    }else{
+	if(parms->nsurf || parms->ntsurf){
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(!powfs[ipowfs].opdadd){
+		    powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+		    }
+		}
+	    }
+	    if(!aper->opdadd){
+		aper->opdadd=cellnew(parms->evl.nevl,1);
+		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		    aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
+		}
+	    }
+	    if(!aper->opdfloc && parms->sim.ncpa_calib){
+		aper->opdfloc=cellnew(parms->sim.ncpa_ndir,1);
+		for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+		    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 		}
 	    }
 	}
-	if(!aper->opdadd){
-	    aper->opdadd=cellnew(parms->evl.nevl,1);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
-	    }
+	TIC;tic;
+	if(parms->ntsurf>0){
+	    setup_surf_tilt(parms, aper, powfs, recon);
 	}
-	if(!aper->opdfloc && parms->sim.ncpa_calib){
-	    aper->opdfloc=cellnew(parms->sim.ncpa_ndir,1);
-	    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-		aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
-	    }
+	if(parms->nsurf>0){
+	    OMPTASK_SINGLE setup_surf_perp(parms, aper, powfs, recon);
 	}
+	toc2("surf prop");
+	/**
+	   note about idealfit: No need to pass surfaces to DM fitting
+	   routine. These are already contained in dm_ncpa which got to add to the
+	   DM command. Nothing needs to be done.
+	*/
+	//Setup lenslet profile
+	lenslet_saspherical(parms, powfs);
+	lenslet_safocuspv(parms, powfs);
     }
-    TIC;tic;
-    if(parms->ntsurf>0){
-	setup_surf_tilt(parms, aper, powfs, recon);
-    }
-    if(parms->nsurf>0){
-	OMPTASK_SINGLE setup_surf_perp(parms, aper, powfs, recon);
-    }
-    toc2("surf prop");
-    /**
-       note about idealfit: No need to pass surfaces to DM fitting
-       routine. These are already contained in dm_ncpa which got to add to the
-       DM command. Nothing needs to be done.
-     */
-    //Setup lenslet profile
-    lenslet_saspherical(parms, powfs);
-    lenslet_safocuspv(parms, powfs);
     if(parms->sim.ncpa_calib){//calibrate NCPA
 	int any_evl=0;
 	if(aper->opdadd){
@@ -582,17 +602,8 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    dspcellfree(recon->HA_ncpa);
 	}
 	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
-	/* to do 
-	   dm flat
-	   matched filter
-	   genseotf() reentrant. ok
-	   genselotf() reentrant. ok
-	   gensepsf() reentrant. ok
-	   gensei() reentrant. ok.
-	   genmtch() reentrant. ok
-	*/
     }
-    if(parms->save.setup){
+    if(parms->save.setup || parms->save.ncpa){
 	writebin(aper->opdadd, "%s/surfevl.bin",  dirsetup);
 	writebin(aper->opdfloc, "%s/surffloc.bin", dirsetup);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

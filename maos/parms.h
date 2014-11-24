@@ -581,6 +581,7 @@ typedef struct DBG_CFG_T{
     int fit;         /**<Comparing DM fitting in GPU and CPU*/
     int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
+    int ncpa_preload;/**<preload integrator with DM sys flat*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -637,6 +638,7 @@ typedef struct LOAD_CFG_T{
     int tomo;        /**<if 1, load tomo matrix*/
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
+    int ncpa;        /**<Load ncpa from save.ncpa*/
 }LOAD_CFG_T;
 /**
    contains input parameters for saving variables.
@@ -648,7 +650,7 @@ typedef struct SAVE_CFG_T{
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/
     int mvst;        /**<MVST computation intermediate matrices*/
-
+    int ncpa;        /**<Save NCPA surface OPD on aper and powfs*/
     /*run time */
     int atm;         /**<save atmosphere*/
     int run;         /**<save run time informaton for each time step*/

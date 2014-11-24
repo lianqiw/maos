@@ -91,7 +91,10 @@ print("void print_usage(){\n    printf(\"Usage:\\n\");", file=fpout)
 for funname in funcs:
     funtype=funcs[funname][0]
     funargs=funcs[funname][1]
-    funcall="    printf(\"out=aolib('"+funname+"',"
+    if funtype=='void':
+        funcall="    printf(\"    aolib('"+funname+"',"        
+    else:
+        funcall="    printf(\"out=aolib('"+funname+"',"
     for arg in funargs:
         argtype=arg[0]
         argname=arg[1]

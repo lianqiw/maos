@@ -449,26 +449,28 @@ compile(){
 	echo "Failed to compile $name. Please see $fnlog for details"
     fi
 }
-
-#First use MKL if available. 
-LAPACK="-lmkl_core"
-if test -n "$OPENMP_CFLAGS" ;then
-    if test "$CN" = "icc" ;then
-	LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
-    elif test "$CN" = "gcc" ;then
-	LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+function set_mkl_lapack(){
+    #First use MKL if available. 
+    LAPACK="-lmkl_core"
+    if test -n "$OPENMP_CFLAGS" ;then
+	if test "$CN" = "icc" ;then
+	    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
+	elif test "$CN" = "gcc" ;then
+	    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+	else
+	    LAPACK+=" -lmkl_sequential -lpthread"
+	fi
     else
 	LAPACK+=" -lmkl_sequential -lpthread"
     fi
-else
-    LAPACK+=" -lmkl_sequential -lpthread"
-fi
-if test "$host_cpu" = "x86_64" ;then
-    LAPACK+=" -lmkl_intel_lp64"
-else
-    LAPACK+=" -lmkl_intel"
-fi
-echo trying LAPACK=$LAPACK
+    if test "$host_cpu" = "x86_64" ;then
+	LAPACK+=" -lmkl_intel_lp64"
+    else
+	LAPACK+=" -lmkl_intel"
+    fi
+    echo trying LAPACK=$LAPACK
+}
+set_mkl_lapack
 AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 if test "$has_lapack" = "no" ;then
     LAPACK="-lblas -llapack"
@@ -510,10 +512,8 @@ if test "$has_lapack" = "no" ;then
 fi
 if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
     if test "$mkl_avail" = "yes" ;then
-	mklname=mkl${libsuffix}
-	download MKL "${mklname}.tar.bz2" ${DOWNLOAD_DIR}/MKL
-	mkdir -p ${LIB_DIR}
-	mv ${DOWNLOAD_DIR}/MKL/*/*.* ${LIB_DIR}
+	download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
+	set_mkl_lapack
 	unset nset ac_cv_lib_m_dposv_
 	AC_CHECK_LIB([m],[dposv_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
     else
@@ -595,8 +595,13 @@ AM_CONDITIONAL(HAS_LWS, false)
 if test "$use_websockets" = "yes" ;then
     AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
-    if test "$has_lws" = "no" ;then
+    if test "$has_lws" = "no" ;then #first try to compile from source. Needs cmake
 	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITHOUT_DEBUG=ON
+	unset ac_cv_lib_websockets_libwebsocket_service
+	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+    fi
+    if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
+	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
 	unset ac_cv_lib_websockets_libwebsocket_service
 	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
     fi
@@ -918,7 +923,7 @@ if test "$with_gtk" != "no" ;then
 else
     echo "Without GTK"
 fi
-
+echo Compile websocket server=$has_lws
 if test "$with_cuda" != "no" ;then
     echo NVCC=$NVCC
     echo CUDAOPT=$CUDAOPT
