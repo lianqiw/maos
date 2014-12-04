@@ -201,6 +201,7 @@ void reconstruct(SIM_T *simu){
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
+    if(isim<0) return;
     const int hi_output=(!parms->sim.closeloop || (isim+1-parms->step_hi)%parms->sim.dtrat_hi==0);
     if(simu->gradlastcl){
 	if(parms->sim.closeloop){

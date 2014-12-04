@@ -1269,6 +1269,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     global->simu=simu;
     SIM_SAVE_T *save=simu->save=calloc(1, sizeof(SIM_SAVE_T));
     simu->isim=-1;
+    simu->reconisim=-1;
     simu->parms=parms;
     simu->powfs=powfs;
     simu->recon=recon;

@@ -133,7 +133,8 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    nin0=parms->tomo.nxbase;
 	}else if(!parms->sim.idealfit && (parms->tomo.precond==1 || parms->tomo.square==2)){
 	    /*same square grid dimension in meter on all layers.*/
-	    long nx=0, ny=0;
+	    long nxmin=LONG_MAX, nymin=LONG_MAX;
+	    long nxmax=0, nymax=0;
 	    for(int ips=0; ips<npsr; ips++){
 		long nxi, nyi;
 		double dxr=recon->dx->p[ips];
@@ -141,12 +142,18 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 				 dxr*parms->tomo.guard, 0, 0, 0, 1);
 		nxi/=recon->os->p[ips];
 		nyi/=recon->os->p[ips];
-		if(nx<nxi) nx=nxi;
-		if(ny<nyi) ny=nyi;
+		if(nxmax<nxi) nxmax=nxi;
+		if(nymax<nyi) nymax=nyi;
+		if(nxmin>nxi) nxmin=nxi;
+		if(nymin>nyi) nymin=nyi;
 	    }
+	    /*FFT grid Must be at least 1.5 times the smallest (on pupil) to avoid
+	     * severe aliasing penalty*/
+	    long nx=MAX(nxmax, nxmin*1.5);
+	    long ny=MAX(nymax, nymin*1.5);
 	    nin0=nextfftsize(MAX(nx, ny));
 	
-	    while (parms->tomo.precond==1 && (nin0 & 1)){
+	    while (parms->tomo.precond==1 && (nin0 & 1)){//FFT need even number
 		nin0=nextfftsize(nin0+1);
 	    }
 	}
