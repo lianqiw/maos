@@ -907,12 +907,13 @@ static void dither_update(SIM_T *simu){
 		dcell *Rmod=0;
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
+		writebin(simu->gradcl->p[parms->nwfsr-1], "twfs_gcl_%d", simu->isim);
 		if(!powfs[ipowfs].gradoff){
-		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		    powfs[ipowfs].gradoff=dcellnew(nwfs, 1);
 		}
 		for(int jwfs=0; jwfs<nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		    dmm(&powfs[ipowfs].gradoff->p[jwfs], 1, simu->recon->GRall->p[ipowfs], Rmod->p[0], "nn", -1);
+		    dmm(&powfs[ipowfs].gradoff->p[jwfs], 1, simu->recon->GRall->p[ipowfs], Rmod->p[0], "nn", -0.5);//temp: set gain to 0.5
 		    if(parms->plot.run){
 			const int nsa=powfs[ipowfs].pts->nsa;
 			drawopd("Goffx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
@@ -921,6 +922,7 @@ static void dither_update(SIM_T *simu){
 				"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 		    }
 		}
+		writebin(powfs[ipowfs].gradoff, "gradoff_%d", simu->isim);
 		dcellfree(Rmod);
 	    }
 	}

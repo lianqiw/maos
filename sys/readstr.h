@@ -41,5 +41,6 @@ INLINE int is_end(char c){
 int readstr_strarr(char ***res, int len, const char *sdata);
 double readstr_num(const char *data, char **endptr0);
 int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const char *data);
+int readstr_intarr(int**ret, int len, const char *data);
 void readstr_intarr_nmax(int **ret, int len, const char *data);
 void readstr_intarr_relax(int **ret, int len, const char *data);

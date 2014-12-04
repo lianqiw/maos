@@ -2194,7 +2194,9 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
     cellfree(recon->xloc);
-    free(recon->xmap->p); free(recon->xmap);//data is referenced
+    if(recon->xmap){
+	free(recon->xmap->p); free(recon->xmap);//data is referenced
+    }
     lfree(recon->xnx);
     lfree(recon->xny);
     lfree(recon->xnloc);

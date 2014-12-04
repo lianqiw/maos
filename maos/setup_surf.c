@@ -290,20 +290,29 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    error("Not handled\n");
 	}
 	if(!strwfs){
-	    warning2("surf->p[%d] does not contain SURFWFS\n", isurf);
+	    warning2("surf->p[%d] does not contain SURFWFS, assume 1\n", isurf);
 	    for(int iwfs=0;iwfs<nwfs; iwfs++){
 		wfscover[iwfs]=1;
 	    }
 	}else{
-	    if(nwfs>9 && parms->sim.skysim){
-		warning("There are many NGS stars. Replicate surface config from the 8th star\n");
-		readstr_intarr_relax(&wfscover, 9, strwfs);
-		wfscover=realloc(wfscover, sizeof(int)*nwfs);
-		for(int i=9; i<nwfs; i++){
-		    wfscover[i]=wfscover[8];
+	    int ncover=readstr_intarr(&wfscover, 0, strwfs);
+	    if(ncover!=nwfs){
+		if(ncover==0) error("wfscover has zero length\n");
+		warning("wfscover has wrong length of %d, expect %d\n", ncover, nwfs);
+		int val;
+		if(parms->sim.skysim){
+		    val=wfscover[ncover-1];
+		    warning("Replicate from last wfs: %d\n", val);
+		}else{
+		    val=wfscover[0];
+		    warning("Replicate from lowest value: %d\n", val);
+		    for(int i=1; i<ncover; i++){
+			if(val>wfscover[i]) val=wfscover[i];
+		    }
 		}
-	    }else{
-		readstr_intarr_relax(&wfscover, nwfs, strwfs);
+		for(int i=ncover; i<nwfs; i++){
+		    wfscover[i]=val;
+		}
 	    }
 	}
 	if(!stropdx){
@@ -609,6 +618,28 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    writebin(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
+    }
+    if(parms->sim.ncpa_calib && !parms->dbg.ncpa_uncorr){
+	//Don't include uncorrectable WFE in science evaluation
+	dcellzero(aper->opdadd);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		const double hl=parms->dm[idm].ht;
+		const double dispx=parms->evl.thetax->p[ievl]*hl;
+		const double dispy=parms->evl.thetay->p[ievl]*hl;
+		const double scale=1-hl/parms->evl.hs->p[ievl];
+		if(parms->dm[idm].cubic){
+		    prop_nongrid_cubic(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
+				       aper->locs, aper->amp->p, aper->opdadd->p[idm]->p,
+				       1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
+		}else{
+		    prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
+				 aper->locs, aper->amp->p, aper->opdadd->p[idm]->p,
+				 1, dispx, dispy, scale, 0, 0);   
+		}
+	    }
+	}
+	writebin(aper->opdadd, "%s/surfevl_correctable.bin",  dirsetup);
     }
     dcellfree(aper->opdfloc);
 }

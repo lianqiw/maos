@@ -326,7 +326,9 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	if(!var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
 	}else if(!strcmp(var,"path") || !strcmp(var, "PATH")){
-	    addpath(value);
+	    char *val2=strextract(value);
+	    addpath(val2);
+	    free(val2);
 	}else if(!strcmp(var,"include")){
 	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);

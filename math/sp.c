@@ -561,6 +561,9 @@ X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int dim){
 	    error("X(sp) matrix doesn't match\n");
 	}
 	const long nzmax=A->p[A->n]+B->p[B->n];
+	if(nzmax==0){
+	    return 0;
+	}
 	C=X(spnew)(A->m, A->n+B->n, nzmax);
 	memcpy(C->p, A->p, A->n*sizeof(spint));
 	memcpy(C->i, A->i, A->p[A->n]*sizeof(spint));

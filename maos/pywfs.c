@@ -142,7 +142,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
 }
 /**
-   Perform FFT on each quadrant of the PSF separately.
+   Perform FFT over the complex PSF with additional phases caused by the
+   pyramid. FFT on each quadrant of the PSF creates diffraction effects.
 */
 void pywfs_fft(dcell **pupim, PYWFS_T *pywfs, dmat *opd){
     locfft_t *locfft=pywfs->locfft;

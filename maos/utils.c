@@ -386,6 +386,22 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 			"WFS Amplitude Map","x (m)","y (m)","powfs %d tel2wfs", ipowfs);
 	    }
 	}
+	for(int jwfs=0; jwfs<powfs[ipowfs].nwfs; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	    const int nsa=powfs[ipowfs].pts->nsa;
+	    if(powfs[ipowfs].gradoff){
+		drawopd("Goffx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
+			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
+		drawopd("Goffy",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p+nsa, NULL,
+			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+	    }
+	    if(powfs[ipowfs].gradoffcog){
+		drawopd("Goffcogx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoffcog->p[jwfs]->p,NULL,
+			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
+		drawopd("Goffcogy",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoffcog->p[jwfs]->p+nsa, NULL,
+			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+	    }
+	}
     }
 }
 

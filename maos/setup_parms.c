@@ -1024,6 +1024,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.na_smooth);
     READ_INT(dbg.na_interp);
     READ_INT(dbg.ncpa_preload);
+    READ_INT(dbg.ncpa_uncorr);
 }
 /**
    Read in GPU options
@@ -2404,6 +2405,7 @@ static void print_parms(const PARMS_T *parms){
     
     int i;
     const char *phytype[]={
+	"",
 	"\033[0;32mmatched filter\033[0;0m",
 	"\033[0;31mthresholded center of gravity\033[0;0m",
 	"\033[0;31mMaximum A Priori Tracing (MAP)\033[0;0m"
@@ -2498,7 +2500,7 @@ static void print_parms(const PARMS_T *parms){
 	if(parms->powfs[i].phystep>-1){
 	    info2("Physical optics start at %d with '%s' %s",
 		  parms->powfs[i].phystep, 
-		  phytype[parms->powfs[i].phytypesim-1],
+		  phytype[parms->powfs[i].phytypesim],
 		  parms->powfs[i].mtchscl?"scaled":"");
 	}else{
 	    info2("Geomtric optics uses %s ",

@@ -256,6 +256,7 @@ char *myabspath(const char *path){
     if(realpath(path, rpath)){
 	return strdup(rpath);
     }else{
+	perror("realpath");
 	return 0;
     }
 #else

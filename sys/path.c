@@ -45,7 +45,7 @@ PNEW(mutex_path);
 void addpath(const char*path){
     char *abspath=myabspath(path);
     if(!path || !abspath){
-	warning("Path not found: path=%s; abspath=%s. Ignored.\n", path, abspath);
+	warning2("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
 	return;
     }
     PATH_T *node=calloc(1,sizeof(PATH_T));

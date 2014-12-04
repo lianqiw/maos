@@ -447,6 +447,9 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	if(count[iw]>nzmax[iw]){
 	    error("Over flow\n");/*should never happen */
 	}
+	if(count[iw]==0){
+	    error("count[%d]=0\n", iw);
+	}
 	pp[iw][nsa]=count[iw];
 	dspsetnzmax(GS0t[iw],count[iw]);
     }

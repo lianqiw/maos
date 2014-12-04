@@ -404,6 +404,9 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     if(ncol0) *ncol0=ncol;
     return count;
 }
+int readstr_intarr(int**ret, int len, const char *data){
+    return readstr_numarr((void**)ret, len,NULL,NULL, T_INT, data);
+}
 /**
    Read an integer array. Duplicate if only one number is present.
  */
@@ -411,7 +414,7 @@ void readstr_intarr_nmax(int **ret, /**<[out] Result*/
 			 int len,   /**<[in]  Max number of values to read.*/
 			 const char *data /**<[in] Input string*/
 			 ){
-    int len2=readstr_numarr((void**)ret, len,NULL,NULL, T_INT, data);
+    int len2=readstr_intarr(ret, len, data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];
@@ -424,8 +427,8 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 			  int len,   /**<[in]  Max number of values to read.*/
 			  const char *data /**<[in] Input string*/
     ){
-    void *ret0=0;
-    int len2=readstr_numarr(&ret0, 0, NULL,NULL, T_INT, data);
+    int *ret0=0;
+    int len2=readstr_intarr(&ret0, 0, data);
     int *ret2=ret0;
     if(len2==1){
 	for(int i=0; i<len; i++){
