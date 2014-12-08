@@ -300,32 +300,38 @@ void prop_index(PROPDATA_T *propdata){
     ({static int printed=0; if(missing>0 && !printed) {printed=1; warning("%d points not covered by input screen\n", missing); \
 	    print_backtrace(); }})
 
-
 #define LINEAR_ADD_NONGRID						\
-    long iphi; double tmp=0; double wt=0;				\
+    long iphi; double tmp=0; double wt=0; double wtsum=0;		\
     wt=(1.-dplocx)*(1.-dplocy);						\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
-	if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
-	else tmp+=invalid_val;						\
+	if((iphi=abs(map[nplocy][nplocx]))){				\
+	    tmp+=(phiin0[iphi]*wt);					\
+	    wtsum+=wt;							\
+	}								\
     }									\
     wt=(dplocx)*(1.-dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
-	else tmp+=invalid_val;						\
+	if((iphi=abs(map[nplocy][nplocx1]))){				\
+	    tmp+=(phiin0[iphi]*wt);					\
+	    wtsum+=wt;							\
+	}								\
     }									\
     wt=(1.-dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
-	else tmp+=invalid_val;						\
+	if((iphi=abs(map[nplocy1][nplocx]))){				\
+	    tmp+=(phiin0[iphi]*wt);					\
+	    wtsum+=wt;							\
+	}								\
     }									\
     wt=(dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
-	else tmp+=invalid_val;						\
+	if((iphi=abs(map[nplocy1][nplocx1]))){				\
+	    tmp+=(phiin0[iphi]*wt);					\
+	    wtsum+=wt;							\
+	}								\
     }									\
-    /*We require all two points to be available. To extropolate */	\
-    /*outside enable extend during loc_create_map_npad*/		\
-    add_valid(phiout[iloc],alpha*tmp); 
+    /*Wt use sum(opd*wt)/sum(wt) to avoid edge roll off*/		\
+    if(wtsum>EPS) phiout[iloc]+=alpha*tmp/wtsum; 
 
 
 #define RUNTIME_CUBIC					\
@@ -346,20 +352,20 @@ void prop_index(PROPDATA_T *propdata){
     fy[3]=dplocy*dplocy*(c3+c4*dplocy);			
 
 #define CUBIC_ADD_GRID					\
-    register double sum=0;				\
+    register double sum=0, sumwt=0;			\
     for(int ky=-1; ky<3; ky++){				\
 	for(int kx=-1; kx<3; kx++){			\
 	    double wt=fx[kx+1]*fy[ky+1];		\
 	    if(wt>EPS){					\
 		double tmp=phiin[ky+nplocy][kx+nplocx];	\
-		sum+=wt*tmp;				\
+		sum+=wt*tmp;sumwt+=wt;			\
 	    }						\
 	}						\
     }							\
-    add_valid(phiout[iloc],sum*alpha);
+    if(sumwt>EPS && sum==sum) phiout[iloc]+=alpha*sum/sumwt;
 
 #define CUBIC_ADD_NONGRID					\
-    register double sum=0;					\
+    register double sum=0,sumwt=0;				\
     for(int jy=-1; jy<3; jy++){					\
 	for(int jx=-1; jx<3; jx++){				\
 	    long iphi;						\
@@ -367,13 +373,12 @@ void prop_index(PROPDATA_T *propdata){
 	    if(wt>EPS){						\
 		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){	\
 		    sum+=wt*phiin0[iphi];			\
-		}else{						\
-		    sum+=invalid_val;				\
+		    sumwt+=wt;					\
 		}						\
 	    }							\
 	}							\
     }								\
-    add_valid(phiout[iloc],sum*alpha);
+    if(sumwt>EPS) phiout[iloc]+=alpha*sum/sumwt;
 
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
@@ -434,7 +439,7 @@ void prop_grid(ARGIN_GRID,
 		      +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
 		    +(phiin[nplocy1][nplocx]*(1.-dplocx)
 		      +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
-	add_valid(phiout[iloc],alpha*tmp);
+	add_valid(phiout[iloc],alpha, tmp);
     }
     ICCTASK_END;
     WARN_MISSING;

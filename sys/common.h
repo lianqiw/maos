@@ -141,20 +141,14 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #if defined(FP_FAST_FMA)
 #define myfma fma
 #else
-#define myfma(x,y,z) (x)*(y)+z
+#define myfma(x,y,z) (x)*(y)+(z)
 #endif
-#define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
-#define not_nan(A) (A==A)
-#define is_nan(A) (!(A==A))
+#define SPLIT(A,B,C) {C=ifloor(A); B=(A)-(C);}
+#define not_nan(A) ((A)==(A))
+#define is_nan(A) (!((A)==(A)))
 
-#define ANTI_ROLLOFF 1 /**<Prevent Edge roll off during interpolation*/
-#if ANTI_ROLLOFF
+#define add_valid(dest, A, B) if((B)==(B)) dest+=(A)*(B)
 #define invalid_val NAN
-#define add_valid(dest, A) if(A==A) dest+=A
-#else
-#define invalid_val 0
-#define add_valid(dest, A)  dest+=A
-#endif
 
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
 long thread_id(void);

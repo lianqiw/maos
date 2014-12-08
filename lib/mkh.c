@@ -110,33 +110,36 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 	/*Limit the point to within active region*/
 	fx[0]=1.-fx[1];
 	fy[0]=1.-fy[1];
+	double wtsum=0;
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
 		double weight=fx[ix]*fy[iy];
-		if(weight>EPS){/*This test fixes the right/top boundary defect*/
-		    long iphi;
-		    if((iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
-			int ic;//look for duplicates
-			for(ic=bp[iloc]; ic<count; ic++){
-			    if(bi[ic]+1==iphi){
-				bx[ic]+=weight;
-				break;
-			    }
+		long iphi;
+		/*The test on weight fixes the right/top boundary defect*/
+		if(weight>EPS && (iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
+		    int ic;//look for duplicates (happens when extended)
+		    for(ic=bp[iloc]; ic<count; ic++){
+			if(bi[ic]+1==iphi){
+			    bx[ic]+=weight;
+			    break;
 			}
-			if(ic==count){
-			    bi[count]=iphi-1;
-			    bx[count]=weight;
-			    count++;
-			}
-		    }else{//some points are not available, declare invalid
-			count=bp[iloc];
-			goto skip_iloc;
 		    }
+		    if(ic==count){
+			bi[count]=iphi-1;
+			bx[count]=weight;
+			count++;
+		    }
+		    wtsum+=weight;
 		}
 	    }
-	    
 	}
-      skip_iloc:;
+	if(wtsum>EPS && wtsum<1-EPS){
+	    wtsum=1./wtsum;
+	    for(long ip=bp[iloc]; ip<count; ip++){
+		bx[count]*=wtsum;
+	    }
+	    warning("Scale weight by 1+%20g\n", wtsum-1);
+	}
     }
     bp[locout->nloc]=count;
     dspsetnzmax(hback, count);
@@ -214,33 +217,35 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const dmat *ampout,
 	fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);
 	fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
 	fy[3]=dplocy*dplocy*(c3+c4*dplocy); 
-
+	double wtsum=0;
 	for(int iy=-1; iy<+3; iy++){
 	    for(int ix=-1; ix<+3; ix++){
 		double weight=fx[ix+1]*fy[iy+1];
-		if(weight>EPS){/*This test fixes the right/top boundary defect*/
-		    long iphi;
-		    if((iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
-			int ic;//look for duplicates
-			for(ic=bp[iloc]; ic<count; ic++){
-			    if(bi[ic]+1==iphi){
-				bx[ic]+=weight;
-				break;
-			    }
+		long iphi;
+		/*The test on weight fixes the right/top boundary defect*/
+		if(weight>EPS && (iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
+		    int ic;//look for duplicates
+		    for(ic=bp[iloc]; ic<count; ic++){
+			if(bi[ic]+1==iphi){
+			    bx[ic]+=weight;
+			    break;
 			}
-			if(ic==count){
-			    bi[count]=iphi-1;
-			    bx[count]=weight;
-			    count++;
-			}
-		    }else{
-			count=bp[iloc];
-			goto skip_iloc;
+		    }
+		    if(ic==count){
+			bi[count]=iphi-1;
+			bx[count]=weight;
+			count++;
 		    }
 		}
 	    }
 	}
-      skip_iloc:;
+	if(wtsum>EPS && wtsum<1-EPS){
+	    wtsum=1./wtsum;
+	    for(long ip=bp[iloc]; ip<count; ip++){
+		bx[count]*=wtsum;
+	    }
+	    warning("Scale weight by 1+%20g\n", wtsum-1);
+	}
     }/*for */
     bp[locout->nloc]=count;
     dspsetnzmax(hback, count);

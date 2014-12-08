@@ -568,8 +568,7 @@ static void test_accuracy(void){
 	    free(phi_cubh);
 	}
     }
-    free(screen->p);
-    free(screens);
+    cellfree(screens);
     locfree(locin);
 }
 /*

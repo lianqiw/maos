@@ -283,7 +283,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM
 mapcell* vonkarman_screen(GENATM_T *data){
     data->method=T_VONKARMAN;
     mapcell *screen=create_screen(data, spect_screen_do);
-    return(screen);
+    return screen;
 }
 
 /**
@@ -292,7 +292,7 @@ mapcell* vonkarman_screen(GENATM_T *data){
 mapcell* biharmonic_screen(GENATM_T *data){
     data->method=T_BIHARMONIC;
     mapcell *screen=create_screen(data, spect_screen_do);
-    return(screen);
+    return screen;
 }
 
 /**

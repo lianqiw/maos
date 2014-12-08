@@ -438,9 +438,9 @@ __global__ void prop_linear(Real *restrict out, const Real *restrict in, const i
 	int iy=Z(floor)(y);
 	x=x-ix; y=y-iy;
 	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
-	    Real tmp=alpha*((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
-			    +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
-	    add_valid(out[i], tmp);
+	    Real tmp=((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
+		      +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
+	    add_valid(out[i], alpha, tmp);
 	}
     }
 }
@@ -522,7 +522,7 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 	for(int kx=-1; kx<3; kx++){
 	    sum+=fx[kx+1]*fy*in[(iy+2)*nx+kx+ix];
 	}
-	add_valid(out[i], sum*alpha);
+	add_valid(out[i], alpha, sum);
     }
 }
 
