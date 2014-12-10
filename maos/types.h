@@ -114,7 +114,7 @@ typedef struct POWFS_T{
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */
-    dmat *sodium;       /**<Loaded and downsampled sodium profile from the file.*/
+    dcell *sodium;      /**<Loaded and downsampled sodium profile from the file.*/
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
     ETF_T *etfsim2;     /**<Second ETF for interpolation during simulation.*/

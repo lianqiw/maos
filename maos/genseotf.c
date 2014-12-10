@@ -36,7 +36,7 @@
    Master routine that generates short exposure OTF by calling genotf() in the
    library with p/t/t removal set.
 */
-void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
+static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     /*create a grid representing the aperture. */
     loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
@@ -90,7 +90,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	double dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
-	    double thres=opdbias?1:1-1e-10;
+	    double thres=opdbias?1:(1-1e-10);
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    OMPTASK_SINGLE
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
@@ -102,10 +102,87 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }/*iwvl */
     locfree(loc);
 }
+
+void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
+    int npsfx=powfs[ipowfs].pts->nx *parms->powfs[ipowfs].embfac;
+    int npsfy=npsfx;
+    char fnprefix[PATH_MAX]; fnprefix[0]='\0';
+    uint32_t key=0;
+    if(parms->aper.fnamp){
+	char *tmp=mybasename(parms->aper.fnamp);
+	strncat(fnprefix, tmp, PATH_MAX-strlen(fnprefix)-1);
+	free(tmp);
+    }else{
+	strncat(fnprefix, "noamp", PATH_MAX-strlen(fnprefix)-1);
+    }
+    if(powfs[ipowfs].amp_tel){
+	for(int iamp=0; iamp<powfs[ipowfs].nwfs; iamp++){
+	    key=dhash(powfs[ipowfs].amp_tel->p[iamp], key);
+	}
+    }else{
+	key=dhash(powfs[ipowfs].amp, key);
+    }
+    info("powfs %d: ncpa_method=%d, opdbias=%p\n",
+	 ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
+    if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
+	info("Puting opdbias to key\n");
+	for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+	    key=dhash(powfs[ipowfs].opdbias->p[iwfs],key);
+	}
+    }
+    if(key!=0){
+	char tmp2[80];
+	snprintf(tmp2,80,"_%ud",key);
+	strncat(fnprefix, tmp2, PATH_MAX-strlen(fnprefix)-1);
+    }
+    char fnotf[PATH_MAX];
+    char fnlock[PATH_MAX];
+    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
+    if(!exist(fnotf)) 
+	mymkdir("%s",fnotf);
+    long nsa=powfs[ipowfs].pts->nsa;
+    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
+	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
+	     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
+	     HOME, fnprefix,
+	     parms->aper.d,parms->aper.din, 
+	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+	     powfs[ipowfs].pts->dsa,nsa,
+	     1./powfs[ipowfs].pts->dx, 
+	     parms->powfs[ipowfs].nwvl,
+	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
+	     parms->powfs[ipowfs].embfac,npsfx,npsfy);
+    snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+  retry:
+    if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
+	int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+	if(fd>=0){/*succeed */
+	    info2("Generating WFS OTF for %s...", fnotf);
+	    TIC;tic;
+	    genseotf(parms,powfs,ipowfs);
+	    toc2("done");
+	    writebin(intstat->otf, "%s", fnotf);
+	    close(fd);
+	    remove(fnlock);
+	}else{
+	    fd=lock_file(fnlock,1,0);/*blocking exclusive lock */
+	    close(fd);
+	    remove(fnlock);
+	    goto retry;
+	}
+    }else{
+	info2("Reading WFS OTF from %s\n", fnotf);
+	intstat->otf=cccellread("%s",fnotf);
+	intstat->notf=intstat->otf->nx*intstat->otf->ny;
+	if(!intstat->notf) error("Invalid otf\n");
+	zftouch(fnotf);
+    }
+}
 /**
    Creating short exposure OTF caused by turbulence within LLT uplink aperture
 */
-void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
+void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
     loc_t *loc=pts2loc(powfs[ipowfs].llt->pts);
     int notf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
@@ -136,6 +213,86 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     }/*iwvl */
     locfree(loc);
 }
+void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
+    if(!parms->powfs[ipowfs].llt){
+	return;
+    }
+    char fnprefix[80];
+    uint32_t key=0;
+    key=dhash(powfs[ipowfs].llt->amp, key);
+    if(powfs[ipowfs].llt->ncpa){
+	dcell *ncpa=powfs[ipowfs].llt->ncpa;
+	long nlotf=ncpa->nx*ncpa->ny;
+	for(long ilotf=0; ilotf<nlotf; ilotf++){
+	    key=dhash(ncpa->p[ilotf], key);
+	}
+    }
+    snprintf(fnprefix,80,"SELOTF_%0x",key);
+    char fnlotf[PATH_MAX];
+    snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_"
+	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
+	     "nwvl%d_%g_embfac%d_v2", 
+	     HOME, fnprefix,
+	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+	     powfs[ipowfs].llt->pts->dsa,
+	     1./powfs[ipowfs].llt->pts->dx,
+	     parms->powfs[ipowfs].llt->widthp,
+	     parms->powfs[ipowfs].nwvl,
+	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
+	     parms->powfs[ipowfs].embfac);
+    char fnllock[PATH_MAX];
+    snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+  retry2:
+    if(exist(fnllock) || !zfexist(fnlotf)){/*need to create data */
+	int fd2=lock_file(fnllock, 0, 0);/*nonblocking exclusive lock */
+	if(fd2>=0){/*succeed */
+	    info2("Generating WFS LLT OTF for %s\n", fnlotf);
+	    genselotf(parms,powfs,ipowfs);
+	    writebin(intstat->lotf, "%s",fnlotf);
+	    close(fd2);
+	    remove(fnllock);
+	}else{
+	    fd2=lock_file(fnllock, 1, 0);/*blocking, exclusive */
+	    close(fd2);
+	    remove(fnllock);
+	    goto retry2;
+	}
+    }else{
+	intstat->lotf=ccellread("%s",fnlotf);
+	if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
+	zftouch(fnlotf);
+	info2("Reading WFS LLT OTF from %s\n", fnlotf);
+    }
+    if(parms->save.setup){//Save PSF is uplink LLT.
+	int nwvl=intstat->lotf->nx;
+	PCCELL(intstat->lotf, lotf);
+	int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+	cmat *psfhat=cnew(nlpsf, nlpsf);
+	dmat *psf=dnew(nlpsf, nlpsf);
+	cellarr *lltpsfsave=NULL;
+	lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "%s/powfs%d_llt_psf", dirsetup, ipowfs);
+	for(int illt=0; illt<intstat->lotf->ny; illt++){
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		const double dx=powfs[ipowfs].llt->pts->dx;
+		const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+		const double dpsf=wvl/(nlpsf*dx)*206265.;
+		ccp(&psfhat, lotf[illt][iwvl]);
+		cfftshift(psfhat);
+		cfft2i(psfhat, 1);
+		cfftshift(psfhat);
+		creal2d(&psf, 0, psfhat, 1);
+		info2("illt %d, iwvl %d has FWHM of %g\"\n",
+		      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
+		cellarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
+	    }
+	}
+	cellarr_close(lltpsfsave);
+	cfree(psfhat);
+	dfree(psf);
+    }
+}
+
 /**
    Createing subaperture short exposure PSF from the tip/tilt removed turbulence
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
@@ -162,7 +319,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
 	int ilotf=nlotf>1?isepsf:0;
-	cmat **lotf=nlotf>0?powfs[ipowfs].intstat->lotf->p+ilotf*nwvl:NULL;
+	cmat **lotf=nlotf>0?(powfs[ipowfs].intstat->lotf->p+ilotf*nwvl):NULL;
 	PCCELL(powfs[ipowfs].intstat->otf->p[iotf],otf);
 	powfs[ipowfs].intstat->sepsf->p[isepsf]=cellnew(nsa,nwvl);
 	PDCELL(powfs[ipowfs].intstat->sepsf->p[isepsf], psepsf);
@@ -206,29 +363,24 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    int nsa=powfs[ipowfs].pts->nsa;
-    int nllt;
-    if(parms->powfs[ipowfs].llt){
-	nllt=parms->powfs[ipowfs].llt->n;
-    }else{
-	nllt=0;
-    }
+    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
     /**
        ni0 may be greater than 1 in the following two cases
        1) multiple LLT
        2) different signal level or wvlwts
        3) powfs[ipowfs].bkgrnd contains rayleigh scatter bkgrnd for each wfs in this powfs.
     */
-    int nsepsf=intstat->nsepsf;
+    const int nsepsf=intstat->nsepsf;
     int ni0=nllt<=1?nsepsf:nllt;
     if(ni0==1 && parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
-	int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-	double siglev0=parms->wfs[iwfs0].siglev;
-	double *wvlwts0=parms->wfs[iwfs0].wvlwts->p;
+	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	const double siglev0=parms->wfs[iwfs0].siglev;
+	const double *wvlwts0=parms->wfs[iwfs0].wvlwts->p;
 	for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs;jwfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    double siglev=parms->wfs[iwfs].siglev;
-	    double *wvlwts=parms->wfs[iwfs].wvlwts->p;
+	    const int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	    const double siglev=parms->wfs[iwfs].siglev;
+	    const double *wvlwts=parms->wfs[iwfs].wvlwts->p;
 	    if(fabs(siglev-siglev0)>EPS){
 		ni0=parms->powfs[ipowfs].nwfs;
 		warning("Different wfs for powfs %d has different siglev\n",ipowfs);
@@ -256,7 +408,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
 	ni0=parms->powfs[ipowfs].nwfs;
     }
-    info2("number of i0 for matched filter is %d\n",ni0);
+    if(ni0>1){
+	info2("number of i0 for matched filter is %d\n",ni0);
+    }
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
 	      parms->powfs[ipowfs].nwfs,ni0);
@@ -307,21 +461,17 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(i0scale){
 	warning("i0 is scaled to match sa area\n");
     }
-    int isepsf_multiplier=nsepsf>1?1:0;
-    int irot_multiplier=nllt>1?1:0;
+    const int isepsf_multiplier=nsepsf>1?1:0;
+    const int irot_multiplier=nllt>1?1:0;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	int idtf_multiplier
+	const int idtf_multiplier
 	    =powfs[ipowfs].dtf[iwvl].si->ny>1?1:0;
-	int idtfisa_multiplier
+	const int idtfisa_multiplier
 	    =powfs[ipowfs].dtf[iwvl].si->nx>1?1:0;
-	cmat *seotfj=cnew(ncompx,ncompy);
-	cmat *seotfk=cnew(ncompx,ncompy);
-	dcomplex *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
-	dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
+	const dcomplex *Ux=powfs[ipowfs].dtf[iwvl].Ux->p;
+	const dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
-	double norm=1./(double)(ncompx*ncompy);
-	const int npsf=intstat->sepsf->p[0]->p[0]->nx;
-	cmat *sepsf=cnew(npsf,npsf);
+	const double norm=1./(double)(ncompx*ncompy);
 	const cmat *(*petf)[nsa]=NULL;
 	void (*pccwm)(cmat*,const cmat*)=NULL;
 	int rotpsf=0;
@@ -345,14 +495,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ietf_multiplier=1;
 	    }
 	}
-	cmat *nominal=NULL;
-	dsp *si=NULL;
 
-	double angle=0;/*angle to rotate otf/psf */
-	double angleg=0;/*angle to derivative of i0 to r/a from x/y */
-	double anglegoff=0;
 	for(int ii0=0; ii0<ni0; ii0++){
-	    const double *area=powfs[ipowfs].realsaa->p[ii0]->p;
+	    double *area=powfs[ipowfs].realsaa->p[ii0]->p;
 	    int isepsf=ii0*isepsf_multiplier;
 	    int idtf=ii0*idtf_multiplier;
 	    int irot=ii0*irot_multiplier;
@@ -360,18 +505,36 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	    double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-	    info2("iwvl=%d, iwfs=%d, wvlsig=%g\n",iwvl,iwfs,wvlsig);
 	    PDCELL(intstat->sepsf->p[isepsf], psepsf);
-	    double pgrad[2];
-	    cmat **nominals=NULL;
-	    if(!powfs[ipowfs].dtf[iwvl].fused){/*may be null if fused to etf */
-		nominals=powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf;
-	    }
+	    cmat **nominals=powfs[ipowfs].dtf[iwvl].fused?0:(powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf);
 	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+powfs[ipowfs].dtf[iwvl].si->nx*idtf;
-	    const double *angles=NULL;
-	    if(nllt)
-		angles=powfs[ipowfs].srot->p[irot]->p;
+	    double *angles=nllt?(powfs[ipowfs].srot->p[irot]->p):0;
+	    ccell *se_save=cellnew(3, NTHREAD);
+#ifdef _OPENMP
+	    if(omp_in_parallel()){
+		error("Already in parallel\n");
+	    }
+#endif
+#pragma omp parallel num_threads(NTHREAD) shared(se_save) default(shared)
+#pragma omp for 
 	    for(int isa=0; isa<nsa; isa++){
+		int ith=0;
+		double angle=0;/*angle to rotate otf/psf */
+		double angleg=0;/*angle to derivative of i0 to r/a from x/y */
+		double anglegoff=0;
+
+#ifdef _OPENMP
+		ith = omp_get_thread_num();
+#endif
+#define seotfj se_save->p[3*ith]
+#define seotfk se_save->p[3*ith+1]
+#define sepsf se_save->p[3*ith+2]
+		if(!seotfk){
+		    seotfk=cnew(ncompx,ncompy);
+		}
+		cmat *nominal=NULL;
+		dsp *si=NULL;
+
 		int isadtf=isa*idtfisa_multiplier;
 		if(nominals) nominal=nominals[isadtf];
 		si=sis[isadtf];
@@ -383,7 +546,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 			angleg=angles[isa];
 		    }
 		}
-	
+		double pgrad[2];
 		/*loaded psepsf. sum to 1 for full sa. peak in center */
 		if(parms->powfs[ipowfs].mtchstc){
 		    /*Forst psf to be centered. */
@@ -441,9 +604,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dscale(gy[ii0][isa],scale);
 		}
 	    }/*for isa */
+	    cellfree(se_save);
 	}/*for ii0*/
-	cfree(sepsf);
-	cfree(seotfj);
-	cfree(seotfk);
     }/*iwvl */
 }

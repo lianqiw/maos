@@ -257,7 +257,11 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	}
     }else{
 	if(!iscell(header->magic)){
-	    error("Trying to read cell from non cell data\n");
+	    //wrap array into cell
+	    info2("Read cell from non cell data\n");
+	    cell *dcout=cellnew(1,1);
+	    dcout->p[0]=readdata_by_id(fp, id, level-1, header);
+	    out=dcout;
 	}else{
 	    long nx=header->nx;
 	    long ny=header->ny;

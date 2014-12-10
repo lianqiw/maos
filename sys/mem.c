@@ -211,7 +211,7 @@ static void memkey_del(void*p){
 }
 static void *calloc_dbg(size_t nmemb, size_t size){
     void *p=calloc_default(nmemb,size);
-    memkey_add(p,size);
+    memkey_add(p,size*nmemb);
     return p;
 }
 static void *malloc_dbg(size_t size){

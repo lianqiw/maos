@@ -356,8 +356,9 @@ void sim_update_etf(SIM_T *simu){
 	   && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
 	    info2("Step %d: powfs %d: Updating ETF\n",isim, ipowfs);
 	    int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
-	    setup_powfs_etf(powfs,parms,ipowfs,1, isim/dtrat);
-	    setup_powfs_etf(powfs,parms,ipowfs,2, isim/dtrat+1);
+	    int colsim=parms->powfs[ipowfs].llt->colsim;
+	    setup_powfs_etf(powfs,parms,ipowfs,1, colsim+isim/dtrat);
+	    setup_powfs_etf(powfs,parms,ipowfs,2, colsim+isim/dtrat+1);
 #if USE_CUDA
 	    if(parms->gpu.wfs){
 		gpu_wfsgrad_update_etf(parms, powfs);

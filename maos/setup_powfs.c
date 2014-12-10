@@ -895,53 +895,30 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
    which represents a scaling factor of the signal level.  */
 static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     char *fnprof=parms->powfs[ipowfs].llt->fnprof;
-    dmat *Nain=dread("%s",fnprof);
-    if(Nain->ny<2){
+    dcell *Nains=dcellread("%s",fnprof);
+    int nprof=Nains->nx*Nains->ny;
+    if(nprof!=1 && nprof!=parms->powfs[ipowfs].nwfs){
 	error("The sodium profile input %s is in wrong fromat\n", fnprof);
     }
-
-    if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
-	/*Make new sampling: */
-	const double rsamax=dmax(powfs[ipowfs].srsamax);
-	const double dthetamin=dmin(powfs[ipowfs].dtheta);
-	const double x0in=Nain->p[0];
-	const long nxin=Nain->nx;
-	const double dxin=(Nain->p[nxin-1]-x0in)/(nxin-1);
-	/*minimum sampling required. */
-	const double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
-	if(dxnew > dxin * 2){
-	    TIC;tic;
-	    info2("Smoothing sodium profile\n");
-	    const long nxnew=ceil((Nain->p[nxin-1]-x0in)/dxnew);
-	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
-	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
-	    dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
-	    powfs[ipowfs].sodium=dnew(nxnew, Nain->ny);
-	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
-#pragma omp parallel for
-	    for(long icol=1; icol<Nain->ny; icol++){
-		/*input profile */
-		double *pin=Nain->p + nxin * icol;
-		/*output profile */
-		double *pout=powfs[ipowfs].sodium->p + nxnew*icol;
-		/*preserve sum of input profile */
-		double Nasum=dblsum(pin, nxin);
-		dspmulvec(pout, ht, pin, 'n', 1);
-		normalize_sum(pout, nxnew, Nasum);
-	    }
-	    dspfree(ht);
-	    locfree(loc_in);
-	    locfree(loc_out);
-	    dfree(Nain);
-	    toc2("Smoothing sodium profile");
+    powfs[ipowfs].sodium=cellnew(nprof, 1);
+    for(int i=0; i<Nains->nx*Nains->ny; i++){
+	dmat *Nain=Nains->p[i];
+	if(Nain->ny<2 || Nain->nx!=Nains->p[0]->nx){
+	    error("The sodium profile input %s is in wrong fromat\n", fnprof);
+	}
+	if(parms->dbg.na_smooth){/*resampling the sodium profile by binning. */
+	    /*Make new sampling: */
+	    const double rsamax=dmax(powfs[ipowfs].srsamax);
+	    const double dthetamin=dmin(powfs[ipowfs].dtheta);
+	    /*minimum sampling required. */
+	    const double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
+	    powfs[ipowfs].sodium->p[i]=smooth(Nain, dxnew);
 	}else{
 	    info2("Not smoothing sodium profile\n");
-	    powfs[ipowfs].sodium=Nain;
+	    powfs[ipowfs].sodium->p[i]=dref(Nain);
 	}
-    }else{
-	info2("Not smoothing sodium profile\n");
-	powfs[ipowfs].sodium=Nain;
     }
+    dcellfree(Nains);
     if(parms->save.setup){
 	writebin(powfs[ipowfs].sodium, "%s/powfs%d_sodium",dirsetup,ipowfs);
     }
@@ -955,25 +932,19 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
     if(!parms->powfs[ipowfs].llt) return;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     ETF_T **powfsetf=NULL;
-    int colstart, colskip;
     if(mode==0){/*preparation. */
+	if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
+	    etf_free(powfs[ipowfs].etfprep, nwvl);
+	}
+	powfs[ipowfs].etfprep=0;
 	powfsetf=&powfs[ipowfs].etfprep;
-	colskip=parms->powfs[ipowfs].llt->colprep;
-    }else{
-	colskip=parms->powfs[ipowfs].llt->colsim;
-	if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim
-	   && parms->powfs[ipowfs].llt->colsimdtrat==0){
-	    if(powfs[ipowfs].etfsim){
-		error("Etfsim should be empty\n");
+    }else{/*simulation*/
+	if(mode==1){
+	    if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
+		powfs[ipowfs].etfsim=0;
 	    }
-	    if(!powfs[ipowfs].etfprep){
-		error("Please call setup_powfs_etf with mode = 0 first\n");
-	    }
-	    powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
-	    info2("Simulation and reconstruction using same etf\n");
-	    return;
-	}else if(mode==1){
 	    etf_free(powfs[ipowfs].etfsim, nwvl);
+	    powfs[ipowfs].etfsim=0;
 	    if(istep!=0 && powfs[ipowfs].etfsim2){//cycle through
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
@@ -983,25 +954,22 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    }
 	}else if(mode==2){
 	    etf_free(powfs[ipowfs].etfsim2, nwvl);
+	    powfs[ipowfs].etfsim2=0;
 	    powfsetf=&powfs[ipowfs].etfsim2;
 	}else{
 	    error("Invalid mode=%d\n", mode);
 	}
     }
-    dmat *sodium=powfs[ipowfs].sodium;
+    dcell *sodium=powfs[ipowfs].sodium;
     if(!sodium){
 	error("Sodium profile is NULL\n");
     }
-    if(sodium->ny-1<colskip){
-	error("Invalid configuration. colprep or colsim is too big\n");
-    }
-    colstart=colskip+istep%(sodium->ny-1-colskip);
-    info2("Na using column %d in %s\n",colstart, mode==0?"preparation":"simulation");
+    info2("Na using column %d in %s\n",istep, mode==0?"preparation":"simulation");
     /*points to the effective sodium profile. */
     *powfsetf=mketf(powfs[ipowfs].dtf, 
 		    parms->powfs[ipowfs].hs,
 		    powfs[ipowfs].sodium,
-		    colstart,
+		    istep,
 		    parms->powfs[ipowfs].nwvl, 
 		    powfs[ipowfs].srot,
 		    powfs[ipowfs].srsa,
@@ -1357,158 +1325,10 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	}else if(parms->powfs[ipowfs].lo && parms->powfs[ipowfs].order<=2){
 	    error("Please specify piinfile for lo order phy wfs\n");
 	}else{
-	    /*LGS */
-	    {
-		int npsfx=powfs[ipowfs].pts->nx *parms->powfs[ipowfs].embfac;
-		int npsfy=npsfx;
-		char fnprefix[PATH_MAX]; fnprefix[0]='\0';
-		uint32_t key=0;
-		if(parms->aper.fnamp){
-		    char *tmp=mybasename(parms->aper.fnamp);
-		    strncat(fnprefix, tmp, PATH_MAX-strlen(fnprefix)-1);
-		    free(tmp);
-		}else{
-		    strncat(fnprefix, "noamp", PATH_MAX-strlen(fnprefix)-1);
-		}
-		if(powfs[ipowfs].amp_tel){
-		    for(int iamp=0; iamp<powfs[ipowfs].nwfs; iamp++){
-			key=dhash(powfs[ipowfs].amp_tel->p[iamp], key);
-		    }
-		}else{
-		    key=dhash(powfs[ipowfs].amp, key);
-		}
-		info("powfs %d: ncpa_method=%d, opdbias=%p\n",
-		     ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
-		if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
-		    info("Puting opdbias to key\n");
-		    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-			key=dhash(powfs[ipowfs].opdbias->p[iwfs],key);
-		    }
-		}
-		if(key!=0){
-		    char tmp2[80];
-		    snprintf(tmp2,80,"_%ud",key);
-		    strncat(fnprefix, tmp2, PATH_MAX-strlen(fnprefix)-1);
-		}
-	    
-		char fnotf[PATH_MAX];
-		char fnlock[PATH_MAX];
-		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
-		if(!exist(fnotf)) 
-		    mymkdir("%s",fnotf);
-	
-		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
-			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
-			 HOME, fnprefix,
-			 parms->aper.d,parms->aper.din, 
-			 parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
-			 powfs[ipowfs].pts->dsa,nsa,
-			 1./powfs[ipowfs].pts->dx, 
-			 parms->powfs[ipowfs].nwvl,
-			 parms->powfs[ipowfs].wvl->p[0]*1.e6,
-			 parms->powfs[ipowfs].embfac,npsfx,npsfy);
-		snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
-	    retry:
-		if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
-		    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
-		    if(fd>=0){/*succeed */
-			info2("Generating WFS OTF for %s...", fnotf);
-			TIC;tic;
-			genseotf(parms,powfs,ipowfs);
-			toc2("done");
-			writebin(intstat->otf, "%s", fnotf);
-			close(fd);
-			remove(fnlock);
-		    }else{
-			fd=lock_file(fnlock,1,0);/*blocking exclusive lock */
-			close(fd);
-			remove(fnlock);
-			goto retry;
-		    }
-		}else{
-		    info2("Reading WFS OTF from %s\n", fnotf);
-		    intstat->otf=cccellread("%s",fnotf);
-		    intstat->notf=intstat->otf->nx*intstat->otf->ny;
-		    if(!intstat->notf) error("Invalid otf\n");
-		    zftouch(fnotf);
-		}
-	    }
+	    /*Gen short exposure OTFs due to atmosphere*/
+	    genseotf(parms, powfs, ipowfs);
 	    if(parms->powfs[ipowfs].llt){
-		char fnprefix[80];
-		uint32_t key=0;
-		key=dhash(powfs[ipowfs].llt->amp, key);
-		if(powfs[ipowfs].llt->ncpa){
-		    dcell *ncpa=powfs[ipowfs].llt->ncpa;
-		    long nlotf=ncpa->nx*ncpa->ny;
-		    for(long ilotf=0; ilotf<nlotf; ilotf++){
-			key=dhash(ncpa->p[ilotf], key);
-		    }
-		}
-		snprintf(fnprefix,80,"SELOTF_%0x",key);
-		char fnlotf[PATH_MAX];
-		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_"
-			 "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
-			 "nwvl%d_%g_embfac%d_v2", 
-			 HOME, fnprefix,
-			 parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
-			 powfs[ipowfs].llt->pts->dsa,
-			 1./powfs[ipowfs].llt->pts->dx,
-			 parms->powfs[ipowfs].llt->widthp,
-			 parms->powfs[ipowfs].nwvl,
-			 parms->powfs[ipowfs].wvl->p[0]*1.e6,
-			 parms->powfs[ipowfs].embfac);
-		char fnllock[PATH_MAX];
-		snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
-	    retry2:
-		if(exist(fnllock) || !zfexist(fnlotf)){/*need to create data */
-		    int fd2=lock_file(fnllock, 0, 0);/*nonblocking exclusive lock */
-		    if(fd2>=0){/*succeed */
-			info2("Generating WFS LLT OTF for %s\n", fnlotf);
-			genselotf(parms,powfs,ipowfs);
-			writebin(intstat->lotf, "%s",fnlotf);
-			close(fd2);
-			remove(fnllock);
-		    }else{
-			fd2=lock_file(fnllock, 1, 0);/*blocking, exclusive */
-			close(fd2);
-			remove(fnllock);
-			goto retry2;
-		    }
-		}else{
-		    intstat->lotf=ccellread("%s",fnlotf);
-		    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
-		    zftouch(fnlotf);
-		    info2("Reading WFS LLT OTF from %s\n", fnlotf);
-		}
-		int nwvl=intstat->lotf->nx;
-		PCCELL(intstat->lotf, lotf);
-		int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
-		cmat *psfhat=cnew(nlpsf, nlpsf);
-		dmat *psf=dnew(nlpsf, nlpsf);
-		cellarr *lltpsfsave=NULL;
-		if(parms->save.setup){
-		    lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "%s/powfs%d_llt_psf", dirsetup, ipowfs);
-		}
-		//cfft2plan(psfhat, 1);
-		for(int illt=0; illt<intstat->lotf->ny; illt++){
-		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			const double dx=powfs[ipowfs].llt->pts->dx;
-			const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-			const double dpsf=wvl/(nlpsf*dx)*206265.;
-			ccp(&psfhat, lotf[illt][iwvl]);
-			cfftshift(psfhat);
-			cfft2i(psfhat, 1);
-			cfftshift(psfhat);
-			creal2d(&psf, 0, psfhat, 1);
-			info2("illt %d, iwvl %d has FWHM of %g\"\n",
-			      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
-			if(lltpsfsave) cellarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
-		    }
-		}
-		if(lltpsfsave) cellarr_close(lltpsfsave);
-		cfree(psfhat);
-		dfree(psf);
+		genselotf(parms, powfs, ipowfs);
 	    }
 	    /*Generating short exposure psfs for both uplink and downlink turbulence effect. */
 	    gensepsf(parms,powfs,ipowfs);
@@ -1521,7 +1341,6 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	}
 	/*generate short exposure i0,gx,gy from psf. */
 	gensei(parms,powfs,ipowfs);
-	cellfree(intstat->sepsf);
 	if(parms->save.setup){
 	    writebin(intstat->i0,"%s/powfs%d_i0",dirsetup,ipowfs);
 	    writebin(intstat->gx,"%s/powfs%d_gx",dirsetup,ipowfs);
@@ -1575,9 +1394,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    writebin(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
 	}
     }
-    dcellfree(powfs[ipowfs].intstat->i0);
-    dcellfree(powfs[ipowfs].intstat->gx);
-    dcellfree(powfs[ipowfs].intstat->gy);
+  
     disable_save=disable_save_save;//put it back.
 }
 /*
@@ -1698,9 +1515,13 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].llt){
 		/*prepare Laser launch telescope. */
 		setup_powfs_sodium(powfs,parms,ipowfs);/*read sodium profile and smooth it */
-		setup_powfs_etf(powfs,parms,ipowfs,0,0);/*etf for prep */
+		setup_powfs_etf(powfs,parms,ipowfs,0,parms->powfs[ipowfs].llt->colprep);/*etf for prep */
 		if(!parms->powfs[ipowfs].llt->colsimdtrat){/*const etf for sim */
-		    setup_powfs_etf(powfs,parms,ipowfs,1,0);
+		    if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim){
+			powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
+		    }else{
+			setup_powfs_etf(powfs,parms,ipowfs,1,parms->powfs[ipowfs].llt->colsim);
+		    }
 		}
 		setup_powfs_llt(powfs,parms,ipowfs);
 	    }
@@ -1714,6 +1535,16 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }/*ipowfs */
     toc2("setup_powfs_phy");
+}
+void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(powfs[ipowfs].intstat){
+	    cellfree(powfs[ipowfs].intstat->sepsf);
+	    cellfree(powfs[ipowfs].intstat->i0);
+	    cellfree(powfs[ipowfs].intstat->gx);
+	    cellfree(powfs[ipowfs].intstat->gy);
+	}
+    }
 }
 void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     free_powfs_geom(powfs, parms, ipowfs);
@@ -1729,6 +1560,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcellfree(intstat->saneaxy);
 	dcellfree(intstat->saneaixy);
 	dfree(intstat->i0sum);
+	cellfree(intstat->cogcoeff);
 	free(intstat);
 	powfs[ipowfs].intstat=NULL;
     }
@@ -1749,7 +1581,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcellfree(powfs[ipowfs].llt->ncpa);
 	free(powfs[ipowfs].llt);
     }
-    dfree(powfs[ipowfs].sodium);
+    dcellfree(powfs[ipowfs].sodium);
     if(powfs[ipowfs].etfprep!=powfs[ipowfs].etfsim){
 	etf_free(powfs[ipowfs].etfprep, parms->powfs[ipowfs].nwvl);
     }
@@ -1759,13 +1591,14 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(powfs[ipowfs].opdbias);
     dcellfree(powfs[ipowfs].gradoff);
     dcellfree(powfs[ipowfs].gradoffcog);
+    dfree(powfs[ipowfs].dtheta);
 }
 /**
    Free all parameters of powfs at the end of simulation.
 */
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
-    int ipowfs;
-    for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    free_powfs_unused(parms, powfs);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].type==0){
 	    free_powfs_shwfs(parms, powfs, ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){

@@ -69,7 +69,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
     );
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double hs,    /**<Guide star focus range*/
-	     dmat *sodium, /**<The sodium profile. First column is coordinate.*/
+	     dcell *sodium, /**<The sodium profile. First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     int nwvl,     /**<Number of wavelength*/
 	     dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
@@ -77,6 +77,9 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );
-void dtf_free(DTF_T *dtfs, int nwvl);
-void etf_free(ETF_T *etfs, int nwvl);
+void dtf_free_do(DTF_T *dtfs, int nwvl);
+void etf_free_do(ETF_T *etfs, int nwvl);
+#define dtf_free(dtfs, nwvl) ({dtf_free_do(dtfs, nwvl); dtfs=0;})
+#define etf_free(etfs, nwvl) ({etf_free_do(etfs, nwvl); etfs=0;})
+dmat* smooth(dmat *profile, double dxnew);
 #endif

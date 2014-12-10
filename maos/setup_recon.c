@@ -2162,9 +2162,11 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->MVModes);
     dcellfree(recon->xmcc);
     dspcellfree(recon->GX);
+    dspcellfree(recon->GXlo);
+    dspcellfree(recon->GXtomo);
+    dspcellfree(recon->GXfocus);
     dspcellfree(recon->GP);
     dspcellfree(recon->GP2);
-    dspcellfree(recon->GXfocus);
     dspcellfree(recon->GA); 
     dspcellfree(recon->GAlo);
     dspcellfree(recon->GAhi);
@@ -2229,6 +2231,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     muv_free(&recon->LR);
     muv_free(&recon->LL);
     dfree(recon->MVM);
+    dspcellfree(recon->sanea);
+    dspcellfree(recon->saneal);
     dspcellfree(recon->saneai);
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;

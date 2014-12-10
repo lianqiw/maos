@@ -175,11 +175,6 @@ void print_backtrace();
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline); })
 
-#define warning_once(A...) ({static int done=0; if(!done){done=1; char fline[4096];char sect[4096]; \
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
-	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline);}})
 
 #define info2(A...) fprintf(stderr, A)
 #define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); QUIT_FUN("ERROR");})
@@ -201,6 +196,10 @@ void print_backtrace();
 	    snprintf(fline,4096, "[%s]\033[01;31m%-20s ",myasctime(),sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(sect)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline);})
+
+#define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
+#define info_once(A...) ({static int done=0; if(!done){done=1; info2(A);}})
+
 #endif
 #ifndef assert
 #if DEBUG

@@ -82,10 +82,17 @@ void maos_setup(const PARMS_T *parms){
 	    assert(iwfs>-1 || iwfs<parms->nwfs);
 	    info2("Studying wfslineariy for WFS %d\n", iwfs);
 	    wfslinearity(parms, powfs, iwfs);
-	    rename_file(0);
-	    scheduler_finish(0);
-	    exit(0);
+	    ((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
 	}
+	{
+	    int LGS_SPH_PSD=-1;
+	    READ_ENV_INT(LGS_SPH_PSD,-1,INFINITY);
+	    if(LGS_SPH_PSD>-1){
+		lgs_wfs_sph_psd(parms, powfs, recon, LGS_SPH_PSD);
+		((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
+	    }
+	}
+	free_powfs_unused(parms, powfs);
     }
     global->setupdone=1;
     if(parms->plot.setup){
@@ -132,9 +139,10 @@ void maos_setup(const PARMS_T *parms){
 void maos(const PARMS_T *parms){
     info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),myhostname());
     maos_setup(parms);
-    if(parms->sim.end<=parms->sim.start) return;
-    info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),myhostname());
-    maos_sim();
+    if(parms->sim.end>parms->sim.start){
+	info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),myhostname());
+	maos_sim();
+    }
     maos_reset();
     info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),myhostname());
 }

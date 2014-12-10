@@ -145,7 +145,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double hs,    /**<Guide star focus range*/
-	     dmat *sodium, /**<The sodium profile. First column is coordinate.*/
+	     dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     int nwvl,     /**<Number of wavelength*/
 	     dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
@@ -153,29 +153,36 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){
-    TIC;tic;
     ETF_T *etfs=calloc(nwvl, sizeof(ETF_T));
     /*setup elongation along radial direction. don't care azimuthal. */
     if(!srot) error("srot is required");
-    const int nllt=srot->nx;
+    const int nllt=MAX(srot->nx, sodium->nx);
     const int nsa=srot->p[0]->nx;
-    const int nhp=sodium->nx; 
+    dmat *sodium0=sodium->p[0];
+    icol=icol%(sodium0->ny-1);
+    const int nhp=sodium0->nx; 
     //adjusting sodium height for the zenith angle;
     double hpmin=0, dhp1=0;
     if(!no_interp){/**Requires linear spacing*/
-	hpmin=sodium->p[0]/cos(za);
-	dhp1=cos(za)/(sodium->p[1]-sodium->p[0]);
+	hpmin=sodium0->p[0]/cos(za);
+	dhp1=cos(za)/(sodium0->p[1]-sodium0->p[0]);
 	/*assume linear spacing. check the assumption valid */
-	if(fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)*(sodium->p[1]-sodium->p[0]))>1.e-7){
+	if(fabs(sodium0->p[nhp-1]-sodium0->p[0]-(nhp-1)*(sodium0->p[1]-sodium0->p[0]))>1.e-7){
 	    error("llt profile is not evenly spaced\n");
 	}
     }//else: Any spacing is ok.
-    const double* px=sodium->p;
+    const double* px=sodium0->p;
     /*the sum of pp determines the scaling of the pixel intensity. */
-    const double* pp=sodium->p+nhp*(1+icol);
-    const double i0scale=dblsum(pp, nhp);
-    if(fabs(i0scale-1)>0.01){
-	warning("Siglev is scaled by %g by sodium profile\n", i0scale);
+    double *psrot[nllt];
+    double *pna[nllt];
+    double i0scale[nllt];
+    for(int illt=0; illt<nllt; illt++){
+	psrot[illt]=srot->p[srot->nx>1?illt:0]->p;
+	pna[illt]=sodium->p[sodium->nx>1?illt:0]->p+nhp*(1+icol);
+	i0scale[illt]=dblsum(pna[illt], nhp);
+	if(fabs(i0scale[illt]-1)>0.01){
+	    warning("Siglev is scaled by %g by sodium profile\n", i0scale[illt]);
+	}
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double dtheta=dtfs[iwvl].dtheta;
@@ -206,16 +213,17 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	      2010-01-04: Fuse dtf nominal into etf for this case.
 	    */
 	    if(dtfs[iwvl].radpix){
-		info2("2D ETF for Radial CCD\n");
+		info_once("2D ETF for Radial CCD\n");
 	    }else{
-		info2("Non-Radial CCD\n");
+		info_once("Non-Radial CCD\n");
 	    }
 	    etfs[iwvl].p2=cellnew(nsa,nllt);
 	    petf=(void*)etfs[iwvl].p2->p;
 	    use1d=0;
 	}
 
-	if(no_interp){ /* No interpolation, no fft */
+	if(no_interp){ /* No interpolation, no fft. intensity scaling is automatically taken care of */
+	    TIC;tic;
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
 		    double rsa=srsa->p[illt]->p[isa];
@@ -223,21 +231,21 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    if(use1d){ /*1d ETF along radius. */
 			petf[illt][isa]=cnew(ncompx,1);
 			dcomplex *etf1d=petf[illt][isa]->p;
-#pragma omp parallel for
+#pragma omp parallel for default(shared)
 			for(int icompx=0; icompx<ncompx; icompx++){
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
-				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium->p[ih]-rsa/hs)));
-				etf1d[icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
+				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
+				etf1d[icompx]+=pna[illt][ih]*cos(tmp)+pna[illt][ih]*sin(tmp)*I;
 			    }
 			}
 		    }else{
-			const double theta=srot->p[illt]->p[isa];
+			const double theta=psrot[illt][isa];
 			const double ct=cos(theta);
 			const double st=sin(theta);
 			petf[illt][isa]=cnew(ncompx,ncompy);
 			PCMAT(petf[illt][isa], etf2d);
-#pragma omp parallel for
+#pragma omp parallel for default(shared)
 			for(int icompy=0; icompy<ncompy; icompy++){
 			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
 			    for(int icompx=0; icompx<ncompx; icompx++){
@@ -245,13 +253,14 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				const double kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
 				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
-				    etf2d[icompy][icompx]+=pp[ih]*cos(tmp)+pp[ih]*sin(tmp)*I;
+				    etf2d[icompy][icompx]+=pna[illt][ih]*cos(tmp)+pna[illt][ih]*sin(tmp)*I;
 				}
 			    }
 			}
 		    }
 		}//isa
 	    }//illt
+	    toc2("ETF");
 	}else{
 	    /*
 	      The ETF is computed as DFT
@@ -298,7 +307,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			if(iihf<0 || iihf>nhp-2){
 			    etf->p[icomp]=0.;
 			}else{
-			    double tmp=pp[iihf]*(1.-iihw)+pp[iihf+1]*iihw;
+			    double tmp=pna[illt][iihf]*(1.-iihw)+pna[illt][iihf+1]*iihw;
 			    /*neglected rsa1 due to renormalization. */
 			    etf->p[icomp]=tmp;
 			    etf2sum+=tmp;
@@ -315,7 +324,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			  the variation of the intensity and meteor trails.
 		      
 			*/
-			cscale(etf,i0scale/etf2sum);
+			cscale(etf,i0scale[illt]/etf2sum);
 			cfftshift(etf);/*put peak in corner; */
 			cfft2(etf, -1);
 			if(use1d){
@@ -325,6 +334,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				cfftshift(etf);
 				petf[illt][isa]=cnew(ncompx,1);
 				dcomplex *etf1d=petf[illt][isa]->p;
+#pragma omp parallel for default(shared)
 				for(int icompx=0; icompx<ncompx; icompx++){
 				    double ir=dusc*(icompx-ncompx2)+netf2;
 				    int iir=ifloor(ir);
@@ -340,11 +350,12 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    /*Rotate the ETF. */
 			    /*need to put peak in center. */
 			    cfftshift(etf);
-			    double theta=srot->p[illt]->p[isa];
+			    double theta=psrot[illt][isa];
 			    double ct=cos(theta);
 			    double st=sin(theta);
 			    petf[illt][isa]=cnew(ncompx,ncompy);
 			    dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p;
+#pragma omp parallel for default(shared)
 			    for(int icompy=0; icompy<ncompy; icompy++){
 				double iy=(icompy-ncompy2);
 				for(int icompx=0; icompx<ncompx; icompx++){
@@ -395,11 +406,10 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    dtfs[iwvl].fused=1;
 	}
     }//for iwvl
-    toc2("ETF");
     return etfs;
 }
 
-void dtf_free(DTF_T *dtfs, int nwvl){
+void dtf_free_do(DTF_T *dtfs, int nwvl){
     if(!dtfs) return;
     for(int iwvl=0;iwvl<nwvl;iwvl++){
 	ccellfree(dtfs[iwvl].nominal);
@@ -410,11 +420,51 @@ void dtf_free(DTF_T *dtfs, int nwvl){
     free(dtfs);
 }
 
-void etf_free(ETF_T *etfs, int nwvl){
+void etf_free_do(ETF_T *etfs, int nwvl){
     if(!etfs) return;
     for(int iwvl=0;iwvl<nwvl;iwvl++){
 	ccellfree(etfs[iwvl].p1);
 	ccellfree(etfs[iwvl].p2);
     }
     free(etfs);
+}
+/**
+   profile is nxm array with m>=2. First column is coordinate and the remaining
+   is function of coordinate. This routine smoothes the profile on new
+   coordinate with spacing of dxnew.
+ */
+dmat* smooth(dmat *prof, double dxnew){
+    const long nxin=prof->nx;
+    const double x0in=prof->p[0];
+    const double dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
+    dmat *out;
+    if(dxnew > dxin * 2){
+	TIC;tic;
+	info_once("smooth: Smoothing");
+	const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
+	loc_t *loc_in=mk1dloc_vec(prof->p, nxin);
+	loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
+	dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
+	out=dnew(nxnew, prof->ny);
+	memcpy(out->p, loc_out->locx, sizeof(double)*nxnew);
+#pragma omp parallel for default(shared)
+	for(long icol=1; icol<prof->ny; icol++){
+	    /*input profile */
+	    double *pin=prof->p + nxin * icol;
+	    /*output profile */
+	    double *pout=out->p + nxnew*icol;
+	    /*preserve sum of input profile */
+	    double Nasum=dblsum(pin, nxin);
+	    dspmulvec(pout, ht, pin, 'n', 1);
+	    normalize_sum(pout, nxnew, Nasum);
+	}
+	dspfree(ht);
+	locfree(loc_in);
+	locfree(loc_out);
+	toc2("done\n");
+    }else{
+	info("smooth: Referencing");
+	out=dref(prof);
+    }
+    return out;
 }

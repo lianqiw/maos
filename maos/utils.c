@@ -34,7 +34,8 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-
+#include "setup_powfs.h"
+#include "genseotf.h"
 /**
    \file maos/utils.c
    A few utility routines
@@ -597,7 +598,88 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	cfree(potf2);
     }
 }
-
+/**
+   Compute spherical aberration
+ */
+void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs){
+    int ipowfs=parms->wfs[iwfs].powfs;
+    /*First save matched filter and i0*/
+    dcell *mtche=powfs[ipowfs].intstat->mtche;
+    dcell *i0=powfs[ipowfs].intstat->i0;
+    dmat *i0sum=powfs[ipowfs].intstat->i0sum;
+    powfs[ipowfs].intstat->mtche=0;
+    powfs[ipowfs].intstat->i0=0;
+    powfs[ipowfs].intstat->i0sum=0;
+    //writebin(i0, "i0_initial");
+    //writebin(mtche, "mtche_initial");
+    dmat *opd=zernike(recon->ploc, parms->aper.d, 2, 15, 1);
+    //writebin(opd, "ropd");
+    dmat *GR=0;
+    dspmm(&GR, recon->GP->p[ipowfs], opd, 'n', 1);
+    dfree(opd);
+    dmat *RR=dpinv(GR, recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
+    //writebin(GR, "GR");
+    //writebin(RR, "RR");
+    int nsa=powfs[ipowfs].pts->nsa;
+    dmat *gradmf=dnew(nsa, 2);
+    dmat *gradcg=dnew(nsa, 2);
+    int ncol=1000;
+    int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+    dmat *rmodmf=dnew(RR->nx, ncol/dtrat);
+    dmat *rmodcg=dnew(RR->nx, ncol/dtrat);
+    double scale=1;
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    double *srot=(parms->powfs[ipowfs].radpix)?
+	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
+    for(int icol=0; icol<1000; icol+=dtrat){
+	setup_powfs_etf(powfs, parms, ipowfs, 0, icol);
+	gensei(parms, powfs, ipowfs);
+	dcell *i0_new=powfs[ipowfs].intstat->i0;
+	//writebin(i0_new, "i0_%d", icol);
+	for(int isa=0; isa<nsa; isa++){
+	    double geach[3]={0,0,1};
+	    dmulvec(geach, mtche->p[isa], i0_new->p[isa]->p, 1);
+	    if(parms->powfs[ipowfs].mtchscl){
+		scale=i0sum->p[isa]/dsum(i0_new->p[isa]);
+	    }
+	    gradmf->p[isa]=geach[0]*scale;
+	    gradmf->p[isa+nsa]=geach[1]*scale;
+	    {
+		dcog(geach, i0_new->p[isa], 0, 0, 
+		     powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
+		     powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+		geach[0]*=pixthetax;
+		geach[1]*=pixthetay;
+		if(srot){
+		    double theta=srot[isa];
+		    double cx=cos(theta);
+		    double sx=sin(theta);
+		    double tmp=geach[0]*cx-geach[1]*sx;
+		    geach[1]=geach[0]*sx+geach[1]*cx;
+		    geach[0]=tmp;
+		}
+		gradcg->p[isa]=geach[0];
+		gradcg->p[isa+nsa]=geach[1];
+	    }
+	    
+	}
+	dmulvec(rmodmf->p+icol/dtrat*rmodmf->nx, RR, gradmf->p, 1);
+	dmulvec(rmodcg->p+icol/dtrat*rmodcg->nx, RR, gradcg->p, 1);
+    }
+    dfree(GR);
+    dfree(RR);
+    writebin(rmodmf, "rmod_mf");
+    writebin(rmodcg, "rmod_cg");
+    dfree(rmodmf);
+    dfree(rmodcg);
+    dfree(gradmf);
+    dfree(gradcg);
+    dcellfree(mtche);
+    dcellfree(i0);
+    dfree(i0sum);
+}
 typedef struct {
     const PARMS_T *parms;
     const POWFS_T *powfs;
