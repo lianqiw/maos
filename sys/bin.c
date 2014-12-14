@@ -973,7 +973,7 @@ void writespint(const spint *p, long nx, long ny, const char *format,...){
     writearr(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
 }
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
-    uint32_t size=0;
+    int size=0;
     switch(magic){
     case M_INT64:
 	size=8;

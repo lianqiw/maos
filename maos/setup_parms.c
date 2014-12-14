@@ -430,7 +430,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->pixtheta<0){
 	    double wvlmax=dmax(powfsi->wvl);
 	    double dsa=parms->aper.d/powfsi->order;
-	    powfsi->pixtheta=abs(powfsi->pixtheta)*wvlmax/dsa;
+	    powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/dsa;
 	}else if(powfsi->pixtheta<1e-4){
 	    warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
 	}else{

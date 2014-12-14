@@ -9,6 +9,7 @@ libtoolize --copy || glibtoolize --copy
 sed 's/-fno-common//g' m4/libtool.m4 > m4/libtool_new.m4
 mv m4/libtool_new.m4 m4/libtool.m4
 aclocal --install -I m4
+autoheader -f
 autoconf 
 automake --add-missing --copy --foreign
-autoheader -f
+

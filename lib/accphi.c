@@ -304,28 +304,28 @@ void prop_index(PROPDATA_T *propdata){
     long iphi; double tmp=0; double wt=0; double wtsum=0;		\
     wt=(1.-dplocx)*(1.-dplocy);						\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
-	if((iphi=abs(map[nplocy][nplocx]))){				\
+	if((iphi=fabs(map[nplocy][nplocx]))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(dplocx)*(1.-dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy][nplocx1]))){				\
+	if((iphi=fabs(map[nplocy][nplocx1]))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(1.-dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx]))){				\
+	if((iphi=fabs(map[nplocy1][nplocx]))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx1]))){				\
+	if((iphi=fabs(map[nplocy1][nplocx1]))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
@@ -371,7 +371,7 @@ void prop_index(PROPDATA_T *propdata){
 	    long iphi;						\
 	    double wt=fx[jx+1]*fy[jy+1];			\
 	    if(wt>EPS){						\
-		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){	\
+		if((iphi=fabs(map[jy+nplocy][jx+nplocx]))){	\
 		    sum+=wt*phiin0[iphi];			\
 		    sumwt+=wt;					\
 		}						\
