@@ -69,7 +69,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
 	for(long iy=skip; iy<ncomp-skip; iy++){
 	    for(long ix=skip; ix<ncomp-skip; ix++){
-		pp[iy][ix]=cexp((abs(iy-ncomp2)+abs(ix-ncomp2))*coeff);
+		pp[iy][ix]=cexp((labs(iy-ncomp2)+labs(ix-ncomp2))*coeff);
 	    }
 	}
     }

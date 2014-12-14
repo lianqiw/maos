@@ -275,7 +275,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 				for(int jx=MAX(0, ix-1); jx<MIN(map_nx, ix+2); jx++){
 				    int sep=(abs(iy-jy)+abs(ix-jx));
 				    int iphi;
-				    if((sep==1 || sep==2) && (iphi=abs(pmap[jy][jx]))){//edge
+				    if((sep==1 || sep==2) && (iphi=fabs(pmap[jy][jx]))){//edge
 					iphi--;
 					double rad=locx[iphi]*locx[iphi]+locy[iphi]*locy[iphi];//dist^2 to center
 					if(level[jy][jx]<min_level){
@@ -302,7 +302,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 			    }
 			    if((min_level==cur_level && count==3) || min_level<cur_level){
 				//if level satisfy or even if three neighbor with higher level.
-				pmap[iy][ix]=-abs(pmap[min_jy][min_jx]);
+				pmap[iy][ix]=-fabs(pmap[min_jy][min_jx]);
 				level[iy][ix]=min_level+1;
 				num_found++;
 			    }
@@ -329,7 +329,7 @@ void loc_embed(map_t *dest, const loc_t *loc, const double *in){
     }
     const double *pin=in-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){
-	long iphi=abs(map->p[i]);
+	long iphi=fabs(map->p[i]);
 	if(iphi){
 	    dest->p[i]=pin[iphi];
 	}else{
@@ -351,7 +351,7 @@ void loc_embed_add(map_t *dest, const loc_t *loc, const double *in){
     }
     const double *pin=in-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){
-	long iphi=abs(map->p[i]);
+	long iphi=fabs(map->p[i]);
 	if(iphi){
 	    dest->p[i]+=pin[iphi];
 	}
@@ -405,45 +405,6 @@ loc_t* map2loc(map_t *map){
     return loc;
 }
 /**
-   convert loc to map, with optionally minimum size of Dx*Dy
-*/
-/*map_t *loc2map(loc_t *loc, int nguard){
-    double xmax, xmin, ymax, ymin;
-    dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
-    dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
-    
-    int nx=round((xmax-xmin)/loc->dx)+nguard*2+1;
-    int ny=round((ymax-ymin)/loc->dy)+nguard*2+1;
-    map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
-    map->ox=xmin-loc->dx*nguard;
-    map->oy=ymin-loc->dy*nguard;
-    double dx_in1=1./loc->dx;
-    double dy_in1=1./loc->dy;
-    for(int iloc=0; iloc<loc->nloc; iloc++){
-	int ix=(int)round((loc->locx[iloc]-map->ox)*dx_in1);
-	int iy=(int)round((loc->locy[iloc]-map->oy)*dy_in1);
-	map->p[ix+iy*nx]=1.;
-    }	
-    return map;
-    }*/
-/**
-   create embed index from loc to map.
- */
-/*long *loc2map_embed(const loc_t *loc, const map_t *map){
-    const double ox=map->ox;
-    const double oy=map->oy;
-    const double dx_in1=1./map->dx;
-    const double dy_in1=1./map->dy;
-    const long nx=map->nx;
-    long *embed=calloc(loc->nloc, sizeof(long));
-    for(int iloc=0; iloc<loc->nloc; iloc++){
-	long ix=(long)round((loc->locx[iloc]-ox)*dx_in1);
-	long iy=(long)round((loc->locy[iloc]-oy)*dy_in1);
-	embed[iloc]=ix+iy*nx;
-    }
-    return embed;
-    }*/
-/**
    Create 1 dimensional loc with given vector.
 */
 loc_t *mk1dloc_vec(double *x, long nx){
@@ -465,13 +426,13 @@ loc_t *mk1dloc(double x0, double dx, long nx){
 /**
    Create a loc array that covers the map_t. Notice that it is different from
    map2loc which only covers valid (value>0) regions.
- */
+*/
 loc_t *mksqloc_map(map_t*map){
     return mksqloc(map->nx, map->ny, map->dx, map->dy, map->ox, map->oy);
 }
 /**
    Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)
- */
+*/
 loc_t *mksqloc_auto(long nx, long ny, double dx, double dy){
     return mksqloc(nx,ny,dx,dy,-nx/2*dx,-ny/2*dy);
 }
@@ -662,7 +623,7 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
    coeffout is in unit of zernike!
 */
 void loc_calc_mod(double *rmsout, double *coeffout,const dmat *mod,
-		 const double *amp, double *opd){
+		  const double *amp, double *opd){
   
     const int nmod=mod->ny;
     const int nloc=mod->nx;
@@ -749,14 +710,14 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	dmulvec3(outp, imcc->p[isa], coeff);
 	/*
 	  2010-07-19: Was =, modified to += to conform to the convention.
-	 */
+	*/
 	res[isa]+=outp[1];
 	res[isa+nsa]+=outp[2];
     }
 }
 /**
    Gather information about the starting of each column in loc.
- */
+*/
 void loc_create_stat_do(loc_t *loc){
     /*First a sanity check to make sure loc is raster scanning along x*/
     if(loc->nloc<2 || fabs(loc->locy[1]-loc->locy[0])>loc->dy*0.1){
@@ -814,7 +775,7 @@ void loc_create_stat_do(loc_t *loc){
 }
 /**
    Create a gray pixel circular map in phi using coordinates defined in loc, center
-defined using cx, cy, radius of r, and value of val */
+   defined using cx, cy, radius of r, and value of val */
 void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
     /*cx,cy,r are in unit of true unit, as in loc */
     double dx=loc->dx;
@@ -855,8 +816,8 @@ void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
 }
 /**
    Create a gray pixel annular map in phi using coordinates defined in loc,
-center defined using cx, cy, radius of r, and value of val
- */
+   center defined using cx, cy, radius of r, and value of val
+*/
 void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,double val){
     loccircle(phi,loc,cx,cy,r,val);
     if(rin>EPS){
@@ -879,8 +840,8 @@ void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double r
     }
 }
 /**
- Create a gray pixel elliptical map in phi using coordinates defined in loc,
-center defined using cx, cy, radii of rx, ry, and value of val */
+   Create a gray pixel elliptical map in phi using coordinates defined in loc,
+   center defined using cx, cy, radii of rx, ry, and value of val */
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val){
     /*cx,cy,r are in unit of true unit, as in loc */
@@ -1239,7 +1200,7 @@ static int parse_poly(double (**pcx)[3], const char *_ps){
    polyn contains the formula
    xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
    ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
- */
+*/
 loc_t *loctransform(loc_t *loc, const char *_polyn){
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
@@ -1363,7 +1324,7 @@ map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
 }
 /**
    ceate a new map_t object from existing one. P is left empty.
- */
+*/
 map_t *mapnew2(map_t* A){
     map_t *map=realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
     map->h=A->h;
@@ -1522,64 +1483,64 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
    reverse = 1 : from out to oin: in=in*beta+out*alpha
 */
 #define LOC_EMBED_DEF(X, T, R, REAL)					\
-void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
-		      loc_t *restrict loc,				\
-		      R *restrict oin, double beta, int reverse){	\
-    locstat_t *restrict locstat=loc->stat;				\
-    if(!*out){								\
-	if(reverse == 0){						\
-	    *out=X(new)(locstat->nx, locstat->ny);			\
-	}else{								\
-	    error("For reverse embedding the array needs to be non-empty\n"); \
-	}								\
-    }else{								\
-	if((*out)->nx < locstat->nx || (*out)->ny < locstat->ny){	\
-	    error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n",	\
-		  (*out)->nx, (*out)->ny, locstat->nx, locstat->ny); \
-	}								\
-    }									\
-    T (*restrict p)[(*out)->nx]=(void *)(*out)->p;			\
-    double dx1=1./locstat->dx;						\
-    long xoff0=((*out)->nx - locstat->nx +1)/2;			\
-    long yoff0=((*out)->ny - locstat->ny +1)/2;			\
-									\
-    for(long icol=0; icol<locstat->ncol; icol++){			\
-	long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1); \
-	long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
-	long pos1=locstat->cols[icol].pos;				\
-	long pos2=locstat->cols[icol+1].pos;				\
-	T *restrict dest=&p[yoff+yoff0][xoff+xoff0];			\
-	if(!reverse){							\
-	    if(oin){							\
-		const R *restrict oin2=oin+pos1;			\
-		if(fabs(alpha)>EPS){					\
-		    for(long ix=0; ix<pos2-pos1; ix++){			\
-			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;		\
-		    }							\
-		}else{							\
-		    for(long ix=0; ix<pos2-pos1; ix++){			\
-			dest[ix]=oin2[ix]*beta;				\
-		    }							\
-		}							\
+    void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
+			  loc_t *restrict loc,				\
+			  R *restrict oin, double beta, int reverse){	\
+	locstat_t *restrict locstat=loc->stat;				\
+	if(!*out){							\
+	    if(reverse == 0){						\
+		*out=X(new)(locstat->nx, locstat->ny);			\
 	    }else{							\
-		if(fabs(alpha)>EPS){					\
-		    for(long ix=0; ix<pos2-pos1; ix++){			\
-			dest[ix]=dest[ix]*alpha+beta;			\
-		    }							\
-		}else{							\
-		    for(long ix=0; ix<pos2-pos1; ix++){			\
-			dest[ix]=beta;					\
-		    }							\
-		}							\
+		error("For reverse embedding the array needs to be non-empty\n"); \
 	    }								\
 	}else{								\
-	    R *restrict oin2=oin+pos1;					\
-	    if(fabs(beta)>EPS){						\
-		for(long ix=0; ix<pos2-pos1; ix++){			\
-		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);	\
+	    if((*out)->nx < locstat->nx || (*out)->ny < locstat->ny){	\
+		error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n", \
+		      (*out)->nx, (*out)->ny, locstat->nx, locstat->ny); \
+	    }								\
+	}								\
+	T (*restrict p)[(*out)->nx]=(void *)(*out)->p;			\
+	double dx1=1./locstat->dx;					\
+	long xoff0=((*out)->nx - locstat->nx +1)/2;			\
+	long yoff0=((*out)->ny - locstat->ny +1)/2;			\
+									\
+	for(long icol=0; icol<locstat->ncol; icol++){			\
+	    long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1); \
+	    long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1); \
+	    long pos1=locstat->cols[icol].pos;				\
+	    long pos2=locstat->cols[icol+1].pos;			\
+	    T *restrict dest=&p[yoff+yoff0][xoff+xoff0];		\
+	    if(!reverse){						\
+		if(oin){						\
+		    const R *restrict oin2=oin+pos1;			\
+		    if(fabs(alpha)>EPS){				\
+			for(long ix=0; ix<pos2-pos1; ix++){		\
+			    dest[ix]=dest[ix]*alpha+oin2[ix]*beta;	\
+			}						\
+		    }else{						\
+			for(long ix=0; ix<pos2-pos1; ix++){		\
+			    dest[ix]=oin2[ix]*beta;			\
+			}						\
+		    }							\
+		}else{							\
+		    if(fabs(alpha)>EPS){				\
+			for(long ix=0; ix<pos2-pos1; ix++){		\
+			    dest[ix]=dest[ix]*alpha+beta;		\
+			}						\
+		    }else{						\
+			for(long ix=0; ix<pos2-pos1; ix++){		\
+			    dest[ix]=beta;				\
+			}						\
+		    }							\
 		}							\
 	    }else{							\
-		for(long ix=0; ix<pos2-pos1; ix++){			\
+		R *restrict oin2=oin+pos1;				\
+		if(fabs(beta)>EPS){					\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
+			oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);	\
+		    }							\
+		}else{							\
+		    for(long ix=0; ix<pos2-pos1; ix++){			\
 		    oin2[ix]=alpha*REAL(dest[ix]);			\
 		}							\
 	    }								\

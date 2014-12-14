@@ -27,6 +27,7 @@
 #include "type.h"
 /*Obtain from SuiteSparse ss_multiply. Gather together */
 typedef spint SS_INT;
+#define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 #ifdef USE_COMPLEX
 #ifdef USE_SINGLE
@@ -36,8 +37,6 @@ typedef spint SS_INT;
 #define SS_IMAG(x) cimagf(x)
 #define SS_CONJ(x) conjf(x)
 #define SS_ABS(x) cabsf(x)
-#define SS_MAX(a,b) ((cabsf(a) > cabsf(b)) ? (a) : (b))
-#define SS_MIN(a,b) ((cabsf(a) < cabsf(b)) ? (a) : (b))
 #else
 #define cs csp
 #define SS_ENTRY dcomplex
@@ -45,8 +44,6 @@ typedef spint SS_INT;
 #define SS_IMAG(x) cimag(x)
 #define SS_CONJ(x) conj(x)
 #define SS_ABS(x) cabs(x)
-#define SS_MAX(a,b) ((cabs(a) > cabs(b)) ? (a) : (b))
-#define SS_MIN(a,b) ((cabs(a) < cabs(b)) ? (a) : (b))
 #endif
 #else
 #ifdef USE_SINGLE
@@ -56,8 +53,6 @@ typedef spint SS_INT;
 #define SS_IMAG(x) (0.)
 #define SS_CONJ(x) (x)
 #define SS_ABS(x) fabsf(x)
-#define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define SS_MIN(a,b) (((a) < (b)) ? (a) : (b))
 #else
 #define cs dsp
 #define SS_ENTRY double
@@ -65,8 +60,6 @@ typedef spint SS_INT;
 #define SS_IMAG(x) (0.)
 #define SS_CONJ(x) (x)
 #define SS_ABS(x) fabs(x)
-#define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define SS_MIN(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 #endif
 

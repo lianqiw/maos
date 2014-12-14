@@ -213,8 +213,8 @@ void X(cwm)(X(mat) *A, const X(mat) *B){
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
 void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2){
-    int has_b1=B1 && ABS(wt1)>EPS;
-    int has_b2=B2 && ABS(wt2)>EPS;
+    int has_b1=B1 && FABS(wt1)>EPS;
+    int has_b2=B2 && FABS(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	for(long i=0; i<B1->nx*B1->ny; i++){
@@ -244,8 +244,8 @@ void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W,
     if(!W){
 	X(cwm2)(A, B1, wt1, B2, wt2);
     }else{
-	int has_b1=B1 && ABS(wt1)>EPS;
-	int has_b2=B2 && ABS(wt2)>EPS;
+	int has_b1=B1 && FABS(wt1)>EPS;
+	int has_b2=B2 && FABS(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	    for(long i=0; i<B1->nx*B1->ny; i++){
@@ -292,8 +292,8 @@ void X(cwmcol2)(X(mat) *restrict A,
 	error("A cannot be empty\n");
     }
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
-    int has_b1=B1 && ABS(wt1)>EPS;
-    int has_b2=B2 && ABS(wt2)>EPS;
+    int has_b1=B1 && FABS(wt1)>EPS;
+    int has_b2=B2 && FABS(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	for(long ix=0; ix<A->nx; ix++){
@@ -326,8 +326,8 @@ void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,
     if(!W){
 	X(cwmcol2)(A, B1, wt1, B2, wt2);
     }else {
-	int has_b1=B1 && ABS(wt1)>EPS;
-	int has_b2=B2 && ABS(wt2)>EPS;
+	int has_b1=B1 && FABS(wt1)>EPS;
+	int has_b2=B2 && FABS(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	    T (*As)[A->nx]=(T(*)[A->nx])A->p;
@@ -755,7 +755,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	}
 	
 	R norm=SQRT(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum);
-	if(ABS(norm)>1.e-15){
+	if(FABS(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){
 		pMod[imod][ix]*=norm;
@@ -773,7 +773,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 */
 int X(clip)(X(mat) *A, R min, R max){
     if(!A) return 0;
-    if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
+    if(!isfinite(min) && !isfinite(max)) return 0;
     if(max<=min){
 	error("upper light should be larger than lower limit\n");
     }
@@ -895,7 +895,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    error("A is %ldx%ld, B is %ldx%ld. They should match\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	if(FABS(bc)>EPS){
+	if(ABS(bc)>EPS){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }
@@ -948,7 +948,7 @@ static int X(islinear)(const X(mat)*xin){
     R xminl=(xin->p[0]);
     R xmaxl=(xin->p[nmax-1]);
     R xsep=(xmaxl-xminl)/(R)(nmax1);
-    if(FABS(xsep+xminl-xin->p[1])>xsep*1.e-3){
+    if(ABS(xsep+xminl-xin->p[1])>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1646,7 +1646,7 @@ R X(celldiff)(const X(cell) *A, const X(cell) *B){
 */
 int X(cellclip)(X(cell) *Ac, R min, R max){
     if(!Ac || !Ac->p) return 0;
-    if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
+    if(!isfinite(min) && !isfinite(max)) return 0;
     int nclip=0;
     for(long i=0; i<Ac->nx*Ac->ny; i++){
 	nclip+=X(clip)(Ac->p[i],min,max);

@@ -305,22 +305,22 @@ void prop_index(PROPDATA_T *propdata){
     long iphi; double tmp=0; double wt=0;				\
     wt=(1.-dplocx)*(1.-dplocy);						\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
-	if((iphi=abs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
+	if((iphi=fabs(map[nplocy][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
 	else tmp+=invalid_val;						\
     }									\
     wt=(dplocx)*(1.-dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+	if((iphi=fabs(map[nplocy][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
 	else tmp+=invalid_val;						\
     }									\
     wt=(1.-dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
+	if((iphi=fabs(map[nplocy1][nplocx]))) tmp+=(phiin0[iphi]*wt);	\
 	else tmp+=invalid_val;						\
     }									\
     wt=(dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=abs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
+	if((iphi=fabs(map[nplocy1][nplocx1]))) tmp+=(phiin0[iphi]*wt);	\
 	else tmp+=invalid_val;						\
     }									\
     /*We require all two points to be available. To extropolate */	\
@@ -365,7 +365,7 @@ void prop_index(PROPDATA_T *propdata){
 	    long iphi;						\
 	    double wt=fx[jx+1]*fy[jy+1];			\
 	    if(wt>EPS){						\
-		if((iphi=abs(map[jy+nplocy][jx+nplocx]))){	\
+		if((iphi=fabs(map[jy+nplocy][jx+nplocx]))){	\
 		    sum+=wt*phiin0[iphi];			\
 		}else{						\
 		    sum+=invalid_val;				\

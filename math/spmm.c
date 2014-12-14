@@ -95,7 +95,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	    X(spmulvec)(y->p, A, x->p, 't', alpha);
 	}else{
 	    PMAT(y,Y); PMAT(x,X);
-	    if(ABS(alpha-1.)<1.e-100){
+	    if(ABS(alpha-1)<1.e-100){
 		for(long icol=0; icol<A->n; icol++){
 		    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 			for(long jcol=0; jcol<y->nx; jcol++){
@@ -249,7 +249,7 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B,
     /*return C=C+ alpha*(A*B) */
     if(!A || !B) return;
     X(sp) *res=X(ss_multiply)(A, B);
-    if(ABS(scale-1.)>EPS){
+    if(ABS(scale-1)>EPS){
 	X(spscale)(res, scale);
     }
     if(!*C0) 

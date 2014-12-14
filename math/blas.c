@@ -204,14 +204,14 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 */
 void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     const int accuracy=10;//How many terms in Taylor expansion to evaluate
-    const double threshold=10;
+    const R threshold=10;
     X(mat) *m_small=0;
     X(mat) *m_exp1=0, *m_power=0, *m_power1=0;
     //first determine the scaling needed
     int scaling=0;
     {
 	R norm=sqrt(X(norm)(A));
-	scaling=(int)ceil(log2(abs(norm*beta*threshold)));
+	scaling=(int)ceil(log2(FABS(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
     X(add)(&m_small, 0, A, beta*exp2(-scaling));

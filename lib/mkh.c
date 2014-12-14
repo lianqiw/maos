@@ -115,7 +115,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 		double weight=fx[ix]*fy[iy];
 		if(weight>EPS){/*This test fixes the right/top boundary defect*/
 		    long iphi;
-		    if((iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
+		    if((iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))){
 			int ic;//look for duplicates
 			for(ic=bp[iloc]; ic<count; ic++){
 			    if(bi[ic]+1==iphi){
@@ -220,7 +220,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const dmat *ampout,
 		double weight=fx[ix+1]*fy[iy+1];
 		if(weight>EPS){/*This test fixes the right/top boundary defect*/
 		    long iphi;
-		    if((iphi=abs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
+		    if((iphi=labs(loc_map_get(map, nplocx+ix, nplocy+iy)))>0){
 			int ic;//look for duplicates
 			for(ic=bp[iloc]; ic<count; ic++){
 			    if(bi[ic]+1==iphi){
