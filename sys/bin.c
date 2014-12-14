@@ -655,6 +655,15 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     case M_DBL:
 	bitpix=-64;
 	break;
+    case M_INT32:
+	bitpix=32;
+	break;
+    case M_INT16:
+	bitpix=16;
+	break;
+    case M_INT8:
+	bitpix=8;
+	break;
     default:
 	error("Data type is not yet supported.\n");
     }
@@ -709,7 +718,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
    Read fits header.
  */
 int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
-    char line[81];
+    char line[82];//extra space for \n \0
     int end=0;
     int page=0;
     int bitpix=0;
@@ -743,24 +752,38 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	}
 	for(int i=start; i<36; i++){
 	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(!strncmp(line, "COMMENT", 7)){/*this is our custom header*/
-		for(int j=79; j>9; j--){
-		    if(isspace((int)line[j])){
-			line[j]='\n';
-			line[j+1]='\0';
+	    if(!strncmp(line, "END",3)){
+		end=1;
+	    }else{
+		char *hh=line;
+		int length=80;
+		int newline=1;
+		if(!strncmp(line, "COMMENT", 7)){
+		    hh=line+10;
+		    length-=10;
+		    newline=0;
+		}
+		//Remove trailing space.
+		for(int j=length-1; j>=0; j--){
+		    if(isspace((int)hh[j])){
+			hh[j]='\0';
+			length--;
 		    }else{
+			if(newline){
+			    hh[j+1]='\n';
+			    hh[j+2]='\0';
+			}
 			break;
 		    }
 		}
-		int length=strlen(line+10);
-		if(*str){
-		    *str=realloc(*str, strlen(*str)+length+1);
-		}else{
-		    *str=malloc(length+1); (*str)[0]='\0';
+		if(length>0){
+		    if(*str){
+			*str=realloc(*str, strlen(*str)+length+1+newline);
+		    }else{
+			*str=malloc(length+1+newline); (*str)[0]='\0';
+		    }
+		    strcat(*str, hh);
 		}
-		strcat(*str, line+10);
-	    }else if(!strncmp(line, "END",3)){
-		end=1;
 	    }
 	}
 	page++;
@@ -771,6 +794,15 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	break;
     case -64:
 	*magic=M_DBL;
+	break;
+    case 32:
+	*magic=M_INT32;
+	break;
+    case 16:
+	*magic=M_INT16;
+	break;
+    case 8:
+	*magic=M_INT8;
 	break;
     default:
 	error("Invalid\n");

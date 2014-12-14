@@ -88,6 +88,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 	warning("Error happened while reading: %s\n", strerror(errno));	\
     }
 int zfeof(file_t *fp);
+long zftell(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfwritelarr(file_t *fp, int count, ...);
 void zfreadlarr(file_t* fp,int count, ...);

@@ -372,7 +372,13 @@ int zfseek(file_t *fp, long offset, int whence){
 	return fseek((FILE*)fp->p,offset,whence);
     }
 }
-
+long zftell(file_t *fp){
+    if(fp->isgzip){
+	return gztell((voidp)fp->p);
+    }else{
+	return ftell((FILE*)fp->p);
+    }
+}
 int zfeof(file_t *fp){
     return zfseek(fp, 1, SEEK_CUR);
 }
@@ -487,6 +493,15 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     case M_DBL:
 	bitpix=-64;
 	break;
+    case M_INT32:
+	bitpix=32;
+	break;
+    case M_INT16:
+	bitpix=16;
+	break;
+    case M_INT8:
+	bitpix=8;
+	break;
     default:
 	bitpix=0;
 	error("Data type is not yet supported.\n");
@@ -513,7 +528,8 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	FLUSH_OUT;
 	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
     }
-    if(str){
+    if(str){/*We wrap our header in COMMENT section to avoid dealing with name
+	     * length limit*/
 	const char *str2=str+strlen(str);
 	while(str<str2){
 	    char *nl=strchr(str, '\n');
@@ -542,7 +558,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
    Read fits header
  */
 int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
-    char line[81];
+    char line[82];//extra space for \n and \0
     int end=0;
     int page=0;
     int bitpix=0;
@@ -550,9 +566,11 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
     while(!end){
 	int start=0;
 	if(page==0){
+	    /*First read mandatory fits headers.*/
 	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
-		info("Garbage in fits file.\n");
+		info("Garbage in fits file at %ld:\n", zftell(fp));
+		info("%s\n", line);
 		return -1;
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0';
@@ -570,29 +588,44 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 		zfread(line, 1, 80, fp); line[80]='\0';
 		if(sscanf(line+10, "%20lu", (long unsigned int*)ny)!=1) error("Unable to determine ny\n");
 	    }else{
-		*ny=0;
+		*ny=1;
 	    }
 	    start=3+naxis;
 	}
 	for(int i=start; i<36; i++){
 	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(!strncmp(line, "COMMENT", 7)){
-		for(int j=79; j>9; j--){
-		    if(isspace((int)line[j])){
-			line[j]='\0';
+	    if(!strncmp(line, "END",3)){
+		end=1;
+	    }else{
+		char *hh=line;
+		int length=80;
+		int newline=1;
+		if(!strncmp(line, "COMMENT", 7)){
+		    hh=line+10;
+		    length-=10;
+		    newline=0;
+		}
+		//Remove trailing space.
+		for(int j=length-1; j>=0; j--){
+		    if(isspace((int)hh[j])){
+			hh[j]='\0';
+			length--;
 		    }else{
+			if(newline){
+			    hh[j+1]='\n';
+			    hh[j+2]='\0';
+			}
 			break;
 		    }
 		}
-		int length=strlen(line+10);
-		if(*str){
-		    *str=realloc(*str, strlen(*str)+length+1);
-		}else{
-		    *str=malloc(length+1); (*str)[0]='\0';
+		if(length>0){
+		    if(*str){
+			*str=realloc(*str, strlen(*str)+length+1+newline);
+		    }else{
+			*str=malloc(length+1+newline); (*str)[0]='\0';
+		    }
+		    strcat(*str, hh);
 		}
-		strcat(*str, line+10);
-	    }else if(!strncmp(line, "END",3)){
-		end=1;
 	    }
 	}
 	page++;

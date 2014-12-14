@@ -231,7 +231,7 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 		out=cspreaddata(fp, header);break;
 	    case M_ZSP64: case M_ZSP32:
 		out=zspreaddata(fp, header);break;	
-	    default:error("id=%lx\n", id);
+	    default:error("data type %lx not supported\n", id);
 	    }
 	    break;
 	case 1:{/*read a cell from fits*/
