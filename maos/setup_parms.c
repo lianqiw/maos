@@ -1351,14 +1351,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(lgspowfs!=-1){
 		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
 		//Set TWFS integration start time to LGS matched filter acc step
-		if(parms->powfs[lgspowfs].dither){
-		    if(parms->powfs[tpowfs].dtrat<1){
-			parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
-			warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[lgspowfs].dither_nskip);
-			int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
-			parms->powfs[tpowfs].dtrat=mtchdtrat;
-			warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
-		    }
+		if(parms->powfs[tpowfs].dtrat<1){
+		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
+		    warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[lgspowfs].dither_nskip);
+		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
+		    parms->powfs[tpowfs].dtrat=mtchdtrat;
+		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
 		}
 	    }
 	}

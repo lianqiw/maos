@@ -270,6 +270,7 @@ static void filter_cl(SIM_T *simu){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
 	//Do not reference the data, even for dtrat==1
+	if(!parms->powfs[ipowfs].psol || !parms->powfs[ipowfs].dtrat) continue;
 	double alpha=(simu->isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
 	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
     }

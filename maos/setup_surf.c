@@ -299,6 +299,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    if(ncover!=nwfs){
 		if(ncover==0) error("wfscover has zero length\n");
 		warning("wfscover has wrong length of %d, expect %d\n", ncover, nwfs);
+		wfscover=realloc(wfscover, sizeof(int)*nwfs);
 		int val;
 		if(parms->sim.skysim){
 		    val=wfscover[ncover-1];
