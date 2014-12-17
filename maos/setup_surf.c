@@ -333,6 +333,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->sim.ncpa_calib){
 	    CALL_THREAD(tdata_ncpa, 0);
 	}
+	//writebin(powfs[0].opdadd->p[0], "wfs0_%d_%s", isurf,  fn);
 	mapfree(surf);
     }
     free(evlcover);
@@ -398,6 +399,12 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 			      displace[0], displace[1], 
 			      scale,parms->dm[idm].cubic,parms->dm[idm].iac);
 	}
+    }
+    if(recon->actinterp){
+	warning("Replacing HA by HA*actinterp");
+	dspcell *HA2=dspcellmulspcell(recon->HA_ncpa, recon->actinterp, 1);
+	dspcellfree(recon->HA_ncpa);
+	recon->HA_ncpa=HA2;
     }
     toc2(" ");
     if(parms->save.setup){
@@ -536,18 +543,30 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf || parms->ntsurf){
 	    error("Please disable surf and tsurf when load.ncpa is set\n");
 	}
-	aper->opdadd=dcellread("surfevl.bin");
-	aper->opdfloc=dcellread("surffloc.bin");
-	if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
-	    error("opdadd is in wrong format\n");
+	if(zfexist("surfevl.bin")){
+	    aper->opdadd=dcellread("surfevl.bin");
+	    if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
+		error("surfevl is in wrong format\n");
+	    }	
+	}else{
+	    warning("surfevl.bin does not exist\n");
 	}
-	if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
-	    error("opdfloc is in wrong foramt\n");
+	if(zfexist("surffloc.bin")){
+	    aper->opdfloc=dcellread("surffloc.bin");
+	    if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
+		error("opdfloc is in wrong foramt\n");
+	    }
+	}else{
+	    warning("surffloc.bin does not exist. dm_ncpa will be zero\n");
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    powfs[ipowfs].opdadd=dcellread("surfpowfs_%d.bin", ipowfs);
-	    if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
-		error("surfpowfs_%d is in wrong format\n", ipowfs);
+	    if(zfexist("surfpowfs_%d.bin", ipowfs)){
+		powfs[ipowfs].opdadd=dcellread("surfpowfs_%d.bin", ipowfs);
+		if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
+		    error("surfpowfs_%d is in wrong format\n", ipowfs);
+		}
+	    }else{
+		warning("surfpowfs_%d.bin does not exist\n", ipowfs);
 	    }
 	}
     }else{
@@ -607,6 +626,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    FitR_NCPA(&rhs, recon, aper);
 	    int maxit=40;
 	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
+	    //don't extrapolate dm_ncpa here.
 	    dcellfree(rhs);
 	    writebin(recon->dm_ncpa, "dm_ncpa");
 	    dspcellfree(recon->HA_ncpa);

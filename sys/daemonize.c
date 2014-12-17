@@ -63,8 +63,8 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 	int op=LOCK_EX;
 	if(!block) op |= LOCK_NB;
 	if(flock(fd, op)){/*lock faild. */
+	    perror("flock");
 	    if(block){/*In block mode, we should never fail. */
-		perror("flock");
 		error("Lock failed\n");
 	    }
 	    long pid=0;

@@ -1540,7 +1540,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 static void
 setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     recon->GRall=cellnew(parms->npowfs, 1);
-    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, 15, 1);
+    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, 5, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, 'n', 1);

@@ -299,9 +299,14 @@ static void filter_cl(SIM_T *simu){
 	    }
 	}
     }
+    //Extrapolate to edge actuators
+    if(simu->recon->actinterp && !parms->recon.modal){
+	dcellzero(simu->dmcmdfull);
+	dcellmm(&simu->dmcmdfull, simu->recon->actinterp, simu->dmcmd, "nn", 1);
+    }
     /*hysteresis. */
     if(simu->hyst){
-	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmdfull);
     }
     if(simu->zoomerr){/*gain was already applied on zoomerr*/
     dcp(&simu->zoomreal, simu->zoomint);
@@ -368,9 +373,14 @@ static void filter_ol(SIM_T *simu){
     if(simu->ttmreal){
 	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
     }
+    //Extrapolate to edge actuators
+    if(simu->recon->actinterp && !simu->parms->recon.modal){
+	dcellzero(simu->dmcmdfull);
+	dcellmm(&simu->dmcmdfull, simu->recon->actinterp, simu->dmcmd, "nn", 1);
+    }
     /*hysterisis. */
     if(simu->hyst){
-	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmdfull);
     }
     /*moao DM is already taken care of automatically.*/
 }
@@ -423,13 +433,6 @@ void filter_dm(SIM_T *simu){
 	filter_cl(simu);
     }else{
 	filter_ol(simu);
-    }
-    if(!parms->recon.modal && simu->recon->actinterp && !parms->tomo.psol){
-	/*make floating actuators averag of neighbor.*/
-	dcell *tmp=NULL;
-	dcellmm(&tmp, simu->recon->actinterp, simu->dmreal, "nn", 1);
-	dcellcp(&simu->dmreal, tmp);
-	dcellfree(tmp);
     }
 #if USE_CUDA
     if(simu->recon->moao){

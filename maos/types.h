@@ -505,12 +505,12 @@ typedef struct SIM_T{
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
-    dcell *dmcmd;      /**<This is the command send to DM (known to RTC).*/
+    dcell *dmcmd;      /**<This is the DM command before extrapolation.*/
+    dcell *dmcmdfull;  /**<This is the final DM command send to DME (known to RTC).*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
     dmat *ttmreal;
-    dcell *dmcmdlast; /**<The command for last time step (known to RTC).*/
     mapcell *dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/

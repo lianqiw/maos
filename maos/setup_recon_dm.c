@@ -282,6 +282,18 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	dspcelladd(&recon->actinterp, interp2);
 	dspcellfree(interp2);
     }
+    if(recon->actinterp){
+	/*
+	  DM fitting output a is extrapolated to edge actuators by
+	  actinterp*a. The corresponding ray tracing from DM would be
+	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
+	  account during DM fitting.
+	 */
+	warning("Replacing HA by HA*actinterp");
+	dspcell *HA2=dspcellmulspcell(recon->HA, recon->actinterp, 1);
+	dspcellfree(recon->HA);
+	recon->HA=HA2;
+    }
     if(parms->save.setup && recon->actinterp){
 	writebin(recon->actinterp, "%s/actinterp", dirsetup);
     }

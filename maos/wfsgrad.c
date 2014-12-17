@@ -908,6 +908,7 @@ static void dither_update(SIM_T *simu){
 		//Build radial mode error using closed loop TWFS measurements from this time step.
 		dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
 		writebin(simu->gradcl->p[parms->nwfsr-1], "twfs_gcl_%d", simu->isim);
+		writebin(Rmod, "twfs_rmod_%d", simu->isim);
 		if(!powfs[ipowfs].gradoff){
 		    powfs[ipowfs].gradoff=dcellnew(nwfs, 1);
 		}
@@ -922,7 +923,7 @@ static void dither_update(SIM_T *simu){
 				"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 		    }
 		}
-		writebin(powfs[ipowfs].gradoff, "gradoff_%d", simu->isim);
+		writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff_%d", ipowfs, simu->isim);
 		dcellfree(Rmod);
 	    }
 	}

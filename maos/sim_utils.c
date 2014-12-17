@@ -1079,6 +1079,7 @@ static void init_simu_dm(SIM_T *simu){
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
     simu->dmcmd=cellnew(parms->ndm,1);
     simu->dmreal=cellnew(parms->ndm,1);
+    simu->dmcmdfull=cellnew(parms->ndm,1);
     if(parms->sim.lpttm>EPS){
 	simu->ttmreal=dnew(2,1);
     }
@@ -1090,10 +1091,15 @@ static void init_simu_dm(SIM_T *simu){
     }
     for(int idm=0; idm<parms->ndm; idm++){
 	simu->dmcmd->p[idm]=dnew(recon->anloc->p[idm],1);
+	if(recon->actinterp && !parms->recon.modal){
+	    simu->dmcmdfull->p[idm]=dnew(recon->anloc->p[idm],1);
+	}else{
+	    simu->dmcmdfull->p[idm]=dref(simu->dmcmd->p[idm]);
+	}
 	if(simu->hyst){
 	    simu->dmreal->p[idm]=dnew(recon->anloc->p[idm],1);
 	}else{
-	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
+	    simu->dmreal->p[idm]=dref(simu->dmcmdfull->p[idm]);
 	}
 	if(simu->dmrealsq){
 	    simu->dmrealsq->p[idm]=mapnew2(recon->amap->p[idm]);
@@ -1467,6 +1473,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmproj);
     cellfree(simu->wfspsol);
     dcellfree(simu->dmcmd);
+    dcellfree(simu->dmcmdfull);
     dcellfree(simu->dmadd);
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
