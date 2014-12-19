@@ -175,8 +175,10 @@ void rename_file(int sig){
     draw_final(0);
     if(disable_save) return;
     if(sig==0){
+	remove("run_done.log");
 	rename("run_recent.log", "run_done.log");
 	mysymlink("run_done.log", "run_recent.log");
+	remove("maos_done.conf");
 	rename("maos_recent.conf", "maos_done.conf");
 	mysymlink("maos_done.conf", "maos_recent.conf");
     }
@@ -394,12 +396,6 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 		drawopd("Goffx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
 			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
 		drawopd("Goffy",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p+nsa, NULL,
-			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
-	    }
-	    if(powfs[ipowfs].gradoffcog){
-		drawopd("Goffcogx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoffcog->p[jwfs]->p,NULL,
-			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		drawopd("Goffcogy",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoffcog->p[jwfs]->p+nsa, NULL,
 			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 	    }
 	}
@@ -683,7 +679,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 typedef struct {
     const PARMS_T *parms;
     const POWFS_T *powfs;
-    dmat *ints;
+    const dmat *ints;
     ccell *fotf;
     ccell *otf;//temporary.
     double bkgrnd;
@@ -696,7 +692,7 @@ typedef struct {
   The function to evaluate the result at x.
 */
 static double mapfun(double *x, mapdata_t *info){
-    dmat *ints=info->ints;
+    const dmat *ints=info->ints;
     ccell *fotf=info->fotf;
     ccell *otf=info->otf;
     const PARMS_T *parms=info->parms;
@@ -749,7 +745,7 @@ static double mapfun(double *x, mapdata_t *info){
 /**
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;
 */
-void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+void maxapriori(double *g, const dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
 		double bkgrnd, double rne){
     int ipowfs=parms->wfs[iwfs].powfs;
@@ -830,4 +826,76 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
     //use average of two places during accumulation and scale
     *cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
     *ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
+}
+
+/**
+   Calculate gradients using current specified algorithm
+*/
+void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype){
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int nsa=powfs[ipowfs].pts->nsa;
+    const double rne=parms->powfs[ipowfs].rne;
+    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
+    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+    dmat **mtche=NULL;
+    double *i0sum=NULL;
+    if(phytype==1){
+	if(powfs[ipowfs].intstat->mtche->ny==1){
+	    mtche=powfs[ipowfs].intstat->mtche->p;
+	    i0sum=powfs[ipowfs].intstat->i0sum->p;
+	}else{
+	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+	    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
+	}
+    }
+    const double *srot=(parms->powfs[ipowfs].radpix)?powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    /*output directly to simu->gradcl. replace */
+    if(!*pgrad){
+	*pgrad=dnew(nsa*2, 1);
+    }
+    double *pgradx=(*pgrad)->p;
+    double *pgrady=pgradx+nsa;
+    for(int isa=0; isa<nsa; isa++){
+	double geach[3]={0,0,1};
+	switch(phytype){
+	case 1:{
+	    dmulvec(geach, mtche[isa],ints[isa]->p,1.);
+	    if(parms->powfs[ipowfs].mtchscl){
+		double scale=i0sum[isa]/dsum(ints[isa]);
+		geach[0]*=scale;
+		geach[1]*=scale;
+	    }
+	}
+	    break;
+	case 2:{
+	    dcog(geach,ints[isa],0.,0.,
+		 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
+		 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+	    geach[0]*=pixthetax;
+	    geach[1]*=pixthetay;
+	    if(srot){
+		double theta=srot[isa];
+		double cx=cos(theta);
+		double sx=sin(theta);
+		double tmp=geach[0]*cx-geach[1]*sx;
+		geach[1]=geach[0]*sx+geach[1]*cx;
+		geach[0]=tmp;
+	    }
+	}
+	    break;
+	case 3:{
+	    geach[0]=pgradx[isa];//warm restart
+	    geach[1]=pgrady[isa];
+	    maxapriori(geach, ints[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
+	}
+	    break;
+	default:
+	    error("Invalid");
+	}
+	
+	pgradx[isa]=geach[0];
+	pgrady[isa]=geach[1];
+    }//for isa
 }

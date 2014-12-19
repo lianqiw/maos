@@ -342,19 +342,19 @@ void X(cellmm)(X(cell) **C0, const void *A_, const X(cell) *B, const char trans[
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 #if _OPENMP >= 200805
-#pragma omp task firstprivate(ix,iy)
+#pragma omp task firstprivate(ix,iy) if(nx*ny>1)
 #endif
 	    for(int iz=0; iz<nz; iz++){
 		if(A->p[ix*ax+iz*az] && B->p[iz*bz+iy*by]){
 		    switch(A->p[ix*ax+iz*az]->id){
 		    case M_T://dense A
-			X(mm)(&C->p[ix+iy*nx],1.,X(mat_cast)(A->p[ix*ax+iz*az]), B->p[iz*bz+iy*by],trans,alpha);
+			X(mm)(C->p+ix+iy*nx,1.,X(mat_cast)(A->p[ix*ax+iz*az]), B->p[iz*bz+iy*by],trans,alpha);
 			break;
 		    case M_SPT:
 			if(trans[1]!='n'){
 			    error("Not implemented\n");
 			}
-			X(spmm)(&C->p[ix+iy*nx],(X(sp*))A->p[ix*ax+iz*az], B->p[iz*bz+iy*by],trans[0],alpha);
+			X(spmm)(C->p+ix+iy*nx,(X(sp*))A->p[ix*ax+iz*az], B->p[iz*bz+iy*by],trans[0],alpha);
 			break;
 		    }
 		}

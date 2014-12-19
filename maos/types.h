@@ -150,7 +150,6 @@ typedef struct POWFS_T{
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
-    dcell *gradoffcog;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     PYWFS_T *pywfs;     /**<For pyramid WFS*/
 }
@@ -538,10 +537,10 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
+    dcell *LGSfocus;  /**<Temporary array*/
     dcell *deltafocus; /**<focus difference between science and ngs estimated from opdr*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
-    double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
-    dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
+    double ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/
     dmat *zoomint;    /**<Trombone integrator*/
     dmat *zoomavg;    /**<Trombone averager from gradients*/

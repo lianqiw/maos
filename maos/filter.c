@@ -308,9 +308,10 @@ static void filter_cl(SIM_T *simu){
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmdfull);
     }
-    if(simu->zoomerr){/*gain was already applied on zoomerr*/
-    dcp(&simu->zoomreal, simu->zoomint);
-	dadd(&simu->zoomint, 1, simu->zoomerr, parms->sim.zoomgain);
+    if(simu->zoomerr){
+	/*The zoomerr is ZoH, so reduce gain by dtrat*/
+	dcp(&simu->zoomreal, simu->zoomint);
+	dadd(&simu->zoomint, 1, simu->zoomerr, parms->sim.zoomgain/parms->sim.zoomdtrat);
     }
     if(recon->moao && !parms->gpu.moao){
 	warning_once("moao filter implemented with LPF\n");

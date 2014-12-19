@@ -35,11 +35,12 @@ void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat* field
 void display_server(int sock);
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);
 dmat *mkamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din);
-void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+void maxapriori(double *g, const dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
 		double bkgrnd, double rne);
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
 void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs);
 double wfsfocusadj(SIM_T *simu, int iwfs);
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam);
+void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
 #endif

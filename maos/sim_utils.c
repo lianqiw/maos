@@ -780,12 +780,11 @@ static void init_simu_wfs(SIM_T *simu){
 	}
     }
     if(parms->sim.mffocus){
-	if(fabs(parms->sim.lpfocus)<1.e-15){
+	if(fabs(parms->sim.lpfocushi)<1.e-15){
 	    error("When mffocus is nonzero, lpfocus need to be non zero\n");
 	}
 	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
-	simu->ngsfocuslpf=cellnew(1,1);
-	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
+	simu->ngsfocuslpf=0;
     }
     if(parms->nphypowfs){
 	simu->upterr_store=cellnew(nwfs,1);
@@ -1528,6 +1527,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
+    dcellfree(simu->LGSfocus);
     dfree(simu->lgsfocuslpf);
     cellfree(simu->ints);
     cellfree(simu->wfspsfout);

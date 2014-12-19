@@ -474,7 +474,6 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    }		
 	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
 	    double a=(R4-b)/R2;
-	    info("a=%g, b=%g\n", a,b);
 	    double var=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){

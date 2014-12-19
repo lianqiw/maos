@@ -75,6 +75,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
     }
     const int nsa=powfs[ipowfs].pts->nsa;
+    //Prevent printing of NEA during recomputing of matched filter
+    const int print_nea=intstat->mtche?0:1;
     dcellfree(intstat->mtche);
     dfree(intstat->i0sum);
 
@@ -303,48 +305,50 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		  ncrdisable, nsa);
 	}
     }/*ii0 */
-    info2("Matched filter sanea:\n");
-    if(powfs[ipowfs].sprint){/*print nea for select subapertures.*/
-	for(int ii0=0; ii0<ni0; ii0++){
-	    int illt=0;
-	    if(ni0==parms->powfs[ipowfs].llt->n){
-		illt=ii0;
-	    }else if(ni0==parms->powfs[ipowfs].nwfs && parms->powfs[ipowfs].llt->n==1){
-		illt=0;
-	    }else{
-		error("Invalid combination\n");
-	    }
-	    info2("llt %d:\n",illt);
-	    info2("sa index   dist   noise equivalent angle\n");
-	    PDMAT(sanea->p[ii0], psanea);
-	    for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
-		int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
-		if(isa>0){
-		    info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
-			  isa, powfs[ipowfs].srsa->p[illt]->p[isa], 
-			  sqrt(psanea[0][isa])*206265000,
-			  sqrt(psanea[1][isa])*206265000);
+    if(print_nea){
+	info2("Matched filter sanea:\n");
+	if(powfs[ipowfs].sprint){/*print nea for select subapertures.*/
+	    for(int ii0=0; ii0<ni0; ii0++){
+		int illt=0;
+		if(ni0==parms->powfs[ipowfs].llt->n){
+		    illt=ii0;
+		}else if(ni0==parms->powfs[ipowfs].nwfs && parms->powfs[ipowfs].llt->n==1){
+		    illt=0;
+		}else{
+		    error("Invalid combination\n");
+		}
+		info2("llt %d:\n",illt);
+		info2("sa index   dist   noise equivalent angle\n");
+		PDMAT(sanea->p[ii0], psanea);
+		for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
+		    int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
+		    if(isa>0){
+			info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
+			      isa, powfs[ipowfs].srsa->p[illt]->p[isa], 
+			      sqrt(psanea[0][isa])*206265000,
+			      sqrt(psanea[1][isa])*206265000);
+		    }
 		}
 	    }
+	}else{
+	    for(int ii0=0; ii0<ni0; ii0++){
+		info2("ii0=%d:\n",ii0);
+		PDMAT(sanea->p[ii0], psanea);
+		double dsa=powfs[ipowfs].saloc->dx;
+		double llimit=-dsa/2;
+		double ulimit=dsa/2;
+		info2("sa index: radius   noise equivalent angle\n");
+		for(int isa=0; isa<nsa; isa++){
+		    double locx=powfs[ipowfs].saloc->locx[isa];
+		    double locy=powfs[ipowfs].saloc->locy[isa];
+		    if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
+			info2("sa %5d: %5.1f m, (%6.2f, %6.2f) mas\n", 
+			      isa, locx, sqrt(psanea[0][isa])*206265000,
+			      sqrt(psanea[1][isa])*206265000);
+		    }
+		}/*isa  */
+	    }/*ii0 */
 	}
-    }else{
-	for(int ii0=0; ii0<ni0; ii0++){
-	    info2("ii0=%d:\n",ii0);
-	    PDMAT(sanea->p[ii0], psanea);
-	    double dsa=powfs[ipowfs].saloc->dx;
-	    double llimit=-dsa/2;
-	    double ulimit=dsa/2;
-	    info2("sa index: radius   noise equivalent angle\n");
-	    for(int isa=0; isa<nsa; isa++){
-		double locx=powfs[ipowfs].saloc->locx[isa];
-		double locy=powfs[ipowfs].saloc->locy[isa];
-		if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
-		    info2("sa %5d: %5.1f m, (%6.2f, %6.2f) mas\n", 
-			  isa, locx, sqrt(psanea[0][isa])*206265000,
-			  sqrt(psanea[1][isa])*206265000);
-		}
-	    }/*isa  */
-	}/*ii0 */
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
 	writebin(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);

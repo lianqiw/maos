@@ -440,6 +440,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->dither){
 	    parms->dither=1;
 	    powfsi->dither_amp*=powfsi->pixtheta;
+	    //Wait 10 cycles for PLL to stablize.
 	    if(powfsi->dither_nskip<10*powfsi->dither_npll+powfsi->dither_pllskip){
 		powfsi->dither_nskip=10*powfsi->dither_npll+powfsi->dither_pllskip;
 	    }
@@ -447,6 +448,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->dither_nmtch*=powfsi->dither_npll;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_nskip*=powfsi->dtrat;
+	    info("powfs[%d].dither_nskip=%d\n", ipowfs, powfsi->dither_nskip);
+	    info("powfs[%d].dither_npll=%d\n", ipowfs, powfsi->dither_npll);	 
+	    info("powfs[%d].dither_ndrift=%d\n", ipowfs, powfsi->dither_ndrift); 
+	    info("powfs[%d].dither_nmtch=%d\n", ipowfs, powfsi->dither_nmtch);
 	}
 	powfsi->modulate/=206265.;
 	powfsi->fov/=206265.;
@@ -1350,14 +1355,17 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    int lgspowfs=parms->ilgspowfs;
 	    if(lgspowfs!=-1){
 		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
-		//Set TWFS integration start time to LGS matched filter acc step
 		if(parms->powfs[tpowfs].dtrat<1){
-		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
-		    warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[lgspowfs].dither_nskip);
 		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
 		    parms->powfs[tpowfs].dtrat=mtchdtrat;
 		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
+		    //Set TWFS integration start time to LGS matched filter acc step
+		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
+		}else if(parms->powfs[lgspowfs].dither){
+		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
+		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}
+		warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[tpowfs].step);
 	    }
 	}
     }
@@ -1527,7 +1535,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     if(parms->sim.fcfocus<=0){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
     }
-    parms->sim.lpfocus=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
+    parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
+    parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dtlo);
     parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
 /**

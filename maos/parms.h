@@ -478,7 +478,8 @@ typedef struct SIM_CFG_T{
     double fcttm;    /**<cross over frequency of tip/tilt split*/
     double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
-    double lpfocus;  /**<derived: lpfocus=2*pi*fc*sim.dt*/
+    double lpfocushi;  /**<derived: lpfocus=2*pi*fc*sim.dthi*/
+    double lpfocuslo;  /**<derived: lpfocus=2*pi*fc*sim.dtlo*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.

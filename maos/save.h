@@ -16,5 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "common.h"
+void save_wfsgrad(SIM_T *simu);
 void save_gradol(SIM_T *simu);
 void save_recon(SIM_T *simu);

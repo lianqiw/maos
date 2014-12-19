@@ -155,8 +155,14 @@ void recon_split(SIM_T *simu){
 	    if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
 		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 		if(parms->sim.mffocus && recon->ngsmod->nmod==6){
-		    simu->ngsfocus=simu->Merr_lo->p[0]->p[5];
-		    simu->Merr_lo->p[0]->p[5]=0;
+		    //Do LPF on focus.
+		    const double lpfocus=parms->sim.lpfocuslo;
+		    double ngsfocus=simu->Merr_lo->p[0]->p[5];
+		    if(parms->sim.mffocus && parms->dbg.deltafocus){
+			ngsfocus+=simu->deltafocus->p[0]->p[0];
+		    }
+		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
+		    simu->Merr_lo->p[0]->p[5]=simu->ngsfocuslpf;
 		}
 	    }/*else: there is ideal NGS correction done in perfevl. */
 	}
@@ -174,20 +180,19 @@ void recon_split(SIM_T *simu){
 		dcell *tmp=NULL;
 		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
 		dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
-		simu->ngsfocus=tmp->p[0]->p[0]; 
+		const double lpfocus=parms->sim.lpfocuslo;
+		double ngsfocus=tmp->p[0]->p[0]; 
+		if(parms->sim.mffocus && parms->dbg.deltafocus){
+		    ngsfocus+=simu->deltafocus->p[0]->p[0];
+		}
+		simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
+		error("Please Implement: add ngsfocus to Merr_lo");
 		dcellfree(tmp);	
 	    }
 	}
 	    break;
 	default:
 	    error("Invalid parms->recon.split: %d\n",parms->recon.split);
-	}
-	if(simu->Merr_lo && parms->sim.mffocus && parms->recon.split==1 && recon->ngsmod->nmod==6){
-	    /*the global focus is handled separately.*/
-	    simu->Merr_lo->p[0]->p[5]=0;
-	}
-	if(parms->sim.mffocus && parms->dbg.deltafocus){
-	    simu->ngsfocus+=simu->deltafocus->p[0]->p[0];
 	}
     }
 }
@@ -276,16 +281,6 @@ void reconstruct(SIM_T *simu){
     
     if(parms->recon.split){//low order reconstruction
 	recon_split(simu);
-    }
-    if(simu->dmerr && simu->gradlastcl){ //High order. 
-	//global focus is the 6th mode in ngsmod->Modes
-	if(parms->sim.mffocus){
-	    //Do LPF on NGS focus measurement to drive global focus
-	    double lpfocus=parms->sim.lpfocus;
-	    simu->ngsfocuslpf->p[0]->p[5]=
-		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
-	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
-	}
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	//For PSF reconstruction.

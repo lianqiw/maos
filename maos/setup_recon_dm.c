@@ -289,7 +289,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
 	  account during DM fitting.
 	 */
-	warning("Replacing HA by HA*actinterp");
+	warning2("Replacing HA by HA*actinterp");
 	dspcell *HA2=dspcellmulspcell(recon->HA, recon->actinterp, 1);
 	dspcellfree(recon->HA);
 	recon->HA=HA2;

@@ -68,7 +68,7 @@ INLINE void THREAD_POOL_INIT(int nthread){
 INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
     (void)urgent;
     for(int it=0; it<nthread; it++){
-#pragma omp task untied
+#pragma omp task 
 	((thread_fun)fun)(arg);
     }
 #pragma omp taskwait
@@ -79,7 +79,7 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
 #define QUEUE(group,fun,arg,nthread,urgent)	\
     (void) group; (void) urgent;		\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task untied")		\
+	_Pragma("omp task")			\
 	fun(arg);				\
     }
 
@@ -93,7 +93,7 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
     (void)group;(void)urgent;			\
     for(int it=0; it<(A)[0].nthread; it++){	\
 	if((A)[it].fun){			\
-	    _Pragma("omp task untied")		\
+	    _Pragma("omp task")			\
 		(A)[it].fun((A)+it);		\
         }					\
     }
@@ -104,7 +104,7 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
     (void) urgent;
     for(int it=0; it<A[0].nthread; it++){		
 	if(A[it].fun){
-#pragma omp task untied
+#pragma omp task
 	    A[it].fun(A+it); 
 	}
     }
@@ -214,7 +214,7 @@ INLINE int atomicadd(int *ptr, int val){
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\
     if(omp_end>end) omp_end=end;			\
-    DO_PRAGMA(omp task untied extra)			\
+    DO_PRAGMA(omp task extra)			\
     for(long index=omp_start; index<omp_end; index++)
 #define OMPTASK_END } _Pragma("omp taskwait")
 #else
@@ -231,7 +231,7 @@ INLINE int atomicadd(int *ptr, int val){
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\
     if(omp_end>end) omp_end=end;			\
-    DO_PRAGMA(omp task untied extra)			\
+    DO_PRAGMA(omp task extra)			\
     for(long index=omp_start; index<omp_end; index++)
 #define ICCTASK_END } _Pragma("omp taskwait")
 #else
@@ -244,7 +244,7 @@ INLINE int atomicadd(int *ptr, int val){
 #define OMPTASK_SINGLE				\
     DO_PRAGMA(omp parallel)			\
     DO_PRAGMA(omp single )			\
-    DO_PRAGMA(omp task untied if(NTHREAD>1))	
+    DO_PRAGMA(omp task if(NTHREAD>1))	
 #else
 #define OMPTASK_SINGLE
 #endif
