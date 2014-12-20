@@ -579,20 +579,38 @@ void wfsgrad_mffocus(SIM_T* simu){
 	long nwfsllt=0; 
 	double lpfocusm=0;
 	double lgsfocusm=0;
+	if(simu->isim==parms->sim.start){
+	    /*Here we set trombone position according to focus in the first
+	     * measurement. And adjust the focus content of this * measurement. */
+	    lgsfocusm=0;
+	    if(parms->sim.zoomshare){
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		    if(!LGSfocus->p[iwfs]) continue;
+		    lgsfocusm+=LGSfocus->p[iwfs]->p[0];
+		    nwfsllt++;
+		}
+		lgsfocusm/=nwfsllt;
+	    }
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		if(!LGSfocus->p[iwfs]) continue;
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->sim.zoomshare){
+		    simu->zoomint->p[iwfs]=lgsfocusm;
+		}else{
+		    simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0]; 
+		}
+		LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->zoomint->p[iwfs]);
+		info2("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
+	    }
+	    lgsfocusm=0;
+	    nwfsllt=0;
+	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    //In RTC. LPF can be put after using the value to put it off critical path.
 	    double lpfocus=parms->sim.lpfocushi;
-	    if(simu->isim==parms->sim.start){
-		/*Here we set trombone position according to focus in the first
-		 * measurement. And adjust the focus content of this
-		 * measurement. */
-		warning("wfs %d: Set trombone position to %g.\n", iwfs, LGSfocus->p[iwfs]->p[0]);
-		simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0];
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->zoomint->p[iwfs]);
-		LGSfocus->p[iwfs]->p[0]=0;
-	    }
 	    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
 	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
 		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);

@@ -390,13 +390,13 @@
 				     cell_tim.innerHTML="Skipped";
 				 }else{
 				     if(cell_btn.firstChild){//change of status
-					 notify('task '+row.cells[cols.PID].innerHTML+' finished on '+hostname2, hostname2, "button-ok.png");
+					 notify('task '+row.cells[cols.PID].innerHTML+' finished on '+hostname2, hostname2+'_ok', "button-ok.png");
 				     }
 				 }
 				 setchild(cell_btn, button_ok);
 			     }else if(i[3]==12 || i[3]==15){//crashed or killed
 				 if(cell_btn.firstChild){//change of status
-				     notify('task '+row.cells[cols.PID].innerHTML+' crashed on '+hostname2, hostname2, "button-err.png");
+				     notify('task '+row.cells[cols.PID].innerHTML+' crashed on '+hostname2, hostname2+'_err', "button-err.png");
 				 }
 				 setchild(cell_btn, button_err);
 				 row.cells[cols.SEED].firstChild.style.background="red";

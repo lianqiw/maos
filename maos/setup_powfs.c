@@ -923,6 +923,25 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	writebin(powfs[ipowfs].sodium, "%s/powfs%d_sodium",dirsetup,ipowfs);
     }
 }
+typedef struct{
+    DTF_T *dtfs;  /**<The dtfs*/
+    double hs;    /**<Guide star focus range*/
+    dcell *sodium;/**<The sodium profile. First column is coordinate.*/
+    int icol;     /**<Which sodium profile to use*/
+    int nwvl;     /**<Number of wavelength*/
+    dcell *srot;  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+    dcell *srsa;  /**<Subaperture to LLT distance*/
+    double za;    /**<Zenith angle*/
+    int no_interp;/**<Use direct sum instead of interpolation + FFT. Slower */
+    int free;     /**<Free this array after using?*/
+}mketf_t;
+void* mketf_wrap(mketf_t *data){
+    info2("Na using column %d.\n",data->icol);
+    ETF_T*result=mketf(data->dtfs, data->hs, data->sodium, data->icol, data->nwvl,
+		       data->srot, data->srsa, data->za, data->no_interp);
+    if(data->free) free(data);
+    return result;
+}
 /**
    Compute Elongation Transfer function.
    - mode=0: for preparation.
@@ -931,50 +950,59 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep){
     if(!parms->powfs[ipowfs].llt) return;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    ETF_T **powfsetf=NULL;
+    mketf_t etfdata={powfs[ipowfs].dtf, 
+		     parms->powfs[ipowfs].hs,
+		     powfs[ipowfs].sodium,
+		     istep,
+		     parms->powfs[ipowfs].nwvl, 
+		     powfs[ipowfs].srot,
+		     powfs[ipowfs].srsa,
+		     parms->sim.za,
+		     !parms->dbg.na_interp, 0};
     if(mode==0){/*preparation. */
 	if(powfs[ipowfs].etfprep && powfs[ipowfs].etfsim!=powfs[ipowfs].etfprep){
 	    etf_free(powfs[ipowfs].etfprep, nwvl);
 	}
-	powfs[ipowfs].etfprep=0;
-	powfsetf=&powfs[ipowfs].etfprep;
+	powfs[ipowfs].etfprep=mketf_wrap(&etfdata);
     }else{/*simulation*/
-	if(mode==1){
+	if(mode==1){/*first pair for interpolation*/
 	    if(powfs[ipowfs].etfsim==powfs[ipowfs].etfprep){
 		powfs[ipowfs].etfsim=0;
 	    }
 	    etf_free(powfs[ipowfs].etfsim, nwvl);
-	    powfs[ipowfs].etfsim=0;
-	    if(istep!=0 && powfs[ipowfs].etfsim2){//cycle through
+	    if(istep!=0 && powfs[ipowfs].etfsim2){//reuse etfsim2 as etfsim
 		powfs[ipowfs].etfsim=powfs[ipowfs].etfsim2;
 		powfs[ipowfs].etfsim2=0;
-		return;
 	    }else{
-		powfsetf=&powfs[ipowfs].etfsim;
+		powfs[ipowfs].etfsim=mketf_wrap(&etfdata);
 	    }
-	}else if(mode==2){
-	    etf_free(powfs[ipowfs].etfsim2, nwvl);
-	    powfs[ipowfs].etfsim2=0;
-	    powfsetf=&powfs[ipowfs].etfsim2;
+	}else if(mode==2){/*second pair for interpolation*/
+	    static pthread_t etfthread=0;
+	    if(powfs[ipowfs].etfsim2){
+		error("etsim2 should be null\n");
+		etf_free(powfs[ipowfs].etfsim2, nwvl);
+	    }
+	    if(etfthread){//preparation already running in a thread
+		pthread_join(etfthread, (void**)&powfs[ipowfs].etfsim2);
+		etfthread=0;
+	    }else{
+		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);
+	    }
+	    //asynchronously preparing for next update.
+	    //Copy data to heap so that they don't disappear during thread execution
+	    mketf_t *etfdata2=calloc(1, sizeof(mketf_t));//freed by mketf_wrap.
+	    memcpy(etfdata2, &etfdata, sizeof(mketf_t));
+	    etfdata2->icol++;
+	    etfdata2->free=1;
+	    if(pthread_create(&etfthread, NULL, (void*(*)(void *))mketf_wrap, etfdata2)){
+		warning("Thread creation failed\n");
+		free(etfdata2);
+		etfthread=0;
+	    }
 	}else{
 	    error("Invalid mode=%d\n", mode);
 	}
     }
-    dcell *sodium=powfs[ipowfs].sodium;
-    if(!sodium){
-	error("Sodium profile is NULL\n");
-    }
-    info2("Na using column %d in %s\n",istep, mode==0?"preparation":"simulation");
-    /*points to the effective sodium profile. */
-    *powfsetf=mketf(powfs[ipowfs].dtf, 
-		    parms->powfs[ipowfs].hs,
-		    powfs[ipowfs].sodium,
-		    istep,
-		    parms->powfs[ipowfs].nwvl, 
-		    powfs[ipowfs].srot,
-		    powfs[ipowfs].srsa,
-		    parms->sim.za,
-		    !parms->dbg.na_interp);
 }
 
 /**
