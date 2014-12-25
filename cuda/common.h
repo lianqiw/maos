@@ -74,19 +74,25 @@ extern "C"{
 }
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
-#define DEBUG_MEM 0
-#if DEBUG_MEM
+int cuda_free(void *p);
 /*static int tot_mem=0; */
 #undef cudaMalloc
+#undef cudaFree
 inline int CUDAMALLOC(Real **p, size_t size){
     return cudaMalloc((Real**)p,size);
 }
 inline int CUDAFREE(Real *p){
-    return cudaFree(p);
+    return cuda_free(p);
 }
+#define DEBUG_MEM 0
+#if DEBUG_MEM
 #define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((Real**)p,size);})
 #define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((Real*)p);})
+#else
+#define cudaMalloc(p,size) CUDAMALLOC((Real**)p,size)
+#define cudaFree(p) CUDAFREE((Real*)p)
 #endif
+
 int current_gpu();
 #define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})

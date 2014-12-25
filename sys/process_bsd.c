@@ -28,7 +28,7 @@
 #include "common.h"
 #include "process.h"
 
-char *get_job_progname(int pid){
+int get_job_progname(char *res, int nres,int pid){
     int mib[4];
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC;
@@ -37,7 +37,8 @@ char *get_job_progname(int pid){
     char buf[PATH_MAX];
     size_t cb = sizeof(buf);
     sysctl(mib, 4, buf, &cb, NULL, 0);
-    return strdup(buf);
+    strncpy(res, nres, path2); res[nres-1]=0;
+    return 0;
 }
 int get_job_mem(void){/*return in KiB */
     int mem;

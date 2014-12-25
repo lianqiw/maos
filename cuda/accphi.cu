@@ -119,8 +119,6 @@ static void atm_prep(atm_prep_t *data){
 static void gpu_atm2gpu_full(map_t **atm, int nps){
     if(!atm) return;
     TIC;tic;
-    int cuda_cache_save=cuda_cache;
-    cuda_cache=0;
     for(int im=0; im<NGPU; im++)
 #if _OPENMP >= 200805 
 #pragma omp task
@@ -135,7 +133,6 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
 #if _OPENMP >= 200805 
 #pragma omp taskwait
 #endif
-    cuda_cache=cuda_cache_save;
     toc2("atm to gpu");
 }
 /**
@@ -198,8 +195,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
 	    }else{
-		nx0=nxa;
-		ny0=nxa;
+		nx0=MIN(nxa, nxn*2);
+		ny0=MIN(nxa, nyn*2);
 	    }
 	    info2("We will host %dx%d in GPU, taking %zd MiB\n", 
 		  nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);

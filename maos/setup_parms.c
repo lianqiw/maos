@@ -441,17 +441,17 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->dither=1;
 	    powfsi->dither_amp*=powfsi->pixtheta;
 	    //Wait 10 cycles for PLL to stablize.
-	    if(powfsi->dither_nskip<10*powfsi->dither_npll+powfsi->dither_pllskip){
-		powfsi->dither_nskip=10*powfsi->dither_npll+powfsi->dither_pllskip;
-	    }
-	    powfsi->dither_ndrift*=powfsi->dither_npll;
-	    powfsi->dither_nmtch*=powfsi->dither_npll;
+	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_nskip*=powfsi->dtrat;
-	    info("powfs[%d].dither_nskip=%d\n", ipowfs, powfsi->dither_nskip);
-	    info("powfs[%d].dither_npll=%d\n", ipowfs, powfsi->dither_npll);	 
-	    info("powfs[%d].dither_ndrift=%d\n", ipowfs, powfsi->dither_ndrift); 
-	    info("powfs[%d].dither_nmtch=%d\n", ipowfs, powfsi->dither_nmtch);
+
+	    powfsi->dither_ndrift*=powfsi->dither_npll;
+	    powfsi->dither_nmtch*=powfsi->dither_npll;
+	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
+	    info2("powfs[%d].dither_nskip=%d simulation frame\n", ipowfs, powfsi->dither_nskip);
+	    info2("powfs[%d].dither_npll=%d WFS frame\n", ipowfs, powfsi->dither_npll);	 
+	    info2("powfs[%d].dither_ndrift=%d WFS frame\n", ipowfs, powfsi->dither_ndrift); 
+	    info2("powfs[%d].dither_nmtch=%d WFS frame\n", ipowfs, powfsi->dither_nmtch);
 	}
 	powfsi->modulate/=206265.;
 	powfsi->fov/=206265.;
@@ -1361,7 +1361,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
 		    //Set TWFS integration start time to LGS matched filter acc step
 		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
-		}else if(parms->powfs[lgspowfs].dither){
+		}else if(parms->powfs[lgspowfs].dither && parms->powfs[tpowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
 		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}

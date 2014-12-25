@@ -35,8 +35,7 @@
 /**
    Get the executable name of current process with full path.
 */
-char *get_job_progname(int pid){
-    char *progname=NULL;
+int get_job_progname(char *res, int nres, int pid){
     char path[PATH_MAX];
     /*readlink doesn't append \0 */
     char procpath[PATH_MAX];
@@ -48,11 +47,11 @@ char *get_job_progname(int pid){
 	if(delt){
 	    delt[0]='\0';
 	}
-	progname=strdup(path);
+	strncpy(res, path, nres); res[nres-1]=0;
     }else{
 	warning("Failed to readlink %s\n", procpath);
     }
-    return progname;
+    return nprog>0?0:1;
 }
 /**
    Get the memory usage of current process.

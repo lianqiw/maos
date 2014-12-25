@@ -41,23 +41,25 @@
 /**
    Get the executable name of current process.
 */
-char *get_job_progname(int pid){
-    char *progname=NULL;
+int get_job_progname(char *res, int nres, int pid){
+    int ans=1;
     if(pid>0){
 	char buf[PATH_MAX];
 	if(proc_pidpath(pid, buf, sizeof(buf))>0){
-	    progname=strdup(buf);
+	    strncpy(res, nres, buf); res[nres-1]=0;
+	    ans=0;
 	}
     }else{
 	char path[PATH_MAX],path2[PATH_MAX];
 	uint32_t size=sizeof(path);
 	if(_NSGetExecutablePath(path,&size)==0){
 	    if(realpath(path,path2)){
-		progname=strdup(path2);
+		strncpy(res, nres, path2); res[nres-1]=0;
+		ans=0;
 	    }
 	}
     }
-    return progname;
+    return ans;
 }
 /**
    Get the memory usage of current process.

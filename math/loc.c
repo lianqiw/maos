@@ -1338,6 +1338,20 @@ map_t *mapnew2(map_t* A){
     map->iac=A->iac;
     return map;
 }
+map_t *mapref(map_t*in){
+    if(!in) return NULL;
+    map_t *out=calloc(1, sizeof(map_t));
+    memcpy(out,in,sizeof(map_t));
+    if(!in->nref){
+	extern quitfun_t quitfun;
+	if(quitfun==&default_quitfun){
+	    warning_once("Referencing non-referenced data. This may cause error.\n");
+	}
+    }else{
+	atomicadd(in->nref, 1);
+    }
+    return out;
+}
 /**
    Create a circular aperture on map_t.
 */

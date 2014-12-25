@@ -44,6 +44,12 @@
    subaperture spacing) grid that defines the circular aperture for tomography.*/
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
+    if(recon->ploc){
+	warning("skip setup_recon_ploc\n");
+	return;
+    }
+    locfree(recon->ploc);
+    cellfree(recon->ploc_tel);
     double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
     if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
 	char *fn=parms->load.ploc;
@@ -83,8 +89,14 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     }
 }
 static void
-setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
+    if(recon->gloc){
+	warning("skip setup_recon_gloc\n");
+	return;
+    }
       //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
+    cellfree(recon->gloc);
+    cellfree(recon->gamp);
     recon->gloc=cellnew(parms->npowfs, 1);
     recon->gamp=cellnew(parms->npowfs, 1);
 
@@ -110,6 +122,17 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 */
 static void 
 setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
+    if(recon->xloc){
+	warning("skip setup_recon_xloc\n");
+	return;
+    }
+    cellfree(recon->xloc);
+    cellfree(recon->xmap);
+    cellfree(recon->xcmap);
+    lfree(recon->xnx);
+    lfree(recon->xny);
+    lfree(recon->xnloc);
+    cellfree(recon->xmcc);
     const int npsr=recon->npsr;
     long nin0=0;
     if(parms->load.xloc){
@@ -189,7 +212,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     for(long i=0; i<recon->npsr; i++){
 	loc_create_map_npad(recon->xloc->p[i], (nin0||parms->tomo.square)?0:1, 
 			    nin0*recon->os->p[i], nin0*recon->os->p[i]);
-	recon->xmap->p[i]=recon->xloc->p[i]->map;
+	recon->xmap->p[i]=mapref(recon->xloc->p[i]->map);
 	recon->xmap->p[i]->h=recon->ht->p[i];
 	recon->xnx->p[i]=recon->xmap->p[i]->nx;
 	recon->xny->p[i]=recon->xmap->p[i]->ny;
@@ -210,6 +233,12 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 */
 static void 
 setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
+    if(recon->HXW){
+	warning("skip setup_recon_HXW\n");
+	return;
+    }
+    cellfree(recon->HXW);
+    cellfree(recon->HXWtomo);
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
@@ -282,7 +311,12 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 */
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    if(recon->GWR){
+	warning("skip setup_recon_GWR\n");
+	return;
+    }
     if(!parms->dbg.usegwr) return;
+    cellfree(recon->GWR);
     recon->GWR=cellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
@@ -300,6 +334,12 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void
 setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    if(recon->GP){
+	warning("skip setup_recon_GP\n");
+	return;
+    }
+    cellfree(recon->GP);
+    cellfree(recon->GP2);
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     dspcell *GP=NULL;
@@ -363,10 +403,14 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void
 setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    if(recon->GA){
+	warning("skip setup_recon_GA\n");
+	return;
+    }
+    cellfree(recon->GA);
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
-    dspcellfree(recon->GA);
     if(parms->load.GA){
 	warning2("Loading saved GA\n");
 	recon->GA=dspcellread("GA");
@@ -390,6 +434,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	info2("Generating GA ");TIC;tic;
 	recon->GA=cellnew(nwfs, ndm);
 	PDSPCELL(recon->GA,GA);
+	if(parms->dbg.usegwr){
+	    setup_recon_GWR(recon, parms, powfs);
+	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
@@ -435,6 +482,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }/*idm */
 	}
     	toc2(" ");
+	dspcellfree(recon->GWR);
     }
     if(parms->save.setup){
 	writebin(recon->GA, "%s/GA",dirsetup);
@@ -511,6 +559,7 @@ static void
 setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
+    cellfree(recon->GX);
     recon->GX=cellnew(nwfs, npsr);
     PDSPCELL(recon->GX,GX);
     PDSPCELL(recon->HXW,HXW);
@@ -567,16 +616,16 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     dspcellfree(recon->sanea);
     dspcellfree(recon->saneai);
     dspcellfree(recon->saneal);
-    dspcell *sanea=recon->sanea=cellnew(nwfs,nwfs);
-    dspcell *saneal=recon->saneal=cellnew(nwfs,nwfs);
-    dspcell *saneai=recon->saneai=cellnew(nwfs,nwfs);
+    dspcell *sanea=recon->sanea=cellnew(nwfs,nwfs);//The subaperture NEA
+    dspcell *saneal=recon->saneal=cellnew(nwfs,nwfs);//The LL' decomposition of sanea
+    dspcell *saneai=recon->saneai=cellnew(nwfs,nwfs);//The inverse of sanea
     info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];
 	int nsa=powfs[ipowfs].pts->nsa;
 	int do_ref=0;
-	if(parms->powfs[ipowfs].neareconfile){/*taks precedance */
+	if(parms->powfs[ipowfs].neareconfile){/*load sanea from file */
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
 	    if(nea && nea->p[0]<1e-11) {
 		error("Supplied NEA is too small\n");
@@ -590,9 +639,17 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dfree(nea);
 	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
 		 !parms->powfs[ipowfs].phyusenea){
-	    /*Physical optics */
+	    /*Physical optics use nea from intstat*/
 	    INTSTAT_T *intstat=powfs[ipowfs].intstat;
 	    if(intstat->saneaxy){
+		if(!intstat->saneaxyl){
+		    intstat->saneaxyl=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//cholesky decomposition
+		    intstat->saneaixy=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//inverse
+		    for(int i=0; i<intstat->saneaxy->nx*intstat->saneaxy->ny; i++){
+			intstat->saneaxyl->p[i]=dchol(intstat->saneaxy->p[i]);
+			intstat->saneaixy->p[i]=dinvspd(intstat->saneaxy->p[i]);
+		    }
+		}
 		const int nnea=intstat->saneaxy->ny;
 		if(parms->recon.glao && nnea!=1){
 		    error("Please average intstat->saneaxy for GLAO mode.\n");
@@ -616,15 +673,15 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    do_ref=1;
 		}
 	    }else{
-		error("Not implemented yet\n");
+		error("Invalid use\n");
 	    }
 	}else{
-	    /*nea scales as sqrt(1/dtrat) */
+	    /*compute nea from nearecon, scaled by area and dtrat. nea scales as sqrt(1/dtrat) */
 	    if(iwfs==iwfs0){
 		const double neasq=pow(parms->powfs[ipowfs].nearecon/206265000.,2)/parms->powfs[ipowfs].dtrat;
 		if(neasq<1.e-30) error("nea is too small\n");
 		dmat *nea=dnew(nsa,2);
-		/*scale neasq by area^-1. (seeing limited) */
+		/*scale neasq by area^-1 if seeing limited */
 		/*scale neasq by area^-2 if diffraction limited */
 		/*only implementing seeing limited here. */
 		PDMAT(nea, neap);
@@ -653,6 +710,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }/*iwfs */
     
     /*Compute the averaged SANEA for each WFS */
+    dfree(recon->neam);
     recon->neam=dnew(parms->nwfsr, 1);
     double neamhi=0; 
     int counthi=0;
@@ -681,6 +739,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	   && parms->powfs[ipowfs].usephy
 	   && parms->powfs[ipowfs].order==1
 	    ){
+	    warning("WFS %d has too much measurement error. Ignore it\n", iwfs);
 	    //Neglecting WFS whos NEA is greater than twice pixel size in
 	    //physical optics mode.
 	    dspfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
@@ -717,14 +776,6 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	writebin(recon->saneal,"%s/saneal",dirsetup);
 	writebin(recon->saneai,"%s/saneai",dirsetup);
     }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(powfs[ipowfs].intstat){
-	    //warning("why free here crash maos?\n");
-	    dcellfree(powfs[ipowfs].intstat->saneaxy);//why 
-	    dcellfree(powfs[ipowfs].intstat->saneaxyl);
-	    dcellfree(powfs[ipowfs].intstat->saneaixy);
-	}
-    }
 }
 /**
    setting up global tip/tilt remove operator from LGS gradients.
@@ -734,6 +785,8 @@ static void
 setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_ttr) return;
     int nwfs=parms->nwfsr;
+    cellfree(recon->TT);
+    cellfree(recon->PTT);
     recon->TT=cellnew(nwfs,nwfs);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -780,10 +833,9 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 static void
 setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_dfr) return;
-    if(recon->DF){ 
-	dcellfree(recon->DF);
-	dcellfree(recon->PDF);
-    }
+    dcellfree(recon->DF);
+    dcellfree(recon->PDF);
+
     int nwfs=parms->nwfsr;
     recon->DF=cellnew(nwfs,nwfs);
     /*Then differential focus modes. */
@@ -826,6 +878,8 @@ static void
 setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     setup_recon_TTR(recon,parms,powfs);
     setup_recon_DFR(recon,parms,powfs);
+    cellfree(recon->TTF);
+    cellfree(recon->PTTF);
     if(recon->DF){
 	recon->TTF=dcellcat(recon->TT,recon->DF,2);
     }else{
@@ -1223,7 +1277,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
 }
 
-static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     if(!parms->sim.ecnn) return;
     /**
        We compute the wavefront estimation error covariance in science focal
@@ -1248,7 +1302,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *
     */
     TIC;tic;
     read_self_cpu();
-	
+    cellfree(recon->ecnn);
     if(0){
 	/*Luc's Method. Solve E^T Hx^T */
 	{
@@ -1348,17 +1402,14 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     setup_recon_tomo_prep(recon, parms); /*redo L2, invpsd */
 #if USE_CUDA
     if(parms->gpu.tomo){
-	gpu_update_recon(parms, recon);
+	gpu_update_recon_cn2(parms, recon);
     }
 #endif
     if(parms->tomo.alg==1&&!parms->tomo.assemble){/*no need to do anything */
 	return;
     }
-    if(parms->tomo.cxx==0){
+    if(parms->tomo.cxx==0 && recon->L2save){
 	/*Need to adjust RLM with the new L2. */
-	if(!recon->L2save){
-	    error("We need the L2save to update the tomography matrix\n");
-	}
 	PDSPCELL(recon->RL.M,RLM);
 	const int npsr=recon->npsr;
 	for(int ips=0; ips<npsr; ips++){
@@ -1404,6 +1455,9 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	warning("There are no LGS with llt. \n");
 	return;
     }
+    cellfree(recon->GFall);
+    cellfree(recon->GFlgs);
+    cellfree(recon->GFngs);
     /*Create GFall: Focus mode -> WFS grad. This is model*/
     recon->GFall=cellnew(parms->npowfs, 1);
     recon->GFlgs=cellnew(parms->nwfsr, 1);
@@ -1483,6 +1537,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}
 	//Compute ray tracing operator for TTF WFS.
 	double hs=parms->powfs[ipowfs_ttf].hs;
+	cellfree(recon->RFdfx);
+	cellfree(recon->RFdfa);
 	recon->RFdfx=cellnew(1, recon->npsr);
 	recon->RFdfa=cellnew(1, parms->ndm);
 	PDSPCELL(recon->HXF,HXF);
@@ -1517,6 +1573,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
       Compute focus constructor from LGS grads. A constructor for each LGS
       because each LGS may have different range error.
     */
+    cellfree(recon->RFlgsg);
     recon->RFlgsg=cellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1539,6 +1596,8 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 */
 static void
 setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
+    cellfree(recon->GRall);
+    cellfree(recon->RRtwfs);
     recon->GRall=cellnew(parms->npowfs, 1);
     dmat *opd=zernike(recon->ploc, parms->aper.d, 3, 5, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1628,7 +1687,11 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     if(parms->recon.split!=2){
 	return;
     }
- 
+    cellfree(recon->MVRngs);
+    cellfree(recon->MVModes);
+    cellfree(recon->MVGM);
+    cellfree(recon->MVFM);
+
     dcellfree(recon->GXL);
     dspcellfull(&recon->GXL, recon->GXlo, 1);
     //NEA of low order WFS.
@@ -1799,7 +1862,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dfree(QU);
     }
     dcellfree(QwQc);
-    
+  
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
     dcellmm(&recon->MVGM, recon->GAlo, recon->MVModes, "nn", 1);
@@ -1879,8 +1942,13 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
    MOAO is handled in setup_recon_moao().
    
 */
-void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APER_T *aper){
     TIC;tic;
+    dfree(recon->wt);
+    dfree(recon->ht);
+    dfree(recon->os);
+    dfree(recon->dx);
+    
     if(parms->cn2.tomo){
 	/*Use cn2 estimation results for tomography. Use its ht to build
 	  reconstructor matrices.*/
@@ -1922,7 +1990,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
     /*setup xloc/aloc to WFS grad */
     if(!parms->sim.idealfit){
 	setup_recon_HXW(recon,parms);
-	setup_recon_GX(recon,parms);
+	setup_recon_GX(recon,parms);//uses HXW.
 	dspcellfree(recon->HXW);/*only keep HXWtomo for tomography */
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
@@ -1934,6 +2002,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	}
 	
 	if(parms->tomo.precond==1){
+	    fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
 	    recon->fdpcg=fdpcg_prepare(parms, recon, powfs, NULL);
 	}
 	
@@ -1967,29 +2036,13 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
     }
     toc2("setup_recon_tomo");
 }
-/**
-   Simple Initialization first
-*/
-RECON_T *setup_recon_init(const PARMS_T *parms){
-    RECON_T * recon = calloc(1, sizeof(RECON_T)); 
-    if(parms->recon.warm_restart){
-	info2("Using warm restart\n");
-    }else{
-	warning2("Do not use warm restart\n");
-    }
-    /*to be used in tomography. */
-    recon->nthread=NTHREAD;
-    /*for recon->aloc dimension*/
-    recon->ndm=parms->ndm;
-    return recon;
-}
 
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
-void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APER_T *aper){
     TIC;tic;
-    if(parms->cn2.pair && parms->cn2.pair->nx>0){
+    if(parms->cn2.pair && parms->cn2.pair->nx>0 && !recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can
 	  be fed to the tomography */
 	recon->cn2est=cn2est_prepare(parms,powfs);
@@ -2011,6 +2064,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	    }
 	}   
     }
+    lfree(recon->ngrad);
     recon->ngrad=lnew(parms->nwfsr, 1);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
@@ -2022,7 +2076,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
     setup_recon_ploc(recon,parms);
     setup_recon_gloc(recon,parms, aper);
     /*Gradient operators*/
-    setup_recon_GWR(recon, parms, powfs);
     setup_recon_GP(recon, parms, powfs);
     setup_recon_GA(recon, parms, powfs);
     /*assemble noise equiva angle inverse from powfs information */
@@ -2038,17 +2091,11 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	setup_recon_twfs(recon,powfs,parms);
     }
     switch(parms->recon.alg){
-    case 0:{
+    case 0:
 	setup_recon_tomo(recon, parms, powfs, aper);
-	setup_recon_fit(recon, parms);
-	setup_recon_moao(recon,parms);
-    }
 	break;
     case 1:
 	setup_recon_lsr(recon, parms, powfs);
-	if(parms->sim.dmproj){
-	    setup_recon_fit(recon, parms);
-	}
 	break;
     default:
 	error("recon.alg=%d is not recognized\n", parms->recon.alg);
@@ -2069,7 +2116,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
 	    powfs[ipowfs].GS0=NULL;
 	}
     }
-    mapfree(aper->ampground);
     toc2("setup_recon");
 }
 
@@ -2078,7 +2124,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *a
  */
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     if(!recon) return;
-    dspcellfree(recon->GWR);
     /* Free arrays that will no longer be used after reconstruction setup is done. */
     dspcellfree(recon->sanea); 
     dspcellfree(recon->saneal);
@@ -2151,6 +2196,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 void free_recon(const PARMS_T *parms, RECON_T *recon){
     if(!recon) return;
     ngsmod_free(recon->ngsmod); recon->ngsmod=0;
+    free_recon_unused(parms, recon);
     free_recon_moao(recon, parms);
     dfree(recon->ht);
     dfree(recon->os);
@@ -2160,7 +2206,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->MVGM);
     dcellfree(recon->MVFM);
     dcellfree(recon->MVModes);
-    dcellfree(recon->xmcc);
     dspcellfree(recon->GX);
     dspcellfree(recon->GXlo);
     dspcellfree(recon->GXtomo);
@@ -2202,13 +2247,15 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->W1); 
     dcellfree(recon->fitNW);
     dfree(recon->fitwt);
+
     cellfree(recon->xloc);
-    if(recon->xmap){
-	free(recon->xmap->p); free(recon->xmap);//data is referenced
-    }
+    cellfree(recon->xmap);
+    cellfree(recon->xcmap);
     lfree(recon->xnx);
     lfree(recon->xny);
     lfree(recon->xnloc);
+    dcellfree(recon->xmcc);
+
     lfree(recon->anx);
     lfree(recon->any);
     lfree(recon->anloc);

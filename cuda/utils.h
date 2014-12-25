@@ -21,8 +21,19 @@
 #include "common.h"
 #include "types.h"
 #include "cudata.h"
+class lock_t{
+    pthread_mutex_t mutex;
+    int enable;
+public:
+    lock_t(pthread_mutex_t _mutex, int _enable=1):mutex(_mutex),enable(_enable){
+	if(enable) LOCK(mutex);
+    }
+    ~lock_t(){
+	if(enable) UNLOCK(mutex);
+    }
+};
+
 extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
-extern int cuda_cache;
 /**
    Without type conversion. Enable asynchrous transfer. It is asynchrous only if
    called allocated pinned memory.
@@ -31,15 +42,15 @@ extern int cuda_cache;
 template<typename M, typename N> 
 inline void type_convert(M *out, const N* in, int nx){
     for(int i=0; i<nx; i++){
-	out[i]=(M)in[i];
+	out[i]=static_cast<M>(in[i]);
     }
 }
 
 template<>
 inline void type_convert<float2, double2>(float2*out, const double2* in, int nx){
     for(int i=0; i<nx; i++){
-	out[i].x=in[i].x;
-	out[i].y=in[i].y;
+	out[i].x=static_cast<float>(in[i].x);
+	out[i].y=static_cast<float>(in[i].y);
     }
 }
 template<>
@@ -55,61 +66,51 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(cuda_dedup && !*dest){
 	key=hashlittle(src, nx*ny*sizeof(N), 0);
 	key=(key<<32) | (nx*ny);
-	LOCK(cudata->memmutex);
+	lock_t tmp(cudata->memmutex);
 	if(cudata->memhash->count(key)){
 	    *dest=(M*)(*cudata->memhash)[key];
 	    (*cudata->memcount)[*dest]++;
+	    return;
 	}
-	UNLOCK(cudata->memmutex);
-	if(*dest) return;
     }else if(!cuda_dedup && *dest){
 	//Avoid overriding previously referenced memory
-	LOCK(cudata->memmutex);
+	lock_t tmp(cudata->memmutex);
 	if(cudata->memcount->count(*dest) && (*cudata->memcount)[*dest]>1){
 	    info("Deferencing data: %p\n", *dest);
 	    (*cudata->memcount)[*dest]--;
 	    *dest=0;
 	}
-	UNLOCK(cudata->memmutex);
     }
     if(!*dest){
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
 	if(cuda_dedup){
-	    LOCK(cudata->memmutex);
+	    lock_t tmp(cudata->memmutex);
 	    (*cudata->memhash)[key]=*dest;
 	    (*cudata->memcount)[*dest]=1;
-	    UNLOCK(cudata->memmutex);
 	}
     }
+    lock_t lock(cudata->memmutex, sizeof(M)!=sizeof(N));
     M* from=0;
     if(sizeof(M)!=sizeof(N)){
-	if(cuda_cache) LOCK(cudata->memmutex);
-	if(cuda_cache && cudata->memcache->count((void*)(*dest))){
-	    /*We cache the array used for the conversion. It is important that
-	     * no gpu memory is allocated/freed at every cycle*/
-	    from=(M*)(*cudata->memcache)[(void*)(*dest)];
-	}else{
-	    from=(M*)malloc(sizeof(M)*nx*ny);
-	    if(cuda_cache){
-		(*cudata->memcache)[(void*)*dest]=(void*)from;
-	    }
+	if(cudata->nmemcache<nx*ny*sizeof(M)){
+	    info2("Enlarging memcache from %ld to %ld\n", cudata->nmemcache, sizeof(M)*nx*ny);
+	    cudata->nmemcache=sizeof(M)*nx*ny;
+	    cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
 	}
+	from=(M*)cudata->memcache;
 	type_convert(from, src, nx*ny);
     }else{
 	from=(M*)(src);
     }
-
+    
     if(stream==(cudaStream_t)0){
 	DO(cudaMemcpy(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice));
     }else{
 	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
-    if((void*)from !=(void*)src && !cuda_cache) {
+    /*if(sizeof(M)!=sizeof(N)){
 	free(from);
-    }
-    if(cuda_cache && sizeof(M)!=sizeof(N)){
-	UNLOCK(cudata->memmutex);
-    }
+	}*/
 }
 
 template<typename M, typename N> inline void

@@ -92,6 +92,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dmat *(*saneaxy)[nsa]=NULL;
     if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
 	dcellfree(intstat->saneaxy);
+	dcellfree(intstat->saneaixy);
+	dcellfree(intstat->saneaxyl);
 	intstat->saneaxy=cellnew(nsa,ni0);
 	saneaxy=(void*)intstat->saneaxy->p;
     }
@@ -353,7 +355,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
 	writebin(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);
     }
-    if(parms->recon.glao && ni0>0){
+    if(parms->powfs[ipowfs].phytype==1 && parms->recon.glao && ni0>0){
 	info2("Averaging saneaxy of different WFS for GLAO mode\n");
 	PDCELL(intstat->saneaxy ,neaxy);
 	dcell *saneaxy2=cellnew(nsa, 1);

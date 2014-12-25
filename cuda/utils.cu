@@ -38,7 +38,6 @@ static cusparseMatDescr_t spdesc=NULL;
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
 int cuda_dedup=0;//1: allow memory deduplication. Useful during setup for const memory.
-int cuda_cache=0;//1: allow caching data used for data conversion between CPU/GPU.
 static __attribute((constructor)) void init(){
     DO(cusparseCreateMatDescr(&spdesc));
     cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -89,7 +88,7 @@ void gpu2gpu(cumap_t **dest0, cumap_t *source, int nps){
   Convert a host dsp array to GPU sprase array.
 */
 cusp::cusp(const dsp *src_csc, int tocsr)
-    :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC){
+    :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC),nref(0){
     if(!src_csc) return;
     dsp *src=const_cast<dsp*>(src_csc);
     if(tocsr){
@@ -108,7 +107,7 @@ cusp::cusp(const dsp *src_csc, int tocsr)
     if(tocsr){
 	dspfree(src);
     }
-    nref=new int[1];
+    nref=new int;
     nref[0]=1;
 }
 void cp2gpu(cusp **dest0, const dspcell *srcc, int tocsr){
@@ -292,7 +291,7 @@ void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     free(tmp);
 }
 template <typename T, typename R, typename S>
-    inline void scale_add(T *p1, R alpha, S *p2, R beta, long n){
+inline void scale_add(T *p1, R alpha, S *p2, R beta, long n){
     for(long i=0; i<n; i++){
 	p1[i]=p1[i]*alpha+p2[i]*beta;
     }
@@ -317,15 +316,7 @@ template <typename R, typename T, typename S>
 static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n, 
 		    cudaStream_t stream, pthread_mutex_t *mutex){
     S *tmp=0;
-    if(cuda_cache) LOCK(cudata->memmutex);
-    if(cuda_cache && cudata->memcache->count((void*)src)){
-	tmp=(S*)(*cudata->memcache)[(void*)src];
-    }else{
-	tmp=(S*)malloc(n*sizeof(S));
-	if(cuda_cache){
-	    (*cudata->memcache)[(void*)src]=(void*)tmp;
-	}
-    }
+    tmp=(S*)malloc(n*sizeof(S));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
 	*dest=(T*)malloc(sizeof(T)*n);
@@ -334,46 +325,43 @@ static void add2cpu(T * restrict *dest, R alpha, S *src, R beta, long n,
     if(mutex) LOCK(*mutex);
     scale_add(p, alpha, tmp, beta, n);
     if(mutex) UNLOCK(*mutex);
-    if(!cuda_cache) {
-	free(tmp);
-    }
-    if(cuda_cache) UNLOCK(cudata->memmutex);
+    free(tmp);
 }
 #define add2cpu_mat(D, double, Comp)					\
-void add2cpu(D##mat **out, double alpha, const cumat<Comp> *in, double beta,	\
-	     cudaStream_t stream, pthread_mutex_t *mutex){		\
-    if(!in){								\
-	if(*out) D##scale(*out, alpha);					\
-	return;								\
-    }									\
-    if(!*out) {								\
-	*out=D##new(in->nx, in->ny);					\
-    }else{								\
-	assert((*out)->nx*(*out)->ny==in->nx*in->ny);			\
-    }									\
-    add2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);\
-}
+    void add2cpu(D##mat **out, double alpha, const cumat<Comp> *in, double beta, \
+		 cudaStream_t stream, pthread_mutex_t *mutex){		\
+	if(!in){							\
+	    if(*out) D##scale(*out, alpha);				\
+	    return;							\
+	}								\
+	if(!*out) {							\
+	    *out=D##new(in->nx, in->ny);				\
+	}else{								\
+	    assert((*out)->nx*(*out)->ny==in->nx*in->ny);		\
+	}								\
+	add2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex); \
+    }
 add2cpu_mat(s, float, Real)
 add2cpu_mat(d, double,Real)
 add2cpu_mat(z, float, Comp)
 add2cpu_mat(c, double,Comp)
 
 #define add2cpu_cell(D, double, curcell)				\
-void add2cpu(D##cell **out, double alpha, const curcell *in, double beta, \
-	     cudaStream_t stream, pthread_mutex_t *mutex){		\
-    if(!in){								\
-	if(*out) D##cellscale(*out, alpha);				\
-	return;								\
-    }									\
-    if(!*out) {								\
-	*out=D##cellnew(in->nx, in->ny);				\
-    }else{								\
-	assert((*out)->nx*(*out)->ny==in->nx*in->ny);			\
-    }									\
-    for(int i=0; i<in->nx*in->ny; i++){					\
-	add2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex);	\
-    }									\
-}
+    void add2cpu(D##cell **out, double alpha, const curcell *in, double beta, \
+		 cudaStream_t stream, pthread_mutex_t *mutex){		\
+	if(!in){							\
+	    if(*out) D##cellscale(*out, alpha);				\
+	    return;							\
+	}								\
+	if(!*out) {							\
+	    *out=D##cellnew(in->nx, in->ny);				\
+	}else{								\
+	    assert((*out)->nx*(*out)->ny==in->nx*in->ny);		\
+	}								\
+	for(int i=0; i<in->nx*in->ny; i++){				\
+	    add2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex); \
+	}								\
+    }
 add2cpu_cell(d, double,curcell)
 add2cpu_cell(s, float, curcell)
 add2cpu_cell(c, double,cuccell)
@@ -381,13 +369,13 @@ add2cpu_cell(z, float, cuccell)
 #define cp2cpu_same(dmat,dzero,dnew,double)				\
     void cp2cpu(dmat **out, const cumat<double> *in, cudaStream_t stream){ \
 	if(!in) {							\
-	if(*out) dzero(*out);						\
-	return;								\
-    }									\
-    if(!*out) *out=dnew(in->nx, in->ny);				\
-    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(double),	\
-		       cudaMemcpyDeviceToHost, stream));		\
-    if(in->header) (*out)->header=strdup(in->header);			\
+	    if(*out) dzero(*out);					\
+	    return;							\
+	}								\
+	if(!*out) *out=dnew(in->nx, in->ny);				\
+	DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(double), \
+			   cudaMemcpyDeviceToHost, stream));		\
+	if(in->header) (*out)->header=strdup(in->header);		\
     }
 
 cp2cpu_same(dmat,dzero,dnew,double)
@@ -410,7 +398,7 @@ void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream){
 }
 #endif
 #define cp2cpu_cell(S, float)						\
-    void cp2cpu(S##cell **out, const cucell<float> *in, cudaStream_t stream){	\
+    void cp2cpu(S##cell **out, const cucell<float> *in, cudaStream_t stream){ \
 	if(!in){							\
 	    if(*out) S##cellzero(*out);					\
 	    return;							\
@@ -484,5 +472,30 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat *opd, cudaStream_t
 	cp2cpu(&tmp, opd, stream); 
 	drawopdamp(fig, loc, tmp->p, amp, zlim, title, xlabel, ylabel, "%s", fn);
 	dfree(tmp);
+    }
+}
+/**
+   Free data if not referenced or reference is 1.
+*/
+#undef cudaFree
+int cuda_free(void *pp){
+    int tofree=1;
+    LOCK(cudata->memmutex);
+    if(cudata->memcount->count(pp)){
+	if((*cudata->memcount)[pp]>1){
+	    (*cudata->memcount)[pp]--;
+	    warning("Freeing referenced pointer %p\n", pp);
+	    tofree=0;
+	}else if((*cudata->memcount)[pp]==1){
+	    cudata->memcount->erase(pp);
+	}else{
+	    warning("memcount[%p]=%d\n", pp, (*cudata->memcount)[pp]);
+	}
+    }
+    UNLOCK(cudata->memmutex);
+    if(tofree){
+	return cudaFree(pp);
+    }else{
+	return 0;
     }
 }

@@ -59,6 +59,33 @@ namespace cuda_recon{
 	    dmfit_vec->p[idm]=dmfit->p[idm]->ref(1);
 	}
     }
+
+    if((parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
+	if(parms->tomo.square){
+	    opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
+	}else{
+	    opdr=curcellnew(recon->npsr, 1, recon->xnloc->p, (long*)NULL);
+	}
+	opdr_vec=curcellnew(recon->npsr, 1);
+	for(int ips=0; ips<recon->npsr; ips++){
+	    opdr_vec->p[ips]=opdr->p[ips]->ref(1);
+	}
+    }
+    update(parms, powfs, recon);
+    gpu_print_mem("recon init");
+}
+void curecon_t::delete_config(){
+    delete grid; grid=0;
+    if(FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
+    delete FR; FR=0;
+    if(RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
+    delete RR; RR=0;
+    delete MVM; MVM=0;
+    delete RFdfx;RFdfx=0;
+    delete GXL;GXL=0;
+}
+void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
+    delete_config();
     if(parms->recon.mvm){
 	if(!parms->gpu.tomo || !parms->gpu.fit){
 	    return; //Use CPU to assemble MVM
@@ -111,17 +138,6 @@ namespace cuda_recon{
 	    break;
 	default:
 	    error("Invalid");
-	}
-    }
-    if((parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
-	if(parms->tomo.square){
-	    opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
-	}else{
-	    opdr=curcellnew(recon->npsr, 1, recon->xnloc->p, (long*)NULL);
-	}
-	opdr_vec=curcellnew(recon->npsr, 1);
-	for(int ips=0; ips<recon->npsr; ips++){
-	    opdr_vec->p[ips]=opdr->p[ips]->ref(1);
 	}
     }
  
@@ -201,10 +217,8 @@ namespace cuda_recon{
 	    gpu_set(cudata_t::recongpu);
 	}
     }
-    gpu_print_mem("recon init");
 }
-
-void curecon_t::update(const PARMS_T *parms, RECON_T *recon){
+void curecon_t::update_cn2(const PARMS_T *parms, RECON_T *recon){
     if(parms->tomo.predict){
 	for(int ips=0; ips<recon->npsr; ips++){ 
 	    int ips0=parms->atmr.indps->p[ips]; 
@@ -212,17 +226,17 @@ void curecon_t::update(const PARMS_T *parms, RECON_T *recon){
 	    grid->xmap[ips].vy=cudata->atm[ips0].vy;
 	}
     }
-   cutomo_grid *_RR=dynamic_cast<cutomo_grid*>(RR);
-   cutomo_grid *_RL=dynamic_cast<cutomo_grid*>(RL);
-   if(_RL){
-       _RL->init_hx(parms, recon);
-   }
-   if(_RR && _RR != _RL){
-       _RR->init_hx(parms, recon);
-   }
-   if(parms->tomo.precond==1){
-       _RL->update_fdpcg(recon->fdpcg);
-   }
+    cutomo_grid *_RR=dynamic_cast<cutomo_grid*>(RR);
+    cutomo_grid *_RL=dynamic_cast<cutomo_grid*>(RL);
+    if(_RL){
+	_RL->init_hx(parms, recon);
+    }
+    if(_RR && _RR != _RL){
+	_RR->init_hx(parms, recon);
+    }
+    if(parms->tomo.precond==1){
+	_RL->update_fdpcg(recon->fdpcg);
+    }
 }
 void curecon_t::reset(const PARMS_T *parms){
     curcellzero(opdr, 0);
@@ -512,7 +526,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	   || igpu==cudata_t::recongpu){
 	    gpu_set(igpu);
 	    if(cudata->recon){
-		error("Already initialized\n");
+		delete cudata->recon;
 	    }
 	    cudata->recon=new curecon_t(parms, powfs, recon);
 	}
@@ -545,7 +559,7 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     }
     gpu_print_mem("MVM");
 }
-void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
+void gpu_update_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     if(!parms->gpu.tomo) return;
     for(int igpu=0; igpu<NGPU; igpu++){
 	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
@@ -553,7 +567,19 @@ void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
 	    gpu_set(igpu);
 	    
 	    curecon_t *curecon=cudata->recon;
-	    curecon->update(parms, recon);
+	    curecon->update(parms, powfs, recon);
+	}
+    }
+}
+void gpu_update_recon_cn2(const PARMS_T *parms, RECON_T *recon){
+    if(!parms->gpu.tomo) return;
+    for(int igpu=0; igpu<NGPU; igpu++){
+	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
+	   || igpu==cudata_t::recongpu){
+	    gpu_set(igpu);
+	    
+	    curecon_t *curecon=cudata->recon;
+	    curecon->update_cn2(parms, recon);
 	}
     }
 }

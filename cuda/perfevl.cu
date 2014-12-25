@@ -40,7 +40,7 @@ extern "C"
 /** 
     save aper_locs, aper_amp to GPU.
 */
-const int TT_NBX=128;
+const int TT_NBX=128;//Number of thread in a block. (for reduction).
 __global__ static void calc_ptt_do( Real *cc,
 				    const Real (*restrict loc)[2], 
 				    const int nloc,
@@ -66,6 +66,7 @@ __global__ static void calc_ptt_do( Real *cc,
 	    }
 	}
     }
+    __syncthreads();
     if(threadIdx.x<4){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }
@@ -102,6 +103,7 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	    }
 	}
     }
+    __syncthreads();
     if(threadIdx.x<7){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }

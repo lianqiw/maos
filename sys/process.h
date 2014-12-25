@@ -30,7 +30,7 @@ double get_usage_load(void);
 double get_usage_mem(void);
 double get_usage_cpu(void);
 
-char *get_job_progname(int pid);
+int get_job_progname(char *res, int nres, int pid);
 int get_job_mem(void);
 double get_job_launchtime(int pid);
 

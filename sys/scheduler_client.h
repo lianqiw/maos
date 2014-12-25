@@ -38,7 +38,7 @@ int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
 /*Handling backtrace*/
-char* call_addr2line(const char *buf);
+int call_addr2line(char *ans, int nans, const char *cmd);
 void print_backtrace_symbol(void *const *buffer, int size);
 /*save a socket for draw()*/
 int scheduler_send_socket(int sfd);

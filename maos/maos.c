@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "maos.h"
+#include "moao.h"
 /**
    \file maos.c
    Contains main() and the entry into simulation maos()
@@ -67,15 +68,20 @@ void maos_setup(const PARMS_T *parms){
     if(!parms->sim.evlol){
 	global->powfs=powfs=setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
-	global->recon=recon=setup_recon_init(parms);
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
-	setup_recon_dm(recon, parms, aper);
+	global->recon=recon=setup_recon_init(parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data*/
 	setup_powfs_phy(parms, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs, aper);
+	if(parms->recon.alg==0 || parms->sim.dmproj){
+	    setup_recon_fit(recon, parms);
+	}
+	if(parms->recon.alg==0 && parms->nmoao){
+	    setup_recon_moao(recon, parms);
+	}
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
 	if(parms->dbg.wfslinearity!=-1){
 	    int iwfs=parms->dbg.wfslinearity;
@@ -92,7 +98,6 @@ void maos_setup(const PARMS_T *parms){
 		((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
 	    }
 	}
-	free_powfs_unused(parms, powfs);
     }
     global->setupdone=1;
     if(parms->plot.setup){
@@ -100,9 +105,7 @@ void maos_setup(const PARMS_T *parms){
     }
 #if USE_CUDA
     extern int cuda_dedup;
-    extern int cuda_cache;
     cuda_dedup=1;
-    cuda_cache=0;
     if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
     }
@@ -116,7 +119,6 @@ void maos_setup(const PARMS_T *parms){
 	gpu_setup_recon(parms, powfs, recon);
     }
     cuda_dedup=0;
-    cuda_cache=1;
 #endif
 
     if(!parms->sim.evlol && parms->recon.mvm){
@@ -126,8 +128,8 @@ void maos_setup(const PARMS_T *parms){
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
     */
-
-    free_recon_unused(parms, recon);
+    //free_powfs_unused(parms, powfs);
+    //free_recon_unused(parms, recon);
     toc2("Presimulation");
 }
 /**

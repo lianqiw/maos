@@ -248,7 +248,10 @@ static RUN_T* running_add(int pid,int sock){
 	irun->pidnew=irun->pid=pid;
 	irun->sock=sock;
 	if(pid>0 && !irun->exe){
-	    irun->exe=get_job_progname(pid);
+	    char progname[PATH_MAX];
+	    if(!get_job_progname(progname, PATH_MAX, pid)){
+		irun->exe=strdup(progname);
+	    }
 	}
 	/*record the launch time */
 	if(pid>0){
@@ -606,13 +609,14 @@ static int respond(int sock){
 	break;
     case CMD_TRACE://8; for backtrace
 	{
-	    char *buf=NULL, *out=NULL;
-	    if(streadstr(sock, &buf)||!(out=call_addr2line(buf))||stwritestr(sock,out)){
+	    char *buf=NULL, out[10000];
+	    if(streadstr(sock, &buf)
+	       ||call_addr2line(out,10000, buf)
+	       ||stwritestr(sock,out)){
 		info2("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
 		ret=-1; 
 	    }
 	    free(buf);
-	    free(out);
 	}
 	break;
     case CMD_UNUSED0://9: not used

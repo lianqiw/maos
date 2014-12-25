@@ -58,35 +58,42 @@ public:
     curcell *dm_wfs;/**<moao results for wfs for warm restart*/
     curcell *dm_evl;/**<moao results for evl for warm restart*/
     /*the following data reside in the gpu memory*/
-    friend void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
+    friend void gpu_update_recon(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);
+    friend void gpu_update_recon_cn2(const PARMS_T *parms, RECON_T *recon);
 public:
     curecon_t(const PARMS_T *parms=0, POWFS_T *powfs=0, RECON_T *recon=0);
+    void delete_config();
     ~curecon_t(){
-	delete grid;
-	if(FL!=dynamic_cast<cusolve_l*>(FR)) delete FL;
-	delete FR;
-	if(RL!=dynamic_cast<cusolve_l*>(RR)) delete RL;
-	delete RR;
-	delete gradin;
+	delete_config();
+	//The following are run time data
+	  delete gradin;
+	  delete tomo_rhs;
+	  delete fit_rhs;
 
 	delete opdr;
 	delete opdr_vec; 
 	delete opdr_save;
-	delete tomo_rhs;
+
 
 	delete dmfit;
 	delete dmfit_vec; 
 	delete dmfit_save;
-	delete fit_rhs;
 
-	delete moao;
 	delete dm_wfs;
 	delete dm_evl;
-	delete RFdfx;
-	delete GXL;
+	if(nmoao){
+	    for(int im=0; im<nmoao; im++){
+		for(int idir=0; idir<moao[im]->ndir; idir++){
+		    delete dm_moao[im][idir];
+		}
+		free(moao[im]);
+		delete moao[im];
+	    }
+	}
     }
     void reset(const PARMS_T *parms);
-    void update(const PARMS_T *parms, RECON_T *recon);
+    void update(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);
+    void update_cn2(const PARMS_T *parms, RECON_T *recon);
     Real tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
     Real fit(dcell **_dmfit, dcell *_opdr);
     Real moao_recon(dcell *_dmfit, dcell *_opdr);

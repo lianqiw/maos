@@ -58,8 +58,9 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	error("saa and saloc mismatch\n");
     }
     
+    double saat2=dmax(saa)*saat;
     for(int isa=0; isa<cn2est->nsa; isa++){
-	if(!saa || saa->p[isa]>saat){
+	if(!saa || saa->p[isa]>saat2){
 	    mask[cn2est->embed->p[isa]]=1;/*use this subaperture */
 	}
     }
@@ -85,7 +86,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	    }
 	}
     }
-    int maxsep=MIN(iymax-iymin, ixmax-ixmin);
+    int maxsep=MIN((iymax-iymin), (ixmax-ixmin));
     free(mask);
     cfft2(overlap, -1);
     for(long i=0; i<nx*nx; i++){
@@ -461,7 +462,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 		}
 	    }
 	    if(nfd>0){
-		if(nfd) info2("Ignore %d negative points. set MAOS_CN2EST_NO_NEGATIVE=0 to disable.\n", nfd);
+		if(nfd) warning_once("Ignore %d negative points. set MAOS_CN2EST_NO_NEGATIVE=0 to disable.\n", nfd);
 
 		dmat *iPnk2=dpinv(Pnk, Pnkwt);
 		//compute the new result 

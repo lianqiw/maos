@@ -385,64 +385,62 @@ int scheduler_recv_socket(int *sfd){
 /**
    Execute addr2line as specified in buf, combine the answer, and return the
    string.*/
-char* call_addr2line(const char *buf){
+int call_addr2line(char *ans, int nans, const char *buf){
+    ans[0]=0;
     FILE *fpcmd=popen(buf,"r");
-    char *out=NULL;
     if(!fpcmd){ 
-	out=strdup("Command failed\n");
+	return 1;
     }else{
-	char ans[4096];
-	while(fgets(ans, sizeof(ans), fpcmd)){
-	    char *tmp=strrchr(ans,'/');
+	char line[4096];
+	while(fgets(line, sizeof(line), fpcmd)){
+	    char *tmp=strrchr(line,'/');
 	    if(tmp){
 		tmp++;
-		char *tmp2=strchr(tmp,'\n'); tmp2[0]='\0';
-		if(out){
-		    out=stradd(out, "->", tmp, NULL);
-		}else{
-		    out=strdup(tmp);
-		}
+		char *tmp2=strchr(tmp,'\n'); if(tmp2) tmp2[0]='\0';
+		strncat(ans, "->", nans-3);
+		strncat(ans, tmp, nans-strlen(tmp)-1);
 	    }
 	}   
 	pclose(fpcmd);
     }
-    return out;
+    return 0;
 }
 
 /**
    Convert backtrace address to source line.
+   Do not call routines that may call malloc as the mutex in malloc may already be locked.
  */
 void print_backtrace_symbol(void *const *buffer, int size){
     //disable memory debugging as this code may be called from within malloc_dbg
     int memdbg=malloc_dbg_disable(0);
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     static int connect_failed=0;
-    char *cmdstr=NULL;
-    char add[24];
-    char *progname=get_job_progname(0);/*don't free pointer. */
-    if(!progname){
+    char cmdstr[PATH_MAX]={0};
+    char add[24]={0};
+    char progname[PATH_MAX]={0};
+    if(get_job_progname(progname, PATH_MAX, 0)){
 	warning("Unable to get progname\n");
 	return;
     }
-    cmdstr=stradd("addr2line -f -e", progname, NULL);
-    free(progname);
+    snprintf(cmdstr, PATH_MAX, "addr2line -f -e %s", progname);
     for(int it=size-1; it>0; it--){
 	snprintf(add,24," %p",buffer[it]);
-	char *tmp=cmdstr;
-	cmdstr=stradd(tmp, add, NULL);
-	free(tmp);
+	strncat(cmdstr, add, PATH_MAX-strlen(cmdstr)-1);
     }
     if(connect_failed){
 	info("%s\n", cmdstr);
-	free(cmdstr);
 	return;
     }
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
     if(MAOS_DISABLE_SCHEDULER || is_scheduler){
 	info("backtrace directly\n");
-	char *ans=call_addr2line(cmdstr);
-	info2("%s\n", ans);
+	char ans[10000];
+	if(!call_addr2line(ans, 10000, cmdstr)){
+	    info2("%s\n", ans);
+	}else{
+	    info2("Command failed\n");
+	}
 	free(ans);
     }else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
@@ -468,12 +466,11 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    connect_failed=1;
 	}
 #else
-	info2("MAOS_DISABLE_SCHEDULER is no 0\n");
+	info2("MAOS_DISABLE_SCHEDULER is set\n");
 #endif
     }
     UNLOCK(mutex);
     sync();
-    free(cmdstr);
 #endif
     if(memdbg) malloc_dbg_enable();
 }

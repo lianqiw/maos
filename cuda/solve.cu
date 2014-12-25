@@ -66,8 +66,8 @@ cumuv_t::cumuv_t(const MUV_T *in)
     dmat *Vc=dcell2m(in->V);
     nx=in->M->nx;
     ny=in->M->ny;
-    nxs=(int*)malloc(sizeof(int)*nx);
-    nys=(int*)malloc(sizeof(int)*ny);
+    nxs=new int[nx];
+    nys=new int[ny];
     for(int i=0; i<nx; i++){
 	nxs[i]=in->M->p[i]->m;
     }
@@ -85,8 +85,8 @@ cumuv_t::~cumuv_t(){
     delete U;
     delete V;
     delete Vx;
-    delete nxs;
-    delete nys;
+    delete[] nxs;
+    delete[] nys;
 }
 cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L)
     :cucg_t(_maxit, _warm_restart),CR(NULL),CL(NULL){

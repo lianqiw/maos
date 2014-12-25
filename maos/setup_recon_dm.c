@@ -33,7 +33,7 @@
    Like ploc, but for DM fitting
 */
 static void
-setup_recon_floc(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
@@ -405,8 +405,20 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	writebin(recon->fitNW,"%s/fitNW",dirsetup);
     }
 }
-
-void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+/**
+   Create initial reconstruction parameters so we can do NCPA calibration.
+ */
+RECON_T *setup_recon_init(const PARMS_T *parms, const APER_T *aper){
+    RECON_T * recon = calloc(1, sizeof(RECON_T)); 
+    if(parms->recon.warm_restart){
+	info2("Using warm restart\n");
+    }else{
+	warning2("Do not use warm restart\n");
+    }
+    /*to be used in tomography. */
+    recon->nthread=NTHREAD;
+    /*for recon->aloc dimension*/
+    recon->ndm=parms->ndm;
     /*setup DM actuator grid */
     setup_recon_aloc(recon,parms);
     /*Grid for DM fitting*/
@@ -415,4 +427,5 @@ void setup_recon_dm(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
 	setup_recon_HA(recon,parms);
 	fit_prep_lrt(recon, parms);
     }
+    return recon;
 }

@@ -109,7 +109,7 @@ prep_saptr(loc_t *saloc, map_t *pmap){
     delete [] saptr;
     return saptr_gpu;
 }
-static curmat *get_neai(dsp *nea){
+static curmat *convert_neai(dsp *nea){
     spint *pp=nea->p;
     spint *pi=nea->i;
     double *px=nea->x;
@@ -187,8 +187,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     }
     ptt=!parms->recon.split || (parms->tomo.splitlrt && parms->recon.mvm!=2); 
     {
-	PDF=curcellnew(parms->npowfs, 1);
-	PDFTT=curcellnew(parms->npowfs, 1);
+	if(!PDF) PDF=curcellnew(parms->npowfs, 1);
+	if(!PDFTT) PDFTT=curcellnew(parms->npowfs, 1);
 	dcell *pdftt=NULL;
 	dcellmm(&pdftt, recon->PDF, recon->TT, "nn", 1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -257,7 +257,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		neai->p[iwfs]=neai->p[iwfs0]->ref();
 	    }else{
 		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
-		neai->p[iwfs]=get_neai(nea);
+		neai->p[iwfs]=convert_neai(nea);
 	    }
 	}/*for iwfs */
     }

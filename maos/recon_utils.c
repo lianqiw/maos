@@ -829,21 +829,6 @@ static void cn2est_moveht(RECON_T *recon){
     */
     error("moveht not yet implemented");
 }
-/**
-   Update the tomographic reconstructor by updating L2.
- */
-static void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
-    CN2EST_T *cn2est=recon->cn2est;
-    /*wtrecon is referenced so should be updated automaticaly. */
-    if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
-	warning("wtrecon is not referenced\n");
-	dfree(recon->wt);
-	recon->wt=dref(cn2est->wtrecon->p[0]);
-    }
-    recon->r0=cn2est->r0m;
-    recon->l0=cn2est->l0;
-    setup_recon_tomo_update(recon, parms);
-}
 
 /**
    Wrapper of Cn2 Estimation operations in recon.c
@@ -865,12 +850,22 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 	if(parms->cn2.moveht){
 	    cn2est_moveht(recon);
 	}
-	if(parms->cn2.tomo){
-	    if(parms->cn2.verbose){
-		info2("Updating tomography weights\n");
-	    }
-	    /*Changes recon parameters. cannot be parallel with tomofit(). */
-	    cn2est_updatetomo(recon, parms);
+
+	if(parms->cn2.verbose){
+	    info2("Updating tomography weights\n");
 	}
+	/*Changes recon parameters. cannot be parallel with tomofit(). */
+	/*wtrecon is referenced so should be updated automaticaly. */
+	if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
+	    warning("wtrecon is not referenced\n");
+	    dfree(recon->wt);
+	    recon->wt=dref(cn2est->wtrecon->p[0]);
+	}
+	recon->r0=cn2est->r0m;
+	recon->l0=cn2est->l0;
+	//if(parms->cn2.tomo){
+	    //Update the tomographic reconstructor by updating L2. 
+	//  setup_recon_tomo_update(recon, parms);
+//	}
     }
 }

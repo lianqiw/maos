@@ -174,5 +174,6 @@ void free_aper(const PARMS_T *parms, APER_T *aper){
     dfree(aper->mod);
     locfft_free(aper->embed);
     dcellfree(aper->opdadd);
+    mapfree(aper->ampground);
     free(aper);
 }

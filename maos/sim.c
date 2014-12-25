@@ -85,7 +85,7 @@ SIM_T *maos_iseed(int iseed){
 	/*put here to avoid messing up timing due to transfering. */
 	gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, parms->sim.start);/*takes 0.4s for NFIRAOS. */
 	if(parms->tomo.predict){
-	    gpu_update_recon(parms, recon);
+	    gpu_update_recon_cn2(parms, recon);
 	}
     }
 #endif

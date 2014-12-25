@@ -53,7 +53,7 @@ static int ngsmod_nmod(int ndm, double hs){
    MCC=(M'*Ha'*W*Ha*M) where M is ngsmod on DM, Ha is propagator from DM to
    science. W is weighting in science.
 */
-static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, const double *wt){
+static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *aper, const double *wt){
     NGSMOD_T *ngsmod=recon->ngsmod;
     const loc_t *plocs=aper->locs;
     double *x=plocs->locx;
@@ -135,7 +135,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
    use_ploc==0. Otherwise, Ha is from ALOC to PLOC and W is the amplitude
    weighting in PLOC.  */
 static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon, 
-			 APER_T *aper, int use_ploc){
+			 const APER_T *aper, int use_ploc){
     const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
     loc_t *loc;
@@ -184,7 +184,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
    2012-05-25: The NGS mode removal should be based on old five modes even if now focus on PS1 is merged with defocus mode
 */
 static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon, 
-		     APER_T *aper, int use_ploc){
+		     const APER_T *aper, int use_ploc){
 
     NGSMOD_T *ngsmod=recon->ngsmod;
     const double ht=ngsmod->ht;
@@ -288,7 +288,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
    weighting. Ptt=(MCC_TT)^-1 *(Hmtt * W * Ha)
 */
 static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon, 
-			    APER_T *aper, int use_ploc){
+			    const APER_T *aper, int use_ploc){
     NGSMOD_T *ngsmod=recon->ngsmod;
     const double *wt=parms->evl.wt->p;
     const int ndm=parms->ndm;
@@ -388,7 +388,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 /**
    Compute NGS modes Ha*M in the science directon using ray tracing. Not used
 */
-dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
+dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     /*Build NGS mod in science direction using accphi */
     NGSMOD_T *ngsmod=recon->ngsmod;
     loc_t **aloc=recon->aloc->p;
@@ -426,7 +426,7 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
 /**
    Compute NGS modes Ha*M in the science directon using analytic formula. Not used
  */
-dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
+dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     /*confirmed to agree with ngsmod_hm_accphi except DM artifacts */
     NGSMOD_T *ngsmod=recon->ngsmod;
     const double hs=ngsmod->hs;
@@ -481,8 +481,8 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
    setup NGS modes and reconstructor using AHST for one or two DMs.
  */
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
-		  APER_T *aper, POWFS_T *powfs){
-    if(recon->ngsmod) error("recon->ngsmod is not empty\n");
+		  const APER_T *aper, POWFS_T *powfs){
+    ngsmod_free(recon->ngsmod);
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	

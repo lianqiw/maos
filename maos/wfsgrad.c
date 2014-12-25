@@ -757,11 +757,15 @@ static void dither_update(SIM_T *simu){
 		dadd(&powfs[ipowfs].gradoff->p[jwfs], 1, goff, -1);
 		dfree(goff);
 	    }
-
-	    genmtch(parms, powfs, ipowfs);
-	    if(parms->powfs[ipowfs].phytypesim!=1){
+	    if(parms->powfs[ipowfs].phytype!=1||parms->powfs[ipowfs].phytypesim!=1){
 		warning("powfs%d: switch to matched filter\n", ipowfs);
-		parms->powfs[ipowfs].phytypesim=1;//set to matched filter
+		parms->powfs[ipowfs].phytype=1;
+		parms->powfs[ipowfs].phytypesim=1;
+	    }
+	    if(parms->powfs[ipowfs].neareconfile || parms->powfs[ipowfs].phyusenea){
+		warning("Disable neareconfile and phyusenea\n");
+		parms->powfs[ipowfs].neareconfile=NULL;
+		parms->powfs[ipowfs].phyusenea=0;
 	    }
 	    if(parms->powfs[ipowfs].phystep>simu->isim+1){
 		warning("powfs%d: switch to physical optics wfs\n", ipowfs);
@@ -770,6 +774,17 @@ static void dither_update(SIM_T *simu){
 	    if(parms->sim.epdm->p[0]<=0){
 		parms->sim.epdm->p[0]=0.5;
 		warning("set ephi to 0.5\n");
+	    }
+	    genmtch(parms, powfs, ipowfs);
+	    int UPDATE_TOMO=1;
+	    READ_ENV_INT(UPDATE_TOMO,0,1);
+	    if(UPDATE_TOMO){
+		setup_recon(simu->recon, parms, powfs, simu->aper);
+#if USE_CUDA
+		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+		    gpu_update_recon(parms, powfs, simu->recon);
+		}
+#endif
 	    }
 #if USE_CUDA
 	    if(parms->gpu.wfs){

@@ -88,17 +88,15 @@ void init_process(void){
 	mymkdir("%s/.aos/",HOME);
 
 	{/*PATH to executable*/
-	    char *exepath=get_job_progname(0);
-	    if(exepath){
+	    char exepath[PATH_MAX];
+	    if(!get_job_progname(exepath, PATH_MAX, 0)){
 		char *tmp=strrchr(exepath,'/');
 		if(exepath[0]=='/' && tmp){
 		    *tmp=0;
 		}else{
-		    free((void*)exepath);
-		    exepath=mygetcwd();
+		    strncpy(exepath, mygetcwd(), PATH_MAX); 
 		}
-		strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]='0';
-		free(exepath);
+		strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
 	    }else{
 		EXEP[0]=0;
 	    }
