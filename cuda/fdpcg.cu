@@ -146,7 +146,7 @@ template<typename T> __global__ static void
 fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
     int ips=blockIdx.z;
     int nx=fddata[ips].nx*fddata[ips].ny;
-    int step=blockDim.x * gridDim.x; 
+    const int step=blockDim.x * gridDim.x; 
     Real scale=fddata[ips].scale;
     T *restrict x=xall[ips];
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){

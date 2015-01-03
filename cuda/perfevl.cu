@@ -50,15 +50,14 @@ __global__ static void calc_ptt_do( Real *cc,
     for(int i=0; i<4; i++){
 	ccb[i][threadIdx.x]=0.f;
     }
-    int step=blockDim.x * gridDim.x; 
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=blockDim.x * gridDim.x){
 	Real tmp=phi[i]*amp[i];
 	ccb[0][threadIdx.x]+=tmp;
 	ccb[1][threadIdx.x]+=tmp*loc[i][0];
 	ccb[2][threadIdx.x]+=tmp*loc[i][1];
 	ccb[3][threadIdx.x]+=tmp*phi[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    for(int i=0; i<4; i++){
@@ -81,11 +80,10 @@ __global__ static void calc_ngsmod_do( Real *cc,
     for(int i=0; i<7; i++){
 	ccb[i][threadIdx.x]=0.f;
     }
-    int step=blockDim.x * gridDim.x; 
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	const Real tmp=phi[i]*amp[i];
-	const Real x=loc[i][0];
-	const Real y=loc[i][1];
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=blockDim.x * gridDim.x){
+	Real tmp=phi[i]*amp[i];
+	Real x=loc[i][0];
+	Real y=loc[i][1];
 	ccb[0][threadIdx.x]+=tmp;
 	ccb[1][threadIdx.x]+=tmp*x;
 	ccb[2][threadIdx.x]+=tmp*y;
@@ -94,7 +92,7 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	ccb[5][threadIdx.x]+=tmp*x*y;
 	ccb[6][threadIdx.x]+=tmp*phi[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 #pragma unroll
@@ -125,6 +123,9 @@ static void calc_ptt_post(double *rmsout, double *coeffout,
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR*/
+	if(tot<pis || tot<ptt){
+	    error("tot=%g, pis=%g\n", tot, pis);
+	}
     }
 }
 static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
@@ -153,6 +154,9 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	pttr_out[0]=tot-pis;//PR
 	pttr_out[1]=ptt-pis;//TT
 	pttr_out[2]=tot-ptt;//PTTR
+	if(tot<pis || tot<ptt){
+	    error("tot=%g, pis=%g\n", tot, pis);
+	}
     }
     //don't use +=. need locking
     ngsmod_out[0]=coeff[1];
@@ -184,9 +188,8 @@ strehlcomp_do(Comp *strehlc,
     Real *sby=sbx+blockDim.x;
     sbx[threadIdx.x]=0;
     sby[threadIdx.x]=0;
-    int skip=blockDim.x * gridDim.x ;
     Real s,c;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=skip){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=blockDim.x * gridDim.x){
 	Z(sincos)(kk*opd[i], &s, &c);
 	sbx[threadIdx.x]+=amp[i]*c;
 	sby[threadIdx.x]+=amp[i]*s;

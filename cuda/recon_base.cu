@@ -78,11 +78,10 @@ inn_multi_do(Real *res_vec, const Real *as, const Real *b, const int n){
     extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
     const Real *a=as+n*blockIdx.y;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=blockDim.x * gridDim.x){
 	sb[threadIdx.x]+=a[i]*b[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    sb[threadIdx.x]+=sb[threadIdx.x+step];

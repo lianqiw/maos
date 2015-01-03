@@ -132,11 +132,14 @@ __global__ void addcabs2_do(Real *restrict a, Real alpha,
 __global__ void sum_do(Real *restrict res, const Real *a, const int n){
     extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=blockDim.x * gridDim.x){
 	sb[threadIdx.x]+=a[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    /*
+      Was using step for above loop. Some threads may proceed faster and
+      replaces step with new value, thus corrupting the computation.
+     */
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    sb[threadIdx.x]+=sb[threadIdx.x+step];
@@ -158,7 +161,7 @@ __global__ void sum2_do(Real *restrict res, const Real *a, const int n){
     s[-16]=0;
     //Read in vector from global mem
     register Real sum=0;
-    int step=blockDim.x * gridDim.x ;
+    const int step=blockDim.x * gridDim.x ;
     for(int i=blockIdx.x * blockDim.x + idx; i<n; i+=step){
 	sum+=a[i];
     }
@@ -192,11 +195,10 @@ __global__ void sum2_do(Real *restrict res, const Real *a, const int n){
 __global__ void max_do(Real *restrict res, const Real *a, const int n){
     extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=blockDim.x * gridDim.x){
 	if(sb[threadIdx.x]<a[i]) sb[threadIdx.x]=a[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    if(sb[threadIdx.x]<sb[threadIdx.x+step]){
@@ -212,11 +214,10 @@ __global__ void max_do(Real *restrict res, const Real *a, const int n){
 __global__ void maxabs_do(Real *restrict res, const Real *a, const int n){
     extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=blockDim.x * gridDim.x){
 	if(sb[threadIdx.x]<Z(fabs)(a[i])) sb[threadIdx.x]=Z(fabs)(a[i]);
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    if(sb[threadIdx.x]<sb[threadIdx.x+step]){
@@ -237,11 +238,10 @@ __global__ void maxabs_do(Real *restrict res, const Real *a, const int n){
 __global__ void inn_do(Real *res_add, const Real *a, const Real *b, const int n){
     extern __shared__ Real sb[];
     sb[threadIdx.x]=0;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=blockDim.x * gridDim.x){
 	sb[threadIdx.x]+=a[i]*b[i];
     }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
+    for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
 	if(threadIdx.x<step){
 	    sb[threadIdx.x]+=sb[threadIdx.x+step];
