@@ -1,4 +1,4 @@
-files=$(ls ../maos/*.[ch] ../sys/*.[ch] ../lib/*.[ch] ../skyc/*.[ch] ../tools/*.[ch] ../cuda/*.[ch] ../cuda/*.cu)
+files=$(ls ../maos/*.[ch] ../sys/*.[ch] ../lib/*.[ch] ../skyc/*.[ch] ../tools/*.[ch] ../mex/*.[ch] ../cuda/*.[ch] ../cuda/*.cu)
 
 for file in $files;do
     if grep -q Copyright $file;then
