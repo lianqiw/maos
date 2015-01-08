@@ -62,7 +62,7 @@ struct thread_t{
 #define THREAD_YIELD	_Pragma("omp taskyield")
 INLINE void THREAD_POOL_INIT(int nthread){
     fprintf(stderr, "Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
-    omp_set_num_threads(nthread);
+    //omp_set_num_threads(nthread);//Instead of limit nthreads globally, we limit it when call omp parallel in this way, MKL can run with all CPU cores.
     omp_set_nested(0);//make sure nested is not enabled
 }
 INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
@@ -242,7 +242,7 @@ INLINE int atomicadd(int *ptr, int val){
 
 #if _OPENMP >= 200805
 #define OMPTASK_SINGLE				\
-    DO_PRAGMA(omp parallel)			\
+    DO_PRAGMA(omp parallel num_threads(NTHREAD))	\
     DO_PRAGMA(omp single )			\
     DO_PRAGMA(omp task if(NTHREAD>1))	
 #else

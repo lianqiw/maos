@@ -116,7 +116,7 @@ void maos_isim(int isim){
 	}
 #endif
     }else{
-	//Do not put this one inside omp parallel
+	//Do not put this one inside parallel 
 	genatm(simu);
 	/*re-seed the atmosphere in case atm is loaded from shm/file */
 	seed_rand(simu->atm_rand, lrand(simu->init_rand));

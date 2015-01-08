@@ -175,9 +175,11 @@ void rename_file(int sig){
     draw_final(0);
     if(disable_save) return;
     if(sig==0){
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "run_%s.log", myhostname());
 	remove("run_done.log");
-	rename("run_recent.log", "run_done.log");
-	mysymlink("run_done.log", "run_recent.log");
+	rename(fn, "run_done.log");
+	mysymlink("run_done.log", fn);
 	remove("maos_done.conf");
 	rename("maos_recent.conf", "maos_done.conf");
 	mysymlink("maos_done.conf", "maos_recent.conf");
@@ -293,7 +295,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 #endif
     }
     free(host);
-    if(nthread<NTHREAD && nthread>0){
+    if(nthread<MAXTHREAD && nthread>0){
         NTHREAD=nthread;
     }
     if(arg->ngpu2>0){

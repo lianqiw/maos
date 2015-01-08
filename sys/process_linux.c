@@ -151,7 +151,10 @@ int get_usage_running(void){
 	if(cstat!='R' && nthread==1){
 	    continue;/*Job is not running; */
 	}
-	if(nthread>1){/*There are many threads. Check each one. */
+	if(nthread>1 && strcmp(exename,"(MATLAB)")){
+	    /*Only count 1 thread of MATLAB*/
+	    nthread=1;
+	}else if(nthread>1){/*There are many threads. Check each one. */
 	    snprintf(fnsub,64,"/proc/%s/task",dp->d_name);
 	    DIR* dirsub=opendir(fnsub);
 	    nthread=0;

@@ -20,6 +20,7 @@
 #include <map>
 #include "types.h"
 extern int NGPU;
+extern int MAXGPU;
 typedef Real ATYPE;
 typedef Real GTYPE;
 namespace cuda_recon{

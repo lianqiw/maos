@@ -41,7 +41,8 @@
 */
 int NNUMA=1; /*Number of numa nodes*/
 int NCPU=0;
-int NTHREAD=0;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
+int MAXTHREAD=0;/*MAXTHREAD=2*NCPU when hyperthreading is enabled. */
+int NTHREAD=0;//Default to MAXTHREAD
 int TCK=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
@@ -104,7 +105,8 @@ void init_process(void){
     }
 
     NCPU= get_ncpu();
-    NTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
+    MAXTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
+    NTHREAD=MAXTHREAD;
 #ifdef HAVE_NUMA_H
     NNUMA=numa_num_configured_nodes();
 #endif
@@ -148,7 +150,7 @@ double get_usage_cpu(void){
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
-    //cent=cent*NTHREAD/NCPU;/*discount hyperthreading. */
+    //cent=cent*MAXTHREAD/NCPU;/*discount hyperthreading. */
     return cent;
 }
 /**

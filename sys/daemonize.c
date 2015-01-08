@@ -258,7 +258,7 @@ static void* fputs_stderr(redirect_t *data){
     return 0;
 }
 /**
-   Redirect stdout and stderr to fd
+   Redirect stdout (1) and stderr (2) to fd
  */
 static void redirect2fd(int fd){
     if(dup2(fd, 1)<0 || dup2(fd, 2)<0){
@@ -271,9 +271,11 @@ static void redirect2fd(int fd){
    Redirect stdout and stderr to fn
  */
 static void redirect2fn(const char *fn){
-    if(!freopen(fn, "w", stdout) || !freopen(fn, "w", stderr)){
+    if(!freopen(fn, "w", stdout)){
 	warning("Error redirecting stdout/stderr\n");
     }
+    //Redirect stderr to stdout 
+    dup2(fileno(stdout), fileno(stderr));
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 }
@@ -285,7 +287,8 @@ static void redirect2fn(const char *fn){
 void redirect(void){
     extern int disable_save;
     if(disable_save) return;
-    const char *fn="run_recent.log";
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX, "run_%s.log", myhostname());
     (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
@@ -302,13 +305,13 @@ void redirect(void){
 	}else{
 	    redirect_t *data=calloc(1, sizeof(redirect_t));
 	    data->pfd=pfd[0];//read
-	    data->stdoutfd=stdoutfd;//write
+	    data->stdoutfd=stdoutfd;//write to console
 	    data->fn=fn;
 	    //spawn a thread to handle output.
 	    pthread_t thread;
 	    //child thread read from pfd[0] and write to stdout.
 	    pthread_create(&thread, NULL, (void *(*)(void *))fputs_stderr, data);
-	    //master threads write to pfd[1]
+	    //master threads redirects stderr and stdout to pfd[1]
 	    redirect2fd(pfd[1]);
 	}
     }

@@ -2266,11 +2266,12 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     free(recon->amap->p);free(recon->amap);//data is referenced
     cellfree(recon->acmap);
     cellfree(recon->aloc);
-    lcellfree(recon->actstuck);
-    lcellfree(recon->actfloat);
-    dspcellfree(recon->actslave);
-    dcellfree(recon->actcpl);
-    dcellfree(recon->aimcc);/*used in filter.c */
+    cellfree(recon->actstuck);
+    cellfree(recon->actfloat);
+    cellfree(recon->actinterp);
+    cellfree(recon->actslave);
+    cellfree(recon->actcpl);
+    cellfree(recon->aimcc);/*used in filter.c */
     muv_free(&recon->RR);
     muv_free(&recon->RL);
     muv_free(&recon->FR);

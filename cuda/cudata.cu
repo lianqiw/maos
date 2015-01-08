@@ -19,6 +19,7 @@
 int nstream=0;
 #define MEM_RESERVE 200000000
 int NGPU=0;
+int MAXGPU=0;
 int* GPUS=NULL;
 cudata_t *cudata_all=NULL;/*for all GPU. */
 
@@ -125,6 +126,11 @@ static int task_cmp(const task_t *a, const task_t *b){
    and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
 int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
+    int ans;//total number of GPUs.
+    if((ans=cudaGetDeviceCount(&MAXGPU)) || MAXGPU==0){//no GPUs available.
+	info2("No GPUs available. ans=%d\n", ans);
+	return 0;
+    }
     if(gpus && ngpu>0){
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
@@ -132,11 +138,6 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		return 0;
 	    }
 	}
-    }
-    int ans, ngpu_tot=0;//total number of GPUs.
-    if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
-	info2("No GPUs available. ans=%d\n", ans);
-	return 0;
     }
     long mem_minimum=0;
     if(parms){
@@ -170,8 +171,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     /*
       Create a mapping between CUDA device ordering and NVML ordering (nvidia-smi).
     */
-    long gmap[ngpu_tot][2];
-    for(int ig=0; ig<ngpu_tot; ig++){
+    long gmap[MAXGPU][2];
+    for(int ig=0; ig<MAXGPU; ig++){
 	gmap[ig][0]=ig;
 	cudaDeviceProp properties;
 	if(!cudaSetDevice(ig) && !cudaGetDeviceProperties(&properties, ig)){
@@ -180,13 +181,13 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    error("Error getting information for GPU %d\n", ig);
 	}
     }
-    qsort(gmap, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_ascend);
+    qsort(gmap, MAXGPU, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_ascend);
     //now gmap[igpu] is the cuda index of the nvml index igpu.
     NGPU=0;
     /*
       User specified exact GPUs to use. We check every entry. 
       If <0 is found, do not use any GPU.
-      If >=ngpu_tot is found, skip the GPU and print warning.
+      If >=MAXGPU is found, skip the GPU and print warning.
       If duplicates are found, use only once.
      */
     if(gpus && ngpu>0){
@@ -198,7 +199,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		NGPU=0;
 		goto end;
 	    }else{
-		if(gpus[ig]>=ngpu_tot){
+		if(gpus[ig]>=MAXGPU){
 		    warning("GPU %d: not exist\n", gpus[ig]);
 		}else{
 		    GPUS[NGPU++]=gmap[gpus[ig]][0];
@@ -209,16 +210,16 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	int repeat=0;
 	if(ngpu<=0){
 	    repeat=0;
-	    ngpu=ngpu_tot;
+	    ngpu=MAXGPU;
 	}
 	GPUS=(int*)calloc(ngpu, sizeof(int));//stores CUDA index
 	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
-	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+	long (*gpu_info)[2]=(long(*)[2])calloc(2*MAXGPU, sizeof(long));
 	int gpu_valid_count;
 	do{
 	    gpu_valid_count=0;
-	    for(int jg=0; jg<ngpu_tot; jg++){//jg: nvml index. ig: cuda index
+	    for(int jg=0; jg<MAXGPU; jg++){//jg: nvml index. ig: cuda index
 		int ig=gmap[jg][0];
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){
@@ -232,11 +233,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	}while(0);
 	if(gpu_valid_count){
 	    /*sort so that gpus with higest memory is in the front.*/
-	    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
+	    qsort(gpu_info, MAXGPU, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
 	    for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
-		if(ig<ngpu_tot && gpu_info[ig][1]>=mem_minimum){
+		if(ig<MAXGPU && gpu_info[ig][1]>=mem_minimum){
 		    GPUS[NGPU++]=(int)gpu_info[ig][0];
-		}else if(ig==ngpu_tot || gpu_info[ig][1]<mem_minimum){
+		}else if(ig==MAXGPU || gpu_info[ig][1]<mem_minimum){
 		    if(NGPU && repeat){
 			ig=0; //reset to beginning.
 		    }else{
@@ -258,7 +259,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		    cudaDeviceEnablePeerAccess(j, 0);
 		}
 		}*/
-	    for(int j=0; j<ngpu_tot; j++){
+	    for(int j=0; j<MAXGPU; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;
 		    break;
@@ -324,10 +325,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
 	    }
-	    /*if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
+	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;
+		THREAD_POOL_INIT(NTHREAD);
 		info2("Reset nthread to %d\n", NTHREAD);
-		}*/
+	    }
 	    free(tasks);
 	}
     }

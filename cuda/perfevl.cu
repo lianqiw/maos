@@ -51,11 +51,11 @@ __global__ static void calc_ptt_do( Real *cc,
 	ccb[i][threadIdx.x]=0.f;
     }
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=blockDim.x * gridDim.x){
-	Real tmp=phi[i]*amp[i];
-	ccb[0][threadIdx.x]+=tmp;
-	ccb[1][threadIdx.x]+=tmp*loc[i][0];
-	ccb[2][threadIdx.x]+=tmp*loc[i][1];
-	ccb[3][threadIdx.x]+=tmp*phi[i];
+	const Real tmp=phi[i]*amp[i];
+	ccb[0][threadIdx.x]+=tmp*phi[i];
+	ccb[1][threadIdx.x]+=tmp;
+	ccb[2][threadIdx.x]+=tmp*loc[i][0];
+	ccb[3][threadIdx.x]+=tmp*loc[i][1];
     }
     for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
@@ -65,7 +65,6 @@ __global__ static void calc_ptt_do( Real *cc,
 	    }
 	}
     }
-    __syncthreads();
     if(threadIdx.x<4){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }
@@ -81,16 +80,16 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	ccb[i][threadIdx.x]=0.f;
     }
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=blockDim.x * gridDim.x){
-	Real tmp=phi[i]*amp[i];
-	Real x=loc[i][0];
-	Real y=loc[i][1];
-	ccb[0][threadIdx.x]+=tmp;
-	ccb[1][threadIdx.x]+=tmp*x;
-	ccb[2][threadIdx.x]+=tmp*y;
-	ccb[3][threadIdx.x]+=tmp*x*x;
-	ccb[4][threadIdx.x]+=tmp*y*y;
-	ccb[5][threadIdx.x]+=tmp*x*y;
-	ccb[6][threadIdx.x]+=tmp*phi[i];
+	const Real tmp=phi[i]*amp[i];
+	const Real x=loc[i][0];
+	const Real y=loc[i][1];
+	ccb[0][threadIdx.x]+=tmp*phi[i];
+	ccb[1][threadIdx.x]+=tmp;
+	ccb[2][threadIdx.x]+=tmp*x;
+	ccb[3][threadIdx.x]+=tmp*y;
+	ccb[4][threadIdx.x]+=tmp*x*x;
+	ccb[5][threadIdx.x]+=tmp*y*y;
+	ccb[6][threadIdx.x]+=tmp*x*y;
     }
     for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
@@ -101,7 +100,6 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	    }
 	}
     }
-    __syncthreads();
     if(threadIdx.x<7){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }
@@ -112,8 +110,9 @@ __global__ static void calc_ngsmod_do( Real *cc,
 static void calc_ptt_post(double *rmsout, double *coeffout, 
 		     const double ipcc, const dmat *imcc,
 		     Real *ccb){
-    double coeff[3], tot;
-    coeff[0]=ccb[0]; coeff[1]=ccb[1]; coeff[2]=ccb[2]; tot=ccb[3];
+    double coeff[3];
+    double tot=ccb[0];
+    coeff[0]=ccb[1]; coeff[1]=ccb[2]; coeff[2]=ccb[3]; 
     if(coeffout){
 	dmulvec3(coeffout, imcc, coeff);
     }
@@ -135,13 +134,11 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 			const double ipcc, const dmat *imcc,
 			const PARMS_T *parms,
 			Real *ccb){
-    double tot=0;
-    tot=ccb[nmod==2?3:6];
-    
+    double tot=(double)ccb[0];
     double coeff[6];//convert to double
-    coeff[0]=ccb[0]; coeff[1]=ccb[1]; 
-    coeff[2]=ccb[2]; coeff[3]=ccb[3];
-    coeff[4]=ccb[4]; coeff[5]=ccb[5];
+    coeff[0]=ccb[1]; coeff[1]=ccb[2]; 
+    coeff[2]=ccb[3]; coeff[3]=ccb[4];
+    coeff[4]=ccb[5]; coeff[5]=ccb[6];
     
     if(pttrcoeff_out){//p/t/t
 	memset(pttrcoeff_out, 0, sizeof(double)*3);

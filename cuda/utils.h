@@ -91,13 +91,20 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     lock_t lock(cudata->memmutex, sizeof(M)!=sizeof(N));
     M* from=0;
+    int free_from=0;
     if(sizeof(M)!=sizeof(N)){
-	if(cudata->nmemcache<nx*ny*sizeof(M)){
-	    info2("Enlarging memcache from %ld to %ld\n", cudata->nmemcache, sizeof(M)*nx*ny);
-	    cudata->nmemcache=sizeof(M)*nx*ny;
-	    cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
+	long memsize=nx*ny*sizeof(M);
+	if(memsize>20000000){//Too large. Don't cache.
+	    from=(M*)malloc(memsize);
+	    free_from=1;
+	}else{
+	    if(cudata->nmemcache<memsize){
+		//info2("Enlarging memcache from %ld to %ld\n", cudata->nmemcache, memsize);
+		cudata->nmemcache=sizeof(M)*nx*ny;
+		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
+	    }
+	    from=(M*)cudata->memcache;
 	}
-	from=(M*)cudata->memcache;
 	type_convert(from, src, nx*ny);
     }else{
 	from=(M*)(src);
@@ -108,9 +115,9 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }else{
 	DO(cudaMemcpyAsync(*dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
-    /*if(sizeof(M)!=sizeof(N)){
+    if(free_from){
 	free(from);
-	}*/
+    }
 }
 
 template<typename M, typename N> inline void

@@ -236,7 +236,7 @@ static void free_dbg(void *p){
 */
 void register_deinit(void (*fun)(void), void *data){
     if(MALLOC==malloc_dbg){
-	T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
+	T_DEINIT *node=calloc_default(1, sizeof(T_DEINIT));
 	node->fun=fun;
 	node->data=data;
 	LOCK(mutex_mem);
@@ -307,9 +307,9 @@ static __attribute__((destructor)) void deinit(){
     thread_pool_destroy();
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
 	DEINIT=p1->next;
-	if(p1->fun) p1->fun();
-	if(p1->data) FREE(p1->data);
-	FREE(p1);
+	//if(p1->fun) p1->fun();
+	//if(p1->data) FREE(p1->data);
+	free_default(p1);
     }
     if(MALLOC==malloc_dbg){
 	if(!exit_fail){

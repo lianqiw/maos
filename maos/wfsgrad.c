@@ -757,6 +757,9 @@ static void dither_update(SIM_T *simu){
 		dadd(&powfs[ipowfs].gradoff->p[jwfs], 1, goff, -1);
 		dfree(goff);
 	    }
+	    if(parms->save.dither){
+		writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff_adjusted_%d", ipowfs, simu->isim);
+	    }
 	    if(parms->powfs[ipowfs].phytype!=1||parms->powfs[ipowfs].phytypesim!=1){
 		warning("powfs%d: switch to matched filter\n", ipowfs);
 		parms->powfs[ipowfs].phytype=1;
@@ -823,7 +826,9 @@ static void dither_update(SIM_T *simu){
 				"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 		    }
 		}
-		writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff_%d", ipowfs, simu->isim);
+		if(parms->save.dither){
+		    writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff_%d", ipowfs, simu->isim);
+		}
 		dcellfree(Rmod);
 	    }
 	}
