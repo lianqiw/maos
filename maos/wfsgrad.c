@@ -755,6 +755,16 @@ static void dither_update(SIM_T *simu){
 		dmat *goff=0;
 		calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, parms->powfs[ipowfs].phytypesim);
 		dadd(&powfs[ipowfs].gradoff->p[jwfs], 1, goff, -1);
+		if(parms->dbg.i0drift){
+		    dzero(goff);
+		    //Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
+		    calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, 2);
+		    dadd(&goff, 1, powfs[ipowfs].gradoff->p[jwfs], 1);
+		    if(powfs[ipowfs].gradncpa){
+			dadd(&goff, 1, powfs[ipowfs].gradncpa->p[jwfs], -1);
+		    }
+		    dadd(&powfs[ipowfs].gradoff->p[jwfs], 1, goff, -0.1);
+		}
 		dfree(goff);
 	    }
 	    if(parms->save.dither){

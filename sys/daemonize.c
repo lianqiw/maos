@@ -288,7 +288,7 @@ void redirect(void){
     extern int disable_save;
     if(disable_save) return;
     char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "run_%s.log", myhostname());
+    snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
     (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);

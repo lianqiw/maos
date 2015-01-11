@@ -100,6 +100,7 @@ __global__ static void calc_ngsmod_do( Real *cc,
 	    }
 	}
     }
+    __syncthreads();
     if(threadIdx.x<7){
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x][0]);
     }
@@ -123,7 +124,7 @@ static void calc_ptt_post(double *rmsout, double *coeffout,
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR*/
 	if(tot<pis || tot<ptt){
-	    error("tot=%g, pis=%g\n", tot, pis);
+	    warning("tot=%g, pis=%g\n", tot, pis);
 	}
     }
 }
@@ -152,7 +153,7 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	pttr_out[1]=ptt-pis;//TT
 	pttr_out[2]=tot-ptt;//PTTR
 	if(tot<pis || tot<ptt){
-	    error("tot=%g, pis=%g\n", tot, pis);
+	    warning("tot=%g, pis=%g\n", tot, pis);
 	}
     }
     //don't use +=. need locking

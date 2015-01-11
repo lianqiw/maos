@@ -111,6 +111,7 @@ typedef struct POWFS_T{
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
     dcell *gradoff;     /**<Offset to grads to subtract from measurement. */
+    dcell *gradncpa;    /**<Offset to grads due to ncpa. */
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */

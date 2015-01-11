@@ -584,6 +584,7 @@ typedef struct DBG_CFG_T{
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_uncorr; /**<1: include uncorrelatable error in science path.*/
+    int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

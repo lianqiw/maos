@@ -176,7 +176,7 @@ void rename_file(int sig){
     if(disable_save) return;
     if(sig==0){
 	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "run_%s.log", myhostname());
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
 	remove("run_done.log");
 	rename(fn, "run_done.log");
 	mysymlink("run_done.log", fn);

@@ -1030,6 +1030,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.na_interp);
     READ_INT(dbg.ncpa_preload);
     READ_INT(dbg.ncpa_uncorr);
+    READ_INT(dbg.i0drift);
 }
 /**
    Read in GPU options

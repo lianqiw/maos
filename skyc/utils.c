@@ -115,8 +115,12 @@ ARG_S *parse_args(int argc, const char *argv[]){
  */
 void rename_file(int sig){
     if(sig==0){
-	rename("run_recent.log", "run_done.log");
-	mysymlink("run_done.log", "run_recent.log");
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
+	remove("run_done.log");
+	rename(fn, "run_done.log");
+	mysymlink("run_done.log", fn);
+	remove("skyc_done.conf");
 	rename("skyc_recent.conf", "skyc_done.conf");
 	mysymlink("skyc_done.conf", "skyc_recent.conf");
     }

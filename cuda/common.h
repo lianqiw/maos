@@ -104,7 +104,7 @@ __host__ __device__ static __inline__ void Z(cuCscale)(Comp x, Real a){
     x.x*=a;
     x.y*=a;
 }
-inline void* malloc4async(int N){
+inline void* malloc4async(size_t N){
     void *tmp;
     cudaMallocHost(&tmp, N);
     return tmp;

@@ -1465,6 +1465,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    }
 		}
 		if(powfs[ipowfs].gradoff){
+		    dcellcp(&powfs[ipowfs].gradncpa, powfs[ipowfs].gradoff);
 		    writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff", ipowfs);
 		}
 	    }
@@ -1586,6 +1587,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(powfs[ipowfs].opdadd);
     dcellfree(powfs[ipowfs].opdbias);
     dcellfree(powfs[ipowfs].gradoff);
+    dcellfree(powfs[ipowfs].gradncpa);
     dfree(powfs[ipowfs].dtheta);
 }
 /**
