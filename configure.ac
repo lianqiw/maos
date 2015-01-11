@@ -630,9 +630,9 @@ if test "$with_gtk" != "no" ;then
     PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
     PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
 
-    if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
-	macint=gtk-mac-integration
-    fi
+    #if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
+#	macint=gtk-mac-integration
+    #fi
     if test "$gtk_3" = "yes" -a "$use_gtk_3" != "no" ;then
 	PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
 	PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])

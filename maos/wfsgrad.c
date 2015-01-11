@@ -21,6 +21,7 @@
 #include "ahst.h"
 #include "mtch.h"
 #include "save.h"
+#include "setup_recon.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
