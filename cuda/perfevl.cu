@@ -128,13 +128,13 @@ static void calc_ptt_post(double *rmsout, double *coeffout,
 	}
     }
 }
-static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
-			double *ngsmod_out, int nmod,
-			double MCC_fcp, double ht, double scale,
-			double thetax, double thetay,
-			const double ipcc, const dmat *imcc,
-			const PARMS_T *parms,
-			Real *ccb){
+static int calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
+		       double *ngsmod_out, int nmod,
+		       double MCC_fcp, double ht, double scale,
+		       double thetax, double thetay,
+		       const double ipcc, const dmat *imcc,
+		       const PARMS_T *parms,
+		       Real *ccb){
     double tot=(double)ccb[0];
     double coeff[6];//convert to double
     coeff[0]=ccb[1]; coeff[1]=ccb[2]; 
@@ -145,6 +145,7 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	memset(pttrcoeff_out, 0, sizeof(double)*3);
 	dmulvec(pttrcoeff_out, imcc, coeff, 1);
     }
+    int ans=0;
     if(pttr_out){
 	//compute TT removed wavefront variance as a side product 
 	double pis=ipcc*coeff[0]*coeff[0];
@@ -152,8 +153,9 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	pttr_out[0]=tot-pis;//PR
 	pttr_out[1]=ptt-pis;//TT
 	pttr_out[2]=tot-ptt;//PTTR
-	if(tot<pis || tot<ptt){
-	    warning("tot=%g, pis=%g\n", tot, pis);
+	if(tot<pis || tot<ptt || ptt<pis || pis<0){
+	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
+	    ans=1;
 	}
     }
     //don't use +=. need locking
@@ -175,6 +177,7 @@ static void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	    ngsmod_out[5]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
 	}
     }
+    return ans;
 }
 
 
@@ -279,18 +282,19 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
 	TO_IMPLEMENT;							\
     }
 
-#define PERFEVL_WFE_CPU(pclep, pclmp, cleNGSmp, ccb)			\
+#define PERFEVL_WFE_CPU(ans, pclep, pclmp, cleNGSmp, ccb)		\
     if(nmod!=3){							\
 	TO_IMPLEMENT;/*mode decomposition. */				\
     }									\
+    int ans;								\
     if(parms->recon.split){						\
 	if(parms->ndm<=2){						\
 	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
-	    calc_ngsmod(nmod==3?pclep[isim]:0, nmod==3?pclmp[isim]:0,	\
-			pcleNGSmp[isim],recon->ngsmod->nmod,		\
-			recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
-			recon->ngsmod->scale, thetax, thetay,		\
-			aper->ipcc, aper->imcc,	parms, ccb);		\
+	    ans=calc_ngsmod(nmod==3?pclep[isim]:0, nmod==3?pclmp[isim]:0, \
+			    pcleNGSmp[isim],recon->ngsmod->nmod,	\
+			    recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
+			    recon->ngsmod->scale, thetax, thetay,	\
+			    aper->ipcc, aper->imcc,	parms, ccb);	\
 	}								\
     }else{								\
 	calc_ptt_post(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc, ccb); \
@@ -476,8 +480,13 @@ void gpu_perfevl_sync(thread_t *info){
 	PDMAT(simu->olep->p[ievl],polep);/*OL error for each dir */
 	PDMAT(simu->clep->p[ievl],pclep);
 	CUDA_SYNC_STREAM;
-	PERFEVL_WFE_CPU(polep, polmp, simu->oleNGSmp, cuperf_t::ccb_ol[ievl]);
-	PERFEVL_WFE_CPU(pclep, pclmp, simu->cleNGSmp, cuperf_t::ccb_cl[ievl]);
+	PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuperf_t::ccb_ol[ievl]);
+	PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuperf_t::ccb_cl[ievl]);
+	if(ans1 || ans2){
+	    warning("Perfevl fails, redo\n");
+	    gpu_perfevl_queue(info);
+	    gpu_perfevl_sync(info);
+	}
 	//info2("thread %ld gpu %d ievl %d end\n", thread_id(), cudata->igpu, ievl);
     }//for ievl
     ctoc("done");

@@ -77,16 +77,16 @@ static double myceil(double a){
    Drawing text. frac=0: left align. frac=0.5: center. frac=1: right align
 */
 static void pango_text(cairo_t *cr, PangoLayout *layout, double x, double y, 
-		       const char *text, double frac, int vertical){
+		       const char *text, double fracx, double fracy, int vertical){
     cairo_save(cr);
     pango_layout_set_markup(layout, text, -1);
-    if(frac>0){
+    if(fracx>0 || fracy>0){
 	int width, height;
 	pango_layout_get_size(layout, &width, &height);
 	if(vertical){
-	    cairo_move_to(cr, x-height*frac/PANGO_SCALE, y+width*frac/PANGO_SCALE);
+	    cairo_move_to(cr, x-height*fracx/PANGO_SCALE, y+width*fracy/PANGO_SCALE);
 	}else{
-	    cairo_move_to(cr, x-width*frac/PANGO_SCALE,  y-height*frac/PANGO_SCALE);
+	    cairo_move_to(cr, x-width*fracx/PANGO_SCALE,  y-height*fracy/PANGO_SCALE);
 	}
     }else{
 	cairo_move_to(cr, x, y);
@@ -103,7 +103,7 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
     if(order==0) return;
     char powindex[40];
     snprintf(powindex, 40,"10<sup>%d</sup>", order);
-    pango_text(cr, layout, x, y, powindex, 0, vertical);
+    pango_text(cr, layout, x, y, powindex, 0, 0, vertical);
 }
 
 
@@ -757,12 +757,11 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_save(cr);
 		char val[80];
 		snprintf(val, 80, "%.2f", y);
-		cairo_translate(cr, round((ix-15)/1)*1, round((iy-font_size-5)/1)*1);
+		cairo_translate(cr, ix-10, round((iy-font_size-5)/1)*1);
 		cairo_scale(cr,1,-1);
-		pango_text(cr, layout, 0, 0, val, 1, 0);
+		pango_text(cr, layout, 0, 0, val, 1, 1, 0);
 		if(drawdata->legend){
-		    cairo_translate(cr, 10, -font_size);
-		    pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 0);
+		    pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 1, 0);
 		}
 		cairo_restore(cr);
 	    }
@@ -853,7 +852,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",(xlog?pow(10,ticv):ticv));
-	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0);
+	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0.5, 0);
     }
     if(xlog || 1){//draw the minor ticks
 	cairo_save(cr);
@@ -897,7 +896,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",(ylog?pow(10,ticv):ticv));
-	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,0.5,1);
+	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,0.5,0.5,1);
     }
     if(ylog || 1){//draw minor ticks
 	cairo_save(cr);
@@ -958,19 +957,19 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_line_to(cr,LEN_LEG-4,heightim*(1-frac));
 	    cairo_stroke(cr);
 	    snprintf(ticval,80,"%g",ticv);
-	    pango_text(cr,layout,LEN_LEG+4,heightim*(1-frac), ticval,0,0);
+	    pango_text(cr,layout,LEN_LEG+4,heightim*(1-frac), ticval,0,0,0);
 	}
 	pango_text_powindex(cr,layout,LEN_LEG/2,-font_size*1.4-2,order,0);
 	cairo_restore(cr);
     }
     if(drawdata->title){
-	pango_text(cr,layout,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title,0.5,0);
+	pango_text(cr,layout,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title,0.5,0.5,0);
     }
     if(drawdata->xlabel){
-	pango_text(cr,layout,xoff+widthim/2,yoff+heightim+8+font_size*1.8, drawdata->xlabel,0.5,0);
+	pango_text(cr,layout,xoff+widthim/2,yoff+heightim+8+font_size*1.8, drawdata->xlabel,0.5,0.5,0);
     }
     if(drawdata->ylabel){
-	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,0.5,1);
+	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,0.5,0.5,1);
     }
     if(drawdata->legend && drawdata->npts){
 	int style, color, connectpts;
@@ -1030,7 +1029,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	    cairo_move_to(cr, leglen+linehead, tall*0.8);
 	    /*cairo_show_text(cr, legend[ig]); */
-	    pango_text(cr, layout, leglen+linehead, -tall*0.2, legend[ig], 0, 0);
+	    pango_text(cr, layout, leglen+linehead, -tall*0.2, legend[ig], 0, 0,0);
 	    cairo_translate(cr, 0, tall);
 	}
 	cairo_restore(cr);
@@ -1040,7 +1039,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_identity_matrix(cr);
 	char fps[10];
 	snprintf(fps, 10, "FPS:%5.1f", 1./drawdata->dtime);
-	pango_text(cr, layout, font_size*0.3, font_size*0.2, fps, 0, 0);
+	pango_text(cr, layout, font_size*0.3, font_size*0.2, fps, 0, 0,0);
 	cairo_restore(cr);
     }
     g_object_unref(layout);

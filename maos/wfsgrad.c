@@ -439,36 +439,23 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 		 +cd*(simu->upterr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
 	    pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
 	}
-	/*2014-10-31: 
-	  To estimate the actual dithering amplitude.
-
-	  Optionally to use LPF instead of averaging. The dithering amplitude
-	  does not change over the course. However, with 240 steps of * averaging,
-	  USE_SUM=1 is a touch better USE_SUM=0.
-
-	  The RTC ADD uses FSM command (uptreal) instead of FSM error signal
-	  (upterr) because the amplitude of FSM error signal is affected by the
-	  gain of the current gradient estimation algorithm and is therefore
-	  should not be used.
+	/*
+	  Compute the amplitude of actual dithering using in and out-of phase
+	  component of uptreal w.r.t. some sinusoidal signal with the same
+	  frequency. The actual phase shift of the reference signal does not matter
 	*/
+
 	{
 	    //Don't use cd, sd above, which doesnot have unit amplitude.
-	    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
-	    const double angle=M_PI*0.5*((isim-adjust)/parms->powfs[ipowfs].dtrat);
+	    const double angle=M_PI*0.5*(isim/parms->powfs[ipowfs].dtrat);
 	    double cs=cos(angle);
 	    double ss=sin(angle);
-#define USE_SUM 1
+
 	    double *fsmpos=simu->uptreal->p[iwfs]->p;
 	    double ipv=(fsmpos[0]*cs+fsmpos[1]*ss);
 	    double qdv=(fsmpos[0]*ss-fsmpos[1]*cs);
-#if USE_SUM
 	    pd->ipv+=ipv;
 	    pd->qdv+=qdv;
-#else
-	    double gpll=parms->powfs[ipowfs].dither_gpll;
-	    pd->ipv=pd->ipv*(1-gpll)+ipv*gpll;
-	    pd->qdv=pd->qdv*(1-gpll)+qdv*gpll;
-#endif
 	}
 	/*Update DLL loop measurement. The delay is about 0.2 of a
 	 * cycle, according to closed loop transfer function*/
@@ -476,16 +463,12 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	if(npllacc>0 && npllacc%npll==0){
 	    pd->deltam=pd->delta;
-#if USE_SUM
 	    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/npll;
 	    if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%.1f mas\n",
 		      isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
 	    }
 	    pd->ipv=pd->qdv=0;
-#else
-	    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv);
-#endif
 	    if(simu->resdither){
 		int ic=(npllacc-1)/(npll);
 		simu->resdither->p[iwfs]->p[ic*2+0]=pd->deltam;
