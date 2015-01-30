@@ -27,7 +27,7 @@ typedef struct GENATM_T{
     rand_t *rstat;   /**<The random stream*/
     double *wt;      /**<The layer weights*/
     double r0;       /**<The Fried Parameter*/
-    double l0;       /**<The outerscale*/
+    double L0;       /**<The outer scale*/
     double dx;       /**<The sampling*/
     long nx;         /**<Number of pixels along x*/
     long ny;         /**<Number of pixels along y*/
@@ -40,7 +40,7 @@ typedef struct GENATM_T{
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
     long method;     /**<The method*/
 }GENATM_T;
-
+map_t *genatm_simple(double r0, double L0, double dx, double nx);
 mapcell* genatm_from_spect(GENATM_T *data);
 mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);

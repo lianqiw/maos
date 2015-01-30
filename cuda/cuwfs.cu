@@ -160,7 +160,7 @@ cullt_t::cullt_t(wfscfg_t *wfscfg)
     const POWFS_T *powfs=wfscfg->powfs;
     const int ipowfs=wfscfg->ipowfs;
     const int wfsind=wfscfg->wfsind;
-    pts=new cupts_t(powfs[ipowfs].llt->pts);
+    pts=new cfsms_t(powfs[ipowfs].llt->pts);
     loc=new culoc_t(powfs[ipowfs].llt->loc);
     if(powfs[ipowfs].llt->ncpa){
 	cp2gpu(&ncpa, powfs[ipowfs].llt->ncpa->p[powfs[ipowfs].llt->ncpa->nx>1?wfsind:0]);

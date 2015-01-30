@@ -50,7 +50,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int embfac=parms->powfs[ipowfs].embfac;
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    int nsa=powfs[ipowfs].pts->nsa;
+    int nsa=powfs[ipowfs].saloc->nloc;
  
     int notf=1;
     int has_ncpa=0;
@@ -96,7 +96,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
 		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		       powfs[ipowfs].realsaa->p[iotf],
-		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 		       ncompx, ncompy, nsa, 1);
 	}
     }/*iwvl */
@@ -140,13 +140,13 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
     if(!exist(fnotf)) 
 	mymkdir("%s",fnotf);
-    long nsa=powfs[ipowfs].pts->nsa;
+    long nsa=powfs[ipowfs].saloc->nloc;
     snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
 	     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
 	     HOME, fnprefix,
 	     parms->aper.d,parms->aper.din, 
-	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].pts->dsa,nsa,
 	     1./powfs[ipowfs].pts->dx, 
 	     parms->powfs[ipowfs].nwvl,
@@ -168,12 +168,14 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    close(fd);
 	    remove(fnlock);
 	}else{
-	    close(fd);
+	    fd=lock_file(fnlock, 1, 0);
+	    close(fd); remove(fnlock);
+	    /*
 	    if(count>10){
 		warning("Cannot obtain lock after 10 trials. Remove lock file and retry\n");
 		remove(fnlock);
 	    }
-	    sleep(10);
+	    sleep(10);*/
 	    goto retry;
 	}
     }else{
@@ -212,7 +214,7 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
-		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0,
+		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   notf, notf, 1, 1);
 	}
     }/*iwvl */
@@ -238,35 +240,37 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
 	     "nwvl%d_%g_embfac%d_v2", 
 	     HOME, fnprefix,
-	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].l0, 
+	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].llt->pts->dsa,
 	     1./powfs[ipowfs].llt->pts->dx,
 	     parms->powfs[ipowfs].llt->widthp,
 	     parms->powfs[ipowfs].nwvl,
 	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
 	     parms->powfs[ipowfs].embfac);
-    char fnllock[PATH_MAX];
-    snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
+    char fnlock[PATH_MAX];
+    snprintf(fnlock, PATH_MAX, "%s.lock", fnlotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int count=0;
-  retry2:
+  retry:
     count++;
-    if(exist(fnllock) || !zfexist(fnlotf)){/*need to create data */
-	int fd2=lock_file(fnllock, 0, 0);/*nonblocking exclusive lock */
-	if(fd2>=0){/*succeed */
+    if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */
+	int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+	if(fd>=0){/*succeed */
 	    info2("Generating WFS LLT OTF for %s\n", fnlotf);
 	    genselotf_do(parms,powfs,ipowfs);
 	    writebin(intstat->lotf, "%s",fnlotf);
-	    close(fd2);
-	    remove(fnllock);
+	    close(fd);
+	    remove(fnlock);
 	}else{
-	    close(fd2);
+	    fd=lock_file(fnlock, 1, 0);
+	    close(fd); remove(fnlock);
+	    /*
 	    if(count>10){
 		warning("Cannot obtain lock after 10 trials. Remove lock file and retry\n");
-		remove(fnllock);
+		remove(fnlock);
 	    }
-	    sleep(10);
-	    goto retry2;
+	    sleep(10);*/
+	    goto retry;
 	}
     }else{
 	intstat->lotf=ccellread("%s",fnlotf);
@@ -308,7 +312,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
    OTF and uplink OTF. Not including detector or elongation characteristics.  */
 void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    int nsa=powfs[ipowfs].pts->nsa;
+    int nsa=powfs[ipowfs].saloc->nloc;
     int nllt;
     if(parms->powfs[ipowfs].llt)
 	nllt=parms->powfs[ipowfs].llt->n;
@@ -373,7 +377,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     const int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
     /**
        ni0 may be greater than 1 in the following two cases

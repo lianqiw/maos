@@ -109,7 +109,7 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	//do not use misregistration since this is the model
 	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
 				     0,0, parms->aper.d, parms->aper.din);
-	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], 1, NULL);
+	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], EPS, 1, NULL);
 	
 	if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
 	    int iwfs=parms->powfs[ipowfs].wfs->p[0];
@@ -319,7 +319,11 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     cellfree(recon->GWR);
     recon->GWR=cellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].gtype_recon==0){
+	if(parms->powfs[ipowfs].type==1){//pyramid WFS
+	    if(parms->recon.alg==0  || parms->ndm>1 || parms->dm[0].ht>0){
+		recon->GWR->p[ipowfs] = pywfs_mkg(powfs[ipowfs].pywfs, recon->gloc->p[ipowfs],0,0);
+	    }
+	}else if(parms->powfs[ipowfs].gtype_recon==0){
 	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
 					recon->gamp->p[ipowfs]->p, powfs[ipowfs].saloc,
 					1, 1, 0, 0, 1);
@@ -348,7 +352,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	GP=dspcellread("%s",parms->load.GP);
 	int nploc=ploc->nloc;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    int nsa=powfs[ipowfs].pts->nsa;
+	    int nsa=powfs[ipowfs].saloc->nloc;
 	    if(GP->p[ipowfs]->m!=nsa*2 || GP->p[ipowfs]->n!=nploc){
 		error("Wrong saved GP: size is %ldx%ld, need %dx%d\n",
 		      GP->p[ipowfs]->nx, GP->p[ipowfs]->ny, nsa*2, nploc);
@@ -361,17 +365,20 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
 	      (non-misregistered)*/
-	    
-	    switch(parms->powfs[ipowfs].gtype_recon){
-	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
-		       using fine sampled powfs.gloc as intermediate plane*/
+	    if(parms->powfs[ipowfs].type==1){
+		info2(" Skip");
+		if(parms->recon.alg==0 || parms->ndm>1 || fabs(parms->dm[0].ht)>EPS){
+		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc,0,0);
+		}
+	    }else if(parms->powfs[ipowfs].gtype_recon==0){
+		/*Create averaging gradient operator (gtilt) from PLOC,
+		  using fine sampled powfs.gloc as intermediate plane*/
 		info2(" Gploc");
 		GP->p[ipowfs]=mkg(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 				  powfs[ipowfs].saloc,1,1,0,0,1);
-	    }
-		break;
-	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
-		       powfs.gloc as intermediate plane.*/
+	    }else if(parms->powfs[ipowfs].gtype_recon==1){
+		/*Create ztilt operator from PLOC, using fine sampled
+		  powfs.gloc as intermediate plane.*/
 		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
@@ -379,9 +386,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		GP->p[ipowfs]=dspmulsp(ZS0,H);
 		dspfree(H);
 		dspfree(ZS0);
-	    }
-		break;
-	    default:
+	    }else{
 		error("Invalid gtype_recon\n");
 	    }
 	}
@@ -424,7 +429,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		if(parms->sim.skysim && parms->powfs[ipowfs].lo){
 		    continue;
 		}
-		int nsa=powfs[ipowfs].pts->nsa;
+		int nsa=powfs[ipowfs].saloc->nloc;
 		if(GA[idm][iwfs]->m!=nsa*2 || GA[idm][iwfs]->n!=nloc){
 		    error("Wrong saved GA\n");
 		}
@@ -444,40 +449,47 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
-		double  ht = parms->dm[idm].ht;
-		double  scale=1. - ht/hs;
-		double  dispx=0, dispy=0;
-		if(!parms->recon.glao){
-		    dispx=parms->wfsr[iwfs].thetax*ht;
-		    dispy=parms->wfsr[iwfs].thetay*ht;
-		}
-		int freeloc=0;
-		loc_t *loc;
-		if(parms->dbg.usegwr){
-		    loc=recon->gloc->p[ipowfs];
+		if(parms->recon.alg==1 && fabs(parms->dm[idm].ht)<EPS){
+		    info2("\nPyWFS from aloc to saloc directly\n");
+		    GA[idm][iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
+					    parms->dm[idm].cubic, parms->dm[idm].iac);
 		}else{
-		    loc=ploc;
-		}
-		if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
-		    loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
-		    freeloc=1;
-		}
-		if(parms->dbg.usegwr){
-		    warning("todo: Fix and use mkg directly\n");
-		    dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
-			       dispx,dispy,scale,
-			       parms->dm[idm].cubic,parms->dm[idm].iac);
-		    GA[idm][iwfs]=dspmulsp(recon->GWR->p[ipowfs], H);
-		    dspfree(H);
-		}else{
-		    dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
-			       dispx,dispy,scale,
-			       parms->dm[idm].cubic,parms->dm[idm].iac);
-		    GA[idm][iwfs]=dspmulsp(recon->GP->p[ipowfs], H);
-		    dspfree(H);
-		}
-		if(freeloc){
-		    locfree(loc);
+		    double  ht = parms->dm[idm].ht;
+		    double  scale=1. - ht/hs;
+		    double  dispx=0, dispy=0;
+		    if(!parms->recon.glao){
+			dispx=parms->wfsr[iwfs].thetax*ht;
+			dispy=parms->wfsr[iwfs].thetay*ht;
+		    }
+		    int freeloc=0;
+		    loc_t *loc;
+		    if(parms->dbg.usegwr){
+			loc=recon->gloc->p[ipowfs];
+		    }else{
+			loc=ploc;
+		    }
+		    if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
+			loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
+			freeloc=1;
+		    }
+	
+		    if(parms->dbg.usegwr){
+			warning("todo: Fix and use mkg directly\n");
+			dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
+				   dispx,dispy,scale,
+				   parms->dm[idm].cubic,parms->dm[idm].iac);
+			GA[idm][iwfs]=dspmulsp(recon->GWR->p[ipowfs], H);
+			dspfree(H);
+		    }else{
+			dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
+				   dispx,dispy,scale,
+				   parms->dm[idm].cubic,parms->dm[idm].iac);
+			GA[idm][iwfs]=dspmulsp(recon->GP->p[ipowfs], H);
+			dspfree(H);
+		    }
+		    if(freeloc){
+			locfree(loc);
+		    }
 		}
 	    }/*idm */
 	}
@@ -623,7 +635,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];
-	int nsa=powfs[ipowfs].pts->nsa;
+	int nsa=powfs[ipowfs].saloc->nloc;
 	int do_ref=0;
 	if(parms->powfs[ipowfs].neareconfile){/*load sanea from file */
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
@@ -716,7 +728,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     int counthi=0;
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
-	const int nsa=powfs[ipowfs].pts->nsa;
+	const int nsa=powfs[ipowfs].saloc->nloc;
 	dmat *sanea_iwfs=dspdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	double area_thres;
 	if(nsa>4){
@@ -791,12 +803,12 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].trs 
-	   || (parms->recon.split && !parms->powfs[ipowfs].lo)){
-	    info2("powfs %d has tip/tilt removed in tomography\n", ipowfs);
+	   || (parms->recon.split && !parms->powfs[ipowfs].lo)
+	   || parms->powfs[ipowfs].dither){
 	    if(parms->powfs[ipowfs].skip){
 		warning("POWFS %d is not included in Tomo.\n", ipowfs);
 	    }
-	    int nsa=powfs[ipowfs].pts->nsa;
+	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *TT=dnew(nsa*2,2);
 	    double *TTx=TT->p;
 	    double *TTy=TT->p+nsa*2;
@@ -845,7 +857,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].nwfs<2){
 		error("This powfs group has only 1 wfs. Could not remove diff focus\n");
 	    }
-	    int nsa=powfs[ipowfs].pts->nsa;
+	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat* DF=dnew(nsa*2,1);
 	    /*saloc is lower left corner of subaperture. don't have to be the center. */
 	    memcpy(DF->p, powfs[ipowfs].saloc->locx, sizeof(double)*nsa);
@@ -972,7 +984,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		long ny=recon->xmap->p[ips]->ny;
 		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc->p[ips]->dx, r0i,
-				       recon->l0, 0, -1);
+				       recon->L0, 0, -1);
 		dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
 	    }
 	}
@@ -994,7 +1006,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal=calloc(1, sizeof(FRACTAL_T));
 	recon->fractal->xloc=recon->xloc;
 	recon->fractal->r0=parms->atmr.r0;
-	recon->fractal->l0=parms->atmr.l0;
+	recon->fractal->L0=parms->atmr.L0;
 	recon->fractal->wt=parms->atmr.wt->p;
 	recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
 	recon->fractal->ninit=parms->tomo.ninit;
@@ -1975,7 +1987,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, cons
 	}
     }
     recon->r0=parms->atmr.r0;
-    recon->l0=parms->atmr.l0;
+    recon->L0=parms->atmr.L0;
 
     /*sampling of xloc */
     recon->dx=dnew(recon->ht->nx, 1);

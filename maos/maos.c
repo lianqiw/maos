@@ -51,8 +51,11 @@ void maos_setup(const PARMS_T *parms){
     RECON_T * recon=NULL;
     read_env();
     if(parms->save.setup){
-	dirsetup="setup";
-	mymkdir("%s",dirsetup);
+	mymkdir("setup");
+	if(chdir("setup")){
+	    error("Unable to save to folder setup\n");
+	}
+	dirsetup=".";
     }else{
 	dirsetup=".";
     }
@@ -124,6 +127,7 @@ void maos_setup(const PARMS_T *parms){
     if(!parms->sim.evlol && parms->recon.mvm){
 	setup_recon_mvm(parms, recon, powfs);
     }
+    if(parms->save.setup && chdir(".."));
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.

@@ -56,9 +56,9 @@
 #define M_HEADER 0x6500  /*header. */
 #define M_SKIP   0x6600  /*the padding of magic number. */
 
-#define M_LOC64  0x6701  /*loc_t with double data*/
-#define M_MAP64  0x016402/*map_t, compatible with M_DBL*/
+#define M_MAP64     0x016402/*map_t, compatible with M_DBL*/
 #define M_RECTMAP64 0x026402/*map_t, compatible with M_DBL*/
+#define M_LOC64     0x036402/*loc_t with double data*/
 #define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
 #if INT_MAX==LONG_MAX //32 bit long

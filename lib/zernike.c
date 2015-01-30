@@ -17,6 +17,7 @@
 */
 
 #include "zernike.h"
+#include "accphi.h"
 /**
    Generating Zernike Rnm for radial order ir, azimuthal or im.  used by loc_zernike.
    */
@@ -68,7 +69,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
 	writebin(loc, "loc_wrongD");
 	warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
     }
-    if(rmin>=rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
+    if(rmin>rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
     const long nloc=loc->nloc;
     int nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     if(onlyr){
@@ -211,18 +212,73 @@ dmat *zernike_cov_kolmogorov(int nr){
    Diagnolize the covariance matrix and transform the mode.
 */
 dmat *diag_mod_cov(const dmat *mz, /**<Modes in zernike space*/
-		   const dmat *cov /**<Covariance of zernike modes in kolmogorov (or any other)*/
+		   const dmat *cov, /**<Covariance of zernike modes in kolmogorov (or any other)*/
+		   int nmod       /**<keep nmod leading modes*/
     ){
     dmat *U=0, *Vt=0, *S=0;
     dsvd(&U, &S, &Vt, cov);
+    //writebin(U,"KL_U");
+    //writebin(S,"KL_S");
     dmat *kl=0;
-    dmm(&kl, 0, mz, U, "nn", 1);
+    dmat *U2=0;
+    if(nmod && nmod<U->ny){
+	U2=dsub(U,0,0,0,nmod);
+    }else{
+	U2=dref(U);
+    }
+    dmm(&kl, 0, mz, U2, "nn", 1);
+    dfree(U2);
     dfree(U);
     dfree(Vt);
     dfree(S);
     return kl;
 }
-
+/**
+   Return cashed KL modes up to maxr radial order
+ */
+cell *KL_kolmogorov_cached(int maxr){
+    int nmod=(maxr+1)*(maxr+2)/2;
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX, "%s/.aos/KL_kolmogorov.bin", HOME);
+    char fnlock[PATH_MAX];
+    snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    cell *kl=0;
+  redo:
+    if(!exist(fnlock) && zfexist(fn)){
+	kl=(cell*)readbin(fn);
+    }
+    if(!kl || kl->p[1]->ny<nmod){
+	cellfree(kl);
+	int fd=lock_file(fnlock, 0, 0);
+	if(fd>=0){//succeed
+	    kl=cellnew(2,1);
+	    int KL_OVER=10;
+	    READ_ENV_INT(KL_OVER, 0, 100);
+	    int maxr2=maxr+10;
+	    int nmod2=(maxr2+1)*(maxr2+2)/2;
+	    int nx=ceil(sqrt(nmod2*KL_OVER/M_PI))*2+1;
+	    info("KL_OVER=%d, nx=%d\n", KL_OVER,nx);
+	    kl->p[0]=(cell*)mkcirloc(2, 2./(nx-1));
+	    //writebin(kl->p[0], "KL_loc");
+	    dmat *cov=zernike_cov_kolmogorov(maxr2);
+	    dmat *modz=zernike((loc_t*)kl->p[0], 2., 0, maxr2, 0);
+	    //writebin(modz, "KL_modz");
+	    kl->p[1]=(cell*)diag_mod_cov(modz, cov, nmod);
+	    //writebin(kl->p[1], "KL_kl");
+	    dfree(modz);
+	    dfree(cov);
+	    writebin(kl, fn);
+	    close(fd); remove(fnlock);
+	}else{
+	    info("waiting to lock %s:", fnlock);
+	    fd=lock_file(fnlock, 1, 0);
+	    info2("locked\n");
+	    close (fd); remove(fnlock);
+	    goto redo;
+	}
+    }
+    return kl;
+}
 /**
    Create Karhunen-Loeve modes for which each mode is statistically independent
    in Kolmogorov spectrum. It first compute the covariance of zernike modes in
@@ -233,31 +289,25 @@ dmat *diag_mod_cov(const dmat *mz, /**<Modes in zernike space*/
    Since each KL mode is linear combination of zenike modes with same m, but
    equal or HIGHER radial order, we have to compute more zernike modes to have
    better accuracy. nr2 controls this overshoot.
+
+   If the required zernike order is close to or more than the sampling of the
+   grid, the process will not work or give poor results. Consequently, the
+   result has to be computed in a finer grid and interpolated back to the
+   coarser grid.
+
+   We cache KL modes for a certain maximum order and interpolate to return results.
  */
-dmat *KL_kolmogorov(const loc_t *loc, double D, int nr, int nr2){
-    int nr3=(int)floor((sqrt(loc->nloc*8+1)-3)*0.5);
-    if(nr2<=0){
-	nr2=nr*2;
-    }else if(nr2<nr){
-	error("nr2=%d cannot be smaller than nr=%d\n", nr2, nr);
+dmat *KL_kolmogorov(const loc_t *loc, double D, int maxr){
+    cell *klcache=KL_kolmogorov_cached(maxr);
+    int nmod=(maxr+1)*(maxr+2)/2;
+    dmat *modkl=dnew(loc->nloc, nmod);
+    loc_t *locin=(loc_t*)klcache->p[0];
+    dmat *opdin=(dmat*)klcache->p[1];
+    for(int imod=0; imod<nmod; imod++){
+	prop_nongrid((loc_t*)locin, opdin->p+locin->nloc*imod,
+		     loc, NULL, modkl->p+loc->nloc*imod, 
+		     1, 0, 0, 2./D, 0, 0);
     }
-    if(nr2>nr3){
-	warning("Reduce nr2=%d to %d\n", nr2, nr3);
-	nr2=nr3;
-    }
-    if(nr>nr3){
-	warning("Reduce nr=%d to %d\n", nr, nr3);	
-	nr=nr3;
-    }
-    dmat *cov=zernike_cov_kolmogorov(nr2);
-    dmat *modz=zernike(loc, D, 0, nr2, 0);
-    dmat *modkl=diag_mod_cov(modz, cov);
-    if(nr2>nr){
-	dmat *modkl2=dsub(modkl, 0, 0, 0, (nr+1)*(nr+2)/2);
-	dfree(modkl);
-	modkl=modkl2;
-    }
-    dfree(cov);
-    dfree(modz);
+    cellfree(klcache);
     return modkl;
 }

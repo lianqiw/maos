@@ -22,7 +22,7 @@ int main(){
     data.ny=m;
     data.dx=dx;
     data.r0=r0;
-    data.l0=L0;
+    data.L0=L0;
     data.wt=wt;
     data.nlayer=nlayer;
     mapcell *map=vonkarman_screen(&data);

@@ -117,7 +117,7 @@ public:
 
 //LLT configuration. Only useful in SHWFS Phy mode.
 class cullt_t{
-    cupts_t *pts;/**<LLT pupil sampling parameters*/
+    cfsms_t *pts;/**<LLT pupil sampling parameters*/
     culoc_t *loc;/**<location of OPD points for laser launch telescope*/
     curmat *amp;
     curmat *ncpa;/**<Aberration*/

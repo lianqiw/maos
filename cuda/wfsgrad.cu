@@ -459,7 +459,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 			 rne, cuwfs[iwfs].custat);
 		    ctoc("noise");
 		}
-		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){
+		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip 
+		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
 		    double cs, ss;
 		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
 		    int ndrift=parms->powfs[ipowfs].dither_ndrift;

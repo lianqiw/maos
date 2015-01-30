@@ -115,9 +115,9 @@ void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, 
 	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc->p[ips], xin->p[ips]->p, 
 		       alpha*extra->scale, 0);
 	fractal_inv(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-		    extra->xloc->p[ips]->dx, r0i, extra->l0, extra->ninit);
+		    extra->xloc->p[ips]->dx, r0i, extra->L0, extra->ninit);
 	fractal_inv_trans(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-			  extra->xloc->p[ips]->dx, r0i, extra->l0, extra->ninit);
+			  extra->xloc->p[ips]->dx, r0i, extra->L0, extra->ninit);
 	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc->p[ips], (*xout)->p[ips]->p, 1, 1);
     }
 }
@@ -776,7 +776,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	hs->p[iwfs]=parms->wfs[iwfs].hs;
     }
     CN2EST_T *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
-			     hs, ht, parms->cn2.keepht, parms->atm.l0);
+			     hs, ht, parms->cn2.keepht, parms->atm.L0);
     cn2est->os=dnew(ht->nx, 1);
     if(!parms->cn2.keepht){
 	/*preserve the number of over sampled layers. */
@@ -862,7 +862,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 	    recon->wt=dref(cn2est->wtrecon->p[0]);
 	}
 	recon->r0=cn2est->r0m;
-	recon->l0=cn2est->l0;
+	recon->L0=cn2est->L0;
 	//if(parms->cn2.tomo){
 	    //Update the tomographic reconstructor by updating L2. 
 	//  setup_recon_tomo_update(recon, parms);

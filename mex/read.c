@@ -34,7 +34,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     if(read_header2(&header2, fp)){
 	return NULL;
     }
-    uint32_t magic=header2.magic;
+    uint32_t magic=header2.magic & 0xFFFF;
     if(magic==0){//end of file or empty file
 	fp->eof=1;
 	return NULL;

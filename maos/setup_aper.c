@@ -98,7 +98,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }else{/*apply an annular mask */
 	//locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
-    loc_reduce(aper->locs, aper->amp, 1, NULL);
+    loc_reduce(aper->locs, aper->amp, EPS, 1, NULL);
     loc_create_stat(aper->locs);
     if(parms->misreg.dm2sci){
 	int isset=0;
@@ -149,7 +149,8 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
 
     if(parms->evl.psfmean || parms->evl.psfhist){
-	aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.psfgridsize, parms->evl.wvl, 0);
+	aper->embed=locfft_init(aper->locs, aper->amp, parms->evl.wvl, 
+				parms->evl.psfgridsize, 2, 0);
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 	    long nembed=aper->embed->nembed->p[iwvl];
 	    if(parms->evl.psfsize->p[iwvl]<1 || parms->evl.psfsize->p[iwvl] > nembed){

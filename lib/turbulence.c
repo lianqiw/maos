@@ -43,7 +43,7 @@ static char *get_fnatm(GENATM_T *data){
     key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
     key=hashlittle(&data->dx, sizeof(double), key);
     key=hashlittle(&data->r0, sizeof(double), key);
-    key=hashlittle(&data->l0, sizeof(double), key);
+    key=hashlittle(&data->L0, sizeof(double), key);
     key=hashlittle(&data->nx, sizeof(long), key);
     key=hashlittle(&data->ny, sizeof(long), key);
     key=hashlittle(&data->nlayer, sizeof(long), key);
@@ -76,15 +76,19 @@ static char *get_fnatm(GENATM_T *data){
 static void spect_screen_do(cellarr *fc, GENATM_T *data){
     if(!data->spect){
 	info2("Generating spect..."); TIC; tic;
+	double slope=0;
 	switch(data->method){
 	case T_VONKARMAN:
-	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,-11./3., 0.5);
+	    slope=-11./3.;
 	    break;
 	case T_BIHARMONIC:
-	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,-4.,0.5); 
+	    slope=-4.;
 	    break;
 	case T_FRACTAL:
 	    break;
+	}
+	if(slope){
+	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->L0,slope, 0.5);
 	}
 	toc2("done");
     }
@@ -189,7 +193,7 @@ static void fractal_screen_do(cellarr *fc, GENATM_T *data){
 	for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 	    drandn(screen, 1, data->rstat);
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	    fractal_do(screen->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
+	    fractal_do(screen->p, nx, ny, data->dx, r0i, data->L0, data->ninit);
 	    remove_piston(screen->p, nx*ny);
 	    cellarr_dmat(fc, ilayer, screen);
 	}
@@ -201,7 +205,7 @@ static void fractal_screen_do(cellarr *fc, GENATM_T *data){
 	}
 	OMPTASK_FOR(ilayer, 0, data->nlayer){
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
+	    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0, data->ninit);
 	    remove_piston(screen[ilayer]->p, nx*ny);
 	}
 	OMPTASK_END;
@@ -301,6 +305,17 @@ mapcell* biharmonic_screen(GENATM_T *data){
 mapcell *fractal_screen(GENATM_T *data){
     data->method=T_FRACTAL;
     return create_screen(data, fractal_screen_do);
+}
+
+map_t *genatm_simple(double r0, double L0, double dx, double nx){
+    rand_t rstat;
+    seed_rand(&rstat, 1);
+    double wt[1]; wt[0]=1;
+    GENATM_T cfg={&rstat, wt, r0, L0, dx, nx, nx, 1, 0, 0, 0, 0, 0, 0};
+    mapcell *screens=vonkarman_screen(&cfg);
+    map_t *out=mapref(screens->p[0]);
+    cellfree(screens);
+    return out;
 }
 
 /**

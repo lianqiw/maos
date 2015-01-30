@@ -356,7 +356,7 @@ static void test_accuracy(void){
     data.ny=n;
     data.dx=dx;
     data.r0=r0;
-    data.l0=L0;
+    data.L0=L0;
     data.wt=wt;
     data.nlayer=nlayer;
     screens=vonkarman_screen(&data);
@@ -595,7 +595,7 @@ static void test_speed(int nthread){
     data.ny=n;
     data.dx=dx;
     data.r0=r0;
-    data.l0=L0;
+    data.L0=L0;
     data.wt=wt;
     data.nlayer=nlayer;
     screens=vonkarman_screen(&data);

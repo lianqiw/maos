@@ -28,11 +28,11 @@ struct cudtf_t{
     int etfis1d;
 };
 struct cullt_t{
-    cupts_t *pts;
+    cfsms_t *pts;
     culoc_t *loc;
 };
 typedef struct cuwloc_t{
-    cupts_t *pts;   /**<location of lower left OPD point in each sa*/
+    cfsms_t *pts;   /**<location of lower left OPD point in each sa*/
     culoc_t *loc;  /**<location of OPD points. for reconstruction purpose only.*/
     culoc_t *saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
     int *embed;       /**<embed for field stop computation*/

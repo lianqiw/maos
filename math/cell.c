@@ -80,7 +80,7 @@ void cellresize(void *in, long nx, long ny){
 void cellfree_do(void *A){
     if(!A) return;
     long id=*((long*)(A));
-    switch(id & 0xFFFF){
+    switch(id){
     case MCC_ANY:{
 	cell *dc=(cell*)A;
 	if(dc->p){

@@ -27,8 +27,9 @@
 
 locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
 		      const dmat *amp,        /**<[in] The amplitude*/
-		      const lmat *fftsize,    /**<[in] The suggested size for FFT*/
 		      const dmat *wvl,        /**<[in] The wavelength*/
+		      const lmat *fftsize,    /**<[in] The suggested size for FFT*/
+		      const double oversize,  /**<[in] Factor of oversize. 2 fot FFT*/
 		      double fieldstop        /**<[in] Size of field stop (radian) if used*/
     ){
     const int nwvl=wvl->nx*wvl->ny;
@@ -38,7 +39,7 @@ locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	if(iwvl==0 || (fftsize && fftsize->p[iwvl]>0 && fftsize->p[iwvl]!=locfft->nembed->p[0])){
 	    locfft->nembed->p[iwvl]=fftsize?fftsize->p[iwvl]:0;
-	    locfft->embed->p[iwvl]=loc_create_embed(&locfft->nembed->p[iwvl], loc, 2, 1);
+	    locfft->embed->p[iwvl]=loc_create_embed(&locfft->nembed->p[iwvl], loc, oversize, 1);
 	}else{
 	    locfft->embed->p[iwvl]=locfft->embed->p[0];
 	    locfft->nembed->p[iwvl]=locfft->nembed->p[0];
@@ -103,7 +104,7 @@ static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wv
    
    Extract center part of psfsize.
 */
-void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one){
+void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one){
     long nwvl=locfft->wvl->nx;
     if(!*psf2s){
 	*psf2s=cellnew(nwvl, 1);
@@ -122,16 +123,23 @@ void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int s
 	    long nembed=locfft->nembed->p[iwvl];
 	    long *embed=locfft->embed->p[iwvl]->p;
 	    const double *amp=locfft->amp->p;
-	    cmat *psf2=cnew(nembed,nembed);
+	    const int ref=!psfsize || psfsize->p[iwvl]==nembed;
+	    cmat *psf2=0;
+	    if(ref){
+		if(!(*psf2s)->p[iwvl]){
+		    (*psf2s)->p[iwvl]=cnew(nembed,nembed);
+		}
+		psf2=(*psf2s)->p[iwvl];
+	    }else{
+		psf2=cnew(nembed,nembed);
+	    }
 
 	    int use1d;
 	    int use1d_enable=0;
 	    if(psfsize && psfsize->p[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
 		use1d=1;
-		//cfft2partialplan(psf2, psfsize->p[iwvl], -1);
 	    }else{
 		use1d=0;
-		//cfft2plan(psf2, -1);
 	    }
 
 	    dcomplex i2pi=I*2*M_PI/locfft->wvl->p[iwvl];
@@ -143,9 +151,8 @@ void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int s
 	    }else{
 		cfft2(psf2,-1);
 	    }
-	    if(!(*psf2s)->p[iwvl] && (!psfsize || psfsize->p[iwvl]==nembed)){/*just reference */
+	    if(ref){/*just reference */
 		cfftshift(psf2);
-		(*psf2s)->p[iwvl]=psf2;
 	    }else{/*create a new array, smaller. */
 		if(!(*psf2s)->p[iwvl]){
 		    (*psf2s)->p[iwvl]=cnew(psfsize->p[iwvl], psfsize->p[iwvl]);
@@ -171,7 +178,7 @@ void locfft_psf(ccell **psf2s, locfft_t *locfft, dmat *opd, lmat *psfsize, int s
 /**
    Apply a field stop
 */
-void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts){
+void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
     int nwvl=locfft->wvl->nx;
     ccell *wvfs=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){

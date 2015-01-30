@@ -68,7 +68,7 @@ typedef struct CN2EST_T{
     dcell *wtrecon;   /**<layer weights for tomography*/
     dspcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
     double r0m;       /**<averaged r0 from all the pairs.>*/
-    double l0;        /**<outer scale*/
+    double L0;        /**<outer scale*/
 } CN2EST_T;
 
 CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat, 

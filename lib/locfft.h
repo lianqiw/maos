@@ -28,8 +28,8 @@ typedef struct{
     double fieldstop;
 }locfft_t;
 
-locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const lmat *fftsize,
-		      const dmat *wvl, double fieldstop); 
+locfft_t *locfft_init(const loc_t *loc, const dmat *amp, const dmat *wvl, 
+		      const lmat *fftsize, double oversize , double fieldstop); 
 void locfft_free(locfft_t *locfft);
-void locfft_psf(ccell **psfs, locfft_t *locfft, dmat *opd, lmat *psfsize, int sum2one);
-void locfft_fieldstop(locfft_t *locfft, dmat *opd, dmat *wvlwts);
+void locfft_psf(ccell **psfs, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one);
+void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts);

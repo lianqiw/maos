@@ -339,7 +339,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     "PSF Sum to: %.15g\n"
 	     "Exposure: %gs\n", 
 	     ievl<0?0:parms->evl.thetax->p[ievl]*206265, ievl<0?0:parms->evl.thetay->p[ievl]*206265,
-	     parms->atm.r0, parms->atm.l0,
+	     parms->atm.r0, parms->atm.L0,
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
@@ -393,7 +393,7 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 	}
 	for(int jwfs=0; jwfs<powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    const int nsa=powfs[ipowfs].pts->nsa;
+	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    if(powfs[ipowfs].gradoff){
 		drawopd("Goffx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
 			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
@@ -422,7 +422,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *potf=intstat->potf->p[intstat->nsepsf>1?wfsind:0];
     cmat *potf2=0;
@@ -618,7 +618,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
     dmat *RR=dpinv(GR, recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
     //writebin(GR, "GR");
     //writebin(RR, "RR");
-    int nsa=powfs[ipowfs].pts->nsa;
+    int nsa=powfs[ipowfs].saloc->nloc;
     dmat *gradmf=dnew(nsa, 2);
     dmat *gradcg=dnew(nsa, 2);
     int ncol=1000;
@@ -817,7 +817,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 */
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam){
     //adjust for delay due to propagation
-    const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+    const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
     //adjust to get delay at beginning of integration
     const int adjust2=parms->powfs[ipowfs].dtrat-1;
     const double angle=M_PI*0.5*((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)+deltam;
@@ -835,7 +835,7 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
 */
 void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype){
     const int ipowfs=parms->wfs[iwfs].powfs;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];

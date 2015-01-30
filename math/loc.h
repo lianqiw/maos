@@ -25,7 +25,7 @@
    This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
 
-lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad);
+lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftpad);
 void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny);
 void loc_create_map(loc_t *loc);
 /*Obtain an entry in the map, with boundary checking enforced*/
@@ -76,6 +76,7 @@ loc_t *mksqloc_map(map_t*map);
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
 loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
 		  double ox, double oy, double theta);
+loc_t *mkcirloc(double D, double dx);
 void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);
@@ -84,7 +85,7 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
 void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin);
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val);
-void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout);
+void loc_reduce(loc_t *loc, dmat *amp, double thres, int cont, int **skipout);
 void loc_reduce_spcell(loc_t *loc, dspcell *sp, int dim, int cont);
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont);
 

@@ -122,8 +122,8 @@ void free_parms(PARMS_T *parms){
     dfree(parms->sim.epdm);
     dfree(parms->sim.aplo);
     dfree(parms->sim.eplo);
-    dfree(parms->sim.apupt);
-    dfree(parms->sim.epupt);
+    dfree(parms->sim.apfsm);
+    dfree(parms->sim.epfsm);
     lfree(parms->sim.seeds);
     free(parms->sim.wspsd);
 
@@ -314,8 +314,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,gtype_recon);
     READ_POWFS_RELAX(int,phytype);
     READ_POWFS_RELAX(int,phytypesim);
+    READ_POWFS_RELAX(int,phytypesim2);
     READ_POWFS_RELAX(dbl,r0);
-    READ_POWFS_RELAX(dbl,l0);
+    READ_POWFS_RELAX(dbl,L0);
     READ_POWFS_RELAX(dbl,mtchcra);
     READ_POWFS_RELAX(int,mtchcpl);
     READ_POWFS_RELAX(int,mtchscl);
@@ -333,7 +334,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_npll);
     READ_POWFS_RELAX(dbl,dither_gpll);
     READ_POWFS_RELAX(int,dither_ndrift);
-    READ_POWFS_RELAX(int,dither_nmtch);
+    READ_POWFS_RELAX(int,dither_ngrad);
     
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
@@ -354,7 +355,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,type);
     READ_POWFS_RELAX(int,step);
     READ_POWFS_RELAX(dbl,modulate);
-    READ_POWFS_RELAX(dbl,fov);
     READ_POWFS(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
@@ -404,6 +404,14 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->phytypesim==-1){
 	    powfsi->phytypesim=powfsi->phytype;
 	}
+	if(powfsi->phytypesim2==-1){
+	    powfsi->phytypesim2=powfsi->phytypesim;
+	}
+	if(powfsi->type==1){//pywfs only uses cog for the moment
+	    powfsi->phytype=2;
+	    powfsi->phytypesim=2;
+	    powfsi->phytypesim2=2;
+	}
 	/*round phystep to be multiple of dtrat. */
 	if(powfsi->phystep>0){
 	    powfsi->phystep=(powfsi->phystep/powfsi->dtrat)
@@ -412,23 +420,20 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->mtchcra==-1){
 	    powfsi->mtchcra=powfsi->mtchcr;
 	}
-	if(powfsi->phytypesim==1 || powfsi->phytype==1){
-	    int pixpsay=powfsi->pixpsa;
-	    int pixpsax=powfsi->radpix;
-	    if(!pixpsax) pixpsax=pixpsay;
-	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0
-				     || powfsi->mtchcra>0)){
-		warning("Disable constraint matched filte for quadcell\n");
-		powfsi->mtchcr=0;
-		powfsi->mtchcra=0;
-	    }
+	int pixpsay=powfsi->pixpsa;
+	int pixpsax=powfsi->radpix;
+	if(!pixpsax) pixpsax=pixpsay;
+	if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
+	    powfsi->mtchcr=0;
+	    powfsi->mtchcra=0;
 	}
 	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
 	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	}
+	powfsi->fieldstop/=206265.;
+	double wvlmax=dmax(powfsi->wvl);
 	/*Senity check pixtheta*/
 	if(powfsi->pixtheta<0){
-	    double wvlmax=dmax(powfsi->wvl);
 	    double dsa=parms->aper.d/powfsi->order;
 	    powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/dsa;
 	}else if(powfsi->pixtheta<1e-4){
@@ -436,7 +441,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	}else{
 	    powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	}
-	powfsi->fieldstop/=206265.;
 	if(powfsi->dither){
 	    parms->dither=1;
 	    powfsi->dither_amp*=powfsi->pixtheta;
@@ -446,15 +450,15 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->dither_nskip*=powfsi->dtrat;
 
 	    powfsi->dither_ndrift*=powfsi->dither_npll;
-	    powfsi->dither_nmtch*=powfsi->dither_npll;
+	    powfsi->dither_ngrad*=powfsi->dither_npll;
 	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
 	    info2("powfs[%d].dither_nskip=%d simulation frame\n", ipowfs, powfsi->dither_nskip);
 	    info2("powfs[%d].dither_npll=%d WFS frame\n", ipowfs, powfsi->dither_npll);	 
 	    info2("powfs[%d].dither_ndrift=%d WFS frame\n", ipowfs, powfsi->dither_ndrift); 
-	    info2("powfs[%d].dither_nmtch=%d WFS frame\n", ipowfs, powfsi->dither_nmtch);
+	    info2("powfs[%d].dither_ngrad=%d WFS frame\n", ipowfs, powfsi->dither_ngrad);
 	}
-	powfsi->modulate/=206265.;
-	powfsi->fov/=206265.;
+	//Input of modulate is in unit of wvl/D. Convert to radian
+	powfsi->modulate*=wvlmax/parms->aper.d;
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -660,7 +664,7 @@ static void readcfg_moao(PARMS_T *parms){
 */
 static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.r0z);
-    READ_DBL(atm.l0);
+    READ_DBL(atm.L0);
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
     READ_INT(atm.fractal);
@@ -692,9 +696,9 @@ static void readcfg_atmr(PARMS_T *parms){
     if(parms->atmr.r0z<=0){
 	parms->atmr.r0z=parms->atm.r0z;
     }
-    READ_DBL(atmr.l0);
-    if(parms->atmr.l0<=0){
-	parms->atmr.l0=parms->atm.l0;
+    READ_DBL(atmr.L0);
+    if(parms->atmr.L0<=0){
+	parms->atmr.L0=parms->atm.L0;
     }
     parms->atmr.ht=readcfg_dmat("atmr.ht");
     parms->atmr.nps=parms->atmr.ht->nx;
@@ -777,7 +781,6 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
     /*it is never good to parallelize the evl ray tracing because it is already so fast */
-    parms->evl.nthread=1;
     parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
 }
 /**
@@ -882,17 +885,17 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.fcfocus);
     READ_DBL(sim.fcttm);
     READ_INT(sim.mffocus);
-    READ_INT(sim.uptideal);
+    READ_INT(sim.fsmideal);
 
     parms->sim.apdm=readcfg_dmat("sim.apdm");
     parms->sim.epdm=readcfg_dmat("sim.epdm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
-    parms->sim.apupt=readcfg_dmat("sim.apupt");
-    parms->sim.epupt=readcfg_dmat("sim.epupt");
+    parms->sim.apfsm=readcfg_dmat("sim.apfsm");
+    parms->sim.epfsm=readcfg_dmat("sim.epfsm");
     parms->sim.aldm=readcfg_int("sim.aldm");
     parms->sim.allo=readcfg_int("sim.allo");
-    parms->sim.alupt=readcfg_int("sim.alupt");
+    parms->sim.alfsm=readcfg_int("sim.alfsm");
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
@@ -912,8 +915,8 @@ static void readcfg_sim(PARMS_T *parms){
     if(fabs(dsum(parms->sim.aplo)-1)>1.e-10){
 	warning("sum(sim.aplo)=%g. Should be 1.\n", dsum(parms->sim.aplo));
     }
-    if(fabs(dsum(parms->sim.apupt)-1)>1.e-10){
-	warning("sum(sim.apupt)=%g. Should be 1.\n", dsum(parms->sim.apupt));
+    if(fabs(dsum(parms->sim.apfsm)-1)>1.e-10){
+	warning("sum(sim.apfsm)=%g. Should be 1.\n", dsum(parms->sim.apfsm));
     }
     parms->sim.seeds=readcfg_lmat("sim.seeds");
     parms->sim.nseed=parms->sim.seeds->nx;
@@ -1357,7 +1360,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(lgspowfs!=-1){
 		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
 		if(parms->powfs[tpowfs].dtrat<1){
-		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_nmtch;
+		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ngrad;
 		    parms->powfs[tpowfs].dtrat=mtchdtrat;
 		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
 		    //Set TWFS integration start time to LGS matched filter acc step
@@ -1819,7 +1822,7 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
 }
 /**
    compute minimum size of atm screen to cover all the beam path. same for
-   all layers.  todo:may need to consider l0 Must be after
+   all layers.  todo:may need to consider L0 Must be after
    setup_parms_postproc_za.
 */
 static void setup_parms_postproc_atm_size(PARMS_T *parms){
@@ -1855,7 +1858,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     /*record the size of the atmosphere. */
     parms->atm.size->p[0]=parms->atm.nx*parms->atm.dx;
     parms->atm.size->p[1]=parms->atm.ny*parms->atm.dx;
-    if(parms->atm.l0 > parms->atm.size->p[0]){
+    if(parms->atm.L0 > parms->atm.size->p[0]){
 	warning("Atmospheric size is smaller than outer scale!\n");
     }
     /*for screen evolving. */
@@ -2003,8 +2006,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->powfs[ipowfs].r0<=0){
 	    parms->powfs[ipowfs].r0=parms->atm.r0;
 	}
-	if(parms->powfs[ipowfs].l0<=0){
-	    parms->powfs[ipowfs].l0=parms->atm.l0;
+	if(parms->powfs[ipowfs].L0<=0){
+	    parms->powfs[ipowfs].L0=parms->atm.L0;
 	}
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
@@ -2436,7 +2439,7 @@ static void print_parms(const PARMS_T *parms){
     info2("\033[0;32mTurbulence at zenith:\033[0;0m\n"
 	  "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
 	  "Anisoplanatic angle is %.2f\"",
-	  parms->atm.r0, parms->atm.l0, fgreen, theta0z*206265);
+	  parms->atm.r0, parms->atm.L0, fgreen, theta0z*206265);
     if(parms->ndm==2){
 	double H1=parms->dm[0].ht;
 	double H2=parms->dm[1].ht;
@@ -2457,7 +2460,7 @@ static void print_parms(const PARMS_T *parms){
     if(parms->recon.alg==0){
 	info2("\033[0;32mReconstruction\033[0;0m: r0=%gm l0=%gm "
 	      "ZA is %g deg. %d layers.%s\n", 
-	      parms->atmr.r0, parms->atmr.l0,  
+	      parms->atmr.r0, parms->atmr.L0,  
 	      parms->sim.za*180/M_PI, 
 	      parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
   

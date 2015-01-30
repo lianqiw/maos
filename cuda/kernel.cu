@@ -137,7 +137,7 @@ __global__ void sum_do(Real *restrict res, const Real *a, const int n){
     }
     /*
       Was using step for above loop. Some threads may proceed faster and
-      replaces step with new value, thus corrupting the computation.
+      replaces step with new value, thus corrfsming the computation.
      */
     for(int step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();

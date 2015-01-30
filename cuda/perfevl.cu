@@ -108,7 +108,7 @@ __global__ static void calc_ngsmod_do( Real *cc,
 /*
   Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
   where amp is the amptliude weighting.  */
-static void calc_ptt_post(double *rmsout, double *coeffout, 
+static int calc_ptt_post(double *rmsout, double *coeffout, 
 		     const double ipcc, const dmat *imcc,
 		     Real *ccb){
     double coeff[3];
@@ -117,6 +117,7 @@ static void calc_ptt_post(double *rmsout, double *coeffout,
     if(coeffout){
 	dmulvec3(coeffout, imcc, coeff);
     }
+    int ans=0;
     if(rmsout){
 	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
 	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
@@ -125,8 +126,10 @@ static void calc_ptt_post(double *rmsout, double *coeffout,
 	rmsout[2]=tot-ptt;/*PTTR*/
 	if(tot<pis || tot<ptt){
 	    warning("tot=%g, pis=%g\n", tot, pis);
+	    ans=1;
 	}
     }
+    return ans;
 }
 static int calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 		       double *ngsmod_out, int nmod,
@@ -286,7 +289,7 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     if(nmod!=3){							\
 	TO_IMPLEMENT;/*mode decomposition. */				\
     }									\
-    int ans;								\
+    int ans=0;								\
     if(parms->recon.split){						\
 	if(parms->ndm<=2){						\
 	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
@@ -297,7 +300,7 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
 			    aper->ipcc, aper->imcc,	parms, ccb);	\
 	}								\
     }else{								\
-	calc_ptt_post(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc, ccb); \
+	ans=calc_ptt_post(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc, ccb); \
     }
 
 /**

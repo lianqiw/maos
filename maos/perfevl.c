@@ -168,7 +168,7 @@ void perfevl_ievl(thread_t *info){
 	    perfevl_ideal_atm(simu, iopdevl, ievl, 1);
 	}else if(simu->atm && !parms->sim.wfsalias){
 	    if(simu->opdevlground){
-		memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
+		dcp(&iopdevl, simu->opdevlground);
 	    }else{
 		dzero(iopdevl);
 	    }
@@ -601,7 +601,7 @@ static void perfevl_save(SIM_T *simu){
 void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
-    if(!(parms->gpu.evl)){ //Cache the ground layer. 
+    if(!(parms->gpu.evl) && parms->evl.nevl>1){ //Cache the ground layer. 
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
 	    if(!simu->opdevlground){

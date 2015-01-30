@@ -139,7 +139,7 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */
-lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad){
+lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftpad){
     double xmin,xmax,ymin,ymax;
     dmaxmin(loc->locx, loc->nloc, &xmax, &xmin);
     dmaxmin(loc->locy, loc->nloc, &ymax, &ymin);
@@ -147,7 +147,7 @@ lmat *loc_create_embed(long *nembed, const loc_t *loc, int oversize, int fftpad)
     const double dy_in1=1./loc->dy;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
     long ny=(long)round((ymax-ymin)*dy_in1)+1;
-    long nxy=(nx>ny?nx:ny)*oversize;/*minimum size */
+    long nxy=(long)ceil((nx>ny?nx:ny)*oversize);/*minimum size */
     if(fftpad){
 	nxy=nextfftsize(nxy);
     }
@@ -475,6 +475,17 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
 	    locy[iy][ix]=st*x+ct*y;
 	}
     }
+    return loc;
+}
+/**
+   Create a loc array within diameter D, with spacing dx.
+ */
+loc_t *mkcirloc(double D, double dx){
+    long nx=D/dx+1;
+    map_t *xy=mapnew(nx, nx, dx, dx, 0);
+    mapcircle(xy, D/2, 1);
+    loc_t *loc=map2loc(xy);
+    mapfree(xy);
     return loc;
 }
 /**
@@ -890,7 +901,8 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
    time. Keep each row continuous if cont==1. Return in skipout the index of
    skipped points if skipout is not NULL.  */
 
-void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
+void loc_reduce(loc_t *loc, dmat *amp, double thres, int cont, int **skipout){
+    if(thres<=0) thres=EPS;
     int redo_stat=loc->stat?1:0;
     int nloc=loc->nloc; 
     int *skip=calloc(nloc,sizeof(int));
@@ -902,14 +914,14 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 	    int pstart=locstat->cols[icol].pos;
 	    int pend=locstat->cols[icol+1].pos;
 	    for(int pos=pstart; pos<pend; pos++){
-		if(amp->p[pos]<EPS){
+		if(amp->p[pos]<thres){
 		    skip[pos]=1;
 		}else{
 		    break;
 		}
 	    }
 	    for(int pos=pend-1; pos>pstart-1; pos--){
-		if(amp->p[pos]<EPS){
+		if(amp->p[pos]<thres){
 		    skip[pos]=1;
 		}else{
 		    break;
@@ -918,7 +930,7 @@ void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
 	}
     }else{
 	for(int iloc=0; iloc<nloc; iloc++){
-	    if(amp->p[iloc]<EPS){
+	    if(amp->p[iloc]<thres){
 		skip[iloc]=1;
 	    }
 	}
@@ -958,7 +970,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
 	error("Mismatch\n");
     }
     int *skip;
-    loc_reduce(loc, sum, cont, &skip);
+    loc_reduce(loc, sum, EPS, cont, &skip);
     dfree(sum);
     int count;
     if(dim==1){/*opd(loc)=sp*opd(locin); */
@@ -1005,7 +1017,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	error("Mismatch dimension\n");
     dmat* sum=dspsumabs(sp,3-dim);
     int *skip;
-    loc_reduce(loc, sum, cont, &skip);
+    loc_reduce(loc, sum, EPS, cont, &skip);
     dfree(sum);
     int count=0;
     if(dim==1){/*opd(loc)=sp*opd(locin); */

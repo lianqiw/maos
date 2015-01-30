@@ -85,7 +85,7 @@ void save_gradol(SIM_T *simu){
     const POWFS_T *powfs=simu->powfs;
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	const int nsa=powfs[ipowfs].pts->nsa;
+	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(!simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
 	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts, simu->gradlastol->p[iwfs]->p,NULL,

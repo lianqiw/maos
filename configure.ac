@@ -165,7 +165,7 @@ AC_SUBST(ldsuffix)
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR},--enable-new-dtags" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 
@@ -535,7 +535,7 @@ has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp
+    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp --enable-shared
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
@@ -548,36 +548,11 @@ else
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
 
-AC_ARG_ENABLE(fftw-threads, AS_HELP_STRING([--disable-fftw-threads],[Disable FFTW threads]), use_fftw_threads="$enableval", use_fftw_threads="yes")
-if test "$use_fftw_threads" = "yes" ;then
-    if test -z "$OPENMP_CFLAGS" ;then
-	AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"], [-pthreads])
-    else
-	AC_CHECK_LIB([fftw3_omp], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"], [$OPENMP_CFLAGS])
-    fi
-fi
-
-if test "$has_fftw_threads" = "yes" -a -z "$OPENMP_CFLAGS" ;then
-    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
-    if test x$has_fftwf = x1 ;then
-        LDFFT="-lfftw3_threads -lfftw3 -lfftw3f_threads -lfftw3f"
-    else
-        LDFFT="-lfftw3_threads -lfftw3"
-    fi
-elif test "$has_fftw_omp" = "yes" -a -n "$OPENMP_CFLAGS" ;then
-    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
-    if test x$has_fftwf = x1 ;then
-        LDFFT="-lfftw3_omp -lfftw3 -lfftw3f_omp -lfftw3f"
-    else
-        LDFFT="-lfftw3_omp -lfftw3"
-    fi
+AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
+if test x$has_fftwf = x1 ;then
+    LDFFT="-lfftw3 -lfftw3f"
 else
-    AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
-    if test x$has_fftwf = x1 ;then
-        LDFFT="-lfftw3 -lfftw3f"
-    else
-        LDFFT="-lfftw3"
-    fi
+    LDFFT="-lfftw3"
 fi
 
 #Check for cholmod

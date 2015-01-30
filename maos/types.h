@@ -84,15 +84,16 @@ typedef struct INTSTAT_T{
 typedef struct PYWFS_T{
     /*Every above are used for SHWFS. Every below are used for PyWFS*/
     double modulate;   /**<Amount of modulation in radian*/
-    long order;        /**<Order*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/
     locfft_t *locfft;  /**<First fft to form PSF*/
     ccell *pyramid;    /**<OPD of pyramid. Angular size of clear aperture is different*/
     cmat *nominal;     /**<For sampling results onto detector*/
-    dspcell *si;           /**<For sampling results onto detector*/
+    dspcell *si;       /**<For sampling results onto detector*/
+    double gain;       /**<Optical gain of PYWFS*/
 }PYWFS_T;
+
 /**
    contains the data associated with a certain type of WFS. not
 necessarily physical optics WFS.x */
@@ -129,6 +130,8 @@ typedef struct POWFS_T{
     dspcell *GS0;        /**<gtilt (average gradient) on ampm*/
     dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
+    /*CoG gain adjustment*/
+    dcell *gain;        /*Gain adjustment for cog and pywfs.*/
     /*Matched filter */
     dcell *sprint;      /**<which subapertures to print sanea*/
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
@@ -143,7 +146,6 @@ typedef struct POWFS_T{
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
     int nsaimcc;         /**<number of saimcc*/
-    int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
     /*The following are a few convenient pointers. */
     dcell*realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     dcell*realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
@@ -234,7 +236,7 @@ typedef struct FRACTAL_T{
     loccell *xloc;      /**<points to recon->xloc*/
     const double *wt;  /**<weight of each layer*/
     double  r0;        /**<The Fried parameter*/
-    double  l0;        /**<The outer scale*/
+    double  L0;        /**<The outer scale*/
     double  scale;     /**<An additional scaling factor*/
     long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
@@ -243,7 +245,7 @@ typedef struct FRACTAL_T{
    contains data related to wavefront reconstruction and DM fitting. */
 typedef struct RECON_T{
     double r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
-    double l0;         /**<l0 used in reconstruction. may get updated in cn2 estimation*/
+    double L0;         /**<L0 used in reconstruction. may get updated in cn2 estimation*/
     dmat *ht;          /**<height of the layers to do tomography.*/
     dmat *wt;          /**<weight of the layers to to tomography. may get updated in cn2 estimation*/
     dmat *os;          /**<over sampling of the layers.*/
@@ -429,20 +431,24 @@ typedef struct WFSINTS_T{
 /**
   data for dithering statistics collection
 */
-typedef struct DITHER_T{ 
+typedef struct DITHER_T{
+    //For PLL
     double delta; /**<PLL estimation of servo lag (only) at every time step*/
     double deltam;/**<Average of delta*/
     double delay; /**<Diference of delay from 2 frame due to beam propagation*/
     double ipv;   /**<in plane value (dot product)*/
     double qdv;   /**<out of plane value (cross product)*/
     double a2m;   /**<actual dither amplitude*/
+    //For matched filter
+    dcell *imb;   /**<accumulated im*/
     dcell *imx;   /**<accumulated cos()*im */
     dcell *imy;   /**<accumulated sin()*im */
-    dcell *imb;   /**<accumulated im for drift mode comuptation*/
     dcell *i0;    /**<accumulated imb for matched filter*/
     dcell *gx;    /**<accumulated imx for matched filter*/
     dcell *gy;    /**<accumulated imy for matched filter*/
-    dmat  *goff;  /**<accumulated gradient offset.*/
+    //For CoG
+    dmat *ggm;    /**<Accumulated cos()*tt_x and sin()*tt_y*/
+    dmat *gg0;    /**<Averaged ggm*/
 }DITHER_T;
 /**
    contains all the run time data struct.
@@ -486,6 +492,7 @@ typedef struct SIM_T{
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2est;     /**<Cn2 Estimation Result*/
+
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/
@@ -531,11 +538,11 @@ typedef struct SIM_T{
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
-    dcell *upterr,*upterr_store;     /**<uplink error*/
-    dcell *uptreal;    /**<uplink real*/
-    SERVO_T *uptint;    /**<uplink integrator output.*/
-    dcell *upterrs;    /**<mmaped file to store upterr history*/
-    dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
+    dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
+    dcell *fsmreal;    /**<uplink real*/
+    SERVO_T *fsmint;    /**<uplink integrator output.*/
+    dcell *fsmerrs;    /**<mmaped file to store fsmerr history*/
+    dcell *fsmcmds;    /**<mmaped file to store fsmcmd history*/
 
     /*focus tracking loop*/
     dcell *LGSfocus;  /**<Temporary array*/

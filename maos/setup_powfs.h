@@ -30,4 +30,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms,
 void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, int iwfs);
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
 void pywfs_free(PYWFS_T *pywfs);
+void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
+void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
+dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac);
 #endif

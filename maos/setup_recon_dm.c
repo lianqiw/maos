@@ -201,10 +201,10 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    switch(parms->recon.modal){
 	    case 1:
-		recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0,  parms->recon.modr, 0, 0);
+		recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0, 0, parms->recon.modr, 0);
 		break;
 	    case 2:
-		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], 0, parms->recon.modr, parms->recon.modr*2); 
+		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], 0, parms->recon.modr); 
 		break;
 	    default:
 		error("Invalid recon.modal");
@@ -289,7 +289,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
 	  account during DM fitting.
 	 */
-	warning2("Replacing HA by HA*actinterp");
+	warning2("Replacing HA by HA*actinterp\n");
 	dspcell *HA2=dspcellmulspcell(recon->HA, recon->actinterp, 1);
 	dspcellfree(recon->HA);
 	recon->HA=HA2;

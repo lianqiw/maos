@@ -22,9 +22,12 @@
 #include "mathdef.h"
 #include "defs.h"
 #if !defined(USE_SINGLE) || HAS_FFTWF==1
+extern int has_threads;
+extern void (*p_fftw_plan_with_nthreads)(int n);
+
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
- */
+*/
 typedef struct PLAN1D_T{
     int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
     FFTW(plan) plan[3]; /**< Array of plans for 1-d FFT */
@@ -57,20 +60,13 @@ void X(fft_free_plan)(fft_t *fft){
     }
     free(fft);
 }
-static void FFTW_THREADS(long n){
-#if USE_FFTW_THREADS == 1
-    if(n>1024*1024){
-	info2("Creating fft plan with %d threads\n", NTHREAD);
-	FFTW(plan_with_nthreads)(NTHREAD);
-    }else{
-	FFTW(plan_with_nthreads)(1);
-    }
-#endif
-}
 /**
    load FFT wisdom from file.
- */
+*/
 #ifdef USE_COMPLEX
+int has_threads=-1;
+void (*p_fftw_plan_with_nthreads)(int n)=NULL;
+//Put the following within USE_COMPLEX to avoid run multiple copies of it.
 static char fnwisdom[64];
 static void load_wisdom(){
     FILE *fpwisdom;
@@ -87,7 +83,7 @@ static void load_wisdom(){
 }
 /**
    save FFT wisdom to file.
- */
+*/
 static void save_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"w"))){
@@ -101,59 +97,77 @@ static void save_wisdom(){
 	fclose(fpwisdom);
     }
 }
-
-#include <dlfcn.h>
-/**
-   executed before main(). FFTW website says "We should also mention one other
-   restriction: if you save wisdom from a program using the multi-threaded FFTW,
-   that wisdom cannot be used by a program using only the single-threaded FFTW
-   (i.e. not calling fftw_init_threads)." So here we use different names.
- */
-static __attribute__((constructor))void init(){
-    /*
-#if !USE_FFTW_THREADS
-#if defined(USE_SINGLE)
-    void *libfftw_threads=dlopen("libfftwf-threads.so", RTLD_LAZY);
-#else
-    void *libfftw_threads=dlopen("libfftw-threads.so", RTLD_LAZY);
-    #endif
-    if(libfftw_threads){
-	
-    }else{
-	//warning("libfftw-threads not found\n");
-    }	
-    
-#endif
-    */
-#if USE_FFTW_THREADS
-    FFTW(init_threads)();
-#ifdef USE_SINGLE
-    sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
-#else
-    sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
-#endif
-#else
-#ifdef USE_SINGLE
-    sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
-#else
-    sprintf(fnwisdom, "%s/.aos/fftw_wisdom_serial",HOME);
-#endif
-#endif
-    load_wisdom();
-}
 /**
    executed after main() exits.
- */
+*/
 static __attribute__((destructor))void deinit(){
     save_wisdom();
-#if USE_FFTW_THREADS == 1
-    FFTW(cleanup_threads)();
-#endif
 }
+#include <dlfcn.h>
+static void init_threads(){
+    void *libfftw_threads=NULL;
+    const char *fn=0;
+#if _OPENMP>200805
+#if defined(USE_SINGLE)
+    fn="libfftw3f_omp.so";
+#else
+    fn="libfftw3_omp.so";
+#endif
+#endif
+    if(!libfftw_threads){
+#if defined(USE_SINGLE)
+	fn="libfftw3f_threads.so";
+#else
+	fn="libfftw3_threads.so";
+#endif
+    }
+    if((libfftw_threads=dlopen(fn, RTLD_LAZY))){
+	info2("Open FFTW thread library: success\n");
+	void (*p_fftw_init_threads)(void)=NULL;
+	has_threads=1;
+#ifdef USE_SINGLE
+	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
+	p_fftw_init_threads=dlsym(libfftw_threads, "fftwf_init_threads");
+	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftwf_plan_with_nthreads");
+#else
+	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
+	p_fftw_init_threads=dlsym(libfftw_threads, "fftw_init_threads");
+	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftw_plan_with_nthreads");
+#endif
+	p_fftw_init_threads();
+    }else{
+	info2("Open FFTW thread library: failed\n"); 
+	has_threads=0;
+#ifdef USE_SINGLE
+	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
+#else
+	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_serial",HOME);
+#endif
+    }
+    load_wisdom();
+}
+#else
+static void init_threads(){}
+#endif
+static void FFTW_THREADS(long n){
+    if(has_threads==-1){
+	init_threads();
+    }
+    if(has_threads==1){
+	if(n>1024*1024){
+	    p_fftw_plan_with_nthreads(NTHREAD);
+	}else{
+	    p_fftw_plan_with_nthreads(1);
+	}
+    }
+}
+
+
+#ifdef USE_COMPLEX
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
- */
+*/
 static void X(fft2plan)(X(mat) *A, int dir){
     assert(abs(dir)==1 && A && A->p);
     if(!A->fft) {
@@ -210,7 +224,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
 
 /**
    Do 2d FFT transforms.
- */
+*/
 void X(fft2)(X(mat) *A, int dir){
     assert(abs(dir)==1); assert(A && A->p);
     /*do 2d FFT on A. */
@@ -231,7 +245,7 @@ void X(fft2i)(X(mat) *A, int dir){
 
 /**
    Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny)
- */
+*/
 void X(fft2s)(X(mat) *A, int dir){/*symmetrical cfft2. */
     X(fft2)(A,dir);
     X(scale)(A,1./sqrt((R)(A->nx*A->ny)));
@@ -258,7 +272,7 @@ void X(fft2partial)(X(mat) *A, int ncomp, int dir){
 
 /**
    returns IFFT(fftshift(FFT(A)))
- */
+*/
 X(mat) *X(ffttreat)(X(mat) *A){
     if (!A) return NULL;
     X(mat) *B=X(new)(A->nx, A->ny);

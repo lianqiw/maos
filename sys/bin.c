@@ -544,31 +544,29 @@ void zfreadlarr(file_t *fp, int count, ...){
 
    In file, the header is located before the data magic.
 */
-static uint32_t 
-read_bin_magic(file_t *fp, char **header){
+static int
+read_bin_header(header_t *header, file_t *fp){
     uint32_t magic,magic2;
     uint64_t nlen, nlen2;
     if(fp->isfits) error("fits file is not supported\n");
     while(1){
 	/*read the magic number.*/
-	if(zfread2(&magic, sizeof(uint32_t), 1, fp)) return 0;
-	/*If it is header, read or skip it.*/
-	if(magic==M_SKIP){
+	if(zfread2(&magic, sizeof(uint32_t), 1, fp)) return -1;
+	/*If it is hstr, read or skip it.*/
+	if((magic&M_SKIP)==M_SKIP){
 	    continue;
 	}else if(magic==M_HEADER){
 	    zfread(&nlen, sizeof(uint64_t), 1, fp);
 	    if(nlen>0){
-		/*zfseek failed in cygwin (gzseek). so we already readin the header instead.*/
-		char header2[nlen];
-		zfread(header2, 1, nlen, fp);
-		header2[nlen-1]='\0'; /*make sure it is NULL terminated. */
-		if(header){
-		    if(*header){
-			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
-			strncat(*header, header2, nlen);
-		    }else{
-			*header=strdup(header2);
-		    }
+		/*zfseek failed in cygwin (gzseek). so we already readin the hstr instead.*/
+		char hstr2[nlen];
+		zfread(hstr2, 1, nlen, fp);
+		hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
+		if(header->str){
+		    header->str=realloc(header->str,((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
+		    strncat(header->str, hstr2, nlen);
+		}else{
+		    header->str=strdup(hstr2);
 		}
 	    }
 	    zfread(&nlen2, sizeof(uint64_t),1,fp);
@@ -576,24 +574,17 @@ read_bin_magic(file_t *fp, char **header){
 	    if(magic!=magic2 || nlen!=nlen2){
 		info("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n", 
 		     magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
-		error("Header verification failed\n");
+		error("Header string verification failed\n");
 	    }
-	}else{ /*otherwise return the magic number*/
-	    return magic;
+	}else{ //Finish
+	    header->magic=magic;
+	    zfreadlarr(fp, 2, &header->nx, &header->ny);
+	    return 0;
 	}
     }/*while*/
+    return -1;
 }
 
-/**
-   Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
-*/
-static void 
-write_bin_magic(uint32_t magic, file_t *fp){
-    if(fp->isfits) error("fits file is not supported\n");
-    uint32_t magic2=M_SKIP;
-    zfwrite(&magic2, sizeof(uint32_t), 1, fp);
-    zfwrite(&magic,  sizeof(uint32_t), 1, fp);
-}
 /**
    Append the header to current position in the file.  
 */
@@ -610,23 +601,23 @@ write_bin_magic(uint32_t magic, file_t *fp){
   of header is rounded to multiple of 8 bytes.
  */
 static void 
-write_bin_header(const char *header, file_t *fp){
-    if(!header) return;
+write_bin_headerstr(const char *str, file_t *fp){
+    if(!str) return;
     if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic=M_HEADER;
-    uint64_t nlen=strlen(header)+1;
-    /*make header 8 byte alignment. */
-    char *header2=strdup(header);
+    uint64_t nlen=strlen(str)+1;
+    /*make str 8 byte alignment. */
+    char *str2=strdup(str);
     if(nlen % 8 != 0){
 	nlen=(nlen/8+1)*8;
-	header2=realloc(header2, nlen);
+	str2=realloc(str2, nlen);
     }
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(header2, 1, nlen, fp);
+    zfwrite(str2, 1, nlen, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
-    free(header2);
+    free(str2);
 }
 
 /**
@@ -648,7 +639,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     if(empty) count=0;
 
     int bitpix=0;
-    switch(magic){
+    switch(magic & 0xFFFF){
     case M_FLT:
 	bitpix=-32;
 	break;
@@ -717,7 +708,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 /**
    Read fits header.
  */
-int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
+static int 
+read_fits_header(header_t *header, file_t *fp){
+    //, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
     char line[82];//extra space for \n \0
     int end=0;
     int page=0;
@@ -738,15 +731,15 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	    if(naxis>2) error("Data type not supported\n");
 	    if(naxis>0){
 		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20lu", (unsigned long *)nx)!=1) error("Unable to determine nx\n");
+		if(sscanf(line+10, "%20lu", (unsigned long *)&header->nx)!=1) error("Unable to determine nx\n");
 	    }else{
-		*nx=0;
+		header->nx=0;
 	    }
 	    if(naxis>1){
 		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20lu", (unsigned long *)ny)!=1) error("Unable to determine ny\n");
+		if(sscanf(line+10, "%20lu", (unsigned long *)&header->ny)!=1) error("Unable to determine ny\n");
 	    }else{
-		*ny=0;
+		header->ny=0;
 	    }
 	    start=3+naxis;
 	}
@@ -777,12 +770,12 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 		    }
 		}
 		if(length>0){
-		    if(*str){
-			*str=realloc(*str, strlen(*str)+length+1+newline);
+		    if(header->str){
+			header->str=realloc(header->str, strlen(header->str)+length+1+newline);
 		    }else{
-			*str=malloc(length+1+newline); (*str)[0]='\0';
+			header->str=malloc(length+1+newline); (header->str)[0]='\0';
 		    }
-		    strcat(*str, hh);
+		    strcat(header->str, hh);
 		}
 	    }
 	}
@@ -790,19 +783,19 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
     }
     switch(bitpix){
     case -32:
-	*magic=M_FLT;
+	header->magic=M_FLT;
 	break;
     case -64:
-	*magic=M_DBL;
+	header->magic=M_DBL;
 	break;
     case 32:
-	*magic=M_INT32;
+	header->magic=M_INT32;
 	break;
     case 16:
-	*magic=M_INT16;
+	header->magic=M_INT16;
 	break;
     case 8:
-	*magic=M_INT8;
+	header->magic=M_INT8;
 	break;
     default:
 	error("Invalid\n");
@@ -818,10 +811,13 @@ void write_header(const header_t *header, file_t *fp){
 	    write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
 	}
     }else{
-	if(header){
-	    write_bin_header(header->str, fp);
+	if(header->str){
+	    write_bin_headerstr(header->str, fp);
 	}
-	write_bin_magic(header->magic, fp);
+	//2015/01/27: We converted dummy header to a subtype.
+	uint32_t magic2=M_SKIP;
+	zfwrite(&magic2, sizeof(uint32_t), 1, fp);
+	zfwrite(&header->magic,  sizeof(uint32_t), 1, fp);
 	zfwritelarr(fp, 2, &header->nx, &header->ny);
     }
 }
@@ -832,15 +828,9 @@ int read_header2(header_t *header, file_t *fp){
     int ans;
     header->str=NULL;
     if(fp->isfits){
-	ans=read_fits_header(fp, &header->str, &header->magic, &header->nx, &header->ny);
+	ans=read_fits_header(header, fp);
     }else{
-	header->magic=read_bin_magic(fp, &header->str);
-	if(header->magic==0){
-	    ans=-1;
-	}else{
-	    ans=0;
-	    zfreadlarr(fp, 2, &header->nx, &header->ny);
-	}
+	ans=read_bin_header(header, fp);
     }
     return ans;
 }
@@ -872,7 +862,7 @@ void write_timestamp(file_t *fp){
     char header[128];
     snprintf(header,128, "Created by MAOS Version %s on %s in %s\n",
 	     PACKAGE_VERSION, myasctime(), myhostname());
-    write_bin_header(header, fp);
+    write_bin_headerstr(header, fp);
 }
 
 /**
@@ -1006,7 +996,7 @@ void writespint(const spint *p, long nx, long ny, const char *format,...){
 }
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     int size=0;
-    switch(magic){
+    switch(magic & 0xFFFF){
     case M_INT64:
 	size=8;
 	break;
@@ -1025,7 +1015,7 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
 	size=abs(size);
 	void *p=malloc(size*len);
 	zfread(p, size, len, fp);
-	switch(magic){
+	switch(magic & 0xFFFF){
 	case M_INT64:{
 	    uint64_t *p2=p;
 	    for(unsigned long j=0; j<len; j++){
@@ -1054,15 +1044,15 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
    Read spint array of size nx*ny from file. Optionally convert from other formats.
  */
 spint *readspint(file_t *fp, long* nx, long* ny){
-    uint32_t magic=read_bin_magic(fp, NULL);
-    uint64_t nx2, ny2;
-    zfreadlarr(fp, 2, &nx2, &ny2);
+    header_t header;
+    read_header(&header, fp);
+    free(header.str);
     spint *out=NULL;
     if(nx!=0 && ny!=0){
-	*nx=(long)nx2;
-	*ny=(long)ny2;
-	out=malloc(nx2*ny2*sizeof(spint));
-	readspintdata(fp, magic, out, nx2*ny2);
+	*nx=(long)header.nx;
+	*ny=(long)header.ny;
+	out=malloc((*nx)*(*ny)*sizeof(spint));
+	readspintdata(fp, header.magic, out, (*nx)*(*ny));
     }else{
 	*nx=0;
 	*ny=0;

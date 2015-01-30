@@ -133,7 +133,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 		}
 	    }
 	}
-	if(wtsum>EPS && wtsum<1-EPS){
+	if(wtsum>EPS && wtsum<1-EPS*10){
 	    wtsum=1./wtsum;
 	    for(long ip=bp[iloc]; ip<count; ip++){
 		bx[count]*=wtsum;

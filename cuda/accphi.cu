@@ -311,23 +311,17 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    /*need to copy atm to gpu. and update next_isim */
 	    TIC;tic;
 	    pthread_join(next_threads[ips], NULL);
-	    toc2("Step %d: Layer %d wait for transfering",isim, ips);
 	    for(int im=0; im<NGPU; im++)
 #if _OPENMP >= 200805 
 #pragma omp task
 #endif
 	    {
-		tic;
 		gpu_set(im);
 		cumap_t *cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
 		DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
 			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
-		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
-		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
-		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
-		     isim, ips, nx0, ny0, im, offx, offy);tic;
 	    }/*for im */
 #if _OPENMP >= 200805 
 #pragma omp taskwait
@@ -363,7 +357,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    }else{/*align left */
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
-	    info2("Step %d: next update layer %d in step %d\n", isim, ips, next_isim[ips]);
+	    toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, next_isim[ips]); 
 }//if isim
 }//for ips
 #if _OPENMP >= 200805 

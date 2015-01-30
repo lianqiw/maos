@@ -33,7 +33,7 @@
 typedef struct ATM_CFG_T{
     double r0z;   /**<r0 at zenith*/
     double r0;    /**<derived from r0z for zenith angle za*/
-    double l0;    /**<outer scale*/
+    double L0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
     double hmax;  /**<maximum in ht*/
     dmat *r0logpsds; /**<[alpha beta]: temporal PSD of log(r0) is beta*f^alpha. f is in hz.*/
@@ -67,7 +67,7 @@ typedef struct ATM_CFG_T{
 typedef struct ATMR_CFG_T{
     double r0z;   /**<r0 at zenith*/
     double r0;    /**<derived from r0z for zenith angle za*/
-    double l0;    /**<outer scale*/
+    double L0;    /**<outer scale*/
     double hs;    /**<height of the high order guide star. derived*/
     double hmax;  /**<maximum of ht*/
     dmat *ht;   /**<height of each layer*/
@@ -184,8 +184,9 @@ typedef struct POWFS_CFG_T{
     int gtype_recon;/**<wfs type if not using physical optics in simulation. 
 		       - 0: geometric
 		       - 1: ztilt.*/
-    int phytype;    /**<physical optics type. 1: mtch, 2: tcog, 3: MAP*/
+    int phytype;    /**<physical optics type for reconstruction. 1: mtch, 2: tcog, 3: MAP*/
     int phytypesim; /**<physical optics type for simulation. -1 to follow phytype*/
+    int phytypesim2;/**<physical optics type after dithering update. -1 to follow phytypesim*/
     int phystep;    /**<frame to start using physical optics. 
 		       -  0: means from frame 0.
 		       - >0: need to compute GS0 to calculate geometric optics
@@ -193,8 +194,8 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.l0 is not set*/
-    double l0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.l0 is not set*/
+    double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    double L0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
     double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
@@ -227,10 +228,9 @@ typedef struct POWFS_CFG_T{
     int dither_npll;  /**<Number of simulations steps for updating PLL.*/
     int dither_ndrift;/**<Number of PLL periods for updating drift mode computation*/
     int dither_nskip; /**<Number of PLL cycles to skip before computing averaged images*/
-    int dither_nmtch; /**<Number of drift periods for updating matched filter*/
+    int dither_ngrad; /**<Number of drift periods for updating pixel processing algorithm (MF/CoG)*/
     /*Options for Pywfs*/
     double modulate;/**<Pyramid modulation diamter in arcsec*/
-    double fov;     /**<Pyramid WFS FoV, equivalent to fieldstop, but for PyWFS only*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -328,7 +328,6 @@ typedef struct EVL_CFG_T{
     lmat *scalegroup;/**<scale group for dm cache. havenumber of nevl*dm
 		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
-    int nthread;    /**<number of threads for evaluation parallelization*/
     lmat *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }EVL_CFG_T;
 
@@ -470,11 +469,11 @@ typedef struct SIM_CFG_T{
     dmat *epdm;      /**<error gain for DM commands (high order)*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
-    dmat *apupt;     /**<servo coefficient for for LGS uplink pointing loop.*/
-    dmat *epupt;     /**<error gain for uplink pointing*/
+    dmat *apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/
+    dmat *epfsm;     /**<error gain for uplink pointing*/
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
-    int alupt;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
     double fcttm;    /**<cross over frequency of tip/tilt split*/
     double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
@@ -486,7 +485,7 @@ typedef struct SIM_CFG_T{
 			- 1: Focus tracking using CL gradients, for each LGS independently.
 			- 2: Focus tracking using CL gradinets, for common LGS focus only.
 		     */
-    int uptideal;    /**<ideal compensation for uplink pointing*/
+    int fsmideal;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/

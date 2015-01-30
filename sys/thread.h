@@ -114,8 +114,11 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
 #else //using our thread_pool 
 
 #define QUEUE(group,fun,arg,nthread,urgent)				\
-    thread_pool_queue_many(&group, (thread_fun)fun, (void*)arg, nthread, urgent); \
-    
+    if(nthread>1){							\
+	thread_pool_queue_many(&group, (thread_fun)fun, (void*)arg, nthread, urgent); \
+    }else{								\
+	fun(arg);							\
+    }
 #define CALL(fun,arg,nthread,urgent)					\
     if(nthread>1){							\
 	long thgroup=0;							\

@@ -423,8 +423,8 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		    parms->powfs[ipowfs].llt->misreg->p[1], 
 		    parms->sim.dt, isim, 1, stream);
 	Real ttx=0,tty=0;
-	if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
-	    if(pistatout||parms->sim.uptideal){
+	if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||pistatout||parms->sim.fsmideal){
+	    if(pistatout||parms->sim.fsmideal){
 		//warning("Remove tip/tilt in uplink ideally\n");
 		Real *lltg=cuwfs[iwfs].lltg;
 		lltg[0]=lltg[1]=0;
@@ -436,13 +436,13 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		ttx=-lltg[0];
 		tty=-lltg[1];
 	    }else{
-		ttx=simu->uptreal->p[iwfs]->p[0];
-		tty=simu->uptreal->p[iwfs]->p[1];
+		ttx=simu->fsmreal->p[iwfs]->p[0];
+		tty=simu->fsmreal->p[iwfs]->p[1];
 	    }
-	    /* copy uptreal to output  */
-	    simu->uptcmds->p[iwfs]->p[isim*2]=ttx;
-	    simu->uptcmds->p[iwfs]->p[isim*2+1]=tty;
-	}/*if uptreal */
+	    /* copy fsmreal to output  */
+	    simu->fsmcmds->p[iwfs]->p[isim*2]=ttx;
+	    simu->fsmcmds->p[iwfs]->p[isim*2+1]=tty;
+	}/*if fsmreal */
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim];
 	    Real angle=simu->winddir?simu->winddir->p[0]:0;

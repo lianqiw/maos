@@ -74,7 +74,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
     }
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     //Prevent printing of NEA during recomputing of matched filter
     const int print_nea=intstat->mtche?0:1;
     dcellfree(intstat->mtche);

@@ -334,23 +334,23 @@ static void filter_cl(SIM_T *simu){
 	    }
 	}
     }
-    if(simu->uptint){
-	/*upterr is from gradients from this time step.*/
-	dcellcp(&simu->uptreal, simu->uptint->mint->p[0]);
+    if(simu->fsmint){
+	/*fsmerr is from gradients from this time step.*/
+	dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].dither){
 		//adjust delay due to propagation
-		const int adjust=parms->sim.alupt+1-parms->powfs[ipowfs].dtrat;
+		const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
 		double angle=M_PI*0.5*((simu->isim-adjust+1)/parms->powfs[ipowfs].dtrat);
-		simu->uptreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
-		simu->uptreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
+		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
+		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
 	}
-	servo_filter(simu->uptint, simu->upterr);
+	servo_filter(simu->fsmint, simu->fsmerr);
     }
 }
 /**
@@ -451,6 +451,6 @@ void filter_dm(SIM_T *simu){
     simu->dmerr=0;//mark no output.
     dcellzero(simu->Merr_lo);
     simu->Merr_lo=0;
-    dcellzero(simu->upterr);
-    simu->upterr=0;
+    dcellzero(simu->fsmerr);
+    simu->fsmerr=0;
 }

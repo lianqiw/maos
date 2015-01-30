@@ -301,11 +301,11 @@ public:
 	if(p) cudaFree(p);
     }
 };
-class cupts_t:public culoc_t{
+class cfsms_t:public culoc_t{
 public:
     Real dxsa;
     int nxsa;
-    cupts_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
+    cfsms_t(pts_t *in=0):culoc_t((loc_t*)in),dxsa(0),nxsa(0){
 	if(!in) return;
 	dxsa=in->dx;
 	nxsa=in->nx;

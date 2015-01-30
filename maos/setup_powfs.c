@@ -172,7 +172,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea, int reduce_isolated){
     }
     int count=0;
     const int nxsa=powfs[ipowfs].pts->nx * powfs[ipowfs].pts->nx;
-    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+    for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 	if(saa->p[isa]>=thresarea){
 	    /*Area is above threshold, keep.  Shift pts, ptsm, loc, locm, amp,
 	      ampm, saloc area is already normalized that maxes to 1. The MOVE*
@@ -339,7 +339,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(parms->save.setup){
 	    writebin(ampi, "%s/powfs%d_ampi", dirsetup, ipowfs);
 	}
-	for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+	for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 	    for(int i=0; i<nx*nx; i++){
 		powfs[ipowfs].amp->p[nx*nx*isa+i]*=ampi->p[i];
 	    }
@@ -427,8 +427,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc){
 	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
-    powfs[ipowfs].npts = powfs[ipowfs].pts->nsa*nxsa;
-    powfs[ipowfs].nthread=MIN(powfs[ipowfs].pts->nsa, NTHREAD);
+    powfs[ipowfs].npts = powfs[ipowfs].saloc->nloc*nxsa;
     powfs[ipowfs].realamp=cellnew(nwfsp, 1);
     powfs[ipowfs].realsaa=cellnew(nwfsp, 1);
     powfs[ipowfs].sumamp=dnew(nwfsp, 1);
@@ -458,8 +457,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(parms->powfs[ipowfs].nwvl>1){
 	    error("Not implemented yet. need to do phase unwrap in wfsgrad.\n");
 	}
-	powfs[ipowfs].fieldstop=locfft_init(powfs[ipowfs].loc, powfs[ipowfs].amp, 0, 
-					    parms->powfs[ipowfs].wvl, parms->powfs[ipowfs].fieldstop);
+	powfs[ipowfs].fieldstop=locfft_init(powfs[ipowfs].loc, powfs[ipowfs].amp, 
+					    parms->powfs[ipowfs].wvl, NULL, 2,  
+					    parms->powfs[ipowfs].fieldstop);
     }
     dfree(ampi);
     if(parms->misreg.dm2wfs){
@@ -560,7 +560,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	powfs[ipowfs].neasim=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    const long nsa=powfs[ipowfs].pts->nsa;
+	    const long nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *nea=NULL;
 	    if(parms->powfs[ipowfs].neasimfile){
 		if(parms->powfs[ipowfs].neasim!=-1){
@@ -569,7 +569,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		nea=dread("%s_wfs%d",parms->powfs[ipowfs].neasimfile,iwfs);/*rad */
 		if(nea->nx!=nsa || (nea->ny!=2 && nea->ny!=3)){
 		    error("wfs %d: NEA read from %s_wfs%d has incorrect format. We want %ldx2(3) array.\n",
-			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].pts->nsa);
+			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].saloc->nloc);
 		}
 	    }else{
 		nea=dnew(nsa, 2);
@@ -632,7 +632,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const int pixpsay=parms->powfs[ipowfs].pixpsa;
     const int radpix=parms->powfs[ipowfs].radpix;
     const double dxsa=powfs[ipowfs].pts->dsa;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     if(parms->powfs[ipowfs].llt){
 	const int nllt=parms->powfs[ipowfs].llt->n;
 	double rsa2, rsa2max=0;
@@ -772,22 +772,22 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    warning("Scaling bkgrnd by %g", bkscale);
 	}
 	if(parms->powfs[ipowfs].bkgrndfn && 
-	   (powfs[ipowfs].bkgrnd->nx!=powfs[ipowfs].pts->nsa
+	   (powfs[ipowfs].bkgrnd->nx!=powfs[ipowfs].saloc->nloc
 	    ||(powfs[ipowfs].bkgrnd->ny!=1
 	       && powfs[ipowfs].bkgrnd->ny!=parms->powfs[ipowfs].nwfs))){
 	    error("powfs%d: bkgrnd is of dimension %ld x %ld, "
 		  "but should be %ld x 1 or %d\n",
 		  ipowfs, powfs[ipowfs].bkgrnd->nx, powfs[ipowfs].bkgrnd->ny,
-		  powfs[ipowfs].pts->nsa, parms->powfs[ipowfs].nwfs);
+		  powfs[ipowfs].saloc->nloc, parms->powfs[ipowfs].nwfs);
 	}
 	if(parms->powfs[ipowfs].bkgrndfnc && 
-	   (powfs[ipowfs].bkgrndc->nx!=powfs[ipowfs].pts->nsa
+	   (powfs[ipowfs].bkgrndc->nx!=powfs[ipowfs].saloc->nloc
 	    ||(powfs[ipowfs].bkgrndc->ny!=1
 	       && powfs[ipowfs].bkgrndc->ny!=parms->powfs[ipowfs].nwfs))){
 	    error("powfs%d: bkgrndc is of dimension %ld x %ld, "
 		  "but should be %ld x 1 or %d\n",
 		  ipowfs, powfs[ipowfs].bkgrndc->nx, powfs[ipowfs].bkgrndc->ny,
-		  powfs[ipowfs].pts->nsa, parms->powfs[ipowfs].nwfs);
+		  powfs[ipowfs].saloc->nloc, parms->powfs[ipowfs].nwfs);
 	}
     }
 }
@@ -936,7 +936,6 @@ typedef struct{
     int free;     /**<Free this array after using?*/
 }mketf_t;
 void* mketf_wrap(mketf_t *data){
-    info2("Na using column %d.\n",data->icol);
     ETF_T*result=mketf(data->dtfs, data->hs, data->sodium, data->icol, data->nwvl,
 		       data->srot, data->srsa, data->za, data->no_interp);
     if(data->free) free(data);
@@ -1174,7 +1173,7 @@ static void
 setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     TIC;tic;
     const int nwfs=parms->powfs[ipowfs].nwfs;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     const int ntry=500;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
@@ -1291,7 +1290,7 @@ static void
 setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     int disable_save_save=disable_save;
     disable_save=0;//temporarily disable this feature.
-    long nsa=powfs[ipowfs].pts->nsa;
+    long nsa=powfs[ipowfs].saloc->nloc;
     if(powfs[ipowfs].intstat){
 	error("Should only be called once\n");
     }
@@ -1504,7 +1503,6 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
-	   ||parms->powfs[ipowfs].dither
 	   ||parms->powfs[ipowfs].neaphy){
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
@@ -1588,6 +1586,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcellfree(powfs[ipowfs].opdbias);
     dcellfree(powfs[ipowfs].gradoff);
     dcellfree(powfs[ipowfs].gradncpa);
+    cellfree(powfs[ipowfs].gain);
     dfree(powfs[ipowfs].dtheta);
 }
 /**

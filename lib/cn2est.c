@@ -22,7 +22,7 @@
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat,
-		     const dmat *hs, dmat *htrecon, int keepht, double l0){
+		     const dmat *hs, dmat *htrecon, int keepht, double L0){
     info2("Cn2 estimation:");
     /*We need at least a pair */
     if(!wfspair) return 0;
@@ -192,8 +192,8 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	cn2est->cov1->p[iwfspair]=dnew(pair->nsep,1);
 	cn2est->covc->p[iwfspair]=cnew(nx, nx);
 
-	info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
-	      iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);
+	/*info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
+	  iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);*/
     }/*iwfspair */
     /*stores estimated weight of layers during simulation and output to file finally. */
     cn2est->wt=dcellnew3(nwfspair, 1, nhtsx, nhtsy);
@@ -221,7 +221,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
     cn2est->wtconvert=cellnew(1,nwfspair);
-    cn2est->l0=l0;
+    cn2est->L0=L0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
 	const int nsep=pair->nsep;
@@ -231,7 +231,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	/*sampling in mxx, myy after FFT */
 	const double dx=dsa/cn2est->ovs;
 	const double df=1./(nm*dx);
-	const double l02=pow(cn2est->l0,-2);
+	const double L02=pow(cn2est->L0,-2);
 	/*initialize */
 	cmat *mc=cnew(nm,nm);
 	/*create 2-d pointers */
@@ -275,7 +275,7 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 		    const double fx=(ix<nm2?ix:ix-nm)*df;
 		    const double sincfx=sinc(fx*dsa);
 		    /*the turbulence PSD with outerscale */
-		    const double psd=psd_coef*pow((fx*fx+fy*fy)*zetan2+l02,-11./6.);
+		    const double psd=psd_coef*pow((fx*fx+fy*fy)*zetan2+L02,-11./6.);
 		    /*gx diff is along x, gy diff is along y to form real curvature */
 		    const double cur=pow(2*fx*(cos(2*M_PI*dsa*fx)-1)+2*fy*(cos(2*M_PI*dsa*fy)-1),2);
 		    pmc[iy][ix]=pow(sincfy*sincfx,2)*psd*cur;

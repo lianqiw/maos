@@ -37,7 +37,7 @@ static mapcell *genatm_do(SIM_T *simu){
     const ATM_CFG_T *atm=&parms->atm;
     TIC;
     mapcell *screens;
-    if(parms->dbg.atm == 0 || parms->dbg.atm == -1){
+    if(parms->dbg.atm == 0){
 	GENATM_T *gs=simu->atmcfg;
 	if(!gs){
 	    simu->atmcfg=calloc(1, sizeof(GENATM_T));/*the data for generating screens. */
@@ -45,7 +45,7 @@ static mapcell *genatm_do(SIM_T *simu){
 	    gs->rstat  = simu->atm_rand;
 	    gs->wt     = atm->wt->p;
 	    gs->r0     = atm->r0;
-	    gs->l0     = atm->l0;
+	    gs->L0     = atm->L0;
 	    gs->dx     = atm->dx;
 	    gs->nx     = atm->nx;
 	    gs->ny     = atm->ny;
@@ -60,6 +60,12 @@ static mapcell *genatm_do(SIM_T *simu){
 	info2("Generating Atmospheric Screen...\n");
 	tic;
 	screens = parms->atm.fun(gs);
+	for(int i=0; i<atm->nps; i++){
+	    screens->p[i]->h=atm->ht->p[i];
+	    double angle=simu->winddir->p[i];
+	    screens->p[i]->vx=cos(angle)*atm->ws->p[i];
+	    screens->p[i]->vy=sin(angle)*atm->ws->p[i];
+	}
 	toc2("Atmosphere ");
     }else{
 	info2("Generating Testing Atmosphere Screen\n");
@@ -78,32 +84,28 @@ static mapcell *genatm_do(SIM_T *simu){
 	screens=cellnew(atm->nps, 1);
 	double hs=90000;
 	double dx=atm->dx;
+	double dx2=2./nx;
 	for(int is=0; is<atm->nps; is++){
 	    screens->p[is]=mapnew(nx, ny, dx, dx, NULL);
 	    screens->p[is]->h=atm->ht->p[is];
 	}
-	double scale=-pow(1.-screens->p[5]->h/hs,-2);
-	double strength=1./20626500.;
-	info("strength=%g, scale=%g\n",strength,scale);
-	switch(parms->dbg.atm){
-	case 1:{
-	    for(int iy=0; iy<ny; iy++){
-		double *p0=screens->p[0]->p+iy*nx;
-		for(int ix=0; ix<nx; ix++){
-		    double x=(ix-nx/2)*dx;
-		    p0[ix]=x*strength;
-		}
-	    }
-	}
-	    break;
-	case 2:{
+	double strength=100e-9;
+	if(parms->dbg.atm>0){
+	    loc_t *sloc=mksqloc_map(screens->p[0]);
+	    dmat *sopd=zernike(sloc, nx*dx, parms->dbg.atm, parms->dbg.atm, 0);
+	    dscale(sopd, strength);
+	    memcpy(screens->p[0]->p, sopd->p, sizeof(double)*sopd->nx);
+	    dfree(sopd);
+	}else if(parms->dbg.atm==-1){
+	    double scale=-pow(1.-screens->p[5]->h/hs,-2);
+	    //plate scale mode only
 	    for(int iy=0; iy<ny; iy++){
 		double *p0=screens->p[0]->p+iy*nx;
 		double *p1=screens->p[5]->p+iy*nx;
-		double y=(iy-ny/2)*dx;
+		double y=(iy-ny/2)*dx2;
 		double yy=y*y;
 		for(int ix=0; ix<nx; ix++){
-		    double x=(ix-nx/2)*dx;
+		    double x=(ix-nx/2)*dx2;
 		    double xx=x*x;
 		    /*double xy=x*y; */
 		    /*p0[ix]=(iy-nx/2)*dx*strength; */
@@ -112,18 +114,11 @@ static mapcell *genatm_do(SIM_T *simu){
 		    p1[ix]=scale*(p0[ix]);
 		}
 	    }
-	}
-	    break;
-	default:
-	    error("Invalid\n");
-	}
+	}else{
+	    error("dbg.atm has invalid value: %d\n", parms->dbg.atm);
+	} 
     }
-    for(int i=0; i<atm->nps; i++){
-	screens->p[i]->h=atm->ht->p[i];
-	double angle=simu->winddir->p[i];
-	screens->p[i]->vx=cos(angle)*atm->ws->p[i];
-	screens->p[i]->vy=sin(angle)*atm->ws->p[i];
-    }
+ 
     return screens;
 }
 
@@ -670,7 +665,7 @@ static void init_simu_evl(SIM_T *simu){
     simu->evl_prop_dm=calloc(nevl*parms->ndm, sizeof(thread_t*));
     simu->evl_propdata_dm=calloc(nevl*parms->ndm, sizeof(PROPDATA_T));
     for(int ievl=0; ievl<nevl; ievl++){
-	const int nthread=parms->evl.nthread;
+	const int nthread=1;
 	int tot;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const int ind=ievl+nevl*ips;
@@ -755,7 +750,7 @@ static void init_simu_wfs(SIM_T *simu){
 	long nnx[parms->nwfsr];
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    nnx[iwfs]=powfs[ipowfs].pts->nsa*2;
+	    nnx[iwfs]=powfs[ipowfs].saloc->nloc*2;
 	}
 	simu->gradlastol=dcellnew3(parms->nwfsr, 1, nnx, NULL);
     }
@@ -763,13 +758,18 @@ static void init_simu_wfs(SIM_T *simu){
 
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int nsa=powfs[ipowfs].pts->nsa;
+	int nsa=powfs[ipowfs].saloc->nloc;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
 	simu->wfsopd->p[iwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 	if(parms->powfs[ipowfs].usephy){
-	    simu->ints->p[iwfs]=cellnew(nsa,1);
-	    for(int isa=0; isa<nsa; isa++){
-		simu->ints->p[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+	    if(parms->powfs[ipowfs].type==0){
+		simu->ints->p[iwfs]=cellnew(nsa,1);
+		for(int isa=0; isa<nsa; isa++){
+		    simu->ints->p[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+		}		
+	    }else{
+		simu->ints->p[iwfs]=cellnew(1,1);
+		simu->ints->p[iwfs]->p[0]=dnew(powfs[ipowfs].saloc->nloc,4);
 	    }
 	}
 	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom->p[iwfs] || parms->powfs[ipowfs].pistatout){
@@ -787,25 +787,25 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->ngsfocuslpf=0;
     }
     if(parms->nphypowfs){
-	simu->upterr_store=cellnew(nwfs,1);
-	simu->uptreal=cellnew(nwfs,1);
+	simu->fsmerr_store=cellnew(nwfs,1);
+	simu->fsmreal=cellnew(nwfs,1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt){
-		simu->upterr_store->p[iwfs]=dnew(2,1);
-		simu->uptreal->p[iwfs]=dnew(2,1);
+	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither){
+		simu->fsmerr_store->p[iwfs]=dnew(2,1);
+		simu->fsmreal->p[iwfs]=dnew(2,1);
 	    }
 	}
-	simu->uptint=servo_new(simu->uptreal, parms->sim.apupt, parms->sim.alupt,
-			       parms->sim.dthi, parms->sim.epupt);
+	simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
+			       parms->sim.dthi, parms->sim.epfsm);
     }
   
-    {/*MMAP the LGS uptlink error/command output */
+    {/*MMAP the LGS fsmlink error/command output */
 	long nnx[nwfs];
 	long nny[nwfs];
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt){
+	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither){
 		nnx[iwfs]=2;
 		nny[iwfs]=nsim;
 	    }else{
@@ -814,11 +814,11 @@ static void init_simu_wfs(SIM_T *simu){
 	    }
 	}
 	if(parms->save.extra){
-	    simu->upterrs = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resupterr_%d.bin", seed);
-	    simu->uptcmds = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resuptcmd_%d.bin", seed);
+	    simu->fsmerrs = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resfsmerr_%d.bin", seed);
+	    simu->fsmcmds = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resfsmcmd_%d.bin", seed);
 	}else{
-	    simu->upterrs = dcellnew3(nwfs, 1, nnx, nny);
-	    simu->uptcmds = dcellnew3(nwfs, 1, nnx, nny);
+	    simu->fsmerrs = dcellnew3(nwfs, 1, nnx, nny);
+	    simu->fsmcmds = dcellnew3(nwfs, 1, nnx, nny);
 	}
     }
    
@@ -829,7 +829,7 @@ static void init_simu_wfs(SIM_T *simu){
 	long ncompy=powfs[ipowfs].ncompy;
 	long notf=MAX(ncompx, ncompy);
 	if(parms->powfs[ipowfs].psfout){
-	    const int nsa=powfs[ipowfs].pts->nsa;
+	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    /*The PSFs here are PSFs of each subaperture. */
 	    simu->wfspsfout->p[iwfs]=cellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout->p[iwfs]->nx*simu->wfspsfout->p[iwfs]->ny; ipsf++){
@@ -924,7 +924,6 @@ static void init_simu_wfs(SIM_T *simu){
     simu->wfs_propdata_dm=calloc(nwfs*parms->ndm, sizeof(PROPDATA_T));
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int nthread=powfs[ipowfs].nthread;
 	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
@@ -945,13 +944,16 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(powfs[ipowfs].loc_tel){/*misregistration. */
 		data->locout=powfs[ipowfs].loc_tel->p[wfsind];
 		tot=data->locout->nloc;
+	    }else if(parms->powfs[ipowfs].type==1){
+		data->locout=powfs[ipowfs].loc;
+		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
 	    prop_index(data);
-	    simu->wfs_prop_atm[iwfs+nwfs*ips]=calloc(nthread, sizeof(thread_t));
-	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,nthread,prop,data);
+	    simu->wfs_prop_atm[iwfs+nwfs*ips]=calloc(NTHREAD, sizeof(thread_t));
+	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,NTHREAD,prop,data);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
@@ -981,13 +983,16 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(powfs[ipowfs].loc_dm){/*misregistration. */
 		data->locout=powfs[ipowfs].loc_dm->p[wfsind+idm*nwfsp];
 		tot=data->locout->nloc;
+	    }else if(parms->powfs[ipowfs].type==1){
+		data->locout=powfs[ipowfs].loc;
+		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
 	    prop_index(data);
-	    simu->wfs_prop_dm[iwfs+nwfs*idm]=calloc(nthread, sizeof(thread_t));
-	    thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, nthread, prop,data);
+	    simu->wfs_prop_dm[iwfs+nwfs*idm]=calloc(NTHREAD, sizeof(thread_t));
+	    thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, NTHREAD, prop,data);
 	}/*idm */
     }/*iwfs */
     simu->wfs_intsdata=calloc(nwfs, sizeof(WFSINTS_T));
@@ -995,12 +1000,11 @@ static void init_simu_wfs(SIM_T *simu){
 
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int nthread=powfs[ipowfs].nthread;
-	int tot=powfs[ipowfs].pts->nsa;
+	int tot=powfs[ipowfs].saloc->nloc;
 	WFSINTS_T *data=simu->wfs_intsdata+iwfs;
 	data->iwfs=iwfs;
 	simu->wfs_ints[iwfs]=calloc(NTHREAD, sizeof(thread_t));
-	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
+	thread_prep(simu->wfs_ints[iwfs], 0, tot, NTHREAD, wfsints,data);
     }
     if(parms->dither || parms->sim.mffocus){
 	simu->zoomerr=dnew(parms->nwfs,1);
@@ -1483,9 +1487,9 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo_store);
-    dcellfree(simu->upterr_store);
-    dcellfree(simu->uptreal);
-    servo_free(simu->uptint);
+    dcellfree(simu->fsmerr_store);
+    dcellfree(simu->fsmreal);
+    servo_free(simu->fsmint);
     dcellfree(simu->cgres);
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
@@ -1495,8 +1499,8 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->olmp);
     dcellfree(simu->clep);
     dcellfree(simu->clmp);
-    dcellfree(simu->upterrs);
-    dcellfree(simu->uptcmds);
+    dcellfree(simu->fsmerrs);
+    dcellfree(simu->fsmcmds);
     if(parms->recon.split){
 	dcellfree(simu->clemp);
 	dfree(simu->cleNGSm);
@@ -1541,6 +1545,8 @@ void free_simu(SIM_T *simu){
 		cellfree(simu->dither[iwfs]->i0);
 		cellfree(simu->dither[iwfs]->gx);
 		cellfree(simu->dither[iwfs]->gy);
+		cellfree(simu->dither[iwfs]->ggm);
+		cellfree(simu->dither[iwfs]->gg0);
 		free(simu->dither[iwfs]);
 	    }
 	}
@@ -1723,7 +1729,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"]\n");
     fprintf(fp,"maos.nsa=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"%ld ",powfs[powfs_ngs[ipowfs]].pts->nsa);
+	fprintf(fp,"%ld ",powfs[powfs_ngs[ipowfs]].saloc->nloc);
     }
     fprintf(fp,"]\n");
     fprintf(fp,"maos.ncomp=[");
@@ -1742,7 +1748,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     
     fprintf(fp,"maos.dxsa=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"%g ",powfs[powfs_ngs[ipowfs]].pts->dsa);
+	fprintf(fp,"%g ",powfs[powfs_ngs[ipowfs]].saloc->dx);
     }
     fprintf(fp,"]\n");
     

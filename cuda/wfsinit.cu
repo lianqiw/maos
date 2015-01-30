@@ -152,7 +152,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    pts_t *pts=powfs[ipowfs].pts;
 	    loc_t *loc=powfs[ipowfs].loc;
-	    cupowfs[ipowfs].pts=new cupts_t(pts);
+	    cupowfs[ipowfs].pts=new cfsms_t(pts);
 	    cupowfs[ipowfs].loc=new culoc_t(loc);
 	    cupowfs[ipowfs].saloc=new culoc_t(powfs[ipowfs].saloc);
 	
@@ -160,7 +160,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		pts=powfs[ipowfs].llt->pts;
 		loc=powfs[ipowfs].llt->loc;
 		cupowfs[ipowfs].llt=new cullt_t;
-		cupowfs[ipowfs].llt->pts=new cupts_t(pts);
+		cupowfs[ipowfs].llt->pts=new cfsms_t(pts);
 		cupowfs[ipowfs].llt->loc=new culoc_t(loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
@@ -395,7 +395,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		int nlx=powfs[ipowfs].llt->pts->nx;
 		int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		cuwfs[iwfs].lltopd=curnew(nlx, nlx);
-		if(parms->powfs[ipowfs].pistatout || parms->sim.uptideal){
+		if(parms->powfs[ipowfs].pistatout || parms->sim.fsmideal){
 		    DO(cudaMallocHost(&cuwfs[iwfs].lltg, 2*sizeof(Real)));
 		}
 		cuwfs[iwfs].lltwvf=cucnew(nlwvf, nlwvf);

@@ -29,7 +29,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	header=&header2;
 	read_header(header, fp);
     }
-    if(header->magic!=M_DBL){
+    if((header->magic&M_DBL)!=M_DBL){
 	error("magic=%x. Expect %x\n", header->magic, M_DBL);
     }
     double dx=fabs(search_header_num(header->str,"dx"));
@@ -77,7 +77,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 void locwritedata(file_t *fp, const loc_t *loc){
     char str[80];
     snprintf(str,80,"dx=%.15g;\ndy=%.15g;\n",loc->dx,loc->dy);
-    header_t header={M_DBL, 0, 0, str};
+    header_t header={M_LOC64, 0, 0, str};
     if(loc){
 	header.nx=loc->nloc;
 	header.ny=2;
