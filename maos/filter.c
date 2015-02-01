@@ -342,10 +342,11 @@ static void filter_cl(SIM_T *simu){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].dither){
 		//adjust delay due to propagation
-		const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
+		const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0)
+		    +1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
-		double angle=M_PI*0.5*((simu->isim-adjust+1)/parms->powfs[ipowfs].dtrat);
+		double angle=M_PI*0.5*((simu->isim+1-adjust)/parms->powfs[ipowfs].dtrat);
 		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }

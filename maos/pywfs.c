@@ -23,7 +23,7 @@
 #include "common.h"
 #include "setup_powfs.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by 1.1 times more
-#define PYWFS_POKE 1e-7 //How many meters to poke
+#define PYWFS_POKE 1e-6 //How many meters to poke
 /**
    Complex wavefront created by pyramid 
 */

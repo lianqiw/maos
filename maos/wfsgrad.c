@@ -496,12 +496,33 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	    const double angle=M_PI*0.5*(isim/parms->powfs[ipowfs].dtrat);
 	    double cs=cos(angle);
 	    double ss=sin(angle);
-
-	    double *fsmpos=simu->fsmreal->p[iwfs]->p;
-	    double ipv=(fsmpos[0]*cs+fsmpos[1]*ss);
-	    double qdv=(fsmpos[0]*ss-fsmpos[1]*cs);
+	    //Net spot movement is FSM+TTM+DM
+	    double ttx=simu->fsmreal->p[iwfs]->p[0];
+	    double tty=simu->fsmreal->p[iwfs]->p[1];
+	    if(simu->ttmreal){
+		ttx+=simu->ttmreal->p[0];
+		tty+=simu->ttmreal->p[1];
+	    }
+	    for(int idm=0; idm<parms->ndm; idm++){
+		double ptt[3]={0,0,0};
+		loc_calc_ptt(NULL, ptt, recon->aloc->p[idm], 0, 
+			     recon->aimcc->p[idm], NULL, simu->dmreal->p[idm]->p);
+		const double hs=parms->powfs[ipowfs].hs;
+		const double ht=parms->dm[idm].ht;
+		const double scale=(1.-ht/hs);//reduction of t/t due to cone effect
+		ttx+=ptt[1]*scale;
+		tty+=ptt[2]*scale;
+	    }
+	    double ipv=(ttx*cs+tty*ss);
+	    double qdv=(ttx*ss-tty*cs);
 	    pd->ipv+=ipv;
 	    pd->qdv+=qdv;
+	    /*Trace error signal for removing from NGS measurements to avoid
+	     * corrupting science*/
+	    double ttxe=simu->fsmerr->p[iwfs]->p[0];
+	    double ttye=simu->fsmerr->p[iwfs]->p[1];
+	    pd->ipve+=(ttxe*cs+ttye*ss);
+	    pd->qdve+=(ttxe*ss-ttye*cs);
 	}
 	/*Update DLL loop measurement. The delay is about 0.2 of a
 	 * cycle, according to closed loop transfer function*/
@@ -510,11 +531,13 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	if(npllacc>0 && npllacc%npll==0){
 	    pd->deltam=pd->delta;
 	    pd->a2m=sqrt(pd->ipv*pd->ipv+pd->qdv*pd->qdv)/npll;
+	    pd->a2me=sqrt(pd->ipve*pd->ipve+pd->qdve*pd->qdve)/npll;
+	    pd->ipv=pd->qdv=0;
+	    pd->ipve=pd->qdve=0;
 	    if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%.1f mas\n",
 		      isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
 	    }
-	    pd->ipv=pd->qdv=0;
 	    if(simu->resdither){
 		int ic=(npllacc-1)/(npll);
 		simu->resdither->p[iwfs]->p[ic*2+0]=pd->deltam;
@@ -573,12 +596,21 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     pfsmerrs[isim][1]=simu->fsmerr->p[iwfs]->p[1];
     if(!parms->powfs[ipowfs].trs){
 	/*when WFS t/t is used for reconstruction, do now close FSM
-	 * loop. Subtract actuao dithering signal form measurement instead.*/
-	if(parms->powfs[ipowfs].dither){
-	    DITHER_T *pd=simu->dither[iwfs];
-	    double cs, ss;
-	    dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
-	    double ptt[2]={-cs*pd->a2m, -ss*pd->a2m};
+	 * loop. Subtract actual dithering signal.*/
+	if(parms->powfs[ipowfs].dither && powfs[ipowfs].gain){
+	    double amp,cs,ss; 
+	    if(0){
+		amp=parms->powfs[ipowfs].dither_amp;
+		const double angle=M_PI*0.5*(isim/parms->powfs[ipowfs].dtrat);
+		cs=cos(angle);
+		ss=sin(angle);
+
+	    }else{
+		DITHER_T *pd=simu->dither[iwfs];
+		dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
+		amp=pd->a2me;
+	    }
+	    double ptt[2]={-cs*amp, -ss*amp};
 	    dmulvec(simu->gradcl->p[iwfs]->p, recon->TT->p[iwfs+iwfs*parms->nwfsr], ptt, 1);
 	    pfsmerrs[isim][0]+=ptt[0];
 	    pfsmerrs[isim][1]+=ptt[1];
@@ -827,14 +859,11 @@ static void dither_update(SIM_T *simu){
 		    }
 		    dfree(goff);
 		}
-		genmtch(parms, powfs, ipowfs);
 		if(parms->save.dither){
 		    writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff_adjusted_%d", ipowfs, simu->isim);
 		    writebin(powfs[ipowfs].intstat->i0, "powfs%d_i0_%d", ipowfs, simu->isim);
 		    writebin(powfs[ipowfs].intstat->gx, "powfs%d_gx_%d", ipowfs, simu->isim);
 		    writebin(powfs[ipowfs].intstat->gy, "powfs%d_gy_%d", ipowfs, simu->isim);
-		    writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche_%d", ipowfs, simu->isim);
-		    writebin(powfs[ipowfs].intstat->i0sum, "powfs%d_i0sum_%d", ipowfs, simu->isim);
 		}
 	    }else{
 		//For CoG gain
@@ -851,12 +880,18 @@ static void dither_update(SIM_T *simu){
 			powfs[ipowfs].gain->p[jwfs]=dnew(ng,1);
 			dset(powfs[ipowfs].gain->p[jwfs], 1);
 		    }
+		    {/*Now that gain is adjusted, we need to adjust estimated
+		      * error strength to not lag behind.*/
+			double madj=dsum(pd->gg0)/pd->gg0->nx;
+			pd->a2me*=pow(madj, -0.5);
+		    }
 		    //notice we divide, not multiply pd->gg0, as it is the error.
+		    //pow() to reduce the rate of change.
 		    if(pd->gg0->nx==1){//single gain for all subapertures
-			dscale(powfs[ipowfs].gain->p[jwfs], 1./pd->gg0->p[0]);
+			dscale(powfs[ipowfs].gain->p[jwfs], pow(pd->gg0->p[0], -0.5));
 		    }else{
 			for(long ig=0; ig<ng; ig++){
-			    powfs[ipowfs].gain->p[jwfs]->p[ig]/=pd->gg0->p[ig];
+			    powfs[ipowfs].gain->p[jwfs]->p[ig]*=pow(pd->gg0->p[ig],-0.5);
 			}
 		    }
 		    double mgain=dsum(powfs[ipowfs].gain->p[jwfs])/ng;
@@ -870,12 +905,28 @@ static void dither_update(SIM_T *simu){
 	    }
 	    if(parms->powfs[ipowfs].phytypesim != parms->powfs[ipowfs].phytypesim2){
 		parms->powfs[ipowfs].phytypesim=parms->powfs[ipowfs].phytypesim2;
-		parms->powfs[ipowfs].phytype=parms->powfs[ipowfs].phytypesim2;
+		parms->powfs[ipowfs].phytype=parms->powfs[ipowfs].phytypesim;
+		info2("Step %d: powfs %d changed to %s\n", simu->isim, ipowfs, 
+		      parms->powfs[ipowfs].phytypesim==1?"matched filter":"CoG");
 	    }
-	    if(parms->powfs[ipowfs].phytypesim2==1 && (parms->powfs[ipowfs].neareconfile || parms->powfs[ipowfs].phyusenea)){
-		warning("Disable neareconfile and phyusenea\n");
-		parms->powfs[ipowfs].neareconfile=NULL;
-		parms->powfs[ipowfs].phyusenea=0;
+	    if(parms->powfs[ipowfs].phytypesim==1){//Matched filter
+		if(parms->powfs[ipowfs].neareconfile || parms->powfs[ipowfs].phyusenea){
+		    warning("Disable neareconfile and phyusenea\n");
+		    parms->powfs[ipowfs].neareconfile=NULL;
+		    parms->powfs[ipowfs].phyusenea=0;
+		}
+		parms->powfs[ipowfs].phytype=1;//Make sure MF is used for reconstruction.
+		genmtch(parms, powfs, ipowfs);
+		if(parms->save.dither){
+		    writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche_%d", ipowfs, simu->isim);
+		    writebin(powfs[ipowfs].intstat->i0sum, "powfs%d_i0sum_%d", ipowfs, simu->isim);
+		}
+#if USE_CUDA
+		if(parms->gpu.wfs){
+		    info2("Update matched filter in GPU\n");
+		    gpu_wfsgrad_update_mtche(parms, powfs);
+		}
+#endif
 	    }
 	    if(parms->sim.epdm->p[0]<=0){
 		parms->sim.epdm->p[0]=0.5;
@@ -887,15 +938,11 @@ static void dither_update(SIM_T *simu){
 		setup_recon(simu->recon, parms, powfs, simu->aper);
 #if USE_CUDA
 		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
-			gpu_update_recon(parms, powfs, simu->recon);
+		    gpu_update_recon(parms, powfs, simu->recon);
 		}
 #endif
 	    }
-#if USE_CUDA
-		if(parms->gpu.wfs && parms->powfs[ipowfs].phytypesim==1){
-		    gpu_wfsgrad_update_mtche(parms, powfs);
-		}
-#endif
+
 	}
 	int itpowfs=parms->itpowfs;
 	if(itpowfs!=-1){

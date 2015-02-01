@@ -436,9 +436,12 @@ typedef struct DITHER_T{
     double delta; /**<PLL estimation of servo lag (only) at every time step*/
     double deltam;/**<Average of delta*/
     double delay; /**<Diference of delay from 2 frame due to beam propagation*/
-    double ipv;   /**<in plane value (dot product)*/
+    double ipv;   /**<in plane value (dot product of fsmreal)*/
     double qdv;   /**<out of plane value (cross product)*/
     double a2m;   /**<actual dither amplitude*/
+    double ipve;   /**<in plane value (dot product of fsmerr)*/
+    double qdve;   /**<out of plane value (cross product)*/
+    double a2me;   /**<actual dither amplitude*/
     //For matched filter
     dcell *imb;   /**<accumulated im*/
     dcell *imx;   /**<accumulated cos()*im */

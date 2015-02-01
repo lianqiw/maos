@@ -154,7 +154,7 @@ static void FFTW_THREADS(long n){
 	init_threads();
     }
     if(has_threads==1){
-	if(n>1024*1024){
+	if(n>256*256){
 	    p_fftw_plan_with_nthreads(NTHREAD);
 	}else{
 	    p_fftw_plan_with_nthreads(1);
