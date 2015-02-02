@@ -584,6 +584,7 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_uncorr; /**<1: include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
+    int pywfs_atm;   /**<use atmosphere when generating pywfs gain.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

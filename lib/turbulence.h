@@ -41,6 +41,7 @@ typedef struct GENATM_T{
     long method;     /**<The method*/
 }GENATM_T;
 map_t *genatm_simple(double r0, double L0, double dx, double nx);
+dmat *genatm_loc(loc_t *loc, double r0, double L0);
 mapcell* genatm_from_spect(GENATM_T *data);
 mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);

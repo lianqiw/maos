@@ -24,7 +24,7 @@
 #include "../math/mathdef.h"
 #include "turbulence.h"
 #include "fractal.h"
-
+#include "accphi.h"
 /**
    Contains routines to generate atmospheric turbulence screens
 */
@@ -316,6 +316,17 @@ map_t *genatm_simple(double r0, double L0, double dx, double nx){
     map_t *out=mapref(screens->p[0]);
     cellfree(screens);
     return out;
+}
+/**
+   Generate atmosphere and map onto loc.
+*/
+dmat *genatm_loc(loc_t *loc, double r0, double dsa){
+    double D=loc_diam(loc);
+    dmat *opd=dnew(loc->nloc, 1);
+    map_t *atm=genatm_simple(r0, dsa, loc->dx, ceil(D/loc->dx)*2);
+    prop_grid(atm, loc, 0, opd->p, 1, 0,0,1,1,0,0);
+    mapfree(atm);
+    return opd;
 }
 
 /**

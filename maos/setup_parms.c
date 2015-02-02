@@ -443,7 +443,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 	if(powfsi->dither){
 	    parms->dither=1;
-	    powfsi->dither_amp*=powfsi->pixtheta;
 	    //Wait 10 cycles for PLL to stablize.
 	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
@@ -1034,6 +1033,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ncpa_preload);
     READ_INT(dbg.ncpa_uncorr);
     READ_INT(dbg.i0drift);
+    READ_INT(dbg.pywfs_atm);
 }
 /**
    Read in GPU options

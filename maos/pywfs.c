@@ -27,7 +27,6 @@
 /**
    Complex wavefront created by pyramid 
 */
-
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     pywfs_free(powfs[ipowfs].pywfs);
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
@@ -79,13 +78,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
     PCMAT(nominal, pn);
     long order=parms->powfs[ipowfs].order;
-    double pixmeter=parms->aper.d/order;//size of detector pixel in meter
+    double dsa=parms->aper.d/order;//size of detector pixel in meter
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
     double du=1./(dx2*ncomp);
-    double dupix=pixmeter*du;
-    double pdmeter=pow(pixmeter/dx2, 2);
+    double dupix=dsa*du;
+    double pdmeter=pow(dsa/dx2, 2);
     double pixblur=parms->powfs[ipowfs].pixblur;
-    double e0b=-2*pow(M_PI*pixblur*pixmeter*du, 2);
+    double e0b=-2*pow(M_PI*pixblur*dsa*du, 2);
     for(int iy=0; iy<ncomp; iy++){
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
@@ -99,8 +98,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     cfftshift(nominal);
     pywfs->si=cellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
-    powfs[ipowfs].saloc=mksqloc(order, order, pixmeter, pixmeter, 
-				(-order*0.5+0.5)*pixmeter, (-order*0.5+0.5)*pixmeter);
+    powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
+				(-order*0.5+0.5)*dsa, (-order*0.5+0.5)*dsa);
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
@@ -137,18 +136,38 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
     }
     locfree(loc_fft);
-
+    if(parms->dbg.pywfs_atm){
+	pywfs->atm=genatm_loc(pywfs->locfft->loc, parms->atm.r0, dsa);
+	writebin(pywfs->atm, "pywfs_loc_atm");
+    }
+    //Determine the gain of PyWFS
+    {
+	const int nsa=powfs[ipowfs].saloc->nloc;
+	dmat *TT=pywfs_tt(pywfs);
+	double gxm=0, gym=0;
+	for(int isa=0; isa<nsa; isa++){
+	    gxm+=TT->p[isa];
+	    gym+=TT->p[isa+nsa*3];
+	}
+	pywfs->gain*=2*nsa/(gxm+gym);
+	info("pywfs_gain=%g\n", pywfs->gain);
+	dfree(TT);
+    }
+    /*
     //Determine the gain of PyWFS
     for(int j=0; j<2; j++){
 	loc_t *loc=powfs[ipowfs].loc;
 	dmat *opd=dnew(loc->nloc, 1);
-	const int nsa=powfs[ipowfs].saloc->nloc;
+
 	dmat *grad0=dnew(nsa,2);
 	dmat *grad=dnew(nsa,2);
 	dmat *ints=0;
 	double gmeanx[4], gmeany[4];
-	const double alpha=1e-8;
+	const double alpha=1e-7;
 	dzero(ints);
+	if(pywfs->atm){
+	    dcp(&opd, pywfs->atm);
+	}
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grad0, pywfs, ints);
 	//writebin(grad0, "grad0");
@@ -156,7 +175,11 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    for(int val=0; val<2; val++){
 		double ptt[3]={0,0,0};
 		ptt[ind+1]=(val*2-1)*alpha;
-		dzero(opd);
+		if(pywfs->atm){
+		    dcp(&opd, pywfs->atm);
+		}else{
+		    dzero(opd);
+		}
 		loc_add_ptt(opd->p, ptt, loc);
 		dzero(ints);
 		pywfs_fft(&ints, pywfs, opd);
@@ -183,7 +206,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dfree(grad0);
 	dfree(opd);
     }
-
+    */
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
 	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
@@ -332,6 +355,71 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     }
 }
 /**
+   Return T/T mode
+*/
+dmat *pywfs_tt(const PYWFS_T *pywfs){
+    const loc_t *loc=pywfs->locfft->loc;
+    dmat *opd=dnew(loc->nloc,1);
+    dmat *ints=0;
+    long nsa=pywfs->si->p[0]->nx;
+    dmat *out=dnew(nsa*2,2);
+    dmat *gradx=drefcols(out, 0, 1);
+    dmat *grady=drefcols(out, 1, 1);
+    dmat *gradx2=dnew(nsa*2,1);
+    dmat *grady2=dnew(nsa*2,1);
+    //dmat *grad0=dnew(nsa*2,1);
+    double ptt[3]={0,0,0};
+    double alpha=0.005/206265.;
+    if(pywfs->atm){
+	dcp(&opd, pywfs->atm);
+    }
+    /*dzero(ints);
+    pywfs_fft(&ints, pywfs, opd);
+    pywfs_grad(&grad0, pywfs, ints);*/
+    //+x
+    ptt[1]=alpha;  ptt[2]=0;
+    loc_add_ptt(opd->p, ptt, loc);
+    dzero(ints);
+    pywfs_fft(&ints, pywfs, opd);
+    pywfs_grad(&gradx, pywfs, ints);
+    //+y
+    ptt[1]=-alpha; ptt[2]=alpha;
+    loc_add_ptt(opd->p, ptt, loc);
+    dzero(ints);
+    pywfs_fft(&ints, pywfs, opd);
+    pywfs_grad(&grady, pywfs, ints);
+    //-x
+    ptt[1]=-alpha; ptt[2]=-alpha;
+    loc_add_ptt(opd->p, ptt, loc);
+    dzero(ints);
+    pywfs_fft(&ints, pywfs, opd);
+    pywfs_grad(&gradx2, pywfs, ints);
+    //-y
+    ptt[1]=+alpha; ptt[2]=-alpha;
+    loc_add_ptt(opd->p, ptt, loc);
+    dzero(ints);
+    pywfs_fft(&ints, pywfs, opd);
+    pywfs_grad(&grady2, pywfs, ints);
+
+    /*writebin(gradx, "pywfs_gradx");
+    writebin(grady, "pywfs_grady");
+    writebin(gradx2, "pywfs_gradx2");
+    writebin(grady2, "pywfs_grady2");
+    writebin(grad0, "pywfs_grad0");
+    exit(0);*/
+    dadd(&gradx, 1, gradx2, -1);
+    dadd(&grady, 1, grady2, -1);
+    dscale(out, 0.5/alpha);
+    dfree(gradx);
+    dfree(grady);
+    dfree(gradx2);
+    dfree(grady2);
+    dfree(opd);
+    dfree(ints);
+    //dfree(grad0);
+    return out;
+}
+/**
    There is no need to simulate turbulence to fake optical gain. Any optical
    gain can be used as long as it "correct", i.e., a radian of tilt produces one
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
@@ -348,11 +436,18 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
     dmat *opdin=dnew(ploc->nloc, 1);
     dsp *gg=dspnew(nsa*2, ploc->nloc, nsa*2*ploc->nloc);
     long count=0;
+    if(pywfs->atm){
+	dcp(&opd, pywfs->atm);
+    }
     pywfs_fft(&ints, pywfs, opd);
     pywfs_grad(&grad0, pywfs, ints);
     for(int ia=0; ia<ploc->nloc; ia++){
 	info2("%d of %ld\n", ia, ploc->nloc);
-	dzero(opd);
+	if(pywfs->atm){
+	    dcp(&opd, pywfs->atm);
+	}else{
+	    dzero(opd);
+	}
 	dzero(ints);
 	dzero(grad);
 	opdin->p[ia]=PYWFS_POKE;
@@ -408,6 +503,9 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
     key=chash(pywfs->pyramid->p[0], key);
     key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
     key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
+    if(pywfs->atm){
+	key=dhash(pywfs->atm, key);
+    }
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/pywfs/", HOME);

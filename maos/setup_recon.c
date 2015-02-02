@@ -795,7 +795,6 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 
 static void
 setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
-    if(!recon->has_ttr) return;
     int nwfs=parms->nwfsr;
     cellfree(recon->TT);
     cellfree(recon->PTT);
@@ -809,16 +808,23 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		warning("POWFS %d is not included in Tomo.\n", ipowfs);
 	    }
 	    int nsa=powfs[ipowfs].saloc->nloc;
-	    dmat *TT=dnew(nsa*2,2);
-	    double *TTx=TT->p;
-	    double *TTy=TT->p+nsa*2;
-	    for(int isa=0; isa<nsa; isa++){
-		TTx[isa]=1;
-		TTy[isa]=0;
-	    }
-	    for(int isa=nsa; isa<nsa*2; isa++){
-		TTx[isa]=0;
-		TTy[isa]=1;
+	    dmat *TT=0;
+	    if(parms->powfs[ipowfs].type==0){//SHWFS
+		TT=dnew(nsa*2,2);
+		double *TTx=TT->p;
+		double *TTy=TT->p+nsa*2;
+		for(int isa=0; isa<nsa; isa++){
+		    TTx[isa]=1;
+		    TTy[isa]=0;
+		}
+		for(int isa=nsa; isa<nsa*2; isa++){
+		    TTx[isa]=0;
+		    TTy[isa]=1;
+		}
+	    }else if(parms->powfs[ipowfs].type==1){
+		TT=pywfs_tt(powfs[ipowfs].pywfs);
+	    }else{
+		error("Invalid powfs.type\n");
 	    }
 	    if(parms->recon.glao){
 		recon->TT->p[ipowfs*(parms->npowfs+1)]=ddup(TT);
@@ -2094,7 +2100,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
     setup_recon_TTFR(recon,parms,powfs);
-    if(parms->sim.mffocus || parms->sim.ahstfocus || parms->dither){
+    if(parms->ilgspowfs!=-1 && (parms->sim.mffocus || parms->sim.ahstfocus || parms->dither)){
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }

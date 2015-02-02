@@ -440,7 +440,7 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     /*Uplink FSM*/
    
     if(!recon->PTT){
-	error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+	error("powfs %d needs PTT, but recon->PTT is NULL",ipowfs);
     }
     dmat *PTT=recon->PTT->p[parms->recon.glao
 			    ?(ipowfs+ipowfs*parms->npowfs)
@@ -448,7 +448,7 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     if(!PTT){
 	error("powfs %d has FSM, but PTT is empty\n", ipowfs);
     }
-    /* Compute LGS Uplink error. */
+    /* Compute FSM error. */
     simu->fsmerr=simu->fsmerr_store;
     dmm(&simu->fsmerr->p[iwfs], 0, PTT, simu->gradcl->p[iwfs], "nn", 1);
     if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip){

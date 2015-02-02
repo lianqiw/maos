@@ -25,7 +25,7 @@
 */
 
 
-locfft_t *locfft_init(const loc_t *loc,       /**<[in] The loc*/
+locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 		      const dmat *amp,        /**<[in] The amplitude*/
 		      const dmat *wvl,        /**<[in] The wavelength*/
 		      const lmat *fftsize,    /**<[in] The suggested size for FFT*/

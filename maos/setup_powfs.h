@@ -33,4 +33,5 @@ void pywfs_free(PYWFS_T *pywfs);
 void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
 dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac);
+dmat *pywfs_tt(const PYWFS_T *pywfs);
 #endif
