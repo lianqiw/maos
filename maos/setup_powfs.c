@@ -360,47 +360,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 
     }
 
-    if(parms->misreg.tel2wfs){
-	TIC;tic;
-	/*
-	  Misregistration/distortion from Telescope pupil to WFS pupil. The
-	  amplitude map after misregistration/distortion will be used for
-	  wavefront sensing.
-	  They are not used for wavefront reconstruction
-	*/
-	int isset=0;
-	powfs[ipowfs].loc_tel=cellnew(nwfsp, 1);
-	powfs[ipowfs].saa_tel=cellnew(nwfsp, 1);
-	powfs[ipowfs].amp_tel=cellnew(nwfsp, 1);
-#pragma omp parallel for shared(isset)
-	for(int jwfs=0; jwfs<nwfsp; jwfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    if(parms->misreg.tel2wfs[iwfs]){
-		isset=1;
-		powfs[ipowfs].loc_tel->p[jwfs]
-		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
-		powfs[ipowfs].amp_tel->p[jwfs]
-		    =mkamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
-			   -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
-			   parms->aper.d, parms->aper.din);
-		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
-		    if(nwfsp>1){
-			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
-		    }
-		    wfspupmask(parms, powfs[ipowfs].loc_tel->p[jwfs],
-			       powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
-		}
-		powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
-	    }
-	}
-	if(!isset){
-	    cellfree(powfs[ipowfs].loc_tel);
-	    dcellfree(powfs[ipowfs].saa_tel); 
-	    dcellfree(powfs[ipowfs].amp_tel);
-	}else{
-	    toc2("misreg.tel2wfs");
-	}
-    }/*if misreg */
+    setup_powfs_misreg(powfs, parms, aper, ipowfs);
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
       the are threshold*/
@@ -428,18 +388,23 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
     powfs[ipowfs].npts = powfs[ipowfs].saloc->nloc*nxsa;
-    powfs[ipowfs].realamp=cellnew(nwfsp, 1);
     powfs[ipowfs].realsaa=cellnew(nwfsp, 1);
+    for(int jwfs=0; jwfs<nwfsp; jwfs++){
+	if(powfs[ipowfs].loc_tel){
+	    powfs[ipowfs].realsaa->p[jwfs]=dref(powfs[ipowfs].saa_tel->p[jwfs]);
+	}else{
+	    powfs[ipowfs].realsaa->p[jwfs]=dref(powfs[ipowfs].saa);
+	}
+    }
+    powfs[ipowfs].realamp=cellnew(nwfsp, 1);
     powfs[ipowfs].sumamp=dnew(nwfsp, 1);
     powfs[ipowfs].sumamp2=dnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
-	dmat *realamp, *realsaa;
+	dmat *realamp;
 	if(powfs[ipowfs].loc_tel){
 	    realamp=powfs[ipowfs].amp_tel->p[jwfs];
-	    realsaa=powfs[ipowfs].saa_tel->p[jwfs];
 	}else{
 	    realamp=powfs[ipowfs].amp;
-	    realsaa=powfs[ipowfs].saa;
 	}
 	double sumamp2=0;
 	double sumamp=0;
@@ -450,7 +415,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].sumamp2->p[jwfs]=sumamp2;
 	powfs[ipowfs].sumamp->p[jwfs]=sumamp;
 	powfs[ipowfs].realamp->p[jwfs]=dref(realamp);
-	powfs[ipowfs].realsaa->p[jwfs]=dref(realsaa);
     }
     if(parms->powfs[ipowfs].fieldstop){
 	warning("powfs%d: generating field stop \n", ipowfs);
@@ -462,6 +426,77 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 					    parms->powfs[ipowfs].fieldstop);
     }
     dfree(ampi);
+ 
+    if(parms->save.setup){
+	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
+	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
+	writebin(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
+	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
+	writebin(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
+	if(powfs[ipowfs].loc_tel){
+	    writebin(powfs[ipowfs].saa_tel,"%s/powfs%d_saa_tel", dirsetup,ipowfs);
+	    writebin(powfs[ipowfs].amp_tel,"%s/powfs%d_amp_tel", dirsetup,ipowfs);
+	    writebin(powfs[ipowfs].loc_tel, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
+	}
+	if(powfs[ipowfs].loc_dm){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		for(int jwfs=0; jwfs<nwfsp; jwfs++){
+		    writebin(powfs[ipowfs].loc_dm, "%s/powfs%d_loc_dm", dirsetup, ipowfs);
+		}
+	    }
+	}
+    }
+}
+void 
+setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
+    int nwfsp=parms->powfs[ipowfs].nwfs;
+    if(parms->misreg.tel2wfs){
+	TIC;tic;
+	/*
+	  Misregistration/distortion from Telescope pupil to WFS pupil. The
+	  amplitude map after misregistration/distortion will be used for
+	  wavefront sensing.
+	  They are not used for wavefront reconstruction
+	*/
+	int isset=0;
+	powfs[ipowfs].loc_tel=cellnew(nwfsp, 1);
+	powfs[ipowfs].amp_tel=cellnew(nwfsp, 1);
+	if(parms->powfs[ipowfs].type==0){
+	    powfs[ipowfs].saa_tel=cellnew(nwfsp, 1);
+	}
+#pragma omp parallel for shared(isset)
+	for(int jwfs=0; jwfs<nwfsp; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	    if(parms->misreg.tel2wfs[iwfs]){
+		isset=1;
+		powfs[ipowfs].loc_tel->p[jwfs]
+		    =loctransform(powfs[ipowfs].loc, parms->misreg.tel2wfs[iwfs]);
+		powfs[ipowfs].amp_tel->p[jwfs]
+		    =mkamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
+			   -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
+			   parms->aper.d, parms->aper.din);
+		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
+		    if(nwfsp>1){
+			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
+		    }
+		    wfspupmask(parms, powfs[ipowfs].loc_tel->p[jwfs],
+			       powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
+		}
+		if(parms->powfs[ipowfs].type==0){
+		    const int nxsa=powfs[ipowfs].pts->nx * powfs[ipowfs].pts->nx;
+		    powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
+		}
+	    }
+	}
+	if(!isset){
+	    cellfree(powfs[ipowfs].loc_tel);
+	    dcellfree(powfs[ipowfs].saa_tel); 
+	    dcellfree(powfs[ipowfs].amp_tel);
+	}else{
+	    toc2("misreg.tel2wfs");
+	}
+    }/*if misreg */ 
+  
     if(parms->misreg.dm2wfs){
 	TIC;tic;
 	/*
@@ -488,25 +523,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    toc2("misreg.dm2wfs");
 	}
     }
-    if(parms->save.setup){
-	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
-	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
-	writebin(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
-	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
-	writebin(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
-	if(powfs[ipowfs].loc_tel){
-	    writebin(powfs[ipowfs].saa_tel,"%s/powfs%d_saa_tel", dirsetup,ipowfs);
-	    writebin(powfs[ipowfs].amp_tel,"%s/powfs%d_amp_tel", dirsetup,ipowfs);
-	    writebin(powfs[ipowfs].loc_tel, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
-	}
-	if(powfs[ipowfs].loc_dm){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		    writebin(powfs[ipowfs].loc_dm, "%s/powfs%d_loc_dm", dirsetup, ipowfs);
-		}
-	    }
-	}
-    }
 }
 /**
    Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to
@@ -521,14 +537,14 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	if(parms->load.GS0){
 	    powfs[ipowfs].GS0=dspcellread("powfs%d_GS0",ipowfs);
 	    if(powfs[ipowfs].amp_tel){
-		assert(powfs[ipowfs].GS0->nx==powfs[ipowfs].nwfs);
+		assert(powfs[ipowfs].GS0->nx==parms->powfs[ipowfs].nwfs);
 	    }else{
 		assert(powfs[ipowfs].GS0->nx==1);
 	    }
 	}else{
 	    /*This mkg takes about 5 seconds. */
 	    if(powfs[ipowfs].amp_tel){
-		powfs[ipowfs].GS0=cellnew(powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].GS0=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }else{
 		powfs[ipowfs].GS0=cellnew(1, 1);
 	    }
@@ -545,7 +561,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	/*setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS. */
 	if(parms->powfs[ipowfs].order>4) 
 	    warning("Ztilt for high order wfs is not good");
-	powfs[ipowfs].nsaimcc=MAX(1,(powfs[ipowfs].loc_tel?powfs[ipowfs].nwfs:1));
+	powfs[ipowfs].nsaimcc=MAX(1,(powfs[ipowfs].loc_tel?parms->powfs[ipowfs].nwfs:1));
 	int nsaimcc=powfs[ipowfs].nsaimcc;
 	cellfree(powfs[ipowfs].saimcc);
 	powfs[ipowfs].saimcc=cellnew(nsaimcc, 1);

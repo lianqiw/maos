@@ -386,12 +386,12 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
 	if(powfs[ipowfs].amp_tel){
-	    for(int wfsind=0; wfsind<powfs[ipowfs].nwfs; wfsind++){
+	    for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
 		drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind]->p,NULL,
 			"WFS Amplitude Map","x (m)","y (m)","powfs %d tel2wfs", ipowfs);
 	    }
 	}
-	for(int jwfs=0; jwfs<powfs[ipowfs].nwfs; jwfs++){
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    if(powfs[ipowfs].gradoff){

@@ -23,63 +23,44 @@
 #include "sim_utils.h"
 #include "sim.h"
 
-/**
-   Save telemetry. TODO: copy from GPU to CPU.
-*/
-void save_wfsgrad(SIM_T *simu){
+void save_gradstat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const POWFS_T *powfs=simu->powfs;
     const int isim=simu->isim;
+    //Save pistat in the end of simulation
     for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(parms->save.grad->p[iwfs]){
-	    cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
+	const int dtrat=parms->powfs[ipowfs].dtrat;
+	double scale;
+	if(parms->powfs[ipowfs].usephy){
+	    scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
+	}else{
+	    scale=(simu->isim+1)/dtrat;
 	}
-	if(parms->plot.run){
-	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
-		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
-		    "x %d",  iwfs);
-	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+powfs[ipowfs].pts->nsa, NULL,
-		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
-		    "y %d",  iwfs);
-	}
-	
-	//Save pistat in the end of simulation
-	if(isim+1==parms->sim.end){
-	    const int dtrat=parms->powfs[ipowfs].dtrat;
-	    double scale;
-	    if(parms->powfs[ipowfs].usephy){
-		scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
-	    }else{
-		scale=(simu->isim+1)/dtrat;
-	    }
-	    if(scale<=0) continue;	    
-	    if(simu->pistatout && simu->pistatout->p[iwfs]){
-		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
-		scale=1./(double)nstep;
-		dcell *pp=simu->pistatout->p[iwfs];
-		dcellscale(pp,scale);
-		if(parms->sim.skysim){/*need peak in corner */
-		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
-			dfftshift(pp->p[ic]);
-		    }
-		    writebin(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
-			     dirskysim,simu->seed,
-			     parms->powfs[ipowfs].order,
-			     parms->wfs[iwfs].thetax*206265,
-			     parms->wfs[iwfs].thetay*206265);
-		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
-			dfftshift(pp->p[ic]);
-		    }
-		}else{/*need peak in center */
-		    writebin(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+	if(scale<=0) continue;	    
+	if(simu->pistatout && simu->pistatout->p[iwfs]){
+	    int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
+	    scale=1./(double)nstep;
+	    dcell *pp=simu->pistatout->p[iwfs];
+	    dcellscale(pp,scale);
+	    if(parms->sim.skysim){/*need peak in corner */
+		for(long ic=0; ic<pp->nx*pp->ny; ic++){
+		    dfftshift(pp->p[ic]);
 		}
-		dcellscale(pp,1./scale);
+		writebin(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+			 dirskysim,simu->seed,
+			 parms->powfs[ipowfs].order,
+			 parms->wfs[iwfs].thetax*206265,
+			 parms->wfs[iwfs].thetay*206265);
+		for(long ic=0; ic<pp->nx*pp->ny; ic++){
+		    dfftshift(pp->p[ic]);
+		}
+	    }else{/*need peak in center */
+		writebin(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 	    }
+	    dcellscale(pp,1./scale);
 	}
     }
 }
-
 void save_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;

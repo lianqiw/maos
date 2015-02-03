@@ -28,7 +28,7 @@ class curecon_t;
 class curecon_geom;
 }
 struct cuperf_t;
-class cuwloc_t;
+class cupowfs_t;
 class cuwfs_t;
 
 typedef struct cudata_t{ 
@@ -52,7 +52,7 @@ typedef struct cudata_t{
     /*for perfevl */
     cuperf_t *perf;
     /*for wfsgrad */
-    cuwloc_t *powfs;
+    cupowfs_t *powfs;
     static cuwfs_t *wfs;
     /*for recon */
     cuda_recon::curecon_t *recon;

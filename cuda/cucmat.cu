@@ -17,3 +17,13 @@
 */
 #include "cucmat.h"
 #include "utils.h"
+
+void cucscale(cucmat *in, Real alpha, cudaStream_t stream){
+    if(!in) return;
+    if(alpha==0){
+	cuczero(in, stream);
+    }else if(Z(fabs)(alpha-1.f)>EPS){
+	int n=in->nx*in->ny;
+	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
+    }
+}

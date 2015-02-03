@@ -100,9 +100,23 @@ int current_gpu();
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-__host__ __device__ static __inline__ void Z(cuCscale)(Comp x, Real a){
-    x.x*=a;
-    x.y*=a;
+__inline__ static __host__ __device__ Comp operator*(const Comp &a, const Comp &b){
+    return Z(cuCmul)(a,b);
+}
+__inline__ static __host__ __device__ Comp&operator*=(Comp &a, const Comp &b){
+    a=Z(cuCmul)(a,b);
+    return a;
+}
+__inline__ static __host__ __device__ Comp operator*(const Comp &a, const Real b){
+    Comp tmp;
+    tmp.x=a.x*b;
+    tmp.y=a.y*b;
+    return tmp;
+}
+__inline__ static __host__ __device__ Comp&operator*=(Comp &a, const Real b){
+    a.x*=b;
+    a.y*=b;
+    return a;
 }
 inline void* malloc4async(size_t N){
     void *tmp;

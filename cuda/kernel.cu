@@ -34,6 +34,13 @@ __global__ void scale_do(Real *restrict in, int n, Real alpha){
 	in[i]*=alpha;
     }
 }
+__global__ void scale_do(Comp *restrict in, int n, Real alpha){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	in[i].x*=alpha;
+	in[i].y*=alpha;
+    }
+}
 
 __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], 
 			   int n, Real pis, Real tx, Real ty){
@@ -395,9 +402,40 @@ __global__ void add_tilt_do(Real *opd, int nx, int ny, Real ox, Real oy, Real dx
    component wise multiply.
 */
 __global__ void cwm_do(Comp *dest, Real *from, int n){
-    for(int i=threadIdx.x+threadIdx.y*blockDim.x; i<n; i+=blockDim.x*blockDim.y){
+    for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
 	dest[i].x*=from[i];
 	dest[i].y*=from[i];
+    }
+}
+/**
+   component wise multiply.
+*/
+__global__ void cwm_do(Comp *dest, Comp *from, int n){
+    for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
+	dest[i]*=from[i];
+    }
+}
+
+/**
+   component wise multiply. dest=dest.*from
+*/
+__global__ void cwm_do(Comp *dest, Comp *from, int lda, int ldb, int nx, int ny){
+    for(int iy=threadIdx.y+blockIdx.y*blockDim.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockIdx.x*blockDim.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    dest[iy+ix*lda]*=from[iy+ix*ldb];
+	}
+    }
+}
+
+
+/**
+   component wise multiply. dest=from1*from2. from1 has same shape as dest.
+*/
+__global__ void cwm_do(Comp *dest, Comp *from1, Comp *from2, int lda, int ldb, int nx, int ny){
+    for(int iy=threadIdx.y+blockIdx.y*blockDim.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockIdx.x*blockDim.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    dest[iy+ix*lda]=from1[iy+ix*lda]*from2[iy+ix*ldb];
+	}
     }
 }
 /**
@@ -458,4 +496,39 @@ multimv_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, i
 	acc[threadIdx.x]+=mvm[nact*ig+iact]*g[ig];
     }
     atomicAdd(&a[iact], acc[threadIdx.x]);
+}
+
+
+/*This is memory bound. So increasing # of points processed does not help. */
+__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON){
+    int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
+	x=x-ix; y=y-iy;
+	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
+	    Real tmp=((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
+		      +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
+	    add_valid(out[i], alpha, tmp);
+	}
+    }
+}
+
+/*This is memory bound. So increasing # of points processed does not help. */
+__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON){
+    int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
+	x=x-ix; y=y-iy;
+	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
+	    Real tmp=((+in[iy*nx+ix].x*(1.f-x) +in[iy*nx+ix+1].x*x)*(1.f-y)
+		      +(+in[(iy+1)*nx+ix].x*(1.f-x) +in[(iy+1)*nx+ix+1].x*x)*y);
+	    add_valid(out[i], alpha, tmp);
+	}
+    }
 }

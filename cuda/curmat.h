@@ -28,8 +28,10 @@
 #define curcellfree(A) ({delete A; A=NULL;})
 #define curzero(A,B...) (A)->zero(B)
 #define curcellzero(A,B...) (A)->zero(B)
-#define curwrite     cuwrite<Real, (uint32_t)M_FLT>
-#define curcellwrite cucellwrite<Real, (uint32_t)M_FLT>
+//#define curwrite     cuwrite<Real, (uint32_t)M_FLT>
+//#define curcellwrite cucellwrite<Real, (uint32_t)M_FLT>
+#define curwrite cuwrite
+#define curcellwrite cuwrite
 #define curcellcp    cucellcp<Real>
 
 void curset(curmat *A, Real alpha, cudaStream_t stream);

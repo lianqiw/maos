@@ -41,7 +41,7 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
 void cellarr_push(cellarr *ca, int i, const void *p){
     if(!p) return;//nothing to be done
     if(!ca) error("cellarr is NULL\n");
-    if(i>=0 && ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);
+    if(i>=0 && ca->cur>i) warning("Invalid. cur=%ld, i=%d\n", ca->cur, i);
     long id=*((long*)(p));
     while(ca->cur<i) {
 	writedata_by_id(ca->fp, 0, id); 

@@ -451,6 +451,12 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    for(int idm=0; idm<ndm; idm++){
 		if(parms->recon.alg==1 && fabs(parms->dm[idm].ht)<EPS){
 		    info2("\nPyWFS from aloc to saloc directly\n");
+#if USE_CUDA
+		    if(parms->gpu.wfs){
+			GA[idm][iwfs]=gpu_pywfs_mkg(parms, powfs, recon->aloc->p[idm], 
+						    iwfs, idm);
+		    }else
+#endif
 		    GA[idm][iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
 					    parms->dm[idm].cubic, parms->dm[idm].iac);
 		}else{
@@ -809,7 +815,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *TT=0;
-	    if(parms->powfs[ipowfs].type==0){//SHWFS
+	    if(parms->powfs[ipowfs].type==0 || 1){//SHWFS
 		TT=dnew(nsa*2,2);
 		double *TTx=TT->p;
 		double *TTy=TT->p+nsa*2;

@@ -332,7 +332,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}else{//Pywfs
 	    pywfs_fft(&simu->ints->p[iwfs]->p[0], powfs[ipowfs].pywfs, opd);
-	    dscale(simu->ints->p[iwfs]->p[0], powfs[ipowfs].saloc->nloc/4*parms->wfs[iwfs].siglevsim);
+	    dscale(simu->ints->p[iwfs]->p[0], parms->wfs[iwfs].siglevsim);
 	}
     }
     TIM(2);
@@ -777,6 +777,18 @@ void wfsgrad_post(thread_t *info){
 	    if(simu->powfs[ipowfs].gradoff){
 		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
 	    }
+	    if(parms->save.grad->p[iwfs]){
+		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
+	    }
+	    if(parms->plot.run){
+		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
+			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
+			"x %d",  iwfs);
+		drawopd("Gcly", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p+
+			simu->powfs[ipowfs].saloc->nloc, NULL,
+			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
+			"y %d",  iwfs);
+	    }
 	}
     }//for iwfs
 }
@@ -995,11 +1007,13 @@ void wfsgrad(SIM_T *simu){
 	//high pass filter lgs focus to remove sodium range variation effect
 	wfsgrad_mffocus(simu);
     }
+    if(1+simu->isim==parms->sim.end){
 #if USE_CUDA
-    if(parms->gpu.wfs){
-	gpu_wfsgrad_save(simu);
-    }else
+	if(parms->gpu.wfs){
+	    gpu_save_gradstat(simu);
+	}else
 #endif
-    save_wfsgrad(simu);
+	    save_gradstat(simu);
+    }
     simu->tk_wfs=myclockd()-tk_start;
 }

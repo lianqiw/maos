@@ -93,6 +93,7 @@ typedef struct PYWFS_T{
     dspcell *si;       /**<For sampling results onto detector*/
     double gain;       /**<Optical gain of PYWFS*/
     dmat *atm;         /**<For generating gain with atmosphere*/
+    int pos_n;         /**<Number of points for modulation.*/
 }PYWFS_T;
 
 /**
@@ -139,7 +140,7 @@ typedef struct POWFS_T{
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
     dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
-    int nwfs;           /**<number of wfs belonging to this wfs*/
+    //int nwfs;           /**<number of wfs belonging to this wfs*/
     int npts;           /**<number of total opd points in all subaps*/
     int namp;           /**<number of amplitude maps*/
     int pixpsax;        /**<number of detector pixels along x*/
@@ -156,8 +157,7 @@ typedef struct POWFS_T{
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
     PYWFS_T *pywfs;     /**<For pyramid WFS*/
-}
-POWFS_T;
+}POWFS_T;
 
 /**
    NGS mode and reconstructors in ad hoc split tomography. Only useful with 1 or 2 DMs.

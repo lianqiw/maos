@@ -30,7 +30,9 @@
 #define cucref(A) (A)->ref()
 #define cuczero(A,B...) (A)->zero(B)
 #define cuccellzero(A,B...) (A)->zero(B)
-#define cucwrite     cuwrite<Comp, (uint32_t)M_ZMP>
-#define cuccellwrite cucellwrite<Comp, (uint32_t)M_ZMP>
-
+//#define cucwrite     cuwrite<Comp, (uint32_t)M_ZMP>
+//#define cuccellwrite cucellwrite<Comp, (uint32_t)M_ZMP>
+#define cucwrite cuwrite
+#define cuccellwrite cuwrite
+void cucscale(cucmat *in, Real Alpha, cudaStream_t stream);
 #endif

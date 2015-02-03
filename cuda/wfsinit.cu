@@ -109,7 +109,7 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-	const int nsa=powfs[ipowfs].pts->nsa;
+	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(parms->powfs[ipowfs].usephy){
 	    if(parms->powfs[ipowfs].phytypesim==1){
 		if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
@@ -145,16 +145,18 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     cudata_t::wfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cudata->powfs=(cuwloc_t*)calloc(parms->npowfs, sizeof(cuwloc_t));
-	cuwloc_t *cupowfs=cudata->powfs;
+	cudata->powfs=(cupowfs_t*)calloc(parms->npowfs, sizeof(cupowfs_t));
+	cupowfs_t *cupowfs=cudata->powfs;
 	/* Setup information that are same for wfs in each powfs*/
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
-	    pts_t *pts=powfs[ipowfs].pts;
 	    loc_t *loc=powfs[ipowfs].loc;
-	    cupowfs[ipowfs].pts=new cfsms_t(pts);
 	    cupowfs[ipowfs].loc=new culoc_t(loc);
-	    cupowfs[ipowfs].saloc=new culoc_t(powfs[ipowfs].saloc);
+	    if(parms->powfs[ipowfs].type==1){//only for pywfs
+		cupowfs[ipowfs].saloc=new culoc_t(powfs[ipowfs].saloc);
+	    }
+	    pts_t *pts=powfs[ipowfs].pts;
+	    if(pts) cupowfs[ipowfs].pts=new cfsms_t(pts);
 	
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		pts=powfs[ipowfs].llt->pts;
@@ -164,10 +166,30 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cupowfs[ipowfs].llt->loc=new culoc_t(loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
-	    if(parms->powfs[ipowfs].fieldstop){
-		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].fieldstop->embed->p[0]->p, powfs[ipowfs].loc->nloc, 1);
-		cupowfs[ipowfs].nembed=powfs[ipowfs].fieldstop->nembed->p[0];
-		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop->fieldmask->p[0]);
+	    locfft_t *locfft=0;
+	    if(powfs[ipowfs].pywfs){
+		locfft=powfs[ipowfs].pywfs->locfft;
+	    }else if(powfs[ipowfs].fieldstop){
+		locfft=powfs[ipowfs].fieldstop;
+	    }
+	    if(locfft){
+		const int nwvl=parms->powfs[ipowfs].nwvl;
+		cupowfs[ipowfs].embed=(int**)calloc(sizeof(int*), nwvl);
+		cupowfs[ipowfs].nembed=(int*)calloc(sizeof(int), nwvl);
+		if(locfft->fieldmask){
+		    cupowfs[ipowfs].fieldstop=curcellnew(nwvl,1);
+		}
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cp2gpu(&cupowfs[ipowfs].embed[iwvl], locfft->embed->p[iwvl]->p, powfs[ipowfs].loc->nloc, 1);
+		    cupowfs[ipowfs].nembed[iwvl]=locfft->nembed->p[iwvl];
+		    if(locfft->fieldmask){
+			cp2gpu(&cupowfs[ipowfs].fieldstop->p[iwvl], locfft->fieldmask->p[iwvl]);
+		    }
+		}
+	    }
+	    if(powfs[ipowfs].pywfs){
+		cp2gpu(&cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
+		cp2gpu(&cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
 	    }
 	}
     }
@@ -176,10 +198,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
        misregistration or NCPA.*/
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
-	cuwloc_t *cupowfs=cudata->powfs;
+	cupowfs_t *cupowfs=cudata->powfs;
 	cuwfs_t *cuwfs=cudata_t::wfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int nsa=powfs[ipowfs].pts->nsa;
+	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int nwvl=parms->powfs[ipowfs].nwvl;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
@@ -202,9 +224,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	cuwfs[iwfs].phiout=curnew(powfs[ipowfs].loc->nloc, 1);
 
-	if(parms->powfs[ipowfs].fieldstop){
-	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, FFT_T_C2C));
-	    cufftSetStream(cuwfs[iwfs].plan_fs, *cuwfs[iwfs].stream);
+	if(cupowfs[ipowfs].nembed[0]){
+	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed[0], cupowfs[ipowfs].nembed[0], FFT_T_C2C));
+	    DO(cufftSetStream(cuwfs[iwfs].plan_fs, *cuwfs[iwfs].stream));
 	}
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].saimcc->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
@@ -229,14 +251,23 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	/*wfs amplitude map on loc */
 	cp2gpu(&cuwfs[iwfs].amp, powfs[ipowfs].realamp->p[wfsind]);
-	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
-	if(nea){
-	    cp2gpu(&cuwfs[iwfs].neasim, nea);
+	if(powfs[ipowfs].neasim && powfs[ipowfs].neasim->p[wfsind]){
+	    cp2gpu(&cuwfs[iwfs].neasim, powfs[ipowfs].neasim->p[wfsind]);
 	}
 
 	/* * Now start physical optics setup * */
-
-	if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
+	if(parms->powfs[ipowfs].type==1){//Pyramid WFS
+	    cuwfs[iwfs].pywvf=cuccellnew(nwvl, 1);
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		cuwfs[iwfs].pywvf->p[iwvl]=cucnew(cupowfs[ipowfs].nembed[iwvl], cupowfs[ipowfs].nembed[iwvl]);
+	    }
+	    const int nxotf=cupowfs[ipowfs].pyramid->p[0]->nx;
+	    const int nyotf=cupowfs[ipowfs].pyramid->p[0]->ny;
+	    cuwfs[iwfs].pyotf=cucnew(nxotf, nyotf);
+	    cuwfs[iwfs].pypsf=curnew(nxotf, nyotf);
+	    DO(cufftPlan2d(&cuwfs[iwfs].plan_py, nxotf, nyotf, FFT_T_C2C));
+	    cufftSetStream(cuwfs[iwfs].plan_py, *cuwfs[iwfs].stream);
+	}else if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
 	    /*If there is llt. */
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(powfs[ipowfs].llt->ncpa){
@@ -403,8 +434,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].lltotfc=cucnew(notf, notf);
 		}
 	    }
-	
-	
+	    
+	    
 	}/*if phy */
 	CUDA_SYNC_DEVICE;
 	gpu_print_mem("wfs init");
@@ -418,13 +449,17 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuwfs_t *cuwfs=cudata_t::wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int nsa=powfs[ipowfs].pts->nsa;
+	int nsa=powfs[ipowfs].saloc->nloc;
 	//gradacc is used for accumulation in geom mode and for output in phy mode
 	initzero(&cuwfs[iwfs].gradacc, nsa*2, 1);
 	initzero(&cuwfs[iwfs].gradcalc,nsa*2,1);
 	if(parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].dither){
 	    if(!cuwfs[iwfs].ints){
-		cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		if(parms->powfs[ipowfs].type==1){//PYWFS
+		    cuwfs[iwfs].ints=curcellnew(1,1,nsa,4);
+		}else{
+		    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
+		}
 	    }else{
 		curcellzero(cuwfs[iwfs].ints);
 	    }
@@ -471,7 +506,7 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 	int seed=lrand(rstat);/*don't put this after continue. */
 	int ipowfs=parms->wfs[iwfs].powfs;
 	if(!parms->powfs[ipowfs].noisy) continue;
-	int nsa=powfs[ipowfs].pts->nsa*2;
+	int nsa=powfs[ipowfs].saloc->nloc*2;
 	if(nsa<RAND_THREAD){
 	    cuwfs[iwfs].custatt=nsa;//number of threads
 	    cuwfs[iwfs].custatb=1;//number of blocks

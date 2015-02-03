@@ -30,6 +30,7 @@
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     pywfs_free(powfs[ipowfs].pywfs);
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
+    pywfs->pos_n=32;
     map_t *map=0;
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
@@ -38,6 +39,16 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
 		     parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
 		     parms->aper.d, parms->aper.din);
+    powfs[ipowfs].amp=dref(pywfs->amp);
+    setup_powfs_misreg(powfs, parms, aper, ipowfs);
+    powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs,1);
+    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	if(powfs[ipowfs].amp_tel){
+	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp_tel->p[jwfs]);
+	}else{
+	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp); 
+	}
+    }
     int nwvl=parms->powfs[ipowfs].wvl->nx;
     double oversize=2*PYWFS_GUARD;
     pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, oversize, 0);
@@ -278,12 +289,13 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     int pos_n=1;
     double pos_r=pywfs->modulate*0.5;
     if(pos_r){
-	pos_n=32;
+	pos_n=pywfs->pos_n;
     }
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
-    dmat *pupraw=0;
+    dmat *pupraw=dnew(ncomp, ncomp);
+    //writebin(psfs, "cpu_wvf");
     for(int ipos=0; ipos<pos_n; ipos++){
 	double theta=2*M_PI*ipos/pos_n;
 	double posx=cos(theta)*pos_r;
@@ -293,17 +305,17 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	    long offy=(long)round(posy/dtheta);
 	    long offy2=nembed2+offy-ncomp2;
 	    long iy0=MAX(-offy2, 0);
-	    long ny2=MIN(ncomp+offy2, nembed);
+	    long ny2=MIN(ncomp+offy2, nembed)-offy2;
 
 	    long offx=(long)round(posx/dtheta);
 	    long offx2=nembed/2+offx-ncomp2;
 	    long ix0=MAX(-offx2, 0);
-	    long nx2=MIN(ncomp+offx2, nembed);
+	    long nx2=MIN(ncomp+offx2, nembed)-offx2;
 
 	    czero(otf);
 	    dcomplex *pyramid=pywfs->pyramid->p[iwvl]->p;
-	    for(long iy=iy0; iy<ny2-offy2; iy++){
-		for(long ix=ix0; ix<nx2-offx2; ix++){
+	    for(long iy=iy0; iy<ny2; iy++){
+		for(long ix=ix0; ix<nx2; ix++){
 		    long indin=ix+offx2+(iy+offy2)*nembed;
 		    long indout=ix+iy*ncomp;
 		    otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
@@ -313,6 +325,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	    cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n));
 	}//for iwvl
     }//for ipos
+    //writebin(pupraw, "cpu_psf");
     ccpd(&otf, pupraw);
     dfree(pupraw);
     cfft2(otf, -1);
@@ -323,15 +336,19 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	(*ints)=dnew(nsa, 4);
     }
     for(int i=0; i<4; i++){
-	dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, 1./(ncomp*ncomp));
+	//normalized so that each "subaperture" sum to 1.
+	dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, (double)nsa/(4*ncomp*ncomp));
     }
-    ccellfree(psfs);
-    cfree(otf);
+    //writebin(*ints, "cpu_ints"); exit(0);
     /*{
 	static int count=-1; count++;
+	writebin(otf, "otf_%d", count);
 	writebin(opd, "opd_%d", count);
 	writebin(*ints, "ints_%d", count);
+	exit(0);
 	}*/
+    ccellfree(psfs);
+    cfree(otf);
 }
 /**
    Compute gradients. It replaces the result, not accumulate.

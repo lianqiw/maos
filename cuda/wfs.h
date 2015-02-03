@@ -31,14 +31,17 @@ struct cullt_t{
     cfsms_t *pts;
     culoc_t *loc;
 };
-typedef struct cuwloc_t{
+typedef struct cupowfs_t{
     cfsms_t *pts;   /**<location of lower left OPD point in each sa*/
     culoc_t *loc;  /**<location of OPD points. for reconstruction purpose only.*/
-    culoc_t *saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
-    int *embed;       /**<embed for field stop computation*/
-    int nembed;       /**<embed for field stop computation*/
-    curmat *fieldstop;/**<*mask for field stop computation*/
+    culoc_t *saloc;
+    int **embed;       /**<embed for field stop computation*/
+    int *nembed;       /**<embed for field stop computation*/
+    curcell *fieldstop;/**<*mask for field stop computation*/
     cullt_t *llt;
+    /*For Pyramid*/
+    cuccell *pyramid;
+    cucmat *pynominal;
 }cupowfs_t;
 /**For matched filter update*/
 class dither_t{
@@ -56,7 +59,7 @@ public:
     }
 };
 class cuwfs_t{
-  public:
+public:
     stream_t *stream;
     cupowfs_t *powfs;
     culoc_t **loc_dm;  /**<Grid for ray tracing from DM to WFS*/
@@ -102,6 +105,11 @@ class cuwfs_t{
     cucmat *psfstat;
     /*For matched filter update*/
     dither_t *dither;
+    /*For Pyramid WFS*/
+    cuccell *pywvf;//Original PSF from OPD
+    cucmat *pyotf; //Truncated OTF to be multiplied by pyramid and FFT.
+    curmat *pypsf; //stores psf during modulation.
+    cufftHandle plan_py;
 };
 
 void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
@@ -111,4 +119,8 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 	     const Real (*orig)[2], const Real*restrict amp, Real alpha, cudaStream_t stream);
 __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
+void pywfs_grad(curmat *grad, curmat *ints, Real gain, cudaStream_t stream);
+void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs,
+		    const PARMS_T *parms, const POWFS_T *powfs, int iwfs, cudaStream_t stream);
+dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

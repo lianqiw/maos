@@ -20,9 +20,17 @@
 */
 #ifndef AOS_CUDA_CUMAT_H
 #define AOS_CUDA_CUMAT_H
-
-template <typename T, uint32_t magic>
+#include <typeinfo>
+template <typename T>
     inline void cuwritedata(const cumat<T> *A, file_t *fp){
+    uint32_t magic;
+    if(typeid(T)==typeid(Real)){
+	magic=M_FLT;
+    }else if(typeid(T)==typeid(Comp)){
+	magic=M_ZMP;
+    }else{
+	error("Invalid type\n");
+    }
     if(A && A->nx>0 && A->ny>0){
 	T *tmp=(T*)malloc(A->nx*A->ny*sizeof(T));
 	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(T), cudaMemcpyDeviceToHost);
@@ -33,23 +41,23 @@ template <typename T, uint32_t magic>
 	writearr(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
     }
 }
-template <typename T, uint32_t magic>
+template <typename T>
     inline void cuwrite(const cumat<T> *A, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
-    cuwritedata<T, magic>(A, fp);
+    cuwritedata<T>(A, fp);
     zfclose(fp);
 }
 
-template <typename T, uint32_t magic>
-    inline void cucellwrite(const cucell<T> *A, const char *format, ...){
+template <typename T>
+    inline void cuwrite(const cucell<T> *A, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     header_t header={MCC_ANY, A?(uint64_t)A->nx:0, A?(uint64_t)A->ny:0, NULL};
     write_header(&header, fp);
     if(A){
 	for(int i=0; i<A->nx*A->ny; i++){
-	    cuwritedata<T, magic>(A->p[i], fp);
+	    cuwritedata<T>(A->p[i], fp);
 	}
     }
     zfclose(fp);	

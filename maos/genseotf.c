@@ -74,7 +74,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	has_ncpa=1;
     }
     if(powfs[ipowfs].loc_tel){
-	notf=MAX(notf,powfs[ipowfs].nwfs);
+	notf=MAX(notf,parms->powfs[ipowfs].nwfs);
     }
     info2("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
@@ -116,7 +116,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	strncat(fnprefix, "noamp", PATH_MAX-strlen(fnprefix)-1);
     }
     if(powfs[ipowfs].amp_tel){
-	for(int iamp=0; iamp<powfs[ipowfs].nwfs; iamp++){
+	for(int iamp=0; iamp<parms->powfs[ipowfs].nwfs; iamp++){
 	    key=dhash(powfs[ipowfs].amp_tel->p[iamp], key);
 	}
     }else{

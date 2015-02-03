@@ -80,6 +80,7 @@ __device__ inline Real CABS2(Comp r){
 
 __global__ void set_do(Real *a, Real alpha, int n);
 __global__ void scale_do(Real *restrict in, int n, Real alpha);
+__global__ void scale_do(Comp *restrict in, int n, Real alpha);
 __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real pis, Real tx, Real ty);
 __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real *ptt, Real pis, Real tx, Real ty);
 __global__ void add_focus_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real focus);
@@ -133,7 +134,13 @@ __global__ void corner2center_abs2_atomic_do(Real *restrict out, int noutx, int 
 __global__ void fftshift_do(Comp *wvf, const int nx, const int ny);
 __global__ void add_tilt_do(Real *opd, int nx, int ny, Real ox, Real oy, Real dx, Real ttx, Real tty);
 __global__ void cwm_do(Comp *dest, Real *from, int n);
+__global__ void cwm_do(Comp *dest, Comp *from, int n);
+__global__ void cwm_do(Comp *dest, Comp *from, int lda, int ldb, int nx, int ny);
+__global__ void cwm_do(Comp *dest, Comp *from1, Comp *from2, int lda, int ldb, int nx, int ny);
 __global__ void unwrap_phase_do(Comp *wvf, Real *opd, int *embed, int n, Real wvl);
 __global__ void mvm_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
 __global__ void multimv_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
+#define KARG_COMMON const Real (*restrict loc)[2], const int nloc, const Real dxi, const Real dyi, const Real dispx, const Real dispy, const Real alpha
+__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON);
+__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON);
 #endif

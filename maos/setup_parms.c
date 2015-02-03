@@ -443,6 +443,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 	if(powfsi->dither){
 	    parms->dither=1;
+	    powfsi->dither_amp/=206265.;
 	    //Wait 10 cycles for PLL to stablize.
 	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;

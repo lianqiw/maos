@@ -227,7 +227,7 @@ __global__ static void sa_ccwm_do(Comp *otfs, const int notfx, const int notfy,
     for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
 	const int skip=iy*notfx;
 	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
-	    otf[ix+skip]=Z(cuCmul)(otf[ix+skip], dtf[ix+skip]);
+	    otf[ix+skip]*=dtf[ix+skip];
 	}
     }
 }
@@ -247,7 +247,7 @@ __global__ static void sa_ccwm_do(Comp *otfs, const int notfx, const int notfy,
 	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
 	    temp.x=Z(cuCreal)(dtf1[ix+skip])*wt1+Z(cuCreal)(dtf2[ix+skip])*wt2;
 	    temp.y=Z(cuCimag)(dtf1[ix+skip])*wt1+Z(cuCimag)(dtf2[ix+skip])*wt2;
-	    otf[ix+skip]=Z(cuCmul)(otf[ix+skip], temp);
+	    otf[ix+skip]*=temp;
 	}
     }
 }
@@ -262,7 +262,7 @@ __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notf
     for(int iy=threadIdx.y; iy<notfy; iy+=blockDim.y){
 	Comp *restrict otf2=otf+iy*notfx;
 	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
-	    otf2[ix]=Z(cuCmul)(otf2[ix], etf[ix]);
+	    otf2[ix]*=etf[ix];
 	}
     }
 }
@@ -282,7 +282,7 @@ __global__ static void sa_ccwmcol_do(Comp *otfs, const int notfx, const int notf
 	for(int ix=threadIdx.x; ix<notfx; ix+=blockDim.x){
 	    temp.x=Z(cuCreal)(etf1[ix])*wt1+Z(cuCreal)(etf2[ix])*wt2;
 	    temp.y=Z(cuCimag)(etf1[ix])*wt1+Z(cuCimag)(etf2[ix])*wt2;
-	    otf2[ix]=Z(cuCmul)(otf2[ix], temp);
+	    otf2[ix]*=temp;
 	}
     }
 }
@@ -364,14 +364,14 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 */
 void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream){
     TIC;tic;
-    cuwloc_t *cupowfs=cudata->powfs;
+    cupowfs_t *cupowfs=cudata->powfs;
     cuwfs_t *cuwfs=cudata->wfs;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const Real hs=parms->wfs[iwfs].hs;
-    const int nsa=powfs[ipowfs].pts->nsa;
+    const int nsa=powfs[ipowfs].saloc->nloc;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
     const int ncompy=powfs[ipowfs].ncompy;
     const int notf=MAX(ncompx,ncompy);

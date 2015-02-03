@@ -162,7 +162,7 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 	    }
 	}
 	double psfnorm;
-	if(sum2one){
+	if(sum2one){/**PSF sum to 1*/
 	    psfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 	}else{/**PSF max is strehl*/
 	    psfnorm=1./locfft->ampsum;
