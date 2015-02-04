@@ -350,17 +350,14 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}else{
 	    curzero(phiout, stream);
 	}
-	if(parms->sim.idealwfs){
+	if((parms->sim.idealwfs || parms->sim.wfsalias)
+	   && !(parms->sim.idealwfs && parms->sim.wfsalias)){
+	    Real alpha=parms->sim.idealwfs?1:-1;
 	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
-		       hs, thetax, thetay, 0, 0, 1, stream);
-	}else{
-	    if(simu->atm){
-		gpu_atm2loc(phiout->p, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
-	    }
-	    if(parms->sim.wfsalias){
-		gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
-			   hs, thetax, thetay, 0, 0, -1, stream);
-	    }
+		       hs, thetax, thetay, 0, 0, alpha, stream);
+	}
+	if(simu->atm && !parms->sim.idealwfs){
+	    gpu_atm2loc(phiout->p, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	}
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
@@ -381,6 +378,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(simu->fsmreal && simu->fsmreal->p[iwfs] && !powfs[ipowfs].llt){
 		ttx+=simu->fsmreal->p[iwfs]->p[0];
 		tty+=simu->fsmreal->p[iwfs]->p[1];
+		simu->fsmcmds->p[iwfs]->p[isim*2]=-simu->fsmreal->p[iwfs]->p[0];
+		simu->fsmcmds->p[iwfs]->p[isim*2+1]=-simu->fsmreal->p[iwfs]->p[1];
 	    }
 	    if(ttx || tty){
 		curaddptt(phiout, loc, 0, -ttx, -tty, stream);
@@ -463,7 +462,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(do_phy || parms->powfs[ipowfs].dither){
 		/*signal level was already multiplied in ints. */
 		curcell *ints=cuwfs[iwfs].ints;
-		const int pixpsa=ints->p[0]->nx*ints->p[0]->ny;//PyWFs and SHWFS
+		const int pixpsa=ints->nx==1?4:(ints->p[0]->nx*ints->p[0]->ny);//PyWFs and SHWFS
 		if(save_ints){
 		    cellarr_curcell(simu->save->intsnf[iwfs], simu->isim, ints, stream);
 		}
@@ -472,10 +471,13 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    rne=parms->powfs[ipowfs].rne;
 		    bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 		    addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-			(ints->p[0]->p, ints->nx, pixpsa, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
+			(ints->p[0]->p, nsa, pixpsa, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
 			 cuwfs[iwfs].bkgrnd2, cuwfs[iwfs].bkgrnd2c, 
 			 rne, cuwfs[iwfs].custat);
 		    ctoc("noise");
+		    if(save_ints){
+			cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
+		    }
 		}
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip 
 		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
@@ -528,9 +530,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    break;
 		default:
 		    TO_IMPLEMENT;
-		}
-		if(save_ints && noisy){
-		    cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 		}
 		ctoc("mtche");
 	    }else{

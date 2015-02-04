@@ -111,6 +111,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		cfft2(nominal,-1);
 		cfftshift(nominal);
 		cfft2(nominal,1);
+		//cancel FFT effect.
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
 		ccp(&nominals[iwfs][isa], nominal);
 		//Coordinate of PSF pixels

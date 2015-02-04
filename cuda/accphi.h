@@ -18,7 +18,8 @@
 #ifndef AOS_CUDA_ACCPHI_H
 #define AOS_CUDA_ACCPHI_H
 #include "curmat.h"
-
+void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *amp, Real *phiout,
+		   Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream);
 void gpu_atm2loc(Real *phiout, culoc_t *loc, Real hs, Real thetax,Real thetay,
 		 Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream);
 void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
@@ -29,4 +30,8 @@ void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 
 			double alpha, cudaStream_t stream);
+#define KARG_COMMON const Real (*restrict loc)[2], const int nloc, const Real dxi, const Real dyi, const Real dispx, const Real dispy, const Real alpha
+__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON);
+__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON);
+
 #endif

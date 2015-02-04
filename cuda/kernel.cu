@@ -498,37 +498,3 @@ multimv_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, i
     atomicAdd(&a[iact], acc[threadIdx.x]);
 }
 
-
-/*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON){
-    int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	Real x=loc[i][0]*dxi+dispx;
-	Real y=loc[i][1]*dyi+dispy;
-	int ix=Z(floor)(x);
-	int iy=Z(floor)(y);
-	x=x-ix; y=y-iy;
-	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
-	    Real tmp=((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
-		      +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
-	    add_valid(out[i], alpha, tmp);
-	}
-    }
-}
-
-/*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON){
-    int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	Real x=loc[i][0]*dxi+dispx;
-	Real y=loc[i][1]*dyi+dispy;
-	int ix=Z(floor)(x);
-	int iy=Z(floor)(y);
-	x=x-ix; y=y-iy;
-	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
-	    Real tmp=((+in[iy*nx+ix].x*(1.f-x) +in[iy*nx+ix+1].x*x)*(1.f-y)
-		      +(+in[(iy+1)*nx+ix].x*(1.f-x) +in[(iy+1)*nx+ix+1].x*x)*y);
-	    add_valid(out[i], alpha, tmp);
-	}
-    }
-}

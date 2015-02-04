@@ -1215,6 +1215,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->recon.alg==0 && parms->recon.modal){
 	error("Modal control is not yet implemented for MV reconstructor\n");
     }
+    if(parms->recon.alg==1 && parms->lsr.alg==2){
+	parms->recon.mvm=1;
+    }
     if(parms->sim.wfsalias){
 	if(parms->sim.idealwfs){
 	    error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
@@ -2326,6 +2329,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 		parms->fdlock->p[iseed]=-1;
 		warning2("Skip seed %ld because %s exist.\n", parms->sim.seeds->p[iseed], fn);
 	    }else{
+		remove(fn);
 	    	snprintf(fn, 80, "Res_%ld.lock",parms->sim.seeds->p[iseed]);
 		parms->fdlock->p[iseed]=lock_file(fn, 0, 0);
 		if(parms->fdlock->p[iseed]<0){
@@ -2747,6 +2751,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->gpu.evl=0;
 	}
 	if(parms->recon.alg==0){/*MV*/
+	    parms->gpu.lsr=0;
 	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for tomo.cxx==0. Disable GPU Tomography.\n");
@@ -2762,10 +2767,6 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	}else if(parms->recon.alg==1){
 	    parms->gpu.tomo=0;
 	    parms->gpu.fit=0;
-	    if(parms->gpu.lsr){
-		warning("\n\nGPU reconstruction for LSR is not available yet\n");
-		parms->gpu.lsr=0;
-	    }
 	}
     }
     if(parms->nwfs==1 && ngpu==0) ngpu=1;/*use a single gpu if there is only 1 wfs.*/
@@ -2808,6 +2809,8 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 		    }
 		}
 	    }
+	}else{
+	    parms->fit.square=0;
 	}
 	if(!parms->atm.frozenflow){
 	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");

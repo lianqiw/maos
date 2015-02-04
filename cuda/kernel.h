@@ -140,7 +140,4 @@ __global__ void cwm_do(Comp *dest, Comp *from1, Comp *from2, int lda, int ldb, i
 __global__ void unwrap_phase_do(Comp *wvf, Real *opd, int *embed, int n, Real wvl);
 __global__ void mvm_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
 __global__ void multimv_do(const Real *restrict mvm, Real *restrict a, const Real *restrict g, int nact, int ng);
-#define KARG_COMMON const Real (*restrict loc)[2], const int nloc, const Real dxi, const Real dyi, const Real dispx, const Real dispy, const Real alpha
-__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON);
-__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON);
 #endif

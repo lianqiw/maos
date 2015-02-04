@@ -45,11 +45,13 @@ namespace cuda_recon{
      gradin(0),opdr(0),opdr_vec(0),opdr_save(0),tomo_rhs(0),
      dmfit(0), dmfit_vec(0),dmfit_save(0),fit_rhs(0),
      RFdfx(0),GXL(0),gngsmvst(0), deltafocus(0),
-     moao(0), dm_wfs(0),dm_evl(0){
+     moao(0), dm_wfs(0),dm_evl(0),nmoao(parms->nmoao){
     if(!parms) return;
     cgstream = new stream_t;
-    if(parms->gpu.fit || parms->recon.mvm || parms->gpu.moao){
-	if(parms->fit.square){
+    if((parms->recon.alg==0 && parms->gpu.fit || parms->recon.mvm ||parms->gpu.moao)
+       || (parms->recon.alg==1 && parms->gpu.lsr)
+	){
+	if(parms->recon.alg==0 && parms->fit.square){
 	    dmfit=curcellnew(parms->ndm, 1, recon->anx->p, recon->any->p);
 	}else{
 	    dmfit=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL);
@@ -60,7 +62,7 @@ namespace cuda_recon{
 	}
     }
 
-    if((parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
+    if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
 	if(parms->tomo.square){
 	    opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
 	}else{
@@ -87,17 +89,15 @@ void curecon_t::delete_config(){
 void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     delete_config();
     if(parms->recon.mvm){
-	if(!parms->gpu.tomo || !parms->gpu.fit){
-	    return; //Use CPU to assemble MVM
-	}
 	if(recon->MVM){//MVM already exists
 	    MVM=new cusolve_mvm(recon->MVM);
 	    return;//done.
+	}else if(!parms->gpu.tomo || !parms->gpu.fit){
+	    return; //Use CPU to assemble MVM
 	}
     }
-    grid=new curecon_geom(parms, recon);
-    if(parms->recon.alg!=0){
-	error("Only MVR is implemented in GPU\n");
+    if(parms->recon.alg==0){
+	grid=new curecon_geom(parms, recon);
     }
     if(parms->gpu.fit){
 	switch(parms->gpu.fit){
@@ -522,7 +522,7 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 typedef cuda_recon::curecon_t curecon_t;
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     for(int igpu=0; igpu<NGPU; igpu++){
-	if((parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
+	if((parms->recon.mvm && parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm)
 	   || igpu==cudata_t::recongpu){
 	    gpu_set(igpu);
 	    if(cudata->recon){
@@ -543,7 +543,7 @@ void gpu_recon_free(){
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     //The following routine assemble MVM and put in recon->MVM
-    if(!parms->load.mvm){
+    if(!recon->MVM){
 	if(parms->recon.mvm==1){
 	    gpu_setup_recon_mvm_trans(parms, recon, powfs);
 	}else{
@@ -648,7 +648,7 @@ void gpu_recon_mvm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
-    curecon->mvm(&simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    curecon->mvm(&simu->dmerr, (parms->recon.alg==0 && parms->tomo.psol)?simu->gradlastol:simu->gradlastcl);
 }
 
 void gpu_moao_recon(SIM_T *simu){

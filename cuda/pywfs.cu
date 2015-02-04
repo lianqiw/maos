@@ -31,8 +31,8 @@ __global__ static void
 pywfs_grad_do(Real *grad, Real *ints, Real gain, int nsa){
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
 	Real alpha=gain/(ints[i]+ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i]);
-	grad[i]=(ints[i]-ints[i+nsa]+ints[nsa*2+i]-ints[nsa*3+i])*alpha;
-	grad[i+nsa]=(ints[i]+ints[i+nsa]-ints[nsa*2+i]-ints[nsa*3+i])*alpha;
+	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha;
+	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha;
     }
 }
 void pywfs_grad(curmat *grad, curmat *ints, Real gain, cudaStream_t stream){
@@ -119,7 +119,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs
 		     1./dx2, 1./dx2, 
 		     (((ix-0.5)*ncomp2)-(-ncomp2+0.5)),
 		     (((iy-0.5)*ncomp2)-(-ncomp2+0.5)), 
-		     (double)nsa/(4*ncomp*ncomp)*parms->wfs[iwfs].siglevsim);
+		     (double)nsa/(ncomp*ncomp)*parms->wfs[iwfs].siglevsim);
 	    }
 	}
     }
@@ -182,7 +182,7 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
 	dzero(gradc);
 	cp2cpu(&gradc, grad, stream);
 	gg->p[iloc]=count;
-	const double thres=dmaxabs(gradc)*1e-3;
+	const double thres=dmaxabs(gradc)*EPS;
 	for(int ig=0; ig<gradc->nx; ig++){
 	    if(fabs(gradc->p[ig])>thres){
 		gg->x[count]=gradc->p[ig]*poke1;

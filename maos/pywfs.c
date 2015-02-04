@@ -22,6 +22,7 @@
 */
 #include "common.h"
 #include "setup_powfs.h"
+#include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by 1.1 times more
 #define PYWFS_POKE 1e-6 //How many meters to poke
 /**
@@ -89,7 +90,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
     PCMAT(nominal, pn);
     long order=parms->powfs[ipowfs].order;
-    double dsa=parms->aper.d/order;//size of detector pixel in meter
+    double dsa=parms->aper.d/order;//size of detector pixel mapped on pupil
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
     double du=1./(dx2*ncomp);
     double dupix=dsa*du;
@@ -107,6 +108,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
     }
     cfftshift(nominal);
+    cfft2(nominal, -1);
+    cfftshift(nominal);
+    cfft2(nominal, 1);
+    cscale(nominal, 1./(nominal->nx*nominal->ny));
     pywfs->si=cellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
     powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
@@ -120,12 +125,17 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 				      1, 0, 0);	    
 	}
     }
-
+    if(parms->save.setup){
+	writebin(pywfs->si, "pywfs_si0");
+    }
     if(parms->powfs[ipowfs].saat>0){
 	//Determine valid subapertures
 	dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
 	dmat *ints=0;
 	pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	if(parms->save.setup){
+	    writebin(ints, "pywfs_ints0");
+	}
 	const int nsa=ints->nx;
 	dmat *saa=dnew(nsa, 1);
 	for(int i=0; i<ints->nx; i++){
@@ -279,7 +289,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     locfft_t *locfft=pywfs->locfft;
     ccell *psfs=0;
-    locfft_psf(&psfs, locfft, opd, NULL, 1);//PSF sum to 1.
+    locfft_psf(&psfs, locfft, opd, NULL, 1);//psfs.^2 sum to 1. peak in center
     int nwvl=locfft->wvl->nx;
     double dx=locfft->loc->dx;
     long nembed=locfft->nembed->p[0];
@@ -326,18 +336,20 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	}//for iwvl
     }//for ipos
     //writebin(pupraw, "cpu_psf");
-    ccpd(&otf, pupraw);
+    ccpd(&otf, pupraw);//pupraw sum to one.
     dfree(pupraw);
+    //cfftshift(otf);
     cfft2(otf, -1);
     ccwm(otf, pywfs->nominal);
     cfft2(otf, 1);
+    //cfftshift(otf);
     const int nsa=pywfs->si->p[0]->nx;
     if(!(*ints)){
 	(*ints)=dnew(nsa, 4);
     }
     for(int i=0; i<4; i++){
 	//normalized so that each "subaperture" sum to 1.
-	dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, (double)nsa/(4*ncomp*ncomp));
+	dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, (double)nsa/(ncomp*ncomp));
     }
     //writebin(*ints, "cpu_ints"); exit(0);
     /*{
@@ -365,10 +377,10 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     for(int isa=0; isa<nsa; isa++){
 	double sum1=gain/(pi[0][isa]+pi[1][isa]
 			  +pi[2][isa]+pi[3][isa]);
-	pgx[isa]=(pi[0][isa]-pi[1][isa]
-		  +pi[2][isa]-pi[3][isa])*sum1;
-	pgy[isa]=(pi[0][isa]+pi[1][isa]
-		  -pi[2][isa]-pi[3][isa])*sum1;
+	pgx[isa]=(pi[1][isa]-pi[0][isa]
+		  +pi[3][isa]-pi[2][isa])*sum1;
+	pgy[isa]=(pi[2][isa]+pi[3][isa]
+		  -pi[0][isa]-pi[1][isa])*sum1;
     }
 }
 /**
@@ -480,7 +492,7 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 	pywfs_grad(&grad, pywfs, ints);
 	dadd(&grad, 1, grad0, -1);
 	gg->p[ia]=count;
-	const double thres=dmaxabs(grad)*1e-3;
+	const double thres=dmaxabs(grad)*EPS;
 	for(int ig=0; ig<grad->nx; ig++){
 	    if(fabs(grad->p[ig])>thres){
 		gg->x[count]=grad->p[ig]*poke1;
@@ -536,6 +548,59 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 	if(fd>0){//succeed
 	    info2("Generating PYWFS poke matrix\n");
 	    gg=pywfs_mkg_do(pywfs, ploc, cubic, iac);
+	    writebin(gg, "%s", fn);
+	    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/", HOME);
+	    remove_file_older(fn, 30*24*3600);
+	    close(fd); remove(fnlock);
+	}else{
+	    info2("Trying to lock %s\n", fnlock);
+	    fd=lock_file(fnlock, 1, 0);
+	    close(fd); remove(fnlock);
+	    goto retry;
+	}
+    }else{
+	gg=dspread(fn);
+    }
+    return gg;
+}
+/*
+  Temporary wrapping
+*/
+dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc,
+		  int iwfs, int idm){
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    PYWFS_T *pywfs=powfs[ipowfs].pywfs;
+    uint32_t key=0;
+    key=hashlittle(aloc->locx, aloc->nloc*sizeof(double), key);
+    key=hashlittle(aloc->locy, aloc->nloc*sizeof(double), key);
+    key=dhash(pywfs->wvlwts, key);
+    key=dhash(pywfs->amp, key);
+    key=chash(pywfs->nominal, key);
+    key=chash(pywfs->pyramid->p[0], key);
+    key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
+    key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
+    if(pywfs->atm){
+	key=dhash(pywfs->atm, key);
+    }
+    char fn[PATH_MAX];
+    char fnlock[PATH_MAX];
+    mymkdir("%s/.aos/pywfs/", HOME);
+    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/G_%u_%ld_%g.bin", HOME, 
+	     key, pywfs->si->p[0]->nx, PYWFS_POKE);
+    snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    dsp *gg=0;
+  retry:
+    if(exist(fnlock) || !zfexist(fn)){
+	int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
+	if(fd>0){//succeed
+	    info2("Generating PYWFS poke matrix\n");
+#if USE_CUDA
+	    if(parms->gpu.wfs){
+		gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
+	    }else
+#endif
+		gg=pywfs_mkg_do(pywfs, aloc, 
+				parms->dm[idm].cubic, parms->dm[idm].iac);
 	    writebin(gg, "%s", fn);
 	    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/", HOME);
 	    remove_file_older(fn, 30*24*3600);

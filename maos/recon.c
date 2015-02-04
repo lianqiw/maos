@@ -227,14 +227,14 @@ void reconstruct(SIM_T *simu){
 		mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
 	    }else
 #if USE_CUDA
-		if(parms->gpu.tomo && parms->gpu.fit){
+		if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
 		    gpu_recon_mvm(simu);
 		}else
 #endif		
 		{
 		    //This assumes skipped WFS are in the end. \todo: fix it if not.
 		    dmulvec(simu->dmerr->m->p, recon->MVM, 
-			    (parms->tomo.psol?simu->gradlastol:simu->gradlastcl)->m->p,1);
+			    ((parms->recon.alg==0 && parms->tomo.psol)?simu->gradlastol:simu->gradlastcl)->m->p,1);
 		}
 	    if(parms->plot.run){
 		dcellcp(&simu->dmfit, simu->dmerr);
@@ -245,8 +245,14 @@ void reconstruct(SIM_T *simu){
 		tomofit(simu);//tomography and fitting. 
 		break;
 	    case 1:
-		if(simu->gradlastcl)
+		if(simu->gradlastcl){
+#if USE_CUDA
+		    if(parms->gpu.lsr){
+			error("To implement. MVM is done in as in MV case\n");
+		    }else
+#endif
 		    muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
+		}
 		break;
 	    default:
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);

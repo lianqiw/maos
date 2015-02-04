@@ -449,16 +449,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
-		if(parms->recon.alg==1 && fabs(parms->dm[idm].ht)<EPS){
+		if(parms->recon.alg==1 && fabs(parms->dm[idm].ht)<EPS && parms->powfs[ipowfs].type==1){
 		    info2("\nPyWFS from aloc to saloc directly\n");
-#if USE_CUDA
-		    if(parms->gpu.wfs){
-			GA[idm][iwfs]=gpu_pywfs_mkg(parms, powfs, recon->aloc->p[idm], 
-						    iwfs, idm);
-		    }else
-#endif
-		    GA[idm][iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
-					    parms->dm[idm].cubic, parms->dm[idm].iac);
+		    GA[idm][iwfs]=pywfs_mkg_ga(parms, powfs, recon->aloc->p[idm], iwfs, idm);
 		}else{
 		    double  ht = parms->dm[idm].ht;
 		    double  scale=1. - ht/hs;
@@ -2114,15 +2107,17 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	/*setup Truth wfs*/
 	setup_recon_twfs(recon,powfs,parms);
     }
-    switch(parms->recon.alg){
-    case 0:
-	setup_recon_tomo(recon, parms, powfs, aper);
-	break;
-    case 1:
-	setup_recon_lsr(recon, parms, powfs);
-	break;
-    default:
-	error("recon.alg=%d is not recognized\n", parms->recon.alg);
+    if(!parms->recon.mvm || !parms->load.mvm){
+	switch(parms->recon.alg){
+	case 0:
+	    setup_recon_tomo(recon, parms, powfs, aper);
+	    break;
+	case 1:
+	    setup_recon_lsr(recon, parms, powfs);
+	    break;
+	default:
+	    error("recon.alg=%d is not recognized\n", parms->recon.alg);
+	}
     }
     cellfree(recon->gloc);
     cellfree(recon->gamp);

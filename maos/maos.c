@@ -121,7 +121,7 @@ void maos_setup(const PARMS_T *parms){
     if(parms->gpu.wfs && powfs){
 	gpu_wfssurf2gpu(parms, powfs);
     }
-    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr)){
 	gpu_setup_recon(parms, powfs, recon);
     }
     extern int cuda_dedup;

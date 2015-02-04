@@ -418,6 +418,40 @@ void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg){
 
 
 /*This is memory bound. So increasing # of points processed does not help. */
+__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON){
+    int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
+	x=x-ix; y=y-iy;
+	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
+	    Real tmp=((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
+		      +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
+	    add_valid(out[i], alpha, tmp);
+	}
+    }
+}
+
+/*This is memory bound. So increasing # of points processed does not help. */
+__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON){
+    int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+	Real x=loc[i][0]*dxi+dispx;
+	Real y=loc[i][1]*dyi+dispy;
+	int ix=Z(floor)(x);
+	int iy=Z(floor)(y);
+	x=x-ix; y=y-iy;
+	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
+	    Real tmp=((+in[iy*nx+ix].x*(1.f-x) +in[iy*nx+ix+1].x*x)*(1.f-y)
+		      +(+in[(iy+1)*nx+ix].x*(1.f-x) +in[(iy+1)*nx+ix+1].x*x)*y);
+	    add_valid(out[i], alpha, tmp);
+	}
+    }
+}
+
+/*This is memory bound. So increasing # of points processed does not help. */
 __global__ void prop_linear_nocheck(Real *restrict out, const Real *restrict in, 
 				    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
@@ -530,33 +564,33 @@ void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,co
 #undef COMM
     }    
 }
-
+void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *amp, Real *phiout,
+		   Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
+    dispx=(dispx-map.ox)/map.dx;
+    dispy=(dispy-map.oy)/map.dy;
+    const int nloc=loc->nloc;
+    if (map.cubic_cc){//128 is a good number for cubic. 
+	prop_cubic<<<DIM(nloc,128), 0, stream>>>
+	    (phiout, map.p->p,map.nx,map.ny, loc->p, loc->nloc,scale/map.dx,scale/map.dy, dispx, dispy, alpha, 
+	     map.cubic_cc->p);
+    }else{
+	prop_linear<<<DIM(nloc,256), 0, stream>>>
+	    (phiout, map.p->p,map.nx,map.ny, loc->p, loc->nloc,scale/map.dx,scale/map.dy, dispx, dispy, alpha);
+    }
+}
+    
 /**
    Ray tracing of dm
 */
 void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
 		const Real hs, const Real thetax, const Real thetay,
-		const Real mispx, const Real mispy, const Real dmalpha, cudaStream_t stream){
-    if(Z(fabs)(dmalpha)<EPS) return;
+		const Real mispx, const Real mispy, const Real alpha, cudaStream_t stream){
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-	const Real dx=cudm[idm].dx;
-	const Real dy=cudm[idm].dy;
 	const Real ht=cudm[idm].ht;
-	const Real dispx=(ht*thetax+mispx-cudm[idm].ox)/dx;
-	const Real dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
-	const Real scale=1.f-ht/hs;
-	const Real (*loc)[2]=locarr[idm]->p;
-	const int nloc=locarr[idm]->nloc;
-#define COMM loc, nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
-#define KARG cudm[idm].p->p,cudm[idm].nx,cudm[idm].ny, COMM
-	if (cudm[idm].cubic_cc){//128 is a good number for cubic. 
-	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc->p);
-	}else{
-	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
-	}
-#undef KARG
-#undef COMM
+	gpu_prop_grid(cudm[idm], locarr[idm], 0, phiout, 
+		      alpha, ht*thetax+mispx, ht*thetay+mispy,
+		      1-ht/hs, 0, stream);
     }/*idm */
 }
 
