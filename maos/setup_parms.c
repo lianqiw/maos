@@ -2769,7 +2769,8 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->gpu.fit=0;
 	}
     }
-    if(parms->nwfs==1 && ngpu==0) ngpu=1;/*use a single gpu if there is only 1 wfs.*/
+    /*use a max of one gpu if there is only 1 wfs.*/
+    if(parms->nwfs==1 && ngpu==0) ngpu=1;
     if(use_cuda) use_cuda=gpu_init(parms, gpus, ngpu);
 #else
     use_cuda=0;

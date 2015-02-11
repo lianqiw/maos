@@ -95,8 +95,8 @@ int scheduler_recv_socket(int *sfd){
 uint16_t PORT=0;
 #define MAX_HOST 1024
 char* hosts[MAX_HOST];
-int nhost;
-int hid;
+int nhost=0;
+int hid=0;
 static int myhostid(const char *host){
     int i;
     for(i=0; i<nhost; i++){
@@ -132,22 +132,19 @@ void init_scheduler(){
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
     memset(hosts, 0, MAX_HOST);
     if(exist(fn)){
-	nhost=64;
 	FILE *fp=fopen(fn,"r");
-	int ihost=0;
 	if(fp){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
 		if(strlen(line)>0 && line[0]!='#'){
-		    hosts[ihost]=strdup0(line);
-		    ihost++;
-		    if(ihost>=MAX_HOST-1){
+		    hosts[nhost]=strdup0(line);
+		    nhost++;
+		    if(nhost>=MAX_HOST-1){
 			break;
 		    }
 		}
 	    }
 	    fclose(fp);
-	    nhost=ihost;
 	}else{
 	    error("failed to open file %s\n",fn);
 	}

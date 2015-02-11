@@ -93,6 +93,7 @@ typedef struct PYWFS_T{
     dspcell *si;       /**<For sampling results onto detector*/
     double gain;       /**<Optical gain of PYWFS*/
     dmat *atm;         /**<For generating gain with atmosphere*/
+    dmat *saa;         /**<Subaperture area. Average is one*/
     int pos_n;         /**<Number of points for modulation.*/
 }PYWFS_T;
 

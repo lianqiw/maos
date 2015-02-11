@@ -488,7 +488,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		}
 	    }
 	    if(parms->powfs[ipowfs].type==1){
-		pywfs_grad(gradcalc, cuwfs[iwfs].ints->p[0],powfs[ipowfs].pywfs->gain,stream);
+		pywfs_grad(gradcalc, cuwfs[iwfs].ints->p[0], cupowfs[ipowfs].saa, 
+			   cuwfs[iwfs].isum, powfs[ipowfs].pywfs->gain,stream);
 		//curwrite(gradcalc, "gradcalc"); exit(0);
 	    }else if(do_phy){
 		curzero(gradcalc, stream);

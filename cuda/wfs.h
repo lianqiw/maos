@@ -42,6 +42,7 @@ typedef struct cupowfs_t{
     /*For Pyramid*/
     cuccell *pyramid;
     cucmat *pynominal;
+    curmat *saa;
 }cupowfs_t;
 /**For matched filter update*/
 class dither_t{
@@ -109,6 +110,7 @@ public:
     cuccell *pywvf;//Original PSF from OPD
     cucmat *pyotf; //Truncated OTF to be multiplied by pyramid and FFT.
     curmat *pypsf; //stores psf during modulation.
+    curmat *isum;//stores sum of psf for all subapertures at each frame in GPU.
     cufftHandle plan_py;
 };
 
@@ -119,7 +121,7 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 	     const Real (*orig)[2], const Real*restrict amp, Real alpha, cudaStream_t stream);
 __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
-void pywfs_grad(curmat *grad, curmat *ints, Real gain, cudaStream_t stream);
+void pywfs_grad(curmat *grad, const curmat *ints, const curmat *saa, curmat *isum, Real gain, cudaStream_t stream);
 void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs,
 		    const PARMS_T *parms, const POWFS_T *powfs, int iwfs, cudaStream_t stream);
 dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);

@@ -535,8 +535,8 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
 	    pd->ipv=pd->qdv=0;
 	    pd->ipve=pd->qdve=0;
 	    if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
-		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%.1f mas\n",
-		      isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000);
+		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%.1f mas, a2me=%.1f mas\n",
+		      isim, iwfs, pd->deltam/(0.5*M_PI), pd->a2m*206265000, pd->a2me*206265000);
 	    }
 	    if(simu->resdither){
 		int ic=(npllacc-1)/(npll);

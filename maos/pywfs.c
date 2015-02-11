@@ -143,9 +143,11 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
 	cellfree(ints);
 	dfree(opd);
-	normalize_max(saa->p, saa->nx*saa->ny, 1);
-	loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat, 0, 0);
-	powfs[ipowfs].saa=saa; saa=NULL;
+	double samax=dmaxabs(saa);
+	loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samax, 0, 0);
+	dscale(saa, saa->nx/dsum(saa));//saa average to one.
+	pywfs->saa=saa; saa=NULL;
+	powfs[ipowfs].saa=dref(pywfs->saa);
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
 		dspfree(pywfs->si->p[ix+iy*2]);
@@ -171,6 +173,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    gym+=TT->p[isa+nsa*3];
 	}
 	pywfs->gain*=2*nsa/(gxm+gym);
+	pywfs->gain*=2.3;//experimental adjustment
 	info("pywfs_gain=%g\n", pywfs->gain);
 	dfree(TT);
     }
@@ -246,16 +249,17 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(gg, "pywfs_gp");
 	locfree(ploc);
 	dspfree(gg);
-    }
-    {//Test implementation
+	}*/
+    /*{//Test implementation
 	dmat *ints=0;
 	int nn=1;
 	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
-	double dsa=parms->aper.d/order;
-	loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
-	dmat *opdsp=zernike(ploc, parms->aper.d, 0, 3, 0);
+	//loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
+	//dmat *opdsp=zernike(ploc, parms->aper.d, 0, 3, 0);
 	cellarr *pupsave=cellarr_init(nn,opds->ny,"ints");
+	cellarr *grads=cellarr_init(nn,opds->ny,"grads");
 	dmat *opd=0;
+	dmat *grad=0;
 	for(int im=0; im<opds->ny; im++){
 	    for(int j=0; j<nn; j++){
 		info2("im=%d, j=%d\n", im, j);
@@ -271,11 +275,14 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		}
 		dzero(ints);
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
 		cellarr_push(pupsave, j+im*nn, ints);
+		cellarr_push(grads, j+im*nn, grad);
 		dfree(opd);
 	    }
 	}
 	cellarr_close(pupsave);
+	cellarr_close(grads);
 	cellfree(ints);
 	dfree(opds);
     }
@@ -335,7 +342,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	    cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n));
 	}//for iwvl
     }//for ipos
-    //writebin(pupraw, "cpu_psf");
+    //writebin(pupraw, "cpu_psf"); exit(0);
     ccpd(&otf, pupraw);//pupraw sum to one.
     dfree(pupraw);
     //cfftshift(otf);
@@ -374,13 +381,14 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     double *pgy=(*pgrad)->p+nsa;
     PDMAT(ints, pi);
     double gain=pywfs->gain;
+    double isum=dsum(ints);
+    double alpha0=gain*nsa/isum;
     for(int isa=0; isa<nsa; isa++){
-	double sum1=gain/(pi[0][isa]+pi[1][isa]
-			  +pi[2][isa]+pi[3][isa]);
+	double alpha2=alpha0/pywfs->saa->p[isa];
 	pgx[isa]=(pi[1][isa]-pi[0][isa]
-		  +pi[3][isa]-pi[2][isa])*sum1;
+		  +pi[3][isa]-pi[2][isa])*alpha2;
 	pgy[isa]=(pi[2][isa]+pi[3][isa]
-		  -pi[0][isa]-pi[1][isa])*sum1;
+		  -pi[0][isa]-pi[1][isa])*alpha2;
     }
 }
 /**

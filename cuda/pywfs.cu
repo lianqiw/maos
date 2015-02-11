@@ -28,16 +28,23 @@ extern "C"
 #include "cucmat.h"
 
 __global__ static void
-pywfs_grad_do(Real *grad, Real *ints, Real gain, int nsa){
+pywfs_grad_do(Real *grad, Real *ints, Real *saa, Real *isum, Real gain, int nsa){
+    Real alpha0=gain*nsa/(*isum);
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
-	Real alpha=gain/(ints[i]+ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i]);
+	Real alpha=alpha0/saa[i];
 	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha;
 	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha;
     }
 }
-void pywfs_grad(curmat *grad, curmat *ints, Real gain, cudaStream_t stream){
+void pywfs_grad(curmat *grad, /**<[out] gradients*/
+		const curmat *ints, /**<[in] Intensity*/
+		const curmat *saa,  /**<[in] Subaperture normalized area*/
+		curmat *isum, /**<[out] Sum intensity*/
+		Real gain,   /**<[in] Gain*/
+		cudaStream_t stream){
+    cursum2(isum->p, ints, stream);//sum of ints
     pywfs_grad_do<<<DIM(ints->nx, 256), 0, stream>>>
-	(grad->p, ints->p, gain, ints->nx);
+	(grad->p, ints->p, saa->p, isum->p, gain, ints->nx);
 }
 void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs,
 		const PARMS_T *parms, const POWFS_T *powfs, int iwfs, cudaStream_t stream){
@@ -152,7 +159,7 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
     if(opd0) curadd(&phiout, 1, opd0, 1, stream);
     ints->zero(stream);
     pywfs_ints(ints, phiout, cupowfs, cuwfs, parms, powfs, iwfs, stream);
-    pywfs_grad(grad0, ints, powfs[ipowfs].pywfs->gain, stream);
+    pywfs_grad(grad0, ints, cupowfs[ipowfs].saa, cuwfs[iwfs].isum, powfs[ipowfs].pywfs->gain, stream);
     //curwrite(grad0, "gpu_mkg_g0");
     dsp *gg=dspnew(nsa*2, aloc->nloc, nsa*2*aloc->nloc);
     int count=0;
@@ -177,7 +184,7 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
 	ints->zero(stream);
 	pywfs_ints(ints, phiout, cupowfs, cuwfs, parms, powfs, iwfs, stream);
 	//curwrite(ints, "gpu_mkg_ints");
-	pywfs_grad(grad, ints, powfs[ipowfs].pywfs->gain,stream);
+	pywfs_grad(grad, ints, cupowfs[ipowfs].saa, cuwfs[iwfs].isum, powfs[ipowfs].pywfs->gain,stream);
 	curadd(&grad, 1, grad0, -1, stream);
 	dzero(gradc);
 	cp2cpu(&gradc, grad, stream);

@@ -190,6 +190,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(powfs[ipowfs].pywfs){
 		cp2gpu(&cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
 		cp2gpu(&cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
+		cp2gpu(&cupowfs[ipowfs].saa, powfs[ipowfs].saa);
 	    }
 	}
     }
@@ -224,7 +225,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	cuwfs[iwfs].phiout=curnew(powfs[ipowfs].loc->nloc, 1);
 
-	if(cupowfs[ipowfs].nembed[0]){
+	if(cupowfs[ipowfs].nembed){
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed[0], cupowfs[ipowfs].nembed[0], FFT_T_C2C));
 	    DO(cufftSetStream(cuwfs[iwfs].plan_fs, *cuwfs[iwfs].stream));
 	}
@@ -267,6 +268,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    cuwfs[iwfs].pypsf=curnew(nxotf, nyotf);
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_py, nxotf, nyotf, FFT_T_C2C));
 	    cufftSetStream(cuwfs[iwfs].plan_py, *cuwfs[iwfs].stream);
+	    cuwfs[iwfs].isum=curnew(1,1);
 	}else if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
 	    /*If there is llt. */
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){

@@ -307,13 +307,11 @@ case "${cc_full}" in
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION%.*}
 	    minor="${minor#4.}"
-	    if test $major -ge 13 ;then
-		OPTIM+=" -axCORE-AVX2"
-            elif test $major -ge 11 ;then
-		OPTIM+=" -axSSE4.2"
-	    elif test $major -ge 10; then
-		OPTIM+=" -axS"
-	    fi
+	    #if test $major -ge 13 ;then
+	#	OPTIM+=" -axCORE-AVX2,SSE4.2"
+	 #   elif test $major -ge 11 ;then
+	#	OPTIM+=" -axSSE4.2"
+	 #   fi
 	    if test $major -lt 11 ;then
 		unset OPENMP_CFLAGS
 	    fi
