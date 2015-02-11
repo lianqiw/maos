@@ -51,7 +51,7 @@ struct thread_t{
   
   The following use thread_t to manage the index
   QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A) 
-  CALL_THREAD(A, nthread, urgent) calls QUEUE_THREAD and waits for all to finish.
+  CALL_THREAD(A, urgent) calls QUEUE_THREAD and waits for all to finish.
 */
 #include <pthread.h>
 #include "thread_pool.h"

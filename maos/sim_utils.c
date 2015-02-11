@@ -944,7 +944,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(powfs[ipowfs].loc_tel){/*misregistration. */
 		data->locout=powfs[ipowfs].loc_tel->p[wfsind];
 		tot=data->locout->nloc;
-	    }else if(parms->powfs[ipowfs].type==1){
+	    }else if(parms->powfs[ipowfs].type==1 || powfs[ipowfs].saloc->nloc<NTHREAD){
 		data->locout=powfs[ipowfs].loc;
 		tot=data->locout->nloc;
 	    }else{
@@ -983,7 +983,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    if(powfs[ipowfs].loc_dm){/*misregistration. */
 		data->locout=powfs[ipowfs].loc_dm->p[wfsind+idm*nwfsp];
 		tot=data->locout->nloc;
-	    }else if(parms->powfs[ipowfs].type==1){
+	    }else if(parms->powfs[ipowfs].type==1 || powfs[ipowfs].saloc->nloc<NTHREAD){
 		data->locout=powfs[ipowfs].loc;
 		tot=data->locout->nloc;
 	    }else{

@@ -31,32 +31,33 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
 	error("start=%ld, end=%ld. end need to be larger than start\n",start, end);
     }
     long nt=(end-start+nthread-1)/nthread;
-    long ithread;
-    for(ithread=0; ithread<nthread; ithread++){
+    if(nt==0){
+	error("nt=%ld\n",nt);
+    }
+    int skip=0;
+    for(long ithread=0; ithread<nthread; ithread++){
 	info[ithread].ithread=ithread;
 	info[ithread].nthread=nthread;
 	info[ithread].data=data;
 	info[ithread].fun=fun;
-	info[ithread].start=start;
-	start+=nt;
-	info[ithread].end=start;
-	if(start>=end){
-	    info[ithread].end=end;
-	    ithread++;
-	    break;
+	if(skip){//skip the rest
+	    info[ithread].start=0;
+	    info[ithread].end=0;
+	}else{
+	    info[ithread].start=start;
+	    start+=nt;
+	    if(start>=end){
+		start=end; 
+		skip=1;
+		data=0;
+		fun=0;
+	    }
+	    info[ithread].end=start;
 	}
     }
-    for(;ithread<nthread;ithread++){/*skip these threads. */
-	info[ithread].ithread=ithread;
-	info[ithread].nthread=nthread;
-	info[ithread].start=0;
-	info[ithread].end=0;
-	info[ithread].data=data;
-	info[ithread].fun=fun;
-    }
     /*Make sure we terminate at the right place. */
-    if(info[nthread-1].end){
-	info[nthread-1].end=end;
+    if(info[nthread-1].end && info[nthread-1].end!=end){
+	error("Not correctly terminated\n");
     }
 }
 /**
