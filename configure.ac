@@ -165,7 +165,7 @@ AC_SUBST(ldsuffix)
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR},--enable-new-dtags" #-avoid-version
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 
@@ -892,7 +892,7 @@ if test "$with_gtk" != "no" ;then
     echo Compile Monitor with Libnotify=$comp_monn
     echo DRAW_LIBS=$DRAW_LIBS
     echo GTK_LIBS=$GTK_LIBS
-    echo Using GTK+-3=$gtk_3
+    echo Using GTK+-${gtk_ver}
 else
     echo "Without GTK"
 fi

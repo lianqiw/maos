@@ -128,8 +128,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     if(parms->save.setup){
 	writebin(pywfs->si, "pywfs_si0");
     }
-    if(parms->powfs[ipowfs].saat>0){
-	//Determine valid subapertures
+
+    {
+	//Determine subapertures area
 	dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
 	dmat *ints=0;
 	pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
@@ -137,16 +138,18 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    writebin(ints, "pywfs_ints0");
 	}
 	const int nsa=ints->nx;
-	dmat *saa=dnew(nsa, 1);
+	pywfs->saa=dnew(nsa, 1);
 	for(int i=0; i<ints->nx; i++){
-	    saa->p[i]=ints->p[i]+ints->p[i+nsa]+ints->p[i+nsa*2]+ints->p[i+nsa*3];
+	    pywfs->saa->p[i]=ints->p[i]+ints->p[i+nsa]+ints->p[i+nsa*2]+ints->p[i+nsa*3];
 	}
 	cellfree(ints);
 	dfree(opd);
+    }
+    if(parms->powfs[ipowfs].saat>0){
+	dmat *saa=pywfs->saa;
 	double samax=dmaxabs(saa);
 	loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samax, 0, 0);
 	dscale(saa, saa->nx/dsum(saa));//saa average to one.
-	pywfs->saa=saa; saa=NULL;
 	powfs[ipowfs].saa=dref(pywfs->saa);
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
@@ -158,13 +161,26 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    }
 	}
     }
+    dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
+  
     if(parms->dbg.pywfs_atm){
 	pywfs->atm=genatm_loc(pywfs->locfft->loc, parms->atm.r0, dsa);
 	writebin(pywfs->atm, "pywfs_loc_atm");
     }
-    //Determine the gain of PyWFS
+
+    //Determine the gain and offset of PyWFS
     {
+	//offset: grad of a flat wavefront
+	dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
+	dmat *ints=0;
+	dmat *goff=0;
+	pywfs_fft(&ints, pywfs, opd);//writebin(ints, "ints_0");
+	pywfs_grad(&goff, pywfs, ints);//writebin(goff, "goff_0");
+	dadd(&pywfs->gradoff, 1, goff, 1);
+	dfree(opd);
+	dfree(ints);
+	//gain
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	dmat *TT=pywfs_tt(pywfs);
 	double gxm=0, gym=0;
@@ -172,65 +188,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    gxm+=TT->p[isa];
 	    gym+=TT->p[isa+nsa*3];
 	}
-	pywfs->gain*=2*nsa/(gxm+gym);
-	pywfs->gain*=2.3;//experimental adjustment
+	double gainscl=2.*nsa/(gxm+gym);
+	//gainscl*=2.3; //2.3 is imperical adjustment.
+	pywfs->gain*=gainscl;
+	dscale(pywfs->gradoff, gainscl);
 	info("pywfs_gain=%g\n", pywfs->gain);
 	dfree(TT);
     }
-    /*
-    //Determine the gain of PyWFS
-    for(int j=0; j<2; j++){
-	loc_t *loc=powfs[ipowfs].loc;
-	dmat *opd=dnew(loc->nloc, 1);
-
-	dmat *grad0=dnew(nsa,2);
-	dmat *grad=dnew(nsa,2);
-	dmat *ints=0;
-	double gmeanx[4], gmeany[4];
-	const double alpha=1e-7;
-	dzero(ints);
-	if(pywfs->atm){
-	    dcp(&opd, pywfs->atm);
-	}
-	pywfs_fft(&ints, pywfs, opd);
-	pywfs_grad(&grad0, pywfs, ints);
-	//writebin(grad0, "grad0");
-	for(int ind=0; ind<2; ind++){
-	    for(int val=0; val<2; val++){
-		double ptt[3]={0,0,0};
-		ptt[ind+1]=(val*2-1)*alpha;
-		if(pywfs->atm){
-		    dcp(&opd, pywfs->atm);
-		}else{
-		    dzero(opd);
-		}
-		loc_add_ptt(opd->p, ptt, loc);
-		dzero(ints);
-		pywfs_fft(&ints, pywfs, opd);
-		pywfs_grad(&grad, pywfs, ints);
-		dadd(&grad, 1, grad0, -1);
-		//writebin(grad, "grad_%d_%d", ind, val);
-		double gxm=0, gym=0;
-		for(int isa=0; isa<nsa; isa++){
-		    gxm+=grad->p[isa];
-		    gym+=grad->p[isa+nsa];
-		}
-		gxm/=nsa; 
-		gym/=nsa;
-		gmeanx[val+2*ind]=gxm;
-		gmeany[val+2*ind]=gym;
-	    }
-	}
-	//info("gmeanx=%g %g %g %g\n", gmeanx[0],gmeanx[1],gmeanx[2],gmeanx[3]);
-	//info("gmeany=%g %g %g %g\n", gmeany[0],gmeany[1],gmeany[2],gmeany[3]);
-	pywfs->gain*=alpha/(gmeanx[1]-gmeanx[0])+alpha/(gmeany[3]-gmeany[2]);
-	info("pywfs_gain=%g\n", pywfs->gain);
-	dfree(ints);
-	dfree(grad);
-	dfree(grad0);
-	dfree(opd);
-    }
-    */
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
 	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
@@ -239,23 +203,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(pywfs->pyramid, "pywfs_pyramid");
 	writebin(nominal, "pywfs_nominal");
 	writebin(pywfs->si, "pywfs_si");
+	writebin(pywfs->gradoff, "pywfs_gradoff");
     }
-    /*
-    {//test GA
-	double dsa=parms->aper.d/order;
-	loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
-	dsp *gg=pywfs_mkg(powfs[ipowfs].pywfs, ploc);
-	writebin(ploc, "pywfs_ploc");
-	writebin(gg, "pywfs_gp");
-	locfree(ploc);
-	dspfree(gg);
-	}*/
-    /*{//Test implementation
+    if(0){//Test implementation
 	dmat *ints=0;
 	int nn=1;
+	double wve=1e-9*10;
 	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
-	//loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
-	//dmat *opdsp=zernike(ploc, parms->aper.d, 0, 3, 0);
 	cellarr *pupsave=cellarr_init(nn,opds->ny,"ints");
 	cellarr *grads=cellarr_init(nn,opds->ny,"grads");
 	dmat *opd=0;
@@ -263,16 +217,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	for(int im=0; im<opds->ny; im++){
 	    for(int j=0; j<nn; j++){
 		info2("im=%d, j=%d\n", im, j);
-		if(1){
-		    opd=dsub(opds, 0, 0, im, 1);
-		    dscale(opd, (j+1)*1.e-8);
-		}else{
-		    opd=dnew(pywfs->locfft->loc->nloc, 1);
-		    dmat *opd2=dsub(opdsp, 0, 0, im, 1);
-		    dscale(opd2, (j+1)*1.e-8);
-		    prop_nongrid(ploc, opd2->p, pywfs->locfft->loc, 0, opd->p, 1, 0, 0, 1, 0, 0);
-		    dfree(opd2);
-		}
+		opd=dsub(opds, 0, 0, im, 1);
+		dscale(opd, pow(2, j)*wve);
 		dzero(ints);
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
@@ -286,8 +232,20 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	cellfree(ints);
 	dfree(opds);
     }
-    exit(0);
-    */
+   
+  
+ 
+    /*
+    {//test GA
+	double dsa=parms->aper.d/order;
+	loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
+	dsp *gg=pywfs_mkg(powfs[ipowfs].pywfs, ploc);
+	writebin(ploc, "pywfs_ploc");
+	writebin(gg, "pywfs_gp");
+	locfree(ploc);
+	dspfree(gg);
+	}*/
+ 
 }
 /**
    Perform FFT over the complex PSF with additional phases caused by the
@@ -314,7 +272,8 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     dmat *pupraw=dnew(ncomp, ncomp);
     //writebin(psfs, "cpu_wvf");
     for(int ipos=0; ipos<pos_n; ipos++){
-	double theta=2*M_PI*ipos/pos_n;
+	//whether the first point falls on the edge or not makes little difference
+	double theta=2*M_PI*(ipos+0.)/pos_n;
 	double posx=cos(theta)*pos_r;
 	double posy=sin(theta)*pos_r;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -389,6 +348,9 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 		  +pi[3][isa]-pi[2][isa])*alpha2;
 	pgy[isa]=(pi[2][isa]+pi[3][isa]
 		  -pi[0][isa]-pi[1][isa])*alpha2;
+    }
+    if(pywfs->gradoff){
+	dadd(pgrad, 1, pywfs->gradoff, -1);
     }
 }
 /**

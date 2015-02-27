@@ -191,6 +191,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cp2gpu(&cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
 		cp2gpu(&cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
 		cp2gpu(&cupowfs[ipowfs].saa, powfs[ipowfs].saa);
+		cp2gpu(&cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gradoff);
 	    }
 	}
     }

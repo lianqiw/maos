@@ -131,7 +131,7 @@ void maos_setup(const PARMS_T *parms){
     if(!parms->sim.evlol && parms->recon.mvm){
 	setup_recon_mvm(parms, recon, powfs);
     }
-    if(parms->save.setup && chdir(".."));
+    if(parms->save.setup && chdir("..")){}
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.

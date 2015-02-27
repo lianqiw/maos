@@ -94,6 +94,7 @@ typedef struct PYWFS_T{
     double gain;       /**<Optical gain of PYWFS*/
     dmat *atm;         /**<For generating gain with atmosphere*/
     dmat *saa;         /**<Subaperture area. Average is one*/
+    dmat *gradoff;     /**<Gradient of a flat wavefront*/
     int pos_n;         /**<Number of points for modulation.*/
 }PYWFS_T;
 

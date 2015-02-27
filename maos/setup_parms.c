@@ -332,7 +332,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_pllskip);
     READ_POWFS_RELAX(int,dither_nskip);
     READ_POWFS_RELAX(int,dither_npll);
+    READ_POWFS_RELAX(int,dither_npoint);
     READ_POWFS_RELAX(dbl,dither_gpll);
+    READ_POWFS_RELAX(dbl,dither_gcog);
     READ_POWFS_RELAX(int,dither_ndrift);
     READ_POWFS_RELAX(int,dither_ngrad);
     
@@ -445,6 +447,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->dither=1;
 	    powfsi->dither_amp/=206265.;
 	    //Wait 10 cycles for PLL to stablize.
+	    powfsi->dither_npll*=powfsi->dither_npoint;
 	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_nskip*=powfsi->dtrat;

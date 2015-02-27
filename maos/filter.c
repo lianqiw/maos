@@ -346,7 +346,8 @@ static void filter_cl(SIM_T *simu){
 		    +1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
-		double angle=M_PI*0.5*((simu->isim+1-adjust)/parms->powfs[ipowfs].dtrat);
+		double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
+		double angle=anglei*((simu->isim+1-adjust)/parms->powfs[ipowfs].dtrat);
 		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }

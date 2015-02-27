@@ -791,7 +791,7 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->fsmreal=cellnew(nwfs,1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither){
+	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither==1){
 		simu->fsmerr_store->p[iwfs]=dnew(2,1);
 		simu->fsmreal->p[iwfs]=dnew(2,1);
 	    }
@@ -805,11 +805,16 @@ static void init_simu_wfs(SIM_T *simu){
 	long nny[nwfs];
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither){
-		nnx[iwfs]=2;
+	    nnx[iwfs]=0;
+	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither==1){
+		nnx[iwfs]+=2;//tip/tilt of FSM
+	    }
+	    if(parms->powfs[ipowfs].dither>1){
+		nnx[iwfs]+=1;//signal in common path dithering
+	    }
+	    if(nnx[iwfs]){
 		nny[iwfs]=nsim;
 	    }else{
-		nnx[iwfs]=0;
 		nny[iwfs]=0;
 	    }
 	}
