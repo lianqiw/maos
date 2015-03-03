@@ -1,11 +1,14 @@
+map=read('accphi_loc_map');
 loc=read('accphi_loc');
 locin=read('accphi_locin');
 hl=read('accphi_hfor');
 hc=read('accphi_cub_hfor');
 map2pts=read('accphi_pts1');
+map2map=read('accphi_map2map');
 loc2loc=read('accphi_loc2loc');
 map2loc=read('accphi_loc0');
 map2stat=read('accphi_stat');
+
 h=read('accphi_loc2h');
 
 cubic_h=read('accphi_cub_loc2h');
@@ -29,12 +32,14 @@ subplot(2,3,4)
 draw(loc, h-map2loc);
 title('h-map2loc');
 subplot(2,3,5)
-draw(loc, loc2loc-map2loc);
-title('loc2loc-map2loc');
-subplot(2,3,6)
-draw(loc, loc2loc);
-title('loc2loc');
-
+draw(loc, loc2loc-h);
+title('h-loc2loc');
+try
+    subplot(2,3,6)
+    tmp=draw(loc, map2stat);
+    draw(tmp-map2map);
+    title('map2stat-map2map');
+end
 sfigure(2)
 clf
 subplot(2,3,1)

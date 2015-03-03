@@ -84,7 +84,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		CONST_IN double *phicol, *phicol2;
 		double bl,br,tl,tr;
 		int rowdiv,rowdiv2;
-		int irows;
+		int irows=0;
 		/*starting address of that col*/
 		offset=ostat->cols[icol].pos;
 		collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
@@ -93,17 +93,21 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		dplocy=ostat->cols[icol].ystart*dy_in2+displacey;
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
+		}else{
+		    if(dplocy<0 || dplocy> wrapy1){
+			missing+=collen;
+			goto end1;
+		    }
 		}
 		SPLIT(dplocy,dplocy,nplocy);
 		dplocx=ostat->cols[icol].xstart*dx_in2+displacex;
 		if(wrap){
 		    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		    irows=0;
 		}else{
-		    if(dplocx<0)
+		    if(dplocx<0){
 			irows=iceil(-dplocx);
-		    else
-			irows=0;
+			missing+=irows;
+		    }
 		    if(dplocx>wrapy) {
 			missing+=collen;
 			goto end1;
@@ -184,6 +188,8 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			}
 			rowdiv=rowdiv2;
 		    }
+		}else{
+		    missing+=(collen-rowdiv);
 		}
 	      end1:;
 	    }/*end for icol*/
@@ -195,7 +201,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		double dplocx0;
 		int nplocx0;
 		int rowdiv,rowdiv2;
-		int irows;
+		int irows=0;
 		/*starting address of that col*/
 		offset=ostat->cols[icol].pos;
 		collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
@@ -210,12 +216,8 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		dplocx=ostat->cols[icol].xstart*dx_in2+displacex;
 		if(wrap){
 		    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		    irows=0;
-		}else{
-		    if(dplocx<0){
-			irows=iceil(-dplocx/xratio);
-		    }else
-			irows=0;
+		}else if(dplocx<0){
+		    irows=iceil(-dplocx/xratio);
 		}
 
 		if(wrap){
@@ -239,7 +241,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		rowdiv = iceil((wrapx-dplocx)/xratio);
 		if(rowdiv<0) rowdiv=0;/*rowdiv may be -1 if dplocx=wrapx+0.* */
 		if(rowdiv>collen) rowdiv=collen;
-		dplocx = dplocx + xratio*irows;
+		dplocx += xratio*irows;
 		for(irow=irows; irow<rowdiv; irow++){/*no wrap*/
 		    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
@@ -371,12 +373,5 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	}/*for icol*/
 	ICCTASK_END;
     }
-    if(missing>0){
-	static int warned=0;
-	if(!warned){
-	    warning(" %d points not covered by input screen\n", missing);
-	    print_backtrace();
-	    warned=1;
-	}
-    }
+    WARN_MISSING;
 }/*function*/

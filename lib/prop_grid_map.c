@@ -35,7 +35,8 @@
 /**
    Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
-   the input grid. scale is the cone effect.*/
+   the input grid. scale is the cone effect.
+*/
 
 /*
   Implement prop_grid_stat or prop_grid_stat_tranpose in a unified way. 
@@ -71,20 +72,17 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
     CONST_IN double *phiin  = mapin->p;
     const double xratio  = dxout*dx_in2;
     const double yratio  = dyout*dy_in2;
+    int missing=0;
     DEF_ENV_FLAG(PROP_GRID_MAP_OPTIM, 1);
     if(PROP_GRID_MAP_OPTIM){
 	if(fabs(xratio-1.)<EPS && fabs(yratio-1.)<EPS){
-	    int irows;
+	    int irows=0;
 	    double dplocx=mapout->ox*dx_in2+displacex;
 	    int nplocx;
 	    if(wrap){
 		dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		irows=0;
-	    }else{
-		if(dplocx<0)
-		    irows=iceil(-dplocx);
-		else
-		    irows=0;
+	    }else if(dplocx<0){
+		irows=iceil(-dplocx);
 	    }
 	    SPLIT(dplocx,dplocx,nplocx);
 	    /*loc_out and loc_in has the same grid sampling.*/
@@ -101,6 +99,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 		}else if(dplocy<0 || dplocy>wrapy){
+		    missing+=collen;
 		    goto end1;
 		}
 		/*The points right on dplocy is handled correctly*/
@@ -174,6 +173,8 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 			}
 			rowdiv=rowdiv2;
 		    }
+		}else{
+		    missing+=irows+(collen-rowdiv);
 		}
 	      end1:;
 	    }/*end for icol*/
@@ -185,36 +186,32 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		double dplocx0;
 		int nplocx0,nplocy;
 		int rowdiv,rowdiv2;
-		int irows;
+		int irows=0;
 
 		/*starting address of that col*/
 		int offset=icol*mapout->nx;
 		int collen=mapout->nx;
 		CONST_OUT double *phiout2=phiout+offset;
-		double dplocx=mapout->ox*dx_in2+displacex;
-		if(wrap){
-		    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		    irows=0;
-		}else{
-		    if(dplocx<0)
-			irows=iceil(-dplocx);
-		    else
-			irows=0;
-		}
+	
 		double dplocy=(mapout->oy+icol*mapout->dy)*dy_in2+displacey;
 		if(wrap){
 		    dplocy-=floor(dplocy/(double)wrapy1)*wrapy1;
 		}else if(dplocy<0 || dplocy>wrapy){
+		    missing+=collen;
 		    goto end2;
 		}
 		SPLIT(dplocy,dplocy,nplocy);
 		phicol  = phiin+nplocy*wrapx1;
 		phicol2 = phiin+(nplocy==wrapy?0:(nplocy+1))*wrapx1;
 		const double dplocy1=1.-dplocy;
- 	  
-		/*last row to do if not wrap*/
-		/*figure out which row we can go in this segment. */
-		  
+
+ 		double dplocx=mapout->ox*dx_in2+displacex;
+		if(wrap){
+		    dplocx -= wrapx1*floor(dplocx/(double)wrapx1);
+		}else if(dplocx<0){
+		    irows=iceil(-dplocx/xratio);
+		}  
+		/*rowdiv is number of points to do without wrapping*/
 		rowdiv = iceil((wrapx-dplocx)/xratio);
 		if(rowdiv<0) rowdiv=0;/*rowdiv may be -1 if dplocx=wrapx+0.* */
 		if(rowdiv>collen) rowdiv=collen;
@@ -241,7 +238,6 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 			/*falls on the edge. */
 			while(dplocx<wrapx1 && rowdiv<collen){
 			    SPLIT(dplocx,dplocx0,nplocx0);
-			    dplocx+=xratio;
 #if TRANSPOSE == 0
 			    phiout2[rowdiv]+=alpha*
 				(+dplocy1*((1-dplocx0)*phicol[nplocx0]
@@ -255,10 +251,11 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 			    phicol2[nplocx0]+=tmp*dplocy*(1-dplocx0);
 			    phicol2[nplocx0-wrapx]+=tmp*dplocy*dplocx0;
 #endif
+			    dplocx+=xratio;
 			    rowdiv++;
 			}
 			dplocx=dplocx-wrapx1;			
-			rowdiv2=iceil((wrapx-dplocx)/xratio);
+			rowdiv2=rowdiv+iceil((wrapx-dplocx)/xratio);
 			if(rowdiv2>collen) rowdiv2=collen;
 			for(int irow=rowdiv; irow<rowdiv2; irow++){
 			    SPLIT(dplocx,dplocx0,nplocx0);
@@ -279,12 +276,15 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 			}
 			rowdiv=rowdiv2;
 		    }
-		}/*if wrap*/
+		}else{/*if wrap*/
+		    missing+=irows+(collen-rowdiv);
+		}
 	      end2:;
 	    }/*for icol*/
 	    ICCTASK_END;
 	}/*fabs(dx_in2*dxout-1)<EPS*/
     }else{
+	warning_once("Using unoptmized prop_grid_map\n");
 	/*non optimized case. slower, but hopefully accurate*/
 	ICCTASK_FOR(icol, colstart, colend){
 	    double dplocx,dplocx0;
@@ -293,25 +293,25 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	    int collen=mapout->nx;
 	    CONST_OUT double *phiout2=phiout+offset;
 	    double dplocy=(mapout->oy+icol*mapout->dy)*dy_in2+displacey;
-	    info2("dplocy=%g, map->dx=%g, map->dy=%g\n", dplocy, mapout->dx, mapout->dy);
 	    if(wrap){
 		dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 	    }else if (dplocy<0 || dplocy>wrapy){
+		missing+=collen;
 		goto skip;
 	    }
 	    SPLIT(dplocy,dplocy,nplocy);
 	    const double dplocy1=1.-dplocy;
 	    nplocy1=(nplocy==wrapx?0:nplocy+1);
-	    dplocx0=(mapout->ox)*dx_in2+displacex-xratio;
+	    dplocx0=(mapout->ox)*dx_in2+displacex;
 	    for(int irow=0; irow<collen; irow++){
-		dplocx0+=xratio;
-		info2("dplocx=%g\n", dplocx0);
+		dplocx=dplocx0+irow*xratio;
 		if(wrap){
-		    dplocx0=dplocx0-floor(dplocx0/(double)wrapx1)*wrapx1;
-		}else if(dplocx0<0 || dplocx0>wrapx){
+		    dplocx=dplocx-floor(dplocx/(double)wrapx1)*wrapx1;
+		}else if(dplocx<0 || dplocx>wrapx){
+		    missing++;
 		    continue;
 		}
-		SPLIT(dplocx0,dplocx,nplocx);
+		SPLIT(dplocx,dplocx,nplocx);
 		nplocx1=(nplocx==wrapx?0:nplocx+1);
 #if TRANSPOSE == 0
 		phiout2[irow]+= alpha*
@@ -331,4 +331,5 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	}/*for icol*/
 	ICCTASK_END;
     }
+    WARN_MISSING;
 }/*function*/

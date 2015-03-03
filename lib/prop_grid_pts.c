@@ -40,12 +40,14 @@ void prop_grid_pts(ARGIN_GRID,
     const int ninx   = mapin->nx;
     const int niny   = mapin->ny;
     const int nx     = pts->nx;
+    const int ny     = pts->ny?pts->ny:pts->nx;
     const double dx_in1 = 1/mapin->dx;
     const double dxout  = pts->dx;
     const double dx_in2 = scale*dx_in1;
     const double dy_in1 = 1/mapin->dy;
     const double dyout  = pts->dy;
     const double dy_in2 = scale*dy_in1;
+    int missing=0;
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dy_in1;
     if(!saend) saend=pts->nsa;
@@ -55,7 +57,7 @@ void prop_grid_pts(ARGIN_GRID,
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
-	    double (*restrict phioutsq)[nx]=(double(*)[nx])(phiout+nx*nx*isa);
+	    double (*restrict phioutsq)[nx]=(double(*)[nx])(phiout+nx*ny*isa);
 	    double (*restrict phiin)[ninx]=(double(*)[ninx])(mapin->p);
 	    const double origx=pts->origx[isa];
 	    const double origy=pts->origy[isa];
@@ -77,17 +79,15 @@ void prop_grid_pts(ARGIN_GRID,
 		    sx=0;
 		
 		my=niny-nplocy-1;/*remaining possible points. */
-		if(my>nx){
-		    my=nx;
-		}
-		if(my<=sy){
-		    goto end1;
+		if(my>ny){
+		    my=ny;
 		}
 		mx=ninx-nplocx-1;
 		if(mx>nx){
 		    mx=nx;
 		}
-		if(mx<=sx){
+		if(my<=sy || mx<=sx){
+		    missing+=nx*ny;
 		    goto end1;
 		}
 
@@ -125,7 +125,7 @@ void prop_grid_pts(ARGIN_GRID,
 	    }else{/*wraping */
 		double *phiin_1, *phiin_2;
 
-		if(ninx < nx || niny < nx){
+		if(ninx < nx || niny < ny){
 		    error("Input map is too small. wraps more than once\n");
 		}
 		w11=dplocx*dplocy;
@@ -141,10 +141,10 @@ void prop_grid_pts(ARGIN_GRID,
 		    nplocx+=ninx;
 		my=niny-nplocy-1;/*remaining possible points. */
 		mx=ninx-nplocx-1;
-		if(my>nx) my=nx;
+		if(my>ny) my=ny;
 		if(mx>nx) mx=nx;
 
-		for(jpix=0; jpix<nx; jpix++){
+		for(jpix=0; jpix<ny; jpix++){
 		    if(jpix<my){
 			phiin_1=phiin[nplocy];
 			phiin_2=phiin[nplocy+1];
@@ -196,7 +196,7 @@ void prop_grid_pts(ARGIN_GRID,
 	    double dplocx, dplocy;
 	    int nplocx, nplocy;
 	    int ipix,jpix,mx,my,nplocx2;
-	    double (*phioutsq)[nx]=(double(*)[nx])(phiout+nx*nx*isa);
+	    double (*phioutsq)[nx]=(double(*)[nx])(phiout+nx*ny*isa);
 	    const double origx=pts->origx[isa];
 	    const double origy=pts->origy[isa];
 	    double dplocx0, dplocy0;
@@ -204,29 +204,35 @@ void prop_grid_pts(ARGIN_GRID,
 	    dplocy0 = myfma(origy,dy_in2,displacey);
 	    if(!wrap){
 		int sx, sy;
+ 		//First figure out the range of points that is covered
+		//mapping of first point on input map.
 		if(dplocx0<0){
 		    sx=iceil(-dplocx0/xratio);
+		    dplocx0  = myfma(origx+(double)sx*dxout,dx_in2,displacex);
 		}else
 		    sx=0;
 		if(dplocy0<0){
 		    sy=iceil(-dplocy0/yratio);
+		    dplocy0  = myfma(origy+(double)sy*dyout,dy_in2,displacey);
 		}else
 		    sy=0;
-
+		//mapping of last point in screen.
 		my=iceil((niny-1-dplocy0)/yratio);
-		if(my>nx){
-		    my=nx;
+		if(my>ny){
+		    my=ny;
 		}
 		mx=iceil((ninx-1-dplocx0)/xratio);
 		if(mx>nx){
 		    mx=nx;
 		}
-		
+		if(my<=sy || mx<=sx) {
+		    missing+=nx*ny;
+		    goto end2;
+		}
 		int nplocxs[mx];
 		double dplocxs[mx];
 
-		dplocx0  = myfma(origx+(double)sx*dxout,dx_in2,displacex);
-		dplocy0  = myfma(origy+(double)sy*dyout,dy_in2,displacey);
+
 		
 		for(ipix=sx; ipix<mx; ipix++){
 		    SPLIT(dplocx0,dplocx,nplocx);
@@ -258,7 +264,7 @@ void prop_grid_pts(ARGIN_GRID,
 		const double *phiin_1, *phiin_2;
 		double dplocy1;
 		int mx0;
-		if(ninx < nx*xratio || niny < nx*yratio){
+		if(ninx < nx*xratio || niny < ny*yratio){
 		    info("nx=%d, xratio=%g, ninx=%d\n",nx,xratio,ninx);
 		    error("Input map is too small. wraps more than once\n");
 		}
@@ -297,7 +303,7 @@ void prop_grid_pts(ARGIN_GRID,
 			dplocx0+=xratio;
 		    }
 		}
-		for(jpix=0; jpix<nx; jpix++){
+		for(jpix=0; jpix<ny; jpix++){
 		    mx=mx0;
 		    SPLIT(dplocy0,dplocy,nplocy);
 		    dplocy1=1.-dplocy;
@@ -327,6 +333,8 @@ void prop_grid_pts(ARGIN_GRID,
 		    dplocy0+=yratio;
 		}
 	    }/*wrap*/
+	  end2:;
 	}/*end isa*/
     }
+    WARN_MISSING;
 }

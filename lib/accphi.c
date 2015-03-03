@@ -15,15 +15,16 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wunused-variable"
+#elif defined __GNUC__
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 #include <math.h>
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
 
-/*
-  The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
-*/
 
 /**
    A wrapper prop routine that handles all the different cases by calling the
@@ -234,9 +235,9 @@ void prop_index(PROPDATA_T *propdata){
     if(done==0) error("Invalid\n");
 }
 
-#define PREPIN_NONGRID(map_npad)			\
+#define PREPIN_NONGRID(nskip)			\
     /*padding to avoid test boundary*/			\
-    loc_create_map_npad(locin, map_npad,0,0);		\
+    if(!locin->map) loc_create_map_npad(locin, nskip,0,0);	\
     const double dx_in1 = 1./locin->dx;			\
     const double dx_in2 = scale*dx_in1;			\
     const double dy_in1 = 1./locin->dy;			\
@@ -244,8 +245,8 @@ void prop_index(PROPDATA_T *propdata){
     displacex = (displacex-locin->map->ox)*dx_in1;	\
     displacey = (displacey-locin->map->oy)*dy_in1;	\
     PDMAT(locin->map, map);				\
-    const int nxmin=locin->npad;			\
-    const int nymin=locin->npad;			\
+    const int nxmin=MAX(nskip,locin->npad);		\
+    const int nymin=nxmin;				\
     const int nxmax=locin->map->nx-nxmin-1;		\
     const int nymax=locin->map->ny-nymin-1;		\
     /*-1 because we count from 1 in the map.*/		\
@@ -258,8 +259,10 @@ void prop_index(PROPDATA_T *propdata){
     const double dy_in2 = scale*dy_in1;			\
     displacex = (displacex-mapin->ox)*dx_in1;		\
     displacey = (displacey-mapin->oy)*dy_in1;		\
-    const int nxmax  = mapin->nx-nskip;			\
-    const int nymax  = mapin->ny-nskip;			\
+    const int nxmin=nskip;				\
+    const int nymin=nskip;				\
+    const int nxmax  = mapin->nx-nskip-1;		\
+    const int nymax  = mapin->ny-nskip-1;		\
     double (*phiin)[mapin->nx]=(void*)(mapin->p);	
 
 #define PREPOUT_LOC				\
@@ -390,6 +393,7 @@ void prop_index(PROPDATA_T *propdata){
 #include "prop_grid_stat.c"
 #include "prop_grid_map.c"
 #undef  TRANSPOSE
+
 /**
    Propagate OPD defines on grid mapin to coordinate locout.  alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
@@ -401,7 +405,7 @@ void prop_grid(ARGIN_GRID,
 	       long start,         /**<[in] First point to do*/
 	       long end            /**<[in] Last point to do*/
     ){
-    PREPIN_GRID(1);
+    PREPIN_GRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
     const int nx = mapin->nx;
@@ -409,6 +413,7 @@ void prop_grid(ARGIN_GRID,
     ICCTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;/*skip points that has zero amplitude */
+	// The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
 	if(dplocx<0||dplocx>nxmax||dplocy<0||dplocy>nymax){
@@ -456,7 +461,7 @@ void prop_nongrid(ARGIN_NONGRID,
 		  long start,          /**<[in] First point to do*/
 		  long end             /**<[in] Last point to do*/
     ){
-    PREPIN_NONGRID(1);
+    PREPIN_NONGRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
     ICCTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
@@ -488,7 +493,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
     ){
-    PREPIN_NONGRID(1);
+    PREPIN_NONGRID(0);
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
     ICCTASK_FOR(iy, start, end, private(nplocy, dplocy, nplocy1, nplocx,dplocx,nplocx1)){
@@ -524,7 +529,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 		      long start,           /**<[in] First point to do*/
 		      long end              /**<[in] Last point to do*/
     ){
-    PREPIN_NONGRID(1);
+    PREPIN_NONGRID(0);
     PREPOUT_PTS;
     RUNTIME_LINEAR;
     
@@ -566,7 +571,8 @@ void prop_nongrid_pts(ARGIN_NONGRID,
    functions.  alpha is the scaling of data. displacex, displacy is the
    displacement of the center of the beam on the input grid.  scale is the cone
    effect. The input grid must cover the output loc completely (we aim for best
-   efficiency).*/
+   efficiency), with at least one full guard ring.
+*/
 void prop_grid_cubic(ARGIN_GRID,
 		     ARGOUT_LOC,
 		     ARG_PROP,
@@ -575,14 +581,14 @@ void prop_grid_cubic(ARGIN_GRID,
 		     long end            /**<[in] Last point to do*/
     ){
     (void)ampout;
-    PREPIN_GRID(2);
+    PREPIN_GRID(1);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
 
     ICCTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
-	if(dplocx>=1&&dplocx<=nxmax&&dplocy>=1&&dplocy<=nymax){
+	if(dplocx>=nxmin&&dplocx<=nxmax&&dplocy>=nxmin&&dplocy<=nymax){
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
@@ -602,7 +608,8 @@ void prop_grid_cubic(ARGIN_GRID,
    functions.  alpha is the scaling of data. displacex, displacy is the
    displacement of the center of the beam on the input grid.  scale is the cone
    effect. The input grid must cover the output loc completely (we aim for best
-   efficiency).*/
+   efficiency), with at least one full guard ring.
+*/
 void prop_grid_pts_cubic(ARGIN_GRID,
 			 ARGOUT_PTS,
 			 ARG_PROP,
@@ -610,7 +617,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 			 long start,         /**<[in] First point to do*/
 			 long end            /**<[in] Last point to do*/
     ){
-    PREPIN_GRID(2);
+    PREPIN_GRID(1);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     ICCTASK_FOR(isa, start, end, private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)){
@@ -621,7 +628,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	for(int iy=0; iy<pts->nx; iy++){
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	    if(dplocy>=1 && dplocy<=nymax){
+	    if(dplocy>=nymin && dplocy<=nymax){
 		SPLIT(dplocy,dplocy,nplocy);
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
@@ -629,7 +636,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 		    if(ampout && fabs(ampout[iloc])<EPS)
 			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		    if(dplocx>=1 && dplocx<=nxmax){
+		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
 			dplocx0=1.-dplocx;
 			MAKE_CUBIC_COEFF;
@@ -654,18 +661,18 @@ void prop_grid_map_cubic(ARGIN_GRID,
 			 ARG_PROP,
 			 double cubic_iac,
 			 long start, long end){
-    PREPIN_GRID(2);
+    PREPIN_GRID(1);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     ICCTASK_FOR(iy, start, end, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	if(dplocy>=1 && dplocy<=nymax){
+	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
 	    for(int ix=0; ix<nxout; ix++){
 		int iloc=ix+iy*nxout;
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		if(dplocx>=1 && dplocx<=nxmax){
+		if(dplocx>=nxmin && dplocx<=nxmax){
 		    SPLIT(dplocx,dplocx,nplocx);
 		    dplocx0=1.-dplocx;
 		    MAKE_CUBIC_COEFF;
@@ -684,7 +691,8 @@ void prop_grid_map_cubic(ARGIN_GRID,
 /**
    like prop_nongrid() but with cubic influence functions. cubic_iac is the
    inter-actuator coupling. Consider embed the input into a map_t and call
-   prop_grid_cubic instead. That one is must faster.*/
+   prop_grid_cubic instead, which is must faster.
+*/
 void prop_nongrid_cubic(ARGIN_NONGRID,
 			ARGOUT_LOC,
 			ARG_PROP,

@@ -174,9 +174,10 @@ typedef struct pts_t{
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/
+    int nx;        /**<number of cols per subaperture*/
+    int ny;        /**<number of rows per subaperture*/
     double dx;     /**<sampling of points in each subaperture*/
     double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
-    int nx;        /**<number points in each col or row per subaperture*/
 }pts_t;
 
 typedef CELL(cmat*) ccell;
