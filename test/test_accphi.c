@@ -19,21 +19,46 @@
 #endif
 TIC;
 
-static void test_accuracy(void){
-    double displacex=0.1;
-    double displacey=0.1;
-    double scale=1.2;/*.414065; */
-    int wrap=0;
+static void test_accuracy(int argc, char **argv){
+    double displacex=0.01;
+    double displacey=0.05;
+    double scale=1.01;/*.414065; */
+    int wrap=0;  
 
     double D=30;
-    double D2=18;
-    double dx=1/16.; 
+    double D2=32;
+    int save=1;
+    if(argc>1){
+	scale=strtod(argv[1], 0);
+    }
+    if(argc>2){
+	displacex=strtod(argv[2], 0);
+    }
+    if(argc>3){
+	displacey=strtod(argv[3], 0);
+    }
+    if(argc>4){
+	wrap=strtol(argv[4], 0, 10);
+    }
+    if(argc>5){
+	D=strtod(argv[5], 0);
+    }
+    if(argc>6){
+	D2=strtod(argv[6], 0);
+    }
+    if(argc>7){
+	save=strtol(argv[7], 0, 10);
+    }
+
+    double dx=1/64.; 
     double dsa=0.5;
     map_t *screen=mapnew(D2/dx, D2/dx, dx, dx, 0);
     dset((dmat*)screen, 1);
     long len=screen->nx*screen->ny;
-    for(long i=0; i<len; i++){
-	screen->p[i]=0.5+((double)i/len);
+    for(long iy=0; iy<screen->ny; iy++){
+	for(long ix=0; ix<screen->nx; ix++){
+	    screen->p[ix+iy*screen->nx]=sin((double)ix/screen->nx*2*M_PI)*sin((double)iy/screen->ny*2*M_PI);
+	}
     }
 
     /*loc for the map */
@@ -79,25 +104,29 @@ static void test_accuracy(void){
     phi_loc2loc=calloc(loc->nloc, sizeof(double));
 
     map_t *map1=mapnew2(loc->map);
-    info("map1->ox=%g\n", map1->ox);
     prop_grid_map(screen, map1, -2, displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid_map(screen, map1, 1, displacex, displacey, scale, wrap, 0,0);
     toc("map\t\t");
+
     prop_grid_pts(screen, pts, NULL,phi_pts, -2, displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid_pts(screen, pts, NULL,phi_pts,  1, displacex, displacey, scale, wrap, 0,0);
     toc("pts\t\t");
+
+    prop_grid_stat(screen, locstat, phi_stat, -2,displacex, displacey, scale, wrap, 0,0);
+    tic;
+    prop_grid_stat(screen, locstat, phi_stat , 1, displacex, displacey, scale, wrap, 0,0);
+    toc("stat\t");tic;
+
     prop_grid(screen, loc, NULL,phi_loc, -2,displacex, displacey, scale, wrap, 0,0);
     tic;
     prop_grid(screen, loc, NULL,phi_loc,  1,displacex, displacey, scale, wrap, 0,0);
     toc("loc\t\t");
-    prop_grid_stat(screen, locstat, phi_stat, -2,displacex, displacey, scale, wrap, 0,0);
-    tic;
-    prop_grid_stat(screen, locstat, phi_stat , 1, displacex, displacey, scale, wrap, 0,0);
-    toc("locstat\t");
+
+
     prop_nongrid(locin, screen->p,loc, NULL,phi_loc2loc, -2,displacex, displacey, scale,0,0);
-    tic;
+    toc("nongrid\t"); tic;
     prop_nongrid(locin, screen->p,loc, NULL,phi_loc2loc, 1,displacex, displacey, scale,0,0);
     toc("nongrid\t");
 	
@@ -159,7 +188,8 @@ static void test_accuracy(void){
 	  ,diff1, diff2,diff3,diff14,diff15,diff45,diffc12, 
 	  diff46, diff47);
 
-
+//    exit(0);
+    if(!save) return;
     mapwrite(screen2,"accphi_screen2");
     mapwrite(screen,"accphi_screen");
     locwrite((loc_t*)pts,"accphi_pts");
@@ -203,5 +233,5 @@ static void test_accuracy(void){
 */
 
 int main(int argc, char** argv){
-    test_accuracy();
+    test_accuracy(argc, argv);
 }

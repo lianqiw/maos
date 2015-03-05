@@ -398,6 +398,7 @@ void cn2est_push(CN2EST_T *cn2est, dcell *gradol){
 	cn2est_cov(cn2est);
     }
 }
+DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
 
 /**
    Do the Cn2 Estimation.
@@ -434,7 +435,6 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     dcellzero(cn2est->wt);
     dcellmm(&cn2est->wt, cn2est->iPnk, cn2est->cov1, "nn", 1);
     double wtsumsum=0;
-    DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	double wtsum=0;
 	dmat *wt=cn2est->wt->p[iwfspair];//the layer weights. 

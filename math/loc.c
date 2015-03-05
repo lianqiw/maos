@@ -178,6 +178,8 @@ void loc_create_map(loc_t *loc){
     loc_create_map_npad(loc,0,0,0);
 }
 PNEW(maplock);
+DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
+
 /**
    Create a map for loc so that we can obtain the index in loc by x,y
    coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid
@@ -234,7 +236,6 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 	int iy=(int)round((locy[iloc]-ymin)*dy_in1);
 	pmap[iy][ix]=iloc+1;/*start from 1. */
     }
-    DEF_ENV_FLAG(LOC_MAP_EXTEND, 1);
     if(LOC_MAP_EXTEND && loc->nloc<map_nx*map_ny){
 	/*
 	  For cubic spline interpolation around the edge of the grid, we need
@@ -732,8 +733,7 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 void loc_create_stat_do(loc_t *loc){
     /*First a sanity check to make sure loc is raster scanning along x*/
     if(loc->nloc<2 || fabs(loc->locy[1]-loc->locy[0])>loc->dy*0.1){
-	warning("cannot create locstat for this loc\n");
-	return;
+	error("cannot create locstat for this loc: loc->nloc=%ld, loc->dy=%g\n", loc->nloc, loc->dy);
     }
     locstat_t *locstat=calloc(1, sizeof(locstat_t));
     loc->stat=locstat;

@@ -26,8 +26,8 @@ subplot(2,3,2)
 draw(loc, map2pts-map2loc);
 title('map2pts-map2loc');
 subplot(2,3,3)
-draw(loc, map2stat-map2loc);
-title('map2stat-map2loc');
+draw(loc, map2loc-map2stat);
+title('map2loc-map2stat');
 subplot(2,3,4)
 draw(loc, h-map2loc);
 title('h-map2loc');
@@ -36,9 +36,9 @@ draw(loc, loc2loc-h);
 title('h-loc2loc');
 try
     subplot(2,3,6)
-    tmp=draw(loc, map2stat);
+    tmp=draw(loc, map2loc);
     draw(tmp-map2map);
-    title('map2stat-map2map');
+    title('map2loc-map2map');
 end
 sfigure(2)
 clf

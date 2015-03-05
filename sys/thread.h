@@ -213,11 +213,12 @@ INLINE int atomicadd(int *ptr, int val){
 #if _OPENMP >= 200805 
 #define OMPTASK_FOR(index, start, end, extra...)	\
     long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
+    DO_PRAGMA(omp parallel for)				\
     for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\
     if(omp_end>end) omp_end=end;			\
-    DO_PRAGMA(omp task extra)			\
+    DO_PRAGMA(omp task extra if(omp_start<omp_end))	\
     for(long index=omp_start; index<omp_end; index++)
 #define OMPTASK_END } _Pragma("omp taskwait")
 #else
@@ -228,15 +229,9 @@ INLINE int atomicadd(int *ptr, int val){
 
 //For those that is only good for icc, use the following
 #if _OPENMP >= 200805 && defined(__INTEL_COMPILER) 
-#define ICCTASK_FOR(index, start, end, extra...)	\
-    long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
-    for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
-    long omp_start=start+omp_sect*omp_j;		\
-    long omp_end=omp_start+omp_sect;			\
-    if(omp_end>end) omp_end=end;			\
-    DO_PRAGMA(omp task extra)			\
-    for(long index=omp_start; index<omp_end; index++)
-#define ICCTASK_END } _Pragma("omp taskwait")
+#define ICCTASK_FOR(index, start,end, extra...)	\
+    OMPTASK_FOR(index,start,end,extra)
+#define ICCTASK_END OMPTASK_END
 #else
 #define ICCTASK_FOR(index,start,end, extra...)	\
     for(long index=start; index<end; index++)
@@ -245,9 +240,8 @@ INLINE int atomicadd(int *ptr, int val){
 
 #if _OPENMP >= 200805
 #define OMPTASK_SINGLE				\
-    DO_PRAGMA(omp parallel num_threads(NTHREAD))	\
-    DO_PRAGMA(omp single )			\
-    DO_PRAGMA(omp task if(NTHREAD>1))	
+    DO_PRAGMA(omp parallel)			\
+    DO_PRAGMA(omp single)			
 #else
 #define OMPTASK_SINGLE
 #endif

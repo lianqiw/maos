@@ -93,6 +93,7 @@ void prop_index(PROPDATA_T *propdata);/*A unified wrapper */
 	double displacey, /**<[in] displacement of the ray */	\
 	const double scale     /**<[in] scaling of the beam diameter (cone)*/
 
+
 void prop_grid_map(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap, long start, long end);
 void prop_grid_pts(ARGIN_GRID, ARGOUT_PTS, ARG_PROP, int wrap, long sastart, long saend);
 void prop_grid    (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
@@ -109,7 +110,20 @@ void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, lon
 void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
 void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, double cubic_iac, long start, long end);
 void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, long start, long end);
+/*
+void prop_grid_block(const double *phiin, long nxin, long nyin,
+		     double *phiout, long nxout, long nyout, 
+		     double dxout, double dyout, double oxout, double oyout,
+		     double alpha, double displacex, double displacey, int wrap);
 
+void prop_grid_block_transpose( double *phiin, long nxin, long nyin,
+				const double *phiout, long nxout, long nyout, 
+				double dxout, double dyout, double oxout, double oyout,
+				double alpha, double displacex, double displacey, int wrap);
+*/
+void prop_grid_map_transpose(map_t *mapin, const map_t *mapout, 
+			     double alpha, double displacex, double displacey, double scale,
+			     int wrap, long start, long end);
 /**
    Propagate OPD defines on grid mapin to locstat_t that stores the starting
    point of each column.  alpha is the scaling of data. displacex, displacy is

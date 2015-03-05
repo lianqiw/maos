@@ -36,6 +36,9 @@
 #ifdef HAVE_NUMA_H
 #include <numa.h>
 #endif
+#if _OPENMP>200805
+#include <omp.h>
+#endif
 /**
    A few routines handles process resource.
 */
@@ -105,7 +108,11 @@ void init_process(void){
     }
 
     NCPU= get_ncpu();
+#if _OPENMP>200805
+    MAXTHREAD=omp_get_max_threads();
+#else
     MAXTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
+#endif
     NTHREAD=MAXTHREAD;
 #ifdef HAVE_NUMA_H
     NNUMA=numa_num_configured_nodes();

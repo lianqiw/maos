@@ -383,15 +383,18 @@ void prop_index(PROPDATA_T *propdata){
     }								\
     if(sumwt>EPS) phiout[iloc]+=alpha*sum/sumwt;
 
-#include "prop_grid_pts.c"
+/**
+   A building block for ray tracing onto a rectangular block of points
+*/
+
+DEF_ENV_FLAG(PROP_GRID_MAP_OPTIM, 1);
+
 #define TRANSPOSE 0
-#include "prop_grid_stat.c"
-#include "prop_grid_map.c"
+#include "prop_grid.c"
 #undef  TRANSPOSE
 
 #define TRANSPOSE 1
-#include "prop_grid_stat.c"
-#include "prop_grid_map.c"
+#include "prop_grid.c"
 #undef  TRANSPOSE
 
 /**
@@ -410,7 +413,7 @@ void prop_grid(ARGIN_GRID,
     RUNTIME_LINEAR;
     const int nx = mapin->nx;
     const int ny = mapin->ny;
-    ICCTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
+    OMPTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;/*skip points that has zero amplitude */
 	// The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
@@ -446,7 +449,7 @@ void prop_grid(ARGIN_GRID,
 		      +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
 	add_valid(phiout[iloc],alpha, tmp);
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 
@@ -464,7 +467,7 @@ void prop_nongrid(ARGIN_NONGRID,
     PREPIN_NONGRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
-    ICCTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
+    OMPTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;/*skip points that has zero amplitude */
 	dplocx=myfma(px[iloc],dx_in2,displacex);
@@ -480,7 +483,7 @@ void prop_nongrid(ARGIN_NONGRID,
 	    continue;
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -496,7 +499,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
     PREPIN_NONGRID(0);
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
-    ICCTASK_FOR(iy, start, end, private(nplocy, dplocy, nplocy1, nplocx,dplocx,nplocx1)){
+    OMPTASK_FOR(iy, start, end, private(nplocy, dplocy, nplocy1, nplocx,dplocx,nplocx1)){
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
@@ -516,7 +519,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	    missing++;
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -533,7 +536,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
     PREPOUT_PTS;
     RUNTIME_LINEAR;
     
-    ICCTASK_FOR(isa, start, end, private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)){
+    OMPTASK_FOR(isa, start, end, private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)){
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
@@ -561,7 +564,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	    }
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 
@@ -585,7 +588,7 @@ void prop_grid_cubic(ARGIN_GRID,
     PREPOUT_LOC;
     RUNTIME_CUBIC;
 
-    ICCTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
+    OMPTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
 	if(dplocx>=nxmin&&dplocx<=nxmax&&dplocy>=nxmin&&dplocy<=nymax){
@@ -600,7 +603,7 @@ void prop_grid_cubic(ARGIN_GRID,
 	}
     }
    
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -620,7 +623,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
     PREPIN_GRID(1);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
-    ICCTASK_FOR(isa, start, end, private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)){
+    OMPTASK_FOR(isa, start, end, private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)){
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
@@ -650,7 +653,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	    }
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -664,7 +667,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
     PREPIN_GRID(1);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
-    ICCTASK_FOR(iy, start, end, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){
+    OMPTASK_FOR(iy, start, end, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
@@ -685,7 +688,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	    missing++;
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -701,7 +704,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(1);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
-    ICCTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
+    OMPTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
 	//for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;/*skip points that has zero amplitude */
@@ -718,7 +721,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	    missing++;
 	}
     }
-    ICCTASK_END
+    OMPTASK_END
 	WARN_MISSING;
 }
 /**
@@ -732,7 +735,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(1);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
-    ICCTASK_FOR(isa, start, end, private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)){
+    OMPTASK_FOR(isa, start, end, private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)){
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
@@ -761,7 +764,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	    }
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 /**
@@ -775,7 +778,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(1);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
-    ICCTASK_FOR(iy, start, end, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){
+    OMPTASK_FOR(iy, start, end, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax){
 	    SPLIT(dplocy,dplocy,nplocy);
@@ -796,7 +799,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 	    missing++;
 	}
     }
-    ICCTASK_END;
+    OMPTASK_END;
     WARN_MISSING;
 }
 
