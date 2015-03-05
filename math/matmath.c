@@ -110,7 +110,7 @@ R X(sumabs)(const X(mat)*A){
 R X(sumsq)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=(R)(A->p[i]*CONJ(A->p[i]));
+	out+=REAL(A->p[i]*CONJ(A->p[i]));
     }
     return out;
 }
@@ -420,7 +420,7 @@ void X(mulvec)(T *restrict y, const X(mat) * restrict A,
 	       const T *restrict x, const T alpha){
     assert(y && x && A);
     PMAT(A,Ap);
-    if(ABS(alpha-1)>1.e-15){
+    if(ABS(alpha-(T)1.)>1.e-15){
 	for(int iy=0; iy<A->ny; iy++){
 	    T tmp=x[iy]*alpha;
 	    for(int ix=0; ix<A->nx; ix++){
@@ -743,7 +743,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     PMAT(Mod,pMod);
     for(int imod=0; imod<nmod; imod++){
 	if(imod>0){/*orthogonalize */
-	    R cross;
+	    T cross;
 	    /*compute dot product. */
 	    for(int jmod=0; jmod<imod; jmod++){
 		if(nonvalid[jmod]) continue;
@@ -754,7 +754,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	    }
 	}
 	
-	R norm=SQRT(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum);
+	R norm=SQRT(REAL(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum));
 	if(FABS(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){
@@ -939,6 +939,7 @@ X(mat)* X(linspace)(R min, R dx, long n){
     }
     return out;
 }
+#ifndef USE_COMPLEX
 /**
    Check whether xin is linearly spaced
 */
@@ -1043,7 +1044,7 @@ X(mat)* X(interp1log)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, 
     }
     return ynew;
 }
-#ifndef USE_COMPLEX
+
 X(mat)* X(interp1)(const X(mat) *xin, const X(mat) *yin, const X(mat) *xnew, T ydefault){
     int free_xy=0;
     X(mat)*ynew=NULL;
@@ -1159,7 +1160,6 @@ void X(histfill)(X(mat) **out, const X(mat)* A,
 	Op[i][ind]++;
     }
 }
-#endif
 
 /**
    1D Cubic spline interpolation preparation.
@@ -1285,6 +1285,7 @@ X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew){
     X(free)(coeff);
     return out;
 }
+#endif
 /**
    Do a component wise log10 on each element of A.
 */
@@ -1552,7 +1553,7 @@ T X(trapz)(const X(mat)*x, const X(mat)*y){
 	    for(long i=0; i<y->nx; i++){
 		ans+=py[i];
 	    }
-	    ans=(ans*2-py[0]-py[y->nx-1]);
+	    ans=(ans*2.-py[0]-py[y->nx-1]);
 	}
 	out+=ans*0.5;
     }
@@ -1717,78 +1718,78 @@ X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
 	for(long ix=0; ix<nx-1; ix++){
 	    if(iy==0){
 		if(ix==0){
-		    p00=2*(2*p[iy][ix]-p[iy][ix+1])-(2*p[iy+1][ix]-p[iy+1][ix+1]);/*from a */
+		    p00=2.*(2.*p[iy][ix]-p[iy][ix+1])-(2.*p[iy+1][ix]-p[iy+1][ix+1]);/*from a */
 		}else{
-		    p00=2*p[iy][ix-1]-p[iy+1][ix-1];/*from b */
+		    p00=2.*p[iy][ix-1]-p[iy+1][ix-1];/*from b */
 		}
-		p01=2*p[iy][ix]-p[iy+1][ix];
-		p02=2*p[iy][ix+1]-p[iy+1][ix+1];
+		p01=2.*p[iy][ix]-p[iy+1][ix];
+		p02=2.*p[iy][ix+1]-p[iy+1][ix+1];
 		if(ix==nx-2){
-		    p03=2*(p[iy][ix+1]*2-p[iy][ix])-(p[iy+1][ix+1]*2-p[iy+1][ix]);/*from n */
+		    p03=2.*(p[iy][ix+1]*2.-p[iy][ix])-(p[iy+1][ix+1]*2.-p[iy+1][ix]);/*from n */
 		}else{
-		    p03=2*p[iy][ix+2]-p[iy+1][ix+2];/*from m */
+		    p03=2.*p[iy][ix+2]-p[iy+1][ix+2];/*from m */
 		}
 	    }else{
 		if(ix==0){
-		    p00=2*p[iy-1][ix]-p[iy-1][ix+1];/*a from b */
+		    p00=2.*p[iy-1][ix]-p[iy-1][ix+1];/*a from b */
 		}else{
 		    p00=p[iy-1][ix-1];/*b */
 		}
 		p01=p[iy-1][ix];
 		p02=p[iy-1][ix+1];
 		if(ix==nx-2){
-		    p03=p[iy-1][ix+1]*2-p[iy-1][ix];/*n from m */
+		    p03=p[iy-1][ix+1]*2.-p[iy-1][ix];/*n from m */
 		}else{
 		    p03=p[iy-1][ix+2];/*m */
 		}
 	    }
 	    if(ix==0){
-		p10=p[iy][ix]*2-p[iy][ix+1];/*from c */
+		p10=p[iy][ix]*2.-p[iy][ix+1];/*from c */
 	    }else{
 		p10=p[iy][ix-1];/*c */
 	    }
 	    p11=p[iy][ix];
 	    p12=p[iy][ix+1];
 	    if(ix==nx-2){
-		p13=p[iy][ix+1]*2-p[iy][ix];/*from d */
+		p13=p[iy][ix+1]*2.-p[iy][ix];/*from d */
 	    }else{
 		p13=p[iy][ix+2];/*d */
 	    }
 	    if(ix==0){
-		p20=p[iy+1][ix]*2-p[iy+1][ix+1];/*from e */
+		p20=p[iy+1][ix]*2.-p[iy+1][ix+1];/*from e */
 	    }else{
 		p20=p[iy+1][ix-1];/*e */
 	    }
 	    p21=p[iy+1][ix];
 	    p22=p[iy+1][ix+1];
 	    if(ix==nx-2){
-		p23=p[iy+1][ix+1]*2-p[iy+1][ix];/*from f */
+		p23=p[iy+1][ix+1]*2.-p[iy+1][ix];/*from f */
 	    }else{
 		p23=p[iy+1][ix+2];/*f */
 	    }
 	    if(iy==ny-2){
 		if(ix==0){
-		    p30=2*(p[iy+1][ix]*2-p[iy+1][ix+1])-(p[iy][ix]*2-p[iy][ix+1]);/*from h */
+		    p30=2.*(p[iy+1][ix]*2.-p[iy+1][ix+1])-(p[iy][ix]*2.-p[iy][ix+1]);/*from h */
 		}else{
-		    p30=2*p[iy+1][ix-1]-p[iy][ix-1];/*from g */
+		    p30=2.*p[iy+1][ix-1]-p[iy][ix-1];/*from g */
 		}
-		p31=2*p[iy+1][ix]-p[iy][ix];
-		p32=2*p[iy+1][ix+1]-p[iy][ix+1];
+		p31=2.*p[iy+1][ix]-p[iy][ix];
+		p32=2.*p[iy+1][ix+1]-p[iy][ix+1];
 		if(ix==nx-2){
-		    p33=2*(2*p[iy+1][ix+1]-p[iy+1][ix])-(2*p[iy][ix+1]-p[iy][ix]);/*from j */
+		    p33=2.*(2.*p[iy+1][ix+1]-p[iy+1][ix])-(2.*p[iy][ix+1]-p[iy][ix]);/*from j */
 		}else{
-		    p33=2*p[iy+1][ix+2]-p[iy][ix+2];/*from i */
+		    p33=2.*p[iy+1][ix+2]-p[iy][ix+2];/*from i */
 		}
 	    }else{
 		if(ix==0){
-		    p30=p[iy+2][ix]*2-p[iy+2][ix+1];/*h from g */
+		    p30=p[iy+2][ix]*2.-p[iy+2][ix+1];/*h from g */
 		}else{
 		    p30=p[iy+2][ix-1];/*g */
 		}
 		p31=p[iy+2][ix];
 		p32=p[iy+2][ix+1];
 		if(ix==nx-2){
-		    p33=2*p[iy+2][ix+1]-p[iy+2][ix];/*j from i */
+		    p33=2.*p[iy+2][ix+1]-p[iy+2][ix];/*j from i */
 		}else{
 		    p33=p[iy+2][ix+2];/*i */
 		}
@@ -1797,19 +1798,19 @@ X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
 	    PMAT(pc[iy][ix],ppc);
 	    ppc[0][0] = p11;
 	    ppc[0][1] = -.5*p10 + .5*p12;
-	    ppc[0][2] = p10 - 2.5*p11 + 2*p12 - .5*p13;
+	    ppc[0][2] = p10 - 2.5*p11 + 2.*p12 - .5*p13;
 	    ppc[0][3] = -.5*p10 + 1.5*p11 - 1.5*p12 + .5*p13;
 	    ppc[1][0] = -.5*p01 + .5*p21;
 	    ppc[1][1] = .25*p00 - .25*p02 - .25*p20 + .25*p22;
 	    ppc[1][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + .5*p20 - 1.25*p21 + p22 - .25*p23;
 	    ppc[1][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .25*p20 + .75*p21 - .75*p22 + .25*p23;
-	    ppc[2][0] = p01 - 2.5*p11 + 2*p21 - .5*p31;
+	    ppc[2][0] = p01 - 2.5*p11 + 2.*p21 - .5*p31;
 	    ppc[2][1] = -.5*p00 + .5*p02 + 1.25*p10 - 1.25*p12 - p20 + p22 + .25*p30 - .25*p32;
-	    ppc[2][2] = p00 - 2.5*p01 + 2*p02 - .5*p03 - 2.5*p10 + 6.25*p11 - 5*p12 + 1.25*p13 + 2*p20 - 5*p21 + 4*p22 - p23 - .5*p30 + 1.25*p31 - p32 + .25*p33;
-	    ppc[2][3] = -.5*p00 + 1.5*p01 - 1.5*p02 + .5*p03 + 1.25*p10 - 3.75*p11 + 3.75*p12 - 1.25*p13 - p20 + 3*p21 - 3*p22 + p23 + .25*p30 - .75*p31 + .75*p32 - .25*p33;
+	    ppc[2][2] = p00 - 2.5*p01 + 2.*p02 - .5*p03 - 2.5*p10 + 6.25*p11 - 5.*p12 + 1.25*p13 + 2.*p20 - 5.*p21 + 4.*p22 - p23 - .5*p30 + 1.25*p31 - p32 + .25*p33;
+	    ppc[2][3] = -.5*p00 + 1.5*p01 - 1.5*p02 + .5*p03 + 1.25*p10 - 3.75*p11 + 3.75*p12 - 1.25*p13 - p20 + 3.*p21 - 3.*p22 + p23 + .25*p30 - .75*p31 + .75*p32 - .25*p33;
 	    ppc[3][0] = -.5*p01 + 1.5*p11 - 1.5*p21 + .5*p31;
 	    ppc[3][1] = .25*p00 - .25*p02 - .75*p10 + .75*p12 + .75*p20 - .75*p22 - .25*p30 + .25*p32;
-	    ppc[3][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + 1.5*p10 - 3.75*p11 + 3*p12 - .75*p13 - 1.5*p20 + 3.75*p21 - 3*p22 + .75*p23 + .5*p30 - 1.25*p31 + p32 - .25*p33;
+	    ppc[3][2] = -.5*p00 + 1.25*p01 - p02 + .25*p03 + 1.5*p10 - 3.75*p11 + 3.*p12 - .75*p13 - 1.5*p20 + 3.75*p21 - 3.*p22 + .75*p23 + .5*p30 - 1.25*p31 + p32 - .25*p33;
 	    ppc[3][3] = .25*p00 - .75*p01 + .75*p02 - .25*p03 - .75*p10 + 2.25*p11 - 2.25*p12 + .75*p13 + .75*p20 - 2.25*p21 + 2.25*p22 - .75*p23 - .25*p30 + .75*p31 - .75*p32 + .25*p33;
 
 	}

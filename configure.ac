@@ -61,7 +61,7 @@ AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
-if test "${USER}" = "lianqiw" ;then
+if test "${USER}" = "lianqiw" -a "$CC" = "gcc" ;then
     OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
 LDEXE="-no-fast-install -ldl"

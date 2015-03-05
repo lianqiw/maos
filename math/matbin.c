@@ -63,6 +63,7 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 		out->p[i]=(T)p[i];
 	    }
 	    free(p);
+#ifdef USE_COMPLEX
 	}else if(M_T==M_CMP && header->magic==M_ZMP){
 	    fcomplex *p=malloc(nx*ny*sizeof(fcomplex));
 	    zfread(p, sizeof(fcomplex), nx*ny, fp);
@@ -70,6 +71,7 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 		out->p[i]=(T)p[i];
 	    }
 	    free(p);
+#endif
 	}else{
 	    error("%s is not a X(mat) file. magic=%x. We want %x\n", 
 		  zfname(fp), header->magic, M_T);

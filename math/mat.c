@@ -347,7 +347,7 @@ T X(sum)(const X(mat) *A){
 	   point numbers.
 	*/
 	for(int i=0; i<A->nx*A->ny; i++){
-	    if(isfinite(p[i])){
+	    if(isfinite(REAL(p[i]))){
 		v+=p[i];
 	    }
 	}

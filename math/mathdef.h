@@ -37,7 +37,7 @@
 #define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 
-#ifdef __clang__
+#if defined(__clang__) || defined(__cplusplus)
 /*clang doesnot accept the gcc version in C++ mode*/
 #define PALL(T,A,pp) typedef T pp##_ptr[(A)->nx]; pp##_ptr *pp=(pp##_ptr*)(A)->p
 #else 

@@ -323,7 +323,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #else
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
 #endif
-    lwork=(int)(work0[0]);
+    lwork=(ptrdiff_t)REAL(work0[0]);
     T *work1=malloc(sizeof(T)*lwork);
 #ifdef USE_COMPLEX
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);

@@ -64,6 +64,7 @@
 #define FABS(A) abs(A)
 #define M_T M_LONG
 #define PRINT(A) fprintf(stderr," %ld",A);
+#define REAL(A) A
 #else //if USE_LONG
 
 #define MAT_TYPE

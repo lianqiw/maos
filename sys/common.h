@@ -51,9 +51,9 @@ enum{
 #ifndef INLINE
 #define INLINE inline __attribute__((always_inline))
 #endif
-typedef double __complex__ dcomplex;
-typedef float  __complex__ fcomplex;
-typedef double ddouble;/*just for saving.*/
+#ifdef __cplusplus
+using namespace std;
+#endif
 #if defined(DLONG)
 typedef unsigned long spint; /*Only optionally activated in AMD64. */
 #define M_SPINT M_INT64
@@ -104,9 +104,42 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   return cexpf(clogf(x)*z);
 }
 #else
-#ifndef __cplusplus
+//C99 always has definitions we need
+//if not included by cuda
+#if !defined(__cplusplus) || defined(AOS_CUDA_GPU_H)
 #include <complex.h>
+#else
+#include <complex>
+typedef complex<double> dcomplex;
+typedef complex<float> fcomplex;
+#define I dcomplex(0,1)
+
+#define fabs abs
+#define cabs abs
+#define cimag imag
+#define creal real
+#define cexp exp
+#define cpow pow
+#define csqrt sqrt
+#define clog log
+#define carg arg
+#define cabsf abs
+
+#define cimagf imag
+#define crealf real
+#define conjf conj
+#define cexpf exp
+#define cpowf pow
+#define csqrtf sqrt
+#define clogf log
+#define cargf arg
+
 #endif
+#endif
+
+#if !defined(__cplusplus) ||  defined(AOS_CUDA_GPU_H)
+typedef double __complex__ dcomplex;
+typedef float  __complex__ fcomplex;
 #endif
 
 #include "mem.h"

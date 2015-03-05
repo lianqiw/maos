@@ -161,7 +161,11 @@ static void FFTW_THREADS(long n){
 	}
     }
 }
-
+#ifdef __cplusplus
+#define COMP(A) reinterpret_cast<fftw_complex*>(A)
+#else
+#define COMP(A) A
+#endif
 
 #ifdef USE_COMPLEX
 /**
@@ -179,9 +183,9 @@ static void X(fft2plan)(X(mat) *A, int dir){
     FFTW_THREADS(A->nx*A->ny);
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
-	A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, A->p, A->p, dir, FFTW_FLAGS);
+	A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
     }else{
-	A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx, A->p, A->p, dir, FFTW_FLAGS);
+	A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx,COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
     }
     UNLOCK_FFT;  
     /*info("Plan %p created\n", A->fft->plan[dir+1]); */
@@ -204,18 +208,18 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     FFTW_THREADS(A->nx*A->ny);
     /*along columns for all columns. */
     plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
-					A->p,NULL,1,nx,
-					A->p,NULL,1,nx,
+					COMP(A->p),NULL,1,nx,
+					COMP(A->p),NULL,1,nx,
 					dir,FFTW_FLAGS);
     /*selected along rows, beginning */
     plan1d->plan[1]=FFTW(plan_many_dft)(1, &ny, ncomp/2,
-					A->p,NULL,nx,1,
-					A->p,NULL,nx,1,
+					COMP(A->p),NULL,nx,1,
+					COMP(A->p),NULL,nx,1,
 					dir,FFTW_FLAGS);
     /*selected along rows, end */
     plan1d->plan[2]=FFTW(plan_many_dft)(1,&ny,ncomp/2, 
-					A->p+nx-ncomp/2,NULL,nx,1,
-					A->p+nx-ncomp/2,NULL,nx,1,
+					COMP(A->p)+nx-ncomp/2,NULL,nx,1,
+					COMP(A->p)+nx-ncomp/2,NULL,nx,1,
 					dir,FFTW_FLAGS);
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
