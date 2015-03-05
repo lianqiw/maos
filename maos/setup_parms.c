@@ -1905,7 +1905,7 @@ static int arrind(double *arr, int *n, double val){
 static void setup_parms_postproc_dm(PARMS_T *parms){
     int ndm=parms->ndm;
     /*disable cache for low order systems. */
-    if(parms->sim.cachedm==1){
+    if(parms->sim.cachedm){
 	if(parms->evl.nevl<2 && parms->nwfs<2){
 	    parms->sim.cachedm=0;
 	    warning("cachedm disabled for SCAO\n");
@@ -1919,12 +1919,30 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
       Setup the parameters used to do DM caching on a finer grid.
     */
     int ncache_tot=0;
-    if(parms->sim.cachedm){
-	for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
-	    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	    if(fabs(ht)<1.e-10){
-		parms->dm[idm].isground=1;
+    if(parms->sim.cachedm==1){//Only cache each DM once
+	for(int idm=0; idm<ndm; idm++){
+	    int nscale=1;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(idm==0){
+		    parms->powfs[ipowfs].scalegroup=lnew(ndm, 1);
+		}
+		parms->powfs[ipowfs].scalegroup->p[idm]=0;
 	    }
+	    if(idm==0){
+		parms->evl.scalegroup=lnew(ndm*parms->evl.nevl, 1);
+	    }
+	    for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
+		parms->evl.scalegroup->p[idm+ievl*ndm]=0;
+	    }
+	
+	    parms->dm[idm].ncache=1;
+	    parms->dm[idm].dxcache=dnew(1,1);
+	    parms->dm[idm].dxcache->p[0]=parms->dm[idm].dx/16;
+	    ncache_tot+=nscale;
+	}
+    }else if(parms->sim.cachedm==2){//cache each DM multiple times according to output grid.
+	for(int idm=0; idm<ndm; idm++){
+	    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    int nscale=0;
 	    int nscalemax=parms->npowfs+parms->evl.nevl;/*maximum number of possible scalings */
 	    double scale[nscalemax];
@@ -1961,6 +1979,10 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	parms->sim.cachedm=0;
     }
     for(int i=0; i<parms->ndm; i++){
+	double ht=parms->dm[i].ht+parms->dm[i].vmisreg;
+	if(fabs(ht)<1.e-10){
+	    parms->dm[i].isground=1;
+	}
 	if(isfinite(parms->dm[i].stroke)){
 	    double strokemicron=parms->dm[i].stroke*1e6;
 	    if(strokemicron<1 || strokemicron>50){

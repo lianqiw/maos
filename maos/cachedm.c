@@ -73,7 +73,9 @@ void prep_cachedm(SIM_T *simu){
 	    count++;
 	}
     }
-    /*new scheme for ray tracing */
+    //cachedm_ha doesn't help because it is not much faster than ray tracing and
+    //is not parallelized as ray tracing.
+        /*new scheme for ray tracing */
     simu->cachedm_prop=calloc(simu->cachedm_n, sizeof(thread_t*));
     simu->cachedm_propdata=calloc(simu->cachedm_n, sizeof(PROPDATA_T));
     PROPDATA_T *cpropdata=simu->cachedm_propdata;
