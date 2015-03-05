@@ -219,7 +219,6 @@ typedef struct POWFS_CFG_T{
     int dtrat;      /**<ratio of sample period over fast loop (LGS)*/
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
-    lmat *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
     int dither;     /**<Turn on/off dithering*/
     double dither_amp;/**<Dithering amptlidue to update centroid gain or matched filter.*/
@@ -279,9 +278,6 @@ typedef struct DM_CFG_T{
     char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck; /**<file containing stuck actuators. nx2 coordinate.*/
 
-    int ncache;
-    dmat *dxcache;/**<the sampling of plane to cache dm for each scale
-		       group. (derived)*/
     char *hyst;     /**<File containing a matrix that describes the
 		       hysterisis. The matrix should have 3 rows, and multiple
 		       columns. Each column describe the parameters for a mode,
@@ -327,8 +323,6 @@ typedef struct EVL_CFG_T{
     int nevl;       /**<Number of evaluation directions. (derived)*/
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
-    lmat *scalegroup;/**<scale group for dm cache. havenumber of nevl*dm
-		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
     lmat *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }EVL_CFG_T;

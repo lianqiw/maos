@@ -693,9 +693,8 @@ static void init_simu_evl(SIM_T *simu){
 	    data->scale=1-ht/parms->evl.hs->p[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
-	    if(simu->cachedm && parms->evl.scalegroup){
-		int isc=parms->evl.scalegroup->p[idm+ievl*parms->ndm];
-		data->mapin=simu->cachedm->p[idm]->p[isc];
+	    if(simu->cachedm){
+		data->mapin=simu->cachedm->p[idm];
 		data->cubic=0;/*already accounted for in cachedm. */
 		data->cubic_iac=0;/*not needed */
 		if(aper->locs_dm){
@@ -969,9 +968,8 @@ static void init_simu_wfs(SIM_T *simu){
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
-	    if(simu->cachedm && parms->powfs[ipowfs].scalegroup->p[idm]!=-1){
-		int isc=parms->powfs[ipowfs].scalegroup->p[idm];
-		data->mapin=simu->cachedm->p[idm]->p[isc];
+	    if(simu->cachedm){
+		data->mapin=simu->cachedm->p[idm];
 		data->cubic=0;/*already accounted for in cachedm. */
 		data->cubic_iac=0;/*not needed */
 	    }else{
@@ -1417,8 +1415,7 @@ void free_simu(SIM_T *simu){
     dfree(simu->atmscale);
     if(parms->sim.cachedm && !parms->sim.evlol){
 	cellfree(simu->cachedm);
-	free(simu->pcachedm);
-	for(int i=0; i<simu->cachedm_n; i++){
+	for(int i=0; i<parms->ndm; i++){
 	    free(simu->cachedm_prop[i]);
 	}
 	free(simu->cachedm_prop);

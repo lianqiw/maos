@@ -57,7 +57,6 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     }
     lfree(powfscfg->wfs);
     lfree(powfscfg->wfsind);
-    lfree(powfscfg->scalegroup);
     free(powfscfg->fnllt);
     free(powfscfg->piinfile);
     free(powfscfg->sninfile);
@@ -155,7 +154,6 @@ void free_parms(PARMS_T *parms){
     }
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
-	dfree(parms->dm[idm].dxcache);
 	free(parms->dm[idm].hyst);
 	free(parms->dm[idm].actstuck);
 	free(parms->dm[idm].actfloat);
@@ -166,7 +164,6 @@ void free_parms(PARMS_T *parms){
 	free(parms->moao[imoao].actfloat);
     }
     free(parms->moao);
-    lfree(parms->evl.scalegroup);
     free(parms->aper.fnamp);
     free(parms->aper.pupmask);
     lfree(parms->save.ints);
@@ -1914,69 +1911,6 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    parms->sim.cachedm=0;
 	    warning("cachedm disabled when comparing CPU against GPU\n");
 	}
-    }
-    /*
-      Setup the parameters used to do DM caching on a finer grid.
-    */
-    int ncache_tot=0;
-    if(parms->sim.cachedm==1){//Only cache each DM once
-	for(int idm=0; idm<ndm; idm++){
-	    int nscale=1;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(idm==0){
-		    parms->powfs[ipowfs].scalegroup=lnew(ndm, 1);
-		}
-		parms->powfs[ipowfs].scalegroup->p[idm]=0;
-	    }
-	    if(idm==0){
-		parms->evl.scalegroup=lnew(ndm*parms->evl.nevl, 1);
-	    }
-	    for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-		parms->evl.scalegroup->p[idm+ievl*ndm]=0;
-	    }
-	
-	    parms->dm[idm].ncache=1;
-	    parms->dm[idm].dxcache=dnew(1,1);
-	    parms->dm[idm].dxcache->p[0]=parms->dm[idm].dx/16;
-	    ncache_tot+=nscale;
-	}
-    }else if(parms->sim.cachedm==2){//cache each DM multiple times according to output grid.
-	for(int idm=0; idm<ndm; idm++){
-	    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	    int nscale=0;
-	    int nscalemax=parms->npowfs+parms->evl.nevl;/*maximum number of possible scalings */
-	    double scale[nscalemax];
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		double dxscl=(1.-ht/parms->powfs[ipowfs].hs)*parms->powfs[ipowfs].dx;
-		if(idm==0){
-		    parms->powfs[ipowfs].scalegroup=lnew(ndm, 1);
-		}
-		if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
-		    parms->powfs[ipowfs].scalegroup->p[idm]=arrind(scale, &nscale, dxscl);
-		}else{
-		    parms->powfs[ipowfs].scalegroup->p[idm]=-1;
-		}
-	    }
-	    /*evl; */
-	    if(parms->dm[idm].dx>parms->evl.dx*10){
-		if(idm==0){
-		    parms->evl.scalegroup=lnew(ndm*parms->evl.nevl, 1);
-		}
-		for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-		    double dxscl=(1. - ht/parms->evl.hs->p[ievl])*parms->evl.dx;
-		    parms->evl.scalegroup->p[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
-		}
-	    }
-	    parms->dm[idm].ncache=nscale;
-	    parms->dm[idm].dxcache=dnew(nscale, 1);
-	    for(int iscale=0; iscale<nscale; iscale++){
-		parms->dm[idm].dxcache->p[iscale]=scale[iscale];
-	    }
-	    ncache_tot+=nscale;
-	}
-    }
-    if(!ncache_tot){
-	parms->sim.cachedm=0;
     }
     for(int i=0; i<parms->ndm; i++){
 	double ht=parms->dm[i].ht+parms->dm[i].vmisreg;

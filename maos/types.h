@@ -474,9 +474,8 @@ typedef struct SIM_T{
     GENATM_T *atmcfg;
     mapcell *atm;       /**<fine sampled simulation turbulence screens*/
     dmat *atmscale;     /**<Scale atmosphere during ray tracing to simulate r0 variation.*/
-    mapccell *cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
-			  fast ray tracing to WFS and aper*/
-    int (*pcachedm)[2];/**<information about cachedm struct.*/
+    mapcell *cachedm;   /**<grid cache dm actuator to a finer sampled screen. for
+			   fast ray tracing to WFS and aper*/
     dmat *winddir;     /**<input wind direction*/
     
     /*Optional surface errors in M1, M2, or M3*/
@@ -624,7 +623,6 @@ typedef struct SIM_T{
     /*A few indicators*/
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
-    int cachedm_n;     /**<length of pcachedm array*/
     int seed;          /**<current running seed.*/
     int iseed;         /**<index of current running seed.*/
     int isim;          /**<record current simulations step.*/
