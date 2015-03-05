@@ -189,10 +189,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    double *dplocx_arr=0;
 	    int *nplocx_arr=0;
 	    int *nplocx2_arr=0;
-	    if(nyout>10){//cache SPLIT() results
-		dplocx_arr=alloca(sizeof(double)*nxout);
-		nplocx_arr=alloca(sizeof(int)*nxout);
-		nplocx2_arr=alloca(sizeof(int)*nxout);
+	    if(nyout>10 && nxout<2000){//cache SPLIT() results
+		//alloca is not good in mac due to stack limitation.
+		dplocx_arr=malloc(sizeof(double)*nxout);
+		nplocx_arr=malloc(sizeof(int)*nxout);
+		nplocx2_arr=malloc(sizeof(int)*nxout);
 
 		double rowdiv=rowdiv0;
 		double dplocx=dplocx00;
@@ -296,6 +297,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		}
 #undef GRID_ADD
 	    }/*for icol*/
+	    if(dplocx_arr){
+		free(dplocx_arr);
+		free(nplocx_arr);
+		free(nplocx2_arr);
+	    }
 	}/*fabs(dx_in2*dxout-1)<EPS*/
     }else{
 	//warning_once("Using unoptmized prop_grid_map\n");
