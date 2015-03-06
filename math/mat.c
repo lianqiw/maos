@@ -929,7 +929,12 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
     long nx,ny,*nxs,*nys;
     if(*B) ref=*B;/*use B as reference. */
     X(celldim)(ref, &nx, &ny, &nxs, &nys);
-    if(nx!=A->nx || ny!=A->ny){
+    if(!A){
+	if(nx!=0 || ny!=0){
+	    error("Shape doesn't agree. A is 0x0. Reference is %ldx%ld\n", 
+		  nx, ny);
+	}
+    }else if(nx!=A->nx || ny!=A->ny){
 	error("Shape doesn't agree. Reference is %ldx%ld but input is %ldx%ld\n",
 	      nx,ny,A->nx,A->ny);
     }

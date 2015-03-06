@@ -292,15 +292,15 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     int ans=0;								\
     if(parms->recon.split){						\
 	if(parms->ndm<=2){						\
-	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
-	    ans=calc_ngsmod(nmod==3?pclep[isim]:0, nmod==3?pclmp[isim]:0, \
-			    pcleNGSmp[isim],recon->ngsmod->nmod,	\
+	    double *pcleNGSmp=COLUMN(cleNGSmp->p[ievl], isim);		\
+	    ans=calc_ngsmod(nmod==3?pclep:0, nmod==3?pclmp:0,		\
+			    pcleNGSmp,recon->ngsmod->nmod,	\
 			    recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
 			    recon->ngsmod->scale, thetax, thetay,	\
 			    aper->ipcc, aper->imcc,	parms, ccb);	\
 	}								\
     }else{								\
-	ans=calc_ptt_post(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc, ccb); \
+	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb); \
     }
 
 /**
@@ -478,10 +478,10 @@ void gpu_perfevl_sync(thread_t *info){
 	const double thetax=parms->evl.thetax->p[ievl];
 	const double thetay=parms->evl.thetay->p[ievl];
 	/*Setup pointers for easy usage */
-	PDMAT(simu->clmp->p[ievl],pclmp);
-	PDMAT(simu->olmp->p[ievl],polmp);/*OL mode for each dir */
-	PDMAT(simu->olep->p[ievl],polep);/*OL error for each dir */
-	PDMAT(simu->clep->p[ievl],pclep);
+	double *polmp=COLUMN(simu->olmp->p[ievl], isim);
+	double *pclmp=COLUMN(simu->clmp->p[ievl], isim);
+	double *polep=COLUMN(simu->olep->p[ievl], isim);
+	double *pclep=COLUMN(simu->clep->p[ievl], isim);
 	CUDA_SYNC_STREAM;
 	PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuperf_t::ccb_ol[ievl]);
 	PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuperf_t::ccb_cl[ievl]);

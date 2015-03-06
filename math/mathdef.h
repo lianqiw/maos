@@ -37,9 +37,9 @@
 #define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 
-#if defined(__clang__) || defined(__cplusplus)
+#if __cplusplus > 201103L
 /*clang doesnot accept the gcc version in C++ mode*/
-#define PALL(T,A,pp) typedef T pp##_ptr[(A)->nx]; pp##_ptr *pp=(pp##_ptr*)(A)->p
+#define PALL(T,A,pp) auto pp=(T(*)[((cell*)A)->nx])((cell*)A)->p
 #else 
 /*clang version caused <anonymous> must be uninitailized error in cuda code.*/
 #define PALL(T,A,pp) T (*pp)[((cell*)A)->nx]=(T(*)[((cell*)A)->nx])((cell*)A)->p
@@ -85,7 +85,8 @@
 #define lhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(long), key)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
-
+#define COLUMN(A,iy) (A->p+iy*A->nx)
+#define INDEX(A,ix,iy) A->p[ix+iy*A->nx]
 #define AOS_LMAT(A) l##A
 #define AOS_CMAT(A) c##A
 #define AOS_DMAT(A) d##A

@@ -90,23 +90,22 @@ static void atm_prep(atm_prep_t *data){
     }else{
 	my=ny0;
     }
-    PDMAT(atm, pin);
     typedef Real pout_t[nx0];
     pout_t *pout=(pout_t*)data->next_atm;
     for(int iy=0; iy<my; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(Real)pin[iy+offy][ix+offx];
+	    pout[iy][ix]=(Real)INDEX(atm, ix+offx, iy+offy);
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(Real)pin[iy+offy][ix+offx-nxi];
+	    pout[iy][ix]=(Real)INDEX(atm, ix+offx-nxi, iy+offy);
 	}
     }
     for(int iy=my; iy<ny0; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(Real)pin[iy+offy-nyi][ix+offx];
+	    pout[iy][ix]=(Real)INDEX(atm, ix+offx, iy+offy-nyi);
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(Real)pin[iy+offy-nyi][ix+offx-nxi];
+	    pout[iy][ix]=(Real)INDEX(atm, ix+offx-nxi, iy+offy-nyi);
 	}
     }
     toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
@@ -164,7 +163,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		avail_max=availi;
 	    }
 	}
-	avail_min-=256<<20; /*reserve 256 MiB*/
+	avail_min-=256<<19;//reserve 128MiB 
+	avail_max-=256<<19;
 	long need=nps*sizeof(Real)*nxn*nyn;
 	info2("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
 	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
