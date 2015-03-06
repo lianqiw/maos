@@ -37,12 +37,12 @@
 #define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 
-#if __cplusplus > 201103L
-/*clang doesnot accept the gcc version in C++ mode*/
-#define PALL(T,A,pp) auto pp=(T(*)[((cell*)A)->nx])((cell*)A)->p
+#if __cplusplus >= 201103L
+//Work around C++ restrictions
+#define PALL(T,A,pp) const long pp##nx=(A)->nx; auto pp=(T(*)[pp##nx])(A)->p
 #else 
-/*clang version caused <anonymous> must be uninitailized error in cuda code.*/
-#define PALL(T,A,pp) T (*pp)[((cell*)A)->nx]=(T(*)[((cell*)A)->nx])((cell*)A)->p
+//C99
+#define PALL(T,A,pp) const long pp##nx=(A)->nx; T (*pp)[pp##nx]=(T(*)[pp##nx])(A)->p
 #endif
 #define PDMAT(M,P)   PALL(double,M,P)
 #define PDCELL(M,P)  PALL(dmat*,M,P)

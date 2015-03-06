@@ -165,7 +165,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     otfnorm=1./otfnorm;
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
 
-    dcomplex wvk=2.*M_PI/wvl*I;
+    dcomplex wvk=COMPLEX(0, 2.*M_PI/wvl);
     for(long jm=0; jm<notfy; jm++){
 	for(long im=0; im<notfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;

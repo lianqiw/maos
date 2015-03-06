@@ -67,7 +67,7 @@ static void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, 
 	    }
 	}
     }else{
-	dcomplex twopii=2*M_PI*I;
+	dcomplex twopii=COMPLEX(0, 2*M_PI);
 	for(int is=0; is<f->nx; is++){
 	    dcomplex s=f->p[is]*twopii;
 	    for(int im=0; im<nmod; im++){

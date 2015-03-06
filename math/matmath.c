@@ -863,7 +863,7 @@ void X(polyval)(X(mat) *A, XR(mat)*p){
     for(long i=0; i<A->nx*A->ny; i++){
 	T tmp=0;
 	for(long ip=0; ip<np; ip++){
-	    tmp+=p->p[ip]*POW(A->p[i], np-ip-1);
+	    tmp+=p->p[ip]*(T)POW(A->p[i], np-ip-1);
 	}
 	A->p[i]=tmp;
     }

@@ -138,7 +138,7 @@ static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phir
     /*toc("mul");tic; */
     /*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
     for(int ix=0; ix<npsf*npsf; ix++){
-	phi->p[ix]=phirecon->p[ix]*I+log(cabs(wvf->p[ix]));/*real part saves amplitude. */
+	phi->p[ix]=COMPLEX(log(cabs(wvf->p[ix])), phirecon->p[ix]);/*real part saves amplitude. */
     }
     /*toc("assign"); */
 }
@@ -225,7 +225,7 @@ static void convert_wvf(GENPISTAT_S *data){
 	dmat *opd=dnew(16,16);
 	for(int ix=0; ix<16*16; ix++){
 	    opd->p[ix]=screen[0]->p[ix]*pi2l*2.;
-	    wvf->p[ix]=cexp(opd->p[ix]*I);
+	    wvf->p[ix]=cexp(COMPLEX(0, opd->p[ix]));
 	}
 	cmat *phi=cnew(16,16);
 	dmat *diff=dnew(npsf*2,npsf);

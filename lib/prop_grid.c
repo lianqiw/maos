@@ -307,6 +307,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	//warning_once("Using unoptmized prop_grid_map\n");
 	/*non optimized case. slower, but hopefully accurate*/
 	//OMPTASK_FOR(icol, 0, nyout){
+	double dplocy1;
 	for(long icol=0; icol<nyout; icol++){
 	    double dplocx,dplocx0;
 	    int nplocx,nplocy,nplocy1, nplocx1;
@@ -319,7 +320,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		goto skip;
 	    }
 	    SPLIT(dplocy,dplocy,nplocy);
-	    const double dplocy1=1.-dplocy;
+	    dplocy1=1.-dplocy;
 	    nplocy1=(nplocy==wrapx?0:nplocy+1);
 	    dplocx0=oxout;
 	    for(int irow=0; irow<nxout; irow++){

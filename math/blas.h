@@ -21,6 +21,9 @@
 
 #include "../sys/sys.h"
 #include <stddef.h>
+#ifdef __cplusplus
+extern "C"{
+#endif
 /**
    \file blas.h
    The following are blas and lapack fortran function definitions. Notice that when
@@ -76,4 +79,9 @@ BLAS_DEF_REAL(BLAS_D,double)
 BLAS_DEF_REAL(BLAS_S,float)
 BLAS_DEF_COMP(BLAS_C,dcomplex,double)
 BLAS_DEF_COMP(BLAS_Z,fcomplex,float)
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

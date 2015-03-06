@@ -24,7 +24,7 @@
 #define matinfo(A...)
 #endif
 
-#ifdef MAT_TYPE
+#undef COMPLEX
 #undef MAT_TYPE
 #undef XR
 #undef XC
@@ -57,7 +57,7 @@
 #undef M_SPT
 #undef COS
 #undef SIN
-#endif
+
 #ifdef USE_LONG
 #define T long
 #define X(A) l##A
@@ -115,14 +115,15 @@
 #define ABS2(A) (pow(creal(A),2)+pow(cimag(A),2))
 #define MAG(A) ABS(A)
 #define SQRT(A) csqrt(A)
-#define RANDU(A) (randu(A)+I*randu(A))
-#define RANDN(A) (randn(A)+I*randn(A))
+#define COMPLEX DCOMPLEX
+#define RANDU(A) COMPLEX(randu(A),randu(A))
+#define RANDN(A) COMPLEX(randn(A),randn(A))
 #define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",creal(A),cimag(A));
 #define DOT dotcmp
 #define POW cpow
 #define LOG clog
 #define EXP cexp
-#define EXPI(A) (cos(A)+I*sin(A))
+#define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
 #else 
 /*Single Precision*/
@@ -172,14 +173,15 @@
 #define ABS2(A) (powf(crealf(A),2)+powf(cimagf(A),2))
 #define MAG(A) ABS(A)
 #define SQRT(A) csqrtf(A)
-#define RANDU(A) ((float)randu(A)+I*(float)randu(A))
-#define RANDN(A) ((float)randn(A)+I*(float)randn(A))
+#define COMPLEX FCOMPLEX
+#define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
+#define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
 #define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",crealf(A),cimagf(A));
 #define DOT dotzmp
 #define POW cpowf
 #define LOG clogf
 #define EXP cexpf
-#define EXPI(A) (cosf(A)+I*sinf(A))
+#define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
 #define PSPCELL(A,pp) PALL(X(sp)*,A,pp)

@@ -317,7 +317,7 @@ case "${cc_full}" in
 	    fi
 	fi
 	;;
-    *gcc*)
+    *gcc*|*g++*)
 	if test -n "`$CC -v 2>&1 |grep clang`" ;then
             CN=clang
             OPTIM="$OPTIM_CLANG"

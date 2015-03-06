@@ -102,7 +102,7 @@ static void psfiris_do(thread_t *info){
     cfft2(otf, 1);
     ccwmd(otf, (dmat*)otf_fine, 1); 
     mapfree(otf_fine);
-    double sumpsf=otf->p[0];
+    double sumpsf=creal(otf->p[0]);
     double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(notf2*notf2);
     if(npix>0){
 	dmat *wvlmat=dnew(1,1);

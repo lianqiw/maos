@@ -73,7 +73,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
 	PCMAT(pywfs->pyramid->p[iwvl], pp);
-	dcomplex coeff=M_PI*I*0.5;
+	dcomplex coeff=COMPLEX(0, M_PI*0.5);
 	long skip=0;
 	if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
 	    double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);

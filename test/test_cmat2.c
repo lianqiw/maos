@@ -223,8 +223,8 @@ int test_ints(){
     double *amp=calloc(nopd*nopd, sizeof(double));
     dcomplex *psf=calloc(npsf*npsf, sizeof(dcomplex));
     dcomplex *psf2=calloc(npsf*npsf, sizeof(dcomplex));
-    dcomplex wvk=2*M_PI*I/0.5e-6;
     double wvkr=2*M_PI/0.5e-6;
+    dcomplex wvk=COMPLEX(0, wvkr);
     for(int i=0; i<nopd*nopd; i++){
 	amp[i]=1;
 	opd[i]=1;
@@ -242,7 +242,7 @@ int test_ints(){
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
 	    double junk=wvkr*opd[i];
-	    psf[i]=amp[i]*(cos(junk)+I*sin(junk));
+	    psf[i]=amp[i]*COMPLEX(cos(junk), sin(junk));
 	}
     }
     /*takes 0.9 ms in debug mode, 0.09ms in O3 mode. */
@@ -250,7 +250,7 @@ int test_ints(){
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
 	    double junk=cos(wvkr*opd[i]);
-	    psf[i]=amp[i]*(junk+I*sqrt(1-junk*junk));
+	    psf[i]=amp[i]*COMPLEX(junk, sqrt(1-junk*junk));
 	}
     }
     /*takes 0.9 ms in debug mode, 0.09ms in O3 mode. */
@@ -295,7 +295,7 @@ int main(){
     cmat_correctness();/*passed */
     test_sq2();/*passed */
     test_cwm();/*passed */
-    dcomplex a=2342+3*I;
+    dcomplex a=COMPLEX(2342,3);
     info("a*conj(a)=%g\n",creal(a*conj(a)));
     info("abs2(a)=%g\n", cabs2(a));
     test_ctilt();

@@ -293,7 +293,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
     cmat *wshat=cnew(nstep, 1);
     //cfft2plan(wshat, -1);
     for(long i=0; i<nstep; i++){
-	wshat->p[i]=sqrt(psd->p[i]*df)*(randn(rstat)+I*randn(rstat));
+	wshat->p[i]=sqrt(psd->p[i]*df)*COMPLEX(randn(rstat), randn(rstat));
     }
     cfft2(wshat, -1);
     dmat *out=NULL;

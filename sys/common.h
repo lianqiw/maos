@@ -112,7 +112,9 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #include <complex>
 typedef complex<double> dcomplex;
 typedef complex<float> fcomplex;
-#define I dcomplex(0,1)
+#define COMPLEX(A,B) dcomplex(A,B)
+#define DCOMPLEX(A,B) dcomplex(A,B)
+#define FCOMPLEX(A,B) fcomplex(A,B)
 
 #define fabs abs
 #define cabs abs
@@ -133,13 +135,51 @@ typedef complex<float> fcomplex;
 #define csqrtf sqrt
 #define clogf log
 #define cargf arg
-
+inline fcomplex operator*(double A, const fcomplex &B){
+    return B*(float)A;
+}
+inline fcomplex operator*(const fcomplex &B, double A){
+    return B*(float)A;
+}
+inline dcomplex operator*(float A, const dcomplex &B){
+    return B*(double)A;
+}
+inline dcomplex operator*(const dcomplex &B, float A){
+    return B*(double)A;
+}
+inline fcomplex operator+(double A, const fcomplex &B){
+    return B+(float)A;
+}
+inline fcomplex operator+(const fcomplex &B, double A){
+    return B+(float)A;
+}
+inline dcomplex operator+(float A, const dcomplex &B){
+    return B+(double)A;
+}
+inline dcomplex operator+(const dcomplex &B, float A){
+    return B+(double)A;
+}
+inline fcomplex operator-(double A, const fcomplex &B){
+    return (float)A-B;
+}
+inline fcomplex operator-(const fcomplex &B, double A){
+    return B-(float)A;
+}
+inline dcomplex operator-(float A, const dcomplex &B){
+    return (double)A-B;
+}
+inline dcomplex operator-(const dcomplex &B, float A){
+    return B-(double)A;
+}
 #endif
 #endif
 
-#if !defined(__cplusplus) ||  defined(AOS_CUDA_GPU_H)
+#ifndef COMPLEX
 typedef double __complex__ dcomplex;
 typedef float  __complex__ fcomplex;
+#define COMPLEX(A,B) ((A)+(B)*I)
+#define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
+#define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
 #endif
 
 #include "mem.h"

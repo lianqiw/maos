@@ -146,7 +146,7 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double ds
     }
     long ny2=ny/2;
     long nx2=nx/2;
-    dcomplex cf=2*M_PI*I;
+    dcomplex cf=COMPLEX(0, 2*M_PI);
     double dfy=1/(ny*dx);
     double dfx=1/(nx*dx);
     *gx=cnew(nx*ny,1);
@@ -195,7 +195,7 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
     spint *pi=propt->i;
     dcomplex *px=propt->x;
     long count=0;
-    dcomplex cf=2*M_PI*I;
+    dcomplex cf=COMPLEX(0, 2*M_PI);
     for(long iy=0; iy<nxg; iy++){
 	for(long ix=0; ix<nxg; ix++){
 	    long icol=ix+iy*nxg;

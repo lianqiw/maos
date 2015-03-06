@@ -162,6 +162,9 @@ static void skysim_isky(SIM_S *simu){
 #endif
 	{
 	    ASTER_S *asteri=&aster[iaster];
+	    double mini;
+	    dmat *pmini=NULL, *min_imres=NULL;
+	    int mdtrat=0;
 	    asteri->nstep=nstep;
 	    if(parms->skyc.dbgaster>-1){
 		if(iaster!=parms->skyc.dbgaster){
@@ -191,10 +194,8 @@ static void skysim_isky(SIM_S *simu){
 	    /*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 	    //setup_aster_controller(simu, asteri, parms);
 
-	    double mini=simu->rmsol;
-	    dmat *pmini=NULL;
-	    dmat *min_imres=NULL;
-	    int mdtrat=0;
+	    mini=simu->rmsol;
+
 	    for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(idtrat)

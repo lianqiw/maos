@@ -49,7 +49,7 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 		const PARMS_S *parms  /**<[in] the parms*/
     ){
     const double *mod=modm->p;
-    const dcomplex ik=2*M_PI/wvl*I;
+    const dcomplex ik=COMPLEX(0, 2*M_PI/wvl);
     double dx=powfs->dxwvf;
     double ox=powfs->saloc->locx[isa]+dx*0.5;
     double oy=powfs->saloc->locy[isa]+dx*0.5;

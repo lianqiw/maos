@@ -208,7 +208,7 @@ static void test_stfun(){
 	spect->p[0]=0;
 	for(long ii=0; ii<nframe; ii+=2){
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=(randn(&rstat)+I*randn(&rstat))*spect->p[i];
+		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
@@ -284,7 +284,7 @@ static void test_psd(){
 	for(long ii=0; ii<nframe; ii+=2){
 	    info2("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=(randn(&rstat)+I*randn(&rstat))*spect->p[i];
+		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
@@ -359,7 +359,7 @@ static void test_cxx(){
 	for(long ii=0; ii<nframe; ii+=2){
 	    info("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
-		atm->p[i]=(randn(&rstat)+I*randn(&rstat))*spect->p[i];
+		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
 	    }
 	    cfft2(atm, -1);
 	    for(long i=0; i<atm->nx*atm->ny; i++){

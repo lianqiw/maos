@@ -83,6 +83,9 @@
 #if USE_ZLIB_H
 #include <zlib.h> /*zlib.h in ubuntu sucks */
 #else
+#ifdef __cplusplus
+extern "C"{
+#endif
 typedef void* voidp;
 char* procfn(const char *fn, const char *mod,const int defaultgzip);
 voidp gzopen(const char *path, const char *mod);
@@ -95,6 +98,9 @@ int   gzread(voidp gzfile, voidp buf, unsigned len);
 int   gzseek(voidp file, long offset, int whence);
 int   gzrewind(voidp file);
 int   gzflush(voidp gzfile, int flush);
+#ifdef __cplusplus
+}
+#endif
 #endif
 typedef struct file_t file_t;
 typedef struct mmap_t mmap_t;

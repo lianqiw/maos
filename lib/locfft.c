@@ -85,7 +85,7 @@ void locfft_free(locfft_t *locfft){
    where A is the amplitude map.
 */
 static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wvl){
-    dcomplex i2pi=I*2*M_PI/wvl;
+    dcomplex i2pi=COMPLEX(0, 2*M_PI/wvl);
     dcomplex strehl=0;
     for(int iloc=0; iloc<iopdevl->nx; iloc++){
 	strehl+=amp->p[iloc]*cexp(i2pi*iopdevl->p[iloc]);
@@ -142,7 +142,7 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 		use1d=0;
 	    }
 
-	    dcomplex i2pi=I*2*M_PI/locfft->wvl->p[iwvl];
+	    dcomplex i2pi=COMPLEX(0, 2*M_PI/locfft->wvl->p[iwvl]);
 	    for(int iloc=0; iloc<opd->nx; iloc++){
 		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
 	    }
@@ -188,7 +188,7 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	wvfs->p[iwvl]=wvf;
 	//cfft2plan(wvf, -1); //cfft2plan(wvf, 1);
 	double wvl=locfft->wvl->p[iwvl];
-	dcomplex i2pi=2*M_PI/wvl*I;
+	dcomplex i2pi=COMPLEX(0,2*M_PI/wvl);
 	const double *amp=locfft->amp->p;
 	for(int iloc=0; iloc<opd->nx; iloc++){
 	    wvf->p[embed->p[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);

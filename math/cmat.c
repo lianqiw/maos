@@ -174,8 +174,8 @@ inline static void abscpy(T *out, const T *in, const long length){
 	out[i]=ABS(in[i]);
     }
 }
-#define RA2XY(A) (REAL(A)*(cos(IMAG(A))+I*sin(IMAG(A)))) /**<macro to convert r/a to x/y*/
-#define XY2RA(A) (ABS(A)+I*atan2(IMAG(A),REAL(A))) /**<macro to convert x/y to r/a*/
+#define RA2XY(A) (REAL(A)*COMPLEX(cos(IMAG(A)), sin(IMAG(A)))) /**<macro to convert r/a to x/y*/
+#define XY2RA(A) COMPLEX(ABS(A), atan2(IMAG(A),REAL(A))) /**<macro to convert x/y to r/a*/
 
 
 /**

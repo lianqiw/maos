@@ -350,7 +350,7 @@ void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *field
     double kk=2*M_PI/wvl;
     double kki=1./kk;
     double wvlh=wvl*0.5;
-    dcomplex i2pi=I*kk;
+    dcomplex i2pi=COMPLEX(0, kk);
     for(int iloc=0; iloc<opd->nx; iloc++){
 	wvf->p[embed->p[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
     }

@@ -142,7 +142,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 
 	    for(int ix=0; ix<ncomp; ix++){
 		int jx=ix<ncomp2?ix:(ix-ncomp);
-		U[ix]=-2.*I*M_PI*jx*du;
+		U[ix]=COMPLEX(0, -2.*M_PI*jx*du);
 	    }
 	}/*iwvl */
 	locfree(loc_ccd);

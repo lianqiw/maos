@@ -32,7 +32,7 @@ static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
 				   double zeta,/**<[in] dampling of zoom corrector*/
 				   double fzc  /**<[in] frequency of zoom corrector*/
 				   ){
-    const dcomplex s=2*M_PI*I*nu;
+    const dcomplex s=COMPLEX(0, 2*M_PI*nu);
     const dcomplex fsovers=fs/s;
     const dcomplex Hint=fsovers;
     const dcomplex Hwfs=(1.-cexp(-1./fsovers))*fsovers;
@@ -125,7 +125,7 @@ dmat *nafocus_time(double alpha,/**<[in] parameter of sodium layer height PSD.*/
     cmat *psd=cnew(nstep, 1);
     //cfft2plan(psd, -1);
     for(int i=1; i<nstep; i++){
-	psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*(randn(rstat)+I*randn(rstat));
+	psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*COMPLEX(randn(rstat), randn(rstat));
     }
     cfft2(psd, -1);
     dmat *out=NULL;

@@ -156,7 +156,7 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long
     dmat *nu=st->nu=dlogspace(-3,log10(0.5/dt),1000);
     st->psd=dinterp1(psdin, 0, nu, 1e-40);
     st->var_sig=psd_inte2(psdin);
-    dcomplex pi2i=TWOPI*I;
+    dcomplex pi2i=COMPLEX(0, TWOPI);
     if(st->Hsys || st->Hwfs || st->Hint || st->s){
 	error("Already initialized\n");
     }

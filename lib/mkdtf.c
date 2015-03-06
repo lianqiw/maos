@@ -133,11 +133,11 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	/*The following is used in genseotf to compute shifted i0.*/
 	for(int ix=0; ix<ncompx; ix++){
 	    int jx=ix<ncompx2?ix:(ix-ncompx);
-	    Ux[ix]=-2.*I*M_PI*jx*dux;
+	    Ux[ix]=COMPLEX(0, -2.*M_PI*jx*dux);
 	}
 	for(int iy=0; iy<ncompy; iy++){
 	    int jy=iy<ncompy2?iy:(iy-ncompy);
-	    Uy[iy]=-2.*I*M_PI*jy*duy;
+	    Uy[iy]=COMPLEX(0, -2.*M_PI*jy*duy);
 	}
 
     }/*iwvl */
@@ -248,7 +248,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
 			    for(int ih=0; ih<nhp; ih++){
 				const double tmp=(-2*M_PI*(kr*(rsa_za/sodium0->p[ih]-rsa/hs)));
-				etf1d[icompx]+=pna[illt][ih]*cos(tmp)+pna[illt][ih]*sin(tmp)*I;
+				etf1d[icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 			    }
 			}
 		    }else{
@@ -265,7 +265,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				const double kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
 				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
-				    etf2d[icompy][icompx]+=pna[illt][ih]*cos(tmp)+pna[illt][ih]*sin(tmp)*I;
+				    etf2d[icompy][icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 				}
 			    }
 			}
