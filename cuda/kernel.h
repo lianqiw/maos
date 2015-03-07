@@ -17,10 +17,7 @@
 */
 #ifndef AOS_CUDA_KERNEL_H
 #define AOS_CUDA_KERNEL_H
-extern "C"
-{
 #include "gpu.h"
-}
 #include "common.h"
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 __device__ inline float atomicAdd(float* address, float val)

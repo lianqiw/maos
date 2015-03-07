@@ -35,9 +35,17 @@ void default_quitfun(const char *msg);
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#ifndef isfinite
 using std::isfinite;
+#endif
 using std::signbit;
 using std::strerror;
+#ifndef isnan
+using std::isnan;
+#endif
+#ifndef isinf
+using std::isinf;
+#endif
 #else
 #include <signal.h>
 #include <math.h>

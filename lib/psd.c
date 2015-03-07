@@ -175,7 +175,7 @@ dmat *psd_vibid(const dmat *psdin){
 }
 
 /**Convert temporal PSD to spatial*/
-dmat *psdt2s(dmat *psdt, double vmean){
+dmat *psdt2s(const dmat *psdt, double vmean){
     if(psdt->nx!=1 || psdt->ny>4){
 	error("psdt needs to be 1 row and less than 4 cols\n");
     }
@@ -198,7 +198,7 @@ dmat *psdt2s(dmat *psdt, double vmean){
 }
 
 /**Convert special PSD to temporal*/
-dmat *psds2t(dmat *psds, double vmean){
+dmat *psds2t(const dmat *psds, double vmean){
     if(psds->nx!=1 || psds->ny>4){
 	error("psds needs to be 1 row and less than 4 cols\n");
     }

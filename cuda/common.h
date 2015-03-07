@@ -18,10 +18,7 @@
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
 
-extern "C"
-{
 #include "gpu.h"
-}
 #include <cuda.h>
 #include <cublas_v2.h>
 #include <cusparse_v2.h>

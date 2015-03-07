@@ -29,6 +29,9 @@
 static __attribute__((destructor)) void deinit_maos(){
     maos_reset();
 }
+extern "C" {
+    int utIsInterruptPending();
+}
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     exception_env=malloc(sizeof(jmp_buf));
@@ -149,7 +152,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			iseed++;
 			break;
 		    }
-		    extern int utIsInterruptPending();
 		    if(utIsInterruptPending()){
 			info2("Simulation interrupted\n");
 			goto end;
