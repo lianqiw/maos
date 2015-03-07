@@ -18,7 +18,7 @@
 
 #ifndef AOS_LIB_AOS_H
 #define AOS_LIB_AOS_H
-#include <unistd.h>
+
 #include "../math/mathdef.h"
 #include "readcfg.h"
 #include "draw.h"

@@ -1,15 +1,15 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+
+
 #include <getopt.h>
-#include <signal.h>
-#include <string.h>
+
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <syslog.h>
 #include <sys/time.h>
-#include <unistd.h>
+
 #include <libwebsockets.h>
 #include "../sys/sys.h"
 #include "scheduler_ws.h"

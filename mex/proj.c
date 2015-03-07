@@ -18,9 +18,9 @@
 #ifdef __INTEL_COMPILER
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+
+
 #include "interface.h"
 #ifdef MATLAB_MEX_FILE
 #include <mex.h>

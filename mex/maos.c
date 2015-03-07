@@ -68,6 +68,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    int *gpus=0;
 	    int ngpu=0;
 	    int ngpu2=0;
+
 	    if(!strcmp(cmd, "setup") && nrhs>1){
 		conf=mxArrayToString(prhs[1]);
 		ARGOPT_T options[]={
@@ -158,25 +159,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		info2("Simulation finished\n");
 	    }
 	}
-	int free_valname=0;
-	char *valname=NULL;
-	if(!strcmp(cmd, "get")){
-	    if(nrhs>1){
-		free_valname=1;
-		valname=mxArrayToString(prhs[1]);
-	    }else{
-		valname="";
+	{
+	    int free_valname=0;
+	    char *valname=NULL;
+	    if(!strcmp(cmd, "get")){
+		if(nrhs>1){
+		    free_valname=1;
+		    valname=mxArrayToString(prhs[1]);
+		}else{
+		    valname="";
+		}
+	    }else if(nlhs>0){
+		valname="simu";
 	    }
-	}else if(nlhs>0){
-	    valname="simu";
-	}
-	if(valname){
-	    if(global){
-		plhs[0]=get_data(global->simu, valname);
-	    }else{
-		plhs[0]=mxCreateDoubleMatrix(0,0,mxREAL);
+	    if(valname){
+		if(global){
+		    plhs[0]=get_data(global->simu, valname);
+		}else{
+		    plhs[0]=mxCreateDoubleMatrix(0,0,mxREAL);
+		}
+		if(free_valname) mxFree(valname);
 	    }
-	    if(free_valname) mxFree(valname);
 	}
       end:;
 	if(free_cmd) mxFree(cmd);

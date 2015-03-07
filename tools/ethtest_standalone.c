@@ -15,16 +15,16 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdio.h>
-#include <stdlib.h>
+
+
 #include <netdb.h>
-#include <unistd.h>
+
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-#include <math.h>
-#include <time.h>
+
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -34,7 +34,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <limits.h>
-#include <string.h>
+
 #define error(A...) ({							\
 	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
 	    fprintf(stderr, A);						\

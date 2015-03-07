@@ -16,17 +16,12 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <string.h>
-#include <math.h>
 #include <search.h>
 #ifndef __CYGWIN__
 #include <execinfo.h>
 #endif
 #include <sys/stat.h>
-#include <unistd.h>
+#define FORBID_MEM 1
 
 int exit_fail=0;
 #include "mem.h"
@@ -45,10 +40,6 @@ int exit_fail=0;
   */
 
 #include "misc.h"
-#undef malloc
-#undef calloc
-#undef free
-#undef realloc
 void *(*CALLOC)(size_t nmemb, size_t size)=0;
 void *(*MALLOC)(size_t size)=0;
 void *(*REALLOC)(void*p0, size_t size)=0;

@@ -16,16 +16,16 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
+
 #include <search.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+
+
+
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <signal.h>
+
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>

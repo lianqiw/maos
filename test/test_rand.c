@@ -1,12 +1,12 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+
+
 #include "../lib/aos.h"
 
 rand_t rstat;/*a struct for each sequence*/
 rand_t rstat2;
 
-#include <time.h>
+
 static void test_number(){
     rand_t a,b;
     seed_rand(&a,1);

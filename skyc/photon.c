@@ -19,7 +19,7 @@
 /*
   Contains functions used to calculate star flux.
 */
-#include <math.h>
+
 #include "skyc.h"
 #include "photon.h"
 /*

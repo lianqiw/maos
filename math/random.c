@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <signal.h>
-#include <math.h>
+
+
 #include "random.h"
 /**
    Routine to generate random numbers.

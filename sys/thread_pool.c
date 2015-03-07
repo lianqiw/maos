@@ -48,10 +48,10 @@
   2011-01-07: spin lock is not available in MAC. reverted back to pthread.
 */
 
-#include <stdlib.h>
-#include <unistd.h>
+
+
 #include <pthread.h>
-#include <signal.h>
+
 #include "common.h"
 #include "misc.h"
 #include "thread.h"

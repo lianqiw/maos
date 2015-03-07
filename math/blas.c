@@ -17,11 +17,11 @@
 */
 
 #define MAT_VERBOSE 0
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include <unistd.h>
+
+
+
+
+
 #include <sys/mman.h>
 
 #include "../sys/sys.h"

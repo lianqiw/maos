@@ -19,10 +19,10 @@
    Obtain information about system load
    
 */
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+
+
 #include <limits.h>
 #include <sys/types.h>
 #include <dirent.h>

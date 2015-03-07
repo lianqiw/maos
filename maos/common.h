@@ -18,13 +18,13 @@
 
 #ifndef __MAOS_COMMON_H
 #define __MAOS_COMMON_H
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
+
+
+
 #include <sys/time.h>
 #include <sys/times.h>
-#include <math.h>
-#include <string.h>
+
+
 #include <search.h>
 
 #include "../lib/aos.h"

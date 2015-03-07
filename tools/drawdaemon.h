@@ -17,7 +17,7 @@
 */
 #ifndef AOS_TOOLS_DRAWDAEMON_H
 #define AOS_TOOLS_DRAWDAEMON_H
-#include <math.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -26,10 +26,10 @@
 #include <cairo-ps.h>
 #include <cairo-svg.h>
 #include <pango/pango.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+
+
+
 
 #include <glib.h>
 #include <gtk/gtk.h>

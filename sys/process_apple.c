@@ -16,10 +16,10 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(__APPLE__)
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+
+
 #include <limits.h>
 #include <dirent.h>
 #include <sys/types.h>

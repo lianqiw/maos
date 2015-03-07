@@ -17,7 +17,7 @@
 */
 #include <dirent.h>
 #include <getopt.h>
-#include <unistd.h>
+
 #include "../lib/aos.h"
 static void usage(){
     fprintf(stderr,"Usage:\n"

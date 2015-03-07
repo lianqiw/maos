@@ -19,9 +19,9 @@
 /*Taken from suitesparse package from UFL. */
 
 /*my defines. */
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+
+
 #include <limits.h>
 #include "../sys/sys.h"
 #include "type.h"

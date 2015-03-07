@@ -19,7 +19,7 @@
    \file calcenc.c
    Standalone to postprocess MAOS PSF output and compute enclosed energe
  */
-#include <unistd.h>
+
 #include <getopt.h>
 
 #include "../lib/aos.h"

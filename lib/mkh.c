@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
+
 #include "../math/mathdef.h"
 #include "mkh.h"
 

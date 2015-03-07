@@ -16,14 +16,14 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* make a client address */
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+
+
+
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
-#include <math.h>
-#include <time.h>
+
+
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -34,7 +34,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <limits.h>
-#include <string.h>
+
 #include "sock.h"
 #include "sockio.h"
 #include "process.h"

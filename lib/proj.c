@@ -29,7 +29,7 @@
   taken into account in the function.
 
  */
-#include <math.h>
+
 #include "accphi.h"
 #include "proj.h"
 /*const double pi=3.1415926535897932384626433832795; */

@@ -40,7 +40,7 @@
    * the License, or (at your option) any later version.
    */
 
-#include <stdio.h>
+
 #ifndef MT_MACHINE_BITS
 #include <limits.h>
 #if LONG_MAX == 2147483647 /*changed to LONG by lianqiw */

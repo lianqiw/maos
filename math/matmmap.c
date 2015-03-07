@@ -20,7 +20,7 @@
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <unistd.h>
+
 #include "type.h"
 #include "mathdef.h"
 #include "defs.h"

@@ -18,9 +18,9 @@
 #ifdef __INTEL_COMPILER
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+
+
 /*compile with 
 mex write.c -largeArrayDims
 usage write(filename, data);

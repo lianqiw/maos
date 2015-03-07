@@ -19,9 +19,10 @@
 #define _MEX_IO_H
 #include <zlib.h>
 #include <signal.h>
-#if __GNUC__ && defined(__STDC_UTF_16__)
-typedef wchar_t char16_t;
+#if __GNUC__ && defined(__STDC_UTF_16__) && !defined(__cplusplus)
+typedef int16_t char16_t;
 #endif
+#include <string.h>
 #include <mex.h>
 #include <stdint.h>
 #include <errno.h>

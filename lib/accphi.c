@@ -20,7 +20,7 @@
 #elif defined __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
-#include <math.h>
+
 #include "accphi.h"
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/

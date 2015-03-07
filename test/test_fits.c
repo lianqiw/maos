@@ -1,7 +1,7 @@
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
+
+
+
+
 #include <sys/mman.h>
 #include "../lib/aos.h"
 int main(){

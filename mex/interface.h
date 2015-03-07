@@ -17,22 +17,20 @@
 */
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <complex.h>
+
 #include <stdint.h>
 #include <setjmp.h>
-typedef uint16_t char16_t;
+#if __GNUC__ && defined(__STDC_UTF_16__) && !defined(__cplusplus)
+typedef int16_t char16_t;
+#endif
 #include <mex.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 #include "../lib/aos.h"
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 #ifndef INLINE
 #define INLINE inline __attribute__((always_inline))
 #endif

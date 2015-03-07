@@ -19,11 +19,11 @@
 #define _GNU_SOURCE 
 #include <sched.h>
 #endif
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
+
+
+
+
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -34,9 +34,9 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <limits.h>
 #include <errno.h>
-#include <stdarg.h>
+
 #include <dirent.h>
-#include <time.h>
+
 #include <ctype.h>
 #include <stdint.h>
 #include "common.h"

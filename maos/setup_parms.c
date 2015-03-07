@@ -16,9 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <math.h>
-#include <stdlib.h>
-#include <unistd.h>
+
+
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

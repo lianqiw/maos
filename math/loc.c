@@ -18,7 +18,7 @@
 
 #include <sys/mman.h>
 #include <sys/file.h>
-#include <unistd.h>
+
 #include "../sys/sys.h"
 #include "mathdef.h"
 #include "loc.h"
@@ -213,8 +213,8 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
     }
     const double dx_in1=1./fabs(loc->dx);
     const double dy_in1=1./fabs(loc->dy);
-    int map_nx=(int) round((xmax-xmin)*dx_in1)+1;
-    int map_ny=(int) round((ymax-ymin)*dy_in1)+1;
+    long map_nx=(long) round((xmax-xmin)*dx_in1)+1;
+    long map_ny=(long) round((ymax-ymin)*dy_in1)+1;
     if(nx && ny){
 	if(map_nx>nx || map_ny>ny){
 	    error("Specified size %dx%d is too small, need at least %dx%d\n", 

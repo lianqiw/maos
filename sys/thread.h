@@ -17,10 +17,8 @@
 */
 #ifndef AOS_LIB_THREAD_H
 #define AOS_LIB_THREAD_H
-#include <stdio.h>
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
+#include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 #ifdef _OPENMP
 #include <omp.h>

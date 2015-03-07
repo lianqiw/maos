@@ -1,6 +1,6 @@
-#include <math.h>
-#include <time.h>
-#include <string.h>
+
+
+
 #include "../lib/aos.h"
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wglobal-constructors"

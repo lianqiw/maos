@@ -20,7 +20,7 @@
    
    Standalone code to sample IRIS PSFs onto detector.
  */
-#include <unistd.h>
+
 #include <getopt.h>
 
 #include "../lib/aos.h"

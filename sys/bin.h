@@ -19,8 +19,8 @@
 #ifndef AOS_BIN_H_
 #define AOS_BIN_H_
 #include <sys/time.h>
-#include <stdio.h>
-#include <stdarg.h>
+
+
 #include <stdint.h>
 #include <pthread.h>
 #include "common.h"

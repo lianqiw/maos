@@ -16,16 +16,16 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /* Check whether scheduler is already running. */
-#include <stdio.h>
-#include <stdlib.h>
+
+
 #include <netdb.h>
-#include <unistd.h>
+
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-#include <math.h>
-#include <time.h>
+
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/file.h>

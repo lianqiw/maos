@@ -16,14 +16,14 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #if defined(__linux__)
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+
+
 #include <limits.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <signal.h>
+
 #include "../sys/sys.h"
 /**
    \file record_cpu.c

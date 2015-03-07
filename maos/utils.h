@@ -19,7 +19,7 @@
 #ifndef __AOS_UTILS_H
 #define __AOS_UTILS_H
 #include "common.h"
-#include <signal.h>
+
 #if USE_STATIC
 extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;

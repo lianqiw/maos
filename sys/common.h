@@ -28,12 +28,25 @@ void default_quitfun(const char *msg);
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
+#if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
+#include <csignal>
+#include <cmath>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+using std::isfinite;
+using std::signbit;
+using std::strerror;
+#else
 #include <signal.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
+#endif
+#define INLINE inline __attribute__((always_inline))
 #include <unistd.h>
 #if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <alloca.h>
@@ -48,12 +61,6 @@ enum{
     T_DBLARR=12,
     T_LONGARR=14,
 };
-#ifndef INLINE
-#define INLINE inline __attribute__((always_inline))
-#endif
-#ifdef __cplusplus
-using namespace std;
-#endif
 #if defined(DLONG)
 typedef unsigned long spint; /*Only optionally activated in AMD64. */
 #define M_SPINT M_INT64
@@ -110,13 +117,13 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #include <complex.h>
 #else
 #include <complex>
+using std::complex;
 typedef complex<double> dcomplex;
 typedef complex<float> fcomplex;
 #define COMPLEX(A,B) dcomplex(A,B)
 #define DCOMPLEX(A,B) dcomplex(A,B)
 #define FCOMPLEX(A,B) fcomplex(A,B)
 
-#define fabs abs
 #define cabs abs
 #define cimag imag
 #define creal real

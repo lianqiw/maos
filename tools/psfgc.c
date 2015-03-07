@@ -19,7 +19,7 @@
    \file psfgc.c
    Standalone code to sample IRIS PSFs onto detector for the Galactic center simulations.
  */
-#include <unistd.h>
+
 #include <getopt.h>
 
 #include "../lib/aos.h"

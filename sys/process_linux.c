@@ -19,15 +19,15 @@
   Linux specific routines.
  */
 #if defined(__linux__)
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
+
+
+
+
 #include <limits.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <string.h>
-#include <signal.h>
+
+
 #include "common.h"
 #include "process.h"
 #include "misc.h"

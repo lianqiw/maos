@@ -20,7 +20,7 @@
 #include <sys/file.h>
 
 #include <fcntl.h>
-#include <unistd.h>
+
 #include "type.h"
 #include "spbin.h"
 #include "defs.h"

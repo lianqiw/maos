@@ -16,10 +16,10 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+
+
+
+
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/uio.h>

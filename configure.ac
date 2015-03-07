@@ -367,12 +367,6 @@ case "${cc_full}" in
 	;;	
 esac
 AC_SUBST(CN)
-if test "$gnu_inline" = "yes" ;then
-    INLINE="extern __inline __attribute__((gnu_inline, always_inline))" #C99
-else
-    INLINE="inline __attribute__((always_inline))" #C99
-fi
-AC_DEFINE_UNQUOTED(INLINE, $INLINE, [Portable definition of inline])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])

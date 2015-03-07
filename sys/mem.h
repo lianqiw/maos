@@ -21,20 +21,16 @@
 #include "config.h"
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
 extern void *(*CALLOC)(size_t nmemb, size_t size);
 extern void *(*MALLOC)(size_t size);
 extern void *(*REALLOC)(void*p0, size_t size);
 extern void  (*FREE)(void *p);
-
+#ifndef FORBID_MEM
 #define malloc MALLOC
 #define calloc CALLOC
 #define realloc REALLOC
 #define free FREE
-
+#endif
 void register_deinit(void (*fun)(void), void *data);
 void malloc_dbg_enable();
 int malloc_dbg_disable(int print);

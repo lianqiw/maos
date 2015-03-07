@@ -15,20 +15,20 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <stdio.h>
-#include <stdlib.h>
+
+
 #include <netdb.h>
-#include <unistd.h>
+
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-#include <math.h>
-#include <time.h>
+
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <string.h>
+
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>

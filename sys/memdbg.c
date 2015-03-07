@@ -18,14 +18,14 @@
 
 #if defined(__linux__)
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
+
+
 #include <stddef.h>
 #include <pthread.h>
-#include <string.h>
+
 #include <search.h>
 #include <dlfcn.h>
-#include <unistd.h>
+
 #include <limits.h>
 #include <sys/syscall.h>
 /**

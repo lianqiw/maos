@@ -29,7 +29,7 @@ number. All internal arithmetic is in double precision. To convert the entire ro
 precision, change the float declarations above to double and decrease MYEPS to 10−16 . Also
 convert the function beschb.
 */
-#include <math.h>
+
 #include "../sys/sys.h"
 #ifdef USE_COMPLEX
 #error "Do not use for complex numbers"

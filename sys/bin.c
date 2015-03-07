@@ -16,14 +16,14 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <string.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-#include <unistd.h>
+
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <stdlib.h>
+
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */

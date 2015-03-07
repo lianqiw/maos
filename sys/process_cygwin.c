@@ -17,7 +17,7 @@
 */
 #if defined (__CYGWIN__)
 #include "process.h"
-#include <string.h>
+
 /*Largely not implemented. */
 int get_job_progname(char **res, int nres, int pid){
     strncpy(res, nres, "maos"); res[nres-1]=0;

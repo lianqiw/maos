@@ -20,13 +20,13 @@
    \file maos/sim.c
    Call various functions to do the simulation and evaluate performance.
 */
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
+
+
+
+
+
 #include <search.h>
-#include <unistd.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 

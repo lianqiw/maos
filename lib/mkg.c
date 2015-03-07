@@ -28,10 +28,10 @@
   make mkg.c a standalone routine. gather mex related into a separate file.
 */
 #define _ISOC99_SOURCE
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+
+
+
 #include "../math/mathdef.h"
 #include "mkg.h"
 

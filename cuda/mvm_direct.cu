@@ -15,11 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-extern "C"
-{
-#include "../sys/thread.h"
 #include "gpu.h"
-}
 #include "utils.h"
 #include "wfs.h"
 #include "recon.h"

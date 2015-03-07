@@ -20,13 +20,13 @@
   read the config file, parse the tokens and store into a binary tree. 
   then user can query tokens using read_int, read_double, or read_array
 */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
+
+
 #include <search.h>
 #include <ctype.h>
-#include <stdarg.h>
-#include <signal.h>
+
+
 #include <limits.h>
 #include "readcfg.h"
 /**
