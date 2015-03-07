@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifdef __linux__
-#define _GNU_SOURCE 
 #include <sched.h>
 #endif
 
