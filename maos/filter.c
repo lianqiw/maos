@@ -48,54 +48,52 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-static inline int limit_diff(double *x1, double *x2, double thres){
+static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
     double diff=*x2-*x1;
     if(fabs(diff)>thres){
 	double ratio=signbit(diff)?-.49999:.49999;
-	double mean=0.5*(*x1+*x2);
-	*x1=mean-thres*ratio;
-	*x2=mean+thres*ratio;
+	if(stuck1){
+	    *x2=*x1+thres*ratio*2;
+	}else if(stuck2){
+	    *x1=*x2-thres*ratio*2;
+	}else{
+	    double mean=0.5*(*x1+*x2);
+	    *x1=mean-thres*ratio;
+	    *x2=mean+thres*ratio;
+	}
     	return 1;
     }
     return 0;
 }
 /**
-   Send LPF TT to TTM
+   Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
 static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
 #if 1
     int ndm=dmcmd->nx;
-    double ptt1[3];
-    double totalptt[3]={0,0,0};
+    double totaltt[2]={0,0};
+    double tt1[2];
     for(int idm=0; idm<ndm; idm++){
-	ptt1[0]=ptt1[1]=ptt1[2]=0;
-	loc_calc_ptt(NULL,ptt1, recon->aloc->p[idm],0,
-		     recon->aimcc->p[idm],NULL,
-		     dmcmd->p[idm]->p);
-	ptt1[0]=0;//don't touch piston
-	loc_remove_ptt(dmcmd->p[idm]->p, 
-		       ptt1,recon->aloc->p[idm]);
-	for(int i=1; i<3; i++){
-	    totalptt[i]+=ptt1[i];
+	tt1[0]=tt1[1]=0;
+	dmulvec(tt1, recon->DMPTT->p[idm], dmcmd->p[idm]->p,1);
+	dmulvec(dmcmd->p[idm]->p, recon->DMTT->p[idm], tt1, -1);
+	for(int i=0; i<2; i++){
+	    totaltt[i]+=tt1[i];
 	}
     }
-    ttm->p[0]=ttm->p[0]*(1-lp)+lp*totalptt[1];
-    ttm->p[1]=ttm->p[1]*(1-lp)+lp*totalptt[2];
-    totalptt[1]-=ttm->p[0];
-    totalptt[2]-=ttm->p[1];
-    loc_add_ptt(dmcmd->p[0]->p, totalptt, recon->aloc->p[0]);
+    ttm->p[0]=ttm->p[0]*(1-lp)+lp*totaltt[0];
+    ttm->p[1]=ttm->p[1]*(1-lp)+lp*totaltt[1];
+    totaltt[0]-=ttm->p[0];
+    totaltt[1]-=ttm->p[1];
+    //Put HPF'ed to ground DM.
+    dmulvec(dmcmd->p[0]->p, recon->DMTT->p[0], totaltt, 1);
 #else
     //Only touch ground DM
-    double ptt1[3]={0,0,0};
-    loc_calc_ptt(NULL,ptt1, recon->aloc->p[0],0,
-		 recon->aimcc->p[0],NULL,
-		 dmcmd->p[0]->p);
-    ttm->p[0]=ttm->p[0]*(1-lp)+lp*ptt1[1];
-    ttm->p[1]=ttm->p[1]*(1-lp)+lp*ptt1[2];
-    ptt1[0]=0;
-    ptt1[1]=ttm->p[0];
-    ptt1[2]=ttm->p[1];
-    loc_remove_ptt(dmcmd->p[0]->p, ptt1,recon->aloc->p[0]);
+    double tt1[2]={0,0};
+    dmulvec(tt1, recon->DMPTT->p[0], dmcmd->p[0]->p,1);
+    ttm->p[0]=ttm->p[0]*(1-lp)+lp*tt1[0];
+    ttm->p[1]=ttm->p[1]*(1-lp)+lp*tt1[1];
+    dmulvec(dmcmd->p[0]->p, recon->DMTT->p[0], ttm->p, -1);
 #endif
 }
 
@@ -108,11 +106,34 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
     */
     if(parms->sim.dmclip){
 	for(int idm=0; idm<parms->ndm; idm++){
-	    int nclip=dclip(dmcmd->p[idm], 
-			    -parms->dm[idm].stroke,
-			    parms->dm[idm].stroke);
-	    if(nclip>0){
-		info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
+	    const int nact=dmcmd->p[idm]->nx;
+	    if(parms->dm[idm].stroke->nx==1){
+		if(parms->dm[idm].stroke->ny!=1){
+		    error("dm.stroke is in wrong format\n");
+		}
+		int nclip=dclip(dmcmd->p[idm], 
+				-parms->dm[idm].stroke->p[0],
+				parms->dm[idm].stroke->p[0]);
+		if(nclip>0){
+		    info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
+		}
+	    }else if(parms->dm[idm].stroke->nx==nact){
+		if(parms->dm[idm].stroke->ny!=2){
+		    error("dm.stroke is in wrong format\n");
+		}
+		
+		double *pcmd=dmcmd->p[idm]->p;
+		double *plow=parms->dm[idm].stroke->p;
+		double *phigh=parms->dm[idm].stroke->p+nact;
+		for(int iact=0; iact<nact; iact++){
+		    if(pcmd[iact]<plow[iact]){
+			pcmd[iact]=plow[iact];
+		    }else if(pcmd[iact]>phigh[iact]){
+			pcmd[iact]=phigh[iact];
+		    }
+		}		    
+	    }else{
+		error("Invalid format\n");
 	    }
 	}
     }
@@ -137,23 +158,29 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    }else{
 		dmr=(double(*)[nx])dm->p;
 	    }
-		
+	    lcell *actstuck=simu->recon->actstuck;
+	    long *stuck=actstuck?(actstuck->p[idm]?actstuck->p[idm]->p:0):0;
 	    int count=0,trials=0;
 	    do{
 		count=0;
 		PDMAT(simu->recon->amap->p[idm],map);
 		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			if(map[iy][ix]>0 && map[iy+1][ix]>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke);
+			int iact1=map[iy][ix];
+			int iact2=map[iy+1][ix];
+			if(iact1>0 && iact2>0){
+			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke, 
+					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
-			    
 		    } 
 		}
 		for(int iy=0; iy<simu->recon->any->p[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
-			if(map[iy][ix]>0 && map[iy][ix+1]>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke);
+			int iact1=map[iy][ix];
+			int iact2=map[iy][ix+1];
+			if(iact1>0 && iact2>0){
+			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke, 
+					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    }
 		}
@@ -161,9 +188,9 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 		if(trials==1 && count>0) {
 		    info2("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
 		}
-	    }while(count>0);
+	    }while(count>0 && trials<100);
 	    if(trials>1){
-		info2("trials=%d\n", trials);
+		info2("trials=%d: %s\n", trials, count?"failed.":"success.");
 	    }
 	    if(!parms->fit.square){//copy data back
 		loc_extract(simu->dmreal->p[idm], simu->recon->aloc->p[idm], simu->dmrealsq->p[idm]);
@@ -267,6 +294,14 @@ static void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    //2015-03-10: move extraplation to right after integrator
+    //Extrapolate to edge actuators
+    if(simu->recon->actinterp && !parms->recon.modal && !parms->recon.psol){
+	dcellcp(&simu->dmcmd0, simu->dmcmd);
+	dcellzero(simu->dmcmd);
+	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+    }
+
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
 	//Do not reference the data, even for dtrat==1
@@ -299,14 +334,10 @@ static void filter_cl(SIM_T *simu){
 	    }
 	}
     }
-    //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !parms->recon.modal){
-	dcellzero(simu->dmcmdfull);
-	dcellmm(&simu->dmcmdfull, simu->recon->actinterp, simu->dmcmd, "nn", 1);
-    }
+   
     /*hysteresis. */
     if(simu->hyst){
-	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmdfull);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
     if(simu->zoomerr){
 	/*The zoomerr is ZoH, so reduce gain by dtrat*/
@@ -373,17 +404,19 @@ static void filter_ol(SIM_T *simu){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
     }
+    //Extrapolate to edge actuators
+    if(simu->recon->actinterp && !simu->parms->recon.modal){
+	dcellcp(&simu->dmcmd0, simu->dmcmd);
+	dcellzero(simu->dmcmd);
+	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+    }
     if(simu->ttmreal){
 	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
     }
-    //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !simu->parms->recon.modal){
-	dcellzero(simu->dmcmdfull);
-	dcellmm(&simu->dmcmdfull, simu->recon->actinterp, simu->dmcmd, "nn", 1);
-    }
+  
     /*hysterisis. */
     if(simu->hyst){
-	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmdfull);
+	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
     /*moao DM is already taken care of automatically.*/
 }

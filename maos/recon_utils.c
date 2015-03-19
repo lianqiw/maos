@@ -708,13 +708,14 @@ void shift_grad(SIM_T *simu){
 
 /**
    Parse the input dead actuator location to actuator indices based on aloc.
+   2015-03-30: build a mask for dead actuators based on coordinate.
 */
 lmat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 		    const char *fndead /**<[in] File containing dead actuators*/
 		    ){
     dmat *dead=dread("%s", fndead);
-    if(dead->ny!=2){
-	error("%s must contain 2 columns of data\n", fndead);
+    if(dead->ny!=2 && dead->ny!=3){
+	error("%s must contain 2 or 3 columns of data\n", fndead);
     }
     loc_create_map(aloc);
     map_t *map=aloc->map;
@@ -722,12 +723,12 @@ lmat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     double oy=aloc->map->oy;
     double dx1=1./aloc->dx;
     PDMAT(dead, ps);
-    lmat *out=lnew(dead->nx, 1);
+    lmat *out=lnew(aloc->nloc, 1);
     for(long jact=0; jact<dead->nx; jact++){
 	long mapx=(long)round((ps[0][jact]-ox)*dx1);
 	long mapy=(long)round((ps[1][jact]-oy)*dx1);
 	long iact=loc_map_get(map, mapx, mapy)-1;
-	out->p[jact]=iact;
+	out->p[iact]=(dead->ny==3?ps[2][jact]*1e9:1);//integer in nm.
     }
     dfree(dead);
     return out;

@@ -352,6 +352,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    IGNORE(sim.servotype_lo);
 	    IGNORE(sim.epfocus);
 	    IGNORE(dbg.dxonedge);
+	    IGNORE(sim.ahst_ttr);
 	    RENAME(sim.gtypeII_lo, sim.eplo);
 	    RENAME(sim.epngs, sim.eplo);
 	    RENAME(sim.apngs, sim.aplo);
@@ -617,9 +618,8 @@ int readcfg_dblarr(double **ret, const char *format,...){
 /**
    Read as a dmat. It can be a file name or an array.
  */
-dmat *readcfg_dmat_do(int n, char *key){
+static dmat *readstr_dmat_do(int n, const char *str){
     double *val=NULL;
-    char *str=getrecord(key, 1)->data;
     if(!str){
 	return 0;
     }else if((str[0]<='Z' && str[0]>='A')
@@ -640,19 +640,25 @@ dmat *readcfg_dmat_do(int n, char *key){
 	return res;
     }
 }
+dmat *readstr_dmat(const char *str){
+    return readstr_dmat_do(0, str);
+}
 /**
    Read as a dmat. It can be a file name or an array.
  */
 dmat *readcfg_dmat(const char *format,...){
     format2key;
-    return readcfg_dmat_do(0, key);
+    char *str=getrecord(key, 1)->data;
+    return readstr_dmat_do(0, str);
 }
+
 /**
    Read as a dmat. It can be a file name or an array.
  */
 dmat *readcfg_dmat_n(int n, const char *format,...){
     format2key;
-    dmat *out=readcfg_dmat_do(n, key);
+    char *str=getrecord(key, 1)->data;
+    dmat *out=readstr_dmat_do(n, str);
     long nread=out?(out->nx*out->ny):0;
     if(n!=0 && nread!=n){
 	error("Need %d elements, got %ld\n", n, nread);
@@ -664,7 +670,8 @@ dmat *readcfg_dmat_n(int n, const char *format,...){
  */
 dmat *readcfg_dmat_nmax(int n, const char *format,...){
     format2key;
-    dmat *out=readcfg_dmat_do(n, key);
+    char *str=getrecord(key, 1)->data;
+    dmat *out=readstr_dmat_do(n, str);
     long nread=out?(out->nx*out->ny):0;
     if(nread<=1){
 	dresize(out, n, 1);

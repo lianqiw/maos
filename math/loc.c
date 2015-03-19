@@ -367,8 +367,9 @@ void loc_extract(dmat *dest, const loc_t *loc, map_t *in){
     if(!map){
 	error("map is null\n");
     }
-    if(dest->nx!=map->nx || dest->ny!=map->ny){
-	error("dest and map doesn't agree\n");
+    if(in->nx!=map->nx || in->ny!=map->ny){
+	error("in and map doesn't agree: in is %ldx%ld, map is %ldx%ld\n",
+	      in->nx, in->ny, map->nx, map->ny);
     }
     double *restrict pdest=dest->p-1;//iphi count from 1
     for(long i=0; i<map->nx*map->ny; i++){

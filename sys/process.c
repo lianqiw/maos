@@ -66,30 +66,14 @@ void init_process(void){
 	}
 #if defined(__CYGWIN__)
 	HOME=getenv("USERPROFILE");
-	const char *temp=getenv("TMP");
-	if(!temp){
-	    temp=getenv("TEMP");
-	}
-	if(!temp || !exist(temp)){
-	    temp="C:/Windows/Temp";
-	}
-	if(!exist(temp)){
-	    temp=HOME;/*set to home */
-	}
-	if(!exist(temp)){
-	    error("Unable to determine the path to temporary files");
-	}
 	HOME=cygwin_create_path(CCP_WIN_A_TO_POSIX,HOME);
-	temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
 #else
 	HOME=getenv("HOME");
-	const char *temp="/tmp";
 #endif
-	strcpy(TEMP, temp);
-	strcat(TEMP, "/maos-");
-	strcat(TEMP, USER);
-	mymkdir("%s",TEMP);
+	strcpy(TEMP, HOME);
+	strcat(TEMP, "/.aos/tmp");
 	mymkdir("%s/.aos/",HOME);
+	mymkdir("%s",TEMP);
 
 	{/*PATH to executable*/
 	    char exepath[PATH_MAX];

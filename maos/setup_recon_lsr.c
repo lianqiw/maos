@@ -68,8 +68,11 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		const long nloc=recon->aloc->p[idm]->nloc;
 		NW->p[idm]=dnew(nloc, ndm*nmod);
 		double *p=NW->p[idm]->p+nmod*idm*nloc;
+		const double *cpl=recon->actcpl->p[idm]->p;
 		for(long iloc=0; iloc<nloc; iloc++){
-		    p[iloc]=1;/*piston mode */
+		    if(cpl[iloc]>0.1){
+			p[iloc]=1;/*piston mode */
+		    }
 		}
 		/*notice offset of 1 because map start count at 1 */
 		p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
@@ -90,11 +93,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
 	if(parms->lsr.actslave){
-	    dcellfree(recon->actcpl);
-	    recon->actcpl=genactcpl(recon->GAhi, NULL);
 	    /*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
 	    dspcell *actslave=slaving(recon->aloc, recon->actcpl, NW,
-				     recon->actstuck, recon->actfloat, 0.1, maxeig);
+				      recon->actstuck, recon->actfloat, 0.1, maxeig);
 	    if(parms->save.setup){
 		if(NW){
 		    writebin(NW, "%s/lsrNW2",dirsetup);

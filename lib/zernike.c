@@ -53,14 +53,27 @@ static dmat *genRnm(const dmat *locr, int ir, int im){
    nr=1 is tip/tilt
    nr=2 is quadratic modes
    if nopiston is set, skip piston mode.
-   if onlyr is set, only radial mode is used.
+   if flag is >0, only radial mode is used.
    
+   if flag is is negative, only generate mode -flag. rmin and rmax is irrelevant
 */
-dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
+dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
+    if(flag<0){
+	rmin=ceil((sqrt(8*(-flag)+1)-3)/2);
+	rmax=rmin;
+    }
     int nr3=(int)floor((sqrt(loc->nloc*8+1)-3)*0.5);
     if(rmax>nr3){
 	warning("Reduce rmax=%d to %d\n", rmax, nr3);	
 	rmax=nr3;
+    }
+    if(rmin>rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
+    const long nloc=loc->nloc;
+    int nmod=0;
+    if(flag>0){//radial only
+	nmod=rmax-rmin;
+    }else{
+	nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     }
     double D2=loc_diam(loc);
     if(D<=0){
@@ -69,12 +82,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
 	writebin(loc, "loc_wrongD");
 	warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
     }
-    if(rmin>rmax) error("Invalid rmin=%d, rmax=%d\n", rmin, rmax);
-    const long nloc=loc->nloc;
-    int nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
-    if(onlyr){
-	nmod=rmax-rmin;
-    }
+ 
     dmat *restrict opd=dnew(nloc,nmod);
     dmat *restrict locr=dnew(nloc,1);
     dmat *restrict locs=dnew(nloc,1);
@@ -97,7 +105,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
 		    pmod[iloc]=Rnm->p[iloc]*coeff;
 		}
 		cmod++;
-	    }else if(!onlyr){
+	    }else if(flag<=0){
 		double coeff=sqrt(2*(ir+1.));
 		double *restrict pmodc;
 		double *restrict pmods;
@@ -117,7 +125,11 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr){
 	    dfree(Rnm);
 	}
     }
-    if(nmod>cmod){
+    if(flag<0){//select only one mode
+	dmat *opd0=opd;
+	opd=dsub(opd0, 0, 0, -flag-(rmin)*(rmin+1)/2-1, 1);
+	dfree(opd0);
+    }else if(nmod>cmod){
 	dresize(opd, nloc, cmod);
     }else if(nmod<cmod){
 	error("over flow\n");

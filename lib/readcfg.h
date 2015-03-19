@@ -49,6 +49,7 @@ double readcfg_dbl (const char*format,...) CHECK_ARG(1);
 
 int    readcfg_intarr(int **ret,   const char *format,...) CHECK_ARG(2);
 int    readcfg_dblarr(double **ret,const char *format,...) CHECK_ARG(2);
+dmat*  readstr_dmat(const char *str);
 dmat*  readcfg_dmat(const char *format,...) CHECK_ARG(1);
 dmat*  readcfg_dmat_n(int n, const char *format,...) CHECK_ARG(2);
 dmat*  readcfg_dmat_nmax(int nmax, const char *format,...) CHECK_ARG(2);

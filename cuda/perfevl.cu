@@ -121,8 +121,8 @@ static int calc_ptt_post(double *rmsout, double *coeffout,
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR*/
-	if(tot<pis || tot<ptt){
-	    warning("tot=%g, pis=%g\n", tot, pis);
+	if(tot*1.01<pis || tot*1.01<ptt){//sanity check. allow round off error
+	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
 	    ans=1;
 	}
     }

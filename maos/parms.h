@@ -254,12 +254,13 @@ typedef struct WFS_CFG_T{
 */
 typedef struct DM_CFG_T{
     double guard;   /**<extra DM actuator rings outside of aper.d*/
-    double stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke$*/
+    dmat *stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke. array: per actuator$*/
     double iastroke;/**<Inter actuator stroke (surface)*/
-    dcell *iastrokescale;/**<Scale inter actuator based on command*/
-    char  *iastrokefn;/**<file describes polynomials that convert opd to voltage
-		       * (first cell), and voltage to opd (second cell). The two
-		       * operations has to be strict inverse of each other*/
+    char *iastrokefn;   /**< describes polynomials that convert
+			  * opd to voltage (first cell), and voltage to opd
+			  * (second cell). The two operations has to be strict
+			  * inverse of each other*/
+    dcell *iastrokescale;/**<Input from iastrokefn*/
     double vmisreg; /**<vertical misregistration*/
     double ht;      /**<height conjugation range*/
     double dx;      /**<actuator separation along x (derived from order)*/
@@ -347,7 +348,6 @@ typedef struct TOMO_CFG_T{
  
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_ttr;    /**<remote tip/tilt in high order DM fit output in split mode*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -364,7 +364,6 @@ typedef struct TOMO_CFG_T{
     int predict;     /**<test predictive control.*/
     int cubic;       /**<cubic influence function in tomography (testing)*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
-    int psol;        /**<Use pseudo open loop gradients*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
 }TOMO_CFG_T;
 /**
@@ -427,6 +426,7 @@ typedef struct RECON_CFG_T{
     int modal;       /**0: zonal, 1:zernike modes, 2: KL modes*/
     int modr;        /**<Maximum radial mode in modal controller*/
     int warm_restart; /**<Warm restart in CG*/
+    int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
     int mvm;        /**<Use the various algorithms recon.alg to assemble a control
 		       matrix to multiply to gradients to get DM commands. If
 		       the algorithm needs PSOL gradient, we will have an

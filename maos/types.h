@@ -177,7 +177,6 @@ typedef struct NGSMOD_T{
     dcell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
     dcell *Pngs;    /**<Project DM command to NGS modes */
     dcell *Modes;   /**<DM vector for the modes*/
-    dcell *Ptt;     /**<Invidual DM tip/tilt removal.*/
     dspcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahstfocus;  /**<records parms->sim.ahstfocus*/
@@ -322,6 +321,8 @@ typedef struct RECON_T{
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
     dspcell *ZZT;       /**<single point piston constraint in tomography.*/
+    dcell *DMTT;       /**<DM tip/tilt mode.*/
+    dcell *DMPTT;      /**<DM tip/tilt reconstructor.*/
     dcell *fitNW;      /**<null modes for DM fit.*/
     dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
     dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
@@ -517,8 +518,8 @@ typedef struct SIM_T{
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
-    dcell *dmcmd;      /**<This is the DM command before extrapolation.*/
-    dcell *dmcmdfull;  /**<This is the final DM command send to DME (known to RTC).*/
+    dcell *dmcmd0;     /**<This is the DM command before extrapolation.*/
+    dcell *dmcmd;      /**<This is the final DM command send to DME (known to RTC).*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/

@@ -19,8 +19,7 @@
 #ifndef AOS_BIN_H_
 #define AOS_BIN_H_
 #include <sys/time.h>
-
-
+#include <limits.h>
 #include <stdint.h>
 #include <pthread.h>
 #include "common.h"
@@ -61,10 +60,12 @@
 #define M_LOC64     0x036402/*loc_t with double data*/
 #define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
-#if INT_MAX==LONG_MAX //32 bit long
+#if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
+#elif LONG_MAX==9223372036854775807L
+#define M_LONG M_INT64 //long is 64 bit
 #else
-#define M_LONG M_INT64 // 64 bit long
+#error "Unknown long size"
 #endif
 #ifdef DLONG 
 #define M_DSP M_DSP64

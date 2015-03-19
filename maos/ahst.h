@@ -40,5 +40,4 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 		     const double *opd, int ievl);
 void ngsmod_free(NGSMOD_T *ngsmod);
 void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr);
-void remove_dm_tt(SIM_T *simu, dcell *dmerr);
 #endif

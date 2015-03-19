@@ -172,7 +172,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
-    draw_final(0);
+    draw_final(1);
     if(disable_save) return;
     if(sig==0){
 	char fn[PATH_MAX];

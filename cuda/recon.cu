@@ -626,7 +626,7 @@ void gpu_tomo(SIM_T *simu){
 		      || parms->evl.tomo);
 	simu->cgres->p[0]->p[simu->reconisim]=
 	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
-			  parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+			  parms->recon.psol?simu->gradlastol:simu->gradlastcl);
     }
 }
 
@@ -644,11 +644,10 @@ void gpu_fit(SIM_T *simu){
     }
     //Don't free opdr. Needed for warm restart in tomo.
 }
-void gpu_recon_mvm(SIM_T *simu){
-    const PARMS_T *parms=simu->parms;
+void gpu_recon_mvm(dcell *dmout, dcell *gradin){
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
-    curecon->mvm(&simu->dmerr, (parms->recon.alg==0 && parms->tomo.psol)?simu->gradlastol:simu->gradlastcl);
+    curecon->mvm(&dmout, gradin);
 }
 
 void gpu_moao_recon(SIM_T *simu){

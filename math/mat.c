@@ -176,7 +176,8 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
 	ny=in->ny-sy;
     }
     if(sx+nx>in->nx || sy+ny>in->ny){
-	error("Invalid parameter range\n");
+	error("Invalid parameter range: (%ld-%ld)x(%ld-%ld) is outside of %ldx%ld\n",
+	      sx, sx+nx, sy, sy+ny, in->nx, in->ny);
     }
     X(mat)*out=X(new)(nx, ny);
     for(int iy=0; iy<ny; iy++){

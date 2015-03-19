@@ -542,6 +542,15 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     dinvspd_inplace(ngsmod->IMCC_TT);
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_m(parms,recon);
+    if(recon->actstuck){
+	warning2("Apply stuck actuators to ngs modes\n");
+	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
+    }
+    /*if(recon->actfloat){
+      We do extrapolation to float actuators, so no need to modify Pngs/Ptt.
+      warning2("Apply float actuators to Pngs, Ptt\n");
+      act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
+      }*/
     /*
        W is recon->saneai;
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
@@ -566,23 +575,6 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
 	dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
-	if(parms->tomo.ahst_ttr){
-	    ngsmod->Ptt=cellnew(parms->ndm,1);
-	    for(int idm=0; idm<ndm; idm++){
-		dcell *Matt=cellnew(ndm,1);
-		dcell *GaM=NULL;
-		Matt->p[idm]=loc2mat(recon->aloc->p[idm],0);
-		dcellmm(&GaM, recon->GAlo, Matt, "nn", 1);
-		dcell *tmp=dcellpinv(GaM,saneai);
-		dcell *tmp2=NULL;
-		dcellmulsp(&tmp2,tmp,recon->GAlo, 1);
-		ngsmod->Ptt->p[idm]=dref(tmp2->p[idm]);
-		dcellfree(tmp);
-		dcellfree(tmp2);
-		dcellfree(GaM);
-		dcellfree(Matt);
-	    }
-	}
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting. */
 	if(parms->dbg.wamethod==0){
@@ -603,56 +595,24 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes,ngsmod->Wa);
 	    toc("Pngs");
-	    if(parms->tomo.ahst_ttr){
-		ngsmod->Ptt=cellnew(parms->ndm,1);
-		for(int idm=0; idm<ndm; idm++){
-		    dmat *Matt=loc2mat(recon->aloc->p[idm],0);
-		    ngsmod->Ptt->p[idm]=dpinv(Matt, ngsmod->Wa->p[idm+idm*ndm]);
-		    dfree(Matt);
-		}
-	    }
 	}else{
 	    info("Wa using science mode\n");
 	    tic;
 	    ngsmod->Pngs=ngsmod_Pngs_Wa(parms,recon,aper,0);
 	    toc("Pngs_Wa");
-	    if(parms->tomo.ahst_ttr){
-		tic;
-		ngsmod->Ptt=ngsmod_Ptt_Wa(parms,recon,aper,0);
-		toc("Pngs_Ptt");
-	    }
 	}
     }else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
 	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL);
-	if(parms->tomo.ahst_ttr){
-	    ngsmod->Ptt=cellnew(parms->ndm,1);
-	    for(int idm=0; idm<ndm; idm++){
-		dmat *Matt=loc2mat(recon->aloc->p[idm],0);
-		ngsmod->Ptt->p[idm]=dpinv(Matt,NULL);
-		dfree(Matt);
-	    }
-	}
     }else{
 	error("Invalid parms->tomo.ahst_wt=%d\n", parms->tomo.ahst_wt);
     }
-    if(recon->actstuck){
-	warning2("Apply stuck actuators to Pngs, Ptt\n");
-	act_stuck(recon->aloc, NULL, recon->ngsmod->Pngs, recon->actstuck);
-	act_stuck(recon->aloc, NULL, recon->ngsmod->Ptt, recon->actstuck);
-	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
-    }
-    if(recon->actfloat){
-	warning2("Apply float actuators to Pngs, Ptt\n");
-	act_float(recon->aloc, NULL, recon->ngsmod->Pngs, recon->actfloat);
-	act_float(recon->aloc, NULL, recon->ngsmod->Ptt, recon->actfloat);
-	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
-    }
+   
+ 
     if(parms->save.setup){
 	/*ahst stands for ad hoc split tomography */
     	writebin(recon->ngsmod->GM,  "%s/ahst_GM",  dirsetup);
 	writebin(recon->ngsmod->Rngs,"%s/ahst_Rngs",dirsetup);
 	writebin(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
-	writebin(recon->ngsmod->Ptt, "%s/ahst_Ptt", dirsetup);
 	writebin(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
 	writebin(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
     }
@@ -865,7 +825,6 @@ void ngsmod_free(NGSMOD_T *ngsmod){
     dcellfree(ngsmod->MCCP);
     dfree(ngsmod->IMCC);
     dfree(ngsmod->IMCC_TT);
-    dcellfree(ngsmod->Ptt);
     free(ngsmod);
 }
 
@@ -894,26 +853,6 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	    simu->Mngs->p[0]->p[5]=0;
 	}
     }
-    ngsmod2dm(&dmerr,recon, simu->Mngs,-1);
-}
-/**
-   Removal tip/tilt on invidual DMs. Be careful about the roll off near the
-   edge.  */
-void remove_dm_tt(SIM_T *simu, dcell *dmerr){
-    const RECON_T *recon=simu->recon;
-    for(int idm=0; idm<simu->parms->ndm; idm++){
-	dmat *utt=NULL;
-	dmm(&utt,0, recon->ngsmod->Ptt->p[idm], dmerr->p[idm], "nn", -1);
-	double *ptt;
-	if(utt->nx==2){
-	    ptt=alloca(3*sizeof(double));
-	    ptt[0]=0; ptt[1]=utt->p[0]; ptt[2]=utt->p[1];
-	}else{
-	    ptt=utt->p;
-	}
-	loc_add_ptt(dmerr->p[idm]->p, ptt, recon->aloc->p[idm]);
-	info("Adding P/T/T %g m %f %f mas to dm %d\n",
-	     ptt[0],ptt[1]*206265000,ptt[2]*206265000,idm);
-	dfree(utt);
-    }
+    dcellmm(&dmerr, recon->ngsmod->Modes, simu->Mngs, "nn", -1);
+    //ngsmod2dm(&dmerr,recon, simu->Mngs,-1);
 }

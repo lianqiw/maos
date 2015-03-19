@@ -16,13 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifdef __linux__
+#define _GNU_SOURCE
 #include <sched.h>
 #endif
-
-
-
-
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -33,9 +29,7 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <limits.h>
 #include <errno.h>
-
 #include <dirent.h>
-
 #include <ctype.h>
 #include <stdint.h>
 #include "common.h"

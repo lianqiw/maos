@@ -498,19 +498,42 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(parms->save.setup){
 	writebin(recon->GA, "%s/GA",dirsetup);
     }
-    if(recon->actstuck){
-	warning2("Apply stuck actuators to GA\n");
-	act_stuck(recon->aloc, recon->GA, NULL, recon->actstuck);
-    	if(parms->save.setup){
-	    writebin(recon->GA,"%s/GA_stuck",dirsetup);
+    if(parms->recon.alg==1){
+	cellfree(recon->actcpl);
+	recon->actcpl=genactcpl(recon->GA, 0);
+	act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
+	
+	if(recon->actstuck){
+	    /*This is need for LSR reconstructor to skip stuck actuators.  GA is
+	      also used to form PSOL gradients, but that one doesn't need this
+	      modification because actuator extropolation was already applied.*/
+	    warning2("Apply stuck actuators to GA\n");
+	    act_stuck(recon->aloc, recon->GA,recon->actstuck);
+	    if(parms->save.setup){
+		writebin(recon->GA,"%s/GA_stuck",dirsetup);
+	    }
 	}
-    }
-    if(recon->actfloat){
-	warning2("Apply float actuators to GA\n");
-	act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
+	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, 0.1);
+	if(recon->actinterp){
+	    dspcell *GA2=dspcellmulspcell(recon->GA, recon->actinterp, 1);
+	    dspcellfree(recon->GA);
+	    recon->GA=GA2;
+	}
 	if(parms->save.setup){
-	    writebin(recon->GA,"%s/GA_float",dirsetup);
+	    if(recon->actinterp){
+		writebin(recon->actinterp, "%s/actinterp", dirsetup);
+	    }
+	    if(recon->actcpl){
+		writebin(recon->actcpl, "actcpl");
+	    }
 	}
+	/*if(recon->actfloat){
+	    warning2("Apply float actuators to GA\n");
+	    act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
+	    if(parms->save.setup){
+	    writebin(recon->GA,"%s/GA_float",dirsetup);
+	    }
+	    }*/
     }
     int nlo=parms->nlopowfs;
     if(parms->recon.modal){
@@ -2053,7 +2076,24 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, cons
     }
     toc2("setup_recon_tomo");
 }
-
+void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
+    recon->DMTT=dcellnew(parms->ndm, 1);
+    recon->DMPTT=dcellnew(parms->ndm, 1);
+    if(!recon->actcpl){
+	error("actcpl must not be null\n");
+    }
+    for(int idm=0; idm<parms->ndm; idm++){
+	recon->DMTT->p[idm]=loc2mat(recon->aloc->p[idm], 0);
+    }
+    act_zero(recon->aloc, recon->DMTT, recon->actstuck);
+    for(int idm=0; idm<parms->ndm; idm++){
+	recon->DMPTT->p[idm]=dpinv(recon->DMTT->p[idm], 0);
+    }
+    if(parms->save.setup){
+	writebin(recon->DMTT, "DMTT");
+	writebin(recon->DMPTT, "DMPTT");
+    }
+}
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
@@ -2135,6 +2175,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	    powfs[ipowfs].GS0=NULL;
 	}
     }
+    setup_recon_dmttr(recon, parms);
     toc2("setup_recon");
 }
 

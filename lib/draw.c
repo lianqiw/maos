@@ -266,13 +266,13 @@ static int open_drawdaemon(){
     }
     if(!sock_ndraw){
 	int sock=-1;
-	if(DRAW_DIRECT && scheduler_recv_socket(&sock)){
+	if(scheduler_recv_socket(&sock)){
 	    sock=-1;
 	}
 	if(sock==-1){
-	    if(DRAW_DIRECT){
+	    if(DRAW_DIRECT){//directly fork and launch
 		sock=launch_drawdaemon();
-	    }else if(sock_helper!=-2){
+	    }else if(sock_helper!=-2){//use help to launch
 		if(sock_helper==-1){
 		    draw_helper();
 		}

@@ -183,6 +183,31 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actstuck) continue;
 	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
+	    double stroke=INFINITY;
+	    const int nact=recon->aloc->p[idm]->nloc;
+	    if(parms->dm[idm].stroke){
+		if(parms->dm[idm].stroke->nx==1){
+		    stroke=parms->dm[idm].stroke->p[0];
+		    dfree(parms->dm[idm].stroke);
+		}else if(parms->dm[idm].stroke->nx!=nact){
+		    error("dm.stroke is in wrong format\n");
+		}
+	    }
+	    if(!parms->dm[idm].stroke){
+		parms->dm[idm].stroke=dnew(nact, 2);
+		for(int iact=0; iact<nact; iact++){
+		    parms->dm[idm].stroke->p[iact]=-stroke;
+		    parms->dm[idm].stroke->p[iact+nact]=stroke;
+		}
+		((PARMS_T*)parms)->sim.dmclip=1;
+	    }
+	    for(int iact=0; iact<nact; iact++){
+		double val=recon->actstuck->p[idm]->p[iact];
+		if(val){
+		    parms->dm[idm].stroke->p[iact]=val*1e-9;
+		    parms->dm[idm].stroke->p[iact+nact]=val*1e-9;
+		}
+	    }
 	}
     }
     if(anyfloat){
@@ -261,27 +286,44 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	writebin(recon->HA,"%s/HA",dirsetup);
     }
     recon->actcpl=genactcpl(recon->HA, recon->W1);
-    if(recon->actstuck){
-	warning2("Apply stuck actuators to HA\n");
-	act_stuck(recon->aloc, recon->HA, NULL, recon->actstuck);
-    	if(parms->save.setup){
-	    writebin(recon->HA,"%s/HA_stuck",dirsetup);
+    //if(1){//new 
+    //cpl accounts for floating actuators, but not stuck actuators.
+    act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
+    //Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
+    act_stuck(recon->aloc, recon->HA, recon->actstuck);
+    if(parms->save.setup){
+	writebin(recon->HA,"%s/HA_float",dirsetup);
+    }
+    if(parms->fit.actinterp || recon->actfloat){
+	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, 0.1);
+    }
+    /*}else{
+	if(recon->actstuck){
+	    warning2("Apply stuck actuators to HA\n");
+	    act_stuck(recon->aloc, recon->HA, recon->actstuck);
+	    if(parms->save.setup){
+		writebin(recon->HA,"%s/HA_stuck",dirsetup);
+	    }
 	}
-    }
-    if(recon->actfloat){
-	warning2("Apply float actuators to HA\n");
-	act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
-	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
-	if(parms->save.setup){
-	    writebin(recon->HA,"%s/HA_float",dirsetup);
+	if(recon->actfloat){
+	    warning2("Apply float actuators to HA\n");
+	    act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
+	    recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
+	    if(parms->save.setup){
+		writebin(recon->HA,"%s/HA_float",dirsetup);
+	    }
 	}
-    }
-    if(parms->fit.actinterp){
-	warning2("Apply slaving actuator operation\n");
-	dspcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
-	dspcelladd(&recon->actinterp, interp2);
-	dspcellfree(interp2);
-    }
+	if(parms->fit.actinterp){
+	    warning2("Slaving actuator extrapolation\n");
+	    dspcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
+	    if(recon->actinterp){
+		dspcell *interp1=recon->actinterp;
+		recon->actinterp=dspcellmulspcell(interp1, interp2, 1);
+		dspcellfree(interp1);
+	    }
+	    dspcellfree(interp2);
+	}
+	}*/
     if(recon->actinterp){
 	/*
 	  DM fitting output a is extrapolated to edge actuators by
@@ -293,9 +335,18 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	dspcell *HA2=dspcellmulspcell(recon->HA, recon->actinterp, 1);
 	dspcellfree(recon->HA);
 	recon->HA=HA2;
+	if(parms->save.setup){
+	    writebin(recon->HA,"%s/HA_final",dirsetup);
+	}
     }
-    if(parms->save.setup && recon->actinterp){
-	writebin(recon->actinterp, "%s/actinterp", dirsetup);
+    
+    if(parms->save.setup){
+	if(recon->actinterp){
+	    writebin(recon->actinterp, "%s/actinterp", dirsetup);
+	}
+	if(recon->actcpl){
+	    writebin(recon->actcpl, "actcpl");
+	}
     }
 }
 
@@ -322,6 +373,9 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	nnw+=2*(ndm-1);
     }
     if(nnw==0) return;
+    dcell* actcpl=dcelldup(recon->actcpl);
+    //include stuck actuator
+    act_stuck(recon->aloc, actcpl, recon->actstuck);
     for(int idm=0; idm<ndm; idm++){
 	int nloc=recon->aloc->p[idm]->nloc;
 	recon->fitNW->p[idm]=dnew(nloc, nnw);
@@ -332,11 +386,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
-	    //const double *cpl=recon->actcpl->p[idm]->p;
+	    const double *cpl=actcpl->p[idm]->p;
 	    for(int iloc=0; iloc<nloc; iloc++){
-		//if(cpl[iloc]>0.5){
-		p[iloc]=scl;
-		//}
+		if(cpl[iloc]>0.1){
+		    //don't count floating or stuck actuators
+		    p[iloc]=scl;
+		}
 	    }
 	}
 	inw+=ndm;
@@ -351,12 +406,12 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
 		double *p2x=p;
 		double *p2y=p+nloc;
-		//const double *cpl=recon->actcpl->p[idm]->p;
+		const double *cpl=actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    //if(cpl[iloc]>0.5){
-		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    //}
+		    if(cpl[iloc]>0.1){
+			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
+		    }
 		}
 	    }
 	}else if(lrt_tt==2){/*Canceling TT. only valid for 2 DMs */
@@ -371,18 +426,19 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 		else if(idm==1) factor=-scl*2./parms->aper.d;
 		double *p2x=p;
 		double *p2y=p+nloc;
-		//const double *cpl=recon->actcpl->p[idm]->p;
+		const double *cpl=actcpl->p[idm]->p;
 		for(int iloc=0; iloc<nloc; iloc++){
-		    //if(cpl[iloc]>0.5){
-		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    //}
+		    if(cpl[iloc]>0.1){
+			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
+		    }
 		}
 	    }
 
 	}
 	inw+=2*(ndm-1);
     }
+    cellfree(actcpl);
     if(parms->fit.actslave){
 	/*
 	  2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found
@@ -397,7 +453,6 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 				recon->actfloat, parms->fit.actthres, 1./recon->floc->nloc);
 	toc2("slaving");
 	if(parms->save.setup){
-	    writebin(recon->actcpl, "%s/actcpl", dirsetup);
 	    writebin(recon->actslave,"%s/actslave",dirsetup);
 	}
     }

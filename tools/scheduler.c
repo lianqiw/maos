@@ -631,6 +631,8 @@ static int respond(int sock){
 	    if(streadfd(sock, &sock_save)){
 		warning("receive socket from %d failed\n", sock);
 		sock_save=-1;
+	    }else{
+		info("received socket %d\n", sock_save);
 	    }
 	}else if(pid==-1){//send sock to draw()
 	    if(sock_save!=-1 && stcheck(sock_save)){
@@ -643,8 +645,9 @@ static int respond(int sock){
 	    }
 	    if(sock_save!=-1){
 		if(stwritefd(sock, sock_save)){
-		    warning("send socket to %d failed\n", sock);
+		    warning("send socket %d to %d failed\n", sock_save, sock);
 		}else{//socket is transferred to draw. we close it.
+		    warning("sent socket %d\n", sock_save);
 		    close(sock_save);
 		    sock_save=-1;
 		}

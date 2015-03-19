@@ -108,6 +108,8 @@ void cellfree_do(void *A){
 	sfree_do(A,0);break;
     case M_ZMP:
 	zfree_do(A,0);break;
+    case M_LONG:
+	lfree_do(A,0);break;
     case M_LOC64:
 	locfree_do(A);break;
     case M_DSP:

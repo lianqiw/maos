@@ -138,7 +138,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const dmat *ampout,
 	    for(long ip=bp[iloc]; ip<count; ip++){
 		bx[count]*=wtsum;
 	    }
-	    warning("Scale weight by 1+%20g\n", wtsum-1);
+	    //warning("Scale weight by 1+%g\n", wtsum-1);
 	}
     }
     bp[locout->nloc]=count;

@@ -157,6 +157,9 @@ void free_parms(PARMS_T *parms){
 	free(parms->dm[idm].hyst);
 	free(parms->dm[idm].actstuck);
 	free(parms->dm[idm].actfloat);
+	free(parms->dm[idm].iastrokefn);
+	cellfree(parms->dm[idm].iastrokescale);
+	dfree(parms->dm[idm].stroke);
     }
     free(parms->dm);
     for(int imoao=0; imoao<parms->nmoao; imoao++){
@@ -207,7 +210,7 @@ static inline int sum_dblarr(int n, double *a){
 #define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
-
+#define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
 
 #define READ_POWFS(A,B)						\
     readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
@@ -555,6 +558,7 @@ static void readcfg_dm(PARMS_T *parms){
     int* inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
+    dmat **dmattmp=NULL;
     READ_DM(dbl,ht);
     READ_DM(dbl,offset);
     READ_DM_RELAX(dbl,dx);
@@ -580,7 +584,22 @@ static void readcfg_dm(PARMS_T *parms){
 	}
     }
     READ_DM_RELAX(dbl,guard);
-    READ_DM_RELAX(dbl,stroke);
+    {
+	char **tmp=0;
+	int nstroke=readcfg_strarr(&tmp, "dm.stroke");
+	for(int idm=0; idm<ndm; idm++){
+	    if(nstroke==ndm){
+		parms->dm[idm].stroke=readstr_dmat(tmp[idm]);
+		free(tmp[idm]); tmp[idm]=0;
+	    }else if(nstroke==1){
+		parms->dm[idm].stroke=readstr_dmat(tmp[0]);
+	    }else{
+		error("dm.stroke is in wrong format\n");
+	    }
+	}
+	free(tmp[0]);
+	free(tmp);
+    }
     READ_DM_RELAX(dbl,iastroke);
     READ_DM_RELAX(str,iastrokefn);
     READ_DM_RELAX(dbl,vmisreg);
@@ -595,6 +614,7 @@ static void readcfg_dm(PARMS_T *parms){
     free(strtmp);
     free(inttmp);
     free(dbltmp);
+    free(dmattmp);
 }
 #define READ_MOAO(A,B)					      \
     readcfg_##A##arr_n((void*)(&A##tmp),nmoao,"moao."#B);     \
@@ -672,10 +692,13 @@ static void readcfg_atm(PARMS_T *parms){
     READ_INT(atm.ninit);
     READ_INT(atm.share);
     READ_INT(atm.r0evolve);
-    parms->atm.r0logpsdt=readcfg_dmat("atm.r0logpsdt");
-    parms->atm.r0logpsds=readcfg_dmat("atm.r0logpsds");
+    READ_DMAT(atm.r0logpsdt);
+    READ_DMAT(atm.r0logpsds);
+    READ_DMAT(atm.ht);
+    //parms->atm.r0logpsdt=readcfg_dmat("atm.r0logpsdt");
+    //parms->atm.r0logpsds=readcfg_dmat("atm.r0logpsds");
     parms->atm.size=readcfg_dmat_n(2, "atm.size");
-    parms->atm.ht=readcfg_dmat("atm.ht");
+    //parms->atm.ht=readcfg_dmat("atm.ht");
     parms->atm.nps=parms->atm.ht->nx;
     parms->atm.wt=readcfg_dmat_n(parms->atm.nps,"atm.wt");
     parms->atm.ws=readcfg_dmat_n(parms->atm.nps,"atm.ws");
@@ -700,7 +723,8 @@ static void readcfg_atmr(PARMS_T *parms){
     if(parms->atmr.L0<=0){
 	parms->atmr.L0=parms->atm.L0;
     }
-    parms->atmr.ht=readcfg_dmat("atmr.ht");
+    READ_DMAT(atmr.ht);
+    //parms->atmr.ht=readcfg_dmat("atmr.ht");
     parms->atmr.nps=parms->atmr.ht->nx;
     parms->atmr.wt=readcfg_dmat_n(parms->atmr.nps, "atmr.wt");
     parms->atmr.os=readcfg_lmat_nmax(parms->atmr.nps, "atmr.os");
@@ -738,7 +762,8 @@ static void readcfg_aper(PARMS_T *parms){
    Read in performance evaluation science point parameters.
 */
 static void readcfg_evl(PARMS_T *parms){
-    parms->evl.thetax=readcfg_dmat("evl.thetax");
+    READ_DMAT(evl.thetax);
+    //parms->evl.thetax=readcfg_dmat("evl.thetax");
     parms->evl.nevl=parms->evl.thetax->nx;
     parms->evl.thetay=readcfg_dmat_n(parms->evl.nevl, "evl.thetay");
     parms->evl.wt=readcfg_dmat_nmax(parms->evl.nevl, "evl.wt");
@@ -746,7 +771,8 @@ static void readcfg_evl(PARMS_T *parms){
     normalize_sum(parms->evl.wt->p, parms->evl.nevl, 1);
     parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
     parms->evl.psfr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfr");
-    parms->evl.wvl=readcfg_dmat("evl.wvl");
+    READ_DMAT(evl.wvl);
+    //parms->evl.wvl=readcfg_dmat("evl.wvl");
     parms->evl.nwvl=parms->evl.wvl->nx;
     for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 	if(parms->evl.wvl->p[iwvl]>0.1){
@@ -798,7 +824,6 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.piston_cr);
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
-    READ_INT(tomo.ahst_ttr);
     READ_INT(tomo.alg);
     READ_INT(tomo.bgs);
     READ_INT(tomo.precond);
@@ -809,7 +834,6 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.cubic);
     READ_DBL(tomo.iac);
     READ_INT(tomo.ninit);
-    READ_INT(tomo.psol);
     READ_INT(tomo.nxbase);
     READ_DBL(tomo.cgthres);
     READ_INT(tomo.splitlrt);
@@ -818,7 +842,8 @@ static void readcfg_tomo(PARMS_T *parms){
 /**
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
 static void readcfg_fit(PARMS_T *parms){
-    parms->fit.thetax=readcfg_dmat("fit.thetax");
+    READ_DMAT(fit.thetax);
+    //parms->fit.thetax=readcfg_dmat("fit.thetax");
     parms->fit.nfit=parms->fit.thetax->nx;
     parms->fit.thetay=readcfg_dmat_n(parms->fit.nfit, "fit.thetay");
     parms->fit.wt=readcfg_dmat_nmax(parms->fit.nfit, "fit.wt");
@@ -873,6 +898,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.mvm);
     READ_INT(recon.modal);
     READ_INT(recon.modr);
+    READ_INT(recon.psol);
     parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
     readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
@@ -886,8 +912,16 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.fcttm);
     READ_INT(sim.mffocus);
     READ_INT(sim.fsmideal);
-
-    parms->sim.apdm=readcfg_dmat("sim.apdm");
+    READ_DMAT(sim.apdm);
+    READ_DMAT(sim.epdm);
+    READ_DMAT(sim.aplo);
+    READ_DMAT(sim.eplo);
+    READ_DMAT(sim.apfsm);
+    READ_DMAT(sim.epfsm);
+    READ_INT(sim.aldm);
+    READ_INT(sim.allo);
+    READ_INT(sim.alfsm);
+    /*parms->sim.apdm=readcfg_dmat("sim.apdm");
     parms->sim.epdm=readcfg_dmat("sim.epdm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
@@ -895,7 +929,7 @@ static void readcfg_sim(PARMS_T *parms){
     parms->sim.epfsm=readcfg_dmat("sim.epfsm");
     parms->sim.aldm=readcfg_int("sim.aldm");
     parms->sim.allo=readcfg_int("sim.allo");
-    parms->sim.alfsm=readcfg_int("sim.alfsm");
+    parms->sim.alfsm=readcfg_int("sim.alfsm");*/
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
@@ -969,7 +1003,8 @@ static void readcfg_sim(PARMS_T *parms){
  */
 static void readcfg_cn2(PARMS_T *parms){
 /*for Cn2 Estimation. */
-    parms->cn2.pair = readcfg_dmat("cn2.pair");
+    READ_DMAT(cn2.pair);
+    //parms->cn2.pair = readcfg_dmat("cn2.pair");
     READ_INT(cn2.step);
     READ_INT(cn2.reset);
     READ_INT(cn2.tomo);
@@ -1213,7 +1248,8 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	error("MVST does not work with least square reconstructor.\n");
     }
     if(parms->recon.alg==0 && parms->recon.modal){
-	error("Modal control is not yet implemented for MV reconstructor\n");
+	warning("Modal control is not applicable to MV reconstructor.\n");
+	parms->recon.modal=0;
     }
     if(parms->recon.alg==1 && parms->lsr.alg==2){
 	parms->recon.mvm=1;
@@ -1917,16 +1953,16 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	if(fabs(ht)<1.e-10){
 	    parms->dm[i].isground=1;
 	}
-	if(isfinite(parms->dm[i].stroke)){
-	    double strokemicron=parms->dm[i].stroke*1e6;
+	if(isfinite(parms->dm[i].stroke->p[0])){
+	    double strokemicron=fabs(parms->dm[i].stroke->p[0])*1e6;
 	    if(strokemicron<1 || strokemicron>50){
 		warning("dm %d: stroke %g m is probably wrong\n",
 			i,parms->dm[i].stroke);
 	    }
 	}
-	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokescale){
+	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokefn){
 	    double strokemicron=parms->dm[i].iastroke*1e6;
-	    if(strokemicron<1 || strokemicron>50){
+	    if(strokemicron<.1 || strokemicron>50){
 		warning("dm %d: iastroke %g m is probably wrong\n",
 			i,parms->dm[i].iastroke);
 	    }
@@ -1947,6 +1983,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->fit.square && parms->load.aloc){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
+    }
+    if(!parms->sim.closeloop || parms->recon.alg!=0){
+	parms->recon.psol=0;
     }
     if(parms->recon.split){
 	if(parms->nlopowfs==0){
@@ -1981,12 +2020,13 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{/*no focus tracking */
 	    if(parms->recon.alg==0){/*MV */
 		/*low order wfs in ahst mode does not need psol. */
-		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->tomo.psol){
+		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->recon.psol){
 		    parms->powfs[ipowfs].psol=0;
 		}else{
 		    parms->powfs[ipowfs].psol=1;
 		}
 	    }else{
+		parms->recon.psol=0;
 		parms->powfs[ipowfs].psol=0;
 	    }
 	}
@@ -2205,7 +2245,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
  
     for(int idm=0; idm<parms->ndm; idm++){
-	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke>0){
+	if(isfinite(parms->dm[idm].stroke->p[0])){
 	    parms->sim.dmclip=1;
 	}
 	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke>0){
@@ -2509,7 +2549,7 @@ static void print_parms(const PARMS_T *parms){
 	      i, parms->dm[i].order,
 	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
-	      parms->dm[i].stroke*1e6);
+	      fabs(parms->dm[i].stroke->p[0])*1e6);
 	if(parms->dm[i].cubic){
 	    info2("     Normalized cubic influence function with inter-actuator coupling of %g\n",
 		  parms->dm[i].iac);

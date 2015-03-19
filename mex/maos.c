@@ -29,9 +29,13 @@
 static __attribute__((destructor)) void deinit_maos(){
     maos_reset();
 }
+#ifdef __cplusplus
 extern "C" {
+#endif
     int utIsInterruptPending();
+#ifdef __cplusplus
 }
+#endif
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     exception_env=malloc(sizeof(jmp_buf));

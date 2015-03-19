@@ -345,7 +345,6 @@ int scheduler_send_socket(int sfd){
     int ssock=scheduler_connect_self(0);
     if(ssock!=-1 && sfd!=-1){
 	int cmd[2]={CMD_SOCK, 1};
-	info("send socket %d to scheduler\n", sfd);
 	if(stwriteintarr(ssock, cmd, 2) || stwritefd(ssock, sfd)){
 	    ans=-1;
 	    warning("Talk to scheduler failed\n");
@@ -374,6 +373,8 @@ int scheduler_recv_socket(int *sfd){
 	    info("scheduler had no valid fd\n");
 	}
 	close(ssock);
+    }else{
+	warning3("Failed to connect to scheduler\n");
     }
     return ans;
 }

@@ -57,7 +57,7 @@ void gpu_recon_reset(const PARMS_T *parms);
 void gpu_recon_free(void);
 void gpu_tomo(SIM_T *simu);
 void gpu_fit(SIM_T *simu);
-void gpu_recon_mvm(SIM_T *simu);
+void gpu_recon_mvm(dcell *dmout, dcell *gradin);
 void gpu_moao_recon(SIM_T *simu);
 void gpu_moao_filter(SIM_T *simu);
 void gpu_moao_2gpu(SIM_T *simu);

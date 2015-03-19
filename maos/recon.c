@@ -79,7 +79,7 @@ void tomofit(SIM_T *simu){
 	    gpu_tomo(simu);
 	}else
 #endif
-	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->recon.psol?simu->gradlastol:simu->gradlastcl);
 	toc_tm("Tomography");
 	if(parms->dbg.deltafocus){
 	    if(simu->opdr && recon->RFdfx){
@@ -105,8 +105,6 @@ void tomofit(SIM_T *simu){
 	}
 	toc_tm("Fitting");
     }
- 
-    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 }
 /**
    Compute pseudo open loop gradients for WFS that need. Only in close loop. In
@@ -172,7 +170,7 @@ void recon_split(SIM_T *simu){
 	    dcelladd(&simu->gradlastol, 1, simu->gngsmvst, -1);
 	    dcellzero(simu->gngsmvst);/*reset accumulation. */
 	    dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
-	    if(parms->tomo.psol){
+	    if(parms->recon.psol){
 		dcell *Mpsol_lo=simu->Mint_lo->mint->p[0];
 		dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
 	    }
@@ -223,18 +221,27 @@ void reconstruct(SIM_T *simu){
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
 	if(parms->recon.mvm){
+	    dcell *dmout, *gradin;
+	    if(parms->recon.psol){
+		dmout=simu->dmfit;
+		gradin=simu->gradlastol;
+	    }else{
+		dmout=simu->dmerr;
+		gradin=simu->gradlastcl;
+	    }
+	    if(!dmout) error("dmout cannot be empty\n");
 	    if(parms->sim.mvmport){
-		mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+		mvm_client_recon(parms, dmout, gradin);
 	    }else
 #if USE_CUDA
 		if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
-		    gpu_recon_mvm(simu);
+		    gpu_recon_mvm(dmout, gradin);
 		}else
 #endif		
 		{
 		    //This assumes skipped WFS are in the end. \todo: fix it if not.
 		    dmulvec(simu->dmerr->m->p, recon->MVM, 
-			    ((parms->recon.alg==0 && parms->tomo.psol)?simu->gradlastol:simu->gradlastcl)->m->p,1);
+			    ((parms->recon.alg==0 && parms->recon.psol)?simu->gradlastol:simu->gradlastcl)->m->p,1);
 		}
 	    if(parms->plot.run){
 		dcellcp(&simu->dmfit, simu->dmerr);
@@ -258,7 +265,16 @@ void reconstruct(SIM_T *simu){
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
 	    }
 	}
-	if(parms->recon.alg==0 && parms->tomo.psol && parms->sim.closeloop){//form error signal in PSOL mode
+	if(parms->recon.psol){
+	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
+	    //form error signal in PSOL mode
+	    if(simu->recon->actinterp){
+		//extrapolate DM fitting result to float and edge actuators
+		dcellcp(&simu->dmcmd0, simu->dmerr);
+		dcellzero(simu->dmerr);
+		dcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+	    }
+
 	    dcell *dmpsol;
 	    if(parms->sim.idealfit || parms->sim.idealtomo){
 		dmpsol=simu->dmpsol;
@@ -274,9 +290,6 @@ void reconstruct(SIM_T *simu){
 	if(parms->recon.split){
 	    if(parms->recon.alg==0){//ahst 
 		remove_dm_ngsmod(simu, simu->dmerr);
-	    }
-	    if(parms->tomo.ahst_ttr){
-		remove_dm_tt(simu, simu->dmerr);
 	    }
 	}
 	

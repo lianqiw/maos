@@ -67,7 +67,7 @@ void save_gradol(SIM_T *simu){
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	const int nsa=powfs[ipowfs].saloc->nloc;
-	if(!simu->gradlastol->p[iwfs]) continue;
+	if(!parms->powfs[ipowfs].psol || !simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
 	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts, simu->gradlastol->p[iwfs]->p,NULL,
 		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)", "x %d",  iwfs);
@@ -134,7 +134,7 @@ void save_recon(SIM_T *simu){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    if(simu->dmreal){
 		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
-			"Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
+			"Actual DM Actuator Position","x (m)", "y (m)", "Real %d",idm);
 	    }
 	}
     }
