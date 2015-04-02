@@ -283,7 +283,9 @@ void* read_by_id(long id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     void *out=readdata_by_id(fp, id, level, 0);
-    zfeof(fp);
+    if(!zfeof(fp)){
+	warning2("Unread data in the end of file\n");
+    }
     zfclose(fp);
     return out;
 }

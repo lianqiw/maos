@@ -58,13 +58,13 @@ int main(int argc, const char *argv[]){
 	/*Failed to wait. fall back to own checking.*/
 	int count=0;
 	while(scheduler_wait()&& count<60){
-	    warning3("failed to get reply from scheduler. retry\n");
+	    warning_time("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
 	    scheduler_start(scmd,arg->nthread,!arg->force);
 	}
 	if(count>=60){
-	    warning3("fall back to own checker\n");
+	    warning_time("fall back to own checker\n");
 	    wait_cpu(arg->nthread);
 	}
     }

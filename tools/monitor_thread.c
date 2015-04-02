@@ -245,7 +245,7 @@ static int respond(int sock){
 	}
 	break;
     default:
-	warning3("Invalid cmd %d\n",cmd[0]);
+	warning_time("Invalid cmd %d\n",cmd[0]);
 	return -1;
     }
     return 0;

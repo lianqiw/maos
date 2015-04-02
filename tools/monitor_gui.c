@@ -189,7 +189,7 @@ static void update_prog(PROC_T *p){
 gboolean remove_entry(PROC_T *iproc){
     /*Delete widget; */
     if(iproc->vbox){
-	/*warning3("destroy hbox\n"); */
+	/*warning_time("destroy hbox\n"); */
 	gtk_widget_destroy(iproc->vbox);
 	iproc->vbox=NULL;
     }else{

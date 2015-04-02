@@ -82,13 +82,13 @@ int main(int argc, char **argv){
     scheduler_start(scmd,1,1);
     int count=0;
     while(scheduler_wait()&& count<60){
-	warning3("failed to get reply from scheduler. retry\n");
+	warning_time("failed to get reply from scheduler. retry\n");
 	sleep(10);
 	count++;
 	scheduler_start(scmd,1,1);
     }
     if(count>=60){
-	warning3("fall back to own checker\n");
+	warning_time("fall back to own checker\n");
 	wait_cpu(1);
     }
     /*info("Ready to go\n"); */

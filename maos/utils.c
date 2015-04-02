@@ -287,7 +287,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	if(scheduler_launch_exe(host, argc, argv)){
 	    warning("Launch locally\n");
 	    if(!locally){
-		error2("Unable to launch maos at server %s\n", host);
+		error("Unable to launch maos at server %s\n", host);
 	    }
 	}else{
 	    exit(EXIT_SUCCESS);

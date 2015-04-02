@@ -175,7 +175,7 @@ static int bind_socket (char *ip, uint16_t port){
     }
     int count=0;
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
-	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
+	info_time("errno=%d. port=%d,sock=%d: ",errno,port,sock);
 	perror ("bind");
 	sleep(10);
 	count++;

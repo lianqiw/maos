@@ -150,7 +150,7 @@ static int runned_add(RUN_T *irun){
     }
     irun->status.done=1;
     if(irun->status.info<10){
-	warning3("Should be a finished process\n");
+	warning_time("Should be a finished process\n");
 	return 1;
     }else{
 	return 0;
@@ -181,7 +181,7 @@ static void runned_remove(int pid){
 	}
     }
     if(!removed){
-	warning3("runned_remove: Record %s:%d not found!\n",hosts[hid],pid);
+	warning_time("runned_remove: Record %s:%d not found!\n",hosts[hid],pid);
     }
 }
 static RUN_T *runned_get(int pid){
@@ -350,7 +350,7 @@ static void running_remove(int pid, int status){
 	}
     }
     if(!irun){
-	warning3("running_remove%s:%d not found\n",hosts[hid],pid);
+	warning_time("running_remove%s:%d not found\n",hosts[hid],pid);
     }
 }
 
@@ -424,7 +424,7 @@ static void process_queue(void){
 	    int nthread=irun->nthread;
 	    if(nrun_get()+nthread<=NCPU && (nthread<=avail || avail >=3)){
 		/*don't close the socket. will close it in select loop. */
-		/*warning3("process %d launched. write to sock %d cmd %d\n", */
+		/*warning_time("process %d launched. write to sock %d cmd %d\n", */
 		/*irun->pid, irun->sock, S_START); */
 		info2("process_queue: Notify %d at %d\n", irun->pid, irun->sock);
 		if(stwriteint(irun->sock,S_START)){
@@ -559,7 +559,7 @@ static int respond(int sock){
 		nrun_add(pid, irun->nthread);
 	    }
 	    if(sizeof(STATUS_T)!=read(sock,&(irun->status), sizeof(STATUS_T))){
-		warning3("Error reading\n");
+		warning_time("Error reading\n");
 	    }
 	    monitor_send(irun,NULL);
 	}
@@ -661,7 +661,7 @@ static int respond(int sock){
 	    if(irun){
 		runned_remove(pid);
 	    }else{
-		warning3("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+		warning_time("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
 	    }
 	}
 	break;	  
@@ -749,7 +749,7 @@ static int respond(int sock){
     }
 	break;
     default:
-	warning3("Invalid cmd: %x\n",cmd[0]);
+	warning_time("Invalid cmd: %x\n",cmd[0]);
 	ret=-1;
     }
     cmd[0]=-1;
@@ -793,7 +793,7 @@ void scheduler_handle_ws(char *in, size_t len){
 	if(irun){
 	    runned_remove(pid);
 	}else{
-	    warning3("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+	    warning_time("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
 	}
     }else if(!strcmp(sep, "KILL")){
 	RUN_T *irun=running_get(pid);
@@ -867,7 +867,7 @@ static void monitor_remove(int sock){
 		pmonitor=ic->next;
 	    }
 	    //close(ic->sock); close panics accept
-	    warning3("Remove monitor at %d\n", ic->sock);
+	    warning_time("Remove monitor at %d\n", ic->sock);
 	    shutdown(ic->sock, SHUT_WR);
 	    free(ic);
 	    break;

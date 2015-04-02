@@ -33,11 +33,7 @@
 #include "thread.h"
 #include "bin.h"
 #include "readstr.h"
-/**
-   Defines our custom file format .bin that may be gzipped and the basic IO
-   functions. All file read/write operators are through functions in this
-   file. The routines can also operate on .fits files.
- */
+
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
   with default compression retio, the write time for compressed file is from 3
@@ -63,24 +59,21 @@
   always to be backward compatible.
 
 */
-/**
-   contains information about opened files.
+/*
+  contains information about opened files.
 */
 struct file_t{
-    void *p;
-    int isgzip;/*Is the file zipped.*/
-    int isfits;/*Is the file fits.*/
-    char *fn;
-    int fd;/*For locking. */
-#if IO_TIMMING == 1
-    struct timeval tv1;
-#endif
+    void *p;   /**<FILE* or voidp when gzipped*/
+    int isgzip;/**<Is the file zipped.*/
+    int isfits;/**<Is the file fits.*/
+    char *fn;  /**<The disk file name*/
+    int fd;    /**<The underlying file descriptor, used for locking. */
 };
-/**
-   Describes the information about mmaped data. Don't unmap a segment of mmaped
-   memory, which causes the whole page to be unmapped. Instead, reference count
-   the mmaped file and unmap the segment when the nref dropes to 1.
- */
+/*
+  Describes the information about mmaped data. Don't unmap a segment of mmaped
+  memory, which causes the whole page to be unmapped. Instead, reference count
+  the mmaped file and unmap the segment when the nref dropes to 1.
+*/
 struct mmap_t{
     void *p;  /**<points to the beginning of mmaped memory for this type of data.*/
     long n;   /**<length of mmaped memory.*/
@@ -88,13 +81,13 @@ struct mmap_t{
     int fd;   /**<file descriptor. close it if not -1.*/
 };
 
-/**
-   Process the input file name and return file names that can be open to
-   read/write. If the file name does not end with .bin or .bin.gz it will add to
-   the end .bin or .bin.gz depending on the value of defaultgzip. For read only
-   access, it will also look into the path for files.
- */
-char* procfn(const char *fn, const char *mod, const int defaultgzip){
+/*
+  Process the input file name and return file names that can be open to
+  read/write. If the file name does not end with .bin or .bin.gz it will add to
+  the end .bin or .bin.gz depending on the value of defaultgzip. For read only
+  access, it will also look into the path for files.
+*/
+static char* procfn(const char *fn, const char *mod, const int defaultgzip){
     char *fn2;
     if(fn[0]=='~'){
 	fn2=malloc(strlen(HOME)+strlen(fn)+16);
@@ -159,10 +152,10 @@ void zftouch(const char *format, ...){
     free(fn2);
 }
 PNEW(lock);
-/**
-   Open a bin file from a fd that may be a socket.
+/*
+  Open a bin file from a fd that may be a socket.
 */
-file_t* zfdopen(int sock, const char *mod){
+static file_t* zfdopen(int sock, const char *mod){
     file_t* fp=calloc(1, sizeof(file_t));
     fp->isgzip=0;
     fp->fd=sock;
@@ -177,13 +170,18 @@ file_t* zfdopen(int sock, const char *mod){
     }
     return fp;
 }
+/**
+   Disables file saving when set to 1.
+*/
 int disable_save=0;
 /**
-   Open a bin file for read/write access. Whether the file is gzipped or not is
-   automatically determined when open for reading. When open for writing, if the
-   file name ends with .bin or .fits, will not be gzipped. If the file has no
-   suffix, the file will be gzipped and .bin is appened to file name.
- */
+   Open a bin file for read/write access. 
+
+   Whether the file is gzipped or not is automatically determined when open for
+   reading. When open for writing, if the file name ends with .bin or .fits,
+   will not be gzipped. If the file has no suffix, the file will be gzipped and
+   .bin is appened to file name.
+*/
 file_t* zfopen(const char *fn, const char *mod){
     LOCK(lock);
     file_t* fp=calloc(1, sizeof(file_t));
@@ -192,9 +190,6 @@ file_t* zfopen(const char *fn, const char *mod){
 	error("%s does not exist for read\n", fn);
 	quit();
     }
-#if IO_TIMMING == 1
-    gettimeofday(&(fp->tv1), NULL);
-#endif
     /*Now open the file to get a fd number that we can use to lock on the
       file.*/
     switch(mod[0]){
@@ -270,38 +265,22 @@ file_t* zfopen(const char *fn, const char *mod){
 }
 
 /**
- * Return the underlining filename
- */
+   Return the underlining filename
+*/
 const char *zfname(file_t *fp){
     return fp->fn;
 }
 /**
-   Return whether it's fits file.
+   Return 1 when it is a fits file.
 */
 int zfisfits(file_t *fp){
     return fp->isfits?1:0;
 }
 /**
    Close the file.
- */
+*/
 void zfclose(file_t *fp){
     LOCK(lock);
-#if IO_TIMMING == 1
-    long fpos;
-    if(fp->isgzip){
-	fpos=gztell((voidp)fp->p);
-    }else{
-	fpos=ftell((FILE*)fp->p);
-    }
-    double size=(double)fpos/1024./1024.;
-    struct timeval tv2;
-    gettimeofday(&tv2, NULL);
-    double tm=(double)tv2.tv_sec+(double)tv2.tv_usec*1e-6
-	-((double)fp->tv1.tv_sec+(double)fp->tv1.tv_usec*1e-6);
-    const char *type[2]={"\033[33mUncompress", "\033[32mCompressed"};
-    info2("%s File %7.2f MiB takes %5.2f s at %6.1f MiB/s: "
-	  "%s\033[00m\n", type[fp->isgzip], size, tm, size/tm, fp->fn);
-#endif
     if(fp->isgzip){
 	gzclose((voidp)fp->p);
     }else{
@@ -311,10 +290,10 @@ void zfclose(file_t *fp){
     free(fp);
     UNLOCK(lock);
 }
-/**
-   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
-   fwrite. Follows the interface of fwrite.
- */
+/*
+  Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
+  fwrite. Follows the interface of fwrite.
+*/
 static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
@@ -330,7 +309,7 @@ static inline void zfwrite_do(const void* ptr, const size_t size, const size_t n
 }
 /**
    Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
- */
+*/
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->isfits && BIGENDIAN==0){
@@ -391,7 +370,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 /**
    Read from the file. If in gzip mode, calls gzread, otherwise, calls
    fread. Follows the interface of fread.
- */
+*/
 static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
@@ -454,7 +433,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 }
 /**
    Wraps zfread2 and do error checking.
- */
+*/
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(zfread2(ptr, size, nmemb, fp)){
 	perror("zfread");
@@ -484,8 +463,8 @@ void zfrewind(file_t *fp){
     }
 }
 /**
-   Tell position in file.
- */
+   Tell position pointer in file.
+*/
 int zfpos(file_t *fp){
     if(fp->isgzip){
 	return gztell((voidp)fp->p);
@@ -494,10 +473,10 @@ int zfpos(file_t *fp){
     }
 }
 /**
-   Tell whether we end of file is reached.
- */
+   Return 1 if end of file is reached. 
+*/
 int zfeof(file_t *fp){
-    return zfseek(fp, 1, SEEK_SET)<0?-1:0;
+    return zfseek(fp, 1, SEEK_SET)<0?1:0;
 }
 /**
    Flush the buffer.
@@ -510,39 +489,9 @@ void zflush(file_t *fp){
     }
 }
 
-/**
-   Write multiple long numbers into the file. To write three numbers, a, b, c,
-call with zfwritelarr(fp, 3, &a, &b, &c); */
-void zfwritelarr(file_t *fp, int count, ...){
-    va_list ap;
-    int i;
-    va_start (ap, count);              /*Initialize the argument list. */
-    for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
-	zfwrite(addr, sizeof(uint64_t), 1, fp);
-    }
-    va_end (ap);                       /* Clean up.  */
-}
-/**
-   Read multiple long numbers from the file. To read three numbers, a, b, c,
-   call with zfreadlarr(fp, 3, &a, &b, &c);
- */
-void zfreadlarr(file_t *fp, int count, ...){
-    va_list ap;
-    int i;
-    va_start (ap, count);              /*Initialize the argument list. */
-    for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
-	zfread(addr, sizeof(uint64_t), 1, fp);
-    }
-    va_end (ap);                       /* Clean up.  */
-}
-
-/**
-   Obtain the current magic number. If it is a header, read it out if output of
-   header is not NULL.  The header will be appended to the output header.
-
-   In file, the header is located before the data magic.
+/*
+  Obtain the current magic number, string header, and array size from a bin
+  format file. In file, the string header is located before the data magic.
 */
 static int
 read_bin_header(header_t *header, file_t *fp){
@@ -558,7 +507,7 @@ read_bin_header(header_t *header, file_t *fp){
 	}else if(magic==M_HEADER){
 	    zfread(&nlen, sizeof(uint64_t), 1, fp);
 	    if(nlen>0){
-		/*zfseek failed in cygwin (gzseek). so we already readin the hstr instead.*/
+		/*zfseek failed in cygwin (gzseek). so we always read in the hstr instead.*/
 		char hstr2[nlen];
 		zfread(hstr2, 1, nlen, fp);
 		hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
@@ -578,17 +527,17 @@ read_bin_header(header_t *header, file_t *fp){
 	    }
 	}else{ //Finish
 	    header->magic=magic;
-	    zfreadlarr(fp, 2, &header->nx, &header->ny);
+	    zfread(&header->nx, sizeof(uint64_t), 1, fp);
+	    zfread(&header->ny, sizeof(uint64_t), 1, fp);
 	    return 0;
 	}
     }/*while*/
     return -1;
 }
 
-/**
-   Append the header to current position in the file.  
-*/
 /*
+  Append the header to current position in the file.  
+   
   First write magic number, then the length of the header, then the header,
   then the length of the header again, then the magic number again. The two set
   of strlen and header are used to identify the header from the end of the file
@@ -599,7 +548,7 @@ read_bin_header(header_t *header, file_t *fp){
   
   Don't need to write M_SKIP here because we have a pair of magic. The length
   of header is rounded to multiple of 8 bytes.
- */
+*/
 static void 
 write_bin_headerstr(const char *str, file_t *fp){
     if(!str) return;
@@ -620,8 +569,8 @@ write_bin_headerstr(const char *str, file_t *fp){
     free(str2);
 }
 
-/**
-   Write fits header. str is extra header that will be put in fits comment
+/*
+  Write fits header. str is extra header that will be put in fits comment
 */
 static void
 write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
@@ -705,9 +654,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     zfwrite(header, sizeof(char), 36*80, fp);
 #undef FLUSH_OUT
 }
-/**
-   Read fits header.
- */
+/*
+  Read fits header.
+*/
 static int 
 read_fits_header(header_t *header, file_t *fp){
     //, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
@@ -803,8 +752,8 @@ read_fits_header(header_t *header, file_t *fp){
     return 0;
 }
 /**
-  A unified header writing routine for .bin and .fits files by delegation. It
-write the array information and string header if any.  */
+   A unified header writing routine for .bin and .fits files. It write the array
+   information and string header if any.  */
 void write_header(const header_t *header, file_t *fp){
     if(fp->isfits){
 	if(!iscell(header->magic)){
@@ -818,12 +767,13 @@ void write_header(const header_t *header, file_t *fp){
 	uint32_t magic2=M_SKIP;
 	zfwrite(&magic2, sizeof(uint32_t), 1, fp);
 	zfwrite(&header->magic,  sizeof(uint32_t), 1, fp);
-	zfwritelarr(fp, 2, &header->nx, &header->ny);
+	zfwrite(&header->nx, sizeof(uint64_t), 1, fp);
+	zfwrite(&header->ny, sizeof(uint64_t), 1, fp);
     }
 }
 /**
    A unified header reading routine for .bin and .fits files. It read the array
-information and string header if any.  Return error signal.*/
+   information and string header if any.  Return non zero value if reading failed*/
 int read_header2(header_t *header, file_t *fp){
     int ans;
     header->str=NULL;
@@ -923,7 +873,7 @@ double search_header_num_valid(const char *header, const char *key){
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
    dimension. Finally write the data itself.
- */
+*/
 void writearr(const void *fpn,     /**<[in] The file pointer*/
 	      const int isfn,      /**<[in] Is this a filename or already opened file*/
 	      const size_t size,   /**<[in] Size of each element*/
@@ -932,7 +882,7 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
 	      const void *p,       /**<[in] The data of the array*/
 	      const uint64_t nx,   /**<[in] Number of rows. this index changes fastest*/
 	      const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
-	      ){
+    ){
     file_t *fp;
     header_t header={magic, nx, ny, (char*)str};
     if(isfn){
@@ -975,25 +925,28 @@ void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
 }
 /**
    Write a int array of size nx*ny to file.
- */
+*/
 void writeint(const int *p, long nx, long ny, const char*format,...){
     format2fn;
     writearr(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
 }
 /**
    Write a long array of size nx*ny to file.
- */
+*/
 void writelong(const long *p, long nx, long ny, const char*format,...){
     format2fn;
     writearr(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
 }
 /**
    Write spint array of size nx*ny to file. 
- */
+*/
 void writespint(const spint *p, long nx, long ny, const char *format,...){
     format2fn;
     writearr(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
 }
+/**
+   read spint array of size len from file and do optional data conversion. 
+*/
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     int size=0;
     switch(magic & 0xFFFF){
@@ -1041,8 +994,8 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     }
 }
 /**
-   Read spint array of size nx*ny from file. Optionally convert from other formats.
- */
+   Read spint array of size nx*ny from file and do optional data conversion.
+*/
 spint *readspint(file_t *fp, long* nx, long* ny){
     header_t header;
     read_header(&header, fp);
@@ -1062,7 +1015,7 @@ spint *readspint(file_t *fp, long* nx, long* ny){
 
 /**
    Unreference the mmaped memory. When the reference drops to zero, unmap it.
- */
+*/
 void mmap_unref(struct mmap_t *in){
     if(in->nref>1){
 	in->nref--;
@@ -1087,7 +1040,7 @@ struct mmap_t *mmap_new(int fd, void *p, long n){
 }
 /**
    Add a reference to a mmap_t.
- */
+*/
 mmap_t*mmap_ref(mmap_t *in){
     in->nref++;
     return in;

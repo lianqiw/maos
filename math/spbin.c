@@ -41,7 +41,7 @@ void X(spwritedata)(file_t *fp, const X(sp) *sp){
 	X(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
 	uint64_t nzmax;
 	nzmax=sp->p[sp->n];/*don't use sp->nzmax, which maybe larger than actual */
-	zfwritelarr(fp, 1, &nzmax);
+	zfwrite(&nzmax, sizeof(uint64_t), 1, fp);
 	zfwrite(sp->p, sizeof(spint), sp->n+1, fp);
 	zfwrite(sp->i, sizeof(spint), nzmax, fp);
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  

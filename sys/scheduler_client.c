@@ -119,7 +119,7 @@ void init_scheduler(){
 	FILE *fp=fopen(fn,"r");
 	if(fp){
 	    if(fscanf(fp,"%hu", &PORT)!=1){
-		/*warning3("Failed to read port from %s\n",fn); */
+		/*warning_time("Failed to read port from %s\n",fn); */
 	    }
 	    fclose(fp);
 	}
@@ -246,7 +246,7 @@ int scheduler_listen(void(*fun)(int)){
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
-	warning3("Failed to connect to scheduler\n");
+	warning_time("Failed to connect to scheduler\n");
 	exit(0);
 	return -1;
     }
@@ -265,7 +265,7 @@ int scheduler_start(char *path, int nthread, int waiting){
 */
 int scheduler_wait(void){
     if(psock==-1){
-	warning3("Failed to connect to scheduler\n");
+	warning_time("Failed to connect to scheduler\n");
 	return -1;
     }
     /*read will block until clearance is received. */
@@ -374,7 +374,7 @@ int scheduler_recv_socket(int *sfd){
 	}
 	close(ssock);
     }else{
-	warning3("Failed to connect to scheduler\n");
+	warning_time("Failed to connect to scheduler\n");
     }
     return ans;
 }

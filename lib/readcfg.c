@@ -622,9 +622,7 @@ static dmat *readstr_dmat_do(int n, const char *str){
     double *val=NULL;
     if(!str){
 	return 0;
-    }else if((str[0]<='Z' && str[0]>='A')
-       || (str[0]<='z' && str[0]>='a')
-       ||(str[0]=='"' || str[0]=='\'')){
+    }else if(check_suffix(str, ".gz") || check_suffix(str, ".bin") || check_suffix(str, ".fits")){
 	char *fn=strextract(str);
 	return dread("%s", fn);
 	free(fn);

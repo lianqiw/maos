@@ -75,7 +75,7 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	    host=strdup(myhostname());
 	}
 	if(scheduler_launch_exe(host, argc, argv)){
-	    error2("Unable to launch skyc at server %s\n", host);
+	    error("Unable to launch skyc at server %s\n", host);
 	}else{
 	    exit(EXIT_SUCCESS);
 	}

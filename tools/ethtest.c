@@ -264,7 +264,7 @@ int mvm_server(int sock){
 }
 int main(int argc, char *argv[]){
     if(argc<3){
-	error2("Usage: \n\t./ethtest client hostname port \n\t./ethtest server port\n\t./ethtest mvm_server port\n");
+	error("Usage: \n\t./ethtest client hostname port \n\t./ethtest server port\n\t./ethtest mvm_server port\n");
 	_Exit(1);
     }
     set_realtime(0, -20);

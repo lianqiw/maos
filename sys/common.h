@@ -240,44 +240,34 @@ void print_backtrace();
 */
 #ifndef error
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
-#define info(A...) ({char fline[4096];char sect[4096];			\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s", fline);})
+#define info(A...) ({char fline[4096]; int n__;			      \
+	    snprintf(fline,4096, "INFO(%s:%d): ", BASEFILE, __LINE__); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
+	    fprintf(stderr,"%s", fline); })
 
-#define error(A...) ({char fline[4096];char sect[4096];			\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error(%ld): ",sect,thread_id()); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline); QUIT_FUN("error");})
+#define error(A...) ({char fline[4096]; int n__;			\
+	    snprintf(fline,4096, "\033[01;31mFATAL(%s:%d): ", BASEFILE, __LINE__); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, "\033[00;00m"); \
+	    QUIT_FUN(fline);})
 
-#define warning(A...) ({char fline[4096];char sect[4096];		\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+#define warning(A...) ({char fline[4096]; int n__;			\
+	    snprintf(fline,4096, "\033[01;31mWARN(%s:%d): ", BASEFILE, __LINE__); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stderr,"%s\033[00;00m", fline); })
 
-
 #define info2(A...) fprintf(stderr, A)
-#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); QUIT_FUN("ERROR");})
 #define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
 
-#define info3(A...) ({char fline[4096];char sect[4096];			\
-		      snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
-		      snprintf(fline,4096, "[%s]%-20s",sect, myasctime()); \
-		      snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-		      fprintf(stderr,"%s", fline);})
-#define error3(A...) ({char fline[4096];char sect[4096];		\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error:(%ld) ",myasctime(),sect,thread_id()); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline); QUIT_FUN("ERROR");})
+#define info_time(A...) ({char fline[4096]; int n__;			      \
+	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
+	    fprintf(stderr,"%s", fline); })
 
-#define warning3(A...) ({char fline[4096];char sect[4096];		\
-	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
-	    snprintf(fline,4096, "[%s]\033[01;31m%-20s ",myasctime(),sect); \
-	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(sect)-1); \
-	    fprintf(stderr,"%s\033[00;00m", fline);})
+#define warning_time(A...) ({char fline[4096]; int n__;			\
+	    snprintf(fline,4096, "\033[01;31mWARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
+	    fprintf(stderr,"%s\033[00;00m", fline); })
 
 #define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
 #define info_once(A...) ({static int done=0; if(!done){done=1; info2(A);}})
@@ -292,7 +282,7 @@ void print_backtrace();
 #endif
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
-/**
+/*
    Functions that return realtime:
    time(): resolution is in integer second. not enough resolution.
    gettimeofday(): must use struct as input argument.

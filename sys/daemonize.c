@@ -15,17 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/* Check whether scheduler is already running. */
-
 
 #include <netdb.h>
-
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/file.h>
@@ -39,12 +34,18 @@
 #include "misc.h"
 #include "daemonize.h"
 
+/*
+  \file daemonize.c
+
+  Process handling routines.
+*/
 /**
-   Ensure singleton process by opening and maintaining lock of file fn. Will
-   proceed if the lock if succeed, in which case non-negative number of the fd
-   is returned. If other process already locked, will return negative number. If
-   version is specified and is bigger than the value contained in existing
-   fnlock, will kill the old process that created fnlock.
+   Ensure exclusive access by opening and maintaining lock of file fn. 
+
+   Will proceed if the lock if succeed, in which case non-negative number of the
+   fd is returned. If other process already locked, will return negative
+   number. If version is specified and is bigger than the value contained in
+   existing fnlock, will kill the old process that created fnlock.
 */
 int lock_file(const char *fnlock, /**<The filename to lock on*/
 	      long block,         /**<block on weighting. set to 0 for no waiting.*/
@@ -88,11 +89,11 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 			if(!kill(pid,SIGTERM)){//signal sent
 			    sleep(5);
 			    if(!kill(pid,0)){//still running
-				warning3("%d is sending KILL signal to the old executive.\n", getpid());
+				warning_time("%d is sending KILL signal to the old executive.\n", getpid());
 				if(!kill(pid,SIGKILL)){//signal sent
 				    sleep(5);
 				    if(!kill(pid,0)){
-					warning3("Failed to kill the old executive\n");
+					warning_time("Failed to kill the old executive\n");
 					return -pid;
 				    }
 				}
@@ -125,7 +126,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
     return fd;
 }
 /**
-   Launch a single instance daemon. First try to create a lock file progname.pid
+   Launch a singleton daemon. First try to create a lock file progname.pid
    in folder lockfolder_in. If lock failes, it means other daemon already
    exists, will not proceed. If lock succeed, will write pid and version in the
    file.
@@ -267,7 +268,7 @@ static void redirect2fd(int fd){
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 }
-/**
+/*
    Redirect stdout and stderr to fn
  */
 static void redirect2fn(const char *fn){
@@ -281,8 +282,7 @@ static void redirect2fn(const char *fn){
 }
 /**
   Redirect output. 
-  If we are in detached mode, will output to file
-  If we are in attached mode, will output to both file and screen.
+  If we are in detached mode, will output to file, otherwise will output to both file and screen.
 */
 void redirect(void){
     extern int disable_save;
@@ -338,7 +338,7 @@ void daemonize(void){ /* Fork off the parent process */
    fork and launch exe as specified in cmd. cmd should composed of the path to
    start the exe, exe name, and parameters. used by maos/skyc.
 
-   if cwd is NULL, cmd must preceed with the path information.
+   if cwd is NULL, cmd must include path information.
    if cwd is not NULL cmd must only contain arguments, without path information.
  */
 pid_t launch_exe(const char *exepath, const char *cmd){
@@ -449,7 +449,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
     return ans;
 }
 /**
-   Find an exe from maos and return the absolute path.
+   Find an executable from predetermined locations and return the absolute path.
  */
 char *find_exe(const char *name){
     char *fn=stradd(BUILDDIR, "/bin/", name,NULL);

@@ -30,7 +30,6 @@
    functions. All file read/write operators are through functions in this
    file. The routines can also operate on .fits files.
  */
-#define IO_TIMMING 0
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
 #define M_CSP64  0x6400  /*sparse complex */
 #define M_DSP64  0x6401  /*sparse double*/
@@ -88,7 +87,6 @@
 extern "C"{
 #endif
 typedef void* voidp;
-char* procfn(const char *fn, const char *mod,const int defaultgzip);
 voidp gzopen(const char *path, const char *mod);
 voidp gzdopen(int fd, const char *mod);
 long  gztell(voidp gzfile);
@@ -117,7 +115,7 @@ typedef struct {
   Make the following function private so that other 
   routine won't call them directly to avoid conflict.
 */
-extern int disable_save; //saving to disk will be disabled when set to nonzero.
+extern int disable_save; ///saving to disk will be disabled when set to nonzero.
 /*
   The following functions takes long type integers.
 */
@@ -126,7 +124,6 @@ void zftouch(const char *format, ...);
 int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
-file_t* zfdopen(int sock, const char *mod);
 file_t *zfopen(const char *fn, const char *mod);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
@@ -140,8 +137,6 @@ double search_header_num(const char *header, const char *key);
 double search_header_num_valid(const char *header, const char *key);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
-//uint32_t read_magic(file_t *fp, char **header);
-//void write_magic(uint32_t magic, file_t *fp);
 void write_header(const header_t *header, file_t *fp);
 int read_header2(header_t *header, file_t *fp);
 void read_header(header_t *header, file_t *fp);
@@ -158,11 +153,6 @@ INLINE header_t *check_cell(header_t *header, long *nx, long *ny){
     }
     return headerc;
 }
-/*
-  convenient function to write multiple long numbers
-*/
-void zfwritelarr(file_t* fp,int count, ...);
-void zfreadlarr(file_t* fp,int count, ...);
 
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);

@@ -168,7 +168,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
 	if(avail_min<need){
 	    if(avail_max<need){
-		error2("No GPU has enough memory\n");
+		error("No GPU has enough memory\n");
 	    }else{
 		char *gcmd=NULL;
 		for(int igpu=0; igpu<NGPU; igpu++){
