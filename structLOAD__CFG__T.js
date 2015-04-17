@@ -15,10 +15,11 @@ var structLOAD__CFG__T =
     [ "mvm", "structLOAD__CFG__T.html#a2a2447883c9bd857513d0daf1c80b35d", null ],
     [ "mvmi", "structLOAD__CFG__T.html#a58a754448faa8dfec90609320e2893ac", null ],
     [ "mvmf", "structLOAD__CFG__T.html#aeba98bcabc0e1504d0eb748a4d64dfcb", null ],
+    [ "i0", "structLOAD__CFG__T.html#a8e4ccd5fb4d6a234d231e50d9f417156", null ],
     [ "mvst", "structLOAD__CFG__T.html#aaf8875582b897aa7687b202b15b2f814", null ],
     [ "GS0", "structLOAD__CFG__T.html#af0058a2e1d8cf4726c1c80eb21e35491", null ],
     [ "tomo", "structLOAD__CFG__T.html#a6300bd2144c25191aa100662d299234f", null ],
     [ "fit", "structLOAD__CFG__T.html#adf26dbe4454ff3de00641dbf5022b601", null ],
     [ "W", "structLOAD__CFG__T.html#a059a70c92c1cc12fcf7b63d7cbb01a68", null ],
-    [ "i0", "structLOAD__CFG__T.html#a2c1b0048501283f30e0b07e06de55f4b", null ]
+    [ "ncpa", "structLOAD__CFG__T.html#a2ca0bc80952f5f9b6679917ba6a5b784", null ]
 ];

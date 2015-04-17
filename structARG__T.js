@@ -3,8 +3,6 @@ var structARG__T =
     [ "detach", "structARG__T.html#a2c3209f38638cec0a050260bab246299", null ],
     [ "override", "structARG__T.html#aba7f73eef7fe4ee3044f9f772e6f7171", null ],
     [ "force", "structARG__T.html#ac55657110f55a48957f1d60a18c4bf08", null ],
-    [ "nthread", "structARG__T.html#a18bb19154482544ae53621864bab3756", null ],
-    [ "pause", "structARG__T.html#a6ec813068e21706b50e0234d8f2b2f81", null ],
     [ "gpus", "structARG__T.html#a62d58e4bc310f6ce33d5ba78d276431a", null ],
     [ "ngpu", "structARG__T.html#a01151fe4cc29825170b634d5c12d8609", null ],
     [ "ngpu2", "structARG__T.html#a7ce8a56b50d1253d283401b23e13171b", null ],

@@ -1,70 +1,70 @@
 \form#0:$m^2$
 \form#1:$rad^2$
 \form#2:$n_{wvl}\times n_{evl}$
-\form#3:\[ h(x;x_{i};\delta)=h_{0}((x-x_{i})/\delta) \]
-\form#4:$\delta$
-\form#5:$h_{0}$
-\form#6:\begin{eqnarray*} h_{0}(x)=\frac{1}{1+2c}\begin{cases} 1+(4c-\frac{5}{2})|x|^{2}+(\frac{3}{2}-3c)|x|^{3} & |x|\leq1\\ (2c-\frac{1}{2})(2-|x|)^{2}+(\frac{1}{2}-c)(2-|x|)^{3} & 1<|x|\leq2\\ 0 & |x|>2\end{cases}\end{eqnarray*}
-\form#7:$xout=(A.M-A.U*A.V')*xin*alpha$
-\form#8:$xout=(A.M-A.V*A.U')*xin*alpha$
-\form#9:$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha$
-\form#10:$C_n^2$
-\form#11:$\pm$
-\form#12:$A^T(W0 B-W1 (W1^T B))$
-\form#13:$\phi(\theta)$
-\form#14:$i$
-\form#15:$\theta_{i}$
-\form#16:$\alpha$
-\form#17:\[ I(\theta_{i})=\int\textrm{d}\theta\phi(\theta)S(\theta-\theta_{i})=\int\textrm{d}\theta\phi(\theta-\theta_{i})S(\theta)\]
-\form#18:$S(\theta)$
-\form#19:\begin{eqnarray*} I(\theta_{i}) & = & \int\textrm{d}\theta\int\textrm{d} u\hat{\phi}(u)e^{2\pi i(\theta-\theta_{i})u}S(\theta)\\ & = & \int\textrm{d} u\hat{\phi}(u)\hat{S}(-u)e^{2\pi i\theta_{i}u}\\ & = & \mathcal{F}^{-1}[\hat{\phi}(u)\hat{S}(-u)](\theta_{i})\end{eqnarray*}
-\form#20:\[ S(\theta)=S^{\prime}(\theta_{ra})=\sqcap(\theta_{r}/\Delta)\sqcap(\theta_{a}/\Delta)*\frac{1}{2\pi \theta_b^2}\exp(-\frac{\theta_r^2+\theta_u^2}{2\theta_b^2}) \]
-\form#21:$R$
-\form#22:$\theta_{ra}=R^{T}\theta$
-\form#23:$\theta_b$
-\form#24:$x/y$
-\form#25:\begin{eqnarray*} \hat{S}(u) & = & \int\textrm{d}\theta S(\theta)e^{-2\pi i\theta^{T}u}\\ & = & \int\textrm{d}\theta S^{\prime}(R^{T}\theta)e^{-2\pi i\theta^{T}u}\\ & = &\int\textrm{d}(R^{T}\theta)S^{\prime}(R^{T}\theta)e^{-2\pi i(R^{T}\theta)^{T}(R^{T}u)}\\ & = & \hat{S^{\prime}}(R^{T}u)\end{eqnarray*}
-\form#26:$\hat{S^{\prime}}$
-\form#27:\[ \hat{S^{\prime}}(u_{ra})=\Delta^{2}\textrm{sinc}(u_{r}\Delta)\textrm{sinc}(u_{\theta}\Delta) \exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)] \]
-\form#28:\[ I(\theta_{i})=\mathcal{F}^{-1}[\hat{\phi}(u)\Delta^{2}\textrm{sinc}(\Delta(u_{x}\cos\theta+u_{y}\sin\theta))\textrm{sinc}(\Delta(-u_{x}\sin\theta+u_{y}\cos\theta))\exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)](\theta_{i})\]
-\form#29:$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$
-\form#30:$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.$
-\form#31:$s$
-\form#32:$G_{lgs}$
-\form#33:$G_{ngs}$
-\form#34:$C_{lgs}, C_{ngs}$
-\form#35:$\hat{x}_{lgs}$
-\form#36:$\hat{x}_{ngs}$
-\form#37:$a_{ngs}$
-\form#38:$F$
-\form#39:$H_A$
-\form#40:$MVModes$
-\form#41:$MVRngs$
-\form#42:\begin{eqnarray*} \hat{x}_{lgs}&=&A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&=&A^{-1}G_{ngs}^TC_{ngs}^{-1}\\ \hat{x}_{ngs}&=&Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&=&F\hat{x}_{ngs}\\ MVModes&=&F\cdot Uw\\ MVRngs&=&(1+G_{ngs}Uw)^{-1} \end{eqnarray*}
-\form#43:$F\cdot Uw$
-\form#44:$W_0, W_1$
-\form#45:\begin{eqnarray*} Q&=&H_A\cdot F \cdot Uw\\ M_{CC}&=&Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}
-\form#46:$MCC$
-\form#47:$M_{CC}=u\Sigma v^T $
-\form#48:$u{\equiv}v$
-\form#49:\begin{eqnarray*} MVModes&=&F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&=&\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}
-\form#50:$||H_X x - H_A a||^2_W$
-\form#51:$H_X, H_A$
-\form#52:$a=\left[H_A^T(W_0-W_1 W_1^T)H_A\right]^{-1} H_A^T (W_0-W_1) H_X x$
-\form#53:\[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\]
-\form#54:$\textrm{PSF}=\frac{1}{N^2\sum(\textrm{amp}^2)}|\textrm{fftshift}\mathcal{F}[A \exp(-\frac{2\pi}{\lambda}\textrm{opd})]|^2$
-\form#55:$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]$
-\form#56:$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) $
-\form#57:$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]$
+\form#3:$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) $
+\form#4:$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]$
+\form#5:$\textrm{PSF}=\frac{1}{N^2\sum(\textrm{amp}^2)}|\textrm{fftshift}\mathcal{F}[A \exp(-\frac{2\pi}{\lambda}\textrm{opd})]|^2$
+\form#6:$I=\textrm{si}*\mathcal{F}^{-1}[\mathcal{F}[\textrm{PSF}\times\textrm{nominal}]]$
+\form#7:\[ h(x;x_{i};\delta)=h_{0}((x-x_{i})/\delta) \]
+\form#8:$\delta$
+\form#9:$h_{0}$
+\form#10:\begin{eqnarray*} h_{0}(x)=\frac{1}{1+2c}\begin{cases} 1+(4c-\frac{5}{2})|x|^{2}+(\frac{3}{2}-3c)|x|^{3} & |x|\leq1\\ (2c-\frac{1}{2})(2-|x|)^{2}+(\frac{1}{2}-c)(2-|x|)^{3} & 1<|x|\leq2\\ 0 & |x|>2\end{cases}\end{eqnarray*}
+\form#11:$xout=(A.M-A.U*A.V')*xin*alpha$
+\form#12:$xout=(A.M-A.V*A.U')*xin*alpha$
+\form#13:$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha$
+\form#14:$C_n^2$
+\form#15:$\pm$
+\form#16:$A^T(W0 B-W1 (W1^T B))$
+\form#17:$\phi(\theta)$
+\form#18:$i$
+\form#19:$\theta_{i}$
+\form#20:$\alpha$
+\form#21:\[ I(\theta_{i})=\int\textrm{d}\theta\phi(\theta)S(\theta-\theta_{i})=\int\textrm{d}\theta\phi(\theta-\theta_{i})S(\theta)\]
+\form#22:$S(\theta)$
+\form#23:\begin{eqnarray*} I(\theta_{i}) & = & \int\textrm{d}\theta\int\textrm{d} u\hat{\phi}(u)e^{2\pi i(\theta-\theta_{i})u}S(\theta)\\ & = & \int\textrm{d} u\hat{\phi}(u)\hat{S}(-u)e^{2\pi i\theta_{i}u}\\ & = & \mathcal{F}^{-1}[\hat{\phi}(u)\hat{S}(-u)](\theta_{i})\end{eqnarray*}
+\form#24:\[ S(\theta)=S^{\prime}(\theta_{ra})=\sqcap(\theta_{r}/\Delta)\sqcap(\theta_{a}/\Delta)*\frac{1}{2\pi \theta_b^2}\exp(-\frac{\theta_r^2+\theta_u^2}{2\theta_b^2}) \]
+\form#25:$R$
+\form#26:$\theta_{ra}=R^{T}\theta$
+\form#27:$\theta_b$
+\form#28:$x/y$
+\form#29:\begin{eqnarray*} \hat{S}(u) & = & \int\textrm{d}\theta S(\theta)e^{-2\pi i\theta^{T}u}\\ & = & \int\textrm{d}\theta S^{\prime}(R^{T}\theta)e^{-2\pi i\theta^{T}u}\\ & = &\int\textrm{d}(R^{T}\theta)S^{\prime}(R^{T}\theta)e^{-2\pi i(R^{T}\theta)^{T}(R^{T}u)}\\ & = & \hat{S^{\prime}}(R^{T}u)\end{eqnarray*}
+\form#30:$\hat{S^{\prime}}$
+\form#31:\[ \hat{S^{\prime}}(u_{ra})=\Delta^{2}\textrm{sinc}(u_{r}\Delta)\textrm{sinc}(u_{\theta}\Delta) \exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)] \]
+\form#32:\[ I(\theta_{i})=\mathcal{F}^{-1}[\hat{\phi}(u)\Delta^{2}\textrm{sinc}(\Delta(u_{x}\cos\theta+u_{y}\sin\theta))\textrm{sinc}(\Delta(-u_{x}\sin\theta+u_{y}\cos\theta))\exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)](\theta_{i})\]
+\form#33:$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$
+\form#34:$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv R_L^{-1} R_R s.$
+\form#35:$s$
+\form#36:$G_{lgs}$
+\form#37:$G_{ngs}$
+\form#38:$C_{lgs}, C_{ngs}$
+\form#39:$\hat{x}_{lgs}$
+\form#40:$\hat{x}_{ngs}$
+\form#41:$a_{ngs}$
+\form#42:$F$
+\form#43:$H_A$
+\form#44:$MVModes$
+\form#45:$MVRngs$
+\form#46:\begin{eqnarray*} \hat{x}_{lgs}&=&A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&=&A^{-1}G_{ngs}^TC_{ngs}^{-1}\\ \hat{x}_{ngs}&=&Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&=&F\hat{x}_{ngs}\\ MVModes&=&F\cdot Uw\\ MVRngs&=&(1+G_{ngs}Uw)^{-1} \end{eqnarray*}
+\form#47:$F\cdot Uw$
+\form#48:$W_0, W_1$
+\form#49:\begin{eqnarray*} Q&=&H_A\cdot F \cdot Uw\\ M_{CC}&=&Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}
+\form#50:$MCC$
+\form#51:$M_{CC}=u\Sigma v^T $
+\form#52:$u{\equiv}v$
+\form#53:\begin{eqnarray*} MVModes&=&F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&=&\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}
+\form#54:$||H_X x - H_A a||^2_W$
+\form#55:$H_X, H_A$
+\form#56:$a=\left[H_A^T(W_0-W_1 W_1^T)H_A\right]^{-1} H_A^T (W_0-W_1) H_X x$
+\form#57:\[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\]
 \form#58:$B=inv(A'*W*A)*A'*W$
-\form#59:$C0+=A*B*alpha$
-\form#60:\[f^\prime(0)=(f(1)-f(-1))/2\]
-\form#61:\[f^\prime(0)=(f(1)-f(0))\]
-\form#62:$f(x)$
-\form#63:\[ f(x)=ax^3+bx^2+cx+d \]
-\form#64:\[ f(x)=3ax^3+2bx+c \]
-\form#65:\begin{eqnarray*} a&=&2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&=&-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&=&f^\prime(0)\\ d&=&f(0)\\ \end{eqnarray*}
-\form#66:\begin{eqnarray*} f^\prime(0)&=&\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&=&\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}
-\form#67:\begin{eqnarray*} a&=&-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&=& f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&=&-0.5 f(-1) + 0.5 f(1) \\ d&=& f(0) \\ \end{eqnarray*}
+\form#59:$f(x)$
+\form#60:\[ f(x)=ax^3+bx^2+cx+d \]
+\form#61:\[ f(x)=3ax^3+2bx+c \]
+\form#62:\begin{eqnarray*} a&=&2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&=&-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&=&f^\prime(0)\\ d&=&f(0)\\ \end{eqnarray*}
+\form#63:\begin{eqnarray*} f^\prime(0)&=&\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&=&\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}
+\form#64:\begin{eqnarray*} a&=&-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&=& f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&=&-0.5 f(-1) + 0.5 f(1) \\ d&=& f(0) \\ \end{eqnarray*}
+\form#65:\[f^\prime(0)=(f(1)-f(-1))/2\]
+\form#66:\[f^\prime(0)=(f(1)-f(0))\]
+\form#67:$C0+=A*B*alpha$
 \form#68:$C_n^k$
 \form#69:\[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \]

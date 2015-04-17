@@ -35,7 +35,7 @@ var structGPU__DATA__T =
     [ "pixbias", "structGPU__DATA__T.html#a1a40911a9c795d4f501f02fb909ec668", null ],
     [ "gdm", "structGPU__DATA__T.html#a6f0b865e4d167d1b80b922469682844e", null ],
     [ "actelse", "structGPU__DATA__T.html#ad14cd87bd1c867dc87875e66438ee665", null ],
-    [ "FSMdelta", "structGPU__DATA__T.html#a16c5da22af3287e8274d5b14602a39ae", null ],
+    [ "FSMdelta", "structGPU__DATA__T.html#a2c3bf659d7fe177eb100e02bda5794d2", null ],
     [ "im0", "structGPU__DATA__T.html#a2ef18c024e8c0cf55b93854368335e79", null ],
     [ "mtch_isa", "structGPU__DATA__T.html#a1a269c334d49ccd6faf319a606772f40", null ],
     [ "saind", "structGPU__DATA__T.html#abc23f02096a36e7fb9e2b26f52f08007", null ],

@@ -12,7 +12,8 @@ var searchData=
   ['zoomgain',['zoomgain',['../structSIM__CFG__T.html#a99a95741a15165c3c25ede5e6369a2f0',1,'SIM_CFG_T']]],
   ['zoomint',['zoomint',['../structSIM__T.html#adda285ed2941c7d3cfdcac50fca4891b',1,'SIM_T']]],
   ['zoompos',['zoompos',['../structSIM__T.html#a31df68e4eec7d9f5b55e48ea64607998',1,'SIM_T']]],
+  ['zoomreal',['zoomreal',['../structSIM__T.html#a4b6e10fa9a9479fbda37b576f92b27e3',1,'SIM_T']]],
   ['zoomshare',['zoomshare',['../structSIM__CFG__T.html#a20bdbee848a5f979efc5244a6df0dcdb',1,'SIM_CFG_T']]],
   ['ztiltout',['ztiltout',['../structSIM__SAVE__T.html#a710796a2f0d14bfd23343c59985d04bd',1,'SIM_SAVE_T::ztiltout()'],['../structWFS__S.html#a1691dcb36d9496a839cbd64842fe4e5a',1,'WFS_S::ztiltout()'],['../structSTAR__S.html#a783187058941a0bffb43ab215cff9d26',1,'STAR_S::ztiltout()']]],
-  ['zzt',['ZZT',['../structRECON__T.html#adafac44fb018d6c245653816e2b42fdd',1,'RECON_T']]]
+  ['zzt',['ZZT',['../structRECON__T.html#a3c26fcdfb72ba980ead3f1fe0acbe949',1,'RECON_T']]]
 ];

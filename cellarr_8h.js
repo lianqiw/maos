@@ -3,6 +3,7 @@ var cellarr_8h =
     [ "cellarr", "structcellarr.html", "structcellarr" ],
     [ "cellarr", "cellarr_8h.html#a0a64cbb615286dee5780159a637e80d1", null ],
     [ "cellarr_init", "cellarr_8h.html#a42c2be57d6cae76e6dce51b974ee6dd8", null ],
+    [ "cellarr_push", "cellarr_8h.html#a007161604e1c45af16d130465e21e88b", null ],
     [ "cellarr_dcell", "cellarr_8h.html#a605ba4e2c0a6c447806d165b184c8435", null ],
     [ "cellarr_scell", "cellarr_8h.html#a7806bc9ba8fdb6b64675f7cffb5254ca", null ],
     [ "cellarr_ccell", "cellarr_8h.html#ad2a2c524cc895bfe2f869c184a93668b", null ],

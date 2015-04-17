@@ -5,7 +5,7 @@ var muv_8h =
     [ "MUV_T", "muv_8h.html#a690187651e7e03633db419281f739d14", null ],
     [ "muv", "muv_8h.html#ae3b764fcb53055a4949e6189432039af", null ],
     [ "muv_trans", "muv_8h.html#a7759cce4984eddbc3b047a8cc0071656", null ],
-    [ "muv_sp", "muv_8h.html#a7fb26a9c4c4ff6adcfeb729654310fc0", null ],
+    [ "muv_sp", "muv_8h.html#af98e98b11966e2d49872ea64ef7894b2", null ],
     [ "muv_ib", "muv_8h.html#a4acab140c9b57cb7668448bde52b837d", null ],
     [ "muv_direct_solve_cell", "muv_8h.html#a80e3f550a1b56369ec606ade7b3ec793", null ],
     [ "muv_direct_solve", "muv_8h.html#a3e72ecac126b7f8a8b55951260883f69", null ],

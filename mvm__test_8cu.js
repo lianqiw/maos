@@ -10,7 +10,7 @@ var mvm__test_8cu =
     [ "bny", "mvm__test_8cu.html#a544faa6e8d4958efa500fd34549897ea", null ],
     [ "BLOCKMV_TNY", "mvm__test_8cu.html#a831e0e858acd4b0330dd4a05e0dd9ad5", null ],
     [ "BLOCKMV_TNX", "mvm__test_8cu.html#a2d90c413cc301bae7ba09dc21935e0f6", null ],
-    [ "ATYPE", "mvm__test_8cu.html#a0b07e8324439d123ec7eca5052003620", null ],
-    [ "GTYPE", "mvm__test_8cu.html#a9d28231a042563029bca09df3421c3ec", null ],
+    [ "ATYPE", "mvm__test_8cu.html#a9fd39fe80a727d5875a61c9216560740", null ],
+    [ "GTYPE", "mvm__test_8cu.html#a413577a1ba237835d102a67ada5304a8", null ],
     [ "mvm_test", "mvm__test_8cu.html#a9f05c59690f79cc115fe3d23dfcfdf93", null ]
 ];

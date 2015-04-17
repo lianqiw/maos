@@ -18,6 +18,6 @@ var searchData=
   ['tomort',['TomoRt',['../recon__utils_8c.html#ad52c3cc4883b219477bd9e5dea89eeae',1,'recon_utils.c']]],
   ['ttfr',['TTFR',['../recon__utils_8c.html#a08347b75d2ff1eb95c0a179873921e98',1,'recon_utils.c']]],
   ['ttfrt',['TTFRt',['../recon__utils_8c.html#a248c9770547232db990ea4a34db3deb9',1,'recon_utils.c']]],
-  ['turbcov',['turbcov',['../turbulence_8h.html#a8a0813e128c3d37863bbd6c34bad5196',1,'turbulence.c']]],
-  ['turbpsd_5ffull',['turbpsd_full',['../turbulence_8h.html#a37c204f03307e1c84d10e3ee0baf1c7f',1,'turbulence.c']]]
+  ['turb_5fdm',['turb_dm',['../filter_8c.html#a2a5fce39d5e74bf0dd37966490eae99a',1,'filter.c']]],
+  ['turbcov',['turbcov',['../turbulence_8h.html#a8a0813e128c3d37863bbd6c34bad5196',1,'turbulence.c']]]
 ];

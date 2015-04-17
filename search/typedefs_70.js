@@ -6,5 +6,6 @@ var searchData=
   ['plot_5fcfg_5ft',['PLOT_CFG_T',['../maos_2parms_8h.html#a2ea99db9960160a8c0101a7f3fdbdfde',1,'parms.h']]],
   ['powfs_5fcfg_5ft',['POWFS_CFG_T',['../maos_2parms_8h.html#a518299fb54b88b002e35e58fab7283a2',1,'parms.h']]],
   ['powfs_5fs',['POWFS_S',['../skyc_2types_8h.html#a6644e0a17f55ea7c8e4eb60401eae628',1,'types.h']]],
-  ['powfs_5ft',['POWFS_T',['../maos_2types_8h.html#acb717d90015a67846eff23714b6d2985',1,'types.h']]]
+  ['powfs_5ft',['POWFS_T',['../maos_2types_8h.html#a71f2c5758904d06c80596c8adbdfd177',1,'types.h']]],
+  ['pts_5ft',['pts_t',['../type_8h.html#a8258bd56c5796930d3701a3253c41a20',1,'type.h']]]
 ];

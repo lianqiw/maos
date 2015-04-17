@@ -7,7 +7,7 @@ var classcuda__wfs_1_1cushphy__t =
     [ "addnoise", "classcuda__wfs_1_1cushphy__t.html#a9e00baa62c41295177a998b37a07b97f", null ],
     [ "output", "classcuda__wfs_1_1cushphy__t.html#a26782fa0e3c96efd5a195221015afaeb", null ],
     [ "seeding", "classcuda__wfs_1_1cushphy__t.html#a9c4e51d6f0b07362c73df344bee76661", null ],
-    [ "dxsa", "classcuda__wfs_1_1cushphy__t.html#af7f0e53445be609c261c6deb419cf845", null ],
+    [ "dxsa", "classcuda__wfs_1_1cushphy__t.html#a68762fa1cc6c255c1918cc25b4ca52a7", null ],
     [ "nxsa", "classcuda__wfs_1_1cushphy__t.html#a0f7c8c4d4f0af8c36fda2be7c62c5874", null ],
     [ "rand", "classcuda__wfs_1_1cushphy__t.html#aee1218dc10752313574b8c819ed3f7b9", null ],
     [ "stream", "classcuda__wfs_1_1cushphy__t.html#a700b24af903267625ad178446cf549f4", null ],

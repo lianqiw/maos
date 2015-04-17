@@ -9,8 +9,8 @@ var searchData=
   ['ngsmod2dm',['ngsmod2dm',['../ahst_8c.html#a3d2a474cd4a6fcebb9e1ff8f26855353',1,'ahst.c']]],
   ['ngsmod2science',['ngsmod2science',['../ahst_8c.html#a0182debdd2a686ac5e1b02a9588dfe0e',1,'ahst.c']]],
   ['ngsmod2wvf',['ngsmod2wvf',['../skysim__utils_8c.html#a6c694ce3a89108572cbbef38e353c9e2',1,'skysim_utils.c']]],
-  ['ngsmod_5fhm_5faccphi',['ngsmod_hm_accphi',['../ahst_8c.html#a7e3cbb7965f524ef7ab5c63a90466abd',1,'ahst.c']]],
-  ['ngsmod_5fhm_5fana',['ngsmod_hm_ana',['../ahst_8c.html#af38907f48ddcb69345df2d5ef6ecc615',1,'ahst.c']]],
+  ['ngsmod_5fhm_5faccphi',['ngsmod_hm_accphi',['../ahst_8c.html#a192c4884609228272643174ef145d71e',1,'ahst.c']]],
+  ['ngsmod_5fhm_5fana',['ngsmod_hm_ana',['../ahst_8c.html#a361c2bca340edabb5a394c01aafc54e9',1,'ahst.c']]],
   ['normalize_5fmax',['normalize_max',['../mathmisc_8h.html#a4ed0395a68a0c06d7bab414a7ba61ca2',1,'mathmisc.c']]],
   ['normalize_5fsum',['normalize_sum',['../mathmisc_8h.html#a5d93ab065d26256340ccb78b4cc1e0fd',1,'mathmisc.c']]]
 ];

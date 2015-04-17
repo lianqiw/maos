@@ -6,7 +6,7 @@ var classcuda__recon_1_1curecon__geom =
     [ "ndm", "classcuda__recon_1_1curecon__geom.html#a974c5011e87c1f8ac41f4b2942a6f782", null ],
     [ "delay", "classcuda__recon_1_1curecon__geom.html#aac185d31104cba35efbef709c9663dcc", null ],
     [ "isim", "classcuda__recon_1_1curecon__geom.html#ab47bc10bc6552890e3ff4b4059975a2f", null ],
-    [ "isimr", "classcuda__recon_1_1curecon__geom.html#aba8438ed462d515eec6ab06db917a084", null ],
+    [ "reconisim", "classcuda__recon_1_1curecon__geom.html#ac79a597dcebb46f9fb9c726ce1084bf6", null ],
     [ "xmap", "classcuda__recon_1_1curecon__geom.html#a79f4ae4efc1fbfb641000c81854cd76b", null ],
     [ "xcmap", "classcuda__recon_1_1curecon__geom.html#a76f61aad45090a0136f0fb6053b587d7", null ],
     [ "amap", "classcuda__recon_1_1curecon__geom.html#aace7874f284ef7e33860039ed2d5528f", null ],
@@ -19,5 +19,5 @@ var classcuda__recon_1_1curecon__geom =
     [ "any", "classcuda__recon_1_1curecon__geom.html#aa8b7e35bd31dbad9e72846501edb7068", null ],
     [ "anloc", "classcuda__recon_1_1curecon__geom.html#ac092cb47c5056fc18611c49aac07fb6d", null ],
     [ "ngrad", "classcuda__recon_1_1curecon__geom.html#a56ffb202bd7b92d48f38052b304c30c8", null ],
-    [ "dt", "classcuda__recon_1_1curecon__geom.html#a8341ebc215c38be70f527234d1b7c402", null ]
+    [ "dt", "classcuda__recon_1_1curecon__geom.html#ad28dbff73b793a746bb3090c065a5792", null ]
 ];

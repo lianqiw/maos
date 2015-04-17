@@ -6,5 +6,6 @@ var structlocstat__t =
     [ "xmin", "structlocstat__t.html#aef821a262bf053742259d208d5fe3ead", null ],
     [ "ymin", "structlocstat__t.html#aaff50975aabe2a64b81faa62228dc0c7", null ],
     [ "ncol", "structlocstat__t.html#a97e5f52c821e34ebf38586a6a019d652", null ],
-    [ "nrow", "structlocstat__t.html#a087bd5a594cf1e49f274b06bc4ca7a7f", null ]
+    [ "nx", "structlocstat__t.html#a62589802e627919e4f176e80fb49da0e", null ],
+    [ "ny", "structlocstat__t.html#a149274579012b1df0813c6020df76c36", null ]
 ];

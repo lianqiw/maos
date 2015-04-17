@@ -7,6 +7,7 @@ var classcumat =
     [ "trans", "classcumat.html#a90a0f99352b6bf54579036b8b8accc68", null ],
     [ "operator T *", "classcumat.html#a681c185109e2a4196d4f87bcf4458ba4", null ],
     [ "operator()", "classcumat.html#a5419da3609f479aa85f5b6b7d7fa9a00", null ],
+    [ "col", "classcumat.html#aacdb39b90073734e8fbbb3c454a8262a", null ],
     [ "p", "classcumat.html#ac7392d26b28be499c837ca65ad6390c2", null ],
     [ "nx", "classcumat.html#a963af98c8b7dab987eb11123986d8cf6", null ],
     [ "ny", "classcumat.html#a39cacc41a4cd7068e5873fcdbdecc079", null ],

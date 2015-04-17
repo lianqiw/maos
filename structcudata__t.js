@@ -1,7 +1,13 @@
 var structcudata__t =
 [
     [ "cudata_t", "structcudata__t.html#a38cbe890ecef9ba9ba3840f7811b9da1", null ],
+    [ "~cudata_t", "structcudata__t.html#a39193b2e23274c58ae18584232667f42", null ],
+    [ "igpu", "structcudata__t.html#a6b54a9a44f05e75f204d07d97e58d2f6", null ],
     [ "memhash", "structcudata__t.html#ad67c72f3173856a7cc5c822788d596f1", null ],
+    [ "memcount", "structcudata__t.html#ac69c6c5b54bfb95a31f3bc41baf4a56e", null ],
+    [ "memcache", "structcudata__t.html#a7ff9926c30c412459537bd69f0cfed36", null ],
+    [ "nmemcache", "structcudata__t.html#aacf1fbec75268f7c95a9bf08585eb122", null ],
+    [ "memmutex", "structcudata__t.html#a5c638508220763c81c6f3677d9e447d2", null ],
     [ "reserve", "structcudata__t.html#abec43b92a3e416b01f84304ac8fd96f2", null ],
     [ "atm", "structcudata__t.html#a0e95406c81bb7dcdd4606d32b28d59c4", null ],
     [ "dmreal", "structcudata__t.html#a4c1cc0bad56053e9e6b0a8e351966d19", null ],
@@ -9,7 +15,7 @@ var structcudata__t =
     [ "nps", "structcudata__t.html#accac58b8212e3b1780f8c14c1d1c433a", null ],
     [ "ndm", "structcudata__t.html#a87d3dea8e558703016db5250803704be", null ],
     [ "perf", "structcudata__t.html#a64d80578a56555cca03f6a21d583c8f6", null ],
-    [ "powfs", "structcudata__t.html#ab1ea75a6cd0a43ea7d5e18f09e2debfe", null ],
+    [ "powfs", "structcudata__t.html#aee7aa705c0aaf5d28dc3788ffa2c7e93", null ],
     [ "recon", "structcudata__t.html#a0862d3766ca07b82dd31cd62be4ac120", null ],
     [ "dm_wfs", "structcudata__t.html#a6b7437010cbda2bbdf4df4586fadb359", null ],
     [ "dm_evl", "structcudata__t.html#ae9dacdd225490265476e88f693deb81e", null ],

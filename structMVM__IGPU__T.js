@@ -14,7 +14,7 @@ var structMVM__IGPU__T =
     [ "mvmig", "structMVM__IGPU__T.html#a5a375d5e36e2e6adfe04911fd08c4a32", null ],
     [ "mvmfg", "structMVM__IGPU__T.html#a465628345c779b71145cb0645549005d", null ],
     [ "mvmt", "structMVM__IGPU__T.html#a2c6b9cb950b10a16c446c85f5906ebfb", null ],
-    [ "FLI", "structMVM__IGPU__T.html#a80274feb2059c7a5f28a988c569cff3e", null ],
+    [ "FLI", "structMVM__IGPU__T.html#a1a71ce0395cce078e6145893a97f8d12", null ],
     [ "residual", "structMVM__IGPU__T.html#a13ada47cd8a55603d0b501767c4d48eb", null ],
     [ "residualfit", "structMVM__IGPU__T.html#a4598fa55be2135eeebfb483e36e3bc49", null ],
     [ "curp", "structMVM__IGPU__T.html#a43f9d4e99a0f361b460946f425b1529c", null ],

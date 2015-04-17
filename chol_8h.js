@@ -2,8 +2,6 @@ var chol_8h =
 [
     [ "spchol", "structspchol.html", "structspchol" ],
     [ "chol_free", "chol_8h.html#a44f9dcd365904c56907f9f03b25fd9d5", null ],
-    [ "cholmod_factor", "chol_8h.html#a1ac433cd0d7b64d449b56872f934590b", null ],
-    [ "cholmod_common", "chol_8h.html#a744c4af5d3fe6d37bccade3eca52b677", null ],
     [ "spchol", "chol_8h.html#a44a0b94cdf0522644f74b23110a06664", null ],
     [ "chol_factorize", "chol_8h.html#a43ab12416b0a5f5b4bb88587edbb9b12", null ],
     [ "chol_solve", "chol_8h.html#a90a86be3964aac1e9130deda1ff26f4d", null ],

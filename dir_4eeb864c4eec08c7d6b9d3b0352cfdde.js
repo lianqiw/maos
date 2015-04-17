@@ -5,7 +5,6 @@ var dir_4eeb864c4eec08c7d6b9d3b0352cfdde =
     [ "cov2psf.c", "cov2psf_8c.html", "cov2psf_8c" ],
     [ "drawres.c", "drawres_8c.html", "drawres_8c" ],
     [ "ethtest.c", "ethtest_8c.html", "ethtest_8c" ],
-    [ "gpu_mvm.c", "gpu__mvm_8c.html", "gpu__mvm_8c" ],
     [ "load.c", "load_8c.html", "load_8c" ],
     [ "mk2dcov.c", "mk2dcov_8c.html", "mk2dcov_8c" ],
     [ "mvm_cpu.c", "mvm__cpu_8c.html", "mvm__cpu_8c" ],

@@ -15,7 +15,6 @@ var structTOMO__CFG__T =
     [ "piston_cr", "structTOMO__CFG__T.html#a92881e916c336aa7e5b337f4f1aab397", null ],
     [ "ahst_wt", "structTOMO__CFG__T.html#a251db726cf66e7523832f2c8bb4ff72b", null ],
     [ "ahst_idealngs", "structTOMO__CFG__T.html#a19bfc1f68d72b0ef71289fd3266afd50", null ],
-    [ "ahst_ttr", "structTOMO__CFG__T.html#af99805edb062959db444f805900fe3aa", null ],
     [ "alg", "structTOMO__CFG__T.html#a78278efa786e9d15e8de3a3af9525101", null ],
     [ "bgs", "structTOMO__CFG__T.html#ab86fba2401ef6e70b161e05e4eb90b90", null ],
     [ "precond", "structTOMO__CFG__T.html#a55e4197464d1963dbff66662ec83f4b1", null ],
@@ -24,6 +23,5 @@ var structTOMO__CFG__T =
     [ "predict", "structTOMO__CFG__T.html#a3f791395e4280d0850637cdbd50f3332", null ],
     [ "cubic", "structTOMO__CFG__T.html#ae00e0bbe65e2f3befc1cc7ecd5b33cbe", null ],
     [ "ninit", "structTOMO__CFG__T.html#ab22689e6073b30826a752cd54eeed379", null ],
-    [ "psol", "structTOMO__CFG__T.html#a5c013d5e2fd526b69b0a8405d45b0f5b", null ],
     [ "splitlrt", "structTOMO__CFG__T.html#a3c1f1b0c942258deca7af43e5af45e58", null ]
 ];

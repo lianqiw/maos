@@ -10,5 +10,6 @@ var searchData=
   ['proc_5ft',['PROC_T',['../structPROC__T.html',1,'']]],
   ['prop_5fwrap_5ft',['PROP_WRAP_T',['../structPROP__WRAP__T.html',1,'']]],
   ['propdata_5ft',['PROPDATA_T',['../structPROPDATA__T.html',1,'']]],
-  ['pts_5ft',['pts_t',['../structpts__t.html',1,'']]]
+  ['pts_5ft',['pts_t',['../structpts__t.html',1,'']]],
+  ['pywfs_5ft',['PYWFS_T',['../structPYWFS__T.html',1,'']]]
 ];

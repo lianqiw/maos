@@ -2,7 +2,6 @@ var searchData=
 [
   ['maos_2ec',['maos.c',['../maos_8c.html',1,'']]],
   ['mathmisc_2eh',['mathmisc.h',['../mathmisc_8h.html',1,'']]],
-  ['misc_2eh',['misc.h',['../misc_8h.html',1,'']]],
   ['mk2dcov_2ec',['mk2dcov.c',['../mk2dcov_8c.html',1,'']]],
   ['mkdtf_2eh',['mkdtf.h',['../mkdtf_8h.html',1,'']]],
   ['mkg_2eh',['mkg.h',['../mkg_8h.html',1,'']]],

@@ -1,5 +1,6 @@
 var maos_8c =
 [
+    [ "maos_setup", "maos_8c.html#a0d93ecccfeb2fc3505b762776178ff44", null ],
     [ "maos", "maos_8c.html#a03b12a216d3e6a33a008f5e35da726e3", null ],
-    [ "main", "maos_8c.html#ac0f2228420376f4db7e1274f2b41667c", null ]
+    [ "maos_reset", "maos_8c.html#ab51286f168c1230cda425a07100662ea", null ]
 ];

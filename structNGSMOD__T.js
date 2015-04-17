@@ -12,8 +12,7 @@ var structNGSMOD__T =
     [ "Rngs", "structNGSMOD__T.html#a514dd751c537bb91de904edc719535df", null ],
     [ "Pngs", "structNGSMOD__T.html#a3e0a759744994377aef5ba9eaefdb90d", null ],
     [ "Modes", "structNGSMOD__T.html#a1dfff587d6fcd3ac3bf9b04d71c5e27f", null ],
-    [ "Ptt", "structNGSMOD__T.html#ae45f01f0921c2ad9c9c599ff9e0bd072", null ],
-    [ "Wa", "structNGSMOD__T.html#ac152fb7687bbbc451a6cc7e7062ca49e", null ],
+    [ "Wa", "structNGSMOD__T.html#a535f0b1b726e7bba843e5c782f525b91", null ],
     [ "nmod", "structNGSMOD__T.html#acae8e0b2e457d89909ae6a3a6c670dd8", null ],
     [ "ahstfocus", "structNGSMOD__T.html#a775fc58dfb417d170c077c3ee44f204c", null ]
 ];

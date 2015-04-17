@@ -54,10 +54,8 @@ var maos_2parms_8h =
       [ "T_XLOC", "maos_2parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a768d170364561a103dbda61d71d776aa", null ],
       [ "T_ATM", "maos_2parms_8h.html#aa54a3168fd46da424c10df2764f9ef49a4418c1a2575f3cf5689ed32e0e904b48", null ]
     ] ],
-    [ "setup_parms", "maos_2parms_8h.html#a97bc282d28009f59b0b4e51013062588", null ],
-    [ "setup_parms_gpu", "maos_2parms_8h.html#a55a5291e2b5e5acff919cedcab4d1b52", null ],
+    [ "setup_parms", "maos_2parms_8h.html#a43a230cd655d6c6e0582849152f2e989", null ],
+    [ "setup_parms_gpu", "maos_2parms_8h.html#a9a36b5678c2ca8539187637c1e016a2c", null ],
     [ "free_parms", "maos_2parms_8h.html#afad950a4f059f347cede7c2f97c7e0bd", null ],
-    [ "create_metapupil", "maos_2parms_8h.html#afa8537cc7299b7b2b218df9787e24031", null ],
-    [ "create_metapupil_wrap", "maos_2parms_8h.html#a2a7201760699d43c972676fda5146739", null ],
     [ "plotdir", "maos_2parms_8h.html#a17f83b9d00296996ebdaff0335ef4340", null ]
 ];

@@ -1,7 +1,7 @@
 var classcuda__wfs_1_1cushz__t =
 [
     [ "cushz_t", "classcuda__wfs_1_1cushz__t.html#a2c1a7f10827d2e483bd75abbc0c9a320", null ],
-    [ "calcg", "classcuda__wfs_1_1cushz__t.html#a3cd3d20e5b9f4e9cb4c4403a0f087891", null ],
+    [ "calcg", "classcuda__wfs_1_1cushz__t.html#ab8118f026b841c958fd038b9e465a756", null ],
     [ "initsim", "classcuda__wfs_1_1cushz__t.html#ab8a5c6fc5deb61d3986d7315d37cb3b6", null ],
     [ "addnoise", "classcuda__wfs_1_1cushz__t.html#a7c9c34860fea70298376400a8ff9bbc8", null ],
     [ "output", "classcuda__wfs_1_1cushz__t.html#aaeb532431fd57ef41450775f90d05287", null ],
@@ -11,7 +11,7 @@ var classcuda__wfs_1_1cushz__t =
     [ "gradcalc", "classcuda__wfs_1_1cushz__t.html#a94fe36019512dcab64068c7f0d7b03df", null ],
     [ "nea", "classcuda__wfs_1_1cushz__t.html#a151b2a88af9ae807864c906deaffb1c7", null ],
     [ "nsa", "classcuda__wfs_1_1cushz__t.html#ac0501dd75392725ad785a5eab44163c8", null ],
-    [ "dxsa", "classcuda__wfs_1_1cushz__t.html#af7f0e53445be609c261c6deb419cf845", null ],
+    [ "dxsa", "classcuda__wfs_1_1cushz__t.html#a68762fa1cc6c255c1918cc25b4ca52a7", null ],
     [ "nxsa", "classcuda__wfs_1_1cushz__t.html#a0f7c8c4d4f0af8c36fda2be7c62c5874", null ],
     [ "rand", "classcuda__wfs_1_1cushz__t.html#aee1218dc10752313574b8c819ed3f7b9", null ],
     [ "stream", "classcuda__wfs_1_1cushz__t.html#a700b24af903267625ad178446cf549f4", null ],

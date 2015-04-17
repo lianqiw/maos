@@ -8,7 +8,7 @@ var classcusp =
     [ "ref", "classcusp.html#a7c6634ce6ae1001a4f54e9429f7ba3a6", null ],
     [ "p", "classcusp.html#abdbace947beecdc19f6391b2935a5d88", null ],
     [ "i", "classcusp.html#af4efbc44c51efad6878c73483e3f9aa8", null ],
-    [ "x", "classcusp.html#ab22bcee4672faae2afe290a24df3d3af", null ],
+    [ "x", "classcusp.html#acebda92bb5916c4af858a682ef0c700e", null ],
     [ "nx", "classcusp.html#ac9dcfde4c32df9d9ef64eb19d6e34a09", null ],
     [ "ny", "classcusp.html#aa96c285b3f0466ea2693b0c96619a538", null ],
     [ "nzmax", "classcusp.html#abd79e7d76d9b0f087fff185a9ff97032", null ],

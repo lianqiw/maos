@@ -77,22 +77,25 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cumoao__t.html",
-"classcuda__wfs_1_1cuwfs__info.html#a4743d0cffd34bc34b9dfef5a387e623e",
-"functions_0x69.html",
-"maos_2setup__parms_8c.html#a0588bde7efe6ccb7af8053fca795d916",
-"page41.html",
-"skyc_2types_8h.html#a6644e0a17f55ea7c8e4eb60401eae628",
-"structDM__CFG__T.html",
-"structLSR__CFG__T.html",
-"structPOWFS__CFG__T.html#a979789ab45a1f87cf251469dbedebe00",
-"structRECON__T.html#ab302a7a65c8b40881b46c9fc707a0a41",
-"structSIM__T.html#a32c1411e2b4624790b8506e9b54449d4",
-"structWFSINTS__T.html#a4ed0e0527b70b06f2ce6f5d2b6e0d4b1",
-"structdrawdata__t.html#a55a75076fbf96906005aa6503904ce62",
-"structstream__t.html#a9f983870b6d79f2286d3df5d99af0283"
+"classcuda__recon_1_1cufit__grid.html#a756c10089d63d29f24ffee66c51c17fe",
+"classcuda__wfs_1_1cuwfs__base.html#a9517c2b9c81236be4dad587ed82380d4",
+"fractal_8h.html#a79d73f36543bc6c698ed417d9f49524a",
+"maos_2parms_8h.html#a84262cb551e7cebb64dc0bdc3f2a4e89",
+"page70.html#sect-pointer",
+"skyc_2parms_8h.html#a45e1ed34abed9a596a6474b47fde73bb",
+"structDBG__CFG__T.html#a7b7363a941e9896fbce7990e1f04c779",
+"structLLT__CFG__T.html#ac8b3e202f9c4be878eb3a9a599c1de4f",
+"structPOWFS__CFG__T.html#a154de8530f467cd40a67f147a59ecf96",
+"structRECON__T.html#a117ecd404b40d3cfefa7d20dd15aee56",
+"structSIM__S.html#afff33157bc2f40bc3cb75ed73bfa92b6",
+"structSKYC__S.html#afe80675b96244367206f0f1693f4c24f",
+"structcudata__t.html#a38cbe890ecef9ba9ba3840f7811b9da1",
+"structkalman__t.html#a8483ee8fb02cb6ac347d276512cdbcab",
+"structssp.html#af7ec7a1ca644603e73438e944317214e"
 ];
 
+var SYNCONMSG = 'click to disable panel synchronisation';
+var SYNCOFFMSG = 'click to enable panel synchronisation';
 var SYNCONMSG = 'click to disable panel synchronisation';
 var SYNCOFFMSG = 'click to enable panel synchronisation';
 var navTreeSubIndices = new Array();
@@ -175,12 +178,12 @@ function createIndent(o,domNode,node,level)
   var level=-1;
   var n = node;
   while (n.parentNode) { level++; n=n.parentNode; }
-  var imgNode = document.createElement("img");
-  imgNode.style.paddingLeft=(16*level).toString()+'px';
-  imgNode.width  = 16;
-  imgNode.height = 22;
-  imgNode.border = 0;
   if (node.childrenData) {
+    var imgNode = document.createElement("img");
+    imgNode.style.paddingLeft=(16*level).toString()+'px';
+    imgNode.width  = 16;
+    imgNode.height = 22;
+    imgNode.border = 0;
     node.plus_img = imgNode;
     node.expandToggle = document.createElement("a");
     node.expandToggle.href = "javascript:void(0)";
@@ -197,8 +200,12 @@ function createIndent(o,domNode,node,level)
     domNode.appendChild(node.expandToggle);
     imgNode.src = node.relpath+"ftv2pnode.png";
   } else {
-    imgNode.src = node.relpath+"ftv2node.png";
-    domNode.appendChild(imgNode);
+    var span = document.createElement("span");
+    span.style.display = 'inline-block';
+    span.style.width   = 16*(level+1)+'px';
+    span.style.height  = '22px';
+    span.innerHTML = '&nbsp;';
+    domNode.appendChild(span);
   } 
 }
 
@@ -417,7 +424,7 @@ function showNode(o, node, index, hash)
       if (!node.childrenVisited) {
         getNode(o, node);
       }
-      $(node.getChildrenUL()).show();
+      $(node.getChildrenUL()).css({'display':'block'});
       if (node.isLast) {
         node.plus_img.src = node.relpath+"ftv2mlastnode.png";
       } else {
@@ -449,8 +456,22 @@ function showNode(o, node, index, hash)
   }
 }
 
+function removeToInsertLater(element) {
+  var parentNode = element.parentNode;
+  var nextSibling = element.nextSibling;
+  parentNode.removeChild(element);
+  return function() {
+    if (nextSibling) {
+      parentNode.insertBefore(element, nextSibling);
+    } else {
+      parentNode.appendChild(element);
+    }
+  };
+}
+
 function getNode(o, po)
 {
+  var insertFunction = removeToInsertLater(po.li);
   po.childrenVisited = true;
   var l = po.childrenData.length-1;
   for (var i in po.childrenData) {
@@ -458,6 +479,7 @@ function getNode(o, po)
     po.children[i] = newNode(o, po, nodeData[0], nodeData[1], nodeData[2],
       i==l);
   }
+  insertFunction();
 }
 
 function gotoNode(o,subIndex,root,hash,relpath)
@@ -561,7 +583,10 @@ function initNavTree(toroot,relpath)
     navSync.click(function(){ toggleSyncButton(relpath); });
   }
 
-  navTo(o,toroot,window.location.hash,relpath);
+  $(window).load(function(){
+    navTo(o,toroot,window.location.hash,relpath);
+    showRoot();
+  });
 
   $(window).bind('hashchange', function(){
      if (window.location.hash && window.location.hash.length>1){
@@ -584,7 +609,5 @@ function initNavTree(toroot,relpath)
        navTo(o,toroot,window.location.hash,relpath);
      }
   })
-
-  $(window).load(showRoot);
 }
 

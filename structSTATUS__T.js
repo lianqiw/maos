@@ -2,7 +2,7 @@ var structSTATUS__T =
 [
     [ "wfs", "structSTATUS__T.html#ae5c5bb6c8ec14227a256eeafd470eaf0", null ],
     [ "recon", "structSTATUS__T.html#a0bb96bab9feabde8c982579de33b9854", null ],
-    [ "cache", "structSTATUS__T.html#aac063366900628f8fe1605ad0a03c9a0", null ],
+    [ "other", "structSTATUS__T.html#ad4c353840912093280d6d51fd77e9624", null ],
     [ "eval", "structSTATUS__T.html#a670548e8e4959a58cee3e5e9a8802483", null ],
     [ "tot", "structSTATUS__T.html#a9d492bae2ee21981229f714c446061c5", null ],
     [ "scale", "structSTATUS__T.html#a093b6843684e59be66f2cf39611078d8", null ],

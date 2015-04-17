@@ -1,11 +1,12 @@
 var structFIT__CFG__T =
 [
-    [ "thetax", "structFIT__CFG__T.html#ae546272f69aa60a0f5c435d438641001", null ],
-    [ "thetay", "structFIT__CFG__T.html#a4c47b74e14e1521755410a9183d3ef6c", null ],
-    [ "wt", "structFIT__CFG__T.html#ae921bb24d3f1439f4023b4009a004cd0", null ],
-    [ "hs", "structFIT__CFG__T.html#ae0e2f6d296103430b051e6c02ff556ae", null ],
+    [ "thetax", "structFIT__CFG__T.html#a321f4dadc5f59cf43c4aa821131400b2", null ],
+    [ "thetay", "structFIT__CFG__T.html#a10dede9f367c05b65418986e7111486b", null ],
+    [ "wt", "structFIT__CFG__T.html#a35b9e6648aa502698b052619376c605d", null ],
+    [ "hs", "structFIT__CFG__T.html#a9b120bc11570fd94c06fbde4a180063e", null ],
     [ "tikcr", "structFIT__CFG__T.html#ac6155155f7d987edfef22f39dcd97bb4", null ],
     [ "svdthres", "structFIT__CFG__T.html#a929d6488ef3d1ce7aefdc5e17c8b7080", null ],
+    [ "actthres", "structFIT__CFG__T.html#a277301001f8ac9776fa585b27af03875", null ],
     [ "actslave", "structFIT__CFG__T.html#aa1fa2b2183ae0d824e4473be934cad14", null ],
     [ "actinterp", "structFIT__CFG__T.html#a8393fd3e9363fa18a9ecce1879fd0d8d", null ],
     [ "nfit", "structFIT__CFG__T.html#a6e582e718e6c2418d8b9238fdcdfcb9d", null ],

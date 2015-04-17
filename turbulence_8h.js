@@ -1,12 +1,18 @@
 var turbulence_8h =
 [
-    [ "GENSCREEN_T", "structGENSCREEN__T.html", "structGENSCREEN__T" ],
-    [ "turbpsd", "turbulence_8h.html#a5a2c1ba389a712a2db8ae491569b45fd", null ],
-    [ "GENSCREEN_T", "turbulence_8h.html#a388aceff87755db6e7606ca4512704a2", null ],
-    [ "genscreen_from_spect", "turbulence_8h.html#a5f3ccf12ec29cbf11ffc0fb286e609a0", null ],
-    [ "vonkarman_screen", "turbulence_8h.html#a58cb269cc05ae0ce8ac42bc0825285dd", null ],
-    [ "biharmonic_screen", "turbulence_8h.html#abde6486d95cbe48bc7aef19d6313ab20", null ],
-    [ "fractal_screen", "turbulence_8h.html#aa035016a167fef5bf8ca97fb9ec931bb", null ],
+    [ "GENATM_T", "structGENATM__T.html", "structGENATM__T" ],
+    [ "GENATM_T", "turbulence_8h.html#a28bce4803e75c1e0e0cd109b2245d28b", null ],
+    [ "genatm_simple", "turbulence_8h.html#aacc0e9d5cd192a49c694f3c2fc399dc7", null ],
+    [ "genatm_loc", "turbulence_8h.html#aa3da6c3439fbe25cb592d8c617b0d563", null ],
+    [ "genatm_from_spect", "turbulence_8h.html#a3d72cf5be3e6a6ca5f88ea5b05695778", null ],
+    [ "vonkarman_screen", "turbulence_8h.html#a1ca22cd6ef9fc6877922857c0cd1b746", null ],
+    [ "biharmonic_screen", "turbulence_8h.html#a1a5ee62565509406b8712a9e9f16af97", null ],
+    [ "fractal_screen", "turbulence_8h.html#aeb514bab0df876eeb65154d87b58e47d", null ],
     [ "turbcov", "turbulence_8h.html#a8a0813e128c3d37863bbd6c34bad5196", null ],
-    [ "turbpsd_full", "turbulence_8h.html#a37c204f03307e1c84d10e3ee0baf1c7f", null ]
+    [ "spatial_psd", "turbulence_8h.html#a8acaf4a0f50a0bfcd23f1c7a9e4505d0", null ],
+    [ "r02strength", "turbulence_8h.html#aaa8f28836a8027119ae5d78a5a5ddc90", null ],
+    [ "turbpsd", "turbulence_8h.html#ae6f5896f260d1a463e59572453cb0a5b", null ],
+    [ "calc_aniso", "turbulence_8h.html#a5c7b446004c896c4369a93a863815d77", null ],
+    [ "calc_greenwood", "turbulence_8h.html#a307e61cfe30d84f01bb86d16b7459910", null ],
+    [ "calc_aniso2", "turbulence_8h.html#a066f38258e20d362d1e184a397697828", null ]
 ];

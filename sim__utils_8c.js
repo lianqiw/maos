@@ -1,7 +1,6 @@
 var sim__utils_8c =
 [
-    [ "genscreen", "sim__utils_8c.html#a399be906c89239f2d06949ee5df937ee", null ],
-    [ "evolve_screen", "sim__utils_8c.html#afc571090e8c4bb481fb2ce4422c9870c", null ],
+    [ "genatm", "sim__utils_8c.html#afce4363970d1fde0eca6130b82b2d28e", null ],
     [ "setup_recon_HXW_predict", "sim__utils_8c.html#a881ef641df236619f3983314ae971e74", null ],
     [ "atm2xloc", "sim__utils_8c.html#a130fb2cf597c4752d9397777e9bcf1e2", null ],
     [ "sim_update_etf", "sim__utils_8c.html#ade5601f0c0ffa73c27aa90ec087d54ac", null ],

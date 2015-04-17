@@ -1,8 +1,12 @@
 var recon__utils_8c =
 [
+    [ "TIMING", "recon__utils_8c.html#a51b7a9c320bb9b58fc5632da0a44ab84", null ],
+    [ "TIC_tm", "recon__utils_8c.html#ac8426a146b24c93e9cc460df348c79ed", null ],
+    [ "tic_tm", "recon__utils_8c.html#a8346642868c1576597ad637b746e9257", null ],
+    [ "toc_tm", "recon__utils_8c.html#a00b7822255d82d13b2ca313db43a139a", null ],
     [ "test_TomoL", "recon__utils_8c.html#a3f7acaaabd294c80ab0f3540b010a1b2", null ],
     [ "Tomo_T", "recon__utils_8c.html#ac0846a43d5d29570425f514e31ad3624", null ],
-    [ "apply_L2", "recon__utils_8c.html#a3691a5ab478320df78f3c0cff4412860", null ],
+    [ "apply_L2", "recon__utils_8c.html#a736ddf612e3ea272d3543f05852cdd6a", null ],
     [ "apply_invpsd", "recon__utils_8c.html#a666275101e117d56e1cf2908b18e0278", null ],
     [ "apply_fractal", "recon__utils_8c.html#a68ea00a9c6e3e064ff6b613e9718cf54", null ],
     [ "TTFR", "recon__utils_8c.html#a08347b75d2ff1eb95c0a179873921e98", null ],
@@ -20,5 +24,7 @@ var recon__utils_8c =
     [ "nea2sp", "recon__utils_8c.html#a8275bff1050a3bf784cbf75b0ed42092", null ],
     [ "psfr_calc", "recon__utils_8c.html#a107d696093a361bb8d4d30b32b7ec6a7", null ],
     [ "shift_grad", "recon__utils_8c.html#a9cdd8da33de20c241e64bdf98cae94bf", null ],
-    [ "act_coord2ind", "recon__utils_8c.html#a7cbdb30dc3f0245abb989ae2e72b0c6a", null ]
+    [ "act_coord2ind", "recon__utils_8c.html#a347342c8605c1f0acf2ddbe61af37b1e", null ],
+    [ "cn2est_prepare", "recon__utils_8c.html#a4dad2b40e77e5deb5541b26836127000", null ],
+    [ "cn2est_isim", "recon__utils_8c.html#af11defbf2b8309f759eafb62e3213220", null ]
 ];

@@ -1,14 +1,12 @@
 var searchData=
 [
   ['c',['C',['../structMUV__T.html#a94e4b5e2b57d787f3467a9f1c81354fb',1,'MUV_T']]],
-  ['cachedm',['cachedm',['../structFIT__CFG__T.html#ab298910fcc58b2dc96e5fc1304a59646',1,'FIT_CFG_T::cachedm()'],['../structSIM__CFG__T.html#a1e7a8af66d62b8d1c0e6b1c31e1c248f',1,'SIM_CFG_T::cachedm()'],['../structSIM__T.html#a3fe06a9637d6540bbe99bfd4f7118f7c',1,'SIM_T::cachedm()']]],
-  ['cachedm_5fn',['cachedm_n',['../structSIM__T.html#a69fdb47e9ffb4cdd5bf09039df2fa200',1,'SIM_T']]],
+  ['cachedm',['cachedm',['../structFIT__CFG__T.html#ab298910fcc58b2dc96e5fc1304a59646',1,'FIT_CFG_T::cachedm()'],['../structSIM__CFG__T.html#a1e7a8af66d62b8d1c0e6b1c31e1c248f',1,'SIM_CFG_T::cachedm()'],['../structSIM__T.html#a0c13afdc2d043e698b917ccafc63b218',1,'SIM_T::cachedm()']]],
   ['cachedm_5fprop',['cachedm_prop',['../structSIM__T.html#aeb4d2e3c35de768607c61a8269ed7d62',1,'SIM_T']]],
   ['cachedm_5fpropdata',['cachedm_propdata',['../structSIM__T.html#a6766b9d62d3bf6c25f02d5b38b55cf50',1,'SIM_T']]],
   ['cachex',['cachex',['../structFIT__CFG__T.html#a2ccc56386db62f4aa2244239f1053f09',1,'FIT_CFG_T']]],
   ['catscl',['catscl',['../structSKYC__S.html#a171681265bc14e558cff2eade23df949',1,'SKYC_S']]],
   ['cb',['CB',['../structMUV__T.html#a8c942db118ffe8c4099cbd8de70a4c4b',1,'MUV_T']]],
-  ['cc',['cc',['../structCN2EST__T.html#a41c72d0b41e56502208472d188f5d9e2',1,'CN2EST_T']]],
   ['cgres',['cgres',['../structSIM__T.html#abbc0b4ab6c1ab56be2b8243c1d149fac',1,'SIM_T']]],
   ['cgthres',['cgthres',['../structTOMO__CFG__T.html#a0754884ca9327bb7ad36e1f341583ef4',1,'TOMO_CFG_T']]],
   ['cle',['cle',['../structSIM__T.html#a1e10c517d94504ae3b0d3368735364ba',1,'SIM_T']]],
@@ -21,7 +19,7 @@ var searchData=
   ['closeloop',['closeloop',['../structSIM__CFG__T.html#a0408bb89e89669682cba86f7fb98b2dc',1,'SIM_CFG_T']]],
   ['cmpgpu',['cmpgpu',['../structDBG__CFG__T.html#a78dabaa61a56a4d94a09b08a44a08248',1,'DBG_CFG_T']]],
   ['cn2',['cn2',['../structPARMS__T.html#abc0c4384664b89b6777b64d77f18a0bc',1,'PARMS_T']]],
-  ['cn2est',['cn2est',['../structRECON__T.html#a55e2ed1c3bc81ac7c31078a40d814ddd',1,'RECON_T']]],
+  ['cn2est',['cn2est',['../structRECON__T.html#a55e2ed1c3bc81ac7c31078a40d814ddd',1,'RECON_T::cn2est()'],['../structSIM__T.html#a35c11df7d74e84b1b79ac499cdfdbfb5',1,'SIM_T::cn2est()']]],
   ['cogcoeff',['cogcoeff',['../structINTSTAT__T.html#abe3059adef4f433c4943ab824d4ec265',1,'INTSTAT_T']]],
   ['cogoff',['cogoff',['../structPOWFS__CFG__T.html#a5d5b1cff8df0912039add82ee9fea407',1,'POWFS_CFG_T']]],
   ['cogthres',['cogthres',['../structPOWFS__CFG__T.html#abbd9591185bc907a7eb41178cc323468',1,'POWFS_CFG_T']]],
@@ -33,10 +31,14 @@ var searchData=
   ['conf',['conf',['../structARG__T.html#a989ce68b27a48e963ca257974c3e720d',1,'ARG_T']]],
   ['confcmd',['confcmd',['../structARG__T.html#a4f12734a26de9dc88f36c4e87d162416',1,'ARG_T::confcmd()'],['../structARG__S.html#a56adb5b293cc03fd531eb1fe7b161904',1,'ARG_S::confcmd()']]],
   ['corrngsm',['corrNGSm',['../structSIM__T.html#a20b5e3a20c72f11e59e3ba4551a4bc48',1,'SIM_T']]],
-  ['cubic',['cubic',['../structmap__t.html#ad3cc4b8d4ca8d3457681a7799525b410',1,'map_t::cubic()'],['../structDM__CFG__T.html#acf71d816fd769fe830d2e03f82c28b12',1,'DM_CFG_T::cubic()'],['../structTOMO__CFG__T.html#ae00e0bbe65e2f3befc1cc7ecd5b33cbe',1,'TOMO_CFG_T::cubic()'],['../structMOAO__CFG__T.html#a6ccaefa7d6eb62c0bd011e9c79f7cfef',1,'MOAO_CFG_T::cubic()']]],
+  ['count',['count',['../structCN2EST__T.html#aa80e95012312277ba0e6ce6007464db1',1,'CN2EST_T']]],
+  ['cov',['cov',['../structEVL__CFG__T.html#a2da4aa44ba47e4faef9f1aaa55dc49e3',1,'EVL_CFG_T']]],
+  ['cov1',['cov1',['../structCN2EST__T.html#a9d6dad23c66cacad0c9ebb25b3ac763e',1,'CN2EST_T']]],
+  ['cov2',['cov2',['../structCN2EST__T.html#af811780b9e6d9e7936d0c84415eb5388',1,'CN2EST_T']]],
+  ['covc',['covc',['../structCN2EST__T.html#a79630ea3fd0ff7f3efec7d8e9d20d178',1,'CN2EST_T']]],
+  ['cubic',['cubic',['../structDM__CFG__T.html#acf71d816fd769fe830d2e03f82c28b12',1,'DM_CFG_T::cubic()'],['../structTOMO__CFG__T.html#ae00e0bbe65e2f3befc1cc7ecd5b33cbe',1,'TOMO_CFG_T::cubic()'],['../structMOAO__CFG__T.html#a6ccaefa7d6eb62c0bd011e9c79f7cfef',1,'MOAO_CFG_T::cubic()'],['../structmap__t.html#ad3cc4b8d4ca8d3457681a7799525b410',1,'map_t::cubic()']]],
   ['cur',['cur',['../structcellarr.html#a413ba98de1badcc3f6dee63ebe76ff53',1,'cellarr']]],
-  ['cxs',['cxs',['../structCN2EST__T.html#abed9702d52d68261bc1cd37bbc1db616',1,'CN2EST_T']]],
+  ['curi',['curi',['../structCN2EST__T.html#ac7ef3d6596aec27c4f78351f08d3f242',1,'CN2EST_T']]],
   ['cxx',['cxx',['../structTOMO__CFG__T.html#a1396c4eb415d8fc6937322476d23bd83',1,'TOMO_CFG_T::cxx()'],['../structLOAD__CFG__T.html#af3196a976edabab31ad4687c655de145',1,'LOAD_CFG_T::cxx()'],['../structRECON__T.html#a63beb2498df15c428decb488e5f5d0d4',1,'RECON_T::cxx()']]],
-  ['cxxscale',['cxxscale',['../structTOMO__CFG__T.html#a13582755190bf75f11a33c5f2567e254',1,'TOMO_CFG_T']]],
-  ['cys',['cys',['../structCN2EST__T.html#a2a40f7be43d60fed9720e8c816e84abe',1,'CN2EST_T']]]
+  ['cxxscale',['cxxscale',['../structTOMO__CFG__T.html#a13582755190bf75f11a33c5f2567e254',1,'TOMO_CFG_T']]]
 ];

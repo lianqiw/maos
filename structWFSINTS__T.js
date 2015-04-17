@@ -6,7 +6,6 @@ var structWFSINTS__T =
     [ "gradref", "structWFSINTS__T.html#a726ea987116d610d83884524121da3ed", null ],
     [ "opd", "structWFSINTS__T.html#a3d642180372fa7f2ead95f18a561357a", null ],
     [ "lltopd", "structWFSINTS__T.html#aeae61b18c76d077e17b5299abc78da88", null ],
-    [ "parms", "structWFSINTS__T.html#ab4e362bb3386f6548b18a1d27e308ffb", null ],
-    [ "powfs", "structWFSINTS__T.html#ab6ec216a219bbe60a6eaf1dc78a64015", null ],
-    [ "iwfs", "structWFSINTS__T.html#a4ed0e0527b70b06f2ce6f5d2b6e0d4b1", null ]
+    [ "iwfs", "structWFSINTS__T.html#a4ed0e0527b70b06f2ce6f5d2b6e0d4b1", null ],
+    [ "isim", "structWFSINTS__T.html#aa2ec7c71f332574cb7eb85e84d2ca622", null ]
 ];
