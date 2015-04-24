@@ -166,6 +166,7 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
+LDFLAGS+=" -Wl,--no-as-needed" #as-needed is default in some system and cause mkl library checking to fail
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 

@@ -48,7 +48,12 @@ using std::strerror;
 #include <stdio.h>
 #include <string.h>
 #endif
-#define INLINE inline __attribute__((always_inline))
+//GNU GCC changes definition of inline to C99 compatible since 4.4
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 5
+#define INLINE extern inline __attribute__((gnu_inline, always_inline)) //GNU
+#else
+#define INLINE inline __attribute__((always_inline)) //C99
+#endif
 #include <unistd.h>
 #if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <alloca.h>

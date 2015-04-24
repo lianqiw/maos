@@ -570,7 +570,7 @@ static void readcfg_dm(PARMS_T *parms){
 	if(order_override && parms->dm[idm].order>0){
 	    if(dx_override && parms->dm[idm].dx>0){
 		if(fabs(parms->dm[idm].order*parms->dm[idm].dx-parms->aper.d)>parms->aper.d*0.01){
-		    error("both dm.order and dm.dx are specified. But they don't agree\n");
+		    error("both dm.order and dm.dx are specified. But they don't agree. Please set one of them to zero.\n");
 		}
 	    }else{
 		parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
@@ -1956,15 +1956,15 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	if(isfinite(parms->dm[i].stroke->p[0])){
 	    double strokemicron=fabs(parms->dm[i].stroke->p[0])*1e6;
 	    if(strokemicron<1 || strokemicron>50){
-		warning("dm %d: stroke %g m is probably wrong\n",
-			i,parms->dm[i].stroke);
+		warning("dm %d: stroke %g um is probably wrong\n",
+			i, strokemicron);
 	    }
 	}
 	if(isfinite(parms->dm[i].iastroke) && !parms->dm[i].iastrokefn){
 	    double strokemicron=parms->dm[i].iastroke*1e6;
 	    if(strokemicron<.1 || strokemicron>50){
-		warning("dm %d: iastroke %g m is probably wrong\n",
-			i,parms->dm[i].iastroke);
+		warning("dm %d: iastroke %g um is probably wrong\n",
+			i, strokemicron);
 	    }
 	}
     }

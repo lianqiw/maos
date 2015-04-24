@@ -280,7 +280,7 @@ void act_stuck(loccell *aloc, void *HA_, const lcell *stuck){
 		    }
 		}
 	    }else{
-		error("Invalid parameter: HA.id=%u\n", HAi->id);
+		error("Invalid parameter: HA.id=%ld\n", HAi->id);
 	    }
 	}
     }

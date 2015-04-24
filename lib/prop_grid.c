@@ -43,7 +43,7 @@
 #define FUN_NAME_BLOCK prop_grid_block_transpose
 #endif
 
-static INLINE int 
+static inline int 
 FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	       CONST_OUT double *phiout, long nxout, long nyout, 
 	       double dxout, double dyout, double oxout, double oyout,

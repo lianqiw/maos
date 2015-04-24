@@ -217,7 +217,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
     long map_ny=(long) round((ymax-ymin)*dy_in1)+1;
     if(nx && ny){
 	if(map_nx>nx || map_ny>ny){
-	    error("Specified size %dx%d is too small, need at least %dx%d\n", 
+	    error("Specified size %dx%d is too small, need at least %ldx%ld\n", 
 		  nx, ny, map_nx, map_ny);
 	}
 	xmin-=(nx-map_nx)/2*loc->dx;
