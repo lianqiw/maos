@@ -158,15 +158,8 @@ int main(int argc, const char *argv[]){
     }else{
 	redirect();
     }
-    //When we are using all GPUs, pretend we are using all CPUs also.
-#if USE_CUDA
-    extern int NGPU, MAXGPU;
-    int nthread=(MAXGPU>0 && MAXGPU==NGPU)?MAXTHREAD:NTHREAD;
-#else
-    int nthread=NTHREAD;
-#endif
     /*Launch the scheduler and report about our process */
-    scheduler_start(scmd,nthread,!arg->force);
+    scheduler_start(scmd,NTHREAD,!arg->force);
     info2("%s\n", scmd);
     info2("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
     maos_version();
@@ -193,7 +186,7 @@ int main(int argc, const char *argv[]){
 	    warning_time("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
-	    scheduler_start(scmd,nthread,!arg->force);
+	    scheduler_start(scmd,NTHREAD,!arg->force);
 	}
 	if(count>=60){
 	    warning_time("fall back to own checker\n");

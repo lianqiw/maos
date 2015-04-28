@@ -185,9 +185,9 @@ if test -n "`which nvcc 2>/dev/null`" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
 else
-    for nvcc in "/opt/cuda/default/bin/nvcc" "/opt/cuda/bin/nvcc" "/usr/local/cuda/" ;do
-	if test -x "$nvcc" ;then
-	    NVCC="$nvcc"
+    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
+	if test -x "${cuda}/bin/cuda" ;then
+	    NVCC="${cuda}/bin/cuda"
 	    break;
 	fi
     done

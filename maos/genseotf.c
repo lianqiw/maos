@@ -536,7 +536,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		error("Already in parallel\n");
 	    }
 #endif
-#pragma omp parallel num_threads(NTHREAD) shared(se_save) default(shared)
+#pragma omp parallel shared(se_save) default(shared)
 #pragma omp for 
 	    for(int isa=0; isa<nsa; isa++){
 		int ith=0;
