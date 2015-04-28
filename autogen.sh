@@ -4,8 +4,11 @@
 #libtoolize: wraps system libtool to a standard libtool script.
 #automake: Creates Makefile.in from Makefile.am
 #autoconf: Generates configure from configure.ac
-
-libtoolize --copy || glibtoolize --copy
+if which libtoolize >/dev/null 2>&1 ; then
+    libtoolize --copy 
+else
+    glibtoolize --copy
+fi
 sed 's/-fno-common//g' m4/libtool.m4 > m4/libtool_new.m4
 mv m4/libtool_new.m4 m4/libtool.m4
 aclocal --install -I m4

@@ -123,6 +123,7 @@ case "$host_os" in
     *linux*)
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
+	LDFLAGS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
 	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
 	if test "${host_cpu}" = "x86_64" ;then
@@ -166,7 +167,6 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-LDFLAGS+=" -Wl,--no-as-needed" #as-needed is default in some system and cause mkl library checking to fail
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
 

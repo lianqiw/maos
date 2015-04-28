@@ -366,7 +366,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
 	      (non-misregistered)*/
 	    if(parms->powfs[ipowfs].type==1){
-		info2(" Skip");
+		info2(" PWFS");
 		if(parms->recon.alg==0 || parms->ndm>1 || fabs(parms->dm[0].ht)>EPS){
 		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc,0,0);
 		}
