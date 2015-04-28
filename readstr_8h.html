@@ -111,10 +111,8 @@ $(document).ready(function(){initNavTree('readstr_8h.html','');});
 <div class="title">readstr.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Group all routines that are used to parse values from string that contain key=value pairs.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a8701968ceb20a387aa8bfc7d411f6e07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8701968ceb20a387aa8bfc7d411f6e07"></a>
@@ -124,19 +122,15 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>is_space</b> (char c)<
 int&#160;</td><td class="memItemRight" valign="bottom"><b>is_end</b> (char c)</td></tr>
 <tr class="separator:a43b69792d1b2328be0405689c1cbbf9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#ac4e8a5fd8356383ad30696d4140fa47f">readstr_strarr</a> (char ***res, int len, const char *sdata)</td></tr>
-<tr class="memdesc:ac4e8a5fd8356383ad30696d4140fa47f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Group all routines that are used to parse values from string that contain key=value pairs.  <a href="#ac4e8a5fd8356383ad30696d4140fa47f">More...</a><br/></td></tr>
 <tr class="separator:ac4e8a5fd8356383ad30696d4140fa47f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f23448c252708e467790d7edf1d0fd0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a0f23448c252708e467790d7edf1d0fd0">readstr_num</a> (const char *data, char **endptr0)</td></tr>
-<tr class="memdesc:a0f23448c252708e467790d7edf1d0fd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in a number from the value string.  <a href="#a0f23448c252708e467790d7edf1d0fd0">More...</a><br/></td></tr>
 <tr class="separator:a0f23448c252708e467790d7edf1d0fd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a038cb517bca7318b353919bf81361f28"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a038cb517bca7318b353919bf81361f28">readstr_numarr</a> (void **ret, int len, int *nrow0, int *ncol0, int type, const char *data)</td></tr>
-<tr class="memdesc:a038cb517bca7318b353919bf81361f28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read numerical array from a string.  <a href="#a038cb517bca7318b353919bf81361f28">More...</a><br/></td></tr>
 <tr class="separator:a038cb517bca7318b353919bf81361f28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d2ba322d0c3af31fcc73d27b49376ac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d2ba322d0c3af31fcc73d27b49376ac"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (int **ret, int len, const char *data)</td></tr>
 <tr class="separator:a5d2ba322d0c3af31fcc73d27b49376ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8708b4c5638fbcc7cd84373027f4869"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#aa8708b4c5638fbcc7cd84373027f4869">readstr_intarr_nmax</a> (int **ret, int len, const char *data)</td></tr>
-<tr class="memdesc:aa8708b4c5638fbcc7cd84373027f4869"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read an integer array.  <a href="#aa8708b4c5638fbcc7cd84373027f4869">More...</a><br/></td></tr>
 <tr class="separator:aa8708b4c5638fbcc7cd84373027f4869"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d29469601ed39c1cc611626f89d27d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readstr_8h.html#a9d29469601ed39c1cc611626f89d27d4">readstr_intarr_relax</a> (int **ret, int len, const char *data)</td></tr>
 <tr class="separator:a9d29469601ed39c1cc611626f89d27d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -173,9 +167,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Group all routines that are used to parse values from string that contain key=value pairs. </p>
-<p>Obtain a string array value from the key. </p>
+<p>Group all routines that are used to parse values from string that contain key=value pairs. Obtain a string array value from the key. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">res</td><td>Result </td></tr>
@@ -210,9 +202,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read in a number from the value string. </p>
-<p>Will interpret * and / operators. *endptr0 will be updated to point to the next valid entry, or at separator like coma (spaced are skipped). </p>
+<p>Read in a number from the value string. Will interpret * and / operators. *endptr0 will be updated to point to the next valid entry, or at separator like coma (spaced are skipped). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Input string </td></tr>
@@ -270,9 +260,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read numerical array from a string. </p>
-<p>if len is nonzero, <em>ret should be already allocated. NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab) Can read in the following formats: [1 2 3] as 3 rows, 1 col [1 2 3] in memory [1 2 3]+2 as [3 4 5] in memory 2</em>[1 2 3] or [1 2 3]*2 as [2 4 6] in memory [1 2 3]/2 as [0.5 1 1.5] in memory 2/[1 2 3] as [2/1 2/2 2/3] in memory 2/[1 2 3]*2+1 as [5 3 7/3] in memory</p>
+<p>Read numerical array from a string. if len is nonzero, <em>ret should be already allocated. NOTICe that continuous numbers are readin as column vector, not row vector(as in matlab) Can read in the following formats: [1 2 3] as 3 rows, 1 col [1 2 3] in memory [1 2 3]+2 as [3 4 5] in memory 2</em>[1 2 3] or [1 2 3]*2 as [2 4 6] in memory [1 2 3]/2 as [0.5 1 1.5] in memory 2/[1 2 3] as [2/1 2/2 2/3] in memory 2/[1 2 3]*2+1 as [5 3 7/3] in memory</p>
 <p>2-d arrays are groups as column vecotrs (in contrast to matlab that uses rows); semi-colon is used to separate columns. [1 2 3; 4 5 6] is 2 d array, 3 rows, 2 columns. In memory is stored as [1 2 3 4 5 6] transpose is supported: [1 2 3; 4 5 6]' is 2 d array, 2 rows, 3 columns. In memory is stored as [1 4 2 5 3 6]</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of values actually read. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -318,9 +306,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_intarr</b> (in
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read an integer array. </p>
-<p>Duplicate if only one number is present. </p>
+<p>Read an integer array. Duplicate if only one number is present. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">ret</td><td>Result </td></tr>

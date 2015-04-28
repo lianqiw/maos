@@ -2,7 +2,6 @@ var muv_8h =
 [
     [ "MUV_T", "structMUV__T.html", "structMUV__T" ],
     [ "EXFUN", "muv_8h.html#a3b57a158271fb1f0d7d394543c50bc11", null ],
-    [ "MUV_T", "muv_8h.html#a690187651e7e03633db419281f739d14", null ],
     [ "muv", "muv_8h.html#ae3b764fcb53055a4949e6189432039af", null ],
     [ "muv_trans", "muv_8h.html#a7759cce4984eddbc3b047a8cc0071656", null ],
     [ "muv_sp", "muv_8h.html#af98e98b11966e2d49872ea64ef7894b2", null ],

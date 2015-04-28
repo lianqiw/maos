@@ -3,7 +3,6 @@ var searchData=
   ['save_2ec',['save.c',['../save_8c.html',1,'']]],
   ['scheduler_5fclient_2eh',['scheduler_client.h',['../scheduler__client_8h.html',1,'']]],
   ['servo_2eh',['servo.h',['../servo_8h.html',1,'']]],
-  ['servo_5foptim_2ec',['servo_optim.c',['../servo__optim_8c.html',1,'']]],
   ['setup_5faper_2ec',['setup_aper.c',['../setup__aper_8c.html',1,'']]],
   ['setup_5faster_2ec',['setup_aster.c',['../setup__aster_8c.html',1,'']]],
   ['setup_5fparms_2ec',['setup_parms.c',['../maos_2setup__parms_8c.html',1,'']]],

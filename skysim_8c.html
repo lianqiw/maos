@@ -111,18 +111,27 @@ $(document).ready(function(){initNavTree('skysim_8c.html','');});
 <div class="title">skysim.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains the <a class="el" href="skysim_8c.html#af8d01af26f9797cb337a56def4eaad4e" title="Setup the stars fields and then calls skysim_isky() to handle each star field. ">skysim()</a> function that does the skycoverage simulation.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2parms_8h.html">parms.h</a>&quot;</code><br/>
+<code>#include &quot;skysim.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2types_8h.html">types.h</a>&quot;</code><br/>
+<code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;setup_aster.h&quot;</code><br/>
+<code>#include &quot;skysim_utils.h&quot;</code><br/>
+<code>#include &quot;mtch.h&quot;</code><br/>
+<code>#include &quot;genstars.h&quot;</code><br/>
+<code>#include &quot;genpistat.h&quot;</code><br/>
+<code>#include &quot;setup_star.h&quot;</code><br/>
+<code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;nafocus.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af8d01af26f9797cb337a56def4eaad4e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skysim_8c.html#af8d01af26f9797cb337a56def4eaad4e">skysim</a> (const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:af8d01af26f9797cb337a56def4eaad4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup the stars fields and then calls skysim_isky() to handle each star field.  <a href="#af8d01af26f9797cb337a56def4eaad4e">More...</a><br/></td></tr>
 <tr class="separator:af8d01af26f9797cb337a56def4eaad4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains the <a class="el" href="skysim_8c.html#af8d01af26f9797cb337a56def4eaad4e" title="Setup the stars fields and then calls skysim_isky() to handle each star field. ">skysim()</a> function that does the skycoverage simulation. </p>
+<div class="textblock"><p>Contains the <a class="el" href="skysim_8c.html#af8d01af26f9797cb337a56def4eaad4e">skysim()</a> function that does the skycoverage simulation.</p>
 <p>The steps: ) Read in parameters ) Read in necessary struct saved by MAOS and/or prepared by user ) Read in star catalog. ) Read in Focus tracking error as a function of sampling frequency ) Read in NGS Mode time vector ) For each possible asterism in a star field. #) Compute NGS Gradient operator from NGS modes. #) Read in saved PSF and interpolate to the location of NGS. apply extra strehl degradation. #) Compute NGS signal level and measurement error from matched filter (be careful about PSF quality). #) For each sample frequency. $) Compute the reconstructor $) Optimize for the loop gain. $) Estimate residual windshake error. $) Do a rough open loop estimate of the total error. (atm + windshake +focus tracking ...) $) Guess for the best sampling frequency (compare with closed loop results to validate this model). ) Compare the asterisms and pick only a few that are within ~200% of the best asterism at their best sampling freq. ) For each remaining asterism in the star field. #) Do a temporal simulation to obtain the final result. #) save error due to focus tracking, telescope windshake, separately. #) Find the best sampling frequency. ) Find the best asterism. ) Repeat for another star field.</p>
 <p>Don't forget:</p>
 <p>) Sampling frequency dependent rne. input a precomputed matrix for all possible sampling frequencies. ) Implementation error. ) Windshake (handle separately), focus tracking jitter ) On axis performance.</p>
@@ -143,7 +152,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Setup the stars fields and then calls skysim_isky() to handle each star field. </p>
 
 </div>

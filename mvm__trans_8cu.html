@@ -108,16 +108,21 @@ $(document).ready(function(){initNavTree('mvm__trans_8cu.html','');});
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">mvm_trans.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Compute the transpose of MVM control matrix in GPU colume by colume.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;gpu.h&quot;</code><br/>
+<code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;wfs.h&quot;</code><br/>
+<code>#include &quot;recon.h&quot;</code><br/>
+<code>#include &quot;pcg.h&quot;</code><br/>
+<code>#include &quot;curmat.h&quot;</code><br/>
+<code>#include &quot;cucmat.h&quot;</code><br/>
+<code>#include &quot;accphi.h&quot;</code><br/>
+<code>#include &quot;cudata.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMVM__IGPU__T.html">MVM_IGPU_T</a></td></tr>
@@ -128,12 +133,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a41c32b112f0949a0b39daf89b6242255"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41c32b112f0949a0b39daf89b6242255"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>MVM_DEBUG</b>&#160;&#160;&#160;0</td></tr>
 <tr class="separator:a41c32b112f0949a0b39daf89b6242255"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a77355f15770618dceedc1c63c69d4334"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77355f15770618dceedc1c63c69d4334"></a>
-typedef struct <a class="el" href="structMVM__IGPU__T.html">MVM_IGPU_T</a>&#160;</td><td class="memItemRight" valign="bottom"><b>MVM_IGPU_T</b></td></tr>
-<tr class="separator:a77355f15770618dceedc1c63c69d4334"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>

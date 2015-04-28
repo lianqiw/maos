@@ -111,32 +111,22 @@ $(document).ready(function(){initNavTree('path_8h.html','');});
 <div class="title">path.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>This file contains function managing the searching path for files, behaves like PATH in POSIX systems.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a8539b4e587a7ea71221206e43f29ead5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a8539b4e587a7ea71221206e43f29ead5">addpath</a> (const char *path)</td></tr>
-<tr class="memdesc:a8539b4e587a7ea71221206e43f29ead5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a directory to path.  <a href="#a8539b4e587a7ea71221206e43f29ead5">More...</a><br/></td></tr>
 <tr class="separator:a8539b4e587a7ea71221206e43f29ead5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa95ac1be1b592e9a3d6761a8376b72b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#aa95ac1be1b592e9a3d6761a8376b72b2">rmpath</a> (const char *path)</td></tr>
-<tr class="memdesc:aa95ac1be1b592e9a3d6761a8376b72b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a directory from path.  <a href="#aa95ac1be1b592e9a3d6761a8376b72b2">More...</a><br/></td></tr>
 <tr class="separator:aa95ac1be1b592e9a3d6761a8376b72b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07766b8acb6b809987722bd8f9bf2700"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a07766b8acb6b809987722bd8f9bf2700">printpath</a> (void)</td></tr>
-<tr class="memdesc:a07766b8acb6b809987722bd8f9bf2700"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print current path.  <a href="#a07766b8acb6b809987722bd8f9bf2700">More...</a><br/></td></tr>
 <tr class="separator:a07766b8acb6b809987722bd8f9bf2700"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25730e4c54130615ab7657ac89c39150"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a25730e4c54130615ab7657ac89c39150">find_file</a> (const char *fn)</td></tr>
-<tr class="memdesc:a25730e4c54130615ab7657ac89c39150"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locate a file in path and return its absolute filename.  <a href="#a25730e4c54130615ab7657ac89c39150">More...</a><br/></td></tr>
 <tr class="separator:a25730e4c54130615ab7657ac89c39150"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e3cda5e813f058b64cceb451bf88e64"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a0e3cda5e813f058b64cceb451bf88e64">search_file</a> (const char *fn)</td></tr>
-<tr class="memdesc:a0e3cda5e813f058b64cceb451bf88e64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to find a file in path and return its absolute filename if exist, NULL otherwise.  <a href="#a0e3cda5e813f058b64cceb451bf88e64">More...</a><br/></td></tr>
 <tr class="separator:a0e3cda5e813f058b64cceb451bf88e64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4d7c608d3c193573c706d3dfd7e070c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#af4d7c608d3c193573c706d3dfd7e070c">freepath</a> (void)</td></tr>
-<tr class="memdesc:af4d7c608d3c193573c706d3dfd7e070c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Empty the path.  <a href="#af4d7c608d3c193573c706d3dfd7e070c">More...</a><br/></td></tr>
 <tr class="separator:af4d7c608d3c193573c706d3dfd7e070c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a784b65d0a2c65638f3f35f7f9849ed29"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8h.html#a784b65d0a2c65638f3f35f7f9849ed29">find_config</a> (const char *name)</td></tr>
-<tr class="memdesc:a784b65d0a2c65638f3f35f7f9849ed29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the directory that hold the configuration files.  <a href="#a784b65d0a2c65638f3f35f7f9849ed29">More...</a><br/></td></tr>
 <tr class="separator:a784b65d0a2c65638f3f35f7f9849ed29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -155,7 +145,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Add a directory to path. </p>
 
 </div>
@@ -173,7 +162,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Remove a directory from path. </p>
 
 </div>
@@ -191,7 +179,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Print current path. </p>
 
 </div>
@@ -209,9 +196,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Locate a file in path and return its absolute filename. </p>
-<p>Will emit error if not found. </p>
+<p>Locate a file in path and return its absolute filename. Will emit error if not found. </p>
 
 </div>
 </div>
@@ -228,7 +213,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Try to find a file in path and return its absolute filename if exist, NULL otherwise. </p>
 
 </div>
@@ -246,7 +230,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Empty the path. </p>
 
 </div>
@@ -264,9 +247,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Find the directory that hold the configuration files. </p>
-<p>name is "maos" for maos, "skyc" for skyc. </p>
+<p>Find the directory that hold the configuration files. name is "maos" for maos, "skyc" for skyc. </p>
 
 </div>
 </div>

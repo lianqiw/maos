@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>Multi-threaded Adaptive Optics Simulator: l_message Struct Reference</title>
+<title>Multi-threaded Adaptive Optics Simulator: mvm_t Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -88,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('structl__message.html','');});
+$(document).ready(function(){initNavTree('structmvm__t.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -109,24 +109,48 @@ $(document).ready(function(){initNavTree('structl__message.html','');});
   <div class="summary">
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">l_message Struct Reference</div>  </div>
+<div class="title">mvm_t Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a85183a6810fffb02586f1664cf9f0665"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85183a6810fffb02586f1664cf9f0665"></a>
-char *&#160;</td><td class="memItemRight" valign="bottom"><b>payload</b></td></tr>
-<tr class="separator:a85183a6810fffb02586f1664cf9f0665"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0017bf7762c0e501cde7dd51681e7c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0017bf7762c0e501cde7dd51681e7c2"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>len</b></td></tr>
-<tr class="separator:ad0017bf7762c0e501cde7dd51681e7c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1683c63017639b099cd457f65dbd8cf7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1683c63017639b099cd457f65dbd8cf7"></a>
-struct <a class="el" href="structl__message.html">l_message</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>next</b></td></tr>
-<tr class="separator:a1683c63017639b099cd457f65dbd8cf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c9773d206a764aeb5acb2b242b953a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c9773d206a764aeb5acb2b242b953a6"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nact</b></td></tr>
+<tr class="separator:a9c9773d206a764aeb5acb2b242b953a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67ca33c7a6bd0576b6e282a85ae98fd2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67ca33c7a6bd0576b6e282a85ae98fd2"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>ngtot</b></td></tr>
+<tr class="separator:a67ca33c7a6bd0576b6e282a85ae98fd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3dbb49850cd183d1dec1cde8a99440a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dbb49850cd183d1dec1cde8a99440a7"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>icol</b></td></tr>
+<tr class="separator:a3dbb49850cd183d1dec1cde8a99440a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e19c8c92f01b485265c9f6603a6a87a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e19c8c92f01b485265c9f6603a6a87a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>ngpu</b></td></tr>
+<tr class="separator:a0e19c8c92f01b485265c9f6603a6a87a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c18cbbe8d41ed3916be50a20c70c355"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c18cbbe8d41ed3916be50a20c70c355"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>k</b></td></tr>
+<tr class="separator:a1c18cbbe8d41ed3916be50a20c70c355"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3001334680ee4b818b7c2191571a129"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab3001334680ee4b818b7c2191571a129"></a>
+GTYPE *&#160;</td><td class="memItemRight" valign="bottom"><b>g</b></td></tr>
+<tr class="separator:ab3001334680ee4b818b7c2191571a129"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d84302c6a88cc6c145aeded1ed83b2a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d84302c6a88cc6c145aeded1ed83b2a"></a>
+ATYPE **&#160;</td><td class="memItemRight" valign="bottom"><b>ac</b></td></tr>
+<tr class="separator:a4d84302c6a88cc6c145aeded1ed83b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d1108e6de05c8fffb1870f126474443"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d1108e6de05c8fffb1870f126474443"></a>
+ATYPE *&#160;</td><td class="memItemRight" valign="bottom"><b>a</b></td></tr>
+<tr class="separator:a3d1108e6de05c8fffb1870f126474443"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa73731e8509a151ea160a9d14689b2e6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa73731e8509a151ea160a9d14689b2e6"></a>
+<a class="el" href="structsmat.html">smat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>mvm</b></td></tr>
+<tr class="separator:aa73731e8509a151ea160a9d14689b2e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c68db06b6b35b4cdf5de76b4e6145bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c68db06b6b35b4cdf5de76b4e6145bc"></a>
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>icols</b></td></tr>
+<tr class="separator:a2c68db06b6b35b4cdf5de76b4e6145bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaf9e0a87a5832cb7ae5d449506b124f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeaf9e0a87a5832cb7ae5d449506b124f"></a>
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>kcols</b></td></tr>
+<tr class="separator:aeaf9e0a87a5832cb7ae5d449506b124f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>tools/scheduler_ws.h</li>
+<li>cuda/<a class="el" href="mvm__daemon_8cu.html">mvm_daemon.cu</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

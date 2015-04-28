@@ -1,6 +1,5 @@
 var thread__pool_8h =
 [
-    [ "thread_pool_t", "thread__pool_8h.html#a5f14d1f0d9a94d2e45b01104049529eb", null ],
     [ "thread_pool_init", "thread__pool_8h.html#aabe039cf94ca9a629ec8aab0be916c92", null ],
     [ "thread_pool_queue", "thread__pool_8h.html#ae1080dc11b0cd0cb161db9815ab53744", null ],
     [ "thread_pool_queue_many", "thread__pool_8h.html#af02875a5fda231954964b176995862a3", null ],

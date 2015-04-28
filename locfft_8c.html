@@ -111,10 +111,9 @@ $(document).ready(function(){initNavTree('locfft_8c.html','');});
 <div class="title">locfft.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>For routines that embed OPDs defined on loc to square(rectangular) array and do fft on it.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+<code>#include &quot;locfft.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a1a498d86778a53c57ef9a310b172ac86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlocfft__t.html">locfft_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8c.html#a1a498d86778a53c57ef9a310b172ac86">locfft_init</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const <a class="el" href="structdmat.html">dmat</a> *amp, const <a class="el" href="structdmat.html">dmat</a> *wvl, const <a class="el" href="structlmat.html">lmat</a> *fftsize, const double oversize, double fieldstop)</td></tr>
@@ -123,10 +122,8 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>locfft_free</b> (<a class="el" href="structlocfft__t.html">locfft_t</a> *locfft)</td></tr>
 <tr class="separator:a98ad6dd510558a695621390d6d5f2a0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10dfbf49464dd0cdc5026defc66cc2e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8c.html#a10dfbf49464dd0cdc5026defc66cc2e7">locfft_psf</a> (<a class="el" href="structccell.html">ccell</a> **psf2s, const <a class="el" href="structlocfft__t.html">locfft_t</a> *locfft, const <a class="el" href="structdmat.html">dmat</a> *opd, const <a class="el" href="structlmat.html">lmat</a> *psfsize, int sum2one)</td></tr>
-<tr class="memdesc:a10dfbf49464dd0cdc5026defc66cc2e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes PSF from OPD by FFT.  <a href="#a10dfbf49464dd0cdc5026defc66cc2e7">More...</a><br/></td></tr>
 <tr class="separator:a10dfbf49464dd0cdc5026defc66cc2e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6a8b056a1313211eb30662fe342937c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locfft_8c.html#ad6a8b056a1313211eb30662fe342937c">locfft_fieldstop</a> (const <a class="el" href="structlocfft__t.html">locfft_t</a> *locfft, <a class="el" href="structdmat.html">dmat</a> *opd, const <a class="el" href="structdmat.html">dmat</a> *wvlwts)</td></tr>
-<tr class="memdesc:ad6a8b056a1313211eb30662fe342937c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply a field stop.  <a href="#ad6a8b056a1313211eb30662fe342937c">More...</a><br/></td></tr>
 <tr class="separator:ad6a8b056a1313211eb30662fe342937c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -234,9 +231,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>locfft_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Computes PSF from OPD by FFT. </p>
-<p>The PSF is computed as</p>
+<p>Computes PSF from OPD by FFT. The PSF is computed as</p>
 <p><img class="formulaInl" alt="$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]$" src="form_4.png"/></p>
 <p>The peak value (center) in the computed PSF is normalized by the peak value in the differaction limited PSF. In other words, the peak value in the computed PSF is the Strehl. Keep this in mind when you compute enclosed energy.</p>
 <p>Extract center part of psfsize. </p>
@@ -272,8 +267,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>locfft_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply a field stop. </p>
+<p>Apply a field stop </p>
 
 </div>
 </div>

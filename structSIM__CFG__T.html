@@ -113,207 +113,139 @@ $(document).ready(function(){initNavTree('structSIM__CFG__T.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>contains input parameters for simulation, like loop gain, seeds, etc.  
- <a href="structSIM__CFG__T.html#details">More...</a></p>
+<p><code>#include &quot;parms.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:a345f9deab3e2b21f28284e29732af51e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a345f9deab3e2b21f28284e29732af51e">dt</a></td></tr>
-<tr class="memdesc:a345f9deab3e2b21f28284e29732af51e"><td class="mdescLeft">&#160;</td><td class="mdescRight">sampling period.  <a href="#a345f9deab3e2b21f28284e29732af51e">More...</a><br/></td></tr>
 <tr class="separator:a345f9deab3e2b21f28284e29732af51e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0df0fbb1d9947e76a318565bbcea58e8"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0df0fbb1d9947e76a318565bbcea58e8">dtlo</a></td></tr>
-<tr class="memdesc:a0df0fbb1d9947e76a318565bbcea58e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">low order wfs sampling period  <a href="#a0df0fbb1d9947e76a318565bbcea58e8">More...</a><br/></td></tr>
 <tr class="separator:a0df0fbb1d9947e76a318565bbcea58e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a398005f7d0d6e3dc03e183a202ec8e65"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a398005f7d0d6e3dc03e183a202ec8e65">dthi</a></td></tr>
-<tr class="memdesc:a398005f7d0d6e3dc03e183a202ec8e65"><td class="mdescLeft">&#160;</td><td class="mdescRight">high order wfs sampling period  <a href="#a398005f7d0d6e3dc03e183a202ec8e65">More...</a><br/></td></tr>
 <tr class="separator:a398005f7d0d6e3dc03e183a202ec8e65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bec09f88dc7ab71730f50f54bca225e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8bec09f88dc7ab71730f50f54bca225e">za</a></td></tr>
-<tr class="memdesc:a8bec09f88dc7ab71730f50f54bca225e"><td class="mdescLeft">&#160;</td><td class="mdescRight">zenith angle in radian  <a href="#a8bec09f88dc7ab71730f50f54bca225e">More...</a><br/></td></tr>
 <tr class="separator:a8bec09f88dc7ab71730f50f54bca225e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5a59a24115cf1c423e5add2290a38b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ac5a59a24115cf1c423e5add2290a38b7">dtrat_hi</a></td></tr>
-<tr class="memdesc:ac5a59a24115cf1c423e5add2290a38b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">ratio of sampling period over clock of high order wfs  <a href="#ac5a59a24115cf1c423e5add2290a38b7">More...</a><br/></td></tr>
 <tr class="separator:ac5a59a24115cf1c423e5add2290a38b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e85ac12e13c1356f84e9caf72dee927"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a3e85ac12e13c1356f84e9caf72dee927">dtrat_lo</a></td></tr>
-<tr class="memdesc:a3e85ac12e13c1356f84e9caf72dee927"><td class="mdescLeft">&#160;</td><td class="mdescRight">dtrat of the lower order loop.  <a href="#a3e85ac12e13c1356f84e9caf72dee927">More...</a><br/></td></tr>
 <tr class="separator:a3e85ac12e13c1356f84e9caf72dee927"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1e1bca9afd7fc8dc1290c1b9bf70053"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#aa1e1bca9afd7fc8dc1290c1b9bf70053">dtrat_skip</a></td></tr>
-<tr class="memdesc:aa1e1bca9afd7fc8dc1290c1b9bf70053"><td class="mdescLeft">&#160;</td><td class="mdescRight">dtrat (over sim.dt) for frame drop.  <a href="#aa1e1bca9afd7fc8dc1290c1b9bf70053">More...</a><br/></td></tr>
 <tr class="separator:aa1e1bca9afd7fc8dc1290c1b9bf70053"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e65d6a0d29a750075158ff470386f5e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a9e65d6a0d29a750075158ff470386f5e">start</a></td></tr>
-<tr class="memdesc:a9e65d6a0d29a750075158ff470386f5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">time step to start simulation.  <a href="#a9e65d6a0d29a750075158ff470386f5e">More...</a><br/></td></tr>
 <tr class="separator:a9e65d6a0d29a750075158ff470386f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7939a4003b5c376eb09702a8a1572ce5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a7939a4003b5c376eb09702a8a1572ce5">end</a></td></tr>
-<tr class="memdesc:a7939a4003b5c376eb09702a8a1572ce5"><td class="mdescLeft">&#160;</td><td class="mdescRight">time step to stop simulation.  <a href="#a7939a4003b5c376eb09702a8a1572ce5">More...</a><br/></td></tr>
 <tr class="separator:a7939a4003b5c376eb09702a8a1572ce5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afea41012cee5ff57da6ab39fcbbbb92c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#afea41012cee5ff57da6ab39fcbbbb92c">pause</a></td></tr>
-<tr class="memdesc:afea41012cee5ff57da6ab39fcbbbb92c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pause at the end of every time step.  <a href="#afea41012cee5ff57da6ab39fcbbbb92c">More...</a><br/></td></tr>
 <tr class="separator:afea41012cee5ff57da6ab39fcbbbb92c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40f7a6168d9fb47e3b8e39774206a78e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a40f7a6168d9fb47e3b8e39774206a78e">seeds</a></td></tr>
-<tr class="memdesc:a40f7a6168d9fb47e3b8e39774206a78e"><td class="mdescLeft">&#160;</td><td class="mdescRight">simulation seeds  <a href="#a40f7a6168d9fb47e3b8e39774206a78e">More...</a><br/></td></tr>
 <tr class="separator:a40f7a6168d9fb47e3b8e39774206a78e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6021b395d1b8ca9bb3f3449b67ed7935"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a6021b395d1b8ca9bb3f3449b67ed7935">nseed</a></td></tr>
-<tr class="memdesc:a6021b395d1b8ca9bb3f3449b67ed7935"><td class="mdescLeft">&#160;</td><td class="mdescRight">How many simulation seed.  <a href="#a6021b395d1b8ca9bb3f3449b67ed7935">More...</a><br/></td></tr>
 <tr class="separator:a6021b395d1b8ca9bb3f3449b67ed7935"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0408bb89e89669682cba86f7fb98b2dc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0408bb89e89669682cba86f7fb98b2dc">closeloop</a></td></tr>
-<tr class="memdesc:a0408bb89e89669682cba86f7fb98b2dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">closed loop or open loop  <a href="#a0408bb89e89669682cba86f7fb98b2dc">More...</a><br/></td></tr>
 <tr class="separator:a0408bb89e89669682cba86f7fb98b2dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a712dd4f546f1058a525c33e50fb8a6df"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a712dd4f546f1058a525c33e50fb8a6df">wspsd</a></td></tr>
-<tr class="memdesc:a712dd4f546f1058a525c33e50fb8a6df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Telescope wind shake PSD input.  <a href="#a712dd4f546f1058a525c33e50fb8a6df">More...</a><br/></td></tr>
 <tr class="separator:a712dd4f546f1058a525c33e50fb8a6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43f7320d412072410d9faae843a78cbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a43f7320d412072410d9faae843a78cbb">wsseq</a></td></tr>
-<tr class="memdesc:a43f7320d412072410d9faae843a78cbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence of wind shake time series.  <a href="#a43f7320d412072410d9faae843a78cbb">More...</a><br/></td></tr>
 <tr class="separator:a43f7320d412072410d9faae843a78cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add22e3e0816176fe8b1e5a38939e02fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#add22e3e0816176fe8b1e5a38939e02fb">apdm</a></td></tr>
-<tr class="memdesc:add22e3e0816176fe8b1e5a38939e02fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">servo coefficient for high order dm.  <a href="#add22e3e0816176fe8b1e5a38939e02fb">More...</a><br/></td></tr>
 <tr class="separator:add22e3e0816176fe8b1e5a38939e02fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95888f046943700e71c979bc09a5247d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a95888f046943700e71c979bc09a5247d">epdm</a></td></tr>
-<tr class="memdesc:a95888f046943700e71c979bc09a5247d"><td class="mdescLeft">&#160;</td><td class="mdescRight">error gain for DM commands (high order)  <a href="#a95888f046943700e71c979bc09a5247d">More...</a><br/></td></tr>
 <tr class="separator:a95888f046943700e71c979bc09a5247d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a452f7e49cf76b011d5f68af53e2476ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a452f7e49cf76b011d5f68af53e2476ee">aplo</a></td></tr>
-<tr class="memdesc:a452f7e49cf76b011d5f68af53e2476ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">servo coefficient for ngs modes.  <a href="#a452f7e49cf76b011d5f68af53e2476ee">More...</a><br/></td></tr>
 <tr class="separator:a452f7e49cf76b011d5f68af53e2476ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff56981dd8cea9503a03f430148b22db"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#aff56981dd8cea9503a03f430148b22db">eplo</a></td></tr>
-<tr class="memdesc:aff56981dd8cea9503a03f430148b22db"><td class="mdescLeft">&#160;</td><td class="mdescRight">error gain for NGS modes (low order)  <a href="#aff56981dd8cea9503a03f430148b22db">More...</a><br/></td></tr>
 <tr class="separator:aff56981dd8cea9503a03f430148b22db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a542af1d1dc42b86f4f6e516a3d27660a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a542af1d1dc42b86f4f6e516a3d27660a">apfsm</a></td></tr>
-<tr class="memdesc:a542af1d1dc42b86f4f6e516a3d27660a"><td class="mdescLeft">&#160;</td><td class="mdescRight">servo coefficient for for LGS uplink pointing loop.  <a href="#a542af1d1dc42b86f4f6e516a3d27660a">More...</a><br/></td></tr>
 <tr class="separator:a542af1d1dc42b86f4f6e516a3d27660a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d4d7abf159b64dce5dad98b4c0a9e6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0d4d7abf159b64dce5dad98b4c0a9e6c">epfsm</a></td></tr>
-<tr class="memdesc:a0d4d7abf159b64dce5dad98b4c0a9e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">error gain for uplink pointing  <a href="#a0d4d7abf159b64dce5dad98b4c0a9e6c">More...</a><br/></td></tr>
 <tr class="separator:a0d4d7abf159b64dce5dad98b4c0a9e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf3ac79b26121245fd0f8fb4057c6a30"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#abf3ac79b26121245fd0f8fb4057c6a30">aldm</a></td></tr>
-<tr class="memdesc:abf3ac79b26121245fd0f8fb4057c6a30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional latency (*sim.dt) of the high order loop.  <a href="#abf3ac79b26121245fd0f8fb4057c6a30">More...</a><br/></td></tr>
 <tr class="separator:abf3ac79b26121245fd0f8fb4057c6a30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada693bb3aa1262538496e612a14fd4cf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ada693bb3aa1262538496e612a14fd4cf">allo</a></td></tr>
-<tr class="memdesc:ada693bb3aa1262538496e612a14fd4cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional latnecy (*sim.dt) of the low order loop.  <a href="#ada693bb3aa1262538496e612a14fd4cf">More...</a><br/></td></tr>
 <tr class="separator:ada693bb3aa1262538496e612a14fd4cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0528a05708cd76bce2c262db81d10de3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0528a05708cd76bce2c262db81d10de3">alfsm</a></td></tr>
-<tr class="memdesc:a0528a05708cd76bce2c262db81d10de3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional latency (*sim.dt) of the uplink loop.  <a href="#a0528a05708cd76bce2c262db81d10de3">More...</a><br/></td></tr>
 <tr class="separator:a0528a05708cd76bce2c262db81d10de3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28b7038bee3f3d98079574453f76c80b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a28b7038bee3f3d98079574453f76c80b">fcttm</a></td></tr>
-<tr class="memdesc:a28b7038bee3f3d98079574453f76c80b"><td class="mdescLeft">&#160;</td><td class="mdescRight">cross over frequency of tip/tilt split  <a href="#a28b7038bee3f3d98079574453f76c80b">More...</a><br/></td></tr>
 <tr class="separator:a28b7038bee3f3d98079574453f76c80b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6b21ef0adecec78bf02f9b5a105d0c4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#aa6b21ef0adecec78bf02f9b5a105d0c4">lpttm</a></td></tr>
-<tr class="memdesc:aa6b21ef0adecec78bf02f9b5a105d0c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">los path filter for ttm.  <a href="#aa6b21ef0adecec78bf02f9b5a105d0c4">More...</a><br/></td></tr>
 <tr class="separator:aa6b21ef0adecec78bf02f9b5a105d0c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a441ca3a0de5bf553e1ad5047cba6d335"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a441ca3a0de5bf553e1ad5047cba6d335">fcfocus</a></td></tr>
-<tr class="memdesc:a441ca3a0de5bf553e1ad5047cba6d335"><td class="mdescLeft">&#160;</td><td class="mdescRight">cross-over frequency of the focus LPF.  <a href="#a441ca3a0de5bf553e1ad5047cba6d335">More...</a><br/></td></tr>
 <tr class="separator:a441ca3a0de5bf553e1ad5047cba6d335"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43adc047991b36f5d57c10de7ef5959d"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a43adc047991b36f5d57c10de7ef5959d">lpfocushi</a></td></tr>
-<tr class="memdesc:a43adc047991b36f5d57c10de7ef5959d"><td class="mdescLeft">&#160;</td><td class="mdescRight">derived: lpfocus=2*pi*fc*sim.dthi  <a href="#a43adc047991b36f5d57c10de7ef5959d">More...</a><br/></td></tr>
 <tr class="separator:a43adc047991b36f5d57c10de7ef5959d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abde6ab7aa4ac8ab4a44b96aee01f7b89"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#abde6ab7aa4ac8ab4a44b96aee01f7b89">lpfocuslo</a></td></tr>
-<tr class="memdesc:abde6ab7aa4ac8ab4a44b96aee01f7b89"><td class="mdescLeft">&#160;</td><td class="mdescRight">derived: lpfocus=2*pi*fc*sim.dtlo  <a href="#abde6ab7aa4ac8ab4a44b96aee01f7b89">More...</a><br/></td></tr>
 <tr class="separator:abde6ab7aa4ac8ab4a44b96aee01f7b89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada8e1ae81471dcde3cadc26db6bffdcd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ada8e1ae81471dcde3cadc26db6bffdcd">fov</a></td></tr>
-<tr class="memdesc:ada8e1ae81471dcde3cadc26db6bffdcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The diameter of total fov in arcsec.  <a href="#ada8e1ae81471dcde3cadc26db6bffdcd">More...</a><br/></td></tr>
 <tr class="separator:ada8e1ae81471dcde3cadc26db6bffdcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf0ce35fd4cdfa16eefa42aea7c3300e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#abf0ce35fd4cdfa16eefa42aea7c3300e">mffocus</a></td></tr>
-<tr class="memdesc:abf0ce35fd4cdfa16eefa42aea7c3300e"><td class="mdescLeft">&#160;</td><td class="mdescRight">method for focus tracing.  <a href="#abf0ce35fd4cdfa16eefa42aea7c3300e">More...</a><br/></td></tr>
 <tr class="separator:abf0ce35fd4cdfa16eefa42aea7c3300e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ff3f1331e6530aebb4203d1577224e6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a1ff3f1331e6530aebb4203d1577224e6">fsmideal</a></td></tr>
-<tr class="memdesc:a1ff3f1331e6530aebb4203d1577224e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">ideal compensation for uplink pointing  <a href="#a1ff3f1331e6530aebb4203d1577224e6">More...</a><br/></td></tr>
 <tr class="separator:a1ff3f1331e6530aebb4203d1577224e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e2c09e514f0786ffa42f3f25f14d608"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a1e2c09e514f0786ffa42f3f25f14d608">servotype_hi</a></td></tr>
-<tr class="memdesc:a1e2c09e514f0786ffa42f3f25f14d608"><td class="mdescLeft">&#160;</td><td class="mdescRight">servo type for high order loop.  <a href="#a1e2c09e514f0786ffa42f3f25f14d608">More...</a><br/></td></tr>
 <tr class="separator:a1e2c09e514f0786ffa42f3f25f14d608"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50827ebc23e85d5b8c052af5436827d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a50827ebc23e85d5b8c052af5436827d9">servotype_lo</a></td></tr>
-<tr class="memdesc:a50827ebc23e85d5b8c052af5436827d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">servo type for low order loop.  <a href="#a50827ebc23e85d5b8c052af5436827d9">More...</a><br/></td></tr>
 <tr class="separator:a50827ebc23e85d5b8c052af5436827d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e7a8af66d62b8d1c0e6b1c31e1c248f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a1e7a8af66d62b8d1c0e6b1c31e1c248f">cachedm</a></td></tr>
-<tr class="memdesc:a1e7a8af66d62b8d1c0e6b1c31e1c248f"><td class="mdescLeft">&#160;</td><td class="mdescRight">cache dm shape on fine sampled grid matched WFS or Science grid  <a href="#a1e7a8af66d62b8d1c0e6b1c31e1c248f">More...</a><br/></td></tr>
 <tr class="separator:a1e7a8af66d62b8d1c0e6b1c31e1c248f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16a3a1b709068ad2f3ed43b343cce6d6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a16a3a1b709068ad2f3ed43b343cce6d6">fuseint</a></td></tr>
-<tr class="memdesc:a16a3a1b709068ad2f3ed43b343cce6d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">fuse the high and low order integrators in split tomography  <a href="#a16a3a1b709068ad2f3ed43b343cce6d6">More...</a><br/></td></tr>
 <tr class="separator:a16a3a1b709068ad2f3ed43b343cce6d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8615676f068e88311d6f774e6cb92354"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8615676f068e88311d6f774e6cb92354">skysim</a></td></tr>
-<tr class="memdesc:a8615676f068e88311d6f774e6cb92354"><td class="mdescLeft">&#160;</td><td class="mdescRight">1: we are doing skycoverage preprocessing  <a href="#a8615676f068e88311d6f774e6cb92354">More...</a><br/></td></tr>
 <tr class="separator:a8615676f068e88311d6f774e6cb92354"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ca1ef171610250f5271d9692a85bb19"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0ca1ef171610250f5271d9692a85bb19">evlol</a></td></tr>
-<tr class="memdesc:a0ca1ef171610250f5271d9692a85bb19"><td class="mdescLeft">&#160;</td><td class="mdescRight">evaluate open loop error only  <a href="#a0ca1ef171610250f5271d9692a85bb19">More...</a><br/></td></tr>
 <tr class="separator:a0ca1ef171610250f5271d9692a85bb19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3efd0f6ef09845d59a4e5faf8ee55b8c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a3efd0f6ef09845d59a4e5faf8ee55b8c">noatm</a></td></tr>
-<tr class="memdesc:a3efd0f6ef09845d59a4e5faf8ee55b8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">disable atmosphere  <a href="#a3efd0f6ef09845d59a4e5faf8ee55b8c">More...</a><br/></td></tr>
 <tr class="separator:a3efd0f6ef09845d59a4e5faf8ee55b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab7309e652116e45e30ce5adc0bd91055"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ab7309e652116e45e30ce5adc0bd91055">idealfit</a></td></tr>
-<tr class="memdesc:ab7309e652116e45e30ce5adc0bd91055"><td class="mdescLeft">&#160;</td><td class="mdescRight">do ideal DM fitting from atmosphere directly.  <a href="#ab7309e652116e45e30ce5adc0bd91055">More...</a><br/></td></tr>
 <tr class="separator:ab7309e652116e45e30ce5adc0bd91055"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d8926134464b4595aa8cf99a64e8669"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a3d8926134464b4595aa8cf99a64e8669">idealtomo</a></td></tr>
-<tr class="memdesc:a3d8926134464b4595aa8cf99a64e8669"><td class="mdescLeft">&#160;</td><td class="mdescRight"><pre class="fragment">         ideal tomography without wfs (directly propagate from
-</pre><p> turbulence).  <a href="#a3d8926134464b4595aa8cf99a64e8669">More...</a><br/></td></tr>
 <tr class="separator:a3d8926134464b4595aa8cf99a64e8669"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a968793b1ad85cb0bb33b42bb885a49e4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a968793b1ad85cb0bb33b42bb885a49e4">psfr</a></td></tr>
-<tr class="memdesc:a968793b1ad85cb0bb33b42bb885a49e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">do PSF reconstruction telemetry  <a href="#a968793b1ad85cb0bb33b42bb885a49e4">More...</a><br/></td></tr>
 <tr class="separator:a968793b1ad85cb0bb33b42bb885a49e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41a18aa63206c15d26d2682fcfc568ac"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a41a18aa63206c15d26d2682fcfc568ac">ecnn</a></td></tr>
-<tr class="memdesc:a41a18aa63206c15d26d2682fcfc568ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate WF covariance due to WFS noise cov Cnn.  <a href="#a41a18aa63206c15d26d2682fcfc568ac">More...</a><br/></td></tr>
 <tr class="separator:a41a18aa63206c15d26d2682fcfc568ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62477737faf5f1a080fc5c46cf9246fd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a62477737faf5f1a080fc5c46cf9246fd">wfsalias</a></td></tr>
-<tr class="memdesc:a62477737faf5f1a080fc5c46cf9246fd"><td class="mdescLeft">&#160;</td><td class="mdescRight"><pre class="fragment">         Study the wfs aliasing effect by projecting turbulence
-</pre><p> onto the NULL space of DM.  <a href="#a62477737faf5f1a080fc5c46cf9246fd">More...</a><br/></td></tr>
 <tr class="separator:a62477737faf5f1a080fc5c46cf9246fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d3b6865ffc87d7df941e43613117995"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8d3b6865ffc87d7df941e43613117995">idealwfs</a></td></tr>
-<tr class="memdesc:a8d3b6865ffc87d7df941e43613117995"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generates ideal WFS by sensing turbulence with DM range.  <a href="#a8d3b6865ffc87d7df941e43613117995">More...</a><br/></td></tr>
 <tr class="separator:a8d3b6865ffc87d7df941e43613117995"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad986764f3285cc28d1c0cd32b0bf6b8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#aad986764f3285cc28d1c0cd32b0bf6b8">idealevl</a></td></tr>
-<tr class="memdesc:aad986764f3285cc28d1c0cd32b0bf6b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate performance within DM range.  <a href="#aad986764f3285cc28d1c0cd32b0bf6b8">More...</a><br/></td></tr>
 <tr class="separator:aad986764f3285cc28d1c0cd32b0bf6b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afde5a66cee6760a28dc7c9654d33fe72"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#afde5a66cee6760a28dc7c9654d33fe72">dmclip</a></td></tr>
-<tr class="memdesc:afde5a66cee6760a28dc7c9654d33fe72"><td class="mdescLeft">&#160;</td><td class="mdescRight">derived: Need to clip actuator stroke  <a href="#afde5a66cee6760a28dc7c9654d33fe72">More...</a><br/></td></tr>
 <tr class="separator:afde5a66cee6760a28dc7c9654d33fe72"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b4e88f03c10bc31213d5dcd8ed4a72a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8b4e88f03c10bc31213d5dcd8ed4a72a">dmclipia</a></td></tr>
-<tr class="memdesc:a8b4e88f03c10bc31213d5dcd8ed4a72a"><td class="mdescLeft">&#160;</td><td class="mdescRight">derived: Need to clip inter-actuator stroke  <a href="#a8b4e88f03c10bc31213d5dcd8ed4a72a">More...</a><br/></td></tr>
 <tr class="separator:a8b4e88f03c10bc31213d5dcd8ed4a72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a237f5657e6f01dc3a5dfd98dc4ecc9d7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a237f5657e6f01dc3a5dfd98dc4ecc9d7">dmproj</a></td></tr>
-<tr class="memdesc:a237f5657e6f01dc3a5dfd98dc4ecc9d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">derived: Need to projection atmosphere onto DMspace.  <a href="#a237f5657e6f01dc3a5dfd98dc4ecc9d7">More...</a><br/></td></tr>
 <tr class="separator:a237f5657e6f01dc3a5dfd98dc4ecc9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a8c516fde3d23322ceda64295ac524a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a9a8c516fde3d23322ceda64295ac524a">ahstfocus</a></td></tr>
-<tr class="memdesc:a9a8c516fde3d23322ceda64295ac524a"><td class="mdescLeft">&#160;</td><td class="mdescRight">New new mode split in ahst + focus tracking.  <a href="#a9a8c516fde3d23322ceda64295ac524a">More...</a><br/></td></tr>
 <tr class="separator:a9a8c516fde3d23322ceda64295ac524a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14de38ccb7649e6ef36c9ae0ffcb10c8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a14de38ccb7649e6ef36c9ae0ffcb10c8">mvmport</a></td></tr>
-<tr class="memdesc:a14de38ccb7649e6ef36c9ae0ffcb10c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction.  <a href="#a14de38ccb7649e6ef36c9ae0ffcb10c8">More...</a><br/></td></tr>
 <tr class="separator:a14de38ccb7649e6ef36c9ae0ffcb10c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab71370aae0377266162f4da9e28bdba0"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ab71370aae0377266162f4da9e28bdba0">mvmhost</a></td></tr>
-<tr class="memdesc:ab71370aae0377266162f4da9e28bdba0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which host does the MVM server run.  <a href="#ab71370aae0377266162f4da9e28bdba0">More...</a><br/></td></tr>
 <tr class="separator:ab71370aae0377266162f4da9e28bdba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7956f2357606d93cc89329a71ae4df01"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a7956f2357606d93cc89329a71ae4df01">mvmsize</a></td></tr>
-<tr class="memdesc:a7956f2357606d93cc89329a71ae4df01"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of gradients to send each time.  <a href="#a7956f2357606d93cc89329a71ae4df01">More...</a><br/></td></tr>
 <tr class="separator:a7956f2357606d93cc89329a71ae4df01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6c307e6461dba2b420c3fc8cbabc0f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ab6c307e6461dba2b420c3fc8cbabc0f7">mvmngpu</a></td></tr>
-<tr class="memdesc:ab6c307e6461dba2b420c3fc8cbabc0f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of GPUs to use in server  <a href="#ab6c307e6461dba2b420c3fc8cbabc0f7">More...</a><br/></td></tr>
 <tr class="separator:ab6c307e6461dba2b420c3fc8cbabc0f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c627eae57555181ac20350578cefcd9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8c627eae57555181ac20350578cefcd9">zoomdtrat</a></td></tr>
-<tr class="memdesc:a8c627eae57555181ac20350578cefcd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">dtrat of the trombone averager  <a href="#a8c627eae57555181ac20350578cefcd9">More...</a><br/></td></tr>
 <tr class="separator:a8c627eae57555181ac20350578cefcd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a20bdbee848a5f979efc5244a6df0dcdb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a20bdbee848a5f979efc5244a6df0dcdb">zoomshare</a></td></tr>
-<tr class="memdesc:a20bdbee848a5f979efc5244a6df0dcdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">1: All LGS share the same trombone  <a href="#a20bdbee848a5f979efc5244a6df0dcdb">More...</a><br/></td></tr>
 <tr class="separator:a20bdbee848a5f979efc5244a6df0dcdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99a95741a15165c3c25ede5e6369a2f0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a99a95741a15165c3c25ede5e6369a2f0">zoomgain</a></td></tr>
-<tr class="memdesc:a99a95741a15165c3c25ede5e6369a2f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">gain of the trombone controller  <a href="#a99a95741a15165c3c25ede5e6369a2f0">More...</a><br/></td></tr>
 <tr class="separator:a99a95741a15165c3c25ede5e6369a2f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9def20dce4869ad66b8922c698ca2a22"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a9def20dce4869ad66b8922c698ca2a22">ncpa_calib</a></td></tr>
-<tr class="memdesc:a9def20dce4869ad66b8922c698ca2a22"><td class="mdescLeft">&#160;</td><td class="mdescRight">calibrate NCPA.  <a href="#a9def20dce4869ad66b8922c698ca2a22">More...</a><br/></td></tr>
 <tr class="separator:a9def20dce4869ad66b8922c698ca2a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4813d011fa1383563d776ed0d3a75eb3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a4813d011fa1383563d776ed0d3a75eb3">ncpa_ttr</a></td></tr>
-<tr class="memdesc:a4813d011fa1383563d776ed0d3a75eb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove average t/t from NCPA for WFS.  <a href="#a4813d011fa1383563d776ed0d3a75eb3">More...</a><br/></td></tr>
 <tr class="separator:a4813d011fa1383563d776ed0d3a75eb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c63524e7269797aa79da7570fefbb16"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a2c63524e7269797aa79da7570fefbb16">ncpa_thetax</a></td></tr>
-<tr class="memdesc:a2c63524e7269797aa79da7570fefbb16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coordinate for NCPA calibration (arcsec)  <a href="#a2c63524e7269797aa79da7570fefbb16">More...</a><br/></td></tr>
 <tr class="separator:a2c63524e7269797aa79da7570fefbb16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4c2d6eaf58078ec4b8273810e612b49"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ad4c2d6eaf58078ec4b8273810e612b49">ncpa_thetay</a></td></tr>
-<tr class="memdesc:ad4c2d6eaf58078ec4b8273810e612b49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coordinate for NCPA calibration (arcsec)  <a href="#ad4c2d6eaf58078ec4b8273810e612b49">More...</a><br/></td></tr>
 <tr class="separator:ad4c2d6eaf58078ec4b8273810e612b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2938edea684042a9a02135735a5698d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ae2938edea684042a9a02135735a5698d">ncpa_wt</a></td></tr>
-<tr class="memdesc:ae2938edea684042a9a02135735a5698d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Weight for each point.  <a href="#ae2938edea684042a9a02135735a5698d">More...</a><br/></td></tr>
 <tr class="separator:ae2938edea684042a9a02135735a5698d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64508de5cde5dadf9087c23faf7048a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a64508de5cde5dadf9087c23faf7048a6">ncpa_hs</a></td></tr>
-<tr class="memdesc:a64508de5cde5dadf9087c23faf7048a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Height of star.  <a href="#a64508de5cde5dadf9087c23faf7048a6">More...</a><br/></td></tr>
 <tr class="separator:a64508de5cde5dadf9087c23faf7048a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d7a50e57248fd4cbba31e51b9dd994a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a5d7a50e57248fd4cbba31e51b9dd994a">ncpa_ndir</a></td></tr>
-<tr class="memdesc:a5d7a50e57248fd4cbba31e51b9dd994a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of points for NCPA calibration.  <a href="#a5d7a50e57248fd4cbba31e51b9dd994a">More...</a><br/></td></tr>
 <tr class="separator:a5d7a50e57248fd4cbba31e51b9dd994a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8e005436b2a65e19dc222b7a0bc8a01"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#af8e005436b2a65e19dc222b7a0bc8a01">dmadd</a></td></tr>
-<tr class="memdesc:af8e005436b2a65e19dc222b7a0bc8a01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Containing dm vector to simulate turbulence (added to integrator output).  <a href="#af8e005436b2a65e19dc222b7a0bc8a01">More...</a><br/></td></tr>
 <tr class="separator:af8e005436b2a65e19dc222b7a0bc8a01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -328,9 +260,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>sampling period. </p>
-<p>1/800 </p>
+<p>sampling period. 1/800 </p>
 
 </div>
 </div>
@@ -343,7 +273,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>low order wfs sampling period </p>
 
 </div>
@@ -357,7 +286,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>high order wfs sampling period </p>
 
 </div>
@@ -371,7 +299,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>zenith angle in radian </p>
 
 </div>
@@ -385,7 +312,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ratio of sampling period over clock of high order wfs </p>
 
 </div>
@@ -399,7 +325,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>dtrat of the lower order loop. </p>
 
 </div>
@@ -413,9 +338,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>dtrat (over sim.dt) for frame drop. </p>
-<p>Be careful when powfs.dtrat is not one. </p>
+<p>dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one. </p>
 
 </div>
 </div>
@@ -428,9 +351,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>time step to start simulation. </p>
-<p>0 </p>
+<p>time step to start simulation. 0 </p>
 
 </div>
 </div>
@@ -443,9 +364,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>time step to stop simulation. </p>
-<p>exclusive </p>
+<p>time step to stop simulation. exclusive </p>
 
 </div>
 </div>
@@ -458,8 +377,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Pause at the end of every time step. </p>
+<p>Pause at the end of every time step </p>
 
 </div>
 </div>
@@ -472,7 +390,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>simulation seeds </p>
 
 </div>
@@ -486,8 +403,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>How many simulation seed. </p>
+<p>How many simulation seed </p>
 
 </div>
 </div>
@@ -500,7 +416,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>closed loop or open loop </p>
 
 </div>
@@ -514,9 +429,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Telescope wind shake PSD input. </p>
-<p>Nx2. First column is freq in Hz, Second column is PSD in rad^2/Hz. </p>
+<pre class="fragment">        Telescope wind shake PSD input. Nx2. First column is
+</pre><p> freq in Hz, Second column is PSD in rad^2/Hz. </p>
 
 </div>
 </div>
@@ -529,7 +443,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>sequence of wind shake time series. </p>
 
 </div>
@@ -543,9 +456,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>servo coefficient for high order dm. </p>
-<p>A is command. e is error signal. at time step n, the command is updated by A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep </p>
+<pre class="fragment">        servo coefficient for high order dm.  A is command. e is
+</pre><p> error signal. at time step n, the command is updated by A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep </p>
 
 </div>
 </div>
@@ -558,7 +470,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>error gain for DM commands (high order) </p>
 
 </div>
@@ -572,7 +483,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>servo coefficient for ngs modes. </p>
 
 </div>
@@ -586,7 +496,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>error gain for NGS modes (low order) </p>
 
 </div>
@@ -600,7 +509,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>servo coefficient for for LGS uplink pointing loop. </p>
 
 </div>
@@ -614,7 +522,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>error gain for uplink pointing </p>
 
 </div>
@@ -628,8 +535,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Additional latency (*sim.dt) of the high order loop. </p>
+<p>Additional latency (*sim.dt) of the high order loop </p>
 
 </div>
 </div>
@@ -642,8 +548,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Additional latnecy (*sim.dt) of the low order loop. </p>
+<p>Additional latnecy (*sim.dt) of the low order loop </p>
 
 </div>
 </div>
@@ -656,8 +561,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Additional latency (*sim.dt) of the uplink loop. </p>
+<p>Additional latency (*sim.dt) of the uplink loop </p>
 
 </div>
 </div>
@@ -670,7 +574,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>cross over frequency of tip/tilt split </p>
 
 </div>
@@ -684,9 +587,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>los path filter for ttm. </p>
-<p>derived: lpttm=2*pi*fcttm*sim.dt </p>
+<p>los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt </p>
 
 </div>
 </div>
@@ -699,7 +600,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>cross-over frequency of the focus LPF. </p>
 
 </div>
@@ -713,7 +613,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>derived: lpfocus=2*pi*fc*sim.dthi </p>
 
 </div>
@@ -727,7 +626,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>derived: lpfocus=2*pi*fc*sim.dtlo </p>
 
 </div>
@@ -741,8 +639,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>The diameter of total fov in arcsec. </p>
+<p>The diameter of total fov in arcsec </p>
 
 </div>
 </div>
@@ -755,9 +652,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>method for focus tracing. </p>
-<ul>
+<pre class="fragment">         method for focus tracing.
+</pre><ul>
 <li>0: no focus tracking.</li>
 <li>1: Focus tracking using CL gradients, for each LGS independently.</li>
 <li>2: Focus tracking using CL gradinets, for common LGS focus only. </li>
@@ -774,7 +670,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ideal compensation for uplink pointing </p>
 
 </div>
@@ -788,9 +683,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>servo type for high order loop. </p>
-<p>1: simple integrator </p>
+<p>servo type for high order loop. 1: simple integrator </p>
 
 </div>
 </div>
@@ -803,9 +696,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>servo type for low order loop. </p>
-<p>1: simple integrator. 2: type II </p>
+<p>servo type for low order loop. 1: simple integrator. 2: type II </p>
 
 </div>
 </div>
@@ -818,7 +709,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>cache dm shape on fine sampled grid matched WFS or Science grid </p>
 
 </div>
@@ -832,7 +722,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>fuse the high and low order integrators in split tomography </p>
 
 </div>
@@ -846,7 +735,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>1: we are doing skycoverage preprocessing </p>
 
 </div>
@@ -860,7 +748,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>evaluate open loop error only </p>
 
 </div>
@@ -874,7 +761,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>disable atmosphere </p>
 
 </div>
@@ -888,7 +774,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>do ideal DM fitting from atmosphere directly. </p>
 
 </div>
@@ -902,10 +787,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p><pre class="fragment">         ideal tomography without wfs (directly propagate from
-</pre><p> turbulence). </p>
-<p>conflicts with idealfit. combine with evl.tomo to evaluate its performance. </p>
+<pre class="fragment">         ideal tomography without wfs (directly propagate from
+</pre><p> turbulence). conflicts with idealfit. combine with evl.tomo to evaluate its performance. </p>
 
 </div>
 </div>
@@ -918,7 +801,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>do PSF reconstruction telemetry </p>
 
 </div>
@@ -932,7 +814,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Calculate WF covariance due to WFS noise cov Cnn. </p>
 
 </div>
@@ -946,8 +827,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p><pre class="fragment">         Study the wfs aliasing effect by projecting turbulence
+<pre class="fragment">         Study the wfs aliasing effect by projecting turbulence
 </pre><p> onto the NULL space of DM. </p>
 
 </div>
@@ -961,7 +841,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Generates ideal WFS by sensing turbulence with DM range. </p>
 
 </div>
@@ -975,7 +854,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Evaluate performance within DM range. </p>
 
 </div>
@@ -989,7 +867,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>derived: Need to clip actuator stroke </p>
 
 </div>
@@ -1003,7 +880,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>derived: Need to clip inter-actuator stroke </p>
 
 </div>
@@ -1017,7 +893,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>derived: Need to projection atmosphere onto DMspace. </p>
 
 </div>
@@ -1031,8 +906,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>New new mode split in ahst + focus tracking. </p>
+<p>New new mode split in ahst + focus tracking </p>
 
 </div>
 </div>
@@ -1045,7 +919,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction. </p>
 
 </div>
@@ -1059,8 +932,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Which host does the MVM server run. </p>
+<p>Which host does the MVM server run </p>
 
 </div>
 </div>
@@ -1073,9 +945,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>number of gradients to send each time. </p>
-<p>0 is all. </p>
+<p>number of gradients to send each time. 0 is all. </p>
 
 </div>
 </div>
@@ -1088,7 +958,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of GPUs to use in server </p>
 
 </div>
@@ -1102,7 +971,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>dtrat of the trombone averager </p>
 
 </div>
@@ -1116,7 +984,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>1: All LGS share the same trombone </p>
 
 </div>
@@ -1130,7 +997,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>gain of the trombone controller </p>
 
 </div>
@@ -1144,9 +1010,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>calibrate NCPA. </p>
-<p>1: with all DMs. 2: with only ground DM. </p>
+<p>calibrate NCPA. 1: with all DMs. 2: with only ground DM. </p>
 
 </div>
 </div>
@@ -1159,9 +1023,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove average t/t from NCPA for WFS. </p>
-<p>Equivalent as repositioning WFS. default 1. </p>
+<p>Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1. </p>
 
 </div>
 </div>
@@ -1174,7 +1036,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Coordinate for NCPA calibration (arcsec) </p>
 
 </div>
@@ -1188,7 +1049,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Coordinate for NCPA calibration (arcsec) </p>
 
 </div>
@@ -1202,7 +1062,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Weight for each point. </p>
 
 </div>
@@ -1216,7 +1075,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Height of star. </p>
 
 </div>
@@ -1230,8 +1088,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Number of points for NCPA calibration. </p>
+<p>Number of points for NCPA calibration </p>
 
 </div>
 </div>
@@ -1244,9 +1101,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Containing dm vector to simulate turbulence (added to integrator output). </p>
-<p>It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty </p>
+<pre class="fragment">        Containing dm vector to simulate turbulence (added to integrator output). 
+</pre><p> It should be cell array (time steps) of cell arry (DMs) of vectors. Can be empty </p>
 
 </div>
 </div>

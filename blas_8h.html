@@ -112,10 +112,9 @@ $(document).ready(function(){initNavTree('blas_8h.html','');});
 <div class="title">blas.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>The following are blas and lapack fortran function definitions.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../sys/sys.h&quot;</code><br/>
+<code>#include &lt;stddef.h&gt;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a01be8a3cce6925981271c5d945bcde8b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01be8a3cce6925981271c5d945bcde8b"></a>
@@ -228,8 +227,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cgesvd_</b> (char *jo
 <tr class="separator:adbf0e605dd8e73aa56c7f8752d398356"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The following are blas and lapack fortran function definitions. </p>
-<p>Notice that when generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack routines to be compatible when usual blas/lapack definitions.</p>
+<div class="textblock"><p>The following are blas and lapack fortran function definitions. Notice that when generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack routines to be compatible when usual blas/lapack definitions.</p>
 <p>2013-12-17: replaced int* by ptrdiff_t* to be compatible with blas/lapack that expect 64 bit integers. Still backward compatible with 32bit integers because only one number will be used and we are using little indians. 2014-03-19: replaced ptrdiff_t by long. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->

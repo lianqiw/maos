@@ -111,35 +111,25 @@ $(document).ready(function(){initNavTree('slaving_8h.html','');});
 <div class="title">slaving.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines to compute interpolation matrices for stuck and floating actuators.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a7bcbb1b8de1d45851f3ac5c1c2b34d01"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a7bcbb1b8de1d45851f3ac5c1c2b34d01">genactcpl</a> (const <a class="el" href="structdspcell.html">dspcell</a> *HA, const <a class="el" href="structdmat.html">dmat</a> *W1)</td></tr>
-<tr class="memdesc:a7bcbb1b8de1d45851f3ac5c1c2b34d01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the actuator coupling coefficient to be used to identify non-coupled actuators.  <a href="#a7bcbb1b8de1d45851f3ac5c1c2b34d01">More...</a><br/></td></tr>
 <tr class="separator:a7bcbb1b8de1d45851f3ac5c1c2b34d01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bdfb7258a5b7d2b445d6ad72279ba84"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdspcell.html">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a8bdfb7258a5b7d2b445d6ad72279ba84">slaving</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, const <a class="el" href="structdcell.html">dcell</a> *actcpl, <a class="el" href="structdcell.html">dcell</a> *NW, const <a class="el" href="structlcell.html">lcell</a> *actstuck, const <a class="el" href="structlcell.html">lcell</a> *actfloat, const double thres, const double scl)</td></tr>
-<tr class="memdesc:a8bdfb7258a5b7d2b445d6ad72279ba84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute slaving actuator regularization.  <a href="#a8bdfb7258a5b7d2b445d6ad72279ba84">More...</a><br/></td></tr>
 <tr class="separator:a8bdfb7258a5b7d2b445d6ad72279ba84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4dd509feae130cc64f3cc381bea87f54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a4dd509feae130cc64f3cc381bea87f54">act_stuck</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, void *HA, const <a class="el" href="structlcell.html">lcell</a> *stuck)</td></tr>
-<tr class="memdesc:a4dd509feae130cc64f3cc381bea87f54"><td class="mdescLeft">&#160;</td><td class="mdescRight">When some actuators are stuck, zero the corresponding column in HA.  <a href="#a4dd509feae130cc64f3cc381bea87f54">More...</a><br/></td></tr>
 <tr class="separator:a4dd509feae130cc64f3cc381bea87f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8eaf56b9e15abf569b929a5703829caf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a8eaf56b9e15abf569b929a5703829caf">act_zero</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, const <a class="el" href="structdcell.html">dcell</a> *HB, const <a class="el" href="structlcell.html">lcell</a> *dead)</td></tr>
-<tr class="memdesc:a8eaf56b9e15abf569b929a5703829caf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Zero out rows of dead actuators in mode vector.  <a href="#a8eaf56b9e15abf569b929a5703829caf">More...</a><br/></td></tr>
 <tr class="separator:a8eaf56b9e15abf569b929a5703829caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af19a67f24e378c870ca65f3eaa675ed7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#af19a67f24e378c870ca65f3eaa675ed7">act_float</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, <a class="el" href="structdspcell.html">dspcell</a> **HA, const <a class="el" href="structdcell.html">dcell</a> *HB, const <a class="el" href="structlcell.html">lcell</a> *actfloat)</td></tr>
-<tr class="memdesc:af19a67f24e378c870ca65f3eaa675ed7"><td class="mdescLeft">&#160;</td><td class="mdescRight">When some actuators are float, remove the corresponding column in HA and/or HB, and add to neigh boring actuators.  <a href="#af19a67f24e378c870ca65f3eaa675ed7">More...</a><br/></td></tr>
 <tr class="separator:af19a67f24e378c870ca65f3eaa675ed7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc1b4899c000ff26f846ec7c8be176c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#adc1b4899c000ff26f846ec7c8be176c3">act_stuck_cmd</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, const <a class="el" href="structdcell.html">dcell</a> *adm, const <a class="el" href="structlcell.html">lcell</a> *stuck)</td></tr>
-<tr class="memdesc:adc1b4899c000ff26f846ec7c8be176c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make DM actuator commands zero at stuck actuator locations.  <a href="#adc1b4899c000ff26f846ec7c8be176c3">More...</a><br/></td></tr>
 <tr class="separator:adc1b4899c000ff26f846ec7c8be176c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdspcell.html">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#af1bb469cd3e559bed0d4230b872d1ba7">act_float_interp</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, const <a class="el" href="structlcell.html">lcell</a> *actfloat)</td></tr>
-<tr class="memdesc:af1bb469cd3e559bed0d4230b872d1ba7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an interpreter that make floating actuators equal to their neighbors.  <a href="#af1bb469cd3e559bed0d4230b872d1ba7">More...</a><br/></td></tr>
 <tr class="separator:af1bb469cd3e559bed0d4230b872d1ba7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a746f4f30fe77615563102f09543fd191"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a746f4f30fe77615563102f09543fd191">act_extrap_do</a> (<a class="el" href="structloc__t.html">loc_t</a> *aloc, const <a class="el" href="structdmat.html">dmat</a> *actcpl, const double scl)</td></tr>
-<tr class="memdesc:a746f4f30fe77615563102f09543fd191"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors.  <a href="#a746f4f30fe77615563102f09543fd191">More...</a><br/></td></tr>
 <tr class="separator:a746f4f30fe77615563102f09543fd191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1173c1aa86a338405f4fa85ccd00f465"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdspcell.html">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="slaving_8h.html#a1173c1aa86a338405f4fa85ccd00f465">act_extrap</a> (<a class="el" href="structloccell.html">loccell</a> *aloc, const <a class="el" href="structdcell.html">dcell</a> *actcpl, const double scl)</td></tr>
 <tr class="separator:a1173c1aa86a338405f4fa85ccd00f465"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,9 +160,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the actuator coupling coefficient to be used to identify non-coupled actuators. </p>
-<p>W1 is optional weighting function. The max value is 1. </p>
+<p>Compute the actuator coupling coefficient to be used to identify non-coupled actuators. W1 is optional weighting function. The max value is 1. </p>
 
 </div>
 </div>
@@ -229,9 +217,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute slaving actuator regularization. </p>
-<p>HA (or use GA) is used to compute active actuators. If NW is non NULL, orthogonalize it with the slaving regularization. When the actuators are in the NULL space of HA, we want to contraint their values to be close to the ones that are active. We put an additional term in the fitting matrix to force this. Be careful with it when using tip/tilt constraint and cholesky back solve. </p>
+<p>Compute slaving actuator regularization. HA (or use GA) is used to compute active actuators. If NW is non NULL, orthogonalize it with the slaving regularization. When the actuators are in the NULL space of HA, we want to contraint their values to be close to the ones that are active. We put an additional term in the fitting matrix to force this. Be careful with it when using tip/tilt constraint and cholesky back solve. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>The actuator grid </td></tr>
@@ -261,7 +247,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>HA</em>, </td>
+          <td class="paramname"><em>HA_</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -276,8 +262,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>When some actuators are stuck, zero the corresponding column in HA. </p>
+<p>When some actuators are stuck, zero the corresponding column in HA </p>
 
 </div>
 </div>
@@ -310,7 +295,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Zero out rows of dead actuators in mode vector. </p>
 
 </div>
@@ -350,9 +334,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neigh boring actuators. </p>
-<p>This is implemented using a second matrix and then add to the original matrix. </p>
+<p>When some actuators are float, remove the corresponding column in HA and/or HB, and add to neigh boring actuators. This is implemented using a second matrix and then add to the original matrix. </p>
 
 </div>
 </div>
@@ -385,7 +367,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Make DM actuator commands zero at stuck actuator locations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -421,7 +402,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create an interpreter that make floating actuators equal to their neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -447,13 +427,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>actcpl</em>, </td>
+          <td class="paramname"><em>actcplc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>scl</em>&#160;</td>
+          <td class="paramname"><em>thres</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -462,13 +442,12 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create an interpreter that make inactive actuators equal avearage of active neighbors if exist or all other neighbors. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Actuator grid array </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">actcpl</td><td>Actuator coupling coefficiency </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scl</td><td>Threshold of coupling to turn on interpolation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">actcplc</td><td>Actuator coupling coefficiency </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">thres</td><td>Threshold of coupling to turn on interpolation </td></tr>
   </table>
   </dd>
 </dl>

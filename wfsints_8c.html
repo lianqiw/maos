@@ -112,10 +112,9 @@ $(document).ready(function(){initNavTree('wfsints_8c.html','');});
 <div class="title">wfsints.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains <a class="el" href="wfsints_8c.html#a4aa8e0cc5984b2881e54c0000ae754ae" title="compute physical optics images and add to ints. ">wfsints()</a> that computes physical optics WFS subaperture images from OPDs.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a51b7a9c320bb9b58fc5632da0a44ab84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51b7a9c320bb9b58fc5632da0a44ab84"></a>
@@ -125,11 +124,10 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a4aa8e0cc5984b2881e54c0000ae754ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsints_8c.html#a4aa8e0cc5984b2881e54c0000ae754ae">wfsints</a> (<a class="el" href="structthread__t.html">thread_t</a> *thread_data)</td></tr>
-<tr class="memdesc:a4aa8e0cc5984b2881e54c0000ae754ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute physical optics images and add to ints.  <a href="#a4aa8e0cc5984b2881e54c0000ae754ae">More...</a><br/></td></tr>
 <tr class="separator:a4aa8e0cc5984b2881e54c0000ae754ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains <a class="el" href="wfsints_8c.html#a4aa8e0cc5984b2881e54c0000ae754ae" title="compute physical optics images and add to ints. ">wfsints()</a> that computes physical optics WFS subaperture images from OPDs. </p>
+<div class="textblock"><p>Contains <a class="el" href="wfsints_8c.html#a4aa8e0cc5984b2881e54c0000ae754ae">wfsints()</a> that computes physical optics WFS subaperture images from OPDs. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a4aa8e0cc5984b2881e54c0000ae754ae"></a>
 <div class="memitem">
@@ -144,9 +142,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute physical optics images and add to ints. </p>
-<p>be careful that fftw inverse fft doesn't have 1/n^2 scaling. this function lives inside the threading routine wfsgradx</p>
+<p>compute physical optics images and add to ints. be careful that fftw inverse fft doesn't have 1/n^2 scaling. this function lives inside the threading routine wfsgradx</p>
 <p>Notice that the uplink psf have to have the same sampling as the subaperture psf. uplink psf has sampling lambda/(nlwvf*ldx) subaperture has sampling lambda/(nwvf*dx) When the uplink pupil is larger than subaperture, we need to scale ldx accordingly. </p>
 
 </div>

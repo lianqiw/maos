@@ -111,24 +111,19 @@ $(document).ready(function(){initNavTree('mkw_8h.html','');});
 <div class="title">mkw.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains functions that computes the bilinear weighting function W0, W1.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a575689005068d3c5eb641fbe306743b2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8h.html#a575689005068d3c5eb641fbe306743b2">mkw_amp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double *amp, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
-<tr class="memdesc:a575689005068d3c5eb641fbe306743b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function.  <a href="#a575689005068d3c5eb641fbe306743b2">More...</a><br/></td></tr>
 <tr class="separator:a575689005068d3c5eb641fbe306743b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c7bf5f93ae75c3c8dc377807f8d45e5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8h.html#a6c7bf5f93ae75c3c8dc377807f8d45e5">mkw_circular</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double r, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
-<tr class="memdesc:a6c7bf5f93ae75c3c8dc377807f8d45e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid.  <a href="#a6c7bf5f93ae75c3c8dc377807f8d45e5">More...</a><br/></td></tr>
 <tr class="separator:a6c7bf5f93ae75c3c8dc377807f8d45e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4db4d6190f9660f18f25bf2263b316c3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8h.html#a4db4d6190f9660f18f25bf2263b316c3">mkw_annular</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double cri, double cro, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
-<tr class="memdesc:a4db4d6190f9660f18f25bf2263b316c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro.  <a href="#a4db4d6190f9660f18f25bf2263b316c3">More...</a><br/></td></tr>
 <tr class="separator:a4db4d6190f9660f18f25bf2263b316c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains functions that computes the bilinear weighting function W0, W1. </p>
+<div class="textblock"><p>Contains functions that computes the bilinear weighting function W0, W1 </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a575689005068d3c5eb641fbe306743b2"></a>
 <div class="memitem">
@@ -165,9 +160,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute the W0, W1 for bilinear influence function. </p>
-<p>The normalization is very important. We need to have sum(amp)==1; W0 and W1 can not be scaled because: 1) they scale the same way as amp, 2) we are using W0-W1*W1', one is linear, one is quadratic. So the result will be different.</p>
+<p>compute the W0, W1 for bilinear influence function. The normalization is very important. We need to have sum(amp)==1; W0 and W1 can not be scaled because: 1) they scale the same way as amp, 2) we are using W0-W1*W1', one is linear, one is quadratic. So the result will be different.</p>
 <p>for the result, we must have 1) sum(W0,1)==W1, sum(W0,2)==W1, 2) sum(W1)==1 2009-11-20: bug found: using a circular gray pixel amplitude map, sum(W1) is less than 1 if loc is not enough large. This method is not good! Prefer the mkw_circular instead which follows closely the loas method. The LAOS W0/W1 gives very good performance in NGS modes.</p>
 <p>This function does not work well. </p>
 
@@ -220,7 +213,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -289,9 +281,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro. </p>
-<p>see mkw(). </p>
+<p>compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro. see mkw(). </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">loc</td><td>grid coordinate </td></tr>

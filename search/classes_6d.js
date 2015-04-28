@@ -12,6 +12,6 @@ var searchData=
   ['moao_5ft',['MOAO_T',['../structMOAO__T.html',1,'']]],
   ['mt_5fstate',['mt_state',['../structmt__state.html',1,'']]],
   ['muv_5ft',['MUV_T',['../structMUV__T.html',1,'']]],
-  ['mvm_5fg_5fmul_5ft',['mvm_g_mul_t',['../structmvm__g__mul__t.html',1,'']]],
-  ['mvm_5figpu_5ft',['MVM_IGPU_T',['../structMVM__IGPU__T.html',1,'']]]
+  ['mvm_5figpu_5ft',['MVM_IGPU_T',['../structMVM__IGPU__T.html',1,'']]],
+  ['mvm_5ft',['mvm_t',['../structmvm__t.html',1,'']]]
 ];

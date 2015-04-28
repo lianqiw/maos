@@ -111,29 +111,28 @@ $(document).ready(function(){initNavTree('setup__star_8c.html','');});
 <div class="title">setup_star.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>setup stars.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2parms_8h.html">parms.h</a>&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2types_8h.html">types.h</a>&quot;</code><br/>
+<code>#include &quot;setup_star.h&quot;</code><br/>
+<code>#include &quot;photon.h&quot;</code><br/>
+<code>#include &quot;mtch.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a0b4edb2c0f6f055f48f5bbeadd7f8327"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b4edb2c0f6f055f48f5bbeadd7f8327"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><b>setup_star_read_ztilt</b> (<a class="el" href="structSTAR__S.html">STAR_S</a> *star, int nstar, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms, int seed)</td></tr>
 <tr class="separator:a0b4edb2c0f6f055f48f5bbeadd7f8327"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae68644330581363ba83630ac90ad9c9b"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__star_8c.html#ae68644330581363ba83630ac90ad9c9b">setup_star_read_wvf</a> (<a class="el" href="structSTAR__S.html">STAR_S</a> *star, int nstar, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms, int seed)</td></tr>
-<tr class="memdesc:ae68644330581363ba83630ac90ad9c9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in asterism WFS wvf.  <a href="#ae68644330581363ba83630ac90ad9c9b">More...</a><br/></td></tr>
 <tr class="separator:ae68644330581363ba83630ac90ad9c9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a519487a9955705e723549fdc79195ec9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSTAR__S.html">STAR_S</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__star_8c.html#a519487a9955705e723549fdc79195ec9">setup_star</a> (int *nstarout, <a class="el" href="structSIM__S.html">SIM_S</a> *simu, <a class="el" href="structdmat.html">dmat</a> *stars, int seed)</td></tr>
-<tr class="memdesc:a519487a9955705e723549fdc79195ec9"><td class="mdescLeft">&#160;</td><td class="mdescRight">setup "star" data array from star information and read in average pixel intensitys.  <a href="#a519487a9955705e723549fdc79195ec9">More...</a><br/></td></tr>
 <tr class="separator:a519487a9955705e723549fdc79195ec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae11597fe4679bb6972a39edf48f23ab8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae11597fe4679bb6972a39edf48f23ab8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>free_istar</b> (<a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
 <tr class="separator:ae11597fe4679bb6972a39edf48f23ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03a5b1f77ec8fe10728a0cbae4e938e4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__star_8c.html#a03a5b1f77ec8fe10728a0cbae4e938e4">free_star</a> (<a class="el" href="structSTAR__S.html">STAR_S</a> *stars, int nstar, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a03a5b1f77ec8fe10728a0cbae4e938e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free array of <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a>.  <a href="#a03a5b1f77ec8fe10728a0cbae4e938e4">More...</a><br/></td></tr>
 <tr class="separator:a03a5b1f77ec8fe10728a0cbae4e938e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af261402679395e8775009c60f13b05ab"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__star_8c.html#af261402679395e8775009c60f13b05ab">free_pistat</a> (<a class="el" href="structPISTAT__S.html">PISTAT_S</a> *pistat, int npistat, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:af261402679395e8775009c60f13b05ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free pixel intensities.  <a href="#af261402679395e8775009c60f13b05ab">More...</a><br/></td></tr>
 <tr class="separator:af261402679395e8775009c60f13b05ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -174,7 +173,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_istar</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Read in asterism WFS wvf. </p>
 
 </div>
@@ -214,9 +212,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_istar</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>setup "star" data array from star information and read in average pixel intensitys. </p>
-<p>Check for star PSF size. If it is larger than 5, we don't use the star because the PSF is too broad. </p>
+<p>setup "star" data array from star information and read in average pixel intensitys. Check for star PSF size. If it is larger than 5, we don't use the star because the PSF is too broad. </p>
 
 </div>
 </div>
@@ -249,8 +245,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_istar</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free array of <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a>. </p>
+<p>Free array of <a class="el" href="structSTAR__S.html">STAR_S</a>. </p>
 
 </div>
 </div>
@@ -283,7 +278,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_istar</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Free pixel intensities. </p>
 
 </div>

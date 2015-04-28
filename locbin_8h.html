@@ -111,14 +111,11 @@ $(document).ready(function(){initNavTree('locbin_8h.html','');});
 <div class="title">locbin.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>i/o functions for <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>, <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;<a class="el" href="loc_8h.html">loc.h</a>&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#a22b5b42fb69c0946972bc87f2f95b1e6">locreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
-<tr class="memdesc:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify the magic, dimension and read in the <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> by calling locreaddata2().  <a href="#a22b5b42fb69c0946972bc87f2f95b1e6">More...</a><br/></td></tr>
 <tr class="separator:a22b5b42fb69c0946972bc87f2f95b1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b18e8ba6f4e742d165285096127f677"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b18e8ba6f4e742d165285096127f677"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>locwritedata</b> (file_t *fp, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
@@ -139,10 +136,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>locarrwrite</b> (<a c
 <a class="el" href="structmap__t.html">map_t</a> *<a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>read_by_id</b> (0x016402, 0, const char *format,...)</td></tr>
 <tr class="separator:a152b0d03d33d530587978445205a11a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f183cdddbf4a73d75e66ad544dfaf10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#a8f183cdddbf4a73d75e66ad544dfaf10">mapreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
-<tr class="memdesc:a8f183cdddbf4a73d75e66ad544dfaf10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> from file.  <a href="#a8f183cdddbf4a73d75e66ad544dfaf10">More...</a><br/></td></tr>
 <tr class="separator:a8f183cdddbf4a73d75e66ad544dfaf10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c571b35aee815f5677daf3050aaa61f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structrmap__t.html">rmap_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#a3c571b35aee815f5677daf3050aaa61f">rmapread</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a3c571b35aee815f5677daf3050aaa61f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Readrtectmap_t from file.  <a href="#a3c571b35aee815f5677daf3050aaa61f">More...</a><br/></td></tr>
 <tr class="separator:a3c571b35aee815f5677daf3050aaa61f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c4f0ea61203b253b960a80206752275"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c4f0ea61203b253b960a80206752275"></a>
 <a class="el" href="structrmap__t.html">rmap_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>rmaparrread</b> (int *nlayer, const char *format,...)</td></tr>
@@ -157,20 +152,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
 <a class="el" href="structmap__t.html">map_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>maparrread</b> (int *nlayer, const char *format,...)</td></tr>
 <tr class="separator:abd717d3dd4847c82dedc4f0921ac0297"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abae6e99bd413d830f88c676c1928899d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#abae6e99bd413d830f88c676c1928899d">d2map</a> (<a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
-<tr class="memdesc:abae6e99bd413d830f88c676c1928899d"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert a dmat to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#abae6e99bd413d830f88c676c1928899d">More...</a><br/></td></tr>
 <tr class="separator:abae6e99bd413d830f88c676c1928899d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab47706126a36259d3fc714f192382e5a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmapcell.html">mapcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#ab47706126a36259d3fc714f192382e5a">dcell2map</a> (<a class="el" href="structdcell.html">dcell</a> *in)</td></tr>
-<tr class="memdesc:ab47706126a36259d3fc714f192382e5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert a mmap'ed dcell to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array  <a href="#ab47706126a36259d3fc714f192382e5a">More...</a><br/></td></tr>
 <tr class="separator:ab47706126a36259d3fc714f192382e5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43931ecf14e267e5c728d3234e76393e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structrmap__t.html">rmap_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#a43931ecf14e267e5c728d3234e76393e">d2rmap</a> (<a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
-<tr class="memdesc:a43931ecf14e267e5c728d3234e76393e"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert a dmat to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#a43931ecf14e267e5c728d3234e76393e">More...</a><br/></td></tr>
 <tr class="separator:a43931ecf14e267e5c728d3234e76393e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa884d15a3af600d6faab7cc2ed01bbb4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structrmap__t.html">rmap_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8h.html#aa884d15a3af600d6faab7cc2ed01bbb4">dcell2rmap</a> (int *nlayer, <a class="el" href="structdcell.html">dcell</a> *in)</td></tr>
-<tr class="memdesc:aa884d15a3af600d6faab7cc2ed01bbb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert a mmap'ed dcell to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array  <a href="#aa884d15a3af600d6faab7cc2ed01bbb4">More...</a><br/></td></tr>
 <tr class="separator:aa884d15a3af600d6faab7cc2ed01bbb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>i/o functions for <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>, <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<div class="textblock"><p>i/o functions for <a class="el" href="structloc__t.html">loc_t</a>, <a class="el" href="structmap__t.html">map_t</a>. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a22b5b42fb69c0946972bc87f2f95b1e6"></a>
 <div class="memitem">
@@ -195,8 +186,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Verify the magic, dimension and read in the <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> by calling locreaddata2(). </p>
+<p>Verify the magic, dimension and read in the <a class="el" href="structloc__t.html">loc_t</a> by calling locreaddata2(). </p>
 
 </div>
 </div>
@@ -223,8 +213,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> from file. </p>
+<p>Read <a class="el" href="structmap__t.html">map_t</a> from file </p>
 
 </div>
 </div>
@@ -251,8 +240,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Readrtectmap_t from file. </p>
+<p>Readrtectmap_t from file </p>
 
 </div>
 </div>
@@ -269,8 +257,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>convert a dmat to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<p>convert a dmat to <a class="el" href="structmap__t.html">map_t</a>. </p>
 
 </div>
 </div>
@@ -287,8 +274,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>convert a mmap'ed dcell to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array </p>
+<p>convert a mmap'ed dcell to <a class="el" href="structmap__t.html">map_t</a> array </p>
 
 </div>
 </div>
@@ -305,8 +291,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>convert a dmat to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<p>convert a dmat to <a class="el" href="structmap__t.html">map_t</a>. </p>
 
 </div>
 </div>
@@ -333,8 +318,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>convert a mmap'ed dcell to <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array </p>
+<p>convert a mmap'ed dcell to <a class="el" href="structmap__t.html">map_t</a> array </p>
 
 </div>
 </div>

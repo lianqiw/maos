@@ -112,10 +112,9 @@ $(document).ready(function(){initNavTree('fdpcg_8c.html','');});
 <div class="title">fdpcg.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Fourier Domain Preconditioner for Tomography step.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;fdpcg.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a9529a590460f985215e605045944b99b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9529a590460f985215e605045944b99b"></a>
@@ -140,18 +139,14 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a8b3477417f7ceb8183f072392ec551ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFDPCG__T.html">FDPCG_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a8b3477417f7ceb8183f072392ec551ca">fdpcg_prepare</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structmapcell.html">mapcell</a> *atm)</td></tr>
-<tr class="memdesc:a8b3477417f7ceb8183f072392ec551ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepare data for Tomography Fourier Domain Preconditioner.  <a href="#a8b3477417f7ceb8183f072392ec551ca">More...</a><br/></td></tr>
 <tr class="separator:a8b3477417f7ceb8183f072392ec551ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2fe70a98a8797a50a58639f9c032a996"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a2fe70a98a8797a50a58639f9c032a996">fdpcg_precond</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin)</td></tr>
-<tr class="memdesc:a2fe70a98a8797a50a58639f9c032a996"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply the Fourier domain preconditioner.  <a href="#a2fe70a98a8797a50a58639f9c032a996">More...</a><br/></td></tr>
 <tr class="separator:a2fe70a98a8797a50a58639f9c032a996"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39d6c9be2ba21e2556b11d2e56d215fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a39d6c9be2ba21e2556b11d2e56d215fe">fdpcg_free</a> (<a class="el" href="structFDPCG__T.html">FDPCG_T</a> *fdpcg)</td></tr>
-<tr class="memdesc:a39d6c9be2ba21e2556b11d2e56d215fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free fdpcg related data structs.  <a href="#a39d6c9be2ba21e2556b11d2e56d215fe">More...</a><br/></td></tr>
 <tr class="separator:a39d6c9be2ba21e2556b11d2e56d215fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Fourier Domain Preconditioner for Tomography step. </p>
-<p>2012-07-11: Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling. </p>
+<div class="textblock"><p>Fourier Domain Preconditioner for Tomography step. 2012-07-11: Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a8b3477417f7ceb8183f072392ec551ca"></a>
 <div class="memitem">
@@ -188,9 +183,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Prepare data for Tomography Fourier Domain Preconditioner. </p>
-<p>atm is used to provide wind velocity information. </p>
+<p>Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information. </p>
 
 </div>
 </div>
@@ -223,9 +216,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply the Fourier domain preconditioner. </p>
-<p>Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin)); </p>
+<p>Apply the Fourier domain preconditioner. Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin)); </p>
 
 </div>
 </div>
@@ -242,7 +233,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Free fdpcg related data structs. </p>
 
 </div>

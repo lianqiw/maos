@@ -111,26 +111,29 @@ $(document).ready(function(){initNavTree('maos_2utils_8c.html','');});
 <div class="title">utils.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>A few utility routines.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;search.h&gt;</code><br/>
+<code>#include &lt;sys/types.h&gt;</code><br/>
+<code>#include &lt;sys/wait.h&gt;</code><br/>
+<code>#include &lt;sys/stat.h&gt;</code><br/>
+<code>#include &lt;fcntl.h&gt;</code><br/>
+<code>#include &lt;errno.h&gt;</code><br/>
+<code>#include &lt;getopt.h&gt;</code><br/>
+<code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;mvm_client.h&quot;</code><br/>
+<code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;genseotf.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aa6846a7e8753720495fab427eb73a333"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#aa6846a7e8753720495fab427eb73a333">plotloc</a> (char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, double ht, char *format,...)</td></tr>
-<tr class="memdesc:aa6846a7e8753720495fab427eb73a333"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plot the loc, together with all beams.  <a href="#aa6846a7e8753720495fab427eb73a333">More...</a><br/></td></tr>
 <tr class="separator:aa6846a7e8753720495fab427eb73a333"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17f83b9d00296996ebdaff0335ef4340"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a17f83b9d00296996ebdaff0335ef4340">plotdir</a> (char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double totfov, char *format,...)</td></tr>
-<tr class="memdesc:a17f83b9d00296996ebdaff0335ef4340"><td class="mdescLeft">&#160;</td><td class="mdescRight">ploted all the different beam directions as points.  <a href="#a17f83b9d00296996ebdaff0335ef4340">More...</a><br/></td></tr>
 <tr class="separator:a17f83b9d00296996ebdaff0335ef4340"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af83a1d1fc29af913013c954d41d34490"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#af83a1d1fc29af913013c954d41d34490">rename_file</a> (int sig)</td></tr>
-<tr class="memdesc:af83a1d1fc29af913013c954d41d34490"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rename the log files when simulation exits.  <a href="#af83a1d1fc29af913013c954d41d34490">More...</a><br/></td></tr>
 <tr class="separator:af83a1d1fc29af913013c954d41d34490"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafb94bb8e11bc2169946336024d6b0fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#aafb94bb8e11bc2169946336024d6b0fc">maos_signal_handler</a> (int sig)</td></tr>
-<tr class="memdesc:aafb94bb8e11bc2169946336024d6b0fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles signals.  <a href="#aafb94bb8e11bc2169946336024d6b0fc">More...</a><br/></td></tr>
 <tr class="separator:aafb94bb8e11bc2169946336024d6b0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad91533fa7ecab0db34f47b51c55edd6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structARG__T.html">ARG_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#aad91533fa7ecab0db34f47b51c55edd6">parse_args</a> (int argc, const char *argv[])</td></tr>
-<tr class="memdesc:aad91533fa7ecab0db34f47b51c55edd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse command line arguments argc, argv.  <a href="#aad91533fa7ecab0db34f47b51c55edd6">More...</a><br/></td></tr>
 <tr class="separator:aad91533fa7ecab0db34f47b51c55edd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42587bb89ea768b120b893036125bd92"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a42587bb89ea768b120b893036125bd92"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>evl_header</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ievl, int iwvl)</td></tr>
@@ -142,29 +145,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>apply_fieldstop</b> (
 void&#160;</td><td class="memItemRight" valign="bottom"><b>plot_setup</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
 <tr class="separator:a02d7d174efd394be9afc432ca1835071"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6ff2a20814ae2f27bc95db16260a059"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#ab6ff2a20814ae2f27bc95db16260a059">mkamp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structmap__t.html">map_t</a> *ampground, double misregx, double misregy, double D, double Din)</td></tr>
-<tr class="memdesc:ab6ff2a20814ae2f27bc95db16260a059"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).  <a href="#ab6ff2a20814ae2f27bc95db16260a059">More...</a><br/></td></tr>
 <tr class="separator:ab6ff2a20814ae2f27bc95db16260a059"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5afdf7a505966f64b56d7f21bd776c8b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5afdf7a505966f64b56d7f21bd776c8b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const int iwfs)</td></tr>
 <tr class="separator:a5afdf7a505966f64b56d7f21bd776c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3181f36e2da6183fb6cb76be582cd35c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a3181f36e2da6183fb6cb76be582cd35c">lgs_wfs_sph_psd</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const int iwfs)</td></tr>
-<tr class="memdesc:a3181f36e2da6183fb6cb76be582cd35c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute spherical aberration.  <a href="#a3181f36e2da6183fb6cb76be582cd35c">More...</a><br/></td></tr>
 <tr class="separator:a3181f36e2da6183fb6cb76be582cd35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57ab368d128a5e32724e08660c379d61"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a57ab368d128a5e32724e08660c379d61">maxapriori</a> (double *g, const <a class="el" href="structdmat.html">dmat</a> *ints, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int isa, int noisy, double bkgrnd, double rne)</td></tr>
-<tr class="memdesc:a57ab368d128a5e32724e08660c379d61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implements MAP tracking algorithm.  <a href="#a57ab368d128a5e32724e08660c379d61">More...</a><br/></td></tr>
 <tr class="separator:a57ab368d128a5e32724e08660c379d61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fb4ea648eb84af9d97863c097bda408"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a4fb4ea648eb84af9d97863c097bda408">wfsfocusadj</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, int iwfs)</td></tr>
-<tr class="memdesc:a4fb4ea648eb84af9d97863c097bda408"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the focus adjustment need to apply to OPD of wfs.  <a href="#a4fb4ea648eb84af9d97863c097bda408">More...</a><br/></td></tr>
 <tr class="separator:a4fb4ea648eb84af9d97863c097bda408"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c9ff6d450188d224e5a7dc18116d0fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a3c9ff6d450188d224e5a7dc18116d0fc">dither_position</a> (double *cs, double *ss, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs, int isim, double deltam)</td></tr>
-<tr class="memdesc:a3c9ff6d450188d224e5a7dc18116d0fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expected averaged position of dithering signal during WFS integration.  <a href="#a3c9ff6d450188d224e5a7dc18116d0fc">More...</a><br/></td></tr>
 <tr class="separator:a3c9ff6d450188d224e5a7dc18116d0fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1ce1ca15a7d117f3af62de929f7977a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#ad1ce1ca15a7d117f3af62de929f7977a">calc_phygrads</a> (<a class="el" href="structdmat.html">dmat</a> **pgrad, <a class="el" href="structdmat.html">dmat</a> *ints[], const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int phytype)</td></tr>
-<tr class="memdesc:ad1ce1ca15a7d117f3af62de929f7977a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate gradients using current specified algorithm.  <a href="#ad1ce1ca15a7d117f3af62de929f7977a">More...</a><br/></td></tr>
 <tr class="separator:ad1ce1ca15a7d117f3af62de929f7977a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A few utility routines. </p>
+<div class="textblock"><p>A few utility routines </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="aa6846a7e8753720495fab427eb73a333"></a>
 <div class="memitem">
@@ -213,8 +210,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Plot the loc, together with all beams. </p>
+<p>Plot the loc, together with all beams </p>
 
 </div>
 </div>
@@ -259,7 +255,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ploted all the different beam directions as points. </p>
 
 </div>
@@ -277,7 +272,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Rename the log files when simulation exits. </p>
 
 </div>
@@ -295,7 +289,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Handles signals. </p>
 
 </div>
@@ -323,8 +316,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Parse command line arguments argc, argv. </p>
+<p>Parse command line arguments argc, argv </p>
 
 </div>
 </div>
@@ -375,7 +367,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). </p>
 
 </div>
@@ -415,8 +406,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute spherical aberration. </p>
+<p>Compute spherical aberration </p>
 
 </div>
 </div>
@@ -485,9 +475,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Implements MAP tracking algorithm. </p>
-<p>The polar coordinate is implicitly taken care of in mapfun if parms-&gt;powfs.radrot=0; </p>
+<p>Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms-&gt;powfs.radrot=0; </p>
 
 </div>
 </div>
@@ -514,9 +502,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the focus adjustment need to apply to OPD of wfs. </p>
-<p>Used in both CPU and GPU code. </p>
+<p>Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code. </p>
 
 </div>
 </div>
@@ -567,8 +553,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Expected averaged position of dithering signal during WFS integration. </p>
+<p>Expected averaged position of dithering signal during WFS integration </p>
 
 </div>
 </div>
@@ -619,8 +604,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (con
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Calculate gradients using current specified algorithm. </p>
+<p>Calculate gradients using current specified algorithm </p>
 
 </div>
 </div>

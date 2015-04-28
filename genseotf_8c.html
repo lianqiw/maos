@@ -112,10 +112,9 @@ $(document).ready(function(){initNavTree('genseotf_8c.html','');});
 <div class="title">genseotf.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>contains routines to generate mean short exposure (tip/tilt removed) pixel intensities.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;genseotf.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ad22b28413b99b89fbbc5080ede29c1d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad22b28413b99b89fbbc5080ede29c1d0"></a>
@@ -134,21 +133,17 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>genseotf</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
 <tr class="separator:a8af32636d2faf44199899565c2f16a72"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9f49fdaf05a8ab6946eb6e5f531a21a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8c.html#ad9f49fdaf05a8ab6946eb6e5f531a21a">genselotf_do</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="memdesc:ad9f49fdaf05a8ab6946eb6e5f531a21a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating short exposure OTF caused by turbulence within LLT uplink aperture.  <a href="#ad9f49fdaf05a8ab6946eb6e5f531a21a">More...</a><br/></td></tr>
 <tr class="separator:ad9f49fdaf05a8ab6946eb6e5f531a21a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ffba9d4d90f4b65147fc4a3440c78d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ffba9d4d90f4b65147fc4a3440c78d8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>genselotf</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
 <tr class="separator:a4ffba9d4d90f4b65147fc4a3440c78d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acce63392ca96c45182348456539fa954"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8c.html#acce63392ca96c45182348456539fa954">gensepsf</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="memdesc:acce63392ca96c45182348456539fa954"><td class="mdescLeft">&#160;</td><td class="mdescRight">Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF.  <a href="#acce63392ca96c45182348456539fa954">More...</a><br/></td></tr>
 <tr class="separator:acce63392ca96c45182348456539fa954"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b7605cad8168d3a00b8c10faefc9d69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genseotf_8c.html#a5b7605cad8168d3a00b8c10faefc9d69">gensei</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
-<tr class="memdesc:a5b7605cad8168d3a00b8c10faefc9d69"><td class="mdescLeft">&#160;</td><td class="mdescRight">generate subaperture short exposure average pixel intensities sampled on detector from short expsoure PSF, the elongation transfer function of the sodium layer, and the detector transfer function.  <a href="#a5b7605cad8168d3a00b8c10faefc9d69">More...</a><br/></td></tr>
 <tr class="separator:a5b7605cad8168d3a00b8c10faefc9d69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>contains routines to generate mean short exposure (tip/tilt removed) pixel intensities. </p>
-<p>Mostly used for LGS pixel intensity for its matched filter. Structure functions from kolmogorov spectrum is used. Not able to take into account outerscale yet.</p>
+<div class="textblock"><p>contains routines to generate mean short exposure (tip/tilt removed) pixel intensities. Mostly used for LGS pixel intensity for its matched filter. Structure functions from kolmogorov spectrum is used. Not able to take into account outerscale yet.</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>find ways to factor in outerscale effect (use von karman spectrum instead of kolmogorov) </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ad9f49fdaf05a8ab6946eb6e5f531a21a"></a>
@@ -180,8 +175,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>genselotf</b> (const 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Creating short exposure OTF caused by turbulence within LLT uplink aperture. </p>
+<p>Creating short exposure OTF caused by turbulence within LLT uplink aperture </p>
 
 </div>
 </div>
@@ -214,9 +208,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>genselotf</b> (const 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. </p>
-<p>Not including detector or elongation characteristics. </p>
+<p>Createing subaperture short exposure PSF from the tip/tilt removed turbulence OTF and uplink OTF. Not including detector or elongation characteristics. </p>
 
 </div>
 </div>
@@ -249,7 +241,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>genselotf</b> (const 
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>generate subaperture short exposure average pixel intensities sampled on detector from short expsoure PSF, the elongation transfer function of the sodium layer, and the detector transfer function. </p>
 
 </div>

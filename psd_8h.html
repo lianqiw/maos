@@ -111,40 +111,29 @@ $(document).ready(function(){initNavTree('psd_8h.html','');});
 <div class="title">psd.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Compute the PSD from a sequence.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ac9d4dd4afe6f46d67b9e21dae7164004"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#ac9d4dd4afe6f46d67b9e21dae7164004">psd1d</a> (const <a class="el" href="structdmat.html">dmat</a> *v, long lseg)</td></tr>
 <tr class="separator:ac9d4dd4afe6f46d67b9e21dae7164004"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1efac7517b951600d5f3ea664edbb792"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a1efac7517b951600d5f3ea664edbb792">psd1dt</a> (const <a class="el" href="structdmat.html">dmat</a> *v, long lseg, double dt)</td></tr>
-<tr class="memdesc:a1efac7517b951600d5f3ea664edbb792"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrap of psd1d to put the frequency along the first column.  <a href="#a1efac7517b951600d5f3ea664edbb792">More...</a><br/></td></tr>
 <tr class="separator:a1efac7517b951600d5f3ea664edbb792"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a551915458adbf09b38f2728b54031fbf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a551915458adbf09b38f2728b54031fbf"></a>
 <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>psdinterp1</b> (const <a class="el" href="structdmat.html">dmat</a> *psdin, const <a class="el" href="structdmat.html">dmat</a> *fnew, int uselog)</td></tr>
 <tr class="separator:a551915458adbf09b38f2728b54031fbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab680e9c6055322dc544d389b5f903e4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#ab680e9c6055322dc544d389b5f903e4a">psd_vibid</a> (const <a class="el" href="structdmat.html">dmat</a> *psdin)</td></tr>
-<tr class="memdesc:ab680e9c6055322dc544d389b5f903e4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise.  <a href="#ab680e9c6055322dc544d389b5f903e4a">More...</a><br/></td></tr>
 <tr class="separator:ab680e9c6055322dc544d389b5f903e4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4746b63c4a6675160757ead3d514a67"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#ac4746b63c4a6675160757ead3d514a67">psdt2s</a> (const <a class="el" href="structdmat.html">dmat</a> *psdt, double vmean)</td></tr>
-<tr class="memdesc:ac4746b63c4a6675160757ead3d514a67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert temporal PSD to spatial.  <a href="#ac4746b63c4a6675160757ead3d514a67">More...</a><br/></td></tr>
 <tr class="separator:ac4746b63c4a6675160757ead3d514a67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70f662b0cf190dfc5f4b418199f58a5a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a70f662b0cf190dfc5f4b418199f58a5a">psds2t</a> (const <a class="el" href="structdmat.html">dmat</a> *psdt, double vmean)</td></tr>
-<tr class="memdesc:a70f662b0cf190dfc5f4b418199f58a5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert special PSD to temporal.  <a href="#a70f662b0cf190dfc5f4b418199f58a5a">More...</a><br/></td></tr>
 <tr class="separator:a70f662b0cf190dfc5f4b418199f58a5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab6fc0b2ef4eee8c68da9a1f3fdf87619"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#ab6fc0b2ef4eee8c68da9a1f3fdf87619">psd_inte</a> (const double *nu, const double *psd, long n)</td></tr>
-<tr class="memdesc:ab6fc0b2ef4eee8c68da9a1f3fdf87619"><td class="mdescLeft">&#160;</td><td class="mdescRight">Integrated a PSF that defines on linear or logrithmically spaced grid nu.  <a href="#ab6fc0b2ef4eee8c68da9a1f3fdf87619">More...</a><br/></td></tr>
 <tr class="separator:ab6fc0b2ef4eee8c68da9a1f3fdf87619"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85712cf61e27393bd5c8e714d8cb11cd"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a85712cf61e27393bd5c8e714d8cb11cd">psd_inte2</a> (const <a class="el" href="structdmat.html">dmat</a> *psdin)</td></tr>
-<tr class="memdesc:a85712cf61e27393bd5c8e714d8cb11cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">wraps psd_inte  <a href="#a85712cf61e27393bd5c8e714d8cb11cd">More...</a><br/></td></tr>
 <tr class="separator:a85712cf61e27393bd5c8e714d8cb11cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b30ed50f276fcdcecab1ec79f53090e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#a8b30ed50f276fcdcecab1ec79f53090e">psd2time</a> (const <a class="el" href="structdmat.html">dmat</a> *psdin, <a class="el" href="structmt__state.html">rand_t</a> *rstat, double dt, int nstep)</td></tr>
-<tr class="memdesc:a8b30ed50f276fcdcecab1ec79f53090e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert PSD into time series.  <a href="#a8b30ed50f276fcdcecab1ec79f53090e">More...</a><br/></td></tr>
 <tr class="separator:a8b30ed50f276fcdcecab1ec79f53090e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbc96f094195135e8ac5fcd26b7cb120"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="psd_8h.html#adbc96f094195135e8ac5fcd26b7cb120">add_psd</a> (const <a class="el" href="structdmat.html">dmat</a> *psd1, const <a class="el" href="structdmat.html">dmat</a> *psd2)</td></tr>
-<tr class="memdesc:adbc96f094195135e8ac5fcd26b7cb120"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add two PSDs.  <a href="#adbc96f094195135e8ac5fcd26b7cb120">More...</a><br/></td></tr>
 <tr class="separator:adbc96f094195135e8ac5fcd26b7cb120"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d7cfb59f809f7afd9c6d24e04fbcf76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d7cfb59f809f7afd9c6d24e04fbcf76"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a class="el" href="structdmat.html">dmat</a> **out, const <a class="el" href="structdmat.html">dmat</a> *in)</td></tr>
@@ -215,7 +204,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Wrap of psd1d to put the frequency along the first column. </p>
 
 </div>
@@ -233,7 +221,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Find vibration peaks in the PSD by comparing the PSD against a LPF version plus noise. </p>
 
 </div>
@@ -261,8 +248,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Convert temporal PSD to spatial. </p>
+<p>Convert temporal PSD to spatial </p>
 
 </div>
 </div>
@@ -274,7 +260,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
           <td class="memname"><a class="el" href="structdmat.html">dmat</a>* psds2t </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>psdt</em>, </td>
+          <td class="paramname"><em>psds</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -289,8 +275,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Convert special PSD to temporal. </p>
+<p>Convert special PSD to temporal </p>
 
 </div>
 </div>
@@ -323,7 +308,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Integrated a PSF that defines on linear or logrithmically spaced grid nu. </p>
 
 </div>
@@ -341,7 +325,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>wraps psd_inte </p>
 
 </div>
@@ -381,7 +364,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Convert PSD into time series. </p>
 
 </div>
@@ -409,9 +391,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>add_psd2</b> (<a clas
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Add two PSDs. </p>
-<p>the first column of each dmat is the frequency nu, and the second column is PSD </p>
+<p>Add two PSDs. the first column of each dmat is the frequency nu, and the second column is PSD </p>
 
 </div>
 </div>

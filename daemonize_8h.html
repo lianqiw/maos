@@ -111,32 +111,22 @@ $(document).ready(function(){initNavTree('daemonize_8h.html','');});
 <div class="title">daemonize.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Handling process creation.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a11994e1abb814e3885025b3fa9088602"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a11994e1abb814e3885025b3fa9088602">single_instance_daemonize</a> (const char *lockfolder_in, const char *progname, long version, void(*daemon_func)(void *), void *daemon_arg)</td></tr>
-<tr class="memdesc:a11994e1abb814e3885025b3fa9088602"><td class="mdescLeft">&#160;</td><td class="mdescRight">Launch a singleton daemon.  <a href="#a11994e1abb814e3885025b3fa9088602">More...</a><br/></td></tr>
 <tr class="separator:a11994e1abb814e3885025b3fa9088602"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad10839cacf3acb84d43eae3ff6d04ade"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#ad10839cacf3acb84d43eae3ff6d04ade">lock_file</a> (const char *fn, long block, long version)</td></tr>
-<tr class="memdesc:ad10839cacf3acb84d43eae3ff6d04ade"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ensure exclusive access by opening and maintaining lock of file fn.  <a href="#ad10839cacf3acb84d43eae3ff6d04ade">More...</a><br/></td></tr>
 <tr class="separator:ad10839cacf3acb84d43eae3ff6d04ade"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29b0af1da2432bcc90721c0b62f4e660"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a29b0af1da2432bcc90721c0b62f4e660">daemonize</a> (void)</td></tr>
-<tr class="memdesc:a29b0af1da2432bcc90721c0b62f4e660"><td class="mdescLeft">&#160;</td><td class="mdescRight">Daemonize a process by fork it and exit the parent.  <a href="#a29b0af1da2432bcc90721c0b62f4e660">More...</a><br/></td></tr>
 <tr class="separator:a29b0af1da2432bcc90721c0b62f4e660"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a39160bd731e78e9de1768b2bed9a06d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a39160bd731e78e9de1768b2bed9a06d3">redirect</a> (void)</td></tr>
-<tr class="memdesc:a39160bd731e78e9de1768b2bed9a06d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Redirect output.  <a href="#a39160bd731e78e9de1768b2bed9a06d3">More...</a><br/></td></tr>
 <tr class="separator:a39160bd731e78e9de1768b2bed9a06d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7efd3a64d0b0853540f2403f926644a"><td class="memItemLeft" align="right" valign="top">pid_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#aa7efd3a64d0b0853540f2403f926644a">launch_exe</a> (const char *exepath, const char *cmd)</td></tr>
-<tr class="memdesc:aa7efd3a64d0b0853540f2403f926644a"><td class="mdescLeft">&#160;</td><td class="mdescRight">fork and launch exe as specified in cmd.  <a href="#aa7efd3a64d0b0853540f2403f926644a">More...</a><br/></td></tr>
 <tr class="separator:aa7efd3a64d0b0853540f2403f926644a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9707696da35911195b46dff9db3531bc"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a9707696da35911195b46dff9db3531bc">find_exe</a> (const char *name)</td></tr>
-<tr class="memdesc:a9707696da35911195b46dff9db3531bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find an executable from predetermined locations and return the absolute path.  <a href="#a9707696da35911195b46dff9db3531bc">More...</a><br/></td></tr>
 <tr class="separator:a9707696da35911195b46dff9db3531bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ee08c179d7bb0348b950226611ff0c3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="daemonize_8h.html#a2ee08c179d7bb0348b950226611ff0c3">spawn_drawdaemon</a> (int sock)</td></tr>
-<tr class="memdesc:a2ee08c179d7bb0348b950226611ff0c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">fork and launch drawdaemon  <a href="#a2ee08c179d7bb0348b950226611ff0c3">More...</a><br/></td></tr>
 <tr class="separator:a2ee08c179d7bb0348b950226611ff0c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -183,9 +173,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Launch a singleton daemon. </p>
-<p>First try to create a lock file progname.pid in folder lockfolder_in. If lock failes, it means other daemon already exists, will not proceed. If lock succeed, will write pid and version in the file.</p>
+<p>Launch a singleton daemon. First try to create a lock file progname.pid in folder lockfolder_in. If lock failes, it means other daemon already exists, will not proceed. If lock succeed, will write pid and version in the file.</p>
 <p>the stdin and stderr stream will then be directed to progname.log in folder lockfolder_in. buffering is disabled to ensure real time display by tail.</p>
 <p>if daemon_func is true, will fork and run it with argument daemon_arg. otherwise the routine returns. </p>
 
@@ -220,8 +208,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Ensure exclusive access by opening and maintaining lock of file fn. </p>
+<p>Ensure exclusive access by opening and maintaining lock of file fn.</p>
 <p>Will proceed if the lock if succeed, in which case non-negative number of the fd is returned. If other process already locked, will return negative number. If version is specified and is bigger than the value contained in existing fnlock, will kill the old process that created fnlock. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -247,9 +234,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Daemonize a process by fork it and exit the parent. </p>
-<p>no need to fork twice since the parent exits. </p>
+<p>Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits. </p>
 
 </div>
 </div>
@@ -266,9 +251,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Redirect output. </p>
-<p>If we are in detached mode, will output to file, otherwise will output to both file and screen. </p>
+<p>Redirect output. If we are in detached mode, will output to file, otherwise will output to both file and screen. </p>
 
 </div>
 </div>
@@ -295,9 +278,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>fork and launch exe as specified in cmd. </p>
-<p>cmd should composed of the path to start the exe, exe name, and parameters. used by maos/skyc.</p>
+<p>fork and launch exe as specified in cmd. cmd should composed of the path to start the exe, exe name, and parameters. used by maos/skyc.</p>
 <p>if cwd is NULL, cmd must include path information. if cwd is not NULL cmd must only contain arguments, without path information. </p>
 
 </div>
@@ -315,7 +296,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Find an executable from predetermined locations and return the absolute path. </p>
 
 </div>
@@ -333,7 +313,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>fork and launch drawdaemon </p>
 
 </div>

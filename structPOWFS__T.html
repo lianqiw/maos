@@ -113,154 +113,106 @@ $(document).ready(function(){initNavTree('structPOWFS__T.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>contains the data associated with a certain type of WFS.  
- <a href="structPOWFS__T.html#details">More...</a></p>
+<p><code>#include &quot;types.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:ac0307a05a1be22e9d81682a318df38c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac0307a05a1be22e9d81682a318df38c9">saloc</a></td></tr>
-<tr class="memdesc:ac0307a05a1be22e9d81682a318df38c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">lower left corner of the subaperture  <a href="#ac0307a05a1be22e9d81682a318df38c9">More...</a><br/></td></tr>
 <tr class="separator:ac0307a05a1be22e9d81682a318df38c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73be78cbe5dacc8a8e4094e71a215810"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpts__t.html">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a73be78cbe5dacc8a8e4094e71a215810">pts</a></td></tr>
-<tr class="memdesc:a73be78cbe5dacc8a8e4094e71a215810"><td class="mdescLeft">&#160;</td><td class="mdescRight">records lower left-most point of each sa in a regular grid.  <a href="#a73be78cbe5dacc8a8e4094e71a215810">More...</a><br/></td></tr>
 <tr class="separator:a73be78cbe5dacc8a8e4094e71a215810"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b1441ab713a22f6431d6567d004d5d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a5b1441ab713a22f6431d6567d004d5d6">saa</a></td></tr>
-<tr class="memdesc:a5b1441ab713a22f6431d6567d004d5d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subaperture area.  <a href="#a5b1441ab713a22f6431d6567d004d5d6">More...</a><br/></td></tr>
 <tr class="separator:a5b1441ab713a22f6431d6567d004d5d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af05e3e57eed3b132f01d6f07a9df121b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#af05e3e57eed3b132f01d6f07a9df121b">loc</a></td></tr>
-<tr class="memdesc:af05e3e57eed3b132f01d6f07a9df121b"><td class="mdescLeft">&#160;</td><td class="mdescRight">concatenated points for all subapertures.  <a href="#af05e3e57eed3b132f01d6f07a9df121b">More...</a><br/></td></tr>
 <tr class="separator:af05e3e57eed3b132f01d6f07a9df121b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fa51e744699b27538142aa5495b608c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a7fa51e744699b27538142aa5495b608c">amp</a></td></tr>
-<tr class="memdesc:a7fa51e744699b27538142aa5495b608c"><td class="mdescLeft">&#160;</td><td class="mdescRight">amplitude map defined on loc, max at 1.  <a href="#a7fa51e744699b27538142aa5495b608c">More...</a><br/></td></tr>
 <tr class="separator:a7fa51e744699b27538142aa5495b608c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8dd1b216eb0faa966fcd41db1e3bee9c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloccell.html">loccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a8dd1b216eb0faa966fcd41db1e3bee9c">loc_dm</a></td></tr>
-<tr class="memdesc:a8dd1b216eb0faa966fcd41db1e3bee9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">distorted loc mapped onto DM.  <a href="#a8dd1b216eb0faa966fcd41db1e3bee9c">More...</a><br/></td></tr>
 <tr class="separator:a8dd1b216eb0faa966fcd41db1e3bee9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3811a14be195e8041969dbbba3dfbf3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloccell.html">loccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac3811a14be195e8041969dbbba3dfbf3">loc_tel</a></td></tr>
-<tr class="memdesc:ac3811a14be195e8041969dbbba3dfbf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">distorted loc mapped onto pupil.  <a href="#ac3811a14be195e8041969dbbba3dfbf3">More...</a><br/></td></tr>
 <tr class="separator:ac3811a14be195e8041969dbbba3dfbf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5982c214905ccdd29d2555884305cc12"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a5982c214905ccdd29d2555884305cc12">amp_tel</a></td></tr>
-<tr class="memdesc:a5982c214905ccdd29d2555884305cc12"><td class="mdescLeft">&#160;</td><td class="mdescRight">real amplitude map on misregistered grid, loc_tel.  <a href="#a5982c214905ccdd29d2555884305cc12">More...</a><br/></td></tr>
 <tr class="separator:a5982c214905ccdd29d2555884305cc12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0d202c2fa4e4f2e40c360881d849f34"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ab0d202c2fa4e4f2e40c360881d849f34">saa_tel</a></td></tr>
-<tr class="memdesc:ab0d202c2fa4e4f2e40c360881d849f34"><td class="mdescLeft">&#160;</td><td class="mdescRight">mis-registered saa, if any  <a href="#ab0d202c2fa4e4f2e40c360881d849f34">More...</a><br/></td></tr>
 <tr class="separator:ab0d202c2fa4e4f2e40c360881d849f34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa84bfe5be5b4a95270aeddf7ffe8d55"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#afa84bfe5be5b4a95270aeddf7ffe8d55">areascale</a></td></tr>
-<tr class="memdesc:afa84bfe5be5b4a95270aeddf7ffe8d55"><td class="mdescLeft">&#160;</td><td class="mdescRight">1.  <a href="#afa84bfe5be5b4a95270aeddf7ffe8d55">More...</a><br/></td></tr>
 <tr class="separator:afa84bfe5be5b4a95270aeddf7ffe8d55"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ee7ad048d03d83475641b14de1395ff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a9ee7ad048d03d83475641b14de1395ff">opdbias</a></td></tr>
-<tr class="memdesc:a9ee7ad048d03d83475641b14de1395ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">OPD bias to be used for matched filter generation.  <a href="#a9ee7ad048d03d83475641b14de1395ff">More...</a><br/></td></tr>
 <tr class="separator:a9ee7ad048d03d83475641b14de1395ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa50ea3357c9bcf7e66c7209e49f9c257"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aa50ea3357c9bcf7e66c7209e49f9c257">gradoff</a></td></tr>
-<tr class="memdesc:aa50ea3357c9bcf7e66c7209e49f9c257"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offset to grads to subtract from measurement.  <a href="#aa50ea3357c9bcf7e66c7209e49f9c257">More...</a><br/></td></tr>
 <tr class="separator:aa50ea3357c9bcf7e66c7209e49f9c257"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c15b7ae605cdc35ea1d074396c41fa2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a1c15b7ae605cdc35ea1d074396c41fa2">gradncpa</a></td></tr>
-<tr class="memdesc:a1c15b7ae605cdc35ea1d074396c41fa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Offset to grads due to ncpa.  <a href="#a1c15b7ae605cdc35ea1d074396c41fa2">More...</a><br/></td></tr>
 <tr class="separator:a1c15b7ae605cdc35ea1d074396c41fa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9fc7510d040ab4d3b80fdd1b4194f9e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDTF__T.html">DTF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ae9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a></td></tr>
-<tr class="memdesc:ae9fc7510d040ab4d3b80fdd1b4194f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">array of dtf for each wvl  <a href="#ae9fc7510d040ab4d3b80fdd1b4194f9e">More...</a><br/></td></tr>
 <tr class="separator:ae9fc7510d040ab4d3b80fdd1b4194f9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abe8bcc3a88aa34ad34dae69e56c25c45"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#abe8bcc3a88aa34ad34dae69e56c25c45">sodium</a></td></tr>
-<tr class="memdesc:abe8bcc3a88aa34ad34dae69e56c25c45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loaded and downsampled sodium profile from the file.  <a href="#abe8bcc3a88aa34ad34dae69e56c25c45">More...</a><br/></td></tr>
 <tr class="separator:abe8bcc3a88aa34ad34dae69e56c25c45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09d11667df6efd9bab59b16505ea524e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a09d11667df6efd9bab59b16505ea524e">etfprep</a></td></tr>
-<tr class="memdesc:a09d11667df6efd9bab59b16505ea524e"><td class="mdescLeft">&#160;</td><td class="mdescRight">ETF for computing short exposure matched filter.  <a href="#a09d11667df6efd9bab59b16505ea524e">More...</a><br/></td></tr>
 <tr class="separator:a09d11667df6efd9bab59b16505ea524e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7f1f27f5404099b70ac042a2db8bb3d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aa7f1f27f5404099b70ac042a2db8bb3d">etfsim</a></td></tr>
-<tr class="memdesc:aa7f1f27f5404099b70ac042a2db8bb3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">ETF for simulation.  <a href="#aa7f1f27f5404099b70ac042a2db8bb3d">More...</a><br/></td></tr>
 <tr class="separator:aa7f1f27f5404099b70ac042a2db8bb3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5ccb25e2fd57c9e582c37e3efec17e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac5ccb25e2fd57c9e582c37e3efec17e5">etfsim2</a></td></tr>
-<tr class="memdesc:ac5ccb25e2fd57c9e582c37e3efec17e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Second ETF for interpolation during simulation.  <a href="#ac5ccb25e2fd57c9e582c37e3efec17e5">More...</a><br/></td></tr>
 <tr class="separator:ac5ccb25e2fd57c9e582c37e3efec17e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a873a35f09a8cbf5a924eb55f0d7c6f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a6a873a35f09a8cbf5a924eb55f0d7c6f">focus</a></td></tr>
-<tr class="memdesc:a6a873a35f09a8cbf5a924eb55f0d7c6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">additional focus error.  <a href="#a6a873a35f09a8cbf5a924eb55f0d7c6f">More...</a><br/></td></tr>
 <tr class="separator:a6a873a35f09a8cbf5a924eb55f0d7c6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa847804ca05e5429c022f93b2ed8c862"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structLLT__T.html">LLT_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aa847804ca05e5429c022f93b2ed8c862">llt</a></td></tr>
-<tr class="memdesc:aa847804ca05e5429c022f93b2ed8c862"><td class="mdescLeft">&#160;</td><td class="mdescRight">uplink aperture parameters  <a href="#aa847804ca05e5429c022f93b2ed8c862">More...</a><br/></td></tr>
 <tr class="separator:aa847804ca05e5429c022f93b2ed8c862"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af49935106ffcdcc195c2d6654d070722"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdccell.html">dccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#af49935106ffcdcc195c2d6654d070722">saimcc</a></td></tr>
-<tr class="memdesc:af49935106ffcdcc195c2d6654d070722"><td class="mdescLeft">&#160;</td><td class="mdescRight">inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt.  <a href="#af49935106ffcdcc195c2d6654d070722">More...</a><br/></td></tr>
 <tr class="separator:af49935106ffcdcc195c2d6654d070722"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd0302013032e547054f9431d7aee502"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#afd0302013032e547054f9431d7aee502">srot</a></td></tr>
-<tr class="memdesc:afd0302013032e547054f9431d7aee502"><td class="mdescLeft">&#160;</td><td class="mdescRight">subaperture rotation wrt LLT  <a href="#afd0302013032e547054f9431d7aee502">More...</a><br/></td></tr>
 <tr class="separator:afd0302013032e547054f9431d7aee502"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1aeacf2ddfafb73167818e8a23dcdf59"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a1aeacf2ddfafb73167818e8a23dcdf59">srsa</a></td></tr>
-<tr class="memdesc:a1aeacf2ddfafb73167818e8a23dcdf59"><td class="mdescLeft">&#160;</td><td class="mdescRight">subaperture distance wrt LLT  <a href="#a1aeacf2ddfafb73167818e8a23dcdf59">More...</a><br/></td></tr>
 <tr class="separator:a1aeacf2ddfafb73167818e8a23dcdf59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6a47d02cbb65e3d42a7d2d0ef062b17a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a6a47d02cbb65e3d42a7d2d0ef062b17a">srsamax</a></td></tr>
-<tr class="memdesc:a6a47d02cbb65e3d42a7d2d0ef062b17a"><td class="mdescLeft">&#160;</td><td class="mdescRight">max of srsa for each llt.  <a href="#a6a47d02cbb65e3d42a7d2d0ef062b17a">More...</a><br/></td></tr>
 <tr class="separator:a6a47d02cbb65e3d42a7d2d0ef062b17a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db0b6be66575a0b32500d140936c9a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdspcell.html">dspcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a2db0b6be66575a0b32500d140936c9a6">GS0</a></td></tr>
-<tr class="memdesc:a2db0b6be66575a0b32500d140936c9a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">gtilt (average gradient) on ampm  <a href="#a2db0b6be66575a0b32500d140936c9a6">More...</a><br/></td></tr>
 <tr class="separator:a2db0b6be66575a0b32500d140936c9a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a5523e98f85e28fb51e88c381f17e91"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a2a5523e98f85e28fb51e88c381f17e91">neasim</a></td></tr>
-<tr class="memdesc:a2a5523e98f85e28fb51e88c381f17e91"><td class="mdescLeft">&#160;</td><td class="mdescRight"><pre class="fragment">        NEA in radian, at dtrat, to be used in simulation
-</pre><p> for geometric wfs model.  <a href="#a2a5523e98f85e28fb51e88c381f17e91">More...</a><br/></td></tr>
 <tr class="separator:a2a5523e98f85e28fb51e88c381f17e91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b7de6ed7a387e8fda3d9382d14ba8db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b7de6ed7a387e8fda3d9382d14ba8db"></a>
 <a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>gain</b></td></tr>
 <tr class="separator:a2b7de6ed7a387e8fda3d9382d14ba8db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c60f2cb244e43a6dd87887c98a37c20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a6c60f2cb244e43a6dd87887c98a37c20">sprint</a></td></tr>
-<tr class="memdesc:a6c60f2cb244e43a6dd87887c98a37c20"><td class="mdescLeft">&#160;</td><td class="mdescRight">which subapertures to print sanea  <a href="#a6c60f2cb244e43a6dd87887c98a37c20">More...</a><br/></td></tr>
 <tr class="separator:a6c60f2cb244e43a6dd87887c98a37c20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c0808eeb946b29d473da332466e827d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structINTSTAT__T.html">INTSTAT_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a3c0808eeb946b29d473da332466e827d">intstat</a></td></tr>
-<tr class="memdesc:a3c0808eeb946b29d473da332466e827d"><td class="mdescLeft">&#160;</td><td class="mdescRight">matched filter i0 and its derivative.  <a href="#a3c0808eeb946b29d473da332466e827d">More...</a><br/></td></tr>
 <tr class="separator:a3c0808eeb946b29d473da332466e827d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48b216d44f49a49cd1e5f6e32534739d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a48b216d44f49a49cd1e5f6e32534739d">dtheta</a></td></tr>
-<tr class="memdesc:a48b216d44f49a49cd1e5f6e32534739d"><td class="mdescLeft">&#160;</td><td class="mdescRight">sampling of the imaging fft grid.  <a href="#a48b216d44f49a49cd1e5f6e32534739d">More...</a><br/></td></tr>
 <tr class="separator:a48b216d44f49a49cd1e5f6e32534739d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace22bc0f58b30c9ef182186ef59d18e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ace22bc0f58b30c9ef182186ef59d18e1">bkgrnd</a></td></tr>
-<tr class="memdesc:ace22bc0f58b30c9ef182186ef59d18e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">wfs background image.  <a href="#ace22bc0f58b30c9ef182186ef59d18e1">More...</a><br/></td></tr>
 <tr class="separator:ace22bc0f58b30c9ef182186ef59d18e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae08b1afeac4ed4dc19ccbcd4fc7d1990"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ae08b1afeac4ed4dc19ccbcd4fc7d1990">bkgrndc</a></td></tr>
-<tr class="memdesc:ae08b1afeac4ed4dc19ccbcd4fc7d1990"><td class="mdescLeft">&#160;</td><td class="mdescRight">wfs background image calibration.  <a href="#ae08b1afeac4ed4dc19ccbcd4fc7d1990">More...</a><br/></td></tr>
 <tr class="separator:ae08b1afeac4ed4dc19ccbcd4fc7d1990"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac45bc64d4ee12ed2fdfbbc8956dd699c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac45bc64d4ee12ed2fdfbbc8956dd699c">npts</a></td></tr>
-<tr class="memdesc:ac45bc64d4ee12ed2fdfbbc8956dd699c"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of total opd points in all subaps  <a href="#ac45bc64d4ee12ed2fdfbbc8956dd699c">More...</a><br/></td></tr>
 <tr class="separator:ac45bc64d4ee12ed2fdfbbc8956dd699c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a915b1fe018f86447586950dbac3383ef"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a915b1fe018f86447586950dbac3383ef">namp</a></td></tr>
-<tr class="memdesc:a915b1fe018f86447586950dbac3383ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of amplitude maps  <a href="#a915b1fe018f86447586950dbac3383ef">More...</a><br/></td></tr>
 <tr class="separator:a915b1fe018f86447586950dbac3383ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ec5687c5268785533c22d746016e663"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a9ec5687c5268785533c22d746016e663">pixpsax</a></td></tr>
-<tr class="memdesc:a9ec5687c5268785533c22d746016e663"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of detector pixels along x  <a href="#a9ec5687c5268785533c22d746016e663">More...</a><br/></td></tr>
 <tr class="separator:a9ec5687c5268785533c22d746016e663"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a091e911bea2900efcc9b160126ebf4ca"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a091e911bea2900efcc9b160126ebf4ca">pixpsay</a></td></tr>
-<tr class="memdesc:a091e911bea2900efcc9b160126ebf4ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of detector pixels along y  <a href="#a091e911bea2900efcc9b160126ebf4ca">More...</a><br/></td></tr>
 <tr class="separator:a091e911bea2900efcc9b160126ebf4ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67bf34f36dd078a571e7a14cdf0755de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a67bf34f36dd078a571e7a14cdf0755de">ncompx</a></td></tr>
-<tr class="memdesc:a67bf34f36dd078a571e7a14cdf0755de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dimension of FFT for subaperture imaging along x.  <a href="#a67bf34f36dd078a571e7a14cdf0755de">More...</a><br/></td></tr>
 <tr class="separator:a67bf34f36dd078a571e7a14cdf0755de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21071d969e8a6f006203a6c004339e0f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a21071d969e8a6f006203a6c004339e0f">ncompy</a></td></tr>
-<tr class="memdesc:a21071d969e8a6f006203a6c004339e0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dimension of FFT for subaperture imaging along y.  <a href="#a21071d969e8a6f006203a6c004339e0f">More...</a><br/></td></tr>
 <tr class="separator:a21071d969e8a6f006203a6c004339e0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24659bc4fb6d282b7554c4545df38842"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a24659bc4fb6d282b7554c4545df38842">nsaimcc</a></td></tr>
-<tr class="memdesc:a24659bc4fb6d282b7554c4545df38842"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of saimcc  <a href="#a24659bc4fb6d282b7554c4545df38842">More...</a><br/></td></tr>
 <tr class="separator:a24659bc4fb6d282b7554c4545df38842"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5efc221b9c619f4d93d5e9188369c8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac5efc221b9c619f4d93d5e9188369c8f">realamp</a></td></tr>
-<tr class="memdesc:ac5efc221b9c619f4d93d5e9188369c8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The real (after misregisteration/distortion) amplitude map.  <a href="#ac5efc221b9c619f4d93d5e9188369c8f">More...</a><br/></td></tr>
 <tr class="separator:ac5efc221b9c619f4d93d5e9188369c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e417bafe34dc0bf4f81cf5e066a0c7e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a4e417bafe34dc0bf4f81cf5e066a0c7e">realsaa</a></td></tr>
-<tr class="memdesc:a4e417bafe34dc0bf4f81cf5e066a0c7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The real (after misregisteration/distortion) subaperture area.  <a href="#a4e417bafe34dc0bf4f81cf5e066a0c7e">More...</a><br/></td></tr>
 <tr class="separator:a4e417bafe34dc0bf4f81cf5e066a0c7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19ce87f6e1d8f0f86800ee8c34ff63c5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a19ce87f6e1d8f0f86800ee8c34ff63c5">sumamp</a></td></tr>
-<tr class="memdesc:a19ce87f6e1d8f0f86800ee8c34ff63c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">sum of realamp  <a href="#a19ce87f6e1d8f0f86800ee8c34ff63c5">More...</a><br/></td></tr>
 <tr class="separator:a19ce87f6e1d8f0f86800ee8c34ff63c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef05d76e01b324b0e7915416b1304349"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aef05d76e01b324b0e7915416b1304349">sumamp2</a></td></tr>
-<tr class="memdesc:aef05d76e01b324b0e7915416b1304349"><td class="mdescLeft">&#160;</td><td class="mdescRight">sum of realamp.  <a href="#aef05d76e01b324b0e7915416b1304349">More...</a><br/></td></tr>
 <tr class="separator:aef05d76e01b324b0e7915416b1304349"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b06f0f15439a4c7593b827b876cd03a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a7b06f0f15439a4c7593b827b876cd03a">opdadd</a></td></tr>
-<tr class="memdesc:a7b06f0f15439a4c7593b827b876cd03a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional OPD surfaces for each WFS for ray tracing.  <a href="#a7b06f0f15439a4c7593b827b876cd03a">More...</a><br/></td></tr>
 <tr class="separator:a7b06f0f15439a4c7593b827b876cd03a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add364b2bdbaa62a33d78c9f4cd62c0fb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlocfft__t.html">locfft_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#add364b2bdbaa62a33d78c9f4cd62c0fb">fieldstop</a></td></tr>
-<tr class="memdesc:add364b2bdbaa62a33d78c9f4cd62c0fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">For computing field stop (aka focal plane mask, spatial filter)  <a href="#add364b2bdbaa62a33d78c9f4cd62c0fb">More...</a><br/></td></tr>
 <tr class="separator:add364b2bdbaa62a33d78c9f4cd62c0fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab65812c39fba825dea17b676029df243"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPYWFS__T.html">PYWFS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ab65812c39fba825dea17b676029df243">pywfs</a></td></tr>
-<tr class="memdesc:ab65812c39fba825dea17b676029df243"><td class="mdescLeft">&#160;</td><td class="mdescRight">For pyramid WFS.  <a href="#ab65812c39fba825dea17b676029df243">More...</a><br/></td></tr>
 <tr class="separator:ab65812c39fba825dea17b676029df243"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>contains the data associated with a certain type of WFS. </p>
-<p>not necessarily physical optics WFS.x </p>
+<div class="textblock"><p>contains the data associated with a certain type of WFS. not necessarily physical optics WFS.x </p>
 </div><h2 class="groupheader">Field Documentation</h2>
 <a class="anchor" id="ac0307a05a1be22e9d81682a318df38c9"></a>
 <div class="memitem">
@@ -271,7 +223,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>lower left corner of the subaperture </p>
 
 </div>
@@ -285,7 +236,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>records lower left-most point of each sa in a regular grid. </p>
 
 </div>
@@ -299,8 +249,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Subaperture area. </p>
+<p>Subaperture area </p>
 
 </div>
 </div>
@@ -313,7 +262,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>concatenated points for all subapertures. </p>
 
 </div>
@@ -327,7 +275,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>amplitude map defined on loc, max at 1. </p>
 
 </div>
@@ -341,9 +288,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>distorted loc mapped onto DM. </p>
-<p>size: (nwfs, ndm) </p>
+<p>distorted loc mapped onto DM. size: (nwfs, ndm) </p>
 
 </div>
 </div>
@@ -356,9 +301,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>distorted loc mapped onto pupil. </p>
-<p>size: (nwfs, 1) </p>
+<p>distorted loc mapped onto pupil. size: (nwfs, 1) </p>
 
 </div>
 </div>
@@ -371,9 +314,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>real amplitude map on misregistered grid, loc_tel. </p>
-<p>used for gradient computing </p>
+<p>real amplitude map on misregistered grid, loc_tel. used for gradient computing </p>
 
 </div>
 </div>
@@ -386,7 +327,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>mis-registered saa, if any </p>
 
 </div>
@@ -400,9 +340,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>1. </p>
-<p>/max(area noramlized by dsa*dsa) </p>
+<p>1./max(area noramlized by dsa*dsa) </p>
 
 </div>
 </div>
@@ -415,8 +353,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>OPD bias to be used for matched filter generation. </p>
+<p>OPD bias to be used for matched filter generation </p>
 
 </div>
 </div>
@@ -429,7 +366,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Offset to grads to subtract from measurement. </p>
 
 </div>
@@ -443,7 +379,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Offset to grads due to ncpa. </p>
 
 </div>
@@ -457,7 +392,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>array of dtf for each wvl </p>
 
 </div>
@@ -471,7 +405,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Loaded and downsampled sodium profile from the file. </p>
 
 </div>
@@ -485,7 +418,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ETF for computing short exposure matched filter. </p>
 
 </div>
@@ -499,7 +431,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ETF for simulation. </p>
 
 </div>
@@ -513,7 +444,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Second ETF for interpolation during simulation. </p>
 
 </div>
@@ -527,9 +457,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>additional focus error. </p>
-<p>(llt-&gt;fnrange) </p>
+<p>additional focus error. (llt-&gt;fnrange) </p>
 
 </div>
 </div>
@@ -542,7 +470,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>uplink aperture parameters </p>
 
 </div>
@@ -556,7 +483,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt. </p>
 
 </div>
@@ -570,7 +496,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>subaperture rotation wrt LLT </p>
 
 </div>
@@ -584,7 +509,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>subaperture distance wrt LLT </p>
 
 </div>
@@ -598,7 +522,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>max of srsa for each llt. </p>
 
 </div>
@@ -612,7 +535,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>gtilt (average gradient) on ampm </p>
 
 </div>
@@ -626,8 +548,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p><pre class="fragment">        NEA in radian, at dtrat, to be used in simulation
+<pre class="fragment">        NEA in radian, at dtrat, to be used in simulation
 </pre><p> for geometric wfs model. </p>
 
 </div>
@@ -641,7 +562,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>which subapertures to print sanea </p>
 
 </div>
@@ -655,7 +575,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>matched filter i0 and its derivative. </p>
 
 </div>
@@ -669,9 +588,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>sampling of the imaging fft grid. </p>
-<p>wvl/(embfac*dxsa); </p>
+<p>sampling of the imaging fft grid. wvl/(embfac*dxsa); </p>
 
 </div>
 </div>
@@ -684,9 +601,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>wfs background image. </p>
-<p>from parms-&gt;powfs[ipowfs].bkgrndfn. </p>
+<p>wfs background image. from parms-&gt;powfs[ipowfs].bkgrndfn. </p>
 
 </div>
 </div>
@@ -699,9 +614,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>wfs background image calibration. </p>
-<p>from parms-&gt;powfs[ipowfs].bkgrndfnc. </p>
+<p>wfs background image calibration. from parms-&gt;powfs[ipowfs].bkgrndfnc. </p>
 
 </div>
 </div>
@@ -714,7 +627,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of total opd points in all subaps </p>
 
 </div>
@@ -728,7 +640,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of amplitude maps </p>
 
 </div>
@@ -742,7 +653,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of detector pixels along x </p>
 
 </div>
@@ -756,7 +666,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of detector pixels along y </p>
 
 </div>
@@ -770,8 +679,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Dimension of FFT for subaperture imaging along x. </p>
+<p>Dimension of FFT for subaperture imaging along x </p>
 
 </div>
 </div>
@@ -784,8 +692,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Dimension of FFT for subaperture imaging along y. </p>
+<p>Dimension of FFT for subaperture imaging along y </p>
 
 </div>
 </div>
@@ -798,7 +705,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>number of saimcc </p>
 
 </div>
@@ -812,8 +718,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>The real (after misregisteration/distortion) amplitude map. </p>
+<p>The real (after misregisteration/distortion) amplitude map </p>
 
 </div>
 </div>
@@ -826,8 +731,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>The real (after misregisteration/distortion) subaperture area. </p>
+<p>The real (after misregisteration/distortion) subaperture area </p>
 
 </div>
 </div>
@@ -840,7 +744,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>sum of realamp </p>
 
 </div>
@@ -854,9 +757,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>sum of realamp. </p>
-<p>^2 </p>
+<p>sum of realamp.^2 </p>
 
 </div>
 </div>
@@ -869,8 +770,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Additional OPD surfaces for each WFS for ray tracing. </p>
+<p>Additional OPD surfaces for each WFS for ray tracing </p>
 
 </div>
 </div>
@@ -883,7 +783,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>For computing field stop (aka focal plane mask, spatial filter) </p>
 
 </div>
@@ -897,8 +796,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>For pyramid WFS. </p>
+<p>For pyramid WFS </p>
 
 </div>
 </div>

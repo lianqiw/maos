@@ -112,10 +112,10 @@ $(document).ready(function(){initNavTree('mvm__iwfs_8cu.html','');});
 <div class="title">mvm_iwfs.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Test MVM for a single WFS.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;curmat.h&quot;</code><br/>
+<code>#include &quot;cucmat.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structGPU__DATA__T.html">GPU_DATA_T</a></td></tr>
@@ -127,12 +127,10 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_only</b> (int *gpus, int ngpu, int nstep)</td></tr>
 <tr class="separator:aad8ded3280cc2f8eefac2785d4d80f5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fb52643d3368098e1d3f823dff3bf65"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mvm__iwfs_8cu.html#a6fb52643d3368098e1d3f823dff3bf65">mvm_iwfs</a> (int *gpus, int ngpu, int nstep)</td></tr>
-<tr class="memdesc:a6fb52643d3368098e1d3f823dff3bf65"><td class="mdescLeft">&#160;</td><td class="mdescRight">A standalone routine that testes applying MVM for a single WFS and update mvm.  <a href="#a6fb52643d3368098e1d3f823dff3bf65">More...</a><br/></td></tr>
 <tr class="separator:a6fb52643d3368098e1d3f823dff3bf65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Test MVM for a single WFS. </p>
-<p>Using two GPUs, without networking. This is not part of maos executable.</p>
+<div class="textblock"><p>Test MVM for a single WFS. Using two GPUs, without networking. This is not part of maos executable.</p>
 <p>two ways: 1) broadcast gradients to both GPUs with each GPU handle part of actuators 2) partition gradients to GPUs with GPU handle all actuators. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a6fb52643d3368098e1d3f823dff3bf65"></a>
@@ -164,7 +162,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>mvm_only</b> (int *gp
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>A standalone routine that testes applying MVM for a single WFS and update mvm. </p>
 
 </div>

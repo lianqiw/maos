@@ -4,8 +4,6 @@ var mkdtf_8h =
     [ "ETF_T", "structETF__T.html", "structETF__T" ],
     [ "dtf_free", "mkdtf_8h.html#a605c602de49507aa0a31bb3d31f08367", null ],
     [ "etf_free", "mkdtf_8h.html#a1a637059c8d0859ae8e6efbbe24c249b", null ],
-    [ "DTF_T", "mkdtf_8h.html#a523679af05f77572e36e8c6ad065e9b7", null ],
-    [ "ETF_T", "mkdtf_8h.html#a98abdca0d37ba0841937811d331efe4b", null ],
     [ "mkdtf", "mkdtf_8h.html#a924e3a5ad82da416e2107fa76e5bfb28", null ],
     [ "mketf", "mkdtf_8h.html#a7558070adc5628a964914592d045fae1", null ],
     [ "dtf_free_do", "mkdtf_8h.html#a453e67095e8c4265fc1c99e3f87c3acc", null ],

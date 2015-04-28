@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>Multi-threaded Adaptive Optics Simulator: tools/psfgc.c File Reference</title>
+<title>Multi-threaded Adaptive Optics Simulator: GPU_FDPCG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -49,8 +49,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
-      <li class="current"><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -71,8 +71,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
-      <li><a href="files.html"><span>File&#160;List</span></a></li>
-      <li><a href="globals.html"><span>Globals</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Data&#160;Fields</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -87,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('psfgc_8c.html','');});
+$(document).ready(function(){initNavTree('structGPU__FDPCG__T.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -106,31 +107,28 @@ $(document).ready(function(){initNavTree('psfgc_8c.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">psfgc.c File Reference</div>  </div>
+<div class="title">GPU_FDPCG_T Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Standalone code to sample IRIS PSFs onto detector for the Galactic center simulations.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:ac0a8f47843d04f042b0f9febb1c3e849"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0a8f47843d04f042b0f9febb1c3e849"></a>
-typedef struct psfiris_t&#160;</td><td class="memItemRight" valign="bottom"><b>psfiris_t</b></td></tr>
-<tr class="separator:ac0a8f47843d04f042b0f9febb1c3e849"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ddf1224851353fc92bfbff6f499fa97"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>main</b> (int argc, char *argv[])</td></tr>
-<tr class="separator:a0ddf1224851353fc92bfbff6f499fa97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:acef1f3bf401970533504aa5d089157cf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acef1f3bf401970533504aa5d089157cf"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nx</b></td></tr>
+<tr class="separator:acef1f3bf401970533504aa5d089157cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadc97516cfec58510289a3b38a40011e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aadc97516cfec58510289a3b38a40011e"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>ny</b></td></tr>
+<tr class="separator:aadc97516cfec58510289a3b38a40011e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b84955f3cd38d6bf370ccc462c3c3de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b84955f3cd38d6bf370ccc462c3c3de"></a>
+Real&#160;</td><td class="memItemRight" valign="bottom"><b>scale</b></td></tr>
+<tr class="separator:a5b84955f3cd38d6bf370ccc462c3c3de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Standalone code to sample IRIS PSFs onto detector for the Galactic center simulations. </p>
-</div></div><!-- contents -->
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>cuda/fdpcg.h</li>
+</ul>
+</div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

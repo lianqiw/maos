@@ -111,40 +111,31 @@ $(document).ready(function(){initNavTree('ahst_8c.html','');});
 <div class="title">ahst.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;ahst.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a192c4884609228272643174ef145d71e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a192c4884609228272643174ef145d71e">ngsmod_hm_accphi</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="memdesc:a192c4884609228272643174ef145d71e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute NGS modes Ha*M in the science directon using ray tracing.  <a href="#a192c4884609228272643174ef145d71e">More...</a><br/></td></tr>
 <tr class="separator:a192c4884609228272643174ef145d71e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a361c2bca340edabb5a394c01aafc54e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a361c2bca340edabb5a394c01aafc54e9">ngsmod_hm_ana</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="memdesc:a361c2bca340edabb5a394c01aafc54e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute NGS modes Ha*M in the science directon using analytic formula.  <a href="#a361c2bca340edabb5a394c01aafc54e9">More...</a><br/></td></tr>
 <tr class="separator:a361c2bca340edabb5a394c01aafc54e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55e7a08356d9cc6424c4b549e4a364f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a55e7a08356d9cc6424c4b549e4a364f2">setup_ngsmod</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="memdesc:a55e7a08356d9cc6424c4b549e4a364f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">setup NGS modes and reconstructor using AHST for one or two DMs.  <a href="#a55e7a08356d9cc6424c4b549e4a364f2">More...</a><br/></td></tr>
 <tr class="separator:a55e7a08356d9cc6424c4b549e4a364f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abad45266bd29e9426cdbb40322c78c38"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#abad45266bd29e9426cdbb40322c78c38">calc_ngsmod_dot</a> (double *pttr_out, double *pttrcoeff_out, double *ngsmod_out, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const double *opd, int ievl)</td></tr>
-<tr class="memdesc:abad45266bd29e9426cdbb40322c78c38"><td class="mdescLeft">&#160;</td><td class="mdescRight">used in performance evaluation on science opds.  <a href="#abad45266bd29e9426cdbb40322c78c38">More...</a><br/></td></tr>
 <tr class="separator:abad45266bd29e9426cdbb40322c78c38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d2a474cd4a6fcebb9e1ff8f26855353"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a3d2a474cd4a6fcebb9e1ff8f26855353">ngsmod2dm</a> (<a class="el" href="structdcell.html">dcell</a> **dmc, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structdcell.html">dcell</a> *M, double gain)</td></tr>
-<tr class="memdesc:a3d2a474cd4a6fcebb9e1ff8f26855353"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert NGS modes to DM actuator commands using analytical expression.  <a href="#a3d2a474cd4a6fcebb9e1ff8f26855353">More...</a><br/></td></tr>
 <tr class="separator:a3d2a474cd4a6fcebb9e1ff8f26855353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0182debdd2a686ac5e1b02a9588dfe0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a0182debdd2a686ac5e1b02a9588dfe0e">ngsmod2science</a> (<a class="el" href="structdmat.html">dmat</a> *iopd, <a class="el" href="structloc__t.html">loc_t</a> *loc, const <a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod, double thetax, double thetay, const double *mod, double alpha)</td></tr>
-<tr class="memdesc:a0182debdd2a686ac5e1b02a9588dfe0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert NGS mode vector to aperture grid for science directions.  <a href="#a0182debdd2a686ac5e1b02a9588dfe0e">More...</a><br/></td></tr>
 <tr class="separator:a0182debdd2a686ac5e1b02a9588dfe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac11262023c447185fc5f178daae87abc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac11262023c447185fc5f178daae87abc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *ngsmod)</td></tr>
 <tr class="separator:ac11262023c447185fc5f178daae87abc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36f0c7d4ea59dd8f46e209691e5e6d8a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#a36f0c7d4ea59dd8f46e209691e5e6d8a">remove_dm_ngsmod</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *dmerr)</td></tr>
-<tr class="memdesc:a36f0c7d4ea59dd8f46e209691e5e6d8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction.  <a href="#a36f0c7d4ea59dd8f46e209691e5e6d8a">More...</a><br/></td></tr>
 <tr class="separator:a36f0c7d4ea59dd8f46e209691e5e6d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs. </p>
-<p>Use parms-&gt;wfsr instead of parms-&gt;wfs for wfs information, which hands GLAO mode correctly. </p>
+<div class="textblock"><p>Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs. Use parms-&gt;wfsr instead of parms-&gt;wfs for wfs information, which hands GLAO mode correctly. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a192c4884609228272643174ef145d71e"></a>
 <div class="memitem">
@@ -175,9 +166,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute NGS modes Ha*M in the science directon using ray tracing. </p>
-<p>Not used </p>
+<p>Compute NGS modes Ha*M in the science directon using ray tracing. Not used </p>
 
 </div>
 </div>
@@ -210,9 +199,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute NGS modes Ha*M in the science directon using analytic formula. </p>
-<p>Not used </p>
+<p>Compute NGS modes Ha*M in the science directon using analytic formula. Not used </p>
 
 </div>
 </div>
@@ -251,7 +238,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>setup NGS modes and reconstructor using AHST for one or two DMs. </p>
 
 </div>
@@ -315,9 +301,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>used in performance evaluation on science opds. </p>
-<p>accumulate to out </p>
+<p>used in performance evaluation on science opds. accumulate to out </p>
 
 </div>
 </div>
@@ -356,7 +340,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Convert NGS modes to DM actuator commands using analytical expression. </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>switch to use mode vectors </dd></dl>
 
@@ -415,7 +398,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Convert NGS mode vector to aperture grid for science directions. </p>
 
 </div>
@@ -443,9 +425,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ngsmod_free</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction. </p>
-<p>if ahst_wt==3 Identity weighting.</p>
+<p>remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction. if ahst_wt==3 Identity weighting.</p>
 <p>if nmod==6: make sure the global focus mode is not removed from LGS result. </p>
 
 </div>

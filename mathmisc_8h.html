@@ -113,10 +113,9 @@ $(document).ready(function(){initNavTree('mathmisc_8h.html','');});
 <div class="title">mathmisc.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>A few math routines.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../sys/sys.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="blas_8h.html">blas.h</a>&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ad4bf26a596bb2b6847c446bb236467c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4bf26a596bb2b6847c446bb236467c9"></a>
@@ -135,67 +134,47 @@ typedef double(*&#160;</td><td class="memItemRight" valign="bottom"><b>golden_se
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ab0fd7caaf2798397c30803cf508ba1ae"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ab0fd7caaf2798397c30803cf508ba1ae">factorial</a> (long n1, long n2)</td></tr>
-<tr class="memdesc:ab0fd7caaf2798397c30803cf508ba1ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the factorial from n1 to n2.  <a href="#ab0fd7caaf2798397c30803cf508ba1ae">More...</a><br/></td></tr>
 <tr class="separator:ab0fd7caaf2798397c30803cf508ba1ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d93ab065d26256340ccb78b4cc1e0fd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a5d93ab065d26256340ccb78b4cc1e0fd">normalize_sum</a> (double *p, long nloc, double norm)</td></tr>
-<tr class="memdesc:a5d93ab065d26256340ccb78b4cc1e0fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">normalize vector to sum to norm;  <a href="#a5d93ab065d26256340ccb78b4cc1e0fd">More...</a><br/></td></tr>
 <tr class="separator:a5d93ab065d26256340ccb78b4cc1e0fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ed0395a68a0c06d7bab414a7ba61ca2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4ed0395a68a0c06d7bab414a7ba61ca2">normalize_max</a> (double *p, long nloc, double max)</td></tr>
-<tr class="memdesc:a4ed0395a68a0c06d7bab414a7ba61ca2"><td class="mdescLeft">&#160;</td><td class="mdescRight">normalize vector to max to max;  <a href="#a4ed0395a68a0c06d7bab414a7ba61ca2">More...</a><br/></td></tr>
 <tr class="separator:a4ed0395a68a0c06d7bab414a7ba61ca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4226ed564a7d77401332c3a55a526d3f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4226ed564a7d77401332c3a55a526d3f">dotdbl</a> (const double *__restrict p1, const double *__restrict p2, const double *__restrict p3, long n)</td></tr>
-<tr class="memdesc:a4226ed564a7d77401332c3a55a526d3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute sum(p1.  <a href="#a4226ed564a7d77401332c3a55a526d3f">More...</a><br/></td></tr>
 <tr class="separator:a4226ed564a7d77401332c3a55a526d3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac670713b01b556d4f7e6e2db15dda20e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ac670713b01b556d4f7e6e2db15dda20e">dotflt</a> (const float *__restrict p1, const float *__restrict p2, const float *__restrict p3, long n)</td></tr>
-<tr class="memdesc:ac670713b01b556d4f7e6e2db15dda20e"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute sum(p1.  <a href="#ac670713b01b556d4f7e6e2db15dda20e">More...</a><br/></td></tr>
 <tr class="separator:ac670713b01b556d4f7e6e2db15dda20e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5752463816745ae3c21850a043cef44f"><td class="memItemLeft" align="right" valign="top">dcomplex&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a5752463816745ae3c21850a043cef44f">dotcmp</a> (const dcomplex *__restrict p1, const dcomplex *__restrict p2, const double *__restrict p3, long n)</td></tr>
-<tr class="memdesc:a5752463816745ae3c21850a043cef44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute sum(p1.  <a href="#a5752463816745ae3c21850a043cef44f">More...</a><br/></td></tr>
 <tr class="separator:a5752463816745ae3c21850a043cef44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a2319333b6a5af4276d28561c431bc5"><td class="memItemLeft" align="right" valign="top">fcomplex&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4a2319333b6a5af4276d28561c431bc5">dotzmp</a> (const fcomplex *__restrict p1, const fcomplex *__restrict p2, const float *__restrict p3, long n)</td></tr>
-<tr class="memdesc:a4a2319333b6a5af4276d28561c431bc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute sum(p1.  <a href="#a4a2319333b6a5af4276d28561c431bc5">More...</a><br/></td></tr>
 <tr class="separator:a4a2319333b6a5af4276d28561c431bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4743ee7b6e7e84249f13db0a14e88063"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4743ee7b6e7e84249f13db0a14e88063">maxdbl</a> (const double *p, long n)</td></tr>
-<tr class="memdesc:a4743ee7b6e7e84249f13db0a14e88063"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the maximum of double vector  <a href="#a4743ee7b6e7e84249f13db0a14e88063">More...</a><br/></td></tr>
 <tr class="separator:a4743ee7b6e7e84249f13db0a14e88063"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac7d23a6f61a359934d93f1fbdc570ea"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aac7d23a6f61a359934d93f1fbdc570ea">maxabs</a> (const double *p, long n)</td></tr>
-<tr class="memdesc:aac7d23a6f61a359934d93f1fbdc570ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the maximum of the abs of double vector  <a href="#aac7d23a6f61a359934d93f1fbdc570ea">More...</a><br/></td></tr>
 <tr class="separator:aac7d23a6f61a359934d93f1fbdc570ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae64970e5df939a68130815b4e6ea55bb"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ae64970e5df939a68130815b4e6ea55bb">maxabsf</a> (const float *p, long n)</td></tr>
-<tr class="memdesc:ae64970e5df939a68130815b4e6ea55bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">compute the maximum of the abs of float vector  <a href="#ae64970e5df939a68130815b4e6ea55bb">More...</a><br/></td></tr>
 <tr class="separator:ae64970e5df939a68130815b4e6ea55bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2012140c24a1ca12cd24742bc4a3cc69"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a2012140c24a1ca12cd24742bc4a3cc69">dblsum</a> (const double *p, long nx)</td></tr>
-<tr class="memdesc:a2012140c24a1ca12cd24742bc4a3cc69"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the sum of double vector.  <a href="#a2012140c24a1ca12cd24742bc4a3cc69">More...</a><br/></td></tr>
 <tr class="separator:a2012140c24a1ca12cd24742bc4a3cc69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa38fdc78d9dc1e1ae591d7aca2502f4a"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aa38fdc78d9dc1e1ae591d7aca2502f4a">fltsum</a> (const float *p, long nx)</td></tr>
-<tr class="memdesc:aa38fdc78d9dc1e1ae591d7aca2502f4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the sum of double vector.  <a href="#aa38fdc78d9dc1e1ae591d7aca2502f4a">More...</a><br/></td></tr>
 <tr class="separator:aa38fdc78d9dc1e1ae591d7aca2502f4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac03ebf16a4d4a5b1cf715f594067067d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ac03ebf16a4d4a5b1cf715f594067067d">adddbl</a> (double *__restrict out, double alpha, const double *in, int N, double beta, double gamma)</td></tr>
-<tr class="memdesc:ac03ebf16a4d4a5b1cf715f594067067d"><td class="mdescLeft">&#160;</td><td class="mdescRight">add two double vectors: out=out*alpha+in*beta+theta  <a href="#ac03ebf16a4d4a5b1cf715f594067067d">More...</a><br/></td></tr>
 <tr class="separator:ac03ebf16a4d4a5b1cf715f594067067d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73ced4ffb73a0819e1a0eea29a401b92"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73ced4ffb73a0819e1a0eea29a401b92"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>invsq</b> (long n, double *__restrict A)</td></tr>
 <tr class="separator:a73ced4ffb73a0819e1a0eea29a401b92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fc7d93797b6932ee8fd6e4bd9037437"><td class="memItemLeft" align="right" valign="top">long *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a4fc7d93797b6932ee8fd6e4bd9037437">invperm</a> (long *p, long np)</td></tr>
-<tr class="memdesc:a4fc7d93797b6932ee8fd6e4bd9037437"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reverse an permution vector.  <a href="#a4fc7d93797b6932ee8fd6e4bd9037437">More...</a><br/></td></tr>
 <tr class="separator:a4fc7d93797b6932ee8fd6e4bd9037437"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab39b3e152a58435ba11f863463f8aa41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ab39b3e152a58435ba11f863463f8aa41">cvecperm</a> (dcomplex *__restrict out, const dcomplex *__restrict in, const long *perm, long nx)</td></tr>
-<tr class="memdesc:ab39b3e152a58435ba11f863463f8aa41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Permute the vector so that out(:)=in(p);.  <a href="#ab39b3e152a58435ba11f863463f8aa41">More...</a><br/></td></tr>
 <tr class="separator:ab39b3e152a58435ba11f863463f8aa41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acfc439afc0e6f242e9fb6d7922a5394b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#acfc439afc0e6f242e9fb6d7922a5394b">cvecpermi</a> (dcomplex *__restrict out, const dcomplex *__restrict in, const long *perm, long nx)</td></tr>
-<tr class="memdesc:acfc439afc0e6f242e9fb6d7922a5394b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reverse permute the vector so that out(p)=in(:);.  <a href="#acfc439afc0e6f242e9fb6d7922a5394b">More...</a><br/></td></tr>
 <tr class="separator:acfc439afc0e6f242e9fb6d7922a5394b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaaed679d152deb02470ebcb73919242"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#aaaaed679d152deb02470ebcb73919242">maxminlong</a> (const long *__restrict p, long N, long *__restrict max, long *__restrict min)</td></tr>
-<tr class="memdesc:aaaaed679d152deb02470ebcb73919242"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute max, min and sum of a long vector.  <a href="#aaaaed679d152deb02470ebcb73919242">More...</a><br/></td></tr>
 <tr class="separator:aaaaed679d152deb02470ebcb73919242"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad05da91f2d849843478cbd228f67bde4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ad05da91f2d849843478cbd228f67bde4">remove_piston</a> (double *p, long n)</td></tr>
-<tr class="memdesc:ad05da91f2d849843478cbd228f67bde4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove piston from p of length n.  <a href="#ad05da91f2d849843478cbd228f67bde4">More...</a><br/></td></tr>
 <tr class="separator:ad05da91f2d849843478cbd228f67bde4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17bd719e22e15aaff05bc4c8773dede2"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#a17bd719e22e15aaff05bc4c8773dede2">nextpow2</a> (long n)</td></tr>
-<tr class="memdesc:a17bd719e22e15aaff05bc4c8773dede2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the next number that is power of 2.  <a href="#a17bd719e22e15aaff05bc4c8773dede2">More...</a><br/></td></tr>
 <tr class="separator:a17bd719e22e15aaff05bc4c8773dede2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2457f6b21851a0a5d62695be54331ca"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mathmisc_8h.html#ab2457f6b21851a0a5d62695be54331ca">nextfftsize</a> (long n)</td></tr>
-<tr class="memdesc:ab2457f6b21851a0a5d62695be54331ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the next number suitable for FFT.  <a href="#ab2457f6b21851a0a5d62695be54331ca">More...</a><br/></td></tr>
 <tr class="separator:ab2457f6b21851a0a5d62695be54331ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0a9c8af7043c7b58bf51d49d8a48ea9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0a9c8af7043c7b58bf51d49d8a48ea9"></a>
 unsigned long&#160;</td><td class="memItemRight" valign="bottom"><b>mylog2</b> (unsigned long n)</td></tr>
@@ -205,7 +184,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
 <tr class="separator:a1ce6ad13180bb05668fcea47b866d4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A few math routines. </p>
+<div class="textblock"><p>A few math routines </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ab0fd7caaf2798397c30803cf508ba1ae"></a>
 <div class="memitem">
@@ -230,9 +209,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the factorial from n1 to n2. </p>
-<p>Overflow LONG if n2&gt;20, so we use double as output. </p>
+<p>Compute the factorial from n1 to n2. Overflow LONG if n2&gt;20, so we use double as output. </p>
 
 </div>
 </div>
@@ -265,7 +242,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>normalize vector to sum to norm; </p>
 
 </div>
@@ -299,7 +275,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>normalize vector to max to max; </p>
 
 </div>
@@ -339,9 +314,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute sum(p1. </p>
-<p>*p2.*p3) </p>
+<p>compute sum(p1.*p2.*p3) </p>
 
 </div>
 </div>
@@ -380,9 +353,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute sum(p1. </p>
-<p>*p2.*p3) </p>
+<p>compute sum(p1.*p2.*p3) </p>
 
 </div>
 </div>
@@ -421,9 +392,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute sum(p1. </p>
-<p>*p2.*p3) for complex p1, p2 and double p3 </p>
+<p>compute sum(p1.*p2.*p3) for complex p1, p2 and double p3 </p>
 
 </div>
 </div>
@@ -462,9 +431,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>compute sum(p1. </p>
-<p>*p2.*p3) for complex p1, p2 and float p3 </p>
+<p>compute sum(p1.*p2.*p3) for complex p1, p2 and float p3 </p>
 
 </div>
 </div>
@@ -491,7 +458,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>compute the maximum of double vector </p>
 
 </div>
@@ -519,7 +485,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>compute the maximum of the abs of double vector </p>
 
 </div>
@@ -547,7 +512,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>compute the maximum of the abs of float vector </p>
 
 </div>
@@ -575,8 +539,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the sum of double vector. </p>
+<p>Compute the sum of double vector </p>
 
 </div>
 </div>
@@ -603,8 +566,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the sum of double vector. </p>
+<p>Compute the sum of double vector </p>
 
 </div>
 </div>
@@ -646,7 +608,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>gamma</em>&#160;</td>
+          <td class="paramname"><em>theta</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -655,7 +617,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>add two double vectors: out=out*alpha+in*beta+theta </p>
 
 </div>
@@ -683,9 +644,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Reverse an permution vector. </p>
-<p>A=B(p) &lt;==&gt; A(pi)=B </p>
+<p>Reverse an permution vector. A=B(p) &lt;==&gt; A(pi)=B </p>
 
 </div>
 </div>
@@ -724,8 +683,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Permute the vector so that out(:)=in(p);. </p>
+<p>Permute the vector so that out(:)=in(p); </p>
 
 </div>
 </div>
@@ -764,8 +722,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Reverse permute the vector so that out(p)=in(:);. </p>
+<p>Reverse permute the vector so that out(p)=in(:); </p>
 
 </div>
 </div>
@@ -804,8 +761,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute max, min and sum of a long vector. </p>
+<p>Compute max, min and sum of a long vector </p>
 
 </div>
 </div>
@@ -832,8 +788,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove piston from p of length n. </p>
+<p>Remove piston from p of length n </p>
 
 </div>
 </div>
@@ -850,7 +805,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Find the next number that is power of 2. </p>
 
 </div>
@@ -868,9 +822,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>golden_section_sear
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Find the next number suitable for FFT. </p>
-<p>Use radix of 2, 3, 5, 7 </p>
+<p>Find the next number suitable for FFT. Use radix of 2, 3, 5, 7 </p>
 
 </div>
 </div>

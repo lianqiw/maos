@@ -111,38 +111,31 @@ $(document).ready(function(){initNavTree('sim__utils_8c.html','');});
 <div class="title">sim_utils.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains a few support functions for simulation.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+<code>#include &quot;sim_utils.h&quot;</code><br/>
+<code>#include &quot;setup_surf.h&quot;</code><br/>
+<code>#include &quot;setup_powfs.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:afce4363970d1fde0eca6130b82b2d28e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#afce4363970d1fde0eca6130b82b2d28e">genatm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:afce4363970d1fde0eca6130b82b2d28e"><td class="mdescLeft">&#160;</td><td class="mdescRight">wrap of the generic vonkarman_genatm to generate turbulence screens.  <a href="#afce4363970d1fde0eca6130b82b2d28e">More...</a><br/></td></tr>
 <tr class="separator:afce4363970d1fde0eca6130b82b2d28e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a881ef641df236619f3983314ae971e74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a881ef641df236619f3983314ae971e74">setup_recon_HXW_predict</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a881ef641df236619f3983314ae971e74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup ray tracing operator from xloc to ploc, with predictive offsetting.  <a href="#a881ef641df236619f3983314ae971e74">More...</a><br/></td></tr>
 <tr class="separator:a881ef641df236619f3983314ae971e74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a130fb2cf597c4752d9397777e9bcf1e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a130fb2cf597c4752d9397777e9bcf1e2">atm2xloc</a> (<a class="el" href="structdcell.html">dcell</a> **opdx, const <a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a130fb2cf597c4752d9397777e9bcf1e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate the atmosphere to closest xloc.  <a href="#a130fb2cf597c4752d9397777e9bcf1e2">More...</a><br/></td></tr>
 <tr class="separator:a130fb2cf597c4752d9397777e9bcf1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade5601f0c0ffa73c27aa90ec087d54ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#ade5601f0c0ffa73c27aa90ec087d54ac">sim_update_etf</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:ade5601f0c0ffa73c27aa90ec087d54ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evolving the Sodium layer by updating the elongation transfer function.  <a href="#ade5601f0c0ffa73c27aa90ec087d54ac">More...</a><br/></td></tr>
 <tr class="separator:ade5601f0c0ffa73c27aa90ec087d54ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a77fdd69488c4c7061a098e3d10b09abe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a77fdd69488c4c7061a098e3d10b09abe">seeding</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a77fdd69488c4c7061a098e3d10b09abe"><td class="mdescLeft">&#160;</td><td class="mdescRight">use random number dirived from input seed to seed other stream.  <a href="#a77fdd69488c4c7061a098e3d10b09abe">More...</a><br/></td></tr>
 <tr class="separator:a77fdd69488c4c7061a098e3d10b09abe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27c195134fbcb70dbf90b5ff2ee82a84"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a27c195134fbcb70dbf90b5ff2ee82a84">init_simu</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, int iseed)</td></tr>
-<tr class="memdesc:a27c195134fbcb70dbf90b5ff2ee82a84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize simu (of type <a class="el" href="structSIM__T.html" title="contains all the run time data struct. ">SIM_T</a>) and various simulation data structs.  <a href="#a27c195134fbcb70dbf90b5ff2ee82a84">More...</a><br/></td></tr>
 <tr class="separator:a27c195134fbcb70dbf90b5ff2ee82a84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84b825eee317f2e6b919c95773cd847f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a84b825eee317f2e6b919c95773cd847f">free_simu</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a84b825eee317f2e6b919c95773cd847f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release memory of simu (of type <a class="el" href="structSIM__T.html" title="contains all the run time data struct. ">SIM_T</a>) and close files.  <a href="#a84b825eee317f2e6b919c95773cd847f">More...</a><br/></td></tr>
 <tr class="separator:a84b825eee317f2e6b919c95773cd847f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0be16bd01f2529c9b983cbc5db7fe691"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#a0be16bd01f2529c9b983cbc5db7fe691">print_progress</a> (const <a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a0be16bd01f2529c9b983cbc5db7fe691"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print out wavefront error information and timing at each time step.  <a href="#a0be16bd01f2529c9b983cbc5db7fe691">More...</a><br/></td></tr>
 <tr class="separator:a0be16bd01f2529c9b983cbc5db7fe691"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af566f334aaf19cf9ad3ed5a847c2aee9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim__utils_8c.html#af566f334aaf19cf9ad3ed5a847c2aee9">save_skyc</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="memdesc:af566f334aaf19cf9ad3ed5a847c2aee9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output parameters necessary to run postproc using <a class="el" href="skyc_8c.html" title="This file contains main routine about skycoverage. ">skyc/skyc.c</a>.  <a href="#af566f334aaf19cf9ad3ed5a847c2aee9">More...</a><br/></td></tr>
 <tr class="separator:af566f334aaf19cf9ad3ed5a847c2aee9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -161,9 +154,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>wrap of the generic vonkarman_genatm to generate turbulence screens. </p>
-<p>Wind velocities are set for each screen. </p>
+<p>wrap of the generic vonkarman_genatm to generate turbulence screens. Wind velocities are set for each screen. </p>
 
 </div>
 </div>
@@ -180,8 +171,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Setup ray tracing operator from xloc to ploc, with predictive offsetting. </p>
+<p>Setup ray tracing operator from xloc to ploc, with predictive offsetting </p>
 
 </div>
 </div>
@@ -208,9 +198,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Propagate the atmosphere to closest xloc. </p>
-<p>skip wavefront sensing and reconstruction.</p>
+<p>Propagate the atmosphere to closest xloc. skip wavefront sensing and reconstruction.</p>
 <p>2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not match in number. Fixed. Do not do scaling even if fit.ht is less. </p>
 
 </div>
@@ -228,7 +216,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Evolving the Sodium layer by updating the elongation transfer function. </p>
 
 </div>
@@ -246,9 +233,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>use random number dirived from input seed to seed other stream. </p>
-<p>necessary to have independant streams for different wfs in threading routines to avoid race condition and have consitent result </p>
+<p>use random number dirived from input seed to seed other stream. necessary to have independant streams for different wfs in threading routines to avoid race condition and have consitent result </p>
 
 </div>
 </div>
@@ -293,9 +278,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Initialize simu (of type <a class="el" href="structSIM__T.html" title="contains all the run time data struct. ">SIM_T</a>) and various simulation data structs. </p>
-<p>Called for every seed. </p>
+<p>Initialize simu (of type <a class="el" href="structSIM__T.html">SIM_T</a>) and various simulation data structs. Called for every seed. </p>
 
 </div>
 </div>
@@ -312,8 +295,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Release memory of simu (of type <a class="el" href="structSIM__T.html" title="contains all the run time data struct. ">SIM_T</a>) and close files. </p>
+<p>Release memory of simu (of type <a class="el" href="structSIM__T.html">SIM_T</a>) and close files. </p>
 
 </div>
 </div>
@@ -330,7 +312,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Print out wavefront error information and timing at each time step. </p>
 
 </div>
@@ -364,8 +345,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Output parameters necessary to run postproc using <a class="el" href="skyc_8c.html" title="This file contains main routine about skycoverage. ">skyc/skyc.c</a>. </p>
+<p>Output parameters necessary to run postproc using <a class="el" href="skyc_8c.html">skyc/skyc.c</a> </p>
 
 </div>
 </div>

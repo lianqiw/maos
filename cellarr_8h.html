@@ -107,34 +107,23 @@ $(document).ready(function(){initNavTree('cellarr_8h.html','');});
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">cellarr.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>cellarr is an object used to write arrays of dcell or ccell into file.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;<a class="el" href="type_8h.html">type.h</a>&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcellarr.html">cellarr</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a0a64cbb615286dee5780159a637e80d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a64cbb615286dee5780159a637e80d1"></a>
-typedef struct <a class="el" href="structcellarr.html">cellarr</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr</b></td></tr>
-<tr class="separator:a0a64cbb615286dee5780159a637e80d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a42c2be57d6cae76e6dce51b974ee6dd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a42c2be57d6cae76e6dce51b974ee6dd8">cellarr_init</a> (long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a42c2be57d6cae76e6dce51b974ee6dd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell.  <a href="#a42c2be57d6cae76e6dce51b974ee6dd8">More...</a><br/></td></tr>
 <tr class="separator:a42c2be57d6cae76e6dce51b974ee6dd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a007161604e1c45af16d130465e21e88b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a007161604e1c45af16d130465e21e88b">cellarr_push</a> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const void *A)</td></tr>
-<tr class="memdesc:a007161604e1c45af16d130465e21e88b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a A of type type into the cellarr ca, at location i.  <a href="#a007161604e1c45af16d130465e21e88b">More...</a><br/></td></tr>
 <tr class="separator:a007161604e1c45af16d130465e21e88b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a605ba4e2c0a6c447806d165b184c8435"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a605ba4e2c0a6c447806d165b184c8435"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_dcell</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structdcell.html">dcell</a> *A)</td></tr>
@@ -161,15 +150,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_cmat</b> (<a 
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a class="el" href="structcellarr.html">cellarr</a> *ca, int i, const <a class="el" href="structzmat.html">zmat</a> *A)</td></tr>
 <tr class="separator:ae43fb6d7bfd64529779ec1933ac52b24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1befd9e7d6ab8731df1fcc80e6c35b57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#a1befd9e7d6ab8731df1fcc80e6c35b57">cellarr_close</a> (<a class="el" href="structcellarr.html">cellarr</a> *ca)</td></tr>
-<tr class="memdesc:a1befd9e7d6ab8731df1fcc80e6c35b57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the cellarr.  <a href="#a1befd9e7d6ab8731df1fcc80e6c35b57">More...</a><br/></td></tr>
 <tr class="separator:a1befd9e7d6ab8731df1fcc80e6c35b57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15a30fa62ff9b797eeea8ca072c06a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cellarr_8h.html#af15a30fa62ff9b797eeea8ca072c06a3">cellarr_close_n</a> (<a class="el" href="structcellarr.html">cellarr</a> **ca, int nc)</td></tr>
-<tr class="memdesc:af15a30fa62ff9b797eeea8ca072c06a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close an array of cellarr.  <a href="#af15a30fa62ff9b797eeea8ca072c06a3">More...</a><br/></td></tr>
 <tr class="separator:af15a30fa62ff9b797eeea8ca072c06a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>cellarr is an object used to write arrays of dcell or ccell into file. </p>
-<p>Mainly used to output PSF into files. </p>
+<div class="textblock"><p>cellarr is an object used to write arrays of dcell or ccell into file. Mainly used to output PSF into files. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a42c2be57d6cae76e6dce51b974ee6dd8"></a>
 <div class="memitem">
@@ -206,8 +192,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell. </p>
+<p>Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell </p>
 
 </div>
 </div>
@@ -231,7 +216,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>A</em>&#160;</td>
+          <td class="paramname"><em>p</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -240,7 +225,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Append a A of type type into the cellarr ca, at location i. </p>
 
 </div>
@@ -258,7 +242,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Close the cellarr. </p>
 
 </div>
@@ -286,8 +269,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cellarr_zmat</b> (<a 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Close an array of cellarr. </p>
+<p>Close an array of cellarr </p>
 
 </div>
 </div>

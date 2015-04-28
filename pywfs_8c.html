@@ -112,10 +112,10 @@ $(document).ready(function(){initNavTree('pywfs_8c.html','');});
 <div class="title">pywfs.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines related to pyramid WFS.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;../cuda/gpu.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a6bc85f078c4f395c33b2a52117dc3f26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6bc85f078c4f395c33b2a52117dc3f26"></a>
@@ -128,19 +128,14 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a481ccf3622a0aa25b96f388a2f0bbf00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a481ccf3622a0aa25b96f388a2f0bbf00">pywfs_setup</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ipowfs)</td></tr>
-<tr class="memdesc:a481ccf3622a0aa25b96f388a2f0bbf00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Complex wavefront created by pyramid.  <a href="#a481ccf3622a0aa25b96f388a2f0bbf00">More...</a><br/></td></tr>
 <tr class="separator:a481ccf3622a0aa25b96f388a2f0bbf00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62cf9bbfec3ce146dc1fb58feab31c16"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a62cf9bbfec3ce146dc1fb58feab31c16">pywfs_fft</a> (<a class="el" href="structdmat.html">dmat</a> **ints, const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs, const <a class="el" href="structdmat.html">dmat</a> *opd)</td></tr>
-<tr class="memdesc:a62cf9bbfec3ce146dc1fb58feab31c16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform FFT over the complex PSF with additional phases caused by the pyramid.  <a href="#a62cf9bbfec3ce146dc1fb58feab31c16">More...</a><br/></td></tr>
 <tr class="separator:a62cf9bbfec3ce146dc1fb58feab31c16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6705f903478cb213c1f4fc386f2bc624"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a6705f903478cb213c1f4fc386f2bc624">pywfs_grad</a> (<a class="el" href="structdmat.html">dmat</a> **pgrad, const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs, const <a class="el" href="structdmat.html">dmat</a> *ints)</td></tr>
-<tr class="memdesc:a6705f903478cb213c1f4fc386f2bc624"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute gradients.  <a href="#a6705f903478cb213c1f4fc386f2bc624">More...</a><br/></td></tr>
 <tr class="separator:a6705f903478cb213c1f4fc386f2bc624"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ff8fc94b4c21eaa25d8c8ca2a8918bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#a0ff8fc94b4c21eaa25d8c8ca2a8918bc">pywfs_tt</a> (const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs)</td></tr>
-<tr class="memdesc:a0ff8fc94b4c21eaa25d8c8ca2a8918bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return T/T mode.  <a href="#a0ff8fc94b4c21eaa25d8c8ca2a8918bc">More...</a><br/></td></tr>
 <tr class="separator:a0ff8fc94b4c21eaa25d8c8ca2a8918bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afae2c1e1c59cb308f2f25509fdbb6105"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pywfs_8c.html#afae2c1e1c59cb308f2f25509fdbb6105">pywfs_mkg</a> (const <a class="el" href="structPYWFS__T.html">PYWFS_T</a> *pywfs, const <a class="el" href="structloc__t.html">loc_t</a> *ploc, int cubic, double iac)</td></tr>
-<tr class="memdesc:afae2c1e1c59cb308f2f25509fdbb6105"><td class="mdescLeft">&#160;</td><td class="mdescRight">ploc is on pupil.  <a href="#afae2c1e1c59cb308f2f25509fdbb6105">More...</a><br/></td></tr>
 <tr class="separator:afae2c1e1c59cb308f2f25509fdbb6105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a112a9b4fc83ace436f7aaf00994c60c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a112a9b4fc83ace436f7aaf00994c60c3"></a>
 <a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_mkg_ga</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structloc__t.html">loc_t</a> *aloc, int iwfs, int idm)</td></tr>
@@ -150,7 +145,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
 <tr class="separator:a1826aede48a77226e4bb6af5803c6cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Routines related to pyramid WFS. </p>
+<div class="textblock"><p>Routines related to pyramid WFS </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a481ccf3622a0aa25b96f388a2f0bbf00"></a>
 <div class="memitem">
@@ -187,8 +182,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Complex wavefront created by pyramid. </p>
+<p>Complex wavefront created by pyramid </p>
 
 </div>
 </div>
@@ -221,9 +215,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Perform FFT over the complex PSF with additional phases caused by the pyramid. </p>
-<p>FFT on each quadrant of the PSF creates diffraction effects. </p>
+<p>Perform FFT over the complex PSF with additional phases caused by the pyramid. FFT on each quadrant of the PSF creates diffraction effects. </p>
 
 </div>
 </div>
@@ -256,9 +248,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute gradients. </p>
-<p>It replaces the result, not accumulate. </p>
+<p>Compute gradients. It replaces the result, not accumulate. </p>
 
 </div>
 </div>
@@ -275,8 +265,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Return T/T mode. </p>
+<p>Return T/T mode </p>
 
 </div>
 </div>
@@ -315,7 +304,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>pywfs_free</b> (<a cl
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>ploc is on pupil. </p>
 
 </div>

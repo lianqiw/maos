@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>Multi-threaded Adaptive Optics Simulator: tools/bin2fits.c File Reference</title>
+<title>Multi-threaded Adaptive Optics Simulator: CGTMP_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -49,8 +49,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
-      <li class="current"><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -71,8 +71,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
-      <li><a href="files.html"><span>File&#160;List</span></a></li>
-      <li><a href="globals.html"><span>Globals</span></a></li>
+      <li><a href="annotated.html"><span>Data&#160;Structures</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Data&#160;Fields</span></a></li>
     </ul>
   </div>
 </div><!-- top -->
@@ -87,7 +88,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('bin2fits_8c.html','');});
+$(document).ready(function(){initNavTree('structCGTMP__T.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -106,25 +107,47 @@ $(document).ready(function(){initNavTree('bin2fits_8c.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a>  </div>
+<a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">bin2fits.c File Reference</div>  </div>
+<div class="title">CGTMP_T Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Convert bin files to fits files.  
-<a href="#details">More...</a></p>
+<p><code>#include &quot;pcg.h&quot;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a0ddf1224851353fc92bfbff6f499fa97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ddf1224851353fc92bfbff6f499fa97"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>main</b> (int argc, char *argv[])</td></tr>
-<tr class="separator:a0ddf1224851353fc92bfbff6f499fa97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Data Fields</h2></td></tr>
+<tr class="memitem:a2cbc7549c40c43d050f36355961d911d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2cbc7549c40c43d050f36355961d911d"></a>
+curcell *&#160;</td><td class="memItemRight" valign="bottom"><b>r0</b></td></tr>
+<tr class="separator:a2cbc7549c40c43d050f36355961d911d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16351e995dbacfb2771a8b2352cc9456"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16351e995dbacfb2771a8b2352cc9456"></a>
+curcell *&#160;</td><td class="memItemRight" valign="bottom"><b>z0</b></td></tr>
+<tr class="separator:a16351e995dbacfb2771a8b2352cc9456"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69510206ab2f9c1944586c70a6fc2a4a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69510206ab2f9c1944586c70a6fc2a4a"></a>
+curcell *&#160;</td><td class="memItemRight" valign="bottom"><b>p0</b></td></tr>
+<tr class="separator:a69510206ab2f9c1944586c70a6fc2a4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28000e8070d38c2adb36633a09ae5fdf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28000e8070d38c2adb36633a09ae5fdf"></a>
+curcell *&#160;</td><td class="memItemRight" valign="bottom"><b>Ap</b></td></tr>
+<tr class="separator:a28000e8070d38c2adb36633a09ae5fdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b499ff7d56e744a81f6d48e9858d028"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b499ff7d56e744a81f6d48e9858d028"></a>
+Real *&#160;</td><td class="memItemRight" valign="bottom"><b>store</b></td></tr>
+<tr class="separator:a1b499ff7d56e744a81f6d48e9858d028"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a232c9631f2328537aa030e9a13230c9f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a232c9631f2328537aa030e9a13230c9f"></a>
+Real *&#160;</td><td class="memItemRight" valign="bottom"><b>diff</b></td></tr>
+<tr class="separator:a232c9631f2328537aa030e9a13230c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a391cf621092c8a99c63163586c8f9b8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a391cf621092c8a99c63163586c8f9b8a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>count_fail</b></td></tr>
+<tr class="separator:a391cf621092c8a99c63163586c8f9b8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a640b8e0d0a7bd415bbe99e039771e63c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a640b8e0d0a7bd415bbe99e039771e63c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>count</b></td></tr>
+<tr class="separator:a640b8e0d0a7bd415bbe99e039771e63c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Convert bin files to fits files. </p>
-<p>Supports matrix and cellarray of matrix. </p>
-</div></div><!-- contents -->
+<div class="textblock"><p>hold data struct for temporary data used for CG to avoid alloc/free at every call to CG. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<li>cuda/pcg.h</li>
+</ul>
+</div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

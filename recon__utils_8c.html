@@ -107,16 +107,16 @@ $(document).ready(function(){initNavTree('recon__utils_8c.html','');});
 <div class="header">
   <div class="summary">
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">recon_utils.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Reusable utilities for wavefront reconstruction and DM fitting.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;recon_utils.h&quot;</code><br/>
+<code>#include &quot;setup_recon.h&quot;</code><br/>
+<code>#include &quot;ahst.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a51b7a9c320bb9b58fc5632da0a44ab84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51b7a9c320bb9b58fc5632da0a44ab84"></a>
@@ -132,79 +132,53 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>toc_tm</b>(A)</td></tr>
 <tr class="separator:a00b7822255d82d13b2ca313db43a139a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f7acaaabd294c80ab0f3540b010a1b2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a3f7acaaabd294c80ab0f3540b010a1b2">test_TomoL</a>&#160;&#160;&#160;0</td></tr>
-<tr class="memdesc:a3f7acaaabd294c80ab0f3540b010a1b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply tomography left hand side operator without using assembled matrix.  <a href="#a3f7acaaabd294c80ab0f3540b010a1b2">More...</a><br/></td></tr>
 <tr class="separator:a3f7acaaabd294c80ab0f3540b010a1b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:ac0846a43d5d29570425f514e31ad3624"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0846a43d5d29570425f514e31ad3624"></a>
-typedef struct Tomo_T&#160;</td><td class="memItemRight" valign="bottom"><b>Tomo_T</b></td></tr>
-<tr class="separator:ac0846a43d5d29570425f514e31ad3624"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a736ddf612e3ea272d3543f05852cdd6a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a736ddf612e3ea272d3543f05852cdd6a">apply_L2</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const <a class="el" href="structdspcell.html">dspcell</a> *L2, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha, int nthread)</td></tr>
-<tr class="memdesc:a736ddf612e3ea272d3543f05852cdd6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply Laplacian2 to xin and accumulates to xout.  <a href="#a736ddf612e3ea272d3543f05852cdd6a">More...</a><br/></td></tr>
 <tr class="separator:a736ddf612e3ea272d3543f05852cdd6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a666275101e117d56e1cf2908b18e0278"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a666275101e117d56e1cf2908b18e0278">apply_invpsd</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha, int xb, int yb)</td></tr>
-<tr class="memdesc:a666275101e117d56e1cf2908b18e0278"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.  <a href="#a666275101e117d56e1cf2908b18e0278">More...</a><br/></td></tr>
 <tr class="separator:a666275101e117d56e1cf2908b18e0278"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a68ea00a9c6e3e064ff6b613e9718cf54"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a68ea00a9c6e3e064ff6b613e9718cf54">apply_fractal</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha, int xb, int yb)</td></tr>
-<tr class="memdesc:a68ea00a9c6e3e064ff6b613e9718cf54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply fractal regularization to x, scaled by alpha.  <a href="#a68ea00a9c6e3e064ff6b613e9718cf54">More...</a><br/></td></tr>
 <tr class="separator:a68ea00a9c6e3e064ff6b613e9718cf54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08347b75d2ff1eb95c0a179873921e98"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a08347b75d2ff1eb95c0a179873921e98">TTFR</a> (<a class="el" href="structdcell.html">dcell</a> *x, const <a class="el" href="structdcell.html">dcell</a> *TTF, const <a class="el" href="structdcell.html">dcell</a> *PTTF)</td></tr>
-<tr class="memdesc:a08347b75d2ff1eb95c0a179873921e98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing Tip/Tilt/Focus from LGS grads.  <a href="#a08347b75d2ff1eb95c0a179873921e98">More...</a><br/></td></tr>
 <tr class="separator:a08347b75d2ff1eb95c0a179873921e98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a248c9770547232db990ea4a34db3deb9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a248c9770547232db990ea4a34db3deb9">TTFRt</a> (<a class="el" href="structdcell.html">dcell</a> *x, const <a class="el" href="structdcell.html">dcell</a> *TTF, const <a class="el" href="structdcell.html">dcell</a> *PTTF)</td></tr>
-<tr class="memdesc:a248c9770547232db990ea4a34db3deb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removing Tip/Tilt/Focus from LGS grads.  <a href="#a248c9770547232db990ea4a34db3deb9">More...</a><br/></td></tr>
 <tr class="separator:a248c9770547232db990ea4a34db3deb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac31a93d205900027f62a385a321de0b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#aac31a93d205900027f62a385a321de0b">applyW</a> (<a class="el" href="structdcell.html">dcell</a> *xin, const <a class="el" href="structdsp.html">dsp</a> *W0, const <a class="el" href="structdmat.html">dmat</a> *W1, const double *wt)</td></tr>
-<tr class="memdesc:aac31a93d205900027f62a385a321de0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">apply weighting W0/W1 with weighting wt for each block.  <a href="#aac31a93d205900027f62a385a321de0b">More...</a><br/></td></tr>
 <tr class="separator:aac31a93d205900027f62a385a321de0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2bca0565f72973497ae8d589a8be63d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#ac2bca0565f72973497ae8d589a8be63d">calcWmcc</a> (const <a class="el" href="structdcell.html">dcell</a> *A, const <a class="el" href="structdcell.html">dcell</a> *B, const <a class="el" href="structdsp.html">dsp</a> *W0, const <a class="el" href="structdmat.html">dmat</a> *W1, const <a class="el" href="structdmat.html">dmat</a> *wt)</td></tr>
-<tr class="memdesc:ac2bca0565f72973497ae8d589a8be63d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute W0/W1 weighted dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_16.png"/>.  <a href="#ac2bca0565f72973497ae8d589a8be63d">More...</a><br/></td></tr>
 <tr class="separator:ac2bca0565f72973497ae8d589a8be63d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79b68f8c7f9f674956e8ae419690a7fc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a79b68f8c7f9f674956e8ae419690a7fc">Tomo_prop</a> (Tomo_T *data, int nthread)</td></tr>
-<tr class="memdesc:a79b68f8c7f9f674956e8ae419690a7fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper of Tomo_prop_do.  <a href="#a79b68f8c7f9f674956e8ae419690a7fc">More...</a><br/></td></tr>
 <tr class="separator:a79b68f8c7f9f674956e8ae419690a7fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ed0c35482fc4e04f94662151c867a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71ed0c35482fc4e04f94662151c867a7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Tomo_nea</b> (Tomo_T *data, int nthread, int gpt)</td></tr>
 <tr class="separator:a71ed0c35482fc4e04f94662151c867a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb00630a5d336d108082c8f7c1409a16"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#adb00630a5d336d108082c8f7c1409a16">Tomo_iprop</a> (Tomo_T *data, int nthread)</td></tr>
-<tr class="memdesc:adb00630a5d336d108082c8f7c1409a16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper of Tomo_iprop_do.  <a href="#adb00630a5d336d108082c8f7c1409a16">More...</a><br/></td></tr>
 <tr class="separator:adb00630a5d336d108082c8f7c1409a16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98112ae2ee582d001eb0307d79eda59a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a98112ae2ee582d001eb0307d79eda59a">TomoR</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *gin, const double alpha)</td></tr>
-<tr class="memdesc:a98112ae2ee582d001eb0307d79eda59a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply tomography right hand operator without using assembled matrix.  <a href="#a98112ae2ee582d001eb0307d79eda59a">More...</a><br/></td></tr>
 <tr class="separator:a98112ae2ee582d001eb0307d79eda59a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad52c3cc4883b219477bd9e5dea89eeae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#ad52c3cc4883b219477bd9e5dea89eeae">TomoRt</a> (<a class="el" href="structdcell.html">dcell</a> **gout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
-<tr class="memdesc:ad52c3cc4883b219477bd9e5dea89eeae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transpose operation of TomoRt.  <a href="#ad52c3cc4883b219477bd9e5dea89eeae">More...</a><br/></td></tr>
 <tr class="separator:ad52c3cc4883b219477bd9e5dea89eeae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3099e480359dfa43b2fe6b4868f1a704"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3099e480359dfa43b2fe6b4868f1a704"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
 <tr class="separator:a3099e480359dfa43b2fe6b4868f1a704"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a168e09881164d7f61ac8e0620ec7135b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a168e09881164d7f61ac8e0620ec7135b">FitR</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
-<tr class="memdesc:a168e09881164d7f61ac8e0620ec7135b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply fit right hand side matrix in CG mode without using assembled matrix.  <a href="#a168e09881164d7f61ac8e0620ec7135b">More...</a><br/></td></tr>
 <tr class="separator:a168e09881164d7f61ac8e0620ec7135b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a4842b145e88d09b903f986fe8951f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a4a4842b145e88d09b903f986fe8951f2">FitL</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
-<tr class="memdesc:a4a4842b145e88d09b903f986fe8951f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply fit left hand side matrix in CG mode without using assembled matrix.  <a href="#a4a4842b145e88d09b903f986fe8951f2">More...</a><br/></td></tr>
 <tr class="separator:a4a4842b145e88d09b903f986fe8951f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8275bff1050a3bf784cbf75b0ed42092"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a8275bff1050a3bf784cbf75b0ed42092">nea2sp</a> (<a class="el" href="structdmat.html">dmat</a> **nea, long nsa)</td></tr>
-<tr class="memdesc:a8275bff1050a3bf784cbf75b0ed42092"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert block of 2x2 neas to sparse matrix.  <a href="#a8275bff1050a3bf784cbf75b0ed42092">More...</a><br/></td></tr>
 <tr class="separator:a8275bff1050a3bf784cbf75b0ed42092"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a107d696093a361bb8d4d30b32b7ec6a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a107d696093a361bb8d4d30b32b7ec6a7">psfr_calc</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *opdr, <a class="el" href="structdcell.html">dcell</a> *dmpsol, <a class="el" href="structdcell.html">dcell</a> *dmerr, <a class="el" href="structdcell.html">dcell</a> *dmerr_lo)</td></tr>
-<tr class="memdesc:a107d696093a361bb8d4d30b32b7ec6a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute and save PSF reconstruction telemetry.  <a href="#a107d696093a361bb8d4d30b32b7ec6a7">More...</a><br/></td></tr>
 <tr class="separator:a107d696093a361bb8d4d30b32b7ec6a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cdd8da33de20c241e64bdf98cae94bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a9cdd8da33de20c241e64bdf98cae94bf">shift_grad</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a9cdd8da33de20c241e64bdf98cae94bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shift gradient when new gradients are ready (in the end of parallel section in sim in CL or wfsgrad in OL).  <a href="#a9cdd8da33de20c241e64bdf98cae94bf">More...</a><br/></td></tr>
 <tr class="separator:a9cdd8da33de20c241e64bdf98cae94bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a347342c8605c1f0acf2ddbe61af37b1e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a347342c8605c1f0acf2ddbe61af37b1e">act_coord2ind</a> (<a class="el" href="structloc__t.html">loc_t</a> *aloc, const char *fndead)</td></tr>
-<tr class="memdesc:a347342c8605c1f0acf2ddbe61af37b1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse the input dead actuator location to actuator indices based on aloc.  <a href="#a347342c8605c1f0acf2ddbe61af37b1e">More...</a><br/></td></tr>
 <tr class="separator:a347342c8605c1f0acf2ddbe61af37b1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4dad2b40e77e5deb5541b26836127000"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structCN2EST__T.html">CN2EST_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a4dad2b40e77e5deb5541b26836127000">cn2est_prepare</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="memdesc:a4dad2b40e77e5deb5541b26836127000"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepare arrays for cn2 estimation.  <a href="#a4dad2b40e77e5deb5541b26836127000">More...</a><br/></td></tr>
 <tr class="separator:a4dad2b40e77e5deb5541b26836127000"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af11defbf2b8309f759eafb62e3213220"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#af11defbf2b8309f759eafb62e3213220">cn2est_isim</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structdcell.html">dcell</a> *grad)</td></tr>
-<tr class="memdesc:af11defbf2b8309f759eafb62e3213220"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper of Cn2 Estimation operations in <a class="el" href="recon_8c.html" title="Wavefront reconstruction and DM fitting routines. ">recon.c</a>.  <a href="#af11defbf2b8309f759eafb62e3213220">More...</a><br/></td></tr>
 <tr class="separator:af11defbf2b8309f759eafb62e3213220"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -219,9 +193,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply tomography left hand side operator without using assembled matrix. </p>
-<p>Fast and saves memory. Only useful in CG. Accumulates to xout;</p>
+<p>Apply tomography left hand side operator without using assembled matrix. Fast and saves memory. Only useful in CG. Accumulates to xout;</p>
 <p>Some timing information: Generated in T410s with Intel Core i5 520 M @ 2.4 GHz (1 T is 1 thread, 2 T is 2 thread) and Poweredge with dual Xeon X5355 2.66Ghz (1 P is 1 thread, 8 P is 8 thread) Time 1 T 2 T 1 P 8 P HXW: 7.8 5.4 7.7 5.0 GP: 4.3 2.6 3.6 1.4 TTFR: 0.3 0.3 0.4 0.6 neai: 0.5 0.3 0.5 0.4 GP': 3.2 2.1 3.4 1.0 HXW': 5.5 4.7 7.4 4.9 cxx: 3.2 2.5 3.5 2.7 </p>
 
 </div>
@@ -268,7 +240,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Apply Laplacian2 to xin and accumulates to xout. </p>
 
 </div>
@@ -320,9 +291,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. </p>
-<p>do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p>
+<p>Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
@@ -374,9 +343,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply fractal regularization to x, scaled by alpha. </p>
-<p>do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p>
+<p>Apply fractal regularization to x, scaled by alpha. do nothing if xb != yb, since we apply to diagonal only. if xb==-1, do all blocks. </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>: this is not thread safe. </dd></dl>
 
 </div>
@@ -410,9 +377,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Removing Tip/Tilt/Focus from LGS grads. </p>
-<p>TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea </p>
+<p>Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea </p>
 
 </div>
 </div>
@@ -445,9 +410,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Removing Tip/Tilt/Focus from LGS grads. </p>
-<p>TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea </p>
+<p>Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. It is not diagonal if differential focus is removed. So cannot be in Tomo_nea </p>
 
 </div>
 </div>
@@ -486,9 +449,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>apply weighting W0/W1 with weighting wt for each block. </p>
-<p>W0*xin-W1*(W1'*xin); </p>
+<p>apply weighting W0/W1 with weighting wt for each block. W0*xin-W1*(W1'*xin); </p>
 
 </div>
 </div>
@@ -533,8 +494,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute W0/W1 weighted dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_16.png"/>. </p>
+<p>Compute W0/W1 weighted dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_16.png"/> </p>
 
 </div>
 </div>
@@ -561,8 +521,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Wrapper of Tomo_prop_do. </p>
+<p>Wrapper of Tomo_prop_do </p>
 
 </div>
 </div>
@@ -589,8 +548,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Wrapper of Tomo_iprop_do. </p>
+<p>Wrapper of Tomo_iprop_do </p>
 
 </div>
 </div>
@@ -629,9 +587,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply tomography right hand operator without using assembled matrix. </p>
-<p>Fast and saves memory. The operation is the same as the Tomo_nea and Tomo_iprop in TomoL, so merge the implemenations.</p>
+<p>Apply tomography right hand operator without using assembled matrix. Fast and saves memory. The operation is the same as the Tomo_nea and Tomo_iprop in TomoL, so merge the implemenations.</p>
 <p>xout=HXW'<em>GP'*NEAI</em>(1-TTF*PTTF)*gin. </p>
 
 </div>
@@ -671,9 +627,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Transpose operation of TomoRt. </p>
-<p>From xout -&gt; gin </p>
+<p>Transpose operation of TomoRt. From xout -&gt; gin </p>
 
 </div>
 </div>
@@ -712,9 +666,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply fit right hand side matrix in CG mode without using assembled matrix. </p>
-<p>Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
+<p>Apply fit right hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
 
 </div>
 </div>
@@ -753,9 +705,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply fit left hand side matrix in CG mode without using assembled matrix. </p>
-<p>Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
+<p>Apply fit left hand side matrix in CG mode without using assembled matrix. Slow. don't use. Assembled matrix is faster because of multiple directions. </p>
 
 </div>
 </div>
@@ -782,7 +732,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Convert block of 2x2 neas to sparse matrix. </p>
 
 </div>
@@ -828,9 +777,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute and save PSF reconstruction telemetry. </p>
-<p>For pseudo open loop estimations, like high order loop, we add opdr to, and subtract dmpsol from the OPD. For closed loop estimations, like ahst low order or lsr, we add dmerr_lo, and dmerr to the OPD. </p>
+<p>Compute and save PSF reconstruction telemetry. For pseudo open loop estimations, like high order loop, we add opdr to, and subtract dmpsol from the OPD. For closed loop estimations, like ahst low order or lsr, we add dmerr_lo, and dmerr to the OPD. </p>
 
 </div>
 </div>
@@ -847,9 +794,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Shift gradient when new gradients are ready (in the end of parallel section in sim in CL or wfsgrad in OL). </p>
-<p>Do not execute in parallel with other routines. In GLAO mode, also averaged gradients from the same type of powfs. </p>
+<p>Shift gradient when new gradients are ready (in the end of parallel section in sim in CL or wfsgrad in OL). Do not execute in parallel with other routines. In GLAO mode, also averaged gradients from the same type of powfs. </p>
 
 </div>
 </div>
@@ -876,9 +821,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Parse the input dead actuator location to actuator indices based on aloc. </p>
-<p>2015-03-30: build a mask for dead actuators based on coordinate. </p>
+<p>Parse the input dead actuator location to actuator indices based on aloc. 2015-03-30: build a mask for dead actuators based on coordinate. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aloc</td><td>Aloc </td></tr>
@@ -912,9 +855,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Prepare arrays for cn2 estimation. </p>
-<p>Multiple pairs can be used to do Cn2 Estimation. The result will be an average of them. </p>
+<p>Prepare arrays for cn2 estimation. Multiple pairs can be used to do Cn2 Estimation. The result will be an average of them. </p>
 
 </div>
 </div>
@@ -947,8 +888,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TomoL</b> (<a class="
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Wrapper of Cn2 Estimation operations in <a class="el" href="recon_8c.html" title="Wavefront reconstruction and DM fitting routines. ">recon.c</a>. </p>
+<p>Wrapper of Cn2 Estimation operations in <a class="el" href="recon_8c.html">recon.c</a> </p>
 
 </div>
 </div>

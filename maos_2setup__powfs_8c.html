@@ -112,10 +112,11 @@ $(document).ready(function(){initNavTree('maos_2setup__powfs_8c.html','');});
 <div class="title">setup_powfs.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Setting up WFS geometry.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;setup_powfs.h&quot;</code><br/>
+<code>#include &quot;mtch.h&quot;</code><br/>
+<code>#include &quot;genseotf.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ae2f2638a878b96a88d02c346d003a0fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2f2638a878b96a88d02c346d003a0fa"></a>
@@ -149,13 +150,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_misreg</b
 void *&#160;</td><td class="memItemRight" valign="bottom"><b>mketf_wrap</b> (mketf_t *data)</td></tr>
 <tr class="separator:aa71646a7c88e20cf1e71b120f576f419"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abd59ad37c2a3372a70066e4b5cf34ac1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#abd59ad37c2a3372a70066e4b5cf34ac1">setup_powfs_etf</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs, int mode, int istep)</td></tr>
-<tr class="memdesc:abd59ad37c2a3372a70066e4b5cf34ac1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Elongation Transfer function.  <a href="#abd59ad37c2a3372a70066e4b5cf34ac1">More...</a><br/></td></tr>
 <tr class="separator:abd59ad37c2a3372a70066e4b5cf34ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82d4fdb55bc76fdeef5e973db095c9fc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a82d4fdb55bc76fdeef5e973db095c9fc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_calib</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structloccell.html">loccell</a> *aloc, <a class="el" href="structdcell.html">dcell</a> *dm_ncpa)</td></tr>
 <tr class="separator:a82d4fdb55bc76fdeef5e973db095c9fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5c6252f2e6a017bf057d45f5447c049"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#ab5c6252f2e6a017bf057d45f5447c049">setup_powfs_init</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
-<tr class="memdesc:ab5c6252f2e6a017bf057d45f5447c049"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup the powfs struct based on parms and aper.  <a href="#ab5c6252f2e6a017bf057d45f5447c049">More...</a><br/></td></tr>
 <tr class="separator:ab5c6252f2e6a017bf057d45f5447c049"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac1fbeda2f6ec733c358e17742e5029f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1fbeda2f6ec733c358e17742e5029f7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_phy</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
@@ -167,15 +166,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_unused</b>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_shwfs</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
 <tr class="separator:a4768b66eb8cc4b10c004fc93a602b427"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fdd29141f0d60af1fd7c6b2385f0031"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a4fdd29141f0d60af1fd7c6b2385f0031">free_powfs</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="memdesc:a4fdd29141f0d60af1fd7c6b2385f0031"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free all parameters of powfs at the end of simulation.  <a href="#a4fdd29141f0d60af1fd7c6b2385f0031">More...</a><br/></td></tr>
 <tr class="separator:a4fdd29141f0d60af1fd7c6b2385f0031"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Setting up WFS geometry. </p>
-<p>like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.</p>
+<div class="textblock"><p>Setting up WFS geometry. like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
 <p>Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space.</p>
-<p>TODO: This routine and <a class="el" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS. ">POWFS_T</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
+<p>TODO: This routine and <a class="el" href="structPOWFS__T.html">POWFS_T</a> should only contain information about the simulation, not about any model used during reconstruction (RTC) to avoid leaking information from the "real world (simulation)" to our knowledge (RTC). </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="abd59ad37c2a3372a70066e4b5cf34ac1"></a>
 <div class="memitem">
@@ -218,8 +215,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_shwfs</b> 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute Elongation Transfer function. </p>
+<p>Compute Elongation Transfer function.</p>
 <ul>
 <li>mode=0: for preparation.</li>
 <li>mode=1: for simulation. </li>
@@ -250,9 +246,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_shwfs</b> 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Setup the powfs struct based on parms and aper. </p>
-<p>Everything about wfs are setup here. </p>
+<p>Setup the powfs struct based on parms and aper. Everything about wfs are setup here. </p>
 
 </div>
 </div>
@@ -279,7 +273,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_shwfs</b> 
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Free all parameters of powfs at the end of simulation. </p>
 
 </div>

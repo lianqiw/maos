@@ -8,7 +8,5 @@ var searchData=
   ['process_2eh',['process.h',['../process_8h.html',1,'']]],
   ['proj_2eh',['proj.h',['../proj_8h.html',1,'']]],
   ['psd_2eh',['psd.h',['../psd_8h.html',1,'']]],
-  ['psfgc_2ec',['psfgc.c',['../psfgc_8c.html',1,'']]],
-  ['psfiris_2ec',['psfiris.c',['../psfiris_8c.html',1,'']]],
   ['pywfs_2ec',['pywfs.c',['../pywfs_8c.html',1,'']]]
 ];

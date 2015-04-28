@@ -112,10 +112,9 @@ $(document).ready(function(){initNavTree('loc_8h.html','');});
 <div class="title">loc.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>This file defines functions relates to <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a>, <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>, <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>, etc.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;mathdef.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="type_8h.html">type.h</a>&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a9397038fc362584506d8dc1d1e5c441b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9397038fc362584506d8dc1d1e5c441b"></a>
@@ -146,13 +145,10 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a693cf06f5fe586acdbb835a69628bd04"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a693cf06f5fe586acdbb835a69628bd04">loc_create_embed</a> (long *nembed, const <a class="el" href="structloc__t.html">loc_t</a> *loc, double oversize, int fftpad)</td></tr>
-<tr class="memdesc:a693cf06f5fe586acdbb835a69628bd04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an vector to embed OPD into square array for FFT purpose.  <a href="#a693cf06f5fe586acdbb835a69628bd04">More...</a><br/></td></tr>
 <tr class="separator:a693cf06f5fe586acdbb835a69628bd04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15b161f5f2373e7b0144dd4b188df4df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a15b161f5f2373e7b0144dd4b188df4df">loc_create_map_npad</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, int npad, int nx, int ny)</td></tr>
-<tr class="memdesc:a15b161f5f2373e7b0144dd4b188df4df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a map for loc so that we can obtain the index in loc by x,y coordinate.  <a href="#a15b161f5f2373e7b0144dd4b188df4df">More...</a><br/></td></tr>
 <tr class="separator:a15b161f5f2373e7b0144dd4b188df4df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3b2280ea7b47be6321e96d02a1f2f9e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ae3b2280ea7b47be6321e96d02a1f2f9e">loc_create_map</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:ae3b2280ea7b47be6321e96d02a1f2f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a map for loc with padding of 1.  <a href="#ae3b2280ea7b47be6321e96d02a1f2f9e">More...</a><br/></td></tr>
 <tr class="separator:ae3b2280ea7b47be6321e96d02a1f2f9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e133b23134b9c1b92e6d0997720393f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9e133b23134b9c1b92e6d0997720393f"></a>
 long&#160;</td><td class="memItemRight" valign="bottom"><b>loc_map_get</b> (<a class="el" href="structmap__t.html">map_t</a> *map, long ix, long iy)</td></tr>
@@ -167,157 +163,107 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_embed_add</b> (<a
 void&#160;</td><td class="memItemRight" valign="bottom"><b>loc_extract</b> (<a class="el" href="structdmat.html">dmat</a> *dest, const <a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structmap__t.html">map_t</a> *in)</td></tr>
 <tr class="separator:a907129388439c75da938eb78d551566f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acece66522afd9f8b8bf2e0d0b57d39d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#acece66522afd9f8b8bf2e0d0b57d39d3">map2loc</a> (<a class="el" href="structmap__t.html">map_t</a> *amp)</td></tr>
-<tr class="memdesc:acece66522afd9f8b8bf2e0d0b57d39d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a map to a loc that collects all positive entries.  <a href="#acece66522afd9f8b8bf2e0d0b57d39d3">More...</a><br/></td></tr>
 <tr class="separator:acece66522afd9f8b8bf2e0d0b57d39d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbc2aac077ef9ac37c7f50d8c743c4a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#abbc2aac077ef9ac37c7f50d8c743c4a1">rmapfree_do</a> (<a class="el" href="structrmap__t.html">rmap_t</a> *map)</td></tr>
-<tr class="memdesc:abbc2aac077ef9ac37c7f50d8c743c4a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structrmap__t.html" title="Map with different x/y sampling. ">rmap_t</a> data.  <a href="#abbc2aac077ef9ac37c7f50d8c743c4a1">More...</a><br/></td></tr>
 <tr class="separator:abbc2aac077ef9ac37c7f50d8c743c4a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af36a619fec3cc46210fa10f8b8a79d2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af36a619fec3cc46210fa10f8b8a79d2b">mapfree_do</a> (<a class="el" href="structmap__t.html">map_t</a> *map)</td></tr>
-<tr class="memdesc:af36a619fec3cc46210fa10f8b8a79d2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> data.  <a href="#af36a619fec3cc46210fa10f8b8a79d2b">More...</a><br/></td></tr>
 <tr class="separator:af36a619fec3cc46210fa10f8b8a79d2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5a3cefb3d9828271afbf1205cb43bbcd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a5a3cefb3d9828271afbf1205cb43bbcd">maparrfree_do</a> (<a class="el" href="structmap__t.html">map_t</a> **map, int nmap)</td></tr>
-<tr class="memdesc:a5a3cefb3d9828271afbf1205cb43bbcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array.  <a href="#a5a3cefb3d9828271afbf1205cb43bbcd">More...</a><br/></td></tr>
 <tr class="separator:a5a3cefb3d9828271afbf1205cb43bbcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51fe49fb09ca33713b0abd3c62fb4915"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a51fe49fb09ca33713b0abd3c62fb4915">loc_free_map</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a51fe49fb09ca33713b0abd3c62fb4915"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free the MAP in <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>.  <a href="#a51fe49fb09ca33713b0abd3c62fb4915">More...</a><br/></td></tr>
 <tr class="separator:a51fe49fb09ca33713b0abd3c62fb4915"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa53d0ffe413fe5002244699bfb7d641b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#aa53d0ffe413fe5002244699bfb7d641b">locfree_do</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:aa53d0ffe413fe5002244699bfb7d641b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> data.  <a href="#aa53d0ffe413fe5002244699bfb7d641b">More...</a><br/></td></tr>
 <tr class="separator:aa53d0ffe413fe5002244699bfb7d641b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7b39637e20709c2f21454a43dd1f227"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#aa7b39637e20709c2f21454a43dd1f227">ptsfree_do</a> (<a class="el" href="structpts__t.html">pts_t</a> *pts)</td></tr>
-<tr class="memdesc:aa7b39637e20709c2f21454a43dd1f227"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a> data.  <a href="#aa7b39637e20709c2f21454a43dd1f227">More...</a><br/></td></tr>
 <tr class="separator:aa7b39637e20709c2f21454a43dd1f227"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09a53c4553b6b5edea84a81470d530df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a09a53c4553b6b5edea84a81470d530df">locarrfree_do</a> (<a class="el" href="structloc__t.html">loc_t</a> **loc, int nloc)</td></tr>
-<tr class="memdesc:a09a53c4553b6b5edea84a81470d530df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> array.  <a href="#a09a53c4553b6b5edea84a81470d530df">More...</a><br/></td></tr>
 <tr class="separator:a09a53c4553b6b5edea84a81470d530df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b269d86e10f1ee15269fe7ce459fea2"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a1b269d86e10f1ee15269fe7ce459fea2">loc_diam</a> (const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a1b269d86e10f1ee15269fe7ce459fea2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Estimate the diameter of loc.  <a href="#a1b269d86e10f1ee15269fe7ce459fea2">More...</a><br/></td></tr>
 <tr class="separator:a1b269d86e10f1ee15269fe7ce459fea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a061a12b16222483d272d19cf53030f1c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a061a12b16222483d272d19cf53030f1c">loccenter</a> (const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a061a12b16222483d272d19cf53030f1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the point that closes to origin (0,0) in loc.  <a href="#a061a12b16222483d272d19cf53030f1c">More...</a><br/></td></tr>
 <tr class="separator:a061a12b16222483d272d19cf53030f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ffc0fceed3940f64a99ce1e0f4a5903"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a1ffc0fceed3940f64a99ce1e0f4a5903">locnew</a> (long nloc, double dx, double dy)</td></tr>
-<tr class="memdesc:a1ffc0fceed3940f64a99ce1e0f4a5903"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc with nloc elements.  <a href="#a1ffc0fceed3940f64a99ce1e0f4a5903">More...</a><br/></td></tr>
 <tr class="separator:a1ffc0fceed3940f64a99ce1e0f4a5903"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28ff7f3346e3697d1f9c699b27b6d862"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structpts__t.html">pts_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a28ff7f3346e3697d1f9c699b27b6d862">ptsnew</a> (long nsa, double dsax, double dsay, long nx, double dx, double dy)</td></tr>
-<tr class="memdesc:a28ff7f3346e3697d1f9c699b27b6d862"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a pts with nsa, dsa, nx, dx.  <a href="#a28ff7f3346e3697d1f9c699b27b6d862">More...</a><br/></td></tr>
 <tr class="separator:a28ff7f3346e3697d1f9c699b27b6d862"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac69d715119dab849084d00b76fd88d1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ac69d715119dab849084d00b76fd88d1a">loc_calc_ptt</a> (double *out, double *coeffout, const <a class="el" href="structloc__t.html">loc_t</a> *loc, const double ipcc, const <a class="el" href="structdmat.html">dmat</a> *imcc, const double *amp, const double *opd)</td></tr>
-<tr class="memdesc:ac69d715119dab849084d00b76fd88d1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">evaluate piston/tip-tilt/ removed wavefront error.  <a href="#ac69d715119dab849084d00b76fd88d1a">More...</a><br/></td></tr>
 <tr class="separator:ac69d715119dab849084d00b76fd88d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf80440f82c491521a1b6316d0793652"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#adf80440f82c491521a1b6316d0793652">loc_calc_mod</a> (double *out, double *coeffout, const <a class="el" href="structdmat.html">dmat</a> *mod, const double *amp, double *opd)</td></tr>
-<tr class="memdesc:adf80440f82c491521a1b6316d0793652"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate variance of OPD in modes defined in mod.  <a href="#adf80440f82c491521a1b6316d0793652">More...</a><br/></td></tr>
 <tr class="separator:adf80440f82c491521a1b6316d0793652"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac68b764561e8b6fb72a5fba2846987ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ac68b764561e8b6fb72a5fba2846987ab">loc_mcc_ptt</a> (const <a class="el" href="structloc__t.html">loc_t</a> *loc, const double *amp)</td></tr>
-<tr class="memdesc:ac68b764561e8b6fb72a5fba2846987ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their inverse covariance matrix.  <a href="#ac68b764561e8b6fb72a5fba2846987ab">More...</a><br/></td></tr>
 <tr class="separator:ac68b764561e8b6fb72a5fba2846987ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a63e86597be21bbacacaa223ef87c1489"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a63e86597be21bbacacaa223ef87c1489">pts_mcc_ptt</a> (const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *amp)</td></tr>
-<tr class="memdesc:a63e86597be21bbacacaa223ef87c1489"><td class="mdescLeft">&#160;</td><td class="mdescRight">same as loc_mcc_ptt, except using pts instead of loc.  <a href="#a63e86597be21bbacacaa223ef87c1489">More...</a><br/></td></tr>
 <tr class="separator:a63e86597be21bbacacaa223ef87c1489"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1e416804268cba258c31ad4b017d2bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab1e416804268cba258c31ad4b017d2bd">loc_remove_ptt</a> (double *opd, const double *ptt, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:ab1e416804268cba258c31ad4b017d2bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove Piston/Tip/Tilt (in radian) from OPD.  <a href="#ab1e416804268cba258c31ad4b017d2bd">More...</a><br/></td></tr>
 <tr class="separator:ab1e416804268cba258c31ad4b017d2bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43b690f19e294542434f1c9ff5f1c501"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a43b690f19e294542434f1c9ff5f1c501">loc_add_ptt</a> (double *opd, const double *ptt, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a43b690f19e294542434f1c9ff5f1c501"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add Piston/Tip/Tilt from OPD.  <a href="#a43b690f19e294542434f1c9ff5f1c501">More...</a><br/></td></tr>
 <tr class="separator:a43b690f19e294542434f1c9ff5f1c501"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a122174d03dd9ec3ef20dfe7c90d5e89c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a122174d03dd9ec3ef20dfe7c90d5e89c">pts_ztilt</a> (<a class="el" href="structdmat.html">dmat</a> **out, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const <a class="el" href="structdcell.html">dcell</a> *imcc, const double *amp, const double *opd)</td></tr>
-<tr class="memdesc:a122174d03dd9ec3ef20dfe7c90d5e89c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute zernike best fit for all subapertures.  <a href="#a122174d03dd9ec3ef20dfe7c90d5e89c">More...</a><br/></td></tr>
 <tr class="separator:a122174d03dd9ec3ef20dfe7c90d5e89c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c33adabbaa1b953c570eecc6ecb5bc4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a9c33adabbaa1b953c570eecc6ecb5bc4">mk1dloc_vec</a> (double *x, long nx)</td></tr>
-<tr class="memdesc:a9c33adabbaa1b953c570eecc6ecb5bc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create 1 dimensional loc with given vector.  <a href="#a9c33adabbaa1b953c570eecc6ecb5bc4">More...</a><br/></td></tr>
 <tr class="separator:a9c33adabbaa1b953c570eecc6ecb5bc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4f2a4c729eb6264e05d8c1179b4226f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a4f2a4c729eb6264e05d8c1179b4226f9">mk1dloc</a> (double x0, double dx, long nx)</td></tr>
-<tr class="memdesc:a4f2a4c729eb6264e05d8c1179b4226f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.  <a href="#a4f2a4c729eb6264e05d8c1179b4226f9">More...</a><br/></td></tr>
 <tr class="separator:a4f2a4c729eb6264e05d8c1179b4226f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6635eb1596c6fe758285c1f1e750ea6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#aa6635eb1596c6fe758285c1f1e750ea6">mksqloc_auto</a> (long nx, long ny, double dx, double dy)</td></tr>
-<tr class="memdesc:aa6635eb1596c6fe758285c1f1e750ea6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)  <a href="#aa6635eb1596c6fe758285c1f1e750ea6">More...</a><br/></td></tr>
 <tr class="separator:aa6635eb1596c6fe758285c1f1e750ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3c8ed8e16d223414bbd4132752252a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ae3c8ed8e16d223414bbd4132752252a6">mksqloc_map</a> (<a class="el" href="structmap__t.html">map_t</a> *map)</td></tr>
-<tr class="memdesc:ae3c8ed8e16d223414bbd4132752252a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array that covers the <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#ae3c8ed8e16d223414bbd4132752252a6">More...</a><br/></td></tr>
 <tr class="separator:ae3c8ed8e16d223414bbd4132752252a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e88b64b40915848e62d802f98a3183f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a1e88b64b40915848e62d802f98a3183f">mksqloc</a> (long nx, long ny, double dx, double dy, double ox, double oy)</td></tr>
-<tr class="memdesc:a1e88b64b40915848e62d802f98a3183f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy.  <a href="#a1e88b64b40915848e62d802f98a3183f">More...</a><br/></td></tr>
 <tr class="separator:a1e88b64b40915848e62d802f98a3183f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67ecca0c93a5633b2039574d754fd9ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a67ecca0c93a5633b2039574d754fd9ca">mksqlocrot</a> (long nx, long ny, double dx, double dy, double ox, double oy, double theta)</td></tr>
-<tr class="memdesc:a67ecca0c93a5633b2039574d754fd9ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">like mksqloc, but roated theta CCW.  <a href="#a67ecca0c93a5633b2039574d754fd9ca">More...</a><br/></td></tr>
 <tr class="separator:a67ecca0c93a5633b2039574d754fd9ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab546034c046ad5d125e7f56c42a309aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab546034c046ad5d125e7f56c42a309aa">mkcirloc</a> (double D, double dx)</td></tr>
-<tr class="memdesc:ab546034c046ad5d125e7f56c42a309aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array within diameter D, with spacing dx.  <a href="#ab546034c046ad5d125e7f56c42a309aa">More...</a><br/></td></tr>
 <tr class="separator:ab546034c046ad5d125e7f56c42a309aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9edbafa21c09482df62b0fc8e67bdd9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af9edbafa21c09482df62b0fc8e67bdd9">loc_create_stat_do</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:af9edbafa21c09482df62b0fc8e67bdd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gather information about the starting of each column in loc.  <a href="#af9edbafa21c09482df62b0fc8e67bdd9">More...</a><br/></td></tr>
 <tr class="separator:af9edbafa21c09482df62b0fc8e67bdd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d8fd7f128a52013ed66af307793e0e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a5d8fd7f128a52013ed66af307793e0e9">loc_free_stat</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a5d8fd7f128a52013ed66af307793e0e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free the stat in <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>.  <a href="#a5d8fd7f128a52013ed66af307793e0e9">More...</a><br/></td></tr>
 <tr class="separator:a5d8fd7f128a52013ed66af307793e0e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac744d2a40bf5ff11ea78d26eff7b0ede"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ac744d2a40bf5ff11ea78d26eff7b0ede">loccircle</a> (double *phi, <a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double r, double val)</td></tr>
-<tr class="memdesc:ac744d2a40bf5ff11ea78d26eff7b0ede"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a gray pixel circular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val.  <a href="#ac744d2a40bf5ff11ea78d26eff7b0ede">More...</a><br/></td></tr>
 <tr class="separator:ac744d2a40bf5ff11ea78d26eff7b0ede"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe2cf8db3da8ef14b91a3f893205b035"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#afe2cf8db3da8ef14b91a3f893205b035">locannular</a> (double *phi, <a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double r, double rin, double val)</td></tr>
-<tr class="memdesc:afe2cf8db3da8ef14b91a3f893205b035"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a gray pixel annular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val.  <a href="#afe2cf8db3da8ef14b91a3f893205b035">More...</a><br/></td></tr>
 <tr class="separator:afe2cf8db3da8ef14b91a3f893205b035"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7bbd426fda390db5f7b38265f5180234"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a7bbd426fda390db5f7b38265f5180234">locannularmask</a> (double *phi, <a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double r, double rin)</td></tr>
-<tr class="memdesc:a7bbd426fda390db5f7b38265f5180234"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a hard annular mask in phi.  <a href="#a7bbd426fda390db5f7b38265f5180234">More...</a><br/></td></tr>
 <tr class="separator:a7bbd426fda390db5f7b38265f5180234"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a446e5c2b1df43113645cd4b5251e6ec2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a446e5c2b1df43113645cd4b5251e6ec2">locellipse</a> (double *phi, <a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double rx, double ry, double val)</td></tr>
-<tr class="memdesc:a446e5c2b1df43113645cd4b5251e6ec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a gray pixel elliptical map in phi using coordinates defined in loc, center defined using cx, cy, radii of rx, ry, and value of val.  <a href="#a446e5c2b1df43113645cd4b5251e6ec2">More...</a><br/></td></tr>
 <tr class="separator:a446e5c2b1df43113645cd4b5251e6ec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6f7fd45e3251caf44eaeee9e47b6b9d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ac6f7fd45e3251caf44eaeee9e47b6b9d">loc_reduce</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdmat.html">dmat</a> *amp, double thres, int cont, int **skipout)</td></tr>
-<tr class="memdesc:ac6f7fd45e3251caf44eaeee9e47b6b9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove points in loc that have zero value in amp and modify amp in the same time.  <a href="#ac6f7fd45e3251caf44eaeee9e47b6b9d">More...</a><br/></td></tr>
 <tr class="separator:ac6f7fd45e3251caf44eaeee9e47b6b9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2bbfc477710e2aa86c65630e07c786"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a8a2bbfc477710e2aa86c65630e07c786">loc_reduce_spcell</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdspcell.html">dspcell</a> *sp, int dim, int cont)</td></tr>
-<tr class="memdesc:a8a2bbfc477710e2aa86c65630e07c786"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove uncoupled points in loc and modify spc in the same time.  <a href="#a8a2bbfc477710e2aa86c65630e07c786">More...</a><br/></td></tr>
 <tr class="separator:a8a2bbfc477710e2aa86c65630e07c786"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ace526a66d1e3f71d9585bc75a48edee1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ace526a66d1e3f71d9585bc75a48edee1">loc_reduce_sp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdsp.html">dsp</a> *sp, int dim, int cont)</td></tr>
-<tr class="memdesc:ace526a66d1e3f71d9585bc75a48edee1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove uncoupled points in loc and modify sp in the same time.  <a href="#ace526a66d1e3f71d9585bc75a48edee1">More...</a><br/></td></tr>
 <tr class="separator:ace526a66d1e3f71d9585bc75a48edee1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97ddd2f3a4448e5394197a69d88dfe86"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a97ddd2f3a4448e5394197a69d88dfe86">loc_add_focus</a> (double *opd, <a class="el" href="structloc__t.html">loc_t</a> *loc, double val)</td></tr>
-<tr class="memdesc:a97ddd2f3a4448e5394197a69d88dfe86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add val amount of focus to opd.  <a href="#a97ddd2f3a4448e5394197a69d88dfe86">More...</a><br/></td></tr>
 <tr class="separator:a97ddd2f3a4448e5394197a69d88dfe86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2802210958b6877d9ee6eb7198b8b35e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a2802210958b6877d9ee6eb7198b8b35e">loc2mat</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, int piston)</td></tr>
-<tr class="memdesc:a2802210958b6877d9ee6eb7198b8b35e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a dmat containing locx and locy in two columns.  <a href="#a2802210958b6877d9ee6eb7198b8b35e">More...</a><br/></td></tr>
 <tr class="separator:a2802210958b6877d9ee6eb7198b8b35e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d528e34a7d8b4e5e3d034480db6a2de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a4d528e34a7d8b4e5e3d034480db6a2de">pts2loc</a> (<a class="el" href="structpts__t.html">pts_t</a> *pts)</td></tr>
-<tr class="memdesc:a4d528e34a7d8b4e5e3d034480db6a2de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a> to <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>.  <a href="#a4d528e34a7d8b4e5e3d034480db6a2de">More...</a><br/></td></tr>
 <tr class="separator:a4d528e34a7d8b4e5e3d034480db6a2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab69c225c64ec68bf802f11586f5e6d79"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab69c225c64ec68bf802f11586f5e6d79">locrot</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const double theta)</td></tr>
-<tr class="memdesc:ab69c225c64ec68bf802f11586f5e6d79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotate the coordinates by theta CCW.  <a href="#ab69c225c64ec68bf802f11586f5e6d79">More...</a><br/></td></tr>
 <tr class="separator:ab69c225c64ec68bf802f11586f5e6d79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cde9c71833ed0c72f04e868f343b508"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a2cde9c71833ed0c72f04e868f343b508">locdup</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a2cde9c71833ed0c72f04e868f343b508"><td class="mdescLeft">&#160;</td><td class="mdescRight">duplicate a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> object;  <a href="#a2cde9c71833ed0c72f04e868f343b508">More...</a><br/></td></tr>
 <tr class="separator:a2cde9c71833ed0c72f04e868f343b508"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43403e4e1e651451d9dc34c251c2aa54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a43403e4e1e651451d9dc34c251c2aa54">loctransform</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, const char *ps)</td></tr>
-<tr class="memdesc:a43403e4e1e651451d9dc34c251c2aa54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transform coordinate.  <a href="#a43403e4e1e651451d9dc34c251c2aa54">More...</a><br/></td></tr>
 <tr class="separator:a43403e4e1e651451d9dc34c251c2aa54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73d1239e6a32b16cfb9c37a0336aa4f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a73d1239e6a32b16cfb9c37a0336aa4f3">locshift</a> (const <a class="el" href="structloc__t.html">loc_t</a> *loc, double sx, double sy)</td></tr>
-<tr class="memdesc:a73d1239e6a32b16cfb9c37a0336aa4f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shift a loc coordinate.  <a href="#a73d1239e6a32b16cfb9c37a0336aa4f3">More...</a><br/></td></tr>
 <tr class="separator:a73d1239e6a32b16cfb9c37a0336aa4f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a661df971a3fe89b0c20a4f9b81772f33"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a661df971a3fe89b0c20a4f9b81772f33">loc_nxny</a> (long *nx, long *ny, const <a class="el" href="structloc__t.html">loc_t</a> *loc)</td></tr>
-<tr class="memdesc:a661df971a3fe89b0c20a4f9b81772f33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the size of a map that is used to build loc or can fully contain loc (embed)  <a href="#a661df971a3fe89b0c20a4f9b81772f33">More...</a><br/></td></tr>
 <tr class="separator:a661df971a3fe89b0c20a4f9b81772f33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b68edbf98776ab061009bd415ce0a02"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a8b68edbf98776ab061009bd415ce0a02">mapnew</a> (long nx, long ny, double dx, double dy, double *p)</td></tr>
-<tr class="memdesc:a8b68edbf98776ab061009bd415ce0a02"><td class="mdescLeft">&#160;</td><td class="mdescRight">create a new <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> object.  <a href="#a8b68edbf98776ab061009bd415ce0a02">More...</a><br/></td></tr>
 <tr class="separator:a8b68edbf98776ab061009bd415ce0a02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a509760a9136ead882e0750c7480e39fe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a509760a9136ead882e0750c7480e39fe">mapnew2</a> (<a class="el" href="structmap__t.html">map_t</a> *A)</td></tr>
-<tr class="memdesc:a509760a9136ead882e0750c7480e39fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">ceate a new <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> object from existing one.  <a href="#a509760a9136ead882e0750c7480e39fe">More...</a><br/></td></tr>
 <tr class="separator:a509760a9136ead882e0750c7480e39fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9edf1c0283fa5cdd62b03554e71e97b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9edf1c0283fa5cdd62b03554e71e97b"></a>
 <a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>mapref</b> (<a class="el" href="structmap__t.html">map_t</a> *A)</td></tr>
 <tr class="separator:ad9edf1c0283fa5cdd62b03554e71e97b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af680f56c9560832bf1d2636cbb916a56"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#af680f56c9560832bf1d2636cbb916a56">mapcircle</a> (<a class="el" href="structmap__t.html">map_t</a> *map, double r, double val)</td></tr>
-<tr class="memdesc:af680f56c9560832bf1d2636cbb916a56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a circular aperture on <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#af680f56c9560832bf1d2636cbb916a56">More...</a><br/></td></tr>
 <tr class="separator:af680f56c9560832bf1d2636cbb916a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab18c8ba6da162b8eed12b17f73efe792"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab18c8ba6da162b8eed12b17f73efe792">mapcircle_symbolic</a> (<a class="el" href="structmap__t.html">map_t</a> *map, double r)</td></tr>
-<tr class="memdesc:ab18c8ba6da162b8eed12b17f73efe792"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a circular aperture on <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#ab18c8ba6da162b8eed12b17f73efe792">More...</a><br/></td></tr>
 <tr class="separator:ab18c8ba6da162b8eed12b17f73efe792"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1c28f7775898d769efe332e42f94177"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#ab1c28f7775898d769efe332e42f94177">map_d_din</a> (<a class="el" href="structmap__t.html">map_t</a> *map, double *d, double *din)</td></tr>
-<tr class="memdesc:ab1c28f7775898d769efe332e42f94177"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the inner and outer diameter of an amplitude map contained in <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>.  <a href="#ab1c28f7775898d769efe332e42f94177">More...</a><br/></td></tr>
 <tr class="separator:ab1c28f7775898d769efe332e42f94177"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97a4bc81f0485585532ff15189f33fb9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a97a4bc81f0485585532ff15189f33fb9">create_metapupil</a> (<a class="el" href="structmap__t.html">map_t</a> **map, long *nx, long *ny, <a class="el" href="structdmat.html">dmat</a> *dirs, double D, double ht, double dx, double dy, double offset, double guard, long ninx, long niny, int pad, int square)</td></tr>
-<tr class="memdesc:a97a4bc81f0485585532ff15189f33fb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, dy, height of ht, that can cover all the directions specified in dirs  <a href="#a97a4bc81f0485585532ff15189f33fb9">More...</a><br/></td></tr>
 <tr class="separator:a97a4bc81f0485585532ff15189f33fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d17a0ee145421054bd35a35b55fb05d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8h.html#a4d17a0ee145421054bd35a35b55fb05d">locresize</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, long nloc)</td></tr>
-<tr class="memdesc:a4d17a0ee145421054bd35a35b55fb05d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resize a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> by shrinking.  <a href="#a4d17a0ee145421054bd35a35b55fb05d">More...</a><br/></td></tr>
 <tr class="separator:a4d17a0ee145421054bd35a35b55fb05d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeac5639962b8331bf8a8d7e2d20622a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeac5639962b8331bf8a8d7e2d20622a8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<a class="el" href="structdmat.html">dmat</a> **out, double alpha, <a class="el" href="structloc__t.html">loc_t</a> *loc, double *oin, double beta, int reverse)</td></tr>
@@ -327,7 +273,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
 <tr class="separator:a2f7cad855397d203f8e69e0c86ee9e64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>This file defines functions relates to <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a>, <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>, <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>, etc. </p>
+<div class="textblock"><p>This file defines functions relates to <a class="el" href="structpts__t.html">pts_t</a>, <a class="el" href="structloc__t.html">loc_t</a>, <a class="el" href="structmap__t.html">map_t</a>, etc. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a693cf06f5fe586acdbb835a69628bd04"></a>
 <div class="memitem">
@@ -364,9 +310,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create an vector to embed OPD into square array for FFT purpose. </p>
-<p>oversize is 2 for fft. </p>
+<p>Create an vector to embed OPD into square array for FFT purpose. oversize is 2 for fft. </p>
 
 </div>
 </div>
@@ -405,9 +349,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a map for loc so that we can obtain the index in loc by x,y coordinate. </p>
-<p>Useful in ray tracing (accphi.c). If extend is true, the invalid region in the map is replaced with closest valid point. This extends the coverage of the grid automatically. </p>
+<p>Create a map for loc so that we can obtain the index in loc by x,y coordinate. Useful in ray tracing (accphi.c). If extend is true, the invalid region in the map is replaced with closest valid point. This extends the coverage of the grid automatically. </p>
 
 </div>
 </div>
@@ -424,7 +366,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a map for loc with padding of 1. </p>
 
 </div>
@@ -442,7 +383,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Convert a map to a loc that collects all positive entries. </p>
 
 </div>
@@ -460,8 +400,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structrmap__t.html" title="Map with different x/y sampling. ">rmap_t</a> data. </p>
+<p>Free <a class="el" href="structrmap__t.html">rmap_t</a> data </p>
 
 </div>
 </div>
@@ -478,8 +417,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> data. </p>
+<p>Free <a class="el" href="structmap__t.html">map_t</a> data </p>
 
 </div>
 </div>
@@ -506,8 +444,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> array. </p>
+<p>Free <a class="el" href="structmap__t.html">map_t</a> array </p>
 
 </div>
 </div>
@@ -524,8 +461,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free the MAP in <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>. </p>
+<p>Free the MAP in <a class="el" href="structloc__t.html">loc_t</a> </p>
 
 </div>
 </div>
@@ -542,8 +478,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> data. </p>
+<p>Free <a class="el" href="structloc__t.html">loc_t</a> data </p>
 
 </div>
 </div>
@@ -560,8 +495,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a> data. </p>
+<p>Free <a class="el" href="structpts__t.html">pts_t</a> data </p>
 
 </div>
 </div>
@@ -588,8 +522,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> array. </p>
+<p>Free <a class="el" href="structloc__t.html">loc_t</a> array </p>
 
 </div>
 </div>
@@ -606,8 +539,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Estimate the diameter of loc. </p>
+<p>Estimate the diameter of loc </p>
 
 </div>
 </div>
@@ -624,9 +556,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Find the point that closes to origin (0,0) in loc. </p>
-<p>Useful in single point piston constraint in creating reconstructor. </p>
+<p>Find the point that closes to origin (0,0) in loc. Useful in single point piston constraint in creating reconstructor. </p>
 
 </div>
 </div>
@@ -659,7 +589,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a loc with nloc elements. </p>
 
 </div>
@@ -711,8 +640,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a pts with nsa, dsa, nx, dx. </p>
+<p>Create a pts with nsa, dsa, nx, dx </p>
 
 </div>
 </div>
@@ -769,9 +697,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>evaluate piston/tip-tilt/ removed wavefront error. </p>
-<p>output coeffout in unit of radian like units. </p>
+<p>evaluate piston/tip-tilt/ removed wavefront error. output coeffout in unit of radian like units. </p>
 
 </div>
 </div>
@@ -816,8 +742,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Calculate variance of OPD in modes defined in mod. </p>
+<p>Calculate variance of OPD in modes defined in mod.</p>
 <p>Notice the difference in rmsout for loc_calc_ptt and this loc_calc_mode. in loc_calc_ptt, out[0] is PR, out[1] is TT, out[2] is PTTR in loc_calc_mod, out[0] is PR, out[1] is PTR, out[2] is PTTR, etc</p>
 <p>The mod is already orth-noramlized so that we have the following simple forms.</p>
 <p>coeffout is in unit of zernike! </p>
@@ -847,9 +772,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their inverse covariance matrix. </p>
-<p>mcc=M'*(amp.*M) </p>
+<p>assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their inverse covariance matrix. mcc=M'*(amp.*M) </p>
 
 </div>
 </div>
@@ -876,9 +799,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>same as loc_mcc_ptt, except using pts instead of loc. </p>
-<p>this is used to build imcc for TT/F powfs ztilt imcc </p>
+<p>same as loc_mcc_ptt, except using pts instead of loc. this is used to build imcc for TT/F powfs ztilt imcc </p>
 
 </div>
 </div>
@@ -911,8 +832,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove Piston/Tip/Tilt (in radian) from OPD. </p>
+<p>Remove Piston/Tip/Tilt (in radian) from OPD </p>
 
 </div>
 </div>
@@ -945,8 +865,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Add Piston/Tip/Tilt from OPD. </p>
+<p>Add Piston/Tip/Tilt from OPD </p>
 
 </div>
 </div>
@@ -991,9 +910,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute zernike best fit for all subapertures. </p>
-<p>add result to out. returns radians not zernike modes of tip/tilt. Used in wfsgrad </p>
+<p>Compute zernike best fit for all subapertures. add result to out. returns radians not zernike modes of tip/tilt. Used in wfsgrad </p>
 
 </div>
 </div>
@@ -1020,7 +937,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create 1 dimensional loc with given vector. </p>
 
 </div>
@@ -1054,7 +970,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers. </p>
 
 </div>
@@ -1094,7 +1009,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2) </p>
 
 </div>
@@ -1112,9 +1026,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a loc array that covers the <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
-<p>Notice that it is different from map2loc which only covers valid (value&gt;0) regions. </p>
+<p>Create a loc array that covers the <a class="el" href="structmap__t.html">map_t</a>. Notice that it is different from map2loc which only covers valid (value&gt;0) regions. </p>
 
 </div>
 </div>
@@ -1165,8 +1077,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy. </p>
+<p>Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy </p>
 
 </div>
 </div>
@@ -1223,9 +1134,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>like mksqloc, but roated theta CCW. </p>
-<p>Useful in creating the pixel coordinates in a polar coordinate CCD. </p>
+<p>like mksqloc, but roated theta CCW. Useful in creating the pixel coordinates in a polar coordinate CCD. </p>
 
 </div>
 </div>
@@ -1252,7 +1161,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a loc array within diameter D, with spacing dx. </p>
 
 </div>
@@ -1270,7 +1178,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Gather information about the starting of each column in loc. </p>
 
 </div>
@@ -1288,8 +1195,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free the stat in <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>. </p>
+<p>Free the stat in <a class="el" href="structloc__t.html">loc_t</a> </p>
 
 </div>
 </div>
@@ -1340,8 +1246,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a gray pixel circular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val. </p>
+<p>Create a gray pixel circular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val </p>
 
 </div>
 </div>
@@ -1398,8 +1303,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a gray pixel annular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val. </p>
+<p>Create a gray pixel annular map in phi using coordinates defined in loc, center defined using cx, cy, radius of r, and value of val </p>
 
 </div>
 </div>
@@ -1450,7 +1354,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a hard annular mask in phi. </p>
 
 </div>
@@ -1508,8 +1411,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a gray pixel elliptical map in phi using coordinates defined in loc, center defined using cx, cy, radii of rx, ry, and value of val. </p>
+<p>Create a gray pixel elliptical map in phi using coordinates defined in loc, center defined using cx, cy, radii of rx, ry, and value of val </p>
 
 </div>
 </div>
@@ -1554,9 +1456,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove points in loc that have zero value in amp and modify amp in the same time. </p>
-<p>Keep each row continuous if cont==1. Return in skipout the index of skipped points if skipout is not NULL. </p>
+<p>Remove points in loc that have zero value in amp and modify amp in the same time. Keep each row continuous if cont==1. Return in skipout the index of skipped points if skipout is not NULL. </p>
 
 </div>
 </div>
@@ -1595,9 +1495,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove uncoupled points in loc and modify spc in the same time. </p>
-<p>debugged on 2009-12-20. Not used often. using a dspcell, to compute the coupling which is modified accordingly. </p>
+<p>Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using a dspcell, to compute the coupling which is modified accordingly. </p>
 
 </div>
 </div>
@@ -1636,9 +1534,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Remove uncoupled points in loc and modify sp in the same time. </p>
-<p>debugged on 2009-12-20. use single sparse matrix, which is modified accordingly. </p>
+<p>Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20. use single sparse matrix, which is modified accordingly. </p>
 
 </div>
 </div>
@@ -1671,9 +1567,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Add val amount of focus to opd. </p>
-<p>The unit is in radian like. Piston is not removed. </p>
+<p>Add val amount of focus to opd. The unit is in radian like. Piston is not removed. </p>
 
 </div>
 </div>
@@ -1700,8 +1594,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a dmat containing locx and locy in two columns. </p>
+<p>Create a dmat containing locx and locy in two columns </p>
 
 </div>
 </div>
@@ -1718,9 +1611,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Convert <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a> to <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a>. </p>
-<p>Each entry in pts recors the lower left point in each subaperture. </p>
+<p>Convert <a class="el" href="structpts__t.html">pts_t</a> to <a class="el" href="structloc__t.html">loc_t</a>. Each entry in pts recors the lower left point in each subaperture. </p>
 
 </div>
 </div>
@@ -1747,7 +1638,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Rotate the coordinates by theta CCW. </p>
 
 </div>
@@ -1765,8 +1655,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>duplicate a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> object; </p>
+<p>duplicate a <a class="el" href="structloc__t.html">loc_t</a> object; </p>
 
 </div>
 </div>
@@ -1793,9 +1682,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Transform coordinate. </p>
-<p>loc contains x,y; locm contains xm, ym. polyn contains the formula xm{ip}=sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic))) ym{ip}=sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic))) </p>
+<p>Transform coordinate. loc contains x,y; locm contains xm, ym. polyn contains the formula xm{ip}=sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic))) ym{ip}=sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic))) </p>
 
 </div>
 </div>
@@ -1828,8 +1715,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Shift a loc coordinate. </p>
+<p>Shift a loc coordinate </p>
 
 </div>
 </div>
@@ -1862,7 +1748,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Compute the size of a map that is used to build loc or can fully contain loc (embed) </p>
 
 </div>
@@ -1908,8 +1793,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>create a new <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> object. </p>
+<p>create a new <a class="el" href="structmap__t.html">map_t</a> object. </p>
 
 </div>
 </div>
@@ -1926,9 +1810,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>ceate a new <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a> object from existing one. </p>
-<p>P is left empty. </p>
+<p>ceate a new <a class="el" href="structmap__t.html">map_t</a> object from existing one. P is left empty. </p>
 
 </div>
 </div>
@@ -1961,8 +1843,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a circular aperture on <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<p>Create a circular aperture on <a class="el" href="structmap__t.html">map_t</a>. </p>
 
 </div>
 </div>
@@ -1989,8 +1870,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create a circular aperture on <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<p>Create a circular aperture on <a class="el" href="structmap__t.html">map_t</a>. </p>
 
 </div>
 </div>
@@ -2023,8 +1903,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Find the inner and outer diameter of an amplitude map contained in <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids. ">map_t</a>. </p>
+<p>Find the inner and outer diameter of an amplitude map contained in <a class="el" href="structmap__t.html">map_t</a>. </p>
 
 </div>
 </div>
@@ -2123,8 +2002,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, dy, height of ht, that can cover all the directions specified in dirs </p>
+<p>create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, dy, height of ht, that can cover all the directions specified in dirs</p>
 <p>offset: distance in pixel from the point closest to the origin to origin (right side). 0: there is a point on the origin. 1/2: the closest point to origin is 1/2 pixel.</p>
 <p>pad!=0: round nx, ny to power of 2. </p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -2172,8 +2050,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembed_locstat</b> (<
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Resize a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> by shrinking. </p>
+<p>Resize a <a class="el" href="structloc__t.html">loc_t</a> by shrinking. </p>
 
 </div>
 </div>

@@ -113,31 +113,23 @@ $(document).ready(function(){initNavTree('structLSR__CFG__T.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>contains input parameters for the least square reconstructor.  
- <a href="structLSR__CFG__T.html#details">More...</a></p>
+<p><code>#include &quot;parms.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:ac56be22038fff61ad88a7350b97c34cb"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#ac56be22038fff61ad88a7350b97c34cb">tikcr</a></td></tr>
-<tr class="memdesc:ac56be22038fff61ad88a7350b97c34cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">tikhonov regularization  <a href="#ac56be22038fff61ad88a7350b97c34cb">More...</a><br/></td></tr>
 <tr class="separator:ac56be22038fff61ad88a7350b97c34cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35e16848dad0992028e3fcf394c26e37"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a35e16848dad0992028e3fcf394c26e37">svdthres</a></td></tr>
-<tr class="memdesc:a35e16848dad0992028e3fcf394c26e37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Threshold in SVD inversion.  <a href="#a35e16848dad0992028e3fcf394c26e37">More...</a><br/></td></tr>
 <tr class="separator:a35e16848dad0992028e3fcf394c26e37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae629e7b241f24cf8ce63f89041fbc31f"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#ae629e7b241f24cf8ce63f89041fbc31f">fnreg</a></td></tr>
-<tr class="memdesc:ae629e7b241f24cf8ce63f89041fbc31f"><td class="mdescLeft">&#160;</td><td class="mdescRight">File containing a regularization term to add to LL.M.  <a href="#ae629e7b241f24cf8ce63f89041fbc31f">More...</a><br/></td></tr>
 <tr class="separator:ae629e7b241f24cf8ce63f89041fbc31f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32d808276474ee2a0c8c79aa231d1aeb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a32d808276474ee2a0c8c79aa231d1aeb">actslave</a></td></tr>
-<tr class="memdesc:a32d808276474ee2a0c8c79aa231d1aeb"><td class="mdescLeft">&#160;</td><td class="mdescRight">slaving constraint for non-active actuators.  <a href="#a32d808276474ee2a0c8c79aa231d1aeb">More...</a><br/></td></tr>
 <tr class="separator:a32d808276474ee2a0c8c79aa231d1aeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0e18ff2e89ca55058dcdb3653fc1132"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#aa0e18ff2e89ca55058dcdb3653fc1132">bgs</a></td></tr>
-<tr class="memdesc:aa0e18ff2e89ca55058dcdb3653fc1132"><td class="mdescLeft">&#160;</td><td class="mdescRight">1: use BGS, block Gaussia Seidel then use alg to solve each block.  <a href="#aa0e18ff2e89ca55058dcdb3653fc1132">More...</a><br/></td></tr>
 <tr class="separator:aa0e18ff2e89ca55058dcdb3653fc1132"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab36a6c21ad95c9d9d92becded22c2b41"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#ab36a6c21ad95c9d9d92becded22c2b41">alg</a></td></tr>
-<tr class="memdesc:ab36a6c21ad95c9d9d92becded22c2b41"><td class="mdescLeft">&#160;</td><td class="mdescRight">algorithm to solve the linear equation.  <a href="#ab36a6c21ad95c9d9d92becded22c2b41">More...</a><br/></td></tr>
 <tr class="separator:ab36a6c21ad95c9d9d92becded22c2b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a676c045ab7b5105c382c3f05031ad7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLSR__CFG__T.html#a2a676c045ab7b5105c382c3f05031ad7">maxit</a></td></tr>
-<tr class="memdesc:a2a676c045ab7b5105c382c3f05031ad7"><td class="mdescLeft">&#160;</td><td class="mdescRight">max iterations.  <a href="#a2a676c045ab7b5105c382c3f05031ad7">More...</a><br/></td></tr>
 <tr class="separator:a2a676c045ab7b5105c382c3f05031ad7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -152,7 +144,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>tikhonov regularization </p>
 
 </div>
@@ -166,8 +157,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Threshold in SVD inversion. </p>
+<p>Threshold in SVD inversion </p>
 
 </div>
 </div>
@@ -180,8 +170,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>File containing a regularization term to add to LL.M. </p>
+<p>File containing a regularization term to add to LL.M </p>
 
 </div>
 </div>
@@ -194,9 +183,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>slaving constraint for non-active actuators. </p>
-<p>Useful in CBS method </p>
+<p>slaving constraint for non-active actuators. Useful in CBS method </p>
 
 </div>
 </div>
@@ -209,7 +196,6 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>1: use BGS, block Gaussia Seidel then use alg to solve each block. </p>
 
 </div>
@@ -223,9 +209,8 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>algorithm to solve the linear equation. </p>
-<p>0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. 2: SVD or EVD: Eigen value decompsition </p>
+<pre class="fragment">         algorithm to solve the linear equation.
+</pre><p> 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. 2: SVD or EVD: Eigen value decompsition </p>
 
 </div>
 </div>
@@ -238,9 +223,7 @@ Data Fields</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>max iterations. </p>
-<p>Usually 30 for CG </p>
+<p>max iterations. Usually 30 for CG </p>
 
 </div>
 </div>

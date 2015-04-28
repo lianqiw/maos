@@ -1,7 +1,6 @@
 var servo_8h =
 [
     [ "SERVO_T", "structSERVO__T.html", "structSERVO__T" ],
-    [ "SERVO_T", "servo_8h.html#a21aecaa569936e973d4979e4257bad8d", null ],
     [ "servo_optim", "servo_8h.html#a4898bb77a0169299d0a7c4904df1c49d", null ],
     [ "servo_Hol", "servo_8h.html#a24d1e3001eb02ce0a180f6a7db127259", null ],
     [ "servo_residual", "servo_8h.html#a7fb15b59144848e3d5e1a72dbb5807c3", null ],

@@ -11,6 +11,6 @@ var namespacecuda__wfs =
     [ "cushg_t", "classcuda__wfs_1_1cushg__t.html", "classcuda__wfs_1_1cushg__t" ],
     [ "cushz_t", "classcuda__wfs_1_1cushz__t.html", "classcuda__wfs_1_1cushz__t" ],
     [ "cushphy_t", "classcuda__wfs_1_1cushphy__t.html", "classcuda__wfs_1_1cushphy__t" ],
-    [ "cupywfs_t", "classcuda__wfs_1_1cupywfs__t.html", "classcuda__wfs_1_1cupywfs__t" ],
+    [ "cupywfs_t", "classcuda__wfs_1_1cupywfs__t.html", null ],
     [ "cuwfs_t", "classcuda__wfs_1_1cuwfs__t.html", "classcuda__wfs_1_1cuwfs__t" ]
 ];

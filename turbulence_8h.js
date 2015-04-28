@@ -1,7 +1,6 @@
 var turbulence_8h =
 [
     [ "GENATM_T", "structGENATM__T.html", "structGENATM__T" ],
-    [ "GENATM_T", "turbulence_8h.html#a28bce4803e75c1e0e0cd109b2245d28b", null ],
     [ "genatm_simple", "turbulence_8h.html#aacc0e9d5cd192a49c694f3c2fc399dc7", null ],
     [ "genatm_loc", "turbulence_8h.html#aa3da6c3439fbe25cb592d8c617b0d563", null ],
     [ "genatm_from_spect", "turbulence_8h.html#a3d72cf5be3e6a6ca5f88ea5b05695778", null ],

@@ -111,22 +111,20 @@ $(document).ready(function(){initNavTree('genstars_8c.html','');});
 <div class="title">genstars.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Generate random stars from besancon star counting model.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;genstars.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2types_8h.html">types.h</a>&quot;</code><br/>
+<code>#include &quot;photon.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af377e43e41abef8317d6537d636910b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#af377e43e41abef8317d6537d636910b1">genstars</a> (long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls, <a class="el" href="structmt__state.html">rand_t</a> *rstat)</td></tr>
-<tr class="memdesc:af377e43e41abef8317d6537d636910b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate stars for nsky star fields from star catalog.  <a href="#af377e43e41abef8317d6537d636910b1">More...</a><br/></td></tr>
 <tr class="separator:af377e43e41abef8317d6537d636910b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade78e28809f94fa8b6e65bb1e3e563d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#ade78e28809f94fa8b6e65bb1e3e563d0">sortstars</a> (<a class="el" href="structdcell.html">dcell</a> *stars)</td></tr>
-<tr class="memdesc:ade78e28809f94fa8b6e65bb1e3e563d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sort the stars with J band magnitude from brightest to dimmest.  <a href="#ade78e28809f94fa8b6e65bb1e3e563d0">More...</a><br/></td></tr>
 <tr class="separator:ade78e28809f94fa8b6e65bb1e3e563d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Generate random stars from besancon star counting model. </p>
-<p>The data file contains J and H magnitudes of all stars within 5 square degree FoV. The location of the stars are assumed to be randomly distributed. Therefore, the possible number of stars within any sub-field is a poisson distribution with mean equal to the average density multiplied with area. </p>
+<div class="textblock"><p>Generate random stars from besancon star counting model. The data file contains J and H magnitudes of all stars within 5 square degree FoV. The location of the stars are assumed to be randomly distributed. Therefore, the possible number of stars within any sub-field is a poisson distribution with mean equal to the average density multiplied with area. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="af377e43e41abef8317d6537d636910b1"></a>
 <div class="memitem">
@@ -187,8 +185,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Generate stars for nsky star fields from star catalog. </p>
+<p>Generate stars for nsky star fields from star catalog.</p>
 <dl class="section return"><dt>Returns</dt><dd>a cell array of nskyx1, each cell contains (2+nwvl) x nstar array of location, and magnitudes. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -219,7 +216,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Sort the stars with J band magnitude from brightest to dimmest. </p>
 
 </div>

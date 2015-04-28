@@ -26,7 +26,6 @@ var thread_8h =
     [ "ICCTASK_FOR", "thread_8h.html#a40b05fdcb5f4c47d8f9d5d285d3e838f", null ],
     [ "ICCTASK_END", "thread_8h.html#a7471fb80365f9f09c80dc488852295ae", null ],
     [ "OMPTASK_SINGLE", "thread_8h.html#acc5e3b3ac8bfc1d3140b074cf961ff98", null ],
-    [ "thread_t", "thread_8h.html#a6e84f6599234bedf30a8b88f56e8fd48", null ],
     [ "thread_fun", "thread_8h.html#a9bf43b411159f96adf95674c0de47d67", null ],
     [ "thread_wrapfun", "thread_8h.html#ab1750ae8c9b2ff3be9893608e991cb25", null ],
     [ "thread_prep", "thread_8h.html#a0e8b5f912d940c8595204d95609f4e05", null ],

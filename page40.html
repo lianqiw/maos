@@ -103,8 +103,7 @@ $(document).ready(function(){initNavTree('page40.html','');});
 <div class="title">Simulation Results </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>MAOS will generate output in binary format <code></code>.bin files (which maybe gzipped) as described below.</p>
-<p>PSFs are written into fits files with extensions.</p>
+<div class="textblock"><p>MAOS will generate output in binary format <code></code>.bin files (which maybe gzipped) as described below. PSFs are written into fits files with extensions.</p>
 <h1><a class="anchor" id="sect-matlab"></a>
 Reading Results in MATLAB</h1>
 <p>There are two MATLAB <code>mex</code> routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.fits files in MATLAB. The source of these mex routines are located in sub-folder <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:</p>
@@ -116,7 +115,7 @@ or cle=read('Res_1.bin.gz');
    write(cle,'Res_1');     will write the data to Res_1.bin.gz;
    write(cle,'Res_1.bin'); will write the data to Res_1.bin without compression.</pre><p>If there is any problem in compling read.c and write.c, there are two matlab scripts in the scripts folder, readbin.m and writebin.m, that have most of functionality of read.c, write.c albeit a bit slower and cannot handle compressed files conveniently.</p>
 <p>The data are saved to the bin files in a moduler way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned ints), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
-<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
+<p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="structloc__t.html">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
 <h1><a class="anchor" id="sect-idl"></a>
 Reading Results in IDL</h1>
 <p>There are two idl scripts in the sub-folder <code>script</code>. They are readbin.pro for reading bin files, and writebin.pro for writing bin files.</p>

@@ -113,10 +113,11 @@ $(document).ready(function(){initNavTree('mvmfull__iwfs_8cu.html','');});
 <div class="title">mvmfull_iwfs.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Test MVM for a single WFS.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;errno.h&gt;</code><br/>
+<code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;curmat.h&quot;</code><br/>
+<code>#include &quot;cucmat.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structGPU__DATA__T.html">GPU_DATA_T</a></td></tr>
@@ -131,12 +132,10 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a214caeeefee1c876551e07e5d77d6503"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mvmfull__iwfs_8cu.html#a214caeeefee1c876551e07e5d77d6503">mvmfull_iwfs</a> (int *gpus, int ngpu, int nstep)</td></tr>
-<tr class="memdesc:a214caeeefee1c876551e07e5d77d6503"><td class="mdescLeft">&#160;</td><td class="mdescRight">A standalone routine that testes applying MVM for a single WFS and update mvm.  <a href="#a214caeeefee1c876551e07e5d77d6503">More...</a><br/></td></tr>
 <tr class="separator:a214caeeefee1c876551e07e5d77d6503"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Test MVM for a single WFS. </p>
-<p>Using two GPUs. Optional using networking. ethtest is the server This is not part of maos executable. Called by test/test_gpu executable.</p>
+<div class="textblock"><p>Test MVM for a single WFS. Using two GPUs. Optional using networking. ethtest is the server This is not part of maos executable. Called by test/test_gpu executable.</p>
 <p>two ways: 1) broadcast gradients to both GPUs with each GPU handle part of actuators. (not tested yet) 2) partition gradients to GPUs with GPU handle all actuators. (selected)</p>
 <p>Use schedtool -a 0x1 PID to let the exe only run one CPU 0. This prevents jitter.</p>
 <p>Optimal timing (low jitter) achieved with multimv_do: cassiopeia with GTX 580:nsm=1, mtch_ngrid=90, nover=9 1.1ms orion with single GTX 590: nsm=1, mtch_ngrid=90, nover=9, 1.3ms kepler with K20: nsm=2, mtch_ngrid=20, nover=3 1.13ms cassiopeia with single GTX590 </p>
@@ -170,9 +169,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>A standalone routine that testes applying MVM for a single WFS and update mvm. </p>
-<p>The orderig of gradients are like xyxyxy instead of normal xxxyyy.</p>
+<p>A standalone routine that testes applying MVM for a single WFS and update mvm. The orderig of gradients are like xyxyxy instead of normal xxxyyy.</p>
 <p>Important: 1) Only page locked host memory can do async memcpy that overallps with computation 2) Has to be Portable for multiple GPUs to do async memcpy concurrently. </p>
 
 </div>

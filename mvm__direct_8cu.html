@@ -113,10 +113,16 @@ $(document).ready(function(){initNavTree('mvm__direct_8cu.html','');});
 <div class="title">mvm_direct.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Compute the MVM control matrix in GPU colume by colume.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;gpu.h&quot;</code><br/>
+<code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;wfs.h&quot;</code><br/>
+<code>#include &quot;recon.h&quot;</code><br/>
+<code>#include &quot;pcg.h&quot;</code><br/>
+<code>#include &quot;curmat.h&quot;</code><br/>
+<code>#include &quot;cucmat.h&quot;</code><br/>
+<code>#include &quot;accphi.h&quot;</code><br/>
+<code>#include &quot;cudata.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMVM__IGPU__T.html">MVM_IGPU_T</a></td></tr>
@@ -134,11 +140,10 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ae7e2b72de3a10cc8eaa01b146415b775"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mvm__direct_8cu.html#ae7e2b72de3a10cc8eaa01b146415b775">gpu_setup_recon_mvm_direct</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structRECON__T.html">RECON_T</a> *recon, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
-<tr class="memdesc:ae7e2b72de3a10cc8eaa01b146415b775"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assemble the MVM control matrix.  <a href="#ae7e2b72de3a10cc8eaa01b146415b775">More...</a><br/></td></tr>
 <tr class="separator:ae7e2b72de3a10cc8eaa01b146415b775"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Compute the MVM control matrix in GPU colume by colume. </p>
+<div class="textblock"><p>Compute the MVM control matrix in GPU colume by colume </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ae7e2b72de3a10cc8eaa01b146415b775"></a>
 <div class="memitem">
@@ -169,7 +174,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Assemble the MVM control matrix. </p>
 
 </div>

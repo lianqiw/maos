@@ -112,10 +112,8 @@ $(document).ready(function(){initNavTree('readcfg_8h.html','');});
 <div class="title">readcfg.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines to read .conf type config files.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a0258dd21e9b70280d7b8fd9de5614c76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0258dd21e9b70280d7b8fd9de5614c76"></a>
@@ -125,81 +123,58 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a53c73968400d1223024541da96b25a53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a53c73968400d1223024541da96b25a53">open_config</a> (char *fn, const char *prefix, long protect)</td></tr>
-<tr class="memdesc:a53c73968400d1223024541da96b25a53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start the read config process by opening .conf files and fill the entries in a hash table.  <a href="#a53c73968400d1223024541da96b25a53">More...</a><br/></td></tr>
 <tr class="separator:a53c73968400d1223024541da96b25a53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7985dcf84dcc547bc18df8a29b616d76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a7985dcf84dcc547bc18df8a29b616d76">close_config</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a7985dcf84dcc547bc18df8a29b616d76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save all configs to file and check for unused config options.  <a href="#a7985dcf84dcc547bc18df8a29b616d76">More...</a><br/></td></tr>
 <tr class="separator:a7985dcf84dcc547bc18df8a29b616d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73c95aaed91c735a3fdc93701f6d964f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a73c95aaed91c735a3fdc93701f6d964f">readcfg_peek</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a73c95aaed91c735a3fdc93701f6d964f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether a have a record of a key.  <a href="#a73c95aaed91c735a3fdc93701f6d964f">More...</a><br/></td></tr>
 <tr class="separator:a73c95aaed91c735a3fdc93701f6d964f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e922a9c36a239462733acec6cd00827"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a2e922a9c36a239462733acec6cd00827">readcfg_peek_n</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a2e922a9c36a239462733acec6cd00827"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check the size of an array input.  <a href="#a2e922a9c36a239462733acec6cd00827">More...</a><br/></td></tr>
 <tr class="separator:a2e922a9c36a239462733acec6cd00827"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a82c0679f3fb4519b902b2e616032e6cd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a82c0679f3fb4519b902b2e616032e6cd">readcfg_peek_override</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a82c0679f3fb4519b902b2e616032e6cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether the record is overriden by user supplied conf files.  <a href="#a82c0679f3fb4519b902b2e616032e6cd">More...</a><br/></td></tr>
 <tr class="separator:a82c0679f3fb4519b902b2e616032e6cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a36b85bb80ce8ab0ecdf6fd0762d4921d">readcfg_str</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain a string value from the key.  <a href="#a36b85bb80ce8ab0ecdf6fd0762d4921d">More...</a><br/></td></tr>
 <tr class="separator:a36b85bb80ce8ab0ecdf6fd0762d4921d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9511bcf6918f17458ee5a33fb2463797"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9511bcf6918f17458ee5a33fb2463797"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (char ***res, const char *format,...)</td></tr>
 <tr class="separator:a9511bcf6918f17458ee5a33fb2463797"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af15ef171b1abcb5ad3658f3b21d8dacc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#af15ef171b1abcb5ad3658f3b21d8dacc">readcfg_strarr_n</a> (char ***ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:af15ef171b1abcb5ad3658f3b21d8dacc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read string array of len elements.  <a href="#af15ef171b1abcb5ad3658f3b21d8dacc">More...</a><br/></td></tr>
 <tr class="separator:af15ef171b1abcb5ad3658f3b21d8dacc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6aba5be414bc11b0ce8c5719d4c02028"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a6aba5be414bc11b0ce8c5719d4c02028">readcfg_strarr_nmax</a> (char ***ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:a6aba5be414bc11b0ce8c5719d4c02028"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read str array of upto len elements.  <a href="#a6aba5be414bc11b0ce8c5719d4c02028">More...</a><br/></td></tr>
 <tr class="separator:a6aba5be414bc11b0ce8c5719d4c02028"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af90add8965ad5b713f08e85d11ea70a0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#af90add8965ad5b713f08e85d11ea70a0">readcfg_int</a> (const char *format,...)</td></tr>
-<tr class="memdesc:af90add8965ad5b713f08e85d11ea70a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read integer.  <a href="#af90add8965ad5b713f08e85d11ea70a0">More...</a><br/></td></tr>
 <tr class="separator:af90add8965ad5b713f08e85d11ea70a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b13907448b0ece4c728fd1f4d2eab30"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a2b13907448b0ece4c728fd1f4d2eab30">readcfg_dbl</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a2b13907448b0ece4c728fd1f4d2eab30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read double.  <a href="#a2b13907448b0ece4c728fd1f4d2eab30">More...</a><br/></td></tr>
 <tr class="separator:a2b13907448b0ece4c728fd1f4d2eab30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ea9d60b32c652ce4fad03c84d08c3f6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a2ea9d60b32c652ce4fad03c84d08c3f6">readcfg_intarr</a> (int **ret, const char *format,...)</td></tr>
-<tr class="memdesc:a2ea9d60b32c652ce4fad03c84d08c3f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read integer array.  <a href="#a2ea9d60b32c652ce4fad03c84d08c3f6">More...</a><br/></td></tr>
 <tr class="separator:a2ea9d60b32c652ce4fad03c84d08c3f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a969fc72b01334d0fe97e6faaa562c9bf"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a969fc72b01334d0fe97e6faaa562c9bf">readcfg_dblarr</a> (double **ret, const char *format,...)</td></tr>
-<tr class="memdesc:a969fc72b01334d0fe97e6faaa562c9bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read double array.  <a href="#a969fc72b01334d0fe97e6faaa562c9bf">More...</a><br/></td></tr>
 <tr class="separator:a969fc72b01334d0fe97e6faaa562c9bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2f8cc2e6faca7a9fcde66c684b4c9a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2f8cc2e6faca7a9fcde66c684b4c9a1"></a>
 <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>readstr_dmat</b> (const char *str)</td></tr>
 <tr class="separator:ae2f8cc2e6faca7a9fcde66c684b4c9a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a45f9445048b5f0da0573a563aeeed5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a9a45f9445048b5f0da0573a563aeeed5">readcfg_dmat</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a9a45f9445048b5f0da0573a563aeeed5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as a dmat.  <a href="#a9a45f9445048b5f0da0573a563aeeed5">More...</a><br/></td></tr>
 <tr class="separator:a9a45f9445048b5f0da0573a563aeeed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a57db729a2f0617087f8afed5288eea06"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a57db729a2f0617087f8afed5288eea06">readcfg_dmat_n</a> (int n, const char *format,...)</td></tr>
-<tr class="memdesc:a57db729a2f0617087f8afed5288eea06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as a dmat.  <a href="#a57db729a2f0617087f8afed5288eea06">More...</a><br/></td></tr>
 <tr class="separator:a57db729a2f0617087f8afed5288eea06"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91f54988e332f7aa340423c86cb73f02"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a91f54988e332f7aa340423c86cb73f02">readcfg_dmat_nmax</a> (int nmax, const char *format,...)</td></tr>
-<tr class="memdesc:a91f54988e332f7aa340423c86cb73f02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as a dmat.  <a href="#a91f54988e332f7aa340423c86cb73f02">More...</a><br/></td></tr>
 <tr class="separator:a91f54988e332f7aa340423c86cb73f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea613f94d787dff48909dd7499e3268a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#aea613f94d787dff48909dd7499e3268a">readcfg_lmat</a> (const char *format,...)</td></tr>
-<tr class="memdesc:aea613f94d787dff48909dd7499e3268a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as an lmat.  <a href="#aea613f94d787dff48909dd7499e3268a">More...</a><br/></td></tr>
 <tr class="separator:aea613f94d787dff48909dd7499e3268a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a840d9d01fee9bd3ab8587eddbc8ccfca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a840d9d01fee9bd3ab8587eddbc8ccfca">readcfg_lmat_n</a> (int n, const char *format,...)</td></tr>
-<tr class="memdesc:a840d9d01fee9bd3ab8587eddbc8ccfca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as an lmat.  <a href="#a840d9d01fee9bd3ab8587eddbc8ccfca">More...</a><br/></td></tr>
 <tr class="separator:a840d9d01fee9bd3ab8587eddbc8ccfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae2c70689f05aead41deedb6abc5fc96f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structlmat.html">lmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ae2c70689f05aead41deedb6abc5fc96f">readcfg_lmat_nmax</a> (int n, const char *format,...)</td></tr>
-<tr class="memdesc:ae2c70689f05aead41deedb6abc5fc96f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read as an lmat.  <a href="#ae2c70689f05aead41deedb6abc5fc96f">More...</a><br/></td></tr>
 <tr class="separator:ae2c70689f05aead41deedb6abc5fc96f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add90c1a773600f3302d94a289b314189"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#add90c1a773600f3302d94a289b314189">readcfg_dblarr_n</a> (double **ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:add90c1a773600f3302d94a289b314189"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read double array of len elements.  <a href="#add90c1a773600f3302d94a289b314189">More...</a><br/></td></tr>
 <tr class="separator:add90c1a773600f3302d94a289b314189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b93ac243fed9ecdeb3d10d660d752ca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#a4b93ac243fed9ecdeb3d10d660d752ca">readcfg_intarr_n</a> (int **ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:a4b93ac243fed9ecdeb3d10d660d752ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read integer array of len elements.  <a href="#a4b93ac243fed9ecdeb3d10d660d752ca">More...</a><br/></td></tr>
 <tr class="separator:a4b93ac243fed9ecdeb3d10d660d752ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab05d7b9c4140e2391243e7223d9c151f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ab05d7b9c4140e2391243e7223d9c151f">readcfg_dblarr_nmax</a> (double **ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:ab05d7b9c4140e2391243e7223d9c151f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read double array of len elements.  <a href="#ab05d7b9c4140e2391243e7223d9c151f">More...</a><br/></td></tr>
 <tr class="separator:ab05d7b9c4140e2391243e7223d9c151f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8a2b6e6bf4ebe66fc6a81456ae5adfd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#ae8a2b6e6bf4ebe66fc6a81456ae5adfd">readcfg_intarr_nmax</a> (int **ret, int len, const char *format,...)</td></tr>
-<tr class="memdesc:ae8a2b6e6bf4ebe66fc6a81456ae5adfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read integer array of maximum of len elements.  <a href="#ae8a2b6e6bf4ebe66fc6a81456ae5adfd">More...</a><br/></td></tr>
 <tr class="separator:ae8a2b6e6bf4ebe66fc6a81456ae5adfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Routines to read .conf type config files. </p>
-<p>Each entry is composed of a key and a value. The entries are maintained in a hash table. Each entry can be retrieved from the key. </p>
+<div class="textblock"><p>Routines to read .conf type config files. Each entry is composed of a key and a value. The entries are maintained in a hash table. Each entry can be retrieved from the key. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a53c73968400d1223024541da96b25a53"></a>
 <div class="memitem">
@@ -230,9 +205,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Start the read config process by opening .conf files and fill the entries in a hash table. </p>
-<p>A key can be protected. If a key is not protected, newer entries with the same key will override a previous entry. </p>
+<p>Start the read config process by opening .conf files and fill the entries in a hash table. A key can be protected. If a key is not protected, newer entries with the same key will override a previous entry. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">config_file</td><td>The .conf file to read </td></tr>
@@ -267,7 +240,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Save all configs to file and check for unused config options. </p>
 
 </div>
@@ -295,7 +267,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Check whether a have a record of a key. </p>
 
 </div>
@@ -323,8 +294,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Check the size of an array input. </p>
+<p>Check the size of an array input </p>
 
 </div>
 </div>
@@ -351,7 +321,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Check whether the record is overriden by user supplied conf files. </p>
 
 </div>
@@ -379,7 +348,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Obtain a string value from the key. </p>
 
 </div>
@@ -419,8 +387,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read string array of len elements. </p>
+<p>Read string array of len elements </p>
 
 </div>
 </div>
@@ -459,8 +426,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read str array of upto len elements. </p>
+<p>Read str array of upto len elements </p>
 
 </div>
 </div>
@@ -487,8 +453,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read integer. </p>
+<p>Read integer </p>
 
 </div>
 </div>
@@ -515,8 +480,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read double. </p>
+<p>Read double </p>
 
 </div>
 </div>
@@ -549,8 +513,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read integer array. </p>
+<p>Read integer array </p>
 
 </div>
 </div>
@@ -583,8 +546,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read double array. </p>
+<p>Read double array </p>
 
 </div>
 </div>
@@ -611,9 +573,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read as a dmat. </p>
-<p>It can be a file name or an array. </p>
+<p>Read as a dmat. It can be a file name or an array. </p>
 
 </div>
 </div>
@@ -646,9 +606,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read as a dmat. </p>
-<p>It can be a file name or an array. </p>
+<p>Read as a dmat. It can be a file name or an array. </p>
 
 </div>
 </div>
@@ -681,9 +639,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read as a dmat. </p>
-<p>It can be a file name or an array. </p>
+<p>Read as a dmat. It can be a file name or an array. </p>
 
 </div>
 </div>
@@ -710,7 +666,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Read as an lmat. </p>
 
 </div>
@@ -744,9 +699,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read as an lmat. </p>
-<p>Exactly n numbers if n&gt;0 </p>
+<p>Read as an lmat. Exactly n numbers if n&gt;0 </p>
 
 </div>
 </div>
@@ -779,9 +732,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read as an lmat. </p>
-<p>A max of n numbers </p>
+<p>Read as an lmat. A max of n numbers </p>
 
 </div>
 </div>
@@ -820,8 +771,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read double array of len elements. </p>
+<p>Read double array of len elements </p>
 
 </div>
 </div>
@@ -860,8 +810,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read integer array of len elements. </p>
+<p>Read integer array of len elements </p>
 
 </div>
 </div>
@@ -900,8 +849,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read double array of len elements. </p>
+<p>Read double array of len elements </p>
 
 </div>
 </div>
@@ -940,8 +888,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>readcfg_strarr</b> (ch
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read integer array of maximum of len elements. </p>
+<p>Read integer array of maximum of len elements </p>
 
 </div>
 </div>

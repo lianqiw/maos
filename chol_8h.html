@@ -108,16 +108,13 @@ $(document).ready(function(){initNavTree('chol_8h.html','');});
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">chol.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Wraps the CHOLESKY Library to provide a simple interface.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structspchol.html">spchol</a></td></tr>
@@ -129,40 +126,25 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>chol_free</b>(A)&#160;&#160;&#160;({<a class="el" href="chol_8h.html#a7a999102f2b6b345ff1ed7aff6e7a841">chol_free_do</a>(A);A=NULL;})</td></tr>
 <tr class="separator:a44f9dcd365904c56907f9f03b25fd9d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a44a0b94cdf0522644f74b23110a06664"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44a0b94cdf0522644f74b23110a06664"></a>
-typedef struct <a class="el" href="structspchol.html">spchol</a>&#160;</td><td class="memItemRight" valign="bottom"><b>spchol</b></td></tr>
-<tr class="separator:a44a0b94cdf0522644f74b23110a06664"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a43ab12416b0a5f5b4bb88587edbb9b12"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspchol.html">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a43ab12416b0a5f5b4bb88587edbb9b12">chol_factorize</a> (<a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
-<tr class="memdesc:a43ab12416b0a5f5b4bb88587edbb9b12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Factorize a sparse array into LL' with reordering.  <a href="#a43ab12416b0a5f5b4bb88587edbb9b12">More...</a><br/></td></tr>
 <tr class="separator:a43ab12416b0a5f5b4bb88587edbb9b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90a86be3964aac1e9130deda1ff26f4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a90a86be3964aac1e9130deda1ff26f4d">chol_solve</a> (<a class="el" href="structdmat.html">dmat</a> **x, <a class="el" href="structspchol.html">spchol</a> *A, <a class="el" href="structdmat.html">dmat</a> *y)</td></tr>
-<tr class="memdesc:a90a86be3964aac1e9130deda1ff26f4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve A*x=y where the cholesky factor of A is stored in A.  <a href="#a90a86be3964aac1e9130deda1ff26f4d">More...</a><br/></td></tr>
 <tr class="separator:a90a86be3964aac1e9130deda1ff26f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a416bdd4f3b6f78aa01162aa24636204d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a416bdd4f3b6f78aa01162aa24636204d">chol_spsolve</a> (<a class="el" href="structspchol.html">spchol</a> *A, const <a class="el" href="structdsp.html">dsp</a> *y)</td></tr>
-<tr class="memdesc:a416bdd4f3b6f78aa01162aa24636204d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve A*x=y where Y is sparse.  <a href="#a416bdd4f3b6f78aa01162aa24636204d">More...</a><br/></td></tr>
 <tr class="separator:a416bdd4f3b6f78aa01162aa24636204d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a7a999102f2b6b345ff1ed7aff6e7a841">chol_free_do</a> (<a class="el" href="structspchol.html">spchol</a> *A)</td></tr>
-<tr class="memdesc:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free cholesky factor.  <a href="#a7a999102f2b6b345ff1ed7aff6e7a841">More...</a><br/></td></tr>
 <tr class="separator:a7a999102f2b6b345ff1ed7aff6e7a841"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a3ff611672c83dc9ccf8f53ca9e299e71">chol_save</a> (<a class="el" href="structspchol.html">spchol</a> *A, const char *format,...)</td></tr>
-<tr class="memdesc:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save cholesky factor and permutation vector to file.  <a href="#a3ff611672c83dc9ccf8f53ca9e299e71">More...</a><br/></td></tr>
 <tr class="separator:a3ff611672c83dc9ccf8f53ca9e299e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f1d989ab970c20e86fcea8843b0243d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspchol.html">spchol</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a2f1d989ab970c20e86fcea8843b0243d">chol_read</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a2f1d989ab970c20e86fcea8843b0243d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read cholesky factor form file.  <a href="#a2f1d989ab970c20e86fcea8843b0243d">More...</a><br/></td></tr>
 <tr class="separator:a2f1d989ab970c20e86fcea8843b0243d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad676f4d815948a8ca80f5a85e3a89c70"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#ad676f4d815948a8ca80f5a85e3a89c70">chol_convert</a> (<a class="el" href="structspchol.html">spchol</a> *A, int keep)</td></tr>
-<tr class="memdesc:ad676f4d815948a8ca80f5a85e3a89c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert the internal data type cholesky factor into the lower left diagonal and permutation vector.  <a href="#ad676f4d815948a8ca80f5a85e3a89c70">More...</a><br/></td></tr>
 <tr class="separator:ad676f4d815948a8ca80f5a85e3a89c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22273cf6a8daa28d160c95e62704f76b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a22273cf6a8daa28d160c95e62704f76b">chol_solve_lower</a> (<a class="el" href="structdmat.html">dmat</a> **x, <a class="el" href="structspchol.html">spchol</a> *C, <a class="el" href="structdmat.html">dmat</a> *y)</td></tr>
-<tr class="memdesc:a22273cf6a8daa28d160c95e62704f76b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve A*x=Y where the A=LL' and L is stored in A.  <a href="#a22273cf6a8daa28d160c95e62704f76b">More...</a><br/></td></tr>
 <tr class="separator:a22273cf6a8daa28d160c95e62704f76b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ec2679aa3113a796e2a59bcf08c80e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8h.html#a9ec2679aa3113a796e2a59bcf08c80e7">chol_solve_upper</a> (<a class="el" href="structdmat.html">dmat</a> **x, <a class="el" href="structspchol.html">spchol</a> *C, <a class="el" href="structdmat.html">dmat</a> *y)</td></tr>
-<tr class="memdesc:a9ec2679aa3113a796e2a59bcf08c80e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solve A*x=Y where the A=U'U and U is stored in A.  <a href="#a9ec2679aa3113a796e2a59bcf08c80e7">More...</a><br/></td></tr>
 <tr class="separator:a9ec2679aa3113a796e2a59bcf08c80e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -181,7 +163,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Factorize a sparse array into LL' with reordering. </p>
 
 </div>
@@ -215,7 +196,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Solve A*x=y where the cholesky factor of A is stored in A. </p>
 
 </div>
@@ -243,9 +223,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Solve A*x=y where Y is sparse. </p>
-<p>Not good idea to use dsp ** as chol_solve because the result may have different nzmax. </p>
+<p>Solve A*x=y where Y is sparse. Not good idea to use dsp ** as chol_solve because the result may have different nzmax. </p>
 
 </div>
 </div>
@@ -262,7 +240,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Free cholesky factor. </p>
 
 </div>
@@ -296,7 +273,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Save cholesky factor and permutation vector to file. </p>
 
 </div>
@@ -324,9 +300,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read cholesky factor form file. </p>
-<p>In the matlab convention, the upper triangle is saved. </p>
+<p>Read cholesky factor form file. In the matlab convention, the upper triangle is saved. </p>
 
 </div>
 </div>
@@ -353,9 +327,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Convert the internal data type cholesky factor into the lower left diagonal and permutation vector. </p>
-<p>The internal data A-&gt;L is freed if keep is 0.</p>
+<p>Convert the internal data type cholesky factor into the lower left diagonal and permutation vector. The internal data A-&gt;L is freed if keep is 0.</p>
 <p>This routine works only if the factor is using simplicity factor. not supernodal. so, in chol_factorize, we have set c.final_super=0, so that the final result is always in simplicity factor. </p>
 
 </div>
@@ -389,8 +361,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Solve A*x=Y where the A=LL' and L is stored in A. </p>
+<p>Solve A*x=Y where the A=LL' and L is stored in A.</p>
 <p>Solve the cholesky backsubstitution when it's expressed in sparse matrix and a permutation vector. Notice only the lower left side of the sparse matrix is stored.</p>
 <p>The original matrix B=A*A'; solve B*x=y or A*(A'*x)=y first solve A\y then solve A'\(A\y)</p>
 <p>This is slower than chol_solve in cholmod. I observed high cpu usage burst during chol_solve, which is probably due to call of blas which is multi-threaded. I don't call blas here. </p>
@@ -426,8 +397,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Solve A*x=Y where the A=U'U and U is stored in A. </p>
+<p>Solve A*x=Y where the A=U'U and U is stored in A.</p>
 <p>Solve the cholesky backsubstitution when it's expressed in sparse matrix and a permutation vector. Notice only the lower left side of the sparse matrix is stored.</p>
 <p>The original matrix B=A'*A; </p>
 

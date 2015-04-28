@@ -111,17 +111,13 @@ $(document).ready(function(){initNavTree('genotf_8h.html','');});
 <div class="title">genotf.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines to generate short/long exposure OTFs of an aperture in present of atmosphere turbulence.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a24adbe01bdb150e6f6119e9698139a47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8h.html#a24adbe01bdb150e6f6119e9698139a47">genotf</a> (<a class="el" href="structcmat.html">cmat</a> **otf, <a class="el" href="structloc__t.html">loc_t</a> *loc, const <a class="el" href="structdmat.html">dmat</a> *amp, const <a class="el" href="structdmat.html">dmat</a> *opdbias, const <a class="el" href="structdmat.html">dmat</a> *area, double thres, double wvl, double dtheta, const <a class="el" href="structdmat.html">dmat</a> *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr)</td></tr>
-<tr class="memdesc:a24adbe01bdb150e6f6119e9698139a47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate OTFs for an aperture or multiple subapertures.  <a href="#a24adbe01bdb150e6f6119e9698139a47">More...</a><br/></td></tr>
 <tr class="separator:a24adbe01bdb150e6f6119e9698139a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7725c012d59b7f12465e53680554da7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8h.html#aa7725c012d59b7f12465e53680554da7">mk2dcov</a> (<a class="el" href="structdmat.html">dmat</a> **cov2d, <a class="el" href="structloc__t.html">loc_t</a> *loc, const double *amp, double ampthres, const <a class="el" href="structdmat.html">dmat</a> *cov, int norm)</td></tr>
-<tr class="memdesc:aa7725c012d59b7f12465e53680554da7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Average spatially the 4-d covariance function to create a 2-d covariance function.  <a href="#aa7725c012d59b7f12465e53680554da7">More...</a><br/></td></tr>
 <tr class="separator:aa7725c012d59b7f12465e53680554da7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -228,9 +224,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Generate OTFs for an aperture or multiple subapertures. </p>
-<p>ALl these apertures must share the same geometry, but may come with different amplitude map and/or OPD biasas. if pttr is 1, the OTF will have tip/tilt removed. make r0 to infinity to build diffraction limited OTF. make r0 to infinity and opdbias to none null to build OTF for a static map. </p>
+<p>Generate OTFs for an aperture or multiple subapertures. ALl these apertures must share the same geometry, but may come with different amplitude map and/or OPD biasas. if pttr is 1, the OTF will have tip/tilt removed. make r0 to infinity to build diffraction limited OTF. make r0 to infinity and opdbias to none null to build OTF for a static map. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">otf</td><td>The otf array for output </td></tr>
@@ -301,9 +295,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Average spatially the 4-d covariance function to create a 2-d covariance function. </p>
-<p>For OPD f defined on points x (2-d coordinate), the 4-d covariance is simply &lt;f'f&gt; where f is vector form of the OPD and the average is over time. The 2-d covariance is additionally averaged over all the points so that B(r)=&lt;f(x)'f(x+r)&gt;_x,t To compute B, we first figure out the number of overlapping pairs of points for each r and then compute the averaging. When the amplitude is less than the threshold, the point does not count. </p>
+<p>Average spatially the 4-d covariance function to create a 2-d covariance function. For OPD f defined on points x (2-d coordinate), the 4-d covariance is simply &lt;f'f&gt; where f is vector form of the OPD and the average is over time. The 2-d covariance is additionally averaged over all the points so that B(r)=&lt;f(x)'f(x+r)&gt;_x,t To compute B, we first figure out the number of overlapping pairs of points for each r and then compute the averaging. When the amplitude is less than the threshold, the point does not count. </p>
 
 </div>
 </div>

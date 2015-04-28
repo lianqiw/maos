@@ -66,7 +66,7 @@ var searchData=
   ['ngsmod2wvf',['ngsmod2wvf',['../skysim__utils_8c.html#a6c694ce3a89108572cbbef38e353c9e2',1,'skysim_utils.c']]],
   ['ngsmod_5fhm_5faccphi',['ngsmod_hm_accphi',['../ahst_8c.html#a192c4884609228272643174ef145d71e',1,'ahst.c']]],
   ['ngsmod_5fhm_5fana',['ngsmod_hm_ana',['../ahst_8c.html#a361c2bca340edabb5a394c01aafc54e9',1,'ahst.c']]],
-  ['ngsmod_5ft',['NGSMOD_T',['../structNGSMOD__T.html',1,'NGSMOD_T'],['../maos_2types_8h.html#a374eeaad70cd58cac290ac1f8d12af3d',1,'NGSMOD_T():&#160;types.h']]],
+  ['ngsmod_5ft',['NGSMOD_T',['../structNGSMOD__T.html',1,'']]],
   ['nhipowfs',['nhipowfs',['../structPARMS__T.html#a1010d5b79d1e8001e634dbef56126838',1,'PARMS_T']]],
   ['nhiwfs',['nhiwfs',['../structPARMS__T.html#a18fc0147c307efef953cfe1c9840b4ee',1,'PARMS_T']]],
   ['nhtomo',['nhtomo',['../structCN2EST__CFG__T.html#a861e6595803bbd7a0e6e08cf23bc212a',1,'CN2EST_CFG_T']]],

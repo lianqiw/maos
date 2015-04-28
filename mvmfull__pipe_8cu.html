@@ -113,10 +113,10 @@ $(document).ready(function(){initNavTree('mvmfull__pipe_8cu.html','');});
 <div class="title">mvmfull_pipe.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Copied from <a class="el" href="mvmfull__iwfs_8cu.html" title="Test MVM for a single WFS. ">mvmfull_iwfs.cu</a> to test another scheme for parallelizing.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;curmat.h&quot;</code><br/>
+<code>#include &quot;cucmat.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structGPU__DATA__T.html">GPU_DATA_T</a></td></tr>
@@ -131,12 +131,10 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a509a4286088d248d61090b5e0dbffe0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mvmfull__pipe_8cu.html#a509a4286088d248d61090b5e0dbffe0e">mvmfull_pipe</a> (char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, int *gpus, int ngpu, int nstep)</td></tr>
-<tr class="memdesc:a509a4286088d248d61090b5e0dbffe0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A standalone routine that testes applying MVM for a single WFS and update mvm.  <a href="#a509a4286088d248d61090b5e0dbffe0e">More...</a><br/></td></tr>
 <tr class="separator:a509a4286088d248d61090b5e0dbffe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Copied from <a class="el" href="mvmfull__iwfs_8cu.html" title="Test MVM for a single WFS. ">mvmfull_iwfs.cu</a> to test another scheme for parallelizing. </p>
-<p>More streams are used now with each stream doing tasks in series. This helps to increase the occupancy on Kepler GPUs with more lower speed cores. </p>
+<div class="textblock"><p>Copied from <a class="el" href="mvmfull__iwfs_8cu.html">mvmfull_iwfs.cu</a> to test another scheme for parallelizing. More streams are used now with each stream doing tasks in series. This helps to increase the occupancy on Kepler GPUs with more lower speed cores. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a509a4286088d248d61090b5e0dbffe0e"></a>
 <div class="memitem">
@@ -197,7 +195,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>A standalone routine that testes applying MVM for a single WFS and update mvm. </p>
 
 </div>

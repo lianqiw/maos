@@ -5,7 +5,6 @@ var recon__utils_8c =
     [ "tic_tm", "recon__utils_8c.html#a8346642868c1576597ad637b746e9257", null ],
     [ "toc_tm", "recon__utils_8c.html#a00b7822255d82d13b2ca313db43a139a", null ],
     [ "test_TomoL", "recon__utils_8c.html#a3f7acaaabd294c80ab0f3540b010a1b2", null ],
-    [ "Tomo_T", "recon__utils_8c.html#ac0846a43d5d29570425f514e31ad3624", null ],
     [ "apply_L2", "recon__utils_8c.html#a736ddf612e3ea272d3543f05852cdd6a", null ],
     [ "apply_invpsd", "recon__utils_8c.html#a666275101e117d56e1cf2908b18e0278", null ],
     [ "apply_fractal", "recon__utils_8c.html#a68ea00a9c6e3e064ff6b613e9718cf54", null ],

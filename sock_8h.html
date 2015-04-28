@@ -111,24 +111,19 @@ $(document).ready(function(){initNavTree('sock_8h.html','');});
 <div class="title">sock.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines to establish socket connection.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;netinet/in.h&gt;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a24b9ffbaf688d73e66832ddffc86cb56">connect_port</a> (const char *hostname, int port, int block, int nodelay)</td></tr>
-<tr class="memdesc:a24b9ffbaf688d73e66832ddffc86cb56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connect to a host at port.  <a href="#a24b9ffbaf688d73e66832ddffc86cb56">More...</a><br/></td></tr>
 <tr class="separator:a24b9ffbaf688d73e66832ddffc86cb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6d79915ff976b61b5e9f1cbefdb7be97">listen_port</a> (uint16_t port, char *localpath, int(*respond)(int), double timeout_sec, void(*timeout_fun)(), int nodelay)</td></tr>
-<tr class="memdesc:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a port and listen to it.  <a href="#a6d79915ff976b61b5e9f1cbefdb7be97">More...</a><br/></td></tr>
 <tr class="separator:a6d79915ff976b61b5e9f1cbefdb7be97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sock_8h.html#a6af4fd5ed53424b07d2aead4d1168f45">socket_block</a> (int sock, int block)</td></tr>
-<tr class="memdesc:a6af4fd5ed53424b07d2aead4d1168f45"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set socket to unblocking mode.  <a href="#a6af4fd5ed53424b07d2aead4d1168f45">More...</a><br/></td></tr>
 <tr class="separator:a6af4fd5ed53424b07d2aead4d1168f45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Routines to establish socket connection. </p>
+<div class="textblock"><p>Routines to establish socket connection </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a24b9ffbaf688d73e66832ddffc86cb56"></a>
 <div class="memitem">
@@ -165,9 +160,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Connect to a host at port. </p>
-<p>hostname may start with / to indicate a local UNIX port </p>
+<p>Connect to a host at port. hostname may start with / to indicate a local UNIX port </p>
 
 </div>
 </div>
@@ -218,9 +211,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Open a port and listen to it. </p>
-<p>Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also if localpath is not null and contains ip address, only bind to that ip address </p>
+<p>Open a port and listen to it. Calls respond(sock) to handle data. If timeout_fun is not NULL, it will be called when 1) connection is establed/handled, 2) every timeout_sec if timeout_sec&gt;0. This function only return at error. if localpath is not null and start with /, open the local unix port also if localpath is not null and contains ip address, only bind to that ip address </p>
 
 </div>
 </div>
@@ -247,8 +238,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Set socket to unblocking mode. </p>
+<p>Set socket to unblocking mode </p>
 
 </div>
 </div>

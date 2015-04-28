@@ -111,20 +111,18 @@ $(document).ready(function(){initNavTree('nafocus_8c.html','');});
 <div class="title">nafocus.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Sodium layer focus tracking analytic results.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;nafocus.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a26387e490ee6a093113d3992d14f4942"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nafocus_8c.html#a26387e490ee6a093113d3992d14f4942">nafocus_residual</a> (double fs, double tau, double zcf, double zeta, double D, double hs, double alpha, double beta)</td></tr>
-<tr class="memdesc:a26387e490ee6a093113d3992d14f4942"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sodium tracking Openloop transfer function.  <a href="#a26387e490ee6a093113d3992d14f4942">More...</a><br/></td></tr>
 <tr class="separator:a26387e490ee6a093113d3992d14f4942"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a890da24d8a5c28589f8b52d1410ad644"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="nafocus_8c.html#a890da24d8a5c28589f8b52d1410ad644">nafocus_time</a> (double alpha, double beta, double dt, long nstep, <a class="el" href="structmt__state.html">rand_t</a> *rstat)</td></tr>
 <tr class="separator:a890da24d8a5c28589f8b52d1410ad644"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Sodium layer focus tracking analytic results. </p>
+<div class="textblock"><p>Sodium layer focus tracking analytic results </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a26387e490ee6a093113d3992d14f4942"></a>
 <div class="memitem">
@@ -185,9 +183,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Sodium tracking Openloop transfer function. </p>
-<p>The cross over frequency (where gain is 1) have a phase margin of 45 (angle(Hol)=-135).</p>
+<p>Sodium tracking Openloop transfer function. The cross over frequency (where gain is 1) have a phase margin of 45 (angle(Hol)=-135).</p>
 <p>First find the frequency fc where phase margin is 45. then scale Hol to have gain of 1 at fc.</p>
 <p>Written: 2010-06-15 Tested ok against RC's skycoverage code: 2010-06-15. </p>
 <dl class="params"><dt>Parameters</dt><dd>

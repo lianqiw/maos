@@ -111,23 +111,19 @@ $(document).ready(function(){initNavTree('filter_8c.html','');});
 <div class="title">filter.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Collection of functions for servo filtering of DM commands.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+<code>#include &quot;ahst.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ac45a59f9db709790e8f359e498cb588e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filter_8c.html#ac45a59f9db709790e8f359e498cb588e">addlow2dm</a> (<a class="el" href="structdcell.html">dcell</a> **dmval, const <a class="el" href="structSIM__T.html">SIM_T</a> *simu, const <a class="el" href="structdcell.html">dcell</a> *low_val, double gain)</td></tr>
-<tr class="memdesc:ac45a59f9db709790e8f359e498cb588e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply hysterisis.  <a href="#ac45a59f9db709790e8f359e498cb588e">More...</a><br/></td></tr>
 <tr class="separator:ac45a59f9db709790e8f359e498cb588e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a5fce39d5e74bf0dd37966490eae99a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filter_8c.html#a2a5fce39d5e74bf0dd37966490eae99a">turb_dm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a2a5fce39d5e74bf0dd37966490eae99a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Simulate turbulence on the DM.  <a href="#a2a5fce39d5e74bf0dd37966490eae99a">More...</a><br/></td></tr>
 <tr class="separator:a2a5fce39d5e74bf0dd37966490eae99a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5628434ad078eec069d06f97a8d9bee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filter_8c.html#ac5628434ad078eec069d06f97a8d9bee">update_dm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:ac5628434ad078eec069d06f97a8d9bee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update various quantities upon updating dmreal.  <a href="#ac5628434ad078eec069d06f97a8d9bee">More...</a><br/></td></tr>
 <tr class="separator:ac5628434ad078eec069d06f97a8d9bee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a78085c7163dd0867b7346204222b31e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="filter_8c.html#a78085c7163dd0867b7346204222b31e9">filter_dm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a78085c7163dd0867b7346204222b31e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does the servo filtering by calling filter_cl() or filter_ol()  <a href="#a78085c7163dd0867b7346204222b31e9">More...</a><br/></td></tr>
 <tr class="separator:a78085c7163dd0867b7346204222b31e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -168,9 +164,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Apply hysterisis. </p>
-<p>Input dmcmd is command to the DM and output dmreal is the actual position the DM goes to. Add low order NGS modes to DM actuator commands for AHST and MVST </p>
+<p>Apply hysterisis. Input dmcmd is command to the DM and output dmreal is the actual position the DM goes to. Add low order NGS modes to DM actuator commands for AHST and MVST </p>
 
 </div>
 </div>
@@ -187,8 +181,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Simulate turbulence on the DM. </p>
+<p>Simulate turbulence on the DM </p>
 
 </div>
 </div>
@@ -205,7 +198,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Update various quantities upon updating dmreal. </p>
 
 </div>
@@ -223,7 +215,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Does the servo filtering by calling filter_cl() or filter_ol() </p>
 
 </div>

@@ -107,53 +107,37 @@ $(document).ready(function(){initNavTree('servo_8h.html','');});
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">servo.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines for servo optimization, filtering, etc.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSERVO__T.html">SERVO_T</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct for servo filtering.  <a href="structSERVO__T.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a21aecaa569936e973d4979e4257bad8d"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structSERVO__T.html">SERVO_T</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a21aecaa569936e973d4979e4257bad8d">SERVO_T</a></td></tr>
-<tr class="memdesc:a21aecaa569936e973d4979e4257bad8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct for servo filtering.  <a href="#a21aecaa569936e973d4979e4257bad8d">More...</a><br/></td></tr>
-<tr class="separator:a21aecaa569936e973d4979e4257bad8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a4898bb77a0169299d0a7c4904df1c49d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a4898bb77a0169299d0a7c4904df1c49d">servo_optim</a> (const <a class="el" href="structdmat.html">dmat</a> *psdin, double dt, long dtrat, double pmargin, const <a class="el" href="structdmat.html">dmat</a> *sigma2n, int servo_type)</td></tr>
-<tr class="memdesc:a4898bb77a0169299d0a7c4904df1c49d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optimize the type II servo gains by balancing errors due to noise and signal propagation.  <a href="#a4898bb77a0169299d0a7c4904df1c49d">More...</a><br/></td></tr>
 <tr class="separator:a4898bb77a0169299d0a7c4904df1c49d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24d1e3001eb02ce0a180f6a7db127259"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24d1e3001eb02ce0a180f6a7db127259"></a>
 <a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>servo_Hol</b> (const <a class="el" href="structdmat.html">dmat</a> *nu, double dt, double dtrat, const <a class="el" href="structdmat.html">dmat</a> *gain)</td></tr>
 <tr class="separator:a24d1e3001eb02ce0a180f6a7db127259"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fb15b59144848e3d5e1a72dbb5807c3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a7fb15b59144848e3d5e1a72dbb5807c3">servo_residual</a> (double *noise_amp, const <a class="el" href="structdmat.html">dmat</a> *psdin, double dt, long dtrat, const <a class="el" href="structdmat.html">dmat</a> *gain, int servo_type)</td></tr>
-<tr class="memdesc:a7fb15b59144848e3d5e1a72dbb5807c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the residual error after servo rejection of a type II servo given the gain.  <a href="#a7fb15b59144848e3d5e1a72dbb5807c3">More...</a><br/></td></tr>
 <tr class="separator:a7fb15b59144848e3d5e1a72dbb5807c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8913fbd450e6f7895e5c5f705963760d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSERVO__T.html">SERVO_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a8913fbd450e6f7895e5c5f705963760d">servo_new</a> (<a class="el" href="structdcell.html">dcell</a> *merr, const <a class="el" href="structdmat.html">dmat</a> *ap, int al, double dt, const <a class="el" href="structdmat.html">dmat</a> *ep)</td></tr>
-<tr class="memdesc:a8913fbd450e6f7895e5c5f705963760d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize.  <a href="#a8913fbd450e6f7895e5c5f705963760d">More...</a><br/></td></tr>
 <tr class="separator:a8913fbd450e6f7895e5c5f705963760d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0837f1096ffa6a5da0574de1f7565815"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a0837f1096ffa6a5da0574de1f7565815">servo_filter</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st, const <a class="el" href="structdcell.html">dcell</a> *merr)</td></tr>
-<tr class="memdesc:a0837f1096ffa6a5da0574de1f7565815"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies type I or type II filter based on number of entries in gain.  <a href="#a0837f1096ffa6a5da0574de1f7565815">More...</a><br/></td></tr>
 <tr class="separator:a0837f1096ffa6a5da0574de1f7565815"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab286106ea67842a91fdfecd273fc736c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#ab286106ea67842a91fdfecd273fc736c">servo_test</a> (<a class="el" href="structdmat.html">dmat</a> *mideal, double dtngs, int dtrat, <a class="el" href="structdmat.html">dmat</a> *sigma2n, <a class="el" href="structdmat.html">dmat</a> *gain)</td></tr>
-<tr class="memdesc:ab286106ea67842a91fdfecd273fc736c"><td class="mdescLeft">&#160;</td><td class="mdescRight">test type I/II filter with ideal measurement to make sure it is implemented correctly.  <a href="#ab286106ea67842a91fdfecd273fc736c">More...</a><br/></td></tr>
 <tr class="separator:ab286106ea67842a91fdfecd273fc736c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59977887c037dde762854fe5767071f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59977887c037dde762854fe5767071f9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st)</td></tr>
 <tr class="separator:a59977887c037dde762854fe5767071f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a214864ff73ecbb74bb2cff516169e973"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="servo_8h.html#a214864ff73ecbb74bb2cff516169e973">servo_free</a> (<a class="el" href="structSERVO__T.html">SERVO_T</a> *st)</td></tr>
-<tr class="memdesc:a214864ff73ecbb74bb2cff516169e973"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structSERVO__T.html" title="Struct for servo filtering. ">SERVO_T</a> struct.  <a href="#a214864ff73ecbb74bb2cff516169e973">More...</a><br/></td></tr>
 <tr class="separator:a214864ff73ecbb74bb2cff516169e973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b59f1b3048e30f25b608c3405d3b013"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b59f1b3048e30f25b608c3405d3b013"></a>
 <a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>servo_typeII_Hol</b> (const <a class="el" href="structdmat.html">dmat</a> *gain, double fs, double lgsdt)</td></tr>
@@ -161,22 +145,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Routines for servo optimization, filtering, etc. </p>
-</div><h2 class="groupheader">Typedef Documentation</h2>
-<a class="anchor" id="a21aecaa569936e973d4979e4257bad8d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structSERVO__T.html">SERVO_T</a> <a class="el" href="structSERVO__T.html">SERVO_T</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Struct for servo filtering. </p>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a4898bb77a0169299d0a7c4904df1c49d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -224,8 +193,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Optimize the type II servo gains by balancing errors due to noise and signal propagation. </p>
+<p>Optimize the type II servo gains by balancing errors due to noise and signal propagation.</p>
 <p>Written: 2010-06-11</p>
 <p>Tested OK: 2010-06-11</p>
 <p>2011-01-17: The optimization process is quite slow, but the result is only dependent on the sigma2n and fs. psdin does not change during the simulation. Built a lookup table in skyc using various sigma2n and interpolate to get ress, resn, and gain.</p>
@@ -282,8 +250,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute the residual error after servo rejection of a type II servo given the gain. </p>
+<p>Compute the residual error after servo rejection of a type II servo given the gain.</p>
 <p>Written: 2010-06-11</p>
 <p>Tested OK: 2010-06-11 </p>
 
@@ -330,9 +297,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Initialize. </p>
-<p>al is additional latency </p>
+<p>Initialize. al is additional latency </p>
 
 </div>
 </div>
@@ -350,7 +315,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&#160;</td>
-          <td class="paramname"><em>merr</em>&#160;</td>
+          <td class="paramname"><em>_merr</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -359,7 +324,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Applies type I or type II filter based on number of entries in gain. </p>
 
 </div>
@@ -372,13 +336,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
           <td class="memname"><a class="el" href="structdmat.html">dmat</a>* servo_test </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>mideal</em>, </td>
+          <td class="paramname"><em>input</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dtngs</em>, </td>
+          <td class="paramname"><em>dt</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -405,7 +369,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>test type I/II filter with ideal measurement to make sure it is implemented correctly. </p>
 
 </div>
@@ -423,8 +386,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>servo_reset</b> (<a c
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structSERVO__T.html" title="Struct for servo filtering. ">SERVO_T</a> struct. </p>
+<p>Free <a class="el" href="structSERVO__T.html">SERVO_T</a> struct </p>
 
 </div>
 </div>

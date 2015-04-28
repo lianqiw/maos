@@ -2,7 +2,6 @@ var searchData=
 [
   ['maos_2ec',['maos.c',['../maos_8c.html',1,'']]],
   ['mathmisc_2eh',['mathmisc.h',['../mathmisc_8h.html',1,'']]],
-  ['mk2dcov_2ec',['mk2dcov.c',['../mk2dcov_8c.html',1,'']]],
   ['mkdtf_2eh',['mkdtf.h',['../mkdtf_8h.html',1,'']]],
   ['mkg_2eh',['mkg.h',['../mkg_8h.html',1,'']]],
   ['mkh_2eh',['mkh.h',['../mkh_8h.html',1,'']]],
@@ -12,7 +11,6 @@ var searchData=
   ['mtch_2ec',['mtch.c',['../maos_2mtch_8c.html',1,'']]],
   ['mtch_2ec',['mtch.c',['../skyc_2mtch_8c.html',1,'']]],
   ['muv_2eh',['muv.h',['../muv_8h.html',1,'']]],
-  ['mvm_5fcpu_2ec',['mvm_cpu.c',['../mvm__cpu_8c.html',1,'']]],
   ['mvm_5fdaemon_2ecu',['mvm_daemon.cu',['../mvm__daemon_8cu.html',1,'']]],
   ['mvm_5fdirect_2ecu',['mvm_direct.cu',['../mvm__direct_8cu.html',1,'']]],
   ['mvm_5fiwfs_2ecu',['mvm_iwfs.cu',['../mvm__iwfs_8cu.html',1,'']]],

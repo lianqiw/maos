@@ -111,20 +111,18 @@ $(document).ready(function(){initNavTree('moao_8c.html','');});
 <div class="title">moao.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routings to setup moao and carry out moao DM fitting.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;recon_utils.h&quot;</code><br/>
+<code>#include &quot;moao.h&quot;</code><br/>
+<code>#include &quot;ahst.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:aaaf77736de33764e12edc12f46b18c64"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="moao_8c.html#aaaf77736de33764e12edc12f46b18c64">free_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="memdesc:aaaf77736de33764e12edc12f46b18c64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free <a class="el" href="structMOAO__T.html" title="contains MOAO related data ">MOAO_T</a>.  <a href="#aaaf77736de33764e12edc12f46b18c64">More...</a><br/></td></tr>
 <tr class="separator:aaaf77736de33764e12edc12f46b18c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac70e508023f8816854d7d4eaf0452aa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="moao_8c.html#ac70e508023f8816854d7d4eaf0452aa6">setup_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="memdesc:ac70e508023f8816854d7d4eaf0452aa6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepare the propagation H matrix for MOAO and compute the reconstructor.  <a href="#ac70e508023f8816854d7d4eaf0452aa6">More...</a><br/></td></tr>
 <tr class="separator:ac70e508023f8816854d7d4eaf0452aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af62a4685464fea7bdd37d04c821c3caf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="moao_8c.html#af62a4685464fea7bdd37d04c821c3caf">moao_recon</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:af62a4685464fea7bdd37d04c821c3caf"><td class="mdescLeft">&#160;</td><td class="mdescRight">moao_recon happens after the common DM fitting and its integrator output to take into account the delay in DM commands.  <a href="#af62a4685464fea7bdd37d04c821c3caf">More...</a><br/></td></tr>
 <tr class="separator:af62a4685464fea7bdd37d04c821c3caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -153,8 +151,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free <a class="el" href="structMOAO__T.html" title="contains MOAO related data ">MOAO_T</a>. </p>
+<p>Free <a class="el" href="structMOAO__T.html">MOAO_T</a> </p>
 
 </div>
 </div>
@@ -181,9 +178,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Prepare the propagation H matrix for MOAO and compute the reconstructor. </p>
-<p>We only need a reconstructor for every different MOAO type. </p>
+<p>Prepare the propagation H matrix for MOAO and compute the reconstructor. We only need a reconstructor for every different MOAO type. </p>
 
 </div>
 </div>
@@ -200,9 +195,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>moao_recon happens after the common DM fitting and its integrator output to take into account the delay in DM commands. </p>
-<p>there is no close loop filtering in MOAO DM commands, but there is still a time delay of 2 cycles. </p>
+<p>moao_recon happens after the common DM fitting and its integrator output to take into account the delay in DM commands. there is no close loop filtering in MOAO DM commands, but there is still a time delay of 2 cycles. </p>
 
 </div>
 </div>

@@ -8,7 +8,6 @@ var searchData=
   ['dither_5ft',['dither_t',['../classdither__t.html',1,'dither_t'],['../structDITHER__T.html',1,'DITHER_T']]],
   ['dm_5fcfg_5ft',['DM_CFG_T',['../structDM__CFG__T.html',1,'']]],
   ['dmat',['dmat',['../structdmat.html',1,'']]],
-  ['drawdata_5ft',['drawdata_t',['../structdrawdata__t.html',1,'']]],
   ['dsp',['dsp',['../structdsp.html',1,'']]],
   ['dspcell',['dspcell',['../structdspcell.html',1,'']]],
   ['dtf_5fs',['DTF_S',['../structDTF__S.html',1,'']]],

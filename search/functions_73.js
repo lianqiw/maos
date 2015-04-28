@@ -62,7 +62,6 @@ var searchData=
   ['streadfd',['streadfd',['../sockio_8h.html#afb4493d945a1d2b3f2c26a04e2a7bf8b',1,'sockio.c']]],
   ['streadstr',['streadstr',['../sockio_8h.html#a329670963f85960af4805e221af37db2',1,'sockio.c']]],
   ['streadstrarr',['streadstrarr',['../sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d',1,'sockio.c']]],
-  ['stwrite3',['stwrite3',['../ethtest_8c.html#a459f12d4bcbeaae4e4bce9b2df22788c',1,'ethtest.c']]],
   ['stwritefd',['stwritefd',['../sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f',1,'sockio.c']]],
   ['stwritestr',['stwritestr',['../sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d',1,'sockio.c']]],
   ['stwritestrarr',['stwritestrarr',['../sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339',1,'sockio.c']]]

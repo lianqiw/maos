@@ -111,21 +111,18 @@ $(document).ready(function(){initNavTree('cachedm_8c.html','');});
 <div class="title">cachedm.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains routines that prepare and carry out DM shape caching on fine sampled grid to speed up ray tracing.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a2923773c14f6b8673f1b6d9f63d1ae17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cachedm_8c.html#a2923773c14f6b8673f1b6d9f63d1ae17">prep_cachedm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a2923773c14f6b8673f1b6d9f63d1ae17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepares the DM caching structs.  <a href="#a2923773c14f6b8673f1b6d9f63d1ae17">More...</a><br/></td></tr>
 <tr class="separator:a2923773c14f6b8673f1b6d9f63d1ae17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5adf2590e4ff92a8cd044a52cf9bd753"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cachedm_8c.html#a5adf2590e4ff92a8cd044a52cf9bd753">calc_cachedm</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a5adf2590e4ff92a8cd044a52cf9bd753"><td class="mdescLeft">&#160;</td><td class="mdescRight">Partition the ray tracing by DM/Destination combinations, as well as segments in each combination to maximum efficiency.  <a href="#a5adf2590e4ff92a8cd044a52cf9bd753">More...</a><br/></td></tr>
 <tr class="separator:a5adf2590e4ff92a8cd044a52cf9bd753"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Contains routines that prepare and carry out DM shape caching on fine sampled grid to speed up ray tracing. </p>
+<div class="textblock"><p>Contains routines that prepare and carry out DM shape caching on fine sampled grid to speed up ray tracing.</p>
 <p>Because the DM has coarse sampling, and cubic influence functions, directly interpolate from the DM to the WFS and science OPD takes a lot of computation. We can speed up this process by first propagating the DM commands to a square grid that matches the sampling of the WFS or science OPD, and then propagate from the square grid to different WFS or science directions. For each sampling and each DM, we only need one fine sampled square grid that will cover all the different directions in the FoV of the WFSs or science. For the ground DM, we need a plane of 1/64m sampling that matches the WFS and science OPD. For the upper DM, we need to two planes, one at 1/64m for the LGS WFS and science OPD, and another one at 1/64 m (1-11.2/90) for the LGS due to cone effect. The square grid are on axis. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a2923773c14f6b8673f1b6d9f63d1ae17"></a>
@@ -141,7 +138,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Prepares the DM caching structs. </p>
 
 </div>
@@ -159,7 +155,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Partition the ray tracing by DM/Destination combinations, as well as segments in each combination to maximum efficiency. </p>
 
 </div>

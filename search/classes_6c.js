@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['l_5fmessage',['l_message',['../structl__message.html',1,'']]],
   ['lap_5ft',['LAP_T',['../structcuda__recon_1_1LAP__T.html',1,'cuda_recon']]],
   ['lcell',['lcell',['../structlcell.html',1,'']]],
   ['llt_5fcfg_5ft',['LLT_CFG_T',['../structLLT__CFG__T.html',1,'']]],

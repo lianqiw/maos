@@ -108,16 +108,13 @@ $(document).ready(function(){initNavTree('type_8h.html','');});
   <div class="summary">
 <a href="#nested-classes">Data Structures</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">type.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Defines the math data types like dmat, cmat, dcell, ccell, dsp, csp data types.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;../sys/sys.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html">dmat</a></td></tr>
@@ -139,22 +136,16 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structzsp.html">zsp</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmap__t.html">map_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">OPD or Amplitude map defined on square/rectangular grids.  <a href="structmap__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structrmap__t.html">rmap_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map with different x/y sampling.  <a href="structrmap__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlocstatcol__t.html">locstatcol_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store starting x,y for each col.  <a href="structlocstatcol__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlocstat__t.html">locstat_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores array of <a class="el" href="structlocstatcol__t.html" title="Store starting x,y for each col. ">locstatcol_t</a>.  <a href="structlocstat__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structloc__t.html">loc_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct for coordinates like plocs, xloc, aloc etc.  <a href="structloc__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpts__t.html">pts_t</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">low left point of each subaperture.  <a href="structpts__t.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structccell.html">ccell</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -239,33 +230,6 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>IND</b>(...)&#160;&#160;&#160;IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)</td></tr>
 <tr class="separator:a104f7f5429ad6b881b0d6ee3e1da78f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:adf7d97a8e8528fbd5f2581c6e0d8880e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf7d97a8e8528fbd5f2581c6e0d8880e"></a>
-typedef enum CEMBED&#160;</td><td class="memItemRight" valign="bottom"><b>CEMBED</b></td></tr>
-<tr class="separator:adf7d97a8e8528fbd5f2581c6e0d8880e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adaca599d2c287b0188058b508fb6612a"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structmap__t.html">map_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#adaca599d2c287b0188058b508fb6612a">map_t</a></td></tr>
-<tr class="memdesc:adaca599d2c287b0188058b508fb6612a"><td class="mdescLeft">&#160;</td><td class="mdescRight">OPD or Amplitude map defined on square/rectangular grids.  <a href="#adaca599d2c287b0188058b508fb6612a">More...</a><br/></td></tr>
-<tr class="separator:adaca599d2c287b0188058b508fb6612a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81a951f719f4387d03bc2fa7fa643d3f"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structrmap__t.html">rmap_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a81a951f719f4387d03bc2fa7fa643d3f">rmap_t</a></td></tr>
-<tr class="memdesc:a81a951f719f4387d03bc2fa7fa643d3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map with different x/y sampling.  <a href="#a81a951f719f4387d03bc2fa7fa643d3f">More...</a><br/></td></tr>
-<tr class="separator:a81a951f719f4387d03bc2fa7fa643d3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7abcaefef78390fe5419877a91e4ce9"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structlocstatcol__t.html">locstatcol_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#ae7abcaefef78390fe5419877a91e4ce9">locstatcol_t</a></td></tr>
-<tr class="memdesc:ae7abcaefef78390fe5419877a91e4ce9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Store starting x,y for each col.  <a href="#ae7abcaefef78390fe5419877a91e4ce9">More...</a><br/></td></tr>
-<tr class="separator:ae7abcaefef78390fe5419877a91e4ce9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6c60a9f09fc2f4070e55ab5607b2bc3"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structlocstat__t.html">locstat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#ae6c60a9f09fc2f4070e55ab5607b2bc3">locstat_t</a></td></tr>
-<tr class="memdesc:ae6c60a9f09fc2f4070e55ab5607b2bc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores array of <a class="el" href="structlocstatcol__t.html" title="Store starting x,y for each col. ">locstatcol_t</a>.  <a href="#ae6c60a9f09fc2f4070e55ab5607b2bc3">More...</a><br/></td></tr>
-<tr class="separator:ae6c60a9f09fc2f4070e55ab5607b2bc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a470b5d468de2e48ab16048d066558512"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structloc__t.html">loc_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a470b5d468de2e48ab16048d066558512">loc_t</a></td></tr>
-<tr class="memdesc:a470b5d468de2e48ab16048d066558512"><td class="mdescLeft">&#160;</td><td class="mdescRight">Struct for coordinates like plocs, xloc, aloc etc.  <a href="#a470b5d468de2e48ab16048d066558512">More...</a><br/></td></tr>
-<tr class="separator:a470b5d468de2e48ab16048d066558512"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8258bd56c5796930d3701a3253c41a20"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structpts__t.html">pts_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a8258bd56c5796930d3701a3253c41a20">pts_t</a></td></tr>
-<tr class="memdesc:a8258bd56c5796930d3701a3253c41a20"><td class="mdescLeft">&#160;</td><td class="mdescRight">low left point of each subaperture.  <a href="#a8258bd56c5796930d3701a3253c41a20">More...</a><br/></td></tr>
-<tr class="separator:a8258bd56c5796930d3701a3253c41a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec1b5e3c3df16427325defaffcb3cb2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec1b5e3c3df16427325defaffcb3cb2e"></a>
-typedef struct <a class="el" href="structcell.html">cell</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cell</b></td></tr>
-<tr class="separator:aec1b5e3c3df16427325defaffcb3cb2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a6260adf4abbf6316fe2fa1f0a479a037"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>CEMBED</b> { <br/>
@@ -280,97 +244,9 @@ Enumerations</h2></td></tr>
 <tr class="separator:a6260adf4abbf6316fe2fa1f0a479a037"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Defines the math data types like dmat, cmat, dcell, ccell, dsp, csp data types. </p>
+<div class="textblock"><p>Defines the math data types like dmat, cmat, dcell, ccell, dsp, csp data types.</p>
 <p>Don't use ulong for dimensions because subtracting a bigger ulong from a smaller ulong overflows. </p>
-</div><h2 class="groupheader">Typedef Documentation</h2>
-<a class="anchor" id="adaca599d2c287b0188058b508fb6612a"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structmap__t.html">map_t</a>  <a class="el" href="structmap__t.html">map_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>OPD or Amplitude map defined on square/rectangular grids. </p>
-<p>with equal spacing on x/y. Can be casted to dmat </p>
-
-</div>
-</div>
-<a class="anchor" id="a81a951f719f4387d03bc2fa7fa643d3f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structrmap__t.html">rmap_t</a> <a class="el" href="structrmap__t.html">rmap_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Map with different x/y sampling. </p>
-<p>Can be cased to dmat </p>
-
-</div>
-</div>
-<a class="anchor" id="ae7abcaefef78390fe5419877a91e4ce9"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structlocstatcol__t.html">locstatcol_t</a> <a class="el" href="structlocstatcol__t.html">locstatcol_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Store starting x,y for each col. </p>
-
-</div>
-</div>
-<a class="anchor" id="ae6c60a9f09fc2f4070e55ab5607b2bc3"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structlocstat__t.html">locstat_t</a> <a class="el" href="structlocstat__t.html">locstat_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Stores array of <a class="el" href="structlocstatcol__t.html" title="Store starting x,y for each col. ">locstatcol_t</a>. </p>
-
-</div>
-</div>
-<a class="anchor" id="a470b5d468de2e48ab16048d066558512"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structloc__t.html">loc_t</a> <a class="el" href="structloc__t.html">loc_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Struct for coordinates like plocs, xloc, aloc etc. </p>
-
-</div>
-</div>
-<a class="anchor" id="a8258bd56c5796930d3701a3253c41a20"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structpts__t.html">pts_t</a> <a class="el" href="structpts__t.html">pts_t</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>low left point of each subaperture. </p>
-<p>don't change the leading 5 elements. so that <a class="el" href="structpts__t.html" title="low left point of each subaperture. ">pts_t</a> can be cast to <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc. ">loc_t</a> </p>
-
-</div>
-</div>
-</div><!-- contents -->
+</div></div><!-- contents -->
 </div><!-- doc-content -->
 
    </ul>

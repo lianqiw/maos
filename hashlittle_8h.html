@@ -111,19 +111,15 @@ $(document).ready(function(){initNavTree('hashlittle_8h.html','');});
 <div class="title">hashlittle.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Hash a memory region to get uint32.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;stdint.h&gt;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a8fcafa39241f09d13a63a0f9756772cc"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hashlittle_8h.html#a8fcafa39241f09d13a63a0f9756772cc">hashlittle</a> (const void *key, size_t length, uint32_t initval)</td></tr>
-<tr class="memdesc:a8fcafa39241f09d13a63a0f9756772cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">hashlittle.c contains a hash function used to hash a chunk of data and return a hash number that can be used to identify the data.  <a href="#a8fcafa39241f09d13a63a0f9756772cc">More...</a><br/></td></tr>
 <tr class="separator:a8fcafa39241f09d13a63a0f9756772cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Hash a memory region to get uint32. </p>
-<p>Do not use on floating precision data. </p>
+<div class="textblock"><p>Hash a memory region to get uint32. Do not use on floating precision data. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a8fcafa39241f09d13a63a0f9756772cc"></a>
 <div class="memitem">
@@ -154,9 +150,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>hashlittle.c contains a hash function used to hash a chunk of data and return a hash number that can be used to identify the data. </p>
-<p>Apply with care to double floating numbers because of round off error. hash the data and return an hash number. </p>
+<p>hashlittle.c contains a hash function used to hash a chunk of data and return a hash number that can be used to identify the data. Apply with care to double floating numbers because of round off error. hash the data and return an hash number. </p>
 <dl class="section return"><dt>Returns</dt><dd>a hash number </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

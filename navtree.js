@@ -12,8 +12,9 @@ var NAVTREE =
     ] ],
     [ "Running simulations", "page25.html", [
       [ "Introduction", "page25.html#sect-run", null ],
-      [ "Examples", "page25.html#sect-exe", null ],
-      [ "Details", "page25.html#sect-details", null ]
+      [ "AO Configurations", "page25.html#sect-exe", null ],
+      [ "Change Parameters", "page25.html#sect-details", null ],
+      [ "Performance Evaluation", "page25.html#sect-perfevl", null ]
     ] ],
     [ "Simulation Parameters", "page30.html", null ],
     [ "Misregistration", "page31.html", [
@@ -77,21 +78,20 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classcuda__recon_1_1cufit__grid.html#a756c10089d63d29f24ffee66c51c17fe",
-"classcuda__wfs_1_1cuwfs__base.html#a9517c2b9c81236be4dad587ed82380d4",
-"fractal_8h.html#a79d73f36543bc6c698ed417d9f49524a",
-"maos_2parms_8h.html#a84262cb551e7cebb64dc0bdc3f2a4e89",
-"page70.html#sect-pointer",
-"skyc_2parms_8h.html#a45e1ed34abed9a596a6474b47fde73bb",
-"structDBG__CFG__T.html#a7b7363a941e9896fbce7990e1f04c779",
-"structLLT__CFG__T.html#ac8b3e202f9c4be878eb3a9a599c1de4f",
-"structPOWFS__CFG__T.html#a154de8530f467cd40a67f147a59ecf96",
-"structRECON__T.html#a117ecd404b40d3cfefa7d20dd15aee56",
-"structSIM__S.html#afff33157bc2f40bc3cb75ed73bfa92b6",
-"structSKYC__S.html#afe80675b96244367206f0f1693f4c24f",
-"structcudata__t.html#a38cbe890ecef9ba9ba3840f7811b9da1",
-"structkalman__t.html#a8483ee8fb02cb6ac347d276512cdbcab",
-"structssp.html#af7ec7a1ca644603e73438e944317214e"
+"classcuda__recon_1_1cufit__grid.html#afcc6ffa450800333628340cf6a1deaa8",
+"classcuwfs__t.html#a0b07a1be98793b5fcc63441434e67bd6",
+"gpu__mvm_8c.html#a0ddf1224851353fc92bfbff6f499fa97",
+"muv_8h.html#aff77c75d843be90cfe5c8a0aa552d9e0",
+"scheduler__client_8h.html#ab6a4b8cf1bc6f3fd8582630575ebc755",
+"structCN2EST__CFG__T.html#a8b956d35e59a79f45b42ec6c016e48b7",
+"structGPU__DATA__T.html#a43a14690fdf74e1a8af397e8ecd23b0f",
+"structNGSMOD__T.html#a775fc58dfb417d170c077c3ee44f204c",
+"structPROP__WRAP__T.html",
+"structSIM__CFG__T.html#a95888f046943700e71c979bc09a5247d",
+"structSKYC__S.html#a261c455bd2cf89b1a6ae516c62d9e525",
+"structcspcell.html#a53908c34870ae6094f472897f2be9a7e",
+"structlocccell.html#addd660a58ec6e54bb76662525bb75e51",
+"structzcell.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -106,26 +106,16 @@ $(document).ready(function(){initNavTree('stfun_8h.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">stfun.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routine to compute structure function.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a0ce1d1f2cb38ddc9fa3b54ca62e64a51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ce1d1f2cb38ddc9fa3b54ca62e64a51"></a>
-typedef struct stfun_t&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_t</b></td></tr>
-<tr class="separator:a0ce1d1f2cb38ddc9fa3b54ca62e64a51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
+<div class="textblock"><code>#include &quot;../math/mathdef.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a61949808f30b8c806f7bf5f59305060b"><td class="memItemLeft" align="right" valign="top">stfun_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#a61949808f30b8c806f7bf5f59305060b">stfun_init</a> (long nx, long ny, double *amp)</td></tr>
-<tr class="memdesc:a61949808f30b8c806f7bf5f59305060b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the stfun data.  <a href="#a61949808f30b8c806f7bf5f59305060b">More...</a><br/></td></tr>
 <tr class="separator:a61949808f30b8c806f7bf5f59305060b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25760d56b9e232904dacb79b1446a4cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a25760d56b9e232904dacb79b1446a4cb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_push</b> (stfun_t *A, <a class="el" href="structdmat.html">dmat</a> *opd)</td></tr>
@@ -134,7 +124,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_push</b> (stfun
 <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_finalize</b> (stfun_t *A)</td></tr>
 <tr class="separator:a4c9ecd1d7433204924e32cc095772364"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55983b822b2827c7531a51b04a0b3060"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stfun_8h.html#a55983b822b2827c7531a51b04a0b3060">stfun_kolmogorov</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double r0)</td></tr>
-<tr class="memdesc:a55983b822b2827c7531a51b04a0b3060"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate the structure function of the phase of kolmogorov spectrum.  <a href="#a55983b822b2827c7531a51b04a0b3060">More...</a><br/></td></tr>
 <tr class="separator:a55983b822b2827c7531a51b04a0b3060"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a28f18a71aa38dc228a8b4e5ac7a4e019"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28f18a71aa38dc228a8b4e5ac7a4e019"></a>
 <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>vkcov</b> (long nx, double dx, double r0, double L0)</td></tr>
@@ -172,7 +161,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_push</b> (stfun
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Initialize the stfun data. </p>
 
 </div>
@@ -200,8 +188,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>stfun_push</b> (stfun
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Generate the structure function of the phase of kolmogorov spectrum. </p>
+<p>Generate the structure function of the phase of kolmogorov spectrum </p>
 
 </div>
 </div>

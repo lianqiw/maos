@@ -112,10 +112,11 @@ $(document).ready(function(){initNavTree('perfevl_8c.html','');});
 <div class="title">perfevl.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Peformance evaluation on science FoV.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+<code>#include &quot;sim.h&quot;</code><br/>
+<code>#include &quot;ahst.h&quot;</code><br/>
+<code>#include &quot;sim_utils.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a51b7a9c320bb9b58fc5632da0a44ab84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51b7a9c320bb9b58fc5632da0a44ab84"></a>
@@ -131,15 +132,12 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a24fb69fe8cc24a1851a6337a3875af52"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="perfevl_8c.html#a24fb69fe8cc24a1851a6337a3875af52">perfevl_ievl</a> (<a class="el" href="structthread__t.html">thread_t</a> *info)</td></tr>
-<tr class="memdesc:a24fb69fe8cc24a1851a6337a3875af52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performance evaluation for each direction in parallel mode.  <a href="#a24fb69fe8cc24a1851a6337a3875af52">More...</a><br/></td></tr>
 <tr class="separator:a24fb69fe8cc24a1851a6337a3875af52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19afa47f9c816174b2fab7b46eba5c32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="perfevl_8c.html#a19afa47f9c816174b2fab7b46eba5c32">perfevl</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr class="memdesc:a19afa47f9c816174b2fab7b46eba5c32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean to field average.  <a href="#a19afa47f9c816174b2fab7b46eba5c32">More...</a><br/></td></tr>
 <tr class="separator:a19afa47f9c816174b2fab7b46eba5c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Peformance evaluation on science FoV. </p>
-<p>Notice that the science FoV can be different from the DM fitting FoV, which is tuned to better sharpen the NGS</p>
+<div class="textblock"><p>Peformance evaluation on science FoV. Notice that the science FoV can be different from the DM fitting FoV, which is tuned to better sharpen the NGS</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>Write a standalone routine that can plot results, using techniques developped in drawdaemon. </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a24fb69fe8cc24a1851a6337a3875af52"></a>
@@ -155,7 +153,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Performance evaluation for each direction in parallel mode. </p>
 
 </div>
@@ -173,7 +170,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean to field average. </p>
 
 </div>

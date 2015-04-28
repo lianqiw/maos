@@ -114,10 +114,12 @@ $(document).ready(function(){initNavTree('bin_8h.html','');});
 <div class="title">bin.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Defines our custom file format .bin that may be gzipped and the basic IO functions.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;sys/time.h&gt;</code><br/>
+<code>#include &lt;limits.h&gt;</code><br/>
+<code>#include &lt;stdint.h&gt;</code><br/>
+<code>#include &lt;pthread.h&gt;</code><br/>
+<code>#include &quot;common.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structheader__t.html">header_t</a></td></tr>
@@ -215,12 +217,6 @@ Typedefs</h2></td></tr>
 <tr class="memitem:aef6ee0fd51b4998d5eae9ffe4e44306c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef6ee0fd51b4998d5eae9ffe4e44306c"></a>
 typedef void *&#160;</td><td class="memItemRight" valign="bottom"><b>voidp</b></td></tr>
 <tr class="separator:aef6ee0fd51b4998d5eae9ffe4e44306c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe7dcc5edaa17468e8fc61e162a1b6b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe7dcc5edaa17468e8fc61e162a1b6b0"></a>
-typedef struct file_t&#160;</td><td class="memItemRight" valign="bottom"><b>file_t</b></td></tr>
-<tr class="separator:abe7dcc5edaa17468e8fc61e162a1b6b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af144e75421ff13a695fae91479c9768c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af144e75421ff13a695fae91479c9768c"></a>
-typedef struct mmap_t&#160;</td><td class="memItemRight" valign="bottom"><b>mmap_t</b></td></tr>
-<tr class="separator:af144e75421ff13a695fae91479c9768c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -255,120 +251,84 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 <tr class="memdesc:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="mdescLeft">&#160;</td><td class="mdescRight">saving to disk will be disabled when set to nonzero.  <a href="#a55e5dc1b9fd29f858d152f3194dd1d22">More...</a><br/></td></tr>
 <tr class="separator:a55e5dc1b9fd29f858d152f3194dd1d22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a413945d9b9ed2b96159910115707a7ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a413945d9b9ed2b96159910115707a7ad">zftouch</a> (const char *format,...)</td></tr>
-<tr class="memdesc:a413945d9b9ed2b96159910115707a7ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update the modification time of a bin file.  <a href="#a413945d9b9ed2b96159910115707a7ad">More...</a><br/></td></tr>
 <tr class="separator:a413945d9b9ed2b96159910115707a7ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb7723b26befc0c6f2a95a7e1a516201"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#afb7723b26befc0c6f2a95a7e1a516201">zfeof</a> (file_t *fp)</td></tr>
-<tr class="memdesc:afb7723b26befc0c6f2a95a7e1a516201"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return 1 if end of file is reached.  <a href="#afb7723b26befc0c6f2a95a7e1a516201">More...</a><br/></td></tr>
 <tr class="separator:afb7723b26befc0c6f2a95a7e1a516201"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d046d102635bba171fb6eaf42ff54fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a1d046d102635bba171fb6eaf42ff54fc">zfpos</a> (file_t *fp)</td></tr>
+<tr class="separator:a1d046d102635bba171fb6eaf42ff54fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d718e30cd4faabe0c6b902e3ede141c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a3d718e30cd4faabe0c6b902e3ede141c">zfseek</a> (file_t *fp, long offset, int whence)</td></tr>
-<tr class="memdesc:a3d718e30cd4faabe0c6b902e3ede141c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the current position pointer, like fseek.  <a href="#a3d718e30cd4faabe0c6b902e3ede141c">More...</a><br/></td></tr>
 <tr class="separator:a3d718e30cd4faabe0c6b902e3ede141c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the file position pointer to the beginning.  <a href="#a0fb14ee86ee80eac407abb5fe9b5e289">More...</a><br/></td></tr>
 <tr class="separator:a0fb14ee86ee80eac407abb5fe9b5e289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memItemLeft" align="right" valign="top">file_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a43fd0b9636dd5ca782e8c718eeb8b7f1">zfopen</a> (const char *fn, const char *mod)</td></tr>
-<tr class="memdesc:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a bin file for read/write access.  <a href="#a43fd0b9636dd5ca782e8c718eeb8b7f1">More...</a><br/></td></tr>
 <tr class="separator:a43fd0b9636dd5ca782e8c718eeb8b7f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b81bfaf82d10ec42e8d296544a0b3dc"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a4b81bfaf82d10ec42e8d296544a0b3dc">zfname</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a4b81bfaf82d10ec42e8d296544a0b3dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the underlining filename.  <a href="#a4b81bfaf82d10ec42e8d296544a0b3dc">More...</a><br/></td></tr>
 <tr class="separator:a4b81bfaf82d10ec42e8d296544a0b3dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01b67a362199a6b984e5759f7d84c168"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a01b67a362199a6b984e5759f7d84c168">zfisfits</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a01b67a362199a6b984e5759f7d84c168"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return 1 when it is a fits file.  <a href="#a01b67a362199a6b984e5759f7d84c168">More...</a><br/></td></tr>
 <tr class="separator:a01b67a362199a6b984e5759f7d84c168"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ed840d37c980314e41e565e7dd617d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a4ed840d37c980314e41e565e7dd617d3">zfclose</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a4ed840d37c980314e41e565e7dd617d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the file.  <a href="#a4ed840d37c980314e41e565e7dd617d3">More...</a><br/></td></tr>
 <tr class="separator:a4ed840d37c980314e41e565e7dd617d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a956297097c436bc2e8eaf8789fa522ee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a956297097c436bc2e8eaf8789fa522ee">zflush</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a956297097c436bc2e8eaf8789fa522ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flush the buffer.  <a href="#a956297097c436bc2e8eaf8789fa522ee">More...</a><br/></td></tr>
 <tr class="separator:a956297097c436bc2e8eaf8789fa522ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a67c349fe1033d91feb34b436dbb7e6b3">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
-<tr class="memdesc:a67c349fe1033d91feb34b436dbb7e6b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.  <a href="#a67c349fe1033d91feb34b436dbb7e6b3">More...</a><br/></td></tr>
 <tr class="separator:a67c349fe1033d91feb34b436dbb7e6b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a092420d038c729b4dc5e9829b515fd94"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a092420d038c729b4dc5e9829b515fd94">zfread2</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
-<tr class="memdesc:a092420d038c729b4dc5e9829b515fd94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles byteswapping in fits file format then call zfread_do to do the actual writing.  <a href="#a092420d038c729b4dc5e9829b515fd94">More...</a><br/></td></tr>
 <tr class="separator:a092420d038c729b4dc5e9829b515fd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f90c7b343cad172afd005feb5112c30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f90c7b343cad172afd005feb5112c30">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
-<tr class="memdesc:a6f90c7b343cad172afd005feb5112c30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wraps zfread2 and do error checking.  <a href="#a6f90c7b343cad172afd005feb5112c30">More...</a><br/></td></tr>
 <tr class="separator:a6f90c7b343cad172afd005feb5112c30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf3e8d275430f33c2cd8262fac88cac8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#adf3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
-<tr class="memdesc:adf3e8d275430f33c2cd8262fac88cac8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Search and return the value correspond to key.  <a href="#adf3e8d275430f33c2cd8262fac88cac8">More...</a><br/></td></tr>
 <tr class="separator:adf3e8d275430f33c2cd8262fac88cac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af916b0aa443255291534c8a9222dd585"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
-<tr class="memdesc:af916b0aa443255291534c8a9222dd585"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a number from the header with key.  <a href="#af916b0aa443255291534c8a9222dd585">More...</a><br/></td></tr>
 <tr class="separator:af916b0aa443255291534c8a9222dd585"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abefda2be23c35c49761c61084c86b936"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#abefda2be23c35c49761c61084c86b936">search_header_num_valid</a> (const char *header, const char *key)</td></tr>
-<tr class="memdesc:abefda2be23c35c49761c61084c86b936"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a number from the header and verify.  <a href="#abefda2be23c35c49761c61084c86b936">More...</a><br/></td></tr>
 <tr class="separator:abefda2be23c35c49761c61084c86b936"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a343d68b2551eff30cf94bb976cafb0ff"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
-<tr class="memdesc:a343d68b2551eff30cf94bb976cafb0ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the length of mem to storge the header and its dimension, rounded to multiple of 8.  <a href="#a343d68b2551eff30cf94bb976cafb0ff">More...</a><br/></td></tr>
 <tr class="separator:a343d68b2551eff30cf94bb976cafb0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1825ca342f947862c152e0408e923189"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a1825ca342f947862c152e0408e923189">write_timestamp</a> (file_t *fp)</td></tr>
-<tr class="memdesc:a1825ca342f947862c152e0408e923189"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the time stamp as header into current location in the file.  <a href="#a1825ca342f947862c152e0408e923189">More...</a><br/></td></tr>
 <tr class="separator:a1825ca342f947862c152e0408e923189"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeafd15c22e61f56f291b709b43ddb04e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
-<tr class="memdesc:aeafd15c22e61f56f291b709b43ddb04e"><td class="mdescLeft">&#160;</td><td class="mdescRight">A unified header writing routine for .bin and .fits files.  <a href="#aeafd15c22e61f56f291b709b43ddb04e">More...</a><br/></td></tr>
 <tr class="separator:aeafd15c22e61f56f291b709b43ddb04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a972a1cdff7d5f045daa2ffe7fb43ecc0">read_header2</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
-<tr class="memdesc:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">A unified header reading routine for .bin and .fits files.  <a href="#a972a1cdff7d5f045daa2ffe7fb43ecc0">More...</a><br/></td></tr>
 <tr class="separator:a972a1cdff7d5f045daa2ffe7fb43ecc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a5ed0da59c78ad3c8ada5c0ce67fa1c94">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
-<tr class="memdesc:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="mdescLeft">&#160;</td><td class="mdescRight">calls read_header2 and abort if error happens.  <a href="#a5ed0da59c78ad3c8ada5c0ce67fa1c94">More...</a><br/></td></tr>
 <tr class="separator:a5ed0da59c78ad3c8ada5c0ce67fa1c94"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a585950cd0440830725f150106f4c41f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a585950cd0440830725f150106f4c41f3">check_cell</a> (<a class="el" href="structheader__t.html">header_t</a> *header, long *nx, long *ny)</td></tr>
-<tr class="memdesc:a585950cd0440830725f150106f4c41f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether the header refers to a cell.  <a href="#a585950cd0440830725f150106f4c41f3">More...</a><br/></td></tr>
 <tr class="separator:a585950cd0440830725f150106f4c41f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9471eeb77e74e8c66ec913534df2d72d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a9471eeb77e74e8c66ec913534df2d72d">writearr</a> (const void *fpn, const int isfile, const size_t size, const uint32_t magic, const char *header, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
-<tr class="memdesc:a9471eeb77e74e8c66ec913534df2d72d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write an 1-d or 2-d array into the file.  <a href="#a9471eeb77e74e8c66ec913534df2d72d">More...</a><br/></td></tr>
 <tr class="separator:a9471eeb77e74e8c66ec913534df2d72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07e8fcd0256fd8377d0bb0d86bfd3c53"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a07e8fcd0256fd8377d0bb0d86bfd3c53">writedbl</a> (const double *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a07e8fcd0256fd8377d0bb0d86bfd3c53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a double array of size nx*ny to file.  <a href="#a07e8fcd0256fd8377d0bb0d86bfd3c53">More...</a><br/></td></tr>
 <tr class="separator:a07e8fcd0256fd8377d0bb0d86bfd3c53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad50c5f6b6016874997a5be6105482229"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ad50c5f6b6016874997a5be6105482229">writeflt</a> (const float *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:ad50c5f6b6016874997a5be6105482229"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a double array of size nx*ny to file.  <a href="#ad50c5f6b6016874997a5be6105482229">More...</a><br/></td></tr>
 <tr class="separator:ad50c5f6b6016874997a5be6105482229"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b79cbb8bdc6e520ce66162fd80a01b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a3b79cbb8bdc6e520ce66162fd80a01b3">writecmp</a> (const dcomplex *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a3b79cbb8bdc6e520ce66162fd80a01b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a double complex array of size nx*ny to file.  <a href="#a3b79cbb8bdc6e520ce66162fd80a01b3">More...</a><br/></td></tr>
 <tr class="separator:a3b79cbb8bdc6e520ce66162fd80a01b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2945e4b7fdf9ea504ef1c13a092f8b9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a2945e4b7fdf9ea504ef1c13a092f8b9b">writefcmp</a> (const fcomplex *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a2945e4b7fdf9ea504ef1c13a092f8b9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a float complex array of size nx*ny to file.  <a href="#a2945e4b7fdf9ea504ef1c13a092f8b9b">More...</a><br/></td></tr>
 <tr class="separator:a2945e4b7fdf9ea504ef1c13a092f8b9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f306628b3df9abba320293f2108b4aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a6f306628b3df9abba320293f2108b4aa">writeint</a> (const int *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a6f306628b3df9abba320293f2108b4aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a int array of size nx*ny to file.  <a href="#a6f306628b3df9abba320293f2108b4aa">More...</a><br/></td></tr>
 <tr class="separator:a6f306628b3df9abba320293f2108b4aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee94d09fd8d7b41ed85dcf5bd6e493a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aee94d09fd8d7b41ed85dcf5bd6e493a2">writelong</a> (const long *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:aee94d09fd8d7b41ed85dcf5bd6e493a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a long array of size nx*ny to file.  <a href="#aee94d09fd8d7b41ed85dcf5bd6e493a2">More...</a><br/></td></tr>
 <tr class="separator:aee94d09fd8d7b41ed85dcf5bd6e493a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85fcc0ed2953b5e9d0812f92de86e5a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a85fcc0ed2953b5e9d0812f92de86e5a3">writespint</a> (const spint *p, long nx, long ny, const char *format,...)</td></tr>
-<tr class="memdesc:a85fcc0ed2953b5e9d0812f92de86e5a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write spint array of size nx*ny to file.  <a href="#a85fcc0ed2953b5e9d0812f92de86e5a3">More...</a><br/></td></tr>
 <tr class="separator:a85fcc0ed2953b5e9d0812f92de86e5a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa4fdbbb160f78db3e75593887b597d51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#aa4fdbbb160f78db3e75593887b597d51">readspintdata</a> (file_t *fp, uint32_t magic, spint *out, long len)</td></tr>
-<tr class="memdesc:aa4fdbbb160f78db3e75593887b597d51"><td class="mdescLeft">&#160;</td><td class="mdescRight">read spint array of size len from file and do optional data conversion.  <a href="#aa4fdbbb160f78db3e75593887b597d51">More...</a><br/></td></tr>
 <tr class="separator:aa4fdbbb160f78db3e75593887b597d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17976d85cba2939873589c6a8bc3e08b"><td class="memItemLeft" align="right" valign="top">spint *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a17976d85cba2939873589c6a8bc3e08b">readspint</a> (file_t *fp, long *nx, long *ny)</td></tr>
-<tr class="memdesc:a17976d85cba2939873589c6a8bc3e08b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read spint array of size nx*ny from file and do optional data conversion.  <a href="#a17976d85cba2939873589c6a8bc3e08b">More...</a><br/></td></tr>
 <tr class="separator:a17976d85cba2939873589c6a8bc3e08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7052d4dbd36ff6e9108e022df369b0a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a7052d4dbd36ff6e9108e022df369b0a2">mmap_unref</a> (struct mmap_t *in)</td></tr>
-<tr class="memdesc:a7052d4dbd36ff6e9108e022df369b0a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unreference the mmaped memory.  <a href="#a7052d4dbd36ff6e9108e022df369b0a2">More...</a><br/></td></tr>
 <tr class="separator:a7052d4dbd36ff6e9108e022df369b0a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a28a7321caa0513c0395c929ca49eae"><td class="memItemLeft" align="right" valign="top">struct mmap_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a3a28a7321caa0513c0395c929ca49eae">mmap_new</a> (int fd, void *p, long n)</td></tr>
-<tr class="memdesc:a3a28a7321caa0513c0395c929ca49eae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a mmap_t object.  <a href="#a3a28a7321caa0513c0395c929ca49eae">More...</a><br/></td></tr>
 <tr class="separator:a3a28a7321caa0513c0395c929ca49eae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ae41cea03912f667596c2fe5af3678d"><td class="memItemLeft" align="right" valign="top">mmap_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a1ae41cea03912f667596c2fe5af3678d">mmap_ref</a> (mmap_t *in)</td></tr>
-<tr class="memdesc:a1ae41cea03912f667596c2fe5af3678d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a reference to a mmap_t.  <a href="#a1ae41cea03912f667596c2fe5af3678d">More...</a><br/></td></tr>
 <tr class="separator:a1ae41cea03912f667596c2fe5af3678d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af13015f496895d65cbd548b35afa90a8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#af13015f496895d65cbd548b35afa90a8">mmap_open</a> (char *fn, int rw)</td></tr>
-<tr class="memdesc:af13015f496895d65cbd548b35afa90a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a file for write with mmmap.  <a href="#af13015f496895d65cbd548b35afa90a8">More...</a><br/></td></tr>
 <tr class="separator:af13015f496895d65cbd548b35afa90a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8b2fc20c9265c5756cbd0f4b8402b4f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#ae8b2fc20c9265c5756cbd0f4b8402b4f">mmap_header_rw</a> (char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header)</td></tr>
-<tr class="memdesc:ae8b2fc20c9265c5756cbd0f4b8402b4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the header in the mmaped file.  <a href="#ae8b2fc20c9265c5756cbd0f4b8402b4f">More...</a><br/></td></tr>
 <tr class="separator:ae8b2fc20c9265c5756cbd0f4b8402b4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a072854f0754e40203c7c88eb841b562d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8h.html#a072854f0754e40203c7c88eb841b562d">mmap_header_ro</a> (char **p0, uint32_t *magic, long *nx, long *ny, char **header0)</td></tr>
-<tr class="memdesc:a072854f0754e40203c7c88eb841b562d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the dimension from the header in the mmaped file.  <a href="#a072854f0754e40203c7c88eb841b562d">More...</a><br/></td></tr>
 <tr class="separator:a072854f0754e40203c7c88eb841b562d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Defines our custom file format .bin that may be gzipped and the basic IO functions. </p>
-<p>All file read/write operators are through functions in this file. The routines can also operate on .fits files. </p>
+<div class="textblock"><p>Defines our custom file format .bin that may be gzipped and the basic IO functions. All file read/write operators are through functions in this file. The routines can also operate on .fits files. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a55e5dc1b9fd29f858d152f3194dd1d22"></a>
 <div class="memitem">
@@ -395,7 +355,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
 </div><div class="memdoc">
 
 <p>saving to disk will be disabled when set to nonzero. </p>
-<p>saving to disk will be disabled when set to nonzero. </p>
+<p>Test whether a bin file exist. </p>
 
 </div>
 </div>
@@ -422,7 +382,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Update the modification time of a bin file. </p>
 
 </div>
@@ -440,8 +399,24 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Return 1 if end of file is reached. </p>
+
+</div>
+</div>
+<a class="anchor" id="a1d046d102635bba171fb6eaf42ff54fc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int zfpos </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Tell position pointer in file. </p>
 
 </div>
 </div>
@@ -474,8 +449,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Move the current position pointer, like fseek. </p>
+<p>Move the current position pointer, like fseek </p>
 
 </div>
 </div>
@@ -492,8 +466,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Move the file position pointer to the beginning. </p>
+<p>Move the file position pointer to the beginning </p>
 
 </div>
 </div>
@@ -520,8 +493,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Open a bin file for read/write access. </p>
+<p>Open a bin file for read/write access.</p>
 <p>Whether the file is gzipped or not is automatically determined when open for reading. When open for writing, if the file name ends with .bin or .fits, will not be gzipped. If the file has no suffix, the file will be gzipped and .bin is appened to file name. </p>
 
 </div>
@@ -539,8 +511,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Return the underlining filename. </p>
+<p>Return the underlining filename </p>
 
 </div>
 </div>
@@ -557,7 +528,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Return 1 when it is a fits file. </p>
 
 </div>
@@ -575,7 +545,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Close the file. </p>
 
 </div>
@@ -593,7 +562,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Flush the buffer. </p>
 
 </div>
@@ -633,7 +601,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Handles byteswapping in fits file format then call zfwrite_do to do the actual writing. </p>
 
 </div>
@@ -673,7 +640,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Handles byteswapping in fits file format then call zfread_do to do the actual writing. </p>
 
 </div>
@@ -713,7 +679,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Wraps zfread2 and do error checking. </p>
 
 </div>
@@ -741,9 +706,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Search and return the value correspond to key. </p>
-<p>NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign. </p>
+<p>Search and return the value correspond to key. NULL if not found. Do not free the returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace), and succeeded by = sign. </p>
 
 </div>
 </div>
@@ -770,8 +733,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read a number from the header with key. </p>
+<p>Read a number from the header with key </p>
 
 </div>
 </div>
@@ -798,7 +760,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Read a number from the header and verify. </p>
 
 </div>
@@ -816,7 +777,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Get the length of mem to storge the header and its dimension, rounded to multiple of 8. </p>
 
 </div>
@@ -834,7 +794,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write the time stamp as header into current location in the file. </p>
 
 </div>
@@ -862,9 +821,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>A unified header writing routine for .bin and .fits files. </p>
-<p>It write the array information and string header if any. </p>
+<p>A unified header writing routine for .bin and .fits files. It write the array information and string header if any. </p>
 
 </div>
 </div>
@@ -891,9 +848,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>A unified header reading routine for .bin and .fits files. </p>
-<p>It read the array information and string header if any. Return non zero value if reading failed </p>
+<p>A unified header reading routine for .bin and .fits files. It read the array information and string header if any. Return non zero value if reading failed </p>
 
 </div>
 </div>
@@ -920,7 +875,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>calls read_header2 and abort if error happens. </p>
 
 </div>
@@ -954,9 +908,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Check whether the header refers to a cell. </p>
-<p>If yes, return NULL. nx, ny are assigned to the dimension. </p>
+<p>Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension. </p>
 
 </div>
 </div>
@@ -1019,15 +971,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Write an 1-d or 2-d array into the file. </p>
-<p>First write a magic number that represents the data type. Then write two numbers representing the dimension. Finally write the data itself. </p>
+<p>Write an 1-d or 2-d array into the file. First write a magic number that represents the data type. Then write two numbers representing the dimension. Finally write the data itself. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">fpn</td><td>The file pointer </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">isfn</td><td>Is this a filename or already opened file </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see <a class="el" href="bin_8h.html" title="Defines our custom file format .bin that may be gzipped and the basic IO functions. ">bin.h</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see <a class="el" href="bin_8h.html">bin.h</a> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The header as string </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The data of the array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. this index changes fastest </td></tr>
@@ -1079,7 +1029,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a double array of size nx*ny to file. </p>
 
 </div>
@@ -1125,7 +1074,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a double array of size nx*ny to file. </p>
 
 </div>
@@ -1171,7 +1119,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a double complex array of size nx*ny to file. </p>
 
 </div>
@@ -1217,7 +1164,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a float complex array of size nx*ny to file. </p>
 
 </div>
@@ -1263,7 +1209,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a int array of size nx*ny to file. </p>
 
 </div>
@@ -1309,7 +1254,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write a long array of size nx*ny to file. </p>
 
 </div>
@@ -1355,7 +1299,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Write spint array of size nx*ny to file. </p>
 
 </div>
@@ -1395,7 +1338,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>read spint array of size len from file and do optional data conversion. </p>
 
 </div>
@@ -1429,7 +1371,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Read spint array of size nx*ny from file and do optional data conversion. </p>
 
 </div>
@@ -1447,9 +1388,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Unreference the mmaped memory. </p>
-<p>When the reference drops to zero, unmap it. </p>
+<p>Unreference the mmaped memory. When the reference drops to zero, unmap it. </p>
 
 </div>
 </div>
@@ -1482,7 +1421,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Create a mmap_t object. </p>
 
 </div>
@@ -1500,7 +1438,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Add a reference to a mmap_t. </p>
 
 </div>
@@ -1528,9 +1465,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Open a file for write with mmmap. </p>
-<p>We don't provide a access control here for generic usage of the function. Lock on a special dummy file for access control. </p>
+<p>Open a file for write with mmmap. We don't provide a access control here for generic usage of the function. Lock on a special dummy file for access control. </p>
 
 </div>
 </div>
@@ -1581,9 +1516,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Initialize the header in the mmaped file. </p>
-<p>If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p. </p>
+<p>Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p. </p>
 
 </div>
 </div>
@@ -1628,7 +1561,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>gzflush</b> (voidp gzf
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Initialize the dimension from the header in the mmaped file. </p>
 
 </div>

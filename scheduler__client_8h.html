@@ -111,26 +111,20 @@ $(document).ready(function(){initNavTree('scheduler__client_8h.html','');});
 <div class="title">scheduler_client.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Contains routines that will be used to talk to the scheduler.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;scheduler.h&quot;</code><br/>
+<code>#include &lt;stdint.h&gt;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ab6a4b8cf1bc6f3fd8582630575ebc755"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#ab6a4b8cf1bc6f3fd8582630575ebc755">scheduler_listen</a> (void(*fun)(int))</td></tr>
-<tr class="memdesc:ab6a4b8cf1bc6f3fd8582630575ebc755"><td class="mdescLeft">&#160;</td><td class="mdescRight">Started by maos to listen to the sock which connects to the scheduler for commands.  <a href="#ab6a4b8cf1bc6f3fd8582630575ebc755">More...</a><br/></td></tr>
 <tr class="separator:ab6a4b8cf1bc6f3fd8582630575ebc755"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa973afc826afd1b7e797c3d0a4115a1b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#aa973afc826afd1b7e797c3d0a4115a1b">scheduler_start</a> (char *path, int nthread, int waiting)</td></tr>
-<tr class="memdesc:aa973afc826afd1b7e797c3d0a4115a1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by maos to report a job start to scheduler.  <a href="#aa973afc826afd1b7e797c3d0a4115a1b">More...</a><br/></td></tr>
 <tr class="separator:aa973afc826afd1b7e797c3d0a4115a1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a421e27a8cfef2c8bb7439f0f4ab949c2">scheduler_wait</a> (void)</td></tr>
-<tr class="memdesc:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by maos to wait for go signal from scheduler.  <a href="#a421e27a8cfef2c8bb7439f0f4ab949c2">More...</a><br/></td></tr>
 <tr class="separator:a421e27a8cfef2c8bb7439f0f4ab949c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5986891c7e4175bef6a299caa29b3c8d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a5986891c7e4175bef6a299caa29b3c8d">scheduler_finish</a> (int status)</td></tr>
-<tr class="memdesc:a5986891c7e4175bef6a299caa29b3c8d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by maos to notify scheduler the completion of a job.  <a href="#a5986891c7e4175bef6a299caa29b3c8d">More...</a><br/></td></tr>
 <tr class="separator:a5986891c7e4175bef6a299caa29b3c8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d7d057907b8873fd6855a54c383a7b8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a9d7d057907b8873fd6855a54c383a7b8">scheduler_report</a> (<a class="el" href="structSTATUS__T.html">STATUS_T</a> *status)</td></tr>
-<tr class="memdesc:a9d7d057907b8873fd6855a54c383a7b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">called by <a class="el" href="sim_8c.html" title="Call various functions to do the simulation and evaluate performance. ">sim.c</a> to report job status  <a href="#a9d7d057907b8873fd6855a54c383a7b8">More...</a><br/></td></tr>
 <tr class="separator:a9d7d057907b8873fd6855a54c383a7b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaadfe50a7ecd1fd90c0c9cc17ea2730e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaadfe50a7ecd1fd90c0c9cc17ea2730e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_launch_drawdaemon</b> (char *fifo)</td></tr>
@@ -139,19 +133,14 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_launch_drawd
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawdaemon</b> (int pid, int direct)</td></tr>
 <tr class="separator:a08135127ac0e2808535d8b42e3b24257"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08ad5203ea6cdb558062b292138b73d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a08ad5203ea6cdb558062b292138b73d9">scheduler_launch_exe</a> (const char *host, int argc, const char *argv[])</td></tr>
-<tr class="memdesc:a08ad5203ea6cdb558062b292138b73d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ask scheduler in another machine to launch exe.  <a href="#a08ad5203ea6cdb558062b292138b73d9">More...</a><br/></td></tr>
 <tr class="separator:a08ad5203ea6cdb558062b292138b73d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a928e4a2456fb419b4361122459bf63fb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a928e4a2456fb419b4361122459bf63fb">call_addr2line</a> (char *ans, int nans, const char *cmd)</td></tr>
-<tr class="memdesc:a928e4a2456fb419b4361122459bf63fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Execute addr2line as specified in buf, combine the answer, and return the string.  <a href="#a928e4a2456fb419b4361122459bf63fb">More...</a><br/></td></tr>
 <tr class="separator:a928e4a2456fb419b4361122459bf63fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a7861b01cc62c04cfeacec8b8ed27aab2">print_backtrace_symbol</a> (void *const *buffer, int size)</td></tr>
-<tr class="memdesc:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert backtrace address to source line.  <a href="#a7861b01cc62c04cfeacec8b8ed27aab2">More...</a><br/></td></tr>
 <tr class="separator:a7861b01cc62c04cfeacec8b8ed27aab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2792cc8d89def3977725e8a4a108eeda"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a2792cc8d89def3977725e8a4a108eeda">scheduler_send_socket</a> (int sfd)</td></tr>
-<tr class="memdesc:a2792cc8d89def3977725e8a4a108eeda"><td class="mdescLeft">&#160;</td><td class="mdescRight">send a sock to the scheduler for caching  <a href="#a2792cc8d89def3977725e8a4a108eeda">More...</a><br/></td></tr>
 <tr class="separator:a2792cc8d89def3977725e8a4a108eeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ac41fc0c0ba612865c05ff21b9d093e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="scheduler__client_8h.html#a3ac41fc0c0ba612865c05ff21b9d093e">scheduler_recv_socket</a> (int *sfd)</td></tr>
-<tr class="memdesc:a3ac41fc0c0ba612865c05ff21b9d093e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a socket from the scheduler for reuse  <a href="#a3ac41fc0c0ba612865c05ff21b9d093e">More...</a><br/></td></tr>
 <tr class="separator:a3ac41fc0c0ba612865c05ff21b9d093e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -170,8 +159,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Started by maos to listen to the sock which connects to the scheduler for commands. </p>
+<p>Started by maos to listen to the sock which connects to the scheduler for commands </p>
 
 </div>
 </div>
@@ -204,7 +192,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Called by maos to report a job start to scheduler. </p>
 
 </div>
@@ -222,7 +209,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Called by maos to wait for go signal from scheduler. </p>
 
 </div>
@@ -240,8 +226,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Called by maos to notify scheduler the completion of a job. </p>
+<p>Called by maos to notify scheduler the completion of a job </p>
 
 </div>
 </div>
@@ -258,8 +243,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>called by <a class="el" href="sim_8c.html" title="Call various functions to do the simulation and evaluate performance. ">sim.c</a> to report job status </p>
+<p>called by <a class="el" href="sim_8c.html">sim.c</a> to report job status </p>
 
 </div>
 </div>
@@ -292,7 +276,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Ask scheduler in another machine to launch exe. </p>
 
 </div>
@@ -326,7 +309,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Execute addr2line as specified in buf, combine the answer, and return the string. </p>
 
 </div>
@@ -354,9 +336,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Convert backtrace address to source line. </p>
-<p>Do not call routines that may call malloc as the mutex in malloc may already be locked. </p>
+<p>Convert backtrace address to source line. Do not call routines that may call malloc as the mutex in malloc may already be locked. </p>
 
 </div>
 </div>
@@ -373,7 +353,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>send a sock to the scheduler for caching </p>
 
 </div>
@@ -391,7 +370,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>scheduler_get_drawd
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>get a socket from the scheduler for reuse </p>
 
 </div>

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['main',['main',['../skyc_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'main(int argc, const char *argv[]):&#160;skyc.c'],['../drawres_8c.html#a0ddf1224851353fc92bfbff6f499fa97',1,'main(int argc, char *argv[]):&#160;drawres.c']]],
+  ['main',['main',['../skyc_8c.html#ac0f2228420376f4db7e1274f2b41667c',1,'skyc.c']]],
   ['maos',['maos',['../maos_8c.html#a03b12a216d3e6a33a008f5e35da726e3',1,'maos.c']]],
   ['maos_5fsignal_5fhandler',['maos_signal_handler',['../maos_2utils_8c.html#aafb94bb8e11bc2169946336024d6b0fc',1,'utils.c']]],
   ['maos_5fsim',['maos_sim',['../sim_8c.html#a5935e0612a22d888703e8eee46a930bf',1,'sim.c']]],

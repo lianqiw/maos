@@ -6,7 +6,7 @@ var searchData=
   ['cell',['cell',['../structcell.html',1,'']]],
   ['cellarr',['cellarr',['../structcellarr.html',1,'']]],
   ['cfsms_5ft',['cfsms_t',['../classcfsms__t.html',1,'']]],
-  ['cgtmp_5ft',['CGTMP_T',['../structcuda__recon_1_1CGTMP__T.html',1,'cuda_recon']]],
+  ['cgtmp_5ft',['CGTMP_T',['../structCGTMP__T.html',1,'']]],
   ['cmat',['cmat',['../structcmat.html',1,'']]],
   ['cn2est_5fcfg_5ft',['CN2EST_CFG_T',['../structCN2EST__CFG__T.html',1,'']]],
   ['cn2est_5ft',['CN2EST_T',['../structCN2EST__T.html',1,'']]],

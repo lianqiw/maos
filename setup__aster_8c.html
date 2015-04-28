@@ -111,26 +111,25 @@ $(document).ready(function(){initNavTree('setup__aster_8c.html','');});
 <div class="title">setup_aster.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines to handle asterisms.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;setup_aster.h&quot;</code><br/>
+<code>#include &quot;photon.h&quot;</code><br/>
+<code>#include &quot;skysim_utils.h&quot;</code><br/>
+<code>#include &quot;mtch.h&quot;</code><br/>
+<code>#include &quot;utils.h&quot;</code><br/>
+<code>#include &quot;setup_star.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a775e19b8c2c52a6258c7d943de3d4303"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structASTER__S.html">ASTER_S</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#a775e19b8c2c52a6258c7d943de3d4303">setup_aster_comb</a> (int *naster, int nstar, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a775e19b8c2c52a6258c7d943de3d4303"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create combination of stars to form asterism.  <a href="#a775e19b8c2c52a6258c7d943de3d4303">More...</a><br/></td></tr>
 <tr class="separator:a775e19b8c2c52a6258c7d943de3d4303"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50dc7d12cb4690e99dab343b7cf7eec9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#a50dc7d12cb4690e99dab343b7cf7eec9">setup_aster_g</a> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, <a class="el" href="structPOWFS__S.html">POWFS_S</a> *powfs, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a50dc7d12cb4690e99dab343b7cf7eec9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Modal to gradient operator by copying from the stars.  <a href="#a50dc7d12cb4690e99dab343b7cf7eec9">More...</a><br/></td></tr>
 <tr class="separator:a50dc7d12cb4690e99dab343b7cf7eec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5f2ea45439c6fe0dbb79f5fcbb51890"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#ac5f2ea45439c6fe0dbb79f5fcbb51890">setup_aster_copystar</a> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:ac5f2ea45439c6fe0dbb79f5fcbb51890"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy information from star struct <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to stars in asterism <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>.  <a href="#ac5f2ea45439c6fe0dbb79f5fcbb51890">More...</a><br/></td></tr>
 <tr class="separator:ac5f2ea45439c6fe0dbb79f5fcbb51890"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0af703f2bfcb475b2480f5946ed8a44f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#a0af703f2bfcb475b2480f5946ed8a44f">setup_aster_wvf</a> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a0af703f2bfcb475b2480f5946ed8a44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>.  <a href="#a0af703f2bfcb475b2480f5946ed8a44f">More...</a><br/></td></tr>
 <tr class="separator:a0af703f2bfcb475b2480f5946ed8a44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a014a880fdbb661f27df668882bdbf55f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#a014a880fdbb661f27df668882bdbf55f">setup_aster_ztilt</a> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a014a880fdbb661f27df668882bdbf55f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>.  <a href="#a014a880fdbb661f27df668882bdbf55f">More...</a><br/></td></tr>
 <tr class="separator:a014a880fdbb661f27df668882bdbf55f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a02065d1f591bf2704f506a9c2181d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a02065d1f591bf2704f506a9c2181d2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_lsr</b> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
@@ -139,10 +138,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_lsr</b> (
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controller</b> (<a class="el" href="structSIM__S.html">SIM_S</a> *simu, <a class="el" href="structASTER__S.html">ASTER_S</a> *aster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
 <tr class="separator:a9168859202cbeb47143d513ffcf80e00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0690b71e285a53074d7bc54e35c9f6b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#ac0690b71e285a53074d7bc54e35c9f6b">setup_aster_select</a> (double *result, <a class="el" href="structASTER__S.html">ASTER_S</a> *aster, int naster, <a class="el" href="structSTAR__S.html">STAR_S</a> *star, double maxerror, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:ac0690b71e285a53074d7bc54e35c9f6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Select a few asterisms that have decent performance (less than maxerror)  <a href="#ac0690b71e285a53074d7bc54e35c9f6b">More...</a><br/></td></tr>
 <tr class="separator:ac0690b71e285a53074d7bc54e35c9f6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab4edbba502e193755bec6e1ea6687ad0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#ab4edbba502e193755bec6e1ea6687ad0">free_aster</a> (<a class="el" href="structASTER__S.html">ASTER_S</a> *aster, int naster, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:ab4edbba502e193755bec6e1ea6687ad0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free the <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a> array.  <a href="#ab4edbba502e193755bec6e1ea6687ad0">More...</a><br/></td></tr>
 <tr class="separator:ab4edbba502e193755bec6e1ea6687ad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -177,9 +174,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Create combination of stars to form asterism. </p>
-<p>It has the option to put TTF always on the brightest for testing purpose. </p>
+<p>Create combination of stars to form asterism. It has the option to put TTF always on the brightest for testing purpose. </p>
 
 </div>
 </div>
@@ -218,9 +213,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Compute Modal to gradient operator by copying from the stars. </p>
-<p>Using average gradients. Similar to Z tilt since the mode is low order </p>
+<p>Compute Modal to gradient operator by copying from the stars. Using average gradients. Similar to Z tilt since the mode is low order </p>
 
 </div>
 </div>
@@ -253,8 +246,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Copy information from star struct <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to stars in asterism <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>. </p>
+<p>Copy information from star struct <a class="el" href="structSTAR__S.html">STAR_S</a> to stars in asterism <a class="el" href="structASTER__S.html">ASTER_S</a>. </p>
 
 </div>
 </div>
@@ -287,8 +279,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>. </p>
+<p>Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html">STAR_S</a> to <a class="el" href="structASTER__S.html">ASTER_S</a>. </p>
 
 </div>
 </div>
@@ -321,8 +312,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html" title="Data for each available star. ">STAR_S</a> to <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a>. </p>
+<p>Copy time history of complex pupil function from <a class="el" href="structSTAR__S.html">STAR_S</a> to <a class="el" href="structASTER__S.html">ASTER_S</a>. </p>
 
 </div>
 </div>
@@ -373,7 +363,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Select a few asterisms that have decent performance (less than maxerror) </p>
 
 </div>
@@ -407,8 +396,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_aster_controlle
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Free the <a class="el" href="structASTER__S.html" title="asterism dependent data. ">ASTER_S</a> array. </p>
+<p>Free the <a class="el" href="structASTER__S.html">ASTER_S</a> array. </p>
 
 </div>
 </div>

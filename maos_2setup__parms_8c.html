@@ -112,10 +112,14 @@ $(document).ready(function(){initNavTree('maos_2setup__parms_8c.html','');});
 <div class="title">setup_parms.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>This file contains necessary routines to read parametes for WFS, DM and wavefront reconstruction.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &lt;sys/types.h&gt;</code><br/>
+<code>#include &lt;sys/stat.h&gt;</code><br/>
+<code>#include &lt;fcntl.h&gt;</code><br/>
+<code>#include &lt;ctype.h&gt;</code><br/>
+<code>#include &quot;../lib/aos.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="maos_2parms_8h.html">parms.h</a>&quot;</code><br/>
+<code>#include &quot;mvm_client.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:ae381522e1d10c3730b356f1ac5d2dccb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae381522e1d10c3730b356f1ac5d2dccb"></a>
@@ -167,13 +171,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_powfs_cfg</b> (<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char **str, int n)</td></tr>
 <tr class="separator:abb6e36b04cc59e87a10f7ef9378cb5a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afad950a4f059f347cede7c2f97c7e0bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#afad950a4f059f347cede7c2f97c7e0bd">free_parms</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-<tr class="memdesc:afad950a4f059f347cede7c2f97c7e0bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free the parms struct.  <a href="#afad950a4f059f347cede7c2f97c7e0bd">More...</a><br/></td></tr>
 <tr class="separator:afad950a4f059f347cede7c2f97c7e0bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4415a47bdac032359c831c0625a6e7e4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#a4415a47bdac032359c831c0625a6e7e4">setup_parms</a> (char *mainconf, char *extraconf, int override)</td></tr>
-<tr class="memdesc:a4415a47bdac032359c831c0625a6e7e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">This routine calles other routines in this file to setup the parms parameter struct parms and check for possible errors.  <a href="#a4415a47bdac032359c831c0625a6e7e4">More...</a><br/></td></tr>
 <tr class="separator:a4415a47bdac032359c831c0625a6e7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a36b5678c2ca8539187637c1e016a2c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#a9a36b5678c2ca8539187637c1e016a2c">setup_parms_gpu</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int *gpus, int ngpu)</td></tr>
-<tr class="memdesc:a9a36b5678c2ca8539187637c1e016a2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional setup_parms code to run when maos is running.  <a href="#a9a36b5678c2ca8539187637c1e016a2c">More...</a><br/></td></tr>
 <tr class="separator:a9a36b5678c2ca8539187637c1e016a2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -192,7 +193,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Free the parms struct. </p>
 
 </div>
@@ -226,9 +226,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>This routine calles other routines in this file to setup the parms parameter struct parms and check for possible errors. </p>
-<p>parms is kept constant after returned from setup_parms. </p>
+<p>This routine calles other routines in this file to setup the parms parameter struct parms and check for possible errors. parms is kept constant after returned from setup_parms. </p>
 
 </div>
 </div>
@@ -261,9 +259,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>free_strarr</b> (char
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Additional setup_parms code to run when maos is running. </p>
-<p>It only contains GPU initialization code for the moment. </p>
+<p>Additional setup_parms code to run when maos is running. It only contains GPU initialization code for the moment. </p>
 
 </div>
 </div>

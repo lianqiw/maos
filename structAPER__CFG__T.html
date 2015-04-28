@@ -113,28 +113,22 @@ $(document).ready(function(){initNavTree('structAPER__CFG__T.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>contains input parameters about the aperture, like the diameter, amplitude map, etc  
- <a href="structAPER__CFG__T.html#details">More...</a></p>
+<p><code>#include &quot;parms.h&quot;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr class="memitem:ace3d5df3fe365f555ce1b851f833e961"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__CFG__T.html#ace3d5df3fe365f555ce1b851f833e961">d</a></td></tr>
-<tr class="memdesc:ace3d5df3fe365f555ce1b851f833e961"><td class="mdescLeft">&#160;</td><td class="mdescRight">Telescope aperture diameter.  <a href="#ace3d5df3fe365f555ce1b851f833e961">More...</a><br/></td></tr>
 <tr class="separator:ace3d5df3fe365f555ce1b851f833e961"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f2d4b89322d5de7b49f7f274807ff93"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__CFG__T.html#a5f2d4b89322d5de7b49f7f274807ff93">din</a></td></tr>
-<tr class="memdesc:a5f2d4b89322d5de7b49f7f274807ff93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Telescope inner blocking diameter.  <a href="#a5f2d4b89322d5de7b49f7f274807ff93">More...</a><br/></td></tr>
 <tr class="separator:a5f2d4b89322d5de7b49f7f274807ff93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf64dffc1048f103b91ee16d94eee779"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__CFG__T.html#abf64dffc1048f103b91ee16d94eee779">rotdeg</a></td></tr>
-<tr class="memdesc:abf64dffc1048f103b91ee16d94eee779"><td class="mdescLeft">&#160;</td><td class="mdescRight">pupil rotation in degree  <a href="#abf64dffc1048f103b91ee16d94eee779">More...</a><br/></td></tr>
 <tr class="separator:abf64dffc1048f103b91ee16d94eee779"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a839e906a586c2d9152df418d24b46151"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a839e906a586c2d9152df418d24b46151"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
 <tr class="separator:a839e906a586c2d9152df418d24b46151"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7994143f2b421ef6e9951cbf578f5ae9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__CFG__T.html#a7994143f2b421ef6e9951cbf578f5ae9">fnampuser</a></td></tr>
-<tr class="memdesc:a7994143f2b421ef6e9951cbf578f5ae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">amplitude maps.  <a href="#a7994143f2b421ef6e9951cbf578f5ae9">More...</a><br/></td></tr>
 <tr class="separator:a7994143f2b421ef6e9951cbf578f5ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad899c34bf5f8baf783e4ec044e99ed4"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__CFG__T.html#aad899c34bf5f8baf783e4ec044e99ed4">pupmask</a></td></tr>
-<tr class="memdesc:aad899c34bf5f8baf783e4ec044e99ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pupil cold stop.  <a href="#aad899c34bf5f8baf783e4ec044e99ed4">More...</a><br/></td></tr>
 <tr class="separator:aad899c34bf5f8baf783e4ec044e99ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -149,8 +143,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Telescope aperture diameter. </p>
+<p>Telescope aperture diameter </p>
 
 </div>
 </div>
@@ -163,8 +156,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Telescope inner blocking diameter. </p>
+<p>Telescope inner blocking diameter </p>
 
 </div>
 </div>
@@ -177,7 +169,6 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>pupil rotation in degree </p>
 
 </div>
@@ -191,9 +182,8 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>amplitude maps. </p>
-<p>expected to be square or rectangular mxn, with 0 at [m/2,n/2] (count from 0) User provided amplitude map (not default) </p>
+<pre class="fragment">  amplitude maps. expected to be square or rectangular mxn, with 0 at
+</pre><p> [m/2,n/2] (count from 0) User provided amplitude map (not default) </p>
 
 </div>
 </div>
@@ -206,8 +196,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>fnamp</b></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>The pupil cold stop. </p>
+<p>The pupil cold stop </p>
 
 </div>
 </div>

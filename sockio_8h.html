@@ -111,10 +111,8 @@ $(document).ready(function(){initNavTree('sockio_8h.html','');});
 <div class="title">sockio.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Routines handle socket i/o.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;common.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ac7fb31521bed5d14292784874f15be50"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7fb31521bed5d14292784874f15be50"></a>
@@ -142,25 +140,18 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadint</b> (int sfd
 int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int sfd, int *cmd, unsigned int len)</td></tr>
 <tr class="separator:a263c164d7b1e8ca75e1da79253a8cf7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac252e98eb123fd187c8d6b0ec247867d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#ac252e98eb123fd187c8d6b0ec247867d">stwritestr</a> (int sfd, const char *str)</td></tr>
-<tr class="memdesc:ac252e98eb123fd187c8d6b0ec247867d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a string to socket.  <a href="#ac252e98eb123fd187c8d6b0ec247867d">More...</a><br/></td></tr>
 <tr class="separator:ac252e98eb123fd187c8d6b0ec247867d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a329670963f85960af4805e221af37db2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#a329670963f85960af4805e221af37db2">streadstr</a> (int sfd, char **str)</td></tr>
-<tr class="memdesc:a329670963f85960af4805e221af37db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a string from socket.  <a href="#a329670963f85960af4805e221af37db2">More...</a><br/></td></tr>
 <tr class="separator:a329670963f85960af4805e221af37db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c90e8add61a1ff1783e57c01b14c339"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#a9c90e8add61a1ff1783e57c01b14c339">stwritestrarr</a> (int sfd, const char *const *str, int nstr)</td></tr>
-<tr class="memdesc:a9c90e8add61a1ff1783e57c01b14c339"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a string array to socket.  <a href="#a9c90e8add61a1ff1783e57c01b14c339">More...</a><br/></td></tr>
 <tr class="separator:a9c90e8add61a1ff1783e57c01b14c339"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fcad7b6c004d6e16dddff1dbbd8a20d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#a7fcad7b6c004d6e16dddff1dbbd8a20d">streadstrarr</a> (int sfd, char ***str, int *nstr)</td></tr>
-<tr class="memdesc:a7fcad7b6c004d6e16dddff1dbbd8a20d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a string array from socket.  <a href="#a7fcad7b6c004d6e16dddff1dbbd8a20d">More...</a><br/></td></tr>
 <tr class="separator:a7fcad7b6c004d6e16dddff1dbbd8a20d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f261c8d14ae4788e2b7dbd1039a221f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f">stwritefd</a> (int sfd, int fd)</td></tr>
-<tr class="memdesc:a8f261c8d14ae4788e2b7dbd1039a221f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrie a file descriptor to socket.  <a href="#a8f261c8d14ae4788e2b7dbd1039a221f">More...</a><br/></td></tr>
 <tr class="separator:a8f261c8d14ae4788e2b7dbd1039a221f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb4493d945a1d2b3f2c26a04e2a7bf8b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#afb4493d945a1d2b3f2c26a04e2a7bf8b">streadfd</a> (int sfd, int *fd)</td></tr>
-<tr class="memdesc:afb4493d945a1d2b3f2c26a04e2a7bf8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a file descriptor from socket.  <a href="#afb4493d945a1d2b3f2c26a04e2a7bf8b">More...</a><br/></td></tr>
 <tr class="separator:afb4493d945a1d2b3f2c26a04e2a7bf8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2364ca481e12db6b45009478899970f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sockio_8h.html#ad2364ca481e12db6b45009478899970f">stcheck</a> (int sfd)</td></tr>
-<tr class="memdesc:ad2364ca481e12db6b45009478899970f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether a socket has been disconnected.  <a href="#ad2364ca481e12db6b45009478899970f">More...</a><br/></td></tr>
 <tr class="separator:ad2364ca481e12db6b45009478899970f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -189,8 +180,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Write a string to socket. </p>
+<p>Write a string to socket </p>
 
 </div>
 </div>
@@ -217,8 +207,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read a string from socket. </p>
+<p>Read a string from socket </p>
 
 </div>
 </div>
@@ -251,8 +240,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Write a string array to socket. </p>
+<p>Write a string array to socket </p>
 
 </div>
 </div>
@@ -285,8 +273,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read a string array from socket. </p>
+<p>Read a string array from socket </p>
 
 </div>
 </div>
@@ -313,9 +300,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Wrie a file descriptor to socket. </p>
-<p>Transfer a open file (socket) descriptor to another process in the same hosts. sfd has to be a AF_UNIX socket. </p>
+<p>Wrie a file descriptor to socket. Transfer a open file (socket) descriptor to another process in the same hosts. sfd has to be a AF_UNIX socket. </p>
 
 </div>
 </div>
@@ -342,9 +327,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Read a file descriptor from socket. </p>
-<p>Use with <a class="el" href="sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f" title="Wrie a file descriptor to socket. ">stwritefd()</a>; </p>
+<p>Read a file descriptor from socket. Use with <a class="el" href="sockio_8h.html#a8f261c8d14ae4788e2b7dbd1039a221f">stwritefd()</a>; </p>
 
 </div>
 </div>
@@ -361,8 +344,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>streadintarr</b> (int 
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Check whether a socket has been disconnected. </p>
+<p>Check whether a socket has been disconnected </p>
 
 </div>
 </div>

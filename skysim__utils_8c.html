@@ -111,27 +111,24 @@ $(document).ready(function(){initNavTree('skysim__utils_8c.html','');});
 <div class="title">skysim_utils.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Utilities for <a class="el" href="skysim_8c.html" title="Contains the skysim() function that does the skycoverage simulation. ">skysim.c</a>.  
-<a href="#details">More...</a></p>
-<table class="memberdecls">
+<div class="textblock"><code>#include &quot;skyc.h&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2parms_8h.html">parms.h</a>&quot;</code><br/>
+<code>#include &quot;<a class="el" href="skyc_2types_8h.html">types.h</a>&quot;</code><br/>
+<code>#include &quot;skysim_utils.h&quot;</code><br/>
+</div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a5953f22b45a68e6da407c1bf4b5ca2b7"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skysim__utils_8c.html#a5953f22b45a68e6da407c1bf4b5ca2b7">calc_rms</a> (const <a class="el" href="structdmat.html">dmat</a> *mod, const <a class="el" href="structdmat.html">dmat</a> *mcc, int istep0)</td></tr>
-<tr class="memdesc:a5953f22b45a68e6da407c1bf4b5ca2b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Open loop NGS mode wavefront error from mode vectors.  <a href="#a5953f22b45a68e6da407c1bf4b5ca2b7">More...</a><br/></td></tr>
 <tr class="separator:a5953f22b45a68e6da407c1bf4b5ca2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c694ce3a89108572cbbef38e353c9e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skysim__utils_8c.html#a6c694ce3a89108572cbbef38e353c9e2">ngsmod2wvf</a> (<a class="el" href="structcmat.html">cmat</a> *wvf, double wvl, const <a class="el" href="structdmat.html">dmat</a> *modm, const <a class="el" href="structPOWFS__S.html">POWFS_S</a> *powfs, int isa, double thetax, double thetay, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms)</td></tr>
-<tr class="memdesc:a6c694ce3a89108572cbbef38e353c9e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function.  <a href="#a6c694ce3a89108572cbbef38e353c9e2">More...</a><br/></td></tr>
 <tr class="separator:a6c694ce3a89108572cbbef38e353c9e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af178ea9a82edb287778f71d9119a7c01"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skysim__utils_8c.html#af178ea9a82edb287778f71d9119a7c01">skysim_sim</a> (<a class="el" href="structdmat.html">dmat</a> **mresout, const <a class="el" href="structdmat.html">dmat</a> *mideal, const <a class="el" href="structdmat.html">dmat</a> *mideal_oa, double ngsol, <a class="el" href="structASTER__S.html">ASTER_S</a> *aster, const <a class="el" href="structPOWFS__S.html">POWFS_S</a> *powfs, const <a class="el" href="structPARMS__S.html">PARMS_S</a> *parms, int idtratc, int noisy, int phystart)</td></tr>
-<tr class="memdesc:af178ea9a82edb287778f71d9119a7c01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time domain physical simulation.  <a href="#af178ea9a82edb287778f71d9119a7c01">More...</a><br/></td></tr>
 <tr class="separator:af178ea9a82edb287778f71d9119a7c01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a81d2ccd0c348d360900edd072b73444d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="skysim__utils_8c.html#a81d2ccd0c348d360900edd072b73444d">skysim_save</a> (const <a class="el" href="structSIM__S.html">SIM_S</a> *simu, const <a class="el" href="structASTER__S.html">ASTER_S</a> *aster, const double *ipres, int selaster, int seldtrat, int isky)</td></tr>
-<tr class="memdesc:a81d2ccd0c348d360900edd072b73444d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save NGS WFS and other information for later use in MAOS simulations.  <a href="#a81d2ccd0c348d360900edd072b73444d">More...</a><br/></td></tr>
 <tr class="separator:a81d2ccd0c348d360900edd072b73444d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Utilities for <a class="el" href="skysim_8c.html" title="Contains the skysim() function that does the skycoverage simulation. ">skysim.c</a>. </p>
+<div class="textblock"><p>Utilities for <a class="el" href="skysim_8c.html">skysim.c</a> </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a5953f22b45a68e6da407c1bf4b5ca2b7"></a>
 <div class="memitem">
@@ -162,7 +159,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Compute Open loop NGS mode wavefront error from mode vectors. </p>
 
 </div>
@@ -226,9 +222,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function. </p>
-<p>Notice the the coordinate for each subaperture is different for TTF. </p>
+<p>convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function. Notice the the coordinate for each subaperture is different for TTF. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in,out]</td><td class="paramname">wvf</td><td>complex pupil function </td></tr>
@@ -316,8 +310,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Time domain physical simulation. </p>
+<p>Time domain physical simulation.</p>
 <p>noisy:</p>
 <ul>
 <li>0: no noise at all;</li>
@@ -374,7 +367,6 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
 <p>Save NGS WFS and other information for later use in MAOS simulations. </p>
 
 </div>
