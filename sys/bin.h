@@ -122,6 +122,7 @@ extern int disable_save; ///saving to disk will be disabled when set to nonzero.
 int zfexist(const char *format, ...); 
 void zftouch(const char *format, ...);
 int zfeof(file_t *fp);
+int zfpos(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen(const char *fn, const char *mod);

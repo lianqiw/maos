@@ -283,9 +283,9 @@ void* read_by_id(long id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     void *out=readdata_by_id(fp, id, level, 0);
-    if(!zfeof(fp)){
-	warning2("Unread data in the end of file\n");
-    }
+    //if(!zfeof(fp)){//EOF is not returned for gzipped file.
+    //warning2("Unread data after %d in file %s\n", zfpos(fp), zfname(fp));
+    //}
     zfclose(fp);
     return out;
 }

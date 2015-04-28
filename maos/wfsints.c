@@ -76,24 +76,15 @@ void wfsints(thread_t *thread_data){
     double norm_ints=parms->wfs[iwfs].siglevsim*norm_psf*norm_psf/((double)ncompx*ncompy);
     /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
     wvf=cnew(nwvf,nwvf);
-    if(use1d){/* use 1d fft for NGS if nwvl >> notf*/
-	//cfft2partialplan(wvf,notf, -1);
-    }else{
-	//cfft2plan(wvf, -1);
-    }
     /* psf contains the psf/otf necessary to cover the focal plane. square */
     if(nwvf!=notf){
 	psf=cnew(notf,notf);
     }else{
 	psf=wvf;
     }
-    //cfft2plan(psf,-1);
-    //cfft2plan(psf,1);
     /* otf contains the psf/otf used to generate detecter image. maybe rectangular*/
     if(notf!=ncompx || notf!=ncompy || srot){
 	otf=cnew(ncompx,ncompy);
-	//cfft2plan(otf,-1);
-	//cfft2plan(otf,1);
 	if(isotf){/*there is an additional pair of FFT*/
 	    norm_ints/=(double)(notf*notf);
 	}
@@ -105,8 +96,6 @@ void wfsints(thread_t *thread_data){
 	const int nlx=powfs[ipowfs].llt->pts->nx;
 	const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 	lwvf=cnew(nlwvf,nlwvf);
-	//cfft2plan(lwvf,-1);
-	//cfft2plan(lwvf,1);
 	if(nlwvf != notf){
 	    lotfc=cnew(notf,notf);
 	}else{
@@ -120,7 +109,6 @@ void wfsints(thread_t *thread_data){
     if(data->psfout){
 	ppsfout=(void*)data->psfout->p;
 	fftpsfout=cnew(psf->nx, psf->ny);
-	//cfft2plan(fftpsfout,1);
     }
     dmat *(*ppistatout)[nsa]=NULL;
     double *gx=NULL; double *gy=NULL;
@@ -129,7 +117,6 @@ void wfsints(thread_t *thread_data){
 	assert(pistatout->nx==nsa && pistatout->ny==nwvl);
 	ppistatout=(void*)pistatout->p;
 	psftmp=cnew(psf->nx,psf->ny);
-	//cfft2plan(psftmp,1);
 	/* the gradient reference for pistatout*/
 	if(data->gradref){
 	    gx=data->gradref->p;
@@ -254,7 +241,8 @@ void wfsints(thread_t *thread_data){
 		/* we have otf here in psf*/
 	    }/* else: we have psf here in psf*/
 	    if(ints){
-		if(!isotf /* Need to turn PSF to OTF*/ || otf!=psf /* Need to embed*/ ){
+		if(!isotf /* Need to turn PSF to OTF*/ 
+		   || otf!=psf /* Need to embed*/ ){
 		    if(isotf){ /*turn back to PSF for embedding. peak in corner.*/
 			cfft2(psf,1);
 		    }

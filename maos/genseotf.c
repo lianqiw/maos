@@ -44,8 +44,10 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		       powfs[ipowfs].pts->dy,
 		       0,0);
     /*size of the OTF grid */
-    int ncompx=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;
-    int ncompy=ncompx;
+    //int ncompx=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;
+    //int ncompy=ncompx;
+    //2015-04-27:replaced by powfs[ipowfs].ncompx/y, which maybe different
+    
     /*The embeding factor for embedding the aperture */
     const int embfac=parms->powfs[ipowfs].embfac;
     const double dxsa=powfs[ipowfs].pts->dsa;
@@ -97,7 +99,8 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
 		       powfs[ipowfs].realsaa->p[iotf],
 		       thres,wvl,dtheta,NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
-		       ncompx, ncompy, nsa, 1);
+		       powfs[ipowfs].ncompx, 
+		       powfs[ipowfs].ncompy, nsa, 1);
 	}
     }/*iwvl */
     locfree(loc);
@@ -143,7 +146,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     long nsa=powfs[ipowfs].saloc->nloc;
     snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-	     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
+	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_SEOTF_v2",
 	     HOME, fnprefix,
 	     parms->aper.d,parms->aper.din, 
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
@@ -151,7 +154,8 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	     1./powfs[ipowfs].pts->dx, 
 	     parms->powfs[ipowfs].nwvl,
 	     parms->powfs[ipowfs].wvl->p[0]*1.e6,
-	     parms->powfs[ipowfs].embfac,npsfx,npsfy);
+	     parms->powfs[ipowfs].embfac,
+	     powfs[ipowfs].ncompx, npsfx,npsfy);
     snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     int count=0;
@@ -192,7 +196,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
     loc_t *loc=pts2loc(powfs[ipowfs].llt->pts);
-    int notf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+    const int notf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
     const int nwvl=parms->powfs[ipowfs].nwvl;
 
     int nlotf=1;
@@ -349,7 +353,10 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    if(sepsf->nx == lotf[iwvl]->nx){
 			ccwm(sepsf,lotf[iwvl]);
 		    }else{
-			assert(sepsf->nx < lotf[iwvl]->nx);
+			if(sepsf->nx > lotf[iwvl]->nx){
+			    error("lotf(%ldx%ld) has smaller size than sepsf (%ldx%ld)\n", 
+				  sepsf->nx, sepsf->nx, lotf[iwvl]->nx, lotf[iwvl]->nx);
+			}
 			cmat *tmp=cnew(sepsf->nx, sepsf->ny);
 			cembedc(tmp, lotf[iwvl], 0,C_FULL);
 			ccwm(sepsf, tmp);
@@ -571,14 +578,12 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cembedc(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
 
 		cfftshift(seotfk);/*PSF, peak in corner; */
-		cfft2(seotfk,-1);/*turn to OTF peak in corner */
+		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
-
-		/*seotfk has peak in corner */
 		if(nominal) ccwm(seotfk,nominal);
-		cscale(seotfk, norm);
+		cscale(seotfk, norm);/*normalized so that after fft, psf sum to 1*/
 		if(intstat->potf){
 		    ccp(&intstat->potf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
@@ -589,7 +594,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(intstat->fotf){
 		    ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
-		cfft2(seotfk,1);/*peak in center. */
+		cfft2(seotfk,1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
 		/*no need fftshift becaose nominal is pre-treated */
 		dspmulcreal(i0[ii0][isa]->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);

@@ -476,7 +476,7 @@ int zfpos(file_t *fp){
    Return 1 if end of file is reached. 
 */
 int zfeof(file_t *fp){
-    return zfseek(fp, 1, SEEK_SET)<0?1:0;
+    return zfseek(fp, 1, SEEK_CUR)<0?1:0;
 }
 /**
    Flush the buffer.

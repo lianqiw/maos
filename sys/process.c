@@ -51,7 +51,7 @@ int TCK=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *USER=NULL;
-char TEMP[PATH_MAX];
+char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts
 char EXEP[PATH_MAX];/*absolute path of the exe.*/
 /**
    Set the HOME, TEMP, USER names.
@@ -67,14 +67,30 @@ void init_process(void){
 	}
 #if defined(__CYGWIN__)
 	HOME=getenv("USERPROFILE");
+	const char *temp=getenv("TMP");
+	if(!temp){
+	    temp=getenv("TEMP");
+	}
+	if(!temp || !exist(temp)){
+	    temp="C:/Windows/Temp";
+	}
+	if(!exist(temp)){
+	    temp=HOME;/*set to home */
+	}
+	if(!exist(temp)){
+	    error("Unable to determine the path to temporary files");
+	}
 	HOME=cygwin_create_path(CCP_WIN_A_TO_POSIX,HOME);
+	temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
 #else
 	HOME=getenv("HOME");
+	const char *temp="/tmp";
 #endif
-	strcpy(TEMP, HOME);
-	strcat(TEMP, "/.aos/tmp");
-	mymkdir("%s/.aos/",HOME);
+	strcpy(TEMP, temp);
+	strcat(TEMP, "/maos-");
+	strcat(TEMP, USER);
 	mymkdir("%s",TEMP);
+	mymkdir("%s/.aos/",HOME);
 
 	{/*PATH to executable*/
 	    char exepath[PATH_MAX];

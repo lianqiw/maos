@@ -55,7 +55,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	const double duy=1./(dtheta*ncompy);
 	const double dux2=dux*dux;
 	const double duy2=duy*duy;
-	const double pdtheta=pixthetax*pixthetay/(dtheta*dtheta);
+	const double pdtheta=pixthetax*pixthetay/(dtheta*dtheta);//scaling factor due to binning into detectors
 	const double duxp=dux*pixthetax;
 	const double duyp=duy*pixthetay;
 	/*For LGS WFS (srot!=NULL), there is elongation effect. For radial pixel
@@ -117,6 +117,17 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		//Coordinate of PSF pixels
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
 		sis[iwfs][isa]=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
+		{
+		    dmat *sisum=dspsum(sis[iwfs][isa],1);
+		    double sum=dsum(sisum);
+		    dfree(sisum);
+		    sum*=pdtheta/(ncompx*ncompy);
+		    if(sum>1){
+			//sum can be smaller than one because we only sampled
+			//part of the psf. But it should never be more than 1.
+			warning("The image will be scaled by %g\n", sum);
+		    }
+		}
 		locfree(loc_ccd);
 	    }/*isa */
 	}/*iwfs */
@@ -399,20 +410,18 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    free(thetas);
 	}//if na_interp
 	if(!use1d){//fuse nominal to etf to avoid multiply again.
-	    const int ndtf=dtfs[iwvl].nominal->nx;
 	    PCCELL(dtfs[iwvl].nominal, pnominal);
-	    int mnominal=-1;/*multiply with isa to get index into pnominal. */
-	    if(ndtf==1)
-		mnominal=0;//non polar ccd
-	    else if(ndtf==nsa)
+	    int mnominal=0;/*multiply with isa to get index into pnominal. */
+	    if(dtfs[iwvl].nominal->nx>1){
 		mnominal=1;//polar ccd
-	    else{
-		error("Invalid nominal.\n");
 	    }
-
+	    int mllt=0;
+	    if(dtfs[iwvl].nominal->ny>1){
+		mllt=1;
+	    }
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
-		    ccwm(petf[illt][isa], pnominal[illt][isa*mnominal]);
+		    ccwm(petf[illt][isa], pnominal[illt*mllt][isa*mnominal]);
 		}
 	    }
 	    dtfs[iwvl].fused=1;
@@ -452,7 +461,7 @@ dmat* smooth(dmat *prof, double dxnew){
     dmat *out;
     if(dxnew > dxin * 2){
 	TIC;tic;
-	info_once("smooth: Smoothing");
+	info_once("smooth: Smoothing ");
 	const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
 	loc_t *loc_in=mk1dloc_vec(prof->p, nxin);
 	loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
@@ -473,7 +482,7 @@ dmat* smooth(dmat *prof, double dxnew){
 	dspfree(ht);
 	locfree(loc_in);
 	locfree(loc_out);
-	toc2("done\n");
+	toc2("done");
     }else{
 	info("smooth: Referencing");
 	out=dref(prof);

@@ -742,8 +742,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		wvlmin=parms->powfs[ipowfs].wvl->p[iwvl];
 	}
 	double dtheta=wvlmin/(dxsa*embfac);/*Min PSF sampling. */
-	ncompx=4*(int)round(0.25*pixpsax*pixthetax/dtheta);
-	ncompy=4*(int)round(0.25*pixpsay*pixthetay/dtheta);
+	ncompx=4*(long)ceil(0.25*pixpsax*pixthetax/dtheta);
+	ncompy=4*(long)ceil(0.25*pixpsay*pixthetay/dtheta);
 	
 	/*
 	  Found that: Must set ncompx==ncompy even for rotationg either psf or
@@ -1035,7 +1035,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     double lltd=lltcfg->d;
     lpts->dsay=lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
     int notf=MAX(powfs[ipowfs].ncompx, powfs[ipowfs].ncompy);
-    /*The otf would be dx/lambda. Make it equal to pts->dsa/lambda/notf)*/
+    /*The otf would be dx/lambda. Make it equal to embfac*pts->dsa/lambda/notf)*/
     const double dx=lpts->dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
     lpts->dy=lpts->dx;
     const int nx=lpts->nx=round(lpts->dsa/lpts->dx);
