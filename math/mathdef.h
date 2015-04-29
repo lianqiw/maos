@@ -82,11 +82,11 @@
 #define lfree(A)     ({lfree_do(A,0);A=NULL;})
 #define lcellfree(A) ({cellfree_do(A);A=NULL;})
 #define lzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
-#define lhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(long), key)
+#define lhash(A,key) hashlittle((A)->p, (A)->nx*(A)->ny*sizeof(long), key)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
-#define COLUMN(A,iy) (A->p+iy*A->nx)
-#define INDEX(A,ix,iy) A->p[ix+iy*A->nx]
+#define COLUMN(A,iy) (A->p+(iy)*(A)->nx)
+#define INDEX(A,ix,iy) A->p[(ix)+(iy)*(A)->nx]
 #define AOS_LMAT(A) l##A
 #define AOS_CMAT(A) c##A
 #define AOS_DMAT(A) d##A

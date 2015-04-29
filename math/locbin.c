@@ -47,10 +47,10 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	double dxd=INFINITY, dyd=INFINITY;
 	for(long i=0; i<out->nloc-1; i++){
 	    double dxi=fabs(out->locx[i+1]-out->locx[i]);
+	    double dyi=fabs(out->locy[i+1]-out->locy[i]);
 	    if(dxi>tol && dxi+tol<dxd){
 		dxd=dxi;
 	    }
-	    double dyi=fabs(out->locy[i+1]-out->locy[i]);
 	    if(dyi>tol && dyi+tol<dyd){
 		dyd=dyi;
 	    }

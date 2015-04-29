@@ -732,10 +732,6 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
    Gather information about the starting of each column in loc.
 */
 void loc_create_stat_do(loc_t *loc){
-    /*First a sanity check to make sure loc is raster scanning along x*/
-    if(loc->nloc<2 || fabs(loc->locy[1]-loc->locy[0])>loc->dy*0.1){
-	error("cannot create locstat for this loc: loc->nloc=%ld, loc->dy=%g\n", loc->nloc, loc->dy);
-    }
     locstat_t *locstat=calloc(1, sizeof(locstat_t));
     loc->stat=locstat;
     const double *locx=loc->locx;
@@ -754,10 +750,12 @@ void loc_create_stat_do(loc_t *loc){
     locstat->ymin=locstat->cols[colcount].ystart;
     locstat->xmin=locstat->cols[colcount].xstart;
     double xmax=locstat->cols[colcount].xstart;
+    const double dythres=fabs(dy)*0.1;
+    const double dxthres=fabs(dx)*0.1;
     colcount++;
     for(iloc=1; iloc<loc->nloc; iloc++){
-	if(fabs(locy[iloc]-locy[iloc-1])>1e-6 /*a new column starts */
-	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1e-6){
+	if(fabs(locy[iloc]-locy[iloc-1])>dythres /*a new column starts */
+	   || fabs(locx[iloc]-locx[iloc-1]-dx)>dxthres){
 	    locstat->cols[colcount].pos=iloc;
 	    locstat->cols[colcount].xstart=locx[iloc];
 	    locstat->cols[colcount].ystart=locy[iloc];

@@ -212,6 +212,12 @@ elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
        	    MEXDIR_AUTO="${i}/bin"
 	fi
     done
+elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
+    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
+	if test -x "$i/bin/mex" ;then
+       	    MEXDIR_AUTO="${i}/bin"
+	fi
+    done
 fi
 
 #Discover default download method
@@ -661,12 +667,15 @@ AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
 
 if test "$with_matlab" != "no" ;then
+    if test ${MEXDIR:0:1} = '~' ;then
+	MEXDIR=$HOME:${MEXDIR:1}
+    fi
     if test -x "${MEXDIR}/mex" ;then
 	MEXDIR="${MEXDIR}"
     elif test -x "${MEXDIR}/bin/mex" ;then
 	MEXDIR="${MEXDIR}/bin"
     else
-	AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-mex to disable])
+	AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-mex to disable])
     fi
     MEXEXT="$($MEXDIR/mexext)"
     if test -z "$MEXEXT" ;then
@@ -746,6 +755,9 @@ if test "$with_cuda" != "no" ;then
     fi
     AC_MSG_NOTICE([Enabling CUDA])
     #Check for nvcc executable
+    if test ${CUDADIR:0:1} = '~' ;then
+	CUDADIR=$HOME:${CUDADIR:1}
+    fi
     NVCC="$CUDADIR/bin/nvcc"
     if test ! -x "$NVCC" ;then
 	NVCC="$CUDADIR/nvcc"

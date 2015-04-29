@@ -551,6 +551,7 @@ void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,co
 	const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
 	const Real scale=1.f-ht/hs;
 	const int nloc=loc->nloc;
+
 #define COMM loc->p,loc->nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
@@ -560,7 +561,7 @@ void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,co
 		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}
 #undef COMM
-    }    
+    }
 }
 void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *amp, Real *phiout,
 		   Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){

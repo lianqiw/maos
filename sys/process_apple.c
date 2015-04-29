@@ -79,7 +79,6 @@ int get_job_mem(void){/*return in KiB */
     }else{
 	mem=t_info.resident_size/1024;
     }
-    info("mem=%d KiB\n",mem);
     /*struct rusage usage; */
     /*getrusage(0, &usage); */
     /*info("mem2=%d KiB\n",(int)usage.ru_maxrss); */
