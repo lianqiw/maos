@@ -189,8 +189,8 @@ inline dcomplex operator-(const dcomplex &B, float A){
 #endif
 
 #ifndef COMPLEX
-typedef double __complex__ dcomplex;
-typedef float  __complex__ fcomplex;
+typedef __complex__ double dcomplex;
+typedef __complex__ float fcomplex;
 #define COMPLEX(A,B) ((A)+(B)*I)
 #define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
 #define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)

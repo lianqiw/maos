@@ -24,7 +24,6 @@
 #include <cusparse_v2.h>
 #include <cufft.h>
 #include <cuComplex.h>
-#include <complex>
 #define NG1D 128
 #define NG2D 8
 #define WRAP_SIZE 32
