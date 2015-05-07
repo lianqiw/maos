@@ -40,7 +40,7 @@ static int ngsmod_nmod(int ndm, double hs){
     int nmod=0;
     if(ndm==1 || !isfinite(hs)){
 	nmod=2;
-    }else if(ndm==2){
+    }else if(ndm>=2){
 	nmod=5;
     }else{
 	error("Invalid ndm: %d\n",ndm);
@@ -356,7 +356,8 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     return Ptt;
 }
 /**
-   DM modes for all the low order modes.*/
+   DM modes for all the low order modes, defined on DM grid. It uses ngsmod2dm
+   to define the modes*/
 static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod; 
     int ndm=parms->ndm;
@@ -514,7 +515,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     info2("ngsmod nmod=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.ahstfocus);
     ngsmod->hs=hs;
     if(ndm>1){
-	ngsmod->ht=parms->dm[1].ht;
+	ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
     }else{
 	ngsmod->ht=0;
     }
@@ -695,8 +696,7 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
     }
 }
 /**
-   Convert NGS modes to DM actuator commands using analytical expression.
-   \todo switch to use mode vectors
+   Convert NGS modes to DM actuator commands using analytical expression. For >2 DMs, we only put NGS modes on ground and top-most DM.
 */
 void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(!M || !M->p[0]) return;
@@ -716,7 +716,6 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 	}
     }
 
-    if(ndm>2) error("Error Usage\n");
     /*first dm */
     double *pm=M->p[0]->p;
     if(recon->ngsmod->nmod==2){
@@ -757,7 +756,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 				   +pm[3]*(xx-yy)
 				   +pm[4]*(xy));
 		}
-	    }else if(idm==1){
+	    }else if(idm+1==ndm){
 		for(unsigned long iloc=0; iloc<nloc; iloc++){
 		    double xx=xloc[iloc]*xloc[iloc];
 		    double xy=xloc[iloc]*yloc[iloc];
@@ -766,8 +765,6 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 				     +pm[3]*(xx-yy)
 				     +pm[4]*(xy));
 		}
-	    }else{
-		error("Invalid\n");
 	    }	
 	}
     }

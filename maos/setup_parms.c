@@ -1267,7 +1267,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	parms->sim.dmproj=1;/*need dmproj */
     }
     if(parms->sim.ahstfocus){
-	if(parms->recon.split!=1 || parms->ndm!=2 || !parms->sim.mffocus){
+	if(parms->recon.split!=1 || !parms->sim.mffocus){
 	    parms->sim.ahstfocus=0;
 	    warning("Disable ahstfocus\n");
 	}

@@ -273,13 +273,11 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
 	calc_ptt_do<<<DIM(nloc, TT_NBX), 0, stream>>>			\
 	    (cc, cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp); \
 	cudaMemcpyAsync(ccb, cc, 4*sizeof(Real), cudaMemcpyDeviceToHost, stream); \
-    }else if(parms->recon.split && parms->ndm==2){			\
+    }else if(parms->recon.split){					\
 	cudaMemsetAsync(cc, 0, 7*sizeof(Real), stream);			\
 	calc_ngsmod_do<<<DIM(nloc,TT_NBX),0,stream>>>			\
 	    (cc, cudata->perf->locs->p, nloc, iopdevl->p, cudata->perf->amp);\
 	cudaMemcpyAsync(ccb, cc, 7*sizeof(Real), cudaMemcpyDeviceToHost, stream); \
-    }else{								\
-	TO_IMPLEMENT;							\
     }
 
 #define PERFEVL_WFE_CPU(ans, pclep, pclmp, cleNGSmp, ccb)		\
@@ -288,16 +286,14 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     }									\
     int ans=0;								\
     if(parms->recon.split){						\
-	if(parms->ndm<=2){						\
-	    double *pcleNGSmp=COLUMN(cleNGSmp->p[ievl], isim);		\
-	    ans=calc_ngsmod(nmod==3?pclep:0, nmod==3?pclmp:0,		\
-			    pcleNGSmp,recon->ngsmod->nmod,	\
-			    recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
-			    recon->ngsmod->scale, thetax, thetay,	\
-			    aper->ipcc, aper->imcc,	parms, ccb);	\
-	}								\
+	double *pcleNGSmp=COLUMN(cleNGSmp->p[ievl], isim);		\
+	ans=calc_ngsmod(nmod==3?pclep:0, nmod==3?pclmp:0,		\
+			pcleNGSmp,recon->ngsmod->nmod,			\
+			recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
+			recon->ngsmod->scale, thetax, thetay,		\
+			aper->ipcc, aper->imcc,	parms, ccb);		\
     }else{								\
-	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb); \
+	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb);	\
     }
 
 /**

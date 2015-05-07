@@ -412,7 +412,7 @@ static void init_simu_evl(SIM_T *simu){
 	long nny[4]={nsim,nsim,nsim,nsim};
 	nnx[1]=0;//deprecated
 	nny[1]=0;
-	if(!parms->recon.split || parms->ndm>2){
+	if(!parms->recon.split){
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
@@ -445,7 +445,7 @@ static void init_simu_evl(SIM_T *simu){
 	    simu->clep=dcellnew3(nevl,1,nnx,nny);
 	    simu->clmp=dcellnew3(nevl,1,nnx,nny);
 	}
-	if(parms->recon.split && parms->ndm<=2){
+	if(parms->recon.split){
 	    long nnx_split[nevl];
 	    long nnx_3[nevl];
 	    for(int ievl=0; ievl<nevl; ievl++){
@@ -1628,7 +1628,7 @@ void print_progress(const SIM_T *simu){
 	      mysqrt(simu->cle->p[isim*nmod])*1e9,
 	      mysqrt(simu->cle->p[1+isim*nmod])*1e9,
 	      mysqrt(simu->cle->p[2+isim*nmod])*1e9);
-	if(parms->recon.split && parms->ndm<=2){
+	if(parms->recon.split){
 	    info2(" Split %6.1f %6.1f %6.1f nm",
 		  mysqrt(simu->clem->p[isim*3])*1e9,
 		  mysqrt(simu->clem->p[1+isim*3])*1e9,

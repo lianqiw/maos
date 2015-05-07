@@ -107,6 +107,7 @@ static int cmp_long2_ascend(const long *a, const long *b){
 struct task_t{
     float timing;/*based on empirical data*/
     int *dest;
+    char name[64];
 };
 static int task_cmp(const task_t *a, const task_t *b){
     if(b->timing > a->timing){
@@ -293,12 +294,18 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    if(parms->gpu.tomo || parms->gpu.fit){
 		tasks[count].timing=20;//ms
 		tasks[count].dest=&cudata_t::recongpu;
+		snprintf(tasks[count].name, 64, "RECON");
 		count++;
 	    }
 	    //evl
 	    for(int ievl=0; parms->gpu.evl && ievl<parms->evl.nevl; ievl++){
-		tasks[count].timing=4.7;//ms
+		if(parms->evl.psfmean==1 && parms->evl.psf->p[ievl]){
+		    tasks[count].timing=20;//ms; more time for PSF
+		}else{
+		    tasks[count].timing=4.7;//ms
+		}
 		tasks[count].dest=cudata_t::evlgpu+ievl;
+		snprintf(tasks[count].name, 64, "EVL %d", ievl);
 		count++;
 	    }
 	    //wfs
@@ -306,6 +313,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		const int ipowfs=parms->wfs[iwfs].powfs;
 		tasks[count].timing=parms->powfs[ipowfs].usephy?17:1.5;
 		tasks[count].dest=cudata_t::wfsgpu+iwfs;
+		snprintf(tasks[count].name, 64, "WFS %d", iwfs);
 		count++;
 	    }
 	    qsort(tasks, count, sizeof(task_t), (int(*)(const void*, const void *))task_cmp);
@@ -324,6 +332,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
+		info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
 	    }
 	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;
