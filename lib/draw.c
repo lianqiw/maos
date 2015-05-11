@@ -535,6 +535,7 @@ void imagesc(const char *fig, /**<Category of the figure*/
     if((TRYLOCK(lock))){
 	return;
     }else{
+	UNLOCK(lock);
 	//We copy all the data and put the imagesc job into a task
 	//The task will free the data after it finishes.
 	struct imagesc_t data;
@@ -560,7 +561,6 @@ void imagesc(const char *fig, /**<Category of the figure*/
 #undef datamemdup
 	long group;
 	QUEUE(&group, imagesc_do, &data, 1, 0);
-	UNLOCK(lock);
     }
 }
 
