@@ -32,7 +32,7 @@ int draw_add(int fd);
 void draw_final(int reuse);
 int draw_current(const char *fig, const char *fn);
 void imagesc(const char *fig, long nx, long ny, const double *limit, const double *zlimit,
-	     const void *p, const char *title, const char *xlabel, const char *ylabel,
+	     const double *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
 void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, 

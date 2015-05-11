@@ -160,6 +160,7 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
 #endif
 
 #define LOCK(A) pthread_mutex_lock(&A)
+#define TRYLOCK(A) pthread_mutex_trylock(&A)
 #define UNLOCK(A) pthread_mutex_unlock(&A)
 #define PINIT(A) pthread_mutex_init(&A,NULL)
 #define PDEINIT(A) pthread_mutex_destroy(&A)

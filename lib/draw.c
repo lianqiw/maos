@@ -445,23 +445,34 @@ void plot_points(const char *fig,          /**<Category of the figure*/
 /**
    Draw an image.
 */
-void imagesc(const char *fig, /**<Category of the figure*/
-	     long nx,   /**<the image is of size nx*ny*/
-	     long ny,   /**<the image is of size nx*ny*/
-	     const double *limit, /**<x min, xmax, ymin and ymax*/
-	     const double *zlim,/**< min,max, the data*/
-	     const void *p, /**<The image*/
-	     const char *title,  /**<title of the plot*/
-	     const char *xlabel, /**<x axis label*/
-	     const char *ylabel, /**<y axis label*/
-	     const char *format, /**<subcategory of the plot.*/
-	     ...){
-    if(disable_draw) return;
-    format2fn;
+//Data structure for imagesc
+struct imagesc_t{
+    char *fig; /**<Category of the figure*/
+    long nx;   /**<the image is of size nx*ny*/
+    long ny;   /**<the image is of size nx*ny*/
+    double *limit; /**<x min; xmax; ymin and ymax*/
+    double *zlim;/**< min;max; the data*/
+    double *p; /**<The image*/
+    char *title;  /**<title of the plot*/
+    char *xlabel; /**<x axis label*/
+    char *ylabel; /**<y axis label*/
+    char *fn;
+};
+static void imagesc_do(struct imagesc_t *data){
     LOCK(lock);
     if(open_drawdaemon()){
 	goto end;
     }
+    char *fig=data->fig;
+    long nx=data->nx;
+    long ny=data->ny;
+    double *limit=data->limit;
+    double *zlim=data->zlim;
+    double *p=data->p;
+    char *title=data->title;
+    char *xlabel=data->xlabel;
+    char *ylabel=data->ylabel;
+    char *fn=data->fn;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	int sock_draw=sock_draws[ifd].fd;
@@ -487,7 +498,7 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	    STWRITEINT(DRAW_LIMIT);
 	    STWRITE(limit, sizeof(double)*4);
 	}
-	if(format){
+	if(fn){
 	    STWRITECMDSTR(DRAW_NAME,fn);
 	}
 	STWRITECMDSTR(DRAW_FIG,fig);
@@ -496,8 +507,61 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	STWRITEINT(DRAW_END);
     }
- end:
-    UNLOCK(lock);
+  end:
+   UNLOCK(lock);
+   free(data->fig);
+   free(data->limit);
+   free(data->zlim);
+   free(data->p);
+   free(data->title);
+   free(data->xlabel);
+   free(data->ylabel);
+   free(data->fn);
+}
+void imagesc(const char *fig, /**<Category of the figure*/
+	     long nx,   /**<the image is of size nx*ny*/
+	     long ny,   /**<the image is of size nx*ny*/
+	     const double *limit, /**<x min, xmax, ymin and ymax*/
+	     const double *zlim,/**< min,max, the data*/
+	     const double *p, /**<The image*/
+	     const char *title,  /**<title of the plot*/
+	     const char *xlabel, /**<x axis label*/
+	     const char *ylabel, /**<y axis label*/
+	     const char *format, /**<subcategory of the plot.*/
+	     ...){
+    if(disable_draw) return;
+    format2fn;
+    //Skip this drawing if line is busy.
+    if((TRYLOCK(lock))){
+	return;
+    }else{
+	//We copy all the data and put the imagesc job into a task
+	//The task will free the data after it finishes.
+	struct imagesc_t data;
+	data.nx=nx;
+	data.ny=ny;
+#define datastrdup(x) data.x=(x)?strdup(x):0
+#define datamemdup(x, size)			\
+	if(x){					\
+	    data.x=malloc(size);		\
+	    memcpy(data.x, x, size);		\
+	}else{					\
+	    data.x=0;				\
+	}
+	datastrdup(fig);
+	datamemdup(limit, 4*sizeof(double));
+	datamemdup(zlim, 2*sizeof(double));
+	datamemdup(p, nx*ny*sizeof(double));
+	datastrdup(title);
+	datastrdup(xlabel);
+	datastrdup(ylabel);
+	data.fn=format?strdup(fn):0;
+#undef datastrdup
+#undef datamemdup
+	long group;
+	QUEUE(&group, imagesc_do, &data, 1, 0);
+	UNLOCK(lock);
+    }
 }
 
 /**
