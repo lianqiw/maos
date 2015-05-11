@@ -218,8 +218,8 @@ class cucell{
 	}
     }
 };
-typedef class cumat<Real>    curmat;
-typedef class cumat<Comp> cucmat;
+typedef class cumat<Real>   curmat;
+typedef class cumat<Comp>   cucmat;
 typedef class cucell<Real>  curcell;
 typedef class cucell<Comp>  cuccell;
 enum TYPE_SP{

@@ -4,8 +4,8 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS="https://sourceforge.net/projects/lianqiw/files/external"
-BASEURLS+=" http://project.tmt.org/~lianqiw/maos/external"
+BASEURLS=" https://github.com/lianqiw/files/raw/master/"
+BASEURLS+=" https://sourceforge.net/projects/lianqiw/files/external"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
     CFLAGS=" "
