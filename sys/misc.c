@@ -15,10 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef __linux__
-#define _GNU_SOURCE
-#include <sched.h>
-#endif
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -796,6 +792,8 @@ void maos_version(void){
 */
 void set_realtime(int icpu, int niceness){
     //Set CPU affinity.
+    /*
+      //Deprecated. Use external tools to do so, like openmp env's
 #ifdef __linux__    
     if(icpu>0){
 	cpu_set_t cpuset={{0}};
@@ -805,6 +803,7 @@ void set_realtime(int icpu, int niceness){
     //lock data in memory, avoid swapping.
     mlockall(MCL_FUTURE | MCL_CURRENT);
 #endif
+    */
     //fail stack
     struct rlimit rl;
     if(!getrlimit(RLIMIT_STACK, &rl)){
@@ -828,7 +827,7 @@ void set_realtime(int icpu, int niceness){
 }
 quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
-    fprintf(stderr, msg);
+    fprintf(stderr, "%s", msg);
     sync();
     if(strncmp(msg, "ERROR", 5)){
 	print_backtrace();

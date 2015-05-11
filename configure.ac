@@ -124,7 +124,7 @@ case "$host_os" in
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
 	LDFLAGS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
-	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
+	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
 	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
