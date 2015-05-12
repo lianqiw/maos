@@ -5,9 +5,9 @@
 #automake: Creates Makefile.in from Makefile.am
 #autoconf: Generates configure from configure.ac
 if which libtoolize >/dev/null 2>&1 ; then
-    libtoolize --copy 
+    libtoolize --copy --force
 else
-    glibtoolize --copy
+    glibtoolize --copy --force
 fi
 sed 's/-fno-common//g' m4/libtool.m4 > m4/libtool_new.m4
 mv m4/libtool_new.m4 m4/libtool.m4

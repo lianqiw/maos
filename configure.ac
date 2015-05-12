@@ -186,8 +186,8 @@ if test -n "`which nvcc 2>/dev/null`" ;then
     fi
 else
     for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
-	if test -x "${cuda}/bin/cuda" ;then
-	    NVCC="${cuda}/bin/cuda"
+	if test -x "${cuda}/bin/nvcc" ;then
+	    NVCC="${cuda}/bin/nvcc"
 	    break;
 	fi
     done
