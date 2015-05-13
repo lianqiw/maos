@@ -29,8 +29,10 @@ void default_quitfun(const char *msg);
 #include "config.h" 
 #endif
 #if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
+//c++ mode
 #include <csignal>
 #include <cmath>
+#include <complex>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -40,14 +42,31 @@ using std::signbit;
 using std::strerror;
 #define isnan std::isnan
 #define isinf std::isinf
-#else
+using std::complex;
+typedef complex<double> dcomplex;
+typedef complex<float> fcomplex;
+#define COMPLEX(A,B) dcomplex(A,B)
+#define DCOMPLEX(A,B) dcomplex(A,B)
+#define FCOMPLEX(A,B) fcomplex(A,B)
+#else//C99 mode
 #include <signal.h>
 #include <math.h> //don't use tgmath. cause gcc out of memory when compiling cmath.h
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+//include complex.h when called by cuda c++ compiler has compatibility
+//issues. We don't need to call complex functions, so no need to include anyway.
+#if !defined(AOS_CUDA_GPU_H)
+#include <complex.h>
 #endif
+typedef __complex__ double dcomplex;
+typedef __complex__ float fcomplex;
+#define COMPLEX(A,B) ((A)+(B)*I)
+#define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
+#define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
+#endif
+
 //GNU GCC changes definition of inline to C99 compatible since 4.4
 #if __GNUC__ == 4 && __GNUC_MINOR__ < 5
 #define INLINE extern inline __attribute__((gnu_inline, always_inline)) //GNU
@@ -81,7 +100,6 @@ typedef unsigned int spint;  /*This is always 32 bit. */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #if defined(__CYGWIN__)
 /*CYGWIN does not have complex.h. */
-#define complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
 #define I _Complex_I
 double cabs(dcomplex __z);
@@ -121,17 +139,10 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #elif !defined(__cplusplus)
 #include <complex.h>
 #elif defined(__cplusplus) && defined(AOS_CUDA_GPU_H)
+//we don't need to include the header as we only used __complex__ which is built-in. no function call is needed.
 //#include <complex.h>
 #else
 //C++ mode
-#include <complex>
-using std::complex;
-typedef complex<double> dcomplex;
-typedef complex<float> fcomplex;
-#define COMPLEX(A,B) dcomplex(A,B)
-#define DCOMPLEX(A,B) dcomplex(A,B)
-#define FCOMPLEX(A,B) fcomplex(A,B)
-
 #define cabs abs
 #define cimag imag
 #define creal real
@@ -186,14 +197,6 @@ inline dcomplex operator-(float A, const dcomplex &B){
 inline dcomplex operator-(const dcomplex &B, float A){
     return B-(double)A;
 }
-#endif
-
-#ifndef COMPLEX
-typedef __complex__ double dcomplex;
-typedef __complex__ float fcomplex;
-#define COMPLEX(A,B) ((A)+(B)*I)
-#define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
-#define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
 #endif
 
 #include "mem.h"
