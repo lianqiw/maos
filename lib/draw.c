@@ -560,7 +560,7 @@ void imagesc(const char *fig, /**<Category of the figure*/
 #undef datastrdup
 #undef datamemdup
 	long group;
-	QUEUE(&group, imagesc_do, &data, 1, 0);
+	QUEUE(group, imagesc_do, &data, 1, 0);
     }
 }
 

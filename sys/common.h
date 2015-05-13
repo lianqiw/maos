@@ -42,7 +42,7 @@ using std::strerror;
 #define isinf std::isinf
 #else
 #include <signal.h>
-#include <math.h>
+#include <math.h> //don't use tgmath. cause gcc out of memory when compiling cmath.h
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -117,12 +117,11 @@ INLINE dcomplex cpow(dcomplex x, dcomplex z){
 INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   return cexpf(clogf(x)*z);
 }
-#else
-//C99 always has definitions we need
-//if not included by cuda
-#if !defined(__cplusplus) || defined(AOS_CUDA_GPU_H)
+//C99 already has definitions we need
+#elif !defined(__cplusplus) || defined(AOS_CUDA_GPU_H)
 #include <complex.h>
 #else
+//C++ mode
 #include <complex>
 using std::complex;
 typedef complex<double> dcomplex;
@@ -185,7 +184,6 @@ inline dcomplex operator-(float A, const dcomplex &B){
 inline dcomplex operator-(const dcomplex &B, float A){
     return B-(double)A;
 }
-#endif
 #endif
 
 #ifndef COMPLEX
