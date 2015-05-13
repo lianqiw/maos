@@ -742,15 +742,14 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		wvlmin=parms->powfs[ipowfs].wvl->p[iwvl];
 	}
 	double dtheta=wvlmin/(dxsa*embfac);/*Min PSF sampling. */
-	ncompx=4*(long)ceil(0.25*pixpsax*pixthetax/dtheta);
-	ncompy=4*(long)ceil(0.25*pixpsay*pixthetay/dtheta);
+	ncompx=ceil(pixpsax*pixthetax/dtheta);
+	ncompy=ceil(pixpsay*pixthetay/dtheta);
 	
 	/*
 	  Found that: Must set ncompx==ncompy even for rotationg either psf or
 	  otf. reduce aliasing and scattering of image intensities.
 	*/
-	ncompx=ncompx>ncompy?ncompx:ncompy;
-	ncompy=ncompx;
+	ncompx=ncompy=MAX(ncompx, ncompy);
 	/*A few manual optimizations. */
 	if(ncompx==ncompy){
 	    if(ncompx>8 && ncompx<16){
@@ -763,6 +762,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		ncompx=ncompy=128;
 	    }
 	}
+	ncompx=ncompy=nextfftsize(ncompx);
 	info2("Subaperture DTF is %dx%d\n", ncompx,ncompy);
     }/*ncomp */
     powfs[ipowfs].ncompx=ncompx;
