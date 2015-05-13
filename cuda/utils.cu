@@ -297,15 +297,17 @@ inline void scale_add(T *p1, R alpha, S *p2, R beta, long n){
     }
 }
 template <>
-inline void scale_add<dcomplex, double, Comp>(dcomplex *p1, double alpha, Comp *p2, double beta, long n){
+inline void scale_add<double2, double, Comp>(double2 *p1, double alpha, Comp *p2, double beta, long n){
     for(long i=0; i<n; i++){
-	p1[i]=p1[i]*alpha+(p2[i].x+I*p2[i].y)*beta;
+	p1[i].x=p1[i].x*alpha+p2[i].x*beta;
+	p1[i].y=p1[i].y*alpha+p2[i].y*beta;
     }
 }
 template <>
-inline void scale_add<fcomplex, float, Comp>(fcomplex *p1, float alpha, Comp *p2, float beta, long n){
+inline void scale_add<float2, float, Comp>(float2 *p1, float alpha, Comp *p2, float beta, long n){
     for(long i=0; i<n; i++){
-	p1[i]=p1[i]*alpha+(p2[i].x+I*p2[i].y)*beta;
+	p1[i].x=p1[i].x*alpha+p2[i].x*beta;
+	p1[i].y=p1[i].y*alpha+p2[i].y*beta;
     }
 }
 /**

@@ -19,7 +19,9 @@
 /**
    \file gpu_mvm.c
   */
-#include "../cuda/gpu.h"
+#include <stdlib.h>
+#include <stdio.h>
+void gpu_mvm_daemon(int);
 int main(int argc, char *argv[]){
     enum{
 	P_EXE,
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]){
 	P_TOT,
     };
     if(argc<P_TOT){
-	info("Usage: %s port\n", argv[0]);
+	fprintf(stderr, "Usage: %s port\n", argv[0]);
 	exit(0);
     }
     int port=strtol(argv[P_PORT], NULL, 10);

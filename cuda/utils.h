@@ -53,11 +53,11 @@ inline void type_convert<float2, double2>(float2*out, const double2* in, int nx)
 	out[i].y=static_cast<float>(in[i].y);
     }
 }
-template<>
+/*template<>
 inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
     type_convert(out, (const double2*)in, nx);
 }
-
+*/
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
 void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){

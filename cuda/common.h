@@ -17,13 +17,14 @@
 */
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
-
-#include "gpu.h"
 #include <cuda.h>
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
 #include <cufft.h>
 #include <cuComplex.h>
+typedef double2 dcomplex;
+typedef float2 fcomplex;
+#include "gpu.h"
 #define NG1D 128
 #define NG2D 8
 #define WRAP_SIZE 32
@@ -96,20 +97,44 @@ int current_gpu();
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-__inline__ static __host__ __device__ Comp operator*(const Comp &a, const Comp &b){
-    return Z(cuCmul)(a,b);
+__inline__ static __host__ __device__ float2 operator*(const float2 &a, const float2 &b){
+    return cuCmulf(a,b);
 }
-__inline__ static __host__ __device__ Comp&operator*=(Comp &a, const Comp &b){
-    a=Z(cuCmul)(a,b);
+__inline__ static __host__ __device__ float2 operator+(const float2 &a, const float2 &b){
+    return cuCaddf(a,b);
+}
+__inline__ static __host__ __device__ float2&operator*=(float2 &a, const float2 &b){
+    a=cuCmulf(a,b);
     return a;
 }
-__inline__ static __host__ __device__ Comp operator*(const Comp &a, const Real b){
-    Comp tmp;
+__inline__ static __host__ __device__ float2 operator*(const float2 &a, const float b){
+    float2 tmp;
     tmp.x=a.x*b;
     tmp.y=a.y*b;
     return tmp;
 }
-__inline__ static __host__ __device__ Comp&operator*=(Comp &a, const Real b){
+__inline__ static __host__ __device__ float2&operator*=(float2 &a, const float b){
+    a.x*=b;
+    a.y*=b;
+    return a;
+}
+__inline__ static __host__ __device__ double2 operator*(const double2 &a, const double2 &b){
+    return cuCmul(a,b);
+}
+__inline__ static __host__ __device__ double2 operator+(const double2 &a, const double2 &b){
+    return cuCadd(a,b);
+}
+__inline__ static __host__ __device__ double2&operator*=(double2 &a, const double2 &b){
+    a=cuCmul(a,b);
+    return a;
+}
+__inline__ static __host__ __device__ double2 operator*(const double2 &a, const double b){
+    double2 tmp;
+    tmp.x=a.x*b;
+    tmp.y=a.y*b;
+    return tmp;
+}
+__inline__ static __host__ __device__ double2&operator*=(double2 &a, const double b){
     a.x*=b;
     a.y*=b;
     return a;

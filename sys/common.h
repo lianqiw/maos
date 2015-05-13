@@ -56,15 +56,17 @@ typedef complex<float> fcomplex;
 #include <stdio.h>
 #include <string.h>
 //include complex.h when called by cuda c++ compiler has compatibility
-//issues. We don't need to call complex functions, so no need to include anyway.
-#if !defined(AOS_CUDA_GPU_H)
+//issues. we define in a similar way as in cuda
+#if defined(AOS_CUDA_GPU_H)
+//already defined 
+#else
 #include <complex.h>
-#endif
 typedef __complex__ double dcomplex;
 typedef __complex__ float fcomplex;
 #define COMPLEX(A,B) ((A)+(B)*I)
 #define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
 #define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
+#endif
 #endif
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4
