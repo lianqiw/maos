@@ -17,7 +17,6 @@
 */
 #ifndef AOS_CUDA_FIT_H
 #define AOS_CUDA_FIT_H
-#include "gpu.h"
 #include "solve.h"
 #include "recon_base.h"
 #include "prop_wrap.h"
@@ -50,7 +49,6 @@ public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
-	if(!this) return;
 	delete[] acmap;
 	delete dmcache;
 	delete xcache;

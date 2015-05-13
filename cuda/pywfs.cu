@@ -15,17 +15,16 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-extern "C"
-{
-#include "gpu.h"
-#include "../maos/sim.h"
-}
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>
 #include "wfs.h"
 #include "cudata.h"
 #include "cucmat.h"
+extern "C"
+{
+#include "../maos/sim.h"
+}
 
 __global__ static void
 pywfs_grad_do(Real *grad, Real *ints, Real *saa, Real *isum, Real *goff, Real gain, int nsa){

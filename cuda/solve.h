@@ -118,7 +118,6 @@ protected:
 public:
     cusolve_cbs(spchol *_C=0, dmat *_Up=0, dmat *_Vp=0);
     virtual ~cusolve_cbs(){
-	if(!this) return;
 	delete Vr;
 	delete Cl;
 	delete Up;

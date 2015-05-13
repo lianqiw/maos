@@ -17,7 +17,6 @@
 */
 #ifndef AOS_CUDA_TOMO_H
 #define AOS_CUDA_TOMO_H
-#include "gpu.h"
 #include "solve.h"
 #include "recon_base.h"
 #include "prop_wrap.h"
@@ -88,7 +87,6 @@ public:
     virtual void Rt(curcell **out, Real beta, 
 		    const curcell *xin, Real alpha, stream_t &stream);
     ~cutomo_grid(){
-	if(!this) return;
 	delete opdwfs;
 	delete grad;
 	delete ttf;

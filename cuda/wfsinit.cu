@@ -15,7 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "gpu.h"
 #include "utils.h"
 #include "accphi.h"
 #include <curand_kernel.h>

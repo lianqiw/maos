@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gpu.h"
 #include "curmat.h"
 #include "cucmat.h"
 #include "utils.h"
@@ -60,7 +59,7 @@ void curadd(curmat **out, Real alpha, curmat *in, Real beta, cudaStream_t stream
     if(!in) return;
     if(!*out || alpha==0){
 	curcp(out, in, stream);
-	if(Z(fabs)(beta-1)>EPS){
+	if(Z(fabs)(beta-(Real)1)>EPS){
 	    scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 		((*out)->p, in->nx*in->ny, beta);
 	}
@@ -86,7 +85,7 @@ void curscale(curmat *in, Real alpha, cudaStream_t stream){
     if(!in) return;
     if(alpha==0) {
 	curzero(in, stream);
-    }else if(Z(fabs)(alpha-1.f)>EPS){
+    }else if(Z(fabs)(alpha-(Real)1)>EPS){
 	int n=in->nx*in->ny;
 	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
     }
@@ -131,7 +130,7 @@ void curmm(curmat **C, Real alpha, const curmat *A, const curmat *B, const char 
 void curmv(Real *c, Real alpha, const curmat *A, const Real *b, char trans, Real beta, cublasHandle_t handle){
     CUBL(gemv)(handle, (trans=='t'||trans==1)?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
 }
-void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B, 
+void curcellmm(curcell **C0, Real alpha, const curcell *A, const curcell *B, 
 	       const char trans[2], const double beta, cublasHandle_t handle){
     if(!A || !B) return;
     int ax, az;
@@ -163,7 +162,7 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
 	cublasGetStream(handle, &stream);
 	if(alpha==0){
 	    curcellzero(*C0, stream);
-	}else if(Z(fabs)(alpha-1)>EPS){
+	}else if(Z(fabs)(alpha-(Real)1)>EPS){
 	    curcellscale(*C0, alpha, stream);
 	}
     }

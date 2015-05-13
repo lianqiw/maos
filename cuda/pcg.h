@@ -33,7 +33,6 @@ typedef struct CGTMP_T{
 	memset(this, 0, sizeof(CGTMP_T));
     }
     ~CGTMP_T(){
-	if(!this) return;
 	delete r0;r0=NULL;
 	delete z0;z0=NULL;
 	delete p0;p0=NULL;

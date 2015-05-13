@@ -118,8 +118,10 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   return cexpf(clogf(x)*z);
 }
 //C99 already has definitions we need
-#elif !defined(__cplusplus) || defined(AOS_CUDA_GPU_H)
+#elif !defined(__cplusplus)
 #include <complex.h>
+#elif defined(__cplusplus) && defined(AOS_CUDA_GPU_H)
+//#include <complex.h>
 #else
 //C++ mode
 #include <complex>

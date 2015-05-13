@@ -19,7 +19,6 @@
 /**
    \file gpu_mvm.c
   */
-#include "../lib/aos.h"
 #include "../cuda/gpu.h"
 int main(int argc, char *argv[]){
     enum{

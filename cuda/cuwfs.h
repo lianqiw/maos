@@ -106,7 +106,6 @@ protected:
 public:
     cushgeom_t(wfscfg_t*);
     virtual void initsim(){
-	if(!this) return;
 	gradacc->zero();
     }
     virtual void addnoise();
@@ -175,7 +174,6 @@ public:
 	delete pistatout;
     }
     virtual void initsim(){
-	if(!this) return;
 	ints->zero();
     }
     virtual void acc(curmat*);

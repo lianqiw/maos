@@ -18,7 +18,6 @@
 #ifndef AOS_CUDA_RECON_H
 #define AOS_CUDA_RECON_H
 
-#include "gpu.h"
 #include "solve.h"
 #include "recon_base.h"
 #include "moao.h"

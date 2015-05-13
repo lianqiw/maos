@@ -40,7 +40,6 @@ class cufdpcg_t:public cucgpre_t{
     GPU_FDPCG_T *fddata;
 public:
     virtual ~cufdpcg_t(){
-	if(!this) return;
 	cudaFree(perm);
 	free(fftips);
 	delete Mb;

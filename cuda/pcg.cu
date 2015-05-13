@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gpu.h"
 #include "utils.h"
 #include "curmat.h"
 #include "pcg.h"

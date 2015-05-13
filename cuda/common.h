@@ -228,11 +228,9 @@ typedef struct stream_t{
 	SPHANDLE_NEW(sphandle, stream);
     }
     ~stream_t(){
-	if(this){
-	    SPHANDLE_DONE(sphandle);
-	    HANDLE_DONE(handle);
-	    STREAM_DONE(stream);
-	}
+	SPHANDLE_DONE(sphandle);
+	HANDLE_DONE(handle);
+	STREAM_DONE(stream);
     }
     void sync(){
 	assert(this);
@@ -260,7 +258,7 @@ typedef struct event_t{
 	DO(cudaEventCreateWithFlags(&event, flag));
     }
     ~event_t(){
-	if(this) cudaEventDestroy(event);
+	cudaEventDestroy(event);
     }
     void record(cudaStream_t stream){
 	DO(cudaEventRecord(event, stream));
