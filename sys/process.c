@@ -109,10 +109,15 @@ void init_process(void){
     }
 
     NCPU= get_ncpu();
-#if _OPENMP>200805
-    MAXTHREAD=omp_get_max_threads();
-#else
     MAXTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
+#if _OPENMP>200805
+    //The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
+    if(getenv("OMP_NUM_THREADS")){
+	int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);
+	if(nthread<MAXTHREAD && nthread>0){
+	    MAXTHREAD=nthread;
+	}
+    }
 #endif
     NTHREAD=MAXTHREAD;
 #ifdef HAVE_NUMA_H
