@@ -295,16 +295,27 @@ static int open_drawdaemon(){
     return sock_ndraw==0?-1:0;
 }
 
-/* Search whether fig is already in list. Return 1 if found. Insert if not found
-   and return 0.*/
-static int check_figfn(list_t **head, const char *fig, const char *fn, int add){
+/* 
+   Check whether we need to draw current page. True if
+   1) not yet exist in the list. it is inserted into the list if add is valid and set as current page.
+   2) is current page.
+   3) when draw_single is not set.
+   4) pause must not be set set.
+*/
+static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
+    if(disable_draw) return 0;
     list_t *child=0;
-    int found1=list_search(head, &child, fig, add);
-    int found2=0;
+    list_search(&sock_draws[ifd].list, &child, fig, add);
+    int found=0;
     if(child){
-	found2=list_search(&child->child, NULL, fn, add);
+	found=list_search(&child->child, NULL, fn, add);
     }
-    return found1 && found2;
+    char **figfn=sock_draws[ifd].figfn;
+    /*if(add && !found){//It is newly insert to the list. Set as current page
+	free(figfn[0]); figfn[0]=strdup(fig);
+	free(figfn[1]); figfn[1]=strdup(fn);
+	}*/
+    return !sock_draws[ifd].pause && (!draw_single || !found || (!strcmp(figfn[0], fig) && !strcmp(figfn[1], fn)));
 }
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
@@ -323,14 +334,13 @@ void draw_final(int reuse){
    Check whether what we are drawing is current page.
 */
 int draw_current(const char *fig, const char *fn){
+    if(disable_draw) return 0;
     int current=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-	char **figfn=sock_draws[ifd].figfn;
-	if(sock_draws[ifd].pause) continue;
-	if(draw_single && check_figfn(&sock_draws[ifd].list, fig, fn, 0)
-	   && figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))) continue;
-	current=1;
+	if(check_figfn(ifd, fig, fn, 0)){
+	    current=1;
+	}
     }
     return current;
 }
@@ -362,13 +372,7 @@ void plot_points(const char *fig,          /**<Category of the figure*/
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	int sock_draw=sock_draws[ifd].fd;
-	char **figfn=sock_draws[ifd].figfn;
-	if(sock_draws[ifd].pause) continue;
-	if(draw_single && figfn[0] && figfn[1] &&
-	   check_figfn(&sock_draws[ifd].list, fig, fn, 1) && 
-	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
-	    continue;
-	}
+	if(!check_figfn(ifd, fig, fn, 1)) continue;
 	STWRITEINT(DRAW_START);
 	if(loc){/*there are points to plot. */
 	    for(int ig=0; ig<ngroup; ig++){
@@ -476,13 +480,7 @@ static void imagesc_do(struct imagesc_t *data){
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
 	int sock_draw=sock_draws[ifd].fd;
-	char **figfn=sock_draws[ifd].figfn;
-	if(sock_draws[ifd].pause) continue;
-	if(draw_single && figfn[0] && figfn[1] && 
-	   check_figfn(&sock_draws[ifd].list, fig, fn, 1) && 
-	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
-	    continue;
-	}
+	if(!check_figfn(ifd, fig, fn, 1)) continue;
 	int32_t header[2];
 	header[0]=nx;
 	header[1]=ny;
@@ -529,8 +527,8 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     const char *ylabel, /**<y axis label*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
-    if(disable_draw) return;
     format2fn;
+    if(disable_draw || !draw_current(fig, fn)) return;
     //Skip this drawing if line is busy.
     if((TRYLOCK(lock))){
 	return;
@@ -570,8 +568,8 @@ void imagesc(const char *fig, /**<Category of the figure*/
 void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
-    if(disable_draw) return;
     format2fn;
+    if(disable_draw || !draw_current(fig, fn)) return;
 
     double *pr,*pi;
     pr=malloc(nx*ny*sizeof(double));
@@ -591,8 +589,8 @@ void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, cons
 void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		    const char *format,...){
-    if(disable_draw) return;
     format2fn;
+    if(disable_draw || !draw_current(fig, fn)) return;
     double *pr,*pi;
     int isreal=1;
     pr=malloc(nx*ny*sizeof(double));
@@ -619,8 +617,8 @@ void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const
 void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...){
-    if(disable_draw) return;
     format2fn;
+    if(disable_draw|| !draw_current(fig, fn)) return;
     double *pr;
     pr=malloc(nx*ny*sizeof(double));
     for(int i=0; i<nx*ny; i++){

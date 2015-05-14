@@ -468,8 +468,7 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat *opd, cudaStream_t
 		    const char *title, const char *xlabel, const char *ylabel,
 		    const char* format,...){
     format2fn;
-    int current=draw_current(fig, fn);
-    if(current){
+    if(draw_current(fig, fn)){
 	dmat *tmp=NULL;
 	cp2cpu(&tmp, opd, stream); 
 	drawopdamp(fig, loc, tmp->p, amp, zlim, title, xlabel, ylabel, "%s", fn);

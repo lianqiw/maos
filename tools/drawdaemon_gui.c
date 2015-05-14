@@ -807,7 +807,10 @@ gboolean addpage(gpointer indata){
 	}
 	if(get_current_drawdata()==drawdata_old){/*we are the current page. need to update pixmap */
 	    update_pixmap(drawdata_old);
-	}/*otherwise, don't have to do anything. */
+	}else{
+	    /*otherwise, notify client that it is not drawing to active page */
+	    page_changed(-1, -1);
+	}
     }else{
 	/*new tab inside the fig to contain the plot. */
 	drawdata->page=page=gtk_scrolled_window_new(NULL,NULL);
@@ -867,6 +870,10 @@ gboolean addpage(gpointer indata){
 	gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH, 
 				    DRAWAREA_MIN_HEIGHT);
 	gtk_widget_show_all(subnb);
+	if(get_current_drawdata()!=drawdata){
+	    //The new page is not activated. notify client that it is not drawing to active page
+	    page_changed(-1, -1);
+	}
     }
     g_slist_free(subnbs);
     return 0;//return 0 cause the function to be removed frm gdb_threads_idle()
