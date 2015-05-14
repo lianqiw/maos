@@ -81,22 +81,6 @@ typedef struct INTSTAT_T{
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
 }INTSTAT_T;
-typedef struct PYWFS_T{
-    /*Every above are used for SHWFS. Every below are used for PyWFS*/
-    double modulate;   /**<Amount of modulation in radian*/
-    dmat *wvlwts;      /**<parms->powfs.wvlwts*/
-    loc_t *loc;        /**<Pupil plane grid*/
-    dmat  *amp;        /**<Pupil plane amplitude map*/
-    locfft_t *locfft;  /**<First fft to form PSF*/
-    ccell *pyramid;    /**<OPD of pyramid. Angular size of clear aperture is different*/
-    cmat *nominal;     /**<For sampling results onto detector*/
-    dspcell *si;       /**<For sampling results onto detector*/
-    double gain;       /**<Optical gain of PYWFS*/
-    dmat *atm;         /**<For generating gain with atmosphere*/
-    dmat *saa;         /**<Subaperture area. Average is one*/
-    dmat *gradoff;     /**<Gradient of a flat wavefront*/
-    int pos_n;         /**<Number of points for modulation.*/
-}PYWFS_T;
 
 /**
    contains the data associated with a certain type of WFS. not
@@ -158,7 +142,7 @@ typedef struct POWFS_T{
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
-    PYWFS_T *pywfs;     /**<For pyramid WFS*/
+    struct PYWFS_T *pywfs;     /**<For pyramid WFS*/
 }POWFS_T;
 
 /**

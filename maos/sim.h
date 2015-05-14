@@ -18,6 +18,7 @@
 
 #ifndef AOS_SIM_H
 #define AOS_SIM_H
+
 void perfevl_ievl(thread_t *info);
 void perfevl(SIM_T *simu);
 void prep_cachedm(SIM_T *simu);
@@ -30,5 +31,4 @@ void wfsgrad_iwfs(thread_t *info);
 void wfsgrad_post(thread_t *info);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
-
 #endif

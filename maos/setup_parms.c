@@ -357,6 +357,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,type);
     READ_POWFS_RELAX(int,step);
     READ_POWFS_RELAX(dbl,modulate);
+    READ_POWFS_RELAX(int,modulpos);
     READ_POWFS(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];

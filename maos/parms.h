@@ -19,7 +19,7 @@
 #ifndef __AOS_PARMS_H__
 #define __AOS_PARMS_H__
 #define MAX_AMPS 5
-
+extern double TOMOSCALE;
 /*********************************************/
 /*             Structs for parms             */
 /*********************************************/
@@ -231,7 +231,8 @@ typedef struct POWFS_CFG_T{
     int dither_nskip; /**<Number of PLL cycles to skip before computing averaged images*/
     int dither_ngrad; /**<Number of drift periods for updating pixel processing algorithm (MF/CoG)*/
     /*Options for Pywfs*/
-    double modulate;/**<Pyramid modulation diamter in arcsec*/
+    double modulate;  /**<Pyramid modulation diamter in arcsec*/
+    int    modulpos;  /**<Number of positions per modulation cycle*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs

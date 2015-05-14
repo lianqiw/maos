@@ -24,6 +24,8 @@
 extern "C"
 {
 #include "../maos/sim.h"
+#include "../maos/utils.h"
+#include "../maos/pywfs.h"
 }
 #undef TIMING
 #define TIMING 0

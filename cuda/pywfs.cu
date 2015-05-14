@@ -21,10 +21,14 @@
 #include "wfs.h"
 #include "cudata.h"
 #include "cucmat.h"
-extern "C"
-{
+#ifdef __cplusplus
+extern "C"{
+#endif
+#include "../maos/pywfs.h"
 #include "../maos/sim.h"
+#ifdef __cplusplus
 }
+#endif
 
 __global__ static void
 pywfs_grad_do(Real *grad, Real *ints, Real *saa, Real *isum, Real *goff, Real gain, int nsa){
@@ -60,10 +64,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs
     long ncomp=powfs[ipowfs].pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     //Dithering pyramid.
-    int pos_n=1;
-    if(pos_r){
-	pos_n=powfs[ipowfs].pywfs->pos_n;
-    }
+    int pos_n=powfs[ipowfs].pywfs->modulpos;
     cucmat *otf=cuwfs[iwfs].pyotf;
     //warning("zero phiout\n");phiout->zero(stream);
     for(int iwvl=0; iwvl<nwvl; iwvl++){

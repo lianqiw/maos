@@ -24,6 +24,7 @@
 #include "recon_utils.h"
 #include "moao.h"
 #include "setup_powfs.h"
+#include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif

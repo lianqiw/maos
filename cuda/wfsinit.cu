@@ -21,7 +21,7 @@
 #include "cucmat.h"
 #include "wfs.h"
 #include "cudata.h"
-
+#include "../maos/pywfs.h"
 /**
    Reshape each cell into column vector and concatenate each cell into a column
 */

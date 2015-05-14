@@ -22,16 +22,16 @@
 */
 #include "common.h"
 #include "setup_powfs.h"
+#include "pywfs.h"
 #include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by 1.1 times more
 #define PYWFS_POKE 1e-6 //How many meters to poke
 /**
-   Complex wavefront created by pyramid 
+   Setup pyramid WFS based on configuration.
 */
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     pywfs_free(powfs[ipowfs].pywfs);
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
-    pywfs->pos_n=32;
     map_t *map=0;
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
@@ -55,6 +55,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->locfft=locfft_init(powfs[ipowfs].loc, pywfs->amp, parms->powfs[ipowfs].wvl, 0, oversize, 0);
     pywfs->wvlwts=ddup(parms->powfs[ipowfs].wvlwts);
     pywfs->modulate=parms->powfs[ipowfs].modulate;
+    pywfs->modulpos=pywfs->modulate>0?parms->powfs[ipowfs].modulpos:1;
     long nembed=pywfs->locfft->nembed->p[0];
     double wvlmin, wvlmax;
     dmaxmin(parms->powfs[ipowfs].wvl->p, nwvl, &wvlmax, &wvlmin);
@@ -261,11 +262,8 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     long nembed2=nembed/2;
     dmat *wvlwts=pywfs->wvlwts;
     //position of pyramid for modulation
-    int pos_n=1;
+    int pos_n=pywfs->modulpos;
     double pos_r=pywfs->modulate*0.5;
-    if(pos_r){
-	pos_n=pywfs->pos_n;
-    }
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);

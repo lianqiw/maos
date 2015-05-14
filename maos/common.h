@@ -18,20 +18,13 @@
 
 #ifndef __MAOS_COMMON_H
 #define __MAOS_COMMON_H
-
-
-
 #include <sys/time.h>
 #include <sys/times.h>
-
-
 #include <search.h>
-
 #include "../lib/aos.h"
 #include "parms.h"
 #include "types.h"
 #include "utils.h"
-extern double TOMOSCALE;
 extern int exit_fail;
 extern const char* dirsetup;
 extern const char *dirskysim;
