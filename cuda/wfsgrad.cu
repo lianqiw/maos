@@ -283,13 +283,13 @@ dither_t::dither_t(int nsa, int pixpsax, int pixpsay):imc(0){
 }
 
 /**Accumulate for matched filter updating*/
-void dither_t::acc(DITHER_T *dither, curcell *ints, Real cs, Real ss, int ndrift, cudaStream_t stream){
+void dither_t::acc(DITHER_T *dither, curcell *ints, Real cs, Real ss, int npll, cudaStream_t stream){
     const int nsa=ints->nx*ints->ny;
     const int pixpsa=ints->p[0]->nx*ints->p[0]->ny;
     dither_acc_do<<<ints->nx, pixpsa, 0, stream>>>
 	(imb->pm, imx->pm, imy->pm, ints->pm, cs, ss, pixpsa, nsa);
     imc++;
-    if(imc%ndrift==0){
+    if(imc%npll==0){
 	cp2cpu(&dither->imb, imb, stream);
 	cp2cpu(&dither->imx, imx, stream);
 	cp2cpu(&dither->imy, imy, stream);
@@ -484,8 +484,8 @@ void gpu_wfsgrad_queue(thread_t *info){
 		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
 		    double cs, ss;
 		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
-		    int ndrift=parms->powfs[ipowfs].dither_ndrift;
-		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, cs, ss, ndrift, stream);
+		    int npll=parms->powfs[ipowfs].dither_npll;
+		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 		}
 	    }
 	    if(parms->powfs[ipowfs].type==1){

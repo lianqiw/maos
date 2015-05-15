@@ -20,6 +20,7 @@
 #include "setup_powfs.h"
 #include "mtch.h"
 #include "genseotf.h"
+#include "pywfs.h"
 #define TEST_POWFS 0
 #define MOVES(p,i,j) p[i]=p[j]
 #define MOVED(p,n,i,j) memcpy(p+n*i, p+n*j, sizeof(double)*n)

@@ -227,9 +227,8 @@ typedef struct POWFS_CFG_T{
     int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
     int dither_npoint;/**<Number of points in each dither peroid (4)*/
     int dither_npll;  /**<Number of WFS frames for updating PLL.*/
-    int dither_ndrift;/**<Number of PLL periods for updating drift mode computation*/
-    int dither_nskip; /**<Number of PLL cycles to skip before computing averaged images*/
-    int dither_ngrad; /**<Number of drift periods for updating pixel processing algorithm (MF/CoG)*/
+    int dither_nskip; /**<Number of WFS frames to skip before computing averaged images*/
+    int dither_ngrad; /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/

@@ -335,7 +335,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_npoint);
     READ_POWFS_RELAX(dbl,dither_gpll);
     READ_POWFS_RELAX(dbl,dither_gcog);
-    READ_POWFS_RELAX(int,dither_ndrift);
     READ_POWFS_RELAX(int,dither_ngrad);
     
     READ_POWFS(dbl,hs);
@@ -452,13 +451,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_nskip*=powfsi->dtrat;
-
-	    powfsi->dither_ndrift*=powfsi->dither_npll;
 	    powfsi->dither_ngrad*=powfsi->dither_npll;
 	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
 	    info2("powfs[%d].dither_nskip=%d simulation frame\n", ipowfs, powfsi->dither_nskip);
 	    info2("powfs[%d].dither_npll=%d WFS frame\n", ipowfs, powfsi->dither_npll);	 
-	    info2("powfs[%d].dither_ndrift=%d WFS frame\n", ipowfs, powfsi->dither_ndrift); 
 	    info2("powfs[%d].dither_ngrad=%d WFS frame\n", ipowfs, powfsi->dither_ngrad);
 	}
 	//Input of modulate is in unit of wvl/D. Convert to radian
