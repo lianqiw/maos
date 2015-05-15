@@ -826,7 +826,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].trs 
 	   || (parms->recon.split && !parms->powfs[ipowfs].lo)
-	   || parms->powfs[ipowfs].dither){
+	   || parms->powfs[ipowfs].dither==1){
 	    if(parms->powfs[ipowfs].skip){
 		warning("POWFS %d is not included in Tomo.\n", ipowfs);
 	    }
@@ -2096,6 +2096,56 @@ void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
     }
 }
 /**
+   Dither using command path (DM) aberration
+ */
+void setup_recon_dither_dm(RECON_T *recon, const PARMS_T *parms){
+    int any=0;
+    int ipowfs_dither=0;
+    int dither_mode=0;
+    double dither_amp=0;
+    int dither_npoint=0;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].dither>1){
+	    if(any){
+		if(dither_mode!=-parms->powfs[ipowfs].dither ||
+		   fabs(dither_amp-parms->powfs[ipowfs].dither_amp)>dither_amp*1e-5
+		    || dither_npoint!=parms->powfs[ipowfs].dither_npoint){
+		    error("Multiple dither with different configuration is not supported\n");
+		}
+	    }
+	    ipowfs_dither=ipowfs;
+	    dither_mode=-parms->powfs[ipowfs].dither;
+	    dither_amp=parms->powfs[ipowfs].dither_amp;
+	    dither_npoint=parms->powfs[ipowfs].dither_npoint;
+	    any=1;
+	}
+    }
+    if(any){
+	const int idm=parms->idmground;
+	recon->dither_npoint=dither_npoint;
+	recon->dither_m=dcellnew(parms->ndm, 1);
+	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
+	dscale(recon->dither_m->p[idm], dither_amp);
+	recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
+	INDEX(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
+	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].dither>1){
+		dmat *gm=dnew(INDEX(recon->GA, iwfs, idm)->nx,1);
+		dspmulvec(gm->p, INDEX(recon->GA, iwfs, idm), recon->dither_m->p[idm]->p, 'n', 1);
+		INDEX(recon->dither_rg, iwfs, iwfs)=dpinv(gm, INDEX(recon->saneai, iwfs, iwfs));
+		dfree(gm);
+	    }
+	}
+	if(parms->save.setup){
+	    writebin(recon->dither_m, "dither_m");
+	    writebin(recon->dither_ra, "dither_ra");
+	    writebin(recon->dither_rg, "dither_rg");
+	}
+    }
+}
+/**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
 void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APER_T *aper){
@@ -2177,6 +2227,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	}
     }
     setup_recon_dmttr(recon, parms);
+    setup_recon_dither_dm(recon, parms);
     toc2("setup_recon");
 }
 

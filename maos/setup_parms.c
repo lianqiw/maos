@@ -445,7 +445,11 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 	if(powfsi->dither){
 	    parms->dither=1;
-	    powfsi->dither_amp/=206265.;
+	    if(powfsi->dither==1){//tip/tilt/arcsec->radian
+		powfsi->dither_amp/=206265.;
+	    }else{//zernike modes. micron-->meter
+		powfsi->dither_amp/=1e6;
+	    }
 	    //Wait 10 cycles for PLL to stablize.
 	    powfsi->dither_npll*=powfsi->dither_npoint;
 	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
@@ -1949,6 +1953,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	double ht=parms->dm[i].ht+parms->dm[i].vmisreg;
 	if(fabs(ht)<1.e-10){
 	    parms->dm[i].isground=1;
+	    parms->idmground=i;
 	}
 	if(isfinite(parms->dm[i].stroke->p[0])){
 	    double strokemicron=fabs(parms->dm[i].stroke->p[0])*1e6;

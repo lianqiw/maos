@@ -220,8 +220,8 @@ typedef struct POWFS_CFG_T{
     int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-    int dither;     /**<Turn on/off dithering*/
-    double dither_amp;/**<Dithering amptlidue to update centroid gain or matched filter.*/
+    int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
+    double dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
     double dither_gpll;/**<Gain of phase locked loop*/
     double dither_gcog;/**<Gain for updating cog gain*/
     int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
@@ -742,6 +742,7 @@ typedef struct PARMS_T{
     int dither;      /**<Some WFS is doing dithering*/
     int ilgspowfs;     /**<Index of LGS WFS*/
     int itpowfs;       /**<Index of twfs*/
+    int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
 }PARMS_T;

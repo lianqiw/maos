@@ -1038,6 +1038,9 @@ static void init_simu_wfs(SIM_T *simu){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].dither){
 		simu->dither[iwfs]=calloc(1, sizeof(DITHER_T));
+		if(parms->powfs[ipowfs].dither!=1){
+		    simu->dither[iwfs]->mr=dcellnewsame_mmap(2, 1, 1, nsim, NULL, "Resdithermr_%d", seed);
+		}
 	    }
 	}
 	if(parms->save.extra){
@@ -1546,6 +1549,8 @@ void free_simu(SIM_T *simu){
 		cellfree(simu->dither[iwfs]->gy);
 		cellfree(simu->dither[iwfs]->ggm);
 		cellfree(simu->dither[iwfs]->gg0);
+		cellfree(simu->dither[iwfs]->mr);
+		
 		free(simu->dither[iwfs]);
 	    }
 	}

@@ -190,7 +190,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    gym+=TT->p[isa+nsa*3];
 	}
 	double gainscl=2.*nsa/(gxm+gym);
-	//gainscl*=2.3; //2.3 is imperical adjustment.
+	gainscl*=1.5;//inject an error;
 	pywfs->gain*=gainscl;
 	dscale(pywfs->gradoff, gainscl);
 	info("pywfs_gain=%g\n", pywfs->gain);

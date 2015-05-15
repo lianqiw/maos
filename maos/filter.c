@@ -294,6 +294,10 @@ static void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
+    if(recon->dither_m){
+	double anglei=(2*M_PI/recon->dither_npoint)*simu->isim;
+	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
+    }
     //2015-03-10: move extraplation to right after integrator
     //Extrapolate to edge actuators
     if(simu->recon->actinterp && !parms->recon.modal && !parms->recon.psol){
@@ -371,7 +375,7 @@ static void filter_cl(SIM_T *simu){
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].dither){
+	    if(parms->powfs[ipowfs].dither==1){
 		//adjust delay due to propagation
 		const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0)
 		    +1-parms->powfs[ipowfs].dtrat;

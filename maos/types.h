@@ -344,6 +344,11 @@ typedef struct RECON_T{
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
 
+    //For common path dithering
+    dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
+    int dither_npoint; /**<The dither period*/
+    dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
+    dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
@@ -436,6 +441,8 @@ typedef struct DITHER_T{
     //For CoG
     dmat *ggm;    /**<Accumulated cos()*tt_x and sin()*tt_y*/
     dmat *gg0;    /**<Averaged ggm*/
+    //For DM dithering
+    dcell *mr;    /**<Mode reconstructed from actuator and gradients*/
 }DITHER_T;
 /**
    contains all the run time data struct.
