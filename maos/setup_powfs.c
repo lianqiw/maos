@@ -388,7 +388,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc){
 	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
-    powfs[ipowfs].npts = powfs[ipowfs].saloc->nloc*nxsa;
     powfs[ipowfs].realsaa=cellnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
 	if(powfs[ipowfs].loc_tel){
@@ -1427,7 +1426,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    powfs[ipowfs].opdbias=cellnew(parms->powfs[ipowfs].nwfs, 1);
 		}
 		if(!powfs[ipowfs].opdbias->p[jwfs]){
-		    powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+		    powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(!dm_ncpa->p[idm] || dm_ncpa->p[idm]->nx==0) continue;
@@ -1436,13 +1435,13 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;
 		    if(parms->dm[idm].cubic){
-			prop_nongrid_pts_cubic(aloc->p[idm], dm_ncpa->p[idm]->p, 
-					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
-					       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
+			prop_nongrid_cubic(aloc->p[idm], dm_ncpa->p[idm]->p, 
+					   powfs[ipowfs].loc, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
+					   -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 		    }else{
-			prop_nongrid_pts(aloc->p[idm], dm_ncpa->p[idm]->p, 
-					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
-					 -1, dispx, dispy, scale, 0, 0);
+			prop_nongrid(aloc->p[idm], dm_ncpa->p[idm]->p, 
+				     powfs[ipowfs].loc, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
+				     -1, dispx, dispy, scale, 0, 0);
 		    }
 		}
 	    }

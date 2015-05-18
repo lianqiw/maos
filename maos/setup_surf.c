@@ -574,7 +574,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		if(!powfs[ipowfs].opdadd){
 		    powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
 		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-			powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+			powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 		    }
 		}
 	    }

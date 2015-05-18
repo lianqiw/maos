@@ -369,7 +369,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
 		}
 	    }
-	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_nskip
+	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_pllskip
 	       && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
 		/*Collect statistics with dithering*/
 		DITHER_T *pd=simu->dither[iwfs];
@@ -502,7 +502,7 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int isim=simu->isim;
-    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_nskip){
+    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_pllskip){
 	//Compute estimate of dithering signal per subaperture from WFS gradients
 	DITHER_T *pd=simu->dither[iwfs];
 	double cs, ss;
@@ -547,7 +547,7 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 	}
 
 	/* Determine the dither signal strength from sensor as well as measurements*/
-	const int npll=parms->powfs[ipowfs].dither_npll;
+	const int npll=parms->powfs[ipowfs].dither_pllrat;
 	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	//This only executes when PLL should have output use saved time history.
 	if(npllacc>0 && npllacc%npll==0){
@@ -589,8 +589,8 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
     if(parms->powfs[ipowfs].dither==1){
 	DITHER_T *pd=simu->dither[iwfs];
 	/* Update drift mode computation. Only useful when wfs t/t is removed*/
-	int npll=parms->powfs[ipowfs].dither_npll;
-	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_nskip+1)/parms->powfs[ipowfs].dtrat;
+	int npll=parms->powfs[ipowfs].dither_pllrat;
+	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	if(npllacc>0 && npllacc % npll==0){
 	    double scale1=1./npll;
 	    double scale2=scale1*2./(pd->a2m);
@@ -841,9 +841,9 @@ static void dither_update(SIM_T *simu){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].dither) continue;
 	if((simu->isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
-	const int nacc=(simu->isim-parms->powfs[ipowfs].dither_nskip+1)/parms->powfs[ipowfs].dtrat;
+	const int nacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
-	const int npll=parms->powfs[ipowfs].dither_npll;
+	const int npll=parms->powfs[ipowfs].dither_pllrat;
 	
 	if(parms->sim.zoomshare && parms->powfs[ipowfs].llt //this is LLT
 	   && nacc>0 && nacc % npll==0){//There is drift mode computation
@@ -858,10 +858,10 @@ static void dither_update(SIM_T *simu){
 		simu->zoomerr->p[iwfs]=sum;
 	    }
 	}
-	int ngrad=parms->powfs[ipowfs].dither_ngrad;
+	int ngrad=parms->powfs[ipowfs].dither_ograt;
 	if(nacc>0 && nacc % ngrad==0){//This is matched filter or cog update
 	    const int nsa=powfs[ipowfs].saloc->nloc;
-	    double scale1=(double)parms->powfs[ipowfs].dither_npll/(double)parms->powfs[ipowfs].dither_ngrad;
+	    double scale1=(double)parms->powfs[ipowfs].dither_pllrat/(double)parms->powfs[ipowfs].dither_ograt;
 	    if(parms->powfs[ipowfs].phytypesim2==1 && parms->powfs[ipowfs].type==0){
 		info2("Step %d: Update matched filter for powfs %d\n", simu->isim, ipowfs);
 		//For matched filter
@@ -934,12 +934,12 @@ static void dither_update(SIM_T *simu){
 		    double mgold=dsum(powfs[ipowfs].gain->p[jwfs])/ng;
 		    //gg0 is output/input of dither signal.
 		    if(!pd->gg0){//single gain for all subapertures.
-			double adj=parms->powfs[ipowfs].dither_gcog*(1-pd->a2me/pd->a2m);
+			double adj=parms->powfs[ipowfs].dither_gog*(1-pd->a2me/pd->a2m);
 			dadds(powfs[ipowfs].gain->p[jwfs], adj);
 		    }else{//separate gain for each gradient
 			dscale(pd->gg0, scale1);
 			for(long ig=0; ig<ng; ig++){
-			    double adj=parms->powfs[ipowfs].dither_gcog*(1.-pd->gg0->p[ig]);
+			    double adj=parms->powfs[ipowfs].dither_gog*(1.-pd->gg0->p[ig]);
 			    powfs[ipowfs].gain->p[jwfs]->p[ig]+=adj;
 			}
 		    }

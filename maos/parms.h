@@ -223,12 +223,12 @@ typedef struct POWFS_CFG_T{
     int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
     double dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
     double dither_gpll;/**<Gain of phase locked loop*/
-    double dither_gcog;/**<Gain for updating cog gain*/
-    int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
+    double dither_gog; /**<Gain for updating optical gain for cog*/
     int dither_npoint;/**<Number of points in each dither peroid (4)*/
-    int dither_npll;  /**<Number of WFS frames for updating PLL.*/
-    int dither_nskip; /**<Number of WFS frames to skip before computing averaged images*/
-    int dither_ngrad; /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
+    int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
+    int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
+    int dither_ogskip; /**<Number of WFS frames to skip before computing averaged images*/
+    int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/

@@ -329,13 +329,13 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,moao);
     READ_POWFS_RELAX(int,dither);
     READ_POWFS_RELAX(dbl,dither_amp);
-    READ_POWFS_RELAX(int,dither_pllskip);
-    READ_POWFS_RELAX(int,dither_nskip);
-    READ_POWFS_RELAX(int,dither_npll);
     READ_POWFS_RELAX(int,dither_npoint);
+    READ_POWFS_RELAX(int,dither_pllskip);
+    READ_POWFS_RELAX(int,dither_pllrat);
     READ_POWFS_RELAX(dbl,dither_gpll);
-    READ_POWFS_RELAX(dbl,dither_gcog);
-    READ_POWFS_RELAX(int,dither_ngrad);
+    READ_POWFS_RELAX(int,dither_ogskip);
+    READ_POWFS_RELAX(int,dither_ograt);
+    READ_POWFS_RELAX(dbl,dither_gog);
     
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
@@ -451,15 +451,14 @@ static void readcfg_powfs(PARMS_T *parms){
 		powfsi->dither_amp/=1e6;
 	    }
 	    //Wait 10 cycles for PLL to stablize.
-	    powfsi->dither_npll*=powfsi->dither_npoint;
-	    powfsi->dither_nskip=powfsi->dither_nskip*powfsi->dither_npll+powfsi->dither_pllskip;
+	    powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
 	    powfsi->dither_pllskip*=powfsi->dtrat;
-	    powfsi->dither_nskip*=powfsi->dtrat;
-	    powfsi->dither_ngrad*=powfsi->dither_npll;
+	    powfsi->dither_ogskip*=powfsi->dtrat;
+	    powfsi->dither_ograt*=powfsi->dither_pllrat;
 	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
-	    info2("powfs[%d].dither_nskip=%d simulation frame\n", ipowfs, powfsi->dither_nskip);
-	    info2("powfs[%d].dither_npll=%d WFS frame\n", ipowfs, powfsi->dither_npll);	 
-	    info2("powfs[%d].dither_ngrad=%d WFS frame\n", ipowfs, powfsi->dither_ngrad);
+	    info2("powfs[%d].dither_ogskip=%d simulation frame\n", ipowfs, powfsi->dither_ogskip);
+	    info2("powfs[%d].dither_pllrat=%d WFS frame\n", ipowfs, powfsi->dither_pllrat);	 
+	    info2("powfs[%d].dither_ograt=%d WFS frame\n", ipowfs, powfsi->dither_ograt);
 	}
 	//Input of modulate is in unit of wvl/D. Convert to radian
 	powfsi->modulate*=wvlmax/parms->aper.d;
@@ -1401,11 +1400,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(lgspowfs!=-1){
 		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
 		if(parms->powfs[tpowfs].dtrat<1){
-		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ngrad;
+		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ograt;
 		    parms->powfs[tpowfs].dtrat=mtchdtrat;
 		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
 		    //Set TWFS integration start time to LGS matched filter acc step
-		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_nskip;
+		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_ogskip;
 		}else if(parms->powfs[lgspowfs].dither && parms->powfs[tpowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
 		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_pllskip;

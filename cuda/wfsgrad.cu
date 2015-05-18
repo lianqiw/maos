@@ -480,11 +480,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 			cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 		    }
 		}
-		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_nskip 
+		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_ogskip 
 		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
 		    double cs, ss;
 		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
-		    int npll=parms->powfs[ipowfs].dither_npll;
+		    int npll=parms->powfs[ipowfs].dither_pllrat;
 		    cuwfs[iwfs].dither->acc(simu->dither[iwfs], ints, cs, ss, npll, stream);
 		}
 	    }

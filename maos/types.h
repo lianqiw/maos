@@ -127,7 +127,6 @@ typedef struct POWFS_T{
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
     dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
     //int nwfs;           /**<number of wfs belonging to this wfs*/
-    int npts;           /**<number of total opd points in all subaps*/
     int namp;           /**<number of amplitude maps*/
     int pixpsax;        /**<number of detector pixels along x*/
     int pixpsay;        /**<number of detector pixels along y*/
