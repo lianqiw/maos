@@ -37,6 +37,7 @@
 #include "sim.h"
 #include "sim_utils.h"
 #include "fdpcg.h"
+#include "save.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -124,7 +125,7 @@ void maos_isim(int isim){
     OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
 	    /* teporarily disable FR.M so that Mfun is used.*/
-	    dspcell *FRM=recon->FR.M; recon->FR.M=NULL; 
+	    cell *FRM=recon->FR.M; recon->FR.M=NULL; 
 	    muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
 	    recon->FR.M=FRM;/*set FR.M back*/
 	    if(parms->save.dm){
@@ -142,6 +143,7 @@ void maos_isim(int isim){
 	    }
 #endif
 	}
+	save_dmreal(simu);
 	extern int NO_RECON, NO_WFS, NO_EVL;
 	if(PARALLEL){
 	    /*

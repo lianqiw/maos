@@ -61,18 +61,19 @@ cumuv_t::cumuv_t(const MUV_T *in)
     :M(0),U(0),V(0),Vx(0),nx(0),ny(0),nxs(0),nys(0){
     if(!in) return;
     if(M || !in->M) error("in->M should not be NULL and M should be NULL\n");
-    dsp *Mc=dspcell2sp(in->M);
+    dspcell *inM=dspcell_cast(in->M);
+    dsp *Mc=dspcell2sp(inM);
     dmat *Uc=dcell2m(in->U);
     dmat *Vc=dcell2m(in->V);
-    nx=in->M->nx;
-    ny=in->M->ny;
+    nx=inM->nx;
+    ny=inM->ny;
     nxs=new int[nx];
     nys=new int[ny];
     for(int i=0; i<nx; i++){
-	nxs[i]=in->M->p[i]->m;
+	nxs[i]=inM->p[i]->m;
     }
     for(int i=0; i<ny; i++){
-	nys[i]=in->M->p[i*in->M->nx]->n;
+	nys[i]=inM->p[i*inM->nx]->n;
     }
     M=new cusp(Mc, 1);
     cp2gpu(&U, Uc);

@@ -127,7 +127,7 @@ static int calc_ptt_post(double *rmsout, double *coeffout,
 	rmsout[0]=tot-pis;/*PR */
 	rmsout[1]=ptt-pis;/*TT */
 	rmsout[2]=tot-ptt;/*PTTR*/
-	if(tot*1.01<pis || tot*1.01<ptt){//sanity check. allow round off error
+	if(tot+1e-18<pis || tot+1e-18<ptt){//sanity check. allow round off error
 	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
 	    ans=1;
 	}
@@ -159,7 +159,7 @@ static int calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	pttr_out[0]=tot-pis;//PR
 	pttr_out[1]=ptt-pis;//TT
 	pttr_out[2]=tot-ptt;//PTTR
-	if(tot<pis || tot<ptt || ptt<pis || pis<0){
+	if(tot+1e-18<pis || tot+1e-18<ptt || ptt+1e-18<pis || pis<-1e-18){
 	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
 	    ans=1;
 	}

@@ -25,7 +25,10 @@
 #ifndef AOS_LIB_CELL_H
 #define AOS_LIB_CELL_H
 #include "type.h"
-void* cellnew(long nx, long ny);
+void* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
+cell *cell_cast(const void *A) CHECK_UNUSED_RESULT;
+void cellinit(cell **A, long nx, long ny);
+
 void cellresize(void *in, long nx, long ny);
 void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, long id);

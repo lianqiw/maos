@@ -20,3 +20,4 @@ void save_wfsgrad(SIM_T *simu);
 void save_gradstat(SIM_T *simu);
 void save_gradol(SIM_T *simu);
 void save_recon(SIM_T *simu);
+void save_dmreal(SIM_T *simu);

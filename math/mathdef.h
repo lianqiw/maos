@@ -34,59 +34,6 @@
 #include "locbin.h"
 #include "random.h"
 
-#define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
-#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
-
-#if __cplusplus >= 201103L
-//Work around C++ restrictions
-#define PALL(T,A,pp) const long pp##nx=(A)->nx; auto pp=(T(*)[pp##nx])(A)->p
-#else 
-//C99
-#define PALL(T,A,pp) const long pp##nx=(A)->nx; T (*pp)[pp##nx]=(T(*)[pp##nx])(A)->p
-#endif
-#define PDMAT(M,P)   PALL(double,M,P)
-#define PDCELL(M,P)  PALL(dmat*,M,P)
-#define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
-#define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
-#define dcellfree(A) ({cellfree_do(A);A=NULL;})
-#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
-#define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
-#define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
-
-#define PSMAT(M,P)   PALL(float,M,P)
-#define PSCELL(M,P)  PALL(smat*,M,P)
-#define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
-#define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
-#define scellfree(A) ({cellfree_do(A);A=NULL;})
-#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
-#define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
-#define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
-
-#define PCMAT(M,P)   PALL(dcomplex,M,P)
-#define PCCELL(M,P)  PALL(cmat*,M,P)
-#define cfree(A)     ({cfree_do(A,0);A=NULL;})
-#define ccellfree(A) ({cellfree_do(A);A=NULL;})
-#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
-#define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
-#define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
-
-#define PZMAT(M,P)   PALL(fcomplex,M,P)
-#define PZCELL(M,P)  PALL(zmat*,M,P) 
-#define zfree(A)     ({zfree_do(A,0);A=NULL;})
-#define zcellfree(A) ({cellfree_do(A);A=NULL;})
-#define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
-#define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
-
-#define PLMAT(M,P)   PALL(long,M,P)
-#define PLCELL(M,P)  PALL(lmat*,M,P) 
-#define lfree(A)     ({lfree_do(A,0);A=NULL;})
-#define lcellfree(A) ({cellfree_do(A);A=NULL;})
-#define lzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
-#define lhash(A,key) hashlittle((A)->p, (A)->nx*(A)->ny*sizeof(long), key)
-
-#define cellfree(A) ({cellfree_do(A); A=0;})
-#define COLUMN(A,iy) (A->p+(iy)*(A)->nx)
-#define INDEX(A,ix,iy) A->p[(ix)+(iy)*(A)->nx]
 #define AOS_LMAT(A) l##A
 #define AOS_CMAT(A) c##A
 #define AOS_DMAT(A) d##A
@@ -141,6 +88,61 @@ AOS_FFT_DEF(AOS_CMAT)
 AOS_MAT_DEF(AOS_LMAT, long)
 AOS_MATBIN_DEF(AOS_LMAT,long)
 
+#define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
+#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
+
+#if __cplusplus >= 201103L
+//Work around C++ restrictions
+#define PALL(T,A,pp) const long pp##nx=(A)->nx; auto pp=(T(*)[pp##nx])(A)->p
+#else 
+//C99
+#define PALL(T,A,pp) const long pp##nx=(A)->nx; T (*pp)[pp##nx]=(T(*)[pp##nx])(A)->p
+#endif
+#define PDMAT(M,P)   PALL(double,M,P)
+#define PDCELL(M,P)  PALL(dmat*,M,P)
+#define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
+#define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
+#define dcellfree(A) ({cellfree_do(A);A=NULL;})
+#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
+#define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
+#define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
+
+#define PSMAT(M,P)   PALL(float,M,P)
+#define PSCELL(M,P)  PALL(smat*,M,P)
+#define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
+#define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
+#define scellfree(A) ({cellfree_do(A);A=NULL;})
+#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
+#define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
+#define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
+
+#define PCMAT(M,P)   PALL(dcomplex,M,P)
+#define PCCELL(M,P)  PALL(cmat*,M,P)
+#define cfree(A)     ({cfree_do(A,0);A=NULL;})
+#define ccellfree(A) ({cellfree_do(A);A=NULL;})
+#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
+#define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
+#define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
+
+#define PZMAT(M,P)   PALL(fcomplex,M,P)
+#define PZCELL(M,P)  PALL(zmat*,M,P) 
+#define zfree(A)     ({zfree_do(A,0);A=NULL;})
+#define zcellfree(A) ({cellfree_do(A);A=NULL;})
+#define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
+#define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
+
+#define PLMAT(M,P)   PALL(long,M,P)
+#define PLCELL(M,P)  PALL(lmat*,M,P) 
+#define lfree(A)     ({lfree_do(A,0);A=NULL;})
+#define lcellfree(A) ({cellfree_do(A);A=NULL;})
+#define lzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(long))
+#define lhash(A,key) hashlittle((A)->p, (A)->nx*(A)->ny*sizeof(long), key)
+
+#define cellfree(A) ({cellfree_do(A); A=0;})
+#define COLUMN(A,iy) (A->p+(iy)*(A)->nx)
+#define INDEX(A,ix,iy) A->p[(ix)+(iy)*(A)->nx]
+
+
 //#define dread(A...) readbin((READFUN)dreaddata, A)
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
@@ -150,49 +152,49 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
 /** Read needs type checking, so don't use autoread/cellread*/
-#define dread(A...)    dmat_cast((cell*)read_by_id(M_DBL, 0, A))
+#define dread(A...)    dmat_cast(read_by_id(M_DBL, 0, A))
 #define dcellnew (dcell*)cellnew
-#define dcellreaddata(fp, header) dcell_cast((cell*)readdata_by_id(fp, M_DBL, 1, header))
+#define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_DBL, 1, header))
 #define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
 #define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
 #define dcccellread(A...) (dcccell*)read_by_id(M_DBL, 3, A)
 
-#define sread(A...)    smat_cast((cell*)read_by_id(M_FLT, 0, A))
+#define sread(A...)    smat_cast(read_by_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
-#define scellreaddata(fp, header) scell_cast((cell*)readdata_by_id(fp, M_FLT, 1, header))
+#define scellreaddata(fp, header) scell_cast(readdata_by_id(fp, M_FLT, 1, header))
 #define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
 #define scccellread(A...) (scccell*)read_by_id(M_FLT, 3, A)
 
-#define cread(A...)    cmat_cast((cell*)read_by_id(M_CMP, 0, A))
+#define cread(A...)    cmat_cast(read_by_id(M_CMP, 0, A))
 #define ccellnew (ccell*)cellnew
-#define ccellreaddata(fp, header) ccell_cast((cell*)readdata_by_id(fp, M_CMP, 1, header))
+#define ccellreaddata(fp, header) ccell_cast(readdata_by_id(fp, M_CMP, 1, header))
 #define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
 #define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
 #define ccccellread(A...) (ccccell*)read_by_id(M_CMP, 3, A)
 
-#define zread(A...)    zmat_cast((cell*)read_by_id(M_ZMP, 0, A))
+#define zread(A...)    zmat_cast(read_by_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew
-#define zcellreaddata(fp, header) zcell_cast((cell*)readdata_by_id(fp, M_ZMP, 1, header))
+#define zcellreaddata(fp, header) zcell_cast(readdata_by_id(fp, M_ZMP, 1, header))
 #define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
 #define zcccellread(A...) (zcccell*)read_by_id(M_ZMP, 3, A)
 
-#define lread(A...) lmat_cast((cell*)read_by_id(M_LONG, 0, A))
+#define lread(A...) lmat_cast(read_by_id(M_LONG, 0, A))
 #define lcellnew (lcell*)cellnew
-#define lcellreaddata(fp, header) lcell_cast((cell*)readdata_by_id(fp, M_LONG, 1, header))
+#define lcellreaddata(fp, header) lcell_cast(readdata_by_id(fp, M_LONG, 1, header))
 #define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
 #define lcccellread(A...) (lcccell*)read_by_id(M_LONG, 3, A)
 
-#define dspread(A...) (dsp*)read_by_id(M_DSP, 0, A)
-#define dspcellread(A...) (dspcell*)read_by_id(M_DSP, 1, A)
-#define sspread(A...) (ssp*)read_by_id(M_SSP, 0, A)
-#define sspcellread(A...) (sspcell*)read_by_id(M_SSP, 1, A)
-#define cspread(A...) (csp*)read_by_id(M_CSP, 0, A)
-#define cspcellread(A...) (cspcell*)read_by_id(M_CSP, 1, A)
-#define zspread(A...) (zsp*)read_by_id(M_ZSP, 0, A)
-#define zspcellread(A...) (zspcell*)read_by_id(M_ZSP, 1, A)
+#define dspread(A...) dsp_cast(read_by_id(M_DSP, 0, A))
+#define dspcellread(A...) dspcell_cast(read_by_id(M_DSP, 1, A))
+#define sspread(A...) ssp_cast(read_by_id(M_SSP, 0, A))
+#define sspcellread(A...) sspcell_cast(read_by_id(M_SSP, 1, A))
+#define cspread(A...) csp_cast(read_by_id(M_CSP, 0, A))
+#define cspcellread(A...) cspcell_cast(read_by_id(M_CSP, 1, A))
+#define zspread(A...) zsp_cast(read_by_id(M_ZSP, 0, A))
+#define zspcellread(A...) zspcell_cast(read_by_id(M_ZSP, 1, A))
 
 #define writebin writebin
 #define writebin writebin

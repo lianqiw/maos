@@ -520,7 +520,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	}
     }
     OMPTASK_END;
-    WARN_MISSING;
+    //WARN_MISSING;//will always be triggered.
 }
 /**
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
@@ -721,8 +721,8 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	    missing++;
 	}
     }
-    OMPTASK_END
-	WARN_MISSING;
+    OMPTASK_END;
+    WARN_MISSING;
 }
 /**
    like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
@@ -800,7 +800,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 	}
     }
     OMPTASK_END;
-    WARN_MISSING;
+    //WARN_MISSING;//will always be triggered
 }
 
 /**

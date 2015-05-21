@@ -387,7 +387,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 				   recon->wt->p[ips]);
 		dspscale(L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	    }
-	    dsp *tmp=dsptmulsp(L2, L2);
+	    dsp *tmp=dspmulsp(L2, L2,"tn");
 	    dspfree(L2);
 	    for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){/*first column of tmp to psf. */
 		psd->p[tmp->i[irow]]=tmp->x[irow];
@@ -439,7 +439,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	}
 	csp *tmp=cspdup(sel);
 	cspmuldiag(tmp,g->p,1);
-	csp *tmp2=csptmulsp(tmp,tmp);
+	csp *tmp2=cspmulsp(tmp,tmp,"tn");
 	cspadd(&Mmid, tmp2);
 	cspfree(tmp);
 	cspfree(tmp2);
@@ -483,8 +483,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	/*need to test this in spatial domain. */
 	cspscale(propx,1./neai);/*prop is not real for off axis wfs. */
 	/*Compute propx'*Mmid*propx and add to Mhat; */
-	csp *tmp=cspmulsp(Mmid,propx);
-	csp *tmp2=csptmulsp(propx,tmp);
+	csp *tmp=cspmulsp(Mmid,propx,"nn");
+	csp *tmp2=cspmulsp(propx,tmp,"tn");
 	cspfree(tmp);
 	cspfree(propx);
 	cspadd(&Mhat,tmp2);

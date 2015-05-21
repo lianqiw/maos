@@ -30,7 +30,7 @@ dcell *genactcpl(const dspcell *HA, const dmat *W1){
 	    dsp *ha=HA->p[ifit+idm*HA->nx];
 	    if(!ha) continue;
 	    if(W1){
-		dspmm(&actcplc->p[idm], ha, W1, 't', 1);
+		dspmm(&actcplc->p[idm], ha, W1, "tn", 1);
 	    }else{
 		dmat *tmp=dspsumabs(ha, 1);
 		tmp->nx=tmp->ny; tmp->ny=1;
@@ -187,8 +187,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	}/*for iact */
 	pp[nact]=count;
 	dspsetnzmax(slavet, count);
-	dsp *slave=dsptrans(slavet);
-	actslave[idm][idm]=dspmulsp(slavet, slave);
+	actslave[idm][idm]=dspmulsp(slavet, slavet,"nt");
 	if(NW && NW->p[idm] && 0){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
@@ -217,7 +216,6 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 		}
 	    }
 	}
-	dspfree(slave);
 	dspfree(slavet);
     }/*idm */
     if(nslavetot==0){
@@ -445,7 +443,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 	free(neighbor);	
     }/*idm */
     if(HA){
-	dspcelladd(HA, dHA);
+	dcelladd(HA, 1, dHA, 1);
 	dspcellfree(dHA);
     }
 }
@@ -629,7 +627,7 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     /*The above interpolation only propagate the value one step. Multiple the
       interpolator a few times to propagate longer.*/
     for(int i=0; i<5; i++){
-	dsp *tmp=dspmulsp(out,out);
+	dsp *tmp=dspmulsp(out,out,"nn");
 	dspfree(out);
 	out=tmp;
     }

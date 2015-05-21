@@ -37,6 +37,21 @@ void *cellnew(long nx, long ny){
     return dc;
 }
 /**
+   check the size of cell array if exist. Otherwise create it
+*/
+void cellinit(cell **A, long nx, long ny){
+    if(*A){
+	assert((*A)->nx == nx && (*A)->ny==ny);
+    }else{
+	*A=cellnew(nx, ny);
+    }
+}
+cell *cell_cast(const void *A){
+    if(!A) return 0;
+    assert(((cell*)A)->id==MCC_ANY);
+    return (cell*)A;
+}
+/**
    Resize a generic cell array.
 */
 void cellresize(void *in, long nx, long ny){

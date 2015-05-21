@@ -234,7 +234,7 @@ void wfsgrad_iwfs(thread_t *info){
 		      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    dspmm(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,'n',1);
+	    dspmm(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,"nn",1);
 	}
 	if(gradcalc->p!=(*gradacc)->p){
 	    dadd(gradacc, 1, gradcalc, 1);
@@ -326,8 +326,8 @@ void wfsgrad_iwfs(thread_t *info){
 		cellarr_dmat(ztiltoutcellarr, isim, *gradacc);
 	    }
 	}else{//Pywfs
-	    pywfs_fft(&simu->ints->p[iwfs]->p[0], powfs[ipowfs].pywfs, opd);
-	    dscale(simu->ints->p[iwfs]->p[0], parms->wfs[iwfs].siglevsim);
+	    pywfs_fft(&ints->p[0], powfs[ipowfs].pywfs, opd);
+	    dscale(ints->p[0], parms->wfs[iwfs].siglevsim);
 	}
     }
     TIM(2);
@@ -804,6 +804,11 @@ void wfsgrad_post(thread_t *info){
 	    if(simu->powfs[ipowfs].gain && simu->powfs[ipowfs].gain->p[wfsind]){
 		dcwm(*gradout, simu->powfs[ipowfs].gain->p[wfsind]);
 	    }
+	    //Gradient offset due to mainly NCPA calibration. Must be after gain
+	    //scaling on gradout
+	    if(simu->powfs[ipowfs].gradoff){
+		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
+	    }
 	    if(do_phy){
 		if(simu->fsmerr_store->p[iwfs]){
 		    wfsgrad_fsm(simu, iwfs);
@@ -812,10 +817,7 @@ void wfsgrad_post(thread_t *info){
 		    wfsgrad_dither(simu, iwfs);
 		}
 	    }
-	    //Gradient offset due to mainly NCPA calibration
-	    if(simu->powfs[ipowfs].gradoff){
-		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
-	    }
+	 
 	    if(parms->save.grad->p[iwfs]){
 		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }

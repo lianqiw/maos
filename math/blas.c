@@ -172,7 +172,7 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 	}else if(id==M_SPT){//sparse
 	    const X(sp)* Wsp=(X(sp)*)W;
 	    X(mat)*At = X(trans)(A);
-	    X(mulsp)(&AtW, At, Wsp, 1);
+	    X(mulsp)(&AtW, At, Wsp, "nn", 1);
 	    X(free)(At);
 	}else{
 	    error("Unrecognized id=%ld\n", id);

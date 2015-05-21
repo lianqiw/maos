@@ -291,9 +291,9 @@ typedef struct RECON_T{
     dspcell *GA;        /**<actuator to wfs grad.*/
     dspcell *GAlo;      /**<GA of low order WFS.*/
     dspcell *GAhi;      /**<GA of high order WFS.*/
-    dspcell *GM;        /**<Mode to wfs grad. Full matrix stored as sparse for compliance with GA*/
-    dspcell *GMlo;      /**<GM for low order WFS.*/
-    dspcell *GMhi;      /**<GM for high order WFS.*/
+    dcell *GM;          /**<Mode to wfs grad. */
+    dcell *GMlo;        /**<GM for low order WFS.*/
+    dcell *GMhi;        /**<GM for high order WFS.*/
     dspcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     dspcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
     dspcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/

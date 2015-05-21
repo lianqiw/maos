@@ -32,30 +32,41 @@
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
-    dspcell *GAlsr;
-    dspcell *GAM=parms->recon.modal?recon->GM:recon->GA;
+    cell *GAlsr;
+    cell *GAM=parms->recon.modal?(cell*)recon->GM:(cell*)recon->GA;
     if(parms->recon.split){ //high order wfs only in split mode. 
-	GAlsr=parms->recon.modal?recon->GMhi:recon->GAhi;
+	GAlsr=parms->recon.modal?(cell*)recon->GMhi:(cell*)recon->GAhi;
     }else{ //all wfs in integrated mode. 
 	GAlsr=GAM;
     }
-    dspcell *GAlsrT=dspcelltrans(GAlsr);
+    int free_GAlsr=0;
+    if(GAlsr->p[0]->id!=M_DBL){
+	dsp *tmp=dsp_cast(GAlsr->p[0]);
+	if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
+	    dcell *tmp2=0;
+	    free_GAlsr=1;
+	    warning("Convert GAlsr to full\n");
+	    dspcellfull(&tmp2, (dspcell*)GAlsr, 1);
+	    GAlsr=(cell*)tmp2;
+	}
+    }
     info2("Building recon->LR\n");
-    recon->LR.M=dspcellmulspcell(GAlsrT, recon->saneai, 1);
-    dspcellfree(GAlsrT);
+    recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");
     // Tip/tilt and diff focus removal low rand terms for LGS WFS.
     if(recon->TTF){
 	dcellmm(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
     info2("Building recon->LL\n");
-    recon->LL.M=dspcellmulspcell(recon->LR.M, GAlsr, 1);
-    
+    recon->LL.M=dcellmm2(recon->LR.M, GAlsr, "nn");
+    if(free_GAlsr){
+	cellfree(GAlsr);
+    }
     double maxeig=pow(recon->neamhi * recon->aloc->p[0]->dx, -2);
     if(fabs(parms->lsr.tikcr)>EPS){
 	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	dspcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
+	dcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
     if(!parms->recon.modal){
@@ -102,25 +113,23 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		}
 		writebin(actslave,"%s/actslave", dirsetup);
 	    }
-	    dspcelladd(&recon->LL.M, actslave);
-	    dspcellfree(actslave);
+	    dcelladd(&recon->LL.M, 1, actslave, 1);
+	    cellfree(actslave);
 	}
     }
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
     dcell *ULo=cellnew(ndm,nwfs);
-    PDCELL(ULo, pULo);
     dcell *VLo=cellnew(ndm,nwfs);
+    PDCELL(ULo, pULo);
     PDCELL(VLo, pVLo);
-    PDSPCELL(recon->LR.M, LRM);
-    PDSPCELL(GAM, GA);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
 	    continue;
 	}
 	for(int idm=0; idm<ndm; idm++){
-	    dspfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);
-	    dsptfull(&pVLo[iwfs][idm], GA[idm][iwfs],1);
+	    dspfull(&pULo[iwfs][idm], (dsp*)IND(recon->LR.M, idm, iwfs),-1);
+	    dsptfull(&pVLo[iwfs][idm], (dsp*)IND(GAM, iwfs, idm),1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
@@ -145,7 +154,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(parms->lsr.fnreg){
 	warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);
 	dspcell *tmp=dspcellread("%s", parms->lsr.fnreg);
-	dspcelladd(&recon->LL.M, tmp);
+	dcelladd(&recon->LL.M, 1, tmp, 1);
 	dspcellfree(tmp);
     }
     recon->LL.alg = parms->lsr.alg;
@@ -174,7 +183,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		else
 		    writebin(recon->LL.MI, "%s/LLMI.bin", dirsetup);
 	    }
-	    dspcellfree(recon->LL.M);
+	    cellfree(recon->LL.M);
 	    dcellfree(recon->LL.U);
 	    dcellfree(recon->LL.V);	
 	}else{

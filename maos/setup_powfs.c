@@ -1469,13 +1469,18 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    if(powfs[ipowfs].opdbias->p[jwfs]){
 			double *realamp=powfs[ipowfs].realamp->p[jwfs]->p;
-			if(parms->powfs[ipowfs].gtype_sim==1){
+			if(parms->powfs[ipowfs].type==1){//pywfs
+			    dmat *ints=0;
+			    pywfs_fft(&ints, powfs[ipowfs].pywfs, powfs[ipowfs].opdbias->p[jwfs]);
+			    pywfs_grad(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pywfs, ints);
+			    dfree(ints);
+			}else if(parms->powfs[ipowfs].gtype_sim==1){
 			    pts_ztilt(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pts,
 				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
 				      realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
 			}else{
 			    dspmm(&powfs[ipowfs].gradoff->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
-				      powfs[ipowfs].opdbias->p[jwfs],'n',1);
+				  powfs[ipowfs].opdbias->p[jwfs],"nn",1);
 			}
 		    }
 		}
@@ -1510,6 +1515,7 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     toc2("setup_powfs_init");
     return powfs;
 }
+//this is only for shwfs.
 void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

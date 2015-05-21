@@ -126,7 +126,7 @@ static void calc_gradol(SIM_T *simu){
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
 			dspmm(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
-				  simu->wfspsol->p[ipowfs]->p[idm], 'n', 1);
+			      simu->wfspsol->p[ipowfs]->p[idm], "nn", 1);
 		    }
 		}
 		OMPTASK_END;

@@ -123,20 +123,6 @@ void save_recon(SIM_T *simu){
 			"Int Hi %d",idm);
 	    }
 	}
-    	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
-	    if(simu->dmproj->p[idm]){
-		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
-			"ATM to DM Projection (Hi)","x (m)","y (m)",
-			"Proj Hi %d",idm);
-	    }
-	}
-	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmreal){
-		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
-			"Actual DM Actuator Position","x (m)", "y (m)", "Real %d",idm);
-	    }
-	}
     }
     if(parms->plot.run && simu->Merr_lo){
 	dcell *dmlo=NULL;
@@ -200,25 +186,17 @@ void save_recon(SIM_T *simu){
 	    }
 	}
     }
-    if(parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
-	if(simu->ttmreal){
-	    simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
-	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
+    if(parms->save.dm && (!parms->sim.closeloop || simu->isim>0)){
+	if(simu->dmerr){
+	    cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	}
-	if(!parms->sim.closeloop || simu->isim>0){
-	    if(simu->dmerr){
-		cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
-	    }
-	    if(simu->dmint->mint->p[0]){
-		cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
-	    }
-	    if(simu->Merr_lo){
-		cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
-		if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
-		    cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
-		}
+	if(simu->dmint->mint->p[0]){
+	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
+	}
+	if(simu->Merr_lo){
+	    cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
+	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
+		cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
 	    }
 	}
     }
@@ -255,5 +233,34 @@ void save_recon(SIM_T *simu){
 	    }
 	}
 	dcellscale(simu->ecov, 1./scale);//scale back to continuous accumulation
+    }
+}
+
+void save_dmreal(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    if(parms->plot.run){
+    	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
+	    if(simu->dmproj->p[idm]){
+		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
+			"ATM to DM Projection (Hi)","x (m)","y (m)",
+			"Proj Hi %d",idm);
+	    }
+	}
+	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmreal){
+		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
+			"Actual DM Actuator Position","x (m)", "y (m)", "Real %d",idm);
+	    }
+	}
+    }
+    if(parms->save.dm){
+	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
+	if(simu->ttmreal){
+	    simu->save->ttmreal->p[simu->isim*2]=simu->ttmreal->p[0];
+	    simu->save->ttmreal->p[simu->isim*2+1]=simu->ttmreal->p[1];
+	}
     }
 }

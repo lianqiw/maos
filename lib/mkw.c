@@ -472,7 +472,7 @@ void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
 	double sc=1./dsum(*W1);
 	dscale(*W1, sc);
 	/*cancel the factor applied in mkw_circular and apply the new factor */
-	*W0 = dspadd2(W0o, W0i, sc/sco, -sc/sci);
+	*W0 = dspadd2(W0o, sc/sco, W0i, -sc/sci);
 
 	dspfree(W0o);
 	dspfree(W0i);

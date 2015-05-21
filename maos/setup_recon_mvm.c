@@ -85,12 +85,18 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dfree(eye);
     }else{
 	dcell *LR=NULL;
-	dspcellfull(&LR, recon->LR.M, 1);
+	if(recon->LR.M->p[0]->id==M_DBL){
+	    LR=(dcell*)recon->LR.M;
+	}else{
+	    dspcellfull(&LR, (dspcell*)recon->LR.M, 1);
+	}
 	if(recon->LR.U && recon->LR.V){
 	    dcellmm(&LR, recon->LR.U, recon->LR.V, "nt", -1);
 	}
 	muv_solve(&MVM, &recon->LL, NULL,  LR);
-	dcellfree(LR);
+	if(LR!=(dcell*)recon->LR.M){
+	    dcellfree(LR);
+	}
     }
     recon->MVM=dcell2m(MVM);
     dcellfree(MVM);

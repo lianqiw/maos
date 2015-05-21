@@ -35,8 +35,8 @@ typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const doub
    terms. M-U*V'; M is usually symmetrical.
  */
 typedef struct MUV_T{
-    /*The forward computation can be done by the following 3 matrices, togetehr with exfun, extra (data) */
-    dspcell *M;     /**<block sparse matrix*/
+    /*The forward computation can be done by the following 3 matrices, together with exfun, extra (data) */
+    cell *M;       /**<block sparse matrix or dense matrix*/
     dcell  *U;     /**<low rank terms U*/
     dcell  *V;     /**<low rank terms V*/
     EXFUN exfun;   /**<Optionally attach an extra function that applies extra data*/

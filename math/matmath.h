@@ -124,8 +124,6 @@
     int X(cellclip)(X(cell) *Ac, R min, R max);				\
     void X(celltikcr)(X(cell) *A, R thres);				\
     void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
-    void X(celladdI)(X(cell) *A, R a);					\
-    void X(celladd)(X(cell) **B0, R bc, const X(cell) *A,const R ac);	\
     X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);	\
     X(cell) *X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);		\
     X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);

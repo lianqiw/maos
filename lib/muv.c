@@ -35,7 +35,7 @@
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
-    const MUV_T *A = B;
+    const MUV_T *A = B;//B is declared void for cg to use without casting.
     if(A->M && xin){
 	dcellmm(xout, A->M, xin, "nn", alpha);
 	if(A->U && A->V){
@@ -82,19 +82,8 @@ void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha
  */
 void muv_sp(dcell **xout, const void *B, const dspcell *xin, const double alpha){
     const MUV_T *A=B;
-    if(!A->M) error("Not implemented\n");
-    if(!xin) return;
-    dspcell *xout2=dspcellmulspcell(A->M, xin, 1);
-    dspcellfull(xout, xout2, alpha);
-    dspcellfree(xout2);
-    if(A->U && A->V){
-	dcell *tmp=NULL;
-	dcell *VT=dcelltrans(A->V);
-	dcellmulsp(&tmp, VT, xin, -1); 
-	dcellfree(VT);
-	dcellmm(xout, A->U, tmp, "nn", alpha);
-	dcellfree(tmp);
-    }
+    if(!A->M || xin) error("Not implemented\n");
+    muv(xout, B, (dcell*)xin, alpha);//reuse the generic implementation of dcellmm.
 }
 /*
   Wrap of data for call with muv_ib.
@@ -118,11 +107,14 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	return;
     }
     assert(A->M);/*Don't support A->Mfun yet.  */
-    PDSPCELL(A->M, AM);
     if(!*xout){
 	*xout=cellnew(A->M->nx, xin->ny);
     }
-    dspmm(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], 'n', alpha);
+    if(IND(A->M, xb, yb)->id==M_DBL){
+	dmm(&(*xout)->p[xb], 1, dmat_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+    }else{
+	dspmm(&(*xout)->p[xb], dsp_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
+    }
     if(A->V && A->U){
 	PDCELL(A->V, AV);
 	PDCELL(A->U, AU);
@@ -188,19 +180,21 @@ void muv_direct_prep(MUV_T *A, double svd){
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
     TIC;tic;
     muv_direct_free(A);
-    dsp *muvM=dspcell2sp(A->M);
-    info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->m, muvM->n);
     if(use_svd){/*Do SVD */
-	dspfull(&A->MI, muvM, 1);
+	dfree(A->MI);
+	A->MI=dcell2m((const dcell*)A->M);
+	info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
 	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, svd);
 	}else{/*use a threshold good for lsr. */
 	    dsvd_pow(A->MI, -1, 2e-4);
 	}
     }else{/*Do Cholesky decomposition. */
+	dsp *muvM=dspcell2sp((const dspcell*)A->M);
+	info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->nx, muvM->ny);
 	A->C=chol_factorize(muvM);
+	dspfree(muvM);
     }
-    dspfree(muvM);
     if(A->U && A->V){
 	dmat *U=dcell2m(A->U);
 	dmat *V=dcell2m(A->V);
@@ -244,18 +238,20 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	A->CB=calloc(nb, sizeof(spchol*));
     }
     for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
-	dsp *muvM=A->M->p[ib+ib*nb];
 	if(use_svd){
-	    dspfull(&A->MIB->p[ib], muvM, 1);
+	    if(A->M->p[ib+ib*nb]->id==M_DBL){
+		dcp(&A->MIB->p[ib], dmat_cast(A->M->p[ib+ib*nb]));
+	    }else{
+		dspfull(&A->MIB->p[ib], dsp_cast(A->M->p[ib+ib*nb]), 1);
+	    }
 	    if(svd<1){
 		dsvd_pow(A->MIB->p[ib], -1, svd);
 	    }else{
 		dsvd_pow(A->MIB->p[ib], -1, 2e-4);
 	    }
 	}else{
-	    A->CB[ib]=chol_factorize(muvM);
+	    A->CB[ib]=chol_factorize(dsp_cast(A->M->p[ib+ib*nb]));
 	}
-	/*Don't free muvM. */
     }
     if(A->U && A->V){/*deal with low rank terms */
 	/*First reduce U, V to column block vectors.  */
@@ -314,7 +310,7 @@ void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
     void *xout=NULL;
     if(A->MI){
 	dmat *x1=NULL;
-	dmulsp(&x1, A->MI, xin, 1);
+	dmulsp(&x1, A->MI, xin, "nn", 1);
 	dmm((void*)&xout, 0, x1, A->MI, "nt", 1);
 	dfree(x1);
     }else{
@@ -492,7 +488,7 @@ void muv_direct_diag_free(MUV_T *A){
    Free MUV_T struct
 */
 void muv_free(MUV_T *A){
-    dspcellfree(A->M);
+    cellfree(A->M);
     dcellfree(A->U);
     dcellfree(A->V);
     if(A->extra){

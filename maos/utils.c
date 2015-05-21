@@ -395,9 +395,9 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    if(powfs[ipowfs].gradoff){
-		drawopd("Goffx",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
+		drawopd("Goffx",powfs[ipowfs].saloc, powfs[ipowfs].gradoff->p[jwfs]->p,NULL,
 			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		drawopd("Goffy",(loc_t*)powfs[ipowfs].pts, powfs[ipowfs].gradoff->p[jwfs]->p+nsa, NULL,
+		drawopd("Goffy",powfs[ipowfs].saloc, powfs[ipowfs].gradoff->p[jwfs]->p+nsa, NULL,
 			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 	    }
 	}
@@ -613,7 +613,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
     dmat *opd=zernike(recon->ploc, parms->aper.d, 2, 15, 1);
     //writebin(opd, "ropd");
     dmat *GR=0;
-    dspmm(&GR, recon->GP->p[ipowfs], opd, 'n', 1);
+    dspmm(&GR, recon->GP->p[ipowfs], opd, "nn", 1);
     dfree(opd);
     dmat *RR=dpinv(GR, recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
     //writebin(GR, "GR");

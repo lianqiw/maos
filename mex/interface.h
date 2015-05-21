@@ -170,6 +170,7 @@ mxArray *any2mx(const void *A_){
 	out=lmat2mx(A_);
 	break;
     default:
+	info("id=%ld is not handled.\n", id);
 	out=mxCreateCellMatrix(0,0);
     }
     return out;
@@ -182,6 +183,8 @@ INLINE dsp *mx2dsp(const mxArray *A){
     dsp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
 	out=calloc(1, sizeof(dsp));
+	out->id=M_DSP64;
+	out->nz=-1;
 	out->m=mxGetM(A);
 	out->n=mxGetN(A);
 	out->p=mxGetJc(A);
@@ -265,6 +268,8 @@ static void *mx2any(const mxArray *A){
 	    mxArray *Ai=mxGetCell(A, i);
 	    if(mxIsCell(Ai)){
 		out->p[i]=mx2any(Ai);
+	    }else if(mxGetIr(Ai)){
+		out->p[i]=(void*)mx2dsp(Ai);
 	    }else{
 		out->p[i]=(void*)mx2d(Ai);
 	    }

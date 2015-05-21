@@ -47,7 +47,7 @@ static void test_spmul(){
     
     dspdisp(Aw);
     dspdisp(Aw2);
-    dsp *diff=dspadd2(Aw,Aw2,1,-1);
+    dsp *diff=dspadd2(Aw,1,Aw2,-1);
     dspdisp(diff);
     }*/
 /*
@@ -134,10 +134,17 @@ static void test_spmul(){
     tic;
     dspmulvec(x->p, A, y->p, 't',1);
     toc("sptmul 5");
-    
+    exit(0);
+}
+void test_addI(){
+    dsp *a=readbin("a.bin");
+    dspaddI(a, 1);
+    writebin(a, "a1.bin");
+    exit(0);
 }
 int main(){
     THREAD_POOL_INIT(2);
+    test_addI();
     test_spmul();
     /*test_L2(); */
     /*test_spsum(); */

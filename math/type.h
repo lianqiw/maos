@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MATH_TYPE_H
-#define AOS_MATH_TYPE_H
+#ifndef AOS_MATARRH_TYPE_H
+#define AOS_MATARRH_TYPE_H
 #include "../sys/sys.h"
 /**
    \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
@@ -49,16 +49,16 @@ typedef enum CEMBED{
     int *nref; /**< reference count */			\
     struct fft_t *fft					
 
-#define MAT(T) struct{ \
+#define MATARR(T) struct{ \
 	ARR(T);	       \
     }
 
-#define CELL(T) struct{		      \
+#define CELLARR(T) struct{		      \
 	ARR(T);			      \
 	T m;/*store continuous data*/ \
     }
 
-#define SPMAT(T) struct{						\
+#define SPMATARR(T) struct{						\
 	long id;/**<to identify the array type*/			\
 	T *restrict x;       /**< numerical values, size nzmax */	\
 	union{long m;long nx;};	          /**< number of rows */	\
@@ -71,16 +71,16 @@ typedef enum CEMBED{
 	int *nref;           /**< reference counting like dmat */	\
     }
 
-typedef MAT(double) dmat;/*a double matrix object contains 2-d array of double numbers*/
-typedef MAT(float) smat;
-typedef MAT(dcomplex) cmat;
-typedef MAT(fcomplex) zmat;
-typedef MAT(long) lmat;
+typedef MATARR(double) dmat;/*a double matrix object contains 2-d array of double numbers*/
+typedef MATARR(float) smat;
+typedef MATARR(dcomplex) cmat;
+typedef MATARR(fcomplex) zmat;
+typedef MATARR(long) lmat;
 
-typedef SPMAT(double) dsp;
-typedef SPMAT(float) ssp;
-typedef SPMAT(dcomplex) csp;
-typedef SPMAT(fcomplex) zsp;
+typedef SPMATARR(double) dsp;
+typedef SPMATARR(float) ssp;
+typedef SPMATARR(dcomplex) csp;
+typedef SPMATARR(fcomplex) zsp;
 
 
 
@@ -180,36 +180,36 @@ typedef struct pts_t{
     double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
 }pts_t;
 
-typedef CELL(cmat*) ccell;
-typedef CELL(zmat*) zcell;
-typedef CELL(dmat*) dcell;
-typedef CELL(smat*) scell;
-typedef CELL(lmat*) lcell;
+typedef CELLARR(cmat*) ccell;
+typedef CELLARR(zmat*) zcell;
+typedef CELLARR(dmat*) dcell;
+typedef CELLARR(smat*) scell;
+typedef CELLARR(lmat*) lcell;
 
-typedef CELL(dsp*) dspcell;
-typedef CELL(ssp*) sspcell;
-typedef CELL(csp*) cspcell;
-typedef CELL(zsp*) zspcell;
+typedef CELLARR(dsp*) dspcell;
+typedef CELLARR(ssp*) sspcell;
+typedef CELLARR(csp*) cspcell;
+typedef CELLARR(zsp*) zspcell;
 
-typedef CELL(ccell*) cccell;
-typedef CELL(zcell*) zccell;
-typedef CELL(dcell*) dccell;
-typedef CELL(scell*) sccell;
-typedef CELL(lcell*) iccell;
+typedef CELLARR(ccell*) cccell;
+typedef CELLARR(zcell*) zccell;
+typedef CELLARR(dcell*) dccell;
+typedef CELLARR(scell*) sccell;
+typedef CELLARR(lcell*) iccell;
 
-typedef CELL(cccell*) ccccell;
-typedef CELL(zccell*) zcccell;
-typedef CELL(dccell*) dcccell;
-typedef CELL(sccell*) scccell;
-typedef CELL(iccell*) icccell;
+typedef CELLARR(cccell*) ccccell;
+typedef CELLARR(zccell*) zcccell;
+typedef CELLARR(dccell*) dcccell;
+typedef CELLARR(sccell*) scccell;
+typedef CELLARR(iccell*) icccell;
 
-typedef CELL(map_t*) mapcell;
-typedef CELL(rmap_t*) rmapcell;
-typedef CELL(loc_t*) loccell;
+typedef CELLARR(map_t*) mapcell;
+typedef CELLARR(rmap_t*) rmapcell;
+typedef CELLARR(loc_t*) loccell;
 
-typedef CELL(mapcell*) mapccell;
-typedef CELL(rmapcell*) rmapccell;
-typedef CELL(loccell*) locccell;
+typedef CELLARR(mapcell*) mapccell;
+typedef CELLARR(rmapcell*) rmapccell;
+typedef CELLARR(loccell*) locccell;
 
 typedef struct cell{
     ARR(struct cell*);
@@ -218,9 +218,12 @@ typedef struct cell{
 
 /*A method to simulate operator overloading for indexing arrys*/
 #define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
-#define IND1(A,i) A->p[i]
-#define IND2(A,ix,iy) A->p[ix+A->nx*iy]
+#define IND1(A,i) (A->p[i])
+#define IND2(A,ix,iy) (A->p[ix+A->nx*iy])
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME
 #define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
 
+#undef ARR
+#undef CELLARR
+#undef MATARR
 #endif

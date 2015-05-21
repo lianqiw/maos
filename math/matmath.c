@@ -1655,35 +1655,6 @@ int X(cellclip)(X(cell) *Ac, R min, R max){
     return nclip;
 }
 
-
-/**
-   add one to another.  B=B*bc+A*ac
-*/
-void X(celladd)(X(cell) **B0, R bc, const X(cell) *A,const R ac){
-    if(A){
-	X(cell) *B=*B0;
-	if(!B){
-	    B=*B0=X(cellnew2)(A); bc=0;
-	}else{
-	    assert(A->nx==B->nx && A->ny == B->ny);
-	}
-	for(int i=0; i<A->nx*A->ny; i++){
-	    X(add)(&B->p[i], bc, A->p[i], ac);
-	}
-    }
-}
-
-/**
-   add a to diagonal elements of A;
-*/
-void X(celladdI)(X(cell) *A, R a){
-    if(A->nx!=A->ny) 
-	error("A must be symmetric\n");
-    for(int ib=0; ib<A->nx; ib++){
-	X(addI)(A->p[ib+ib*A->nx], a);
-    }
-}
-
 /**
    raise each cell in the cell array to power of power.
 */

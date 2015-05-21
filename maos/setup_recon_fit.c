@@ -82,7 +82,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    error("FRM, FRU, FRV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FR\n");
-	recon->FR.M=dspcellread("FRM");
+	recon->FR.M=readbin("FRM");
 	recon->FR.U=dcellread("FRU");
 	recon->FR.V=dcellread("FRV");
     }else{
@@ -95,10 +95,10 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		    dsp *tmp=dspmulsp(recon->W0, HXF[ips][ifit]);
+		    dsp *tmp=dspmulsp(recon->W0, HXF[ips][ifit],"nn");
 		    for(int idm=0; idm<ndm; idm++){
-			dspmulsp2(&FRM[ips][idm],HAT[ifit][idm], tmp, 
-				 recon->fitwt->p[ifit]);
+			dspmulsp2(&FRM[ips][idm],HAT[ifit][idm], tmp, "nn",
+				  recon->fitwt->p[ifit]);
 		    }
 		    dspfree(tmp);
 		}
@@ -151,7 +151,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    error("FLM, FLU, FLV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FL\n");
-	recon->FL.M=dspcellread("FLM");
+	recon->FL.M=readbin("FLM");
 	recon->FL.U=dcellread("FLU");
 	recon->FL.V=dcellread("FLV");
     }else{
@@ -161,10 +161,10 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		dsp *tmp=dspmulsp(recon->W0, HA[idm][ifit]);
+		dsp *tmp=dspmulsp(recon->W0, HA[idm][ifit],"nn");
 		for(int jdm=0; jdm<ndm; jdm++){
-		    dspmulsp2(&FLM[idm][jdm],HAT[ifit][jdm], tmp,
-			     recon->fitwt->p[ifit]);
+		    dspmulsp2(&FLM[idm][jdm],HAT[ifit][jdm], tmp,"nn",
+			      recon->fitwt->p[ifit]);
 		}
 		dspfree(tmp);
 	    }
@@ -181,7 +181,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double maxeig=4./nact;
 	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
 	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
-	    dspcelladdI(recon->FL.M,tikcr*maxeig);
+	    dcelladdI(recon->FL.M,tikcr*maxeig);
 	}
 
 	{/*Low rank terms. */
@@ -192,7 +192,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcellfree(tmp);
 	}
 	if(recon->actslave){
-	    dspcelladd(&recon->FL.M, recon->actslave);
+	    dcelladd(&recon->FL.M, 1, recon->actslave, 1);
 	}
 	/*dspcellsym(recon->FL.M); */
 	info2("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",

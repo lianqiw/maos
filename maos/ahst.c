@@ -167,7 +167,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	    dspmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
 	dspcell *HatHai=dspcellmulspcell(Hat,Ha,1);
-	dspcelladd(&Wa, HatHai);
+	dcelladd(&Wa, 1, HatHai, 1);
 	dspcellfree(Hat);
 	dspcellfree(Ha);
 	dspcellfree(HatHai);
@@ -337,7 +337,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	    }else{
 		Hat->p[idm]=dspref(HatGround);
 	    }
-	    dspmm(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],'n',wt[ievl]);
+	    dspmm(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],"nn",wt[ievl]);
 	}
 	dspcellfree(Hat);
     }
@@ -575,7 +575,8 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }
     if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
-	dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
+	//dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
+	dcellmm(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, "nn", 1);
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting. */
 	if(parms->dbg.wamethod==0){
@@ -591,7 +592,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		nact+=recon->aloc->p[idm]->nloc;
 	    }
 	    double maxeig=4./nact;
-	    dspcelladdI(ngsmod->Wa, 1e-9*maxeig);
+	    dcelladdI(ngsmod->Wa, 1e-9*maxeig);
 	    
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes,ngsmod->Wa);

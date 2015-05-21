@@ -21,7 +21,8 @@
 #include "random.h"
 #include "mathdef.h"
 #include "defs.h"/*Defines T, X, etc */
-
+//Check for correct type and for possible memory corruption
+#define assert_mat(A) assert(!A || A->id==M_T)
 /**
    The only function that actually creats the matrix object. It ensures that all
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
@@ -82,9 +83,9 @@ void X(init)(X(mat)**A, long nx, long ny){
 /**
    cast a cell object to X(mat)
  */
-X(mat) *X(mat_cast)(cell *A){
+X(mat) *X(mat_cast)(void *A){
     if(!A) return 0;
-    assert(A->id==M_T);
+    assert(((cell*)A)->id==M_T);
     return (X(mat)*)A;
 }
 /**
@@ -92,6 +93,7 @@ X(mat) *X(mat_cast)(cell *A){
 */
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
+    assert_mat(A);
     int free_extra=0;
     if(A->nref){
 	int nref=atomicadd(A->nref, -1);
@@ -132,6 +134,7 @@ void X(free_keepdata)(X(mat) *A){
 */
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
+    assert_mat(in);
     X(mat) *out=calloc(1, sizeof(X(mat)));
     memcpy(out,in,sizeof(X(mat)));
     if(!in->nref){
@@ -162,6 +165,7 @@ X(mat) *X(ref_reshape)(const X(mat) *in, long nx, long ny){
    X(mat). reference counted. not used
 */
 X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
+    assert_mat(in);
     return X(new_ref)(in->nx, ncol, in->p+icol*in->nx);
 }
 
@@ -169,6 +173,8 @@ X(mat)* X(refcols)(const X(mat) *in, long icol, long ncol){
    Create a new sub matrix of nx*ny starting from(sx,sy) and copy the data.
 */
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
+    if(!in) return 0;
+    assert_mat(in);
     if(nx<=0){
 	nx=in->nx-sx;
     }
@@ -190,6 +196,7 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
    possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
+    assert_mat(A);
     if(!A->nref || A->nref[0]>1){
 	error("Resizing a referenced vector\n");
     }
@@ -225,7 +232,8 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
     }else if(!in1){
 	return X(dup)(in2);
     }
-
+    assert_mat(in1);
+    assert_mat(in2);
     X(mat) *out=NULL;
 
     if(dim==1){
@@ -262,6 +270,7 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
 */
 void X(cp)(X(mat) **out0, const X(mat) *in){
     if(in && in->nx && in->ny){
+	assert_mat(in);
 	X(init)(out0, in->nx, in->ny);
 	X(mat) *out=*out0;
 	if(out->p!=in->p){
@@ -276,6 +285,7 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
    duplicate a X(mat) array
 */
 X(mat) *X(dup)(const X(mat) *in){
+    assert_mat(in);
     X(mat) *out=NULL;
     X(cp)(&out, in);
     return out;
@@ -286,6 +296,7 @@ X(mat) *X(dup)(const X(mat) *in){
 */
 X(mat) *X(trans)(const X(mat) *A){
     if(!A) return NULL;
+    assert_mat(A);
     X(mat) *B=X(new)(A->ny,A->nx);
     if(A->nx==1 || A->ny==1){
 	memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
@@ -305,6 +316,7 @@ X(mat) *X(trans)(const X(mat) *A){
 */
 void X(set)(X(mat) *A, const T val){
     if(A){
+	assert_mat(A);
 	for(long i=0; i<A->nx*A->ny; i++){
 	    A->p[i]=val;
 	}
@@ -316,6 +328,7 @@ void X(set)(X(mat) *A, const T val){
 */
 void X(show)(const X(mat) *A, const char *format, ...){
     if(!A) return;
+    assert_mat(A);
     format2fn;
     info2("Displaying content of %s:\n",fn);
     PMAT(A,p);
@@ -341,6 +354,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
 T X(sum)(const X(mat) *A){
     T v=0;
     if(A){
+	assert_mat(A);
 	T *restrict p=A->p;
 	/**
 	   Loops like this will only be vectorized with -ffast-math because
@@ -360,6 +374,7 @@ T X(sum)(const X(mat) *A){
 */
 T X(trace)(const X(mat)*A){
     T trace=0;
+    assert_mat(A);
     long n=MIN(A->nx, A->ny);
     for(long i=0; i<n; i++){
 	trace+=A->p[i*(1+A->nx)];
@@ -372,6 +387,7 @@ T X(trace)(const X(mat)*A){
    shift frequency components by n/2
 */
 void X(fftshift)(X(mat) *A){
+    assert_mat(A);
     long i;
     const long nx=A->nx;
     const long ny=A->ny;
@@ -418,6 +434,8 @@ void X(fftshift)(X(mat) *A){
    \endverbatim
 */
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
+    assert_mat(A);
+    assert_mat(B);
     const long nx=A->nx;
     const long ny=A->ny;
     T *Ap=A->p;
@@ -475,10 +493,11 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
     }
 }
 /**
-   cast a cell object to X(cell)
+   cast a cell object to X(cell) after checking.
  */
-X(cell) *X(cell_cast)(cell *A){
-    if(!A) return 0;
+X(cell) *X(cell_cast)(void *A_){
+    if(!A_) return 0;
+    cell *A=(cell*)A_;
     assert(A->id==MCC_ANY);
     for(int i=0; i<A->nx*A->ny; i++){
 	assert(!A->p[i] || A->p[i]->id==M_T);
@@ -528,16 +547,6 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     return out;
 }
 
-/**
-   check the size of matrix if exist. Otherwise create it
-*/
-void X(cellinit)(X(cell)**A, long nx, long ny){
-    if(*A){
-	assert((*A)->nx == nx && (*A)->ny==ny);
-    }else{
-	*A=cellnew(nx, ny);
-    }
-}
 /**
    creat a X(cell) reference an existing X(cell) by referencing the
    elements.
@@ -885,6 +894,7 @@ X(mat) *X(cell2m)(const X(cell) *A){
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
 		if(!isempty(Ap[iy][ix])){
+		    assert_mat(Ap[iy][ix]);
 		    memcpy(out->p+((icol+jcol)*nx+kr),
 			   Ap[iy][ix]->p+icol*nxs[ix],
 			   nxs[ix]*sizeof(T));

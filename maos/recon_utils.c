@@ -159,7 +159,7 @@ static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt
     }
     dmat *xout=NULL;
     dmat *tmp=NULL;
-    dspmm(&xout, W0, xin, 'n', wt);
+    dspmm(&xout, W0, xin, "nn", wt);
     dmm(&tmp, 0, W1, xin, "tn", -1);
     dmm(&xout, 1, W1, tmp, "nn", wt);
     dcp(&xin, xout);
@@ -193,7 +193,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 	    int ind=iy*nevl+ievl;
 	    dmat *xout=NULL;
 	    dmat *tmp=NULL;
-	    dspmm(&xout, W0, B->p[ind], 'n', wt->p[ievl]);
+	    dspmm(&xout, W0, B->p[ind], "nn", wt->p[ievl]);
 	    dmm(&tmp, 0, W1, B->p[ind], "tn", -1);
 	    dmm(&xout, 1, W1, tmp, "nn", wt->p[ievl]);
 	    for(int ix=0; ix<A->ny; ix++){
@@ -252,11 +252,11 @@ static void Tomo_prop_do(thread_t *info){
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
 		PDSPCELL(recon->HXWtomo,HXW);
-		dspmm(&xx, HXW[ips][iwfs], data->xin->p[ips], 'n', 1);
+		dspmm(&xx, HXW[ips][iwfs], data->xin->p[ips], "nn", 1);
 	    }
 	}
 	/*Apply the gradient operation */
-	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, 'n', 1);
+	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, "nn", 1);
 	dfree(xx);
 	/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
     }
@@ -282,9 +282,9 @@ static void Tomo_nea_gpt_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 'n', 1);
+	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], "nn", 1);
 	dfree(data->gg->p[iwfs]); /*We reuse gg. */
-	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, 't', data->alpha);
+	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, "tn", data->alpha);
 	dfree(gg2);
     }
 }
@@ -296,7 +296,7 @@ static void Tomo_nea_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 'n', 1);
+	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], "nn", 1);
 	dcp(&data->gg->p[iwfs], gg2);
 	dfree(gg2);
     }
@@ -348,15 +348,15 @@ static void Tomo_iprop_do(thread_t *info){
 	}else{
 	    PDSPCELL(recon->HXWtomo,HXW);
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		dspmm(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 't', 1);
+		dspmm(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], "tn", 1);
 	    }
 	}
 	if(data->xin){/*data->xin is empty when called from TomoR */
 	    switch(recon->cxx){
 	    case 0:{/*L2 */
 		dmat *xx=NULL;
-		dspmm(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips],'n', 1);
-		dspmm(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, 't', data->alpha);
+		dspmm(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips],"nn", 1);
+		dspmm(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, "tn", data->alpha);
 		dfree(xx);
 	    }
 		break;
@@ -368,7 +368,7 @@ static void Tomo_iprop_do(thread_t *info){
 		break;
 	    }
 	    if(recon->ZZT){
-		dspmm(&data->xout->p[ips], recon->ZZT->p[ips+ips*nps], data->xin->p[ips], 't', data->alpha);
+		dspmm(&data->xout->p[ips], recon->ZZT->p[ips+ips*nps], data->xin->p[ips], "tn", data->alpha);
 	    }
 	}
     }

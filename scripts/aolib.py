@@ -44,6 +44,10 @@ def handle_type(argtype):
         mx2c='mx2any'
         c2mx='any2mx'
         free_c='cellfree'
+    elif argtype=='cell**':
+        mx2c=''
+        c2mx='any2mx'
+        free_c='cellfree'
     elif argtype=='rand_t*':
         mx2c='mx2rand'
         c2mx=''
@@ -58,18 +62,31 @@ for funname in funcs: #loop over functions
     funtype=funcs[funname][0]
     funargs=funcs[funname][1]
     print (funname, funtype,funargs)
-    fundef='void '+funname+'_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){\n'
-    fundef+='    if(nrhs!='+str(len(funargs))+') mexErrMsgTxt(\"Expect '+str(len(funargs))+' arguments\\n");\n'
+    nargs=len(funargs)
+    fundef=''
     fundef_free=''
+    pointer_output=''
+    if funtype=='void':
+        pointer_output_count=0
+    else:
+        pointer_output_count=1
+        
     count=0
     for arg in funargs: #get data from matlab
         argtype=arg[0]
         argname=arg[1]
         mx2c, c2mx, free_c=handle_type(argtype)
-        fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n'
+        if len(mx2c)>0:
+            fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n' #input frm matlab
+            count=count+1
+        else:
+            fundef+='    '+argtype[0:-1]+' '+argname+'=0;\n' #output
+            arg[1]='&'+argname
+            pointer_output+='    plhs['+str(pointer_output_count)+']='+c2mx+'('+argname+');\n'
+            pointer_output_count+=1
+            nargs-=1;
         if len(free_c)>0:
             fundef_free+='    '+free_c+'('+argname+');\n'
-        count=count+1
     if funtype=='void':
         fundef+='    '+funname+"("
     else:
@@ -81,10 +98,16 @@ for funname in funcs: #loop over functions
     mx2c, c2mx, free_c=handle_type(funtype)
     if funtype !='void':
         fundef+='    plhs[0]='+c2mx+'('+funname+'_out);\n'
+        
+    if len(pointer_output)>0:
+        fundef+=pointer_output
     if len(free_c)>0:
         fundef+='    '+free_c+'('+funname+'_out);\n'
     fundef+=fundef_free
     fundef+='}'
+    fundef0='void '+funname+'_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){\n'
+    fundef0+='    if(nrhs!='+str(nargs)+') mexErrMsgTxt(\"Expect '+str(nargs)+' arguments\\n");\n'
+    fundef=fundef0+fundef
     print(fundef, file=fpout)
 
 print("void print_usage(){\n    printf(\"Usage:\\n\");", file=fpout)

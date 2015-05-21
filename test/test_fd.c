@@ -301,7 +301,7 @@ int main(){
 	    }
 	    csp *tmp=cspdup(sel);
 	    cspmuldiag(tmp,g->p,1);
-	    csp *tmp2=csptmulsp(tmp,tmp);
+	    csp *tmp2=cspmulsp(tmp,tmp,"tn");
 	    cspadd(&Mmid, tmp2);
 	    cspfree(tmp);
 	    cspfree(tmp2);
@@ -323,9 +323,9 @@ int main(){
 	    toc("prop");
 	    cspscale(prop1,1./NEA[iwfs]);
 	    /*Compute prop'*Mmid*prop and add to Mhat; */
-	    csp *tmp=cspmulsp(Mmid,prop1);
+	    csp *tmp=cspmulsp(Mmid,prop1,"nn");
 	    toc("Mul1");
-	    csp *tmp2=csptmulsp(prop1,tmp);
+	    csp *tmp2=cspmulsp(prop1,tmp,"tn");
 	    toc("Mul2");
 	    cspwrite(tmp2,"Mhat_%d.bin",iwfs);
 	    cspadd(&Mhat,tmp2);

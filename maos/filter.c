@@ -318,7 +318,7 @@ static void filter_cl(SIM_T *simu){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
     if(!parms->dbg.ncpa_preload && recon->dm_ncpa){
-	warning_once("Add NCPA after integrator\n");
+	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
     if(parms->sim.dmclip || parms->sim.dmclipia){

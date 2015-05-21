@@ -310,7 +310,21 @@ static void test_expm(){
     writebin(B, "expm_out");
     exit(0);
 }
+static void test_mm(){
+    dcell *A=cellnew(1,1);
+    dcell *B=cellnew(1,1);
+    A->p[0]=dnew(3,4);
+    dset(A->p[0],1);
+    B->p[0]=dnew(4,5);
+    dset(B->p[0],1);
+    dcell *C=dcellmm2(A,B,"nn");
+    writebin(A, "A");
+    writebin(B, "B");
+    writebin(C, "C");
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_mm();
     test_expm();
     //test_reccati();
     test_kalman();

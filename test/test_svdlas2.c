@@ -291,7 +291,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	free(xv2);
 	*VT=dtrans(V);
 	*U=NULL;
-	dspmm(U, A, V, 'n',1);
+	dspmm(U, A, V, "nn",1);
 	dmat *SdiagI=ddup(*Sdiag); 
 	dcwpow(SdiagI, -1);
 	dmuldiag(*U, SdiagI);
