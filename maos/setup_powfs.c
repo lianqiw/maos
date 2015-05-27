@@ -1472,6 +1472,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 			if(parms->powfs[ipowfs].type==1){//pywfs
 			    dmat *ints=0;
 			    pywfs_fft(&ints, powfs[ipowfs].pywfs, powfs[ipowfs].opdbias->p[jwfs]);
+			    //writebin(powfs[ipowfs].opdbias->p[jwfs], "opdbias\n");exit(0);
 			    pywfs_grad(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pywfs, ints);
 			    dfree(ints);
 			}else if(parms->powfs[ipowfs].gtype_sim==1){

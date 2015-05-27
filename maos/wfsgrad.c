@@ -109,7 +109,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int dtrat_output=(isim+1-parms->powfs[ipowfs].step)%dtrat==0;
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
-    const int do_geom=!do_phy || save_gradgeom || do_pistatout;
+    const int do_geom=(!do_phy || save_gradgeom || do_pistatout) && parms->powfs[ipowfs].type==0;
     const double *realamp=powfs[ipowfs].realamp?powfs[ipowfs].realamp->p[wfsind]->p:0;
     dmat *gradcalc=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
@@ -801,14 +801,14 @@ void wfsgrad_post(thread_t *info){
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
 	dmat **gradout=&simu->gradcl->p[iwfs];
 	if(dtrat_output){
+	    //scaling on gradout
 	    if(simu->powfs[ipowfs].gain && simu->powfs[ipowfs].gain->p[wfsind]){
 		dcwm(*gradout, simu->powfs[ipowfs].gain->p[wfsind]);
 	    }
 	    //Gradient offset due to mainly NCPA calibration. Must be after gain
-	    //scaling on gradout
 	    if(simu->powfs[ipowfs].gradoff){
-		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -1);
-	    }
+		dadd(gradout, 1, simu->powfs[ipowfs].gradoff->p[wfsind], -parms->dbg.gradoff_scale);
+	    }	
 	    if(do_phy){
 		if(simu->fsmerr_store->p[iwfs]){
 		    wfsgrad_fsm(simu, iwfs);
@@ -817,7 +817,6 @@ void wfsgrad_post(thread_t *info){
 		    wfsgrad_dither(simu, iwfs);
 		}
 	    }
-	 
 	    if(parms->save.grad->p[iwfs]){
 		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }

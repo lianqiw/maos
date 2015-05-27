@@ -218,7 +218,7 @@ void write_by_id(const void *A, long id, const char* format,...){
     writedata_by_id(fp, A, id);
     zfclose(fp);
 }
-void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
+cell *readdata_by_id(file_t *fp, long id, int level, header_t *header){
     header_t header2={0};
     if(!header){
 	header=&header2;
@@ -233,10 +233,12 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	case 0:/*read a mat*/
 	    if(!id) id=header->magic;
 	    switch(id){
-	    case M_DBL: out=dreaddata(fp, header);break;
-	    case M_FLT: out=sreaddata(fp, header);break;
-	    case M_CMP: out=creaddata(fp, header);break;
-	    case M_ZMP: out=zreaddata(fp, header);break;
+	    case M_DBL: 
+	    case M_FLT:
+		out=dreaddata(fp, header);break;
+	    case M_CMP: 
+	    case M_ZMP:
+		out=creaddata(fp, header);break;
 	    case M_LONG: out=lreaddata(fp, header);break;
 	    case M_LOC64: out=locreaddata(fp, header); break;
 	    case M_MAP64: out=mapreaddata(fp, header); break;
@@ -294,18 +296,20 @@ void *readdata_by_id(file_t *fp, long id, int level, header_t *header){
     return out;
 }
 
-void* read_by_id(long id, int level, const char *format, ...){
+cell* read_by_id(long id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    void *out=readdata_by_id(fp, id, level, 0);
+    cell *out=readdata_by_id(fp, id, level, 0);
     //if(!zfeof(fp)){//EOF is not returned for gzipped file.
     //warning2("Unread data after %d in file %s\n", zfpos(fp), zfname(fp));
     //}
     zfclose(fp);
     return out;
 }
-
-void* readbin(const char *format, ...){
+/**
+   Return cell* so the consumer does not use it without check and cast
+ */
+cell* readbin(const char *format, ...){
     format2fn;
     return read_by_id(0, -1, "%s", fn);
 }

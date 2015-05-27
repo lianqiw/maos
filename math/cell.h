@@ -34,10 +34,10 @@ void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, long id);
 void write_by_id(const void* dc, long id, const char* format,...);
 
-void* readdata_by_id(file_t *fp, long id, int level, header_t *header);
-void* read_by_id(long id, int level, const char *format, ...);
+cell* readdata_by_id(file_t *fp, long id, int level, header_t *header);
+cell* read_by_id(long id, int level, const char *format, ...);
 
-void* readbin(const char *format, ...);
+cell* readbin(const char *format, ...);
 void writebin(const void *dc, const char *format, ...);
 void writebindata(file_t *fp, const void *dc);
 #endif

@@ -639,7 +639,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    writebin(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
     }
-    if(parms->sim.ncpa_calib && !parms->dbg.ncpa_uncorr){
+    if(parms->sim.ncpa_calib && parms->dbg.ncpa_nouncorr && recon->dm_ncpa && aper->opdadd){
 	//Don't include uncorrectable WFE in science evaluation
 	dcellzero(aper->opdadd);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){

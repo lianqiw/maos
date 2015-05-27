@@ -295,7 +295,7 @@ static void filter_cl(SIM_T *simu){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
     if(recon->dither_m){
-	double anglei=(2*M_PI/recon->dither_npoint)*simu->isim;
+	double anglei=(2*M_PI/recon->dither_npoint)*(simu->isim+1);
 	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
     }
     //2015-03-10: move extraplation to right after integrator

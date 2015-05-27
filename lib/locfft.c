@@ -109,6 +109,9 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
     if(!*psf2s){
 	*psf2s=cellnew(nwvl, 1);
     }
+    if(opd->nx!=locfft->amp->nx){
+	error("The length of opd should be %ld, but is %ld\n", locfft->amp->nx, opd->nx);
+    }
     for(int iwvl=0; iwvl<nwvl; iwvl++)
 #if _OPENMP>=200805
 #pragma omp task

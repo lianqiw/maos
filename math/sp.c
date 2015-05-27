@@ -414,19 +414,24 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
 	X(add)(out0, 1, (X(mat)*)A, alpha);
     }
 }
-X(sp) *X(2sp)(X(mat)*A){
+X(sp) *X(2sp)(X(mat)*A, R thres){
     if(!A) return 0;
     assert(A->id==M_T);
     X(sp) *out=X(spnew)(A->nx, A->ny, A->nx*A->ny);
-    out->p[0]=0;
+    long count=0;
     for(long icol=0; icol<A->ny; icol++){
-	out->p[icol+1]=(icol+1)*A->nx;
+	out->p[icol]=count;
 	for(long irow=0; irow<A->nx; irow++){
-	    long ix=out->p[icol]+irow;
-	    out->i[ix]=irow;
+	    T val=IND(A, irow, icol);
+	    if(ABS(val)>thres){
+		out->i[count]=irow;
+		out->x[count]=val;
+		count++;
+	    }
 	}
     }
-    memcpy(out->x, A->p, sizeof(T)*A->nx*A->ny);
+    out->p[A->ny]=count;
+    X(spsetnzmax)(out, count);
     return out;
 }
 /** 

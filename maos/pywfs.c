@@ -166,6 +166,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     locfree(loc_fft);
   
     if(parms->dbg.pywfs_atm){
+	warning("dbg.pywfs_atm is on. This is for testing only.\n");
 	pywfs->atm=genatm_loc(pywfs->locfft->loc, parms->atm.r0, dsa);
 	writebin(pywfs->atm, "pywfs_loc_atm");
     }
@@ -206,10 +207,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(pywfs->si, "pywfs_si");
 	writebin(pywfs->gradoff, "pywfs_gradoff");
     }
-    if(0){//Test implementation
+    if(0){//Test implementation using zernikes
 	dmat *ints=0;
 	int nn=1;
-	double wve=1e-9*10;
+	double wve=1e-9*160;
 	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
 	cellarr *pupsave=cellarr_init(nn,opds->ny,"ints");
 	cellarr *grads=cellarr_init(nn,opds->ny,"grads");
@@ -232,8 +233,89 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	cellarr_close(grads);
 	cellfree(ints);
 	dfree(opds);
+	exit(0);
     }
-   
+
+    //Test NCPA calibration
+    int PYWFS_NCPA;
+    READ_ENV_INT(PYWFS_NCPA,0,1);
+    if(PYWFS_NCPA){
+	dmat *opdatm=dread("opdatm");
+	dmat *opdbias_full=dread("opdbias_full");
+	dmat *opdbias_astigx=dread("opdbias_astigx");
+	dmat *opdbias_polish=dread("opdbias_polish");
+	const double atmscale=1;
+#pragma omp parallel for
+	for(int i=0; i<100; i++){
+	    info2("%d ", i);
+	    dmat *ints=0;
+	    dmat *grad=0;
+	    dmat *opd=0;
+
+	    dadd(&opd, 0, opdatm, (i+1)*0.02);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "grad_atm_%d", i);
+
+	    dadd(&opd, 0, opdbias_full, (i+1)*0.02);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradbias_full_%d", i);
+
+	    dadd(&opd, 0, opdbias_astigx, (i+1)*0.02);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradbias_astigx_%d", i);
+
+	    dadd(&opd, 0, opdbias_polish, (i+1)*0.02);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradbias_polish_%d", i);
+
+	    dadd(&opd, 0, opdbias_full, (i+1)*0.02);
+	    dadd(&opd, 1, opdatm, atmscale);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradboth_full_%d", i);
+
+	    
+	    dadd(&opd, 0, opdbias_astigx, (i+1)*0.02);
+	    dadd(&opd, 1, opdatm, atmscale);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradboth_astigx_%d", i);
+
+	    dadd(&opd, 0, opdbias_polish, (i+1)*0.02);
+	    dadd(&opd, 1, opdatm, atmscale);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradboth_polish_%d", i);
+	    dfree(opd);
+	    dfree(ints);
+	    dfree(grad);
+
+	    
+	    dadd(&opd, 0, opdbias_full, (i+1)*0.02);
+	    dadd(&opd, 1, opdatm, (i+1)*0.02);
+	    dzero(ints);
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+	    pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	    writebin(grad, "gradall_%d", i);
+	    dfree(opd);
+	    dfree(ints);
+	    dfree(grad);
+
+	}
+
+	exit(0);	
+    }
   
  
     /*
@@ -263,7 +345,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     dmat *wvlwts=pywfs->wvlwts;
     //position of pyramid for modulation
     int pos_n=pywfs->modulpos;
-    double pos_r=pywfs->modulate*0.5;
+    double pos_r=pywfs->modulate;
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
@@ -338,14 +420,25 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     double *pgy=(*pgrad)->p+nsa;
     PDMAT(ints, pi);
     double gain=pywfs->gain;
-    double isum=dsum(ints);
-    double alpha0=gain*nsa/isum;
-    for(int isa=0; isa<nsa; isa++){
-	double alpha2=alpha0/pywfs->saa->p[isa];
-	pgx[isa]=(pi[1][isa]-pi[0][isa]
-		  +pi[3][isa]-pi[2][isa])*alpha2;
-	pgy[isa]=(pi[2][isa]+pi[3][isa]
-		  -pi[0][isa]-pi[1][isa])*alpha2;
+    if(0){
+	warning_once("Do not use mean i0\n");
+	for(int isa=0; isa<nsa; isa++){
+	    double alpha2=gain/(pi[0][isa]+pi[1][isa]+pi[2][isa]+pi[3][isa]);
+	    pgx[isa]=(pi[1][isa]-pi[0][isa]
+		      +pi[3][isa]-pi[2][isa])*alpha2;
+	    pgy[isa]=(pi[2][isa]+pi[3][isa]
+		      -pi[0][isa]-pi[1][isa])*alpha2;
+	}
+    }else{
+	double isum=dsum(ints);
+	double alpha0=gain*nsa/isum;
+	for(int isa=0; isa<nsa; isa++){
+	    double alpha2=alpha0/pywfs->saa->p[isa];
+	    pgx[isa]=(pi[1][isa]-pi[0][isa]
+		      +pi[3][isa]-pi[2][isa])*alpha2;
+	    pgy[isa]=(pi[2][isa]+pi[3][isa]
+		      -pi[0][isa]-pi[1][isa])*alpha2;
+	}
     }
     if(pywfs->gradoff){
 	dadd(pgrad, 1, pywfs->gradoff, -1);
@@ -424,33 +517,32 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
  */
 static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
     const loc_t *loc=pywfs->locfft->loc;
-    dmat *opd=dnew(loc->nloc, 1);
-    const double poke1=1./PYWFS_POKE;
-    dmat *ints=0;
     const int nsa=pywfs->si->p[0]->nx;
-    dmat *grad=dnew(nsa*2,1);
     dmat *grad0=dnew(nsa*2,1);
-    dmat *opdin=dnew(ploc->nloc, 1);
-    dsp *gg=dspnew(nsa*2, ploc->nloc, nsa*2*ploc->nloc);
     long count=0;
-    if(pywfs->atm){
-	dcp(&opd, pywfs->atm);
-    }
-    pywfs_fft(&ints, pywfs, opd);
-    pywfs_grad(&grad0, pywfs, ints);
-    for(int ia=0; ia<ploc->nloc; ia++){
-	info2("%d of %ld\n", ia, ploc->nloc);
+    {
+	dmat *opd=dnew(loc->nloc, 1);
+	dmat *ints=0;
 	if(pywfs->atm){
 	    dcp(&opd, pywfs->atm);
-	}else{
-	    dzero(opd);
 	}
-	dzero(ints);
-	dzero(grad);
+	pywfs_fft(&ints, pywfs, opd);
+	pywfs_grad(&grad0, pywfs, ints);
+	dfree(opd);
+	dfree(ints);
+    }
+    dmat *ggd=dnew(nsa*2, ploc->nloc);
+#pragma omp parallel for
+    for(int ia=0; ia<ploc->nloc; ia++){
+	info2("%d of %ld\n", ia, ploc->nloc);
+	dmat *opdin=dnew(ploc->nloc, 1);
+	dmat *opd=dnew(loc->nloc, 1);
+	dmat *ints=0;
+	dmat *grad=drefcols(ggd, ia, 1);
+	if(pywfs->atm){
+	    dcp(&opd, pywfs->atm);
+	}
 	opdin->p[ia]=PYWFS_POKE;
-	if(ia>0){
-	    opdin->p[ia-1]=0;//remove old value from opd
-	}
 	if(cubic){
 	    prop_nongrid_cubic((loc_t*)ploc, opdin->p, loc, NULL, opd->p, 1, 0, 0, 1, iac, 0, 0);
 	}else{
@@ -459,32 +551,15 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grad, pywfs, ints);
 	dadd(&grad, 1, grad0, -1);
-	gg->p[ia]=count;
-	const double thres=dmaxabs(grad)*EPS;
-	for(int ig=0; ig<grad->nx; ig++){
-	    if(fabs(grad->p[ig])>thres){
-		gg->x[count]=grad->p[ig]*poke1;
-		gg->i[count]=ig;
-		count++;
-	    }
-	}
-	/*
-	    writebin(opd, "opd_%d", ia);
-	    writebin(ints, "ints_%d", ia);
-	    writebin(grad, "grad_%d", ia);
-	    if(ia>50){
-		exit(0);
-	    }
-	*/
-	
+	dfree(opd);
+	dfree(opdin);
+	dfree(grad);
+	dfree(ints);
     }
-    gg->p[ploc->nloc]=count;
-    dspsetnzmax(gg, count);
-    cellfree(ints);
-    dfree(opd);
-    dfree(opdin);
-    dfree(grad);
-    dfree(grad0);
+    dfree(grad0);	
+    dscale(ggd, 1./PYWFS_POKE);
+    dsp *gg=d2sp(ggd, dmaxabs(ggd)*1e-6);
+    dfree(ggd);
     return gg;
 }
 /**
@@ -500,6 +575,9 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
     key=chash(pywfs->pyramid->p[0], key);
     key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
     key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
+    key=hashlittle(&pywfs->modulate, sizeof(double), key);
+    key=hashlittle(&pywfs->modulpos, sizeof(double), key);
+    key=dhash(pywfs->saa, key);
     if(pywfs->atm){
 	key=dhash(pywfs->atm, key);
     }
@@ -547,6 +625,9 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc,
     key=chash(pywfs->pyramid->p[0], key);
     key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
     key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
+    key=hashlittle(&pywfs->modulate, sizeof(double), key);
+    key=hashlittle(&pywfs->modulpos, sizeof(double), key);
+    key=dhash(pywfs->saa, key);
     if(pywfs->atm){
 	key=dhash(pywfs->atm, key);
     }

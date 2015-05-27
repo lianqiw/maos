@@ -2147,9 +2147,26 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 		dmat *grad=0;
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+		INDEX(recon->dither_rg, iwfs, iwfs)=dpinv(grad, INDEX(recon->saneai, iwfs, iwfs));
+		if(0){//test linearity
+		    dscale(opd, 1./4.);
+		    dmat *tmp=0;
+		    dmat *res=dnew(10,1);
+		    for(int i=0; i<10; i++){
+			dscale(opd, 2);
+			dzero(ints);
+			pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			dmm(&tmp, 0, INDEX(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
+			res->p[i]=tmp->p[0];
+		    }
+		    writebin(res, "linearity");
+		    dfree(tmp);
+		    dfree(res);
+		    exit(0);
+		}
 		dfree(ints);
 		dfree(opd);
-		INDEX(recon->dither_rg, iwfs, iwfs)=dpinv(grad, INDEX(recon->saneai, iwfs, iwfs));
 		dfree(grad);
 	    }
 	}

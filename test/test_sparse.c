@@ -137,7 +137,7 @@ static void test_spmul(){
     exit(0);
 }
 void test_addI(){
-    dsp *a=readbin("a.bin");
+    dsp *a=dspread("a.bin");
     dspaddI(a, 1);
     writebin(a, "a1.bin");
     exit(0);

@@ -1067,9 +1067,10 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.na_smooth);
     READ_INT(dbg.na_interp);
     READ_INT(dbg.ncpa_preload);
-    READ_INT(dbg.ncpa_uncorr);
+    READ_INT(dbg.ncpa_nouncorr);
     READ_INT(dbg.i0drift);
     READ_INT(dbg.pywfs_atm);
+    READ_DBL(dbg.gradoff_scale);
 }
 /**
    Read in GPU options

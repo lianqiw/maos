@@ -57,7 +57,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs
     const int nwvl=parms->powfs[ipowfs].nwvl;
     cuwfs[iwfs].pypsf->zero(stream);
     locfft_t *locfft=powfs[ipowfs].pywfs->locfft;
-    Real pos_r=powfs[ipowfs].pywfs->modulate*0.5; 
+    Real pos_r=powfs[ipowfs].pywfs->modulate; 
     double dx=locfft->loc->dx;
     long nembed=locfft->nembed->p[0];
     long nembed2=nembed/2;
