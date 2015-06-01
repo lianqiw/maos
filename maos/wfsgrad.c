@@ -467,8 +467,14 @@ static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
 	}
     }
     double a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-    //info("a2m=%g mas\n", a2m * 206265000);
     //writebin(signal, "signal"); exit(0);
+    /*{
+	static int count=0;
+	writebin(signal, "signal_%d", count);
+	info("a2m=%g, slope=%g, npoint=%ld, dtrat=%ld, detrend=%d\n", a2m, slope, npoint, dtrat, detrend);
+	count++;
+	if(count==2){ exit(0);}
+	}*/
     return a2m;
 }
 
@@ -565,10 +571,10 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 		dfree(tmp);
 	    }else{
 		dmat *tmp=0;
-		tmp=drefcols(pd->mr->p[0], simu->isim-ncol+1, ncol);
+		tmp=drefcols(pd->mr->p[0], simu->isim-ncol+1, ncol);//DM
 		pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
 		dfree(tmp);
-		tmp=drefcols(pd->mr->p[1], simu->isim-ncol+1, ncol);
+		tmp=drefcols(pd->mr->p[1], simu->isim-ncol+1, ncol);//Grad
 		pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
 		dfree(tmp);
 	    }
@@ -580,8 +586,8 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    }
 	    if(simu->resdither){
 		int ic=(npllacc-1)/(npll);
-		simu->resdither->p[iwfs]->p[ic*2+0]=pd->deltam;
-		simu->resdither->p[iwfs]->p[ic*2+1]=pd->a2m;
+		IND(simu->resdither->p[iwfs], 0, ic)=pd->deltam;
+		IND(simu->resdither->p[iwfs], 1, ic)=pd->a2me/pd->a2m;
 	    }
 	}
     }//PLL loop
@@ -842,12 +848,12 @@ static void dither_update(SIM_T *simu){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].dither) continue;
 	if((simu->isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
-	const int nacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
+	const int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int npll=parms->powfs[ipowfs].dither_pllrat;
 	
 	if(parms->sim.zoomshare && parms->powfs[ipowfs].llt //this is LLT
-	   && nacc>0 && nacc % npll==0){//There is drift mode computation
+	   && npllacc>0 && npllacc % npll==0){//There is drift mode computation
 	    double sum=0;
 	    for(int jwfs=0; jwfs<nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
@@ -860,7 +866,7 @@ static void dither_update(SIM_T *simu){
 	    }
 	}
 	int ngrad=parms->powfs[ipowfs].dither_ograt;
-	if(nacc>0 && nacc % ngrad==0){//This is matched filter or cog update
+	if(npllacc>0 && npllacc % ngrad==0){//This is matched filter or cog update
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    double scale1=(double)parms->powfs[ipowfs].dither_pllrat/(double)parms->powfs[ipowfs].dither_ograt;
 	    if(parms->powfs[ipowfs].phytypesim2==1 && parms->powfs[ipowfs].type==0){
@@ -947,7 +953,10 @@ static void dither_update(SIM_T *simu){
 		    double mgain=dsum(powfs[ipowfs].gain->p[jwfs])/ng;
 		    info2("Step %d: Update CoG gain for wfs %d. Averaged gain adjustment is %g\n", 
 			  simu->isim, iwfs, mgain);
-			     
+		    if(simu->resdither){
+			int ic=(npllacc-1)/(npll);
+			IND(simu->resdither->p[iwfs], 2, ic)=mgain;
+		    }			     
 		    //adjust WFS measurement dither signal by gain adjustment.
 		    pd->a2me*=(mgain/mgold);
 
@@ -982,10 +991,10 @@ static void dither_update(SIM_T *simu){
 		}
 #endif
 	    }
-	    if(parms->sim.epdm->p[0]<=0){
+	    /*if(parms->sim.epdm->p[0]<=0){
 		parms->sim.epdm->p[0]=0.5;
 		warning("set ephi to 0.5\n");
-	    }
+		}*/
 	    int UPDATE_TOMO=1;
 	    READ_ENV_INT(UPDATE_TOMO,0,1);
 	    if(UPDATE_TOMO && parms->recon.alg==0){//no need to update LSR.

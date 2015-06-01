@@ -346,6 +346,7 @@ typedef struct RECON_T{
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
+    int dither_dtrat;  /**<The dtrat of the powers that requests dithering*/
     dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
     dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/

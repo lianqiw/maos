@@ -450,11 +450,14 @@ static void readcfg_powfs(PARMS_T *parms){
 	    }else{//zernike modes. micron-->meter
 		powfsi->dither_amp/=1e6;
 	    }
-	    //Wait 10 cycles for PLL to stablize.
+	    //Convert all rate in unit of WFS frame rate
+	    //pllrat was already in WFS frame rate.
+	    powfsi->dither_ograt*=powfsi->dither_pllrat;
+	    
 	    powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
+	    //Convert all in simulation rate (sim.dt).
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_ogskip*=powfsi->dtrat;
-	    powfsi->dither_ograt*=powfsi->dither_pllrat;
 	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
 	    info2("powfs[%d].dither_ogskip=%d simulation frame\n", ipowfs, powfsi->dither_ogskip);
 	    info2("powfs[%d].dither_pllrat=%d WFS frame\n", ipowfs, powfsi->dither_pllrat);	 
@@ -2713,7 +2716,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     if(disable_save){
 	close_config(NULL);
     }else{
-	close_config("maos_recent.conf");
+	close_config("maos_%s_%ld.conf", myhostname(), (long)getpid());
     }
     /*
       Postprocess the parameters for integrity. The ordering of the following

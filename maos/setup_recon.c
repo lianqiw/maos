@@ -2101,12 +2101,14 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
     int dither_mode=0;
     double dither_amp=0;
     int dither_npoint=0;
+    int dither_dtrat=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dither>1){
-	    if(any){
+	if(parms->powfs[ipowfs].dither>1){//common path dithering
+	    if(any){//already found, check consistency
 		if(dither_mode!=-parms->powfs[ipowfs].dither ||
 		   fabs(dither_amp-parms->powfs[ipowfs].dither_amp)>dither_amp*1e-5
-		    || dither_npoint!=parms->powfs[ipowfs].dither_npoint){
+		    || dither_npoint!=parms->powfs[ipowfs].dither_npoint
+		    || dither_dtrat!=parms->powfs[ipowfs].dtrat){
 		    error("Multiple dither with different configuration is not supported\n");
 		}
 	    }
@@ -2114,12 +2116,14 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 	    dither_mode=-parms->powfs[ipowfs].dither;
 	    dither_amp=parms->powfs[ipowfs].dither_amp;
 	    dither_npoint=parms->powfs[ipowfs].dither_npoint;
+	    dither_dtrat=parms->powfs[ipowfs].dtrat;
 	    any=1;
 	}
     }
     if(any){
 	const int idm=parms->idmground;
 	recon->dither_npoint=dither_npoint;
+	recon->dither_dtrat=dither_dtrat;
 	recon->dither_m=dcellnew(parms->ndm, 1);
 	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
 	dscale(recon->dither_m->p[idm], dither_amp);

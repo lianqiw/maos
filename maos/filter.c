@@ -294,10 +294,6 @@ static void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
     }
-    if(recon->dither_m){
-	double anglei=(2*M_PI/recon->dither_npoint)*(simu->isim+1);
-	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
-    }
     //2015-03-10: move extraplation to right after integrator
     //Extrapolate to edge actuators
     if(simu->recon->actinterp && !parms->recon.modal && !parms->recon.psol){
@@ -317,6 +313,13 @@ static void filter_cl(SIM_T *simu){
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
+    if(recon->dither_m){
+	//Change phase in calc_dither_amp if phase of dithering is changed
+	//this is for step isim+1
+	double anglei=(2*M_PI/recon->dither_npoint)*(simu->isim+1)/recon->dither_dtrat;
+	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
+    }
+
     if(!parms->dbg.ncpa_preload && recon->dm_ncpa){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
@@ -370,8 +373,9 @@ static void filter_cl(SIM_T *simu){
 	}
     }
     if(simu->fsmint){
-	/*fsmerr is from gradients from this time step.*/
+	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 	dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
+	servo_filter(simu->fsmint, simu->fsmerr);
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
@@ -387,7 +391,6 @@ static void filter_cl(SIM_T *simu){
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }
 	}
-	servo_filter(simu->fsmint, simu->fsmerr);
     }
 }
 /**

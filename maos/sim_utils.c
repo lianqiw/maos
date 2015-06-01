@@ -1049,7 +1049,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].dither){
-		    nnx[iwfs]=2;
+		    nnx[iwfs]=3;
 		    nny[iwfs]=(nsim-parms->powfs[ipowfs].dither_pllskip)/(parms->powfs[ipowfs].dtrat*parms->powfs[ipowfs].dither_pllrat);
 		}else{
 		    nnx[iwfs]=0;
