@@ -221,6 +221,7 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
     int dither;     /**<Turn on/off dithering to update centroid gain or matched filter*/
+    double gradscale;/**<Scale CL gradients. For testing*/
     double dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
     double dither_gpll;/**<Gain of phase locked loop*/
     double dither_gog; /**<Gain for updating optical gain for cog*/

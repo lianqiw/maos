@@ -754,7 +754,8 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->gradlastol=dcellnew3(parms->nwfsr, 1, nnx, NULL);
     }
     simu->gradacc=cellnew(nwfs,1);/*wfsgrad internal */
-
+    simu->gradoff=cellnew(nwfs,1);
+    simu->gradscale=cellnew(nwfs,1);//leave empty first
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].saloc->nloc;
@@ -776,6 +777,10 @@ static void init_simu_wfs(SIM_T *simu){
 	}
 	if(parms->powfs[ipowfs].pistatout){
 	    simu->pistatout->p[iwfs]=cellnew(nsa,parms->powfs[ipowfs].nwvl);
+	}
+	if(powfs[ipowfs].gradncpa){
+	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+	    dadd(&simu->gradoff->p[iwfs], 1, powfs[ipowfs].gradncpa->p[wfsind], 1);
 	}
     }
     if(parms->sim.mffocus){
@@ -1049,7 +1054,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].dither){
-		    nnx[iwfs]=3;
+		    nnx[iwfs]=4;
 		    nny[iwfs]=(nsim-parms->powfs[ipowfs].dither_pllskip)/(parms->powfs[ipowfs].dtrat*parms->powfs[ipowfs].dither_pllrat);
 		}else{
 		    nnx[iwfs]=0;
@@ -1468,6 +1473,8 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);
     dcellfree(simu->gradlastol);
+    dcellfree(simu->gradoff);
+    dcellfree(simu->gradscale);
     dcellfree(simu->opdr);
     dcellfree(simu->gngsmvst);
     dcellfree(simu->cn2est);
@@ -1803,12 +1810,12 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirskysim,ipowfs);
 	writebin(powfs[ipowfs].amp, "%s/powfs%d_amp",dirskysim,ipowfs);
 	locwrite(powfs[ipowfs].saloc,"%s/powfs%d_saloc",dirskysim,ipowfs);
-	if(powfs[ipowfs].gradoff){
+	if(powfs[ipowfs].gradncpa){
 	    int nsa=parms->powfs[ipowfs].order;
 	    mymkdir("%s/gradoff/", dirskysim);
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		writebin(powfs[ipowfs].gradoff->p[jwfs], 
+		writebin(powfs[ipowfs].gradncpa->p[jwfs], 
 		       "%s/gradoff/gradoff_sa%d_x%.0f_y%.0f.bin", 
 		       dirskysim, nsa, 
 		       parms->wfs[iwfs].thetax*206265, 

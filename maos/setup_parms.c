@@ -328,6 +328,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,sigscale);
     READ_POWFS_RELAX(int,moao);
     READ_POWFS_RELAX(int,dither);
+    READ_POWFS_RELAX(dbl,gradscale);
     READ_POWFS_RELAX(dbl,dither_amp);
     READ_POWFS_RELAX(int,dither_npoint);
     READ_POWFS_RELAX(int,dither_pllskip);

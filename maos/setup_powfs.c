@@ -1463,8 +1463,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		dfree(mcc);
 	    }
 	    if(parms->powfs[ipowfs].ncpa_method==1){//gradient offset
-		if(!powfs[ipowfs].gradoff){
-		    powfs[ipowfs].gradoff=cellnew(parms->powfs[ipowfs].nwfs,1);
+		if(!powfs[ipowfs].gradncpa){
+		    powfs[ipowfs].gradncpa=cellnew(parms->powfs[ipowfs].nwfs,1);
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    if(powfs[ipowfs].opdbias->p[jwfs]){
@@ -1473,21 +1473,20 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 			    dmat *ints=0;
 			    pywfs_fft(&ints, powfs[ipowfs].pywfs, powfs[ipowfs].opdbias->p[jwfs]);
 			    //writebin(powfs[ipowfs].opdbias->p[jwfs], "opdbias\n");exit(0);
-			    pywfs_grad(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pywfs, ints);
+			    pywfs_grad(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pywfs, ints);
 			    dfree(ints);
 			}else if(parms->powfs[ipowfs].gtype_sim==1){
-			    pts_ztilt(&powfs[ipowfs].gradoff->p[jwfs], powfs[ipowfs].pts,
+			    pts_ztilt(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pts,
 				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
 				      realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
 			}else{
-			    dspmm(&powfs[ipowfs].gradoff->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
+			    dspmm(&powfs[ipowfs].gradncpa->p[jwfs],adpind(powfs[ipowfs].GS0, jwfs),
 				  powfs[ipowfs].opdbias->p[jwfs],"nn",1);
 			}
 		    }
 		}
-		if(powfs[ipowfs].gradoff){
-		    dcellcp(&powfs[ipowfs].gradncpa, powfs[ipowfs].gradoff);
-		    writebin(powfs[ipowfs].gradoff, "powfs%d_gradoff", ipowfs);
+		if(powfs[ipowfs].gradncpa){
+		    writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
 		}
 	    }
 	}
@@ -1607,9 +1606,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     etf_free(powfs[ipowfs].etfsim2, parms->powfs[ipowfs].nwvl);
     dcellfree(powfs[ipowfs].opdadd);
     dcellfree(powfs[ipowfs].opdbias);
-    dcellfree(powfs[ipowfs].gradoff);
     dcellfree(powfs[ipowfs].gradncpa);
-    cellfree(powfs[ipowfs].gain);
     dfree(powfs[ipowfs].dtheta);
 }
 /**

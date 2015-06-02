@@ -99,8 +99,7 @@ typedef struct POWFS_T{
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
     dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
-    dcell *gradoff;     /**<Offset to grads to subtract from measurement. */
-    dcell *gradncpa;    /**<Offset to grads due to ncpa. */
+    dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */
@@ -118,8 +117,6 @@ typedef struct POWFS_T{
     dspcell *GS0;        /**<gtilt (average gradient) on ampm*/
     dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
-    /*CoG gain adjustment*/
-    dcell *gain;        /*Gain adjustment for cog and pywfs.*/
     /*Matched filter */
     dcell *sprint;      /**<which subapertures to print sanea*/
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
@@ -485,6 +482,9 @@ typedef struct SIM_T{
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2est;     /**<Cn2 Estimation Result*/
+    dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
+    /*CoG gain adjustment*/
+    dcell *gradscale;  /*Gain adjustment for cog and pywfs.*/
 
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
