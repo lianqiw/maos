@@ -404,6 +404,7 @@ typedef struct FIT_CFG_T{
 typedef struct LSR_CFG_T{
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
+    double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/

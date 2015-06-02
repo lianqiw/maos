@@ -891,6 +891,7 @@ static void readcfg_lsr(PARMS_T *parms){
     READ_INT(lsr.actslave);
     READ_INT(lsr.bgs);
     READ_INT(lsr.maxit);
+    READ_DBL(lsr.actthres);
 }
 /**
    Read general reconstruction parameters
@@ -1991,8 +1992,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
     }
-    if(!parms->sim.closeloop || parms->recon.alg!=0){
-	parms->recon.psol=0;
+    if(!parms->sim.closeloop){
+	parms->recon.psol=0;//open loop does not need psol
+    }else if(parms->recon.psol==-1){//automatic.
+	if(parms->recon.alg==0){//MV perfers psol
+	    parms->recon.psol=1;
+	}else{//LSR perfers cl
+	    parms->recon.psol=0;
+	}
     }
     if(parms->recon.split){
 	if(parms->nlopowfs==0){
@@ -2024,17 +2031,12 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
 	    parms->powfs[ipowfs].psol=1;
-	}else{/*no focus tracking */
-	    if(parms->recon.alg==0){/*MV */
-		/*low order wfs in ahst mode does not need psol. */
-		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->recon.psol){
-		    parms->powfs[ipowfs].psol=0;
-		}else{
-		    parms->powfs[ipowfs].psol=1;
-		}
-	    }else{
-		parms->recon.psol=0;
+	}else if(parms->recon.psol){//PSOL reconstruction
+	    /*low order wfs in ahst mode does not need psol. */
+	    if((parms->recon.split==1 && parms->powfs[ipowfs].skip)){
 		parms->powfs[ipowfs].psol=0;
+	    }else{
+		parms->powfs[ipowfs].psol=1;
 	    }
 	}
     }

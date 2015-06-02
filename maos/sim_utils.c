@@ -909,7 +909,7 @@ static void init_simu_wfs(SIM_T *simu){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->save.grad->p[iwfs]){
 		    save->gradcl[iwfs]=cellarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
-		    if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
+		    if(parms->powfs[ipowfs].psol){
 			save->gradol[iwfs]=cellarr_init(nstep-parms->powfs[ipowfs].dtrat,1, 
 							"wfs%d_gradol_%d.bin", iwfs, seed);
 		    }
@@ -1194,7 +1194,7 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->save.dm){
 	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
 	save->dmint=cellarr_init(nrstep, 1,"dmint_%d.bin", seed);
-	if(parms->recon.alg==0){
+	if(parms->recon.psol){
 	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){

@@ -392,18 +392,11 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
     }
 }
 void gpu_dmreal2gpu(mapcell *dmreal, DM_CFG_T *dmcfg){
-    for(int im=0; im<NGPU; im++)
-#if _OPENMP >= 200805
-#pragma omp task
-#endif
-    {
+    for(int im=0; im<NGPU; im++){
 	gpu_set(im);
 	cudata->ndm=dmreal->nx;
 	gpu_dm2gpu(&cudata->dmreal, dmreal->p, dmreal->nx, dmcfg);
     }
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 }
 void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++){

@@ -35,7 +35,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     map_t *map=0;
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-    powfs[ipowfs].loc=map2loc(map);
+    pywfs->loc=map2loc(map);
+    powfs[ipowfs].loc=pywfs->loc;//do not free here.
     mapfree(map);
     pywfs->amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
 		     parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
@@ -346,6 +347,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     //position of pyramid for modulation
     int pos_n=pywfs->modulpos;
     double pos_r=pywfs->modulate;
+    if(pos_r<=0) pos_n=1;
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
@@ -509,6 +511,17 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     //dfree(grad0);
     return out;
 }
+static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
+    key=lochash(pywfs->loc, key);
+    key=dhash(pywfs->amp, key);
+    key=dhash(pywfs->saa, key);
+    key=dhash(pywfs->wvlwts, key);
+    key=chash(pywfs->pyramid->p[0], key);
+    if(pywfs->atm){
+	key=dhash(pywfs->atm, key);
+    }
+    return key;
+}
 /**
    There is no need to simulate turbulence to fake optical gain. Any optical
    gain can be used as long as it "correct", i.e., a radian of tilt produces one
@@ -519,7 +532,6 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
     const loc_t *loc=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
-    long count=0;
     {
 	dmat *opd=dnew(loc->nloc, 1);
 	dmat *ints=0;
@@ -532,9 +544,10 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 	dfree(ints);
     }
     dmat *ggd=dnew(nsa*2, ploc->nloc);
-#pragma omp parallel for
+    int count=0;
+    TIC;tic;
+#pragma omp parallel for shared(count)
     for(int ia=0; ia<ploc->nloc; ia++){
-	info2("%d of %ld\n", ia, ploc->nloc);
 	dmat *opdin=dnew(ploc->nloc, 1);
 	dmat *opd=dnew(loc->nloc, 1);
 	dmat *ints=0;
@@ -555,7 +568,13 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 	dfree(opdin);
 	dfree(grad);
 	dfree(ints);
+	atomicadd(&count, 1);
+	if(count%10==0){
+	    double ts=myclockd()-tk;
+	    info2("%d of %ld. %.2f of %.2f seconds\n", count, ploc->nloc, ts, ts/count*ploc->nloc);
+	}
     }
+    info2("\n");
     dfree(grad0);	
     dscale(ggd, 1./PYWFS_POKE);
     dsp *gg=d2sp(ggd, dmaxabs(ggd)*1e-6);
@@ -567,26 +586,16 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
  */
 dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
     uint32_t key=0;
-    key=hashlittle(ploc->locx, ploc->nloc*sizeof(double), key);
-    key=hashlittle(ploc->locy, ploc->nloc*sizeof(double), key);
-    key=dhash(pywfs->wvlwts, key);
-    key=dhash(pywfs->amp, key);
-    key=chash(pywfs->nominal, key);
-    key=chash(pywfs->pyramid->p[0], key);
-    key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
-    key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
-    key=hashlittle(&pywfs->modulate, sizeof(double), key);
-    key=hashlittle(&pywfs->modulpos, sizeof(double), key);
-    key=dhash(pywfs->saa, key);
-    if(pywfs->atm){
-	key=dhash(pywfs->atm, key);
-    }
+    key=lochash(ploc, key);
+    key=pywfs_hash(pywfs, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/pywfs/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/G_%u_%ld_%g.bin", HOME, 
-	     key, pywfs->si->p[0]->nx, PYWFS_POKE);
+    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/G_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
+	     cubic, iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    info2("Using G in %s\n", fn);
     dsp *gg=0;
   retry:
     if(exist(fnlock) || !zfexist(fn)){
@@ -612,31 +621,20 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 /*
   Temporary wrapping
 */
-dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc,
-		  int iwfs, int idm){
+dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm){
     const int ipowfs=parms->wfs[iwfs].powfs;
     PYWFS_T *pywfs=powfs[ipowfs].pywfs;
     uint32_t key=0;
-    key=hashlittle(aloc->locx, aloc->nloc*sizeof(double), key);
-    key=hashlittle(aloc->locy, aloc->nloc*sizeof(double), key);
-    key=dhash(pywfs->wvlwts, key);
-    key=dhash(pywfs->amp, key);
-    key=chash(pywfs->nominal, key);
-    key=chash(pywfs->pyramid->p[0], key);
-    key=hashlittle(pywfs->si->p[0]->i, pywfs->si->p[0]->nzmax*sizeof(spint), key);
-    key=hashlittle(pywfs->si->p[0]->x, pywfs->si->p[0]->nzmax*sizeof(double), key);
-    key=hashlittle(&pywfs->modulate, sizeof(double), key);
-    key=hashlittle(&pywfs->modulpos, sizeof(double), key);
-    key=dhash(pywfs->saa, key);
-    if(pywfs->atm){
-	key=dhash(pywfs->atm, key);
-    }
+    key=lochash(aloc, key);
+    key=pywfs_hash(pywfs, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/pywfs/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/G_%u_%ld_%g.bin", HOME, 
-	     key, pywfs->si->p[0]->nx, PYWFS_POKE);
+    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/GA_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
+	     parms->dm[idm].cubic, parms->dm[idm].iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
+    info2("Using GA in %s\n", fn);
     dsp *gg=0;
   retry:
     if(exist(fnlock) || !zfexist(fn)){
@@ -648,8 +646,7 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc,
 		gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
 	    }else
 #endif
-		gg=pywfs_mkg_do(pywfs, aloc, 
-				parms->dm[idm].cubic, parms->dm[idm].iac);
+		gg=pywfs_mkg_do(pywfs, aloc, parms->dm[idm].cubic, parms->dm[idm].iac);
 	    writebin(gg, "%s", fn);
 	    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/", HOME);
 	    remove_file_older(fn, 30*24*3600);
@@ -668,6 +665,7 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc,
 void pywfs_free(PYWFS_T *pywfs){
     if(!pywfs) return;
     dfree(pywfs->amp);
+    pywfs->loc=0;
     locfft_free(pywfs->locfft);
     cellfree(pywfs->pyramid);
     cfree(pywfs->nominal);

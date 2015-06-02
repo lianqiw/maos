@@ -135,7 +135,11 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
     pts->nsa=nsa;
     return pts;
 }
-
+uint32_t lochash(const loc_t *loc, uint32_t key){
+    key=hashlittle(loc->locx, loc->nloc*sizeof(double), key);
+    key=hashlittle(loc->locy, loc->nloc*sizeof(double), key);
+    return key;
+}
 /**
    Create an vector to embed OPD into square array for FFT purpose. oversize is
 2 for fft.  */

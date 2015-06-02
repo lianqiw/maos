@@ -24,7 +24,7 @@
  */
 typedef struct PYWFS_T{
     double modulate;   /**<Amount of modulation in radian*/
-    double modulpos;   /**<Number of positions per modulation cycle*/
+    int modulpos;      /**<Number of positions per modulation cycle*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/

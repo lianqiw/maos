@@ -65,6 +65,9 @@ void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs
     long ncomp2=ncomp/2;
     //Dithering pyramid.
     int pos_n=powfs[ipowfs].pywfs->modulpos;
+    if(pos_r<=0){
+	pos_n=1;
+    }
     cucmat *otf=cuwfs[iwfs].pyotf;
     //warning("zero phiout\n");phiout->zero(stream);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -166,7 +169,6 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
     int count=0;
     TIC;tic;
     for(int iloc=0; iloc<aloc->nloc; iloc++){
-	if(iloc%10==0) toc2("idm=%d, iloc=%d", idm, iloc);tic;
 	dmreal->p[idm]->p[iloc]=poke;
 	if(iloc>0){
 	    dmreal->p[idm]->p[iloc-1]=0;
@@ -199,6 +201,10 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
 	    }
 	}
 	//cuwrite(gradc, "gpu_mkg_gc"); exit(0);
+	if(iloc%10==0){
+	    double ts=myclockd()-tk;
+	    info2("%d of %ld. %.2f of %.2f seconds\n", iloc, aloc->nloc, ts, ts/(iloc+1)*aloc->nloc);
+	}
     }
     gg->p[aloc->nloc]=count;
     dspsetnzmax(gg, count);

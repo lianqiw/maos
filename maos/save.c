@@ -69,9 +69,9 @@ void save_gradol(SIM_T *simu){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(!parms->powfs[ipowfs].psol || !simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
-	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts, simu->gradlastol->p[iwfs]->p,NULL,
+	    drawopd("Gpolx",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p,NULL,
 		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)", "x %d",  iwfs);
-	    drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts, simu->gradlastol->p[iwfs]->p+nsa, NULL,
+	    drawopd("Gpoly",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p+nsa, NULL,
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
@@ -162,9 +162,6 @@ void save_recon(SIM_T *simu){
 	if(parms->save.opdr){
 	    cellarr_dcell(simu->save->opdr, simu->reconisim, simu->opdr);
 	}
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmfit, simu->reconisim, simu->dmfit);
-	}
 	if(parms->save.opdx || parms->plot.opdx){
 	    dcell *opdx=simu->opdx;
 	    if(!opdx){
@@ -187,6 +184,9 @@ void save_recon(SIM_T *simu){
 	}
     }
     if(parms->save.dm && (!parms->sim.closeloop || simu->isim>0)){
+	if(simu->dmfit){
+	    cellarr_dcell(simu->save->dmfit, simu->reconisim, simu->dmfit);
+	}
 	if(simu->dmerr){
 	    cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	}

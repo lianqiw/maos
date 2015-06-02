@@ -514,7 +514,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		writebin(recon->GA,"%s/GA_stuck",dirsetup);
 	    }
 	}
-	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, 0.1);
+	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
 	if(recon->actinterp){
 	    dspcell *GA2=dspcellmulspcell(recon->GA, recon->actinterp, 1);
 	    dspcellfree(recon->GA);

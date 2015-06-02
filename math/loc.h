@@ -36,6 +36,7 @@ INLINE long loc_map_get(map_t *map, long ix, long iy){
 	return 0;
     }
 }
+uint32_t lochash(const loc_t *loc, uint32_t key);
 void loc_embed(map_t *dest, const loc_t *loc, const double *in);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);

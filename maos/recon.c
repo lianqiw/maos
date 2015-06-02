@@ -209,27 +209,24 @@ void reconstruct(SIM_T *simu){
     if(simu->gradlastcl){
 	if(parms->sim.closeloop){
 	    calc_gradol(simu);
-	}else if(!simu->gradlastol){
-	    simu->gradlastol=dcellref(simu->gradlastcl);
+	    save_gradol(simu);//must be here since gradol is only calculated in this file. 
 	}
-	save_gradol(simu);//must be here since gradol is only calculated in this file. 
-    
-	if(parms->cn2.pair){
+    	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, parms->cn2.psol?simu->gradlastol:simu->gradlastcl);
 	}//if cn2est 
     }
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
+	dcell *dmout, *gradin;
+	if(parms->recon.psol){
+	    dmout=simu->dmfit;
+	    gradin=simu->gradlastol;
+	}else{
+	    dmout=simu->dmerr;
+	    gradin=simu->gradlastcl;
+	}
+	if(!dmout) error("dmout cannot be empty\n");
 	if(parms->recon.mvm){
-	    dcell *dmout, *gradin;
-	    if(parms->recon.psol){
-		dmout=simu->dmfit;
-		gradin=simu->gradlastol;
-	    }else{
-		dmout=simu->dmerr;
-		gradin=simu->gradlastcl;
-	    }
-	    if(!dmout) error("dmout cannot be empty\n");
 	    if(parms->sim.mvmport){
 		mvm_client_recon(parms, dmout, gradin);
 	    }else
@@ -239,13 +236,8 @@ void reconstruct(SIM_T *simu){
 		}else
 #endif		
 		{
-		    //This assumes skipped WFS are in the end. \todo: fix it if not.
-		    dmulvec(simu->dmerr->m->p, recon->MVM, 
-			    ((parms->recon.alg==0 && parms->recon.psol)?simu->gradlastol:simu->gradlastcl)->m->p,1);
+		    dmulvec(dmout->m->p, recon->MVM, gradin->m->p, 1);
 		}
-	    if(parms->plot.run){
-		dcellcp(&simu->dmfit, simu->dmerr);
-	    }
 	}else{
 	    switch(parms->recon.alg){
 	    case 0:
@@ -258,7 +250,7 @@ void reconstruct(SIM_T *simu){
 			error("To implement. MVM is done in as in MV case\n");
 		    }else
 #endif
-		    muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
+			muv_solve(&dmout,&(recon->LL), &(recon->LR), gradin);
 		}
 		break;
 	    default:
