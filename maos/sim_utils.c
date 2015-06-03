@@ -1563,6 +1563,8 @@ void free_simu(SIM_T *simu){
 	}
 	free(simu->dither);
     }
+    cellfree(simu->resdither);
+    cellfree(simu->zoompos);
     /*Close all files */
     
     cellarr_close_n(save->wfspsfout, nwfs);

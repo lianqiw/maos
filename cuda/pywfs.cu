@@ -110,7 +110,6 @@ void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs
 	    CUFFT(cuwfs[iwfs].plan_py, otf->p, CUFFT_INVERSE);
 	    curaddcabs2(&cuwfs[iwfs].pypsf, 1, otf, alpha, stream);
 	}
-	curwrite(cuwfs[iwfs].pypsf, "psf");
 	embed_do<<<DIM(ncomp*ncomp, 256),0,stream>>>
 	    (otf->p, cuwfs[iwfs].pypsf->p, ncomp*ncomp);
 	CUFFT(cuwfs[iwfs].plan_py, otf->p, CUFFT_FORWARD);
