@@ -302,7 +302,7 @@ int main(){
 	    csp *tmp=cspdup(sel);
 	    cspmuldiag(tmp,g->p,1);
 	    csp *tmp2=cspmulsp(tmp,tmp,"tn");
-	    cspadd(&Mmid, tmp2);
+	    cspadd(&Mmid, 1, tmp2, 1);
 	    cspfree(tmp);
 	    cspfree(tmp2);
 	}
@@ -328,7 +328,7 @@ int main(){
 	    csp *tmp2=cspmulsp(prop1,tmp,"tn");
 	    toc("Mul2");
 	    cspwrite(tmp2,"Mhat_%d.bin",iwfs);
-	    cspadd(&Mhat,tmp2);
+	    cspadd(&Mhat,1, tmp2, 1);
 	    cspfree(tmp);
 	    cspfree(tmp2);
 	    toc("done");
@@ -337,7 +337,7 @@ int main(){
 	}
 	cspwrite(Mhat,"Mhat_prop.bin");
 
-	cspadd(&Mhat,Mpsd);
+	cspadd(&Mhat, 1, Mpsd, 1);
 	cspfree(Mpsd);
 	cspwrite(Mhat,"Mhat.bin");/*Verified with manual computation in MATLAB so far. */
 	cspdroptol(Mhat,1e-15);

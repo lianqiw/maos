@@ -51,6 +51,35 @@ cell *cell_cast(const void *A){
     assert(((cell*)A)->id==MCC_ANY);
     return (cell*)A;
 }
+
+/**
+   Obtain the dimensions.
+*/
+void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys){
+    const cell *A=cell_cast(A_);
+    *nxs=calloc(A->nx, sizeof(long));
+    *nys=calloc(A->ny, sizeof(long));
+    *nx=0;
+    *ny=0;
+    for(long ix=0; ix<A->nx; ix++){
+	for(long iy=0; iy<A->ny; iy++){
+	    if(!isempty(IND(A,ix,iy))){
+		*nx+=IND(A,ix,iy)->nx;
+		(*nxs)[ix]=IND(A,ix,iy)->nx;
+		break;
+	    }
+	}
+    }
+    for(long iy=0; iy<A->ny; iy++){
+	for(long ix=0; ix<A->nx; ix++){
+	    if(!isempty(IND(A,ix,iy))){
+		*ny+=IND(A,ix,iy)->ny;
+		(*nys)[iy]=IND(A,ix,iy)->ny;
+		break;
+	    }
+	}
+    }
+}
 /**
    Resize a generic cell array.
 */

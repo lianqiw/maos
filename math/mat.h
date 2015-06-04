@@ -57,7 +57,7 @@
     X(cell) *X(cellreduce)(const X(cell) *A, int dim);			\
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim);	\
     X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim); \
-    X(mat) *X(cell2m)(const X(cell) *A);				\
+    X(mat) *X(cell2m)(const void *A);					\
     X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim);	\
     void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);	\
 

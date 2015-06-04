@@ -516,7 +516,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
 	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
 	if(recon->actinterp){
-	    dspcell *GA2=dspcellmulspcell(recon->GA, recon->actinterp, 1);
+	    dspcell *GA2=0;
+	    dcellmm(&GA2, recon->GA, recon->actinterp, "nn", 1);
 	    dspcellfree(recon->GA);
 	    recon->GA=GA2;
 	}
@@ -1158,7 +1159,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*single point piston constraint. no need tikholnov.*/
 	    info2("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
-		dspadd(&RLM[ips][ips], recon->ZZT->p[ips+ips*npsr]);
+		dspadd(&RLM[ips][ips], 1, recon->ZZT->p[ips+ips*npsr], 1);
 	    }
 	    dspcellfree(recon->ZZT);
 	}
@@ -1179,7 +1180,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
-		dspadd(&RLM[ips][ips], tmp);
+		dspadd(&RLM[ips][ips], 1, tmp, 1);
 		dspfree(tmp);
 	    }
 	    break;
@@ -1459,7 +1460,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 		error("L2 is empty!!\n");
 	    }
 	    dsp *LLdiff=dspadd2(LL,1,LLold,-1);/*adjustment to RLM */
-	    dspadd(&RLM[ips][ips], LLdiff);
+	    dspadd(&RLM[ips][ips], 1, LLdiff, 1);
 	    dspfree(LLdiff);
 	    dspfree(LL);
 	    dspfree(LLold);
@@ -1731,7 +1732,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     cellfree(recon->MVFM);
 
     dcellfree(recon->GXL);
-    dspcellfull(&recon->GXL, recon->GXlo, 1);
+    dcelladd(&recon->GXL, 1, recon->GXlo, 1);
     //NEA of low order WFS.
     dcell *neailo=cellnew(parms->nwfsr, parms->nwfsr);
     dcell *nealo=cellnew(parms->nwfsr, parms->nwfsr);

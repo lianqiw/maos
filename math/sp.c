@@ -465,41 +465,7 @@ void X(sptfull)(X(mat) **out0, const X(sp) *A, const T alpha){
 	X(free)(tmp);
     }
 }
-/**
- * Convert sparse cell to dense matrix cell: out0=out0+full(A)*alpha*/
-void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const T alpha){
-    if(!A) return;
-    X(cell) *out=*out0;
-    if(!out){
-	out=*out0=cellnew(A->nx, A->ny);
-    }else{
-	assert(out->nx==A->nx && out->ny==A->ny);
-    }
-    PSPCELL(A,pA);
-    PCELL(out,pout);
-    for(int iy=0; iy<A->ny; iy++){
-	for(int ix=0; ix<A->nx; ix++){
-	    X(spfull)(&pout[iy][ix], pA[iy][ix], alpha);
-	}
-    }
-}
-/**
- * Convert transpose of sparse cell to dense matrix cell: out0=out0+full(A')*alpha*void X(sptcellfull)(X(cell) **out0, const X(spcell) *A, const T alpha){
-    if(!A) return;
-    X(cell) *out=*out0;
-    if(!out){
-	out=*out0=cellnew(A->ny, A->nx);
-    }else{
-	assert(out->nx==A->ny && out->ny==A->nx);
-    }
-    PSPCELL(A,pA);
-    PCELL(out, pout);
-    for(int iy=0; iy<A->ny; iy++){
-	for(int ix=0; ix<A->nx; ix++){
-	    X(spfull)(&pout[ix][iy], pA[iy][ix], alpha);
-	}
-    } 
-}
+
 /**
  * Added two sparse matrices: return A*a+B*b*/
 X(sp) *X(spadd2)(const X(sp) *A,T a, const X(sp)*B,T b){
@@ -514,15 +480,18 @@ X(sp) *X(spadd2)(const X(sp) *A,T a, const X(sp)*B,T b){
 }
 /**
  * Add a sparse matrix to another: A0=A0+B*/
-void X(spadd)(X(sp) **A0, const X(sp) *B){
+void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta){
     /*add B to A. */
     if(B){
-	if(!*A0) 
+	if(!*A0){
 	    *A0=X(spdup)(B);
-	else{
-	    X(sp)*res=X(spadd2)(*A0, 1, B, 1);
+	    if(beta!=1){
+		X(spscale)(*A0, beta);	
+	    }
+	}else{
+	    X(sp)*res=X(spadd2)(*A0, alpha, B, beta);
 	    X(spmove)(*A0, res);
-	    X(spfree)(res);
+	    free(res);
 	}
     }
 }
@@ -865,7 +834,7 @@ void X(spcellsort)(X(spcell) *A){
 */
 void X(spsym)(X(sp) **A){
     X(sp) *B=X(sptrans)(*A);
-    X(spadd)(A,B);
+    X(spadd)(A,(T)1,B,(T)1);
     X(spscale)(*A,0.5);
     X(spfree)(B);
     X(spdroptol)(*A,EPS);

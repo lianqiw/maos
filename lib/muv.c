@@ -182,7 +182,7 @@ void muv_direct_prep(MUV_T *A, double svd){
     muv_direct_free(A);
     if(use_svd){/*Do SVD */
 	dfree(A->MI);
-	A->MI=dcell2m((const dcell*)A->M);
+	A->MI=dcell2m(A->M);
 	info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
 	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, svd);

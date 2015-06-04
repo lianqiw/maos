@@ -297,33 +297,6 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     if(parms->fit.actinterp || recon->actfloat){
 	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, 0.1);
     }
-    /*}else{
-	if(recon->actstuck){
-	    warning2("Apply stuck actuators to HA\n");
-	    act_stuck(recon->aloc, recon->HA, recon->actstuck);
-	    if(parms->save.setup){
-		writebin(recon->HA,"%s/HA_stuck",dirsetup);
-	    }
-	}
-	if(recon->actfloat){
-	    warning2("Apply float actuators to HA\n");
-	    act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
-	    recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
-	    if(parms->save.setup){
-		writebin(recon->HA,"%s/HA_float",dirsetup);
-	    }
-	}
-	if(parms->fit.actinterp){
-	    warning2("Slaving actuator extrapolation\n");
-	    dspcell *interp2=act_extrap(recon->aloc, recon->actcpl, 0.5);
-	    if(recon->actinterp){
-		dspcell *interp1=recon->actinterp;
-		recon->actinterp=dspcellmulspcell(interp1, interp2, 1);
-		dspcellfree(interp1);
-	    }
-	    dspcellfree(interp2);
-	}
-	}*/
     if(recon->actinterp){
 	/*
 	  DM fitting output a is extrapolated to edge actuators by
@@ -332,7 +305,9 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	  account during DM fitting.
 	 */
 	warning2("Replacing HA by HA*actinterp\n");
-	dspcell *HA2=dspcellmulspcell(recon->HA, recon->actinterp, 1);
+	
+	dspcell *HA2=0;
+	dcellmm(&HA2, recon->HA, recon->actinterp, "nn", 1);
 	dspcellfree(recon->HA);
 	recon->HA=HA2;
 	if(parms->save.setup){

@@ -39,7 +39,7 @@
 #define AOS_DMAT(A) d##A
 #define AOS_SMAT(A) s##A
 #define AOS_ZMAT(A) z##A
-
+#define isempty(A) (!(A) || !(A)->nx || !(A)->ny)
 //#ifdef USE_SINGLE
 //Single
 AOS_MAT_DEF(AOS_SMAT,float)

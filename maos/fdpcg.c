@@ -440,7 +440,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	csp *tmp=cspdup(sel);
 	cspmuldiag(tmp,g->p,1);
 	csp *tmp2=cspmulsp(tmp,tmp,"tn");
-	cspadd(&Mmid, tmp2);
+	cspadd(&Mmid, 1, tmp2, 1);
 	cspfree(tmp);
 	cspfree(tmp2);
     }
@@ -487,7 +487,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	csp *tmp2=cspmulsp(propx,tmp,"tn");
 	cspfree(tmp);
 	cspfree(propx);
-	cspadd(&Mhat,tmp2);
+	cspadd(&Mhat,1, tmp2, 1);
 	cspfree(tmp2);
     }
     cspfree(Mmid);

@@ -634,43 +634,13 @@ X(cell) *X(celltrans)(const X(cell) *A){
 }
 
 /**
-   Obtain the dimensions.
-*/
-static void X(celldim)(const X(cell) *A, long *nx, long *ny,
-		       long **nxs, long **nys){
-    X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
-    *nxs=calloc(A->nx, sizeof(long));
-    *nys=calloc(A->ny, sizeof(long));
-    *nx=0;
-    *ny=0;
-    for(long ix=0; ix<A->nx; ix++){
-	for(long iy=0; iy<A->ny; iy++){
-	    if(!isempty(Ap[iy][ix])){
-		*nx+=Ap[iy][ix]->nx;
-		(*nxs)[ix]=Ap[iy][ix]->nx;
-		break;
-	    }
-	}
-    }
-    for(long iy=0; iy<A->ny; iy++){
-	for(long ix=0; ix<A->nx; ix++){
-	    if(!isempty(Ap[iy][ix])){
-		*ny+=Ap[iy][ix]->ny;
-		(*nys)[iy]=Ap[iy][ix]->ny;
-		break;
-	    }
-	}
-    }
-}
-
-/**
    reduce nx*ny cell matrix to 1*ny if dim=1 and nx*1 if dim=2 by merging the cells.
 */
 X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     if(!A) return NULL;
     X(cell)* out=NULL;
     long nx, ny, *nxs, *nys;
-    X(celldim)(A, &nx, &ny, &nxs, &nys);
+    celldim(A, &nx, &ny, &nxs, &nys);
     if(nx==0 || ny==0) return NULL;
     PCELL(A,pA);
     if(dim==1){
@@ -876,38 +846,6 @@ void X(celldropempty)(X(cell) **A0, int dim){
  
 }
 
-/**
-   Convert a block matrix to a matrix.
-*/
-X(mat) *X(cell2m)(const X(cell) *A){
-    if(A->nx*A->ny==1){
-	return X(dup)(A->p[0]);
-    }
-    PCELL(A, Ap);
-    //X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
-    long nx,ny,*nxs,*nys;
-    X(celldim)(A,&nx,&ny,&nxs,&nys);
-    X(mat) *out=X(new)(nx,ny);
-    long jcol=0;
-    for(long iy=0; iy<A->ny; iy++){
-	for(long icol=0; icol<nys[iy]; icol++){
-	    long kr=0;
-	    for(long ix=0; ix<A->nx; ix++){
-		if(!isempty(Ap[iy][ix])){
-		    assert_mat(Ap[iy][ix]);
-		    memcpy(out->p+((icol+jcol)*nx+kr),
-			   Ap[iy][ix]->p+icol*nxs[ix],
-			   nxs[ix]*sizeof(T));
-		}
-		kr+=nxs[ix];
-	    }
-	}
-	jcol+=nys[iy];
-    }
-    free(nxs);
-    free(nys);
-    return out;
-}
 
 /**
    convert a vector to cell using dimensions specified in dims. Reference the vector
@@ -939,7 +877,7 @@ X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
 void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
     long nx,ny,*nxs,*nys;
     if(*B) ref=*B;/*use B as reference. */
-    X(celldim)(ref, &nx, &ny, &nxs, &nys);
+    celldim(ref, &nx, &ny, &nxs, &nys);
     if(!A){
 	if(nx!=0 || ny!=0){
 	    error("Shape doesn't agree. A is 0x0. Reference is %ldx%ld\n", 

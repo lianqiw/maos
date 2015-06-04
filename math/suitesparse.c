@@ -16,10 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*Taken from suitesparse package from UFL. */
-
-/*my defines. */
-
+/*Taken from suitesparse package from UFL. The operations performs ok with
+ * non-ascending ordering in each column and may produce results such way. Sort
+ * the columns in ascending order before exporting to matlab.*/
 
 
 #include <limits.h>

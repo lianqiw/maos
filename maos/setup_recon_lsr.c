@@ -46,7 +46,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    dcell *tmp2=0;
 	    free_GAlsr=1;
 	    warning("Convert GAlsr to full\n");
-	    dspcellfull(&tmp2, (dspcell*)GAlsr, 1);
+	    dcelladd(&tmp2, 1, (dspcell*)GAlsr, 1);
 	    GAlsr=(cell*)tmp2;
 	}
     }

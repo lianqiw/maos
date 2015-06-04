@@ -119,42 +119,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
     }
 }
 
-/**
-   y=y+alpha*x*A;
-   implemented by transposing x,y index in sptmulmat implementation
-   TESTED OK.
-*/
-/*
-void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
-    if(A&&x){
-	X(init)(yout, x->nx, A->n);
-	X(mat) *y=*yout;
-	assert(x->nx==y->nx && x->ny==A->m);
-	if(x->nx==1){
-	    X(spmulvec)(y->p, A, x->p, 't', alpha);
-	}else{
-	    PMAT(y,Y); PMAT(x,X);
-	    if(ABS(alpha-(T)1.)<1.e-100){
-		for(long icol=0; icol<A->n; icol++){
-		    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(long jcol=0; jcol<y->nx; jcol++){
-			    Y[icol][jcol]+=A->x[ix]*X[A->i[ix]][jcol];
-			}
-		    }
-		}
-	    }else{
-		for(long icol=0; icol<A->n; icol++){
-		    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-			for(long jcol=0; jcol<y->nx; jcol++){
-			    Y[icol][jcol]+=alpha*A->x[ix]*X[A->i[ix]][jcol];
-			}
-		    }
-		}
-	    }
-	}
-    }
-}
-*/
+
 /**
    Unified sparse matrix multiply with dense matrix to handle sparse*dense or dense*sparse with flexibility.
    op(y)=op(y)+op(A)*op(x)*alpha
@@ -329,51 +294,6 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2
     trans2[0]=reverse_trans(trans[1]);
     X(spmm_do)(yout, A, x, trans2, 1, alpha);
 }
-/**
-   Multiply a cell with a sparse cell.
-
-   \f$C0+=A*B*alpha\f$. where C0, and A are dense.
-*/
-/*
-void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha){
-    if(!A || !B) return;
-    int ax, az;
-    int nx,ny,nz;
-    int bz, by;
-    const char trans[2]="nn";
-    if(trans[0]=='n'||trans[0]=='N'){
-	nx=A->nx; 
-	ax=1; az=A->nx;
-	nz=A->ny;
-    }else{ 
-	nx=A->ny;
-	az=1; ax=A->nx;
-	nz=A->nx;
-    }
-    if(trans[1]=='n'||trans[1]=='N'){
-	ny=B->ny; 
-	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
-    }else{
-	ny=B->nx;
-	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
-    }
-    if(!*C0){
-	*C0=cellnew(nx,ny);
-    }
-    X(cell) *C=*C0;
-    for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    for(int iz=0; iz<nz; iz++){
-		if(A->p[ix*ax+iz*az] && B->p[iz*bz+iy*by]){
-		    X(mulsp)(&C->p[ix+iy*nx],A->p[ix*ax+iz*az], 
-			     B->p[iz*bz+iy*by],alpha);
-		}
-	    }
-	}
-    }
-    }*/
 
 /**
  * Multiply two sparse arrays and add to the third: C0=C0+op(A)*op(B)*scale*/
@@ -403,7 +323,7 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2]
     if(!*C0) 
 	*C0=res;
     else{
-	X(spadd)(C0, res);
+	X(spadd)(C0,1,res,1);
 	X(spfree)(res);
     }
     X(spfree)(At);
@@ -416,35 +336,6 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
     X(ss_dropzeros)(res);
     return res;
 }
-
-/**
- * Multiply two sparse cell*/
-X(spcell) *X(spcellmulspcell)(const X(spcell) *A, 
-			      const X(spcell) *B, 
-			      const T scale){
-    /*return C=A*B; */
-    if(!A || !B) return NULL;
-    if(A->ny!=B->nx) error("mismatch\n");
-    X(spcell) *C=cellnew(A->nx, B->ny);
-    PSPCELL(A,Ap);
-    PSPCELL(B,Bp);
-    PSPCELL(C,Cp);
-    /*
-      X(sp) *(*Ap)[A->nx] = (X(sp) *(*)[A->nx]) A->p;
-      X(sp) *(*Bp)[B->nx] = (X(sp) *(*)[B->nx]) B->p;
-      X(sp) *(*Cp)[C->nx] = (X(sp) *(*)[C->nx]) C->p;
-    */
-    for(int iy=0; iy<B->ny; iy++){
-	for(int ix=0; ix<A->nx; ix++){
-	    Cp[iy][ix]=NULL;
-	    for(int iz=0; iz<A->ny; iz++){
-		X(spmulsp2)(&Cp[iy][ix],Ap[iz][ix],Bp[iy][iz],"nn",scale);
-	    }
-	}
-    }
-    return C;
-}
-
 
 /**
    Compute A*B and add to C0.
@@ -466,83 +357,62 @@ X(spcell) *X(spcellmulspcell)(const X(spcell) *A,
 */
 void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], const R alpha){
     if(!A_ || !B_) return;
-    const cell *A=cell_cast(A_);
-    const cell *B=cell_cast(B_);
+    const cell *A=(const cell*)(A_);
+    const cell *B=(const cell*)(B_);
     cell **C0=(cell**)C0_;
-    mm_t D=parse_trans(A, B, trans);
-    cellinit(C0, D.nx, D.ny);
-    cell *C=*C0;
-    for(int iy=0; iy<D.ny; iy++){
-	for(int ix=0; ix<D.nx; ix++){
+    if(A->id==MCC_ANY && B->id==MCC_ANY){
+	//multiplication of cells.
+	mm_t D=parse_trans(A, B, trans);
+	cellinit(C0, D.nx, D.ny);
+	cell *C=*C0;
+	for(int iy=0; iy<D.ny; iy++){
+	    for(int ix=0; ix<D.nx; ix++){
 #if _OPENMP >= 200805
 #pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1)
 #endif
-	    for(int iz=0; iz<D.nz; iz++){
-		if(A->p[ix*D.ax+iz*D.az] && B->p[iz*D.bz+iy*D.by]){
-		    switch(B->p[iz*D.bz+iy*D.by]->id){
-		    case M_T: //dense B
-			{
-			    X(mat)*Bi_d=X(mat_cast)(B->p[iz*D.bz+iy*D.by]);
-			    X(mat)** Ci_d=(X(mat)**)(C->p+ix+iy*D.nx);
-			    switch(A->p[ix*D.ax+iz*D.az]->id){
-			    case M_T://dense A * dense B
-				{
-				    X(mat)*Ai_d=X(mat_cast)(A->p[ix*D.ax+iz*D.az]);
-				    X(mm)(Ci_d,1.,Ai_d, Bi_d,trans,alpha);
-				}
-				break;
-			    case M_SPT://sparse A * dense B
-				{
-				    X(sp)*Ai_sp=X(sp_cast)(A->p[ix*D.ax+iz*D.az]);
-				    X(spmm)(Ci_d, Ai_sp, Bi_d,trans,alpha);
-				}
-				break;
-			    }
-			}
-			break;
-		    case M_SPT: //sparse B
-			{
-			    X(sp)*Bi_sp=X(sp_cast)(B->p[iz*D.bz+iy*D.by]);
-			    switch(A->p[ix*D.ax+iz*D.az]->id){
-			    case M_T://dense A * sparse B. dense C
-				{
-				    X(mat)**Ci_d=(X(mat)**)(C->p+ix+iy*D.nx);
-				    X(mat)* Ai_d=X(mat_cast)(A->p[ix*D.ax+iz*D.az]);
-				    X(mulsp)(Ci_d, Ai_d, Bi_sp,trans,alpha);
-				}
-				break;
-			    case M_SPT://sparse A * sparse B. sparse or dense C.
-				{
-				    X(sp)*Ai_sp=X(sp_cast)(A->p[ix*D.ax+iz*D.az]);
-				    if(!C->p[ix+iy*D.nx] || C->p[ix+iy*D.nx]->id==M_SPT){//C is sparse
-					X(sp)** Ci_sp=(X(sp)**)(C->p+ix+iy*D.nx);
-					X(spmulsp2)(Ci_sp,Ai_sp, Bi_sp,trans,alpha);
-				    }else if(C->p[ix+iy*D.nx]->id==M_T){//C is dense
-					X(mat)** Ci_d=(X(mat)**)(C->p+ix+iy*D.nx);
-					X(mat)* Afull=0; X(spfull)(&Afull, Ai_sp, 1);
-					X(mat)* Bfull=0; X(spfull)(&Bfull, Bi_sp, 1);
-					X(mm)(Ci_d,1., Afull, Bfull, trans, alpha);
-					X(free)(Afull);
-					X(free)(Bfull);
-				    }else{
-					error("Invalid C id=%ld\n", C->p[ix+iy*D.nx]->id);
-				    }
-				}
-				break;
-			    }
-			}
-			break;
-		    default:
-			error("Invalid B id=%ld\n", B->p[ix*D.ax+iz*D.az]->id);
-		    }
+		for(int iz=0; iz<D.nz; iz++){
+		    X(cellmm)(C->p+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 		}
-	    }
-	}
-    }
 #if _OPENMP >= 200805
 #pragma omp taskwait
 #endif
+	    }
+	}
+	
+    }else{
+	//multiplication between dense or sparse 
+	if(B->id==M_T){//dense B
+	    if(A->id==M_T){ //dense A
+		X(mm)((X(mat)**)C0, 1, (X(mat)*)A, (X(mat)*)B, trans, alpha);
+	    }else if(A->id==M_SPT){//sparse A
+		X(spmm)((X(mat)**)C0, (X(sp)*)A, (X(mat)*)B, trans, alpha);
+	    }else{
+		error("Invalid A type, id=%ld.\n", A->id);
+	    }
+	}else if(B->id==M_SPT){//sparse B
+	    if(A->id==M_T){//dense A
+		X(mulsp)((X(mat)**)C0, (X(mat)*)A, (X(sp)*)B, trans, alpha);
+	    }else if(A->id==M_SPT){//sparse A
+		if(!*C0 || (*C0)->id==M_SPT){//result is sparse
+		    X(spmulsp2)((X(sp)**)C0, (X(sp)*)A, (X(sp)*)B, trans, alpha);
+		}else if((*C0)->id==M_T){//result is dense
+		    X(mat)*Afull=0; X(spfull)(&Afull, (X(sp)*)A, 1);
+		    X(mat)*Bfull=0; X(spfull)(&Bfull, (X(sp)*)B, 1);
+		    X(mm)((X(mat)**)C0, 1, Afull, Bfull, trans, alpha);
+		    X(free)(Afull);
+		    X(free)(Bfull);
+		}else{
+		    error("Invalid C type, id=%ld. \n", (*C0)->id);
+		}
+	    }else{
+		error("Invalid A type, id=%ld.\n", A->id);
+	    }
+	}else{
+	    error("Invalid B type, id=%ld.\n", B->id);
+	}
+    }
 }
+
 void *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
     void *res=0;
     X(cellmm)(&res, A_, B_, trans, 1);
@@ -566,7 +436,7 @@ void X(celladdI)(void *A_, T alpha){
     }
 }
 /**
-   Takes parameters of X(mat), X(sp), X(cell), X(spcell)
+   Takes parameters of X(mat), X(sp), X(cell), X(spcell): A=A*ac+B*bc;
  */
 void X(celladd)(void *A_, T ac, const void *B_, T bc){
     if(!A_ || !B_) return;
@@ -580,22 +450,22 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
 	}
     }else{//non cell
 	if(!*pA || (*pA)->id==M_T){//A is dense
-	    if(B->id==M_T){
+	    if(B->id==M_T){//Add dense to dense
 		X(add)((X(mat)**)pA, ac, (X(mat)*)B, bc);
-	    }else{
+	    }else{//add sparse to dense
 		if(ac!=1){
 		    X(scale)((X(mat*))*pA, ac);
 		}
 		X(spfull)((X(mat)**)(pA), (X(sp)*)B, bc);
 	    }
 	}else if((*pA)->id==M_SPT){
-	    if(B->id==M_SPT){
+	    if(B->id==M_SPT){//add sparse to sparse
 		X(sp)* tmp=X(spadd2)((X(sp)*)(*pA), ac,
 				     (X(sp)*)B, bc);
-		X(spmove)((X(sp)*)(*pA), (X(sp)*)B);
-		X(spfree)(tmp);
+		X(spmove)((X(sp)*)(*pA), (X(sp)*)tmp);
+		free(tmp);
 	    }else{
-		error("Adding dense to sparse matrix makes a dense\n");
+		error("Adding dense to sparse matrix makes no dense\n");
 	    }
 	}else{
 	    error("Invalid operand\n");
@@ -603,3 +473,39 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
     }
 }
 
+/**
+   Convert X(cell) or X(spcell) to X(mat)
+*/
+X(mat)* X(cell2m)(const void *A_){
+    if(!A_) return 0;
+    cell *A=cell_cast(A_);
+    long nx,ny,*nxs,*nys;
+    celldim(A,&nx,&ny,&nxs,&nys);
+    if(!nx || !ny) return 0;
+    X(mat) *out=X(new)(nx,ny);
+    long jcol=0;
+    for(long iy=0; iy<A->ny; iy++){
+	for(long icol=0; icol<nys[iy]; icol++){
+	    long kr=0;
+	    for(long ix=0; ix<A->nx; ix++){
+		if(!isempty(IND(A,ix,iy))){
+		    T *pout=out->p+((icol+jcol)*nx+kr);
+		    if(IND(A,ix,iy)->id==M_T){
+			memcpy(pout, ((X(mat*))IND(A,ix,iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
+		    }else if(IND(A, ix, iy)->id==M_SPT){
+			//convert sparse col to full
+			X(sp*)Asp=(X(sp*))IND(A,ix,iy);
+			for(long j=Asp->p[icol]; j<Asp->p[icol+1]; j++){
+			    pout[Asp->i[j]]=Asp->x[j];
+			}			
+		    }
+		}
+		kr+=nxs[ix];
+	    }
+	}
+	jcol+=nys[iy];
+    }
+    free(nxs);
+    free(nys);
+    return out;
+}

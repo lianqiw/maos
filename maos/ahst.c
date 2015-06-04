@@ -163,14 +163,10 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacey=thetay*hc;
 	    /*from DM to ploc (plocs) science beam */
 	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
-	    Ha->p[idm]=dsptrans(Hat->p[idm]);
 	    dspmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
-	dspcell *HatHai=dspcellmulspcell(Hat,Ha,1);
-	dcelladd(&Wa, 1, HatHai, 1);
+	dcellmm(&Wa, Hat, Hat, "nt", 1);
 	dspcellfree(Hat);
-	dspcellfree(Ha);
-	dspcellfree(HatHai);
     }
     if(use_ploc){
 	free(amp);
