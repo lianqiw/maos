@@ -89,7 +89,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
    Setup the deformable mirrors grid aloc. This is used for DM fitting.
 */
 static void
-setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
+setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     const int ndm=parms->ndm;
     if(ndm==0) return;
     if(parms->fit.cachedm){
@@ -218,18 +218,31 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     if(parms->recon.modal){
-	if(parms->recon.modr<=0){
-	    error("Please specify recon.modr\n");
-	}
 	recon->amod=cellnew(ndm, 1);
 	recon->anmod=lnew(ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
+	    int nmod=parms->recon.nmod;
+	    const long nloc=recon->aloc->p[idm]->nloc;
 	    switch(parms->recon.modal){
-	    case 1:
-		recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0, 0, parms->recon.modr, 0);
+	    case -2: {//dummy modal control, emulating zonal mode with identity modal matrix
+		if(nmod && nmod!=nloc){
+		    warning("recon.mod should be 0 or %ld when recon.modal=2 \n",nloc);
+		    recon->amod->p[idm]=dnew(nloc, nloc);
+		    double val=sqrt(nloc);
+		    daddI(recon->amod->p[idm], val);
+		    dadds(recon->amod->p[idm], -val/nloc);
+		}
+	    }
 		break;
-	    case 2:
-		recon->amod->p[idm]=KL_kolmogorov(recon->aloc->p[idm], 0, parms->recon.modr); 
+	    case -1://zernike
+		{
+		    if(!nmod) nmod=nloc;
+		    int rmax=floor((sqrt(1+8*nmod)-3)*0.5);
+		    recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0, 0, rmax, 0);
+		}
+		break;
+	    case 1://Karhunen loeve
+		recon->amod->p[idm]=KL_vonkarman(recon->aloc->p[idm], nmod, parms->atmr.L0);
 		break;
 	    default:
 		error("Invalid recon.modal");
@@ -294,8 +307,10 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     if(parms->save.setup){
 	writebin(recon->HA,"%s/HA_float",dirsetup);
     }
-    if(parms->fit.actinterp || recon->actfloat){
-	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, 0.1);
+    if(parms->fit.actinterp){
+	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->fit.actthres);
+    }else if(recon->actfloat){
+	warning("There are float actuators, but fit.actinterp is off\n");
     }
     if(recon->actinterp){
 	/*
@@ -450,7 +465,7 @@ RECON_T *setup_recon_init(const PARMS_T *parms, const APER_T *aper){
     /*for recon->aloc dimension*/
     recon->ndm=parms->ndm;
     /*setup DM actuator grid */
-    setup_recon_aloc(recon,parms);
+    setup_recon_aloc(recon,parms,aper);
     /*Grid for DM fitting*/
     setup_recon_floc(recon,parms, aper);
     if(parms->recon.alg==0 || parms->sim.ncpa_calib){

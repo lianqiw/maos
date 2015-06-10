@@ -118,7 +118,7 @@ R X(sumsq)(const X(mat)*A){
    compute the norm(2) of A
 */
 R X(norm)(const X(mat)*A){
-    return sqrt(X(sumsq)(A));
+    return sqrt(X(sumsq)(A)/A->ny);
 }
 
 /**

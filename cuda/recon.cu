@@ -60,6 +60,8 @@ namespace cuda_recon{
 	){
 	if(parms->recon.alg==0 && parms->fit.square){
 	    dmfit=curcellnew(parms->ndm, 1, recon->anx->p, recon->any->p);
+	}else if(parms->recon.modal){
+	    dmfit=curcellnew(parms->ndm, 1, recon->anmod->p, (long*)NULL);
 	}else{
 	    dmfit=curcellnew(parms->ndm, 1, recon->anloc->p, (long*)NULL);
 	}

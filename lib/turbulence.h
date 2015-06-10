@@ -52,8 +52,8 @@ dmat *spatial_psd(long nx, long ny, double dx, double strength,
 INLINE double r02strength(double r0){
     return 0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
 }
-INLINE dmat* turbpsd(long nx, long ny, double dx, double r0, double l0, double slope, double power){
-    return spatial_psd(nx, ny, dx, r02strength(r0), 1./l0, INFINITY, slope, power);
+INLINE dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power){
+    return spatial_psd(nx, ny, dx, r02strength(r0), 1./L0, INFINITY, slope, power);
 }
 
 double calc_aniso(double r0, int nht, double *ht, double *wt);

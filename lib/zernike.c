@@ -18,31 +18,29 @@
 
 #include "zernike.h"
 #include "accphi.h"
+#include "turbulence.h"
 /**
    Generating Zernike Rnm for radial order ir, azimuthal or im.  used by loc_zernike.
    */
-static dmat *genRnm(const dmat *locr, int ir, int im){
+dmat *zernike_Rnm(const dmat *locr, int ir, int im){
     if(ir<0 || im < 0|| im>ir || (ir-im)%2!=0)
 	error("Invalid ir, im (%d, %d)\n", ir, im);
-    
-    const long nloc=locr->nx;
-    dmat *Rnm=dnew(nloc,1);
-    for(int s=0; s<=(ir-im)/2; s++){
-	double coeff=pow(-1,s)*factorial((ir+im)/2-s+1, ir-s)/factorial(1,s)/factorial(1,(ir-im)/2-s);
-	int power=ir-2*s;
-	if(power==0){
-	    for(long iloc=0; iloc<nloc; iloc++){
-		Rnm->p[iloc]+=coeff;
-	    }
-	}else if(power==1){
-	    for(long iloc=0; iloc<nloc; iloc++){
-		Rnm->p[iloc]+=coeff*locr->p[iloc];
-	    }
-	}else{
-	    for(long iloc=0; iloc<nloc; iloc++){
-		Rnm->p[iloc]+=coeff*pow(locr->p[iloc],power);
-	    }
+    const long nloc=locr->nx*locr->ny;
+    dmat *Rnm=dnew(locr->nx, locr->ny);
+    const int ns=(ir-im)/2+1;
+    double coeff[ns];
+    int power[ns];
+    for(int s=0; s<ns; s++){
+	coeff[s]=factoriall((ir+im)/2-s+1, ir-s)/factoriall(1,s)/factoriall(1,(ir-im)/2-s)*pow(-1,s);
+	power[s]=ir-2*s;
+    }
+    for(long iloc=0; iloc<nloc; iloc++){
+	long double tmp=0;
+	long double r=locr->p[iloc];
+	for(int s=0; s<ns; s++){
+	    tmp+=coeff[s]*powl(r,power[s]);
 	}
+	Rnm->p[iloc]=(double)tmp;
     }
     return Rnm;
 }
@@ -54,8 +52,8 @@ static dmat *genRnm(const dmat *locr, int ir, int im){
    nr=2 is quadratic modes
    if nopiston is set, skip piston mode.
    if flag is >0, only radial mode is used.
-   
-   if flag is is negative, only generate mode -flag. rmin and rmax is irrelevant
+   if flag is  0, all modes between rmin and rmax.
+   if flag is <0, only generate mode -flag. rmin and rmax is irrelevant
 */
 dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     if(flag<0){
@@ -72,15 +70,15 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     int nmod=0;
     if(flag>0){//radial only
 	nmod=rmax-rmin;
-    }else{
+    }else{//a specific mode
 	nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     }
     double D2=loc_diam(loc);
     if(D<=0){
 	D=D2;
     }else if(fabs(D-D2)>D*0.5){
-	writebin(loc, "loc_wrongD");
 	warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
+	writebin(loc, "loc_wrongD");
     }
  
     dmat *restrict opd=dnew(nloc,nmod);
@@ -89,15 +87,26 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     const double *restrict locx=loc->locx;
     const double *restrict locy=loc->locy;
     const double R1=2./D;
+    long nover=0; double rover=1;
     for(long iloc=0; iloc<nloc; iloc++){
 	locr->p[iloc]=sqrt(pow(locx[iloc],2)+pow(locy[iloc],2))*R1;
+	if(locr->p[iloc]>1){
+	    nover++;
+	    if(locr->p[iloc]>rover){
+		rover=locr->p[iloc];
+	    }
+	}
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
+    }
+    if(nover){
+	warning("%ld/%ld points outside unit circle with maximum radius %g\n",
+		nover, nloc, rover);
     }
     int cmod=0;
     for(int ir=rmin; ir<=rmax; ir++){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
-	    dmat *Rnm=genRnm(locr, ir, im);
+	    dmat *Rnm=zernike_Rnm(locr, ir, im);
 	    if(im==0){/*Radial*/
 		double coeff=sqrt(ir+1.);
 		double *restrict pmod=opd->p+nloc*cmod;
@@ -170,6 +179,9 @@ static lmat *zernike_index(int nr){
    Verified against values in J.Y.Wang 1978, table II(a,b).
 
    Notice that (D/r0)^(5/3) has been factored out.
+
+   2015-06-05: This is not longer being used. It is inaccurate for annular
+   pupil. Analytic calculation using the power spectrum is used instead.
 */
 dmat *zernike_cov_kolmogorov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
@@ -221,105 +233,132 @@ dmat *zernike_cov_kolmogorov(int nr){
 }
 
 /**
+   Compute covariance matrix of zernike modes in von Karman turbulence
+*/
+dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
+		    const dmat *modz, /**<Zernike modes*/
+		    double L0 /**<Outer scale*/){
+    dmat *CC=0;
+    dmm(&CC, 1, modz, modz, "tn", 1);//the covariance of the modes
+    long nembed=0;
+    lmat *embed=loc_create_embed(&nembed, loc, 2, 0);
+    int nmod=modz->ny;
+    ccell *spect=ccellnew(nmod, 1);
+#pragma omp parallel for
+    for(long ic=0; ic<nmod; ic++){
+	spect->p[ic]=cnew(nembed, nembed);
+	for(long ix=0; ix<loc->nloc; ix++){
+	    spect->p[ic]->p[embed->p[ix]]=IND(modz, ix, ic);
+	}
+	cfftshift(spect->p[ic]);
+	cfft2(spect->p[ic], -1);
+    }
+    dmat *turbspec=turbpsd(nembed, nembed, loc->dx, 0.2, L0, -11./3., 1);
+    dmat *DD=dnew(nmod, nmod);
+#pragma omp parallel for
+    for(long ic=0; ic<nmod; ic++){
+	for(long id=0; id<=ic; id++){
+	    double tmp=0;
+	    for(long ip=0; ip<nembed*nembed; ip++){
+		tmp+=spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip])*turbspec->p[ip];
+	    }
+	    IND(DD, ic, id)=IND(DD,id,ic)=tmp;//*scale;
+	}
+    }
+    dmat *CCi=dpinv(CC, 0);
+    dmat *tmp=0;
+    dmm(&tmp, 0, CCi, DD, "nn", 1);
+    dmm(&DD, 0, tmp, CCi, "nt", 1);
+    dfree(tmp);
+    lfree(embed);
+    dfree(CCi);
+    dfree(turbspec);
+    ccellfree(spect);
+    return DD;
+}
+
+/**
    Diagnolize the covariance matrix and transform the mode.
 */
-dmat *diag_mod_cov(const dmat *mz, /**<Modes in zernike space*/
-		   const dmat *cov, /**<Covariance of zernike modes in kolmogorov (or any other)*/
-		   int nmod       /**<keep nmod leading modes*/
+dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
+		     const dmat *cov  /**<Covariance of modes*/
     ){
     dmat *U=0, *Vt=0, *S=0;
     dsvd(&U, &S, &Vt, cov);
-    //writebin(U,"KL_U");
-    //writebin(S,"KL_S");
     dmat *kl=0;
     dmat *U2=0;
-    if(nmod && nmod<U->ny){
-	U2=dsub(U,0,0,0,nmod);
-    }else{
-	U2=dref(U);
-    }
-    dmm(&kl, 0, mz, U2, "nn", 1);
-    dfree(U2);
+    dmm(&kl, 0, mod, U, "nn", 1);
     dfree(U);
     dfree(Vt);
     dfree(S);
     return kl;
 }
+
 /**
-   Return cashed KL modes up to maxr radial order
+   Create Karhunen-Loeve modes for which each mode is statistically independent
+   in von Karman spectrum.
+   
+   The original method is to compute covariance of zernike modes in von Karman
+   spectrum and diagnolize the covariance matrix. But this methods suffers for
+   higher order systems because high order zernike modes are hard to generate on
+   account of limited resolution of double precision floating point numbers. To
+   make matters worse, to generate m KL modes, around 2*m Zernike modes are
+   needed because each KL mode is a linear combination of all Zernike modes with
+   same azimuthal (m) but higher radial (r) order. A work around of the
+   precisiosn issue is to limit the absolute value of the zernike modes to
+   within 100 to avoid excessive norm due to round off errors. 
+
+   The new method is to use zonal modes (identity matrix). The advantage is that
+   the zonal modes spans the whole range of possible modes and are
+   straightforward to generate.
+
+   In theory, the KL modes computes should be independent on the starting mode,
+   as long as the modes span the whole vector space for the coordinate.
  */
-cell *KL_kolmogorov_cached(int maxr){
-    int nmod=(maxr+1)*(maxr+2)/2;
+dmat *KL_vonkarman_do(const loc_t *loc, double L0){
+    dmat *modz=dnew(loc->nloc, loc->nloc);
+    double val=sqrt(loc->nloc); //this ensures rms wfe is 1.
+    daddI(modz, val);
+    dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
+    dmat *cov=cov_vonkarman(loc, modz, L0);
+    dmat *kl=cov_diagnolize(modz, cov);
+    dfree(modz);
+    dfree(cov);
+    return kl;
+}
+dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
+    if(!loc) return 0;
+    uint32_t key=lochash(loc, 0);
+    mymkdir("%s/.aos/cache", HOME);
     char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "%s/.aos/KL_kolmogorov.bin", HOME);
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/KL_vonkarman_%u_%g_%ld.bin", HOME, key, L0, loc->nloc);
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
-    cell *kl=0;
+    dmat *kl=0;
   redo:
     if(!exist(fnlock) && zfexist(fn)){
-	kl=(cell*)readbin(fn);
-    }
-    if(!kl || kl->p[1]->ny<nmod){
-	cellfree(kl);
+	kl=dread(fn);
+    }else{
+	info("trying to lock %s\n", fnlock);
 	int fd=lock_file(fnlock, 0, 0);
-	if(fd>=0){//succeed
-	    kl=cellnew(2,1);
-	    int KL_OVER=10;
-	    READ_ENV_INT(KL_OVER, 0, 100);
-	    int maxr2=maxr+10;
-	    int nmod2=(maxr2+1)*(maxr2+2)/2;
-	    int nx=ceil(sqrt(nmod2*KL_OVER/M_PI))*2+1;
-	    info("KL_OVER=%d, nx=%d\n", KL_OVER,nx);
-	    kl->p[0]=(cell*)mkcirloc(2, 2./(nx-1));
-	    //writebin(kl->p[0], "KL_loc");
-	    dmat *cov=zernike_cov_kolmogorov(maxr2);
-	    dmat *modz=zernike((loc_t*)kl->p[0], 2., 0, maxr2, 0);
-	    //writebin(modz, "KL_modz");
-	    kl->p[1]=(cell*)diag_mod_cov(modz, cov, nmod);
-	    //writebin(kl->p[1], "KL_kl");
-	    dfree(modz);
-	    dfree(cov);
-	    writebin(kl, fn);
+	if(fd>=0){//start preparing
+	    info2("locked\n");
+	    kl=KL_vonkarman_do(loc, L0);
+	    writebin(kl, "%s", fn);
 	    close(fd); remove(fnlock);
 	}else{
-	    info("waiting to lock %s:", fnlock);
+	    info("waiting to lock\n", fnlock);
 	    fd=lock_file(fnlock, 1, 0);
 	    info2("locked\n");
 	    close (fd); remove(fnlock);
 	    goto redo;
 	}
     }
-    return kl;
-}
-/**
-   Create Karhunen-Loeve modes for which each mode is statistically independent
-   in Kolmogorov spectrum. It first compute the covariance of zernike modes in
-   kolmogorov spectrum, and then diagnolize the covariance of these modes using
-   SVD and use the Unitery matrix to transform the zernike modes. Notice the
-   ordering of the master zernike modes may be reordering in the SVD process.
-
-   Since each KL mode is linear combination of zenike modes with same m, but
-   equal or HIGHER radial order, we have to compute more zernike modes to have
-   better accuracy. nr2 controls this overshoot.
-
-   If the required zernike order is close to or more than the sampling of the
-   grid, the process will not work or give poor results. Consequently, the
-   result has to be computed in a finer grid and interpolated back to the
-   coarser grid.
-
-   We cache KL modes for a certain maximum order and interpolate to return results.
- */
-dmat *KL_kolmogorov(const loc_t *loc, double D, int maxr){
-    cell *klcache=KL_kolmogorov_cached(maxr);
-    int nmod=(maxr+1)*(maxr+2)/2;
-    dmat *modkl=dnew(loc->nloc, nmod);
-    loc_t *locin=(loc_t*)klcache->p[0];
-    dmat *opdin=(dmat*)klcache->p[1];
-    for(int imod=0; imod<nmod; imod++){
-	prop_nongrid((loc_t*)locin, opdin->p+locin->nloc*imod,
-		     loc, NULL, modkl->p+loc->nloc*imod, 
-		     1, 0, 0, 2./D, 0, 0);
+    if(nmod>0 && nmod<loc->nloc){
+	//Take sub matrix
+	dmat *klorig=kl;
+	kl=dsub(klorig, 0, 0, 0, nmod);
+	dfree(klorig);
     }
-    cellfree(klcache);
-    return modkl;
+    return kl;
 }

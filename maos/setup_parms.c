@@ -892,6 +892,7 @@ static void readcfg_lsr(PARMS_T *parms){
     READ_INT(lsr.bgs);
     READ_INT(lsr.maxit);
     READ_DBL(lsr.actthres);
+    READ_INT(lsr.actinterp);
 }
 /**
    Read general reconstruction parameters
@@ -902,7 +903,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.split);
     READ_INT(recon.mvm);
     READ_INT(recon.modal);
-    READ_INT(recon.modr);
+    READ_INT(recon.nmod);
     READ_INT(recon.psol);
     parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
     readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
@@ -1256,6 +1257,14 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->recon.alg==0 && parms->recon.modal){
 	warning("Modal control is not applicable to MV reconstructor.\n");
 	parms->recon.modal=0;
+    }
+    if(parms->lsr.actinterp==-1){
+	if(parms->recon.alg==1 && parms->recon.modal){
+	    //no need in modal lsr control
+	    parms->lsr.actinterp=0;
+	}else{
+	    parms->lsr.actinterp=1;
+	}
     }
     if(parms->recon.alg==1 && parms->lsr.alg==2){
 	parms->recon.mvm=1;

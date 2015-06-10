@@ -514,7 +514,11 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		writebin(recon->GA,"%s/GA_stuck",dirsetup);
 	    }
 	}
-	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+	if(parms->lsr.actinterp){
+	    recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->lsr.actthres);
+	}else if(recon->actfloat){
+	    warning("There are float actuators, but fit.actinterp is off\n");
+	}
 	if(recon->actinterp){
 	    dspcell *GA2=0;
 	    dcellmm(&GA2, recon->GA, recon->actinterp, "nn", 1);
@@ -529,13 +533,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		writebin(recon->actcpl, "actcpl");
 	    }
 	}
-	/*if(recon->actfloat){
-	    warning2("Apply float actuators to GA\n");
-	    act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
-	    if(parms->save.setup){
-	    writebin(recon->GA,"%s/GA_float",dirsetup);
-	    }
-	    }*/
     }
     int nlo=parms->nlopowfs;
     if(parms->recon.modal){

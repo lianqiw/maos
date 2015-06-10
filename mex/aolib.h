@@ -16,19 +16,27 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-double dtrapz(const dmat *x, const dmat *y);
-dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
-dmat* zernike(loc_t *loc, double D, int rmin, int rmax, int onlyr);
+dmat *zernike_Rnm(const dmat *locr, int ir, int im);
+dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr);
 dmat *zernike_cov_kolmogorov(int nr);
-dmat *diag_mod_cov(dmat *mz, dmat *cov, int nmod);
-dmat *KL_kolmogorov(loc_t *loc, double D, int maxr);
-dmat *psd_vibid(const dmat *psdin);
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
+dmat *cov_vonkarman(const loc_t *loc, const dmat *modz, double L0);
+dmat *cov_diagnolize(const dmat *mod, const dmat *cov);
+dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0);
+dmat* turbcov(dmat *r, double rmax, double r0, double L0);
+
 cell* readbin(const char *fn);
 void  writebin(const cell* dc, const char* fn);
+
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit);
+double dtrapz(const dmat *x, const dmat *y);
+dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
+dmat *psd_vibid(const dmat *psdin);
 dmat* psd2time(const dmat *psdin, rand_t *seed, double dt, int nstepin);
 dmat *psdt2s(const dmat *psdt, double vmean);
 dmat *psds2t(const dmat *psdt, double vmean);
+
 dsp * mkh(loc_t *locin, loc_t *locout, const dmat *ampout, double displacex, double displacey,double scale, int cubic, double cubic_iac);
 void dsvd_pow(dmat *A, double power, double thres);
 cell* dcellmm2(const cell *A, const cell *B, const char*trans);
+
+

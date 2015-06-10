@@ -379,7 +379,7 @@ typedef struct FIT_CFG_T{
     double svdthres; /**<Threshold in SVD inversion*/
     double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
-    int actinterp;   /**<interpolate actuator results to non-active actuators after DM fitting. turn on when inter-actuator-stroke study.*/
+    int actinterp;   /**<interpolate actuator results to non-active actuators.*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/
     int lrt_tt;      /**<differential tip/tilt constraint on two DMs or tt on upper dms.*/
@@ -406,6 +406,7 @@ typedef struct LSR_CFG_T{
     double svdthres; /**<Threshold in SVD inversion*/
     double actthres; /**<When actuator coupling coefficient drops below this, start slaving.*/
     char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
+    int actinterp;   /**<interpolate actuator results to non-active actuators .*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int alg;         /**<algorithm to solve the linear equation.
@@ -425,8 +426,8 @@ typedef struct RECON_CFG_T{
 		       - 0: integrated tomography
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
-    int modal;       /**0: zonal, 1:zernike modes, 2: KL modes*/
-    int modr;        /**<Maximum radial mode in modal controller*/
+    int modal;       /**-2: emulate zonal, -1: zernike, 0: zonal, 1: KL modes*/
+    int nmod;        /**<Maximum number of modes to control in modal controller*/
     int warm_restart; /**<Warm restart in CG*/
     int psol;        /**<Use pseudo open loop gradients for wavefront reconstruction*/
     int mvm;        /**<Use the various algorithms recon.alg to assemble a control

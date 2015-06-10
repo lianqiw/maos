@@ -55,8 +55,8 @@ void X(mm)(X(mat)**C0, const T beta, const X(mat) *A, const X(mat) *B,
 	n=B->ny;
 	k2=B->nx;
     }
-    if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td\n",
-		    m, k, k2, n);
+    if(k!=k2) error("dmm: Matrix doesn't match: A: %tdx%td, B: %tdx%td, trans=%s\n",
+		    m, k, k2, n, trans);
     
     if(!*C0){
 	*C0=X(new)(m,n); 

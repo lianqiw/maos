@@ -296,7 +296,7 @@ static void filter_cl(SIM_T *simu){
     }
     //2015-03-10: move extraplation to right after integrator
     //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !parms->recon.modal && !parms->recon.psol){
+    if(simu->recon->actinterp && !parms->recon.psol){
 	dcellcp(&simu->dmcmd0, simu->dmcmd);
 	dcellzero(simu->dmcmd);
 	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);

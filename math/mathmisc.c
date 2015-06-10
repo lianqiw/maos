@@ -34,6 +34,18 @@ double factorial(long n1, long n2){
     return fact;
 }
 /**
+   Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
+long double factoriall(long n1, long n2){
+    long double fact=1;
+    while(n2>=n1){
+	fact*=n2--;
+    }
+    if(!isfinite(fact)){
+	error("Factorial overflows\n");
+    }
+    return fact;
+}
+/**
    normalize vector to sum to norm;*/
 void normalize_sum(double *p, long nloc, double norm){
     if(!nloc) return;
