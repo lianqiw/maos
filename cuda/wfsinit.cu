@@ -184,6 +184,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}
 	    }
 	    if(powfs[ipowfs].pywfs){
+		cupowfs[ipowfs].pywfs=powfs[ipowfs].pywfs;
 		cp2gpu(&cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
 		cp2gpu(&cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
 		cp2gpu(&cupowfs[ipowfs].saa, powfs[ipowfs].saa);
@@ -241,7 +242,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}
 	cuwfs[iwfs].powfs=cupowfs+ipowfs;
-	cudaDeviceSynchronize();
 	/*GS0 for gtilt. */
 	if(powfs[ipowfs].GS0){
 	    dsp *t=powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0];
@@ -287,7 +287,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].lltamp=cuwfs[iwfs0].lltamp;
 		}
 	    }
-	    cudaDeviceSynchronize();
 
 	    /*CUFFTW is row major. */
 	    int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */

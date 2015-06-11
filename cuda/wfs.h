@@ -40,6 +40,7 @@ typedef struct cupowfs_t{
     curcell *fieldstop;/**<*mask for field stop computation*/
     cullt_t *llt;
     /*For Pyramid*/
+    struct PYWFS_T *pywfs;//points to powfs[ipowfs].pywfs
     cuccell *pyramid;
     cucmat *pynominal;
     curmat *saa;
@@ -123,7 +124,6 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
 void pywfs_grad(curmat *grad, const curmat *ints, const curmat *saa, curmat *isum, const curmat *goff, Real gain, cudaStream_t stream);
-void pywfs_ints(curmat *ints, curmat *phiout, cupowfs_t *cupowfs, cuwfs_t *cuwfs,
-		    const PARMS_T *parms, const POWFS_T *powfs, int iwfs, cudaStream_t stream);
+void pywfs_ints(curmat *ints, curmat *phiout, cuwfs_t *cuwfs, Real siglev, cudaStream_t stream);
 dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

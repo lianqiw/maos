@@ -422,7 +422,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 			   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
 	}
 	if(parms->powfs[ipowfs].type==1){
-	    pywfs_ints(cuwfs[iwfs].ints->p[0], phiout, cupowfs, cuwfs, parms, powfs, iwfs, stream);
+	    pywfs_ints(cuwfs[iwfs].ints->p[0], phiout, cuwfs+iwfs,parms->wfs[iwfs].siglevsim, stream);
 			   
 	}else{
 	    if(do_geom){

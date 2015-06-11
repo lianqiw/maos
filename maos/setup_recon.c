@@ -410,7 +410,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 static void
 setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(recon->GA){
-	warning("skip setup_recon_GA\n");
+	warning("setup_recon_GA: GA already exists. Return.\n");
 	return;
     }
     cellfree(recon->GA);
