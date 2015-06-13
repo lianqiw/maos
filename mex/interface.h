@@ -145,6 +145,8 @@ mxArray *any2mx(const void *A_){
     const cell *A=A_;
     long id=A?(A->id):0;
     switch(id){
+    case 0:
+	break;
     case MCC_ANY:
 	out=mxCreateCellMatrix(A->nx, A->ny);
 	for(int i=0; i<A->nx*A->ny; i++){
@@ -299,7 +301,7 @@ static void mex_signal_handler(int sig){
 static jmp_buf *exception_env;
 static void mex_quitfun(const char *msg){
     if(exception_env){
-	info2("longjmp\n");
+	info2("error: %s\n", msg);
 	longjmp(*exception_env, 1);
     }else{
 	info2("mexerrmsg\n");

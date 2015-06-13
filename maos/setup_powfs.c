@@ -551,9 +551,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    for(int iwfs=0; iwfs<powfs[ipowfs].GS0->nx; iwfs++){
 		powfs[ipowfs].GS0->p[iwfs]=mkg(powfs[ipowfs].loc, 
 					       powfs[ipowfs].loc,
-					       powfs[ipowfs].realamp->p[iwfs]->p,
+					       powfs[ipowfs].realamp->p[iwfs],
 					       powfs[ipowfs].saloc,
-					       1, 1, 0, 0, 1);
+					       1, 0, 0, 1);
 	    }
 	}
     }

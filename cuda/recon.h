@@ -65,10 +65,10 @@ public:
     ~curecon_t(){
 	delete_config();
 	//The following are run time data
-	  delete gradin;
-	  delete tomo_rhs;
-	  delete fit_rhs;
-
+	delete gradin;
+	delete tomo_rhs;
+	delete fit_rhs;
+	
 	delete opdr;
 	delete opdr_vec; 
 	delete opdr_save;

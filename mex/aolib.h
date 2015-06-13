@@ -39,4 +39,5 @@ dsp * mkh(loc_t *locin, loc_t *locout, const dmat *ampout, double displacex, dou
 void dsvd_pow(dmat *A, double power, double thres);
 cell* dcellmm2(const cell *A, const cell *B, const char*trans);
 
-
+dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, double scale, double dispx, double dispy, int do_partial);
+dsp * mkh(loc_t *locin, loc_t *locout, const dmat *ampout, double displacex, double displacey,double scale, int cubic, double cubic_iac);

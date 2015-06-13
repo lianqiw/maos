@@ -326,8 +326,8 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}else if(parms->powfs[ipowfs].gtype_recon==0){
 	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
-					recon->gamp->p[ipowfs]->p, powfs[ipowfs].saloc,
-					1, 1, 0, 0, 1);
+					recon->gamp->p[ipowfs], powfs[ipowfs].saloc,
+					1, 0, 0, 1);
 	}else{
 	    recon->GWR->p[ipowfs] = mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 					(loc_t*)powfs[ipowfs].pts, 1,1,0,0);
@@ -375,8 +375,8 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		/*Create averaging gradient operator (gtilt) from PLOC,
 		  using fine sampled powfs.gloc as intermediate plane*/
 		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
-				  powfs[ipowfs].saloc,1,1,0,0,1);
+		GP->p[ipowfs]=mkg(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs],
+				  powfs[ipowfs].saloc,1,0,0,1);
 	    }else if(parms->powfs[ipowfs].gtype_recon==1){
 		/*Create ztilt operator from PLOC, using fine sampled
 		  powfs.gloc as intermediate plane.*/
@@ -2433,6 +2433,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     cn2est_free(recon->cn2est);
     cellfree(recon->gloc);
     cellfree(recon->gamp);
+    cellfree(recon->DMTT);
+    cellfree(recon->DMPTT);
     free(recon);
 }
 

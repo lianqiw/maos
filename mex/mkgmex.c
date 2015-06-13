@@ -42,7 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     loc_t *xloc=mx2loc(prhs[P_XLOC]);
     loc_t *ploc=mx2loc(prhs[P_PLOC]);
     loc_t *saloc=mx2loc(prhs[P_SALOC]);
-    double *amp=mxGetPr(prhs[P_AMP]);
+    dmat *amp=mx2d(prhs[P_AMP]);
     double dispx=mxGetScalar(prhs[P_DISPX]);
     double dispy=mxGetScalar(prhs[P_DISPY]);
     double scale=mxGetScalar(prhs[P_SCALE]);
@@ -53,4 +53,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     free(xloc);
     free(ploc);
     free(saloc);
+    dfree(amp);
 }

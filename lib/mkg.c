@@ -111,9 +111,8 @@ typedef struct{
  */
 dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	   loc_t *ploc,     /**<the grid on the aperture plan*/
-	   double *amp,     /**<the amplitude on ploc*/
-	   loc_t *saloc,    /**<Coordinate of the subapertures*/
-	   int saorc,       /**<0: saloc is the center of the subapertures. 1: saloc is the origin of the subapertures.*/
+	   dmat  *pamp,     /**<the amplitude on ploc*/
+	   loc_t *saloc,    /**<Lower left origin of the subapertures*/
 	   double scale,    /**<cone effect*/
 	   double dispx,   /**<displacement due to beam angle (2 vector). similar as accphi routines*/
 	   double dispy,    /**<displacement due to beam angle (2 vector). similar as accphi routines*/
@@ -129,7 +128,6 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
       SALOC->SALOC*scale+displace. PLOC->PLOC*scale+dispace. There are no offset
       or scaling between PLOC and SALOC
 
-      saorc: SALOC is subaperture origin or center. 
       1: origin (lower left corner), 
       0: center.
     */
@@ -194,8 +192,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     dsa2=dsa/2.*dp2;
     /*To store the weights.*/
 
-    poffset[0]+=dsa2*saorc;/*offset to SALOC to make it subaperture center.*/
-    poffset[1]+=dsa2*saorc;
+    poffset[0]+=dsa2;/*offset to SALOC to make it subaperture center.*/
+    poffset[1]+=dsa2;
     double amp2[3][3];
     double wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
     double *wtalpha, *wtbeta;
@@ -211,6 +209,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     int valid=1;
     int iw;
     int iphi;
+    double *amp=pamp?pamp->p:0;
     if(!same && amp){
 	/*
 	  Copy and modify amplitude map to fix boundry
@@ -468,10 +467,9 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 /**
    Returns the transpose of mkgt()
  */
-dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
-	 int saorc, double scale, double dispx, double dispy, int do_partial){
-    dsp *GS0T=mkgt(xloc, ploc, amp, saloc, 
-		   saorc, scale, dispx, dispy, do_partial);
+dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, 
+	 double scale, double dispx, double dispy, int do_partial){
+    dsp *GS0T=mkgt(xloc, ploc, amp, saloc, scale, dispx, dispy, do_partial);
     dsp *GS0=dsptrans(GS0T);
     dspfree(GS0T);
     return GS0;

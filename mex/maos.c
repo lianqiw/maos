@@ -56,6 +56,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}else{
 	    cmd="sim";
 	}
+	if(!strcmp(cmd, "-h")){
+	    printf("Usage: maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
+		 "  simu=maos('sim', nstep)\n"
+		 "       maos('reset')\n"
+		 "  simu=maos('get','simu')\n"
+		 "dmreal=maos('get','dmreal')\n"
+		);
+	}
 	if(!strcmp(cmd, "reset")){
 	    if(global) maos_reset();
 	    iseed=0;
@@ -129,43 +137,46 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		    error("The second parameter should be an integer\n");
 		}
 		nstep=(int)mxGetScalar(prhs[1]);
+		if(nstep<0){
+		    nstep=parms->sim.end-parms->sim.start;
+		}
+	    }else{
+		nstep=1;
 	    }
-	}
-	if(nstep<0){
-	    nstep=parms->sim.end-parms->sim.start;
-	}
-	if(nstep>0){
-	    SIM_T *simu=global->simu;
-	    if(iseed<parms->sim.nseed){
-		if(!simu){
-		    while(!(simu=maos_iseed(iseed))){
-			iseed++;
-			if(iseed==parms->sim.nseed){
-			    info2("All seeds are finished\n");
+
+	    if(nstep>0){
+		SIM_T *simu=global->simu;
+		if(iseed<parms->sim.nseed){
+		    if(!simu){
+			while(!(simu=maos_iseed(iseed))){
+			    iseed++;
+			    if(iseed==parms->sim.nseed){
+				info2("All seeds are finished\n");
+				goto end;
+			    }
+			}
+			isim=parms->sim.start;
+		    }
+		    while(nstep--){
+			if(isim<parms->sim.end){
+			    maos_isim(isim);
+			    isim++;
+			}else{//one seed finished
+			    free_simu(simu);simu=0;
+			    iseed++;
+			    break;
+			}
+			if(utIsInterruptPending()){
+			    info2("Simulation interrupted\n");
 			    goto end;
 			}
 		    }
-		    isim=parms->sim.start;
+		}else{
+		    info2("Simulation finished\n");
 		}
-		while(nstep--){
-		    if(isim<parms->sim.end){
-			maos_isim(isim);
-			isim++;
-		    }else{//one seed finished
-			free_simu(simu);simu=0;
-			iseed++;
-			break;
-		    }
-		    if(utIsInterruptPending()){
-			info2("Simulation interrupted\n");
-			goto end;
-		    }
-		}
-	    }else{
-		info2("Simulation finished\n");
 	    }
 	}
-	{
+	if(nlhs==1){
 	    int free_valname=0;
 	    char *valname=NULL;
 	    if(!strcmp(cmd, "get")){
