@@ -756,7 +756,7 @@ read_fits_header(header_t *header, file_t *fp){
    information and string header if any.  */
 void write_header(const header_t *header, file_t *fp){
     if(fp->isfits){
-	if(!iscell(header->magic)){
+	if(header->magic==MCC_ANY){
 	    write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
 	}
     }else{

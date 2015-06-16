@@ -446,11 +446,11 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     /*Ray tracing operator for each WFS */
     if(parms->save.setup){
-	cspwrite(sel,"%s/fdpcg_sel",dirsetup);
-	writebin(gx,"%s/fdpcg_gx",dirsetup);
-	writebin(gy,"%s/fdpcg_gy",dirsetup);
-	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
-	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
+	cspwrite(sel,"fdpcg_sel");
+	writebin(gx,"fdpcg_gx");
+	writebin(gy,"fdpcg_gy");
+	cspwrite(Mhat,"fdpcg_invpsd");
+	cspwrite(Mmid,"fdpcg_Mmid");
     }
     cfree(gx);
     cfree(gy);
@@ -478,7 +478,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	}
 	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){
-	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
+	    cspwrite(propx,"fdpcg_prop_wfs%d",iwfs);
 	}
 	/*need to test this in spatial domain. */
 	cspscale(propx,1./neai);/*prop is not real for off axis wfs. */
@@ -508,7 +508,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
 
     if(parms->save.setup){
-	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);
+	cspwrite(Mhat,"fdpcg_Mhat");
     }
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     /*Now invert each block. */
@@ -529,7 +529,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 
     perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
     if(parms->save.setup){
-	lwrite(perm, "%s/fdpcg_perm", dirsetup);
+	lwrite(perm, "fdpcg_perm");
     }
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
     csp *Minvp=cspinvbdiag(Mhatp,bs);
@@ -538,20 +538,20 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
-	cspwrite(Minv,"%s/fdpcg_Minv",dirsetup);
+	cspwrite(Minv,"fdpcg_Minv");
     }
 #else//use block diagonal matrix
     fdpcg->perm=perm; perm=NULL;
     if(parms->gpu.tomo){
 	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
 	if(parms->save.setup>1){
-	    lwrite(fdpcg->permhf, "%s/fdpcg_permhf", dirsetup);
+	    lwrite(fdpcg->permhf, "fdpcg_permhf");
 	}
     }
     
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
     if(parms->save.setup){
-	writebin(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
+	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
     double svd_thres=1e-7;
     info2("FDPCG SVD Threshold is %g\n", svd_thres);
@@ -565,7 +565,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	csvd_pow(fdpcg->Mbinv->p[ib], -1, svd_thres);
     }
     if(parms->save.setup){
-	writebin(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);
+	writebin(fdpcg->Mbinv,"fdpcg_Minvb");
     }
 #endif
     cspfree(Mhatp);

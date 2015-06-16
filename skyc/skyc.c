@@ -46,7 +46,7 @@ int main(int argc, const char *argv[]){
       will block until ones are available.  if arg->force==1, will run
       immediately.
     */
-    scheduler_start(scmd,arg->nthread,!arg->force);
+    scheduler_start(scmd,arg->nthread,0,!arg->force);
     /*setting up parameters before asking scheduler to check for any errors. */
     dirsetup=stradd("setup",NULL);
     PARMS_S * parms=setup_parms(arg);
@@ -61,7 +61,7 @@ int main(int argc, const char *argv[]){
 	    warning_time("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
-	    scheduler_start(scmd,arg->nthread,!arg->force);
+	    scheduler_start(scmd,arg->nthread,0,!arg->force);
 	}
 	if(count>=60){
 	    warning_time("fall back to own checker\n");

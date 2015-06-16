@@ -337,7 +337,11 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_ogskip);
     READ_POWFS_RELAX(int,dither_ograt);
     READ_POWFS_RELAX(dbl,dither_gog);
-    
+
+    READ_POWFS_RELAX(int, zoomdtrat);
+    READ_POWFS_RELAX(int, zoomshare);
+    READ_POWFS_RELAX(dbl, zoomgain);
+
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
@@ -949,15 +953,6 @@ static void readcfg_sim(PARMS_T *parms){
     if(parms->sim.aplo->nx>2 || parms->sim.aplo->ny!=1){
 	error("Invalid use of aplo\n");
     }
-    if(fabs(dsum(parms->sim.apdm)-1)>1.e-10){
-	warning("sum(sim.apdm)=%g. Should be 1.\n", dsum(parms->sim.apdm));
-    }
-    if(fabs(dsum(parms->sim.aplo)-1)>1.e-10){
-	warning("sum(sim.aplo)=%g. Should be 1.\n", dsum(parms->sim.aplo));
-    }
-    if(fabs(dsum(parms->sim.apfsm)-1)>1.e-10){
-	warning("sum(sim.apfsm)=%g. Should be 1.\n", dsum(parms->sim.apfsm));
-    }
     parms->sim.seeds=readcfg_lmat("sim.seeds");
     parms->sim.nseed=parms->sim.seeds->nx;
     READ_DBL(sim.dt);
@@ -989,9 +984,6 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.mvmsize);
     READ_INT(sim.mvmngpu);
 
-    READ_INT(sim.zoomdtrat);
-    READ_INT(sim.zoomshare);
-    READ_DBL(sim.zoomgain);
     READ_INT(sim.ncpa_calib);
     READ_INT(sim.ncpa_ttr);
     parms->sim.ncpa_thetax=readcfg_dmat("sim.ncpa_thetax");
@@ -1063,7 +1055,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
     READ_INT(dbg.nocgwarm);
-    READ_INT(dbg.deltafocus);
     if(readcfg_peek("dbg.test")){
 	READ_INT(dbg.test);
     }
@@ -1399,8 +1390,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     //Match TWFS to LGS POWFS
     parms->itpowfs=-1;
     parms->ilgspowfs=-1;
+    parms->nlgspowfs=0;
     for(int lgspowfs=0; lgspowfs<parms->npowfs; lgspowfs++){
 	if(parms->powfs[lgspowfs].llt){
+	    parms->nlgspowfs++;
 	    if(parms->ilgspowfs==-1){
 		parms->ilgspowfs=lgspowfs;
 	    }else{
@@ -1952,7 +1945,6 @@ static int arrind(double *arr, int *n, double val){
 
 */
 static void setup_parms_postproc_dm(PARMS_T *parms){
-    int ndm=parms->ndm;
     /*disable cache for low order systems. */
     if(parms->sim.cachedm){
 	if(parms->evl.nevl<2 && parms->nwfs<2){

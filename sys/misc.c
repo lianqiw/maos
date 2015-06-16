@@ -839,7 +839,7 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
-    info2("default_signal_handler: sig=%d\n", sig);sync();
+    info2("default_signal_handler: %s (%d).\n", strsignal(sig), sig);sync();
     int cancel_action=0;
     struct sigaction act={{0}};
     act.sa_flags=0;

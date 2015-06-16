@@ -58,7 +58,7 @@ static void calcenc(const char *fn, double dstep, double rmax, int type, int nth
     info2("%s --> %s\n", fn, fnout);
     header_t header={0};
     read_header(&header, fp);
-    if(iscell(header.magic)){//cell array.
+    if(iscell(&header.magic)){//cell array.
 	write_header(&header, fpout);
 	long ncell=header.nx*header.ny;
 	for(long i=0; i<ncell; i++){

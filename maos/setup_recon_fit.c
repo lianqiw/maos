@@ -47,7 +47,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	if(parms->save.setup){
-	    writebin(recon->HXF,"%s/HXF",dirsetup);
+	    writebin(recon->HXF,"HXF");
 	}
 	toc2(" ");
     }
@@ -118,8 +118,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		}
 	    }
 	    if(parms->save.recon){
-		writebin(recon->FR.M,"%s/FRM",dirsetup);
-		writebin(recon->FR.V,"%s/FRV",dirsetup);
+		writebin(recon->FR.M,"FRM");
+		writebin(recon->FR.V,"FRV");
 	    }
 	}else{
 	    info("Avoid building recon->FR.M\n");
@@ -142,7 +142,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	if(parms->save.recon){
-	    writebin(recon->FR.U,"%s/FRU",dirsetup);
+	    writebin(recon->FR.U,"FRU");
 	}
     }
 
@@ -198,9 +198,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	info2("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",
 	      recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
 	if(parms->save.recon){
-	    writebin(recon->FL.M,"%s/FLM.bin",dirsetup);
-	    writebin(recon->FL.U,"%s/FLU",dirsetup);
-	    writebin(recon->FL.V,"%s/FLV",dirsetup);
+	    writebin(recon->FL.M,"FLM.bin");
+	    writebin(recon->FL.U,"FLU");
+	    writebin(recon->FL.V,"FLV");
 	}
     }
     if((parms->fit.alg==0 || parms->fit.alg==2) && parms->fit.bgs){
@@ -217,21 +217,21 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     if(parms->save.recon){
        	if(recon->FL.C){
 	    chol_convert(recon->FL.C, 1);
-	    chol_save(recon->FL.C,"%s/FLC.bin",dirsetup);
+	    chol_save(recon->FL.C,"FLC.bin");
 	}
 	if(recon->FL.MI)
-	    writebin(recon->FL.MI,"%s/FLMI", dirsetup);
+	    writebin(recon->FL.MI,"FLMI");
 	if(recon->FL.Up)
-	    writebin(recon->FL.Up, "%s/FLUp", dirsetup);
+	    writebin(recon->FL.Up, "FLUp");
 	if(recon->FL.Vp)
-	    writebin(recon->FL.Vp, "%s/FLVp", dirsetup);
+	    writebin(recon->FL.Vp, "FLVp");
 	if(recon->FL.CB){
 	    for(int ib=0; ib<recon->FL.nb; ib++){
-		chol_save(recon->FL.CB[ib],"%s/FLCB_%d.bin",dirsetup, ib);
+		chol_save(recon->FL.CB[ib],"FLCB_%d.bin", ib);
 	    }
 	}
 	if(recon->FL.MIB){
-	    writebin(recon->FL.MIB,"%s/FLMIB", dirsetup);
+	    writebin(recon->FL.MIB,"FLMIB");
 	}
     }
     info2("After assemble fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);

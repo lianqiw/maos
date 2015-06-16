@@ -40,7 +40,7 @@ typedef enum CEMBED{
   partition. */
 
 #define ARR(T)						\
-    long id;       /**< to identify the array type*/	\
+    uint32_t id;   /**< to identify the array type. Must be the first element*/	\
     T *restrict p; /**<The data pointer*/		\
     long nx;       /**< number of rows */		\
     long ny;       /**< number of columns */		\
@@ -50,16 +50,16 @@ typedef enum CEMBED{
     struct fft_t *fft					
 
 #define MATARR(T) struct{ \
-	ARR(T);	       \
+	ARR(T);		  \
     }
 
-#define CELLARR(T) struct{		      \
+#define CELLARR(T) struct{	      \
 	ARR(T);			      \
 	T m;/*store continuous data*/ \
     }
 
 #define SPMATARR(T) struct{						\
-	long id;/**<to identify the array type*/			\
+	uint32_t id;/**<to identify the array type*/			\
 	T *restrict x;       /**< numerical values, size nzmax */	\
 	union{long m;long nx;};	          /**< number of rows */	\
 	union{long n;long ny;};	          /**< number of columns */	\
@@ -144,7 +144,7 @@ typedef struct locstat_t{
    Struct for coordinates like plocs, xloc, aloc etc.
 */
 typedef struct loc_t{
-    long id;
+    uint32_t id;
     double *locx;  /**< x coordinates of each point*/
     double *locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
@@ -162,7 +162,7 @@ typedef struct loc_t{
    cast to loc_t
 */
 typedef struct pts_t{
-    long id;
+    uint32_t id;
     double *origx; /**<The x origin of each subaperture*/
     double *origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
@@ -217,12 +217,32 @@ typedef struct cell{
 }cell;
 
 /*A method to simulate operator overloading for indexing arrys*/
+#if DEBUG
+INLINE void assert_1d(long i, long nx, long ny){
+    if(i<0 || i>=nx*ny){
+	error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
+    }
+}
+INLINE void assert_2d(long ix, long iy, long nx, long ny){
+    if(ix<0 || ix>=nx || iy<0 || iy>=ny){
+	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
+    }
+}
+#define IND1(A,i) (A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)]
+#define IND2(A,ix,iy) (A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)]
+#define PIND1(A,i) (A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i))
+#define PIND2(A,ix,iy) (A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy))
+#else
+#define IND1(A,i) ((A)->p[(i)])
+#define IND2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
+#define PIND1(A,i) ((A)->p+(i))
+#define PIND2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
+#endif
 #define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
-#define IND1(A,i) (A->p[i])
-#define IND2(A,ix,iy) (A->p[ix+A->nx*iy])
+#define PIND0(A) error("Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n");
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME
 #define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
-
+#define PIND(...) IND_GET(_0,__VA_ARGS__,PIND2,PIND1,PIND0,PIND0)(__VA_ARGS__)
 #undef ARR
 #undef CELLARR
 #undef MATARR

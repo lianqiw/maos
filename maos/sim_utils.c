@@ -1014,12 +1014,11 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->wfs_ints[iwfs]=calloc(NTHREAD, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, NTHREAD, wfsints,data);
     }
-    if(parms->dither || parms->sim.mffocus){
+    if(parms->nlgspowfs){
+	simu->LGSfocus=dcellnew(parms->nwfs,1);
 	simu->zoomerr=dnew(parms->nwfs,1);
 	simu->zoomint=dnew(parms->nwfs,1);
-	if(parms->sim.mffocus){
-	    simu->zoomavg=dnew(parms->nwfs, 1);
-	}
+	simu->zoomavg=dnew(parms->nwfs, 1);
 	if(!disable_save){
 	    long nnx[parms->nwfs];
 	    long nny[parms->nwfs];
@@ -1510,6 +1509,11 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->clmp);
     dcellfree(simu->fsmerrs);
     dcellfree(simu->fsmcmds);
+    dcellfree(simu->LGSfocus);
+    dfree(simu->zoomerr);
+    dfree(simu->zoomreal);
+    dfree(simu->zoomavg);
+    dfree(simu->zoomint);
     if(parms->recon.split){
 	dcellfree(simu->clemp);
 	dfree(simu->cleNGSm);
@@ -1540,7 +1544,6 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
-    dcellfree(simu->LGSfocus);
     dfree(simu->lgsfocuslpf);
     cellfree(simu->ints);
     cellfree(simu->wfspsfout);

@@ -48,6 +48,7 @@
 #include "scheduler_ws.h"
 #endif
 static char *scheduler_fnlog=NULL;
+static int NGPU=0;
 /**
    Struct to hold information of running jobs.
 */
@@ -59,7 +60,8 @@ typedef struct RUN_T{
     int pid;
     int pidnew;//the new pid
     int sock;
-    int nthread;
+    int nthread;//number of threads
+    int ngpu;//number of gpus requested.
     char *exe; /*Path to the executable.*/
     char *path;/*Job path and Job arguments.*/
     char *path0;/*same as path, with fields separated by \n instead of space*/
@@ -100,36 +102,48 @@ static void monitor_send(RUN_T *run,char*path);
 static void monitor_send_initial(MONITOR_T *ic);
 static void monitor_send_load(void);
 static long counter=0;//an negative index to retrieve this irun.
-static int nrun_handle(int cmd, int pid, int nthread){
-    static int nrun=0;
+static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
+    static int ncpu=0;
+    static int ngpu=0;
     switch(cmd){
     case 0:
+	if(pid==1){
+	    return ngpu;
+	}else{
+	    return ncpu;
+	}
 	break;
     case 1:
-	nrun+=nthread;
-	info2("nrun increased by %d to %d by %d\n",
-	     nthread, nrun, pid);
+	ncpu+=nthread;
+	ngpu+=ngpu_used;
+	info2("%d: ncpu +%d->%d. ngpu +%d->%d.\n",
+	      pid, nthread, ncpu, ngpu_used, ngpu);
 	break;
     case 2:
-	nrun-=nthread;
-	info2("nrun decreased by %d to %d by %d\n",
-	     nthread, nrun, pid);
-	if(nrun<0){
-	    warning2("nrun=%d\n", nrun);
-	    nrun=0;
+	ncpu-=nthread;
+	ngpu-=ngpu_used;
+	info2("%d: ncpu -%d->%d. ngpu -%d->%d.\n",
+	      pid, nthread, ncpu, ngpu_used, ngpu);
+	if(ncpu<0){
+	    warning2("ncpu=%d\n", ncpu);
+	    ncpu=0;
+	}
+	if(ngpu<0){
+	    warning2("ngpu=%d\n", ngpu);
+	    ngpu=0;
 	}
 	break;
     }
-    return nrun;
+    return ncpu;
 }
-static int nrun_get(){
-    return nrun_handle(0,0,0);
+static int nrun_get(int type){
+    return nrun_handle(0,type,0,0);
 }
-static int nrun_add(int pid, int nthread){
-    return nrun_handle(1, pid, nthread);
+static void nrun_add(int pid, int nthread, int ngpu){
+    nrun_handle(1, pid, nthread, ngpu);
 }
-static int nrun_sub(int pid, int nthread){
-    return nrun_handle(2, pid, nthread);
+static void nrun_sub(int pid, int nthread, int ngpu){
+    nrun_handle(2, pid, nthread, ngpu);
 }
 /**
    The following runned_* routines maintains the linked list
@@ -197,22 +211,22 @@ static RUN_T *runned_get(int pid){
    Restart a crashed/finished job
 */
 static void runned_restart(int pid){
-    RUN_T *irun, *irun2=NULL;
-    for(irun=runned; irun; irun2=irun,irun=irun->next){
+    RUN_T *irun, *irun_prev=NULL;
+    for(irun=runned; irun; irun_prev=irun,irun=irun->next){
 	if(irun->pid==pid){
 	    if(irun->status.info<10){
 		warning("status.info=%d\n", irun->status.info);
 		break;
 	    }
-	    if(irun2){//not start
-		irun2->next=irun->next;
-	    }else{
-		irun2=runned=irun->next;
+	    if(irun_prev){//not start of list
+		irun_prev->next=irun->next;
+	    }else{//start if list
+		irun_prev=runned=irun->next;
 	    }
-	    if(irun->next==NULL){
-		runned_end=irun2;
+	    if(!irun->next){
+		runned_end=irun_prev;
 	    }
-	    //Insert the beginning of running list
+	    //Insert to the beginning of running list
 	    irun->next=running;
 	    running=irun;
 	    if(!running_end){
@@ -298,7 +312,7 @@ static void running_remove(int pid, int status){
 	if(irun->pid==pid){
 	    if(irun->pid>0 && (irun->status.info==S_START 
 			       || irun->status.info==S_RUNNING)){
-		nrun_sub(irun->pid, irun->nthread);
+		nrun_sub(irun->pid, irun->nthread, irun->ngpu);
 	    }
 	    if(irun->status.info<10){//mark termination time.
 		irun->status.timend=myclocki();
@@ -405,13 +419,13 @@ static void check_jobs(void){
 */
 static void process_queue(void){
     static double timestamp=0;
-    if(nrun_get()>0 && myclockd()-timestamp<1) {
+    if(nrun_get(0)>0 && myclockd()-timestamp<1) {
 	return;
     }
     timestamp=myclockd();
-    if(nrun_get()>=NCPU) return;
+    if(nrun_get(0)>=NCPU) return;
     int avail=get_cpu_avail();
-    info2("process_queue: nrun=%d avail=%d\n", nrun_get(), avail);
+    info2("process_queue: nrun=%d avail=%d\n", nrun_get(0), avail);
     if(avail<1) return;
     RUN_T *irun=running_get_wait(S_WAIT);
     while(irun && irun->pid>0 && kill(irun->pid,0)){//job exited
@@ -422,7 +436,7 @@ static void process_queue(void){
     if(irun){
 	if(irun->sock>0){
 	    int nthread=irun->nthread;
-	    if(nrun_get()+nthread<=NCPU && (nthread<=avail || avail >=3)){
+	    if(nrun_get(0)+nthread<=NCPU && (nthread<=avail || avail >=3) && (!NGPU || !irun->ngpu || nrun_get(1)+irun->ngpu<=NGPU)){
 		/*don't close the socket. will close it in select loop. */
 		/*warning_time("process %d launched. write to sock %d cmd %d\n", */
 		/*irun->pid, irun->sock, S_START); */
@@ -431,7 +445,7 @@ static void process_queue(void){
 		    perror("stwriteint");
 		    warning("failed to notify maos\n");
 		}
-		nrun_add(irun->pid, nthread);
+		nrun_add(irun->pid, nthread, irun->ngpu);
 		irun->status.timstart=myclocki();
 		irun->status.info=S_START;
 		monitor_send(irun,NULL);
@@ -520,23 +534,31 @@ static int respond(int sock){
 	{
 	    /* Data read. */
 	    int nthread;
+	    int ngpu;
 	    int waiting;
 	    if(streadint(sock, &nthread) || streadint(sock, &waiting)){
 		ret=-1;
 		break;
 	    }
-	    if(nthread<1) 
+	    ngpu=waiting >> 1;
+	    if(ngpu>NGPU){
+		ngpu=NGPU;
+	    }
+	    if(ngpu)//maos restrict number of threads to ngpu+1 when gpu is in use.
+		nthread=ngpu;
+	    else if(nthread<1) 
 		nthread=1;
 	    else if(nthread>NCPU)
 		nthread=NCPU;
 	    RUN_T *irun=running_add(pid,sock);
 	    irun->nthread=nthread;
-	    if(waiting){
+	    irun->ngpu=ngpu;
+	    if(waiting & 0x1){
 		irun->status.info=S_WAIT;
 		all_done=0;
 		info2("%5d queued.\n",pid);
 	    }else{/*no waiting, no need reply. */
-		nrun_add(pid, nthread);
+		nrun_add(pid, nthread, ngpu);
 		irun->status.info=S_START;
 		irun->status.timstart=myclocki();
 		info2("%5d started\n",pid);
@@ -556,7 +578,7 @@ static int respond(int sock){
 		irun=running_add(pid,sock);
 		irun->status.info=S_START;
 		irun->nthread=irun->status.nthread;
-		nrun_add(pid, irun->nthread);
+		nrun_add(pid, irun->nthread, irun->ngpu);
 	    }
 	    if(sizeof(STATUS_T)!=read(sock,&(irun->status), sizeof(STATUS_T))){
 		warning_time("Error reading\n");
@@ -1018,6 +1040,24 @@ int main(){
 	char slocal2[PATH_MAX];
 	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, myhostname());
 	scheduler_fnlog=strdup(slocal2);
+    }
+    {
+	//Find out number of gpus.
+	FILE *fpcmd=popen("nvidia-smi -L", "r");
+	if(!fpcmd){
+	    NGPU=0;
+	}else{
+	    char line[4096];
+	    while(fgets(line, sizeof(line), fpcmd)){
+		if(!strncmp(line, "GPU", 3)){
+		    NGPU++;
+		}else{
+		    warning("unknown entry: %s\n", line);
+		}
+	    }
+	}
+	pclose(fpcmd);
+	info("NGPU=%d\n", NGPU);
     }
     double timeout=0.5;
 #if HAS_LWS

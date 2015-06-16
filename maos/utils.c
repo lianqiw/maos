@@ -301,11 +301,24 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	if(!arg->gpus || arg->ngpu==0){
 	    arg->ngpu=arg->ngpu2;
 	}else{
-	    error("-g and -G cannot both be specified\n");
+	    error("-g and -G cannot be specified simultaneously\n");
+	}
+    }else if(arg->ngpu){//check for -g-1
+	for(int ig=arg->ngpu-1; ig>=0; ig--){
+	    if(arg->gpus[ig]<0){
+		if(ig+1==arg->ngpu){//-g-1 appear last
+		    arg->gpus[0]=-1;
+		    arg->ngpu=1;
+		}else{
+		    //-g-1 is not last. It invalides previous -g's
+		    arg->ngpu=arg->ngpu-(1+ig);
+		    memcpy(arg->gpus, arg->gpus+ig+1, arg->ngpu*sizeof(int));
+		}
+		break;
+	    }
 	}
     }
     arg->confcmd=cmds;
-    
     addpath(".");
     if(arg->dirout){
 	mymkdir("%s",arg->dirout);

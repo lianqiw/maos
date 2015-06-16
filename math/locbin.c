@@ -30,7 +30,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	read_header(header, fp);
     }
     if((header->magic&M_DBL)!=M_DBL){
-	error("magic=%x. Expect %x\n", header->magic, M_DBL);
+	error("magic=%u. Expect %x\n", header->magic, M_DBL);
     }
     double dx=fabs(search_header_num(header->str,"dx"));
     double dy=fabs(search_header_num(header->str,"dy"));
@@ -163,7 +163,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 	dmat *in=dreaddata(fp, header);
 	map=d2map(in);
 	dfree(in);
-    }else if(iscell(header->magic)){/*old format. */
+    }else if(iscell(&header->magic)){/*old format. */
 	dcell *in=dcellreaddata(fp, header);
 	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
 	    error("Map should be square\n");

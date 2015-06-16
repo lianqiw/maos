@@ -77,11 +77,11 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 		    &(recon->W0), &(recon->W1));
     }
     if(parms->save.setup){
-	dspwrite(recon->W0, "%s/W0",dirsetup);
-	writebin(recon->W1, "%s/W1",dirsetup);
+	dspwrite(recon->W0, "W0");
+	writebin(recon->W1, "W1");
     }
     if(parms->save.setup){
-	locwrite(recon->floc, "%s/floc",dirsetup);
+	locwrite(recon->floc, "floc");
     }
     loc_create_stat(recon->floc);
 }
@@ -252,10 +252,10 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	
     }
     if(parms->save.setup){
-	writebin(recon->aloc,"%s/aloc",dirsetup);
-	writebin(recon->amap, "%s/amap", dirsetup);
+	writebin(recon->aloc,"aloc");
+	writebin(recon->amap, "amap");
 	if(parms->recon.modal){
-	    writebin(recon->amod, "%s/amod", dirsetup);
+	    writebin(recon->amod, "amod");
 	}
     }
 }
@@ -296,7 +296,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	toc2(" ");
     }
     if(parms->save.setup){
-	writebin(recon->HA,"%s/HA",dirsetup);
+	writebin(recon->HA,"HA");
     }
     recon->actcpl=genactcpl(recon->HA, recon->W1);
     //if(1){//new 
@@ -305,7 +305,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     //Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
     act_stuck(recon->aloc, recon->HA, recon->actstuck);
     if(parms->save.setup){
-	writebin(recon->HA,"%s/HA_float",dirsetup);
+	writebin(recon->HA,"HA_float");
     }
     if(parms->fit.actinterp){
 	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->fit.actthres);
@@ -326,13 +326,13 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	dspcellfree(recon->HA);
 	recon->HA=HA2;
 	if(parms->save.setup){
-	    writebin(recon->HA,"%s/HA_final",dirsetup);
+	    writebin(recon->HA,"HA_final");
 	}
     }
     
     if(parms->save.setup){
 	if(recon->actinterp){
-	    writebin(recon->actinterp, "%s/actinterp", dirsetup);
+	    writebin(recon->actinterp, "actinterp");
 	}
 	if(recon->actcpl){
 	    writebin(recon->actcpl, "actcpl");
@@ -443,11 +443,11 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 				recon->actfloat, parms->fit.actthres, 1./recon->floc->nloc);
 	toc2("slaving");
 	if(parms->save.setup){
-	    writebin(recon->actslave,"%s/actslave",dirsetup);
+	    writebin(recon->actslave,"actslave");
 	}
     }
     if(parms->save.setup){
-	writebin(recon->fitNW,"%s/fitNW",dirsetup);
+	writebin(recon->fitNW,"fitNW");
     }
 }
 /**

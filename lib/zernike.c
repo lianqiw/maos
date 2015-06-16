@@ -286,7 +286,6 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
     dmat *U=0, *Vt=0, *S=0;
     dsvd(&U, &S, &Vt, cov);
     dmat *kl=0;
-    dmat *U2=0;
     dmm(&kl, 0, mod, U, "nn", 1);
     dfree(U);
     dfree(Vt);
@@ -347,7 +346,7 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
 	    writebin(kl, "%s", fn);
 	    close(fd); remove(fnlock);
 	}else{
-	    info("waiting to lock\n", fnlock);
+	    info("waiting to lock %s\n", fnlock);
 	    fd=lock_file(fnlock, 1, 0);
 	    info2("locked\n");
 	    close (fd); remove(fnlock);

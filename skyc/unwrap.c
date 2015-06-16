@@ -171,7 +171,7 @@ static void convert_wvf(GENPISTAT_S *data){
     uint32_t magic;
     /*zfread(&magic, sizeof(uint32_t),1,fp_wvf); */
     magic=read_magic(fp_wvf, NULL);
-    if(!iscell(magic)){
+    if(!iscell(&magic)){
 	error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
     }
     long nstep,junk;

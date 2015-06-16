@@ -108,7 +108,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    /*scale it to match the magnitude of LL.M */
 	    dcellscale(NW, sqrt(maxeig));
 	    if(parms->save.setup){
-		writebin(NW, "%s/lsrNW",dirsetup);
+		writebin(NW, "lsrNW");
 	    }
 	}
 	if(parms->lsr.actslave){
@@ -117,9 +117,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 				      recon->actstuck, recon->actfloat, parms->lsr.actthres, maxeig);
 	    if(parms->save.setup){
 		if(NW){
-		    writebin(NW, "%s/lsrNW2",dirsetup);
+		    writebin(NW, "lsrNW2");
 		}
-		writebin(actslave,"%s/actslave", dirsetup);
+		writebin(actslave,"actslave");
 	    }
 	    dcelladd(&recon->LL.M, 1, actslave, 1);
 	    cellfree(actslave);
@@ -175,21 +175,21 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dcelldropempty(&recon->LL.U,2);
     dcelldropempty(&recon->LL.V,2);
     if(parms->save.recon){
-	writebin(recon->LR.M,"%s/LRM",dirsetup);
-	writebin(recon->LR.U,"%s/LRU",dirsetup);
-	writebin(recon->LR.V,"%s/LRV",dirsetup);
-	writebin(recon->LL.M,"%s/LLM.bin",dirsetup);/*disable compression */
-	writebin(recon->LL.U,"%s/LLU",dirsetup);
-	writebin(recon->LL.V,"%s/LLV",dirsetup); 
+	writebin(recon->LR.M,"LRM");
+	writebin(recon->LR.U,"LRU");
+	writebin(recon->LR.V,"LRV");
+	writebin(recon->LL.M,"LLM.bin");/*disable compression */
+	writebin(recon->LL.U,"LLU");
+	writebin(recon->LL.V,"LLV"); 
     }
     if(parms->lsr.alg==0 || parms->lsr.alg==2){
 	if(!parms->lsr.bgs){
 	    muv_direct_prep(&recon->LL, (parms->lsr.alg==2)*parms->lsr.svdthres);
 	    if(parms->save.recon){
 		if(recon->LL.C)
-		    chol_save(recon->LL.C, "%s/LLC.bin", dirsetup);
+		    chol_save(recon->LL.C, "LLC.bin");
 		else
-		    writebin(recon->LL.MI, "%s/LLMI.bin", dirsetup);
+		    writebin(recon->LL.MI, "LLMI.bin");
 	    }
 	    cellfree(recon->LL.M);
 	    dcellfree(recon->LL.U);
@@ -199,9 +199,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->save.recon){
 		for(int ib=0; ib<recon->LL.nb; ib++){
 		    if(recon->LL.CB)
-			chol_save(recon->LL.CB[ib],"%s/LLCB_%d.bin",dirsetup, ib);
+			chol_save(recon->LL.CB[ib],"LLCB_%d.bin", ib);
 		    else
-			writebin(recon->LL.MI,"%s/LLMIB_%d.bin", dirsetup, ib);
+			writebin(recon->LL.MI,"LLMIB_%d.bin", ib);
 		}
 	    }
 	    /*Don't free M, U, V */

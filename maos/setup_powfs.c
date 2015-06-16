@@ -338,7 +338,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
 	if(parms->save.setup){
-	    writebin(ampi, "%s/powfs%d_ampi", dirsetup, ipowfs);
+	    writebin(ampi,"powfs%d_ampi", ipowfs);
 	}
 	for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 	    for(int i=0; i<nx*nx; i++){
@@ -428,20 +428,20 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     dfree(ampi);
  
     if(parms->save.setup){
-	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
-	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
-	writebin(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
-	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
-	writebin(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
+	locwrite((loc_t*)powfs[ipowfs].pts,"powfs%d_pts",ipowfs);
+	locwrite(powfs[ipowfs].saloc,"powfs%d_saloc",ipowfs); 
+	writebin(powfs[ipowfs].saa,"powfs%d_saa",ipowfs);
+	locwrite(powfs[ipowfs].loc,"powfs%d_loc",ipowfs);
+	writebin(powfs[ipowfs].amp,"powfs%d_amp",ipowfs);
 	if(powfs[ipowfs].loc_tel){
-	    writebin(powfs[ipowfs].saa_tel,"%s/powfs%d_saa_tel", dirsetup,ipowfs);
-	    writebin(powfs[ipowfs].amp_tel,"%s/powfs%d_amp_tel", dirsetup,ipowfs);
-	    writebin(powfs[ipowfs].loc_tel, "%s/powfs%d_loc_tel", dirsetup,ipowfs);
+	    writebin(powfs[ipowfs].saa_tel,"powfs%d_saa_tel",ipowfs);
+	    writebin(powfs[ipowfs].amp_tel,"powfs%d_amp_tel",ipowfs);
+	    writebin(powfs[ipowfs].loc_tel,"powfs%d_loc_tel",ipowfs);
 	}
 	if(powfs[ipowfs].loc_dm){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		for(int jwfs=0; jwfs<nwfsp; jwfs++){
-		    writebin(powfs[ipowfs].loc_dm, "%s/powfs%d_loc_dm", dirsetup, ipowfs);
+		    writebin(powfs[ipowfs].loc_dm,"powfs%d_loc_dm", ipowfs);
 		}
 	    }
 	}
@@ -625,11 +625,11 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
 	if(parms->save.setup){
-	    writebin(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
+	    writebin(powfs[ipowfs].neasim,"powfs%d_neasim", ipowfs);
 	}
     }
     if(parms->save.setup && powfs[ipowfs].GS0){
-	writebin(powfs[ipowfs].GS0,"%s/powfs%d_GS0",dirsetup,ipowfs);
+	writebin(powfs[ipowfs].GS0,"powfs%d_GS0",ipowfs);
     }
 }
 /**
@@ -705,7 +705,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    }
 	}
 	if(parms->save.setup){
-	    writebin(powfs[ipowfs].sprint,"%s/powfs%d_sprint", dirsetup,ipowfs);
+	    writebin(powfs[ipowfs].sprint,"powfs%d_sprint",ipowfs);
 	}
     }
     int pixpsax=pixpsay;
@@ -879,9 +879,9 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	powfs[ipowfs].dtheta->p[iwvl]=powfs[ipowfs].dtf[iwvl].dtheta;
 	if(parms->save.setup>1){
 	    writebin(powfs[ipowfs].dtf[iwvl].nominal,
-		     "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
+		     "powfs%d_dtf%d_nominal",ipowfs,iwvl);
 	    writebin(powfs[ipowfs].dtf[iwvl].si,
-		     "%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);
+		     "powfs%d_dtf%d_si",ipowfs,iwvl);
 	}
     }
 }
@@ -936,7 +936,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
     }
     dcellfree(Nains);
     if(parms->save.setup){
-	writebin(powfs[ipowfs].sodium, "%s/powfs%d_sodium",dirsetup,ipowfs);
+	writebin(powfs[ipowfs].sodium,"powfs%d_sodium",ipowfs);
     }
 }
 typedef struct{
@@ -1105,35 +1105,35 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     llt->mcc =pts_mcc_ptt(llt->pts, llt->amp->p);
     llt->imcc =dcellinvspd_each(llt->mcc);
     if(parms->save.setup){
-	locwrite(llt->loc, "%s/powfs%d_llt_loc",dirsetup,ipowfs);
-	writebin(llt->amp, "%s/powfs%d_llt_amp", dirsetup,ipowfs);
-	writebin(llt->imcc, "%s/powfs%d_llt_imcc",dirsetup,ipowfs);
+	locwrite(llt->loc,"powfs%d_llt_loc",ipowfs);
+	writebin(llt->amp,"powfs%d_llt_amp",ipowfs);
+	writebin(llt->imcc,"powfs%d_llt_imcc",ipowfs);
 	if(llt->ncpa){
-	    writebin(llt->ncpa, "%s/powfs%d_llt_ncpa", dirsetup, ipowfs);
+	    writebin(llt->ncpa,"powfs%d_llt_ncpa", ipowfs);
 	}
-	writebin(powfs[ipowfs].srot, "%s/powfs%d_srot",dirsetup,ipowfs);
-	writebin(powfs[ipowfs].srsa, "%s/powfs%d_srsa",dirsetup,ipowfs);
+	writebin(powfs[ipowfs].srot,"powfs%d_srot",ipowfs);
+	writebin(powfs[ipowfs].srsa,"powfs%d_srsa",ipowfs);
     }
     if(parms->save.setup>1){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		writebin(powfs[ipowfs].etfprep[iwvl].p1, 
-			   "%s/powfs%d_etfprep%d_1d",dirsetup,ipowfs,iwvl);
+			   "%powfs%d_etfprep%d_1d",ipowfs,iwvl);
 	    }
 	    if(powfs[ipowfs].etfprep[iwvl].p2){
 		writebin(powfs[ipowfs].etfprep[iwvl].p2,
-			   "%s/powfs%d_etfprep%d_2d",dirsetup,ipowfs,iwvl);
+			   "powfs%d_etfprep%d_2d",ipowfs,iwvl);
 	    }
 	}
 	if(powfs[ipowfs].etfsim != powfs[ipowfs].etfprep){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(powfs[ipowfs].etfsim[iwvl].p1){
 		    writebin(powfs[ipowfs].etfsim[iwvl].p1, 
-			       "%s/powfs%d_etfsim%d_1d",dirsetup,ipowfs,iwvl);
+			       "powfs%d_etfsim%d_1d",ipowfs,iwvl);
 		}
 		if(powfs[ipowfs].etfsim[iwvl].p2){
 		    writebin(powfs[ipowfs].etfsim[iwvl].p2,
-			       "%s/powfs%d_etfsim%d_2d",dirsetup,ipowfs,iwvl);
+			       "powfs%d_etfsim%d_2d",ipowfs,iwvl);
 		}
 	    }
 	}
@@ -1290,9 +1290,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     if(parms->save.setup){
 	if(sanea){
-	    writebin(sanea, "%s/powfs%d_sanea", dirsetup, ipowfs);
+	    writebin(sanea,"powfs%d_sanea", ipowfs);
 	}
-	writebin(powfs[ipowfs].intstat->cogcoeff, "%s/powfs%d_cogcoeff", dirsetup, ipowfs);
+	writebin(powfs[ipowfs].intstat->cogcoeff,"powfs%d_cogcoeff", ipowfs);
     }
     dcellfree(sanea);
     toc2("setup_powfs_cog");
@@ -1344,7 +1344,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    /*Generating short exposure psfs for both uplink and downlink turbulence effect. */
 	    gensepsf(parms,powfs,ipowfs);
 	    if(parms->save.setup>1 && intstat){
-		writebin(intstat->sepsf->p[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
+		writebin(intstat->sepsf->p[0],"powfs%d_sepsf",ipowfs);
 	    }
 	    /*Free short exposure otf. */
 	    ccellfree(intstat->lotf);
@@ -1353,9 +1353,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	/*generate short exposure i0,gx,gy from psf. */
 	gensei(parms,powfs,ipowfs);
 	if(parms->save.setup){
-	    writebin(intstat->i0,"%s/powfs%d_i0",dirsetup,ipowfs);
-	    writebin(intstat->gx,"%s/powfs%d_gx",dirsetup,ipowfs);
-	    writebin(intstat->gy,"%s/powfs%d_gy",dirsetup,ipowfs);
+	    writebin(intstat->i0,"powfs%d_i0",ipowfs);
+	    writebin(intstat->gx,"powfs%d_gx",ipowfs);
+	    writebin(intstat->gy,"powfs%d_gy",ipowfs);
 	}
     
 	/*Remove OTFs that are older than 30 days. */
@@ -1367,7 +1367,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].phytype==1 || parms->powfs[ipowfs].phytypesim==1){
 	genmtch(parms,powfs,ipowfs);
 	if(parms->save.setup){
-	    writebin(powfs[ipowfs].intstat->mtche, "%s/powfs%d_mtche",dirsetup,ipowfs);
+	    writebin(powfs[ipowfs].intstat->mtche,"powfs%d_mtche",ipowfs);
 	}
     }
     if(parms->powfs[ipowfs].phytype==2 || parms->powfs[ipowfs].phytypesim==2 || parms->powfs[ipowfs].dither){
@@ -1380,7 +1380,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	intstat->saneaixy->p[i]=dinvspd(intstat->saneaxy->p[i]);
     }
     if(parms->save.setup){
-	writebin(intstat->saneaxy, "%s/powfs%d_saneaxy",dirsetup,ipowfs);
+	writebin(intstat->saneaxy,"powfs%d_saneaxy",ipowfs);
     }
     if(parms->powfs[ipowfs].neaphy){/*use physical optics nea for geom grad*/
 	powfs[ipowfs].neasim=cellnew(parms->powfs[ipowfs].nwfs, 1);
@@ -1402,7 +1402,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
 	if(parms->save.setup){
-	    writebin(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
+	    writebin(powfs[ipowfs].neasim,"powfs%d_neasim", ipowfs);
 	}
     }
   

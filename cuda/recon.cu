@@ -51,7 +51,7 @@ namespace cuda_recon{
     :grid(0), FR(0), FL(0), RR(0), RL(0), MVM(0),
      gradin(0),opdr(0),opdr_vec(0),opdr_save(0),tomo_rhs(0),
      dmfit(0), dmfit_vec(0),dmfit_save(0),fit_rhs(0),
-     RFdfx(0),GXL(0),gngsmvst(0), deltafocus(0),
+     GXL(0),gngsmvst(0),
      moao(0), dm_wfs(0),dm_evl(0),nmoao(parms->nmoao){
     if(!parms) return;
     cgstream = new stream_t;
@@ -92,7 +92,6 @@ void curecon_t::delete_config(){
     if(RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
     delete RR; RR=0;
     delete MVM; MVM=0;
-    delete RFdfx;RFdfx=0;
     delete GXL;GXL=0;
 }
 void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
@@ -150,9 +149,6 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	}
     }
  
-    if(parms->dbg.deltafocus){
-	cp2gpu(&RFdfx, recon->RFdfx);
-    }
     if(parms->recon.split==2){
 	cp2gpu(&GXL, recon->GXL);
     }
@@ -260,7 +256,7 @@ void curecon_t::reset(const PARMS_T *parms){
 }
     
 #define DBG_RECON 1
-Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
+Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, 
 		      const dcell *_gradin){
     cp2gpu(&gradin, _gradin);
 #if DBG_RECON
@@ -302,11 +298,6 @@ Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, dcell **_deltafocus,
 	info("computing ngsmvst\n");
 	curcellmm(&gngsmvst, 0, GXL, opdr_vec, "nn", 1, *cgstream);
 	add2cpu(_gngsmvst, 1, gngsmvst, 1, *cgstream);
-    }
-    if(RFdfx){
-	info2("computing deltafocus\n");
-	curcellmm(&deltafocus, 0, RFdfx, opdr_vec, "nn", 1, *cgstream);
-	cp2cpu(_deltafocus, deltafocus, *cgstream);
     }
     cgstream->sync();
 return cgres;
@@ -634,7 +625,7 @@ void gpu_tomo(SIM_T *simu){
 		      || (recon->moao && !parms->gpu.moao)
 		      || parms->evl.tomo);
 	simu->cgres->p[0]->p[simu->reconisim]=
-	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, &simu->deltafocus,
+	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, 
 			  parms->recon.psol?simu->gradlastol:simu->gradlastcl);
     }
 }

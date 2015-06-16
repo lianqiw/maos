@@ -181,7 +181,7 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     uint32_t magic;
     char *header;
     mmap_header_ro(&map, &magic, &nx, &ny, &header);
-    if(!iscell(magic)){
+    if(!iscell(&magic)){
 	error("We want a cell array, File has %d\n", (int)magic);
     }
     X(cell) *out=cellnew(nx, ny);

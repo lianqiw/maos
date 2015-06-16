@@ -243,7 +243,7 @@ int scheduler_listen(void(*fun)(int)){
 /**
    Called by maos to report a job start to scheduler.
  */
-int scheduler_start(char *path, int nthread, int waiting){
+int scheduler_start(char *path, int nthread, int ngpu, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
 	warning_time("Failed to connect to scheduler\n");
@@ -255,7 +255,7 @@ int scheduler_start(char *path, int nthread, int waiting){
     cmd[0]=CMD_START;
     cmd[1]=getpid();
     cmd[2]=nthread;
-    cmd[3]=waiting;
+    cmd[3]=(waiting?1:0) | (ngpu << 1);;
     CATCH_ERR(stwriteintarr(psock,cmd,4));
     return 0;
 }

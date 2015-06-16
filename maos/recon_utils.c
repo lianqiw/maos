@@ -809,10 +809,10 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }
     if(parms->save.setup){
-	writebin(cn2est->iPnk,"%s/cn2_iPnk",dirsetup);
-	writebin(cn2est->Pnk,"%s/cn2_Pnk",dirsetup);
-	writebin(cn2est->ht,"%s/cn2_ht",dirsetup);
-	writebin(cn2est->wtconvert,"%s/cn2_wtconvert",dirsetup);
+	writebin(cn2est->iPnk,"cn2_iPnk");
+	writebin(cn2est->Pnk,"cn2_Pnk");
+	writebin(cn2est->ht,"cn2_ht");
+	writebin(cn2est->wtconvert,"cn2_wtconvert");
     }
     dfree(wfstheta);
     dfree(ht);

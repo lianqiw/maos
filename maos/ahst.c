@@ -154,9 +154,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
-
 	dspcell *Hat=cellnew(ndm,1);
-	dspcell *Ha=cellnew(1,ndm);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -527,7 +525,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     if(parms->save.setup){
-	writebin(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
+	writebin(recon->ngsmod->MCC, "ahst_MCC");
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);
@@ -608,11 +606,11 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
  
     if(parms->save.setup){
 	/*ahst stands for ad hoc split tomography */
-    	writebin(recon->ngsmod->GM,  "%s/ahst_GM",  dirsetup);
-	writebin(recon->ngsmod->Rngs,"%s/ahst_Rngs",dirsetup);
-	writebin(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
-	writebin(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
-	writebin(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
+    	writebin(recon->ngsmod->GM,  "ahst_GM");
+	writebin(recon->ngsmod->Rngs,"ahst_Rngs");
+	writebin(recon->ngsmod->Pngs,"ahst_Pngs");
+	writebin(recon->ngsmod->Modes, "ahst_Modes");
+	writebin(recon->ngsmod->Wa, "ahst_Wa");
     }
     
 }

@@ -43,7 +43,6 @@ private:
     curcell *opdr_save;/*for debugging*/
     curcell *dmfit_save;/*for debugging*/
 
-    curcell *RFdfx;
     curcell *GXL;
 
     curcell *gngsmvst;
@@ -93,7 +92,7 @@ public:
     void reset(const PARMS_T *parms);
     void update(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);
     void update_cn2(const PARMS_T *parms, RECON_T *recon);
-    Real tomo(dcell **_opdr, dcell **gngsmvst, dcell **dfocus, const dcell *_gradin);
+    Real tomo(dcell **_opdr, dcell **gngsmvst, const dcell *_gradin);
     Real fit(dcell **_dmfit, dcell *_opdr);
     Real moao_recon(dcell *_dmfit, dcell *_opdr);
     void moao_filter(dcell *_dm_wfs, dcell *_dm_evl);

@@ -158,8 +158,15 @@ int main(int argc, const char *argv[]){
     }else{
 	redirect();
     }
-    /*Launch the scheduler and report about our process */
-    scheduler_start(scmd,NTHREAD,!arg->force);
+    /*Launch the scheduler if it is not running and report about our process */
+    int ngpu;
+#if USE_CUDA
+    ngpu=arg->ngpu;
+    if(!ngpu) ngpu=0xFFFFFF;
+#else
+    ngpu=0;
+#endif
+    scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
     info2("%s\n", scmd);
     info2("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
     maos_version();
@@ -186,7 +193,7 @@ int main(int argc, const char *argv[]){
 	    warning_time("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
-	    scheduler_start(scmd,NTHREAD,!arg->force);
+	    scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
 	}
 	if(count>=60){
 	    warning_time("fall back to own checker\n");

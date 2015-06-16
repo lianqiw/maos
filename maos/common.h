@@ -26,7 +26,6 @@
 #include "types.h"
 #include "utils.h"
 extern int exit_fail;
-extern const char* dirsetup;
 extern const char *dirskysim;
 #define EXIT raise(SIGTERM)
 extern GLOBAL_T *global;

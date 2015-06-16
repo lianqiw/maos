@@ -42,11 +42,11 @@ static mm_t parse_trans(const cell *A, const cell *B, const char trans[2]){
     if(trans[1]=='n' || trans[1]=='N'){
 	ny=B->ny; 
 	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
+	if(nz!=B->nx) error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
     }else if(trans[1]=='c' || trans[1]=='t'){
 	ny=B->nx;
 	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
+	if(nz!=B->ny) error("mismatch: trans=%s, A is %ldx%ld, B is %ldx%ld\n", trans, A->nx, A->ny, B->nx, B->ny);
     }else{
 	error("Invalid trans[1]=%c\n", trans[1]);
 	ny=0; by=0; bz=0;
@@ -302,7 +302,6 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2]
     if(!A || !B) return;
     X(sp)* At=0;
     X(sp)* Bt=0;
-    int transa=0, transb=0;
     if(trans[0]=='t'||trans[0]=='c'){
 	At=X(sptrans)(A);
 	if(trans[0]=='c'){
@@ -387,7 +386,7 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 	    }else if(A->id==M_SPT){//sparse A
 		X(spmm)((X(mat)**)C0, (X(sp)*)A, (X(mat)*)B, trans, alpha);
 	    }else{
-		error("Invalid A type, id=%ld.\n", A->id);
+		error("Invalid A type, id=%u.\n", A->id);
 	    }
 	}else if(B->id==M_SPT){//sparse B
 	    if(A->id==M_T){//dense A
@@ -402,13 +401,13 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 		    X(free)(Afull);
 		    X(free)(Bfull);
 		}else{
-		    error("Invalid C type, id=%ld. \n", (*C0)->id);
+		    error("Invalid C type, id=%u. \n", (*C0)->id);
 		}
 	    }else{
-		error("Invalid A type, id=%ld.\n", A->id);
+		error("Invalid A type, id=%u.\n", A->id);
 	    }
 	}else{
-	    error("Invalid B type, id=%ld.\n", B->id);
+	    error("Invalid B type, id=%u.\n", B->id);
 	}
     }
 }
@@ -431,7 +430,7 @@ void X(celladdI)(void *A_, T alpha){
 	}else if(IND(A, ii, ii)->id==M_SPT){
 	    X(spaddI)(X(sp_cast)(IND(A,ii,ii)),alpha);
 	}else{
-	    error("Invalid id=%ld", IND(A,ii,ii)->id);
+	    error("Invalid id=%u", IND(A,ii,ii)->id);
 	}
     }
 }

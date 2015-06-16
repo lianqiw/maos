@@ -31,11 +31,11 @@ void cellinit(cell **A, long nx, long ny);
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);
 void cellresize(void *in, long nx, long ny);
 void cellfree_do(void* dc);
-void writedata_by_id(file_t *fd, const void* pix, long id);
-void write_by_id(const void* dc, long id, const char* format,...);
+void writedata_by_id(file_t *fd, const void* pix, uint32_t id);
+void write_by_id(const void* dc, uint32_t id, const char* format,...);
 
-cell* readdata_by_id(file_t *fp, long id, int level, header_t *header);
-cell* read_by_id(long id, int level, const char *format, ...);
+cell* readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header);
+cell* read_by_id(uint32_t id, int level, const char *format, ...);
 
 cell* readbin(const char *format, ...);
 void writebin(const void *dc, const char *format, ...);

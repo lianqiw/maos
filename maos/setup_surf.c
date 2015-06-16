@@ -409,7 +409,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     }
     toc2(" ");
     if(parms->save.setup){
-	writebin(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
+	writebin(recon->HA_ncpa,"HA_ncpa");
     }
 }
 void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
@@ -634,10 +634,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
     }
     if(parms->save.setup || parms->save.ncpa){
-	writebin(aper->opdadd, "%s/surfevl.bin",  dirsetup);
-	writebin(aper->opdfloc, "%s/surffloc.bin", dirsetup);
+	writebin(aper->opdadd, "surfevl.bin");
+	writebin(aper->opdfloc, "surffloc.bin");
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    writebin(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
+	    writebin(powfs[ipowfs].opdadd, "surfpowfs_%d.bin",  ipowfs);
 	}
     }
     if(parms->sim.ncpa_calib && parms->dbg.ncpa_nouncorr && recon->dm_ncpa && aper->opdadd){
@@ -660,7 +660,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		}
 	    }
 	}
-	writebin(aper->opdadd, "%s/surfevl_correctable.bin",  dirsetup);
+	writebin(aper->opdadd, "surfevl_correctable.bin");
     }
     dcellfree(aper->opdfloc);
 }

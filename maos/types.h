@@ -279,7 +279,6 @@ typedef struct RECON_T{
     dspcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
     dspcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
     dspcell *GXlo;      /**<GX for low order WFs*/
-    dspcell *GXfocus;   /**<GX used for focus tracking.*/
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
     dcell *MVRngs;     /**<NGS recon for MV split tomography*/
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
@@ -334,8 +333,6 @@ typedef struct RECON_T{
     dcell *RFngsg;     /**<focus reconstruction for all TTF NGS from grad.*/
     dcell *RFngsx;     /**<focus reconstruction for all TTF NGS from opdr.*/
     dcell *RFngsa;     /**<focus reconstruction for all TTF NGS from dm*/
-    dcell *RFdfx;      /**<delta focus reconstruction for science-ngs from opdr.*/
-    dcell *RFdfa;      /**<delta focus reconstruction for science-ngs from dm.*/
 
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
@@ -539,7 +536,6 @@ typedef struct SIM_T{
 
     /*focus tracking loop*/
     dcell *LGSfocus;  /**<Temporary array*/
-    dcell *deltafocus; /**<focus difference between science and ngs estimated from opdr*/
     dmat *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocuslpf;/**<low pass filtered NGS focus*/
     dmat *zoomerr;    /**<Trombone error signal from zoomavg*/

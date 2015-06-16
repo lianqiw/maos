@@ -81,17 +81,6 @@ void tomofit(SIM_T *simu){
 #endif
 	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->recon.psol?simu->gradlastol:simu->gradlastcl);
 	toc_tm("Tomography");
-	if(parms->dbg.deltafocus){
-	    if(simu->opdr && recon->RFdfx){
-		//Compute the delta focus in open loop.
-		dcellmm(&simu->deltafocus, recon->RFdfx, simu->opdr, "nn", 1);
-	    }
-	    if(parms->dbg.deltafocus==2){
-		dcell *dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
-		//Compute the delta focus in closed loop.
-		dcellmm(&simu->deltafocus, recon->RFdfa, dmpsol, "nn", -1);
-	    }
-	}
     }
     if(parms->ndm>0){
 	TIC_tm; tic_tm;
@@ -156,9 +145,6 @@ void recon_split(SIM_T *simu){
 		    //Do LPF on focus.
 		    const double lpfocus=parms->sim.lpfocuslo;
 		    double ngsfocus=simu->Merr_lo->p[0]->p[5];
-		    if(parms->sim.mffocus && parms->dbg.deltafocus){
-			ngsfocus+=simu->deltafocus->p[0]->p[0];
-		    }
 		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 		    simu->Merr_lo->p[0]->p[5]=simu->ngsfocuslpf;
 		}
@@ -180,9 +166,6 @@ void recon_split(SIM_T *simu){
 		dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
 		const double lpfocus=parms->sim.lpfocuslo;
 		double ngsfocus=tmp->p[0]->p[0]; 
-		if(parms->sim.mffocus && parms->dbg.deltafocus){
-		    ngsfocus+=simu->deltafocus->p[0]->p[0];
-		}
 		simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 		error("Please Implement: add ngsfocus to Merr_lo");
 		dcellfree(tmp);	

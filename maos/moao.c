@@ -121,10 +121,10 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 						1./recon->floc->nloc);
 	}
 	if(parms->save.setup){
-	    writebin(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
-	    writebin(recon->moao[imoao].HA, "%s/moao%d_HA",dirsetup,imoao);
-	    writebin(recon->moao[imoao].NW, "%s/moao%d_NW",dirsetup,imoao);
-	    writebin(recon->moao[imoao].actslave, "%s/moao%d_actslave",dirsetup,imoao);
+	    writebin(recon->moao[imoao].aloc,"moao%d_aloc",imoao);
+	    writebin(recon->moao[imoao].HA, "moao%d_HA",imoao);
+	    writebin(recon->moao[imoao].NW, "moao%d_NW",imoao);
+	    writebin(recon->moao[imoao].actslave, "moao%d_actslave",imoao);
 	}
 	if(parms->plot.setup){
 	    plotloc("FoV",parms,recon->moao[imoao].aloc->p[0], 0,"moao_aloc");

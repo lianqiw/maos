@@ -79,13 +79,13 @@ int main(int argc, char **argv){
 
     /*Now we are in the background. */
     /*info("Waiting for the scheduelr\n"); */
-    scheduler_start(scmd,1,1);
+    scheduler_start(scmd,1,0,1);
     int count=0;
     while(scheduler_wait()&& count<60){
 	warning_time("failed to get reply from scheduler. retry\n");
 	sleep(10);
 	count++;
-	scheduler_start(scmd,1,1);
+	scheduler_start(scmd,1,0,1);
     }
     if(count>=60){
 	warning_time("fall back to own checker\n");

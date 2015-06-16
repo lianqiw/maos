@@ -482,7 +482,6 @@ static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
 void wfsgrad_fsm(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int isim=simu->isim;
     /*Uplink FSM*/
@@ -508,13 +507,15 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int isim=simu->isim;
-    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_pllskip){
-	//Compute estimate of dithering signal per subaperture from WFS gradients
-	DITHER_T *pd=simu->dither[iwfs];
+    if(!parms->powfs[ipowfs].dither || isim<parms->powfs[ipowfs].dither_pllskip){
+	return;
+    }
+    DITHER_T *pd=simu->dither[iwfs];
+    if(parms->powfs[ipowfs].dither==1){
 	double cs, ss;
+	//For T/T dithering. Compute gradient derivative for every subaperture
 	dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
 	if(parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2!=1){
-	    //CoG use different gain for each.
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    if(!pd->ggm){
 		pd->ggm=dnew(nsa*2,1);
@@ -524,9 +525,18 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 		pd->ggm->p[isa+nsa]+=ss*simu->gradcl->p[iwfs]->p[isa+nsa];
 	    }
 	}
-    }
-    
-    if(parms->powfs[ipowfs].dither>1){
+	    
+	/*Use delay locked loop to determine the phase of actual dithering
+	  signal from WFS error signal, i.e., average position of expected
+	  spot during integration. Uplink propagation is accounted for in
+	  LGS.*/
+	double err, cd, sd;
+	dither_position(&cd, &sd, parms, ipowfs, isim, pd->deltam);
+	err=(-sd*(simu->fsmerr->p[iwfs]->p[0])
+	     +cd*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
+	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
+    }else if(parms->powfs[ipowfs].dither>1){
+	//DM dithering.  Compute dither signal in input (DM) and output (gradients) signal.
 	dmat *tmp=0;
 	const int idm=parms->idmground;
 	dmm(&tmp, 0, INDEX(recon->dither_ra, idm, idm), simu->dmreal->p[idm], "nn", 1);
@@ -536,69 +546,47 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 	dfree(tmp);
     }
     
-    if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_pllskip){
-	DITHER_T *pd=simu->dither[iwfs];
-	/* 
-	   The phase locked loop determines the phase of actual dithering signal
-	   from WFS error signal.
-	*/
-	if(parms->powfs[ipowfs].dither==1){//dither in tip/tilt
-	    double err, cd, sd;
-	    //Average position of expected spot during integration. Uplink propagation is accounted for in LGS.
-	    dither_position(&cd, &sd, parms, ipowfs, isim, pd->deltam);
-	    //Correlate with error signal from WFS measurements.
-	    err=(-sd*(simu->fsmerr->p[iwfs]->p[0])
-		 +cd*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
-	    pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
+  
+    const int npll=parms->powfs[ipowfs].dither_pllrat;
+    int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
+    if(npllacc%npll==0){
+	//Synchronous detection of dither signal in input (DM) and output
+	//(gradients) signal. The ratio between the two is used for optical gain adjustment.
+	pd->deltam=pd->delta;
+	const int npoint=parms->powfs[ipowfs].dither_npoint;
+	int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
+	if(parms->powfs[ipowfs].dither==1){
+	    dmat *tmp=0;
+	    tmp=drefcols(simu->fsmerrs->p[iwfs], simu->isim-ncol+1, ncol);
+	    pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
+	    dfree(tmp);
+	    tmp=drefcols(simu->fsmcmds->p[iwfs], simu->isim-ncol+1, ncol);
+	    pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
+	    dfree(tmp);
+	}else{
+	    dmat *tmp=0;
+	    tmp=drefcols(pd->mr->p[0], simu->isim-ncol+1, ncol);//DM
+	    pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
+	    dfree(tmp);
+	    tmp=drefcols(pd->mr->p[1], simu->isim-ncol+1, ncol);//Grad
+	    pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
+	    dfree(tmp);
 	}
-
-	/* Determine the dither signal strength from sensor as well as measurements*/
-	const int npll=parms->powfs[ipowfs].dither_pllrat;
-	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
-	//This only executes when PLL should have output use saved time history.
-	if(npllacc>0 && npllacc%npll==0){
-	    pd->deltam=pd->delta;
-	    const int npoint=parms->powfs[ipowfs].dither_npoint;
-	    int detrend=1;//parms->powfs[ipowfs].dither==1?0:1;//detrend not needed in tip/tilt mode
-	    int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
-	    if(parms->powfs[ipowfs].dither==1){
-		dmat *tmp=0;
-		tmp=drefcols(simu->fsmerrs->p[iwfs], simu->isim-ncol+1, ncol);
-		pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, detrend);
-		dfree(tmp);
-		tmp=drefcols(simu->fsmcmds->p[iwfs], simu->isim-ncol+1, ncol);
-		pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, detrend);
-		dfree(tmp);
-	    }else{
-		dmat *tmp=0;
-		tmp=drefcols(pd->mr->p[0], simu->isim-ncol+1, ncol);//DM
-		pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
-		dfree(tmp);
-		tmp=drefcols(pd->mr->p[1], simu->isim-ncol+1, ncol);//Grad
-		pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
-		dfree(tmp);
-	    }
 	    
-	    if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
-		const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-		info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%8g, a2me/a2m=%.2f\n",
-		      isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me/pd->a2m);
-	    }
-	    if(simu->resdither){
-		int ic=(npllacc-1)/(npll);
-		IND(simu->resdither->p[iwfs], 0, ic)=pd->deltam;
-		IND(simu->resdither->p[iwfs], 1, ic)=pd->a2m;
-		IND(simu->resdither->p[iwfs], 2, ic)=pd->a2me;
-	    }
+	if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
+	    const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
+	    info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%8g, a2me/a2m=%.2f\n",
+		  isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me/pd->a2m);
 	}
-    }//PLL loop
-
-    if(parms->powfs[ipowfs].dither==1){
-	DITHER_T *pd=simu->dither[iwfs];
-	/* Update drift mode computation. Only useful when wfs t/t is removed*/
-	int npll=parms->powfs[ipowfs].dither_pllrat;
-	int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
-	if(npllacc>0 && npllacc % npll==0){
+	if(simu->resdither){
+	    int ic=(npllacc-1)/(npll);
+	    IND(simu->resdither->p[iwfs], 0, ic)=pd->deltam;
+	    IND(simu->resdither->p[iwfs], 1, ic)=pd->a2m;
+	    IND(simu->resdither->p[iwfs], 2, ic)=pd->a2me;
+	}
+	    
+	if(parms->powfs[ipowfs].dither==1){
+	    /* Update drift mode computation. Only useful when wfs t/t is removed*/
 	    double scale1=1./npll;
 	    double scale2=scale1*2./(pd->a2m);
 	    if(pd->imb){//matched filter
@@ -617,9 +605,7 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 		//Smooth trombone movement by provide continuous err.
 		if(parms->powfs[ipowfs].llt){
 		    dmat *focus=dnew(1,1);
-		    dmat *RFlgsg=recon->RFlgsg->p[parms->recon.glao
-						  ?(ipowfs+ipowfs*parms->npowfs)
-						  :(iwfs+iwfs*parms->nwfs)];
+		    dmat *RFlgsg=IND(recon->RFlgsg, iwfs, iwfs);
 		    dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
 		    simu->zoomerr->p[iwfs]=focus->p[0];//2014-12-17: removed /npll;
 		    dfree(focus);
@@ -640,11 +626,10 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
     }
 
     if(!parms->powfs[ipowfs].trs){
-	/*when WFS t/t is used for reconstruction, do now close FSM
+	/*when WFS t/t is used for reconstruction, do not close FSM
 	 * loop. Subtract actual dithering signal.*/
 	if(parms->powfs[ipowfs].dither==1 && simu->gradscale->p[iwfs]){
 	    double amp,cs,ss; 
-	    DITHER_T *pd=simu->dither[iwfs];
 	    dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
 	    amp=pd->a2me;
 	    double ptt[2]={-cs*amp, -ss*amp};
@@ -656,12 +641,11 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
 
 /**
    Accomplish Two tasks:
-   
-   1) High pass filter lgs focus to remove sodium range variation effact.
-   2) Average LGS focus measurement to drive the trombone.
+   1) Average LGS focus measurement to drive the trombone.
+   2) High pass filter lgs focus to remove sodium range variation effact.
    
    We trust the focus measurement of the LGS WFS at high temporal frequency
-   where NGS cannot provide due to low frame rate. After the HPF on lgs
+   which NGS cannot provide due to low frame rate. After the HPF on lgs
    gradients, our system is NO LONGER affected by sodium layer variation.
 
    if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely
@@ -672,11 +656,11 @@ void wfsgrad_dither(SIM_T *simu, int iwfs){
    present and powfs.dfrs need to be set to 1 to handle it in tomography. This
    is the original focus tracking method.
 */
-void wfsgrad_mffocus(SIM_T* simu){
+static void wfsgrad_lgsfocus(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     
-    /*New plate mode focus offset for LGS WFS. Not needed*/
+    /*New plate mode focus offset for LGS WFS. Not really needed*/
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
@@ -694,88 +678,72 @@ void wfsgrad_mffocus(SIM_T* simu){
 
     int hi_output=(!parms->sim.closeloop || (simu->isim+1)%parms->sim.dtrat_hi==0);
     if(hi_output){
-	dcellzero(simu->LGSfocus);
-	/*residual focus along ngs estimated from LGS measurement.*/
-	dcellmm(&simu->LGSfocus, recon->RFlgsg, simu->gradcl,"nn",1);
-	dcell *LGSfocus=simu->LGSfocus;
-	long nwfsllt=0; 
-	double lpfocusm=0;
-	double lgsfocusm=0;
-	if(simu->isim==parms->sim.start){
-	    /*Here we set trombone position according to focus in the first
-	     * measurement. And adjust the focus content of this * measurement. */
-	    lgsfocusm=0;
-	    if(parms->sim.zoomshare){
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		    if(!LGSfocus->p[iwfs]) continue;
+	dcell *LGSfocus=simu->LGSfocus;//computed in wfsgrad_post.
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(!parms->powfs[ipowfs].llt) continue;
+	    const int do_phy=(parms->powfs[ipowfs].usephy && simu->isim>=parms->powfs[ipowfs].phystep);
+	    if(!do_phy) continue;
+	    double lgsfocusm=0;
+	    if(parms->powfs[ipowfs].zoomshare){
+		lgsfocusm=0;
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    lgsfocusm+=LGSfocus->p[iwfs]->p[0];
-		    nwfsllt++;
 		}
-		lgsfocusm/=nwfsllt;
+		lgsfocusm/=parms->powfs[ipowfs].nwfs;
 	    }
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		if(!LGSfocus->p[iwfs]) continue;
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->sim.zoomshare){
-		    simu->zoomint->p[iwfs]=lgsfocusm;
-		}else{
-		    simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0]; 
+	    if(simu->isim==parms->sim.start && parms->powfs[ipowfs].phytypesim!=1){
+		/*Here we set trombone position according to focus in the first
+		  measurement. And adjust the focus content of this
+		  measurement. This simulates the initial focus acquisition
+		  step. No need if start with pre-built matched filter.*/
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		    if(parms->powfs[ipowfs].zoomshare){
+			simu->zoomint->p[iwfs]=lgsfocusm;
+		    }else{
+			simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0]; 
+		    }
+		    LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
+		    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->zoomint->p[iwfs]);
+		    info2("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
 		}
-		LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->zoomint->p[iwfs]);
-		info2("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
 	    }
-	    lgsfocusm=0;
-	    nwfsllt=0;
-	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    if(!LGSfocus->p[iwfs]) continue;
-	    int ipowfs=parms->wfs[iwfs].powfs;
 	    //In RTC. LPF can be put after using the value to put it off critical path.
 	    double lpfocus=parms->sim.lpfocushi;
-	    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
-	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
-	    }
-	    lgsfocusm+=LGSfocus->p[iwfs]->p[0];
-	    //Averaged LPF focus
-	    lpfocusm+=simu->lgsfocuslpf->p[iwfs]; 
-	    nwfsllt++;
-	    
-	}
-	lgsfocusm/=nwfsllt;
-	if(parms->sim.mffocus==2){//remove LPF GLOBAL focus from each lgs
-	    lpfocusm/=nwfsllt;
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		if(!LGSfocus->p[iwfs]) continue;
-		int ipowfs=parms->wfs[iwfs].powfs;
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -lpfocusm);
-	    }
-	}
-    
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    if(LGSfocus->p[iwfs]){
-		if(parms->sim.zoomshare){
-		    //all lgs share the same trombone so take the average value.
-		    simu->zoomavg->p[iwfs]+=lgsfocusm;
-		}else{
-		    simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
+	    double infocus=0;
+	    //For those WFS that dither and run mtch, use focus error from ib instead
+	    const int zoom_output=(parms->powfs[ipowfs].dither!=1 || parms->powfs[ipowfs].phytypesim!=1);
+	    const int zoomavg_output=((simu->reconisim+1)%parms->powfs[ipowfs].zoomdtrat==0);
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		if(parms->sim.mffocus){//Focus HPF
+		    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
+			infocus=LGSfocus->p[iwfs]->p[0];
+		    }else{//remove powfs averaged focus form each lgs.
+			infocus=lgsfocusm;
+		    }
+		    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+infocus*lpfocus;
+		    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
+		}
+		if(zoom_output){//Trombone averager
+		    if(parms->powfs[ipowfs].zoomshare){//all lgs share the same trombone.
+			simu->zoomavg->p[iwfs]+=lgsfocusm;
+		    }else{//each lgs has individual zoom mechanism.
+			simu->zoomavg->p[iwfs]+=LGSfocus->p[iwfs]->p[0];
+		    }
+		    if(zoomavg_output){
+			/*zoom error is zero order hold even if no output from averager*/
+			simu->zoomerr->p[iwfs]=simu->zoomavg->p[iwfs]*parms->powfs[ipowfs].zoomgain*pow(parms->powfs[ipowfs].zoomdtrat,-2);
+			simu->zoomavg->p[iwfs]=0;
+		    }
 		}
 	    }
-	}
-	/*zoom error is zero order hold even if no output from averager*/
-	if((simu->reconisim+1)%parms->sim.zoomdtrat==0){
-	    int dtrat=parms->sim.zoomdtrat;
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].llt && (parms->powfs[ipowfs].dither!=1 || parms->powfs[ipowfs].phytypesim!=1)){
-		    //For those WFS that dither and run mtch, use focus error from ib instead
-		    simu->zoomerr->p[iwfs]=simu->zoomavg->p[iwfs]/dtrat;
-		}
-	    }
-	    dzero(simu->zoomavg);
 	}
     }
+    /*The zoomerr is prescaled, and ZoH. moved from filter.c as it only relates to WFS.*/
+    dcp(&simu->zoomreal, simu->zoomint);
+    dadd(&simu->zoomint, 1, simu->zoomerr, 1);
 }
 
 /**
@@ -793,7 +761,6 @@ void wfsgrad_post(thread_t *info){
     const int isim=simu->isim;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int dtrat_output=((isim+1-parms->powfs[ipowfs].step)%dtrat==0);
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
@@ -804,7 +771,7 @@ void wfsgrad_post(thread_t *info){
 		dcwm(*gradout, simu->gradscale->p[iwfs]);
 	    }
 	    dscale(*gradout, parms->powfs[ipowfs].gradscale);
-	    //Gradient offset due to mainly NCPA calibration. Must be after gain
+	    //Gradient offset due to mainly NCPA calibration. Must be after gain adjustment.
 	    if(simu->gradoff->p[iwfs]){
 		dadd(gradout, 1, simu->gradoff->p[iwfs], -parms->dbg.gradoff_scale);
 	    }
@@ -815,6 +782,10 @@ void wfsgrad_post(thread_t *info){
 		}
 		if(parms->powfs[ipowfs].dither){
 		    wfsgrad_dither(simu, iwfs);
+		}
+		
+		if(parms->powfs[ipowfs].llt){
+		    dmm(PIND(simu->LGSfocus, iwfs), 0, IND(simu->recon->RFlgsg, iwfs, iwfs), IND(simu->gradcl, iwfs), "nn", 1);
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
@@ -846,7 +817,7 @@ static void dither_update(SIM_T *simu){
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int npll=parms->powfs[ipowfs].dither_pllrat;
 	
-	if(parms->sim.zoomshare && parms->powfs[ipowfs].llt //this is LLT
+	if(parms->powfs[ipowfs].zoomshare && parms->powfs[ipowfs].llt //this is LLT
 	   && npllacc>0 && npllacc % npll==0){//There is drift mode computation
 	    double sum=0;
 	    for(int jwfs=0; jwfs<nwfs; jwfs++){
@@ -981,10 +952,7 @@ static void dither_update(SIM_T *simu){
 		}
 #endif
 	    }
-	    /*if(parms->sim.epdm->p[0]<=0){
-		parms->sim.epdm->p[0]=0.5;
-		warning("set ephi to 0.5\n");
-		}*/
+
 	    int UPDATE_TOMO=1;
 	    READ_ENV_INT(UPDATE_TOMO,0,1);
 	    if(UPDATE_TOMO && parms->recon.alg==0){//no need to update LSR.
@@ -1041,9 +1009,9 @@ void wfsgrad(SIM_T *simu){
     }
     CALL_THREAD(simu->wfs_grad_post, 0);
     dither_update(simu);
-    if(parms->sim.mffocus){
+    if(parms->nlgspowfs){
 	//high pass filter lgs focus to remove sodium range variation effect
-	wfsgrad_mffocus(simu);
+	wfsgrad_lgsfocus(simu);
     }
     if(1+simu->isim==parms->sim.end){
 #if USE_CUDA

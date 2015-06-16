@@ -29,7 +29,7 @@ extern int hid;
 extern uint16_t PORT;
 /*called by maos */
 int scheduler_listen(void(*fun)(int));
-int scheduler_start(char *path, int nthread, int waiting);
+int scheduler_start(char *path, int nthread, int ngpu, int waiting);
 int scheduler_wait(void);
 int scheduler_finish(int status);
 int scheduler_report(STATUS_T *status);

@@ -88,7 +88,7 @@ void cellresize(void *in, long nx, long ny){
     if(A->nx==nx || A->ny==1){
 	int nold=A->nx*A->ny;
 	int nnew=nx*ny;
-	if(nnew<nold && iscell(A->id)){
+	if(nnew<nold && iscell(A)){
 	    for(int i=nnew; i<nold; i++){
 		cellfree_do(A->p[i]);
 	    }
@@ -107,7 +107,7 @@ void cellresize(void *in, long nx, long ny){
 		A->p[ix+iy*A->nx]=0;
 	    }
 	}
-	if(iscell(A->id)){
+	if(iscell(A)){
 	    for(long i=0; i<A->nx*A->ny; i++){
 		cellfree_do(A->p[i]);
 	    }
@@ -123,7 +123,7 @@ void cellresize(void *in, long nx, long ny){
 */
 void cellfree_do(void *A){
     if(!A) return;
-    long id=*((long*)(A));
+    uint32_t id=((cell*)A)->id;
     switch(id){
     case MCC_ANY:{
 	cell *dc=(cell*)A;
@@ -165,19 +165,19 @@ void cellfree_do(void *A){
     case M_ZSP:
 	zspfree_do(A);break;
     default:
-	error("Unknown id=%lx\n", id);
+	error("Unknown id=%u\n", id);
     }
 }
 
-void writedata_by_id(file_t *fp, const void *A_, long id){
+void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
     const cell *A=(const cell*)A_;
     if(A){
 	if(!id){
 	    id=A->id;
 	}else if (id!=MCC_ANY){
-	    long id2=*((long*)(A));
+	    uint32_t id2=A->id;
 	    if((id & id2)!=id && (id & id2) != id2){
-		error("id=%ld, id2=%ld, mismatch\n", id, id2);
+		error("id=%u, id2=%u, mismatch\n", id, id2);
 	    }
 	}
     }else if(!id){
@@ -237,24 +237,24 @@ void writedata_by_id(file_t *fp, const void *A_, long id){
     case M_ZSP:
 	zspwritedata(fp, (zsp*)A);break;	
     default:
-	error("Unknown id=%lx\n", id);
+	error("Unknown id=%u\n", id);
     }
 }
 
-void write_by_id(const void *A, long id, const char* format,...){
+void write_by_id(const void *A, uint32_t id, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     writedata_by_id(fp, A, id);
     zfclose(fp);
 }
-cell *readdata_by_id(file_t *fp, long id, int level, header_t *header){
+cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
     header_t header2={0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
     }
     void *out=0;
-    if(level<0 && !iscell(header->magic)){
+    if(level<0 && !iscell(&header->magic)){
 	level=0;
     }
     if(zfisfits(fp) || level==0){
@@ -279,7 +279,7 @@ cell *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 		out=cspreaddata(fp, header);break;
 	    case M_ZSP64: case M_ZSP32:
 		out=zspreaddata(fp, header);break;	
-	    default:error("data type %lx not supported\n", id);
+	    default:error("data type id=%u not supported\n", id);
 	    }
 	    break;
 	case 1:{/*read a cell from fits*/
@@ -304,7 +304,7 @@ cell *readdata_by_id(file_t *fp, long id, int level, header_t *header){
 	    error("Only support zero or one level of cell when reading fits file\n");
 	}
     }else{
-	if(!iscell(header->magic)){
+	if(!iscell(&header->magic)){
 	    //wrap array into cell
 	    info2("Read cell from non cell data\n");
 	    cell *dcout=cellnew(1,1);
@@ -325,7 +325,7 @@ cell *readdata_by_id(file_t *fp, long id, int level, header_t *header){
     return out;
 }
 
-cell* read_by_id(long id, int level, const char *format, ...){
+cell* read_by_id(uint32_t id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     cell *out=readdata_by_id(fp, id, level, 0);

@@ -57,8 +57,10 @@
 #define M_MAP64     0x016402/*map_t, compatible with M_DBL*/
 #define M_RECTMAP64 0x026402/*map_t, compatible with M_DBL*/
 #define M_LOC64     0x036402/*loc_t with double data*/
-#define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
-
+INLINE int iscell(void *id){
+    uint32_t magic=*((uint32_t*)id);
+    return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
+}
 #if LONG_MAX==2147483647L //long is 32 bit
 #define M_LONG M_INT32
 #elif LONG_MAX==9223372036854775807L
@@ -104,7 +106,7 @@ int   gzflush(voidp gzfile, int flush);
 typedef struct file_t file_t;
 typedef struct mmap_t mmap_t;
 typedef struct {
-    uint32_t magic;
+    uint32_t magic;//this must be the first element because we cast header_t to uint32_t.
     uint64_t nx;
     uint64_t ny;
     char *str;
@@ -142,19 +144,6 @@ void write_header(const header_t *header, file_t *fp);
 int read_header2(header_t *header, file_t *fp);
 void read_header(header_t *header, file_t *fp);
 /**Check whether the header refers to a cell. If yes, return NULL. nx, ny are assigned to the dimension.*/
-INLINE header_t *check_cell(header_t *header, long *nx, long *ny){
-    header_t *headerc=NULL;
-    if(iscell(header->magic)){
-	*nx=header->nx;
-	*ny=header->ny;
-    }else{
-	*nx=1;
-	*ny=1;
-	headerc=header;
-    }
-    return headerc;
-}
-
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);

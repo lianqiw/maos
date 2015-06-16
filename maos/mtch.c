@@ -353,7 +353,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
-	writebin(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);
+	writebin(sanea, "powfs%d_sanea", ipowfs);
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->recon.glao && ni0>0){
 	info2("Averaging saneaxy of different WFS for GLAO mode\n");

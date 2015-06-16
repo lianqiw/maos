@@ -230,6 +230,10 @@ typedef struct POWFS_CFG_T{
     int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
     int dither_ogskip; /**<Number of WFS frames to skip before computing averaged images*/
     int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
+    //options for zoom corrector
+    int zoomdtrat;   /**<dtrat of the trombone averager*/
+    int zoomshare;   /**<1: All LGS share the same trombone*/
+    double zoomgain; /**<gain of the trombone controller*/
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
@@ -512,9 +516,6 @@ typedef struct SIM_CFG_T{
     char *mvmhost;   /**<Which host does the MVM server run*/
     int mvmsize;     /**<number of gradients to send each time. 0 is all.*/
     int mvmngpu;     /**<number of GPUs to use in server*/
-    int zoomdtrat;   /**<dtrat of the trombone averager*/
-    int zoomshare;   /**<1: All LGS share the same trombone*/
-    double zoomgain; /**<gain of the trombone controller*/
     int ncpa_calib;  /**<calibrate NCPA. 1: with all DMs. 2: with only ground DM.*/
     int ncpa_ttr;    /**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
     dmat *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
@@ -573,7 +574,6 @@ typedef struct DBG_CFG_T{
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
     int nocgwarm;    /**<Disable warm restart in CG*/
-    int deltafocus;  /**<use delta focus between science and NGS estimated from opdr.*/
     int test;        /**<Temporary any testing purpose*/
     int dmfullfov;   /**<let DM cover full FoV (sim.fov)*/
     int tomo;        /**<Comparing tomography in GPU and CPU*/
@@ -745,6 +745,7 @@ typedef struct PARMS_T{
     dmat *dirs;      /**<Collect for beam directions*/
     int dither;      /**<Some WFS is doing dithering*/
     int ilgspowfs;     /**<Index of LGS WFS*/
+    int nlgspowfs;   /**<Number of LGS WFS*/
     int itpowfs;       /**<Index of twfs*/
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/

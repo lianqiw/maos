@@ -289,7 +289,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	cmat *psfhat=cnew(nlpsf, nlpsf);
 	dmat *psf=dnew(nlpsf, nlpsf);
 	cellarr *lltpsfsave=NULL;
-	lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "%s/powfs%d_llt_psf", dirsetup, ipowfs);
+	lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
 	for(int illt=0; illt<intstat->lotf->ny; illt++){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const double dx=powfs[ipowfs].llt->pts->dx;

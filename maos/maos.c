@@ -23,7 +23,6 @@
 */
 GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
-const char *dirsetup=NULL;
 const char *dirskysim=NULL;
 
 /** begin variable overridable by environment variable MAOS_ .  These are for
@@ -55,9 +54,6 @@ void maos_setup(const PARMS_T *parms){
 	if(chdir("setup")){
 	    error("Unable to save to folder setup\n");
 	}
-	dirsetup=".";
-    }else{
-	dirsetup=".";
     }
     if(parms->sim.skysim){
 	dirskysim="skysim";

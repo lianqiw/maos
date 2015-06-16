@@ -168,7 +168,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     long pid = fork();
     if(pid<0){
 	exit(EXIT_FAILURE);
-    }else if (pid > 0) {/*exit first parent. */
+    }else if (pid > 0) {
 	close(fd);/*release lock in this process that is not daemon. */
 	sleep(1);
 	waitpid(pid,NULL,0);/*prevent child from defunct*/
@@ -178,6 +178,8 @@ void single_instance_daemonize(const char *lockfolder_in,
 	    exit(EXIT_SUCCESS);
 	}
     }
+    //child process keeps on
+    
     /* setsid so that this process is the session leader and
        therefore detached from the parent session and will
        not hang when the parent session terminates. As a
@@ -289,6 +291,7 @@ void redirect(void){
     if(disable_save) return;
     char fn[PATH_MAX];
     snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
+    mysymlink(fn, "run_recent.log");
     (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
@@ -412,7 +415,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 	    close(pipfd[0]);
 	    detached=1;
 	    pid_t pid2=fork();
-	    if(pid2<0){
+	    if(pid2<0){//error forking
 		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
 		    warning("Report pid(%d) failed\n", (int)pid2);
 		}

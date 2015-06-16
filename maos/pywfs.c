@@ -238,7 +238,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
 
     //Test NCPA calibration
-    int PYWFS_NCPA;
+    int PYWFS_NCPA=0;
     READ_ENV_INT(PYWFS_NCPA,0,1);
     if(PYWFS_NCPA){
 	dmat *opdatm=dread("opdatm");

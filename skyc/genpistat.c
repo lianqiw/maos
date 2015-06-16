@@ -82,7 +82,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    header_t header={0};
 	    read_header(&header, fp_wvf);
 	    long nstep=header.nx;
-	    if(!iscell(header.magic)){
+	    if(!iscell(&header.magic)){
 		error("expected data type: %u, got %u\n", (uint32_t)MCC_ANY, header.magic);
 	    }
 	    free(header.str); header.str=NULL;
