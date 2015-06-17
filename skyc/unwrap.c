@@ -91,9 +91,9 @@ static dmat* gen_unwrap(long nx, long ny){
     
     info("col=%ld,count=%ld\n",col,count);
     dspsetnzmax(Ht,count);
-    /*dspwrite(Ht,"Ht"); */
+    /*writebin(Ht,"Ht"); */
     dsp *H=dsptrans(Ht);
-    /*dspwrite(H,"H"); */
+    /*writebin(H,"H"); */
     dsp *HtH=dspmulsp(Ht,H);
     dmat *cHtH=NULL;
     dspfull(&cHtH,HtH,1);

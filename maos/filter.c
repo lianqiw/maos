@@ -346,7 +346,7 @@ static void filter_cl(SIM_T *simu){
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
     }
-
+    
     if(recon->moao && !parms->gpu.moao){
 	warning_once("moao filter implemented with LPF\n");
 	if(simu->dm_wfs){

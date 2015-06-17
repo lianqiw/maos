@@ -43,6 +43,6 @@ int main(int argc, char **argv){
     dcell *actcpl=genactcpl(has, NULL);
     dspcell *slave=slaving(aloc, actcpl, NULL, NULL, NULL, thres, 1);
     dcellfree(actcpl);
-    dspwrite(slave->p[0],"slaving");
+    writebin(slave->p[0],"slaving");
     dspcellfree(slave);
 }

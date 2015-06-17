@@ -48,12 +48,12 @@
     X(cell) *X(cell_cast)(void *A) CHECK_UNUSED_RESULT;			\
     X(cell) *X(cellnew2)(const X(cell) *A);				\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny);	\
-    void X(cellzero)(X(cell) *dc);					\
+    void X(cellzero)(void *dc);						\
     void X(cellset)(X(cell)*dc, T alpha);				\
     X(cell) *X(celltrans)(const X(cell) *A);				\
     X(cell) *X(cellref)(const X(cell) *in);				\
     X(cell) *X(celldup)(const X(cell) *in);				\
-    void X(cellcp)(X(cell)** out0, const X(cell) *in);			\
+    void X(cellcp)(void* out0, const void*in);				\
     X(cell) *X(cellreduce)(const X(cell) *A, int dim);			\
     X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim);	\
     X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim); \

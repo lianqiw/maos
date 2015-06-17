@@ -134,7 +134,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    if(parms->skyc.dbg){
 		writebin(powfs[ipowfs].dtf[iwvl].nominal,
 		       "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
-		dspwrite(powfs[ipowfs].dtf[iwvl].si,
+		writebin(powfs[ipowfs].dtf[iwvl].si,
 			"%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);
 	    }
 	    powfs[ipowfs].dtf[iwvl].U=cnew(ncomp,1);

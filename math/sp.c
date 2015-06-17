@@ -55,7 +55,7 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 }
 static void X(spfree_content)(X(sp) *sp){
     if(!sp) return;
-    assert(sp->id==M_SPT);
+    assert(issp(sp));
     if(sp->nref){
 	int nref=atomicadd(sp->nref, -1);
 	if(!nref){
@@ -70,7 +70,7 @@ static void X(spfree_content)(X(sp) *sp){
  * free a X(sp) matrix*/
 void X(spfree_do)(X(sp) *sp){
     if(sp){
-	assert(sp->id==M_SPT);
+	assert(issp(sp));
 	X(spfree_content)(sp);
 	free(sp);
     }
@@ -97,7 +97,7 @@ X(sp) *X(spref)(X(sp) *A){
 void X(spmove)(X(sp) *A, X(sp) *res){
     if(!res || !A) 
 	error("Trying to move an NULL matrix\n");
-    assert(res->id==M_SPT && A->id==M_SPT);
+    assert(issp(res) && issp(A));
     X(spfree_content)(A);
     memcpy(A,res,sizeof(X(sp)));
     memset(res, 0, sizeof(X(sp)));
@@ -167,14 +167,14 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
 }
 X(sp)* X(sp_cast)(void *A){
     if(!A) return 0;
-    assert(((cell*)A)->id==M_SPT);
+    assert(issp(A));
     return (X(sp)*)A;
 }
 /**
    resize a X(sp) matrix
 */
 void X(spsetnzmax)(X(sp) *sp, long nzmax){
-    assert(sp->id==M_SPT);
+    assert(issp(sp));
     if(sp->nzmax!=nzmax){
 	sp->i=realloc(sp->i, sizeof(spint)*nzmax);
 	sp->x=realloc(sp->x, sizeof(T)*nzmax);
@@ -187,7 +187,7 @@ void X(spsetnzmax)(X(sp) *sp, long nzmax){
 void X(spdisp)(const X(sp) *sp){
     long ic,ir;
     long imax;
-    assert(sp->id==M_SPT);
+    assert(issp(sp));
     if(sp->nzmax==0){
 	info("X(spdisp): All zeros\n");
     }else{
@@ -214,7 +214,7 @@ void X(spdisp)(const X(sp) *sp){
  * Check a X(sp) array for wrong orders. Return 1 if is lower triangle, 2 if
  * upper triangle, and 3 if diagonal.*/
 int X(spcheck)(const X(sp) *sp){
-    assert(sp->id==M_SPT);
+    assert(issp(sp));
     int not_lower=0;
     int not_upper=0;
     if(sp){
@@ -264,7 +264,7 @@ X(spcell) *X(spcell_cast)(void *A_){
     if(!A_) return 0;
     cell *A=cell_cast(A_);
     for(int i=0; i<A->nx*A->ny; i++){
-	assert(!A->p[i] || A->p[i]->id==M_SPT);
+	assert(!A->p[i] || issp(A->p[i]));
     }
     return (X(spcell)*)A;
 }
@@ -393,7 +393,7 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
     /**
        add A*f to dense matrix located in p;
     */
-    if(A->id==M_SPT){//sparse
+    if(issp(A)){//sparse
 	long nx=A->m;
 	long icol,ix,irow;
 	if(!*out0){
@@ -416,7 +416,7 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
 }
 X(sp) *X(2sp)(X(mat)*A, R thres){
     if(!A) return 0;
-    assert(A->id==M_T);
+    assert(ismat(A));
     X(sp) *out=X(spnew)(A->nx, A->ny, A->nx*A->ny);
     long count=0;
     for(long icol=0; icol<A->ny; icol++){
@@ -442,7 +442,7 @@ void X(sptfull)(X(mat) **out0, const X(sp) *A, const T alpha){
     /**
        add A*f to dense matrix located in p;
     */
-    if(A->id==M_SPT){
+    if(issp(A)){
 	long nx=A->m;
 	long icol,ix,irow;
 	if(!*out0){
@@ -469,7 +469,7 @@ void X(sptfull)(X(mat) **out0, const X(sp) *A, const T alpha){
 /**
  * Added two sparse matrices: return A*a+B*b*/
 X(sp) *X(spadd2)(const X(sp) *A,T a, const X(sp)*B,T b){
-    assert(A->id==M_SPT && B->id==M_SPT);
+    assert(issp(A) && issp(B));
     if(A->m!=B->m || A->n!=B->n) {
 	error("X(sp) matrix mismatch: (%ldx%ld) vs (%ldx%ld\n",
 	      A->m, A->n, B->m, B->n);
@@ -607,7 +607,7 @@ X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int dim){
 	*/
     }else if(dim==1){
 	/*|AB|*/
-	assert(A->id==M_SPT && B->id==M_SPT);
+	assert(issp(A) && issp(B));
 	if(A->m != B->m){
 	    error("X(sp) matrix doesn't match\n");
 	}

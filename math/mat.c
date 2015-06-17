@@ -22,7 +22,7 @@
 #include "mathdef.h"
 #include "defs.h"/*Defines T, X, etc */
 //Check for correct type and for possible memory corruption
-#define assert_mat(A) assert(!A || A->id==M_T)
+#define assert_mat(A) assert(!A || ismat(A))
 /**
    The only function that actually creats the matrix object. It ensures that all
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
@@ -85,7 +85,7 @@ void X(init)(X(mat)**A, long nx, long ny){
  */
 X(mat) *X(mat_cast)(void *A){
     if(!A) return 0;
-    assert(((cell*)A)->id==M_T);
+    assert(ismat(A));
     return (X(mat)*)A;
 }
 /**
@@ -498,9 +498,9 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 X(cell) *X(cell_cast)(void *A_){
     if(!A_) return 0;
     cell *A=(cell*)A_;
-    assert(A->id==MCC_ANY);
+    assert(iscell(A));
     for(int i=0; i<A->nx*A->ny; i++){
-	assert(!A->p[i] || A->p[i]->id==M_T);
+	assert(!A->p[i] || ismat(A->p[i]));
     }
     return (X(cell)*)A;
 }
@@ -565,45 +565,6 @@ X(cell) *X(cellref)(const X(cell) *in){
 	}
     }
     return out;
-}
-
-/**
-   duplicate a X(cell) object.
-*/
-X(cell) *X(celldup)(const X(cell) *in){
-    X(cell) *out=NULL;
-    X(cellcp)(&out, in);
-    return out;
-}
-
-/**
-   copy the values from one X(cell) to another.
-*/
-void X(cellcp)(X(cell)** out0, const X(cell) *in){
-    if(in){
-	if(!*out0){
-	    *out0=X(cellnew2)(in);
-	}else{
-	    assert((*out0)->nx==in->nx && (*out0)->ny==in->ny);
-	}
-	X(cell)* out=*out0;
-	for(int i=0; i<in->nx*in->ny; i++){
-	    X(cp)(&out->p[i], in->p[i]);
-	}
-    }else{/*if input is empty, zero the output. do not free. */
-	X(cellzero)(*out0);
-    }
-}
-
-/**
-   setting all elements of a X(cell) to zero.
-*/
-void X(cellzero)(X(cell) *dc){
-    if(dc){
-	for(int ix=0; ix<dc->nx*dc->ny; ix++){
-	    X(zero)(dc->p[ix]);
-	}
-    }
 }
 
 /**
@@ -680,88 +641,6 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     }
     free(nxs);
     free(nys);
-    return out;
-}
-
-/**
-   concatenate two cell matrices along dimenstion 'dim'.
-*/
-X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
-    if(!A){
-	if(!B){
-	    return NULL;
-	}else{
-	    return X(celldup)(B);
-	}
-    }else if(!B){
-	return X(celldup)(A);
-    }
-
-    X(cell) *out=NULL;
-    PCELL(A,pA);
-    PCELL(B,pB);
-
-    if(dim==1){
-	/*along x. */
-	if(A->ny!=B->ny){
-	    error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
-		  A->nx, A->ny, B->nx, B->ny);
-	}
-	out=cellnew(A->nx+B->nx, A->ny);
-	PCELL(out,pout);
-	for(long iy=0; iy<A->ny; iy++){
-	    for(long ix=0; ix<A->nx; ix++){
-		pout[iy][ix]=X(dup)(pA[iy][ix]);
-	    }
-	    for(long ix=0; ix<B->nx; ix++){
-		pout[iy][ix+A->nx]=X(dup)(pB[iy][ix]);
-	    }
-	}
-    }else if(dim==2){
-	/*along y. */
-	if(A->nx!=B->nx){
-	    error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n", 
-		  A->nx, A->ny, B->nx, B->ny);
-	}
-	out=cellnew(A->nx, A->ny+B->ny);
-	PCELL(out,pout);
-	for(long iy=0; iy<A->ny; iy++){
-	    for(long ix=0; ix<A->nx; ix++){
-		pout[iy][ix]=X(dup)(pA[iy][ix]);
-	    }
-	}
-	for(long iy=0; iy<B->ny; iy++){
-	    for(long ix=0; ix<B->nx; ix++){
-		pout[iy+A->ny][ix]=X(dup)(pB[iy][ix]);
-	    }
-	}
-    }else{
-	error("Invalid dim\n");
-    }
-    return out;
-}
-
-/**
-   concatenate coresponding elements of each X(cell). They must
-   have the same shape.
-*/
-X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim){
-    if(!A){
-	if(!B){
-	    return NULL;
-	}else{
-	    return X(celldup)(B);
-	}
-    }else if(!B){
-	return X(celldup)(A);
-    }
-    if(A->nx!=B->nx || A->ny!=B->ny){
-	error("Mismatch: (%ld %ld), (%ld %ld)\n",A->nx, A->ny, B->nx, B->ny);
-    }
-    X(cell) *out=cellnew(A->nx, A->ny);
-    for(long ix=0; ix<A->nx*A->ny; ix++){
-	out->p[ix]=X(cat)(A->p[ix], B->p[ix], dim);
-    }
     return out;
 }
 

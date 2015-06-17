@@ -19,7 +19,7 @@ static void test_dpinv(){
     dsp *spw=dspnewdiag(w->nx, w->p, 1);
     dmat *Ap2=dpinv(A,spw);
     writebin(w,"w");
-    dspwrite(spw,"spw");
+    writebin(spw,"spw");
     writebin(Ap2,"Ap2");
     dfree(A); dfree(w); dfree(Ap); dfree(ApA); dspfree(spw); dfree(Ap2);
 }

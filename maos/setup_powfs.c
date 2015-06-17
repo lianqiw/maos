@@ -1357,11 +1357,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    writebin(intstat->gx,"powfs%d_gx",ipowfs);
 	    writebin(intstat->gy,"powfs%d_gy",ipowfs);
 	}
-    
-	/*Remove OTFs that are older than 30 days. */
-	char *dirotf=stradd(HOME, "/.aos/otfc", NULL);
-	remove_file_older(dirotf, 30*24*3600);
-	free(dirotf);
+   
     }
     /*Generating Matched filter */
     if(parms->powfs[ipowfs].phytype==1 || parms->powfs[ipowfs].phytypesim==1){

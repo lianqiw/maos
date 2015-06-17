@@ -431,13 +431,14 @@ void remove_file_older(const char *fndir, long sec){
     long sec2=myclocki()-sec;
     while((dp=readdir(dir))){
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
-	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_mtime<=sec2 || sec==0)){
+	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_atime<=sec2 || sec==0)){
 	    remove(fnfull);
 	    info2("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
 	}
     }
     closedir(dir);
 }
+
 /**
    Make dirs recursively. like mkdir -p in bash
 */
@@ -911,3 +912,4 @@ void quit(){
 }
 #undef strdup
 char* (*strdup0)(const char *)=strdup;
+

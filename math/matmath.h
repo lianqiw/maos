@@ -109,7 +109,7 @@
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
 									\
     R X(cellnorm)(const X(cell) *in);					\
-    void X(cellscale)(X(cell) *A, R w);					\
+    void X(cellscale)(void *A, R w);					\
     void X(celldropempty)(X(cell) **A0, int dim);			\
     T X(cellinn)(const X(cell)*A, const X(cell)*B);			\
     void X(cellcwm)(X(cell) *B, const X(cell) *A);			\

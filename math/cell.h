@@ -26,6 +26,7 @@
 #define AOS_LIB_CELL_H
 #include "type.h"
 void* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
+void* cellnew2(const void*)CHECK_UNUSED_RESULT;
 cell *cell_cast(const void *A) CHECK_UNUSED_RESULT;
 void cellinit(cell **A, long nx, long ny);
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);

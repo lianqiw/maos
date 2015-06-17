@@ -590,8 +590,8 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
     key=pywfs_hash(pywfs, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
-    mymkdir("%s/.aos/pywfs/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/G_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+    mymkdir("%s/.aos/cache/", HOME);
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
 	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
 	     cubic, iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
@@ -604,7 +604,7 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 	    info2("Generating PYWFS poke matrix\n");
 	    gg=pywfs_mkg_do(pywfs, ploc, cubic, iac);
 	    writebin(gg, "%s", fn);
-	    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/", HOME);
+	    snprintf(fn, PATH_MAX, "%s/.aos/cache/", HOME);
 	    remove_file_older(fn, 30*24*3600);
 	    close(fd); remove(fnlock);
 	}else{
@@ -615,6 +615,7 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 	}
     }else{
 	gg=dspread(fn);
+	zftouch(fn);
     }
     return gg;
 }
@@ -629,36 +630,33 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int i
     key=pywfs_hash(pywfs, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
-    mymkdir("%s/.aos/pywfs/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/GA_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+    mymkdir("%s/.aos/cache/", HOME);
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/GA_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
 	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
 	     parms->dm[idm].cubic, parms->dm[idm].iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     info2("Using GA in %s\n", fn);
     dsp *gg=0;
-  retry:
-    if(exist(fnlock) || !zfexist(fn)){
-	int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
-	if(fd>0){//succeed
-	    info2("Generating PYWFS poke matrix\n");
+    while(!gg){
+	if(exist(fnlock) || !zfexist(fn)){
+	    int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
+	    if(fd>0){//succeed
+		info2("Generating PYWFS poke matrix\n");
 #if USE_CUDA
-	    if(parms->gpu.wfs){
-		gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
-	    }else
+		if(parms->gpu.wfs){
+		    gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
+		}else
 #endif
-		gg=pywfs_mkg_do(pywfs, aloc, parms->dm[idm].cubic, parms->dm[idm].iac);
-	    writebin(gg, "%s", fn);
-	    snprintf(fn, PATH_MAX, "%s/.aos/pywfs/", HOME);
-	    remove_file_older(fn, 30*24*3600);
+		    gg=pywfs_mkg_do(pywfs, aloc, parms->dm[idm].cubic, parms->dm[idm].iac);
+		writebin(gg, "%s", fn);
+	    }else{
+		info2("Trying to lock %s\n", fnlock);
+		fd=lock_file(fnlock, 1, 0);
+	    }
 	    close(fd); remove(fnlock);
 	}else{
-	    info2("Trying to lock %s\n", fnlock);
-	    fd=lock_file(fnlock, 1, 0);
-	    close(fd); remove(fnlock);
-	    goto retry;
+	    gg=dspread(fn);
 	}
-    }else{
-	gg=dspread(fn);
     }
     return gg;
 }

@@ -142,7 +142,13 @@ void listen_draw(){
 		drawdata->pts[ipts]=dnew(nptsx, nptsy);
 		if(nptsx*nptsy>0){
 		    STREAD(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+		    if(nptsx>50){
+			if(!drawdata->icumu){
+			    drawdata->icumu=nptsx/10;
+			}
+		    }
 		}
+		    
 	    }
 	    break;
 	case DRAW_STYLE:
@@ -223,7 +229,6 @@ void listen_draw(){
 			(drawdata->p, drawdata->format, nx, ny, stride);
 		}
 		if(drawdata->npts>0){
-		    drawdata->icumu=50;
 		    drawdata->cumuquad=1;
 		    if(drawdata->nstyle>1){
 			if(drawdata->nstyle!=drawdata->npts){

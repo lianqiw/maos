@@ -52,11 +52,11 @@ static char *get_fnatm(GENATM_T *data){
 	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->nx, key);
     }
     char diratm[PATH_MAX];
-    snprintf(diratm,PATH_MAX,"%s/.aos/atm", HOME);
+    snprintf(diratm,PATH_MAX,"%s/.aos/cache/atm", HOME);
     if(!exist(diratm)) mymkdir("%s", diratm);
     char fnatm[PATH_MAX];
     char *types[]={"vonkarman","fractal","biharmonic"};
-    snprintf(fnatm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
+    snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     if(zfexist(fnatm)) zftouch(fnatm);
     remove_file_older(diratm, 30*24*3600);
@@ -247,22 +247,17 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM
 		if(fd>=0){/*succeed to lock file. */
 		    char fntmp[PATH_MAX];
 		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
-		    int disable_save_save=disable_save;
-		    disable_save=0;//temporarily disable this feature.
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fntmp); 
 		    atmfun(fc, data);
-		    disable_save=disable_save_save;
 		    cellarr_close(fc);
 		    if(rename(fntmp, fnatm)){
 			error("Unable to rename %s\n", fnlock);
 		    }
-		    close(fd); remove(fnlock);
 		}else{/*wait for the previous lock to release.*/
 		    warning("Waiting for previous lock to release ...");
 		    fd=lock_file(fnlock, 1, 0);
-		    warning2("OK\n");
-		    close(fd); remove(fnlock);
 		}
+		close(fd); remove(fnlock);
 	    }
 	}
 	screen=dcell2map(in);

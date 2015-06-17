@@ -36,19 +36,40 @@ void *cellnew(long nx, long ny){
     }
     return dc;
 }
+
+/**
+   Allocate a new array of the same type
+ */
+void *cellnew2(const void *A_){
+    cell *A=(cell*)A_;
+    if(!A_){
+	return 0;
+    }else if(iscell(A)){
+	return cellnew(A->nx, A->ny);
+    }else if(A->id==M_DBL){
+	return dnew(A->nx, A->ny);
+    }else{
+	error("Invalid type: id=%u\n", A->id);
+	return 0;
+    }
+}
+
 /**
    check the size of cell array if exist. Otherwise create it
 */
 void cellinit(cell **A, long nx, long ny){
     if(*A){
-	assert((*A)->nx == nx && (*A)->ny==ny);
+	if(!(iscell(*A) && (*A)->nx == nx && (*A)->ny==ny)){
+	    error("type or size mismatch: id=%u, require (%ld, %ld), A is (%ld, %ld)\n",
+		  (*A)->id, nx, ny, (*A)->nx, (*A)->ny);
+	}
     }else{
 	*A=cellnew(nx, ny);
     }
 }
 cell *cell_cast(const void *A){
     if(!A) return 0;
-    assert(((cell*)A)->id==MCC_ANY);
+    assert(iscell(A));
     return (cell*)A;
 }
 
@@ -329,9 +350,6 @@ cell* read_by_id(uint32_t id, int level, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     cell *out=readdata_by_id(fp, id, level, 0);
-    //if(!zfeof(fp)){//EOF is not returned for gzipped file.
-    //warning2("Unread data after %d in file %s\n", zfpos(fp), zfname(fp));
-    //}
     zfclose(fp);
     return out;
 }

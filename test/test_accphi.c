@@ -211,8 +211,8 @@ static void test_accuracy(int argc, char **argv){
     writedbl(phi_pts,loc->nloc,1,"accphi_pts.bin");
     writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");
 
-    dspwrite(hfor, "accphi_hfor");
-    dspwrite(hforcubic, "accphi_cub_hfor");
+    writebin(hfor, "accphi_hfor");
+    writebin(hforcubic, "accphi_cub_hfor");
     dspfree(hfor);
     dspfree(hforcubic);
     free(phi_loc); free(phi_stat);

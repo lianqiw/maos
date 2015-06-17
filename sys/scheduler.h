@@ -101,5 +101,5 @@ enum{
     S_KILLED,/*15*/
     S_NONEXIST,/*16*/
 };
-#define scheduler_version 0x27
+#define scheduler_version 0x28
 #endif

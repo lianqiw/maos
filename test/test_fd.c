@@ -254,7 +254,7 @@ int main(){
     double wt[]={0.383615641256048,0.161455623630726,0.065928670909859,0.140502287357995,0.121599369179309,0.126898407666063};
     dmat *saa=dread("SAA.bin");
     csp *sel=fdpcg_sa(xloc,saloc,saa->p);/*Tested. fully agree with laos mkapfd */
-    cspwrite(sel,"sel.bin");
+    writebin(sel,"sel.bin");
 
     long nperm;
     long *perm=fdpcg_perm(&nperm,xlocs,nps,saloc);/*tested ok. */
@@ -286,10 +286,10 @@ int main(){
 	Mhatp=cspread("Mhatperm");
     }else{
 	csp *Mpsd=cspnewdiag(256*256*6,invpsd,1);
-	cspwrite(Mpsd,"Mpsd.bin");
+	writebin(Mpsd,"Mpsd.bin");
 
 	/*csp *Mhat=cspnewdiag(256*256*6,invpsd,1); */
-	/*cspwrite(Mhat,"cinvpsd"); */
+	/*writebin(Mhat,"cinvpsd"); */
 	/*Compute gx'*sel'*sel*gx+gy'*sel'*sel*gy */
 	csp *Mmid=NULL;
 	for(int i=0; i<2; i++){
@@ -306,7 +306,7 @@ int main(){
 	    cspfree(tmp);
 	    cspfree(tmp2);
 	}
-	cspwrite(Mmid,"Mmid");
+	writebin(Mmid,"Mmid");
 	TIC;
 	tic;
 	csp *Mhat=NULL;
@@ -317,7 +317,7 @@ int main(){
 	    }
 	    /*tested ok if all layers share the same sampling. */
 	    csp *prop1=fdpcg_prop(nps,os,256,0.25,dispx,dispy);
-	    cspwrite(prop1,"prop_%d",iwfs);
+	    writebin(prop1,"prop_%d",iwfs);
 
 	    /*need to test this in spatial domain. */
 	    toc("prop");
@@ -327,7 +327,7 @@ int main(){
 	    toc("Mul1");
 	    csp *tmp2=cspmulsp(prop1,tmp,"tn");
 	    toc("Mul2");
-	    cspwrite(tmp2,"Mhat_%d.bin",iwfs);
+	    writebin(tmp2,"Mhat_%d.bin",iwfs);
 	    cspadd(&Mhat,1, tmp2, 1);
 	    cspfree(tmp);
 	    cspfree(tmp2);
@@ -335,16 +335,16 @@ int main(){
 	    cspfree(prop1);
 	    toc("done");
 	}
-	cspwrite(Mhat,"Mhat_prop.bin");
+	writebin(Mhat,"Mhat_prop.bin");
 
 	cspadd(&Mhat, 1, Mpsd, 1);
 	cspfree(Mpsd);
-	cspwrite(Mhat,"Mhat.bin");/*Verified with manual computation in MATLAB so far. */
+	writebin(Mhat,"Mhat.bin");/*Verified with manual computation in MATLAB so far. */
 	cspdroptol(Mhat,1e-15);
 	cspsym(&Mhat);
 	Mhatp=cspperm(Mhat,0,perm,perm);
 	cspfree(Mhat);
-	cspwrite(Mhatp,"Mhatperm.bin");/*Verified so far. */
+	writebin(Mhatp,"Mhatperm.bin");/*Verified so far. */
     }
     /*Now invert each block. */
     /*First blocksize. */
@@ -366,7 +366,7 @@ int main(){
     info("Block size is %ld, there are %ld blocks\n",bs,nb);
     csp *Minv=cspinvbdiag(Mhatp,bs);
    
-    cspwrite(Minv,"Minv.bin");
+    writebin(Minv,"Minv.bin");
     free(perm);
     locfree(xloc);
     locfree(saloc);

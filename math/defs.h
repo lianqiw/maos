@@ -23,7 +23,8 @@
 #else
 #define matinfo(A...)
 #endif
-
+#ifndef AOS_MATH_DEFS_H
+#define AOS_MATH_DEFS_H
 #undef COMPLEX
 #undef MAT_TYPE
 #undef XR
@@ -191,8 +192,18 @@
 #else
 #define M_SPT M_SPT32
 #endif
+INLINE int issp(const void *id){
+    const uint32_t magic=*((const uint32_t*)id);
+    return (magic==M_SPT);
+}
 
 #endif //if USE_LONG
 
 #define PMAT(A,pp) PALL(T,A,pp)
 #define PCELL(A,pp) PALL(X(mat)*,A,pp)
+INLINE int ismat(const void *id){
+    const uint32_t magic=*((const uint32_t*)id);
+    return (magic==M_T);
+}
+
+#endif

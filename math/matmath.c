@@ -885,7 +885,7 @@ void X(addI)(X(mat) *A, T val){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
-    if(A && A->nx){
+    if(A && A->nx && ac){
 	if(!*B0){
 	    *B0=X(new)(A->nx, A->ny); 
 	    bc=0;/*no bother to accumulate. */
@@ -895,13 +895,17 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    error("A is %ldx%ld, B is %ldx%ld. They should match\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	if(ABS(bc)>EPS){
+	if(bc){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }
-	}else{/*just assign */
-	    for(int i=0; i<A->nx*A->ny; i++){
-		B->p[i]=A->p[i]*ac;
+	}else{
+	    if(ac==1){
+		X(cp)(B0, A);
+	    }else{/*just assign */
+		for(int i=0; i<A->nx*A->ny; i++){
+		    B->p[i]=A->p[i]*ac;
+		}
 	    }
 	}
     }
@@ -910,7 +914,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
    Add a scalar to matrix
 */
 void X(adds)(X(mat*)A, const T ac){
-    if(!A || !A->nx) return;
+    if(!A || !A->nx || !ac) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]+=ac;
     }
@@ -1561,6 +1565,97 @@ T X(trapz)(const X(mat)*x, const X(mat)*y){
 }
 
 /**
+   duplicate a X(cell) object.
+*/
+X(cell) *X(celldup)(const X(cell) *in){
+    X(cell) *out=NULL;
+    X(cellcp)(&out, in);
+    return out;
+}
+
+/**
+   concatenate two cell matrices along dimenstion 'dim'.
+*/
+X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
+    if(!A){
+	if(!B){
+	    return NULL;
+	}else{
+	    return X(celldup)(B);
+	}
+    }else if(!B){
+	return X(celldup)(A);
+    }
+
+    X(cell) *out=NULL;
+    PCELL(A,pA);
+    PCELL(B,pB);
+
+    if(dim==1){
+	/*along x. */
+	if(A->ny!=B->ny){
+	    error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
+		  A->nx, A->ny, B->nx, B->ny);
+	}
+	out=cellnew(A->nx+B->nx, A->ny);
+	PCELL(out,pout);
+	for(long iy=0; iy<A->ny; iy++){
+	    for(long ix=0; ix<A->nx; ix++){
+		pout[iy][ix]=X(dup)(pA[iy][ix]);
+	    }
+	    for(long ix=0; ix<B->nx; ix++){
+		pout[iy][ix+A->nx]=X(dup)(pB[iy][ix]);
+	    }
+	}
+    }else if(dim==2){
+	/*along y. */
+	if(A->nx!=B->nx){
+	    error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n", 
+		  A->nx, A->ny, B->nx, B->ny);
+	}
+	out=cellnew(A->nx, A->ny+B->ny);
+	PCELL(out,pout);
+	for(long iy=0; iy<A->ny; iy++){
+	    for(long ix=0; ix<A->nx; ix++){
+		pout[iy][ix]=X(dup)(pA[iy][ix]);
+	    }
+	}
+	for(long iy=0; iy<B->ny; iy++){
+	    for(long ix=0; ix<B->nx; ix++){
+		pout[iy+A->ny][ix]=X(dup)(pB[iy][ix]);
+	    }
+	}
+    }else{
+	error("Invalid dim\n");
+    }
+    return out;
+}
+
+/**
+   concatenate coresponding elements of each X(cell). They must
+   have the same shape.
+*/
+X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim){
+    if(!A){
+	if(!B){
+	    return NULL;
+	}else{
+	    return X(celldup)(B);
+	}
+    }else if(!B){
+	return X(celldup)(A);
+    }
+    if(A->nx!=B->nx || A->ny!=B->ny){
+	error("Mismatch: (%ld %ld), (%ld %ld)\n",A->nx, A->ny, B->nx, B->ny);
+    }
+    X(cell) *out=cellnew(A->nx, A->ny);
+    for(long ix=0; ix<A->nx*A->ny; ix++){
+	out->p[ix]=X(cat)(A->p[ix], B->p[ix], dim);
+    }
+    return out;
+}
+
+/**
    compute norm2.
 */
 R X(cellnorm)(const X(cell) *A){
@@ -1571,15 +1666,7 @@ R X(cellnorm)(const X(cell) *A){
     return out;
 }
 
-/**
-   scale each element of A.
-*/
-void X(cellscale)(X(cell) *A, R w){
-    if(!A) return;
-    for(int i=0; i<A->nx*A->ny; i++){
-	X(scale)(A->p[i],w);
-    }
-}
+
 
 /**
    Compute the inner produce of two dcell.

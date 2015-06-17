@@ -20,10 +20,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-
 #include <sys/mman.h>
 #include <fcntl.h>
-
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */
@@ -80,6 +78,10 @@ struct mmap_t{
     long nref;/**<Number of reference.*/
     int fd;   /**<file descriptor. close it if not -1.*/
 };
+/**
+   Disables file saving when set to 1.
+*/
+int disable_save=0;
 
 /*
   Process the input file name and return file names that can be open to
@@ -102,7 +104,7 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
        && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
 	strncat(fn2, ".bin", 4);
     }
-    if(mod[0]=='r' || mod[0]=='a'){
+    if(mod[0]=='r'){
 	char *fnr=NULL;
 	if(!(fnr=search_file(fn2))){/*If does not exist. */
 	    if(!check_suffix(fn2, ".gz")){
@@ -116,8 +118,20 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	}
 	free(fn2);
 	fn2=fnr;
-    }else if (mod[0]=='w'){/*for write, no suffix. we append .bin or .bin.gz */
-	if(islink(fn2)){/*remove old file to avoid write over a symbolic link. */
+	if(!fnr){
+	  
+	}
+    }else if (mod[0]=='w' || mod[0]=='a'){
+	if(disable_save){//When saving is disabled, allow writing to cache folder.
+	    char fncache[PATH_MAX];
+	    snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
+	    if(strcmp(fncache, fn2)){
+		warning("Saving is disabled.\n");
+		free(fn2);
+		fn2=0;
+	    }
+	}
+	if(fn2 && islink(fn2)){/*remove old file to avoid write over a symbolic link. */
 	    if(remove(fn2)){
 		error("Failed to remove %s\n", fn2);
 	    }
@@ -146,7 +160,7 @@ int zfexist(const char *format, ...){
 void zftouch(const char *format, ...){
     format2fn;
     char *fn2=procfn(fn, "rb", 0);
-    if(utimes(fn2, NULL)){
+    if(fn2 && utimes(fn2, NULL)){
 	perror("zftouch failed");
     }
     free(fn2);
@@ -170,10 +184,7 @@ static file_t* zfdopen(int sock, const char *mod){
     }
     return fp;
 }
-/**
-   Disables file saving when set to 1.
-*/
-int disable_save=0;
+
 /**
    Open a bin file for read/write access. 
 
@@ -182,13 +193,16 @@ int disable_save=0;
    will not be gzipped. If the file has no suffix, the file will be gzipped and
    .bin is appened to file name.
 */
-file_t* zfopen(const char *fn, const char *mod){
+file_t* zfopen_try(const char *fn, const char *mod){
     LOCK(lock);
     file_t* fp=calloc(1, sizeof(file_t));
     const char* fn2=fp->fn=procfn(fn,mod,1);
-    if(!fp->fn){
-	error("%s does not exist for read\n", fn);
-	quit();
+    if(!fn2){
+	if(mod[0]=='r'){
+	    error("%s does not exist for read\n", fn);
+	}
+	free(fp); fp=0;
+	goto end;
     }
     /*Now open the file to get a fd number that we can use to lock on the
       file.*/
@@ -196,24 +210,25 @@ file_t* zfopen(const char *fn, const char *mod){
     case 'r':/*read only */
 	if((fp->fd=open(fn2, O_RDONLY))==-1){
 	    perror("open for read");
+	}else{
+	    //update access time.
+	    struct timespec times[2]={{0, UTIME_NOW}, {0, UTIME_OMIT}};
+	    if(futimens(fp->fd, times)){
+		warning("change access time failed for %s.\n", fp->fn);
+	    }
 	}
 	break;
     case 'w':/*write */
     case 'a':
-	if(disable_save){
-	    warning("output directory is not specified so saving is disabled.\n");
-	    free(fp->fn); free(fp);
-	    return 0;
-	}
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
 	}else{
 	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
-		error("Trying to write to a file that is already opened for writing: %s\n", fn2);
-	    }
-	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
+		perror("flock");
+		close(fp->fd);
+		fp->fd=-1;
+	    }else if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
 		perror("ftruncate");
-		warning2("Truncating %s failed. fd=%d\n", fn2, fp->fd);
 	    }
 	}
 	break;
@@ -221,8 +236,11 @@ file_t* zfopen(const char *fn, const char *mod){
 	error("Unknown mod=%s\n", mod);
     }
     if(fp->fd==-1){
-	error("Unable to open file %s for %s\n", fn2, mod[0]=='r'?"Reading":"Writing");
-	quit();
+	error("Unable to open file %s for %s\n", fn2, mod[0]=='r'?"reading":"writing");
+	free(fp->fn);
+	free(fp);
+	fp=0;
+	goto end;
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     if(mod[0]=='w'){
@@ -260,10 +278,17 @@ file_t* zfopen(const char *fn, const char *mod){
     if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
     }
+  end:
     UNLOCK(lock);
     return fp;
 }
-
+file_t *zfopen(const char *fn, const char *mod){
+    file_t *fp=zfopen_try(fn, mod);
+    if(!fp){
+	error("Open file %s for %s failed\n", fn, mod[0]=='r'?"read":"write");
+    }
+    return fp;
+}
 /**
    Return the underlining filename
 */
@@ -381,7 +406,7 @@ static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, fi
 /**
    Handles byteswapping in fits file format then call zfread_do to do the actual writing.
 */
-int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfread_try(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->isfits && size>1){/*need to do byte swapping.*/
 	const long bs=2880;
@@ -432,10 +457,10 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     }
 }
 /**
-   Wraps zfread2 and do error checking.
+   Wraps zfread_try and do error checking.
 */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-    if(zfread2(ptr, size, nmemb, fp)){
+    if(zfread_try(ptr, size, nmemb, fp)){
 	perror("zfread");
 	error("Error happened while reading %s\n", fp->fn);
     }
@@ -500,7 +525,7 @@ read_bin_header(header_t *header, file_t *fp){
     if(fp->isfits) error("fits file is not supported\n");
     while(1){
 	/*read the magic number.*/
-	if(zfread2(&magic, sizeof(uint32_t), 1, fp)) return -1;
+	if(zfread_try(&magic, sizeof(uint32_t), 1, fp)) return -1;
 	/*If it is hstr, read or skip it.*/
 	if((magic&M_SKIP)==M_SKIP){
 	    continue;
@@ -668,7 +693,7 @@ read_fits_header(header_t *header, file_t *fp){
     while(!end){
 	int start=0;
 	if(page==0){
-	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
+	    if(zfread_try(line, 1, 80, fp)) return -1; line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		warning("Garbage in fits file %s\n", fp->fn);
 		return -1;

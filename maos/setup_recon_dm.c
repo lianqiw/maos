@@ -77,7 +77,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 		    &(recon->W0), &(recon->W1));
     }
     if(parms->save.setup){
-	dspwrite(recon->W0, "W0");
+	writebin(recon->W0, "W0");
 	writebin(recon->W1, "W1");
     }
     if(parms->save.setup){

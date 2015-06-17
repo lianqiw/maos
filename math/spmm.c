@@ -359,7 +359,7 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
     const cell *A=(const cell*)(A_);
     const cell *B=(const cell*)(B_);
     cell **C0=(cell**)C0_;
-    if(A->id==MCC_ANY && B->id==MCC_ANY){
+    if(iscell(A) && iscell(B)){
 	//multiplication of cells.
 	mm_t D=parse_trans(A, B, trans);
 	cellinit(C0, D.nx, D.ny);
@@ -380,21 +380,21 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 	
     }else{
 	//multiplication between dense or sparse 
-	if(B->id==M_T){//dense B
-	    if(A->id==M_T){ //dense A
+	if(ismat(B)){//dense B
+	    if(ismat(A)){ //dense A
 		X(mm)((X(mat)**)C0, 1, (X(mat)*)A, (X(mat)*)B, trans, alpha);
-	    }else if(A->id==M_SPT){//sparse A
+	    }else if(issp(A)){//sparse A
 		X(spmm)((X(mat)**)C0, (X(sp)*)A, (X(mat)*)B, trans, alpha);
 	    }else{
 		error("Invalid A type, id=%u.\n", A->id);
 	    }
-	}else if(B->id==M_SPT){//sparse B
-	    if(A->id==M_T){//dense A
+	}else if(issp(B)){//sparse B
+	    if(ismat(A)){//dense A
 		X(mulsp)((X(mat)**)C0, (X(mat)*)A, (X(sp)*)B, trans, alpha);
-	    }else if(A->id==M_SPT){//sparse A
-		if(!*C0 || (*C0)->id==M_SPT){//result is sparse
+	    }else if(issp(A)){//sparse A
+		if(!*C0 || issp(*C0)){//result is sparse
 		    X(spmulsp2)((X(sp)**)C0, (X(sp)*)A, (X(sp)*)B, trans, alpha);
-		}else if((*C0)->id==M_T){//result is dense
+		}else if(ismat(*C0)){//result is dense
 		    X(mat)*Afull=0; X(spfull)(&Afull, (X(sp)*)A, 1);
 		    X(mat)*Bfull=0; X(spfull)(&Bfull, (X(sp)*)B, 1);
 		    X(mm)((X(mat)**)C0, 1, Afull, Bfull, trans, alpha);
@@ -425,9 +425,9 @@ void X(celladdI)(void *A_, T alpha){
     for(int ii=0; ii<A->ny; ii++){
 	if(!IND(A, ii, ii)){
 	    continue;
-	}else if(IND(A, ii, ii)->id==M_T){
+	}else if(ismat(IND(A, ii, ii))){
 	    X(addI)(X(mat_cast)(IND(A,ii,ii)), alpha);
-	}else if(IND(A, ii, ii)->id==M_SPT){
+	}else if(issp(IND(A, ii, ii))){
 	    X(spaddI)(X(sp_cast)(IND(A,ii,ii)),alpha);
 	}else{
 	    error("Invalid id=%u", IND(A,ii,ii)->id);
@@ -438,18 +438,18 @@ void X(celladdI)(void *A_, T alpha){
    Takes parameters of X(mat), X(sp), X(cell), X(spcell): A=A*ac+B*bc;
  */
 void X(celladd)(void *A_, T ac, const void *B_, T bc){
-    if(!A_ || !B_) return;
+    if(!A_ || !B_ || !bc) return;
     cell *B=(cell*)(B_);
     cell **pA=(cell**)A_;
-    if(B->id==MCC_ANY){//cell
+    if(iscell(B)){//cell
 	cellinit(pA, B->nx, B->ny);
 	cell *A=*pA;
 	for(int i=0; i<B->nx*B->ny; i++){
 	    X(celladd)(A->p+i, ac, B->p[i], bc);
 	}
     }else{//non cell
-	if(!*pA || (*pA)->id==M_T){//A is dense
-	    if(B->id==M_T){//Add dense to dense
+	if(!*pA || ismat(*pA)){//A is dense
+	    if(ismat(B)){//Add dense to dense
 		X(add)((X(mat)**)pA, ac, (X(mat)*)B, bc);
 	    }else{//add sparse to dense
 		if(ac!=1){
@@ -457,19 +457,57 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
 		}
 		X(spfull)((X(mat)**)(pA), (X(sp)*)B, bc);
 	    }
-	}else if((*pA)->id==M_SPT){
-	    if(B->id==M_SPT){//add sparse to sparse
-		X(sp)* tmp=X(spadd2)((X(sp)*)(*pA), ac,
-				     (X(sp)*)B, bc);
+	}else if(issp(*pA)){
+	    if(issp(B)){//add sparse to sparse
+		X(sp)* tmp=X(spadd2)((X(sp)*)(*pA), ac, (X(sp)*)B, bc);
 		X(spmove)((X(sp)*)(*pA), (X(sp)*)tmp);
 		free(tmp);
 	    }else{
-		error("Adding dense to sparse matrix makes no dense\n");
+		error("Adding dense to sparse matrix is not allowed.\n");
 	    }
 	}else{
 	    error("Invalid operand\n");
 	}
     }
+}
+/**
+   Takes parameters of X(mat), X(sp), X(cell), X(spcell): Copy B to A;
+ */
+void X(cellcp)(void *A_, const void *B_){
+    if(!B_){
+	X(cellscale)(*((cell**)A_), 0);
+    }else{
+	X(celladd)(A_, 0, B_, 1);
+    }
+}
+
+/**
+   scale each element of A.
+*/
+void X(cellscale)(void *A_, R w){
+    if(!A_) return;
+    cell *A=(cell*)A_;
+    if(iscell(A_)){
+	for(int i=0; i<A->nx*A->ny; i++){
+	    X(cellscale)(A->p[i],w);
+	}
+    }else{
+	if(ismat(A)){
+	    X(scale)((X(mat*))A, w);
+	}else if(issp(A)){
+	    X(spscale)((X(sp*))A, w);
+	}else{
+	    error("Invalid type: id=%u\n", A->id);
+	}
+    }
+}
+
+
+/**
+   setting all elements of a X(cell) to zero.
+*/
+void X(cellzero)(void *dc){
+    X(cellscale)(dc, 0);
 }
 
 /**
@@ -489,9 +527,9 @@ X(mat)* X(cell2m)(const void *A_){
 	    for(long ix=0; ix<A->nx; ix++){
 		if(!isempty(IND(A,ix,iy))){
 		    T *pout=out->p+((icol+jcol)*nx+kr);
-		    if(IND(A,ix,iy)->id==M_T){
+		    if(ismat(IND(A,ix,iy))){
 			memcpy(pout, ((X(mat*))IND(A,ix,iy))->p+icol*nxs[ix], nxs[ix]*sizeof(T));
-		    }else if(IND(A, ix, iy)->id==M_SPT){
+		    }else if(issp(IND(A, ix, iy))){
 			//convert sparse col to full
 			X(sp*)Asp=(X(sp*))IND(A,ix,iy);
 			for(long j=Asp->p[icol]; j<Asp->p[icol+1]; j++){

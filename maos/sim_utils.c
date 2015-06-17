@@ -1663,6 +1663,30 @@ void print_progress(const SIM_T *simu){
 	    error("NaN/inf found\n");
 	}
     }
+    
+    if(parms->plot.run){
+	dcell *res=dcellnew(2,1);
+	dmat *tmp=dsub(parms->recon.split?simu->clem:simu->cle, 0, 3, 0, simu->isim+1);
+	res->p[0]=dnew(tmp->ny, 1);
+	res->p[1]=dnew(tmp->ny, 1);
+	if(parms->recon.split){
+	    for(int i=0; i<tmp->ny; i++){
+		IND(res->p[0], i)=IND(tmp, 0, i);//LGS
+		IND(res->p[1], i)=IND(tmp, 2, i);//NGS
+	    }
+	}else{
+	    for(int i=0; i<tmp->ny; i++){
+		IND(res->p[0], i)=IND(tmp, 2, i);//PTTR
+		IND(res->p[1], i)=IND(tmp, 0, i)-IND(tmp,2,i);//TT
+	    }
+	}
+	dfree(tmp);
+	dcellcwpow(res, 0.5); dcellscale(res, 1e9);
+	char *legs[3]={"High Order", "Low Order"};
+	plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", 0, NULL, legs,
+		    "Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
+	dcellfree(res);
+    }
 }
 /**
    Output parameters necessary to run postproc using skyc/skyc.c

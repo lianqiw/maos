@@ -291,7 +291,6 @@ void redirect(void){
     if(disable_save) return;
     char fn[PATH_MAX];
     snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
-    mysymlink(fn, "run_recent.log");
     (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
@@ -318,6 +317,9 @@ void redirect(void){
 	    redirect2fd(pfd[1]);
 	}
     }
+    remove("run_recent.log");
+    mysymlink(fn, "run_recent.log");
+
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

@@ -12,7 +12,7 @@ static void test_w1(){
     info("Sum W1=%g",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
     writebin(W1,"W1");
-    dspwrite(W0,"W0");
+    writebin(W0,"W0");
     locwrite(loc,"loc");
 }
 static void test_wploc(){
@@ -33,7 +33,7 @@ static void test_wploc(){
     info("Sum W1=%g\n",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
     writebin(W1,"pW1");
-    dspwrite(W0,"pW0");
+    writebin(W0,"pW0");
 }
 static void test_wcir(){
     loc_t *loc=mksqloc2(100,100,1./4.);
@@ -41,7 +41,7 @@ static void test_wcir(){
     dmat *W1=NULL;
     mkw_circular(loc,0,0,10,&W0,&W1);
     locwrite(loc,"loc");
-    dspwrite(W0,"W0");
+    writebin(W0,"W0");
     writebin(W1,"W1");
 }
 static void test_int_reg(){
@@ -109,7 +109,7 @@ void test_loc_reduce_sp(void){
     dsp *G0t=dsptrans(G0->p[0]);
     loc_reduce_sp(xloc[0],G0t,1,1);
     dsp *G03=dsptrans(G0t);
-    dspwrite(G03,"G03.bin");
+    writebin(G03,"G03.bin");
     locarrwrite(xloc,nloc,"xloc3");
     }
 

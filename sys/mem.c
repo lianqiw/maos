@@ -294,6 +294,11 @@ static __attribute__((constructor)) void init(){
 static __attribute__((destructor)) void deinit(){
     void freepath();
     void thread_pool_destroy();
+    //remove files that are 365 days old.
+    char fncache[PATH_MAX];
+    extern const char *HOME;
+    snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
+    remove_file_older(fncache, 365*24*3600);
     freepath();
     thread_pool_destroy();
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){

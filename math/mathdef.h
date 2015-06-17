@@ -143,7 +143,6 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define INDEX(A,ix,iy) A->p[(ix)+(iy)*(A)->nx]
 
 
-//#define dread(A...) readbin((READFUN)dreaddata, A)
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
 #define mapcellread(A...) (mapcell*)read_by_id(M_MAP64, 1, A)
@@ -151,7 +150,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
-/** Read needs type checking, so don't use autoread/cellread*/
+/** Read needs type checking, so don't use readbin*/
 #define dread(A...)    dmat_cast(read_by_id(M_DBL, 0, A))
 #define dcellnew (dcell*)cellnew
 #define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_DBL, 1, header))
@@ -195,29 +194,4 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define cspcellread(A...) cspcell_cast(read_by_id(M_CSP, 1, A))
 #define zspread(A...) zsp_cast(read_by_id(M_ZSP, 0, A))
 #define zspcellread(A...) zspcell_cast(read_by_id(M_ZSP, 1, A))
-
-#define writebin writebin
-#define writebin writebin
-#define writebin writebin
-#define writebin writebin
-#define lwrite writebin
-#define iwritebin writebin
-#define writebinbin writebin
-#define writebinbin writebin
-#define writebinbin writebin
-#define writebinbin writebin
-#define iwritebindata writebindata
-#define writebinbindata writebindata
-#define writebinbindata writebindata
-#define writebinbindata writebindata
-#define writebinbindata writebindata
-#define dspwrite writebin
-#define cspwrite writebin
-#define sspwrite writebin
-#define zspwrite writebin
-#define dspwritebin writebin
-#define cspwritebin writebin
-#define sspwritebin writebin
-#define zspwritebin writebin
-
 #endif

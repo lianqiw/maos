@@ -57,8 +57,8 @@
 #define M_MAP64     0x016402/*map_t, compatible with M_DBL*/
 #define M_RECTMAP64 0x026402/*map_t, compatible with M_DBL*/
 #define M_LOC64     0x036402/*loc_t with double data*/
-INLINE int iscell(void *id){
-    uint32_t magic=*((uint32_t*)id);
+INLINE int iscell(const void *id){
+    const uint32_t magic=*((const uint32_t*)id);
     return (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420);
 }
 #if LONG_MAX==2147483647L //long is 32 bit
@@ -127,6 +127,7 @@ int zfeof(file_t *fp);
 int zfpos(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
+file_t *zfopen_try(const char *fn, const char *mod);
 file_t *zfopen(const char *fn, const char *mod);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);

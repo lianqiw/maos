@@ -151,8 +151,7 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
     X(mat) *AtW=NULL;
     /*Compute AtW=A'*W */
     if(W){
-	long id=((cell*)W)->id;
-	if(id==M_T){//dense
+	if(ismat(W)){//dense
 	    const X(mat)* wt=(X(mat)*)W;
 	    if(wt->ny==wt->nx){
 		X(mm)(&AtW, 0, A, wt, "tn", 1);
@@ -169,13 +168,13 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 	    }else{
 		error("Invalid format\n");
 	    }
-	}else if(id==M_SPT){//sparse
+	}else if(issp(W)){//sparse
 	    const X(sp)* Wsp=(X(sp)*)W;
 	    X(mat)*At = X(trans)(A);
 	    X(mulsp)(&AtW, At, Wsp, "nn", 1);
 	    X(free)(At);
 	}else{
-	    error("Unrecognized id=%ld\n", id);
+	    error("Invalid data type :%u\n", ((cell*)W)->id);
 	}
     }else{
 	AtW=X(trans)(A);

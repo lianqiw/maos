@@ -446,11 +446,11 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     /*Ray tracing operator for each WFS */
     if(parms->save.setup){
-	cspwrite(sel,"fdpcg_sel");
+	writebin(sel,"fdpcg_sel");
 	writebin(gx,"fdpcg_gx");
 	writebin(gy,"fdpcg_gy");
-	cspwrite(Mhat,"fdpcg_invpsd");
-	cspwrite(Mmid,"fdpcg_Mmid");
+	writebin(Mhat,"fdpcg_invpsd");
+	writebin(Mmid,"fdpcg_Mmid");
     }
     cfree(gx);
     cfree(gy);
@@ -478,7 +478,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	}
 	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){
-	    cspwrite(propx,"fdpcg_prop_wfs%d",iwfs);
+	    writebin(propx,"fdpcg_prop_wfs%d",iwfs);
 	}
 	/*need to test this in spatial domain. */
 	cspscale(propx,1./neai);/*prop is not real for off axis wfs. */
@@ -508,7 +508,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
 
     if(parms->save.setup){
-	cspwrite(Mhat,"fdpcg_Mhat");
+	writebin(Mhat,"fdpcg_Mhat");
     }
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     /*Now invert each block. */
@@ -529,7 +529,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 
     perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
     if(parms->save.setup){
-	lwrite(perm, "fdpcg_perm");
+	writebin(perm, "fdpcg_perm");
     }
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
     csp *Minvp=cspinvbdiag(Mhatp,bs);
@@ -538,14 +538,14 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
-	cspwrite(Minv,"fdpcg_Minv");
+	writebin(Minv,"fdpcg_Minv");
     }
 #else//use block diagonal matrix
     fdpcg->perm=perm; perm=NULL;
     if(parms->gpu.tomo){
 	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
 	if(parms->save.setup>1){
-	    lwrite(fdpcg->permhf, "fdpcg_permhf");
+	    writebin(fdpcg->permhf, "fdpcg_permhf");
 	}
     }
     

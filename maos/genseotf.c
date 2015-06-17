@@ -111,13 +111,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int npsfy=npsfx;
     char fnprefix[PATH_MAX]; fnprefix[0]='\0';
     uint32_t key=0;
-    if(parms->aper.fnamp){
-	char *tmp=mybasename(parms->aper.fnamp);
-	strncat(fnprefix, tmp, PATH_MAX-strlen(fnprefix)-1);
-	free(tmp);
-    }else{
-	strncat(fnprefix, "noamp", PATH_MAX-strlen(fnprefix)-1);
-    }
+    strcat(fnprefix, "SEOTF");
     if(powfs[ipowfs].amp_tel){
 	for(int iamp=0; iamp<parms->powfs[ipowfs].nwfs; iamp++){
 	    key=dhash(powfs[ipowfs].amp_tel->p[iamp], key);
@@ -140,13 +134,13 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     char fnotf[PATH_MAX];
     char fnlock[PATH_MAX];
-    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
+    snprintf(fnotf,PATH_MAX,"%s/.aos/cache/",HOME);
     if(!exist(fnotf)) 
 	mymkdir("%s",fnotf);
     long nsa=powfs[ipowfs].saloc->nloc;
-    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
+    snprintf(fnotf,PATH_MAX,"%s/.aos/cache/%s_D%g_%g_"
 	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_SEOTF_v2",
+	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_v2",
 	     HOME, fnprefix,
 	     parms->aper.d,parms->aper.din, 
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
@@ -158,36 +152,24 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	     powfs[ipowfs].ncompx, npsfx,npsfy);
     snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    int count=0;
-  retry:
-    count++;
-    if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
-	int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
-	if(fd>=0){/*succeed */
-	    info2("Generating WFS OTF for %s...", fnotf);
-	    TIC;tic;
-	    genseotf_do(parms,powfs,ipowfs);
-	    toc2("done");
-	    writebin(intstat->otf, "%s", fnotf);
-	    close(fd);
-	    remove(fnlock);
-	}else{
-	    fd=lock_file(fnlock, 1, 0);
-	    close(fd); remove(fnlock);
-	    /*
-	    if(count>10){
-		warning("Cannot obtain lock after 10 trials. Remove lock file and retry\n");
-		remove(fnlock);
+    while(!intstat->otf){
+	if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
+	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+	    if(fd>=0){/*succeed */
+		info2("Generating WFS OTF for %s...", fnotf);
+		TIC;tic; genseotf_do(parms,powfs,ipowfs); toc2("done");
+		writebin(intstat->otf, "%s", fnotf);
+	    }else{
+		warning("Waiting for previous lock to release ...");
+		fd=lock_file(fnlock, 1, 0);
 	    }
-	    sleep(10);*/
-	    goto retry;
+	    close(fd); remove(fnlock);
+	}else{
+	    info2("Reading WFS OTF from %s\n", fnotf);
+	    intstat->otf=cccellread("%s",fnotf);
+	    intstat->notf=intstat->otf->nx*intstat->otf->ny;
+	    if(!intstat->notf) error("Invalid otf\n");
 	}
-    }else{
-	info2("Reading WFS OTF from %s\n", fnotf);
-	intstat->otf=cccellread("%s",fnotf);
-	intstat->notf=intstat->otf->nx*intstat->otf->ny;
-	if(!intstat->notf) error("Invalid otf\n");
-	zftouch(fnotf);
     }
 }
 /**
@@ -240,7 +222,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     }
     snprintf(fnprefix,80,"SELOTF_%0x",key);
     char fnlotf[PATH_MAX];
-    snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_"
+    snprintf(fnlotf,PATH_MAX,"%s/.aos/cache/%s_"
 	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
 	     "nwvl%d_%g_embfac%d_v2", 
 	     HOME, fnprefix,
@@ -254,33 +236,23 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s.lock", fnlotf);
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    int count=0;
-  retry:
-    count++;
-    if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */
-	int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
-	if(fd>=0){/*succeed */
-	    info2("Generating WFS LLT OTF for %s\n", fnlotf);
-	    genselotf_do(parms,powfs,ipowfs);
-	    writebin(intstat->lotf, "%s",fnlotf);
-	    close(fd);
-	    remove(fnlock);
-	}else{
-	    fd=lock_file(fnlock, 1, 0);
-	    close(fd); remove(fnlock);
-	    /*
-	    if(count>10){
-		warning("Cannot obtain lock after 10 trials. Remove lock file and retry\n");
-		remove(fnlock);
+    while(!intstat->lotf){
+	if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */
+	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+	    if(fd>=0){/*succeed */
+		info2("Generating WFS LLT OTF for %s\n", fnlotf);
+		genselotf_do(parms,powfs,ipowfs);
+		writebin(intstat->lotf, "%s",fnlotf);
+	    }else{//waiting by retry locking with blocking.
+		warning("Waiting for previous lock to release ...");
+		fd=lock_file(fnlock, 1, 0);
 	    }
-	    sleep(10);*/
-	    goto retry;
+	    close(fd); remove(fnlock);
+	}else{
+	    info2("Reading WFS LLT OTF from %s\n", fnlotf);
+	    intstat->lotf=ccellread("%s",fnlotf);
+	    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 	}
-    }else{
-	intstat->lotf=ccellread("%s",fnlotf);
-	if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
-	zftouch(fnlotf);
-	info2("Reading WFS LLT OTF from %s\n", fnlotf);
     }
     if(parms->save.setup){//Save PSF is uplink LLT.
 	int nwvl=intstat->lotf->nx;
