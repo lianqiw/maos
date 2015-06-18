@@ -615,7 +615,6 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 	}
     }else{
 	gg=dspread(fn);
-	zftouch(fn);
     }
     return gg;
 }
