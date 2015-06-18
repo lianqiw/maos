@@ -228,7 +228,7 @@ static void psfcomp(curmat *iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
 		(psf->p, iopdevl->p, cudata->perf->amp, nloc, 2.*M_PI/cuperf_t::wvls[iwvl]);
 	}else{
 	    cucmat *wvf=cudata->perf->wvf->p[iwvl];
-	    cuczero(wvf, stream);
+	    cuzero(wvf, stream);
 	    embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
 		(wvf->p, iopdevl->p, cudata->perf->amp, cudata->perf->embed[iwvl], nloc, cuperf_t::wvls[iwvl]);
 	    CUFFT(cuperf_t::plan[iwvl+nwvl*ievl], wvf->p, CUFFT_FORWARD);
@@ -250,7 +250,7 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     LOCK(cudata->perf->mutex);/*wvf is allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat *wvf=cudata->perf->wvf->p[iwvl];
-	cuczero(wvf, stream);
+	cuzero(wvf, stream);
 	if(!psf[iwvl]) psf[iwvl]=curnew(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 	if(cuperf_t::psfsize[iwvl]==1){
 	    strehlcomp_do<<<REDUCE(nloc), DIM_REDUCE*sizeof(Real)*2,stream>>>
@@ -382,12 +382,12 @@ void gpu_perfevl_queue(thread_t *info){
 	    if(parms->evl.psfmean){
 		psfcomp_r(cudata->perf->psfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
 		if(opdcopy!=iopdevl){
-		    curfree(opdcopy);
+		    cufree(opdcopy);
 		}
 		if(!parms->gpu.psf){ //need to move psf from GPU to CPU for accumulation.
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			add2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->perf->psfol->p[iwvl], 1, stream);
-			curzero(cudata->perf->psfol->p[iwvl]); //do not accumulate in gpu.
+			cuzero(cudata->perf->psfol->p[iwvl]); //do not accumulate in gpu.
 		    }
 		}
 	    }
@@ -453,7 +453,7 @@ void gpu_perfevl_queue(thread_t *info){
 		if(!parms->gpu.psf){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			add2cpu(&simu->evlpsfmean->p[iwvl+ievl*nwvl], 1, cuperf_t::psfcl->p[iwvl+ievl*nwvl], 1, stream);
-			curzero(cuperf_t::psfcl->p[iwvl+ievl*nwvl]); 
+			cuzero(cuperf_t::psfcl->p[iwvl+ievl*nwvl]); 
 		    }
 		}
 	    }
@@ -551,7 +551,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    if(!parms->gpu.psf){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    add2cpu(&simu->evlpsfmean_ngsr->p[iwvl+ievl*nwvl], 1, cuperf_t::psfcl_ngsr->p[iwvl+ievl*nwvl], 1, stream);
-		    curzero(cuperf_t::psfcl_ngsr->p[iwvl+ievl*nwvl]); 
+		    cuzero(cuperf_t::psfcl_ngsr->p[iwvl+ievl*nwvl]); 
 		}
 	    }
 	}

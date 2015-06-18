@@ -182,7 +182,7 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 	error("xout is not continuous");
     }
 #if DBG_FD
-    curcellwrite(xin, "fdg_xin");
+    cuwrite(xin, "fdg_xin");
 #endif
     /*2012-07-11: Use real to complex fft*/
     for(int ic=0; ic<fftnc; ic++){
@@ -215,7 +215,7 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 	    (fddata, (*xout)->pm);
     }
 #if DBG_FD
-    curcellwrite(*xout, "fdg_xout");
+    cuwrite(*xout, "fdg_xout");
 #endif
     RECORD(3);
 #if TIMING

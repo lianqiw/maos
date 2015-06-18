@@ -29,7 +29,7 @@ void curset(curmat *A, Real alpha, cudaStream_t stream){
 
 void curcp(curmat **out, const curmat *in, cudaStream_t stream){
     if(!in){
-	curzero(*out, stream);
+	cuzero(*out, stream);
     }else{
 	if(!*out){
 	    *out=curnew(in->nx, in->ny);
@@ -41,7 +41,7 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 }
 void curcp(curmat **out, const curmat *in){
     if(!in){
-	curzero(*out);
+	cuzero(*out);
     }else{
 	if(!*out){
 	    *out=curnew(in->nx, in->ny);
@@ -76,7 +76,7 @@ void curaddcabs2(curmat **out, Real alpha, cucmat *in, Real beta, cudaStream_t s
     if(!*out){
 	*out=curnew(in->nx,in->ny);
     }else if(alpha==0){
-	curzero(*out, stream);
+	cuzero(*out, stream);
     }
     addcabs2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 	((*out)->p, alpha, in->p, beta, in->nx*in->ny);
@@ -84,7 +84,7 @@ void curaddcabs2(curmat **out, Real alpha, cucmat *in, Real beta, cudaStream_t s
 void curscale(curmat *in, Real alpha, cudaStream_t stream){
     if(!in) return;
     if(alpha==0) {
-	curzero(in, stream);
+	cuzero(in, stream);
     }else if(Z(fabs)(alpha-(Real)1)>EPS){
 	int n=in->nx*in->ny;
 	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
@@ -161,7 +161,7 @@ void curcellmm(curcell **C0, Real alpha, const curcell *A, const curcell *B,
 	cudaStream_t stream;
 	cublasGetStream(handle, &stream);
 	if(alpha==0){
-	    curcellzero(*C0, stream);
+	    cuzero(*C0, stream);
 	}else if(Z(fabs)(alpha-(Real)1)>EPS){
 	    curcellscale(*C0, alpha, stream);
 	}

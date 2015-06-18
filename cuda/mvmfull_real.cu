@@ -509,7 +509,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    }
 	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(Real), 
 			    cudaMemcpyDeviceToHost, datai->stream_a[0]);
-	    curzero(datai->act, datai->stream_a[0]);
+	    cuzero(datai->act, datai->stream_a[0]);
 	}
 	//CPU sums them together. sync first gpu
 	data[0].stream_a[0].sync();
@@ -562,7 +562,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		char fn[PATH_MAX];
 		snprintf(fn, PATH_MAX, "pix_gpu%d", igpu);
 		writearr(fn, 1, sizeof(short), M_INT16, NULL, pix->p, totpix, 1);
-		curwrite(data[igpu].grad, "grad_gpu%d", igpu);
+		cuwrite(data[igpu].grad, "grad_gpu%d", igpu);
 	    }
 	}
 	/*

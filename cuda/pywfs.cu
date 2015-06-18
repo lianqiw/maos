@@ -54,7 +54,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cuwfs_t *cuwfs, Real siglev, cudaS
     //Pyramid WFS
     cupowfs_t *cupowfs=cuwfs->powfs;
     PYWFS_T *pywfs=cupowfs->pywfs;
-    cuwfs->pypsf->zero(stream);
+    cuzero(cuwfs->pypsf, stream);
     locfft_t *locfft=pywfs->locfft;
     const int nwvl=locfft->wvl->nx;
     Real pos_r=pywfs->modulate; 
@@ -72,7 +72,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cuwfs_t *cuwfs, Real siglev, cudaS
 	cucmat *wvf=cuwfs->pywvf->p[iwvl];
 	Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_n);
 	Real wvl=locfft->wvl->p[iwvl];
-	wvf->zero(stream);
+	cuzero(wvf, stream);
 	embed_wvf_do<<<DIM(phiout->nx,256),0,stream>>>
 	    (wvf->p, phiout->p, cuwfs->amp, cupowfs->embed[iwvl], phiout->nx, wvl);
 	CUFFT(cuwfs->plan_fs, wvf->p, CUFFT_FORWARD);
@@ -94,7 +94,7 @@ void pywfs_ints(curmat *ints, curmat *phiout, cuwfs_t *cuwfs, Real siglev, cudaS
 	    long offx2=nembed/2+offx-ncomp2;
 	    long ix0=MAX(-offx2, 0);
 	    long nx2=MIN(ncomp+offx2, nembed)-offx2-ix0;
-	    otf->zero(stream);
+	    cuzero(otf, stream);
 	    cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
 		(otf->p+ix0+iy0*ncomp, 
 		 cupowfs->pyramid->p[iwvl]->p+ix0+iy0*ncomp, 
@@ -152,7 +152,7 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
     curmat *opd0=0;
     cp2gpu(&opd0, pywfs->atm);
     if(opd0) curadd(&phiout, 1, opd0, 1, stream);
-    ints->zero(stream);
+    cuzero(ints, stream);
     pywfs_ints(ints, phiout, cuwfs, siglev, stream);
     pywfs_grad(grad0, ints, cupowfs->saa, cuwfs->isum, cupowfs->pyoff, pywfs->gain, stream);
     dsp *gg=dspnew(nsa*2, aloc->nloc, nsa*2*aloc->nloc);
@@ -168,13 +168,13 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
 	if(opd0){
 	    curcp(&phiout, opd0, stream);
 	}else{
-	    phiout->zero(stream);
+	    cuzero(phiout, stream);
 	}
 	int ipowfs=parms->wfs[iwfs].powfs;
 	gpu_dm2loc(phiout->p, cuwfs->loc_dm, cudata->dmreal, cudata->ndm,
 		   parms->powfs[ipowfs].hs, parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 		   0, 0, 1, stream);
-	ints->zero(stream);
+	cuzero(ints, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev, stream);
 	pywfs_grad(grad, ints, cupowfs->saa, cuwfs->isum, cupowfs->pyoff, pywfs->gain,stream);
 	curadd(&grad, 1, grad0, -1, stream);
@@ -196,12 +196,12 @@ dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int 
     }
     gg->p[aloc->nloc]=count;
     dspsetnzmax(gg, count);
-    curfree(grad0);
-    curfree(opd0);
-    curfree(grad);
-    curfree(ints);
+    cufree(grad0);
+    cufree(opd0);
+    cufree(grad);
+    cufree(ints);
     dfree(gradc);
-    curfree(phiout);
+    cufree(phiout);
     cellfree(dmreal);
     cellfree(dmrealsq);
     return gg;

@@ -67,6 +67,38 @@ void cellinit(cell **A, long nx, long ny){
 	*A=cellnew(nx, ny);
     }
 }
+/**
+   check the size of cell array if exist. Otherwise create it. m is created for dcell
+*/
+void cellinit2(cell **A, const cell *B){
+    if(!iscell(B)){
+	error("Invalid usage. B must be cell\n");
+    }if(*A){
+	cellinit(A, B->nx, B->ny);
+    }else{
+	uint32_t magic=0;
+	for(int ib=0; ib<B->nx*B->ny; ib++){
+	    if(IND(B,ib)){
+		if(!magic){
+		    magic=IND(B,ib)->id;
+		}else{
+		    if(magic!=IND(B, ib)->id){
+			error("Mixed type is not supported: %u vs %u\n",
+			      magic, IND(B, ib)->id);
+		    }
+		}
+	    }
+	}
+	if(magic==M_DBL){
+	    *A=(cell*)dcellnew2((const dcell*)B);
+	}else if(magic==M_CMP){
+	    *A=(cell*)ccellnew2((const ccell*)B);
+	}else{
+	    *A=(cell*)cellnew(B->nx, B->ny);
+	}
+    }
+}
+
 cell *cell_cast(const void *A){
     if(!A) return 0;
     assert(iscell(A));

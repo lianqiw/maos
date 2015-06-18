@@ -154,13 +154,13 @@ static void mvm_direct_igpu(thread_t *info){
     }
     stream.sync();
     toc2("Thread %ld mvm", info->ithread);
-    curfree(mvm);
-    curfree(mvmi);
-    //curcellfree(fitx);
-    curcellfree(fitr);
-    curcellfree(opdx);
-    curcellfree(opdr);
-    curcellfree(grad);
+    cufree(mvm);
+    cufree(mvmi);
+    //cufree(fitx);
+    cufree(fitr);
+    cufree(opdx);
+    cufree(opdr);
+    cufree(grad);
     if(gpu_avail){
 	LOCK(gpu_mutex);
 	gpu_avail[gpu_pos++]=igpu;

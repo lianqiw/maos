@@ -128,7 +128,7 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
 /**
    do HXp operation, opdfit+=Hxp*xin*/
 void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
-    opdfit->m->zero(stream);
+    cuzero(opdfit->m, stream);
     if(!hxp){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
 	    gpu_atm2loc(opdfit->p[ifit]->p, floc, INFINITY,
@@ -137,7 +137,7 @@ void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
 	}
     }else{
 	if(xcache){//caching
-	    xcache->m->zero(stream);
+	    cuzero(xcache->m, stream);
 	    hxp0->forward(xcache->pm, xin->pm, 1, NULL, stream);
 	    hxp1->forward(opdfit->pm, xcache->pm, 1, NULL, stream);
 	}else{
@@ -149,7 +149,7 @@ void cufit_grid::do_hxp(const curcell *xin, stream_t &stream){
    do HXp' operation, xout+=alpha*Hxp'*opdfit2*/
 void cufit_grid::do_hxpt(const curcell *xout, Real alpha, stream_t &stream){
     if(xcache){
-	xcache->m->zero(stream);
+	cuzero(xcache->m, stream);
 	hxp1->backward(opdfit2->pm, xcache->pm, alpha, fitwt->p, stream);
 	hxp0->backward(xcache->pm, xout->pm, alpha, NULL, stream);
     }else{
@@ -161,10 +161,10 @@ void cufit_grid::do_hxpt(const curcell *xout, Real alpha, stream_t &stream){
    opdfit+=Ha*xin;
 */
 void cufit_grid::do_ha(const curcell *xin, stream_t &stream){
-    opdfit->m->zero(stream); 
+    cuzero(opdfit->m, stream); 
     if(dmcache){
 	/*xout->dmcache*/ 
-	dmcache->m->zero(stream); 
+	cuzero(dmcache->m, stream); 
 	ha0->forward(dmcache->pm, xin->pm, 1.f, NULL, stream);
 	/*dmcache->opdfit*/ 
 	ha1->forward(opdfit->pm, dmcache->pm, 1.f, NULL, stream);
@@ -179,7 +179,7 @@ void cufit_grid::do_ha(const curcell *xin, stream_t &stream){
 void cufit_grid::do_hat(curcell *xout,  Real alpha, stream_t &stream){
     if(dmcache){ 
 	/*opdfit2->dmcache*/ 
-	dmcache->m->zero(stream); 
+	cuzero(dmcache->m, stream); 
 	ha1->backward(opdfit2->pm, dmcache->pm, alpha, fitwt->p, stream);
 	/*dmcache->xout*/ 
 	ha0->backward(dmcache->pm, xout->pm, 1, NULL, stream);

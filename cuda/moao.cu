@@ -52,20 +52,20 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
 }
 Real cumoao_t::moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream){
     for(int idir=0; idir<ndir; idir++){
-	opdfit->m->zero(stream);
+	cuzero(opdfit->m, stream);
 	hxp[idir]->forward(opdfit->pm, xin->pm, 1.f, NULL, stream);//tomography	
 	hap[idir]->forward(opdfit->pm, ain->pm, -1.f, NULL, stream);//minus common DM.
 	grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);
-	rhs->m->zero(stream);
+	cuzero(rhs->m, stream);
 	ha->backward(opdfit2->pm, rhs->pm, 1, NULL, stream);
 	solve(&xout[idir], rhs, stream);
 	/*{
 	    static int ic=-1; ic++;
-	    curcellwrite(xout[idir], "xout_%d", ic);
-	    curcellwrite(rhs, "rhs_%d", ic);
-	    curcellwrite(xin, "xin_%d", ic);
-	    curcellwrite(ain, "ain_%d", ic);
-	    curcellwrite(opdfit, "opd_%d", ic);
+	    cuwrite(xout[idir], "xout_%d", ic);
+	    cuwrite(rhs, "rhs_%d", ic);
+	    cuwrite(xin, "xin_%d", ic);
+	    cuwrite(ain, "ain_%d", ic);
+	    cuwrite(opdfit, "opd_%d", ic);
 	    }*/
     }
     return 0;
@@ -76,7 +76,7 @@ void cumoao_t::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stre
     }else{
 	curscale((*xout)->m, beta, stream);
     }
-    opdfit->m->zero(stream);
+    cuzero(opdfit->m, stream);
     ha->forward(opdfit->pm, xin->pm, 1, NULL, stream);
     grid->W01->apply(opdfit2->m->p, opdfit->m->p, opdfit->nx, stream);
     ha->backward(opdfit2->pm, (*xout)->pm, alpha, NULL, stream);

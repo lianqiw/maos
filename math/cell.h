@@ -29,6 +29,7 @@ void* cellnew(long nx, long ny)CHECK_UNUSED_RESULT;
 void* cellnew2(const void*)CHECK_UNUSED_RESULT;
 cell *cell_cast(const void *A) CHECK_UNUSED_RESULT;
 void cellinit(cell **A, long nx, long ny);
+void cellinit2(cell **A, const cell *B);
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);
 void cellresize(void *in, long nx, long ny);
 void cellfree_do(void* dc);

@@ -97,14 +97,14 @@ cushgeom_t::cushgeom_t(wfscfg_t *wfscfg)
     if(!parms->powfs[ipowfs].pistatout 
        || parms->powfs[ipowfs].pistatstc 
        || parms->powfs[ipowfs].dtrat==1){
-	gradcalc=gradacc->ref();
+	gradcalc=curef(gradacc);
     }else{
 	gradcalc=curnew(nsa*2,1);
     }
 }
 void cushgeom_t::output(){
     error("To implement\n");
-    gradacc->zero();
+    cuzero(gradacc);
 }
 __global__ void add_geom_noise_do(Real *restrict g, const Real *restrict nea, 
 				  int nsa, curandState *restrict rstat);
@@ -360,8 +360,8 @@ void cushphy_t::acc(curmat *opd){
 }
 void cuwfs_t::initsim(){
     gpu_set(wfsinfo->igpu);
-    geom->initsim();
-    phy->initsim();
+    if(geom) geom->initsim();
+    if(phy) phy->initsim();
 }
 void cuwfs_t::seeding(int seed){
     gpu_set(wfsinfo->igpu);

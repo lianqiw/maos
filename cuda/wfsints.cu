@@ -408,7 +408,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	if(cuwfs[iwfs].lltncpa){
 	    curcp(&lltopd, cuwfs[iwfs].lltncpa, stream);
 	}else{
-	    curzero(lltopd, stream);
+	    cuzero(lltopd, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
@@ -531,7 +531,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_1");
 	    ctoc("psf");
 	    if(wvfout){
-		curzero(cuwfs[iwfs].psfout, stream);
+		cuzero(cuwfs[iwfs].psfout, stream);
 		CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout->p, CUFFT_INVERSE);
 		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
 		    (wvfout->p[isa+nsa*iwvl]->p, wvf_n, wvf_n, 

@@ -129,7 +129,7 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
     if(!*px){
 	*px=curcellnew(b);
     }else if(!warm){
-	curcellzero(*px, stream);
+	cuzero(*px, stream);
     }
     curcell *x0=*px;
     int kover=0; //k overflows maxit

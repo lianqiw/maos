@@ -223,10 +223,10 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(ipowfs==parms->wfsr[iwfs].powfs){
 		    if(GPpi){
-			GPp->p[iwfs]=GPpi->ref();
+			GPp->p[iwfs]=curef(GPpi);
 		    }
 		    if(GPf){
-			GP->p[iwfs]=GPf->ref();
+			GP->p[iwfs]=curef(GPf);
 		    }
 		}
 	    }
@@ -250,7 +250,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
 	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
-		neai->p[iwfs]=neai->p[iwfs0]->ref();
+		neai->p[iwfs]=curef(neai->p[iwfs0]);
 	    }else{
 		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
 		neai->p[iwfs]=convert_neai(nea);
@@ -587,17 +587,17 @@ void cutomo_grid::do_gp(curcell *_grad, curcell *_opdwfs, int ptt2, stream_t &st
     if(_opdwfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    curzero(_grad->p[iwfs], stream);
+	    cuzero(_grad->p[iwfs], stream);
 	    cuspmul(_grad->p[iwfs]->p, GP->p[iwfs], _opdwfs->p[iwfs]->p, 1, 'n', 1, stream);
 	}
     }
-    curzero(ttf, stream);
+    cuzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(gpdata, _grad->pm, ttf->p, ttf->p+nwfs*2, _opdwfs?_opdwfs->pm:NULL, ptt2);
 }
 void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &stream){
     if(_opdwfs){
-	curzero(_opdwfs->m, stream);
+	cuzero(_opdwfs->m, stream);
     }
     //Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
@@ -606,7 +606,7 @@ void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &s
     if(_opdwfs){//Does GP' for GP with sparse
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    curzero(_opdwfs->p[iwfs], stream);
+	    cuzero(_opdwfs->p[iwfs], stream);
 	    cuspmul(_opdwfs->p[iwfs]->p, GP->p[iwfs], _grad->p[iwfs]->p, 1, 't', 1, stream);
 	}
     }
@@ -632,7 +632,7 @@ void cutomo_grid::Rt(curcell **gout, Real beta, const curcell *xin, Real alpha, 
     }else{
 	curcellscale(*gout, beta, stream);
     }
-    curzero(opdwfs->m, stream);
+    cuzero(opdwfs->m, stream);
     hx->forward(opdwfs->pm, xin->pm, alpha, NULL, stream);
     do_gp(*gout, opdwfs, 1, stream);
     do_gpt(NULL, *gout, 1, stream);
@@ -660,7 +660,7 @@ void cutomo_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, s
 #endif
     RECORD(0);
     curcell *opdx=*xout;
-    curzero(opdwfs->m, stream);
+    cuzero(opdwfs->m, stream);
     //xin to opdwfs
     hx->forward(opdwfs->pm, xin->pm, 1, NULL, stream);
     RECORD(1);

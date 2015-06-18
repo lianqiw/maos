@@ -145,7 +145,12 @@ maos, "skyc" for skyc.  */
 char *find_config(const char *name){
     const char *maos_config_path=getenv("MAOS_CONFIG_PATH");
     char *config_path=NULL;
-    if(maos_config_path){
+    if(!exist(config_path) && EXEP[0]){
+	/*If not found, try the folder that contains the exe*/
+	free(config_path);
+	config_path=stradd(EXEP,"/config/",name,NULL);
+    }
+    if(!exist(config_path) && maos_config_path){
 	config_path=stradd(maos_config_path,"/config/",name,NULL);
 	if(!exist(config_path)){
 	    free(config_path);
@@ -157,12 +162,7 @@ char *find_config(const char *name){
 	free(config_path);
 	config_path=stradd(SRCDIR,"/config/",name,NULL);
     }
-    
-    if(!exist(config_path) && EXEP[0]){
-	/*If not found, try the folder that contains the exe*/
-	free(config_path);
-	config_path=stradd(EXEP,"/config/",name,NULL);
-    }
+
     if(!exist(config_path) && HOME){
 	/*If not found, try .aos folder*/
 	free(config_path);

@@ -51,7 +51,7 @@ class cumat{
     }
 
     void zero(cudaStream_t stream=(cudaStream_t)-1){
-	if(this && p){
+	if(p){
 	    if(stream==(cudaStream_t)-1){
 		DO(cudaMemset(p, 0, nx*ny*sizeof(T)));
 	    }else{
@@ -60,7 +60,6 @@ class cumat{
 	}
     }
     cumat* ref(int vector=0){
-	if(!this) return 0;
 	if(nref) atomicadd(nref, 1);
 	cumat* res;
 	if(vector){
@@ -208,7 +207,6 @@ class cucell{
 	cudaFree(pm);
     }
     void zero(cudaStream_t stream=(cudaStream_t)-1){
-	if(!this) return;
 	if(m){
 	    m->zero();
 	}else{
@@ -260,7 +258,6 @@ class cusp{
     }
     void trans();/*covnert to CSR mode by transpose*/
     cusp* ref(void){
-	if(!this) return 0;
 	if(nref) atomicadd(nref, 1);
 	cusp* res=(cusp*)malloc(sizeof(cusp));
 	memcpy(res, this, sizeof(*this));
@@ -425,4 +422,8 @@ void initzero(cumat<T> **A, long nx, long ny){
 	*A=new cumat<T>(nx,ny);
     }
 }
+
+#define curef(A,B...) ((A)?(A)->ref(B):0)
+#define cuzero(A,B...) if(A) (A)->zero(B)
+#define cufree(A) ({delete A; A=NULL;})
 #endif

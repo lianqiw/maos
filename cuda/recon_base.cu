@@ -119,7 +119,7 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
 	delete pis;
 	pis=curnew(ndir,1);
     }else{
-	pis->zero(stream);
+	cuzero(pis, stream);
     }
     //Apply W1: Piston removal
     inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>

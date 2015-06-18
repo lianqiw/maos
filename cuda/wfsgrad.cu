@@ -293,9 +293,9 @@ void dither_t::acc(DITHER_T *dither, curcell *ints, Real cs, Real ss, int npll, 
 	cp2cpu(&dither->imb, imb, stream);
 	cp2cpu(&dither->imx, imx, stream);
 	cp2cpu(&dither->imy, imy, stream);
-	curcellzero(imb);
-	curcellzero(imx);
-	curcellzero(imy);
+	cuzero(imb);
+	cuzero(imx);
+	cuzero(imy);
     }
 }
 /**
@@ -343,13 +343,13 @@ void gpu_wfsgrad_queue(thread_t *info){
 	curmat *gradcalc=cuwfs[iwfs].gradcalc;
 	curmat *gradref=0;
 	if((isim-parms->powfs[ipowfs].step)%dtrat==0){
-	    curcellzero(cuwfs[iwfs].ints, stream);
-	    curzero(cuwfs[iwfs].gradacc, stream);
+	    cuzero(cuwfs[iwfs].ints, stream);
+	    cuzero(cuwfs[iwfs].gradacc, stream);
 	}
 	if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
 	    curcp(&phiout, cuwfs[iwfs].opdadd, stream);
 	}else{
-	    curzero(phiout, stream);
+	    cuzero(phiout, stream);
 	}
 	if((parms->sim.idealwfs || parms->sim.wfsalias)
 	   && !(parms->sim.idealwfs && parms->sim.wfsalias)){
@@ -429,7 +429,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		double ratio;
 		if(do_pistatout && dtrat>1){
 		    gradref=gradcalc; 
-		    curzero(gradcalc, stream);
+		    cuzero(gradcalc, stream);
 		    ratio=1;
 		}else{
 		    gradref=gradacc;
@@ -491,9 +491,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(parms->powfs[ipowfs].type==1){
 		pywfs_grad(gradcalc, cuwfs[iwfs].ints->p[0], cupowfs[ipowfs].saa, 
 			   cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gain,stream);
-		//curwrite(gradcalc, "gradcalc"); exit(0);
+		//cuwrite(gradcalc, "gradcalc"); exit(0);
 	    }else if(do_phy){
-		curzero(gradcalc, stream);
+		cuzero(gradcalc, stream);
 		curcell *ints=cuwfs[iwfs].ints;
 		const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 		switch(parms->powfs[ipowfs].phytypesim){
@@ -596,13 +596,13 @@ void gpu_save_gradstat(SIM_T *simu){
 		curcell* tmp=cuwfs[iwfs].pistatout;
 		curcellscale(tmp, 1.f/(Real)nstep, stream);
 		if(parms->sim.skysim){
-		    curcellwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+		    cuwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 				 dirskysim,simu->seed,
 				 parms->powfs[ipowfs].order,
 				 parms->wfs[iwfs].thetax*206265,
 				 parms->wfs[iwfs].thetay*206265);
 		}else{
-		    curcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+		    cuwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}
 		curcellscale(tmp, nstep, stream);
 	    }

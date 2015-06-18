@@ -60,10 +60,11 @@ int is_scheduler=0;
 #define MAOS_DISABLE_SCHEDULER 0
 #endif
 #if MAOS_DISABLE_SCHEDULER
-int scheduler_start(char *path, int nthread, int waiting){
+int scheduler_start(char *path, int nthread, int ngpu, int waiting){
     (void)path;
     (void)nthread;
     (void)waiting;
+    (void)ngpu;
     return -1;
 }
 int scheduler_wait(void){

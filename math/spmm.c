@@ -442,7 +442,7 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
     cell *B=(cell*)(B_);
     cell **pA=(cell**)A_;
     if(iscell(B)){//cell
-	cellinit(pA, B->nx, B->ny);
+	cellinit2(pA, B);
 	cell *A=*pA;
 	for(int i=0; i<B->nx*B->ny; i++){
 	    X(celladd)(A->p+i, ac, B->p[i], bc);

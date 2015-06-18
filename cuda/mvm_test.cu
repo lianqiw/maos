@@ -170,7 +170,7 @@ void mvm_test(int igpu){
     int nevent=nstream*2;
     event_t event[nevent];
     Real one=1.;
-    //curwrite(cuy, "y0");
+    //cuwrite(cuy, "y0");
     Real tm;
     cudaProfilerStart();
     
@@ -185,7 +185,7 @@ void mvm_test(int igpu){
 	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("cublas?gemv takes %.6f ms\n", tm);
-	curwrite(cuy, "y_cugemv");
+	cuwrite(cuy, "y_cugemv");
     }
     {
 	for(int nover=2; nover<256; nover+=2)
@@ -193,7 +193,7 @@ void mvm_test(int igpu){
 		//custom method. 10 is optimal
 		int naeach=128;
 		const int nblock=(M*nover+naeach-1)/naeach;
-		cuy->zero();
+		cuzero(cuy);
 		int is;
 		for(is=0; is<nstream; is++){
 		    stream[is].sync();
@@ -214,14 +214,14 @@ void mvm_test(int igpu){
 		}
 		info("nover=%d,  %.6f ms\n", nover, toc3*1000);
 	    }
-	curwrite(cuy, "y_multimv");
+	cuwrite(cuy, "y_multimv");
     }
     {
 	//custom method
 	int naeach, mp_count;
 	naeach=128;
 	mp_count=(M+naeach-1)/naeach;
-	cuy->zero(stream[0]);stream[0].sync();
+	cuzero(cuy, stream[0]);stream[0].sync();
     	event[0].record(stream[0]);
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
@@ -233,14 +233,14 @@ void mvm_test(int igpu){
 	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("mvm_g_mul takes %.6f ms\n", tm);
-	curwrite(cuy, "y_gmul");
+	cuwrite(cuy, "y_gmul");
 	}
     /*  {
 	
 	const int nblock=(M+BLOCKMV_TNX-1)/BLOCKMV_TNX;
 	//const int nblock=1;
 	//new method with blocking
-	cuy->zero(stream[0]);stream[0].sync();
+	cuzero(cuy, stream[0]);stream[0].sync();
 	cudaProfilerStart();
 	event[0].record(stream[0]);
 	for(int i=0; i<N; i+=iN){
@@ -254,7 +254,7 @@ void mvm_test(int igpu){
 	cudaProfilerStop();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("blockmv takes %.6f ms\n", tm);
-	curwrite(cuy, "y_blockmv");
+	cuwrite(cuy, "y_blockmv");
 	}*/
     /*{
 	cudaProfilerStart();

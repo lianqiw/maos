@@ -459,7 +459,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 		    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
 		}
 	    }else{
-		curcellzero(cuwfs[iwfs].ints);
+		cuzero(cuwfs[iwfs].ints);
 	    }
 	}
 	if(parms->powfs[ipowfs].pistatout){
@@ -472,7 +472,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 		const int npsf=MAX(notfx,notfy);
 		cuwfs[iwfs].pistatout=curcellnew(nsa, parms->powfs[ipowfs].nwvl, npsf, npsf);
 	    }else{
-		curcellzero(cuwfs[iwfs].pistatout);
+		cuzero(cuwfs[iwfs].pistatout);
 	    }
 	}
 	CUDA_SYNC_DEVICE;
