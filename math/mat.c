@@ -532,12 +532,12 @@ X(cell) *X(cellnew2)(const X(cell) *A){
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
 */
 X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
-    X(cell) *out=cellnew(nx,ny);
     long tot=0;
     for(long i=0; i<nx*ny; i++){
 	tot+=nnx[i]*(nny?nny[i]:1);
     }
     if(!tot) return NULL;
+    X(cell) *out=cellnew(nx,ny);
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
@@ -546,7 +546,21 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
     }
     return out;
 }
-
+/**
+   Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
+*/
+X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my){
+    long tot=nx*ny*mx*my;    
+    if(!tot) return NULL;
+    X(cell) *out=cellnew(nx,ny);
+    out->m=X(new)(tot,1);
+    tot=0;
+    for(long i=0; i<nx*ny; i++){
+	out->p[i]=X(new_ref)(mx, my, out->m->p+tot);
+	tot+=mx*my;
+    }
+    return out;
+}
 /**
    creat a X(cell) reference an existing X(cell) by referencing the
    elements.

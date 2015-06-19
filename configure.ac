@@ -111,7 +111,8 @@ esac
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
-
+#AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw_system="yes"],[has_fftw_system='no'])
+#unset ac_cv_lib_fftw3_fftw_execute
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
@@ -163,6 +164,7 @@ case "$host_os" in
 	AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_SUBST(ldsuffix)
+AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
@@ -530,11 +532,10 @@ if test "$has_z" = "no" ;then
 fi
 LDZ="-lz"
 #Check for FFTW3 header and library.
-has_fftw='yes'
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp --disable-shared --enable-static
+    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp --enable-shared --enable-static
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
@@ -546,13 +547,29 @@ else
     AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
 fi
 AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-
-AC_DEFINE(USE_FFTW_THREADS, [0], "Disable FFTW3 threads support.")
 if test x$has_fftwf = x1 ;then
     LDFFT="-lfftw3 -lfftw3f"
 else
     LDFFT="-lfftw3"
 fi
+fftw_threads=1
+if test "$with_matlab" = "no"  ;then
+    if test -n "$OPENMP_CFLAGS" ;then
+	AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
+    else
+	AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
+    fi
+    if test x$has_fftwf = x1 ;then
+	if test -n "$OPENMP_CFLAGS" ;then
+	    AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
+	else
+	    AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
+	fi
+    fi
+else
+    fftw_threads=0
+fi
+AC_DEFINE_UNQUOTED(USE_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
@@ -727,7 +744,7 @@ if test "$with_matlab" != "no" ;then
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl"
+	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDFFT"
 	LDMEX="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else

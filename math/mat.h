@@ -48,6 +48,7 @@
     X(cell) *X(cell_cast)(void *A) CHECK_UNUSED_RESULT;			\
     X(cell) *X(cellnew2)(const X(cell) *A);				\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny);	\
+    X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my);	\
     void X(cellzero)(void *dc);						\
     void X(cellset)(X(cell)*dc, T alpha);				\
     X(cell) *X(celltrans)(const X(cell) *A);				\

@@ -30,6 +30,9 @@
    Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
 X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ...){
     if(!nx || !ny) return NULL;
+    if(disable_save){
+	return X(new)(nx, ny);
+    }
     format2fn;
     int fd=mmap_open(fn, 1);
     size_t metasize=3*8+bytes_header(header);//size of meta data. 
@@ -59,6 +62,9 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 			 const char *header1, const char *header2[],
 			 const char *format, ...){
     if(!nx || !ny) return NULL;
+    if(disable_save){
+	return X(cellnew3)(nx, ny, nnx, nny);
+    }
     format2fn;
     int fd=mmap_open(fn, 1);
     long metasize=3*8;
@@ -99,6 +105,9 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *header,
 			     const char *format, ...){
     if(!nx || !ny) return NULL;
+    if(disable_save){
+	return X(cellnewsame)(nx, ny, mx, my);
+    }
     format2fn;
     int fd=mmap_open(fn, 1);
     long metasize=3*8;

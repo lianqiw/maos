@@ -125,8 +125,8 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	if(disable_save){//When saving is disabled, allow writing to cache folder.
 	    char fncache[PATH_MAX];
 	    snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
-	    if(strcmp(fncache, fn2)){
-		warning("Saving is disabled.\n");
+	    if(mystrcmp(fn2, fncache)){
+		warning("Saving is disabled. %s does not contain %s\n", fn2, fncache);
 		free(fn2);
 		fn2=0;
 	    }
@@ -1085,7 +1085,7 @@ mmap_t*mmap_ref(mmap_t *in){
 */
 int mmap_open(char *fn, int rw){
     if(rw && disable_save){
-	error("output directory is not specified\n");
+	warning("Saving is disabled for %s\n", fn);
     }
     char *fn2=procfn(fn,rw?"w":"r",0);
     if(!fn2) return -1;

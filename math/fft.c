@@ -24,7 +24,7 @@
 #if !defined(USE_SINGLE) || HAS_FFTWF==1
 extern int has_threads;
 extern void (*p_fftw_plan_with_nthreads)(int n);
-
+static int FFTW_VERBOSE=0;
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
 */
@@ -103,40 +103,61 @@ static void save_wisdom(){
 static __attribute__((destructor))void deinit(){
     save_wisdom();
 }
+/**
+   executed before main()
+*/
+static __attribute__((constructor))void init(){
+    READ_ENV_INT(FFTW_VERBOSE, 0, 1);
+}
 #include <dlfcn.h>
 static void init_threads(){
     void *libfftw_threads=NULL;
     const char *fn=0;
+#if USE_FFTW_THREADS == 0
 #if _OPENMP>200805
 #if defined(USE_SINGLE)
-    fn="libfftw3f_omp.so";
+    fn="libfftw3f_omp."LDSUFFIX;
 #else
-    fn="libfftw3_omp.so";
+    fn="libfftw3_omp."LDSUFFIX;
 #endif
-#endif
-    if(!libfftw_threads){
+#else
 #if defined(USE_SINGLE)
-	fn="libfftw3f_threads.so";
+    fn="libfftw3f_threads."LDSUFFIX;
 #else
-	fn="libfftw3_threads.so";
+    fn="libfftw3_threads."LDSUFFIX;
 #endif
-    }
-    if((libfftw_threads=dlopen(fn, RTLD_LAZY))){
-	info2("Open FFTW thread library: success\n");
-	void (*p_fftw_init_threads)(void)=NULL;
+#endif
+#endif
+    if(!fn || (libfftw_threads=dlopen(fn, RTLD_LAZY))){
+	if(!fn){
+	    info2("FFTW thread library is built in\n");
+	}else{
+	    info2("Open FFTW thread library %s: success\n", fn);
+	}
+	int (*p_fftw_init_threads)(void)=NULL;
 	has_threads=1;
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
+#if USE_FFTW_THREADS
+	p_fftw_init_threads=fftwf_init_threads;
+	p_fftw_plan_with_nthreads=fftwf_plan_with_nthreads;
+#else
 	p_fftw_init_threads=dlsym(libfftw_threads, "fftwf_init_threads");
 	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftwf_plan_with_nthreads");
+#endif
 #else
 	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
+#if USE_FFTW_THREADS
+	p_fftw_init_threads=fftw_init_threads;
+	p_fftw_plan_with_nthreads=fftw_plan_with_nthreads;
+#else
 	p_fftw_init_threads=dlsym(libfftw_threads, "fftw_init_threads");
 	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftw_plan_with_nthreads");
 #endif
+#endif
 	p_fftw_init_threads();
     }else{
-	info2("Open FFTW thread library: failed\n"); 
+	info2("Open FFTW thread library %s: failed\n", fn); 
 	has_threads=0;
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
@@ -149,16 +170,19 @@ static void init_threads(){
 #else
 static void init_threads(){}
 #endif
-static void FFTW_THREADS(long n){
+static void FFTW_THREADS(long nx, long ny){
     if(has_threads==-1){
 	init_threads();
+	if(FFTW_VERBOSE){
+	    info2("FFTW: has_threads=%d\n", has_threads);
+	}
     }
     if(has_threads==1){
-	if(n>256*256){
-	    p_fftw_plan_with_nthreads(NTHREAD);
-	}else{
-	    p_fftw_plan_with_nthreads(1);
+	int nth=(nx*ny>256*256)?NTHREAD:1;
+	if(FFTW_VERBOSE){
+	    info2("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
 	}
+	p_fftw_plan_with_nthreads(nth);
     }
 }
 #ifdef __cplusplus
@@ -180,7 +204,7 @@ static void X(fft2plan)(X(mat) *A, int dir){
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
     LOCK_FFT;
-    FFTW_THREADS(A->nx*A->ny);
+    FFTW_THREADS(A->nx, A->ny);
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
 	A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
@@ -205,7 +229,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     FFTW_FLAGS=FFTW_ESTIMATE;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
-    FFTW_THREADS(A->nx*A->ny);
+    FFTW_THREADS(A->nx, A->ny);
     /*along columns for all columns. */
     plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
 					COMP(A->p),NULL,1,nx,
@@ -313,7 +337,7 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
-	FFTW_THREADS(nx*ny);
+	FFTW_THREADS(nx, ny);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
 	UNLOCK_FFT;
