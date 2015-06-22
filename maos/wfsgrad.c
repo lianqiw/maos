@@ -369,7 +369,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
 		}
 	    }
-	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_pllskip
+	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_ogskip
 	       && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
 		/*Collect statistics with dithering*/
 		DITHER_T *pd=simu->dither[iwfs];
@@ -584,7 +584,9 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    IND(simu->resdither->p[iwfs], 1, ic)=pd->a2m;
 	    IND(simu->resdither->p[iwfs], 2, ic)=pd->a2me;
 	}
-	    
+    }
+    int nogacc=(simu->isim-parms->powfs[ipowfs].dither_ogskip+1)/parms->powfs[ipowfs].dtrat;
+    if(nogacc>0 && nogacc%npll==0){
 	if(parms->powfs[ipowfs].dither==1){
 	    /* Update drift mode computation. Only useful when wfs t/t is removed*/
 	    double scale1=1./npll;
@@ -833,7 +835,8 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    }
 	}
 	int ngrad=parms->powfs[ipowfs].dither_ograt;
-	if(npllacc>0 && npllacc % ngrad==0){//This is matched filter or cog update
+	const int nogacc=(simu->isim-parms->powfs[ipowfs].dither_ogskip+1)/parms->powfs[ipowfs].dtrat;
+	if(nogacc>0 && nogacc % ngrad==0){//This is matched filter or cog update
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    double scale1=(double)parms->powfs[ipowfs].dither_pllrat/(double)parms->powfs[ipowfs].dither_ograt;
 	    if(parms->powfs[ipowfs].phytypesim2==1 && parms->powfs[ipowfs].type==0){
@@ -918,7 +921,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    info2("Step %d: Update CoG gain for wfs %d. %s gain adjustment is %g\n", 
 			  simu->isim, iwfs, pd->gg0?"Average":"Global", mgain);
 		    if(simu->resdither){
-			int ic=(npllacc-1)/(npll);
+			int ic=(nogacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgain;
 		    }			     
 		    if(parms->save.dither){

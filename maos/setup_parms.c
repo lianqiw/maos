@@ -463,10 +463,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	    //Convert all in simulation rate (sim.dt).
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_ogskip*=powfsi->dtrat;
-	    info2("powfs[%d].dither_pllskip=%d simulation frame\n", ipowfs, powfsi->dither_pllskip);
-	    info2("powfs[%d].dither_ogskip=%d simulation frame\n", ipowfs, powfsi->dither_ogskip);
-	    info2("powfs[%d].dither_pllrat=%d WFS frame\n", ipowfs, powfsi->dither_pllrat);	 
-	    info2("powfs[%d].dither_ograt=%d WFS frame\n", ipowfs, powfsi->dither_ograt);
 	}
 	//Input of modulate is in unit of wvl/D. Convert to radian
 	powfsi->modulate*=wvlmax/parms->aper.d;
@@ -2542,7 +2538,12 @@ static void print_parms(const PARMS_T *parms){
 	    info2(" %g",parms->powfs[i].wvl->p[iwvl]);
 	}
 	info2("]\n");
-	
+	if(parms->powfs[i].dither){
+	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
+		  parms->powfs[i].dither_pllskip, parms->powfs[i].dither_pllrat);
+	    info2("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
+		  parms->powfs[i].dither_ogskip, parms->powfs[i].dither_ograt);
+	}
     }
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
     for(i=0; i<parms->nwfs; i++){
