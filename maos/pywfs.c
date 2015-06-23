@@ -121,10 +121,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
-	    pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, NULL, 
+	    pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
 				      ((ix-0.5)*dx2*ncomp2), 
 				      ((iy-0.5)*dx2*ncomp2),
-				      1, 0, 0);	    
+				      1, 0);	    
 	}
     }
     if(parms->save.setup){
@@ -156,10 +156,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
 		dspfree(pywfs->si->p[ix+iy*2]);
-		pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, NULL, 
+		pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
 					  ((ix-0.5)*dx2*ncomp2), 
 					  ((iy-0.5)*dx2*ncomp2),
-					  1, 0, 0);	    
+					  1, 0);	    
 	    }
 	}
     }
@@ -528,7 +528,7 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
+static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc){
     const loc_t *loc=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
@@ -556,11 +556,7 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 	    dcp(&opd, pywfs->atm);
 	}
 	opdin->p[ia]=PYWFS_POKE;
-	if(cubic){
-	    prop_nongrid_cubic((loc_t*)ploc, opdin->p, loc, NULL, opd->p, 1, 0, 0, 1, iac, 0, 0);
-	}else{
-	    prop_nongrid((loc_t*)ploc, opdin->p, loc, NULL, opd->p, 1, 0, 0, 1, 0, 0);
-	}
+	prop_nongrid((loc_t*)ploc, opdin->p, loc, opd->p, 1, 0, 0, 1, 0, 0);
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grad, pywfs, ints);
 	dadd(&grad, 1, grad0, -1);
@@ -584,16 +580,16 @@ static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, dou
 /**
    ploc is on pupil.
  */
-dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
+dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc){
     uint32_t key=0;
     key=lochash(ploc, key);
     key=pywfs_hash(pywfs, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%g_%g.bin", HOME, 
 	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
-	     cubic, iac, PYWFS_POKE);
+	     ploc->iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     info2("Using G in %s\n", fn);
     dsp *gg=0;
@@ -602,7 +598,7 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, int cubic, double iac){
 	int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
 	if(fd>0){//succeed
 	    info2("Generating PYWFS poke matrix\n");
-	    gg=pywfs_mkg_do(pywfs, ploc, cubic, iac);
+	    gg=pywfs_mkg_do(pywfs, ploc);
 	    writebin(gg, "%s", fn);
 	    snprintf(fn, PATH_MAX, "%s/.aos/cache/", HOME);
 	    remove_file_older(fn, 30*24*3600);
@@ -630,9 +626,9 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int i
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/GA_%u_%ld_%g_%d_%d_%g_%g.bin", HOME, 
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/GA_%u_%ld_%g_%d_%g_%g.bin", HOME, 
 	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
-	     parms->dm[idm].cubic, parms->dm[idm].iac, PYWFS_POKE);
+	     parms->dm[idm].iac, PYWFS_POKE);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     info2("Using GA in %s\n", fn);
     dsp *gg=0;
@@ -646,7 +642,7 @@ dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int i
 		    gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
 		}else
 #endif
-		    gg=pywfs_mkg_do(pywfs, aloc, parms->dm[idm].cubic, parms->dm[idm].iac);
+		    gg=pywfs_mkg_do(pywfs, aloc);
 		writebin(gg, "%s", fn);
 	    }else{
 		info2("Trying to lock %s\n", fnlock);

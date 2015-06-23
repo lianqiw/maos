@@ -62,17 +62,9 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
 	if(aper->locs_dm){
 	    locs=aper->locs_dm->p[ievl+idm*parms->evl.nevl];
 	}
-	if(parms->dm[idm].cubic){
-	    prop_grid_cubic(simu->dmprojsq->p[idm],
-			    locs, aper->amp->p, iopdevl->p, 
-			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-			    0, 0);
-	}else{
-	    prop_grid(simu->dmprojsq->p[idm],
-		      locs, aper->amp->p, iopdevl->p,
-		      alpha, dispx, dispy, scale, 0,
-		      0, 0);
-	}
+	prop_grid(simu->dmprojsq->p[idm], locs, iopdevl->p,
+		  alpha, dispx, dispy, scale, 0,
+		  0, 0);
     }
 }
 static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
@@ -259,12 +251,11 @@ void perfevl_ievl(thread_t *info){
 		    if(parms->tomo.square){
 			memcpy(&xmap, recon->xmap->p[ipsr], sizeof(map_t));
 			xmap.p=simu->opdr->p[ipsr]->p;
-			prop_grid(&xmap, aper->locs, NULL, iopdevl->p, -1,
+			prop_grid(&xmap, aper->locs, iopdevl->p, -1,
 				  displacex, displacey, scale, 0, 0, 0);
 		    }else{
-			prop_nongrid(recon->xloc->p[ipsr], 
-				     simu->opdr->p[ipsr]->p,
-				     aper->locs, NULL, iopdevl->p, -1,
+			prop_nongrid(recon->xloc->p[ipsr], simu->opdr->p[ipsr]->p,
+				     aper->locs,  iopdevl->p, -1,
 				     displacex, displacey, scale, 0, 0);
 		    }
 		}
@@ -291,15 +282,8 @@ void perfevl_ievl(thread_t *info){
 		/**
 		   prop is faster than spmulvec. \fixme check definition of misreg
 		*/
-		if(parms->moao[imoao].cubic){
-		    prop_nongrid_cubic(recon->moao[imoao].aloc->p[0],dmevl[ievl]->p,
-				       aper->locs, NULL, iopdevl->p, -1, 0,0,1,
-				       parms->moao[imoao].iac, 
-				       0,0);
-		}else{
-		    prop_nongrid(recon->moao[imoao].aloc->p[0],dmevl[ievl]->p,
-				 aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
-		}
+		prop_nongrid(recon->moao[imoao].aloc->p[0],dmevl[ievl]->p,
+			     aper->locs, iopdevl->p, -1, 0,0,1,0,0);
 	    }
 	}
 	

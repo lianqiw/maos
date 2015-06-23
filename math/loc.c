@@ -1333,7 +1333,6 @@ map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
     map->oy=-map->ny/2*map->dy;
     map->vx=0;
     map->vy=0;
-    map->cubic=0;
     map->iac=0;
     return map;
 }
@@ -1349,7 +1348,6 @@ map_t *mapnew2(map_t* A){
     map->oy=A->oy;
     map->vx=A->vx;
     map->vy=A->vy;
-    map->cubic=A->cubic;
     map->iac=A->iac;
     return map;
 }

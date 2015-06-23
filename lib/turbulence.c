@@ -319,7 +319,7 @@ dmat *genatm_loc(loc_t *loc, double r0, double dsa){
     double D=loc_diam(loc);
     dmat *opd=dnew(loc->nloc, 1);
     map_t *atm=genatm_simple(r0, dsa, loc->dx, ceil(D/loc->dx)*2);
-    prop_grid(atm, loc, 0, opd->p, 1, 0,0,1,1,0,0);
+    prop_grid(atm, loc, opd->p, 1, 0,0,1,1,0,0);
     mapfree(atm);
     return opd;
 }

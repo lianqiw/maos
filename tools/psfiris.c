@@ -239,7 +239,9 @@ int main(int argc, char *argv[]){
     int naloc=aloc->nx;
     dcell *mode_aloc=dcellread("setup/setup/ahst_Modes");
     int nmod=mode_aloc->p[0]->ny;
-    
+    for(int ialoc=0; ialoc<naloc; ialoc++){
+	aloc->p[ialoc]->iac=0.3;
+    }
     const double D=32;
     const double dx1=1.;
     const double dx2=1./16.;
@@ -253,9 +255,9 @@ int main(int argc, char *argv[]){
     dmat *mode_ploc=dnew(ploc->nloc, nmod);
     for(int imod=0; imod<nmod; imod++){
 	for(int ialoc=0; ialoc<naloc; ialoc++){
-	    prop_nongrid_cubic(aloc->p[ialoc], mode_aloc->p[ialoc]->p+imod*mode_aloc->p[ialoc]->nx, 
-			       ploc, pamp->p, mode_ploc->p+ploc->nloc*imod, 
-			       1, thetax[idir]/206265., thetay[idir]/206265., 1, 0.3, 0, 0);
+	    prop_nongrid(aloc->p[ialoc], mode_aloc->p[ialoc]->p+imod*mode_aloc->p[ialoc]->nx, 
+			 ploc,  mode_ploc->p+ploc->nloc*imod, 
+			 1, thetax[idir]/206265., thetay[idir]/206265., 1, 0, 0);
 	}
 	double inp=dotdbl(mode_ploc->p+ploc->nloc*imod, mode_ploc->p+ploc->nloc*imod, pwt->p, ploc->nloc);
 	dmat *dtmp=dnew_ref(ploc->nloc, 1, mode_ploc->p+ploc->nloc*imod);

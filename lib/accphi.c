@@ -25,117 +25,13 @@
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
 
-
-/**
-   A wrapper prop routine that handles all the different cases by calling the
-   different routines. Handles threading.
-*/
-void prop(thread_t *data){
-    PROPDATA_T *propdata=data->data;
-    const double displacex=propdata->displacex0+propdata->displacex1;
-    const double displacey=propdata->displacey0+propdata->displacey1;
-    switch(propdata->index){
-    case 0:
-	prop_grid_map(propdata->mapin, propdata->mapout,
-		      propdata->alpha, displacex, displacey,
-		      propdata->scale, propdata->wrap, data->start, data->end);
-	break;
-    case 1:
-	prop_grid_pts(propdata->mapin, propdata->ptsout, 
-		      propdata->ampout, propdata->phiout,
-		      propdata->alpha, displacex, displacey,
-		      propdata->scale, propdata->wrap, 
-		      data->start, data->end);
-	break;
-    case 2:
-	prop_grid(propdata->mapin, propdata->locout, 
-		  propdata->ampout, propdata->phiout,
-		  propdata->alpha, displacex, displacey,
-		  propdata->scale, propdata->wrap, 
-		  data->start, data->end);
-	break;
-    case 3:
-	prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
-		       propdata->alpha, displacex, displacey,
-		       propdata->scale, propdata->wrap, 
-		       data->start, data->end);
-	break;
-    case 4:
-	prop_nongrid_cubic(propdata->locin, propdata->phiin,
-			   propdata->locout, propdata->ampout, propdata->phiout,
-			   propdata->alpha, displacex, displacey, 
-			   propdata->scale, propdata->cubic_iac, 
-			   data->start, data->end);
-	break;
-    case 5:
-	prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
-			       propdata->mapout, 
-			       propdata->alpha, displacex, displacey, 
-			       propdata->scale, propdata->cubic_iac, 
-			       data->start, data->end);
-	break;
-    case 6:
-	prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
-			       propdata->ptsout, propdata->ampout, propdata->phiout,
-			       propdata->alpha, displacex, displacey, 
-			       propdata->scale, propdata->cubic_iac, 
-			       data->start, data->end);
-	break;
-    case 7:
-	prop_nongrid(propdata->locin, propdata->phiin,
-		     propdata->locout, propdata->ampout, propdata->phiout,
-		     propdata->alpha, displacex, displacey, 
-		     propdata->scale,
-		     data->start, data->end);
-	break;
-    case 8:
-	prop_nongrid_map(propdata->locin, propdata->phiin,
-			 propdata->mapout, 
-			 propdata->alpha, displacex, displacey, 
-			 propdata->scale, 
-			 data->start, data->end);
-	break;
-    case 9:
-	prop_nongrid_pts(propdata->locin, propdata->phiin,
-			 propdata->ptsout, propdata->ampout, propdata->phiout,
-			 propdata->alpha, displacex, displacey, 
-			 propdata->scale, 
-			 data->start, data->end);
-	break;
-    case 10:
-	prop_grid_map_cubic(propdata->mapin, propdata->mapout,
-			    propdata->alpha, displacex, displacey,
-			    propdata->scale, propdata->cubic_iac,
-			    data->start, data->end);
-	break;
-    case 11:
-	prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, 
-			    propdata->ampout, propdata->phiout,
-			    propdata->alpha, displacex, displacey,
-			    propdata->scale, propdata->cubic_iac, 
-			    data->start, data->end);
-	break;
-    case 12:
-	prop_grid_cubic(propdata->mapin, propdata->locout, 
-			propdata->ampout, propdata->phiout,
-			propdata->alpha, displacex, displacey,
-			propdata->scale, propdata->cubic_iac, 
-			data->start, data->end);
-	break;
-    case 13:
-	error("Invalid\n");
-	break;
-    default:
-	error("Invalid\n");
-    }
-}
 /**
    Identify the index of this ray tracing.
 */
-void prop_index(PROPDATA_T *propdata){
+static void prop_index(PROPDATA_T *propdata){
     int done=0;
     if(propdata->mapin){
-	if(propdata->cubic){
+	if(propdata->mapin->iac){
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
 		/*case 10 */
@@ -156,9 +52,9 @@ void prop_index(PROPDATA_T *propdata){
 		    done=1;
 		}
 		if(propdata->ostat){
-		    error("Invalid\n");
+		    if(done) error("Invalid\n");
 		    /*case 13 */
-		    propdata->index=13;
+		    propdata->index=14;
 		    done=1;
 		}
 	    }
@@ -166,7 +62,7 @@ void prop_index(PROPDATA_T *propdata){
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
 		/*case 0 */
-		propdata->index=0;
+		propdata->index=13;
 		done=1;
 	    }
 	    if(propdata->phiout){
@@ -192,7 +88,7 @@ void prop_index(PROPDATA_T *propdata){
 	}
     }
     if(propdata->locin){
-	if(propdata->cubic){
+	if(propdata->locin->iac){
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
 		/*case 4 */
@@ -235,6 +131,113 @@ void prop_index(PROPDATA_T *propdata){
     if(done==0) error("Invalid\n");
 }
 
+/**
+   A wrapper prop routine that handles all the different cases by calling the
+   different routines. Handles threading.
+*/
+void prop(thread_t *data){
+    PROPDATA_T *propdata=data->data;
+    if(!propdata->index){
+	prop_index(propdata);
+    }
+    const double displacex=propdata->displacex0+propdata->displacex1;
+    const double displacey=propdata->displacey0+propdata->displacey1;
+    switch(propdata->index){
+    case 1:
+	prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
+		      propdata->alpha, displacex, displacey,
+		      propdata->scale, propdata->wrap, 
+		      data->start, data->end);
+	break;
+    case 2:
+	prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
+		  propdata->alpha, displacex, displacey,
+		  propdata->scale, propdata->wrap, 
+		  data->start, data->end);
+	break;
+    case 3:
+	prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
+		       propdata->alpha, displacex, displacey,
+		       propdata->scale, propdata->wrap, 
+		       data->start, data->end);
+	break;
+    case 4:
+	prop_nongrid_cubic(propdata->locin, propdata->phiin,
+			   propdata->locout, propdata->phiout,
+			   propdata->alpha, displacex, displacey, 
+			   propdata->scale, propdata->locin->iac, 
+			   data->start, data->end);
+	break;
+    case 5:
+	prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
+			       propdata->mapout, 
+			       propdata->alpha, displacex, displacey, 
+			       propdata->scale, propdata->locin->iac, 
+			       data->start, data->end);
+	break;
+    case 6:
+	prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
+			       propdata->ptsout, propdata->phiout,
+			       propdata->alpha, displacex, displacey, 
+			       propdata->scale, propdata->locin->iac, 
+			       data->start, data->end);
+	break;
+    case 7:
+	prop_nongrid(propdata->locin, propdata->phiin,
+		     propdata->locout, propdata->phiout,
+		     propdata->alpha, displacex, displacey, 
+		     propdata->scale,
+		     data->start, data->end);
+	break;
+    case 8:
+	prop_nongrid_map(propdata->locin, propdata->phiin,
+			 propdata->mapout, 
+			 propdata->alpha, displacex, displacey, 
+			 propdata->scale, 
+			 data->start, data->end);
+	break;
+    case 9:
+	prop_nongrid_pts(propdata->locin, propdata->phiin,
+			 propdata->ptsout, propdata->phiout,
+			 propdata->alpha, displacex, displacey, 
+			 propdata->scale, 
+			 data->start, data->end);
+	break;
+    case 10:
+	prop_grid_map_cubic(propdata->mapin, propdata->mapout,
+			    propdata->alpha, displacex, displacey,
+			    propdata->scale, propdata->mapin->iac,
+			    data->start, data->end);
+	break;
+    case 11:
+	prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, propdata->phiout,
+			    propdata->alpha, displacex, displacey,
+			    propdata->scale, propdata->mapin->iac, 
+			    data->start, data->end);
+	break;
+    case 12:
+	prop_grid_cubic(propdata->mapin, propdata->locout, propdata->phiout,
+			propdata->alpha, displacex, displacey,
+			propdata->scale, propdata->mapin->iac, 
+			data->start, data->end);
+	break;
+    case 13:
+	prop_grid_map(propdata->mapin, propdata->mapout,
+		      propdata->alpha, displacex, displacey,
+		      propdata->scale, propdata->wrap, data->start, data->end);
+	break;
+    case 14:
+	prop_grid_stat_cubic(propdata->mapin, propdata->ostat, propdata->phiout,
+			    propdata->alpha, displacex, displacey,
+			    propdata->scale, propdata->mapin->iac,
+			    data->start, data->end);
+	break;
+    default:
+	error("Invalid\n");
+    }
+}
+
+
 #define PREPIN_NONGRID(nskip)			\
     /*padding to avoid test boundary*/			\
     if(!locin->map) loc_create_map_npad(locin, nskip,0,0);	\
@@ -269,7 +272,7 @@ void prop_index(PROPDATA_T *propdata){
     if(!locout) error("locout is NULL!");	\
     const double *px=locout->locx;		\
     const double *py=locout->locy;		\
-    if(!end) end=locout->nloc;			
+    if(!end) end=locout->nloc;			\
 
 #define PREPOUT_PTS				\
     const double dxout=pts->dx;			\
@@ -284,6 +287,10 @@ void prop_index(PROPDATA_T *propdata){
     double *phiout=mapout->p;			\
     const int nxout=mapout->nx;			\
     if(!end) end=mapout->ny;
+
+#define PREPOUT_STAT				\
+    const double dxout  = ostat->dx;		\
+    if(colend==0) colend = ostat->ncol;
 
 #define RUNTIME_LINEAR				\
     double dplocx, dplocy;			\
@@ -408,14 +415,17 @@ void prop_grid(ARGIN_GRID,
 	       long start,         /**<[in] First point to do*/
 	       long end            /**<[in] Last point to do*/
     ){
+    if(mapin->iac){
+	if(wrap) error("wrap=1 is invalid for cubic\n");
+	prop_grid_cubic(ARGIN_GRID2, ARGOUT_LOC2, ARG_PROP2, mapin->iac, start, end);
+	return;
+    }
     PREPIN_GRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
     const int nx = mapin->nx;
     const int ny = mapin->ny;
     OMPTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
 	// The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
@@ -464,12 +474,14 @@ void prop_nongrid(ARGIN_NONGRID,
 		  long start,          /**<[in] First point to do*/
 		  long end             /**<[in] Last point to do*/
     ){
+    if(locin->iac){
+	prop_nongrid_cubic(ARGIN_NONGRID2, ARGOUT_LOC2, ARG_PROP2, locin->iac, start, end);
+	return;
+    }
     PREPIN_NONGRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
     OMPTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax && dplocx>=nxmin && dplocx<=nxmax){
@@ -496,6 +508,10 @@ void prop_nongrid_map(ARGIN_NONGRID,
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
     ){
+    if(locin->iac){
+	prop_nongrid_map_cubic(ARGIN_NONGRID2, ARGOUT_MAP2, ARG_PROP2, locin->iac, start, end);
+	return;
+    }
     PREPIN_NONGRID(0);
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
@@ -532,6 +548,10 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 		      long start,           /**<[in] First point to do*/
 		      long end              /**<[in] Last point to do*/
     ){
+    if(locin->iac){
+	prop_nongrid_pts_cubic(ARGIN_NONGRID2, ARGOUT_PTS2, ARG_PROP2, locin->iac, start, end);
+	return;
+    }
     PREPIN_NONGRID(0);
     PREPOUT_PTS;
     RUNTIME_LINEAR;
@@ -548,8 +568,6 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 		nplocy1=nplocy+1;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
-		    if(ampout && fabs(ampout[iloc])<EPS)
-			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
@@ -583,7 +601,6 @@ void prop_grid_cubic(ARGIN_GRID,
 		     long start,         /**<[in] First point to do*/
 		     long end            /**<[in] Last point to do*/
     ){
-    (void)ampout;
     PREPIN_GRID(1);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
@@ -636,8 +653,6 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
-		    if(ampout && fabs(ampout[iloc])<EPS)
-			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
@@ -673,7 +688,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
 	    for(int ix=0; ix<nxout; ix++){
-		int iloc=ix+iy*nxout;
+		int iloc=ix+iy*nxout;//output index
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		if(dplocx>=nxmin && dplocx<=nxmax){
 		    SPLIT(dplocx,dplocx,nplocx);
@@ -692,6 +707,42 @@ void prop_grid_map_cubic(ARGIN_GRID,
     WARN_MISSING;
 }
 /**
+   like prop_grid_stat() but with cubic influence function.
+ */
+void prop_grid_stat_cubic(ARGIN_GRID,
+			  ARGOUT_STAT,
+			  ARG_PROP,
+			  double cubic_iac,
+			  long colstart, long colend){
+    PREPIN_GRID(1);
+    PREPOUT_STAT;
+    RUNTIME_CUBIC;
+    OMPTASK_FOR(icol, colstart, colend, private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)){	
+	dplocy=myfma(ostat->cols[icol].ystart,dy_in2,displacey);
+	if(dplocy>=nymin && dplocy<=nymax){
+	    SPLIT(dplocy,dplocy,nplocy);
+	    dplocy0=1.-dplocy;
+	    const int nxout=ostat->cols[icol+1].pos-ostat->cols[icol].pos;
+	    for(int ix=0; ix<nxout; ix++){
+		int iloc=ostat->cols[icol].pos+ix;//output index.
+		dplocx=myfma(ostat->cols[icol].xstart+ix*dxout,dx_in2,displacex); 
+		if(dplocx>=nxmin && dplocx<=nxmax){
+		    SPLIT(dplocx,dplocx,nplocx);
+		    dplocx0=1.-dplocx;
+		    MAKE_CUBIC_COEFF;
+		    CUBIC_ADD_GRID;
+		}else{
+		    missing++;
+		}
+	    }
+	}else{
+	    missing++;
+	}
+	OMPTASK_END;
+	WARN_MISSING;
+    }
+}
+/**
    like prop_nongrid() but with cubic influence functions. cubic_iac is the
    inter-actuator coupling. Consider embed the input into a map_t and call
    prop_grid_cubic instead, which is must faster.
@@ -705,9 +756,6 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
     PREPOUT_LOC;
     RUNTIME_CUBIC;
     OMPTASK_FOR(iloc, start, end, private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)){
-	//for(long iloc=start; iloc<end; iloc++){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
 	dplocy=myfma(py[iloc],dy_in2,displacey);
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	if(dplocy>=nymin && dplocy<=nymax && dplocx>=nxmin && dplocx<=nxmax){
@@ -747,8 +795,6 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 		dplocy0=1.-dplocy;
 		for(int ix=0; ix<pts->nx; ix++){
 		    iloc++;
-		    if(ampout && fabs(ampout[iloc])<EPS)
-			continue;/*skip points that has zero amplitude */
 		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		    if(dplocx>=nxmin && dplocx<=nxmax){
 			SPLIT(dplocx,dplocx,nplocx);
@@ -810,7 +856,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
    interpolating from locout to locin, but the OPD are reversed computed. Simply
    replace prop_nongrid by prop_nongrid_bin without changing arguments, except
    removing start, end, will do the same ray tracing using reverse interpolation
-   (binning). ampout is not used.
+   (binning). 
 
    2011-04-27: Revised usage of alpha, displacex/y so that the result agrees with
    prop_nongrid when used in the same situation. Report missing does not make
@@ -822,13 +868,11 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 void prop_nongrid_bin(const loc_t *locin,
 		      const double* phiin,
 		      loc_t *locout, 
-		      const double *ampout,
 		      double* phiout,
 		      ARG_PROP){
     if(locout->dx<locin->dx) {
 	error("This routine is designed for down sampling.\n");
     }
-    (void) ampout;
     loc_create_map_npad(locout, 1,0,0);
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;

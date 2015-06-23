@@ -143,7 +143,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
     if(use_ploc){
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
-	prop_nongrid_bin(aper->locs,aper->amp->p, loc,NULL,amp,1,0,0,1);
+	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
@@ -160,7 +160,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    /*from DM to ploc (plocs) science beam */
-	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
+	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
 	    dspmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
 	dcellmm(&Wa, Hat, Hat, "nt", 1);
@@ -194,7 +194,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     if(use_ploc){
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
-	prop_nongrid_bin(aper->locs,aper->amp->p,loc,NULL,amp,1,0,0,1);
+	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
@@ -255,7 +255,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		Hat->p[idm]=dspref(HatGround);
 	    }else{
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
 		if(parms->dm[idm].isground){
 		    HatGround=dspref(Hat->p[idm]);
 		}
@@ -294,7 +294,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     if(use_ploc){
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
-	prop_nongrid_bin(aper->locs, aper->amp->p,loc,NULL,amp,1,0,0,1);
+	prop_nongrid_bin(aper->locs, aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
@@ -324,7 +324,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacey=thetay*hc;
 	    if(!parms->dm[idm].isground || !HatGround){
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, NULL, displacex,displacey,1.,0,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
 		if(parms->dm[idm].isground){
 		    HatGround=dspref(Hat->p[idm]);
 		}
@@ -409,9 +409,8 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
 		double ht=parms->dm[idm].ht;
 		double displacex=parms->evl.thetax->p[ievl]*ht;
 		double displacey=parms->evl.thetay->p[ievl]*ht;
-		prop_nongrid(aloc[idm], 
-			     dmt->p[idm]->p,
-			     aper->locs, NULL, HM[imod][ievl]->p,1,
+		prop_nongrid(aloc[idm], dmt->p[idm]->p,
+			     aper->locs, HM[imod][ievl]->p,1,
 			     displacex, displacey, 1.,0,0);
 	    }
 	}

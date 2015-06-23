@@ -47,7 +47,7 @@ static inline int
 FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	       CONST_OUT double *phiout, long nxout, long nyout, 
 	       double dxout, double dyout, double oxout, double oyout,
-	       double alpha, int wrap){
+	       const double alpha, int wrap){
     
     const long wrapx  = nxin - 1;
     const long wrapy  = nyin - 1;
@@ -111,9 +111,9 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 #define GRID_ADD(irow, offset)			\
 		phiout2[irow]+=alpha*		\
 		    (bl*phicol2[irow+offset]	\
-		    +br*phicol2[irow]		\
-		    +tl*phicol[irow+offset]	\
-		    +tr*phicol[irow]);
+		     +br*phicol2[irow]		\
+		     +tl*phicol[irow+offset]	\
+		     +tr*phicol[irow]);
 #else
 #define GRID_ADD(irow,offset)			\
 		double tmp=alpha*phiout2[irow];	\
@@ -376,6 +376,16 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
 		   long colstart,      /**<[in] First column to do ray tracing*/
 		   long colend         /**<[in] Last column (exclusive) to do ray tracing*/
     ){
+    if(mapin->iac){
+#if TRANSPOSE == 0
+	if(wrap) error("wrap=1 is invalid for cubic\n");
+	prop_grid_map_cubic(mapin, mapout, ARG_PROP2, mapin->iac, colstart, colend);
+	return;
+#else
+	error("transpose ray tracing is not available with iac\n");
+#endif
+    }
+	
     CONST_OUT double *phiout=mapout->p;
     CONST_IN double *phiin  = mapin->p;
     /*With OpenMP compiler complained uninitialized value for the following
@@ -404,17 +414,21 @@ void FUN_NAME_MAP (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid
 
 void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		  const pts_t *pts,/**<[in] coordinate of destination grid*/
-		  const double *ampout,/**<[in] Amplitude defined on locout. skip point of amp is 0*/
 		  CONST_OUT double *phiout, /**<[in,out] OPD defined on locout*/
-		  double alpha,       /**<[in] scaling of OPD*/
-		  double displacex,   /**<[in] displacement of the ray */
-		  double displacey,   /**<[in] displacement of the ray */
-		  double scale,       /**<[in] scaling of the beam diameter (cone)*/
+		  ARG_PROP,
 		  int wrap,           /**<[in] wrap input OPD or not*/
 		  long sastart,       /**<[in] The starting subaperture to trace ray*/
 		  long saend          /**<[in] The last (exclusive) subaperture to trace ray*/
     ){
-    (void)ampout;
+    if(mapin->iac){
+#if TRANSPOSE == 0
+	if(wrap) error("wrap=1 is invalid for cubic\n");
+	prop_grid_pts_cubic(mapin, pts, phiout, ARG_PROP2, mapin->iac, sastart, saend);
+	return;
+#else
+	error("transpose ray tracing is not available with iac\n");
+#endif
+    }
     const long nxin = mapin->nx;
     const long nyin = mapin->ny;
     /*
@@ -446,14 +460,19 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    const locstat_t *ostat, /**<[in] information about each clumn of a output loc grid*/
 		    CONST_OUT double *phiout,    /**<[in,out] OPD defined on ostat*/
-		    double alpha,       /**<[in] scaling of OPD*/
-		    double displacex,   /**<[in] displacement of the ray */
-		    double displacey,   /**<[in] displacement of the ray */
-		    double scale,       /**<[in] scaling of the beam diameter (cone)*/
+		    ARG_PROP,
 		    int wrap,           /**<[in] wrap input OPD or not*/
 		    long colstart,      /**<[in] First column to do ray tracing*/
 		    long colend         /**<[in] Last column (exclusive) to do ray tracing*/
     ){
+    if(mapin->iac){
+#if TRANSPOSE == 0
+	prop_grid_stat_cubic(mapin, ostat, phiout, ARG_PROP2, mapin->iac, colstart, colend);
+	return;
+#else
+	error("transpose ray tracing is not available with iac\n");
+#endif
+    }
     CONST_IN double *phiin  = mapin->p;
     const long nxin = mapin->nx;
     const long nyin = mapin->ny;
@@ -470,7 +489,6 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
     int missing=0;
     if(colend==0) colend = ostat->ncol;
     OMPTASK_FOR(icol, colstart, colend){
-	//for(int icol=colstart; icol<colend; icol++){
 	const long offset=ostat->cols[icol].pos;
 	const long nxout=ostat->cols[icol+1].pos-offset;
 	const double oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;

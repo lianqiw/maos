@@ -84,7 +84,6 @@ void test_prop(){
     cuwrite(cumapout.p, "prop_mapout");
     prop_grid_map(mapin, mapout, alpha, dispx, dispy, 1, 0, 0, 0);
     writebin(mapout, "prop_mapout_cpu");
-    mapin->cubic=1;
     mapin->iac=0.3;
 }
 

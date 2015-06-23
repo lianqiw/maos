@@ -70,17 +70,17 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,offset,guard,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=cellnew(1,1); 
 	recon->moao[imoao].aloc->p[0]=map2loc(map);
+	recon->moao[imoao].aloc->p[0]->iac=parms->moao[imoao].iac;
 	mapfree(map);
 	loc_create_map_npad(recon->moao[imoao].aloc->p[0],parms->fit.square?0:1,0,0);
 	recon->moao[imoao].amap=cellnew(1,1);
 	recon->moao[imoao].amap->p[0]=recon->moao[imoao].aloc->p[0]->map;
-	recon->moao[imoao].amap->p[0]->cubic=parms->moao[imoao].cubic;
 	recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
 	recon->moao[imoao].HA=cellnew(1,1);
-	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, NULL, 0, 0, 1, 
-					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
+	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, 0, 0, 1, 
+					parms->moao[imoao].iac); 
 	if(parms->moao[imoao].actstuck){
 	    recon->moao[imoao].actstuck=cellnew(1,1);
 	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
@@ -159,17 +159,17 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 			   thetax*ht, thetay*ht,scale, 0, 0, 0);
 	}else{
 	    prop_nongrid(recon->xloc->p[ipsr], opdr->p[ipsr]->p,
-			 recon->floc, NULL, xp->p[0]->p, 1, 
+			 recon->floc, xp->p[0]->p, 1, 
 			 thetax*ht, thetay*ht, scale, 0, 0);
 	}
     }
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht;
 	double scale=1.-ht/hs;
-	prop_nongrid_cubic(recon->aloc->p[idm], dmcommon->p[idm]->p,
-			   recon->floc, NULL, xp->p[0]->p, -1, 
-			   thetax*ht, thetay*ht, scale, 
-			   parms->dm[idm].iac, 0, 0);
+	prop_nongrid(recon->aloc->p[idm], dmcommon->p[idm]->p,
+		     recon->floc, xp->p[0]->p, -1, 
+		     thetax*ht, thetay*ht, scale, 
+		     0, 0);
     }
     if(rhsout){
 	*rhsout=dcelldup(xp);

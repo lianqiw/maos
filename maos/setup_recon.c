@@ -282,9 +282,8 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		const double  scale=1. - ht/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
-		HXW[ips][iwfs]=mkh(recon->xloc->p[ips], loc, NULL, 
-				   dispx,dispy,scale,
-				   parms->tomo.cubic, parms->tomo.iac);
+		HXW[ips][iwfs]=mkh(recon->xloc->p[ips], loc, 
+				   dispx,dispy,scale, parms->tomo.iac);
 	    }
 	}
 	toc2(" ");
@@ -322,7 +321,7 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].type==1){//pyramid WFS
 	    if(parms->recon.alg==0  || parms->ndm>1 || parms->dm[0].ht>0){
-		recon->GWR->p[ipowfs] = pywfs_mkg(powfs[ipowfs].pywfs, recon->gloc->p[ipowfs],0,0);
+		recon->GWR->p[ipowfs] = pywfs_mkg(powfs[ipowfs].pywfs, recon->gloc->p[ipowfs]);
 	    }
 	}else if(parms->powfs[ipowfs].gtype_recon==0){
 	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
@@ -367,10 +366,10 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
 	      (non-misregistered)*/
 	    if(parms->powfs[ipowfs].type==1){
-		info2(" PWFS");
-		if(parms->recon.alg==0 || parms->ndm>1 || fabs(parms->dm[0].ht)>EPS){
-		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc,0,0);
-		}
+		info2(" PWFS (skip)");
+		/*if(parms->recon.alg==0 || parms->ndm>1 || fabs(parms->dm[0].ht)>EPS){
+		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc);
+		    }*/
 	    }else if(parms->powfs[ipowfs].gtype_recon==0){
 		/*Create averaging gradient operator (gtilt) from PLOC,
 		  using fine sampled powfs.gloc as intermediate plane*/
@@ -383,7 +382,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs], 0,0,1,0,0);
+		dsp *H=mkh(ploc,recon->gloc->p[ipowfs], 0,0,1,0);
 		GP->p[ipowfs]=dspmulsp(ZS0,H,"nn");
 		dspfree(H);
 		dspfree(ZS0);
@@ -475,15 +474,15 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	
 		    if(parms->dbg.usegwr){
 			warning("todo: Fix and use mkg directly\n");
-			dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
+			dsp *H=mkh(recon->aloc->p[idm], loc, 
 				   dispx,dispy,scale,
-				   parms->dm[idm].cubic,parms->dm[idm].iac);
+				  parms->dm[idm].iac);
 			GA[idm][iwfs]=dspmulsp(recon->GWR->p[ipowfs], H,"nn");
 			dspfree(H);
 		    }else{
-			dsp *H=mkh(recon->aloc->p[idm], loc, NULL, 
+			dsp *H=mkh(recon->aloc->p[idm], loc, 
 				   dispx,dispy,scale,
-				   parms->dm[idm].cubic,parms->dm[idm].iac);
+				   parms->dm[idm].iac);
 			GA[idm][iwfs]=dspmulsp(recon->GP->p[ipowfs], H,"nn");
 			dspfree(H);
 		    }
@@ -1347,8 +1346,8 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, const AP
 		const double scale=1.-ht/hs;
 		const double dispx=parms->evl.thetax->p[ievl]*ht;
 		const double dispy=parms->evl.thetay->p[ievl]*ht;
-		dsp *HXT=mkhb(recon->xloc->p[ips], aper->locs, NULL,
-			      dispx, dispy, scale, 0, 0);
+		dsp *HXT=mkhb(recon->xloc->p[ips], aper->locs, 
+			      dispx, dispy, scale, 0);
 		dspfull(&hxt->p[ips], HXT, 1); dspfree(HXT);
 	    }
 	    dcell *t1=NULL;
@@ -1403,7 +1402,7 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, const AP
 		const double dispx=parms->evl.thetax->p[ievl]*ht;
 		const double dispy=parms->evl.thetay->p[ievl]*ht;
 		for(int icol=0; icol<t1->ny; icol++){
-		    prop_nongrid(recon->xloc->p[ips], &pt1[icol][ind], aper->locs, NULL,
+		    prop_nongrid(recon->xloc->p[ips], &pt1[icol][ind], aper->locs,
 				 px1[icol], 1, dispx, dispy, scale, 0, 0);
 		}
 		ind+=recon->xloc->p[ips]->nloc;
@@ -2063,15 +2062,9 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 		double scale=1.-ht/parms->powfs[ipowfs].hs;
 		double dispx=ht*parms->wfsr[iwfs].thetax;
 		double dispy=ht*parms->wfsr[iwfs].thetay;
-		if(parms->dm[idm].cubic){
-		    prop_nongrid_cubic(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
-				       powfs[ipowfs].loc, NULL, opd->p, 
-				       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-		}else{
-		    prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
-				 powfs[ipowfs].loc, NULL, opd->p, 
-				 -1, dispx, dispy, scale, 0, 0);
-		}
+		prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
+			     powfs[ipowfs].loc, opd->p, 
+			     -1, dispx, dispy, scale, 0, 0);
 		dmat *ints=0;
 		dmat *grad=0;
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);

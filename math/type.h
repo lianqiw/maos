@@ -98,8 +98,7 @@ typedef struct map_t{
     double h;       /**<Heigh conjugation of this surface*/
     double vx;      /**Wind velocity. Useful for atmospheric grid*/
     double vy;      /**Wind velocity. Useful for atmospheric grid*/
-    int cubic;
-    double iac;
+    double iac;     /**<Inter-actuator coupling. >0: use cubic influence function*/
 } map_t;
 
 /**
@@ -149,7 +148,8 @@ typedef struct loc_t{
     double *locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
     double dx;     /**< Sampling along x*/
-    double dy;     /**< Sampling along y*/ 
+    double dy;     /**< Sampling along y*/
+    double iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
     locstat_t *stat;/**<points to column statistics*/
     map_t *map;    /**< point to the map used for identifying neihboring points.*/
     int npad;      /*padding when create map*/
@@ -171,6 +171,7 @@ typedef struct pts_t{
 	double dsax;   /**<side length of subaperture*/
     };
     double dsay;   /**<side length of subaperture*/
+    double dummy;  /**<dummy. to make sure alignment with loc_t*/
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/

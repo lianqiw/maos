@@ -107,9 +107,9 @@ static void test_accuracy(int argc, char **argv){
     prop_grid_map(screen, map1, 1, displacex, displacey, scale, wrap, 0,0);
     toc("map\t\t");
 
-    prop_grid_pts(screen, pts, NULL,phi_pts, -2, displacex, displacey, scale, wrap, 0,0);
+    prop_grid_pts(screen, pts, phi_pts, -2, displacex, displacey, scale, wrap, 0,0);
     tic;
-    prop_grid_pts(screen, pts, NULL,phi_pts,  1, displacex, displacey, scale, wrap, 0,0);
+    prop_grid_pts(screen, pts, phi_pts,  1, displacex, displacey, scale, wrap, 0,0);
     toc("pts\t\t");
 
     prop_grid_stat(screen, locstat, phi_stat, -2,displacex, displacey, scale, wrap, 0,0);
@@ -117,21 +117,21 @@ static void test_accuracy(int argc, char **argv){
     prop_grid_stat(screen, locstat, phi_stat , 1, displacex, displacey, scale, wrap, 0,0);
     toc("stat\t");tic;
 
-    prop_grid(screen, loc, NULL,phi_loc, -2,displacex, displacey, scale, wrap, 0,0);
+    prop_grid(screen, loc, phi_loc, -2,displacex, displacey, scale, wrap, 0,0);
     tic;
-    prop_grid(screen, loc, NULL,phi_loc,  1,displacex, displacey, scale, wrap, 0,0);
+    prop_grid(screen, loc, phi_loc,  1,displacex, displacey, scale, wrap, 0,0);
     toc("loc\t\t");
 
 
-    prop_nongrid(locin, screen->p,loc, NULL,phi_loc2loc, -2,displacex, displacey, scale,0,0);
+    prop_nongrid(locin, screen->p,loc, phi_loc2loc, -2,displacex, displacey, scale,0,0);
     toc("nongrid\t"); tic;
-    prop_nongrid(locin, screen->p,loc, NULL,phi_loc2loc, 1,displacex, displacey, scale,0,0);
+    prop_nongrid(locin, screen->p,loc, phi_loc2loc, 1,displacex, displacey, scale,0,0);
     toc("nongrid\t");
 	
     phi_h=calloc(loc->nloc,sizeof(double));
  
     tic;
-    dsp *hfor=mkh(locin, loc, NULL,displacex, displacey, scale,0,0);
+    dsp *hfor=mkh(locin, loc, displacex, displacey, scale,0);
     toc("mkh\t\t\t");
     dspmulvec(phi_h,hfor, screen->p, 'n', -2);
     tic;
@@ -142,24 +142,28 @@ static void test_accuracy(int argc, char **argv){
     phi_cub=calloc(loc->nloc,sizeof(double));
     phi_cub2=calloc(loc->nloc,sizeof(double));
     double *phi_cub3=calloc(loc->nloc,sizeof(double));
+    double *phi_cub4=calloc(loc->nloc,sizeof(double));
     phi_cubh=calloc(loc->nloc, sizeof(double));
 
-    prop_nongrid_cubic(locin,screen->p,loc,NULL,phi_cub,-2, displacex, displacey, scale, cubic,0,0);
+    prop_nongrid_cubic(locin,screen->p,loc,phi_cub,-2, displacex, displacey, scale, cubic,0,0);
     tic;
-    prop_nongrid_cubic(locin,screen->p,loc,NULL,phi_cub,1, displacex, displacey, scale, cubic,0,0);
+    prop_nongrid_cubic(locin,screen->p,loc,phi_cub,1, displacex, displacey, scale, cubic,0,0);
     toc("nongrid, cubic\t");
-    prop_grid_cubic(screen, loc, NULL,phi_cub2, -2,displacex, displacey, scale,  cubic, 0,0);
+    prop_grid_cubic(screen, loc, phi_cub2, -2,displacex, displacey, scale,  cubic, 0,0);
     tic;
-    prop_grid_cubic(screen, loc, NULL,phi_cub2, 1,displacex, displacey, scale,  cubic, 0,0);
+    prop_grid_cubic(screen, loc, phi_cub2, 1,displacex, displacey, scale,  cubic, 0,0);
     toc("grid,  cubic\t");
-    prop_grid_cubic(screen2, loc, NULL,phi_cub3, -2,displacex, displacey, scale,  cubic, 0,0);
+    prop_grid_cubic(screen2, loc,phi_cub3, -2,displacex, displacey, scale,  cubic, 0,0);
     tic;
-    prop_grid_cubic(screen2, loc, NULL,phi_cub3, 1,displacex, displacey, scale,  cubic, 0,0);
+    prop_grid_cubic(screen2, loc,phi_cub3, 1,displacex, displacey, scale,  cubic, 0,0);
     toc("grid2, cubic\t");
- 
+    prop_grid_stat_cubic(screen, locstat,phi_cub4, -2,displacex, displacey, scale,  cubic, 0,0);
+    tic;
+    prop_grid_stat_cubic(screen, locstat,phi_cub4, 1,displacex, displacey, scale,  cubic, 0,0);
+    toc("grid  2stat, cubic\t");
     dsp *hforcubic;
     tic;
-    hforcubic=mkh(locin, loc, NULL, displacex, displacey, scale, 1, cubic);
+    hforcubic=mkh(locin, loc, displacex, displacey, scale, cubic);
     toc("mkh cubic \t\t");
     dspmulvec(phi_cubh, hforcubic,screen->p,'n',-2);
     tic;
@@ -205,6 +209,7 @@ static void test_accuracy(int argc, char **argv){
     writedbl(phi_cub,loc->nloc,1,"accphi_cub_loc2loc.bin");
     writedbl(phi_cub2,loc->nloc,1,"accphi_cub_map2loc.bin");
     writedbl(phi_cub3,loc->nloc,1,"accphi_cub_locmap2loc.bin");
+    writedbl(phi_cub4,loc->nloc,1,"accphi_cub_locmap2stat.bin");
     writedbl(phi_cubh,loc->nloc,1,"accphi_cub_loc2h.bin");
     info("saved\n");
 

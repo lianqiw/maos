@@ -495,7 +495,7 @@ void FitR(dcell **xout, const void *A,
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*simu->dt;
 		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*simu->dt;
-		prop_grid(simu->atm->p[ips], recon->floc, NULL, xp->p[ifit]->p, 
+		prop_grid(simu->atm->p[ips], recon->floc, xp->p[ifit]->p, 
 			  atmscale, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
@@ -515,7 +515,7 @@ void FitR(dcell **xout, const void *A,
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht;
 		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		prop_nongrid(recon->xloc->p[ips], xin->p[ips]->p, recon->floc, NULL, 
+		prop_nongrid(recon->xloc->p[ips], xin->p[ips]->p, recon->floc, 
 			     xp->p[ifit]->p, 1, displace[0], displace[1], scale, 0, 0);
 	    }
 	}
@@ -633,7 +633,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			    prop_grid_stat(&xmap, locs->stat, xx->p, 1, 
 					   dispx, dispy, scale, 0, 0, 0);
 			}else{
-			    prop_nongrid(recon->xloc->p[ips], opdr->p[ips]->p, locs, NULL,
+			    prop_nongrid(recon->xloc->p[ips], opdr->p[ips]->p, locs,
 					 xx->p, 1, dispx, dispy, scale, 0, 0);
 			}
 		    }
@@ -644,13 +644,8 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double scale=1.-ht/hs;
 			double dispx=parms->evl.thetax->p[ievl]*ht;
 			double dispy=parms->evl.thetay->p[ievl]*ht;
-			if(parms->dm[idm].cubic){
-			    prop_nongrid_cubic(recon->aloc->p[idm], dmadd->p[idm]->p, locs, NULL,
-					       xx->p, 1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-			}else{
-			    prop_nongrid(recon->aloc->p[idm], dmadd->p[idm]->p, locs, NULL,
-					 xx->p, 1, dispx, dispy, scale, 0, 0);
-			}
+			prop_nongrid(recon->aloc->p[idm], dmadd->p[idm]->p, locs,
+				     xx->p, 1, dispx, dispy, scale, 0, 0);
 		    }
 		}
 		dmm(&simu->ecov->p[ievl], 1, xx, xx, "nt", 1);

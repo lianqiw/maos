@@ -343,7 +343,7 @@ public:
 	    delete cubic_cc;
 	    cubic_cc=0;
 	}
-	if(in->cubic){
+	if(in->iac){
 	    cubic_cc=gpu_dmcubic_cc(in->iac);
 	}
     }

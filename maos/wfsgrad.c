@@ -46,22 +46,13 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     for(int idm=0; idm<parms->ndm; idm++){
 	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
-	double *amp=powfs[ipowfs].realamp->p[wfsind]->p;
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	double dispx=ht*parms->wfs[iwfs].thetax;
 	double dispy=ht*parms->wfs[iwfs].thetay;
 	double scale=1.-ht/hs;
-	if(parms->dm[idm].cubic){
-	    prop_grid_cubic(simu->dmprojsq->p[idm],
-			    loc, amp, opd->p, 
-			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-			    0, 0);
-	}else{
-	    prop_grid(simu->dmprojsq->p[idm],
-		      loc, amp, opd->p, 
-		      alpha, dispx, dispy, scale, 0,
-		      0, 0);
-	}
+	prop_grid(simu->dmprojsq->p[idm], loc, opd->p, 
+		  alpha, dispx, dispy, scale, 0,
+		  0, 0);
     }
 }
 
@@ -189,15 +180,8 @@ void wfsgrad_iwfs(thread_t *info){
 	if(dmwfs[iwfs]){
 	    /* No need to do mis registration here since the MOAO DM is attached
 	       to close to the WFS.*/
-	    if(parms->moao[imoao].cubic){
-		prop_nongrid_pts_cubic(recon->moao[imoao].aloc->p[0], dmwfs[iwfs]->p,
-				       powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
-				       parms->moao[imoao].iac, 0, 0);
-	    }else{
-		prop_nongrid_pts(recon->moao[imoao].aloc->p[0], dmwfs[iwfs]->p,
-				 powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
-				 0, 0);
-	    }
+	    prop_nongrid_pts(recon->moao[imoao].aloc->p[0], dmwfs[iwfs]->p,
+			     powfs[ipowfs].pts, opd->p, -1, 0, 0, 1, 0, 0);
 	}
     }
     /* Add defocus to OPD if needed. */
@@ -270,7 +254,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
 		    const double displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];
 		    const double displacey=-atm->p[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg->p[1];
-		    prop_grid_pts(atm->p[ips],powfs[ipowfs].llt->pts,NULL,
+		    prop_grid_pts(atm->p[ips],powfs[ipowfs].llt->pts,
 				  lltopd->p,atmscale,displacex,displacey,
 				  scale, 1., 0, 0);
 		}

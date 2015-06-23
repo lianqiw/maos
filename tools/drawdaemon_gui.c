@@ -1470,7 +1470,7 @@ GtkWidget *create_window(){
     g_signal_connect(window, "destroy", G_CALLBACK (close_window), NULL);
     gtk_window_set_position(GTK_WINDOW(window), 
 			    GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 600, 500);
+    gtk_window_set_default_size(GTK_WINDOW(window), 800, 700);
     gtk_widget_add_events(GTK_WIDGET(window),GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
     g_signal_connect(GTK_WIDGET(window),"event", G_CALLBACK(window_state), NULL);
     gtk_widget_show_all(window); 

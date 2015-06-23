@@ -610,7 +610,6 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(dbl,histbin);
     READ_DM_RELAX(int,histn);
     READ_DM_RELAX(int,hist); 
-    READ_DM_RELAX(int,cubic);
     READ_DM_RELAX(dbl,iac);
     READ_DM_RELAX(str,hyst);
     READ_DM_RELAX(str,actfloat);
@@ -669,7 +668,6 @@ static void readcfg_moao(PARMS_T *parms){
 	    parms->moao[imoao].order=parms->aper.d/parms->moao[imoao].dx;
 	}
     }
-    READ_MOAO_RELAX(int,cubic);
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,gdm);
     READ_MOAO_RELAX(dbl,stroke);
@@ -835,7 +833,6 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.assemble);
     READ_INT(tomo.predict);
     READ_DBL(tomo.minwt);
-    READ_INT(tomo.cubic);
     READ_DBL(tomo.iac);
     READ_INT(tomo.ninit);
     READ_INT(tomo.nxbase);
@@ -2561,7 +2558,7 @@ static void print_parms(const PARMS_T *parms){
 	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
 	      fabs(parms->dm[i].stroke->p[0])*1e6);
-	if(parms->dm[i].cubic){
+	if(parms->dm[i].iac){
 	    info2("     Normalized cubic influence function with inter-actuator coupling of %g\n",
 		  parms->dm[i].iac);
 	}else{

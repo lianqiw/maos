@@ -1050,7 +1050,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     llt->amp=dnew(nx,nx);
     if(lltcfg->fnamp){
 	map_t *lltamp=mapread("%s", lltcfg->fnamp);
-	prop_grid_pts(lltamp, llt->pts, NULL, llt->amp->p, 1, 0, 0, 1, 1, 0, 0);
+	prop_grid_pts(lltamp, llt->pts, llt->amp->p, 1, 0, 0, 1, 1, 0, 0);
 	sumamp2=dinn(llt->amp, llt->amp);
 	mapfree(lltamp);
     }else{
@@ -1083,7 +1083,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	llt->ncpa=cellnew(nlotf, 1);
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    llt->ncpa->p[ilotf]=dnew(nx,nx);
-	    prop_grid_pts(ncpa->p[ilotf], llt->pts, NULL, llt->ncpa->p[ilotf]->p, 1, 0, 0, 1, 0, 0, 0);
+	    prop_grid_pts(ncpa->p[ilotf], llt->pts, llt->ncpa->p[ilotf]->p, 1, 0, 0, 1, 0, 0, 0);
 	}
 	cellfree(ncpa);
     }
@@ -1430,15 +1430,9 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		    double scale=1.-ht/hs;
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;
-		    if(parms->dm[idm].cubic){
-			prop_nongrid_cubic(aloc->p[idm], dm_ncpa->p[idm]->p, 
-					   powfs[ipowfs].loc, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
-					   -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-		    }else{
-			prop_nongrid(aloc->p[idm], dm_ncpa->p[idm]->p, 
-				     powfs[ipowfs].loc, NULL, powfs[ipowfs].opdbias->p[jwfs]->p, 
-				     -1, dispx, dispy, scale, 0, 0);
-		    }
+		    prop_nongrid(aloc->p[idm], dm_ncpa->p[idm]->p, 
+				 powfs[ipowfs].loc, powfs[ipowfs].opdbias->p[jwfs]->p, 
+				 -1, dispx, dispy, scale, 0, 0);
 		}
 	    }
 	}

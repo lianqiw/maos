@@ -165,7 +165,7 @@ static void prop_surf_ncpa(thread_t *info){
 	const double displacex=parms->sim.ncpa_thetax->p[idir]*hl;
 	const double displacey=parms->sim.ncpa_thetay->p[idir]*hl;
 	const double scale=1.-hl/parms->sim.ncpa_hs->p[idir];
-	prop_grid(surf, recon->floc, NULL, aper->opdfloc->p[idir]->p, 
+	prop_grid(surf, recon->floc, aper->opdfloc->p[idir]->p, 
 		  1, displacex, displacey, scale, 0, 0, 0);	
     }
 }
@@ -205,7 +205,7 @@ static void prop_surf_wfs(thread_t *info){
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
-	prop_grid(surf, locwfs, NULL, powfs[ipowfs].opdadd->p[wfsind]->p, 
+	prop_grid(surf, locwfs, powfs[ipowfs].opdadd->p[wfsind]->p, 
 		  1, displacex, displacey, scale, 1., 0, 0); 
     }
     if(any){
@@ -355,7 +355,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
 	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
 	    xp->p[ievl]=dnew(recon->floc->nloc,1);
 	    prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
-			 recon->floc, NULL, xp->p[ievl]->p, 1, 0, 0, 1, 0, 0);
+			 recon->floc, xp->p[ievl]->p, 1, 0, 0, 1, 0, 0);
 	}
     }
     applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt->p);
@@ -395,9 +395,9 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    double displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
-	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, NULL,
+	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, 
 			      displace[0], displace[1], 
-			      scale,parms->dm[idm].cubic,parms->dm[idm].iac);
+			      scale,parms->dm[idm].iac);
 	}
     }
     if(recon->actinterp){
@@ -649,15 +649,9 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		const double dispx=parms->evl.thetax->p[ievl]*hl;
 		const double dispy=parms->evl.thetay->p[ievl]*hl;
 		const double scale=1-hl/parms->evl.hs->p[ievl];
-		if(parms->dm[idm].cubic){
-		    prop_nongrid_cubic(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
-				       aper->locs, aper->amp->p, aper->opdadd->p[idm]->p,
-				       1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-		}else{
-		    prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
-				 aper->locs, aper->amp->p, aper->opdadd->p[idm]->p,
-				 1, dispx, dispy, scale, 0, 0);   
-		}
+		prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
+			     aper->locs, aper->opdadd->p[idm]->p,
+			     1, dispx, dispy, scale, 0, 0);   
 	    }
 	}
 	writebin(aper->opdadd, "surfevl_correctable.bin");

@@ -74,9 +74,6 @@ void prep_cachedm(SIM_T *simu){
 	cpropdata[idm].displacex1=0;
 	cpropdata[idm].displacey1=0;
 	cpropdata[idm].scale=1;
-	cpropdata[idm].cubic=simu->parms->dm[idm].cubic;
-	cpropdata[idm].cubic_iac=simu->parms->dm[idm].iac;
-	prop_index(&cpropdata[idm]);
 	thread_prep(simu->cachedm_prop[idm], 0, cpropdata[idm].mapout->ny, 
 		    NTHREAD, prop, (void*)&cpropdata[idm]);
     }

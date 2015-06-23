@@ -41,9 +41,9 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht;
 		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		HXF[ips][ifit]=mkh(recon->xloc->p[ips], recon->floc, NULL,
+		HXF[ips][ifit]=mkh(recon->xloc->p[ips], recon->floc, 
 				   displace[0], displace[1], scale,
-				   parms->tomo.cubic, parms->tomo.iac);
+				   parms->tomo.iac);
 	    }
 	}
 	if(parms->save.setup){

@@ -108,7 +108,6 @@ void mapwritedata(file_t *fp, map_t *map){
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
     char *header=in->header;
-    map->cubic=0;
     map->iac=0;
     if(header){
 	map->ox=search_header_num(header,"ox");

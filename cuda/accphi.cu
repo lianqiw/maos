@@ -384,7 +384,7 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
     cp2gpu(cudm, dmreal, ndm);
     if(dmcfg){
 	for(int idm=0; idm<ndm; idm++){
-	    if(dmcfg[idm].cubic && !(*cudm)[idm].cubic_cc){
+	    if(dmcfg[idm].iac && !(*cudm)[idm].cubic_cc){
 		(*cudm)[idm].cubic_cc=gpu_dmcubic_cc(dmcfg[idm].iac);
 	    }
 	    (*cudm)[idm].ht+=dmcfg[idm].vmisreg;

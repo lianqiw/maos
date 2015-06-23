@@ -293,9 +293,9 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
 		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
 		}
-		HXWtomo[ips][iwfs]=mkh(recon->xloc->p[ips], ploc, NULL, 
+		HXWtomo[ips][iwfs]=mkh(recon->xloc->p[ips], ploc, 
 				       displace[0],displace[1],scale,
-				       parms->tomo.cubic, parms->tomo.iac);
+				       parms->tomo.iac);
 	    }
 	}
     }
@@ -328,7 +328,7 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 	    double disx=-simu->atm->p[ips]->vx*isim*simu->dt;
 	    double disy=-simu->atm->p[ips]->vy*isim*simu->dt;
 	    int ipsr=parms->atm.ipsr->p[ips];
-	    prop_grid(simu->atm->p[ips],recon->xloc->p[ipsr],NULL,(*opdx)->p[ipsr]->p,
+	    prop_grid(simu->atm->p[ips],recon->xloc->p[ipsr],(*opdx)->p[ipsr]->p,
 		      1,disx,disy,1,1,0,0);
 	}
     }
@@ -676,11 +676,8 @@ static void init_simu_evl(SIM_T *simu){
 	    data->scale=1-ht/parms->evl.hs->p[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=(void*)1;/*need to update this in genatm. */
-	    data->phiout=(void*)1;/*replace later in simulation. */
 	    data->ostat=aper->locs->stat;
 	    tot=aper->locs->stat->ncol;
-	    prop_index(data);
 	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
 	}
@@ -695,15 +692,6 @@ static void init_simu_evl(SIM_T *simu){
 	    data->wrap=0;
 	    if(simu->cachedm){
 		data->mapin=simu->cachedm->p[idm];
-		data->cubic=0;/*already accounted for in cachedm. */
-		data->cubic_iac=0;/*not needed */
-		if(aper->locs_dm){
-		    data->locout=aper->locs_dm->p[ind];
-		    tot=data->locout->nloc;
-		}else{
-		    data->ostat=aper->locs->stat;
-		    tot=aper->locs->stat->ncol;
-		}
 	    }else{
 		if(simu->dmrealsq){
 		    data->mapin=simu->dmrealsq->p[idm];
@@ -711,17 +699,16 @@ static void init_simu_evl(SIM_T *simu){
 		    data->locin=recon->aloc->p[idm];
 		    data->phiin=simu->dmreal->p[idm]->p;
 		}
-		data->cubic=parms->dm[idm].cubic;
-		data->cubic_iac=parms->dm[idm].iac;
-		if(aper->locs_dm){
-		    data->locout=aper->locs_dm->p[ind];
-		}else{
-		    data->locout=aper->locs;/*propagate to locs if no cachedm. */
-		}
-		tot=data->locout->nloc;
 	    }
+	    if(aper->locs_dm){
+		data->locout=aper->locs_dm->p[ind];
+		tot=data->locout->nloc;
+	    }else{
+		data->ostat=aper->locs->stat;
+		tot=aper->locs->stat->ncol;
+	    }
+
 	    data->phiout=(void*)1;/*replace later in simulation. */
-	    prop_index(data);
 	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
 	}
@@ -960,7 +947,6 @@ static void init_simu_wfs(SIM_T *simu){
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
-	    prop_index(data);
 	    simu->wfs_prop_atm[iwfs+nwfs*ips]=calloc(NTHREAD, sizeof(thread_t));
 	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,NTHREAD,prop,data);
 	}
@@ -975,8 +961,6 @@ static void init_simu_wfs(SIM_T *simu){
 	    data->wrap=0;
 	    if(simu->cachedm){
 		data->mapin=simu->cachedm->p[idm];
-		data->cubic=0;/*already accounted for in cachedm. */
-		data->cubic_iac=0;/*not needed */
 	    }else{
 		if(simu->dmrealsq){
 		    data->mapin=simu->dmrealsq->p[idm];
@@ -984,8 +968,6 @@ static void init_simu_wfs(SIM_T *simu){
 		    data->locin=recon->aloc->p[idm];
 		    data->phiin=simu->dmreal->p[idm]->p;
 		}
-		data->cubic=parms->dm[idm].cubic;
-		data->cubic_iac=parms->dm[idm].iac;
 	    }
 	    data->phiout=(void*)1;/*replace later in simulation */
 	    if(powfs[ipowfs].loc_dm){/*misregistration. */
@@ -998,7 +980,6 @@ static void init_simu_wfs(SIM_T *simu){
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
-	    prop_index(data);
 	    simu->wfs_prop_dm[iwfs+nwfs*idm]=calloc(NTHREAD, sizeof(thread_t));
 	    thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, NTHREAD, prop,data);
 	}/*idm */

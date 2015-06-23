@@ -274,11 +274,10 @@ typedef struct DM_CFG_T{
     double offset;  /**<Center-most actuator offset from origin
 		       - =0 means there is a act on center. 
 		       - 1/2 means no one in the center.*/
-    double iac;     /**<Inter-Actuator Coupling coefficient.*/
+    double iac;     /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     double histbin; /**<The bin width for histogram.*/
     int histn;      /**<Number of bins in histogram.*/
     int hist;       /**<Compute histogram of commands of each actuator*/
-    int cubic;      /**<use cubic spline. better than linear. need to specify iac*/ 
     double order;   /**<Order of the DM within telescope clear subaperture*/
     int isground;   /**<Is this DM the ground DM (derived)*/
     char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
@@ -339,7 +338,7 @@ typedef struct EVL_CFG_T{
 typedef struct TOMO_CFG_T{
     double tikcr;    /**<tikhonov regularization.*/
     double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
-    double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
+    double iac;      /**<!=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     double cxxscale; /**<scale the Cxx^-1 term.*/
     double svdthres; /**<Threshold in SVD inversion*/
     double cgthres;  /**<Repeat cg if residual is not reached*/
@@ -367,7 +366,6 @@ typedef struct TOMO_CFG_T{
 			closed loop warm restart. x10 in open loop*/
     int assemble;    /**<force assemble tomography matrix in CG*/
     int predict;     /**<test predictive control.*/
-    int cubic;       /**<cubic influence function in tomography (testing)*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
 }TOMO_CFG_T;
@@ -605,10 +603,9 @@ typedef struct MOAO_CFG_T{
     double dx;       /**<Spacing of MOAO DM act*/
     double order;    /**<Order of this MOAO*/
     int used;        /**<This moao is used*/
-    int cubic;       /**<Whether use cubic influence function*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
-    double iac;      /**<Inter-actuator-coupling for cubic influence function*/
+    double iac;      /**<If !=0: use cubic influence function with this Inter-Actuator Coupling coefficient.*/
     double stroke;   /**<Stroke of the MOAO DM*/
     double gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
     double ar;       /**<Aspect ratio dy/dx*/

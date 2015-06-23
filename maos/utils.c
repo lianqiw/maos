@@ -19,9 +19,6 @@
 
 #include <search.h>
 
-
-
-
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -423,7 +420,7 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 dmat *mkamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din){
     dmat *amp=dnew(loc->nloc, 1);
     if(ampground){
-	prop_grid(ampground, loc, NULL, amp->p, 1, misregx, misregy,1,0,0,0);
+	prop_grid(ampground, loc, amp->p, 1, misregx, misregy,1,0,0,0);
     }else{
 	locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
     }

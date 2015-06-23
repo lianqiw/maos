@@ -129,7 +129,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    cfree(nominal);
 
 	    loc_t *loc_psf=mksqloc(ncomp, ncomp, dtheta, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
-	    powfs[ipowfs].dtf[iwvl].si=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
+	    powfs[ipowfs].dtf[iwvl].si=mkh(loc_psf,loc_ccd,0,0,1,0);
 	    locfree(loc_psf);
 	    if(parms->skyc.dbg){
 		writebin(powfs[ipowfs].dtf[iwvl].nominal,
