@@ -120,7 +120,13 @@ R X(sumsq)(const X(mat)*A){
 R X(norm)(const X(mat)*A){
     return sqrt(X(sumsq)(A)/A->ny);
 }
-
+/**
+   compute the standard deviation of A
+*/
+R X(std)(const X(mat)*A){
+    long N=A->nx*A->ny;
+    return sqrt((X(sumsq)(A)-X(sum)(A)/N)/(N-1));
+}
 /**
    Fill A with random uniform numbers between [0, 1]*max
 */

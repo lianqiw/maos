@@ -48,7 +48,6 @@ typedef struct cudata_t{
     cumap_t *dmreal;/**<DM: array of cumap_t */
     cumap_t *dmproj;/**<DM: array of cumap_t */
     int nps; /**<number of phase screens*/
-    int ndm; /**<number of DM.*/
     /*for perfevl */
     cuperf_t *perf;
     /*for wfsgrad */

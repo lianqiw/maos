@@ -902,6 +902,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.modal);
     READ_INT(recon.nmod);
     READ_INT(recon.psol);
+    READ_DBL(recon.poke);
     parms->nwfsr=parms->recon.glao?parms->npowfs:parms->nwfs;
     readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
@@ -1043,7 +1044,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
-    READ_INT(dbg.usegwr);
     READ_INT(dbg.cmpgpu);
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
@@ -1059,7 +1059,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ncpa_preload);
     READ_INT(dbg.ncpa_nouncorr);
     READ_INT(dbg.i0drift);
-    READ_INT(dbg.pywfs_atm);
     READ_DBL(dbg.gradoff_scale);
 }
 /**
@@ -1238,8 +1237,12 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->recon.alg==1 && parms->recon.split==2){
 	error("MVST does not work with least square reconstructor.\n");
     }
+    if(parms->ndm>1 && parms->recon.modal){
+	warning("Modal control is not supported for multiple DMs\n");
+	parms->recon.modal=0;
+    }
     if(parms->recon.alg==0 && parms->recon.modal){
-	warning("Modal control is not applicable to MV reconstructor.\n");
+	warning("Modal control is not supported yet with MV reconstructor. Disabled.\n");
 	parms->recon.modal=0;
     }
     if(parms->lsr.actinterp==-1){

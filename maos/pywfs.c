@@ -1,6 +1,6 @@
 /*
   Copyright 2009-2015 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
-  
+   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
   MAOS is free software: you can redistribute it and/or modify it under the
@@ -25,7 +25,6 @@
 #include "pywfs.h"
 #include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by 1.1 times more
-#define PYWFS_POKE 1e-6 //How many meters to poke
 /**
    Setup pyramid WFS based on configuration.
 */
@@ -33,6 +32,11 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs_free(powfs[ipowfs].pywfs);
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
     map_t *map=0;
+    pywfs->poke=parms->recon.poke;//How many meters to poke
+    if(pywfs->poke>1e-5 || pywfs->poke<1e-10){
+	warning("poke=%g m is out of range\n", pywfs->poke);
+    }
+    pywfs->iwfs0=parms->powfs[ipowfs].wfs->p[0];
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
     pywfs->loc=map2loc(map);
@@ -129,6 +133,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
     if(parms->save.setup){
 	writebin(pywfs->si, "pywfs_si0");
+	locwrite(pywfs->locfft->loc, "pywfs_locfft");
     }
 
     {
@@ -166,12 +171,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
   
-    if(parms->dbg.pywfs_atm){
-	warning("dbg.pywfs_atm is on. This is for testing only.\n");
-	pywfs->atm=genatm_loc(pywfs->locfft->loc, parms->atm.r0, dsa);
-	writebin(pywfs->atm, "pywfs_loc_atm");
-    }
-
     //Determine the gain and offset of PyWFS
     {
 	//offset: grad of a flat wavefront
@@ -352,7 +351,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
     dmat *pupraw=dnew(ncomp, ncomp);
-    //writebin(psfs, "cpu_wvf");
+    //writebin(psfs, "cpu_wvf0");
     for(int ipos=0; ipos<pos_n; ipos++){
 	//whether the first point falls on the edge or not makes little difference
 	double theta=2*M_PI*(ipos+0.)/pos_n;
@@ -379,18 +378,22 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 		    otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
 		}
 	    }
+	    //writebin(otf, "cpu_wvf1");
 	    cfft2(otf, 1);
+	    //writebin(otf, "cpu_wvf2");
 	    cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n));
+	    //writebin(pupraw, "cpu_wvf3");
 	}//for iwvl
     }//for ipos
     //writebin(pupraw, "cpu_psf"); exit(0);
     ccpd(&otf, pupraw);//pupraw sum to one.
+    //writebin(otf, "cpu_wvf4");
     dfree(pupraw);
-    //cfftshift(otf);
     cfft2(otf, -1);
+    //writebin(otf, "cpu_wvf5");
     ccwm(otf, pywfs->nominal);
     cfft2(otf, 1);
-    //cfftshift(otf);
+    //writebin(otf, "cpu_wvf6");
     const int nsa=pywfs->si->p[0]->nx;
     if(!(*ints)){
 	(*ints)=dnew(nsa, 4);
@@ -400,13 +403,6 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	dspmulcreal((*ints)->p+nsa*i, pywfs->si->p[i], otf->p, (double)nsa/(ncomp*ncomp));
     }
     //writebin(*ints, "cpu_ints"); exit(0);
-    /*{
-	static int count=-1; count++;
-	writebin(otf, "otf_%d", count);
-	writebin(opd, "opd_%d", count);
-	writebin(*ints, "ints_%d", count);
-	exit(0);
-	}*/
     ccellfree(psfs);
     cfree(otf);
 }
@@ -462,9 +458,6 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     //dmat *grad0=dnew(nsa*2,1);
     double ptt[3]={0,0,0};
     double alpha=0.005/206265.;
-    if(pywfs->atm){
-	dcp(&opd, pywfs->atm);
-    }
     /*dzero(ints);
     pywfs_fft(&ints, pywfs, opd);
     pywfs_grad(&grad0, pywfs, ints);*/
@@ -517,9 +510,6 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
     key=dhash(pywfs->saa, key);
     key=dhash(pywfs->wvlwts, key);
     key=chash(pywfs->pyramid->p[0], key);
-    if(pywfs->atm){
-	key=dhash(pywfs->atm, key);
-    }
     return key;
 }
 /**
@@ -528,77 +518,128 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dsp *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* ploc){
-    const loc_t *loc=pywfs->locfft->loc;
+static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+    const loc_t *locfft=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
     {
-	dmat *opd=dnew(loc->nloc, 1);
+	dmat *opd=dnew(locfft->nloc, 1);
 	dmat *ints=0;
-	if(pywfs->atm){
-	    dcp(&opd, pywfs->atm);
-	}
 	pywfs_fft(&ints, pywfs, opd);
 	pywfs_grad(&grad0, pywfs, ints);
+	//writebin(grad0, "grad0_cpu");
+	//writebin(ints, "ints0_cpu");
 	dfree(opd);
 	dfree(ints);
     }
-    dmat *ggd=dnew(nsa*2, ploc->nloc);
     int count=0;
+    int nmod=mod?mod->ny:locin->nloc;
+    dmat *ggd=dnew(nsa*2, nmod);
+    if(nmod && mod->nx!=locin->nloc){
+	error("mod->nx must equal to %ld", locin->nloc);
+    }
     TIC;tic;
 #pragma omp parallel for shared(count)
-    for(int ia=0; ia<ploc->nloc; ia++){
-	dmat *opdin=dnew(ploc->nloc, 1);
-	dmat *opd=dnew(loc->nloc, 1);
+    for(int imod=0; imod<nmod; imod++){
+	dmat *opdin=dnew(locin->nloc, 1);
+	dmat *opdfft=dnew(locfft->nloc, 1);
 	dmat *ints=0;
-	dmat *grad=drefcols(ggd, ia, 1);
-	if(pywfs->atm){
-	    dcp(&opd, pywfs->atm);
+	dmat *grad=drefcols(ggd, imod, 1);
+	double poke=pywfs->poke;
+	if(mod){
+	    dmat *tmp=drefcols(mod, imod, 1);
+	    //the equivalent radimodl order of zernike.
+	    //double radial=ceil((sqrt(8.*(imod+1)+1)-3)*0.5)+1;
+	    //double std=dstd(tmp);
+	    double tmax,tmin;
+	    dmaxmin(tmp->p, tmp->nx, &tmax, &tmin);
+	    info("mode %d, p/v=%g\n", imod, tmax-tmin);
+	    poke/=(tmax-tmin);//sqrt(radial);
+	    dadd(&opdin, 0, tmp, poke);
+	    dfree(tmp);
+	}else{
+	    opdin->p[imod]=poke;
 	}
-	opdin->p[ia]=PYWFS_POKE;
-	prop_nongrid((loc_t*)ploc, opdin->p, loc, opd->p, 1, 0, 0, 1, 0, 0);
-	pywfs_fft(&ints, pywfs, opd);
+	prop_nongrid((loc_t*)locin, opdin->p, locfft, opdfft->p, 1, displacex, displacey, scale, 0, 0);
+	//writebin(opdfft, "phiout_cpu_%d", imod);
+	pywfs_fft(&ints, pywfs, opdfft);
+	//writebin(ints, "ints_cpu_%d", imod);
 	pywfs_grad(&grad, pywfs, ints);
 	dadd(&grad, 1, grad0, -1);
-	dfree(opd);
-	dfree(opdin);
-	dfree(grad);
-	dfree(ints);
+	dscale(grad, 1./poke);	
 	atomicadd(&count, 1);
 	if(count%10==0){
 	    double ts=myclockd()-tk;
-	    info2("%d of %ld. %.2f of %.2f seconds\n", count, ploc->nloc, ts, ts/count*ploc->nloc);
+	    info2("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", count, locin->nloc, ts, ts/count*locin->nloc, dstd(grad));
 	}
+	dfree(opdfft);
+	dfree(opdin);
+	dfree(grad);
+	dfree(ints);
     }
     info2("\n");
     dfree(grad0);	
-    dscale(ggd, 1./PYWFS_POKE);
-    dsp *gg=d2sp(ggd, dmaxabs(ggd)*1e-6);
-    dfree(ggd);
-    return gg;
+    return ggd;
 }
 /**
    ploc is on pupil.
  */
-dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc){
+dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+    if(mod && mod->ny<=6){
+	return pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
+    }
     uint32_t key=0;
-    key=lochash(ploc, key);
+    key=lochash(locin, key);
     key=pywfs_hash(pywfs, key);
+    if(mod) key=dhash(mod, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%g_%g.bin", HOME, 
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%g_%g_%g_%g_%g.bin", HOME, 
 	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
-	     ploc->iac, PYWFS_POKE);
+	     locin->iac, displacex, displacey, scale, pywfs->poke);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     info2("Using G in %s\n", fn);
-    dsp *gg=0;
+    dmat *gg=0;
+    if(0){//test amount of poke 
+	dmat *mod1=dnew(locin->nloc, 3);
+	if(mod){
+	    memcpy(PCOL(mod1, 0), PCOL(mod, 0), sizeof(double)*mod->nx);
+	    memcpy(PCOL(mod1, 1), PCOL(mod, 1000), sizeof(double)*mod->nx);
+	    memcpy(PCOL(mod1, 2), PCOL(mod, 3200), sizeof(double)*mod->nx);
+	}else{
+	    IND(mod1, 30, 0)=1;//sqrt(locin->nloc);
+	    IND(mod1, 800, 1)=1;//sqrt(locin->nloc);
+	    IND(mod1, 3000, 2)=1;//sqrt(locin->nloc);
+	}
+	writebin(mod1, "mod1");
+	dcell *gg1=dcellnew(13,1);
+	dcell *gg2=dcellnew(13,1);
+	double poke=1e-9;
+	double step=pow(10,0.25);
+	for(int ig=0; ig<gg1->nx; ig++){
+	    ((PYWFS_T*)pywfs)->poke=poke;
+	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, mod1, displacex, displacey, scale);
+	    gg2->p[ig]=pywfs_mkg_do(pywfs, locin, mod1, displacex, displacey, scale);
+	    poke=poke*step;
+	}
+	writebin(gg1, "gg1g");
+	cellfree(gg1);
+	writebin(gg2, "gg1c");
+	cellfree(gg2);
+	exit(0);
+    }
   retry:
     if(exist(fnlock) || !zfexist(fn)){
 	int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
 	if(fd>0){//succeed
 	    info2("Generating PYWFS poke matrix\n");
-	    gg=pywfs_mkg_do(pywfs, ploc);
+#if USE_CUDA
+	    if(global->parms->gpu.wfs){
+		gg=gpu_pywfs_mkg(pywfs, locin, mod, displacex, displacey, scale);
+	    }else
+#endif
+		gg=pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
 	    writebin(gg, "%s", fn);
 	    snprintf(fn, PATH_MAX, "%s/.aos/cache/", HOME);
 	    remove_file_older(fn, 30*24*3600);
@@ -610,51 +651,11 @@ dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc){
 	    goto retry;
 	}
     }else{
-	gg=dspread(fn);
+	gg=dread(fn);
     }
     return gg;
 }
-/*
-  Temporary wrapping
-*/
-dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm){
-    const int ipowfs=parms->wfs[iwfs].powfs;
-    PYWFS_T *pywfs=powfs[ipowfs].pywfs;
-    uint32_t key=0;
-    key=lochash(aloc, key);
-    key=pywfs_hash(pywfs, key);
-    char fn[PATH_MAX];
-    char fnlock[PATH_MAX];
-    mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/GA_%u_%ld_%g_%d_%g_%g.bin", HOME, 
-	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
-	     parms->dm[idm].iac, PYWFS_POKE);
-    snprintf(fnlock, PATH_MAX, "%s.lock", fn);
-    info2("Using GA in %s\n", fn);
-    dsp *gg=0;
-    while(!gg){
-	if(exist(fnlock) || !zfexist(fn)){
-	    int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
-	    if(fd>0){//succeed
-		info2("Generating PYWFS poke matrix\n");
-#if USE_CUDA
-		if(parms->gpu.wfs){
-		    gg=gpu_pywfs_mkg(parms, powfs, aloc, iwfs, idm);
-		}else
-#endif
-		    gg=pywfs_mkg_do(pywfs, aloc);
-		writebin(gg, "%s", fn);
-	    }else{
-		info2("Trying to lock %s\n", fnlock);
-		fd=lock_file(fnlock, 1, 0);
-	    }
-	    close(fd); remove(fnlock);
-	}else{
-	    gg=dspread(fn);
-	}
-    }
-    return gg;
-}
+
 void pywfs_free(PYWFS_T *pywfs){
     if(!pywfs) return;
     dfree(pywfs->amp);

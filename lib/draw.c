@@ -111,9 +111,11 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 	    break;
 	case DRAW_PAUSE:
 	    sock_data->pause=1;
+	    info2("draw %d paused\n", sock_draw);
 	    break;
 	case DRAW_RESUME:
 	    sock_data->pause=0;
+	    info2("draw %d resumed\n", sock_draw);
 	    break;
 	default:
 	    warning("cmd=%d is not understood\n", cmd);
@@ -311,10 +313,6 @@ static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
 	found=list_search(&child->child, NULL, fn, add);
     }
     char **figfn=sock_draws[ifd].figfn;
-    /*if(add && !found){//It is newly insert to the list. Set as current page
-	free(figfn[0]); figfn[0]=strdup(fig);
-	free(figfn[1]); figfn[1]=strdup(fn);
-	}*/
     return !sock_draws[ifd].pause && (!draw_single || !found || (!strcmp(figfn[0], fig) && !strcmp(figfn[1], fn)));
 }
 /**

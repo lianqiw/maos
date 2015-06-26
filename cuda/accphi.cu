@@ -91,18 +91,18 @@ static void atm_prep(atm_prep_t *data){
     pout_t *pout=(pout_t*)data->next_atm;
     for(int iy=0; iy<my; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(Real)INDEX(atm, ix+offx, iy+offy);
+	    pout[iy][ix]=(Real)IND(atm, ix+offx, iy+offy);
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(Real)INDEX(atm, ix+offx-nxi, iy+offy);
+	    pout[iy][ix]=(Real)IND(atm, ix+offx-nxi, iy+offy);
 	}
     }
     for(int iy=my; iy<ny0; iy++){
 	for(int ix=0; ix<mx; ix++){
-	    pout[iy][ix]=(Real)INDEX(atm, ix+offx, iy+offy-nyi);
+	    pout[iy][ix]=(Real)IND(atm, ix+offx, iy+offy-nyi);
 	}
 	for(int ix=mx; ix<nx0; ix++){
-	    pout[iy][ix]=(Real)INDEX(atm, ix+offx-nxi, iy+offy-nyi);
+	    pout[iy][ix]=(Real)IND(atm, ix+offx-nxi, iy+offy-nyi);
 	}
     }
     toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
@@ -377,32 +377,17 @@ curmat* gpu_dmcubic_cc(Real iac){
     cudaMemcpy(res->p, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
     return res;
 }
-/**
-   Copy DM commands to GPU.
-*/
-static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
-    cp2gpu(cudm, dmreal, ndm);
-    if(dmcfg){
-	for(int idm=0; idm<ndm; idm++){
-	    if(dmcfg[idm].iac && !(*cudm)[idm].cubic_cc){
-		(*cudm)[idm].cubic_cc=gpu_dmcubic_cc(dmcfg[idm].iac);
-	    }
-	    (*cudm)[idm].ht+=dmcfg[idm].vmisreg;
-	}
-    }
-}
-void gpu_dmreal2gpu(mapcell *dmreal, DM_CFG_T *dmcfg){
+
+void gpu_dmreal2gpu(mapcell *dmreal){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cudata->ndm=dmreal->nx;
-	gpu_dm2gpu(&cudata->dmreal, dmreal->p, dmreal->nx, dmcfg);
+	cp2gpu(&cudata->dmreal, dmreal->p, dmreal->nx);
     }
 }
-void gpu_dmproj2gpu(mapcell *dmproj, DM_CFG_T *dmcfg){
+void gpu_dmproj2gpu(mapcell *dmproj){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cudata->ndm=dmproj->nx;
-	gpu_dm2gpu(&cudata->dmproj, dmproj->p, dmproj->nx, dmcfg);
+	cp2gpu(&cudata->dmproj, dmproj->p, dmproj->nx);
     }
 }
 
@@ -555,7 +540,7 @@ void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,co
 #undef COMM
     }
 }
-void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *amp, Real *phiout,
+void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *phiout,
 		   Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
     dispx=(dispx-map.ox)/map.dx;
     dispy=(dispy-map.oy)/map.dy;
@@ -579,7 +564,7 @@ void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 	const Real ht=cudm[idm].ht;
-	gpu_prop_grid(cudm[idm], locarr[idm], 0, phiout, 
+	gpu_prop_grid(cudm[idm], locarr[idm], phiout, 
 		      alpha, ht*thetax+mispx, ht*thetay+mispy,
 		      1-ht/hs, 0, stream);
     }/*idm */

@@ -416,11 +416,7 @@ static void init_simu_evl(SIM_T *simu){
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
-	if(disable_save){
-	    simu->res = dcellnew3(4,1,nnx,nny);
-	}else{
-	    simu->res = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
-	}
+	simu->res = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
 	//Do not reference. Just assign. Don't free.
 	simu->ole     = simu->res->p[0];
 	simu->cle     = simu->res->p[2];
@@ -1044,7 +1040,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    simu->resdither = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resdither_%d.bin", seed);
 	}
     }
-    if(simu->recon->cn2est && !disable_save){
+    if(simu->recon->cn2est){
 	simu->cn2est=dcellnew(2,1);
 	int ncn2=(parms->sim.end-1)/parms->cn2.step;
 	long nnx[2]={ncn2, ncn2};
@@ -1125,14 +1121,14 @@ static void init_simu_dm(SIM_T *simu){
     }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
-	gpu_dmreal2gpu(simu->dmrealsq, parms->dm);
+	gpu_dmreal2gpu(simu->dmrealsq);
 	if(simu->dmprojsq){
-	    gpu_dmproj2gpu(simu->dmprojsq, parms->dm);
+	    gpu_dmproj2gpu(simu->dmprojsq);
 	}
     }
 #endif
     simu->wfspsol=cellnew(parms->npowfs, 1);
-    simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.aldm, 
+    simu->dmint=servo_new(simu->dmerr_store, parms->sim.apdm, parms->sim.aldm, 
 			  parms->sim.dthi, parms->sim.epdm);
     if(parms->dbg.ncpa_preload && recon->dm_ncpa){//set the integrator
 	warning_once("Preload integrator with NCPA\n");
@@ -1351,12 +1347,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[1]=nnx[0]=parms->sim.end;
 	    nny[1]=nny[0]=1;
 	    const char *header[2]={"Tomography", "DM Fit"};
-	    if(disable_save){
-		simu->cgres=dcellnew3(2, 1, nnx, nny);
-	    }else{
-		simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
-					  "ResCG_%d.bin", seed);
-	    }
+	    simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
+				      "ResCG_%d.bin", seed);
 	}
     }
     init_simu_evl(simu);

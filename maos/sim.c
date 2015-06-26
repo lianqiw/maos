@@ -132,7 +132,7 @@ void maos_isim(int isim){
 	    }
 #if USE_CUDA
 	    if(parms->gpu.evl || parms->gpu.wfs){
-		gpu_dmproj2gpu(simu->dmprojsq, NULL);
+		gpu_dmproj2gpu(simu->dmprojsq);
 	    }
 #endif
 	}

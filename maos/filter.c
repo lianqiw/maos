@@ -267,20 +267,10 @@ static void filter_cl(SIM_T *simu){
     if(drop){
 	warning("Drop a frame at step %d\n", simu->isim);
     }else if(simu->dmerr){
-	if(parms->recon.modal){
-	    dmerr=cellnew(parms->ndm, 1);
-	    for(int idm=0; idm<parms->ndm; idm++){
-		dmm(&dmerr->p[idm], 0, recon->amod->p[idm], simu->dmerr->p[idm], "nn", 1);
-	    }
-	}else{
-	    dmerr=simu->dmerr;
-	}
+	dmerr=simu->dmerr;
     }
     //always run servo_filter even if dmerr is NULL.
     servo_filter(simu->dmint, dmerr);
-    if(parms->recon.modal && dmerr){
-	dcellfree(dmerr);
-    }
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
@@ -290,18 +280,10 @@ static void filter_cl(SIM_T *simu){
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
-    dcellcp(&simu->dmcmd,simu->dmint->mint->p[0]);
+    dcellcp(&simu->dmcmd0,simu->dmint->mint->p[0]);
     if(!parms->sim.fuseint){
-	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint->p[0], 1);
+	addlow2dm(&simu->dmcmd0,simu,simu->Mint_lo->mint->p[0], 1);
     }
-    //2015-03-10: move extraplation to right after integrator
-    //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !parms->recon.psol){
-	dcellcp(&simu->dmcmd0, simu->dmcmd);
-	dcellzero(simu->dmcmd);
-	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
-    }
-
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
 	//Do not reference the data, even for dtrat==1
@@ -309,7 +291,21 @@ static void filter_cl(SIM_T *simu){
 	double alpha=(simu->isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
 	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
     }
-    dcellcp(&simu->dmpsol, simu->dmcmd);
+    dcellcp(&simu->dmpsol, simu->dmcmd0);
+    if(parms->recon.modal){
+	dcellzero(simu->dmcmd);
+	dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmcmd0, "nn", 1);
+	//convert DM command from modal to zonal spae
+    }else if(simu->recon->actinterp && !parms->recon.psol){
+	//Extrapolate to edge actuators
+	dcellzero(simu->dmcmd);
+	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+    }else{
+	dcellcp(&simu->dmcmd, simu->dmcmd0);
+    }
+    
+    //The DM commands are always on zonal modes from this moment
+
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
@@ -324,8 +320,11 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
-    if(parms->sim.dmclip || parms->sim.dmclipia){
+    if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
 	dcell *tmp=dcelldup(simu->dmcmd);
+	if(recon->actstuck){//zero stuck actuators
+	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
+	}
 	clipdm(simu, simu->dmcmd);
 	dcelladd(&tmp, 1, simu->dmcmd, -1); //find what is clipped
 	dcelladd(&simu->dmint->mint->p[0], 1, tmp, -1);//remove from integrator (anti wind up)
@@ -456,7 +455,7 @@ void update_dm(SIM_T *simu){
     }
 #if USE_CUDA
     if(parms->gpu.wfs || parms->gpu.evl){
-	gpu_dmreal2gpu(simu->dmrealsq, NULL);
+	gpu_dmreal2gpu(simu->dmrealsq);
     }
 #endif
     calc_cachedm(simu);

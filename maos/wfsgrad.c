@@ -523,9 +523,9 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	//DM dithering.  Compute dither signal in input (DM) and output (gradients) signal.
 	dmat *tmp=0;
 	const int idm=parms->idmground;
-	dmm(&tmp, 0, INDEX(recon->dither_ra, idm, idm), simu->dmreal->p[idm], "nn", 1);
+	dmm(&tmp, 0, IND(recon->dither_ra, idm, idm), simu->dmreal->p[idm], "nn", 1);
 	simu->dither[iwfs]->mr->p[0]->p[isim]=tmp->p[0];
-	dmm(&tmp, 0, INDEX(recon->dither_rg, iwfs, iwfs), simu->gradcl->p[iwfs], "nn", 1);
+	dmm(&tmp, 0, IND(recon->dither_rg, iwfs, iwfs), simu->gradcl->p[iwfs], "nn", 1);
 	simu->dither[iwfs]->mr->p[1]->p[isim]=tmp->p[0];
 	dfree(tmp);
     }

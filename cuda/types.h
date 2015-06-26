@@ -287,7 +287,7 @@ public:
     Real dx;
     Real dy;
     long nloc;
-    culoc_t(loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
+    culoc_t(const loc_t *in=0):p(0),dx(0),dy(0),nloc(0){
 	if(!in) return;
 	dx=in->dx;
 	dy=in->dy;
@@ -328,6 +328,7 @@ public:
     Real dx, dy;
     Real ht;
     Real vx, vy;
+    Real iac;
     curmat *cubic_cc; /*coefficients for cubic influence function. */
     void init(const map_t *in){
 	nx=in->nx;
@@ -339,12 +340,15 @@ public:
 	ht=in->h;
 	vx=in->vx;
 	vy=in->vy;
-	if(cubic_cc){
-	    delete cubic_cc;
-	    cubic_cc=0;
-	}
-	if(in->iac){
-	    cubic_cc=gpu_dmcubic_cc(in->iac);
+	if(fabs(iac-in->iac)>(iac+in->iac)*1e-5){
+	    iac=in->iac;
+	    if(cubic_cc){
+		delete cubic_cc;
+		cubic_cc=0;
+	    }
+	    if(in->iac){
+		cubic_cc=gpu_dmcubic_cc(in->iac);
+	    }
 	}
     }
     void zero(){
@@ -363,7 +367,8 @@ public:
 	    ht=in->ht;
 	    vx=in->vx;
 	    vy=in->vy;
-	    if(in->cubic_cc){
+	    if(fabs(iac-in->iac)>(iac+in->iac)*1e-5){
+		iac=in->iac;
 		gpu2gpu(&cubic_cc, in->cubic_cc);
 	    }
 	}else{

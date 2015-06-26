@@ -217,46 +217,10 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);
 	}
     }
-    if(parms->recon.modal){
-	recon->amod=cellnew(ndm, 1);
-	recon->anmod=lnew(ndm, 1);
-	for(int idm=0; idm<ndm; idm++){
-	    int nmod=parms->recon.nmod;
-	    const long nloc=recon->aloc->p[idm]->nloc;
-	    switch(parms->recon.modal){
-	    case -2: {//dummy modal control, emulating zonal mode with identity modal matrix
-		if(nmod && nmod!=nloc){
-		    warning("recon.mod should be 0 or %ld when recon.modal=2 \n",nloc);
-		    recon->amod->p[idm]=dnew(nloc, nloc);
-		    double val=sqrt(nloc);
-		    daddI(recon->amod->p[idm], val);
-		    dadds(recon->amod->p[idm], -val/nloc);
-		}
-	    }
-		break;
-	    case -1://zernike
-		{
-		    if(!nmod) nmod=nloc;
-		    int rmax=floor((sqrt(1+8*nmod)-3)*0.5);
-		    recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0, 0, rmax, 0);
-		}
-		break;
-	    case 1://Karhunen loeve
-		recon->amod->p[idm]=KL_vonkarman(recon->aloc->p[idm], nmod, parms->atmr.L0);
-		break;
-	    default:
-		error("Invalid recon.modal");
-	    }	    
-	    recon->anmod->p[idm]=recon->amod->p[idm]->ny;
-	}
-	
-    }
+ 
     if(parms->save.setup){
 	writebin(recon->aloc,"aloc");
 	writebin(recon->amap, "amap");
-	if(parms->recon.modal){
-	    writebin(recon->amod, "amod");
-	}
     }
 }
 

@@ -263,6 +263,7 @@ __global__ void embed_do(Comp *out, Real *in, int nx){
     const int step=blockDim.x * gridDim.x;
     for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
 	out[ix].x=in[ix];
+	out[ix].y=0;
     }
 }
 /* extract real from complex data.*/

@@ -704,7 +704,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	}
     }
     OMPTASK_END;
-    WARN_MISSING;
+    //WARN_MISSING;
 }
 /**
    like prop_grid_stat() but with cubic influence function.

@@ -441,6 +441,7 @@ typedef struct RECON_CFG_T{
     char **misreg_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
+    double poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -567,7 +568,6 @@ typedef struct DBG_CFG_T{
     int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
-    int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
@@ -581,7 +581,6 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_nouncorr; /**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
-    int pywfs_atm;   /**<use atmosphere when generating pywfs gain.*/
     double gradoff_scale;/**<Scale the reference vector*/
 }DBG_CFG_T;
 /**

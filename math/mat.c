@@ -200,6 +200,8 @@ void X(resize)(X(mat) *A, long nx, long ny){
     if(!A->nref || A->nref[0]>1){
 	error("Resizing a referenced vector\n");
     }
+    if(!nx) nx=A->nx;
+    if(!ny) ny=A->ny;
     if(A->nx==nx || A->ny==1){
 	A->p=realloc(A->p, sizeof(T)*nx*ny);
 	if(nx*ny>A->nx*A->ny){

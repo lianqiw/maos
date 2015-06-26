@@ -292,7 +292,7 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     }									\
     int ans=0;								\
     if(parms->recon.split){						\
-	double *pcleNGSmp=COLUMN(cleNGSmp->p[ievl], isim);		\
+	double *pcleNGSmp=PCOL(cleNGSmp->p[ievl], isim);		\
 	ans=calc_ngsmod(nmod==3?pclep:0, nmod==3?pclmp:0,		\
 			pcleNGSmp,recon->ngsmod->nmod,			\
 			recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
@@ -334,7 +334,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    curset(iopdevl, 0, stream);
 	}
 	if(parms->sim.idealevl){
-	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmproj, cudata->ndm,
+	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmproj, parms->ndm,
 		       parms->evl.hs->p[ievl], thetax, thetay, 0,0,1, stream);
 	}else if(simu->atm && !parms->sim.wfsalias){
 	    gpu_atm2loc(iopdevl->p, cudata->perf->locs, parms->evl.hs->p[ievl], thetax, thetay, 
@@ -396,7 +396,7 @@ void gpu_perfevl_queue(thread_t *info){
 	if(parms->evl.tomo){
 	    TO_IMPLEMENT;
 	}else{
-	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmreal, cudata->ndm, 
+	    gpu_dm2loc(iopdevl->p, cudata->perf->locs_dm[ievl], cudata->dmreal, parms->ndm, 
 		       parms->evl.hs->p[ievl], thetax, thetay,
 		       0,0,-1, stream);
 	    if(simu->ttmreal){
@@ -477,10 +477,10 @@ void gpu_perfevl_sync(thread_t *info){
 	const double thetax=parms->evl.thetax->p[ievl];
 	const double thetay=parms->evl.thetay->p[ievl];
 	/*Setup pointers for easy usage */
-	double *polmp=COLUMN(simu->olmp->p[ievl], isim);
-	double *pclmp=COLUMN(simu->clmp->p[ievl], isim);
-	double *polep=COLUMN(simu->olep->p[ievl], isim);
-	double *pclep=COLUMN(simu->clep->p[ievl], isim);
+	double *polmp=PCOL(simu->olmp->p[ievl], isim);
+	double *pclmp=PCOL(simu->clmp->p[ievl], isim);
+	double *polep=PCOL(simu->olep->p[ievl], isim);
+	double *pclep=PCOL(simu->clep->p[ievl], isim);
 	CUDA_SYNC_STREAM;
 	PERFEVL_WFE_CPU(ans1, polep, polmp, simu->oleNGSmp, cuperf_t::ccb_ol[ievl]);
 	PERFEVL_WFE_CPU(ans2, pclep, pclmp, simu->cleNGSmp, cuperf_t::ccb_cl[ievl]);

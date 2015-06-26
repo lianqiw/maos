@@ -216,6 +216,9 @@ typedef struct cell{
     ARR(struct cell*);
     struct cell *m;
 }cell;
+#undef ARR
+#undef CELLARR
+#undef MATARR
 
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
@@ -244,7 +247,6 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME
 #define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
 #define PIND(...) IND_GET(_0,__VA_ARGS__,PIND2,PIND1,PIND0,PIND0)(__VA_ARGS__)
-#undef ARR
-#undef CELLARR
-#undef MATARR
+#define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
+
 #endif

@@ -24,7 +24,7 @@
 */
 #include "common.h"
 #include "ahst.h"
-
+#include "pywfs.h"
 /**
    \file maos/ahst.c Contains functions to setup NGS modes and reconstructor
    using AHST for one or two DMs.  Use parms->wfsr instead of parms->wfs for wfs
@@ -536,7 +536,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     dinvspd_inplace(ngsmod->IMCC_TT);
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_m(parms,recon);
-    if(recon->actstuck){
+    if(recon->actstuck && !parms->recon.modal){
 	warning2("Apply stuck actuators to ngs modes\n");
 	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
     }
@@ -553,11 +553,27 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     dspcell *saneai=recon->saneai;
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
-	dcellmm(&ngsmod->GM, recon->GAlo, ngsmod->Modes, "nn", 1);
+	ngsmod->GM=cellnew(parms->nwfsr, 1);
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
+		//if(IND(recon->GAlo, iwfs, idm)){
+		if(parms->powfs[ipowfs].type==0){//shwfs
+		    dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
+		}else{//pwfs.
+		    double  ht = parms->dm[idm].ht;
+		    double  scale=1. - ht/parms->wfs[iwfs].hs;
+		    double  dispx=0, dispy=0;
+		    dispx=parms->wfsr[iwfs].thetax*ht;
+		    dispy=parms->wfsr[iwfs].thetay*ht;
+		    IND(ngsmod->GM, iwfs)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], IND(ngsmod->Modes, idm), dispx, dispy, scale);
+		}
+	    }
+	}
 	if(parms->nlowfs==1 && ngsmod->nmod>5){
 	    /*There is only one wfs, remove first plate scale mode*/
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].lo){
 		    int nx=ngsmod->GM->p[iwfs]->nx;
 		    memset(ngsmod->GM->p[iwfs]->p+nx*2, 0, nx*sizeof(double));
@@ -566,9 +582,18 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
 	ngsmod->Rngs=dcellpinv(ngsmod->GM,saneai);
     }
+    if(parms->recon.modal){//convert Modes to space of amod
+	for(int idm=0; idm<parms->ndm; idm++){
+	    dmat *proj=dpinv(recon->amod->p[idm], NULL);
+	    dmat *tmp=0;
+	    dmm(&tmp, 0, proj, ngsmod->Modes->p[idm], "nn", 1);
+	    dfree(ngsmod->Modes->p[idm]);
+	    ngsmod->Modes->p[idm]=tmp;
+	    dfree(proj);
+	}
+    }
     if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
-	//dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
 	dcellmm(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, "nn", 1);
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting. */

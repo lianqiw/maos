@@ -305,34 +305,6 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     }
 }
 
-
-/**
-   Setup gradient operator from powfs.gloc to wavefront sensor for least square reconstruction.
-*/
-static void
-setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    if(recon->GWR){
-	warning("skip setup_recon_GWR\n");
-	return;
-    }
-    if(!parms->dbg.usegwr) return;
-    cellfree(recon->GWR);
-    recon->GWR=cellnew(parms->npowfs, 1);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].type==1){//pyramid WFS
-	    if(parms->recon.alg==0  || parms->ndm>1 || parms->dm[0].ht>0){
-		recon->GWR->p[ipowfs] = pywfs_mkg(powfs[ipowfs].pywfs, recon->gloc->p[ipowfs]);
-	    }
-	}else if(parms->powfs[ipowfs].gtype_recon==0){
-	    recon->GWR->p[ipowfs] = mkg(recon->gloc->p[ipowfs], recon->gloc->p[ipowfs],
-					recon->gamp->p[ipowfs], powfs[ipowfs].saloc,
-					1, 0, 0, 1);
-	}else{
-	    recon->GWR->p[ipowfs] = mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
-					(loc_t*)powfs[ipowfs].pts, 1,1,0,0);
-	}
-    }
-}
 /**
    Setup gradient operator from ploc to wavefront sensors.
 */
@@ -367,8 +339,8 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	      (non-misregistered)*/
 	    if(parms->powfs[ipowfs].type==1){
 		info2(" PWFS (skip)");
-		/*if(parms->recon.alg==0 || parms->ndm>1 || fabs(parms->dm[0].ht)>EPS){
-		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc);
+		/*if(parms->recon.alg==0){
+		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc,0,0,1);
 		    }*/
 	    }else if(parms->powfs[ipowfs].gtype_recon==0){
 		/*Create averaging gradient operator (gtilt) from PLOC,
@@ -421,7 +393,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	recon->GA=dspcellread("GA");
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
 	    error("Wrong saved GA\n");
-	PDSPCELL(recon->GA,GA);
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -430,7 +401,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    continue;
 		}
 		int nsa=powfs[ipowfs].saloc->nloc;
-		if(GA[idm][iwfs]->m!=nsa*2 || GA[idm][iwfs]->n!=nloc){
+		if(IND(recon->GA,iwfs,idm)->nx!=nsa*2 || (!parms->recon.modal && IND(recon->GA,iwfs,idm)->ny!=nloc)
+		   || (parms->recon.modal && IND(recon->GA,iwfs,idm)->ny!=recon->amod->p[idm]->ny)){
 		    error("Wrong saved GA\n");
 		}
 	    }
@@ -438,9 +410,40 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }else{
 	info2("Generating GA ");TIC;tic;
 	recon->GA=cellnew(nwfs, ndm);
-	PDSPCELL(recon->GA,GA);
-	if(parms->dbg.usegwr){
-	    setup_recon_GWR(recon, parms, powfs);
+	if(parms->recon.modal) {
+	    recon->GM=cellnew(nwfs, ndm);
+	    
+	    recon->amod=cellnew(ndm, 1);
+	    recon->anmod=lnew(ndm, 1);
+	    for(int idm=0; idm<ndm; idm++){
+		int nmod=parms->recon.nmod;
+		const long nloc=recon->aloc->p[idm]->nloc;
+		switch(parms->recon.modal){
+		case -2: {//dummy modal control, emulating zonal mode with identity modal matrix
+		    if(nmod && nmod!=nloc){
+			warning("recon.mod should be 0 or %ld when recon.modal=2 \n",nloc);
+		    }
+		    recon->amod->p[idm]=dnew(nloc, nloc);
+		    double val=sqrt(nloc);
+		    daddI(recon->amod->p[idm], val);
+		    dadds(recon->amod->p[idm], -val/nloc);
+		}
+		    break;
+		case -1://zernike
+		    {
+			if(!nmod) nmod=nloc;
+			int rmax=floor((sqrt(1+8*nmod)-3)*0.5);
+			recon->amod->p[idm]=zernike(recon->aloc->p[idm], 0, 0, rmax, 0);
+		    }
+		    break;
+		case 1://Karhunen loeve. Don't limit number of modes here to make caching of G_M right.
+		    recon->amod->p[idm]=KL_vonkarman(recon->aloc->p[idm], 0, parms->atmr.L0);
+		    break;
+		default:
+		    error("Invalid recon.modal");
+		}	    
+		recon->anmod->p[idm]=recon->amod->p[idm]->ny;
+	    }
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
@@ -449,56 +452,66 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
-		if(parms->recon.alg==1 && fabs(parms->dm[idm].ht)<EPS && parms->powfs[ipowfs].type==1){
-		    info2("\nPyWFS from aloc to saloc directly\n");
-		    GA[idm][iwfs]=pywfs_mkg_ga(parms, powfs, recon->aloc->p[idm], iwfs, idm);
+		double  ht = parms->dm[idm].ht;
+		double  scale=1. - ht/hs;
+		double  dispx=0, dispy=0;
+		if(!parms->recon.glao){
+		    dispx=parms->wfsr[iwfs].thetax*ht;
+		    dispy=parms->wfsr[iwfs].thetay*ht;
+		}
+		if(parms->powfs[ipowfs].type==1){
+		    if(!parms->recon.modal){
+			info2("\nPyWFS from aloc to saloc directly\n");
+			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 0, dispx, dispy, scale);
+			IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
+			dfree(tmp);
+		    }else if(!parms->powfs[ipowfs].lo){
+			info2("\nPyWFS from amod to saloc directly\n");
+			//We compute the GM for full set of modes so that it is cached only once.
+			IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], recon->amod->p[idm], dispx, dispy, scale);
+		    }
 		}else{
-		    double  ht = parms->dm[idm].ht;
-		    double  scale=1. - ht/hs;
-		    double  dispx=0, dispy=0;
-		    if(!parms->recon.glao){
-			dispx=parms->wfsr[iwfs].thetax*ht;
-			dispy=parms->wfsr[iwfs].thetay*ht;
-		    }
 		    int freeloc=0;
-		    loc_t *loc;
-		    if(parms->dbg.usegwr){
-			loc=recon->gloc->p[ipowfs];
-		    }else{
-			loc=ploc;
-		    }
+		    loc_t *loc=ploc;
 		    if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
 			loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
 			freeloc=1;
 		    }
-	
-		    if(parms->dbg.usegwr){
-			warning("todo: Fix and use mkg directly\n");
-			dsp *H=mkh(recon->aloc->p[idm], loc, 
-				   dispx,dispy,scale,
-				  parms->dm[idm].iac);
-			GA[idm][iwfs]=dspmulsp(recon->GWR->p[ipowfs], H,"nn");
-			dspfree(H);
-		    }else{
-			dsp *H=mkh(recon->aloc->p[idm], loc, 
-				   dispx,dispy,scale,
-				   parms->dm[idm].iac);
-			GA[idm][iwfs]=dspmulsp(recon->GP->p[ipowfs], H,"nn");
-			dspfree(H);
-		    }
+		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale, parms->dm[idm].iac);
+		    IND(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[ipowfs], H,"nn");
+		    dspfree(H);
 		    if(freeloc){
 			locfree(loc);
+		    }
+		    if(parms->recon.modal){
+			dspmm(&IND(recon->GM, iwfs, idm), IND(recon->GA, iwfs, idm), recon->amod->p[idm], "nn",1);
 		    }
 		}
 	    }/*idm */
 	}
     	toc2(" ");
-	dspcellfree(recon->GWR);
+    }
+    if(parms->recon.modal && parms->recon.nmod>0){
+	for(int idm=0; idm<ndm; idm++){
+	    if(parms->recon.nmod<recon->amod->p[idm]->ny){
+		warning("Reduce number of controlled modes from %ld to %d\n",
+			recon->amod->p[idm]->ny, parms->recon.nmod);
+		dresize(recon->amod->p[idm], 0, parms->recon.nmod);
+		recon->anmod->p[idm]=recon->amod->p[idm]->ny;
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+		    if(!IND(recon->GM, iwfs, idm)) continue;
+		    dresize(IND(recon->GM, iwfs, idm), 0,  parms->recon.nmod);
+		}
+	    }
+	}
     }
     if(parms->save.setup){
 	writebin(recon->GA, "GA");
+	if(parms->recon.modal)
+	    writebin(recon->amod, "amod");
+	    writebin(recon->GM, "GM");
     }
-    if(parms->recon.alg==1){
+    if(parms->recon.alg==1 && !parms->recon.modal){
 	cellfree(recon->actcpl);
 	recon->actcpl=genactcpl(recon->GA, 0);
 	act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
@@ -534,49 +547,25 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
     int nlo=parms->nlopowfs;
-    if(parms->recon.modal){
-	dspcell *GA=recon->GA;
-	cellfree(recon->GM);
-	cellfree(recon->GMlo);
-	cellfree(recon->GMhi);
-	recon->GM=cellnew(nwfs, ndm);
-	recon->GMlo=cellnew(nwfs, ndm);
-	recon->GMhi=cellnew(nwfs, ndm);
-	for(int idm=0; idm<ndm; idm++){
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs = parms->wfsr[iwfs].powfs;
-		dspmm(&recon->GM->p[iwfs+nwfs*idm], GA->p[iwfs+idm*nwfs], recon->amod->p[idm], "nn",1);
-		if(parms->powfs[ipowfs].lo
-		   || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
-		    recon->GMlo->p[iwfs+idm*nwfs]=dref(recon->GM->p[iwfs+idm*nwfs]);
-		}
-		if(!parms->powfs[ipowfs].skip){
-		    recon->GMhi->p[iwfs+idm*nwfs]=dref(recon->GM->p[iwfs+idm*nwfs]);
-		}
-	    }
-	}
-	if(parms->save.setup){
-	    writebin(recon->GM, "GM");
-	}
-    }
     /*Create GAlo that only contains GA for low order wfs */
     dspcellfree(recon->GAlo);
     dspcellfree(recon->GAhi);
     recon->GAlo=cellnew(recon->GA->nx, recon->GA->ny);
     recon->GAhi=cellnew(recon->GA->nx, recon->GA->ny);
-    PDSPCELL(recon->GAlo,GAlo);
-    PDSPCELL(recon->GAhi,GAhi);
-    PDSPCELL(recon->GA,GA);
+    if(parms->recon.modal) recon->GMhi=cellnew(nwfs, ndm);
 
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo
 	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
-		GAlo[idm][iwfs]=dspref(GA[idm][iwfs]);
+		IND(recon->GAlo, iwfs, idm)=dspref(IND(recon->GA, iwfs, idm));
 	    }
 	    if(!parms->powfs[ipowfs].skip){
-		GAhi[idm][iwfs]=dspref(GA[idm][iwfs]);		
+		IND(recon->GAhi, iwfs, idm)=dspref(IND(recon->GA, iwfs, idm));
+		if(parms->recon.modal){
+		    IND(recon->GMhi, iwfs, idm)=dref(IND(recon->GM, iwfs, idm));
+		}
 	    }
 	}
     }
@@ -1566,7 +1555,13 @@ setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
-	    dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+	    if(parms->powfs[ipowfs].type==0){//PWFS
+		dmat *opd0=zernike(powfs[ipowfs].pywfs->locfft->loc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
+		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, powfs[ipowfs].pywfs->locfft->loc, opd0, 0, 0, 1);
+		dfree(opd0);
+	    }else{//SHWFS
+		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+	    }
 	}
     }
     dcell *GRtwfs=cellnew(parms->nwfsr, 1);
@@ -2052,7 +2047,7 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
 	dscale(recon->dither_m->p[idm], dither_amp);
 	recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
-	INDEX(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
+	IND(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
 	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
@@ -2069,7 +2064,7 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 		dmat *grad=0;
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-		INDEX(recon->dither_rg, iwfs, iwfs)=dpinv(grad, INDEX(recon->saneai, iwfs, iwfs));
+		IND(recon->dither_rg, iwfs, iwfs)=dpinv(grad, IND(recon->saneai, iwfs, iwfs));
 		if(0){//test linearity
 		    dscale(opd, 1./4.);
 		    dmat *tmp=0;
@@ -2079,7 +2074,7 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 			dzero(ints);
 			pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-			dmm(&tmp, 0, INDEX(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
+			dmm(&tmp, 0, IND(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
 			res->p[i]=tmp->p[0];
 		    }
 		    writebin(res, "linearity");

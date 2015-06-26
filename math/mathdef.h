@@ -139,9 +139,6 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define lhash(A,key) hashlittle((A)->p, (A)->nx*(A)->ny*sizeof(long), key)
 
 #define cellfree(A) ({cellfree_do(A); A=0;})
-#define COLUMN(A,iy) (A->p+(iy)*(A)->nx)
-#define INDEX(A,ix,iy) A->p[(ix)+(iy)*(A)->nx]
-
 
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)

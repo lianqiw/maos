@@ -256,7 +256,7 @@ void reconstruct(SIM_T *simu){
 	    }else if(parms->sim.fuseint || parms->recon.split==1){
 		dmpsol=simu->wfspsol->p[parms->hipowfs->p[0]];
 	    }else{
-		warning_once("Temporary solution\n");
+		warning_once("Temporary solution for MVST.\n");
 		dmpsol=simu->dmint->mint->p[0];
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
@@ -268,7 +268,7 @@ void reconstruct(SIM_T *simu){
 	    }
 	}
 	
-	if(recon->actstuck){//zero stuck actuators
+	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators
 	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
     }

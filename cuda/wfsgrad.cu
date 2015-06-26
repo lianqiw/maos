@@ -354,7 +354,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	if((parms->sim.idealwfs || parms->sim.wfsalias)
 	   && !(parms->sim.idealwfs && parms->sim.wfsalias)){
 	    Real alpha=parms->sim.idealwfs?1:-1;
-	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, cudata->ndm,
+	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
 		       hs, thetax, thetay, 0, 0, alpha, stream);
 	}
 	if(simu->atm && !parms->sim.idealwfs){
@@ -369,7 +369,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    cellarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
 	}
 	if(CL){
-	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmreal, cudata->ndm,
+	    gpu_dm2loc(phiout->p, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
 		       hs, thetax, thetay, 0, 0, -1, stream);
 	    Real ttx=0, tty=0;
 	    if(simu->ttmreal){

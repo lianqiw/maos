@@ -30,6 +30,7 @@
     R X(sumabs)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(sumsq)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     R X(norm)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
+    R X(std)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     void X(randu)(X(mat) *A, const T mean, rand_t *rstat);		\
     void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);		\
     void X(scale)(X(mat) *A, R w);					\

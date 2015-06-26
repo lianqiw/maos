@@ -57,7 +57,7 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
 */
 dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     if(flag<0){
-	rmin=ceil((sqrt(8*(-flag)+1)-3)/2);
+	rmin=ceil((sqrt(8.*(-flag)+1)-3)*0.5);
 	rmax=rmin;
     }
     int nr3=(int)floor((sqrt(loc->nloc*8+1)-3)*0.5);
@@ -254,6 +254,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 	cfft2(spect->p[ic], -1);
     }
     dmat *turbspec=turbpsd(nembed, nembed, loc->dx, 0.2, L0, -11./3., 1);
+    turbspec->p[0]=0;//remove piston.
     dmat *DD=dnew(nmod, nmod);
 #pragma omp parallel for
     for(long ic=0; ic<nmod; ic++){
@@ -287,6 +288,25 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
     dsvd(&U, &S, &Vt, cov);
     dmat *kl=0;
     dmm(&kl, 0, mod, U, "nn", 1);
+    {
+	//Drop modes with infinitesimal strength
+	double smax=S->p[0];
+	double thres=smax*1e-10;
+	long count=0;
+	for(long i=S->nx-1; i>0; i--){
+	    if(S->p[i]<thres){
+		count++;
+	    }else{
+		break;
+	    }
+	}
+	if(count>0){
+	    warning("Drop %ld last columns.\n", count);
+	    dmat *kl2=dsub(kl, 0, 0, 0, kl->ny-count);
+	    dfree(kl);
+	    kl=kl2;
+	}
+    }
     dfree(U);
     dfree(Vt);
     dfree(S);
@@ -316,7 +336,7 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
  */
 dmat *KL_vonkarman_do(const loc_t *loc, double L0){
     dmat *modz=dnew(loc->nloc, loc->nloc);
-    double val=sqrt(loc->nloc); //this ensures rms wfe is 1.
+    double val=sqrt(loc->nloc); //this ensures rms wfe is 1, or orthonormal.
     daddI(modz, val);
     dadds(modz, -val/loc->nloc);//this ensure every column sum to 0 (no piston)
     dmat *cov=cov_vonkarman(loc, modz, L0);
@@ -335,7 +355,9 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     dmat *kl=0;
   redo:
-    if(!exist(fnlock) && zfexist(fn)){
+    if(loc->nloc<500){//fast. no need cache.
+	kl=KL_vonkarman_do(loc, L0);
+    }else if(!exist(fnlock) && zfexist(fn)){
 	kl=dread(fn);
     }else{
 	info("trying to lock %s\n", fnlock);

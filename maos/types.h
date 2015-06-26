@@ -271,7 +271,6 @@ typedef struct RECON_T{
     INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
     FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
-    dspcell *GWR;       /**<gradient of wfs for recon: gtilt or ztilt (on amp) depending on gtype_recon.*/
     dspcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each powfs.*/
     dspcell *GP2;        /**<Gradient operator from HXW. GX=GP*H for each wfs, referenced from GP.*/
     dspcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
@@ -287,8 +286,7 @@ typedef struct RECON_T{
     dspcell *GA;        /**<actuator to wfs grad.*/
     dspcell *GAlo;      /**<GA of low order WFS.*/
     dspcell *GAhi;      /**<GA of high order WFS.*/
-    dcell *GM;          /**<Mode to wfs grad. */
-    dcell *GMlo;        /**<GM for low order WFS.*/
+    dcell *GM;          /**<GM for all WFS.*/
     dcell *GMhi;        /**<GM for high order WFS.*/
     dspcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     dspcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/

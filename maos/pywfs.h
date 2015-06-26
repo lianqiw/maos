@@ -23,8 +23,10 @@
    Parameters used by Pyramid WFS
  */
 typedef struct PYWFS_T{
+    double poke;       /**<How much to poke for mkg*/
     double modulate;   /**<Amount of modulation in radian*/
     int modulpos;      /**<Number of positions per modulation cycle*/
+    int iwfs0;         /**<First iwfs for this powfs*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/
@@ -33,7 +35,6 @@ typedef struct PYWFS_T{
     cmat *nominal;     /**<For sampling results onto detector*/
     dspcell *si;       /**<For sampling results onto detector*/
     double gain;       /**<Optical gain of PYWFS*/
-    dmat *atm;         /**<For generating gain with atmosphere*/
     dmat *saa;         /**<Subaperture area. Average is one*/
     dmat *gradoff;     /**<Gradient of a flat wavefront*/
 }PYWFS_T;
@@ -42,8 +43,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 void pywfs_free(PYWFS_T *pywfs);
 void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
-dsp* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc);
-dsp *pywfs_mkg_ga(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
+dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* ploc, const dmat *mod, double displacex,  double displacey, double scale);
 dmat *pywfs_tt(const PYWFS_T *pywfs);
 
 #endif
