@@ -34,12 +34,12 @@ void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);
 void cellresize(void *in, long nx, long ny);
 void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, uint32_t id);
-void write_by_id(const void* dc, uint32_t id, const char* format,...);
+void write_by_id(const void* dc, uint32_t id, const char* format,...) CHECK_ARG(3);
 
 cell* readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header);
-cell* read_by_id(uint32_t id, int level, const char *format, ...);
+cell* read_by_id(uint32_t id, int level, const char *format, ...) CHECK_ARG(3);
 
-cell* readbin(const char *format, ...);
-void writebin(const void *dc, const char *format, ...);
+cell* readbin(const char *format, ...) CHECK_ARG(1);
+void writebin(const void *dc, const char *format, ...) CHECK_ARG(2);
 void writebindata(file_t *fp, const void *dc);
 #endif

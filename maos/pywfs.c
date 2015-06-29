@@ -135,7 +135,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(pywfs->si, "pywfs_si0");
 	locwrite(pywfs->locfft->loc, "pywfs_locfft");
     }
-
     {
 	//Determine subapertures area
 	dmat *opd=dnew(pywfs->locfft->loc->nloc, 1);
@@ -144,10 +143,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	if(parms->save.setup){
 	    writebin(ints, "pywfs_ints0");
 	}
-	const int nsa=ints->nx;
-	pywfs->saa=dnew(nsa, 1);
+	int nints=ints->nx;
+	pywfs->saa=dnew(nints, 1);
 	for(int i=0; i<ints->nx; i++){
-	    pywfs->saa->p[i]=ints->p[i]+ints->p[i+nsa]+ints->p[i+nsa*2]+ints->p[i+nsa*3];
+	    pywfs->saa->p[i]=ints->p[i]+ints->p[i+nints]+ints->p[i+nints*2]+ints->p[i+nints*3];
 	}
 	cellfree(ints);
 	dfree(opd);
@@ -168,6 +167,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    }
 	}
     }
+    const int nsa=powfs[ipowfs].saloc->nloc;
     dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
   
@@ -183,7 +183,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dfree(opd);
 	dfree(ints);
 	//gain
-	const int nsa=powfs[ipowfs].saloc->nloc;
 	dmat *TT=pywfs_tt(pywfs);
 	double gxm=0, gym=0;
 	for(int isa=0; isa<nsa; isa++){
@@ -197,15 +196,29 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	info("pywfs_gain=%g\n", pywfs->gain);
 	dfree(TT);
     }
+
+    //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
+    {
+	powfs[ipowfs].saneaxy=cellnew(nsa,1);
+	double rne=parms->powfs[ipowfs].rne;
+	for(int isa=0; isa<nsa; isa++){
+	    dmat *tmp=dnew(2,2);
+	    double ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
+	    double sig=pywfs->saa->p[isa]*parms->powfs[ipowfs].siglev;//siglev of subaperture
+	    IND(tmp,0,0)=IND(tmp,1,1)=pow(ogi/sig,2)*(sig+4*rne*rne);
+	    powfs[ipowfs].saneaxy->p[isa]=tmp;
+	}
+    }
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
 	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
-	writebin(pywfs->amp, "pywfs_amp");
-	writebin(pywfs->locfft->embed, "pywfs_embed");
-	writebin(pywfs->pyramid, "pywfs_pyramid");
-	writebin(nominal, "pywfs_nominal");
-	writebin(pywfs->si, "pywfs_si");
-	writebin(pywfs->gradoff, "pywfs_gradoff");
+	writebin(pywfs->amp, "powfs%d_amp", ipowfs);
+	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
+	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
+	writebin(nominal, "powfs%d_nominal", ipowfs);
+	writebin(pywfs->si, "powfs%d_si", ipowfs);
+	writebin(pywfs->gradoff, "powfs%d_gradoff", ipowfs);
+	writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea", ipowfs);
     }
     if(0){//Test implementation using zernikes
 	dmat *ints=0;
@@ -418,7 +431,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     double *pgy=(*pgrad)->p+nsa;
     PDMAT(ints, pi);
     double gain=pywfs->gain;
-    if(0){
+    if(0){//Use standard Quad Cell algorithm
 	warning_once("Do not use mean i0\n");
 	for(int isa=0; isa<nsa; isa++){
 	    double alpha2=gain/(pi[0][isa]+pi[1][isa]+pi[2][isa]+pi[3][isa]);
@@ -427,9 +440,9 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 	    pgy[isa]=(pi[2][isa]+pi[3][isa]
 		      -pi[0][isa]-pi[1][isa])*alpha2;
 	}
-    }else{
-	double isum=dsum(ints);
-	double alpha0=gain*nsa/isum;
+    }else{//Denominator is replaced by SAA*mean(i0).
+	double imean=dsum(ints)/nsa;
+	double alpha0=gain/imean;
 	for(int isa=0; isa<nsa; isa++){
 	    double alpha2=alpha0/pywfs->saa->p[isa];
 	    pgx[isa]=(pi[1][isa]-pi[0][isa]

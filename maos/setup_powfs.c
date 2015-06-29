@@ -1118,7 +1118,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		writebin(powfs[ipowfs].etfprep[iwvl].p1, 
-			   "%powfs%d_etfprep%d_1d",ipowfs,iwvl);
+			 "powfs%d_etfprep%d_1d",ipowfs,iwvl);
 	    }
 	    if(powfs[ipowfs].etfprep[iwvl].p2){
 		writebin(powfs[ipowfs].etfprep[iwvl].p2,
@@ -1204,7 +1204,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcell *sanea=NULL;
     if(parms->powfs[ipowfs].phytype==2){/*need nea in reconstruction*/
 	do_nea=1;
-	intstat->saneaxy=cellnew(nsa, intstat->i0->ny);
+	powfs[ipowfs].saneaxy=cellnew(nsa, intstat->i0->ny);
 	sanea=cellnew(intstat->i0->ny, 1);
 	seed_rand(&rstat, 1);
 	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
@@ -1277,9 +1277,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    sanea->p[iwfs]->p[isa]=nea->p[0];
 		    sanea->p[iwfs]->p[isa+nsa]=nea->p[3];
 		    if(srot){
-			drotvecnn(&intstat->saneaxy->p[isa+nsa*iwfs], nea, srot[isa]);
+			drotvecnn(&powfs[ipowfs].saneaxy->p[isa+nsa*iwfs], nea, srot[isa]);
 		    }else{
-			intstat->saneaxy->p[isa+nsa*iwfs]=dref(nea);
+			powfs[ipowfs].saneaxy->p[isa+nsa*iwfs]=dref(nea);
 		    }
 		    dfree(nea);
 		}
@@ -1369,31 +1369,26 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].phytype==2 || parms->powfs[ipowfs].phytypesim==2 || parms->powfs[ipowfs].dither){
 	setup_powfs_cog(parms, powfs, ipowfs);
     }
-    intstat->saneaxyl=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//cholesky decomposition
-    intstat->saneaixy=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//inverse
-    for(int i=0; i<intstat->saneaxy->nx*intstat->saneaxy->ny; i++){
-	intstat->saneaxyl->p[i]=dchol(intstat->saneaxy->p[i]);
-	intstat->saneaixy->p[i]=dinvspd(intstat->saneaxy->p[i]);
-    }
     if(parms->save.setup){
-	writebin(intstat->saneaxy,"powfs%d_saneaxy",ipowfs);
+	writebin(powfs[ipowfs].saneaxy,"powfs%d_saneaxy",ipowfs);
     }
     if(parms->powfs[ipowfs].neaphy){/*use physical optics nea for geom grad*/
 	powfs[ipowfs].neasim=cellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    dmat **sanea=NULL;
-	    /*saneaxyl is the cholesky decomposition of the Cnn. */
-	    if(powfs[ipowfs].intstat->saneaxyl->ny==1){
-		sanea=powfs[ipowfs].intstat->saneaxyl->p;
+	    if(powfs[ipowfs].saneaxy->ny==1){
+		sanea=powfs[ipowfs].saneaxy->p;
 	    }else{
-		sanea=powfs[ipowfs].intstat->saneaxyl->p+jwfs;
+		sanea=powfs[ipowfs].saneaxy->p+jwfs;
 	    }
 	    dmat *nea=dnew(nsa,3);
 	    PDMAT(nea, pnea);
 	    for(int isa=0; isa<nsa; isa++){
-		pnea[0][isa]=sanea[isa]->p[0];
-		pnea[1][isa]=sanea[isa]->p[3];
-		pnea[2][isa]=sanea[isa]->p[1];
+		dmat *neal=dchol(sanea[isa]);
+		pnea[0][isa]=neal->p[0];
+		pnea[1][isa]=neal->p[3];
+		pnea[2][isa]=neal->p[1];
+		dfree(neal);
 	    }
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
@@ -1558,14 +1553,13 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dtf_free(powfs[ipowfs].dtf, parms->powfs[ipowfs].nwvl);
     dspcellfree(powfs[ipowfs].GS0);
     dcellfree(powfs[ipowfs].neasim);
+    dcellfree(powfs[ipowfs].saneaxy);
     if(powfs[ipowfs].intstat){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat;
 	cellfree(intstat->fotf);
 	cellfree(intstat->potf);
 	dcellfree(intstat->mtche);
-	dcellfree(intstat->saneaxyl);
-	dcellfree(intstat->saneaxy);
-	dcellfree(intstat->saneaixy);
+
 	dfree(intstat->i0sum);
 	cellfree(intstat->cogcoeff);
 	free(intstat);

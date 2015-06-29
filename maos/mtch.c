@@ -89,14 +89,11 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     PDCELL(intstat->gy,gys);
     PDMAT( intstat->i0sum,i0sum);
     PDCELL(intstat->mtche,mtche);
-    dmat *(*saneaxy)[nsa]=NULL;
     if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
-	dcellfree(intstat->saneaxy);
-	dcellfree(intstat->saneaixy);
-	dcellfree(intstat->saneaxyl);
-	intstat->saneaxy=cellnew(nsa,ni0);
-	saneaxy=(void*)intstat->saneaxy->p;
+	dcellfree(powfs[ipowfs].saneaxy);
+	powfs[ipowfs].saneaxy=cellnew(nsa,ni0);
     }
+    dcell *saneaxy=powfs[ipowfs].saneaxy;
     int nllt;
     if(parms->powfs[ipowfs].llt){
 	nllt=parms->powfs[ipowfs].llt->n;
@@ -290,9 +287,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
 		    //Rotate NEA to (x/y)
 		    double theta=srot[isa]; 
-		    drotvecnn(&saneaxy[ii0][isa], nea2, theta);
+		    drotvecnn(PIND(saneaxy, isa, ii0), nea2, theta);
 		}else{
-		    saneaxy[ii0][isa]=dref(nea2);
+		    IND(saneaxy, isa, ii0)=dref(nea2);
 		}
 	    }
 	    dfree(nea2);
@@ -357,16 +354,15 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->recon.glao && ni0>0){
 	info2("Averaging saneaxy of different WFS for GLAO mode\n");
-	PDCELL(intstat->saneaxy ,neaxy);
 	dcell *saneaxy2=cellnew(nsa, 1);
 	double scale=1./ni0;
 	for(int isa=0; isa<nsa; isa++){
 	    for(int ii0=0; ii0<ni0; ii0++){
-		dadd(&saneaxy2->p[isa], 1, neaxy[ii0][isa], scale);
+		dadd(&saneaxy2->p[isa], 1, IND(saneaxy, isa, ii0), scale);
 	    }
 	}
-	dcellfree(intstat->saneaxy);
-	intstat->saneaxy=saneaxy2;
+	dcellfree(powfs[ipowfs].saneaxy);
+	powfs[ipowfs].saneaxy=saneaxy2;
     }
     dcellfree(sanea);
     dfree(i0m);

@@ -645,43 +645,31 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dcwpow(nea,-1);/*rad^-2 */
 	    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 	    dfree(nea);
-	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
-		 !parms->powfs[ipowfs].phyusenea){
+	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && !parms->powfs[ipowfs].phyusenea){
 	    /*Physical optics use nea from intstat*/
-	    INTSTAT_T *intstat=powfs[ipowfs].intstat;
-	    if(intstat->saneaxy){
-		if(!intstat->saneaxyl){
-		    intstat->saneaxyl=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//cholesky decomposition
-		    intstat->saneaixy=cellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//inverse
-		    for(int i=0; i<intstat->saneaxy->nx*intstat->saneaxy->ny; i++){
-			intstat->saneaxyl->p[i]=dchol(intstat->saneaxy->p[i]);
-			intstat->saneaixy->p[i]=dinvspd(intstat->saneaxy->p[i]);
-		    }
+	    if(!powfs[ipowfs].saneaxy){
+		error("saneaxy cannot be null\n");
+	    }
+	    dcell *saneaxy=powfs[ipowfs].saneaxy;
+	    const int nnea=saneaxy->ny;
+	    if(parms->recon.glao && nnea!=1){
+		error("Please average powfs[ipowfs].saneaxy for GLAO mode.\n");
+	    }
+	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+	    if(nnea>1 || iwfs==iwfs0){
+		dcell *saneaxyl=cellnew(nsa, 1);
+		dcell *saneaixy=cellnew(nsa, 1);
+		for(int isa=0; isa<nsa; isa++){
+		    saneaxyl->p[isa]=dchol(saneaxy->p[isa]);
+		    saneaixy->p[isa]=dinvspd(saneaxy->p[isa]);
 		}
-		const int nnea=intstat->saneaxy->ny;
-		if(parms->recon.glao && nnea!=1){
-		    error("Please average intstat->saneaxy for GLAO mode.\n");
-		}
-		int indsanea=0;
-		if(nnea==1){
-		    indsanea=0;
-		}else if(nnea==parms->powfs[ipowfs].nwfs){
-		    indsanea=parms->powfs[ipowfs].wfsind->p[iwfs];
-		}else{
-		    error("invalid\n");
-		}
-		if(nnea>1 || iwfs==iwfs0){
-		    dmat **saneaxy =intstat->saneaxy ->p+indsanea*nsa;
-		    dmat **sanealxy=intstat->saneaxyl->p+indsanea*nsa;
-		    dmat **saneaixy=intstat->saneaixy->p+indsanea*nsa;
-		    sanea->p[iwfs+iwfs*nwfs]=nea2sp(saneaxy,nsa);
-		    saneal->p[iwfs+iwfs*nwfs]=nea2sp(sanealxy,nsa);
-		    saneai->p[iwfs+iwfs*nwfs]=nea2sp(saneaixy,nsa);
-		}else{
-		    do_ref=1;
-		}
+		sanea->p[iwfs+iwfs*nwfs]=nea2sp(PCOL(saneaxy, wfsind),nsa);
+		saneal->p[iwfs+iwfs*nwfs]=nea2sp(saneaxyl->p,nsa);
+		saneai->p[iwfs+iwfs*nwfs]=nea2sp(saneaixy->p,nsa);
+		dcellfree(saneaxyl);
+		dcellfree(saneaixy);
 	    }else{
-		error("Invalid use\n");
+		do_ref=1;
 	    }
 	}else{
 	    /*compute nea from nearecon, scaled by area and dtrat. nea scales as sqrt(1/dtrat) */

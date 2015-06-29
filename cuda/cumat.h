@@ -42,7 +42,7 @@ template <typename T>
     }
 }
 template <typename T>
-    inline void cuwrite(const cumat<T> *A, const char *format, ...){
+inline void cuwrite(const cumat<T> *A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     cuwritedata<T>(A, fp);
@@ -50,7 +50,7 @@ template <typename T>
 }
 
 template <typename T>
-    inline void cuwrite(const cucell<T> *A, const char *format, ...){
+inline void cuwrite(const cucell<T> *A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     header_t header={MCC_ANY, A?(uint64_t)A->nx:0, A?(uint64_t)A->ny:0, NULL};
