@@ -33,7 +33,7 @@ double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart
 	   const dcell *b,/**<[in] The right hand side vector to solve*/ 
 	   int warm,      /**<[in] Use warm restart (use the value contained in px)*/
 	   int maxiter    /**<[in] Max number of iterations*/
-	   ){
+    ){
     
     dcell *r0=NULL, *x0=NULL, *z0=NULL;
     if(!*px){

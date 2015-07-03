@@ -71,14 +71,14 @@ void maos_setup(const PARMS_T *parms){
 	global->recon=recon=setup_recon_init(parms, aper);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 	setup_surf(parms, aper, powfs, recon);
-	/*set up physical optics powfs data*/
+	/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/
 	setup_powfs_phy(parms, powfs);
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
 	if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
- 	gpu_wfsgrad_init(parms, powfs);
-    }
+	    gpu_wfsgrad_init(parms, powfs);
+	}
 	
 #endif
 	//Don't put this inside parallel, otherwise svd will run single threaded.
@@ -127,6 +127,7 @@ void maos_setup(const PARMS_T *parms){
     if(!parms->sim.evlol && parms->recon.mvm){
 	setup_recon_mvm(parms, recon, powfs);
     }
+    setup_recon_post(recon, parms, aper);
     if(parms->save.setup && chdir("..")){}
     /*
       Before entering real simulation, make sure to delete all variables that

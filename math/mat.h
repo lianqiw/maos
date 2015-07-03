@@ -26,7 +26,7 @@
     X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
     X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT;	\
     X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;		\
-    X(mat) *X(mat_cast)(void *A) CHECK_UNUSED_RESULT;			\
+    X(mat) *X(mat_cast)(const void *A) CHECK_UNUSED_RESULT;		\
     void X(init)(X(mat)**A, long nx, long ny) ;				\
     void X(free_keepdata)(X(mat) *A);					\
     void X(free_do)(X(mat) *A, int keepdata);				\
@@ -45,7 +45,7 @@
     T X(trace)(const X(mat) *A) CHECK_UNUSED_RESULT;			\
     void X(fftshift)(X(mat) *A);					\
     void X(cpcorner2center)(X(mat) *A, const X(mat)*B);			\
-    X(cell) *X(cell_cast)(void *A) CHECK_UNUSED_RESULT;			\
+    X(cell) *X(cell_cast)(const void *A) CHECK_UNUSED_RESULT;		\
     X(cell) *X(cellnew2)(const X(cell) *A);				\
     X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny);	\
     X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my);	\

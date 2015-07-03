@@ -116,14 +116,14 @@ static int nrun_handle(int cmd, int pid, int nthread, int ngpu_used){
     case 1:
 	ncpu+=nthread;
 	ngpu+=ngpu_used;
-	info2("%d: ncpu +%d->%d. ngpu +%d->%d.\n",
-	      pid, nthread, ncpu, ngpu_used, ngpu);
+	info2("%d: ncpu %d->%d. ngpu %d->%d.\n",
+	      pid, ncpu-nthread, ncpu, ngpu-ngpu_used, ngpu);
 	break;
     case 2:
 	ncpu-=nthread;
 	ngpu-=ngpu_used;
-	info2("%d: ncpu -%d->%d. ngpu -%d->%d.\n",
-	      pid, nthread, ncpu, ngpu_used, ngpu);
+	info2("%d: ncpu %d->%d. ngpu %d->%d.\n",
+	      pid, ncpu+nthread, ncpu, ngpu+ngpu_used, ngpu);
 	if(ncpu<0){
 	    warning2("ncpu=%d\n", ncpu);
 	    ncpu=0;
@@ -433,7 +433,7 @@ static void process_queue(void){
 	irun=running_get_wait(S_WAIT);
     }
     info("irun=%p\n", irun);
-    if(irun){
+    if(irun){//There are jobs waiting.
 	if(irun->sock>0){
 	    int nthread=irun->nthread;
 	    if(nrun_get(0)+nthread<=NCPU && (nthread<=avail || avail >=3) && (!NGPU || !irun->ngpu || nrun_get(1)+irun->ngpu<=NGPU)){
@@ -451,8 +451,7 @@ static void process_queue(void){
 		monitor_send(irun,NULL);
 		FILE *fp=fopen(scheduler_fnlog,"a");
 		if(fp){
-		    fprintf(fp,"[%s] %s %5d  started '%s'\n",
-			    myasctime(),hosts[hid],irun->pid,irun->path);
+		    fprintf(fp,"[%s] %s %5d  started '%s'\n", myasctime(),hosts[hid],irun->pid,irun->path);
 		    fclose(fp);
 		}else{
 		    warning("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
@@ -462,7 +461,7 @@ static void process_queue(void){
 	    warning2("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 	}
     }else{
-	if(avail>1){
+	if(avail>1 && nrun_get(0)<NCPU && (!NGPU || nrun_get(1)<NGPU)){
 	    static double lasttime=0;
 	    double thistime=myclockd();
 	    if(thistime>lasttime+0.001){

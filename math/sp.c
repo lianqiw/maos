@@ -165,7 +165,7 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
     X(spsetnzmax)(A,count);
     return A;
 }
-X(sp)* X(sp_cast)(void *A){
+X(sp)* X(sp_cast)(const void *A){
     if(!A) return 0;
     assert(issp(A));
     return (X(sp)*)A;
@@ -260,7 +260,7 @@ void X(spscale)(X(sp) *A, const T beta){
 /**
    cast a cell object to X(spcell) after checking
  */
-X(spcell) *X(spcell_cast)(void *A_){
+X(spcell) *X(spcell_cast)(const void *A_){
     if(!A_) return 0;
     cell *A=cell_cast(A_);
     for(int i=0; i<A->nx*A->ny; i++){
@@ -387,31 +387,58 @@ T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x){
 /**
  * Convert sparse matrix into dense matrix and add to output:
  * out0=out0+full(A)*alpha*/
-void X(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
+void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
     if(!A)
 	return;
     /**
        add A*f to dense matrix located in p;
     */
-    if(issp(A)){//sparse
-	long nx=A->m;
-	long icol,ix,irow;
-	if(!*out0){
-	    *out0=X(new)(A->m, A->n);
-	}
-	X(mat) *out=*out0;
-	assert(out->nx==A->m && out->ny==A->n);
-	PMAT(out,pp);
-	for(icol=0; icol<A->n; icol++){
-	    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		irow=A->i[ix];
-		if(irow>=nx)
-		    error("invalid row:%ld, %ld",irow,nx);
-		pp[icol][irow]+=alpha*A->x[ix];
+    if(trans=='n'){    
+	if(issp(A)){//sparse
+	    long nx=A->m;
+	    long icol,ix,irow;
+	    if(!*out0){
+		*out0=X(new)(A->m, A->n);
 	    }
+	    X(mat) *out=*out0;
+	    assert(out->nx==A->m && out->ny==A->n);
+	    PMAT(out,pp);
+	    for(icol=0; icol<A->n; icol++){
+		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		    irow=A->i[ix];
+		    if(irow>=nx)
+			error("invalid row:%ld, %ld",irow,nx);
+		    pp[icol][irow]+=alpha*A->x[ix];
+		}
+	    }
+	}else{
+	    X(add)(out0, 1, (X(mat)*)A, alpha);
+	}
+    }else if(trans=='t'){
+	if(issp(A)){
+	    long nx=A->m;
+	    long icol,ix,irow;
+	    if(!*out0){
+		*out0=X(new)(A->n, A->m);
+	    }
+	    X(mat) *out=*out0;
+	    assert(out->nx==A->n && out->ny==A->m);
+	    PMAT(out,pp);
+	    for(icol=0; icol<A->n; icol++){
+		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
+		    irow=A->i[ix];
+		    if(irow>=nx)
+			error("invalid row:%ld, %ld",irow,nx);
+		    pp[irow][icol]+=alpha*A->x[ix];
+		}
+	    }
+	}else{
+	    X(mat)*tmp=X(trans)((X(mat)*)A);
+	    X(add)(out0, 1, tmp, alpha);
+	    X(free)(tmp);
 	}
     }else{
-	X(add)(out0, 1, (X(mat)*)A, alpha);
+	error("trans=%c is invalid\n", trans);
     }
 }
 X(sp) *X(2sp)(X(mat)*A, R thres){
@@ -433,37 +460,6 @@ X(sp) *X(2sp)(X(mat)*A, R thres){
     out->p[A->ny]=count;
     X(spsetnzmax)(out, count);
     return out;
-}
-/** 
- * Convert the transpose of a sparse matrix into dense matrix and add to output:
- * out0=out0+full(A')*alpha;*/
-void X(sptfull)(X(mat) **out0, const X(sp) *A, const T alpha){
-    if(!A) return;
-    /**
-       add A*f to dense matrix located in p;
-    */
-    if(issp(A)){
-	long nx=A->m;
-	long icol,ix,irow;
-	if(!*out0){
-	    *out0=X(new)(A->n, A->m);
-	}
-	X(mat) *out=*out0;
-	assert(out->nx==A->n && out->ny==A->m);
-	PMAT(out,pp);
-	for(icol=0; icol<A->n; icol++){
-	    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		irow=A->i[ix];
-		if(irow>=nx)
-		    error("invalid row:%ld, %ld",irow,nx);
-		pp[irow][icol]+=alpha*A->x[ix];
-	    }
-	}
-    }else{
-	X(mat)*tmp=X(trans)((X(mat)*)A);
-	X(add)(out0, 1, tmp, alpha);
-	X(free)(tmp);
-    }
 }
 
 /**
@@ -565,6 +561,27 @@ void X(spconj)(X(sp) *A){
 #endif
 }
 
+void X(spcellfull)(X(cell)**out0, const X(spcell)*A, const char trans, const T alpha){
+    if(!A) return;
+    if(!*out0){
+	if(trans=='n'){
+	    *out0=X(cellnew)(A->nx, A->ny);
+	}else if(trans=='t'){
+	    *out0=X(cellnew)(A->ny, A->nx);
+	}else{
+	    error("trans=%c is invalid\n", trans);
+	}
+    }
+    for(int iy=0; iy<A->ny; iy++){
+	for(int ix=0; ix<A->nx; ix++){
+	    if(trans=='n'){
+		X(spfull)(PIND((*out0), ix, iy), IND(A, ix, iy), trans, alpha);
+	    }else{
+		X(spfull)(PIND((*out0), iy, ix), IND(A, ix, iy), trans, alpha);
+	    }
+	}
+    }
+}
 /**
  * Transpose a sparse cell*/
 X(spcell) *X(spcelltrans)(const X(spcell) *spc){

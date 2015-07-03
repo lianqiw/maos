@@ -395,8 +395,8 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 		if(!*C0 || issp(*C0)){//result is sparse
 		    X(spmulsp2)((X(sp)**)C0, (X(sp)*)A, (X(sp)*)B, trans, alpha);
 		}else if(ismat(*C0)){//result is dense
-		    X(mat)*Afull=0; X(spfull)(&Afull, (X(sp)*)A, 1);
-		    X(mat)*Bfull=0; X(spfull)(&Bfull, (X(sp)*)B, 1);
+		    X(mat)*Afull=0; X(spfull)(&Afull, (X(sp)*)A, 'n',1);
+		    X(mat)*Bfull=0; X(spfull)(&Bfull, (X(sp)*)B, 'n',1);
 		    X(mm)((X(mat)**)C0, 1, Afull, Bfull, trans, alpha);
 		    X(free)(Afull);
 		    X(free)(Bfull);
@@ -455,7 +455,7 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
 		if(ac!=1){
 		    X(scale)((X(mat*))*pA, ac);
 		}
-		X(spfull)((X(mat)**)(pA), (X(sp)*)B, bc);
+		X(spfull)((X(mat)**)(pA), (X(sp)*)B, 'n',bc);
 	    }
 	}else if(issp(*pA)){
 	    if(issp(B)){//add sparse to sparse

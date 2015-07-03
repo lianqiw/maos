@@ -385,7 +385,7 @@ void loc_extract(dmat *dest, const loc_t *loc, map_t *in){
 }
 /**
    Convert a map to a loc that collects all positive entries. */
-loc_t* map2loc(map_t *map){
+loc_t* map2loc(map_t *map, double thres){
     const double dx=map->dx;
     const double dy=map->dy;
     const double ox=map->ox;
@@ -398,7 +398,7 @@ loc_t* map2loc(map_t *map){
     long count=0;
     for(iy=0; iy<ny; iy++){
 	for(ix=0; ix<nx; ix++){
-	    if(map0[iy][ix]>0){
+	    if(map0[iy][ix]>thres){
 		loc->locx[count]=ix*dx+ox;
 		loc->locy[count]=iy*dy+oy;
 		count++;
@@ -483,14 +483,18 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
     }
     return loc;
 }
+
 /**
-   Create a loc array within diameter D, with spacing dx.
+   Create a loc array within diameter D, and inner diameter Din, with spacing dx.
  */
-loc_t *mkcirloc(double D, double dx){
+loc_t *mkannloc(double D, double Din, double dx, double thres){
     long nx=D/dx+1;
     map_t *xy=mapnew(nx, nx, dx, dx, 0);
     mapcircle(xy, D/2, 1);
-    loc_t *loc=map2loc(xy);
+    if(Din>0 && Din<D){
+	mapcircle(xy, Din/2, -1);
+    }
+    loc_t *loc=map2loc(xy, thres);
     mapfree(xy);
     return loc;
 }
@@ -1133,6 +1137,7 @@ loc_t *locdup(loc_t *loc){
     loc_t *res=locnew(loc->nloc, loc->dx, loc->dy);
     memcpy(res->locx,loc->locx,sizeof(double)*loc->nloc);
     memcpy(res->locy,loc->locy,sizeof(double)*loc->nloc);
+    res->iac=loc->iac;
     return res;
 }
 /**Parse string representation of polynominal to array representation.*/

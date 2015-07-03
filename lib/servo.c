@@ -231,7 +231,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
     }
     cadd(&st->Hol, 0, st->Hsys, st->g);
     double g2=1;/*additional g to multiply. !=1 if g0 is nonzero and type is 2.*/
-    if(st->type==2){
+    if(st->type==2){//type II controller
 	ccwm(st->Hol, st->Hint);/*multiply the second integrator*/
         if(fabs(g0)>EPS){/*figure out a, T from new g0*/
 	    double margin, fcross;
@@ -242,9 +242,9 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 		a=1;
 		T=0;
 	    }else{
-		 a=(1-sin(phineed))/(1+sin(phineed));
-		 double f0=fcross*sqrt(a);
-		 T=1./(2.*M_PI*f0);
+		a=(1-sin(phineed))/(1+sin(phineed));
+		double f0=fcross*sqrt(a);
+		T=1./(2.*M_PI*f0);
 	    }
 	    /* Hlead is multiplied by sqrt(a) so it has unit gain at cross over frequency*/
 	    g2=sqrt(a);
@@ -361,14 +361,45 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     return gm;
 }
 /**
+   Convert Closed loop residual PSD back to OL psd using rejection transfer function:
+   PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
+ */
+dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double sigma2n){
+    SERVO_CALC_T st={0};
+    servo_calc_init(&st, psdcl, dt, dtrat);
+    const dmat *nu=st.nu;
+    const dmat *psd=st.psd;
+    dmat *psdol=dnew(psd->nx, psd->ny+1);
+    double psdn=sigma2n*(dt*dtrat*2);
+    cadd(&st.Hol, 0, st.Hsys, gain);
+    for(int i=0; i<nu->nx; i++){
+	dcomplex Hol=st.Hol->p[i];
+	dcomplex Hrej=1./(1.+Hol);
+	double normHrej=Hrej*conj(Hrej);
+	//dcomplex Hcl=Hol*Hrej;
+	//dcomplex Hwfs=st.Hwfs->p[i];
+	//dcomplex Hn=Hcl/Hwfs;
+	//double normHn=Hn*conj(Hn);
+	IND(psdol, i, 0)=nu->p[i];//frequency.
+	for(int icol=0; icol<psd->ny; icol++){
+	    IND(psdol, i, icol+1)=IND(psd, i, icol)/(normHrej)-psdn;
+	    if(IND(psdol, i, icol+1)<0){
+		IND(psdol, i, icol+1)=0;
+	    }
+	}
+    }
+    servo_calc_free(&st);
+    return psdol;
+}
+/**
    Compute the residual error after servo rejection of a type II servo given the gain.
    
    Written: 2010-06-11
    
    Tested OK: 2010-06-11
 */
- double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type){
-     SERVO_CALC_T st={0};
+double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type){
+    SERVO_CALC_T st={0};
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     switch(servo_type){
@@ -454,6 +485,24 @@ static void servo_init(SERVO_T *st, const dcell *merr){
     st->initialized=1;
 }
 /**
+   Update servo parameters
+*/
+void servo_update(SERVO_T *st, const dmat *ep){
+    dfree(st->ep);
+    if(ep->nx!=3){//type I
+	st->ep=ddup(ep);
+    }else{//type II. convert data format
+	st->ep=dnew(ep->nx, ep->ny);
+	for(int i=0; i<ep->ny; i++){
+	    st->ep->p[i*3]=ep->p[i*3];
+	    double a=ep->p[1+i*3];
+	    double T=ep->p[2+i*3];
+	    st->ep->p[1+i*3]=exp(-st->dt/(a*T));
+	    st->ep->p[2+i*3]=exp(-st->dt/T);
+	}
+    }
+}
+/**
    Initialize. al is additional latency
 */
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep){
@@ -468,21 +517,10 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
 	dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
     }
     st->mint=cellnew(st->ap->nx, 1);
-    if(ep->nx!=3){//type I
-	st->ep=dref(ep);
-    }else{//type II. convert data format
-	st->ep=dnew(ep->nx, ep->ny);
-	for(int i=0; i<ep->ny; i++){
-	    st->ep->p[i*3]=ep->p[i*3];
-	    double a=ep->p[1+i*3];
-	    double T=ep->p[2+i*3];
-	    st->ep->p[1+i*3]=exp(-dt/(a*T));
-	    st->ep->p[2+i*3]=exp(-dt/T);
-	}
-    }
     st->dt=dt;
     st->al=al;
     st->merrhist=cellnew(st->al+1, 1);
+    servo_update(st, ep);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
     }

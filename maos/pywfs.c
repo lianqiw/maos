@@ -39,7 +39,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->iwfs0=parms->powfs[ipowfs].wfs->p[0];
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-    pywfs->loc=map2loc(map);
+    pywfs->loc=map2loc(map, 0);
     powfs[ipowfs].loc=pywfs->loc;//do not free here.
     mapfree(map);
     pywfs->amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
@@ -329,19 +329,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 
 	exit(0);	
     }
-  
- 
-    /*
-    {//test GA
-	double dsa=parms->aper.d/order;
-	loc_t *ploc=mkcirloc(parms->aper.d+dsa*2, dsa/2);
-	dsp *gg=pywfs_mkg(powfs[ipowfs].pywfs, ploc);
-	writebin(ploc, "pywfs_ploc");
-	writebin(gg, "pywfs_gp");
-	locfree(ploc);
-	dspfree(gg);
-	}*/
- 
 }
 /**
    Perform FFT over the complex PSF with additional phases caused by the

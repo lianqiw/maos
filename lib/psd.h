@@ -24,6 +24,7 @@
 dmat *psd1d(const dmat *v, long lseg );
 dmat *psd1dt(const dmat *v, long lseg, double dt);
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog);
+dmat *psdmean(const dmat *psd);
 dmat *psd_vibid(const dmat *psdin);
 dmat *psdt2s(const dmat *psdt, double vmean);
 dmat *psds2t(const dmat *psdt, double vmean);

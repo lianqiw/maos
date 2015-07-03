@@ -132,7 +132,7 @@ static void test_zernike(){
     writebin(mod,"mod_norm");
     }
 static void test_embed(){
-    loc_t *loc=mkcirloc(10, 1./64);
+    loc_t *loc=mkannloc(10, 0, 1./64,0);
     locwrite(loc, "loccir");
     dmat *opd=dnew(645,645);
     dembed_locstat(&opd, loc, NULL);

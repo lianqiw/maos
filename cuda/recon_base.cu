@@ -152,7 +152,7 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     for(int idm=0; idm<ndm; idm++){
 	amap[idm].init(recon->amap->p[idm]);
     }
-    if(!parms->sim.idealfit){
+    if(recon->xloc){
 	xmap=new cugrid_t[npsr];
 	for(int ipsr=0; ipsr<npsr; ipsr++){
 	    xmap[ipsr].init(recon->xmap->p[ipsr]);
@@ -160,7 +160,7 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 	xnx=recon->xnx->p;
 	xny=recon->xny->p;
     }
-    if(parms->fit.cachex){
+    if(recon->xcmap){
 	xcmap=new cugrid_t[npsr];
 	for(int ipsr=0; ipsr<npsr; ipsr++){
 	    xcmap[ipsr].init(recon->xcmap->p[ipsr]);

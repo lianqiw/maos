@@ -62,7 +62,7 @@ static void test_accuracy(int argc, char **argv){
     /*loc for the map */
     loc_t *locin=mksqloc(screen->nx,screen->ny,dx,dx,screen->ox,screen->oy);
     
-    //pts_t *pts=realloc(mkcirloc(D, 1./2.), sizeof(pts_t));
+    //pts_t *pts=realloc(mkannloc(D, 0, 1./2.,0), sizeof(pts_t));
     pts_t *pts=realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));
     pts->dx=dx;
     pts->dy=dx;

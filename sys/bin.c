@@ -126,7 +126,7 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	    char fncache[PATH_MAX];
 	    snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
 	    if(mystrcmp(fn2, fncache)){
-		warning("Saving is disabled. %s does not contain %s\n", fn2, fncache);
+		warning("Saving is disabled for %s.\n", fn2);
 		free(fn2);
 		fn2=0;
 	    }

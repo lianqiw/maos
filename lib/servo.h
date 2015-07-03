@@ -44,8 +44,10 @@ typedef struct SERVO_T{
 }SERVO_T;
 dcell* servo_optim(const dmat *psdin, double dt, long dtrat,  double pmargin, 
 		   const dmat* sigma2n, int servo_type);
+dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double sigma2n);
 cmat *servo_Hol(const dmat *nu, double dt, double dtrat, const dmat *gain);
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type);
+void servo_update(SERVO_T *st, const dmat *ep);
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep);
 int servo_filter(SERVO_T *st, const dcell *merr);
 dmat* servo_test(dmat *mideal, double dtngs, int dtrat, dmat* sigma2n, dmat *gain);

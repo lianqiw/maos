@@ -197,7 +197,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	      for large DMs. Disable.
 	    */
 	    dmat *H=NULL;
-	    dspfull(&H, slavet, 1);
+	    dspfull(&H, slavet, 'n',1);
 	    dmat *Hinv=dpinv(H,NULL);
 	    dmat *mod=NULL;
 	    dmm(&mod, 0, Hinv, NW->p[idm], "nn", 1);

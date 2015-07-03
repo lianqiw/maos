@@ -47,7 +47,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	map_t *fmap=0;
 	create_metapupil(&fmap,0,0,parms->dirs,parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
-	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
+	recon->floc=map2loc(fmap, 0);/*convert map_t to loc_t */
 	mapfree(fmap);
 	/*Do not restrict fmap to within active pupil. */
     }
@@ -134,7 +134,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 		create_metapupil(&map,0,0,parms->dirs, parms->aper.d,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
-	    recon->aloc->p[idm]=map2loc(map);
+	    recon->aloc->p[idm]=map2loc(map, 0);
 	    mapfree(map);
 	}
     }

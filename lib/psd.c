@@ -24,7 +24,6 @@
 dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	    long lseg /**<[in] The length of overlapping segments*/
     ){
-    long lseg2=lseg>>1;
     long nx;
     long ncol;
     if(v->nx==1){
@@ -34,6 +33,8 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	nx=v->nx;
 	ncol=v->ny;
     }
+    if(lseg<=1) lseg=nx;
+    long lseg2=lseg>>1;
     int nseg=(nx/lseg2-1)>>1; /*number of segments*/
     if(nseg<1){
 	nseg=1;
@@ -83,7 +84,25 @@ dmat *psd1dt(const dmat *v, long lseg, double dt){
     dfree(psd);
     return psd2;
 }
-
+/**
+   Average pads across multiple columns.
+ */
+dmat *psdmean(const dmat *psd){
+    if(psd->ny<=2){
+	return ddup(psd);
+    }else{
+	//average columns from 2.
+	dmat *tmp=dnew(psd->ny, 1);
+	dset(tmp, 1./(psd->ny-1)); tmp->p[0]=0; //skip first (time) column
+	dcell *psdm=dcellnew(1,2);
+	psdm->p[0]=drefcols(psd, 0, 1);
+	dmm(&psdm->p[1], 0, psd, tmp, "nn", 1);
+	dfree(tmp);
+	dmat *res=dcell2m(psdm);
+	dcellfree(psdm);
+	return res;
+    }
+}
 /*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     dmat *f1=drefcols(psdin, 0, 1);

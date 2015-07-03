@@ -1070,7 +1070,7 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmcmd=cellnew(parms->ndm,1);
     simu->dmreal=cellnew(parms->ndm,1);
     if(parms->recon.psol){
-	simu->dmfit=cellnew(parms->ndm,1);
+	simu->dmfit=dcellnew3(parms->ndm,1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
     }
     if(parms->sim.lpttm>EPS){
 	simu->ttmreal=dnew(2,1);
@@ -1164,6 +1164,11 @@ static void init_simu_dm(SIM_T *simu){
 	    simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, 
 				       NULL, NULL,"dmhist_%d.bin",simu->seed);
 	}
+    }
+    if(parms->recon.psd){
+	simu->dmerrts=dcellnewsame(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
+				   parms->recon.psddtrat * parms->recon.psdoverlap);
+	
     }
     int nstep=parms->sim.end;
     int nrstep=nstep-(parms->sim.closeloop?1:0);
@@ -1462,6 +1467,7 @@ void free_simu(SIM_T *simu){
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
     dcellfree(simu->Mngs);
+    dcellfree(simu->dmerrts);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
     dcellfree(simu->dmerr_store);

@@ -261,7 +261,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		dmat *eye=dnew(ntotact, ntotact);
 		daddI(eye, 1);
 		FLId=dnew(ntotact, ntotact);
-		muv_direct_solve(&FLId, &recon->FL, eye);
+		muv_direct_solve_mat(&FLId, &recon->FL, eye);
 		dfree(eye);
 		toc("Fit CBS");tic;
 	    }

@@ -309,7 +309,9 @@ typedef struct RECON_T{
     dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/
-    double sigmanlo;   /**<Wavefront error due to noise for lo order.*/
+    double sigmanlo;   /**<Wavefront error (m^2) due to noise for lo order.*/
+    double sigmanhi;   /**<Wavefront error (m^2) due to noise for high order. Needs to multiply with simu->gradscale^2.*/
+    
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
     MUV_T RL;          /**<tomography left hand side matrix*/
     MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
@@ -349,6 +351,10 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxx;           /**<records parms->tomo.cxx*/
+
+    //For Error PSD computation
+    dspcell *Herr;      /**<Ray tracing from DM along science directions for a few points*/
+    
 }RECON_T;
 
 typedef struct SIM_SAVE_T{
@@ -539,7 +545,8 @@ typedef struct SIM_T{
     dmat *zoomavg;    /**<Trombone averager from gradients*/
     dmat *zoomreal;   /**<Trombone real position*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
-    
+    /*PSD computation*/
+    dcell *dmerrts;    /**<Herr*dmerr time history*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

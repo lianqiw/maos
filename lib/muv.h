@@ -68,10 +68,9 @@ typedef struct MUV_T{
 
 void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);
 void muv_trans(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_sp(dcell **xout, const void *B, const dspcell *xin, const double alpha);
 void muv_ib(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin);
-void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin);
+void muv_direct_solve(dcell **xout, const MUV_T *A, dcell *xin);
+void muv_direct_solve_mat(dmat **xout, const MUV_T *A, dmat *xin);
 void muv_direct_prep(MUV_T *muv, double svd);
 void muv_direct_free(MUV_T *muv);
 void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib);

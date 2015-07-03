@@ -69,7 +69,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	map_t *pmap=0;
 	create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
-	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
+	recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
 	mapfree(pmap);
     }
     if(parms->save.setup){
@@ -105,7 +105,7 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	map_t *map=0;
 	double dx=parms->powfs[ipowfs].dx;
 	create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-	recon->gloc->p[ipowfs]=map2loc(map); 
+	recon->gloc->p[ipowfs]=map2loc(map, 0); 
 	mapfree(map);
 	//do not use misregistration since this is the model
 	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
@@ -188,7 +188,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=0;
 	    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
-	    recon->xloc->p[ips]=map2loc(map);
+	    recon->xloc->p[ips]=map2loc(map, 0);
 	    loc_create_stat(recon->xloc->p[ips]);
 	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
 		  ips, map->nx,map->ny,dxr, recon->xloc->p[ips]->nloc);
@@ -1171,8 +1171,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    if(parms->powfs[ipowfs].lo){
 		for(int ips=0; ips<npsr; ips++){
-		    dspfull(&pULo[iwfs][ips], RRM[iwfs][ips],-1);
-		    dsptfull(&pVLo[iwfs][ips], GX[ips][iwfs],1);
+		    dspfull(&pULo[iwfs][ips], RRM[iwfs][ips],'n',-1);
+		    dspfull(&pVLo[iwfs][ips], GX[ips][iwfs],'t',1);
 		}
 	    }
 	}
@@ -1279,8 +1279,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
 }
 
-static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
-    if(!parms->sim.ecnn) return;
+static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *locs, lmat *mask){
     /**
        We compute the wavefront estimation error covariance in science focal
        plane due to wavefront measurement noise. Basically we compute
@@ -1304,97 +1303,71 @@ static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, const AP
     */
     TIC;tic;
     read_self_cpu();
-    cellfree(recon->ecnn);
-    if(0){
-	/*Luc's Method. Solve E^T Hx^T */
-	{
-	    warning("Overriding sanea\n");
-	    warning("Overriding sanea\n");
-	    warning("Overriding sanea\n");
-	    dspcellfree(recon->sanea);
-	    recon->sanea=dspcellread("nt");
-	}
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psfr->p[ievl]) continue;
-	    dcell *hxt=cellnew(recon->npsr, 1);
-	    double hs=parms->evl.hs->p[ievl];
-	    for(int ips=0; ips<recon->npsr; ips++){
-		const double ht=recon->ht->p[ips];
-		const double scale=1.-ht/hs;
-		const double dispx=parms->evl.thetax->p[ievl]*ht;
-		const double dispy=parms->evl.thetay->p[ievl]*ht;
-		dsp *HXT=mkhb(recon->xloc->p[ips], aper->locs, 
-			      dispx, dispy, scale, 0);
-		dspfull(&hxt->p[ips], HXT, 1); dspfree(HXT);
+    dmat *t1=NULL;
+    if(recon->MVM){//MVM
+	dspcell *sanealhi=cellnew(parms->nwfsr, parms->nwfsr);
+	for(int iwfsr=0; iwfsr<parms->nwfsr; iwfsr++){
+	    int ipowfs=parms->wfsr[iwfsr].powfs;
+	    if(!parms->powfs[ipowfs].skip){
+		IND(sanealhi, iwfsr, iwfsr)=dspref(IND(recon->saneal, iwfsr, iwfsr));
 	    }
-	    dcell *t1=NULL;
-	    info("CPU Usage: %.1f HXT   ", read_self_cpu()); toc2(" ");tic;
-	    muv_direct_solve_cell(&t1, &recon->RL, hxt); dcellfree(hxt);
-	    info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
-	    dcell *p=NULL;
-	    muv_trans(&p, &recon->RR, t1, 1); dcellfree(t1);
-	    writebin(p, "p_%d.bin", ievl);
-	    info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
-	    dcell *t2=NULL;
-		
-	    dcellmm(&t2, recon->sanea, p, "nn", 1); 
-	    dcell *t3=NULL;
-	    dcellmm(&t3, p, t2, "tn", 1);
-	    dcellfree(p); dcellfree(t2);
-	    info("CPU Usage: %.1f MUL   ", read_self_cpu()); toc2(" ");tic;
-	    writebin(t3->p[0], "ecnn_new_%d.bin", ievl);
-	    dcellfree(t3);
 	}
+	//dsp *tmp=dspcell2sp(sanealhi);  dspcellfree(sanealhi);
+	dmat *tmp=dcell2m(sanealhi); dspcellfree(sanealhi);
+	dcellmm(&t1, recon->MVM, tmp, "nn", 1);
+	cellfree(tmp);
+	toc2("MVM ");tic;
+    }else if(parms->recon.alg==0){//MV
+	dcell *tmp2=NULL;
+	dcell *tmp=NULL;
+	dspcellfull(&tmp2, recon->saneal, 'n', 1); 
+	muv(&tmp, &recon->RR, tmp2, 1); 
+	toc2("RR ");tic;
+	cellfree(tmp2);
+	muv_direct_solve(&tmp2, &recon->RL, tmp); dcellfree(tmp);
+	toc2("RL ");tic;
+	//2015-06-29: Put in ommited DM fitting operation
+	muv(&tmp, &recon->FR, tmp2, 1); dcellfree(tmp2);
+	toc2("FR ");tic;
+	muv_direct_solve(&tmp2, &recon->FL, tmp); dcellfree(tmp);
+	toc2("FL ");tic;
+	t1=dcell2m(tmp2); dcellfree(tmp2);
+    }else{//LSR
+	dcell *tmp2=NULL;
+	dcell *tmp=NULL;
+	dspcellfull(&tmp2, recon->saneal, 'n', 1); 
+	muv(&tmp, &recon->LR, tmp2, 1); cellfree(tmp2);
+	toc2("LR ");tic;
+	muv_direct_solve(&tmp2, &recon->LL, tmp); dcellfree(tmp);
+	toc2("LL ");tic;
+	t1=dcell2m(tmp2); dcellfree(tmp2);
     }
-    if(1){
-	dcell *rhs=NULL;
-	muv_sp(&rhs, &recon->RR, recon->saneal, 1);
-	info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
-	dmat *rhs2=dcell2m(rhs); dcellfree(rhs);
-	writebin(rhs2, "rhs_1");
-	dmat *t1=NULL;
-	muv_direct_solve(&t1, &recon->RL, rhs2); dfree(rhs2);
-	writebin(t1, "solve_1");
-	info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
-	recon->ecnn=cellnew(parms->evl.nevl, 1);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psfr->p[ievl]) continue;
-	    tic;
-	    char strht[24];
-	    if(!isinf(parms->evl.hs->p[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.hs->p[ievl]);
-	    }else{
-		strht[0]='\0';
+    dcell *ecnn=cellnew(parms->evl.nevl, 1);
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	if(mask && !mask->p[ievl]) continue;
+	tic;
+	/*Build HX for science directions that need ecov.*/
+	dmat *x1=dnew(locs->nloc, t1->ny);
+	double hs=parms->evl.hs->p[ievl];
+	int offset=0;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    const double ht=parms->dm[idm].ht;
+	    const double scale=1.-ht/hs;
+	    const double dispx=parms->evl.thetax->p[ievl]*ht;
+	    const double dispy=parms->evl.thetay->p[ievl]*ht;
+	    for(int icol=0; icol<t1->ny; icol++){
+		prop_nongrid(recon->aloc->p[idm], PCOL(t1, icol)+offset,
+			     locs, PCOL(x1, icol), 1, dispx, dispy, scale, 0, 0);
 	    }
-	    /*Build HX for science directions that need ecov.*/
-	    
-	    dmat *x1=dnew(aper->locs->nloc, t1->ny);
-	    PDMAT(t1, pt1);
-	    PDMAT(x1, px1);
-	    int ind=0;
-	    double hs=parms->evl.hs->p[ievl];
-	    for(int ips=0; ips<recon->npsr; ips++){
-		const double ht=recon->ht->p[ips];
-		const double scale=1.-ht/hs;
-		const double dispx=parms->evl.thetax->p[ievl]*ht;
-		const double dispy=parms->evl.thetay->p[ievl]*ht;
-		for(int icol=0; icol<t1->ny; icol++){
-		    prop_nongrid(recon->xloc->p[ips], &pt1[icol][ind], aper->locs,
-				 px1[icol], 1, dispx, dispy, scale, 0, 0);
-		}
-		ind+=recon->xloc->p[ips]->nloc;
-	    }
-	    info("CPU Usage: %.1f accphi", read_self_cpu()); toc2(" ");tic;
-	    
-	    dmm(&recon->ecnn->p[ievl], 0, x1, x1, "nt", 1);
-	    dfree(x1);
-	    info("CPU Usage: %.1f Mul   ", read_self_cpu()); toc2(" ");
-	    writebin(recon->ecnn->p[ievl], "ecnn_x%g_y%g%s.bin", 
-		   parms->evl.thetax->p[ievl]*206265,
-		   parms->evl.thetay->p[ievl]*206265, strht);
+	    offset+=recon->aloc->p[idm]->nloc;
 	}
-	dfree(t1);
+	toc2("Prop ");tic;
+	dmm(&ecnn->p[ievl], 0, x1, x1, "nt", 1);
+	dfree(x1);
+	toc2("MM ");
     }
+    dcellfree(t1);
+    return ecnn;
 }
 /**
    Update assembled tomography matrix with new L2. Called from cn2est when new
@@ -1648,9 +1621,9 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
 	    dspfull(&neailo->p[iwfs*(1+parms->nwfsr)],
-		   recon->saneai->p[iwfs*(1+parms->nwfsr)], 1);
+		    recon->saneai->p[iwfs*(1+parms->nwfsr)], 'n', 1);
 	    dspfull(&nealo->p[iwfs*(1+parms->nwfsr)],
-		   recon->sanea->p[iwfs*(1+parms->nwfsr)], 1);
+		    recon->sanea->p[iwfs*(1+parms->nwfsr)], 'n', 1);
 	}
     }
     /* 2012-03-21: Remove focus mode from GL and NEA so no focus is
@@ -1682,11 +1655,11 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	}
 	toc2("MVST: svd prep");
 	dcell *GXLT=dcelltrans(recon->GXL);
-	muv_direct_solve_cell(&U, &recon->RL, GXLT);
+	muv_direct_solve(&U, &recon->RL, GXLT);
 	dcellfree(GXLT);
 	dcell *rhs=NULL;
 	muv(&rhs, &recon->FR, U, 1);
-	muv_direct_solve_cell(&FU, &recon->FL, rhs);
+	muv_direct_solve(&FU, &recon->FL, rhs);
 	dcellfree(rhs);
 	toc2("MVST: U, FU");
     
@@ -1942,7 +1915,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, cons
 	/*setup inverse noise covariance matrix. */
 	/*prepare for tomography setup */
 	setup_recon_tomo_prep(recon,parms);
-	if(parms->tomo.assemble || parms->recon.split==2 || parms->sim.psfr){
+	if(parms->tomo.assemble || parms->recon.split==2 || parms->sim.psfr || parms->recon.psd){
 	    /*assemble the matrix only if not using CG CG apply the
 	      individual matrices on fly to speed up and save memory. */
 	    setup_recon_tomo_matrix(recon,parms);
@@ -1953,9 +1926,6 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, cons
 	    recon->fdpcg=fdpcg_prepare(parms, recon, powfs, NULL);
 	}
 	
-	if(parms->sim.ecnn){
-	    setup_recon_tomo_ecnn(recon, parms, aper);
-	}
 	/*Fall back function method if .M is NULL */
 	recon->RL.Mfun=TomoL;
 	recon->RL.Mdata=recon;
@@ -2082,6 +2052,7 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 	}
     }
 }
+
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
@@ -2136,7 +2107,9 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	/*setup Truth wfs*/
 	setup_recon_twfs(recon,powfs,parms);
     }
-    if(!parms->recon.mvm || !parms->load.mvm){
+    if(parms->recon.mvm && parms->load.mvm){
+	recon->MVM=dread("%s", parms->load.mvm);
+    }else{
 	switch(parms->recon.alg){
 	case 0:
 	    setup_recon_tomo(recon, parms, powfs, aper);
@@ -2167,6 +2140,74 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
     setup_recon_dmttr(recon, parms);
     setup_recon_dither_dm(recon, powfs, parms);
     toc2("setup_recon");
+}
+
+/**
+   PSD computation for gian update
+ */
+void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
+    if(!parms->recon.psd) return;
+    recon->Herr=cellnew(parms->evl.nevl, parms->ndm);
+    double d1=parms->aper.d-parms->dm[0].dx;
+    double d2=parms->aper.din+parms->dm[0].dx;
+    double dx=(d1-d2)*0.1;
+    if(dx<parms->dm[0].dx){
+	dx=parms->dm[0].dx;
+    }
+    loc_t *eloc=mkannloc(d1, d2, dx, 0.8);
+    //loc_t* eloc=locdup(recon->aloc->p[0]);
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    double ht=parms->dm[idm].ht;
+	    double dispx=parms->evl.thetax->p[ievl]*ht;
+	    double dispy=parms->evl.thetay->p[ievl]*ht;
+	    double scale=1-ht/parms->evl.hs->p[ievl];
+	    IND(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale, parms->dm[idm].iac);
+	}
+    }
+    dcell *ecnn=setup_recon_ecnn(recon, parms, eloc, 0);
+    double sigma2e=0;
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	double sigma2i=0;
+	for(int iloc=0; iloc<eloc->nloc; iloc++){
+	    sigma2i+=IND(ecnn->p[ievl], iloc, iloc);
+	}
+	sigma2e+=parms->evl.wt->p[ievl]*(sigma2i/eloc->nloc);
+    }
+    recon->sigmanhi=sigma2e;
+    info2("High order WFS mean noise propagation is %g nm\n", sqrt(sigma2e)*1e9);
+    if(parms->save.setup){
+    writebin(ecnn, "psd_ecnn");
+	writebin(recon->Herr, "Herr");
+	writebin(eloc, "eloc.bin");
+    }
+    locfree(eloc);
+    dcellfree(ecnn);
+}
+	    
+/**
+   A few further operations that needs MVM.
+ */
+void setup_recon_post(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
+    TIC;tic;
+    if(parms->sim.ecnn){
+	recon->ecnn=setup_recon_ecnn(recon, parms, aper->locs, parms->evl.psfr);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    char strht[24];
+	    if(!isinf(parms->evl.hs->p[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.hs->p[ievl]);
+	    }else{
+		strht[0]='\0';
+	    }
+	    writebin(recon->ecnn->p[ievl],  "ecnn_x%g_y%g%s.bin", 
+		     parms->evl.thetax->p[ievl]*206265,
+		     parms->evl.thetay->p[ievl]*206265, strht);
+	}
+    }
+    if(parms->recon.psd){
+	setup_recon_psd(recon, parms);
+    }
+    toc2("setup_recon_post");
 }
 
 /**
@@ -2237,6 +2278,9 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	muv_free(&recon->LR);
 	muv_free(&recon->LL);
 	fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
+	if(parms->gpu.tomo && parms->gpu.fit){
+	    dfree(recon->MVM);//keep GPU copy.
+	}
     }
 }
 /**

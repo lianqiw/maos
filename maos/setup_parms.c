@@ -907,6 +907,9 @@ static void readcfg_recon(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->recon.misreg_tel2wfs,parms->nwfsr, "recon.misreg_tel2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2wfs,parms->ndm*parms->nwfsr, "recon.misreg_dm2wfs");  
     readcfg_strarr_nmax(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
+    READ_INT(recon.psd);
+    READ_INT(recon.psddtrat);
+    READ_INT(recon.psdoverlap);
 }
 /**
    Read in simulation parameters

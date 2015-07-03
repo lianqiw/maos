@@ -40,7 +40,7 @@ uint32_t lochash(const loc_t *loc, uint32_t key);
 void loc_embed(map_t *dest, const loc_t *loc, const double *in);
 void loc_embed_add(map_t *dest, const loc_t *loc, const double *in);
 void loc_extract(dmat *dest, const loc_t *loc, map_t *in);
-loc_t * map2loc(map_t *amp);
+loc_t * map2loc(map_t *amp, double thres);
 void rmapfree_do(rmap_t *map);
 #define rmapfree(A) ({rmapfree_do(A);A=NULL;})
 void mapfree_do(map_t *map);
@@ -77,7 +77,7 @@ loc_t *mksqloc_map(map_t*map);
 loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
 loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
 		  double ox, double oy, double theta);
-loc_t *mkcirloc(double D, double dx);
+loc_t *mkannloc(double D, double Din, double dx, double thres);
 void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);

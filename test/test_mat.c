@@ -227,7 +227,7 @@ static void test_spline_2d(void){
 static void test_svd(void){
     dspcell *a=dspcellread("SVD");
     dmat *A=NULL;
-    dspfull(&A, a->p[0], 1);
+    dspfull(&A, a->p[0], 'n',1);
     if(0){
 	dmat *U, *S, *VT;
 	tic;

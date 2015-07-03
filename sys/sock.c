@@ -81,17 +81,20 @@ static void socket_tcp_keepalive(int sock){
 	warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
     }
 }
+/*static void socket_reuse_addr(int sock){
+   const int one=1;
+   if(!setsockopt(sock,SOL_SOCKET,SO_REUSEADDR, &one,sizeof(int))){
+       perror("setsockopt");
+       warning("set REUSEADDR failed\n");
+   }
+   }*/
 static void socket_nopipe(int sock){
-    const int one=1;
 #ifdef SO_NOSIGPIPE
+    const int one=1;
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
 #elif ! defined(__linux__)
     signal(SIGPIPE, SIG_IGN);
 #endif
-    if(!setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&one,sizeof(int))){
-	perror("setsockopt");
-	warning("set REUSEADDR failed\n");
-    }
 }
 /**
    Set socket to unblocking mode
@@ -157,12 +160,13 @@ static int bind_socket (char *ip, uint16_t port){
     struct sockaddr_in name;
     /* Create the socket. */
     int sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
-    socket_tcp_keepalive(sock);
-    socket_nopipe(sock);
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
     }
+    socket_tcp_keepalive(sock);
+    //socket_reuse_addr(sock);
+    socket_nopipe(sock);
     cloexec(sock);
     
     /* Give the socket a name. */

@@ -34,8 +34,8 @@
 /**
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
-void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
-    const MUV_T *A = B;//B is declared void for cg to use without casting.
+void muv(dcell **xout, const void *A_, const dcell *xin, const double alpha){
+    const MUV_T *A = A_;//A_ is declared void for cg to use without casting.
     if(A->M && xin){
 	dcellmm(xout, A->M, xin, "nn", alpha);
 	if(A->U && A->V){
@@ -45,18 +45,18 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	    dcellfree(tmp);
 	}
 	if(A->extra){
-	    A->exfun(xout, A->extra, xin, alpha, -1, -1);
+	    A->exfun(xout, A->extra, dcell_cast(xin), alpha, -1, -1);
 	}
     }else{
-	A->Mfun(xout, A->Mdata, xin, alpha);
+	A->Mfun(xout, A->Mdata, dcell_cast(xin), alpha);
     }
 }
 /**
    Apply the transpose of operation muv(); Apply the sparse plug low rand
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
    U,V are low rank.  */
-void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha){
-    const MUV_T *A = B;
+void muv_trans(dcell **xout, const void *A_, const dcell *xin, const double alpha){
+    const MUV_T *A = A_;
     if(A->M){
 	if(!xin) return;
 	dcellmm(xout, A->M, xin, "tn", alpha);
@@ -75,15 +75,6 @@ void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha
     }else{
 	error("Please assign Mtfun for M' operation\n");
     }
-}
-/**
-   Apply the sparse plus low rank computation to xin with scaling of alpha to
-   sparse cell array. \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.
- */
-void muv_sp(dcell **xout, const void *B, const dspcell *xin, const double alpha){
-    const MUV_T *A=B;
-    if(!A->M || xin) error("Not implemented\n");
-    muv(xout, B, (dcell*)xin, alpha);//reuse the generic implementation of dcellmm.
 }
 /*
   Wrap of data for call with muv_ib.
@@ -242,7 +233,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	    if(A->M->p[ib+ib*nb]->id==M_DBL){
 		dcp(&A->MIB->p[ib], dmat_cast(A->M->p[ib+ib*nb]));
 	    }else{
-		dspfull(&A->MIB->p[ib], dsp_cast(A->M->p[ib+ib*nb]), 1);
+		dspfull(&A->MIB->p[ib], dsp_cast(A->M->p[ib+ib*nb]), 'n',1);
 	    }
 	    if(svd<1){
 		dsvd_pow(A->MIB->p[ib], -1, svd);
@@ -280,7 +271,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
    Apply CBS or SVD multiply to xin to get xout. Create xout is not exist
    already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.*/
 
-void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin){
+void muv_direct_solve_mat(dmat **xout, const MUV_T *A, dmat *xin){
     dmat *dotpt=NULL;
     if(A->Up && A->Vp){
 	dmm(&dotpt,0,A->Vp,xin,"tn",-1);
@@ -353,14 +344,14 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
 }
 /**
    convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
-void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin){
+void muv_direct_solve(dcell **xout, const MUV_T *A, dcell *xin){
     if(!xin) return;
     if(xin->nx*xin->ny==1){/*there is only one cell. */
 	if(!*xout) *xout=cellnew(1,1);
-	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);
+	muv_direct_solve_mat(&((*xout)->p[0]), A, xin->p[0]);
     }else{
 	dmat *xin2=dcell2m(xin);
-	muv_direct_solve(&xin2, A, xin2);/*in place solve. */
+	muv_direct_solve_mat(&xin2, A, xin2);/*in place solve. */
 	d2cell(xout,xin2,xin);/*xin is the reference for dimensions. copy data into xout. */
 	dfree(xin2);
     }
@@ -441,7 +432,7 @@ double muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm r
 	switch(L->alg){
 	case 0:/*CBS */
 	case 2:/*SVD */
-	    muv_direct_solve_cell(px, L, rhs);
+	    muv_direct_solve(px, L, rhs);
 	    break;
 	case 1:/*CG */
 	    res=pcg(px, L->M?muv:L->Mfun, L->M?L:L->Mdata, L->pfun, L->pdata, rhs, L->warm, L->maxit);

@@ -96,7 +96,7 @@ static dmat* gen_unwrap(long nx, long ny){
     /*writebin(H,"H"); */
     dsp *HtH=dspmulsp(Ht,H);
     dmat *cHtH=NULL;
-    dspfull(&cHtH,HtH,1);
+    dspfull(&cHtH,HtH,'n',1);
     /*writebin(cHtH,"cHtH"); */
     /*caddI(cHtH,1e-9); */
     dmat *IcHtH=dinv(cHtH);

@@ -226,10 +226,8 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
     OMPTASK_SINGLE
-    if(parms->recon.mvm){
-	if(parms->load.mvm){
-	    recon->MVM=dread("%s", parms->load.mvm);
-	}else if(!(parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit)){
+    if(parms->recon.mvm && !recon->MVM){
+	if(!(parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit)){
 	    if(parms->recon.alg==0){
 		setup_recon_mvr_mvm(recon, parms, powfs);
 	    }else{
@@ -246,9 +244,6 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	}
 	if(parms->sim.mvmport){
 	    mvm_client_send_m(parms, recon->MVM);
-	}
-	if(parms->gpu.tomo && parms->gpu.fit){
-	    dfree(recon->MVM);
 	}
     }
     toc2("setup_recon_mvm");

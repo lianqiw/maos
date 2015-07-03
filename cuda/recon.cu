@@ -71,7 +71,7 @@ namespace cuda_recon{
 	}
     }
 
-    if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
+    if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit && !parms->load.mvm){
 	if(parms->tomo.square){
 	    opdr=curcellnew(recon->npsr, 1, recon->xnx->p, recon->xny->p);
 	}else{
@@ -104,7 +104,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    return; //Use CPU to assemble MVM
 	}
     }
-    if(parms->recon.alg==0){
+    if(parms->recon.alg==0 && !(parms->recon.mvm && parms->load.mvm)){
 	grid=new curecon_geom(parms, recon);
     }
     if(parms->gpu.fit){

@@ -67,12 +67,9 @@ public:
 	delete gradin;
 	delete tomo_rhs;
 	delete fit_rhs;
-	
 	delete opdr;
 	delete opdr_vec; 
 	delete opdr_save;
-
-
 	delete dmfit;
 	delete dmfit_vec; 
 	delete dmfit_save;

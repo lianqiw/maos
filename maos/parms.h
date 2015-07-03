@@ -442,6 +442,9 @@ typedef struct RECON_CFG_T{
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
     double poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
+    int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
+    int psddtrat;   /**<how many time step to sample for PSD computation.*/
+    int psdoverlap; /**<how many psddtrat periods to use with one new period for computing PSD.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.

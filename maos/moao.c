@@ -69,7 +69,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double guard=parms->moao[imoao].guard*MAX(dxr, dyr);
 	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,offset,guard,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=cellnew(1,1); 
-	recon->moao[imoao].aloc->p[0]=map2loc(map);
+	recon->moao[imoao].aloc->p[0]=map2loc(map, 0);
 	recon->moao[imoao].aloc->p[0]->iac=parms->moao[imoao].iac;
 	mapfree(map);
 	loc_create_map_npad(recon->moao[imoao].aloc->p[0],parms->fit.square?0:1,0,0);

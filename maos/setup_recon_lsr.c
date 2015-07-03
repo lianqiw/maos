@@ -136,8 +136,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    continue;
 	}
 	for(int idm=0; idm<ndm; idm++){
-	    dspfull(&pULo[iwfs][idm], (dsp*)IND(recon->LR.M, idm, iwfs),-1);
-	    dsptfull(&pVLo[iwfs][idm], (dsp*)IND(GAM, iwfs, idm),1);
+	    dspfull(&pULo[iwfs][idm], (dsp*)IND(recon->LR.M, idm, iwfs),'n',-1);
+	    dspfull(&pVLo[iwfs][idm], (dsp*)IND(GAM, iwfs, idm),'t',1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);

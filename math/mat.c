@@ -83,7 +83,7 @@ void X(init)(X(mat)**A, long nx, long ny){
 /**
    cast a cell object to X(mat)
  */
-X(mat) *X(mat_cast)(void *A){
+X(mat) *X(mat_cast)(const void *A){
     if(!A) return 0;
     assert(ismat(A));
     return (X(mat)*)A;
@@ -497,7 +497,7 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 /**
    cast a cell object to X(cell) after checking.
  */
-X(cell) *X(cell_cast)(void *A_){
+X(cell) *X(cell_cast)(const void *A_){
     if(!A_) return 0;
     cell *A=(cell*)A_;
     assert(iscell(A));
