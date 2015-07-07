@@ -255,7 +255,7 @@ static void test_psd1d(){
     for(int i=0; i<100; i++){
 	tmp->p[i]=sin(i/10.);
     }
-    dmat *psd=psd1d(tmp, 10);
+    dmat *psd=psd1d(tmp, 1);
     writebin(tmp, "tmp");
     writebin(psd, "psd");
     exit(0);

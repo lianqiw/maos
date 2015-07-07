@@ -523,8 +523,11 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt->p[ievl]);
 	}
     }
+    dmat *MCCl=dchol(ngsmod->MCC);
+    ngsmod->MCCu=dtrans(MCCl); dfree(MCCl);
     if(parms->save.setup){
 	writebin(recon->ngsmod->MCC, "ahst_MCC");
+	writebin(recon->ngsmod->MCCu, "ahst_MCCu");
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);

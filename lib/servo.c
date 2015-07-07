@@ -338,12 +338,12 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     default:
 	error("Invalid servo_type=%d\n", servo_type);
     }
-    dcell *gm=cellnew(sigma2n->nx, sigma2n->ny);
+    dcell *gm=cellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
     double g0_max=2.0;
-    for(long ins=0; ins<sigma2n->nx*sigma2n->ny; ins++){
-	st.sigma2n=sigma2n->p[ins];
+    for(long ins=0; ins<gm->nx*gm->ny; ins++){
+	st.sigma2n=sigma2n?sigma2n->p[ins]:0;
 	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, g0_step);
 	servo_calc_do(&st, g0);
 	gm->p[ins]=dnew(ng+2,1);

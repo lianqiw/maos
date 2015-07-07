@@ -23,7 +23,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     enum{
 	P_DATA,
-	P_LSEG,
+	P_NSEG,
 	P_TOT,
     };
     enum{
@@ -31,17 +31,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     }; 
     if(nrhs < P_TOT){
-	mexErrMsgTxt("Usage: psd=psd1d(data, lseg)");
+	mexErrMsgTxt("Usage: psd=psd1d(data, nseg)");
     }
     
     dmat *data=mx2d(prhs[P_DATA]);
-    long lseg=(long)mxGetScalar(prhs[P_LSEG]);
+    long nseg=(long)mxGetScalar(prhs[P_NSEG]);
     dmat *psd;
     if(nrhs > P_TOT){
 	double dt=(double)mxGetScalar(prhs[P_TOT]);
-	psd=psd1dt(data, lseg, dt);
+	psd=psd1dt(data, nseg, dt);
     }else{
-	psd=psd1d(data, lseg);
+	psd=psd1d(data, nseg);
     }
     dfree(data);
     plhs[PL_PSD]=d2mx(psd);

@@ -559,7 +559,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    
 	if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 	    const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-	    info2("PLL step%d, wfs%d: deltam=%.2f frame, a2m=%8g, a2me/a2m=%.2f\n",
+	    info2("Step %d wfs%d PLL: deltam=%.2f frame, a2m=%-8g, a2me/a2m=%.2f\n",
 		  isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me/pd->a2m);
 	}
 	if(simu->resdither){
@@ -902,8 +902,8 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			dzero(pd->gg0);
 		    }
 		    double mgain=dsum(simu->gradscale->p[iwfs])/ng;
-		    info2("Step %d: Update CoG gain for wfs %d. %s gain adjustment is %g\n", 
-			  simu->isim, iwfs, pd->gg0?"Average":"Global", mgain);
+		    info2("Step %d wfs %d CoG gain adjusted by %g %s.\n", 
+			  simu->isim, iwfs, mgain, pd->gg0?"on average":"globally");
 		    if(simu->resdither){
 			int ic=(nogacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgain;

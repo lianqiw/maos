@@ -2155,7 +2155,6 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	dx=parms->dm[0].dx;
     }
     loc_t *eloc=mkannloc(d1, d2, dx, 0.8);
-    //loc_t* eloc=locdup(recon->aloc->p[0]);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    double ht=parms->dm[idm].ht;
@@ -2165,24 +2164,28 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	    IND(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale, parms->dm[idm].iac);
 	}
     }
-    dcell *ecnn=setup_recon_ecnn(recon, parms, eloc, 0);
-    double sigma2e=0;
-    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	double sigma2i=0;
-	for(int iloc=0; iloc<eloc->nloc; iloc++){
-	    sigma2i+=IND(ecnn->p[ievl], iloc, iloc);
+    if(parms->recon.psd==2){//don't use signanhi by default
+	dcell *ecnn=setup_recon_ecnn(recon, parms, eloc, 0);
+	double sigma2e=0;
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    double sigma2i=0;
+	    for(int iloc=0; iloc<eloc->nloc; iloc++){
+		sigma2i+=IND(ecnn->p[ievl], iloc, iloc);
+	    }
+	    sigma2e+=parms->evl.wt->p[ievl]*(sigma2i/eloc->nloc);
 	}
-	sigma2e+=parms->evl.wt->p[ievl]*(sigma2i/eloc->nloc);
+	recon->sigmanhi=sigma2e;
+	info2("High order WFS mean noise propagation is %g nm\n", sqrt(sigma2e)*1e9);
+	if(parms->save.setup){
+	    writebin(ecnn, "psd_ecnn");
+	}
+	dcellfree(ecnn);
     }
-    recon->sigmanhi=sigma2e;
-    info2("High order WFS mean noise propagation is %g nm\n", sqrt(sigma2e)*1e9);
     if(parms->save.setup){
-    writebin(ecnn, "psd_ecnn");
 	writebin(recon->Herr, "Herr");
 	writebin(eloc, "eloc.bin");
     }
     locfree(eloc);
-    dcellfree(ecnn);
 }
 	    
 /**

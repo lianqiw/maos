@@ -909,7 +909,7 @@ static void readcfg_recon(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
     READ_INT(recon.psd);
     READ_INT(recon.psddtrat);
-    READ_INT(recon.psdoverlap);
+    READ_INT(recon.psdnseg);
 }
 /**
    Read in simulation parameters

@@ -444,7 +444,7 @@ typedef struct RECON_CFG_T{
     double poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
     int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat;   /**<how many time step to sample for PSD computation.*/
-    int psdoverlap; /**<how many psddtrat periods to use with one new period for computing PSD.*/
+    int psdnseg;    /**<#how many overlapping partitions of the time history to compute PSD.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.

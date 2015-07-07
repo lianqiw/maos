@@ -151,6 +151,7 @@ typedef struct NGSMOD_T{
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
     dmat *IMCC;     /**<inv of MCC.*/
+    dmat *MCCu;     /**<MCCu'*MCCu=MCC*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
     dcell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
     dcell *Pngs;    /**<Project DM command to NGS modes */
@@ -547,6 +548,7 @@ typedef struct SIM_T{
     dcell *zoompos;    /**<Trombone position history. for saving*/
     /*PSD computation*/
     dcell *dmerrts;    /**<Herr*dmerr time history*/
+    dmat *Merrts;      /**<Time history of low order WFE.*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

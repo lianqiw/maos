@@ -177,7 +177,99 @@ void recon_split(SIM_T *simu){
 	}
     }
 }
+void recon_servo_update(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    if(!parms->recon.psd) return;
+    if(simu->dmerr){//compute PSD on dmerr.
+	const int dtrat=parms->recon.psddtrat;
+	const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
+	const int iframe=iacc % dtrat;
+	//Accumulate data history.
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		dspmulvec(PCOL(IND(simu->dmerrts, ievl), iframe), IND(recon->Herr, ievl, idm),
+			  simu->dmerr->p[idm]->p, 'n', 1);
+	    }
+	}
 
+	if(iframe+1==dtrat){//ready for output.
+	    dmat *psd=0;
+	    double dthi=parms->sim.dt*parms->sim.dtrat_hi;
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		dmat *tmp=dtrans(IND(simu->dmerrts, ievl));
+		dmat *psdi=psd1dt(tmp, parms->recon.psdnseg, dthi);
+		dfree(tmp);
+		dadd(&psd, 1, psdi, parms->evl.wt->p[ievl]);
+		dfree(psdi);
+	    }
+	    dcellzero(simu->dmerrts);
+	    writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
+	    writebin(psd, "psdcli_%d", simu->reconisim);
+	    {//average all the PSDs
+		double scale=1./(psd->ny-1);
+		for(int ix=0; ix<psd->nx; ix++){
+		    double tmp=0;
+		    for(int iy=1; iy<psd->ny; iy++){
+			tmp+=IND(psd, ix, iy);
+		    }
+		    IND(psd, ix, 1)=tmp*scale;
+		}
+		dresize(psd, psd->nx, 2);
+	    }
+	    writebin(psd, "psdcl_%d", simu->reconisim);
+	    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
+		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0], 0);
+		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
+		double g=0.5;
+		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
+		info2("Step %d New Gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
+		writebin(psdol, "psdol_%d", simu->reconisim);		    
+		dcellfree(coeff);
+		dfree(psdol);
+	    }else{
+		error("Please implement\n");
+	    }
+	    dfree(psd);
+	}
+    }
+    if(parms->recon.split && simu->Merr_lo){
+	const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
+	const int dtrat=parms->recon.psddtrat;
+	const int iframe=iacc % dtrat;
+	dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, simu->Merr_lo->p[0]->p, 1);
+	if(iframe+1==dtrat){
+	    //writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
+	    dmat *ts=dtrans(simu->Merrts);
+	    double dt=parms->sim.dt*parms->sim.dtrat_lo;
+	    dmat *psd=psd1dt(ts, parms->recon.psdnseg, dt);
+	    dzero(simu->Merrts);
+	    dfree(ts);
+	    {//Sum all the PSDs
+		for(int ix=0; ix<psd->nx; ix++){
+		    for(int iy=2; iy<psd->ny; iy++){
+			IND(psd, ix, 1)+=IND(psd, ix, iy);
+		    }
+		}
+		dresize(psd, psd->nx, 2);
+	    }
+	    writebin(psd, "psdcl_lo_%d", simu->reconisim);
+
+	    if(simu->Mint_lo->ep->nx==1 && simu->Mint_lo->ep->nx==1){
+		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
+		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
+		const double g=0.5;
+		simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
+		info2("Step %d New Gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		dfree(psdol);
+		dcellfree(coeff);
+	    }else{
+		error("Please implement\n");
+	    }
+	    dfree(psd);
+	}
+    }
+}
 /**
    Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
@@ -271,87 +363,13 @@ void reconstruct(SIM_T *simu){
 	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators
 	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
-	if(parms->recon.psd){//compute PSD on dmerr.
-	    //Total data length is psddtrat*psdoverlap. New data only comes to the last psddtrat.
-	    const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
-	    const int dtrat=parms->recon.psddtrat;
-	    const int offset=dtrat * (parms->recon.psdoverlap-1);//offset in assignment
-	    const int iframe=iacc % dtrat;
-	    //Accumulate data history.
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		for(int idm=0; idm<parms->ndm; idm++){
-		    dspmulvec(PCOL(IND(simu->dmerrts, ievl), iframe+offset), IND(recon->Herr, ievl, idm),
-			      simu->dmerr->p[idm]->p, 'n', 1);
-		}
-	    }
-	    if(iframe+1==dtrat){//ready for output.
-		//writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
-		if(iacc+1>=dtrat*parms->recon.psdoverlap){//compute PSDs
-		    dmat *psd=0;
-		    double dt=parms->sim.dt*parms->sim.dtrat_hi;
-		    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-			dmat *tmp=dtrans(IND(simu->dmerrts, ievl));
-			dmat *psdi=psd1dt(tmp, dtrat, dt);
-			dfree(tmp);
-			dadd(&psd, 1, psdi, parms->evl.wt->p[ievl]);
-			dfree(psdi);
-		    }
-		    dmat *psdm=psdmean(psd);
-		    dmat *sigma2n=dnew(1,1);
-		    sigma2n->p[0]=recon->sigmanhi;
-		    if(parms->nwfs==1 && simu->gradscale->p[0]){
-			double gain=dsum(simu->gradscale->p[0])/simu->gradscale->p[0]->nx;
-			info("Scale sigman by %g\n", gain*gain);
-			sigma2n->p[0]*=gain*gain;
-		    }
-		    //warning_once("override sigma2n=0\n");
-		    //sigma2n->p[0]=0;
-		    dmat *psdol=servo_rej2ol(psdm, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0],
-					     sigma2n->p[0]);
-		    dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, sigma2n, 1);
-		    dmat *ep=dnew(1,1);
-		    ep->p[0]=coeff->p[0]->p[0];
-		    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
-			double g=0.5;
-			simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-			info("Gain is updated to %.3f\n", simu->dmint->ep->p[0]);
-		    }else{
-			error("Please implement\n");
-		    }
-		    if(parms->recon.split){
-			if(simu->Mint_lo->ep->nx==1 && simu->Mint_lo->ep->ny==1){
-			    double g=0.5;
-			    simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-			}else{
-			    error("Please implement\n");
-			}
-			warning_once("todo: separately estimate low order gain\n");
-		    }
-		    //writebin(psd, "psdcli_%d", simu->reconisim);
-		    writebin(psdm, "psdcl_%d", simu->reconisim);
-		    writebin(psdol, "psdol_%d", simu->reconisim);
-		    dfree(psd);
-		    dfree(ep);
-		    dcellfree(coeff);
-		    dfree(sigma2n);
-		    dfree(psdol);
-		    dfree(psdm);
-		    
-		}
-		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		    //Move data
-		    memmove(PCOL(IND(simu->dmerrts, ievl), 0), PCOL(IND(simu->dmerrts, ievl), dtrat),
-			    sizeof(double)*IND(simu->dmerrts, ievl)->nx*offset);
-		    memset(PCOL(IND(simu->dmerrts, ievl), offset), 0, IND(simu->dmerrts, ievl)->nx*sizeof(double)*dtrat);
-		}
-		
-
-	    }
-	}
     }
     
     if(parms->recon.split){//low order reconstruction
 	recon_split(simu);
+    }
+    if(parms->recon.psd){
+	recon_servo_update(simu);
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	//For PSF reconstruction.

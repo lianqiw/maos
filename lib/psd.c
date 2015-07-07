@@ -22,7 +22,7 @@
 //#define W_J(i,N2) (1-pow((double)(i-N2)/(double)N2, 2))
 #define W_J(i,N2) 1
 dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
-	    long lseg /**<[in] The length of overlapping segments*/
+	    long nseg      /**<[in] Number of overlapping segments*/
     ){
     long nx;
     long ncol;
@@ -33,14 +33,9 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 	nx=v->nx;
 	ncol=v->ny;
     }
-    if(lseg<=1) lseg=nx;
-    long lseg2=lseg>>1;
-    int nseg=(nx/lseg2-1)>>1; /*number of segments*/
-    if(nseg<1){
-	nseg=1;
-	lseg=nx;
-	lseg2=lseg>>1;
-    }
+    if(nseg<=1) nseg=1;
+    const int lseg2=nx/(nseg+1);
+    const int lseg=lseg2*2;
     dmat *psd=dnew(lseg2+1, ncol);
     cmat *hat=cnew(lseg, 1);
     //cfft2plan(hat, -1);
@@ -71,8 +66,8 @@ dmat *psd1d(const dmat *v, /**<[in] The data sequence*/
 /**
   Wrap of psd1d to put the frequency along the first column.
 */
-dmat *psd1dt(const dmat *v, long lseg, double dt){
-    dmat *psd=psd1d(v, lseg);
+dmat *psd1dt(const dmat *v, long nseg, double dt){
+    dmat *psd=psd1d(v, nseg);
     dmat *psd2=dnew(psd->nx, psd->ny+1);
     int N=(psd->nx-1)*2;
     double df=1./(N*dt);
@@ -80,29 +75,11 @@ dmat *psd1dt(const dmat *v, long lseg, double dt){
 	psd2->p[i]=df*i;
     }
     dscale(psd, 1./df);//divide so the value is point, not integrated in a bin.
-    memcpy(psd2->p+psd->nx, psd->p, psd->nx*psd->ny*sizeof(double));
+    memcpy(psd2->p+psd2->nx, psd->p, psd->nx*psd->ny*sizeof(double));
     dfree(psd);
     return psd2;
 }
-/**
-   Average pads across multiple columns.
- */
-dmat *psdmean(const dmat *psd){
-    if(psd->ny<=2){
-	return ddup(psd);
-    }else{
-	//average columns from 2.
-	dmat *tmp=dnew(psd->ny, 1);
-	dset(tmp, 1./(psd->ny-1)); tmp->p[0]=0; //skip first (time) column
-	dcell *psdm=dcellnew(1,2);
-	psdm->p[0]=drefcols(psd, 0, 1);
-	dmm(&psdm->p[1], 0, psd, tmp, "nn", 1);
-	dfree(tmp);
-	dmat *res=dcell2m(psdm);
-	dcellfree(psdm);
-	return res;
-    }
-}
+
 /*Interpolate psd onto new f. We interpolate in log space which is more linear.*/
 dmat *psdinterp1(const dmat *psdin, const dmat *fnew, int uselog){
     dmat *f1=drefcols(psdin, 0, 1);

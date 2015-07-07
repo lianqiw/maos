@@ -363,7 +363,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	for(int im=0; im<x->ny; im++){
 	    dmat *xi=dsub(x, 20, 0, im, 1);
 	    dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
-	    dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
+	    dmat *psdi=psd1dt(xi, 1, parms->maos.dt);
 	    if(im<2){
 		add_psd2(&simu->psd_tt, psdi);
 	    }else if(im<5){
@@ -471,7 +471,7 @@ static void skysim_prep_sde(SIM_S *simu){
     PDMAT(simu->sdecoeff, pcoeff);
     for(int im=0; im<x->ny; im++){
 	dmat *xi=dsub(x, 20, 0, im, 1);
-	simu->psdi->p[im]=psd1dt(xi, xi->nx, parms->maos.dt);
+	simu->psdi->p[im]=psd1dt(xi, 1, parms->maos.dt);
 	dfree(xi);
 	if(im==0 && parms->skyc.psd_ws){
 	    //add windshake on first mode only

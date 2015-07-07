@@ -1167,8 +1167,10 @@ static void init_simu_dm(SIM_T *simu){
     }
     if(parms->recon.psd){
 	simu->dmerrts=dcellnewsame(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
-				   parms->recon.psddtrat * parms->recon.psdoverlap);
-	
+				   parms->recon.psddtrat);
+	if(parms->recon.split){
+	    simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat);
+	}
     }
     int nstep=parms->sim.end;
     int nrstep=nstep-(parms->sim.closeloop?1:0);
