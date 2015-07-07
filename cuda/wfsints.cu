@@ -358,10 +358,10 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 /**
    Do physical wfs images in GPU. please check wfsints() in CPU code for comments.
 */
-void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream){
+void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim, cudaStream_t stream){
     TIC;tic;
-    cupowfs_t *cupowfs=cudata->powfs;
-    cuwfs_t *cuwfs=cudata->wfs;
+    cuarray<cupowfs_t>&cupowfs=cudata->powfs;
+    cuarray<cuwfs_t>&cuwfs=cudata->wfs;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -378,18 +378,17 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     const Real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const Real pixthetay=parms->powfs[ipowfs].pixtheta;
     const Real siglev=parms->wfs[iwfs].siglevsim;
-    const Real *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot:NULL;
+    const Real *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot.P():NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
 			 && parms->powfs[ipowfs].radpix);
-    const Real *restrict const srot2=multi_dtf?cuwfs[iwfs].srot:NULL;
+    const Real *restrict const srot2=multi_dtf?cuwfs[iwfs].srot.P():NULL;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    curcell *restrict const ints=cuwfs[iwfs].ints;
-    curmat *lltopd=NULL;
-    curcell *pistatout=NULL;
+    curcell &ints=cuwfs[iwfs].ints;
+    curcell pistatout;
     if(parms->powfs[ipowfs].pistatout && isim>=parms->powfs[ipowfs].pistatstart){
 	pistatout=cuwfs[iwfs].pistatout;
     }
-    cuccell *wvfout=NULL;
+    cuccell wvfout;
     const int wvf_n=notf/2+2;//was notf/2
     if(parms->powfs[ipowfs].psfout){
 	wvfout=cuwfs[iwfs].wvfout;
@@ -402,18 +401,19 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 
     Comp *lotfc=NULL;
     Comp *lwvf=NULL;
+    curmat lltopd;
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
 	lltopd=cuwfs[iwfs].lltopd;
 	if(cuwfs[iwfs].lltncpa){
-	    curcp(&lltopd, cuwfs[iwfs].lltncpa, stream);
+	    curcp(lltopd, cuwfs[iwfs].lltncpa, stream);
 	}else{
 	    cuzero(lltopd, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
-	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc,
+	gpu_atm2loc(lltopd, cupowfs[ipowfs].llt.loc,
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg->p[0], 
 		    parms->powfs[ipowfs].llt->misreg->p[1], 
@@ -424,10 +424,10 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		//warning("Remove tip/tilt in uplink ideally\n");
 		Real *lltg=cuwfs[iwfs].lltg;
 		lltg[0]=lltg[1]=0;
-		cuztilt(lltg, lltopd->p, 1, 
-			cupowfs[ipowfs].llt->pts->dxsa, 
-			cupowfs[ipowfs].llt->pts->nxsa, cuwfs[iwfs].lltimcc,
-			cupowfs[ipowfs].llt->pts->p, cuwfs[iwfs].lltamp, 1.f, stream);
+		cuztilt(lltg, lltopd, 1, 
+			cupowfs[ipowfs].llt.pts.Dxsa(), 
+			cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
+			cupowfs[ipowfs].llt.pts, cuwfs[iwfs].lltamp, 1.f, stream);
 		CUDA_SYNC_STREAM;
 		ttx=-lltg[0];
 		tty=-lltg[1];
@@ -450,13 +450,13 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	    const double dx=powfs[ipowfs].llt->pts->dx;
 	    const double ox=powfs[ipowfs].llt->pts->origx[0];
 	    const double oy=powfs[ipowfs].llt->pts->origy[0];
-	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd->p, nlx, nlx, ox, oy, dx, ttx, tty);
+	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
 	}
 	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
-	lwvf=cuwfs[iwfs].lltwvf->p;
+	lwvf=cuwfs[iwfs].lltwvf;
 	if(nlwvf != notf){
-	    lotfc=cuwfs[iwfs].lltotfc->p;
+	    lotfc=cuwfs[iwfs].lltotfc;
 	}else{
 	    lotfc=lwvf;
 	}
@@ -468,14 +468,14 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     /* Now begin physical optics preparation*/
     int isotf=(lltopd || pistatout);
     int msa=cuwfs[iwfs].msa;/* number of subaps to process at each time.*/
-    wvf=cuwfs[iwfs].wvf->p;
+    wvf=cuwfs[iwfs].wvf;
     if(nwvf==notf){
 	psf=wvf;
     }else{
-	psf=cuwfs[iwfs].psf->p;
+	psf=cuwfs[iwfs].psf;
     }
     if(srot1 || ncompx!=notf || ncompy!=notf){
-	otf=cuwfs[iwfs].otf->p;
+	otf=cuwfs[iwfs].otf;
 	if(isotf){/*There is an additional pair of FFT.*/
 	    norm_ints/=((Real)notf*notf);
 	}
@@ -484,7 +484,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
     }
 
     if(pistatout){
-	psfstat=cuwfs[iwfs].psfstat->p;
+	psfstat=cuwfs[iwfs].psfstat.P();
     }
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -498,7 +498,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		cudaMemsetAsync(lotfc, 0, sizeof(Comp)*notf*notf, stream);
 	    }
 	    sa_embed_wvf_do<<<1,dim3(16,16),0,stream>>>
-		(lwvf, lltopd->p, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
+		(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
 	    /*Turn to PSF. peak in corner */
 	    CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_FORWARD);
 	    sa_abs2real_do<<<1,dim3(16,16),0,stream>>>(lwvf, nlwvf, 1./(Real)(nlwvf*nlwvf));
@@ -519,7 +519,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		cudaMemsetAsync(psf, 0, sizeof(Comp)*ksa*notf*notf, stream);
 	    }
 	    sa_embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
-		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp+isa*nx*nx, wvl, nx, nwvf);
+		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp.P()+isa*nx*nx, wvl, nx, nwvf);
 	    ctoc("embed");
 	    /* turn to complex psf, peak in corner */
 	    CUFFT(cuwfs[iwfs].plan1, wvf, CUFFT_FORWARD);
@@ -532,10 +532,10 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 	    ctoc("psf");
 	    if(wvfout){
 		cuzero(cuwfs[iwfs].psfout, stream);
-		CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout->p, CUFFT_INVERSE);
+		CUFFT2(cuwfs[iwfs].plan2, psf, cuwfs[iwfs].psfout, CUFFT_INVERSE);
 		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
-		    (wvfout->p[isa+nsa*iwvl]->p, wvf_n, wvf_n, 
-		     cuwfs[iwfs].psfout->p, notf, notf, norm_psf/(notf*notf));
+		    (wvfout[isa+nsa*iwvl], wvf_n, wvf_n, 
+		     cuwfs[iwfs].psfout, notf, notf, norm_psf/(notf*notf));
 	    }
 	    /* abs2 part to real, peak in corner */
 	    sa_abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
@@ -550,15 +550,15 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 				    MEMCPY_D2D, stream);
 		    if(parms->powfs[ipowfs].pistatout==1){
 			sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
-			    (psfstat, notf,notf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
+			    (psfstat, notf,notf, gradref.P()+isa, gradref.P()+nsa+isa, -1.f/dtheta);
 		    }
 		    CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
 		    if(parms->sim.skysim){/*want peak in corner*/
 			sa_acc_real_do<<<ksa,dim3(16,16),0,stream>>>
-			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, notf, notf, norm_pistat);
+			    (pistatout[isa+nsa*iwvl], psfstat, notf, notf, norm_pistat);
 		    }else{/*want peak in center*/
 			sa_acc_real_fftshift_do<<<ksa,dim3(16,16),0,stream>>>
-			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, notf, notf, norm_pistat);
+			    (pistatout[isa+nsa*iwvl], psfstat, notf, notf, norm_pistat);
 		    }
 		}
 		if(lltopd){/*multiply with uplink otf. */
@@ -602,20 +602,20 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		    Real wt1=1.-wt2;
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2->col(isa), wt2, 0);
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
 		    }else{
 			sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2->col(isa), wt2, 0);
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), wt1, cuwfs[iwfs].dtf[iwvl].etf2.Col(isa), wt2, 0);
 		    }
 		    ctoc("ccwm2");
 		}else if(cuwfs[iwfs].dtf[iwvl].etf){
 		    ctoc("before ccwm");
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
 			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), 0);
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    }else{
 			sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
-			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf->col(isa), 0);
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf.Col(isa), 0);
 		    }
 		    ctoc("ccwm");
 		}
@@ -623,12 +623,12 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		if(cuwfs[iwfs].dtf[iwvl].nominal){
 		    int each=0;
 		    Comp *pnominal=0;
-		    if(cuwfs[iwfs].dtf[iwvl].nominal->ny==1){
+		    if(cuwfs[iwfs].dtf[iwvl].nominal.Ny()==1){
 			each=1;
-			pnominal=cuwfs[iwfs].dtf[iwvl].nominal->col(0);
+			pnominal=cuwfs[iwfs].dtf[iwvl].nominal.Col(0);
 		    }else{
 			each=0;
-			pnominal=cuwfs[iwfs].dtf[iwvl].nominal->col(isa);
+			pnominal=cuwfs[iwfs].dtf[iwvl].nominal.Col(isa);
 		    }
 		    sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
 			(otf, ncompx, ncompy, pnominal, each);
@@ -638,7 +638,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat *gradref, int iwfs, int isim,
 		CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_INVERSE);
 		ctoc("fft");
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
-		    (ints->p[isa]->p, pixpsax, pixpsay, 
+		    (ints[isa], pixpsax, pixpsay, 
 		     (Real)parms->powfs[ipowfs].pixoffx, (Real)parms->powfs[ipowfs].pixoffy,
 		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);

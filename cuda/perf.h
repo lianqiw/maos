@@ -24,36 +24,35 @@
 struct cuperf_t{
     static int *nembed;
     static int *psfsize;
-    static Real *wvls;    
-    static cudaStream_t *stream;
-    static cublasHandle_t *handle;
-    static cufftHandle *plan;
-
-    static curcell *surf;
-    static curcell *opd;
-    static curcell *psfcl;
-    static curcell *psfcl_ngsr;
-    static curcell *opdcov;
-    static curcell *opdcov_ngsr;
-    static curcell *opdmean;
-    static curcell *opdmean_ngsr;
-    static curcell *cc_ol, *cc_cl, *coeff;
+    static Real *wvls;
+    static cudaStream_t    *stream;
+    static cublasHandle_t  *handle;
+    static cufftHandle     *plan;
+    static curcell surf;
+    static curcell opd;
+    static curcell psfcl;
+    static curcell psfcl_ngsr;
+    static curcell opdcov;
+    static curcell opdcov_ngsr;
+    static curcell opdmean;
+    static curcell opdmean_ngsr;
+    static curcell cc_ol, cc_cl, coeff;
     static Real **ccb_ol, **ccb_cl;
-
+    static pthread_mutex_t perfmutex;
     pthread_mutex_t mutex;
-    culoc_t *locs;
-    culoc_t ***locs_dm;
-    curmat *imcc;
-    Real   *amp;
+    culoc_t locs;
+    cuarray<cuarray<culoc_t> > locs_dm;
+    curmat imcc;
+    curmat amp;
     int    **embed;
 
-    cuccell *wvf;
-    cuccell *psfs;
-    curcell *psfol;
-    curmat  *opdcovol;
-    curmat  *opdmeanol;
-    cuperf_t(){
-	memset(this, 0, sizeof(*this));
+    cuccell wvf;
+    cuccell psfs;
+    curcell psfol;
+    curmat  opdcovol;
+    curmat  opdmeanol;
+    cuperf_t():locs_dm(0),embed(0){
     }
+    ~cuperf_t();
 };
 #endif

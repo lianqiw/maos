@@ -27,41 +27,31 @@ protected:
     /*the following data are input or intermediate data for the operation*/
     curecon_geom *grid;
     int nfit;
-    cugrid_t *acmap;
-    curcell *dmcache, *xcache;
-    curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
-    curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
-    curmat *opdfitv;/**<Concatenated version of opdfit. 1 column for each direction*/
-    curmat *opdfit2v;/**<Concatenated version of opdfit2. 1 column for each direction*/
-    curmat *fitwt, *fitNW, *dotNW;
-    culoc_t *floc;
+    cugridcell acmap;
+    curcell dmcache;
+    curcell xcache;
+    curcell opdfit; /**<OPDs defined on ploc for fitting.*/
+    curcell opdfit2;/**<OPDs defined on ploc for fitting.*/
+    curmat opdfitv;/**<Concatenated version of opdfit. 1 column for each direction*/
+    curmat opdfit2v;/**<Concatenated version of opdfit2. 1 column for each direction*/
+    curmat fitwt, fitNW, dotNW;
+    culoc_t floc;
     dir_t *dir;
-    cusp *actslave;
+    cusp actslave;
     map_ray *hxp, *hxp0, *hxp1, *ha, *ha0, *ha1;
     /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
     PROP_WRAP_T *hapdata;//for moao
     PROP_WRAP_T *hadata,*ha0data,*ha1data;*/
-    void do_hxp(const curcell *xin, stream_t &stream);
-    void do_hxpt(const curcell *xout, Real alpha, stream_t &stream);
-    void do_ha(const curcell *xin, stream_t &stream);
-    void do_hat(curcell *xout,  Real alpha, stream_t &stream);
+    void do_hxp(const curcell &xin, stream_t &stream);
+    void do_hxpt(const curcell &xout, Real alpha, stream_t &stream);
+    void do_ha(const curcell &xin, stream_t &stream);
+    void do_hat(curcell &xout,  Real alpha, stream_t &stream);
 public:
     cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
-	delete[] acmap;
-	delete dmcache;
-	delete xcache;
-	delete opdfit;
-	delete opdfit2;
-	delete opdfitv;
-	delete opdfit2v;
-	delete fitwt;
-	delete fitNW;
-	delete dotNW;
 	delete dir;
-	delete floc;
-	delete actslave;
+
 	delete [] ha;
 	delete [] ha0;
 	delete [] ha1;
@@ -70,12 +60,12 @@ public:
 	delete [] hxp0;
 	delete [] hxp1;
     }
-    virtual void R(curcell **out, Real beta, 
-		   const curcell *xin, Real alpha, stream_t &stream);
-    virtual void L(curcell **out, Real beta, 
-		   const curcell *xin, Real alpha, stream_t &stream);
-    virtual void Rt(curcell **out, Real beta, 
-		    const curcell *xin, Real alpha, stream_t &stream);
+    virtual void R(curcell &out, Real beta, 
+		   curcell &xin, Real alpha, stream_t &stream);
+    virtual void L(curcell &out, Real beta, 
+		   const curcell &xin, Real alpha, stream_t &stream);
+    virtual void Rt(curcell &out, Real beta, 
+		    curcell &xin, Real alpha, stream_t &stream);
 };
 
 }//namespace

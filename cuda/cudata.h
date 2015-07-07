@@ -19,6 +19,8 @@
 #define AOS_CUDA_DATA_H
 #include <map>
 #include "types.h"
+#include "perf.h"
+#include "wfs.h"
 extern int NGPU;
 extern int MAXGPU;
 typedef Real ATYPE;
@@ -36,43 +38,39 @@ typedef struct cudata_t{
     static int recongpu;
     static int *evlgpu;
     static int *wfsgpu;
-    std::map<uint64_t, void*> *memhash;/*For reuse constant GPU memory*/
-    std::map<void *, int> *memcount; /*Store count of reused memory*/
+    std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory*/
+    std::map<void *, int> memcount; /*Store count of reused memory*/
     void *memcache;/*For reuse temp array for type conversion.*/
     long nmemcache;
     pthread_mutex_t memmutex;
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
-    cumap_t *atm;   /**<atmosphere: array of cumap_t */
+    cumapcell atm;   /**<atmosphere: array of cumap_t */
     static dmat *atmscale; /**<Scaling of atmosphere due to r0 variation*/
-    cumap_t *dmreal;/**<DM: array of cumap_t */
-    cumap_t *dmproj;/**<DM: array of cumap_t */
+    cumapcell dmreal;/**<DM: array of cumap_t */
+    cumapcell dmproj;/**<DM: array of cumap_t */
     int nps; /**<number of phase screens*/
     /*for perfevl */
-    cuperf_t *perf;
+    cuperf_t perf;
     /*for wfsgrad */
-    cupowfs_t *powfs;
-    static cuwfs_t *wfs;
+    cuarray<cupowfs_t>powfs;
+    static cuarray<cuwfs_t>wfs;//must be static so we can address all elements.
     /*for recon */
     cuda_recon::curecon_t *recon;
     /*for moao*/
-    cumap_t **dm_wfs;
-    cumap_t **dm_evl;
+    cuarray<cumapcell> dm_wfs;
+    cuarray<cumapcell> dm_evl;
     /*for mvm*/
-    curmat *mvm_m;/*the control matrix*/
+    curmat mvm_m;/*the control matrix*/
     ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
     ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
     GTYPE *mvm_g;/*the gradients copied from gpu*/
-    stream_t *mvm_stream;
-    cudata_t(){
-	memset(this, 0, sizeof(cudata_t));
-	memhash=new std::map<uint64_t, void*>;
-	memcount=new std::map<void*, int>;
+    stream_t mvm_stream;
+    cudata_t():nmemcache(0),memcache(NULL),reserve(0),nps(0),powfs(0),recon(0)
+	      ,mvm_a(0),mvm_a2(0),mvm_g(0){
 	pthread_mutex_init(&memmutex, 0);
     }
     ~cudata_t(){
-	delete memhash;
-	delete memcount;
 	free(memcache);
     }
 }cudata_t;
@@ -86,7 +84,7 @@ inline cudata_t* _cudata(){
 #else
 extern __thread cudata_t *cudata;
 #endif
-extern cudata_t *cudata_all;/*use pointer array to avoid misuse. */
+extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
 
 void gpu_print_mem(const char *msg);
 long gpu_get_mem(void);
@@ -100,9 +98,9 @@ inline void gpu_set(int igpu){
     }
     cudaSetDevice(GPUS[igpu]);
 #ifdef __APPLE__
-    pthread_setspecific(cudata_key, &cudata_all[igpu]);
+    pthread_setspecific(cudata_key, cudata_all[igpu]);
 #else
-    cudata=cudata_all+igpu;
+    cudata=cudata_all[igpu];
 #endif
     if(cudata->reserve){
 	cudaFree(cudata->reserve);

@@ -22,7 +22,7 @@
 #define AOS_CUDA_CUMAT_H
 #include <typeinfo>
 template <typename T>
-    inline void cuwritedata(const cumat<T> *A, file_t *fp){
+    inline void cuwritedata(const cumat<T> &A, file_t *fp){
     uint32_t magic;
     if(typeid(T)==typeid(Real)){
 	magic=M_FLT;
@@ -31,18 +31,18 @@ template <typename T>
     }else{
 	error("Invalid type\n");
     }
-    if(A && A->nx>0 && A->ny>0){
-	T *tmp=(T*)malloc(A->nx*A->ny*sizeof(T));
-	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(T), cudaMemcpyDeviceToHost);
+    if(A && A.Nx()>0 && A.Ny()>0){
+	T *tmp=(T*)malloc(A.Nx()*A.Ny()*sizeof(T));
+	cudaMemcpy(tmp, A.P(), A.Nx()*A.Ny()*sizeof(T), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-	writearr(fp, 0, sizeof(T), magic, NULL, tmp, A->nx, A->ny);
+	writearr(fp, 0, sizeof(T), magic, NULL, tmp, A.Nx(), A.Ny());
 	free(tmp);
     }else{
 	writearr(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
     }
 }
 template <typename T>
-inline void cuwrite(const cumat<T> *A, const char *format, ...)CHECK_ARG(2){
+inline void cuwrite(const cumat<T> &A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     cuwritedata<T>(A, fp);
@@ -50,33 +50,33 @@ inline void cuwrite(const cumat<T> *A, const char *format, ...)CHECK_ARG(2){
 }
 
 template <typename T>
-inline void cuwrite(const cucell<T> *A, const char *format, ...)CHECK_ARG(2){
+inline void cuwrite(const cucell<T> &A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
-    header_t header={MCC_ANY, A?(uint64_t)A->nx:0, A?(uint64_t)A->ny:0, NULL};
+    header_t header={MCC_ANY, A?(uint64_t)A.Nx():0, A?(uint64_t)A.Ny():0, NULL};
     write_header(&header, fp);
     if(A){
-	for(int i=0; i<A->nx*A->ny; i++){
-	    cuwritedata<T>(A->p[i], fp);
+	for(int i=0; i<A.Nx()*A.Ny(); i++){
+	    cuwritedata<T>(A[i], fp);
 	}
     }
     zfclose(fp);	
 }
 
 template <typename T>
-inline void cucellcp(cucell<T> **out, const cucell<T>*in, cudaStream_t stream){
-    if(!*out){
-	*out=new cucell<T>(in);
+inline void cucellcp(cucell<T> &out, const cucell<T>&in, cudaStream_t stream){
+    if(!out){
+	out=in.New();
     }
-    if(!in->m){
-	for(int i=0; i<in->nx*in->ny; i++){
-	    curcp(&(*out)->p[i], in->p[i], stream);
+    if(!in.M()){
+	for(int i=0; i<in.Nx()*in.Ny(); i++){
+	    curcp(out[i], in[i], stream);
 	}
     }else{
-	if(!(*out)->m){
+	if(!out.M()){
 	    error("in is continuous, out is not\n");
 	}
-	curcp(&(*out)->m, in->m, stream);
+	curcp(out.M(), in.M(), stream);
     }
 }
 #endif

@@ -121,16 +121,15 @@ static void mvm_thread(void* ithread0){
 		gpu_set(ithread);
 	    }
 	    X(mat) *mvm=mvm_data->mvm;
-	    cudata->mvm_stream=new stream_t;
-	    cp2gpu(&cudata->mvm_m, mvm, *cudata->mvm_stream);
+	    cp2gpu(cudata->mvm_m, mvm, cudata->mvm_stream);
 	    if(cudata->mvm_a){
 		cudaFree(cudata->mvm_a); cudata->mvm_a=NULL;
 		cudaFree(cudata->mvm_g); cudata->mvm_g=NULL;
 	    }
 	    cudaMalloc(&cudata->mvm_a, mvm->nx*sizeof(ATYPE));
 	    cudaMalloc(&cudata->mvm_g, mvm->ny*sizeof(GTYPE));
-	    cudaMemsetAsync(cudata->mvm_a, 0, mvm->nx*sizeof(ATYPE), *cudata->mvm_stream);
-	    cudaStreamSynchronize(*cudata->mvm_stream);
+	    cudaMemsetAsync(cudata->mvm_a, 0, mvm->nx*sizeof(ATYPE), cudata->mvm_stream);
+	    cudaStreamSynchronize(cudata->mvm_stream);
 	    if(cudata->mvm_a2){
 		free(cudata->mvm_a2);
 	    }
@@ -142,10 +141,10 @@ static void mvm_thread(void* ithread0){
 	    int icol=mvm_data->icols[ithread];
 	    int k=mvm_data->kcols[ithread];
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
-			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
+			    cudaMemcpyHostToDevice, cudata->mvm_stream);
 	    
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, *cudata->mvm_stream>>>
-	      (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, cudata->mvm_stream>>>
+		(cudata->mvm_m+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
 	    /*Real one=1;
 	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
 	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
@@ -158,9 +157,9 @@ static void mvm_thread(void* ithread0){
 	    int ki2=mvm_data->k+mvm_data->icol-icol;
 	    int k=MIN(ki, ki2);
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
-			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, *cudata->mvm_stream>>>
-	    (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+			    cudaMemcpyHostToDevice, cudata->mvm_stream);
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(Real)*naeach, cudata->mvm_stream>>>
+		(cudata->mvm_m+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
 	    /*Real one=1;
 	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
 	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
@@ -169,9 +168,9 @@ static void mvm_thread(void* ithread0){
 	    break;
 	case CMD_DMCP:{
 	    cudaMemcpyAsync(mvm_data->ac[ithread], cudata->mvm_a, nact*sizeof(ATYPE),
-			    cudaMemcpyDeviceToHost, *cudata->mvm_stream);
-	    cudaStreamSynchronize(*cudata->mvm_stream);
-	    cudaMemsetAsync(cudata->mvm_a, 0, nact*sizeof(ATYPE), *cudata->mvm_stream);
+			    cudaMemcpyDeviceToHost, cudata->mvm_stream);
+	    cudaStreamSynchronize(cudata->mvm_stream);
+	    cudaMemsetAsync(cudata->mvm_a, 0, nact*sizeof(ATYPE), cudata->mvm_stream);
 	    cmds[ithread]=0;
 	}
 	    break;

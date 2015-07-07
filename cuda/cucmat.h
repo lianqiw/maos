@@ -25,5 +25,5 @@
 #define cuccellnew  new cucell<Comp>
 #define cucwrite cuwrite
 #define cuccellwrite cuwrite
-void cucscale(cucmat *in, Real Alpha, cudaStream_t stream);
+void cucscale(cucmat &in, Real Alpha, cudaStream_t stream);
 #endif

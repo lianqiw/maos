@@ -17,50 +17,49 @@
 */
 #include "solve.h"
 namespace cuda_recon{
-Real cucg_t::solve(curcell **xout, const curcell *xin, stream_t &stream){
+Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
     Real ans;
     cgtmp.count++;
-    if((ans=gpu_pcg(xout, this, precond, xin, &cgtmp,
+    if((ans=gpu_pcg(xout, this, precond, xin, cgtmp,
 		    warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
-	warning2("CG %5d(%5d) does not converge. ans=%g. maxit=%d\n", 
+	warning2("CG %5d(%5d) does not converge. residual=%g. maxit=%d\n", 
 		 cgtmp.count, cgtmp.count_fail, ans, maxit);
     }
     return ans;
 }
 
-void cumuv_t::Forward(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream){
+void cumuv_t::Forward(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
-    if(!*out){
-	*out=curcellnew(nx, 1, nxs, (int*)NULL);
+    if(!out){
+	out=curcell(nx, 1, nxs, (int*)NULL);
     }else{
-	curscale((*out)->m, beta, stream);
+	curscale(out.M(), beta, stream);
     }
-    cuspmul((*out)->m->p, M, in->m->p, 1, 'n', alpha, stream);
+    cuspmul(out.M().P(), M, in.M().P(), 1, 'n', alpha, stream);
     if(U && V){
-	curmv(Vx->p, 0, V, in->m->p, 't', 1, stream);
-	curmv((*out)->m->p, 1, U, Vx->p, 'n', -alpha, stream);
+	curmv(Vx.P(), 0, V, in.M().P(), 't', 1, stream);
+	curmv(out.M().P(), 1, U, Vx.P(), 'n', -alpha, stream);
     }
 }
-void cumuv_t::Trans(curcell **out, Real beta, const curcell *in, Real alpha, stream_t &stream){
+void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
     if(!M) error("M Can not be empty\n");
-    if(!*out){
-	*out=curcellnew(ny, 1, nys, (int*)NULL);
+    if(!out){
+	out=curcell(ny, 1, nys, (int*)NULL);
     }else{
-	curscale((*out)->m, beta, stream);
+	curscale(out.M(), beta, stream);
     }
     
-    curscale((*out)->m, beta, stream);
-    cuspmul((*out)->m->p, M, in->m->p, 1, 't', alpha, stream);
+    curscale(out.M(), beta, stream);
+    cuspmul(out.M().P(), M, in.M().P(), 1, 't', alpha, stream);
     if(U && V){
-	curmv(Vx->p, 0, U, in->m->p, 't', 1, stream);
-	curmv((*out)->m->p, 1, V, Vx->p, 'n', -alpha, stream);
+	curmv(Vx.P(), 0, U, in.M().P(), 't', 1, stream);
+	curmv(out.M().P(), 1, V, Vx.P(), 'n', -alpha, stream);
     }
 }
-cumuv_t::cumuv_t(const MUV_T *in)
-    :M(0),U(0),V(0),Vx(0),nx(0),ny(0),nxs(0),nys(0){
+cumuv_t::cumuv_t(const MUV_T *in):nx(0),ny(0),nxs(0),nys(0){
     if(!in) return;
-    if(M || !in->M) error("in->M should not be NULL and M should be NULL\n");
+    if(M || !in->M) error("in.M() should not be NULL and M should be NULL\n");
     dspcell *inM=dspcell_cast(in->M);
     dsp *Mc=dspcell2sp(inM);
     dmat *Uc=dcell2m(in->U);
@@ -70,22 +69,18 @@ cumuv_t::cumuv_t(const MUV_T *in)
     nxs=new int[nx];
     nys=new int[ny];
     for(int i=0; i<nx; i++){
-	nxs[i]=inM->p[i]->m;
+	nxs[i]=inM->p[i]->nx;
     }
     for(int i=0; i<ny; i++){
-	nys[i]=inM->p[i*inM->nx]->n;
+	nys[i]=inM->p[i*inM->nx]->ny;
     }
-    M=new cusp(Mc, 1);
-    cp2gpu(&U, Uc);
-    cp2gpu(&V, Vc);
+    M=cusp(Mc, 1);
+    cp2gpu(U, Uc);
+    cp2gpu(V, Vc);
     dspfree(Mc); dfree(Uc); dfree(Vc);
-    Vx=curnew(V->ny, 1);
+    Vx=curmat(V.Ny(), 1);
 }
 cumuv_t::~cumuv_t(){
-    delete M;
-    delete U;
-    delete V;
-    delete Vx;
     delete[] nxs;
     delete[] nys;
 }
@@ -95,30 +90,29 @@ cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *
     CR=new cumuv_t(_R);
     CL=new cumuv_t(_L);
 }
-cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp)
-    :Vr(0),Cl(0),Cp(0),Up(0),Vp(0),y(0){
+cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
     if(!_C) return;
     chol_convert(_C, 0);
-    Cl=new cusp(_C->Cl, 0);
-    cp2gpu(&Cp, _C->Cp, _C->Cl->m, 1);
+    Cl=cusp(_C->Cl, 0);
+    cp2gpu(Cp, _C->Cp, _C->Cl->m, 1);
     if(_Up){
-	cp2gpu(&Up, _Up);
-	cp2gpu(&Vp, _Vp);
+	cp2gpu(Up, _Up);
+	cp2gpu(Vp, _Vp);
     }
 }
-Real cusolve_cbs::solve(curcell **xout, const curcell *xin, stream_t &stream){
-    if(!*xout) *xout=curcellnew(xin);
-    if(Cl->type==SP_CSC){
-	chol_solve((*xout)->m->p, xin->m->p, stream);
+Real cusolve_cbs::solve(curcell &xout, const curcell &xin, stream_t &stream){
+    if(!xout) xout=xin.New();
+    if(Cl.Type()==SP_CSC){
+	chol_solve(xout.M().P(), xin.M().P(), stream);
     }else{
 	error("To implemente\n");
     }
     if(Up){
 	if(!Vr){
-	    Vr=curnew(Vp->ny, 1);
+	    Vr=curmat(Vp.Ny(), 1);
 	}
-	curmv(Vr->p, 0, Vp, xin->m->p, 't', -1, stream);
-	curmv((*xout)->m->p, 1, Up, Vr->p, 'n', 1, stream);
+	curmv(Vr.P(), 0, Vp, xin.M().P(), 't', -1, stream);
+	curmv(xout.M().P(), 1, Up, Vr.P(), 'n', 1, stream);
     }
     return 0;
 }
@@ -161,15 +155,15 @@ static __global__ void cuchol_solve_lower_do(Real *restrict y, Real *Cx, int *Cp
 }
 void cusolve_cbs::chol_solve(Real *out, const Real *in, stream_t &stream){
     if(!Cl || !Cp) error("Invalid\n");
-    int n=Cl->nx;
+    int n=Cl.Nx();
     if(!y){
-	y=curnew(Cl->nx, 1);
+	y=curmat(Cl.Nx(), 1);
     }
-    perm_f_do<<<DIM(n, 256),0,stream>>>(y->p, in, Cp, n);
+    perm_f_do<<<DIM(n, 256),0,stream>>>(y.P(), in, Cp.P(), n);
     //only 1 block for synchronization.
     const int NTH=256;
-    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y->p, Cl->x, Cl->p, Cl->i, n); 
-    perm_i_do<<<DIM(n, 256),0,stream>>>(out, y->p, Cp, n);
+    cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y.P(), Cl.Px(), Cl.Pp(), Cl.Pi(), n); 
+    perm_i_do<<<DIM(n, 256),0,stream>>>(out, y.P(), Cp.P(), n);
     cudaStreamSynchronize(stream);
 }
 }

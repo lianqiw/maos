@@ -23,11 +23,11 @@ namespace cuda_recon{
 
 
 W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
-    :W1(0),W0p(0),W0f(0),nxx(R_nxx),pis(0){
+    :nxx(R_nxx),pis(0){
     if(!R_W0 || !R_W1){
 	error("R0, R1 must not be empty\n");
     }
-    cp2gpu(&W1, R_W1);
+    cp2gpu(W1, R_W1);
     {
 	/*W0 of partially illuminates subaps are stored as sparse matrix in W0f in
 	  GPU. W0 of fully illuminated subaps are stored in W0p.*/
@@ -60,8 +60,8 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
 	}
 	pp2[R_W0->n]=count;
 	W0new->nzmax=count;
-	W0p=new cusp(W0new, 1);
-	cp2gpu(&W0f, full, count2, 1);
+	W0p=cusp(W0new, 1);
+	cp2gpu(W0f, full, count2, 1);
 	dspfree(W0new);
 	cudaFreeHost(full);
     }
@@ -115,21 +115,20 @@ apply_W0_do(Real *outs, const Real *ins, const int *W0f, Real W0v, int nx, int n
     }
 }
 void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stream){
-    if(!pis || pis->nx < ndir){
-	delete pis;
-	pis=curnew(ndir,1);
+    if(pis.Nx() < ndir){
+	pis=curmat(ndir,1);
     }else{
-	cuzero(pis, stream);
+	pis.zero(stream);
     }
     //Apply W1: Piston removal
     inn_multi_do<<<dim3(32, ndir), dim3(DIM_REDUCE), DIM_REDUCE*sizeof(Real), stream>>>
-	(pis->p, xin, W1->p, W1->nx);
+	(pis.P(), xin, W1.P(), W1.Nx());
     assign_multi_do<<<dim3(32, ndir), dim3(256), 0, stream>>>
-	(xout, W1->p, pis->p, -1, W1->nx);
+	(xout, W1.P(), pis.P(), -1, W1.Nx());
     //Apply W0: bilinar-weighting
     if(W0f){
 	apply_W0_do<<<dim3(16, ndir), dim3(256,1), 0, stream>>> 		
-	    (xout, xin, W0f->p, W0v, nxx, W1->nx, W0f->nx);
+	    (xout, xin, W0f.P(), W0v, nxx, W1.Nx(), W0f.Nx());
     }
     if(W0p){
 	cuspmul(xout, W0p, xin, ndir, 'n', 1.f, stream);
@@ -137,36 +136,33 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
 }
 
 curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
-    :npsr(0),ndm(0),isim(0),reconisim(0),
-     amap(0),xmap(0),xcmap(0),W01(0),
-     xnx(0),xny(0),anx(0),any(0),
-     anloc(0),ngrad(0),
-     dt(0),delay(0){
+    :npsr(0),ndm(0),delay(0),isim(0),reconisim(0),
+     xnx(0),xny(0),anx(0),any(0), anloc(0),ngrad(0), dt(0){
     if(!parms) return;
     ndm=parms->ndm;
     npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
-    pmap.init(recon->pmap);
-    fmap.init(recon->fmap);
+    pmap=(recon->pmap);
+    fmap=(recon->fmap);
     /*Setup various grid*/
-    amap=new cugrid_t[ndm];
+    amap=cugridcell(ndm,1);
     for(int idm=0; idm<ndm; idm++){
-	amap[idm].init(recon->amap->p[idm]);
+	amap[idm]=(recon->amap->p[idm]);
     }
     if(recon->xloc){
-	xmap=new cugrid_t[npsr];
+	xmap=cugridcell(npsr,1);
 	for(int ipsr=0; ipsr<npsr; ipsr++){
-	    xmap[ipsr].init(recon->xmap->p[ipsr]);
+	    xmap[ipsr]=recon->xmap->p[ipsr];
 	}
 	xnx=recon->xnx->p;
 	xny=recon->xny->p;
     }
     if(recon->xcmap){
-	xcmap=new cugrid_t[npsr];
+	xcmap=cugridcell(npsr,1);
 	for(int ipsr=0; ipsr<npsr; ipsr++){
-	    xcmap[ipsr].init(recon->xcmap->p[ipsr]);
+	    xcmap[ipsr]=(recon->xcmap->p[ipsr]);
 	}
     }
-    W01=new W01_T(recon->W0, recon->W1, fmap.nx);
+    W01=W01_T(recon->W0, recon->W1, fmap.nx);
     anx=recon->anx->p;
     any=recon->any->p;
     anloc=recon->anloc->p;
@@ -176,7 +172,7 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 }
 
 map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
-		 const cugrid_t *in, int _nlayer,//input. layers.
+		 const cugridcell &in, int _nlayer,//input. layers.
 		 Real dt){//directions and star height.
     nlayer=_nlayer;
     ndir=_ndir;
@@ -190,8 +186,8 @@ map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
 		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dt;
 		const Real hs=dir[idir].hs;
 		const Real scale=1.f-ht/hs;
-		cugrid_t outscale=out*scale;
-		gpu_prop_grid_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
+		cugrid_t outscale=out.Scale(scale);
+		gpu_map2map_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
 				   dispx, dispy, in[ilayer].cubic_cc);
 	    }
 	    hdata_cpu[idir+ilayer*ndir].togpu(hdata+idir+ilayer*ndir);
@@ -200,7 +196,7 @@ map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
     delete [] hdata_cpu;
 }
 
-map_l2l::map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer){//input. layers.
+map_l2l::map_l2l(const cugridcell &out, const cugridcell &in, int _nlayer){//input. layers.
     nlayer=_nlayer;
     ndir=0;//this is laye to layer.
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];
@@ -209,7 +205,7 @@ map_l2l::map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer){//input. 
 	if(Z(fabs)(out[ilayer].ht-in[ilayer].ht)>EPS){
 	    error("Layer height miX(mat)ch\n");
 	}
-	gpu_prop_grid_prep(hdata_cpu+ilayer, out[ilayer], in[ilayer],
+	gpu_map2map_prep(hdata_cpu+ilayer, out[ilayer], in[ilayer],
 			   0, 0, in[ilayer].cubic_cc);
 	hdata_cpu[ilayer].togpu(hdata+ilayer);
     }

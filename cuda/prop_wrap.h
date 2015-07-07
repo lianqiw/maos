@@ -22,7 +22,7 @@
 struct PROP_WRAP_T{
     int offdir, offdirx, offdiry;
     int offps, offpsx, offpsy;
-    Real *cc;
+    const Real *cc;
     int nxdir,nydir;
     int nxps,nyps;
     Real dispx, dispy;
@@ -65,13 +65,11 @@ typedef struct{
     Real yratio;//nohelp
     Real fx[9];//9 to avoid bank conflict
     Real fy[9];
-}gpu_prop_grid_shared_t;
-__global__ void 
-gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, 
-		 int ndir, int nps, Real alpha1, Real *alpha2, char trans);
+}gpu_map2map_shared_t;
+__global__ void gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, 
+			       int ndir, int nps, Real alpha1, Real *alpha2, char trans);
 
-void gpu_prop_grid_prep(PROP_WRAP_T*res, 
-			const cugrid_t &g_dir, const cugrid_t &gi,
-			Real dispx, Real dispy, curmat *cc);
-void gpu_prop_grid(cumap_t &out, cumap_t &in, Real dispx, Real dispy, Real alpha, curmat *cc, char trans);
+void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &gi,
+		      Real dispx, Real dispy, const curmat &cc);
+void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real alpha, const curmat &cc, char trans);
 #endif

@@ -29,16 +29,16 @@ streams are used now with each stream doing tasks in series. This helps to incre
 
 #define TIMING 0
 typedef struct{
-    curmat *cumvm;//active mvm control matrix
-    curmat *cumvm_next;//inactive mvm control matrix.
-    curmat *cumvm1;
-    curmat *cumvm2;
-    curmat *mtch;
-    curmat *pix;//pixels. Each sa has 15x6=90 pixels.
-    curmat *grad;
-    curmat *act;
-    stream_t *stream;
-    stream_t *stream_mvm;//mvm
+    curmat cumvm;//active mvm control matrix
+    curmat cumvm_next;//inactive mvm control matrix.
+    curmat cumvm1;
+    curmat cumvm2;
+    curmat mtch;
+    curmat pix;//pixels. Each sa has 15x6=90 pixels.
+    curmat grad;
+    curmat act;
+    cuarray<stream_t> stream;
+    stream_t stream_mvm;//mvm
     int ism;//index of stream for mvm
     int count;
     int gpu;//Which GPU this data is for
@@ -122,18 +122,17 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
     for(int igpu=0; igpu<ngpu; igpu++){
 	cudaSetDevice(gpus[igpu]);
-	data[igpu].cumvm1=curnew(mvm1->nx, ng);
-	data[igpu].cumvm2=curnew(mvm2->nx, ng);
+	data[igpu].cumvm1=curmat(mvm1->nx, ng);
+	data[igpu].cumvm2=curmat(mvm2->nx, ng);
 	data[igpu].cumvm=data[igpu].cumvm1;
 	data[igpu].cumvm_next=data[igpu].cumvm2;
-	cp2gpu(&data[igpu].cumvm1, mvm);
-	data[igpu].pix=curnew(pixpsa, nsa);
-	data[igpu].mtch=curnew(pixpsa, nsa*2);
-	cp2gpu(&data[igpu].mtch, mtch);
-	data[igpu].grad=curnew(ng, 1);
-	data[igpu].act=curnew(mvm1->nx, 1);
-	data[igpu].stream=new stream_t[nsm];
-	data[igpu].stream_mvm=new stream_t;
+	cp2gpu(data[igpu].cumvm1, mvm);
+	data[igpu].pix=curmat(pixpsa, nsa);
+	data[igpu].mtch=curmat(pixpsa, nsa*2);
+	cp2gpu(data[igpu].mtch, mtch);
+	data[igpu].grad=curmat(ng, 1);
+	data[igpu].act=curmat(mvm1->nx, 1);
+	data[igpu].stream=cuarray<stream_t>(nsm, 1);
 	data[igpu].gpu=gpus[igpu];
 
 	data[igpu].event_g=new event_t[sect_gpu];
@@ -179,13 +178,13 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    int ism=datai->ism=(datai->ism+1)%nsm;
 	    int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 
-	    DO(cudaMemcpyAsync(datai->pix->p+isa*pixpsa, pix->p+isa*pixpsa, sizeof(Real)*nleft*pixpsa,
+	    DO(cudaMemcpyAsync(datai->pix.P()+isa*pixpsa, pix->p+isa*pixpsa, sizeof(Real)*nleft*pixpsa,
 			       cudaMemcpyHostToDevice, datai->stream[ism]));
 	    //Start matched filter in the same stream
 	    mtch_do<<<mtch_ngrid, dim3(mtch_dimx, mtch_dimy), 
 		mtch_dimx*mtch_dimy*sizeof(Real), datai->stream[ism]>>>
-	       (datai->mtch->p+isa*2*pixpsa, datai->pix->p+isa*pixpsa, 
-		datai->grad->p+isa*2, pixpsa, nleft);
+		(datai->mtch.P()+isa*2*pixpsa, datai->pix.P()+isa*pixpsa, 
+		 datai->grad.P()+isa*2, pixpsa, nleft);
 #if 0
 	    Real one=1; Real zero=0; 
 	    Real *pbeta;
@@ -203,7 +202,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		const int nstream=10;
 		const int nblock=(nact*nstream+naeach-1)/naeach;
 		multimv_do<<<nblock, naeach, sizeof(Real)*naeach, datai->stream[ism]>>>
-		    (datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
+		    (datai->cumvm.P()+nact*isa*2, datai->act, datai->grad.P()+isa*2, 
 		     nact, nleft*2);
 	    }
 #endif
@@ -217,7 +216,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    for(int ism=0; ism<nsm; ism++){
 		datai->stream[ism].sync();
 	    }
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(Real), 
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act, nact*sizeof(Real), 
 			    cudaMemcpyDeviceToHost, datai->stream[0]);
 
 	}

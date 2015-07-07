@@ -35,14 +35,14 @@ cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, in
     embednx=embedny=powfs[ipowfs].nembed;
 }
 
-void cufieldstop_t::apply(cuwfs_info *wfsinfo, curmat *opd, cudaStream_t stream){
+void cufieldstop_t::apply(cuwfs_info *wfsinfo, curmat &opd, cudaStream_t stream){
     if(nwvl>1) error("Please implemente\n");
     embed_wvf_do<<<DIM(opd->nx, 256), 0, stream>>>
 	(wvf->p, opd->p, wfsinfo->amp->p, wfsinfo->embed->p, opd->nx, wvl[0]);
-    CUFFT(plan, (cufftComplex *)wvf->p, CUFFT_FORWARD);
+    CUFFT(plan, (Comp *)wvf->p, CUFFT_FORWARD);
     cwm_do<<<DIM(wvf->nx*wvf->ny, 256),0,stream>>>
 	(wvf->p, fieldmask->p, wvf->nx*wvf->ny);
-    CUFFT(plan, (cufftComplex *)wvf->p, CUFFT_INVERSE);
+    CUFFT(plan, (Comp *)wvf->p, CUFFT_INVERSE);
     unwrap_phase_do<<<DIM2(wvf->nx, wvf->ny, 16),0,stream>>>
 	(wvf->p, opd->p, wfsinfo->embed->p, opd->nx, wvl[0]);
 }
@@ -128,7 +128,7 @@ cushg_t::cushg_t(wfscfg_t *wfscfg)
     const int wfsind=wfscfg->wfsind;
     GS0=new cusp(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0], 1);
 }
-void cushg_t::calcg(curmat *opd, Real ratio){
+void cushg_t::calcg(curmat &opd, Real ratio){
     cuspmul(gradcalc->p, GS0, opd->p, 1, 'n', ratio, stream);
 }
 cushz_t::cushz_t(wfscfg_t *wfscfg)
@@ -143,7 +143,7 @@ cushz_t::cushz_t(wfscfg_t *wfscfg)
     }
     cp2gpu(&imcc, _imcc, nsa, 1);
 }
-void cushz_t::calcg(curmat *opd, Real ratio){
+void cushz_t::calcg(curmat &opd, Real ratio){
     error("need to implement. Decide where to put pts info.\n");
     /*cuztilt<<<nsa, dim3(16,16), 0, stream>>>
 	(gradcalc->p, opd->p, opd->nx, dxsa, nxsa, imcc,
@@ -156,7 +156,7 @@ cullt_t::cullt_t(wfscfg_t *wfscfg)
     const POWFS_T *powfs=wfscfg->powfs;
     const int ipowfs=wfscfg->ipowfs;
     const int wfsind=wfscfg->wfsind;
-    pts=new cfsms_t(powfs[ipowfs].llt->pts);
+    pts=new cupts_t(powfs[ipowfs].llt->pts);
     loc=new culoc_t(powfs[ipowfs].llt->loc);
     if(powfs[ipowfs].llt->ncpa){
 	cp2gpu(&ncpa, powfs[ipowfs].llt->ncpa->p[powfs[ipowfs].llt->ncpa->nx>1?wfsind:0]);

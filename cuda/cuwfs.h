@@ -58,7 +58,7 @@ public:
 	    wvl[iwvl]=_wvl[iwvl];
 	}
     }
-    void apply(cuwfs_info *wfsinfo, curmat *opd, cudaStream_t stream);
+    void apply(cuwfs_info *wfsinfo, curmat &opd, cudaStream_t stream);
     ~cufieldstop_t(){
 	delete fieldmask;
 	delete wvf;
@@ -110,13 +110,13 @@ public:
     }
     virtual void addnoise();
     virtual void output();
-    virtual void calcg(curmat *opd, Real ratio);
+    virtual void calcg(curmat &opd, Real ratio);
     virtual void acc(curmat *opd);
 };
 
 //LLT configuration. Only useful in SHWFS Phy mode.
 class cullt_t{
-    cfsms_t *pts;/**<LLT pupil sampling parameters*/
+    cupts_t *pts;/**<LLT pupil sampling parameters*/
     culoc_t *loc;/**<location of OPD points for laser launch telescope*/
     curmat *amp;
     curmat *ncpa;/**<Aberration*/

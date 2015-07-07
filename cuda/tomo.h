@@ -52,27 +52,28 @@ struct LAP_T{
 class cutomo_grid:public cusolve_r, public cucg_t{
     curecon_geom *grid;
     /*Temporary data*/
-    curcell *opdwfs;
-    curcell *grad;  
-    curmat *ttf;
+    curcell opdwfs;
+    curcell grad;  
+    curmat ttf;
 
     /*Configuration data*/
-    curcell *neai;
-    curcell *PTT;  /**< Global tip/tilt */
-    curcell *PDF;  /**< Differential focus removal */
-    curcell *PDFTT;/**<Coupling between DF and TT*/
-    cucell<int> *saptr;
-    cucell<short2> *GPp;
+    curcell neai;
+    curcell PTT;  /**< Global tip/tilt */
+    curcell PDF;  /**< Differential focus removal */
+    curcell PDFTT;/**<Coupling between DF and TT*/
+    cucell<int> saptr;
+    cucell<short2> GPp;
     Real *GPscale;
-    cuspcell *GP;
+    cuspcell GP;
     int ptt;       /**< piston/tip/tilt removal in L()*/
     int nwfs;
-    map_ray *hx;
-    GPU_GP_T *gpdata;
-    LAP_T *lap;
+    map_ray hx;
+    cumat<GPU_GP_T>gpdata;
+    cumat<LAP_T> lap;
     void init(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
-    void do_gp(curcell *grad, curcell *opdwfs, int ptt, stream_t &stream);
-    void do_gpt(curcell *opdwfs, curcell *grad, int ptt, stream_t &stream);
+    void do_gp(curcell &grad, const curcell &opdwfs, int ptt, stream_t &stream);
+    void do_gpt(curcell &opdwfs, curcell &grad, int ptt, stream_t &stream);
+    cutomo_grid &operator=(const cutomo_grid &);
 public:
     cutomo_grid(const PARMS_T *parms=0, const RECON_T *recon=0, 
 		const POWFS_T *powfs=0, curecon_geom *_grid=0);
@@ -80,26 +81,14 @@ public:
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);
     }
-    virtual void R(curcell **out, Real beta, 
-		   const curcell *xin, Real alpha, stream_t &stream);
-    virtual void L(curcell **out, Real beta, 
-		   const curcell *xin, Real alpha, stream_t &stream);
-    virtual void Rt(curcell **out, Real beta, 
-		    const curcell *xin, Real alpha, stream_t &stream);
+    virtual void R(curcell &out, Real beta, 
+		   curcell &xin, Real alpha, stream_t &stream);
+    virtual void L(curcell &out, Real beta, 
+		   const curcell &xin, Real alpha, stream_t &stream);
+    virtual void Rt(curcell &out, Real beta, 
+		    curcell &xin, Real alpha, stream_t &stream);
     ~cutomo_grid(){
-	delete opdwfs;
-	delete grad;
-	delete ttf;
-	delete neai;
-	delete PTT;
-	delete PDF;
-	delete PDFTT;
-	delete saptr;
-	delete GPp;
 	delete[] GPscale;
-	delete GP;
-	delete hx;
-	cudaFree(gpdata);
     }
 };
 

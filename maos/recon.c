@@ -307,7 +307,7 @@ void reconstruct(SIM_T *simu){
 	    }else
 #if USE_CUDA
 		if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
-		    gpu_recon_mvm(dmout, gradin);
+		    gpu_recon_mvm(&dmout, gradin);
 		}else
 #endif		
 		{

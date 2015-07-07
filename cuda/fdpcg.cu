@@ -26,17 +26,18 @@ void cufdpcg_t::update(FDPCG_T *fdpcg){
     //copy or update Mb. 
     int nxsave=fdpcg->Mbinv->nx;
     fdpcg->Mbinv->nx=nb;
-    cp2gpu(&Mb, fdpcg->Mbinv);
+    cp2gpu(Mb, fdpcg->Mbinv);
     fdpcg->Mbinv->nx=nxsave;
 }
 cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
-    :grid(_grid),perm(0),Mb(0),fft(0),ffti(0),fftnc(0),fftips(0),
-     xhat1(0),xhat2(0),nb(0),bs(0),nby(0),nbz(0),scale(0),fddata(0){
+    :grid(_grid),perm(0),Mb(0),fftnc(0),fftips(0),
+     xhat1(0),xhat2(0),nb(0),bs(0),nby(0),nbz(0),scale(0){
+
     scale=fdpcg->scale;
     bs=fdpcg->bs;//linear size of each block.
     nb=fdpcg->permhf->nx/bs;//size of non-redundant block
     update(fdpcg);
-    cp2gpu(&perm, fdpcg->permhf->p, nb*bs, 1);
+    cp2gpu(perm, fdpcg->permhf->p, nb*bs, 1);
     int nps=grid->npsr;
     int count=0;
     int osi=-1;
@@ -49,8 +50,8 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 	    count++;
 	}
     }
-    fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
-    ffti=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+    fft=cuarray<cufftHandle>(count,1);
+    ffti=cuarray<cufftHandle>(count,1);
     fftnc=count;
     fftips=(int*)calloc(count+1, sizeof(int));
     for(int ic=0; ic<count; ic++){
@@ -75,8 +76,8 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 			 nembed, 1, ncomp[0]*ncomp[1],
 			 FFT_T_C2R, fftips[ic+1]-fftips[ic]));
     }
-    xhat1=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
-    xhat2=cuccellnew(grid->npsr, 1, grid->xnx, grid->xny);
+    xhat1=cuccell(grid->npsr, 1, grid->xnx, grid->xny);
+    xhat2=cuccell(grid->npsr, 1, grid->xnx, grid->xny);
     {
 	/*nby is blockDim.y: number of FD blocks in each threading block*/
 	/*nbz is gridDim.x: number of threading blocks to launch*/
@@ -96,8 +97,8 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
 	    FDDATA[ips].scale=1.f;
 	}
     }
-    DO(cudaMalloc(&fddata, sizeof(GPU_FDPCG_T)*nps));
-    cudaMemcpy(fddata, FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+    fddata=cumat<GPU_FDPCG_T>(nps, 1);
+    cudaMemcpy(fddata.P(), FDDATA, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
     delete [] FDDATA;
 }
 /*
@@ -165,7 +166,7 @@ fdpcg_scale(GPU_FDPCG_T *fddata, T **xall){
 
 */
 #define DBG_FD 0
-void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
+void cufdpcg_t::P(curcell &xout, const curcell &xin, stream_t &stream){
 #if TIMING
     EVENT_INIT(4)
 #define RECORD(i) EVENT_TIC(i)
@@ -173,12 +174,12 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
 #define RECORD(i)
 #endif
     RECORD(0);
-    if(!xin->m){
+    if(!xin.M()){
 	error("xin is not continuous");
     }
-    if(!*xout){
-	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
-    }else if(!(*xout)->m){
+    if(!xout){
+	xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
+    }else if(!(xout).M()){
 	error("xout is not continuous");
     }
 #if DBG_FD
@@ -188,19 +189,19 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
 	DO(cufftSetStream(fft[ic], stream));
-	CUFFTR2C(fft[ic], xin->p[ips]->p, xhat1->p[ips]->p);
+	CUFFTR2C(fft[ic], xin[ips].P(), xhat1[ips].P());
     }
     RECORD(1);
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr), dim3(256,1),0,stream>>>
-	    (fddata, xhat1->pm);
+	    (fddata.P(), xhat1.pm);
     }
 #if DBG_FD
 	cuccellwrite(xhat1, "fdg_fft");
 #endif
 
     fdpcg_mul_block_sync_half<<<nbz, dim3(bs,nby), sizeof(Comp)*bs*2*nby, stream>>>
-	(xhat2->m->p, xhat1->m->p, Mb->m->p, perm, nb);
+	(xhat2.M().P(), xhat1.M().P(), Mb.M().P(), perm, nb);
     RECORD(2);
 #if DBG_FD
     cuccellwrite(xhat2, "fdg_mul");
@@ -208,14 +209,14 @@ void cufdpcg_t::P(curcell **xout, const curcell *xin, stream_t &stream){
     for(int ic=0; ic<fftnc; ic++){
 	int ips=fftips[ic];
 	DO(cufftSetStream(ffti[ic], stream));
-	CUFFTC2R(ffti[ic], xhat2->p[ips]->p, (*xout)->p[ips]->p);
+	CUFFTC2R(ffti[ic], xhat2[ips].P(), xout[ips].P());
     }
     if(scale){
 	fdpcg_scale<<<dim3(9,1,grid->npsr),dim3(256,1),0,stream>>>
-	    (fddata, (*xout)->pm);
+	    (fddata.P(), xout.pm);
     }
 #if DBG_FD
-    cuwrite(*xout, "fdg_xout");
+    cuwrite(xout, "fdg_xout");
 #endif
     RECORD(3);
 #if TIMING

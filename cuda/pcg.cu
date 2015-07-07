@@ -39,17 +39,16 @@ __global__ static void div_assign_do(Real * dest, const Real * a, Real * b){
 /**
    res points to a scalar in device memory. **The caller has to zero it**
 */
-void curcellinn_add(Real *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
+void curcellinn_add(Real *restrict res, const curcell &A, const curcell &B, cudaStream_t stream){
     //cudaMemsetAsync(res, 0,sizeof(Real), stream);
-    if(A->m && B->m){
-	const int n=A->m->nx*A->m->ny;
-	inn_wrap(res, A->m->p, B->m->p, n, stream);
+    if(A.M() && B.M()){
+	const int n=A.M().N();
+	inn_wrap(res, A.M().P(), B.M().P(), n, stream);
     }else{
-	for(int i=0; i<A->nx*A->ny; i++){
-	    const curmat *a=A->p[i];
-	    const curmat *b=B->p[i];
-	    const int n=a->nx*a->ny;
-	    inn_wrap(res,a->p,b->p,n,stream);
+	for(int i=0; i<A.N(); i++){
+	    const curmat &a=A[i];
+	    const curmat &b=B[i];
+	    inn_wrap(res,a.P(),b.P(),a.N(),stream);
 	}
     }
 }
@@ -59,7 +58,7 @@ __global__ static void div_sqrt_do(Real * dest, const Real * a, const Real * b){
     dest[0]=sqrt(a[0]/b[0]);
 }
 /**Only use kernels to avoid synchronization*/
-static inline void pcg_residual(Real *r0r0, Real *rkzk, Real *rr0, curcell *r0, 
+static inline void pcg_residual(Real *r0r0, Real *rkzk, Real *rr0, curcell &r0, 
 				int precond, cudaStream_t stream){
     if(precond){
 	/*r0r0=r0'*r0; */
@@ -85,8 +84,8 @@ int pcg_save=0;
 
    TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
 */
-Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
-	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter,
+Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
+	      const curcell &b, CGTMP_T &cg_data, int warm, int maxiter,
 	      stream_t &stream, double cgthres){
 #if TIMING 
 #define NEVENT 16
@@ -102,36 +101,36 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 #define RECORD(n)
 #endif
     RECORD(0);
-    curcell *&r0=cg_data->r0;
-    curcell *&z0=cg_data->z0;/*Is reference to r0 or preconditioned value. */
-    curcell *&p0=cg_data->p0;
-    curcell *&Ap=cg_data->Ap;
+    curcell &r0=cg_data.r0;
+    curcell &z0=cg_data.z0;/*Is reference to r0 or preconditioned value. */
+    curcell &p0=cg_data.p0;
+    curcell &Ap=cg_data.Ap;
     int ntot=maxiter*2+3;
-    if(!cg_data->store){
-	DO(cudaMalloc(&cg_data->store, ntot*sizeof(Real)));
+    if(!cg_data.store){
+	cg_data.store=curmat(ntot, 1);
     }
-    Real *store=cg_data->store;
+    Real *store=cg_data.store;
     DO(cudaMemsetAsync(store, 0, ntot*sizeof(Real),stream));
     Real *rr0=store; store++;
     Real *bk  =store; store++;
     Real *rkzk=store; store+=maxiter+1;
     Real *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
-    if(!cg_data->diff){ //Only this enables async transfer
-	DO(cudaMallocHost(&cg_data->diff, sizeof(Real)*(maxiter+1)));
+    if(!cg_data.diff){ //Only this enables async transfer
+	DO(cudaMallocHost(&cg_data.diff, sizeof(Real)*(maxiter+1)));
     }
-    Real *&diff=cg_data->diff;
+    Real *&diff=cg_data.diff;
     memset(diff, 0, sizeof(Real)*(maxiter+1));
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
     /*computes r0=b-A*x0 */
-    if(!*px){
-	*px=curcellnew(b);
+    if(!x0){
+	x0=b.New();
     }else if(!warm){
-	cuzero(*px, stream);
+	x0.zero(stream);
     }
-    curcell *x0=*px;
+   
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
 	if(k==maxiter){
@@ -143,17 +142,18 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	if(k%500==0){/*initial or re-start every 500 steps*/
 	    RECORD(1);
 	    /*computes r0=b-A*x0 */
-	    curcellcp(&r0, b, stream);/*r0=b; */
+	    curcellcp(r0, b, stream);/*r0=b; */
 	    RECORD(2);
-	    (*Amul)(&r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */ 
+	    (*Amul)(r0, 1.f, x0, -1.f, stream);/*r0=r0+(-1)*A*x0 */ 
 	    RECORD(3);
 	    if(Mmul){/*z0=M*r0*/
-		(*Mmul)(&z0,r0,stream);
+		if(z0.P()==r0.P()) z0=0;
+		(*Mmul)(z0,r0,stream);
 	    }else{
 		z0=r0;
 	    }
 	    RECORD(4);
-	    curcellcp(&p0, z0, stream);
+	    curcellcp(p0, z0, stream);
 	    RECORD(5);
 	    curcellinn_add(rkzk+0, r0, z0, stream);//9
 	    RECORD(6);
@@ -175,17 +175,17 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	info2("%.5f ", diff[k]);
 #endif	
 	/*Ap=A*p0*/
-	(*Amul)(&Ap, 0.f, p0, 1.f, stream); RECORD(8);
+	(*Amul)(Ap, 0.f, p0, 1.f, stream); RECORD(8);
 	/*ak[k]=rkzk[k]/(p0'*Ap); */
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
 
-	curcelladd(&x0, p0, ak+k, 1.f, stream);
+	curcelladd(x0, p0, ak+k, 1.f, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
-	    curcelladd(&r0, Ap, ak+k, -1, stream);
+	    curcelladd(r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
 	    RECORD(15);
 #if TIMING 
@@ -200,11 +200,11 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	    break;
 	}
 	/*r0=r0-ak[k]*Ap */
-	curcelladd(&r0, Ap, ak+k, -1, stream);
+	curcelladd(r0, Ap, ak+k, -1, stream);
 	RECORD(11);
 	/*preconditioner */
 	if(Mmul) {/*z0=M*r0*/
-	    (*Mmul)(&z0,r0, stream);
+	    (*Mmul)(z0,r0, stream);
 	}
 	RECORD(12);
 	/*rkzk[k+1]=r0'*z0 for next step*/
@@ -213,7 +213,7 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	/*bk=rkzk[k+1]/rkzk[k];*/
 	div_assign_do<<<1,1,0,stream>>>(bk, rkzk+k+1, rkzk+k);
 	/*p0=bk*p0+z0 */
-	curcelladd(&p0, bk, z0, stream);
+	curcelladd(p0, bk, z0, stream);
 	RECORD(14);
 #if TIMING 
 	CUDA_SYNC_STREAM;
@@ -225,7 +225,6 @@ Real gpu_pcg(curcell **px, cucg_t *Amul, cucgpre_t *Mmul,
 	      maxiter, k, times[8], times[9], times[10], times[11], times[12], times[13], times[14]);
 #endif
     }
-    if(z0==r0) z0=0;
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1

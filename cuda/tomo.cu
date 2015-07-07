@@ -27,7 +27,7 @@ namespace cuda_recon{
   We convert GP from sparse matrix to coefficients of pos==1 or 2. By doing so, we can also convert the type to integer to save memory transfer. Short2 is used without performance penalty.
   For partially illiminated subapertures, this conversion brings in approximation as we limite the influence of gradient from each subaperture to (pos*2-1)x(pos*2-1) points. The system performance is largely not affected.
 */
-void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
+void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	     const dsp *GP, const loc_t *saloc, const loc_t *ploc){
     if(!GP){ 
 	error("GP is required\n");
@@ -77,15 +77,15 @@ void prep_GP(cumat<short2>**GPp, Real *GPscale, cusp **GPf,
 	    }
 	}
 	dspfree(GPt);
-	*GPp=new cumat<short2>(np, nsa);
-	cudaMemcpy((*GPp)->p, partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
+	GPp=cumat<short2>(np, nsa);
+	cudaMemcpy(GPp.P(), partxy, sizeof(short2)*np*nsa, cudaMemcpyHostToDevice);
 	*GPscale=1./pxscale;
 	free(partxy);
     }else{/*use sparse */
-	*GPf=new cusp(GP, 1);
+	GPf=cusp(GP, 1);
     }
 }
-static cumat<int> *
+static cumat<int> 
 prep_saptr(loc_t *saloc, map_t *pmap){
     /*saloc mapped onto pmap*/
     int nsa=saloc->nloc;
@@ -100,12 +100,12 @@ prep_saptr(loc_t *saloc, map_t *pmap){
 	saptr[isa][0]=(int)roundf((salocx[isa]-ox)*dx1);
 	saptr[isa][1]=(int)roundf((salocy[isa]-oy)*dy1);
     }
-    cumat<int> *saptr_gpu=new cumat<int>(2, nsa);
-    DO(cudaMemcpy(saptr_gpu->p, saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
+    cumat<int> saptr_gpu=cumat<int>(2, nsa);
+    DO(cudaMemcpy(saptr_gpu.P(), saptr, nsa*2*sizeof(int), cudaMemcpyHostToDevice));
     delete [] saptr;
     return saptr_gpu;
 }
-static curmat *convert_neai(dsp *nea){
+static curmat convert_neai(dsp *nea){
     spint *pp=nea->p;
     spint *pi=nea->i;
     double *px=nea->x;
@@ -129,14 +129,13 @@ static curmat *convert_neai(dsp *nea){
 	    }
 	}
     }
-    curmat *neai_gpu=curnew(3, nsa);
-    DO(cudaMemcpy(neai_gpu->p, neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
+    curmat neai_gpu=curmat(3, nsa);
+    DO(cudaMemcpy(neai_gpu.P(), neai, 3*nsa*sizeof(Real), cudaMemcpyHostToDevice));
     free(neai);
     return neai_gpu;
 }
 #define TIMING 0
 void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
-    if(hx) delete hx; 
     dir_t dir[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
@@ -149,7 +148,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
     if(dt>0){
 	info("dt=%g. vx[0]=%g\n", dt, grid->xmap[0].vx);
     }
-    hx=new map_l2d(grid->pmap, dir, nwfs, grid->xmap, grid->npsr, dt);
+    hx=map_l2d(grid->pmap, dir, nwfs, grid->xmap, grid->npsr, dt);
 
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
@@ -164,27 +163,24 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	    lapc[ips].zzi=-1;
 	}
     }
-    if(!lap){
-	DO(cudaMalloc(&lap, sizeof(LAP_T)*recon->npsr));
-    }
-    cudaMemcpy(lap, lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
+    lap=cumat<LAP_T>(recon->npsr, 1);
+    cudaMemcpy(lap.P(), lapc, sizeof(LAP_T)*recon->npsr, cudaMemcpyHostToDevice);
 }
 
 cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 			 const POWFS_T *powfs, curecon_geom *_grid)
-    :cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-     opdwfs(0),grad(0),ttf(0),neai(0),PTT(0),PDF(0),PDFTT(0),saptr(0),GPp(0),
-     GPscale(0),GP(0),ptt(0),nwfs(0),hx(0),gpdata(0),lap(0){
+    :cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
+     grid(_grid), GPscale(0),ptt(0),nwfs(0){
     if(!parms) return;
     nwfs=parms->nwfsr;
 
     if(recon->PTT && !PTT){//for t/t proj in 1)uplink t/t 2) recon
-	cp2gpu(&PTT, recon->PTT);
+	cp2gpu(PTT, recon->PTT);
     }
     ptt=!parms->recon.split || (parms->tomo.splitlrt && parms->recon.mvm!=2); 
     {
-	if(!PDF) PDF=curcellnew(parms->npowfs, 1);
-	if(!PDFTT) PDFTT=curcellnew(parms->npowfs, 1);
+	PDF=curcell(parms->npowfs, 1);
+	PDFTT=curcell(parms->npowfs, 1);
 	dcell *pdftt=NULL;
 	dcellmm(&pdftt, recon->PDF, recon->TT, "nn", 1);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -192,7 +188,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		/*We only use the first diagonal block for each powfs. The
 		  off diagonal is simply -1/(nlgswfs-1) times the diagonal block*/
 		int iwfs1=parms->powfs[ipowfs].wfs->p[1];//second wfs
-		cp2gpu(&PDF->p[ipowfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
+		cp2gpu(PDF[ipowfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
 		if(parms->powfs[ipowfs].trs){
 		    /*coupling between TT and DF modes. 
 		      We desire (I-DF*PDF)(I-TT*PTT)g=(I-TT*PTT-DF*PDF+DF*PDF*TT*PTT)g
@@ -200,7 +196,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		      g2=(I-TT*tt-DF*(df-(PDF*TT)*tt))
 		      Here we record the values of PDF*TT
 		    */
-		    cp2gpu(&PDFTT->p[ipowfs], pdftt->p[iwfs1*nwfs+iwfs1]);
+		    cp2gpu(PDFTT[ipowfs], pdftt->p[iwfs1*nwfs+iwfs1]);
 		}
 	    }
 	}
@@ -208,52 +204,49 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
     }
     {
 	const int npowfs=parms->npowfs;
-	GPp=new cucell<short2>(nwfs, 1);
-	GP=new cuspcell(nwfs, 1);
+	GPp=cucell<short2>(nwfs, 1);
+	GP=cuspcell(nwfs, 1);
 	GPscale=new Real[npowfs];
-	saptr=new cucell<int>(npowfs, 1);
+	saptr=cucell<int>(npowfs, 1);
 	int has_GPp=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].skip) continue;
-	    cusp *GPf=NULL;
-	    cumat<short2> *GPpi=0;
-	    prep_GP(&GPpi, &GPscale[ipowfs], &GPf,
+	    cusp GPf;
+	    cumat<short2> GPpi;
+	    prep_GP(GPpi, &GPscale[ipowfs], GPf,
 		    recon->GP->p[ipowfs], powfs[ipowfs].saloc, recon->ploc);
-	    saptr->p[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
+	    saptr[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(ipowfs==parms->wfsr[iwfs].powfs){
 		    if(GPpi){
-			GPp->p[iwfs]=curef(GPpi);
+			GPp[iwfs]=GPpi;
 		    }
 		    if(GPf){
-			GP->p[iwfs]=curef(GPf);
+			GP[iwfs]=GPf;
 		    }
 		}
 	    }
 	    if(GPpi){
 		has_GPp=1;
 	    }
-	    delete GPpi;
-	    delete GPf;
 	}
 	if(!has_GPp){
-	    delete GPp;
-	    GPp=NULL;
+	    GPp=cucell<short2>();
 	}
     }
 
     {
-	neai=curcellnew(parms->nwfsr, 1);
+	neai=curcell(parms->nwfsr, 1);
 	/*convert recon->saneai to gpu. */
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
 	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
-		neai->p[iwfs]=curef(neai->p[iwfs0]);
+		neai[iwfs]=neai[iwfs0];
 	    }else{
 		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
-		neai->p[iwfs]=convert_neai(nea);
+		neai[iwfs]=convert_neai(nea);
 	    }
 	}/*for iwfs */
     }
@@ -271,18 +264,18 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];//wfs index in this group
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
-	    GPDATA[iwfs].saptr=(int(*)[2])saptr->p[ipowfs]->p;
-	    GPDATA[iwfs].GPp=(GPp && GPp->p[iwfs])?(short2*)GPp->p[iwfs]->p:NULL;
+	    GPDATA[iwfs].saptr=(int(*)[2])saptr[ipowfs].P();
+	    GPDATA[iwfs].GPp=GPp[iwfs]?(short2*)GPp[iwfs].P():NULL;
 	    GPDATA[iwfs].GPscale=GPscale[ipowfs];
 	    if(parms->powfs[ipowfs].trs){
-		GPDATA[iwfs].PTT=PTT->p[iwfs+iwfs*nwfs]->p;
+		GPDATA[iwfs].PTT=PTT(iwfs,iwfs).P();
 	    }
 	    if(parms->powfs[ipowfs].dfrs){
-		GPDATA[iwfs].PDF=PDF->p[ipowfs]->p;
-		GPDATA[iwfs].PDFTT=PDFTT->p[ipowfs]->p;
+		GPDATA[iwfs].PDF=PDF[ipowfs].P();
+		GPDATA[iwfs].PDFTT=PDFTT[ipowfs].P();
 	    }
 
-	    GPDATA[iwfs].neai=(const Real(*)[3])neai->p[iwfs]->p;
+	    GPDATA[iwfs].neai=(const Real(*)[3])neai[iwfs].P();
 	    GPDATA[iwfs].nsa=powfs[ipowfs].pts->nsa;
 	    GPDATA[iwfs].nxp=recon->pmap->nx;
 	    GPDATA[iwfs].dxp=recon->pmap->dx;
@@ -290,8 +283,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].oxp=recon->pmap->ox;
 	    GPDATA[iwfs].oyp=recon->pmap->oy;
 	}
-	DO(cudaMalloc(&gpdata, sizeof(GPU_GP_T)*nwfs));
-	DO(cudaMemcpy(gpdata, GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
+	gpdata=cumat<GPU_GP_T>(nwfs,1);
+	DO(cudaMemcpy(gpdata.P(), GPDATA, sizeof(GPU_GP_T)*nwfs, cudaMemcpyHostToDevice));
 	delete [] GPDATA;
     }
 
@@ -316,9 +309,9 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    }
 	}
 
-	opdwfs=curcellnew(nwfs, 1, nxpw, nypw);
-	grad=curcellnew(nwfs, 1, ngw, (int*)NULL);
-	ttf=curnew(3*nwfs, 1);
+	opdwfs=curcell(nwfs, 1, nxpw, nypw);
+	grad=curcell(nwfs, 1, ngw, (int*)NULL);
+	ttf=curmat(3*nwfs, 1);
     }
 }
 
@@ -583,31 +576,31 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, Real **wfsopd, Real *ttin, Rea
     }
 }
 
-void cutomo_grid::do_gp(curcell *_grad, curcell *_opdwfs, int ptt2, stream_t &stream){
+void cutomo_grid::do_gp(curcell &_grad, const curcell &_opdwfs, int ptt2, stream_t &stream){
     if(_opdwfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    cuzero(_grad->p[iwfs], stream);
-	    cuspmul(_grad->p[iwfs]->p, GP->p[iwfs], _opdwfs->p[iwfs]->p, 1, 'n', 1, stream);
+	    if(GPp[iwfs] || !GP[iwfs]) continue;
+	    cuzero(_grad[iwfs], stream);
+	    cuspmul(_grad[iwfs].P(), GP[iwfs], _opdwfs[iwfs].P(), 1, 'n', 1, stream);
 	}
     }
     cuzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata, _grad->pm, ttf->p, ttf->p+nwfs*2, _opdwfs?_opdwfs->pm:NULL, ptt2);
+	(gpdata.P(), _grad.pm, ttf.P(), ttf.P()+nwfs*2, _opdwfs?_opdwfs.pm:NULL, ptt2);
 }
-void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &stream){
+void cutomo_grid::do_gpt(curcell &_opdwfs, curcell &_grad, int ptt2, stream_t &stream){
     if(_opdwfs){
-	cuzero(_opdwfs->m, stream);
+	cuzero(_opdwfs.M(), stream);
     }
     //Does  GP'*NEA*(1-TTDF) if _opdwfs!=0 and GPp!=0 or NEA*(1-TTDF)
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(gpdata, _opdwfs?_opdwfs->pm:0, ttf->p, ttf->p+nwfs*2, _grad->pm, ptt2);
+	(gpdata.P(), _opdwfs?_opdwfs.pm:0, ttf.P(), ttf.P()+nwfs*2, _grad.pm, ptt2);
     
     if(_opdwfs){//Does GP' for GP with sparse
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(GPp->p[iwfs] || !GP->p[iwfs]) continue;
-	    cuzero(_opdwfs->p[iwfs], stream);
-	    cuspmul(_opdwfs->p[iwfs]->p, GP->p[iwfs], _grad->p[iwfs]->p, 1, 't', 1, stream);
+	    if(GPp[iwfs] || !GP[iwfs]) continue;
+	    cuzero(_opdwfs[iwfs], stream);
+	    cuspmul(_opdwfs[iwfs].P(), GP[iwfs], _grad[iwfs].P(), 1, 't', 1, stream);
 	}
     }
 }
@@ -615,27 +608,28 @@ void cutomo_grid::do_gpt(curcell *_opdwfs, curcell *_grad, int ptt2, stream_t &s
   Tomography right hand side matrix. Computes xout = xout *beta + alpha * Hx' G' C * xin.
   xout is zeroed out before accumulation.
 */
-void cutomo_grid::R(curcell **xout, Real beta, const curcell *_grad, Real alpha, stream_t &stream){
-    if(!*xout){
-	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
+void cutomo_grid::R(curcell &xout, Real beta,  curcell &_grad, Real alpha, stream_t &stream){
+    if(!xout){
+	xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
-	curcellscale(*xout, beta, stream);
+	curcellscale(xout, beta, stream);
     }
-    do_gp(const_cast<curcell*>(_grad), NULL, 1, stream);
-    do_gpt(opdwfs, const_cast<curcell*>(_grad), 1, stream);
-    hx->backward(opdwfs->pm, (*xout)->pm, alpha, NULL, stream);
+    do_gp(_grad, curcell(), 1, stream);
+    do_gpt(opdwfs, _grad, 1, stream);
+    hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
 }
 
-void cutomo_grid::Rt(curcell **gout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
-    if(!*gout){
-	*gout=curcellnew(nwfs, 1, grid->ngrad, (long*)NULL);
+void cutomo_grid::Rt(curcell &gout, Real beta,  curcell &xin, Real alpha, stream_t &stream){
+    if(!gout){
+	gout=curcell(nwfs, 1, grid->ngrad, (long*)NULL);
     }else{
-	curcellscale(*gout, beta, stream);
+	curcellscale(gout, beta, stream);
     }
-    cuzero(opdwfs->m, stream);
-    hx->forward(opdwfs->pm, xin->pm, alpha, NULL, stream);
-    do_gp(*gout, opdwfs, 1, stream);
-    do_gpt(NULL, *gout, 1, stream);
+    opdwfs.M().zero(stream);
+    hx.forward(opdwfs.pm, xin.pm, alpha, NULL, stream);
+    do_gp(gout, opdwfs, 1, stream);
+    curcell dummy;
+    do_gpt(dummy, gout, 1, stream);
 }
 
 /*
@@ -646,11 +640,11 @@ void cutomo_grid::Rt(curcell **gout, Real beta, const curcell *xin, Real alpha, 
   1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
   2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
 */
-void cutomo_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream){
-    if(!*xout){
-	*xout=curcellnew(grid->npsr, 1, grid->xnx, grid->xny);
+void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
+    if(!xout){
+	xout=curcell(grid->npsr, 1, grid->xnx, grid->xny);
     }else{
-	curscale((*xout)->m, beta, stream);
+	curscale(xout.M(), beta, stream);
     }
 #if TIMING==2
     EVENT_INIT(6);
@@ -659,10 +653,9 @@ void cutomo_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, s
 #define RECORD(i)
 #endif
     RECORD(0);
-    curcell *opdx=*xout;
-    cuzero(opdwfs->m, stream);
+    cuzero(opdwfs.M(), stream);
     //xin to opdwfs
-    hx->forward(opdwfs->pm, xin->pm, 1, NULL, stream);
+    hx.forward(opdwfs.pm, xin.pm, 1, NULL, stream);
     RECORD(1);
     //opdwfs to grad to ttf
     do_gp(grad, opdwfs, ptt, stream);
@@ -670,12 +663,12 @@ void cutomo_grid::L(curcell **xout, Real beta, const curcell *xin, Real alpha, s
     //grad and ttf to opdwfs
     do_gpt(opdwfs, grad, ptt, stream);
     RECORD(3);
-    //opdwfs to opdx
-    hx->backward(opdwfs->pm, opdx->pm, alpha, NULL, stream);
+    //opdwfs to xout
+    hx.backward(opdwfs.pm, xout.pm, alpha, NULL, stream);
     RECORD(4);
     /*This could be in parallel to hx->forward, do_gp, do_gpt*/
     gpu_laplacian_do<<<dim3(3,3,grid->npsr),dim3(16,16), 0, stream>>>
-	(lap, opdx->pm, xin->pm, nwfs, alpha);
+	(lap.P(), xout.pm, xin.pm, nwfs, alpha);
     RECORD(5);
 #if TIMING==2
     EVENT_TOC;

@@ -112,7 +112,7 @@ static void atm_prep(atm_prep_t *data){
 /**
    Transfer atmospheric data to GPU.
 */
-static void gpu_atm2gpu_full(map_t **atm, int nps){
+static void gpu_atm2gpu_full(const mapcell *atm){
     if(!atm) return;
     TIC;tic;
     for(int im=0; im<NGPU; im++)
@@ -122,8 +122,8 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
     {
 	gpu_set(im);
 	gpu_print_mem("atm in full");
-	cudata->nps=nps;
-	cp2gpu(&cudata->atm, atm, nps);
+	cudata->nps=atm->nx;
+	cp2gpu(cudata->atm, atm);
 	gpu_print_mem("atm out");
     }
 #if _OPENMP >= 200805 
@@ -203,7 +203,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
     if(nx0==parms->atm.nx && ny0==parms->atm.ny){
 	WRAP_ATM=1;
 	if(iseed0!=iseed){
-	    gpu_atm2gpu_full(atm, nps);
+	    gpu_atm2gpu_full(atmc);
 	    iseed0=iseed;
 	}
 	return;
@@ -226,10 +226,10 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
-	    cudata->atm=new cumap_t[nps];
+	    cudata->atm=cumapcell(nps, 1);
 	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
-		cudata->atm[ips].p=new curmat(nx0, ny0);
+		cudata->atm[ips].p=curmat(nx0, ny0);
 		cudata->atm[ips].nx=nx0;
 		cudata->atm[ips].ny=ny0;
 
@@ -243,7 +243,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 
     	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
-	    cumap_t *cuatm=cudata->atm;
+	    cumapcell &cuatm=cudata->atm;
 	    for(int ips=0; ips<nps; ips++){
 		/*Do not copy over nx, ny from atm as cuatm is smaller*/
 		cuatm[ips].vx=atm[ips]->vx;
@@ -314,10 +314,10 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 #endif
 	    {
 		gpu_set(im);
-		cumap_t *cuatm=cudata->atm;
+		cumapcell &cuatm=cudata->atm;
 		cuatm[ips].ox=next_ox[ips];
 		cuatm[ips].oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips].p->p, (Real*)next_atm[ips],
+		DO(cudaMemcpy(cuatm[ips].P(), (Real*)next_atm[ips],
 			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
 	    }/*for im */
 #if _OPENMP >= 200805 
@@ -355,8 +355,8 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
 	    toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, next_isim[ips]); 
-}//if isim
-}//for ips
+	}//if isim
+    }//for ips
 #if _OPENMP >= 200805 
 #pragma omp taskwait
 #endif
@@ -365,29 +365,33 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 /**
    Copy DM configurations to GPU.
 */
-curmat* gpu_dmcubic_cc(Real iac){
-    Real cc[5];
-    Real cubicn=1.f/(1.f+2.f*iac);
-    cc[0]=1.f*cubicn;
-    cc[1]=(4.f*iac-2.5f)*cubicn; 
-    cc[2]=(1.5f-3.f*iac)*cubicn;		       
-    cc[3]=(2.f*iac-0.5f)*cubicn;			
-    cc[4]=(0.5f-iac)*cubicn; 
-    curmat *res=curnew(5,1);
-    cudaMemcpy(res->p, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
-    return res;
+curmat gpu_dmcubic_cc(Real iac){
+    if(iac){
+	Real cc[5];
+	Real cubicn=1.f/(1.f+2.f*iac);
+	cc[0]=1.f*cubicn;
+	cc[1]=(4.f*iac-2.5f)*cubicn; 
+	cc[2]=(1.5f-3.f*iac)*cubicn;		       
+	cc[3]=(2.f*iac-0.5f)*cubicn;			
+	cc[4]=(0.5f-iac)*cubicn; 
+	curmat res(5,1);
+	cudaMemcpy(res, cc, 5*sizeof(Real), cudaMemcpyHostToDevice);
+	return res;
+    }else{
+	return curmat();
+    }
 }
 
 void gpu_dmreal2gpu(mapcell *dmreal){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cp2gpu(&cudata->dmreal, dmreal->p, dmreal->nx);
+	cp2gpu(cudata->dmreal, dmreal);
     }
 }
 void gpu_dmproj2gpu(mapcell *dmproj){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	cp2gpu(&cudata->dmproj, dmproj->p, dmproj->nx);
+	cp2gpu(cudata->dmproj, dmproj);
     }
 }
 
@@ -511,9 +515,9 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,const Real thetay,
-		 const Real mispx, const Real mispy, const Real dt, const int isim, Real atmalpha, cudaStream_t stream){
-    cumap_t *cuatm=cudata->atm;
+void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real thetax, Real thetay,
+		  Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream){
+    cumapcell &cuatm=cudata->atm;
     if(Z(fabs)(atmalpha)<EPS) return;
     if(cudata_t::atmscale){
 	atmalpha*=cudata_t::atmscale->p[isim];
@@ -527,52 +531,63 @@ void gpu_atm2loc(Real *phiout, culoc_t *loc, const Real hs, const Real thetax,co
 	const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
 	const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
 	const Real scale=1.f-ht/hs;
-	const int nloc=loc->nloc;
+	const int nloc=loc.Nloc();
 
-#define COMM loc->p,loc->nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
+#define COMM loc.P(),loc.Nloc(),scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
+		(phiout, cuatm[ips].P(), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}else{/*we are gauranteed. */
 	    prop_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips].p->p, cuatm[ips].nx, cuatm[ips].ny, COMM);
+		(phiout, cuatm[ips].P(), cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}
 #undef COMM
     }
 }
-void gpu_prop_grid(const cumap_t &map, culoc_t *loc, Real *phiout,
-		   Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
+void gpu_map2loc(const cumap_t &map, const culoc_t &loc, Real *phiout,
+		 Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
     dispx=(dispx-map.ox)/map.dx;
     dispy=(dispy-map.oy)/map.dy;
-    const int nloc=loc->nloc;
+    const int nloc=loc.Nloc();
     if (map.cubic_cc){//128 is a good number for cubic. 
 	prop_cubic<<<DIM(nloc,128), 0, stream>>>
-	    (phiout, map.p->p,map.nx,map.ny, loc->p, loc->nloc,scale/map.dx,scale/map.dy, dispx, dispy, alpha, 
-	     map.cubic_cc->p);
+	    (phiout, map.P(),map.nx,map.ny, loc.P(), loc.Nloc(),scale/map.dx,scale/map.dy, dispx, dispy, alpha, 
+	     map.cubic_cc.P());
     }else{
 	prop_linear<<<DIM(nloc,256), 0, stream>>>
-	    (phiout, map.p->p,map.nx,map.ny, loc->p, loc->nloc,scale/map.dx,scale/map.dy, dispx, dispy, alpha);
+	    (phiout, map.P(),map.nx,map.ny, loc.P(), loc.Nloc(),scale/map.dx,scale/map.dy, dispx, dispy, alpha);
     }
 }
     
 /**
-   Ray tracing of dm
+   Ray tracing of dm. use locondm for each dm. so that distortion can be properly accounted for. Use the other version if no distortion.
 */
-void gpu_dm2loc(Real *phiout, culoc_t **locarr, cumap_t *cudm, int ndm,
-		const Real hs, const Real thetax, const Real thetay,
-		const Real mispx, const Real mispy, const Real alpha, cudaStream_t stream){
+void gpu_dm2loc(Real *phiout, const cuarray<culoc_t> &locondm, const cumapcell &cudm, int ndm,
+		Real hs,  Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
 	const Real ht=cudm[idm].ht;
-	gpu_prop_grid(cudm[idm], locarr[idm], phiout, 
-		      alpha, ht*thetax+mispx, ht*thetay+mispy,
-		      1-ht/hs, 0, stream);
+	gpu_map2loc(cudm[idm], locondm[idm], phiout, 
+		    alpha, ht*thetax+mispx, ht*thetay+mispy,
+		    1-ht/hs, 0, stream);
     }/*idm */
 }
-
+/**
+   Ray tracing of dm. 
+*/
+void gpu_dm2loc(Real *phiout, const culoc_t &locout, const cumapcell &cudm, int ndm,
+		Real hs, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+    for(int idm=0; idm<ndm; idm++){
+	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
+	const Real ht=cudm[idm].ht;
+	gpu_map2loc(cudm[idm], locout, phiout, 
+		    alpha, ht*thetax+mispx, ht*thetay+mispy,
+		    1-ht/hs, 0, stream);
+    }/*idm */
+}
 /**
    Convert NGS mode vector to aperture grid for science directions.  */
-void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
+void gpu_ngsmod2science(curmat &opd, Real (*restrict loc)[2],
 			const NGSMOD_T *ngsmod, const double *mod, 
 			double thetax, double thetay, 
 			double alpha, cudaStream_t stream){
@@ -590,8 +605,8 @@ void gpu_ngsmod2science(curmat *opd, Real (*restrict loc)[2],
 	}else{
 	    focus=mod[2]*(1.-scale);
 	}
-	add_ngsmod_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>
-	    (opd->p, loc, opd->nx*opd->ny, 
+	add_ngsmod_do<<<DIM(opd.N(), 256), 0, stream>>>
+	    (opd.P(), loc, opd.N(),
 	     mod[0], mod[1], mod[2], mod[3], mod[4], focus,
 	     thetax, thetay, scale, ht, alpha);
     }

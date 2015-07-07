@@ -24,37 +24,25 @@ namespace cuda_recon{
 class cumoao_t:private cucg_t{
 private:
     curecon_geom *grid;
-    curmat *NW, *dotNW;
-    cugrid_t *amap;
-    cusp *actslave;
-    curcell *opdfit;
-    curcell *opdfit2;
-    map_ray *ha;
-
-    map_ray **hxp;
-    map_ray **hap;
+    curmat NW, dotNW;
+    cugridcell amap;
+    cusp actslave;
+    curcell opdfit;
+    curcell opdfit2;
+    map_ray ha;
+    cuarray<map_ray>hxp;
+    cuarray<map_ray>hap;
     int ndir;
-    curcell *rhs;
+    curcell rhs;
 public:
     friend class curecon_t;
-    virtual void L(curcell **xout, Real beta, const curcell *xin, Real alpha, stream_t &stream);
-    Real moao_solve(curcell **xout, const curcell *xin, const curcell *ain, stream_t &stream);
+    virtual void L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream);
+    Real moao_solve(curccell &xout, const curcell &xin, const curcell &ain, stream_t &stream);
+    cumoao_t():grid(0),ndir(0){ }
     cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
-    ~cumoao_t(){
-	delete NW;
-	delete dotNW;
-	delete amap;
-	delete actslave;
-	delete opdfit;
-	delete opdfit2;
-	delete ha;
-	for(int idir=0; idir<ndir; idir++){
-	    delete hxp[idir];
-	    delete hap[idir];
-	}
-	delete hxp;
-	delete hap;
-	delete rhs;
+    ~cumoao_t(){}
+    operator bool(){
+	return amap?1:0;
     }
 };
 }//namespace

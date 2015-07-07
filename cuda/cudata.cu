@@ -21,7 +21,7 @@ int nstream=0;
 int NGPU=0;
 int MAXGPU=0;
 int* GPUS=NULL;
-cudata_t *cudata_all=NULL;/*for all GPU. */
+cudata_t **cudata_all=NULL;/*for all GPU. */
 
 #ifdef __APPLE__
 pthread_key_t cudata_key;
@@ -34,7 +34,7 @@ __thread cudata_t *cudata=NULL;/*for current thread and current GPU */
 int cudata_t::recongpu=0;
 int *cudata_t::evlgpu=0;
 int *cudata_t::wfsgpu=0;
-cuwfs_t *cudata_t::wfs=0;
+cuarray<cuwfs_t>cudata_t::wfs;
 dmat *cudata_t::atmscale=0;
 /**
    Get GPU info.
@@ -250,16 +250,12 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	free(gpu_info);
     }
     if(NGPU) {
-	cudata_all=new cudata_t[NGPU];
+	cudata_all=new cudata_t*[NGPU];
 	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
-	    gpu_set(i);
-	    /*for(int j=0; j<NGPU; j++){
-		if(j!=i){
-		    cudaDeviceEnablePeerAccess(j, 0);
-		}
-		}*/
+	    cudaSetDevice(GPUS[i]);
+	    cudata=cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
 	    for(int j=0; j<MAXGPU; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;
@@ -351,8 +347,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
    Clean up device.
 */
 void gpu_cleanup(void){
+    cudata_t::wfs=cuarray<cuwfs_t>(0,0);
     for(int ig=0; ig<NGPU; ig++){
-	cudaSetDevice(GPUS[ig]);
-	cudaDeviceReset();
+	gpu_set(ig);
+	delete cudata;
+	//cudaDeviceReset();
     }
 }
+

@@ -29,20 +29,15 @@ struct dir_t{
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T{
-    curmat *W1;    /**< The aperture weighting, piston removal*/
-    cusp   *W0p;   /**< W0 for partial points*/
-    cumat<int>*W0f;   /**< index for fully illuminated points.*/
+    curmat W1;    /**< The aperture weighting, piston removal*/
+    cusp   W0p;   /**< W0 for partial points*/
+    cumat<int>W0f;   /**< index for fully illuminated points.*/
     Real   W0v;   /**< maximum Value of W0*/
     int     nxx;   /**< First dimension of grid*/
-    curmat *pis;   /**< Temporary data*/
+    curmat pis;   /**< Temporary data*/
 public:
+    W01_T():W0v(0),nxx(0){ }
     W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
-    ~W01_T(){
-	delete W1;
-	delete W0p;
-	delete W0f;
-	delete pis;
-    }
     void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream);
 };
 
@@ -57,62 +52,71 @@ class curecon_geom{
 public:
     int npsr, ndm;
     int delay, isim, reconisim;
-    cugrid_t *xmap;/*Grid of xmap*/
-    cugrid_t *xcmap;
-    cugrid_t *amap;
+    cugridcell xmap;/*Grid of xmap*/
+    cugridcell xcmap;
+    cugridcell amap;
     cugrid_t pmap; /*Pupil map for tomo*/
     cugrid_t fmap; /*Pupil map for fit*/
-    W01_T *W01;    /**< The aperture weighting defined on floc*/
+    W01_T W01;    /**< The aperture weighting defined on floc*/
     long *xnx, *xny;/*do not free*/
     long *anx, *any;/*do not free*/
     long *anloc, *ngrad;/*do not free*/
     Real dt; 
     curecon_geom(const PARMS_T *parms=0, const RECON_T *recon=0);
     ~curecon_geom(){
-	delete[] xmap;
-	delete[] amap;
-	delete[] xcmap;
-	delete W01;
     }
 };
 class map_ray{
+private:
+    map_ray(const map_ray&in);
 protected:
     PROP_WRAP_T *hdata;
+    int *nref;
     int nlayer, ndir;
 public:
-    map_ray():hdata(0),nlayer(0),ndir(0){};
+    map_ray():hdata(0),nlayer(0),ndir(0),nref(0){};
     //from in to out
     void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
-	gpu_prop_grid_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
+	gpu_map2map_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 'n');
     }
     //from out to in
     void backward(Real **out, Real **in, Real alpha, Real *wt, stream_t &stream){
-	gpu_prop_grid_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
+	gpu_map2map_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
+    map_ray &operator=(const map_ray&in){
+	hdata=in.hdata;
+	nlayer=in.nlayer;
+	ndir=in.ndir;
+	nref=in.nref;
+	if(nref) nref[0]++;
+	return *this;
+    }
     virtual ~map_ray(){
-	PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
-	cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
-	for(int i=0; i<ndir*nlayer; i++){
-	    if(pcpu[i].reverse){
-		cudaFree(pcpu[i].reverse);
+	if(hdata && nref && !atomicadd(nref, -1)){
+	    PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
+	    cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+	    for(int i=0; i<ndir*nlayer; i++){
+		if(pcpu[i].reverse){
+		    cudaFree(pcpu[i].reverse);
+		}
 	    }
+	    delete [] pcpu;
+	    cudaFree(hdata);
 	}
-	delete [] pcpu;
-	cudaFree(hdata);
     }
 };
 /*Ray tracing from one/multiple layers to one/multiple directions*/
 class map_l2d:public map_ray{
 public:
-    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugrid_t *in, int _nlayer, Real dt=0);
+    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugridcell &in, int _nlayer, Real dt=0);
 };
 
 /*Ray tracing from layer to layer, for caching.*/
 class map_l2l:public map_ray{
 public:
-    map_l2l(const cugrid_t *out, const cugrid_t *in, int _nlayer);
+    map_l2l(const cugridcell &out, const cugridcell &in, int _nlayer);
 };
 
 }//namespace

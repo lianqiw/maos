@@ -31,62 +31,40 @@ public:
     cusolve_l *RL;
     cusolve_l *MVM;
 private:
-    curcell *gradin; /**< The grad to operator on*/
+    curcell gradin; /**< The grad to operator on*/
    
-    curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
-    curcell *opdr_vec; /**<Referencing opdr in vector form*/
-    curcell *tomo_rhs;
-    curcell *dmfit;
-    curcell *dmfit_vec;
-    curcell *fit_rhs;
-    stream_t *cgstream;
-    curcell *opdr_save;/*for debugging*/
-    curcell *dmfit_save;/*for debugging*/
+    curcell opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
+    curcell opdr_vec; /**<Referencing opdr in vector form*/
+    curcell tomo_rhs;
+    curcell dmfit;
+    curcell dmfit_vec;
+    curcell fit_rhs;
+    stream_t cgstream;
+    curcell opdr_save;/*for debugging*/
+    curcell dmfit_save;/*for debugging*/
 
-    curcell *GXL;
+    curcell GXL;
 
-    curcell *gngsmvst;
-    curcell *deltafocus;
+    curcell gngsmvst;
+    curcell deltafocus;
     
 public:
     int nmoao;
-    cumoao_t **moao;/**<moao configurations for GPU*/
+    cuarray<cumoao_t> moao;/**<moao configurations for GPU*/
     X(mat) *moao_gwfs, *moao_gevl;
-    curcell ***dm_moao;/**<moao output*/
-    curcell *dm_wfs;/**<moao results for wfs for warm restart*/
-    curcell *dm_evl;/**<moao results for evl for warm restart*/
+    curcccell dm_moao;/**<moao output*/
+    curcell dm_wfs;/**<moao results for wfs for warm restart*/
+    curcell dm_evl;/**<moao results for evl for warm restart*/
     /*the following data reside in the gpu memory*/
     friend void gpu_update_recon(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);
     friend void gpu_update_recon_cn2(const PARMS_T *parms, RECON_T *recon);
 public:
     curecon_t(const PARMS_T *parms=0, POWFS_T *powfs=0, RECON_T *recon=0);
-    void delete_config();
+    void reset_config();
     ~curecon_t(){
-	delete_config();
-	//The following are run time data
-	delete gradin;
-	delete tomo_rhs;
-	delete fit_rhs;
-	delete opdr;
-	delete opdr_vec; 
-	delete opdr_save;
-	delete dmfit;
-	delete dmfit_vec; 
-	delete dmfit_save;
-
-	delete dm_wfs;
-	delete dm_evl;
-	if(nmoao){
-	    for(int im=0; im<nmoao; im++){
-		for(int idir=0; idir<moao[im]->ndir; idir++){
-		    delete dm_moao[im][idir];
-		}
-		free(moao[im]);
-		delete moao[im];
-	    }
-	}
+	reset_config();
     }
-    void reset(const PARMS_T *parms);
+    void reset_runtime();
     void update(const PARMS_T *parms, POWFS_T*powfs, RECON_T *recon);
     void update_cn2(const PARMS_T *parms, RECON_T *recon);
     Real tomo(dcell **_opdr, dcell **gngsmvst, const dcell *_gradin);

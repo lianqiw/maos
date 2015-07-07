@@ -27,31 +27,26 @@ typedef struct GPU_FDPCG_T{
 class curecon_geom;
 class cufdpcg_t:public cucgpre_t{
     curecon_geom *grid;
-    int *perm;   /**<permutation vector for fdpcg*/
-    cuccell *Mb;  /**<The main fdpcg block matrix*/
-    cufftHandle *fft;
-    cufftHandle *ffti;
+    cumat<int> perm;   /**<permutation vector for fdpcg*/
+    cuccell Mb;  /**<The main fdpcg block matrix*/
+    cuarray<cufftHandle> fft;
+    cuarray<cufftHandle> ffti;
     int      fftnc;/*total number of ffts*/
     int     *fftips;/*starting ips for each fft.*/
-    cuccell *xhat1, *xhat2;
+    cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;
     //int ixskip;//skip the ix due to redundant
-    GPU_FDPCG_T *fddata;
+    cumat<GPU_FDPCG_T> fddata;
+    cufdpcg_t &operator=(const cufdpcg_t&in);
+    cufdpcg_t(const cufdpcg_t&);
 public:
     virtual ~cufdpcg_t(){
-	cudaFree(perm);
 	free(fftips);
-	delete Mb;
-	delete xhat1;
-	delete xhat2;
-	cudaFree(fddata);
-	cudaFree(fft);
-	cudaFree(ffti);
     }
     cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid);
     void update(FDPCG_T *fdpcg);
-    void P(curcell **xout, const curcell *xin, stream_t &stream);
+    void P(curcell &xout, const curcell &xin, stream_t &stream);
 };
 }//namespace
 #endif

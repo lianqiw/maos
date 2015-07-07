@@ -31,9 +31,9 @@
   Do not separate the function branches because each layer/wfs combination may use different branches.
 */
 __global__ void 
-gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
+gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, Real alpha1, Real *alpha2, char trans){
     /*Using shared memory to reduce register spill */
-    __shared__ gpu_prop_grid_shared_t shared;
+    __shared__ gpu_map2map_shared_t shared;
     int &stepx=shared.stepx;
     int &stepy=shared.stepy;
     Real &dispx=shared.dispx;
@@ -361,14 +361,14 @@ gpu_prop_grid_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps
     }/*for*/
 }
 /*
-  Prepare data and copy to GPU so that one kernel (gpu_prop_grid_do) can handle multiple independent ray tracing.
+  Prepare data and copy to GPU so that one kernel (gpu_map2map_do) can handle multiple independent ray tracing.
   Forward: ps->dir (xloc -> wfs or dm->floc)
   Backward: dir->ps (wfs -> xloc or floc->dm)
 */
 
-void gpu_prop_grid_prep(PROP_WRAP_T*res, 
+void gpu_map2map_prep(PROP_WRAP_T*res, 
 			const cugrid_t &g_dir, const cugrid_t &g_ps,
-			Real dispx, Real dispy, curmat *cc){
+			Real dispx, Real dispy, const curmat &cc){
     assert(g_ps.ny!=1);
     const Real uxi=1.f/g_ps.dx;
     const Real uyi=1.f/g_ps.dy;
@@ -380,7 +380,7 @@ void gpu_prop_grid_prep(PROP_WRAP_T*res,
 	if(!cc && !res->isreverse){
 	    res->reverse=new PROP_WRAP_T;
 	    res->reverse->isreverse=1;
-	    gpu_prop_grid_prep(res->reverse, g_ps, g_dir, -dispx, -dispy, NULL);
+	    gpu_map2map_prep(res->reverse, g_ps, g_dir, -dispx, -dispy, curmat());
 	}
     }else if(Z(fabs)(xratio-0.5f)<EPS && Z(fabs)(yratio-0.5f)<EPS){
 	xratio=yratio=0.5f;
@@ -441,20 +441,20 @@ void gpu_prop_grid_prep(PROP_WRAP_T*res,
     res->yratio=yratio;
     res->nx=nx;
     res->ny=ny;
-    res->cc=cc?cc->p:NULL;
+    res->cc=cc?cc.P():NULL;
 }
 
-void gpu_prop_grid(cumap_t &out, cumap_t &in, Real dispx, Real dispy, Real alpha, curmat *cc, char trans){
+void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real alpha, const curmat &cc, char trans){
     PROP_WRAP_T wrap;
     PROP_WRAP_T *wrap_gpu;
     cudaMalloc(&wrap_gpu, sizeof(PROP_WRAP_T));
-    gpu_prop_grid_prep(&wrap, out, in, dispx, dispy, cc);
+    gpu_map2map_prep(&wrap, out, in, dispx, dispy, cc);
     wrap.togpu(wrap_gpu);
     Real **p;
     cudaMalloc(&p, sizeof(Real*)*2);
-    Real *tmp[2]={out.p->p, in.p->p};
+    const Real *tmp[2]={out.P(), in.P()};
     cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyDeviceToHost);
-    gpu_prop_grid_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
+    gpu_map2map_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
 	(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
     cudaMemcpy(&wrap, wrap_gpu, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
     if(wrap.reverse){

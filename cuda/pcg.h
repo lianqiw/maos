@@ -22,31 +22,25 @@ namespace cuda_recon{
    hold data struct for temporary data used for CG to avoid alloc/free at every call to CG.
 */
 typedef struct CGTMP_T{
-    curcell *r0;
-    curcell *z0;
-    curcell *p0;
-    curcell *Ap;
-    Real *store;
+    curcell r0;
+    curcell z0;
+    curcell p0;
+    curcell Ap;
+    curmat store;
     Real *diff;
     int count_fail, count;
-    CGTMP_T(){
-	memset(this, 0, sizeof(CGTMP_T));
+    CGTMP_T():diff(0),count_fail(0),count(0){
     }
     ~CGTMP_T(){
-	delete r0;r0=NULL;
-	delete z0;z0=NULL;
-	delete p0;p0=NULL;
-	delete Ap;Ap=NULL;
-	if(store) cudaFree(store); store=NULL;
-	if(diff) cudaFreeHost(diff); diff=NULL;
+	if(diff) cudaFreeHost(diff); 
     }
 }CGTMP_T;
 //typedef void (*G_CGFUN)(curcell**, Real, const curcell*, Real, stream_t &stream);
 //typedef void (*G_PREFUN)(curcell**, const curcell*, stream_t &stream);
 class cucg_t;
 class cucgpre_t;
-Real gpu_pcg(curcell **x0, cucg_t *Amul, cucgpre_t *Mmul,
-	      const curcell *b, CGTMP_T *cg_data, int warm, int maxiter, 
+Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
+	      const curcell &b, CGTMP_T &cg_data, int warm, int maxiter, 
 	      stream_t &stream, double cgthres=-1);
 }//namespace
 #endif
