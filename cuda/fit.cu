@@ -46,7 +46,7 @@
 namespace cuda_recon{
 cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom *_grid)
     :cucg_t(parms?parms->fit.maxit:0, parms?parms->recon.warm_restart:0),grid(_grid),
-     nfit(0),dir(0), hxp(0),ha(0),ha0(0),ha1(0),hxp0(0),hxp1(0){
+     nfit(0),dir(0){
     if(!parms || !recon) return;
     /*Initialize*/
     const int ndm=parms->ndm;
@@ -103,17 +103,17 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     //dm -> floc
     if(!parms->sim.idealfit){
 	if(parms->fit.cachex){
-	    hxp0=new map_l2l(grid->xcmap, grid->xmap, npsr);
-	    hxp1=new map_l2d(grid->fmap, dir, nfit, grid->xcmap, npsr);
+	    hxp0.Init_l2l(grid->xcmap, grid->xmap, npsr);
+	    hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap, npsr);
 	}else{
-	    hxp=new map_l2d(grid->fmap, dir, nfit,grid->xmap, npsr);
+	    hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap, npsr);
 	}
     }
     if(parms->fit.cachedm){
-	ha0=new map_l2l(acmap, grid->amap, ndm);
-	ha1=new map_l2d(grid->fmap, dir, nfit, acmap, ndm);
+	ha0.Init_l2l(acmap, grid->amap, ndm);
+	ha1.Init_l2d(grid->fmap, dir, nfit, acmap, ndm);
     }else{
-	ha=new map_l2d(grid->fmap, dir, nfit, grid->amap, ndm);
+	ha.Init_l2d(grid->fmap, dir, nfit, grid->amap, ndm);
     }
 }
 
@@ -134,10 +134,10 @@ void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
     }else{
 	if(xcache){//caching
 	    cuzero(xcache.M(), stream);
-	    hxp0->forward(xcache.pm, xin.pm, 1, NULL, stream);
-	    hxp1->forward(opdfit.pm, xcache.pm, 1, NULL, stream);
+	    hxp0.forward(xcache.pm, xin.pm, 1, NULL, stream);
+	    hxp1.forward(opdfit.pm, xcache.pm, 1, NULL, stream);
 	}else{
-	    hxp->forward(opdfit.pm, xin.pm, 1, NULL, stream);
+	    hxp.forward(opdfit.pm, xin.pm, 1, NULL, stream);
 	}
     }
 }
@@ -146,10 +146,10 @@ void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
 void cufit_grid::do_hxpt(const curcell &xout, Real alpha, stream_t &stream){
     if(xcache){
 	cuzero(xcache.M(), stream);
-	hxp1->backward(opdfit2.pm, xcache.pm, alpha, fitwt.P(), stream);
-	hxp0->backward(xcache.pm, xout.pm, alpha, NULL, stream);
+	hxp1.backward(opdfit2.pm, xcache.pm, alpha, fitwt.P(), stream);
+	hxp0.backward(xcache.pm, xout.pm, alpha, NULL, stream);
     }else{
-	hxp->backward(opdfit2.pm, xout.pm, alpha, fitwt.P(), stream);
+	hxp.backward(opdfit2.pm, xout.pm, alpha, fitwt.P(), stream);
     }
 }
 
@@ -161,12 +161,12 @@ void cufit_grid::do_ha(const curcell &xin, stream_t &stream){
     if(dmcache){
 	/*xout->dmcache*/ 
 	cuzero(dmcache.M(), stream); 
-	ha0->forward(dmcache.pm, xin.pm, 1.f, NULL, stream);
+	ha0.forward(dmcache.pm, xin.pm, 1.f, NULL, stream);
 	/*dmcache->opdfit*/ 
-	ha1->forward(opdfit.pm, dmcache.pm, 1.f, NULL, stream);
+	ha1.forward(opdfit.pm, dmcache.pm, 1.f, NULL, stream);
     }else{ 
 	/*xout->opfit*/ 
-	ha->forward(opdfit.pm, xin.pm, 1.f, NULL, stream);
+	ha.forward(opdfit.pm, xin.pm, 1.f, NULL, stream);
     }
 }
 
@@ -176,12 +176,12 @@ void cufit_grid::do_hat(curcell &xout,  Real alpha, stream_t &stream){
     if(dmcache){ 
 	/*opdfit2->dmcache*/ 
 	cuzero(dmcache.M(), stream); 
-	ha1->backward(opdfit2.pm, dmcache.pm, alpha, fitwt.P(), stream);
+	ha1.backward(opdfit2.pm, dmcache.pm, alpha, fitwt.P(), stream);
 	/*dmcache->xout*/ 
-	ha0->backward(dmcache.pm, xout.pm, 1, NULL, stream);
+	ha0.backward(dmcache.pm, xout.pm, 1, NULL, stream);
     }else{ 
 	/*opfit2->xout	*/ 
-	ha->backward(opdfit2.pm, xout.pm, alpha, fitwt.P(), stream);
+	ha.backward(opdfit2.pm, xout.pm, alpha, fitwt.P(), stream);
     } 
 }
 

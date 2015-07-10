@@ -21,9 +21,8 @@
 #include "accphi.h"
 namespace cuda_recon{
 
-
-W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx)
-    :nxx(R_nxx),pis(0){
+void W01_T::Init(const dsp *R_W0, const dmat *R_W1, int R_nxx){
+    nxx=R_nxx; nxx=0;
     if(!R_W0 || !R_W1){
 	error("R0, R1 must not be empty\n");
     }
@@ -138,7 +137,6 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
 curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     :npsr(0),ndm(0),delay(0),isim(0),reconisim(0),
      xnx(0),xny(0),anx(0),any(0), anloc(0),ngrad(0), dt(0){
-    if(!parms) return;
     ndm=parms->ndm;
     npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
     pmap=(recon->pmap);
@@ -162,7 +160,7 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 	    xcmap[ipsr]=(recon->xcmap->p[ipsr]);
 	}
     }
-    W01=W01_T(recon->W0, recon->W1, fmap.nx);
+    W01.Init(recon->W0, recon->W1, fmap.nx);
     anx=recon->anx->p;
     any=recon->any->p;
     anloc=recon->anloc->p;
@@ -171,9 +169,10 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     delay=2;//2 frame delay
 }
 
-map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
-		 const cugridcell &in, int _nlayer,//input. layers.
-		 Real dt){//directions and star height.
+void map_ray::Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
+		       const cugridcell &in, int _nlayer,//input. layers.
+		       Real dt){//directions and star height.
+    if(nlayer) error("Already initialized\n");
     nlayer=_nlayer;
     ndir=_ndir;
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
@@ -196,7 +195,8 @@ map_l2d::map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
     delete [] hdata_cpu;
 }
 
-map_l2l::map_l2l(const cugridcell &out, const cugridcell &in, int _nlayer){//input. layers.
+void map_ray::Init_l2l(const cugridcell &out, const cugridcell &in, int _nlayer){//input. layers.
+    if(nlayer) error("Already initialized\n");
     nlayer=_nlayer;
     ndir=0;//this is laye to layer.
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];

@@ -37,15 +37,15 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
     }
 
     dir_t dir0={0,0,INFINITY,0};
-    ha=map_l2d(grid->fmap, &dir0, 1, amap, 1);
+    ha.Init_l2d(grid->fmap, &dir0, 1, amap, 1);
     opdfit=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
 
     hxp=cuarray<map_ray>(ndir, 1);
     hap=cuarray<map_ray>(ndir, 1);
     for(int idir=0; idir<ndir; idir++){
-	hxp[idir]=map_l2d(grid->fmap, dir+idir, 1, grid->xmap, grid->npsr);
-	hap[idir]=map_l2d(grid->fmap, dir+idir, 1, grid->amap, grid->ndm);
+	hxp[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->xmap, grid->npsr);
+	hap[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->amap, grid->ndm);
     }
     rhs=curcell(1,1,amap[0].nx,amap[0].ny);
 }
@@ -71,7 +71,7 @@ Real cumoao_t::moao_solve(curccell &xout, const curcell &xin, const curcell &ain
 }
 void cumoao_t::L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream){
     if(!xout){
-	xout=curcell(1, 1, amap.Nx(), amap.Ny());
+	xout=curcell(1, 1, amap[0].nx, amap[0].ny);
     }else{
 	curscale(xout.M(), beta, stream);
     }
@@ -148,7 +148,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 	    }
 	    if(!cudata->dm_evl[ievl]){
 		cudata->dm_evl[ievl]=cumapcell(1,1);
-		cudata->dm_evl[ievl][0]=(recon->moao[imoao].amap->p[0]); 
+		cudata->dm_evl[ievl][0]=(moao->amap->p[0]); 
 	    }
 	    if(parms->fit.square){
 		cp2gpu(cudata->dm_evl[ievl][0], simu->dm_evl->p[ievl]);

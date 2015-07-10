@@ -57,7 +57,7 @@ void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stre
 	curmv(out.M().P(), 1, V, Vx.P(), 'n', -alpha, stream);
     }
 }
-cumuv_t::cumuv_t(const MUV_T *in):nx(0),ny(0),nxs(0),nys(0){
+void cumuv_t::Init(const MUV_T *in){
     if(!in) return;
     if(M || !in->M) error("in.M() should not be NULL and M should be NULL\n");
     dspcell *inM=dspcell_cast(in->M);
@@ -80,18 +80,16 @@ cumuv_t::cumuv_t(const MUV_T *in):nx(0),ny(0),nxs(0),nys(0){
     dspfree(Mc); dfree(Uc); dfree(Vc);
     Vx=curmat(V.Ny(), 1);
 }
-cumuv_t::~cumuv_t(){
-    delete[] nxs;
-    delete[] nys;
-}
+
 cusolve_sparse::cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L)
-    :cucg_t(_maxit, _warm_restart),CR(NULL),CL(NULL){
-    if(!_R) return;
-    CR=new cumuv_t(_R);
-    CL=new cumuv_t(_L);
+    :cucg_t(_maxit, _warm_restart){
+    CR.Init(_R);
+    CL.Init(_L);
 }
 cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
-    if(!_C) return;
+    if(!_C){
+	error("C cannot be empty\n");
+    }
     chol_convert(_C, 0);
     Cl=cusp(_C->Cl, 0);
     cp2gpu(Cp, _C->Cp, _C->Cl->m, 1);

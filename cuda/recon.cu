@@ -48,8 +48,7 @@ extern "C"{
 */
 namespace cuda_recon{
     curecon_t::curecon_t(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon)
-	:grid(0),FR(0), FL(0), RR(0), RL(0), MVM(0),
-     moao(0), nmoao(parms->nmoao){
+	:grid(0),FR(0), FL(0), RR(0), RL(0), MVM(0), nmoao(0),moao(0){
     if(!parms) return;
     if((parms->recon.alg==0 && parms->gpu.fit || parms->recon.mvm ||parms->gpu.moao)
        || (parms->recon.alg==1 && parms->gpu.lsr)
@@ -90,6 +89,13 @@ void curecon_t::reset_config(){
     }
     delete RR; RR=0;//problematic.
     delete MVM; MVM=0;
+    if(moao){
+	for(int im=0; im<nmoao; im++){
+	    delete moao[im];
+	}
+	delete [] moao;
+	moao=0; nmoao=0;
+    }
 }
 void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     reset_config();
@@ -153,7 +159,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	nmoao=parms->nmoao;
 	const int nwfs=parms->nwfs;
 	const int nevl=parms->evl.nevl;
-	moao=cuarray<cumoao_t>(nmoao, 1);
+	moao=new cumoao_t*[nmoao];
 	dm_moao=curcccell(nmoao, 1);
 	moao_gwfs=X(new)(nwfs, 1);
 	moao_gevl=X(new)(nevl, 1);
@@ -195,7 +201,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    count++;
 		}
 	    }
-	    moao[imoao]=cumoao_t(parms, recon->moao+imoao, dir, count, grid);
+	    moao[imoao]=new cumoao_t(parms, recon->moao+imoao, dir, count, grid);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].moao==imoao){
@@ -338,7 +344,7 @@ Real curecon_t::moao_recon(dcell *_dmfit, dcell *_opdr){
     }
     for(int imoao=0; imoao<nmoao; imoao++){
 	if(!moao[imoao]) continue;
-	moao[imoao].moao_solve(dm_moao[imoao], opdr, dmfit, cgstream);
+	moao[imoao]->moao_solve(dm_moao[imoao], opdr, dmfit, cgstream);
     }
     return 0;
 }

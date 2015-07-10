@@ -148,7 +148,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
     if(dt>0){
 	info("dt=%g. vx[0]=%g\n", dt, grid->xmap[0].vx);
     }
-    hx=map_l2d(grid->pmap, dir, nwfs, grid->xmap, grid->npsr, dt);
+    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap, grid->npsr, dt);
 
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
@@ -171,7 +171,6 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 			 const POWFS_T *powfs, curecon_geom *_grid)
     :cucg_t(parms?parms->tomo.maxit:0, parms?parms->recon.warm_restart:0),
      grid(_grid), GPscale(0),ptt(0),nwfs(0){
-    if(!parms) return;
     nwfs=parms->nwfsr;
 
     if(recon->PTT && !PTT){//for t/t proj in 1)uplink t/t 2) recon

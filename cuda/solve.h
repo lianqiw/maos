@@ -43,13 +43,14 @@ public:
     virtual ~cucgpre_t(){}
 };
 
-class cucg_t:public cusolve_l{/*Implementes LHS with cg algorithm*/
+class cucg_t:public cusolve_l,nonCopiable{/*Implementes LHS with cg algorithm*/
     int maxit, warm_restart;
     CGTMP_T cgtmp;
 protected:
     cucgpre_t *precond;
 public:
-    cucg_t(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(NULL){}
+    cucg_t(int _maxit=0, int _warm_restart=0):maxit(_maxit),warm_restart(_warm_restart),precond(0){}
+    void Init(int _maxit, int _warm_restart){maxit=_maxit; warm_restart=_warm_restart;}
     virtual ~cucg_t(){
 	delete precond;
     }
@@ -66,15 +67,19 @@ public:
     }
 };
 
-class cumuv_t{
+class cumuv_t:public nonCopiable{
     cusp M;
     curmat U;
     curmat V;
     curmat Vx;
     int nx, ny, *nxs, *nys;
  public:
-    cumuv_t(const MUV_T *in=0);
-    ~cumuv_t();
+    cumuv_t():nx(0),ny(0),nxs(0),nys(0){};
+    void Init(const MUV_T *in);
+    ~cumuv_t(){
+	delete[] nxs;
+	delete[] nys;
+    }
     void Forward(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream);
     void operator()(curcell &out, Real beta, const curcell &in, Real alpha, stream_t &stream){
 	Forward(out, beta, in, alpha, stream);
@@ -84,29 +89,24 @@ class cumuv_t{
 
 class cusolve_sparse:public cusolve_r,public cucg_t{
 protected:
-    cumuv_t *CR, *CL;
+    cumuv_t CR, CL;
 public:
-    cusolve_sparse(int _maxit=0, int _warm_restart=0, MUV_T *_R=0, MUV_T *_L=0);
-    virtual ~cusolve_sparse(){
-	info2("cusolve_sparse::destructor\n");
-	delete CR;
-	delete CL;
-    }
+    cusolve_sparse(int _maxit, int _warm_restart, MUV_T *_R, MUV_T *_L);
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream){
-	CR->Forward(out, beta, xin, alpha, stream);
+	CR.Forward(out, beta, xin, alpha, stream);
     }
     virtual void L(curcell &out, Real beta, 
 		   const curcell &xin, Real alpha, stream_t &stream){
-	CL->Forward(out, beta, xin, alpha, stream);
+	CL.Forward(out, beta, xin, alpha, stream);
     }
     virtual void Rt(curcell &out, Real beta, 
 		    curcell &xin, Real alpha, stream_t &stream){
-	CR->Trans(out, beta, xin, alpha, stream);
+	CR.Trans(out, beta, xin, alpha, stream);
     }
 };
 
-class cusolve_cbs:public cusolve_l{
+class cusolve_cbs:public cusolve_l,nonCopiable{
 protected:
     cusp Cl;
     cumat<int> Cp;
@@ -115,15 +115,15 @@ protected:
     curmat y;
     curmat Vr;
 public:
-    cusolve_cbs(spchol *_C=0, dmat *_Up=0, dmat *_Vp=0);
+    cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp);
     void chol_solve(Real *out, const Real *in,  stream_t &stream);
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream);
 };
 
-class cusolve_mvm:public cusolve_l{
+class cusolve_mvm:public cusolve_l,nonCopiable{
     curmat M;
 public:
-    cusolve_mvm(dmat *_M=0):M(0){
+    cusolve_mvm(dmat *_M){
 	cp2gpu(M, _M);
     }
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream){

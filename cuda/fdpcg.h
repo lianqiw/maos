@@ -25,7 +25,7 @@ typedef struct GPU_FDPCG_T{
     Real scale;
 }GPU_FDPCG_T;
 class curecon_geom;
-class cufdpcg_t:public cucgpre_t{
+class cufdpcg_t:public cucgpre_t,nonCopiable{
     curecon_geom *grid;
     cumat<int> perm;   /**<permutation vector for fdpcg*/
     cuccell Mb;  /**<The main fdpcg block matrix*/
@@ -36,15 +36,12 @@ class cufdpcg_t:public cucgpre_t{
     cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;
-    //int ixskip;//skip the ix due to redundant
     cumat<GPU_FDPCG_T> fddata;
-    cufdpcg_t &operator=(const cufdpcg_t&in);
-    cufdpcg_t(const cufdpcg_t&);
 public:
     virtual ~cufdpcg_t(){
 	free(fftips);
     }
-    cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid);
+    cufdpcg_t(FDPCG_T *fdpcg=0, curecon_geom *_grid=0);
     void update(FDPCG_T *fdpcg);
     void P(curcell &xout, const curcell &xin, stream_t &stream);
 };

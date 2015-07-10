@@ -22,7 +22,7 @@
 #include "recon_base.h"
 #include "moao.h"
 namespace cuda_recon{
-class curecon_t{
+class curecon_t:public nonCopiable{
 public:
     curecon_geom *grid;
     cusolve_r *FR;
@@ -50,7 +50,7 @@ private:
     
 public:
     int nmoao;
-    cuarray<cumoao_t> moao;/**<moao configurations for GPU*/
+    cumoao_t **moao;/**<moao configurations for GPU*/
     X(mat) *moao_gwfs, *moao_gevl;
     curcccell dm_moao;/**<moao output*/
     curcell dm_wfs;/**<moao results for wfs for warm restart*/

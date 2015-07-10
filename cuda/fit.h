@@ -38,7 +38,7 @@ protected:
     culoc_t floc;
     dir_t *dir;
     cusp actslave;
-    map_ray *hxp, *hxp0, *hxp1, *ha, *ha0, *ha1;
+    map_ray hxp, hxp0, hxp1, ha, ha0, ha1;
     /*PROP_WRAP_T *hxpdata,*hxp0data,*hxp1data;
     PROP_WRAP_T *hapdata;//for moao
     PROP_WRAP_T *hadata,*ha0data,*ha1data;*/
@@ -51,14 +51,6 @@ public:
     virtual ~cufit_grid(){
 	info2("cufit_grid::destructor\n");
 	delete dir;
-
-	delete [] ha;
-	delete [] ha0;
-	delete [] ha1;
-
-	delete [] hxp;
-	delete [] hxp0;
-	delete [] hxp1;
     }
     virtual void R(curcell &out, Real beta, 
 		   curcell &xin, Real alpha, stream_t &stream);

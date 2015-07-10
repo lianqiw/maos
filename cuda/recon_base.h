@@ -28,7 +28,7 @@ struct dir_t{
     int skip;
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
-class W01_T{
+class W01_T:public nonCopiable{
     curmat W1;    /**< The aperture weighting, piston removal*/
     cusp   W0p;   /**< W0 for partial points*/
     cumat<int>W0f;   /**< index for fully illuminated points.*/
@@ -37,7 +37,7 @@ class W01_T{
     curmat pis;   /**< Temporary data*/
 public:
     W01_T():W0v(0),nxx(0){ }
-    W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
+    void Init(const dsp *R_W0, const dmat *R_W1, int R_nxx);
     void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream);
 };
 
@@ -48,7 +48,7 @@ public:
    moao
 */
 
-class curecon_geom{
+class curecon_geom:public nonCopiable{
 public:
     int npsr, ndm;
     int delay, isim, reconisim;
@@ -62,19 +62,17 @@ public:
     long *anx, *any;/*do not free*/
     long *anloc, *ngrad;/*do not free*/
     Real dt; 
-    curecon_geom(const PARMS_T *parms=0, const RECON_T *recon=0);
-    ~curecon_geom(){
-    }
+    curecon_geom(const PARMS_T *parms, const RECON_T *recon);
+    ~curecon_geom(){ }
 };
-class map_ray{
-private:
-    map_ray(const map_ray&in);
+class map_ray:public nonCopiable{
 protected:
     PROP_WRAP_T *hdata;
-    int *nref;
     int nlayer, ndir;
 public:
-    map_ray():hdata(0),nlayer(0),ndir(0),nref(0){};
+    map_ray():hdata(0),nlayer(0),ndir(0){};
+    void Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugridcell &in, int _nlayer, Real dt=0);
+    void Init_l2l(const cugridcell &out, const cugridcell &in, int _nlayer);
     //from in to out
     void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
 	gpu_map2map_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
@@ -85,16 +83,8 @@ public:
 	gpu_map2map_do<<<dim3(4,4,nlayer),dim3(PROP_WRAP_TX,4),0,stream>>>
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
-    map_ray &operator=(const map_ray&in){
-	hdata=in.hdata;
-	nlayer=in.nlayer;
-	ndir=in.ndir;
-	nref=in.nref;
-	if(nref) nref[0]++;
-	return *this;
-    }
     virtual ~map_ray(){
-	if(hdata && nref && !atomicadd(nref, -1)){
+	if(hdata){
 	    PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
 	    cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
 	    for(int i=0; i<ndir*nlayer; i++){
@@ -106,17 +96,9 @@ public:
 	    cudaFree(hdata);
 	}
     }
-};
-/*Ray tracing from one/multiple layers to one/multiple directions*/
-class map_l2d:public map_ray{
-public:
-    map_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugridcell &in, int _nlayer, Real dt=0);
-};
-
-/*Ray tracing from layer to layer, for caching.*/
-class map_l2l:public map_ray{
-public:
-    map_l2l(const cugridcell &out, const cugridcell &in, int _nlayer);
+    operator bool()const{
+	return nlayer?1:0;
+    }
 };
 
 }//namespace

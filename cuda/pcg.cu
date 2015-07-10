@@ -173,14 +173,13 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 	RECORD(7);
 #if PRINT_RES == 2
 	info2("%.5f ", diff[k]);
-#endif	
+#endif
 	/*Ap=A*p0*/
 	(*Amul)(Ap, 0.f, p0, 1.f, stream); RECORD(8);
 	/*ak[k]=rkzk[k]/(p0'*Ap); */
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
-
 	curcelladd(x0, p0, ak+k, 1.f, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/

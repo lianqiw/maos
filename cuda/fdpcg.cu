@@ -30,9 +30,8 @@ void cufdpcg_t::update(FDPCG_T *fdpcg){
     fdpcg->Mbinv->nx=nxsave;
 }
 cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
-    :grid(_grid),perm(0),Mb(0),fftnc(0),fftips(0),
-     xhat1(0),xhat2(0),nb(0),bs(0),nby(0),nbz(0),scale(0){
-
+    :grid(_grid),fftnc(0),fftips(0),nb(0),bs(0),nby(0),nbz(0),scale(0){
+    if(!fdpcg) return;
     scale=fdpcg->scale;
     bs=fdpcg->bs;//linear size of each block.
     nb=fdpcg->permhf->nx/bs;//size of non-redundant block
