@@ -235,9 +235,9 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM
 		    /*If there is more than one numa memory node available and
 		     * memory size of less than 8GB, read to memory instead of mmap*/
 		    /* Not useful to prevent QPI memory access. disabled*/
-		    in=dcellread(fnatm);
+		    in=dcellread("%s",fnatm);
 		}else{
-		    in=dcellread_mmap(fnatm);
+		    in=dcellread_mmap("%s",fnatm);
 		}
 	    }else{
 		char fnlock[PATH_MAX];

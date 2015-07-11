@@ -26,7 +26,6 @@ struct dir_t{
     Real thetay;
     Real hs;
     int skip;
-    dir_t(Real thetax_=0, Real thetay_=0, Real hs_=0, int skip_=0):thetax(thetax_),thetay(thetay_),hs(hs_),skip(skip_){}
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T:public nonCopiable{

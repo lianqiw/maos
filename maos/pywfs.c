@@ -651,7 +651,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
 	    goto retry;
 	}
     }else{
-	gg=dread(fn);
+	gg=dread("%s", fn);
     }
     return gg;
 }

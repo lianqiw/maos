@@ -38,7 +38,6 @@ public:
     friend class curecon_t;
     virtual void L(curcell &xout, Real beta, const curcell &xin, Real alpha, stream_t &stream);
     Real moao_solve(curccell &xout, const curcell &xin, const curcell &ain, stream_t &stream);
-    cumoao_t():grid(0),ndir(0){ }
     cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, curecon_geom *_grid);
     ~cumoao_t(){}
     operator bool(){

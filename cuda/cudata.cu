@@ -255,7 +255,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    cudaSetDevice(GPUS[i]);
-	    cudata=cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
+	    cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
+	    gpu_set(i);
 	    for(int j=0; j<MAXGPU; j++){
 		if(GPUS[i]==gmap[j][0]){
 		    cudata->igpu=j;

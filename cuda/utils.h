@@ -25,7 +25,7 @@ class lock_t{
     pthread_mutex_t &mutex;
     int enable;
 public:
-    lock_t(pthread_mutex_t _mutex, int _enable=1):mutex(_mutex),enable(_enable){
+    lock_t(pthread_mutex_t &_mutex, int _enable=1):mutex(_mutex),enable(_enable){
 	if(enable) LOCK(mutex);
     }
     ~lock_t(){
