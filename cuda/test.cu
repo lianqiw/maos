@@ -69,9 +69,14 @@ void test_sum(){
 }
 /*Test ray tracing*/
 void test_prop(){
+    cudaSetDevice(0);
     map_t *mapin=mapnew(30, 30, 0.5, 0.5, 0);
     map_t *mapout=mapnew(200, 200, 0.1, 0.1, 0);
-    dset((dmat*)mapin, 1);
+    rand_t rstat;
+    seed_rand(&rstat, 1);
+    drandn((dmat*)mapin, 1, &rstat);
+    //dset((dmat*)mapin, 1);
+    mapin->iac=0.3;
     writebin(mapin, "prop_mapin_cpu");
     cumap_t cumapin; cumapin=mapin;
     cumap_t cumapout; cumapout=mapout;
@@ -80,11 +85,11 @@ void test_prop(){
     Real alpha=1;
     Real dispx=0;
     Real dispy=0;
-    gpu_map2map(cumapout, cumapin, dispx, dispy, alpha, curmat(), 'n');
+    curmat cc=gpu_dmcubic_cc(mapin->iac);
+    gpu_map2map(cumapout, cumapin, dispx, dispy, alpha, cc, 'n');
     cuwrite(cumapout.p, "prop_mapout");
     prop_grid_map(mapin, mapout, alpha, dispx, dispy, 1, 0, 0, 0);
     writebin(mapout, "prop_mapout_cpu");
-    mapin->iac=0.3;
 }
 
 int main(int argc, char** argv){

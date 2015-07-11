@@ -1208,7 +1208,7 @@ static void init_simu_moao(SIM_T *simu){
     const int seed=simu->seed;
     int nstep=parms->sim.end;
     int ny=parms->sim.closeloop && !parms->gpu.moao ? 2 : 1;
-    if(!parms->gpu.wfs || ! parms->gpu.moao){
+    if(!parms->gpu.wfs || ! parms->gpu.moao || parms->plot.run){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int imoao=parms->powfs[ipowfs].moao;
@@ -1222,7 +1222,7 @@ static void init_simu_moao(SIM_T *simu){
 	    }
 	}
     }
-    if(!parms->gpu.evl || ! parms->gpu.moao){ 
+    if(!parms->gpu.evl || ! parms->gpu.moao || parms->plot.run){ 
 	int imoao=parms->evl.moao;
 	if(imoao!=-1){
 	    simu->dm_evl=cellnew(nevl, ny);

@@ -184,6 +184,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    dir[count].thetax=parms->wfs[iwfs].thetax;
 		    dir[count].thetay=parms->wfs[iwfs].thetay;
 		    dir[count].hs=parms->wfs[iwfs].hs;
+		    dir[count].skip=0;
 		    count++;
 		}
 	    }
@@ -198,6 +199,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    dir[count].thetax=parms->evl.thetax->p[ievl];
 		    dir[count].thetay=parms->evl.thetay->p[ievl];
 		    dir[count].hs=parms->evl.hs->p[ievl];
+		    dir[count].skip=0;
 		    count++;
 		}
 	    }
@@ -366,7 +368,7 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 	    }
 	    Real g=moao_gwfs->p[iwfs];
 	    curadd(cudata->dm_wfs[iwfs][0], 1-g, temp, g, stream);
-	    if(!wfsgpu){//gpu.moao implies fit.square=1
+	    if(!wfsgpu || (_dm_wfs && _dm_wfs->p[iwfs])){//gpu.moao implies fit.square=1
 		cp2cpu(&_dm_wfs->p[iwfs], cudata->dm_wfs[iwfs][0], stream);
 	    }
 	}
@@ -385,7 +387,7 @@ void curecon_t::moao_filter(dcell *_dm_wfs, dcell *_dm_evl){
 	    }
 	    Real g=moao_gevl->p[ievl];
 	    curadd(cudata->dm_evl[ievl][0], 1-g, temp, g, stream);
-	    if(!cudata_t::evlgpu){
+	    if(!cudata_t::evlgpu || (_dm_evl && _dm_evl->p[ievl])){
 		cp2cpu(&_dm_evl->p[ievl], cudata->dm_evl[ievl][0], stream);
 	    }
 	}

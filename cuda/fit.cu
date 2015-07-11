@@ -103,17 +103,17 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     //dm -> floc
     if(!parms->sim.idealfit){
 	if(parms->fit.cachex){
-	    hxp0.Init_l2l(grid->xcmap, grid->xmap, npsr);
-	    hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap, npsr);
+	    hxp0.Init_l2l(grid->xcmap, grid->xmap);
+	    hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap);
 	}else{
-	    hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap, npsr);
+	    hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap);
 	}
     }
     if(parms->fit.cachedm){
-	ha0.Init_l2l(acmap, grid->amap, ndm);
-	ha1.Init_l2d(grid->fmap, dir, nfit, acmap, ndm);
+	ha0.Init_l2l(acmap, grid->amap);
+	ha1.Init_l2d(grid->fmap, dir, nfit, acmap);
     }else{
-	ha.Init_l2d(grid->fmap, dir, nfit, grid->amap, ndm);
+	ha.Init_l2d(grid->fmap, dir, nfit, grid->amap);
     }
 }
 

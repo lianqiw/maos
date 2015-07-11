@@ -22,7 +22,7 @@
 #include "types.h"
 #include "cudata.h"
 class lock_t{
-    pthread_mutex_t mutex;
+    pthread_mutex_t &mutex;
     int enable;
 public:
     lock_t(pthread_mutex_t _mutex, int _enable=1):mutex(_mutex),enable(_enable){
@@ -60,17 +60,16 @@ inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int 
 */
 template<typename M, typename N>
 void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
-    lock_t lock(cudata->memmutex, sizeof(M)!=sizeof(N));
     M* from=0;
     int free_from=0;
     if(sizeof(M)!=sizeof(N)){
 	long memsize=nx*ny*sizeof(M);
-	if(memsize>20000000){//Too large. Don't cache.
+	if(memsize>20000000 || !cudata){//Too large. Don't cache.
 	    from=(M*)malloc(memsize);
 	    free_from=1;
 	}else{
+	    LOCK(cudata->memmutex);
 	    if(cudata->nmemcache<memsize){
-		//info2("Enlarging memcache from %ld to %ld\n", cudata->nmemcache, memsize);
 		cudata->nmemcache=sizeof(M)*nx*ny;
 		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
 	    }
@@ -87,6 +86,8 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     }
     if(free_from){
 	free(from);
+    }else if(sizeof(M)!=sizeof(N)){
+	UNLOCK(cudata->memmutex);
     }
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
@@ -103,7 +104,7 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	    cudata->memcount[*dest]++;
 	    return;
 	}
-    }else if(!cuda_dedup && *dest){
+    }else if(!cuda_dedup && *dest && cudata){
 	//Avoid overriding previously referenced memory
 	lock_t tmp(cudata->memmutex);
 	if(cudata->memcount.count(*dest) && cudata->memcount[*dest]>1){

@@ -123,6 +123,22 @@ void save_recon(SIM_T *simu){
 			"Int Hi %d",idm);
 	    }
 	}
+	if(simu->dm_wfs){
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		int imoao=parms->powfs[ipowfs].moao;
+		if(imoao<0) continue;
+		drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_wfs->p[iwfs]->p, NULL,
+			"MOAO", "x(m)", "y(m)", "WFS %d", iwfs);
+	    }
+	}
+	if(simu->dm_evl){
+	    int imoao=parms->evl.moao;
+	    for(int ievl=0; ievl<parms->evl.nevl && imoao>=0; ievl++){
+		drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_evl->p[ievl]->p, NULL,
+			"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
+	    }
+	}
     }
     if(parms->plot.run && simu->Merr_lo){
 	dcell *dmlo=NULL;

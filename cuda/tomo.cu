@@ -148,7 +148,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
     if(dt>0){
 	info("dt=%g. vx[0]=%g\n", dt, grid->xmap[0].vx);
     }
-    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap, grid->npsr, dt);
+    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap, dt);
 
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
@@ -207,7 +207,6 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	GP=cuspcell(nwfs, 1);
 	GPscale=new Real[npowfs];
 	saptr=cucell<int>(npowfs, 1);
-	int has_GPp=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].skip) continue;
 	    cusp GPf;
@@ -225,12 +224,6 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 		    }
 		}
 	    }
-	    if(GPpi){
-		has_GPp=1;
-	    }
-	}
-	if(!has_GPp){
-	    GPp=cucell<short2>();
 	}
     }
 
@@ -264,7 +257,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
 	    GPDATA[iwfs].saptr=(int(*)[2])saptr[ipowfs].P();
-	    GPDATA[iwfs].GPp=GPp[iwfs]?(short2*)GPp[iwfs].P():NULL;
+	    GPDATA[iwfs].GPp=(short2*)GPp[iwfs].P();
 	    GPDATA[iwfs].GPscale=GPscale[ipowfs];
 	    if(parms->powfs[ipowfs].trs){
 		GPDATA[iwfs].PTT=PTT(iwfs,iwfs).P();

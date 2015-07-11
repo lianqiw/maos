@@ -19,7 +19,8 @@
 #include "accphi.h"
 #include "prop_wrap.h"
 /*
-  One kernel that handles multiple layers/directions, linear or cubic
+  One kernel that handles multiple layers/directions, linear or cubic to enable fully parallelization across the full GPU.
+
   Forward: Propagate from XLOC to WFS (Parallel across each WFS).  
   Backward (Transpose): Propagate from WFS to XLOC (Parallel across each Layer)
   
@@ -48,9 +49,7 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
     int &nn=shared.nn;
     Real *&pps=shared.pps;
     Real *&pdir=shared.pdir;
-    Real *const &fx=(Real*)shared.fx;
-    Real *const &fy=(Real*)shared.fy;
-
+    
     int &ix0=shared.ix0[threadIdx.x];
     int &iy0=shared.iy0[threadIdx.y];
 
@@ -171,6 +170,8 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 			const Real tcy2=tcy+0.5f;
 			//Each thread has the same coefficients, so we use
 			// shared memory to store them to avoid register spill.
+			Real *const &fx=(Real*)shared.fx;
+			Real *const &fy=(Real*)shared.fy;
 			if(threadIdx.x==0 && threadIdx.y==0){
 			    fy[0]=(cc[3]+cc[4]*tcy)*tcy*tcy;
 			    fy[1]=(cc[3]+cc[4]*tcy2)*tcy2*tcy2;
@@ -224,30 +225,31 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 			const int ymaxps=datai->nyps-datai->offpsy;
 			const int xminps=-datai->offpsx;
 			const int yminps=-datai->offpsy;
+			Real fy[4]; Real fx[4];
 			for(int my=iy0; my<ny; my+=stepy){
 			    Real jy;
 			    const Real y=Z(modf)(dispy+my*yratio, &jy);
 			    const int iy=(int)jy;	
-			    if(threadIdx.x==0 && threadIdx.y==0){
+			    //if(threadIdx.x==0 && threadIdx.y==0){
 				fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
 				fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
 				fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
 				fy[3]=y*y*(cc[3]+cc[4]*y); 
-			    }
-			    __syncthreads();
+				//}
+				//__syncthreads();
 			    for(int mx=ix0; mx<nx; mx+=stepx){
 				Real jx;
 				const Real x=Z(modf)(dispx+mx*xratio, &jx);
 				const int ix=(int)jx;
 				const Real value=pdir[mx+my*ndirx]*alpha;
 				//cc need to be in device memory for sm_13 to work.
-				if(threadIdx.x==0 && threadIdx.y==0){
+				//	if(threadIdx.x==0 && threadIdx.y==0){
 				    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
 				    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
 				    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
 				    fx[3]=x*x*(cc[3]+cc[4]*x); 
-				}
-				__syncthreads();
+				    //	}
+				    //__syncthreads();
 				const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 				const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
 				for(int ky=ky0; ky<ky1; ky++){
@@ -263,35 +265,36 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 			    }
 			}
 		    }
-		}else{
+		}else{//CC, non trans
 		    const int xmaxps=npsx-datai->offpsx;
 		    const int ymaxps=datai->nyps-datai->offpsy;
 		    const int xminps=-datai->offpsx;
 		    const int yminps=-datai->offpsy;
+		    Real fy[4]; Real fx[4];
 		    for(int my=iy0; my<ny; my+=stepy){
 			Real jy;
 			const Real y=Z(modf)(dispy+my*yratio, &jy);
 			const int iy=(int)jy; 
-			if(threadIdx.x==0 && threadIdx.y==0){
+			//if(threadIdx.x==0 && threadIdx.y==0){
 			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
 			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
 			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
 			    fy[3]=y*y*(cc[3]+cc[4]*y); 
-			}
-			__syncthreads();
+			    //	}
+		    //	__syncthreads();
 			for(int mx=ix0; mx<nx; mx+=stepx){
 			    Real jx;
 			    const Real x=Z(modf)(dispx+mx*xratio, &jx);
 			    const int ix=(int)jx;
 			    Real sum=0;
 			    //cc need to be in device memory for sm_13 to work.
-			    if(threadIdx.x==0 && threadIdx.y==0){
+			    //if(threadIdx.x==0 && threadIdx.y==0){
 				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
 				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
 				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
 				fx[3]=x*x*(cc[3]+cc[4]*x); 
-			    }
-			    __syncthreads();
+				// }
+			// __syncthreads();
 			    const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 			    const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
 			    for(int ky=ky0; ky<ky1; ky++){
@@ -366,9 +369,8 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
   Backward: dir->ps (wfs -> xloc or floc->dm)
 */
 
-void gpu_map2map_prep(PROP_WRAP_T*res, 
-			const cugrid_t &g_dir, const cugrid_t &g_ps,
-			Real dispx, Real dispy, const curmat &cc){
+void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &g_ps,
+		      Real dispx, Real dispy, const curmat &cc){
     assert(g_ps.ny!=1);
     const Real uxi=1.f/g_ps.dx;
     const Real uyi=1.f/g_ps.dy;
@@ -380,7 +382,7 @@ void gpu_map2map_prep(PROP_WRAP_T*res,
 	if(!cc && !res->isreverse){
 	    res->reverse=new PROP_WRAP_T;
 	    res->reverse->isreverse=1;
-	    gpu_map2map_prep(res->reverse, g_ps, g_dir, -dispx, -dispy, curmat());
+	    gpu_map2map_prep(res->reverse, g_ps, g_dir, -dispx, -dispy, cc);
 	}
     }else if(Z(fabs)(xratio-0.5f)<EPS && Z(fabs)(yratio-0.5f)<EPS){
 	xratio=yratio=0.5f;
@@ -405,9 +407,29 @@ void gpu_map2map_prep(PROP_WRAP_T*res,
 	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)Z(floor)((nxps-dispx-EPS)*xratio1);
-    int ny=(int)Z(floor)((nyps-dispy-EPS)*yratio1);
-    
+    int nx=(int)Z(floor)((nxps-1-dispx-EPS)*xratio1+1);
+    int ny=(int)Z(floor)((nyps-1-dispy-EPS)*yratio1+1);
+    //Sanity check.
+    while((nx-1)*xratio+dispx+1>=nxps){
+	warning("out point is at %g with ratio %g, and input %d\n",
+		(nx-1)*xratio+dispx, xratio, nxps-1);
+	nx--;
+    }
+    while((nx)*xratio+dispx+1<nxps){
+	warning("out point is at %g with ratio %g, and input %d\n",
+		(nx-1)*xratio+dispx, xratio, nxps-1);
+	nx++;
+    }
+    while((ny-1)*yratio+dispy+1>=nyps){
+	warning("out point is at %g with ratio %g, and input %d\n",
+		(ny-1)*yratio+dispy, yratio, nyps-1);
+	ny--;
+    }
+    while((ny)*yratio+dispy+1<nyps){
+	warning("out point is at %g with ratio %g, and input %d\n",
+		(ny-1)*yratio+dispy, yratio, nyps-1);
+	ny++;
+    }
     if(nx>nxdir-offx1) nx=nxdir-offx1;
     if(ny>nydir-offy1) ny=nydir-offy1;
     int offx2=(int)Z(floor)(dispx); dispx-=offx2;/*for input. coarse sampling. */
@@ -453,7 +475,7 @@ void gpu_map2map(cumap_t &out, const cumap_t &in, Real dispx, Real dispy, Real a
     Real **p;
     cudaMalloc(&p, sizeof(Real*)*2);
     const Real *tmp[2]={out.P(), in.P()};
-    cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyDeviceToHost);
+    cudaMemcpy(p, tmp, sizeof(Real*)*2, cudaMemcpyHostToDevice);
     gpu_map2map_do<<<dim3(4,4,1),dim3(PROP_WRAP_TX,4),0,0>>>
 	(wrap_gpu, p, p+1, 1, 1, alpha, 0, trans);
     cudaMemcpy(&wrap, wrap_gpu, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);

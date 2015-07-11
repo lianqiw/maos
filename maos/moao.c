@@ -163,6 +163,8 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 			 thetax*ht, thetay*ht, scale, 0, 0);
 	}
     }
+    //static int count=-1; count++;
+    //writebin(xp->p[0], "opdfit0_%d", count);
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht;
 	double scale=1.-ht/hs;
@@ -171,6 +173,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 		     thetax*ht, thetay*ht, scale, 
 		     0, 0);
     }
+    //writebin(xp->p[0], "opdfit1_%d", count);
     if(rhsout){
 	*rhsout=dcelldup(xp);
     }
@@ -285,14 +288,14 @@ void moao_recon(SIM_T *simu){
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms, imoao, 
 		      parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl],
-		      INFINITY, simu->opdr, dmcommon, parms->plot.run?&rhsout:NULL, 1);
+		      INFINITY, simu->opdr, dmcommon, (parms->plot.run||1)?&rhsout:NULL, 1);
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
-	    /*{
-		writebin(rhs->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
+	    if(0){
+		writebin(rhsout->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
 		writebin(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);
-		}*/
+	    }
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;

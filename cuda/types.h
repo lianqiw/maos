@@ -104,7 +104,7 @@ public:
 	}
 	p=NULL;
     }
-    virtual ~cumat(){
+    ~cumat(){
 	reset();
     }
     cumat(const cumat &in):p(in.p),nx(in.nx),ny(in.ny),nref(in.nref),header(in.header){
@@ -663,7 +663,7 @@ public:
     cumap_t& operator=(map_t*in){
 	if(in){
 	    cugrid_t::operator=(in);
-	    if(!p && nx>0 && ny>0){
+	    if(p.Nx()!=nx || p.Ny()!=ny){
 		p=curmat(nx, ny);
 	    }
 	}

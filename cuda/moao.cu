@@ -36,28 +36,37 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
 	actslave=cusp(moao->actslave->p[0], 1);
     }
 
-    dir_t dir0={0,0,INFINITY,0};
-    ha.Init_l2d(grid->fmap, &dir0, 1, amap, 1);
+    dir_t dir0(0,0,INFINITY,0);
+    ha.Init_l2d(grid->fmap, &dir0, 1, amap);
     opdfit=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
 
     hxp=cuarray<map_ray>(ndir, 1);
     hap=cuarray<map_ray>(ndir, 1);
     for(int idir=0; idir<ndir; idir++){
-	hxp[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->xmap, grid->npsr);
-	hap[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->amap, grid->ndm);
+	hxp[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->xmap);
+	hap[idir].Init_l2d(grid->fmap, dir+idir, 1, grid->amap);
     }
     rhs=curcell(1,1,amap[0].nx,amap[0].ny);
 }
 Real cumoao_t::moao_solve(curccell &xout, const curcell &xin, const curcell &ain, stream_t &stream){
     for(int idir=0; idir<ndir; idir++){
 	cuzero(opdfit.M(), stream);
-	hxp[idir].forward(opdfit.pm, xin.pm, 1.f, NULL, stream);//tomography	
+	//cuwrite(xin, "xin_%d", idir);
+	//info("hxp[%d]\n", idir);
+	hxp[idir].forward(opdfit.pm, xin.pm, 1.f, NULL, stream);//tomography
+	//cuwrite(opdfit, "opdfit0_%d", idir);
+	//cuwrite(ain, "ain_%d", idir);
+	//info("hap[%d]\n", idir);
 	hap[idir].forward(opdfit.pm, ain.pm, -1.f, NULL, stream);//minus common DM.
+	//cuwrite(opdfit, "opdfit1_%d", idir);
 	grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);
+	//cuwrite(opdfit2, "opdfit2_%d", idir);
 	cuzero(rhs.M(), stream);
 	ha.backward(opdfit2.pm, rhs.pm, 1, NULL, stream);
+	//cuwrite(rhs, "rhs_%d", idir);
 	solve(xout[idir], rhs, stream);
+	//cuwrite(xout[idir], "xout_%d", idir);
 	/*{
 	    static int ic=-1; ic++;
 	    cuwrite(xout[idir], "xout_%d", ic);

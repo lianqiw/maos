@@ -169,11 +169,11 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     delay=2;//2 frame delay
 }
 
-void map_ray::Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
-		       const cugridcell &in, int _nlayer,//input. layers.
+void map_ray::Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //output.
+		       const cugridcell &in,//input.
 		       Real dt){//directions and star height.
     if(nlayer) error("Already initialized\n");
-    nlayer=_nlayer;
+    nlayer=in.N();
     ndir=_ndir;
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
     DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer*ndir));
@@ -187,7 +187,7 @@ void map_ray::Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
 		const Real scale=1.f-ht/hs;
 		cugrid_t outscale=out.Scale(scale);
 		gpu_map2map_prep(hdata_cpu+idir+ilayer*ndir, outscale, in[ilayer],
-				   dispx, dispy, in[ilayer].cubic_cc);
+				 dispx, dispy, in[ilayer].cubic_cc);
 	    }
 	    hdata_cpu[idir+ilayer*ndir].togpu(hdata+idir+ilayer*ndir);
 	}
@@ -195,9 +195,9 @@ void map_ray::Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, //output.
     delete [] hdata_cpu;
 }
 
-void map_ray::Init_l2l(const cugridcell &out, const cugridcell &in, int _nlayer){//input. layers.
+void map_ray::Init_l2l(const cugridcell &out, const cugridcell &in){//input. layers.
     if(nlayer) error("Already initialized\n");
-    nlayer=_nlayer;
+    nlayer=in.N();
     ndir=0;//this is laye to layer.
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer];
     DO(cudaMalloc(&hdata, sizeof(PROP_WRAP_T)*nlayer));

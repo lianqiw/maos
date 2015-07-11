@@ -26,6 +26,7 @@ struct dir_t{
     Real thetay;
     Real hs;
     int skip;
+    dir_t(Real thetax_=0, Real thetay_=0, Real hs_=0, int skip_=0):thetax(thetax_),thetay(thetay_),hs(hs_),skip(skip_){}
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T:public nonCopiable{
@@ -71,8 +72,8 @@ protected:
     int nlayer, ndir;
 public:
     map_ray():hdata(0),nlayer(0),ndir(0){};
-    void Init_l2d(const cugrid_t &out, dir_t *dir, int _ndir, const cugridcell &in, int _nlayer, Real dt=0);
-    void Init_l2l(const cugridcell &out, const cugridcell &in, int _nlayer);
+    void Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, const cugridcell &in, Real dt=0);
+    void Init_l2l(const cugridcell &out, const cugridcell &in);
     //from in to out
     void forward(Real **out, Real **in,  Real alpha, Real *wt, stream_t &stream){
 	gpu_map2map_do<<<dim3(4,4,ndir==0?nlayer:ndir),dim3(PROP_WRAP_TX,4),0,stream>>>
@@ -97,7 +98,7 @@ public:
 	}
     }
     operator bool()const{
-	return nlayer?1:0;
+	return nlayer||ndir;
     }
 };
 

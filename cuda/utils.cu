@@ -461,19 +461,21 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t
 #undef cudaFree
 int cuda_free(void *pp){
     int tofree=1;
-    LOCK(cudata->memmutex);
-    if(cudata->memcount.count(pp)){
-	if(cudata->memcount[pp]>1){
-	    cudata->memcount[pp]--;
-	    warning("Freeing referenced pointer %p\n", pp);
-	    tofree=0;
-	}else if(cudata->memcount[pp]==1){
-	    cudata->memcount.erase(pp);
-	}else{
-	    warning("memcount[%p]=%d\n", pp, cudata->memcount[pp]);
+    if(cudata){
+	LOCK(cudata->memmutex);
+	if(cudata->memcount.count(pp)){
+	    if(cudata->memcount[pp]>1){
+		cudata->memcount[pp]--;
+		warning("Freeing referenced pointer %p\n", pp);
+		tofree=0;
+	    }else if(cudata->memcount[pp]==1){
+		cudata->memcount.erase(pp);
+	    }else{
+		warning("memcount[%p]=%d\n", pp, cudata->memcount[pp]);
+	    }
 	}
+	UNLOCK(cudata->memmutex);
     }
-    UNLOCK(cudata->memmutex);
     if(tofree){
 	return cudaFree(pp);
     }else{
