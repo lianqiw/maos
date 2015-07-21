@@ -1,5 +1,6 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-LDADD=../lib/libaos.la $(LDOPTS) 
+AM_LDFLAGS=$(LDOPTS) $(LDEXE)
+LDADD=../lib/libaos.la
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h icon-waiting.h mouse_black.h mouse_hand.h mouse_white.h mygtk.h\

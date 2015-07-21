@@ -1,4 +1,5 @@
-#AM_CFLAGS=$(CUDAOPT)
+AM_CFLAGS=$(OPTS) -I $(top_srcdir)
+AM_LDFLAGS=$(LDOPTS) $(LDEXE)
 #In the order of include:
 HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h prop_wrap.h
 HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
@@ -16,16 +17,14 @@ SRCS=$(SRC_LIB) $(SRC_RECON) $(SRC_WFS) $(SRC_MVM) perfinit.cu perfevl.cu
 #libaogpu_a_LIBADD=
 lib_LTLIBRARIES=libaogpu.la
 libaogpu_la_SOURCES=$(SRCS) $(EXTRA_DIST)
-libaogpu_la_LIBADD=
-libaogpu_la_LDFLAGS=$(LDLIB)
+libaogpu_la_LIBADD=../lib/libaos.la #put $(LIBCUDA) here doesn't help because rpath linker flag is not preserved in the .la file
+libaogpu_la_LDFLAGS=$(LDOPTS)
 
 bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
 ___test_test_cuda_SOURCES=test.cu 
-___test_test_cuda_CFLAGS=$(OPTS)
-___test_test_cuda_LDADD=libaogpu.la $(LIBCUDA) ../lib/libaos.la $(LDOPTS)
+___test_test_cuda_LDADD=libaogpu.la $(LIBCUDA) 
 ___bin_gpu_mvm_SOURCES=gpu_mvm.c
-___bin_gpu_mvm_CFLAGS=$(OPTS)
-___bin_gpu_mvm_LDADD=libaogpu.la $(LIBCUDA) ../lib/libaos.la $(LDOPTS)
+___bin_gpu_mvm_LDADD=libaogpu.la $(LIBCUDA)
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:

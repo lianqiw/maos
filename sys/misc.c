@@ -33,6 +33,7 @@
 #include "process.h"
 #include "misc.h"
 #include "path.h"
+#include "version.h"
 /**
    Obtain the basename of a file. The returnned string must be freed.
 */
@@ -779,7 +780,7 @@ void maos_version(void){
 #else
     info2(", w/o optimization\n");
 #endif
-    info2("Source: %s\n", SRCDIR);
+    info2("Source: %s %s\n", SRCDIR, GIT_VERSION);
     info2("BUILD: %s\n", BUILDDIR);
     info2("Launched at %s in %s with PID %ld.\n",myasctime(),myhostname(), (long)getpid());
 #if HAS_LWS

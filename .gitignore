@@ -39,3 +39,4 @@ ar-lib
 mex/maos2mex.h
 mex/aolib.c
 .nfs*
+version.h

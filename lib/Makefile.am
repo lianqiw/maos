@@ -1,4 +1,5 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
+AM_CFLAGS=$(OPTS) -I$(top_srcdir)
+AM_LDFLAGS=$(LDOPTS)
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS=accphi.h mkg.h readcfg.h mkh.h aos.h mkw.h turbulence.h	\
@@ -15,5 +16,4 @@ slaving.c mkdtf.c psd.c kalman.c cn2est.c misc.c locfft.c zernike.c
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
 libaos_la_LIBADD=../math/libaomath.la
-libaos_la_LDFLAGS = $(LDLIB)
 

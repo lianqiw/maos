@@ -63,7 +63,7 @@ void X(fft_free_plan)(fft_t *fft){
 /**
    load FFT wisdom from file.
 */
-#ifdef USE_COMPLEX
+#if defined(USE_COMPLEX) && !defined (USE_SINGLE)
 int has_threads=-1;
 void (*p_fftw_plan_with_nthreads)(int n)=NULL;
 //Put the following within USE_COMPLEX to avoid run multiple copies of it.

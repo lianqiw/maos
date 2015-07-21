@@ -177,7 +177,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cupowfs[ipowfs].fieldstop=curcell(nwvl,1);
 		}
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cp2gpu(cupowfs[ipowfs].embed[iwvl], locfft->embed->p[iwvl]->p, powfs[ipowfs].loc->nloc, 1);
+		    cp2gpu(&cupowfs[ipowfs].embed[iwvl], locfft->embed->p[iwvl]->p, powfs[ipowfs].loc->nloc, 1);
 		    cupowfs[ipowfs].nembed[iwvl]=locfft->nembed->p[iwvl];
 		    if(locfft->fieldmask){
 			cp2gpu(cupowfs[ipowfs].fieldstop[iwvl], locfft->fieldmask->p[iwvl]);

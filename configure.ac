@@ -64,9 +64,12 @@ OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common"
 if test "${USER}" = "lianqiw" ;then
     OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
 fi
-LDEXE="-no-fast-install -ldl"
+LDEXE=
+OPTS=
 if test -z "$OPENMP_CFLAGS" ;then
-    LDEXE+=" -lpthread"
+    LDFLAGS+=" -pthread"
+else
+    CFLAGS+=" $OPENMP_CFLAGS"
 fi
 OPTSextra=""
 
@@ -85,8 +88,8 @@ case ${host_cpu} in
 	host_cpu=x86_64
 	CFLAGS_CPU="-m64"
 	CFLAGS_ARCH="-m64 -DDLONG"
-        LDFLAGS+=" -m64"
-        CDEFINE="__x86_64__"
+        LDOPTS+=" -m64"
+        #CDEFINE="__x86_64__"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
 	objcopy_output=elf64-x86-64
 	objcopy_arch=i386:x86-64
@@ -96,8 +99,8 @@ case ${host_cpu} in
 	host_cpu=i386
 	CFLAGS_CPU="-m32"
 	CFLAGS_ARCH="-m32 -DDINT -D_FILE_OFFSET_BITS=64"
-	LDFLAGS+=" -m32"
-        CDEFINE="__i386__"
+	LDOPTS+=" -m32"
+        #CDEFINE="__i386__"
 	AC_DEFINE(X86, [1], "I386 Machine")
 	objcopy_output=elf32-i386
 	objcopy_arch=i386
@@ -118,13 +121,13 @@ AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
 AM_CONDITIONAL(DARWIN, false)
 AM_CONDITIONAL(WIN,    false)
-LDLIB="-avoid-version"
 mkl_avail="no"
+echo host_os=$host_os
 case "$host_os" in
     *linux*)
 	AM_CONDITIONAL(LINUX, true)
-	LDEXE+=" -lrt" #need real time library.
-	LDFLAGS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+	LDOPTS+=" -lrt" #need real time library.
+	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
 	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
 	if test "${host_cpu}" = "x86_64" ;then
@@ -163,14 +166,15 @@ case "$host_os" in
 	echo host_os=$host_os
 	AC_MSG_ERROR([Unrecognized OS])
 esac
-AC_SUBST(ldsuffix)
+
 AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
 PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
+CFLAGS+=" -I${PRE_DIR}/include"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-CFLAGS="$CFLAGS_EXTRA $CFLAGS_ARCH -I${PRE_DIR}/include"
+OPTS+=" $CFLAGS_EXTRA $CFLAGS_ARCH"
 
 die(){
     shift
@@ -375,7 +379,7 @@ case "${cc_full}" in
 	DEBUG="-O0"
 	;;	
 esac
-AC_SUBST(CN)
+
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
@@ -455,19 +459,23 @@ function set_mkl_lapack(){
     LAPACK="-lmkl_core"
     if test -n "$OPENMP_CFLAGS" ;then
 	if test "$CN" = "icc" ;then
-	    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
+	    LAPACK+=" -lmkl_intel_thread"
 	elif test "$CN" = "gcc" ;then
-	    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
+	    LAPACK+=" -lmkl_gnu_thread"
 	else
-	    LAPACK+=" -lmkl_sequential -lpthread"
+	    LAPACK+=" -lmkl_intel_thread"
 	fi
     else
-	LAPACK+=" -lmkl_sequential -lpthread"
+	LAPACK+=" -lmkl_intel_thread -liomp5"
     fi
     if test "$host_cpu" = "x86_64" ;then
 	LAPACK+=" -lmkl_intel_lp64"
     else
 	LAPACK+=" -lmkl_intel"
+    fi
+    if test "$use_static" = "yes" ;then
+    	LAPACK="-Wl,--start-group,${LAPACK},--end-group"
+	LAPACK=${LAPACK// /,}
     fi
     echo trying LAPACK=$LAPACK
 }
@@ -522,7 +530,7 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
     fi
 fi
 
-AC_CHECK_HEADERS([numa.h], [LDFLAGS+=" -lnuma"], [])
+AC_CHECK_HEADERS([numa.h], [LDOPTS+=" -lnuma"], [])
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
@@ -530,7 +538,7 @@ if test "$has_z" = "no" ;then
     unset ac_cv_lib_z_gzopen
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
-LDZ="-lz"
+
 #Check for FFTW3 header and library.
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
@@ -674,14 +682,8 @@ if test "$with_gtk" != "no" ;then
 fi
 
 AC_CHECK_HEADERS([unistd.h])
-LDOPTS="$LDCHOL $LDFFT $LAPACK $LDZ -lm $LDEXE"
-OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
-AC_SUBST(LDAOS)
-AC_SUBST(OPTS)
-AC_SUBST(LDOPTS)
-AC_SUBST(OPTScommon)
-AC_SUBST(SRC_DIR)
-AC_SUBST(BUILD_DIR)
+OPTS+=" $OPTScommon $OPTScc $OPTSprof $OPTSextra"
+
 
 if test "$with_matlab" != "no" ;then
     if test ${MEXDIR:0:1} = '~' ;then
@@ -894,9 +896,23 @@ AC_CONFIG_FILES( [Makefile
 if test -d "${srcdir}/test" ;then
     AC_CONFIG_FILES([test/Makefile])
 fi
-LDFLAGS+=" -no-fast-install"
-LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
+LDOPTS+=" -no-fast-install -avoid-version -ldl"
+LDEXE+=" $LAPACK"
+echo LIBS=$LIBS
+LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
+AC_SUBST(ldsuffix)
+AC_SUBST(CN)
+AC_SUBST(LDAOS)
+AC_SUBST(OPTS)
+AC_SUBST(LDCHOL)
+AC_SUBST(LDFFT)
+AC_SUBST(LAPACK)
+AC_SUBST(LDEXE)
+AC_SUBST(OPTScommon)
+AC_SUBST(SRC_DIR)
+AC_SUBST(BUILD_DIR)
 AC_SUBST(LIBS)
+AC_SUBST(LDOPTS)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR

@@ -20,7 +20,7 @@ $(srcdir)/math/tmp.c:$(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/m
 	@echo "#define USE_COMPLEX" > $(srcdir)/math/tmp.c
 	@cat $(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c $(srcdir)/math/spbin.c $(srcdir)/math/sp.c >> $(srcdir)/math/tmp.c
 
-EXTRA_DIST = doxygen.cfg docs 
+EXTRA_DIST = doxygen.cfg docs version.h
 
 #Note: in EXTRA_DIST, don't specify a folder. If you do, everything in that
 #folder, including compiled files (in the compiled folder), svn directory, will
@@ -97,3 +97,4 @@ scripts/maos.py\
 scripts/readbin.py\
 scripts/readbin.m\
 scripts/writebin.m
+
