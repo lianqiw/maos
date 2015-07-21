@@ -19,6 +19,7 @@
 #include "common.h"
 #include "sim_utils.h"
 #include "maos.h"
+#include "version.h"
 int maos_server_fd=-1;
 
 static void maos_server(PARMS_T *parms){
@@ -108,6 +109,26 @@ static void maos_daemon(int sock){
 	}
     }
     //info2("maos_daemon quit\n");
+}
+void maos_version(void){
+    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+#if USE_CUDA
+    info2(", w/t CUDA");
+#else
+    info2(", w/o CUDA");
+#endif
+#ifdef __OPTIMIZE__
+    info2(", w/t optimization.\n");
+#else
+    info2(", w/o optimization\n");
+#endif
+    info2("Source: %s %s\n", SRCDIR, GIT_VERSION);
+    info2("BUILD: %s\n", BUILDDIR);
+    info2("Launched at %s in %s with PID %ld.\n",myasctime(),myhostname(), (long)getpid());
+#if HAS_LWS
+    extern uint16_t PORT;
+    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+#endif
 }
 
 /**

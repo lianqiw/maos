@@ -33,7 +33,6 @@
 #include "process.h"
 #include "misc.h"
 #include "path.h"
-#include "version.h"
 /**
    Obtain the basename of a file. The returnned string must be freed.
 */
@@ -768,27 +767,6 @@ int sem_unlock(const char *key){
 	return 0;
     }
 }
-void maos_version(void){
-    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
-#if USE_CUDA
-    info2(", w/t CUDA");
-#else
-    info2(", w/o CUDA");
-#endif
-#ifdef __OPTIMIZE__
-    info2(", w/t optimization.\n");
-#else
-    info2(", w/o optimization\n");
-#endif
-    info2("Source: %s %s\n", SRCDIR, GIT_VERSION);
-    info2("BUILD: %s\n", BUILDDIR);
-    info2("Launched at %s in %s with PID %ld.\n",myasctime(),myhostname(), (long)getpid());
-#if HAS_LWS
-    extern uint16_t PORT;
-    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
-#endif
-}
-
 /**
    Set scheduling priorities for the process to enable real time behavior.
 */
