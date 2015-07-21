@@ -622,7 +622,6 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    double ptt[2]={-cs*amp, -ss*amp};
 	    dmulvec(simu->gradcl->p[iwfs]->p, recon->TT->p[iwfs+iwfs*parms->nwfsr], ptt, 1);
 	}
-	simu->fsmerr=0;//do not close fsm loop
     }
 }
 
@@ -770,7 +769,9 @@ void wfsgrad_post(thread_t *info){
 		if(parms->powfs[ipowfs].dither){
 		    wfsgrad_dither(simu, iwfs);
 		}
-		
+		if(!parms->powfs[ipowfs].trs){
+		    simu->fsmerr=0;//do not close fsm loop
+		}
 		if(parms->powfs[ipowfs].llt){
 		    dmm(PIND(simu->LGSfocus, iwfs), 0, IND(simu->recon->RFlgsg, iwfs, iwfs), IND(simu->gradcl, iwfs), "nn", 1);
 		}
