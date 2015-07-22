@@ -793,7 +793,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *TT=0;
-	    if(parms->powfs[ipowfs].type==0 || 1){//SHWFS
+	    if(parms->powfs[ipowfs].type==0){//SHWFS
 		TT=dnew(nsa*2,2);
 		double *TTx=TT->p;
 		double *TTy=TT->p+nsa*2;

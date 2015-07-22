@@ -443,7 +443,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     }
 }
 /**
-   Return T/T mode
+   Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
     const loc_t *loc=pywfs->locfft->loc;
@@ -455,12 +455,10 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dmat *grady=drefcols(out, 1, 1);
     dmat *gradx2=dnew(nsa*2,1);
     dmat *grady2=dnew(nsa*2,1);
-    //dmat *grad0=dnew(nsa*2,1);
+
     double ptt[3]={0,0,0};
     double alpha=0.005/206265.;
-    /*dzero(ints);
-    pywfs_fft(&ints, pywfs, opd);
-    pywfs_grad(&grad0, pywfs, ints);*/
+
     //+x
     ptt[1]=alpha;  ptt[2]=0;
     loc_add_ptt(opd->p, ptt, loc);
@@ -486,12 +484,6 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     pywfs_fft(&ints, pywfs, opd);
     pywfs_grad(&grady2, pywfs, ints);
 
-    /*writebin(gradx, "pywfs_gradx");
-    writebin(grady, "pywfs_grady");
-    writebin(gradx2, "pywfs_gradx2");
-    writebin(grady2, "pywfs_grady2");
-    writebin(grad0, "pywfs_grad0");
-    exit(0);*/
     dadd(&gradx, 1, gradx2, -1);
     dadd(&grady, 1, grady2, -1);
     dscale(out, 0.5/alpha);
@@ -501,7 +493,6 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dfree(grady2);
     dfree(opd);
     dfree(ints);
-    //dfree(grad0);
     return out;
 }
 static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
