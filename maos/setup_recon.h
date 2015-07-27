@@ -20,7 +20,7 @@
 #define SETUP_RECON_H
 #include "common.h"
 //Called by maos.c
-RECON_T *setup_recon_init(const PARMS_T *parms, const APER_T *aper);
+RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs);
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms);
 //Called by setup_recon.c
 void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);

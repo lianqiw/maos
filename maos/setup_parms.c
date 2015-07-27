@@ -1445,7 +1445,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		if(parms->powfs[ipowfs].trs==1){
 		    error("Low order wfs should not be tilt removed\n");
 		}
-		if(parms->powfs[ipowfs].gtype_sim==0){
+		if(parms->powfs[ipowfs].gtype_sim==0 && parms->powfs[ipowfs].type==0){
 		    warning("Low order POWFS %d is using gtilt in simulation. "
 			    "This is not recommended\n", ipowfs);
 		}

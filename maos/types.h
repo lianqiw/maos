@@ -347,7 +347,6 @@ typedef struct RECON_T{
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
-    int ndm;           /**<number of DMs;*/
     int has_ttr;       /**<whether there is any tip/tilt removed WFS*/
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/

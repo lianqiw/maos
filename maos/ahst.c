@@ -472,11 +472,12 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     return HMC;
 }
 /**
-   setup NGS modes and reconstructor using AHST for one or two DMs.
- */
-void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
-		  const APER_T *aper, POWFS_T *powfs){
-    ngsmod_free(recon->ngsmod);
+   AHST parameters that are related to the geometry only, and
+   will not be updated when estimated WFS measurement noise changes.
+*/
+void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 
+		       const APER_T *aper, const POWFS_T *powfs){
+    if(recon->ngsmod) error("Should only be called once\n");
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
@@ -543,17 +544,12 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	warning2("Apply stuck actuators to ngs modes\n");
 	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
     }
-    /*if(recon->actfloat){
+   /*if(recon->actfloat){
       We do extrapolation to float actuators, so no need to modify Pngs/Ptt.
       warning2("Apply float actuators to Pngs, Ptt\n");
       act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
       }*/
-    /*
-       W is recon->saneai;
-       Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
-       Pngs=Rngs*GA
-     */
-    dspcell *saneai=recon->saneai;
+
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
 	ngsmod->GM=cellnew(parms->nwfsr, 1);
@@ -587,7 +583,6 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	ngsmod->Rngs=dcellpinv(ngsmod->GM,saneai);
     }
     if(parms->recon.modal){//convert Modes to space of amod
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -600,12 +595,12 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     if(parms->tomo.ahst_wt==1){
-	/*Use gradient weighting. */
-	dcellmm(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, "nn", 1);
+	//Do it in setup_ngsmod();
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting. */
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
+
 	    tic;
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,0);
 	    /*
@@ -633,17 +628,41 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }else{
 	error("Invalid parms->tomo.ahst_wt=%d\n", parms->tomo.ahst_wt);
     }
-   
+    if(parms->save.setup){
+	writebin(ngsmod->Modes, "ahst_Modes");
+	writebin(ngsmod->GM,  "ahst_GM");
+	if(ngsmod->Pngs) writebin(ngsmod->Pngs,"ahst_Pngs");
+    }
+}
+    
+/**
+   setup NGS modes reconstructor in ahst mode.
+ */
+void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon, 
+			const APER_T *aper, const POWFS_T *powfs){
+    NGSMOD_T *ngsmod=recon->ngsmod;
+    if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
+	cellfree(ngsmod->Rngs);
+	/*
+	  W is recon->saneai;
+	  Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
+	  Pngs=Rngs*GA
+	*/
+	ngsmod->Rngs=dcellpinv(ngsmod->GM, recon->saneai);
+    }
+  
+    if(parms->tomo.ahst_wt==1){
+	/*Use gradient weighting. */
+	dcellzero(ngsmod->Pngs);
+	dcellmm(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, "nn", 1);
+	if(parms->save.setup){
+	    writebin(ngsmod->Pngs,"ahst_Pngs");
+	}
+    }
  
     if(parms->save.setup){
-	/*ahst stands for ad hoc split tomography */
-    	writebin(recon->ngsmod->GM,  "ahst_GM");
-	writebin(recon->ngsmod->Rngs,"ahst_Rngs");
-	writebin(recon->ngsmod->Pngs,"ahst_Pngs");
-	writebin(recon->ngsmod->Modes, "ahst_Modes");
-	writebin(recon->ngsmod->Wa, "ahst_Wa");
+	writebin(ngsmod->Rngs,"ahst_Rngs");
     }
-    
 }
 /**
    used in performance evaluation on science opds. accumulate to out*/
@@ -732,7 +751,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     double MCC_fcp=recon->ngsmod->aper_fcp;
     loc_t **aloc=recon->aloc->p;
     /*convert mode vector and add to dm commands */
-    const int ndm=recon->ndm;
+    const int ndm=recon->aloc->nx;
     if(!*dmc){
 	*dmc=cellnew(ndm,1);
     }

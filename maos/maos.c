@@ -68,7 +68,7 @@ void maos_setup(const PARMS_T *parms){
 	global->powfs=powfs=setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
 	/*Setup DM fitting parameters so we can flatten the DM in setup_surf.c */
-	global->recon=recon=setup_recon_init(parms, aper);
+	global->recon=recon=setup_recon_prep(parms, aper, powfs);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/

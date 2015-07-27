@@ -71,7 +71,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     if(parms->powfs[ipowfs].fieldstop){
 	ncomp=ceil(parms->powfs[ipowfs].fieldstop/dtheta_min*0.5)*2;
 	if(ncomp>nembed){
-	    error("nembed=%ld is smaller than ncomp=%ld\n", nembed, ncomp);
+	    ncomp=nembed;
 	}
     }
     long ncomp2=ncomp/2;
@@ -84,6 +84,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
 	    double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);
 	    int nstop=ceil(parms->powfs[ipowfs].fieldstop/dtheta*0.5)*2;
+	    if(nstop>ncomp) nstop=ncomp;
 	    skip=(ncomp-nstop)/2;
 	}
 	for(long iy=skip; iy<ncomp-skip; iy++){

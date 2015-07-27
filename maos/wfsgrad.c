@@ -563,7 +563,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    
 	if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 	    const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-	    info2("Step %d wfs%d PLL: deltam=%.2f frame, a2m=%-8g, a2me/a2m=%.2f\n",
+	    info2("Step %d wfs%d PLL: deltam=%.2f frame, a2m=%.2f, a2me/a2m=%.2f\n",
 		  isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me/pd->a2m);
 	}
 	if(simu->resdither){

@@ -440,7 +440,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 	    simu->fsmcmds->p[iwfs]->p[isim*2+1]=tty;
 	}/*if fsmreal */
 	if(simu->telws){
-	    Real tt=simu->telws->p[isim];
+	    Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
 	    Real angle=simu->winddir?simu->winddir->p[0]:0;
 	    ttx+=tt*cosf(angle)*parms->powfs[ipowfs].llt->ttrat;
 	    tty+=tt*sinf(angle)*parms->powfs[ipowfs].llt->ttrat;

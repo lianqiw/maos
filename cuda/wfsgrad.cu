@@ -359,7 +359,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	}
 	if(simu->telws){
-	    Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;
+	    Real tt=simu->telws->p[isim];
 	    Real angle=simu->winddir?simu->winddir->p[0]:0;
 	    curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
 	}
