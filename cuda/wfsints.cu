@@ -445,6 +445,9 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 	    ttx+=tt*cosf(angle)*parms->powfs[ipowfs].llt->ttrat;
 	    tty+=tt*sinf(angle)*parms->powfs[ipowfs].llt->ttrat;
 	}
+	if(simu->llt_tt && simu->llt_tt->p[iwfs]){
+	    ttx+=simu->llt_tt->p[iwfs]->p[isim];//put all to x direction.
+	}
 	if(ttx!=0 && tty!=0){
 	    /* add tip/tilt to opd  */
 	    const double dx=powfs[ipowfs].llt->pts->dx;

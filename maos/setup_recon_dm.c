@@ -143,11 +143,10 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	double ht=parms->dm[idm].ht;
 	double offset=parms->dm[idm].offset+((int)round(parms->dm[idm].order)%2)*0.5;
 	double dx=parms->dm[idm].dx;
-	loc_create_map_npad(recon->aloc->p[idm], parms->fit.square?0:1, 0, 0);
 	recon->aloc->p[idm]->iac=parms->dm[idm].iac;
+	loc_create_map_npad(recon->aloc->p[idm], parms->fit.square?0:1, 0, 0);
 	recon->amap->p[idm]=recon->aloc->p[idm]->map;
 	recon->amap->p[idm]->h=ht;
-	recon->amap->p[idm]->iac=parms->dm[idm].iac;
 	if(parms->fit.cachedm){
 	    const double dx2=parms->atmr.dx/parms->fit.pos;
 	    const double dy2=dx2;
@@ -250,8 +249,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);
 		}
 		HA[idm][ifit]=mkh(recon->aloc->p[idm], loc, 
-				  displace[0], displace[1], 
-				  scale,parms->dm[idm].iac);
+				  displace[0], displace[1], scale);
 		if(loc!=recon->floc){
 		    locfree(loc);
 		}

@@ -294,8 +294,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
 		}
 		HXWtomo[ips][iwfs]=mkh(recon->xloc->p[ips], ploc, 
-				       displace[0],displace[1],scale,
-				       parms->tomo.iac);
+				       displace[0],displace[1],scale);
 	    }
 	}
     }
@@ -992,6 +991,17 @@ static void init_simu_wfs(SIM_T *simu){
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, NTHREAD, wfsints,data);
     }
     if(parms->nlgspowfs){
+	simu->llt_tt=dcellnew(parms->nwfs, 1);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->ttpsd){
+		dmat *psdin=dread("%s", parms->powfs[ipowfs].llt->ttpsd);
+		simu->llt_tt->p[iwfs]=psd2time(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
+	    }
+	}
+	writebin(simu->llt_tt, "llt_tt_%d", seed);
+    }
+    if(parms->nlgspowfs){
 	simu->LGSfocus=dcellnew(parms->nwfs,1);
 	simu->zoomerr=dnew(parms->nwfs,1);
 	simu->zoomint=dnew(parms->nwfs,1);
@@ -1549,6 +1559,7 @@ void free_simu(SIM_T *simu){
     }
     cellfree(simu->resdither);
     cellfree(simu->zoompos);
+    cellfree(simu->llt_tt);
     /*Close all files */
     
     cellarr_close_n(save->wfspsfout, nwfs);
@@ -1641,7 +1652,7 @@ void print_progress(const SIM_T *simu){
 	      status->tot*tkmean, status->mean*tkmean,
 	      lapsh,lapsm,resth,restm);
 	if(!isfinite(simu->cle->p[isim*nmod])){
-	    error("NaN/inf found\n");
+	    error("Step %d: NaN/inf found: cle is %g\n", isim, simu->cle->p[isim*nmod]);
 	}
     }
     

@@ -20,8 +20,6 @@
 #include "../math/mathdef.h"
 #include "mkh.h"
 
-static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const 
-		       double displacex, double displacey, double scale,double cubic_iac);
 /**
    Create ray tracing operator from coordinate locin to locout.  Locin is
    required to be evenly spaced.
@@ -29,7 +27,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const
    If vector Pin is defined on locin, Pout is defined on locout, H=mkh(locin,
    locout, ...), Pout=H*Pin does the bilinear interpolation.
 
-   If cubic_iac is non zero, will call mkh_cubic to produce a cubical interpolation.
+   If  locin->iac is non zero, will call mkh_cubic to produce a cubical interpolation.
    
    A cubic influence function that can reproduce piston/tip/tilt is coined by
    Ellerbroek to model the piezostack DM actuator. The influence has the
@@ -47,9 +45,8 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const
 
  */
 dsp* mkh(loc_t *locin, loc_t *locout, 
-	 double displacex, double displacey, double scale,
-	 double cubic_iac){
-    dsp *Hb=mkhb(locin, locout,displacex, displacey, scale, cubic_iac);
+	 double displacex, double displacey, double scale){
+    dsp *Hb=mkhb(locin, locout,displacex, displacey, scale);
     dsp *H=dsptrans(Hb);
     dspfree(Hb);
     return H;
@@ -58,12 +55,9 @@ dsp* mkh(loc_t *locin, loc_t *locout,
    Create transpose of mkh() result.
 */
 dsp* mkhb(loc_t *locin, loc_t *locout,
-	  double displacex, double displacey, double scale,
-	  double cubic_iac){
-    if(cubic_iac){
-	return mkhb_cubic(locin, locout, displacex, displacey, scale, cubic_iac);
-    }else if(locin->iac){
-	warning("locin has iac but iac flag is not set. Use linear.\n");
+	  double displacex, double displacey, double scale){
+    if(locin->iac){
+	return mkhb_cubic(locin, locout, displacex, displacey, scale, locin->iac);
     }
     loc_create_map(locin);
     dsp *hback;
@@ -146,11 +140,18 @@ dsp* mkhb(loc_t *locin, loc_t *locout,
     dspdroptol(hback,EPS);
     return hback;
 }
+dsp *mkh_cubic(loc_t *locin, loc_t *locout, 
+	       double displacex, double displacey, double scale, double cubic_iac){
+    dsp *Hb=mkhb_cubic(locin, locout,displacex, displacey, scale, cubic_iac);
+    dsp *H=dsptrans(Hb);
+    dspfree(Hb);
+    return H;
+}
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
-static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, 
-		       double displacex, double displacey, double scale,double cubic_iac){
+dsp *mkhb_cubic(loc_t *locin, loc_t *locout, 
+		double displacex, double displacey, double scale, double cubic_iac){
     dsp *hback;
     double dplocx, dplocy;
     int nplocx, nplocy;
@@ -169,6 +170,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout,
     /*-1 because we count from 1 in the map. */
     /*cubic */
     double fx[4],fy[4];
+    //double cubic_iac=locin->iac;
     const double cubicn=1./(1.+2.*cubic_iac);
     const double c0=1*cubicn;
     const double c1=(4*cubic_iac-2.5)*cubicn;

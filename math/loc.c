@@ -230,6 +230,7 @@ void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny){
 	map_ny=ny;
     }
     loc->map = mapnew(map_nx, map_ny, loc->dx, loc->dy, 0);
+    loc->map->iac=loc->iac;
     loc->map->ox=xmin;
     loc->map->oy=ymin;
     PDMAT(loc->map, pmap);

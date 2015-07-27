@@ -396,8 +396,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
 	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, 
-			      displace[0], displace[1], 
-			      scale,parms->dm[idm].iac);
+			      displace[0], displace[1], scale);
 	}
     }
     if(recon->actinterp){

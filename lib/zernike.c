@@ -98,7 +98,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 	}
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
     }
-    if(nover){
+    if(nover > (M_PI*D/loc->dx)){
 	warning("%ld/%ld points outside unit circle with maximum radius %g\n",
 		nover, nloc, rover);
     }
@@ -106,6 +106,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     for(int ir=rmin; ir<=rmax; ir++){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
+	    if(flag>0 && im!=0) continue;//we want radial only
 	    dmat *Rnm=zernike_Rnm(locr, ir, im);
 	    if(im==0){/*Radial*/
 		double coeff=sqrt(ir+1.);

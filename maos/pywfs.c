@@ -128,7 +128,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
 				      ((ix-0.5)*dx2*ncomp2), 
 				      ((iy-0.5)*dx2*ncomp2),
-				      1, 0);	    
+				      1); 
 	}
     }
     if(parms->save.setup){
@@ -163,7 +163,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
 					  ((ix-0.5)*dx2*ncomp2), 
 					  ((iy-0.5)*dx2*ncomp2),
-					  1, 0);	    
+					  1);	    
 	    }
 	}
     }
@@ -248,7 +248,42 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dfree(opds);
 	exit(0);
     }
-
+    if(0){//Test linearity of a zenike mode with noise
+	double wve=1e-9*20;
+	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 0, -parms->powfs[ipowfs].dither);
+	dmat *opdi=0;
+	dmat *ints=0, *grad=0;
+	dadd(&opdi, 0, opds, wve);
+	pywfs_fft(&ints, powfs[ipowfs].pywfs, opdi);
+	pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+	dmat *reg=dpinv(grad, 0);
+	writebin(grad, "dither_grad");
+	writebin(reg, "dither_reg");
+	writebin(ints, "dither_ints");
+	rand_t srand;
+	seed_rand(&srand, 1);
+	dmat *tmp=0;
+	int nj=10, nn=10;
+	dmat *res=dnew(nj, nn);
+	dmat *ints2=0;
+	for(int j=0; j<nj; j++){
+	    dzero(ints);
+	    dadd(&opdi, 0, opds, wve*(j+1));
+	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opdi);
+	    for (int in=0; in<nn; in++){
+		dadd(&ints2, 0, ints, 100);
+		addnoise(ints2, &srand, 0, 0, 0, 0, in);
+		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
+		dmm(&tmp, 0, reg, grad, "nn", 1);
+		IND(res, j, in)=tmp->p[0];
+		info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, tmp->p[0]);
+	    }
+	}
+	writebin(opds, "dither_opd");
+	writebin(res, "dither_res");
+	dfree(opds); dfree(opdi); dfree(ints); dfree(grad); dfree(reg), dfree(tmp); dfree(res); dfree(ints2);
+	exit(0);
+    }
     //Test NCPA calibration
     int PYWFS_NCPA=0;
     READ_ENV_INT(PYWFS_NCPA,0,1);
@@ -446,6 +481,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
+    TIC;tic;info2("Computing pywfs_tt...");
     const loc_t *loc=pywfs->locfft->loc;
     dmat *opd=dnew(loc->nloc,1);
     dmat *ints=0;
@@ -493,6 +529,7 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dfree(grady2);
     dfree(opd);
     dfree(ints);
+    toc2("done");
     return out;
 }
 static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){

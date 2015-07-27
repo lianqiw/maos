@@ -116,7 +116,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		ccp(&nominals[iwfs][isa], nominal);
 		//Coordinate of PSF pixels
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
-		sis[iwfs][isa]=mkh(loc_psf,loc_ccd,0,0,1,0);
+		sis[iwfs][isa]=mkh(loc_psf,loc_ccd,0,0,1);
 		{
 		    dmat *sisum=dspsum(sis[iwfs][isa],1);
 		    double sum=dsum(sisum);
@@ -465,7 +465,7 @@ dmat* smooth(dmat *prof, double dxnew){
 	const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
 	loc_t *loc_in=mk1dloc_vec(prof->p, nxin);
 	loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
-	dsp *ht=mkhb(loc_out, loc_in, 0, 0, 1,0);
+	dsp *ht=mkhb(loc_out, loc_in, 0, 0, 1);
 	out=dnew(nxnew, prof->ny);
 	memcpy(out->p, loc_out->locx, sizeof(double)*nxnew);
 #pragma omp parallel for default(shared)

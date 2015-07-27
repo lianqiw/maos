@@ -85,7 +85,9 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    iscell=1;
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
-	    out=mxCreateCellMatrix(nx,ny);
+	    if(nx*ny>1){
+		out=mxCreateCellMatrix(nx,ny);
+	    }
 	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
 	    for(ix=0; ix<nx*ny; ix++){
 		int start2=0;
@@ -98,10 +100,14 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    break;
 		}
 		if(tmp && tmp!=SKIPPED){
-		    mxSetCell(out, ix, tmp);
-		}
-		if(header3){
-		    mxSetCell(header0, ix, header3);
+		    if(nx*ny==1){//only one entry
+			out=tmp;
+		    }else{
+			mxSetCell(out, ix, tmp);
+		    }
+		    if(header3){
+			mxSetCell(header0, ix, header3);
+		    }
 		}
 	    }
 	    if(header){

@@ -95,6 +95,7 @@ typedef struct APER_CFG_T{
 typedef struct LLT_CFG_T{
     double d;      /**<LLT clear aperture diameter*/
     double widthp; /**<Gaussian beam width percentage of d*/
+    char *ttpsd;   /**<PSD of uplink beam jitter*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fnprof;  /**<File contains sodium profile*/
     char *fnsurf;  /**<Pupil Surface OPD error*/
@@ -234,6 +235,7 @@ typedef struct POWFS_CFG_T{
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     double zoomgain; /**<gain of the trombone controller*/
+    int zoomset;     /**<Set zoom position from the beginning*/
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/

@@ -469,8 +469,6 @@ typedef struct SIM_T{
 
     /*Telescope windshake time series and direction.*/
     dmat *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
-    double telwsx;     /**<cos(ws_theta)*/
-    double telwsy;     /**<sin(ws_theta)*/
 
     /*WFS data for each time step. Each has a cell for each wfs*/
     dcell *wfsopd;     /**<WFS Ray tracing result*/
@@ -484,8 +482,8 @@ typedef struct SIM_T{
     dcell *cn2est;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
     /*CoG gain adjustment*/
-    dcell *gradscale;  /*Gain adjustment for cog and pywfs.*/
-
+    dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
+    dcell *llt_tt;   /**<LLT uplink jitter*/
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/

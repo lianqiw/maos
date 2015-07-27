@@ -22,7 +22,7 @@ endif
 libmaos_la_LIBADD+=../lib/libaos.la 
 bin_PROGRAMS=../bin/maos 
 ___bin_maos_SOURCES=main.c
-___bin_maos_LDADD=libmaos.la $(LAPACK) 
+___bin_maos_LDADD=libmaos.la  $(LDFFT) $(LAPACK) 
 if USE_CUDA
 ___bin_maos_LDADD+=$(LIBCUDA)
 endif

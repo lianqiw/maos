@@ -282,6 +282,9 @@ void wfsgrad_iwfs(thread_t *info){
 		ttx+=tmp*cos(angle);
 		tty+=tmp*sin(angle);
 	    }
+	    if(simu->llt_tt && simu->llt_tt->p[iwfs]){
+		ttx+=simu->llt_tt->p[iwfs]->p[isim];//put all to x direction.
+	    }
 	    if(ttx !=0 || tty != 0){ /* add tip/tilt to llt opd */
 		double ptt[3]={0, ttx, tty};
 		loc_add_ptt(lltopd->p, ptt, powfs[ipowfs].llt->loc);
@@ -541,11 +544,12 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
 	if(parms->powfs[ipowfs].dither==1){
 	    dmat *tmp=0;
-	    tmp=drefcols(simu->fsmerrs->p[iwfs], simu->isim-ncol+1, ncol);
-	    pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
-	    dfree(tmp);
+	    double norm=1./parms->powfs[ipowfs].dither_amp;
 	    tmp=drefcols(simu->fsmcmds->p[iwfs], simu->isim-ncol+1, ncol);
-	    pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
+	    pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1)*norm;
+	    dfree(tmp);
+	    tmp=drefcols(simu->fsmerrs->p[iwfs], simu->isim-ncol+1, ncol);
+	    pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1)*norm;
 	    dfree(tmp);
 	}else{
 	    dmat *tmp=0;
@@ -618,7 +622,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	if(parms->powfs[ipowfs].dither==1 && simu->gradscale->p[iwfs]){
 	    double amp,cs,ss; 
 	    dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
-	    amp=pd->a2me;
+	    amp=pd->a2me*parms->powfs[ipowfs].dither_amp;
 	    double ptt[2]={-cs*amp, -ss*amp};
 	    dmulvec(simu->gradcl->p[iwfs]->p, recon->TT->p[iwfs+iwfs*parms->nwfsr], ptt, 1);
 	}
@@ -678,7 +682,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		}
 		lgsfocusm/=parms->powfs[ipowfs].nwfs;
 	    }
-	    if(simu->isim==parms->sim.start && parms->powfs[ipowfs].phytypesim!=1){
+	    if(parms->powfs[ipowfs].zoomset && simu->isim==parms->sim.start && parms->powfs[ipowfs].phytypesim!=1){
 		/*Here we set trombone position according to focus in the first
 		  measurement. And adjust the focus content of this
 		  measurement. This simulates the initial focus acquisition
@@ -769,8 +773,8 @@ void wfsgrad_post(thread_t *info){
 		if(parms->powfs[ipowfs].dither){
 		    wfsgrad_dither(simu, iwfs);
 		}
-		if(!parms->powfs[ipowfs].trs){
-		    simu->fsmerr=0;//do not close fsm loop
+		if(!parms->powfs[ipowfs].trs && simu->fsmerr){
+		    dzero(simu->fsmerr->p[iwfs]);//do not close fsm loop
 		}
 		if(parms->powfs[ipowfs].llt){
 		    dmm(PIND(simu->LGSfocus, iwfs), 0, IND(simu->recon->RFlgsg, iwfs, iwfs), IND(simu->gradcl, iwfs), "nn", 1);

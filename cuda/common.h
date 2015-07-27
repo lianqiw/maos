@@ -148,6 +148,7 @@ inline void* malloc4async(size_t N){
 inline void free4async(void *P){
     cudaFreeHost(P);
 }
+#define CUDA_CHECK_ERROR DO(cudaGetLastError())
 #define CUDA_SYNC_STREAM ({DO(cudaGetLastError());DO(cudaStreamSynchronize(stream));})
 #define CUDA_SYNC_DEVICE ({DO(cudaGetLastError());DO(cudaDeviceSynchronize());})
 #define TIMING 0

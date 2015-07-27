@@ -211,6 +211,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     recon->xny=lnew(recon->npsr, 1);
     recon->xnloc=lnew(recon->npsr, 1);
     for(long i=0; i<recon->npsr; i++){
+	recon->xloc->p[i]->iac=parms->tomo.iac;
 	loc_create_map_npad(recon->xloc->p[i], (nin0||parms->tomo.square)?0:1, 
 			    nin0*recon->os->p[i], nin0*recon->os->p[i]);
 	recon->xmap->p[i]=mapref(recon->xloc->p[i]->map);
@@ -283,7 +284,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
 		HXW[ips][iwfs]=mkh(recon->xloc->p[ips], loc, 
-				   dispx,dispy,scale, parms->tomo.iac);
+				   dispx,dispy,scale);
 	    }
 	}
 	toc2(" ");
@@ -354,7 +355,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,recon->gloc->p[ipowfs], 0,0,1,0);
+		dsp *H=mkh(ploc,recon->gloc->p[ipowfs], 0,0,1);
 		GP->p[ipowfs]=dspmulsp(ZS0,H,"nn");
 		dspfree(H);
 		dspfree(ZS0);
@@ -450,6 +451,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
 		continue;
 	    }
+	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS
+		continue;
+	    }
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
 		double  ht = parms->dm[idm].ht;
@@ -459,25 +463,27 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    dispx=parms->wfsr[iwfs].thetax*ht;
 		    dispy=parms->wfsr[iwfs].thetay*ht;
 		}
-		if(parms->powfs[ipowfs].type==1){
-		    if(!parms->recon.modal){
-			info2("\nPyWFS from aloc to saloc directly\n");
-			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 0, dispx, dispy, scale);
-			IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
-			dfree(tmp);
-		    }else if(!parms->powfs[ipowfs].lo){
-			info2("\nPyWFS from amod to saloc directly\n");
-			//We compute the GM for full set of modes so that it is cached only once.
-			IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], recon->amod->p[idm], dispx, dispy, scale);
+		if(parms->powfs[ipowfs].type==1){//PWFS
+		    if(!parms->powfs[ipowfs].lo){
+			if(!parms->recon.modal){
+			    info2("\nPyWFS from aloc to saloc directly\n");
+			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 0, dispx, dispy, scale);
+			    IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
+			    dfree(tmp);
+			}else{
+			    info2("\nPyWFS from amod to saloc directly\n");
+			    //We compute the GM for full set of modes so that it is cached only once.
+			    IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], recon->amod->p[idm], dispx, dispy, scale);
+			}
 		    }
-		}else{
+		}else{//SHWFS
 		    int freeloc=0;
 		    loc_t *loc=ploc;
 		    if(parms->recon.misreg_dm2wfs && parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]){
 			loc=loctransform(loc, parms->recon.misreg_dm2wfs[iwfs+idm*nwfs]);
 			freeloc=1;
 		    }
-		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale, parms->dm[idm].iac);
+		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale);
 		    IND(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[ipowfs], H,"nn");
 		    dspfree(H);
 		    if(freeloc){
@@ -546,7 +552,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
     }
-    int nlo=parms->nlopowfs;
     /*Create GAlo that only contains GA for low order wfs */
     dspcellfree(recon->GAlo);
     dspcellfree(recon->GAhi);
@@ -558,7 +563,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo
-	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
+	       || (parms->recon.split && parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
 		IND(recon->GAlo, iwfs, idm)=dspref(IND(recon->GA, iwfs, idm));
 	    }
 	    if(!parms->powfs[ipowfs].skip){
@@ -778,7 +783,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 
 static void
-setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     int nwfs=parms->nwfsr;
     cellfree(recon->TT);
     cellfree(recon->PTT);
@@ -788,9 +793,6 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(parms->powfs[ipowfs].trs 
 	   || (parms->recon.split && !parms->powfs[ipowfs].lo)
 	   || parms->powfs[ipowfs].dither==1){
-	    if(parms->powfs[ipowfs].skip){
-		warning("POWFS %d is not included in Tomo.\n", ipowfs);
-	    }
 	    int nsa=powfs[ipowfs].saloc->nloc;
 	    dmat *TT=0;
 	    if(parms->powfs[ipowfs].type==0){//SHWFS
@@ -821,10 +823,8 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dfree(TT);
 	}
     }
-    recon->PTT=dcellpinv(recon->TT,recon->saneai);
     if(parms->save.setup){
 	writebin(recon->TT, "TT");
-	writebin(recon->PTT, "PTT");
     }
 }
 /**
@@ -833,7 +833,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 
 static void
-setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_dfr) return;
     dcellfree(recon->DF);
     dcellfree(recon->PDF);
@@ -866,10 +866,8 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    dfree(DF);
 	}
     }
-    recon->PDF=dcellpinv(recon->DF,recon->saneai);
     if(parms->save.setup){
 	writebin(recon->DF, "DF");
-	writebin(recon->PDF, "PDF");
     }
 }
 /**
@@ -878,18 +876,29 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 */
 static void
 setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
-    setup_recon_TTR(recon,parms,powfs);
-    setup_recon_DFR(recon,parms,powfs);
+    dcellfree(recon->PTT);
+    dcellfree(recon->PDF);
     cellfree(recon->TTF);
     cellfree(recon->PTTF);
-    if(recon->DF){
-	recon->TTF=dcellcat(recon->TT,recon->DF,2);
-    }else{
-	recon->TTF=dcellref(recon->TT);
+    if(!recon->TT){
+	setup_recon_TT(recon,parms,powfs);
     }
+    if(!recon->DF && recon->has_dfr){
+	setup_recon_DF(recon,parms,powfs);
+    }
+    if(!recon->TTF){
+	if(recon->DF){
+	    recon->TTF=dcellcat(recon->TT,recon->DF,2);
+	}else{
+	    recon->TTF=dcellref(recon->TT);
+	}
+    }
+    recon->PTT=dcellpinv(recon->TT,recon->saneai);
+    recon->PDF=dcellpinv(recon->DF,recon->saneai);
     recon->PTTF=dcellpinv(recon->TTF,recon->saneai);
     if(parms->save.setup){
-	writebin(recon->TTF, "TTF");
+	writebin(recon->TTF, "TTF");	
+	writebin(recon->PTT, "PTT");
 	writebin(recon->PTTF, "PTTF");
     }
     /*dcellfree(recon->DF);//don't free DF to use in PDF. */
@@ -1516,9 +1525,9 @@ setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
-	    if(parms->powfs[ipowfs].type==0){//PWFS
-		dmat *opd0=zernike(powfs[ipowfs].pywfs->locfft->loc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
-		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, powfs[ipowfs].pywfs->locfft->loc, opd0, 0, 0, 1);
+	    if(parms->powfs[ipowfs].type==1){//PWFS
+		dmat *opd0=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
+		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd0, 0, 0, 1);
 		dfree(opd0);
 	    }else{//SHWFS
 		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
@@ -2161,7 +2170,7 @@ void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
 	    double dispx=parms->evl.thetax->p[ievl]*ht;
 	    double dispy=parms->evl.thetay->p[ievl]*ht;
 	    double scale=1-ht/parms->evl.hs->p[ievl];
-	    IND(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale, parms->dm[idm].iac);
+	    IND(recon->Herr, ievl, idm)=mkh(recon->aloc->p[idm], eloc, dispx, dispy, scale);
 	}
     }
     if(parms->recon.psd==2){//don't use signanhi by default

@@ -160,7 +160,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    /*from DM to ploc (plocs) science beam */
-	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
+	    Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.);
 	    dspmuldiag(Hat->p[idm], amp, wt[ievl]);
 	}
 	dcellmm(&Wa, Hat, Hat, "nt", 1);
@@ -255,7 +255,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		Hat->p[idm]=dspref(HatGround);
 	    }else{
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.);
 		if(parms->dm[idm].isground){
 		    HatGround=dspref(Hat->p[idm]);
 		}
@@ -324,7 +324,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacey=thetay*hc;
 	    if(!parms->dm[idm].isground || !HatGround){
 		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.,0);
+		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.);
 		if(parms->dm[idm].isground){
 		    HatGround=dspref(Hat->p[idm]);
 		}
@@ -558,18 +558,22 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	/*we disabled GA for low order wfs in skysim mode. */
 	ngsmod->GM=cellnew(parms->nwfsr, 1);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		//if(IND(recon->GAlo, iwfs, idm)){
-		if(parms->powfs[ipowfs].type==0){//shwfs
-		    dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
-		}else{//pwfs.
-		    double  ht = parms->dm[idm].ht;
-		    double  scale=1. - ht/parms->wfs[iwfs].hs;
-		    double  dispx=0, dispy=0;
-		    dispx=parms->wfsr[iwfs].thetax*ht;
-		    dispy=parms->wfsr[iwfs].thetay*ht;
-		    IND(ngsmod->GM, iwfs)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], IND(ngsmod->Modes, idm), dispx, dispy, scale);
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].lo
+	       || (parms->recon.split && parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){
+		for(int idm=0; idm<parms->ndm; idm++){
+		    if(parms->powfs[ipowfs].type==0){//shwfs
+			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
+		    }else{//pwfs.
+			double  ht = parms->dm[idm].ht;
+			double  scale=1. - ht/parms->wfs[iwfs].hs;
+			double  dispx=0, dispy=0;
+			dispx=parms->wfsr[iwfs].thetax*ht;
+			dispy=parms->wfsr[iwfs].thetay*ht;
+			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm],
+					    IND(ngsmod->Modes, idm), dispx, dispy, scale);
+			dadd(&IND(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
+		    }
 		}
 	    }
 	}

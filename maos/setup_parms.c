@@ -341,7 +341,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int, zoomdtrat);
     READ_POWFS_RELAX(int, zoomshare);
     READ_POWFS_RELAX(dbl, zoomgain);
-
+    READ_POWFS_RELAX(int, zoomset);
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
@@ -378,6 +378,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    powfsi->llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
+	    powfsi->llt->ttpsd=readcfg_str("%sllt.ttpsd",prefix);
 	    powfsi->llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
 	    powfsi->llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    powfsi->llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
@@ -418,6 +419,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->phytype=2;
 	    powfsi->phytypesim=2;
 	    powfsi->phytypesim2=2;
+	    if(powfsi->phystep!=0){
+		warning("PWFS must run in physical optics mode, changed.\n");
+		powfsi->phystep=0;
+	    }
 	}
 	/*round phystep to be multiple of dtrat. */
 	if(powfsi->phystep>0){

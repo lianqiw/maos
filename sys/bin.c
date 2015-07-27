@@ -637,7 +637,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	bitpix=8;
 	break;
     default:
-	error("Data type is not yet supported.\n");
+	error("Data type is not yet supported. magic=%x\n", magic);
     }
     const int nh=36;
     char header[nh][80];
@@ -788,7 +788,7 @@ read_fits_header(header_t *header, file_t *fp){
    information and string header if any.  */
 void write_header(const header_t *header, file_t *fp){
     if(fp->isfits){
-	if(header->magic==MCC_ANY){
+	if(header->magic!=MCC_ANY){
 	    write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
 	}
     }else{
