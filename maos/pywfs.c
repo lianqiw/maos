@@ -69,11 +69,12 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     //size of the part of the PSF captured by pyramid
     long ncomp=nembed;
     if(parms->powfs[ipowfs].fieldstop){
-	ncomp=ceil(parms->powfs[ipowfs].fieldstop/dtheta_min*0.5)*2;
+	ncomp=nextfftsize(ceil(parms->powfs[ipowfs].fieldstop/dtheta_min));
 	if(ncomp>nembed){
 	    ncomp=nembed;
 	}
     }
+
     long ncomp2=ncomp/2;
     pywfs->pyramid=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -194,8 +195,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	//gainscl*=2;//inject an error;
 	pywfs->gain*=gainscl;
 	dscale(pywfs->gradoff, gainscl);
+	dscale(TT, gainscl);
+	pywfs->GTT=TT;
 	info("pywfs_gain=%g\n", pywfs->gain);
-	dfree(TT);
     }
 
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
@@ -482,6 +484,10 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
+    if(pywfs->GTT) {
+	warning("Reusing cached pywfs->GTT\n");
+	return dref(pywfs->GTT);
+    }
     TIC;tic;info2("Computing pywfs_tt...");
     const loc_t *loc=pywfs->locfft->loc;
     dmat *opd=dnew(loc->nloc,1);

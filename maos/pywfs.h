@@ -37,6 +37,7 @@ typedef struct PYWFS_T{
     double gain;       /**<Optical gain of PYWFS*/
     dmat *saa;         /**<Subaperture area. Average is one*/
     dmat *gradoff;     /**<Gradient of a flat wavefront*/
+    dmat *GTT;          /**<Response of TT mode.*/
 }PYWFS_T;
 
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);

@@ -1084,7 +1084,6 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     setup_recon_floc(recon,parms, aper);
     /*Gradient operators*/
     setup_recon_GP(recon, parms, powfs);
-    setup_recon_GA(recon, parms, powfs);
     //TT Removal
     setup_recon_TT(recon,parms,powfs);
     //DF removal. //Deprecated
@@ -1145,8 +1144,14 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	setup_recon_HA(recon,parms);
 	fit_prep_lrt(recon, parms);
     }
+    return recon;
+}
+/**
+   That depends on GPU data.
+ */
+void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
+    setup_recon_GA(recon, parms, powfs);
     if(parms->recon.split){
 	setup_ngsmod_prep(parms,recon,aper,powfs);
     }
-    return recon;
 }

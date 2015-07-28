@@ -81,6 +81,7 @@ void maos_setup(const PARMS_T *parms){
 	}
 	
 #endif
+	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs, aper);
 	if(parms->recon.alg==0 || parms->sim.dmproj){
