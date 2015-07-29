@@ -41,7 +41,8 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
 	error("Error truncating file\n");
     }
     char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
-    if(!map){
+    if(map==MAP_FAILED){
+	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;//save value of map
@@ -76,7 +77,8 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 	error("Error truncating file\n");
     }
     char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
-    if(!map){
+    if(map==MAP_FAILED){
+	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;
@@ -117,7 +119,8 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
 	error("Error truncating file\n");
     }
     char *map=mmap(NULL, msize,(PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
-    if(!map){
+    if(map==MAP_FAILED){
+	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;
@@ -162,7 +165,8 @@ X(mat*) X(read_mmap)(const char *format, ...){
     if(fd<0) return NULL;
     long msize=flen(fn);
     char *map=mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
-    if(!map){
+    if(map==MAP_FAILED){	
+	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;
@@ -182,7 +186,8 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     if(fd<0) return NULL;
     long msize=flen(fn);
     char *map=mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
-    if(!map){
+    if(map==MAP_FAILED){
+	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;

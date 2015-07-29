@@ -267,7 +267,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    const int nyotf=cupowfs[ipowfs].pyramid[0].Ny();
 	    cuwfs[iwfs].pyotf=cucmat(nxotf, nyotf);
 	    cuwfs[iwfs].pypsf=curmat(nxotf, nyotf);
-	    DO(cufftPlan2d(&cuwfs[iwfs].plan_py, nxotf, nyotf, FFT_T_C2C));
+	    DO(cufftPlan2d(&cuwfs[iwfs].plan_py, nyotf, nxotf, FFT_T_C2C));
 	    cufftSetStream(cuwfs[iwfs].plan_py, cuwfs[iwfs].stream);
 	    cuwfs[iwfs].isum=curmat(1,1);
 	}else if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
@@ -300,7 +300,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    const int ncompx=powfs[ipowfs].ncompx;
 	    const int ncompy=powfs[ipowfs].ncompy;
 	    const int notf=MAX(ncompx, ncompy);
-	    int ncomp2[2]={ncompx, ncompy};
+	    int ncomp2[2]={ncompy, ncompx};
 	    int notf2[2]={notf, notf};
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/

@@ -578,7 +578,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	if(parms->powfs[ipowfs].dither==1){
 	    /* Update drift mode computation. Only useful when wfs t/t is removed*/
 	    double scale1=1./npll;
-	    double scale2=scale1*2./(pd->a2m);
+	    double amp=pd->a2m*parms->powfs[ipowfs].dither_amp;
+	    double scale2=scale1*2./(amp);
 	    if(pd->imb){//matched filter
 		dcellscale(pd->imb, scale1);
 		dmat *ibgrad=0;
@@ -937,6 +938,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		if(parms->save.dither==1){
 		    writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche_%d", ipowfs, simu->isim);
 		    writebin(powfs[ipowfs].intstat->i0sum, "powfs%d_i0sum_%d", ipowfs, simu->isim);
+		    writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea_%d", ipowfs, simu->isim);
 		}
 #if USE_CUDA
 		if(parms->gpu.wfs){

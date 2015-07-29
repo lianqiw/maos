@@ -32,9 +32,9 @@ extern "C"{
 
 __global__ static void
 pywfs_grad_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
-    Real alpha0=gain*nsa/(*isum);
+    const Real alpha0=gain*nsa/(*isum);
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
-	Real alpha=alpha0/saa[i];
+	const Real alpha=alpha0/saa[i];
 	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
 	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
     }
@@ -57,44 +57,41 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
     cuzero(cuwfs.pypsf, stream);
     locfft_t *locfft=pywfs->locfft;
     const int nwvl=locfft->wvl->nx;
-    Real pos_r=pywfs->modulate; 
-    Real dx=locfft->loc->dx;
-    long nembed=locfft->nembed->p[0];
-    long nembed2=nembed/2;
-    long ncomp=pywfs->nominal->nx;
-    long ncomp2=ncomp/2;
-    int pos_n=pywfs->modulpos;
-    if(pos_r<=0){
-	pos_n=1;
-    }
+    const Real dx=locfft->loc->dx;
+    const long nembed=locfft->nembed->p[0];
+    const long nembed2=nembed/2;
+    const long ncomp=pywfs->nominal->nx;
+    const long ncomp2=ncomp/2;
+    const Real pos_r=pywfs->modulate; 
+    const int pos_n=pos_r>0?pywfs->modulpos:0;
     cucmat &otf=cuwfs.pyotf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &wvf=cuwfs.pywvf[iwvl];
-	Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_n);
-	Real wvl=locfft->wvl->p[iwvl];
+	const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_n);
+	const Real wvl=locfft->wvl->p[iwvl];
 	cuzero(wvf, stream);
 	embed_wvf_do<<<DIM(phiout.Nx(),256),0,stream>>>
 	    (wvf, phiout, cuwfs.amp, cupowfs->embed[iwvl], phiout.Nx(), wvl);
 	CUFFT(cuwfs.plan_fs, wvf, CUFFT_FORWARD);
 	fftshift_do<<<DIM2(wvf.Nx(), wvf.Ny(), 16),0,stream>>>
 	    (wvf, wvf.Nx(), wvf.Ny());
-	Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
+	const Real otfnorm=1./(sqrt(locfft->ampnorm)*locfft->nembed->p[iwvl]);
 	cucscale(wvf, otfnorm, stream);
 	//cuwrite(wvf, "gpu_wvf0");
-	Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
+	const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 	for(int ipos=0; ipos<pos_n; ipos++){
-	    Real theta=2*M_PI*ipos/pos_n;
-	    Real posx=cos(theta)*pos_r;
-	    Real posy=sin(theta)*pos_r;
-	    long offy=(long)round(posy/dtheta);
-	    long offy2=nembed2+offy-ncomp2;
-	    long iy0=MAX(-offy2, 0);
-	    long ny2=MIN(ncomp+offy2, nembed)-offy2-iy0;
+	    const Real theta=2*M_PI*ipos/pos_n;
+	    const Real posx=cos(theta)*pos_r;
+	    const Real posy=sin(theta)*pos_r;
+	    const long offy=(long)round(posy/dtheta);
+	    const long offy2=nembed2+offy-ncomp2;
+	    const long iy0=MAX(-offy2, 0);
+	    const long ny2=MIN(ncomp+offy2, nembed)-offy2-iy0;
 
-	    long offx=(long)round(posx/dtheta);
-	    long offx2=nembed/2+offx-ncomp2;
-	    long ix0=MAX(-offx2, 0);
-	    long nx2=MIN(ncomp+offx2, nembed)-offx2-ix0;
+	    const long offx=(long)round(posx/dtheta);
+	    const long offx2=nembed/2+offx-ncomp2;
+	    const long ix0=MAX(-offx2, 0);
+	    const long nx2=MIN(ncomp+offx2, nembed)-offx2-ix0;
 	    cuzero(otf, stream);
 	    cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
 		(otf.P()+ix0+iy0*ncomp, 
@@ -117,7 +114,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 	//cuwrite(otf, "gpu_wvf6");
 	//Use ray tracing for si
-	Real dx2=dx*nembed/ncomp;
+	const Real dx2=dx*nembed/ncomp;
 	const int nsa=cupowfs->saloc.Nloc();
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
@@ -141,7 +138,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     stream_t &stream=cuwfs.stream;
     mapcell *mapinsq=(mapcell*)cellnew(1,1);
     dcell *opdin=dcellnew(1, 1);
-    Real siglev=100;//irrelevant in noise free case.
+    const Real siglev=100;//irrelevant in noise free case.
     for(int i=0; i<1; i++){
 	mapinsq->p[i]=mapnew2(locin->map);
 	opdin->p[i]=dnew(locin->nloc,1);
@@ -160,7 +157,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     TIC;tic;
     //cuwrite(grad0, "grad0_gpu");
     //cuwrite(ints, "ints0_gpu");
-    int nmod=mod?mod->ny:locin->nloc;
+    const int nmod=mod?mod->ny:locin->nloc;
     dmat *ggd=dnew(nsa*2, nmod);
     for(int imod=0; imod<nmod; imod++){
 	Real poke=pywfs->poke;

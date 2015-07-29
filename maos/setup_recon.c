@@ -758,29 +758,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     if(!parms->nlgspowfs){
 	return;
     }
-    cellfree(recon->GFall);
-    cellfree(recon->GFngs);
-    /*Create GFall: Focus mode -> WFS grad. This is model*/
-    recon->GFall=cellnew(parms->npowfs, 1);
-    recon->GFngs=cellnew(parms->nwfs, 1);
-    {
-	dmat *opd=dnew(recon->ploc->nloc,1);
-	loc_add_focus(opd->p, recon->ploc, 1);
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
-	    dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
-	    if(parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].llt){
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		    recon->GFngs->p[iwfs]=dref(recon->GFall->p[ipowfs]);
-		}
-	    }
-	}
-	dfree(opd);
-    }
-    if(parms->save.setup){
-	writebin(recon->GFall,"GFall");
-    }
-
+    
     if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
 	dmat *GMGngs=NULL;
 	dcell *GMngs=cellnew(1, parms->nwfsr);
@@ -840,21 +818,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 */
 static void
 setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
-    cellfree(recon->GRall);
     cellfree(recon->RRtwfs);
-    recon->GRall=cellnew(parms->npowfs, 1);
-    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
-	    if(parms->powfs[ipowfs].type==1){//PWFS
-		dmat *opd0=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
-		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd0, 0, 0, 1);
-		dfree(opd0);
-	    }else{//SHWFS
-		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
-	    }
-	}
-    }
     dcell *GRtwfs=cellnew(parms->nwfsr, 1);
     dspcell *neai=cellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1235,24 +1199,6 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, cons
     
     toc2("setup_recon_tomo");
 }
-void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
-    recon->DMTT=dcellnew(parms->ndm, 1);
-    recon->DMPTT=dcellnew(parms->ndm, 1);
-    if(!recon->actcpl){
-	error("actcpl must not be null\n");
-    }
-    for(int idm=0; idm<parms->ndm; idm++){
-	recon->DMTT->p[idm]=loc2mat(recon->aloc->p[idm], 0);
-    }
-    act_zero(recon->aloc, recon->DMTT, recon->actstuck);
-    for(int idm=0; idm<parms->ndm; idm++){
-	recon->DMPTT->p[idm]=dpinv(recon->DMTT->p[idm], 0);
-    }
-    if(parms->save.setup){
-	writebin(recon->DMTT, "DMTT");
-	writebin(recon->DMPTT, "DMPTT");
-    }
-}
 /**
    Dither using command path (DM) aberration
  */
@@ -1349,8 +1295,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }
-    if(parms->itpowfs!=-1){
-	/*setup Truth wfs*/
+    if(parms->itpowfs!=-1){ /*setup Truth wfs*/
 	setup_recon_twfs(recon,powfs,parms);
     }
     if(!parms->sim.idealfit){
@@ -1385,7 +1330,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	    powfs[ipowfs].GS0=NULL;
 	}
     }
-    setup_recon_dmttr(recon, parms);
     setup_recon_dither_dm(recon, powfs, parms);
     toc2("setup_recon");
 }

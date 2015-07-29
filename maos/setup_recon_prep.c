@@ -834,6 +834,71 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 	}
     }/*iwfs */
 }
+
+/**
+   From focus mode to gradients
+ */
+static void
+setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
+    /*Create GFall: Focus mode -> WFS grad. This is model*/
+    recon->GFall=cellnew(parms->npowfs, 1);
+    recon->GFngs=cellnew(parms->nwfs, 1);
+    {
+	dmat *opd=dnew(recon->ploc->nloc,1);
+	loc_add_focus(opd->p, recon->ploc, 1);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
+	    dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+	    if(parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].llt){
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		    recon->GFngs->p[iwfs]=dref(recon->GFall->p[ipowfs]);
+		}
+	    }
+	}
+	dfree(opd);
+    }
+    if(parms->save.setup){
+	writebin(recon->GFall,"GFall");
+    }
+}
+/**
+   From radial order modes to gradients.
+ */
+static void
+setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
+    recon->GRall=cellnew(parms->npowfs, 1);
+    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
+	    if(parms->powfs[ipowfs].type==1){//PWFS
+		dmat *opd0=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
+		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd0, 0, 0, 1);
+		dfree(opd0);
+	    }else{//SHWFS
+		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+	    }
+	}
+    }
+}
+void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
+    recon->DMTT=dcellnew(parms->ndm, 1);
+    recon->DMPTT=dcellnew(parms->ndm, 1);
+    if(!recon->actcpl){
+	error("actcpl must not be null\n");
+    }
+    for(int idm=0; idm<parms->ndm; idm++){
+	recon->DMTT->p[idm]=loc2mat(recon->aloc->p[idm], 0);
+    }
+    act_zero(recon->aloc, recon->DMTT, recon->actstuck);
+    for(int idm=0; idm<parms->ndm; idm++){
+	recon->DMPTT->p[idm]=dpinv(recon->DMTT->p[idm], 0);
+    }
+    if(parms->save.setup){
+	writebin(recon->DMTT, "DMTT");
+	writebin(recon->DMPTT, "DMPTT");
+    }
+}
+
 /**
    Setup fitting low rank terms that are in the NULL space of DM fitting
    operator. typically include piston on each DM and tip/tilt on certain
@@ -1144,13 +1209,18 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	setup_recon_HA(recon,parms);
 	fit_prep_lrt(recon, parms);
     }
+    setup_recon_dmttr(recon, parms);
     return recon;
 }
 /**
-   That depends on GPU data.
+   That may depend on GPU data.
  */
 void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
     setup_recon_GA(recon, parms, powfs);
+    setup_recon_GF(recon, parms);
+    if(parms->itpowfs!=-1){
+	setup_recon_GR(recon,powfs,parms);
+    }
     if(parms->recon.split){
 	setup_ngsmod_prep(parms,recon,aper,powfs);
     }

@@ -587,18 +587,16 @@ write_bin_headerstr(const char *str, file_t *fp){
     if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(str)+1;
+    uint64_t nlen2=(nlen%8)?((nlen/8+1)*8):(nlen);
+    char zero[8]={0};    
+    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
     /*make str 8 byte alignment. */
-    char *str2=strdup(str);
-    if(nlen % 8 != 0){
-	nlen=(nlen/8+1)*8;
-	str2=realloc(str2, nlen);
-    }
+    zfwrite(str, 1, nlen, fp);
+    if(nlen2>nlen)
+	zfwrite(zero, 1, nlen2-nlen, fp);
+    zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
-    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(str2, 1, nlen, fp);
-    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(&magic, sizeof(uint32_t), 1, fp);
-    free(str2);
 }
 
 /*

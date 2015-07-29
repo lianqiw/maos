@@ -335,7 +335,7 @@ public:
     }
     void zero(cudaStream_t stream=(cudaStream_t)-1){
 	if(m){
-	    m.zero();
+	    m.zero(stream);
 	}else{
 	    for(long i=0; i<nx*ny; i++){
 		p[i].zero(stream);
