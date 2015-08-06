@@ -204,8 +204,8 @@ void recon_servo_update(SIM_T *simu){
 		dfree(psdi);
 	    }
 	    dcellzero(simu->dmerrts);
-	    writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
-	    writebin(psd, "psdcli_%d", simu->reconisim);
+	    //writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
+	    //writebin(psd, "psdcli_%d", simu->reconisim);
 	    {//average all the PSDs
 		double scale=1./(psd->ny-1);
 		for(int ix=0; ix<psd->nx; ix++){
@@ -217,7 +217,7 @@ void recon_servo_update(SIM_T *simu){
 		}
 		dresize(psd, psd->nx, 2);
 	    }
-	    writebin(psd, "psdcl_%d", simu->reconisim);
+	    //writebin(psd, "psdcl_%d", simu->reconisim);
 	    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
 		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0], 0);
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
@@ -253,7 +253,7 @@ void recon_servo_update(SIM_T *simu){
 		}
 		dresize(psd, psd->nx, 2);
 	    }
-	    writebin(psd, "psdcl_lo_%d", simu->reconisim);
+	    //writebin(psd, "psdcl_lo_%d", simu->reconisim);
 
 	    if(simu->Mint_lo->ep->nx==1 && simu->Mint_lo->ep->nx==1){
 		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
@@ -335,7 +335,10 @@ void reconstruct(SIM_T *simu){
 	if(parms->recon.psol){
 	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 	    //form error signal in PSOL mode
-	    if(simu->recon->actinterp){
+	    if(1){
+		warning_once("temporarily disable\n");
+	    }
+	    else if(simu->recon->actinterp){
 		//extrapolate DM fitting result to float and edge actuators
 		dcellcp(&simu->dmcmd0, simu->dmerr);
 		dcellzero(simu->dmerr);

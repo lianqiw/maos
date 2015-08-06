@@ -542,30 +542,19 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf || parms->ntsurf){
 	    error("Please disable surf and tsurf when load.ncpa is set\n");
 	}
-	if(zfexist("surfevl.bin")){
-	    aper->opdadd=dcellread("surfevl.bin");
-	    if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
-		error("surfevl is in wrong format\n");
-	    }	
-	}else{
-	    warning("surfevl.bin does not exist\n");
+	aper->opdadd=dcellread("%s/surfevl.bin", parms->load.ncpa);
+	if(aper->opdadd->nx!=parms->evl.nevl || aper->opdadd->p[0]->nx!=aper->locs->nloc){
+	    error("surfevl is in wrong format\n");
+	}	
+	aper->opdfloc=dcellread("%s/surffloc.bin", parms->load.ncpa);
+	if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
+	    error("opdfloc is in wrong foramt\n");
 	}
-	if(zfexist("surffloc.bin")){
-	    aper->opdfloc=dcellread("surffloc.bin");
-	    if(aper->opdfloc->nx!=parms->sim.ncpa_ndir || aper->opdfloc->p[0]->nx!=recon->floc->nloc){
-		error("opdfloc is in wrong foramt\n");
-	    }
-	}else{
-	    warning("surffloc.bin does not exist. dm_ncpa will be zero\n");
-	}
+
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(zfexist("surfpowfs_%d.bin", ipowfs)){
-		powfs[ipowfs].opdadd=dcellread("surfpowfs_%d.bin", ipowfs);
-		if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
-		    error("surfpowfs_%d is in wrong format\n", ipowfs);
-		}
-	    }else{
-		warning("surfpowfs_%d.bin does not exist\n", ipowfs);
+	    powfs[ipowfs].opdadd=dcellread("%s/surfpowfs_%d.bin", parms->load.ncpa, ipowfs);
+	    if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
+		error("surfpowfs_%d is in wrong format\n", ipowfs);
 	    }
 	}
     }else{

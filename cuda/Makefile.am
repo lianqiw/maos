@@ -10,21 +10,28 @@ SRC_RECON=solve.cu recon_base.cu tomo.cu fit.cu moao.cu fdpcg.cu pcg.cu recon.cu
 SRC_MVM= mvm_iwfs.cu mvmfull_iwfs.cu mvmfull_real.cu mvmfull_pipe.cu mvm_daemon.cu
 SRC_WFS= wfsinit.cu wfsints.cu wfsgrad.cu pywfs.cu
 SRCS=$(SRC_LIB) $(SRC_RECON) $(SRC_WFS) $(SRC_MVM) perfinit.cu perfevl.cu 
-#LTLIBRARIES does not work.
+
 #must include EXTRA_DIST in SOURCES, otherwise some automake tools are missing
+
 #lib_LIBRARIES=libaogpu.a
 #libaogpu_a_SOURCES=$(SRCS) $(EXTRA_DIST)
-#libaogpu_a_LIBADD=
+#libaogpu_a_LDFLAGS=$(LDOPTS)
+
+#else
 lib_LTLIBRARIES=libaogpu.la
 libaogpu_la_SOURCES=$(SRCS) $(EXTRA_DIST)
-libaogpu_la_LIBADD=../lib/libaos.la #put $(LIBCUDA) here doesn't help because rpath linker flag is not preserved in the .la file
+libaogpu_la_LIBADD=../lib/libaos.la $(LIBCUDA)
 libaogpu_la_LDFLAGS=$(LDOPTS)
-
+#endif
+#if USE_STATIC
+#all-local:dlink.o
+#dlink.o:libaogpu.la
+#	$(NVCC) $(CUDAOPT) -dlink .libs/libaogpu.a -o dlink.o
+#endif
+LDADD=libaogpu.la $(LIBCUDA) 
 bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
 ___test_test_cuda_SOURCES=test.cu 
-___test_test_cuda_LDADD=libaogpu.la $(LIBCUDA) 
 ___bin_gpu_mvm_SOURCES=gpu_mvm.c
-___bin_gpu_mvm_LDADD=libaogpu.la $(LIBCUDA)
 
 #The following does the depency generation/tracking and verbosity right.
 .cu.o:

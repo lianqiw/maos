@@ -58,9 +58,6 @@ static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
    pixel intensities.
  */
 void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
-    if(!powfs[ipowfs].intstat){
-	error("Please create intstat before calling mtch");
-    }
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
     const double pixthetay=parms->powfs[ipowfs].pixtheta;

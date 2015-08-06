@@ -45,4 +45,5 @@ void shift_grad(SIM_T *simu);
 lmat* act_coord2ind(loc_t *aloc, const char *fndead);
 CN2EST_T* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad);
+double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
 #endif

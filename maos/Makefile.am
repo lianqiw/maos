@@ -1,6 +1,6 @@
 SUBDIRS = .
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) #Compiler flags for each target that doesn't specify per target CFLAGS. Supplements CFLAGS
-AM_LDFLAGS=$(LDOPTS) $(LDEXE)
+AM_LDFLAGS=$(LDEXE_MAOS) $(LDOPTS) $(LDEXE) 
 
 #the libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later
 nobase_include_HEADERS=common.h maos.h parms.h types.h utils.h setup_powfs.h \
@@ -18,11 +18,17 @@ libmaos_la_SOURCES=$(SRCS)
 libmaos_la_LIBADD=
 if USE_CUDA
 libmaos_la_LIBADD+=../cuda/libaogpu.la
+#if USE_STATIC
+#libmaos_la_LIBADD+=../cuda/dlink.o
+#endif
 endif
 libmaos_la_LIBADD+=../lib/libaos.la 
 bin_PROGRAMS=../bin/maos 
 ___bin_maos_SOURCES=main.c
-___bin_maos_LDADD=libmaos.la  $(LDFFT) $(LAPACK) 
+___bin_maos_LDADD=libmaos.la  
 if USE_CUDA
-___bin_maos_LDADD+=$(LIBCUDA)
+___bin_maos_LDADD+=$(libmaos_la_LIBADD) $(LIBCUDA)
+#if USE_STATIC
+#___bin_maos_LDADD+=-lculibos -ldl -lrt
+#endif
 endif

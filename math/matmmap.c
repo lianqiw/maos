@@ -124,7 +124,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
 	error("mmap failed\n");
     }
     char *map0=map;
-    /*memset(map, 0, msize); */
+    /*memset(map, 0, msize);*/
     X(cell) *out=cellnew(nx,ny);
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);

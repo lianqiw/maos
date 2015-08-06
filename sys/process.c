@@ -34,16 +34,12 @@
 #include "misc.h"
 #include "process.h"
 #include "daemonize.h"
-#ifdef HAVE_NUMA_H
-#include <numa.h>
-#endif
 #if _OPENMP>200805
 #include <omp.h>
 #endif
 /**
    A few routines handles process resource.
 */
-int NNUMA=1; /*Number of numa nodes*/
 int NCPU=0;
 int MAXTHREAD=0;/*MAXTHREAD=2*NCPU when hyperthreading is enabled. */
 int NTHREAD=0;//Default to MAXTHREAD
@@ -120,9 +116,6 @@ void init_process(void){
     }
 #endif
     NTHREAD=MAXTHREAD;
-#ifdef HAVE_NUMA_H
-    NNUMA=numa_num_configured_nodes();
-#endif
     TCK = sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");

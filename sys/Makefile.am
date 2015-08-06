@@ -11,5 +11,5 @@ SYS_SRC=daemonize.c misc.c process.c thread.c hashlittle.c mem.c path.c	\
 
 lib_LTLIBRARIES=libaosys.la
 libaosys_la_SOURCES=$(SYS_SRC)
-libaosys_la_LIBADD=-lz -lm
-
+libaosys_la_LIBADD=-lz -lm -ldl #don't remove
+#we put -lz -lm -ldl here so that libtool will always put these flags after the library when linking exes.

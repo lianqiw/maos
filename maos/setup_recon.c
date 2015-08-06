@@ -521,8 +521,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	dcellfree(ULo);
 	dcellfree(VLo);
 	/*Remove empty cells. */
-	dcelldropempty(&recon->RR.U,2);
-	dcelldropempty(&recon->RR.V,2);
+	//dcelldropempty(&recon->RR.U,2);
+	//dcelldropempty(&recon->RR.V,2);
 	dcelldropempty(&recon->RL.U,2);
 	dcelldropempty(&recon->RL.V,2);
 
@@ -829,12 +829,18 @@ setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}
     }
     recon->RRtwfs=dcellpinv(GRtwfs, neai);
-    cellfree(GRtwfs);
-    cellfree(neai);
     if(parms->save.setup){
 	writebin(recon->GRall, "GRall");
 	writebin(recon->RRtwfs, "RRtwfs");
     }
+    if(parms->recon.fnsphpsd){
+	recon->eptwfs=twfs_gain_optim(parms, recon, powfs);
+	warning("eptwfs is reset to %g\n", parms->sim.eptwfs);
+    }else{
+	recon->eptwfs=parms->sim.eptwfs;
+    }
+    cellfree(GRtwfs);
+    cellfree(neai);
 }
 
 /**

@@ -229,16 +229,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM
 	while(!in){
 	    if(exist(fnatm)){
 		info2("Reading %s\n", fnatm);
-		long totsize_g=(nlayer*data->nx*data->ny*sizeof(double))>>30;
-		extern int NNUMA;
-		if(NNUMA>1 && totsize_g<8 && 0){
-		    /*If there is more than one numa memory node available and
-		     * memory size of less than 8GB, read to memory instead of mmap*/
-		    /* Not useful to prevent QPI memory access. disabled*/
-		    in=dcellread("%s",fnatm);
-		}else{
-		    in=dcellread_mmap("%s",fnatm);
-		}
+		in=dcellread_mmap("%s",fnatm);
 	    }else{
 		char fnlock[PATH_MAX];
 		snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);

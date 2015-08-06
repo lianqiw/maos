@@ -718,6 +718,7 @@ static void init_simu_wfs(SIM_T *simu){
     const int nwfs=parms->nwfs;
     const int nsim=parms->sim.end;
     const int seed=simu->seed;
+    simu->eptwfs=recon->eptwfs;
     simu->ints=cellnew(nwfs, 1);
     simu->wfspsfout=cellnew(nwfs, 1);
     simu->pistatout=cellnew(nwfs, 1);
@@ -999,7 +1000,7 @@ static void init_simu_wfs(SIM_T *simu){
 		simu->llt_tt->p[iwfs]=psd2time(psdin, simu->misc_rand, parms->sim.dt, parms->sim.end);
 	    }
 	}
-	writebin(simu->llt_tt, "llt_tt_%d", seed);
+	//writebin(simu->llt_tt, "llt_tt_%d", seed);
     }
     if(parms->nlgspowfs){
 	simu->LGSfocus=dcellnew(parms->nwfs,1);
@@ -1050,12 +1051,20 @@ static void init_simu_wfs(SIM_T *simu){
 	    simu->resdither = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resdither_%d.bin", seed);
 	}
     }
-    if(simu->recon->cn2est){
+    if(recon->cn2est){
 	simu->cn2est=dcellnew(2,1);
 	int ncn2=(parms->sim.end-1)/parms->cn2.step;
 	long nnx[2]={ncn2, ncn2};
 	long nny[2]={1, recon->cn2est->htrecon->nx};
 	simu->cn2est=dcellnew_mmap(2, 1, nnx, nny, NULL, NULL, "Rescn2_%d.bin", seed);
+    }
+    if(parms->itpowfs!=-1){
+	const int ipowfs=parms->itpowfs;
+	const int iwfs=parms->powfs[ipowfs].wfs->p[0];
+	const int nmod=recon->RRtwfs->p[iwfs]->nx;
+	const int dtrat=parms->powfs[ipowfs].dtrat;
+	const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
+	simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "Restwfs_%d.bin", seed);
     }
 }
 
@@ -1558,6 +1567,7 @@ void free_simu(SIM_T *simu){
 	free(simu->dither);
     }
     cellfree(simu->resdither);
+    cellfree(simu->restwfs);
     cellfree(simu->zoompos);
     cellfree(simu->llt_tt);
     /*Close all files */

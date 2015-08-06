@@ -433,7 +433,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fn);
+    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fd?fn:"command line");
     if(fd){
 	fclose(fd);
 	free(fn);

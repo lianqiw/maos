@@ -377,8 +377,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(simu->fsmreal && simu->fsmreal->p[iwfs] && !powfs[ipowfs].llt){
 		ttx+=simu->fsmreal->p[iwfs]->p[0];
 		tty+=simu->fsmreal->p[iwfs]->p[1];
-		simu->fsmcmds->p[iwfs]->p[isim*2]=-simu->fsmreal->p[iwfs]->p[0];
-		simu->fsmcmds->p[iwfs]->p[isim*2+1]=-simu->fsmreal->p[iwfs]->p[1];
 	    }
 	    if(ttx || tty){
 		curaddptt(phiout, loc, 0, -ttx, -tty, stream);
@@ -421,7 +419,11 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(parms->powfs[ipowfs].type==1){
 	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].siglevsim, stream);
-			   
+	    /*dmat *tmp=0;
+	    cp2cpu(&tmp, 0, cuwfs[iwfs].ints[0], 1);
+	    info("ints sum to %g for each subaperture. siglev[%d]=%g\n",
+	    dsum(tmp)/tmp->nx, iwfs, parms->wfs[iwfs].siglevsim); dfree(tmp);*/
+	    //cuwrite(cuwfs[iwfs].ints[0], "ints_%g", parms->wfs[iwfs].siglevsim); exit(0);
 	}else{
 	    if(do_geom){
 		double ratio;

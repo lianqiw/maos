@@ -335,7 +335,8 @@ typedef struct RECON_T{
 
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
-
+    double eptwfs;     /**<Twfs reference vector servo gain.*/
+    //double Rrms;       /**<RMS WFE of Radial order zernike modes*/
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/
@@ -480,6 +481,7 @@ typedef struct SIM_T{
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
     dcell *cn2est;     /**<Cn2 Estimation Result*/
     dcell *gradoff;    /**<Offset to grads to subtract from measurement. */
+    double eptwfs;     /**<Twfs reference vector servo gain.*/
     /*CoG gain adjustment*/
     dcell *gradscale;  /**<Gain adjustment for cog and pywfs.*/
     dcell *llt_tt;   /**<LLT uplink jitter*/
@@ -499,7 +501,9 @@ typedef struct SIM_T{
     dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     dmat *timing;      /**<Timing and memory using for each step*/
+    
     dcell *resdither;   /**<Phase and amplitude estimation of dithering*/
+    dmat *restwfs;    /**<Truth wfs output*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
     dcell *dmcmd0;     /**<This is the DM command before extrapolation.*/

@@ -308,7 +308,13 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    //wfs
 	    for(int iwfs=0; parms->gpu.wfs && iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		tasks[count].timing=parms->powfs[ipowfs].usephy?17:1.5;
+		if(parms->powfs[ipowfs].type==1){//pwfs
+		    tasks[count].timing=200;
+		}else if(parms->powfs[ipowfs].usephy){
+		    tasks[count].timing=17;
+		}else{
+		    tasks[count].timing=1.5;
+		}
 		tasks[count].dest=cudata_t::wfsgpu+iwfs;
 		snprintf(tasks[count].name, 64, "WFS %d", iwfs);
 		count++;

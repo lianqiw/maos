@@ -232,7 +232,7 @@ static void filter_cl(SIM_T *simu){
     assert(parms->sim.closeloop);
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
-  
+    const int isim=simu->isim;
     {/*Auto adjusting epdm for testing different epdm*/
     	static int epdm_is_auto=0;
 	if(simcfg->epdm->p[0]<0){
@@ -240,11 +240,11 @@ static void filter_cl(SIM_T *simu){
 	    simcfg->epdm->p[0]=0.5;
 	}
 	if(epdm_is_auto){
-	    if((simu->isim*10)<parms->sim.end){//initial steps
+	    if((isim*10)<parms->sim.end){//initial steps
 		simcfg->epdm->p[0]=0.5;
-	    }else if((simu->isim*10)%parms->sim.end==0){
-		simcfg->epdm->p[0]=(double)simu->isim/(double)parms->sim.end;
-		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], simu->isim);
+	    }else if((isim*10)%parms->sim.end==0){
+		simcfg->epdm->p[0]=(double)isim/(double)parms->sim.end;
+		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], isim);
 	    }
 	}
     }
@@ -253,7 +253,7 @@ static void filter_cl(SIM_T *simu){
     int drop=0;
     if(simu->dmerr && parms->sim.dtrat_skip){
 	if(parms->sim.dtrat_skip>0){
-	    if((simu->isim+1)%parms->sim.dtrat_skip==0){//evenly
+	    if((isim+1)%parms->sim.dtrat_skip==0){//evenly
 		drop=1;
 	    }
 	}else if(parms->sim.dtrat_skip<0){//use random draws
@@ -265,7 +265,7 @@ static void filter_cl(SIM_T *simu){
     }
     dcell *dmerr=0;
     if(drop){
-	warning("Drop a frame at step %d\n", simu->isim);
+	warning("Drop a frame at step %d\n", isim);
     }else if(simu->dmerr){
 	dmerr=simu->dmerr;
     }
@@ -288,7 +288,7 @@ static void filter_cl(SIM_T *simu){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
 	//Do not reference the data, even for dtrat==1
 	if(!parms->powfs[ipowfs].psol || !parms->powfs[ipowfs].dtrat) continue;
-	double alpha=(simu->isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
+	double alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
 	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
     }
     dcellcp(&simu->dmpsol, simu->dmcmd0);
@@ -312,7 +312,7 @@ static void filter_cl(SIM_T *simu){
     if(recon->dither_m){
 	//Change phase in calc_dither_amp if phase of dithering is changed
 	//this is for step isim+1
-	double anglei=(2*M_PI/recon->dither_npoint)*(simu->isim+1)/recon->dither_dtrat;
+	double anglei=((isim+1)/recon->dither_dtrat)*(2*M_PI/recon->dither_npoint);
 	dcelladd(&simu->dmcmd, 1, recon->dither_m, sin(anglei));
     }
 
@@ -376,12 +376,12 @@ static void filter_cl(SIM_T *simu){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].dither==1){
 		//adjust delay due to propagation
-		const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0)
-		    +1-parms->powfs[ipowfs].dtrat;
+		const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0);
+		//+1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
 		double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-		double angle=anglei*((simu->isim+1-adjust)/parms->powfs[ipowfs].dtrat);
+		double angle=((isim+1-adjust)/parms->powfs[ipowfs].dtrat)*anglei;
 		simu->fsmreal->p[iwfs]->p[0]-=parms->powfs[ipowfs].dither_amp*cos(angle);
 		simu->fsmreal->p[iwfs]->p[1]-=parms->powfs[ipowfs].dither_amp*sin(angle);
 	    }

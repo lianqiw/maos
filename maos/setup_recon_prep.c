@@ -867,18 +867,17 @@ setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
     recon->GRall=cellnew(parms->npowfs, 1);
-    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
+    dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    if(parms->powfs[ipowfs].type==1){//PWFS
-		dmat *opd0=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order/2, 1);
-		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd0, 0, 0, 1);
-		dfree(opd0);
+		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd, 0, 0, 1);
 	    }else{//SHWFS
 		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
 	    }
 	}
     }
+    dfree(opd);
 }
 void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
     recon->DMTT=dcellnew(parms->ndm, 1);

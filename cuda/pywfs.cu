@@ -116,6 +116,8 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	//Use ray tracing for si
 	const Real dx2=dx*nembed/ncomp;
 	const int nsa=cupowfs->saloc.Nloc();
+	const double scale=(Real)nsa*siglev/(ncomp*ncomp);
+
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
 		Real* pout=ints.P()+(ix+iy*2)*nsa;
@@ -124,8 +126,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 		     cupowfs->saloc, cupowfs->saloc.Nloc(),
 		     1./dx2, 1./dx2, 
 		     (((ix-0.5)*ncomp2)-(-ncomp2+0.5)),
-		     (((iy-0.5)*ncomp2)-(-ncomp2+0.5)), 
-		     (Real)nsa/(ncomp*ncomp)*siglev);
+		     (((iy-0.5)*ncomp2)-(-ncomp2+0.5)), scale);
 	    }
 	}
     }

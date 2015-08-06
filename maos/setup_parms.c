@@ -176,6 +176,7 @@ void free_parms(PARMS_T *parms){
     free(parms->load.mvm);
     free(parms->load.mvmi);
     free(parms->load.mvmf);
+    free(parms->load.ncpa);
     lfree(parms->fdlock);
     lfree(parms->hipowfs);
     lfree(parms->lopowfs);
@@ -409,50 +410,56 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->mtchcpl=1;
 	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	}
-	if(powfsi->phytypesim==-1){
-	    powfsi->phytypesim=powfsi->phytype;
-	}
-	if(powfsi->phytypesim2==-1){
-	    powfsi->phytypesim2=powfsi->phytypesim;
-	}
-	if(powfsi->type==1){//pywfs only uses cog for the moment
-	    powfsi->phytype=2;
-	    powfsi->phytypesim=2;
-	    powfsi->phytypesim2=2;
+	double wvlmax=dmax(powfsi->wvl);
+	if(powfsi->type==0){//shwfs
+	    if(powfsi->phytypesim==-1){
+		powfsi->phytypesim=powfsi->phytype;
+	    }
+	    if(powfsi->phytypesim2==-1){
+		powfsi->phytypesim2=powfsi->phytypesim;
+	    }
+	    if(powfsi->mtchcra==-1){
+		powfsi->mtchcra=powfsi->mtchcr;
+	    }
+	    int pixpsay=powfsi->pixpsa;
+	    int pixpsax=powfsi->radpix;
+	    if(!pixpsax) pixpsax=pixpsay;
+	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
+		powfsi->mtchcr=0;
+		powfsi->mtchcra=0;
+	    }
+	    /*Senity check pixtheta*/
+	    if(powfsi->pixtheta<0){
+		double dsa=parms->aper.d/powfsi->order;
+		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/dsa;
+	    }else if(powfsi->pixtheta<1e-4){
+		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+	    }else{
+		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
+	    }
+	}else if(powfsi->type==1){//pywfs only uses cog for the moment
+	    powfsi->phytype=powfsi->phytypesim=powfsi->phytypesim2=2;//like quad cell cog
 	    if(powfsi->phystep!=0){
 		warning("PWFS must run in physical optics mode, changed.\n");
 		powfsi->phystep=0;
 	    }
+	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
+	    //Input of modulate is in unit of wvl/D. Convert to radian
+	    powfsi->modulate*=wvlmax/parms->aper.d;
 	}
-	/*round phystep to be multiple of dtrat. */
-	if(powfsi->phystep>0){
-	    powfsi->phystep=(powfsi->phystep/powfsi->dtrat)
-		*powfsi->dtrat;
+	if(powfsi->dither && powfsi->phystep!=0){
+	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
+	    powfsi->phystep=0;
+	}else if(powfsi->phystep>0){
+	    /*round phystep to be multiple of dtrat. */
+	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 	}
-	if(powfsi->mtchcra==-1){
-	    powfsi->mtchcra=powfsi->mtchcr;
-	}
-	int pixpsay=powfsi->pixpsa;
-	int pixpsax=powfsi->radpix;
-	if(!pixpsax) pixpsax=pixpsay;
-	if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
-	    powfsi->mtchcr=0;
-	    powfsi->mtchcra=0;
-	}
+
 	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
 	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	}
 	powfsi->fieldstop/=206265.;
-	double wvlmax=dmax(powfsi->wvl);
-	/*Senity check pixtheta*/
-	if(powfsi->pixtheta<0){
-	    double dsa=parms->aper.d/powfsi->order;
-	    powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/dsa;
-	}else if(powfsi->pixtheta<1e-4){
-	    warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
-	}else{
-	    powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
-	}
+
 	if(powfsi->dither){
 	    parms->dither=1;
 	    if(powfsi->dither==1){//tip/tilt/arcsec->radian
@@ -468,9 +475,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	    //Convert all in simulation rate (sim.dt).
 	    powfsi->dither_pllskip*=powfsi->dtrat;
 	    powfsi->dither_ogskip*=powfsi->dtrat;
+	    if(powfsi->dither_ograt<=0 || powfsi->dither_pllrat<=0){
+		error("dither_ograt or _pllrat must be positive\n");
+	    }
 	}
-	//Input of modulate is in unit of wvl/D. Convert to radian
-	powfsi->modulate*=wvlmax/parms->aper.d;
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -504,6 +512,46 @@ static void readcfg_wfs(PARMS_T *parms){
     }
     READ_WFS_RELAX(dbl,hs);
     READ_WFS_RELAX(dbl,fitwt);
+    
+   /*link wfs with powfs*/
+    int wfscount=0;
+    int ipowfs=0;
+    for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){
+	if(parms->powfs[kpowfs].nwfs==0){//no stars. drop powfs
+	    free_powfs_cfg(&parms->powfs[kpowfs]);
+	    ipowfs--;
+	    continue;
+	}else{
+	    if(ipowfs<kpowfs){
+		memcpy(parms->powfs+ipowfs, parms->powfs+kpowfs, sizeof(POWFS_CFG_T));
+	    }
+	}
+	int mwfs=parms->powfs[ipowfs].nwfs;
+	parms->powfs[ipowfs].wfs=lnew(mwfs, 1);
+	parms->powfs[ipowfs].wfsind=lnew(parms->nwfs, 1);
+	int count=0;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(iwfs>=wfscount && iwfs<wfscount+mwfs){
+		parms->wfs[iwfs].powfs=ipowfs;
+		parms->powfs[ipowfs].wfs->p[count]=iwfs;
+		parms->powfs[ipowfs].wfsind->p[iwfs]=count;
+		count++;
+	    }else{
+		parms->powfs[ipowfs].wfsind->p[iwfs]=-1;/*not belong */
+	    }
+	}
+	wfscount+=mwfs;
+    }
+    parms->npowfs=ipowfs;
+    if(parms->npowfs==0){
+	warning("No wfs is found\n");
+	if(!parms->sim.idealfit && !parms->sim.evlol){
+	    error("Cannot proceed\n");
+	}
+    }else if(parms->nwfs!=wfscount){
+	error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n", 
+	      parms->nwfs, wfscount);
+    }
 
     dmat *wvlwts=readcfg_dmat("wfs.wvlwts");
     dmat *siglev=readcfg_dmat("wfs.siglev");
@@ -514,7 +562,7 @@ static void readcfg_wfs(PARMS_T *parms){
 	error("wfs.siglev can be either empty or %d\n",parms->nwfs);
     }
     for(i=0; i<parms->nwfs; i++){
-	int ipowfs=parms->wfs[i].powfs;
+	ipowfs=parms->wfs[i].powfs;
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->wfs[i].wvlwts=dnew(nwvl, 1);
 	if(wvlwts->nx==0){
@@ -915,6 +963,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.psd);
     READ_INT(recon.psddtrat);
     READ_INT(recon.psdnseg);
+    READ_STR(recon.fnsphpsd);
 }
 /**
    Read in simulation parameters
@@ -930,18 +979,11 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DMAT(sim.eplo);
     READ_DMAT(sim.apfsm);
     READ_DMAT(sim.epfsm);
+    READ_DBL(sim.aptwfs);
+    READ_DBL(sim.eptwfs);
     READ_INT(sim.aldm);
     READ_INT(sim.allo);
     READ_INT(sim.alfsm);
-    /*parms->sim.apdm=readcfg_dmat("sim.apdm");
-    parms->sim.epdm=readcfg_dmat("sim.epdm");
-    parms->sim.aplo=readcfg_dmat("sim.aplo");
-    parms->sim.eplo=readcfg_dmat("sim.eplo");
-    parms->sim.apfsm=readcfg_dmat("sim.apfsm");
-    parms->sim.epfsm=readcfg_dmat("sim.epfsm");
-    parms->sim.aldm=readcfg_int("sim.aldm");
-    parms->sim.allo=readcfg_int("sim.allo");
-    parms->sim.alfsm=readcfg_int("sim.alfsm");*/
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
@@ -1121,6 +1163,7 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.evlopd=parms->save.all;
 	parms->save.run=parms->save.all;/*see following */
 	parms->save.ncpa=parms->save.all;
+	parms->save.dither=parms->save.all;
     }
 
     if(parms->save.run){
@@ -1173,7 +1216,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_INT(load.tomo);
     READ_INT(load.fit);
     READ_INT(load.W);
-    READ_INT(load.ncpa);
+    READ_STR(load.ncpa);
 }
 /**
    Process simulation parameters to find incompatibility.
@@ -1320,33 +1363,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	parms->nwfs=0;
     }
     /*link wfs with powfs*/
-    int wfscount=0;
-    int ipowfs=0;
-    for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){
-	if(parms->powfs[kpowfs].nwfs==0){//no stars. drop powfs
-	    free_powfs_cfg(&parms->powfs[kpowfs]);
-	    ipowfs--;
-	    continue;
-	}else{
-	    if(ipowfs<kpowfs){
-		memcpy(parms->powfs+ipowfs, parms->powfs+kpowfs, sizeof(POWFS_CFG_T));
-	    }
-	}
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int mwfs=parms->powfs[ipowfs].nwfs;
-	parms->powfs[ipowfs].wfs=lnew(mwfs, 1);
-	parms->powfs[ipowfs].wfsind=lnew(parms->nwfs, 1);
-	int count=0;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    if(iwfs>=wfscount && iwfs<wfscount+mwfs){
-		parms->wfs[iwfs].powfs=ipowfs;
-		parms->powfs[ipowfs].wfs->p[count]=iwfs;
-		parms->powfs[ipowfs].wfsind->p[iwfs]=count;
-		count++;
-	    }else{
-		parms->powfs[ipowfs].wfsind->p[iwfs]=-1;/*not belong */
-	    }
-	}
-	wfscount+=mwfs;
 	if(parms->powfs[ipowfs].llt){
 	    parms->powfs[ipowfs].llt->i=lnew(mwfs, 1);/*default to zero. */
 	    if(parms->powfs[ipowfs].llt->n>1){
@@ -1381,16 +1399,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning2("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
 	}
     }//for ipowfs
-    if((parms->npowfs=ipowfs)==0){
-	warning("No wfs is found\n");
-	if(!parms->sim.idealfit && !parms->sim.evlol){
-	    error("Cannot proceed\n");
-	}
-    }else if(parms->nwfs!=wfscount){
-	error("parms->nwfs=%d and sum(parms->powfs[*].nwfs)=%d mismatch\n", 
-	      parms->nwfs, wfscount);
-    }
-
+    
     //Match TWFS to LGS POWFS
     parms->itpowfs=-1;
     parms->ilgspowfs=-1;
@@ -1421,6 +1430,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
 		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}
+		//floor to multiple of dtrat.
+		const int dtrat=parms->powfs[tpowfs].dtrat;
+		parms->powfs[tpowfs].step=((parms->powfs[tpowfs].step+dtrat-1)/dtrat)*dtrat;
 		warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[tpowfs].step);
 	    }
 	}
@@ -1428,7 +1440,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 
     parms->hipowfs=lnew(parms->npowfs, 1);
     parms->lopowfs=lnew(parms->npowfs, 1);
-    for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/*Figure out order of High order WFS if not specified.*/
 	if(parms->powfs[ipowfs].order==0){
 	    if(parms->ndm>0){
@@ -1555,7 +1567,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dtrat_lo=-1;
     parms->step_lo=-1;
     parms->step_hi=-1;
-    for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2) continue;
 	if(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].llt){
 	    error("Pyramid WFS is not available for LGS WFS\n");
@@ -1657,7 +1669,7 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    double bkgrnd=parms->powfs[ipowfs].bkgrnd;
-	    if(fabs(bkgrnd)>1.e-50){
+	    if(bkgrnd>0){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
 		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
 		      ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
@@ -2372,7 +2384,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	info2(" %ld", parms->sim.seeds->p[i]);
     }
     info2("\n");
-  
+    if(parms->sim.nseed>1 && parms->dither){
+	error("The dither mode updates parameters in place and does not support multiple seeds yet.\n");
+    }
     if(parms->save.ngcov>0 && parms->save.gcovp<10){
 	warning("parms->save.gcovp=%d is too small. It may fill your disk!\n",
 		parms->save.gcovp);
@@ -2514,11 +2528,15 @@ static void print_parms(const PARMS_T *parms){
 	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
 	}
 	info2("\n");
-	info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
-	      (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
-	      parms->powfs[i].pixpsa, 
-	      parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
-	      1./parms->sim.dt/parms->powfs[i].dtrat);
+	if(parms->powfs[i].type==0){
+	    info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
+		  (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
+		  parms->powfs[i].pixpsa, 
+		  parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
+		  1./parms->sim.dt/parms->powfs[i].dtrat);
+	}else{
+	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[i].dtrat);
+	}
 	info2("wvl: [");
 	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){
 	    info2(" %g",parms->powfs[i].wvl->p[iwvl]);
@@ -2555,9 +2573,13 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
     for(i=0; i<parms->nwfs; i++){
-	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km\n",
+	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 	      i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
-	      parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3);
+	      parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
+	if((parms->wfs[i].siglev-parms->wfs[i].siglevsim)>EPS){
+	    info2(" (%g in simulation)", parms->wfs[i].siglevsim);
+	}
+	info2("\n");
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
 	    error("wfs thetax or thetay is too large\n");
 	}

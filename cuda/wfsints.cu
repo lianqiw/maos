@@ -429,15 +429,11 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 			cupowfs[ipowfs].llt.pts.Nxsa(), cuwfs[iwfs].lltimcc,
 			cupowfs[ipowfs].llt.pts, cuwfs[iwfs].lltamp, 1.f, stream);
 		CUDA_SYNC_STREAM;
-		ttx=-lltg[0];
-		tty=-lltg[1];
-	    }else{
-		ttx=simu->fsmreal->p[iwfs]->p[0];
-		tty=simu->fsmreal->p[iwfs]->p[1];
+		simu->fsmreal->p[iwfs]->p[0]=-lltg[0];
+		simu->fsmreal->p[iwfs]->p[1]=-lltg[1];
 	    }
-	    /* copy fsmreal to output  */
-	    simu->fsmcmds->p[iwfs]->p[isim*2]=ttx;
-	    simu->fsmcmds->p[iwfs]->p[isim*2+1]=tty;
+	    ttx=simu->fsmreal->p[iwfs]->p[0];
+	    tty=simu->fsmreal->p[iwfs]->p[1];
 	}/*if fsmreal */
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim]*parms->powfs[ipowfs].llt->ttrat;

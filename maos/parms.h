@@ -447,6 +447,7 @@ typedef struct RECON_CFG_T{
     int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat;   /**<how many time step to sample for PSD computation.*/
     int psdnseg;    /**<#how many overlapping partitions of the time history to compute PSD.*/
+    char *fnsphpsd; /**<PSD of spherical aberration due to profile evolution.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -481,6 +482,8 @@ typedef struct SIM_CFG_T{
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    double aptwfs;   /**<Twfs reference vector servo coefficient.*/
+    double eptwfs;   /**<Twfs reference vector servo gain.*/
     double fcttm;    /**<cross over frequency of tip/tilt split*/
     double lpttm;    /**<los path filter for ttm. derived: lpttm=2*pi*fcttm*sim.dt*/
     double fcfocus;  /**<cross-over frequency of the focus LPF.*/
@@ -642,7 +645,7 @@ typedef struct LOAD_CFG_T{
     int tomo;        /**<if 1, load tomo matrix*/
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
-    int ncpa;        /**<Load ncpa from save.ncpa*/
+    char *ncpa;      /**<Load ncpa from this path. saved by save.ncpa*/
 }LOAD_CFG_T;
 /**
    contains input parameters for saving variables.

@@ -826,12 +826,12 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
 */
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam){
     //adjust for delay due to propagation
-    const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0)+1-parms->powfs[ipowfs].dtrat;
+    const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0);//+(1-parms->powfs[ipowfs].dtrat);
     //adjust to get delay at beginning of integration
     const int adjust2=parms->powfs[ipowfs].llt?(parms->powfs[ipowfs].dtrat-1):0;
     const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-    const double angle=anglei*((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)+deltam;
-    const double angle2=anglei*((isim-adjust)/parms->powfs[ipowfs].dtrat)+deltam;
+    const double angle=((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
+    const double angle2=((isim-adjust)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
     const double delay=(double)adjust/parms->powfs[ipowfs].dtrat;
     const double beta=1+delay+floor(-delay);
     const double scale=1./(beta*beta+(1-beta)*(1-beta));

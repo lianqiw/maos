@@ -126,7 +126,7 @@ echo host_os=$host_os
 case "$host_os" in
     *linux*)
 	AM_CONDITIONAL(LINUX, true)
-	LDOPTS+=" -lrt" #need real time library.
+	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
 	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
@@ -266,13 +266,12 @@ else
     AM_CONDITIONAL(USE_LONG, false)
 fi
 
+LDEXE+=" -static" #show that we prefer static linking.
 if test "x$use_static" = "xyes" ;then
-    LDEXE+=" -all-static" #Enable all static build.
+    LDEXE_MAOS="-all-static" #only all static linking for maos
     AM_CONDITIONAL(USE_STATIC, true)
     AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
-    #(cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
 else
-    LDEXE+=" -static" #show that we prefer static linking.
     AM_CONDITIONAL(USE_STATIC, false)
     AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
@@ -479,10 +478,17 @@ function set_mkl_lapack(){
     fi
     echo trying LAPACK=$LAPACK
 }
-set_mkl_lapack
-AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+has_lapack=no
 if test "$has_lapack" = "no" ;then
-    LAPACK="-lblas -llapack"
+    set_mkl_lapack
+    unset nset ac_cv_lib_m_dgemm_
+    unset nset ac_cv_lib_m_dposv_
+    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+fi
+
+if test "$has_lapack" = "no" ;then
+    LAPACK="-llapack -lblas -lgfortran -lm"
     echo trying LAPACK=$LAPACK
 
     unset nset ac_cv_lib_m_dgemm_
@@ -490,6 +496,7 @@ if test "$has_lapack" = "no" ;then
     AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
     AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
 fi
+
 if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
     unset nset ac_cv_lib_m_dgemm_
     unset nset ac_cv_lib_m_dposv_
@@ -530,7 +537,6 @@ if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
     fi
 fi
 
-AC_CHECK_HEADERS([numa.h], [LDOPTS+=" -lnuma"], [])
 #Check for zlib
 AC_CHECK_LIB([z],[gzopen],[],[has_z='no'])
 if test "$has_z" = "no" ;then
@@ -746,7 +752,7 @@ if test "$with_matlab" != "no" ;then
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl $LDFFT"
+	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lfftw3"
 	LDMEX="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else
@@ -769,9 +775,9 @@ if test "$with_cuda" != "no" ;then
     if test -n "$with_cuda" ;then
 	user_enable_cuda=yes
     fi
-    if test "$use_static" = "yes"; then
-	AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
-    fi
+    #if test "$use_static" = "yes"; then
+	#AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
+    #fi
     AC_MSG_NOTICE([Enabling CUDA])
     #Check for nvcc executable
     if test ${CUDADIR:0:1} = '~' ;then
@@ -859,7 +865,7 @@ if test "$with_cuda" != "no" ;then
 	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
   	;;			  
     esac
-    LIBCUDA+=" -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart -lstdc++"
 else
     with_cuda="no"
 fi
@@ -906,8 +912,8 @@ if test ! -f "${srcdir}/version.h" ;then
 	fi
     )
 fi
-LDOPTS+=" -no-fast-install -avoid-version -ldl"
-LDEXE+=" $LAPACK"
+LDOPTS+=" -no-fast-install -avoid-version"
+LDEXE="$LDFFT $LAPACK $LDCHOL $LDEXE -lz -lm -ldl"
 echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
@@ -918,6 +924,7 @@ AC_SUBST(LDCHOL)
 AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
 AC_SUBST(LDEXE)
+AC_SUBST(LDEXE_MAOS)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
