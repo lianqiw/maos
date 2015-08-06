@@ -72,27 +72,5 @@ void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...) CHECK_ARG(9);
-enum{
-    DRAW_START=0, /*Mark the starting of data stream. */
-    DRAW_DATA,
-    DRAW_SHM,
-    DRAW_POINTS,
-    DRAW_STYLE,
-    DRAW_CIRCLE,
-    DRAW_LIMIT,
-    DRAW_FIG,
-    DRAW_NAME,
-    DRAW_TITLE,
-    DRAW_XLABEL,
-    DRAW_YLABEL,
-    DRAW_ZLIM,
-    DRAW_LEGEND,/*legend */
-    DRAW_XYLOG,/*logscale long x, y*/
-    DRAW_FIGFN,
-    DRAW_PAUSE,
-    DRAW_RESUME,
-    DRAW_FINAL,/*this client is done.*/
-    DRAW_END=100
-};
 
 #endif

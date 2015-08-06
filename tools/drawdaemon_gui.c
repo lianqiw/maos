@@ -269,9 +269,10 @@ static void drawdata_free_input(drawdata_t *drawdata){
     free(drawdata->p);
     if(drawdata->npts>0){
 	for(int ipts=0; ipts<drawdata->npts; ipts++){	
-	    dfree(drawdata->pts[ipts]);
+	    free(drawdata->pts[ipts]);
 	}
 	free(drawdata->pts);
+	free(drawdata->ptsdim);
     }
     if(drawdata->nstyle>0){
 	free(drawdata->style);
@@ -770,6 +771,7 @@ gboolean addpage(gpointer indata){
 	drawdata_old->p=drawdata->p;
 	drawdata_old->p0=drawdata->p0;
 	drawdata_old->pts=drawdata->pts;
+	drawdata_old->ptsdim=drawdata->ptsdim;
 	drawdata_old->npts=drawdata->npts;
 	drawdata_old->nstyle=drawdata->nstyle;
 	drawdata_old->style=drawdata->style;

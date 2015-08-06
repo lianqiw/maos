@@ -101,5 +101,28 @@ enum{
     S_KILLED,/*15*/
     S_NONEXIST,/*16*/
 };
+//For tools/drawdaemon and lib/draw.c
+enum{
+    DRAW_START=0, /*Mark the starting of data stream. */
+    DRAW_DATA,
+    DRAW_SHM,
+    DRAW_POINTS,
+    DRAW_STYLE,
+    DRAW_CIRCLE,
+    DRAW_LIMIT,
+    DRAW_FIG,
+    DRAW_NAME,
+    DRAW_TITLE,
+    DRAW_XLABEL,
+    DRAW_YLABEL,
+    DRAW_ZLIM,
+    DRAW_LEGEND,/*legend */
+    DRAW_XYLOG,/*logscale long x, y*/
+    DRAW_FIGFN,
+    DRAW_PAUSE,
+    DRAW_RESUME,
+    DRAW_FINAL,/*this client is done.*/
+    DRAW_END=100
+};
 #define scheduler_version 0x28
 #endif

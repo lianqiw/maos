@@ -29,7 +29,21 @@ static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
 PNEW2(drawdata_mutex);
-
+void dmaxmin(const double *p, long n, double *pmax, double *pmin){
+    double max=-INFINITY, min=INFINITY;
+    for(long i=0; i<n; i++){
+	if(p[i]==p[i]){//not NAN
+	    if(p[i]>max){
+		max=p[i];
+	    }
+	    if(p[i]<min){
+		min=p[i];
+	    }
+	}
+    }
+    if(pmax) *pmax=max;
+    if(pmin) *pmin=min;
+}
 /**
    convert double to int
 */
@@ -138,10 +152,13 @@ void listen_draw(){
 		STREADINT(nptsy);
 		STREADINT(drawdata->square);
 		drawdata->grid=1;
-		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(dmat*));
-		drawdata->pts[ipts]=dnew(nptsx, nptsy);
+		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(double*));
+		drawdata->pts[ipts]=calloc(nptsx*nptsy, sizeof(double));
+		drawdata->ptsdim=realloc(drawdata->ptsdim, drawdata->npts*sizeof(int)*2);
+		drawdata->ptsdim[ipts][0]=nptsx;
+		drawdata->ptsdim[ipts][1]=nptsy;
 		if(nptsx*nptsy>0){
-		    STREAD(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+		    STREAD(drawdata->pts[ipts], sizeof(double)*nptsx*nptsy);
 		    if(nptsx>50){
 			if(!drawdata->icumu){
 			    drawdata->icumu=nptsx/10;

@@ -1,6 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) $(LDEXE)
-LDADD=../lib/libaos.la 
+AM_LDFLAGS=$(LDOPTS) #$(LDEXE)
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h icon-waiting.h mouse_black.h mouse_hand.h mouse_white.h mygtk.h\
@@ -29,7 +28,7 @@ if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS)
-___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
+___bin_drawdaemon_LDADD=../sys/libaosys.la $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
 ___bin_calcenc_SOURCES=calcenc.c
@@ -57,6 +56,7 @@ ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
 endif
 
+LDADD=../lib/libaos.la 
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu
 ___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_slaving_SOURCES=slaving.c

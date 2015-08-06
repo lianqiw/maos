@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../lib/aos.h"
 #include "drawdaemon.h"
 #include "icon-draw.h"
 int sock;

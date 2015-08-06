@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "drawdaemon.h"
+#include <math.h>
 /*
   Routines in this file are about drawing in the cairo surface.
 
@@ -340,27 +341,28 @@ void update_limit(drawdata_t *drawdata){
 
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
     for(int ipts=0; ipts<drawdata->npts; ipts++){
-	dmat *pts=drawdata->pts[ipts];
-	if(!pts) continue;
+	const double *ptsx=drawdata->pts[ipts], *ptsy=0;
+	if(!ptsx) continue;
+	const int ptsnx=drawdata->ptsdim[ipts][0];
+	const int ptsny=drawdata->ptsdim[ipts][1];
 	double xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
-	double *ptsy=NULL;
-	if(pts->ny>1){/*x is supplied */
-	    dmaxmin(pts->p, pts->nx, &xmax, &xmin);
-	    ptsy=pts->p+pts->nx;
+	if(ptsny>1){/*x is supplied */
+	    dmaxmin(ptsx, ptsnx, &xmax, &xmin);
+	    ptsy=ptsx+ptsnx;
 	}else{/*x is index */
-	    xmin=0; xmax=(double)(pts->nx-1);
-	    ptsy=pts->p;
+	    xmin=0; xmax=(double)(ptsnx-1);
+	    ptsy=ptsx;
 	}
 	if(drawdata->cumu){
 	    int icumu=(int)drawdata->icumu;
 	    int ips0=0;
-	    if(icumu<pts->nx){
+	    if(icumu<ptsnx){
 		ips0=icumu;
 	    }
 	    double y_cumu=0,y;
 		  
 	    if(drawdata->cumuquad){
-		for(int ips=ips0; ips<pts->nx; ips++){
+		for(int ips=ips0; ips<ptsnx; ips++){
 		    y_cumu+=ptsy[ips]*ptsy[ips];
 		    y=sqrt(y_cumu/(ips-ips0+1));
 		    if(y>ymax) ymax=y;
@@ -368,7 +370,7 @@ void update_limit(drawdata_t *drawdata){
 		}
 	    }else{
 		if(drawdata->cumuquad){
-		    for(int ips=ips0; ips<pts->nx; ips++){
+		    for(int ips=ips0; ips<ptsnx; ips++){
 			y_cumu+=ptsy[ips];
 			y=y_cumu/(ips-ips0+1);
 			if(y>ymax) ymax=y;
@@ -377,7 +379,7 @@ void update_limit(drawdata_t *drawdata){
 		}
 	    } 
 	}else{
-	    dmaxmin(ptsy, pts->nx, &ymax, &ymin);
+	    dmaxmin(ptsy, ptsnx, &ymax, &ymin);
 	}
 	if(xmin<xmin0) xmin0=xmin;
 	if(xmax>xmax0) xmax0=xmax;
@@ -665,20 +667,22 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    drawdata->style_pts[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
 	    set_color(cr, color);
 
-	    dmat *pts=drawdata->pts[ipts];
-	    if(!pts || pts->nx==0 || pts->ny==0) continue;
-	    double *ptsx=NULL, *ptsy=NULL;
-	    if(pts->ny==2){
-		ptsx=pts->p;	
-		ptsy=ptsx+pts->nx;
+	    const double *pts=drawdata->pts[ipts];
+	    const int ptsnx=drawdata->ptsdim[ipts][0];
+	    const int ptsny=drawdata->ptsdim[ipts][1];
+	    if(!pts || ptsnx==0 || ptsny==0) continue;
+	    const double *ptsx, *ptsy=NULL;
+	    if(ptsny==2){
+		ptsx=pts;
+		ptsy=ptsx+ptsnx;
 	    }else{
-		ptsy=pts->p;
+		ptsx=0;
+		ptsy=pts;
 	    }
 	    int ips0=0;
-	    if(drawdata->cumu && icumu<pts->nx){
+	    if(drawdata->cumu && icumu<ptsnx){
 		ips0=icumu;
 	    }
-	    int nptsx=pts->nx;
 	    int ptstep=1;
 	    double ix=0, iy=0, y=0, y_cumu=0;
 	    if(connectpts){/*plot curves. */
@@ -697,7 +701,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		}
 		cairo_move_to(cr, ix, iy);
 		/*connect additional points. */
-		for(ips++; ips<nptsx; ips+=ptstep){
+		for(ips++; ips<ptsnx; ips+=ptstep){
 		    if(ptsx){/*don't do round here. */
 			ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
 		    }else{
@@ -725,7 +729,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    if(!(connectpts && style==5)){/*plot points. */
 		y_cumu=0;
-		for(unsigned int ips=ips0; ips<nptsx; ips+=ptstep){
+		for(unsigned int ips=ips0; ips<ptsnx; ips+=ptstep){
 		    /*Map the coordinate to the image */
 		    if(ptsx){/*don't do round here. */
 			ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
@@ -753,7 +757,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_stroke(cr);//stroke all together. 
 		toc2("stroke");
 	    }*/
-	    if(drawdata->cumu && pts->nx>0){
+	    if(drawdata->cumu && ptsnx>0){
 		cairo_save(cr);
 		char val[80];
 		snprintf(val, 80, "%.2f", y);

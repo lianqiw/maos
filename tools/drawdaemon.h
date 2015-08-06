@@ -26,14 +26,11 @@
 #include <cairo-ps.h>
 #include <cairo-svg.h>
 #include <pango/pango.h>
-
-
-
-
-
 #include <glib.h>
 #include <gtk/gtk.h>
-#include "../lib/aos.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "../sys/sys.h"
 #include "mygtk.h"
 #ifndef CAIRO_FORMAT_A8
 #define CAIRO_FORMAT_RGB24 0x01
@@ -49,7 +46,8 @@ struct drawdata_t{
     double *p0;      /*original pointer of double */
     unsigned char *p;/*converted pointer of char or int. */
     /*Draw points */
-    dmat **pts;      /*pts; */
+    double **pts;      /*pts; */
+    int (*ptsdim)[2];  /*nx, ny of pts*/
     int npts;        /*number of pts mat, not points. */
     int32_t *style;
     int *style_pts;    /*save pts style for legend */
@@ -157,4 +155,5 @@ gboolean addpage(gpointer junk);
 /*from drawdaemon_io */
 void listen_draw();
 void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);
+void dmaxmin(const double *p, long n, double *max, double *min);
 #endif
