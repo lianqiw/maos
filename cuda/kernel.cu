@@ -423,7 +423,7 @@ __global__ void cwm_do(Comp *dest, Comp *from, int n){
 __global__ void cwm_do(Comp *dest, Comp *from, int lda, int ldb, int nx, int ny){
     for(int iy=threadIdx.y+blockIdx.y*blockDim.y; iy<ny; iy+=blockDim.y*gridDim.y){
 	for(int ix=threadIdx.x+blockIdx.x*blockDim.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    dest[iy+ix*lda]*=from[iy+ix*ldb];
+	    dest[ix+iy*lda]*=from[ix+iy*ldb];
 	}
     }
 }
@@ -435,7 +435,7 @@ __global__ void cwm_do(Comp *dest, Comp *from, int lda, int ldb, int nx, int ny)
 __global__ void cwm_do(Comp *dest, Comp *from1, Comp *from2, int lda, int ldb, int nx, int ny){
     for(int iy=threadIdx.y+blockIdx.y*blockDim.y; iy<ny; iy+=blockDim.y*gridDim.y){
 	for(int ix=threadIdx.x+blockIdx.x*blockDim.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    dest[iy+ix*lda]=from1[iy+ix*lda]*from2[iy+ix*ldb];
+	    dest[ix+iy*lda]=from1[ix+iy*lda]*from2[ix+iy*ldb];
 	}
     }
 }

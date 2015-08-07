@@ -400,12 +400,12 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 	    long offy=(long)round(posy/dtheta);
 	    long offy2=nembed2+offy-ncomp2;
 	    long iy0=MAX(-offy2, 0);
-	    long ny2=MIN(ncomp+offy2, nembed)-offy2;
+	    long ny2=MIN(ncomp, nembed-offy2)-iy0;
 
 	    long offx=(long)round(posx/dtheta);
 	    long offx2=nembed/2+offx-ncomp2;
 	    long ix0=MAX(-offx2, 0);
-	    long nx2=MIN(ncomp+offx2, nembed)-offx2;
+	    long nx2=MIN(ncomp, nembed-offx2)-ix0;
 
 	    czero(otf);
 	    dcomplex *pyramid=pywfs->pyramid->p[iwvl]->p;

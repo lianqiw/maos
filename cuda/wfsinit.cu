@@ -235,14 +235,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		dmat *imcc=concat_dcell_as_vector(powfs[ipowfs].saimcc->p[icol]);
 		cp2gpu(cuwfs[iwfs].imcc, imcc);
 		dfree(imcc);
-		/*
-		Real *imcc[nsa];
-		for(int isa=0; isa<nsa; isa++){
-		    imcc[isa]=NULL;
-		    cp2gpu(imcc[isa], powfs[ipowfs].saimcc->p[icol]->p[isa]);
-		}
-		DO(cudaMalloc(&cuwfs[iwfs].imcc, nsa*sizeof(void*)));
-		DO(cudaMemcpy(cuwfs[iwfs].imcc, imcc, nsa*sizeof(void*), cudaMemcpyHostToDevice));*/
 	    }else{
 		cuwfs[iwfs].imcc=cuwfs[iwfs0].imcc;
 	    }

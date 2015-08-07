@@ -920,7 +920,10 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
     }else{
 	fp=(file_t*) fpn;
     }
-    if(!fp) return;
+    if(!fp){
+	warning("fp is empty\n");
+	return;
+    }
     write_header(&header, fp);
     if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
     if(isfn) zfclose(fp);

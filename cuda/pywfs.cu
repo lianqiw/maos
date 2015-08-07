@@ -83,26 +83,26 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	    const Real theta=2*M_PI*ipos/pos_n;
 	    const Real posx=cos(theta)*pos_r;
 	    const Real posy=sin(theta)*pos_r;
-	    const long offy=(long)round(posy/dtheta);
-	    const long offy2=nembed2+offy-ncomp2;
+	    const long offy=(long)round(posy/dtheta);//offset of center
+	    const long offy2=nembed2+offy-ncomp2;//offset of corner
 	    const long iy0=MAX(-offy2, 0);
-	    const long ny2=MIN(ncomp+offy2, nembed)-offy2-iy0;
+	    const long ny2=MIN(ncomp, nembed-offy2)-iy0;
 
 	    const long offx=(long)round(posx/dtheta);
 	    const long offx2=nembed/2+offx-ncomp2;
 	    const long ix0=MAX(-offx2, 0);
-	    const long nx2=MIN(ncomp+offx2, nembed)-offx2-ix0;
+	    const long nx2=MIN(ncomp, nembed-offx2)-ix0;
 	    cuzero(otf, stream);
 	    cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
 		(otf.P()+ix0+iy0*ncomp, 
 		 cupowfs->pyramid[iwvl].P()+ix0+iy0*ncomp, 
 		 wvf.P()+ix0+offx2+(iy0+offy2)*nembed,
 		 ncomp, nembed, nx2, ny2);
-	    //cuwrite(otf, "gpu_wvf1");
+	    //cuwrite(otf, "gpu_wvf1_%d", ipos);
 	    CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
-	    //cuwrite(otf, "gpu_wvf2");
+	    //cuwrite(otf, "gpu_wvf2_%d", ipos);
 	    curaddcabs2(cuwfs.pypsf, 1, otf, alpha, stream);
-	    //cuwrite(cuwfs.pypsf, "gpu_wvf3");
+	    //cuwrite(cuwfs.pypsf, "gpu_wvf3_%d", ipos);
 	}
 	embed_do<<<DIM(ncomp*ncomp, 256),0,stream>>>
 	    (otf, cuwfs.pypsf, ncomp*ncomp);
@@ -116,7 +116,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	//Use ray tracing for si
 	const Real dx2=dx*nembed/ncomp;
 	const int nsa=cupowfs->saloc.Nloc();
-	const double scale=(Real)nsa*siglev/(ncomp*ncomp);
+	const Real scale=(Real)nsa*siglev/(Real)(ncomp*ncomp);
 
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
@@ -129,6 +129,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 		     (((iy-0.5)*ncomp2)-(-ncomp2+0.5)), scale);
 	    }
 	}
+	//cuwrite(ints, "gpu_ints"); exit(0);
     }
 }
 //dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm){

@@ -21,12 +21,8 @@
   then user can query tokens using read_int, read_double, or read_array
 */
 
-
-
 #include <search.h>
 #include <ctype.h>
-
-
 #include <limits.h>
 #include "readcfg.h"
 /**
@@ -176,10 +172,12 @@ static void print_key(const void *key, VISIT which, int level){
 		fprintf(fpout, "\n");
 	    }
 	}
-	if(store->count==0){
-	    error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
-	}else if(store->count!=1){
-	    error("Key %s is used %ld times\n", store->key, store->count);
+	if(!store->data || strcmp(store->data, "ignore")){
+	    if(store->count==0 ){
+		error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+	    }else if(store->count!=1){
+		error("Key %s is used %ld times\n", store->key, store->count);
+	    }
 	}
     }
 }
@@ -362,10 +360,6 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    RENAME(evl.opdcov, evl.cov);
 	    RENAME(evl.psfpttr, evl.pttr);
 #endif
-	    if(value && !strcmp(value, "ignore")){
-		ssline[0]='\0';
-		continue;
-	    }
 	    STORE_T *store=calloc(1, sizeof(STORE_T));
 	    if(prefix){
 		store->key=stradd(prefix,var,NULL);

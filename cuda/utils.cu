@@ -299,6 +299,7 @@ static void add2cpu(T * restrict *dest, R alpha, const S *src, R beta, long n,
     S *tmp=0;
     tmp=(S*)malloc(n*sizeof(S));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(S), cudaMemcpyDeviceToHost, stream));
+    CUDA_SYNC_STREAM;
     if(!*dest){
 	*dest=(T*)malloc(sizeof(T)*n);
     }
@@ -357,6 +358,7 @@ add2cpu_cell(z, float, cuccell)
 	if(!*out) *out=dnew(in.Nx(), in.Ny());				\
 	DO(cudaMemcpyAsync((*out)->p, in.P(), in.N()*sizeof(double),	\
 			   cudaMemcpyDeviceToHost, stream));		\
+	CUDA_SYNC_STREAM;						\
 	if(in.header) (*out)->header=strdup(in.header);	\
     }
 

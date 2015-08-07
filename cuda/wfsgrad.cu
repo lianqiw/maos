@@ -316,6 +316,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int isim=simu->isim;
 	/*The following are truly constants for this powfs */
 	const int ipowfs=parms->wfs[iwfs].powfs;
+	if(simu->isim<parms->powfs[ipowfs].step) return;
 	const int imoao=parms->powfs[ipowfs].moao;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
@@ -547,18 +548,16 @@ void gpu_wfsgrad_queue(thread_t *info){
     }//for iwfs
 }
 
-void gpu_wfsgrad_sync(thread_t *info){
-    int iwfs=info->start;
-    SIM_T *simu=(SIM_T*)info->data;
+void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     gpu_set(cudata_t::wfsgpu[iwfs]);
     cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
     stream_t &stream=cuwfs[iwfs].stream;
-    CUDA_SYNC_STREAM;
     const int isim=simu->isim;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int dtrat_output=((isim+1)%dtrat==0);
+    CUDA_SYNC_STREAM;
     if(dtrat_output){
 	const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
@@ -579,7 +578,6 @@ void gpu_wfsgrad_sync(thread_t *info){
 	    }
 	}
     }
-    //info2("thread %ld gpu %d iwfs %d finish\n", thread_id(), cudata->igpu, iwfs);
 }
 void gpu_save_gradstat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;

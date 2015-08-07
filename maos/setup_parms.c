@@ -1414,26 +1414,26 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-    for(int tpowfs=0; tpowfs<parms->npowfs; tpowfs++){
-	if(parms->powfs[tpowfs].skip==2){//TWFS
-	    parms->itpowfs=tpowfs;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].skip==2){//TWFS
+	    parms->itpowfs=ipowfs;
 	    int lgspowfs=parms->ilgspowfs;
 	    if(lgspowfs!=-1){
-		warning("powfs %d is TWFS for powfs %d\n", tpowfs, lgspowfs);
-		if(parms->powfs[tpowfs].dtrat<1){
+		warning("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
+		if(parms->powfs[ipowfs].dtrat<1){
 		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ograt;
-		    parms->powfs[tpowfs].dtrat=mtchdtrat;
-		    warning("powfs %d dtrat is set to %d\n", tpowfs, mtchdtrat);
+		    parms->powfs[ipowfs].dtrat=mtchdtrat;
+		    warning("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
 		    //Set TWFS integration start time to LGS matched filter acc step
-		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_ogskip;
-		}else if(parms->powfs[lgspowfs].dither && parms->powfs[tpowfs].step<parms->powfs[lgspowfs].dither_pllskip){
+		    parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_ogskip;
+		}else if(parms->powfs[lgspowfs].dither && parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
-		    parms->powfs[tpowfs].step=parms->powfs[lgspowfs].dither_pllskip;
+		    parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}
 		//floor to multiple of dtrat.
-		const int dtrat=parms->powfs[tpowfs].dtrat;
-		parms->powfs[tpowfs].step=((parms->powfs[tpowfs].step+dtrat-1)/dtrat)*dtrat;
-		warning("powfs %d step is set to %d\n", tpowfs, parms->powfs[tpowfs].step);
+		const int dtrat=parms->powfs[ipowfs].dtrat;
+		parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+		warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
 	    }
 	}
     }
@@ -2045,7 +2045,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
 	}
-	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
+	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
 	    parms->powfs[ipowfs].psol=1;
 	}else if(parms->recon.psol){//PSOL reconstruction
@@ -2559,11 +2559,6 @@ static void print_parms(const PARMS_T *parms){
 	}else{
 	    info2("\033[0;31m(noise free)\033[0;0m\n");
 	}
-	info2("wvl: [");
-	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){
-	    info2(" %g",parms->powfs[i].wvl->p[iwvl]);
-	}
-	info2("]\n");
 	if(parms->powfs[i].dither){
 	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
 		  parms->powfs[i].dither_pllskip, parms->powfs[i].dither_pllrat);
@@ -2751,7 +2746,11 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     if(disable_save){
 	close_config(NULL);
     }else{
-	close_config("maos_%s_%ld.conf", myhostname(), (long)getpid());
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", myhostname(), (long)getpid());
+	close_config("%s", fn);
+	remove("maos_recent.conf");
+	mysymlink(fn, "maos_recent.conf");
     }
     /*
       Postprocess the parameters for integrity. The ordering of the following

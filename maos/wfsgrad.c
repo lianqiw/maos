@@ -655,6 +655,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
 	   && simu->Mint_lo && simu->Mint_lo->mint->p[1]
+	   && simu->isim+1>parms->powfs[ipowfs].step
 	   && (simu->isim+1-parms->powfs[ipowfs].step)%parms->powfs[ipowfs].dtrat==0){
 	    /*In new ahst mode, the first plate scale mode contains focus for
 	      lgs. But it turns out to be not necessary to remove it because the
@@ -669,6 +670,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 
     dcell *LGSfocus=simu->LGSfocus;//computed in wfsgrad_post.
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(simu->isim<parms->powfs[ipowfs].step) continue;
 	if(parms->sim.closeloop && (simu->isim+1-parms->powfs[ipowfs].step)%parms->sim.dtrat_hi!=0) continue;
 	if(!parms->powfs[ipowfs].llt) continue;
 	const int do_phy=(parms->powfs[ipowfs].usephy && simu->isim>=parms->powfs[ipowfs].phystep);
@@ -742,16 +744,17 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 void wfsgrad_post(thread_t *info){
     SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
-#if USE_CUDA
-    if(parms->gpu.wfs){
-	gpu_wfsgrad_sync(info);
-    }
-#endif
     //Postprocessing gradients
     const int isim=simu->isim;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
+#if USE_CUDA
+	if(parms->gpu.wfs){
+	    gpu_wfsgrad_sync(simu, iwfs);
+	}
+#endif
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
+	if(isim<parms->powfs[ipowfs].step) continue;
 	const int dtrat_output=((isim+1-parms->powfs[ipowfs].step)%dtrat==0);
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
 	dmat **gradout=&simu->gradcl->p[iwfs];
@@ -787,7 +790,7 @@ void wfsgrad_post(thread_t *info){
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
-		cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
+		cellarr_push(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
 		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
@@ -810,6 +813,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].dither) continue;
+	if(simu->isim<parms->powfs[ipowfs].step) continue;
 	if((simu->isim+1-parms->powfs[ipowfs].step)%parms->powfs[ipowfs].dtrat!=0) continue;
 	const int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
