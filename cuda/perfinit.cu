@@ -120,13 +120,13 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	cublasSetStream(cuperf_t::handle[ievl], cuperf_t::stream[ievl]);
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		if(iwvl>0 && cuperf_t::nembed[iwvl]==cuperf_t::nembed[0]){
-		    cuperf_t::plan[iwvl+nwvl*ievl]=cuperf_t::plan[0+nwvl*ievl];
-		}else{
+		//if(iwvl>0 && cuperf_t::nembed[iwvl]==cuperf_t::nembed[0]){
+		//  cuperf_t::plan[iwvl+nwvl*ievl]=cuperf_t::plan[0+nwvl*ievl];
+		//}else{
 		    DO(cufftPlan2d(&cuperf_t::plan[iwvl+nwvl*ievl],cuperf_t::nembed[iwvl],
 				   cuperf_t::nembed[iwvl],FFT_T_C2C));
 		    DO(cufftSetStream(cuperf_t::plan[iwvl+nwvl*ievl], cuperf_t::stream[ievl]));
-		}
+		    //	}
 	    }/*for iwvl */
 	}
     }
@@ -218,7 +218,7 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
     if(parms->evl.psfmean || parms->evl.psfhist){
 	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
-	    if(!cudata->perf.wvf){/*temporary. no need to zero*/
+	    if(!cudata->perf.wvf){
 		cudata->perf.wvf=cuccell(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    if(!parms->evl.psfhist && iwvl>0 && cuperf_t::nembed[iwvl] == cuperf_t::nembed[iwvl-1]){
@@ -228,7 +228,7 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 		    }
 		}
 	    }
-	    if(parms->evl.psfmean){
+	    if(parms->evl.psfhist){
 		cudata->perf.psfs=cuccell(nwvl, 1);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    if(cuperf_t::psfsize[iwvl]<cuperf_t::nembed[iwvl]){

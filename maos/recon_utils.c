@@ -868,7 +868,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 /**
    Optimize TWFS gain
 */
-double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
+/*double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
     dcell *tmp=0;
     dcellmm(&tmp, recon->RRtwfs, recon->saneal, "nn", 1);
     dcell *tmp2=0;
@@ -885,3 +885,4 @@ double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cellfree(coeff);
     return eptwfs;
 }
+*/

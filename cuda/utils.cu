@@ -401,11 +401,7 @@ void cellarr_cur(struct cellarr *ca, int i, const curmat &A, cudaStream_t stream
     X(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-#if CUDA_DOUBLE==1
-    cellarr_dmat(ca, i, tmp);
-#else
-    cellarr_smat(ca, i, tmp);
-#endif
+    cellarr_push(ca, i, tmp);
     X(free)(tmp);
 }
 
@@ -413,11 +409,7 @@ void cellarr_cuc(struct cellarr *ca, int i, const cucmat &A, cudaStream_t stream
     C(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-#if CUDA_DOUBLE==1
-    cellarr_cmat(ca, i, tmp);
-#else
-    cellarr_zmat(ca, i, tmp);
-#endif
+    cellarr_push(ca, i, tmp);
     C(free)(tmp);
 }
 
@@ -425,11 +417,7 @@ void cellarr_curcell(struct cellarr *ca, int i, const curcell &A, cudaStream_t s
     X(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-#if CUDA_DOUBLE==1
-    cellarr_dcell(ca, i, tmp);
-#else
-    cellarr_scell(ca, i, tmp);
-#endif
+    cellarr_push(ca, i, tmp);
     X(cellfree)(tmp);
 }
 
@@ -437,11 +425,7 @@ void cellarr_cuccell(struct cellarr *ca, int i, const cuccell &A, cudaStream_t s
     C(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-#if CUDA_DOUBLE==1
-    cellarr_ccell(ca, i, tmp);
-#else
-    cellarr_zcell(ca, i, tmp);
-#endif
+    cellarr_push(ca, i, tmp);
     C(cellfree)(tmp);
 }
 

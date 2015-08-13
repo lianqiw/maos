@@ -206,17 +206,8 @@ void recon_servo_update(SIM_T *simu){
 	    dcellzero(simu->dmerrts);
 	    //writebin(simu->dmerrts, "dmerrts_%d", simu->reconisim);
 	    //writebin(psd, "psdcli_%d", simu->reconisim);
-	    {//average all the PSDs
-		double scale=1./(psd->ny-1);
-		for(int ix=0; ix<psd->nx; ix++){
-		    double tmp=0;
-		    for(int iy=1; iy<psd->ny; iy++){
-			tmp+=IND(psd, ix, iy);
-		    }
-		    IND(psd, ix, 1)=tmp*scale;
-		}
-		dresize(psd, psd->nx, 2);
-	    }
+	    //average all the PSDs
+	    psd_sum(psd, 1./(psd->ny-1));
 	    //writebin(psd, "psdcl_%d", simu->reconisim);
 	    if(simu->dmint->ep->nx==1 && simu->dmint->ep->ny==1){
 		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_hi, simu->dmint->ep->p[0], 0);
@@ -233,9 +224,9 @@ void recon_servo_update(SIM_T *simu){
 	    dfree(psd);
 	}
     }
-    if(parms->recon.split && simu->Merr_lo){
+    if(parms->recon.split && simu->Merr_lo){//compute PSD on low order control
 	const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
-	const int dtrat=parms->recon.psddtrat;
+	const int dtrat=parms->recon.psddtrat_lo;
 	const int iframe=iacc % dtrat;
 	dmulvec(PCOL(simu->Merrts, iframe), recon->ngsmod->MCCu, simu->Merr_lo->p[0]->p, 1);
 	if(iframe+1==dtrat){
@@ -245,14 +236,8 @@ void recon_servo_update(SIM_T *simu){
 	    dmat *psd=psd1dt(ts, parms->recon.psdnseg, dt);
 	    dzero(simu->Merrts);
 	    dfree(ts);
-	    {//Sum all the PSDs
-		for(int ix=0; ix<psd->nx; ix++){
-		    for(int iy=2; iy<psd->ny; iy++){
-			IND(psd, ix, 1)+=IND(psd, ix, iy);
-		    }
-		}
-		dresize(psd, psd->nx, 2);
-	    }
+	    //Sum all the PSDs
+	    psd_sum(psd, 1);
 	    //writebin(psd, "psdcl_lo_%d", simu->reconisim);
 
 	    if(simu->Mint_lo->ep->nx==1 && simu->Mint_lo->ep->nx==1){

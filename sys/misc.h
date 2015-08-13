@@ -70,7 +70,7 @@ typedef struct ARGOPT_T{
 		   2:The key does not need value, and the supplied val is a function pointer.
 		   3:The key needs value, and the supplied val is a function pointer.
 		*/
-    void *val;  /**<The the address to put the return result.*/
+    void *val;  /**<The address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
 }ARGOPT_T;
 void parse_argopt(char *cmds, ARGOPT_T *options);

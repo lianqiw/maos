@@ -59,7 +59,7 @@ static char *get_fnatm(GENATM_T *data){
     snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     if(zfexist(fnatm)) zftouch(fnatm);
-    remove_file_older(diratm, 30*24*3600);
+    remove_file_older(diratm, 365*24*3600);//1 year
     long avail=available_space(diratm);
     long need=data->nx*data->ny*data->nlayer*sizeof(double)+500000000;
     if(avail>need){

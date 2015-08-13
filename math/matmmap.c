@@ -38,7 +38,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     size_t metasize=3*8+bytes_header(header);//size of meta data. 
     size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
     if(ftruncate(fd, msize)){
-	error("Error truncating file\n");
+	error("Error truncating file %s to size %lu\n", fn, msize);
     }
     char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
@@ -74,7 +74,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
 	msize+=metasize+nnx[ix]*nny[ix]*sizeof(T)+bytes_header(header2?header2[ix]:NULL);
     }
     if(ftruncate(fd, msize)){
-	error("Error truncating file\n");
+	error("Error truncating file %s to size %lu\n", fn, msize);
     }
     char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
@@ -116,7 +116,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
     long msize=metasize;
     msize=metasize+bytes_header(header)+nx*ny*(metasize+mx*my*sizeof(T));
     if(ftruncate(fd, msize)){
-	error("Error truncating file\n");
+	error("Error truncating file %s to size %lu\n", fn, msize);
     }
     char *map=mmap(NULL, msize,(PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){

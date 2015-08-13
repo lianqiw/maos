@@ -308,8 +308,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    //wfs
 	    for(int iwfs=0; parms->gpu.wfs && iwfs<parms->nwfs; iwfs++){
 		const int ipowfs=parms->wfs[iwfs].powfs;
-		if(parms->powfs[ipowfs].type==1){//pwfs
-		    tasks[count].timing=200;
+		if(parms->powfs[ipowfs].type==1){//pwfs is slower
+		    tasks[count].timing=50;
 		}else if(parms->powfs[ipowfs].usephy){
 		    tasks[count].timing=17;
 		}else{

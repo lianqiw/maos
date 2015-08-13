@@ -594,7 +594,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    if(iopt==-1){
 		continue;/*we don't want this key. */
 	    }
-	    if((options[iopt].opt & 1) == 1){
+	    if((options[iopt].opt & 1) == 1){//1, or 3. parse value
 		value=start;
 		while(value[0]=='\n' || isspace((int)value[0])){
 		    value[0]=' ';
@@ -702,7 +702,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		    if(start[0]=='\n') start[0]=' ';
 		}
 	    }else{
-		error("Bracked is not closed\n");
+		error("Bracket is not closed\n");
 		start++;
 	    }
 	}else if(start[0]=='\'' || start[0]=='"'){/*make sure we don't split strings that are part of value. */

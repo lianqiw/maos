@@ -1064,7 +1064,9 @@ static void init_simu_wfs(SIM_T *simu){
 	const int nmod=recon->RRtwfs->p[iwfs]->nx;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int nacc=parms->sim.end-parms->powfs[ipowfs].step;
-	simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "Restwfs_%d.bin", seed);
+	if(nacc>0){
+	    simu->restwfs=dnew_mmap(nmod, nacc/dtrat, NULL, "Restwfs_%d.bin", seed);
+	}
     }
 }
 
@@ -1188,7 +1190,7 @@ static void init_simu_dm(SIM_T *simu){
 	simu->dmerrts=dcellnewsame(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
 				   parms->recon.psddtrat);
 	if(parms->recon.split){
-	    simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat);
+	    simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
 	}
     }
     int nstep=parms->sim.end;

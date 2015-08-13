@@ -51,7 +51,7 @@ struct cuperf_t{
     curcell psfol;
     curmat  opdcovol;
     curmat  opdmeanol;
-    cuperf_t():locs_dm(0),embed(0){
+    cuperf_t():embed(0){
     }
     ~cuperf_t();
 };

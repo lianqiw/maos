@@ -298,7 +298,7 @@ static __attribute__((destructor)) void deinit(){
     char fncache[PATH_MAX];
     extern const char *HOME;
     snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
-    remove_file_older(fncache, 365*24*3600);
+    remove_file_older(fncache, 365*24*3600);//1 year
     freepath();
     thread_pool_destroy();
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){

@@ -32,4 +32,5 @@ double psd_inte2(const dmat *psdin);
 dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstep);
 dmat* add_psd(const dmat *psd1, const dmat *psd2);
 void add_psd2(dmat **out, const dmat *in);
+void psd_sum(dmat *psd, double scale);
 #endif

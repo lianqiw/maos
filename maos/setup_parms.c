@@ -962,6 +962,8 @@ static void readcfg_recon(PARMS_T *parms){
     readcfg_strarr_nmax(&parms->recon.misreg_dm2sci,parms->ndm*parms->fit.nfit, "recon.misreg_dm2sci");
     READ_INT(recon.psd);
     READ_INT(recon.psddtrat);
+    READ_INT(recon.psddtrat_lo); 
+    READ_INT(recon.psddtrat_twfs);
     READ_INT(recon.psdnseg);
     READ_STR(recon.fnsphpsd);
 }
@@ -2385,7 +2387,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     }
     info2("\n");
     if(parms->sim.nseed>1 && parms->dither){
-	error("The dither mode updates parameters in place and does not support multiple seeds yet.\n");
+	warning("Some of the dither mode updates parameters still persist for different seeds.\n");
     }
     if(parms->save.ngcov>0 && parms->save.gcovp<10){
 	warning("parms->save.gcovp=%d is too small. It may fill your disk!\n",
@@ -2574,6 +2576,8 @@ static void print_parms(const PARMS_T *parms){
 	if((parms->wfs[i].siglev-parms->wfs[i].siglevsim)>EPS){
 	    info2(" (%g in simulation)", parms->wfs[i].siglevsim);
 	}
+	const int ipowfs=parms->wfs[i].powfs;
+	info2(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
 	info2("\n");
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
 	    error("wfs thetax or thetay is too large\n");

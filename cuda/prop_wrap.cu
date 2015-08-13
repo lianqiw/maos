@@ -108,10 +108,10 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 	    nx=datai->nx;
 	    ny=datai->ny;
 	    npsx=datai->nxps;
+	    pdir=pdirs[idir]+datai->offdir;
+	    pps=ppss[ips]+datai->offps;
 	}
 	__syncthreads();
-	pdir=pdirs[idir]+datai->offdir;
-	pps=ppss[ips]+datai->offps;
 	if(!cc && match){
 	    //Matched bilinear propagation. always forward prop. 
 	    /*During reverse operation, for different idir, the offo is
@@ -275,26 +275,19 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 			Real jy;
 			const Real y=Z(modf)(dispy+my*yratio, &jy);
 			const int iy=(int)jy; 
-			//if(threadIdx.x==0 && threadIdx.y==0){
-			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
-			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
-			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
-			    fy[3]=y*y*(cc[3]+cc[4]*y); 
-			    //	}
-		    //	__syncthreads();
+			fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
+			fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
+			fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
+			fy[3]=y*y*(cc[3]+cc[4]*y); 
 			for(int mx=ix0; mx<nx; mx+=stepx){
 			    Real jx;
 			    const Real x=Z(modf)(dispx+mx*xratio, &jx);
 			    const int ix=(int)jx;
 			    Real sum=0;
-			    //cc need to be in device memory for sm_13 to work.
-			    //if(threadIdx.x==0 && threadIdx.y==0){
-				fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
-				fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
-				fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
-				fx[3]=x*x*(cc[3]+cc[4]*x); 
-				// }
-			// __syncthreads();
+			    fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x)); 
+			    fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x); 
+			    fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x)); 
+			    fx[3]=x*x*(cc[3]+cc[4]*x); 
 			    const int ky0=(yminps-iy)>-1?(yminps-iy):-1;
 			    const int ky1=(ymaxps-iy)< 3?(ymaxps-iy): 3;
 			    for(int ky=ky0; ky<ky1; ky++){
@@ -352,11 +345,6 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 				  pps[kx+1+(ky+1)*npsx]*fracx)*wt;
 			}
 			pdir[ix+iy*ndirx]+=alpha*tmp;
-			/*pdir[ix+iy*ndirx]+=
-			    alpha*(+(pps[kx+      ky*npsx]*(1.f-fracx)+
-				     pps[kx+1+    ky*npsx]*fracx)*(1.f-fracy)
-				   +(pps[kx  +(ky+1)*npsx]*(1.f-fracx)+
-				   pps[kx+1+(ky+1)*npsx]*fracx)*fracy);*/
 		    }
 		}
 	    }

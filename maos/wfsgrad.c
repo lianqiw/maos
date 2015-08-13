@@ -904,23 +904,40 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			dset(simu->gradscale->p[iwfs], parms->powfs[ipowfs].gradscale);
 		    }
 		    double mgold=dsum(simu->gradscale->p[iwfs])/ng;
+		    double mgnew;
 		    //gg0 is output/input of dither signal.
 		    if(!pd->gg0){//single gain for all subapertures. For Pyramid WFS
+#if 0 //HIA method.
 			double adj=parms->powfs[ipowfs].dither_gog*mgold*(1-pd->a2me/pd->a2m);
 			dadds(simu->gradscale->p[iwfs], adj);
+			mgnew=mgold+adj;
+			while(mgnew<0){//prevent negative gain
+			    adj*=0.5;
+			    dadds(simu->gradscale->p[iwfs], -adj);
+			    mgnew+=-adj;
+			}
+#else
+			double adj=pow(pd->a2me/pd->a2m, -parms->powfs[ipowfs].dither_gog);
+			dscale(simu->gradscale->p[iwfs], adj);
+			mgnew=mgold*adj;
+#endif
 		    }else{//separate gain for each gradient. For shwfs.
 			dscale(pd->gg0, scale1); //Scale value at end of accumulation
 			for(long ig=0; ig<ng; ig++){
 			    double adj=parms->powfs[ipowfs].dither_gog*mgold*(1.-pd->gg0->p[ig]);
 			    simu->gradscale->p[iwfs]->p[ig]+=adj;
+			    while(simu->gradscale->p[iwfs]->p[ig]<0){
+				adj*=0.5;
+				simu->gradscale->p[iwfs]->p[ig]+=-adj;
+			    }
 			}
+			mgnew=dsum(simu->gradscale->p[iwfs])/ng;
 			dzero(pd->gg0);
 		    }
-		    double mgnew=dsum(simu->gradscale->p[iwfs])/ng;
 		    info2("Step %d wfs %d CoG gain adjusted by %g %s.\n", 
 			  simu->isim, iwfs, mgnew, pd->gg0?"on average":"globally");
 		    if(simu->resdither){
-			int ic=(nogacc-1)/(npll);
+			int ic=(npllacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgnew;
 		    }			   
 		    //adjust WFS measurement dither signal by gain adjustment. used for dither t/t removal from gradients.
@@ -932,9 +949,9 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    if(parms->save.dither){
 			writebin(simu->gradscale->p[iwfs], "wfs%d_gradscale_%d", iwfs, simu->isim);
 		    }
-		    if(parms->powfs[ipowfs].skip==2 && parms->recon.fnsphpsd){//TWFS. Update TWFS gain.
+		    /*if(parms->powfs[ipowfs].skip==2 && parms->recon.fnsphpsd){//TWFS. Update TWFS gain.
 			simu->eptwfs=twfs_gain_optim(parms, simu->recon, powfs);
-		    }
+			}*/
 		}
 	    }
 	    if(parms->powfs[ipowfs].phytypesim != parms->powfs[ipowfs].phytypesim2){
@@ -977,18 +994,19 @@ static void wfsgrad_dither_post(SIM_T *simu){
     }
 }
 /**
-   TWFS has output. Accumulate result to simu->gradoff.
+   TWFS has output. Accumulate result to simu->gradoff. It is put in wfsgrad.c
+   instead of recon.c to avoid race condition because it updates simu->gradoff.
  */
 void wfsgrad_twfs_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int itpowfs=parms->itpowfs;
-    const int ntacc=(simu->isim-parms->powfs[itpowfs].step+1);
-    if(ntacc>0 && ntacc%parms->powfs[itpowfs].dtrat==0){
+    const int ntstep=(simu->isim-parms->powfs[itpowfs].step+1);
+    if(ntstep>0 && ntstep%parms->powfs[itpowfs].dtrat==0){
 	info2("Step %d: TWFS has output with gain %g\n", simu->isim, simu->eptwfs);
 	dcell *Rmod=0;
 	//Build radial mode error using closed loop TWFS measurements from this time step.
 	dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
-	memcpy(PCOL(simu->restwfs, ntacc/parms->powfs[itpowfs].dtrat-1),
+	memcpy(PCOL(simu->restwfs, ntstep/parms->powfs[itpowfs].dtrat-1),
 	       Rmod->p[0]->p, sizeof(double)*simu->restwfs->nx);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -1011,6 +1029,31 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 	    writebin(Rmod, "Rmod_%d", simu->isim);
 	}
 	dcellfree(Rmod);
+    
+	if(parms->recon.psd){
+	    const int ntacc=ntstep/parms->powfs[itpowfs].dtrat;
+	    const int dtrat=parms->recon.psddtrat_twfs;
+	    if(ntacc % dtrat==0){//output
+		info("Step %d: TWFS output psd\n", simu->isim);
+		dmat *ts=dsub(simu->restwfs, 0, 0, ntacc-dtrat, dtrat);
+		dmat *tts=dtrans(ts);dfree(ts);
+		const double dt=parms->sim.dt*parms->powfs[itpowfs].dtrat;	
+		dmat *psd=psd1dt(tts, parms->recon.psdnseg, dt);
+		dfree(tts);
+		//Sum all the PSDs
+		psd_sum(psd, 1);
+		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->powfs[itpowfs].dtrat, simu->eptwfs, 0);
+		writebin(psd, "psdcl_twfs_%d", ntacc);
+		writebin(psdol, "psdol_twfs_%d", ntacc);
+		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, M_PI*0.25, 0, 1);
+		const double g=0.5;
+		simu->eptwfs=simu->eptwfs*(1-g)+coeff->p[0]->p[0]*g;
+		info2("Step %d New Gain (twfs): %.3f\n", simu->isim, simu->eptwfs);
+		dfree(psdol);
+		cellfree(coeff);
+		dfree(psd);
+	    }
+	}
     }
 }
 /**

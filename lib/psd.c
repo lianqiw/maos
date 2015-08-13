@@ -356,3 +356,16 @@ void add_psd2(dmat **out, const dmat *in){
 	dfree(tmp);
     }
 }
+/**
+   Sum all the columns of PSDs (excluding first column), scaled by scale
+*/
+void psd_sum(dmat *psd, double scale){
+    for(int ix=0; ix<psd->nx; ix++){
+	double tmp=0;
+	for(int iy=1; iy<psd->ny; iy++){
+	    tmp+=IND(psd, ix, iy);
+	}
+	IND(psd, ix, 1)=tmp*scale;
+    }
+    dresize(psd, psd->nx, 2);
+}

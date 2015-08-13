@@ -359,19 +359,23 @@ void update_limit(drawdata_t *drawdata){
 	    if(icumu<ptsnx){
 		ips0=icumu;
 	    }
-	    double y_cumu=0,y;
+	    double y_cumu=0,y=0;
 		  
 	    if(drawdata->cumuquad){
 		for(int ips=ips0; ips<ptsnx; ips++){
-		    y_cumu+=ptsy[ips]*ptsy[ips];
-		    y=sqrt(y_cumu/(ips-ips0+1));
-		    if(y>ymax) ymax=y;
-		    if(y<ymin) ymin=y;
+		    const double tmp=ptsy[ips];
+		    if(tmp!=0){
+			y_cumu+=tmp*tmp;
+			y=sqrt(y_cumu/(ips-ips0+1));
+			if(y>ymax) ymax=y;
+			if(y<ymin) ymin=y;
+		    }
 		}
 	    }else{
-		if(drawdata->cumuquad){
-		    for(int ips=ips0; ips<ptsnx; ips++){
-			y_cumu+=ptsy[ips];
+		for(int ips=ips0; ips<ptsnx; ips++){
+		    const double tmp=ptsy[ips];
+		    if(tmp!=0){
+			y_cumu+=tmp;
 			y=y_cumu/(ips-ips0+1);
 			if(y>ymax) ymax=y;
 			if(y<ymin) ymin=y;
@@ -707,15 +711,18 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		    }else{
 			ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 		    }
-		    y=ptsy[ips];
 		    if(drawdata->cumu){
-			if(drawdata->cumuquad){
-			    y_cumu+=y*y;
-			    y=sqrt(y_cumu/(ips-ips0+1));
-			}else{
-			    y_cumu+=y;
-			    y=y_cumu/(ips-ips0+1);
+			if(ptsy[ips]!=0){
+			    if(drawdata->cumuquad){
+				y_cumu+=ptsy[ips]*ptsy[ips];
+				y=sqrt(y_cumu/(ips-ips0+1));
+			    }else{
+				y_cumu+=ptsy[ips];
+				y=y_cumu/(ips-ips0+1);
+			    }
 			}
+		    }else{
+			y=ptsy[ips];
 		    }
 		    iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
 	
@@ -736,15 +743,18 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		    }else{
 			ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 		    }
-		    y=ptsy[ips];
 		    if(drawdata->cumu){
-			if(drawdata->cumuquad){
-			    y_cumu+=y*y;
-			    y=sqrt(y_cumu/(ips-ips0+1));
-			}else{
-			    y_cumu+=y;
-			    y=y_cumu/(ips-ips0+1);
+			if(ptsy[ips]!=0){
+			    if(drawdata->cumuquad){
+				y_cumu+=ptsy[ips]*ptsy[ips];
+				y=sqrt(y_cumu/(ips-ips0+1));
+			    }else{
+				y_cumu+=ptsy[ips];
+				y=y_cumu/(ips-ips0+1);
+			    }
 			}
+		    }else{
+			y=ptsy[ips];
 		    }
 		    iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
 		    draw_point(cr, ix, iy, style, size);

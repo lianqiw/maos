@@ -833,12 +833,12 @@ setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	writebin(recon->GRall, "GRall");
 	writebin(recon->RRtwfs, "RRtwfs");
     }
-    if(parms->recon.fnsphpsd){
+    /*if(parms->recon.fnsphpsd){
 	recon->eptwfs=twfs_gain_optim(parms, recon, powfs);
 	warning("eptwfs is reset to %g\n", parms->sim.eptwfs);
-    }else{
-	recon->eptwfs=parms->sim.eptwfs;
-    }
+	}else{*/
+    recon->eptwfs=parms->sim.eptwfs;
+//}
     cellfree(GRtwfs);
     cellfree(neai);
 }

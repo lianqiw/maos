@@ -247,7 +247,7 @@ static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
    Compute only PSF and add to result.
 */
 static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
-    LOCK(cudata->perf.mutex);/*wvf is allocated per GPU.*/
+    LOCK(cudata->perf.mutex);/*wvf and psf is allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &wvf=cudata->perf.wvf[iwvl];
 	cuzero(wvf, stream);
@@ -260,9 +260,7 @@ static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc
 	}else{
 	    embed_wvf_do<<<DIM(iopdevl.Nx(),256),0,stream>>>
 		(wvf.P(), iopdevl.P(), cudata->perf.amp, cudata->perf.embed[iwvl], nloc, cuperf_t::wvls[iwvl]);
-	    CUDA_CHECK_ERROR;
 	    CUFFT(cuperf_t::plan[iwvl+nwvl*ievl], wvf.P(), CUFFT_FORWARD);
-	    CUDA_CHECK_ERROR;
 	    if(atomic){
 		corner2center_abs2_atomic_do<<<DIM2((psf[iwvl]).Nx(),(psf[iwvl]).Ny(),16),0,stream>>>
 		    ((psf[iwvl]).P(), (psf[iwvl]).Nx(), (psf[iwvl]).Ny(), wvf.P(), wvf.Nx(), wvf.Ny());
@@ -270,7 +268,6 @@ static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc
 		corner2center_abs2_do<<<DIM2((psf[iwvl]).Nx(),(psf[iwvl]).Ny(),16),0,stream>>>
 		    ((psf[iwvl]).P(), (psf[iwvl]).Nx(), (psf[iwvl]).Ny(), wvf.P(), wvf.Nx(), wvf.Ny());
 	    }
-	    CUDA_CHECK_ERROR;
 	}
     }
     UNLOCK(cudata->perf.mutex);

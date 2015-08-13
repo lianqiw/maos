@@ -35,7 +35,6 @@ typedef struct APER_T{
 			    performance evaluation*/
     dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
-    //map_t *ampmask;      /**<The amplitude map for pupil masking in NGS WFS*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
@@ -336,7 +335,6 @@ typedef struct RECON_T{
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
     double eptwfs;     /**<Twfs reference vector servo gain.*/
-    //double Rrms;       /**<RMS WFE of Radial order zernike modes*/
     //For common path dithering
     dcell *dither_m;   /**<The dither mode added to DM command (ndm*1)*/
     int dither_npoint; /**<The dither period*/

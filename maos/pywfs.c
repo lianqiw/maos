@@ -677,7 +677,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
 		gg=pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
 	    writebin(gg, "%s", fn);
 	    snprintf(fn, PATH_MAX, "%s/.aos/cache/", HOME);
-	    remove_file_older(fn, 30*24*3600);
+	    remove_file_older(fn, 365*24*3600);//one year
 	    close(fd); remove(fnlock);
 	}else{
 	    info2("Trying to lock %s\n", fnlock);

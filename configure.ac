@@ -67,7 +67,7 @@ fi
 LDEXE=
 OPTS=
 if test -z "$OPENMP_CFLAGS" ;then
-    LDFLAGS+=" -pthread"
+    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
 else
     CFLAGS+=" $OPENMP_CFLAGS"
 fi
@@ -284,7 +284,7 @@ fi
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 COMMON_GCC="-fms-extensions -static-libgcc"
 COMMON_GCC+=" -Wno-deprecated-declarations" 
-COMMON_CLANG="-Wno-deprecated-declarations" #"-Qunused-arguments"
+COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments"
 OPTIM_ALL="-O3 "
 OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
 OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno"
@@ -844,7 +844,7 @@ if test "$with_cuda" != "no" ;then
 	CUDAOPT+=" -gencode arch=compute_30,code=sm_30"
     fi
     if test "$cudaver" -ge 65 ;then
-        CUDAOPT="$CUDAOPT -gencode arch=compute_50,code=sm_50"
+        CUDAOPT="$CUDAOPT -gencode arch=compute_52,code=sm_52"
     fi
     #if test -n "$OPENMP_CFLAGS";then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"

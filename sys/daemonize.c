@@ -172,8 +172,8 @@ void single_instance_daemonize(const char *lockfolder_in,
 	close(fd);/*release lock in this process that is not daemon. */
 	sleep(1);
 	waitpid(pid,NULL,0);/*prevent child from defunct*/
-	sleep(1);
 	if(daemon_func){/*The process that launched this routine will return. */
+	    sleep(3);
 	    return;
 	}else{
 	    exit(EXIT_SUCCESS);
