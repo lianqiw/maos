@@ -189,7 +189,7 @@ static void draw_remove(int fd, int reuse){
 	}
     }
     if(reuse){
-	scheduler_send_socket(fd);
+	scheduler_send_socket(fd, DRAW_ID);
     }
     close(fd);
     if(found){
@@ -267,19 +267,23 @@ static int open_drawdaemon(){
 	return -1;
     }
     if(!sock_ndraw){
+	if(DRAW_ID<=0){
+	    DRAW_ID=getsid(0);
+	    if(DRAW_ID<0){
+		DRAW_ID=1;
+	    }
+	}
 	int sock=-1;
-	if(scheduler_recv_socket(&sock)){
+	if(scheduler_recv_socket(&sock, DRAW_ID)){
 	    sock=-1;
 	}
+	info("sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch
 		sock=launch_drawdaemon();
 	    }else if(sock_helper!=-2){//use help to launch
 		if(sock_helper==-1){
 		    draw_helper();
-		}
-		if(!DRAW_ID){
-		    DRAW_ID=getpid();
 		}
 		if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
 		    sock=-1;

@@ -86,10 +86,10 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     (void)argv;
     return -1;
 }
-int scheduler_send_socket(int sfd){
+int scheduler_send_socket(int sfd, int id){
     return -1;
 }
-int scheduler_recv_socket(int *sfd){
+int scheduler_recv_socket(int *sfd, int id){
     return -1;
 }
 #else
@@ -341,11 +341,11 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
 /**
    send a sock to the scheduler for caching
 */
-int scheduler_send_socket(int sfd){
+int scheduler_send_socket(int sfd, int id){
     int ans=-1;
     int ssock=scheduler_connect_self(0);
     if(ssock!=-1 && sfd!=-1){
-	int cmd[2]={CMD_SOCK, 1};
+	int cmd[2]={CMD_SOCK, abs(id)};
 	if(stwriteintarr(ssock, cmd, 2) || stwritefd(ssock, sfd)){
 	    ans=-1;
 	    warning("Talk to scheduler failed\n");
@@ -359,11 +359,11 @@ int scheduler_send_socket(int sfd){
 /**
    get a socket from the scheduler for reuse
 */
-int scheduler_recv_socket(int *sfd){
+int scheduler_recv_socket(int *sfd, int id){
     int ans=-1;
     int ssock=scheduler_connect_self(0);
     if(ssock!=-1){
-	int cmd[2]={CMD_SOCK, -1};
+	int cmd[2]={CMD_SOCK, -abs(id)};
 	int ans2=-1;
 	if(stwriteintarr(ssock, cmd, 2) || streadint(ssock, &ans2)){
 	    warning("Talk to scheduler failed\n");

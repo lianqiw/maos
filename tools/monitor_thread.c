@@ -114,12 +114,11 @@ static int host_from_sock(int sock){
 
 
 void add_host_wrap(int ihost){
-    int cmd[3]={MON_ADDHOST, 0, 0};
-    cmd[1]=ihost;
+    int cmd[3]={MON_ADDHOST, ihost, 0};
     stwriteintarr(sock_main[1], cmd, 3);
 }
 
-/* Record the host upon connection */
+/* Record the host after connection is established*/
 static void host_added(int ihost, int sock){
     htime[ihost]=myclockd();
     proc_remove_all(ihost);/*remove all entries. */
@@ -148,7 +147,7 @@ static void host_removed(int sock){
     gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
     info2("disconnected from %s\n", hosts[ihost]);
 }
-
+//connect to scheduler(host)
 static void add_host(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     int todo=0;
@@ -180,20 +179,31 @@ static void add_host(gpointer data){
 	}
     }
 }
-
+//respond to scheduler
 static int respond(int sock){
-    int ihost=host_from_sock(sock);
-    htime[ihost]=myclockd();
     int cmd[3];
     if(streadintarr(sock, cmd, 3)){
 	return -1;//failed
     }
+    int ihost=host_from_sock(sock);
+    if(ihost>=0){
+	htime[ihost]=myclockd();
+    }
     int pid=cmd[2];
     switch(cmd[0]){
+    case -1:{//server request shutdown
+	info2("disconnect from %s\n", hosts[ihost]);
+	return -1;
+    }
+	break;
     case MON_VERSION:
 	break;
     case MON_STATUS:
 	{
+	    if(ihost<0){
+		warning("Host not found\n");
+		return -1;
+	    }
 	    PROC_T *p=proc_get(ihost,pid);
 	    if(!p){
 		p=proc_add(ihost,pid);
@@ -214,6 +224,10 @@ static int respond(int sock){
 	break;
     case MON_PATH:
 	{
+	    if(ihost<0){
+		warning("Host not found\n");
+		return -1;
+	    }
 	    PROC_T *p=proc_get(ihost,pid);
 	    if(!p){
 		p=proc_add(ihost,pid);
@@ -229,6 +243,10 @@ static int respond(int sock){
 	break;
     case MON_LOAD:
 	{
+	    if(ihost<0){
+		warning("Host not found\n");
+		return -1;
+	    }
 	    usage_cpu[ihost]=(double)((pid>>16) & 0xFFFF)/100.;
 	    usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
 	    usage_cpu[ihost]=MAX(MIN(1,usage_cpu[ihost]),0);

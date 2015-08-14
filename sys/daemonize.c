@@ -170,7 +170,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 	exit(EXIT_FAILURE);
     }else if (pid > 0) {
 	close(fd);/*release lock in this process that is not daemon. */
-	sleep(1);
+	usleep(1e5);
 	waitpid(pid,NULL,0);/*prevent child from defunct*/
 	if(daemon_func){/*The process that launched this routine will return. */
 	    sleep(3);

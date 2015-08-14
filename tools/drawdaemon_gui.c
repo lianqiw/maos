@@ -630,7 +630,7 @@ static gboolean key_press(GtkWidget *widget, GdkEventKey *event,
     return TRUE;
 }
 static void page_changed(int topn, int subn){
-    info("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
+    //info("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
     if(sock==-1 || sock_block) return;
     GtkWidget *topnb=curtopnb;
     GtkWidget *subnb, *subpage;

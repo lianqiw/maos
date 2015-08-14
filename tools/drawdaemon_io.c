@@ -95,16 +95,16 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 #define STREADSTR(p) if(streadstr(sock, &p)) goto end;
 void listen_draw(){
     info("listen_draw is listening at %d\n", sock);
-    TIC;tic;
+    //TIC;tic;
     static drawdata_t *drawdata=NULL;
     int cmd=0;
     static int errcount=0;
     while(!streadint(sock, &cmd)){
-	info("cmd=%d\n", cmd);
+	//info("cmd=%d\n", cmd);
 	sock_block=0;//Indicate connection is active
 	switch (cmd){
 	case DRAW_START:
-	    tic;
+	    //tic;
 	    if(drawdata){
 		warning("listen_draw: drawdata is not empty\n");
 	    }
@@ -144,7 +144,7 @@ void listen_draw(){
 	    break;
 	case DRAW_POINTS:
 	    {
-		info("DRAW_POINTS\n");
+		//info("DRAW_POINTS\n");
 		int nptsx, nptsy;
 		int ipts=drawdata->npts;
 		drawdata->npts++;
@@ -259,11 +259,11 @@ void listen_draw(){
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
 		gdk_threads_add_idle(addpage, drawdatawrap);
-		if(drawdata->p0){
+		/*if(drawdata->p0){
 		    toc2("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
 		}else{
 		    toc2("fifo_read points");
-		}
+		    }*/
 		drawdata=NULL;
 	    }
 	    break;

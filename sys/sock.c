@@ -31,6 +31,32 @@
    small writes will make TCP send these multiple buffers as individual
    packets, which can result in poor overall performance. 
 
+   Note on TCP server/client connection 3-step establishment process:
+   0) Server creates a socket and bind() on a port, and then starts listen() on the port
+   1) Client connects to the server by calling connect(), which send a SYN to the server.
+   2) The server receives the SYN. It sends SYN+ACK to the client.
+   3) The client receives SYN+ACK. It sends back ACK, and then moves to established state
+   *) Server receives ACK and moves to estibalished state.
+
+   Note on TCP peer to peer simultaneous open process:
+   1) peer 1 and peer 2 send SYN to each other
+   2) Each received SYN and send back ACK
+   3) Each received ACK and move to estibalished stat.
+
+   Note on TCP 4-step shutdown process:
+   1) peer 1 send a FIN using shutdown(socket, SHUT_WR) or close() to active close
+   2) peer 2 recieve the FIN and send back ACK. It can still write the data for peer 1 to use.
+   3) peer 2 send a FIN using shutdown(socket, SHUT_WR) or close() to passive close
+   4) peer 1 receives the FIN and (ACK before or after the FIN) and send back ACK. 
+   *) peer 2 receive ACK and now connection is closed.
+   peer 1 now is in TIME_WAIT state (always) to avoid delayed packets confusing the system.
+
+   In order for the server to close the port and reopen it immediately, it has
+   to be peer 2 instead of peer 1. This requires it to first notify the client
+   to shutdown the connection.
+
+   shutdown(socket, SHUR_RD) doesn't send anything to its peer. It just blocking reading the socket.
+   close() destroys the socket in addition to call shutdown on it.
 
    Changelog:
    2012-10-25:
@@ -39,12 +65,7 @@
 
 */
 
-
-
-
 #include <fcntl.h> 
-
-
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/tcp.h> /*SOL_TCP */
@@ -58,6 +79,7 @@
 #include "common.h"
 #include "sock.h"
 #include "thread.h"
+#include "sockio.h"
 /**
    When the keepalive flag is on, the socket will receive notice when the
    connection to remote socket is disrupted.
@@ -252,21 +274,35 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     FD_SET (sock, &active_fd_set);
  
     while(quit_listen!=2){
+	if(quit_listen==1){
+	    /*
+	      shutdown(sock, SHUT_WR) sends a FIN to the peer, therefore
+	      initialize a active close and the port will remain in TIME_WAIT state.
+
+	      shutdown(sock, SHUT_RD) sends nother, just mark the scoket as not readable.
+
+	      accept() create a new socket on the existing port. A socket is identified by client ip/port and server ip/port.
+	      
+	      It is the port that remain in TIME_WAIT state.
+	     */
+	    //shutdown(sock, SHUT_RDWR);
+	    //shutdown(sock_local, SHUT_RDWR);
+	    /*Notice existing client to shutdown*/
+	    for(int i=0; i<FD_SETSIZE; i++){
+		if(FD_ISSET(i, &active_fd_set) && i!=sock && i!=sock_local){
+		    int cmd[3]={-1, 0, 0};
+		    stwrite(i, cmd, 3*sizeof(int)); //We ask the client to actively close the connection
+		    //shutdown(i, SHUT_WR);
+		}
+	    }
+	    usleep(1e5);
+	    quit_listen=2;
+	    //don't break. Listen for connection close events.
+	}
 	if(timeout_fun){
 	    timeout_fun();
 	}
-	if(quit_listen==1){
-	    shutdown(sock, SHUT_RDWR);
-	    shutdown(sock_local, SHUT_RDWR);
-	    /*Notice client to shutdown*/
-	    for(int i=0; i<FD_SETSIZE; i++){
-		if(FD_ISSET(i, &active_fd_set)){
-		    shutdown(i, SHUT_WR);
-		}
-	    }
-	    usleep(1000);
-	    quit_listen=2;
-	}
+
 	struct timeval timeout;
 	timeout.tv_sec=timeout_sec;
 	timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
@@ -291,25 +327,25 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		    struct sockaddr_in clientname;
     		    int port2=accept(i, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
-			warning("accept failed: %s\n", strerror(errno));
+			warning("accept failed: %s. close port %d\n", strerror(errno), i);
 			FD_CLR(i, &active_fd_set);
-			break;
+			close(i);
+		    }else{
+			info2("port %d is connected\n", port2);
+			FD_SET(port2, &active_fd_set);
 		    }
-		    info2("port %d is connected\n", port2);
-		    //cloexec(port2);
-		    FD_SET(port2, &active_fd_set);
 		}else if(i==sock_local){
 		    socklen_t size=sizeof(struct sockaddr_un);
 		    struct sockaddr_un clientname;
 		    int port2=accept(i, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
-			warning("accept failed: %s. sock %d\n", strerror(errno), i);
+			warning("accept failed: %s. close port %d\n", strerror(errno), i);
 			FD_CLR(i, &active_fd_set);
-			break;
+			close(i);
+		    }else{
+			info2("port %d is connected locally\n", port2);
+			FD_SET(port2, &active_fd_set);
 		    }
-		    info2("port %d is connected locally\n", port2);
-		    //cloexec(port2);
-		    FD_SET(port2, &active_fd_set);
 		}else{
 		    /* Data arriving on an already-connected socket. Call responder to handle.
 		       On return:
@@ -321,8 +357,9 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
 			    warning2("close port %d\n", i);
-			    shutdown(i, SHUT_RDWR);
 			    close(i);
+			}else{
+			    warning("ans=%d is not understood.\n", ans);
 			}
 		    }
 		}
@@ -330,18 +367,19 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	}
     }
     /* Error happened. We close all connections and this server socket.*/
+    close(sock);
+    close(sock_local);
+    FD_CLR(sock, &active_fd_set);
+    FD_CLR(sock_local, &active_fd_set);
     warning("listen_port exited\n");
     for(int i=0; i<FD_SETSIZE; i++){
 	if(FD_ISSET(i, &active_fd_set)){
-	    info("sock %d is still connected\n", i);
-	    shutdown(i, SHUT_RDWR);
-	    usleep(1000);
+	    warning("sock %d is still connected\n", i);
 	    close(i);
 	    FD_CLR(i, &active_fd_set);
 	}
     }
     usleep(100);
-    close(sock);
     sync();
 }
 

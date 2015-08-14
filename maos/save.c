@@ -256,8 +256,8 @@ void save_dmreal(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     if(parms->plot.run){
-    	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
-	    if(simu->dmproj->p[idm]){
+    	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->dmproj && simu->dmproj->p[idm]){
 		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
 			"ATM to DM Projection (Hi)","x (m)","y (m)",
 			"Proj Hi %d",idm);
@@ -265,7 +265,7 @@ void save_dmreal(SIM_T *simu){
 	}
 	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
 	for(int idm=0; idm<parms->ndm; idm++){
-	    if(simu->dmreal){
+	    if(simu->dmreal && simu->dmreal->p[idm]){
 		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
 			"Actual DM Actuator Position","x (m)", "y (m)", "Real %d",idm);
 	    }

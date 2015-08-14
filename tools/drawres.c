@@ -66,7 +66,7 @@ static ARG_T * parse_args(int argc, char **argv){
 int main(int argc, char *argv[]){
     ARG_T *arg=parse_args(argc, argv);
     /*use the parent pid so same bash session has the same drawdaemon. */
-    DRAW_ID=getppid();/*variables in draw.c */
+    DRAW_ID=getsid(0)+2e6;/*variables in draw.c */
     DRAW_DIRECT=1;/*launch drawdaemon directly, without going through server. */
     char **path;
     int npath;

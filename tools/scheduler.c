@@ -35,13 +35,7 @@
    2012-10-25: This file only contains the routines to be used by the server.
  */
 
-
-
-
 #include <errno.h>
-
-
-
 #include <sys/socket.h>
 #include "../sys/sys.h"
 #if HAS_LWS
@@ -644,37 +638,74 @@ static int respond(int sock){
 	break;
     case CMD_SOCK://10:Called by draw() to cache a sock.
 	{
-	static int sock_save=-1;
-	if(pid==1){//receive sock from draw()
-	    if(sock_save!=-1){
-		close(sock_save);
-	    }
-	    if(streadfd(sock, &sock_save)){
-		warning("receive socket from %d failed\n", sock);
-		sock_save=-1;
-	    }else{
-		info("received socket %d\n", sock_save);
-	    }
-	}else if(pid==-1){//send sock to draw()
-	    if(sock_save!=-1 && stcheck(sock_save)){
-		close(sock_save);
-		sock_save=-1;
-	    }
-	    //cannot pass -1 as sock, so return a flag first.
-	    if(stwriteint(sock, sock_save==-1?-1:0)){
-		warning("Unable to talk to draw\n");
-	    }
-	    if(sock_save!=-1){
-		if(stwritefd(sock, sock_save)){
-		    warning("send socket %d to %d failed\n", sock_save, sock);
-		}else{//socket is transferred to draw. we close it.
-		    warning("sent socket %d\n", sock_save);
-		    close(sock_save);
+	    typedef struct SOCKID_T{
+		int id;
+		int sock;
+		struct SOCKID_T *prev;
+		struct SOCKID_T *next;
+	    }SOCKID_T;
+	    static struct SOCKID_T *head=0;
+	    if(pid>0){//receive sock from draw()
+		int found=0;
+		int sock_save;
+		if(streadfd(sock, &sock_save)){
+		    warning("receive socket from %d failed\n", sock);
 		    sock_save=-1;
+		}else{
+		    info("received socket %d\n", sock_save);
+		    for(SOCKID_T *p=head; p; p=p->next){
+			if(p->id==pid){
+			    close(p->sock);
+			    p->sock=sock_save;
+			    found=1;
+			}
+		    }
+		    if(!found){
+			SOCKID_T *tmp=malloc(sizeof(SOCKID_T));
+			tmp->id=pid;
+			tmp->sock=sock_save;
+			tmp->next=head;
+			tmp->prev=0;
+			if(head){
+			    head->prev=tmp;
+			}
+			head=tmp;
+		    }
+		}
+	    }else if(pid<0){//send sock to draw()
+		int sock_save=-1;
+		for(SOCKID_T *p=head, *p_next; p; p=p_next){
+		    p_next=p->next;
+		    int badsock=0;
+		    if((badsock=stcheck(p->sock)) || p->id==-pid){
+			if(!badsock){
+			    sock_save=p->sock;
+			}else{
+			    close(p->sock);
+			}
+			//remove from list if bad sock or match
+			if(p->prev){//middle item
+			    p->prev->next=p->next;
+			}else{//first item
+			    head=p->next;
+			}
+			free(p);	
+		    }
+		}
+		//cannot pass -1 as sock, so return a flag first.
+		if(stwriteint(sock, sock_save>-1?0:-1)){
+		    warning("Unable to talk to draw\n");
+		}
+		if(sock_save>-1){
+		    if(stwritefd(sock, sock_save)){
+			warning("send socket %d to %d failed\n", sock_save, sock);
+		    }else{//socket is transferred to draw. we close it.
+			warning("sent socket %d\n",sock_save);
+		    }
+		    close(sock_save);
 		}
 	    }
 	}
-    }
 	break;
     case CMD_REMOVE://11; by Monitor*/
 	{
