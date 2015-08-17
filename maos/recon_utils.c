@@ -705,9 +705,9 @@ void shift_grad(SIM_T *simu){
    Parse the input dead actuator location to actuator indices based on aloc.
    2015-03-30: build a mask for dead actuators based on coordinate.
 */
-lmat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
+lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 		    const char *fndead /**<[in] File containing dead actuators*/
-		    ){
+    ){
     dmat *dead=dread("%s", fndead);
     if(dead->ny!=2 && dead->ny!=3){
 	error("%s must contain 2 or 3 columns of data\n", fndead);

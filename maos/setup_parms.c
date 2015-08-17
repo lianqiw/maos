@@ -504,6 +504,7 @@ static void readcfg_wfs(PARMS_T *parms){
     parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
     double *dbltmp=NULL;
     int    *inttmp=NULL;
+    char  **strtmp=NULL;
     READ_WFS(dbl,thetax);
     READ_WFS(dbl,thetay);
     for(i=0; i<parms->nwfs; i++){
@@ -512,8 +513,9 @@ static void readcfg_wfs(PARMS_T *parms){
     }
     READ_WFS_RELAX(dbl,hs);
     READ_WFS_RELAX(dbl,fitwt);
-    
-   /*link wfs with powfs*/
+    READ_WFS_RELAX(str,sabad);
+
+    /*link wfs with powfs*/
     int wfscount=0;
     int ipowfs=0;
     for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){

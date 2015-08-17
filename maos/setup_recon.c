@@ -58,15 +58,29 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     dspcell *saneal=recon->saneal=cellnew(nwfs,nwfs);//The LL' decomposition of sanea
     dspcell *saneai=recon->saneai=cellnew(nwfs,nwfs);//The inverse of sanea
     info2("Recon NEA:\n");
+    
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];
 	int nsa=powfs[ipowfs].saloc->nloc;
 	int do_ref=0;
+	lmat *samask=0;
+	if(parms->wfs[iwfs].sabad){
+	    samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
+	}
 	if(parms->powfs[ipowfs].neareconfile){/*load sanea from file */
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
 	    if(nea && nea->p[0]<1e-11) {
 		error("Supplied NEA is too small\n");
+	    }
+	    if(samask){
+		for(int isa=0; isa<nsa; isa++){
+		    if(samask->p[isa]){
+			warning("wfs %d sa %d is masked\n", iwfs, isa);
+			nea->p[isa]=INFINITY;
+			nea->p[isa+nsa]=INFINITY;
+		    }
+		}
 	    }
 	    /*rad */
 	    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
@@ -81,21 +95,29 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		error("saneaxy cannot be null\n");
 	    }
 	    dcell *saneaxy=powfs[ipowfs].saneaxy;
-	    const int nnea=saneaxy->ny;
-	    if(parms->recon.glao && nnea!=1){
+	    if(parms->recon.glao && saneaxy->ny!=1){
 		error("Please average powfs[ipowfs].saneaxy for GLAO mode.\n");
 	    }
-	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	    if(nnea>1 || iwfs==iwfs0){
+	    if(saneaxy->ny>1 || iwfs==iwfs0 || parms->wfs[iwfs].sabad){
+		int ind=saneaxy->ny>1?parms->powfs[ipowfs].wfsind->p[iwfs]:0;
+		dcell *saneaxyi=cellnew(nsa, 1);
 		dcell *saneaxyl=cellnew(nsa, 1);
 		dcell *saneaixy=cellnew(nsa, 1);
 		for(int isa=0; isa<nsa; isa++){
-		    saneaxyl->p[isa]=dchol(saneaxy->p[isa]);
-		    saneaixy->p[isa]=dinvspd(saneaxy->p[isa]);
+		    dcp(&saneaxyi->p[isa], IND(saneaxy, isa, ind));
+		    saneaxyl->p[isa]=dchol(saneaxyi->p[isa]);
+		    saneaixy->p[isa]=dinvspd(IND(saneaxyi, isa, ind));
+		    if(samask && samask->p[isa]){
+			warning("wfs %d sa %d is masked\n", iwfs, isa);
+			dset(saneaxyi->p[isa], INFINITY);
+			dset(saneaxyl->p[isa], INFINITY);
+			dset(saneaixy->p[isa], 0);
+		    }
 		}
-		sanea->p[iwfs+iwfs*nwfs]=nea2sp(PCOL(saneaxy, wfsind),nsa);
+		sanea->p[iwfs+iwfs*nwfs]=nea2sp(saneaxyi->p, nsa);
 		saneal->p[iwfs+iwfs*nwfs]=nea2sp(saneaxyl->p,nsa);
 		saneai->p[iwfs+iwfs*nwfs]=nea2sp(saneaixy->p,nsa);
+		dcellfree(saneaxyi);
 		dcellfree(saneaxyl);
 		dcellfree(saneaixy);
 	    }else{
@@ -103,7 +125,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}else{
 	    /*compute nea from nearecon, scaled by area and dtrat. nea scales as sqrt(1/dtrat) */
-	    if(iwfs==iwfs0){
+	    if(iwfs==iwfs0  || parms->wfs[iwfs].sabad){
 		const double neasq=pow(parms->powfs[ipowfs].nearecon/206265000.,2)/parms->powfs[ipowfs].dtrat;
 		if(neasq<1.e-30) error("nea is too small\n");
 		dmat *nea=dnew(nsa,2);
@@ -112,9 +134,13 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		/*only implementing seeing limited here. */
 		PDMAT(nea, neap);
 		double *area=powfs[ipowfs].saa->p;
-		for(int i=0; i<nsa; i++){
-		    double tmp=neasq/area[i];
-		    neap[0][i]=neap[1][i]=tmp;
+		for(int isa=0; isa<nsa; isa++){
+		    double tmp=neasq/area[isa];
+		    if(samask && samask->p[isa]){
+			warning("wfs %d sa %d is masked\n", iwfs, isa);
+			tmp=INFINITY;
+		    }
+		    neap[0][isa]=neap[1][isa]=tmp;
 		}
 		sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 		dcwpow(nea, -1);
@@ -126,6 +152,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		do_ref=1;
 	    }
 	}
+	
+
 	if(do_ref){
 	    sanea->p[iwfs+iwfs*nwfs] =dspref( sanea->p[iwfs0+iwfs0*nwfs]);
 	    saneal->p[iwfs+iwfs*nwfs]=dspref(saneal->p[iwfs0+iwfs0*nwfs]);
@@ -133,6 +161,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}else{
 	    dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
 	}
+	lfree(samask);
     }/*iwfs */
     
     /*Compute the averaged SANEA for each WFS */

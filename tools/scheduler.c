@@ -686,8 +686,10 @@ static int respond(int sock){
 			//remove from list if bad sock or match
 			if(p->prev){//middle item
 			    p->prev->next=p->next;
+			    p->next->prev=p->prev;
 			}else{//first item
 			    head=p->next;
+			    p->next->prev->prev=0;
 			}
 			free(p);	
 		    }

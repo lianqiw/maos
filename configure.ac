@@ -862,7 +862,8 @@ if test "$with_cuda" != "no" ;then
     CCBINOPT="$OPTS -fPIC "
     case "$CCBIN" in 
         *gcc*)
-	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
+	    CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
+	    CCBINOPT=${CCBINOPT/-Qunused-arguments/}
   	;;			  
     esac
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart -lstdc++"

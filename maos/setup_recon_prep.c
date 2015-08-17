@@ -351,7 +351,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	recon->actstuck=cellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actstuck) continue;
-	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
+	    recon->actstuck->p[idm]=loc_coord2ind(recon->aloc->p[idm], parms->dm[idm].actstuck);
 	    double stroke=INFINITY;
 	    const int nact=recon->aloc->p[idm]->nloc;
 	    if(parms->dm[idm].stroke){
@@ -383,7 +383,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	recon->actfloat=cellnew(parms->ndm, 1);
 	for(int idm=0; idm<ndm; idm++){
 	    if(!parms->dm[idm].actfloat) continue;
-	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);
+	    recon->actfloat->p[idm]=loc_coord2ind(recon->aloc->p[idm], parms->dm[idm].actfloat);
 	}
     }
  

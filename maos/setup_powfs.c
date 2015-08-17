@@ -348,10 +348,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	/*do not multiply to siglev. Already handled automatically*/
 	thresarea*=parms->powfs[ipowfs].safill2d;
     }
- 
+
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    
-  
+   
     if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
 	if(nwfsp>1){
 	    error("dbg.pupmask=1, powfs can only have 1 wfs.\n");

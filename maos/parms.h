@@ -246,6 +246,7 @@ typedef struct POWFS_CFG_T{
 typedef struct WFS_CFG_T{
     dmat *wvlwts; /**<Weights of signal value for each wavelength. if not
 		       specified in config, will use powfs.wvlwts*/
+    char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     double thetax;  /**<x direction*/
     double thetay;  /**<y direction*/
     double siglev;  /**<Total signal value for all wavelength. if not specified
