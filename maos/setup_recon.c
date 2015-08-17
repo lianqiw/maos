@@ -106,7 +106,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		for(int isa=0; isa<nsa; isa++){
 		    dcp(&saneaxyi->p[isa], IND(saneaxy, isa, ind));
 		    saneaxyl->p[isa]=dchol(saneaxyi->p[isa]);
-		    saneaixy->p[isa]=dinvspd(IND(saneaxyi, isa, ind));
+		    saneaixy->p[isa]=dinvspd(saneaxyi->p[isa]);
 		    if(samask && samask->p[isa]){
 			warning("wfs %d sa %d is masked\n", iwfs, isa);
 			dset(saneaxyi->p[isa], INFINITY);

@@ -822,13 +822,13 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     return focus;
 }
 /**
-   Expected averaged position of dithering signal during WFS integration
+   Expected averaged position of dithering signal during WFS integration. Called when (isim+1)%dtrat=0
 */
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam){
-    //adjust for delay due to propagation
-    const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0);//+(1-parms->powfs[ipowfs].dtrat);
+    //adjust for delay due to propagation, and computation delay. no effect when al+1=dtrat, which makes 2 wfs frame delay.
+    const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
     //adjust to get delay at beginning of integration
-    const int adjust2=parms->powfs[ipowfs].llt?(parms->powfs[ipowfs].dtrat-1):0;
+    const int adjust2=parms->powfs[ipowfs].dtrat-1;
     const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
     const double angle=((isim-adjust-adjust2)/parms->powfs[ipowfs].dtrat)*anglei+deltam;
     const double angle2=((isim-adjust)/parms->powfs[ipowfs].dtrat)*anglei+deltam;

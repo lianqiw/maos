@@ -374,10 +374,9 @@ static void filter_cl(SIM_T *simu){
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].dither==1){
-		//adjust delay due to propagation
-		const int adjust=(parms->powfs[ipowfs].llt?parms->sim.alfsm:0);
-		//+1-parms->powfs[ipowfs].dtrat;
+	    if(parms->powfs[ipowfs].dither==1){//T/T dithering.
+		//adjust delay due to propagation, and computation delay.
+		const int adjust=parms->sim.alfsm+1-parms->powfs[ipowfs].dtrat;
 		//Use isim+1 because the command is for next time step.
 		//minus adjust for delay
 		double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
