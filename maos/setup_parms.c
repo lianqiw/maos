@@ -519,7 +519,8 @@ static void readcfg_wfs(PARMS_T *parms){
     int wfscount=0;
     int ipowfs=0;
     for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){
-	if(parms->powfs[kpowfs].nwfs==0){//no stars. drop powfs
+	if(parms->powfs[kpowfs].nwfs==0//no stars.
+	   || parms->powfs[ipowfs].step>=parms->sim.end){//not used.
 	    free_powfs_cfg(&parms->powfs[kpowfs]);
 	    ipowfs--;
 	    continue;
@@ -2722,6 +2723,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     open_config(mainconf,NULL,0);/*main .conf file. */
     open_config(extraconf, NULL, 1);
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
+    readcfg_sim(parms);
     readcfg_aper(parms);
     readcfg_atm(parms);
     readcfg_powfs(parms);
@@ -2734,7 +2736,6 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     readcfg_lsr(parms);
     readcfg_recon(parms);
     readcfg_evl(parms);
-    readcfg_sim(parms);
     readcfg_cn2(parms);
     readcfg_plot(parms);
     readcfg_dbg(parms);

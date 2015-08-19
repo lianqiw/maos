@@ -562,19 +562,18 @@ void gpu_perfevl_save(SIM_T *simu){
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info2("Step %d: Output PSF\n", isim);
 	const int nwvl=parms->evl.nwvl;
+	const double scale=1./(double)(parms->evl.psfmean>1?parms->evl.psfmean:(simu->isim+1-parms->evl.psfisim));
 	if(cudata->perf.psfol){
+	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    /*copy the PSF accumulated in all the GPUs to CPU.*/
 	    X(cell) *temp=X(cellnew)(nwvl, 1);
 	    X(cell) *temp2=X(cellnew)(nwvl, 1);
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    if(parms->evl.psfol==2){
-		scale=scale/parms->evl.npsf;
-	    }
 	    for(int im=0; im<NGPU; im++){
 		gpu_set(im);
 		cp2cpu(&temp2, cudata->perf.psfol, 0);
 		cudaStreamSynchronize(0);
-		X(celladd)(&temp, 1, temp2, scale);
+		X(celladd)(&temp, 1, temp2, scaleol);
+		cuzero(cudata->perf.psfol);
 	    }
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(!temp || !temp->p[iwvl]) continue;
@@ -586,7 +585,6 @@ void gpu_perfevl_save(SIM_T *simu){
 	    X(cellfree)(temp2);
 	}
 	if(cuperf_t::psfcl){
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!parms->evl.psf->p[ievl] || parms->evl.psfngsr->p[ievl]==2) continue;
 		gpu_set(cudata_t::evlgpu[ievl]);
@@ -598,12 +596,11 @@ void gpu_perfevl_save(SIM_T *simu){
 			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
 		    cellarr_cur(simu->save->evlpsfmean[ievl], isim*nwvl+iwvl, pp, stream);
-		    curscale(pp, 1.f/scale, stream);
+		    cuzero(pp, stream);
 		}
 	    }
 	}
 	if(cuperf_t::psfcl_ngsr){
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!parms->evl.psf->p[ievl] || !parms->evl.psfngsr->p[ievl]) continue;
 		gpu_set(cudata_t::evlgpu[ievl]);
@@ -615,52 +612,49 @@ void gpu_perfevl_save(SIM_T *simu){
 			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
 		    cellarr_cur(simu->save->evlpsfmean_ngsr[ievl], isim*nwvl+iwvl, pp, stream);
-		    curscale(pp, 1.f/scale, stream);
+		    cuzero(pp, stream);
 		}
 	    }
 	}
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info2("Step %d: Output opdcov\n", isim);
-	double scale=1./(isim+1-parms->evl.psfisim);
+	const double scale=1./(double)(parms->evl.cov>1?parms->evl.cov:(simu->isim+1-parms->evl.psfisim));
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psf->p[ievl]|| parms->evl.psfngsr->p[ievl]==2) continue;
+	    if(!parms->evl.psf->p[ievl]) continue;
 	    gpu_set(cudata_t::evlgpu[ievl]);
 	    cudaStream_t stream=cuperf_t::stream[ievl];
-	    {
-		curmat &pp=cuperf_t::opdcov[ievl];
-		curscale(pp, scale, stream);
-		cellarr_cur(simu->save->evlopdcov[ievl], isim, pp, stream);
-		curscale(pp, 1./scale, stream);
+	    if(parms->evl.psfngsr->p[ievl]!=2){
+		{
+		    curmat &pp=cuperf_t::opdcov[ievl];
+		    curscale(pp, scale, stream);
+		    cellarr_cur(simu->save->evlopdcov[ievl], isim, pp, stream);
+		    cuzero(pp, stream);
+		}
+		{
+		    curmat &pp=cuperf_t::opdmean[ievl];
+		    curscale(pp, scale, stream);
+		    cellarr_cur(simu->save->evlopdmean[ievl], isim, pp, stream);
+		    cuzero(pp, stream);
+		}
 	    }
-	    {
-		curmat &pp=cuperf_t::opdmean[ievl];
-		curscale(pp, scale, stream);
-		cellarr_cur(simu->save->evlopdmean[ievl], isim, pp, stream);
-		curscale(pp, 1./scale, stream);
-	    }
-	}
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psf->p[ievl]|| !parms->evl.psfngsr->p[ievl]) continue;
-	    gpu_set(cudata_t::evlgpu[ievl]);
-	    cudaStream_t stream=cuperf_t::stream[ievl];
-	    {
-		curmat &pp=cuperf_t::opdcov_ngsr[ievl];
-		curscale(pp, scale, stream);
-		cellarr_cur(simu->save->evlopdcov_ngsr[ievl], isim, pp, stream);
-		curscale(pp, 1./scale, stream);
-	    }
-	    {
-		curmat &pp=cuperf_t::opdmean_ngsr[ievl];
-		curscale(pp, scale, stream);
-		cellarr_cur(simu->save->evlopdmean_ngsr[ievl], isim, pp, stream);
-		curscale(pp, 1./scale, stream);
+	    if(parms->evl.psfngsr->p[ievl]){
+		{
+		    curmat &pp=cuperf_t::opdcov_ngsr[ievl];
+		    curscale(pp, scale, stream);
+		    cellarr_cur(simu->save->evlopdcov_ngsr[ievl], isim, pp, stream);
+		    cuzero(pp, stream);
+		}
+		{
+		    curmat &pp=cuperf_t::opdmean_ngsr[ievl];
+		    curscale(pp, scale, stream);
+		    cellarr_cur(simu->save->evlopdmean_ngsr[ievl], isim, pp, stream);
+		    cuzero(pp, stream);
+		}
 	    }
 	}
 	if(parms->evl.psfol){
-	    if(parms->evl.psfol==2){
-		scale=scale/parms->evl.npsf;
-	    }
+	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    {
 		X(mat) *temp=NULL;
 		X(mat) *temp2=NULL;
@@ -668,7 +662,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		    gpu_set(im);
 		    cp2cpu(&temp2, cudata->perf.opdcovol, 0);
 		    cudaStreamSynchronize(0);
-		    X(add)(&temp, 1, temp2, scale);
+		    X(add)(&temp, 1, temp2, scaleol);
+		    cuzero(cudata->perf.opdcovol);
 		}
 		cellarr_mat(simu->save->evlopdcovol, isim, temp);
 		X(free)(temp);
@@ -681,7 +676,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		    gpu_set(im);
 		    cp2cpu(&temp2, cudata->perf.opdmeanol, 0);
 		    cudaStreamSynchronize(0);
-		    X(add)(&temp, 1, temp2, scale);
+		    X(add)(&temp, 1, temp2, scaleol);
+		    cuzero(cudata->perf.opdmeanol);
 		}
 		cellarr_mat(simu->save->evlopdmeanol, isim, temp);
 		X(free)(temp);
