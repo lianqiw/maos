@@ -943,9 +943,6 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    //adjust WFS measurement dither signal by gain adjustment. used for dither t/t removal from gradients.
 		    pd->a2me*=(mgnew/mgold);
 		    dcellscale(powfs[ipowfs].saneaxy, pow(mgnew/mgold, 2));
-		    if(!parms->recon.glao){
-			dspscale(IND(simu->recon->saneal, iwfs, iwfs), mgnew/mgold);
-		    }
 		    if(parms->save.dither){
 			writebin(simu->gradscale->p[iwfs], "wfs%d_gradscale_%d", iwfs, simu->isim);
 		    }

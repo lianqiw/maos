@@ -598,6 +598,7 @@ lmat *readcfg_lmat_nmax(int n, const char *format,...){
 	    }
 	}
     }else if(nread!=n){
+	print_backtrace();
 	error("Need %d elements, got %ld\n", n, nread);
     }
     return out;

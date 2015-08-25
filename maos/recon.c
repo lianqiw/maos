@@ -181,7 +181,7 @@ void recon_servo_update(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     if(!parms->recon.psd) return;
-    if(simu->dmerr){//compute PSD on dmerr.
+    if(simu->dmerr && parms->sim.dtrat_hi>0){//compute PSD on dmerr.
 	const int dtrat=parms->recon.psddtrat;
 	const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
 	const int iframe=iacc % dtrat;
@@ -224,7 +224,7 @@ void recon_servo_update(SIM_T *simu){
 	    dfree(psd);
 	}
     }
-    if(parms->recon.split && simu->Merr_lo){//compute PSD on low order control
+    if(parms->recon.split && simu->Merr_lo && parms->recon.psddtrat_lo>0){//compute PSD on low order control
 	const int iacc=(simu->reconisim/parms->sim.dtrat_lo);//reconstruction steps
 	const int dtrat=parms->recon.psddtrat_lo;
 	const int iframe=iacc % dtrat;

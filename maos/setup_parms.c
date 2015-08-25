@@ -519,9 +519,9 @@ static void readcfg_wfs(PARMS_T *parms){
     int wfscount=0;
     int ipowfs=0;
     for(int kpowfs=0; kpowfs<parms->npowfs; kpowfs++, ipowfs++){
-	if(parms->powfs[kpowfs].nwfs==0//no stars.
-	   || parms->powfs[ipowfs].step>=parms->sim.end){//not used.
+	if(parms->powfs[kpowfs].nwfs==0){//no stars.
 	    free_powfs_cfg(&parms->powfs[kpowfs]);
+	    parms->nwfs-=parms->powfs[kpowfs].nwfs;
 	    ipowfs--;
 	    continue;
 	}else{
@@ -1608,6 +1608,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
     if(parms->sim.fcfocus<=0){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
+	if(parms->sim.fcfocus<10){
+	    parms->sim.fcfocus=10;
+	}
     }
     parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
     parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dtlo);
