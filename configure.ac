@@ -282,17 +282,19 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
-COMMON_GCC="-fms-extensions -static-libgcc"
-COMMON_GCC+=" -Wno-deprecated-declarations" 
+COMMON_GCC=" -Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments"
-OPTIM_ALL="-O3 "
-OPTIM_ICC="$OPTIM_ALL -funroll-loops " #-static-intel"
-OPTIM_GCC="$OPTIM_ALL -funroll-loops -fprefetch-loop-arrays -fno-math-errno"
-OPTIM_CLANG="$OPTIM_ALL"
-DEBUG_ALL="-g -O0 -DDEBUG_TRACE"
-DEBUG_ICC="$DEBUG_ALL"
-DEBUG_GCC="$DEBUG_ALL -ggdb"
-DEBUG_CLANG="$DEBUG_ALL"
+COMMON_ALL=""
+
+OPTIM_ALL="$COMMON_ALL -O3 "
+OPTIM_ICC="$COMMON_ICC $OPTIM_ALL"
+OPTIM_GCC="$COMMON_GCC $OPTIM_ALL"
+OPTIM_CLANG="$COMMON_CLANG $OPTIM_ALL"
+
+DEBUG_ALL="$COMMON_ALL -g -O0 -DDEBUG_TRACE"
+DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
+DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
+DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 
 #inline definition:
 
@@ -309,10 +311,7 @@ while test -L $cc_full ;do
 done
 case "${cc_full}" in	
     *icc*)
-	CN=icc
-	COMMON="$COMMON_ICC"
-	OPTIM="$OPTIM_ICC"
-	DEBUG="$DEBUG_ICC"
+	CN=ICC
 	#Test ICC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
@@ -331,15 +330,9 @@ case "${cc_full}" in
 	;;
     *gcc*|*g++*)
 	if test -n "`$CC -v 2>&1 |grep clang`" ;then
-            CN=clang
-            OPTIM="$OPTIM_CLANG"
-	    COMMON="$COMMON_CLANG"
-	    DEBUG="$DEBUG_CLANG"
+            CN=CLANG
 	else
-            CN=gcc
-	    OPTIM="$OPTIM_GCC"
-	    COMMON="$COMMON_GCC"
-	    DEBUG="$DEBUG_GCC"
+            CN=GCC
 	fi
 	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
@@ -354,12 +347,12 @@ case "${cc_full}" in
 	    if test "$major" -ge 4 -a "$minor" -ge 2;then
 		#echo "Enabling -mtune=native"
 		#OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
-		OPTIM+=" -ftree-vectorize " #introduced in GCC 4
+		OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
-	    if test $major -eq 4 -a $minor -lt 5;then
-		gnu_inline="yes"
-	    fi
+	    #if test $major -eq 4 -a $minor -lt 5;then
+	    #gnu_inline="yes"
+	    #fi
 	    #GCC introduced openmp task in 4.4
 	    if test $major -lt 4 -o $minor -lt 4 ;then
 		unset OPENMP_CFLAGS
@@ -367,29 +360,24 @@ case "${cc_full}" in
 	fi
 	;;
     *clang*)
-        CN=clang
-	OPTIM="$OPTIM_CLANG"
-	COMMON="$COMMON_CLANG"
-	DEBUG="$DEBUG_CLANG"
+        CN=CLANG
 	;;
     *) #Other compilers
-     	OPTIM="-O3"
-        COMMON=""
-	DEBUG="-O0"
+	CN=ALL
 	;;	
 esac
-
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
-    OPTScc="$DEBUG $COMMON"
+    ccprefix=DEBUG
 else
     AM_CONDITIONAL(DEBUG,false)
     AC_DEFINE(DEBUG,[0],["Do not debug"])
-    OPTScc="$OPTIM $COMMON"
+    ccprefix=OPTIM
 fi
-
-
+optname=${ccprefix}_${CN}
+OPTScc=${!optname}
+unset optname
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
@@ -457,9 +445,9 @@ function set_mkl_lapack(){
     #First use MKL if available. 
     LAPACK="-lmkl_core"
     if test -n "$OPENMP_CFLAGS" ;then
-	if test "$CN" = "icc" ;then
+	if test "$CN" = "ICC" ;then
 	    LAPACK+=" -lmkl_intel_thread"
-	elif test "$CN" = "gcc" ;then
+	elif test "$CN" = "GCC" ;then
 	    LAPACK+=" -lmkl_gnu_thread"
 	else
 	    LAPACK+=" -lmkl_intel_thread"
@@ -859,13 +847,24 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBINOPT="$OPTS -fPIC "
+    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC "
     case "$CCBIN" in 
-        *gcc*)
-	    CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__"
-	    CCBINOPT=${CCBINOPT/-Qunused-arguments/}
-  	;;			  
+        gcc*)
+	    CCN=GCC
+	    CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
+	    ;;
+	clang*)
+	    CCN=CLANG
+	    ;;
+	icc*)
+	    CCN=ICC
+	    ;;
+	*)
+	    CCN=ALL
+	    ;;
     esac
+    optname=${ccprefix}_${CCN}
+    CCBINOPT+=" ${!optname}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart -lstdc++"
 else
     with_cuda="no"

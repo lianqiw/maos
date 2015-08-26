@@ -211,18 +211,9 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	if((fp->fd=open(fn2, O_RDONLY))==-1){
 	    perror("open for read");
 	}else{
-#ifdef __linux__
-	    //update access time.
-	    struct timespec times[2]={{0, UTIME_NOW}, {0, UTIME_OMIT}};
-	    if(futimens(fp->fd, times)){
-		warning("change access time failed for %s.\n", fp->fn);
-	    }
-#else
-	    //mac has no implementation of futimens. Use futimes instead.
 	    if(futimes(fp->fd, NULL)){
 		warning("change access/modification time failed for %s.\n", fp->fn);
 	    }
-#endif
 	}
 	break;
     case 'w':/*write */
