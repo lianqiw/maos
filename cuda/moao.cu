@@ -106,7 +106,7 @@ static void gpu_dm2gpu_embed(curmat &dmgpu, dmat *dmcpu, loc_t *loc, int nx, int
     map_t *map=loc->map;
     double *pin=dmcpu->p-1;
     for(long i=0; i<map->nx*map->ny; i++){
-	long iphi=map->p[i];
+	long iphi=(long)map->p[i];
 	if(iphi){
 	    pout[i]=pin[iphi];
 	}

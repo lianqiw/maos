@@ -76,19 +76,19 @@ int cuda_free(void *p);
 /*static int tot_mem=0; */
 #undef cudaMalloc
 #undef cudaFree
-inline int CUDAMALLOC(Real **p, size_t size){
-    return cudaMalloc((Real**)p,size);
+inline int CUDAMALLOC(void **p, size_t size){
+    return cudaMalloc(p,size);
 }
-inline int CUDAFREE(Real *p){
+inline int CUDAFREE(void *p){
     return cuda_free(p);
 }
 #define DEBUG_MEM 0
 #if DEBUG_MEM
-#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((Real**)p,size);})
-#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((Real*)p);})
+#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((void**)(void*)p,size);})
+#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((void*)p);})
 #else
-#define cudaMalloc(p,size) CUDAMALLOC((Real**)p,size)
-#define cudaFree(p) CUDAFREE((Real*)p)
+#define cudaMalloc(p,size) CUDAMALLOC((void**)(void*)p,size)
+#define cudaFree(p) CUDAFREE((void*)p)
 #endif
 
 int current_gpu();

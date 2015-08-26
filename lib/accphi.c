@@ -423,6 +423,7 @@ void prop_grid(ARGIN_GRID,
     PREPIN_GRID(0);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
+    (void)nxmin; (void)nymin; 
     const int nx = mapin->nx;
     const int ny = mapin->ny;
     OMPTASK_FOR(iloc, start, end, private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)){
@@ -602,6 +603,7 @@ void prop_grid_cubic(ARGIN_GRID,
 		     long end            /**<[in] Last point to do*/
     ){
     PREPIN_GRID(1);
+    (void)nymin;
     PREPOUT_LOC;
     RUNTIME_CUBIC;
 

@@ -997,7 +997,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		etf_free(powfs[ipowfs].etfsim2, nwvl);
 	    }
 	    if(etfthread){//preparation already running in a thread
-		pthread_join(etfthread, (void**)&powfs[ipowfs].etfsim2);
+		pthread_join(etfthread, (void**)(void*)&powfs[ipowfs].etfsim2);
 		etfthread=0;
 	    }else{
 		powfs[ipowfs].etfsim2=mketf_wrap(&etfdata);

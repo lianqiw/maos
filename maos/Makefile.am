@@ -1,6 +1,6 @@
 SUBDIRS = .
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) #Compiler flags for each target that doesn't specify per target CFLAGS. Supplements CFLAGS
-AM_LDFLAGS=$(LDEXE_MAOS) $(LDOPTS) $(LDEXE) 
+AM_LDFLAGS=$(LDEXE_MAOS) $(LDOPTS) $(LDEXE_FULL) 
 
 #the libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later
 nobase_include_HEADERS=common.h maos.h parms.h types.h utils.h setup_powfs.h \

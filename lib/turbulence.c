@@ -118,14 +118,14 @@ static void spect_screen_do(cellarr *fc, GENATM_T *data){
     if(data->r0logpsds){
 	double slope=data->r0logpsds->p[0];
 	double strength=data->r0logpsds->p[1]*(5./3.);//strength of log(wt)
-	double fmin=0, fmax=0;
+	double minfreq=0, maxfreq=0;
 	if(data->r0logpsds->nx>2){//low frequency end is converted to outscale
-	    fmin=data->r0logpsds->p[2];
+	    minfreq=data->r0logpsds->p[2];
 	}
 	if(data->r0logpsds->nx>3){
-	    fmax=data->r0logpsds->p[3];
+	    maxfreq=data->r0logpsds->p[3];
 	}
-	spect2=spatial_psd(nx, ny, dx, strength, fmin, fmax, slope, 0.5);
+	spect2=spatial_psd(nx, ny, dx, strength, minfreq, maxfreq, slope, 0.5);
 	dc2=cellnew(2,1);
 	dc2->p[0] = dnew(nx, ny);
 	dc2->p[1] = dnew(nx, ny);
@@ -361,8 +361,8 @@ dmat *spatial_psd(long nx,      /**<The size*/
 		  long ny,      /**<The size*/
 		  double dx,    /**<The sampling of spatial coordinate.*/
 		  double strength,    /**<The Fried parameter*/
-		  double fmin,  /**<Low end frequency cut off*/
-		  double fmax,  /**<High end frequency cut off*/
+		  double minfreq,  /**<Low end frequency cut off*/
+		  double maxfreq,  /**<High end frequency cut off*/
 		  double slope, /**<should be -11/3 for von karman or kolmogorov
 				   screens, or -4 for biharmonic screen (just
 				   testing only).*/
@@ -370,11 +370,11 @@ dmat *spatial_psd(long nx,      /**<The size*/
     ){
     if(slope==0) slope=-11./3.;//Kolmogorov
     slope*=power/2.;
-    if(fmax==0) fmax=INFINITY;
+    if(maxfreq==0) maxfreq=INFINITY;
     const double dfx=1./(nx*dx);
     const double dfy=1./(ny*dx);
-    const double fmin2=fmin*fmin;
-    const double fmax2=fmax*fmax;
+    const double minfreq2=minfreq*minfreq;
+    const double maxfreq2=maxfreq*maxfreq;
     const double scrnstr=pow(strength*(dfx*dfy),power);
     const int nx2=nx/2;
     const int ny2=ny/2;
@@ -384,12 +384,12 @@ dmat *spatial_psd(long nx,      /**<The size*/
 	double r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
 	for(int ix=0;ix<nx;ix++){
 	    double r2=pow((ix<nx2?ix:ix-nx)*dfx,2)+r2y;
-	    if(r2<=fmax2){
-		psd->p[ix+iy*nx] = pow(r2+fmin2,slope)*scrnstr;
+	    if(r2<=maxfreq2){
+		psd->p[ix+iy*nx] = pow(r2+minfreq2,slope)*scrnstr;
 	    }
 	}
     }
-    if(fmin==0) psd->p[0]=0;  //remove infinite piston mode if fmin is zero (L0 is inf).
+    if(minfreq==0) psd->p[0]=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
     return psd;
 }
 

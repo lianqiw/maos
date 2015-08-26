@@ -4,7 +4,9 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURLS=" https://github.com/lianqiw/files/raw/master/"
+BASEURLS=
+BASEURLS+=" https://bitbucket.org/lianqiw/files/downloads/"
+BASEURLS+=" https://github.com/lianqiw/files/raw/master/"
 BASEURLS+=" https://sourceforge.net/projects/lianqiw/files/external"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
@@ -66,219 +68,6 @@ if test "${USER}" = "lianqiw" ;then
 fi
 LDEXE=
 OPTS=
-if test -z "$OPENMP_CFLAGS" ;then
-    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
-else
-    CFLAGS+=" $OPENMP_CFLAGS"
-fi
-OPTSextra=""
-
-#Enable the user to force 32 or 64 bit program
-AC_ARG_ENABLE(64,  AS_HELP_STRING([--enable-64],[Force 64 (disable=32) bit executables]))
-
-if test "$enable_64" = "yes" ;then
-    host_cpu=x86_64
-elif test "$enable_64" = "no" ;then
-    host_cpu=i386
-else
-    host_cpu=$(uname -m)
-fi
-case ${host_cpu} in 
-    *64)
-	host_cpu=x86_64
-	CFLAGS_CPU="-m64"
-	CFLAGS_ARCH="-m64 -DDLONG"
-        LDOPTS+=" -m64"
-        #CDEFINE="__x86_64__"
-	AC_DEFINE(X86_64, [1], "X86_64 Machine")
-	objcopy_output=elf64-x86-64
-	objcopy_arch=i386:x86-64
-	echo "CPU is 64 bit"
-	;;
-    *86)
-	host_cpu=i386
-	CFLAGS_CPU="-m32"
-	CFLAGS_ARCH="-m32 -DDINT -D_FILE_OFFSET_BITS=64"
-	LDOPTS+=" -m32"
-        #CDEFINE="__i386__"
-	AC_DEFINE(X86, [1], "I386 Machine")
-	objcopy_output=elf32-i386
-	objcopy_arch=i386
-	echo "CPU is 32 bit"
-	;;
-    *)
-        echo host_cpu=$host_cpu
-        AC_MSG_ERROR([Unrecognized host_cpu])
-	;;
-esac   
-#Used for embedding conf folder in maos exe
-AC_SUBST(objcopy_output)
-AC_SUBST(objcopy_arch)
-#AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw_system="yes"],[has_fftw_system='no'])
-#unset ac_cv_lib_fftw3_fftw_execute
-#Check operating system.
-AM_CONDITIONAL(LINUX,  false)
-AM_CONDITIONAL(BSD,    false)
-AM_CONDITIONAL(DARWIN, false)
-AM_CONDITIONAL(WIN,    false)
-mkl_avail="no"
-echo host_os=$host_os
-case "$host_os" in
-    *linux*)
-	AM_CONDITIONAL(LINUX, true)
-	LDEXE+=" -lrt" #need real time library.
-	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
-	CFLAGS_EXTRA="-g -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
-	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
-	if test "${host_cpu}" = "x86_64" ;then
-	    libsuffix="64"
-	else
-	    libsuffix="32"
-	fi
-	mkl_avail="yes"
-	system="linux"
-	ldsuffix="so"
-	;;
-    *darwin*)
-	AM_CONDITIONAL(DARWIN, true)
-	CFLAGS_EXTRA="-fPIC"
-	mkl_avail="no"
-	libsuffix=fat
-	system="apple"
-	ldsuffix="dylib"
-	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_ARCH+=" -mmacosx-version-min=10.6"
-	;;
-    *bsd*)
-	AM_CONDITIONAL(BSD, true)
-	system="bsd"
-	ldsuffix="so"
-	;;
-    *cygwin*|*mingw*)
-	AM_CONDITIONAL(WIN, true)
-	system="win"
-	ldsuffix="dll"
-	;;
-    none)
-	AC_MSG_NOTICE([OS is none])
-	;;
-    *)
-	echo host_os=$host_os
-	AC_MSG_ERROR([Unrecognized OS])
-esac
-
-AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
-PRE_DIR="${HOME}/.aos/"          #prefix for installation
-TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
-LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
-LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-CFLAGS+=" -I${PRE_DIR}/include"
-DOWNLOAD_DIR="${TMP_DIR}/downloads"
-OPTS+=" $CFLAGS_EXTRA $CFLAGS_ARCH"
-
-die(){
-    shift
-    echo "Error:$@"
-    exit
-}
-#Try to discover CUDA install in the system
-if ! which which >/dev/null 2>&1;then
-    die "Please install 'which'"
-fi
-if test -n "`which nvcc 2>/dev/null`" ;then
-    NVCC="$(which nvcc)"
-    if test -L "$NVCC" ;then
-	NVCC="$(readlink "$NVCC")"
-    fi
-else
-    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
-	if test -x "${cuda}/bin/nvcc" ;then
-	    NVCC="${cuda}/bin/nvcc"
-	    break;
-	fi
-    done
-    unset nvcc
-fi
-if test -n "$NVCC" ;then
-    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-    unset NVCC
-fi
-
-#Compile mex routines if MATLAB is detected and single is not enabled
-MEXDIR_AUTO=
-if test -n "`which mex 2>/dev/null`" ;then
-    MEX="$(which mex)"
-    if test -L "$MEX" ;then
-	MEX="$(readlink "$MEX")"
-    fi
-    MEXDIR_AUTO="$(dirname "$MEX")"
-elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-	if test -x "$i/bin/mex" ;then
-       	    MEXDIR_AUTO="${i}/bin"
-	fi
-    done
-elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
-	if test -x "$i/bin/mex" ;then
-       	    MEXDIR_AUTO="${i}/bin"
-	fi
-    done
-fi
-
-#Discover default download method
-if test -x "`which wget 2>/dev/null`" ;then
-    wget="wget -t1 --no-check-certificate"
-    wgetoutput="-O"
-elif test -x "`which curl 2>/dev/null`" ;then
-    wget="curl --retry 1 -L --progress-bar"
-    wgetoutput="--output"
-else
-    wget="die wget/curl not found ; "
-fi
-#Common configure options.
-AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
-AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
-AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
-AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
-AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
-AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
-if test -z "$MEXDIR" ;then
-    with_matlab=no
-fi
-
-AM_CONDITIONAL(USE_SCHEDULER, true)
-if test "$use_scheduler" = "no" ;then
-    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
-    AM_CONDITIONAL(USE_SCHEDULER, false)
-    use_websockets="no"
-fi
-if test "$host_cpu" = "x86_64" ;then 
-    chol_fun=cholmod_l_factorize
-    AM_CONDITIONAL(USE_LONG, true)
-else
-    chol_fun=cholmod_factorize
-    AM_CONDITIONAL(USE_LONG, false)
-fi
-
-LDEXE+=" -static" #show that we prefer static linking.
-if test "x$use_static" = "xyes" ;then
-    LDEXE_MAOS="-all-static" #only all static linking for maos
-    AM_CONDITIONAL(USE_STATIC, true)
-    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
-else
-    AM_CONDITIONAL(USE_STATIC, false)
-    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
-fi
-
-if test x$use_oprof = "xyes" ;then
-    OPTSprof+=" -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
-fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
@@ -378,6 +167,221 @@ fi
 optname=${ccprefix}_${CN}
 OPTScc=${!optname}
 unset optname
+
+if test -z "$OPENMP_CFLAGS" ;then
+    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
+else
+    CFLAGS+=" $OPENMP_CFLAGS"
+fi
+OPTSextra=""
+
+#Enable the user to force 32 or 64 bit program
+AC_ARG_ENABLE(64,  AS_HELP_STRING([--enable-64],[Force 64 (disable=32) bit executables]))
+
+if test "$enable_64" = "yes" ;then
+    host_cpu=x86_64
+elif test "$enable_64" = "no" ;then
+    host_cpu=i386
+else
+    host_cpu=$(uname -m)
+fi
+case ${host_cpu} in 
+    *64)
+	host_cpu=x86_64
+	CFLAGS_CPU="-m64"
+	CFLAGS_ARCH="-m64 -DDLONG"
+        LDOPTS+=" -m64"
+        #CDEFINE="__x86_64__"
+	AC_DEFINE(X86_64, [1], "X86_64 Machine")
+	objcopy_output=elf64-x86-64
+	objcopy_arch=i386:x86-64
+	echo "CPU is 64 bit"
+	;;
+    *86)
+	host_cpu=i386
+	CFLAGS_CPU="-m32"
+	CFLAGS_ARCH="-m32 -DDINT -D_FILE_OFFSET_BITS=64"
+	LDOPTS+=" -m32"
+        #CDEFINE="__i386__"
+	AC_DEFINE(X86, [1], "I386 Machine")
+	objcopy_output=elf32-i386
+	objcopy_arch=i386
+	echo "CPU is 32 bit"
+	;;
+    *)
+        echo host_cpu=$host_cpu
+        AC_MSG_ERROR([Unrecognized host_cpu])
+	;;
+esac   
+#Used for embedding conf folder in maos exe
+AC_SUBST(objcopy_output)
+AC_SUBST(objcopy_arch)
+#AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw_system="yes"],[has_fftw_system='no'])
+#unset ac_cv_lib_fftw3_fftw_execute
+#Check operating system.
+AM_CONDITIONAL(LINUX,  false)
+AM_CONDITIONAL(BSD,    false)
+AM_CONDITIONAL(DARWIN, false)
+AM_CONDITIONAL(WIN,    false)
+mkl_avail="no"
+echo host_os=$host_os
+case "$host_os" in
+    *linux*)
+	AM_CONDITIONAL(LINUX, true)
+	LDEXE+=" -lrt" #need real time library.
+	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
+	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
+	if test "${host_cpu}" = "x86_64" ;then
+	    libsuffix="64"
+	else
+	    libsuffix="32"
+	fi
+	mkl_avail="yes"
+	system="linux"
+	ldsuffix="so"
+	;;
+    *darwin*)
+	AM_CONDITIONAL(DARWIN, true)
+	CFLAGS_EXTRA="-fPIC"
+	mkl_avail="no"
+	libsuffix=fat
+	system="apple"
+	ldsuffix="dylib"
+	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
+	CFLAGS_ARCH+=" -mmacosx-version-min=10.6"
+	;;
+    *bsd*)
+	AM_CONDITIONAL(BSD, true)
+	system="bsd"
+	ldsuffix="so"
+	;;
+    *cygwin*|*mingw*)
+	AM_CONDITIONAL(WIN, true)
+	system="win"
+	ldsuffix="dll"
+	;;
+    none)
+	AC_MSG_NOTICE([OS is none])
+	;;
+    *)
+	echo host_os=$host_os
+	AC_MSG_ERROR([Unrecognized OS])
+esac
+
+AC_DEFINE_UNQUOTED(LDSUFFIX, ["$ldsuffix"], "Suffix of dynamic load library")
+PRE_DIR="${HOME}/.aos/"          #prefix for installation
+TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
+LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
+LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
+CFLAGS+=" -I${PRE_DIR}/include"
+DOWNLOAD_DIR="${TMP_DIR}/downloads"
+OPTS+=" $CFLAGS_EXTRA $CFLAGS_ARCH"
+
+die(){
+    shift
+    echo "Error:$@"
+    exit
+}
+#Try to discover CUDA install in the system
+if ! which which >/dev/null 2>&1;then
+    die "Please install 'which'"
+fi
+if test -n "`which nvcc 2>/dev/null`" ;then
+    NVCC="$(which nvcc)"
+    if test -L "$NVCC" ;then
+	NVCC="$(readlink "$NVCC")"
+    fi
+else
+    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
+	if test -x "${cuda}/bin/nvcc" ;then
+	    NVCC="${cuda}/bin/nvcc"
+	    break;
+	fi
+    done
+    unset nvcc
+fi
+if test -n "$NVCC" ;then
+    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
+    unset NVCC
+fi
+
+#Compile mex routines if MATLAB is detected and single is not enabled
+MEXDIR_AUTO=
+if test -n "`which mex 2>/dev/null`" ;then
+    MEX="$(which mex)"
+    if test -L "$MEX" ;then
+	MEX="$(readlink "$MEX")"
+    fi
+    MEXDIR_AUTO="$(dirname "$MEX")"
+elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
+    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+	if test -x "$i/bin/mex" ;then
+       	    MEXDIR_AUTO="${i}/bin"
+	fi
+    done
+elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
+    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
+	if test -x "$i/bin/mex" ;then
+       	    MEXDIR_AUTO="${i}/bin"
+	fi
+    done
+fi
+
+#Discover default download method
+if test -x "`which curl 2>/dev/null`" ;then
+    wget="curl --retry 1 -L --progress-bar"
+    wgetoutput="--output"
+elif test -x "`which wget 2>/dev/null`" ;then
+    wget="wget -t1 --no-check-certificate"
+    wgetoutput="-O"
+else
+    wget="die wget/curl not found ; "
+fi
+#Common configure options.
+AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
+AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
+AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
+AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
+AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
+AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
+AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
+if test -z "$MEXDIR" ;then
+    with_matlab=no
+fi
+
+AM_CONDITIONAL(USE_SCHEDULER, true)
+if test "$use_scheduler" = "no" ;then
+    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+    AM_CONDITIONAL(USE_SCHEDULER, false)
+    use_websockets="no"
+fi
+if test "$host_cpu" = "x86_64" ;then 
+    chol_fun=cholmod_l_factorize
+    AM_CONDITIONAL(USE_LONG, true)
+else
+    chol_fun=cholmod_factorize
+    AM_CONDITIONAL(USE_LONG, false)
+fi
+
+LDEXE+=" -static" #show that we prefer static linking.
+if test "x$use_static" = "xyes" ;then
+    LDEXE_MAOS="-all-static" #only all static linking for maos
+    AM_CONDITIONAL(USE_STATIC, true)
+    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
+else
+    AM_CONDITIONAL(USE_STATIC, false)
+    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
+fi
+
+if test x$use_oprof = "xyes" ;then
+    OPTSprof+=" -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+fi
+
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
@@ -913,7 +917,8 @@ if test ! -f "${srcdir}/version.h" ;then
     )
 fi
 LDOPTS+=" -no-fast-install -avoid-version"
-LDEXE="$LDFFT $LAPACK $LDCHOL $LDEXE -lz -lm -ldl"
+LDEXE+=" -lz -lm -ldl"
+LDEXE_FULL="$LDFFT $LAPACK $LDCHOL $LDEXE"
 echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)
@@ -924,6 +929,7 @@ AC_SUBST(LDCHOL)
 AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
 AC_SUBST(LDEXE)
+AC_SUBST(LDEXE_FULL)
 AC_SUBST(LDEXE_MAOS)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)

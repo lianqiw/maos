@@ -263,8 +263,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(grad, "dither_grad");
 	writebin(reg, "dither_reg");
 	writebin(ints, "dither_ints");
-	rand_t srand;
-	seed_rand(&srand, 1);
+	rand_t rstat;
+	seed_rand(&rstat, 1);
 	dmat *tmp=0;
 	int nj=10, nn=10;
 	dmat *res=dnew(nj, nn);
@@ -275,7 +275,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opdi);
 	    for (int in=0; in<nn; in++){
 		dadd(&ints2, 0, ints, 100);
-		addnoise(ints2, &srand, 0, 0, 0, 0, in);
+		addnoise(ints2, &rstat, 0, 0, 0, 0, in);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
 		dmm(&tmp, 0, reg, grad, "nn", 1);
 		IND(res, j, in)=tmp->p[0];

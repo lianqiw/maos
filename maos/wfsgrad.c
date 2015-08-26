@@ -411,13 +411,13 @@ void wfsgrad_iwfs(thread_t *info){
     info("wfs %d grad timing: ray %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2);
 #endif
 }
-static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
+static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
 			      long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
 			      long npoint,  /**<number of points during dithering*/
-			      int detrend   /**<flag for detrending (remove linear signal)*/
+			      int detrend   /**<flag for detrending (remove linear dithersig)*/
     ){
-    const long nmod=signal->nx;
-    long nframe=(signal->ny-1)/dtrat+1;//number of wavefront frames
+    const long nmod=dithersig->nx;
+    long nframe=(dithersig->ny-1)/dtrat+1;//number of wavefront frames
     double slope=0;
     long offset=(nframe/npoint-1)*npoint;//number of WFS frame separations between first and last cycle
     if(detrend && offset){//detrending
@@ -425,7 +425,7 @@ static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
 	    for(long im=0; im<nmod; im++){
 		long i0=ip*dtrat*nmod+im;
 		long i1=(ip+offset)*dtrat*nmod+im;
-		slope+=signal->p[i1]-signal->p[i0];
+		slope+=dithersig->p[i1]-dithersig->p[i0];
 	    }
 	}
 	slope/=(npoint*nmod*offset);
@@ -438,8 +438,8 @@ static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
 	    double angle=anglei*iframe;//position of dithering
 	    double cs=cos(angle);
 	    double ss=sin(angle);
-	    double ttx=signal->p[iframe*dtrat*2]-slope*iframe;
-	    double tty=signal->p[iframe*dtrat*2+1]-slope*iframe;
+	    double ttx=dithersig->p[iframe*dtrat*2]-slope*iframe;
+	    double tty=dithersig->p[iframe*dtrat*2+1]-slope*iframe;
 	    ipv+=(ttx*cs+tty*ss);
 	    qdv+=(ttx*ss-tty*cs);
 	}
@@ -448,16 +448,16 @@ static double calc_dither_amp(dmat *signal, /**<array of data. nmod*nsim */
 	    double angle=anglei*iframe;//position of dithering
 	    double cs=cos(angle);
 	    double ss=sin(angle);
-	    double mod=signal->p[iframe*dtrat]-slope*iframe;
+	    double mod=dithersig->p[iframe*dtrat]-slope*iframe;
 	    ipv+=(mod*cs);
 	    qdv+=(mod*ss);
 	}
     }
     double a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-    //writebin(signal, "signal"); exit(0);
+    //writebin(dithersig, "dithersig"); exit(0);
     /*{
 	static int count=0;
-	writebin(signal, "signal_%d", count);
+	writebin(dithersig, "dithersig_%d", count);
 	info("a2m=%g, slope=%g, npoint=%ld, dtrat=%ld, detrend=%d\n", a2m, slope, npoint, dtrat, detrend);
 	count++;
 	if(count==2){ exit(0);}
@@ -472,8 +472,8 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int isim=simu->isim;
     /*Uplink FSM*/
-    const int index=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
-    dmat *PTT=recon->PTT?(recon->PTT->p[index]):0;
+    const int ind=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
+    dmat *PTT=recon->PTT?(recon->PTT->p[ind]):0;
     if(!PTT){
 	error("powfs %d has FSM, but PTT is empty\n", ipowfs);
     }
@@ -485,7 +485,7 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     IND(simu->fsmerrs->p[iwfs], 1, isim)=simu->fsmerr->p[iwfs]->p[1];
 }
 
-/*Postprocessing for dithering signal extraction*/
+/*Postprocessing for dithering dithersig extraction*/
 static void wfsgrad_dither(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
@@ -512,7 +512,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	}
 	    
 	/*Use delay locked loop to determine the phase of actual dithering
-	  signal from WFS error signal, i.e., average position of expected
+	  dithersig from WFS error dithersig, i.e., average position of expected
 	  spot during integration. Uplink propagation is accounted for in
 	  LGS.*/
 	double err, cd, sd;
@@ -521,7 +521,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	     +cd*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
 	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
     }else if(parms->powfs[ipowfs].dither>1){
-	//DM dithering.  Compute dither signal in input (DM) and output (gradients) signal.
+	//DM dithering.  Compute dither dithersig in input (DM) and output (gradients) dithersig.
 	dmat *tmp=0;
 	const int idm=parms->idmground;
 	dmm(&tmp, 0, IND(recon->dither_ra, idm, idm), simu->dmreal->p[idm], "nn", 1);
@@ -535,8 +535,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
     const int npll=parms->powfs[ipowfs].dither_pllrat;
     int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
     if(npllacc%npll==0){
-	//Synchronous detection of dither signal in input (DM) and output
-	//(gradients) signal. The ratio between the two is used for optical gain adjustment.
+	//Synchronous detection of dither dithersig in input (DM) and output
+	//(gradients) dithersig. The ratio between the two is used for optical gain adjustment.
 	pd->deltam=pd->delta;
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
 	int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
@@ -583,10 +583,10 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 		dcellscale(pd->imb, scale1);
 		dmat *ibgrad=0;
 		calc_phygrads(&ibgrad, pd->imb->p, parms, powfs, iwfs, 2);
-		if(parms->powfs[ipowfs].trs){//tip/tilt drift signal
+		if(parms->powfs[ipowfs].trs){//tip/tilt drift dithersig
 		    dmat *tt=dnew(2,1);
-		    const int index=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
-		    dmat *PTT=recon->PTT?(recon->PTT->p[index]):0;
+		    const int ind=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
+		    dmat *PTT=recon->PTT?(recon->PTT->p[ind]):0;
 		    dmm(&tt, 0, PTT, ibgrad, "nn", 1);
 		    simu->fsmerr->p[iwfs]->p[0]+=tt->p[0];
 		    simu->fsmerr->p[iwfs]->p[1]+=tt->p[1];
@@ -618,7 +618,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 
     if(!parms->powfs[ipowfs].trs){
 	/*when WFS t/t is used for reconstruction, do not close FSM
-	 * loop. Subtract actual dithering signal.*/
+	 * loop. Subtract actual dithering dithersig.*/
 	if(parms->powfs[ipowfs].dither==1 && simu->gradscale->p[iwfs]){
 	    double amp,cs,ss; 
 	    dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
@@ -905,7 +905,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    }
 		    double mgold=dsum(simu->gradscale->p[iwfs])/ng;
 		    double mgnew;
-		    //gg0 is output/input of dither signal.
+		    //gg0 is output/input of dither dithersig.
 		    if(!pd->gg0){//single gain for all subapertures. For Pyramid WFS
 #if 0 //HIA method.
 			double adj=parms->powfs[ipowfs].dither_gog*mgold*(1-pd->a2me/pd->a2m);
@@ -940,7 +940,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			int ic=(npllacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgnew;
 		    }			   
-		    //adjust WFS measurement dither signal by gain adjustment. used for dither t/t removal from gradients.
+		    //adjust WFS measurement dither dithersig by gain adjustment. used for dither t/t removal from gradients.
 		    pd->a2me*=(mgnew/mgold);
 		    dcellscale(powfs[ipowfs].saneaxy, pow(mgnew/mgold, 2));
 		    if(parms->save.dither){

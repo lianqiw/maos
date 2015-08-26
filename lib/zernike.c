@@ -291,8 +291,8 @@ dmat *cov_diagnolize(const dmat *mod, /**<Input mode*/
     dmm(&kl, 0, mod, U, "nn", 1);
     {
 	//Drop modes with infinitesimal strength
-	double smax=S->p[0];
-	double thres=smax*1e-10;
+	double ssmax=S->p[0];
+	double thres=ssmax*1e-10;
 	long count=0;
 	for(long i=S->nx-1; i>0; i--){
 	    if(S->p[i]<thres){
