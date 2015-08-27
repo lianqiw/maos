@@ -232,6 +232,7 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	/*convert recon->saneai to gpu. */
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
 	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];/*first wfs in this group. */
 	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
 	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){

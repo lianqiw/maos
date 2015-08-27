@@ -61,6 +61,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip==3) continue;
 	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs->p[0];
 	int nsa=powfs[ipowfs].saloc->nloc;
 	int do_ref=0;
@@ -171,6 +172,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     int counthi=0;
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip==3) continue;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	dmat *sanea_iwfs=dspdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	double area_thres;
@@ -219,6 +221,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     dscale(recon->neam, 1./sqrt(TOMOSCALE));
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip==3) continue;
 	if(!parms->powfs[ipowfs].lo){
 	    neamhi+=pow(recon->neam->p[iwfs],2);
 	    counthi++;

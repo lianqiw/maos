@@ -134,8 +134,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
     }
     if(parms->save.setup){
-	writebin(pywfs->si, "pywfs_si0");
-	locwrite(pywfs->locfft->loc, "pywfs_locfft");
+	writebin(pywfs->si, "powfs%d_si0", ipowfs);
+	locwrite(pywfs->locfft->loc, "powfs%d_locfft", ipowfs);
     }
     {
 	//Determine subapertures area
@@ -143,7 +143,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dmat *ints=0;
 	pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 	if(parms->save.setup){
-	    writebin(ints, "pywfs_ints0");
+	    writebin(ints, "powfs%d_ints0", ipowfs);
 	}
 	int nints=ints->nx;
 	pywfs->saa=dnew(nints, 1);

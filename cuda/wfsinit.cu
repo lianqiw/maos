@@ -369,9 +369,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].phytypesim==1){
 		    //Separated with gpu_wfsgrad_upate_mtche();
 		}else if(parms->powfs[ipowfs].phytypesim==2){/*cog*/
-		    if(powfs[ipowfs].intstat->cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+		    if(powfs[ipowfs].cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			cp2gpu(cuwfs[iwfs].cogcoeff, 
-			       powfs[ipowfs].intstat->cogcoeff->p[powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);
+			       powfs[ipowfs].cogcoeff->p[powfs[ipowfs].cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);
 		    }else{
 			cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
 		    }

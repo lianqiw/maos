@@ -1577,7 +1577,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].type==1 && parms->powfs[ipowfs].llt){
 	    error("Pyramid WFS is not available for LGS WFS\n");
 	}
-	if(!parms->powfs[ipowfs].trs){
+	if(parms->powfs[ipowfs].lo || (parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){//has t/t measurement.
 	    if(parms->sim.dtrat_lo<0){
 		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
 	    }else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
@@ -1590,7 +1590,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
 	if(!parms->powfs[ipowfs].lo){
-	    if(!parms->powfs[ipowfs].skip){
+	    if(!parms->powfs[ipowfs].skip){//participate in high order recon
 		if(parms->sim.dtrat_hi<0){
 		    parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
 		}else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){

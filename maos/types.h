@@ -72,7 +72,6 @@ typedef struct INTSTAT_T{
     dcell *gy;          /**<gradient of i0 along y*/
     dmat *i0sum;        /**<sum of i0*/
     dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
-    dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
@@ -119,6 +118,7 @@ typedef struct POWFS_T{
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
     dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
+    dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     //subaperture noise equivalent angles.
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
     int namp;           /**<number of amplitude maps*/

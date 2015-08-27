@@ -559,8 +559,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    break;
 		case 2:{/*tCoG gives gradients along r/a*/
 		    dcog(g,ints,0.,0.,
-			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
-			 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+			 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
+			 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
 		    g[0]*=pixthetax;
 		    g[1]*=pixthetay;
 		}
@@ -655,8 +655,8 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 	    gradmf->p[isa+nsa]=geach[1]*scale;
 	    {
 		dcog(geach, i0_new->p[isa], 0, 0, 
-		     powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
-		     powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+		     powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
+		     powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
 		geach[0]*=pixthetax;
 		geach[1]*=pixthetay;
 		if(srot){
@@ -883,8 +883,8 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    break;
 	case 2:{
 	    dcog(geach,ints[isa],0.,0.,
-		 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2],
-		 powfs[ipowfs].intstat->cogcoeff->p[wfsind]->p[isa*2+1]);
+		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
+		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
 	    geach[0]*=pixthetax;
 	    geach[1]*=pixthetay;
 	    if(srot){

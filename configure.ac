@@ -60,6 +60,66 @@ BUILD_DIR=$(pwd)
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
+
+#AUTO detect libraries in the system
+#Try to discover CUDA install in the system
+if ! which which >/dev/null 2>&1;then
+    die "Please install 'which'"
+fi
+if test -n "`which nvcc 2>/dev/null`" ;then
+    NVCC="$(which nvcc)"
+    if test -L "$NVCC" ;then
+	NVCC="$(readlink "$NVCC")"
+    fi
+else
+    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
+	if test -x "${cuda}/bin/nvcc" ;then
+	    NVCC="${cuda}/bin/nvcc"
+	    break;
+	fi
+    done
+    unset nvcc
+fi
+if test -n "$NVCC" ;then
+    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
+    unset NVCC
+fi
+
+#Compile mex routines if MATLAB is detected and single is not enabled
+MEXDIR_AUTO=
+if test -n "`which mex 2>/dev/null`" ;then
+    MEX="$(which mex)"
+    if test -L "$MEX" ;then
+	MEX="$(readlink "$MEX")"
+    fi
+    MEXDIR_AUTO="$(dirname "$MEX")"
+elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
+    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+	if test -x "$i/bin/mex" ;then
+       	    MEXDIR_AUTO="${i}/bin"
+	fi
+    done
+elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
+    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
+	if test -x "$i/bin/mex" ;then
+       	    MEXDIR_AUTO="${i}/bin"
+	fi
+    done
+fi
+
+#Common configure options.
+AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
+AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
+AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
+AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
+AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
+AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
+AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
+AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
+
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
@@ -283,50 +343,7 @@ die(){
     echo "Error:$@"
     exit
 }
-#Try to discover CUDA install in the system
-if ! which which >/dev/null 2>&1;then
-    die "Please install 'which'"
-fi
-if test -n "`which nvcc 2>/dev/null`" ;then
-    NVCC="$(which nvcc)"
-    if test -L "$NVCC" ;then
-	NVCC="$(readlink "$NVCC")"
-    fi
-else
-    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
-	if test -x "${cuda}/bin/nvcc" ;then
-	    NVCC="${cuda}/bin/nvcc"
-	    break;
-	fi
-    done
-    unset nvcc
-fi
-if test -n "$NVCC" ;then
-    CUDADIR_AUTO="$(dirname "$(dirname "${NVCC}")")"
-    unset NVCC
-fi
 
-#Compile mex routines if MATLAB is detected and single is not enabled
-MEXDIR_AUTO=
-if test -n "`which mex 2>/dev/null`" ;then
-    MEX="$(which mex)"
-    if test -L "$MEX" ;then
-	MEX="$(readlink "$MEX")"
-    fi
-    MEXDIR_AUTO="$(dirname "$MEX")"
-elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
-	if test -x "$i/bin/mex" ;then
-       	    MEXDIR_AUTO="${i}/bin"
-	fi
-    done
-elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
-	if test -x "$i/bin/mex" ;then
-       	    MEXDIR_AUTO="${i}/bin"
-	fi
-    done
-fi
 
 #Discover default download method
 if test -x "`which curl 2>/dev/null`" ;then
@@ -338,21 +355,7 @@ elif test -x "`which wget 2>/dev/null`" ;then
 else
     wget="die wget/curl not found ; "
 fi
-#Common configure options.
-AC_ARG_ENABLE(all-static, AS_HELP_STRING([--diable-all-static], [Compile statically]), [use_static="$enableval"],[use_static="no"])
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],[Turn on debug]), [debug="$enableval"], [debug="no"])
-AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code profiling.]),[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
-AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
-AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
-AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
-AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
-AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
-AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
-if test -z "$MEXDIR" ;then
-    with_matlab=no
-fi
+
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
@@ -545,6 +548,10 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
     unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
+fi
+
+if test -z "$MEXDIR" ;then
+    with_matlab=no
 fi
 if test "$with_matlab" != "no" ;then
     #cannot compile with single floating fft when compiling mex routines
