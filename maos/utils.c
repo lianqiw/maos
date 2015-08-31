@@ -553,6 +553,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		double g[3]={0,0,0};
 		//notice that all the following gives gradients in x/y coord only.
 		switch(type){
+		case 0://no-op
+		    break;
 		case 1:{/*(constraint) Matched filter give gradients along x/y*/
 		    dmulvec(g, mtche[isa], ints->p,1.);
 		}

@@ -588,7 +588,6 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 	    //double std=dstd(tmp);
 	    double tmax,tmin;
 	    dmaxmin(tmp->p, tmp->nx, &tmax, &tmin);
-	    info("mode %d, p/v=%g\n", imod, tmax-tmin);
 	    poke/=(tmax-tmin);//sqrt(radial);
 	    dadd(&opdin, 0, tmp, poke);
 	    dfree(tmp);

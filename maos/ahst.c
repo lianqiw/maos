@@ -555,6 +555,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	ngsmod->GM=cellnew(parms->nwfsr, 1);
 	int nttwfs=0;
 	int nttfwfs=0;
+	info2("Low order control includes WFS");
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip==3) continue;
@@ -565,6 +566,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 		}else{
 		    nttfwfs++;
 		}
+		info2(" %d", iwfs);
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(parms->powfs[ipowfs].type==0){//shwfs
 			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
@@ -581,11 +583,12 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
+	info2("\n");
 	if(ngsmod->nmod>2 && nttfwfs==0){
 	    error("Only TT wfs cannot control plate scale\n");
 	}
 	if(ngsmod->nmod>5 && nttfwfs==1 && nttwfs==0){
-	    /*There is only one wfs, remove first plate scale mode as it degenerates with focus mode*/
+	    warning("There is only one wfs, remove first plate scale mode as it degenerates with focus mode");
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(ngsmod->GM->p[iwfs]){
 		    int nx=ngsmod->GM->p[iwfs]->nx;

@@ -75,7 +75,7 @@ void save_gradol(SIM_T *simu){
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
-	    cellarr_dmat(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);
+	    cellarr_dmat(simu->save->gradol[iwfs], simu->reconisim/parms->powfs[ipowfs].dtrat, simu->gradlastol->p[iwfs]);
 	}
     }
     if(parms->save.ngcov>0){

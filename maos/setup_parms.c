@@ -2456,7 +2456,7 @@ static void print_parms(const PARMS_T *parms){
     
     int i;
     const char *phytype[]={
-	"",
+	"Skip",
 	"\033[0;32mmatched filter\033[0;0m",
 	"\033[0;31mthresholded center of gravity\033[0;0m",
 	"\033[0;31mMaximum A Priori Tracing (MAP)\033[0;0m"

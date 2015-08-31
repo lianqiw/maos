@@ -148,19 +148,16 @@ inline void* malloc4async(size_t N){
 inline void free4async(void *P){
     cudaFreeHost(P);
 }
+extern int NULL_STREAM;
+#if DEBUG
 #define CUDA_CHECK_ERROR DO(cudaGetLastError())
-#define CUDA_SYNC_STREAM ({DO(cudaGetLastError());DO(cudaStreamSynchronize(stream));})
-#define CUDA_SYNC_DEVICE ({DO(cudaGetLastError());DO(cudaDeviceSynchronize());})
-#define TIMING 0
-#if TIMING == 1
-extern int nstream;
-#define STREAM_NEW(stream) ({DO(cudaStreamCreate(&stream));info2("nstream=%d\n",lockadd(&nstream,1)+1);})
-#define STREAM_DONE(stream) ({DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream));info2("nstream=%d\n",lockadd(&nstream,-1)-1);})
 #else
-#define STREAM_NEW(stream) DO(cudaStreamCreate(&stream))
-#define STREAM_DONE(stream) DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream))
+#define CUDA_CHECK_ERROR
 #endif
-#undef TIMING
+#define CUDA_SYNC_STREAM ({CUDA_CHECK_ERROR;DO(cudaStreamSynchronize(stream));})
+#define CUDA_SYNC_DEVICE ({CUDA_CHECK_ERROR;DO(cudaDeviceSynchronize());})
+#define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info2("Warning NULL stream\n");} else DO(cudaStreamCreate(&stream))
+#define STREAM_DONE(stream) if(!NULL_STREAM) DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream))
 #define HANDLE_NEW(handle,stream) ({DO(cublasCreate(&handle)); DO(cublasSetStream(handle, stream));})
 #define SPHANDLE_NEW(handle,stream) ({DO(cusparseCreate(&handle)); DO(cusparseSetStream(handle, stream));})
 #define HANDLE_DONE(handle) DO(cublasDestroy(handle))

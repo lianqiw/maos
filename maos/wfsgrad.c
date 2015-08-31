@@ -326,7 +326,7 @@ void wfsgrad_iwfs(thread_t *info){
 	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
 	    if(save_ints){
-		cellarr_dcell(simu->save->intsnf[iwfs], isim, ints);
+		cellarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
 	    }
 	    if(noisy){/*add noise */
 		const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
@@ -353,7 +353,7 @@ void wfsgrad_iwfs(thread_t *info){
 			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		}
 		if(save_ints){
-		    cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
+		    cellarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
 		}
 	    }
 	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_ogskip
@@ -401,7 +401,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-	    cellarr_dmat(simu->save->gradgeom[iwfs], isim, gradtmp);/*noise free. */
+	    cellarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
     }//dtrat_out
@@ -790,7 +790,7 @@ void wfsgrad_post(thread_t *info){
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
-		cellarr_push(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
+		cellarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
 		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
