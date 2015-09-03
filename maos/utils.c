@@ -811,15 +811,20 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     const int isim=simu->isim;
     double focus=0;
-    if(powfs[ipowfs].focus){
-	const long nx=powfs[ipowfs].focus->nx;
-	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
-    }
-    if(simu->zoomreal && parms->powfs[ipowfs].llt){
-	if(simu->zoompos && simu->zoompos->p[iwfs]){
-	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
+    if(parms->powfs[ipowfs].llt){
+	if(powfs[ipowfs].focus){
+	    const long nx=powfs[ipowfs].focus->nx;
+	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
 	}
-	focus-=simu->zoomreal->p[iwfs];
+	if(simu->zoomreal && parms->powfs[ipowfs].llt){
+	    if(simu->zoompos && simu->zoompos->p[iwfs]){
+		simu->zoompos->p[iwfs]->p[isim]=simu->zoomreal->p[iwfs];
+	    }
+	    focus-=simu->zoomreal->p[iwfs];
+	}
+    }
+    if(simu->telfocusreal){
+	focus-=simu->telfocusreal->p[0]->p[0];
     }
     return focus;
 }

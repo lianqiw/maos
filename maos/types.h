@@ -326,12 +326,10 @@ typedef struct RECON_T{
     dcell *GFngs;      /**<Focus to NGS gradients*/
     dcell *GFall;      /**<Focus to WFS Gradients.*/
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
-    dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
-    dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
     dcell *RFngsg;     /**<focus reconstruction for all TTF NGS from grad.*/
-    dcell *RFngsx;     /**<focus reconstruction for all TTF NGS from opdr.*/
-    dcell *RFngsa;     /**<focus reconstruction for all TTF NGS from dm*/
-
+    /*For focus offloading*/
+    dcell *RFdm;       /**<Focus from DM commands. For telescope offloading*/
+    
     dcell *GRall;      /**<Radial order zernike to gradient*/
     dcell *RRtwfs;     /**<Radial order zernike reconstruction from twfs grads*/
     double eptwfs;     /**<Twfs reference vector servo gain.*/
@@ -545,6 +543,9 @@ typedef struct SIM_T{
     dmat *zoomavg;    /**<Trombone averager from gradients*/
     dmat *zoomreal;   /**<Trombone real position*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
+    /*focus offloading*/
+    dcell *telfocusint; /**<Telescope focus integrated*/
+    dcell *telfocusreal;/**<Telescope focus integrated*/
     /*PSD computation*/
     dcell *dmerrts;    /**<Herr*dmerr time history*/
     dmat *Merrts;      /**<Time history of low order WFE.*/

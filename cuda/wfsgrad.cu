@@ -397,13 +397,12 @@ void gpu_wfsgrad_queue(thread_t *info){
 		       INFINITY, 0, 0, 0, 0, -1, stream);
 	}
   
-	if(parms->powfs[ipowfs].llt){
-	    Real focus=(Real)wfsfocusadj(simu, iwfs);
-	    if(Z(fabs)(focus)>1e-20){
-		const int nloc=cupowfs[ipowfs].loc.Nloc();
-		add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus);
-	    }
+	Real focus=(Real)wfsfocusadj(simu, iwfs);
+	if(Z(fabs)(focus)>1e-20){
+	    const int nloc=cupowfs[ipowfs].loc.Nloc();
+	    add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout, loc, nloc, focus);
 	}
+
 	if(cupowfs[ipowfs].fieldstop){
 	    if(parms->powfs[ipowfs].nwvl>1){
 		error("Implement broadband case\n");

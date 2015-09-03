@@ -787,61 +787,70 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
 setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
-    if(!parms->nlgspowfs){
-	return;
-    }
-    
-    if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
-	dmat *GMGngs=NULL;
-	dcell *GMngs=cellnew(1, parms->nwfsr);
-	/*Compute focus reconstructor from NGS Grads. fuse grads
-	  together to construct a single focus measurement*/
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1 && parms->powfs[ipowfs].skip!=2){
-		info2("wfs %d will be used to track focus\n", iwfs);
-	    }else{
-		continue;
+    if(parms->nlgspowfs){
+	if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
+	    dmat *GMGngs=NULL;
+	    dcell *GMngs=cellnew(1, parms->nwfsr);
+	    /*Compute focus reconstructor from NGS Grads. fuse grads
+	      together to construct a single focus measurement*/
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
+		if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1 && parms->powfs[ipowfs].skip!=2){
+		    info2("wfs %d will be used to track focus\n", iwfs);
+		}else{
+		    continue;
+		}
+		dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+		      recon->GFall->p[ipowfs],"nn",1);
+		dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
 	    }
-	    dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		  recon->GFall->p[ipowfs],"nn",1);
-	    dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
-	}
-	dinvspd_inplace(GMGngs);
-	/*A focus reconstructor from all NGS measurements.*/
-	dcell *RFngsg=recon->RFngsg=cellnew(1, parms->nwfsr);
+	    dinvspd_inplace(GMGngs);
+	    /*A focus reconstructor from all NGS measurements.*/
+	    dcell *RFngsg=recon->RFngsg=cellnew(1, parms->nwfsr);
   
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    if(!recon->GFall->p[ipowfs]) continue;
-	    //NGS gradient to Focus mode reconstructor.
-	    dmm(&RFngsg->p[iwfs], 0, GMGngs, GMngs->p[iwfs],"nt",1);
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
+		if(!recon->GFall->p[ipowfs]) continue;
+		//NGS gradient to Focus mode reconstructor.
+		dmm(&RFngsg->p[iwfs], 0, GMGngs, GMngs->p[iwfs],"nt",1);
+	    }
+	    dfree(GMGngs);
+	    dcellfree(GMngs);
 	}
-	dfree(GMGngs);
-	dcellfree(GMngs);
-    }
-    /*
-      Compute focus constructor from LGS grads. A constructor for each LGS
-      because each LGS may have different range error. Applyes to parms->wfs, not parms->wfsr.
-    */
-    cellfree(recon->RFlgsg);
-    recon->RFlgsg=cellnew(parms->nwfs, parms->nwfs);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(!parms->powfs[ipowfs].llt) continue;
-	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-	    int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-	    if(iwfs==iwfs0 || !parms->recon.glao){
-		IND(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[ipowfs], IND(recon->saneai, iwfs, iwfs));
-	    }else{
-		IND(recon->RFlgsg, iwfs, iwfs)=dref(IND(recon->RFlgsg, iwfs0, iwfs0));
+	/*
+	  Compute focus constructor from LGS grads. A constructor for each LGS
+	  because each LGS may have different range error. Applyes to parms->wfs, not parms->wfsr.
+	*/
+	cellfree(recon->RFlgsg);
+	recon->RFlgsg=cellnew(parms->nwfs, parms->nwfs);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(!parms->powfs[ipowfs].llt) continue;
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+		if(iwfs==iwfs0 || !parms->recon.glao){
+		    IND(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[ipowfs], IND(recon->saneai, iwfs, iwfs));
+		}else{
+		    IND(recon->RFlgsg, iwfs, iwfs)=dref(IND(recon->RFlgsg, iwfs0, iwfs0));
+		}
 	    }
 	}
-    }
      
-    if(parms->save.setup){
-	writebin(recon->RFngsg,"RFngsg");
-	writebin(recon->RFlgsg,"RFlgsg");
+	if(parms->save.setup){
+	    writebin(recon->RFngsg,"RFngsg");
+	    writebin(recon->RFlgsg,"RFlgsg");
+	}
+    }
+    if(parms->sim.focus2tel){
+	int idm=parms->idmground;
+	dcell *Fdm=dcellnew(parms->ndm, 1);
+	Fdm->p[idm]=dnew(recon->anloc->p[idm], 1);
+	loc_add_focus(Fdm->p[idm]->p, recon->aloc->p[idm], 1);
+	recon->RFdm=dcellpinv(Fdm, 0);
+	dcellfree(Fdm);
+	if(parms->save.setup){
+	    writebin(recon->RFdm, "RFdm");
+	}
     }
 }
 
@@ -1328,11 +1337,8 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
     setup_recon_TTFR(recon,parms,powfs);
-    if(parms->nlgspowfs){
-	//if(parms->ilgspowfs!=-1 && (parms->sim.mffocus || parms->sim.ahstfocus || parms->dither)){
-	/*mvst uses information here*/
-	setup_recon_focus(recon, powfs, parms);
-    }
+    /*mvst uses information here*/
+    setup_recon_focus(recon, powfs, parms);
     if(parms->itpowfs!=-1){ /*setup Truth wfs*/
 	setup_recon_twfs(recon,powfs,parms);
     }
@@ -1553,11 +1559,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->GFngs);
     dcellfree(recon->GFall);
     dcellfree(recon->RFlgsg);
-    dcellfree(recon->RFlgsa);
-    dcellfree(recon->RFlgsx);
     dcellfree(recon->RFngsg);
-    dcellfree(recon->RFngsa);
-    dcellfree(recon->RFngsx);
+    dcellfree(recon->RFdm);
     dcellfree(recon->GRall);
     dcellfree(recon->RRtwfs);
     dspcellfree(recon->ZZT);

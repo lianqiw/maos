@@ -1516,6 +1516,8 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->fsmerrs);
     dcellfree(simu->fsmcmds);
     dcellfree(simu->LGSfocus);
+    dcellfree(simu->telfocusint);
+    dcellfree(simu->telfocusreal);
     dfree(simu->zoomerr);
     dfree(simu->zoomreal);
     dfree(simu->zoomavg);

@@ -345,6 +345,10 @@ void gpu_perfevl_queue(thread_t *info){
 	    Real angle=simu->winddir?simu->winddir->p[0]:0;
 	    curaddptt(iopdevl, cudata->perf.locs, 0, tt*cosf(angle), tt*sinf(angle), stream);
 	}
+	if(simu->telfocusreal){
+	    Real focus=-simu->telfocusreal->p[0]->p[0];
+	    add_focus_do<<<DIM(nloc, 256),0,stream>>>(iopdevl, cudata->perf.locs, nloc, focus);
+	}
 	if(save_evlopd){
 	    cellarr_cur(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 	}

@@ -270,7 +270,7 @@ static void filter_cl(SIM_T *simu){
 	dmerr=simu->dmerr;
     }
     //always run servo_filter even if dmerr is NULL.
-    servo_filter(simu->dmint, dmerr);
+    int hiout=servo_filter(simu->dmint, dmerr);
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
@@ -308,6 +308,10 @@ static void filter_cl(SIM_T *simu){
 
     if(simu->ttmreal){
 	ttsplit_do(recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
+    }
+    if(parms->sim.focus2tel && hiout){
+	dcellcp(&simu->telfocusreal, simu->telfocusint);
+	dcellmm(&simu->telfocusint, recon->RFdm, simu->dmcmd, "nn", parms->sim.epfocus2tel);
     }
     if(recon->dither_m){
 	//Change phase in calc_dither_amp if phase of dithering is changed

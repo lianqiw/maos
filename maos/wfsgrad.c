@@ -113,20 +113,9 @@ void wfsgrad_iwfs(thread_t *info){
 	dcellzero(ints);
 	dzero(*gradacc);
     }
-    if(simu->telws){/*Wind shake */
-	double tmp=simu->telws->p[isim];
-	double angle=simu->winddir?simu->winddir->p[0]:0;
-	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
-    }
-
-    /* Add surface error*/
-    if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
-	dadd(&opd,1, powfs[ipowfs].opdadd->p[wfsind],1);
-    }
-
     /* Now begin ray tracing. */
     if(parms->sim.idealwfs && !parms->powfs[ipowfs].lo){
+	/* Add subspace of atm projected onto range of DM.*/
 	wfs_ideal_atm(simu, opd, iwfs, 1);
     }else if(atm){
 	for(int ips=0; ips<nps; ips++){
@@ -145,6 +134,24 @@ void wfsgrad_iwfs(thread_t *info){
 	    wfs_ideal_atm(simu, opd, iwfs, -1);
 	}
     }
+
+    if(simu->telws){/*Wind shake */
+	double tmp=simu->telws->p[isim];
+	double angle=simu->winddir?simu->winddir->p[0]:0;
+	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+    }
+    
+    double focus=wfsfocusadj(simu, iwfs);
+    if(fabs(focus)>1e-20){
+	loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
+    }
+    
+    /* Add surface error*/
+    if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
+	dadd(&opd,1, powfs[ipowfs].opdadd->p[wfsind],1);
+    }
+
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
     }
@@ -185,13 +192,7 @@ void wfsgrad_iwfs(thread_t *info){
 			     powfs[ipowfs].pts, opd->p, -1, 0, 0, 1, 0, 0);
 	}
     }
-    /* Add defocus to OPD if needed. */
-    if(parms->powfs[ipowfs].llt){
-	double focus=wfsfocusadj(simu, iwfs);
-	if(fabs(focus)>1e-20){
-	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
-	}
-    }
+ 
     if(parms->powfs[ipowfs].fieldstop>0 && parms->powfs[ipowfs].type==0){
 	locfft_fieldstop(powfs[ipowfs].fieldstop, opd, parms->powfs[ipowfs].wvlwts);
     }

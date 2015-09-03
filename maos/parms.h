@@ -493,6 +493,8 @@ typedef struct SIM_CFG_T{
     double lpfocushi;  /**<derived: lpfocus=2*pi*fc*sim.dthi*/
     double lpfocuslo;  /**<derived: lpfocus=2*pi*fc*sim.dtlo*/
     double fov;      /**<The diameter of total fov in arcsec*/
+    int focus2tel;   /**<Offload focus to telescope*/
+    double epfocus2tel;/*Gain for telescope focus control*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
 			- 1: Focus tracking using CL gradients, for each LGS independently.

@@ -180,6 +180,9 @@ void perfevl_ievl(thread_t *info){
 	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
 	}
+	if(simu->telfocusreal){
+	    loc_add_focus(iopdevl->p, aper->locs, -simu->telfocusreal->p[0]->p[0]);
+	}
 	/*Add surfaces along science path. prepared in setup_surf.c */
 	if(aper->opdadd && aper->opdadd->p[ievl]){
 	    dadd(&iopdevl, 1, aper->opdadd->p[ievl], 1);
