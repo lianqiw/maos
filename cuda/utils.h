@@ -53,6 +53,13 @@ inline void type_convert<float2, double2>(float2*out, const double2* in, int nx)
 	out[i].y=static_cast<float>(in[i].y);
     }
 }
+template<>
+inline void type_convert<double2, float2>(double2*out, const float2* in, int nx){
+    for(int i=0; i<nx; i++){
+	out[i].x=static_cast<double>(in[i].x);
+	out[i].y=static_cast<double>(in[i].y);
+    }
+}
 /*template<>
 inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
     type_convert(out, (const double2*)in, nx);

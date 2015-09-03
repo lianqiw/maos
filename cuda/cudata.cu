@@ -140,7 +140,7 @@ static int task_cmp(const task_t *a, const task_t *b){
 int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     int ans;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&MAXGPU)) || MAXGPU==0){//no GPUs available.
-	info2("No GPUs available. ans=%d\n", ans);
+	info2("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
 	return 0;
     }
     if(gpus && ngpu>0){

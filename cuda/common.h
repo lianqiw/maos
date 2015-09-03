@@ -227,7 +227,7 @@ INLINE void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){
 }
 INLINE void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){	
     LOCK_CUFFT;						
-    int _ans=FFT_R2C(plan, (cufftReal*)in, out);		
+    int _ans=FFT_R2C(plan, (Real*)in, out);		
     UNLOCK_CUFFT;						
     if(_ans){						
 	error("cufft failed: %s\n", cufft_str[_ans]);	
@@ -235,7 +235,7 @@ INLINE void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){
 }
 INLINE void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){	
     LOCK_CUFFT;						
-    int _ans=FFT_C2R(plan, (cufftComplex*)in, out);		
+    int _ans=FFT_C2R(plan, (Comp*)in, out);		
     UNLOCK_CUFFT;						
     if(_ans){						
 	error("cufft failed: %s\n", cufft_str[_ans]);	
