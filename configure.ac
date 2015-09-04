@@ -5,9 +5,9 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
 BASEURLS=
-BASEURLS+=" https://bitbucket.org/lianqiw/files/downloads/"
 BASEURLS+=" https://github.com/lianqiw/files/raw/master/"
 BASEURLS+=" https://sourceforge.net/projects/lianqiw/files/external"
+BASEURLS+=" https://bitbucket.org/lianqiw/files/downloads/"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
     CFLAGS=" "
@@ -19,7 +19,7 @@ AC_CONFIG_MACRO_DIR([m4])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_HEADER([config.h])
 #defines host host_os host_cpu host_vendor etc
-AC_CANONICAL_HOST 
+AC_CANONICAL_HOST
 AC_LANG([C])
 AC_TYPE_SIZE_T #it sets CC if empty
 AC_PROG_CC([$CC])
@@ -72,7 +72,7 @@ if test -n "`which nvcc 2>/dev/null`" ;then
 	NVCC="$(readlink "$NVCC")"
     fi
 else
-    for cuda in "/opt/cuda/default" "/opt/cuda" "/usr/local/cuda" ;do
+    for cuda in /opt/cuda/default /opt/cuda /usr/local/cuda ;do
 	if test -x "${cuda}/bin/nvcc" ;then
 	    NVCC="${cuda}/bin/nvcc"
 	    break;
@@ -93,16 +93,12 @@ if test -n "`which mex 2>/dev/null`" ;then
 	MEX="$(readlink "$MEX")"
     fi
     MEXDIR_AUTO="$(dirname "$MEX")"
-elif test -n "`ls -d /Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+else
+    for i in /Applications/MATLAB*.app ~/Applications/MATLAB*.app /opt/MATLAB/* /usr/local/share/MATLAB/* ;do
 	if test -x "$i/bin/mex" ;then
        	    MEXDIR_AUTO="${i}/bin"
-	fi
-    done
-elif test -n "`ls -d ~/Applications/MATLAB*.app 2>/dev/null`" ;then
-    for i in "$(ls -d ~/Applications/MATLAB*.app)" ;do
-	if test -x "$i/bin/mex" ;then
-       	    MEXDIR_AUTO="${i}/bin"
+	    echo "Matlab found at ${i}"
+	    break;
 	fi
     done
 fi
@@ -114,12 +110,15 @@ AC_ARG_ENABLE(oprof, AS_HELP_STRING([--enable-oprof],[Enable oprof for code prof
 AC_ARG_ENABLE(cuda-double, AS_HELP_STRING([--enable-cuda-double],[Enable cuda double precision]), [cuda_double="$enableval"],[cuda_double="no"])
 AC_ARG_ENABLE(scheduler,AS_HELP_STRING([--disable-scheduler],["Disable built in scheduler"]), [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_ENABLE(websockets,AS_HELP_STRING([--disable-websockets],[Disable websockets (default: enabled)]), [use_websockets="$enableval"], [use_websockets="yes"])
+AC_ARG_ENABLE(mkl, AS_HELP_STRING([--enable-mkl], ["Prefer to use MKL"]), [use_mkl="$enableval"], [use_mkl="default"])
 AC_ARG_WITH(cuda, AS_HELP_STRING([--with-cuda[=DIR]],[With cuda support]), [CUDADIR=${withval}], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), [CCBIN=${withval}], [CCBIN=${CC}])
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="no"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
-
+if test -z "$MEXDIR" ;then
+    with_matlab=no
+fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
@@ -235,44 +234,6 @@ else
 fi
 OPTSextra=""
 
-#Enable the user to force 32 or 64 bit program
-AC_ARG_ENABLE(64,  AS_HELP_STRING([--enable-64],[Force 64 (disable=32) bit executables]))
-
-if test "$enable_64" = "yes" ;then
-    host_cpu=x86_64
-elif test "$enable_64" = "no" ;then
-    host_cpu=i386
-else
-    host_cpu=$(uname -m)
-fi
-case ${host_cpu} in 
-    *64)
-	host_cpu=x86_64
-	CFLAGS_CPU="-m64"
-	CFLAGS_ARCH="-m64 -DDLONG"
-        LDOPTS+=" -m64"
-        #CDEFINE="__x86_64__"
-	AC_DEFINE(X86_64, [1], "X86_64 Machine")
-	objcopy_output=elf64-x86-64
-	objcopy_arch=i386:x86-64
-	echo "CPU is 64 bit"
-	;;
-    *86)
-	host_cpu=i386
-	CFLAGS_CPU="-m32"
-	CFLAGS_ARCH="-m32 -DDINT -D_FILE_OFFSET_BITS=64"
-	LDOPTS+=" -m32"
-        #CDEFINE="__i386__"
-	AC_DEFINE(X86, [1], "I386 Machine")
-	objcopy_output=elf32-i386
-	objcopy_arch=i386
-	echo "CPU is 32 bit"
-	;;
-    *)
-        echo host_cpu=$host_cpu
-        AC_MSG_ERROR([Unrecognized host_cpu])
-	;;
-esac   
 #Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
@@ -334,9 +295,21 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-CFLAGS+=" -I${PRE_DIR}/include"
+CFLAGS+=" -I${PRE_DIR}/include $CFLAGS_ARCH"
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
-OPTS+=" $CFLAGS_EXTRA $CFLAGS_ARCH"
+OPTS+=" $CFLAGS_EXTRA "
+
+if test "$host_cpu" = "x86_64" ;then
+    CFLAGS+=" -DDLONG "
+    mflag="-m64"
+else
+    CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
+    mflag="-m32"
+fi
+if ! grep -q "$mflag" <<< $CFLAGS ;then
+    CFLAGS=" $mflag $CFLAGS"
+fi
+unset mflag
 
 die(){
     shift
@@ -439,7 +412,7 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS_ARCH -O3 -fPIC"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -fPIC"  && \
 	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} > $fnlog || \
 	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ > $fnlog) && \
 	make -j4 install >> $fnlog) ;then
@@ -448,88 +421,85 @@ compile(){
 	echo "Failed to compile $name. Please see $fnlog for details"
     fi
 }
-function set_mkl_lapack(){
-    #First use MKL if available. 
-    LAPACK="-lmkl_core"
-    if test -n "$OPENMP_CFLAGS" ;then
-	if test "$CN" = "ICC" ;then
-	    LAPACK+=" -lmkl_intel_thread"
-	elif test "$CN" = "GCC" ;then
-	    LAPACK+=" -lmkl_gnu_thread"
-	else
-	    LAPACK+=" -lmkl_intel_thread"
-	fi
-    else
-	LAPACK+=" -lmkl_intel_thread -liomp5"
-    fi
-    if test "$host_cpu" = "x86_64" ;then
-	LAPACK+=" -lmkl_intel_lp64"
-    else
-	LAPACK+=" -lmkl_intel"
-    fi
-    if test "$use_static" = "yes" ;then
-    	LAPACK="-Wl,--start-group,${LAPACK},--end-group"
-	LAPACK=${LAPACK// /,}
-    fi
+function set_lapack(){
+    type=$1
+    case $type in
+	*mkl*)
+	    if test "$type" = "mkl-download" -a "$mkl_avail" = "yes";then
+		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
+	    fi
+	    #First use MKL if available. 
+	    LAPACK="-lmkl_core"
+	    if test -n "$OPENMP_CFLAGS" ;then
+		if test "$CN" = "ICC" ;then
+		    LAPACK+=" -lmkl_intel_thread"
+		elif test "$CN" = "GCC" ;then
+		    LAPACK+=" -lmkl_gnu_thread"
+		else
+		    LAPACK+=" -lmkl_intel_thread"
+		fi
+	    else
+		LAPACK+=" -lmkl_intel_thread -liomp5"
+	    fi
+	    if test "$host_cpu" = "x86_64" ;then
+		LAPACK+=" -lmkl_intel_lp64"
+	    else
+		LAPACK+=" -lmkl_intel"
+	    fi
+	    if test "$use_static" = "yes" ;then
+    		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
+		LAPACK=${LAPACK// /,}
+	    fi
+	    ;;
+	*pkg-config*)
+	    LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
+	    ;;
+	*default*)
+	    LAPACK="-llapack -lblas "
+	    if test "$type" = "default-link" ;then
+	       fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
+	       if test -n "${fn_blas}" ;then
+		   ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
+	       fi
+	       fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
+	       if test -n "${fn_lapack}" ;then
+		   ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
+	       fi
+	    fi
+	       ;;
+		*)
+		    LAPACK=
+		    ;;
+    esac
     echo trying LAPACK=$LAPACK
 }
 has_lapack=no
-if test "$has_lapack" = "no" ;then
-    set_mkl_lapack
-    unset nset ac_cv_lib_m_dgemm_
-    unset nset ac_cv_lib_m_dposv_
-    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
-    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-fi
+case $use_mkl in
+    yes) #prefer MKL
+	trys="mkl mkl-download pkg-config default default-link"
+	;;
+    no) #disable MKL
+	trys="pkg-config default default-link"
+	;;
+    default) #default order
+	trys="pkg-config default default-link mkl mkl-download"
+	;;
+esac
 
-if test "$has_lapack" = "no" ;then
-    LAPACK="-llapack -lblas -lgfortran -lm"
-    echo trying LAPACK=$LAPACK
-
-    unset nset ac_cv_lib_m_dgemm_
-    unset nset ac_cv_lib_m_dposv_
-    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
-    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-fi
-
-if test "$has_blas" = "no" -o "$has_lapack" = "no" ;then
-    unset nset ac_cv_lib_m_dgemm_
-    unset nset ac_cv_lib_m_dposv_
-    #Check for LAPACK library in the system
-    if test -n "`which pkg-config 2>/dev/null`" ;then
-	LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
+for try in ${trys}; do
+    if test "$has_lapack" = "no" -o "$has_blas" = "no";then
+	unset nset ac_cv_lib_m_dgemm_
+	unset nset ac_cv_lib_m_dposv_
+	set_lapack ${try}
 	if test -n "$LAPACK" ;then
-	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
+	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
 	fi
     fi
-fi
-#Some system has liblapack.so.? without symbol links to liblapack.so
-if test "$has_blas" = "no" ;then
-    fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
-    if test -n "${fn_blas}" ;then
-	ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
-    fi
-    unset nset ac_cv_lib_m_dgemm_
-    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
-fi
-if test "$has_lapack" = "no" ;then
-    fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
-    if test -n "${fn_lapack}" ;then
-	ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
-    fi
-    unset nset ac_cv_lib_m_dposv_
-    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-fi
+done
+
 if test "$has_lapack" = "no" -o "$has_blas" = "no" ;then
-    if test "$mkl_avail" = "yes" ;then
-	download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
-	set_mkl_lapack
-	unset nset ac_cv_lib_m_dposv_
-	AC_CHECK_LIB([m],[dposv_],[],[AC_MSG_ERROR([Please install blas/lapack])],[$LAPACK])
-    else
-	AC_MSG_ERROR([Please install blas/lapack])
-    fi
+    AC_MSG_ERROR([Please install blas/lapack])
 fi
 
 #Check for zlib
@@ -545,16 +515,13 @@ AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
     compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp --enable-shared --enable-static
-    unset ac_cv_lib_fftw3_fftw_execute
     #compile FFTW fftw.tar.bz2 --enable-float 
+    unset ac_cv_lib_fftw3_fftw_execute
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
 fi
 
-if test -z "$MEXDIR" ;then
-    with_matlab=no
-fi
 if test "$with_matlab" != "no" ;then
-    #cannot compile with single floating fft when compiling mex routines
+    #cannot compile with single precision floating fft when compiling mex routines
     has_fftwf=0
 else
     AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
@@ -582,7 +549,7 @@ if test "$with_matlab" = "no"  ;then
 else
     fftw_threads=0
 fi
-AC_DEFINE_UNQUOTED(USE_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
+AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 
 #Check for cholmod
 AC_CHECK_LIB([cholmod], [${chol_fun}], [], [has_chol="no"], [$LAPACK -lm])
@@ -746,13 +713,13 @@ if test "$with_matlab" != "no" ;then
     if test "$mex_cpu" != "$host_cpu" ;then
 	mex_lib="no"
     else       
-	LIBMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
-	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LIBMEX])
+	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "
+	AC_CHECK_LIB([mx], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
     fi
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
-	LIBMEX+=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lfftw3"
-	LDMEX="-no-fast-install -static -Xcompiler -shared"
+	LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lfftw3"
+	LDMEX+="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else
 	with_matlab="no"
@@ -925,7 +892,7 @@ if test ! -f "${srcdir}/version.h" ;then
 fi
 LDOPTS+=" -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"
-LDEXE_FULL="$LDFFT $LAPACK $LDCHOL $LDEXE"
+LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
 echo LIBS=$LIBS
 LIBS="" #somehow LIBS contain -fftw3 -lnvidia-smlA
 AC_SUBST(ldsuffix)

@@ -21,10 +21,11 @@ bin_PROGRAMS=read write aolib maos crandcreate crandn crandp clrand mkwmex proj 
 
 read_SOURCES=read.c io.c
 read_CFLAGS=$(MEXOPT)
-read_LDADD=$(LIBMEX)
+read_LDADD=-lmx -lmex -lz
+
 write_SOURCES=write.c io.c
 write_CFLAGS=$(MEXOPT)
-write_LDADD=$(LIBMEX)
+write_LDADD=-lmx -lmex -lz
 
 maos_LDADD=../maos/libmaos.la 
 if USE_CUDA

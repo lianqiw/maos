@@ -113,7 +113,7 @@ static __attribute__((constructor))void init(){
 static void init_threads(){
     void *libfftw_threads=NULL;
     const char *fn=0;
-#if USE_FFTW_THREADS == 0
+#if BUILTIN_FFTW_THREADS == 0
 #if _OPENMP>200805
 #if defined(USE_SINGLE)
     fn="libfftw3f_omp."LDSUFFIX;
@@ -138,7 +138,7 @@ static void init_threads(){
 	has_threads=1;
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
-#if USE_FFTW_THREADS
+#if BUILTIN_FFTW_THREADS
 	p_fftw_init_threads=fftwf_init_threads;
 	p_fftw_plan_with_nthreads=fftwf_plan_with_nthreads;
 #else
@@ -147,7 +147,7 @@ static void init_threads(){
 #endif
 #else
 	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
-#if USE_FFTW_THREADS
+#if BUILTIN_FFTW_THREADS
 	p_fftw_init_threads=fftw_init_threads;
 	p_fftw_plan_with_nthreads=fftw_plan_with_nthreads;
 #else

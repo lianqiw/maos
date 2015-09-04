@@ -1,6 +1,6 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) $(LDEXE_FULL)
-LDADD=../lib/libaos.la
+AM_LDFLAGS=$(LDOPTS) 
+LDADD=../lib/libaos.la $(LDEXE_FULL)
 
 bin_PROGRAMS=test_mat test_plot test_draw test_rand test_sparse test_cmat2		\
 		test_fft test_proj test_loc test_chol test_accphi convert_psfout	\

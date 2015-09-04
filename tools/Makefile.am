@@ -25,13 +25,10 @@ ___bin_record_cpu_SOURCES=record_cpu.c
 endif
 
 if DRAW
-PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
+PROGS+=../bin/drawdaemon 
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS)
 ___bin_drawdaemon_LDADD=../sys/libaosys.la $(DRAW_LIBS) -lgthread-2.0
-___bin_drawbin_SOURCES=drawbin.c
-___bin_drawres_SOURCES=drawres.c
-___bin_calcenc_SOURCES=calcenc.c
 endif
 
 if USE_SCHEDULER
@@ -56,8 +53,8 @@ ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
 endif
 
-LDADD=../lib/libaos.la 
-PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu
+LDADD=../lib/libaos.la $(LDEXE_FULL)
+PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_slaving_SOURCES=slaving.c
 ___bin_cov2psf_SOURCES=cov2psf.c
@@ -67,4 +64,7 @@ ___bin_psfgc_SOURCES=psfgc.c
 ___bin_mk2dcov_SOURCES=mk2dcov.c
 ___bin_ethtest_SOURCES=ethtest.c
 ___bin_mvm_cpu_SOURCES=mvm_cpu.c
+___bin_drawbin_SOURCES=drawbin.c
+___bin_drawres_SOURCES=drawres.c
+___bin_calcenc_SOURCES=calcenc.c
 bin_PROGRAMS=$(PROGS)

@@ -38,7 +38,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     size_t metasize=3*8+bytes_header(header);//size of meta data. 
     size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
     if(ftruncate(fd, msize)){
-	error("Error truncating file %s to size %lu\n", fn, msize);
+	error("Error truncating file %s to size %zu\n", fn, msize);
     }
     char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){

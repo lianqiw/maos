@@ -1,5 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-AM_LDFLAGS=$(LDOPTS) $(LDEXE_FULL)
+AM_LDFLAGS=$(LDOPTS) 
 #In the order of include:
 HEADER_LIB=common.h types.h cucmat.h  cumat.h  curmat.h gpu.h kernel.h utils.h prop_wrap.h
 HEADER_RECON=solve.h recon_base.h pcg.h tomo.h fit.h recon.h fdpcg.h moao.h
@@ -28,7 +28,7 @@ libaogpu_la_LDFLAGS=$(LDOPTS)
 #dlink.o:libaogpu.la
 #	$(NVCC) $(CUDAOPT) -dlink .libs/libaogpu.a -o dlink.o
 #endif
-LDADD=libaogpu.la $(LIBCUDA) 
+LDADD=libaogpu.la $(LIBCUDA) $(LDEXE_FULL)
 bin_PROGRAMS=../test/test_cuda ../bin/gpu_mvm
 ___test_test_cuda_SOURCES=test.cu 
 ___bin_gpu_mvm_SOURCES=gpu_mvm.c

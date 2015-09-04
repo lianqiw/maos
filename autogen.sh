@@ -16,3 +16,6 @@ autoheader -f
 autoconf 
 automake --add-missing --copy --foreign
 
+
+#To compile in 32 bit mode in 64 bit machines, run configure.ac with the following options
+# --host=i686-pc-linux-gnu CFLAGS="-m32" LDFLAGS="-m32" CXXFLAGS="-m32"

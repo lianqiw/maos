@@ -50,11 +50,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	int nstep=0;
 	char *cmd=0;//default action is sim
 	int free_cmd=0;
-	if(nrhs>0){
+	if(nrhs>0 && mxIsChar(prhs[0])){
 	    cmd=mxArrayToString(prhs[0]);
 	    free_cmd=1;
 	}else{
 	    cmd="sim";
+	    if(nrhs>0 && mxIsDouble(prhs[0])){
+		nstep=(int)mxGetScalar(prhs[0]);
+	    }
 	}
 	if(!strcmp(cmd, "-h")){
 	    printf("Usage: maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
