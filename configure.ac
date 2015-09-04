@@ -826,24 +826,29 @@ if test "$with_cuda" != "no" ;then
         CUDAOPT+=" -DDLONG"
     fi
     CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC "
+    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     case "$CCBIN" in 
         gcc*)
 	    CCN=GCC
 	    CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
+	    LIBCUDA+=" -lstdc++"
 	    ;;
 	clang*)
 	    CCN=CLANG
+	    LIBCUDA+=" -lc++"
 	    ;;
 	icc*)
 	    CCN=ICC
+	    LIBCUDA+=" -lstdc++"
 	    ;;
 	*)
 	    CCN=ALL
+	    LIBCUDA+=" -lstdc++"
 	    ;;
     esac
     optname=${ccprefix}_${CCN}
     CCBINOPT+=" ${!optname}"
-    LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart -lstdc++"
+
 else
     with_cuda="no"
 fi
