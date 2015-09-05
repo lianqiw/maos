@@ -102,7 +102,9 @@ typedef unsigned int spint;  /*This is always 32 bit. */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #if defined(__CYGWIN__)
 /*CYGWIN does not have complex.h. */
+#ifndef _Complex_I
 #define _Complex_I (__extension__ 1.0iF)
+#endif
 #define I _Complex_I
 double cabs(dcomplex __z);
 double cimag(dcomplex __z);

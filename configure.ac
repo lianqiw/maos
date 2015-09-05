@@ -251,8 +251,8 @@ case "$host_os" in
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
-	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L -fPIC"
-	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE"
+	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
+	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE -fPIC"
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
 	else
@@ -264,13 +264,13 @@ case "$host_os" in
 	;;
     *darwin*)
 	AM_CONDITIONAL(DARWIN, true)
-	CFLAGS_EXTRA="-fPIC"
+	CFLAGS_EXTRA=
 	mkl_avail="no"
 	libsuffix=fat
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_ARCH+=" -mmacosx-version-min=10.6"
+	CFLAGS_ARCH+=" -mmacosx-version-min=10.6 -fPIC"
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -412,7 +412,7 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
-    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3 -fPIC"  && \
+    if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
 	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} > $fnlog || \
 	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ > $fnlog) && \
 	make -j4 install >> $fnlog) ;then

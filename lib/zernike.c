@@ -35,12 +35,12 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
 	power[s]=ir-2*s;
     }
     for(long iloc=0; iloc<nloc; iloc++){
-	long double tmp=0;
-	long double r=locr->p[iloc];
+	double tmp=0;
+	double r=locr->p[iloc];
 	for(int s=0; s<ns; s++){
-	    tmp+=coeff[s]*powl(r,power[s]);
+	    tmp+=coeff[s]*pow(r,power[s]);
 	}
-	Rnm->p[iloc]=(double)tmp;
+	Rnm->p[iloc]=tmp;
     }
     return Rnm;
 }

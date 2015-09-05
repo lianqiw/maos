@@ -19,8 +19,8 @@
 #include "process.h"
 
 /*Largely not implemented. */
-int get_job_progname(char **res, int nres, int pid){
-    strncpy(res, nres, "maos"); res[nres-1]=0;
+int get_job_progname(char *res, int nres, int pid){
+    strncpy(res, "maos", nres); res[nres-1]=0;
     return 0;
 }
 int get_job_mem(void){
