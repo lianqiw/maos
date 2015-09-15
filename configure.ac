@@ -514,7 +514,11 @@ fi
 AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    compile FFTW fftw.tar.bz2 --enable-threads --enable-openmp --enable-shared --enable-static
+    FLAGS="--enable-threads --enable-shared --enable-static"
+    if test -n "$OPENMP_FLAGS" ;then
+        FLAGS+=" --enable-openmp"
+    fi
+    compile FFTW fftw.tar.bz2 $FLAGS
     #compile FFTW fftw.tar.bz2 --enable-float 
     unset ac_cv_lib_fftw3_fftw_execute
     AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
