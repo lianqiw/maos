@@ -57,7 +57,7 @@ void save_gradstat(SIM_T *simu){
 	    }else{/*need peak in center */
 		writebin(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 	    }
-	    dcellscale(pp,1./scale);
+	    dcellzero(pp);
 	}
     }
 }
@@ -225,7 +225,7 @@ void save_recon(SIM_T *simu){
 		   parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
 		   simu->reconisim+1);
 	}
-	dcellscale(simu->gcov, 1./scale);
+	dcellzero(simu->gcov);//2015-11-04: Do not cumulative average.
     }
     if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
 	info2("Output PSF Recon Telemetry\n");
@@ -248,7 +248,7 @@ void save_recon(SIM_T *simu){
 		       parms->evl.thetay->p[ievl]*206265, strht, nstep);
 	    }
 	}
-	dcellscale(simu->ecov, 1./scale);//scale back to continuous accumulation
+	dcellzero(simu->ecov);//2015-11-04: Do not cumulative average.
     }
 }
 
