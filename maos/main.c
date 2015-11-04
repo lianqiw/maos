@@ -113,7 +113,11 @@ static void maos_daemon(int sock){
 void maos_version(void){
     info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
 #if USE_CUDA
-    info2(", w/t CUDA");
+#if CUDA_DOUBLE
+    info2(", w/t CUDA(double)");
+#else
+    info2(", w/t CUDA(single)");
+#endif
 #else
     info2(", w/o CUDA");
 #endif

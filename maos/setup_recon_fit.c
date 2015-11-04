@@ -253,15 +253,11 @@ void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
     }
     toc2("Generating fit matrix ");
     /*Fall back function method if FR.M is NULL (!HXF<-idealfit) */
-    if(!recon->FR.M){
-	recon->FR.Mfun  = FitR;
-	recon->FR.Mdata = recon;
-    }
+    recon->FR.Mfun  = FitR;
+    recon->FR.Mdata = recon;
     /*Fall back function method if FL.M is NULL */
-    if(!recon->FL.M){
-	recon->FL.Mfun  = FitL;
-	recon->FL.Mdata = recon;
-    }
+    recon->FL.Mfun  = FitL;
+    recon->FL.Mdata = recon;
     recon->FL.alg = parms->fit.alg;
     recon->FL.bgs = parms->fit.bgs;
     recon->FL.warm  = parms->recon.warm_restart;
