@@ -385,7 +385,7 @@ download(){
 		fi
 	    done
 	    if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-		AC_MSG_ERROR(["Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
+		AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
 	    fi
 	fi
 	if test -f ${DOWNLOAD_DIR}/${fn} ;then
@@ -394,7 +394,7 @@ download(){
 	    if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
 		rm -rf ${DOWNLOAD_DIR}/${fn}
 		retry=$((retry+1))
-		AC_MSG_NOTICE([File download is not correct, retry])
+		AC_MSG_NOTICE([File downloaded is not correct.])
 	    else
 		break
 	    fi
