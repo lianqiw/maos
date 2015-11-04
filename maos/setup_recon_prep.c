@@ -269,7 +269,9 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	char *fn=parms->load.aloc;
 	warning("Loading aloc from %s\n",fn);
 	recon->aloc=loccellread("%s",fn);
-	if(recon->aloc->nx!=ndm) error("Invalid saved aloc");
+	if(recon->aloc->nx!=ndm || recon->aloc->ny!=1) {
+	    error("Loaded aloc should have %dx1 cells\n", ndm);
+	}
 	for(int idm=0; idm<ndm; idm++){
 	    if(fabs(parms->dm[idm].dx-recon->aloc->p[idm]->dx)>1e-7){
 		error("DM[%d]: loaded aloc has dx=%g while dm.dx=%g\n", idm, 

@@ -330,6 +330,13 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
+    if(loc->nloc!=amp->nx){
+	error("loc and amp mismatch\n");
+    }else if(loc->nloc!=cov->nx || cov->nx!=cov->ny){
+    	error("loc and cov mismatch\n");
+    }else if(nsa<1 || ncompx<1 || ncompy){
+	error("nsa, ncompx, ncompy has to be at least 1\n");
+    }
     /*creating pairs of points that both exist with given separation*/
     double duxwvl=wvl/(dtheta*ncompx);
     double duywvl=wvl/(dtheta*ncompy);

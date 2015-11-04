@@ -655,7 +655,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 	    }/*if psfr[ievl] */
 	}/*ievl */
 	dfree(xx);
-    }else{/*Always use Ha*a. Do Ha in postproc, so just do a. */
+    }else{/*Do Ha in postproc, so just do a. */
 	if(dmerr){/*high order closed loop estimates. (lsr)*/
 	    dcelladd(&dmadd, 1, dmerr, 1);
 	}

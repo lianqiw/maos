@@ -19,7 +19,7 @@
 #undef _GNU_SOURCE /*avoid compiling problem*/
 #endif
 
-static const int skip_unicell=1; //strip single cells: a{1}->a
+static const int skip_unicell=0; //strip single cells: a{1}->a
 
 #include "io.h"
 mxArray *SKIPPED=(mxArray*)(1);
@@ -85,7 +85,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    iscell=1;
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
-	    if(nx*ny>1 && skip_unicell){
+	    if(nx*ny>1 || !skip_unicell){
 		out=mxCreateCellMatrix(nx,ny);
 	    }
 	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
@@ -100,10 +100,10 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    break;
 		}
 		if(tmp && tmp!=SKIPPED){
-		    if(nx*ny==1 && skip_unicell){//only one entry
-			out=tmp;
-		    }else{
+		    if(nx*ny>1 || !skip_unicell){
 			mxSetCell(out, ix, tmp);
+		    }else{
+			out=tmp;
 		    }
 		    if(header3){
 			mxSetCell(header0, ix, header3);

@@ -83,7 +83,7 @@ void save_gradol(SIM_T *simu){
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
 	    int iwfs1=parms->save.gcov->p[igcov*2];
 	    int iwfs2=parms->save.gcov->p[igcov*2+1];
-	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
+	    //info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
 	    dmm(&simu->gcov->p[igcov], 1, simu->gradlastol->p[iwfs1], simu->gradlastol->p[iwfs2],"nt",1);
 	}
     }
@@ -233,7 +233,7 @@ void save_recon(SIM_T *simu){
 	double scale=1./nstep;
 	dcellscale(simu->ecov, scale);
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
-	    writebin(simu->ecov, "ecov_%d_%ld", seed, nstep);
+	    writebin(simu->ecov, "ecov_%d_%d", seed, simu->reconisim);
 	}else{/*deprecated */
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -243,9 +243,9 @@ void save_recon(SIM_T *simu){
 		}else{
 		    strht[0]='\0';
 		}
-		writebin(simu->ecov->p[ievl], "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
+		writebin(simu->ecov->p[ievl], "ecov_%d_x%g_y%g%s_%d.bin", seed, 
 		       parms->evl.thetax->p[ievl]*206265,
-		       parms->evl.thetay->p[ievl]*206265, strht, nstep);
+		       parms->evl.thetay->p[ievl]*206265, strht, simu->reconisim);
 	    }
 	}
 	dcellzero(simu->ecov);//2015-11-04: Do not cumulative average.
