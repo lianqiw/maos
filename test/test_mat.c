@@ -323,7 +323,31 @@ static void test_mm(){
     writebin(C, "C");
     exit(0);
 }
+void test_sho(){
+    dmat *x=dread("input");
+    dmat *y=dnew(x->nx, x->ny);
+    SHO_T *sho=sho_new(200, 0.9);
+    double dt=1./64000.;
+    for(int i=1; i<x->nx*x->ny; i++){
+	y->p[i]=sho_step(sho, x->p[i-1], dt);
+    }
+    sho_reset(sho);
+    writebin(y, "output");
+    dmat *x2=dread("input2");
+    dmat *y2=dnew(x2->nx, x2->ny);
+    double dt2=1./800.;
+    for(int i=1; i<x2->nx*x2->ny; i++){
+	y2->p[i]=sho_step(sho, x2->p[i-1], dt2);
+    }
+    writebin(y2, "output2");
+    free(sho);
+    dfree(x);
+    dfree(y);
+    dfree(x2);
+    dfree(y2);
+}
 int main(int argc, char **argv){
+    test_sho();
     test_mm();
     test_expm();
     //test_reccati();

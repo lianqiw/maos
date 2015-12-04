@@ -330,11 +330,11 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
-    if(loc->nloc!=amp->nx){
-	error("loc and amp mismatch\n");
-    }else if(loc->nloc!=cov->nx || cov->nx!=cov->ny){
+    if(amp && loc->nloc*nsa!=amp->nx*amp->ny){
+	error("loc and amp mismatch. loc->nloc=%ld, amp is %ldx%ld, nsa=%ld\n", loc->nloc, amp->nx, amp->ny, nsa);
+    }else if(cov && (amp->nx!=cov->nx || cov->nx!=cov->ny)){
     	error("loc and cov mismatch\n");
-    }else if(nsa<1 || ncompx<1 || ncompy){
+    }else if(nsa<1 || ncompx<1 || ncompy<1){
 	error("nsa, ncompx, ncompy has to be at least 1\n");
     }
     /*creating pairs of points that both exist with given separation*/

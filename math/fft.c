@@ -113,6 +113,7 @@ static __attribute__((constructor))void init(){
 static void init_threads(){
     void *libfftw_threads=NULL;
     const char *fn=0;
+    //quitfun is not null when run in matlab.
 #if BUILTIN_FFTW_THREADS == 0
 #if _OPENMP>200805
 #if defined(USE_SINGLE)
@@ -120,14 +121,15 @@ static void init_threads(){
 #else
     fn="libfftw3_omp."LDSUFFIX;
 #endif
-#else
+#else //else OPENMP
 #if defined(USE_SINGLE)
     fn="libfftw3f_threads."LDSUFFIX;
 #else
     fn="libfftw3_threads."LDSUFFIX;
 #endif
-#endif
-#endif
+#endif //if OPENMP
+#endif //if FFTW_THREADS
+    
     if(!fn || (libfftw_threads=dlopen(fn, RTLD_LAZY))){
 	if(!fn){
 	    info2("FFTW thread library is built in\n");
@@ -157,7 +159,9 @@ static void init_threads(){
 #endif
 	p_fftw_init_threads();
     }else{
-	info2("Open FFTW thread library %s: failed\n", fn); 
+	if(!quitfun){
+	    info2("Open FFTW thread library %s: failed\n", fn);
+	}
 	has_threads=0;
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_serial",HOME);
@@ -167,10 +171,20 @@ static void init_threads(){
     }
     load_wisdom();
 }
-#else
-static void init_threads(){}
+#else //if USE_COMPLEX
+static void init_threads(){}//avoid multiple init.
 #endif
-static void FFTW_THREADS(long nx, long ny){
+static void fft_execute(FFTW(plan) plan){
+/*#if _OPENMP>200805
+    if(has_threads && !omp_in_parallel()){//testing purpose.
+	OMPTASK_SINGLE{
+	    FFTW(execute)(plan);
+	}
+    }else
+    #endif*/
+    FFTW(execute)(plan);
+}
+static void fft_threads(long nx, long ny){
     if(has_threads==-1){
 	init_threads();
 	if(FFTW_VERBOSE){
@@ -204,7 +218,7 @@ static void X(fft2plan)(X(mat) *A, int dir){
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
     LOCK_FFT;
-    FFTW_THREADS(A->nx, A->ny);
+    fft_threads(A->nx, A->ny);
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
 	A->fft->plan[dir+1]=FFTW(plan_dft_1d)(A->ny*A->nx, COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
@@ -229,7 +243,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     FFTW_FLAGS=FFTW_ESTIMATE;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
-    FFTW_THREADS(A->nx, A->ny);
+    fft_threads(A->nx, A->ny);
     /*along columns for all columns. */
     plan1d->plan[0]=FFTW(plan_many_dft)(1, &nx, ny,
 					COMP(A->p),NULL,1,nx,
@@ -259,7 +273,7 @@ void X(fft2)(X(mat) *A, int dir){
     if(!A->fft || !A->fft->plan[dir+1]) {
 	X(fft2plan)(A, dir);//Uses FFTW_ESTIMATE to avoid override data.
     }
-    FFTW(execute)(A->fft->plan[dir+1]);
+    fft_execute(A->fft->plan[dir+1]);
 }
 
 /**
@@ -294,7 +308,7 @@ void X(fft2partial)(X(mat) *A, int ncomp, int dir){
     if(!plan1d) error("Please run //cfft2partialplan first\n");
     if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
     for(int i=0; i<3; i++){
-	FFTW(execute)(plan1d->plan[i]);
+	fft_execute(plan1d->plan[i]);
     }
 }
 
@@ -337,7 +351,7 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
-	FFTW_THREADS(nx, ny);
+	fft_threads(nx, ny);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
 	UNLOCK_FFT;
@@ -350,7 +364,7 @@ void X(cell_fft2)(X(cell) *dc, int dir){
     if(!dc->fft || !dc->fft->plan[dir+1]){
 	X(cell_fft2plan)(dc, dir);
     }
-    FFTW(execute)(dc->fft->plan[dir+1]);
+    fft_execute(dc->fft->plan[dir+1]);
 }
 
 void X(fft1plan_r2hc)(X(mat) *A, int dir){
@@ -374,7 +388,7 @@ void X(fft1plan_r2hc)(X(mat) *A, int dir){
 
 void X(fft1)(X(mat) *A, int dir){
     assert(A->fft && abs(dir)==1);
-    FFTW(execute)(A->fft->plan[dir+1]);
+    fft_execute(A->fft->plan[dir+1]);
 }
 
 #endif //#ifdef USE_COMPLEX

@@ -397,7 +397,6 @@ static void init_simu_evl(SIM_T *simu){
     RECON_T *recon=simu->recon;
     const int nsim=parms->sim.end;
     const int nevl=parms->evl.nevl;
-    const int nwvl=parms->evl.nwvl;
     const int nmod=parms->evl.nmod;
     const int seed=simu->seed;
     SIM_SAVE_T *save=simu->save;
@@ -598,22 +597,6 @@ static void init_simu_evl(SIM_T *simu){
 	    }
 	}
     }
-  
-    if(parms->evl.psfmean || parms->evl.psfhist){
-	/*compute diffraction limited PSF. */
-	dmat *iopdevl=dnew(aper->locs->nloc,1);
-	ccell *psf2s=0;
-	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
-	dcell *evlpsfdl=cellnew(nwvl,1);
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
-	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);
-	}
-	ccellfree(psf2s);
-	writebin(evlpsfdl, "evlpsfdl_%d.fits",seed);
-	dcellfree(evlpsfdl);
-	dfree(iopdevl);
-    }
 
     if(parms->sim.psfr){
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
@@ -776,15 +759,22 @@ static void init_simu_wfs(SIM_T *simu){
     if(parms->nphypowfs){
 	simu->fsmerr_store=cellnew(nwfs,1);
 	simu->fsmreal=cellnew(nwfs,1);
+	simu->fsmsho=calloc(nwfs*2, sizeof(SHO_T*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].llt || parms->powfs[ipowfs].dither==1){
 		simu->fsmerr_store->p[iwfs]=dnew(2,1);
 		simu->fsmreal->p[iwfs]=dnew(2,1);
+		if(parms->sim.f0fsm>0){
+		    simu->fsmsho[iwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//x
+		    simu->fsmsho[iwfs+nwfs]=sho_new(parms->sim.f0fsm, parms->sim.zetafsm);//y
+		}
 	    }
 	}
 	simu->fsmint=servo_new(simu->fsmreal, parms->sim.apfsm, parms->sim.alfsm,
 			       parms->sim.dthi, parms->sim.epfsm);
+
+
     }
   
     {/*MMAP the LGS fsmlink error/command output */
@@ -1504,6 +1494,12 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->fsmerr_store);
     dcellfree(simu->fsmreal);
     servo_free(simu->fsmint);
+    if(simu->fsmsho){
+	for(int i=0; i<parms->nwfs*2; i++){
+	    free(simu->fsmsho[i]);
+	}
+	free(simu->fsmsho);
+    }
     dcellfree(simu->cgres);
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);

@@ -316,7 +316,7 @@ void perfevl_ievl(thread_t *info){
 		}else if(parms->evl.cov){/*remove piston */
 		    dadds(iopdevl, -pclmp[isim][0]);
 		}
-		if(parms->evl.cov){
+		if(parms->evl.cov && parms->evl.psfr->p[ievl]){
 		    dmm(&simu->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
 		    dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
 		}/*opdcov */
@@ -456,7 +456,7 @@ static void perfevl_mean(SIM_T *simu){
 			loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
 			loc_remove_ptt(iopdevl->p, ptt, aper->locs);
 		    }
-		    if(parms->evl.cov){
+		    if(parms->evl.cov && parms->evl.psfr->p[ievl]){
 			dmm(&simu->evlopdcov_ngsr->p[ievl], 1, iopdevl, iopdevl, "nt", 1);
 			dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 		    }

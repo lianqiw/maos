@@ -54,4 +54,18 @@ dmat* servo_test(dmat *mideal, double dtngs, int dtrat, dmat* sigma2n, dmat *gai
 void servo_reset(SERVO_T *st);
 void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
+/**
+   struct for state space modeling of a second order harnomic oscillator with
+   resonance frequency of f0 and damping ratio of zeta.
+*/
+typedef struct SHO_T{
+    double dt;//minimum dt for advancing state.
+    double c1;//2*zeta*omega0; omega0=2*pi*f0;
+    double c2;//omega0^2;
+    double x1;//status (derivative)
+    double x2;//status (position)
+}SHO_T;
+SHO_T *sho_new(double f0, double zeta);
+double sho_step(SHO_T *sho, double xi, double dt);
+void sho_reset(SHO_T *sho);
 #endif

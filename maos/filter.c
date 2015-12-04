@@ -374,6 +374,15 @@ static void filter_cl(SIM_T *simu){
     if(simu->fsmint){
 	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
 	dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
+	if(parms->sim.f0fsm>0){
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		if(simu->fsmreal->p[iwfs]){
+		    double *pin=simu->fsmint->mint->p[0]->p[iwfs]->p;
+		    simu->fsmreal->p[iwfs]->p[0]=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
+		    simu->fsmreal->p[iwfs]->p[1]=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
+		}
+	    }
+	}
 	servo_filter(simu->fsmint, simu->fsmerr);
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

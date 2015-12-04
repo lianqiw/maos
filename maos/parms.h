@@ -485,6 +485,8 @@ typedef struct SIM_CFG_T{
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    double zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
+    double f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
     double aptwfs;   /**<Twfs reference vector servo coefficient.*/
     double eptwfs;   /**<Twfs reference vector servo gain.*/
     double fcttm;    /**<cross over frequency of tip/tilt split*/

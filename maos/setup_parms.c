@@ -986,6 +986,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DMAT(sim.eplo);
     READ_DMAT(sim.apfsm);
     READ_DMAT(sim.epfsm);
+    READ_DBL(sim.zetafsm);
+    READ_DBL(sim.f0fsm);
     READ_DBL(sim.aptwfs);
     READ_DBL(sim.eptwfs);
     READ_INT(sim.aldm);

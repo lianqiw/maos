@@ -46,7 +46,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	if(sdataend[0]==']'){
 	    sdataend--;
 	}else{
-	    error("Unmatched [");
+	    error("{%s}: Does not end in ].\n", sdata);
 	}
     }
     /*skip spaces*/

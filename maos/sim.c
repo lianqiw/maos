@@ -244,11 +244,28 @@ void maos_sim(){
     const PARMS_T *parms=global->parms;
     POWFS_T *powfs=global->powfs;
     RECON_T *recon=global->recon;
+    APER_T *aper=global->aper;
     SIM_T *simu=0;
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
     if(parms->sim.skysim){
 	save_skyc(powfs,recon,parms);
+    }
+    if(parms->evl.psfmean || parms->evl.psfhist){
+	/*compute diffraction limited PSF. Save to output directory.*/
+	dmat *iopdevl=dnew(aper->locs->nloc,1);
+	ccell *psf2s=0;
+	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
+	const int nwvl=parms->evl.nwvl;
+	dcell *evlpsfdl=cellnew(nwvl,1);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
+	    evlpsfdl->p[iwvl]->header=evl_header(parms, simu->aper, -1, iwvl);
+	}
+	ccellfree(psf2s);
+	writebin(evlpsfdl, "evlpsfdl.fits");
+	dcellfree(evlpsfdl);
+	dfree(iopdevl);
     }
     info2("PARALLEL=%d\n", PARALLEL);
     if(simstart>=simend) return;

@@ -723,6 +723,8 @@ if test "$with_matlab" != "no" ;then
     if test x$mex_lib = xyes ;then
     	MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE $OPENMP_CFLAGS" 
 	LIBMEX=" -lmwlapack -lmwblas -lmx -lmex -lmat -lut -lstdc++ -lz -lm -ldl -lfftw3"
+	#some MATLAB distribution has libmwfftw3.so, some only has libmwfftw3.so.3
+	#AC_CHECK_LIB([mwfftw3], [fftw_execute], [LIBMEX+=" -lmwfftw3"], [LIBMEX+=" -l:libmwfftw3.so.3"], [$LDMEX])
 	LDMEX+="-no-fast-install -static -Xcompiler -shared"
 	AM_CONDITIONAL(USE_MEX, true)
     else

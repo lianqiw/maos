@@ -529,6 +529,7 @@ typedef struct SIM_T{
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
     dcell *fsmerr,*fsmerr_store;     /**<uplink error*/
+    SHO_T **fsmsho;     /**<State of FSM SHO*/
     dcell *fsmreal;    /**<uplink real*/
     SERVO_T *fsmint;    /**<uplink integrator output.*/
     dcell *fsmerrs;    /**<mmaped file to store fsmerr history*/

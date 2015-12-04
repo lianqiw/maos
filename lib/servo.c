@@ -699,3 +699,27 @@ void servo_free(SERVO_T *st){
     dfree(st->ep);
     free(st);
 }
+
+SHO_T *sho_new(double f0, double zeta){
+    SHO_T *out=calloc(1, sizeof(SHO_T));
+    const double omega0=2*M_PI*f0;
+    out->dt=0.01/f0;
+    out->c1=2*zeta*omega0;
+    out->c2=omega0*omega0;
+    out->x1=out->x2=0;
+    return out;
+}
+double sho_step(SHO_T *sho, double xi, double dt){
+    //divide dt to multiple time to do proper integration.
+    long nover=(long)ceil(dt/sho->dt);
+    double dti=dt/nover;
+    for(long i=0; i<nover; i++){
+	double x1d=sho->x1*(-sho->c1)+sho->x2*(-sho->c2)+xi*sho->c2;
+	sho->x2+=dti*sho->x1;
+	sho->x1+=dti*x1d;
+    }
+    return sho->x2;
+}
+void sho_reset(SHO_T *sho){
+    sho->x1=sho->x2=0;
+}

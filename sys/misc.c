@@ -236,30 +236,31 @@ char *mygetcwd(void){
     return strdup(cwd0);
 }
 /**
-   Translate a path into absolute path.
+   Translate a path into absolute path. The caller shall free the returned string.
 */
 char *myabspath(const char *path){
     if(!path) return 0;
-#if _BSD_SOURCE || _XOPEN_SOURCE >= 500
-    char rpath[PATH_MAX];
-    if(realpath(path, rpath)){
-	return strdup(rpath);
-    }else{
-	perror("realpath");
+    char path2[PATH_MAX];
+    switch(path[0]){
+    case '~':
+	snprintf(path2, PATH_MAX, "%s/%s", HOME, path+1);
+	break;
+    case '/':
+	snprintf(path2, PATH_MAX, "%s", path);
+	break;
+    default:
+	{
+	    char *cwd=mygetcwd();
+	    snprintf(path2, PATH_MAX, "%s/%s", cwd, path);
+	    free(cwd);
+	}
+    }
+    if(!isdir(path)){
+	error("path %s does not exist\n", path);
 	return 0;
+    }else{
+	return strdup(path2);
     }
-#else
-    char *cpath=mygetcwd();//save current cwd.
-    if(chdir(path)){
-       error("path %s doesn't exist\n",path);
-    }
-    char *abspath=mygetcwd();
-    if(chdir(cpath)){
-	error("Unable to cd back to %s\n",cpath);
-    }
-    free(cpath);
-    return abspath;
-#endif
 }
 
 void mysymlink(const char *fn, const char *fnlink){

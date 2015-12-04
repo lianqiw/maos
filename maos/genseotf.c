@@ -37,7 +37,7 @@
    library with p/t/t removal set.
 */
 static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    /*create a grid representing the aperture. */
+    /*create a grid representing the sub-aperture. */
     loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->dx,
