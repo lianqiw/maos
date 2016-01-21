@@ -1046,14 +1046,14 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     double oy=lpts->origx[0]=(dx-lpts->dsa)*0.5;
     double ox=lpts->origy[0]=(dx-lpts->dsa)*0.5;
     double sumamp2=0;
-    llt->amp=dnew(nx,nx);
+    llt->amp=dnew(nx*nx, 1);
     if(lltcfg->fnamp){
 	map_t *lltamp=mapread("%s", lltcfg->fnamp);
 	prop_grid_pts(lltamp, llt->pts, llt->amp->p, 1, 0, 0, 1, 1, 0, 0);
 	sumamp2=dinn(llt->amp, llt->amp);
 	mapfree(lltamp);
     }else{
-	PDMAT(llt->amp, amps);
+	double *amps=llt->amp->p;
 	double l2max =pow(lltd*0.5,2);
 	/*the waist is defined as the radius where amplitude
 	  drop to 1/e or intensity to 1/e^2.*/
@@ -1066,8 +1066,8 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		xx*=xx;
 		double r2=xx+yy;
 		if(r2<=l2max){
-		    amps[iy][ix]=exp(-r2/r2waist);
-		    sumamp2+=pow(amps[iy][ix],2);
+		    amps[iy*nx+ix]=exp(-r2/r2waist);
+		    sumamp2+=pow(amps[iy*nx+ix],2);
 		}
 	    }
 	}
@@ -1100,9 +1100,32 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    llt->amp->p[i]=-llt->amp->p[i];
 	}
     }
+  
     llt->loc=mksqloc(nx,nx,dx,dx, lpts->origx[0], lpts->origy[0]);
     llt->mcc =pts_mcc_ptt(llt->pts, llt->amp->p);
     llt->imcc =dcellinvspd_each(llt->mcc);
+    /*Remove tip/tilt/focus from ncpa */
+    if(llt->ncpa && parms->powfs[ipowfs].llt->ttfr){
+	int nmod=4;//pick first four modes
+	dmat *pttfa=zernike(llt->loc, parms->powfs[ipowfs].llt->d, 0, 2, 0);
+	dmat *pttf=drefcols(pttfa, 0, nmod);
+	dmat *proj=dpinv(pttf, llt->amp);
+	dmat *res=dnew(nmod, 1);
+	for(int ilotf=0; ilotf<llt->ncpa->nx*llt->ncpa->ny; ilotf++){
+	    dzero(res);
+	    dmulvec(res->p, proj, llt->ncpa->p[ilotf]->p, 1);
+	    dmulvec(llt->ncpa->p[ilotf]->p, pttf, res->p, -1);
+	    dshow(res, "LOTF %d", ilotf);
+	}
+	if(parms->save.setup){
+	    writebin(pttf, "powfs%d_llt_pttf", ipowfs);
+	    writebin(proj, "powfs%d_llt_proj", ipowfs);
+	}
+	dfree(pttfa);
+	dfree(pttf);
+	dfree(proj);
+	dfree(res);
+    }
     if(parms->save.setup){
 	locwrite(llt->loc,"powfs%d_llt_loc",ipowfs);
 	writebin(llt->amp,"powfs%d_llt_amp",ipowfs);

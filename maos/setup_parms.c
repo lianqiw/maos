@@ -15,10 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -384,6 +380,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    powfsi->llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    powfsi->llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
+	    powfsi->llt->ttfr=readcfg_int("%sllt.ttfr",prefix);
 	    powfsi->llt->colprep=readcfg_int("%sllt.colprep",prefix); 
 	    powfsi->llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    powfsi->llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
@@ -2013,6 +2010,36 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
    altitude is allowed.
 */
 static void setup_parms_postproc_recon(PARMS_T *parms){
+   if(parms->nmoao>0){//remove unused moao configurations
+	int count=0;
+	for(int imoao=0; imoao<parms->nmoao; imoao++){
+	    int used=0;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].moao>=parms->nmoao){
+		    error("invalid powfs[%d].moao=%d", ipowfs, parms->powfs[ipowfs].moao);
+		}
+		if(parms->powfs[ipowfs].moao==imoao){
+		    used=1;
+		    break;
+		}
+	    }
+	    if(parms->evl.moao>=parms->nmoao){
+		error("invalid evl.moao=%d\n", parms->evl.moao);
+	    }
+	    if(parms->evl.moao==imoao){
+		used=1;
+	    }
+	    if(used){
+		parms->moao[imoao].used=1;
+		count++;
+	    }
+	}
+	if(count==0){//no moao
+	    parms->nmoao=0;
+	    free(parms->moao);
+	    parms->moao=NULL;
+	}
+    }
     if((parms->recon.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->recon.split=0;
@@ -2161,16 +2188,19 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    }
 	    if(parms->powfs[ipowfs].order>maxorder){
 		maxorder=parms->powfs[ipowfs].order;
+		info("maxorder=%g\n", maxorder);
 	    }
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    if(parms->dm[idm].order > maxorder){
 		maxorder=parms->dm[idm].order;
+		info("maxorder=%g\n", maxorder);
 	    }
 	}
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
 	    if(parms->moao[imoao].order>maxorder){
 		maxorder=parms->moao[imoao].order;
+		info("maxorder=%g\n", maxorder);
 	    }
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
@@ -2308,36 +2338,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
-    if(parms->nmoao>0){//remove unused moao configurations
-	int count=0;
-	for(int imoao=0; imoao<parms->nmoao; imoao++){
-	    int used=0;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].moao>=parms->nmoao){
-		    error("invalid powfs[%d].moao=%d", ipowfs, parms->powfs[ipowfs].moao);
-		}
-		if(parms->powfs[ipowfs].moao==imoao){
-		    used=1;
-		    break;
-		}
-	    }
-	    if(parms->evl.moao>=parms->nmoao){
-		error("invalid evl.moao=%d\n", parms->evl.moao);
-	    }
-	    if(parms->evl.moao==imoao){
-		used=1;
-	    }
-	    if(used){
-		parms->moao[imoao].used=1;
-		count++;
-	    }
-	}
-	if(count==0){//no moao
-	    parms->nmoao=0;
-	    free(parms->moao);
-	    parms->moao=NULL;
-	}
-    }
+ 
     if(parms->recon.misreg_tel2wfs){
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(parms->recon.misreg_tel2wfs[iwfs]){

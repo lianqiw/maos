@@ -46,10 +46,10 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
 }
 
 /**
-   Create Zernike modes on loc with diameter D and radial order upto nr
-   nr=0 is piston
-   nr=1 is tip/tilt
-   nr=2 is quadratic modes
+   Create Zernike modes on loc with diameter D and radial order from rmin to rmax
+   r=0 is piston
+   r=1 is tip/tilt
+   r=2 is quadratic modes
    if nopiston is set, skip piston mode.
    if flag is >0, only radial mode is used.
    if flag is  0, all modes between rmin and rmax.

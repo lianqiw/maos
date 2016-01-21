@@ -899,7 +899,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     const RECON_T *recon=simu->recon;
     dcellzero(simu->Mngs);
     dcellmm(&simu->Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
-    //zero out global focus mode if any.
+    //zero out global focus mode if any so we don't remove it from DM commands.
     if(recon->ngsmod->nmod>5){
 	if(simu->parms->sim.ahstfocus){
 	    const double scale=recon->ngsmod->scale;

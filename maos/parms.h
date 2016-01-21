@@ -104,6 +104,7 @@ typedef struct LLT_CFG_T{
     dmat *oy;    /**<see ox.*/
     dmat *misreg;
     lmat *i;        /**<Index into llt for this iwfs.*/
+    int ttfr;      /**<Remove piston/tip/tilt/focus from ncpa*/
     int n;         /**<number of launch telescopes in this powfs*/
     int colprep;   /**<starting column to use in fn for ETF in preparation of
 		      matched filter*/
