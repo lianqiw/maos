@@ -26,8 +26,7 @@ mex write.c -largeArrayDims
 usage write(filename, data);
 */
 #include "io.h"
-
-static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *header){
+static char *mx2str(const mxArray *header){
     char *str=NULL;
     if(header && mxIsChar(header)){
 	int nheader=mxGetM(header)*mxGetN(header)+1;
@@ -42,16 +41,23 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }
 	}
     }
+    return str;
+}
+static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *header){
+    char *str=mx2str(header);
     uint32_t magic;
     uint64_t m,n;
     if(!arr){
 	m=0; n=0;
     }else{
+	if(mxGetNumberOfDimensions(arr)>2){
+	    error("Arrays with more than 2 dimensions cannot be handled\n");
+	}
 	m=mxGetM(arr);
 	n=mxGetN(arr);
-    }
-    if(!m || !n){
-	arr=NULL;
+        if(!m || !n){
+	    arr=NULL;
+	}
     }
     if(arr && mxIsCell(arr)){
 	magic=MCC_ANY;
@@ -98,7 +104,8 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    issparse=0;
 	    type2=M_DBL;
 	}
-	header_t header2={magic, m, n, str};
+	//don't write global header.
+	header_t header2={magic, m, n, 0};
 	write_header(&header2, fp);
 	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
@@ -107,7 +114,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    if(header && mxIsCell(header)){
 		writedata(fp, type2, in, mxGetCell(header, ix));
 	    }else{
-		writedata(fp, type2, in, NULL);
+		writedata(fp, type2, in, header);
 	    }
 	}
     }else{/*not cell.*/

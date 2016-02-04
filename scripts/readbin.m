@@ -73,12 +73,12 @@ function [magic, nx, ny, header]=readfits_header(fid)
         if page==0
             res=fread(fid, 80, 'char*1=>char*1')';
             if length(res)==0 || feof(fid)
-                END=1
+                END=1;
                 break;
             end
             if ~strcmp(res(1:6), 'SIMPLE') && ~strcmp(res(1:16), 'XTENSION= ''IMAGE')
                 disp('Garbage in fits file');
-                END=1
+                END=1;
                 break;
             end
             res=fread(fid, 80, 'char*1=>char*1')';
@@ -206,14 +206,24 @@ function [res header err]=readbin_do(fid, isfits)
      case {MCC_ANY, MCC_DBL, MCC_CMP, MC_CSP, MC_SP, MC_DBL, MC_CMP, MC_INT32, MC_INT64}
       res=cell(nx,ny);
       header2=cell(nx,ny);
+      nheaderstr=0;
       for ii=1:nx*ny
           [res{ii} header2{ii} err]=readbin_do(fid, isfits);
+          if length(header2{ii})
+              nheaderstr=nheaderstr+1;
+          end
           if err
               break;
           end
       end
-      header2{end+1}=header;
-      header=header2;
+      if(nheaderstr)
+          if length(header)
+              header2{end+1}=header;
+          end
+          header=header2;
+      else
+          clear header2;
+      end
      case {M_SP64, M_CSP64}
       nz=zfread(fid,1,'uint64=>uint64');
       Jc=zfread(fid,ny+1,'uint64=>uint64');

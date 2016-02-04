@@ -402,7 +402,7 @@ static void init_simu_evl(SIM_T *simu){
     SIM_SAVE_T *save=simu->save;
     simu->evlopd=cellnew(nevl, 1);
     simu->perfevl_iground=parms->atm.iground;
-    if(!disable_save){
+    if(!disable_save && parms->save.extra){
 	simu->timing=dnew_mmap(5, nsim, NULL, "Timing_%d.bin", seed);
     }
     {/*MMAP the main result file */
@@ -1014,7 +1014,11 @@ static void init_simu_wfs(SIM_T *simu){
 		    nny[iwfs]=0;
 		}
 	    }
-	    simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
+	    if(parms->save.extra){
+		simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
+	    }else{
+		simu->zoompos=dcellnew3(parms->nwfs, 1, nnx, nny);
+	    }
 	}
 	
     }
@@ -1369,8 +1373,12 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[1]=nnx[0]=parms->sim.end;
 	    nny[1]=nny[0]=1;
 	    const char *header[2]={"Tomography", "DM Fit"};
-	    simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
-				      "ResCG_%d.bin", seed);
+	    if(parms->save.extra){
+		simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
+					  "ResCG_%d.bin", seed);
+	    }else{
+		simu->cgres=dcellnew3(2, 1, nnx, nny);
+	    }
 	}
     }
     init_simu_evl(simu);

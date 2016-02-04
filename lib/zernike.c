@@ -78,7 +78,6 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 	D=D2;
     }else if(fabs(D-D2)>D*0.5){
 	warning("specified diameter is incorrect. D=%g, loc D=%g\n", D, D2);
-	writebin(loc, "loc_wrongD");
     }
  
     dmat *restrict opd=dnew(nloc,nmod);

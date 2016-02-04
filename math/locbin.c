@@ -107,18 +107,18 @@ void mapwritedata(file_t *fp, map_t *map){
 */
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
+    memset(map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
     char *header=in->header;
     map->iac=0;
-    if(header){
-	map->ox=search_header_num(header,"ox");
-	map->oy=search_header_num(header,"oy");
-	map->dx=search_header_num(header,"dx");
-	map->dy=search_header_num(header,"dy");
-	map->h =search_header_num(header,"h");
-	map->vx=search_header_num(header,"vx");
-	map->vy=search_header_num(header,"vy");
-    }
+    map->ox=search_header_num(header,"ox");
+    map->oy=search_header_num(header,"oy");
+    map->dx=search_header_num(header,"dx");
+    map->dy=search_header_num(header,"dy");
+    map->h =search_header_num(header,"h");
+    map->vx=search_header_num(header,"vx");
+    map->vy=search_header_num(header,"vy");
     if(is_nan(map->dx)){
+	error("dx is not specified in header.\n");
 	map->dx=1./64.;
     }
     if(is_nan(map->dy)){
@@ -186,6 +186,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 */
 rmap_t* d2rmap(dmat *in){
     rmap_t *map=realloc(dref(in), sizeof(rmap_t));
+    memset(map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
     char *header=in->header;
     if(!in->header){
 	error("this dmat has no header\n");

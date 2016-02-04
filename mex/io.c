@@ -29,7 +29,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include "io.h"
-static void write_timestamp(file_t *fp);
+//static void write_timestamp(file_t *fp);
 
 static const char *myasctime(void){
     static char st[64];
@@ -206,9 +206,9 @@ file_t* zfopen(const char *fn, char *mod){
     if(check_suffix(fn2, ".fits") || check_suffix(fn2, ".fits.gz")){
 	fp->isfits=1;
     }  
-    if(mod[0]=='w' && !fp->isfits){
+    /*if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
-    }
+	}*/
     free(fn2);
     return fp;
 }
@@ -423,26 +423,24 @@ static void write_bin_header(const char *header, file_t *fp){
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
     /*make header 8 byte alignment.*/
-    char *header2=strdup(header);
-    if(nlen % 8 != 0){
-	nlen=(nlen/8+1)*8;
-	header2=realloc(header2, nlen);
-    }
+    uint64_t nlen2=(nlen/8+1)*8;
+    char *header2=calloc(sizeof(char), nlen2);
+    memcpy(header2, header, nlen);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
-    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(header2, 1, nlen, fp);
-    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
+    zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
+    zfwrite(header2, 1, nlen2, fp);
+    zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     free(header2);
 }
 
-static void write_timestamp(file_t *fp){
+/*static void write_timestamp(file_t *fp){
     if(fp->isfits) error("Not supported\n");
     char header[128];
     snprintf(header,128, "Created by write on %s\n",
 	     myasctime());
     write_bin_header(header, fp);
-}
+    }*/
 
 /**
    Obtain the current magic number. If it is a header, read it out if output of

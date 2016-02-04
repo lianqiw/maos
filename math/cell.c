@@ -237,7 +237,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	id=MCC_ANY;//default for empty array
     }
     switch(id){
-    case MCC_ANY:{
+    case MCC_ANY:{//write cell
 	uint64_t nx=0;
 	uint64_t ny=0;
 	if(A){
@@ -357,8 +357,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    error("Only support zero or one level of cell when reading fits file\n");
 	}
     }else{
-	if(!iscell(&header->magic)){
-	    //wrap array into cell
+	if(!iscell(&header->magic)){//wrap array into 1x1 cell
 	    info2("Read cell from non cell data\n");
 	    cell *dcout=cellnew(1,1);
 	    dcout->p[0]=readdata_by_id(fp, id, level-1, header);
@@ -368,8 +367,13 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    long ny=header->ny;
 	    cell *dcout=cellnew(nx, ny);
 	    dcout->header=header->str; header->str=0;
+	    header_t headerc={0};
 	    for(long i=0; i<nx*ny; i++){
-		dcout->p[i]=readdata_by_id(fp, id, level-1, 0);
+		read_header(&headerc, fp);
+		if(!headerc.str && dcout->header){//copy str from cell to mat.
+		    headerc.str=strdup(dcout->header);
+		}
+		dcout->p[i]=readdata_by_id(fp, id, level-1, &headerc);
 	    }
 	    out=dcout;
 	}

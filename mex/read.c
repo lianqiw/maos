@@ -89,6 +89,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		out=mxCreateCellMatrix(nx,ny);
 	    }
 	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
+	    int nheader0=0;
 	    for(ix=0; ix<nx*ny; ix++){
 		int start2=0;
 		if(start==-1 || ix<start || ix>=start+howmany){
@@ -107,12 +108,21 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    }
 		    if(header3){
 			mxSetCell(header0, ix, header3);
+			if(mxGetNumberOfElements(header3)){
+			    nheader0++;
+			}
 		    }
 		}
 	    }
-	    if(header){
-		mxSetCell(header0, nx*ny, *header);
-		*header=header0;
+	    if(nheader0){
+		if(header){
+		    mxSetCell(header0, nx*ny, *header);
+		    *header=header0;
+		}else{
+		    mxDestroyArray(header0);
+		}
+	    }else{
+		mxDestroyArray(header0);//just use the global header.
 	    }
 	}
 	break;

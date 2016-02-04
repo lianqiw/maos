@@ -211,9 +211,7 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	if((fp->fd=open(fn2, O_RDONLY))==-1){
 	    perror("open for read");
 	}else{
-	    if(futimes(fp->fd, NULL)){
-		warning("change access/modification time failed for %s.\n", fp->fn);
-	    }
+	    futimes(fp->fd, NULL);
 	}
 	break;
     case 'w':/*write */
@@ -273,9 +271,9 @@ file_t* zfopen_try(const char *fn, const char *mod){
     if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){
 	fp->isfits=1;
     }
-    if(mod[0]=='w' && !fp->isfits){
+    /*if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
-    }
+	}*/
   end:
     UNLOCK(lock);
     return fp;
@@ -574,8 +572,8 @@ read_bin_header(header_t *header, file_t *fp){
 */
 static void 
 write_bin_headerstr(const char *str, file_t *fp){
-    if(!str) return;
-    if(fp->isfits) error("fits file is not supported\n");
+    if(!str || !strlen(str)) return;
+    assert(!fp->isfits);
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(str)+1;
     uint64_t nlen2=(nlen%8)?((nlen/8+1)*8):(nlen);
@@ -829,12 +827,12 @@ uint64_t bytes_header(const char *header){
 /**
    Write the time stamp as header into current location in the file.
 */
-void write_timestamp(file_t *fp){
+/*void write_timestamp(file_t *fp){
     char header[128];
     snprintf(header,128, "Created by MAOS Version %s on %s in %s\n",
 	     PACKAGE_VERSION, myasctime(), myhostname());
     write_bin_headerstr(header, fp);
-}
+    }*/
 
 /**
    Search and return the value correspond to key. NULL if not found. Do not free the

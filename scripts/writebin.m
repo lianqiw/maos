@@ -32,10 +32,6 @@ function writebin(data,varargin)
         fn=[fn '.bin'];
     end
     fid=fopen(fn,'wb');
-    s=size(data);
-    if(length(s)>2)
-        error('We do not handle more than 2 dimensions');
-    end
     writebin_do(data,header,fid);
     if do_gzip
         system(sprintf('gzip -f %s',fn));
@@ -67,9 +63,12 @@ function writebin_do(data,header,fid)
     MAT_SP=65281;
     MAT_CSP=65282;
     M_HEADER=25856;
+    if length(size(data))>2
+        error('We do not handle more than 2 dimensions');
+    end
     if iscell(data)
         if ~isempty(header) 
-            if  ~iscell(header) %header is not cell.
+            if ~iscell(header) %header is not cell.
                 writeheader_do(header, fid);
             else
                 if numel(header)==numel(data)+1

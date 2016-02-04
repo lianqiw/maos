@@ -1115,7 +1115,6 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dzero(res);
 	    dmulvec(res->p, proj, llt->ncpa->p[ilotf]->p, 1);
 	    dmulvec(llt->ncpa->p[ilotf]->p, pttf, res->p, -1);
-	    dshow(res, "LOTF %d", ilotf);
 	}
 	if(parms->save.setup){
 	    writebin(pttf, "powfs%d_llt_pttf", ipowfs);
