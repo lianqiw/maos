@@ -72,7 +72,7 @@ ARG_S *parse_args(int argc, const char *argv[]){
 #ifndef MAOS_DISABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
 	if(!host){
-	    host=strdup(myhostname());
+	    host=strdup(HOST);
 	}
 	if(scheduler_launch_exe(host, argc, argv)){
 	    error("Unable to launch skyc at server %s\n", host);
@@ -116,7 +116,7 @@ ARG_S *parse_args(int argc, const char *argv[]){
 void rename_file(int sig){
     if(sig==0){
 	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "run_%s_%ld.log", myhostname(), (long)getpid());
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	remove("run_done.log");
 	rename(fn, "run_done.log");
 	mysymlink("run_done.log", fn);

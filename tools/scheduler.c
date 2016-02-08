@@ -1071,7 +1071,7 @@ int main(){
     is_scheduler=1;
     {
 	char slocal2[PATH_MAX];
-	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, myhostname());
+	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, HOST);
 	scheduler_fnlog=strdup(slocal2);
     }
     {

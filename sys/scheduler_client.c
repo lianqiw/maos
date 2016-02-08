@@ -22,8 +22,6 @@
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
-
-
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -150,9 +148,9 @@ void init_scheduler(){
 	    error("failed to open file %s\n",fn);
 	}
     }
-    hid=myhostid(myhostname());
+    hid=myhostid(HOST);
     if(hid==-1){
-	hosts[nhost]=strdup0(myhostname());/*use local machine */
+	hosts[nhost]=strdup0("localhost");/*use local machine */
 	hid=nhost;
 	nhost++;
     }

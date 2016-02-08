@@ -16,12 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   Obtain information about system load
-   
+   Obtain information about system
 */
-
-
-
 
 #include <limits.h>
 #include <sys/types.h>
@@ -47,6 +43,7 @@ int TCK=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *USER=NULL;
+char HOST[256];
 char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts
 char EXEP[PATH_MAX];/*absolute path of the exe.*/
 /**
@@ -56,58 +53,71 @@ void init_process(void){
 #if defined(__CYGWIN__)
     cygwin_internal(CW_SYNC_WINENV);
 #endif
-    if(!HOME){
-	USER=getenv("USER");
-	if(!USER){
-	    USER=getenv("USERNAME");
-	}
+//Get User
+    USER=getenv("USER");
+    if(!USER){
+	USER=getenv("USERNAME");
+    }
+    //Get Home
 #if defined(__CYGWIN__)
-	HOME=getenv("USERPROFILE");
-	const char *temp=getenv("TMP");
-	if(!temp){
-	    temp=getenv("TEMP");
-	}
-	if(!temp || !exist(temp)){
-	    temp="C:/Windows/Temp";
-	}
-	if(!exist(temp)){
-	    temp=HOME;/*set to home */
-	}
-	if(!exist(temp)){
-	    error("Unable to determine the path to temporary files");
-	}
-	HOME=cygwin_create_path(CCP_WIN_A_TO_POSIX,HOME);
-	temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
+    HOME=getenv("USERPROFILE");
+    HOME=cygwin_create_path(CCP_WIN_A_TO_POSIX,HOME);
 #else
-	HOME=getenv("HOME");
-	const char *temp="/tmp";
+    HOME=getenv("HOME");
 #endif
-	strcpy(TEMP, temp);
-	strcat(TEMP, "/maos-");
-	strcat(TEMP, USER);
-	mymkdir("%s",TEMP);
-	mymkdir("%s/.aos/",HOME);
+    
+//Get Temp directory
+#if defined(__CYGWIN__)
+    const char *temp=getenv("TMP");
+    if(!temp){
+	temp=getenv("TEMP");
+    }
+    if(!temp || !exist(temp)){
+	temp="C:/Windows/Temp";
+    }
+    if(!exist(temp)){
+	temp=HOME;/*set to home */
+    }
+    if(!exist(temp)){
+	error("Unable to determine the path to temporary files");
+    }
+    temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
+#else
+    const char *temp="/tmp";
+#endif
 
-	{/*PATH to executable*/
-	    char exepath[PATH_MAX];
-	    if(!get_job_progname(exepath, PATH_MAX, 0)){
-		char *tmp=strrchr(exepath,'/');
-		if(exepath[0]=='/' && tmp){
-		    *tmp=0;
-		}else{
-		    strncpy(exepath, mygetcwd(), PATH_MAX); 
-		}
-		strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
+    strcpy(TEMP, temp);
+    strcat(TEMP, "/maos-");
+    strcat(TEMP, USER);
+
+    //Create temporary folders
+    mymkdir("%s",TEMP);
+    mymkdir("%s/.aos/",HOME);
+
+    {/*PATH to executable*/
+	char exepath[PATH_MAX];
+	if(!get_job_progname(exepath, PATH_MAX, 0)){
+	    char *tmp=strrchr(exepath,'/');
+	    if(exepath[0]=='/' && tmp){
+		*tmp=0;
 	    }else{
-		EXEP[0]=0;
+		strncpy(exepath, mygetcwd(), PATH_MAX); 
 	    }
+	    strncpy(EXEP, exepath, PATH_MAX-1); EXEP[PATH_MAX-1]=0;
+	}else{
+	    EXEP[0]=0;
 	}
+    }
+    //Local host name
+    if(gethostname(HOST,255)){
+	warning("Unable to get hostname, set to localhost\n");
+	sprintf(HOST, "localhost");
     }
 
     NCPU= get_ncpu();
     MAXTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
 #if _OPENMP>200805
-    //The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
+//The openmp library may have not yet initialized, so we parse OMP_NUM_THREADS instead.
     if(getenv("OMP_NUM_THREADS")){
 	int nthread=strtol(getenv("OMP_NUM_THREADS"), 0, 10);
 	if(nthread<MAXTHREAD && nthread>0){

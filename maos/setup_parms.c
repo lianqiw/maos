@@ -2762,7 +2762,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
 	close_config(NULL);
     }else{
 	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", myhostname(), (long)getpid());
+	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 	close_config("%s", fn);
 	remove("maos_recent.conf");
 	mysymlink(fn, "maos_recent.conf");

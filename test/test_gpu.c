@@ -8,19 +8,18 @@
 #include "../cuda/gpu.h"
 
 int main(int argc, char *argv[]){
-    const char *host=myhostname();
-    info2("host is %s\n", host);
+    info2("HOST is %s\n", HOST);
     int ngpu;
     int gpus[8];
-    if(!strcmp(host, "cassiopeia") || !strcmp(host, "kepler")){
+    if(!strcmp(HOST, "cassiopeia") || !strcmp(HOST, "kepler")){
 	ngpu=2;
 	gpus[0]=0;
 	gpus[1]=1;
-    }else if(!strcmp(host, "orion")){
+    }else if(!strcmp(HOST, "orion")){
 	ngpu=2;
 	gpus[0]=0;
 	gpus[1]=1;
-    }else if(!strcmp(host, "geforce")){
+    }else if(!strcmp(HOST, "geforce")){
 	ngpu=8;
 	/*gpus[0]=4;
 	  gpus[1]=6;*/

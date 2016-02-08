@@ -45,6 +45,7 @@ extern int TCK;
 extern long NMEM;
 extern const char *HOME;/*the user home */
 extern const char *USER;/*the user name */
+extern char HOST[];/*the host name */
 extern char TEMP[];/*the temporary folder */
 extern char EXEP[];/*the exe path*/
 int get_ncpu(void);

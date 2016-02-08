@@ -138,8 +138,8 @@ int client(const char *hostname, int port, int nmin, int nmax, int nstep, int nr
 	}
     }
     close(sock);
-    writebin(timing, "pix_timing_%s_%d_%d_%d", myhostname(), nmin, nmax, nstep);
-    writebin(timing2, "pix_timing2_%s_%d_%d_%d", myhostname(), nmin, nmax, nstep);
+    writebin(timing, "pix_timing_%s_%d_%d_%d", HOST, nmin, nmax, nstep);
+    writebin(timing2, "pix_timing2_%s_%d_%d_%d", HOST, nmin, nmax, nstep);
     info("done\n");
     return 0;
 }

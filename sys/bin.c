@@ -830,7 +830,7 @@ uint64_t bytes_header(const char *header){
 /*void write_timestamp(file_t *fp){
     char header[128];
     snprintf(header,128, "Created by MAOS Version %s on %s in %s\n",
-	     PACKAGE_VERSION, myasctime(), myhostname());
+	     PACKAGE_VERSION, myasctime(), HOST);
     write_bin_headerstr(header, fp);
     }*/
 

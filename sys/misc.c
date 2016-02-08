@@ -193,24 +193,6 @@ char *strtime(void){
     char *dir=stradd(str, pid, NULL);
     return dir;
 }
-/**
-   Obtain the hostname of the current machine.
- */
-const char *myhostname(void){
-    static int inited=0;
-    static char host[255];
-    PNEW(lock);
-    LOCK(lock);
-    if(!inited){
-	if(gethostname(host,255)){
-	    warning("Unable to get hostname, set to localhost\n");
-	    sprintf(host,"localhost");
-	}
-	inited=1;
-    }
-    UNLOCK(lock);
-    return host;
-}
 
 /**
    Get current time in milli-second resolution.

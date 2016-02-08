@@ -145,14 +145,14 @@ void maos_setup(const PARMS_T *parms){
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){
-    info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),myhostname());
+    info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
     maos_setup(parms);
     if(parms->sim.end>parms->sim.start){
-	info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),myhostname());
+	info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),HOST);
 	maos_sim();
     }
     maos_reset();
-    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),myhostname());
+    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
 }
 
 void maos_reset(){
