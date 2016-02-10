@@ -107,7 +107,7 @@ void mapwritedata(file_t *fp, map_t *map){
 */
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
-    memset(map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
+    memset((void*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
     char *header=in->header;
     map->iac=0;
     map->ox=search_header_num(header,"ox");
@@ -186,7 +186,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 */
 rmap_t* d2rmap(dmat *in){
     rmap_t *map=realloc(dref(in), sizeof(rmap_t));
-    memset(map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
+    memset((void*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
     char *header=in->header;
     if(!in->header){
 	error("this dmat has no header\n");

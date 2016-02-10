@@ -155,14 +155,11 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 	    const X(mat)* wt=(X(mat)*)W;
 	    if(wt->ny==wt->nx){
 		X(mm)(&AtW, 0, A, wt, "tn", 1);
-	    }else if(wt->ny==1){
+	    }else if(wt->ny==1 && wt->nx==A->nx){
 		AtW=X(new)(A->ny,A->nx);
-		PMAT(A,pA);
-		PMAT(AtW,pAtW);
-		T *w=wt->p;
 		for(long iy=0; iy<A->ny; iy++){
 		    for(long ix=0;ix<A->nx; ix++){
-			pAtW[ix][iy]=pA[iy][ix]*w[ix];
+			IND(AtW,iy,ix)=IND(A,ix,iy)*IND(wt,ix);
 		    }
 		}
 	    }else{
@@ -187,6 +184,7 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
     if(X(isnan(cc))){
 	writebin(cc,"cc_isnan");
 	writebin(A,"A_isnan");
+	writebin(AtW,"AtW_isnan");
 	writebin(W,"W_isnan");
     }
     X(svd_pow)(cc,-1,1e-14);/*invert the matrix using SVD. safe with small eigen values. */

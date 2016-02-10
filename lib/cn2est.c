@@ -21,8 +21,19 @@
 #include "turbulence.h"
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
-CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat,
-		     const dmat *hs, dmat *htrecon, int keepht, double L0){
+#define COV_ROTATE 0     /*1: rotate the covariance and then cut along x. (old method).*/
+CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indices.*/
+		     const dmat *wfstheta,/**<nwfs*2: angular direction of each WFS.*/
+		     const loc_t *saloc,  /**<nsa*2: Subaperture low left corner coordinates*/
+		     const dmat *saa,     /**<nsa*1: Normalized subaperture area*/
+		     const double saat,   /**<Threshold for keeping subapertures*/
+		     const dmat *hs,      /**<nwfs*1: altitude of guide star*/
+		     const dmat *htrecon, /**<Layers height intended for tomography*/
+		     int keepht,          /**<2: slodar directly to htrecon,
+					   * otherwise: interpolate onto htrecon
+					   * from native slodar heights*/
+		     double L0            /**<The Outer scale*/
+    ){
     info2("Cn2 estimation:");
     /*We need at least a pair */
     if(!wfspair) return 0;
@@ -38,7 +49,8 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     int nwfs=wfstheta->nx;
     cn2est->nwfs=nwfs;
     cn2est->nsa=saloc->nloc;
-    /*wfscov is a flag for wfs show whether wfs participates in covariance. */
+    /*wfscov is a flag for wfs showing whether this wfs participates in
+     * covariance computation. */
     cn2est->wfscov=calloc(nwfs, sizeof(int));
     for(int ind=0; ind<npair; ind++){
 	int iwfs=(int)wfspair->p[ind];
@@ -48,12 +60,14 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	cn2est->wfscov[iwfs]=1;
     }
     /*embed has dimension nembed*nembed. It is used to embed 1-d gradient vector
-      to a 2-d map for each curvature and covariance compuation later.*/
+      to a 2-d map for each curvature, so that we can use FFT to compute the covariance*/
     cn2est->nembed=0;
     cn2est->embed=loc_create_embed(&cn2est->nembed, saloc, 2, 0);
-    const int nx=cn2est->nembed;
-    /*mask is a mask for valid subapertures that have enough area */
-    int *mask=calloc(nx*nx,sizeof(int));
+    const long nx=cn2est->nembed;
+    const long nxnx=nx*nx;
+    /* mask is a mask defined on square grid for subapertures that have
+     * normalized area above the threshold.*/
+    int *mask=calloc(nxnx,sizeof(int));
     if(saa && saa->nx!=cn2est->nsa){
 	error("saa and saloc mismatch\n");
     }
@@ -65,11 +79,10 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	}
     }
     int (*pmask)[nx]=(void*)mask;
+    /* this mask for for subapertures that we can compute curvature.*/
     cn2est->mask=lnew(nx,nx);
     int (*pmask2)[nx]=(void*)cn2est->mask->p;
     cmat *overlap=cnew(nx, nx);
-    //cfft2plan(overlap, -1);
-    //cfft2plan(overlap, 1);
     PCMAT(overlap, pover);
     int iymin=nx,iymax=0,ixmin=nx,ixmax=0;
     for(int iy=0; iy<nx; iy++){
@@ -89,14 +102,19 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     int maxsep=MIN((iymax-iymin), (ixmax-ixmin));
     free(mask);
     cfft2(overlap, -1);
-    for(long i=0; i<nx*nx; i++){
+    for(long i=0; i<nxnx; i++){
 	overlap->p[i]=overlap->p[i]*conj(overlap->p[i]);
     }
     cfft2(overlap, 1);
     cfftshift(overlap);
-    creal2d(&cn2est->overlap, 0, overlap, 1./(nx*nx));
+    /*cn2est->overlap: number of overlaps for each separation. peak value at (nx/2, nx/2)*/
+    cn2est->overlapi=dnew(nx,nx);
+    for(long i=0; i<nxnx; i++){
+	double over=creal(overlap->p[i]);
+	cn2est->overlapi->p[i]=(over>MIN_SA_OVERLAP)?(nxnx/over):0;
+    }
     cfree(overlap);
-    /*2-d arrays to store x y gradient  and x y "curvature" */
+    /*2-d arrays to store x y gradient, and "curvature" */
     cn2est->gxs=cellnew(nwfs, 1);/*stores gradient in 2-d map */
     cn2est->gys=cellnew(nwfs, 1);
     cn2est->curi=cellnew(nwfs, 1);
@@ -105,8 +123,6 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
 	    cn2est->gys->p[ix]=dnew(nx, nx);
 	    cn2est->curi->p[ix]=cnew(nx, nx);
-	    //cfft2plan(cn2est->curi->p[ix], -1);
-	    //cfft2plan(cn2est->curi->p[ix], 1);
 	}
     }
     /*
@@ -139,83 +155,18 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     PDMAT(wfstheta, pwfstheta);
     double hmin, hmax;
     dmaxmin(cn2est->htrecon->p, cn2est->htrecon->nx, &hmax, &hmin);
-    for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
-	/*get pointer for this pair */
-	CN2PAIR_T *pair=cn2est->pair+iwfspair;
-	/*The WFS in this pair. */
-	int wfs0=wfspair->p[iwfspair*2];
-	int wfs1=wfspair->p[iwfspair*2+1];
-	if(wfs0==wfs1){
-	    error("must pair different wfs.\n");
-	}
-	pair->wfs0=wfs0;
-	pair->wfs1=wfs1;
-	/*The separation between the stars */
-	double dthetax=pwfstheta[0][wfs0]-pwfstheta[0][wfs1];
-	double dthetay=pwfstheta[1][wfs0]-pwfstheta[1][wfs1];
-	/*The direction of the WFS pair baseline vector */
-	double ang=atan2(dthetay, dthetax);
-	pair->beta=ang;
-	/*the angular distance between WFS */
-	pair->dtheta=sqrt(dthetax*dthetax+dthetay*dthetay);
-	/*The average wfs guide star height of the two*/
-	if(hs->nx*hs->ny>=nwfs){
-	    pair->hsm=(hs->p[wfs0]+hs->p[wfs1])*0.5;
-	}else if(hs->nx*hs->ny==1){
-	    pair->hsm=hs->p[0];
-	}else{
-	    error("hs in in wrong format, should have 1 or %d elements\n", nwfs);
-	}
-	/*The number of layers is determined */
-	if(keepht==2){
-	    /*slodar output directly to layers used for tomography. may not work well */
-	    pair->iht0=0;
-	    pair->iht1=cn2est->htrecon->nx;
-	}else{
-	    /*output to nature slodar heights. and then bin to tomography layers */
-	    pair->iht0=(int)floor(hmin*pair->dtheta/(dsa*(1-hmin/pair->hsm)));
-	    pair->iht1=(int)floor(hmax*pair->dtheta/(dsa*(1-hmax/pair->hsm)));
-	    if(pair->iht0<-maxsep){
-		pair->iht0=-maxsep;
-	    }
-	    if(pair->iht1>maxsep){
-		pair->iht1=maxsep;
-	    }
-	    pair->iht1++;//exclusive
-	}
-	pair->nsep=(pair->iht1-pair->iht0);
-	nhtsx[iwfspair]=pair->nsep;
-	nhtsy[iwfspair]=1;
-	/*initialize ht array to store layer heights */
-	cn2est->ht->p[iwfspair]=dnew(pair->nsep,1);
-	/*stores the cross-covariance of the curvature for x, and y grads. */
-	cn2est->cov1->p[iwfspair]=dnew(pair->nsep,1);
-	cn2est->covc->p[iwfspair]=cnew(nx, nx);
-
-	/*info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
-	  iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);*/
-    }/*iwfspair */
-    /*stores estimated weight of layers during simulation and output to file finally. */
-    cn2est->wt=dcellnew3(nwfspair, 1, nhtsx, nhtsy);
-    /*stores estimated r0 during simulation */
-    cn2est->r0=dnew(nwfspair,1);
-    /*
-      Now we start to build the model that will be used to estimate Cn2 from the
-      cross-covariance.
-    */
-
-    /*ovs is the over sampling factor in mxx, myy. need to be at least 2 to
+    /*ovs is the over sampling factor in mc. need to be at least 2 to
       cover the non-zero PSD (sinc functions.)*/
       
-      /*deprecated:for ovs bigger than 1, the
+    /*deprecated:for ovs bigger than 1, the
       results changes even with wfs pairs aligned along x/y direction. The
       reason is that we are sampling more PSDs with bigger ovs. This is probably
       the aliasing effect. With larger ovs, we are using larger
       frequencies. That gets aliased into the results. Then how about padding?*/
     cn2est->ovs=2;
-    /*Pnk stores the opeator from layer weight to gradient curvature covariance
-      matrix. iPnk is the covariance of it. Each diagonal cell is for each WFS
-      pair.*/
+    /*Pnk stores the opeator from layer weight to curvature covariance
+      matrix. iPnk is the psuedo inverse of Pnk. Each diagonal cell is for each
+      WFS pair.*/
     cn2est->Pnk=cellnew(nwfspair, nwfspair);
     cn2est->iPnk=cellnew(nwfspair,nwfspair);
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
@@ -223,12 +174,94 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
     cn2est->wtconvert=cellnew(1,nwfspair);
     cn2est->L0=L0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
+	/*get pointer for this pair */
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
+	/*The WFS in this pair. */
+	const int wfs0=wfspair->p[iwfspair*2];
+	const int wfs1=wfspair->p[iwfspair*2+1];
+	pair->wfs0=wfs0;
+	pair->wfs1=wfs1;
+	/*The separation between the stars */
+	const double dthetax=pwfstheta[0][wfs0]-pwfstheta[0][wfs1];
+	const double dthetay=pwfstheta[1][wfs0]-pwfstheta[1][wfs1];
+	/*the angular distance between WFS */
+	double dtheta=sqrt(dthetax*dthetax+dthetay*dthetay);
+	/*The direction of the WFS pair baseline vector */
+	double beta=atan2(dthetay, dthetax);
+	if(wfs0==wfs1 || dtheta<1e-14){
+	    dtheta=0;
+	    beta=0;
+	}
+	/*The average wfs guide star height of the two*/
+	const double cb=cos(beta);
+	const double sb=sin(beta);
+#if COV_ROTATE
+	const double slang=1;
+#else
+	const double slang=MAX(fabs(cb), fabs(sb));
+#endif
+	double hsm=0;
+	if(hs->nx*hs->ny>=nwfs){
+	    hsm=(hs->p[wfs0]+hs->p[wfs1])*0.5;
+	}else if(hs->nx*hs->ny==1){
+	    hsm=hs->p[0];
+	}else{
+	    error("hs in in wrong format, should have 1 or %d elements\n", nwfs);
+	}
+	if(dtheta==0){//seeing only for self-correlation.
+	    pair->iht0=0;
+	    pair->iht1=1;
+	    warning("Can only obtain r0 using auto-correlation.\n");
+	}else{
+	    /*The number of layers is determined */
+	    if(keepht==2){
+		/*slodar output directly to layers used for tomography. may not work well */
+		pair->iht0=0;
+		pair->iht1=cn2est->htrecon->nx;
+	    }else{
+		/*output to nature slodar heights. and then bin to tomography layers */
+		pair->iht0=(int)floor(hmin*dtheta*slang/(dsa*(1-hmin/hsm)));
+		pair->iht1=(int)floor(hmax*dtheta*slang/(dsa*(1-hmax/hsm)));
+		if(pair->iht0<-maxsep){
+		    pair->iht0=-maxsep;
+		}
+		if(pair->iht1>maxsep){
+		    pair->iht1=maxsep;
+		}
+		pair->iht1++;//exclusive
+	    }
+	}
+	pair->nht=(pair->iht1-pair->iht0);
+	nhtsx[iwfspair]=pair->nht;
+	nhtsy[iwfspair]=1;
+#if COV_ROTATE
+	pair->nsep=pair->nht;
+#else
+	pair->nsep=nxnx; //use all combinations.
+#endif
+	/*initialize ht array to store layer heights */
+	cn2est->ht->p[iwfspair]=dnew(pair->nht,1);
+	/*stores the cross-covariance of the curvature for x, and y grads. */
+	cn2est->covc->p[iwfspair]=cnew(nx, nx);
+        cn2est->cov2->p[iwfspair]=dnew(nx, nx);
+#if COV_ROTATE
+	cn2est->cov1->p[iwfspair]=dnew(pair->nsep,1);//1d cut
+#else
+        cn2est->cov1->p[iwfspair]=dref_reshape(cn2est->cov2->p[iwfspair], nxnx, 1);
+#endif
+	/*info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
+	  iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);*/
+ 
+
+	/*
+	  Now we start to build the model that will be used to estimate Cn2 from the
+	  cross-covariance of curvature.
+	*/
 	const int nsep=pair->nsep;
-	/*nm is the size of the mxx myy array */
+	/*nm is the size of the mc array */
 	const int nm=4*(MAX(abs(pair->iht0), abs(pair->iht1-1))+1)*cn2est->ovs;
 	const int nm2=nm>>1;
-	/*sampling in mxx, myy after FFT */
+	/*sampling in mc after FFT */
 	const double dx=dsa/cn2est->ovs;
 	const double df=1./(nm*dx);
 	const double L02=pow(cn2est->L0,-2);
@@ -236,33 +269,30 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	cmat *mc=cnew(nm,nm);
 	/*create 2-d pointers */
 	PCMAT(mc,pmc);
-	/*create FFT plans */
-	//cfft2plan(mc,1);
 	/*the forward operator from layer weights to cross-covariance */
- 	dmat *Pnk=dnew(nsep, nsep);
-	PDMAT(Pnk, pPnk);
+ 	dmat *Pnk=dnew(nsep, pair->nht);
 	info2("Pair %d: hk=[", iwfspair);
-	double cb=cos(pair->beta);
-	double sb=sin(pair->beta);
 	for(int iht=pair->iht0; iht<pair->iht1; iht++){
 	    /*the height of each layer */
-	     double hk;
-	    if(keepht==2){
+	    double hk;
+	    if(keepht==2){//do not use.
 		hk=cn2est->htrecon->p[iht-pair->iht0];
+	    }else if(dtheta==0){
+		hk=0;
 	    }else{
-		hk=dsa*iht/(pair->dtheta+dsa*iht/pair->hsm);
+		hk=dsa*iht/(dtheta*slang+dsa*iht/hsm);
 	    }
 	    info2("%.2f ",hk*0.001);
 	    cn2est->ht->p[iwfspair]->p[iht-pair->iht0]=hk;
 	    /*the cone effect */
-	    const double zeta=1.-hk/pair->hsm;
+	    const double zeta=1.-hk/hsm;
 	    const double zetan2=pow(zeta,-2);
 	    /*
 	      coefficients for the PSD. zeta is cone effect. df is the frequency
 	      bin. df*df is from the descretization of the PSD. we use df
 	      instead of 1/dx like in the matlab code because our inverse fft
 	      does not apply (1/N)^ scaling.
-	     */
+	    */
 	    /*the coefficients in fron of the PSD. r0 is left out. */
 	    const double psd_coef=pow(zeta,-2)*4*M_PI*M_PI
 		*0.0229*pow(2*M_PI/0.5e-6,-2)*(df*df);
@@ -282,26 +312,39 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 		}/*ix */
 	    }/*iy */
 	    /*doing fft */
-	    cfft2(mc,1);/*fft */
+	    cfft2(mc,1);/*inverse fft */
 	    /*shift 0 freq to center. */
 	    cfftshift(mc);
-	    for(int isep=pair->iht0; isep<pair->iht1; isep++){
+	    for(int isep=0; isep<nsep; isep++){
 		/*Different from matlab prototype because I used interpolation. */
-		double xx=(iht-isep)*cb*cn2est->ovs + nm2;
-		double yy=(iht-isep)*sb*cn2est->ovs + nm2;
-#if INTERP_NEAREST
-		/*Do interpolation using nearest neighbor */
-		int ixx=(int)round(xx);
-		int iyy=(int)round(yy);
-		double imc=creal(pmc[iyy][ixx]);
+#if COV_ROTATE //subaperture separation align with guide star separation baseline
+		int xsep=isep*cb+pair->iht0;
+		int ysep=isep*sb+pair->iht0;
 #else
-		/*Do interpolation using bilinear spline interp. */
-		int ixx=(int)floor(xx); xx=xx-ixx;
-		int iyy=(int)floor(yy); yy=yy-iyy;
-		double imc=creal((pmc[iyy][ixx]*(1-xx)+pmc[iyy][ixx+1]*(xx))*(1-yy)
-				 +(pmc[iyy+1][ixx]*(1-xx)+pmc[iyy+1][ixx+1]*(xx))*yy);
+		int ysep=(isep/nx);
+		int xsep=(isep-ysep*nx)-nx/2;
+		ysep-=nx/2;
 #endif
-		pPnk[iht-pair->iht0][isep-pair->iht0]=imc;
+		double xx=(iht*cb/slang-xsep)*cn2est->ovs + nm2;
+		double yy=(iht*sb/slang-ysep)*cn2est->ovs + nm2;
+
+		if(xx<0 || yy<0 || xx+1>=nm || yy+1>=nm){
+		    //warning("Out of range: xx=%g, yy=%g\n", xx, yy);
+		}else{
+#if INTERP_NEAREST
+		    /*Do interpolation using nearest neighbor */
+		    int ixx=(int)round(xx);
+		    int iyy=(int)round(yy);
+		    double imc=creal(pmc[iyy][ixx]);
+#else
+		    /*Do interpolation using bilinear spline interp. */
+		    int ixx=(int)floor(xx); xx=xx-ixx;
+		    int iyy=(int)floor(yy); yy=yy-iyy;
+		    double imc=creal((pmc[iyy][ixx]*(1-xx)+pmc[iyy][ixx+1]*(xx))*(1-yy)
+				     +(pmc[iyy+1][ixx]*(1-xx)+pmc[iyy+1][ixx+1]*(xx))*yy);
+#endif
+		    IND(Pnk, isep, iht-pair->iht0)=imc;
+		}
 	    }
 	}
 	info2("]km\n");
@@ -314,6 +357,10 @@ CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, con
 	dfree(Pnk);
 	cfree(mc);
     }/*iwfspair */
+/*stores estimated weight of layers during simulation and output to file finally. */
+    cn2est->wt=dcellnew3(nwfspair, 1, nhtsx, nhtsy);
+/*stores estimated r0 during simulation */
+    cn2est->r0=dnew(nwfspair,1);
     return cn2est;
 }/*cn2est_prepare */
 
@@ -372,11 +419,11 @@ static void cn2est_cov(CN2EST_T *cn2est){
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	const int wfs0=cn2est->pair[iwfspair].wfs0;
 	const int wfs1=cn2est->pair[iwfspair].wfs1;
-	dcomplex *cur1=cn2est->curi->p[wfs0]->p;
-	dcomplex *cur2=cn2est->curi->p[wfs1]->p;
+	const dcomplex *cur1=cn2est->curi->p[wfs0]->p;
+	const dcomplex *cur2=cn2est->curi->p[wfs1]->p;
 	dcomplex *cov=cn2est->covc->p[iwfspair]->p;
 	for(long i=0; i<cn2est->nembed*cn2est->nembed; i++){
-	    cov[i]+=cur1[i]*conj(cur2[i]);
+	    cov[i]+=conj(cur1[i])*(cur2[i]);
 	}
     }/*iwfspair */
 }
@@ -402,38 +449,41 @@ DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
 
 /**
    Do the Cn2 Estimation.
- */
+*/
 void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     info2("cn2est from %d measurements\n", cn2est->count);
     cmat *covi=cnew(cn2est->nembed, cn2est->nembed);
+#if COV_ROTATE
     dmat *covr=dnew(cn2est->nembed, cn2est->nembed);
-    PDMAT(covr, pcovr);
-    PDMAT(cn2est->overlap, pover);
+#endif
     const int nwfspair=cn2est->wt->nx;
-    //cfft2plan(covi, 1);
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
-	//cfft2plan(covi, 1);
 	cadd(&covi, 0, cn2est->covc->p[iwfspair], 1./(cn2est->count*cn2est->nembed*cn2est->nembed));
 	cfft2(covi, 1);
 	cfftshift(covi);
 	creal2d(&cn2est->cov2->p[iwfspair], 0, covi, 1);
+#if COV_ROTATE
 	//roate and embed;
-	dembed(covr, cn2est->cov2->p[iwfspair], M_PI-cn2est->pair[iwfspair].beta);
+	dembed(covr, cn2est->cov2->p[iwfspair], -cn2est->pair[iwfspair].beta);
 	double *cc=cn2est->cov1->p[iwfspair]->p;
 	CN2PAIR_T *pair=cn2est->pair+iwfspair;
 	int off=cn2est->nembed/2;
-	for(int isep=pair->iht0; isep<pair->iht1; isep++){
-	    if(pover[off][off+isep]>=MIN_SA_OVERLAP){
-		cc[isep-pair->iht0]=(double)pcovr[off][off+isep]/pover[off][off+isep];
-	    }else{
-		cc[isep-pair->iht0]=0;
-	    }
+	for(long isep=pair->iht0; isep<pair->iht1; isep++){
+	    cc[isep-pair->iht0]=IND(covr, off+isep, off)*IND(cn2est->overlapi,off+isep,off);
 	}
+#else
+	for(long isep=0; isep<covi->nx*covi->ny; isep++){
+	    cn2est->cov2->p[iwfspair]->p[isep]*=cn2est->overlapi->p[isep];//temporary. apply to mc instead.
+	}
+#endif
     }
     cfree(covi);
+#if COV_ROTATE
     dfree(covr);
+#endif
     dcellzero(cn2est->wt);
     dcellmm(&cn2est->wt, cn2est->iPnk, cn2est->cov1, "nn", 1);
+  
     double wtsumsum=0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	double wtsum=0;
@@ -441,41 +491,39 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	dmat *ht=cn2est->ht->p[iwfspair];
 	int nlayer=wt->nx;
 	if(CN2EST_NO_NEGATIVE){
-	    /*The following tries to remove negative heights. 
-	      This should not be done because noise causing small negative and postive values. 
-	      If we simply remove negative values, it will bias the r0.*/
-	    dmat *Pnk=cn2est->Pnk->p[iwfspair+iwfspair*nwfspair];
-	    dmat *Pnkwt=dnew(nlayer, 1);//to remove columns in Pnk if negative weights are returned 
+	    /*The following tries to remove negative weights.  For small
+	      negatives, we just zero them. For significant ones, we remove the
+	      layer from being estimated to avoid biasing the result.
+	    */
+	    dmat *Pnk=ddup(cn2est->Pnk->p[iwfspair+iwfspair*nwfspair]);
 	    //number of negative layers found. 
-	    int nfd=0;
-	    dset(Pnkwt, 1);
-	  repeat:
-	    nfd=0;
-	    for(int ix=0; ix<nlayer; ix++){
-		const double val=wt->p[ix];
-		if(val<0 && Pnkwt->p[ix]>0){
-		    //negatives found. Remove columns in the forward matrix to disable this point.
-		    //Pnk and redo the estimation matrix iPnk
-		    nfd++;
-		    //disable diagonal elements. 
-		    Pnkwt->p[ix]=0;
-		}
-	    }
-	    if(nfd>0){
-		if(nfd) warning_once("Ignore %d negative points. set MAOS_CN2EST_NO_NEGATIVE=0 to disable.\n", nfd);
-
-		dmat *iPnk2=dpinv(Pnk, Pnkwt);
-		//compute the new result 
-		dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
+	    int nfd=0,nfdi=0;
+	    do{
+		nfdi=0;
 		for(int ix=0; ix<nlayer; ix++){
-		    if(Pnkwt->p[ix]==0){
-			wt->p[ix]=0;
+		    const double val=wt->p[ix];
+		    if(val<0){
+			if(val<-1e-2){
+			    //negatives found. Remove columns in the forward matrix to disable this point.
+			    //Pnk and redo the estimation matrix iPnk
+			    nfd++;
+			    nfdi++;
+			    dmat *tmp=drefcols(Pnk, ix, 1);
+			    dzero(tmp);
+			    dfree(tmp);
+			}else{
+			    wt->p[ix]=0;
+			}
 		    }
 		}
-		dfree(iPnk2);
-		goto repeat;
-	    }
-	    dfree(Pnkwt);
+		if(nfdi>0){
+		    warning_once("Ignore %d negative weights. set MAOS_CN2EST_NO_NEGATIVE=0 in your shell to disable this feature.\n", nfd);
+		    dmat *iPnk2=dpinv(Pnk, NULL);
+		    //compute the new result 
+		    dmm(&wt, 0, iPnk2, cn2est->cov1->p[iwfspair], "nn", 1);
+		    dfree(iPnk2);
+		}
+	    }while(nfdi);
 	}
 	for(int ix=0; ix<nlayer; ix++){
 	    wtsum+=wt->p[ix];
@@ -503,7 +551,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
     dcellzero(cn2est->wtrecon);
     dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
-    /*only 1 cell. norm to sum to 1. */
+/*only 1 cell. norm to sum to 1. */
     normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){
 	info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
@@ -520,7 +568,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 	}
 	info2("]\n");
     }
-    /*divide by the number of accumulated frames. */
+/*divide by the number of accumulated frames. */
     if(reset){
 	if(verbose) info2("reset the covariance");
 	cn2est->count=0;/*reset the counter; */
@@ -530,23 +578,32 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 
 /**
    Free all the data.
- */
+*/
 void cn2est_free(CN2EST_T *cn2est){
     if(!cn2est) return;
+    free(cn2est->pair);
+    free(cn2est->wfscov);
     lfree(cn2est->embed);
     lfree(cn2est->mask);
-    free(cn2est->wfscov);
-    free(cn2est->pair);
-    dcellfree(cn2est->gxs);
-    dcellfree(cn2est->gys);
-    ccellfree(cn2est->curi);
-    ccellfree(cn2est->covc);
-    dcellfree(cn2est->cov1);
-    dcellfree(cn2est->cov2);
-    dcellfree(cn2est->iPnk);
-    dcellfree(cn2est->wt);
-    dcellfree(cn2est->ht);
+    cellfree(cn2est->gxs);
+    cellfree(cn2est->gys);
+    cellfree(cn2est->curi);
+    cellfree(cn2est->covc);
+    cellfree(cn2est->cov1);
+    cellfree(cn2est->cov2);
+    dfree(cn2est->overlapi);
+    cellfree(cn2est->Pnk);
+    cellfree(cn2est->iPnk);
+    cellfree(cn2est->wt);
+    cellfree(cn2est->ht);
     dfree(cn2est->dmht);
     dfree(cn2est->r0);
+    cellfree(cn2est->htrecon);
+    cellfree(cn2est->os);
+    cellfree(cn2est->dx);
+    cellfree(cn2est->dmht);
+    cellfree(cn2est->wtrecon);
+    cellfree(cn2est->wtconvert);
+
     free(cn2est);
 }

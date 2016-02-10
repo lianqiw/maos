@@ -227,17 +227,18 @@ int detached=0;
 typedef struct{
     int pfd;
     int stdoutfd;
-    const char *fn;
+    char *fn;
 }redirect_t;
 
 static void* fputs_stderr(redirect_t *data){
     int fd=data->pfd;
     int stdoutfd=data->stdoutfd;
-    const char *fn=data->fn;
+    char *fn=data->fn;
     free(data);
     FILE *fpout[2];
     fpout[0]=fdopen(stdoutfd, "w");
     fpout[1]=fopen(fn, "w");
+    free(fn);
     setbuf(fpout[0], NULL);
     setbuf(fpout[1], NULL);
     if(!fpout[0] || !fpout[1]) {
@@ -309,7 +310,7 @@ void redirect(void){
 	    redirect_t *data=calloc(1, sizeof(redirect_t));
 	    data->pfd=pfd[0];//read
 	    data->stdoutfd=stdoutfd;//write to console
-	    data->fn=fn;
+	    data->fn=strdup(fn);
 	    //spawn a thread to handle output.
 	    pthread_t thread;
 	    //child thread read from pfd[0] and write to stdout.

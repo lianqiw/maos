@@ -612,9 +612,9 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
     cudaProfilerStop();
     //writebin(dmres->p[0], "dmres");
     
-    writebin(timing, "timing_%s_%dgpu", myhostname(), ngpu);
-    writebin(timing_tot, "timing_tot_%s_%dgpu", myhostname(), ngpu);
-    writebin(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
+    writebin(timing, "timing_%s_%dgpu", HOST, ngpu);
+    writebin(timing_tot, "timing_tot_%s_%dgpu", HOST, ngpu);
+    writebin(timing_sock, "timing_sock_%s_%dgpu", HOST, ngpu);
     X(pageunlock)(pix1, pix2, mvm1, mvm2, NULL);
     X(free)(mvm1);
     X(free)(mvm2);

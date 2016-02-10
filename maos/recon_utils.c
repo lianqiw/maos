@@ -804,6 +804,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }
     if(parms->save.setup){
+	writebin(cn2est->overlapi, "cn2_overlapi");
 	writebin(cn2est->iPnk,"cn2_iPnk");
 	writebin(cn2est->Pnk,"cn2_Pnk");
 	writebin(cn2est->ht,"cn2_ht");
@@ -853,16 +854,11 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 	/*Changes recon parameters. cannot be parallel with tomofit(). */
 	/*wtrecon is referenced so should be updated automaticaly. */
 	if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
-	    warning("wtrecon is not referenced\n");
 	    dfree(recon->wt);
 	    recon->wt=dref(cn2est->wtrecon->p[0]);
 	}
 	recon->r0=cn2est->r0m;
 	recon->L0=cn2est->L0;
-	//if(parms->cn2.tomo){
-	    //Update the tomographic reconstructor by updating L2. 
-	//  setup_recon_tomo_update(recon, parms);
-//	}
     }
 }
 /**

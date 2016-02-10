@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cn2est_push(cn2est, grad);
     cn2est_est(cn2est, 1, 0);
 #define nfield 12
-    const char *fieldnames[nfield]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlap","cov2","cov1"};
+    const char *fieldnames[nfield]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlapi","cov2","cov1"};
     int pos=0;
     plhs[0]=mxCreateStructMatrix(1,1,nfield,fieldnames);
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->htrecon));
@@ -78,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->Pnk));
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->iPnk));
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->wtconvert));
-    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->overlap));
+    mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->overlapi));
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->cov2));
     mxSetFieldByNumber(plhs[0], 0, pos++, any2mx(cn2est->cov1));
 

@@ -22,13 +22,11 @@
    contains the data related to Cn2 Estimation for each WFS pair.
 */
 typedef struct CN2PAIR_T{
-    double dtheta;  /**<separation between the stars*/
-    double beta;    /**<angle of separation between the stars*/
-    double hsm;     /**<Mean hs of the wfs pair*/
     int xstep;      /**<separation step of subapertures along x*/
     int ystep;      /**<separation step of subapertures along y*.*/
     int iht0;       /**<starting iht, may be negative or 0, for minimum height*/
     int iht1;       /**<ending iht (exclusive), for maximum height*/
+    int nht;        /**<iht1-iht0+1*/
     int nsep;       /**<number of subaperture separations to use. equal to nhs usually*/
     int wfs0;       /**<first wfs in this pair*/
     int wfs1;       /**<second wfs in this pair*/
@@ -37,6 +35,7 @@ typedef struct CN2PAIR_T{
    contains the data related to Cn2 Estimation.
  */
 typedef struct CN2EST_T{
+    struct CN2PAIR_T *pair; /**<information about each pair*/
     int *wfscov;     /**<Whether this wfs participates in covariance computation.*/
     long nembed;      /**<size of array to embed the LGS gradients into*/
     lmat *embed;      /**<pointers to embed*/
@@ -47,13 +46,12 @@ typedef struct CN2EST_T{
     ccell *covc;     /**<Accumulation of FFT of Covariance in 2d*/
     dcell *cov2;     /**<Covariance in 2d*/
     dcell *cov1;     /**<Cut of cov2 along wfs separation*/
-    dmat *overlap;   /**<Number of overlapping subapertures*/
+    dmat *overlapi;  /**<1./Number of overlapping subapertures for each separation*/
     int nsa;         /**<Number of subapertures*/
     int nwfs;        /**<number of wfs*/
     int nwfspair;    /**<number of wfs pairs to use for cn2 estimation*/
     int ovs;         /**<Over sampling ratio in building the influence matrix*/
     int count;       /**<number of time steps we have accumulated the covariance*/
-    struct CN2PAIR_T *pair; /**<information about each pair*/
     dcell *Pnk;      /**<Cn2 Estimation forward matrix*/
     dcell *iPnk;     /**<Cn2 Estimation matrix.*/
     dcell *wt;       /**<Estimated weighting of the layers*/
@@ -71,8 +69,9 @@ typedef struct CN2EST_T{
     double L0;        /**<outer scale*/
 } CN2EST_T;
 
-CN2EST_T *cn2est_new(dmat *wfspair, dmat *wfstheta, loc_t *saloc, dmat *saa, const double saat, 
-		     const dmat* hs, dmat *htrecon, int keepht, double l0);
+CN2EST_T *cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
+		     const dmat *saa, const double saat, 
+		     const dmat* hs, const dmat *htrecon, int keepht, double l0);
 void cn2est_est(CN2EST_T *cn2est, int verbose, int reset);
 void cn2est_free(CN2EST_T *cn2est);
 void cn2est_push(CN2EST_T *cn2est, dcell *gradol);
