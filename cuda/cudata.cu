@@ -21,7 +21,7 @@ int nstream=0;
 int NGPU=0;
 int MAXGPU=0;
 int NULL_STREAM=0;
-int* GPUS=NULL;
+cuarray<int> GPUS;
 cudata_t **cudata_all=NULL;/*for all GPU. */
 
 #ifdef __APPLE__
@@ -43,8 +43,8 @@ static __attribute((constructor)) void init(){
     }
 }
 int cudata_t::recongpu=0;
-int *cudata_t::evlgpu=0;
-int *cudata_t::wfsgpu=0;
+cuarray<int>cudata_t::evlgpu;
+cuarray<int>cudata_t::wfsgpu;
 cuarray<cuwfs_t>cudata_t::wfs;
 dmat *cudata_t::atmscale=0;
 /**
@@ -203,11 +203,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
       If duplicates are found, use only once.
      */
     if(gpus && ngpu>0){
-	if(!GPUS) GPUS=(int*)malloc(ngpu*sizeof(int));
+	GPUS=cuarray<int>(ngpu, 1);
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
 		info2("CUDA is disabled by user.\n");
-		free(GPUS); GPUS=NULL; 
+		GPUS=cuarray<int>();
 		NGPU=0;
 		goto end;
 	    }else{
@@ -224,7 +224,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    repeat=0;
 	    ngpu=MAXGPU;
 	}
-	GPUS=(int*)calloc(ngpu, sizeof(int));//stores CUDA index
+	GPUS=cuarray<int>(ngpu, 1);//stores CUDA index
 	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*MAXGPU, sizeof(long));
@@ -284,16 +284,16 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	     * usage. We first gather together all the tasks and assign a timing
 	     * in ms to each. Sort all the tasks in descend order and then
 	     * iteratively assign each task to the minimally used GPU*/
-	    cudata_t::evlgpu=(int*)calloc(parms->evl.nevl, sizeof(int));
-	    cudata_t::wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
+	    cudata_t::evlgpu=cuarray<int>(parms->evl.nevl, 1);
+	    cudata_t::wfsgpu=cuarray<int>(parms->nwfs, 1);
 	    int ntask=0;
 	    if(parms->gpu.tomo || parms->gpu.fit) ntask++;
 	    if(parms->gpu.evl) ntask+=parms->evl.nevl;
 	    if(parms->gpu.wfs) ntask+=parms->nwfs;
 	    if(ntask==0){
 		delete [] cudata_all;
-		free(GPUS);
-		NGPU=0;GPUS=0;
+		NGPU=0;
+		GPUS=cuarray<int>();
 		return NGPU;
 	    }
 	    struct task_t *tasks=(task_t*)calloc(ntask, sizeof(task_t));
@@ -369,7 +369,5 @@ void gpu_cleanup(void){
     for(int ig=0; ig<NGPU; ig++){
 	gpu_set(ig);
 	delete cudata;
-	//cudaDeviceReset();
     }
 }
-

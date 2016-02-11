@@ -28,7 +28,7 @@ struct dir_t{
     int skip;
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
-class W01_T:public nonCopiable{
+class W01_T{
     curmat W1;    /**< The aperture weighting, piston removal*/
     cusp   W0p;   /**< W0 for partial points*/
     cumat<int>W0f;   /**< index for fully illuminated points.*/
@@ -36,8 +36,7 @@ class W01_T:public nonCopiable{
     int     nxx;   /**< First dimension of grid*/
     curmat pis;   /**< Temporary data*/
 public:
-    W01_T():W0v(0),nxx(0){ }
-    void Init(const dsp *R_W0, const dmat *R_W1, int R_nxx);
+    W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
     void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream);
 };
 
@@ -48,7 +47,7 @@ public:
    moao
 */
 
-class curecon_geom:public nonCopiable{
+class curecon_geom:public nonCopyable{
 public:
     int npsr, ndm;
     int delay, isim, reconisim;
@@ -65,7 +64,7 @@ public:
     curecon_geom(const PARMS_T *parms, const RECON_T *recon);
     ~curecon_geom(){ }
 };
-class map_ray:public nonCopiable{
+class map_ray:public nonCopyable{
 protected:
     PROP_WRAP_T *hdata;
     int nlayer, ndir;

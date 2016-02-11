@@ -171,7 +171,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    }else{
 		char *gcmd=NULL;
 		for(int igpu=0; igpu<NGPU; igpu++){
-		    extern int *GPUS;
+		    extern cuarray<int> GPUS;
 		    gpu_set(igpu);
 		    if(gpu_get_mem()>need){
 			char tmp[8];

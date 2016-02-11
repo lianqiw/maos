@@ -43,7 +43,7 @@ public:
     virtual ~cucgpre_t(){}
 };
 
-class cucg_t:public cusolve_l,nonCopiable{/*Implementes LHS with cg algorithm*/
+class cucg_t:public cusolve_l,nonCopyable{/*Implementes LHS with cg algorithm*/
     int maxit, warm_restart;
     CGTMP_T cgtmp;
 protected:
@@ -67,7 +67,7 @@ public:
     }
 };
 
-class cumuv_t:public nonCopiable{
+class cumuv_t:public nonCopyable{
     cusp M;
     curmat U;
     curmat V;
@@ -106,7 +106,7 @@ public:
     }
 };
 
-class cusolve_cbs:public cusolve_l,nonCopiable{
+class cusolve_cbs:public cusolve_l,nonCopyable{
 protected:
     cusp Cl;
     cumat<int> Cp;
@@ -120,7 +120,7 @@ public:
     virtual Real solve(curcell &xout, const curcell &xin, stream_t &stream);
 };
 
-class cusolve_mvm:public cusolve_l,nonCopiable{
+class cusolve_mvm:public cusolve_l,nonCopyable{
     curmat M;
 public:
     cusolve_mvm(dmat *_M){

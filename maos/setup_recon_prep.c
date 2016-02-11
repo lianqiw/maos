@@ -1008,6 +1008,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     if(parms->save.setup){
 	writebin(recon->fitNW,"fitNW");
     }
+    cellfree(actcpl);
 }
 /**
    setting up global tip/tilt remove operator from LGS gradients.

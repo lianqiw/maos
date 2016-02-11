@@ -345,7 +345,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 
 		   || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    /*Need one per wfs in this powfs, or the first wfs. */
-		    cuwfs[iwfs].dtf=(cudtf_t*)calloc(nwvl, sizeof(cudtf_t));
+		    cuwfs[iwfs].dtf=cuarray<cudtf_t>(nwvl, 1);
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			int notfused=!powfs[ipowfs].dtf[iwvl].fused;
 			if(notfused){

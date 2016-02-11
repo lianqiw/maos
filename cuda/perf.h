@@ -22,12 +22,13 @@
    cell array of nevl*1 is allocated using static data member to avoid duplicate.
  */
 struct cuperf_t{
-    static int *nembed;
-    static int *psfsize;
-    static Real *wvls;
-    static cudaStream_t    *stream;
-    static cublasHandle_t  *handle;
-    static cufftHandle     *plan;
+    static int nevl;
+    static cuarray<int> nembed;
+    static cuarray<int> psfsize;
+    static cuarray<Real> wvls;
+    static cuarray<cudaStream_t>   stream;
+    static cuarray<cublasHandle_t> handle;
+    static cuarray<cufftHandle>    plan;
     static curcell surf;
     static curcell opd;
     static curcell psfcl;

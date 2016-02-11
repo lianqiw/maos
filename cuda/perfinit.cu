@@ -22,13 +22,13 @@
 #include "cudata.h"
 #include "perf.h"
 
-int   *cuperf_t::nembed=0;
-int   *cuperf_t::psfsize=0;
-Real *cuperf_t::wvls=0;    
-cudaStream_t    *cuperf_t::stream=0;
-cublasHandle_t  *cuperf_t::handle=0;
-cufftHandle     *cuperf_t::plan=0;
-
+cuarray<int> cuperf_t::nembed;
+cuarray<int> cuperf_t::psfsize;
+cuarray<Real> cuperf_t::wvls;
+cuarray<cudaStream_t> cuperf_t::stream;
+cuarray<cublasHandle_t> cuperf_t::handle;
+cuarray<cufftHandle> cuperf_t::plan;
+int cuperf_t::nevl;
 curcell cuperf_t::surf;
 curcell cuperf_t::opd;
 curcell cuperf_t::psfcl;
@@ -56,6 +56,14 @@ cuperf_t::~cuperf_t(){
     cc_ol=curcell();
     cc_cl=curcell();
     coeff=curcell();
+    if(cuperf_t::ccb_cl){
+	for(int ievl=0; ievl<nevl; ievl++){
+	    free4async(cuperf_t::ccb_cl[ievl]);
+	    free4async(cuperf_t::ccb_ol[ievl]);
+	}
+        free(cuperf_t::ccb_cl); cuperf_t::ccb_cl=0;
+	free(cuperf_t::ccb_ol); cuperf_t::ccb_ol=0;
+    }
 }
 /**
    Initialize perfevl
@@ -68,9 +76,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     const int nwvl=parms->evl.nwvl;
     /*The following lives in CPU. */
     if(parms->evl.psfmean || parms->evl.psfhist){
-	cuperf_t::nembed =(int*)  calloc(nwvl, sizeof(int));
-	cuperf_t::psfsize=(int*)  calloc(nwvl, sizeof(int));
-	cuperf_t::wvls   =(Real*)calloc(nwvl, sizeof(Real));
+	cuperf_t::nembed =cuarray<int>(nwvl, 1);
+	cuperf_t::psfsize=cuarray<int>(nwvl, 1);
+	cuperf_t::wvls   =cuarray<Real>(nwvl, 1);
     
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cuperf_t::nembed[iwvl]=(int)aper->embed->nembed->p[iwvl];
@@ -108,10 +116,10 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	    cudata->perf.locs_dm[ievl][idm]=culoc_t(loc_dm);
 	}
     }
-    cuperf_t::stream=(cudaStream_t*)calloc(nevl, sizeof(cudaStream_t));
-    cuperf_t::handle=(cublasHandle_t*)calloc(nevl, sizeof(cublasHandle_t));
+    cuperf_t::stream=cuarray<cudaStream_t>(nevl, 1);
+    cuperf_t::handle=cuarray<cublasHandle_t>(nevl, 1);
     if(parms->evl.psfmean || parms->evl.psfhist){
-	cuperf_t::plan  = (cufftHandle*)calloc(nwvl*nevl, sizeof(cufftHandle));
+	cuperf_t::plan  = cuarray<cufftHandle>(nwvl*nevl,1);
     }
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
@@ -120,16 +128,13 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	cublasSetStream(cuperf_t::handle[ievl], cuperf_t::stream[ievl]);
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		//if(iwvl>0 && cuperf_t::nembed[iwvl]==cuperf_t::nembed[0]){
-		//  cuperf_t::plan[iwvl+nwvl*ievl]=cuperf_t::plan[0+nwvl*ievl];
-		//}else{
-		    DO(cufftPlan2d(&cuperf_t::plan[iwvl+nwvl*ievl],cuperf_t::nembed[iwvl],
-				   cuperf_t::nembed[iwvl],FFT_T_C2C));
-		    DO(cufftSetStream(cuperf_t::plan[iwvl+nwvl*ievl], cuperf_t::stream[ievl]));
-		    //	}
+		DO(cufftPlan2d(&cuperf_t::plan[iwvl+nwvl*ievl],cuperf_t::nembed[iwvl],
+			       cuperf_t::nembed[iwvl],FFT_T_C2C));
+		DO(cufftSetStream(cuperf_t::plan[iwvl+nwvl*ievl], cuperf_t::stream[ievl]));
 	    }/*for iwvl */
 	}
     }
+    cuperf_t::nevl=nevl;
     cuperf_t::opd=curcell(nevl,1);
     cuperf_t::cc_cl=curcell(nevl, 1);
     cuperf_t::cc_ol=curcell(nevl, 1);

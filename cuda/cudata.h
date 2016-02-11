@@ -36,8 +36,8 @@ class cuwfs_t;
 typedef struct cudata_t{ 
     int igpu;
     static int recongpu;
-    static int *evlgpu;
-    static int *wfsgpu;
+    static cuarray<int> evlgpu;
+    static cuarray<int> wfsgpu;
     std::map<uint64_t, void*> memhash;/*For reuse constant GPU memory*/
     std::map<void *, int> memcount; /*Store count of reused memory*/
     void *memcache;/*For reuse temp array for type conversion.*/
@@ -92,7 +92,7 @@ long gpu_get_mem(void);
    switch to the next GPU and update the pointer.
 */
 inline void gpu_set(int igpu){
-    extern int *GPUS;
+    extern cuarray<int> GPUS;
     if(igpu>=NGPU){
 	error("Invalid igpu=%d", igpu);
     }

@@ -147,6 +147,7 @@ void free_parms(PARMS_T *parms){
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	dfree(parms->wfs[iwfs].wvlwts);
+	free(parms->wfs[iwfs].sabad);
     }
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
@@ -592,6 +593,7 @@ static void readcfg_wfs(PARMS_T *parms){
     dfree(wvlwts);
     free(dbltmp);
     free(inttmp);
+    free(strtmp);
 }
 #define READ_DM(A,B)					     \
     readcfg_##A##arr_n((void*)(&A##tmp),ndm,"dm."#B);	     \

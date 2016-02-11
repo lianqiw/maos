@@ -25,7 +25,7 @@ typedef struct GPU_FDPCG_T{
     Real scale;
 }GPU_FDPCG_T;
 class curecon_geom;
-class cufdpcg_t:public cucgpre_t,nonCopiable{
+class cufdpcg_t:public cucgpre_t,nonCopyable{
     curecon_geom *grid;
     cumat<int> perm;   /**<permutation vector for fdpcg*/
     cuccell Mb;  /**<The main fdpcg block matrix*/

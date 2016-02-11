@@ -69,7 +69,7 @@ public:
     curmat neasim;     /**<The noise equivalent angles for each subaperture.*/
     curmat  amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
-    cudtf_t *dtf;       /**<array for each wvl.*/
+    cuarray<cudtf_t> dtf;       /**<array for each wvl.*/
     curmat srot;      /**<angle to rotate PSF/OTF*/
     curmat mtche;     /**<matched filter gradient operator.*/
     curmat i0sum;     /**<sum of i0 for each subaperture.*/

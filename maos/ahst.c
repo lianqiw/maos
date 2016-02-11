@@ -877,6 +877,7 @@ void ngsmod_free(NGSMOD_T *ngsmod){
     dcellfree(ngsmod->Pngs);
     dcellfree(ngsmod->Modes);
     dfree(ngsmod->MCC);
+    dfree(ngsmod->MCCu);
     dcellfree(ngsmod->MCCP);
     dfree(ngsmod->IMCC);
     dfree(ngsmod->IMCC_TT);

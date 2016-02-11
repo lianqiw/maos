@@ -22,7 +22,7 @@
 #include "recon_base.h"
 #include "moao.h"
 namespace cuda_recon{
-class curecon_t:public nonCopiable{
+class curecon_t:public nonCopyable{
 public:
     curecon_geom *grid;
     cusolve_r *FR;

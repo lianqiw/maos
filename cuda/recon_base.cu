@@ -21,7 +21,7 @@
 #include "accphi.h"
 namespace cuda_recon{
 
-void W01_T::Init(const dsp *R_W0, const dmat *R_W1, int R_nxx){
+W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
     nxx=R_nxx; nxx=0;
     if(!R_W0 || !R_W1){
 	error("R0, R1 must not be empty\n");
@@ -136,7 +136,8 @@ void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stre
 
 curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
     :npsr(0),ndm(0),delay(0),isim(0),reconisim(0),
-     xnx(0),xny(0),anx(0),any(0), anloc(0),ngrad(0), dt(0){
+     xnx(0),xny(0),anx(0),any(0), anloc(0),ngrad(0), dt(0),
+     W01(recon->W0, recon->W1, recon->fmap->nx){
     ndm=parms->ndm;
     npsr=parms->sim.idealfit?parms->atm.nps:recon->npsr;
     pmap=(recon->pmap);
@@ -160,7 +161,6 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 	    xcmap[ipsr]=(recon->xcmap->p[ipsr]);
 	}
     }
-    W01.Init(recon->W0, recon->W1, fmap.nx);
     anx=recon->anx->p;
     any=recon->any->p;
     anloc=recon->anloc->p;

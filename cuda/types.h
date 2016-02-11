@@ -19,12 +19,12 @@
 #define AOS_CUDA_TYPES_H
 #include "common.h"
 #include "kernel.h"
-class nonCopiable{
+class nonCopyable{
 private:
-    nonCopiable& operator=(nonCopiable&);
-    nonCopiable(const nonCopiable&);
+    nonCopyable& operator=(nonCopyable&);
+    nonCopyable(const nonCopyable&);
 protected:
-    nonCopiable(){}
+    nonCopyable(){}
 };
 
 template <typename T>
