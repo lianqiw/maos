@@ -37,8 +37,8 @@
 */
 static cholmod_sparse *dsp2chol(const dsp *A){
     cholmod_sparse *B=calloc(1, sizeof(cholmod_sparse));
-    B->nrow=A->m;
-    B->ncol=A->n;
+    B->nrow=A->nx;
+    B->ncol=A->ny;
     B->nzmax=A->nzmax;
     B->p=A->p;/*do not duplicate. */
     B->i=A->i;
@@ -194,7 +194,7 @@ void chol_save(spchol *A, const char *format,...){
 	header_t header={MCC_ANY, 2, 1, NULL};
 	write_header(&header, fp);
 	dspwritedata(fp, C);
-	writearr(fp, 0, sizeof(spint), M_SPINT, "Cp", A->Cp, C->m, 1);
+	writearr(fp, 0, sizeof(spint), M_SPINT, "Cp", A->Cp, C->nx, 1);
     }else if(A->L){/*Save native cholmod format. */
 	cholmod_factor *L=A->L;
 	char str[1024];
@@ -264,7 +264,7 @@ spchol *chol_read(const char *format, ...){
 	}
 	long nxp, nyp;
 	A->Cp=readspint(fp, &nxp, &nyp);
-	if(nxp*nyp!=C->m){
+	if(nxp*nyp!=C->nx){
 	    error("Cp is in wrong format\n");
 	}
     }else{/*Native cholmod format exists. Read it. */
@@ -483,7 +483,7 @@ static void chol_solve_lower_each(thread_t *info){
     info2("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     PDMAT(y2, py);
-    for(long icol=0; icol<A->n; icol++){
+    for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
 	    py[iy][icol]*=AxI;
@@ -495,7 +495,7 @@ static void chol_solve_lower_each(thread_t *info){
     }
 
     /*Solve L'\y; */
-    for(long icol=A->n-1; icol>-1; icol--){
+    for(long icol=A->ny-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
@@ -521,7 +521,7 @@ static void chol_solve_upper_each(thread_t *info){
     /*Solve L\y */
     PDMAT(y2, py);
     /*Solve R'\y */
-    for(long icol=0; icol<A->m; icol++){
+    for(long icol=0; icol<A->nx; icol++){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
@@ -534,7 +534,7 @@ static void chol_solve_upper_each(thread_t *info){
     }
 	
     /*Solve R\y */
-    for(long icol=A->m-1; icol>-1; icol--){
+    for(long icol=A->nx-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
 	    py[iy][icol]*=AxI;
@@ -571,7 +571,7 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
     }
     dsp *A=C->Cl;
     spint *perm=C->Cp;
-    assert(A && A->m==A->n && A->m==y->nx);
+    assert(A && A->nx==A->ny && A->nx==y->nx);
     if(!*x){
 	*x=dnew(y->nx,y->ny);
     }else{
@@ -587,7 +587,7 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	/*Solve L\y */
 	double *py=y2->p;
 	
-	for(long icol=0; icol<A->n; icol++){
+	for(long icol=0; icol<A->ny; icol++){
 	    /*assert(Ai[Ap[icol]]==icol);//lower triangular matrix. */
 	    py[icol]/=Ax[Ap[icol]];
 	    double val=-py[icol];
@@ -597,7 +597,7 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	}
 
 	/*Solve L'\y; */
-	for(long icol=A->n-1; icol>-1; icol--){
+	for(long icol=A->ny-1; icol>-1; icol--){
 	    double sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order.*/
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
@@ -634,7 +634,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
     }
     dsp *A=C->Cu;
     spint *perm=C->Cp;
-    assert(A && A->m==A->n && A->m==y->nx);
+    assert(A && A->nx==A->ny && A->nx==y->nx);
     if(!*x){
 	*x=dnew(y->nx,y->ny);
     }else{
@@ -650,7 +650,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	/*Solve R'\y */
 	double *py=y2->p;
 
-	for(long icol=0; icol<A->m; icol++){
+	for(long icol=0; icol<A->nx; icol++){
 	    double sum=0;
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
 		sum+=Ax[irow]*py[Ai[irow]];
@@ -659,7 +659,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	}
 
 	/*Solve R\y */
-	for(long icol=A->m-1; icol>-1; icol--){
+	for(long icol=A->nx-1; icol>-1; icol--){
 	    py[icol]/=Ax[Ap[icol+1]-1];
 	    double val=-py[icol];
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than

@@ -71,7 +71,7 @@ typedef struct sp_thread_t {
  */
 void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha){
     if(A && x){
-	for(long icol=0; icol<A->n; icol++){
+	for(long icol=0; icol<A->ny; icol++){
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		y[A->i[ix]]+=alpha*A->x[ix]*creal(x[icol]);
 	    }
@@ -90,13 +90,13 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
     if(A && x){
 	assert(y);
 	if(trans=='n'){
-	    for(long icol=0; icol<A->n; icol++){
+	    for(long icol=0; icol<A->ny; icol++){
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
 		}
 	    }
 	}else if(trans=='t'){
-	    OMPTASK_FOR(icol, 0, A->n){
+	    OMPTASK_FOR(icol, 0, A->ny){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    tmp+=alpha*(A->x[ix])*x[A->i[ix]];
@@ -105,7 +105,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
 	    }
 	    OMPTASK_END;
 	}else if(trans=='c'){
-	    OMPTASK_FOR(icol, 0, A->n){
+	    OMPTASK_FOR(icol, 0, A->ny){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    tmp+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
@@ -147,7 +147,7 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 #define no_trans(A,i,j) A[j][i]
 #define do_trans(A,i,j) A[i][j]
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
-	for(long icol=0; icol<A->n; icol++){				\
+	for(long icol=0; icol<A->ny; icol++){				\
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		for(long jcol=0; jcol<yny; jcol++){			\
 		    py(Y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, icol, jcol)); \
@@ -157,7 +157,7 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 
 #define LOOP_TRANSA(py, yny, conjA, px, conjx)				\
 	{								\
-	    OMPTASK_FOR(icol, 0, A->n){					\
+	    OMPTASK_FOR(icol, 0, A->ny){					\
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		    for(long jcol=0; jcol<yny; jcol++){			\
 			py(Y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, A->i[ix], jcol)); \

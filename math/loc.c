@@ -991,7 +991,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
 	for(int isp=0; isp<spc->nx*spc->ny;isp++){
 	    dsp *sp=spc->p[isp];
 	    if(!sp) continue;
-	    sp->m=count;
+	    sp->nx=count;
 	    for(int iz=0; iz<sp->nzmax; iz++){
 		sp->i[iz]=map[sp->i[iz]];
 	    }
@@ -1009,7 +1009,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
 		}
 	    }
 	    sp->p[count]=sp->p[nloc];
-	    sp->n=count;
+	    sp->ny=count;
 	    sp->p=realloc(sp->p,sizeof(long)*(count+1));
 	}
     }
@@ -1021,7 +1021,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     int nloc=loc->nloc;
-    if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
+    if((dim==1 && nloc!=sp->nx) || (dim==2 && nloc!=sp->ny) || dim<0 || dim>2)
 	error("Mismatch dimension\n");
     dmat* sum=dspsumabs(sp,3-dim);
     int *skip;
@@ -1034,7 +1034,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	    map[iloc]=count;
 	    if(!skip[iloc]) count++;
 	}
-	sp->m=count;
+	sp->nx=count;
 	for(int iz=0; iz<sp->nzmax; iz++){
 	    sp->i[iz]=map[sp->i[iz]];
 	}
@@ -1047,7 +1047,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	    }
 	}
 	sp->p[count]=sp->p[nloc];
-	sp->n=count;
+	sp->ny=count;
 	sp->p=realloc(sp->p,sizeof(long)*(count+1));
     }
     free(skip);

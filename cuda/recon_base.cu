@@ -33,19 +33,19 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	spint *pp=R_W0->p;
 	spint *pi=R_W0->i;
 	double *px=R_W0->x;
-	dsp *W0new=dspnew(R_W0->m, R_W0->n, R_W0->nzmax);
+	dsp *W0new=dspnew(R_W0->nx, R_W0->ny, R_W0->nzmax);
 	spint *pp2=W0new->p;
 	spint *pi2=W0new->i;
 	double *px2=W0new->x;
 	int *full;
-	DO(cudaMallocHost(&full, R_W0->n*sizeof(int)));
+	DO(cudaMallocHost(&full, R_W0->ny*sizeof(int)));
 	//#define W0_BW 1
 	double W1max=dmax(R_W1);
 	double thres=W1max*(1.f-1e-6);
 	W0v=(Real)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
 	int count=0;
 	int count2=0;
-	for(int ic=0; ic<R_W0->n; ic++){
+	for(int ic=0; ic<R_W0->ny; ic++){
 	    pp2[ic]=count;
 	    if(R_W1->p[ic]>thres){
 		full[count2]=ic;
@@ -57,7 +57,7 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 		count+=nv;
 	    }
 	}
-	pp2[R_W0->n]=count;
+	pp2[R_W0->ny]=count;
 	W0new->nzmax=count;
 	W0p=cusp(W0new, 1);
 	cp2gpu(W0f, full, count2, 1);

@@ -362,7 +362,7 @@ int main(){
 	    bs+=1;
 	}
     }
-    long nb=Mhatp->m/bs;
+    long nb=Mhatp->nx/bs;
     info("Block size is %ld, there are %ld blocks\n",bs,nb);
     csp *Minv=cspinvbdiag(Mhatp,bs);
    

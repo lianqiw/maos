@@ -199,9 +199,9 @@ void rename_file(int sig){
    Handles signals.
  */
 int maos_signal_handler(int sig){
-    psignal(sig, "maos");
+    psignal(sig, "maos signal handler:");
     rename_file(sig);/*handles signal */
-    if(global->parms->sim.mvmport){
+    if(global && global->parms && global->parms->sim.mvmport){
 	mvm_client_close();
     }
     scheduler_finish(sig);

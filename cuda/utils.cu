@@ -77,10 +77,10 @@ cusp::cusp(const dsp *src_csc, int tocsr)
 	src=src_csc;
 	type=SP_CSC;
     }
-    nx=src_csc->m;
-    ny=src_csc->n;
+    nx=src_csc->nx;
+    ny=src_csc->ny;
     nzmax=src->nzmax;
-    cp2gpu(&p, src->p, src->n+1, 1);
+    cp2gpu(&p, src->p, src->ny+1, 1);
     cp2gpu(&i, src->i, src->nzmax, 1);
     cp2gpu(&x, src->x, src->nzmax, 1);
     nref=new int;

@@ -45,8 +45,8 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
 	sp->i=malloc(nzmax*sizeof(spint));
 	sp->x=malloc(nzmax*sizeof(T));
     }
-    sp->m=nx;
-    sp->n=ny;
+    sp->nx=nx;
+    sp->ny=ny;
     sp->nzmax=nzmax;
     sp->nz=-1;
     sp->nref=calloc(1,sizeof(int));
@@ -109,10 +109,10 @@ void X(spmove)(X(sp) *A, X(sp) *res){
 X(sp) *X(spdup)(const X(sp) *A){
     if(!A) return NULL;
     assert_sp(A);
-    long nmax=A->p[A->n];
+    long nmax=A->p[A->ny];
     X(sp) *out;
-    out=X(spnew)(A->m, A->n, nmax);
-    memcpy(out->p, A->p, sizeof(spint)*(A->n+1));
+    out=X(spnew)(A->nx, A->ny, nmax);
+    memcpy(out->p, A->p, sizeof(spint)*(A->ny+1));
     memcpy(out->i, A->i, sizeof(spint)*nmax);
     memcpy(out->x, A->x, sizeof(T)*nmax);
     return out;
@@ -123,7 +123,7 @@ X(sp) *X(spdup)(const X(sp) *A){
 */
 X(sp) *X(spnew2)(const X(sp) *A){
     assert_sp(A);
-    return X(spnew)(A->m, A->n, A->p[A->n]);
+    return X(spnew)(A->nx, A->ny, A->p[A->ny]);
 }
 /**
    Create a new X(sp) matrix and fill in uniform random
@@ -142,9 +142,9 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
     T *px=A->x;
     long count=0;
     R thres=1.-fill;
-    for(int icol=0; icol<A->n; icol++){
+    for(int icol=0; icol<A->ny; icol++){
 	pp[icol]=count;
-	for(int irow=0; irow<A->m; irow++){
+	for(int irow=0; irow<A->nx; irow++){
 	    if(randu(rstat)>thres){
 		pi[count]=irow;
 		px[count]=RANDU(rstat)*mean;
@@ -161,7 +161,7 @@ X(sp)* X(spnewrandu)(int nx, int ny, const T mean,
 	    }
 	}
     }
-    pp[A->n]=count;
+    pp[A->ny]=count;
     X(spsetnzmax)(A,count);
     return A;
 }
@@ -192,7 +192,7 @@ void X(spdisp)(const X(sp) *sp){
 	info("X(spdisp): All zeros\n");
     }else{
 	info("X(spdisp):\n");
-	for(ic=0; ic<sp->n; ic++){
+	for(ic=0; ic<sp->ny; ic++){
 	    imax=-1;
 	    for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){ 
 #ifdef USE_COMPLEX
@@ -220,7 +220,7 @@ int X(spcheck)(const X(sp) *sp){
     if(sp){
 	long ic,ir;
 	long imax;
-	for(ic=0; ic<sp->n; ic++){
+	for(ic=0; ic<sp->ny; ic++){
 	    imax=-1;
 	    if(sp->p[ic+1]<sp->p[ic]){
 		error("p in column %ld is smaller than %ld\n",ic+1,ic);
@@ -234,12 +234,12 @@ int X(spcheck)(const X(sp) *sp){
 		if(sp->i[ir]<ic) not_lower=1;
 		if(sp->i[ir]>ic) not_upper=1;
 	    }
-	    if(imax>=sp->m){
+	    if(imax>=sp->nx){
 		error("imax=%ld exceeds column size at column %ld\n",imax,ic);
 	    }
 	}
-	if(sp->p[sp->n]!=sp->nzmax){
-	    warning("real nzmax is %ld, allocated is %ld\n",(long)sp->p[sp->n],sp->nzmax);
+	if(sp->p[sp->ny]!=sp->nzmax){
+	    warning("real nzmax is %ld, allocated is %ld\n",(long)sp->p[sp->ny],sp->nzmax);
 	}
     }
     return (not_lower?0:1) | (not_upper?0:2);
@@ -284,33 +284,33 @@ X(sp)* X(spnewdiag)(long N, T *vec, T alpha){
     T *px=out->x;
     long count=0;
     if(vec){
-	for(long icol=0; icol<out->n; icol++){
+	for(long icol=0; icol<out->ny; icol++){
 	    pp[icol]=count;
 	    pi[count]=icol;
 	    px[count]=vec[icol]*alpha;
 	    count++;
 	}
     }else{
-	for(long icol=0; icol<out->n; icol++){
+	for(long icol=0; icol<out->ny; icol++){
 	    pp[icol]=count;
 	    pi[count]=icol;
 	    px[count]=alpha;
 	    count++;
 	}
     }
-    pp[out->n]=count;
+    pp[out->ny]=count;
     return out;
 }
 /**
    Extract diagonal element of A and return
 */
 X(mat) *X(spdiag)(const X(sp) *A){
-    if(A->m!=A->n){
+    if(A->nx!=A->ny){
 	error("Only work for square matrix\n");
     }
     assert_sp(A);
-    X(mat) *out=X(new)(A->m,1);
-    for(long icol=0; icol<A->n; icol++){
+    X(mat) *out=X(new)(A->nx,1);
+    for(long icol=0; icol<A->ny; icol++){
 	for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 	    long row=A->i[irow];
 	    if(row==icol){
@@ -331,7 +331,7 @@ X(mat) *X(spdiag)(const X(sp) *A){
 void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha){
     if(A && w){
 	assert_sp(A);
-	for(long icol=0; icol<A->n; icol++){
+	for(long icol=0; icol<A->ny; icol++){
 	    const T wi=w[icol]*alpha;
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		A->x[ix]*=wi;
@@ -349,8 +349,8 @@ T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x){
     if(x && y){
 	if(A){
 	    assert_sp(A);
-	    assert(x->ny==1 && y->ny==1 && A->m==y->nx && A->n==x->nx);
-	    for(int icol=0; icol<A->n; icol++){
+	    assert(x->ny==1 && y->ny==1 && A->nx==y->nx && A->ny==x->nx);
+	    for(int icol=0; icol<A->ny; icol++){
 		for(int ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    res+=y->p[A->i[ix]]*A->x[ix]*x->p[icol];
 		}
@@ -395,15 +395,15 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
     */
     if(trans=='n'){    
 	if(issp(A)){//sparse
-	    long nx=A->m;
+	    long nx=A->nx;
 	    long icol,ix,irow;
 	    if(!*out0){
-		*out0=X(new)(A->m, A->n);
+		*out0=X(new)(A->nx, A->ny);
 	    }
 	    X(mat) *out=*out0;
-	    assert(out->nx==A->m && out->ny==A->n);
+	    assert(out->nx==A->nx && out->ny==A->ny);
 	    PMAT(out,pp);
-	    for(icol=0; icol<A->n; icol++){
+	    for(icol=0; icol<A->ny; icol++){
 		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    irow=A->i[ix];
 		    if(irow>=nx)
@@ -416,15 +416,15 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 	}
     }else if(trans=='t'){
 	if(issp(A)){
-	    long nx=A->m;
+	    long nx=A->nx;
 	    long icol,ix,irow;
 	    if(!*out0){
-		*out0=X(new)(A->n, A->m);
+		*out0=X(new)(A->ny, A->nx);
 	    }
 	    X(mat) *out=*out0;
-	    assert(out->nx==A->n && out->ny==A->m);
+	    assert(out->nx==A->ny && out->ny==A->nx);
 	    PMAT(out,pp);
-	    for(icol=0; icol<A->n; icol++){
+	    for(icol=0; icol<A->ny; icol++){
 		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    irow=A->i[ix];
 		    if(irow>=nx)
@@ -466,9 +466,9 @@ X(sp) *X(2sp)(X(mat)*A, R thres){
  * Added two sparse matrices: return A*a+B*b*/
 X(sp) *X(spadd2)(const X(sp) *A,T a, const X(sp)*B,T b){
     assert(issp(A) && issp(B));
-    if(A->m!=B->m || A->n!=B->n) {
+    if(A->nx!=B->nx || A->ny!=B->ny) {
 	error("X(sp) matrix mismatch: (%ldx%ld) vs (%ldx%ld\n",
-	      A->m, A->n, B->m, B->n);
+	      A->nx, A->ny, B->nx, B->ny);
     }
     X(sp) *C=X(ss_add)(A,B,a,b);
     X(ss_dropzeros)(C);
@@ -496,11 +496,11 @@ void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta){
    Add alpha times identity to a sparse matrix
 */
 void X(spaddI)(X(sp) *A, T alpha){
-    assert((A)->m==(A)->n);
+    assert((A)->nx==(A)->ny);
     X(spsort)(A);//make sure it is sorted correctly.
     //First check for missing diagonal elements
     long missing=0;
-    for(long icol=0; icol<A->n; icol++){
+    for(long icol=0; icol<A->ny; icol++){
 	int found=0;
 	for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 	    if(A->i[ix]==icol){
@@ -516,7 +516,7 @@ void X(spaddI)(X(sp) *A, T alpha){
 	A->i=realloc(A->i, sizeof(spint)*(nzmax+missing));
     }
     missing=0;
-    for(long icol=0; icol<A->n; icol++){
+    for(long icol=0; icol<A->ny; icol++){
 	A->p[icol]+=missing;
 	int found=0;
 	long ix;
@@ -554,7 +554,7 @@ X(sp) *X(sptrans)(const X(sp) *A){
  */
 void X(spconj)(X(sp) *A){
 #ifdef USE_COMPLEX
-    const long nzmax=A->p[A->n];
+    const long nzmax=A->p[A->ny];
     for(long i=0; i<nzmax; i++){
 	A->x[i]=CONJ(A->x[i]);
     }
@@ -625,22 +625,22 @@ X(sp) *X(spcat)(const X(sp) *A, const X(sp) *B, int dim){
     }else if(dim==1){
 	/*|AB|*/
 	assert(issp(A) && issp(B));
-	if(A->m != B->m){
+	if(A->nx != B->nx){
 	    error("X(sp) matrix doesn't match\n");
 	}
-	const long nzmax=A->p[A->n]+B->p[B->n];
+	const long nzmax=A->p[A->ny]+B->p[B->ny];
 	if(nzmax==0){
 	    return 0;
 	}
-	C=X(spnew)(A->m, A->n+B->n, nzmax);
-	memcpy(C->p, A->p, A->n*sizeof(spint));
-	memcpy(C->i, A->i, A->p[A->n]*sizeof(spint));
-	memcpy(C->x, A->x, A->p[A->n]*sizeof(T));
-	memcpy(C->i+A->p[A->n], B->i, B->p[B->n]*sizeof(spint));
-	memcpy(C->x+A->p[A->n], B->x, B->p[B->n]*sizeof(T));
-	const long Anzmax=A->p[A->n];
-	for(long i=0; i<B->n+1; i++){
-	    C->p[i+A->n]=Anzmax+B->p[i];
+	C=X(spnew)(A->nx, A->ny+B->ny, nzmax);
+	memcpy(C->p, A->p, A->ny*sizeof(spint));
+	memcpy(C->i, A->i, A->p[A->ny]*sizeof(spint));
+	memcpy(C->x, A->x, A->p[A->ny]*sizeof(T));
+	memcpy(C->i+A->p[A->ny], B->i, B->p[B->ny]*sizeof(spint));
+	memcpy(C->x+A->p[A->ny], B->x, B->p[B->ny]*sizeof(T));
+	const long Anzmax=A->p[A->ny];
+	for(long i=0; i<B->ny+1; i++){
+	    C->p[i+A->ny]=Anzmax+B->p[i];
 	}
     }else{
 	error("Wrong dimension\n");
@@ -661,8 +661,8 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
 	    if(Ap[iy][ix]) {
-		nnx[ix]=Ap[iy][ix]->m;
-		nx+=Ap[iy][ix]->m;
+		nnx[ix]=Ap[iy][ix]->nx;
+		nx+=Ap[iy][ix]->nx;
 		break;
 	    }
 	}
@@ -670,15 +670,15 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
 	    if(Ap[iy][ix]) {
-		nny[iy]=Ap[iy][ix]->n;;
-		ny+=Ap[iy][ix]->n;
+		nny[iy]=Ap[iy][ix]->ny;
+		ny+=Ap[iy][ix]->ny;
 		break;
 	    }
 	}
     }
     for(long i=0; i<A->nx*A->ny; i++){
 	if(A->p[i]){
-	    nzmax+=A->p[i]->p[A->p[i]->n];
+	    nzmax+=A->p[i]->p[A->p[i]->ny];
 	}
     }
     X(sp) *out=X(spnew)(nx,ny,nzmax);
@@ -721,18 +721,18 @@ X(mat) *X(spsum)(const X(sp) *A, int dim){
     T *p;
     switch(dim){
     case 1:/*sum along col */
-	v=X(new)(1,A->n);
+	v=X(new)(1,A->ny);
 	p=v->p;
-	for(int icol=0; icol<A->n; icol++){
+	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 		p[icol]+=A->x[irow];
 	    }
 	}
 	break;
     case 2:/*sum along row */
-	v=X(new)(A->m,1);
+	v=X(new)(A->nx,1);
 	p=v->p;
-	for(int icol=0; icol<A->n; icol++){
+	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 		p[A->i[irow]]+=A->x[irow];
 	    }
@@ -752,18 +752,18 @@ X(mat) *X(spsumabs)(const X(sp) *A, int col){
     T *p;
     switch(col){
     case 1:/*sum along col */
-	v=X(new)(1,A->n);
+	v=X(new)(1,A->ny);
 	p=v->p;
-	for(int icol=0; icol<A->n; icol++){
+	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 		p[icol]+=ABS(A->x[irow]);
 	    }
 	}
 	break;
     case 2:/*sum along row */
-	v=X(new)(A->m,1);
+	v=X(new)(A->nx,1);
 	p=v->p;
-	for(int icol=0; icol<A->n; icol++){
+	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 		p[A->i[irow]]+=ABS(A->x[irow]);
 	    }
@@ -813,11 +813,11 @@ static int spelemcmp(const spelem *A, const spelem *B){
    Make sure the elements are sorted correctly. Does not change the location of
 data. can be done without harm. */
 void X(spsort)(X(sp) *A){
-    if(!A || A->n==0 || A->m==0) return;
+    if(!A || A->ny==0 || A->nx==0) return;
     assert_sp(A);
-    long nelem_max=A->nzmax/A->n*2;
+    long nelem_max=A->nzmax/A->ny*2;
     spelem *col=malloc(nelem_max*sizeof(spelem));
-    for(long i=0; i<A->n; i++){
+    for(long i=0; i<A->ny; i++){
 	long nelem=(A->p[i+1]-A->p[i]);
 	if(nelem==0) continue;
 	if(nelem>nelem_max){
@@ -942,15 +942,15 @@ X(sp) *X(spconvolvop)(X(mat) *A){
 */
 static X(sp) *X(sppermcol)(const X(sp) *A, int reverse, long *p){
     if(!p) return X(spdup)(A);
-    X(sp) *B=X(spnew)(A->m,A->n,A->nzmax);
+    X(sp) *B=X(spnew)(A->nx,A->ny,A->nzmax);
     long *perm;
     if(reverse){
 	perm=p;
     }else{
-	perm=invperm(p,A->m);
+	perm=invperm(p,A->nx);
     }
 
-    for(long icol=0; icol<A->n; icol++){
+    for(long icol=0; icol<A->ny; icol++){
 	B->p[icol]=A->p[icol];
 	for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 	    long row=A->i[irow];
@@ -958,7 +958,7 @@ static X(sp) *X(sppermcol)(const X(sp) *A, int reverse, long *p){
 	    B->x[irow]=A->x[irow];
 	}
     }
-    B->p[A->n]=A->p[A->n];
+    B->p[A->ny]=A->p[A->ny];
     if(!reverse){
 	free(perm);
     }
@@ -995,11 +995,11 @@ X(sp) *X(spperm)(X(sp) *A, int reverse, long *pcol, long *prow){
 X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     if(!A) return 0;
     assert_sp(A);
-    if(A->m!=A->n){
+    if(A->nx!=A->ny){
 	error("Must be a square matrix\n");
     }
-    long nb=A->m/bs;
-    X(sp) *B=X(spnew)(A->m, A->n, nb*bs*bs);
+    long nb=A->nx/bs;
+    X(sp) *B=X(spnew)(A->nx, A->ny, nb*bs*bs);
     X(mat) *bk=X(new)(bs,bs);
     PMAT(bk,pbk);
     for(long ib=0;ib<nb; ib++){
@@ -1026,7 +1026,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 	    }
 	}
     }
-    B->p[A->n]=nb*bs*bs;
+    B->p[A->ny]=nb*bs*bs;
     X(free)(bk);
     return B;
 }
@@ -1037,10 +1037,10 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 X(cell) *X(spblockextract)(const X(sp) *A, long bs){
     if(!A) return 0;
     assert_sp(A);
-    if(A->m!=A->n){
+    if(A->nx!=A->ny){
 	error("Must be a square matrix\n");
     }
-    long nb=A->m/bs;
+    long nb=A->nx/bs;
     X(cell) *out=cellnew(nb,1);
     for(long ib=0;ib<nb; ib++){
 	long is=ib*bs;/*starting col */

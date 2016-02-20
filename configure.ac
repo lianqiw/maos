@@ -61,6 +61,15 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 
+#find the real flavor of CC
+if $CC -v 2>&1 |grep clang ;then
+    CN=CLANG
+elif $CC -v 2>&1 |grep icc ;then
+    CN=ICC
+else
+    CN=GCC
+fi
+    
 #AUTO detect libraries in the system
 #Try to discover CUDA install in the system
 if ! which which >/dev/null 2>&1;then
@@ -152,32 +161,20 @@ DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 #in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
 #GCC mode can be forced on using __attribute__((gnu_inline))
 #always_inline causes inline to be done in debug mode.
-CN=""
-cc_full=`which ${CC%% *}`
-while test -L $cc_full ;do
-    cc_full=`readlink $cc_full`
-done
-case "${cc_full}" in	
-    *icc*)
-	CN=ICC
-	#Test ICC version
+case "$CN" in
+    ICC)
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION%.*}
 	    minor="${minor#4.}"
-	    #if test $major -ge 13 ;then
-	#	OPTIM+=" -axCORE-AVX2,SSE4.2"
-	 #   elif test $major -ge 11 ;then
-	#	OPTIM+=" -axSSE4.2"
-	 #   fi
 	    if test $major -lt 11 ;then
 		unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
-    *gcc*|*g++*)
-	if test -n "`$CC -v 2>&1 |grep clang`" ;then
+    GCC)
+	if test -n "$(CC -v 2>&1 |grep clang)" ;then
             CN=CLANG
 	else
             CN=GCC
@@ -207,11 +204,7 @@ case "${cc_full}" in
 	    fi
 	fi
 	;;
-    *clang*)
-        CN=CLANG
-	;;
-    *) #Other compilers
-	CN=ALL
+    *)
 	;;	
 esac
 if test "x$debug" = "xyes" ;then
@@ -270,7 +263,7 @@ case "$host_os" in
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_ARCH+=" -mmacosx-version-min=10.6 -fPIC"
+	CFLAGS_ARCH+=" -mmacosx-version-min=10.7 -fPIC -stdlib=libc++"
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -306,7 +299,7 @@ else
     CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
     mflag="-m32"
 fi
-if ! grep -q "$mflag" <<< $CFLAGS ;then
+if ! echo $CFLAGS | grep -q -- "$mflag" ;then
     CFLAGS=" $mflag $CFLAGS"
 fi
 unset mflag
@@ -831,27 +824,19 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC "
+    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
-    case "$CCBIN" in 
-        gcc*)
-	    CCN=GCC
-	    CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
-	    LIBCUDA+=" -lstdc++"
-	    ;;
-	clang*)
-	    CCN=CLANG
-	    LIBCUDA+=" -lc++"
-	    ;;
-	icc*)
-	    CCN=ICC
-	    LIBCUDA+=" -lstdc++"
-	    ;;
-	*)
-	    CCN=ALL
-	    LIBCUDA+=" -lstdc++"
-	    ;;
-    esac
+    if $CCBIN -v 2>&1 |grep clang ;then
+	CCN=CLANG
+	LIBCUDA+=" -lc++"
+    elif $CCBIN -v 2>&1 |grep icc ;then
+	 CCN=ICC
+	 LIBCUDA+=" -lstdc++"
+    else
+	CCN=GCC
+	CCBINOPT+=" -Wno-unused-value -D__STRICT_ANSI__ $"
+	LIBCUDA+=" -lstdc++"
+    fi
     optname=${ccprefix}_${CCN}
     CCBINOPT+=" ${!optname}"
 

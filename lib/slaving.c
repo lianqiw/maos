@@ -376,7 +376,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 		spint *pi=pHA[idm][ifit]->i;
 		double *px=pHA[idm][ifit]->x;
 
-		pdHA[idm][ifit]=dspnew(pHA[idm][ifit]->m, pHA[idm][ifit]->n, nzmax);
+		pdHA[idm][ifit]=dspnew(pHA[idm][ifit]->nx, pHA[idm][ifit]->ny, nzmax);
 		spint *pp2=pdHA[idm][ifit]->p;
 		spint *pi2=pdHA[idm][ifit]->i;
 		double *px2=pdHA[idm][ifit]->x;

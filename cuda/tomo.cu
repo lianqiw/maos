@@ -47,7 +47,7 @@ void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
 	double dx1=1./ploc->dx;
 	double dy1=1./ploc->dy;
-	for(int ic=0; ic<GPt->n; ic++){
+	for(int ic=0; ic<GPt->ny; ic++){
 	    int isa=(ic<nsa)?ic:(ic-nsa);
 	    for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 		int ix=pi[ir];
@@ -111,7 +111,7 @@ static curmat convert_neai(dsp *nea){
     double *px=nea->x;
     int nsa=nea->ny/2;
     Real (*neai)[3]=(Real(*)[3])calloc(3*nsa, sizeof(Real));
-    for(int ic=0; ic<nea->n; ic++){
+    for(int ic=0; ic<nea->ny; ic++){
 	for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 	    int ix=pi[ir];
 	    int isa=ic<nsa?ic:ic-nsa;

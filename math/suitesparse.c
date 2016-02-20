@@ -118,8 +118,8 @@ static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT t
     cs *A = ss_calloc (1, sizeof (cs)) ;    /* allocate the cs struct */
     if (!A) return (NULL) ;                 /* out of memory */
     A->id = M_SPT;
-    A->m = m ;                              /* define dimensions and nzmax */
-    A->n = n ;
+    A->nx = m ;                              /* define dimensions and nzmax */
+    A->ny = n ;
     A->nzmax = nzmax = SS_MAX (nzmax, 1) ;
     A->nz = triplet ? 0 : -1 ;              /* allocate triplet or comp.col */
     A->p = ss_malloc (triplet ? nzmax : n+1, sizeof (SS_INT)) ;
@@ -136,7 +136,7 @@ static SS_INT ss_sprealloc (cs *A, SS_INT nzmax)
 {
     SS_INT ok, oki, okj = 1, okx = 1 ;
     if (!A) return (0) ;
-    if (nzmax <= 0) nzmax = (SS_CSC (A)) ? (A->p [A->n]) : A->nz ;
+    if (nzmax <= 0) nzmax = (SS_CSC (A)) ? (A->p [A->ny]) : A->nz ;
     A->i = ss_realloc (A->i, nzmax, sizeof (SS_INT), &oki) ;
     if (SS_TRIPLET (A)) A->p = ss_realloc (A->p, nzmax, sizeof (SS_INT), &okj) ;
     if (A->x) A->x = ss_realloc (A->x, nzmax, sizeof (SS_ENTRY), &okx) ;
@@ -185,9 +185,9 @@ cs* X(ss_multiply) (const cs *A, const cs *B)
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
     if (!SS_CSC (A) || !SS_CSC (B)) return (NULL) ;      /* check inputs */
-    if (A->n != B->m) return (NULL) ;
-    m = A->m ; anz = A->p [A->n] ;
-    n = B->n ; Bp = B->p ; Bi = B->i ; Bx = B->x ; bnz = Bp [n] ;
+    if (A->ny != B->nx) return (NULL) ;
+    m = A->nx ; anz = A->p [A->ny] ;
+    n = B->ny ; Bp = B->p ; Bi = B->i ; Bx = B->x ; bnz = Bp [n] ;
     w = ss_calloc (m, sizeof (SS_INT)) ;                    /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
     x = values ? ss_malloc (m, sizeof (SS_ENTRY)) : NULL ; /* get workspace */
@@ -221,9 +221,9 @@ cs* X(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
     if (!SS_CSC (A) || !SS_CSC (B)) return (NULL) ;         /* check inputs */
-    if (A->m != B->m || A->n != B->n) return (NULL) ;
-    m = A->m ; anz = A->p [A->n] ;
-    n = B->n ; Bp = B->p ; Bx = B->x ; bnz = Bp [n] ;
+    if (A->nx != B->nx || A->ny != B->ny) return (NULL) ;
+    m = A->nx ; anz = A->p [A->ny] ;
+    n = B->ny ; Bp = B->p ; Bx = B->x ; bnz = Bp [n] ;
     w = ss_calloc (m, sizeof (SS_INT)) ;                       /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
     x = values ? ss_malloc (m, sizeof (SS_ENTRY)) : NULL ;    /* get workspace */
@@ -249,7 +249,7 @@ static SS_INT ss_fkeep (cs *A, SS_INT (*fkeep) (SS_INT, SS_INT, SS_ENTRY, void *
     SS_INT j, p, nz = 0, n, *Ap, *Ai ;
     SS_ENTRY *Ax ;
     if (!SS_CSC (A) || !fkeep) return (-1) ;    /* check inputs */
-    n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
+    n = A->ny ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     for (j = 0 ; j < n ; j++)
     {
         p = Ap [j] ;                        /* get current location of col j */
@@ -322,7 +322,7 @@ cs* X(ss_transpose) (const cs *A, SS_INT values)
     SS_ENTRY *Cx, *Ax ;
     cs *C ;
     if (!SS_CSC (A)) return (NULL) ;    /* check inputs */
-    m = A->m ; n = A->n ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
+    m = A->nx ; n = A->ny ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     C = ss_spalloc (n, m, Ap [n], values && Ax, 0) ;       /* allocate result */
     w = ss_calloc (m, sizeof (SS_INT)) ;                      /* get workspace */
     if (!C || !w) return (ss_done (C, w, NULL, 0)) ;       /* out of memory */

@@ -92,7 +92,7 @@ cusolve_cbs::cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp){
     }
     chol_convert(_C, 0);
     Cl=cusp(_C->Cl, 0);
-    cp2gpu(Cp, _C->Cp, _C->Cl->m, 1);
+    cp2gpu(Cp, _C->Cp, _C->Cl->nx, 1);
     if(_Up){
 	cp2gpu(Up, _Up);
 	cp2gpu(Vp, _Vp);

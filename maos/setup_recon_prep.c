@@ -415,8 +415,8 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	    int nloc=recon->xloc->p[ips]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		if(!HXW[ips][iwfs] 
-		   || HXW[ips][iwfs]->m!=nploc 
-		   || HXW[ips][iwfs]->n!=nloc){
+		   || HXW[ips][iwfs]->nx!=nploc 
+		   || HXW[ips][iwfs]->ny!=nloc){
 		    error("Wrong saved HXW\n");
 		}
 	    }
@@ -556,7 +556,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	int nploc=ploc->nloc;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    int nsa=powfs[ipowfs].saloc->nloc;
-	    if(GP->p[ipowfs]->m!=nsa*2 || GP->p[ipowfs]->n!=nploc){
+	    if(GP->p[ipowfs]->nx!=nsa*2 || GP->p[ipowfs]->ny!=nploc){
 		error("Wrong saved GP: size is %ldx%ld, need %dx%d\n",
 		      GP->p[ipowfs]->nx, GP->p[ipowfs]->ny, nsa*2, nploc);
 	    }

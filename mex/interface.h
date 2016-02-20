@@ -60,9 +60,9 @@ INLINE mxArray *dsp2mx(const dsp*A){
 	mxSetNzmax(out, A->nzmax);
 	if(A->nref) A->nref[0]++;
     }else{
-	out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
+	out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxREAL);
 	memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-	memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
+	memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
 	memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
     }
     return out;
@@ -70,9 +70,9 @@ INLINE mxArray *dsp2mx(const dsp*A){
 INLINE mxArray *csp2mx(const csp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxCOMPLEX);
     mxArray *out=0;
-    out=mxCreateSparse(A->m,A->n,A->nzmax,mxCOMPLEX);
+    out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxCOMPLEX);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
-    memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
+    memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
     for(long i=0; i<A->nzmax; i++){
@@ -187,8 +187,8 @@ INLINE dsp *mx2dsp(const mxArray *A){
 	out=calloc(1, sizeof(dsp));
 	out->id=M_DSP64;
 	out->nz=-1;
-	out->m=mxGetM(A);
-	out->n=mxGetN(A);
+	out->nx=mxGetM(A);
+	out->ny=mxGetN(A);
 	out->p=mxGetJc(A);
 	out->i=mxGetIr(A);
 	out->x=mxGetPr(A);

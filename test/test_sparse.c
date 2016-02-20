@@ -74,9 +74,9 @@ static void test_spmul(){
     dsp *A=Ac->p[0];
     rand_t rstat;
     seed_rand(&rstat,1);
-    dmat *x=dnew(A->n,1);
+    dmat *x=dnew(A->ny,1);
     drandn(x,1,&rstat);
-    dmat *y=dnew(A->m,1);
+    dmat *y=dnew(A->nx,1);
     info("x->p=%p\n",x);
     tic;
     dspmulvec(y->p,A,x->p,'n',1);

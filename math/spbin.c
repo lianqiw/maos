@@ -32,17 +32,17 @@
 void X(spwritedata)(file_t *fp, const X(sp) *sp){
     header_t header={M_SPT, 0, 0, NULL};
     if(sp && sp->nzmax){
-	header.nx=sp->m;
-	header.ny=sp->n;
+	header.nx=sp->nx;
+	header.ny=sp->ny;
 	header.str=sp->header;
     }
     write_header(&header, fp);
     if(sp && sp->nzmax){
 	X(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
 	uint64_t nzmax;
-	nzmax=sp->p[sp->n];/*don't use sp->nzmax, which maybe larger than actual */
+	nzmax=sp->p[sp->ny];/*don't use sp->nzmax, which maybe larger than actual */
 	zfwrite(&nzmax, sizeof(uint64_t), 1, fp);
-	zfwrite(sp->p, sizeof(spint), sp->n+1, fp);
+	zfwrite(sp->p, sizeof(spint), sp->ny+1, fp);
 	zfwrite(sp->i, sizeof(spint), nzmax, fp);
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
     }

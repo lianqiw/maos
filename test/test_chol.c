@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
     toc("done");
     rand_t rstat;
     seed_rand(&rstat,1);
-    dmat *y=dnew(RLMc->m, 1);
+    dmat *y=dnew(RLMc->nx, 1);
     drandn(y, 1, &rstat);
     dmat *x=NULL, *x2=NULL, *x3=NULL;
     chol_convert(R1, 1);

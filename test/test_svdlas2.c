@@ -142,9 +142,9 @@ static const dsp* A2=NULL;
  * n = ncol (y stores product vector).		              *
  **************************************************************/
 static void opb(long n, double *x, double *y){
-    dmat *tmp=dnew(A2->m, 1);
+    dmat *tmp=dnew(A2->nx, 1);
     dspmulvec(tmp->p, A2, x, 'n',1);
-    memset(y, 0, sizeof(double)*A2->n);
+    memset(y, 0, sizeof(double)*A2->ny);
     dspmulvec(y, A2, tmp->p, 't',1);
     dfree(tmp);
     mxvcount +=2;
@@ -152,8 +152,8 @@ static void opb(long n, double *x, double *y){
 static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     /* make a lanczos run; see landr for meaning of parameters */
     A2=A;/*Save it to global. */
-    nrow=A->m;
-    ncol=A->n;
+    nrow=A->nx;
+    ncol=A->ny;
     long i;
     long n=ncol;      /*Dimension of B=A'A; */
     long nn=ncol+nrow;
