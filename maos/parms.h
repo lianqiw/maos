@@ -146,6 +146,7 @@ typedef struct POWFS_CFG_T{
 		       calibrated out. depends on variability.*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
+    double dsa;     /**<Size of subaperture in 1 dimension*/
     double dx;      /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
     double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial

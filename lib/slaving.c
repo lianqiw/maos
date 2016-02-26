@@ -269,7 +269,7 @@ void act_stuck(loccell *aloc, void *HA_, const lcell *stuck){
 		dsp *ha=(dsp*)HAi;
 		spint *pp=ha->p;
 		double *px=ha->x;
-		assert(ha->n==aloc->p[idm]->nloc);
+		assert(ha->ny==aloc->p[idm]->nloc);
 		for(int iact=0; iact<nact; iact++){
 		    if(stuck->p[idm]->p[iact]){
 			for(int ic=pp[iact]; ic<pp[iact+1]; ic++){

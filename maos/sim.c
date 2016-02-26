@@ -245,7 +245,6 @@ void maos_sim(){
     POWFS_T *powfs=global->powfs;
     RECON_T *recon=global->recon;
     APER_T *aper=global->aper;
-    SIM_T *simu=0;
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
     if(parms->sim.skysim){
@@ -260,7 +259,7 @@ void maos_sim(){
 	dcell *evlpsfdl=cellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
-	    evlpsfdl->p[iwvl]->header=evl_header(parms, simu->aper, -1, iwvl);
+	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);
 	}
 	ccellfree(psf2s);
 	writebin(evlpsfdl, "evlpsfdl.fits");
@@ -271,6 +270,7 @@ void maos_sim(){
     if(simstart>=simend) return;
     double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	SIM_T *simu=0;
 	while(!(simu=maos_iseed(iseed))){
 	    iseed++;
 	}

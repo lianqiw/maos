@@ -296,6 +296,7 @@ void reconstruct(SIM_T *simu){
 		}else
 #endif		
 		{
+		    dzero(dmout->m);
 		    dmulvec(dmout->m->p, recon->MVM, gradin->m->p, 1);
 		}
 	}else{

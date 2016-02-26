@@ -237,7 +237,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     /*order of the system. 60 for TMT */
     const int order  = parms->powfs[ipowfs].order;
     /*Subaperture lateral length. 0.5 for TMT. */
-    const double dxsa = parms->aper.d/(double)order;
+    const double dsa = parms->powfs[ipowfs].dsa;
     /*The subaperture area that are considered as full. */
     double areafulli;
     if(order>2){
@@ -248,25 +248,25 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 
     /*Number of OPD pixels in 1 direction in each
       subaperture. Make it even to do fft.*/
-    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
-    const double dx=dxsa/nx;/*adjust dx. */
+    int nx = 2*(int)round(0.5*dsa/parms->powfs[ipowfs].dx);
+    const double dx=dsa/nx;/*adjust dx. */
     const double dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
     if(fabs(parms->powfs[ipowfs].dx-dx)>EPS)
 	warning("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
-    if(fabs(dxsa - nx * dx)>EPS){
-	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dxsa, dx);
+    if(fabs(dsa - nx * dx)>EPS){
+	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dsa, dx);
     }
-    info2("There are %d points in each subaperture of %gm.\n", nx, dxsa);
+    info2("There are %d points in each subaperture of %gm.\n", nx, dsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
-	if(fabs(powfs[ipowfs].saloc->dx-dxsa)>0.1*(powfs[ipowfs].saloc->dx+dxsa)){
-	    error("loaded saloc has dx=%g, while powfs.order implies %g\n",
-		  powfs[ipowfs].saloc->dx, dxsa);
+	if(fabs(powfs[ipowfs].saloc->dx-dsa)>0.01*(powfs[ipowfs].saloc->dx+dsa)){
+	    error("loaded saloc has dx=%g, while powfs.dsa=%g\n",
+		  powfs[ipowfs].saloc->dx, dsa);
 	}
     }else{
 	/*The coordinate of the subaperture (lower left coordinate) */
-	powfs[ipowfs].saloc=locnew(order*order, dxsa, dxsa);
+	powfs[ipowfs].saloc=locnew(order*order, dsa, dsa);
 	int count = 0;
 	/*Offset of the coordinate of the center most subaperture from the center. */
 	double offset;
@@ -277,7 +277,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	/*r2max: Maximum distance^2 from the center to keep a subaperture */
 	double r2max=pow(order*0.5, 2);
-	double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2,2):-1;
+	double r2min=dsa<parms->aper.din?pow(parms->aper.din/dsa/2,2):-1;
 	/*the lower left *grid* coordinate of the subaperture */
 
 	/*Collect all the subapertures that are within the allowed radius*/
@@ -293,8 +293,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		double r4=pow(xc,2)+pow(yc,2);
 		if(r1<r2max || r2<r2max || r3<r2max || r4<r2max||
 		   r1>r2min || r2>r2min || r3>r2min || r4>r2min){
-		    powfs[ipowfs].saloc->locx[count]=xc*dxsa;
-		    powfs[ipowfs].saloc->locy[count]=yc*dxsa;
+		    powfs[ipowfs].saloc->locx[count]=xc*dsa;
+		    powfs[ipowfs].saloc->locy[count]=yc*dsa;
 		    count++;
 		}
 	    }
@@ -302,7 +302,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].saloc->nloc=count;
     }
     /*convert saloc to pts*/
-    powfs[ipowfs].pts=ptsnew(powfs[ipowfs].saloc->nloc, dxsa, dxsa, nx, dx, dx);
+    powfs[ipowfs].pts=ptsnew(powfs[ipowfs].saloc->nloc, dsa, dsa, nx, dx, dx);
     for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
 	powfs[ipowfs].pts->origx[isa]=powfs[ipowfs].saloc->locx[isa]+dxoffset;
 	powfs[ipowfs].pts->origy[isa]=powfs[ipowfs].saloc->locy[isa]+dxoffset;
@@ -646,7 +646,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int pixpsay=parms->powfs[ipowfs].pixpsa;
     const int radpix=parms->powfs[ipowfs].radpix;
-    const double dxsa=powfs[ipowfs].pts->dsa;
+    const double dsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].saloc->nloc;
     if(parms->powfs[ipowfs].llt){
 	const int nllt=parms->powfs[ipowfs].llt->n;
@@ -662,8 +662,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 
 	for(int illt=0;illt<nllt;illt++){
 	    /*adjusted llt center because pts->orig is corner */
-	    double ox2=parms->powfs[ipowfs].llt->ox->p[illt]-dxsa*0.5;
-	    double oy2=parms->powfs[ipowfs].llt->oy->p[illt]-dxsa*0.5;
+	    double ox2=parms->powfs[ipowfs].llt->ox->p[illt]-dsa*0.5;
+	    double oy2=parms->powfs[ipowfs].llt->oy->p[illt]-dsa*0.5;
 	    powfs[ipowfs].srot->p[illt]=dnew(nsa,1);
 	    powfs[ipowfs].srsa->p[illt]=dnew(nsa,1);
 
@@ -676,7 +676,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		if(rsa2>rsa2max) rsa2max=rsa2;
 	    }
 	    powfs[ipowfs].srsamax->p[illt]=sqrt(rsa2max);
-	    int pnsa=(int)ceil(sqrt(rsa2max)/dxsa)+1;
+	    int pnsa=(int)ceil(sqrt(rsa2max)/dsa)+1;
 	    
 	    double prot[pnsa];
 	    powfs[ipowfs].sprint->p[illt]=dnew(pnsa,1);
@@ -686,8 +686,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		pp[ind]=-1;
 	    }
 	    double desrot=0;
-	    if(fabs(parms->powfs[ipowfs].llt->ox->p[illt])<dxsa 
-	       && fabs(parms->powfs[ipowfs].llt->oy->p[illt])<dxsa){
+	    if(fabs(parms->powfs[ipowfs].llt->ox->p[illt])<dsa 
+	       && fabs(parms->powfs[ipowfs].llt->oy->p[illt])<dsa){
 		desrot=0;
 	    }else{
 		double ddx=(0-parms->powfs[ipowfs].llt->ox->p[illt]);
@@ -695,7 +695,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		desrot=atan2(ddy,ddx);
 	    }
 	    for(int isa=0; isa<nsa; isa++){
-		int ind=(int)round(powfs[ipowfs].srsa->p[illt]->p[isa]/dxsa);
+		int ind=(int)round(powfs[ipowfs].srsa->p[illt]->p[isa]/dsa);
 		double irot=fabs(powfs[ipowfs].srot->p[illt]->p[isa]-desrot);
 		if(irot<prot[ind]){
 		    prot[ind]=irot;
@@ -740,7 +740,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    if(wvlmin>parms->powfs[ipowfs].wvl->p[iwvl])
 		wvlmin=parms->powfs[ipowfs].wvl->p[iwvl];
 	}
-	double dtheta=wvlmin/(dxsa*embfac);/*Min PSF sampling. */
+	double dtheta=wvlmin/(dsa*embfac);/*Min PSF sampling. */
 	ncompx=ceil(pixpsax*pixthetax/dtheta);
 	ncompy=ceil(pixpsay*pixthetay/dtheta);
 	

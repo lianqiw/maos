@@ -227,12 +227,18 @@ static inline int sum_dblarr(int n, double *a){
 */
 static void readcfg_powfs(PARMS_T *parms){
     int     npowfs,i;
-    parms->npowfs=npowfs=readcfg_peek_n("powfs.order");
+    parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
     parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
     int    *inttmp=NULL;
     double *dbltmp=NULL;
     char  **strtmp=NULL;
-    READ_POWFS(int,order);
+    READ_POWFS(dbl,dsa);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].dsa<0){
+	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
+	}
+	parms->powfs[ipowfs].order=round(parms->aper.d/parms->powfs[ipowfs].dsa);
+    }
     READ_POWFS(int,nwvl);
     dmat* wvllist=readcfg_dmat("powfs.wvl");
     dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
@@ -428,8 +434,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    }
 	    /*Senity check pixtheta*/
 	    if(powfsi->pixtheta<0){
-		double dsa=parms->aper.d/powfsi->order;
-		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/dsa;
+		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
 	    }else if(powfsi->pixtheta<1e-4){
 		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
 	    }else{
@@ -622,21 +627,8 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM(dbl,offset);
     READ_DM_RELAX(dbl,dx);
     READ_DM_RELAX(dbl,ar);
-    READ_DM_RELAX(dbl,order);
-    int dx_override=readcfg_peek_override("dm.dx");
-    int order_override=readcfg_peek_override("dm.order");
     for(int idm=0; idm<ndm; idm++){
-	if(order_override && parms->dm[idm].order>0){
-	    if(dx_override && parms->dm[idm].dx>0){
-		if(fabs(parms->dm[idm].order*parms->dm[idm].dx-parms->aper.d)>parms->aper.d*0.01){
-		    error("both dm.order and dm.dx are specified. But they don't agree. Please set one of them to zero.\n");
-		}
-	    }else{
-		parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
-	    }
-	}else{
-	    parms->dm[idm].order=parms->aper.d/parms->dm[idm].dx;
-	}
+	parms->dm[idm].order=parms->aper.d/parms->dm[idm].dx;
 	parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
 	if(parms->dm[idm].ar<=0){
 	    error("ar must be positive\n");
@@ -689,17 +681,7 @@ static void readcfg_dm(PARMS_T *parms){
    Read in MOAO parameters.
 */
 static void readcfg_moao(PARMS_T *parms){
-    int ndx=readcfg_peek_n("moao.dx");
-    int nod=readcfg_peek_n("moao.order");
-    int nmoao;
-    if(ndx>=nod){
-	nmoao=ndx;
-	if(nod!=1 && nod!=nmoao){
-	    error("moao.order is invalid\n");
-	}
-    }else{
-	nmoao=nod;
-    }
+    int nmoao=readcfg_peek_n("moao.dx");
     int i;
     parms->nmoao=nmoao;
     parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
@@ -707,21 +689,8 @@ static void readcfg_moao(PARMS_T *parms){
     double *dbltmp=NULL;
     char **strtmp=NULL;
     READ_MOAO_RELAX(dbl,dx);
-    READ_MOAO_RELAX(dbl,order);
-    int dx_override=readcfg_peek_override("moao.dx");
-    int order_override=readcfg_peek_override("moao.order");
     for(int imoao=0; imoao<nmoao; imoao++){
-	if(order_override && parms->moao[imoao].order>0){
-	    if(dx_override && parms->moao[imoao].dx>0){
-		if(fabs(parms->moao[imoao].order*parms->moao[imoao].dx-parms->aper.d)>parms->aper.d*0.01){
-		    error("both moao.order and moao.dx are specified. But they don't agree\n");
-		}
-	    }else{
-		parms->moao[imoao].dx=parms->aper.d/parms->moao[imoao].order;
-	    }
-	}else{
-	    parms->moao[imoao].order=parms->aper.d/parms->moao[imoao].dx;
-	}
+	parms->moao[imoao].order=parms->aper.d/parms->moao[imoao].dx;
     }
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,gdm);
@@ -1449,14 +1418,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->hipowfs=lnew(parms->npowfs, 1);
     parms->lopowfs=lnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	/*Figure out order of High order WFS if not specified.*/
-	if(parms->powfs[ipowfs].order==0){
-	    if(parms->ndm>0){
-		parms->powfs[ipowfs].order=parms->dm[0].order;
-	    }else{
-		error("Please specify powfs[%d].order\n", ipowfs);
-	    }
-	}
 	if(parms->powfs[ipowfs].nwfs>0){
 	    if(parms->powfs[ipowfs].lo){
 		parms->lopowfs->p[parms->nlopowfs]=ipowfs;
@@ -1540,12 +1501,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	{
 	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
-	    const double dxsa= parms->aper.d/(double)parms->powfs[ipowfs].order;
-	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
-	    double dx=dxsa/nx;/*adjust dx. */
+	    const double dsa=parms->powfs[ipowfs].dsa;
+	    int nx = 2*(int)round(0.5*dsa/parms->powfs[ipowfs].dx);
+	    if(nx<2) nx=2;
+	    double dx=dsa/nx;/*adjust dx. */
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
-		warning("powfs %d: Adjusting dx from %g to %g. \n"
-			"Please adjust evl.dx, powfs.dx, atm.dx to match the new value for best efficiency.\n",
+		warning("powfs %d: Adjusting dx from %g to %g. \n",
 			ipowfs,parms->powfs[ipowfs].dx, dx);
 	    }
 	    parms->powfs[ipowfs].dx=dx;
@@ -2183,29 +2144,26 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
     if(parms->atmr.dx<EPS){
 	/*find out the sampling to setup tomography grid using the maximum order of the wfs and DMs. */
-	double maxorder=0;
+	double mindsa=INFINITY;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if (parms->powfs[ipowfs].lo || parms->powfs[ipowfs].skip){
 		continue;
 	    }
-	    if(parms->powfs[ipowfs].order>maxorder){
-		maxorder=parms->powfs[ipowfs].order;
-		info("maxorder=%g\n", maxorder);
+	    if(parms->powfs[ipowfs].dsa<mindsa){
+		mindsa=parms->powfs[ipowfs].dsa;
 	    }
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    if(parms->dm[idm].order > maxorder){
-		maxorder=parms->dm[idm].order;
-		info("maxorder=%g\n", maxorder);
+	    if(mindsa<parms->dm[idm].dx){
+		mindsa=parms->dm[idm].dx;
 	    }
 	}
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
-	    if(parms->moao[imoao].order>maxorder){
-		maxorder=parms->moao[imoao].order;
-		info("maxorder=%g\n", maxorder);
+	    if(mindsa<parms->moao[imoao].dx){
+		mindsa=parms->moao[imoao].dx;
 	    }
 	}
-	parms->atmr.dx=parms->aper.d/maxorder;
+	parms->atmr.dx=mindsa;
     }
 
 

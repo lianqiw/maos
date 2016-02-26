@@ -267,6 +267,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    dmat *nea2=dtmcc(mtche[ii0][isa], wt);
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
+	    if(i0sum[ii0][isa]<EPS){//zero flux
+		nea2->p[0]=nea2->p[3]=pixthetax*10;
+	    }
 	    if(parms->powfs[ipowfs].mtchcpl==0 
 	       && (!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx)){
 		/*remove coupling between r/a (x/y) measurements. */

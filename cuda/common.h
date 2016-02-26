@@ -267,19 +267,19 @@ typedef struct stream_t{
 	init();
     }
     void sync(){
-	assert(this);
+	//assert(this);
 	DO(cudaStreamSynchronize(stream));
     }
     operator cudaStream_t&(){
-	assert(this);
+	//assert(this);
 	return stream;
     }
     operator cublasHandle_t&(){
-	assert(this);
+	//assert(this);
 	return handle;
     }
     operator cusparseHandle_t&(){
-	assert(this);
+	//assert(this);
 	return sphandle;
     }
 private:
@@ -298,7 +298,7 @@ typedef struct event_t{
 	DO(cudaEventRecord(event, stream));
     }
     operator cudaEvent_t(){
-	assert(this);
+	//assert(this);
 	return event;
     }
 }event_t;
