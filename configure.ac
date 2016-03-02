@@ -69,7 +69,15 @@ elif $CC -v 2>&1 |grep icc ;then
 else
     CN=GCC
 fi
-    
+#canonicalize the host_cpu name
+case "$host_cpu" in
+    *86)
+	host_cpu=x86
+	;;
+    *64)
+	host_cpu=x86_64
+	;;
+esac
 #AUTO detect libraries in the system
 #Try to discover CUDA install in the system
 if ! which which >/dev/null 2>&1;then
@@ -663,18 +671,18 @@ if test "$with_matlab" != "no" ;then
     elif test -x "${MEXDIR}/bin/mex" ;then
 	MEXDIR="${MEXDIR}/bin"
     else
-	AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-mex to disable])
+	AC_MSG_ERROR([mex not found at $MEXDIR. please reconfigure with --with-matlab=DIR to specify MATLAB location or --without-matlab to disable])
     fi
     MEXEXT="$($MEXDIR/mexext)"
     if test -z "$MEXEXT" ;then
-	AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --disable-mex to disable mex.])
+	AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --without-matlab to disable mex.])
     fi
     case $MEXEXT in
    	mexglx)
 	    MEXLIB=glnx86
 	    MEXOPT="$OPTS -fPIC -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
 	    MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
-	    mex_cpu=i386
+	    mex_cpu=x86
 	    ;;
    	mexa64)
 	    MEXLIB=glnxa64
@@ -685,7 +693,7 @@ if test "$with_matlab" != "no" ;then
 	mexmaci)
 	    MEXLIB=maci
 	    MEXOPT="$OPTS -fPIC -m32 -fexceptions" 
-	    mex_cpu=i386
+	    mex_cpu=x86
 	    ;;
 	mexmaci64)
 	    MEXLIB=maci64
@@ -701,13 +709,16 @@ if test "$with_matlab" != "no" ;then
 	mexw32)
 	    MEXLIB=win32
 	    MEXOPT=""
-	    mex_cpu=i386
+	    mex_cpu=x86
 	    ;;
 	*)
 	    AC_MSG_ERROR([Unknown mex extension "$MEXEXT"])
 	    ;;
     esac
     if test "$mex_cpu" != "$host_cpu" ;then
+	echo mex_cpu=$mex_cpu
+	echo host_cpu=$host_cpu
+	echo Architecture mismatch, disable mex support.
 	mex_lib="no"
     else       
 	LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} "

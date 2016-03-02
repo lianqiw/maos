@@ -191,6 +191,8 @@ INLINE void thread_new(thread_fun fun, void* arg){
     pthread_create(&temp, NULL, fun, arg);
 }
 void thread_block_signal();
+#endif
+
 INLINE int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
     int __ret;                                     
@@ -200,6 +202,7 @@ INLINE int cmpxchg(int *ptr, int old, int newval){
 		      : "memory");				 
     return __ret;
 }
+
 INLINE int atomicadd(int *ptr, int val){
     int old;
     do{
@@ -207,7 +210,6 @@ INLINE int atomicadd(int *ptr, int val){
     }while(cmpxchg(ptr, old, old+val)!=old);
     return old+val;
 }
-#endif
 
 #if _OPENMP >= 200805 
 #define OMPTASK_FOR(index, start, end, extra...)	\

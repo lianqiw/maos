@@ -60,18 +60,7 @@ void thread_prep(thread_t *info, long start, long end, long nthread,
 	error("Not correctly terminated\n");
     }
 }
-/**
-   return initial value of src and add step to it atomically.
-*/
-int lockadd(int *src, int step){
-    static pthread_mutex_t atomic_lock=PTHREAD_MUTEX_INITIALIZER;
-    int result;
-    pthread_mutex_lock(&atomic_lock);
-    result=*src;
-    *src+=step;
-    pthread_mutex_unlock(&atomic_lock);
-    return result;
-}
+
 /**
    After calling this routine, this thread will nolonger receive signals
  */
