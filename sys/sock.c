@@ -307,7 +307,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	timeout.tv_sec=timeout_sec;
 	timeout.tv_usec=(timeout_sec-timeout.tv_sec)*1e6;
 	read_fd_set = active_fd_set;
-	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout)<0){
+	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout_sec>0?&timeout:0)<0){
 	    if(errno==EINTR){
 		warning("select failed: %s\n", strerror(errno));
 		continue;

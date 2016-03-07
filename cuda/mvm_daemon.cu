@@ -327,8 +327,7 @@ static int respond(int sock){
     }
     return 0;
 }
-static void* gpu_mvm_gpu_init(void* A){
-    (void)A;
+static void* gpu_mvm_gpu_init(){
     gpu_init(NULL, 0, 0);
     DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
     struct cudaDeviceProp prop;
@@ -369,7 +368,7 @@ static void* gpu_mvm_gpu_init(void* A){
 }
 void gpu_mvm_daemon(int port){
     info2("Starting MVM daemon at port %d\n", port);
-    pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
+    gpu_mvm_gpu_init();
     redirect();
-    listen_port(port, NULL, respond, 0, NULL, 1);
+    listen_port(port, NULL, respond, -1, NULL, 1);
 }
