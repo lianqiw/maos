@@ -306,7 +306,7 @@ int scheduler_report(STATUS_T *status){
 }
 
 /**
-   Ask scheduler in another machine to launch exe.
+   Ask scheduler (maybe in another machine) to launch executable.
 */
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     int ret=0;

@@ -257,7 +257,6 @@ typedef struct WFS_CFG_T{
     double hs;      /**height of star. Derived from powfs.hs or from input*/
     double fitwt;   /**<Include wfs in fitting directions if corresponding wfs[iwfs].fitwt is greater than 0*/
     int powfs;      /**<powfs type*/
-    int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.
@@ -334,7 +333,6 @@ typedef struct EVL_CFG_T{
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
-    lmat *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }EVL_CFG_T;
 
 /**
@@ -442,7 +440,6 @@ typedef struct RECON_CFG_T{
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
-    int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
     char **misreg_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/

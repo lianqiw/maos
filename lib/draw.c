@@ -73,7 +73,17 @@ typedef struct{
 }sockinfo_t;
 sockinfo_t sock_draws[MAXDRAW];
 
-#define CATCH(A) if(A){info("stwrite to %d failed with %s\n", sock_draw, strerror(errno));print_backtrace();if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw,0); continue;}
+#define CATCH(A) if(A){\
+	info("stwrite to %d failed with %s\n", \
+	     sock_draw, strerror(errno));				\
+	warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);	\
+	if(sock_helper<0&&!DRAW_DIRECT){				\
+	    disable_draw=1;						\
+	    warning("disable draw\n");					\
+	}								\
+	draw_remove(sock_draw,0);					\
+	continue;							\
+    }
 #define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
 #define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
 #define STWRITECMDSTR(cmd,str) CATCH(stwriteint(sock_draw,cmd) || stwritestr(sock_draw,str))

@@ -286,9 +286,10 @@ void reconstruct(SIM_T *simu){
 	    gradin=simu->gradlastcl;
 	}
 	if(!dmout) error("dmout cannot be empty\n");
+	//The following takes gradin as input and computs dmfit in dmout.
 	if(parms->recon.mvm){
 	    if(parms->sim.mvmport){
-		mvm_client_recon(parms, dmout, gradin);
+		mvm_client_recon(parms->sim.mvmsize, dmout, gradin);
 	    }else
 #if USE_CUDA
 		if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){

@@ -22,45 +22,41 @@
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <errno.h>
-int sock_mvm;
-int ndone;
-int nleft;
-char *start;
-
+static int sock_mvm=-1;
 /*Read into double array until we get all*/
 #define READ_ARR(p,n,type)				\
-    nleft=(n)*sizeof(type);				\
-    start=(char*)(p);					\
-    do{							\
-	int nread=read(sock_mvm, start, nleft);		\
-	nleft-=nread;					\
-	start+=nread;					\
-	if(nread<=0){					\
-	    error("Read failed\n");			\
-	}						\
-    }while(nleft>0);
+    {							\
+	int nleft;					\
+	char *start;					\
+	nleft=(n)*sizeof(type);				\
+	start=(char*)(p);				\
+	do{						\
+	    int nread=read(sock_mvm, start, nleft);	\
+	    nleft-=nread;				\
+	    start+=nread;				\
+	    if(nread<=0){				\
+		error("Read failed\n");			\
+	    }						\
+	}while(nleft>0);				\
+    }
 
 #define WRITE_ARR(p,n,type)						\
-    if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
-	perror("write");						\
-	error("error writing. want %ld wrote %d\n",(long)(n)*sizeof(type), ndone); \
+    {									\
+	int ndone;							\
+	if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){ \
+	    perror("write");						\
+	    error("error writing. want %ld wrote %d\n",(long)(n)*sizeof(type), ndone); \
+	}								\
     }
-
 #define READ_CMD(p) READ_ARR(p,N_CMD,int)
 #define WRITE_CMD(p) WRITE_ARR(p,N_CMD,int)
-
-void mvm_client_init(const char *host, int port){
-    if((sock_mvm=connect_port(host, port, 1, 1))<0){
-	error("Unable to connect to mvm server\n");
-    }
-}
 
 /**
    It is called by maos to send mvm matrix to mvm server
 */
-void mvm_client_send_m(const PARMS_T *parms, dmat *mvmd){
+void mvm_client_send_m(dmat *mvmd, int ngpu){
     int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
-    cmd[1]=parms->sim.mvmngpu;
+    cmd[1]=ngpu;
     cmd[2]=mvmd->nx;
     cmd[3]=mvmd->ny;
     info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
@@ -73,9 +69,17 @@ void mvm_client_send_m(const PARMS_T *parms, dmat *mvmd){
     free(fmvm);
     info2(" done\n");
 }
-
-void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
-    /* first move gradients to continuous buffer*/
+void mvm_client_init(const char *host, int port, dmat *mvm, int ngpu){
+    if((sock_mvm=connect_port(host, port, 1, 1))<0){
+	error("Unable to connect to mvm server\n");
+    }
+    mvm_client_send_m(mvm, ngpu);
+}
+void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
+    if(sock_mvm==-1){
+	error("please call mvm_client_init first\n");
+    }
+    /* first move gradients to continuous buffer with correct numerical type.*/
     int nwfs=grad->nx;
     int ngtot=0;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -101,24 +105,29 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     }
     ATYPE *dmall=malloc(sizeof(ATYPE) *natot);
     ATYPE *pdmall=dmall;
-    int neach=parms->sim.mvmsize;//testing parms->sim.mvmsize;
-    if(neach<=0){
+    int neach=mvmsize;//testing parms->sim.mvmsize;
+    if(neach<=0){//scan different sizes.
 	static int neach0=10;
 	neach=(neach0+=10);
     }
     if(neach>ngtot) neach=ngtot;
     TIC;double tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
-    cmd[1]=0;
-    cmd[2]=neach;
+    cmd[1]=0;//NGPU
+    cmd[2]=neach;//Number of grads each time.
     WRITE_CMD(cmd);
-    /*for(int i=0; i<ngtot; i+=neach){
+#if 1 //write set of data each time.
+    for(int i=0; i<ngtot; i+=neach){
 	WRITE_ARR(gall+i, MIN(neach, ngtot-i), GTYPE);
-	}*/
+    }
+#else //write all the data once
     WRITE_ARR(gall, ngtot, GTYPE);
+#endif
     double tim_gsend=toc3;
+    //Read computed DM command
     READ_ARR(dmall, natot, ATYPE);
     double tim_aread=toc3;
+    //Copy DM command to the right place.
     for(int idm=0; idm<dm->nx; idm++){
 	if(dm->p[idm]){
 	    int nact=dm->p[idm]->nx;

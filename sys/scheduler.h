@@ -73,8 +73,8 @@ enum{
 };
 /*command from scheduler etc to maos*/
 enum{
-    MAOS_SERVER=1,/*tell maos to act as server*/
-    MAOS_DRAW=10,/*tell maos to start drawing*/
+    MAOS_SERVER=1,/*not used*/
+    MAOS_DRAW=10, /*tell maos to start drawing with the received fd*/
     MAOS_ASSIGN_WFS=100,
     MAOS_ASSIGN_EVL,/*101*/
     MAOS_ASSIGN_RECON,/*102*/

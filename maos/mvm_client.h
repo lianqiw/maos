@@ -47,8 +47,8 @@ enum{
     GPU_MVM_A,
 };
 
-void mvm_client_init(const char *host, int port);
-void mvm_client_send_m(const PARMS_T *parms, dmat *mvm);
-void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad);
+void mvm_client_init(const char *host, int port, dmat *mvm, int ngpu);
+void mvm_client_send_m(dmat *mvm, int ngpu);
+void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad);
 void mvm_client_close(void);
 #endif

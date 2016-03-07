@@ -78,8 +78,7 @@ typedef struct mvm_g_mul_t{
 }mvm_t;
 mvm_t *mvm_data=NULL;
 
-int mp_count;/*number multi-processors on each GPU*/
-int mp_core;/*number of cuda cores per multi-processor*/
+static int mp_count;/*number multi-processors on each GPU*/
 
 int ndone;
 int nleft;
@@ -210,7 +209,6 @@ static int respond(int sock){
     switch(cmd[0]){
     case GPU_MVM_M:{/*maos sends M matrix*/
 	int ngpu=cmd[1];
-
 	int nact=cmd[2];
 	int ngtot=cmd[3];
 	info("Receiving mvm %dx%d\n", nact, ngtot);
@@ -336,6 +334,7 @@ static void* gpu_mvm_gpu_init(void* A){
     struct cudaDeviceProp prop;
     DO(cudaGetDeviceProperties(&prop, 0));
     mp_count=prop.multiProcessorCount;
+    /*
     switch(prop.major){
     case 1:
 	mp_core=8;
@@ -355,7 +354,7 @@ static void* gpu_mvm_gpu_init(void* A){
     }
     default:
 	error("Please fill on this");
-    }
+    }*/
     /*Creating stream for the first time is slow. So do it here to avoid latency
       later. Do not init stream_t in multithread. It is slower.*/
     TIC;tic;

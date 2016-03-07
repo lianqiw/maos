@@ -50,9 +50,9 @@ int stread(int sfd, void *p, size_t len){
     long left=len;
     do{
 	if(is_sock){
-	    nread=read(sfd, p, left);
-	}else{
 	    nread=recv(sfd, p, left, MSG_WAITALL);
+	}else{
+	    nread=read(sfd, p, left);
 	}
 	p=(char*)p+nread; left-=nread;
     }while(nread>0 && left>0);

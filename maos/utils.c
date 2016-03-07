@@ -267,8 +267,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
     if(!host && !arg->detach){//forground running.
 	arg->force=1;
     }else if(getenv("MAOS_DIRECT_LAUNCH")){
-	/*lanched through scheduler to run locally. We are already detached, so
-	  don't daemonize again.*/
+	/*being lanuched by scheduler. We are already detached, so don't daemonize again.*/
 	arg->detach=0;
 	arg->force=0;
 	detached=1;
@@ -288,6 +287,8 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	}else{
 	    exit(EXIT_SUCCESS);
 	}
+#else
+	arg->force=1;//launch directly when scheduler is disabled.
 #endif
     }
     free(host);

@@ -2368,13 +2368,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	parms->save.gcovp=parms->sim.end;
     }
 
-    if(parms->sim.mvmport){
-	if(!parms->sim.mvmport){
-	    error("sim.mvmport cannot be zero.\n");
-	}
-	mvm_client_init(parms->sim.mvmhost, parms->sim.mvmport);
-    }
-
     if(parms->dbg.cmpgpu){
 	warning("Make cpu code follows gpu implementations.\n");
 	parms->tomo.square=1;

@@ -564,11 +564,11 @@ static int respond(int sock){
 	    monitor_send(irun,NULL);
 	}
 	break;
-    case CMD_FINISH://2
+    case CMD_FINISH://2: Called by MAOS when job finishes.
 	running_remove(pid,S_FINISH);
 	return -1;
 	break;
-    case CMD_STATUS://3; by MAOS
+    case CMD_STATUS://3: Called by MAOS to report status at every time step
 	{
 	    RUN_T *irun=running_get(pid);
 	    if(!irun){/*started before scheduler is relaunched. */
@@ -583,11 +583,11 @@ static int respond(int sock){
 	    monitor_send(irun,NULL);
 	}
 	break;
-    case CMD_CRASH://4;by MAOS
+    case CMD_CRASH://4: called by MAOS when job crashes
 	running_remove(pid,S_CRASH);
 	return -1;
 	break;
-    case CMD_MONITOR://5; by Monitor
+    case CMD_MONITOR://5: Called by Monitor when it connects
 	{
 	    MONITOR_T *tmp=monitor_add(sock);
 	    if(pid>=0x8){/*check monitor version. */
@@ -596,7 +596,7 @@ static int respond(int sock){
 	    info2("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
-    case CMD_PATH://6; by MAOS
+    case CMD_PATH://6: Called by MAOS to report the PATH.
 	{
 	    RUN_T *irun=running_add(pid, sock);
 	    free(irun->path0);
@@ -610,7 +610,7 @@ static int respond(int sock){
 	    monitor_send(irun,irun->path);
 	}
 	break;
-    case CMD_KILL://7; by Monitor
+    case CMD_KILL://7: Called by Monitor to kill a task.
 	{
 	    RUN_T *irun=running_get(pid);
 	    if(irun){
@@ -626,7 +626,7 @@ static int respond(int sock){
 	    }
 	}
 	break;
-    case CMD_TRACE://8; for backtrace
+    case CMD_TRACE://8: Called by MAOS to request a backtrace
 	{
 	    char *buf=NULL, out[10000];
 	    if(streadstr(sock, &buf)
@@ -640,7 +640,7 @@ static int respond(int sock){
 	break;
     case CMD_UNUSED0://9: not used
 	break;
-    case CMD_SOCK://10:Called by draw() to cache a sock.
+    case CMD_SOCK://10:Called by draw() to cache a fd. Vaoid over UNIX socket only.
 	{
 	    typedef struct SOCKID_T{
 		int id;
@@ -714,7 +714,7 @@ static int respond(int sock){
 	    }
 	}
 	break;
-    case CMD_REMOVE://11; by Monitor*/
+    case CMD_REMOVE://11: Called by Monitor to remove a finished job fron the list*/
 	{
 	    RUN_T*irun=runned_get(pid);
 	    if(irun){
@@ -724,7 +724,7 @@ static int respond(int sock){
 	    }
 	}
 	break;	  
-    case CMD_DISPLAY://12; called by remote display to talk to maos*/
+    case CMD_DISPLAY://12: called by monitor to enable maos to draw.*/
 	{
 	    RUN_T *irun=running_get(pid);
 	    int cmd2[2]={MAOS_DRAW, 0};
@@ -739,16 +739,16 @@ static int respond(int sock){
 	break;
     case CMD_UNUSED1://13;not used
 	break;
-    case CMD_UNUSED2://14;intended for monitor
+    case CMD_UNUSED2://14;not used
 	break;
-    case CMD_RESTART://15;intended for maos
+    case CMD_RESTART://15: Called by maos to restart a job
 	runned_restart(pid);
 	break;
-    case CMD_UNUSED3://16;
+    case CMD_UNUSED3://16;not used
 	break;
-    case CMD_UNUSED4://17;only used in monitor
+    case CMD_UNUSED4://17;not used
 	break;
-    case CMD_LAUNCH://18; called from another machine to start a job in this machine
+    case CMD_LAUNCH://18: called from maos another machine to start a job in this machine
 	{
 	char *exename=NULL;
 	char *execwd=NULL;
@@ -769,32 +769,13 @@ static int respond(int sock){
 		execmd=stradd(execwd, "/", execmd, NULL);
 		free(tmp);
 	    }
-	    if(strstr(execmd, "--server")){
-		/*launch immediately so we can establish a connection from client*/
+	    if(strstr(execmd, "--server")){//Launch immediately in server mode
 		int pidn=-1;
 		if((pidn=launch_exe(exename, execmd))<0){
 		    warning("launch_exe %s failed\n", exename);
 		    ret=-1;
-		}else{
-		    info("job launched as %d\n", pidn);
-		    RUN_T *irun=NULL;
-		    int count=0;
-		    while(!(irun=running_get(pidn)) && !kill(pidn,0) && count<10){
-			sleep(1);
-		    }
-		    if(irun){//job is started
-			int cmd2[2]={MAOS_SERVER, 0};
-			if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
-			    ret=-1;
-			}else{
-			    ret=0;
-			}
-		    }else{//job is not started due to lacking resource(?)
-			kill(pidn, SIGTERM);
-			ret=-1;
-		    }
 		}
-	    }else{
+	    }else{//Queue in jobs.
 		new_job(exename, execmd);
 		ret=0;
 	    }
@@ -829,7 +810,8 @@ static int respond(int sock){
     return ret;/*don't close the port yet. may be reused by the client. */
 }
 /*
-  handle requests from web browser via websockets
+  handle requests from web browser via websockets. Browser sends request over
+  text messages with fields separated by '&'.
 */
 void scheduler_handle_ws(char *in, size_t len){
     char *sep=strchr(in, '&');
@@ -935,7 +917,7 @@ static void monitor_remove(int sock){
 }
 
 /**
-   Convert RUN_T to string for websocket
+   Convert RUN_T to string for websocket.
 */
 #if HAS_LWS
 void html_convert(RUN_T *irun, char *path, char **dest, size_t *plen, long prepad, long postpad){

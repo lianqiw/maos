@@ -84,7 +84,8 @@ SIM_T *maos_iseed(int iseed){
     }
 #endif
     return simu;
-} 
+}
+
 void maos_isim(int isim){
     const PARMS_T *parms=global->parms;
     RECON_T *recon=global->recon;

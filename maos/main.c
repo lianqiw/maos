@@ -20,73 +20,12 @@
 #include "sim_utils.h"
 #include "maos.h"
 #include "version.h"
-int maos_server_fd=-1;
-
-static void maos_server(PARMS_T *parms){
-    if(maos_server_fd<0){
-	error("Invalid maos_server_fd\n");
-	EXIT;
-    }
-    warning("maos running in server mode\n");
-    int msglen;
-    int sock=maos_server_fd;
-    while(!streadint(sock, &msglen)){
-	int ret=0;/*acknowledgement of the command. 0: accepted. otherwise: not understood*/
-	int *msg=alloca(sizeof(int)*msglen);
-	
-	if(streadintarr(sock, msg, msglen)){
-	    break;
-	}
-	switch(msg[0]){
-	case MAOS_ASSIGN_WFS:{/*Specifies which WFS to be handled*/
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		parms->wfs[iwfs].sock=msg[iwfs+1]?-1:0;
-	    }
-	}break;
-	case MAOS_ASSIGN_EVL:{/*Specifies which EVL to be handled*/
-	    if(!parms->evl.sock){
-		parms->evl.sock=calloc(parms->evl.nevl, sizeof(int));
-	    }
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		parms->evl.sock->p[ievl]=msg[ievl+1]?-1:0;
-	    }
-	}break;
-	case MAOS_ASSIGN_RECON:{/*Specifies whether recon should be handled*/
-	    parms->recon.sock=msg[1]?-1:0;
-	}break;
-	case MAOS_ASSIGN_DONE:{/*Now start configuration*/
-	    error("Not completed\n");
-	}break;
-	default:
-	    ret=1;
-	}/*switch*/
-
-	if(stwriteint(sock, ret)){
-	    break;
-	}
-    }
-    warning("maos_server exited\n");
-    //todo:listening on socket for commands.
-    //maos client mode: start maos server mode via scheduler.
-}
 static void maos_daemon(int sock){
-    //info2("maos_daemon is listening at %d\n", sock);
     thread_block_signal();
     int cmd[2];
     while(!streadintarr(sock, cmd, 2)){
-	//info2("maos_daemon got %d at %d\n", cmd[0], sock);
 	switch(cmd[0]){
-	case MAOS_SERVER:
-	    {
-		if(streadfd(sock, &maos_server_fd)){
-		    warning("unable to read fd from %d\n", sock);
-		    maos_server_fd=-1;
-		    EXIT;
-		}else{
-		    warning("got fd=%d\n", maos_server_fd);
-		}
-	    }break;
-	case MAOS_DRAW:
+	case MAOS_DRAW://Starting draw to received fd.
 	    {
 		int fd;
 		if(streadfd(sock, &fd)){
@@ -99,7 +38,7 @@ static void maos_daemon(int sock){
 		PARMS_T *parms=(PARMS_T*)global->parms;//cast away constness
 		parms->plot.setup=1;
 		parms->plot.run=1;
-		if(global->setupdone){//already plotted.
+		if(global->setupdone){//setup is already finished. request plot setup.
 		    plot_setup(global->parms, global->powfs, global->aper, global->recon);
 		}
 	    }break;
@@ -108,7 +47,6 @@ static void maos_daemon(int sock){
 	    break;
 	}
     }
-    //info2("maos_daemon quit\n");
 }
 void maos_version(void){
     info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
@@ -227,20 +165,11 @@ int main(int argc, const char *argv[]){
     }
     thread_new((thread_fun)scheduler_listen, maos_daemon);
     setup_parms_gpu(parms, arg->gpus, arg->ngpu);
-    if(arg->server){
-	while(maos_server_fd<0){
-	    warning("Waiting for fd\n");
-	    sleep(1);
-	}
-	maos_server(parms);
-	EXIT;
-    }
     free(scmd);
     free(arg->dirout);
     free(arg->gpus);
     free(arg);
-
-    /*do not use prallel single in maos(). It causes blas to run single threaded
+    /* do not use prallel single in maos(). It causes blas to run single threaded
      * during preparation. Selective enable parallel for certain setup functions
      * that doesn't use blas*/
     maos(parms);
