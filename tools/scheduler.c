@@ -189,7 +189,7 @@ static void runned_remove(int pid){
 	}
     }
     if(!removed){
-	warning_time("runned_remove: Record %s:%d not found!\n",hosts[hid],pid);
+	warning_time("runned_remove: Record %s:%d not found!\n",HOST,pid);
     }
 }
 static RUN_T *runned_get(int pid){
@@ -229,6 +229,7 @@ static void runned_restart(int pid){
 	    //update status
 	    irun->status.info=S_QUEUED;
 	    irun->status.done=0;
+	    //pidnew changed to be different from pid to indicate restarted job.
 	    irun->pidnew=--counter;
 	    monitor_send(irun, NULL);
 	    irun->pid=irun->pidnew;//sync after notify monitor.
@@ -350,7 +351,7 @@ static void running_remove(int pid, int status){
 		FILE *fp=fopen(scheduler_fnlog,"a");
 		if(fp){
 		    fprintf(fp,"[%s] %s %5d %8s '%s'\n",
-			    myasctime(),hosts[hid],pid,statusstr,irun->path);
+			    myasctime(),HOST,pid,statusstr,irun->path);
 		    fclose(fp);
 		}
 	    }
@@ -358,7 +359,7 @@ static void running_remove(int pid, int status){
 	}
     }
     if(!irun){
-	warning_time("running_remove%s:%d not found\n",hosts[hid],pid);
+	warning_time("running_remove%s:%d not found\n",HOST,pid);
     }
 }
 
@@ -445,7 +446,7 @@ static void process_queue(void){
 		monitor_send(irun,NULL);
 		FILE *fp=fopen(scheduler_fnlog,"a");
 		if(fp){
-		    fprintf(fp,"[%s] %s %5d  started '%s'\n", myasctime(),hosts[hid],irun->pid,irun->path);
+		    fprintf(fp,"[%s] %s %5d  started '%s'\n", myasctime(),HOST,irun->pid,irun->path);
 		    fclose(fp);
 		}else{
 		    warning("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
@@ -507,7 +508,10 @@ static void new_job(char *exename, char *execmd){
     all_done=0;
 }
 /**
-   respond to client requests
+   respond to client requests. The fixed header is int[2] for opcode and
+   pid. Optional data follows based on opcode. The disadvanced of this is that
+   new commands with additional payload cannot be easily introduced in the
+   scheduler().
 */
 static int respond(int sock){
     /*
@@ -716,7 +720,7 @@ static int respond(int sock){
 	    if(irun){
 		runned_remove(pid);
 	    }else{
-		warning_time("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+		warning_time("CMD_REMOVE: %s:%d not found\n",HOST,pid);
 	    }
 	}
 	break;	  
@@ -848,7 +852,7 @@ void scheduler_handle_ws(char *in, size_t len){
 	if(irun){
 	    runned_remove(pid);
 	}else{
-	    warning_time("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+	    warning_time("CMD_REMOVE: %s:%d not found\n",HOST,pid);
 	}
     }else if(!strcmp(sep, "KILL")){
 	RUN_T *irun=running_get(pid);
@@ -988,7 +992,7 @@ void html_convert_all(l_message **head, l_message **tail, long prepad, long post
 #endif
 static int monitor_send_do(RUN_T *irun, char *path, int sock){
     int cmd[3];
-    cmd[1]=irun->pidnew;//Replaces hid(useless) by new pid as of 2013-04-01.
+    cmd[1]=irun->pidnew;
     cmd[2]=irun->pid;
     if(path){/*don't do both. */
 	cmd[0]=MON_PATH;
@@ -1019,7 +1023,7 @@ static void monitor_send_load(void){
     double mem=get_usage_mem();
     int cmd[3];
     cmd[0]=MON_LOAD;
-    cmd[1]=hid;
+    cmd[1]=0;
     int memi=(int)(mem*100);
     int cpui=(int)(usage_cpu*100);
     cmd[2]=(memi & 0xFFFF) | (cpui << 16);
@@ -1040,15 +1044,6 @@ static void monitor_send_initial(MONITOR_T *ic){
     int sock;
     RUN_T *irun;
     sock=ic->sock;
-    {
-	int cmd[3];
-	cmd[0]=MON_VERSION;
-	cmd[1]=scheduler_version;
-	cmd[2]=hid;/*Fixme: sending hid to monitor is not good is hosts does not match. */
-	if(stwrite(sock,cmd,sizeof(int)*3)){
-	    return;
-	}
-    }
     for(irun=runned; irun; irun=irun->next){
 	if(monitor_send_do(irun,irun->path,sock)|| monitor_send_do(irun,NULL,sock)){
 	    monitor_remove(sock);

@@ -281,8 +281,8 @@ static __attribute__((constructor)) void init(){
     void init_process(void);
     init_process();
 #ifndef MAOS_DISABLE_SCHEDULER
-    void init_scheduler(void);
-    init_scheduler();
+    void init_hosts(void);
+    init_hosts();
 #endif
     if(not_nan(NAN)){
 	error("NAN check failed\n");

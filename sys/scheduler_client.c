@@ -17,8 +17,6 @@
 */
 /* make a client address */
 
-
-
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
@@ -95,7 +93,6 @@ uint16_t PORT=0;
 #define MAX_HOST 1024
 char* hosts[MAX_HOST];
 int nhost=0;
-int hid=0;
 static int myhostid(const char *host){
     int i;
     for(i=0; i<nhost; i++){
@@ -110,7 +107,7 @@ static int myhostid(const char *host){
 
 
 /*Initialize hosts and associate an id number */
-void init_scheduler(){
+void init_hosts(){
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
@@ -136,8 +133,7 @@ void init_scheduler(){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
 		if(strlen(line)>0 && line[0]!='#'){
-		    hosts[nhost]=strdup0(line);
-		    nhost++;
+		    hosts[nhost++]=strdup0(line);
 		    if(nhost>=MAX_HOST-1){
 			break;
 		    }
@@ -148,11 +144,8 @@ void init_scheduler(){
 	    error("failed to open file %s\n",fn);
 	}
     }
-    hid=myhostid(HOST);
-    if(hid==-1){
-	hosts[nhost]=strdup0("localhost");/*use local machine */
-	hid=nhost;
-	nhost++;
+    if(myhostid(HOST)==-1){
+	hosts[nhost++]=strdup0("localhost");/*use local machine */
     }
 }
 

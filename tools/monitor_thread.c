@@ -181,6 +181,7 @@ static void add_host(gpointer data){
 //respond to scheduler
 static int respond(int sock){
     int cmd[3];
+    //read fixed length header info.
     if(streadintarr(sock, cmd, 3)){
 	return -1;//failed
     }
