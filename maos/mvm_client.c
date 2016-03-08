@@ -116,7 +116,7 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
     cmd[1]=0;//NGPU
     cmd[2]=neach;//Number of grads each time.
     WRITE_CMD(cmd);
-#if 1 //write set of data each time.
+#if 0 //write set of data each time.
     for(int i=0; i<ngtot; i+=neach){
 	WRITE_ARR(gall+i, MIN(neach, ngtot-i), GTYPE);
     }
@@ -145,7 +145,10 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 }
 
 void mvm_client_close(void){
-    shutdown(sock_mvm, SHUT_RDWR);
-    sleep(1);
     close(sock_mvm);
+}
+static __attribute__((destructor))void deinit(){
+    if(sock_mvm!=-1){
+	close(sock_mvm);
+    }
 }

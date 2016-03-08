@@ -111,9 +111,7 @@ static void mvm_thread(void* ithread0){
     while(1){
 	switch(cmds[ithread]){
 	case 0:
-	    /*info2("thread %d sleeped at %.1f\n", ithread, (myclockd()-tic_start)*1e6);
-	    usleep(1);
-	    info2("thread %d wake up at %.1f\n", ithread, (myclockd()-tic_start)*1e6);*/
+	    usleep(10);
 	    break;
 	case CMD_MCOPY:{
 	    if(ithread<NGPU){
@@ -203,7 +201,7 @@ double tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, 
 static int respond(int sock){
     TIC;tic;
     sock_mvm=sock;
-    int cmd[N_CMD];
+    int cmd[N_CMD]={0};
     READ_CMD(cmd);
     static double tim_gfirst=0;
     switch(cmd[0]){
@@ -244,13 +242,11 @@ static int respond(int sock){
 	    threads=(pthread_t*)calloc(NCPU, sizeof(pthread_t));
 	    cmds=(int*)calloc(NCPU, sizeof(int));
 	    for(long i=0; i<NCPU; i++){
+		cmds[i]=CMD_MCOPY;
 		pthread_create(threads+i, NULL, (void*(*)(void*))mvm_thread, (void*)i);
-		cmds[i]=0;
 	    }
 	}
-	for(int i=0; i<NGPU; i++){
-	    cmds[i]=CMD_MCOPY;
-	}
+	//Wait for all copying to be finish.
 	for(int i=0; i<NGPU; i++){
 	    while(cmds[i]==CMD_MCOPY){
 		usleep(1);
@@ -271,14 +267,15 @@ static int respond(int sock){
 	    int k=MIN(ngeach, ngtot-icol);
 	    stread(sock_mvm, mvm_data->g+icol, k*sizeof(GTYPE));
 	    tim_gsend+=toc3;tic;
-	    if(cmd[2]<1800){//part of grads
+	    if(cmd[2]<1800){//Use next available GPU to handle this task.
 		int igpu=gpu_next();
-		while(cmds[igpu]){
+		while(cmds[igpu]){//wait until last job is finished.
+		    usleep(10);
 		}
 		mvm_data->icols[igpu]=icol;
 		mvm_data->kcols[igpu]=k;
-		cmds[igpu]=CMD_GMUL;
-	    }else{ //Send to different gpus
+		cmds[igpu]=CMD_GMUL;//Notify new job.
+	    }else{ //Let each GPU figure out which part of gradients to copy and compute.
 		mvm_data->icol=icol;
 		mvm_data->k=k;
 		//CALL_THREAD(mvm_data->mvm_g_mul, NGPU, 0);
@@ -295,23 +292,25 @@ static int respond(int sock){
 	}
 	for(int i=0; i<NGPU; i++){
 	    while(cmds[i]){
+		usleep(10);
 	    }
+	    //Copy partial DM commands back.
 	    cmds[i]=CMD_DMCP;
 	}
 	for(int i=0; i<NGPU; i++){
 	    while(cmds[i]==CMD_DMCP){
-		usleep(1);
+		usleep(10);
 	    }
 	}
-	//CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
 	tim_dmcp+=toc3;tic;
 	tic_save=tic;
+	//Ask each thread to sum the DM vector.
 	for(int i=0; i<NCPU; i++){
 	    cmds[i]=CMD_DMADD;
 	}
 	for(int i=0; i<NCPU; i++){
 	    while(cmds[i]==CMD_DMADD){
-		usleep(1);
+		usleep(10);
 	    }
 	}
 	tim_dmsum+=toc3;tic;
@@ -327,7 +326,8 @@ static int respond(int sock){
     }
     return 0;
 }
-static void* gpu_mvm_gpu_init(){
+static void* gpu_mvm_gpu_init(void *A){
+    (void)A;
     gpu_init(NULL, 0, 0);
     DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
     struct cudaDeviceProp prop;
@@ -367,8 +367,10 @@ static void* gpu_mvm_gpu_init(){
     return NULL;
 }
 void gpu_mvm_daemon(int port){
+    /* GPU initialization may take a few seconds to finish. Launch in a separate
+     * thread and join before using GPU.*/
+    pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
     info2("Starting MVM daemon at port %d\n", port);
-    gpu_mvm_gpu_init();
     redirect();
     listen_port(port, NULL, respond, -1, NULL, 1);
 }
