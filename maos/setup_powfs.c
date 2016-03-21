@@ -260,7 +260,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
-	if(fabs(powfs[ipowfs].saloc->dx-dsa)>0.01*(powfs[ipowfs].saloc->dx+dsa)){
+	if(fabs(powfs[ipowfs].saloc->dx-dsa)>1e-6*fabs(dsa)){
 	    error("loaded saloc has dx=%g, while powfs.dsa=%g\n",
 		  powfs[ipowfs].saloc->dx, dsa);
 	}

@@ -71,6 +71,10 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(!zfexist(fn)) error("%s doesn't exist\n",fn);
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
+	if(fabs(aper->locs->dx-parms->evl.dx)>1e-7*parms->evl.dx){
+	    warning("Loaded locs has unexpected sampling of %g, should be %g\n", 
+		    aper->locs->dx, parms->evl.dx);
+	}
     }else{/* locs act as a pupil mask. no points outside will be evaluated. */
 	map_t *smap=0;
 	create_metapupil(&smap,0,0,parms->dirs,parms->aper.d,0,parms->evl.dx,parms->evl.dx,0,0.5,0,0,0,0);

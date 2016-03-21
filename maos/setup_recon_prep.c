@@ -37,10 +37,9 @@ static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
     if(parms->load.ploc){/*optionally load ploc from the file. see dbg.conf */
-	char *fn=parms->load.ploc;
-	warning("Loading ploc from %s\n",fn);
-	recon->ploc=locread("%s",fn);
-	if(fabs(recon->ploc->dx-dxr)>dxr*0.01){
+	warning("Loading ploc from %s\n",parms->load.ploc);
+	recon->ploc=locread("%s", parms->load.ploc);
+	if(fabs(recon->ploc->dx-dxr)>dxr*1e-6){
 	    warning("Loaded ploc has unexpected sampling of %g, should be %g\n",
 		    recon->ploc->dx, dxr);
 	}
@@ -105,7 +104,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
-	if(fabs(recon->floc->dx-dxr)>dxr*0.01){
+	if(fabs(recon->floc->dx-dxr)>dxr*1e-6){
 	    warning("Loaded floc has unexpected sampling of %g, should be %g\n", 
 		    recon->floc->dx, dxr);
 	}
