@@ -102,7 +102,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 	switch(cmd){
 	case DRAW_FIGFN:
 	    {
-		char *fig, *fn;
+		char *fig=0, *fn=0;
 		streadstr(sock_draw, &fig);
 		streadstr(sock_draw, &fn);
 		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
@@ -322,7 +322,7 @@ static int check_figfn(int ifd,  const char *fig, const char *fn, int add){
 	found=list_search(&child->child, NULL, fn, add);
     }
     char **figfn=sock_draws[ifd].figfn;
-    return !sock_draws[ifd].pause && (!draw_single || !found || (!strcmp(figfn[0], fig) && !strcmp(figfn[1], fn)));
+    return !sock_draws[ifd].pause && (!draw_single || !found || (!mystrcmp(figfn[0], fig) && !mystrcmp(figfn[1], fn)));
 }
 /**
    Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.

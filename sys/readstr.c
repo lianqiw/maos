@@ -39,6 +39,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	if(len) maxcount=len;
 	*res=calloc(maxcount,sizeof(char*));
     }
+    if(!sdata) return count;
     const char *sdataend=sdata+strlen(sdata)-1;
     const char *sdata2=sdata;
     if(sdata[0]=='['){

@@ -2154,12 +2154,12 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    }
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    if(mindsa<parms->dm[idm].dx){
+	    if(parms->dm[idm].dx<mindsa){
 		mindsa=parms->dm[idm].dx;
 	    }
 	}
 	for(int imoao=0; imoao<parms->nmoao; imoao++){
-	    if(mindsa<parms->moao[imoao].dx){
+	    if(parms->moao[imoao].dx<mindsa){
 		mindsa=parms->moao[imoao].dx;
 	    }
 	}
