@@ -891,7 +891,7 @@ if test ! -f "${srcdir}/version.h" ;then
     (
 	cd ${srcdir}
 	if which git >/dev/null 2>&1 ;then
-	    echo static char *GIT_VERSION=\"$(git describe)\"\; >version.h
+	    echo static char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
 	else
 	    echo static char *GIT_VERSION=\"\"\; >version.h
 	fi
