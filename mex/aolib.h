@@ -34,7 +34,8 @@ dmat *psd_vibid(const dmat *psdin);
 dmat* psd2time(const dmat *psdin, rand_t *seed, double dt, int nstepin);
 dmat *psdt2s(const dmat *psdt, double vmean);
 dmat *psds2t(const dmat *psdt, double vmean);
-
+dmat *psd1d(const dmat *v, long nseg);
+dmat *psd1dt(const dmat *v, long nseg, double dt);
 dsp * mkh(loc_t *locin, loc_t *locout, double displacex, double displacey,double scale);
 dsp * mkh_cubic(loc_t *locin, loc_t *locout, double displacex, double displacey,double scale, double cubic_iac);
 void dsvd_pow(dmat *A, double power, double thres);

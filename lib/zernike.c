@@ -103,6 +103,9 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     }
     int cmod=0;
     for(int ir=rmin; ir<=rmax; ir++){
+	if(rmax > 10){
+	    info2("Zernike: %d of %d\n", ir, rmax);
+	}
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
 	    if(flag>0 && im!=0) continue;//we want radial only
@@ -110,6 +113,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 	    if(im==0){/*Radial*/
 		double coeff=sqrt(ir+1.);
 		double *restrict pmod=opd->p+nloc*cmod;
+#pragma omp parallel for
 		for(long iloc=0; iloc<nloc; iloc++){
 		    pmod[iloc]=Rnm->p[iloc]*coeff;
 		}
@@ -125,6 +129,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 		    pmodc=opd->p+nloc*cmod;
 		    pmods=opd->p+nloc*(cmod+1);
 		}
+#pragma omp parallel for
 		for(long iloc=0; iloc<nloc; iloc++){
 		    pmods[iloc]=Rnm->p[iloc]*coeff*sin(im*locs->p[iloc]);
 		    pmodc[iloc]=Rnm->p[iloc]*coeff*cos(im*locs->p[iloc]);

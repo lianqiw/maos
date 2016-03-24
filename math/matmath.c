@@ -748,18 +748,22 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     memset(nonvalid, 0, sizeof(int)*nmod);
     PMAT(Mod,pMod);
     for(int imod=0; imod<nmod; imod++){
+	if(nmod>10){
+	    info2("Gramschmidt: %d of %d\n", imod, nmod);
+	}
 	if(imod>0){/*orthogonalize */
 	    T cross;
 	    /*compute dot product. */
 	    for(int jmod=0; jmod<imod; jmod++){
 		if(nonvalid[jmod]) continue;
 		cross=-DOT(pMod[imod],pMod[jmod],amp,nx)/wtsum;
+#pragma omp parallel for
 		for(long ix=0; ix<nx; ix++){
 		    pMod[imod][ix]+=cross*pMod[jmod][ix];
 		}
 	    }
 	}
-	
+	/*normalize*/
 	R norm=SQRT(REAL(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum));
 	if(FABS(norm)>1.e-15){
 	    norm=1./norm;

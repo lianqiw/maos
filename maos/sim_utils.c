@@ -406,7 +406,7 @@ static void init_simu_evl(SIM_T *simu){
 	simu->timing=dnew_mmap(5, nsim, NULL, "Timing_%d.bin", seed);
     }
     {/*MMAP the main result file */
-	long nnx[4]={nmod,nmod,nmod,nmod};
+	long nnx[4]={nmod,nmod,nmod,3};
 	long nny[4]={nsim,nsim,nsim,nsim};
 	nnx[1]=0;//deprecated
 	nny[1]=0;

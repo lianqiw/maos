@@ -107,12 +107,10 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 	if(nmod==3){							\
 	    calc_ngsmod_dot(pclep[isim],pclmp[isim], pcleNGSmp[isim],	\
 			    parms,recon,aper, iopdevl->p,ievl);		\
-	}else if(nmod==5 ||nmod==6){/*more modes are wanted. */		\
+	}else{/*more modes are wanted. */				\
 	    calc_ngsmod_dot(NULL,NULL, pcleNGSmp[isim],			\
 			    parms,recon,aper, iopdevl->p,ievl);		\
 	    loc_calc_mod(pclep[isim],pclmp[isim], aper->mod,aper->amp->p,iopdevl->p); \
-	}else{								\
-	    error("Not implemented\n");					\
 	}								\
     }else{/*for integrated tomography. */				\
 	if(nmod==3){							\

@@ -85,9 +85,9 @@ long gpu_get_mem(void){
     return (long)fr;
 }
 /**
-   Get available memory.
+   Get available memory/maximum memory ratio. Returns 0-100.
 */
-static long gpu_get_free_mem(int igpu){
+static long gpu_get_free_mem_ratio(int igpu, long minimum){
     size_t fr=0, tot=0;
     int ans;
     if((ans=cudaMemGetInfo(&fr, &tot))){
@@ -95,7 +95,11 @@ static long gpu_get_free_mem(int igpu){
     }
     info2("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
 	  igpu, fr*9.3e-10, tot*9.3e-10);
-    return (long)fr;
+    if((long)fr>minimum){
+	return (long)(fr*100./tot);
+    }else{
+	return 0;
+    }
 }
 static int cmp_long2_descend(const long *a, const long *b){
     if(b[1]>a[1]){
@@ -236,8 +240,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		gpu_info[ig][0]=ig;
 		if(!cudaSetDevice(ig)){
 		    //this allocates context and create a CPU thread for this GPU.
-		    gpu_info[ig][1]=gpu_get_free_mem(ig);
-		    if(gpu_info[ig][1]>=mem_minimum){
+		    gpu_info[ig][1]=gpu_get_free_mem_ratio(ig, mem_minimum);
+		    if(gpu_info[ig][1]>0){
 			gpu_valid_count++;
 		    }
 		}
@@ -247,9 +251,9 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    /*sort so that gpus with higest memory is in the front.*/
 	    qsort(gpu_info, MAXGPU, sizeof(long)*2, (int(*)(const void*, const void *))cmp_long2_descend);
 	    for(int i=0, ig=0; i<ngpu; i++, ig++){//ig: cuda index
-		if(ig<MAXGPU && gpu_info[ig][1]>=mem_minimum){
+		if(ig<MAXGPU && gpu_info[ig][1]>0){
 		    GPUS[NGPU++]=(int)gpu_info[ig][0];
-		}else if(ig==MAXGPU || gpu_info[ig][1]<mem_minimum){
+		}else if(ig==MAXGPU || gpu_info[ig][1]<=0){
 		    if(NGPU && repeat){
 			ig=0; //reset to beginning.
 		    }else{
@@ -346,7 +350,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
-		//info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
+		info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
 	    }
 	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;

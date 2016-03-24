@@ -233,12 +233,6 @@ static void readcfg_powfs(PARMS_T *parms){
     double *dbltmp=NULL;
     char  **strtmp=NULL;
     READ_POWFS(dbl,dsa);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dsa<0){
-	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
-	}
-	parms->powfs[ipowfs].order=round(parms->aper.d/parms->powfs[ipowfs].dsa);
-    }
     READ_POWFS(int,nwvl);
     dmat* wvllist=readcfg_dmat("powfs.wvl");
     dmat* wvlwts=readcfg_dmat("powfs.wvlwts");
@@ -1338,6 +1332,19 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	parms->npowfs=0;
 	free(parms->wfs); parms->wfs=NULL;
 	parms->nwfs=0;
+    }
+    //Check powfs.dsa
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].dsa<0){
+	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
+	}else if(parms->powfs[ipowfs].dsa==0){
+	    if(parms->ndm){
+		parms->powfs[ipowfs].dsa=parms->dm[0].dx;
+	    }else{
+		parms->powfs[ipowfs].dsa=0.5;
+	    }
+	}
+	parms->powfs[ipowfs].order=round(parms->aper.d/parms->powfs[ipowfs].dsa);
     }
     /*link wfs with powfs*/
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
