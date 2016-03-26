@@ -1612,6 +1612,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	double secz=1./cosz;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ht->p[ips] *= secz;/*scale atmospheric height */
+	    parms->atm.ws->p[ips] *= cosz;/*Wind velocity reduced due to line of sight*/
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
