@@ -43,11 +43,9 @@ config/maos/dm_none.conf\
 config/maos/dm_dual.conf\
 config/maos/dm_single.conf\
 config/maos/dm_triple.conf\
-config/maos/fov_iris.conf\
-config/maos/fov_irms.conf\
+config/maos/evl_sq34.conf\
+config/maos/fit_cir48.conf\
 config/maos/fov_oa.conf\
-config/maos/fov_pmos.conf\
-config/maos/fov_wirc.conf\
 config/maos/llt_CL.conf\
 config/maos/llt_SL.conf\
 config/maos/mcao_ngs.conf\

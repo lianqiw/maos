@@ -45,4 +45,6 @@
 #include "locfft.h"
 #include "zernike.h"
 #include "misc.h"
+#define RAD2AS 2.062648062470964e+05 //radian to arcsecond
+#define RAD2MAS 2.062648062470964e+08 //radian to milli-arcsecond
 #endif

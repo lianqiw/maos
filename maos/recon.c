@@ -278,7 +278,7 @@ void reconstruct(SIM_T *simu){
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
 	dcell *dmout, *gradin;
-	if(parms->recon.psol){
+	if(parms->recon.psol || parms->sim.idealfit){
 	    dmout=simu->dmfit;
 	    gradin=simu->gradlastol;
 	}else{
@@ -302,10 +302,10 @@ void reconstruct(SIM_T *simu){
 		}
 	}else{
 	    switch(parms->recon.alg){
-	    case 0:
-		tomofit(simu);//tomography and fitting. 
+	    case 0://MVR
+		tomofit(simu);//tomography and fitting. output to dmfit
 		break;
-	    case 1:
+	    case 1://LSR
 		if(simu->gradlastcl){
 #if USE_CUDA
 		    if(parms->gpu.lsr){
@@ -319,7 +319,7 @@ void reconstruct(SIM_T *simu){
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
 	    }
 	}
-	if(parms->recon.psol){
+	if(parms->recon.psol || parms->sim.idealfit || !parms->sim.closeloop){
 	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 	    //form error signal in PSOL mode
 	    if(0){

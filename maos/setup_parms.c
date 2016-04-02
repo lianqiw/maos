@@ -400,83 +400,7 @@ static void readcfg_powfs(PARMS_T *parms){
 		powfsi->radpix=0;
 	    }
 	}
-	if(powfsi->radrot && !powfsi->radpix){
-	    powfsi->radrot=0;
-	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
-	}
-	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
-	    powfsi->mtchcpl=1;
-	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
-	}
-	double wvlmax=dmax(powfsi->wvl);
-	if(powfsi->type==0){//shwfs
-	    if(powfsi->phytypesim==-1){
-		powfsi->phytypesim=powfsi->phytype;
-	    }
-	    if(powfsi->phytypesim2==-1){
-		powfsi->phytypesim2=powfsi->phytypesim;
-	    }
-	    if(powfsi->mtchcra==-1){
-		powfsi->mtchcra=powfsi->mtchcr;
-	    }
-	    int pixpsay=powfsi->pixpsa;
-	    int pixpsax=powfsi->radpix;
-	    if(!pixpsax) pixpsax=pixpsay;
-	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
-		powfsi->mtchcr=0;
-		powfsi->mtchcra=0;
-	    }
-	    /*Senity check pixtheta*/
-	    if(powfsi->pixtheta<0){
-		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
-	    }else if(powfsi->pixtheta<1e-4){
-		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
-	    }else{
-		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
-	    }
-	}else if(powfsi->type==1){//pywfs only uses cog for the moment
-	    powfsi->phytype=powfsi->phytypesim=powfsi->phytypesim2=2;//like quad cell cog
-	    if(powfsi->phystep!=0){
-		warning("PWFS must run in physical optics mode, changed.\n");
-		powfsi->phystep=0;
-	    }
-	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
-	    //Input of modulate is in unit of wvl/D. Convert to radian
-	    powfsi->modulate*=wvlmax/parms->aper.d;
-	}
-	if(powfsi->dither && powfsi->phystep!=0){
-	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
-	    powfsi->phystep=0;
-	}else if(powfsi->phystep>0){
-	    /*round phystep to be multiple of dtrat. */
-	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
-	}
-
-	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
-	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
-	}
-	powfsi->fieldstop/=206265.;
-
-	if(powfsi->dither){
-	    parms->dither=1;
-	    if(powfsi->dither==1){//tip/tilt/arcsec->radian
-		powfsi->dither_amp/=206265.;
-	    }else{//zernike modes. micron-->meter
-		powfsi->dither_amp/=1e6;
-	    }
-	    //Convert all rate in unit of WFS frame rate
-	    //pllrat was already in WFS frame rate.
-	    powfsi->dither_ograt*=powfsi->dither_pllrat;
-	    
-	    powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
-	    //Convert all in simulation rate (sim.dt).
-	    powfsi->dither_pllskip*=powfsi->dtrat;
-	    powfsi->dither_ogskip*=powfsi->dtrat;
-	    if(powfsi->dither_ograt<=0 || powfsi->dither_pllrat<=0){
-		error("dither_ograt or _pllrat must be positive\n");
-	    }
-	}
-    }/*ipowfs */
+    }
     free(inttmp);
     free(dbltmp);
     free(strtmp);
@@ -1346,6 +1270,85 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	parms->powfs[ipowfs].order=round(parms->aper.d/parms->powfs[ipowfs].dsa);
     }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
+	if(powfsi->radrot && !powfsi->radpix){
+	    powfsi->radrot=0;
+	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
+	}
+	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
+	    powfsi->mtchcpl=1;
+	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+	}
+	double wvlmax=dmax(powfsi->wvl);
+	if(powfsi->type==0){//shwfs
+	    if(powfsi->phytypesim==-1){
+		powfsi->phytypesim=powfsi->phytype;
+	    }
+	    if(powfsi->phytypesim2==-1){
+		powfsi->phytypesim2=powfsi->phytypesim;
+	    }
+	    if(powfsi->mtchcra==-1){
+		powfsi->mtchcra=powfsi->mtchcr;
+	    }
+	    int pixpsay=powfsi->pixpsa;
+	    int pixpsax=powfsi->radpix;
+	    if(!pixpsax) pixpsax=pixpsay;
+	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
+		powfsi->mtchcr=0;
+		powfsi->mtchcra=0;
+	    }
+	    /*Convert pixtheta to radian and do senity check*/
+	    if(powfsi->pixtheta<0){//minus means ratio to lambda/dsa
+		powfsi->pixtheta=fabs(powfsi->pixtheta)*wvlmax/powfsi->dsa;
+	    }else if(powfsi->pixtheta<1e-4){
+		warning("powfs%d: pixtheta should be supplied in arcsec\n", ipowfs);
+	    }else{//input is arcsecond.
+		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
+	    }
+	}else if(powfsi->type==1){//pywfs only uses cog for the moment
+	    powfsi->phytype=powfsi->phytypesim=powfsi->phytypesim2=2;//like quad cell cog
+	    if(powfsi->phystep!=0){
+		warning("PWFS must run in physical optics mode, changed.\n");
+		powfsi->phystep=0;
+	    }
+	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
+	    //Input of modulate is in unit of wvl/D. Convert to radian
+	    powfsi->modulate*=wvlmax/parms->aper.d;
+	}
+	if(powfsi->dither && powfsi->phystep!=0){
+	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
+	    powfsi->phystep=0;
+	}else if(powfsi->phystep>0){
+	    /*round phystep to be multiple of dtrat. */
+	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
+	}
+
+	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
+	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+	}
+	powfsi->fieldstop/=206265.;
+
+	if(powfsi->dither){
+	    parms->dither=1;
+	    if(powfsi->dither==1){//tip/tilt/arcsec->radian
+		powfsi->dither_amp/=206265.;
+	    }else{//zernike modes. micron-->meter
+		powfsi->dither_amp/=1e6;
+	    }
+	    //Convert all rate in unit of WFS frame rate
+	    //pllrat was already in WFS frame rate.
+	    powfsi->dither_ograt*=powfsi->dither_pllrat;
+	    
+	    powfsi->dither_ogskip=powfsi->dither_ogskip*powfsi->dither_pllrat+powfsi->dither_pllskip;
+	    //Convert all in simulation rate (sim.dt).
+	    powfsi->dither_pllskip*=powfsi->dtrat;
+	    powfsi->dither_ogskip*=powfsi->dtrat;
+	    if(powfsi->dither_ograt<=0 || powfsi->dither_pllrat<=0){
+		error("dither_ograt or _pllrat must be positive\n");
+	    }
+	}
+    }/*ipowfs */
     /*link wfs with powfs*/
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int mwfs=parms->powfs[ipowfs].nwfs;
@@ -2019,7 +2022,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
     }
-    if(!parms->sim.closeloop){
+    if(parms->sim.idealfit==1){
+	parms->recon.psol=1;
+    }else if(!parms->sim.closeloop){
 	parms->recon.psol=0;//open loop does not need psol
     }else if(parms->recon.psol==-1){//automatic.
 	if(parms->recon.alg==0){//MV perfers psol
