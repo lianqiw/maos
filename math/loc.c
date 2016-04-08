@@ -409,6 +409,8 @@ loc_t* map2loc(map_t *map, double thres){
     loc->locx=realloc(loc->locx, sizeof(double)*count);
     loc->locy=realloc(loc->locy, sizeof(double)*count);
     loc->nloc=count;
+    loc->iac=map->iac;
+    loc->ht=map->h;
     return loc;
 }
 /**
@@ -1139,6 +1141,7 @@ loc_t *locdup(loc_t *loc){
     memcpy(res->locx,loc->locx,sizeof(double)*loc->nloc);
     memcpy(res->locy,loc->locy,sizeof(double)*loc->nloc);
     res->iac=loc->iac;
+    res->ht=loc->ht;
     return res;
 }
 /**Parse string representation of polynominal to array representation.*/

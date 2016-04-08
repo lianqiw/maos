@@ -366,15 +366,15 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
 	cell *C=*C0;
 	for(int iy=0; iy<D.ny; iy++){
 	    for(int ix=0; ix<D.nx; ix++){
-#if _OPENMP >= 200805
-#pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1)
-#endif
+/*#if _OPENMP >= 200805
+#pragma omp task firstprivate(ix,iy) if(D.nx*D.ny>1 && omp_in_parallel())
+#endif*/
 		for(int iz=0; iz<D.nz; iz++){
 		    X(cellmm)(C->p+ix+iy*D.nx, A->p[ix*D.ax+iz*D.az], B->p[iz*D.bz+iy*D.by], trans, alpha);
 		}
-#if _OPENMP >= 200805
+/*#if _OPENMP >= 200805
 #pragma omp taskwait
-#endif
+#endif*/
 	    }
 	}
 	

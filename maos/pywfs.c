@@ -32,6 +32,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs_free(powfs[ipowfs].pywfs);
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
     map_t *map=0;
+    pywfs->hs=parms->powfs[ipowfs].hs;
     pywfs->poke=parms->recon.poke;//How many meters to poke
     if(pywfs->poke>1e-5 || pywfs->poke<1e-10){
 	warning("poke=%g m is out of range\n", pywfs->poke);
@@ -570,7 +571,7 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
     int count=0;
     int nmod=mod?mod->ny:locin->nloc;
     dmat *ggd=dnew(nsa*2, nmod);
-    if(nmod && mod->nx!=locin->nloc){
+    if(mod && mod->nx!=locin->nloc){
 	error("mod->nx must equal to %ld", locin->nloc);
     }
     TIC;tic;
@@ -629,8 +630,8 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%g_%d_%g_%g_%g_%g_%g.bin", HOME, 
-	     key, pywfs->locfft->nembed->p[0], pywfs->modulate, pywfs->modulpos,
+    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g.bin", HOME, 
+	     key, pywfs->locfft->nembed->p[0], locin->nloc, pywfs->modulate, pywfs->modulpos,
 	     locin->iac, displacex, displacey, scale, pywfs->poke);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
     info2("Using G in %s\n", fn);
@@ -653,7 +654,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
 	double step=pow(10,0.25);
 	for(int ig=0; ig<gg1->nx; ig++){
 	    ((PYWFS_T*)pywfs)->poke=poke;
-	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, mod1, displacex, displacey, scale);
+	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, mod1, displacex, displacey);
 	    gg2->p[ig]=pywfs_mkg_do(pywfs, locin, mod1, displacex, displacey, scale);
 	    poke=poke*step;
 	}
@@ -670,7 +671,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
 	    info2("Generating PYWFS poke matrix\n");
 #if USE_CUDA
 	    if(global->parms->gpu.wfs){
-		gg=gpu_pywfs_mkg(pywfs, locin, mod, displacex, displacey, scale);
+		gg=gpu_pywfs_mkg(pywfs, locin, mod, displacex, displacey);
 	    }else
 #endif
 		gg=pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);

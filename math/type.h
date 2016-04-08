@@ -149,6 +149,7 @@ typedef struct loc_t{
     long   nloc;   /**< number of points*/
     double dx;     /**< Sampling along x*/
     double dy;     /**< Sampling along y*/
+    double ht;     /**< Conjugation height of the loc grid.*/
     double iac;    /**<Inter-actuator coupling. >0: use cubic influence function for ray tracing*/
     locstat_t *stat;/**<points to column statistics*/
     map_t *map;    /**< point to the map used for identifying neihboring points.*/
@@ -158,8 +159,7 @@ typedef struct loc_t{
 /**
    low left point of each subaperture.
    
-   don't change the leading 5 elements. so that pts_t can be
-   cast to loc_t
+   don't change the leading 5 elements. so that pts_t can be used as loc_t.
 */
 typedef struct pts_t{
     uint32_t id;
@@ -171,7 +171,8 @@ typedef struct pts_t{
 	double dsax;   /**<side length of subaperture*/
     };
     double dsay;   /**<side length of subaperture*/
-    double dummy;  /**<dummy. to make sure alignment with loc_t*/
+    double dummy1; /**<Place holder*/
+    double dummy2;  /**<Place holder*/
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/

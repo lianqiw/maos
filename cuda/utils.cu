@@ -157,7 +157,7 @@ void cuspmul(Real *y, cusp &A, const Real *x, int ncolvec, char trans, Real alph
 }
 
 /**
-   Convert a source loc_t to device memory.
+   Convert a source loc_t to device memory. row vector is used.
 */
 void cp2gpu(curmat &dest, const loc_t *src){
     Real2 *tmp=(Real2*)malloc(src->nloc*sizeof(Real2));

@@ -133,7 +133,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
     }
 }
 //dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm){
-dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey){
     gpu_set(cudata_t::wfsgpu[pywfs->iwfs0]);
     cuwfs_t &cuwfs=cudata->wfs[pywfs->iwfs0];
     cupowfs_t *cupowfs=cuwfs.powfs;
@@ -181,12 +181,13 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
 	CUDA_SYNC_STREAM;
 	cp2gpu(cumapin, mapinsq);
 	cuzero(phiout, stream);
-	gpu_dm2loc(phiout, culocout, cumapin, 1, 1, displacex, displacey, 0, 0, 1, stream);
+	gpu_dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, displacex, displacey, 0, 0, 1, stream);
+	//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
+	//cuwrite(phiout, "gpu_phiout_%d", imod);
 	cuzero(ints, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev, stream);
-	//cuwrite(phiout, "phiout_gpu_%d", imod);
+	//cuwrite(ints, "gpu_ints_%d", imod);
 	pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs->gain,stream);
-	//cuwrite(ints, "ints_gpu_%d", imod);
 	curadd(grad, 1, grad0, -1, stream);
 	curscale(grad, 1./poke, stream);
 	dmat *gradc=drefcols(ggd, imod, 1);

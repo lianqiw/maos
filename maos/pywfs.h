@@ -23,6 +23,7 @@
    Parameters used by Pyramid WFS
  */
 typedef struct PYWFS_T{
+    double hs;         /**<Height of guide star*/
     double poke;       /**<How much to poke for mkg*/
     double modulate;   /**<Amount of modulation in radian*/
     int modulpos;      /**<Number of positions per modulation cycle*/
