@@ -39,6 +39,7 @@ typedef struct PYWFS_T{
     dmat *saa;         /**<Subaperture area. Average is one*/
     dmat *gradoff;     /**<Gradient of a flat wavefront*/
     dmat *GTT;          /**<Response of TT mode.*/
+    dmat *pupilshift;  /**<Pupil shift. 4x2.*/
 }PYWFS_T;
 
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);

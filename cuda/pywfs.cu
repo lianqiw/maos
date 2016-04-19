@@ -120,13 +120,19 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
-		Real* pout=ints.P()+(ix+iy*2)*nsa;
+		const int ind=ix+iy*2;
+		Real shx=0, shy=0;
+		if(pywfs->pupilshift){
+		    shx=IND(pywfs->pupilshift, ind, 0)*cupowfs->saloc.Dx();
+		    shy=IND(pywfs->pupilshift, ind, 1)*cupowfs->saloc.Dy();
+		}
+		Real* pout=ints.P()+ind*nsa;
 		prop_linear<<<DIM(nsa, 256), 0, stream>>>
 		    (pout, otf, otf.Nx(), otf.Ny(), 
 		     cupowfs->saloc, cupowfs->saloc.Nloc(),
 		     1./dx2, 1./dx2, 
-		     (((ix-0.5)*ncomp2)-(-ncomp2+0.5)),
-		     (((iy-0.5)*ncomp2)-(-ncomp2+0.5)), scale);
+		     ((ix-0.5)*ncomp2)-(-ncomp2+0.5)+shx,
+		     ((iy-0.5)*ncomp2)-(-ncomp2+0.5)+shy, scale);
 	    }
 	}
 	//cuwrite(ints, "gpu_ints"); exit(0);

@@ -121,6 +121,28 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     cfftshift(nominal);
     cfft2(nominal, 1);
     cscale(nominal, 1./(nominal->nx*nominal->ny));
+    if(parms->dbg.pwfs_psx){
+	if(parms->dbg.pwfs_psx->nx!=4){
+	    error("dbg.pwfs_psx has wrong format: expected 4x1, got %ldx%ld\n",
+		  parms->dbg.pwfs_psx->nx, parms->dbg.pwfs_psx->ny);
+	}
+	if(parms->dbg.pwfs_psy->nx!=4){
+	    error("dbg.pwfs_psy has wrong format: expected 4x1, got %ldx%ld\n",
+		  parms->dbg.pwfs_psy->nx, parms->dbg.pwfs_psy->ny);
+	}
+	pywfs->pupilshift=dnew(4,2);
+	for(int i=0; i<4; i++){
+	    double tmp;
+	    tmp=IND(parms->dbg.pwfs_psx, i);
+	    IND(pywfs->pupilshift, i, 0)=tmp-round(tmp);
+	    tmp=IND(parms->dbg.pwfs_psy, i);
+	    IND(pywfs->pupilshift, i, 1)=tmp-round(tmp);
+
+	}
+	if(parms->save.setup){
+	    writebin(pywfs->pupilshift, "powfs%d_pupilshift", ipowfs);
+	}
+    }
     pywfs->si=cellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
     powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
@@ -128,10 +150,16 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
-	    pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
-				      ((ix-0.5)*dx2*ncomp2), 
-				      ((iy-0.5)*dx2*ncomp2),
-				      1); 
+	    const int ind=ix+iy*2;
+	    double shx=0, shy=0;
+	    if(pywfs->pupilshift){
+		shx=IND(pywfs->pupilshift, ind, 0)*dsa;
+		shy=IND(pywfs->pupilshift, ind, 1)*dsa;
+	    }
+	    pywfs->si->p[ind]=mkh(loc_fft, powfs[ipowfs].saloc, 
+				  ((ix-0.5)*ncomp2)*dx2+shx, 
+				  ((iy-0.5)*ncomp2)*dx2+shy,
+				  1); 
 	}
     }
     if(parms->save.setup){
@@ -546,6 +574,9 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
     key=dhash(pywfs->saa, key);
     key=dhash(pywfs->wvlwts, key);
     key=chash(pywfs->pyramid->p[0], key);
+    if(pywfs->pupilshift){
+	key=dhash(pywfs->pupilshift, key);
+    }
     return key;
 }
 /**

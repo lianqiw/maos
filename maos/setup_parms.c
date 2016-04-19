@@ -187,6 +187,8 @@ void free_parms(PARMS_T *parms){
     free_strarr(parms->recon.misreg_tel2wfs,parms->nwfsr);
     dfree(parms->dirs);
     lfree(parms->dbg.tomo_maxit);
+    dfree(parms->dbg.pwfs_psx);
+    dfree(parms->dbg.pwfs_psy);
     free(parms);
 }
 static inline int sum_intarr(int n, long *a){
@@ -209,6 +211,7 @@ static inline int sum_dblarr(int n, double *a){
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
+#define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
     readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
@@ -985,7 +988,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.atm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
-    parms->dbg.tomo_maxit=readcfg_lmat("dbg.tomo_maxit");
+    READ_LMAT(dbg.tomo_maxit);
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
@@ -1005,6 +1008,8 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ncpa_nouncorr);
     READ_INT(dbg.i0drift);
     READ_DBL(dbg.gradoff_scale);
+    READ_DMAT(dbg.pwfs_psx);
+    READ_DMAT(dbg.pwfs_psy);
 }
 /**
    Read in GPU options
@@ -1072,7 +1077,7 @@ static void readcfg_save(PARMS_T *parms){
 	    }
 	}
     }
-    parms->save.gcov=readcfg_lmat("save.gcov");
+    READ_LMAT(save.gcov);
     parms->save.ngcov=parms->save.gcov->nx/2;
     READ_INT(save.gcovp);
     READ_INT(save.mvmi);

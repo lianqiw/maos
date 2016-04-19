@@ -593,9 +593,11 @@ typedef struct DBG_CFG_T{
     int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
-    int ncpa_nouncorr; /**<1: do not include uncorrelatable error in science path.*/
+    int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
     double gradoff_scale;/**<Scale the reference vector*/
+    dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
+    dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
