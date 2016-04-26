@@ -2045,15 +2045,15 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    if(parms->ntrpowfs>=parms->nhipowfs){
 		warning("There is no WFS controlling tip/tilt.\n");
 	    }else{
-		warning("Split reconstruction is enabled when there is no low order WFS."
-			" Will split the tip/tilt modes from high order wfs\n");
+		info2("Split reconstruction is enabled when there is no low order WFS."
+		      " Will split the tip/tilt modes from high order wfs\n");
 	    }
 	}
 	if(parms->sim.skysim && (parms->nhipowfs==0 || parms->nlopowfs==0)){
 	    error("There is only high or low order WFS. can not do skycoverage presimulation\n");
 	}
 	if(!parms->nlopowfs && parms->tomo.ahst_wt==1){
-	    warning("When there is no lowfs. Change ahst_wt from 1 to 3\n");
+	    info2("When there is no lowfs. Change ahst_wt from 1 to 3\n");
 	    parms->tomo.ahst_wt=3;
 	}
     }

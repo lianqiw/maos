@@ -92,7 +92,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	//Make pyramid edge or vertax flat within certain range
 	double eskip=(parms->dbg.pwfs_flate/dtheta/2); 
 	double vskip=(parms->dbg.pwfs_flatv/dtheta/2);
-	warning("eskip=%g, vskip=%g. dtheta=%g\n", eskip, vskip, dtheta);
 	for(long iy=skip; iy<ncomp-skip; iy++){
 	    for(long ix=skip; ix<ncomp-skip; ix++){
 		double xd=labs(ix-ncomp2);
@@ -524,7 +523,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
     if(pywfs->GTT) {
-	warning("Reusing cached pywfs->GTT\n");
+	info2("Reusing cached pywfs->GTT\n");
 	return dref(pywfs->GTT);
     }
     TIC;tic;info2("Computing pywfs_tt...");

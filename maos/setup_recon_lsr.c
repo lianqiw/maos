@@ -45,7 +45,6 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	if(tmp->nzmax>tmp->nx*tmp->ny*0.2){//not very sparse
 	    dcell *tmp2=0;
 	    free_GAlsr=1;
-	    warning("Convert GAlsr to full\n");
 	    dcelladd(&tmp2, 1, (dspcell*)GAlsr, 1);
 	    GAlsr=(cell*)tmp2;
 	}
