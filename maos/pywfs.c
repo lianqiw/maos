@@ -83,15 +83,25 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	PCMAT(pywfs->pyramid->p[iwvl], pp);
 	dcomplex coeff=COMPLEX(0, M_PI*0.5);
 	long skip=0;
+	double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);//PSF sampling
 	if(parms->powfs[ipowfs].fieldstop){//Limit fov per wvl
-	    double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);
 	    int nstop=ceil(parms->powfs[ipowfs].fieldstop/dtheta*0.5)*2;
 	    if(nstop>ncomp) nstop=ncomp;
 	    skip=(ncomp-nstop)/2;
 	}
+	//Make pyramid edge or vertax flat within certain range
+	double eskip=(parms->dbg.pwfs_flate/dtheta/2); 
+	double vskip=(parms->dbg.pwfs_flatv/dtheta/2);
+	warning("eskip=%g, vskip=%g. dtheta=%g\n", eskip, vskip, dtheta);
 	for(long iy=skip; iy<ncomp-skip; iy++){
 	    for(long ix=skip; ix<ncomp-skip; ix++){
-		pp[iy][ix]=cexp((labs(iy-ncomp2)+labs(ix-ncomp2))*coeff);
+		double xd=labs(ix-ncomp2);
+		double yd=labs(iy-ncomp2);
+		double opd=xd+yd;
+		if(xd<eskip||yd<eskip||(xd<vskip && yd<vskip)){
+		    opd=0;
+		}
+		pp[iy][ix]=cexp(opd*coeff);
 	    }
 	}
     }

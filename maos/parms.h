@@ -598,6 +598,8 @@ typedef struct DBG_CFG_T{
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
+    double pwfs_flate;/**<pyramid flat edge angular width */
+    double pwfs_flatv;/**<pyramid flat vertex angular width*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
