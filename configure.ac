@@ -483,7 +483,7 @@ case $use_mkl in
 	trys="pkg-config default default-link"
 	;;
     default) #default order
-	trys="pkg-config default default-link mkl mkl-download"
+	trys="mkl pkg-config default default-link mkl-download"
 	;;
 esac
 

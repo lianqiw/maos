@@ -154,8 +154,16 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
     pywfs->si=cellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
-    powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
-				(-order*0.5+0.5)*dsa, (-order*0.5+0.5)*dsa);
+    if(parms->powfs[ipowfs].saloc){
+	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
+	if(fabs(powfs[ipowfs].saloc->dx-dsa)>1e-6*fabs(dsa)){
+	    error("loaded saloc has dx=%g, while powfs.dsa=%g\n",
+		  powfs[ipowfs].saloc->dx, dsa);
+	}
+    }else{
+	powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
+				    (-order*0.5+0.5)*dsa, (-order*0.5+0.5)*dsa);
+    }
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
@@ -191,12 +199,11 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	cellfree(ints);
 	dfree(opd);
     }
-    if(parms->powfs[ipowfs].saat>0){
+    if(parms->powfs[ipowfs].saat>0 && !parms->powfs[ipowfs].saloc){
 	dmat *saa=pywfs->saa;
 	double samax=dmaxabs(saa);
 	loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samax, 0, 0);
 	dscale(saa, saa->nx/dsum(saa));//saa average to one.
-	powfs[ipowfs].saa=dref(pywfs->saa);
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
 		dspfree(pywfs->si->p[ix+iy*2]);
@@ -207,6 +214,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    }
 	}
     }
+    powfs[ipowfs].saa=dref(pywfs->saa);
     const int nsa=powfs[ipowfs].saloc->nloc;
     dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
@@ -252,7 +260,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
-	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
+	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
+	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
 	writebin(pywfs->amp, "powfs%d_amp", ipowfs);
 	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
 	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
