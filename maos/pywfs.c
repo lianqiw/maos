@@ -40,18 +40,21 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->iwfs0=parms->powfs[ipowfs].wfs->p[0];
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-    pywfs->loc=map2loc(map, 0);
-    powfs[ipowfs].loc=pywfs->loc;//do not free here.
+    powfs[ipowfs].loc=map2loc(map, 0);
     mapfree(map);
-    pywfs->amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
-		     parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
-		     parms->aper.d, parms->aper.din);
-    powfs[ipowfs].amp=dref(pywfs->amp);
+    powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
+			    parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
+			    parms->aper.d, parms->aper.din);
+    loc_reduce(powfs[ipowfs].loc, powfs[ipowfs].amp, EPS, 0, NULL);
+    //For convenience.
+    pywfs->loc=powfs[ipowfs].loc;
+    pywfs->amp=powfs[ipowfs].amp;
     setup_powfs_misreg(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs,1);
     for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	if(powfs[ipowfs].amp_tel){
-	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp_tel->p[jwfs]);
+	int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	if(parms->misreg.tel2wfs && parms->misreg.tel2wfs[iwfs]){
+	    error("To be implemented\n");
 	}else{
 	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp); 
 	}
@@ -262,7 +265,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
 	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
 	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
-	writebin(pywfs->amp, "powfs%d_amp", ipowfs);
+	writebin(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
 	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
 	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
 	writebin(nominal, "powfs%d_nominal", ipowfs);

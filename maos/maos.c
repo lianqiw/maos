@@ -73,6 +73,12 @@ void maos_setup(const PARMS_T *parms){
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/
 	setup_powfs_phy(parms, powfs);
+    }
+    if(parms->plot.setup){
+	plot_setup(parms, powfs, aper, recon);
+    }
+    global->setupdone=1;
+    if(!parms->sim.evlol){
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
@@ -106,10 +112,6 @@ void maos_setup(const PARMS_T *parms){
 		((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
 	    }
 	}
-    }
-    global->setupdone=1;
-    if(parms->plot.setup){
-	plot_setup(parms, powfs, aper, recon);
     }
 #if USE_CUDA
     if(parms->gpu.evl){
