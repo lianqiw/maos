@@ -17,21 +17,15 @@
 */
 
 #define MAT_VERBOSE 0
-
-
-
-
-
 #include <sys/mman.h>
-
 #include "../sys/sys.h"
 #include "random.h"
-
 #include "mathmisc.h"
 #include "mathdef.h"
 #include "fft.h"
 #include "defs.h"/*Defines T, X, etc */
 
+#include "blas.h"
 /*
   Group operations related to BLAS/LAPACK to this file.
 */

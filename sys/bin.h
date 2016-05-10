@@ -68,18 +68,22 @@ INLINE int iscell(const void *id){
 #else
 #error "Unknown long size"
 #endif
-#ifdef DLONG 
+#define M_INT M_INT32
+#define M_STR M_INT8
+
+#ifdef DLONG
+#define M_SPINT M_INT64
 #define M_DSP M_DSP64
 #define M_CSP M_CSP64
 #define M_SSP M_SSP64
 #define M_ZSP M_ZSP64
 #else
+#define M_SPINT M_INT32
 #define M_DSP M_DSP32
 #define M_CSP M_CSP32
 #define M_SSP M_SSP32
 #define M_ZSP M_ZSP32
 #endif
-
 
 #define USE_ZLIB_H 0
 #if USE_ZLIB_H
@@ -136,9 +140,6 @@ void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
-const char *search_header(const char *header, const char *key);
-double search_header_num(const char *header, const char *key);
-double search_header_num_valid(const char *header, const char *key);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
@@ -148,14 +149,6 @@ void read_header(header_t *header, file_t *fp);
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writefcmp(const fcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writeint(const int *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
-void writelong(const long *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
-void writespint(const spint *p, long nx, long ny, const char *format,...) CHECK_ARG(4);
-void readspintdata(file_t *fp, uint32_t magic, spint *out, long len);
-spint *readspint(file_t *fp, long* nx, long* ny);
 void mmap_unref(struct mmap_t *in);
 struct mmap_t *mmap_new(int fd, void *p, long n);
 mmap_t*mmap_ref(mmap_t *in);

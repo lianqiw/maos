@@ -62,14 +62,16 @@ char *mystrdup(const char *A);
 #define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
 
 typedef struct ARGOPT_T{
-    char *name; /**<The long name*/
-    char key;   /**<The short name*/
-    int type;   /**<The type of result expected*/
-    int opt;    /**<0: the key does not need value, like -d. 
-		   1:The key needs value, like -s 1.
-		   2:The key does not need value, and the supplied val is a function pointer.
-		   3:The key needs value, and the supplied val is a function pointer.
-		*/
+    char *name;    /**<The long name*/
+    char key;      /**<The short name*/
+    int type;      /**<The type of result expected*/
+    int valtype;   /**<The type of input expected:
+		      0: The key does not need value;
+		      1: The key needs value;
+		      2: The key accepts an array of values.*/
+    int isfun;  /**< Whether val indicate a function pointer
+		      0: The address to put the return results.
+		      1: A function pointer to call. */
     void *val;  /**<The address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
 }ARGOPT_T;

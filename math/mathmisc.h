@@ -19,13 +19,11 @@
 #ifndef AOS_LIB_MATHMISC_H
 #define AOS_LIB_MATHMISC_H
 #include "../sys/sys.h"
-#include "blas.h"
 /**
    \file mathmisc.h
    A few math routines
 */
-double factorial(long n1, long n2);
-long double factoriall(long n1, long n2);
+long double factorial(long n1, long n2);
 void normalize_sum(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 
@@ -60,4 +58,6 @@ unsigned long mylog2(unsigned long n);
 typedef double(*golden_section_fun)(void *param, double x);
 double golden_section_search(golden_section_fun f, void *param, 
 			     double x1, double x4, double tau);
+void readspintdata(file_t *fp, uint32_t magic, spint *out, long len);
+spint *readspint(file_t *fp, long* nx, long* ny);
 #endif

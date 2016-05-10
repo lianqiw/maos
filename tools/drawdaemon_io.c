@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <tgmath.h>
 #include "drawdaemon.h"
 /*
   Routines in this file handles I/O.
@@ -75,7 +76,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	    offset=0.5;
 	}
 	for(int i=0; i<nx*ny; i++){
-	    if(is_nan(p[i])){
+	    if(isnan(p[i])){
 		pi[i]=0;
 	    }else{
 		double x=(p[i]-min)*scale+offset;

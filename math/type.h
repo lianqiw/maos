@@ -18,7 +18,7 @@
 
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
-#include "../sys/sys.h"
+#include "numtype.h"
 /**
    \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.

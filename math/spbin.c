@@ -47,6 +47,8 @@ void X(spwritedata)(file_t *fp, const X(sp) *sp){
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
     }
 }
+
+
 /**
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.

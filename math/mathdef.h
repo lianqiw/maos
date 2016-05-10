@@ -30,7 +30,6 @@
 #include "chol.h"
 #include "cellarr.h"
 #include "mathmisc.h"
-#include "loc.h"
 #include "locbin.h"
 #include "random.h"
 

@@ -34,7 +34,7 @@
 
    2012-10-25: This file only contains the routines to be used by the server.
  */
-
+#include <tgmath.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include "../sys/sys.h"

@@ -17,6 +17,7 @@
 */
 
 #include <search.h>
+#include <tgmath.h>
 #ifndef __CYGWIN__
 #include <execinfo.h>
 #endif
@@ -284,9 +285,6 @@ static __attribute__((constructor)) void init(){
     void init_hosts(void);
     init_hosts();
 #endif
-    if(not_nan(NAN)){
-	error("NAN check failed\n");
-    }
 }
 /**
    Register routines to be called with mem.c is unloading (deinit).

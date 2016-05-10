@@ -29,17 +29,12 @@
 
 
 
+#include <tgmath.h>
 #include <netdb.h>
-
-
 #include <netdb.h>
-
-#include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

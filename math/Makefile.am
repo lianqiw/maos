@@ -1,7 +1,7 @@
 AM_CFLAGS=$(OPTS) -I$(top_srcdir)
 AM_LDFLAGS=$(LDOPTS)
 
-nobase_include_HEADERS= type.h  mathmisc.h random.h mathdef.h cell.h  suitesparse.h blas.h \
+nobase_include_HEADERS= type.h numtype.h mathmisc.h random.h mathdef.h cell.h  suitesparse.h blas.h \
  matbin.h spbin.h cellarr.h chol.h  mat.h sp.h fft.h matmath.h loc.h locbin.h defs.h
 
 EXTRA_DIST=suitesparse.c matmmap.c

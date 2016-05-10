@@ -75,15 +75,15 @@ static void strtrim(char **str){
     int iend;
     /*turn non-printable characters, coma, and semicolumn, to space */
     for(char *tmp=*str; !is_end(*tmp); tmp++){
-	if(!isgraph((int)*tmp) || *tmp==',' || is_space(*tmp)){
+	if(!isgraph((int)*tmp) || *tmp==',' || isspace(*tmp)){
 	    *tmp=' ';
 	}
     }
     /*remove leading spaces. */
-    while(!is_end(**str) && is_space((*str)[0])) (*str)++;
+    while(!is_end(**str) && isspace((*str)[0])) (*str)++;
     iend=strlen(*str)-1;
     /*remove tailing spaces. */
-    while((is_space((*str)[iend]) || (*str)[iend]==';') && iend>=0){
+    while((isspace((*str)[iend]) || (*str)[iend]==';') && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
@@ -145,13 +145,13 @@ static char *squeeze(char *line){
 	}
 	/*Remove trailing linebreak, semi-colon, and spaces*/
 	int nread=strlen(line)-1;
-	while(nread>=0 && (is_space(line[nread]) || is_end(line[nread]))){
+	while(nread>=0 && (isspace(line[nread]) || is_end(line[nread]))){
 	    line[nread]='\0';
 	    nread--;
 	}
 	/*Remove leading spaces*/
 	sline=line;
-	while(is_space(sline[0])) sline++;
+	while(isspace(sline[0])) sline++;
 	if(is_end(sline[0]))  sline=NULL;
     }
     return sline;
@@ -487,7 +487,7 @@ int readcfg_peek_n(const char *format, ...){
 	free(ret);
     }else{/*this is numerical array */
 	void *ret;
-	count=readstr_numarr(&ret, 0, NULL,NULL,T_DBL, sdata);
+	count=readstr_numarr(&ret, 0, NULL,NULL,M_DBL, sdata);
 	free(ret);
     }
     return count;
@@ -547,7 +547,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 */
 int readcfg_intarr(int **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, 0,NULL,NULL, T_INT, getrecord(key, 1)->data);
+    return readstr_numarr((void**)ret, 0,NULL,NULL, M_INT, getrecord(key, 1)->data);
 }
 /**
    Read as an lmat.
@@ -556,7 +556,7 @@ lmat *readcfg_lmat_do(int n, char *key){
     long *val=0;
     long **ret=&val;
     int nx, ny;
-    readstr_numarr((void**)ret, n, &nx, &ny, T_LONG, getrecord(key, 1)->data);
+    readstr_numarr((void**)ret, n, &nx, &ny, M_LONG, getrecord(key, 1)->data);
     lmat *res=0;
     if(!nx || !ny){
 	free(val); val=0;
@@ -608,7 +608,7 @@ lmat *readcfg_lmat_nmax(int n, const char *format,...){
 */
 int readcfg_dblarr(double **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, 0,NULL,NULL,T_DBL, getrecord(key, 1)->data);
+    return readstr_numarr((void**)ret, 0,NULL,NULL,M_DBL, getrecord(key, 1)->data);
 }
 /**
    Read as a dmat. It can be a file name or an array.
@@ -624,7 +624,7 @@ static dmat *readstr_dmat_do(int n, const char *str){
     }else{
         double **pval=&val;
 	int nx, ny;
-	readstr_numarr((void**)pval, n, &nx, &ny,T_DBL, str);
+	readstr_numarr((void**)pval, n, &nx, &ny,M_DBL, str);
 	dmat *res=0;
 	if(!nx || !ny) {
 	    free(val); val=0;
@@ -706,7 +706,7 @@ void readcfg_strarr_nmax(char ***ret, int len, const char *format,...){
 void readcfg_intarr_n(int **ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_numarr((void**)ret, len, NULL,NULL,T_INT, getrecord(key, 1)->data))){
+    if(len!=(len2=readstr_numarr((void**)ret, len, NULL,NULL,M_INT, getrecord(key, 1)->data))){
 	error("%s: Need %d, got %d integers\n", key, len, len2);
     }
 }
@@ -715,7 +715,7 @@ void readcfg_intarr_n(int **ret, int len, const char *format,...){
 */
 void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_numarr((void**)ret, len,NULL,NULL, T_INT, getrecord(key, 1)->data);
+    int len2=readstr_numarr((void**)ret, len,NULL,NULL, M_INT, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];
@@ -730,7 +730,7 @@ void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
 void readcfg_dblarr_n(double **ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, T_DBL, getrecord(key, 1)->data))){
+    if(len!=(len2=readstr_numarr((void**)ret, len,NULL,NULL, M_DBL, getrecord(key, 1)->data))){
 	error("%s: Need %d, got %d double\n", key, len, len2);
     }
 }
@@ -739,7 +739,7 @@ void readcfg_dblarr_n(double **ret, int len, const char *format,...){
 */
 void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
     format2key;
-    int len2=readstr_numarr((void**)ret, len, NULL,NULL,T_DBL, getrecord(key, 1)->data);
+    int len2=readstr_numarr((void**)ret, len, NULL,NULL,M_DBL, getrecord(key, 1)->data);
     if(len2==1){
 	for(int i=1; i<len; i++){
 	    (*ret)[i]=(*ret)[0];

@@ -41,6 +41,7 @@ struct thread_t{
     thread_wrapfun fun;/*the function, takes data as argument */
     void *data;/*the data to pass to the function. */
 };
+long thread_id(void);
 /*
   For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
 

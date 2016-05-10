@@ -90,14 +90,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    if(!strcmp(cmd, "setup") && nrhs>1){
 		conf=mxArrayToString(prhs[1]);
 		ARGOPT_T options[]={
-		    {"override",'O',T_INT,0, &override, NULL},
-		    {"output", 'o',T_STR, 1, &dirout, NULL},
-		    {"nthread",'n',T_INT, 1, &nthread,NULL},
-		    {"conf",   'c',T_STR, 1, &mainconf, NULL},
-		    {"path",   'P',T_STR, 3, addpath, NULL},
-		    {"gpu",    'g',T_INTARR, 1, &gpus, &ngpu},
-		    {"ngpu",   'G',T_INT, 1, &ngpu2, NULL},
-		    {NULL, 0,0,0, NULL, NULL}
+		    {"override",'O',M_INT,0, 0, &override, NULL},
+		    {"output", 'o',M_STR, 1, 0, &dirout, NULL},
+		    {"nthread",'n',M_INT, 1, 0, &nthread,NULL},
+		    {"gpu",    'g',M_INT, 2, 0, &gpus, &ngpu},
+		    {"ngpu",   'G',M_INT, 1, 0, &ngpu2, NULL},
+		    {"conf",   'c',M_STR, 1, 0, &mainconf, NULL},
+		    {"path",   'P',M_STR, 1, 1, addpath, NULL},
+		    {NULL,     0,  0,     0, 0, NULL, NULL}
 		};
 		parse_argopt(conf, options);
 		if(nthread<NTHREAD && nthread>0){

@@ -15,8 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -30,7 +28,6 @@
 #include "path.h"
 #include "thread.h"
 #include "bin.h"
-#include "readstr.h"
 
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
@@ -834,60 +831,7 @@ uint64_t bytes_header(const char *header){
     write_bin_headerstr(header, fp);
     }*/
 
-/**
-   Search and return the value correspond to key. NULL if not found. Do not free the
-   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
-   and succeeded by = sign. */
-const char *search_header(const char *header, const char *key){
-    if(!header) return NULL;
-    const char *ans=NULL;
-    //const char *ans_bak=NULL;
-    const char *val=header;
-    while(val[0]!='\0' && (val=strstr(val, key))){
-	if(val>header){
-	    char prev=*(val-1);
-	    if(!isspace((int)prev) && prev!=';' && prev !=','){
-		//ans_bak=val;
-		val=val+strlen(key);
-		continue;/*Invalid */
-	    }
-	}
-	val=val+strlen(key);
-	while(val[0]==' ') val++;
-	if(val[0] == '='){
-	    val++;
-	}else{
-	    continue;//invalid key
-	}
-	while(val[0]==' ') val++;
-	ans=val;
-	break;
-    }
-    //if(!ans) ans=ans_bak;
-    return ans;
-}
-/**
-   Read a number from the header with key
-*/
-double search_header_num(const char *header, const char *key){
-    if(!header) return NAN;
-    const char *val=search_header(header, key);
-    if(val){
-	return readstr_num(val, NULL);
-    }else{
-	return NAN;/*not found. */
-    }
-}
-/**
-   Read a number from the header and verify.
-*/
-double search_header_num_valid(const char *header, const char *key){
-    double val=search_header_num(header, key);
-    if(is_nan(val)){
-	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
-    }
-    return val;
-}
+
 /**
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
@@ -923,116 +867,6 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
 void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
     writearr(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
-}
-/**
-   Write a double array of size nx*ny to file.
-*/
-void writeflt(const float *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
-}
-/**
-   Write a double complex array of size nx*ny to file.
-*/
-void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(dcomplex), M_CMP, NULL, p, nx, ny);
-}
-/**
-   Write a float complex array of size nx*ny to file.
-*/
-void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(fcomplex), M_ZMP, NULL, p, nx, ny);
-}
-/**
-   Write a int array of size nx*ny to file.
-*/
-void writeint(const int *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
-}
-/**
-   Write a long array of size nx*ny to file.
-*/
-void writelong(const long *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
-}
-/**
-   Write spint array of size nx*ny to file. 
-*/
-void writespint(const spint *p, long nx, long ny, const char *format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
-}
-/**
-   read spint array of size len from file and do optional data conversion. 
-*/
-void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
-    int size=0;
-    switch(magic & 0xFFFF){
-    case M_INT64:
-	size=8;
-	break;
-    case M_INT32:
-	size=4;
-	break;
-    case M_DBL:/*saved by matlab. */
-	size=-8;
-	break;
-    default:
-	error("This is not a valid sparse spint file. magic=%x\n", magic);
-    }
-    if(sizeof(spint)==size){/*Matched int. */
-	zfread(out, sizeof(spint), len, fp);
-    }else{
-	size=abs(size);
-	void *p=malloc(size*len);
-	zfread(p, size, len, fp);
-	switch(magic & 0xFFFF){
-	case M_INT64:{
-	    uint64_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_INT32:{
-	    uint32_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_DBL:{
-	    double *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	}
-    }
-}
-/**
-   Read spint array of size nx*ny from file and do optional data conversion.
-*/
-spint *readspint(file_t *fp, long* nx, long* ny){
-    header_t header;
-    read_header(&header, fp);
-    free(header.str);
-    spint *out=NULL;
-    if(nx!=0 && ny!=0){
-	*nx=(long)header.nx;
-	*ny=(long)header.ny;
-	out=malloc((*nx)*(*ny)*sizeof(spint));
-	readspintdata(fp, header.magic, out, (*nx)*(*ny));
-    }else{
-	*nx=0;
-	*ny=0;
-    }
-    return out;
 }
 
 /**
