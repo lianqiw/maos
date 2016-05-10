@@ -237,11 +237,7 @@ void gpu_write(const Real *p, int nx, int ny, const char *format, ...){
     format2fn;
     Real *tmp=(Real*)malloc(nx*ny*sizeof(Real));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost);
-#if CUDA_DOUBLE
-    writedbl(tmp,nx,ny,"%s",fn);
-#else
-    writeflt(tmp,nx,ny,"%s",fn);
-#endif
+    writearr(fn, 1, sizeof(Real), M_REAL, NULL, p, nx, ny);
     free(tmp);
 }
 
@@ -252,11 +248,7 @@ void gpu_write(const Comp *p, int nx, int ny, const char *format, ...){
     format2fn;
     Comp *tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost);
-#if CUDA_DOUBLE
-    writecmp((dcomplex*)tmp,nx,ny,"%s",fn);
-#else
-    writefcmp((fcomplex*)tmp,nx,ny,"%s",fn);
-#endif
+    writearr(fn, 1, sizeof(Comp), M_COMP, NULL, p, nx, ny);
     free(tmp);
 }
 /*
@@ -266,7 +258,7 @@ void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     format2fn;
     int *tmp=(int*)malloc(nx*ny*sizeof(int));
     cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost);
-    writeint(tmp,nx,ny,"%s",fn);
+    writearr(fn, 1, sizeof(int), M_INT32, NULL, tmp, nx, ny);
     free(tmp);
 }
 template <typename T, typename R, typename S>

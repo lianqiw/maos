@@ -58,7 +58,6 @@ typedef struct PROPDATA_T{
     int nooptim;/*disable optim. */
     int index;
 }PROPDATA_T;
-
 void prop(thread_t *data);/*A unified wrapper */
 
 #define ARGIN_GRID						\

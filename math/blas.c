@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -17,21 +17,15 @@
 */
 
 #define MAT_VERBOSE 0
-
-
-
-
-
 #include <sys/mman.h>
-
 #include "../sys/sys.h"
 #include "random.h"
-
 #include "mathmisc.h"
 #include "mathdef.h"
 #include "fft.h"
 #include "defs.h"/*Defines T, X, etc */
 
+#include "blas.h"
 /*
   Group operations related to BLAS/LAPACK to this file.
 */

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -30,7 +30,6 @@
 #include "chol.h"
 #include "cellarr.h"
 #include "mathmisc.h"
-#include "loc.h"
 #include "locbin.h"
 #include "random.h"
 

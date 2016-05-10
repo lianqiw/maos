@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -47,6 +47,8 @@ void X(spwritedata)(file_t *fp, const X(sp) *sp){
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
     }
 }
+
+
 /**
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.

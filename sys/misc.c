@@ -28,11 +28,13 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <tgmath.h>
 #include "common.h"
 #include "thread.h"
 #include "process.h"
 #include "misc.h"
 #include "path.h"
+#include "bin.h"
 /**
    Obtain the basename of a file. The returnned string must be freed.
 */
@@ -577,7 +579,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    if(iopt==-1){
 		continue;/*we don't want this key. */
 	    }
-	    if((options[iopt].opt & 1) == 1){//1, or 3. parse value
+	    if((options[iopt].valtype)){//expects a value.
 		value=start;
 		while(value[0]=='\n' || isspace((int)value[0])){
 		    value[0]=' ';
@@ -586,33 +588,59 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    }else{
 		value=NULL;
 	    }
-	    int isfun=((options[iopt].opt&2)==2);
+	    int isfun=(options[iopt].isfun);
 	    switch(options[iopt].type){
 	    case 0:/*no result needed */
 		break;
-	    case T_INT:{
-		int val=value?strtol(value, &start, 10):1;
-		if(isfun){/*Is function */
-		    void (*tmp)(int)=(void (*)(int))options[iopt].val;
-		    tmp(val);
+	    case M_INT:{
+		if(options[iopt].valtype==2){//needs an array
+		    if(isfun) error("Not implemented yet\n");
+		    int val=strtol(value, &start, 10);
+		    int **tmp=options[iopt].val;
+		    int *nval=options[iopt].nval;
+		    int i;
+		    for(i=0; i<*nval; i++){
+			if((*tmp)[i]==val) break;
+		    }
+		    if(i==*nval){
+			(*nval)++;
+			*tmp=realloc(*tmp, *nval*sizeof(int));
+			(*tmp)[(*nval)-1]=val;
+		    } 
 		}else{
-		    int *tmp=options[iopt].val;
-		    *tmp=val;
+		    int val=value?strtol(value, &start, 10):1;
+		    if(isfun){/*Is function */
+			void (*tmp)(int)=(void (*)(int))options[iopt].val;
+			tmp(val);
+		    }else{
+			int *tmp=options[iopt].val;
+			*tmp=val;
+		    }
 		}
 	    }
 		break;
-	    case T_DBL:{
-		double val=value?strtod(value, &start):1;
-		if(isfun){/*Is function */
-		    void (*tmp)(double)=(void (*)(double))options[iopt].val;
-		    tmp(val);
+	    case M_DBL:{
+		if(options[iopt].valtype==2){//needs an array
+		    if(isfun) error("Not implemented yet\n");
+		    double val=strtod(value, &start);
+		    int **tmp=options[iopt].val;
+		    int *nval=options[iopt].nval;
+		    (*nval)++;
+		    *tmp=realloc(*tmp, *nval*sizeof(double));
+		    (*tmp)[(*nval)-1]=(int)val;
 		}else{
-		    double *tmp=options[iopt].val;
-		    *tmp=val;
+		    double val=value?strtod(value, &start):1;
+		    if(isfun){/*Is function */
+			void (*tmp)(double)=(void (*)(double))options[iopt].val;
+			tmp(val);
+		    }else{
+			double *tmp=options[iopt].val;
+			*tmp=val;
+		    }
 		}
 	    }
 		break;
-	    case T_STR:{
+	    case M_STR:{
 		char *val=value?cmd_string(value, &start):"Unknown";
 		if(isfun){
 		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
@@ -623,32 +651,8 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		}
 	    }
 		break;
-	    case T_INTARR:{
-		if(isfun) error("Not implemented yet\n");
-		int val=strtol(value, &start, 10);
-		int **tmp=options[iopt].val;
-		int *nval=options[iopt].nval;
-		int i;
-		for(i=0; i<*nval; i++){
-		    if((*tmp)[i]==val) break;
-		}
-		if(i==*nval){
-		    (*nval)++;
-		    *tmp=realloc(*tmp, *nval*sizeof(int));
-		    (*tmp)[(*nval)-1]=val;
-		}
-	    }
-		break;
-	    case T_DBLARR:{
-		if(isfun) error("Not implemented yet\n");
-		double val=strtod(value, &start);
-		int **tmp=options[iopt].val;
-		int *nval=options[iopt].nval;
-		(*nval)++;
-		*tmp=realloc(*tmp, *nval*sizeof(double));
-		(*tmp)[(*nval)-1]=(int)val;
-	    }
-		break;
+	    default:
+		error("Unknown type");
 	    }/*switch */
 	    /*Empty the string that we already parsed. */
 	    memset(start0, ' ',start-start0);

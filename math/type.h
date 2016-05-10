@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,7 +18,7 @@
 
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
-#include "../sys/sys.h"
+#include "numtype.h"
 /**
    \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.

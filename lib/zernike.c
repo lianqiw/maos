@@ -31,7 +31,7 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
     double coeff[ns];
     int power[ns];
     for(int s=0; s<ns; s++){
-	coeff[s]=factoriall((ir+im)/2-s+1, ir-s)/factoriall(1,s)/factoriall(1,(ir-im)/2-s)*pow(-1,s);
+	coeff[s]=factorial((ir+im)/2-s+1, ir-s)/factorial(1,s)/factorial(1,(ir-im)/2-s)*pow(-1,s);
 	power[s]=ir-2*s;
     }
     for(long iloc=0; iloc<nloc; iloc++){

@@ -46,17 +46,17 @@ ARG_S *parse_args(int argc, const char *argv[]){
     ARG_S *arg=calloc(1, sizeof(ARG_S));
     char *host=NULL; int local=0;
     ARGOPT_T options[]={
-	{"help", 'h', T_INT, 2, print_usage, NULL},
-	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
-	{"override",'O',T_INT,0, &arg->override, NULL},
-	{"force",  'f',T_INT, 0, &arg->force, NULL},
-	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
-	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
-	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
-	{"path",   'P',T_STR, 3, addpath, NULL},
-	{"run",    'r',T_STR, 1, &host, NULL},
-	{"local",  'l',T_INT, 0, &local, NULL},
-	{NULL, 0,0,0, NULL, NULL}
+	{"help",  'h', M_INT, 0, 1, print_usage, NULL},
+	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
+	{"override",'O',M_INT,0, 0, &arg->override, NULL},
+	{"force",  'f',M_INT, 0, 0, &arg->force, NULL},
+	{"output", 'o',M_STR, 1, 0, &arg->dirout, NULL},
+	{"nthread",'n',M_INT, 1, 0, &arg->nthread,NULL},
+	{"conf",   'c',M_STR, 1, 0, &arg->conf, NULL},
+	{"path",   'P',M_STR, 1, 1, addpath, NULL},
+	{"run",    'r',M_STR, 1, 0, &host, NULL},
+	{"local",  'l',M_INT, 0, 0, &local, NULL},
+	{NULL, 0,0,0,0, NULL, NULL}
     };
     char *cmds=strnadd(argc-1, argv+1, " ");
     parse_argopt(cmds, options);

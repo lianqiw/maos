@@ -15,9 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <tgmath.h>
+#include <ctype.h> /*isspace */
 #include "readstr.h"
 #include "misc.h"
+#include "bin.h"
 
 /**
    Group all routines that are used to parse values from string that contain
@@ -110,14 +112,14 @@ double readstr_num(const char *data, /**<[in] Input string*/
 	error("{%s}: Unable to parse for a number\n", data);
 	return NAN;
     }
-    while(is_space(endptr[0])) endptr++;
+    while(isspace(endptr[0])) endptr++;
     while(endptr[0]=='/' || endptr[0]=='*'){
 	int power=1;
 	if(endptr[0]=='/'){
 	    power=-1;
 	}
 	endptr++;
-	while(is_space(endptr[0])) endptr++;
+	while(isspace(endptr[0])) endptr++;
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
@@ -128,7 +130,7 @@ double readstr_num(const char *data, /**<[in] Input string*/
 	}else{
 	    res/=tmp;
 	}
-	while(is_space(endptr[0])) endptr++;
+	while(isspace(endptr[0])) endptr++;
     }
     if(endptr0){
 	*endptr0=endptr;
@@ -168,13 +170,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     size_t nmax=10;
     size_t size=0;/*size of each number */
     switch(type){
-    case T_INT:
+    case M_INT:
 	size=sizeof(int);
 	break;
-    case T_LONG:
+    case M_LONG:
 	size=sizeof(long);
 	break;
-    case T_DBL:
+    case M_DBL:
 	size=sizeof(double);
 	break;
     default:
@@ -210,7 +212,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}else{
 		    fact/=fact1;
 		}
-		while(is_space(endptr[0])) endptr++;
+		while(isspace(endptr[0])) endptr++;
 		if(endptr[0]=='/'){
 		    power=-1;
 		}else if(endptr[0]=='*'){
@@ -231,7 +233,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     }
     if(strchr(startptr,']')){/*there is indeed ']'. Handle operations after ] */
 	endptr=strchr(startptr,']')+1;
-	while(is_space(endptr[0]) || endptr[0]=='\''){
+	while(isspace(endptr[0]) || endptr[0]=='\''){
 	    if(endptr[0]=='\'') trans=1-trans;
 	    endptr++;
 	}
@@ -253,13 +255,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		error("We do not yet support * or / after + or - \n");
 	    }
 	    endptr++;
-	    while(is_space(endptr[0])) endptr++;
+	    while(isspace(endptr[0])) endptr++;
 	    startptr2=endptr;
 	    double fact2=strtod(startptr2, &endptr);
 	    if(startptr2==endptr){
 		error("{%s}: Invalid entry to parse for numerical array\n", data);
 	    }
-	    while(is_space(endptr[0])) endptr++;
+	    while(isspace(endptr[0])) endptr++;
 	    if(addition){/*addition*/
 		if(addition==1){
 		    addval+=fact2;
@@ -308,19 +310,19 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
 	/*assign the value to appropriate array. convert to int if necessary. */
 	switch(type){
-	case T_INT:
+	case M_INT:
 	    if(fabs(res-(int)res)>EPS){
 		warning("Floating point number supplied while integer is needed: {%s}\n", data);
 	    }
 	    ((int*)(*ret))[count]=(int)res;
 	    break;
-	case T_LONG:
+	case M_LONG:
 	    if(fabs(res-(long)res)>EPS){
 		warning("Floating point number supplied while long integer is needed: {%s}\n", data);
 	    }
 	    ((long*)(*ret))[count]=(long)res;
 	    break;
-	case T_DBL:
+	case M_DBL:
 	    ((double*)(*ret))[count]=res;
 	    break;
 	default:
@@ -357,7 +359,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	info("Transposing %dx%d array\n", ncol, nrow);
 	void *newer=calloc(count, size);
 	switch(type){
-	case T_INT:{
+	case M_INT:{
 	    int *from=(*ret);
 	    int *to=newer;
 	    for(int icol=0; icol<ncol; icol++){
@@ -367,7 +369,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    }
 	}
 	    break;
-	case T_LONG:{
+	case M_LONG:{
 	    long *from=(*ret);
 	    long *to=newer;
 	    for(int icol=0; icol<ncol; icol++){
@@ -377,7 +379,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    }
 	}
 	    break;
-	case T_DBL:{
+	case M_DBL:{
 	    double *from=(*ret);
 	    double *to=newer;
 	    for(int icol=0; icol<ncol; icol++){
@@ -406,7 +408,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     return count;
 }
 int readstr_intarr(int**ret, int len, const char *data){
-    return readstr_numarr((void**)ret, len,NULL,NULL, T_INT, data);
+    return readstr_numarr((void**)ret, len,NULL,NULL, M_INT, data);
 }
 /**
    Read an integer array. Duplicate if only one number is present.
@@ -443,4 +445,58 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 	error("{%s}: Require %d numbers, but got %d\n", data, len, len2);
     }
     free(ret2);
+}
+/**
+   Search and return the value correspond to key. NULL if not found. Do not free the
+   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
+   and succeeded by = sign. */
+const char *search_header(const char *header, const char *key){
+    if(!header) return NULL;
+    const char *ans=NULL;
+    //const char *ans_bak=NULL;
+    const char *val=header;
+    while(val[0]!='\0' && (val=strstr(val, key))){
+	if(val>header){
+	    char prev=*(val-1);
+	    if(!isspace((int)prev) && prev!=';' && prev !=','){
+		//ans_bak=val;
+		val=val+strlen(key);
+		continue;/*Invalid */
+	    }
+	}
+	val=val+strlen(key);
+	while(val[0]==' ') val++;
+	if(val[0] == '='){
+	    val++;
+	}else{
+	    continue;//invalid key
+	}
+	while(val[0]==' ') val++;
+	ans=val;
+	break;
+    }
+    //if(!ans) ans=ans_bak;
+    return ans;
+}
+/**
+   Read a number from the header with key
+*/
+double search_header_num(const char *header, const char *key){
+    if(!header) return NAN;
+    const char *val=search_header(header, key);
+    if(val){
+	return readstr_num(val, NULL);
+    }else{
+	return NAN;/*not found. */
+    }
+}
+/**
+   Read a number from the header and verify.
+*/
+double search_header_num_valid(const char *header, const char *key){
+    double val=search_header_num(header, key);
+    if(isnan(val)){
+	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
+    }
+    return val;
 }

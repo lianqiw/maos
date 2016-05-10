@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -55,13 +55,13 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 		dyd=dyi;
 	    }
 	}
-	if(fabs(dx)<tol || is_nan(dx)){
+	if(fabs(dx)<tol || isnan(dx)){
 	    dx=dxd;//use value derived from data
 	}else if(fabs(dx-dxd)>tol && isfinite(dxd)){
 	    error("Specified dx=%.15g doesn't agree with data: %.15g\n", dx, dxd);
 	}
 
-	if(fabs(dy)<tol || is_nan(dy)){
+	if(fabs(dy)<tol || isnan(dy)){
 	    dy=dyd;
 	}else if(fabs(dy-dyd)>tol && isfinite(dyd)){
 	    error("Specified dy=%.15g doesn't agree with data: %.15g\n", dy, dyd);
@@ -117,20 +117,20 @@ map_t* d2map(dmat *in){
     map->h =search_header_num(header,"h");
     map->vx=search_header_num(header,"vx");
     map->vy=search_header_num(header,"vy");
-    if(is_nan(map->dx)){
+    if(isnan(map->dx)){
 	error("dx is not specified in header.\n");
 	map->dx=1./64.;
     }
-    if(is_nan(map->dy)){
+    if(isnan(map->dy)){
 	map->dy=map->dx;
     }
-    if(is_nan(map->ox) || is_nan(map->oy)){
+    if(isnan(map->ox) || isnan(map->oy)){
 	map->ox=-map->nx/2*map->dx;
 	map->oy=-map->ny/2*map->dy;
     }
-    if(is_nan(map->h)) map->h=0;
-    if(is_nan(map->vx)) map->vx=0;
-    if(is_nan(map->vy)) map->vy=0;
+    if(isnan(map->h)) map->h=0;
+    if(isnan(map->vx)) map->vx=0;
+    if(isnan(map->vy)) map->vy=0;
     return map;
 }
 
@@ -200,7 +200,7 @@ rmap_t* d2rmap(dmat *in){
     map->ftel=search_header_num(header,"ftel");
     map->fexit=search_header_num(header,"fexit");
     map->fsurf=search_header_num(header,"fsurf");
-    if(is_nan(map->ox) || is_nan(map->oy) || is_nan(map->dx)|| is_nan(map->dy) || is_nan(map->fsurf)){
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)|| isnan(map->dy) || isnan(map->fsurf)){
 	error("header is needed to convert dmat to map_t\n");
     }
     return map;

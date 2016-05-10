@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <tgmath.h>
 #if defined __CYGWIN__
 #include <sys/cygwin.h>
 #endif
