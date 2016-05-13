@@ -49,12 +49,7 @@ mapcell *fractal_screen(GENATM_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 dmat *spatial_psd(long nx, long ny, double dx, double strength, 
 		  double fmin, double fmax, double slope, double power);
-INLINE double r02strength(double r0){
-    return 0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
-}
-INLINE dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power){
-    return spatial_psd(nx, ny, dx, r02strength(r0), 1./L0, INFINITY, slope, power);
-}
+dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_greenwood(double r0, int nps, double *ws, double *wt);

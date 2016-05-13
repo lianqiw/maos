@@ -392,7 +392,10 @@ dmat *spatial_psd(long nx,      /**<The size*/
     if(minfreq==0) psd->p[0]=0;  //remove infinite piston mode if minfreq is zero (L0 is inf).
     return psd;
 }
-
+dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power){
+    double strength=0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
+    return spatial_psd(nx, ny, dx, strength, 1./L0, INFINITY, slope, power);
+}
 /**
    Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
    weights.  */

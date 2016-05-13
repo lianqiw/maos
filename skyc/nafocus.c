@@ -22,6 +22,9 @@
 */
 #include "skyc.h"
 #include "nafocus.h"
+static inline double nafocus_NaPSD(double nu, double alpha, double beta2){
+    return beta2*pow(nu,alpha);/*we don't divide 2pi */
+}
 
 /**
    Compute Zoom optics focus corrector open loop transfer function

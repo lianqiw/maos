@@ -21,9 +21,6 @@
 /**
    Compute sodium power spectrum density. alpha, beta are the parameters of the
    sodium power spectrum obtained by fitting measurement data at UBC. */
-INLINE double nafocus_NaPSD(double nu, double alpha, double beta2){
-    return beta2*pow(nu,alpha);/*we don't divide 2pi */
-}
 double nafocus_residual(double fs, double tau, double f_zc, double zeta, 
 			double D, double hs, double alpha, double beta);
 dmat* nafocus_time(double alpha, double beta, double dt, long nstep, rand_t *rstat);
