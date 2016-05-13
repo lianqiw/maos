@@ -73,7 +73,7 @@ static char *get_fnatm(GENATM_T *data){
  * Geneate the screens two layer at a time and appends to file if fc is not
  * NULL. Handles large screens well without using the full storage.
  */
-static void spect_screen_do(cellarr *fc, GENATM_T *data){
+static void spect_screen_do(zfarr *fc, GENATM_T *data){
     if(!data->spect){
 	info2("Generating spect..."); TIC; tic;
 	double slope=0;
@@ -161,9 +161,9 @@ static void spect_screen_do(cellarr *fc, GENATM_T *data){
 	}
 	double tk3=myclockd();
 	if(fc){/*save to file. */
-	    cellarr_dmat(fc, ilayer, dc->p[0]);
+	    zfarr_dmat(fc, ilayer, dc->p[0]);
 	    if(ilayer+1<nlayer){
-		cellarr_dmat(fc, ilayer+1, dc->p[1]);
+		zfarr_dmat(fc, ilayer+1, dc->p[1]);
 	    }
 	}else{
 	    dcp((dmat**)&data->screen->p[ilayer], dc->p[0]);
@@ -185,7 +185,7 @@ static void spect_screen_do(cellarr *fc, GENATM_T *data){
 /**
  * Generate one screen at a time and save to file
  */
-static void fractal_screen_do(cellarr *fc, GENATM_T *data){
+static void fractal_screen_do(zfarr *fc, GENATM_T *data){
     const long nx=data->nx;
     const long ny=data->ny;
     if(fc){
@@ -195,7 +195,7 @@ static void fractal_screen_do(cellarr *fc, GENATM_T *data){
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 	    fractal_do(screen->p, nx, ny, data->dx, r0i, data->L0, data->ninit);
 	    remove_piston(screen->p, nx*ny);
-	    cellarr_dmat(fc, ilayer, screen);
+	    zfarr_dmat(fc, ilayer, screen);
 	}
 	dfree(screen);
     }else{
@@ -217,7 +217,7 @@ static void fractal_screen_do(cellarr *fc, GENATM_T *data){
  * atmosphere will be different from data->share=0 due to different algorithms
  * used.
  */
-static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM_T *data)){
+static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T *data)){
     mapcell* screen;
     long nlayer=data->nlayer;
     char *fnatm=NULL;
@@ -238,9 +238,9 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(cellarr *fc, GENATM
 		if(fd>=0){/*succeed to lock file. */
 		    char fntmp[PATH_MAX];
 		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
-		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fntmp); 
+		    zfarr *fc = zfarr_init(nlayer, 1, "%s", fntmp); 
 		    atmfun(fc, data);
-		    cellarr_close(fc);
+		    zfarr_close(fc);
 		    if(rename(fntmp, fnatm)){
 			error("Unable to rename %s\n", fnlock);
 		    }

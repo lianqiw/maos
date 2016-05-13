@@ -57,7 +57,11 @@ void X(maxmin)(const T *restrict p, long N, R *max, R *min){
     a=-INFINITY;
     b=INFINITY;
     for(i=0; i<N; i++){
-	R tmp=MAG(p[i]);
+#ifdef USE_COMPLEX
+	R tmp=fabs(p[i]);
+#else
+	R tmp=p[i];
+#endif
 	if(!isnan(tmp)){
 	    if(tmp>a) a=tmp;
 	    if(tmp<b) b=tmp;
@@ -90,8 +94,8 @@ R X(min)(const X(mat) *A){
 R X(maxabs)(const X(mat) *A){
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    max=FABS(max);
-    min=FABS(min);
+    max=ABS(max);
+    min=ABS(min);
     return max>min?max:min;
 }
 /**
@@ -110,7 +114,7 @@ R X(sumabs)(const X(mat)*A){
 R X(sumsq)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=REAL(A->p[i]*CONJ(A->p[i]));
+	out+=creal(A->p[i]*conj(A->p[i]));
     }
     return out;
 }
@@ -125,7 +129,7 @@ R X(norm)(const X(mat)*A){
 */
 R X(std)(const X(mat)*A){
     long N=A->nx*A->ny;
-    return sqrt((X(sumsq)(A)-POW(X(sum)(A),2)/N)/(N-1));
+    return sqrt((X(sumsq)(A)-pow(X(sum)(A),2)/N)/(N-1));
 }
 /**
    Fill A with random uniform numbers between [0, 1]*max
@@ -219,8 +223,8 @@ void X(cwm)(X(mat) *A, const X(mat) *B){
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
 void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2){
-    int has_b1=B1 && FABS(wt1)>EPS;
-    int has_b2=B2 && FABS(wt2)>EPS;
+    int has_b1=B1 && ABS(wt1)>EPS;
+    int has_b2=B2 && ABS(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	for(long i=0; i<B1->nx*B1->ny; i++){
@@ -250,8 +254,8 @@ void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W,
     if(!W){
 	X(cwm2)(A, B1, wt1, B2, wt2);
     }else{
-	int has_b1=B1 && FABS(wt1)>EPS;
-	int has_b2=B2 && FABS(wt2)>EPS;
+	int has_b1=B1 && ABS(wt1)>EPS;
+	int has_b2=B2 && ABS(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	    for(long i=0; i<B1->nx*B1->ny; i++){
@@ -298,8 +302,8 @@ void X(cwmcol2)(X(mat) *restrict A,
 	error("A cannot be empty\n");
     }
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
-    int has_b1=B1 && FABS(wt1)>EPS;
-    int has_b2=B2 && FABS(wt2)>EPS;
+    int has_b1=B1 && ABS(wt1)>EPS;
+    int has_b2=B2 && ABS(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	for(long ix=0; ix<A->nx; ix++){
@@ -332,8 +336,8 @@ void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,
     if(!W){
 	X(cwmcol2)(A, B1, wt1, B2, wt2);
     }else {
-	int has_b1=B1 && FABS(wt1)>EPS;
-	int has_b2=B2 && FABS(wt2)>EPS;
+	int has_b1=B1 && ABS(wt1)>EPS;
+	int has_b2=B2 && ABS(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	    T (*As)[A->nx]=(T(*)[A->nx])A->p;
@@ -415,7 +419,7 @@ void X(cwdiv)(X(mat) *B, const X(mat) *A, T value){
     assert(A->nx==B->nx && A->ny==B->ny);
     for(int i=0; i<A->nx*A->ny; i++){
 	B->p[i]/=A->p[i];
-	if(isnan(REAL(B->p[i]))) B->p[i]=value;
+	if(isnan(creal(B->p[i]))) B->p[i]=value;
     }
 }
 /**
@@ -511,7 +515,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(mat) *C=NULL;
     X(cp)(&C,A);
     X(add)(&C,1,B,-1);
-    T d=SQRT(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
+    T d=sqrt(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
     X(free)(C);
     return isnan(d)?0:d;
 }
@@ -544,11 +548,11 @@ void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
 		for(int jy=0; jy<nres; jy++){
 		    R iiy=iy+(jy-resm)*2*res;
 		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    R wty=1.-FABS(iy-iiy);
+		    R wty=1.-ABS(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
 			R iix=ix+(jx-resm)*2*res;
 			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			R wtx=1.-FABS(ix-iix);
+			R wtx=1.-ABS(ix-iix);
 			if(rr2r<r2){
 			    tot+=res2*wty*wtx;
 			}
@@ -671,7 +675,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx,
     PMAT(im,pim);
     for(int iy=0; iy<im->ny; iy++){
 	for(int ix=0; ix<im->nx; ix++){
-	    iI=REAL(pim[iy][ix])-bkgrnd;
+	    iI=creal(pim[iy][ix])-bkgrnd;
 	    if(iI>thres){
 		sum+=iI;
 		sumx+=iI*ix;
@@ -679,7 +683,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx,
 	    }
 	}
     }
-    if(FABS(sum)>0){
+    if(ABS(sum)>0){
 	grad[0]=sumx/sum-((R)(im->nx-1)*0.5+offsetx);
 	grad[1]=sumy/sum-((R)(im->ny-1)*0.5+offsety);
     }else{
@@ -698,7 +702,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R grad[2];
     R Amax=X(max)(A);
     X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
-    if(FABS(grad[0])>0.1 || FABS(grad[1])>0.1){
+    if(ABS(grad[0])>0.1 || ABS(grad[1])>0.1){
 	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(mat) *B=XC(new)(A->nx,A->ny);
 	//XC(fft2plan)(B,-1);
@@ -764,8 +768,8 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	    }
 	}
 	/*normalize*/
-	R norm=SQRT(REAL(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum));
-	if(FABS(norm)>1.e-15){
+	R norm=sqrt(creal(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum));
+	if(ABS(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){
 		pMod[imod][ix]*=norm;
@@ -790,7 +794,7 @@ int X(clip)(X(mat) *A, R min, R max){
     T *restrict Ap=A->p;
     int nclip=0;
     for(long i=0; i<A->nx *A->ny; i++){
-	R Ar=REAL(Ap[i]);
+	R Ar=creal(Ap[i]);
 	if(Ar>max) {
 	    Ap[i]=max;
 	    nclip++;
@@ -834,7 +838,7 @@ void X(muldiag2)(X(mat) *A, const X(mat) *s){
 void X(cwpow)(X(mat)*A, R power){
     if(!A) return;
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=POW(A->p[i],power);
+	A->p[i]=pow(A->p[i],power);
     }
 }
 
@@ -844,7 +848,7 @@ void X(cwpow)(X(mat)*A, R power){
 void X(cwexp)(X(mat)*A, R alpha){
     if(!A) return;
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=EXP(A->p[i]*alpha);
+	A->p[i]=exp(A->p[i]*alpha);
     }
 }
 
@@ -855,7 +859,7 @@ void X(cwpow_thres)(X(mat) *A, R power, R thres){
     thres*=X(maxabs)(A);
     for(long i=0; i<A->nx*A->ny; i++){
 	if(ABS(A->p[i])>thres){
-	    A->p[i]=POW(A->p[i], power);
+	    A->p[i]=pow(A->p[i], power);
 	}else{
 	    A->p[i]=0;
 	}
@@ -873,7 +877,7 @@ void X(polyval)(X(mat) *A, XR(mat)*p){
     for(long i=0; i<A->nx*A->ny; i++){
 	T tmp=0;
 	for(long ip=0; ip<np; ip++){
-	    tmp+=p->p[ip]*(T)POW(A->p[i], np-ip-1);
+	    tmp+=p->p[ip]*(T)pow(A->p[i], np-ip-1);
 	}
 	A->p[i]=tmp;
     }
@@ -979,7 +983,7 @@ static int X(islog)(const X(mat)*xin){
     R x1=log10(xin->p[1]);
     R xmaxl=log10(xin->p[nmax1]);
     R xsep=(xmaxl-xminl)/(R)(nmax1);
-    if(!isfinite(xsep) || FABS(xsep+xminl-x1)>xsep*1.e-3){
+    if(!isfinite(xsep) || ABS(xsep+xminl-x1)>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1168,7 +1172,7 @@ void X(histfill)(X(mat) **out, const X(mat)* A,
     const int noff=n/2;
     const int n1=n-1;
     for(long i=0; i<A->nx*A->ny; i++){
-	int ind=(int)round(REAL(Ap[i]-center)*spacingi)+noff;
+	int ind=(int)round(creal(Ap[i]-center)*spacingi)+noff;
 	if(ind<0) ind=0;
 	if(ind>n1) ind=n1;
 	Op[i][ind]++;
@@ -1279,7 +1283,7 @@ X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat) *xnew){
     T xsep1=(T)(nx-1)/(x->p[nx-1]-xmin);
     X(mat) *out=X(new)(xnew->nx, xnew->ny);
     for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-	R xn=REAL((xnew->p[ix]-xmin)*xsep1);
+	R xn=creal((xnew->p[ix]-xmin)*xsep1);
 	long xnf=floor(xn);
 	if(xnf<0) xnf=0;
 	if(xnf>nx-2) xnf=nx-2;
@@ -1306,7 +1310,7 @@ X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew){
 void X(cwlog10)(X(mat) *A){
     R ratio=1./log(10);
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=LOG(A->p[i])*ratio;
+	A->p[i]=log(A->p[i])*ratio;
     }
 }
 /**
@@ -1314,7 +1318,7 @@ void X(cwlog10)(X(mat) *A){
 */
 void X(cwlog)(X(mat) *A){
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=LOG(A->p[i]);
+	A->p[i]=log(A->p[i]);
     }
 }
 /**
@@ -1333,7 +1337,7 @@ void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
     const long noutx=A->nx;
     const long nouty=A->ny;
     memset(A->p, 0, sizeof(T)*noutx*nouty);
-    if(FABS(theta)<1.e-10){/*no rotation. */
+    if(ABS(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
 	const long skipy=(nouty-niny-1)/2;
 	long ixstart=0, ixend=ninx;
@@ -1900,13 +1904,13 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
     X(mat)*zz=X(new)(xnew->nx, xnew->ny);
     PCELL(coeff,pc);
     for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
-	R xm=REAL((xnew->p[ix]-xmin)*xsep1);
+	R xm=creal((xnew->p[ix]-xmin)*xsep1);
 	long xmf=floor(xm);
 	if(xmf<0) xmf=0;
 	if(xmf>nx-2) xmf=nx-2;
 	xm=xm-xmf;
 
-	R ym=REAL((ynew->p[ix]-ymin)*ysep1);
+	R ym=creal((ynew->p[ix]-ymin)*ysep1);
 	long ymf=floor(ym);
 	if(ymf<0) ymf=0;
 	if(ymf>ny-2) ymf=ny-2;

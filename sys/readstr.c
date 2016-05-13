@@ -27,7 +27,15 @@
 */
 
 /**
-   Obtain a string array value from the key.
+   Obtain a string array value from the key. String entries must be separated by
+   space, coma [,] or semi-column [;]. Enclosing with quote is optional, but
+   necessary to protect spaces.
+   Examples:
+   []: one empty string
+   [,]: two empty strings
+   [a b]: two strings: "a" and "b";
+   [a,b]: same as [a b]
+   ['a b']: one string "a b".
  */
 int readstr_strarr(char ***res, /**<[out] Result*/
 		   int len,     /**<[in] Length of array*/
@@ -46,9 +54,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
     const char *sdata2=sdata;
     if(sdata[0]=='['){
 	sdata2++;
-	if(sdataend[0]==']'){
-	    sdataend--;
-	}else{
+	if(sdataend[0]!=']'){
 	    error("{%s}: Does not end in ].\n", sdata);
 	}
     }
@@ -56,32 +62,59 @@ int readstr_strarr(char ***res, /**<[out] Result*/
     while(sdata2<sdataend && sdata2[0]==' '){
 	sdata2++;
     }
-    while(sdata2<sdataend){
-	char mark=' ';
+    int end_coma=0;//end with coma. append an additional element.
+    while(sdata2<sdataend || end_coma){
+	const char *sdata4=sdataend;
+	const char *sdata3;
+	end_coma=0;
+	//If entry is quoted
 	if(sdata2[0]=='"' || sdata2[0]=='\''){
-	    mark=sdata2[0];
+	    char sep=sdata2[0];
 	    sdata2++;
+	    sdata4=strchr(sdata2, sep);//find matching quote.
+	    if(!sdata4){
+		error("{%s}: Unmatched quote in input\n", sdata);
+	    }
+	    sdata3=sdata4+1;
+	    //Skip spaces
+	    while(sdata3<sdataend && sdata3[0]==' '){
+		sdata3++;
+	    }
+	    //Ignore separator following the quote.
+	    if(sdata3[0]==',' || sdata3[0]==';'){
+		sdata3++;
+		end_coma=1;
+	    }
+	}else{
+	    //Find the next space, coma or semi-colon.
+	    char sep[]=" ,;";
+	    for(int is=0; is<sizeof(sep); is++){
+		const char *tmp=strchr(sdata2, sep[is]);
+		if(tmp && tmp<sdata4 && tmp<sdataend){
+		    sdata4=tmp;
+		}
+	    }
+	    if(sdata4[0]==',' || sdata4[0]==';'){
+		end_coma=1;
+	    }
+	    //skip the separator
+	    sdata3=sdata4+1;
 	}
-	const char *sdata4=strchr(sdata2, mark);
-	if(!sdata4){
-	    if(mark!=' '){
-		error("{%s}: Unmatched string\n", sdata);
+	if(count>=maxcount){//check memory
+	    if(len){
+		maxcount*=2;
+		*res=realloc(*res,sizeof(char*)*maxcount);
 	    }else{
-		sdata4=sdataend+1;
+		error("need %d, got more than %d elements\n", len, count);
 	    }
 	}
 	if(sdata4>sdata2){/*found non-empty str*/
-	    if(!len && count>=maxcount){
-		maxcount*=2;
-		*res=realloc(*res,sizeof(char*)*maxcount);
-	    }
-	    (*res)[count]=mystrndup(sdata2, sdata4-sdata2);
+	    (*res)[count++]=mystrndup(sdata2, sdata4-sdata2);
 	}else{/*found empty str*/
-	    (*res)[count]=NULL;
+	    (*res)[count++]=NULL;
 	}
-	count++;
-	sdata2=sdata4+1;
-	while(sdata2<sdataend && (sdata2[0]==' ' || sdata2[0]==';')){
+	sdata2=sdata3;
+	while(sdata2<sdataend && (sdata2[0]==' ')){//skip space
 	    sdata2++;
 	}
     }

@@ -355,50 +355,50 @@ typedef struct RECON_T{
 }RECON_T;
 
 typedef struct SIM_SAVE_T{
-    /*cellarrs to save telemetry data.*/
-    cellarr **wfspsfout; /**<special file to save wfs psf history*/
-    cellarr **ztiltout;  /**<special file to save zernike wfs tilt history*/
+    /*zfarrs to save telemetry data.*/
+    zfarr **wfspsfout; /**<special file to save wfs psf history*/
+    zfarr **ztiltout;  /**<special file to save zernike wfs tilt history*/
     /*Evaluation directions PSF. */
-    cellarr * evlpsfolmean;  /**<science field psf OL time average*/
-    cellarr **evlpsfmean;    /**<science field psf CL time average*/
-    cellarr **evlpsfhist;    /**<to save time history of science field psf*/
-    cellarr **evlopdcov;     /**<science field OPD covariance*/
-    cellarr **evlopdmean;    /**<science field OPD mean*/
-    cellarr *evlopdcovol;    /**<science field OPD covariance (open loop)*/
-    cellarr *evlopdmeanol;   /**<science field OPD mean (open loop)*/
-    cellarr **evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
-    cellarr **evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
-    cellarr **evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
-    cellarr **evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
-    cellarr **ecovxx;     /**<the time history of xx used to calculate ecov.*/
+    zfarr * evlpsfolmean;  /**<science field psf OL time average*/
+    zfarr **evlpsfmean;    /**<science field psf CL time average*/
+    zfarr **evlpsfhist;    /**<to save time history of science field psf*/
+    zfarr **evlopdcov;     /**<science field OPD covariance*/
+    zfarr **evlopdmean;    /**<science field OPD mean*/
+    zfarr *evlopdcovol;    /**<science field OPD covariance (open loop)*/
+    zfarr *evlopdmeanol;   /**<science field OPD mean (open loop)*/
+    zfarr **evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
+    zfarr **evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
+    zfarr **evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
+    zfarr **evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
+    zfarr **ecovxx;     /**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
-    cellarr *dmerr;
-    cellarr *dmint;
-    cellarr *dmfit;
-    cellarr *dmreal;
+    zfarr *dmerr;
+    zfarr *dmint;
+    zfarr *dmfit;
+    zfarr *dmreal;
     dmat *ttmreal;
-    cellarr *dmcmd;
-    cellarr *dmproj;
+    zfarr *dmcmd;
+    zfarr *dmproj;
     /*Low order modes */
-    cellarr *Merr_lo;
-    cellarr *Mint_lo;
-    cellarr *opdr;
-    cellarr *opdx;
+    zfarr *Merr_lo;
+    zfarr *Mint_lo;
+    zfarr *opdr;
+    zfarr *opdx;
     /*science */
-    cellarr **evlopdcl;
-    cellarr **evlopdol;
+    zfarr **evlopdcl;
+    zfarr **evlopdol;
 
-    cellarr **wfsopd;
-    cellarr **wfsopdol;
-    cellarr **wfslltopd;
+    zfarr **wfsopd;
+    zfarr **wfsopdol;
+    zfarr **wfslltopd;
     /*gradients */
-    cellarr **gradcl;
-    cellarr **gradgeom;
-    cellarr **gradol;
-    cellarr **intsny;
-    cellarr **intsnf;
-    cellarr **dm_evl;
-    cellarr **dm_wfs;
+    zfarr **gradcl;
+    zfarr **gradgeom;
+    zfarr **gradol;
+    zfarr **intsny;
+    zfarr **intsnf;
+    zfarr **dm_evl;
+    zfarr **dm_wfs;
     /*covariances */
 }SIM_SAVE_T;
 /*

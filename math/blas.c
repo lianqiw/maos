@@ -202,7 +202,7 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     int scaling=0;
     {
 	R norm=sqrt(X(norm)(A));
-	scaling=(int)ceil(log2(FABS(norm*beta*threshold)));
+	scaling=(int)ceil(log2(ABS(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
     X(add)(&m_small, 0, A, beta*exp2(-scaling));
@@ -259,7 +259,7 @@ X(mat)* X(chol)(const X(mat) *A){
     if(A->nx!=A->ny) error("dchol requires square matrix\n");
     X(mat) *B = X(dup)(A);
     if(A->nx==1){
-	B->p[0]=SQRT(B->p[0]);
+	B->p[0]=sqrt(B->p[0]);
 	return B;
     }
     ptrdiff_t n=B->nx;
@@ -314,7 +314,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #else
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
 #endif
-    lwork=(ptrdiff_t)REAL(work0[0]);
+    lwork=(ptrdiff_t)creal(work0[0]);
     T *work1=malloc(sizeof(T)*lwork);
 #ifdef USE_COMPLEX
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
@@ -352,10 +352,10 @@ void X(svd_pow)(X(mat) *A, R power, R thres){
     X(mat) *VT=NULL;
     X(svd)(&U, &Sdiag, &VT, A);
     /*eigen values below the threshold will not be used. the first is the biggest. */
-    R maxeig=FABS(Sdiag->p[0]);
+    R maxeig=ABS(Sdiag->p[0]);
     R thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
+	if(ABS(Sdiag->p[i])>thres0){/*only do with  */
 	    if(thres<0){/*compare adjacent eigenvalues*/
 		thres0=Sdiag->p[i]*(-thres);
 	    }

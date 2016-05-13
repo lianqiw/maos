@@ -42,7 +42,7 @@ echo -n "LGS MCAO ($((D*4))x$((D*4))):"
 echo $(./maos $args aper.d=$D dm.dx=[0.25 0.25] 2>>maos_check.stderr ) nm
 
 echo -n "LGS MOAO:        "
-echo $(./maos $args aper.d=$D evl.moao=0 moao.order=[$D] 2>>maos_check.stderr ) nm
+echo $(./maos $args aper.d=$D evl.moao=0 moao.dx=[1/2] 2>>maos_check.stderr ) nm
 
 echo -n "LGS GLAO:        "
 echo $(./maos $args aper.d=$D dm_single.conf  recon.glao=1 wfs_lgs_only.conf 2>>maos_check.stderr ) nm

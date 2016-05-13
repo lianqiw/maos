@@ -1518,7 +1518,7 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
    reverse = 0 : from oin to out: out=out*alpha+in*beta
    reverse = 1 : from out to oin: in=in*beta+out*alpha
 */
-#define LOC_EMBED_DEF(X, T, R, REAL)					\
+#define LOC_EMBED_DEF(X, T, R, OPX)					\
     void X(embed_locstat)(X(mat) **restrict out, double alpha,		\
 			  loc_t *restrict loc,				\
 			  R *restrict oin, double beta, int reverse){	\
@@ -1573,20 +1573,20 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 		R *restrict oin2=oin+pos1;				\
 		if(fabs(beta)>EPS){					\
 		    for(long ix=0; ix<pos2-pos1; ix++){			\
-			oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);	\
+			oin2[ix]=oin2[ix]*beta+alpha*OPX(dest[ix]);	\
 		    }							\
 		}else{							\
 		    for(long ix=0; ix<pos2-pos1; ix++){			\
-		    oin2[ix]=alpha*REAL(dest[ix]);			\
+		    oin2[ix]=alpha*OPX(dest[ix]);			\
 		}							\
 	    }								\
 	}								\
     }									\
 }
 
-#define REAL(A) (A)
-LOC_EMBED_DEF(AOS_DMAT, double, double, REAL)
-#undef REAL
-#define REAL(A) creal(A)
-LOC_EMBED_DEF(AOS_CMAT, dcomplex, double, REAL)
-#undef REAL
+#define OPX(A) (A)
+LOC_EMBED_DEF(AOS_DMAT, double, double, OPX)
+#undef OPX
+#define OPX(A) creal(A)
+LOC_EMBED_DEF(AOS_CMAT, dcomplex, double, OPX)
+#undef OPX

@@ -16,32 +16,32 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LIB_CELLARR_H
-#define AOS_LIB_CELLARR_H
+#ifndef AOS_LIB_ZFARR_H
+#define AOS_LIB_ZFARR_H
 #include "type.h"
 /**
-   \file cellarr.h
-   cellarr is an object used to write arrays of dcell or ccell into file.
+   \file zfarr.h
+   zfarr is an object used to write arrays of dcell or ccell into file.
    Mainly used to output PSF into files.
 */
 /*
    used to save array of dmat, cmat, ccell or dcell. mainly used to save
 psfout. No user modifiable entries.  */
-typedef struct cellarr{
+typedef struct zfarr{
     file_t *fp;     /**<pointer to file*/
     long cur;       /**<Current element*/
     long tot;       /**<Total number of elements*/
-}cellarr;
-cellarr* cellarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
-void cellarr_push(cellarr *ca, int i, const void *A);
-void cellarr_dcell(cellarr *ca, int i, const dcell *A);
-void cellarr_scell(cellarr *ca, int i, const scell *A);
-void cellarr_ccell(cellarr *ca, int i, const ccell *A);
-void cellarr_zcell(cellarr *ca, int i, const zcell *A);
-void cellarr_dmat(cellarr *ca, int i, const dmat *A);
-void cellarr_smat(cellarr *ca, int i, const smat *A);
-void cellarr_cmat(cellarr *ca, int i, const cmat *A);
-void cellarr_zmat(cellarr *ca, int i, const zmat *A);
-void cellarr_close(cellarr *ca);
-void cellarr_close_n(cellarr **ca, int nc);
+}zfarr;
+zfarr* zfarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
+void zfarr_push(zfarr *ca, int i, const void *A);
+void zfarr_dcell(zfarr *ca, int i, const dcell *A);
+void zfarr_scell(zfarr *ca, int i, const scell *A);
+void zfarr_ccell(zfarr *ca, int i, const ccell *A);
+void zfarr_zcell(zfarr *ca, int i, const zcell *A);
+void zfarr_dmat(zfarr *ca, int i, const dmat *A);
+void zfarr_smat(zfarr *ca, int i, const smat *A);
+void zfarr_cmat(zfarr *ca, int i, const cmat *A);
+void zfarr_zmat(zfarr *ca, int i, const zmat *A);
+void zfarr_close(zfarr *ca);
+void zfarr_close_n(zfarr **ca, int nc);
 #endif

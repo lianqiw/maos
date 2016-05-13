@@ -28,7 +28,7 @@
 #include "spbin.h"
 #include "cell.h"
 #include "chol.h"
-#include "cellarr.h"
+#include "zfarr.h"
 #include "mathmisc.h"
 #include "locbin.h"
 #include "random.h"

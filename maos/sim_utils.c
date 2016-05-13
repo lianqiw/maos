@@ -509,24 +509,24 @@ static void init_simu_evl(SIM_T *simu){
 	if(parms->evl.psfmean && !parms->sim.evlol){
 	    simu->evlpsfmean=cellnew(parms->evl.nwvl,nevl);
 	    simu->evlpsfmean->header=strdup(header);
-	    save->evlpsfmean=calloc(nevl, sizeof(cellarr*));
+	    save->evlpsfmean=calloc(nevl, sizeof(zfarr*));
 	    simu->evlpsfmean_ngsr=cellnew(parms->evl.nwvl,nevl);
 	    simu->evlpsfmean_ngsr->header=strdup(header);
-	    save->evlpsfmean_ngsr=calloc(nevl, sizeof(cellarr*));
+	    save->evlpsfmean_ngsr=calloc(nevl, sizeof(zfarr*));
 	}
 	if(parms->evl.psfhist){
-	    save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
-	    save->evlpsfhist_ngsr=calloc(nevl, sizeof(cellarr*));
+	    save->evlpsfhist=calloc(nevl, sizeof(zfarr*));
+	    save->evlpsfhist_ngsr=calloc(nevl, sizeof(zfarr*));
 	}
 	if(parms->evl.cov){
 	    simu->evlopdcov=cellnew(nevl,1);
 	    simu->evlopdcov_ngsr=cellnew(nevl,1);
-	    save->evlopdcov=calloc(nevl, sizeof(cellarr*));
-	    save->evlopdcov_ngsr=calloc(nevl, sizeof(cellarr*));
+	    save->evlopdcov=calloc(nevl, sizeof(zfarr*));
+	    save->evlopdcov_ngsr=calloc(nevl, sizeof(zfarr*));
 	    simu->evlopdmean=cellnew(nevl,1);
 	    simu->evlopdmean_ngsr=cellnew(nevl,1);
-	    save->evlopdmean=calloc(nevl, sizeof(cellarr*));
-	    save->evlopdmean_ngsr=calloc(nevl, sizeof(cellarr*));
+	    save->evlopdmean=calloc(nevl, sizeof(zfarr*));
+	    save->evlopdmean_ngsr=calloc(nevl, sizeof(zfarr*));
 	}
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf->p[ievl]) continue;
@@ -537,23 +537,23 @@ static void init_simu_evl(SIM_T *simu){
 	    }
 	    if(parms->evl.psfngsr->p[ievl]!=2 && !parms->sim.evlol){
 		if(parms->evl.psfmean){
-		    save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
+		    save->evlpsfmean[ievl]=zfarr_init(parms->evl.nwvl,nframepsf, 
 							"evlpsfcl_%d_x%g_y%g%s.fits", seed,
 							parms->evl.thetax->p[ievl]*206265,
 							parms->evl.thetay->p[ievl]*206265, strht);
 		}
 		if(parms->evl.psfhist){
-		    save->evlpsfhist[ievl]=cellarr_init(parms->sim.end, 1,
+		    save->evlpsfhist[ievl]=zfarr_init(parms->sim.end, 1,
 							"evlpsfhist_%d_x%g_y%g%s.bin", seed,
 							parms->evl.thetax->p[ievl]*206265,
 							parms->evl.thetay->p[ievl]*206265,strht);
 		}
 		if(parms->evl.cov){
-		    save->evlopdcov[ievl]=cellarr_init(nframecov, 1,
+		    save->evlopdcov[ievl]=zfarr_init(nframecov, 1,
 						       "evlopdcov_%d_x%g_y%g%s.bin", seed,
 						       parms->evl.thetax->p[ievl]*206265,
 						       parms->evl.thetay->p[ievl]*206265, strht);
-		    save->evlopdmean[ievl]=cellarr_init(nframecov, 1,
+		    save->evlopdmean[ievl]=zfarr_init(nframecov, 1,
 							"evlopdmean_%d_x%g_y%g%s.bin", seed,
 							parms->evl.thetax->p[ievl]*206265,
 							parms->evl.thetay->p[ievl]*206265, strht);
@@ -561,23 +561,23 @@ static void init_simu_evl(SIM_T *simu){
 	    }
 	    if(parms->evl.psfngsr->p[ievl]!=0 && !parms->sim.evlol){
 		if(parms->evl.psfmean){
-		    save->evlpsfmean_ngsr[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
+		    save->evlpsfmean_ngsr[ievl]=zfarr_init(parms->evl.nwvl,nframepsf, 
 							     "evlpsfcl_ngsr_%d_x%g_y%g%s.fits", seed,
 							     parms->evl.thetax->p[ievl]*206265,
 							     parms->evl.thetay->p[ievl]*206265, strht);
 		}
 		if(parms->evl.psfhist){
-		    save->evlpsfhist_ngsr[ievl]=cellarr_init(parms->sim.end, 1,
+		    save->evlpsfhist_ngsr[ievl]=zfarr_init(parms->sim.end, 1,
 							     "evlpsfhist_ngsr_%d_x%g_y%g%s.bin", seed,
 							     parms->evl.thetax->p[ievl]*206265,
 							     parms->evl.thetay->p[ievl]*206265,strht);
 		}
 		if(parms->evl.cov){
-		    save->evlopdcov_ngsr[ievl]=cellarr_init(nframecov, 1,
+		    save->evlopdcov_ngsr[ievl]=zfarr_init(nframecov, 1,
 							    "evlopdcov_ngsr_%d_x%g_y%g%s.bin", seed,
 							    parms->evl.thetax->p[ievl]*206265,
 							    parms->evl.thetay->p[ievl]*206265, strht);
-		    save->evlopdmean_ngsr[ievl]=cellarr_init(nframecov, 1,
+		    save->evlopdmean_ngsr[ievl]=zfarr_init(nframecov, 1,
 							     "evlopdmean_ngsr_%d_x%g_y%g%s.bin", seed,
 							     parms->evl.thetax->p[ievl]*206265,
 							     parms->evl.thetay->p[ievl]*206265, strht);
@@ -589,11 +589,11 @@ static void init_simu_evl(SIM_T *simu){
 	    if(parms->evl.psfmean){
 		simu->evlpsfolmean=cellnew(parms->evl.nwvl,1);
 		simu->evlpsfolmean->header=strdup(header);
-		save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
+		save->evlpsfolmean=zfarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
 	    }
 	    if(parms->evl.cov){
-		save->evlopdcovol=cellarr_init(nframecov, 1, "evlopdcovol_%d", seed);
-		save->evlopdmeanol=cellarr_init(nframecov, 1, "evlopdmean_%d", seed);
+		save->evlopdcovol=zfarr_init(nframecov, 1, "evlopdcovol_%d", seed);
+		save->evlopdmeanol=zfarr_init(nframecov, 1, "evlopdmean_%d", seed);
 	    }
 	}
     }
@@ -605,7 +605,7 @@ static void init_simu_evl(SIM_T *simu){
 	    simu->ecov=cellnew(nevl, 1);
 	    if(parms->dbg.ecovxx){/*temporary. */
 		warning("Saving history of ecov_xx\n");
-		save->ecovxx=calloc(nevl, sizeof(cellarr *));
+		save->ecovxx=calloc(nevl, sizeof(zfarr *));
 		char strht[24];
 		for(int ievl=0; ievl<nevl; ievl++){
 		    if(!parms->evl.psf->p[ievl]) continue;
@@ -615,7 +615,7 @@ static void init_simu_evl(SIM_T *simu){
 			strht[0]='\0';
 		    }
 	    
-		    save->ecovxx[ievl]=cellarr_init(parms->sim.end, 1,
+		    save->ecovxx[ievl]=zfarr_init(parms->sim.end, 1,
 						    "ecovxx_%d_x%g_y%g%s.bin", seed,
 						    parms->evl.thetax->p[ievl]*206265,
 						    parms->evl.thetay->p[ievl]*206265,strht);
@@ -626,13 +626,13 @@ static void init_simu_evl(SIM_T *simu){
 
     if(parms->save.evlopd){
 	int nstep=parms->sim.end;
-	save->evlopdol=calloc(nevl, sizeof(cellarr*));
-	save->evlopdcl=calloc(nevl, sizeof(cellarr*));
+	save->evlopdol=calloc(nevl, sizeof(zfarr*));
+	save->evlopdcl=calloc(nevl, sizeof(zfarr*));
 
 	for(int ievl=0; ievl<nevl; ievl++){
-	    save->evlopdol[ievl]=cellarr_init(nstep,1, 
+	    save->evlopdol[ievl]=zfarr_init(nstep,1, 
 					      "evl%d_opdol_%d.bin",ievl,seed);
-	    save->evlopdcl[ievl]=cellarr_init(nstep,1,
+	    save->evlopdcl[ievl]=zfarr_init(nstep,1,
 					      "evl%d_opdcl_%d.bin",ievl,seed);
 	}
     }
@@ -705,8 +705,8 @@ static void init_simu_wfs(SIM_T *simu){
     simu->ints=cellnew(nwfs, 1);
     simu->wfspsfout=cellnew(nwfs, 1);
     simu->pistatout=cellnew(nwfs, 1);
-    save->wfspsfout=calloc(nwfs,sizeof(cellarr*));
-    save->ztiltout =calloc(nwfs,sizeof(cellarr*));
+    save->wfspsfout=calloc(nwfs,sizeof(zfarr*));
+    save->ztiltout =calloc(nwfs,sizeof(zfarr*));
     simu->gradcl=cellnew(nwfs,1);
     simu->wfsopd=cellnew(nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
@@ -819,7 +819,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    }
 	    mymkdir("%s/wvfout/", dirskysim);
 	    mymkdir("%s/ztiltout/", dirskysim);
-	    save->wfspsfout[iwfs]=cellarr_init
+	    save->wfspsfout[iwfs]=zfarr_init
 		(parms->sim.end-parms->sim.start,1,
 		 "%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
 		 dirskysim, seed,
@@ -827,7 +827,7 @@ static void init_simu_wfs(SIM_T *simu){
 		 parms->wfs[iwfs].thetax*206265,
 		 parms->wfs[iwfs].thetay*206265);
 	
-	    save->ztiltout[iwfs]=cellarr_init
+	    save->ztiltout[iwfs]=zfarr_init
 		(parms->sim.end-parms->sim.start,1,
 		 "%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
 		 dirskysim, seed,
@@ -846,58 +846,58 @@ static void init_simu_wfs(SIM_T *simu){
     }
     int nstep=parms->sim.end;
     if(parms->save.wfsopd){
-	save->wfsopd=calloc(nwfs, sizeof(cellarr*));
-	save->wfsopdol=calloc(nwfs, sizeof(cellarr*));
-	save->wfslltopd=calloc(nwfs, sizeof(cellarr*));
+	save->wfsopd=calloc(nwfs, sizeof(zfarr*));
+	save->wfsopdol=calloc(nwfs, sizeof(zfarr*));
+	save->wfslltopd=calloc(nwfs, sizeof(zfarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(!parms->save.wfsopd->p[iwfs]){
 		continue;
 	    }
-	    save->wfsopd[iwfs]=cellarr_init(nstep, 1,"wfs%d_opd_%d.bin", iwfs, seed);
-	    save->wfsopdol[iwfs]=cellarr_init(nstep, 1,"wfs%d_opdol_%d.bin", iwfs, seed);
+	    save->wfsopd[iwfs]=zfarr_init(nstep, 1,"wfs%d_opd_%d.bin", iwfs, seed);
+	    save->wfsopdol[iwfs]=zfarr_init(nstep, 1,"wfs%d_opdol_%d.bin", iwfs, seed);
 	    if(powfs[ipowfs].llt){
-		save->wfslltopd[iwfs]=cellarr_init(nstep,1, "wfs%d_lltopd_%d.bin", iwfs, seed);
+		save->wfslltopd[iwfs]=zfarr_init(nstep,1, "wfs%d_lltopd_%d.bin", iwfs, seed);
 	    }
 	}
     }
     if(parms->save.ints){
-	save->intsny=calloc(nwfs, sizeof(cellarr*));
-	save->intsnf=calloc(nwfs, sizeof(cellarr*));
+	save->intsny=calloc(nwfs, sizeof(zfarr*));
+	save->intsnf=calloc(nwfs, sizeof(zfarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.ints->p[iwfs] && parms->powfs[ipowfs].usephy){
-		save->intsnf[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
+		save->intsnf[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
 		if(parms->powfs[ipowfs].noisy){
-		    save->intsny[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_intsny_%d.bin", iwfs, seed);
+		    save->intsny[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_intsny_%d.bin", iwfs, seed);
 		}
 	    }
 	}
     }
     if(!parms->sim.idealfit && !parms->sim.idealtomo){
 	if(parms->save.grad){
-	    save->gradcl=calloc(nwfs, sizeof(cellarr*));
-	    save->gradol=calloc(nwfs, sizeof(cellarr*));
+	    save->gradcl=calloc(nwfs, sizeof(zfarr*));
+	    save->gradol=calloc(nwfs, sizeof(zfarr*));
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int dtrat=parms->powfs[ipowfs].dtrat;
 		if(parms->save.grad->p[iwfs]){
-		    save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
+		    save->gradcl[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		    if(parms->powfs[ipowfs].psol){
-			save->gradol[iwfs]=cellarr_init(nstep/dtrat-1,1, 
+			save->gradol[iwfs]=zfarr_init(nstep/dtrat-1,1, 
 							"wfs%d_gradol_%d.bin", iwfs, seed);
 		    }
 		}
 	    }
 	}
 	if(parms->save.gradgeom){
-	    save->gradgeom=calloc(nwfs, sizeof(cellarr*));
+	    save->gradgeom=calloc(nwfs, sizeof(zfarr*));
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int dtrat=parms->powfs[ipowfs].dtrat;
 		if(parms->save.gradgeom->p[iwfs]){
-		    save->gradgeom[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+		    save->gradgeom[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 		}
 	    }
 	}
@@ -1194,24 +1194,24 @@ static void init_simu_dm(SIM_T *simu){
     int nstep=parms->sim.end;
     int nrstep=nstep-(parms->sim.closeloop?1:0);
     if(parms->save.dm){
-	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
-	save->dmint=cellarr_init(nrstep, 1,"dmint_%d.bin", seed);
+	save->dmerr=zfarr_init(nrstep, 1,"dmerr_%d.bin", seed);
+	save->dmint=zfarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	if(parms->recon.psol){
-	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
+	    save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){
-	    save->Merr_lo=cellarr_init(nstep-parms->sim.dtrat_lo, 1, "Merr_lo_%d.bin", seed);
+	    save->Merr_lo=zfarr_init(nstep-parms->sim.dtrat_lo, 1, "Merr_lo_%d.bin", seed);
 	    if(!parms->sim.fuseint){
-		save->Mint_lo=cellarr_init(nstep-parms->sim.dtrat_lo, 1, "Mint_lo_%d.bin", seed);
+		save->Mint_lo=zfarr_init(nstep-parms->sim.dtrat_lo, 1, "Mint_lo_%d.bin", seed);
 	    }
 	}
 	if(parms->sim.lpttm>EPS){
 	    save->ttmreal= dnew_mmap(2, nstep, NULL, "ttmreal_%d.bin", seed);
 	}
-	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
-	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
+	save->dmreal = zfarr_init(nstep, 1, "dmreal_%d.bin", seed);
+	save->dmcmd  = zfarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){
-	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
+	    save->dmproj = zfarr_init(nstep, 1, "dmproj_%d.bin", seed);
 	}
 
     }
@@ -1259,19 +1259,19 @@ static void init_simu_moao(SIM_T *simu){
     #endif*/
     if(parms->save.dm){
 	if(simu->dm_wfs){
-	    save->dm_wfs=calloc(nwfs, sizeof(cellarr*));
+	    save->dm_wfs=calloc(nwfs, sizeof(zfarr*));
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int imoao=parms->powfs[ipowfs].moao;
 		if(imoao>-1){
-		    save->dm_wfs[iwfs]=cellarr_init(nstep,1,"wfs%d_moaofit_%d.bin",iwfs,seed);
+		    save->dm_wfs[iwfs]=zfarr_init(nstep,1,"wfs%d_moaofit_%d.bin",iwfs,seed);
 		}
 	    }
 	}
 	if(simu->dm_evl){
-	    save->dm_evl=calloc(nwfs, sizeof(cellarr*));
+	    save->dm_evl=calloc(nwfs, sizeof(zfarr*));
 	    for(int ievl=0; ievl<nevl; ievl++){
-		save->dm_evl[ievl]=cellarr_init(nstep,1, "evl%d_moaofit_%d.bin",ievl,seed);
+		save->dm_evl[ievl]=zfarr_init(nstep,1, "evl%d_moaofit_%d.bin",ievl,seed);
 	    }
 	}
     }
@@ -1362,10 +1362,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(parms->recon.alg==0){
 	    int nstep=parms->sim.end;
 	    if(parms->save.opdr){
-		save->opdr=cellarr_init(nstep-1,1, "opdr_%d.bin", seed);
+		save->opdr=zfarr_init(nstep-1,1, "opdr_%d.bin", seed);
 	    }
 	    if(parms->save.opdx){
-		save->opdx=cellarr_init(nstep, 1,"opdx_%d.bin", seed);
+		save->opdx=zfarr_init(nstep, 1,"opdx_%d.bin", seed);
 	    }
 	}
 	{
@@ -1535,8 +1535,8 @@ void free_simu(SIM_T *simu){
 	dcellfree(simu->oleNGSmp);
     }
     SIM_SAVE_T *save=simu->save;
-    cellarr_close_n(save->evlpsfhist, nevl);
-    cellarr_close_n(save->evlpsfhist_ngsr, nevl);
+    zfarr_close_n(save->evlpsfhist, nevl);
+    zfarr_close_n(save->evlpsfhist_ngsr, nevl);
     dcellfree(simu->evlpsfmean);
     dcellfree(simu->evlpsfolmean);
     dcellfree(simu->evlopdcov);
@@ -1546,15 +1546,15 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->evlpsfmean_ngsr);
     dcellfree(simu->evlopdcov_ngsr);
     dcellfree(simu->evlopdmean_ngsr);
-    cellarr_close_n(save->evlpsfmean, nevl);
-    cellarr_close_n(save->evlopdcov, nevl);
-    cellarr_close_n(save->evlopdmean, nevl);
-    cellarr_close(save->evlopdcovol);
-    cellarr_close(save->evlopdmeanol);
-    cellarr_close_n(save->evlpsfmean_ngsr, nevl);
-    cellarr_close_n(save->evlopdcov_ngsr, nevl);
-    cellarr_close_n(save->evlopdmean_ngsr,nevl);
-    cellarr_close(save->evlpsfolmean);
+    zfarr_close_n(save->evlpsfmean, nevl);
+    zfarr_close_n(save->evlopdcov, nevl);
+    zfarr_close_n(save->evlopdmean, nevl);
+    zfarr_close(save->evlopdcovol);
+    zfarr_close(save->evlopdmeanol);
+    zfarr_close_n(save->evlpsfmean_ngsr, nevl);
+    zfarr_close_n(save->evlopdcov_ngsr, nevl);
+    zfarr_close_n(save->evlopdmean_ngsr,nevl);
+    zfarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
     dfree(simu->lgsfocuslpf);
     cellfree(simu->ints);
@@ -1584,32 +1584,32 @@ void free_simu(SIM_T *simu){
     cellfree(simu->llt_tt);
     /*Close all files */
     
-    cellarr_close_n(save->wfspsfout, nwfs);
-    cellarr_close_n(save->ztiltout, nwfs);
-    cellarr_close(save->dmerr);
-    cellarr_close(save->dmint);
-    cellarr_close(save->dmfit);
-    cellarr_close(save->dmreal);    
-    cellarr_close(save->dmcmd);
+    zfarr_close_n(save->wfspsfout, nwfs);
+    zfarr_close_n(save->ztiltout, nwfs);
+    zfarr_close(save->dmerr);
+    zfarr_close(save->dmint);
+    zfarr_close(save->dmfit);
+    zfarr_close(save->dmreal);    
+    zfarr_close(save->dmcmd);
     dfree(save->ttmreal);
-    cellarr_close(save->dmproj);
-    cellarr_close(save->Merr_lo);
-    cellarr_close(save->Mint_lo);
-    cellarr_close(save->opdr);
-    cellarr_close(save->opdx);
-    cellarr_close_n(save->evlopdcl, nevl);
-    cellarr_close_n(save->evlopdol, nevl);
-    cellarr_close_n(save->ecovxx, nevl);
-    cellarr_close_n(save->wfsopd, nwfs);
-    cellarr_close_n(save->wfsopdol, nwfs);
-    cellarr_close_n(save->wfslltopd, nwfs);
-    cellarr_close_n(save->gradcl, nwfs);
-    cellarr_close_n(save->gradgeom, nwfs);
-    cellarr_close_n(save->gradol, nwfs);
-    cellarr_close_n(save->intsny, nwfs);
-    cellarr_close_n(save->intsnf, nwfs);
-    cellarr_close_n(save->dm_evl, nevl);
-    cellarr_close_n(save->dm_wfs, nwfs);
+    zfarr_close(save->dmproj);
+    zfarr_close(save->Merr_lo);
+    zfarr_close(save->Mint_lo);
+    zfarr_close(save->opdr);
+    zfarr_close(save->opdx);
+    zfarr_close_n(save->evlopdcl, nevl);
+    zfarr_close_n(save->evlopdol, nevl);
+    zfarr_close_n(save->ecovxx, nevl);
+    zfarr_close_n(save->wfsopd, nwfs);
+    zfarr_close_n(save->wfsopdol, nwfs);
+    zfarr_close_n(save->wfslltopd, nwfs);
+    zfarr_close_n(save->gradcl, nwfs);
+    zfarr_close_n(save->gradgeom, nwfs);
+    zfarr_close_n(save->gradol, nwfs);
+    zfarr_close_n(save->intsny, nwfs);
+    zfarr_close_n(save->intsnf, nwfs);
+    zfarr_close_n(save->dm_evl, nevl);
+    zfarr_close_n(save->dm_wfs, nwfs);
  
     dfree(simu->winddir);
     if(parms->fdlock){

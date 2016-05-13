@@ -124,12 +124,12 @@ inline dcomplex operator-(const dcomplex &B, float A){
 }
 #endif//#ifndef AOS_CUDA_GPU_H
 #else //#if defined(__cplusplus) C99 mode
-#include <math.h> //don't use tgmath. cause gcc out of memory when compiling cmath.h
+#include <tgmath.h> //tgmath caused gcc out of memory has been fixed
 typedef __complex__ double dcomplex;
 typedef __complex__ float fcomplex;
-#define COMPLEX(A,B) ((A)+(B)*I)
-#define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
-#define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
+#define COMPLEX(A,B) ((A)+I*(B))
+#define DCOMPLEX(A,B) ((double)(A)+I*(double)(B))
+#define FCOMPLEX(A,B) ((float)(A)+I*(float)(B))
 #if defined(__CYGWIN__)
 /*CYGWIN does not have complex.h. */
 #ifndef _Complex_I
@@ -156,7 +156,6 @@ fcomplex clogf(fcomplex);
 float cargf(fcomplex);
 #else //#if defined(__CYGWIN__)
 //C99 already has definitions we need
-#include <complex.h>
 #endif
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 /*BSD lacks few routines in C99 implementation*/

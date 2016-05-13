@@ -260,8 +260,8 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 	cmat *psfhat=cnew(nlpsf, nlpsf);
 	dmat *psf=dnew(nlpsf, nlpsf);
-	cellarr *lltpsfsave=NULL;
-	lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
+	zfarr *lltpsfsave=NULL;
+	lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
 	for(int illt=0; illt<intstat->lotf->ny; illt++){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		const double dx=powfs[ipowfs].llt->pts->dx;
@@ -274,10 +274,10 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		creal2d(&psf, 0, psfhat, 1);
 		info2("illt %d, iwvl %d has FWHM of %g\"\n",
 		      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
-		cellarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
+		zfarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
 	    }
 	}
-	cellarr_close(lltpsfsave);
+	zfarr_close(lltpsfsave);
 	cfree(psfhat);
 	dfree(psf);
     }

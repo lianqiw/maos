@@ -460,7 +460,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 	    lotfc=lwvf;
 	}
 	if(parms->save.wfsopd->p[iwfs]){
-	    cellarr_cur(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
+	    zfarr_cur(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
 	}
     }/*if has llt */
 
@@ -646,6 +646,6 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 	}/*for isa block loop */
     }/*for iwvl */
     if(parms->powfs[ipowfs].psfout){
-	cellarr_cuccell(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
+	zfarr_cuccell(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
     }
 }

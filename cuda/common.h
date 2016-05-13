@@ -41,7 +41,7 @@ typedef dmat rmat;
 #define X(A) d##A
 #define C(A) c##A
 #define Z(A) A
-#define cellarr_mat cellarr_dmat
+#define zfarr_mat zfarr_dmat
 #define FFT_T_C2C CUFFT_Z2Z
 #define FFT_T_C2R CUFFT_Z2D
 #define FFT_T_R2C CUFFT_D2Z
@@ -59,7 +59,7 @@ typedef smat rmat;
 #define X(A) s##A
 #define C(A) z##A
 #define Z(A) A##f
-#define cellarr_mat cellarr_smat
+#define zfarr_mat zfarr_smat
 #define FFT_T_C2C CUFFT_C2C
 #define FFT_T_C2R CUFFT_C2R
 #define FFT_T_R2C CUFFT_R2C

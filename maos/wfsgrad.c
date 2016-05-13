@@ -153,7 +153,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
+	zfarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
     }
  
     if(CL){
@@ -198,7 +198,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
+	zfarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
     }
     if(parms->plot.run){
 	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
@@ -228,12 +228,12 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     ccell *psfout=NULL;
-    cellarr *psfoutcellarr=NULL;
-    cellarr *ztiltoutcellarr=NULL;
+    zfarr *psfoutzfarr=NULL;
+    zfarr *ztiltoutzfarr=NULL;
     if(parms->powfs[ipowfs].psfout){
 	psfout=simu->wfspsfout->p[iwfs];
-	psfoutcellarr=simu->save->wfspsfout[iwfs];
-	ztiltoutcellarr=simu->save->ztiltout[iwfs];
+	psfoutzfarr=simu->save->wfspsfout[iwfs];
+	ztiltoutzfarr=simu->save->ztiltout[iwfs];
     }
     TIM(1);
     /* Now begin Physical Optics Intensity calculations */
@@ -291,7 +291,7 @@ void wfsgrad_iwfs(thread_t *info){
 		loc_add_ptt(lltopd->p, ptt, powfs[ipowfs].llt->loc);
 	    }
 	    if(save_opd){
-		cellarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);
+		zfarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);
 	    }
 	}
 	if(parms->powfs[ipowfs].type==0){
@@ -310,8 +310,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    intsdata->opd=0;
 	    intsdata->lltopd=0;
 	    if(psfout){
-		cellarr_ccell(psfoutcellarr, isim, psfout);
-		cellarr_dmat(ztiltoutcellarr, isim, *gradacc);
+		zfarr_ccell(psfoutzfarr, isim, psfout);
+		zfarr_dmat(ztiltoutzfarr, isim, *gradacc);
 	    }
 	}else{//Pywfs
 	    pywfs_fft(&ints->p[0], powfs[ipowfs].pywfs, opd);
@@ -327,7 +327,7 @@ void wfsgrad_iwfs(thread_t *info){
 	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
 	    if(save_ints){
-		cellarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
+		zfarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
 	    }
 	    if(noisy){/*add noise */
 		const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
@@ -354,7 +354,7 @@ void wfsgrad_iwfs(thread_t *info){
 			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		}
 		if(save_ints){
-		    cellarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
+		    zfarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
 		}
 	    }
 	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_ogskip
@@ -402,7 +402,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-	    cellarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
+	    zfarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
     }//dtrat_out
@@ -791,7 +791,7 @@ void wfsgrad_post(thread_t *info){
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
-		cellarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
+		zfarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
 		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,

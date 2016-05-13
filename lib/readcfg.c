@@ -69,13 +69,13 @@ static long nused=0;/*number of read records */
 #define STRICT 1
 
 /**
-   trim the spaces or coma before and after string.*/
+   trim the spaces before and after string.*/
 static void strtrim(char **str){
     if(!*str) return;
     int iend;
     /*turn non-printable characters, coma, and semicolumn, to space */
     for(char *tmp=*str; !is_end(*tmp); tmp++){
-	if(!isgraph((int)*tmp) || *tmp==',' || isspace(*tmp)){
+	if(!isgraph((int)*tmp) || isspace(*tmp)){
 	    *tmp=' ';
 	}
     }
@@ -682,8 +682,9 @@ dmat *readcfg_dmat_nmax(int n, const char *format,...){
 void readcfg_strarr_n(char ***ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_strarr((char***)ret, len, getrecord(key, 1)->data))){
-	error("%s: Require %d elements, but got %d\n", key, len, len2);
+    const char *val=getrecord(key, 1)->data;
+    if(len!=(len2=readstr_strarr((char***)ret, len, val))){
+	error("%s: Require %d elements, but got %d from %s\n", key, len, len2, val);
     }
 }
 /**

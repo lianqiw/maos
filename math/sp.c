@@ -556,7 +556,7 @@ void X(spconj)(X(sp) *A){
 #ifdef USE_COMPLEX
     const long nzmax=A->p[A->ny];
     for(long i=0; i<nzmax; i++){
-	A->x[i]=CONJ(A->x[i]);
+	A->x[i]=conj(A->x[i]);
     }
 #endif
 }

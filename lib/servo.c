@@ -41,7 +41,7 @@ typedef struct SERVO_CALC_T{
 }SERVO_CALC_T;
 #define TWOPI 6.283185307179586
 /*Compute phase between -2pi, and 0*/
-INLINE double phase(dcomplex val){
+static inline double phase(dcomplex val){
     double ang=atan2(cimag(val), creal(val));
     if(ang>0){
 	ang=ang-TWOPI;
@@ -317,7 +317,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);
 
    sigma2n is a dmat array of all wanted sigma2n.
-   Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n]
+   Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]
 */
 dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 		   const dmat* sigma2n, int servo_type){

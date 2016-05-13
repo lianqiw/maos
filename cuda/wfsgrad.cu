@@ -366,7 +366,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
 	}
 	if(save_opd){
-	    cellarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
+	    zfarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
 	}
 	if(CL){
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
@@ -411,7 +411,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 			  cupowfs[ipowfs].fieldstop[0], parms->powfs[ipowfs].wvl->p[0], cuwfs[iwfs].plan_fs, stream);
 	}
 	if(save_opd){
-	    cellarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
+	    zfarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
 	}
 	if(parms->plot.run){
 	    const double *realamp=powfs[ipowfs].realamp->p[wfsind]->p;
@@ -448,7 +448,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		}
 	    }   
 	    if(parms->powfs[ipowfs].psfout){
-		cellarr_cur(simu->save->ztiltout[iwfs], simu->isim, gradcalc, stream);
+		zfarr_cur(simu->save->ztiltout[iwfs], simu->isim, gradcalc, stream);
 	    }
 	    if(do_phy || parms->powfs[ipowfs].psfout || parms->powfs[ipowfs].dither || do_pistatout){/*physical optics */
 		CUDA_CHECK_ERROR;
@@ -465,7 +465,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		const int pixpsa=(ints.N()==1)?4:(ints[0].N());//PyWFs and SHWFS
 		if(save_ints){
 		    CUDA_CHECK_ERROR;
-		    cellarr_curcell(simu->save->intsnf[iwfs], simu->isim/dtrat, ints, stream);
+		    zfarr_curcell(simu->save->intsnf[iwfs], simu->isim/dtrat, ints, stream);
 		    CUDA_CHECK_ERROR;
 		}
 		ctoc("mtche");
@@ -478,7 +478,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 			 rne, cuwfs[iwfs].custat);
 		    ctoc("noise");
 		    if(save_ints){
-			cellarr_curcell(simu->save->intsny[iwfs], simu->isim/dtrat, ints, stream);
+			zfarr_curcell(simu->save->intsny[iwfs], simu->isim/dtrat, ints, stream);
 		    }
 		}
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_ogskip 
@@ -575,12 +575,12 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 		cp2cpu(&gradcl, gradcalc, stream);
 	    }
 	    if(save_gradgeom){//also do geom grad during phy grad sims
-		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim/dtrat, gradacc, stream);
+		zfarr_cur(simu->save->gradgeom[iwfs], simu->isim/dtrat, gradacc, stream);
 	    }
 	}else{
 	    cp2cpu(&gradcl, gradacc, stream);
 	    if(save_gradgeom){
-		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim/dtrat, curmat(), stream);
+		zfarr_cur(simu->save->gradgeom[iwfs], simu->isim/dtrat, curmat(), stream);
 	    }
 	}
     }

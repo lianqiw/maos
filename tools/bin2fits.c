@@ -18,7 +18,7 @@
 
 /**
    \file bin2fits.c
-   Convert bin files to fits files. Supports matrix and cellarray of matrix.
+   Convert bin files to fits files. Supports matrix and zfarray of matrix.
 */
 
 #include "../lib/aos.h"

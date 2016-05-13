@@ -278,8 +278,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	int nn=1;
 	double wve=1e-9*160;
 	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
-	cellarr *pupsave=cellarr_init(nn,opds->ny,"ints");
-	cellarr *grads=cellarr_init(nn,opds->ny,"grads");
+	zfarr *pupsave=zfarr_init(nn,opds->ny,"ints");
+	zfarr *grads=zfarr_init(nn,opds->ny,"grads");
 	dmat *opd=0;
 	dmat *grad=0;
 	for(int im=0; im<opds->ny; im++){
@@ -290,13 +290,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		dzero(ints);
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-		cellarr_push(pupsave, j+im*nn, ints);
-		cellarr_push(grads, j+im*nn, grad);
+		zfarr_push(pupsave, j+im*nn, ints);
+		zfarr_push(grads, j+im*nn, grad);
 		dfree(opd);
 	    }
 	}
-	cellarr_close(pupsave);
-	cellarr_close(grads);
+	zfarr_close(pupsave);
+	zfarr_close(grads);
 	cellfree(ints);
 	dfree(opds);
 	exit(0);

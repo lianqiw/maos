@@ -389,35 +389,35 @@ cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)
 cp2cpu_cell(z, Comp)
 
-void cellarr_cur(struct cellarr *ca, int i, const curmat &A, cudaStream_t stream){
+void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream){
     X(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     X(free)(tmp);
 }
 
-void cellarr_cuc(struct cellarr *ca, int i, const cucmat &A, cudaStream_t stream){
+void zfarr_cuc(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream){
     C(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     C(free)(tmp);
 }
 
-void cellarr_curcell(struct cellarr *ca, int i, const curcell &A, cudaStream_t stream){
+void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream){
     X(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     X(cellfree)(tmp);
 }
 
-void cellarr_cuccell(struct cellarr *ca, int i, const cuccell &A, cudaStream_t stream){
+void zfarr_cuccell(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream){
     C(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     C(cellfree)(tmp);
 }
 

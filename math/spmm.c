@@ -84,7 +84,7 @@ void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha
  * sparse matrix multiply with a vector: y=y+op(A)*x*alpha
  op(A)=A  if trans=='n'
  op(A)=A' if trans=='t'
- op(A)=CONJ(A') if trans=='c'
+ op(A)=conj(A') if trans=='c'
 */
 void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha){
     if(A && x){
@@ -108,7 +108,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
 	    OMPTASK_FOR(icol, 0, A->ny){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    tmp+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
+		    tmp+=alpha*conj(A->x[ix])*x[A->i[ix]];
 		}
 		y[icol]+=tmp;
 	    }
@@ -125,7 +125,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
    op(y)=op(y)+op(A)*op(x)*alpha
    op(A)=A  if trans=='n'
    op(A)=A' if trans=='t'
-   op(A)=CONJ(A') if trans=='c'
+   op(A)=conj(A') if trans=='c'
 */
 static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const int transy, const T alpha){
     if(!A || !x) return;
@@ -143,7 +143,7 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 	PMAT(x,X);
 
 #define no_conj(A) (A)
-#define do_conj(A) CONJ(A)
+#define do_conj(A) conj(A)
 #define no_trans(A,i,j) A[j][i]
 #define do_trans(A,i,j) A[i][j]
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
@@ -341,11 +341,11 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
    C0=C0+op(A)*op(B)*alpha;
    op(A)=A  if trans[0]=='n'
    op(A)=A' if trans[0]=='t'
-   op(A)=CONJ(A') if trans[0]=='c'
+   op(A)=conj(A') if trans[0]=='c'
 
    op(B)=B  if trans[1]=='n'
    op(B)=B' if trans[1]=='t'
-   op(B)=CONJ(B') if trans[1]=='c'
+   op(B)=conj(B') if trans[1]=='c'
    
    A may be dense or sparse matrix.
 */

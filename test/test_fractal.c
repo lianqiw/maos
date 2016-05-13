@@ -181,18 +181,18 @@ static void test_stfun(){
     {
 	map_t *atm=mapnew(nx+1, ny+1, dx, dx,NULL);
 	stfun_t *data=stfun_init(nx, ny, NULL);
-	cellarr *save=cellarr_init(nframe, 1, "fractal_atm.bin");
+	zfarr *save=zfarr_init(nframe, 1, "fractal_atm.bin");
 	for(long i=0; i<nframe; i++){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
 	    fractal_do(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
-	    cellarr_dmat(save, i, (dmat*)atm);
+	    zfarr_dmat(save, i, (dmat*)atm);
 	    if(i%100==0)
 		info("%ld of %ld\n", i, nframe);
 	}
-	cellarr_close(save);
+	zfarr_close(save);
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fractal.bin");
 	ddraw("fractal", st, NULL,NULL, "Atmosphere","x","y","stfun");

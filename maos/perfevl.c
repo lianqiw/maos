@@ -68,7 +68,7 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
     }
 }
 static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
-			  dcell *evlpsfmean, cellarr** evlpsfhist,
+			  dcell *evlpsfmean, zfarr** evlpsfhist,
 			  dmat *iopdevl, int ievl){
     /* the OPD after this time will be tilt removed. Don't use for performance
        evaluation. */
@@ -82,7 +82,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 	}
     }
     if(parms->evl.psfhist){
-	cellarr_ccell(evlpsfhist[ievl], -1, psf2s);
+	zfarr_ccell(evlpsfhist[ievl], -1, psf2s);
     }
     if(parms->plot.run){
 	dmat *psftemp=NULL;
@@ -188,7 +188,7 @@ void perfevl_ievl(thread_t *info){
 
 	TIM(1);
 	if(save_evlopd){
-	    cellarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
+	    zfarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
 	}
 	if(parms->plot.run){
 	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
@@ -293,7 +293,7 @@ void perfevl_ievl(thread_t *info){
 		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
 	}
 	if(save_evlopd){
-	    cellarr_dmat(simu->save->evlopdcl[ievl], isim, iopdevl);
+	    zfarr_dmat(simu->save->evlopdcl[ievl], isim, iopdevl);
 	}
 
 	/*Evaluate closed loop performance. */
@@ -502,7 +502,7 @@ static void perfevl_save(SIM_T *simu){
 		    if(!pcl[ievl][iwvl]->header){
 			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
-		    cellarr_dmat(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, pcl[ievl][iwvl]);
+		    zfarr_dmat(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, pcl[ievl][iwvl]);
 		}
 	    }
 	    dcellzero(simu->evlpsfmean);
@@ -517,7 +517,7 @@ static void perfevl_save(SIM_T *simu){
 		    if(!pcl[ievl][iwvl]->header){
 			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
-		    cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, pcl[ievl][iwvl]);
+		    zfarr_dmat(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, pcl[ievl][iwvl]);
 		}
 	    }
 	    dcellzero(simu->evlpsfmean_ngsr);
@@ -531,7 +531,7 @@ static void perfevl_save(SIM_T *simu){
 		if(!pcl[iwvl]->header){
 		    pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
 		}
-		cellarr_dmat(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
+		zfarr_dmat(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
 	    }
 	    dcellzero(simu->evlpsfolmean);
 	}
@@ -545,13 +545,13 @@ static void perfevl_save(SIM_T *simu){
 	dcellscale(simu->evlopdmean_ngsr, scale);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov->p[ievl]) continue;
-	    cellarr_dmat(simu->save->evlopdcov[ievl], isim, simu->evlopdcov->p[ievl]);
-	    cellarr_dmat(simu->save->evlopdmean[ievl], isim, simu->evlopdmean->p[ievl]);
+	    zfarr_dmat(simu->save->evlopdcov[ievl], isim, simu->evlopdcov->p[ievl]);
+	    zfarr_dmat(simu->save->evlopdmean[ievl], isim, simu->evlopdmean->p[ievl]);
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov_ngsr->p[ievl]) continue;
-	    cellarr_dmat(simu->save->evlopdcov_ngsr[ievl], isim, simu->evlopdcov_ngsr->p[ievl]);
-	    cellarr_dmat(simu->save->evlopdmean_ngsr[ievl], isim, simu->evlopdmean_ngsr->p[ievl]);
+	    zfarr_dmat(simu->save->evlopdcov_ngsr[ievl], isim, simu->evlopdcov_ngsr->p[ievl]);
+	    zfarr_dmat(simu->save->evlopdmean_ngsr[ievl], isim, simu->evlopdmean_ngsr->p[ievl]);
 	}
 	dcellzero(simu->evlopdcov);
 	dcellzero(simu->evlopdmean);
@@ -561,8 +561,8 @@ static void perfevl_save(SIM_T *simu){
 	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    dscale(simu->evlopdcovol, scaleol);
 	    dscale(simu->evlopdmeanol, scaleol);
-	    cellarr_dmat(simu->save->evlopdcovol, isim, simu->evlopdcovol);
-	    cellarr_dmat(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
+	    zfarr_dmat(simu->save->evlopdcovol, isim, simu->evlopdcovol);
+	    zfarr_dmat(simu->save->evlopdmeanol, isim, simu->evlopdmeanol);
 	    dzero(simu->evlopdcovol);
 	    dzero(simu->evlopdmeanol);
 	}
