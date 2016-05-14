@@ -191,14 +191,14 @@ void free_parms(PARMS_T *parms){
     dfree(parms->dbg.pwfs_psy);
     free(parms);
 }
-static inline int sum_intarr(int n, long *a){
+INLINE int sum_intarr(int n, long *a){
     int sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);
     }
     return sum;
 }
-static inline int sum_dblarr(int n, double *a){
+INLINE int sum_dblarr(int n, double *a){
     double sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);

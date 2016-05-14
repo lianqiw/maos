@@ -48,7 +48,7 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
+INLINE int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
     double diff=*x2-*x1;
     if(fabs(diff)>thres){
 	double ratio=signbit(diff)?-.49999:.49999;
@@ -68,7 +68,7 @@ static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, 
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
-static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
+INLINE void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
 #if 1
     int ndm=dmcmd->nx;
     double totaltt[2]={0,0};
@@ -97,7 +97,7 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
 #endif
 }
 
-static inline void clipdm(SIM_T *simu, dcell *dmcmd){
+INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
     const PARMS_T *parms=simu->parms;
     if(!dmcmd) return;
     /*

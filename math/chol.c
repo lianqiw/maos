@@ -413,7 +413,7 @@ dsp *chol_spsolve(spchol *A, const dsp *y){
 /**
    forward permutation.
 */
-static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
+INLINE void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{
@@ -441,7 +441,7 @@ static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
 /**
    backward permutation.
 */
-static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
+INLINE void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{

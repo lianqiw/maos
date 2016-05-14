@@ -136,7 +136,7 @@ void socket_block(int sock, int block){
   about conversion from in to uint16. THis is an ugly workaround*/
 #undef htons
 #define htons myhtons
-static inline uint16_t myhtons(uint16_t port){
+INLINE uint16_t myhtons(uint16_t port){
     uint16_t ans;
 #if __BYTE_ORDER == __BIG_ENDIAN
     ans=(port);

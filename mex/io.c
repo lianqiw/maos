@@ -30,6 +30,12 @@
 #include <ctype.h>
 #include "io.h"
 //static void write_timestamp(file_t *fp);
+//GNU GCC changes definition of inline to C99 compatible since 4.4
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 5 && !defined(__clang__)
+#define INLINE static inline __attribute__((gnu_inline, always_inline)) //GNU
+#else
+#define INLINE static inline __attribute__((always_inline)) //C99
+#endif //if __GNUC__ == 4 && __GNUC_MINOR__ < 5
 
 static const char *myasctime(void){
     static char st[64];
@@ -222,7 +228,7 @@ void zfclose(file_t *fp){
     }
     free(fp);
 }
-static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
 	    perror("gzwrite");
@@ -312,7 +318,7 @@ void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_
     zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
     free(tmp);
 }
-static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{

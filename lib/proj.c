@@ -33,7 +33,7 @@
 #include "accphi.h"
 #include "proj.h"
 /*const double pi=3.1415926535897932384626433832795; */
-static inline double cosangle(double a[3], double b[3]){
+INLINE double cosangle(double a[3], double b[3]){
     return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));

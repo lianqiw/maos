@@ -59,10 +59,10 @@ using std::strerror;
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 5
-#define INLINE extern inline __attribute__((gnu_inline, always_inline)) //GNU
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 5 && !defined(__clang__)
+#define INLINE static inline __attribute__((gnu_inline, always_inline)) //GNU
 #else
-#define INLINE inline __attribute__((always_inline)) //C99
+#define INLINE static inline __attribute__((always_inline)) //C99
 #endif //if __GNUC__ == 4 && __GNUC_MINOR__ < 5
 
 #undef	MAX

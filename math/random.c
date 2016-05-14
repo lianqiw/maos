@@ -260,12 +260,12 @@ static  double  v;
 
 /**
    the target density */
-static inline double ff (double xr){
+INLINE double ff (double xr){
     return  exp(-xr*xr*0.5);
 }
 /**
    the inverse of the target density */
-static inline double f_inv (double y){
+INLINE double f_inv (double y){
     return  sqrt(-2.*log(y));
 }
 /**

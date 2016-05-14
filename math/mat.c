@@ -28,7 +28,7 @@
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
    true, p is treated as external resource and is not reference counted.
 */
-static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
+INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->id=M_T;
     out->nx=nx;

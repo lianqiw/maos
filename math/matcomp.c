@@ -153,7 +153,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 /**
    do a modules square and copy to real part of output
 */
-inline static void sq2cpy(T *out, const T *in, const long length){
+INLINE void sq2cpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=ABS2(in[i]);
     }
@@ -161,7 +161,7 @@ inline static void sq2cpy(T *out, const T *in, const long length){
 /**
    Copy the real part.
 */
-inline static void realcpy(T *out, const T *in, const long length){
+INLINE void realcpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=creal(in[i]);
     }
@@ -169,16 +169,16 @@ inline static void realcpy(T *out, const T *in, const long length){
 /**
    Copy the absolute value to output.
  */
-inline static void abscpy(T *out, const T *in, const long length){
+INLINE void abscpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=ABS(in[i]);
     }
 }
-inline static T RA2XY(T A){
+INLINE T RA2XY(T A){
     //convert r/a to x/y
     return COMPLEX(creal(A)*cos(cimag(A)), creal(A)*sin(cimag(A)));
 }
-inline static T XY2RA(T A){
+INLINE T XY2RA(T A){
     //convert x/y to r/a*/
     return COMPLEX(ABS(A), atan2(cimag(A),creal(A)));
 }
