@@ -202,7 +202,7 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     int scaling=0;
     {
 	R norm=sqrt(X(norm)(A));
-	scaling=(int)ceil(log2(ABS(norm*beta*threshold)));
+	scaling=(int)ceil(log2(fabs(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
     X(add)(&m_small, 0, A, beta*exp2(-scaling));
@@ -352,10 +352,10 @@ void X(svd_pow)(X(mat) *A, R power, R thres){
     X(mat) *VT=NULL;
     X(svd)(&U, &Sdiag, &VT, A);
     /*eigen values below the threshold will not be used. the first is the biggest. */
-    R maxeig=ABS(Sdiag->p[0]);
+    R maxeig=fabs(Sdiag->p[0]);
     R thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(ABS(Sdiag->p[i])>thres0){/*only do with  */
+	if(fabs(Sdiag->p[i])>thres0){/*only do with  */
 	    if(thres<0){/*compare adjacent eigenvalues*/
 		thres0=Sdiag->p[i]*(-thres);
 	    }

@@ -42,7 +42,7 @@ void X(scale)(X(mat) *A, R w){
  */
 int X(isnan)(const X(mat)*A){
     for(long i=0; i<A->nx*A->ny; i++){
-	if(isnan(A->p[i])){
+	if(isnan(creal(A->p[i]))){
 	    return 1;
 	}
     }
@@ -94,8 +94,8 @@ R X(min)(const X(mat) *A){
 R X(maxabs)(const X(mat) *A){
     R max,min;
     X(maxmin)(A->p, A->nx*A->ny, &max, &min);
-    max=ABS(max);
-    min=ABS(min);
+    max=fabs(max);
+    min=fabs(min);
     return max>min?max:min;
 }
 /**
@@ -104,7 +104,7 @@ R X(maxabs)(const X(mat) *A){
 R X(sumabs)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=ABS(A->p[i]);
+	out+=fabs(A->p[i]);
     }
     return out;
 }
@@ -114,7 +114,7 @@ R X(sumabs)(const X(mat)*A){
 R X(sumsq)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=creal(A->p[i]*conj(A->p[i]));
+	out+=(A->p[i]*conj(A->p[i]));
     }
     return out;
 }
@@ -129,7 +129,8 @@ R X(norm)(const X(mat)*A){
 */
 R X(std)(const X(mat)*A){
     long N=A->nx*A->ny;
-    return sqrt((X(sumsq)(A)-pow(X(sum)(A),2)/N)/(N-1));
+    R var=(X(sumsq)(A)-pow(X(sum)(A),2)/N)/(N-1);
+    return sqrt(var);
 }
 /**
    Fill A with random uniform numbers between [0, 1]*max
@@ -162,7 +163,7 @@ T X(inn)(const X(mat)*A, const X(mat) *B){
     for(int i=0; i<A->nx*A->ny; i++){
 	out+=A->p[i]*B->p[i];
     }
-    if(isnan(out)){
+    if(isnan(creal(out))){
 	error("NaN found\n");
     }
     return out;
@@ -179,7 +180,7 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 	    res+=pw[j][i]*a[i]*b[j];
 	}
     }
-    if(isnan(res)){
+    if(isnan(creal(res))){
 	error("NaN found\n");
     }
     return res;
@@ -223,8 +224,8 @@ void X(cwm)(X(mat) *A, const X(mat) *B){
    Compute component wise multiply A=A.*(B1*wt1+B2*wt2)
 */
 void X(cwm2)(X(mat) *A, const X(mat) *B1, R wt1, const X(mat)*B2, R wt2){
-    int has_b1=B1 && ABS(wt1)>EPS;
-    int has_b2=B2 && ABS(wt2)>EPS;
+    int has_b1=B1 && fabs(wt1)>EPS;
+    int has_b2=B2 && fabs(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	for(long i=0; i<B1->nx*B1->ny; i++){
@@ -254,8 +255,8 @@ void X(cwm3)(X(mat) *restrict A, const X(mat) *restrict W,
     if(!W){
 	X(cwm2)(A, B1, wt1, B2, wt2);
     }else{
-	int has_b1=B1 && ABS(wt1)>EPS;
-	int has_b2=B2 && ABS(wt2)>EPS;
+	int has_b1=B1 && fabs(wt1)>EPS;
+	int has_b2=B2 && fabs(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx*A->ny==B1->nx*B1->ny && A->nx*A->ny==B2->nx*B2->ny);
 	    for(long i=0; i<B1->nx*B1->ny; i++){
@@ -302,8 +303,8 @@ void X(cwmcol2)(X(mat) *restrict A,
 	error("A cannot be empty\n");
     }
     T (*As)[A->nx]=(T(*)[A->nx])A->p;
-    int has_b1=B1 && ABS(wt1)>EPS;
-    int has_b2=B2 && ABS(wt2)>EPS;
+    int has_b1=B1 && fabs(wt1)>EPS;
+    int has_b2=B2 && fabs(wt2)>EPS;
     if(has_b1 && has_b2){
 	assert(A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	for(long ix=0; ix<A->nx; ix++){
@@ -336,8 +337,8 @@ void X(cwm3col)(X(mat) *restrict A,const X(mat) *restrict W,
     if(!W){
 	X(cwmcol2)(A, B1, wt1, B2, wt2);
     }else {
-	int has_b1=B1 && ABS(wt1)>EPS;
-	int has_b2=B2 && ABS(wt2)>EPS;
+	int has_b1=B1 && fabs(wt1)>EPS;
+	int has_b2=B2 && fabs(wt2)>EPS;
 	if(has_b1 && has_b2){
 	    assert(A->nx*A->ny==W->nx*W->ny && A->nx==B1->nx && A->nx==B2->nx && B1->ny==1 && B2->ny==1);
 	    T (*As)[A->nx]=(T(*)[A->nx])A->p;
@@ -430,7 +431,7 @@ void X(mulvec)(T *restrict y, const X(mat) * restrict A,
 	       const T *restrict x, const T alpha){
     assert(y && x && A);
     PMAT(A,Ap);
-    if(ABS(alpha-(T)1.)>1.e-15){
+    if(fabs(alpha-(T)1.)>1.e-15){
 	for(int iy=0; iy<A->ny; iy++){
 	    T tmp=x[iy]*alpha;
 	    for(int ix=0; ix<A->nx; ix++){
@@ -517,7 +518,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(add)(&C,1,B,-1);
     T d=sqrt(X(norm)(C)*2/(X(norm)(C)+X(norm)(B)));
     X(free)(C);
-    return isnan(d)?0:d;
+    return isnan(creal(d))?0:d;
 }
 /**
    Generate a new gray pixel map based on bilinear influence functions used in
@@ -548,11 +549,11 @@ void X(circle)(X(mat) *A, R cx, R cy, R dx, R dy, R r, T val){
 		for(int jy=0; jy<nres; jy++){
 		    R iiy=iy+(jy-resm)*2*res;
 		    R rr2y=(iiy*dy-cy)*(iiy*dy-cy);
-		    R wty=1.-ABS(iy-iiy);
+		    R wty=1.-fabs(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
 			R iix=ix+(jx-resm)*2*res;
 			R rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
-			R wtx=1.-ABS(ix-iix);
+			R wtx=1.-fabs(ix-iix);
 			if(rr2r<r2){
 			    tot+=res2*wty*wtx;
 			}
@@ -683,7 +684,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx,
 	    }
 	}
     }
-    if(ABS(sum)>0){
+    if(fabs(sum)>0){
 	grad[0]=sumx/sum-((R)(im->nx-1)*0.5+offsetx);
 	grad[1]=sumy/sum-((R)(im->ny-1)*0.5+offsety);
     }else{
@@ -702,7 +703,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R grad[2];
     R Amax=X(max)(A);
     X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
-    if(ABS(grad[0])>0.1 || ABS(grad[1])>0.1){
+    if(fabs(grad[0])>0.1 || fabs(grad[1])>0.1){
 	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(mat) *B=XC(new)(A->nx,A->ny);
 	//XC(fft2plan)(B,-1);
@@ -769,7 +770,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
 	}
 	/*normalize*/
 	R norm=sqrt(creal(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum));
-	if(ABS(norm)>1.e-15){
+	if(fabs(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){
 		pMod[imod][ix]*=norm;
@@ -858,7 +859,7 @@ void X(cwexp)(X(mat)*A, R alpha){
 void X(cwpow_thres)(X(mat) *A, R power, R thres){
     thres*=X(maxabs)(A);
     for(long i=0; i<A->nx*A->ny; i++){
-	if(ABS(A->p[i])>thres){
+	if(fabs(A->p[i])>thres){
 	    A->p[i]=pow(A->p[i], power);
 	}else{
 	    A->p[i]=0;
@@ -967,7 +968,7 @@ static int X(islinear)(const X(mat)*xin){
     R xminl=(xin->p[0]);
     R xmaxl=(xin->p[nmax-1]);
     R xsep=(xmaxl-xminl)/(R)(nmax1);
-    if(ABS(xsep+xminl-xin->p[1])>xsep*1.e-3){
+    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -983,7 +984,7 @@ static int X(islog)(const X(mat)*xin){
     R x1=log10(xin->p[1]);
     R xmaxl=log10(xin->p[nmax1]);
     R xsep=(xmaxl-xminl)/(R)(nmax1);
-    if(!isfinite(xsep) || ABS(xsep+xminl-x1)>xsep*1.e-3){
+    if(!isfinite(xsep) || fabs(xsep+xminl-x1)>xsep*1.e-3){
 	return 0;
     }else{
 	return 1;
@@ -1243,12 +1244,12 @@ X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y){
     }
     X(mat) *coeff=X(new)(4,nx);
     T xsep=(px[nx-1]-px[0])/(nx-1);
-    R thres=ABS(xsep)*1.e-5;
+    R thres=fabs(xsep)*1.e-5;
   
     PMAT(coeff,pc);
     T ypriv,ynext;
     for(long ix=0; ix<nx-1; ix++){
-	if(ABS(px[ix+1]-px[ix]-xsep)>thres){
+	if(fabs(px[ix+1]-px[ix]-xsep)>thres){
 	    error("The coordinate is not evenly spaced\n");
 	}
 	if(UNLIKELY(ix==0)){
@@ -1337,7 +1338,7 @@ void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
     const long noutx=A->nx;
     const long nouty=A->ny;
     memset(A->p, 0, sizeof(T)*noutx*nouty);
-    if(ABS(theta)<1.e-10){/*no rotation. */
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
 	const long skipy=(nouty-niny-1)/2;
 	long ixstart=0, ixend=ninx;
@@ -1399,7 +1400,7 @@ long X(fwhm)(X(mat) *A){
     R hm=0.5*X(max)(A);
     long fwhm=0;
     for(long ix=0; ix<A->nx*A->ny; ix++){
-	if(ABS(A->p[ix])>=hm){
+	if(fabs(A->p[ix])>=hm){
 	    fwhm++;
 	}
     }
@@ -1565,7 +1566,7 @@ T X(trapz)(const X(mat)*x, const X(mat)*y){
 	if(px){
 	    for(long i=0; i<y->nx-1; i++){
 		//notice use of abs here.
-		ans+=ABS(px[i+1]-px[i])*(py[i+1]+py[i]);
+		ans+=fabs(px[i+1]-px[i])*(py[i+1]+py[i]);
 	    }
 	}else{
 	    for(long i=0; i<y->nx; i++){
@@ -1717,7 +1718,7 @@ void X(celldropzero)(X(cell) *B, R thres){
 	    if(!tmp) continue;
 	    int hasnonzero=0;
 	    for(int ixy=0; ixy<tmp->nx*tmp->ny; ixy++){
-		if(ABS(tmp->p[ixy])>thres){
+		if(fabs(tmp->p[ixy])>thres){
 		    hasnonzero=1;
 		    break;
 		}

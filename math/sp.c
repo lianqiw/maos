@@ -450,7 +450,7 @@ X(sp) *X(2sp)(X(mat)*A, R thres){
 	out->p[icol]=count;
 	for(long irow=0; irow<A->nx; irow++){
 	    T val=IND(A, irow, icol);
-	    if(ABS(val)>thres){
+	    if(fabs(val)>thres){
 		out->i[count]=irow;
 		out->x[count]=val;
 		count++;
@@ -756,7 +756,7 @@ X(mat) *X(spsumabs)(const X(sp) *A, int col){
 	p=v->p;
 	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
-		p[icol]+=ABS(A->x[irow]);
+		p[icol]+=fabs(A->x[irow]);
 	    }
 	}
 	break;
@@ -765,7 +765,7 @@ X(mat) *X(spsumabs)(const X(sp) *A, int col){
 	p=v->p;
 	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
-		p[A->i[irow]]+=ABS(A->x[irow]);
+		p[A->i[irow]]+=fabs(A->x[irow]);
 	    }
 	}
 	break;
@@ -888,7 +888,7 @@ X(sp) *X(spconvolvop)(X(mat) *A){
     PMAT(A,PA);
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(ABS(PA[iy][ix])>0){
+	    if(fabs(PA[iy][ix])>0){
 		vals[count]=PA[iy][ix];
 		sepx[count]=ix;
 		sepy[count]=iy;

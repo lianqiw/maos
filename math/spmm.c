@@ -316,7 +316,7 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2]
     }
     X(sp) *res=X(ss_multiply)(At?At:A, Bt?Bt:B);
     X(spsort)(res);
-    if(ABS(scale-(T)1.)>EPS){
+    if(fabs(scale-(T)1.)>EPS){
 	X(spscale)(res, scale);
     }
     if(!*C0) 

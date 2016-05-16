@@ -38,7 +38,7 @@
 #undef M_T
 #undef M_SPT64
 #undef M_SPT32
-#undef ABS
+#undef fabs
 #undef RANDU
 #undef RANDN
 #undef PRINT
@@ -50,7 +50,7 @@
 #ifdef USE_LONG
 #define T long
 #define X(A) l##A
-#define ABS(A) abs(A)
+#define fabs(A) abs(A)
 #define M_T M_LONG
 #define PRINT(A) fprintf(stderr," %ld",A);
 #else //if USE_LONG
@@ -63,7 +63,6 @@
 #define R double
 #define RI dcomplex
 #define FFTW(A) fftw_##A
-//#define ABS(A) fabs(A)
 #ifndef USE_COMPLEX
 /*Double */
 #define X(A) d##A
@@ -73,7 +72,7 @@
 #define M_T M_DBL
 #define M_SPT64 M_DSP64
 #define M_SPT32 M_DSP32
-#define ABS(A) fabs(A)
+#define fabs(A) fabs(A)
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
 #define PRINT(A) fprintf(stderr," %10.3e",A);
@@ -86,7 +85,7 @@
 #define M_T M_CMP
 #define M_SPT64 M_CSP64
 #define M_SPT32 M_CSP32
-#define ABS(A) fabs(A)
+#define fabs(A) cabs(A)
 #define COMPLEX DCOMPLEX
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
@@ -110,7 +109,7 @@
 #define M_T M_FLT
 #define M_SPT64 M_SSP64
 #define M_SPT32 M_SSP32
-#define ABS(A) fabs(A)
+#define fabs(A) fabsf(A)
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
 #define PRINT(A) fprintf(stderr,"%10.3e",A);
@@ -124,7 +123,7 @@
 #define M_T M_ZMP
 #define M_SPT64 M_ZSP64
 #define M_SPT32 M_ZSP32
-#define ABS(A) fabs(A)
+#define fabs(A) cabsf(A)
 #define COMPLEX FCOMPLEX
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))

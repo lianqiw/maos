@@ -174,8 +174,8 @@ case "$CN" in
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
 	    major=${CC_VERSION%%.*}
-	    minor=${CC_VERSION%.*}
-	    minor="${minor#4.}"
+	    minor=${CC_VERSION#*.}
+	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
 		unset OPENMP_CFLAGS
 	    fi
@@ -190,17 +190,17 @@ case "$CN" in
 	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
-	    major="${CC_VERSION%%.*}"
-	    minor="${CC_VERSION%.*}"
-	    minor="${minor#4.}"
+	    major=${CC_VERSION%%.*}
+	    minor=${CC_VERSION#*.}
+	    minor=${minor%%.*}
 	    echo major=$major minor=$minor
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-	    if test "$major" -ge 4 -a "$minor" -ge 2;then
+	    OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
+	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
 		#echo "Enabling -mtune=native"
-		#OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
-		OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
+		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
 	    #if test $major -eq 4 -a $minor -lt 5;then
@@ -430,7 +430,13 @@ function set_lapack(){
 		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
 	    #First use MKL if available. 
-	    LAPACK="-lmkl_core"
+	    LAPACK=
+	    if test "$host_cpu" = "x86_64" ;then
+		LAPACK+=" -lmkl_intel_lp64"
+	    else
+		LAPACK+=" -lmkl_intel"
+	    fi
+	    LAPACK+=" -lmkl_core"
 	    if test -n "$OPENMP_CFLAGS" ;then
 		if test "$CN" = "ICC" ;then
 		    LAPACK+=" -lmkl_intel_thread"
@@ -442,11 +448,7 @@ function set_lapack(){
 	    else
 		LAPACK+=" -lmkl_intel_thread -liomp5"
 	    fi
-	    if test "$host_cpu" = "x86_64" ;then
-		LAPACK+=" -lmkl_intel_lp64"
-	    else
-		LAPACK+=" -lmkl_intel"
-	    fi
+	 
 	    if test "$use_static" = "yes" ;then
     		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 		LAPACK=${LAPACK// /,}
@@ -458,12 +460,21 @@ function set_lapack(){
 	*default*)
 	    LAPACK="-llapack -lblas "
 	    if test "$type" = "default-link" ;then
-	       fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
+	       if test -d $/usr/lib${libsuffix} ;then
+		   USRLIB=/usr/lib${libsuffix}
+	       else
+		   USRLIB=/usr/lib
+	       fi
+	       echo Try to link from $USRLIB
+	       fn_blas=`ls ${USRLIB}/libblas.so.* 2>/dev/null`
+	       echo fn_blas=${fn_blas}
 	       if test -n "${fn_blas}" ;then
+		   rm -rf "${LIB_DIR}/libblas.so"
 		   ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
 	       fi
-	       fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
+	       fn_lapack=`ls ${USRLIB}/liblapack.so.* 2>/dev/null`
 	       if test -n "${fn_lapack}" ;then
+		   rm -rf "${LIB_DIR}/liblapack.so"
 		   ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
 	       fi
 	    fi
@@ -493,8 +504,9 @@ for try in ${trys}; do
 	unset nset ac_cv_lib_m_dposv_
 	set_lapack ${try}
 	if test -n "$LAPACK" ;then
-	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+	    #the trailing -lm is necessary for ubuntu-16.04 with mkl
+	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
+	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
 	fi
     fi
 done

@@ -29,7 +29,7 @@ void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha){
     assert(A && A->p);
     const long ntot=A->nx*A->ny;
     if(B){
-	if(ABS(alpha-1)>1.e-15){
+	if(fabs(alpha-1)>1.e-15){
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=conj(B->p[i])*alpha;
 	    }
@@ -39,7 +39,7 @@ void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha){
 	    }
 	}
     }else{
-	if(ABS(alpha-1)>1.e-15){	
+	if(fabs(alpha-1)>1.e-15){	
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
@@ -53,7 +53,7 @@ void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha){
     assert(A && A->p);
     const long ntot=A->nx*A->ny;
     if(B){
-	if(ABS(alpha-1)>1.e-15){
+	if(fabs(alpha-1)>1.e-15){
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=B->p[i]*alpha;
 	    }
@@ -63,7 +63,7 @@ void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha){
 	    }
 	}
     }else{
-	if(ABS(alpha-1)>1.e-15){	
+	if(fabs(alpha-1)>1.e-15){	
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
@@ -88,7 +88,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
  
     R wvk=2.*M_PI/wvl;
     memset(psf, 0, sizeof(T)*npsfx*npsfy);
-    if(ABS(theta)<1.e-10){/*no rotation. */
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(npsfx-nopdx)/2;
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
@@ -171,7 +171,7 @@ INLINE void realcpy(T *out, const T *in, const long length){
  */
 INLINE void abscpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
-	out[i]=ABS(in[i]);
+	out[i]=fabs(in[i]);
     }
 }
 INLINE T RA2XY(T A){
@@ -180,7 +180,7 @@ INLINE T RA2XY(T A){
 }
 INLINE T XY2RA(T A){
     //convert x/y to r/a*/
-    return COMPLEX(ABS(A), atan2(cimag(A),creal(A)));
+    return COMPLEX(fabs(A), atan2(cimag(A),creal(A)));
 }
 
 /**
@@ -200,7 +200,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
       flag==2: copy real only.
     */
     memset(out, 0, sizeof(T)*noutx*nouty);
-    if(ABS(theta)<1.e-10){/*no rotation. */
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(noutx-ninx)/2;
 	const int skipy=(nouty-niny)/2;
 	int ixstart=0, ixend=ninx;
@@ -298,7 +298,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    DO_LOOP(,creal);
 	    break;
 	case C_ABS:
-	    DO_LOOP(,ABS);
+	    DO_LOOP(,fabs);
 	    break;
 	case C_LITERAL:
 	    DO_LOOP(RA2XY,XY2RA);
@@ -320,7 +320,7 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
     const long noutx=A->nx;
     const long nouty=A->ny;
     memset(out, 0, sizeof(T)*noutx*nouty);
-    if(ABS(theta)<1.e-10){/*no rotation. */
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
 	long ixstart=0, ixend=ninx;
@@ -381,7 +381,7 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B, 
 		      R xoutscale,R youtscale,
 		      const R theta, CEMBED flag){
-    if(ABS(xoutscale-1)<1.e-10 && ABS(youtscale-1)<1.e-10){
+    if(fabs(xoutscale-1)<1.e-10 && fabs(youtscale-1)<1.e-10){
 	X(embedc)(A,B,theta,flag);
 	return;
     }
@@ -435,7 +435,7 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 	DO_LOOP(,creal);
 	break;
     case C_ABS:
-	DO_LOOP(,ABS);
+	DO_LOOP(,fabs);
 	break;
     case C_LITERAL:
 	DO_LOOP(RA2XY,XY2RA);
@@ -520,7 +520,7 @@ void X(abs2toreal)(X(mat) *A){
 void X(abstoreal)(X(mat) *A){
     /*put abs to real */
     for(int i=0; i<A->nx*A->ny; i++){
-	A->p[i]=ABS(A->p[i]);
+	A->p[i]=fabs(A->p[i]);
     }
 }
 /**
@@ -549,7 +549,7 @@ void X(real2d)(XR(mat)**restrict A0, R alpha,
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(ABS(alpha)<EPS){
+    if(fabs(alpha)<EPS){
 	for(long i=0; i<B->nx*B->ny; i++){
 	    A->p[i]=creal(B->p[i])*beta;
 	}
@@ -571,7 +571,7 @@ void X(abs22d)(XR(mat)**restrict A0, R alpha,
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(ABS(alpha)<1.e-60){
+    if(fabs(alpha)<1.e-60){
 	for(int i=0; i<B->nx*B->ny; i++){
 	    A->p[i]=ABS2(B->p[i])*beta;
 	}

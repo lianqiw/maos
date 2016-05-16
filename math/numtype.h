@@ -124,7 +124,7 @@ INLINE dcomplex operator-(const dcomplex &B, float A){
 }
 #endif//#ifndef AOS_CUDA_GPU_H
 #else //#if defined(__cplusplus) C99 mode
-#include <tgmath.h> //tgmath caused gcc out of memory has been fixed
+#include <tgmath.h> //tgmath causing gcc out of memory has been fixed
 typedef __complex__ double dcomplex;
 typedef __complex__ float fcomplex;
 #define COMPLEX(A,B) ((A)+I*(B))
