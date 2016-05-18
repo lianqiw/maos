@@ -116,8 +116,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     double du=1./(dx2*ncomp);
     double dupix=dsa*du;
     double pdmeter=pow(dsa/dx2, 2);
-    double pixblur=parms->powfs[ipowfs].pixblur;
-    double e0b=-2*pow(M_PI*pixblur*dsa*du, 2);
+    //convert fwhm to sigma. dsa is pixel size (pupil plane)
+    double fwhm2sigma=1./(2.*sqrt(2.*log(2.)));
+    double pixblur=parms->powfs[ipowfs].pixblur*fwhm2sigma*dsa;
+    double e0b=-2*pow(M_PI*pixblur*du, 2);
     for(int iy=0; iy<ncomp; iy++){
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
