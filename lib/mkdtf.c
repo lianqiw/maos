@@ -31,16 +31,15 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	     double pixthetay,/**<Pixel size along y (a)*/
 	     double pixoffx,  /**<offset of image center from center of detector*/
 	     double pixoffy,  /**<offset of image center from center of detector*/
-	     double pixblur,  /**<Pixel blur FWHM(fraction of pixel)*/
+	     double pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
 	     dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     ){
     int nwvl=wvls->nx;
     DTF_T *dtfs=calloc(nwvl, sizeof(DTF_T));
-    const double fwhm2sigma=1./(2.*sqrt(2.*log(2.)));
-    const double blurx=pixblur*pixthetax*fwhm2sigma; //convert to sigma in radian
-    const double blury=pixblur*pixthetay*fwhm2sigma;
+    const double blurx=pixblur*pixthetax;
+    const double blury=pixblur*pixthetay;
     const double e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
     const double e0y=-2*M_PI*M_PI*blury*blury;
     const int do_blur=fabs(blurx)>EPS && fabs(blury)>EPS;
