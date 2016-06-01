@@ -1,11 +1,62 @@
-#/usr/bin/env python3
+#!/usr/bin/env python3
+import sys
 import numpy as np
 import scipy.sparse as sparse
 import os
 import gzip
 import struct
-isfits=0
 
+magic2dname={
+    25600: 'M_CSP64',
+    25601: 'M_SP64',
+    25602: 'M_DBL',
+    25603: 'M_INT64',
+    25604: 'M_CMP',
+    25605: 'M_INT32',
+    25606: 'M_CSP32',
+    25607: 'M_SP32',
+    25608: 'M_FLT',
+    25609: 'M_ZMP',
+    25610: 'M_INT8',
+    25611: 'M_INT16',
+    25616: 'MC_CSP',
+    25617: 'MC_SP',
+    25618: 'MC_DBL',
+    25619: 'MC_INT64',
+    25620: 'MC_CMP',
+    25621: 'MC_INT32',
+    25633: 'MCC_ANY',
+    25634: 'MCC_DBL',
+    25636: 'MCC_CMP',
+    25856: 'M_HEADER',
+    26112: 'M_SKIP'
+}
+
+dname2type={
+    'M_ZMP': np.complex64,
+    'M_CMP': np.complex128,
+    'M_CSP32': np.complex64,
+    'M_CSP64': np.complex128,
+    'M_DBL': np.double,
+    'M_FLT': np.float,
+    'M_HEADER': object,
+    'M_INT16': np.int16,
+    'M_INT32': np.int32,
+    'M_INT64': np.int64,
+    'M_INT8': np.int8,
+    'M_SKIP': object,
+    'M_SP32': np.float,
+    'M_SP64': np.double
+}
+
+bitpix2magic={
+    -32:0x6408,
+    -64:0x6402,
+    32:0x6405,
+    16:0x640B,
+    8:0x640,
+    0:0
+}
 
 def readuint16(fp):
     return struct.unpack("<H", fp.read(2))[0]
@@ -63,46 +114,6 @@ def read(file, want_header=0):
         return (out, header)
     else:
         return out
-magic2dname={25600: 'M_CSP64',
- 25601: 'M_SP64',
- 25602: 'M_DBL',
- 25603: 'M_INT64',
- 25604: 'M_CMP',
- 25605: 'M_INT32',
- 25606: 'M_CSP32',
- 25607: 'M_SP32',
- 25608: 'M_FLT',
- 25609: 'M_ZMP',
- 25610: 'M_INT8',
- 25611: 'M_INT16',
- 25616: 'MC_CSP',
- 25617: 'MC_SP',
- 25618: 'MC_DBL',
- 25619: 'MC_INT64',
- 25620: 'MC_CMP',
- 25621: 'MC_INT32',
- 25633: 'MCC_ANY',
- 25634: 'MCC_DBL',
- 25636: 'MCC_CMP',
- 25856: 'M_HEADER',
- 26112: 'M_SKIP'}
-
-dname2type={
-    'M_ZMP': np.complex64,
-    'M_CMP': np.complex128,
-    'M_CSP32': np.complex64,
-    'M_CSP64': np.complex128,
-    'M_DBL': np.double,
-    'M_FLT': np.float,
-    'M_HEADER': object,
-    'M_INT16': np.int16,
-    'M_INT32': np.int32,
-    'M_INT64': np.int64,
-    'M_INT8': np.int8,
-    'M_SKIP': object,
-    'M_SP32': np.float,
-    'M_SP64': np.double
-}
 
 def readbin_do(fp, isfits):
     err=0
@@ -123,8 +134,8 @@ def readbin_do(fp, isfits):
         out=np.asmatrix(np.zeros((ny, nx), dtype=object))
         header=np.asmatrix(np.zeros((ny, nx), dtype=object))
 
-        for iy in xrange(0, ny):
-            for ix in xrange(0, nx):
+        for iy in range(0, ny):
+            for ix in range(0, nx):
                 out[iy,ix], header[iy,ix], err=readbin_do(fp, isfits)
                 if len(header[iy,ix])==0:
                     header[iy,ix]=header_cell;
@@ -160,7 +171,7 @@ def readbin_do(fp, isfits):
                 junk=fp.read(2880-byteleft)
 
     return(out, header, err)
-bitpix2magic={-32:0x6408, -64:0x6402, 32:0x6405, 16:0x640B, 8:0x640, 0:0}
+
 
 def readfits_header(fp):
     END=0
@@ -177,7 +188,7 @@ def readfits_header(fp):
                 END=1
                 break
             if res[0:6] !='SIMPLE' and res[0:16] !="XTENSION= 'IMAGE":
-                print res
+                print(res)
                 print('Unknown data format in fits file', END, page, start, len(res), fp.tell());
                 END=1
                 break
@@ -227,5 +238,8 @@ def readbin_header(fp):
     return (magic, nx, ny, header)
 
 if __name__ == '__main__':
-    out=readbin('a.bin')
-
+    if len(sys.argv)>1:
+        res=read(sys.argv[1])
+        print(res)
+    else:
+        raise ValueError("Usage: res=readbin.read(file name)")
