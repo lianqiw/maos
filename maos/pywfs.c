@@ -164,7 +164,11 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		  powfs[ipowfs].saloc->dx, dsa);
 	}
     }else{
-	long order2=order+MAX(0, parms->dbg.pwfs_pupelong);
+	//Pad the grid to avoid missing significant pixels (subapertures).
+	long order2=order+2*MAX(0, ceil(parms->dbg.pwfs_pupelong));
+	if(order2>order){
+	    warning("order=%ld, order2=%ld.\n", order, order2);
+	}
 	powfs[ipowfs].saloc=mksqloc(order2, order2, dsa, dsa, 
 				    (-order2*0.5+0.5)*dsa, (-order2*0.5+0.5)*dsa);
     }
@@ -179,7 +183,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
 		double angle=atan2(iy-0.5, ix-0.5);
 		//squeeze the detector pixel coordinate radially to simulate pupil elongation
-		double frac=1-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
+		double frac=1.-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
 		locstretch(pywfs->msaloc->p[ind], angle, frac);
 		saloc=pywfs->msaloc->p[ind];
 	    }
