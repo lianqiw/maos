@@ -40,6 +40,7 @@ typedef struct PYWFS_T{
     dmat *gradoff;     /**<Gradient of a flat wavefront*/
     dmat *GTT;          /**<Response of TT mode.*/
     dmat *pupilshift;  /**<Pupil shift. 4x2.*/
+    loccell *msaloc;   /**<Mishaped saloc of each sub-pupil due to optical effects*/
 }PYWFS_T;
 
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);

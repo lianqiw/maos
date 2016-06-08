@@ -225,7 +225,7 @@ void save_recon(SIM_T *simu){
 		   parms->save.gcov->p[igcov*2], parms->save.gcov->p[igcov*2+1],
 		   simu->reconisim+1);
 	}
-	dcellzero(simu->gcov);//2015-11-04: Do not cumulative average.
+	dcellscale(simu->gcov, 1./scale); //2016-06-07: Do not reset.
     }
     if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
 	info2("Output PSF Recon Telemetry\n");
@@ -248,7 +248,7 @@ void save_recon(SIM_T *simu){
 		       parms->evl.thetay->p[ievl]*206265, strht, simu->reconisim);
 	    }
 	}
-	dcellzero(simu->ecov);//2015-11-04: Do not cumulative average.
+	dcellscale(simu->ecov, 1./scale); //2016-06-07: Do not reset. 
     }
 }
 

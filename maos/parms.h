@@ -600,6 +600,7 @@ typedef struct DBG_CFG_T{
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
     double pwfs_flate;/**<pyramid flat edge angular width */
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
+    double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

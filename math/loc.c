@@ -1119,7 +1119,7 @@ loc_t *pts2loc(pts_t *pts){
 }
 
 /**
-   Rotate the coordinates by theta CCW.
+   Rotate the coordinates by theta (radian) CCW.
 */
 void locrot(loc_t *loc, const double theta){
     const double ctheta=cos(theta);
@@ -1132,6 +1132,16 @@ void locrot(loc_t *loc, const double theta){
 	y[i]=x[i]*stheta+y[i]*ctheta;
 	x[i]=tmp;
     }
+}
+/**
+   Stretch the coordinate by frac along theta (radian) CCW.
+*/
+void locstretch(loc_t *loc, const double theta, const double frac){
+    locrot(loc, -theta);
+    for(int i=0; i<loc->nloc; i++){
+	loc->locx[i]*=frac;
+    }
+    locrot(loc, theta);
 }
 
 /**

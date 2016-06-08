@@ -94,6 +94,7 @@ void loc_add_focus(double *opd, loc_t *loc, double val);
 dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
+void locstretch(loc_t *loc, const double theta, const double frac);
 loc_t *locdup(loc_t *loc);
 loc_t *loctransform(loc_t *loc, const char *ps);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
