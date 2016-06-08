@@ -122,14 +122,20 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	    for(int ix=0; ix<2; ix++){
 		const int ind=ix+iy*2;
 		Real shx=0, shy=0;
+		culoc_t saloc;
+		if(cupowfs->msaloc){
+		    saloc=cupowfs->msaloc[ind];
+		}else{
+		    saloc=cupowfs->saloc;
+		}
 		if(pywfs->pupilshift){
-		    shx=IND(pywfs->pupilshift, ind, 0)*cupowfs->saloc.Dx();
-		    shy=IND(pywfs->pupilshift, ind, 1)*cupowfs->saloc.Dy();
+		    shx=IND(pywfs->pupilshift, ind, 0)*saloc.Dx();
+		    shy=IND(pywfs->pupilshift, ind, 1)*saloc.Dy();
 		}
 		Real* pout=ints.P()+ind*nsa;
 		prop_linear<<<DIM(nsa, 256), 0, stream>>>
 		    (pout, otf, otf.Nx(), otf.Ny(), 
-		     cupowfs->saloc, cupowfs->saloc.Nloc(),
+		     saloc, saloc.Nloc(),
 		     1./dx2, 1./dx2, 
 		     ((ix-0.5)*ncomp2)-(-ncomp2+0.5)+shx,
 		     ((iy-0.5)*ncomp2)-(-ncomp2+0.5)+shy, scale);

@@ -164,19 +164,33 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		  powfs[ipowfs].saloc->dx, dsa);
 	}
     }else{
-	powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
-				    (-order*0.5+0.5)*dsa, (-order*0.5+0.5)*dsa);
+	long order2=order+MAX(0, parms->dbg.pwfs_pupelong);
+	powfs[ipowfs].saloc=mksqloc(order2, order2, dsa, dsa, 
+				    (-order2*0.5+0.5)*dsa, (-order2*0.5+0.5)*dsa);
     }
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
+
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
 	    const int ind=ix+iy*2;
+	    loc_t *saloc=powfs[ipowfs].saloc;
+	    if(parms->dbg.pwfs_pupelong){//pupil elongation (along radial direction)
+		if(!pywfs->msaloc) pywfs->msaloc=cellnew(4,1);
+		pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
+		double angle=atan2(iy-0.5, ix-0.5);
+		//squeeze the detector pixel coordinate radially to simulate pupil elongation
+		double frac=1-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
+		locstretch(pywfs->msaloc->p[ind], angle, frac);
+		saloc=pywfs->msaloc->p[ind];
+	    }
 	    double shx=0, shy=0;
+    
 	    if(pywfs->pupilshift){
 		shx=IND(pywfs->pupilshift, ind, 0)*dsa;
 		shy=IND(pywfs->pupilshift, ind, 1)*dsa;
 	    }
-	    pywfs->si->p[ind]=mkh(loc_fft, powfs[ipowfs].saloc, 
+
+	    pywfs->si->p[ind]=mkh(loc_fft, saloc,
 				  ((ix-0.5)*ncomp2)*dx2+shx, 
 				  ((iy-0.5)*ncomp2)*dx2+shy,
 				  1); 
@@ -209,8 +223,18 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dscale(saa, saa->nx/dsum(saa));//saa average to one.
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
-		dspfree(pywfs->si->p[ix+iy*2]);
-		pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
+		const int ind=ix+iy*2;
+		dspfree(pywfs->si->p[ind]);
+		loc_t *saloc=powfs[ipowfs].saloc;
+		if(parms->dbg.pwfs_pupelong){
+		    pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
+		    double angle=atan2(iy-0.5, ix-0.5);
+		    //squeeze the detector pixel coordinate radially to simulate pupil elongation
+		    double frac=1-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
+		    locstretch(pywfs->msaloc->p[ind], angle, frac);
+		    saloc=pywfs->msaloc->p[ind];
+		}
+		pywfs->si->p[ix+iy*2]=mkh(loc_fft, saloc,
 					  ((ix-0.5)*dx2*ncomp2), 
 					  ((iy-0.5)*dx2*ncomp2),
 					  1);	    
@@ -264,6 +288,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
 	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
+	writebin(pywfs->msaloc, "powfs%d_msaloc", ipowfs);	
 	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
 	writebin(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
 	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);

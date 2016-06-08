@@ -35,6 +35,7 @@ typedef struct cupowfs_t{
     cupts_t pts;   /**<location of lower left OPD point in each sa*/
     culoc_t loc;  /**<location of OPD points. for reconstruction purpose only.*/
     culoc_t saloc;
+    cuarray<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
     int **embed;       /**<embed for field stop computation*/
     int *nembed;       /**<embed for field stop computation*/
     curcell fieldstop;/**<*mask for field stop computation*/
