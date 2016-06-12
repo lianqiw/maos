@@ -699,7 +699,9 @@ void servo_free(SERVO_T *st){
     dfree(st->ep);
     free(st);
 }
-
+/**
+   Second harmonic oscillator. Initialization.
+ */
 SHO_T *sho_new(double f0, double zeta){
     SHO_T *out=calloc(1, sizeof(SHO_T));
     const double omega0=2*M_PI*f0;
@@ -709,6 +711,9 @@ SHO_T *sho_new(double f0, double zeta){
     out->x1=out->x2=0;
     return out;
 }
+/**
+   Second harmonic oscillator. Step.
+ */
 double sho_step(SHO_T *sho, double xi, double dt){
     //divide dt to multiple time to do proper integration.
     long nover=(long)ceil(dt/sho->dt);
@@ -720,6 +725,9 @@ double sho_step(SHO_T *sho, double xi, double dt){
     }
     return sho->x2;
 }
+/**
+   Second harmonic oscillator. Reset.
+*/
 void sho_reset(SHO_T *sho){
     sho->x1=sho->x2=0;
 }

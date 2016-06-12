@@ -868,7 +868,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.mffocus);
     READ_DBL(sim.epfocus2tel);
     READ_INT(sim.focus2tel);
-    READ_INT(sim.fsmideal);
+    READ_INT(sim.idealfsm);
+    READ_INT(sim.commonfsm);
     READ_DMAT(sim.apdm);
     READ_DMAT(sim.epdm);
     READ_DMAT(sim.aplo);

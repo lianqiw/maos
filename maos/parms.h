@@ -484,6 +484,7 @@ typedef struct SIM_CFG_T{
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
     double zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
     double f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
     double aptwfs;   /**<Twfs reference vector servo coefficient.*/
@@ -501,7 +502,7 @@ typedef struct SIM_CFG_T{
 			- 1: Focus tracking using CL gradients, for each LGS independently.
 			- 2: Focus tracking using CL gradinets, for common LGS focus only.
 		     */
-    int fsmideal;    /**<ideal compensation for uplink pointing*/
+    int idealfsm;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/

@@ -262,8 +262,8 @@ void wfsgrad_iwfs(thread_t *info){
 		}
 	    }
 	    double ttx=0, tty=0;//FSM + wind shake induced jitter
-	    if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||do_pistatout||parms->sim.fsmideal){
-		if(do_pistatout||parms->sim.fsmideal){
+	    if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||do_pistatout||parms->sim.idealfsm){
+		if(do_pistatout||parms->sim.idealfsm){
 		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
 		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
@@ -1072,7 +1072,8 @@ void wfsgrad(SIM_T *simu){
     if(parms->itpowfs!=-1){
 	wfsgrad_twfs_recon(simu);
     }
-    if(parms->nlgspowfs){ //high pass filter lgs focus to remove sodium range variation effect
+    if(parms->nlgspowfs){ 
+	//high pass filter lgs focus to remove sodium range variation effect
 	wfsgrad_lgsfocus(simu);
     }
     if(1+simu->isim==parms->sim.end){

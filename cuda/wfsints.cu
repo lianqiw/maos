@@ -419,8 +419,8 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim,
 		    parms->powfs[ipowfs].llt->misreg->p[1], 
 		    parms->sim.dt, isim, 1, stream);
 	Real ttx=0,tty=0;
-	if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||pistatout||parms->sim.fsmideal){
-	    if(pistatout||parms->sim.fsmideal){
+	if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||pistatout||parms->sim.idealfsm){
+	    if(pistatout||parms->sim.idealfsm){
 		//warning("Remove tip/tilt in uplink ideally\n");
 		Real *lltg=cuwfs[iwfs].lltg;
 		lltg[0]=lltg[1]=0;

@@ -383,6 +383,24 @@ static void filter_cl(SIM_T *simu){
 		}
 	    }
 	}
+	if(parms->sim.commonfsm && simu->fsmerr){
+	    warning_once("Using common fsm\n");
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].llt){
+		    dmat *fsmerr=0;
+		    double scale=1./parms->powfs[ipowfs].nwfs;
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			dadd(&fsmerr, 1, simu->fsmerr->p[iwfs], scale);
+		    }
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			dcp(&simu->fsmerr->p[iwfs], fsmerr);
+		    }
+		    dfree(fsmerr);
+		}
+	    }
+	}
 	servo_filter(simu->fsmint, simu->fsmerr);
 	/*Inject dithering command, for step isim+1*/
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
