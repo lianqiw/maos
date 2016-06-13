@@ -67,7 +67,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     const long nxnx=nx*nx;
     /* mask is a mask defined on square grid for subapertures that have
      * normalized area above the threshold.*/
-    int *mask=calloc(nxnx,sizeof(int));
+    lmat *mask=lnew(nx,nx);
     if(saa && saa->nx!=cn2est->nsa){
 	error("saa and saloc mismatch\n");
     }
@@ -75,23 +75,21 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     double saat2=dmax(saa)*saat;
     for(int isa=0; isa<cn2est->nsa; isa++){
 	if(!saa || saa->p[isa]>saat2){
-	    mask[cn2est->embed->p[isa]]=1;/*use this subaperture */
+	    mask->p[cn2est->embed->p[isa]]=1;/*use this subaperture */
 	}
     }
-    int (*pmask)[nx]=(void*)mask;
     /* this mask for for subapertures that we can compute curvature.*/
     cn2est->mask=lnew(nx,nx);
-    int (*pmask2)[nx]=(void*)cn2est->mask->p;
     cmat *overlap=cnew(nx, nx);
-    PCMAT(overlap, pover);
+    cmat*  pover=overlap;
     int iymin=nx,iymax=0,ixmin=nx,ixmax=0;
     for(int iy=0; iy<nx; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    /*Only use a subaperture if we are able to make curvature. */
-	    if(pmask[iy][ix] && pmask[iy][ix+1] && pmask[iy][ix-1] &&
-	       pmask[iy+1][ix] && pmask[iy-1][ix]){
-		pmask2[iy][ix]=1;
-		pover[iy][ix]=1;
+	    if(IND(mask,ix,iy) && IND(mask,ix+1,iy) && IND(mask,ix-1,iy) &&
+	       IND(mask,ix,iy+1) && IND(mask,ix,iy-1)){
+		IND(cn2est->mask,ix,iy)=1;
+		IND(pover,ix,iy)=1;
 		if(ix>ixmax) ixmax=ix;
 		if(ix<ixmin) ixmin=ix;
 		if(iy>iymax) iymax=iy;
@@ -100,7 +98,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	}
     }
     int maxsep=MIN((iymax-iymin), (ixmax-ixmin));
-    free(mask);
+    lfree(mask);
     cfft2(overlap, -1);
     for(long i=0; i<nxnx; i++){
 	overlap->p[i]=overlap->p[i]*conj(overlap->p[i]);
@@ -152,7 +150,6 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     cn2est->pair=calloc(nwfspair, sizeof(CN2PAIR_T));
     long nhtsx[nwfspair]; 
     long nhtsy[nwfspair];
-    PDMAT(wfstheta, pwfstheta);
     double hmin, hmax;
     dmaxmin(cn2est->htrecon->p, cn2est->htrecon->nx, &hmax, &hmin);
     /*ovs is the over sampling factor in mc. need to be at least 2 to
@@ -182,8 +179,8 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	pair->wfs0=wfs0;
 	pair->wfs1=wfs1;
 	/*The separation between the stars */
-	const double dthetax=pwfstheta[0][wfs0]-pwfstheta[0][wfs1];
-	const double dthetay=pwfstheta[1][wfs0]-pwfstheta[1][wfs1];
+	const double dthetax=IND(wfstheta,wfs0,0)-IND(wfstheta,wfs1,0);
+	const double dthetay=IND(wfstheta,wfs0,1)-IND(wfstheta,wfs1,1);
 	/*the angular distance between WFS */
 	double dtheta=sqrt(dthetax*dthetax+dthetay*dthetay);
 	/*The direction of the WFS pair baseline vector */
@@ -268,7 +265,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	/*initialize */
 	cmat *mc=cnew(nm,nm);
 	/*create 2-d pointers */
-	PCMAT(mc,pmc);
+	cmat* pmc=mc;
 	/*the forward operator from layer weights to cross-covariance */
  	dmat *Pnk=dnew(nsep, pair->nht);
 	info2("Pair %d: hk=[", iwfspair);
@@ -308,7 +305,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 		    const double psd=psd_coef*pow((fx*fx+fy*fy)*zetan2+L02,-11./6.);
 		    /*gx diff is along x, gy diff is along y to form real curvature */
 		    const double cur=pow(2*fx*(cos(2*M_PI*dsa*fx)-1)+2*fy*(cos(2*M_PI*dsa*fy)-1),2);
-		    pmc[iy][ix]=pow(sincfy*sincfx,2)*psd*cur;
+		    IND(pmc,ix,iy)=pow(sincfy*sincfx,2)*psd*cur;
 		}/*ix */
 	    }/*iy */
 	    /*doing fft */
@@ -335,13 +332,13 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 		    /*Do interpolation using nearest neighbor */
 		    int ixx=(int)round(xx);
 		    int iyy=(int)round(yy);
-		    double imc=creal(pmc[iyy][ixx]);
+		    double imc=creal(IND(pmc,ixx,iyy));
 #else
 		    /*Do interpolation using bilinear spline interp. */
 		    int ixx=(int)floor(xx); xx=xx-ixx;
 		    int iyy=(int)floor(yy); yy=yy-iyy;
-		    double imc=creal((pmc[iyy][ixx]*(1-xx)+pmc[iyy][ixx+1]*(xx))*(1-yy)
-				     +(pmc[iyy+1][ixx]*(1-xx)+pmc[iyy+1][ixx+1]*(xx))*yy);
+		    double imc=creal((IND(pmc,ixx,iyy)*(1-xx)+IND(pmc,ixx+1,iyy)*(xx))*(1-yy)
+				     +(IND(pmc,ixx,iyy+1)*(1-xx)+IND(pmc,ixx+1,iyy+1)*(xx))*yy);
 #endif
 		    IND(Pnk, isep, iht-pair->iht0)=imc;
 		}
@@ -389,19 +386,18 @@ static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
 	    cn2est->gys->p[iwfs]->p[embed[isa]]=pgrad[isa+nsa];
 	}
 	/*Compute curvature of wavefront from gradients. */
-	PCMAT(cn2est->curi->p[iwfs], cur);
-	PDMAT(cn2est->gxs->p[iwfs], gx);
-	PDMAT(cn2est->gys->p[iwfs], gy);
-	int (*mask)[cn2est->nembed]=(void*)cn2est->mask->p;
+	cmat*  cur=cn2est->curi->p[iwfs];
+	dmat*  gx=cn2est->gxs->p[iwfs];
+	dmat*  gy=cn2est->gys->p[iwfs];
 	const int ny=cn2est->curi->p[iwfs]->ny;
 	const int nx=cn2est->curi->p[iwfs]->nx;
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		if(mask[iy][ix]){
-		    cur[iy][ix]=gx[iy][ix+1]+gx[iy][ix-1]-2*gx[iy][ix]/*gx along x */
-			+gy[iy+1][ix]+gy[iy-1][ix]-2*gy[iy][ix];/*gy along y */
+		if(IND(cn2est->mask,ix,iy)){
+		    IND(cur,ix,iy)=IND(gx,ix+1,iy)+IND(gx,ix-1,iy)-2*IND(gx,ix,iy)/*gx along x */
+			+IND(gy,ix,iy+1)+IND(gy,ix,iy-1)-2*IND(gy,ix,iy);/*gy along y */
 		}else{
-		    cur[iy][ix]=0;//must set to zero.
+		    IND(cur,ix,iy)=0;//must set to zero.
 		}
 	    }
 	}

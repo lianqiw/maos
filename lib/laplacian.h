@@ -23,8 +23,7 @@
    \file laplacian.h
    Compute laplacian operator for turbulence covariance approximation.
 */
-void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight, 
-			 double *opd, double *opdout);
+void apply_laplacian_map(dmat *opdout, const dmat *opd, double dx, double r0, double weight);
 dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight);
 dsp* mklaplacian_loc(loc_t *loc, double r0, double weight);
 double laplacian_coef(double r0, double weight, double dx);

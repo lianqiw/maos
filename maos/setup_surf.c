@@ -382,7 +382,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
     recon->HA_ncpa=cellnew(nevl, ndm);
-    PDSPCELL(recon->HA_ncpa,HA);
+    dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
 	double hs=parms->sim.ncpa_hs->p[ievl];
@@ -395,7 +395,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    double displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
-	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, 
+	    IND(HA,ievl,idm)=mkh(recon->aloc->p[idm], recon->floc, 
 			      displace[0], displace[1], scale);
 	}
     }
@@ -446,13 +446,13 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 		ampw->p[ix]=1;
 	    }
 	    normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
-	    PDMAT(ampw, pampw);
+	    dmat*  pampw=ampw/*PDMAT*/;
 	    
 	    double nx2=(nx-1)*0.5;
 	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 	    //normalize x,y from -1 to 1 in clear aperture
 	    double Rx2=pow(fill1d*nx/2, -2);
-	    dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
+	    dmat *opdi=dnew(nx, nx); dmat*  popdi=opdi/*PDMAT*/;
 	    double R2=0, R4=0, Rf2=0, Rf=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
@@ -461,15 +461,15 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 #if MEASURED_LENSLET
 		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
 		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
-		    popdi[iy][ix]=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+		    IND(popdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
 #else
-		    popdi[iy][ix]=rr*rr;
+		    IND(popdi,ix,iy)=rr*rr;
 #endif
-		    double amp=pampw[iy][ix];
+		    double amp=IND(pampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
-		    Rf+=popdi[iy][ix]*amp;
-		    Rf2+=popdi[iy][ix]*rr*rr*amp;
+		    Rf+=IND(popdi,ix,iy)*amp;
+		    Rf2+=IND(popdi,ix,iy)*rr*rr*amp;
 		}
 	    }		
 	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
@@ -478,8 +478,8 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		    popdi[iy][ix]-=a*rr+b;
-		    var+=popdi[iy][ix]*popdi[iy][ix]*pampw[iy][ix];
+		    IND(popdi,ix,iy)-=a*rr+b;
+		    var+=IND(popdi,ix,iy)*IND(popdi,ix,iy)*IND(pampw,ix,iy);
 		}
 	    }
 	    dfree(ampw);

@@ -276,13 +276,13 @@ void setup_recon_HXW_predict(SIM_T *simu){
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
     warning("Generating Predictive HXW\n");
-    PDSPCELL(recon->HXWtomo,HXWtomo);
+    dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    double  hs = parms->wfs[iwfs].hs;
 	    for(int ips=0; ips<npsr; ips++){
-		dspfree(HXWtomo[ips][iwfs]);
+		dspfree(IND(HXWtomo,iwfs,ips));
 		double  ht = recon->ht->p[ips];
 		double  scale=1. - ht/hs;
 		double  displace[2];
@@ -293,7 +293,7 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
 		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
 		}
-		HXWtomo[ips][iwfs]=mkh(recon->xloc->p[ips], ploc, 
+		IND(HXWtomo,iwfs,ips)=mkh(recon->xloc->p[ips], ploc, 
 				       displace[0],displace[1],scale);
 	    }
 	}
@@ -1697,7 +1697,7 @@ void print_progress(const SIM_T *simu){
 	dfree(tmp);
 	dcellcwpow(res, 0.5); dcellscale(res, 1e9);
 	char *legs[3]={"High Order", "Low Order"};
-	plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", 0, NULL, legs,
+	plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", NULL, legs,
 		    "Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 	dcellfree(res);
     }

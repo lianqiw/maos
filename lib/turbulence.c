@@ -193,7 +193,7 @@ static void fractal_screen_do(zfarr *fc, GENATM_T *data){
 	for(int ilayer=0; ilayer<data->nlayer; ilayer++){
 	    drandn(screen, 1, data->rstat);
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	    fractal_do(screen->p, nx, ny, data->dx, r0i, data->L0, data->ninit);
+	    fractal_do(screen, data->dx, r0i, data->L0, data->ninit);
 	    remove_piston(screen->p, nx*ny);
 	    zfarr_dmat(fc, ilayer, screen);
 	}
@@ -205,7 +205,7 @@ static void fractal_screen_do(zfarr *fc, GENATM_T *data){
 	}
 	OMPTASK_FOR(ilayer, 0, data->nlayer){
 	    double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
-	    fractal_do(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0, data->ninit);
+	    fractal_do((dmat*)screen[ilayer], screen[0]->dx, r0i, data->L0, data->ninit);
 	    remove_piston(screen[ilayer]->p, nx*ny);
 	}
 	OMPTASK_END;

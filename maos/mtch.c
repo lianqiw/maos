@@ -27,13 +27,12 @@
 */
 static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0p)[nx]=(void*)i0->p;
     double (*i0x1p)[nx]=(void*)i0x1;
     double (*i0x2p)[nx]=(void*)i0x2;
     for(int iy=0; iy<i0->ny; iy++){
 	for(int ix=0; ix<i0->nx-1; ix++){
-	    i0x1p[iy][ix+1]=i0p[iy][ix]*scale;
-	    i0x2p[iy][ix]=i0p[iy][ix+1]*scale;
+	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
 	}
     }
 }
@@ -43,13 +42,12 @@ static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
 */
 static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0p)[nx]=(void*)i0->p;
     double (*i0y1p)[nx]=(void*)i0y1;
     double (*i0y2p)[nx]=(void*)i0y2;
     for(int iy=0; iy<i0->ny-1; iy++){
 	for(int ix=0; ix<i0->nx; ix++){
-	    i0y1p[iy+1][ix]=i0p[iy][ix]*scale;
-	    i0y2p[iy][ix]=i0p[iy+1][ix]*scale;
+	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
+	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
 	}
     }
 }
@@ -81,11 +79,11 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell *sanea=cellnew(ni0,1);
     
     intstat->i0sum=dnew(nsa,ni0);
-    PDCELL(intstat->i0,i0s);
-    PDCELL(intstat->gx,gxs);
-    PDCELL(intstat->gy,gys);
-    PDMAT( intstat->i0sum,i0sum);
-    PDCELL(intstat->mtche,mtche);
+    dcell *i0s=intstat->i0;
+    dcell* gxs=intstat->gx/*PDELL*/;
+    dcell* gys=intstat->gy/*PDELL*/;
+    dmat *i0sum=intstat->i0sum;
+    dcell *mtche=intstat->mtche;
     if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
 	dcellfree(powfs[ipowfs].saneaxy);
 	powfs[ipowfs].saneaxy=cellnew(nsa,ni0);
@@ -125,8 +123,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
     dmat *i0m=dnew(2,nmod);
     dmat *i0g=dnew(i0n,nmod);
-    PDMAT(i0g, pi0g);
-    PDMAT(i0m, pi0m);
     dmat *i0x1=NULL, *i0x2=NULL, *i0y1=NULL, *i0y2=NULL;
     dmat *wt=dnew(i0n,1);
     double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
@@ -146,21 +142,21 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    srot=powfs[ipowfs].srot->p[irot]->p;
 	}
 	sanea->p[ii0]=dnew(nsa,2);
-	PDMAT(sanea->p[ii0], psanea);
+	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 	/*Derivative is along r/a or x/y*/
-	pi0m[0][0]=1;
-	pi0m[1][1]=1;
+	IND(i0m,0,0)=1;
+	IND(i0m,1,1)=1;
 	if(!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx){
 	    if(mtchcrx){/*constrained x(radial) */
 		double shift=pixthetax*shiftx;
 		/*kp is here to ensure good conditioning */
-		pi0m[mtchcrx][0]=shift*kpx;
-		pi0m[mtchcrx+1][0]=-shift*kpx;
+		IND(i0m,0,mtchcrx)=shift*kpx;
+		IND(i0m,0,mtchcrx+1)=-shift*kpx;
 	    }
 	    if(mtchcry){/*constrained y(azimuthal). */
 		double shift=pixthetay*shifty;
-		pi0m[mtchcry][1]=shift*kpy;
-		pi0m[mtchcry+1][1]=-shift*kpy;
+		IND(i0m,1,mtchcry)=shift*kpy;
+		IND(i0m,1,mtchcry+1)=-shift*kpy;
 	    }
 	}
 	double i0summax=0;
@@ -172,26 +168,26 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		double theta=srot[isa]; 
 		if(mtchcrx){/*constrained x(radial) */
 		    double shift=pixthetax*shiftx;
-		    pi0m[mtchcrx][0]=shift*kpx*cos(theta);
-		    pi0m[mtchcrx][1]=shift*kpx*sin(theta);
-		    pi0m[mtchcrx+1][0]=-pi0m[mtchcrx][0];
-		    pi0m[mtchcrx+1][1]=-pi0m[mtchcrx][1];
+		    IND(i0m,0,mtchcrx)=shift*kpx*cos(theta);
+		    IND(i0m,1,mtchcrx)=shift*kpx*sin(theta);
+		    IND(i0m,0,mtchcrx+1)=-IND(i0m,0,mtchcrx);
+		    IND(i0m,1,mtchcrx+1)=-IND(i0m,1,mtchcrx);
 		}
 		if(mtchcry){/*constrained y(azimuthal). */
 		    double shift=pixthetay*shifty;
-		    pi0m[mtchcry][0]=-shift*kpy*sin(theta);
-		    pi0m[mtchcry][1]= shift*kpy*cos(theta);
-		    pi0m[mtchcry+1][0]=-pi0m[mtchcry][0];
-		    pi0m[mtchcry+1][1]=-pi0m[mtchcry][1];
+		    IND(i0m,0,mtchcry)=-shift*kpy*sin(theta);
+		    IND(i0m,1,mtchcry)= shift*kpy*cos(theta);
+		    IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
+		    IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
 		}
 	    }
 
-	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
-	    if(i0sum[ii0][isa]>i0summax){
-		i0summax=i0sum[ii0][isa];
+	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
+	    if(IND(i0sum,isa,ii0)>i0summax){
+		i0summax=IND(i0sum,isa,ii0);
 	    }
 	    if(mtchadp){
-		long fwhm=dfwhm(i0s[ii0][isa]);
+		long fwhm=dfwhm(IND(i0s,isa,ii0));
 		if(fwhm>4){
 		    crdisable=0;
 		}else{
@@ -209,42 +205,42 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]->p; 
 	    }
 	    dzero(i0g);/*don't forget to zero out */
-	    adddbl(pi0g[0], 1, gxs[ii0][isa]->p, i0n, 1, 0);
-	    adddbl(pi0g[1], 1, gys[ii0][isa]->p, i0n, 1, 0);
-	    adddbl(pi0g[2], 1, i0s[ii0][isa]->p, i0n, kpx, bkgrnd_res);
-	    adddbl(pi0g[2], 1, bkgrnd2, i0n, 1, bkgrnd_res);
-	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
+	    adddbl(PCOL(i0g,0), 1, IND(gxs,isa,ii0)->p, i0n, 1, 0);
+	    adddbl(PCOL(i0g,1), 1, IND(gys,isa,ii0)->p, i0n, 1, 0);
+	    adddbl(PCOL(i0g,2), 1, IND(i0s,isa,ii0)->p, i0n, kpx, bkgrnd_res);
+	    adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
+	    adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
 	    if(mtchcrx && !crdisable){
-		mki0shx(pi0g[mtchcrx],pi0g[mtchcrx+1],i0s[ii0][isa],kpx);
+		mki0shx(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),IND(i0s,isa,ii0),kpx);
 		if(sub_i0){
-		    adddbl(pi0g[mtchcrx],1,i0s[ii0][isa]->p, i0n, -kpx, 0);
-		    adddbl(pi0g[mtchcrx+1],1,i0s[ii0][isa]->p, i0n, -kpx,0);
+		    adddbl(PCOL(i0g,mtchcrx),1,IND(i0s,isa,ii0)->p, i0n, -kpx, 0);
+		    adddbl(PCOL(i0g,mtchcrx+1),1,IND(i0s,isa,ii0)->p, i0n, -kpx,0);
 		}
-		adddbl(pi0g[mtchcrx],   1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(pi0g[mtchcrx],   1, bkgrnd2c, i0n, -1, 0);
-		adddbl(pi0g[mtchcrx+1], 1, bkgrnd2,  i0n,  1,bkgrnd_res);
-		adddbl(pi0g[mtchcrx+1], 1, bkgrnd2c, i0n, -1, 0);
+		adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
+		adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
+		adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
 	    }
 	    if(mtchcry && !crdisable){
-		mki0shy(pi0g[mtchcry],pi0g[mtchcry+1],i0s[ii0][isa],kpy);
+		mki0shy(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),IND(i0s,isa,ii0),kpy);
 		if(sub_i0){
-		    adddbl(pi0g[mtchcry],1,i0s[ii0][isa]->p, i0n, -kpy,0);
-		    adddbl(pi0g[mtchcry+1],1,i0s[ii0][isa]->p,i0n, -kpy,0);
+		    adddbl(PCOL(i0g,mtchcry),1,IND(i0s,isa,ii0)->p, i0n, -kpy,0);
+		    adddbl(PCOL(i0g,mtchcry+1),1,IND(i0s,isa,ii0)->p,i0n, -kpy,0);
 		}
-		adddbl(pi0g[mtchcry],  1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(pi0g[mtchcry],  1, bkgrnd2c, i0n, -1, 0);
-		adddbl(pi0g[mtchcry+1],1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(pi0g[mtchcry+1],1, bkgrnd2c ,i0n, -1, 0);
+		adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
+		adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
 	    }
 	  
 	    if(bkgrnd2){
 		/*adding rayleigh backscatter poisson noise. */
 		for(int i=0; i<i0n; i++){/*noise weighting. */
-		    wt->p[i]=1./(rne*rne+bkgrnd+i0s[ii0][isa]->p[i]+bkgrnd2[i]);
+		    wt->p[i]=1./(rne*rne+bkgrnd+IND(i0s,isa,ii0)->p[i]+bkgrnd2[i]);
 		}	
 	    }else{
 		for(int i=0; i<i0n; i++){/*noise weighting. */
-		    wt->p[i]=1./(rne*rne+bkgrnd+i0s[ii0][isa]->p[i]);
+		    wt->p[i]=1./(rne*rne+bkgrnd+IND(i0s,isa,ii0)->p[i]);
 		}
 	    }
 	    if(crdisable){
@@ -254,7 +250,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		i0m->ny=3;
 	    }
 	    dmat *tmp=dpinv(i0g, wt);
-	    dmm(&mtche[ii0][isa],0,i0m, tmp, "nn", 1);
+	    dmm(&IND(mtche,isa,ii0),0,i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
 		/*Put old values back. */
@@ -264,10 +260,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    for(int i=0; i<i0n; i++){/*noise weighting. */
 		wt->p[i]=1./wt->p[i];
 	    }
-	    dmat *nea2=dtmcc(mtche[ii0][isa], wt);
+	    dmat *nea2=dtmcc(IND(mtche,isa,ii0), wt);
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
-	    if(i0sum[ii0][isa]<EPS){//zero flux
+	    if(IND(i0sum,isa,ii0)<EPS){//zero flux
 		nea2->p[0]=nea2->p[3]=pixthetax*10;
 	    }
 	    if(parms->powfs[ipowfs].mtchcpl==0 
@@ -275,13 +271,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		/*remove coupling between r/a (x/y) measurements. */
 		nea2->p[1]=nea2->p[2]=0;
 	    }
-	    psanea[0][isa]=nea2->p[0];
-	    psanea[1][isa]=nea2->p[3];
+	    IND(psanea,isa,0)=nea2->p[0];
+	    IND(psanea,isa,1)=nea2->p[3];
 		
 	    if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
 		//Rotate matched filter to produce grads in (x/y).
 		double theta=srot[isa]; 
-		drotvect(mtche[ii0][isa], theta);
+		drotvect(IND(mtche,isa,ii0), theta);
 	    }
 	    if(parms->powfs[ipowfs].phytype==1){
 		if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
@@ -318,21 +314,21 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		}
 		info2("ii0 %d, llt %d.\n", ii0, illt);
 		info2("sa index   dist   noise equivalent angle\n");
-		PDMAT(sanea->p[ii0], psanea);
+		dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 		for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
 		    int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
 		    if(isa>0){
 			info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
 			      isa, powfs[ipowfs].srsa->p[illt]->p[isa], 
-			      sqrt(psanea[0][isa])*206265000,
-			      sqrt(psanea[1][isa])*206265000);
+			      sqrt(IND(psanea,isa,0))*206265000,
+			      sqrt(IND(psanea,isa,1))*206265000);
 		    }
 		}
 	    }
 	}else{
 	    for(int ii0=0; ii0<ni0; ii0++){
 		info2("ii0=%d:\n",ii0);
-		PDMAT(sanea->p[ii0], psanea);
+		dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 		double dsa=powfs[ipowfs].saloc->dx;
 		double llimit=-dsa/2;
 		double ulimit=dsa/2;
@@ -342,8 +338,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    double locy=powfs[ipowfs].saloc->locy[isa];
 		    if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
 			info2("sa %5d: %5.1f m, (%6.2f, %6.2f) mas\n", 
-			      isa, locx, sqrt(psanea[0][isa])*206265000,
-			      sqrt(psanea[1][isa])*206265000);
+			      isa, locx, sqrt(IND(psanea,isa,0))*206265000,
+			      sqrt(IND(psanea,isa,1))*206265000);
 		    }
 		}/*isa  */
 	    }/*ii0 */

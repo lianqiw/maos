@@ -48,66 +48,64 @@ void plotloc(char *fig, const PARMS_T *parms,
     if(parms->sim.ncpa_calib){
 	ncir+=parms->sim.ncpa_ndir;
     }
-    double (*cir)[4];
-    cir=(double(*)[4])calloc(ncir*4,sizeof(double));
+    dmat *cir=dnew(4, ncir);
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	double hs=parms->evl.hs->p[ievl];
-	cir[count][0]=ht*parms->evl.thetax->p[ievl];
-	cir[count][1]=ht*parms->evl.thetay->p[ievl];
-	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
-	cir[count][3]=0xFF0000;/*rgb color */
+	IND(cir,0,count)=ht*parms->evl.thetax->p[ievl];
+	IND(cir,1,count)=ht*parms->evl.thetay->p[ievl];
+	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	IND(cir,3,count)=0xFF0000;/*rgb color */
 	count++;
     }
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	double hs=parms->fit.hs->p[ifit];
-	cir[count][0]=ht*parms->fit.thetax->p[ifit];
-	cir[count][1]=ht*parms->fit.thetay->p[ifit];
-	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
-	cir[count][3]=0xFF22DD;/*rgb color */
+	IND(cir,0,count)=ht*parms->fit.thetax->p[ifit];
+	IND(cir,1,count)=ht*parms->fit.thetay->p[ifit];
+	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	IND(cir,3,count)=0xFF22DD;/*rgb color */
 	count++;
     }
     for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
 	double hs=parms->sim.ncpa_hs->p[idir];
-	cir[count][0]=ht*parms->sim.ncpa_thetax->p[idir];
-	cir[count][1]=ht*parms->sim.ncpa_thetay->p[idir];
-	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
-	cir[count][3]=0x22FF00;/*rgb color */
+	IND(cir,0,count)=ht*parms->sim.ncpa_thetax->p[idir];
+	IND(cir,1,count)=ht*parms->sim.ncpa_thetay->p[idir];
+	IND(cir,2,count)=parms->aper.d*0.5*(1-ht/hs);
+	IND(cir,3,count)=0x22FF00;/*rgb color */
 	count++;
     }
 
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	double hs=parms->wfs[iwfs].hs;
 	int ipowfs=parms->wfs[iwfs].powfs;
-	cir[count][0]=parms->wfs[iwfs].thetax*ht;
-	cir[count][1]=parms->wfs[iwfs].thetay*ht;
-	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
+	IND(cir,0,count)=parms->wfs[iwfs].thetax*ht;
+	IND(cir,1,count)=parms->wfs[iwfs].thetay*ht;
+	IND(cir,2,count)=parms->aper.d*0.5*(1.-ht/hs);
 	if(isfinite(hs)){//LGS
-	    cir[count][3]=0xFF8800;
+	    IND(cir,3,count)=0xFF8800;
 	}else if(!parms->powfs[ipowfs].lo){//Hi NGS
-	    cir[count][3]=0xFFFF00;
+	    IND(cir,3,count)=0xFFFF00;
 	}else if(parms->powfs[ipowfs].order>1){//TTF
-	    cir[count][3]=0x0000FF;//TTF
+	    IND(cir,3,count)=0x0000FF;//TTF
 	}else{
-	    cir[count][3]=0x0000FF;//TT
+	    IND(cir,3,count)=0x0000FF;//TT
 	}
 	count++;
     }
-    plot_points(fig, 1, &loc, NULL ,NULL, NULL,NULL,ncir, cir, NULL,
+    plot_points(fig, 1, &loc, NULL ,NULL, NULL,NULL, cir, NULL,
 	       "Coordinate","x (m)","y (m)", "%s",fn);
-    free(cir);
+    dfree(cir);
 }
 /**
    ploted all the different beam directions as points. */
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     format2fn;
     int ncir=1;
-    double (*cir)[4];
-    cir=(double(*)[4])calloc(ncir*4,sizeof(double));
-    cir[0][0]=0;
-    cir[0][1]=0;
-    cir[0][2]=totfov/2;
-    cir[0][3]=0x000000;/*rgb color */
+    dmat *cir=dnew(4, ncir);
+    IND(cir,0,0)=0;
+    IND(cir,1,0)=0;
+    IND(cir,2,0)=totfov/2;
+    IND(cir,3,0)=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     ngroup+=1;
     loccell *locs=cellnew(ngroup, 1);
@@ -159,9 +157,9 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     double limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
-    plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL,ncir,cir, NULL,
+    plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL, cir, NULL,
 		"Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
-    free(cir);
+    dfree(cir);
     cellfree(locs);
     free(style);
 }
@@ -488,8 +486,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	gnfra=dnew(nsep,nsa*2);
     }
     dmat *gnfxy=dnew(nsep,nsa*2);
-    PDMAT(gnfxy,pgnfxy);
-    PDMAT(gnfra,pgnfra);
+    dmat* pgnfxy=gnfxy/*PDMAT*/;
+    dmat* pgnfra=gnfra/*PDMAT*/;
     const int ndir=4;
     char *dirs[]={"x", "y", "r", "a"};
     char *types[]={"","MF", "CoG", "MAP"};
@@ -536,8 +534,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
-		    PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
-		    dsp *sis=psi[idtf][idtfsa];
+		    dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
+		    dsp *sis=IND(psi,idtfsa,idtf);
 		    double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 		    if(petf){
@@ -579,18 +577,18 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    error("Invalid");
 		}
 		if(type==1 || !srot){
-		    pgnfxy[isa][isep]=g[0]/pixthetax;
-		    pgnfxy[isa+nsa][isep]=g[1]/pixthetay;
+		    IND(pgnfxy,isep,isa)=g[0]/pixthetax;
+		    IND(pgnfxy,isep,isa+nsa)=g[1]/pixthetay;
 		    
 		    if(srot){/*obtain gradients in r/a coord*/
-			pgnfra[isa][isep]=(g[0]*cx+g[1]*sx)/pixthetax;
-			pgnfra[isa+nsa][isep]=(-g[0]*sx+g[1]*cx)/pixthetay;
+			IND(pgnfra,isep,isa)=(g[0]*cx+g[1]*sx)/pixthetax;
+			IND(pgnfra,isep,isa+nsa)=(-g[0]*sx+g[1]*cx)/pixthetay;
 		    }
 		}else{
-		    pgnfra[isa][isep]=g[0]/pixthetax;
-		    pgnfra[isa+nsa][isep]=g[1]/pixthetay;
-		    pgnfxy[isa][isep]=(g[0]*cx-g[1]*sx)/pixthetax;
-		    pgnfxy[isa+nsa][isep]=(g[0]*sx+g[1]*cx)/pixthetay;
+		    IND(pgnfra,isep,isa)=g[0]/pixthetax;
+		    IND(pgnfra,isep,isa+nsa)=g[1]/pixthetay;
+		    IND(pgnfxy,isep,isa)=(g[0]*cx-g[1]*sx)/pixthetax;
+		    IND(pgnfxy,isep,isa+nsa)=(g[0]*sx+g[1]*cx)/pixthetay;
 		}
 	    }
 	}/*for isa*/
@@ -730,10 +728,10 @@ static double mapfun(double *x, mapdata_t *info){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvlsig=parms->wfs[iwfs].wvlwts->p[iwvl]
 	    *parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-	PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
+	dspcell*  psi=powfs[ipowfs].dtf[iwvl].si/*PDSPCELL*/;
 	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
 	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
-	dsp *sis=psi[idtf][idtfsa];
+	dsp *sis=IND(psi,idtfsa,idtf);
 	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);

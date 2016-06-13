@@ -139,18 +139,16 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
     if(x->ny==1 && trans[1]=='n' && transy==0){
 	X(spmulvec)(y->p, A, x->p, trans[0], alpha);
     }else{
-	PMAT(y,Y);
-	PMAT(x,X);
 
 #define no_conj(A) (A)
 #define do_conj(A) conj(A)
-#define no_trans(A,i,j) A[j][i]
-#define do_trans(A,i,j) A[i][j]
+#define no_trans(A,i,j) IND(A,i,j)
+#define do_trans(A,i,j) IND(A,j,i)
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
 	for(long icol=0; icol<A->ny; icol++){				\
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		for(long jcol=0; jcol<yny; jcol++){			\
-		    py(Y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, icol, jcol)); \
+		    py(y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, icol, jcol)); \
 		}							\
 	    }								\
 	}
@@ -160,7 +158,7 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 	    OMPTASK_FOR(icol, 0, A->ny){					\
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		    for(long jcol=0; jcol<yny; jcol++){			\
-			py(Y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, A->i[ix], jcol)); \
+			py(y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, A->i[ix], jcol)); \
 		    }							\
 		}							\
 	    }								\

@@ -196,7 +196,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     tptr1 += nrow;
     a      = tptr1;
     *Sdiag=dnew(maxprs,1);
-    dmat *V=dnew(nrow, maxprs); PDMAT(V,pV);
+    dmat *V=dnew(nrow, maxprs); dmat* pV=V;
     TIC;tic;
     if(landr(n, lanmax, maxprs, nnzero, endl, endr, vectors, kappa, ritz, bnd, r)){ 
 	warning("landr failed\n");

@@ -45,7 +45,7 @@ typedef struct GENOTF_T{
 /**
    Remove tip/tilt from the covariance matrix.
 */
-static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
+static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 		    loc_t *loc,       /**<The aperture grid*/
 		    const double *amp /**<The amplitude map*/
 		   ){
@@ -55,21 +55,20 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     int nloc=loc->nloc;
 
     dmat *B2=dnew(nloc, nloc);
-    PDMAT(B2, BP);
-    PDMAT(B0, B);
+    dmat*  BP=B2;
   
     double *mod[3];
     dmat *mcc=dnew(3,3);/*modal cross coupling matrix. */
-    PDMAT(mcc, cc);
+    dmat*  cc=mcc;
  
     mod[0]=NULL;
     mod[1]=locx;
     mod[2]=locy;
     for(int im=0; im<3;im++){
 	for(int jm=im;jm<3;jm++){
-	    cc[jm][im]=dotdbl(mod[im], mod[jm], amp, nloc);
+	    IND(cc,im,jm)=dotdbl(mod[im], mod[jm], amp, nloc);
 	    if(im!=jm)
-		cc[im][jm]=cc[jm][im];
+		IND(cc,jm,im)=IND(cc,im,jm);
 	}
     }
     dinvspd_inplace(mcc);
@@ -90,34 +89,34 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     }
     /* MCC = - cci' *M' */
     dmm(&MCC, 0, mcc, M,  "tt", -1);
-    PDMAT(MCC, pMCC);
+    dmat*  pMCC=MCC;
     /* Mtmp =  MW' * B  */
-    dmm(&Mtmp, 0, MW, B0, "tn", 1);
+    dmm(&Mtmp, 0, MW, B, "tn", 1);
     /*Remove tip/tilt from left side*/
-    PDMAT(Mtmp, pMtmp);
+    dmat*  pMtmp=Mtmp;
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=pMtmp[iloc][0];
-	double tmp2=pMtmp[iloc][1];
-	double tmp3=pMtmp[iloc][2];
+	double tmp1=IND(pMtmp,0,iloc);
+	double tmp2=IND(pMtmp,1,iloc);
+	double tmp3=IND(pMtmp,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]=B[iloc][jloc]+
-		(pMCC[jloc][0]*tmp1
-		 +pMCC[jloc][1]*tmp2
-		 +pMCC[jloc][2]*tmp3);
+	    IND(BP,jloc,iloc)=IND(B,jloc,iloc)+
+		(IND(pMCC,0,jloc)*tmp1
+		 +IND(pMCC,1,jloc)*tmp2
+		 +IND(pMCC,2,jloc)*tmp3);
 	}
     }
     /* Mtmp = MW' * BP' */
     dmm(&Mtmp, 0, MW, B2, "tt", 1);
     /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=pMCC[iloc][0];
-	double tmp2=pMCC[iloc][1];
-	double tmp3=pMCC[iloc][2];
+	double tmp1=IND(pMCC,0,iloc);
+	double tmp2=IND(pMCC,1,iloc);
+	double tmp3=IND(pMCC,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]+=
-		tmp1*pMtmp[jloc][0]
-		+tmp2*pMtmp[jloc][1]
-		+tmp3*pMtmp[jloc][2];
+	    IND(BP,jloc,iloc)+=
+		tmp1*IND(pMtmp,0,jloc)
+		+tmp2*IND(pMtmp,1,jloc)
+		+tmp3*IND(pMtmp,2,jloc);
 	}
     }
     dfree(mcc);
@@ -140,19 +139,19 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     }else{
 	B2=ddup(B);/*duplicate since we need to modify it. */
     }
-    PDMAT(B2, BP);
+    dmat*  BP=B2;
     if(!*otf){
 	*otf=cnew(notfx,notfy);
     }
-    PCMAT(*otf,OTF);
+    cmat* OTF=*otf;
     /*Do the exponential.*/
     double k2=pow(2*M_PI/wvl,2);
     double *restrict BPD=malloc(sizeof(double)*nloc);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]=exp(k2*BP[iloc][jloc]);
+	    IND(BP,jloc,iloc)=exp(k2*IND(BP,jloc,iloc));
 	}
-	BPD[iloc]=pow(BP[iloc][iloc], -0.5);
+	BPD[iloc]=pow(IND(BP,iloc,iloc), -0.5);
     }
     double otfnorm=0;
     if(amp){
@@ -174,7 +173,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		tmp1=BPD[iloc1]*BP[iloc1][iloc2];
+		tmp1=BPD[iloc1]*IND(BP, iloc2, iloc1);
 		tmp2=BPD[iloc2];
 		if(amp){
 		    tmp1*=amp[iloc1];
@@ -187,7 +186,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		    tmp+=tmp1*tmp2;
 		}
 	    }
-	    OTF[jm][im]=tmp*otfnorm;
+	    IND(OTF,im,jm)=tmp*otfnorm;
 	}
     }
     free(BPD);
@@ -296,16 +295,15 @@ static dmat* genotfB(loc_t *loc, double r0, double L0){
     long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
-    dmat *B0=dnew(nloc, nloc);
-    PDMAT(B0, B);
+    dmat *B=dnew(nloc, nloc);
     const double coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
+	    IND(B,i,j)=IND(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
-    return B0;
+    return B;
 }
 /**
    Generate OTFs for an aperture or multiple subapertures. ALl these apertures
@@ -408,8 +406,7 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     long ncovx=(long) round((xmax-xmin)*dx1)*2;
     long ncovy=(long) round((ymax-ymin)*dy1)*2;
     dinit(cov2d, ncovx, ncovy);
-    PDMAT(*cov2d, pcov2d);
-    PDMAT(cov, pcov);
+    dmat*  pcov2d=*cov2d;
     /*the following is adapted from gen_pval*/
     loc_create_map(loc);
     map_t *map=loc->map;
@@ -435,15 +432,15 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 		long iy=map_y[iloc]+jm2;
 		long iloc2=(long)loc_map_get(map, ix, iy);
 		if(iloc2>0 && (!amp || amp[iloc2]>=ampthres)){
-		    acc+=pcov[iloc][iloc2-1];
+		    acc+=IND(cov,iloc2-1,iloc);
 		    count++;
 		}
 	    }
 	    if(count>0){
 		if(norm){/*compute the covariance*/
-		    pcov2d[jm][im]=acc/count;
+		    IND(pcov2d,im,jm)=acc/count;
 		}else{/*compute approximate PSD.*/
-		    pcov2d[jm][im]=acc;
+		    IND(pcov2d,im,jm)=acc;
 		}
 	    }
 	}

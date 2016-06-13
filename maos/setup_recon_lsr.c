@@ -95,11 +95,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		/*notice offset of 1 because map start count at 1 */
 		p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
 		map_t *map=recon->aloc->p[idm]->map;
-		PDMAT(map, pmap);
 		for(long iy=0; iy<map->ny; iy++){
 		    for(long ix=0; ix<map->nx; ix++){
-			if(pmap[iy][ix]){
-			    p[(long)pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
+			if(IND(map,ix,iy)){
+			    p[(long)IND(map,ix,iy)]=(double)2*((iy+ix)&1)-1;
 			}
 		    }
 		}
@@ -127,16 +126,16 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
     dcell *ULo=cellnew(ndm,nwfs);
     dcell *VLo=cellnew(ndm,nwfs);
-    PDCELL(ULo, pULo);
-    PDCELL(VLo, pVLo);
+    dcell*  pULo=ULo/*PDELL*/;
+    dcell*  pVLo=VLo/*PDELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
 	    continue;
 	}
 	for(int idm=0; idm<ndm; idm++){
-	    dspfull(&pULo[iwfs][idm], (dsp*)IND(recon->LR.M, idm, iwfs),'n',-1);
-	    dspfull(&pVLo[iwfs][idm], (dsp*)IND(GAM, iwfs, idm),'t',1);
+	    dspfull(&IND(pULo,idm,iwfs), (dsp*)IND(recon->LR.M, idm, iwfs),'n',-1);
+	    dspfull(&IND(pVLo,idm,iwfs), (dsp*)IND(GAM, iwfs, idm),'t',1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);

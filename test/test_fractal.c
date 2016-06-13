@@ -20,15 +20,15 @@ static void test_accuracy(){
     }
     mapwrite(atm, "atm_rand.bin");
     mapwrite(atm2, "atm2_rand.bin");
-    fractal_do(atm->p, nx, ny, dx, r0,L0,ninit);
+    fractal_do((dmat*)atm, dx, r0,L0,ninit);
     mapwrite(atm, "atm_frac.bin");
-    fractal_inv(atm->p, nx, ny, dx, r0,L0,ninit);
+    fractal_inv((dmat*)atm, dx, r0,L0,ninit);
     mapwrite(atm, "atm_frac_inv.bin");
 
    
-    fractal_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
+    fractal_trans((dmat*)atm2, dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_trans.bin");
-    fractal_inv_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
+    fractal_inv_trans((dmat*)atm2, dx, r0,L0,ninit);
     mapwrite(atm2, "atm2_frac_inv_trans.bin");
     
     /*
@@ -84,7 +84,7 @@ static void test_cov(){/*not good */
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal_do(atm->p, nx, ny, dx, r0,L0,ninit);
+	fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	/*mapwrite(atm, "atm_%ld.bin", i); */
 	cembedd(atmhat, (dmat*)atm, 0);
 	cfft2(atmhat, -1);
@@ -122,7 +122,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal_do(atm->p, nx, ny, dx, r0,L0,ninit);
+	fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -143,17 +143,17 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
     map_t *atm=mapnew(nx, ny, dx,dx, NULL);
     dmat *vec=dnew(4,1);
     dmat *cov=NULL;
-    PDMAT((dmat*)atm,pp);
+    dmat* pp=(dmat*)atm;
     for(long i=0; i<nframe; i++){
 	info("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal_do(atm->p, nx, ny, dx, r0,L0,ninit);
-	vec->p[0]=pp[ofy+0][ofx+0];
-	vec->p[1]=pp[ofy+0][ofx+1];
-	vec->p[2]=pp[ofy+1][ofx+0];
-	vec->p[3]=pp[ofy+1][ofx+1];
+	fractal_do((dmat*)atm, dx, r0,L0,ninit);
+	vec->p[0]=IND(pp,ofx+0,ofy+0);
+	vec->p[1]=IND(pp,ofx+1,ofy+0);
+	vec->p[2]=IND(pp,ofx+0,ofy+1);
+	vec->p[3]=IND(pp,ofx+1,ofy+1);
 	dmm(&cov, 1, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -186,7 +186,7 @@ static void test_stfun(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal_do(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
+	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
 	    zfarr_dmat(save, i, (dmat*)atm);
 	    if(i%100==0)
@@ -245,19 +245,17 @@ static void test_psd(){
 	cmat *hat=cnew(nx*ratio, ny*ratio);
 	//cfft2plan(hat, -1);
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
-	PCMAT(hat, phat);
-	PDMAT(atm, patm);
 
 	for(long i=0; i<nframe; i++){
 	    info2("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal_do(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
+	    fractal_do((dmat*)atm, dx, r0,L0,ninit);
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    phat[iy+yskip][ix+xskip]=patm[iy][ix];
+		    IND(hat,ix+xskip,iy+yskip)=IND(atm,ix,iy);
 		}
 	    }
 	    cfftshift(hat);
@@ -278,9 +276,9 @@ static void test_psd(){
 	//cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
 	dmat *atmi=dnew(atm->nx, atm->ny);
-	PCMAT(hat, phat);
-	PDMAT(atmr, patmr);
-	PDMAT(atmi, patmi);
+	cmat*  phat=hat;
+	dmat*  patmr=atmr;
+	dmat*  patmi=atmi;
 	for(long ii=0; ii<nframe; ii+=2){
 	    info2("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
@@ -294,7 +292,7 @@ static void test_psd(){
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    phat[iy+yskip][ix+xskip]=patmr[iy][ix];
+		    IND(phat,ix+xskip,iy+yskip)=IND(patmr,ix,iy);
 		}
 	    }
 	    cfftshift(hat);
@@ -303,7 +301,7 @@ static void test_psd(){
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
-		    phat[iy+yskip][ix+xskip]=patmi[iy][ix];
+		    IND(phat,ix+xskip,iy+yskip)=IND(patmi,ix,iy);
 		}
 	    }
 	    cfftshift(hat);
@@ -336,7 +334,7 @@ static void test_cxx(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal_do(atm->p, nx+1, ny+1, dx, r0, L0, ninit);
+	    fractal_do((dmat*)atm, dx, r0, L0, ninit);
 	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
 	    dmat *atmvec=dref_reshape(sec, nx*ny, 1);
 	    dmm(&cxx,1, atmvec,atmvec,"nt",1);

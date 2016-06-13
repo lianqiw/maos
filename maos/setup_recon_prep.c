@@ -408,14 +408,14 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	if(recon->HXW->nx!=nwfs || recon->HXW->ny!=npsr){
 	    error("Wrong saved HXW\n");
 	}
-	PDSPCELL(recon->HXW,HXW);
+	dspcell* HXW=recon->HXW/*PDSPCELL*/;
 	int nploc=ploc->nloc;
 	for(int ips=0; ips<npsr; ips++){
 	    int nloc=recon->xloc->p[ips]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(!HXW[ips][iwfs] 
-		   || HXW[ips][iwfs]->nx!=nploc 
-		   || HXW[ips][iwfs]->ny!=nloc){
+		if(!IND(HXW,iwfs,ips) 
+		   || IND(HXW,iwfs,ips)->nx!=nploc 
+		   || IND(HXW,iwfs,ips)->ny!=nloc){
 		    error("Wrong saved HXW\n");
 		}
 	    }
@@ -423,7 +423,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     }else{
 	info2("Generating HXW");TIC;tic;
 	recon->HXW=cellnew(nwfs,npsr);
-	PDSPCELL(recon->HXW,HXW);
+	dspcell* HXW=recon->HXW/*PDSPCELL*/;
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
 	    
@@ -441,7 +441,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		const double  scale=1. - ht/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
-		HXW[ips][iwfs]=mkh(recon->xloc->p[ips], loc, 
+		IND(HXW,iwfs,ips)=mkh(recon->xloc->p[ips], loc, 
 				   dispx,dispy,scale);
 	    }
 	}
@@ -451,13 +451,13 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	writebin(recon->HXW, "HXW");
     }
     recon->HXWtomo=cellnew(recon->HXW->nx, recon->HXW->ny);
-    PDSPCELL(recon->HXWtomo,HXWtomo);
-    PDSPCELL(recon->HXW,HXW);
+    dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
+    dspcell* HXW=recon->HXW/*PDSPCELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
 	    for(int ips=0; ips<npsr; ips++){
-		HXWtomo[ips][iwfs]=dspref(HXW[ips][iwfs]);
+		IND(HXWtomo,iwfs,ips)=dspref(IND(HXW,iwfs,ips));
 	    }
 	} 
     }
@@ -474,7 +474,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	const int nfit=parms->fit.nfit;
 	const int ndm=parms->ndm;
 	recon->HA=cellnew(nfit, ndm);
-	PDSPCELL(recon->HA,HA);
+	dspcell* HA=recon->HA/*PDSPCELL*/;
 	info2("Generating HA ");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
@@ -488,7 +488,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 		if(parms->recon.misreg_dm2sci && parms->recon.misreg_dm2sci[ifit+idm*nfit]){
 		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);
 		}
-		HA[idm][ifit]=mkh(recon->aloc->p[idm], loc, 
+		IND(HA,ifit,idm)=mkh(recon->aloc->p[idm], loc, 
 				  displace[0], displace[1], scale);
 		if(loc!=recon->floc){
 		    locfree(loc);
@@ -804,33 +804,33 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
     recon->GX=cellnew(nwfs, npsr);
-    PDSPCELL(recon->GX,GX);
-    PDSPCELL(recon->HXW,HXW);
+    dspcell* GX=recon->GX/*PDSPCELL*/;
+    dspcell* HXW=recon->HXW/*PDSPCELL*/;
     info2("Generating GX ");TIC;tic;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 	for(int ips=0; ips<npsr; ips++){
-	    GX[ips][iwfs]=dspmulsp(recon->GP2->p[iwfs], HXW[ips][iwfs],"nn");
+	    IND(GX,iwfs,ips)=dspmulsp(recon->GP2->p[iwfs], IND(HXW,iwfs,ips),"nn");
 	}/*ips */
     }
     toc2(" ");
     recon->GXtomo=cellnew(recon->GX->nx, recon->GX->ny);
-    PDSPCELL(recon->GXtomo,GXtomo);
+    dspcell* GXtomo=recon->GXtomo/*PDSPCELL*/;
 
     recon->GXlo=cellnew(recon->GX->nx, recon->GX->ny);
-    PDSPCELL(recon->GXlo, GXlo);
+    dspcell*  GXlo=recon->GXlo/*PDSPCELL*/;
 
     int nlo=parms->nlopowfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	for(int ips=0; ips<npsr; ips++){
 	    if(!parms->powfs[ipowfs].skip){/*for tomography */
-		GXtomo[ips][iwfs]=dspref(GX[ips][iwfs]);
+		IND(GXtomo,iwfs,ips)=dspref(IND(GX,iwfs,ips));
 	    }
 	    if(parms->powfs[ipowfs].lo 
 	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
 		/*for low order wfs or extracted t/t for high order ngs wfs.*/
-		GXlo[ips][iwfs]=dspref(GX[ips][iwfs]);
+		IND(GXlo,iwfs,ips)=dspref(IND(GX,iwfs,ips));
 	    }
 	}
     }/*iwfs */

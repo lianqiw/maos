@@ -427,7 +427,6 @@ INLINE void
 servo_typeII_filter(SERVO_T *st, const dcell *merrc){
     if(!merrc) return;
     const dmat *gain=st->ep;
-    PDMAT(gain,pgain);
     int indmul=0;
     if(gain->nx!=3){
 	error("Wrong format in gain\n");
@@ -459,9 +458,9 @@ servo_typeII_filter(SERVO_T *st, const dcell *merrc){
 	 */
 	for(int imod=0; imod<nmod; imod++){
 	    int indm=imod * indmul;
-	    gg=pgain[indm][0];
-	    e1a=pgain[indm][1];
-	    e1=pgain[indm][2];
+	    gg=IND(gain,0,indm);
+	    e1a=IND(gain,1,indm);
+	    e1=IND(gain,2,indm);
 	    mlead->p[imod] = e1a*mlead->p[imod]+gg*(1-e1a)/(1-e1)*(merr->p[imod]-e1*merrlast->p[imod]);
 	}
     }
@@ -626,7 +625,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
 	input->nx=1;
     }
     int nmod=input->nx;
-    PDMAT(input,pinput);
+    dmat* pinput=input;
     dmat *merr=dnew(nmod,1);
     dcell *mreal=cellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
@@ -639,12 +638,12 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     SERVO_T *st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
     rand_t rstat;
     seed_rand(&rstat, 1);
-    PDMAT(mres,pmres);
+    dmat* pmres=mres;
     /*two step delay is ensured with the order of using, copy, acc*/
     for(int istep=0; istep<input->ny; istep++){
-	memcpy(merr->p, pinput[istep], nmod*sizeof(double));
+	memcpy(merr->p, PCOL(pinput,istep), nmod*sizeof(double));
 	dadd(&merr, 1, mreal->p[0], -1);
-	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
+	memcpy(PCOL(pmres,istep),merr->p,sizeof(double)*nmod);
 	if(istep % dtrat == 0){
 	    dzero(meas->p[0]);
 	}

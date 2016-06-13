@@ -26,7 +26,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     }
     cmat *xsel=cnew(nx,ny);
     //cfft2plan(xsel,-1);
-    PCMAT(xsel,pxsel);
+    cmat* pxsel=xsel;
     double dx1=1./xloc->dx;
     long offx=-xloc->locx[0]*dx1+saloc->dx*0.5*dx1;
     long offy=-xloc->locy[0]*dx1+saloc->dx*0.5*dx1;
@@ -34,7 +34,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture center. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1;
+	    IND(pxsel,ix,iy)=1;
 	}
     }
     writebin(xsel,"xsel0");
@@ -43,12 +43,12 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     cfftshift(xsel);
     /*temporary. cancel fft effect and compare with laos. */
     cscale(xsel,1./(double)(nx*ny));
-    double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
+    double xselc=creal(IND(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
-	    if(cabs(pxsel[iy][ix])<xselc){
-		pxsel[iy][ix]=0;
+	    if(cabs(IND(pxsel,ix,iy))<xselc){
+		IND(pxsel,ix,iy)=0;
 	    }
 	}
     }

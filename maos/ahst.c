@@ -62,13 +62,12 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
     double *amp=aper->amp->p;
     const int nmod=ngsmod->nmod;
     dcell *mcc=cellnew(parms->evl.nevl,1);
-    PDMAT(aper->mcc,aMCC);
+    dmat *aMCC=aper->mcc;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	mcc->p[ievl]=dnew(nmod,nmod);
-	PDMAT(mcc->p[ievl],MCC);
-	MCC[0][0]=aMCC[1][1];
-	MCC[1][1]=aMCC[2][2];
-	MCC[1][0]=MCC[0][1]=aMCC[1][2];
+	dmat *MCC=mcc->p[ievl]=dnew(nmod,nmod);
+	IND(MCC,0,0)=IND(aMCC,1,1);
+	IND(MCC,1,1)=IND(aMCC,2,2);
+	IND(MCC,0,1)=IND(MCC,1,0)=IND(aMCC,2,1);
     }
     if(ngsmod->nmod>=5){
 	double *mod[nmod];
@@ -86,7 +85,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 	const double scale1=1.-scale;
 
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    PDMAT(mcc->p[ievl],MCC);
+	    dmat *MCC=mcc->p[ievl];
 	    if(fabs(wt[ievl])<1.e-12) continue;
 	    double thetax=parms->evl.thetax->p[ievl];
 	    double thetay=parms->evl.thetay->p[ievl];
@@ -115,9 +114,9 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 		for(int imod=jmod; imod<nmod; imod++){
 		    if(imod<2&&jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
-		    MCC[imod][jmod]=tmp;
+		    IND(MCC,jmod,imod)=tmp;
 		    if(imod!=jmod){
-			MCC[jmod][imod]=MCC[imod][jmod];
+			IND(MCC,imod,jmod)=IND(MCC,jmod,imod);
 		    }
 		}
 	    }
@@ -206,10 +205,10 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 
     dcell *modc=cellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
-    PDMAT(modc->p[0],mod);
+    dmat *mod=modc->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
-	mod[0][iloc]=x[iloc]*amp[iloc];
-	mod[1][iloc]=y[iloc]*amp[iloc];
+	IND(mod,iloc,0)=x[iloc]*amp[iloc];
+	IND(mod,iloc,1)=y[iloc]*amp[iloc];
     }
     const double MCC_fcp=ngsmod->aper_fcp;
     /*dc component of the focus mod. subtract during evaluation. */
@@ -227,21 +226,21 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		double yy=y[iloc]*y[iloc];
 		/*remove piston in focus */
 		if(parms->sim.ahstfocus){
-		    mod[2][iloc]=amp[iloc]
+		    IND(mod,iloc,2)=amp[iloc]
 			*(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		}else{
-		    mod[2][iloc]=amp[iloc]
+		    IND(mod,iloc,2)=amp[iloc]
 			*(scale1*(xx+yy-MCC_fcp)
 			  -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		}
-		mod[3][iloc]=amp[iloc]
+		IND(mod,iloc,3)=amp[iloc]
 		    *(scale1*(xx-yy)
 		      -2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]));
-		mod[4][iloc]=amp[iloc]
+		IND(mod,iloc,4)=amp[iloc]
 		    *(scale1*(xy)
 		      -ht*scale*(thetay*x[iloc]+thetax*y[iloc]));
 		if(nmod>5){
-		    mod[5][iloc]=amp[iloc]*(xx+yy-MCC_fcp);
+		    IND(mod,iloc,5)=amp[iloc]*(xx+yy-MCC_fcp);
 		}
 	    }
 	}
@@ -306,10 +305,10 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 
     dcell *modc=cellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
-    PDMAT(modc->p[0],mod);
+    dmat *mod=modc->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
-	mod[0][iloc]=x[iloc]*amp[iloc];
-	mod[1][iloc]=y[iloc]*amp[iloc];
+	IND(mod,iloc,0)=x[iloc]*amp[iloc];
+	IND(mod,iloc,1)=y[iloc]*amp[iloc];
     }
     dcell *HatWHmt=cellnew(ndm,1);
     dsp *HatGround=NULL;
@@ -396,7 +395,7 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
     const int nmod=ngsmod->nmod;
     M->p[0]=dnew(nmod,1);
     dcell *HMC=cellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
-    PDCELL(HMC,HM);
+    dcell* HM=HMC;/*PDELL*/;
     int nloc=aper->locs->nloc;
     for(int imod=0; imod<nmod; imod++){
 	dzero(M->p[0]);
@@ -404,13 +403,13 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
 	dcellzero(dmt);
 	ngsmod2dm(&dmt,recon,M,1.);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    HM[imod][ievl]=dnew(nloc,1);
+	    IND(HM,ievl,imod)=dnew(nloc,1);
 	    for(int idm=0; idm<parms->ndm; idm++){
 		double ht=parms->dm[idm].ht;
 		double displacex=parms->evl.thetax->p[ievl]*ht;
 		double displacey=parms->evl.thetay->p[ievl]*ht;
 		prop_nongrid(aloc[idm], dmt->p[idm]->p,
-			     aper->locs, HM[imod][ievl]->p,1,
+			     aper->locs, IND(HM,ievl,imod)->p,1,
 			     displacex, displacey, 1.,0,0);
 	    }
 	}
@@ -430,7 +429,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     const int nmod=ngsmod->nmod;
     const double MCC_fcp=recon->ngsmod->aper_fcp;
     dcell *HMC=cellnew(parms->evl.nevl,nmod);
-    PDCELL(HMC,HM);
+    dcell* HM=HMC;/*PDELL*/;
     double *x=aper->locs->locx;
     double *y=aper->locs->locy;
     int nloc=aper->locs->nloc;
@@ -438,31 +437,31 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
 	double sx=parms->evl.thetax->p[ievl];
 	double sy=parms->evl.thetay->p[ievl];
 	for(int imod=0; imod<nmod; imod++){
-	    HM[imod][ievl]=dnew(nloc,1);
+	    IND(HM,ievl,imod)=dnew(nloc,1);
 	}
 	if(nmod==2){
 	    for(int iloc=0; iloc<nloc; iloc++){
-		HM[0][ievl]->p[iloc]=x[iloc];
-		HM[1][ievl]->p[iloc]=y[iloc];
+		IND(HM,ievl,0)->p[iloc]=x[iloc];
+		IND(HM,ievl,1)->p[iloc]=y[iloc];
 	    }
 	}else if(nmod>=5){
 	    for(int iloc=0; iloc<nloc; iloc++){
 		double xx=pow(x[iloc],2);
 		double yy=pow(y[iloc],2);
 		double xy=x[iloc]*y[iloc];
-		HM[0][ievl]->p[iloc]=x[iloc];
-		HM[1][ievl]->p[iloc]=y[iloc];
+		IND(HM,ievl,0)->p[iloc]=x[iloc];
+		IND(HM,ievl,1)->p[iloc]=y[iloc];
 		if(parms->sim.ahstfocus){
-		    HM[2][ievl]->p[iloc]=
+		    IND(HM,ievl,2)->p[iloc]=
 			-2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
 		}else{
-		    HM[2][ievl]->p[iloc]=(xx+yy-MCC_fcp)*scale1
+		    IND(HM,ievl,2)->p[iloc]=(xx+yy-MCC_fcp)*scale1
 			-2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
 		}
-		HM[3][ievl]->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
-		HM[4][ievl]->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
+		IND(HM,ievl,3)->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
+		IND(HM,ievl,4)->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
 		if(nmod>5){
-		    HM[5][ievl]->p[iloc]=(xx+yy-MCC_fcp);
+		    IND(HM,ievl,5)->p[iloc]=(xx+yy-MCC_fcp);
 		}
 	    }
 	}else{
@@ -531,12 +530,12 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	writebin(recon->ngsmod->MCCu, "ahst_MCCu");
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
-    PDMAT(ngsmod->MCC,MCC);
+    dmat *MCC=ngsmod->MCC;
     ngsmod->IMCC_TT=dnew(2,2);
-    ngsmod->IMCC_TT->p[0]=MCC[0][0];
-    ngsmod->IMCC_TT->p[1]=MCC[0][1];
-    ngsmod->IMCC_TT->p[2]=MCC[1][0];
-    ngsmod->IMCC_TT->p[3]=MCC[1][1];
+    ngsmod->IMCC_TT->p[0]=IND(MCC,0,0);
+    ngsmod->IMCC_TT->p[1]=IND(MCC,1,0);
+    ngsmod->IMCC_TT->p[2]=IND(MCC,0,1);
+    ngsmod->IMCC_TT->p[3]=IND(MCC,1,1);
     dinvspd_inplace(ngsmod->IMCC_TT);
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_m(parms,recon);

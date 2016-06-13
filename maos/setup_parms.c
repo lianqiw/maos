@@ -1840,33 +1840,33 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
     //Collect all beam directions 
     const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
     parms->dirs=dnew(3, ndir);
-    PDMAT(parms->dirs, pdir);
+    dmat*  pdir=parms->dirs/*PDMAT*/;
     int count=0;
 
     for(int i=0; i<parms->nwfs; i++){
-	pdir[count][0]=parms->wfs[i].thetax;
-	pdir[count][1]=parms->wfs[i].thetay;
-	pdir[count][2]=parms->wfs[i].hs;
+	IND(pdir,0,count)=parms->wfs[i].thetax;
+	IND(pdir,1,count)=parms->wfs[i].thetay;
+	IND(pdir,2,count)=parms->wfs[i].hs;
 	count++;
     }
     
     for(int i=0; i<parms->evl.nevl; i++){
-	pdir[count][0]=parms->evl.thetax->p[i];
-	pdir[count][1]=parms->evl.thetay->p[i];
-	pdir[count][2]=parms->evl.hs->p[i];
+	IND(pdir,0,count)=parms->evl.thetax->p[i];
+	IND(pdir,1,count)=parms->evl.thetay->p[i];
+	IND(pdir,2,count)=parms->evl.hs->p[i];
 	count++;
     }
     for(int i=0; i<parms->fit.nfit; i++){
-	pdir[count][0]=parms->fit.thetax->p[i];
-	pdir[count][1]=parms->fit.thetay->p[i];
-	pdir[count][2]=parms->fit.hs->p[i];
+	IND(pdir,0,count)=parms->fit.thetax->p[i];
+	IND(pdir,1,count)=parms->fit.thetay->p[i];
+	IND(pdir,2,count)=parms->fit.hs->p[i];
 	count++;
     }
     if(parms->sim.ncpa_calib){
 	for(int i=0; i<parms->sim.ncpa_ndir; i++){
-	    pdir[count][0]=parms->sim.ncpa_thetax->p[i];
-	    pdir[count][1]=parms->sim.ncpa_thetay->p[i];
-	    pdir[count][2]=parms->sim.ncpa_hs->p[i];
+	    IND(pdir,0,count)=parms->sim.ncpa_thetax->p[i];
+	    IND(pdir,1,count)=parms->sim.ncpa_thetay->p[i];
+	    IND(pdir,2,count)=parms->sim.ncpa_hs->p[i];
 	    count++;
 	}
     }

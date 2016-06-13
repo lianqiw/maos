@@ -54,7 +54,6 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
       hs: distance from exit pupil to m3.
       betax,betay: beam angle from exit pupil to focal plane.
      */
-    const double (*phiin)[mapin->nx]=(void*)mapin->p;
     const int wrapx1 = mapin->nx;
     const int wrapy1 = mapin->ny;
     const int wrapx = wrapx1-1;
@@ -104,9 +103,9 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 	}
 	sc2=sc*cosangle(vi,vm3);
 	/*sc2=sc*0.707; */
-	phiout[iloc]+=sc2*(phiin[nplocy][nplocx]*(1.-dplocx)*(1.-dplocy)
-			  +phiin[nplocy][nplocx1]*(dplocx)*(1.-dplocy)
-			  +phiin[nplocy1][nplocx]*(1.-dplocx)*(dplocy)
-			  +phiin[nplocy1][nplocx1]*(dplocx)*(dplocy));
+	phiout[iloc]+=sc2*(IND(mapin,nplocx,nplocy)*(1.-dplocx)*(1.-dplocy)
+			  +IND(mapin,nplocx1,nplocy)*(dplocx)*(1.-dplocy)
+			  +IND(mapin,nplocx,nplocy1)*(1.-dplocx)*(dplocy)
+			  +IND(mapin,nplocx1,nplocy1)*(dplocx)*(dplocy));
     }
 }

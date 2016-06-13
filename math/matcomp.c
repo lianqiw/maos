@@ -190,7 +190,6 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
     const T *restrict in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    T *restrict out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
     /*
@@ -199,7 +198,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
       flag==1: copy abs2;
       flag==2: copy real only.
     */
-    memset(out, 0, sizeof(T)*noutx*nouty);
+    X(zero(A));
     if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(noutx-ninx)/2;
 	const int skipy=(nouty-niny)/2;
@@ -213,7 +212,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *restrict out2=out+skipy*noutx+skipx;
+	T *restrict out2=PIND(A, skipx, skipy);
 	for(int iy=iystart; iy<iyend; iy++){
 	    T * outi=out2+iy*noutx;
 	    const T * ini=in+iy*ninx;
@@ -246,8 +245,6 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	  
 	  The original method of adding in to out is not right.
 	 */
-	T (*restrict outs)[noutx]=(T(*)[noutx])out;
-	T (*restrict ins)[ninx]=(T(*)[ninx])in;
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	const R negstheta=-stheta;
@@ -275,11 +272,11 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    for(int ix=sx; ix<mx; ix++){				\
 		ix2=ifloor(x2); x3=x2-ix2;x31=1.-x3;			\
 		iy2=ifloor(y2); y3=y2-iy2;				\
-		outs[iy][ix] =						\
-		    AFTER((CMD(ins[iy2][ix2])*(x31)			\
-			   +CMD(ins[iy2][ix2+1])*x3)*(1.-y3)		\
-			  +(CMD(ins[iy2+1][ix2])*(x31)			\
-			    +CMD(ins[iy2+1][ix2+1])*x3)*y3);		\
+		IND(A,ix,iy) =						\
+		    AFTER((CMD(IND(B,ix2,iy2))*(x31)			\
+			   +CMD(IND(B,ix2+1,iy2))*x3)*(1.-y3)		\
+			  +(CMD(IND(B,ix2,iy2+1))*(x31)			\
+			    +CMD(IND(B,ix2+1,iy2+1))*x3)*y3);		\
 		x2+=ctheta;						\
 		y2+=negstheta;						\
 	    }								\
@@ -313,13 +310,11 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
    Embed or crop a XR(mat) into center of X(mat). 
  */
 void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
-    R *restrict in=B->p;
     long ninx=B->nx;
     long niny=B->ny;
-    T *out=A->p;
     const long noutx=A->nx;
     const long nouty=A->ny;
-    memset(out, 0, sizeof(T)*noutx*nouty);
+    X(zero)(A);
     if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
@@ -333,17 +328,15 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *out2=out+skipy*noutx+skipx;
+	T *out2=PIND(A, skipx, skipy);
 	for(long iy=iystart; iy<iyend; iy++){
 	    T *outi=out2+iy*noutx;
-	    const R *ini=in+iy*ninx;
+	    const R *ini=PCOL(B, iy);
 	    for(long ix=ixstart; ix<ixend; ix++){
 		outi[ix]=ini[ix];
 	    }
 	}
     }else{
-	T (*outs)[noutx]=(void*)out;
-	R (*ins)[ninx]=(void*)in;
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	R x2,y2;
@@ -364,11 +357,11 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 		    iy2=ifloor(y2); 
 		    x2=x2-ix2; 
 		    y2=y2-iy2; 
-		    outs[iy][ix] =
-			ins[iy2][ix2]*((1.-x2)*(1.-y2))
-			+ins[iy2][ix2+1]*(x2*(1.-y2))
-			+ins[iy2+1][ix2]*((1-x2)*y2)
-			+ins[iy2+1][ix2+1]*(x2*y2); 
+		    IND(A,ix,iy) =
+			+IND(B,ix2,iy2)*((1.-x2)*(1.-y2))
+			+IND(B,ix2+1,iy2)*(x2*(1.-y2))
+			+IND(B,ix2,iy2+1)*((1-x2)*y2)
+			+IND(B,ix2+1,iy2+1)*(x2*y2); 
 		} 
 	    } 
 	} 
@@ -385,16 +378,11 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 	X(embedc)(A,B,theta,flag);
 	return;
     }
-    const T *in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    T *out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
   
-
-    T (*outs)[noutx]=(T(*)[noutx])out;
-    T (*ins)[ninx]=(T(*)[ninx])in;
     const R ctheta=cos(theta);
     const R stheta=sin(theta);
     R x2,y2;
@@ -416,11 +404,11 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 		iy2=ifloor(y2);						\
 		x2=x2-ix2;						\
 		y2=y2-iy2;						\
-		outs[iy][ix] =AFTER(+CMD(ins[iy2][ix2])*((1.-x2)*(1.-y2)) \
-				    +CMD(ins[iy2][ix2+1])*(x2*(1.-y2))	\
-				    +CMD(ins[iy2+1][ix2])*((1-x2)*y2)	\
-				    +CMD(ins[iy2+1][ix2+1])*(x2*y2));	\
-	    }else outs[iy][ix]=0;					\
+		IND(A,ix,iy) =AFTER(+CMD(IND(B,ix2,iy2))*((1.-x2)*(1.-y2)) \
+				    +CMD(IND(B,ix2+1,iy2))*(x2*(1.-y2))	\
+				    +CMD(IND(B,ix2,iy2+1))*((1-x2)*y2)	\
+				    +CMD(IND(B,ix2+1,iy2+1))*(x2*y2));	\
+	    }else IND(A,ix,iy)=0;					\
 	}								\
     }
     /*it is not good to embed flag in the inner most loop. */
@@ -600,8 +588,6 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     T uy[ny];
     T cx=EXPI(-2*M_PI*dux*sx);
     T cy=EXPI(-2*M_PI*duy*sy);
-    PMAT(otf, potf);
-    PMAT(otfin, potfin);
     //warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
 	ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
@@ -633,13 +619,13 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     if(otf->p==otfin->p){
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		potf[iy][ix]*=ux[ix]*uy[iy];
+		IND(otf,ix,iy)*=ux[ix]*uy[iy];
 	    }
 	}
     }else{
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		potf[iy][ix]=potfin[iy][ix]*ux[ix]*uy[iy];
+		IND(otf,ix,iy)=IND(otfin,ix,iy)*ux[ix]*uy[iy];
 	    }
 	}
     }

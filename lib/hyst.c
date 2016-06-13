@@ -100,9 +100,9 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
     double *restrict xlast=hyst->xlast->p;
     double *restrict dxlast=hyst->dxlast->p;
     double *restrict x0=hyst->x0->p;
-    PDMAT(hyst->ylast, ylast);
-    PDMAT(hyst->y0, py0);
-    PDMAT(hyst->coeff, coeff);
+    dmat*  ylast=hyst->ylast;
+    dmat*  py0=hyst->y0;
+    dmat*  coeff=hyst->coeff;
     int nmod=hyst->coeff->ny;
     int naloc=dmcmd->nx;
     for(int ia=0; ia<naloc; ia++){
@@ -113,7 +113,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 		/*Changes in moving direction, change the initial condition */
 		x0[ia]=xlast[ia];
 		for(int imod=0; imod<nmod; imod++){
-		    py0[ia][imod]=ylast[ia][imod];
+		    IND(py0,imod,ia)=IND(ylast,imod,ia);
 		}
 	    }
 	    double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
@@ -121,9 +121,9 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 		alphasc*=pow((hyst->stroke-x[ia])/(hyst->stroke*2.), hyst->power);
 	    }
 	    for(int imod=0; imod<nmod; imod++){
-		const double alpha=alphasc*coeff[imod][1];
-		const double alphabeta=alpha*coeff[imod][2];
-		ylast[ia][imod]=xia-alphabeta+(py0[ia][imod]-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
+		const double alpha=alphasc*IND(coeff,1,imod);
+		const double alphabeta=alpha*IND(coeff,2,imod);
+		IND(ylast,imod,ia)=xia-alphabeta+(IND(py0,imod,ia)-x0[ia]+alphabeta)*exp(-(xia-x0[ia])/alpha);
 	    }
 	    xlast[ia]=xia;
 	    dxlast[ia]=dx;
@@ -131,7 +131,7 @@ void hyst_dmat(HYST_T *hyst, dmat *dmreal, const dmat *dmcmd){
 	/*update output. */
 	double y=0;
 	for(int imod=0; imod<nmod; imod++){
-	    y+=ylast[ia][imod]*coeff[imod][0];
+	    y+=IND(ylast,imod,ia)*IND(coeff,0,imod);
 	}
 	xout[ia]=y;
     }

@@ -43,10 +43,10 @@ void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit, cons
 void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...) CHECK_ARG(10);
-void plot_points(const char *fig, long ngroup, loc_t **loc, dcell *dc,
-		 const int32_t *style, const double *limit, const char *xylog, int ncir, double(*pcir)[4], 
+void plot_points(const char *fig, long ngroup, loc_t **loc, const dcell *dc,
+		 const int32_t *style, const double *limit, const char *xylog, const dmat *cir, 
 		 char **legend, const char *title, const char *xlabel, const char *ylabel,
-		 const char *format,...) CHECK_ARG(14);
+		 const char *format,...) CHECK_ARG(13);
 void ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...) CHECK_ARG(8);

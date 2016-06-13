@@ -28,9 +28,8 @@
    Compute Open loop NGS mode wavefront error from mode vectors.  */
 double calc_rms(const dmat *mod, const dmat *mcc, int istep0){
     double rms=0;
-    PDMAT(mod, pmod);
     for(long istep=istep0; istep<mod->ny; istep++){
-	rms+=dwdot(pmod[istep], mcc, pmod[istep]);
+	rms+=dwdot(PCOL(mod,istep), mcc, PCOL(mod,istep));
     }
     return rms/(mod->ny-istep0);
 }
@@ -122,8 +121,6 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	hasphy=0;
     }
     const int nmod=mideal->nx;
-    PDMAT(mideal,pmideal);
-    PDMAT(mideal_oa, pmideal_oa);
     dmat *res=dnew(6,1);/*Results. 1-2: NGS and TT modes., 
 			  3-4:On axis NGS and TT modes,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
@@ -132,8 +129,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcell *merrm=cellnew(1,1);dcell *pmerrm=NULL;
     const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;
     dmat *mres=dnew(nmod,nstep);
-    PDMAT(mres,pmres);
-    PDMAT(parms->skyc.rnefs,rnefs);
+    dmat* rnefs=parms->skyc.rnefs;
     dcell *zgradc=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
     dcell *gradout=dcellnew3(aster->nwfs, 1, aster->ngs, 0);
     dmat *gradsave=0;
@@ -212,9 +208,9 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }
 	}
 	for(int istep=0; istep<nstep; istep++){
-	    memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
+	    memcpy(merr->p, PCOL(mideal,istep), nmod*sizeof(double));
 	    dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
-	    memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
+	    memcpy(PCOL(mres,istep),merr->p,sizeof(double)*nmod);
 	    if(mpsol){//collect averaged modes for PSOL.
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		    dadd(&mpsol->p[iwfs], 1, mreal, 1);
@@ -231,10 +227,10 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    res->p[0]+=res_ngs;
 		    res->p[1]+=dwdot2(merr->p,parms->maos.mcc_tt,merr->p);
 		    double dot_oa=dwdot(merr->p, parms->maos.mcc_oa, merr->p);
-		    double dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, pmideal[istep]);
+		    double dot_res_ideal=dwdot(merr->p, parms->maos.mcc_oa, PCOL(mideal,istep));
 		    double dot_res_oa=0;
 		    for(int imod=0; imod<nmod; imod++){
-			dot_res_oa+=merr->p[imod]*pmideal_oa[istep][imod];
+			dot_res_oa+=merr->p[imod]*IND(mideal_oa,imod,istep);
 		    }
 		    res->p[2]+=dot_oa-2*dot_res_ideal+2*dot_res_oa;
 		    res->p[4]+=dot_oa;
@@ -242,10 +238,10 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		{
 		    double dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
 		    /*Notice that mcc_oa_tt2 is 2x5 marix. */
-		    double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, pmideal[istep]);
+		    double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, PCOL(mideal,istep));
 		    double dot_res_oa_tt=0;
 		    for(int imod=0; imod<2; imod++){
-			dot_res_oa_tt+=merr->p[imod]*pmideal_oa[istep][imod];
+			dot_res_oa_tt+=merr->p[imod]*IND(mideal_oa,imod,istep);
 		    }
 		    res->p[3]+=dot_oa_tt-2*dot_res_ideal_tt+2*dot_res_oa_tt;
 		    res->p[5]+=dot_oa_tt;
@@ -285,11 +281,11 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		    const double thetay=aster->wfs[iwfs].thetay;
 		    const int ipowfs=aster->wfs[iwfs].ipowfs;
 		    const long nsa=parms->maos.nsa[ipowfs];
-		    PCCELL(aster->wfs[iwfs].wvfout[istep],wvfout);
+		    ccell* wvfout=aster->wfs[iwfs].wvfout[istep];
 		    for(long iwvl=0; iwvl<nwvl; iwvl++){
 			double wvl=parms->maos.wvl[iwvl];
 			for(long isa=0; isa<nsa; isa++){
-			    ccp(&wvfc->p[iwfs], wvfout[iwvl][isa]);
+			    ccp(&wvfc->p[iwfs], IND(wvfout,isa,iwvl));
 			    /*Apply NGS mode error to PSF. */
 			    ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs+ipowfs, isa,
 				       thetax, thetay, parms);
@@ -334,7 +330,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    case 1:/*both poisson and read out noise. */
 				{
 				    double bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
-				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,rnefs[ipowfs][idtrat]);
+				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,IND(rnefs,idtrat,ipowfs));
 				}
 				break;
 			    case 2:/*there is still poisson noise. */
@@ -356,7 +352,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 				}else{
 				    warning_once("mtch is out of range\n");
 				}
-				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
+				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*IND(rnefs,idtrat,ipowfs)); 
 				igrad[0]*=pixtheta;
 				igrad[1]*=pixtheta;
 			    }
@@ -511,8 +507,8 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
     }
     fprintf(fp,"]\n");
 
-    PDMAT(parms->skyc.rnefs,rnefs);
-    double rne=rnefs[0][seldtrat];
+    dmat* rnefs=parms->skyc.rnefs;
+    double rne=IND(rnefs,seldtrat,0);
     double bkgrnd=aster[selaster].wfs[0].bkgrnd;
 
     if(parms->maos.npowfs==1){

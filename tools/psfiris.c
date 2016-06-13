@@ -224,12 +224,12 @@ int main(int argc, char *argv[]){
 	if(skycres->nx!=3 || skycres->ny!=7){
 	    error("format is wrong\n");
 	}
-	PDCELL(skycres, pskycres);
-	dmat *skyresi=pskycres[ingscount][iza];
-	PDMAT(skyresi, pskyresi);
+	dcell*  pskycres=skycres;
+	dmat *skyresi=IND(pskycres,iza,ingscount);
+	dmat*  pskyresi=skyresi;
 	int ind=(int)round(skyp*(nsky/100.))-1;
-	tt=pskyresi[1][ind]+pskyresi[2][ind];
-	ps=pskyresi[0][ind]-tt;
+	tt=IND(pskyresi,ind,1)+IND(pskyresi,ind,2);
+	ps=IND(pskyresi,ind,0)-tt;
 	if(ps<0) ps=0;
 	dcellfree(skycres);
     }
@@ -268,9 +268,9 @@ int main(int argc, char *argv[]){
     cellfree(aloc);
     dcellfree(mode_aloc);
     dmat *cc_mode=dnew(5,5);
-    PDMAT(cc_mode, pcc_mode);
-    pcc_mode[0][0]=pcc_mode[1][1]=tt/2.;
-    pcc_mode[2][2]=pcc_mode[3][3]=pcc_mode[4][4]=ps/3.;
+    dmat*  pcc_mode=cc_mode;
+    IND(pcc_mode,0,0)=IND(pcc_mode,1,1)=tt/2.;
+    IND(pcc_mode,2,2)=IND(pcc_mode,3,3)=IND(pcc_mode,4,4)=ps/3.;
     int nploc=ploc->nloc;
     dmat *tmp=NULL;
     dmat *cc_opd=NULL;

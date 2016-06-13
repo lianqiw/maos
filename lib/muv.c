@@ -107,12 +107,12 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	dspmm(&(*xout)->p[xb], dsp_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
     }
     if(A->V && A->U){
-	PDCELL(A->V, AV);
-	PDCELL(A->U, AU);
+	dcell*  AV=A->V;
+	dcell*  AU=A->U;
 	for(int jb=0; jb<A->U->ny; jb++){
 	    dmat *tmp=NULL;
-	    dmm(&tmp, 0, AV[jb][yb], xin->p[yb], "tn", -1);
-	    dmm(&(*xout)->p[xb], 1, AU[jb][xb], tmp, "nn", alpha);
+	    dmm(&tmp, 0, IND(AV,yb,jb), xin->p[yb], "tn", -1);
+	    dmm(&(*xout)->p[xb], 1, IND(AU,xb,jb), tmp, "nn", alpha);
 	    dfree(tmp);
 	}
     }

@@ -700,9 +700,9 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     dcell *acc=dcellnew3(nwfs, 1, ngs, 0);
     dcell *meas=dcellnew3(nwfs, 1, ngs, 0);
     int nmod=input->nx;
-    PDMAT(input,pinput);
+    dmat* pinput=input;
     dmat *mres=ddup(input);
-    PDMAT(mres, pmres);
+    dmat*  pmres=mres;
     kalman_init(kalman);
     rand_t rstat;
     seed_rand(&rstat, 1);

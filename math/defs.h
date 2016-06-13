@@ -129,8 +129,6 @@
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
 
-#define PSPCELL(A,pp) PALL(X(sp)*,A,pp)
-
 #ifdef DLONG
 #define M_SPT M_SPT64
 #else
@@ -144,8 +142,6 @@ INLINE int issp(const void *id){
 #endif //if USE_LONG
 
 #define ABS2(A) ((A)*conj(A))
-#define PMAT(A,pp) PALL(T,A,pp)
-#define PCELL(A,pp) PALL(X(mat)*,A,pp)
 INLINE int ismat(const void *id){
     const uint32_t magic=*((const uint32_t*)id);
     return (magic==M_T);

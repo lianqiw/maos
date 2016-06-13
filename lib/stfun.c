@@ -65,17 +65,17 @@ void stfun_push(stfun_t *A, dmat *opd){
     long nx=A->hat0->nx/2;
     long nx2=nx>>1;
     long ny2=ny>>1;
-    PDMAT(opd, popd);
-    PDMAT(A->amp,pamp);
-    PCMAT(A->hat1, p1);
-    PCMAT(A->hat2, p2);
+    dmat*  popd=opd;
+    dmat* pamp=A->amp;
+    cmat*  p1=A->hat1;
+    cmat*  p2=A->hat2;
     cset(A->hat1, 0);
     cset(A->hat2, 0);
     for(long iy=0; iy<ny; iy++){
 	for(long ix=0; ix<nx; ix++){
-	    double o=popd[iy][ix]*pamp[iy][ix];
-	    p1[iy+ny2][ix+nx2]=o;
-	    p2[iy+ny2][ix+nx2]=o*o;
+	    double o=IND(popd,ix,iy)*IND(pamp,ix,iy);
+	    IND(p1,ix+nx2,iy+ny2)=o;
+	    IND(p2,ix+nx2,iy+ny2)=o*o;
 	}
     }
     cfft2(A->hat1, -1);
@@ -96,12 +96,12 @@ dmat *stfun_finalize(stfun_t *A){
     long nx=A->hat0->nx;
     long ny=A->hat0->ny;
     dmat *st=dnew(nx, ny);
-    PDMAT(st,pst);
-    PCMAT(A->hattot, p1);
-    PCMAT(A->hat0, p2);
+    dmat* pst=st;
+    cmat*  p1=A->hattot;
+    cmat*  p2=A->hat0;
     for(long iy=1; iy<ny; iy++){/*skip first row/column where hat0 is 0. */
 	for(long ix=1; ix<nx; ix++){
-	    pst[iy][ix]=creal(p1[iy][ix]/p2[iy][ix]);
+	    IND(pst,ix,iy)=creal(IND(p1,ix,iy)/IND(p2,ix,iy));
 	}
     }
     cfree(A->hat0);
@@ -120,12 +120,12 @@ dmat* stfun_kolmogorov(loc_t *loc, double r0){
     double *locx=loc->locx;
     double *locy=loc->locy;
     dmat *st=dnew(nloc,nloc);
-    PDMAT(st,B);
+    dmat* B=st;
     double coeff=6.88*pow(r0,-5./3.)*pow(0.5e-6/(2.*M_PI),2);
     for(int i=0; i<nloc; i++){
 	for(int j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
+	    IND(B,i,j)=IND(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
     return st;

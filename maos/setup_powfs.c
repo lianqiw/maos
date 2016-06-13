@@ -324,17 +324,17 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    nedge++;
 	}
 	ampi=dnew(nx,nx);
-	PDMAT(ampi, pampi);
+	dmat*  pampi=ampi/*PDMAT*/;
 	double alpha=(nx*nx*parms->powfs[ipowfs].safill2d-(nx-2*nedge)*(nx-2*nedge))
 	    /((nx-2*(nedge-1))*(nx-2*(nedge-1))-(nx-2*nedge)*(nx-2*nedge));
 	double tot=0;
 	for(int iy=nedge-1; iy<nx-nedge+1; iy++){
 	    for(int ix=nedge-1; ix<nx-nedge+1; ix++){
-		pampi[iy][ix]=1;
+		IND(pampi,ix,iy)=1;
 		if(ix==nedge-1 || ix==nx-nedge || iy==nedge-1 || iy==nx-nedge){
-		    pampi[iy][ix]=alpha;
+		    IND(pampi,ix,iy)=alpha;
 		}
-		tot+=pampi[iy][ix];
+		tot+=IND(pampi,ix,iy);
 	    }
 	}
 	if(parms->save.setup){
@@ -1270,7 +1270,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }
 
 	    powfs[ipowfs].cogcoeff->p[iwfs]=dnew(2,nsa);
-	    PDMAT(powfs[ipowfs].cogcoeff->p[iwfs], cogcoeff);
+	    dmat*  cogcoeff=powfs[ipowfs].cogcoeff->p[iwfs]/*PDMAT*/;
 	    for(int isa=0; isa<nsa; isa++){
 		dmat *bkgrnd2i=bkgrnd2?bkgrnd2[isa]:NULL;
 		dmat *bkgrnd2ic=bkgrnd2c?bkgrnd2c[isa]:NULL;
@@ -1282,17 +1282,17 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    cogdata_t data={ints, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne, &rstat, 100};
 		    double ftol=0.0001;/*tolerance of nea^2 in pixel*/
 		    int ncall=dminsearch(coeff, 2, ftol, (dminsearch_fun)cogfun, &data);
-		    cogcoeff[isa][0]=coeff[0];
-		    cogcoeff[isa][1]=coeff[1];
+		    IND(cogcoeff,0,isa)=coeff[0];
+		    IND(cogcoeff,1,isa)=coeff[1];
 		    info("isa %d:, ncall=%3d, coeff=%g %g\n", isa, ncall, coeff[0], coeff[1]);
 		}else{
-		    cogcoeff[isa][0]=parms->powfs[ipowfs].cogthres;
-		    cogcoeff[isa][1]=parms->powfs[ipowfs].cogoff;
+		    IND(cogcoeff,0,isa)=parms->powfs[ipowfs].cogthres;
+		    IND(cogcoeff,1,isa)=parms->powfs[ipowfs].cogoff;
 		}
 		if(do_nea){
 		    dmat *nea=dnew(2,2);
 		    dmat *ints=intstat->i0->p[isa+iwfs*nsa];/*equivalent noise*/
-		    cog_nea(nea->p, ints, cogcoeff[isa][0], cogcoeff[isa][1], ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
+		    cog_nea(nea->p, ints, IND(cogcoeff,0,isa), IND(cogcoeff,1,isa), ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		    nea->p[0]=nea->p[0]*pixthetax*pixthetax+neaspeckle2;
 		    nea->p[3]=nea->p[3]*pixthetay*pixthetay+neaspeckle2;
 		    nea->p[1]=nea->p[1]*pixthetax*pixthetay;
@@ -1407,12 +1407,12 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		sanea=powfs[ipowfs].saneaxy->p+jwfs;
 	    }
 	    dmat *nea=dnew(nsa,3);
-	    PDMAT(nea, pnea);
+	    dmat*  pnea=nea/*PDMAT*/;
 	    for(int isa=0; isa<nsa; isa++){
 		dmat *neal=dchol(sanea[isa]);
-		pnea[0][isa]=neal->p[0];
-		pnea[1][isa]=neal->p[3];
-		pnea[2][isa]=neal->p[1];
+		IND(pnea,isa,0)=neal->p[0];
+		IND(pnea,isa,1)=neal->p[3];
+		IND(pnea,isa,2)=neal->p[1];
 		dfree(neal);
 	    }
 	    powfs[ipowfs].neasim->p[jwfs]=nea;

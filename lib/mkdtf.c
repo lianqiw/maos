@@ -75,10 +75,10 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	dtfs[iwvl].ncompy=ncompy;
 	dtfs[iwvl].nominal=cellnew(ndtf,nwfs);
 	dtfs[iwvl].si=cellnew(ndtf,nwfs);
-	PCCELL(dtfs[iwvl].nominal, nominals);
-	PDSPCELL(dtfs[iwvl].si, sis);
+	ccell*  nominals=dtfs[iwvl].nominal;
+	dspcell*  sis=dtfs[iwvl].si;
 	cmat *nominal=cnew(ncompx,ncompy);
-	PCMAT(nominal,pn);
+	cmat* pn=nominal;
 	//Coordinate of PSF points
 	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
 	double theta=0;
@@ -98,9 +98,9 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 			int jx=ix-ncompx2;
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
-			pn[iy][ix]=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
+			IND(pn,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
 			if(do_blur){
-			    pn[iy][ix]*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
+			    IND(pn,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
 			}
 		    }
 		}
@@ -113,12 +113,12 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		cfft2(nominal,1);
 		//cancel FFT effect.
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
-		ccp(&nominals[iwfs][isa], nominal);
+		ccp(&IND(nominals,isa,iwfs), nominal);
 		//Coordinate of PSF pixels
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
-		sis[iwfs][isa]=mkh(loc_psf,loc_ccd,0,0,1);
+		IND(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
 		{
-		    dmat *sisum=dspsum(sis[iwfs][isa],1);
+		    dmat *sisum=dspsum(IND(sis,isa,iwfs),1);
 		    double sum=dsum(sisum);
 		    dfree(sisum);
 		    sum*=pdtheta/(ncompx*ncompy);
@@ -215,7 +215,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	const long ncompy2=ncompy>>1;
 	const double dux=1./(dtheta*ncompx);
 	const double duy=1./(dtheta*ncompy);
-	cmat *(*petf)[nsa]=NULL;
+	ccell *petf=0;
 	int use1d;
 	if(dtfs[iwvl].radrot){
 	    if(!dtfs[iwvl].radpix){
@@ -228,7 +228,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    */
 	    warning("Rotate PSF to do radial format detector (preferred)\n");
 	    etfs[iwvl].p1=cellnew(nsa,nllt);
-	    petf=(void*)etfs[iwvl].p1->p;
+	    petf=etfs[iwvl].p1;
 	    use1d=1;
 	}else{
 	    /*
@@ -241,7 +241,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		info_once("Non-Radial CCD\n");
 	    }
 	    etfs[iwvl].p2=cellnew(nsa,nllt);
-	    petf=(void*)etfs[iwvl].p2->p;
+	    petf=etfs[iwvl].p2;
 	    use1d=0;
 	}
 
@@ -252,8 +252,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 		    double rsa=srsa->p[illt]->p[isa];
 		    double rsa_za=rsa*cos(za);
 		    if(use1d){ /*1d ETF along radius. */
-			petf[illt][isa]=cnew(ncompx,1);
-			dcomplex *etf1d=petf[illt][isa]->p;
+			IND(petf,isa,illt)=cnew(ncompx,1);
+			dcomplex *etf1d=IND(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 			for(int icompx=0; icompx<ncompx; icompx++){
 			    const double kr=dux*(icompx>=ncompx2?(icompx-ncompx):icompx);
@@ -266,8 +266,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			const double theta=psrot[illt][isa];
 			const double ct=cos(theta);
 			const double st=sin(theta);
-			petf[illt][isa]=cnew(ncompx,ncompy);
-			PCMAT(petf[illt][isa], etf2d);
+			IND(petf,isa,illt)=cnew(ncompx,ncompy);
+			cmat *etf2d=IND(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			for(int icompy=0; icompy<ncompy; icompy++){
 			    const double ky=duy*(icompy>=ncompy2?(icompy-ncompy):icompy);
@@ -276,7 +276,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				const double kr=(ct*kx+st*ky);/*along radial*/
 				for(int ih=0; ih<nhp; ih++){
 				    const double tmp=(-2*M_PI*(kr*(rsa_za/px[ih]-rsa/hs)));
-				    etf2d[icompy][icompx]+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
+				    IND(etf2d,icompx,icompy)+=COMPLEX(pna[illt][ih]*cos(tmp), pna[illt][ih]*sin(tmp));
 				}
 			    }
 			}
@@ -352,11 +352,11 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			cfft2(etf, -1);
 			if(use1d){
 			    if(npad==1 && nover==1){
-				ccp(&petf[illt][isa],etf);
+				ccp(&IND(petf,isa,illt),etf);
 			    }else{
 				cfftshift(etf);
-				petf[illt][isa]=cnew(ncompx,1);
-				dcomplex *etf1d=petf[illt][isa]->p;
+				IND(petf,isa,illt)=cnew(ncompx,1);
+				dcomplex *etf1d=IND(petf,isa,illt)->p;
 #pragma omp parallel for default(shared)
 				for(int icompx=0; icompx<ncompx; icompx++){
 				    double ir=dusc*(icompx-ncompx2)+netf2;
@@ -367,7 +367,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 					    +etf->p[iir+1]*ir;
 				    }/*else{etf1d[icompx]=0;}*/
 				}
-				cfftshift(petf[illt][isa]);
+				cfftshift(IND(petf,isa,illt));
 			    }
 			}else{
 			    /*Rotate the ETF. */
@@ -376,8 +376,8 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			    double theta=psrot[illt][isa];
 			    double ct=cos(theta);
 			    double st=sin(theta);
-			    petf[illt][isa]=cnew(ncompx,ncompy);
-			    dcomplex (*etf2d)[ncompx]=(void*)petf[illt][isa]->p;
+			    IND(petf,isa,illt)=cnew(ncompx,ncompy);
+			    cmat *etf2d=IND(petf,isa,illt);
 #pragma omp parallel for default(shared)
 			    for(int icompy=0; icompy<ncompy; icompy++){
 				double iy=(icompy-ncompy2);
@@ -388,21 +388,21 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 				    ir=ir-iir;
 				    if(iir>=0 && iir<netf-1){
 					/*bilinear interpolation. */
-					etf2d[icompy][icompx]=etf->p[iir]*(1.-ir)
+					IND(etf2d,icompx,icompy)=etf->p[iir]*(1.-ir)
 					    +etf->p[iir+1]*ir;
-				    }/*else{etf2d[icompy][icompx]=0;}*/
+				    }/*else{IND(etf2d,icompx,icompy)=0;}*/
 				}
 			    }
-			    cfftshift(petf[illt][isa]);/*peak in corner; */
+			    cfftshift(IND(petf,isa,illt));/*peak in corner; */
 			}
 		    }else{
 			warning_once("Wrong focus!\n");
 			if(use1d){
-			    petf[illt][isa]=cnew(ncompx,1);
+			    IND(petf,isa,illt)=cnew(ncompx,1);
 			}else{
-			    petf[illt][isa]=cnew(ncompx,ncompy);
+			    IND(petf,isa,illt)=cnew(ncompx,ncompy);
 			}
-			cset(petf[illt][isa],1);
+			cset(IND(petf,isa,illt),1);
 		    }
 		}//for isa
 	    }//for illt.
@@ -410,7 +410,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    free(thetas);
 	}//if na_interp
 	if(!use1d){//fuse nominal to etf to avoid multiply again.
-	    PCCELL(dtfs[iwvl].nominal, pnominal);
+	    ccell*  pnominal=dtfs[iwvl].nominal;
 	    int mnominal=0;/*multiply with isa to get index into pnominal. */
 	    if(dtfs[iwvl].nominal->nx>1){
 		mnominal=1;//polar ccd
@@ -421,7 +421,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    }
 	    for(int illt=0; illt<nllt; illt++){
 		for(int isa=0; isa<nsa; isa++){
-		    ccwm(petf[illt][isa], pnominal[illt*mllt][isa*mnominal]);
+		    ccwm(IND(petf,isa,illt), IND(pnominal,isa*mnominal,illt*mllt));
 		}
 	    }
 	    dtfs[iwvl].fused=1;

@@ -72,7 +72,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
     //cfft2plan(xsel,-1);
-    PCMAT(xsel,pxsel);
+    cmat* pxsel=xsel/*PCMAT*/;
     double dx1=1./dx;
     long offx=nx/2;
     long offy=ny/2;
@@ -80,18 +80,18 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1./(double)(nx*ny);/*cancel FFT scaling.*/
+	    IND(pxsel,ix,iy)=1./(double)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
+    double xselc=creal(IND(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
-	    if(cabs(pxsel[iy][ix])<xselc){
-		pxsel[iy][ix]=0;
+	    if(cabs(IND(pxsel,ix,iy))<xselc){
+		IND(pxsel,ix,iy)=0;
 	    }
 	}
     }

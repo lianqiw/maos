@@ -95,16 +95,16 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    recon->moao[imoao].NW=cellnew(1,1);
 	    long nloc=recon->moao[imoao].aloc->p[0]->nloc;
 	    recon->moao[imoao].NW->p[0]=dnew(nloc,3);
-	    PDMAT(recon->moao[imoao].NW->p[0], pNW);
+	    dmat*  pNW=recon->moao[imoao].NW->p[0]/*PDMAT*/;
 	    double scl=1./nloc;
 	    double scl2=scl*2./parms->aper.d;
 	    const double *locx=recon->moao[imoao].aloc->p[0]->locx;
 	    const double *locy=recon->moao[imoao].aloc->p[0]->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		/*We don't want piston/tip/tilt on the mems. */
-		pNW[0][iloc]=scl;/*piston; */
-		pNW[1][iloc]=scl2*locx[iloc];/*tip */
-		pNW[2][iloc]=scl2*locy[iloc];/*tilt */
+		IND(pNW,iloc,0)=scl;/*piston; */
+		IND(pNW,iloc,1)=scl2*locx[iloc];/*tip */
+		IND(pNW,iloc,2)=scl2*locy[iloc];/*tilt */
 	    }
 	}
 	recon->moao[imoao].W0=dspref(recon->W0);

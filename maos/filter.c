@@ -143,7 +143,7 @@ INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
 	    /* Embed DM commands to a square array (borrow dmrealsq) */
 	    double iastroke;
 	    int nx=simu->recon->anx->p[idm];
-	    double (*dmr)[nx];
+	    dmat *dmr;
 	    dmat *dm;
 	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
 		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm], NAN);
@@ -154,32 +154,32 @@ INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
 	    }
 	    if(!parms->fit.square){
 		loc_embed(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], dm->p);
-		dmr=(double(*)[nx])simu->dmrealsq->p[idm]->p;
+		dmr=(dmat*)simu->dmrealsq->p[idm];
 	    }else{
-		dmr=(double(*)[nx])dm->p;
+		dmr=dm;
 	    }
 	    lcell *actstuck=simu->recon->actstuck;
 	    long *stuck=actstuck?(actstuck->p[idm]?actstuck->p[idm]->p:0):0;
 	    int count=0,trials=0;
 	    do{
 		count=0;
-		PDMAT(simu->recon->amap->p[idm],map);
+		dmat* map=(dmat*)simu->recon->amap->p[idm]/*PDMAT*/;
 		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			int iact1=map[iy][ix];
-			int iact2=map[iy+1][ix];
+			int iact1=IND(map,ix,iy);
+			int iact2=IND(map,ix,iy+1);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke, 
+			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix,iy+1), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    } 
 		}
 		for(int iy=0; iy<simu->recon->any->p[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
-			int iact1=map[iy][ix];
-			int iact2=map[iy][ix+1];
+			int iact1=IND(map,ix,iy);
+			int iact2=IND(map,ix+1,iy);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke, 
+			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix+1,iy), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    }

@@ -53,7 +53,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    cmat *nominal=cnew(ncomp,ncomp);
 	    //cfft2plan(nominal,-1);
 	    //cfft2plan(nominal,1);
-	    PCMAT(nominal,pn);
+	    cmat* pn=nominal;
 	    const double theta=0;
 	    const double ct=cos(theta);
 	    const double st=sin(theta);
@@ -63,7 +63,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		    int jx=ix-ncomp2;
 		    double ir=ct*jx+st*jy;
 		    double ia=-st*jx+ct*jy;
-		    pn[iy][ix]=sinc(ir*dupth)*sinc(ia*dupth)
+		    IND(pn,ix,iy)=sinc(ir*dupth)*sinc(ia*dupth)
 			*pow(e0,ir*ir*du2)*pow(e0,ia*ia*du2)
 			*pdtheta;
 		}

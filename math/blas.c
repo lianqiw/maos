@@ -272,10 +272,10 @@ X(mat)* X(chol)(const X(mat) *A){
 	    error("The leading minor of order %td is not posite denifite\n", info);
 	}
     }else{/*Zero out the upper diagonal. For some reason they are not zero. */
-	PDMAT(B, Bp);
+	X(mat)*  Bp=B;
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<iy; ix++){
-		Bp[iy][ix]=0;
+		IND(Bp,ix,iy)=0;
 	    }
 	}
     }

@@ -419,21 +419,20 @@ INLINE void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     }else{
 	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
     }
-    PDMAT(in,pin);
-    PDMAT(*out,pout);
-    if(*out==in){/*Do each column in place. */
+    dmat* pout=*out;
+    if(pout==in){/*Do each column in place. */
 	double *tmp=malloc(in->nx*sizeof(double));
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[icx]=pin[icy][perm[icx]];
+		tmp[icx]=IND(in,perm[icx],icy);
 	    }
-	    memcpy(pout[icy], tmp, sizeof(double)*in->nx);
+	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
 	free(tmp);
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		pout[icy][icx]=pin[icy][perm[icx]];
+		IND(pout,icx,icy)=IND(in,perm[icx],icy);
 	    }
 	}
     }
@@ -447,21 +446,20 @@ INLINE void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     }else{
 	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
     }
-    PDMAT(in,pin);
-    PDMAT(*out,pout);
-    if(*out==in){/*Do each column in place. */
+    dmat* pout=*out;
+    if(pout==in){/*Do each column in place. */
 	double *tmp=malloc(in->nx*sizeof(double));
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[perm[icx]]=pin[icy][icx];
+		tmp[perm[icx]]=IND(in,icx,icy);
 	    }
-	    memcpy(pout[icy], tmp, sizeof(double)*in->nx);
+	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
 	free(tmp);
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		pout[icy][perm[icx]]=pin[icy][icx];
+		IND(pout,perm[icx],icy)=IND(in,icx,icy);
 	    }
 	}
     }
@@ -482,14 +480,13 @@ static void chol_solve_lower_each(thread_t *info){
     dmat *y2=data->y2;
     info2("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
-    PDMAT(y2, py);
     for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
-	    py[iy][icol]*=AxI;
-	    double val=-py[iy][icol];
+	    IND(y2,icol,iy)*=AxI;
+	    double val=-IND(y2,icol,iy);
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		py[iy][Ai[irow]]+=val*Ax[irow];/*update in place. */
+		IND(y2,Ai[irow],iy)+=val*Ax[irow];/*update in place. */
 	    }
 	}
     }
@@ -501,9 +498,9 @@ static void chol_solve_lower_each(thread_t *info){
 	    double sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
-		sum+=Ax[irow]*py[iy][Ai[irow]];
+		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
 	    }
-	    py[iy][icol]=(py[iy][icol]-sum)*AxI;
+	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
 	}
     }
 }
@@ -519,17 +516,16 @@ static void chol_solve_upper_each(thread_t *info){
     dmat *y2=data->y2;
     info2("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
     /*Solve L\y */
-    PDMAT(y2, py);
     /*Solve R'\y */
     for(long icol=0; icol<A->nx; icol++){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
-		sum+=Ax[irow]*py[iy][Ai[irow]];
+		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
 	    }
 	    /*assert(Ai[Ap[icol+1]-1]==icol);//confirm upper right triangular */
-	    py[iy][icol]=(py[iy][icol]-sum)*AxI;
+	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
 	}
     }
 	
@@ -537,11 +533,11 @@ static void chol_solve_upper_each(thread_t *info){
     for(long icol=A->nx-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
-	    py[iy][icol]*=AxI;
-	    double val=-py[iy][icol];
+	    IND(y2,icol,iy)*=AxI;
+	    double val=-IND(y2,icol,iy);
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
-		py[iy][Ai[irow]]+=val*Ax[irow];
+		IND(y2,Ai[irow],iy)+=val*Ax[irow];
 	    }
 	}
     }

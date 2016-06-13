@@ -233,10 +233,10 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
 }
-#define IND1(A,i) (A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)]
-#define IND2(A,ix,iy) (A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)]
-#define PIND1(A,i) (A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i))
-#define PIND2(A,ix,iy) (A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy))
+#define IND1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
+#define IND2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
+#define PIND1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
+#define PIND2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
 #else
 #define IND1(A,i) ((A)->p[(i)])
 #define IND2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])

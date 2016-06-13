@@ -357,12 +357,11 @@ int draw_current(const char *fig, const char *fn){
 void plot_points(const char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 dcell *dc,          /**<If loc isempty, use cell to plot curves*/
+		 const dcell *dc,    /**<If loc isempty, use cell to plot curves*/
 		 const int32_t *style,/**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 const char *xylog,  /**<Whether use logscale for x, y*/
-		 int ncir,           /**<Number of circles*/
-		 double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
+		 const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
 		 char **legend,      /**<ngroup number of char**/
 		 const char *title,  /**<title of the plot*/
 		 const char *xlabel, /**<x axis label*/
@@ -420,10 +419,13 @@ void plot_points(const char *fig,          /**<Category of the figure*/
 	    STWRITEINT(ngroup);
 	    STWRITE(style,sizeof(uint32_t)*ngroup);
 	}
-	if(ncir>0){
+	if(cir){
+	    if(cir->nx!=4){
+		error("Cir should have 4 rows\n");
+	    }
 	    STWRITEINT(DRAW_CIRCLE);
-	    STWRITEINT(ncir);
-	    STWRITE(pcir, sizeof(double)*ncir*4);
+	    STWRITEINT(cir->ny);
+	    STWRITE(cir->p, sizeof(double)*cir->nx*cir->ny);
 	}
 	if(limit){/*xmin,xmax,ymin,ymax */
 	    STWRITEINT(DRAW_LIMIT);

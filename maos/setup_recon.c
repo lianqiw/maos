@@ -133,7 +133,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		/*scale neasq by area^-1 if seeing limited */
 		/*scale neasq by area^-2 if diffraction limited */
 		/*only implementing seeing limited here. */
-		PDMAT(nea, neap);
+		dmat*  neap=nea/*PDMAT*/;
 		double *area=powfs[ipowfs].saa->p;
 		for(int isa=0; isa<nsa; isa++){
 		    double tmp=neasq/area[isa];
@@ -141,7 +141,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			warning("wfs %d sa %d is masked\n", iwfs, isa);
 			tmp=INFINITY;
 		    }
-		    neap[0][isa]=neap[1][isa]=tmp;
+		    IND(neap,isa,0)=IND(neap,isa,1)=tmp;
 		}
 		sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
 		dcwpow(nea, -1);
@@ -459,7 +459,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
     }else{
 	info2("Building recon->RR\n");
-	PDSPCELL(recon->GX,GX);
+	dspcell* GX=recon->GX/*PDSPCELL*/;
 	const dspcell *saneai=recon->saneai;
 	/*
 	  Reconstruction Right hand side matrix. In split tomography mode, low
@@ -468,7 +468,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	*/
 	dspcell *GXtomoT=dspcelltrans(recon->GXtomo);
 	recon->RR.M=dcellmm2(GXtomoT, saneai, "nn");
-	PDSPCELL(recon->RR.M, RRM);
+	dspcell*  RRM=(dspcell*)recon->RR.M/*PDSPCELL*/;
 	/*
 	  Tip/tilt and diff focus removal low rand terms for LGS WFS.
 	*/
@@ -479,12 +479,12 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
  
 	info2("Building recon->RL\n"); /*left hand side matrix */
 	recon->RL.M=dcellmm2(recon->RR.M,recon->GXtomo, "nn");
-	PDSPCELL(recon->RL.M,RLM);
+	dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 	if(parms->tomo.piston_cr){ 
 	    /*single point piston constraint. no need tikholnov.*/
 	    info2("Adding ZZT to RLM\n");
 	    for(int ips=0; ips<npsr; ips++){
-		dspadd(&RLM[ips][ips], 1, recon->ZZT->p[ips+ips*npsr], 1);
+		dspadd(PIND(RLM,ips,ips), 1, recon->ZZT->p[ips+ips*npsr], 1);
 	    }
 	    dspcellfree(recon->ZZT);
 	}
@@ -505,7 +505,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
-		dspadd(&RLM[ips][ips], 1, tmp, 1);
+		dspadd(PIND(RLM,ips,ips), 1, tmp, 1);
 		dspfree(tmp);
 	    }
 	    break;
@@ -523,9 +523,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 
 	/*Low rank terms for low order wfs. Only in Integrated tomography. */
 	dcell *ULo=cellnew(npsr,nwfs);
-	PDCELL(ULo, pULo);
+	dcell*  pULo=ULo/*PDELL*/;
 	dcell *VLo=cellnew(npsr,nwfs);
-	PDCELL(VLo, pVLo);
+	dcell*  pVLo=VLo/*PDELL*/;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip){
@@ -533,8 +533,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    if(parms->powfs[ipowfs].lo){
 		for(int ips=0; ips<npsr; ips++){
-		    dspfull(&pULo[iwfs][ips], RRM[iwfs][ips],'n',-1);
-		    dspfull(&pVLo[iwfs][ips], GX[ips][iwfs],'t',1);
+		    dspfull(PIND(pULo,ips,iwfs), IND(RRM,ips,iwfs),'n',-1);
+		    dspfull(PIND(pVLo,ips,iwfs), IND(GX,iwfs,ips),'t',1);
 		}
 	    }
 	}
@@ -747,7 +747,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     }
     if(parms->tomo.cxx==0 && recon->L2save){
 	/*Need to adjust RLM with the new L2. */
-	PDSPCELL(recon->RL.M,RLM);
+	dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 	const int npsr=recon->npsr;
 	for(int ips=0; ips<npsr; ips++){
 	    dsp* LL=dspmulsp(recon->L2->p[ips+npsr*ips], 
@@ -758,7 +758,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 		error("L2 is empty!!\n");
 	    }
 	    dsp *LLdiff=dspadd2(LL,1,LLold,-1);/*adjustment to RLM */
-	    dspadd(&RLM[ips][ips], 1, LLdiff, 1);
+	    dspadd(PIND(RLM,ips,ips), 1, LLdiff, 1);
 	    dspfree(LLdiff);
 	    dspfree(LL);
 	    dspfree(LLold);
@@ -1050,10 +1050,10 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcell *RCRtQwQ=NULL;
 	dcellmm(&RCRtQwQ, RCRt, QwQc, "nn", 1);
 	dmat *tmp=dcell2m(RCRtQwQ);
-	PDMAT(tmp, ptmp);
+	dmat*  ptmp=tmp/*PDMAT*/;
 	double rss=0;
 	for(int i=0; i<tmp->nx; i++){
-	    rss+=ptmp[i][i];
+	    rss+=IND(ptmp,i,i);
 	}
 	dfree(tmp);
 	dcellfree(RCRtQwQ);

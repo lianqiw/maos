@@ -247,7 +247,7 @@ void prop(thread_t *data){
     const double dy_in2 = scale*dy_in1;			\
     displacex = (displacex-locin->map->ox)*dx_in1;	\
     displacey = (displacey-locin->map->oy)*dy_in1;	\
-    PDMAT(locin->map, map);				\
+    map_t*  map=locin->map;				\
     const int nxmin=MAX(nskip,locin->npad);		\
     const int nymin=nxmin;				\
     const int nxmax=locin->map->nx-nxmin-1;		\
@@ -266,7 +266,6 @@ void prop(thread_t *data){
     const int nymin=nskip;				\
     const int nxmax  = mapin->nx-nskip-1;		\
     const int nymax  = mapin->ny-nskip-1;		\
-    double (*phiin)[mapin->nx]=(void*)(mapin->p);	
 
 #define PREPOUT_LOC				\
     if(!locout) error("locout is NULL!");	\
@@ -298,7 +297,6 @@ void prop(thread_t *data){
     int missing=0;				
 
 #define MAKE_CUBIC_PARAM			\
-    double fx[4],fy[4];				\
     const double cubicn=1./(1.+2.*cubic_iac);	\
     const double c0=1.*cubicn;			\
     const double c1=(4.*cubic_iac-2.5)*cubicn;	\
@@ -314,28 +312,28 @@ void prop(thread_t *data){
     long iphi; double tmp=0; double wt=0; double wtsum=0;		\
     wt=(1.-dplocx)*(1.-dplocy);						\
     if(wt>EPS){/*this test fixed to top/right boundary defect*/		\
-	if((iphi=fabs(map[nplocy][nplocx]))){				\
+	if((iphi=fabs(IND(map,nplocx,nplocy)))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(dplocx)*(1.-dplocy);						\
     if(wt>EPS){								\
-	if((iphi=fabs(map[nplocy][nplocx1]))){				\
+	if((iphi=fabs(IND(map,nplocx1,nplocy)))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(1.-dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=fabs(map[nplocy1][nplocx]))){				\
+	if((iphi=fabs(IND(map,nplocx,nplocy1)))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
     }									\
     wt=(dplocx)*(dplocy);						\
     if(wt>EPS){								\
-	if((iphi=fabs(map[nplocy1][nplocx1]))){				\
+	if((iphi=fabs(IND(map,nplocx1,nplocy1)))){				\
 	    tmp+=(phiin0[iphi]*wt);					\
 	    wtsum+=wt;							\
 	}								\
@@ -351,6 +349,7 @@ void prop(thread_t *data){
     MAKE_CUBIC_PARAM;					
 
 #define MAKE_CUBIC_COEFF			\
+    double fx[4],fy[4];				\
     fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);	\
     fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);	\
     fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);	\
@@ -367,7 +366,7 @@ void prop(thread_t *data){
 	for(int kx=-1; kx<3; kx++){			\
 	    double wt=fx[kx+1]*fy[ky+1];		\
 	    if(wt>EPS){					\
-		double tmp=phiin[ky+nplocy][kx+nplocx];	\
+		double tmp=IND(mapin,kx+nplocx,ky+nplocy);	\
 		sum+=wt*tmp;sumwt+=wt;			\
 	    }						\
 	}						\
@@ -381,7 +380,7 @@ void prop(thread_t *data){
 	    long iphi;						\
 	    double wt=fx[jx+1]*fy[jy+1];			\
 	    if(wt>EPS){						\
-		if((iphi=fabs(map[jy+nplocy][jx+nplocx]))){	\
+		if((iphi=fabs(IND(map,jx+nplocx,jy+nplocy)))){	\
 		    sum+=wt*phiin0[iphi];			\
 		    sumwt+=wt;					\
 		}						\
@@ -454,10 +453,10 @@ void prop_grid(ARGIN_GRID,
 	}
 	nplocx1=(nplocx==nxmax?0:nplocx+1);
 	nplocy1=(nplocy==nymax?0:nplocy+1);
-	double tmp=(+(phiin[nplocy][nplocx]*(1.-dplocx)
-		      +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
-		    +(phiin[nplocy1][nplocx]*(1.-dplocx)
-		      +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
+	double tmp=(+(IND(mapin,nplocx,nplocy)*(1.-dplocx)
+		      +IND(mapin,nplocx1,nplocy)*dplocx)*(1.-dplocy)
+		    +(IND(mapin,nplocx,nplocy1)*(1.-dplocx)
+		      +IND(mapin,nplocx1,nplocy1)*dplocx)*dplocy);
 	add_valid(phiout[iloc],alpha, tmp);
     }
     OMPTASK_END;
@@ -895,7 +894,7 @@ void prop_nongrid_bin(const loc_t *locin,
     /*Scale alpha to cancel out scaling */
     double alpha2 = alpha*(locin->dx/locout->dx/scale)*(locin->dy/locout->dy/scale);
     long iphi1,iphi2,iphi3,iphi4;
-    PDMAT(locout->map, map);
+    map_t* map=locout->map;
     /*-1 because we count from 1 in the map. */
     double *phiout0=phiout-1;
     for(long iloc=0; iloc<locin->nloc; iloc++){
@@ -910,10 +909,10 @@ void prop_nongrid_bin(const loc_t *locin,
 	
 	    /*only proceed if all four points exist, otherwise we run the risk
 	     * of accumulating edge results beyond the map to within the map. */
-	    iphi1=map[nplocy][nplocx];
-	    iphi2=map[nplocy][nplocx1];
-	    iphi3=map[nplocy1][nplocx];
-	    iphi4=map[nplocy1][nplocx1];
+	    iphi1=IND(map,nplocx,nplocy);
+	    iphi2=IND(map,nplocx1,nplocy);
+	    iphi3=IND(map,nplocx,nplocy1);
+	    iphi4=IND(map,nplocx1,nplocy1);
 	    if(iphi1>0 && iphi2>0 && iphi3>0 && iphi4>0){
 		phiout0[iphi1]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
 		phiout0[iphi2]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));

@@ -83,7 +83,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->pyramid=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
-	PCMAT(pywfs->pyramid->p[iwvl], pp);
+	cmat*  pp=pywfs->pyramid->p[iwvl]/*PCMAT*/;
 	dcomplex coeff=COMPLEX(0, M_PI*0.5);
 	long skip=0;
 	double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);//PSF sampling
@@ -103,13 +103,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		if(xd<eskip||yd<eskip||(xd<vskip && yd<vskip)){
 		    opd=0;
 		}
-		pp[iy][ix]=cexp(opd*coeff);
+		IND(pp,ix,iy)=cexp(opd*coeff);
 	    }
 	}
     }
 
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
-    PCMAT(nominal, pn);
+    cmat*  pn=nominal/*PCMAT*/;
     long order=parms->powfs[ipowfs].order;
     double dsa=parms->aper.d/order;//size of detector pixel mapped on pupil
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
@@ -122,9 +122,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
 	    int jx=ix-ncomp2; 
-	    pn[iy][ix]=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
+	    IND(pn,ix,iy)=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
 	    if(pixblur){
-		pn[iy][ix]*=exp(e0b*(jx*jx+jy*jy));
+		IND(pn,ix,iy)*=exp(e0b*(jx*jx+jy*jy));
 	    }
 	}
     }
@@ -533,26 +533,25 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     }
     double *pgx=(*pgrad)->p;
     double *pgy=(*pgrad)->p+nsa;
-    PDMAT(ints, pi);
     double gain=pywfs->gain;
     if(0){//Use standard Quad Cell algorithm
 	warning_once("Do not use mean i0\n");
 	for(int isa=0; isa<nsa; isa++){
-	    double alpha2=gain/(pi[0][isa]+pi[1][isa]+pi[2][isa]+pi[3][isa]);
-	    pgx[isa]=(pi[1][isa]-pi[0][isa]
-		      +pi[3][isa]-pi[2][isa])*alpha2;
-	    pgy[isa]=(pi[2][isa]+pi[3][isa]
-		      -pi[0][isa]-pi[1][isa])*alpha2;
+	    double alpha2=gain/(IND(ints,isa,0)+IND(ints,isa,1)+IND(ints,isa,2)+IND(ints,isa,3));
+	    pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
+		      +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
+	    pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
+		      -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
 	}
     }else{//Denominator is replaced by SAA*mean(i0).
 	double imean=dsum(ints)/nsa;
 	double alpha0=gain/imean;
 	for(int isa=0; isa<nsa; isa++){
 	    double alpha2=alpha0/pywfs->saa->p[isa];
-	    pgx[isa]=(pi[1][isa]-pi[0][isa]
-		      +pi[3][isa]-pi[2][isa])*alpha2;
-	    pgy[isa]=(pi[2][isa]+pi[3][isa]
-		      -pi[0][isa]-pi[1][isa])*alpha2;
+	    pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
+		      +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
+	    pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
+		      -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
 	}
     }
     if(pywfs->gradoff){

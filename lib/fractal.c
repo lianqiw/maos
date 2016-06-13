@@ -87,21 +87,20 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
 	error("Illegal parameter: r0=%g, L0=%g\n", r0, L0);
     }
     head=node;
-    dmat *dr=dnew(2, nroot+2);
-    PDMAT(dr, r);
+    dmat *r=dnew(2, nroot+2);
     double sqrt2=sqrt(2);
-    r[0][0]=0;
-    r[0][1]=0;
+    IND(r,0,0)=0;
+    IND(r,1,0)=0;
     for(long i=0; i<=nroot; i++){
 	long j=1<<i;
-	r[i+1][0]=j*dx;
-	r[i+1][1]=j*dx*sqrt2;
+	IND(r,0,i+1)=j*dx;
+	IND(r,1,i+1)=j*dx*sqrt2;
     }
     double D=(n-1)*dx;
-    node->cov=turbcov(dr, D*sqrt(2), r0, L0);
-    dfree(dr);
+    node->cov=turbcov(r, D*sqrt(2), r0, L0);
+    dfree(r);
     dmat *rc0=dnew(ninit*ninit, ninit*ninit);
-    PDMAT(rc0, rc);
+    dmat*  rc=rc0;
     double dx2=dx*(n-1)/(ninit-1);
     for(long j=0; j<ninit; j++){
 	double y=dx2*j;
@@ -113,7 +112,7 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
 		for(long i2=0; i2<ninit; i2++){
 		    double x2=dx2*i2;
 		    long k2=i2+j2*ninit;
-		    rc[k][k2]=sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2));
+		    IND(rc,k2,k)=sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2));
 		}
 	    }
 	}

@@ -48,21 +48,19 @@ static double laplacian_coef3(double r0, double weight, double dx){
 }
 /**
    Apply L2 directly to map with periodic condition.*/
-void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight, 
-			 double *opd, double *opdout){
-    int ix,iy;
-    double (*OPD)[nx]=(double(*)[nx])opd;
-    double (*OPDout)[nx]=(double(*)[nx])opdout;
+void apply_laplacian_map(dmat *opdout, const dmat *opd, double dx, double r0, double weight){
+    const long nx=opd->nx;
+    const long ny=opd->ny;
     double cf=laplacian_coef(r0, weight, dx);
     if(!opdout)
 	error("opdout is not allocated\n");
-    for(iy=0; iy<ny; iy++){
-	for(ix=0; ix<nx; ix++){
-	    OPDout[iy][ix]=cf*(-OPD[iy][ix]
-			       +0.25*(OPD[iy==0?ny-1:iy-1][ix]
-				      +OPD[iy][ix==0?nx-1:ix-1]
-				      +OPD[iy][ix==nx-1?0:ix+1]
-				      +OPD[iy==ny-1?0:iy+1][ix]));
+    for(long iy=0; iy<ny; iy++){
+	for(long ix=0; ix<nx; ix++){
+	    IND(opdout,ix,iy)=cf*(-IND(opd,ix,iy)
+			       +0.25*(IND(opd,ix,iy==0?ny-1:iy-1)
+				      +IND(opd,ix==0?nx-1:ix-1,iy)
+				      +IND(opd,ix==nx-1?0:ix+1,iy)
+				      +IND(opd,ix,iy==ny-1?0:iy+1)));
 	    
 	}
     }

@@ -101,8 +101,8 @@ static void calc_pistat(GENPISTAT_S *data){
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=NULL;
 	    //cfft2plan(wvf,-1);
-	    PDCELL(pistat, ppistat);
-	    PDMAT(phygrad, pphygrad);
+	    dcell*  ppistat=pistat;
+	    dmat*  pphygrad=phygrad;
 	    cmat *otf=cnew(ncomp,ncomp);
 	    //cfft2plan(otf,1);
 	    //cfft2plan(otf,-1);
@@ -116,17 +116,17 @@ static void calc_pistat(GENPISTAT_S *data){
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
 	    dmat *gmean=dnew(2,nsa);
-	    PDMAT(gmean, pgmean);
+	    dmat*  pgmean=gmean;
 	    for(long istep=0; istep<nstep; istep++){
 		LOCK(data->mutex_read);
 		ccell *wvfi=ccellreaddata(fp_wvf, 0);
 		UNLOCK(data->mutex_read);
-		PCCELL(wvfi,wvfout);
+		ccell* wvfout=wvfi;
 		for(long iwvl=0; iwvl<nwvl; iwvl++){
 		    double wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
-			ccp(&wvfc, wvfout[iwvl][isa]);
+			ccp(&wvfc, IND(wvfout,isa,iwvl));
 			cembedc(wvf,wvfc,0,C_FULL);
 			cfft2(wvf,-1);
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
@@ -137,12 +137,12 @@ static void calc_pistat(GENPISTAT_S *data){
 			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax);
 			grad[0]*=dtheta[iwvl];//convert to Radian
 			grad[1]*=dtheta[iwvl];
-			pphygrad[istep][isa]+=grad[0]*nwvli;//record the value
-			pphygrad[istep][isa+nsa]+=grad[1]*nwvli;
+			IND(pphygrad,isa,istep)+=grad[0]*nwvli;//record the value
+			IND(pphygrad,isa+nsa,istep)+=grad[1]*nwvli;
 
 			if(istep>=avgstart){
-			    pgmean[isa][0]+=grad[0];//record the average
-			    pgmean[isa][1]+=grad[1];
+			    IND(pgmean,0,isa)+=grad[0];//record the average
+			    IND(pgmean,1,isa)+=grad[1];
 			    //Then remove the CoG from the WVF and accumulate PSF.
 			    mapply->p[0]=-grad[0];
 			    mapply->p[1]=-grad[1];
@@ -163,7 +163,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 			    cembedc(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
-			    cabs22d(&ppistat[iwvl][isa], 1, wvf, 1);
+			    cabs22d(&IND(ppistat,isa,iwvl), 1, wvf, 1);
 			}
 		    }
 		    
@@ -192,7 +192,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		    psf=pistat->p[i];//peak in corner
 		    ccpd(&otf, psf);
 		    cfft2(otf,-1);//turn to otf. peak in corner
-		    ctilt(otf,pgmean[isa][0]/dtheta[iwvl],pgmean[isa][1]/dtheta[iwvl],0);
+		    ctilt(otf,IND(pgmean,0,isa)/dtheta[iwvl],IND(pgmean,1,isa)/dtheta[iwvl],0);
 		    cfft2i(otf,1);//turn to psf, peak in corner
 		    creal2d(&psf,0,otf,1);
 		}
@@ -407,15 +407,15 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    }
 		}
 		if(count>0){
-		    PDCELL(avgpi, pavgpi);
+		    dcell*  pavgpi=avgpi;
 		    dcellscale(avgpi, 1./count);
 		    dcellzero(i0); dcellzero(gx); dcellzero(gy);
 		    for(int isa=0; isa<nsa; isa++){
 			/*Assume each WVL has same weighting*/
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    writebin(avgpi, "avgpi");
-			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
-			    ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
+			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], IND(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl);
+			    ccpd(&otf1->p[isa+iwvl*nsa], IND(pavgpi,isa,iwvl));
 			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
 			}
 		    }

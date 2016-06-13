@@ -191,7 +191,7 @@ static lmat *zernike_index(int nr){
 dmat *zernike_cov_kolmogorov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
     dmat *res=dnew(nmod, nmod);
-    PDMAT(res, pres);
+    dmat*  pres=res;
     lmat *zind=zernike_index(nr);
     for(int ir=0; ir<=nr; ir++){
 	for(int im=0; im<=ir; im++){
@@ -224,15 +224,15 @@ dmat *zernike_cov_kolmogorov(int nr){
 		    *(tgamma(14./3.)*tgamma((ir+jr-5./3.)*0.5))
 		    /(tgamma((ir-jr+17./3.)*0.5)*tgamma((jr-ir+17./3.)*0.5)*tgamma((ir+jr+23./3.)*0.5));
 		if(im==0){
-		    pres[jct0][ict0]=pres[ict0][jct0]=tmp;
+		    IND(pres,ict0,jct0)=IND(pres,jct0,ict0)=tmp;
 		}else{
-		    pres[ictc][jctc]=pres[jctc][ictc]=tmp;
-		    pres[icts][jcts]=pres[jcts][icts]=tmp;
+		    IND(pres,jctc,ictc)=IND(pres,ictc,jctc)=tmp;
+		    IND(pres,jcts,icts)=IND(pres,icts,jcts)=tmp;
 		}
 	    }
 	}
     }
-    //pres[0][0]=0; //piston covariance
+    //IND(pres,0,0)=0; //piston covariance
     lfree(zind);
     return res;
 }
