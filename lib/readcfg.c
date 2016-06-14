@@ -201,7 +201,8 @@ void close_config(const char *format, ...){
 	info2("Used %ld of %ld supplied keys\n",nused, nstore);
 	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
 	twalk(MROOT, print_key);
-	if(fpout) fclose(fpout); fpout=0;
+	if(fpout) fclose(fpout);
+	fpout=0;
     }
     while(MROOT){
 	twalk(MROOT, delete_leaf);

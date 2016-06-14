@@ -62,7 +62,8 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }else if(ig%100==0){
 		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
-	    if(ig) eye->p[ig-1]=0; eye->p[ig]=1;
+	    if(ig) eye->p[ig-1]=0;
+	    eye->p[ig]=1;
 	    if(!parms->powfs[parms->wfsr[curwfs].powfs].skip){
 		dcellzero(res);
 		muv_solve(&res, &recon->LL, &recon->LR, eyec);

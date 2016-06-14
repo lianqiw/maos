@@ -684,7 +684,10 @@ read_fits_header(header_t *header, file_t *fp){
     while(!end){
 	int start=0;
 	if(page==0){
-	    if(zfread_try(line, 1, 80, fp)) return -1; line[80]='\0';
+	    if(zfread_try(line, 1, 80, fp)){
+		return -1;
+	    }
+	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		warning("Garbage in fits file %s\n", fp->fn);
 		return -1;

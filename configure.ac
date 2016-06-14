@@ -133,6 +133,7 @@ AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), 
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="default"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
+AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 if test -z "$MEXDIR" ;then
     with_matlab=no
 fi
@@ -161,6 +162,7 @@ DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
 DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
 DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 
+CFLAGS+=" -fPIC"
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -182,11 +184,6 @@ case "$CN" in
 	fi
 	;;
     GCC)
-	if test -n "$(CC -v 2>&1 |grep clang)" ;then
-            CN=CLANG
-	else
-            CN=GCC
-	fi
 	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
@@ -210,6 +207,11 @@ case "$CN" in
 	    if test $major -lt 4 -o $minor -lt 4 ;then
 		unset OPENMP_CFLAGS
 	    fi
+	fi
+	;;
+    CLANG)
+	if test "$system" = "apple" ;then
+	    CFLAGS+=" -stdlib=libc++"
 	fi
 	;;
     *)
@@ -253,7 +255,9 @@ case "$host_os" in
 	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
-	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE -fPIC"
+	if test "$use_release" = "yes" ;then
+	    CFLAGS+=" -D_GLIBC_2_5_SOURCE"
+	fi
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
 	else
@@ -271,7 +275,9 @@ case "$host_os" in
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_ARCH+=" -mmacosx-version-min=10.7 -fPIC -stdlib=libc++"
+	if test "$use_release" = "yes" ;then
+	    CFLAGS+=" -mmacosx-version-min=10.7"
+	fi
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -296,7 +302,7 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-CFLAGS+=" -I${PRE_DIR}/include $CFLAGS_ARCH"
+CFLAGS+=" -I${PRE_DIR}/include "
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
 
@@ -307,7 +313,7 @@ else
     CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
     mflag="-m32"
 fi
-if ! echo $CFLAGS | grep -q -- "$mflag" ;then
+if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS=" $mflag $CFLAGS"
 fi
 unset mflag

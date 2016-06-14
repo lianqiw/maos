@@ -737,9 +737,10 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }
     if(parms->save.setup){
 	writebin(recon->GA, "GA");
-	if(parms->recon.modal)
+	if(parms->recon.modal){
 	    writebin(recon->amod, "amod");
 	    writebin(recon->GM, "GM");
+	}
     }
     if(parms->recon.alg==1 && !parms->recon.modal){
 	recon->actcpl=genactcpl(recon->GA, 0);
