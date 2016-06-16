@@ -701,7 +701,8 @@ void servo_free(SERVO_T *st){
 /**
    Second harmonic oscillator. Initialization.
  */
-SHO_T *sho_new(double f0, double zeta){
+SHO_T *sho_new(double f0,   /**<Resonance frequency*/ 
+	       double zeta  /**<Damping*/){
     SHO_T *out=calloc(1, sizeof(SHO_T));
     const double omega0=2*M_PI*f0;
     out->dt=0.01/f0;
@@ -729,4 +730,28 @@ double sho_step(SHO_T *sho, double xi, double dt){
 */
 void sho_reset(SHO_T *sho){
     sho->x1=sho->x2=0;
+}
+/**
+   Second harmonic oscillator. Filter a time series for testing.
+*/
+dmat *sho_filter( const dmat *x,/**<Input time series*/
+		  double dt,     /**<Input time series sampling*/
+		  double f0,    /**<Resonance frequency*/ 
+		  double zeta  /**<Damping*/ ){
+    SHO_T *sho=sho_new(f0, zeta);
+    dmat *xi=dref(x);
+    if(xi->nx==1){
+	xi->nx=xi->ny;
+	xi->ny=1;
+    }
+    dmat *yo=dnew(xi->nx, xi->ny);
+    for(long iy=0; iy<xi->ny; iy++){
+	sho_reset(sho);
+	for(long ix=0; ix<xi->nx; ix++){
+	    IND(yo, ix, iy)=sho_step(sho, IND(xi, ix, iy), dt);
+	}
+    }
+    dfree(xi);
+    free(sho);
+    return yo;
 }
