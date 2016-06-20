@@ -74,9 +74,13 @@ X(mat) *X(new)(long nx, long ny){
    check the size of matrix if exist. Otherwise create it.
 */
 void X(init)(X(mat)**A, long nx, long ny){
-    if(*A){
-	assert((*A)->nx == nx && (*A)->ny==ny);
+    if(*A && (*A)->nx > 0 && (*A)->ny > 0){
+	if((*A)->nx != nx || (*A)->ny!=ny){
+	    error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
+		  (*A)->nx, (*A)->ny, nx, ny);
+	}
     }else{
+	X(free)(*A);
 	*A=X(new)(nx, ny);
     }
 }

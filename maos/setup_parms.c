@@ -671,9 +671,18 @@ static void readcfg_atmr(PARMS_T *parms){
 	parms->atmr.L0=parms->atm.L0;
     }
     READ_DMAT(atmr.ht);
-    //parms->atmr.ht=readcfg_dmat("atmr.ht");
+    READ_DMAT(atmr.wt);
+    if(parms->atmr.ht->nx==0){
+	dcp(&parms->atmr.ht, parms->atm.ht);
+    }
+    if(parms->atmr.wt->nx==0){
+	dcp(&parms->atmr.wt, parms->atm.wt);
+    }else{
+	if(parms->atmr.wt->nx!=parms->atmr.ht->nx){
+	    error("atmr.wt has to match atmr.ht\n");
+	}
+    }
     parms->atmr.nps=parms->atmr.ht->nx;
-    parms->atmr.wt=readcfg_dmat_n(parms->atmr.nps, "atmr.wt");
     parms->atmr.os=readcfg_lmat_nmax(parms->atmr.nps, "atmr.os");
     READ_DBL(atmr.dx);
 }
@@ -1731,12 +1740,12 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->atmr.nps=nps;
     }
-    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0){
+    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0 && parms->atmr.ht->nx>1){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 	warning2("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
 	dresize(parms->atmr.wt, 1, 1);
-	parms->atmr.os->nx=1;
+	lresize(parms->atmr.os, 1, 1);
 	parms->atmr.ht->p[0]=parms->dm[0].ht;
 	parms->atmr.wt->p[0]=1;
 	parms->atmr.nps=1;
