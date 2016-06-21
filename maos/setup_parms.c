@@ -2244,7 +2244,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(!parms->tomo.precond){
 	    factor*=10;
 	}
-	parms->tomo.maxit=3*factor;
+	parms->tomo.maxit=4*factor;
 	if(parms->recon.mvm==1 && parms->tomo.splitlrt){
 	    warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 	    parms->tomo.splitlrt=0;
