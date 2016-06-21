@@ -42,11 +42,11 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 		   const char *sdata /**<[in] Input string*/
 		   ){
     int count=0;
-    int maxcount=5;
-    if(len && *res){
+    int maxcount=len;
+    if(len && *res){//pre allocatrd data.
 	memset(*res, 0, sizeof(char*)*len);
     }else{
-	if(len) maxcount=len;
+	if(!len) maxcount=5;
 	*res=calloc(maxcount,sizeof(char*));
     }
     if(!sdata) return count;
@@ -101,11 +101,11 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	    sdata3=sdata4+1;
 	}
 	if(count>=maxcount){//check memory
-	    if(len){
+	    if(!len){
 		maxcount*=2;
 		*res=realloc(*res,sizeof(char*)*maxcount);
 	    }else{
-		error("need %d, got more than %d elements\n", len, count);
+		error("{%s}: need %d, got more than %d elements\n", sdata, len, count);
 	    }
 	}
 	if(sdata4>sdata2){/*found non-empty str*/
@@ -285,7 +285,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 	    }
 	    if(addition && power2){
-		error("We do not yet support * or / after + or - \n");
+		error("{%s}: We do not yet support * or / after + or - \n", data);
 	    }
 	    endptr++;
 	    while(isspace(endptr[0])) endptr++;
@@ -385,7 +385,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
     }
     if(nrow*ncol!=count){
-	error("nrow=%d, ncol=%d, count=%d\n", nrow, ncol, count);
+	error("{%s}: nrow=%d, ncol=%d, count=%d\n", data, nrow, ncol, count);
     }
 
     if(trans && count>0){
@@ -529,7 +529,7 @@ double search_header_num(const char *header, const char *key){
 double search_header_num_valid(const char *header, const char *key){
     double val=search_header_num(header, key);
     if(isnan(val)){
-	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
+	error("{%s}: Unable to parse a number for %s from %s\n", header, key, search_header(header, key));
     }
     return val;
 }

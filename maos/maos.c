@@ -49,18 +49,19 @@ void maos_setup(const PARMS_T *parms){
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
     read_env();
-    if(parms->save.setup){
-	mymkdir("setup");
-	if(chdir("setup")){
-	    error("Unable to save to folder setup\n");
-	}
-    }
     if(parms->sim.skysim){
 	dirskysim="skysim";
 	mymkdir("%s",dirskysim);
     }else{
 	dirskysim=".";
     }
+    if(parms->save.setup){
+	mymkdir("setup");
+	if(chdir("setup")){
+	    error("Unable to save to folder setup\n");
+	}
+    }
+ 
     THREAD_POOL_INIT(NTHREAD);
     global->aper=aper=setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);

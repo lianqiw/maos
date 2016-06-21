@@ -431,21 +431,18 @@ void mymkdir(const char *format, ...){
     format2fn;
     if(!fn) return;
     if(fn[strlen(fn)-1]=='/')
-	fn[strlen(fn)-1]='/';
-    if(mkdir(fn, 0700)==-1){
-	if(errno==EEXIST){
-	    return;
-	}else if(errno==ENOENT){
-	    char *tmp=strrchr(fn,'/');
-	    if(!tmp){
-		error("Unable to mkdir '%s'\n",fn);
-	    }
-	    tmp[0]='\0';
-	    mymkdir("%s",fn);
-	    tmp[0]='/';
-	    if(mkdir(fn,0700)==-1&&errno!=EEXIST){
-		error("Unable to mkdir '%s'\n",fn);
-	    }
+	fn[strlen(fn)-1]='\0';
+    if(mkdir(fn, 0700)==-1 && errno!=EEXIST){
+	perror("mkdir");
+	char *tmp=strrchr(fn,'/');
+	if(!tmp){
+	    error("Unable to mkdir '%s'\n",fn);
+	}
+	tmp[0]='\0';
+	mymkdir("%s",fn);
+	tmp[0]='/';
+	if(mkdir(fn,0700)==-1 && errno!=EEXIST){
+	    error("Unable to mkdir '%s'\n",fn);
 	}
     }
 }
