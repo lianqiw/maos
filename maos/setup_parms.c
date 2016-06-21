@@ -2258,7 +2258,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->fit.alg==1 && parms->fit.maxit==0){
 	int factor;
 	factor=parms->recon.warm_restart?1:10;
-	parms->fit.maxit=4*factor;
+	parms->fit.maxit=10*factor;
     }
     /*Fitting tip/tilt constraint is only intended for multi DM*/
     if(parms->ndm<2 && parms->fit.lrt_tt){
