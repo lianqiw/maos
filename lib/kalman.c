@@ -156,7 +156,7 @@ static void sde_scale_coeff(dmat *coeff, double var_in, dmat *psdcov_sde, const 
    Fit a PSD with SDE model. Use initial guess from coeff0 and return final
    answer in the same format.
 */
-static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit){
+static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     if(psdin->ny!=2){
 	error("psd must contain nu and psd\n");
     }
@@ -222,24 +222,28 @@ static dmat* sde_fit_do2(const dmat *psdin, const dmat *coeff0, double tmax_fit)
     sde_scale_coeff(coeff, var_in, psdcov_sde, freq, ncov);
 
     double diff1=sde_diff(coeff->p, &data);
-    info2("sde_fit: %d interations: %g->%g\n", data.count, diff0, diff1);
+    info2("sde_fit: %d interations: %g->%g. ", data.count, diff0, diff1);
     if(diff1>0.2 && diff1>diff0*0.75){
-	warning("Failed to converge\n");
+	static int count=0;
+	writebin(psdin, "sde_fit_psdin_%d_%g", count, tmax_fit);
+	writebin(coeff0,"sde_fit_coeff_%d_%g", count, tmax_fit);
+	count++;
+	if(tmax_fit>0){
+	    info2("Redo with PSD fitting.\n");
+	    dfree(coeff);
+	    coeff=sde_fit_do(psdin, coeff0, 0);
+	}else{
+	    warning2("Failed to converge.\n");
+	}
+    }else{
+	info2("\n");
     }
     dfree(freq);
     dfree(psdcov_in);
     dfree(psdcov_sde);
     return coeff;
 }
-static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
-    dmat *coeff=sde_fit_do2(psdin, coeff0, tmax_fit);
-    if(coeff->p[0]>10 && tmax_fit>0){
-	info2("Redo with PSD fitting. c1=%g\n", coeff->p[0]);
-	dfree(coeff);
-	coeff=sde_fit_do2(psdin, coeff0, 0);
-    }
-    return coeff;
-}
+
 /**
    Estiamte the total PSD power for vibration peaks using FWHM*peak
  */
@@ -254,12 +258,12 @@ static double sde_vib_est(double c1, double c2){
 /**
    If coeff0 is not null, use it immediately, otherwise, do vibration identification
  */
-dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit){
+dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid){
     if (coeff0){
 	return sde_fit_do(psdin, coeff0, tmax_fit);
     }else{
 	//Do vibration identification
-	dmat *vibs=psd_vibid(psdin);
+	dmat *vibs=vibid?psd_vibid(psdin):NULL;
 	dcell *coeffs=cellnew(1, vibs?(1+vibs->ny):1);
 	dmat *coeffi=dnew(3,1);
 	dmat *psd2=ddup(psdin);
@@ -503,8 +507,6 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dscale(Sigma_varep, dT2);
 	}
 	dscale(Sigma_zeta->p[idtrat], dT2/(dT*dT));
-	dfree(tmp1); dfree(tmp2);
-	dfree(expAj); dfree(expAjn);
 	{
 	    dmat *tmp=0;
 	    dmm(&tmp, 0, Sigma_zeta->p[idtrat], Pd, "nt", 1);
@@ -519,6 +521,8 @@ kalman_t* sde_kalman(const dmat *coeff, /**<SDE coefficients*/
 	    dmm(&Xi->p[idtrat], 0, tmp, AcI, "nn", 1./dT);
 	    dfree(tmp);
 	}   
+	dfree(tmp1); dfree(tmp2);
+	dfree(expAj); dfree(expAjn);
     }
     dmat *Ad=0; dexpm(&Ad, 0, Ac, dthi*dtrat_min);  /*discrete state propagation at dT*/
     dmat *AdM=0; dexpm(&AdM, 0, Ac, dthi);/*discrete state propagation at dthi*/

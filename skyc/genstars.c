@@ -115,7 +115,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    dmat*  pres=tmp;
 	    int J19c=0;
 	    for(long istar=0; istar<nstar; istar++){
-		long ind=round(ntot*randu(rstat));
+		long ind=round((ntot-1)*randu(rstat));
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    IND(pres,2+iwvl,istar)=IND(pcatalog,ind,iwvl);
 		}

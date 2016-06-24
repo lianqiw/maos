@@ -192,6 +192,10 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
    Larger scaling is more accurate but slower. Tested against matlab expm
+
+   First, scaling the matrix by 2^-n times so it is smaller than 1/threshold.
+   Then compute exp(A*beta*2^-n) using Tylor expansion.
+   Then compute the final answer by taking exponential of 2^n.
 */
 void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     const int accuracy=10;//How many terms in Taylor expansion to evaluate
@@ -202,6 +206,10 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     int scaling=0;
     {
 	R norm=sqrt(X(norm)(A));
+	R max2=X(maxabs)(A);
+	if(norm<max2){
+	    norm=max2;
+	}
 	scaling=(int)ceil(log2(fabs(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
@@ -209,6 +217,7 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     X(mat)*result=X(new)(A->nx, A->ny);
     X(addI)(result, 1);
     X(cp)(&m_power, m_small);
+    //Compute the exponential using Taylor expansion.
     R factorial_i=1.0;
     for(int i=1; i<accuracy; i++){
 	factorial_i*=i;
@@ -223,11 +232,17 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
 	X(cp)(&m_exp1, result);
 	X(mm)(&result, 0, m_exp1, m_exp1, "nn", 1);
     }
+    X(add)(out, alpha, result, 1);
+    if(X(isnan)(*out)){
+	static int count=-1; count++;
+	info("scaling=%d. exp2=%g\n", scaling, exp2(-scaling));
+	writebin(A, "error_expm_%d_%f", count, beta);
+	error("expm returns NaN\n");
+    }
     X(free)(m_small);
     X(free)(m_exp1);
     X(free)(m_power);
     X(free)(m_power1);
-    X(add)(out, alpha, result, 1);
     X(free)(result);
 }
 /**
@@ -266,6 +281,7 @@ X(mat)* X(chol)(const X(mat) *A){
     ptrdiff_t info=0;//some take 4 byte, some take 8 byte in 64 bit machine.
     Z(potrf)("L", &n, B->p, &n, &info);
     if(info){
+	writebin(A, "error_chol_A");
 	if(info<0){
 	    error("The %td-th parameter has an illegal value\n", -info);
 	}else{

@@ -393,7 +393,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 		servo_filter(st2t, pmerrm);//do even if merrm is zero. to simulate additional latency
 	    }
 	    if(parms->skyc.dbg){
-		memcpy(gradsave->p+istep*gradsave->nx, gradout->m->p, sizeof(double)*gradsave->nx);
+		memcpy(PCOL(gradsave, istep), gradout->m->p, sizeof(double)*gradsave->nx);
 	    }
 	}/*istep; */
     }

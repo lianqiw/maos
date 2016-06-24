@@ -1714,11 +1714,11 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.dt=%g\n",parms->sim.dt);
     fprintf(fp,"maos.zadeg=%g\n",zadeg);
     if(parms->ndm==2){
-	fprintf(fp,"common.hc=%g\n",parms->dm[1].ht);
+	fprintf(fp,"maos.hc=%g\n",parms->dm[1].ht);
     }else{
 	error("Invalid");
     }
-    fprintf(fp,"common.hs=%g\n",recon->ngsmod->hs);
+    fprintf(fp,"maos.hs=%g\n",recon->ngsmod->hs);
     fprintf(fp,"maos.nmod=%d\n",recon->ngsmod->nmod);
     fprintf(fp,"maos.D=%g\n",parms->aper.d);
     fprintf(fp,"maos.wvl=[");
@@ -1808,19 +1808,19 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     
     fprintf(fp,"maos.fnwfsloc=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_loc\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_loc\" " ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     
     fprintf(fp,"maos.fnwfsamp=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_amp\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_amp\" " ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     
     fprintf(fp,"maos.fnsaloc=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_saloc\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_saloc\" " ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     

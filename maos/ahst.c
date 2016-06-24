@@ -370,7 +370,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 	ngsmod2dm(&dmt,recon,M,1.);
 	M->p[0]->p[imod]=0;
 	for(int idm=0; idm<ndm; idm++){
-	    memcpy(mod->p[idm]->p+imod*aloc[idm]->nloc, dmt->p[idm]->p, 
+	    memcpy(PCOL(mod->p[idm], imod), dmt->p[idm]->p, 
 		   sizeof(double)*aloc[idm]->nloc);
 	}
     }
