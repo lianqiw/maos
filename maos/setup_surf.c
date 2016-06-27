@@ -42,7 +42,7 @@
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info("Setting up tilt surface (M3)\n");
-    rmapcell *tsurf=cellnew(parms->ntsurf, 1);
+    rmapcell *tsurf=rmapcellnew(parms->ntsurf, 1);
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=parms->tsurf[itsurf];
 	info("Loading tilt surface from %s\n", fn);
@@ -98,7 +98,7 @@ typedef struct{
 }SURF_DATA;
 
 static void prop_surf_evl(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const APER_T *aper=data->aper;
     const map_t *surf=data->surf;
@@ -106,7 +106,7 @@ static void prop_surf_evl(thread_t *info){
     const int *evlcover=data->evlcover;
     const int isurf=data->isurf;
     const char *prt=" covers evl ";
-    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -132,7 +132,7 @@ static void prop_surf_evl(thread_t *info){
 }
 
 static void prop_surf_ncpa(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const APER_T *aper=data->aper;
     const RECON_T *recon=data->recon;
@@ -150,7 +150,7 @@ static void prop_surf_ncpa(thread_t *info){
 }
 
 static void prop_surf_wfs(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const POWFS_T *powfs=data->powfs;
     const map_t *surf=data->surf;
@@ -158,7 +158,7 @@ static void prop_surf_wfs(thread_t *info){
     const int *wfscover=data->wfscover;
     const int isurf=data->isurf;
     const char *prt=" covers WFS ";
-    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -206,9 +206,9 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     const int nncpa=parms->sim.ncpa_ndir;
-    int *evlcover=malloc(nevl*sizeof(int));
-    int *wfscover=malloc(nwfs*sizeof(int));
-    int *ncpacover=malloc(nncpa*sizeof(int));
+    int *evlcover=mymalloc(nevl,int);
+    int *wfscover=mymalloc(nwfs,int);
+    int *ncpacover=mymalloc(nncpa,int);
     int opdxcover;
     SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0};
     const int nthread=NTHREAD;
@@ -278,7 +278,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    if(ncover!=nwfs){
 		if(ncover==0) error("wfscover has zero length\n");
 		warning("wfscover has wrong length of %d, expect %d\n", ncover, nwfs);
-		wfscover=realloc(wfscover, sizeof(int)*nwfs);
+		wfscover=myrealloc(wfscover,nwfs,int);
 		int val;
 		if(parms->sim.skysim){
 		    val=wfscover[ncover-1];
@@ -330,7 +330,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     }else{
 	error("opdfloc is not available\n");
 	//the following is wrong for two reasons: 1) ncpa_ndir may be different then evl.nevl, 2) ray tracing from locs to floc is not good because of edge effect.
-	xp=cellnew(parms->sim.ncpa_ndir, 1);
+	xp=dcellnew(parms->sim.ncpa_ndir, 1);
 	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
 	    xp->p[ievl]=dnew(recon->floc->nloc,1);
 	    prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
@@ -360,7 +360,7 @@ void FitL_NCPA(dcell **xout, const void *A,
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
-    recon->HA_ncpa=cellnew(nevl, ndm);
+    recon->HA_ncpa=dspcellnew(nevl, ndm);
     dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
@@ -464,7 +464,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    dfree(ampw);
 	    dscale(opdi, err/sqrt(var));
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		if(!powfs[ipowfs].opdadd->p[jwfs]){
@@ -490,7 +490,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
 	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    const int nx=powfs[ipowfs].pts->nx;
 	    const int nxsa=nx*nx;
@@ -540,20 +540,20 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf || parms->ntsurf){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!powfs[ipowfs].opdadd){
-		    powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 		    }
 		}
 	    }
 	    if(!aper->opdadd){
-		aper->opdadd=cellnew(parms->evl.nevl,1);
+		aper->opdadd=dcellnew(parms->evl.nevl,1);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		    aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
 		}
 	    }
 	    if(!aper->opdfloc && parms->sim.ncpa_calib){
-		aper->opdfloc=cellnew(parms->sim.ncpa_ndir,1);
+		aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
 		for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
 		    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 		}

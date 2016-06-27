@@ -266,7 +266,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 	for(long id=0; id<=ic; id++){
 	    double tmp=0;
 	    for(long ip=0; ip<nembed*nembed; ip++){
-		tmp+=spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip])*turbspec->p[ip];
+		tmp+=creal(spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip]))*turbspec->p[ip];
 	    }
 	    IND(DD, ic, id)=IND(DD,id,ic)=tmp;//*scale;
 	}

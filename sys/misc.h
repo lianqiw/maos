@@ -62,7 +62,7 @@ char *mystrdup(const char *A);
 #define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
 
 typedef struct ARGOPT_T{
-    char *name;    /**<The long name*/
+    const char *name;    /**<The long name*/
     char key;      /**<The short name*/
     int type;      /**<The type of result expected*/
     int valtype;   /**<The type of input expected:

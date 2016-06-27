@@ -55,7 +55,7 @@ static char *get_fnatm(GENATM_T *data){
     snprintf(diratm,PATH_MAX,"%s/.aos/cache/atm", HOME);
     if(!exist(diratm)) mymkdir("%s", diratm);
     char fnatm[PATH_MAX];
-    char *types[]={"vonkarman","fractal","biharmonic"};
+    const char *types[]={"vonkarman","fractal","biharmonic"};
     snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     if(zfexist(fnatm)) zftouch(fnatm);
@@ -96,7 +96,7 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
     dmat *spect   = data->spect;
     double* wt    = data->wt;
     int nlayer    = data->nlayer;
-    dcell *dc     = cellnew(2,1);
+    dcell *dc     = dcellnew(2,1);
     long nx = data->nx;
     long ny = data->ny;
     double dx=data->dx;
@@ -126,7 +126,7 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	    maxfreq=data->r0logpsds->p[3];
 	}
 	spect2=spatial_psd(nx, ny, dx, strength, minfreq, maxfreq, slope, 0.5);
-	dc2=cellnew(2,1);
+	dc2=dcellnew(2,1);
 	dc2->p[0] = dnew(nx, ny);
 	dc2->p[1] = dnew(nx, ny);
 	seed_rand(&rstat2, rstat->statevec[0]);
@@ -255,7 +255,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	dcellfree(in);
 	free(fnatm);
     }else{
-  	screen=cellnew(nlayer, 1);
+  	screen=(mapcell*)cellnew(nlayer, 1);
 	long nx = data->nx;
 	long ny = data->ny;
 	double dx = data->dx;
@@ -293,7 +293,7 @@ mapcell *fractal_screen(GENATM_T *data){
     return create_screen(data, fractal_screen_do);
 }
 
-map_t *genatm_simple(double r0, double L0, double dx, double nx){
+map_t *genatm_simple(double r0, double L0, double dx, long nx){
     rand_t rstat;
     seed_rand(&rstat, 1);
     double wt[1]; wt[0]=1;

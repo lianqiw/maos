@@ -37,7 +37,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     ){
     int nwvl=wvls->nx;
-    DTF_T *dtfs=calloc(nwvl, sizeof(DTF_T));
+    DTF_T *dtfs=mycalloc(nwvl,DTF_T);
     const double blurx=pixblur*pixthetax;
     const double blury=pixblur*pixthetay;
     const double e0x=-2*M_PI*M_PI*blurx*blurx;//blurring factors
@@ -73,8 +73,8 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	dtfs[iwvl].wvl=wvl;
 	dtfs[iwvl].ncompx=ncompx;
 	dtfs[iwvl].ncompy=ncompy;
-	dtfs[iwvl].nominal=cellnew(ndtf,nwfs);
-	dtfs[iwvl].si=cellnew(ndtf,nwfs);
+	dtfs[iwvl].nominal=ccellnew(ndtf,nwfs);
+	dtfs[iwvl].si=dspcellnew(ndtf,nwfs);
 	ccell*  nominals=dtfs[iwvl].nominal;
 	dspcell*  sis=dtfs[iwvl].si;
 	cmat *nominal=cnew(ncompx,ncompy);
@@ -165,7 +165,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){
-    ETF_T *etfs=calloc(nwvl, sizeof(ETF_T));
+    ETF_T *etfs=mycalloc(nwvl,ETF_T);
     /*setup elongation along radial direction. don't care azimuthal. */
     if(!srot) error("srot is required");
     const int nllt=MAX(srot->nx, sodium->nx);
@@ -227,7 +227,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	      space for many LGS.
 	    */
 	    warning("Rotate PSF to do radial format detector (preferred)\n");
-	    etfs[iwvl].p1=cellnew(nsa,nllt);
+	    etfs[iwvl].p1=ccellnew(nsa,nllt);
 	    petf=etfs[iwvl].p1;
 	    use1d=1;
 	}else{
@@ -240,7 +240,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    }else{
 		info_once("Non-Radial CCD\n");
 	    }
-	    etfs[iwvl].p2=cellnew(nsa,nllt);
+	    etfs[iwvl].p2=ccellnew(nsa,nllt);
 	    petf=etfs[iwvl].p2;
 	    use1d=0;
 	}
@@ -300,7 +300,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	    const double dtetf=dtheta/nover;
 	    const double dusc=(netf*dtetf)/(dtheta*ncompx);
 	    cmat *etf=cnew(netf,1);
-	    double *thetas=calloc(netf, sizeof(double));
+	    double *thetas=mycalloc(netf,double);
 	    const int netf2=netf>>1;
 	    /*Only interpolating the center part. the rest is padding. */
 	    const int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));

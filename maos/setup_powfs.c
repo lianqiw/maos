@@ -387,7 +387,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc){
 	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
-    powfs[ipowfs].realsaa=cellnew(nwfsp, 1);
+    powfs[ipowfs].realsaa=dcellnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
 	if(powfs[ipowfs].loc_tel){
 	    powfs[ipowfs].realsaa->p[jwfs]=dref(powfs[ipowfs].saa_tel->p[jwfs]);
@@ -395,7 +395,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    powfs[ipowfs].realsaa->p[jwfs]=dref(powfs[ipowfs].saa);
 	}
     }
-    powfs[ipowfs].realamp=cellnew(nwfsp, 1);
+    powfs[ipowfs].realamp=dcellnew(nwfsp, 1);
     powfs[ipowfs].sumamp=dnew(nwfsp, 1);
     powfs[ipowfs].sumamp2=dnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
@@ -458,10 +458,10 @@ setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowf
 	  They are not used for wavefront reconstruction
 	*/
 	int isset=0;
-	powfs[ipowfs].loc_tel=cellnew(nwfsp, 1);
-	powfs[ipowfs].amp_tel=cellnew(nwfsp, 1);
+	powfs[ipowfs].loc_tel=(loccell*)cellnew(nwfsp, 1);
+	powfs[ipowfs].amp_tel=dcellnew(nwfsp, 1);
 	if(parms->powfs[ipowfs].type==0){
-	    powfs[ipowfs].saa_tel=cellnew(nwfsp, 1);
+	    powfs[ipowfs].saa_tel=dcellnew(nwfsp, 1);
 	}
 #pragma omp parallel for shared(isset)
 	for(int jwfs=0; jwfs<nwfsp; jwfs++){
@@ -503,7 +503,7 @@ setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowf
 	  pupil. The distorted grid are used for ray tracing from DM to WFS.
 	  They are not used for wavefront reconstruction
 	*/
-	powfs[ipowfs].loc_dm=cellnew(nwfsp*parms->ndm, 1);
+	powfs[ipowfs].loc_dm=(loccell*)cellnew(nwfsp*parms->ndm, 1);
 	int isset=0;
 #pragma omp parallel for collapse(2) shared(isset)
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -543,9 +543,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	}else{
 	    /*This mkg takes about 5 seconds. */
 	    if(powfs[ipowfs].amp_tel){
-		powfs[ipowfs].GS0=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].GS0=dspcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }else{
-		powfs[ipowfs].GS0=cellnew(1, 1);
+		powfs[ipowfs].GS0=dspcellnew(1, 1);
 	    }
 	    for(int iwfs=0; iwfs<powfs[ipowfs].GS0->nx; iwfs++){
 		powfs[ipowfs].GS0->p[iwfs]=mkg(powfs[ipowfs].loc, 
@@ -563,7 +563,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	powfs[ipowfs].nsaimcc=MAX(1,(powfs[ipowfs].loc_tel?parms->powfs[ipowfs].nwfs:1));
 	int nsaimcc=powfs[ipowfs].nsaimcc;
 	cellfree(powfs[ipowfs].saimcc);
-	powfs[ipowfs].saimcc=cellnew(nsaimcc, 1);
+	powfs[ipowfs].saimcc=(dccell*)cellnew(nsaimcc, 1);
 	for(int imcc=0; imcc<nsaimcc; imcc++){
 	    dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].realamp->p[imcc]->p);
 	    powfs[ipowfs].saimcc->p[imcc]=dcellinvspd_each(mcc);
@@ -572,7 +572,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     }
  
     if(!parms->powfs[ipowfs].neaphy){
-	powfs[ipowfs].neasim=cellnew(parms->powfs[ipowfs].nwfs, 1);
+	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    const long nsa=powfs[ipowfs].saloc->nloc;
@@ -657,10 +657,10 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	dcellfree(powfs[ipowfs].srsa);
 	dcellfree(powfs[ipowfs].sprint);
 
-	powfs[ipowfs].srot=cellnew(nllt,1);
-	powfs[ipowfs].srsa=cellnew(nllt,1);
+	powfs[ipowfs].srot=dcellnew(nllt,1);
+	powfs[ipowfs].srsa=dcellnew(nllt,1);
 	powfs[ipowfs].srsamax=dnew(nllt,1);
-	powfs[ipowfs].sprint=cellnew(nllt,1);
+	powfs[ipowfs].sprint=dcellnew(nllt,1);
 
 	for(int illt=0;illt<nllt;illt++){
 	    /*adjusted llt center because pts->orig is corner */
@@ -917,7 +917,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
     if(nprof!=1 && nprof!=parms->powfs[ipowfs].nwfs){
 	error("The sodium profile input %s is in wrong fromat\n", fnprof);
     }
-    powfs[ipowfs].sodium=cellnew(nprof, 1);
+    powfs[ipowfs].sodium=dcellnew(nprof, 1);
     for(int i=0; i<Nains->nx*Nains->ny; i++){
 	dmat *Nain=Nains->p[i];
 	if(Nain->ny<2 || Nain->nx!=Nains->p[0]->nx){
@@ -952,7 +952,7 @@ typedef struct{
     int no_interp;/**<Use direct sum instead of interpolation + FFT. Slower */
     int free;     /**<Free this array after using?*/
 }mketf_t;
-void* mketf_wrap(mketf_t *data){
+ETF_T* mketf_wrap(mketf_t *data){
     ETF_T*result=mketf(data->dtfs, data->hs, data->sodium, data->icol, data->nwvl,
 		       data->srot, data->srsa, data->za, data->no_interp);
     if(data->free) free(data);
@@ -1006,7 +1006,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    }
 	    //asynchronously preparing for next update.
 	    //Copy data to heap so that they don't disappear during thread execution
-	    mketf_t *etfdata2=calloc(1, sizeof(mketf_t));//freed by mketf_wrap.
+	    mketf_t *etfdata2=mycalloc(1,mketf_t);//freed by mketf_wrap.
 	    memcpy(etfdata2, &etfdata, sizeof(mketf_t));
 	    etfdata2->icol++;
 	    etfdata2->free=1;
@@ -1029,9 +1029,9 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     double wvl0=parms->powfs[ipowfs].wvl->p[0];
-    LLT_T *llt=powfs[ipowfs].llt=calloc(1, sizeof(LLT_T));
+    LLT_T *llt=powfs[ipowfs].llt=mycalloc(1,LLT_T);
     LLT_CFG_T *lltcfg=parms->powfs[ipowfs].llt;
-    pts_t *lpts=llt->pts=calloc(1, sizeof(pts_t));
+    pts_t *lpts=llt->pts=mycalloc(1,pts_t);
     lpts->nsa=1;
     double lltd=lltcfg->d;
     lpts->dsay=lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
@@ -1042,8 +1042,8 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const int nx=lpts->nx=round(lpts->dsa/lpts->dx);
     lpts->dsay=lpts->dsa=lpts->dx*lpts->nx;
     
-    lpts->origx=calloc(1, sizeof(double));
-    lpts->origy=calloc(1, sizeof(double));
+    lpts->origx=mycalloc(1,double);
+    lpts->origy=mycalloc(1,double);
 
     double oy=lpts->origx[0]=(dx-lpts->dsa)*0.5;
     double ox=lpts->origy[0]=(dx-lpts->dsa)*0.5;
@@ -1081,7 +1081,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	mapcell *ncpa=mapcellread("%s",parms->powfs[ipowfs].llt->fnsurf);
 	int nlotf=ncpa->nx*ncpa->ny;
 	assert(nlotf==1 || nlotf==parms->powfs[ipowfs].nwfs);
-	llt->ncpa=cellnew(nlotf, 1);
+	llt->ncpa=dcellnew(nlotf, 1);
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    llt->ncpa->p[ilotf]=dnew(nx,nx);
 	    prop_grid_pts(ncpa->p[ilotf], llt->pts, llt->ncpa->p[ilotf]->p, 1, 0, 0, 1, 0, 0, 0);
@@ -1092,7 +1092,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     for(int i=0; i<llt->amp->nx*llt->amp->ny; i++){
 	if(llt->amp->p[i]<0){
 	    if(!llt->ncpa){
-		llt->ncpa=cellnew(1,1);
+		llt->ncpa=dcellnew(1,1);
 		llt->ncpa->p[0]=dnew(nx,nx);
 	    }
 	    for(int ic=0; ic<llt->ncpa->nx; ic++){
@@ -1227,8 +1227,8 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     dcell *sanea=NULL;
     if(parms->powfs[ipowfs].phytype==2 && parms->powfs[ipowfs].skip!=3){/*need nea in reconstruction*/
 	do_nea=1;
-	powfs[ipowfs].saneaxy=cellnew(nsa, intstat->i0->ny);
-	sanea=cellnew(intstat->i0->ny, 1);
+	powfs[ipowfs].saneaxy=dcellnew(nsa, intstat->i0->ny);
+	sanea=dcellnew(intstat->i0->ny, 1);
 	seed_rand(&rstat, 1);
 	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
 	if(neaspeckle>pixthetax){
@@ -1240,7 +1240,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
 	neaspeckle2=pow(neaspeckle,2);
     }
-    powfs[ipowfs].cogcoeff=cellnew(nwfs,1);
+    powfs[ipowfs].cogcoeff=dcellnew(nwfs,1);
     
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	if(iwfs==0 || (intstat && intstat->i0->ny>1)){
@@ -1335,7 +1335,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	error("Should only be called once\n");
     }
     if(parms->powfs[ipowfs].phytype==1 || parms->powfs[ipowfs].phytypesim==1){
-	INTSTAT_T *intstat=powfs[ipowfs].intstat=calloc(1, sizeof(INTSTAT_T));
+	INTSTAT_T *intstat=powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 	if(parms->load.i0){
 	    warning("Loading i0, gx, gy\n");
 	    intstat->i0=dcellread("%s/powfs%d_i0",parms->load.i0, ipowfs);
@@ -1346,7 +1346,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		/*load psf. 1 for each wavefront sensor. */
 		info2("Using 1 sepsf for each wfs when loading sepsf\n");
 		intstat->nsepsf=parms->powfs[ipowfs].nwfs;
-		intstat->sepsf=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		intstat->sepsf=dccellnew(parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    dcell *sepsf=intstat->sepsf->p[jwfs]=dcellread("%s_wfs%d",parms->powfs[ipowfs].piinfile,iwfs);
@@ -1398,7 +1398,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	writebin(powfs[ipowfs].saneaxy,"powfs%d_saneaxy",ipowfs);
     }
     if(parms->powfs[ipowfs].neaphy){/*use physical optics nea for geom grad*/
-	powfs[ipowfs].neasim=cellnew(parms->powfs[ipowfs].nwfs, 1);
+	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    dmat **sanea=NULL;
 	    if(powfs[ipowfs].saneaxy->ny==1){
@@ -1439,7 +1439,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		double thetax=parms->wfs[iwfs].thetax;
 		double thetay=parms->wfs[iwfs].thetay;
 		if(!powfs[ipowfs].opdbias){
-		    powfs[ipowfs].opdbias=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		    powfs[ipowfs].opdbias=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		}
 		if(!powfs[ipowfs].opdbias->p[jwfs]){
 		    powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
@@ -1474,7 +1474,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 	    }
 	    if(parms->powfs[ipowfs].ncpa_method==1){//gradient offset
 		if(!powfs[ipowfs].gradncpa){
-		    powfs[ipowfs].gradncpa=cellnew(parms->powfs[ipowfs].nwfs,1);
+		    powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
 		}
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    if(powfs[ipowfs].opdbias->p[jwfs]){
@@ -1508,7 +1508,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
    setup here.  \callgraph */
 POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     TIC;tic;
-    POWFS_T *powfs=calloc(parms->npowfs, sizeof(POWFS_T));
+    POWFS_T *powfs=mycalloc(parms->npowfs,POWFS_T);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].type==0){

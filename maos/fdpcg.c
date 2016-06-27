@@ -202,8 +202,8 @@ fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
 	error("dsa must be multiple of dx. dsa=%g, dx=%g, diff=%g\n", dsa, dx, fabs(dsa-dx*os));
     }
  
-    double *wt=alloca(sizeof(double)*(os+1));
-    double *st=alloca(sizeof(double)*(os+1));
+    double *wt=myalloca(os+1, double);
+    double *st=myalloca(os+1, double);
     /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(double)os/dsa;
     for(long ios=1; ios<os; ios++){
@@ -370,7 +370,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
     /*Concatenate invpsd; */
-    dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
+    dcomplex *invpsd=mycalloc(nxtot,dcomplex);
     long offset=0;
     switch(parms->tomo.cxx){
     case 0:/*forward matrix uses biharmonic approx. We use here also. */
@@ -509,7 +509,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.setup){
 	writebin(Mhat,"fdpcg_Mhat");
     }
-    FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
+    FDPCG_T *fdpcg=mycalloc(1,FDPCG_T);
     /*Now invert each block. */
     /*bs: blocksize. */
     int bs=0;
@@ -586,7 +586,7 @@ typedef struct{
    Copy x vector and do FFT on each layer
 */
 static void fdpcg_fft(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     ccell *xhati=data->xhati;
     const dcell *xin=data->xin;
@@ -615,7 +615,7 @@ static void fdpcg_fft(thread_t *info){
    Multiply each block in pthreads
  */
 static void fdpcg_mulblock(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     long bs=fdpcg->Mbinv->p[0]->nx;
     for(int ib=info->start; ib<info->end; ib++){
@@ -627,7 +627,7 @@ static void fdpcg_mulblock(thread_t *info){
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
 static void fdpcg_ifft(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     ccell *xhat2i=data->xhat2i;
     dcell *xout=data->xout;

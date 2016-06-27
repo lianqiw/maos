@@ -40,7 +40,7 @@ typedef struct GENATM_T{
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
     long method;     /**<The method*/
 }GENATM_T;
-map_t *genatm_simple(double r0, double L0, double dx, double nx);
+map_t *genatm_simple(double r0, double L0, double dx, long nx);
 dmat *genatm_loc(loc_t *loc, double r0, double L0);
 mapcell* genatm_from_spect(GENATM_T *data);
 mapcell* vonkarman_screen(GENATM_T *data);

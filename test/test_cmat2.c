@@ -219,10 +219,10 @@ static void bench_ccwm(void){
 int test_ints(){
     int nopd=32;
     int npsf=64;
-    double *opd=calloc(nopd*nopd, sizeof(double));
-    double *amp=calloc(nopd*nopd, sizeof(double));
-    dcomplex *psf=calloc(npsf*npsf, sizeof(dcomplex));
-    dcomplex *psf2=calloc(npsf*npsf, sizeof(dcomplex));
+    double *opd=mycalloc(nopd*nopd,double);
+    double *amp=mycalloc(nopd*nopd,double);
+    dcomplex *psf=mycalloc(npsf*npsf,dcomplex);
+    dcomplex *psf2=mycalloc(npsf*npsf,dcomplex);
     double wvkr=2*M_PI/0.5e-6;
     dcomplex wvk=COMPLEX(0, wvkr);
     for(int i=0; i<nopd*nopd; i++){

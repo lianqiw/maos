@@ -125,13 +125,21 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define mapwrite(out, A...) write_by_id((void*)out, M_MAP64, A)
 #define mapread(A...)    (map_t*)read_by_id(M_MAP64, 0, A)
 #define mapcellread(A...) (mapcell*)read_by_id(M_MAP64, 1, A)
-
+#define mapcellnew (mapcell*)cellnew
+#define mapccellnew (mapccell*)cellnew
+    
+#define rmapcellnew (rmapcell*)cellnew
+#define rmapccellnew (rmapccell*)cellnew
+    
 #define locwrite(out, A...) write_by_id((void*)out, M_LOC64, A)
 #define locread(A...)    (loc_t*)read_by_id(M_LOC64, 0, A)
 #define loccellread(A...) (loccell*)read_by_id(M_LOC64, 1, A)
+#define loccellnew (loccell*)cellnew
+#define locccellnew (locccell*)cellnew
 /** Read needs type checking, so don't use readbin*/
 #define dread(A...)    dmat_cast(read_by_id(M_DBL, 0, A))
 #define dcellnew (dcell*)cellnew
+#define dccellnew (dccell*)cellnew
 #define dcellreaddata(fp, header) dcell_cast(readdata_by_id(fp, M_DBL, 1, header))
 #define dcellread(A...) (dcell*)read_by_id(M_DBL, 1, A)
 #define dccellread(A...) (dccell*)read_by_id(M_DBL, 2, A)
@@ -139,6 +147,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define sread(A...)    smat_cast(read_by_id(M_FLT, 0, A))
 #define scellnew (scell*)cellnew
+#define sccellnew (sccell*)cellnew
 #define scellreaddata(fp, header) scell_cast(readdata_by_id(fp, M_FLT, 1, header))
 #define scellread(A...) (scell*)read_by_id(M_FLT, 1, A)
 #define sccellread(A...) (sccell*)read_by_id(M_FLT, 2, A)
@@ -146,6 +155,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define cread(A...)    cmat_cast(read_by_id(M_CMP, 0, A))
 #define ccellnew (ccell*)cellnew
+#define cccellnew (cccell*)cellnew
 #define ccellreaddata(fp, header) ccell_cast(readdata_by_id(fp, M_CMP, 1, header))
 #define ccellread(A...) (ccell*)read_by_id(M_CMP, 1, A)
 #define cccellread(A...) (cccell*)read_by_id(M_CMP, 2, A)
@@ -153,6 +163,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define zread(A...)    zmat_cast(read_by_id(M_ZMP, 0, A))
 #define zcellnew (zcell*)cellnew
+#define zccellnew (zccell*)cellnew
 #define zcellreaddata(fp, header) zcell_cast(readdata_by_id(fp, M_ZMP, 1, header))
 #define zcellread(A...) (zcell*)read_by_id(M_ZMP, 1, A)
 #define zccellread(A...) (zccell*)read_by_id(M_ZMP, 2, A)
@@ -160,6 +171,7 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 
 #define lread(A...) lmat_cast(read_by_id(M_LONG, 0, A))
 #define lcellnew (lcell*)cellnew
+#define lccellnew (lccell*)cellnew
 #define lcellreaddata(fp, header) lcell_cast(readdata_by_id(fp, M_LONG, 1, header))
 #define lcellread(A...) (lcell*)read_by_id(M_LONG, 1, A)
 #define lccellread(A...) (lccell*)read_by_id(M_LONG, 2, A)
@@ -173,4 +185,8 @@ AOS_MATBIN_DEF(AOS_LMAT,long)
 #define cspcellread(A...) cspcell_cast(read_by_id(M_CSP, 1, A))
 #define zspread(A...) zsp_cast(read_by_id(M_ZSP, 0, A))
 #define zspcellread(A...) zspcell_cast(read_by_id(M_ZSP, 1, A))
+#define dspcellnew (dspcell*)cellnew
+#define dspccellnew (dspccell*)cellnew
+#define cspcellnew (cspcell*)cellnew
+#define cspccellnew (cspccell*)cellnew
 #endif

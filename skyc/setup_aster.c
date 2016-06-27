@@ -38,7 +38,7 @@ static long comb_select(long n, long k){
    initialize an initial combination composed a vector of non-negative numbers 0,1,2,...
 */
 static int* comb_init(long k){
-    int *comb=calloc(k, sizeof(int));
+    int *comb=mycalloc(k,int);
     for(int i=0; i<k; i++){
 	comb[i]=i;
     }
@@ -75,7 +75,7 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 	return NULL;
     }else if(parms->skyc.keeporder){
 	/*Use the same order as input stars.*/
-	ASTER_S *aster=calloc(1, sizeof(ASTER_S));
+	ASTER_S *aster=mycalloc(1,ASTER_S);
 	*naster=1;
 	int npowfs=parms->maos.npowfs;
 	int nleft=nstar;
@@ -89,7 +89,7 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 	}
 	int ntot=nstar-nleft;
 	aster[0].nwfs=ntot;
-	aster[0].wfs=calloc(ntot, sizeof(WFS_S));
+	aster[0].wfs=mycalloc(ntot,WFS_S);
 	aster[0].iaster=0;
 	int count=0;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -129,13 +129,13 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
     if(parms->skyc.verbose){
 	info2("Number of stars: %d, number of asterisms: %d\n", nstar, ncomb);
     }
-    aster=calloc(ncomb, sizeof(ASTER_S));
+    aster=mycalloc(ncomb,ASTER_S);
     int count=0;
     int *comb=comb_init(nwfstot);
     do{
 	if(npowfs==1){
 	    aster[count].nwfs=nwfs[0];
-	    aster[count].wfs=calloc(nwfs[0], sizeof(WFS_S));
+	    aster[count].wfs=mycalloc(nwfs[0], WFS_S);
 	    aster[count].iaster=count;
 	    for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
 		aster[count].wfs[iwfs].istar=comb[iwfs];
@@ -148,7 +148,7 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 	    do{
 		memset(mask, 0, sizeof(int)*nwfstot);
 		aster[count].nwfs=nwfstot;
-		aster[count].wfs=calloc(nwfstot, sizeof(WFS_S));
+		aster[count].wfs=mycalloc(nwfstot,WFS_S);
 		aster[count].iaster=count;
 		for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
 		    aster[count].wfs[iwfs].ipowfs=0;
@@ -179,11 +179,11 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 gradients. Similar to Z tilt since the mode is low order */
 void setup_aster_g(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     /*2010-06-08: Tested against MATLAB skycoverage code. */
-    aster->g=cellnew(aster->nwfs,1);
+    aster->g=dcellnew(aster->nwfs,1);
     if(parms->maos.nmod<5 || parms->maos.nmod>6){
 	error("Not compatible with the number of NGS modes\n");
     }
-    aster->ngs=calloc(aster->nwfs, sizeof(long));
+    aster->ngs=mycalloc(aster->nwfs,long);
     aster->tsa=0;
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int istar=aster->wfs[iwfs].istar;
@@ -289,8 +289,8 @@ void setup_aster_lsr(ASTER_S *aster, const PARMS_S *parms){
 	dcellfree(aster->pgm);
 	dcellfree(aster->sigman);
     }
-    aster->pgm=cellnew(ndtrat,1);
-    aster->sigman=cellnew(ndtrat,1);
+    aster->pgm=dcellnew(ndtrat,1);
+    aster->sigman=dcellnew(ndtrat,1);
     dmat *gm=ddup(aster->gm);
     if(aster->nwfs==1 && parms->maos.nmod==6 && gm->nx==8){
 	info2("set 3rd column of gm to zero\n");
@@ -298,7 +298,7 @@ void setup_aster_lsr(ASTER_S *aster, const PARMS_S *parms){
     }
 
     for(int idtrat=0; idtrat<ndtrat; idtrat++){
-	dcell *nea=cellnew(aster->nwfs, 1);
+	dcell *nea=dcellnew(aster->nwfs, 1);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    nea->p[iwfs]=ddup(aster->wfs[iwfs].pistat->sanea->p[idtrat]);
 	    dcwpow(nea->p[iwfs], 2);
@@ -353,7 +353,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	dfree(aster->res_ws);
 	dfree(aster->res_ngs);
     }
-    aster->gain=cellnew(ndtrat,1);
+    aster->gain=dcellnew(ndtrat,1);
     aster->res_ws=dnew(ndtrat,1);
     aster->res_ngs=dnew(ndtrat,3);
     dmat*  pres_ngs=aster->res_ngs;
@@ -493,8 +493,8 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	aster->res_ngs=dnew(1,1);
 	//assemble neam
 	if(aster->neam) error("neam is already set?\n");
-	aster->neam=calloc(1, sizeof(dcell*));
-	aster->neam[0]=cellnew(aster->nwfs, aster->nwfs);
+	aster->neam=mycalloc(1,dcell*);
+	aster->neam[0]=dcellnew(aster->nwfs, aster->nwfs);
 	for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    int ng=aster->g->p[iwfs]->nx;
 	    aster->neam[0]->p[iwfs+aster->nwfs*iwfs]=dnew(ng, ng);
@@ -511,7 +511,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		wfs0_max=idtrat;
 	    }
 	}
-	aster->kalman=calloc(1, sizeof(kalman_t*));
+	aster->kalman=mycalloc(1,kalman_t*);
 	double resmin=INFINITY;
 	kalman_t *kalman_min=0;
 	int idtrat_min=0;
@@ -553,15 +553,15 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	aster->kalman[0]=kalman_min;
     }else{
 	if(aster->neam) dcellfreearr(aster->neam, ndtrat);
-	aster->neam=calloc(ndtrat, sizeof(dcell*));
+	aster->neam=mycalloc(ndtrat,dcell*);
 	aster->res_ngs=dnew(ndtrat,3);
 	dmat*  pres_ngs=aster->res_ngs;
-	aster->kalman=calloc(ndtrat, sizeof(kalman_t*));
+	aster->kalman=mycalloc(ndtrat,kalman_t*);
 	dmat *dtrats=dnew(aster->nwfs,1);
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	    //assemble neam
 	    //TIC;tic;
-	    aster->neam[idtrat]=cellnew(aster->nwfs, aster->nwfs);
+	    aster->neam[idtrat]=dcellnew(aster->nwfs, aster->nwfs);
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		dmat *tmp=ddup(aster->wfs[iwfs].pistat->sanea->p[idtrat]);/*in rad */
 		dcwpow(tmp, 2);

@@ -110,10 +110,10 @@ void rmapfree_do(rmap_t *map){
    Create a loc with nloc elements.
 */
 loc_t *locnew(long nloc,double dx, double dy){
-    loc_t *loc=calloc(1, sizeof(loc_t));
+    loc_t *loc=(loc_t*)mycalloc(1,loc_t);
     loc->id=M_LOC64;
-    loc->locx=calloc(nloc, sizeof(double));
-    loc->locy=calloc(nloc, sizeof(double));
+    loc->locx=(double*)mycalloc(nloc,double);
+    loc->locy=(double*)mycalloc(nloc,double);
     loc->nloc=nloc;
     loc->dx=dx;
     loc->dy=dy;
@@ -123,10 +123,10 @@ loc_t *locnew(long nloc,double dx, double dy){
    Create a pts with nsa, dsa, nx, dx
 */
 pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy){
-    pts_t *pts=calloc(1, sizeof(pts_t));
+    pts_t *pts=(pts_t*)mycalloc(1,pts_t);
     pts->id=M_LOC64;
-    pts->origx=calloc(nsa, sizeof(double));
-    pts->origy=calloc(nsa, sizeof(double));
+    pts->origx=(double*)mycalloc(nsa,double);
+    pts->origy=(double*)mycalloc(nsa,double);
     pts->dsa=dsax;
     pts->dsay=dsay;
     pts->nx=nx;
@@ -405,8 +405,8 @@ loc_t* map2loc(map_t *map, double thres){
 	    }
 	}
     }
-    loc->locx=realloc(loc->locx, sizeof(double)*count);
-    loc->locy=realloc(loc->locy, sizeof(double)*count);
+    loc->locx=(double*)myrealloc(loc->locx,count,double);
+    loc->locy=(double*)myrealloc(loc->locy,count,double);
     loc->nloc=count;
     loc->iac=map->iac;
     loc->ht=map->h;
@@ -560,7 +560,7 @@ dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
 dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
     const int nmod=3;
     const int nsa=pts->nsa;
-    dcell *mcc=cellnew(nsa,1);
+    dcell *mcc=dcellnew(nsa,1);
     for(int isa=0; isa<nsa; isa++){
 	const double origy=pts->origy[isa];
 	const double origx=pts->origx[isa];
@@ -743,7 +743,7 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
    Gather information about the starting of each column in loc.
 */
 void loc_create_stat_do(loc_t *loc){
-    locstat_t *locstat=calloc(1, sizeof(locstat_t));
+    locstat_t *locstat=(locstat_t*)mycalloc(1,locstat_t);
     loc->stat=locstat;
     const double *locx=loc->locx;
     const double *locy=loc->locy;
@@ -751,7 +751,7 @@ void loc_create_stat_do(loc_t *loc){
     double dx=locstat->dx=loc->dx;
     double dy=locstat->dy=loc->dy;
     int ncolmax=(int)round((locy[nloc-1]-locy[0])/dy)+2;
-    locstat->cols=malloc(ncolmax*sizeof(locstatcol_t));
+    locstat->cols=(locstatcol_t*)mymalloc(ncolmax,locstatcol_t);
     int colcount=0;
     /*do first column separately. */
     int iloc=0;
@@ -779,7 +779,7 @@ void loc_create_stat_do(loc_t *loc){
 	    colcount++;
 	    if(colcount>=ncolmax){/*expand the memory. */
 		ncolmax*=2;
-		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
+		locstat->cols=(locstatcol_t*)myrealloc(locstat->cols, ncolmax,locstatcol_t);
 	    }
 	}
     }
@@ -790,7 +790,7 @@ void loc_create_stat_do(loc_t *loc){
     if(xmax < locx[loc->nloc-1]){
 	xmax = locx[loc->nloc-1];
     }
-    locstat->cols=realloc(locstat->cols,(locstat->ncol+1)*sizeof(locstatcol_t));
+    locstat->cols=(locstatcol_t*)myrealloc(locstat->cols,(locstat->ncol+1),locstatcol_t);
     locstat->ny=(long)round((locy[loc->nloc-1]-locstat->ymin)/dy)+1;
     locstat->nx=(long)round((xmax-locstat->xmin)/dx)+1;
 }
@@ -915,7 +915,7 @@ void loc_reduce(loc_t *loc, dmat *amp, double thres, int cont, int **skipout){
     if(thres<=0) thres=EPS;
     int redo_stat=loc->stat?1:0;
     int nloc=loc->nloc; 
-    int *skip=calloc(nloc,sizeof(int));
+    int *skip=(int*)mycalloc(nloc,int);
     if(cont){/*make sure loc is continuous. */
 	loc_create_stat(loc);
 	locstat_t *locstat=loc->stat;
@@ -985,7 +985,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
     int count;
     if(dim==1){/*opd(loc)=sp*opd(locin); */
 	count=0;
-	int *map=calloc(nloc,sizeof(int));
+	int *map=(int*)mycalloc(nloc,int);
 	for(int iloc=0; iloc<nloc; iloc++){
 	    map[iloc]=count;
 	    if(!skip[iloc]) count++;
@@ -1012,7 +1012,7 @@ void loc_reduce_spcell(loc_t *loc, dspcell *spc, int dim, int cont){
 	    }
 	    sp->p[count]=sp->p[nloc];
 	    sp->ny=count;
-	    sp->p=realloc(sp->p,sizeof(long)*(count+1));
+	    sp->p=(spint*)myrealloc(sp->p,(count+1),spint);
 	}
     }
     free(skip);
@@ -1031,7 +1031,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     dfree(sum);
     int count=0;
     if(dim==1){/*opd(loc)=sp*opd(locin); */
-	int *map=calloc(nloc,sizeof(int));
+	int *map=(int*)mycalloc(nloc,int);
 	for(int iloc=0; iloc<nloc; iloc++){
 	    map[iloc]=count;
 	    if(!skip[iloc]) count++;
@@ -1050,7 +1050,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	}
 	sp->p[count]=sp->p[nloc];
 	sp->ny=count;
-	sp->p=realloc(sp->p,sizeof(long)*(count+1));
+	sp->p=(spint*)myrealloc(sp->p,(count+1),spint);
     }
     free(skip);
 }
@@ -1336,15 +1336,15 @@ void locresize(loc_t *loc, long nloc){
     if(!loc) return;
     loc_free_map(loc);
     loc_free_stat(loc);
-    loc->locx=realloc(loc->locx, sizeof(double)*nloc);
-    loc->locy=realloc(loc->locy, sizeof(double)*nloc);
+    loc->locx=(double*)myrealloc(loc->locx,nloc,double);
+    loc->locy=(double*)myrealloc(loc->locy,nloc,double);
     loc->nloc=nloc;
 }
 /**
    create a new map_t object.
 */
 map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
-    map_t *map=realloc(dnew_data(nx, ny, p),sizeof(map_t));
+    map_t *map=(map_t*)realloc(dnew_data(nx, ny, p),sizeof(map_t));
     map->h=0;
     map->dx=dx;
     map->dy=dy;
@@ -1359,7 +1359,7 @@ map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
    ceate a new map_t object from existing one. P is left empty.
 */
 map_t *mapnew2(map_t* A){
-    map_t *map=realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
+    map_t *map=(map_t*)realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
     map->h=A->h;
     map->dx=A->dx;
     map->dy=A->dy;
@@ -1372,7 +1372,7 @@ map_t *mapnew2(map_t* A){
 }
 map_t *mapref(map_t*in){
     if(!in) return NULL;
-    map_t *out=calloc(1, sizeof(map_t));
+    map_t *out=(map_t*)mycalloc(1,map_t);
     memcpy(out,in,sizeof(map_t));
     if(!in->nref){
 	extern quitfun_t quitfun;

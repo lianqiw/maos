@@ -54,7 +54,7 @@ void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin,
 */
 void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
-    const INVPSD_T *extra=A;
+    const INVPSD_T *extra=(const INVPSD_T*)A;
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
     int ips1, ips2;
@@ -99,7 +99,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
 */
 void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
-    const FRACTAL_T *extra=A;
+    const FRACTAL_T *extra=(const FRACTAL_T*)A;
     int ips1, ips2;
     if(xb<0){/*do all cells */
 	ips1=0; 
@@ -187,7 +187,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 
     assert(wt->nx==B->nx && wt->ny==1 && A->nx == B->nx);
     const int nevl=B->nx;
-    dcell *res=cellnew(A->ny, B->ny);
+    dcell *res=dcellnew(A->ny, B->ny);
     for(int iy=0; iy<B->ny; iy++){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    int ind=iy*nevl+ievl;
@@ -222,7 +222,7 @@ typedef struct Tomo_T{
    gg  = GP * HXW * xin
 */
 static void Tomo_prop_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=global->parms;
     SIM_T *simu=global->simu;
@@ -276,7 +276,7 @@ void Tomo_prop(Tomo_T *data, int nthread){
    gg = GP' * NEAI * gg;
 */
 static void Tomo_nea_gpt_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     dspcell*  NEAI=recon->saneai/*PDSPCELL*/;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
@@ -290,7 +290,7 @@ static void Tomo_nea_gpt_do(thread_t *info){
 }
 
 static void Tomo_nea_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     dspcell*  NEAI=recon->saneai/*PDSPCELL*/;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
@@ -315,7 +315,7 @@ void Tomo_nea(Tomo_T *data, int nthread, int gpt){
    xout = Cxx^-1 * xin + HXW * gg;
 */
 static void Tomo_iprop_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=global->parms;
     SIM_T *simu=global->simu;
@@ -397,7 +397,7 @@ void TomoR(dcell **xout, const void *A,
     dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
     TTFR(gg, recon->TTF, recon->PTTF);
     if(!*xout){
-	*xout=cellnew(recon->npsr, 1);
+	*xout=dcellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, NULL, gg, *xout, 1};
     Tomo_nea(&data, recon->nthread, 1);
@@ -413,7 +413,7 @@ void TomoRt(dcell **gout, const void *A,
 	    const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     if(!*gout){
-	*gout=cellnew(recon->saneai->nx, 1);
+	*gout=dcellnew(recon->saneai->nx, 1);
     }
     Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
     Tomo_prop(&data, recon->nthread);
@@ -445,9 +445,9 @@ void TomoL(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
-    dcell *gg=cellnew(parms->nwfsr, 1);
+    dcell *gg=dcellnew(parms->nwfsr, 1);
     if(!*xout){
-	*xout=cellnew(recon->npsr, 1);
+	*xout=dcellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, xin, gg, *xout, 0};
   
@@ -485,7 +485,7 @@ void FitR(dcell **xout, const void *A,
 	int isim=simu->reconisim;
 	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	const int nfit=parms->fit.nfit;
-	xp=cellnew(nfit,1);
+	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -505,7 +505,7 @@ void FitR(dcell **xout, const void *A,
 	const PARMS_T *parms=global->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	xp=cellnew(nfit,1);
+	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -686,7 +686,7 @@ void shift_grad(SIM_T *simu){
 	    if(simu->gradlastcl){
 		dcellzero(simu->gradlastcl);
 	    }else{
-		simu->gradlastcl=cellnew(parms->nwfsr, 1);
+		simu->gradlastcl=dcellnew(parms->nwfsr, 1);
 	    }
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const double scale=1./parms->powfs[ipowfs].nwfs;

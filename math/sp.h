@@ -65,7 +65,7 @@ T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESU
 T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
 void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], const R alpha); \
-void* X(cellmm2)(const void *A_, const void *B_, const char trans[2]); \
+cell* X(cellmm2)(const void *A_, const void *B_, const char trans[2]);	\
 X(sp) *X(2sp)(X(mat)*A, R thres);				       \
 void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T f); \
 void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const char trans, const T f); \

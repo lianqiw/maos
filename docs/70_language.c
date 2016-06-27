@@ -48,7 +48,7 @@
    The simplist usage of pointer is to create and index an 1-D array:
    <code>double *p;</code>.  
 
-   <code>p=calloc(1024, sizeof(double));</code> Allocate a memory block of
+   <code>p=mycalloc(1024,double);</code> Allocate a memory block of
    1024x8 byte and store its address in p.<p> <code>p[0]=1;</code> will assign 1 to
    the first number in the array<p>
 

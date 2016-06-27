@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
     if(!strcmp(argv[jarg], "gc")){
 	jarg++;
 	info("Creating headers for GC\n");
-	header=malloc(sizeof(char*)*25);
+	header=mymalloc(25,char*);
 	char tmp[320];
 	double wvl[5]={0.9, 0.975, 1, 1.025, 1.1};
 	for(int iwvl=0; iwvl<5; iwvl++){

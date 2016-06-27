@@ -43,14 +43,14 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     dispy=(dispy-map->oy+saorc*dsa*0.5*scale)*dy1;
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
-    long *ind=calloc(nmax, sizeof(long));
-    loc_t *sloc=calloc(1, sizeof(loc_t));
+    long *ind=mycalloc(nmax,long);
+    loc_t *sloc=mycalloc(1,loc_t);
     sloc->dx=xloc->dx;
     sloc->dy=xloc->dy;
-    sloc->locx=calloc(nmax,sizeof(double));
-    sloc->locy=calloc(nmax,sizeof(double));
+    sloc->locx=mycalloc(nmax,double);
+    sloc->locy=mycalloc(nmax,double);
     double *amploc=NULL;
-    if(amp) amploc=calloc(nmax,sizeof(double));
+    if(amp) amploc=mycalloc(nmax,double);
 
     dsp*zax=dspnew(xloc->nloc,nsa,xloc->nloc);
     dsp*zay=dspnew(xloc->nloc,nsa,xloc->nloc);

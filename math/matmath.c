@@ -25,9 +25,9 @@
 /**
    scale each element of A by w.
 */
-void X(scale)(X(mat) *A, R w){
+void X(scale)(X(mat) *A, T w){
     if(!A) return;
-    if(w==0){
+    if(w==(T)0){
 	memset(A->p, 0, sizeof(T)*A->nx*A->ny);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
@@ -114,7 +114,7 @@ R X(sumabs)(const X(mat)*A){
 R X(sumsq)(const X(mat)*A){
     R out=0;
     for(long i=0; i<A->nx*A->ny; i++){
-	out+=(A->p[i]*conj(A->p[i]));
+	out+=creal(A->p[i]*conj(A->p[i]));
     }
     return out;
 }
@@ -129,7 +129,8 @@ R X(norm)(const X(mat)*A){
 */
 R X(std)(const X(mat)*A){
     long N=A->nx*A->ny;
-    R var=(X(sumsq)(A)-pow(X(sum)(A),2)/N)/(N-1);
+    T sum=X(sum)(A);
+    R var=(X(sumsq)(A)-creal(sum*conj(sum))/N)/(N-1);
     return sqrt(var);
 }
 /**
@@ -875,7 +876,7 @@ void X(addI)(X(mat) *A, T val){
    behavior changed on 2009-11-02. if A is NULL, don't do anything.
 */
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
-    if(A && A->nx && ac){
+    if(A && A->nx && fabs(ac)>EPS){
 	if(!*B0){
 	    *B0=X(new)(A->nx, A->ny); 
 	    bc=0;/*no bother to accumulate. */
@@ -885,12 +886,12 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    error("A is %ldx%ld, B is %ldx%ld. They should match\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	if(bc){
+	if(fabs(bc)>EPS){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }
 	}else{
-	    if(ac==1){
+	    if(ac==(T)1){
 		X(cp)(B0, A);
 	    }else{/*just assign */
 		for(int i=0; i<A->nx*A->ny; i++){
@@ -904,7 +905,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
    Add a scalar to matrix
 */
 void X(adds)(X(mat*)A, const T ac){
-    if(!A || !A->nx || !ac) return;
+    if(!A || !A->nx || ac==(T)0) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]+=ac;
     }
@@ -1403,7 +1404,7 @@ typedef struct{
 }ENC_T;
 
 static void X(enc_thread)(thread_t *pdata){
-    ENC_T *data=pdata->data;
+    ENC_T *data=(ENC_T*)pdata->data;
     const X(mat) *dvec=data->dvec;
     X(mat) *enc=data->enc;
     X(mat)*  ppsf=data->phat;
@@ -1578,7 +1579,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 	    error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	out=cellnew(A->nx+B->nx, A->ny);
+	out=(X(cell*))cellnew(A->nx+B->nx, A->ny);
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<A->nx; ix++){
 		IND(out,ix,iy)=X(dup)(IND(A,ix,iy));
@@ -1593,7 +1594,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 	    error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n", 
 		  A->nx, A->ny, B->nx, B->ny);
 	}
-	out=cellnew(A->nx, A->ny+B->ny);
+	out=(X(cell*))cellnew(A->nx, A->ny+B->ny);
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<A->nx; ix++){
 		IND(out,ix,iy)=X(dup)(IND(A,ix,iy));
@@ -1627,7 +1628,7 @@ X(cell) *X(cellcat_each)(const X(cell) *A, const X(cell) *B, int dim){
     if(A->nx!=B->nx || A->ny!=B->ny){
 	error("Mismatch: (%ld %ld), (%ld %ld)\n",A->nx, A->ny, B->nx, B->ny);
     }
-    X(cell) *out=cellnew(A->nx, A->ny);
+    X(cell) *out=(X(cell*))cellnew(A->nx, A->ny);
     for(long ix=0; ix<A->nx*A->ny; ix++){
 	out->p[ix]=X(cat)(A->p[ix], B->p[ix], dim);
     }
@@ -1746,7 +1747,7 @@ X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
     const long nx=x->nx;
     const long ny=y->nx;
     assert(x->ny==1 && y->ny ==1 && z->nx==nx && z->ny==ny);
-    X(cell)*coeff=cellnew(nx,ny);
+    X(cell)*coeff=X(cellnew)(nx,ny);
     X(cell)* pc=coeff;
   
     X(mat)* p=z;

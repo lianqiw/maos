@@ -83,17 +83,17 @@ int disable_save=0;
 /*
   Process the input file name and return file names that can be open to
   read/write. If the file name does not end with .bin or .bin.gz it will add to
-  the end .bin or .bin.gz depending on the value of defaultgzip. For read only
+  the end .bin. For read only
   access, it will also look into the path for files.
 */
-static char* procfn(const char *fn, const char *mod, const int defaultgzip){
+static char* procfn(const char *fn, const char *mod){
     char *fn2;
     if(fn[0]=='~'){
-	fn2=malloc(strlen(HOME)+strlen(fn)+16);
+	fn2=(char*)malloc(strlen(HOME)+strlen(fn)+16);
 	strcpy(fn2,HOME);
 	strcat(fn2,fn+1);
     }else{
-	fn2=malloc(strlen(fn)+16);
+	fn2=(char*)malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
     }
     /*If there is no recognized suffix, add .bin in the end. */
@@ -143,7 +143,7 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
 */
 int zfexist(const char *format, ...){
     format2fn;
-    char *fn2=procfn(fn, "rb", 0);
+    char *fn2=procfn(fn, "rb");
     int ans=0;
     if(fn2){ 
 	ans=1;
@@ -156,7 +156,7 @@ int zfexist(const char *format, ...){
 */
 void zftouch(const char *format, ...){
     format2fn;
-    char *fn2=procfn(fn, "rb", 0);
+    char *fn2=procfn(fn, "rb");
     if(fn2 && utimes(fn2, NULL)){
 	perror("zftouch failed");
     }
@@ -167,7 +167,7 @@ PNEW(lock);
   Open a bin file from a fd that may be a socket.
 */
 static file_t* zfdopen(int sock, const char *mod){
-    file_t* fp=calloc(1, sizeof(file_t));
+    file_t* fp=(file_t*)mycalloc(1,file_t);
     fp->isgzip=0;
     fp->fd=sock;
     if(fp->isgzip){
@@ -192,8 +192,8 @@ static file_t* zfdopen(int sock, const char *mod){
 */
 file_t* zfopen_try(const char *fn, const char *mod){
     LOCK(lock);
-    file_t* fp=calloc(1, sizeof(file_t));
-    const char* fn2=fp->fn=procfn(fn,mod,1);
+    file_t* fp=(file_t*)mycalloc(1,file_t);
+    const char* fn2=fp->fn=procfn(fn,mod);
     if(!fn2){
 	if(mod[0]=='r'){
 	    error("%s does not exist for read\n", fn);
@@ -314,7 +314,7 @@ void zfclose(file_t *fp){
 */
 INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
-	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
+	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
 	    error("write to %s failed\n", fp->fn);
 	}
@@ -503,7 +503,7 @@ void zflush(file_t *fp){
     if(fp->isgzip){
 	gzflush(fp->p,4);
     }else{
-	fflush(fp->p);
+	fflush((FILE*)fp->p);
     }
 }
 
@@ -530,7 +530,7 @@ read_bin_header(header_t *header, file_t *fp){
 		zfread(hstr2, 1, nlen, fp);
 		hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 		if(header->str){
-		    header->str=realloc(header->str,((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
+		    header->str=(char*)realloc(header->str,((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
 		    strncat(header->str, hstr2, nlen);
 		}else{
 		    header->str=strdup(hstr2);
@@ -739,9 +739,9 @@ read_fits_header(header_t *header, file_t *fp){
 		}
 		if(length>0){
 		    if(header->str){
-			header->str=realloc(header->str, strlen(header->str)+length+1+newline);
+			header->str=(char*)myrealloc(header->str, strlen(header->str)+length+1+newline,char);
 		    }else{
-			header->str=malloc(length+1+newline); (header->str)[0]='\0';
+			header->str=(char*)malloc(length+1+newline); (header->str)[0]='\0';
 		    }
 		    strcat(header->str, hh);
 		}
@@ -890,7 +890,7 @@ void mmap_unref(struct mmap_t *in){
    Create a mmap_t object.
 */
 struct mmap_t *mmap_new(int fd, void *p, long n){
-    struct mmap_t *out=calloc(1, sizeof(struct mmap_t));
+    struct mmap_t *out=(mmap_t*)mycalloc(1,struct mmap_t);
     out->p=p;
     out->n=n;
     out->nref=1;
@@ -914,7 +914,7 @@ int mmap_open(char *fn, int rw){
     if(rw && disable_save){
 	warning("Saving is disabled for %s\n", fn);
     }
-    char *fn2=procfn(fn,rw?"w":"r",0);
+    char *fn2=procfn(fn,rw?"w":"r");
     if(!fn2) return -1;
     if(fn2 && strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
 	error("new_mmap does not support gzip\n");
@@ -970,7 +970,7 @@ void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **heade
     char *header=NULL;
     while(((uint32_t*)p)[0]==M_HEADER){
 	p+=4;
-	long nlen=((uint64_t*)p)[0];p+=8;
+	uint64_t nlen=((uint64_t*)p)[0];p+=8;
 	header=p;
 	p+=nlen;
 	if(nlen == ((uint64_t*)p)[0]){

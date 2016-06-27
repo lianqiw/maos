@@ -38,7 +38,7 @@ extern "C" {
 #endif
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    exception_env=malloc(sizeof(jmp_buf));
+    exception_env=(int(*)[37])malloc(sizeof(jmp_buf));
     if(setjmp(*exception_env)){
 	//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
 	info2("Exception happened\n");
@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	static int isim=0;
 	static int iseed=0;
 	int nstep=0;
-	char *cmd=0;//default action is sim
+	const char *cmd=0;//default action is sim
 	int free_cmd=0;
 	if(nrhs>0 && mxIsChar(prhs[0])){
 	    cmd=mxArrayToString(prhs[0]);
@@ -96,7 +96,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		    {"gpu",    'g',M_INT, 2, 0, &gpus, &ngpu},
 		    {"ngpu",   'G',M_INT, 1, 0, &ngpu2, NULL},
 		    {"conf",   'c',M_STR, 1, 0, &mainconf, NULL},
-		    {"path",   'P',M_STR, 1, 1, addpath, NULL},
+		    {"path",   'P',M_STR, 1, 1, (void*)addpath, NULL},
 		    {NULL,     0,  0,     0, 0, NULL, NULL}
 		};
 		parse_argopt(conf, options);
@@ -181,7 +181,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	if(nlhs==1){
 	    int free_valname=0;
-	    char *valname=NULL;
+	    const char *valname=NULL;
 	    if(!strcmp(cmd, "get")){
 		if(nrhs>1){
 		    free_valname=1;
@@ -198,11 +198,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		}else{
 		    plhs[0]=mxCreateDoubleMatrix(0,0,mxREAL);
 		}
-		if(free_valname) mxFree(valname);
+		if(free_valname) mxFree((char*)valname);
 	    }
 	}
       end:;
-	if(free_cmd) mxFree(cmd);
+	if(free_cmd) mxFree((char*)cmd);
     }
 }
     

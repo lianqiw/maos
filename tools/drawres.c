@@ -33,7 +33,7 @@ typedef struct ARG_T{
     long *seeds;
 }ARG_T;
 static ARG_T * parse_args(int argc, char **argv){
-    ARG_T *arg=calloc(1, sizeof(ARG_T));
+    ARG_T *arg=mycalloc(1,ARG_T);
     static struct option long_options[]={
 	{"help",0,0,'h'},
 	{"seed",1,0,'s'},
@@ -51,7 +51,7 @@ static ARG_T * parse_args(int argc, char **argv){
 	    break;
 	case 's':{
 	    arg->nseed++;
-	    arg->seeds=realloc(arg->seeds, sizeof(long)*arg->nseed);
+	    arg->seeds=myrealloc(arg->seeds,arg->nseed,long);
 	    arg->seeds[arg->nseed-1]=strtol(optarg,NULL,10);
 	}
 	    break;
@@ -73,13 +73,13 @@ int main(int argc, char *argv[]){
 
     if(arg->iarg<argc){
 	npath=argc-arg->iarg;
-	path=calloc(npath, sizeof(char*));
+	path=mycalloc(npath,char*);
 	for(int ipath=0; ipath<npath; ipath++){
 	    path[ipath]=argv[ipath+arg->iarg];
 	}
     }else{
 	npath=1;
-	path=calloc(npath, sizeof(char*));
+	path=mycalloc(npath,char*);
 	path[0]=mygetcwd();
     }
     long nseed=0;
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]){
 		    if(!found){
 			info2("Found unique seed %ld\n", seedi);
 			nseed++;
-			seed=realloc(seed, sizeof(long)*nseed);
+			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
 		    }
 		}else if(sscanf(dp->d_name, "Res%ld_%ld.bin",&seedi, &seedi2)==2){
@@ -151,9 +151,9 @@ int main(int argc, char *argv[]){
 		    if(!found){
 			info("Found unique seed %ld %ld\n", seedi, seedi2);
 			nseed++;
-			seed=realloc(seed, sizeof(long)*nseed);
+			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
-			seed2=realloc(seed2, sizeof(long)*nseed);
+			seed2=myrealloc(seed2,nseed,long);
 			seed2[nseed-1]=seedi2;
 		    }
 		}
@@ -178,14 +178,14 @@ int main(int argc, char *argv[]){
     }
     info2("\n");
 
-    dcell *resolhi=cellnew(npath,nseed);
-    dcell *resollo=cellnew(npath,nseed);
-    dcell *reshi=cellnew(npath,nseed);
-    dcell *reslo=cellnew(npath,nseed);
-    dcell *reshim=cellnew(npath,1);
-    dcell *reslom=cellnew(npath,1);
-    dcell *resolhim=cellnew(npath,1);
-    dcell *resollom=cellnew(npath,1);
+    dcell *resolhi=dcellnew(npath,nseed);
+    dcell *resollo=dcellnew(npath,nseed);
+    dcell *reshi=dcellnew(npath,nseed);
+    dcell *reslo=dcellnew(npath,nseed);
+    dcell *reshim=dcellnew(npath,1);
+    dcell *reslom=dcellnew(npath,1);
+    dcell *resolhim=dcellnew(npath,1);
+    dcell *resollom=dcellnew(npath,1);
     const char *xlabel, *ylabel;
     dmat *ysky=NULL;
     const char* xylog;
@@ -199,8 +199,8 @@ int main(int argc, char *argv[]){
 	xlabel="Wavefront Error (nm)";
     }
 
-    /*dcell *upterr=cellnew(npath, nseed);
-      dcell *uptcmd=cellnew(npath, nseed);*/
+    /*dcell *upterr=dcellnew(npath, nseed);
+      dcell *uptcmd=dcellnew(npath, nseed);*/
     for(int ipath=0; ipath<npath; ipath++){
 	int seedcount=0;
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]){
     if(npath==1){
 	char *legs[nseed];
 	for(int iseed=0; iseed<nseed; iseed++){
-	    legs[iseed]=malloc(50*sizeof(char));
+	    legs[iseed]=mymalloc(50,char);
 	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
 	}
 	if(restype==1){
@@ -356,8 +356,8 @@ int main(int argc, char *argv[]){
 	    free(legs[iseed]);
 	}
     }else{
-	char **pathtag=calloc(npath, sizeof(char*));
-	char prefix[3]="A: ";
+	char **pathtag=mycalloc(npath,char*);
+	char prefix[4]="A: ";
 	for(int ipath=0; ipath<npath; ipath++){
 	    prefix[0]='A'+ipath;
 	    pathtag[ipath]=stradd(prefix, path[ipath], NULL);

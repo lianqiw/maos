@@ -338,7 +338,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     default:
 	error("Invalid servo_type=%d\n", servo_type);
     }
-    dcell *gm=cellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
+    dcell *gm=dcellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
     double g0_max=2.0;
@@ -375,7 +375,7 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
     for(int i=0; i<nu->nx; i++){
 	dcomplex Hol=st.Hol->p[i];
 	dcomplex Hrej=1./(1.+Hol);
-	double normHrej=Hrej*conj(Hrej);
+	double normHrej=creal(Hrej*conj(Hrej));
 	//dcomplex Hcl=Hol*Hrej;
 	//dcomplex Hwfs=st.Hwfs->p[i];
 	//dcomplex Hn=Hcl/Hwfs;
@@ -505,7 +505,7 @@ void servo_update(SERVO_T *st, const dmat *ep){
    Initialize. al is additional latency
 */
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep){
-    SERVO_T *st=calloc(1, sizeof(SERVO_T));
+    SERVO_T *st=mycalloc(1,SERVO_T);
     if(ap){
 	st->ap=ddup(ap);
     }else{
@@ -515,10 +515,10 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     if(st->ap->nx<2){
 	dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
     }
-    st->mint=cellnew(st->ap->nx, 1);
+    st->mint=(dccell*)cellnew(st->ap->nx, 1);
     st->dt=dt;
     st->al=al;
-    st->merrhist=cellnew(st->al+1, 1);
+    st->merrhist=(dccell*)cellnew(st->al+1, 1);
     servo_update(st, ep);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
@@ -627,13 +627,13 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
     int nmod=input->nx;
     dmat* pinput=input;
     dmat *merr=dnew(nmod,1);
-    dcell *mreal=cellnew(1,1);
+    dcell *mreal=dcellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
     dmat *sigman=NULL;
     if(dnorm(sigma2n)>0){
 	sigman=dchol(sigma2n);
     }
-    dcell *meas=cellnew(1,1);
+    dcell *meas=dcellnew(1,1);
     dmat *noise=dnew(nmod, 1);
     SERVO_T *st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
     rand_t rstat;
@@ -703,7 +703,7 @@ void servo_free(SERVO_T *st){
  */
 SHO_T *sho_new(double f0,   /**<Resonance frequency*/ 
 	       double zeta  /**<Damping*/){
-    SHO_T *out=calloc(1, sizeof(SHO_T));
+    SHO_T *out=mycalloc(1,SHO_T);
     const double omega0=2*M_PI*f0;
     out->dt=0.01/f0;
     out->c1=2*zeta*omega0;

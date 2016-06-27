@@ -47,15 +47,22 @@ void default_quitfun(const char *msg);
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#define isfinite std::isfinite
+#include <cmath>
 using std::signbit;
+using std::isfinite;
+using std::isnan;
 using std::strerror;
+using std::calloc;
+using std::malloc;
+using std::free;
+using std::realloc;
 #else//C99 mode
 #include <signal.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <tgmath.h>
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4

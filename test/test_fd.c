@@ -70,10 +70,10 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
        with same or harmonic spatial frequencies. Group them together.
 
     */
-    long *xdim=calloc(nps, sizeof(long));
-    long *os=calloc(nps, sizeof(long));
-    long *fxlim=calloc(nps, sizeof(long));
-    long *noff=calloc(nps, sizeof(long));
+    long *xdim=mycalloc(nps,long);
+    long *os=mycalloc(nps,long);
+    long *fxlim=mycalloc(nps,long);
+    long *noff=mycalloc(nps,long);
     long xloctot=0;
     for(long ips=0; ips<nps; ips++){
 	xdim[ips]=(long)sqrt((double)xloc[ips]->nloc);
@@ -91,7 +91,7 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
 	    error("Layer %ld oversampling ratio is greater than ground layer\n",ips);
 	}
     }
-    long *perm=calloc(xloctot, sizeof(long));
+    long *perm=mycalloc(xloctot,long);
     long use_os=os[0];
     long adim=xdim[0]/use_os;
     long osx=xdim[0]/2;
@@ -134,8 +134,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double ds
 	error("dsa must be multiple of dx");
     }
  
-    double *wt=alloca(sizeof(double)*(os+1));
-    double *st=alloca(sizeof(double)*(os+1));
+    double *wt=(double*)alloca(sizeof(double)*(os+1));
+    double *st=(double*)alloca(sizeof(double)*(os+1));
     /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(double)os/dsa;
     for(long ios=1; ios<os; ios++){
@@ -240,7 +240,7 @@ int main(){
     loc_t *saloc=locread("saloc.bin");
     saloc->dx=0.5;
     long nps=6;
-    loc_t **xlocs=calloc(nps, sizeof(loc_t*));
+    loc_t **xlocs=mycalloc(nps,loc_t*);
     long os[nps];
     for(long ips=0; ips<nps; ips++){
 	xlocs[ips]=xloc;
@@ -265,7 +265,7 @@ int main(){
     double dispx[nps],dispy[nps];
 
     double r0=0.198749305619780;
-    dcomplex *invpsd=calloc(256*256*6, sizeof(dcomplex));
+    dcomplex *invpsd=mycalloc(256*256*6,dcomplex);
     long offset=0;
     for(long ips=0; ips<nps; ips++){
 	dmat *tmp=turbpsd(256,256,0.25*(1-ht[ips]/hs), r0*pow(wt[ips],-3./5.),30,0,-1);

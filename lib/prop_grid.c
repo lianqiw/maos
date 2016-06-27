@@ -191,9 +191,9 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    int *nplocx2_arr=0;
 	    if(nyout>10 && nxout<2000){//cache SPLIT() results
 		//alloca is not good in mac due to stack limitation.
-		dplocx_arr=malloc(sizeof(double)*nxout);
-		nplocx_arr=malloc(sizeof(int)*nxout);
-		nplocx2_arr=malloc(sizeof(int)*nxout);
+		dplocx_arr=mymalloc(nxout,double);
+		nplocx_arr=mymalloc(nxout,int);
+		nplocx2_arr=mymalloc(nxout,int);
 
 		double rowdiv=rowdiv0;
 		double dplocx=dplocx00;

@@ -81,7 +81,7 @@ static int test_tomo(){
     } 
     toc("");
     writebin(junk,"MUV1.bin");
-    RECON_T *recon=calloc(1, sizeof(RECON_T));
+    RECON_T *recon=mycalloc(1,RECON_T);
     recon->G0=dspcellread("G0.bin");
     recon->TT=dcellread("TT.bin");
     recon->PTT=dcellread("PTT.bin");
@@ -126,7 +126,7 @@ static int test_fit(){
     toc("");
     writebin(rhs,"fit_rhs1.bin");
     writebin(MUV_f,"MUV_f.bin");
-    RECON_T *recon=calloc(1, sizeof(RECON_T));
+    RECON_T *recon=mycalloc(1,RECON_T);
     recon->HX=dspcellread("HX.bin");
     recon->HA=dspcellread("HA.bin");
     recon->W1=dread("W1.bin");

@@ -93,7 +93,7 @@ for funname in funcs: #loop over functions
         argname=arg[1]
         mx2c, c2mx, free_c=handle_type(argtype)
         if len(mx2c)>0: #input argument
-            fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n' #input from matlab
+            fundef+='    '+argtype+' '+argname+'=('+argtype+")"+mx2c+'(prhs['+str(count)+']);\n' #input from matlab
             count=count+1
         else: #output argument
             fundef+='    '+argtype[0:-1]+' '+argname+'=0;\n' #output

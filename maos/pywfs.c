@@ -30,7 +30,7 @@
 */
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     pywfs_free(powfs[ipowfs].pywfs);
-    PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
+    PYWFS_T *pywfs=powfs[ipowfs].pywfs=mycalloc(1,PYWFS_T);
     map_t *map=0;
     pywfs->hs=parms->powfs[ipowfs].hs;
     pywfs->poke=parms->recon.poke;//How many meters to poke
@@ -80,7 +80,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
 
     long ncomp2=ncomp/2;
-    pywfs->pyramid=cellnew(nwvl, 1);
+    pywfs->pyramid=ccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
 	cmat*  pp=pywfs->pyramid->p[iwvl]/*PCMAT*/;
@@ -155,7 +155,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    writebin(pywfs->pupilshift, "powfs%d_pupilshift", ipowfs);
 	}
     }
-    pywfs->si=cellnew(4,1);//for each quadrant.
+    pywfs->si=dspcellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
@@ -179,7 +179,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    const int ind=ix+iy*2;
 	    loc_t *saloc=powfs[ipowfs].saloc;
 	    if(parms->dbg.pwfs_pupelong){//pupil elongation (along radial direction)
-		if(!pywfs->msaloc) pywfs->msaloc=cellnew(4,1);
+		if(!pywfs->msaloc) pywfs->msaloc=loccellnew(4,1);
 		pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
 		double angle=atan2(iy-0.5, ix-0.5);
 		//squeeze the detector pixel coordinate radially to simulate pupil elongation
@@ -279,7 +279,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
     {
-	powfs[ipowfs].saneaxy=cellnew(nsa,1);
+	powfs[ipowfs].saneaxy=dcellnew(nsa,1);
 	double rne=parms->powfs[ipowfs].rne;
 	for(int isa=0; isa<nsa; isa++){
 	    dmat *tmp=dnew(2,2);

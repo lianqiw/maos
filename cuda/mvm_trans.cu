@@ -31,7 +31,6 @@
 typedef struct MVM_IGPU_T{
     const PARMS_T *parms;
     RECON_T *recon;
-    POWFS_T *powfs;
     curcell &mvmig; /*intermediate TomoL result*/
     curcell &mvmfg; /*intermediate FitR result*/
     curmat &mvmt;     /*result: tranpose of MVM calculated by this GPU.*/
@@ -172,7 +171,7 @@ static void mvm_trans_igpu(thread_t *info){
 	  igpu, tk_prep, tk_fitL, tk_fitR, tk_TomoL, tk_TomoR, tk_cp);
 }
 
-void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
+void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
     TIC;tic;
     if(parms->recon.alg!=0){
 	error("Please adapt to LSR\n");
@@ -279,7 +278,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	}
 	gpu_set(cudata_t::recongpu);
     	curmat mvmt=curmat(ntotgrad, ntotact);
-	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
+	MVM_IGPU_T data={parms, recon, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
 	thread_t info[nthread];
 	thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);

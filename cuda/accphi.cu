@@ -546,6 +546,7 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real thetax, Real th
 }
 void gpu_map2loc(const cumap_t &map, const culoc_t &loc, Real *phiout,
 		 Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
+    (void)wrap;
     dispx=(dispx-map.ox)/map.dx;
     dispy=(dispy-map.oy)/map.dy;
     const int nloc=loc.Nloc();

@@ -136,7 +136,7 @@ static void prop_index(PROPDATA_T *propdata){
    different routines. Handles threading.
 */
 void prop(thread_t *data){
-    PROPDATA_T *propdata=data->data;
+    PROPDATA_T *propdata=(PROPDATA_T*)data->data;
     if(!propdata->index){
 	prop_index(propdata);
     }

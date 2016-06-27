@@ -42,7 +42,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	const double pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
 	const double pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
 	loc_t *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pixtheta, pxo, pyo);
-	powfs[ipowfs].dtf=calloc(parms->maos.nwvl, sizeof(DTF_S));
+	powfs[ipowfs].dtf=mycalloc(parms->maos.nwvl,DTF_S);
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 	    const double wvl=parms->maos.wvl[iwvl];
 	    const double dtheta=wvl/(dxsa*embfac);
@@ -166,8 +166,8 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	if(loc->nloc!=nsa*ptspsa){
 	    error("loc %ld does not divide to %ld sa\n",loc->nloc, nsa);
 	}
-	powfs[ipowfs].locxamp=calloc(nsa,sizeof(double));
-	powfs[ipowfs].locyamp=calloc(nsa,sizeof(double));
+	powfs[ipowfs].locxamp=mycalloc(nsa,double);
+	powfs[ipowfs].locyamp=mycalloc(nsa,double);
 	for(long isa=0; isa<nsa; isa++){
 	    const double* iamp=amp->p+isa*ptspsa;
 	    const double* locx=loc->locx+isa*ptspsa;

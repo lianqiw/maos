@@ -82,7 +82,7 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	saa=pow(dxsa,2);
     }
     if(!Np){
-	Np=alloca(sizeof(double)*nwvl);
+	Np=myalloca(nwvl, double);
     }
     double Npwvl=0;
     for(int iwvl=0; iwvl<nwvl; iwvl++){

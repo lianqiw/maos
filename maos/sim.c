@@ -257,7 +257,7 @@ void maos_sim(){
 	ccell *psf2s=0;
 	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
 	const int nwvl=parms->evl.nwvl;
-	dcell *evlpsfdl=cellnew(nwvl,1);
+	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
 	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);

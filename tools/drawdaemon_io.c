@@ -23,9 +23,10 @@
   Todo: fread does not block when there are no more data available, and simply
   return EOF. Consider changing to read, which blocks when no data available.
  */
-
-char *defname="Title";
-char *deffig="Figure";
+#define myalloca(nelem, type) (type*)alloca(nelem*sizeof(type))
+#define mycalloc(nelem, type) (type*)calloc(nelem,sizeof(type))
+#define mymalloc(nelem, type) (type*)malloc(nelem*sizeof(type))
+#define myrealloc(p, nelem, type) (type*)realloc(p,nelem*sizeof(type))
 static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
@@ -66,7 +67,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	info[0]=min; info[1]=max;
     }
     if(color){/*colored */
-	int *pi=pout;
+	int *pi=(int*)pout;
 	double scale,offset;
 	if(fabs(max-min)>1.e-4*fabs(min)){
 	    scale=1./(max-min);
@@ -84,7 +85,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	    }
 	}
     }else{/*b/w */
-	unsigned char *pc=pout;
+	unsigned char *pc=(unsigned char*)pout;
 	double scale=255./(max-min);
 	for(int i=0; i<nx*ny; i++){
 	    pc[i]=(unsigned char)((p[i]-min)*scale);
@@ -109,14 +110,14 @@ void listen_draw(){
 	    if(drawdata){
 		warning("listen_draw: drawdata is not empty\n");
 	    }
-	    drawdata=calloc(1, sizeof(drawdata_t));
+	    drawdata=mycalloc(1,drawdata_t);
 	    LOCK(drawdata_mutex);
 	    ndrawdata++;
 	    UNLOCK(drawdata_mutex);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
 	    drawdata->square=1;/*default to square. */
-	    drawdata->name=defname;
+	    drawdata->name=NULL;
 	    drawdata->format=(cairo_format_t)0;
 	    drawdata->gray=0;
 	    drawdata->ticinside=1;
@@ -137,7 +138,7 @@ void listen_draw(){
 		drawdata->ny=header[1];
 		int nx=drawdata->nx;
 		int ny=drawdata->ny;
-		drawdata->p0=malloc(sizeof(double)*nx*ny);
+		drawdata->p0=mymalloc(nx*ny,double);
 		if(nx*ny>0){
 		    STREAD(drawdata->p0, nx*ny*sizeof(double));
 		}
@@ -153,9 +154,9 @@ void listen_draw(){
 		STREADINT(nptsy);
 		STREADINT(drawdata->square);
 		drawdata->grid=1;
-		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(double*));
-		drawdata->pts[ipts]=calloc(nptsx*nptsy, sizeof(double));
-		drawdata->ptsdim=realloc(drawdata->ptsdim, drawdata->npts*sizeof(int)*2);
+		drawdata->pts=myrealloc(drawdata->pts, drawdata->npts,double*);
+		drawdata->pts[ipts]=mycalloc(nptsx*nptsy,double);
+		drawdata->ptsdim=(int(*)[2])realloc(drawdata->ptsdim, drawdata->npts*sizeof(int)*2);
 		drawdata->ptsdim[ipts][0]=nptsx;
 		drawdata->ptsdim[ipts][1]=nptsy;
 		if(nptsx*nptsy>0){
@@ -171,16 +172,16 @@ void listen_draw(){
 	    break;
 	case DRAW_STYLE:
 	    STREADINT(drawdata->nstyle);
-	    drawdata->style=calloc(drawdata->nstyle, sizeof(int32_t));
+	    drawdata->style=mycalloc(drawdata->nstyle,int32_t);
 	    STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
 	    break;
 	case DRAW_CIRCLE:
 	    STREADINT(drawdata->ncir);
-	    drawdata->cir=calloc(4*drawdata->ncir, sizeof(double));
+	    drawdata->cir=(double(*)[4])calloc(4*drawdata->ncir, sizeof(double));
 	    STREAD(drawdata->cir,sizeof(double)*4*drawdata->ncir);
 	    break;
 	case DRAW_LIMIT:
-	    drawdata->limit_data=calloc(4, sizeof(double));
+	    drawdata->limit_data=mycalloc(4,double);
 	    STREAD(drawdata->limit_data, 4*sizeof(double));
 	    break;
 	case DRAW_FIG:
@@ -199,11 +200,11 @@ void listen_draw(){
 	    STREADSTR(drawdata->ylabel);
 	    break;
 	case DRAW_ZLIM:
-	    drawdata->zlim=calloc(2, sizeof(double));
+	    drawdata->zlim=mycalloc(2,double);
 	    STREAD(drawdata->zlim, sizeof(double)*2);
 	    break;
 	case DRAW_LEGEND:
-	    drawdata->legend=calloc(drawdata->npts, sizeof(char*));
+	    drawdata->legend=mycalloc(drawdata->npts,char*);
 	    for(int i=0; i<drawdata->npts; i++){
 		STREADSTR(drawdata->legend[i]);
 	    }
@@ -231,7 +232,7 @@ void listen_draw(){
 		    }
 		    int stride=cairo_format_stride_for_width(drawdata->format, nx);
 		    if(!drawdata->limit_data){
-			drawdata->limit_data=calloc(4, sizeof(double));
+			drawdata->limit_data=mycalloc(4,double);
 			drawdata->limit_data[0]=0;
 			drawdata->limit_data[1]=drawdata->nx;
 			drawdata->limit_data[2]=0;
@@ -239,9 +240,9 @@ void listen_draw(){
 		    }
 		    /*convert data from double to int/char. */
 		    if(!drawdata->zlim){
-			drawdata->zlim=calloc(2, sizeof(double));
+			drawdata->zlim=mycalloc(2,double);
 		    }
-		    drawdata->p=calloc(nx*ny, size);
+		    drawdata->p=(unsigned char*)calloc(nx*ny, size);
 		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
 		    drawdata->image= cairo_image_surface_create_for_data 
 			(drawdata->p, drawdata->format, nx, ny, stride);
@@ -256,8 +257,8 @@ void listen_draw(){
 			}
 		    }
 		}
-		if(!drawdata->fig) drawdata->fig=deffig;
-		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
+		if(!drawdata->fig) drawdata->fig=NULL;
+		drawdata_t **drawdatawrap=mycalloc(1,drawdata_t*);
 		drawdatawrap[0]=drawdata;
 		gdk_threads_add_idle(addpage, drawdatawrap);
 		/*if(drawdata->p0){

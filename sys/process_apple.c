@@ -88,6 +88,7 @@ int get_job_mem(void){/*return in KiB */
    Get the launch time of current process.
 */
 double get_job_launchtime(int pid){
+    (void)pid;
     double starttime;
     struct timeval tp;
     gettimeofday(&tp, NULL);
@@ -129,12 +130,12 @@ int read_cpu_counter(long *user, long *tot){
     if (host_processor_info (mach_host_self (),
 			     PROCESSOR_CPU_LOAD_INFO,
 			     &ncpu0,
-			     (void*) &pinfo,
+			     (int**) &pinfo,
 			     &info_count)) {
 	return -1;
     }
     *user=0; *tot=0;
-    for (int i = 0; i < ncpu0; i++) {
+    for (unsigned int i = 0; i < ncpu0; i++) {
 	long tmp=pinfo[i].cpu_ticks[CPU_STATE_USER]
 	    +pinfo[i].cpu_ticks[CPU_STATE_NICE]
 	    +pinfo[i].cpu_ticks[CPU_STATE_SYSTEM];

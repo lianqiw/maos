@@ -51,7 +51,7 @@ char *mybasename(const char *fn){
     }else{
 	sep++;
     }
-    char *bn=malloc(strlen(sep)+1);
+    char *bn=(char*)malloc(strlen(sep)+1);
     strcpy(bn,sep);
     return bn;
 }
@@ -110,7 +110,7 @@ char *argv2str(int argc, const char *argv[], const char* delim){
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=calloc(slen, sizeof(char));
+    char *scmd=(char*)mycalloc(slen,char);
     if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
@@ -328,7 +328,7 @@ char *stradd(const char* a, ...){
 	n+=strlen(arg);
     }
     va_end(ap);
-    out=calloc(n, sizeof(char));
+    out=(char*)mycalloc(n,char);
     if(a){
 	strcpy(out,a);
     }
@@ -348,7 +348,7 @@ char *strnadd(int argc, const char *argv[], const char* delim){
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=calloc(slen, sizeof(char));
+    char *scmd=(char*)mycalloc(slen,char);
     for(int iarg=0; iarg<argc; iarg++){
 	if(argv[iarg] && strlen(argv[iarg])>0){
 	    strcat(scmd,argv[iarg]);
@@ -380,7 +380,7 @@ char *expand_filename(const char *fn){
 char *mystrndup(const char *A, int len){
     int len2=strlen(A);
     if(len2<len) len=len2;
-    char *B=malloc(len+1);
+    char *B=(char*)malloc(len+1);
     memcpy(B,A,len);
     B[len]='\0';
     return B;
@@ -394,7 +394,7 @@ char *mystrdup(const char *A){
 	return NULL;
     }else{
 	int nlen=strlen(A);
-	char *B=malloc(nlen+1);
+	char *B=(char*)malloc(nlen+1);
 	memcpy(B,A,nlen+1);
 	return B;
     }
@@ -593,15 +593,15 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		if(options[iopt].valtype==2){//needs an array
 		    if(isfun) error("Not implemented yet\n");
 		    int val=strtol(value, &start, 10);
-		    int **tmp=options[iopt].val;
-		    int *nval=options[iopt].nval;
+		    int **tmp=(int**)options[iopt].val;
+		    int *nval=(int*)options[iopt].nval;
 		    int i;
 		    for(i=0; i<*nval; i++){
 			if((*tmp)[i]==val) break;
 		    }
 		    if(i==*nval){
 			(*nval)++;
-			*tmp=realloc(*tmp, *nval*sizeof(int));
+			*tmp=(int*)myrealloc(*tmp, *nval,int);
 			(*tmp)[(*nval)-1]=val;
 		    } 
 		}else{
@@ -610,7 +610,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 			void (*tmp)(int)=(void (*)(int))options[iopt].val;
 			tmp(val);
 		    }else{
-			int *tmp=options[iopt].val;
+			int *tmp=(int*)options[iopt].val;
 			*tmp=val;
 		    }
 		}
@@ -620,10 +620,10 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		if(options[iopt].valtype==2){//needs an array
 		    if(isfun) error("Not implemented yet\n");
 		    double val=strtod(value, &start);
-		    int **tmp=options[iopt].val;
-		    int *nval=options[iopt].nval;
+		    double **tmp=(double**)options[iopt].val;
+		    int *nval=(int*)options[iopt].nval;
 		    (*nval)++;
-		    *tmp=realloc(*tmp, *nval*sizeof(double));
+		    *tmp=(double*)myrealloc(*tmp, *nval,double);
 		    (*tmp)[(*nval)-1]=(int)val;
 		}else{
 		    double val=value?strtod(value, &start):1;
@@ -631,21 +631,22 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 			void (*tmp)(double)=(void (*)(double))options[iopt].val;
 			tmp(val);
 		    }else{
-			double *tmp=options[iopt].val;
+			double *tmp=(double*)options[iopt].val;
 			*tmp=val;
 		    }
 		}
 	    }
 		break;
 	    case M_STR:{
-		char *val=value?cmd_string(value, &start):"Unknown";
+		char *val=value?cmd_string(value, &start):strdup("Unknown");
 		if(isfun){
 		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
-		    tmp(val); free(val);
+		    tmp(val);
 		}else{
-		    char **tmp=options[iopt].val;
+		    char **tmp=(char**)options[iopt].val;
 		    free(*tmp); *tmp=val;
 		}
+		free(val);
 	    }
 		break;
 	    default:
@@ -807,8 +808,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
     info2("default_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
     int cancel_action=0;
-    struct sigaction act;
-    act.sa_mask=0;
+    struct sigaction act={{0}};
     act.sa_flags=0;
     act.sa_handler=SIG_DFL;
     sigaction(sig, &act, 0);
@@ -850,8 +850,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
    Register signal handler
 */
 void register_signal_handler(int (*func)(int)){
-    struct sigaction act;
-    act.sa_mask=0;
+    struct sigaction act={{0}};
     act.sa_sigaction=default_signal_handler;
     act.sa_flags=SA_SIGINFO;
     sigaction(SIGBUS, &act, 0);

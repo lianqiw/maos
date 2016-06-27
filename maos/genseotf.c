@@ -83,9 +83,9 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cellfree(powfs[ipowfs].intstat->otf);
     }
     powfs[ipowfs].intstat->notf=notf;
-    powfs[ipowfs].intstat->otf=cellnew(notf, 1);
+    powfs[ipowfs].intstat->otf=cccellnew(notf, 1);
     for(int iotf=0; iotf<notf; iotf++){
-	powfs[ipowfs].intstat->otf->p[iotf]=cellnew(nsa,nwvl);
+	powfs[ipowfs].intstat->otf->p[iotf]=ccellnew(nsa,nwvl);
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
@@ -189,7 +189,7 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(powfs[ipowfs].intstat->lotf){
 	ccellfree(powfs[ipowfs].intstat->lotf);
     }
-    powfs[ipowfs].intstat->lotf=cellnew(nwvl,nlotf);
+    powfs[ipowfs].intstat->lotf=ccellnew(nwvl,nlotf);
     ccell*  lotf=powfs[ipowfs].intstat->lotf/*PCELL*/;
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
@@ -305,13 +305,13 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(powfs[ipowfs].intstat->sepsf){
 	cellfree(powfs[ipowfs].intstat->sepsf);
     }
-    powfs[ipowfs].intstat->sepsf=cellnew(powfs[ipowfs].intstat->nsepsf, 1);
+    powfs[ipowfs].intstat->sepsf=dccellnew(powfs[ipowfs].intstat->nsepsf, 1);
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
 	int ilotf=nlotf>1?isepsf:0;
 	cmat **lotf=nlotf>0?(powfs[ipowfs].intstat->lotf->p+ilotf*nwvl):NULL;
 	ccell* otf=powfs[ipowfs].intstat->otf->p[iotf]/*PCELL*/;
-	powfs[ipowfs].intstat->sepsf->p[isepsf]=cellnew(nsa,nwvl);
+	powfs[ipowfs].intstat->sepsf->p[isepsf]=dcellnew(nsa,nwvl);
 	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf]/*PDELL*/;
 	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -414,19 +414,19 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     cellfree(intstat->fotf);
     cellfree(intstat->potf);
 
-    intstat->i0=cellnew(nsa,ni0);
-    intstat->gx=cellnew(nsa,ni0);
-    intstat->gy=cellnew(nsa,ni0);
+    intstat->i0=dcellnew(nsa,ni0);
+    intstat->gx=dcellnew(nsa,ni0);
+    intstat->gy=dcellnew(nsa,ni0);
     if(parms->powfs[ipowfs].phytypesim==3 ){
-	intstat->fotf=cellnew(nsepsf, 1);
+	intstat->fotf=cccellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
-	    intstat->fotf->p[i]=cellnew(nsa,nwvl);
+	    intstat->fotf->p[i]=ccellnew(nsa,nwvl);
 	}
     }
     if(parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs){
-	intstat->potf=cellnew(nsepsf, 1);
+	intstat->potf=cccellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
-	    intstat->potf->p[i]=cellnew(nsa,nwvl);
+	    intstat->potf->p[i]=ccellnew(nsa,nwvl);
 	}
     }
     /* subaperture rotation angle. */
@@ -502,7 +502,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    cmat **nominals=powfs[ipowfs].dtf[iwvl].fused?0:(powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf);
 	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+powfs[ipowfs].dtf[iwvl].si->nx*idtf;
 	    double *angles=nllt?(powfs[ipowfs].srot->p[irot]->p):0;
-	    ccell *se_save=cellnew(3, NTHREAD);
+	    ccell *se_save=ccellnew(3, NTHREAD);
 #ifdef _OPENMP
 	    if(omp_in_parallel()){
 		error("Already in parallel\n");

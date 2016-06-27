@@ -253,7 +253,7 @@ static RUN_T* running_add(int pid,int sock){
 	return irun;
     }else{
 	info2("adding %d to running\n", pid); /*create the node */
-	irun=calloc(1, sizeof(RUN_T));
+	irun=mycalloc(1,RUN_T);
 	irun->pidnew=irun->pid=pid;
 	irun->sock=sock;
 	if(pid>0 && !irun->exe){
@@ -642,13 +642,13 @@ static int respond(int sock){
 	break;
     case CMD_SOCK://10:Called by draw() to cache a fd. Vaoid over UNIX socket only.
 	{
-	    typedef struct SOCKID_T{
+	    typedef struct SOCKID_M{
 		int id;
 		int sock;
-		struct SOCKID_T *prev;
-		struct SOCKID_T *next;
-	    }SOCKID_T;
-	    static struct SOCKID_T *head=0;
+		struct SOCKID_M *prev;
+		struct SOCKID_M *next;
+	    } SOCKID_T;
+	    static SOCKID_T *head=0;
 	    if(pid>0){//receive sock from draw()
 		int found=0;
 		int sock_save;
@@ -665,7 +665,7 @@ static int respond(int sock){
 			}
 		    }
 		    if(!found){
-			SOCKID_T *tmp=malloc(sizeof(SOCKID_T));
+			SOCKID_T *tmp=(SOCKID_T*)malloc(sizeof(SOCKID_T));
 			tmp->id=pid;
 			tmp->sock=sock_save;
 			tmp->next=head;
@@ -814,6 +814,7 @@ static int respond(int sock){
   text messages with fields separated by '&'.
 */
 void scheduler_handle_ws(char *in, size_t len){
+    (void)len;
     char *sep=strchr(in, '&');
     if(!sep){
 	warning("Invalid message: %s\n", in);
@@ -876,7 +877,7 @@ static void scheduler_timeout(void){
     }
     /*Report CPU usage every 3 seconds. */
     if(thistime>=(lasttime3+3)){
-	if(running>0){
+	if(running){
 	    check_jobs();
 	}
 	usage_cpu=get_usage_cpu();
@@ -890,7 +891,7 @@ static void scheduler_timeout(void){
 /*The following routines maintains the MONITOR_T linked list. */
 static MONITOR_T* monitor_add(int sock){
     /*info2("added monitor on sock %d\n",sock); */
-    MONITOR_T *node=calloc(1, sizeof(MONITOR_T));
+    MONITOR_T *node=mycalloc(1,MONITOR_T);
     node->sock=sock;
     node->next=pmonitor;
     pmonitor=node;
@@ -943,13 +944,13 @@ void html_convert(RUN_T *irun, char *path, char **dest, size_t *plen, long prepa
 	ws_push(temp, len);
     }else{
 	*plen=len;
-	*dest=malloc(len+prepad+postpad);
+	*dest=(char*)malloc(len+prepad+postpad);
 	memcpy(*dest+prepad, temp, len);
     }
 }
 static void html_convert_all_do(RUN_T *irun, l_message **head, l_message **tail, long prepad, long postpad){
-    l_message *node=malloc(sizeof(l_message));
-    l_message *node2=malloc(sizeof(l_message));
+    l_message *node=(l_message*)malloc(sizeof(l_message));
+    l_message *node2=(l_message*)malloc(sizeof(l_message));
     node->next=node2;
     node2->next=0;
     html_convert(irun, irun->path, &node->payload, &node->len, prepad, postpad);

@@ -58,10 +58,10 @@ typedef int spint;  /*This is always 32 bit. */
 //When including by CUDA, all definitions are already available.
 #ifndef AOS_CUDA_GPU_H
 //C++ mode
-#include <cmath>
 #include <complex>
-#define isnan std::isnan
-#define isinf std::isinf
+using std::real;
+using std::conj;
+using std::isinf;
 using std::complex;
 typedef complex<double> dcomplex;
 typedef complex<float> fcomplex;
@@ -124,7 +124,6 @@ INLINE dcomplex operator-(const dcomplex &B, float A){
 }
 #endif//#ifndef AOS_CUDA_GPU_H
 #else //#if defined(__cplusplus) C99 mode
-#include <tgmath.h> //tgmath causing gcc out of memory has been fixed
 typedef __complex__ double dcomplex;
 typedef __complex__ float fcomplex;
 #define COMPLEX(A,B) ((A)+I*(B))

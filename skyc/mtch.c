@@ -61,8 +61,8 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
 */
 static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0x1p)[nx]=(void*)i0x1;
-    double (*i0x2p)[nx]=(void*)i0x2;
+    double (*i0x1p)[nx]=(double(*)[nx])i0x1;
+    double (*i0x2p)[nx]=(double(*)[nx])i0x2;
     for(int iy=0; iy<i0->ny; iy++){
 	for(int ix=0; ix<i0->nx-1; ix++){
 	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
@@ -75,8 +75,8 @@ static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
 */
 static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0y1p)[nx]=(void*)i0y1;
-    double (*i0y2p)[nx]=(void*)i0y2;
+    double (*i0y1p)[nx]=(double(*)[nx])i0y1;
+    double (*i0y2p)[nx]=(double(*)[nx])i0y2;
     for(int iy=0; iy<i0->ny-1; iy++){
 	for(int ix=0; ix<i0->nx; ix++){
 	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
@@ -104,7 +104,7 @@ void mtch(dcell **mtche, dmat **sanea,
     dmat *i0g=dnew(npixtot, nmod);
     dmat *wt=dnew(npixtot, 1);
     if(!*mtche){
-	*mtche=cellnew(nsa,1);
+	*mtche=dcellnew(nsa,1);
     }
     if(!*sanea){
 	*sanea=dnew(nsa*2,1);

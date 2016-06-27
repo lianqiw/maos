@@ -43,7 +43,7 @@ static void read_env(){
 }
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
-    global=calloc(1, sizeof(GLOBAL_T));
+    global=mycalloc(1,GLOBAL_T);
     global->parms=parms;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;

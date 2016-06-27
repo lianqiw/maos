@@ -410,8 +410,8 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
     }
 }
 
-void *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
-    void *res=0;
+cell *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
+    cell *res=0;
     X(cellmm)(&res, A_, B_, trans, 1);
     return res;
 }
@@ -436,7 +436,7 @@ void X(celladdI)(void *A_, T alpha){
    Takes parameters of X(mat), X(sp), X(cell), X(spcell): A=A*ac+B*bc;
  */
 void X(celladd)(void *A_, T ac, const void *B_, T bc){
-    if(!A_ || !B_ || !bc) return;
+    if(!A_ || !B_ || bc==(T)0) return;
     cell *B=(cell*)(B_);
     cell **pA=(cell**)A_;
     if(iscell(B)){//cell
@@ -450,7 +450,7 @@ void X(celladd)(void *A_, T ac, const void *B_, T bc){
 	    if(ismat(B)){//Add dense to dense
 		X(add)((X(mat)**)pA, ac, (X(mat)*)B, bc);
 	    }else{//add sparse to dense
-		if(ac!=1){
+		if(ac!=(T)1){
 		    X(scale)((X(mat*))*pA, ac);
 		}
 		X(spfull)((X(mat)**)(pA), (X(sp)*)B, 'n',bc);

@@ -492,6 +492,7 @@ static void clear_jobs_skipped(GtkAction *btn){
     clear_jobs(btn, test_skipped);
 }
 static void save_all_jobs(GtkAction *btn){
+    (void)btn;
     char *fnall=NULL;
     char *tm=strtime();
     for(int ihost=0; ihost<nhost; ihost++){
@@ -805,22 +806,22 @@ int main(int argc, char *argv[])
     gtk_window_set_default_size(GTK_WINDOW(window), 1200, 600);
     gtk_widget_show_all(window);
 
-    tabs=calloc(nhost,sizeof(GtkWidget*));
-    pages=calloc(nhost,sizeof(GtkWidget*));
-    titles=calloc(nhost,sizeof(GtkWidget*));
-    pproc=calloc(nhost,sizeof(PROC_T*));
-    nproc=calloc(nhost,sizeof(int));
-    cmdconnect=calloc(nhost,sizeof(GtkWidget*));
-    hsock=calloc(nhost, sizeof(int));
+    tabs=mycalloc(nhost,GtkWidget*);
+    pages=mycalloc(nhost,GtkWidget*);
+    titles=mycalloc(nhost,GtkWidget*);
+    pproc=mycalloc(nhost,PROC_T*);
+    nproc=mycalloc(nhost,int);
+    cmdconnect=mycalloc(nhost,GtkWidget*);
+    hsock=mycalloc(nhost,int);
     for(int i=0; i<nhost; i++){
 	hsock[i]=-1;
     }
-    usage_cpu=calloc(nhost,sizeof(double));
-    usage_mem=calloc(nhost,sizeof(double));
-    usage_cpu2=calloc(nhost,sizeof(double));
-    usage_mem2=calloc(nhost,sizeof(double));
-    prog_cpu=calloc(nhost, sizeof(GtkWidget *));
-    prog_mem=calloc(nhost, sizeof(GtkWidget *));
+    usage_cpu=mycalloc(nhost,double);
+    usage_mem=mycalloc(nhost,double);
+    usage_cpu2=mycalloc(nhost,double);
+    usage_mem2=mycalloc(nhost,double);
+    prog_cpu=mycalloc(nhost,GtkWidget *);
+    prog_mem=mycalloc(nhost,GtkWidget *);
 
     pango_active=pango_attr_list_new();
     pango_down=pango_attr_list_new();

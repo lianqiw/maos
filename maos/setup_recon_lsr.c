@@ -79,7 +79,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
     if(!parms->recon.modal){
 	if(parms->lsr.alg!=2){
 	    /* Not SVD, need low rank terms for piston/waffle mode constraint. */
-	    NW=cellnew(ndm,1);
+	    NW=dcellnew(ndm,1);
 	    int nmod=2;/*two modes. */
 	    for(int idm=0; idm<ndm; idm++){
 		loc_create_map(recon->aloc->p[idm]);
@@ -124,8 +124,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     /*Low rank terms for low order wfs. Only in Integrated tomography. */
-    dcell *ULo=cellnew(ndm,nwfs);
-    dcell *VLo=cellnew(ndm,nwfs);
+    dcell *ULo=dcellnew(ndm,nwfs);
+    dcell *VLo=dcellnew(ndm,nwfs);
     dcell*  pULo=ULo/*PDELL*/;
     dcell*  pVLo=VLo/*PDELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){

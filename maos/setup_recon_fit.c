@@ -31,7 +31,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	info2("Generating HXF");TIC;tic;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	recon->HXF=cellnew(nfit, npsr);
+	recon->HXF=dspcellnew(nfit, npsr);
 	dspcell* HXF=recon->HXF/*PDSPCELL*/;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
@@ -102,7 +102,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		    dspfree(tmp);
 		}
 	    }
-	    recon->FR.V=cellnew(npsr, 1);
+	    recon->FR.V=dcellnew(npsr, 1);
 	    dmat **FRV=recon->FR.V->p;  
 	
 	    for(int ips=0; ips<npsr; ips++){
@@ -126,7 +126,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->FR.V=NULL;
 	}
 	/*Always need FR.U as it is used to do FL.U, FL.V */
-	recon->FR.U=cellnew(ndm, 1);
+	recon->FR.U=dcellnew(ndm, 1);
 	dmat **FRU=recon->FR.U->p;
 	
 	for(int idm=0; idm<ndm; idm++){    

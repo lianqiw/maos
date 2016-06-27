@@ -34,7 +34,7 @@ struct stfun_t{
    Initialize the stfun data.
 */
 stfun_t *stfun_init(long nx, long ny, double *amp){
-    stfun_t *A=calloc(1, sizeof(struct stfun_t));
+    stfun_t *A=mycalloc(1,struct stfun_t);
     A->count=0;
     A->hat0=cnew(nx*2, ny*2);
     A->hat1=cnew(nx*2, ny*2);

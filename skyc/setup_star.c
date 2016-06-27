@@ -36,7 +36,7 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
     int nstar=coord->ny;
     dmat* pc=coord;
     int nwvl=parms->maos.nwvl;
-    STAR_S *star=calloc(nstar, sizeof(STAR_S));
+    STAR_S *star=mycalloc(nstar,STAR_S);
     double ngsgrid=parms->maos.ngsgrid/206265.;
     double r2=pow(parms->skyc.patfov/206265./2.,2);
     double keepout=pow(parms->skyc.keepout/206265.,2);
@@ -85,13 +85,13 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
 	}
 	star[jstar].mags=dnew(nwvl,1);
 	memcpy(star[jstar].mags->p, PCOL(pc,istar)+2, sizeof(double)*nwvl);
-	star[jstar].use=calloc(parms->maos.npowfs, sizeof(int));
+	star[jstar].use=mycalloc(parms->maos.npowfs,int);
 	jstar++;
     }
     if(jstar<nstar){
 	/*warning2("%d stars dropped\n", nstar-jstar); */
 	coord->ny=jstar;
-	star=realloc(star, jstar*sizeof(STAR_S));
+	star=myrealloc(star, jstar,STAR_S);
     }
     return star;
 }
@@ -106,7 +106,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
     const double ngsgrid=parms->maos.ngsgrid;
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
-	stari->pistat=calloc(npowfs, sizeof(PISTAT_S));
+	stari->pistat=mycalloc(npowfs,PISTAT_S);
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 	double thxnorm=thetax/ngsgrid;
@@ -183,7 +183,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    }
 
 	    stari->pistat[ipowfs].psf=avgpsf;/*PSF is in corner. */
-	    stari->pistat[ipowfs].neaspec=cellnew(nsa*2, 1);
+	    stari->pistat[ipowfs].neaspec=dcellnew(nsa*2, 1);
 	    for(int ig=0; ig<nsa*2; ig++){
 		dmat *tmp=0;
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -221,7 +221,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
     const double r2=pow(parms->skyc.patfov/206265./2.,2);
     dmat* rnefs=parms->skyc.rnefs;
     for(int istar=0; istar<nstar; istar++){
-	star[istar].siglev=cellnew(npowfs, 1);
+	star[istar].siglev=dcellnew(npowfs, 1);
 	star[istar].bkgrnd=dnew(npowfs,1);
 	star[istar].siglevtot=dnew(npowfs,1);
 	/*Normalized angular distance */
@@ -285,13 +285,13 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    //size of PSF
 	    const double sigma_theta=parms->skyc.wvlmean/parms->maos.dxsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
-	    pistat->i0=cellnew(nsa,nwvl);
-	    pistat->gx=cellnew(nsa,nwvl);
-	    pistat->gy=cellnew(nsa,nwvl);
+	    pistat->i0=dcellnew(nsa,nwvl);
+	    pistat->gx=dcellnew(nsa,nwvl);
+	    pistat->gy=dcellnew(nsa,nwvl);
 	    
-	    pistat->i0s=cellnew(nsa,1);
-	    pistat->gxs=cellnew(nsa,1);
-	    pistat->gys=cellnew(nsa,1);
+	    pistat->i0s=dcellnew(nsa,1);
+	    pistat->gxs=dcellnew(nsa,1);
+	    pistat->gys=dcellnew(nsa,1);
 
 	    dcell*  psf=pistat->psf;
 	    dcell*  i0=pistat->i0;
@@ -316,9 +316,9 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    }
 	    const double pixtheta=parms->skyc.pixtheta[ipowfs];
 	    int ndtrat=parms->skyc.ndtrat;
-	    pistat->mtche=calloc(ndtrat, sizeof(dcell*));
-	    pistat->sanea=cellnew(ndtrat,1);
-	    pistat->sanea0=cellnew(ndtrat,1);
+	    pistat->mtche=mycalloc(ndtrat,dcell*);
+	    pistat->sanea=dcellnew(ndtrat,1);
+	    pistat->sanea0=dcellnew(ndtrat,1);
 	    pistat->snr=dnew(ndtrat,1);
 	    dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
 
@@ -391,7 +391,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
     const int nmod=parms->maos.nmod;
     assert(nmod>=5 && nmod<=6);
     for(int istar=0; istar<nstar; istar++){
-	star[istar].g=cellnew(npowfs, 1);
+	star[istar].g=dcellnew(npowfs, 1);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    const double thetax=star[istar].thetax;
@@ -433,7 +433,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
-	stari->ztiltout=cellnew(npowfs, 1);
+	stari->ztiltout=dcellnew(npowfs, 1);
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
@@ -460,7 +460,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 			/*info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi); */
 			continue;
 		    }
-		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    fnztilt[iy][ix]=myalloca(PATH_MAX, char);
 		    if(parms->skyc.usephygrad){
 			warning_once("Using phygrad\n");
 			snprintf(fnztilt[iy][ix],PATH_MAX,"%s/phygrad/phygrad_seed%d_sa%d_x%g_y%g",
@@ -469,7 +469,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 			snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 				 dirstart,seed,msa,thx,thy);
 		    }
-		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    fngoff[iy][ix]=myalloca(PATH_MAX, char);
 		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_sa%d_x%g_y%g",
 			     dirstart,msa,thx,thy);
 		    if(!zfexist(fnztilt[iy][ix])){
@@ -523,7 +523,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 		    }/* if(fnwvf) */
 		    if(fngoff[iy][ix] && zfexist(fngoff[iy][ix])){
 			if(!stari->goff){
-			    stari->goff=cellnew(npowfs, 1);
+			    stari->goff=dcellnew(npowfs, 1);
 			}
 			dmat *tmp=dread("%s", fngoff[iy][ix]);
 			dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);
@@ -550,7 +550,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
-	stari->wvfout=calloc(npowfs, sizeof(ccell**));
+	stari->wvfout=mycalloc(npowfs,ccell**);
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
@@ -581,7 +581,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			/*info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi); */
 			continue;
 		    }
-		    fnwvf[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    fnwvf[iy][ix]=myalloca(PATH_MAX, char);
 		    snprintf(fnwvf[iy][ix],PATH_MAX,"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
 	
@@ -623,7 +623,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 		    
 			if(!stari->wvfout[ipowfs]){
-			    stari->wvfout[ipowfs]=calloc(nstep,sizeof(ccell*));
+			    stari->wvfout[ipowfs]=mycalloc(nstep,ccell*);
 			}
 			ccell **pwvfout=stari->wvfout[ipowfs];
 			for(long istep=0; istep<nstep; istep++){
@@ -696,7 +696,7 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
     }
     if(jstar!=nstar){
 	nstar=jstar;
-	star=realloc(star,sizeof(STAR_S)*jstar);
+	star=myrealloc(star,jstar,STAR_S);
     }
     *nstarout=nstar;
     if(parms->skyc.verbose){

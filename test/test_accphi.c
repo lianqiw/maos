@@ -62,7 +62,7 @@ static void test_accuracy(int argc, char **argv){
     loc_t *locin=mksqloc(screen->nx,screen->ny,dx,dx,screen->ox,screen->oy);
     
     //pts_t *pts=realloc(mkannloc(D, 0, 1./2.,0), sizeof(pts_t));
-    pts_t *pts=realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));
+    pts_t *pts=(pts_t*)realloc(mksqloc_auto(D/dsa, D/dsa, dsa, dsa), sizeof(pts_t));
     pts->dx=dx;
     pts->dy=dx;
     pts->nx=dsa/dx;
@@ -95,10 +95,10 @@ static void test_accuracy(int argc, char **argv){
     diff14=0;
     diff15=0;
 	
-    phi_pts=calloc(loc->nloc, sizeof(double));
-    phi_loc=calloc(loc->nloc, sizeof(double));
-    phi_stat=calloc(loc->nloc, sizeof(double));
-    phi_loc2loc=calloc(loc->nloc, sizeof(double));
+    phi_pts=mycalloc(loc->nloc,double);
+    phi_loc=mycalloc(loc->nloc,double);
+    phi_stat=mycalloc(loc->nloc,double);
+    phi_loc2loc=mycalloc(loc->nloc,double);
 
     map_t *map1=mapnew2(loc->map);
     prop_grid_map(screen, map1, -2, displacex, displacey, scale, wrap, 0,0);
@@ -127,7 +127,7 @@ static void test_accuracy(int argc, char **argv){
     prop_nongrid(locin, screen->p,loc, phi_loc2loc, 1,displacex, displacey, scale,0,0);
     toc("nongrid\t");
 	
-    phi_h=calloc(loc->nloc,sizeof(double));
+    phi_h=mycalloc(loc->nloc,double);
  
     tic;
     dsp *hfor=mkh(locin, loc, displacex, displacey, scale);
@@ -138,11 +138,11 @@ static void test_accuracy(int argc, char **argv){
     toc("mul h\t\t");
 
 
-    phi_cub=calloc(loc->nloc,sizeof(double));
-    phi_cub2=calloc(loc->nloc,sizeof(double));
-    double *phi_cub3=calloc(loc->nloc,sizeof(double));
-    double *phi_cub4=calloc(loc->nloc,sizeof(double));
-    phi_cubh=calloc(loc->nloc, sizeof(double));
+    phi_cub=mycalloc(loc->nloc,double);
+    phi_cub2=mycalloc(loc->nloc,double);
+    double *phi_cub3=mycalloc(loc->nloc,double);
+    double *phi_cub4=mycalloc(loc->nloc,double);
+    phi_cubh=mycalloc(loc->nloc,double);
 
     prop_nongrid_cubic(locin,screen->p,loc,phi_cub,-2, displacex, displacey, scale, cubic,0,0);
     tic;

@@ -54,9 +54,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     dspcellfree(recon->sanea);
     dspcellfree(recon->saneai);
     dspcellfree(recon->saneal);
-    dspcell *sanea=recon->sanea=cellnew(nwfs,nwfs);//The subaperture NEA
-    dspcell *saneal=recon->saneal=cellnew(nwfs,nwfs);//The LL' decomposition of sanea
-    dspcell *saneai=recon->saneai=cellnew(nwfs,nwfs);//The inverse of sanea
+    dspcell *sanea=recon->sanea=dspcellnew(nwfs,nwfs);//The subaperture NEA
+    dspcell *saneal=recon->saneal=dspcellnew(nwfs,nwfs);//The LL' decomposition of sanea
+    dspcell *saneai=recon->saneai=dspcellnew(nwfs,nwfs);//The inverse of sanea
     info2("Recon NEA:\n");
     
     for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -101,9 +101,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    if(saneaxy->ny>1 || iwfs==iwfs0 || parms->wfs[iwfs].sabad){
 		int ind=saneaxy->ny>1?parms->powfs[ipowfs].wfsind->p[iwfs]:0;
-		dcell *saneaxyi=cellnew(nsa, 1);
-		dcell *saneaxyl=cellnew(nsa, 1);
-		dcell *saneaixy=cellnew(nsa, 1);
+		dcell *saneaxyi=dcellnew(nsa, 1);
+		dcell *saneaxyl=dcellnew(nsa, 1);
+		dcell *saneaixy=dcellnew(nsa, 1);
 		for(int isa=0; isa<nsa; isa++){
 		    dcp(&saneaxyi->p[isa], IND(saneaxy, isa, ind));
 		    saneaxyl->p[isa]=dchol(saneaxyi->p[isa]);
@@ -207,7 +207,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=dspnewdiag(nsa*2,NULL, pixtheta*1e4);
 	    recon->neam->p[iwfs]=INFINITY;
 	}
-	char *neatype;
+	const char *neatype;
 	if(parms->powfs[ipowfs].neareconfile){
 	    neatype="FILE";
 	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
@@ -303,7 +303,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		error("Wrong format of loaded L2\n");
 	    }
 	}else{
-	    recon->L2=cellnew(npsr,npsr);
+	    recon->L2=dspcellnew(npsr,npsr);
 	    for(int ips=0; ips<npsr; ips++){
 		if(parms->tomo.square){/*periodic bc */
 		    recon->L2->p[ips+npsr*ips]=mklaplacian_map
@@ -323,14 +323,14 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
     }
     if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
-	recon->invpsd=calloc(1, sizeof(INVPSD_T));
+	recon->invpsd=mycalloc(1,INVPSD_T);
 	if(parms->load.cxx){
 	    recon->invpsd->invpsd=dcellread("%s",parms->load.cxx);
 	    if(recon->invpsd->invpsd->nx!=npsr || recon->invpsd->invpsd->ny!=1){
 		error("Wrong format of loaded invpsd\n");
 	    }
 	}else{
-	    dcell* invpsd=recon->invpsd->invpsd=cellnew(npsr,1);
+	    dcell* invpsd=recon->invpsd->invpsd=dcellnew(npsr,1);
 	    for(int ips=0; ips<npsr; ips++){
 		long nx=recon->xmap->p[ips]->nx;
 		long ny=recon->xmap->p[ips]->ny;
@@ -345,7 +345,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	}
 	dcellscale(recon->invpsd->invpsd, sqrt(parms->tomo.cxxscale*TOMOSCALE));
 	
-	ccell* fftxopd=recon->invpsd->fftxopd=cellnew(recon->npsr, 1);
+	ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
 	    fftxopd->p[ips]=cnew(recon->xmap->p[ips]->nx, recon->xmap->p[ips]->ny);
 	    //cfft2plan(fftxopd->p[ips],-1);
@@ -355,14 +355,14 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->invpsd->square = parms->tomo.square;
     }
     if(parms->tomo.cxx==2){
-	recon->fractal=calloc(1, sizeof(FRACTAL_T));
+	recon->fractal=mycalloc(1,FRACTAL_T);
 	recon->fractal->xloc=recon->xloc;
 	recon->fractal->r0=parms->atmr.r0;
 	recon->fractal->L0=parms->atmr.L0;
 	recon->fractal->wt=parms->atmr.wt->p;
 	recon->fractal->scale=sqrt(parms->tomo.cxxscale*TOMOSCALE);
 	recon->fractal->ninit=parms->tomo.ninit;
-	dcell *xopd=recon->fractal->xopd=cellnew(npsr, 1);
+	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
 	    int nn=nextfftsize(MAX(recon->xmap->p[ips]->nx, recon->xmap->p[ips]->ny))+1;
 	    xopd->p[ips]=dnew(nn,nn);
@@ -373,7 +373,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	/*when add constraint, make sure the order of
 	  magnitude are at the same range.*/
 	dspcellfree(recon->ZZT);
-	recon->ZZT=cellnew(npsr,npsr);
+	recon->ZZT=dspcellnew(npsr,npsr);
 	for(int ips=0; ips<npsr; ips++){
 	    double r0=recon->r0;
 	    double dx=recon->xloc->p[ips]->dx;
@@ -522,9 +522,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	/*dspcellsym(recon->RL.M); */
 
 	/*Low rank terms for low order wfs. Only in Integrated tomography. */
-	dcell *ULo=cellnew(npsr,nwfs);
+	dcell *ULo=dcellnew(npsr,nwfs);
 	dcell*  pULo=ULo/*PDELL*/;
-	dcell *VLo=cellnew(npsr,nwfs);
+	dcell *VLo=dcellnew(npsr,nwfs);
 	dcell*  pVLo=VLo/*PDELL*/;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
@@ -667,7 +667,7 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
     read_self_cpu();
     dmat *t1=NULL;
     if(recon->MVM){//MVM
-	dspcell *sanealhi=cellnew(parms->nwfsr, parms->nwfsr);
+	dspcell *sanealhi=dspcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfsr=0; iwfsr<parms->nwfsr; iwfsr++){
 	    int ipowfs=parms->wfsr[iwfsr].powfs;
 	    if(!parms->powfs[ipowfs].skip){
@@ -704,7 +704,7 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
 	toc2("LL ");tic;
 	t1=dcell2m(tmp2); dcellfree(tmp2);
     }
-    dcell *ecnn=cellnew(parms->evl.nevl, 1);
+    dcell *ecnn=dcellnew(parms->evl.nevl, 1);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(mask && !mask->p[ievl]) continue;
 	tic;
@@ -790,7 +790,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
     if(parms->nlgspowfs){
 	if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
 	    dmat *GMGngs=NULL;
-	    dcell *GMngs=cellnew(1, parms->nwfsr);
+	    dcell *GMngs=dcellnew(1, parms->nwfsr);
 	    /*Compute focus reconstructor from NGS Grads. fuse grads
 	      together to construct a single focus measurement*/
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
@@ -806,7 +806,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    dinvspd_inplace(GMGngs);
 	    /*A focus reconstructor from all NGS measurements.*/
-	    dcell *RFngsg=recon->RFngsg=cellnew(1, parms->nwfsr);
+	    dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
   
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		int ipowfs=parms->wfsr[iwfs].powfs;
@@ -822,7 +822,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 	  because each LGS may have different range error. Applyes to parms->wfs, not parms->wfsr.
 	*/
 	cellfree(recon->RFlgsg);
-	recon->RFlgsg=cellnew(parms->nwfs, parms->nwfs);
+	recon->RFlgsg=dcellnew(parms->nwfs, parms->nwfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!parms->powfs[ipowfs].llt) continue;
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -860,8 +860,8 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     cellfree(recon->RRtwfs);
-    dcell *GRtwfs=cellnew(parms->nwfsr, 1);
-    dspcell *neai=cellnew(parms->nwfsr, parms->nwfsr);
+    dcell *GRtwfs=dcellnew(parms->nwfsr, 1);
+    dspcell *neai=dspcellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip==2){//twfs
@@ -956,8 +956,8 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcellfree(recon->GXL);
     dcelladd(&recon->GXL, 1, recon->GXlo, 1);
     //NEA of low order WFS.
-    dcell *neailo=cellnew(parms->nwfsr, parms->nwfsr);
-    dcell *nealo=cellnew(parms->nwfsr, parms->nwfsr);
+    dcell *neailo=dcellnew(parms->nwfsr, parms->nwfsr);
+    dcell *nealo=dcellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
@@ -1138,7 +1138,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     if(parms->save.setup){
 	dcell *Qn=NULL;
 	dcellmm(&Qn, recon->HA, recon->MVModes, "nn", 1);
-	dcell *Qntt=cellnew(Qn->nx,Qn->ny);
+	dcell *Qntt=dcellnew(Qn->nx,Qn->ny);
 	dmat *TTploc=loc2mat(recon->floc,1);/*TT mode. need piston mode too! */
 	dmat *PTTploc=dpinv(TTploc,recon->W0);/*TT projector. no need w1 since we have piston. */
 	dfree(TTploc);
@@ -1383,7 +1383,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
  */
 void setup_recon_psd(RECON_T *recon, const PARMS_T *parms){
     if(!parms->recon.psd) return;
-    recon->Herr=cellnew(parms->evl.nevl, parms->ndm);
+    recon->Herr=dspcellnew(parms->evl.nevl, parms->ndm);
     double d1=parms->aper.d-parms->dm[0].dx;
     double d2=parms->aper.din+parms->dm[0].dx;
     double dx=(d1-d2)*0.1;

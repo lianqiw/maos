@@ -163,7 +163,7 @@ int main(int argc, const char *argv[]){
 	    wait_cpu(NTHREAD);
 	}
     }
-    thread_new((thread_fun)scheduler_listen, maos_daemon);
+    thread_new((thread_fun)scheduler_listen, (void*)maos_daemon);
     setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     free(scmd);
     free(arg->dirout);

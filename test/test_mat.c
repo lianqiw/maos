@@ -74,7 +74,7 @@ static void test_d2cell(){
     dfree(A2);
 
     A=dcellread("ccell.bin");
-    long *dims=calloc(A->nx,sizeof(long));
+    long *dims=mycalloc(A->nx,long);
     for(int ix=0; ix<A->nx; ix++){
 	dims[ix]=A->p[ix]->nx;
     }
@@ -311,13 +311,13 @@ static void test_expm(){
     exit(0);
 }
 static void test_mm(){
-    dcell *A=cellnew(1,1);
-    dcell *B=cellnew(1,1);
+    dcell *A=dcellnew(1,1);
+    dcell *B=dcellnew(1,1);
     A->p[0]=dnew(3,4);
     dset(A->p[0],1);
     B->p[0]=dnew(4,5);
     dset(B->p[0],1);
-    dcell *C=dcellmm2(A,B,"nn");
+    dcell *C=(dcell*)dcellmm2(A,B,"nn");
     writebin(A, "A");
     writebin(B, "B");
     writebin(C, "C");

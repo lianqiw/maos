@@ -106,8 +106,8 @@ void mapwritedata(file_t *fp, map_t *map){
    convert a dmat to map_t.
 */
 map_t* d2map(dmat *in){
-    map_t *map=realloc(dref(in), sizeof(map_t));
-    memset((void*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
+    map_t *map=(map_t*)myrealloc(dref(in), sizeof(map_t),char);
+    memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
     char *header=in->header;
     map->iac=0;
     map->ox=search_header_num(header,"ox");
@@ -138,7 +138,7 @@ map_t* d2map(dmat *in){
  * convert a mmap'ed dcell to map_t array
  */
 mapcell *dcell2map(dcell *in){
-    mapcell *map=cellnew(in->nx, in->ny);
+    mapcell *map=(mapcell*)cellnew(in->nx, in->ny);
     for(long i=0; i<in->nx*in->ny; i++){
 	if(!in->p[i]->header && in->header){
 	    in->p[i]->header=strdup(in->header);
@@ -185,8 +185,8 @@ map_t *mapreaddata(file_t *fp, header_t *header){
    convert a dmat to map_t.
 */
 rmap_t* d2rmap(dmat *in){
-    rmap_t *map=realloc(dref(in), sizeof(rmap_t));
-    memset((void*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
+    rmap_t *map=(rmap_t*)myrealloc(dref(in), sizeof(rmap_t),char);
+    memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
     char *header=in->header;
     if(!in->header){
 	error("this dmat has no header\n");
@@ -211,7 +211,7 @@ rmap_t* d2rmap(dmat *in){
  */
 rmap_t **dcell2rmap(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
-    rmap_t **map=calloc(in->nx*in->ny, sizeof(rmap_t*));
+    rmap_t **map=(rmap_t**)mycalloc(in->nx*in->ny,rmap_t*);
     for(long i=0; i<in->nx*in->ny; i++){
 	map[i]=d2rmap(in->p[i]);
     }

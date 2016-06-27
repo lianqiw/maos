@@ -33,7 +33,7 @@
     R X(std)(const X(mat) *in) CHECK_UNUSED_RESULT;			\
     void X(randu)(X(mat) *A, const T mean, rand_t *rstat);		\
     void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);		\
-    void X(scale)(X(mat) *A, R w);					\
+    void X(scale)(X(mat) *A, T w);					\
     T X(inn)(const X(mat)*A, const X(mat) *B);				\
     T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \
     T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT; \

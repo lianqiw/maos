@@ -35,7 +35,7 @@
    Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell **xout, const void *A_, const dcell *xin, const double alpha){
-    const MUV_T *A = A_;//A_ is declared void for cg to use without casting.
+    const MUV_T *A = (const MUV_T*)A_;//A_ is declared void for cg to use without casting.
     if(A->M && xin){
 	dcellmm(xout, A->M, xin, "nn", alpha);
 	if(A->U && A->V){
@@ -56,7 +56,7 @@ void muv(dcell **xout, const void *A_, const dcell *xin, const double alpha){
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
    U,V are low rank.  */
 void muv_trans(dcell **xout, const void *A_, const dcell *xin, const double alpha){
-    const MUV_T *A = A_;
+    const MUV_T *A = (const MUV_T*)A_;
     if(A->M){
 	if(!xin) return;
 	dcellmm(xout, A->M, xin, "tn", alpha);
@@ -88,7 +88,7 @@ typedef struct{
    Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb):
    \f$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha\f$; U,V are low rank. */
 void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
-    const MUV_IB_T *C=B;
+    const MUV_IB_T *C=(const MUV_IB_T*)B;
     int xb=C->xb;
     int yb=C->yb;
     const MUV_T *A=C->A;
@@ -99,7 +99,7 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     }
     assert(A->M);/*Don't support A->Mfun yet.  */
     if(!*xout){
-	*xout=cellnew(A->M->nx, xin->ny);
+	*xout=dcellnew(A->M->nx, xin->ny);
     }
     if(IND(A->M, xb, yb)->id==M_DBL){
 	dmm(&(*xout)->p[xb], 1, dmat_cast(IND(A->M, xb, yb)), xin->p[yb], "nn", alpha);
@@ -224,9 +224,9 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     int nb=A->M->nx;
     A->nb=nb;
     if(use_svd){
-	A->MIB=cellnew(nb,1);
+	A->MIB=dcellnew(nb,1);
     }else{
-	A->CB=calloc(nb, sizeof(spchol*));
+	A->CB=mycalloc(nb,spchol*);
     }
     for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 	if(use_svd){
@@ -251,8 +251,8 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	dcell *V2=dcellreduce(A->V, 2);
 	dcellfree(A->V); A->V=V2;
 
-	A->UpB=cellnew(A->U->nx, A->U->ny);	
-	A->VpB=cellnew(A->V->nx, A->V->ny);	
+	A->UpB=dcellnew(A->U->nx, A->U->ny);	
+	A->VpB=dcellnew(A->V->nx, A->V->ny);	
 	for(int ib=0; ib<nb; ib++){
 	    muv_direct_prep_lowrank(&A->UpB->p[ib], 
 				    &A->VpB->p[ib], 
@@ -302,7 +302,7 @@ void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
     if(A->MI){
 	dmat *x1=NULL;
 	dmulsp(&x1, A->MI, xin, "nn", 1);
-	dmm((void*)&xout, 0, x1, A->MI, "nt", 1);
+	dmm((dmat**)&xout, 0, x1, A->MI, "nt", 1);
 	dfree(x1);
     }else{
 	dsp *x1=chol_spsolve(A->C, xin);
@@ -347,7 +347,7 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
 void muv_direct_solve(dcell **xout, const MUV_T *A, dcell *xin){
     if(!xin) return;
     if(xin->nx*xin->ny==1){/*there is only one cell. */
-	if(!*xout) *xout=cellnew(1,1);
+	if(!*xout) *xout=dcellnew(1,1);
 	muv_direct_solve_mat(&((*xout)->p[0]), A, xin->p[0]);
     }else{
 	dmat *xin2=dcell2m(xin);
@@ -374,8 +374,8 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
     dcell *x0=*px; /*Just a convenient pointer. */
     dcell *c0=dcellnew2(b);/*Auxillary array */
     MUV_IB_T B={A,-1,-1};
-    dcell *x0b=cellnew(nb,1);
-    dcell *c0b=cellnew(nb,1);
+    dcell *x0b=dcellnew(nb,1);
+    dcell *c0b=dcellnew(nb,1);
     if(A->pfun){
 	warning("We don't handle preconditioner yet\n");
     }

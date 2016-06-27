@@ -140,7 +140,7 @@ static int list_search(list_t **head, list_t **node, const char *key, int add){
     int ans=p?1:0;
     if(add){
 	if(!p){
-	    p=calloc(1, sizeof(list_t));
+	    p=mycalloc(1,list_t);
 	    p->key=strdup(key);
 	    p->next=*head;
 	    *head=p;
@@ -354,7 +354,7 @@ int draw_current(const char *fig, const char *fn){
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
 */
-void plot_points(const char *fig,          /**<Category of the figure*/
+void plot_points(const char *fig,    /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
 		 const dcell *dc,    /**<If loc isempty, use cell to plot curves*/
@@ -362,7 +362,7 @@ void plot_points(const char *fig,          /**<Category of the figure*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 const char *xylog,  /**<Whether use logscale for x, y*/
 		 const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
-		 char **legend,      /**<ngroup number of char**/
+		 const char *const* legend, /**<ngroup number of char**/
 		 const char *title,  /**<title of the plot*/
 		 const char *xlabel, /**<x axis label*/
 		 const char *ylabel, /**<y axis label*/
@@ -473,57 +473,55 @@ struct imagesc_t{
 };
 static void imagesc_do(struct imagesc_t *data){
     LOCK(lock);
-    if(open_drawdaemon()){
-	goto end;
+    if(!open_drawdaemon()){
+	char *fig=data->fig;
+	long nx=data->nx;
+	long ny=data->ny;
+	double *limit=data->limit;
+	double *zlim=data->zlim;
+	double *p=data->p;
+	char *title=data->title;
+	char *xlabel=data->xlabel;
+	char *ylabel=data->ylabel;
+	char *fn=data->fn;
+	for(int ifd=0; ifd<sock_ndraw; ifd++){
+	    /*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+	    int sock_draw=sock_draws[ifd].fd;
+	    if(!check_figfn(ifd, fig, fn, 1)) continue;
+	    int32_t header[2];
+	    header[0]=nx;
+	    header[1]=ny;
+	    STWRITEINT(DRAW_START);
+	    STWRITEINT(DRAW_DATA);
+	    STWRITE(header, sizeof(int32_t)*2);
+	    STWRITE(p, sizeof(double)*nx*ny);
+	    if(zlim){
+		STWRITEINT(DRAW_ZLIM);
+		STWRITE(zlim,sizeof(double)*2);
+	    }
+	    if(limit){/*xmin,xmax,ymin,ymax */
+		STWRITEINT(DRAW_LIMIT);
+		STWRITE(limit, sizeof(double)*4);
+	    }
+	    if(fn){
+		STWRITECMDSTR(DRAW_NAME,fn);
+	    }
+	    STWRITECMDSTR(DRAW_FIG,fig);
+	    STWRITECMDSTR(DRAW_TITLE,title);
+	    STWRITECMDSTR(DRAW_XLABEL,xlabel);
+	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
+	    STWRITEINT(DRAW_END);
+	}
     }
-    char *fig=data->fig;
-    long nx=data->nx;
-    long ny=data->ny;
-    double *limit=data->limit;
-    double *zlim=data->zlim;
-    double *p=data->p;
-    char *title=data->title;
-    char *xlabel=data->xlabel;
-    char *ylabel=data->ylabel;
-    char *fn=data->fn;
-    for(int ifd=0; ifd<sock_ndraw; ifd++){
-	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-	int sock_draw=sock_draws[ifd].fd;
-	if(!check_figfn(ifd, fig, fn, 1)) continue;
-	int32_t header[2];
-	header[0]=nx;
-	header[1]=ny;
-	STWRITEINT(DRAW_START);
-	STWRITEINT(DRAW_DATA);
-	STWRITE(header, sizeof(int32_t)*2);
-	STWRITE(p, sizeof(double)*nx*ny);
-	if(zlim){
-	    STWRITEINT(DRAW_ZLIM);
-	    STWRITE(zlim,sizeof(double)*2);
-	}
-	if(limit){/*xmin,xmax,ymin,ymax */
-	    STWRITEINT(DRAW_LIMIT);
-	    STWRITE(limit, sizeof(double)*4);
-	}
-	if(fn){
-	    STWRITECMDSTR(DRAW_NAME,fn);
-	}
-	STWRITECMDSTR(DRAW_FIG,fig);
-	STWRITECMDSTR(DRAW_TITLE,title);
-	STWRITECMDSTR(DRAW_XLABEL,xlabel);
-	STWRITECMDSTR(DRAW_YLABEL,ylabel);
-	STWRITEINT(DRAW_END);
-    }
-  end:
-   UNLOCK(lock);
-   free(data->fig);
-   free(data->limit);
-   free(data->zlim);
-   free(data->p);
-   free(data->title);
-   free(data->xlabel);
-   free(data->ylabel);
-   free(data->fn);
+    UNLOCK(lock);
+    free(data->fig);
+    free(data->limit);
+    free(data->zlim);
+    free(data->p);
+    free(data->title);
+    free(data->xlabel);
+    free(data->ylabel);
+    free(data->fn);
 }
 void imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
@@ -549,17 +547,17 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	data.nx=nx;
 	data.ny=ny;
 #define datastrdup(x) data.x=(x)?strdup(x):0
-#define datamemdup(x, size)			\
-	if(x){					\
-	    data.x=malloc(size);		\
-	    memcpy(data.x, x, size);		\
-	}else{					\
-	    data.x=0;				\
+#define datamemdup(x, size,type)			\
+	if(x){						\
+	    data.x=mymalloc(size,type);			\
+	    memcpy(data.x, x,size*sizeof(type));	\
+	}else{						\
+	    data.x=0;					\
 	}
 	datastrdup(fig);
-	datamemdup(limit, 4*sizeof(double));
-	datamemdup(zlim, 2*sizeof(double));
-	datamemdup(p, nx*ny*sizeof(double));
+	datamemdup(limit, 4, double);
+	datamemdup(zlim, 2, double);
+	datamemdup(p, nx*ny, double);
 	datastrdup(title);
 	datastrdup(xlabel);
 	datastrdup(ylabel);
@@ -581,8 +579,8 @@ void imagesc_cmp_ri(const char *fig, long nx, long ny, const double *limit, cons
     if(disable_draw || !draw_current(fig, fn)) return;
 
     double *pr,*pi;
-    pr=malloc(nx*ny*sizeof(double));
-    pi=malloc(nx*ny*sizeof(double));
+    pr=mymalloc(nx*ny,double);
+    pi=mymalloc(nx*ny,double);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=creal(p[i]);
 	pi[i]=cimag(p[i]);
@@ -602,8 +600,8 @@ void imagesc_cmp_ap(const char *fig, long nx, long ny, const double *limit,const
     if(disable_draw || !draw_current(fig, fn)) return;
     double *pr,*pi;
     int isreal=1;
-    pr=malloc(nx*ny*sizeof(double));
-    pi=calloc(nx*ny,sizeof(double));
+    pr=mymalloc(nx*ny,double);
+    pi=mycalloc(nx*ny,double);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=cabs(p[i]);
 	if(pr[i]>1.e-10){
@@ -629,7 +627,7 @@ void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,cons
     format2fn;
     if(disable_draw|| !draw_current(fig, fn)) return;
     double *pr;
-    pr=malloc(nx*ny*sizeof(double));
+    pr=mymalloc(nx*ny,double);
     for(int i=0; i<nx*ny; i++){
 	pr[i]=cabs(p[i]);
     }
@@ -720,7 +718,7 @@ void drawloc(const char *fig, loc_t *loc, double *zlim,
     int nxm=loc->map->nx;
     int nx=loc->map->nx-npad*2;
     int ny=loc->map->ny-npad*2;
-    double *opd0=calloc(nx*ny, sizeof(double));
+    double *opd0=mycalloc(nx*ny,double);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    opd0[ix+iy*nx]=(loc->map->p[(ix+npad)+(iy+npad)*nxm]>0);
@@ -785,7 +783,7 @@ void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *am
     double ampthres;
     dmaxmin(amp, loc->nloc, &ampthres, 0);
     ampthres*=0.5;
-    double *opd0=calloc(nx*ny, sizeof(double));
+    double *opd0=mycalloc(nx*ny,double);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
 	    long ii=loc->map->p[(ix+npad)+(iy+npad)*nxm]-1;

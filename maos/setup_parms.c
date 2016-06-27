@@ -214,12 +214,12 @@ INLINE int sum_dblarr(int n, double *a){
 #define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
-    readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
+    readcfg_##A##arr_n((&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
 #define READ_POWFS_RELAX(A,B)						\
-    readcfg_##A##arr_nmax((void*)(&A##tmp), npowfs, "powfs."#B);	\
+    readcfg_##A##arr_nmax((&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
@@ -231,7 +231,7 @@ INLINE int sum_dblarr(int n, double *a){
 static void readcfg_powfs(PARMS_T *parms){
     int     npowfs,i;
     parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
-    parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
+    parms->powfs=mycalloc(parms->npowfs,POWFS_CFG_T);
     int    *inttmp=NULL;
     double *dbltmp=NULL;
     char  **strtmp=NULL;
@@ -375,7 +375,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
 	    open_config(powfsi->fnllt,prefix,0);
-	    powfsi->llt=calloc(1, sizeof(LLT_CFG_T));
+	    powfsi->llt=mycalloc(1,LLT_CFG_T);
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    powfsi->llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
@@ -409,12 +409,12 @@ static void readcfg_powfs(PARMS_T *parms){
     free(strtmp);
 }
 #define READ_WFS(A,B)							\
-    readcfg_##A##arr_n((void*)(&A##tmp),nwfs,"wfs."#B);			\
+    readcfg_##A##arr_n((&A##tmp),nwfs,"wfs."#B);			\
     for(i=0; i<nwfs; i++){						\
 	parms->wfs[i].B = A##tmp[i];					\
     }									
 #define READ_WFS_RELAX(A,B)						\
-    readcfg_##A##arr_nmax((void*)(&A##tmp),nwfs,"wfs."#B);		\
+    readcfg_##A##arr_nmax((&A##tmp),nwfs,"wfs."#B);		\
     for(i=0; i<nwfs; i++){						\
 	parms->wfs[i].B = A##tmp[i];					\
     }									
@@ -425,7 +425,7 @@ static void readcfg_powfs(PARMS_T *parms){
 static void readcfg_wfs(PARMS_T *parms){
     int i;
     int nwfs=parms->nwfs=readcfg_peek_n("wfs.thetax");
-    parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
+    parms->wfs=mycalloc(parms->nwfs,struct WFS_CFG_T);
     double *dbltmp=NULL;
     int    *inttmp=NULL;
     char  **strtmp=NULL;
@@ -522,13 +522,13 @@ static void readcfg_wfs(PARMS_T *parms){
     free(strtmp);
 }
 #define READ_DM(A,B)					     \
-    readcfg_##A##arr_n((void*)(&A##tmp),ndm,"dm."#B);	     \
+    readcfg_##A##arr_n((&A##tmp),ndm,"dm."#B);	     \
     for(i=0; i<ndm; i++){				     \
 	parms->dm[i].B = A##tmp[i];			     \
     }							     
 
 #define READ_DM_RELAX(A,B) \
-    readcfg_##A##arr_nmax((void*)(&A##tmp),ndm,"dm."#B);     \
+    readcfg_##A##arr_nmax((&A##tmp),ndm,"dm."#B);     \
     for(i=0; i<ndm; i++){				     \
 	parms->dm[i].B = A##tmp[i];			     \
     }							     
@@ -539,7 +539,7 @@ static void readcfg_wfs(PARMS_T *parms){
 static void readcfg_dm(PARMS_T *parms){
     int ndm,i;
     ndm=parms->ndm=readcfg_peek_n("dm.ht");
-    parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
+    parms->dm=mycalloc(parms->ndm,struct DM_CFG_T);
     int* inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
@@ -588,12 +588,12 @@ static void readcfg_dm(PARMS_T *parms){
     free(dmattmp);
 }
 #define READ_MOAO(A,B)					      \
-    readcfg_##A##arr_n((void*)(&A##tmp),nmoao,"moao."#B);     \
+    readcfg_##A##arr_n((&A##tmp),nmoao,"moao."#B);     \
     for(i=0; i<nmoao; i++){				      \
 	parms->moao[i].B = A##tmp[i];			      \
     }							      
 #define READ_MOAO_RELAX(A,B)				      \
-    readcfg_##A##arr_nmax((void*)(&A##tmp),nmoao,"moao."#B);  \
+    readcfg_##A##arr_nmax((&A##tmp),nmoao,"moao."#B);  \
     for(i=0; i<nmoao; i++){				      \
 	parms->moao[i].B = A##tmp[i];			      \
     }							      
@@ -605,7 +605,7 @@ static void readcfg_moao(PARMS_T *parms){
     int nmoao=readcfg_peek_n("moao.dx");
     int i;
     parms->nmoao=nmoao;
-    parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
+    parms->moao=mycalloc(nmoao,MOAO_CFG_T);
     int *inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
@@ -2092,7 +2092,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
   
     if(parms->recon.glao){
-	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
+	parms->wfsr=mycalloc(parms->npowfs,WFS_CFG_T);
 	parms->nwfsr=parms->npowfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->wfsr[ipowfs].thetax=0;
@@ -2695,7 +2695,7 @@ static void print_parms(const PARMS_T *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
+PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override){
     if(!mainconf){
 	mainconf="default.conf";
     }
@@ -2714,7 +2714,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     free(config_path);
     open_config(mainconf,NULL,0);/*main .conf file. */
     open_config(extraconf, NULL, 1);
-    PARMS_T* parms=calloc(1, sizeof(PARMS_T));
+    PARMS_T* parms=mycalloc(1,PARMS_T);
     readcfg_sim(parms);
     readcfg_aper(parms);
     readcfg_atm(parms);

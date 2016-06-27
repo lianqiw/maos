@@ -126,7 +126,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dcell *merrm=cellnew(1,1);dcell *pmerrm=NULL;
+    dcell *merrm=dcellnew(1,1);dcell *pmerrm=NULL;
     const int nstep=aster->nstep?aster->nstep:parms->maos.nstep;
     dmat *mres=dnew(nmod,nstep);
     dmat* rnefs=parms->skyc.rnefs;
@@ -158,18 +158,18 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     }
     if(kalman){
 	kalman_init(kalman);
-	mpsol=cellnew(aster->nwfs, 1); //for psol grad.
+	mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
     }
     const long nwvl=parms->maos.nwvl;
     dcell **psf=0, **mtche=0, **ints=0;
     ccell *wvf=0,*wvfc=0, *otf=0;
     if(hasphy){
-	psf=calloc(aster->nwfs, sizeof(dcell*));
-	wvf=cellnew(aster->nwfs,1);
-	wvfc=cellnew(aster->nwfs,1);
-	mtche=calloc(aster->nwfs, sizeof(dcell*));
-	ints=calloc(aster->nwfs, sizeof(dcell*));
-	otf=cellnew(aster->nwfs,1);
+	psf=mycalloc(aster->nwfs,dcell*);
+	wvf=ccellnew(aster->nwfs,1);
+	wvfc=ccellnew(aster->nwfs,1);
+	mtche=mycalloc(aster->nwfs,dcell*);
+	ints=mycalloc(aster->nwfs,dcell*);
+	otf=ccellnew(aster->nwfs,1);
     
 	for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int ipowfs=aster->wfs[iwfs].ipowfs;
@@ -177,7 +177,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    wvf->p[iwfs]=cnew(ncomp,ncomp);
 	    wvfc->p[iwfs]=NULL;
-	    psf[iwfs]=cellnew(nsa,nwvl);
+	    psf[iwfs]=dcellnew(nsa,nwvl);
 	    //cfft2plan(wvf->p[iwfs], -1);
 	    if(parms->skyc.multirate){
 		mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[(int)aster->idtrats->p[iwfs]];
@@ -187,7 +187,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    otf->p[iwfs]=cnew(ncomp,ncomp);
 	    //cfft2plan(otf->p[iwfs],-1);
 	    //cfft2plan(otf->p[iwfs],1);
-	    ints[iwfs]=cellnew(nsa,1);
+	    ints[iwfs]=dcellnew(nsa,1);
 	    int pixpsa=parms->skyc.pixpsa[ipowfs];
 	    for(long isa=0; isa<nsa; isa++){
 		ints[iwfs]->p[isa]=dnew(pixpsa,pixpsa);

@@ -45,32 +45,32 @@ void imagesc_cmp_abs(const char *fig, long nx, long ny, const double *limit,cons
 		     const char *format,...) CHECK_ARG(10);
 void plot_points(const char *fig, long ngroup, loc_t **loc, const dcell *dc,
 		 const int32_t *style, const double *limit, const char *xylog, const dmat *cir, 
-		 char **legend, const char *title, const char *xlabel, const char *ylabel,
+		 const char *const* legend, const char *title, const char *xlabel, const char *ylabel,
 		 const char *format,...) CHECK_ARG(13);
 void ddraw(const char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...) CHECK_ARG(8);
 void cdraw(const char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
-	   const char*format,...) CHECK_ARG(8);
+	   const char *format,...) CHECK_ARG(8);
 void cdrawabs(const char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...) CHECK_ARG(8);
 void cdrawri(const char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
-	     const char*format,...) CHECK_ARG(8);
+	     const char *format,...) CHECK_ARG(8);
 
 void drawmap(const char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(7);
 void drawloc(const char *fig, loc_t *loc,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
-	     const char* format,...) CHECK_ARG(7);
+	     const char *format,...) CHECK_ARG(7);
 void drawopd(const char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel, 
-	     const char* format,...) CHECK_ARG(8);
+	     const char *format,...) CHECK_ARG(8);
 void drawopdamp(const char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
-		const char* format,...) CHECK_ARG(9);
+		const char *format,...) CHECK_ARG(9);
 
 #endif

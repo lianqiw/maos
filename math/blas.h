@@ -53,15 +53,15 @@ extern "C"{
 		 T*,const ptrdiff_t*, ptrdiff_t*);			\
     void X(ger)(ptrdiff_t*,ptrdiff_t*,T*,T*,ptrdiff_t*,T*,ptrdiff_t*,T*,ptrdiff_t*); \
     void X(gesv)(ptrdiff_t*,ptrdiff_t*,T*,ptrdiff_t*,ptrdiff_t*,T*,ptrdiff_t*,ptrdiff_t*); \
-    void X(potrf)(char* , ptrdiff_t* , T *, ptrdiff_t* , ptrdiff_t* );	\
+    void X(potrf)(const char* , ptrdiff_t* , T *, ptrdiff_t* , ptrdiff_t* );	\
 
 #define BLAS_DEF_REAL(X,T)						\
-    void X(gesvd)(char* jobu, char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
+    void X(gesvd)(const char* jobu, const char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
 		  ptrdiff_t* lda, T* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt, \
 		  T* work, ptrdiff_t* lwork, ptrdiff_t* info );		
 
 #define BLAS_DEF_COMP(X,T,R)						\
-    void X(gesvd)(char* jobu, char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
+    void X(gesvd)(const char* jobu, const char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
 		  ptrdiff_t* lda, R* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt, \
 		  T* work, ptrdiff_t* lwork, R*rwork, ptrdiff_t* info );		
 

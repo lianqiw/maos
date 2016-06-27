@@ -177,7 +177,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     remove(arg->confcmd);
     free(arg->conf);
     free(arg->confcmd);
-    PARMS_S *parms=calloc(1, sizeof(PARMS_S));
+    PARMS_S *parms=mycalloc(1,PARMS_S);
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
@@ -249,7 +249,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     info2("\n");
     {
 	//skip unwanted seeds
-	parms->fdlock=calloc(parms->maos.nseed, sizeof(int));
+	parms->fdlock=mycalloc(parms->maos.nseed,int);
 	char fn[81];
 	int nseed=0;
 	for(int i=0; i<parms->maos.nseed; i++){
@@ -297,7 +297,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    error("skyc.dtrats must be specified in descending order\n");
 	}
     }
-    parms->skyc.fss=calloc(parms->skyc.ndtrat, sizeof(double));
+    parms->skyc.fss=mycalloc(parms->skyc.ndtrat,double);
     parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
     if(parms->skyc.rne<0){
 	/* Uses the new noise model based on Roger's spread sheet and document

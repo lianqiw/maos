@@ -81,7 +81,7 @@ int server(int sock){
 	return -1;
     }
     info2("nstep=%d, nmin=%d, nmax=%d, nrep=%d\n", nstep,nmin, nmax, nrep);
-    buf2=malloc(nmax*nstep);
+    buf2=(char*)malloc(nmax*nstep);
     //warm up
     for(int i=0; i<10; i++){
 	if(stread(sock, buf2, nmax) || stwrite(sock, buf2, 64)){
@@ -109,7 +109,7 @@ int client(const char *hostname, int port, int nmin, int nmax, int nstep, int nr
 	warning("Unable to connecto to %s\n", hostname);
 	close(sock); return 1;
     }
-    buf1=malloc(nmax*nstep);
+    buf1=(char*)malloc(nmax*nstep);
     for(int i=0;i<10;i++){//warm up
 	stwrite(sock, buf1, nmax);
 	stread(sock, buf1, 64);
@@ -163,12 +163,12 @@ int mvm_server(int sock){
     if(type==1){//mvmfull_iwfs
 	totpix=pixpsa*nsa;
     }else{//mvmfull_real
-	saind=malloc((nsa+1)*sizeof(int));
+	saind=mymalloc((nsa+1),int);
 	if(streadintarr(sock, saind, nsa+1)){
 	    return -1;
 	}
     }
-    short *pix=malloc(sizeof(short)*totpix);
+    short *pix=mymalloc(totpix,short);
     if(type==1){
 	rand_t rseed;
 	seed_rand(&rseed, 1);

@@ -61,7 +61,7 @@ void mvm_client_send_m(dmat *mvmd, int ngpu){
     cmd[3]=mvmd->ny;
     info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
     WRITE_CMD(cmd);
-    float *fmvm=malloc(sizeof(float)*(mvmd->nx*mvmd->ny));
+    float *fmvm=mymalloc((mvmd->nx*mvmd->ny),float);
     for(int i=0; i<mvmd->nx*mvmd->ny; i++){
 	fmvm[i]=(float)(mvmd->p[i]*GSCALE1*ASCALE);
     }
@@ -88,7 +88,7 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 	    ngtot+=n;
 	}
     }
-    GTYPE *gall=malloc(ngtot*sizeof(GTYPE));
+    GTYPE *gall=mymalloc(ngtot,GTYPE);
     GTYPE *pgall=gall;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	if(!grad->p[iwfs]) continue;
@@ -103,7 +103,7 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 	    natot+=dm->p[idm]->nx;
 	}
     }
-    ATYPE *dmall=malloc(sizeof(ATYPE) *natot);
+    ATYPE *dmall=mymalloc(natot,ATYPE);
     ATYPE *pdmall=dmall;
     int neach=mvmsize;//testing parms->sim.mvmsize;
     if(neach<=0){//scan different sizes.

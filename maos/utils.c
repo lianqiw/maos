@@ -41,8 +41,8 @@
 /**
    Plot the loc, together with all beams
  */
-void plotloc(char *fig, const PARMS_T *parms, 
-	     loc_t *loc, double ht, char *format,...){
+void plotloc(const char *fig, const PARMS_T *parms, 
+	     loc_t *loc, double ht, const char *format,...){
     format2fn;
     int ncir=parms->evl.nevl + parms->fit.nfit + parms->nwfs;
     if(parms->sim.ncpa_calib){
@@ -98,7 +98,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 }
 /**
    ploted all the different beam directions as points. */
-void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
+static void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...){
     format2fn;
     int ncir=1;
     dmat *cir=dnew(4, ncir);
@@ -108,8 +108,8 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     IND(cir,3,0)=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     ngroup+=1;
-    loccell *locs=cellnew(ngroup, 1);
-    int32_t *style=calloc(ngroup, sizeof(int32_t));
+    loccell *locs=(loccell*)cellnew(ngroup, 1);
+    int32_t *style=mycalloc(ngroup,int32_t);
     int count=0;
     style[count]=(0xFF0000<<8)+(4<<4)+3;
     locs->p[count]=locnew(parms->evl.nevl, 0, 0);
@@ -239,11 +239,11 @@ static void print_usage(void){
    Parse command line arguments argc, argv
  */
 ARG_T * parse_args(int argc, const char *argv[]){
-    ARG_T *arg=calloc(1, sizeof(ARG_T));
+    ARG_T *arg=mycalloc(1,ARG_T);
     char *host=NULL;
     int nthread=0;
     ARGOPT_T options[]={
-	{"help",   'h',M_INT, 0, 1, print_usage, NULL},
+	{"help",   'h',M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"force",  'f',M_INT, 0, 0, &arg->force, NULL},
 	{"override",'O',M_INT,0, 0, &arg->override, NULL},
@@ -252,7 +252,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{"gpu",    'g',M_INT, 2, 0, &arg->gpus, &arg->ngpu},
 	{"ngpu",   'G',M_INT, 1, 0, &arg->ngpu2, NULL},
 	{"conf",   'c',M_STR, 1, 0, &arg->conf, NULL},
-	{"path",   'p',M_STR, 1, 1, addpath, NULL},
+	{"path",   'p',M_STR, 1, 1, (void*)addpath, NULL},
 	{"run",    'r',M_STR, 1, 0, &host, NULL},
 	{"server", 'S',M_INT, 0, 0, &arg->server,NULL},
 	{NULL,     0,  0,     0, 0, NULL, NULL}
@@ -434,7 +434,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *potf=intstat->potf->p[intstat->nsepsf>1?wfsind:0];
     cmat *potf2=0;
-    ccell *otf=cellnew(nwvl,1);
+    ccell *otf=ccellnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	otf->p[iwvl]=cnew(potf->p[0]->nx, potf->p[0]->ny);
     }
@@ -450,24 +450,24 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     }
     int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
     double *srot=NULL;
-    const cmat ***petf=NULL;
+    cmat ***petf=NULL;
     void (*pccwm)(cmat*,const cmat*)=NULL;
     if(nllt){
 	srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
-	petf=calloc(nwvl, sizeof(void*));
+	petf=mycalloc(nwvl,cmat**);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfsim[iwvl].p1){
 		pccwm=ccwmcol;
 		if(powfs[ipowfs].etfsim[iwvl].p1->ny==1)
-		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p1->p;
+		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p1->p;
 		else
-		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p1->p+wfsind*nsa;
+		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p1->p+wfsind*nsa;
 	    }else{
 		pccwm=ccwm;
 		if(powfs[ipowfs].etfsim[iwvl].p2->ny==1)
-		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p2->p;
+		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p2->p;
 		else
-		    petf[iwvl]=(void*)powfs[ipowfs].etfsim[iwvl].p2->p+wfsind*nsa;
+		    petf[iwvl]=powfs[ipowfs].etfsim[iwvl].p2->p+wfsind*nsa;
 	    }
 	}
     }
@@ -489,8 +489,8 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     dmat* pgnfxy=gnfxy/*PDMAT*/;
     dmat* pgnfra=gnfra/*PDMAT*/;
     const int ndir=4;
-    char *dirs[]={"x", "y", "r", "a"};
-    char *types[]={"","MF", "CoG", "MAP"};
+    const char *dirs[]={"x", "y", "r", "a"};
+    const char *types[]={"","MF", "CoG", "MAP"};
     if(parms->powfs[ipowfs].mtchcr){
 	types[1]="MFC";
     }
@@ -716,7 +716,7 @@ static double mapfun(double *x, mapdata_t *info){
     int nsa=fotf->nx;
     int nwvl=fotf->ny;
     if(!otf){
-	info->otf=cellnew(nwvl,1);
+	info->otf=ccellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    info->otf->p[iwvl]=cnew(info->fotf->p[0]->nx, info->fotf->p[0]->ny);
 	    //cfft2plan(info->otf->p[iwvl], 1);

@@ -47,7 +47,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	memset(*res, 0, sizeof(char*)*len);
     }else{
 	if(!len) maxcount=5;
-	*res=calloc(maxcount,sizeof(char*));
+	*res=(char**)mycalloc(maxcount,char*);
     }
     if(!sdata) return count;
     const char *sdataend=sdata+strlen(sdata)-1;
@@ -103,7 +103,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	if(count>=maxcount){//check memory
 	    if(!len){
 		maxcount*=2;
-		*res=realloc(*res,sizeof(char*)*maxcount);
+		*res=(char**)myrealloc(*res,maxcount,char*);
 	    }else{
 		error("{%s}: need %d, got more than %d elements\n", sdata, len, count);
 	    }
@@ -120,7 +120,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
     }
     if(!len){
 	if(count>0){
-	    *res=realloc(*res,sizeof(char*)*count);
+	    *res=(char**)myrealloc(*res,count,char*);
 	}else{
 	    free(*res); *res=NULL;
 	}
@@ -324,8 +324,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    if(len){
 		error("{%s}: Needs %d numbers, but more are supplied.\n", data, len);
 	    }else{
-		*ret=realloc(*ret, size*nmax*2);
-		memset(*ret+size*nmax, 0, size*nmax);
+		*ret=myrealloc(*ret, size*nmax*2,char);
+		memset((char*)*ret+size*nmax, 0, size*nmax);
 		nmax*=2;
 	    }
 	}
@@ -393,8 +393,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	void *newer=calloc(count, size);
 	switch(type){
 	case M_INT:{
-	    int *from=(*ret);
-	    int *to=newer;
+	    int *from=(int*)(*ret);
+	    int *to=(int*)newer;
 	    for(size_t icol=0; icol<ncol; icol++){
 		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
@@ -403,8 +403,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
 	    break;
 	case M_LONG:{
-	    long *from=(*ret);
-	    long *to=newer;
+	    long *from=(long*)(*ret);
+	    long *to=(long*)newer;
 	    for(size_t icol=0; icol<ncol; icol++){
 		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
@@ -413,8 +413,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
 	    break;
 	case M_DBL:{
-	    double *from=(*ret);
-	    double *to=newer;
+	    double *from=(double*)(*ret);
+	    double *to=(double*)newer;
 	    for(size_t icol=0; icol<ncol; icol++){
 		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
@@ -430,7 +430,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	*ret=newer;
     }else if(!len){
 	if(count>0){
-	    *ret=realloc(*ret, size*count);
+	    *ret=myrealloc(*ret, size*count,char);
 	}else{
 	    free(*ret);
 	    *ret=NULL;
@@ -528,7 +528,7 @@ double search_header_num(const char *header, const char *key){
 */
 double search_header_num_valid(const char *header, const char *key){
     double val=search_header_num(header, key);
-    if(isnan(val)){
+    if(!(val==val)){
 	error("{%s}: Unable to parse a number for %s from %s\n", header, key, search_header(header, key));
     }
     return val;

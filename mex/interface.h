@@ -144,7 +144,7 @@ INLINE mxArray *ccell2mx(const ccell *A){
     }*/
 mxArray *any2mx(const void *A_){
     mxArray *out=0;
-    const cell *A=A_;
+    const cell *A=(const cell*)A_;
     long id=A?(A->id):0;
     switch(id){
     case 0:
@@ -156,22 +156,22 @@ mxArray *any2mx(const void *A_){
 	}
 	break;
     case M_DBL:
-	out=d2mx(A_);
+	out=d2mx((dmat*)A_);
 	break;
     case M_CMP:
-	out=c2mx(A_);
+	out=c2mx((cmat*)A_);
 	break;
     case M_LOC64:
-	out=loc2mx(A_);
+	out=loc2mx((loc_t*)A_);
 	break;
     case M_DSP64:
-	out=dsp2mx(A_);
+	out=dsp2mx((dsp*)A_);
 	break;
     case M_INT64:
-	out=lmat2mx(A_);
+	out=lmat2mx((lmat*)A_);
 	break;
     case M_INT32:
-	out=lmat2mx(A_);
+	out=lmat2mx((lmat*)A_);
 	break;
     default:
 	info("id=%ld is not handled.\n", id);
@@ -186,7 +186,7 @@ INLINE dsp *mx2dsp(const mxArray *A){
     if(!mxIsDouble(A) || mxIsComplex(A)) error("Only double is supported\n");
     dsp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
-	out=calloc(1, sizeof(dsp));
+	out=(dsp*)calloc(1, sizeof(dsp));
 	out->id=M_DSP64;
 	out->nz=-1;
 	out->nx=mxGetM(A);
@@ -200,7 +200,7 @@ INLINE dsp *mx2dsp(const mxArray *A){
 }
 INLINE loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
-    loc_t *loc=calloc(1, sizeof(loc_t));
+    loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
     loc->ref=1;
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
@@ -272,30 +272,30 @@ static void *mx2any(const mxArray *A){
 	for(int i=0; i<out->nx*out->ny; i++){
 	    mxArray *Ai=mxGetCell(A, i);
 	    if(mxIsCell(Ai)){
-		out->p[i]=mx2any(Ai);
+		out->p[i]=(cell*)mx2any(Ai);
 	    }else if(mxGetPi(Ai)){
 		error("Complex type not handled by mx2any\n");
 	    }else if(mxGetIr(Ai)){
-		out->p[i]=(void*)mx2dsp(Ai);
+		out->p[i]=(cell*)mx2dsp(Ai);
 	    }else{
-		out->p[i]=(void*)mx2d(Ai);
+		out->p[i]=(cell*)mx2d(Ai);
 	    }
 	}
     }
     return out;
 }
 static kalman_t *mx2kalman(const mxArray*A){
-    kalman_t *kalman=calloc(1, sizeof(kalman_t));
-    kalman->Ad=mx2any(mxGetField(A,0,"Ad"));
-    kalman->Cd=mx2any(mxGetField(A,0,"Cd"));
-    kalman->AdM=mx2any(mxGetField(A,0,"AdM"));
-    kalman->FdM=mx2any(mxGetField(A,0,"FdM"));
-    kalman->M=mx2any(mxGetField(A,0,"M"));
-    kalman->P=mx2any(mxGetField(A,0,"P"));
+    kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
+    kalman->Ad=(dmat*)mx2any(mxGetField(A,0,"Ad"));
+    kalman->Cd=(dcell*)mx2any(mxGetField(A,0,"Cd"));
+    kalman->AdM=(dmat*)mx2any(mxGetField(A,0,"AdM"));
+    kalman->FdM=(dmat*)mx2any(mxGetField(A,0,"FdM"));
+    kalman->M=(dcell*)mx2any(mxGetField(A,0,"M"));
+    kalman->P=(dmat*)mx2any(mxGetField(A,0,"P"));
     kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
-    kalman->dtrat=mx2any(mxGetField(A,0,"dtrat"));
-    kalman->Gwfs=mx2any(mxGetField(A,0,"Gwfs"));
-    kalman->Rwfs=mx2any(mxGetField(A,0,"Rwfs"));
+    kalman->dtrat=(dmat*)mx2any(mxGetField(A,0,"dtrat"));
+    kalman->Gwfs=(dcell*)mx2any(mxGetField(A,0,"Gwfs"));
+    kalman->Rwfs=(dcell*)mx2any(mxGetField(A,0,"Rwfs"));
     return kalman;
 }
 static mxArray* kalman2mx(kalman_t *kalman){
@@ -345,13 +345,13 @@ static mxArray *cn2est2mx(cn2est_t *cn2est){
 }
 INLINE char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
-    char *fn=malloc(nlen);
+    char *fn=(char*)malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
 }
 INLINE rand_t *mx2rand(const mxArray *A){
     int seed=(int)mxGetScalar(A);
-    rand_t *out=malloc(sizeof(rand_t));
+    rand_t *out=(rand_t*)malloc(sizeof(rand_t));
     seed_rand(out, seed);
     return out;
 }
@@ -396,11 +396,18 @@ static __attribute__((constructor)) void init(){
 	default_handler=signal(SIGTERM, mex_signal_handler);
     }
     quitfun=mex_quitfun;
+
     if(REFERENCE){
-	CALLOC=calloc_mex;
-	MALLOC=malloc_mex;
-	REALLOC=realloc_mex;
-	FREE=free_mex;
+	extern int mem_debug;
+	mem_debug=1;
+	extern void *(*calloc_custom)(size_t, size_t);
+	extern void *(*malloc_custom)(size_t);
+	extern void *(*realloc_custom)(void *, size_t);
+	extern void  (*free_custom)(void *);
+	calloc_custom=calloc_mex;
+	malloc_custom=malloc_mex;
+	realloc_custom=realloc_mex;
+	free_custom=free_mex;
     }
 }
 static __attribute__((destructor)) void deinit(){

@@ -44,14 +44,14 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     }
     /*>>1 is a short cut for /2 */
     int nwfspair=npair>>1;
-    cn2est_t *cn2est=calloc(1, sizeof(cn2est_t));
+    cn2est_t *cn2est=mycalloc(1,cn2est_t);
     cn2est->nwfspair=nwfspair;
     int nwfs=wfstheta->nx;
     cn2est->nwfs=nwfs;
     cn2est->nsa=saloc->nloc;
     /*wfscov is a flag for wfs showing whether this wfs participates in
      * covariance computation. */
-    cn2est->wfscov=calloc(nwfs, sizeof(int));
+    cn2est->wfscov=mycalloc(nwfs,int);
     for(int ind=0; ind<npair; ind++){
 	int iwfs=(int)wfspair->p[ind];
 	if(iwfs<0 || iwfs>=nwfs){
@@ -113,9 +113,9 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     }
     cfree(overlap);
     /*2-d arrays to store x y gradient, and "curvature" */
-    cn2est->gxs=cellnew(nwfs, 1);/*stores gradient in 2-d map */
-    cn2est->gys=cellnew(nwfs, 1);
-    cn2est->curi=cellnew(nwfs, 1);
+    cn2est->gxs=dcellnew(nwfs, 1);/*stores gradient in 2-d map */
+    cn2est->gys=dcellnew(nwfs, 1);
+    cn2est->curi=ccellnew(nwfs, 1);
     for(int ix=0; ix<nwfs; ix++){
 	if(cn2est->wfscov[ix]){
 	    cn2est->gxs->p[ix]=dnew(nx, nx);
@@ -131,7 +131,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     const double dsa=saloc->dx;
     /*determine the layer height used for tomography. */
     cn2est->htrecon=ddup(htrecon);
-    cn2est->wtrecon=cellnew(1,1);
+    cn2est->wtrecon=dcellnew(1,1);
     cn2est->wtrecon->p[0]=dnew(cn2est->htrecon->nx,1);
     {
 	info2("htrecon=[");
@@ -141,13 +141,13 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	info2("]km\n");
     }
     /*stores cross-covariance data during simulation */
-    cn2est->covc=cellnew(nwfspair,1);
-    cn2est->cov1=cellnew(nwfspair,1);
-    cn2est->cov2=cellnew(nwfspair,1);
+    cn2est->covc=ccellnew(nwfspair,1);
+    cn2est->cov1=dcellnew(nwfspair,1);
+    cn2est->cov2=dcellnew(nwfspair,1);
     /*height of layers for each wfs pair of slodar output. */
-    cn2est->ht=cellnew(nwfspair,1);
+    cn2est->ht=dcellnew(nwfspair,1);
     /*record sapair to use for each separation */
-    cn2est->pair=calloc(nwfspair, sizeof(CN2PAIR_T));
+    cn2est->pair=mycalloc(nwfspair,CN2PAIR_T);
     long nhtsx[nwfspair]; 
     long nhtsy[nwfspair];
     double hmin, hmax;
@@ -164,11 +164,11 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     /*Pnk stores the opeator from layer weight to curvature covariance
       matrix. iPnk is the psuedo inverse of Pnk. Each diagonal cell is for each
       WFS pair.*/
-    cn2est->Pnk=cellnew(nwfspair, nwfspair);
-    cn2est->iPnk=cellnew(nwfspair,nwfspair);
+    cn2est->Pnk=dcellnew(nwfspair, nwfspair);
+    cn2est->iPnk=dcellnew(nwfspair,nwfspair);
     /*wtconvert is the matrix to down/up sample the CN2 estimates to layers
       used for tomography*/
-    cn2est->wtconvert=cellnew(1,nwfspair);
+    cn2est->wtconvert=dspcellnew(1,nwfspair);
     cn2est->L0=L0;
     for(int iwfspair=0; iwfspair<nwfspair; iwfspair++){
 	/*get pointer for this pair */

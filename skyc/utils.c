@@ -43,17 +43,17 @@ static void print_usage(void){
    Parse command line arguments argc, argv
  */
 ARG_S *parse_args(int argc, const char *argv[]){
-    ARG_S *arg=calloc(1, sizeof(ARG_S));
+    ARG_S *arg=mycalloc(1,ARG_S);
     char *host=NULL; int local=0;
     ARGOPT_T options[]={
-	{"help",  'h', M_INT, 0, 1, print_usage, NULL},
+	{"help",  'h', M_INT, 0, 1, (void*)print_usage, NULL},
 	{"detach", 'd',M_INT, 0, 0, &arg->detach, NULL},
 	{"override",'O',M_INT,0, 0, &arg->override, NULL},
 	{"force",  'f',M_INT, 0, 0, &arg->force, NULL},
 	{"output", 'o',M_STR, 1, 0, &arg->dirout, NULL},
 	{"nthread",'n',M_INT, 1, 0, &arg->nthread,NULL},
 	{"conf",   'c',M_STR, 1, 0, &arg->conf, NULL},
-	{"path",   'P',M_STR, 1, 1, addpath, NULL},
+	{"path",   'P',M_STR, 1, 1, (void*)addpath, NULL},
 	{"run",    'r',M_STR, 1, 0, &host, NULL},
 	{"local",  'l',M_INT, 0, 0, &local, NULL},
 	{NULL, 0,0,0,0, NULL, NULL}

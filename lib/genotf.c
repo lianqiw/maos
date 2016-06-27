@@ -35,7 +35,7 @@ typedef struct GENOTF_T{
     double wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
     long ncompy; /**<Size of OTF*/
-    int nsa;    /**<Number of (sub)apertures*/
+    long nsa;    /**<Number of (sub)apertures*/
     long pttr;   /**<Remove piston/tip/tilt*/
     const dmat *B;
     const T_VALID *pval;
@@ -146,7 +146,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     cmat* OTF=*otf;
     /*Do the exponential.*/
     double k2=pow(2*M_PI/wvl,2);
-    double *restrict BPD=malloc(sizeof(double)*nloc);
+    double *restrict BPD=mymalloc(nloc,double);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
 	    IND(BP,jloc,iloc)=exp(k2*IND(BP,jloc,iloc));
@@ -169,7 +169,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	for(long im=0; im<notfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
 	    double tmp1,tmp2; dcomplex tmp3;
-	    register dcomplex tmp=0.;
+	    dcomplex tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
@@ -196,7 +196,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
    A wrapper to execute pttr parallel in pthreads
  */
 static void genotf_wrap(thread_t *info){
-    GENOTF_T *data=info->data;
+    GENOTF_T *data=(GENOTF_T*)info->data;
     const int nsa=data->nsa;
     cmat**otf=(cmat**)data->otf;
     loc_t *loc=data->loc;
@@ -245,11 +245,12 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
     double *locx=loc->locx;
     double *locy=loc->locy;
     const long pvaltot=notfx*notfy*nloc*2;
-    long (*pval0)[2]=malloc(sizeof(long)*pvaltot*2);
+    typedef long long2[2];
+    long2 *pval0=mymalloc(pvaltot,long2);
     if(!pval0){
 	error("malloc for %ld failed\n", pvaltot);
     }
-    T_VALID *pval=malloc(sizeof(T_VALID)*notfx*notfy);
+    T_VALID *pval=mymalloc(notfx*notfy,T_VALID);
     T_VALID (*restrict qval)[notfx]=(T_VALID (*)[notfx])(pval);
     long count=0,count2;
     loc_create_map(loc);
@@ -283,7 +284,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
 	error("count=%ld > pvaltot=%ld\n", count, pvaltot);
     }
     /*loc_free_map(loc);*//*do not free map. dangerous in multi-threaded envorionment. where other threads may be visiting loc->map.*/
-    /*pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position. */
+    /*pval0=myrealloc(pval0,count*2,int); //do not realloc. will change position. */
     return pval;
 }
 /**
@@ -413,8 +414,8 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
     map_t *map=loc->map;
     long ncovx2=ncovx/2;
     long ncovy2=ncovy/2;
-    long *map_x=malloc(sizeof(long)*loc->nloc);
-    long *map_y=malloc(sizeof(long)*loc->nloc);
+    long *map_x=mymalloc(loc->nloc,long);
+    long *map_y=mymalloc(loc->nloc,long);
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	map_x[iloc]=(long)round((locx[iloc]-map->ox)*dx1);
 	map_y[iloc]=(long)round((locy[iloc]-map->oy)*dy1);

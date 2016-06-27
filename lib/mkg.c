@@ -217,7 +217,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	  generally applies to the case that XLOC is smaller
 	  than PLOC.
 	*/
-	ampcopy=malloc(sizeof(double)*ploc->nloc);
+	ampcopy=mymalloc(ploc->nloc,double);
 	memcpy(ampcopy,amp,sizeof(double)*ploc->nloc);
 	for(ipix=0; ipix<ploc->nloc; ipix++){
 	    plocx=ploc->locx[ipix]*dx2+dispx;

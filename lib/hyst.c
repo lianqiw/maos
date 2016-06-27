@@ -37,7 +37,7 @@ struct HYST_T{
   Hysteresis modeling. Create the hysteresis model
 */
 HYST_T *hyst_new(dmat *coeff, int naloc){
-    HYST_T *hyst=calloc(1, sizeof(HYST_T));
+    HYST_T *hyst=mycalloc(1,HYST_T);
     int nhmod=coeff->ny;
     if(coeff->nx!=3 || nhmod<1){
 	error("DM hystereis has wrong format. Expect 3 rows, but has %ldx%ld\n", coeff->nx, coeff->ny);

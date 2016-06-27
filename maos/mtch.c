@@ -27,8 +27,9 @@
 */
 static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0x1p)[nx]=(void*)i0x1;
-    double (*i0x2p)[nx]=(void*)i0x2;
+    typedef double pcol[nx];
+    pcol *i0x1p=(pcol*)i0x1;
+    pcol *i0x2p=(pcol*)i0x2;
     for(int iy=0; iy<i0->ny; iy++){
 	for(int ix=0; ix<i0->nx-1; ix++){
 	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
@@ -42,8 +43,9 @@ static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
 */
 static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
     int nx=i0->nx;
-    double (*i0y1p)[nx]=(void*)i0y1;
-    double (*i0y2p)[nx]=(void*)i0y2;
+    typedef double pcol[nx];
+    pcol *i0y1p=(pcol*)i0y1;
+    pcol *i0y2p=(pcol*)i0y2;
     for(int iy=0; iy<i0->ny-1; iy++){
 	for(int ix=0; ix<i0->nx; ix++){
 	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
@@ -75,8 +77,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcellfree(intstat->mtche);
     dfree(intstat->i0sum);
 
-    intstat->mtche=cellnew(nsa,ni0);
-    dcell *sanea=cellnew(ni0,1);
+    intstat->mtche=dcellnew(nsa,ni0);
+    dcell *sanea=dcellnew(ni0,1);
     
     intstat->i0sum=dnew(nsa,ni0);
     dcell *i0s=intstat->i0;
@@ -86,7 +88,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell *mtche=intstat->mtche;
     if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
 	dcellfree(powfs[ipowfs].saneaxy);
-	powfs[ipowfs].saneaxy=cellnew(nsa,ni0);
+	powfs[ipowfs].saneaxy=dcellnew(nsa,ni0);
     }
     dcell *saneaxy=powfs[ipowfs].saneaxy;
     int nllt;
@@ -350,7 +352,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->recon.glao && ni0>0){
 	info2("Averaging saneaxy of different WFS for GLAO mode\n");
-	dcell *saneaxy2=cellnew(nsa, 1);
+	dcell *saneaxy2=dcellnew(nsa, 1);
 	double scale=1./ni0;
 	for(int isa=0; isa<nsa; isa++){
 	    for(int ii0=0; ii0<ni0; ii0++){

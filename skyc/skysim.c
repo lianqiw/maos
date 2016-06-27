@@ -425,12 +425,12 @@ static void skysim_prep_gain(SIM_S *simu){
     info2("Precompute gains for different levels of noise.\n");
     /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
     dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
-    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    simu->gain_tt =mycalloc(parms->skyc.ndtrat,dcell*);
+    simu->gain_ps =mycalloc(parms->skyc.ndtrat,dcell*);
+    simu->gain_ngs=mycalloc(parms->skyc.ndtrat,dcell*);
     int servotype=parms->skyc.servo;
     if(parms->maos.nmod>5){
-	simu->gain_focus=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+	simu->gain_focus=mycalloc(parms->skyc.ndtrat,dcell*);
     }
     TIC;tic;
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
@@ -466,7 +466,7 @@ static void skysim_prep_sde(SIM_S *simu){
       kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
     */
     dmat *x=dtrans(simu->mideal);
-    simu->psdi=cellnew(x->ny, 1);
+    simu->psdi=dcellnew(x->ny, 1);
     simu->sdecoeff=dnew(3,x->ny);
     dmat*  pcoeff=simu->sdecoeff;
     for(int im=0; im<x->ny; im++){
@@ -506,14 +506,14 @@ void skysim(const PARMS_S *parms){
 	writebin(parms->skyc.resfocus, "%s/resfocus",dirsetup);
 	}*/
     const int npowfs=parms->maos.npowfs;
-    SIM_S *simu=calloc(1, sizeof(SIM_S));
-    simu->status=calloc(1, sizeof(STATUS_T));
+    SIM_S *simu=mycalloc(1,SIM_S);
+    simu->status=mycalloc(1,STATUS_T);
     simu->status->info=S_RUNNING;
     simu->status->scale=1;
     simu->status->nseed=parms->maos.nseed;
     simu->status->nthread=parms->skyc.nthread;
     simu->status->timstart=myclocki();
-    simu->powfs=calloc(npowfs, sizeof(POWFS_S));
+    simu->powfs=mycalloc(npowfs,POWFS_S);
     simu->parms=parms;
     setup_powfs(simu->powfs, parms);
     genpistat(parms, simu->powfs); 

@@ -123,7 +123,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 /**
    Performance evaluation for each direction in parallel mode.  */
 void perfevl_ievl(thread_t *info){
-    SIM_T *simu=info->data;
+    SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;

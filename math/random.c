@@ -24,7 +24,7 @@
    Create a new random stream, seeded with seed.
 */
 rand_t *new_rand(int seed){
-    rand_t *out=calloc(1, sizeof(rand_t));
+    rand_t *out=(rand_t*)mycalloc(1,rand_t);
     seed_rand(out, seed);
     return out;
 }

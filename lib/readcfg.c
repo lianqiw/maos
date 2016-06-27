@@ -214,26 +214,27 @@ void close_config(const char *format, ...){
    a hash table. A key can be protected. If a key is not protected, newer
    entries with the same key will override a previous entry.
  */
-void open_config(char* config_file, /**<[in]The .conf file to read*/
+void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		 const char* prefix,/**<[in]if not NULL, prefix the key with this.*/
 		 long protect       /**<[in]whether we protect the value*/
 		 ){
-    if(!config_file) return;
+    if(!config_in) return;
     FILE *fd=NULL;
-    char *fn=NULL;
+    char *config_file=NULL;
     int print_override=1;
-    if(check_suffix(config_file, ".conf")){
-	if(exist(config_file)){
-	    fn=strdup(config_file);
+    if(check_suffix(config_in, ".conf")){
+	if(exist(config_in)){
+	    config_file=strdup(config_in);
 	}else{
-	    fn=find_file(config_file);
+	    config_file=find_file(config_in);
 	    print_override=0;
 	}
-	if(!fn || !(fd=fopen(fn,"r"))){
+	if(!config_file || !(fd=fopen(config_file,"r"))){
 	    perror("fopen");
-	    error("Cannot open file %s for reading.\n",fn);
+	    error("Cannot open file %s for reading.\n",config_file);
 	}
     }else{
+	config_file=strdup(config_in);
 	parse_argopt(config_file, NULL);
 	char *end; 
 	//Remove trailing space
@@ -241,12 +242,13 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    if(isspace((int)*end)) *end='\0'; 
 	    else break;
 	}
-	if(end<config_file) return;
-	fn=config_file;
+	if(end<config_file) {
+	    free(config_file);
+	    return;
+	}
     }
     
     char *sline=NULL;
-    char *var=NULL, *value=NULL;
     int countnew=0;
     int countold=0;
     
@@ -318,10 +320,13 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    eql[-1]='\0';
 	}
 	eql[0]='\0';
-	var=ssline;
-	value=eql+1;
-	strtrim(&var);
+	char *var0=ssline;
+	strtrim(&var0);
+	const char *var=var0;//so we can assign a const string to it in RENAME.
+	
+	char *value=eql+1;
 	strtrim(&value);
+
 	if(!var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
 	}else if(!strcmp(var,"path") || !strcmp(var, "PATH")){
@@ -361,7 +366,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    RENAME(evl.opdcov, evl.cov);
 	    RENAME(evl.psfpttr, evl.pttr);
 #endif
-	    STORE_T *store=calloc(1, sizeof(STORE_T));
+	    STORE_T *store=mycalloc(1,STORE_T);
 	    if(prefix){
 		store->key=stradd(prefix,var,NULL);
 	    }else{
@@ -376,10 +381,10 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	    store->protect=protect;
 	    store->count=0;
 
-	    void **entryfind=tfind(store, &MROOT, key_cmp);
+	    void *entryfind=tfind(store, &MROOT, key_cmp);
 	    if(entryfind){ 
 		/*same key found */
-		STORE_T *oldstore=*entryfind;
+		STORE_T *oldstore=*(STORE_T**)entryfind;
 		if(append){
 		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
 		    const char *olddata=oldstore->data;
@@ -391,7 +396,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 		    }else if(newdata[0]!='[' || newdata[nnewdata-1]!=']'){
 			error("newdata='%s' should be encapsulated by bare [].\n", newdata);
 		    }else{
-			oldstore->data=realloc(oldstore->data, (nolddata+nnewdata));
+			oldstore->data=myrealloc(oldstore->data, (nolddata+nnewdata),char);
 			oldstore->data[nolddata-1]=' ';
 			strncat(oldstore->data, newdata+1, nnewdata-1);
 		    }
@@ -428,11 +433,11 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fd?fn:"command line");
+    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fd?config_file:"command line");
     if(fd){
 	fclose(fd);
-	free(fn);
     }
+    free(config_file);
 #undef MAXLN
 }
 /**
@@ -440,7 +445,7 @@ void open_config(char* config_file, /**<[in]The .conf file to read*/
  */
 static const STORE_T* getrecord(char *key, int mark){
     STORE_T store;
-    void **found=0;
+    void *found=0;
     strtrim(&key);
     store.key=key;
     if((found=tfind(&store, &MROOT, key_cmp))){
@@ -455,7 +460,7 @@ static const STORE_T* getrecord(char *key, int mark){
 	print_file("change.log");
 	error("Record %s not found\n",key);
     }
-    return found?(*found):0;
+    return found?(*(STORE_T**)found):0;
 }
 /**
    Check whether a have a record of a key.

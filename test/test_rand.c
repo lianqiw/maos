@@ -25,7 +25,7 @@ static void test_speed(){
     clock_t ck;
     int seed=2;
     N=1000000;
-    p=malloc(sizeof(double)*N);
+    p=mymalloc(N,double);
     memset(p, 0, sizeof(double)*N);
     seed_rand(&rstat, seed);
     srand(seed);

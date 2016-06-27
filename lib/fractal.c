@@ -75,7 +75,7 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
     if(L0>9000) L0=INFINITY;/*L0 bigger than 9000 is treated as infinity. */
     vkcov_t *node=vkcov_get(r0, L0, dx, n, ninit);
     if(node) return node;
-    node=calloc(1, sizeof(vkcov_t));
+    node=mycalloc(1,vkcov_t);
     node->r0=r0;
     node->L0=L0;
     node->dx=dx;

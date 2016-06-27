@@ -139,7 +139,7 @@ if test -z "$MEXDIR" ;then
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
+OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers" 
 if test "${USER}" = "lianqiw" ;then
     OPTScommon="-Wshadow -Wall -Wextra -Werror $OPTScommon"
 fi
@@ -853,7 +853,7 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS"
+    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS -Wno-unused-parameter"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
 	CCN=CLANG
@@ -909,9 +909,9 @@ if test ! -f "${srcdir}/version.h" ;then
     (
 	cd ${srcdir}
 	if which git >/dev/null 2>&1 ;then
-	    echo static char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
+	    echo static const char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
 	else
-	    echo static char *GIT_VERSION=\"\"\; >version.h
+	    echo static const char *GIT_VERSION=\"\"\; >version.h
 	fi
     )
 fi

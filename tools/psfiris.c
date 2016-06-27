@@ -51,7 +51,7 @@ typedef struct psfiris_t{
 }psfiris_t;
 
 static void psfiris_do(thread_t *info){
-    psfiris_t *data=info->data;
+    psfiris_t *data=(psfiris_t*)info->data;
     int iwvl=info->start;
     int npix=data->npix;
     int notf1=data->notf1;
@@ -285,10 +285,10 @@ int main(int argc, char *argv[]){
     
     dcell *psf_lgs=dcellread("za%d_%dp/evlpsfcl_ngsr_1_x%g_y%g.fits", za, prof, thetax[idir], thetay[idir]);
     
-    dcell *output=cellnew(nwvl,1);
+    dcell *output=dcellnew(nwvl,1);
     info2("%d: ", nwvl);
     psfiris_t data={npix, notf1, notf2, dx1, dx2, pixsize, pixoffx, pixoffy, blur, ploc, pamp, cc_opd, cc_zero, imperr, wvls, psf_lgs, output, msg};
-    thread_t *info=calloc(nwvl, sizeof(thread_t));
+    thread_t *info=mycalloc(nwvl,thread_t);
     thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);

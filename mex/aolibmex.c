@@ -20,7 +20,7 @@
 */
 #include "../lib/aos.h"
 ccell *genotfmex(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr){
-    ccell *out=cellnew(nsa, 1);
+    ccell *out=ccellnew(nsa, 1);
     genotf(out->p, loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr);
     return out;
 }

@@ -238,7 +238,7 @@ void adddbl(double *restrict out, double alpha,
    A=B(p) <==> A(pi)=B
 */ 
 long *invperm(long *p, long np){
-    long *restrict pi=malloc(sizeof(long)*np);/*inverse of p */
+    long *restrict pi=(long*)mymalloc(np,long);/*inverse of p */
     for(long irow=0; irow<np; irow++){
 	pi[p[irow]]=irow;
     }
@@ -418,21 +418,21 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
 	zfread(p, size, len, fp);
 	switch(magic & 0xFFFF){
 	case M_INT64:{
-	    uint64_t *p2=p;
+	    uint64_t *p2=(uint64_t*)p;
 	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
 	}
 	    break;
 	case M_INT32:{
-	    uint32_t *p2=p;
+	    uint32_t *p2=(uint32_t*)p;
 	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
 	}
 	    break;
 	case M_DBL:{
-	    double *p2=p;
+	    double *p2=(double*)p;
 	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
@@ -452,7 +452,7 @@ spint *readspint(file_t *fp, long* nx, long* ny){
     if(nx!=0 && ny!=0){
 	*nx=(long)header.nx;
 	*ny=(long)header.ny;
-	out=malloc((*nx)*(*ny)*sizeof(spint));
+	out=(spint*)mymalloc((*nx)*(*ny),spint);
 	readspintdata(fp, header.magic, out, (*nx)*(*ny));
     }else{
 	*nx=0;

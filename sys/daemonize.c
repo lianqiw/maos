@@ -113,7 +113,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 	    lseek(fd,0,SEEK_SET);
 	    if(ftruncate(fd,0)<0)
 		warning("Unable to truncate the file\n");
-	    if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
+	    if(write(fd,strpid,strlen(strpid)+1)!=(long)strlen(strpid)+1){
 		warning("Write pid %d to %s failed\n",getpid(),fnlock);
 	    }
 	    fsync(fd);/*don't close file. maintain lock. */
@@ -146,9 +146,9 @@ void single_instance_daemonize(const char *lockfolder_in,
     char *fnlock0=stradd(lockfolder,"/",progname,".pid",NULL);
     char *fnlog0=stradd(lockfolder,"/",progname,".log",NULL);
     /*Make those stack variable so that we don't have to free them. */
-    char *fnlock=alloca(strlen(fnlock0)+1);
+    char *fnlock=(char*)alloca(strlen(fnlock0)+1);
     strcpy(fnlock,fnlock0);
-    char *fnlog=alloca(strlen(fnlog0)+1);
+    char *fnlog=(char*)alloca(strlen(fnlog0)+1);
     strcpy(fnlog,fnlog0);
     free(lockfolder);
     free(fnlog0);
@@ -213,7 +213,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     lseek(fd,0,SEEK_SET);
     if(ftruncate(fd,0)<0)
 	warning("Unable to truncate file\n");
-    if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
+    if(write(fd,strpid,strlen(strpid)+1)!=(long)strlen(strpid)+1){
 	warning("Write pid %d to %s failed\n",getpid(),fnlock);
     }
     if(daemon_func){
@@ -307,7 +307,7 @@ void redirect(void){
 	if(pipe(pfd)){//fail to create pipe.
 	    warning("pipe failed\n");
 	}else{
-	    redirect_t *data=calloc(1, sizeof(redirect_t));
+	    redirect_t *data=(redirect_t*)mycalloc(1,redirect_t);
 	    data->pfd=pfd[0];//read
 	    data->stdoutfd=stdoutfd;//write to console
 	    data->fn=strdup(fn);

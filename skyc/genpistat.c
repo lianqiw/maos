@@ -26,10 +26,10 @@
 #include "types.h"
 #include "skysim_utils.h"
 #include "genpistat.h"
-
+typedef long long4[4];
 typedef struct GENPISTAT_S{
     int ncase;
-    long(*cases)[4];
+    long4 *cases;
     int icase;
     pthread_mutex_t mutex_read;/*don't let them read in the same time. */
     const PARMS_S *parms;
@@ -88,11 +88,11 @@ static void calc_pistat(GENPISTAT_S *data){
 	    free(header.str); header.str=NULL;
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
-	    dcell *pistat=cellnew(nsa, nwvl);/*pixel intensity mean(I) */
-	    dcell *neaspec=cellnew(nsa*2, nwvl);
-	    dcell **avgpsf=calloc(nwvl, sizeof(dcell*));
+	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
+	    dcell *neaspec=dcellnew(nsa*2, nwvl);
+	    dcell **avgpsf=mycalloc(nwvl,dcell*);
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		avgpsf[iwvl]=cellnew(ndtrat, nsa);
+		avgpsf[iwvl]=dcellnew(ndtrat, nsa);
 	    }
 	    for(long ig=0; ig<2*nsa*nwvl; ig++){
 		neaspec->p[ig]=dnew(ndtrat, 1);
@@ -222,11 +222,11 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
     info2("Genpistat..");
-    GENPISTAT_S *data=calloc(1, sizeof(GENPISTAT_S));
+    GENPISTAT_S *data=mycalloc(1,GENPISTAT_S);
     data->parms=parms;
     data->powfs=powfs;
     data->ncase=parms->maos.nseed*(2*ng+1)*(2*ng+1)*parms->maos.npowfs;
-    data->cases=calloc(4*data->ncase,sizeof(long));
+    data->cases=mycalloc(data->ncase,long4);
     data->ngsgrid=ngsgrid;
     long count=0;
     for(int iseed=0; iseed<parms->maos.nseed; iseed++){
@@ -243,7 +243,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 		    count++;
 		    if(count>data->ncase){
 			data->ncase=data->ncase*2;
-			data->cases=realloc(data->cases,sizeof(long)*data->ncase*4);
+			data->cases=myrealloc(data->cases,data->ncase,long4);
 		    }
 		}
 	    }/*for gx */
@@ -252,7 +252,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     /*info("count=%ld, data->ncase=%ld\n",count,data->ncase); */
     data->ncase=count;
     data->icase=0;
-    data->cases=realloc(data->cases, sizeof(long)*4*data->ncase);
+    data->cases=myrealloc(data->cases,data->ncase,long4);
     CALL(calc_pistat, data, parms->skyc.nthread,0);
     info2("done\n");
   
@@ -276,7 +276,7 @@ void prep_bspstrehl(SIM_S *simu){
     }
     simu->bspstrehlxy=dref(gg);
 
-    simu->bspstrehl=calloc(parms->maos.npowfs, sizeof(dcell**));
+    simu->bspstrehl=mycalloc(parms->maos.npowfs,dcell**);
 
     long ngnew=ng*10;
     dmat *xnew=dnew(ngnew*2+1, ngnew*2+1);
@@ -291,7 +291,7 @@ void prep_bspstrehl(SIM_S *simu){
 	long msa=parms->maos.msa[ipowfs];
 	long nsa=parms->maos.nsa[ipowfs];
 	long nwvl=parms->maos.nwvl;
-	dcell *strehlgrid = cellnew(nsa,nwvl);
+	dcell *strehlgrid = dcellnew(nsa,nwvl);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    strehlgrid->p[ic]=dnew(ng2,ng2);
 	}
@@ -315,7 +315,7 @@ void prep_bspstrehl(SIM_S *simu){
 	    }
 	}
 
-	simu->bspstrehl[ipowfs]=calloc(nsa*nwvl, sizeof(dcell*));
+	simu->bspstrehl[ipowfs]=mycalloc(nsa*nwvl,dcell*);
 	writebin(strehlgrid, "strehlgrid_%d",ipowfs);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    simu->bspstrehl[ipowfs][ic]=dbspline_prep(gg,gg,strehlgrid->p[ic]);
@@ -341,7 +341,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
     rand_t rstat;
     seed_rand(&rstat, 1);
     long ng=round(patfov/2/ngsgrid)+1;
-    dcell **nonlin=calloc(npowfs, sizeof(dcell*));
+    dcell **nonlin=mycalloc(npowfs,dcell*);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	char fnnonlin[PATH_MAX];
 	snprintf(fnnonlin, PATH_MAX, "%s/powfs%d_nonlin", dirstart, ipowfs);
@@ -366,8 +366,8 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 	    dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
 	    dcell *mtche=0;
 	    dmat *sanea=0;
-	    ccell *otf1=cellnew(nsa, nwvl);
-	    ccell *otf2=cellnew(nsa, nwvl);
+	    ccell *otf1=ccellnew(nsa, nwvl);
+	    ccell *otf2=ccellnew(nsa, nwvl);
 	    long ncomp=parms->maos.ncomp[ipowfs];
 	    for(int isa=0; isa<nsa; isa++){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -384,7 +384,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		const double wvl=parms->maos.wvl[iwvl];
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
-	    dcell *nonxy=cellnew(ng,1);
+	    dcell *nonxy=dcellnew(ng,1);
 	    for(int ig=0; ig<ng; ig++){
 		nonxy->p[ig]=dnew(siglevs->nx, 2);
 		char fnpistat[PATH_MAX];

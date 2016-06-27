@@ -57,7 +57,7 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 	if(header->magic==M_T){
 	    zfread(out->p,sizeof(T),nx*ny,fp);
 	}else if(M_T==M_DBL && header->magic==M_FLT){
-	    float *p=malloc(nx*ny*sizeof(float));
+	    float *p=(float*)mymalloc(nx*ny,float);
 	    zfread(p, sizeof(float), nx*ny, fp);
 	    for(uint64_t i=0; i<nx*ny; i++){
 		out->p[i]=(T)p[i];
@@ -65,7 +65,7 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 	    free(p);
 #ifdef USE_COMPLEX
 	}else if(M_T==M_CMP && header->magic==M_ZMP){
-	    fcomplex *p=malloc(nx*ny*sizeof(fcomplex));
+	    fcomplex *p=(fcomplex*)mymalloc(nx*ny,fcomplex);
 	    zfread(p, sizeof(fcomplex), nx*ny, fp);
 	    for(uint64_t i=0; i<nx*ny; i++){
 		out->p[i]=(T)p[i];

@@ -38,20 +38,28 @@ int exit_fail=0;
   We use the backtrace to see the chain of calling when memory is
   allocated. This is better than using BASEFILE, __LINE__ which does not tell
   where the call from eventually from ans is not useful.
-  */
 
+  2016-06-28: The memory debugging is switched on by environment various instead
+  of statically compiled. This has another advantage is that when launched from
+  matlab, the memory allocations are replaced by matlab equivalents to have
+  matlab manage the memory during referencing..
+  */
+#include <dlfcn.h>
 #include "misc.h"
-void *(*CALLOC)(size_t nmemb, size_t size)=0;
-void *(*MALLOC)(size_t size)=0;
-void *(*REALLOC)(void*p0, size_t size)=0;
-void  (*FREE)(void *p)=0;
-void *(*calloc_default)(size_t, size_t)=calloc;
-void *(*malloc_default)(size_t)=malloc;
-void *(*realloc_default)(void *, size_t)=realloc;
-void  (*free_default)(void *)=free;
+
+void *(*calloc_default)(size_t, size_t);
+void *(*malloc_default)(size_t);
+void *(*realloc_default)(void *, size_t);
+void  (*free_default)(void *);
+
+void *(*calloc_custom)(size_t, size_t);
+void *(*malloc_custom)(size_t);
+void *(*realloc_custom)(void *, size_t);
+void  (*free_custom)(void *);
 
 static int MEM_VERBOSE=0;
 static int MEM_DEBUG=0;
+int mem_debug=0;
 PNEW(mutex_mem);
 static void *MROOT=NULL;
 static long  memcnt=0;
@@ -71,9 +79,8 @@ typedef struct{
     int nfunc;
     size_t size;
 }T_STATKEY;
-static int stat_cmp(const void *a, const void *b){
-    const T_STATKEY *pa=a;
-    const T_STATKEY *pb=b;
+typedef int(*compar)(const void*, const void*);
+static int stat_cmp(const T_STATKEY *pa, const T_STATKEY *pb){
     int nfunc=MIN(pa->nfunc, pb->nfunc);
     for(int i=0; i<nfunc; i++){
 	if(pa->func[i]<pb->func[i]){
@@ -96,22 +103,22 @@ static void stat_usage(const void *key, VISIT which, int level){
     if(which==leaf || which==postorder){
 	/*printf("%p: size %8zu B", key2->p, (key2->size));
 	  print_backtrace_symbol(key2->func, key2->nfunc-2);*/
-	void **found;
+	void *found;
 	T_STATKEY key3;
 	key3.func=(void**)key2->func;
 	key3.nfunc=key2->nfunc-2;
-	if(!(found=tfind(&key3, &MSTATROOT, stat_cmp))){
-	    T_STATKEY *keynew=calloc_default(1, sizeof(T_STATKEY));
+	if(!(found=tfind(&key3, &MSTATROOT, (compar)stat_cmp))){
+	    T_STATKEY *keynew=(T_STATKEY*)calloc_default(1, sizeof(T_STATKEY));
 	    keynew->p=key2->p;
-	    keynew->func=malloc_default(key3.nfunc*sizeof(void*));
+	    keynew->func=(void**)malloc_default(key3.nfunc*sizeof(void*));
 	    memcpy(keynew->func, key3.func, sizeof(void*)*key3.nfunc);
 	    keynew->nfunc=key3.nfunc;
 	    keynew->size=key2->size;
-	    if(!tsearch(keynew, &MSTATROOT, stat_cmp)){
+	    if(!tsearch(keynew, &MSTATROOT, (compar)stat_cmp)){
 		error("Error inserting to tree\n");
 	    }
 	}else{
-	    T_STATKEY *keynew=*found;
+	    T_STATKEY *keynew=*(T_STATKEY**)found;
 	    keynew->size+=key2->size;
 	}
     }
@@ -148,7 +155,7 @@ static void memkey_add(void *p,size_t size){
 	return;
     }
  
-    T_MEMKEY *key=calloc_default(1,sizeof(T_MEMKEY));
+    T_MEMKEY *key=(T_MEMKEY*)calloc_default(1,sizeof(T_MEMKEY));
     key->p=p;
     key->size=size;
 #ifndef __CYGWIN__
@@ -175,13 +182,13 @@ static void memkey_add(void *p,size_t size){
 
 static void memkey_del(void*p){
     if(!p) return;
-    void **found=0;
+    void *found=0;
     T_MEMKEY key;
     key.p=p;
     LOCK(mutex_mem);
     found=tfind(&key, &MROOT, key_cmp);
     if(found){
-	T_MEMKEY* key1=*found;/*the address of allocated T_MEMKEY. */
+	T_MEMKEY* key1=*(T_MEMKEY**)found;/*the address of allocated T_MEMKEY. */
 	memfree+=key1->size;
 	memcnt--;
 	if(MEM_VERBOSE==1){
@@ -227,8 +234,8 @@ static void free_dbg(void *p){
    Register a function or data to call or free upon exit
 */
 void register_deinit(void (*fun)(void), void *data){
-    if(MALLOC==malloc_dbg){
-	T_DEINIT *node=calloc_default(1, sizeof(T_DEINIT));
+    if(mem_debug){
+	T_DEINIT *node=(T_DEINIT*)calloc_default(1, sizeof(T_DEINIT));
 	node->fun=fun;
 	node->data=data;
 	LOCK(mutex_mem);
@@ -237,47 +244,48 @@ void register_deinit(void (*fun)(void), void *data){
 	UNLOCK(mutex_mem);
     }
 }
-void malloc_dbg_enable(){
-    CALLOC=calloc_dbg;
-    MALLOC=malloc_dbg;
-    REALLOC=realloc_dbg;
-    FREE=free_dbg;
+
+void* malloc(size_t size){
+    return mem_debug?malloc_custom(size):malloc_default(size);
 }
-int malloc_dbg_disable(int print){
-    int dbg_enabled=0;
-    if(MALLOC==malloc_dbg){
-	dbg_enabled=1;
-    }
-    CALLOC=calloc_default;
-    MALLOC=malloc_default;
-    REALLOC=realloc_default;
-    FREE=free_default;
-    if(dbg_enabled && print){
-	if(MROOT){
-	    warning("%ld (%.3f MB) allocated memory not freed!!!\n",
-		    memcnt, (memalloc-memfree)/1024./1024.);
-	    twalk(MROOT,stat_usage);
-	    twalk(MSTATROOT, print_usage);
-	}else{
-	    info("All allocated memory are freed.\n");
-	    if(memcnt>0){
-		warning("But memory count is still none zero: %ld\n",memcnt);
-	    }
+void *calloc(size_t size, size_t nmemb){
+    return mem_debug?calloc_custom(size, nmemb):calloc_default(size,nmemb);
+}
+void* realloc(void *p, size_t size){
+    return mem_debug?realloc_custom(p, size):realloc_default(p,size);
+}
+void free(void *p){
+    if(mem_debug) free_custom(p); else free_default(p);
+}
+
+void print_mem(){
+    if(MROOT){
+	warning("%ld (%.3f MB) allocated memory not freed!!!\n",
+		memcnt, (memalloc-memfree)/1024./1024.);
+	twalk(MROOT,stat_usage);
+	twalk(MSTATROOT, print_usage);
+    }else{
+	info("All allocated memory are freed.\n");
+	if(memcnt>0){
+	    warning("But memory count is still none zero: %ld\n",memcnt);
 	}
-	info2("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
-	info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
     }
-    return dbg_enabled;
+    info2("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
+    info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
 static __attribute__((constructor)) void init(){
+    calloc_default=(void*(*)(size_t, size_t))dlsym(RTLD_NEXT, "calloc");
+    malloc_default=(void*(*)(size_t))dlsym(RTLD_NEXT, "malloc");
+    realloc_default=(void*(*)(void*, size_t))dlsym(RTLD_NEXT, "realloc");
+    free_default=(void(*)(void*))dlsym(RTLD_NEXT, "free");
     READ_ENV_INT(MEM_DEBUG, 0, 1);
     READ_ENV_INT(MEM_VERBOSE, 0, 2);
-    if(!CALLOC){
-	if(MEM_DEBUG){
-	    malloc_dbg_enable();
-	}else{
-	    malloc_dbg_disable(0);
-	}
+    mem_debug=MEM_DEBUG;
+    if(mem_debug){
+	malloc_custom=malloc_dbg;
+	realloc_custom=realloc_dbg;
+	calloc_custom=calloc_dbg;
+	free_custom=free_dbg;
     }
     void init_process(void);
     init_process();
@@ -302,12 +310,13 @@ static __attribute__((destructor)) void deinit(){
     for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
 	DEINIT=p1->next;
 	//if(p1->fun) p1->fun();
-	//if(p1->data) FREE(p1->data);
+	//if(p1->data) myfree(p1->data);
 	free_default(p1);
     }
-    if(MALLOC==malloc_dbg){
+    if(mem_debug){
 	if(!exit_fail){
-	    malloc_dbg_disable(1);
+	    if(!mem_debug) return;
+	    print_mem();
 	}else{
 	    info("exit_fail=%d\n", exit_fail);
 	}

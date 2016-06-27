@@ -79,7 +79,7 @@ void X(invspd_inplace)(X(mat) *A){
     ptrdiff_t info=0, N=A->nx;
     const char uplo='U';
     /* B is identity matrix */
-    T *B=calloc(N*N,sizeof(T));
+    T *B=(T*)mycalloc(N*N,T);
     for(long i=0;i<N;i++){
 	B[i+i*N]=1;
     }
@@ -110,11 +110,11 @@ void X(inv_inplace)(X(mat)*A){
     if(!A) return;
     if(A->nx!=A->ny) error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
     ptrdiff_t info=0, N=A->nx;
-    T *B=calloc(N*N,sizeof(T));
+    T *B=(T*)mycalloc(N*N,T);
     for(int i=0;i<N;i++){
 	B[i+i*N]=1;
     }
-    ptrdiff_t *ipiv=calloc(N, sizeof(int));
+    ptrdiff_t *ipiv=(ptrdiff_t*)mycalloc(N,ptrdiff_t);
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
 	writebin(A,"gesv");
@@ -325,13 +325,13 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     T work0[1];
     ptrdiff_t info=0;
 #ifdef USE_COMPLEX
-    R *rwork=malloc(nsvd*5*sizeof(R));
+    R *rwork=(R*)mymalloc(nsvd*5,R);
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
 #endif
     lwork=(ptrdiff_t)creal(work0[0]);
-    T *work1=malloc(sizeof(T)*lwork);
+    T *work1=(T*)mymalloc(lwork,T);
 #ifdef USE_COMPLEX
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
 #else

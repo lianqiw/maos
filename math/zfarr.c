@@ -26,11 +26,11 @@ zfarr* zfarr_init(long nx, long ny,const char*format,...){
     format2fn;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    zfarr *out=calloc(1, sizeof(zfarr));
+    zfarr *out=(zfarr*)mycalloc(1,zfarr);
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=nx*ny;
-    header_t header={MCC_ANY, nx, ny, NULL};
+    header_t header={MCC_ANY, (uint64_t)nx, (uint64_t)ny, NULL};
     write_header(&header, out->fp);
     return out;
 }

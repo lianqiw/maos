@@ -141,7 +141,7 @@ INLINE int issp(const void *id){
 
 #endif //if USE_LONG
 
-#define ABS2(A) ((A)*conj(A))
+#define ABS2(A) creal((A)*conj(A))
 INLINE int ismat(const void *id){
     const uint32_t magic=*((const uint32_t*)id);
     return (magic==M_T);

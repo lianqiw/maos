@@ -843,7 +843,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		info2("Step %d: Update matched filter for powfs %d\n", simu->isim, ipowfs);
 		//For matched filter
 		if(!powfs[ipowfs].intstat){
-		    powfs[ipowfs].intstat=calloc(1, sizeof(INTSTAT_T));
+		    powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 		}
 		parms->powfs[ipowfs].radgx=0;//ensure derivate is interpreted as along x/y.
 		if(!powfs[ipowfs].intstat->i0 || powfs[ipowfs].intstat->i0->ny!=nwfs){

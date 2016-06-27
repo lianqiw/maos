@@ -12,7 +12,7 @@ static void test_grid_proj(){
     double bx=tmp->p[0];
     double by=tmp->p[1];
     dfree(tmp);
-    rmap_t *mapin=calloc(1, sizeof(rmap_t));
+    rmap_t *mapin=mycalloc(1,rmap_t);
     mapin->p=junk->p;
     mapin->ox=X->p[0];
     mapin->oy=Y->p[0];
@@ -41,7 +41,7 @@ static void test_grid_proj(){
     loc_t* loc2=locread("aper_locs.bin");
     
     dmat *amp=dread("aper_amp.bin");
-    double *phi2=calloc(1, sizeof(double)*loc2->nloc);
+    double *phi2=(double*)calloc(1, sizeof(double)*loc2->nloc);
     proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
 		   amp->p,phi2,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);

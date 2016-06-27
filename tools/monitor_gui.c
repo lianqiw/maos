@@ -121,7 +121,7 @@ static void create_entry(PROC_T *p){
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_timing,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    change_button(p, GTK_STOCK_PREFERENCES, kill_job_event);
+    change_button(p, GTK_STOCK_PREFERENCES, (void*)kill_job_event);
     gtk_box_pack_start(GTK_BOX(p->hbox),p->btn,FALSE,FALSE,0);
     p->vbox=gtk_vbox_new(FALSE,0);
     if(nproc[p->hid]==1){
@@ -228,7 +228,7 @@ gboolean refresh(PROC_T *p){
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Queued");
 	break;
     case S_FINISH:/*Finished */
-	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
+	change_button(p,GTK_STOCK_APPLY,(void*)delete_hbox_event);
 	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);/*progress bar color.(filled bkgrnd) */
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&green);/*progress bar color.(empty bkgrnd) */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Skipped");
@@ -236,18 +236,18 @@ gboolean refresh(PROC_T *p){
 	break;
     case S_CRASH:/*Error */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Error");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(void*)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;
     case S_TOKILL:/*kill command sent */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Kill command sent");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(void*)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&yellow);
 	break;
     case S_KILLED:
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Killed");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(void*)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;

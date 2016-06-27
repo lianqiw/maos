@@ -24,7 +24,7 @@
 */
 dcell *genactcpl(const dspcell *HA, const dmat *W1){
     int ndm=HA->ny;
-    dcell *actcplc=cellnew(ndm, 1);
+    dcell *actcplc=dcellnew(ndm, 1);
     for(int idm=0; idm<ndm; idm++){
 	for(int ifit=0; ifit<HA->nx; ifit++){
 	    dsp *ha=HA->p[ifit+idm*HA->nx];
@@ -76,7 +76,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	error("scl=%g is too small\n", scl);
     }
     int ndm=aloc->nx;
-    dspcell *actslavec=cellnew(ndm, ndm);/*block diagonal. */
+    dspcell *actslavec=(dspcell*)cellnew(ndm, ndm);/*block diagonal. */
     dspcell*  actslave=actslavec;
     int nslavetot=0;
     /*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
@@ -323,7 +323,7 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
     dspcell *dHA=NULL;
     if(HA && *HA){
 	int nfit=(*HA)->nx;
-	dHA=cellnew(nfit,ndm);
+	dHA=dspcellnew(nfit,ndm);
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!actfloat->p[idm]) continue;
@@ -339,9 +339,9 @@ void act_float(loccell *aloc, dspcell **HA, const dcell *HB, const lcell *actflo
 	/*which floating actuator to assign for this one. */
 	lmat *indfloat=lnew(4, nact);
 	/*number of floating actuators that is assigned for this one. */
-	long *nindfloat=calloc(nact, sizeof(long));
+	long *nindfloat=mycalloc(nact,long);
 	/*active neighbors of each dead act. */
-	long *neighbor=calloc(nact, sizeof(long));
+	long *neighbor=mycalloc(nact,long);
 	long nzmax=0;
 	long *isfloat=actfloat->p[idm]->p;
 	/*loop through the floating actuators */
@@ -478,7 +478,7 @@ dspcell* act_float_interp(loccell *aloc,  /**<[in] Actuator grid array*/
 			  const lcell *actfloat/**<[in] List of floating actuators*/
     ){
     int ndm=aloc->nx;
-    dspcell *out=cellnew(ndm, ndm);
+    dspcell *out=dspcellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
 	loc_create_map(aloc->p[idm]);
 	map_t *map=aloc->p[idm]->map;
@@ -635,7 +635,7 @@ dspcell* act_extrap(loccell *aloc,     /**<[in] Actuator grid array*/
 		    const double thres /**<[in] Threshold of coupling to turn on interpolation*/
     ){
     int ndm=actcplc->nx;
-    dspcell *out=cellnew(ndm, ndm);
+    dspcell *out=dspcellnew(ndm, ndm);
     for(int idm=0; idm<ndm; idm++){
 	out->p[idm+ndm*idm]=act_extrap_do(aloc->p[idm], actcplc->p[idm], thres);
     }

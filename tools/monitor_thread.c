@@ -56,7 +56,7 @@ PROC_T *proc_get(int id,int pid){
 static PROC_T *proc_add(int id,int pid){
     PROC_T *iproc;
     if((iproc=proc_get(id,pid))) return iproc;
-    iproc=calloc(1, sizeof(PROC_T));
+    iproc=mycalloc(1,PROC_T);
     iproc->iseed_old=-1;
     iproc->pid=pid;
     iproc->hid=id;
@@ -276,7 +276,7 @@ static int respond(int sock){
 
    write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
 void listen_host(){
-    htime=calloc(nhost, sizeof(double));
+    htime=mycalloc(nhost,double);
     FD_ZERO(&active_fd_set);
     FD_SET(sock_main[0], &active_fd_set);
     int keep_listen=1;

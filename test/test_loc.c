@@ -2,7 +2,7 @@
 /*
 static void test_w1(){
     loc_t *loc=mksqloc2(200,200,1./64.);
-    double *amp=calloc(loc->nloc, sizeof(double));
+    double *amp=mycalloc(loc->nloc,double);
     loccircle(amp,loc,0,0, 1,1);
     drawopd("test_loc",loc,amp,"loc");
     normalize(amp,loc->nloc,1);

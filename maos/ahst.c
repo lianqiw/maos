@@ -61,7 +61,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
     int nloc=plocs->nloc;
     double *amp=aper->amp->p;
     const int nmod=ngsmod->nmod;
-    dcell *mcc=cellnew(parms->evl.nevl,1);
+    dcell *mcc=dcellnew(parms->evl.nevl,1);
     dmat *aMCC=aper->mcc;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	dmat *MCC=mcc->p[ievl]=dnew(nmod,nmod);
@@ -74,7 +74,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 	mod[0]=x;
 	mod[1]=y;
 	for(int imod=2; imod<nmod; imod++){
-	    mod[imod]=malloc(nloc*sizeof(double));
+	    mod[imod]=mymalloc(nloc,double);
 	}
 	/*dc component of the focus mod. subtract during evaluation. */
 	/*this is not precisely R^2/2 due to obscuration */
@@ -141,7 +141,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
     double *amp=NULL;
     if(use_ploc){
 	loc=recon->floc;
-	amp=calloc(loc->nloc,sizeof(double));
+	amp=mycalloc(loc->nloc,double);
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
@@ -153,7 +153,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
-	dspcell *Hat=cellnew(ndm,1);
+	dspcell *Hat=dspcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -192,7 +192,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     double *amp=NULL;
     if(use_ploc){
 	loc=recon->floc;
-	amp=calloc(loc->nloc,sizeof(double));
+	amp=mycalloc(loc->nloc,double);
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
@@ -203,7 +203,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     y=loc->locy;
     nloc=loc->nloc;
 
-    dcell *modc=cellnew(1,1);/*W*Hm*M */
+    dcell *modc=dcellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
     dmat *mod=modc->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
@@ -213,7 +213,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     const double MCC_fcp=ngsmod->aper_fcp;
     /*dc component of the focus mod. subtract during evaluation. */
     /*this is not precisely R^2/2 due to obscuration */
-    dcell *HatWHmt=cellnew(ndm,1);
+    dcell *HatWHmt=dcellnew(ndm,1);
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
@@ -244,7 +244,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	dspcell *Hat=cellnew(ndm,1);
+	dspcell *Hat=dspcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -264,7 +264,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	dspcellfree(Hat);
     }
     dspfree(HatGround);
-    dcell *IMCC=cellnew(1,1);
+    dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC);
     dcell *Pngs=NULL;
     dcellmm(&Pngs,IMCC,HatWHmt,"nt",1);
@@ -292,7 +292,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     double *amp=NULL;
     if(use_ploc){
 	loc=recon->floc;
-	amp=calloc(loc->nloc,sizeof(double));
+	amp=mycalloc(loc->nloc,double);
 	prop_nongrid_bin(aper->locs, aper->amp->p,loc,amp,1,0,0,1);
 	normalize_sum(amp,loc->nloc,1);
     }else{
@@ -303,20 +303,20 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     y=loc->locy;
     nloc=loc->nloc;
 
-    dcell *modc=cellnew(1,1);/*W*Hm*M */
+    dcell *modc=dcellnew(1,1);/*W*Hm*M */
     modc->p[0]=dnew(nloc,nmod);
     dmat *mod=modc->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
 	IND(mod,iloc,0)=x[iloc]*amp[iloc];
 	IND(mod,iloc,1)=y[iloc]*amp[iloc];
     }
-    dcell *HatWHmt=cellnew(ndm,1);
+    dcell *HatWHmt=dcellnew(ndm,1);
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
 	double thetax=parms->evl.thetax->p[ievl];
 	double thetay=parms->evl.thetay->p[ievl];
-	dspcell *Hat=cellnew(ndm,1);
+	dspcell *Hat=dspcellnew(ndm,1);
 	for(int idm=0; idm<ndm; idm++){
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
@@ -334,9 +334,9 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	}
 	dspcellfree(Hat);
     }
-    dcell *IMCC=cellnew(1,1);
+    dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC_TT);
-    dcell *Ptt=cellnew(ndm,1);
+    dcell *Ptt=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
 	dmm(&(Ptt->p[idm]),0,IMCC->p[0],HatWHmt->p[idm],"nt",1);
     }
@@ -355,10 +355,10 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod; 
     int ndm=parms->ndm;
     int nmod=ngsmod->nmod;
-    dcell *M=cellnew(1,1);
+    dcell *M=dcellnew(1,1);
     M->p[0]=dnew(nmod,1);
-    dcell *mod=cellnew(ndm,1);
-    dcell *dmt=cellnew(ndm,1);
+    dcell *mod=dcellnew(ndm,1);
+    dcell *dmt=dcellnew(ndm,1);
     loc_t **aloc=recon->aloc->p;
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
@@ -387,14 +387,14 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
     NGSMOD_T *ngsmod=recon->ngsmod;
     loc_t **aloc=recon->aloc->p;
     const int ndm=parms->ndm;
-    dcell *dmt=cellnew(ndm,1);
+    dcell *dmt=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
     }
-    dcell *M=cellnew(1,1);
+    dcell *M=dcellnew(1,1);
     const int nmod=ngsmod->nmod;
     M->p[0]=dnew(nmod,1);
-    dcell *HMC=cellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
+    dcell *HMC=dcellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
     dcell* HM=HMC;/*PDELL*/;
     int nloc=aper->locs->nloc;
     for(int imod=0; imod<nmod; imod++){
@@ -428,7 +428,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     const double scale1=1.-scale;
     const int nmod=ngsmod->nmod;
     const double MCC_fcp=recon->ngsmod->aper_fcp;
-    dcell *HMC=cellnew(parms->evl.nevl,nmod);
+    dcell *HMC=dcellnew(parms->evl.nevl,nmod);
     dcell* HM=HMC;/*PDELL*/;
     double *x=aper->locs->locx;
     double *y=aper->locs->locy;
@@ -477,7 +477,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
 void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 
 		       const APER_T *aper, const POWFS_T *powfs){
     if(recon->ngsmod) error("Should only be called once\n");
-    NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
+    NGSMOD_T *ngsmod=recon->ngsmod=mycalloc(1,NGSMOD_T);
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
@@ -551,7 +551,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	/*we disabled GA for low order wfs in skysim mode. */
-	ngsmod->GM=cellnew(parms->nwfsr, 1);
+	ngsmod->GM=dcellnew(parms->nwfsr, 1);
 	int nttwfs=0;
 	int nttfwfs=0;
 	info2("Low order control includes WFS");
@@ -764,7 +764,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     /*convert mode vector and add to dm commands */
     const int ndm=recon->aloc->nx;
     if(!*dmc){
-	*dmc=cellnew(ndm,1);
+	*dmc=dcellnew(ndm,1);
     }
     for(int idm=0; idm<ndm; idm++){
 	if(!(*dmc)->p[idm]){

@@ -78,7 +78,7 @@ double  *xv1 = NULL,    /* temp arrays needed for computing   */
 		  	 * lanczos vectors                    */
 
 static
-char	*error[10] = {  /* error messages used by function    *
+const char	*error[10] = {  /* error messages used by function    *
 			 * check_parameters                   */
 	    NULL,
 	  " SORRY, YOUR MATRIX IS TOO BIG ",
@@ -472,7 +472,7 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
 
     size = 5 * n + (lanmax * 4 + 1);
     tptr = NULL;
-    if (!(tptr = malloc(size * sizeof(double)))){
+    if (!(tptr = (double*)malloc(size * sizeof(double)))){
 	perror("FIRST MALLOC FAILED in LANDR()");
 	raise(errno);
     }
@@ -491,8 +491,8 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
     /* compute eigenvectors */
     if (vectors) {
 	info("j=%ld\n",j);
-	xv1 = malloc((nrow+ncol)*(j+1) * sizeof(double));
-	xv2 = malloc(ncol * sizeof(double));
+	xv1 = mymalloc((nrow+ncol)*(j+1) ,double);
+	xv2 = mymalloc(ncol ,double);
 
 	kappa = ddmax(fabs(kappa), eps34);
 	ritvec(n, kappa, ritz, bnd, wptr[6], wptr[9], wptr[4], wptr[5]);
