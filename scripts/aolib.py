@@ -98,7 +98,8 @@ for funname in funcs: #loop over functions
     mx2c, c2mx, free_c=handle_type(funtype)
     if funtype !='void':
         fundef+='    plhs[0]='+c2mx+'('+funname+'_out);\n'
-        
+    else:
+        fundef+='    (void)plhs;\n'
     if len(pointer_output)>0:
         fundef+=pointer_output
     if len(free_c)>0:
@@ -106,6 +107,7 @@ for funname in funcs: #loop over functions
     fundef+=fundef_free
     fundef+='}'
     fundef0='void '+funname+'_mex(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){\n'
+    fundef0+='    (void)nlhs;\n';
     fundef0+='    if(nrhs!='+str(nargs)+') mexErrMsgTxt(\"Expect '+str(nargs)+' arguments\\n");\n'
     fundef=fundef0+fundef
     print(fundef, file=fpout)

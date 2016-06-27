@@ -31,7 +31,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     enum{
 	PL_COV2D,
 	PL_TOT,
-    }; 
+    };
+    (void)nlhs;
     if(nrhs !=P_TOT){
 	mexErrMsgTxt("Usage: cov2d=mk2dcov(loc, amp, cov, normalization)");
     }

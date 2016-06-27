@@ -105,7 +105,7 @@ int check_suffix(const char *fn, const char *suffix){
 char *argv2str(int argc, const char *argv[], const char* delim){
     if(!argc) return NULL;
     char *cwd=mygetcwd();
-    int slen=strlen(cwd)+2+strlen(HOME);
+    size_t slen=strlen(cwd)+2+strlen(HOME);
     if(!delim) delim=" ";
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
@@ -755,6 +755,8 @@ int sem_unlock(const char *key){
    Set scheduling priorities for the process to enable real time behavior.
 */
 void set_realtime(int icpu, int niceness){
+    (void)icpu;
+    (void)niceness;
     //Set CPU affinity.
     /*
       //Deprecated. Use external tools to do so, like openmp env's
@@ -805,7 +807,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
     info2("default_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
     int cancel_action=0;
-    struct sigaction act={{0}};
+    struct sigaction act;
+    act.sa_mask=0;
     act.sa_flags=0;
     act.sa_handler=SIG_DFL;
     sigaction(sig, &act, 0);
@@ -847,7 +850,8 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
    Register signal handler
 */
 void register_signal_handler(int (*func)(int)){
-    struct sigaction act={{0}};
+    struct sigaction act;
+    act.sa_mask=0;
     act.sa_sigaction=default_signal_handler;
     act.sa_flags=SA_SIGINFO;
     sigaction(SIGBUS, &act, 0);

@@ -24,6 +24,7 @@
 #include "interface.h"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
+    (void)nlhs;
     unsigned int seed,nlem;
     rand_t *p;
     if(nrhs!=1){

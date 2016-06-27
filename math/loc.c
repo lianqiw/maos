@@ -854,7 +854,7 @@ void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double r
     double rr2max=pow(r+0.25*(loc->dx+loc->dy),2);
     double rr2min=MIN(rin*rin, pow(rin-0.25*(loc->dx+loc->dy),2));
     for(long iloc=0; iloc<loc->nloc; iloc++){
-	double r2=pow(loc->locx[iloc],2)+pow(loc->locy[iloc],2);
+	double r2=pow(loc->locx[iloc]-cx,2)+pow(loc->locy[iloc]-cy,2);
 	if(r2<rr2min || r2>rr2max){
 	    phi[iloc]=0;
 	}

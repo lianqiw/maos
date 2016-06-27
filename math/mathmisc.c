@@ -303,7 +303,7 @@ void remove_piston(double *p, long n){
 */
 long nextpow2(long n){
     n--;
-    for(long i=1; i<sizeof(long)*8; i<<=1){
+    for(size_t i=1; i<sizeof(long)*8; i<<=1){
 	n = n | (n >> i);
     }
     return n+1;
@@ -419,21 +419,21 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
 	switch(magic & 0xFFFF){
 	case M_INT64:{
 	    uint64_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
+	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
 	}
 	    break;
 	case M_INT32:{
 	    uint32_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
+	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
 	}
 	    break;
 	case M_DBL:{
 	    double *p2=p;
-	    for(unsigned long j=0; j<len; j++){
+	    for(long j=0; j<len; j++){
 		out[j]=(spint)p2[j];
 	    }
 	}

@@ -42,6 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_OTF,
 	PL_TOT,
     };
+    (void)nlhs;
     if(nrhs !=P_TOT){
 	mexErrMsgTxt("Usage: otf=genotfmex(loc, amp, opdbias, area, thres, wvl, "
 		     "dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr)\n"

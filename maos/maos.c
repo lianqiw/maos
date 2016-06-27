@@ -90,7 +90,7 @@ void maos_setup(const PARMS_T *parms){
 #endif
 	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
-	setup_recon(recon, parms, powfs, aper);
+	setup_recon(recon, parms, powfs);
 	if(parms->recon.alg==0 || parms->sim.dmproj){
 	    setup_recon_fit(recon, parms);
 	}
@@ -166,7 +166,7 @@ void maos_reset(){
     free_simu(global->simu);
     free_recon(parms,global->recon); 
     free_powfs(parms,global->powfs); 
-    free_aper(parms, global->aper);
+    free_aper(global->aper);
     free_parms(parms);
 #if USE_CUDA
     if(use_cuda){

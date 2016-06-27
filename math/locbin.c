@@ -152,7 +152,7 @@ mapcell *dcell2map(dcell *in){
  * Read map_t from file
  */
 map_t *mapreaddata(file_t *fp, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);

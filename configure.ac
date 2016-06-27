@@ -141,7 +141,7 @@ fi
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
+    OPTScommon="-Wshadow -Wall -Wextra -Werror $OPTScommon"
 fi
 LDEXE=
 OPTS=

@@ -20,7 +20,7 @@
 #define AOS_RECON_UTILS_H
 #include "common.h"
 
-void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, double alpha, int nthread);
+void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, double alpha);
 void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
 void apply_fractal(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);

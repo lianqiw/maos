@@ -99,7 +99,7 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
    Like ploc, but for DM fitting
 */
 static void
-setup_recon_floc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
+setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
     double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
@@ -258,7 +258,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
    Setup the deformable mirrors grid aloc. This is used for DM fitting.
 */
 static void
-setup_recon_aloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
+setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm==0) return;
     if(parms->fit.cachedm){
@@ -1146,9 +1146,9 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     /*fine sampled pupil loc*/
     setup_recon_gloc(recon,parms, aper);
     /*setup DM actuator grid */
-    setup_recon_aloc(recon,parms,aper);
+    setup_recon_aloc(recon,parms);
     /*Grid for DM fitting*/
-    setup_recon_floc(recon,parms, aper);
+    setup_recon_floc(recon,parms);
     /*Gradient operators*/
     setup_recon_GP(recon, parms, powfs);
     //TT Removal

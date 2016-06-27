@@ -325,7 +325,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(SERVO_CALC_T));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     st.pmargin=pmargin;
@@ -365,7 +365,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
    PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
  */
 dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double sigma2n){
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdcl, dt, dtrat);
     const dmat *nu=st.nu;
     const dmat *psd=st.psd;
@@ -399,7 +399,7 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
    Tested OK: 2010-06-11
 */
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type){
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     switch(servo_type){

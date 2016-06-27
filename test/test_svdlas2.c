@@ -142,6 +142,7 @@ static const dsp* A2=NULL;
  * n = ncol (y stores product vector).		              *
  **************************************************************/
 static void opb(long n, double *x, double *y){
+    (void)n;
     dmat *tmp=dnew(A2->nx, 1);
     dspmulvec(tmp->p, A2, x, 'n',1);
     memset(y, 0, sizeof(double)*A2->ny);

@@ -30,6 +30,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_MAP,
 	PL_TOT,
     };
+    (void)nlhs;
     if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: [map]=mkcirmap(nx, ny, cx, cy, radius)\n");
     }

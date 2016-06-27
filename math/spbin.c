@@ -54,7 +54,7 @@ void X(spwritedata)(file_t *fp, const X(sp) *sp){
    library developer.
   */
 X(sp) *X(spreaddata)(file_t *fp, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);

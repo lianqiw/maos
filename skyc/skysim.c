@@ -134,7 +134,7 @@ static void skysim_isky(SIM_S *simu){
 	    /*Compute signal level. */
 	    setup_aster_copystar(&aster[iaster], star, parms);
 	    /*setup gradient operator. */
-	    setup_aster_g(&aster[iaster], star, powfs, parms);
+	    setup_aster_g(&aster[iaster], star, parms);
 	    /*Compute the reconstructor, nea, sigman and optimize controller. */
 	    setup_aster_ztilt(&aster[iaster], star, parms);
 	    setup_aster_controller(simu, &aster[iaster], star, parms);

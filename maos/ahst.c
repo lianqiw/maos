@@ -650,8 +650,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 /**
    setup NGS modes reconstructor in ahst mode.
  */
-void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon, 
-			const APER_T *aper, const POWFS_T *powfs){
+void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod;
     if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
 	cellfree(ngsmod->Rngs);

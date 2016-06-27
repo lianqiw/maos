@@ -139,7 +139,7 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
     dmat *UpV=NULL;
     /*UpV=(I-Up'*V)^{-1} */
     dmm(&UpV,0,*Up,V,"tn",-1);
-    for(unsigned long ii=0; ii<UpV->ny; ii++){
+    for(long ii=0; ii<UpV->ny; ii++){
 	UpV->p[ii+ii*UpV->nx]+=1;
     }
     dinv_inplace(UpV);

@@ -40,7 +40,7 @@
    Apply Laplacian2 to xin and accumulates to xout.
 */
 void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, 
-	      double alpha, int nthread){
+	      double alpha){
     dcell *xx=NULL;
     dcellmm(&xx, L2, xin, "nn", 1.);
     dcellmm(xout, L2, xx, "tn", alpha);

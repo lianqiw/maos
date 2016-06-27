@@ -980,7 +980,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    }
 
 	    if(!parms->powfs[ipowfs].lo && parms->recon.alg==0){//no need to update LSR.
-		setup_recon(simu->recon, parms, powfs, simu->aper);
+		setup_recon(simu->recon, parms, powfs);
 #if USE_CUDA
 		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
 		    gpu_update_recon(parms, powfs, simu->recon);

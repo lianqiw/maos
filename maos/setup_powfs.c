@@ -64,7 +64,7 @@
    Free the powfs geometric parameters
 */
 static void
-free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
+free_powfs_geom(POWFS_T *powfs, int ipowfs){
     if(!powfs[ipowfs].pts){
 	return;
     }
@@ -232,7 +232,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea, int reduce_isolated){
 static void 
 setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
 		 APER_T *aper, int ipowfs){
-    free_powfs_geom(powfs, parms, ipowfs);
+    free_powfs_geom(powfs,ipowfs);
     int nwfsp=parms->powfs[ipowfs].nwfs;
     /*order of the system. 60 for TMT */
     const int order  = parms->powfs[ipowfs].order;
@@ -1574,7 +1574,7 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
     }
 }
 void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    free_powfs_geom(powfs, parms, ipowfs);
+    free_powfs_geom(powfs,ipowfs);
     dtf_free(powfs[ipowfs].dtf, parms->powfs[ipowfs].nwvl);
     dspcellfree(powfs[ipowfs].GS0);
     dcellfree(powfs[ipowfs].neasim);

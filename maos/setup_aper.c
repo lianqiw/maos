@@ -173,7 +173,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 }
 /**
    Free the aper structure after simulation*/
-void free_aper(const PARMS_T *parms, APER_T *aper){
+void free_aper(APER_T *aper){
     /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
     dfree(aper->amp);

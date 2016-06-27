@@ -88,7 +88,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	}else{
 	    //Find the next space, coma or semi-colon.
 	    char sep[]=" ,;";
-	    for(int is=0; is<sizeof(sep); is++){
+	    for(size_t is=0; is<sizeof(sep); is++){
 		const char *tmp=strchr(sdata2, sep[is]);
 		if(tmp && tmp<sdata4 && tmp<sdataend){
 		    sdata4=tmp;
@@ -314,10 +314,10 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    _Exit(1);
 	}
     }
-    int count=0;
-    int nrow=0;/*number of rows*/ 
-    int ncol=0;/*number of columns*/
-    int rowbegin=0;/*beginning of this row*/
+    size_t count=0;
+    size_t nrow=0;/*number of rows*/ 
+    size_t ncol=0;/*number of columns*/
+    size_t rowbegin=0;/*beginning of this row*/
     /*Read in the array */
     while(startptr[0]!=']' && !is_end(startptr[0])){
 	if(count>=nmax){
@@ -369,7 +369,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		if(nrow==0){
 		    nrow=count-rowbegin;
 		}else if(nrow!=count-rowbegin){
-		    error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
+		    error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
 		}
 		rowbegin=count;
 	    }
@@ -381,22 +381,22 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	if(nrow==0){
 	    nrow=count-rowbegin;
 	}else if(nrow!=count-rowbegin){
-	    error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
+	    error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
 	}
     }
     if(nrow*ncol!=count){
-	error("{%s}: nrow=%d, ncol=%d, count=%d\n", data, nrow, ncol, count);
+	error("{%s}: nrow=%zu, ncol=%zu, count=%zu\n", data, nrow, ncol, count);
     }
 
     if(trans && count>0){
-	info("Transposing %dx%d array\n", ncol, nrow);
+	info("Transposing %zux%zu array\n", ncol, nrow);
 	void *newer=calloc(count, size);
 	switch(type){
 	case M_INT:{
 	    int *from=(*ret);
 	    int *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }
@@ -405,8 +405,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	case M_LONG:{
 	    long *from=(*ret);
 	    long *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }
@@ -415,8 +415,8 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	case M_DBL:{
 	    double *from=(*ret);
 	    double *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }

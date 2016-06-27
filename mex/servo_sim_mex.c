@@ -30,7 +30,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_RES,
 	PL_TOT,
     };
-    
+    (void)nlhs;    
     if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: gain=servo_test(input, dt, dtrat, sigman, gain);\n"
 		     "input is input time series. Should match the PSD used for gain optimization\n"

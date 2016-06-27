@@ -399,6 +399,7 @@ void X(fft_free_plan)(fft_t *fft){
     }
 }
 void X(fft2)(X(mat) *A, int dir){
+    (void)A; (void)dir;
     error("libfftw3f is not available\n");
 }
 #endif //!defined(USE_SINGLE) || HAS_FFTWF==1

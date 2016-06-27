@@ -177,7 +177,7 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 /**
    Compute Modal to gradient operator by copying from the stars. Using average
 gradients. Similar to Z tilt since the mode is low order */
-void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *parms){
+void setup_aster_g(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     /*2010-06-08: Tested against MATLAB skycoverage code. */
     aster->g=cellnew(aster->nwfs,1);
     if(parms->maos.nmod<5 || parms->maos.nmod>6){
@@ -283,7 +283,7 @@ static dmat *calc_recon_error(const dmat *pgm,   /**<[in] the reconstructor*/
     return res;
 }
 
-void setup_aster_lsr(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
+void setup_aster_lsr(ASTER_S *aster, const PARMS_S *parms){
     int ndtrat=parms->skyc.ndtrat;
     if(aster->pgm){
 	dcellfree(aster->pgm);
@@ -456,7 +456,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	writebin(aster->res_ngs,"%s/aster%d_res_ngs",dirsetup,aster->iaster);
     }
 }
-static void setup_aster_kalman_dtrat(ASTER_S *aster, STAR_S *star, const PARMS_S *parms, int idtrat_wfs0){
+static void setup_aster_kalman_dtrat(ASTER_S *aster, const PARMS_S *parms, int idtrat_wfs0){
     if(parms->skyc.verbose){
 	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, 
 	      (int)parms->skyc.dtrats->p[idtrat_wfs0]);
@@ -517,7 +517,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	int idtrat_min=0;
 	//Try progressively lower sampling frequencies until performance starts to degrades
 	for(int idtrat_limit=wfs0_max; idtrat_limit>wfs0_min; idtrat_limit--){
-	    setup_aster_kalman_dtrat(aster, star, parms, idtrat_limit);
+	    setup_aster_kalman_dtrat(aster, parms, idtrat_limit);
 	    aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam[0], 0);
 	    dmat *rests=0;
 #if 1   //more accurate
@@ -547,7 +547,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 		}
 	    }
 	}
-	setup_aster_kalman_dtrat(aster, star, parms, idtrat_min);
+	setup_aster_kalman_dtrat(aster, parms, idtrat_min);
 	if(parms->skyc.verbose) info2("selected\n");
 	aster->res_ngs->p[0]=resmin;
 	aster->kalman[0]=kalman_min;
@@ -595,7 +595,7 @@ void setup_aster_controller(SIM_S *simu, ASTER_S *aster, STAR_S *star, const PAR
     if(parms->skyc.servo<0){
 	setup_aster_kalman(simu, aster, star, parms);
     }else{
-	setup_aster_lsr(aster, star, parms);
+	setup_aster_lsr(aster, parms);
 	setup_aster_servo(simu, aster, parms);
     }
 }

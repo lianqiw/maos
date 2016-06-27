@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if(nrhs < P_TOT){
 	mexErrMsgTxt("Usage: psd=psd1d(data, nseg)");
     }
-    
+    (void)nlhs;    
     dmat *data=mx2d(prhs[P_DATA]);
     long nseg=(long)mxGetScalar(prhs[P_NSEG]);
     dmat *psd;

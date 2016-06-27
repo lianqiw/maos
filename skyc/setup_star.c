@@ -489,7 +489,7 @@ long setup_star_read_ztilt(STAR_S *star, int nstar, const PARMS_S *parms, int se
 		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty))/wtsum;
 		    if(fnztilt[iy][ix]){
 			file_t *fp_ztilt=zfopen(fnztilt[iy][ix],"rb");
-			header_t header={0};
+			header_t header={0,0,0,0};
 			read_header(&header, fp_ztilt);
 			
 			if(iscell(&header.magic)){
@@ -603,7 +603,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    if(fnwvf[iy][ix]){
 			/*info("Loading %.4f x %s\n", wtxi, fnwvf[iy][ix]); */
 			file_t *fp_wvf=zfopen(fnwvf[iy][ix],"rb");
-			header_t header={0};
+			header_t header={0,0,0,0};
 			read_header(&header, fp_wvf);
 			if(!iscell(&header.magic)){
 			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);

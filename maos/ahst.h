@@ -32,8 +32,7 @@ void ngsmod2science(dmat *iopd, loc_t *loc, const NGSMOD_T *ngsmod,
 void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 
 		       const APER_T *aper, const POWFS_T* powfs);
 
-void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon, 
-			const APER_T *aper, const POWFS_T* powfs);
+void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon);
 
 void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 		     double *ngsmod_out,

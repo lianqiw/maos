@@ -31,6 +31,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_KALMAN,
 	PL_TOT,
     };
+    (void)nlhs;
     if(nrhs!=P_TOT){
 	mexErrMsgTxt("Usage: kalman=sde_kalman_mex(coeff, dthi, dtrat, Gwfs, Rwfs, Proj)\n");
     }

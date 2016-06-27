@@ -2811,7 +2811,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
     if(parms->nwfs==1 && ngpu==0) ngpu=1;
     if(use_cuda) use_cuda=gpu_init(parms, gpus, ngpu);
 #else
-    use_cuda=0;
+    use_cuda=0; (void) gpus; (void)ngpu;
 #endif
     if(use_cuda){
 	if(parms->sim.evlol){

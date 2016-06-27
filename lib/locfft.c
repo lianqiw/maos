@@ -179,10 +179,13 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 #endif
 }
 /**
-   Apply a field stop
+   Apply a field stop to the OPD.
 */
 void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
     int nwvl=locfft->wvl->nx;
+    if(nwvl>1){
+	warning("Not tested for multi-wavelength case yet.\n");
+    }
     ccell *wvfs=cellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int nembed=locfft->nembed->p[iwvl];
@@ -205,6 +208,7 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	 * for different wavelength result*/
 	error("Not implemented yet\n");
     }
+    dmat *opdold=ddup(opd); dzero(opd);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=locfft->wvl->p[iwvl];
 	double wvlh=wvl*0.5;
@@ -213,14 +217,13 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	lmat *embed=locfft->embed->p[iwvl];
 	for(int iloc=0; iloc<opd->nx; iloc++){
 	    double val=carg(wvf->p[embed->p[iloc]])*kki;
-	    if(fabs(val-opd->p[iloc])>wvlh){//need phase unwrapping
+	    if(fabs(val-opdold->p[iloc])>wvlh){//need phase unwrapping
 		warning_once("phase unwrapping is needed\n");
-		double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
+		double diff=fmod(val-opdold->p[iloc]+wvlh, wvl);
 		if(diff<0) diff+=wvl;
-		opd->p[iloc]+=diff-wvlh;
-	    }else{
-		opd->p[iloc]=val;
+		val=(diff-wvlh)+opdold->p[iloc];
 	    }
+	    opd->p[iloc]+=wvlwts->p[iwvl]*val;
 	}
     }
     ccellfree(wvfs);

@@ -196,7 +196,7 @@ fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int 
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
 static void 
-fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
+fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     long os=(long)round(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
 	error("dsa must be multiple of dx. dsa=%g, dx=%g, diff=%g\n", dsa, dx, fabs(dsa-dx*os));
@@ -250,7 +250,7 @@ fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
 static csp *
-fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
+fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
     long nx2[nps],nx3[nps];
     long ny2[nps],ny3[nps];
     long noff[nps];
@@ -368,8 +368,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *sel=fdpcg_saselect(nxp,nyp,dxp, saloc, powfs[hipowfs].saa->p);
     /*Gradient operator. */
     cmat *gx, *gy;
-    int ttr=parms->recon.split?1:0;
-    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx,ttr);/*tested ok. */
+    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
     /*Concatenate invpsd; */
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
     long offset=0;
@@ -476,7 +475,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 		dispy[ips]+=atm->p[ips0]->vy*parms->sim.dt*2;
 	    }
 	}
-	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
+	csp *propx=fdpcg_prop(nps,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){
 	    writebin(propx,"fdpcg_prop_wfs%d",iwfs);
 	}

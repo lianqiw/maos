@@ -357,7 +357,8 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	}
     }
     
-    GENOTF_T data={0};
+    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, ncompx, ncompy, nsa, pttr, B, pval, isafull, otffull};
+    /*
     data.otf=otf;
     data.loc=loc;
     data.amp=amp;
@@ -368,11 +369,12 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.ncompx=ncompx;
     data.ncompy=ncompy;
     data.nsa=nsa;
-    data.pttr=pttr;/*was missing. */
+    data.pttr=pttr;
     data.B=B;
     data.pval=pval;
     data.isafull=isafull;
     data.otffull=otffull;
+    */
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
     CALL_THREAD(info, 1);

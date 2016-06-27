@@ -551,6 +551,8 @@ void X(spconj)(X(sp) *A){
     for(long i=0; i<nzmax; i++){
 	A->x[i]=conj(A->x[i]);
     }
+#else
+    (void)A;    
 #endif
 }
 

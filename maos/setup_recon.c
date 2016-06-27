@@ -241,7 +241,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
    differential focus.
 */
 static void
-setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms){
     dcellfree(recon->PTT);
     dcellfree(recon->PDF);
     cellfree(recon->PTTF);
@@ -786,7 +786,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    sodium tracking error. Need to average out the focus error caused by
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
-setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
+setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
     if(parms->nlgspowfs){
 	if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
 	    dmat *GMGngs=NULL;
@@ -858,7 +858,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
    Setup reconstructor for TWFS
 */
 static void
-setup_recon_twfs(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
+setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     cellfree(recon->RRtwfs);
     dcell *GRtwfs=cellnew(parms->nwfsr, 1);
     dspcell *neai=cellnew(parms->nwfsr, parms->nwfsr);
@@ -1203,7 +1203,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
    MOAO is handled in setup_recon_moao().
    
 */
-void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APER_T *aper){
+void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     /*setup inverse noise covariance matrix. */
     /*prepare for tomography setup */
@@ -1331,16 +1331,16 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
-void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APER_T *aper){
+void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     TIC;tic;
     /*assemble noise equiva angle inverse from powfs information */
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
-    setup_recon_TTFR(recon,parms,powfs);
+    setup_recon_TTFR(recon,parms);
     /*mvst uses information here*/
-    setup_recon_focus(recon, powfs, parms);
+    setup_recon_focus(recon, parms);
     if(parms->itpowfs!=-1){ /*setup Truth wfs*/
-	setup_recon_twfs(recon,powfs,parms);
+	setup_recon_twfs(recon,parms);
     }
     if(!parms->sim.idealfit){
 	if(parms->recon.mvm && parms->load.mvm){
@@ -1348,10 +1348,10 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
 	}else{
 	    switch(parms->recon.alg){
 	    case 0:
-		setup_recon_tomo(recon, parms, powfs, aper);
+		setup_recon_tomo(recon, parms, powfs);
 		break;
 	    case 1:
-		setup_recon_lsr(recon, parms, powfs);
+		setup_recon_lsr(recon, parms);
 		break;
 	    default:
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
@@ -1362,7 +1362,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, const APE
     cellfree(recon->gamp);
     if(parms->recon.split){
 	/*split tomography */
-	setup_ngsmod_recon(parms,recon,aper,powfs);
+	setup_ngsmod_recon(parms,recon);
 	if(!parms->sim.idealfit && parms->recon.split==2 && parms->recon.alg==0){/*Need to be after fit */
 	    setup_recon_mvst(recon, parms);
 	}

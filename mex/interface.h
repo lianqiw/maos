@@ -53,8 +53,8 @@ INLINE mxArray *dsp2mx(const dsp*A){
     if(REFERENCE){
 	out=mxCreateSparse(0, 0, 0, mxREAL);
 	mxSetPr(out, A->x);
-	mxSetJc(out, A->p);
-	mxSetIr(out, A->i);
+	mxSetJc(out, (mwIndex*)A->p);
+	mxSetIr(out, (mwIndex*)A->i);
 	mxSetM(out, A->nx);
 	mxSetN(out, A->ny);
 	mxSetNzmax(out, A->nzmax);
@@ -189,8 +189,8 @@ INLINE dsp *mx2dsp(const mxArray *A){
 	out->nz=-1;
 	out->nx=mxGetM(A);
 	out->ny=mxGetN(A);
-	out->p=mxGetJc(A);
-	out->i=mxGetIr(A);
+	out->p=(spint*)mxGetJc(A);
+	out->i=(spint*)mxGetIr(A);
 	out->x=mxGetPr(A);
 	out->nzmax=mxGetNzmax(A);
     }

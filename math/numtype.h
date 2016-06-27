@@ -20,9 +20,9 @@
 #define AOS_MATH_NUMTYPE_H
 #include "../sys/sys.h"
 #if defined(DLONG)
-typedef unsigned long spint; /*Only optionally activated in AMD64. */
+typedef long spint; /*Only optionally activated in AMD64. */
 #else
-typedef unsigned int spint;  /*This is always 32 bit. */
+typedef int spint;  /*This is always 32 bit. */
 #endif
 
 #ifndef M_PI

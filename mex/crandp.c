@@ -20,6 +20,7 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
+    (void)nlhs;
     rand_t *strand;
     double *p,*pin;
     int nx,ny;

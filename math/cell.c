@@ -246,7 +246,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	}
 	id=0;/*determine id first for empty cell*/
 	if(nx && ny){
-	    for(int ix=0; ix<nx*ny; ix++){
+	    for(long ix=0; ix<(long)(nx*ny); ix++){
 		if(A->p[ix]){
 		    id=A->p[ix]->id;
 		    if(!id){
@@ -261,7 +261,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
 	write_header(&header, fp);
 	if(id){
-	    for(int ix=0; ix<A->nx*A->ny; ix++){
+	    for(long ix=0; ix<(long)(A->nx*A->ny); ix++){
 		writedata_by_id(fp, A->p[ix], 0);
 	    }
 	}
@@ -301,7 +301,7 @@ void write_by_id(const void *A, uint32_t id, const char* format,...){
     zfclose(fp);
 }
 cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -367,7 +367,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    long ny=header->ny;
 	    cell *dcout=cellnew(nx, ny);
 	    dcout->header=header->str; header->str=0;
-	    header_t headerc={0};
+	    header_t headerc={0,0,0,0};
 	    for(long i=0; i<nx*ny; i++){
 		read_header(&headerc, fp);
 		if(!headerc.str && dcout->header){//copy str from cell to mat.
