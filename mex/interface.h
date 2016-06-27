@@ -121,6 +121,7 @@ INLINE mxArray *lmat2mx(const lmat *A){
     memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(long));
     return out;
 }
+/*
 INLINE mxArray *dcell2mx(const dcell *A){
     if(!A) return mxCreateCellMatrix(0,0);
     mxArray *out=mxCreateCellMatrix(A->nx,A->ny);
@@ -140,7 +141,7 @@ INLINE mxArray *ccell2mx(const ccell *A){
 	}
     }
     return out;
-}
+    }*/
 mxArray *any2mx(const void *A_){
     mxArray *out=0;
     const cell *A=A_;
@@ -235,6 +236,7 @@ INLINE dmat *mx2d(const mxArray *A){
     }
     return out;
 }
+/*
 INLINE dmat *mx2dvec(const mxArray *A){
     dmat *out=mx2d(A);
     if(out->nx==1){
@@ -259,7 +261,7 @@ INLINE dcell *mx2dcell(const mxArray *A){
 	}
     }
     return out;
-}
+    }*/
 static void *mx2any(const mxArray *A){
     if(!mxIsCell(A)){
 	mexErrMsgTxt("A is not cell");
@@ -271,6 +273,8 @@ static void *mx2any(const mxArray *A){
 	    mxArray *Ai=mxGetCell(A, i);
 	    if(mxIsCell(Ai)){
 		out->p[i]=mx2any(Ai);
+	    }else if(mxGetPi(Ai)){
+		error("Complex type not handled by mx2any\n");
 	    }else if(mxGetIr(Ai)){
 		out->p[i]=(void*)mx2dsp(Ai);
 	    }else{
@@ -279,6 +283,65 @@ static void *mx2any(const mxArray *A){
 	}
     }
     return out;
+}
+static kalman_t *mx2kalman(const mxArray*A){
+    kalman_t *kalman=calloc(1, sizeof(kalman_t));
+    kalman->Ad=mx2any(mxGetField(A,0,"Ad"));
+    kalman->Cd=mx2any(mxGetField(A,0,"Cd"));
+    kalman->AdM=mx2any(mxGetField(A,0,"AdM"));
+    kalman->FdM=mx2any(mxGetField(A,0,"FdM"));
+    kalman->M=mx2any(mxGetField(A,0,"M"));
+    kalman->P=mx2any(mxGetField(A,0,"P"));
+    kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
+    kalman->dtrat=mx2any(mxGetField(A,0,"dtrat"));
+    kalman->Gwfs=mx2any(mxGetField(A,0,"Gwfs"));
+    kalman->Rwfs=mx2any(mxGetField(A,0,"Rwfs"));
+    return kalman;
+}
+static mxArray* kalman2mx(kalman_t *kalman){
+    const int nfield=12;
+    const char *fieldnames[]={"Ad","Cd","AdM","FdM","Qn","Rn","M","P", "dthi", "dtrat", "Gwfs", "Rwfs"};
+    mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
+    int pos=0;
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Ad));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Cd));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->AdM));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->FdM));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Qn));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Rn));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->M));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->P));
+    mxSetFieldByNumber(A, 0, pos++, mxCreateDoubleScalar(kalman->dthi));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->dtrat));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Gwfs));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(kalman->Rwfs));
+    if(pos!=nfield){
+	error("Invalid number of elements\n");
+    }
+    return A;
+}
+static mxArray *cn2est2mx(cn2est_t *cn2est){
+    const int nfield=12;
+    const char *fieldnames[]={"htrecon","wtrecon","r0m","ht","wt","r0","Pnk","iPnk","wtconvert","overlapi","cov2","cov1"};
+    int pos=0;
+    mxArray *A=mxCreateStructMatrix(1,1,nfield,fieldnames);
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->htrecon));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wtrecon->p[0]));
+    mxSetFieldByNumber(A, 0, pos++, mxCreateDoubleScalar(cn2est->r0m));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->ht));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wt));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->r0));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->Pnk));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->iPnk));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->wtconvert));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->overlapi));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->cov2));
+    mxSetFieldByNumber(A, 0, pos++, any2mx(cn2est->cov1));
+    if(pos!=nfield){
+	error("Invalid number of elements\n");
+    }
+    return A;
+
 }
 INLINE char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;

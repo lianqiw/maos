@@ -1166,7 +1166,7 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	if(parms->cn2.tomo){
 	    /*Use cn2 estimation results for tomography. Use its ht to build
 	      reconstructor matrices.*/
-	    CN2EST_T *cn2est=recon->cn2est;
+	    cn2est_t *cn2est=recon->cn2est;
 	    recon->ht=dref(cn2est->htrecon);
 	    recon->os=dref(cn2est->os);
 	    recon->wt=dref(cn2est->wtrecon->p[0]);

@@ -38,33 +38,6 @@
    2011-09-07: 
    Relocate simu->surfwfs to powfs.opdadd In order to perserve surface for different seeds
 */
-/**
-   Propagate tilt surface from star at hs, along direction (thetax, thetay), to loc.
-*/
-static void tsurf2loc(rmapcell *tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs){
-    for(int itsurf=0; itsurf<ntsurf; itsurf++){
-	const double alx=tsurf->p[itsurf]->txdeg/180*M_PI;
-	const double aly=tsurf->p[itsurf]->tydeg/180*M_PI;
-	const double ftel=tsurf->p[itsurf]->ftel;
-	const double fexit=tsurf->p[itsurf]->fexit;
-	const double fsurf=tsurf->p[itsurf]->fsurf;
-	const double mag=fexit/ftel;
-	const double scalex=-mag;
-	const double scaley=mag;
-	const double scaleopd=-2;
-	const double het=fexit-fsurf;/*distance between exit pupil and M3. */
-	rmap_t *mapsurf=tsurf->p[itsurf];
-
-	double d_img_focus=1./(1./ftel-1./hs)-ftel;
-	/*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
-	double d_img_exit=fexit+d_img_focus;
-		
-	/*2010-04-02: do not put - sign */
-	double bx=thetax*(d_img_focus+ftel)/d_img_exit;
-	double by=thetay*(d_img_focus+ftel)/d_img_exit;
-	proj_rect_grid(mapsurf,alx,aly,locin,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
-    }
-}
 
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
@@ -76,13 +49,17 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	tsurf->p[itsurf]=rmapread("%s",fn); 
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
-		  parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl], parms->evl.hs->p[ievl]);
+	for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+	    m3proj(tsurf->p[itsurf], aper->opdadd->p[ievl], aper->locs, 
+		   parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl], parms->evl.hs->p[ievl]);
+	}
     }
     if(parms->sim.ncpa_calib){
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-	    tsurf2loc(tsurf, parms->ntsurf, aper->opdfloc->p[ifit], recon->floc, 
-		      parms->sim.ncpa_thetax->p[ifit], parms->sim.ncpa_thetay->p[ifit], parms->sim.ncpa_hs->p[ifit]);
+	    for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+		m3proj(tsurf->p[itsurf], aper->opdfloc->p[ifit], recon->floc, 
+		       parms->sim.ncpa_thetax->p[ifit], parms->sim.ncpa_thetay->p[ifit], parms->sim.ncpa_hs->p[ifit]);
+	    }
 	}
     }
 
@@ -96,8 +73,10 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
-	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfs, 
-		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
+	for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+	    m3proj(tsurf->p[itsurf], powfs[ipowfs].opdadd->p[wfsind], locwfs, 
+		   parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
+	}
     }
     cellfree(tsurf);
 }

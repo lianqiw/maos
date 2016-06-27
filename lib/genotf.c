@@ -393,7 +393,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
    overlapping pairs of points for each r and then compute the averaging. When
    the amplitude is less than the threshold, the point does not count.*/
 
-void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov, int norm){
+dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm){
     if(loc->nloc!=cov->nx || loc->nloc!=cov->ny){
 	error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
     }
@@ -407,8 +407,7 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     double dy1=1./loc->dy;
     long ncovx=(long) round((xmax-xmin)*dx1)*2;
     long ncovy=(long) round((ymax-ymin)*dy1)*2;
-    dinit(cov2d, ncovx, ncovy);
-    dmat*  pcov2d=*cov2d;
+    dmat *cov2d=dnew(ncovx, ncovy);
     /*the following is adapted from gen_pval*/
     loc_create_map(loc);
     map_t *map=loc->map;
@@ -429,24 +428,25 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 	    long count=0;
 	    double acc=0;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
-		if(amp && amp[iloc]<ampthres) continue;
+		if(amp && amp->p[iloc]<ampthres) continue;
 		long ix=map_x[iloc]+im2;
 		long iy=map_y[iloc]+jm2;
 		long iloc2=(long)loc_map_get(map, ix, iy);
-		if(iloc2>0 && (!amp || amp[iloc2]>=ampthres)){
+		if(iloc2>0 && (!amp || amp->p[iloc2]>=ampthres)){
 		    acc+=IND(cov,iloc2-1,iloc);
 		    count++;
 		}
 	    }
 	    if(count>0){
 		if(norm){/*compute the covariance*/
-		    IND(pcov2d,im,jm)=acc/count;
+		    IND(cov2d,im,jm)=acc/count;
 		}else{/*compute approximate PSD.*/
-		    IND(pcov2d,im,jm)=acc;
+		    IND(cov2d,im,jm)=acc;
 		}
 	    }
 	}
     }
     free(map_x);
     free(map_y);
+    return cov2d;
 }

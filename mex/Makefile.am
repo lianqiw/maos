@@ -8,12 +8,12 @@ EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
 
-bin_PROGRAMS=read write aolib maos crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim_mex servo_sim_mex psd1d mkcirmap sde_kalman_mex kalman_sim_mex calcenc act_extrap cn2est 
+bin_PROGRAMS=read write aolib maos 
 
 #.c.o:
 #	$(MEX) $(AM_CFLAGS) -c $< 
 
-#Two special ones that does not depend on aos_long
+#Two special ones that does not depend on aos library
 #read$(EXEEXT):read.c io.c
 #	$(MEX) $(SRC_DIR)/mex/read.c $(SRC_DIR)/mex/io.c -lz
 #write$(EXEEXT):write.c io.c

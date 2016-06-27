@@ -54,10 +54,8 @@ endif
 endif
 
 LDADD=../lib/libaos.la $(LDEXE_FULL)
-PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov ../bin/ethtest ../bin/mvm_cpu ../bin/drawbin ../bin/drawres ../bin/calcenc
+PROGS+=../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/ethtest ../bin/mvm_cpu ../bin/drawbin ../bin/drawres 
 ___bin_servo_optim_SOURCES=servo_optim.c
-___bin_slaving_SOURCES=slaving.c
-___bin_cov2psf_SOURCES=cov2psf.c
 ___bin_bin2fits_SOURCES=bin2fits.c
 ___bin_psfiris_SOURCES=psfiris.c
 ___bin_psfgc_SOURCES=psfgc.c
@@ -66,5 +64,4 @@ ___bin_ethtest_SOURCES=ethtest.c
 ___bin_mvm_cpu_SOURCES=mvm_cpu.c
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
-___bin_calcenc_SOURCES=calcenc.c
 bin_PROGRAMS=$(PROGS)

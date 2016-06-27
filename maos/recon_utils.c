@@ -734,7 +734,7 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 Estimation. The result will be an average of them.  */
 
 
-CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
+cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     dmat *pair=parms->cn2.pair;
     int npair=pair->nx*pair->ny;
     int ipowfs=-1;
@@ -771,7 +771,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	hs->p[iwfs]=parms->wfs[iwfs].hs;
     }
-    CN2EST_T *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
+    cn2est_t *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
 			     hs, ht, parms->cn2.keepht, parms->atm.L0);
     cn2est->os=dnew(ht->nx, 1);
     if(!parms->cn2.keepht){
@@ -820,7 +820,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
  */
 static void cn2est_moveht(RECON_T *recon){
     (void)recon;
-    /*CN2EST_T *cn2est=recon->cn2est; */
+    /*cn2est_t *cn2est=recon->cn2est; */
     /*
       Implemented mechanism to move height of layers. Need to redo HXF, GX, etc.
     */
@@ -831,7 +831,7 @@ static void cn2est_moveht(RECON_T *recon){
    Wrapper of Cn2 Estimation operations in recon.c
 */
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
-    CN2EST_T *cn2est=recon->cn2est;
+    cn2est_t *cn2est=recon->cn2est;
     cn2est_push(cn2est, grad);
     static int icn2=-1;
     if(cn2est->count%parms->cn2.step == 0){

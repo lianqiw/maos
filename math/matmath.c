@@ -1474,6 +1474,9 @@ X(mat) *X(enc)(X(mat) *psf, /**<The input array*/
 	       int type,  /**<The type. -1: azimuthal average, 0: within a square, 1: within a circle, 2: within a slit*/
 	       int nthread
     ){
+    if(type<-1 || type>2){
+	error("Usage: type= \n-1: azimuthal average, \n0: within a square, \n1: within a circle, \n2: within a slit\n");
+    }
     R rmax=ceil(X(max)(dvec))+1;
     long ncomp;
     ncomp=nextfftsize(rmax*2);//avoid wrapping

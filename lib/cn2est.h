@@ -34,7 +34,7 @@ typedef struct CN2PAIR_T{
 /**
    contains the data related to Cn2 Estimation.
  */
-typedef struct CN2EST_T{
+typedef struct cn2est_t{
     struct CN2PAIR_T *pair; /**<information about each pair*/
     int *wfscov;     /**<Whether this wfs participates in covariance computation.*/
     long nembed;      /**<size of array to embed the LGS gradients into*/
@@ -67,12 +67,12 @@ typedef struct CN2EST_T{
     dspcell *wtconvert; /**<to convert wt from wt to wtrecon.*/
     double r0m;       /**<averaged r0 from all the pairs.>*/
     double L0;        /**<outer scale*/
-} CN2EST_T;
+} cn2est_t;
 
-CN2EST_T *cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
+cn2est_t *cn2est_new(const dmat *wfspair, const dmat *wfstheta, const loc_t *saloc,
 		     const dmat *saa, const double saat, 
 		     const dmat* hs, const dmat *htrecon, int keepht, double l0);
-void cn2est_est(CN2EST_T *cn2est, int verbose, int reset);
-void cn2est_free(CN2EST_T *cn2est);
-void cn2est_push(CN2EST_T *cn2est, dcell *gradol);
+void cn2est_est(cn2est_t *cn2est, int verbose, int reset);
+void cn2est_free(cn2est_t *cn2est);
+void cn2est_push(cn2est_t *cn2est, dcell *gradol);
 #endif

@@ -22,7 +22,7 @@
 #define INTERP_NEAREST 0 /*set to 0 after debugging */
 #define MIN_SA_OVERLAP 5 /*minimum of subaperture overlap at this separation*/
 #define COV_ROTATE 0     /*1: rotate the covariance and then cut along x. (old method).*/
-CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indices.*/
+cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indices.*/
 		     const dmat *wfstheta,/**<nwfs*2: angular direction of each WFS.*/
 		     const loc_t *saloc,  /**<nsa*2: Subaperture low left corner coordinates*/
 		     const dmat *saa,     /**<nsa*1: Normalized subaperture area*/
@@ -44,7 +44,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     }
     /*>>1 is a short cut for /2 */
     int nwfspair=npair>>1;
-    CN2EST_T *cn2est=calloc(1, sizeof(CN2EST_T));
+    cn2est_t *cn2est=calloc(1, sizeof(cn2est_t));
     cn2est->nwfspair=nwfspair;
     int nwfs=wfstheta->nx;
     cn2est->nwfs=nwfs;
@@ -364,7 +364,7 @@ CN2EST_T *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 /**
    Embed gradent vector to gradient map 
 */
-static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
+static void cn2est_embed(cn2est_t *cn2est, dcell *gradol, int icol){
     long *embed=cn2est->embed->p;
     for(int iwfs=0; iwfs<gradol->nx; iwfs++){
 	if(!cn2est->wfscov[iwfs]) continue;
@@ -407,7 +407,7 @@ static void cn2est_embed(CN2EST_T *cn2est, dcell *gradol, int icol){
 /**
    Compute cross-covairance from gradient curvature
 */
-static void cn2est_cov(CN2EST_T *cn2est){
+static void cn2est_cov(cn2est_t *cn2est){
     /*accumulate cross-covariance of gradient curvature. */
     const int nwfspair=cn2est->nwfspair;
     cn2est->count++;
@@ -423,7 +423,7 @@ static void cn2est_cov(CN2EST_T *cn2est){
 	}
     }/*iwfspair */
 }
-void cn2est_push(CN2EST_T *cn2est, dcell *gradol){
+void cn2est_push(cn2est_t *cn2est, dcell *gradol){
     int ncol=0;
     if(gradol->nx<cn2est->nwfs){
 	error("Grad has less number of wfs than required %d\n", cn2est->nwfs);
@@ -446,7 +446,7 @@ DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
 /**
    Do the Cn2 Estimation.
 */
-void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
+void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
     info2("cn2est from %d measurements\n", cn2est->count);
     cmat *covi=cnew(cn2est->nembed, cn2est->nembed);
 #if COV_ROTATE
@@ -575,7 +575,7 @@ void cn2est_est(CN2EST_T *cn2est, int verbose, int reset){
 /**
    Free all the data.
 */
-void cn2est_free(CN2EST_T *cn2est){
+void cn2est_free(cn2est_t *cn2est){
     if(!cn2est) return;
     free(cn2est->pair);
     free(cn2est->wfscov);

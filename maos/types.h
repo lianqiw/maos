@@ -340,7 +340,7 @@ typedef struct RECON_T{
     dcell *dither_rg;  /**<The dither mode recon from grads (nwfs*nwfs)*/
     dcell *dither_ra;  /**<The dither mode recon from dm commands (ndm*ndm)*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
-    CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
+    cn2est_t *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
