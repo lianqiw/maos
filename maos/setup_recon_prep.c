@@ -714,7 +714,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			locfree(loc);
 		    }
 		    if(parms->recon.modal){
-			dspmm(&IND(recon->GM, iwfs, idm), IND(recon->GA, iwfs, idm), recon->amod->p[idm], "nn",1);
+			dspmm(PIND(recon->GM, iwfs, idm), IND(recon->GA, iwfs, idm), recon->amod->p[idm], "nn",1);
 		    }
 		}
 	    }/*idm */

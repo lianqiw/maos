@@ -1107,8 +1107,8 @@ void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap){
     X(mat)*  pB=B;
     R wty, wtx;
     for(long iy=0; iy<iylen; iy++){
-	T *outi=&IND(pA,ixstart+skipx,iystart+skipy+iy);
-	T *ini =&IND(pB,ixstart,iystart+iy);
+	T *outi=PIND(pA,ixstart+skipx,iystart+skipy+iy);
+	T *ini =PIND(pB,ixstart,iystart+iy);
 	if(iy<overlap){
 	    wty=(R)iy/(R)(overlap-1);
 	}else if(iylen-iy-1<overlap){
@@ -1321,8 +1321,8 @@ void X(embed)(X(mat) *restrict A, const X(mat) *restrict B, const R theta){
 	    iyend=niny+skipy;
 	}
 	for(long iy=iystart; iy<iyend; iy++){
-	    T *outi=&IND(A,skipx+ixstart,skipy+iy);
-	    T *ini =&IND(B,ixstart,iy);
+	    T *outi=PIND(A,skipx+ixstart,skipy+iy);
+	    T *ini =PIND(B,ixstart,iy);
 	    memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
 	}
     }else{

@@ -163,7 +163,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 			    cembedc(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
-			    cabs22d(&IND(ppistat,isa,iwvl), 1, wvf, 1);
+			    cabs22d(PIND(ppistat,isa,iwvl), 1, wvf, 1);
 			}
 		    }
 		    

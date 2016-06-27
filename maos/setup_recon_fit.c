@@ -96,7 +96,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
 		    dsp *tmp=dspmulsp(recon->W0, IND(HXF,ifit,ips),"nn");
 		    for(int idm=0; idm<ndm; idm++){
-			dspmulsp2(&IND(FRM,idm,ips),IND(HAT,idm,ifit), tmp, "nn",
+			dspmulsp2(PIND(FRM,idm,ips),IND(HAT,idm,ifit), tmp, "nn",
 				  recon->fitwt->p[ifit]);
 		    }
 		    dspfree(tmp);

@@ -113,7 +113,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		cfft2(nominal,1);
 		//cancel FFT effect.
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
-		ccp(&IND(nominals,isa,iwfs), nominal);
+		ccp(PIND(nominals,isa,iwfs), nominal);
 		//Coordinate of PSF pixels
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
 		IND(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
@@ -352,7 +352,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 			cfft2(etf, -1);
 			if(use1d){
 			    if(npad==1 && nover==1){
-				ccp(&IND(petf,isa,illt),etf);
+				ccp(PIND(petf,isa,illt),etf);
 			    }else{
 				cfftshift(etf);
 				IND(petf,isa,illt)=cnew(ncompx,1);

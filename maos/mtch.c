@@ -250,7 +250,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		i0m->ny=3;
 	    }
 	    dmat *tmp=dpinv(i0g, wt);
-	    dmm(&IND(mtche,isa,ii0),0,i0m, tmp, "nn", 1);
+	    dmm(PIND(mtche,isa,ii0),0,i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
 		/*Put old values back. */

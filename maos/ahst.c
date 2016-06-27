@@ -577,7 +577,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 			dispy=parms->wfsr[iwfs].thetay*ht;
 			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm],
 					    IND(ngsmod->Modes, idm), dispx, dispy, scale);
-			dadd(&IND(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
+			dadd(PIND(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 		    }
 		}
 	    }

@@ -199,7 +199,7 @@ void genselotf_do(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	double thres=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
-	    genotf(&IND(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
+	    genotf(PIND(lotf,iwvl,ilotf), loc, powfs[ipowfs].llt->amp, ncpa?ncpa->p[ilotf]:NULL, 
 		   0, thres, wvl, dtheta, NULL,parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0,
 		   notf, notf, 1, 1);
 	}
@@ -338,7 +338,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cfftshift(sepsf); /*peak now in corner. */
 		cfft2(sepsf,1);   /*turn to psf. FFT 1th */
 		cfftshift(sepsf); /*psf with peak in center */
-		creal2d(&IND(psepsf,isa,iwvl),0,sepsf,norm);/*copy to output. */
+		creal2d(PIND(psepsf,isa,iwvl),0,sepsf,norm);/*copy to output. */
 	    }
 	    cfree(sepsf);
 	}

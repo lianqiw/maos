@@ -15,7 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 dmat *zernike_Rnm(const dmat *locr, int ir, int im);
 dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int onlyr);
 dmat *zernike_cov_kolmogorov(int nr);
@@ -42,3 +41,4 @@ void dsvd_pow(dmat *A, double power, double thres);
 cell* dcellmm2(const cell *A, const cell *B, const char*trans);
 dsp *mkg(loc_t* xloc, loc_t *ploc, dmat *amp, loc_t *saloc, double scale, double dispx, double dispy, int do_partial);
 dmat *sho_filter(const dmat *xi, double dt, double f0, double zeta);
+cell *genotfmex(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr);

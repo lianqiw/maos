@@ -78,7 +78,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
     if(parms->evl.psfmean){
 	dcell*  pevlpsfmean=evlpsfmean/*PDELL*/;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&IND(pevlpsfmean,iwvl,ievl), 1, psf2s->p[iwvl], 1);
+	    cabs22d(PIND(pevlpsfmean,iwvl,ievl), 1, psf2s->p[iwvl], 1);
 	}
     }
     if(parms->evl.psfhist){

@@ -28,6 +28,7 @@ typedef int16_t char16_t;
 //extern "C" {
 //#endif
 #include "../lib/aos.h"
+#include "aolibmex.h"
 //#ifdef __cplusplus
 //}
 //#endif
