@@ -114,8 +114,11 @@ static void socket_nopipe(int sock){
 #ifdef SO_NOSIGPIPE
     const int one=1;
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
-#elif ! defined(__linux__)
+#elif
+#if ! defined(__linux__)
     signal(SIGPIPE, SIG_IGN);
+#endif
+    (void)sock;
 #endif
 }
 /**

@@ -430,7 +430,6 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	}else{
 	    info2("Command failed\n");
 	}
-	free(ans);
     }else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
 	//Create a new connection.

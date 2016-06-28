@@ -15,14 +15,13 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#define _GNU_SOURCE //For RTLD_NEXT in linux
 #include <search.h>
 #include <tgmath.h>
 #ifndef __CYGWIN__
 #include <execinfo.h>
 #endif
 #include <sys/stat.h>
-#define FORBID_MEM 1
 
 int exit_fail=0;
 #include "mem.h"

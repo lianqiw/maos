@@ -362,7 +362,7 @@ void plot_points(const char *fig,    /**<Category of the figure*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 const char *xylog,  /**<Whether use logscale for x, y*/
 		 const dmat *cir,    /**<Data for the circles: x, y origin, radius, and color*/
-		 const char *const* legend, /**<ngroup number of char**/
+		 const char *const*const legend, /**<ngroup number of char**/
 		 const char *title,  /**<title of the plot*/
 		 const char *xlabel, /**<x axis label*/
 		 const char *ylabel, /**<y axis label*/

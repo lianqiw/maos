@@ -86,10 +86,10 @@ dump_handshake_info(struct libwebsocket *wsi)
     char buf[256];
 
     for (size_t n = 0; n < sizeof(token_names) / sizeof(token_names[0]); n++) {
-	if (!lws_hdr_total_length(wsi, (lws_token_indexes)n))
+	if (!lws_hdr_total_length(wsi, (enum lws_token_indexes)n))
 	    continue;
 
-	lws_hdr_copy(wsi, buf, sizeof buf, (lws_token_indexes)n);
+	lws_hdr_copy(wsi, buf, sizeof buf, (enum lws_token_indexes)n);
 
 	fprintf(stderr, "    %s = %s\n", token_names[n], buf);
     }

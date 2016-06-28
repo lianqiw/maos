@@ -793,5 +793,5 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
+void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...);
 #endif

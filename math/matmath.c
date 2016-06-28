@@ -25,7 +25,7 @@
 /**
    scale each element of A by w.
 */
-void X(scale)(X(mat) *A, T w){
+void X(scale)(X(mat) *A, R w){
     if(!A) return;
     if(w==(T)0){
 	memset(A->p, 0, sizeof(T)*A->nx*A->ny);

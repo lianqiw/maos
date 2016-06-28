@@ -71,7 +71,7 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T f); \
 void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const char trans, const T f); \
 X(sp) *X(spadd2)(const X(sp) *A, T a, const X(sp)*B,T b) CHECK_UNUSED_RESULT; \
 void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta); \
-void X(celladd)(void *A_, T ac, const void *B_, T bc);	\
+void X(celladd)(void *A_, R ac, const void *B_, R bc);	\
 void X(spaddI)(X(sp) *A0, T alpha);\
 void X(celladdI)(void *A_, T alpha);\
 X(sp) *X(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\

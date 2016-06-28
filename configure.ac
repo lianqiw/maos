@@ -139,9 +139,9 @@ if test -z "$MEXDIR" ;then
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers" 
+OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon="-Wshadow -Wall -Wextra -Werror $OPTScommon"
+    OPTScommon+="-Wshadow -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-incompatible-pointer-types-discards-qualifiers" 
 fi
 LDEXE=
 OPTS=

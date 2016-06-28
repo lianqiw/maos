@@ -320,7 +320,7 @@ add2cpu_mat(s, float, Real)
 add2cpu_mat(d, double,Real)
 add2cpu_mat(z, float, Comp)
 add2cpu_mat(c, double,Comp)
-
+	
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\

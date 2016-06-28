@@ -98,7 +98,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 }
 /**
    ploted all the different beam directions as points. */
-static void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...){
+void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...){
     format2fn;
     int ncir=1;
     dmat *cir=dnew(4, ncir);

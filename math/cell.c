@@ -40,7 +40,8 @@ cell *cellnew(long nx, long ny){
 /**
    Allocate a new array of the same type
  */
-cell *cellnew2(const cell *A){
+cell *cellnew2(const void *A_){
+    const cell *A=(const cell*)A_;
     if(!A){
 	return 0;
     }else if(iscell(A)){

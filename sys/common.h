@@ -41,7 +41,7 @@ void default_quitfun(const char *msg);
 
 
 #if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
-//c++ mode
+//c++ mode, not CUDA
 #include <csignal>
 #include <cstdarg>
 #include <cstdio>
@@ -56,13 +56,12 @@ using std::calloc;
 using std::malloc;
 using std::free;
 using std::realloc;
-#else//C99 mode
+#else//C99 mode or CUDA.
 #include <signal.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <tgmath.h>
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4
