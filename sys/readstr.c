@@ -47,7 +47,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	memset(*res, 0, sizeof(char*)*len);
     }else{
 	if(!len) maxcount=5;
-	*res=(char**)mycalloc(maxcount,char*);
+	*res=mycalloc(maxcount,char*);
     }
     if(!sdata) return count;
     const char *sdataend=sdata+strlen(sdata)-1;
@@ -103,7 +103,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
 	if(count>=maxcount){//check memory
 	    if(!len){
 		maxcount*=2;
-		*res=(char**)myrealloc(*res,maxcount,char*);
+		*res=myrealloc(*res,maxcount,char*);
 	    }else{
 		error("{%s}: need %d, got more than %d elements\n", sdata, len, count);
 	    }
@@ -120,7 +120,7 @@ int readstr_strarr(char ***res, /**<[out] Result*/
     }
     if(!len){
 	if(count>0){
-	    *res=(char**)myrealloc(*res,count,char*);
+	    *res=myrealloc(*res,count,char*);
 	}else{
 	    free(*res); *res=NULL;
 	}

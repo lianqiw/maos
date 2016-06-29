@@ -26,7 +26,7 @@ zfarr* zfarr_init(long nx, long ny,const char*format,...){
     format2fn;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    zfarr *out=(zfarr*)mycalloc(1,zfarr);
+    zfarr *out=mycalloc(1,zfarr);
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=nx*ny;

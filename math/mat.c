@@ -29,7 +29,7 @@
    true, p is treated as external resource and is not reference counted.
 */
 INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    X(mat) *out=(X(mat)*)mycalloc(1,X(mat));
+    X(mat) *out=mycalloc(1,X(mat));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
@@ -40,10 +40,10 @@ INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
 	out->p=p;
     }else{
 	if(!p && nx && ny){
-	    p=(T*)mycalloc((nx*ny),T);
+	    p=mycalloc((nx*ny),T);
 	}
 	out->p=p;
-	out->nref=(int*)mycalloc(1,int);
+	out->nref=mycalloc(1,int);
 	out->nref[0]=1;
     }
     return out;
@@ -139,7 +139,7 @@ void X(free_keepdata)(X(mat) *A){
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
     assert_mat(in);
-    X(mat) *out=(X(mat)*)mycalloc(1,X(mat));
+    X(mat) *out=mycalloc(1,X(mat));
     memcpy(out,in,sizeof(X(mat)));
     if(!in->nref){
 	extern quitfun_t quitfun;
@@ -207,12 +207,12 @@ void X(resize)(X(mat) *A, long nx, long ny){
     if(!nx) nx=A->nx;
     if(!ny) ny=A->ny;
     if(A->nx==nx || A->ny==1){
-	A->p=(T*)myrealloc(A->p,nx*ny,T);
+	A->p=myrealloc(A->p,nx*ny,T);
 	if(nx*ny>A->nx*A->ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
     }else{/*copy memory to preserve data*/
-	T *p=(T*)mycalloc(nx*ny,T);
+	T *p=mycalloc(nx*ny,T);
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
 	for(long iy=0; iy<miny; iy++){
@@ -682,15 +682,13 @@ void X(celldropempty)(X(cell) **A0, int dim){
 		X(cellfree)(A);
 		*A0=NULL;
 	    }else{
-		X(cell) *B=(X(cell*))mycalloc(1,X(cell)*);
-		B->p=(X(mat)**)mycalloc((A->nx-ndrop)*A->ny,X(mat)*);
-		X(cell)* pB=B;
+		X(cell) *B=X(cellnew)(A->nx-ndrop,A->ny);
 		int count=0;
 		for(int ix=0; ix<A->nx; ix++){
 		    if(keep[ix]){
 			if(count!=ix){
 			    for(int iy=0; iy<A->ny; iy++){
-				IND(pB,count,iy)=IND(A,ix,iy);
+				IND(B,count,iy)=IND(A,ix,iy);
 			    }
 			}
 			count++;
@@ -727,7 +725,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	    X(cellfree)(A);
 	    *A0=NULL;
 	}else{
-	    A->p=(X(mat)**)myrealloc(A->p,A->ny*A->nx,X(mat)*);
+	    A->p=myrealloc(A->p,A->ny*A->nx,X(mat)*);
 	}
     }else{
 	error("Invalid dim: %d\n",dim);

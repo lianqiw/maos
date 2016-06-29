@@ -726,9 +726,8 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
 void fdpcg_free(FDPCG_T *fdpcg){
     if(!fdpcg) return;
     cspfree(fdpcg->Minv);
-    if(fdpcg->Mbinv){
-        lfree(fdpcg->perm);
-        ccellfree(fdpcg->Mbinv);
-    }
+    lfree(fdpcg->perm);
+    lfree(fdpcg->permhf);
+    ccellfree(fdpcg->Mbinv);
     free(fdpcg);
 }

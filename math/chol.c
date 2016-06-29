@@ -36,7 +36,7 @@
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
 */
 static cholmod_sparse *dsp2chol(const dsp *A){
-    cholmod_sparse *B=(cholmod_sparse*)mycalloc(1,cholmod_sparse);
+    cholmod_sparse *B=mycalloc(1,cholmod_sparse);
     B->nrow=A->nx;
     B->ncol=A->ny;
     B->nzmax=A->nzmax;
@@ -68,7 +68,7 @@ static dsp *chol2sp(const cholmod_sparse *B){
    Convert our dmat type to cholmod_dense type.
 */
 static cholmod_dense* d2chol(const dmat *A, int start, int end){
-    cholmod_dense* B=(cholmod_dense*)mycalloc(1,cholmod_dense);
+    cholmod_dense* B=mycalloc(1,cholmod_dense);
     if(end==0) end=A->ny;
     B->nrow=A->nx;
     B->ncol=end-start;
@@ -86,8 +86,8 @@ static cholmod_dense* d2chol(const dmat *A, int start, int end){
 */
 spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
-    spchol *out=(spchol*)mycalloc(1,spchol);
-    out->c=(cholmod_common*)mycalloc(1,cholmod_common);
+    spchol *out=mycalloc(1,spchol);
+    out->c=mycalloc(1,cholmod_common);
     MOD(start)(out->c);
     cholmod_sparse *A=dsp2chol(A_in);
     out->c->status=CHOLMOD_OK;
@@ -165,7 +165,7 @@ void chol_convert(spchol *A, int keep){
     error("chol_convert only work with CHOL_SIMPLE=1\n");
 #endif
     cholmod_factor *L=A->L;
-    A->Cp=(spint*)mymalloc(A->L->n,spint);
+    A->Cp=mymalloc(A->L->n,spint);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
     if(keep){
 	L=MOD(copy_factor)(A->L, A->c);
@@ -243,7 +243,7 @@ void chol_save(spchol *A, const char *format,...){
    is saved. */
 spchol *chol_read(const char *format, ...){
     format2fn;
-    spchol *A=(spchol*)mycalloc(1,spchol);
+    spchol *A=mycalloc(1,spchol);
     file_t *fp=zfopen(fn, "rb");
     header_t header={0,0,0,0};
     read_header(&header, fp);
@@ -273,7 +273,7 @@ spchol *chol_read(const char *format, ...){
 	}
 #define READ_SIZE_T(A) L->A=(size_t)search_header_num(header.str,#A)
 #define READ_INT(A) L->A=(int)search_header_num(header.str,#A)
-	cholmod_factor *L=A->L=(cholmod_factor*)mycalloc(1,cholmod_factor);
+	cholmod_factor *L=A->L=mycalloc(1,cholmod_factor);
 	READ_SIZE_T(n);
 	READ_SIZE_T(minor);
 	READ_SIZE_T(nzmax);
@@ -319,7 +319,7 @@ spchol *chol_read(const char *format, ...){
 	    READSPINT(s, L->ssize);
 	}
 	READDBL(x, L->is_super?L->xsize:L->nzmax);
-	A->c=(cholmod_common*)mycalloc(1,cholmod_common);
+	A->c=mycalloc(1,cholmod_common);
 	MOD(start)(A->c);
 #undef READSPINT
 #undef READDDBL
@@ -421,7 +421,7 @@ INLINE void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     }
     dmat* pout=*out;
     if(pout==in){/*Do each column in place. */
-	double *tmp=(double*)mymalloc(in->nx,double);
+	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
 		tmp[icx]=IND(in,perm[icx],icy);
@@ -448,7 +448,7 @@ INLINE void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     }
     dmat* pout=*out;
     if(pout==in){/*Do each column in place. */
-	double *tmp=(double*)mymalloc(in->nx,double);
+	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
 		tmp[perm[icx]]=IND(in,icx,icy);

@@ -34,10 +34,10 @@ endif
 if USE_SCHEDULER
 if MON
 if MONN #FULL with notify
-MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) -DWITH_NOTIFY
+MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) -DWITH_NOTIFY=1
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MONN_LIBS) 
 else #Monitor wihtout libnotify.
-MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS)
+MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) -DWITH_NOTIFY=0
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MON_LIBS) 
 endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
@@ -55,11 +55,9 @@ endif
 
 LDADD=../lib/libaos.la $(LDEXE_FULL)
 PROGS+=../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/ethtest ../bin/mvm_cpu ../bin/drawbin ../bin/drawres 
-___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_bin2fits_SOURCES=bin2fits.c
 ___bin_psfiris_SOURCES=psfiris.c
 ___bin_psfgc_SOURCES=psfgc.c
-___bin_mk2dcov_SOURCES=mk2dcov.c
 ___bin_ethtest_SOURCES=ethtest.c
 ___bin_mvm_cpu_SOURCES=mvm_cpu.c
 ___bin_drawbin_SOURCES=drawbin.c

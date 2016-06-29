@@ -52,10 +52,6 @@ using std::signbit;
 using std::isfinite;
 using std::isnan;
 using std::strerror;
-using std::calloc;
-using std::malloc;
-using std::free;
-using std::realloc;
 #else//C99 mode or CUDA.
 #include <signal.h>
 #include <stdarg.h>

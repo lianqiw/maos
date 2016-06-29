@@ -307,7 +307,7 @@ void redirect(void){
 	if(pipe(pfd)){//fail to create pipe.
 	    warning("pipe failed\n");
 	}else{
-	    redirect_t *data=(redirect_t*)mycalloc(1,redirect_t);
+	    redirect_t *data=mycalloc(1,redirect_t);
 	    data->pfd=pfd[0];//read
 	    data->stdoutfd=stdoutfd;//write to console
 	    data->fn=strdup(fn);

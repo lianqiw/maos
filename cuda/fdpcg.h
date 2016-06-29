@@ -32,7 +32,7 @@ class cufdpcg_t:public cucgpre_t,nonCopyable{
     cuarray<cufftHandle> fft;
     cuarray<cufftHandle> ffti;
     int      fftnc;/*total number of ffts*/
-    int     *fftips;/*starting ips for each fft.*/
+    cuarray<int> fftips;/*starting ips for each fft.*/
     cuccell xhat1, xhat2;
     int nb, bs, nby, nbz; 
     int scale;

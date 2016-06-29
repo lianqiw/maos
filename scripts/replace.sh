@@ -1,5 +1,6 @@
 var="[()0-9a-zA-Z+*._> -]+"
 type="[()a-zA-Z0-9_ *]+"
+if false ;then
 #minus sign must be the last or first inside a []. no need to escape ><
 #reformat calloc(s, sizeof(b)) by mycalloc(s, b)
 sed -i "" -E "s|(calloc\($var),[ ]*sizeof\(($type)\)\);|my\1,\2\);|g" $@
@@ -13,3 +14,5 @@ sed -i "" -E "s|(realloc\($var),($var)\*[ ]*sizeof\(($type)\)[ ]*\);|my\1,\2,\3)
 sed -i "" -E "s|(realloc\($var),[ ]*sizeof\(($type)\)[ ]*\*[ ]*($var)[ ]*\);|my\1,\3,\2);|g" $@
 #reformat remalloc(p, s by mymalloc(s, b, char)
 sed -i "" -E "s|(realloc\($var),($var)\);|my\1,\2,char);|g" $@
+fi
+sed -i -E "s/(\($type\))(mymalloc|myrealloc|mycalloc)/\2/g" $@

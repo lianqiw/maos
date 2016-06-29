@@ -20,11 +20,28 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#ifdef __cplusplus
+extern "C"{
+#endif
+    void *calloc_maos(size_t, size_t);
+    void *malloc_maos(size_t);
+    void *realloc_maos(void *, size_t);
+    void  free_maos(void *);
+#ifdef __cplusplus
+}
+#endif
 #define myalloca(nelem, type) (type*)alloca(nelem*sizeof(type))
 #define mycalloc(nelem, type) (type*)calloc(nelem,sizeof(type))
 #define mymalloc(nelem, type) (type*)malloc(nelem*sizeof(type))
 #define myrealloc(p, nelem, type) (type*)realloc(p,nelem*sizeof(type))
-
+#if defined(__linux__) || !defined(__cplusplus)
+#ifndef IN_MEM_C
+#define free free_maos
+#define malloc malloc_maos
+#define calloc calloc_maos
+#define realloc realloc_maos
+#endif
+#endif
 void register_deinit(void (*fun)(void), void *data);
 void malloc_dbg_enable();
 int malloc_dbg_disable(int print);

@@ -87,7 +87,7 @@ static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT t
     A->p = (SS_INT*)ss_malloc (triplet ? nzmax : n+1, sizeof (SS_INT)) ;
     A->i = (SS_INT*)ss_malloc (nzmax, sizeof (SS_INT)) ;
     A->x = values ? (SS_ENTRY*)ss_malloc (nzmax, sizeof (SS_ENTRY)) : NULL ;
-    A->nref=(int*)mycalloc(1,int);
+    A->nref=mycalloc(1,int);
     A->nref[0]=1;
     return ((!A->p || !A->i || (values && !A->x)) ? ss_spfree (A) : A) ;
 }

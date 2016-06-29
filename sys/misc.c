@@ -109,7 +109,7 @@ char *argv2str(int argc, const char *argv[], const char* delim){
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=(char*)mycalloc(slen,char);
+    char *scmd=mycalloc(slen,char);
     if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
@@ -327,7 +327,7 @@ char *stradd(const char* a, ...){
 	n+=strlen(arg);
     }
     va_end(ap);
-    out=(char*)mycalloc(n,char);
+    out=mycalloc(n,char);
     if(a){
 	strcpy(out,a);
     }
@@ -347,7 +347,7 @@ char *strnadd(int argc, const char *argv[], const char* delim){
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=(char*)mycalloc(slen,char);
+    char *scmd=mycalloc(slen,char);
     for(int iarg=0; iarg<argc; iarg++){
 	if(argv[iarg] && strlen(argv[iarg])>0){
 	    strcat(scmd,argv[iarg]);
@@ -526,8 +526,8 @@ static char *cmd_string(char *start, char **end2){
     return out;
 }
 /**
-   Parse command line arguments. Returns whatever is not yet parsed. Need to
-   free the returned string. This is more relaxed than the built in getopd
+   Parse command line arguments. The remaining string contains whatever is not yet parsed. 
+   This is more relaxed than the built in getopd
 */
 void parse_argopt(char *cmds, ARGOPT_T *options){
     char *cmds_end=cmds+(cmds?strlen(cmds):0);
@@ -600,7 +600,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		    }
 		    if(i==*nval){
 			(*nval)++;
-			*tmp=(int*)myrealloc(*tmp, *nval,int);
+			*tmp=myrealloc(*tmp, *nval,int);
 			(*tmp)[(*nval)-1]=val;
 		    } 
 		}else{
@@ -622,7 +622,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		    double **tmp=(double**)options[iopt].val;
 		    int *nval=(int*)options[iopt].nval;
 		    (*nval)++;
-		    *tmp=(double*)myrealloc(*tmp, *nval,double);
+		    *tmp=myrealloc(*tmp, *nval,double);
 		    (*tmp)[(*nval)-1]=(int)val;
 		}else{
 		    double val=value?strtod(value, &start):1;

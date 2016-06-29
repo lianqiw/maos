@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
     int nstep0=nstep>1?20:0;//warm up
     dmat *d_saind=dread("NFIRAOS_saind");
     const int nsa=(d_saind->nx-1)/fraction;
-    int *saind=(int*)mymalloc((1+nsa),int);
+    int *saind=mymalloc((1+nsa),int);
     for(int i=0; i<nsa+1; i++){
 	saind[i]=(int)d_saind->p[i];
     }

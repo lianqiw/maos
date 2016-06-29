@@ -167,7 +167,7 @@ PNEW(lock);
   Open a bin file from a fd that may be a socket.
 */
 static file_t* zfdopen(int sock, const char *mod){
-    file_t* fp=(file_t*)mycalloc(1,file_t);
+    file_t* fp=mycalloc(1,file_t);
     fp->isgzip=0;
     fp->fd=sock;
     if(fp->isgzip){
@@ -192,7 +192,7 @@ static file_t* zfdopen(int sock, const char *mod){
 */
 file_t* zfopen_try(const char *fn, const char *mod){
     LOCK(lock);
-    file_t* fp=(file_t*)mycalloc(1,file_t);
+    file_t* fp=mycalloc(1,file_t);
     const char* fn2=fp->fn=procfn(fn,mod);
     if(!fn2){
 	if(mod[0]=='r'){
@@ -741,7 +741,7 @@ read_fits_header(header_t *header, file_t *fp){
 		}
 		if(length>0){
 		    if(header->str){
-			header->str=(char*)myrealloc(header->str, strlen(header->str)+length+1+newline,char);
+			header->str=myrealloc(header->str, strlen(header->str)+length+1+newline,char);
 		    }else{
 			header->str=(char*)malloc(length+1+newline); (header->str)[0]='\0';
 		    }
@@ -892,7 +892,7 @@ void mmap_unref(struct mmap_t *in){
    Create a mmap_t object.
 */
 struct mmap_t *mmap_new(int fd, void *p, long n){
-    struct mmap_t *out=(mmap_t*)mycalloc(1,struct mmap_t);
+    struct mmap_t *out=mycalloc(1,struct mmap_t);
     out->p=p;
     out->n=n;
     out->nref=1;

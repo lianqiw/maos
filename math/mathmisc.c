@@ -238,7 +238,7 @@ void adddbl(double *restrict out, double alpha,
    A=B(p) <==> A(pi)=B
 */ 
 long *invperm(long *p, long np){
-    long *restrict pi=(long*)mymalloc(np,long);/*inverse of p */
+    long *restrict pi=mymalloc(np,long);/*inverse of p */
     for(long irow=0; irow<np; irow++){
 	pi[p[irow]]=irow;
     }
@@ -452,7 +452,7 @@ spint *readspint(file_t *fp, long* nx, long* ny){
     if(nx!=0 && ny!=0){
 	*nx=(long)header.nx;
 	*ny=(long)header.ny;
-	out=(spint*)mymalloc((*nx)*(*ny),spint);
+	out=mymalloc((*nx)*(*ny),spint);
 	readspintdata(fp, header.magic, out, (*nx)*(*ny));
     }else{
 	*nx=0;

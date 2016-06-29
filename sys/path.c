@@ -48,7 +48,7 @@ void addpath(const char*path){
 	warning2("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
 	return;
     }
-    PATH_T *node=(PATH_T*)mycalloc(1,PATH_T);
+    PATH_T *node=mycalloc(1,PATH_T);
     node->path=abspath;
     LOCK(mutex_path);
     node->next=PATH;

@@ -34,18 +34,18 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
     X(sp) *sp;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    sp = (X(sp)*)mycalloc(1,X(sp));
+    sp = mycalloc(1,X(sp));
     sp->id=M_SPT;
     if(nzmax>0){
-	sp->p=(spint*)mymalloc((ny+1),spint);
-	sp->i=(spint*)mymalloc(nzmax,spint);
-	sp->x=(T*)mymalloc(nzmax,T);
+	sp->p=mymalloc((ny+1),spint);
+	sp->i=mymalloc(nzmax,spint);
+	sp->x=mymalloc(nzmax,T);
     }
     sp->nx=nx;
     sp->ny=ny;
     sp->nzmax=nzmax;
     sp->nz=-1;
-    sp->nref=(int*)mycalloc(1,int);
+    sp->nref=mycalloc(1,int);
     sp->nref[0]=1;
     return sp;
 }
@@ -78,9 +78,9 @@ void X(spfree_do)(X(sp) *sp){
 X(sp) *X(spref)(X(sp) *A){
     if(!A) return NULL;
     assert_sp(A);
-    X(sp) *out = (X(sp)*)mycalloc(1,X(sp));
+    X(sp) *out = mycalloc(1,X(sp));
     if(!A->nref){
-	A->nref=(int*)mycalloc(1,int);
+	A->nref=mycalloc(1,int);
 	A->nref[0]=1;
     }
     memcpy(out,A,sizeof(X(sp)));
@@ -172,8 +172,8 @@ X(sp)* X(sp_cast)(const void *A){
 void X(spsetnzmax)(X(sp) *sp, long nzmax){
     assert(issp(sp));
     if(sp->nzmax!=nzmax){
-	sp->i=(spint*)myrealloc(sp->i,nzmax,spint);
-	sp->x=(T*)myrealloc(sp->x,nzmax,T);
+	sp->i=myrealloc(sp->i,nzmax,spint);
+	sp->x=myrealloc(sp->x,nzmax,T);
 	sp->nzmax=nzmax;
     }
 }
@@ -505,8 +505,8 @@ void X(spaddI)(X(sp) *A, T alpha){
     }
     long nzmax=A->p[A->ny];
     if(missing){//expanding storage
-	A->x=(T*)myrealloc(A->x,(nzmax+missing),T);
-	A->i=(spint*)myrealloc(A->i,(nzmax+missing),spint);
+	A->x=myrealloc(A->x,(nzmax+missing),T);
+	A->i=myrealloc(A->i,(nzmax+missing),spint);
     }
     missing=0;
     for(long icol=0; icol<A->ny; icol++){
@@ -810,13 +810,13 @@ void X(spsort)(X(sp) *A){
     if(!A || A->ny==0 || A->nx==0) return;
     assert_sp(A);
     long nelem_max=A->nzmax/A->ny*2;
-    spelem *col=(spelem*)mymalloc(nelem_max,spelem);
+    spelem *col=mymalloc(nelem_max,spelem);
     for(long i=0; i<A->ny; i++){
 	long nelem=(A->p[i+1]-A->p[i]);
 	if(nelem==0) continue;
 	if(nelem>nelem_max){
 	    nelem_max=nelem;
-	    col=(spelem*)myrealloc(col, nelem_max,spelem);
+	    col=myrealloc(col, nelem_max,spelem);
 	}
 	for(long j=0; j<nelem; j++){
 	    col[j].i=A->i[A->p[i]+j];
@@ -872,9 +872,9 @@ void X(spcellsym)(X(spcell) **A){
 X(sp) *X(spconvolvop)(X(mat) *A){
     /*First collect statistics on A. */
     long nini=10;
-    T *vals=(T*)mycalloc(nini,T);
-    spint *sepx=(spint*)mycalloc(nini,spint);
-    spint *sepy=(spint*)mycalloc(nini,spint);
+    T *vals=mycalloc(nini,T);
+    spint *sepx=mycalloc(nini,spint);
+    spint *sepy=mycalloc(nini,spint);
     long count=0;
     const long nx=A->nx;
     const long ny=A->ny;
@@ -890,9 +890,9 @@ X(sp) *X(spconvolvop)(X(mat) *A){
 	    }
 	    if(count>=nini){
 		nini*=2;
-		vals=(T*)myrealloc(vals,nini,T);
-		sepx=(spint*)myrealloc(sepx,nini,spint);
-		sepy=(spint*)myrealloc(sepy,nini,spint);
+		vals=myrealloc(vals,nini,T);
+		sepx=myrealloc(sepx,nini,spint);
+		sepy=myrealloc(sepy,nini,spint);
 	    }
 	}
     }

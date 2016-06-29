@@ -649,7 +649,14 @@ if test "$with_gtk" != "no" ;then
 	GTK_CFLAGS=""
 	GTK_LIBS=""
     fi
-
+    if false ;then
+	#Temporarily include GTK_CFLAGS in CFLAGS to enable header search.
+	CFLAGS_SAVE=$CFLAGS
+	CFLAGS="$CFLAGS $GTK_CFLAGS $MON_CFLAGS"
+	AC_CHECK_HEADERS([gtk/gtk.h], [], [comp_draw="no"; comp_mon="no"])
+	AC_CHECK_HEADERS([libnotify/notify.h], [], [comp_monn="no"])
+	CFLAGS=$CFLAGS_SAVE
+    fi
     AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
     AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
     AM_CONDITIONAL(MONN, test x$comp_monn = xyes)

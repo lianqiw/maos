@@ -213,7 +213,7 @@ static void fft_threads(long nx, long ny){
 static void X(fft2plan)(X(mat) *A, int dir){
     assert(abs(dir)==1 && A && A->p);
     if(!A->fft) {
-	A->fft=(fft_t*)mycalloc(1,fft_t);
+	A->fft=mycalloc(1,fft_t);
     }else if(A->fft->plan[dir+1]) return;
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
@@ -235,13 +235,13 @@ static void X(fft2plan)(X(mat) *A, int dir){
 static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     assert(abs(dir)==1);
     if(!A->fft){
-	A->fft=(fft_t*)mycalloc(1,fft_t);
+	A->fft=mycalloc(1,fft_t);
     } else if(A->fft->plan1d[dir+1]) return;
     const int nx=A->nx;
     const int ny=A->ny;
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;
-    PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=(PLAN1D_T*)mycalloc(1,PLAN1D_T);
+    PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=mycalloc(1,PLAN1D_T);
     LOCK_FFT;
     fft_threads(A->nx, A->ny);
     /*along columns for all columns. */
@@ -347,7 +347,7 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     T *restrict p1=dc->p[0]->p;
     T *restrict p2=dc->p[1]->p;
     /*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
-    fft_t *fft=(fft_t*)mycalloc(1,fft_t);
+    fft_t *fft=mycalloc(1,fft_t);
     if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
@@ -372,7 +372,7 @@ void X(fft1plan_r2hc)(X(mat) *A, int dir){
 	error("not supported\n");
     }
     assert(abs(dir)==1 && A && A->p);
-    if(!A->fft) A->fft=(fft_t*)mycalloc(1,fft_t);
+    if(!A->fft) A->fft=mycalloc(1,fft_t);
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;
     LOCK_FFT;

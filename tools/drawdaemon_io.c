@@ -23,10 +23,6 @@
   Todo: fread does not block when there are no more data available, and simply
   return EOF. Consider changing to read, which blocks when no data available.
  */
-#define myalloca(nelem, type) (type*)alloca(nelem*sizeof(type))
-#define mycalloc(nelem, type) (type*)calloc(nelem,sizeof(type))
-#define mymalloc(nelem, type) (type*)malloc(nelem*sizeof(type))
-#define myrealloc(p, nelem, type) (type*)realloc(p,nelem*sizeof(type))
 static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;

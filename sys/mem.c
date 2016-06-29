@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 
 int exit_fail=0;
+#define IN_MEM_C 1
 #include "mem.h"
 #include "thread.h"
 #include "scheduler_client.h"
@@ -244,20 +245,24 @@ void register_deinit(void (*fun)(void), void *data){
 	UNLOCK(mutex_mem);
     }
 }
-
-void* malloc(size_t size){
-    return mem_debug?malloc_custom(size):malloc_default(size);
+#ifdef __cpluspluc
+unamespace std{
+#endif
+    void* malloc_maos(size_t size){
+	return mem_debug?malloc_custom(size):malloc_default(size);
+    }
+    void *calloc_maos(size_t size, size_t nmemb){
+	return mem_debug?calloc_custom(size, nmemb):calloc_default(size,nmemb);
+    }
+    void* realloc_maos(void *p, size_t size){
+	return mem_debug?realloc_custom(p, size):realloc_default(p,size);
+    }
+    void free_maos(void *p){
+	if(mem_debug) free_custom(p); else free_default(p);
+    }
+#ifdef __cpluspluc
 }
-void *calloc(size_t size, size_t nmemb){
-    return mem_debug?calloc_custom(size, nmemb):calloc_default(size,nmemb);
-}
-void* realloc(void *p, size_t size){
-    return mem_debug?realloc_custom(p, size):realloc_default(p,size);
-}
-void free(void *p){
-    if(mem_debug) free_custom(p); else free_default(p);
-}
-
+#endif
 void print_mem(){
     if(MROOT){
 	warning("%ld (%.3f MB) allocated memory not freed!!!\n",
@@ -265,7 +270,7 @@ void print_mem(){
 	twalk(MROOT,stat_usage);
 	twalk(MSTATROOT, print_usage);
     }else{
-	info("All allocated memory are freed.\n");
+	info2("All allocated memory are freed.\n");
 	if(memcnt>0){
 	    warning("But memory count is still none zero: %ld\n",memcnt);
 	}

@@ -106,7 +106,7 @@ void mapwritedata(file_t *fp, map_t *map){
    convert a dmat to map_t.
 */
 map_t* d2map(dmat *in){
-    map_t *map=(map_t*)myrealloc(dref(in), sizeof(map_t),char);
+    map_t *map=myrealloc(dref(in), 1, map_t);
     memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
     char *header=in->header;
     map->iac=0;
@@ -185,7 +185,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
    convert a dmat to map_t.
 */
 rmap_t* d2rmap(dmat *in){
-    rmap_t *map=(rmap_t*)myrealloc(dref(in), sizeof(rmap_t),char);
+    rmap_t *map=myrealloc(dref(in), 1, rmap_t);
     memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
     char *header=in->header;
     if(!in->header){
@@ -211,7 +211,7 @@ rmap_t* d2rmap(dmat *in){
  */
 rmap_t **dcell2rmap(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
-    rmap_t **map=(rmap_t**)mycalloc(in->nx*in->ny,rmap_t*);
+    rmap_t **map=mycalloc(in->nx*in->ny,rmap_t*);
     for(long i=0; i<in->nx*in->ny; i++){
 	map[i]=d2rmap(in->p[i]);
     }

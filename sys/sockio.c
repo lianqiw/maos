@@ -134,7 +134,7 @@ int stwritestrarr(int sfd, const char *const *str, int nstr){
 int streadstrarr(int sfd, char ***str, int *nstr){
     int ans=streadint(sfd, nstr);
     if(ans) return ans;
-    *str=(char**)mycalloc(*nstr,char*);
+    *str=mycalloc(*nstr,char*);
     for(int istr=0; istr<*nstr && !ans; istr++){
 	ans=streadstr(sfd, &(*str)[istr]);
     }

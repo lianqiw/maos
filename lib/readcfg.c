@@ -247,7 +247,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    return;
 	}
     }
-    
+
     char *sline=NULL;
     int countnew=0;
     int countold=0;
@@ -256,27 +256,28 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
     char ssline[MAXLN];
     ssline[0]='\0';/*stores the available line. */
     char line[MAXLN];
+    char *config_line=config_file;
     while(1){
 	if(fd){/*read from file*/
 	    if(!fgets(line, MAXLN, fd)) break;
 	}else{/*read from string*/
-	    if(!config_file) break;
-	    char *p0=strchr(config_file, '\n');
+	    if(!config_line) break;
+	    char *p0=strchr(config_line, '\n');
 	    int len;
 	    if(p0){
-		len=p0-config_file;
+		len=p0-config_line;
 	    }else{
-		len=strlen(config_file);
+		len=strlen(config_line);
 	    }
 	    if(len+1>MAXLN){
 		error("Input line is too long. Please make MAXLN larger to accomodate.\n");
 	    }
-	    strncpy(line, config_file, len);
+	    strncpy(line, config_line, len);
 	    line[len]='\0';
 	    if(p0){
-		config_file=p0+1;
+		config_line=p0+1;
 	    }else{
-		config_file=0;
+		config_line=0;
 	    }
 	}
 	sline=squeeze(line);
