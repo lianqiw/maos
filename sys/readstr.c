@@ -228,7 +228,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
     }
     const char *startptr=data;
-    char *endptr, *startptr2;
+    const char *endptr, *startptr2;
     double fact=1;
     int power=1;
     int addition=0; double addval=0; 
@@ -236,7 +236,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     /*process possible numbers before the array. */
     if(strchr(startptr,'[')){/*there is indeed '[' */
 	while(startptr[0]!='['){/*parse number before [*/
-	    double fact1=strtod(startptr, &endptr);/*get the number */
+	    double fact1=strtod(startptr, (char**)&endptr);/*get the number */
 	    if(startptr==endptr){
 		error("{%s}: Invalid entry to parse for numerical array\n", data);
 	    }else{/*valid number */
@@ -290,7 +290,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    endptr++;
 	    while(isspace(endptr[0])) endptr++;
 	    startptr2=endptr;
-	    double fact2=strtod(startptr2, &endptr);
+	    double fact2=strtod(startptr2, (char**)&endptr);
 	    if(startptr2==endptr){
 		error("{%s}: Invalid entry to parse for numerical array\n", data);
 	    }
@@ -330,7 +330,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    }
 	}
 	/*parse the string for a floating point number.  */
-	double res=readstr_num(startptr, &endptr);
+	double res=readstr_num(startptr, (char**)&endptr);
 	startptr=endptr;
 	/*apply the factors appear before or after [] */
 	if(power==1){

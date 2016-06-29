@@ -128,7 +128,17 @@
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define USE_COMPLEX */
 #endif/*#define USE_SINGLE */
-
+/*
+#ifndef USE_COMPLEX
+#undef conj
+#define conj
+#undef real
+#define real
+#define creal2 creal
+#undef creal
+#define creal
+#endif
+*/
 #ifdef DLONG
 #define M_SPT M_SPT64
 #else

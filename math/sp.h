@@ -58,7 +58,7 @@ X(sp)* X(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\
 X(mat) *X(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
 void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha); \
-void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha); \
+void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, R alpha); \
 void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const T alpha); \
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2], const T alpha); \
 T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\

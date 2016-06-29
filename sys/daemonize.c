@@ -366,7 +366,6 @@ pid_t launch_exe(const char *exepath, const char *cmd){
     /*
       extract cwd from cmd;
     */
-    char *stexe=NULL;
     char *cmd2;
     if(cmd[0]=='~'){
 	cmd2=stradd(HOME, cmd+1, NULL);
@@ -376,7 +375,8 @@ pid_t launch_exe(const char *exepath, const char *cmd){
     const char *cmd2end=cmd2+strlen(cmd2);
     for(int iexe=0; iexe<nexe; iexe++){
 	const char *exe=exes[iexe];
-	const char *cmd3=cmd2;
+	char *cmd3=cmd2;
+	char *stexe=NULL;
 	do{
 	    stexe=strstr(cmd3, exe);
 	    cmd3=cmd3+strlen(exe);

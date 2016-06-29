@@ -38,7 +38,7 @@ extern "C" {
 #endif
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    exception_env=(int(*)[37])malloc(sizeof(jmp_buf));
+    exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
     if(setjmp(*exception_env)){
 	//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
 	info2("Exception happened\n");

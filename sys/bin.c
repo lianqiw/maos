@@ -649,11 +649,10 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     if(str){
 	const char *str2=str+strlen(str);
 	while(str<str2){
-	    char *nl=strchr(str, '\n');
+	    const char *nl=strchr(str, '\n');
 	    int length;
 	    if(nl){
 		length=nl-str+1;
-		if(length<=70) nl[0]=';';
 	    }else{
 		length=strlen(str);
 	    }
@@ -661,6 +660,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    FLUSH_OUT;
 	    strncpy(header[hc], "COMMENT   ", 10);
 	    strncpy(header[hc]+10, str, length);
+	    if(nl){
+		header[hc][10+length-1]=';';
+	    }
 	    hc++;
 	    str+=length;
 	}

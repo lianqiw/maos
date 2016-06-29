@@ -220,7 +220,7 @@ file_t* zfopen(const char *fn, const char *mod){
 }
 void zfclose(file_t *fp){
     if(fp->isgzip){
-	gzclose((voidp)fp->p);
+	gzclose((gzFile)fp->p);
     }else{
 	if(fclose((FILE*)fp->p)){
 	    perror("fclose\n");
@@ -230,7 +230,7 @@ void zfclose(file_t *fp){
 }
 INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
-	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
+	if(gzwrite((gzFile)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
 	    error("write failed\n");
 	}
@@ -318,7 +318,7 @@ void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_
 }
 INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
-	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
+	return gzread((gzFile)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{
 	return fread(ptr, size, nmemb, (FILE*)fp->p)==nmemb?0:-1;
     }
@@ -388,14 +388,14 @@ int zfseek(file_t *fp, long offset, int whence){
 	offset=nb*bs;
     }
     if(fp->isgzip){
-	return gzseek((voidp)fp->p,offset,whence)==-1?-1:0;
+	return gzseek((gzFile)fp->p,offset,whence)==-1?-1:0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }
 }
 long zftell(file_t *fp){
     if(fp->isgzip){
-	return gztell((voidp)fp->p);
+	return gztell((gzFile)fp->p);
     }else{
 	return ftell((FILE*)fp->p);
     }
@@ -551,11 +551,10 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	     * length limit*/
 	const char *str2=str+strlen(str);
 	while(str<str2){
-	    char *nl=strchr(str, '\n');
+	    const char *nl=strchr(str, '\n');
 	    int length;
 	    if(nl){
 		length=nl-str+1;
-		if(length<=70) nl[0]=';';
 	    }else{
 		length=strlen(str);
 	    }
@@ -563,6 +562,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    FLUSH_OUT;
 	    strncpy(header[hc], "COMMENT   ", 10);
 	    strncpy(header[hc]+10, str, length);
+	    if(nl){
+		header[hc][10+length-1]=';';
+	    }
 	    hc++;
 	    str+=length;
 	}

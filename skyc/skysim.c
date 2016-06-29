@@ -590,7 +590,7 @@ void skysim(const PARMS_S *parms){
 #endif
 	if(simu->isky_start < simu->isky_end){
 	    simu->isky=simu->isky_start;
-	    CALL(skysim_isky, simu, nthread,0);/*isky iteration. */
+	    CALL((thread_fun)skysim_isky, simu, nthread,0);/*isky iteration. */
 	}
 	if(parms->skyc.dbgsky<0){
 	    char fn[80];

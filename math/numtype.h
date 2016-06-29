@@ -59,6 +59,7 @@ typedef int spint;  /*This is always 32 bit. */
 #ifndef AOS_CUDA_GPU_H
 //C++ mode
 #include <complex>
+#include <cmath>
 using std::real;
 using std::conj;
 using std::isinf;
@@ -68,7 +69,8 @@ typedef complex<float> fcomplex;
 #define COMPLEX(A,B) dcomplex(A,B)
 #define DCOMPLEX(A,B) dcomplex(A,B)
 #define FCOMPLEX(A,B) fcomplex(A,B)
-#define cabs abs
+#define fabs std::abs
+#define cabs fabs
 #define cimag imag
 #define creal real
 #define cexp exp
@@ -76,7 +78,7 @@ typedef complex<float> fcomplex;
 #define csqrt sqrt
 #define clog log
 #define carg arg
-#define cabsf abs
+#define cabsf fabs
 
 #define cimagf imag
 #define crealf real
@@ -121,6 +123,15 @@ INLINE dcomplex operator-(float A, const dcomplex &B){
 }
 INLINE dcomplex operator-(const dcomplex &B, float A){
     return B-(double)A;
+}
+INLINE conj(double A){
+    return A;
+}
+INLINE real(double A){
+    return A;
+}
+INLINE abs(double A){
+    return A;
 }
 #endif//#ifndef AOS_CUDA_GPU_H
 #else //#if defined(__cplusplus) C99 mode

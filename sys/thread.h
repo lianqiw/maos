@@ -64,11 +64,11 @@ INLINE void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
-INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
+INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     (void)urgent;
     for(int it=0; it<nthread; it++){
 #pragma omp task 
-	((thread_fun)fun)(arg);
+	fun(arg);
     }
 #pragma omp taskwait
 }

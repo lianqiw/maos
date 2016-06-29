@@ -15,9 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE //For RTLD_NEXT in linux
+#endif
 #include <search.h>
-#include <tgmath.h>
 #ifndef __CYGWIN__
 #include <execinfo.h>
 #endif

@@ -28,7 +28,6 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <stdint.h>
-#include <tgmath.h>
 #include "common.h"
 #include "thread.h"
 #include "process.h"

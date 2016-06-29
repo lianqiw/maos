@@ -328,10 +328,12 @@ int main(int argc, char *argv[]){
     }
  
     if(npath==1){
-	char *legs[nseed];
+	char *legs0[nseed];
+	const char *legs[nseed];//work around C warning.
 	for(int iseed=0; iseed<nseed; iseed++){
-	    legs[iseed]=mymalloc(50,char);
-	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
+	    legs0[iseed]=mymalloc(50,char);
+	    snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
+	    legs[iseed]=legs0[iseed];
 	}
 	if(restype==1){
 	    plot_points("Res", nseed, NULL, restot, NULL, NULL, xylog, NULL, legs,
@@ -353,14 +355,16 @@ int main(int argc, char *argv[]){
 			"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
-	    free(legs[iseed]);
+	    free(legs0[iseed]);
 	}
     }else{
-	char **pathtag=mycalloc(npath,char*);
+	char *pathtag0[npath];
+	const char *pathtag[npath];
 	char prefix[4]="A: ";
 	for(int ipath=0; ipath<npath; ipath++){
 	    prefix[0]='A'+ipath;
-	    pathtag[ipath]=stradd(prefix, path[ipath], NULL);
+	    pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
+	    pathtag[ipath]=pathtag0[ipath];
 	}
 	if(restype==1){
 	    plot_points("Res", npath, NULL, restotm, NULL, NULL, xylog, NULL, pathtag,
