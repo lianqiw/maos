@@ -641,11 +641,11 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 		if(isfun){
 		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
 		    tmp(val);
+		    free(val);
 		}else{
 		    char **tmp=(char**)options[iopt].val;
 		    free(*tmp); *tmp=val;
 		}
-		free(val);
 	    }
 		break;
 	    default:
