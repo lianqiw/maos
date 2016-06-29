@@ -62,6 +62,7 @@ using std::realloc;
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4

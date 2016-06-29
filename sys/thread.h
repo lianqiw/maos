@@ -118,16 +118,16 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
     }else{								\
 	fun(arg);							\
     }
-#define CALL(fun,arg,nthread,urgent)					\
-    if(nthread>1){							\
-	long thgroup=0;							\
-	thread_pool_queue_many						\
-	    (&thgroup, (thread_fun)fun, (void*)arg, nthread, urgent);	\
-	thread_pool_wait(&thgroup);					\
-    }else{								\
-	fun(arg);							\
+INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+    if(nthread>1){							
+	long thgroup=0;							
+	thread_pool_queue_many						
+	    (&thgroup, fun, arg, nthread, urgent);			
+	thread_pool_wait(&thgroup);					
+    }else{								
+	fun(arg);							
     }
-
+}
 #define WAIT(group)\
     thread_pool_wait(&group);
 /**

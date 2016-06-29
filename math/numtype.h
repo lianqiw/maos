@@ -124,15 +124,13 @@ INLINE dcomplex operator-(float A, const dcomplex &B){
 INLINE dcomplex operator-(const dcomplex &B, float A){
     return B-(double)A;
 }
-INLINE conj(double A){
+INLINE double conj(double A){
     return A;
 }
-INLINE real(double A){
+INLINE double real(double A){
     return A;
 }
-INLINE abs(double A){
-    return A;
-}
+
 #endif//#ifndef AOS_CUDA_GPU_H
 #else //#if defined(__cplusplus) C99 mode
 #include <tgmath.h> //never include tgmath.h in CUDA included headers.
