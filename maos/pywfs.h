@@ -41,6 +41,8 @@ typedef struct PYWFS_T{
     dmat *GTT;          /**<Response of TT mode.*/
     dmat *pupilshift;  /**<Pupil shift. 4x2.*/
     loccell *msaloc;   /**<Mishaped saloc of each sub-pupil due to optical effects*/
+    int sigmatch;      /**<Scale gradients by matching intensity (1: locally, 2: globally).*/
+    double siglev;     /**<Nominal siglev per subaperture*/
 }PYWFS_T;
 
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);

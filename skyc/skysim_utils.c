@@ -352,7 +352,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 				}else{
 				    warning_once("mtch is out of range\n");
 				}
-				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*IND(rnefs,idtrat,ipowfs)); 
+				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*IND(rnefs,idtrat,ipowfs), 0); 
 				igrad[0]*=pixtheta;
 				igrad[1]*=pixtheta;
 			    }

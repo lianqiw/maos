@@ -33,6 +33,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=mycalloc(1,PYWFS_T);
     map_t *map=0;
     pywfs->hs=parms->powfs[ipowfs].hs;
+    pywfs->sigmatch=parms->powfs[ipowfs].sigmatch;
+    pywfs->siglev=parms->powfs[ipowfs].siglev;
     pywfs->poke=parms->recon.poke;//How many meters to poke
     if(pywfs->poke>1e-5 || pywfs->poke<1e-10){
 	warning("poke=%g m is out of range\n", pywfs->poke);
@@ -534,26 +536,33 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     double *pgx=(*pgrad)->p;
     double *pgy=(*pgrad)->p+nsa;
     double gain=pywfs->gain;
-    if(0){//Use standard Quad Cell algorithm
-	warning_once("Do not use mean i0\n");
-	for(int isa=0; isa<nsa; isa++){
-	    double alpha2=gain/(IND(ints,isa,0)+IND(ints,isa,1)+IND(ints,isa,2)+IND(ints,isa,3));
-	    pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
-		      +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
-	    pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
-		      -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
-	}
-    }else{//Denominator is replaced by SAA*mean(i0).
-	double imean=dsum(ints)/nsa;
-	double alpha0=gain/imean;
-	for(int isa=0; isa<nsa; isa++){
-	    double alpha2=alpha0/pywfs->saa->p[isa];
-	    pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
-		      +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
-	    pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
-		      -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
-	}
+    double imean=0;
+    if(pywfs->sigmatch==2){
+	imean=dsum(ints)/nsa;
     }
+    for(int isa=0; isa<nsa; isa++){
+	double isum=0;
+	switch(pywfs->sigmatch){
+	case 0:
+	    info_once("No siglev correction\n");
+	    isum=pywfs->siglev*pywfs->saa->p[isa]; 
+	    break;
+	case 1:
+	    info_once("Individual correction\n");
+	    isum=(IND(ints,isa,0)+IND(ints,isa,1)+IND(ints,isa,2)+IND(ints,isa,3));
+	    break;
+	case 2:
+	    info_once("Global correction (preferred);\n");
+	    isum=imean*pywfs->saa->p[isa];
+	    break;
+	}
+	double alpha2=gain/isum;
+	pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
+		  +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
+	pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
+		  -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
+    }
+    
     if(pywfs->gradoff){
 	dadd(pgrad, 1, pywfs->gradoff, -1);
     }

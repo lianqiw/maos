@@ -134,7 +134,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    
 			double grad[2]={0,0};
 			double pmax=dmax(psf);
-			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 			grad[0]*=dtheta[iwvl];//convert to Radian
 			grad[1]*=dtheta[iwvl];
 			IND(pphygrad,isa,istep)+=grad[0]*nwvli;//record the value
@@ -153,7 +153,7 @@ static void calc_pistat(GENPISTAT_S *data){
 				if(nframe%(int)dtrats->p[idtrat]==0){
 				    grad[0]=grad[1]=0;
 				    pmax=dmax(*pavgpsf);
-				    dcog(grad,*pavgpsf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+				    dcog(grad,*pavgpsf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 				    dzero(*pavgpsf);
 				    neaspec->p[isa+iwvl*nsa*2]->p[idtrat]+=pow(grad[0]*dtheta[iwvl],2);
 				    neaspec->p[isa+nsa+iwvl*nsa*2]->p[idtrat]+=pow(grad[1]*dtheta[iwvl],2);

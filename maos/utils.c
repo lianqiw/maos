@@ -561,7 +561,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		case 2:{/*tCoG gives gradients along r/a*/
 		    dcog(g,ints,0.,0.,
 			 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
-			 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
+			 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1], 0);
 		    g[0]*=pixthetax;
 		    g[1]*=pixthetay;
 		}
@@ -649,7 +649,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 	for(int isa=0; isa<nsa; isa++){
 	    double geach[3]={0,0,1};
 	    dmulvec(geach, mtche->p[isa], i0_new->p[isa]->p, 1);
-	    if(parms->powfs[ipowfs].mtchscl){
+	    if(parms->powfs[ipowfs].sigmatch){
 		scale=i0sum->p[isa]/dsum(i0_new->p[isa]);
 	    }
 	    gradmf->p[isa]=geach[0]*scale;
@@ -657,7 +657,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
 	    {
 		dcog(geach, i0_new->p[isa], 0, 0, 
 		     powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
-		     powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
+		     powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1], 0);
 		geach[0]*=pixthetax;
 		geach[1]*=pixthetay;
 		if(srot){
@@ -880,17 +880,36 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	switch(phytype){
 	case 1:{
 	    dmulvec(geach, mtche[isa],ints[isa]->p,1.);
-	    if(parms->powfs[ipowfs].mtchscl){
-		double scale=i0sum[isa]/dsum(ints[isa]);
-		geach[0]*=scale;
-		geach[1]*=scale;
+	    double scale=1.;
+	    switch(parms->powfs[ipowfs].sigmatch){
+	    case 0:
+		break;
+	    case 1:
+		scale=i0sum[isa]/dsum(ints[isa]);
+		break;
+	    case 2:
+		error("To implement\n");
+		break;
 	    }
+	    geach[0]*=scale;
+	    geach[1]*=scale;
 	}
 	    break;
 	case 2:{
+	    double sumi=0;
+	    switch(parms->powfs[ipowfs].sigmatch){
+	    case 0:
+		sumi=i0sum[isa];
+		break;
+	    case 1:
+		break;
+	    case 2:
+		error("To implement\n");
+		break;
+	    }
 	    dcog(geach,ints[isa],0.,0.,
 		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2],
-		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1]);
+		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1], sumi);
 	    geach[0]*=pixthetax;
 	    geach[1]*=pixthetay;
 	    if(srot){

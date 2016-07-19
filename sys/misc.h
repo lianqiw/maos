@@ -83,5 +83,4 @@ void maos_version(void);
 void set_realtime(int icpu, int niceness);
 void register_signal_handler(int(*)(int));
 void mypause(void);
-void quit(void);
 #endif

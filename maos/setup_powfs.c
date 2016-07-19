@@ -1169,13 +1169,13 @@ static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int
     dmat *ints2=dnew(ints->nx, ints->ny);
     double gnf[2]={0,0};
     double gny[2]={0,0};
-    dcog(gnf, ints, 0, 0, cogthres, cogoff);
+    dcog(gnf, ints, 0, 0, cogthres, cogoff, 0);
     seed_rand(rstat, 1);/*reset the seed each time to make dminsearch work.*/
     nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
     for(int i=0; i<ntry; i++){
 	dcp(&ints2, ints);
 	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
-	dcog(gny, ints2, 0, 0, cogthres, cogoff);
+	dcog(gny, ints2, 0, 0, cogthres, cogoff, 0);
 	double errx=gny[0]-gnf[0];
 	double erry=gny[1]-gnf[1];
 	nea[0]+=errx*errx;

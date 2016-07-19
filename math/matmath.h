@@ -70,7 +70,7 @@
     void X(rotvect)(X(mat) *A, const R theta);				\
     void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta);		\
     void X(mulvec3)(T *y, const X(mat) *A, const T *x);			\
-    void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd); \
+    void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd, R flux); \
     void X(shift2center)(X(mat) *A, R offsetx, R offsety);		\
     int X(clip)(X(mat) *A, R min, R max);				\
     void X(gramschmidt)(X(mat) *Mod, R *amp);				\

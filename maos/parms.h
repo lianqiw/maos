@@ -200,10 +200,10 @@ typedef struct POWFS_CFG_T{
     double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     double L0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
     double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
-    double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
+    double mtchcra; /**<if >0 use constrained mtch for azimuthal (y) for this amount of pixels*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
-    int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/
+    int sigmatch;   /**<scale subaperture image to have the same intensity as i0. Keep false.*/
     int mtchadp;    /**<Using adaptive matched filter. When the number of pixels
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/

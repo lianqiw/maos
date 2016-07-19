@@ -544,7 +544,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(parms->powfs[ipowfs].mtchstc){
 		    /*Forst psf to be centered. */
 		    double pmax=dmax(IND(psepsf,isa,iwvl));
-		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax);
+		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
 		ccpd(&sepsf,IND(psepsf,isa,iwvl));
 		cembedc(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */

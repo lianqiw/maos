@@ -31,7 +31,24 @@ extern "C"{
 #endif
 
 __global__ static void
-pywfs_grad_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
+pywfs_grad_0_do(Real *grad, const Real *ints, const Real *saa, const Real isum, const Real *goff, Real gain, int nsa){
+    const Real alpha0=gain/isum;
+    for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
+	const Real alpha=alpha0/saa[i];
+	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
+	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
+    }
+}
+__global__ static void
+pywfs_grad_1_do(Real *grad, const Real *ints, const Real *saa, const Real *goff, Real gain, int nsa){
+    for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
+	const Real alpha=gain/(ints[i]+ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i]);
+	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
+	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
+    }
+}
+__global__ static void
+pywfs_grad_2_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
     const Real alpha0=gain*nsa/(*isum);
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
 	const Real alpha=alpha0/saa[i];
@@ -39,16 +56,31 @@ pywfs_grad_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, c
 	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
     }
 }
+
 void pywfs_grad(curmat &grad, /**<[out] gradients*/
 		const curmat &ints, /**<[in] Intensity*/
 		const curmat &saa,  /**<[in] Subaperture normalized area*/
 		curmat &isum, /**<[out] Sum intensity*/
 		const curmat &goff, /**<[in] Gradient of flat wavefront*/
-		Real gain,   /**<[in] Gain*/
+		const PYWFS_T *pywfs,
 		cudaStream_t stream){
-    cursum2(isum, ints, stream);//sum of ints
-    pywfs_grad_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-	(grad, ints, saa, isum, goff, gain, ints.Nx());
+    switch(pywfs->sigmatch){
+    case 0://No siglev correction
+	info_once("No siglev correction\n");
+	pywfs_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+	    (grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
+	break;
+    case 1:
+	info_once("Individual correction\n");
+        pywfs_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+	    (grad, ints, saa, goff, pywfs->gain, ints.Nx());
+	break;
+    case 2:
+	info_once("Global correction (preferred);\n");
+	cursum2(isum, ints, stream);//sum of ints
+	pywfs_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+	    (grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
+    }
 }
 void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaStream_t stream){
     //Pyramid WFS
@@ -167,7 +199,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     curmat grad0(nsa*2,1);
     cuzero(ints, stream);
     pywfs_ints(ints, phiout, cuwfs, siglev, stream);
-    pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs->gain, stream);
+    pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
     TIC;tic;
     //cuwrite(grad0, "grad0_gpu");
     //cuwrite(ints, "ints0_gpu");
@@ -199,7 +231,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
 	cuzero(ints, stream);
 	pywfs_ints(ints, phiout, cuwfs, siglev, stream);
 	//cuwrite(ints, "gpu_ints_%d", imod);
-	pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs->gain,stream);
+	pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 	curadd(grad, 1, grad0, -1, stream);
 	curscale(grad, 1./poke, stream);
 	dmat *gradc=drefcols(ggd, imod, 1);

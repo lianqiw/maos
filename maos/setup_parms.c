@@ -320,7 +320,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,L0);
     READ_POWFS_RELAX(dbl,mtchcra);
     READ_POWFS_RELAX(int,mtchcpl);
-    READ_POWFS_RELAX(int,mtchscl);
+    READ_POWFS_RELAX(int,sigmatch);
     READ_POWFS_RELAX(int,mtchadp);
     READ_POWFS_RELAX(dbl,cogthres);
     READ_POWFS_RELAX(dbl,cogoff);
@@ -1547,13 +1547,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].noisy=0;
 	    parms->powfs[ipowfs].phystep=-1;
 	}
-	if(parms->powfs[ipowfs].mtchscl==-1){
-	    if(fabs(parms->powfs[ipowfs].sigscale-1)>EPS){
-		parms->powfs[ipowfs].mtchscl=1;
-	    }else{
-		parms->powfs[ipowfs].mtchscl=0;
-	    }
-	}
     }
     parms->hipowfs->nx=parms->nhipowfs;
     parms->lopowfs->nx=parms->nlopowfs;
@@ -2380,7 +2373,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	if(parms->sim.nseed<1){
 	    scheduler_finish(0);
 	    info2("There are no seed to run. Use -O to override. Exit\n");
-	    quit();
+	    sync(); exit(0);
 	}
     }
     info2("There are %d valid simulation seeds: ",parms->sim.nseed);
@@ -2542,10 +2535,9 @@ static void print_parms(const PARMS_T *parms){
 	info2("    %s in reconstruction. ", 
 	      parms->powfs[i].gtype_recon==0?"Gtilt":"Ztilt");
 	if(parms->powfs[i].phystep>-1){
-	    info2("Physical optics start at %d with '%s' %s",
+	    info2("Physical optics start at %d with '%s'",
 		  parms->powfs[i].phystep, 
-		  phytype[parms->powfs[i].phytypesim],
-		  parms->powfs[i].mtchscl?"scaled":"");
+		  phytype[parms->powfs[i].phytypesim]);
 	}else{
 	    info2("Geomtric optics uses %s ",
 		  parms->powfs[i].gtype_sim==0?"gtilt":"ztilt");

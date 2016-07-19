@@ -491,7 +491,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 	    if(parms->powfs[ipowfs].type==1){
 		pywfs_grad(gradcalc, cuwfs[iwfs].ints[0], cupowfs[ipowfs].saa, 
-			   cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gain,stream);
+			   cuwfs[iwfs].isum, cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs,stream);
 		//cuwrite(gradcalc, "gradcalc"); exit(0);
 	    }else if(do_phy){
 		CUDA_CHECK_ERROR;
@@ -503,7 +503,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    break; //no-op
 		case 1:
 		    mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche.P()), ints.M(), 
-			  parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum.P():NULL,
+			  parms->powfs[ipowfs].sigmatch?cuwfs[iwfs].i0sum.P():NULL,
 			  pixpsa, nsa, cuwfs[iwfs].msa, stream);
 		    break;
 		case 2:{

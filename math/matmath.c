@@ -647,8 +647,8 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
    point (cog=0) from the physical center.
    all length are given in terms of pixel.
 */
-void X(cog)(R *grad,const X(mat) *im,R offsetx,
-	    R offsety, R thres, R bkgrnd){
+void X(cog)(R *grad,const X(mat) *im,R offsetx, R offsety,
+	    R thres, R bkgrnd, R flux){
     R sum=0,sumx=0,sumy=0;
     R iI;
     for(int iy=0; iy<im->ny; iy++){
@@ -660,6 +660,9 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx,
 		sumy+=iI*iy;
 	    }
 	}
+    }
+    if(flux>0){//linerize CoG by overriding sum
+	sum=flux;
     }
     if(fabs(sum)>0){
 	grad[0]=sumx/sum-((R)(im->nx-1)*0.5+offsetx);
@@ -679,7 +682,7 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx,
 void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R grad[2];
     R Amax=X(max)(A);
-    X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
+    X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2, 0);
     if(fabs(grad[0])>0.1 || fabs(grad[1])>0.1){
 	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(mat) *B=XC(new)(A->nx,A->ny);
@@ -702,7 +705,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 #else
 	XC(real2d)(&A,0,B,1);
 #endif
-	X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
+	X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2, 0);
 	/*info("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(free)(B);
     }

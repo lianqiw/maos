@@ -285,7 +285,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		remove(fnpid);
 	    }
 	    scheduler_finish(0);
-	    quit();
+	    sync();exit(0);
 	}
     }
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){

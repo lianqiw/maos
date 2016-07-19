@@ -799,7 +799,7 @@ void default_quitfun(const char *msg){
 	print_backtrace();
 	sync();
     }
-    quit();
+    exit(0);
 }
 static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
@@ -870,10 +870,6 @@ void mypause(){
     info2("Press Any Key to Continue:"); 
     while(getchar()!=0x0a); 
     info2("continuing...\n"); 
-}
-void quit(){
-    sync();
-    abort();
 }
 #undef strdup
 char* (*strdup0)(const char *)=strdup;
