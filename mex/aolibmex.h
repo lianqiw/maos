@@ -18,3 +18,4 @@
 cell *genotfmex(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *area, double thres, double wvl, double dtheta, const dmat *cov, double r0, double l0, long ncompx, long ncompy, long nsa, long pttr);
 dmat *m3projmex(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs);
 dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
+dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
