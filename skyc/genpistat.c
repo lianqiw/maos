@@ -425,7 +425,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			dcelladd(&i0s, 0, i0, sig);
 			dcelladd(&gxs, 0, gx, sig);
 			dcelladd(&gys, 0, gy, sig);
-			mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
+			genmtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
 			/*writebin(mtche, "mtche_%.0f", sig);
 			  writebin(sanea, "sanea_%.0f", sig);
 			  writebin(i0s, "i0s_%.0f", sig);

@@ -197,10 +197,9 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
-    double L0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
-    double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
-    double mtchcra; /**<if >0 use constrained mtch for azimuthal (y) for this amount of pixels*/
+    double r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    double L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    int mtchcr;     /**<use constrained matched filter (0: disable, 1: both axis. 2: radial/x only, 3: az/y only)*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
     int sigmatch;   /**<scale subaperture image to have the same intensity as i0. Keep false.*/

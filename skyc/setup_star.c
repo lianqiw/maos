@@ -327,9 +327,9 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		dcelladd(&i0s, 0, pistat->i0s, dtrat);
 		dcelladd(&gxs, 0, pistat->gxs, dtrat);
 		dcelladd(&gys, 0, pistat->gys, dtrat);
-		mtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
-		     i0s, gxs, gys, pixtheta, IND(rnefs,idtrat,ipowfs), 
-		     star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
+		genmtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
+			i0s, gxs, gys, pixtheta, IND(rnefs,idtrat,ipowfs), 
+			star[istar].bkgrnd->p[ipowfs]*dtrat, parms->skyc.mtchcr);
 		/*Add nolinearity*/
 		if(nonlin){
 		    //add linearly not quadratically since the errors are related.

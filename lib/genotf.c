@@ -451,3 +451,146 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
     free(map_y);
     return cov2d;
 }
+/**
+   shift i0 without wraping into i0x1 (+1) and i0x2 (-1)
+*/
+static void mki0shx(double *i0x1, double *i0x2, const dmat *i0, double scale){
+    int nx=i0->nx;
+    typedef double pcol[nx];
+    pcol *i0x1p=(pcol*)i0x1;
+    pcol *i0x2p=(pcol*)i0x2;
+    for(int iy=0; iy<i0->ny; iy++){
+	for(int ix=0; ix<i0->nx-1; ix++){
+	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
+	}
+    }
+}
+
+/**
+  shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
+*/
+static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
+    int nx=i0->nx;
+    typedef double pcol[nx];
+    pcol *i0y1p=(pcol*)i0y1;
+    pcol *i0y2p=(pcol*)i0y2;
+    for(int iy=0; iy<i0->ny-1; iy++){
+	for(int ix=0; ix<i0->nx; ix++){
+	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
+	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
+	}
+    }
+}
+/**
+   Generating matched filter from averaged short exposure images.
+*/
+
+dmat *mtch(dmat **neaout, /**<[out] sanea*/
+	   const dmat *i0, /**<Averaged subaperture image*/
+	   const dmat *gx, /**<derivative of i0 along x*/
+	   const dmat *gy, /**<derivative of i0 along y*/
+	   const dmat *dbkgrnd2, /**<background*/
+	   const dmat *dbkgrnd2c, /**<background calibration*/
+	   double bkgrnd,  /**<global background*/
+	   double bkgrndc, /**<global background calibration*/
+	   double rne,     /**<Detector read noise*/
+	   double pixthetax, /**<Size of pixel along x*/
+	   double pixthetay, /**<Size of pixel along y*/
+	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	   int radgx,        /**<1: gx/gy is along r/a coord.*/
+	   int cr    /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
+    ){
+    const double *bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
+    const double *bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
+    const double bkgrnd_res=bkgrnd-bkgrndc;
+    const double kpx=1./pixthetax;
+    const double kpy=1./pixthetay;
+    int nmod=3;
+    int mtchcrx=0;
+    int mtchcry=0;
+
+    if(cr==1 || cr==2){
+	mtchcrx=nmod;
+	nmod+=2;
+    }
+    if(cr==1 || cr==3){
+	mtchcry=nmod;
+	nmod+=2;
+    }
+    const int i0n=i0->nx*i0->ny;
+    dmat *i0m=dnew(2,nmod);
+    dmat *i0g=dnew(i0n,nmod);
+    dmat *wt=dnew(i0n,1);
+    /*Derivative is along r/a or x/y*/
+    IND(i0m,0,0)=1;
+    IND(i0m,1,1)=1;
+    double theta=radgx?0:pixrot;
+    if(mtchcrx){/*constrained x(radial) */
+	IND(i0m,0,mtchcrx)=cos(theta);
+	IND(i0m,1,mtchcrx)=sin(theta);
+	IND(i0m,0,mtchcrx+1)=-IND(i0m,0,mtchcrx);
+	IND(i0m,1,mtchcrx+1)=-IND(i0m,1,mtchcrx);
+    }
+    if(mtchcry){/*constrained y(azimuthal). */
+	IND(i0m,0,mtchcry)=-sin(theta);
+	IND(i0m,1,mtchcry)= cos(theta);
+	IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
+	IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
+    }
+    
+    adddbl(PCOL(i0g,0), 1, gx->p, i0n, 1, 0);
+    adddbl(PCOL(i0g,1), 1, gy->p, i0n, 1, 0);
+    adddbl(PCOL(i0g,2), 1, i0->p, i0n, kpx, bkgrnd_res);
+    adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
+    adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
+    if(mtchcrx){
+	mki0shx(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,kpx);
+	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
+	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
+    }
+    if(mtchcry){
+	mki0shy(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,kpy);
+	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
+	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
+    }
+
+    if(bkgrnd2){
+	/*adding rayleigh backscatter poisson noise. */
+	for(int i=0; i<i0n; i++){/*noise weighting. */
+	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]+bkgrnd2[i]);
+	}	
+    }else{
+	for(int i=0; i<i0n; i++){/*noise weighting. */
+	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]);
+	}
+    }
+
+    dmat *tmp=dpinv(i0g, wt);
+    dmat *mtche=0;
+    dmm(&mtche,0,i0m, tmp, "nn", 1);
+    dfree(tmp);
+    
+    for(int i=0; i<i0n; i++){/*noise weighting. */
+	wt->p[i]=1./wt->p[i];
+    }
+    dmat *nea2=dtmcc(mtche, wt);
+
+    if(radgx && pixrot){
+	//Rotate mtched filter to x/y
+	drotvect(mtche, pixrot);
+	//Rotate NEA to (x/y)
+	drotvecnn(neaout, nea2,pixrot);
+    }else{//Already in x/y
+	dcp(neaout, nea2);
+    }
+    dfree(nea2);
+    dfree(i0m);
+    dfree(i0g);
+    dfree(wt);
+    return mtche;
+}

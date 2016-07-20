@@ -22,37 +22,7 @@
    \file maos/mtch.c
    Setting up matched filter
 */
-/**
-   shift i0 without wraping into i0x1 (+1) and i0x2 (-1)
-*/
-static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
-    int nx=i0->nx;
-    typedef double pcol[nx];
-    pcol *i0x1p=(pcol*)i0x1;
-    pcol *i0x2p=(pcol*)i0x2;
-    for(int iy=0; iy<i0->ny; iy++){
-	for(int ix=0; ix<i0->nx-1; ix++){
-	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
-	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
-	}
-    }
-}
 
-/**
-  shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
-*/
-static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
-    int nx=i0->nx;
-    typedef double pcol[nx];
-    pcol *i0y1p=(pcol*)i0y1;
-    pcol *i0y2p=(pcol*)i0y2;
-    for(int iy=0; iy<i0->ny-1; iy++){
-	for(int ix=0; ix<i0->nx; ix++){
-	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
-	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
-	}
-    }
-}
 /**
    The routine used to generate matched filter from WFS mean short exposure
    pixel intensities.
@@ -61,12 +31,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
-    const double kpx=1./pixthetax;
-    const double kpy=1./pixthetay;
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
-    const double bkgrnd_res=bkgrnd*(1.-parms->powfs[ipowfs].bkgrndc);
-    const int sub_i0=1;/*doesn't make any difference. */
+    const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
+
     int ni0=intstat->i0->ny;
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
@@ -98,35 +66,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	nllt=0;
     }
     int irot_multiplier=nllt>1?1:0;
-    int nmod=3;
-    int mtchcrx=0;
-    int mtchcry=0;
-    double shiftx=0, shifty=0;
-    /*always use saved i0. cyclic shift is not good */
-    /*because of the wrapped ring. */
-    if(fabs(parms->powfs[ipowfs].mtchcr)>1.e-10){
-	shiftx=parms->powfs[ipowfs].mtchcr;
-	mtchcrx=nmod;
-	nmod+=2;
-	if(fabs(shiftx-1)>1.e-10){
-	    error("Only constraint of 1 pixel is implemented\n");
-	}
-    }
-    if(fabs(parms->powfs[ipowfs].mtchcra)>1.e-10){
-	shifty=parms->powfs[ipowfs].mtchcra;
-	mtchcry=nmod;
-	nmod+=2;
-	if(fabs(shifty-1)>1.e-10){
-	    error("Only constraint of 1 pixel is implemented\n");
-	}
-    }
-    
-    const int i0n=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
     const int mtchadp=parms->powfs[ipowfs].mtchadp;
-    dmat *i0m=dnew(2,nmod);
-    dmat *i0g=dnew(i0n,nmod);
-    dmat *i0x1=NULL, *i0x2=NULL, *i0y1=NULL, *i0y2=NULL;
-    dmat *wt=dnew(i0n,1);
     double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
     if(neaspeckle>pixthetax){
 	error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
@@ -145,48 +85,14 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
 	sanea->p[ii0]=dnew(nsa,2);
 	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
-	/*Derivative is along r/a or x/y*/
-	IND(i0m,0,0)=1;
-	IND(i0m,1,1)=1;
-	if(!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx){
-	    if(mtchcrx){/*constrained x(radial) */
-		double shift=pixthetax*shiftx;
-		/*kp is here to ensure good conditioning */
-		IND(i0m,0,mtchcrx)=shift*kpx;
-		IND(i0m,0,mtchcrx+1)=-shift*kpx;
-	    }
-	    if(mtchcry){/*constrained y(azimuthal). */
-		double shift=pixthetay*shifty;
-		IND(i0m,1,mtchcry)=shift*kpy;
-		IND(i0m,1,mtchcry+1)=-shift*kpy;
-	    }
-	}
 	double i0summax=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
+	const int radgx=parms->powfs[ipowfs].radgx;
 	for(int isa=0; isa<nsa; isa++){
-	    if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radgx){
-		/*The derivative is along x/y, but constraint is along r/a*/
-		double theta=srot[isa]; 
-		if(mtchcrx){/*constrained x(radial) */
-		    double shift=pixthetax*shiftx;
-		    IND(i0m,0,mtchcrx)=shift*kpx*cos(theta);
-		    IND(i0m,1,mtchcrx)=shift*kpx*sin(theta);
-		    IND(i0m,0,mtchcrx+1)=-IND(i0m,0,mtchcrx);
-		    IND(i0m,1,mtchcrx+1)=-IND(i0m,1,mtchcrx);
-		}
-		if(mtchcry){/*constrained y(azimuthal). */
-		    double shift=pixthetay*shifty;
-		    IND(i0m,0,mtchcry)=-shift*kpy*sin(theta);
-		    IND(i0m,1,mtchcry)= shift*kpy*cos(theta);
-		    IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
-		    IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
-		}
-	    }
-
-	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
-	    if(IND(i0sum,isa,ii0)>i0summax){
-		i0summax=IND(i0sum,isa,ii0);
+	    double pixrot=0;//pixel rotation
+	    if(srot){
+		pixrot=srot[isa]; 
 	    }
 	    if(mtchadp){
 		long fwhm=dfwhm(IND(i0s,isa,ii0));
@@ -197,72 +103,24 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    ncrdisable++;
 		}
 	    }
+	    dmat* bkgrnd2=NULL;
+	    dmat* bkgrnd2c=NULL;
+	    if(powfs[ipowfs].bkgrnd){
+		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]; 
+	    }
+	    if(powfs[ipowfs].bkgrndc){
+		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
+	    }
+	    dmat *nea2=0;
+	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0), IND(gxs,isa,ii0),  IND(gys,isa,ii0),
+				     bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay, 
+				     pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
 	    
-	    double* bkgrnd2=NULL;
-	    double* bkgrnd2c=NULL;
-	    if(powfs[ipowfs].bkgrnd && powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]){
-		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]->p; 
+	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
+	    if(IND(i0sum,isa,ii0)>i0summax){
+		i0summax=IND(i0sum,isa,ii0);
 	    }
-	    if(powfs[ipowfs].bkgrndc && powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]){
-		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]->p; 
-	    }
-	    dzero(i0g);/*don't forget to zero out */
-	    adddbl(PCOL(i0g,0), 1, IND(gxs,isa,ii0)->p, i0n, 1, 0);
-	    adddbl(PCOL(i0g,1), 1, IND(gys,isa,ii0)->p, i0n, 1, 0);
-	    adddbl(PCOL(i0g,2), 1, IND(i0s,isa,ii0)->p, i0n, kpx, bkgrnd_res);
-	    adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
-	    adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
-	    if(mtchcrx && !crdisable){
-		mki0shx(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),IND(i0s,isa,ii0),kpx);
-		if(sub_i0){
-		    adddbl(PCOL(i0g,mtchcrx),1,IND(i0s,isa,ii0)->p, i0n, -kpx, 0);
-		    adddbl(PCOL(i0g,mtchcrx+1),1,IND(i0s,isa,ii0)->p, i0n, -kpx,0);
-		}
-		adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
-		adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
-		adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
-	    }
-	    if(mtchcry && !crdisable){
-		mki0shy(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),IND(i0s,isa,ii0),kpy);
-		if(sub_i0){
-		    adddbl(PCOL(i0g,mtchcry),1,IND(i0s,isa,ii0)->p, i0n, -kpy,0);
-		    adddbl(PCOL(i0g,mtchcry+1),1,IND(i0s,isa,ii0)->p,i0n, -kpy,0);
-		}
-		adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
-		adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
-		adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
-	    }
-	  
-	    if(bkgrnd2){
-		/*adding rayleigh backscatter poisson noise. */
-		for(int i=0; i<i0n; i++){/*noise weighting. */
-		    wt->p[i]=1./(rne*rne+bkgrnd+IND(i0s,isa,ii0)->p[i]+bkgrnd2[i]);
-		}	
-	    }else{
-		for(int i=0; i<i0n; i++){/*noise weighting. */
-		    wt->p[i]=1./(rne*rne+bkgrnd+IND(i0s,isa,ii0)->p[i]);
-		}
-	    }
-	    if(crdisable){
-		/*temporarily mark matrix is only 3 col, which effectively
-		  disables constraint*/
-		i0g->ny=3;
-		i0m->ny=3;
-	    }
-	    dmat *tmp=dpinv(i0g, wt);
-	    dmm(PIND(mtche,isa,ii0),0,i0m, tmp, "nn", 1);
-	    dfree(tmp);
-	    if(crdisable){
-		/*Put old values back. */
-		i0g->ny=nmod;
-		i0m->ny=nmod;
-	    }
-	    for(int i=0; i<i0n; i++){/*noise weighting. */
-		wt->p[i]=1./wt->p[i];
-	    }
-	    dmat *nea2=dtmcc(IND(mtche,isa,ii0), wt);
+
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
 	    if(IND(i0sum,isa,ii0)<EPS){//zero flux
@@ -275,22 +133,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	    IND(psanea,isa,0)=nea2->p[0];
 	    IND(psanea,isa,1)=nea2->p[3];
-		
-	    if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
-		//Rotate matched filter to produce grads in (x/y).
-		double theta=srot[isa]; 
-		drotvect(IND(mtche,isa,ii0), theta);
-	    }
-	    if(parms->powfs[ipowfs].phytype==1){
-		if(parms->powfs[ipowfs].radpix && parms->powfs[ipowfs].radgx){
-		    //Rotate NEA to (x/y)
-		    double theta=srot[isa]; 
-		    drotvecnn(PIND(saneaxy, isa, ii0), nea2, theta);
-		}else{
-		    IND(saneaxy, isa, ii0)=dref(nea2);
-		}
-	    }
-	    dfree(nea2);
+	    IND(saneaxy, isa, ii0)=nea2;
 	}/*isa  */
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
 	if(i0summax<siglev*0.1 || i0summax>siglev){
@@ -363,8 +206,4 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	powfs[ipowfs].saneaxy=saneaxy2;
     }
     dcellfree(sanea);
-    dfree(i0m);
-    dfree(i0g);
-    dfree(i0x1); dfree(i0x2); dfree(i0y1); dfree(i0y2);
-    dfree(wt);
 }

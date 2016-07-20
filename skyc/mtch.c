@@ -87,62 +87,23 @@ static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
 /**
    Compute matched filter.
  */
-void mtch(dcell **mtche, dmat **sanea,
+void genmtch(dcell **mtche, dmat **sanea,
 	  dcell *i0, dcell *gx, dcell *gy, double pixtheta, 
 	  double rne, double bkgrnd, int cr){
-    double kp=1./pixtheta;
-    const double psfvar=0;
-    int nmod=3;
-    if(cr){
-	nmod=7;
-    }
     const long nsa=i0->nx;
-    const long nx=i0->p[0]->nx;
-    const long ny=i0->p[0]->ny;
-    const long npixtot=nx*ny;
-    dmat *i0m=dnew(2,nmod);
-    dmat *i0g=dnew(npixtot, nmod);
-    dmat *wt=dnew(npixtot, 1);
     if(!*mtche){
 	*mtche=dcellnew(nsa,1);
     }
     if(!*sanea){
 	*sanea=dnew(nsa*2,1);
     }
-    IND(i0m,0,0)=1;
-    IND(i0m,1,1)=1;
-
-    if(cr){
-	IND(i0m,0,3)=1;
-	IND(i0m,0,4)=-1;
-	IND(i0m,1,5)=1;
-	IND(i0m,1,6)=-1;
-    }
     for(long isa=0; isa<nsa; isa++){    
-	dzero(i0g);
-	/*kp is here to ensure good conditioning */
-	adddbl(PCOL(i0g,0), 1, gx->p[isa]->p, npixtot, 1, 0);
-	adddbl(PCOL(i0g,1), 1, gy->p[isa]->p, npixtot, 1, 0);
-	adddbl(PCOL(i0g,2), 1, i0->p[isa]->p, npixtot, kp, 0);
-	if(cr){
-	    mki0shx(PCOL(i0g,3), PCOL(i0g,4), i0->p[isa], kp);
-	    mki0shy(PCOL(i0g,5), PCOL(i0g,6), i0->p[isa], kp);
-	}
-	for(long ipix=0; ipix<npixtot; ipix++){
-	    wt->p[ipix]=1./(rne*rne+bkgrnd+i0->p[isa]->p[ipix]+psfvar*i0->p[isa]->p[ipix]);
-	}
-	
-	dmat *tmp=dpinv(i0g, wt);
-	dmm(&(*mtche)->p[isa],0,i0m,tmp,"nn",1);
-	dfree(tmp);
-	dcwpow(wt,-1);
-	dmat *nea2=dtmcc((*mtche)->p[isa], wt);
+	dmat *nea2=0;
+	IND(*mtche, isa)=mtch(&nea2, IND(i0, isa), IND(gx, isa), IND(gy, isa), 0, 0,
+			      bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
 	/*Drop coupling in x/y gradients. */
 	(*sanea)->p[isa]=sqrt(nea2->p[0]);
 	(*sanea)->p[isa+nsa]=sqrt(nea2->p[3]);
 	dfree(nea2);
     }
-    dfree(wt);
-    dfree(i0g);
-    dfree(i0m);
 }

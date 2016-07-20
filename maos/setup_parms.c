@@ -318,7 +318,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,phytypesim2);
     READ_POWFS_RELAX(dbl,r0);
     READ_POWFS_RELAX(dbl,L0);
-    READ_POWFS_RELAX(dbl,mtchcra);
     READ_POWFS_RELAX(int,mtchcpl);
     READ_POWFS_RELAX(int,sigmatch);
     READ_POWFS_RELAX(int,mtchadp);
@@ -353,7 +352,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
     READ_POWFS(int,pixpsa);
-    READ_POWFS_RELAX(dbl,mtchcr);
+    READ_POWFS_RELAX(int,mtchcr);
     READ_POWFS_RELAX(int,mtchstc);
     READ_POWFS_RELAX(int,phystep);
     READ_POWFS_RELAX(int,noisy);
@@ -1306,15 +1305,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(powfsi->phytypesim2==-1){
 		powfsi->phytypesim2=powfsi->phytypesim;
 	    }
-	    if(powfsi->mtchcra==-1){
-		powfsi->mtchcra=powfsi->mtchcr;
-	    }
 	    int pixpsay=powfsi->pixpsa;
 	    int pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
-	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
-		powfsi->mtchcr=0;
-		powfsi->mtchcra=0;
+	    if(pixpsax*pixpsay<4){
+		powfsi->mtchcr=0;//cannot do constraint.
 	    }
 	    /*Convert pixtheta to radian and do senity check*/
 	    if(powfsi->pixtheta<0){//minus means ratio to lambda/dsa
