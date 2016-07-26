@@ -457,8 +457,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     double dispx[nps];
     double dispy[nps];
     /* Mhat = Mhat + propx' * Mmid * propx */
-    for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
-	int iwfs=parms->powfs[hipowfs].wfs->p[jwfs];
+    for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
+	int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
 	double neai=recon->neam->p[iwfs];
 	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
@@ -467,8 +467,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	      coordinate. so we are like doing parallel beam
 	      propagation. Removed scaling by 1/(1-ht[ips]/hs);
 	    */
-	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
-	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
+	    dispx[ips]=ht[ips]*parms->wfsr[iwfs].thetax;
+	    dispy[ips]=ht[ips]*parms->wfsr[iwfs].thetay;
 	    if(atm){
 		int ips0=parms->atmr.indps->p[ips]; 
 		dispx[ips]+=atm->p[ips0]->vx*parms->sim.dt*2;

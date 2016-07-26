@@ -168,6 +168,7 @@ typedef struct POWFS_CFG_T{
     int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
     lmat *wfs;       /**<array of wfs belongs to this powfs*/
+    lmat *wfsr;      /**<array of reconstruction wfs belongs to this powfs*/
     lmat *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
     int nwfsr;      /**<number of wfs for reconstruction belonging to this powfs*/

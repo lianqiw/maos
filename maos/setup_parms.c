@@ -2088,6 +2088,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
 	    parms->wfsr[ipowfs].powfs=ipowfs;
 	    parms->powfs[ipowfs].nwfsr=1;
+	    parms->powfs[ipowfs].wfsr=lnew(1,1);
+	    parms->powfs[ipowfs].wfsr->p[0]=ipowfs;
 	}
 	parms->fit.nfit=1;
 	dresize(parms->fit.thetax, 1, 1);
@@ -2102,6 +2104,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->nwfsr= parms->nwfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+	    parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
 	}
 	int nwfsfit=0;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

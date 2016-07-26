@@ -36,7 +36,7 @@ echo -n "LGS MCAO (SVD):  "
 echo $(./maos $args aper.d=$D tomo.alg=2 fit.alg=2 2>>maos_check.stderr) nm
 
 echo -n "LGS MCAO (MVM):  "
-echo $(./maos $args aper.d=$D atmr.os=[2 2 2 2 2 2] tomo.precond=1 tomo.maxit=100 fit.alg=0 2>>maos_check.stderr) nm
+echo $(./maos $args aper.d=$D atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1 2>>maos_check.stderr) nm
 fi
 echo -n "LGS MCAO ($((D*4))x$((D*4))):"
 echo $(./maos $args aper.d=$D dm.dx=[0.25 0.25] 2>>maos_check.stderr ) nm
