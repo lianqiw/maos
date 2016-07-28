@@ -329,9 +329,10 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    stream.sync();
 	    toc2("MVM copy to CPU");
 	}
-	writebin(residual, "MVM_RL_residual");
-	writebin(residualfit, "MVM_FL_residual");
-	
+	if(parms->save.setup){
+	    writebin(residual, "MVM_RL_residual");
+	    writebin(residualfit, "MVM_FL_residual");
+	}
 	if(parms->save.mvmi){
 	    for(int i=0; i<NGPU; i++){
 		gpu_set(i);

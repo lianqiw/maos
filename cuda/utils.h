@@ -77,8 +77,11 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}else{
 	    LOCK(cudata->memmutex);
 	    if(cudata->nmemcache<memsize){
-		cudata->nmemcache=sizeof(M)*nx*ny;
+		cudata->nmemcache=memsize;
+		/*info("GPU%d: Enlarge mem cache to %ld: %p->", 
+		  current_gpu(), memsize, cudata->memcache);*/
 		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
+		//info("%p\n", cudata->memcache);
 	    }
 	    from=(M*)cudata->memcache;
 	}

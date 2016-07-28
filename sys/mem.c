@@ -180,9 +180,9 @@ static void memkey_add(void *p,size_t size){
     }
 
 }
-
-static void memkey_del(void*p){
-    if(!p) return;
+//Return 0 if success. 1 if failed.
+static int memkey_del(void*p){
+    if(!p) return 0;
     void *found=0;
     T_MEMKEY key;
     key.p=p;
@@ -193,19 +193,21 @@ static void memkey_del(void*p){
 	memfree+=key1->size;
 	memcnt--;
 	if(MEM_VERBOSE==1){
-	    info2("%p freed with %zu bytes\n",p, key1->size);
+	    info2("Free: %p freed with %zu bytes\n",p, key1->size);
 	}else if(MEM_VERBOSE==2 && key1->size>1024){
 	    info2("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 	}
 	if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
-	    warning("Error deleting old record\n");
+	    warning2("Free: Error deleting old record\n");
 	}
 	UNLOCK(mutex_mem);
 	free_default(key1);
+	return 0;
     }else{
 	UNLOCK(mutex_mem);
-	warning("%p not found\n", p);
+	warning2("Free: %p not found\n", p);
 	print_backtrace();
+	return 1;
     }
 
 }
@@ -227,8 +229,9 @@ static void *realloc_dbg(void*p0, size_t size){
 }
 static void free_dbg(void *p){
     if(!p) return;
-    memkey_del(p);
-    free_default(p);
+    if(!memkey_del(p)){
+	free_default(p);
+    }
 }
 
 /**
