@@ -235,14 +235,15 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 }
 #define IND1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
 #define IND2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
-#define PIND1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
-#define PIND2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
+//#define PIND1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
+//#define PIND2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
 #else
 #define IND1(A,i) ((A)->p[(i)])
 #define IND2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
+#endif
 #define PIND1(A,i) ((A)->p+(i))
 #define PIND2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
-#endif
+//#endif
 #define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
 #define PIND0(A) error("Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n");
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME

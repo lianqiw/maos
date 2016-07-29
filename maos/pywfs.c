@@ -706,7 +706,7 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
     return ggd;
 }
 /**
-   ploc is on pupil.
+   locin is on pupil.
  */
 dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
     if(mod && mod->ny<=6){
