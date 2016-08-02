@@ -144,13 +144,14 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    error("dbg.pwfs_psy has wrong format: expected 4x1, got %ldx%ld\n",
 		  parms->dbg.pwfs_psy->nx, parms->dbg.pwfs_psy->ny);
 	}
+	int redefine=parms->powfs[ipowfs].saloc?0:1;
 	pywfs->pupilshift=dnew(4,2);
 	for(int i=0; i<4; i++){
 	    double tmp;
 	    tmp=IND(parms->dbg.pwfs_psx, i);
-	    IND(pywfs->pupilshift, i, 0)=tmp-round(tmp);
+	    IND(pywfs->pupilshift, i, 0)=tmp-redefine?round(tmp):0;
 	    tmp=IND(parms->dbg.pwfs_psy, i);
-	    IND(pywfs->pupilshift, i, 1)=tmp-round(tmp);
+	    IND(pywfs->pupilshift, i, 1)=tmp-redefine?round(tmp):0;
 
 	}
 	if(parms->save.setup){
@@ -643,18 +644,23 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, 
+			  double displacex, double displacey, double scale){
     const loc_t *locfft=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
+    dmat *opd0;
+    if(pywfs->opdadd){
+	opd0=dref(pywfs->opdadd);
+    }else{
+	opd0=dnew(locfft->nloc, 1);
+    }
     {
-	dmat *opd=dnew(locfft->nloc, 1);
 	dmat *ints=0;
-	pywfs_fft(&ints, pywfs, opd);
+	pywfs_fft(&ints, pywfs, opd0);
 	pywfs_grad(&grad0, pywfs, ints);
 	//writebin(grad0, "grad0_cpu");
 	//writebin(ints, "ints0_cpu");
-	dfree(opd);
 	dfree(ints);
     }
     int count=0;
@@ -667,7 +673,7 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 #pragma omp parallel for shared(count)
     for(int imod=0; imod<nmod; imod++){
 	dmat *opdin=dnew(locin->nloc, 1);
-	dmat *opdfft=dnew(locfft->nloc, 1);
+	dmat *opdfft=ddup(opd0);
 	dmat *ints=0;
 	dmat *grad=drefcols(ggd, imod, 1);
 	double poke=pywfs->poke;
@@ -702,13 +708,21 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 	dfree(ints);
     }
     info2("\n");
-    dfree(grad0);	
+    dfree(grad0);
+    dfree(opd0);
     return ggd;
 }
 /**
    locin is on pupil.
  */
-dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat *opdadd, 
+		double displacex, double displacey, double scale){
+    if(opdadd){
+	dfree(pywfs->opdadd);
+	pywfs->opdadd=dnew(pywfs->locfft->loc->nloc, 1);
+	prop_nongrid(pywfs->loc, opdadd->p, pywfs->locfft->loc, pywfs->opdadd->p, 1, 0, 0, 1, 0, 0);
+    }
+    
     if(mod && mod->ny<=6){
 	return pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
     }
@@ -716,6 +730,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
     key=lochash(locin, key);
     key=pywfs_hash(pywfs, key);
     if(mod) key=dhash(mod, key);
+    if(opdadd) key=dhash(opdadd, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
@@ -788,5 +803,6 @@ void pywfs_free(PYWFS_T *pywfs){
     cellfree(pywfs->pyramid);
     cfree(pywfs->nominal);
     dspcellfree(pywfs->si);
+    dfree(pywfs->opdadd);
     free(pywfs);
 }

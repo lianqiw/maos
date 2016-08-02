@@ -95,7 +95,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
     const long ncomp=pywfs->nominal->nx;
     const long ncomp2=ncomp/2;
     const Real pos_r=pywfs->modulate; 
-    const int pos_n=pos_r>0?pywfs->modulpos:0;
+    const int pos_n=pos_r>0?pywfs->modulpos:1;
     cucmat &otf=cuwfs.pyotf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &wvf=cuwfs.pywvf[iwvl];
@@ -192,12 +192,17 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     cumapcell cumapin(1,1);
     cp2gpu(cumapin, mapinsq);
     curmat phiout(pywfs->locfft->loc->nloc,1);
+    curmat phiout0(pywfs->locfft->loc->nloc,1);
+    if(pywfs->opdadd){
+	cp2gpu(phiout0, pywfs->opdadd);
+    }
     culoc_t culocout(pywfs->locfft->loc); 
     const int nsa=cupowfs->saloc.Nloc();
     curmat ints(nsa,4);
     curmat grad(nsa*2,1);
     curmat grad0(nsa*2,1);
     cuzero(ints, stream);
+    curadd(phiout, 1, phiout0, 1, stream);
     pywfs_ints(ints, phiout, cuwfs, siglev, stream);
     pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
     TIC;tic;
@@ -224,7 +229,8 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
 	loc_embed(mapinsq->p[0], locin, opdin->p[0]->p);
 	CUDA_SYNC_STREAM;
 	cp2gpu(cumapin, mapinsq);
-	cuzero(phiout, stream);
+	//cuzero(phiout, stream);
+	curcp(phiout, phiout0, stream);
 	gpu_dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, displacex, displacey, 0, 0, 1, stream);
 	//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
 	//cuwrite(phiout, "gpu_phiout_%d", imod);
