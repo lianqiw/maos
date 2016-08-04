@@ -311,7 +311,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	return;
     }
     int singleton=0;
-    if(A->nx>2048 && !omp_in_parallel()){
+    if(A->nx>2048 && !OMP_IN_PARALLEL){
 	singleton=1;
 	//Prevent multiple processes class gesvd simultaneously.
 	sem_lock("svd", 1);
@@ -395,7 +395,7 @@ void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	    snprintf(fnlock, PATH_MAX, "%s.lock", fnsvd);
 	    if(exist(fnsvd)){
 		info2("Reading %s\n", fnsvd);
-		in=readbin(fnsvd);
+		in=readbin("%s", fnsvd);
 	    }else{
 		int fd=lock_file(fnlock, 0, 0);
 		if(fd>=0){//success

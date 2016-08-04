@@ -192,7 +192,7 @@ INLINE void thread_new(thread_fun fun, void* arg){
     pthread_create(&temp, NULL, fun, arg);
 }
 void thread_block_signal();
-#endif
+
 
 INLINE int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
@@ -247,3 +247,11 @@ INLINE int atomicadd(int *ptr, int val){
 #else
 #define OMPTASK_SINGLE
 #endif
+#if _OPENMP >= 200805
+#define OMP_IN_PARALLEL omp_in_parallel()
+#else
+#define OMP_IN_PARALLEL 0
+#endif
+
+
+#endif //ifndef AOS_LIB_THREAD_H
