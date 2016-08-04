@@ -77,8 +77,7 @@ typedef struct ARGOPT_T{
 }ARGOPT_T;
 void parse_argopt(char *cmds, ARGOPT_T *options);
 int sig_block(int block);
-int sem_lock(const char *key);
-int sem_unlock(const char *key);
+int sem_lock(const char *key, int lock);
 void maos_version(void);
 void set_realtime(int icpu, int niceness);
 void register_signal_handler(int(*)(int));

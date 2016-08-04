@@ -225,14 +225,14 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	fnatm=get_fnatm(data);
     }
     if(fnatm){
+	char fnlock[PATH_MAX];
+	snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnatm)){
 		info2("Reading %s\n", fnatm);
 		in=dcellread_mmap("%s",fnatm);
 	    }else{
-		char fnlock[PATH_MAX];
-		snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
 		/*non blocking exclusive lock. */
 		int fd=lock_file(fnlock, 0, 0);
 		if(fd>=0){/*succeed to lock file. */
@@ -242,7 +242,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 		    atmfun(fc, data);
 		    zfarr_close(fc);
 		    if(rename(fntmp, fnatm)){
-			error("Unable to rename %s\n", fnlock);
+			error("Unable to rename %s to %s\n", fntmp, fnatm);
 		    }
 		}else{/*wait for the previous lock to release.*/
 		    warning("Waiting for previous lock to release ...");

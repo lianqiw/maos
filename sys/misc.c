@@ -715,42 +715,33 @@ int sig_block(int block){
 	return sigprocmask(SIG_UNBLOCK, &set, NULL);
     }
 }
-
-int sem_lock(const char *key){
-    sem_t *sem=sem_open(key, O_CREAT, 00700, 1);
+int sem_lock(const char *key, int lock){
+    char fnsem[PATH_MAX];
+    snprintf(fnsem, PATH_MAX, "%s_%s", key, USER);
+    if(fnsem[0]!='/'){
+	fnsem[0]='/';
+    }
+    sem_t *sem=sem_open(fnsem, lock==1?O_CREAT:0, 00700, 1);
     if(sem==SEM_FAILED){
-	warning("sem_open failed\n");
+	info("fnsem=%s\n", fnsem);
+	perror("sem_open");
 	return -1;
     }else{
 	int value;
 	sem_getvalue(sem, &value);
-	info2("Trying to lock %p (value=%d) ... ", sem, value);
-	sem_wait(sem);
-	if(sig_block(1)){
-	    //block signal delivery in critical region.
-	    warning("block signal failed\n");
+	if(lock){
+	    info2("locking %p (value=%d) ... ", sem, value);
+	    sem_wait(sem);
+	}else{
+	    info2("unlock %p (value=%d) ... ", sem, value);
+	    sem_post(sem);
 	}
+	(void)sig_block(lock);
 	info2("done\n");
 	return 0;
     }
 }
-int sem_unlock(const char *key){
-    sem_t *sem=sem_open(key, 0);
-    if(sem==SEM_FAILED){
-	warning("sem_open failed\n");
-	return -1;
-    }else{
-	int value;
-	sem_getvalue(sem, &value);
-	info2("Trying to unlock %p (value=%d) ... ", sem, value);
-	sem_post(sem);
-	if(sig_block(0)){
-	    warning("unblock signal failed\n");
-	}
-	info2("done\n");
-	return 0;
-    }
-}
+ 
 /**
    Set scheduling priorities for the process to enable real time behavior.
 */

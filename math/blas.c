@@ -310,6 +310,12 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	if(Sdiag) *Sdiag=0;
 	return;
     }
+    int singleton=0;
+    if(A->nx>2048 && !omp_in_parallel()){
+	singleton=1;
+	//Prevent multiple processes class gesvd simultaneously.
+	sem_lock("svd", 1);
+    }
     char jobuv='S';
     ptrdiff_t M=(int)A->nx;
     ptrdiff_t N=(int)A->ny;
@@ -353,8 +359,70 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #ifdef USE_COMPLEX
     free(rwork);
 #endif
+    if(singleton){
+	sem_lock("svd", 0);
+    }
 }
 
+void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
+    char fnsvd[PATH_MAX];
+    int do_cache=0;
+    if(A->nx>512){
+	//Cache the result
+	uint32_t key=0;
+	key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+	char dirsvd[PATH_MAX];
+	snprintf(dirsvd, PATH_MAX, "%s/.aos/cache/svd", HOME);
+	snprintf(fnsvd, PATH_MAX, "%s/svd_%ld_%u.bin", dirsvd, A->nx, key);
+	if(!exist(dirsvd)){
+	    mymkdir("%s", dirsvd);
+	}else{
+	    if(zfexist(fnsvd)) zftouch(fnsvd);
+	    remove_file_older(dirsvd, 365*24*3600);
+	}
+	long avail=available_space(dirsvd);
+	long need=A->nx*A->ny*sizeof(T)*3;
+	if(avail>need){
+	    do_cache=1;
+	}
+    }
+    if(!do_cache){
+	X(svd)(U, Sdiag, VT, A);
+    }else{
+	cell *in=0;
+	while(!in){
+	    char fnlock[PATH_MAX];
+	    snprintf(fnlock, PATH_MAX, "%s.lock", fnsvd);
+	    if(exist(fnsvd)){
+		info2("Reading %s\n", fnsvd);
+		in=readbin(fnsvd);
+	    }else{
+		int fd=lock_file(fnlock, 0, 0);
+		if(fd>=0){//success
+		    char fntmp[PATH_MAX];
+		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnsvd);
+		    X(svd)(U, Sdiag, VT, A);
+		    in=cellnew(3, 1);
+		    in->p[0]=(cell*)*U;
+		    in->p[1]=(cell*)*Sdiag;
+		    in->p[2]=(cell*)*VT;
+		    writebin(in, "%s", fntmp);
+		    if(rename(fntmp, fnsvd)){
+			error("Unable to rename %s to %s\n", fntmp, fnsvd);
+		    }
+		    }else{//wait
+		    warning("Waiting for previous lock to release ...");
+		    fd=lock_file(fnlock, 1 ,0);
+		}
+		close(fd); remove(fnlock);
+	    }
+	}
+	*U=X(mat_cast)(in->p[0]); in->p[0]=0;
+	*Sdiag=XR(mat_cast)(in->p[1]); in->p[1]=0;
+	*VT=X(mat_cast)(in->p[2]); in->p[2]=0;
+	cellfree(in);
+    }
+}
 
 /**
    computes pow(A,power) in place using svd.
