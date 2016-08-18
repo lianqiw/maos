@@ -82,23 +82,34 @@ static mapcell *genatm_do(SIM_T *simu){
 	int nx=atm->nx;
 	int ny=atm->ny;
 	screens=mapcellnew(atm->nps, 1);
-	double hs=90000;
+	double hs=9000;
 	double dx=atm->dx;
 	for(int is=0; is<atm->nps; is++){
 	    screens->p[is]=mapnew(nx, ny, dx, dx, NULL);
 	    screens->p[is]->h=atm->ht->p[is];
 	}
-	double strength=5000e-9;
-	if(parms->dbg.atm>0){//represent a zernike mode.
-	    loc_t *sloc=mksqloc_map(screens->p[0]);
-	    dmat *sopd=zernike(sloc, nx*dx, 0, 0, -parms->dbg.atm);
-	    dscale(sopd, strength);
-	    memcpy(screens->p[0]->p, sopd->p, sizeof(double)*sopd->nx);
-	    dfree(sopd);
+	double strength=100e-9;
+	if(parms->dbg.atm>0){//represent a Fourier mode.
+	    double kk=2*M_PI/parms->dbg.atm*dx;
+	    long nn=MAX(nx, ny);
+	    dmat *sind=dnew(nn, 1);
+	    for(int ii=0; ii<nn; ii++){
+		sind->p[ii]=sin((ii-nn/2)*kk);
+	    }
+	    for(int iy=0; iy<ny; iy++){
+		for(int ix=0; ix<nx; ix++){
+		    IND(screens->p[0], ix, iy)=strength*2*sind->p[ix]*sind->p[iy];
+		}
+	    }
+	    dfree(sind);
+	    for(int ips=1; ips<atm->nps; ips++){
+		dadd((dmat**)&screens->p[ips], 0, (dmat*)screens->p[ips], atm->wt->p[ips]);
+	    }
+	    dscale((dmat*)screens->p[0], atm->wt->p[0]);
 	}else if(parms->dbg.atm==-1){
 	    double scale=-pow(1.-screens->p[5]->h/hs,-2);
 	    double dx2=2./nx;
-	    //plate scale mode only
+	    //plate scale mode (focus) only
 	    for(int iy=0; iy<ny; iy++){
 		double *p0=screens->p[0]->p+iy*nx;
 		double *p1=screens->p[5]->p+iy*nx;
@@ -115,7 +126,7 @@ static mapcell *genatm_do(SIM_T *simu){
 		}
 	    }
 	}else{
-	    error("dbg.atm has invalid value: %d\n", parms->dbg.atm);
+	    error("dbg.atm has invalid value: %g\n", parms->dbg.atm);
 	} 
     }
  

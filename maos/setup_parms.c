@@ -994,7 +994,7 @@ static void readcfg_plot(PARMS_T *parms){
 */
 static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.wamethod);
-    READ_INT(dbg.atm);
+    READ_DBL(dbg.atm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     READ_LMAT(dbg.tomo_maxit);

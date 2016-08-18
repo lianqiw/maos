@@ -331,12 +331,19 @@ void update_limit(drawdata_t *drawdata){
 	drawdata->zoomx=1;
 	drawdata->zoomy=1;
     }
-    if(drawdata->cumu){
-	drawdata->limit_cumu=mycalloc(4,double);
-	drawdata->limit=drawdata->limit_cumu;
+    double gain=1;
+    if(!drawdata->limit){
+	if(drawdata->cumu){
+	    drawdata->limit_cumu=mycalloc(4,double);
+	    drawdata->limit=drawdata->limit_cumu;
+	}else{
+	    drawdata->limit_data=mycalloc(4,double);
+	    drawdata->limit=drawdata->limit_data;
+	}
     }else{
-	drawdata->limit_data=mycalloc(4,double);
-	drawdata->limit=drawdata->limit_data;
+	if(drawdata->dtime<1){
+	    gain=drawdata->dtime;
+	}
     }
 
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
@@ -394,10 +401,11 @@ void update_limit(drawdata_t *drawdata){
     int ylog=drawdata->xylog[1]=='n'?0:1;
     round_limit(&xmin0, &xmax0, xlog);
     round_limit(&ymin0, &ymax0, ylog);
+    
     drawdata->limit[0]=xmin0;
     drawdata->limit[1]=xmax0;
-    drawdata->limit[2]=ymin0;
-    drawdata->limit[3]=ymax0;
+    drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
+    drawdata->limit[3]=ymax0*gain+(1-gain)*drawdata->limit[3];
 }
 
 /**
@@ -441,7 +449,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     int ylog=drawdata->xylog[1]=='n'?0:1;
 
     int widthim, heightim;
-    double xmin, xmax, ymin, ymax;
+    static double xmin, xmax, ymin, ymax;
     if(xlog){
 	xmin=log10(drawdata->limit[0]);
 	xmax=log10(drawdata->limit[1]);

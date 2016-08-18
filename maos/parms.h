@@ -575,7 +575,6 @@ typedef struct PLOT_CFG_T{
 */
 typedef struct DBG_CFG_T{
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
-    int atm;         /**<test special atmosphere*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     lmat *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
@@ -596,6 +595,7 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
+    double atm;         /**<test special atmosphere*/
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/

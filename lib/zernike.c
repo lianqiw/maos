@@ -69,7 +69,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     const long nloc=loc->nloc;
     int nmod=0;
     if(flag>0){//radial only
-	nmod=rmax-rmin;
+	nmod=rmax-rmin+1;
     }else{//a specific mode
 	nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     }
@@ -104,7 +104,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     int cmod=0;
     for(int ir=rmin; ir<=rmax; ir++){
 	if(rmax > 10){
-	    info2("Zernike: %d of %d\n", ir, rmax);
+	    info2("Zernike radial order %d of %d\n", ir, rmax);
 	}
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;

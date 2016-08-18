@@ -17,16 +17,30 @@
 */
 #ifndef AOS_LIB_THREAD_H
 #define AOS_LIB_THREAD_H
+/**
+   \file thread.h
+   Functions regarding to threading
+*/
 
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-/**
-   \file thread.h
-   Functions regarding to threading
-*/
+
+#if _OPENMP >= 200805
+#define OMPTASK_SINGLE				\
+    DO_PRAGMA(omp parallel)			\
+    DO_PRAGMA(omp single)			
+#else
+#define OMPTASK_SINGLE
+#endif
+#if _OPENMP >= 200805
+#define OMP_IN_PARALLEL omp_in_parallel()
+#else
+#define OMP_IN_PARALLEL 0
+#endif
+
 /**
    Information about job to launch for each thread. start and end are the two indices.
 */
@@ -90,6 +104,9 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 
 #define QUEUE_THREAD(group,A,urgent)		\
     (void)group;(void)urgent;			\
+    if(!OMP_IN_PARALLEL){			\
+	warning("QUEUE_THREAD is not in parallel region\n"); \
+    }							     \
     for(int it=0; it<(A)[0].nthread; it++){	\
 	if((A)[it].fun){			\
 	    _Pragma("omp task")			\
@@ -101,13 +118,19 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 /*Turn to inline function because nvcc concatenates _Pragma to } */
 INLINE void CALL_THREAD(thread_t *A, int urgent){
     (void) urgent;
-    for(int it=0; it<A[0].nthread; it++){		
-	if(A[it].fun){
+    if(!OMP_IN_PARALLEL){
+	//Wraps call in parallel region.
+	OMPTASK_SINGLE
+	    CALL_THREAD(A, urgent);
+    }else{
+	for(int it=0; it<A[0].nthread; it++){		
+	    if(A[it].fun){
 #pragma omp task
-	    A[it].fun(A+it); 
+		A[it].fun(A+it); 
+	    }
 	}
-    }
 #pragma omp taskwait
+    }
 }
 
 #else //using our thread_pool 
@@ -240,18 +263,7 @@ INLINE int atomicadd(int *ptr, int val){
 #define ICCTASK_END 
 #endif
 
-#if _OPENMP >= 200805
-#define OMPTASK_SINGLE				\
-    DO_PRAGMA(omp parallel)			\
-    DO_PRAGMA(omp single)			
-#else
-#define OMPTASK_SINGLE
-#endif
-#if _OPENMP >= 200805
-#define OMP_IN_PARALLEL omp_in_parallel()
-#else
-#define OMP_IN_PARALLEL 0
-#endif
+
 
 
 #endif //ifndef AOS_LIB_THREAD_H
