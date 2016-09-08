@@ -775,7 +775,12 @@ void wfsgrad_post(thread_t *info){
 	    if(simu->gradoff->p[iwfs]){
 		dadd(gradout, 1, simu->gradoff->p[iwfs], -parms->dbg.gradoff_scale);
 	    }
-
+	    //Injected gradient offset for testing.
+	    if(parms->dbg.gradoff){
+		info_once("Add injected gradient offset vector\n");
+		int icol=(isim+1)%parms->dbg.gradoff->ny;
+		dadd(gradout, 1, IND(parms->dbg.gradoff, iwfs, icol), -1);
+	    }
 	    if(do_phy){
 		if(simu->fsmerr_store->p[iwfs]){
 		    wfsgrad_fsm(simu, iwfs);

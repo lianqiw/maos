@@ -785,3 +785,16 @@ double readcfg_dbl(const char *format,...){
     }
     return ans;
 }
+
+/**
+   Read dcell
+*/
+dcell* readcfg_dcell(const char *format,...){
+    format2key;
+    const char *str=getrecord(key, 1)->data;
+    if(str){
+	return dcellread(str);
+    }else{
+	return NULL;
+    }
+}

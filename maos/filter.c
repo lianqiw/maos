@@ -324,6 +324,13 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
+    if(parms->dbg.dmoff){
+	info_once("Add injected DM offset vector\n");
+	int icol=(isim+1)%parms->dbg.dmoff->ny;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	}
+    }
     if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
 	dcell *tmp=dcelldup(simu->dmcmd);
 	if(recon->actstuck){//zero stuck actuators
@@ -423,7 +430,8 @@ static void filter_cl(SIM_T *simu){
    filter DM commands in open loop mode by simply copy the output
  */
 static void filter_ol(SIM_T *simu){
-    assert(!simu->parms->sim.closeloop);
+    const PARMS_T *parms=simu->parms;
+    assert(!parms->sim.closeloop);
     if(simu->dmerr){
 	dcellcp(&simu->dmcmd, simu->dmerr);
     }else{
@@ -437,14 +445,21 @@ static void filter_ol(SIM_T *simu){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
     }
+    if(parms->dbg.dmoff){
+	info_once("Add injected DM offset vector\n");
+	int icol=(simu->isim+1)%parms->dbg.dmoff->ny;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	}
+    }
     //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !simu->parms->recon.modal){
+    if(simu->recon->actinterp && !parms->recon.modal){
 	dcellcp(&simu->dmcmd0, simu->dmcmd);
 	dcellzero(simu->dmcmd);
 	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
     }
     if(simu->ttmreal){
-	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
+	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
   
     /*hysterisis. */
@@ -503,6 +518,7 @@ void filter_dm(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
+  
 #if USE_CUDA
     if(simu->recon->moao){
 	if(parms->gpu.moao){

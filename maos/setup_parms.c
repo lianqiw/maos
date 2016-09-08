@@ -189,6 +189,8 @@ void free_parms(PARMS_T *parms){
     lfree(parms->dbg.tomo_maxit);
     dfree(parms->dbg.pwfs_psx);
     dfree(parms->dbg.pwfs_psy);
+    dcellfree(parms->dbg.dmoff);
+    dcellfree(parms->dbg.gradoff);
     free(parms);
 }
 INLINE int sum_intarr(int n, long *a){
@@ -211,6 +213,7 @@ INLINE int sum_dblarr(int n, double *a){
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
+#define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
@@ -1022,6 +1025,8 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
     READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
     READ_DBL(dbg.pwfs_pupelong);
+    READ_DCELL(dbg.dmoff);
+    READ_DCELL(dbg.gradoff);
 }
 /**
    Read in GPU options
@@ -2425,6 +2430,16 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 	    }
+	}
+    }
+    if(parms->dbg.dmoff){
+	if(parms->dbg.dmoff->nx!=parms->ndm){
+	    cellresize(parms->dbg.dmoff, parms->ndm, parms->dbg.dmoff->ny);
+	}
+    }
+    if(parms->dbg.gradoff){
+	if(parms->dbg.gradoff->nx!=parms->nwfs){
+	    cellresize(parms->dbg.gradoff, parms->nwfs, parms->dbg.gradoff->ny);
 	}
     }
 }
