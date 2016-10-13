@@ -793,7 +793,7 @@ dcell* readcfg_dcell(const char *format,...){
     format2key;
     const char *str=getrecord(key, 1)->data;
     if(str){
-	return dcellread(str);
+	return dcellread("%s", str);
     }else{
 	return NULL;
     }
