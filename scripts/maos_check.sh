@@ -36,16 +36,16 @@ echo -n "LGS MCAO (SVD):  "
 echo $(./maos $args aper.d=$D tomo.alg=2 fit.alg=2 2>>maos_check.stderr) nm
 
 echo -n "LGS MCAO (MVM):  "
-echo $(./maos $args aper.d=$D atmr.os=[2 2 2 2 2 2] tomo.precond=1 tomo.maxit=100 fit.alg=0 2>>maos_check.stderr) nm
+echo $(./maos $args aper.d=$D atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1 2>>maos_check.stderr) nm
 fi
 echo -n "LGS MCAO ($((D*4))x$((D*4))):"
 echo $(./maos $args aper.d=$D dm.dx=[0.25 0.25] 2>>maos_check.stderr ) nm
 
 echo -n "LGS MOAO:        "
-echo $(./maos $args aper.d=$D evl.moao=0 moao.order=[$D] 2>>maos_check.stderr ) nm
+echo $(./maos $args aper.d=$D evl.moao=0 moao.dx=[1/2] 2>>maos_check.stderr ) nm
 
 echo -n "LGS GLAO:        "
-echo $(./maos $args aper.d=$D dm_single.conf  recon.glao=1 wfs_lgs_only.conf 2>>maos_check.stderr ) nm
+echo $(./maos $args aper.d=$D dm_single.conf  recon.glao=1 wfs_lgs_ttf.conf 2>>maos_check.stderr ) nm
 
 echo -n "NGS SCAO (inte): "
 echo $(./maos $args aper.d=$D  -cscao_ngs.conf recon.split=0 2>>maos_check.stderr ) nm

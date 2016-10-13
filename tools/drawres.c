@@ -33,7 +33,7 @@ typedef struct ARG_T{
     long *seeds;
 }ARG_T;
 static ARG_T * parse_args(int argc, char **argv){
-    ARG_T *arg=calloc(1, sizeof(ARG_T));
+    ARG_T *arg=mycalloc(1,ARG_T);
     static struct option long_options[]={
 	{"help",0,0,'h'},
 	{"seed",1,0,'s'},
@@ -51,7 +51,7 @@ static ARG_T * parse_args(int argc, char **argv){
 	    break;
 	case 's':{
 	    arg->nseed++;
-	    arg->seeds=realloc(arg->seeds, sizeof(long)*arg->nseed);
+	    arg->seeds=myrealloc(arg->seeds,arg->nseed,long);
 	    arg->seeds[arg->nseed-1]=strtol(optarg,NULL,10);
 	}
 	    break;
@@ -73,13 +73,13 @@ int main(int argc, char *argv[]){
 
     if(arg->iarg<argc){
 	npath=argc-arg->iarg;
-	path=calloc(npath, sizeof(char*));
+	path=mycalloc(npath,char*);
 	for(int ipath=0; ipath<npath; ipath++){
 	    path[ipath]=argv[ipath+arg->iarg];
 	}
     }else{
 	npath=1;
-	path=calloc(npath, sizeof(char*));
+	path=mycalloc(npath,char*);
 	path[0]=mygetcwd();
     }
     long nseed=0;
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]){
 		    if(!found){
 			info2("Found unique seed %ld\n", seedi);
 			nseed++;
-			seed=realloc(seed, sizeof(long)*nseed);
+			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
 		    }
 		}else if(sscanf(dp->d_name, "Res%ld_%ld.bin",&seedi, &seedi2)==2){
@@ -151,9 +151,9 @@ int main(int argc, char *argv[]){
 		    if(!found){
 			info("Found unique seed %ld %ld\n", seedi, seedi2);
 			nseed++;
-			seed=realloc(seed, sizeof(long)*nseed);
+			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
-			seed2=realloc(seed2, sizeof(long)*nseed);
+			seed2=myrealloc(seed2,nseed,long);
 			seed2[nseed-1]=seedi2;
 		    }
 		}
@@ -178,14 +178,14 @@ int main(int argc, char *argv[]){
     }
     info2("\n");
 
-    dcell *resolhi=cellnew(npath,nseed);
-    dcell *resollo=cellnew(npath,nseed);
-    dcell *reshi=cellnew(npath,nseed);
-    dcell *reslo=cellnew(npath,nseed);
-    dcell *reshim=cellnew(npath,1);
-    dcell *reslom=cellnew(npath,1);
-    dcell *resolhim=cellnew(npath,1);
-    dcell *resollom=cellnew(npath,1);
+    dcell *resolhi=dcellnew(npath,nseed);
+    dcell *resollo=dcellnew(npath,nseed);
+    dcell *reshi=dcellnew(npath,nseed);
+    dcell *reslo=dcellnew(npath,nseed);
+    dcell *reshim=dcellnew(npath,1);
+    dcell *reslom=dcellnew(npath,1);
+    dcell *resolhim=dcellnew(npath,1);
+    dcell *resollom=dcellnew(npath,1);
     const char *xlabel, *ylabel;
     dmat *ysky=NULL;
     const char* xylog;
@@ -199,8 +199,8 @@ int main(int argc, char *argv[]){
 	xlabel="Wavefront Error (nm)";
     }
 
-    /*dcell *upterr=cellnew(npath, nseed);
-      dcell *uptcmd=cellnew(npath, nseed);*/
+    /*dcell *upterr=dcellnew(npath, nseed);
+      dcell *uptcmd=dcellnew(npath, nseed);*/
     for(int ipath=0; ipath<npath; ipath++){
 	int seedcount=0;
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -328,57 +328,61 @@ int main(int argc, char *argv[]){
     }
  
     if(npath==1){
-	char *legs[nseed];
+	char *legs0[nseed];
+	const char *legs[nseed];//work around C warning.
 	for(int iseed=0; iseed<nseed; iseed++){
-	    legs[iseed]=malloc(50*sizeof(char));
-	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
+	    legs0[iseed]=mymalloc(50,char);
+	    snprintf(legs0[iseed], 50, "Seed %ld", seed[iseed]);
+	    legs[iseed]=legs0[iseed];
 	}
 	if(restype==1){
-	    plot_points("Res", nseed, NULL, restot, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("Res", nseed, NULL, restot, NULL, NULL, xylog, NULL, legs,
 			"Total Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
 			"High order Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, xylog, 0, NULL,legs,
+	    plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
 			"Low order Wavefront Error", xlabel,ylabel, "Low");
-	    plot_points("ResOL", nseed, NULL, resol, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("ResOL", nseed, NULL, resol, NULL, NULL, xylog, NULL, legs,
 			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, xylog, NULL, legs,
 			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, xylog, NULL, legs,
 			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
 	}else{
-	    plot_points("Tot", nseed, NULL, reshi, NULL, NULL, xylog, 0, NULL, legs,
+	    plot_points("Tot", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
 			"Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All");
-	    plot_points("Atm TT", nseed, NULL, reslo, NULL, NULL, xylog, 0, NULL,legs,
+	    plot_points("Atm TT", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
 			"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
-	    free(legs[iseed]);
+	    free(legs0[iseed]);
 	}
     }else{
-	char **pathtag=calloc(npath, sizeof(char*));
-	char prefix[3]="A: ";
+	char *pathtag0[npath];
+	const char *pathtag[npath];
+	char prefix[4]="A: ";
 	for(int ipath=0; ipath<npath; ipath++){
 	    prefix[0]='A'+ipath;
-	    pathtag[ipath]=stradd(prefix, path[ipath], NULL);
+	    pathtag0[ipath]=stradd(prefix, path[ipath], NULL);
+	    pathtag[ipath]=pathtag0[ipath];
 	}
 	if(restype==1){
-	    plot_points("Res", npath, NULL, restotm, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("Res", npath, NULL, restotm, NULL, NULL, xylog, NULL, pathtag,
 			"Total Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("Reshi", npath, NULL, reshim, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("Reshi", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
 			"High order Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("Reslo", npath, NULL, reslom, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("Reslo", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
 			"Low order Wavefront Error", xlabel,ylabel, "Low");
-	    plot_points("ResOL", npath, NULL, resolm, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("ResOL", npath, NULL, resolm, NULL, NULL, xylog, NULL, pathtag,
 			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, xylog, NULL, pathtag,
 			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, xylog, NULL, pathtag,
 			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
 	}else{
-	    plot_points("Tot", npath, NULL, reshim, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("Tot", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
 			"Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All");
-	    plot_points("Atm TT", npath, NULL, reslom, NULL, NULL, xylog, 0, NULL, pathtag,
+	    plot_points("Atm TT", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
 			"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -389,24 +393,24 @@ int main(int argc, char *argv[]){
 		dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
 		dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1); 
 		dcell *resol_i=dcellsub(resol, 0,0,iseed, 1); 
-		plot_points("Res", npath, NULL, restot_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("Res", npath, NULL, restot_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
-		plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-		plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Low order Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
-		plot_points("ResOL", npath, NULL, resol_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("ResOL", npath, NULL, resol_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Total Openloop Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
-		plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Openloop Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-		plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Low order Openloop Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
 		dcellfree(resolhi_i);dcellfree(resollo_i);
 		dcellfree(resol_i);dcellfree(restot_i);
 	    }else{
-		plot_points("Tot", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("Tot", npath, NULL, reshi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All_%ld",seed[iseed]);
-		plot_points("Atm TT", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL, pathtag,
+		plot_points("Atm TT", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
 			    "ATM T/T Wavefront Error", xlabel,ylabel, "TT_%ld",seed[iseed]);
 	    }
 	    dcellfree(reshi_i);dcellfree(reslo_i);
@@ -418,7 +422,7 @@ int main(int argc, char *argv[]){
       if(upterr && upterr->p[0]){
       for(int iseed=0; iseed<nseed; iseed++){
 
-      plot_points("upterr", nseed, NULL, upterr, NULL, NULL, xylog, 0, NULL, NULL, 
+      plot_points("upterr", nseed, NULL, upterr, NULL, NULL, xylog, NULL, NULL, 
       "Uplink error", xlabel, "Error (rad)", "%d", iseed);
       }
       }*/

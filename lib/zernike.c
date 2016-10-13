@@ -31,7 +31,7 @@ dmat *zernike_Rnm(const dmat *locr, int ir, int im){
     double coeff[ns];
     int power[ns];
     for(int s=0; s<ns; s++){
-	coeff[s]=factoriall((ir+im)/2-s+1, ir-s)/factoriall(1,s)/factoriall(1,(ir-im)/2-s)*pow(-1,s);
+	coeff[s]=factorial((ir+im)/2-s+1, ir-s)/factorial(1,s)/factorial(1,(ir-im)/2-s)*pow(-1,s);
 	power[s]=ir-2*s;
     }
     for(long iloc=0; iloc<nloc; iloc++){
@@ -69,7 +69,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     const long nloc=loc->nloc;
     int nmod=0;
     if(flag>0){//radial only
-	nmod=rmax-rmin;
+	nmod=rmax-rmin+1;
     }else{//a specific mode
 	nmod=(rmax+1)*(rmax+2)/2-(rmin)*(rmin+1)/2;
     }
@@ -104,7 +104,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     int cmod=0;
     for(int ir=rmin; ir<=rmax; ir++){
 	if(rmax > 10){
-	    info2("Zernike: %d of %d\n", ir, rmax);
+	    info2("Zernike radial order %d of %d\n", ir, rmax);
 	}
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
@@ -191,7 +191,7 @@ static lmat *zernike_index(int nr){
 dmat *zernike_cov_kolmogorov(int nr){
     int nmod=(nr+1)*(nr+2)/2;
     dmat *res=dnew(nmod, nmod);
-    PDMAT(res, pres);
+    dmat*  pres=res;
     lmat *zind=zernike_index(nr);
     for(int ir=0; ir<=nr; ir++){
 	for(int im=0; im<=ir; im++){
@@ -224,15 +224,15 @@ dmat *zernike_cov_kolmogorov(int nr){
 		    *(tgamma(14./3.)*tgamma((ir+jr-5./3.)*0.5))
 		    /(tgamma((ir-jr+17./3.)*0.5)*tgamma((jr-ir+17./3.)*0.5)*tgamma((ir+jr+23./3.)*0.5));
 		if(im==0){
-		    pres[jct0][ict0]=pres[ict0][jct0]=tmp;
+		    IND(pres,ict0,jct0)=IND(pres,jct0,ict0)=tmp;
 		}else{
-		    pres[ictc][jctc]=pres[jctc][ictc]=tmp;
-		    pres[icts][jcts]=pres[jcts][icts]=tmp;
+		    IND(pres,jctc,ictc)=IND(pres,ictc,jctc)=tmp;
+		    IND(pres,jcts,icts)=IND(pres,icts,jcts)=tmp;
 		}
 	    }
 	}
     }
-    //pres[0][0]=0; //piston covariance
+    //IND(pres,0,0)=0; //piston covariance
     lfree(zind);
     return res;
 }
@@ -266,7 +266,7 @@ dmat *cov_vonkarman(const loc_t *loc, /**<The location grid*/
 	for(long id=0; id<=ic; id++){
 	    double tmp=0;
 	    for(long ip=0; ip<nembed*nembed; ip++){
-		tmp+=spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip])*turbspec->p[ip];
+		tmp+=creal(spect->p[ic]->p[ip]*conj(spect->p[id]->p[ip]))*turbspec->p[ip];
 	    }
 	    IND(DD, ic, id)=IND(DD,id,ic)=tmp;//*scale;
 	}

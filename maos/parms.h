@@ -168,6 +168,7 @@ typedef struct POWFS_CFG_T{
     int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
     lmat *wfs;       /**<array of wfs belongs to this powfs*/
+    lmat *wfsr;      /**<array of reconstruction wfs belongs to this powfs*/
     lmat *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
     int nwfsr;      /**<number of wfs for reconstruction belonging to this powfs*/
@@ -197,13 +198,12 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double r0;  /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
-    double L0;  /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
-    double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
-    double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
+    double r0;      /**<Fried parameter  for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    double L0;      /**<Outerscale for matched filter generation. Uses atm.r0, atm.L0 is not set*/
+    int mtchcr;     /**<use constrained matched filter (0: disable, 1: both axis. 2: radial/x only, 3: az/y only)*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
-    int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/
+    int sigmatch;   /**<scale subaperture image to have the same intensity as i0. Keep false.*/
     int mtchadp;    /**<Using adaptive matched filter. When the number of pixels
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/
@@ -484,6 +484,7 @@ typedef struct SIM_CFG_T{
     int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
+    int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
     double zetafsm;  /**<Damping of FSM modeled as second harmonic oscillater (SHO).*/
     double f0fsm;    /**<Resonance frequency of FSM (SHO). 0: infinite.*/
     double aptwfs;   /**<Twfs reference vector servo coefficient.*/
@@ -501,7 +502,7 @@ typedef struct SIM_CFG_T{
 			- 1: Focus tracking using CL gradients, for each LGS independently.
 			- 2: Focus tracking using CL gradinets, for common LGS focus only.
 		     */
-    int fsmideal;    /**<ideal compensation for uplink pointing*/
+    int idealfsm;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
@@ -574,7 +575,6 @@ typedef struct PLOT_CFG_T{
 */
 typedef struct DBG_CFG_T{
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
-    int atm;         /**<test special atmosphere*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     lmat *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
@@ -595,11 +595,15 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
+    double atm;         /**<test special atmosphere*/
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/
     double pwfs_flate;/**<pyramid flat edge angular width */
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
+    double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
+    dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
+    dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -780,7 +784,7 @@ typedef struct ARG_T{
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
-PARMS_T* setup_parms(char *main, char *extra, int override);
+PARMS_T* setup_parms(const char *main, const char *extra, int override);
 void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
@@ -791,5 +795,5 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
+void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *format,...);
 #endif

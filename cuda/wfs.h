@@ -35,6 +35,7 @@ typedef struct cupowfs_t{
     cupts_t pts;   /**<location of lower left OPD point in each sa*/
     culoc_t loc;  /**<location of OPD points. for reconstruction purpose only.*/
     culoc_t saloc;
+    cuarray<culoc_t> msaloc;/**<Mishaped saloc, for pywfs.*/
     int **embed;       /**<embed for field stop computation*/
     int *nembed;       /**<embed for field stop computation*/
     curcell fieldstop;/**<*mask for field stop computation*/
@@ -122,7 +123,7 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 	     const Real (*orig)[2], const Real*restrict amp, Real alpha, cudaStream_t stream);
 __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
-void pywfs_grad(curmat &grad, const curmat &ints, const curmat &saa, curmat &isum, const curmat &goff, Real gain, cudaStream_t stream);
+void pywfs_grad(curmat &grad, const curmat &ints, const curmat &saa, curmat &isum, const curmat &goff, const PYWFS_T *pywfs, cudaStream_t stream);
 void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaStream_t stream);
 dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

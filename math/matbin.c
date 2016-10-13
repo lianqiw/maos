@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -38,7 +38,7 @@ void X(writedata)(file_t *fp, const X(mat) *A){
    Function to read dense matrix into memory from file pointer. Generally used
    by library developer.  */
 X(mat) *X(readdata)(file_t *fp, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -57,17 +57,17 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 	if(header->magic==M_T){
 	    zfread(out->p,sizeof(T),nx*ny,fp);
 	}else if(M_T==M_DBL && header->magic==M_FLT){
-	    float *p=malloc(nx*ny*sizeof(float));
+	    float *p=mymalloc(nx*ny,float);
 	    zfread(p, sizeof(float), nx*ny, fp);
-	    for(int i=0; i<nx*ny; i++){
+	    for(uint64_t i=0; i<nx*ny; i++){
 		out->p[i]=(T)p[i];
 	    }
 	    free(p);
 #ifdef USE_COMPLEX
 	}else if(M_T==M_CMP && header->magic==M_ZMP){
-	    fcomplex *p=malloc(nx*ny*sizeof(fcomplex));
+	    fcomplex *p=mymalloc(nx*ny,fcomplex);
 	    zfread(p, sizeof(fcomplex), nx*ny, fp);
-	    for(int i=0; i<nx*ny; i++){
+	    for(uint64_t i=0; i<nx*ny; i++){
 		out->p[i]=(T)p[i];
 	    }
 	    free(p);

@@ -118,7 +118,6 @@ dmat *psd_vibid(const dmat *psdin){
     double ylpf=0, dylpf=0;
     int nmaxp=100;
     dmat *res=dnew(4, nmaxp);
-    PDMAT(res, pres);
     double thres=25e-18;/*threshold: 5 nm*/
     double sumxy=0, sumy=0, sum=0;
     int count=0;
@@ -134,11 +133,11 @@ dmat *psd_vibid(const dmat *psdin){
 	    }
 	    if(y->p[i+1]>ylpf+dylpf*5 && f[i]>1){//beginning of peak
 		inpeak=1;
-		if(count>0 && f[i] < f[(int)pres[count-1][3]] + 0.1){
+		if(count>0 && f[i] < f[(int)IND(res,3,count-1)] + 0.1){
 		    //combine with last peak if within 1 Hz.
 		    count--;
 		}else{
-		    pres[count][2]=i;
+		    IND(res,2,count)=i;
 		    sumxy=f[i]*psd[i];//for CoG
 		    sumy=psd[i];//for CoG
 		    sum=0;//integration
@@ -152,14 +151,13 @@ dmat *psd_vibid(const dmat *psdin){
 	    if(y->p[i]<ylpf+dylpf && y->p[i+1]<ylpf+dylpf){//end of peak
 		inpeak=0;
 		if(sum*0.5>thres){
-		    pres[count][0]=sumxy/sumy;
-		    pres[count][1]=sum*0.5;
-		    pres[count][3]=i;
+		    IND(res,0,count)=sumxy/sumy;
+		    IND(res,1,count)=sum*0.5;
+		    IND(res,3,count)=i;
 		    count++;
 		    if(count==nmaxp){
 			nmaxp*=2;
 			dresize(res, 4, nmaxp);
-			pres=(void*)res->p;
 		    }
 		}
 	    }

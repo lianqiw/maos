@@ -114,8 +114,11 @@ static void socket_nopipe(int sock){
 #ifdef SO_NOSIGPIPE
     const int one=1;
     setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
-#elif ! defined(__linux__)
+#else
+#if ! defined(__linux__)
     signal(SIGPIPE, SIG_IGN);
+#endif
+    (void)sock;
 #endif
 }
 /**
@@ -136,7 +139,7 @@ void socket_block(int sock, int block){
   about conversion from in to uint16. THis is an ugly workaround*/
 #undef htons
 #define htons myhtons
-static inline uint16_t myhtons(uint16_t port){
+INLINE uint16_t myhtons(uint16_t port){
     uint16_t ans;
 #if __BYTE_ORDER == __BIG_ENDIAN
     ans=(port);

@@ -48,7 +48,7 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
+INLINE int limit_diff(double *x1, double *x2, double thres, long stuck1, long stuck2){
     double diff=*x2-*x1;
     if(fabs(diff)>thres){
 	double ratio=signbit(diff)?-.49999:.49999;
@@ -68,7 +68,7 @@ static inline int limit_diff(double *x1, double *x2, double thres, long stuck1, 
 /**
    Send LPF TT to TTM. Use DMTT, DMPTT to take into account possible stuck actuators.
 */
-static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
+INLINE void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp){
 #if 1
     int ndm=dmcmd->nx;
     double totaltt[2]={0,0};
@@ -97,7 +97,7 @@ static inline void ttsplit_do(RECON_T *recon, dcell *dmcmd, dmat *ttm, double lp
 #endif
 }
 
-static inline void clipdm(SIM_T *simu, dcell *dmcmd){
+INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
     const PARMS_T *parms=simu->parms;
     if(!dmcmd) return;
     /*
@@ -143,7 +143,7 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    /* Embed DM commands to a square array (borrow dmrealsq) */
 	    double iastroke;
 	    int nx=simu->recon->anx->p[idm];
-	    double (*dmr)[nx];
+	    dmat *dmr;
 	    dmat *dm;
 	    if(parms->dm[idm].iastrokescale){ //convert dm to voltage
 		dm=dinterp1(parms->dm[idm].iastrokescale->p[0], 0, dmcmd->p[idm], NAN);
@@ -154,32 +154,32 @@ static inline void clipdm(SIM_T *simu, dcell *dmcmd){
 	    }
 	    if(!parms->fit.square){
 		loc_embed(simu->dmrealsq->p[idm], simu->recon->aloc->p[idm], dm->p);
-		dmr=(double(*)[nx])simu->dmrealsq->p[idm]->p;
+		dmr=(dmat*)simu->dmrealsq->p[idm];
 	    }else{
-		dmr=(double(*)[nx])dm->p;
+		dmr=dm;
 	    }
 	    lcell *actstuck=simu->recon->actstuck;
 	    long *stuck=actstuck?(actstuck->p[idm]?actstuck->p[idm]->p:0):0;
 	    int count=0,trials=0;
 	    do{
 		count=0;
-		PDMAT(simu->recon->amap->p[idm],map);
+		dmat* map=(dmat*)simu->recon->amap->p[idm]/*PDMAT*/;
 		for(int iy=0; iy<simu->recon->any->p[idm]-1; iy++){
 		    for(int ix=0; ix<nx; ix++){
-			int iact1=map[iy][ix];
-			int iact2=map[iy+1][ix];
+			int iact1=IND(map,ix,iy);
+			int iact2=IND(map,ix,iy+1);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy+1][ix], iastroke, 
+			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix,iy+1), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    } 
 		}
 		for(int iy=0; iy<simu->recon->any->p[idm]; iy++){
 		    for(int ix=0; ix<nx-1; ix++){
-			int iact1=map[iy][ix];
-			int iact2=map[iy][ix+1];
+			int iact1=IND(map,ix,iy);
+			int iact2=IND(map,ix+1,iy);
 			if(iact1>0 && iact2>0){
-			    count+=limit_diff(&dmr[iy][ix], &dmr[iy][ix+1], iastroke, 
+			    count+=limit_diff(PIND(dmr,ix,iy), PIND(dmr,ix+1,iy), iastroke, 
 					      stuck?stuck[iact1-1]:0, stuck?stuck[iact2-1]:0);
 			}
 		    }
@@ -324,6 +324,13 @@ static void filter_cl(SIM_T *simu){
 	info_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }
+    if(parms->dbg.dmoff){
+	info_once("Add injected DM offset vector\n");
+	int icol=(isim+1)%parms->dbg.dmoff->ny;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	}
+    }
     if(parms->sim.dmclip || parms->sim.dmclipia || recon->actstuck){
 	dcell *tmp=dcelldup(simu->dmcmd);
 	if(recon->actstuck){//zero stuck actuators
@@ -373,13 +380,32 @@ static void filter_cl(SIM_T *simu){
     }
     if(simu->fsmint){
 	/*fsmerr is from gradients from this time step. so copy before update for correct delay*/
-	dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
-	if(parms->sim.f0fsm>0){
+	if(parms->sim.f0fsm>0){//Apply SHO filter
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		if(simu->fsmreal->p[iwfs]){
 		    double *pin=simu->fsmint->mint->p[0]->p[iwfs]->p;
 		    simu->fsmreal->p[iwfs]->p[0]=sho_step(simu->fsmsho[iwfs], pin[0], parms->sim.dt);
 		    simu->fsmreal->p[iwfs]->p[1]=sho_step(simu->fsmsho[iwfs+parms->nwfs], pin[1], parms->sim.dt);
+		}
+	    }
+	}else{//Copy directly
+	    dcellcp(&simu->fsmreal, simu->fsmint->mint->p[0]);
+	}
+	if(parms->sim.commonfsm && simu->fsmerr){
+	    warning_once("Using common fsm\n");
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].llt){
+		    dmat *fsmerr=0;
+		    double scale=1./parms->powfs[ipowfs].nwfs;
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			dadd(&fsmerr, 1, simu->fsmerr->p[iwfs], scale);
+		    }
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			dcp(&simu->fsmerr->p[iwfs], fsmerr);
+		    }
+		    dfree(fsmerr);
 		}
 	    }
 	}
@@ -404,7 +430,8 @@ static void filter_cl(SIM_T *simu){
    filter DM commands in open loop mode by simply copy the output
  */
 static void filter_ol(SIM_T *simu){
-    assert(!simu->parms->sim.closeloop);
+    const PARMS_T *parms=simu->parms;
+    assert(!parms->sim.closeloop);
     if(simu->dmerr){
 	dcellcp(&simu->dmcmd, simu->dmerr);
     }else{
@@ -418,14 +445,21 @@ static void filter_ol(SIM_T *simu){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
     }
+    if(parms->dbg.dmoff){
+	info_once("Add injected DM offset vector\n");
+	int icol=(simu->isim+1)%parms->dbg.dmoff->ny;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    dadd(&simu->dmcmd->p[idm], 1, IND(parms->dbg.dmoff, idm, icol), -1);
+	}
+    }
     //Extrapolate to edge actuators
-    if(simu->recon->actinterp && !simu->parms->recon.modal){
+    if(simu->recon->actinterp && !parms->recon.modal){
 	dcellcp(&simu->dmcmd0, simu->dmcmd);
 	dcellzero(simu->dmcmd);
 	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
     }
     if(simu->ttmreal){
-	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, simu->parms->sim.lpttm);
+	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
     }
   
     /*hysterisis. */
@@ -484,6 +518,7 @@ void filter_dm(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
+  
 #if USE_CUDA
     if(simu->recon->moao){
 	if(parms->gpu.moao){

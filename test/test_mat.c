@@ -74,7 +74,7 @@ static void test_d2cell(){
     dfree(A2);
 
     A=dcellread("ccell.bin");
-    long *dims=calloc(A->nx,sizeof(long));
+    long *dims=mycalloc(A->nx,long);
     for(int ix=0; ix<A->nx; ix++){
 	dims[ix]=A->p[ix]->nx;
     }
@@ -193,22 +193,22 @@ static void test_spline_2d(void){
     for(int i=0; i<nx; i++){
 	x->p[i]=i*2+10;
     }
-    PDMAT(z,pz);
+    dmat* pz=z;
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    pz[iy][ix]=sin(ix*M_PI/14.2)*sin(iy*M_PI/12.3);
+	    IND(pz,ix,iy)=sin(ix*M_PI/14.2)*sin(iy*M_PI/12.3);
 	}
     }
     long nxnew=nx*11;
     long nynew=ny*11;
     dmat *xnew=dnew(nxnew,nynew);
     dmat *ynew=dnew(nxnew,nynew);
-    PDMAT(xnew,pxnew);
-    PDMAT(ynew,pynew);
+    dmat* pxnew=xnew;
+    dmat* pynew=ynew;
     for(int iy=0; iy<nynew; iy++){
 	for(int ix=0; ix<nxnew; ix++){
-	    pxnew[iy][ix]=ix*0.2+6;
-	    pynew[iy][ix]=iy*0.12+6;
+	    IND(pxnew,ix,iy)=ix*0.2+6;
+	    IND(pynew,ix,iy)=iy*0.12+6;
 	}
     }
     dcell *coeff=dbspline_prep(x,y,z);
@@ -311,13 +311,13 @@ static void test_expm(){
     exit(0);
 }
 static void test_mm(){
-    dcell *A=cellnew(1,1);
-    dcell *B=cellnew(1,1);
+    dcell *A=dcellnew(1,1);
+    dcell *B=dcellnew(1,1);
     A->p[0]=dnew(3,4);
     dset(A->p[0],1);
     B->p[0]=dnew(4,5);
     dset(B->p[0],1);
-    dcell *C=dcellmm2(A,B,"nn");
+    dcell *C=(dcell*)dcellmm2(A,B,"nn");
     writebin(A, "A");
     writebin(B, "B");
     writebin(C, "C");

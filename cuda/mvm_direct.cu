@@ -164,7 +164,7 @@ static void mvm_direct_igpu(thread_t *info){
 /**
    Assemble the MVM control matrix.
 */
-void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
+void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
     TIC;tic;
     if(parms->recon.alg!=0){
 	error("Please adapt to LSR\n");

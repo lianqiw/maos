@@ -96,7 +96,7 @@ void maos_isim(int isim){
     if(isim==simstart+1){//skip slow first step.
 	tk_atm=myclockd();
     }
-    if(isim+1+parms->sim.dtrat_hi>=simend){
+    if(isim+2+parms->sim.dtrat_hi>=simend){
 	draw_single=0;
     }
     double ck_0=myclockd();
@@ -123,7 +123,7 @@ void maos_isim(int isim){
 	    muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
 	    recon->FR.M=FRM;/*set FR.M back*/
 	    if(parms->save.dm){
-		cellarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
+		zfarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
 	    }
 	    if(!parms->fit.square){
 		/* Embed DM commands to a square array for fast ray tracing */
@@ -257,7 +257,7 @@ void maos_sim(){
 	ccell *psf2s=0;
 	locfft_psf(&psf2s, aper->embed, iopdevl, parms->evl.psfsize, 0);
 	const int nwvl=parms->evl.nwvl;
-	dcell *evlpsfdl=cellnew(nwvl,1);
+	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
 	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);

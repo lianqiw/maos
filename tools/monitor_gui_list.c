@@ -29,17 +29,12 @@
 
 
 
+#include <tgmath.h>
 #include <netdb.h>
-
-
 #include <netdb.h>
-
-#include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
 #include <arpa/inet.h>
-
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -199,7 +194,7 @@ gboolean refresh(PROC_T *p){
 		pos=strstr(spath, "/skyc ");
 	    }
 	    if(pos){
-		sstart=malloc(pos-spath+1);
+		sstart=(char*)malloc(pos-spath+1);
 		memcpy(sstart, spath, pos-spath);
 		sstart[pos-spath]='\0';
 		sargs=strdup(pos+1);
@@ -212,7 +207,7 @@ gboolean refresh(PROC_T *p){
 		    char *pos3=strchr(pos2, ' ');
 		    if(!pos3) pos3=strchr(pos2, '\0');
 		    if(pos3){
-			sout=malloc(pos3-pos2+1);
+			sout=(char*)malloc(pos3-pos2+1);
 			memcpy(sout, pos2, pos3-pos2);
 			sout[pos3-pos2]='\0';
 			memmove(pos2-4, pos3, strlen(pos3)+1);
@@ -382,7 +377,8 @@ static void clipboard_append(const char *jobinfo){
     }
 }
 /*A general routine handle actions to each item.*/
-static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, char *action){
+static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, const char *action){
+    (void)path;
     gint ihost=GPOINTER_TO_INT(user_data);
     GValue value=G_VALUE_INIT;
     gtk_tree_model_get_value(model, iter, COL_PID, &value);
@@ -434,7 +430,8 @@ static void copy_selected_outpath(GtkTreeModel *model, GtkTreePath *path, GtkTre
     handle_selected(model, path, iter, user_data, -1, "CopyOutPath");
 }
 /*Handles menu item clicks in a general way.*/
-static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, GtkTreeSelectionForeachFunc func, char *action){
+static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, GtkTreeSelectionForeachFunc func, const char *action){
+    (void)menuitem;
     gint ihost=GPOINTER_TO_INT(user_data);
     GtkWidget *view=views[ihost];
     GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
@@ -590,8 +587,8 @@ static gboolean view_release_event(GtkWidget *view, GdkEventButton *event, gpoin
 }
 GtkWidget *new_page(int ihost){
     if(!lists){
-	lists=calloc(nhost,sizeof(GtkListStore*));
-	views=calloc(nhost, sizeof(GtkWidget*));
+	lists=mycalloc(nhost,GtkListStore*);
+	views=mycalloc(nhost,GtkWidget*);
     }
 
     lists[ihost]=gtk_list_store_new(COL_TOT,

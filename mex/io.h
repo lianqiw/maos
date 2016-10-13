@@ -90,7 +90,7 @@ typedef struct {
     uint64_t ny;
     char *str;
 }header_t;
-file_t* zfopen(const char *fn, char *mod);
+file_t* zfopen(const char *fn, const char *mod);
 void zfclose(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);

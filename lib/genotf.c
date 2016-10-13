@@ -35,7 +35,7 @@ typedef struct GENOTF_T{
     double wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
     long ncompy; /**<Size of OTF*/
-    int nsa;    /**<Number of (sub)apertures*/
+    long nsa;    /**<Number of (sub)apertures*/
     long pttr;   /**<Remove piston/tip/tilt*/
     const dmat *B;
     const T_VALID *pval;
@@ -45,7 +45,7 @@ typedef struct GENOTF_T{
 /**
    Remove tip/tilt from the covariance matrix.
 */
-static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
+static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 		    loc_t *loc,       /**<The aperture grid*/
 		    const double *amp /**<The amplitude map*/
 		   ){
@@ -55,21 +55,20 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     int nloc=loc->nloc;
 
     dmat *B2=dnew(nloc, nloc);
-    PDMAT(B2, BP);
-    PDMAT(B0, B);
+    dmat*  BP=B2;
   
     double *mod[3];
     dmat *mcc=dnew(3,3);/*modal cross coupling matrix. */
-    PDMAT(mcc, cc);
+    dmat*  cc=mcc;
  
     mod[0]=NULL;
     mod[1]=locx;
     mod[2]=locy;
     for(int im=0; im<3;im++){
 	for(int jm=im;jm<3;jm++){
-	    cc[jm][im]=dotdbl(mod[im], mod[jm], amp, nloc);
+	    IND(cc,im,jm)=dotdbl(mod[im], mod[jm], amp, nloc);
 	    if(im!=jm)
-		cc[im][jm]=cc[jm][im];
+		IND(cc,jm,im)=IND(cc,im,jm);
 	}
     }
     dinvspd_inplace(mcc);
@@ -90,34 +89,34 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     }
     /* MCC = - cci' *M' */
     dmm(&MCC, 0, mcc, M,  "tt", -1);
-    PDMAT(MCC, pMCC);
+    dmat*  pMCC=MCC;
     /* Mtmp =  MW' * B  */
-    dmm(&Mtmp, 0, MW, B0, "tn", 1);
+    dmm(&Mtmp, 0, MW, B, "tn", 1);
     /*Remove tip/tilt from left side*/
-    PDMAT(Mtmp, pMtmp);
+    dmat*  pMtmp=Mtmp;
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=pMtmp[iloc][0];
-	double tmp2=pMtmp[iloc][1];
-	double tmp3=pMtmp[iloc][2];
+	double tmp1=IND(pMtmp,0,iloc);
+	double tmp2=IND(pMtmp,1,iloc);
+	double tmp3=IND(pMtmp,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]=B[iloc][jloc]+
-		(pMCC[jloc][0]*tmp1
-		 +pMCC[jloc][1]*tmp2
-		 +pMCC[jloc][2]*tmp3);
+	    IND(BP,jloc,iloc)=IND(B,jloc,iloc)+
+		(IND(pMCC,0,jloc)*tmp1
+		 +IND(pMCC,1,jloc)*tmp2
+		 +IND(pMCC,2,jloc)*tmp3);
 	}
     }
     /* Mtmp = MW' * BP' */
     dmm(&Mtmp, 0, MW, B2, "tt", 1);
     /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=pMCC[iloc][0];
-	double tmp2=pMCC[iloc][1];
-	double tmp3=pMCC[iloc][2];
+	double tmp1=IND(pMCC,0,iloc);
+	double tmp2=IND(pMCC,1,iloc);
+	double tmp3=IND(pMCC,2,iloc);
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]+=
-		tmp1*pMtmp[jloc][0]
-		+tmp2*pMtmp[jloc][1]
-		+tmp3*pMtmp[jloc][2];
+	    IND(BP,jloc,iloc)+=
+		tmp1*IND(pMtmp,0,jloc)
+		+tmp2*IND(pMtmp,1,jloc)
+		+tmp3*IND(pMtmp,2,jloc);
 	}
     }
     dfree(mcc);
@@ -140,19 +139,19 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     }else{
 	B2=ddup(B);/*duplicate since we need to modify it. */
     }
-    PDMAT(B2, BP);
+    dmat*  BP=B2;
     if(!*otf){
 	*otf=cnew(notfx,notfy);
     }
-    PCMAT(*otf,OTF);
+    cmat* OTF=*otf;
     /*Do the exponential.*/
     double k2=pow(2*M_PI/wvl,2);
-    double *restrict BPD=malloc(sizeof(double)*nloc);
+    double *restrict BPD=mymalloc(nloc,double);
     for(long iloc=0; iloc<nloc; iloc++){
 	for(long jloc=0; jloc<nloc; jloc++){
-	    BP[iloc][jloc]=exp(k2*BP[iloc][jloc]);
+	    IND(BP,jloc,iloc)=exp(k2*IND(BP,jloc,iloc));
 	}
-	BPD[iloc]=pow(BP[iloc][iloc], -0.5);
+	BPD[iloc]=pow(IND(BP,iloc,iloc), -0.5);
     }
     double otfnorm=0;
     if(amp){
@@ -170,11 +169,11 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	for(long im=0; im<notfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
 	    double tmp1,tmp2; dcomplex tmp3;
-	    register dcomplex tmp=0.;
+	    dcomplex tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		tmp1=BPD[iloc1]*BP[iloc1][iloc2];
+		tmp1=BPD[iloc1]*IND(BP, iloc2, iloc1);
 		tmp2=BPD[iloc2];
 		if(amp){
 		    tmp1*=amp[iloc1];
@@ -187,7 +186,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		    tmp+=tmp1*tmp2;
 		}
 	    }
-	    OTF[jm][im]=tmp*otfnorm;
+	    IND(OTF,im,jm)=tmp*otfnorm;
 	}
     }
     free(BPD);
@@ -197,7 +196,7 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
    A wrapper to execute pttr parallel in pthreads
  */
 static void genotf_wrap(thread_t *info){
-    GENOTF_T *data=info->data;
+    GENOTF_T *data=(GENOTF_T*)info->data;
     const int nsa=data->nsa;
     cmat**otf=(cmat**)data->otf;
     loc_t *loc=data->loc;
@@ -246,11 +245,12 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
     double *locx=loc->locx;
     double *locy=loc->locy;
     const long pvaltot=notfx*notfy*nloc*2;
-    long (*pval0)[2]=malloc(sizeof(long)*pvaltot*2);
+    typedef long long2[2];
+    long2 *pval0=mymalloc(pvaltot,long2);
     if(!pval0){
 	error("malloc for %ld failed\n", pvaltot);
     }
-    T_VALID *pval=malloc(sizeof(T_VALID)*notfx*notfy);
+    T_VALID *pval=mymalloc(notfx*notfy,T_VALID);
     T_VALID (*restrict qval)[notfx]=(T_VALID (*)[notfx])(pval);
     long count=0,count2;
     loc_create_map(loc);
@@ -284,7 +284,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
 	error("count=%ld > pvaltot=%ld\n", count, pvaltot);
     }
     /*loc_free_map(loc);*//*do not free map. dangerous in multi-threaded envorionment. where other threads may be visiting loc->map.*/
-    /*pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position. */
+    /*pval0=myrealloc(pval0,count*2,int); //do not realloc. will change position. */
     return pval;
 }
 /**
@@ -296,16 +296,15 @@ static dmat* genotfB(loc_t *loc, double r0, double L0){
     long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
-    dmat *B0=dnew(nloc, nloc);
-    PDMAT(B0, B);
+    dmat *B=dnew(nloc, nloc);
     const double coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
-	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
+	    IND(B,i,j)=IND(B,j,i)=coeff*pow(rdiff2,5./6.);
 	}
     }
-    return B0;
+    return B;
 }
 /**
    Generate OTFs for an aperture or multiple subapertures. ALl these apertures
@@ -359,7 +358,8 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	}
     }
     
-    GENOTF_T data={0};
+    GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, ncompx, ncompy, nsa, pttr, B, pval, isafull, otffull};
+    /*
     data.otf=otf;
     data.loc=loc;
     data.amp=amp;
@@ -370,11 +370,12 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.ncompx=ncompx;
     data.ncompy=ncompy;
     data.nsa=nsa;
-    data.pttr=pttr;/*was missing. */
+    data.pttr=pttr;
     data.B=B;
     data.pval=pval;
     data.isafull=isafull;
     data.otffull=otffull;
+    */
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
     CALL_THREAD(info, 1);
@@ -393,7 +394,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
    overlapping pairs of points for each r and then compute the averaging. When
    the amplitude is less than the threshold, the point does not count.*/
 
-void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov, int norm){
+dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm){
     if(loc->nloc!=cov->nx || loc->nloc!=cov->ny){
 	error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
     }
@@ -407,16 +408,14 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     double dy1=1./loc->dy;
     long ncovx=(long) round((xmax-xmin)*dx1)*2;
     long ncovy=(long) round((ymax-ymin)*dy1)*2;
-    dinit(cov2d, ncovx, ncovy);
-    PDMAT(*cov2d, pcov2d);
-    PDMAT(cov, pcov);
+    dmat *cov2d=dnew(ncovx, ncovy);
     /*the following is adapted from gen_pval*/
     loc_create_map(loc);
     map_t *map=loc->map;
     long ncovx2=ncovx/2;
     long ncovy2=ncovy/2;
-    long *map_x=malloc(sizeof(long)*loc->nloc);
-    long *map_y=malloc(sizeof(long)*loc->nloc);
+    long *map_x=mymalloc(loc->nloc,long);
+    long *map_y=mymalloc(loc->nloc,long);
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	map_x[iloc]=(long)round((locx[iloc]-map->ox)*dx1);
 	map_y[iloc]=(long)round((locy[iloc]-map->oy)*dy1);
@@ -430,24 +429,168 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 	    long count=0;
 	    double acc=0;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
-		if(amp && amp[iloc]<ampthres) continue;
+		if(amp && amp->p[iloc]<ampthres) continue;
 		long ix=map_x[iloc]+im2;
 		long iy=map_y[iloc]+jm2;
 		long iloc2=(long)loc_map_get(map, ix, iy);
-		if(iloc2>0 && (!amp || amp[iloc2]>=ampthres)){
-		    acc+=pcov[iloc][iloc2-1];
+		if(iloc2>0 && (!amp || amp->p[iloc2]>=ampthres)){
+		    acc+=IND(cov,iloc2-1,iloc);
 		    count++;
 		}
 	    }
 	    if(count>0){
 		if(norm){/*compute the covariance*/
-		    pcov2d[jm][im]=acc/count;
+		    IND(cov2d,im,jm)=acc/count;
 		}else{/*compute approximate PSD.*/
-		    pcov2d[jm][im]=acc;
+		    IND(cov2d,im,jm)=acc;
 		}
 	    }
 	}
     }
     free(map_x);
     free(map_y);
+    return cov2d;
+}
+/**
+   shift i0 without wraping into i0x1 (+1) and i0x2 (-1)
+*/
+static void mki0shx(double *i0x1, double *i0x2, const dmat *i0, double scale){
+    int nx=i0->nx;
+    typedef double pcol[nx];
+    pcol *i0x1p=(pcol*)i0x1;
+    pcol *i0x2p=(pcol*)i0x2;
+    for(int iy=0; iy<i0->ny; iy++){
+	for(int ix=0; ix<i0->nx-1; ix++){
+	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
+	}
+    }
+}
+
+/**
+  shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
+*/
+static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
+    int nx=i0->nx;
+    typedef double pcol[nx];
+    pcol *i0y1p=(pcol*)i0y1;
+    pcol *i0y2p=(pcol*)i0y2;
+    for(int iy=0; iy<i0->ny-1; iy++){
+	for(int ix=0; ix<i0->nx; ix++){
+	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
+	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
+	}
+    }
+}
+/**
+   Generating matched filter from averaged short exposure images.
+*/
+
+dmat *mtch(dmat **neaout, /**<[out] sanea*/
+	   const dmat *i0, /**<Averaged subaperture image*/
+	   const dmat *gx, /**<derivative of i0 along x*/
+	   const dmat *gy, /**<derivative of i0 along y*/
+	   const dmat *dbkgrnd2, /**<background*/
+	   const dmat *dbkgrnd2c, /**<background calibration*/
+	   double bkgrnd,  /**<global background*/
+	   double bkgrndc, /**<global background calibration*/
+	   double rne,     /**<Detector read noise*/
+	   double pixthetax, /**<Size of pixel along x*/
+	   double pixthetay, /**<Size of pixel along y*/
+	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	   int radgx,        /**<1: gx/gy is along r/a coord.*/
+	   int cr    /**<Constraint flag 0: disable, 1: both axis, 2: x only, 3: y only*/
+    ){
+    const double *bkgrnd2=dbkgrnd2?dbkgrnd2->p:0;
+    const double *bkgrnd2c=dbkgrnd2c?dbkgrnd2c->p:0;
+    const double bkgrnd_res=bkgrnd-bkgrndc;
+    const double kpx=1./pixthetax;
+    const double kpy=1./pixthetay;
+    int nmod=3;
+    int mtchcrx=0;
+    int mtchcry=0;
+
+    if(cr==1 || cr==2){
+	mtchcrx=nmod;
+	nmod+=2;
+    }
+    if(cr==1 || cr==3){
+	mtchcry=nmod;
+	nmod+=2;
+    }
+    const int i0n=i0->nx*i0->ny;
+    dmat *i0m=dnew(2,nmod);
+    dmat *i0g=dnew(i0n,nmod);
+    dmat *wt=dnew(i0n,1);
+    /*Derivative is along r/a or x/y*/
+    IND(i0m,0,0)=1;
+    IND(i0m,1,1)=1;
+    double theta=radgx?0:pixrot;
+    if(mtchcrx){/*constrained x(radial) */
+	IND(i0m,0,mtchcrx)=cos(theta);
+	IND(i0m,1,mtchcrx)=sin(theta);
+	IND(i0m,0,mtchcrx+1)=-IND(i0m,0,mtchcrx);
+	IND(i0m,1,mtchcrx+1)=-IND(i0m,1,mtchcrx);
+    }
+    if(mtchcry){/*constrained y(azimuthal). */
+	IND(i0m,0,mtchcry)=-sin(theta);
+	IND(i0m,1,mtchcry)= cos(theta);
+	IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
+	IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
+    }
+    
+    adddbl(PCOL(i0g,0), 1, gx->p, i0n, 1, 0);
+    adddbl(PCOL(i0g,1), 1, gy->p, i0n, 1, 0);
+    adddbl(PCOL(i0g,2), 1, i0->p, i0n, kpx, bkgrnd_res);
+    adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
+    adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
+    if(mtchcrx){
+	mki0shx(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,kpx);
+	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
+	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
+    }
+    if(mtchcry){
+	mki0shy(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,kpy);
+	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
+	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
+	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
+    }
+
+    if(bkgrnd2){
+	/*adding rayleigh backscatter poisson noise. */
+	for(int i=0; i<i0n; i++){/*noise weighting. */
+	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]+bkgrnd2[i]);
+	}	
+    }else{
+	for(int i=0; i<i0n; i++){/*noise weighting. */
+	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]);
+	}
+    }
+
+    dmat *tmp=dpinv(i0g, wt);
+    dmat *mtche=0;
+    dmm(&mtche,0,i0m, tmp, "nn", 1);
+    dfree(tmp);
+    
+    for(int i=0; i<i0n; i++){/*noise weighting. */
+	wt->p[i]=1./wt->p[i];
+    }
+    dmat *nea2=dtmcc(mtche, wt);
+
+    if(radgx && pixrot){
+	//Rotate mtched filter to x/y
+	drotvect(mtche, pixrot);
+	//Rotate NEA to (x/y)
+	drotvecnn(neaout, nea2,pixrot);
+    }else{//Already in x/y
+	dcp(neaout, nea2);
+    }
+    dfree(nea2);
+    dfree(i0m);
+    dfree(i0g);
+    dfree(wt);
+    return mtche;
 }

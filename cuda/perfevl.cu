@@ -350,7 +350,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    add_focus_do<<<DIM(nloc, 256),0,stream>>>(iopdevl, cudata->perf.locs, nloc, focus);
 	}
 	if(save_evlopd){
-	    cellarr_cur(simu->save->evlopdol[ievl], isim, iopdevl, stream);
+	    zfarr_cur(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 	}
 	if(parms->plot.run){
 	    drawopdamp_gpu("OL", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
@@ -409,7 +409,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    }
 	}
 	if(save_evlopd){
-	    cellarr_cur(simu->save->evlopdcl[ievl], isim, iopdevl, stream);
+	    zfarr_cur(simu->save->evlopdcl[ievl], isim, iopdevl, stream);
 	}
 
 	if(parms->plot.run){
@@ -441,7 +441,7 @@ void gpu_perfevl_queue(thread_t *info){
 		if(parms->evl.psfhist){
 		    //Compute complex. 
 		    psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		    cellarr_cuccell(simu->save->evlpsfhist[ievl], isim, cudata->perf.psfs, stream);
+		    zfarr_cuccell(simu->save->evlpsfhist[ievl], isim, cudata->perf.psfs, stream);
 		    if(parms->evl.psfmean){
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
 			    curaddcabs2(cuperf_t::psfcl[iwvl+nwvl*ievl], 1, 
@@ -539,7 +539,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    if(parms->evl.psfhist){
 		/*Compute complex. */
 		psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		cellarr_cuccell(simu->save->evlpsfhist_ngsr[ievl], simu->isim, cudata->perf.psfs, stream);
+		zfarr_cuccell(simu->save->evlpsfhist_ngsr[ievl], simu->isim, cudata->perf.psfs, stream);
 		if(parms->evl.psfmean){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			curaddcabs2(cuperf_t::psfcl_ngsr[iwvl+nwvl*ievl], 1, 
@@ -566,7 +566,8 @@ void gpu_perfevl_save(SIM_T *simu){
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info2("Step %d: Output PSF\n", isim);
 	const int nwvl=parms->evl.nwvl;
-	const double scale=1./(double)(parms->evl.psfmean>1?parms->evl.psfmean:(simu->isim+1-parms->evl.psfisim));
+	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	const double scale=1./(double)nacc;
 	if(cudata->perf.psfol){
 	    const double scaleol=(parms->evl.psfol==2)?(scale/parms->evl.npsf):(scale);
 	    /*copy the PSF accumulated in all the GPUs to CPU.*/
@@ -577,12 +578,11 @@ void gpu_perfevl_save(SIM_T *simu){
 		cp2cpu(&temp2, cudata->perf.psfol, 0);
 		cudaStreamSynchronize(0);
 		X(celladd)(&temp, 1, temp2, scaleol);
-		cuzero(cudata->perf.psfol);
 	    }
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(!temp || !temp->p[iwvl]) continue;
 		temp->p[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
-		cellarr_mat(simu->save->evlpsfolmean, isim*nwvl+iwvl, temp->p[iwvl]);
+		zfarr_mat(simu->save->evlpsfolmean, isim*nwvl+iwvl, temp->p[iwvl]);
 		free(temp->p[iwvl]->header); temp->p[iwvl]->header=NULL;
 	    }
 	    X(cellfree)(temp);
@@ -599,8 +599,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		    if(!pp.header){
 			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
-		    cellarr_cur(simu->save->evlpsfmean[ievl], isim*nwvl+iwvl, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlpsfmean[ievl], isim*nwvl+iwvl, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 	    }
 	}
@@ -615,15 +615,16 @@ void gpu_perfevl_save(SIM_T *simu){
 		    if(!pp.header){
 			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    }
-		    cellarr_cur(simu->save->evlpsfmean_ngsr[ievl], isim*nwvl+iwvl, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlpsfmean_ngsr[ievl], isim*nwvl+iwvl, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 	    }
 	}
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
 	info2("Step %d: Output opdcov\n", isim);
-	const double scale=1./(double)(parms->evl.cov>1?parms->evl.cov:(simu->isim+1-parms->evl.psfisim));
+	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
+	const double scale=1./(double)nacc;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psf->p[ievl]) continue;
 	    gpu_set(cudata_t::evlgpu[ievl]);
@@ -632,28 +633,28 @@ void gpu_perfevl_save(SIM_T *simu){
 		{
 		    curmat &pp=cuperf_t::opdcov[ievl];
 		    curscale(pp, scale, stream);
-		    cellarr_cur(simu->save->evlopdcov[ievl], isim, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlopdcov[ievl], isim, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 		{
 		    curmat &pp=cuperf_t::opdmean[ievl];
 		    curscale(pp, scale, stream);
-		    cellarr_cur(simu->save->evlopdmean[ievl], isim, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlopdmean[ievl], isim, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 	    }
 	    if(parms->evl.psfngsr->p[ievl]){
 		{
 		    curmat &pp=cuperf_t::opdcov_ngsr[ievl];
 		    curscale(pp, scale, stream);
-		    cellarr_cur(simu->save->evlopdcov_ngsr[ievl], isim, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlopdcov_ngsr[ievl], isim, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 		{
 		    curmat &pp=cuperf_t::opdmean_ngsr[ievl];
 		    curscale(pp, scale, stream);
-		    cellarr_cur(simu->save->evlopdmean_ngsr[ievl], isim, pp, stream);
-		    cuzero(pp, stream);
+		    zfarr_cur(simu->save->evlopdmean_ngsr[ievl], isim, pp, stream);
+		    curscale(pp, 1./scale, stream);
 		}
 	    }
 	}
@@ -667,9 +668,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		    cp2cpu(&temp2, cudata->perf.opdcovol, 0);
 		    cudaStreamSynchronize(0);
 		    X(add)(&temp, 1, temp2, scaleol);
-		    cuzero(cudata->perf.opdcovol);
 		}
-		cellarr_mat(simu->save->evlopdcovol, isim, temp);
+		zfarr_mat(simu->save->evlopdcovol, isim, temp);
 		X(free)(temp);
 		X(free)(temp2);
 	    }
@@ -681,9 +681,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		    cp2cpu(&temp2, cudata->perf.opdmeanol, 0);
 		    cudaStreamSynchronize(0);
 		    X(add)(&temp, 1, temp2, scaleol);
-		    cuzero(cudata->perf.opdmeanol);
 		}
-		cellarr_mat(simu->save->evlopdmeanol, isim, temp);
+		zfarr_mat(simu->save->evlopdmeanol, isim, temp);
 		X(free)(temp);
 		X(free)(temp2);
 	    }

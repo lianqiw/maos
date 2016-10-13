@@ -267,7 +267,7 @@ void apply_limit(drawdata_t *drawdata){
 	if(style==0) connectpts=1;				\
     }
 
-static void inline
+INLINE void
 draw_point(cairo_t *cr, double ix, double iy, long style, double size){
     double size1=size+1;
     /*It is important to round ix, iy to have right symbols. */
@@ -331,12 +331,19 @@ void update_limit(drawdata_t *drawdata){
 	drawdata->zoomx=1;
 	drawdata->zoomy=1;
     }
-    if(drawdata->cumu){
-	drawdata->limit_cumu=calloc(4, sizeof(double));
-	drawdata->limit=drawdata->limit_cumu;
+    double gain=1;
+    if(!drawdata->limit){
+	if(drawdata->cumu){
+	    drawdata->limit_cumu=mycalloc(4,double);
+	    drawdata->limit=drawdata->limit_cumu;
+	}else{
+	    drawdata->limit_data=mycalloc(4,double);
+	    drawdata->limit=drawdata->limit_data;
+	}
     }else{
-	drawdata->limit_data=calloc(4, sizeof(double));
-	drawdata->limit=drawdata->limit_data;
+	if(drawdata->dtime<1){
+	    gain=drawdata->dtime;
+	}
     }
 
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
@@ -394,10 +401,11 @@ void update_limit(drawdata_t *drawdata){
     int ylog=drawdata->xylog[1]=='n'?0:1;
     round_limit(&xmin0, &xmax0, xlog);
     round_limit(&ymin0, &ymax0, ylog);
+    
     drawdata->limit[0]=xmin0;
     drawdata->limit[1]=xmax0;
-    drawdata->limit[2]=ymin0;
-    drawdata->limit[3]=ymax0;
+    drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
+    drawdata->limit[3]=ymax0*gain+(1-gain)*drawdata->limit[3];
 }
 
 /**
@@ -441,7 +449,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     int ylog=drawdata->xylog[1]=='n'?0:1;
 
     int widthim, heightim;
-    double xmin, xmax, ymin, ymax;
+    static double xmin, xmax, ymin, ymax;
     if(xlog){
 	xmin=log10(drawdata->limit[0]);
 	xmax=log10(drawdata->limit[1]);
@@ -641,7 +649,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_fill(cr);
 #endif
 	if(!drawdata->style_pts){
-	    drawdata->style_pts=calloc(drawdata->npts, sizeof(int));/*save the styles for legend */
+	    drawdata->style_pts=mycalloc(drawdata->npts,int);/*save the styles for legend */
 	}
 	int color=0x0000FF;
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);/*Blue */
@@ -690,7 +698,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    int ptstep=1;
 	    double ix=0, iy=0, y=0, y_cumu=0;
 	    if(connectpts){/*plot curves. */
-		unsigned int ips=ips0;
+		int ips=ips0;
 		/*Draw first point */
 		if(ptsx){/*don't do round here. */
 		    ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
@@ -736,7 +744,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    if(!(connectpts && style==5)){/*plot points. */
 		y_cumu=0;
-		for(unsigned int ips=ips0; ips<ptsnx; ips+=ptstep){
+		for(int ips=ips0; ips<ptsnx; ips+=ptstep){
 		    /*Map the coordinate to the image */
 		    if(ptsx){/*don't do round here. */
 			ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
@@ -808,7 +816,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	int ncx=widthim/2;
 	int ncy=heightim/2;
 
-	for(unsigned int icir=0; icir<drawdata->ncir; icir++){
+	for(int icir=0; icir<drawdata->ncir; icir++){
 	    int color=(int)drawdata->cir[icir][3];
 	    set_color(cr, color);
 	    double ix=(drawdata->cir[icir][0]-centerx)*scalex*zoomx+ncx;

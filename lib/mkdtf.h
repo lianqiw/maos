@@ -62,7 +62,7 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	     double pixthetay,/**<Pixel size along y (a)*/
 	     double pixoffx,  /**<offset of image center from center of detector*/
 	     double pixoffy,  /**<offset of image center from center of detector*/
-	     double pixblur,  /**<Pixel blur (fraction of pixel)*/
+	     double pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
 	     dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/

@@ -25,8 +25,8 @@ extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
 
-void plotloc(char *fig, const PARMS_T *parms, 
-	     loc_t *loc, double ht, char *format,...);
+void plotloc(const char *fig, const PARMS_T *parms, 
+	     loc_t *loc, double ht, const char *format,...);
 void rename_file(int sig);
 int maos_signal_handler(int sig);
 ARG_T* parse_args(int argc, const char *argv[]);

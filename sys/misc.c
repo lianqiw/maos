@@ -33,6 +33,7 @@
 #include "process.h"
 #include "misc.h"
 #include "path.h"
+#include "bin.h"
 /**
    Obtain the basename of a file. The returnned string must be freed.
 */
@@ -49,7 +50,7 @@ char *mybasename(const char *fn){
     }else{
 	sep++;
     }
-    char *bn=malloc(strlen(sep)+1);
+    char *bn=(char*)malloc(strlen(sep)+1);
     strcpy(bn,sep);
     return bn;
 }
@@ -103,12 +104,12 @@ int check_suffix(const char *fn, const char *suffix){
 char *argv2str(int argc, const char *argv[], const char* delim){
     if(!argc) return NULL;
     char *cwd=mygetcwd();
-    int slen=strlen(cwd)+2+strlen(HOME);
+    size_t slen=strlen(cwd)+2+strlen(HOME);
     if(!delim) delim=" ";
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=calloc(slen, sizeof(char));
+    char *scmd=mycalloc(slen,char);
     if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
@@ -326,7 +327,7 @@ char *stradd(const char* a, ...){
 	n+=strlen(arg);
     }
     va_end(ap);
-    out=calloc(n, sizeof(char));
+    out=mycalloc(n,char);
     if(a){
 	strcpy(out,a);
     }
@@ -346,7 +347,7 @@ char *strnadd(int argc, const char *argv[], const char* delim){
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
-    char *scmd=calloc(slen, sizeof(char));
+    char *scmd=mycalloc(slen,char);
     for(int iarg=0; iarg<argc; iarg++){
 	if(argv[iarg] && strlen(argv[iarg])>0){
 	    strcat(scmd,argv[iarg]);
@@ -378,7 +379,7 @@ char *expand_filename(const char *fn){
 char *mystrndup(const char *A, int len){
     int len2=strlen(A);
     if(len2<len) len=len2;
-    char *B=malloc(len+1);
+    char *B=(char*)malloc(len+1);
     memcpy(B,A,len);
     B[len]='\0';
     return B;
@@ -392,7 +393,7 @@ char *mystrdup(const char *A){
 	return NULL;
     }else{
 	int nlen=strlen(A);
-	char *B=malloc(nlen+1);
+	char *B=(char*)malloc(nlen+1);
 	memcpy(B,A,nlen+1);
 	return B;
     }
@@ -429,21 +430,18 @@ void mymkdir(const char *format, ...){
     format2fn;
     if(!fn) return;
     if(fn[strlen(fn)-1]=='/')
-	fn[strlen(fn)-1]='/';
-    if(mkdir(fn, 0700)==-1){
-	if(errno==EEXIST){
-	    return;
-	}else if(errno==ENOENT){
-	    char *tmp=strrchr(fn,'/');
-	    if(!tmp){
-		error("Unable to mkdir '%s'\n",fn);
-	    }
-	    tmp[0]='\0';
-	    mymkdir("%s",fn);
-	    tmp[0]='/';
-	    if(mkdir(fn,0700)==-1&&errno!=EEXIST){
-		error("Unable to mkdir '%s'\n",fn);
-	    }
+	fn[strlen(fn)-1]='\0';
+    if(mkdir(fn, 0700)==-1 && errno!=EEXIST){
+	perror("mkdir");
+	char *tmp=strrchr(fn,'/');
+	if(!tmp){
+	    error("Unable to mkdir '%s'\n",fn);
+	}
+	tmp[0]='\0';
+	mymkdir("%s",fn);
+	tmp[0]='/';
+	if(mkdir(fn,0700)==-1 && errno!=EEXIST){
+	    error("Unable to mkdir '%s'\n",fn);
 	}
     }
 }
@@ -528,8 +526,8 @@ static char *cmd_string(char *start, char **end2){
     return out;
 }
 /**
-   Parse command line arguments. Returns whatever is not yet parsed. Need to
-   free the returned string. This is more relaxed than the built in getopd
+   Parse command line arguments. The remaining string contains whatever is not yet parsed. 
+   This is more relaxed than the built in getopd
 */
 void parse_argopt(char *cmds, ARGOPT_T *options){
     char *cmds_end=cmds+(cmds?strlen(cmds):0);
@@ -577,7 +575,7 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    if(iopt==-1){
 		continue;/*we don't want this key. */
 	    }
-	    if((options[iopt].opt & 1) == 1){//1, or 3. parse value
+	    if((options[iopt].valtype)){//expects a value.
 		value=start;
 		while(value[0]=='\n' || isspace((int)value[0])){
 		    value[0]=' ';
@@ -586,69 +584,72 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	    }else{
 		value=NULL;
 	    }
-	    int isfun=((options[iopt].opt&2)==2);
+	    int isfun=(options[iopt].isfun);
 	    switch(options[iopt].type){
 	    case 0:/*no result needed */
 		break;
-	    case T_INT:{
-		int val=value?strtol(value, &start, 10):1;
-		if(isfun){/*Is function */
-		    void (*tmp)(int)=(void (*)(int))options[iopt].val;
-		    tmp(val);
+	    case M_INT:{
+		if(options[iopt].valtype==2){//needs an array
+		    if(isfun) error("Not implemented yet\n");
+		    int val=strtol(value, &start, 10);
+		    int **tmp=(int**)options[iopt].val;
+		    int *nval=(int*)options[iopt].nval;
+		    int i;
+		    for(i=0; i<*nval; i++){
+			if((*tmp)[i]==val) break;
+		    }
+		    if(i==*nval){
+			(*nval)++;
+			*tmp=myrealloc(*tmp, *nval,int);
+			(*tmp)[(*nval)-1]=val;
+		    } 
 		}else{
-		    int *tmp=options[iopt].val;
-		    *tmp=val;
+		    int val=value?strtol(value, &start, 10):1;
+		    if(isfun){/*Is function */
+			void (*tmp)(int)=(void (*)(int))options[iopt].val;
+			tmp(val);
+		    }else{
+			int *tmp=(int*)options[iopt].val;
+			*tmp=val;
+		    }
 		}
 	    }
 		break;
-	    case T_DBL:{
-		double val=value?strtod(value, &start):1;
-		if(isfun){/*Is function */
-		    void (*tmp)(double)=(void (*)(double))options[iopt].val;
-		    tmp(val);
+	    case M_DBL:{
+		if(options[iopt].valtype==2){//needs an array
+		    if(isfun) error("Not implemented yet\n");
+		    double val=strtod(value, &start);
+		    double **tmp=(double**)options[iopt].val;
+		    int *nval=(int*)options[iopt].nval;
+		    (*nval)++;
+		    *tmp=myrealloc(*tmp, *nval,double);
+		    (*tmp)[(*nval)-1]=(int)val;
 		}else{
-		    double *tmp=options[iopt].val;
-		    *tmp=val;
+		    double val=value?strtod(value, &start):1;
+		    if(isfun){/*Is function */
+			void (*tmp)(double)=(void (*)(double))options[iopt].val;
+			tmp(val);
+		    }else{
+			double *tmp=(double*)options[iopt].val;
+			*tmp=val;
+		    }
 		}
 	    }
 		break;
-	    case T_STR:{
-		char *val=value?cmd_string(value, &start):"Unknown";
+	    case M_STR:{
+		char *val=value?cmd_string(value, &start):strdup("Unknown");
 		if(isfun){
 		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
-		    tmp(val); free(val);
+		    tmp(val);
+		    free(val);
 		}else{
-		    char **tmp=options[iopt].val;
+		    char **tmp=(char**)options[iopt].val;
 		    free(*tmp); *tmp=val;
 		}
 	    }
 		break;
-	    case T_INTARR:{
-		if(isfun) error("Not implemented yet\n");
-		int val=strtol(value, &start, 10);
-		int **tmp=options[iopt].val;
-		int *nval=options[iopt].nval;
-		int i;
-		for(i=0; i<*nval; i++){
-		    if((*tmp)[i]==val) break;
-		}
-		if(i==*nval){
-		    (*nval)++;
-		    *tmp=realloc(*tmp, *nval*sizeof(int));
-		    (*tmp)[(*nval)-1]=val;
-		}
-	    }
-		break;
-	    case T_DBLARR:{
-		if(isfun) error("Not implemented yet\n");
-		double val=strtod(value, &start);
-		int **tmp=options[iopt].val;
-		int *nval=options[iopt].nval;
-		(*nval)++;
-		*tmp=realloc(*tmp, *nval*sizeof(double));
-		(*tmp)[(*nval)-1]=(int)val;
-	    }
-		break;
+	    default:
+		error("Unknown type");
 	    }/*switch */
 	    /*Empty the string that we already parsed. */
 	    memset(start0, ' ',start-start0);
@@ -714,46 +715,39 @@ int sig_block(int block){
 	return sigprocmask(SIG_UNBLOCK, &set, NULL);
     }
 }
-
-int sem_lock(const char *key){
-    sem_t *sem=sem_open(key, O_CREAT, 00700, 1);
+int sem_lock(const char *key, int lock){
+    char fnsem[PATH_MAX];
+    snprintf(fnsem, PATH_MAX, "%s_%s", key, USER);
+    if(fnsem[0]!='/'){
+	fnsem[0]='/';
+    }
+    sem_t *sem=sem_open(fnsem, lock==1?O_CREAT:0, 00700, 1);
     if(sem==SEM_FAILED){
-	warning("sem_open failed\n");
+	info("fnsem=%s\n", fnsem);
+	perror("sem_open");
 	return -1;
     }else{
 	int value;
 	sem_getvalue(sem, &value);
-	info2("Trying to lock %p (value=%d) ... ", sem, value);
-	sem_wait(sem);
-	if(sig_block(1)){
-	    //block signal delivery in critical region.
-	    warning("block signal failed\n");
+	if(lock){
+	    info2("locking %p (value=%d) ... ", sem, value);
+	    sem_wait(sem);
+	}else{
+	    info2("unlock %p (value=%d) ... ", sem, value);
+	    sem_post(sem);
 	}
+	(void)sig_block(lock);
 	info2("done\n");
 	return 0;
     }
 }
-int sem_unlock(const char *key){
-    sem_t *sem=sem_open(key, 0);
-    if(sem==SEM_FAILED){
-	warning("sem_open failed\n");
-	return -1;
-    }else{
-	int value;
-	sem_getvalue(sem, &value);
-	info2("Trying to unlock %p (value=%d) ... ", sem, value);
-	sem_post(sem);
-	if(sig_block(0)){
-	    warning("unblock signal failed\n");
-	}
-	info2("done\n");
-	return 0;
-    }
-}
+ 
 /**
    Set scheduling priorities for the process to enable real time behavior.
 */
 void set_realtime(int icpu, int niceness){
+    (void)icpu;
+    (void)niceness;
     //Set CPU affinity.
     /*
       //Deprecated. Use external tools to do so, like openmp env's
@@ -796,7 +790,7 @@ void default_quitfun(const char *msg){
 	print_backtrace();
 	sync();
     }
-    quit();
+    exit(0);
 }
 static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
@@ -867,10 +861,6 @@ void mypause(){
     info2("Press Any Key to Continue:"); 
     while(getchar()!=0x0a); 
     info2("continuing...\n"); 
-}
-void quit(){
-    sync();
-    abort();
 }
 #undef strdup
 char* (*strdup0)(const char *)=strdup;

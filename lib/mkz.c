@@ -43,14 +43,14 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     dispy=(dispy-map->oy+saorc*dsa*0.5*scale)*dy1;
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
-    long *ind=calloc(nmax, sizeof(long));
-    loc_t *sloc=calloc(1, sizeof(loc_t));
+    long *ind=mycalloc(nmax,long);
+    loc_t *sloc=mycalloc(1,loc_t);
     sloc->dx=xloc->dx;
     sloc->dy=xloc->dy;
-    sloc->locx=calloc(nmax,sizeof(double));
-    sloc->locy=calloc(nmax,sizeof(double));
+    sloc->locx=mycalloc(nmax,double);
+    sloc->locy=mycalloc(nmax,double);
     double *amploc=NULL;
-    if(amp) amploc=calloc(nmax,sizeof(double));
+    if(amp) amploc=mycalloc(nmax,double);
 
     dsp*zax=dspnew(xloc->nloc,nsa,xloc->nloc);
     dsp*zay=dspnew(xloc->nloc,nsa,xloc->nloc);
@@ -92,12 +92,11 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 	/*writebin(mcc,"mcc_isa%d",isa); */
 	dinvspd_inplace(mcc);
 	/*writebin(mcc,"imcc_isa%d",isa); */
-	double (*MCC)[3]=(double(*)[3])mcc->p;
 	xpp[isa]=xcount;
 	ypp[isa]=ycount;
 	for(int ic=0; ic<count; ic++){
-	    double xx=MCC[1][0]+MCC[1][1]*slocx[ic]+MCC[1][2]*slocy[ic];
-	    double yy=MCC[2][0]+MCC[2][1]*slocx[ic]+MCC[2][2]*slocy[ic];
+	    double xx=IND(mcc,0,1)+IND(mcc,1,1)*slocx[ic]+IND(mcc,2,1)*slocy[ic];
+	    double yy=IND(mcc,0,2)+IND(mcc,1,2)*slocx[ic]+IND(mcc,2,2)*slocy[ic];
 	    if(amp){
 		xx*=amploc[ic];
 		yy*=amploc[ic];

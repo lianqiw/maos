@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -23,16 +23,16 @@
 /**
    Create a generic cell array.
 */
-void *cellnew(long nx, long ny){
+cell *cellnew(long nx, long ny){
     cell *dc;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    dc=calloc(1, sizeof(cell));
+    dc=mycalloc(1,cell);
     dc->id=MCC_ANY;
     dc->nx=nx;
     dc->ny=ny;
     if(nx*ny>0){
-	dc->p=calloc(nx*ny, sizeof(void*));
+	dc->p=mycalloc(nx*ny,cell*);
     }
     return dc;
 }
@@ -40,14 +40,14 @@ void *cellnew(long nx, long ny){
 /**
    Allocate a new array of the same type
  */
-void *cellnew2(const void *A_){
-    cell *A=(cell*)A_;
-    if(!A_){
+cell *cellnew2(const void *A_){
+    const cell *A=(const cell*)A_;
+    if(!A){
 	return 0;
     }else if(iscell(A)){
 	return cellnew(A->nx, A->ny);
     }else if(A->id==M_DBL){
-	return dnew(A->nx, A->ny);
+	return (cell*)dnew(A->nx, A->ny);
     }else{
 	error("Invalid type: id=%u\n", A->id);
 	return 0;
@@ -110,8 +110,8 @@ cell *cell_cast(const void *A){
 */
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys){
     const cell *A=cell_cast(A_);
-    *nxs=calloc(A->nx, sizeof(long));
-    *nys=calloc(A->ny, sizeof(long));
+    *nxs=mycalloc(A->nx,long);
+    *nys=mycalloc(A->ny,long);
     *nx=0;
     *ny=0;
     for(long ix=0; ix<A->nx; ix++){
@@ -146,12 +146,12 @@ void cellresize(void *in, long nx, long ny){
 		cellfree_do(A->p[i]);
 	    }
 	}
-	A->p=realloc(A->p, sizeof(cell*)*nnew);
+	A->p=myrealloc(A->p,nnew,cell*);
 	if(nnew>nold){
 	    memset(A->p+nold, 0, (nnew-nold)*sizeof(cell*));
 	}
     }else{
-	cell **p=calloc(nx*ny, sizeof(cell*));
+	cell **p=mycalloc(nx*ny,cell*);
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
 	for(long iy=0; iy<miny; iy++){
@@ -198,25 +198,25 @@ void cellfree_do(void *A){
 	free(dc);
     }break;
     case M_DBL:
-	dfree_do(A,0);break;
+	dfree_do((dmat*)A,0);break;
     case M_CMP:
-	cfree_do(A,0);break;
+	cfree_do((cmat*)A,0);break;
     case M_FLT:
-	sfree_do(A,0);break;
+	sfree_do((smat*)A,0);break;
     case M_ZMP:
-	zfree_do(A,0);break;
+	zfree_do((zmat*)A,0);break;
     case M_LONG:
-	lfree_do(A,0);break;
+	lfree_do((lmat*)A,0);break;
     case M_LOC64:
-	locfree_do(A);break;
+	locfree_do((loc_t*)A);break;
     case M_DSP:
-	dspfree_do(A);break;
+	dspfree_do((dsp*)A);break;
     case M_SSP:
-	sspfree_do(A);break;
+	sspfree_do((ssp*)A);break;
     case M_CSP:
-	cspfree_do(A);break;
+	cspfree_do((csp*)A);break;
     case M_ZSP:
-	zspfree_do(A);break;
+	zspfree_do((zsp*)A);break;
     default:
 	error("Unknown id=%u\n", id);
     }
@@ -246,7 +246,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	}
 	id=0;/*determine id first for empty cell*/
 	if(nx && ny){
-	    for(int ix=0; ix<nx*ny; ix++){
+	    for(long ix=0; ix<(long)(nx*ny); ix++){
 		if(A->p[ix]){
 		    id=A->p[ix]->id;
 		    if(!id){
@@ -261,7 +261,7 @@ void writedata_by_id(file_t *fp, const void *A_, uint32_t id){
 	header_t header={MCC_ANY, nx, ny, A?A->header:NULL};
 	write_header(&header, fp);
 	if(id){
-	    for(int ix=0; ix<A->nx*A->ny; ix++){
+	    for(long ix=0; ix<(long)(A->nx*A->ny); ix++){
 		writedata_by_id(fp, A->p[ix], 0);
 	    }
 	}
@@ -301,7 +301,7 @@ void write_by_id(const void *A, uint32_t id, const char* format,...){
     zfclose(fp);
 }
 cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -337,12 +337,12 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    break;
 	case 1:{/*read a cell from fits*/
 	    int maxlen=10;
-	    void **tmp=malloc(maxlen*sizeof(void*));
+	    void **tmp=mymalloc(maxlen,void*);
 	    int nx=0;
 	    do{
 		if(nx>=maxlen){
 		    maxlen*=2;
-		    tmp=realloc(tmp, sizeof(void*)*maxlen);
+		    tmp=myrealloc(tmp,maxlen,void*);
 		}
 		tmp[nx++]=readdata_by_id(fp, id, 0, header);
 		free(header->str);header->str=0;
@@ -367,7 +367,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	    long ny=header->ny;
 	    cell *dcout=cellnew(nx, ny);
 	    dcout->header=header->str; header->str=0;
-	    header_t headerc={0};
+	    header_t headerc={0,0,0,0};
 	    for(long i=0; i<nx*ny; i++){
 		read_header(&headerc, fp);
 		if(!headerc.str && dcout->header){//copy str from cell to mat.
@@ -379,7 +379,7 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	}
     }
     free(header->str);header->str=0;
-    return out;
+    return (cell*)out;
 }
 
 cell* read_by_id(uint32_t id, int level, const char *format, ...){

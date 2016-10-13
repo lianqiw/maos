@@ -30,9 +30,11 @@
 */
 void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     pywfs_free(powfs[ipowfs].pywfs);
-    PYWFS_T *pywfs=powfs[ipowfs].pywfs=calloc(1, sizeof(PYWFS_T));
+    PYWFS_T *pywfs=powfs[ipowfs].pywfs=mycalloc(1,PYWFS_T);
     map_t *map=0;
     pywfs->hs=parms->powfs[ipowfs].hs;
+    pywfs->sigmatch=parms->powfs[ipowfs].sigmatch;
+    pywfs->siglev=parms->powfs[ipowfs].siglev;
     pywfs->poke=parms->recon.poke;//How many meters to poke
     if(pywfs->poke>1e-5 || pywfs->poke<1e-10){
 	warning("poke=%g m is out of range\n", pywfs->poke);
@@ -40,18 +42,21 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->iwfs0=parms->powfs[ipowfs].wfs->p[0];
     double dx=parms->powfs[ipowfs].dx; 
     create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-    pywfs->loc=map2loc(map, 0);
-    powfs[ipowfs].loc=pywfs->loc;//do not free here.
+    powfs[ipowfs].loc=map2loc(map, 0);
     mapfree(map);
-    pywfs->amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
-		     parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
-		     parms->aper.d, parms->aper.din);
-    powfs[ipowfs].amp=dref(pywfs->amp);
+    powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
+			    parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
+			    parms->aper.d, parms->aper.din);
+    loc_reduce(powfs[ipowfs].loc, powfs[ipowfs].amp, EPS, 0, NULL);
+    //For convenience.
+    pywfs->loc=powfs[ipowfs].loc;
+    pywfs->amp=powfs[ipowfs].amp;
     setup_powfs_misreg(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs,1);
     for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	if(powfs[ipowfs].amp_tel){
-	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp_tel->p[jwfs]);
+	int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	if(parms->misreg.tel2wfs && parms->misreg.tel2wfs[iwfs]){
+	    error("To be implemented\n");
 	}else{
 	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp); 
 	}
@@ -77,10 +82,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
 
     long ncomp2=ncomp/2;
-    pywfs->pyramid=cellnew(nwvl, 1);
+    pywfs->pyramid=ccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	pywfs->pyramid->p[iwvl]=cnew(ncomp, ncomp);
-	PCMAT(pywfs->pyramid->p[iwvl], pp);
+	cmat*  pp=pywfs->pyramid->p[iwvl]/*PCMAT*/;
 	dcomplex coeff=COMPLEX(0, M_PI*0.5);
 	long skip=0;
 	double dtheta=parms->powfs[ipowfs].wvl->p[iwvl]/(dx*nembed);//PSF sampling
@@ -100,28 +105,28 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		if(xd<eskip||yd<eskip||(xd<vskip && yd<vskip)){
 		    opd=0;
 		}
-		pp[iy][ix]=cexp(opd*coeff);
+		IND(pp,ix,iy)=cexp(opd*coeff);
 	    }
 	}
     }
 
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
-    PCMAT(nominal, pn);
+    cmat*  pn=nominal/*PCMAT*/;
     long order=parms->powfs[ipowfs].order;
     double dsa=parms->aper.d/order;//size of detector pixel mapped on pupil
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
     double du=1./(dx2*ncomp);
     double dupix=dsa*du;
     double pdmeter=pow(dsa/dx2, 2);
-    double pixblur=parms->powfs[ipowfs].pixblur;
-    double e0b=-2*pow(M_PI*pixblur*dsa*du, 2);
+    double pixblur=parms->powfs[ipowfs].pixblur*dsa;
+    double e0b=-2*pow(M_PI*pixblur*du, 2);
     for(int iy=0; iy<ncomp; iy++){
 	int jy=iy-ncomp2;
 	for(int ix=0; ix<ncomp; ix++){
 	    int jx=ix-ncomp2; 
-	    pn[iy][ix]=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
+	    IND(pn,ix,iy)=sinc(jy*dupix)*sinc(jx*dupix)*pdmeter;
 	    if(pixblur){
-		pn[iy][ix]*=exp(e0b*(jx*jx+jy*jy));
+		IND(pn,ix,iy)*=exp(e0b*(jx*jx+jy*jy));
 	    }
 	}
     }
@@ -139,33 +144,60 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    error("dbg.pwfs_psy has wrong format: expected 4x1, got %ldx%ld\n",
 		  parms->dbg.pwfs_psy->nx, parms->dbg.pwfs_psy->ny);
 	}
+	int redefine=parms->powfs[ipowfs].saloc?0:1;
 	pywfs->pupilshift=dnew(4,2);
 	for(int i=0; i<4; i++){
 	    double tmp;
 	    tmp=IND(parms->dbg.pwfs_psx, i);
-	    IND(pywfs->pupilshift, i, 0)=tmp-round(tmp);
+	    IND(pywfs->pupilshift, i, 0)=tmp-redefine?round(tmp):0;
 	    tmp=IND(parms->dbg.pwfs_psy, i);
-	    IND(pywfs->pupilshift, i, 1)=tmp-round(tmp);
+	    IND(pywfs->pupilshift, i, 1)=tmp-redefine?round(tmp):0;
 
 	}
 	if(parms->save.setup){
 	    writebin(pywfs->pupilshift, "powfs%d_pupilshift", ipowfs);
 	}
     }
-    pywfs->si=cellnew(4,1);//for each quadrant.
+    pywfs->si=dspcellnew(4,1);//for each quadrant.
     //Make loc_t symmetric to ensure proper sampling onto detector. Center of subaperture
-    powfs[ipowfs].saloc=mksqloc(order, order, dsa, dsa, 
-				(-order*0.5+0.5)*dsa, (-order*0.5+0.5)*dsa);
+    if(parms->powfs[ipowfs].saloc){
+	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
+	if(fabs(powfs[ipowfs].saloc->dx-dsa)>1e-6*fabs(dsa)){
+	    error("loaded saloc has dx=%g, while powfs.dsa=%g\n",
+		  powfs[ipowfs].saloc->dx, dsa);
+	}
+    }else{
+	//Pad the grid to avoid missing significant pixels (subapertures).
+	long order2=order+2*MAX(0, ceil(parms->dbg.pwfs_pupelong));
+	if(order2>order){
+	    warning("order=%ld, order2=%ld.\n", order, order2);
+	}
+	powfs[ipowfs].saloc=mksqloc(order2, order2, dsa, dsa, 
+				    (-order2*0.5+0.5)*dsa, (-order2*0.5+0.5)*dsa);
+    }
     loc_t *loc_fft=mksqloc(ncomp, ncomp, dx2, dx2, (-ncomp2+0.5)*dx2, (-ncomp2+0.5)*dx2);
+
     for(int iy=0; iy<2; iy++){
 	for(int ix=0; ix<2; ix++){
 	    const int ind=ix+iy*2;
+	    loc_t *saloc=powfs[ipowfs].saloc;
+	    if(parms->dbg.pwfs_pupelong){//pupil elongation (along radial direction)
+		if(!pywfs->msaloc) pywfs->msaloc=loccellnew(4,1);
+		pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
+		double angle=atan2(iy-0.5, ix-0.5);
+		//squeeze the detector pixel coordinate radially to simulate pupil elongation
+		double frac=1.-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
+		locstretch(pywfs->msaloc->p[ind], angle, frac);
+		saloc=pywfs->msaloc->p[ind];
+	    }
 	    double shx=0, shy=0;
+    
 	    if(pywfs->pupilshift){
 		shx=IND(pywfs->pupilshift, ind, 0)*dsa;
 		shy=IND(pywfs->pupilshift, ind, 1)*dsa;
 	    }
-	    pywfs->si->p[ind]=mkh(loc_fft, powfs[ipowfs].saloc, 
+
+	    pywfs->si->p[ind]=mkh(loc_fft, saloc,
 				  ((ix-0.5)*ncomp2)*dx2+shx, 
 				  ((iy-0.5)*ncomp2)*dx2+shy,
 				  1); 
@@ -191,22 +223,32 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	cellfree(ints);
 	dfree(opd);
     }
-    if(parms->powfs[ipowfs].saat>0){
+    if(parms->powfs[ipowfs].saat>0 && !parms->powfs[ipowfs].saloc){
 	dmat *saa=pywfs->saa;
 	double samax=dmaxabs(saa);
 	loc_reduce(powfs[ipowfs].saloc, saa, parms->powfs[ipowfs].saat*samax, 0, 0);
 	dscale(saa, saa->nx/dsum(saa));//saa average to one.
-	powfs[ipowfs].saa=dref(pywfs->saa);
 	for(int iy=0; iy<2; iy++){
 	    for(int ix=0; ix<2; ix++){
-		dspfree(pywfs->si->p[ix+iy*2]);
-		pywfs->si->p[ix+iy*2]=mkh(loc_fft, powfs[ipowfs].saloc, 
+		const int ind=ix+iy*2;
+		dspfree(pywfs->si->p[ind]);
+		loc_t *saloc=powfs[ipowfs].saloc;
+		if(parms->dbg.pwfs_pupelong){
+		    pywfs->msaloc->p[ind]=locdup(powfs[ipowfs].saloc);
+		    double angle=atan2(iy-0.5, ix-0.5);
+		    //squeeze the detector pixel coordinate radially to simulate pupil elongation
+		    double frac=1-(parms->dbg.pwfs_pupelong*sqrt(2.))/(order*0.5);
+		    locstretch(pywfs->msaloc->p[ind], angle, frac);
+		    saloc=pywfs->msaloc->p[ind];
+		}
+		pywfs->si->p[ix+iy*2]=mkh(loc_fft, saloc,
 					  ((ix-0.5)*dx2*ncomp2), 
 					  ((iy-0.5)*dx2*ncomp2),
 					  1);	    
 	    }
 	}
     }
+    powfs[ipowfs].saa=dref(pywfs->saa);
     const int nsa=powfs[ipowfs].saloc->nloc;
     dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
@@ -240,7 +282,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
     {
-	powfs[ipowfs].saneaxy=cellnew(nsa,1);
+	powfs[ipowfs].saneaxy=dcellnew(nsa,1);
 	double rne=parms->powfs[ipowfs].rne;
 	for(int isa=0; isa<nsa; isa++){
 	    dmat *tmp=dnew(2,2);
@@ -252,8 +294,10 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
     if(parms->save.setup){
 	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
-	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);
-	writebin(pywfs->amp, "powfs%d_amp", ipowfs);
+	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
+	writebin(pywfs->msaloc, "powfs%d_msaloc", ipowfs);	
+	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
+	writebin(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
 	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
 	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
 	writebin(nominal, "powfs%d_nominal", ipowfs);
@@ -266,8 +310,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	int nn=1;
 	double wve=1e-9*160;
 	dmat *opds=zernike(pywfs->locfft->loc, parms->aper.d, 0, 3, 0);
-	cellarr *pupsave=cellarr_init(nn,opds->ny,"ints");
-	cellarr *grads=cellarr_init(nn,opds->ny,"grads");
+	zfarr *pupsave=zfarr_init(nn,opds->ny,"ints");
+	zfarr *grads=zfarr_init(nn,opds->ny,"grads");
 	dmat *opd=0;
 	dmat *grad=0;
 	for(int im=0; im<opds->ny; im++){
@@ -278,13 +322,13 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		dzero(ints);
 		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-		cellarr_push(pupsave, j+im*nn, ints);
-		cellarr_push(grads, j+im*nn, grad);
+		zfarr_push(pupsave, j+im*nn, ints);
+		zfarr_push(grads, j+im*nn, grad);
 		dfree(opd);
 	    }
 	}
-	cellarr_close(pupsave);
-	cellarr_close(grads);
+	zfarr_close(pupsave);
+	zfarr_close(grads);
 	cellfree(ints);
 	dfree(opds);
 	exit(0);
@@ -492,28 +536,34 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
     }
     double *pgx=(*pgrad)->p;
     double *pgy=(*pgrad)->p+nsa;
-    PDMAT(ints, pi);
     double gain=pywfs->gain;
-    if(0){//Use standard Quad Cell algorithm
-	warning_once("Do not use mean i0\n");
-	for(int isa=0; isa<nsa; isa++){
-	    double alpha2=gain/(pi[0][isa]+pi[1][isa]+pi[2][isa]+pi[3][isa]);
-	    pgx[isa]=(pi[1][isa]-pi[0][isa]
-		      +pi[3][isa]-pi[2][isa])*alpha2;
-	    pgy[isa]=(pi[2][isa]+pi[3][isa]
-		      -pi[0][isa]-pi[1][isa])*alpha2;
-	}
-    }else{//Denominator is replaced by SAA*mean(i0).
-	double imean=dsum(ints)/nsa;
-	double alpha0=gain/imean;
-	for(int isa=0; isa<nsa; isa++){
-	    double alpha2=alpha0/pywfs->saa->p[isa];
-	    pgx[isa]=(pi[1][isa]-pi[0][isa]
-		      +pi[3][isa]-pi[2][isa])*alpha2;
-	    pgy[isa]=(pi[2][isa]+pi[3][isa]
-		      -pi[0][isa]-pi[1][isa])*alpha2;
-	}
+    double imean=0;
+    if(pywfs->sigmatch==2){
+	imean=dsum(ints)/nsa;
     }
+    for(int isa=0; isa<nsa; isa++){
+	double isum=0;
+	switch(pywfs->sigmatch){
+	case 0:
+	    info_once("No siglev correction\n");
+	    isum=pywfs->siglev*pywfs->saa->p[isa]; 
+	    break;
+	case 1:
+	    info_once("Individual correction\n");
+	    isum=(IND(ints,isa,0)+IND(ints,isa,1)+IND(ints,isa,2)+IND(ints,isa,3));
+	    break;
+	case 2:
+	    info_once("Global correction (preferred);\n");
+	    isum=imean*pywfs->saa->p[isa];
+	    break;
+	}
+	double alpha2=gain/isum;
+	pgx[isa]=(IND(ints,isa,1)-IND(ints,isa,0)
+		  +IND(ints,isa,3)-IND(ints,isa,2))*alpha2;
+	pgy[isa]=(IND(ints,isa,2)+IND(ints,isa,3)
+		  -IND(ints,isa,0)-IND(ints,isa,1))*alpha2;
+    }
+    
     if(pywfs->gradoff){
 	dadd(pgrad, 1, pywfs->gradoff, -1);
     }
@@ -594,18 +644,23 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, 
+			  double displacex, double displacey, double scale){
     const loc_t *locfft=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
+    dmat *opd0;
+    if(pywfs->opdadd){
+	opd0=dref(pywfs->opdadd);
+    }else{
+	opd0=dnew(locfft->nloc, 1);
+    }
     {
-	dmat *opd=dnew(locfft->nloc, 1);
 	dmat *ints=0;
-	pywfs_fft(&ints, pywfs, opd);
+	pywfs_fft(&ints, pywfs, opd0);
 	pywfs_grad(&grad0, pywfs, ints);
 	//writebin(grad0, "grad0_cpu");
 	//writebin(ints, "ints0_cpu");
-	dfree(opd);
 	dfree(ints);
     }
     int count=0;
@@ -618,7 +673,7 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 #pragma omp parallel for shared(count)
     for(int imod=0; imod<nmod; imod++){
 	dmat *opdin=dnew(locin->nloc, 1);
-	dmat *opdfft=dnew(locfft->nloc, 1);
+	dmat *opdfft=ddup(opd0);
 	dmat *ints=0;
 	dmat *grad=drefcols(ggd, imod, 1);
 	double poke=pywfs->poke;
@@ -653,13 +708,21 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 	dfree(ints);
     }
     info2("\n");
-    dfree(grad0);	
+    dfree(grad0);
+    dfree(opd0);
     return ggd;
 }
 /**
-   ploc is on pupil.
+   locin is on pupil.
  */
-dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey, double scale){
+dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat *opdadd, 
+		double displacex, double displacey, double scale){
+    if(opdadd){
+	dfree(pywfs->opdadd);
+	pywfs->opdadd=dnew(pywfs->locfft->loc->nloc, 1);
+	prop_nongrid(pywfs->loc, opdadd->p, pywfs->locfft->loc, pywfs->opdadd->p, 1, 0, 0, 1, 0, 0);
+    }
+    
     if(mod && mod->ny<=6){
 	return pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
     }
@@ -667,6 +730,7 @@ dmat* pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, doubl
     key=lochash(locin, key);
     key=pywfs_hash(pywfs, key);
     if(mod) key=dhash(mod, key);
+    if(opdadd) key=dhash(opdadd, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
     mymkdir("%s/.aos/cache/", HOME);
@@ -739,5 +803,6 @@ void pywfs_free(PYWFS_T *pywfs){
     cellfree(pywfs->pyramid);
     cfree(pywfs->nominal);
     dspcellfree(pywfs->si);
+    dfree(pywfs->opdadd);
     free(pywfs);
 }

@@ -23,7 +23,7 @@ m4/ltsugar.m4
 #Ignore files that are not distributed.
 external/*
 #Ignore files that are produced by `make`
-math/tmp.c
+math/tmp.c*
 *.o
 *.mex???
 *.bak
@@ -37,6 +37,6 @@ scripts/*.app
 ar-lib
 *.pyc
 mex/maos2mex.h
-mex/aolib.c
+mex/aolib.c*
 .nfs*
 version.h

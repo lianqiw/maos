@@ -52,7 +52,7 @@ static GtkWidget *new_button(void){
     gtk_widget_show_all(ev);
     return ev;
     }
-static void change_button(PROC_T *p, const gchar *STOCKID, void (*func)){
+static void change_button(PROC_T *p, const gchar *STOCKID, GCallback func){
     if(p->btn){
 	g_signal_handler_disconnect(p->btn, p->btnhandler);
     }else{
@@ -110,7 +110,7 @@ static void create_entry(PROC_T *p){
     p->entry_iseed=new_entry("iSEED",WIDTH_ISEED,0.5);
     p->entry_timing=new_entry("Timing",WIDTH_TIMING,1);
     /*kill_button_new(p); */
-    change_button(p, GTK_STOCK_STOP, kill_job_event);
+    change_button(p, GTK_STOCK_STOP, (GCallback)kill_job_event);
     int irow=nrows[p->hid];
     nrows[p->hid]++;
     gtk_table_resize(GTK_TABLE(tables[p->hid]), nrows[p->hid],ncol);
@@ -210,25 +210,25 @@ gboolean refresh(PROC_T *p){
 	break;
     case S_FINISH:/*Finished */
 	p->frac=1;
-	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
+	change_button(p,GTK_STOCK_APPLY,(GCallback)delete_hbox_event);
 	/*progress bar color. */
 	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Error");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(GCallback)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;
     case S_TOKILL:/*kill command sent */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Kill command sent");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(GCallback)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&yellow);
 	break;
     case S_KILLED:
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Killed");
-	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
+	change_button(p,GTK_STOCK_CLOSE,(GCallback)delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;
@@ -240,8 +240,8 @@ gboolean refresh(PROC_T *p){
 }
 GtkWidget *new_page(int ihost){
     if(!tables){
-	tables=calloc(nhost, sizeof(GtkWidget*));
-	nrows=calloc(nhost, sizeof(gint));
+	tables=mycalloc(nhost,GtkWidget*);
+	nrows=mycalloc(nhost,gint);
     }
     nrows[ihost]=0;
     tables[ihost]=gtk_table_new(nrows[ihost],ncol,0);

@@ -26,7 +26,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     }
     cmat *xsel=cnew(nx,ny);
     //cfft2plan(xsel,-1);
-    PCMAT(xsel,pxsel);
+    cmat* pxsel=xsel;
     double dx1=1./xloc->dx;
     long offx=-xloc->locx[0]*dx1+saloc->dx*0.5*dx1;
     long offy=-xloc->locy[0]*dx1+saloc->dx*0.5*dx1;
@@ -34,7 +34,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture center. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1;
+	    IND(pxsel,ix,iy)=1;
 	}
     }
     writebin(xsel,"xsel0");
@@ -43,12 +43,12 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     cfftshift(xsel);
     /*temporary. cancel fft effect and compare with laos. */
     cscale(xsel,1./(double)(nx*ny));
-    double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
+    double xselc=creal(IND(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
-	    if(cabs(pxsel[iy][ix])<xselc){
-		pxsel[iy][ix]=0;
+	    if(cabs(IND(pxsel,ix,iy))<xselc){
+		IND(pxsel,ix,iy)=0;
 	    }
 	}
     }
@@ -70,10 +70,10 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
        with same or harmonic spatial frequencies. Group them together.
 
     */
-    long *xdim=calloc(nps, sizeof(long));
-    long *os=calloc(nps, sizeof(long));
-    long *fxlim=calloc(nps, sizeof(long));
-    long *noff=calloc(nps, sizeof(long));
+    long *xdim=mycalloc(nps,long);
+    long *os=mycalloc(nps,long);
+    long *fxlim=mycalloc(nps,long);
+    long *noff=mycalloc(nps,long);
     long xloctot=0;
     for(long ips=0; ips<nps; ips++){
 	xdim[ips]=(long)sqrt((double)xloc[ips]->nloc);
@@ -91,7 +91,7 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
 	    error("Layer %ld oversampling ratio is greater than ground layer\n",ips);
 	}
     }
-    long *perm=calloc(xloctot, sizeof(long));
+    long *perm=mycalloc(xloctot,long);
     long use_os=os[0];
     long adim=xdim[0]/use_os;
     long osx=xdim[0]/2;
@@ -134,8 +134,8 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double ds
 	error("dsa must be multiple of dx");
     }
  
-    double *wt=alloca(sizeof(double)*(os+1));
-    double *st=alloca(sizeof(double)*(os+1));
+    double *wt=(double*)alloca(sizeof(double)*(os+1));
+    double *st=(double*)alloca(sizeof(double)*(os+1));
     /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(double)os/dsa;
     for(long ios=1; ios<os; ios++){
@@ -240,7 +240,7 @@ int main(){
     loc_t *saloc=locread("saloc.bin");
     saloc->dx=0.5;
     long nps=6;
-    loc_t **xlocs=calloc(nps, sizeof(loc_t*));
+    loc_t **xlocs=mycalloc(nps,loc_t*);
     long os[nps];
     for(long ips=0; ips<nps; ips++){
 	xlocs[ips]=xloc;
@@ -258,7 +258,6 @@ int main(){
 
     long nperm;
     long *perm=fdpcg_perm(&nperm,xlocs,nps,saloc);/*tested ok. */
-    writelong(perm, nperm,1,"perm");
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,256,256,xloc->dx,saloc->dx);/*tested ok. */
     writebin(gx,"gx");
@@ -266,7 +265,7 @@ int main(){
     double dispx[nps],dispy[nps];
 
     double r0=0.198749305619780;
-    dcomplex *invpsd=calloc(256*256*6, sizeof(dcomplex));
+    dcomplex *invpsd=mycalloc(256*256*6,dcomplex);
     long offset=0;
     for(long ips=0; ips<nps; ips++){
 	dmat *tmp=turbpsd(256,256,0.25*(1-ht[ips]/hs), r0*pow(wt[ips],-3./5.),30,0,-1);

@@ -41,7 +41,7 @@ int main(){
 /*
 static int test_fft_speed_small(){
     int nis=128;
-    int *is=calloc(nis,sizeof(int));
+    int *is=mycalloc(nis,int);
     dmat *tim=dnew(nis,1);
     for(int ii=0; ii<nis; ii++){
 	is[ii]=ii+1;
@@ -69,7 +69,7 @@ static int test_fft_speed_small(){
 
 static void test_fft_speed(){
     int nis=2048;
-    int *is=calloc(nis,sizeof(int));
+    int *is=mycalloc(nis,int);
     dmat *tim=dnew(nis,1);
     for(int ii=0; ii<nis; ii++){
 	is[ii]=(ii+1)*2;
@@ -108,11 +108,11 @@ static void test_fft_speed(){
     }*/
 static void test_fft_special(){
     int nis=2;
-    int *is=calloc(nis,sizeof(int));
+    int *is=mycalloc(nis,int);
     dmat *tim=dnew(nis,1);
     is[0]=3824;
     is[1]=4096;
-    ccell *ac=cellnew(nis,1);
+    ccell *ac=ccellnew(nis,1);
     rand_t rstat;
     seed_rand(&rstat,1);
     TIC;

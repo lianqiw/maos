@@ -18,7 +18,7 @@
 
 /*
   Compute the projection of a tilted M3 onto pupil.
-  input loc locin is located at height ht and tilted at angle
+  input map is located at height ht and tilted at angle
   thetax, thetay
   focus of the guide star is at heigt hs, angle alphax,alphay
 
@@ -33,7 +33,7 @@
 #include "accphi.h"
 #include "proj.h"
 /*const double pi=3.1415926535897932384626433832795; */
-static inline double cosangle(double a[3], double b[3]){
+INLINE double cosangle(double a[3], double b[3]){
     return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
@@ -54,7 +54,6 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
       hs: distance from exit pupil to m3.
       betax,betay: beam angle from exit pupil to focal plane.
      */
-    const double (*phiin)[mapin->nx]=(void*)mapin->p;
     const int wrapx1 = mapin->nx;
     const int wrapy1 = mapin->ny;
     const int wrapx = wrapx1-1;
@@ -104,9 +103,34 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 	}
 	sc2=sc*cosangle(vi,vm3);
 	/*sc2=sc*0.707; */
-	phiout[iloc]+=sc2*(phiin[nplocy][nplocx]*(1.-dplocx)*(1.-dplocy)
-			  +phiin[nplocy][nplocx1]*(dplocx)*(1.-dplocy)
-			  +phiin[nplocy1][nplocx]*(1.-dplocx)*(dplocy)
-			  +phiin[nplocy1][nplocx1]*(dplocx)*(dplocy));
+	phiout[iloc]+=sc2*(IND(mapin,nplocx,nplocy)*(1.-dplocx)*(1.-dplocy)
+			  +IND(mapin,nplocx1,nplocy)*(dplocx)*(1.-dplocy)
+			  +IND(mapin,nplocx,nplocy1)*(1.-dplocx)*(dplocy)
+			  +IND(mapin,nplocx1,nplocy1)*(dplocx)*(dplocy));
     }
+}
+
+/**
+   Wraps proj_rect_grid for M3.
+*/
+void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, double thetax, double thetay, double hs){
+    const double alx=tsurf->txdeg/180*M_PI;
+    const double aly=tsurf->tydeg/180*M_PI;
+    const double ftel=tsurf->ftel;
+    const double fexit=tsurf->fexit;
+    const double fsurf=tsurf->fsurf;
+    const double mag=fexit/ftel;
+    const double scalex=-mag;
+    const double scaley=mag;
+    const double scaleopd=-2;
+    const double het=fexit-fsurf;/*distance between exit pupil and M3. */
+
+    double d_img_focus=1./(1./ftel-1./hs)-ftel;
+    /*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
+    double d_img_exit=fexit+d_img_focus;
+		
+    /*2010-04-02: do not put - sign */
+    double bx=thetax*(d_img_focus+ftel)/d_img_exit;
+    double by=thetay*(d_img_focus+ftel)/d_img_exit;
+    proj_rect_grid(tsurf,alx,aly,locout,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
 }

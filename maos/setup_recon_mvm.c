@@ -42,7 +42,7 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    ntotgrad+=powfs[ipowfs].saloc->nloc*2;
 	}
-	MVM=cellnew(ndm, nwfs);
+	MVM=dcellnew(ndm, nwfs);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
@@ -62,7 +62,8 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }else if(ig%100==0){
 		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
-	    if(ig) eye->p[ig-1]=0; eye->p[ig]=1;
+	    if(ig) eye->p[ig-1]=0;
+	    eye->p[ig]=1;
 	    if(!parms->powfs[parms->wfsr[curwfs].powfs].skip){
 		dcellzero(res);
 		muv_solve(&res, &recon->LL, &recon->LR, eyec);
@@ -112,7 +113,7 @@ typedef struct {
 }MVR_MVM_T;
 static void 
 setup_recon_mvr_mvm_iact(thread_t *info){
-    MVR_MVM_T *data=info->data;
+    MVR_MVM_T *data=(MVR_MVM_T*)info->data;
     const PARMS_T *parms=data->parms;
     RECON_T *recon=data->recon;
     const int ndm=parms->ndm;
@@ -194,7 +195,8 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     for(int idm=0; idm<ndm; idm++){
 	ntotact+=recon->anloc->p[idm];
     }
-    long (*curp)[2]=malloc(ntotact*2*sizeof(long));
+    typedef long long2[2];
+    long2* curp=mymalloc(ntotact,long2);
     int nact=0;
     for(int idm=0; idm<ndm; idm++){
 	for(int iact=0; iact<recon->anloc->p[idm]; iact++){
@@ -203,7 +205,7 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
 	nact+=recon->anloc->p[idm];
     }
-    dcell *MVMt=cellnew(nwfs, ndm);
+    dcell *MVMt=dcellnew(nwfs, ndm);
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
@@ -228,24 +230,23 @@ setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
     if(!parms->recon.mvm) return;
-    OMPTASK_SINGLE
-	if(!recon->MVM){
-	    if(!(parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit)){
-		if(parms->recon.alg==0){
-		    setup_recon_mvr_mvm(recon, parms, powfs);
-		}else{
-		    setup_recon_lsr_mvm(recon, parms, powfs);   
-		}
-	    }
-#if USE_CUDA
-	    if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
-		gpu_setup_recon_mvm(parms, recon, powfs);
-	    }
-#endif
-	    if(!parms->load.mvm && (parms->save.setup || parms->save.mvm || parms->save.recon)){
-		writebin(recon->MVM, "MVM.bin");
+    if(!recon->MVM){
+	if(!(parms->recon.alg==0 && parms->gpu.tomo && parms->gpu.fit)){
+	    if(parms->recon.alg==0){
+		setup_recon_mvr_mvm(recon, parms, powfs);
+	    }else{
+		setup_recon_lsr_mvm(recon, parms, powfs);   
 	    }
 	}
+#if USE_CUDA
+	if((parms->gpu.tomo && parms->gpu.fit) || parms->gpu.lsr){
+	    gpu_setup_recon_mvm(parms, recon, powfs);
+	}
+#endif
+	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm || parms->save.recon)){
+	    writebin(recon->MVM, "MVM.bin");
+	}
+    }
     if(parms->sim.mvmport){
 	mvm_client_init(parms->sim.mvmhost, parms->sim.mvmport, recon->MVM, parms->sim.mvmngpu);
     }

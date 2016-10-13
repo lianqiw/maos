@@ -68,4 +68,5 @@ typedef struct SHO_T{
 SHO_T *sho_new(double f0, double zeta);
 double sho_step(SHO_T *sho, double xi, double dt);
 void sho_reset(SHO_T *sho);
+dmat *sho_filter(const dmat *xi, double dt, double f0, double zeta);
 #endif

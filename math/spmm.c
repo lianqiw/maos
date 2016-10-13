@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -69,11 +69,11 @@ typedef struct sp_thread_t {
 /**
  * Multiply a sparse matrix with the real part of a complex vector: y=y+A*creal(x)*alpha
  */
-void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha){
+void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, R alpha){
     if(A && x){
 	for(long icol=0; icol<A->ny; icol++){
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		y[A->i[ix]]+=alpha*A->x[ix]*creal(x[icol]);
+		y[A->i[ix]]+=alpha*(A->x[ix]*creal(x[icol]));
 	    }
 	}
 
@@ -84,7 +84,7 @@ void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha
  * sparse matrix multiply with a vector: y=y+op(A)*x*alpha
  op(A)=A  if trans=='n'
  op(A)=A' if trans=='t'
- op(A)=CONJ(A') if trans=='c'
+ op(A)=conj(A') if trans=='c'
 */
 void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha){
     if(A && x){
@@ -108,7 +108,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
 	    OMPTASK_FOR(icol, 0, A->ny){
 		T tmp=0;
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    tmp+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
+		    tmp+=alpha*conj(A->x[ix])*x[A->i[ix]];
 		}
 		y[icol]+=tmp;
 	    }
@@ -125,7 +125,7 @@ void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans
    op(y)=op(y)+op(A)*op(x)*alpha
    op(A)=A  if trans=='n'
    op(A)=A' if trans=='t'
-   op(A)=CONJ(A') if trans=='c'
+   op(A)=conj(A') if trans=='c'
 */
 static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const int transy, const T alpha){
     if(!A || !x) return;
@@ -139,18 +139,16 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
     if(x->ny==1 && trans[1]=='n' && transy==0){
 	X(spmulvec)(y->p, A, x->p, trans[0], alpha);
     }else{
-	PMAT(y,Y);
-	PMAT(x,X);
 
 #define no_conj(A) (A)
-#define do_conj(A) CONJ(A)
-#define no_trans(A,i,j) A[j][i]
-#define do_trans(A,i,j) A[i][j]
+#define do_conj(A) conj(A)
+#define no_trans(A,i,j) IND(A,i,j)
+#define do_trans(A,i,j) IND(A,j,i)
 #define LOOP_NORMA(py, yny,  conjA, px, conjx)				\
 	for(long icol=0; icol<A->ny; icol++){				\
 	    for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		for(long jcol=0; jcol<yny; jcol++){			\
-		    py(Y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, icol, jcol)); \
+		    py(y, A->i[ix], jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, icol, jcol)); \
 		}							\
 	    }								\
 	}
@@ -160,7 +158,7 @@ static void X(spmm_do)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const cha
 	    OMPTASK_FOR(icol, 0, A->ny){					\
 		for(long ix=A->p[icol]; ix<A->p[icol+1]; ix++){		\
 		    for(long jcol=0; jcol<yny; jcol++){			\
-			py(Y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(X, A->i[ix], jcol)); \
+			py(y, icol, jcol)+=alpha*conjA(A->x[ix])*conjx(px(x, A->i[ix], jcol)); \
 		    }							\
 		}							\
 	    }								\
@@ -316,7 +314,7 @@ void X(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, const char trans[2]
     }
     X(sp) *res=X(ss_multiply)(At?At:A, Bt?Bt:B);
     X(spsort)(res);
-    if(ABS(scale-(T)1.)>EPS){
+    if(fabs(scale-(T)1.)>EPS){
 	X(spscale)(res, scale);
     }
     if(!*C0) 
@@ -341,11 +339,11 @@ X(sp) *X(spmulsp)(const X(sp) *A, const X(sp) *B, const char trans[2]){
    C0=C0+op(A)*op(B)*alpha;
    op(A)=A  if trans[0]=='n'
    op(A)=A' if trans[0]=='t'
-   op(A)=CONJ(A') if trans[0]=='c'
+   op(A)=conj(A') if trans[0]=='c'
 
    op(B)=B  if trans[1]=='n'
    op(B)=B' if trans[1]=='t'
-   op(B)=CONJ(B') if trans[1]=='c'
+   op(B)=conj(B') if trans[1]=='c'
    
    A may be dense or sparse matrix.
 */
@@ -412,8 +410,8 @@ void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], c
     }
 }
 
-void *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
-    void *res=0;
+cell *X(cellmm2)(const void *A_, const void *B_, const char trans[2]){
+    cell *res=0;
     X(cellmm)(&res, A_, B_, trans, 1);
     return res;
 }
@@ -437,8 +435,8 @@ void X(celladdI)(void *A_, T alpha){
 /**
    Takes parameters of X(mat), X(sp), X(cell), X(spcell): A=A*ac+B*bc;
  */
-void X(celladd)(void *A_, T ac, const void *B_, T bc){
-    if(!A_ || !B_ || !bc) return;
+void X(celladd)(void *A_, R ac, const void *B_, R bc){
+    if(!A_ || !B_ || bc==0) return;
     cell *B=(cell*)(B_);
     cell **pA=(cell**)A_;
     if(iscell(B)){//cell

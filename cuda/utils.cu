@@ -237,11 +237,7 @@ void gpu_write(const Real *p, int nx, int ny, const char *format, ...){
     format2fn;
     Real *tmp=(Real*)malloc(nx*ny*sizeof(Real));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Real), cudaMemcpyDeviceToHost);
-#if CUDA_DOUBLE
-    writedbl(tmp,nx,ny,"%s",fn);
-#else
-    writeflt(tmp,nx,ny,"%s",fn);
-#endif
+    writearr(fn, 1, sizeof(Real), M_REAL, NULL, p, nx, ny);
     free(tmp);
 }
 
@@ -252,11 +248,7 @@ void gpu_write(const Comp *p, int nx, int ny, const char *format, ...){
     format2fn;
     Comp *tmp=(Comp*)malloc(nx*ny*sizeof(Comp));
     cudaMemcpy(tmp, p, nx*ny*sizeof(Comp), cudaMemcpyDeviceToHost);
-#if CUDA_DOUBLE
-    writecmp((dcomplex*)tmp,nx,ny,"%s",fn);
-#else
-    writefcmp((fcomplex*)tmp,nx,ny,"%s",fn);
-#endif
+    writearr(fn, 1, sizeof(Comp), M_COMP, NULL, p, nx, ny);
     free(tmp);
 }
 /*
@@ -266,7 +258,7 @@ void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     format2fn;
     int *tmp=(int*)malloc(nx*ny*sizeof(int));
     cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost);
-    writeint(tmp,nx,ny,"%s",fn);
+    writearr(fn, 1, sizeof(int), M_INT32, NULL, tmp, nx, ny);
     free(tmp);
 }
 template <typename T, typename R, typename S>
@@ -328,7 +320,7 @@ add2cpu_mat(s, float, Real)
 add2cpu_mat(d, double,Real)
 add2cpu_mat(z, float, Comp)
 add2cpu_mat(c, double,Comp)
-
+	
 #define add2cpu_cell(D, T, C)				    \
     void add2cpu(D##cell **out, T alpha, const C &in, T beta,	\
 		 cudaStream_t stream, pthread_mutex_t *mutex){		\
@@ -397,35 +389,35 @@ cp2cpu_cell(d, Real)
 cp2cpu_cell(c, Comp)
 cp2cpu_cell(z, Comp)
 
-void cellarr_cur(struct cellarr *ca, int i, const curmat &A, cudaStream_t stream){
+void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream){
     X(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     X(free)(tmp);
 }
 
-void cellarr_cuc(struct cellarr *ca, int i, const cucmat &A, cudaStream_t stream){
+void zfarr_cuc(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream){
     C(mat) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     C(free)(tmp);
 }
 
-void cellarr_curcell(struct cellarr *ca, int i, const curcell &A, cudaStream_t stream){
+void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream){
     X(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     X(cellfree)(tmp);
 }
 
-void cellarr_cuccell(struct cellarr *ca, int i, const cuccell &A, cudaStream_t stream){
+void zfarr_cuccell(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream){
     C(cell) *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_push(ca, i, tmp);
+    zfarr_push(ca, i, tmp);
     C(cellfree)(tmp);
 }
 

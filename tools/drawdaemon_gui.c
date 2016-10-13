@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <tgmath.h>
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
 #include "mouse_hand.h"
@@ -82,7 +83,7 @@ static void set_cur_window(GtkWidget *window){
     curwindow=window;
     GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(curwindow));
     GList *list=gtk_container_get_children(GTK_CONTAINER(vbox));
-    curtopnb=list->next->data;
+    curtopnb=(GtkWidget*)list->next->data;
     g_list_free(list);
 }
 /*Get the current page for notebook*/
@@ -94,7 +95,7 @@ static drawdata_t *get_current_drawdata(void){
     GtkWidget *topnb=curtopnb;
     GtkWidget *w1=get_current_page(topnb);
     GtkWidget *w2=get_current_page(w1);
-    drawdata_t **pdrawdata=g_object_get_data(G_OBJECT(w2),"drawdatawrap");
+    drawdata_t **pdrawdata=(drawdata_t**)g_object_get_data(G_OBJECT(w2),"drawdatawrap");
     if(pdrawdata){
 	return *pdrawdata;
     }else{
@@ -104,14 +105,14 @@ static drawdata_t *get_current_drawdata(void){
 static GtkWidget *get_topnb(GtkWidget *window){
     GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
     GList *list=gtk_container_get_children(GTK_CONTAINER(vbox));
-    GtkWidget *topnb=list->next->data;
+    GtkWidget *topnb=(GtkWidget*)list->next->data;
     g_list_free(list);
     return topnb;
 }
 static GtkWidget *get_toolbar(GtkWidget *window){
     GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(window));
     GList *list=gtk_container_get_children(GTK_CONTAINER(vbox));
-    GtkWidget *toolbar=list->data;
+    GtkWidget *toolbar=(GtkWidget*)list->data;
     g_list_free(list);
     return toolbar;
 }
@@ -202,7 +203,7 @@ static gboolean update_pixmap_timer(updatetimer_t * timer){
 }
 static void delayed_update_pixmap(drawdata_t *drawdata){
     drawdata->pending++;
-    updatetimer_t *tmp=calloc(1, sizeof(updatetimer_t));
+    updatetimer_t *tmp=mycalloc(1,updatetimer_t);
     tmp->pending=drawdata->pending;
     tmp->drawdata=drawdata;
     if(!drawdata->pixmap){
@@ -280,11 +281,11 @@ static void drawdata_free_input(drawdata_t *drawdata){
     if(drawdata->ncir>0){
 	free(drawdata->cir);
     }
-    if(drawdata->fig!=deffig) free(drawdata->fig);
-    if(drawdata->name!=defname) free(drawdata->name);
-    if(drawdata->title) free(drawdata->title);
-    if(drawdata->xlabel) free(drawdata->xlabel);
-    if(drawdata->ylabel) free(drawdata->ylabel);
+    free(drawdata->fig);
+    free(drawdata->name);
+    free(drawdata->title);
+    free(drawdata->xlabel);
+    free(drawdata->ylabel);
     if(drawdata->legend){
 	for(int i=0; i<drawdata->npts; i++){
 	    free(drawdata->legend[i]);
@@ -659,10 +660,12 @@ static void page_changed(int topn, int subn){
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook *topnb, GtkWidget *page, guint n,  GtkWidget *toolbar){
+    (void)topnb; (void)page; 
     gtk_widget_set_sensitive(toolbar, TRUE);
     page_changed(n, -1);
 }
 static void subnb_page_switch(GtkNotebook *subnb, GtkWidget *page, guint n, gpointer dummy){
+    (void)subnb; (void)page; 
     (void)dummy;
     page_changed(-1, n);
 }
@@ -703,8 +706,8 @@ gboolean addpage(gpointer indata){
     int nsubnb=0;
     for(GSList *p=windows; p; p=p->next){
 	//scan through all window to find all topnb page that has the same "fig"
-	GtkWidget *window=p->data;
-	GtkWidget *topnb=get_topnb(window);
+	GtkWidget *window=(GtkWidget*)p->data;
+	GtkWidget *topnb=(GtkWidget*)get_topnb(window);
 	for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
 	    GtkWidget *subnb=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), itab);
 	    const gchar *text=topnb_label_get(topnb, subnb);
@@ -745,7 +748,7 @@ gboolean addpage(gpointer indata){
     GtkWidget *page=NULL;
     for(GSList *p=subnbs; p; p=p->next){
 	/*scan through all the subnb pages with same label */
-	GtkWidget *subnb=p->data;
+	GtkWidget *subnb=(GtkWidget*)p->data;
 	for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
 	    page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), itab);
 	    const gchar *labeltext=subnb_label_get(subnb, page);
@@ -760,7 +763,7 @@ gboolean addpage(gpointer indata){
 	/*
 	  we use drawdatawrap so that we don't have to modify the data on the g_object.
 	*/
-	drawdata_t **drawdata_wrapold=g_object_get_data(G_OBJECT(page),"drawdatawrap");
+	drawdata_t **drawdata_wrapold=(drawdata_t**)g_object_get_data(G_OBJECT(page),"drawdatawrap");
 	drawdata_t *drawdata_old=(*drawdata_wrapold);
 	/*Instead of freeing drawdata, we replace its content with newdata. this
 	  makes dialog continue to work. Do not replace generated data.*/
@@ -785,7 +788,7 @@ gboolean addpage(gpointer indata){
 	drawdata_old->legend=drawdata->legend;
 	if(drawdata->limit_data){
 	    if(!drawdata_old->limit_data){
-		drawdata_old->limit_data=calloc(4, sizeof(double));
+		drawdata_old->limit_data=mycalloc(4,double);
 	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}else{
@@ -855,7 +858,7 @@ gboolean addpage(gpointer indata){
 	gtk_container_add(GTK_CONTAINER(page), drawarea);
 #endif
 	GtkWidget *button=subnb_label_new(drawdatawrap);
-	GtkWidget *subnb=subnbs->data;/*choose first. */
+	GtkWidget *subnb=(GtkWidget*)subnbs->data;/*choose first. */
 	gtk_notebook_append_page(GTK_NOTEBOOK(subnb), page,button);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
@@ -1021,6 +1024,7 @@ static void spin_changed(GtkSpinButton *spin, gdouble *val){
     delayed_update_pixmap(drawdata_dialog);
 }
 static void toolbutton_cumu_click(GtkToolButton *btn){
+    (void)btn;
     drawdata_t *page=get_current_drawdata();
     if(!page->image){
 	page->cumu=page->cumu?0:1;
@@ -1028,6 +1032,7 @@ static void toolbutton_cumu_click(GtkToolButton *btn){
     delayed_update_pixmap(page);
 }
 static void toolbutton_stop(GtkToolButton *btn){
+    (void)btn;
     close(sock); sock=-1; sock_block=1;
 }
 static void togglebutton_pause(GtkToggleToolButton *btn){
@@ -1264,14 +1269,14 @@ static void close_window(GtkObject *object)
     }
     GtkWidget *topnb=get_topnb(GTK_WIDGET(object));
     GtkWidget *toolbar=get_toolbar(GTK_WIDGET(object));
-    g_signal_handlers_disconnect_by_func(topnb, topnb_page_changed, toolbar);
+    g_signal_handlers_disconnect_by_func(topnb, (gpointer)topnb_page_changed, toolbar);
     int npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb));
     for(int ipage=0; ipage<npages; ipage++){
 	GtkWidget *page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb),ipage);
 	int ntabs=gtk_notebook_get_n_pages(GTK_NOTEBOOK(page));
 	for(int itab=0; itab<ntabs; itab++){
 	    GtkWidget *tab=gtk_notebook_get_nth_page(GTK_NOTEBOOK(page),itab);
-	    drawdata_t **drawdatawrap=g_object_get_data(G_OBJECT(tab),"drawdatawrap");
+	    drawdata_t **drawdatawrap=(drawdata_t**)g_object_get_data(G_OBJECT(tab),"drawdatawrap");
 	    gtk_widget_hide(tab);
 	    drawdata_free(*drawdatawrap); 
 	}

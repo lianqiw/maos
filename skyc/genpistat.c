@@ -26,10 +26,10 @@
 #include "types.h"
 #include "skysim_utils.h"
 #include "genpistat.h"
-
+typedef long long4[4];
 typedef struct GENPISTAT_S{
     int ncase;
-    long(*cases)[4];
+    long4 *cases;
     int icase;
     pthread_mutex_t mutex_read;/*don't let them read in the same time. */
     const PARMS_S *parms;
@@ -79,7 +79,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dmat *mapply=dnew(2,1);
 	    TIC;tic;
 	    file_t *fp_wvf=zfopen(fnwvf,"rb");
-	    header_t header={0};
+	    header_t header={0,0,0,0};
 	    read_header(&header, fp_wvf);
 	    long nstep=header.nx;
 	    if(!iscell(&header.magic)){
@@ -88,11 +88,11 @@ static void calc_pistat(GENPISTAT_S *data){
 	    free(header.str); header.str=NULL;
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
-	    dcell *pistat=cellnew(nsa, nwvl);/*pixel intensity mean(I) */
-	    dcell *neaspec=cellnew(nsa*2, nwvl);
-	    dcell **avgpsf=calloc(nwvl, sizeof(dcell*));
+	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
+	    dcell *neaspec=dcellnew(nsa*2, nwvl);
+	    dcell **avgpsf=mycalloc(nwvl,dcell*);
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		avgpsf[iwvl]=cellnew(ndtrat, nsa);
+		avgpsf[iwvl]=dcellnew(ndtrat, nsa);
 	    }
 	    for(long ig=0; ig<2*nsa*nwvl; ig++){
 		neaspec->p[ig]=dnew(ndtrat, 1);
@@ -101,8 +101,8 @@ static void calc_pistat(GENPISTAT_S *data){
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=NULL;
 	    //cfft2plan(wvf,-1);
-	    PDCELL(pistat, ppistat);
-	    PDMAT(phygrad, pphygrad);
+	    dcell*  ppistat=pistat;
+	    dmat*  pphygrad=phygrad;
 	    cmat *otf=cnew(ncomp,ncomp);
 	    //cfft2plan(otf,1);
 	    //cfft2plan(otf,-1);
@@ -116,17 +116,17 @@ static void calc_pistat(GENPISTAT_S *data){
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
 	    dmat *gmean=dnew(2,nsa);
-	    PDMAT(gmean, pgmean);
+	    dmat*  pgmean=gmean;
 	    for(long istep=0; istep<nstep; istep++){
 		LOCK(data->mutex_read);
 		ccell *wvfi=ccellreaddata(fp_wvf, 0);
 		UNLOCK(data->mutex_read);
-		PCCELL(wvfi,wvfout);
+		ccell* wvfout=wvfi;
 		for(long iwvl=0; iwvl<nwvl; iwvl++){
 		    double wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			//first compute PSF from WVF and compute CoG
-			ccp(&wvfc, wvfout[iwvl][isa]);
+			ccp(&wvfc, IND(wvfout,isa,iwvl));
 			cembedc(wvf,wvfc,0,C_FULL);
 			cfft2(wvf,-1);
 			cabs22d(&psf, 0, wvf, 1);//peak in corner.
@@ -134,15 +134,15 @@ static void calc_pistat(GENPISTAT_S *data){
 			    
 			double grad[2]={0,0};
 			double pmax=dmax(psf);
-			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+			dcog(grad,psf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 			grad[0]*=dtheta[iwvl];//convert to Radian
 			grad[1]*=dtheta[iwvl];
-			pphygrad[istep][isa]+=grad[0]*nwvli;//record the value
-			pphygrad[istep][isa+nsa]+=grad[1]*nwvli;
+			IND(pphygrad,isa,istep)+=grad[0]*nwvli;//record the value
+			IND(pphygrad,isa+nsa,istep)+=grad[1]*nwvli;
 
 			if(istep>=avgstart){
-			    pgmean[isa][0]+=grad[0];//record the average
-			    pgmean[isa][1]+=grad[1];
+			    IND(pgmean,0,isa)+=grad[0];//record the average
+			    IND(pgmean,1,isa)+=grad[1];
 			    //Then remove the CoG from the WVF and accumulate PSF.
 			    mapply->p[0]=-grad[0];
 			    mapply->p[1]=-grad[1];
@@ -153,7 +153,7 @@ static void calc_pistat(GENPISTAT_S *data){
 				if(nframe%(int)dtrats->p[idtrat]==0){
 				    grad[0]=grad[1]=0;
 				    pmax=dmax(*pavgpsf);
-				    dcog(grad,*pavgpsf,0.5, 0.5, 0.*pmax, 0.2*pmax);
+				    dcog(grad,*pavgpsf,0.5, 0.5, 0.*pmax, 0.2*pmax, 0);
 				    dzero(*pavgpsf);
 				    neaspec->p[isa+iwvl*nsa*2]->p[idtrat]+=pow(grad[0]*dtheta[iwvl],2);
 				    neaspec->p[isa+nsa+iwvl*nsa*2]->p[idtrat]+=pow(grad[1]*dtheta[iwvl],2);
@@ -163,7 +163,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
 			    cembedc(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
-			    cabs22d(&ppistat[iwvl][isa], 1, wvf, 1);
+			    cabs22d(PIND(ppistat,isa,iwvl), 1, wvf, 1);
 			}
 		    }
 		    
@@ -192,7 +192,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		    psf=pistat->p[i];//peak in corner
 		    ccpd(&otf, psf);
 		    cfft2(otf,-1);//turn to otf. peak in corner
-		    ctilt(otf,pgmean[isa][0]/dtheta[iwvl],pgmean[isa][1]/dtheta[iwvl],0);
+		    ctilt(otf,IND(pgmean,0,isa)/dtheta[iwvl],IND(pgmean,1,isa)/dtheta[iwvl],0);
 		    cfft2i(otf,1);//turn to psf, peak in corner
 		    creal2d(&psf,0,otf,1);
 		}
@@ -222,11 +222,11 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
     info2("Genpistat..");
-    GENPISTAT_S *data=calloc(1, sizeof(GENPISTAT_S));
+    GENPISTAT_S *data=mycalloc(1,GENPISTAT_S);
     data->parms=parms;
     data->powfs=powfs;
     data->ncase=parms->maos.nseed*(2*ng+1)*(2*ng+1)*parms->maos.npowfs;
-    data->cases=calloc(4*data->ncase,sizeof(long));
+    data->cases=mycalloc(data->ncase,long4);
     data->ngsgrid=ngsgrid;
     long count=0;
     for(int iseed=0; iseed<parms->maos.nseed; iseed++){
@@ -243,7 +243,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 		    count++;
 		    if(count>data->ncase){
 			data->ncase=data->ncase*2;
-			data->cases=realloc(data->cases,sizeof(long)*data->ncase*4);
+			data->cases=myrealloc(data->cases,data->ncase,long4);
 		    }
 		}
 	    }/*for gx */
@@ -252,8 +252,8 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     /*info("count=%ld, data->ncase=%ld\n",count,data->ncase); */
     data->ncase=count;
     data->icase=0;
-    data->cases=realloc(data->cases, sizeof(long)*4*data->ncase);
-    CALL(calc_pistat, data, parms->skyc.nthread,0);
+    data->cases=myrealloc(data->cases,data->ncase,long4);
+    CALL((thread_fun)calc_pistat, (void*)data, parms->skyc.nthread,0);
     info2("done\n");
   
     dcellfree(data->unwrap);
@@ -276,7 +276,7 @@ void prep_bspstrehl(SIM_S *simu){
     }
     simu->bspstrehlxy=dref(gg);
 
-    simu->bspstrehl=calloc(parms->maos.npowfs, sizeof(dcell**));
+    simu->bspstrehl=mycalloc(parms->maos.npowfs,dcell**);
 
     long ngnew=ng*10;
     dmat *xnew=dnew(ngnew*2+1, ngnew*2+1);
@@ -291,7 +291,7 @@ void prep_bspstrehl(SIM_S *simu){
 	long msa=parms->maos.msa[ipowfs];
 	long nsa=parms->maos.nsa[ipowfs];
 	long nwvl=parms->maos.nwvl;
-	dcell *strehlgrid = cellnew(nsa,nwvl);
+	dcell *strehlgrid = dcellnew(nsa,nwvl);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    strehlgrid->p[ic]=dnew(ng2,ng2);
 	}
@@ -315,7 +315,7 @@ void prep_bspstrehl(SIM_S *simu){
 	    }
 	}
 
-	simu->bspstrehl[ipowfs]=calloc(nsa*nwvl, sizeof(dcell*));
+	simu->bspstrehl[ipowfs]=mycalloc(nsa*nwvl,dcell*);
 	writebin(strehlgrid, "strehlgrid_%d",ipowfs);
 	for(long ic=0; ic<nsa*nwvl; ic++){
 	    simu->bspstrehl[ipowfs][ic]=dbspline_prep(gg,gg,strehlgrid->p[ic]);
@@ -341,7 +341,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
     rand_t rstat;
     seed_rand(&rstat, 1);
     long ng=round(patfov/2/ngsgrid)+1;
-    dcell **nonlin=calloc(npowfs, sizeof(dcell*));
+    dcell **nonlin=mycalloc(npowfs,dcell*);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	char fnnonlin[PATH_MAX];
 	snprintf(fnnonlin, PATH_MAX, "%s/powfs%d_nonlin", dirstart, ipowfs);
@@ -366,8 +366,8 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 	    dcell *is=dcellnew3(nsa,1, pixpsas, pixpsas);
 	    dcell *mtche=0;
 	    dmat *sanea=0;
-	    ccell *otf1=cellnew(nsa, nwvl);
-	    ccell *otf2=cellnew(nsa, nwvl);
+	    ccell *otf1=ccellnew(nsa, nwvl);
+	    ccell *otf2=ccellnew(nsa, nwvl);
 	    long ncomp=parms->maos.ncomp[ipowfs];
 	    for(int isa=0; isa<nsa; isa++){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -384,7 +384,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		const double wvl=parms->maos.wvl[iwvl];
 		dtheta[iwvl]=wvl/(dxsa*embfac);
 	    }
-	    dcell *nonxy=cellnew(ng,1);
+	    dcell *nonxy=dcellnew(ng,1);
 	    for(int ig=0; ig<ng; ig++){
 		nonxy->p[ig]=dnew(siglevs->nx, 2);
 		char fnpistat[PATH_MAX];
@@ -407,15 +407,15 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 		    }
 		}
 		if(count>0){
-		    PDCELL(avgpi, pavgpi);
+		    dcell*  pavgpi=avgpi;
 		    dcellscale(avgpi, 1./count);
 		    dcellzero(i0); dcellzero(gx); dcellzero(gy);
 		    for(int isa=0; isa<nsa; isa++){
 			/*Assume each WVL has same weighting*/
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    writebin(avgpi, "avgpi");
-			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], pavgpi[iwvl][isa], powfs[ipowfs].dtf+iwvl);
-			    ccpd(&otf1->p[isa+iwvl*nsa], pavgpi[iwvl][isa]);
+			    psf2i0gxgy(i0->p[isa], gx->p[isa], gy->p[isa], IND(pavgpi,isa,iwvl), powfs[ipowfs].dtf+iwvl);
+			    ccpd(&otf1->p[isa+iwvl*nsa], IND(pavgpi,isa,iwvl));
 			    cfft2(otf1->p[isa+iwvl*nsa], -1);//turn to otf, peak in corner
 			}
 		    }
@@ -425,7 +425,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			dcelladd(&i0s, 0, i0, sig);
 			dcelladd(&gxs, 0, gx, sig);
 			dcelladd(&gys, 0, gy, sig);
-			mtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
+			genmtch(&mtche, &sanea, i0s, gxs, gys, pixtheta, 3, 0, 0);
 			/*writebin(mtche, "mtche_%.0f", sig);
 			  writebin(sanea, "sanea_%.0f", sig);
 			  writebin(i0s, "i0s_%.0f", sig);

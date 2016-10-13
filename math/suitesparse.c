@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -28,39 +28,8 @@
 typedef spint SS_INT;
 #define SS_MAX(a,b) (((a) > (b)) ? (a) : (b))
 
-#ifdef USE_COMPLEX
-#ifdef USE_SINGLE
-#define cs zsp
-#define SS_ENTRY fcomplex
-#define SS_REAL(x) crealf(x)
-#define SS_IMAG(x) cimagf(x)
-#define SS_CONJ(x) conjf(x)
-#define SS_ABS(x) cabsf(x)
-#else
-#define cs csp
-#define SS_ENTRY dcomplex
-#define SS_REAL(x) creal(x)
-#define SS_IMAG(x) cimag(x)
-#define SS_CONJ(x) conj(x)
-#define SS_ABS(x) cabs(x)
-#endif
-#else
-#ifdef USE_SINGLE
-#define cs ssp
-#define SS_ENTRY float
-#define SS_REAL(x) (x)
-#define SS_IMAG(x) (0.)
-#define SS_CONJ(x) (x)
-#define SS_ABS(x) fabsf(x)
-#else
-#define cs dsp
-#define SS_ENTRY double
-#define SS_REAL(x) (x)
-#define SS_IMAG(x) (0.)
-#define SS_CONJ(x) (x)
-#define SS_ABS(x) fabs(x)
-#endif
-#endif
+#define SS_ENTRY T
+#define cs X(sp)
 
 #define SS_FLIP(i) (-(i)-2)
 #define SS_UNFLIP(i) (((i) < 0) ? SS_FLIP(i) : (i))
@@ -70,22 +39,15 @@ typedef spint SS_INT;
 #define SS_TRIPLET(A) (A && (A->nz >= 0))
 
 /**
- wrapper for free */
-static void *ss_free (void *p)
-{
-    if (p) free (p) ;       /* free p if it is not already NULL */
-    return (NULL) ;         /* return NULL to simplify the use of ss_free */
-}
-
-/**
  free a sparse matrix */
 static cs *ss_spfree (cs *A)
 {
-    if (!A) return (NULL) ;     /* do nothing if A already NULL */
-    ss_free (A->p) ;
-    ss_free (A->i) ;
-    ss_free (A->x) ;
-    return (ss_free (A)) ;      /* free the cs struct and return NULL */
+    if(A){
+	free (A->p) ;
+	free (A->i) ;
+	free (A->x) ;
+    }
+    return NULL;
 }
 
 /**
@@ -115,17 +77,17 @@ static void *ss_realloc (void *p, SS_INT n, size_t size, SS_INT *ok)
  allocate a sparse matrix (triplet form or compressed-column form) */
 static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT triplet)
 {
-    cs *A = ss_calloc (1, sizeof (cs)) ;    /* allocate the cs struct */
+    cs *A = (cs*)ss_calloc (1, sizeof (cs)) ;    /* allocate the cs struct */
     if (!A) return (NULL) ;                 /* out of memory */
     A->id = M_SPT;
     A->nx = m ;                              /* define dimensions and nzmax */
     A->ny = n ;
     A->nzmax = nzmax = SS_MAX (nzmax, 1) ;
     A->nz = triplet ? 0 : -1 ;              /* allocate triplet or comp.col */
-    A->p = ss_malloc (triplet ? nzmax : n+1, sizeof (SS_INT)) ;
-    A->i = ss_malloc (nzmax, sizeof (SS_INT)) ;
-    A->x = values ? ss_malloc (nzmax, sizeof (SS_ENTRY)) : NULL ;
-    A->nref=calloc(1,sizeof(long));
+    A->p = (SS_INT*)ss_malloc (triplet ? nzmax : n+1, sizeof (SS_INT)) ;
+    A->i = (SS_INT*)ss_malloc (nzmax, sizeof (SS_INT)) ;
+    A->x = values ? (SS_ENTRY*)ss_malloc (nzmax, sizeof (SS_ENTRY)) : NULL ;
+    A->nref=mycalloc(1,int);
     A->nref[0]=1;
     return ((!A->p || !A->i || (values && !A->x)) ? ss_spfree (A) : A) ;
 }
@@ -137,9 +99,9 @@ static SS_INT ss_sprealloc (cs *A, SS_INT nzmax)
     SS_INT ok, oki, okj = 1, okx = 1 ;
     if (!A) return (0) ;
     if (nzmax <= 0) nzmax = (SS_CSC (A)) ? (A->p [A->ny]) : A->nz ;
-    A->i = ss_realloc (A->i, nzmax, sizeof (SS_INT), &oki) ;
-    if (SS_TRIPLET (A)) A->p = ss_realloc (A->p, nzmax, sizeof (SS_INT), &okj) ;
-    if (A->x) A->x = ss_realloc (A->x, nzmax, sizeof (SS_ENTRY), &okx) ;
+    A->i = (SS_INT*)ss_realloc (A->i, nzmax, sizeof (SS_INT), &oki) ;
+    if (SS_TRIPLET (A)) A->p = (SS_INT*)ss_realloc (A->p, nzmax, sizeof (SS_INT), &okj) ;
+    if (A->x) A->x = (SS_ENTRY*)ss_realloc (A->x, nzmax, sizeof (SS_ENTRY), &okx) ;
     ok = (oki && okj && okx) ;
     if (ok) A->nzmax = nzmax ;
     return (ok) ;
@@ -149,8 +111,8 @@ static SS_INT ss_sprealloc (cs *A, SS_INT nzmax)
  free workspace and return a sparse matrix result */
 static cs *ss_done (cs *C, void *w, void *x, SS_INT ok)
 {
-    ss_free (w) ;                       /* free workspace */
-    ss_free (x) ;
+    free (w) ;                       /* free workspace */
+    free (x) ;
     return (ok ? C : ss_spfree (C)) ;   /* return result if OK, else free it */
 }
 
@@ -188,9 +150,9 @@ cs* X(ss_multiply) (const cs *A, const cs *B)
     if (A->ny != B->nx) return (NULL) ;
     m = A->nx ; anz = A->p [A->ny] ;
     n = B->ny ; Bp = B->p ; Bi = B->i ; Bx = B->x ; bnz = Bp [n] ;
-    w = ss_calloc (m, sizeof (SS_INT)) ;                    /* get workspace */
+    w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                    /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
-    x = values ? ss_malloc (m, sizeof (SS_ENTRY)) : NULL ; /* get workspace */
+    x = values ? (SS_ENTRY*)ss_malloc (m, sizeof (SS_ENTRY)) : NULL ; /* get workspace */
     C = ss_spalloc (m, n, anz + bnz, values, 0) ;        /* allocate result */
     if (!C || !w || (values && !x)) return (ss_done (C, w, x, 0)) ;
     Cp = C->p ;
@@ -224,9 +186,9 @@ cs* X(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
     if (A->nx != B->nx || A->ny != B->ny) return (NULL) ;
     m = A->nx ; anz = A->p [A->ny] ;
     n = B->ny ; Bp = B->p ; Bx = B->x ; bnz = Bp [n] ;
-    w = ss_calloc (m, sizeof (SS_INT)) ;                       /* get workspace */
+    w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                       /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
-    x = values ? ss_malloc (m, sizeof (SS_ENTRY)) : NULL ;    /* get workspace */
+    x = values ? (SS_ENTRY*)ss_malloc (m, sizeof (SS_ENTRY)) : NULL ;    /* get workspace */
     C = ss_spalloc (m, n, anz + bnz, values, 0) ;           /* allocate result*/
     if (!C || !w || (values && !x)) return (ss_done (C, w, x, 0)) ;
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
@@ -275,7 +237,7 @@ static SS_INT ss_nonzero (SS_INT i, SS_INT j, SS_ENTRY aij, void *other)
     (void) i;
     (void) j;
     (void) other;
-    return SS_ABS(aij)>1e-50 ;
+    return fabs(aij)>1e-50 ;
 }
 /**
    drop zeros in the sparse matrix.
@@ -291,7 +253,7 @@ static SS_INT ss_tol (SS_INT i, SS_INT j, SS_ENTRY aij, void *tol)
 {
     (void) i;
     (void) j;
-    return (SS_ABS (aij) > *((double *) tol)) ;
+    return (fabs (aij) > *((double *) tol)) ;
 }
 /**
    drop values below threashold of tol.
@@ -324,7 +286,7 @@ cs* X(ss_transpose) (const cs *A, SS_INT values)
     if (!SS_CSC (A)) return (NULL) ;    /* check inputs */
     m = A->nx ; n = A->ny ; Ap = A->p ; Ai = A->i ; Ax = A->x ;
     C = ss_spalloc (n, m, Ap [n], values && Ax, 0) ;       /* allocate result */
-    w = ss_calloc (m, sizeof (SS_INT)) ;                      /* get workspace */
+    w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                      /* get workspace */
     if (!C || !w) return (ss_done (C, w, NULL, 0)) ;       /* out of memory */
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
     for (p = 0 ; p < Ap [n] ; p++) w [Ai [p]]++ ;          /* row counts */
@@ -334,7 +296,7 @@ cs* X(ss_transpose) (const cs *A, SS_INT values)
         for (p = Ap [j] ; p < Ap [j+1] ; p++)
         {
             Ci [q = w [Ai [p]]++] = j ; /* place A(i,j) as entry C(j,i) */
-            if (Cx) Cx [q] = (values > 0) ? SS_CONJ (Ax [p]) : Ax [p] ;
+            if (Cx) Cx [q] = (values > 0) ? conj (Ax [p]) : Ax [p] ;
         }
     }
     return (ss_done (C, w, NULL, 1)) ;  /* success; free w and return C */

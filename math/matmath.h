@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -70,7 +70,7 @@
     void X(rotvect)(X(mat) *A, const R theta);				\
     void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta);		\
     void X(mulvec3)(T *y, const X(mat) *A, const T *x);			\
-    void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd); \
+    void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd, R flux); \
     void X(shift2center)(X(mat) *A, R offsetx, R offsety);		\
     int X(clip)(X(mat) *A, R min, R max);				\
     void X(gramschmidt)(X(mat) *Mod, R *amp);				\
@@ -80,6 +80,7 @@
     void X(cwexp)(X(mat) *A, R alpha);					\
     void X(cwpow_thres)(X(mat) *A, R power, R thres);			\
     void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
+    void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
     void X(svd_pow)(X(mat) *A, R power, R thres);			\
     void X(expm)(X(mat) **out, R alpha, const X(mat) *A, R beta);	\
     void X(polyval)(X(mat) *A, XR(mat)*p);				\

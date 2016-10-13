@@ -7,14 +7,17 @@ def parse_file(srcdir, files):
         fpi=open(srcdir+'/'+fn,'r')
         ln=fpi.read();
         fpi.close();
-        while True:
+    
+        while True: #remove all comments start with # or //
             start=ln.find('#')
+            if start==-1:
+                start=ln.find('//')
             end=ln.find('\n', start)
             if start==-1 or end==-1:
                 break
             ln=ln[0:start]+ln[end+1:]
 
-        while True:
+        while True: #Remove all C style comments.
             start=ln.find('/*')
             end=ln.find('*/', start)
             if start==-1 or end==-1:
@@ -83,6 +86,9 @@ def parse_func(srcdir, structs, files):
             if len(defs)==2:
                 funtype=defs[0]
                 funname=defs[1]
+                name2=funname.split('=')
+                funname=name2[0] #Mex name
+                funname2=name2[len(name2)-1] #C name
             else:
                 print(defs)
             funarg=list()
@@ -93,7 +99,7 @@ def parse_func(srcdir, structs, files):
                 else:
                     print(argpair)
             if len(funname)>0:
-                funcs[funname]=[funtype, funarg]
+                funcs[funname]=[funtype, funarg, funname2]
             end=closep+1;
             if ln[end]==';' or ln[end]==' ':
                 end+=1

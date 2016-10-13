@@ -74,8 +74,8 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     }
     long ntot=catalog->nx;
     long nsky0=0;
-    dcell *res=cellnew(nsky,1);
-    PDMAT(catalog, pcatalog);
+    dcell *res=dcellnew(nsky,1);
+    dmat*  pcatalog=catalog;
     double fov22=pow(fov/2/206265,2);
 
 
@@ -88,11 +88,11 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    long nstar=randp(rstat, navg);
 	    if(nstar==0) continue;
 	    res->p[isky]=dnew(nwvl+2, nstar);
-	    PDMAT(res->p[isky],pres);
+	    dmat* pres=res->p[isky];
 	    for(long istar=0; istar<nstar; istar++){
 		long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    pres[istar][2+iwvl]=pcatalog[iwvl][ind];
+		    IND(pres,2+iwvl,istar)=IND(pcatalog,ind,iwvl);
 		}
 	    }
 	}
@@ -112,14 +112,14 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    long nstar=randp(rstat, navg0);
 	    if(nstar==0) continue;
 	    dmat *tmp=dnew(nwvl+2, nstar);
-	    PDMAT(tmp, pres);
+	    dmat*  pres=tmp;
 	    int J19c=0;
 	    for(long istar=0; istar<nstar; istar++){
-		long ind=round(ntot*randu(rstat));
+		long ind=round((ntot-1)*randu(rstat));
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    pres[istar][2+iwvl]=pcatalog[iwvl][ind];
+		    IND(pres,2+iwvl,istar)=IND(pcatalog,ind,iwvl);
 		}
-		if(pres[istar][2+Jind]<=19){
+		if(IND(pres,2+Jind,istar)<=19){
 		    J19c++;
 		}
 	    }
@@ -137,13 +137,13 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     for(long isky=0; isky<nsky; isky++){
 	if(!res->p[isky]) continue;
 	long nstar=res->p[isky]->ny;
-	PDMAT(res->p[isky],pres);
+	dmat* pres=res->p[isky];
 	for(long istar=0; istar<nstar; istar++){
 	    /*randomly draw the star location. */
 	    double r=sqrt(fov22*randu(rstat));
 	    double th=2*M_PI*randu(rstat);
-	    pres[istar][0]=r*cos(th);
-	    pres[istar][1]=r*sin(th);
+	    IND(pres,0,istar)=r*cos(th);
+	    IND(pres,1,istar)=r*sin(th);
 	}
     }
     dfree(catalog);

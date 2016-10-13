@@ -78,7 +78,7 @@ double  *xv1 = NULL,    /* temp arrays needed for computing   */
 		  	 * lanczos vectors                    */
 
 static
-char	*error[10] = {  /* error messages used by function    *
+const char	*error[10] = {  /* error messages used by function    *
 			 * check_parameters                   */
 	    NULL,
 	  " SORRY, YOUR MATRIX IS TOO BIG ",
@@ -142,6 +142,7 @@ static const dsp* A2=NULL;
  * n = ncol (y stores product vector).		              *
  **************************************************************/
 static void opb(long n, double *x, double *y){
+    (void)n;
     dmat *tmp=dnew(A2->nx, 1);
     dspmulvec(tmp->p, A2, x, 'n',1);
     memset(y, 0, sizeof(double)*A2->ny);
@@ -196,7 +197,7 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     tptr1 += nrow;
     a      = tptr1;
     *Sdiag=dnew(maxprs,1);
-    dmat *V=dnew(nrow, maxprs); PDMAT(V,pV);
+    dmat *V=dnew(nrow, maxprs); dmat* pV=V;
     TIC;tic;
     if(landr(n, lanmax, maxprs, nnzero, endl, endr, vectors, kappa, ritz, bnd, r)){ 
 	warning("landr failed\n");
@@ -471,7 +472,7 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
 
     size = 5 * n + (lanmax * 4 + 1);
     tptr = NULL;
-    if (!(tptr = malloc(size * sizeof(double)))){
+    if (!(tptr = (double*)malloc(size * sizeof(double)))){
 	perror("FIRST MALLOC FAILED in LANDR()");
 	raise(errno);
     }
@@ -490,8 +491,8 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
     /* compute eigenvectors */
     if (vectors) {
 	info("j=%ld\n",j);
-	xv1 = malloc((nrow+ncol)*(j+1) * sizeof(double));
-	xv2 = malloc(ncol * sizeof(double));
+	xv1 = mymalloc((nrow+ncol)*(j+1) ,double);
+	xv2 = mymalloc(ncol ,double);
 
 	kappa = ddmax(fabs(kappa), eps34);
 	ritvec(n, kappa, ritz, bnd, wptr[6], wptr[9], wptr[4], wptr[5]);

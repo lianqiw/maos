@@ -31,8 +31,8 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	info2("Generating HXF");TIC;tic;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	recon->HXF=cellnew(nfit, npsr);
-	PDSPCELL(recon->HXF,HXF);
+	recon->HXF=dspcellnew(nfit, npsr);
+	dspcell* HXF=recon->HXF/*PDSPCELL*/;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    for(int ips=0; ips<npsr; ips++){
@@ -41,7 +41,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax->p[ifit]*ht;
 		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		HXF[ips][ifit]=mkh(recon->xloc->p[ips], recon->floc, 
+		IND(HXF,ifit,ips)=mkh(recon->xloc->p[ips], recon->floc, 
 				   displace[0], displace[1], scale);
 	    }
 	}
@@ -70,8 +70,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm==0) return;
     dspcell *HATc=dspcelltrans(recon->HA);
-    PDSPCELL(HATc, HAT);
-    PDSPCELL(recon->HA,HA);
+    dspcell*  HAT=HATc/*PDSPCELL*/;
+    dspcell* HA=recon->HA/*PDSPCELL*/;
 
     info2("Before assembling fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     /*Assemble Fit matrix. */
@@ -88,21 +88,21 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	if(recon->HXF){
 	    info2("Building recon->FR\n");
 	    recon->FR.M=cellnew(ndm, npsr);
-	    PDSPCELL(recon->FR.M, FRM);
-	    PDSPCELL(recon->HXF, HXF);
+	    dspcell*  FRM=(dspcell*)recon->FR.M/*PDSPCELL*/;
+	    dspcell*  HXF=recon->HXF/*PDSPCELL*/;
 
 	    for(int ips=0; ips<npsr; ips++){
 		for(int ifit=0; ifit<nfit; ifit++){
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		    dsp *tmp=dspmulsp(recon->W0, HXF[ips][ifit],"nn");
+		    dsp *tmp=dspmulsp(recon->W0, IND(HXF,ifit,ips),"nn");
 		    for(int idm=0; idm<ndm; idm++){
-			dspmulsp2(&FRM[ips][idm],HAT[ifit][idm], tmp, "nn",
+			dspmulsp2(PIND(FRM,idm,ips),IND(HAT,idm,ifit), tmp, "nn",
 				  recon->fitwt->p[ifit]);
 		    }
 		    dspfree(tmp);
 		}
 	    }
-	    recon->FR.V=cellnew(npsr, 1);
+	    recon->FR.V=dcellnew(npsr, 1);
 	    dmat **FRV=recon->FR.V->p;  
 	
 	    for(int ips=0; ips<npsr; ips++){
@@ -112,7 +112,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		    /*notice the sqrt. */
 		    if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
 		    dspmulvec(FRV[ips]->p+ifit*nloc, 
-			      HXF[ips][ifit], recon->W1->p, 't',
+			      IND(HXF,ifit,ips), recon->W1->p, 't',
 			      sqrt(recon->fitwt->p[ifit]));
 		}
 	    }
@@ -126,7 +126,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->FR.V=NULL;
 	}
 	/*Always need FR.U as it is used to do FL.U, FL.V */
-	recon->FR.U=cellnew(ndm, 1);
+	recon->FR.U=dcellnew(ndm, 1);
 	dmat **FRU=recon->FR.U->p;
 	
 	for(int idm=0; idm<ndm; idm++){    
@@ -136,7 +136,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		/*notice the sart. */
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
 		dspmulvec(FRU[idm]->p+ifit*nloc, 
-			  HA[idm][ifit], recon->W1->p,'t',
+			  IND(HA,ifit,idm), recon->W1->p,'t',
 			  sqrt(recon->fitwt->p[ifit]));
 	    }
 	}
@@ -156,13 +156,13 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	info2("Building recon->FL\n");
 	recon->FL.M=cellnew(ndm, ndm);
-	dsp *(*FLM)[ndm]=(dsp*(*)[ndm])recon->FL.M->p;
+	dspcell *FLM=(dspcell*)recon->FL.M;
 	for(int idm=0; idm<ndm; idm++){
 	    for(int ifit=0; ifit<nfit; ifit++){
 		if(fabs(recon->fitwt->p[ifit])<1.e-12) continue;
-		dsp *tmp=dspmulsp(recon->W0, HA[idm][ifit],"nn");
+		dsp *tmp=dspmulsp(recon->W0, IND(HA,ifit,idm),"nn");
 		for(int jdm=0; jdm<ndm; jdm++){
-		    dspmulsp2(&FLM[idm][jdm],HAT[ifit][jdm], tmp,"nn",
+		    dspmulsp2(PIND(FLM,jdm,idm),IND(HAT,jdm,ifit), tmp,"nn",
 			      recon->fitwt->p[ifit]);
 		}
 		dspfree(tmp);

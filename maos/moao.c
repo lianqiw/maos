@@ -59,7 +59,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
     if(recon->moao){
 	free_recon_moao(recon, parms);
     }
-    recon->moao=calloc(nmoao, sizeof(MOAO_T));
+    recon->moao=mycalloc(nmoao,MOAO_T);
     for(int imoao=0; imoao<nmoao; imoao++){
 	if(!parms->moao[imoao].used) continue;
 	double dxr=parms->moao[imoao].dx;
@@ -68,43 +68,43 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double offset=((int)round(parms->moao[imoao].order)%2)*0.5;
 	double guard=parms->moao[imoao].guard*MAX(dxr, dyr);
 	create_metapupil(&map,0,0,parms->dirs,parms->aper.d,0,dxr,dyr,offset,guard,0,0,0,parms->fit.square);
-	recon->moao[imoao].aloc=cellnew(1,1); 
+	recon->moao[imoao].aloc=loccellnew(1,1); 
 	recon->moao[imoao].aloc->p[0]=map2loc(map, 0);
 	recon->moao[imoao].aloc->p[0]->iac=parms->moao[imoao].iac;
 	mapfree(map);
 	loc_create_map_npad(recon->moao[imoao].aloc->p[0],parms->fit.square?0:1,0,0);
-	recon->moao[imoao].amap=cellnew(1,1);
+	recon->moao[imoao].amap=mapcellnew(1,1);
 	recon->moao[imoao].amap->p[0]=recon->moao[imoao].aloc->p[0]->map;
 	recon->moao[imoao].amap->p[0]->iac=parms->moao[imoao].iac;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc->p[0], NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
-	recon->moao[imoao].HA=cellnew(1,1);
+	recon->moao[imoao].HA=dspcellnew(1,1);
 	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc->p[0], recon->floc, 0, 0, 1);
 	if(parms->moao[imoao].actstuck){
-	    recon->moao[imoao].actstuck=cellnew(1,1);
+	    recon->moao[imoao].actstuck=lcellnew(1,1);
 	    recon->moao[imoao].actstuck->p[0]=loc_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actstuck);
 	    act_stuck(recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
 	}
 	if(parms->moao[imoao].actfloat){
-	    recon->moao[imoao].actfloat=cellnew(1,1);
+	    recon->moao[imoao].actfloat=lcellnew(1,1);
 	    recon->moao[imoao].actfloat->p[0]=loc_coord2ind(recon->moao[imoao].aloc->p[0], parms->moao[imoao].actfloat);
 	    act_float(recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
 	}
 
 	if(parms->moao[imoao].lrt_ptt){
-	    recon->moao[imoao].NW=cellnew(1,1);
+	    recon->moao[imoao].NW=dcellnew(1,1);
 	    long nloc=recon->moao[imoao].aloc->p[0]->nloc;
 	    recon->moao[imoao].NW->p[0]=dnew(nloc,3);
-	    PDMAT(recon->moao[imoao].NW->p[0], pNW);
+	    dmat*  pNW=recon->moao[imoao].NW->p[0]/*PDMAT*/;
 	    double scl=1./nloc;
 	    double scl2=scl*2./parms->aper.d;
 	    const double *locx=recon->moao[imoao].aloc->p[0]->locx;
 	    const double *locy=recon->moao[imoao].aloc->p[0]->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		/*We don't want piston/tip/tilt on the mems. */
-		pNW[0][iloc]=scl;/*piston; */
-		pNW[1][iloc]=scl2*locx[iloc];/*tip */
-		pNW[2][iloc]=scl2*locy[iloc];/*tilt */
+		IND(pNW,iloc,0)=scl;/*piston; */
+		IND(pNW,iloc,1)=scl2*locx[iloc];/*tip */
+		IND(pNW,iloc,2)=scl2*locy[iloc];/*tilt */
 	    }
 	}
 	recon->moao[imoao].W0=dspref(recon->W0);
@@ -143,7 +143,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 	  double thetax, double thetay, double hs, 
 	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha){
   
-    dcell *xp=cellnew(1,1);
+    dcell *xp=dcellnew(1,1);
     xp->p[0]=dnew(recon->floc->nloc,1);
     
     for(int ipsr=0; ipsr<recon->npsr; ipsr++){
@@ -235,7 +235,7 @@ void moao_recon(SIM_T *simu){
     dcell *rhs=NULL;
     int iy=parms->sim.closeloop?1:0;
     if(simu->dm_wfs){/*There is MOAO DM for WFS */
-	dcell *dmmoao=cellnew(1,1);
+	dcell *dmmoao=dcellnew(1,1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int imoao=parms->powfs[ipowfs].moao;
@@ -271,7 +271,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
+		zfarr_dmat(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;
@@ -280,7 +280,7 @@ void moao_recon(SIM_T *simu){
     }
     if(simu->dm_evl){/*There is MOAO DM for Science */
 	int imoao=parms->evl.moao;
-	dcell *dmmoao=cellnew(1,1);
+	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<nevl; ievl++){
 	    dmmoao->p[0]=(simu->dm_evl->p[ievl+iy*nevl]);
 	    dcell *rhsout=NULL;
@@ -317,7 +317,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
+		zfarr_dmat(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
 	    dmmoao->p[0]=NULL;

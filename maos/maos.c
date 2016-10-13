@@ -43,24 +43,25 @@ static void read_env(){
 }
 void maos_setup(const PARMS_T *parms){
     TIC;tic;
-    global=calloc(1, sizeof(GLOBAL_T));
+    global=mycalloc(1,GLOBAL_T);
     global->parms=parms;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
     read_env();
-    if(parms->save.setup){
-	mymkdir("setup");
-	if(chdir("setup")){
-	    error("Unable to save to folder setup\n");
-	}
-    }
     if(parms->sim.skysim){
 	dirskysim="skysim";
 	mymkdir("%s",dirskysim);
     }else{
 	dirskysim=".";
     }
+    if(parms->save.setup){
+	mymkdir("setup");
+	if(chdir("setup")){
+	    error("Unable to save to folder setup\n");
+	}
+    }
+ 
     THREAD_POOL_INIT(NTHREAD);
     global->aper=aper=setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
@@ -73,6 +74,12 @@ void maos_setup(const PARMS_T *parms){
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/
 	setup_powfs_phy(parms, powfs);
+    }
+    if(parms->plot.setup){
+	plot_setup(parms, powfs, aper, recon);
+    }
+    global->setupdone=1;
+    if(!parms->sim.evlol){
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
@@ -83,7 +90,7 @@ void maos_setup(const PARMS_T *parms){
 #endif
 	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
-	setup_recon(recon, parms, powfs, aper);
+	setup_recon(recon, parms, powfs);
 	if(parms->recon.alg==0 || parms->sim.dmproj){
 	    setup_recon_fit(recon, parms);
 	}
@@ -106,10 +113,6 @@ void maos_setup(const PARMS_T *parms){
 		((PARMS_T*)parms)->sim.end=parms->sim.start;//indicate no simulation
 	    }
 	}
-    }
-    global->setupdone=1;
-    if(parms->plot.setup){
-	plot_setup(parms, powfs, aper, recon);
     }
 #if USE_CUDA
     if(parms->gpu.evl){
@@ -163,7 +166,7 @@ void maos_reset(){
     free_simu(global->simu);
     free_recon(parms,global->recon); 
     free_powfs(parms,global->powfs); 
-    free_aper(parms, global->aper);
+    free_aper(global->aper);
     free_parms(parms);
 #if USE_CUDA
     if(use_cuda){

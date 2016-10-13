@@ -39,5 +39,19 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long nsa,      /**<Number of (sub)apertures*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	    );
-void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov, int norm);
+dmat* mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int norm);
+dmat *mtch(dmat **neaout, /**<[out] sanea*/
+	   const dmat *i0, /**<Averaged subaperture image*/
+	   const dmat *gx, /**<derivative of i0 along x*/
+	   const dmat *gy, /**<derivative of i0 along y*/
+	   const dmat *dbkgrnd2, /**<background*/
+	   const dmat *dbkgrnd2c, /**<background calibration*/
+	   double bkgrnd,  /**<global background*/
+	   double bkgrndc, /**<global background calibration*/
+	   double rne,     /**<Detector read noise*/
+	   double pixthetax, /**<Size of pixel along x*/
+	   double pixthetay, /**<Size of pixel along y*/
+	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
+	   int radgx,        /**<1: gx/gy is along r/a coord.*/
+	   int cr );
 #endif

@@ -32,7 +32,7 @@ static TIC;
    Setting up aperture cordinate grid aper_locs, and amplitude map for
 performance evaluation. */
 APER_T * setup_aper(const PARMS_T *const parms){
-    APER_T *aper = calloc(1, sizeof(APER_T));
+    APER_T *aper = mycalloc(1,APER_T);
     tic;
     if(parms->aper.fnamp){
 	info2("Reading aperture amplitude map from %s\n", parms->aper.fnamp);
@@ -61,7 +61,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    const long nx=aper->ampground->nx;
 	    const long ny=aper->ampground->ny;
 	    dmat *B=dnew_data(nx, ny, aper->ampground->p);
-	    aper->ampground->p=calloc(nx*ny, sizeof(double));
+	    aper->ampground->p=mycalloc(nx*ny,double);
 	    dembed((dmat*)aper->ampground,B,parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}
@@ -92,7 +92,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(fabs(parms->aper.rotdeg)>1.e-12){
 	    warning("Pupil mask is rotated by %g deg\n",parms->aper.rotdeg);
 	    dmat *B=dnew_data(mask->nx, mask->ny, mask->p);
-	    mask->p=calloc(mask->nx*mask->ny, sizeof(double));
+	    mask->p=mycalloc(mask->nx*mask->ny,double);
 	    dembed((dmat*)mask, B, parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}
@@ -111,7 +111,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     if(parms->misreg.dm2sci){
 	int isset=0;
 	int nevl=parms->evl.nevl;
-	aper->locs_dm=cellnew(parms->ndm, nevl);
+	aper->locs_dm=loccellnew(parms->ndm, nevl);
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int ievl=0; ievl<nevl; ievl++){
 		if(parms->misreg.dm2sci[ievl+idm*nevl])
@@ -173,7 +173,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 }
 /**
    Free the aper structure after simulation*/
-void free_aper(const PARMS_T *parms, APER_T *aper){
+void free_aper(APER_T *aper){
     /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
     dfree(aper->amp);

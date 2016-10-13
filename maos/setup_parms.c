@@ -189,16 +189,18 @@ void free_parms(PARMS_T *parms){
     lfree(parms->dbg.tomo_maxit);
     dfree(parms->dbg.pwfs_psx);
     dfree(parms->dbg.pwfs_psy);
+    dcellfree(parms->dbg.dmoff);
+    dcellfree(parms->dbg.gradoff);
     free(parms);
 }
-static inline int sum_intarr(int n, long *a){
+INLINE int sum_intarr(int n, long *a){
     int sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);
     }
     return sum;
 }
-static inline int sum_dblarr(int n, double *a){
+INLINE int sum_dblarr(int n, double *a){
     double sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);
@@ -211,15 +213,16 @@ static inline int sum_dblarr(int n, double *a){
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
 #define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 #define READ_DMAT(A) parms->A= readcfg_dmat(#A) /*read a key with dmat. */
+#define READ_DCELL(A) parms->A= readcfg_dcell(#A) /*read a key with dmat. */
 #define READ_LMAT(A) parms->A= readcfg_lmat(#A) /*read a key with lmat. */
 
 #define READ_POWFS(A,B)						\
-    readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
+    readcfg_##A##arr_n((&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
 #define READ_POWFS_RELAX(A,B)						\
-    readcfg_##A##arr_nmax((void*)(&A##tmp), npowfs, "powfs."#B);	\
+    readcfg_##A##arr_nmax((&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
@@ -231,7 +234,7 @@ static inline int sum_dblarr(int n, double *a){
 static void readcfg_powfs(PARMS_T *parms){
     int     npowfs,i;
     parms->npowfs=npowfs=readcfg_peek_n("powfs.dsa");
-    parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
+    parms->powfs=mycalloc(parms->npowfs,POWFS_CFG_T);
     int    *inttmp=NULL;
     double *dbltmp=NULL;
     char  **strtmp=NULL;
@@ -318,9 +321,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,phytypesim2);
     READ_POWFS_RELAX(dbl,r0);
     READ_POWFS_RELAX(dbl,L0);
-    READ_POWFS_RELAX(dbl,mtchcra);
     READ_POWFS_RELAX(int,mtchcpl);
-    READ_POWFS_RELAX(int,mtchscl);
+    READ_POWFS_RELAX(int,sigmatch);
     READ_POWFS_RELAX(int,mtchadp);
     READ_POWFS_RELAX(dbl,cogthres);
     READ_POWFS_RELAX(dbl,cogoff);
@@ -353,7 +355,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
     READ_POWFS(int,pixpsa);
-    READ_POWFS_RELAX(dbl,mtchcr);
+    READ_POWFS_RELAX(int,mtchcr);
     READ_POWFS_RELAX(int,mtchstc);
     READ_POWFS_RELAX(int,phystep);
     READ_POWFS_RELAX(int,noisy);
@@ -375,7 +377,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
 	    open_config(powfsi->fnllt,prefix,0);
-	    powfsi->llt=calloc(1, sizeof(LLT_CFG_T));
+	    powfsi->llt=mycalloc(1,LLT_CFG_T);
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    powfsi->llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
@@ -409,12 +411,12 @@ static void readcfg_powfs(PARMS_T *parms){
     free(strtmp);
 }
 #define READ_WFS(A,B)							\
-    readcfg_##A##arr_n((void*)(&A##tmp),nwfs,"wfs."#B);			\
+    readcfg_##A##arr_n((&A##tmp),nwfs,"wfs."#B);			\
     for(i=0; i<nwfs; i++){						\
 	parms->wfs[i].B = A##tmp[i];					\
     }									
 #define READ_WFS_RELAX(A,B)						\
-    readcfg_##A##arr_nmax((void*)(&A##tmp),nwfs,"wfs."#B);		\
+    readcfg_##A##arr_nmax((&A##tmp),nwfs,"wfs."#B);		\
     for(i=0; i<nwfs; i++){						\
 	parms->wfs[i].B = A##tmp[i];					\
     }									
@@ -425,7 +427,7 @@ static void readcfg_powfs(PARMS_T *parms){
 static void readcfg_wfs(PARMS_T *parms){
     int i;
     int nwfs=parms->nwfs=readcfg_peek_n("wfs.thetax");
-    parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
+    parms->wfs=mycalloc(parms->nwfs,struct WFS_CFG_T);
     double *dbltmp=NULL;
     int    *inttmp=NULL;
     char  **strtmp=NULL;
@@ -522,13 +524,13 @@ static void readcfg_wfs(PARMS_T *parms){
     free(strtmp);
 }
 #define READ_DM(A,B)					     \
-    readcfg_##A##arr_n((void*)(&A##tmp),ndm,"dm."#B);	     \
+    readcfg_##A##arr_n((&A##tmp),ndm,"dm."#B);	     \
     for(i=0; i<ndm; i++){				     \
 	parms->dm[i].B = A##tmp[i];			     \
     }							     
 
 #define READ_DM_RELAX(A,B) \
-    readcfg_##A##arr_nmax((void*)(&A##tmp),ndm,"dm."#B);     \
+    readcfg_##A##arr_nmax((&A##tmp),ndm,"dm."#B);     \
     for(i=0; i<ndm; i++){				     \
 	parms->dm[i].B = A##tmp[i];			     \
     }							     
@@ -539,7 +541,7 @@ static void readcfg_wfs(PARMS_T *parms){
 static void readcfg_dm(PARMS_T *parms){
     int ndm,i;
     ndm=parms->ndm=readcfg_peek_n("dm.ht");
-    parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
+    parms->dm=mycalloc(parms->ndm,struct DM_CFG_T);
     int* inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
@@ -588,12 +590,12 @@ static void readcfg_dm(PARMS_T *parms){
     free(dmattmp);
 }
 #define READ_MOAO(A,B)					      \
-    readcfg_##A##arr_n((void*)(&A##tmp),nmoao,"moao."#B);     \
+    readcfg_##A##arr_n((&A##tmp),nmoao,"moao."#B);     \
     for(i=0; i<nmoao; i++){				      \
 	parms->moao[i].B = A##tmp[i];			      \
     }							      
 #define READ_MOAO_RELAX(A,B)				      \
-    readcfg_##A##arr_nmax((void*)(&A##tmp),nmoao,"moao."#B);  \
+    readcfg_##A##arr_nmax((&A##tmp),nmoao,"moao."#B);  \
     for(i=0; i<nmoao; i++){				      \
 	parms->moao[i].B = A##tmp[i];			      \
     }							      
@@ -605,7 +607,7 @@ static void readcfg_moao(PARMS_T *parms){
     int nmoao=readcfg_peek_n("moao.dx");
     int i;
     parms->nmoao=nmoao;
-    parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
+    parms->moao=mycalloc(nmoao,MOAO_CFG_T);
     int *inttmp=NULL;
     double *dbltmp=NULL;
     char **strtmp=NULL;
@@ -671,9 +673,18 @@ static void readcfg_atmr(PARMS_T *parms){
 	parms->atmr.L0=parms->atm.L0;
     }
     READ_DMAT(atmr.ht);
-    //parms->atmr.ht=readcfg_dmat("atmr.ht");
+    READ_DMAT(atmr.wt);
+    if(parms->atmr.ht->nx==0){
+	dcp(&parms->atmr.ht, parms->atm.ht);
+    }
+    if(parms->atmr.wt->nx==0){
+	dcp(&parms->atmr.wt, parms->atm.wt);
+    }else{
+	if(parms->atmr.wt->nx!=parms->atmr.ht->nx){
+	    error("atmr.wt has to match atmr.ht\n");
+	}
+    }
     parms->atmr.nps=parms->atmr.ht->nx;
-    parms->atmr.wt=readcfg_dmat_n(parms->atmr.nps, "atmr.wt");
     parms->atmr.os=readcfg_lmat_nmax(parms->atmr.nps, "atmr.os");
     READ_DBL(atmr.dx);
 }
@@ -868,7 +879,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.mffocus);
     READ_DBL(sim.epfocus2tel);
     READ_INT(sim.focus2tel);
-    READ_INT(sim.fsmideal);
+    READ_INT(sim.idealfsm);
+    READ_INT(sim.commonfsm);
     READ_DMAT(sim.apdm);
     READ_DMAT(sim.epdm);
     READ_DMAT(sim.aplo);
@@ -985,7 +997,7 @@ static void readcfg_plot(PARMS_T *parms){
 */
 static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.wamethod);
-    READ_INT(dbg.atm);
+    READ_DBL(dbg.atm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     READ_LMAT(dbg.tomo_maxit);
@@ -1012,6 +1024,9 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DMAT(dbg.pwfs_psy);
     READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
     READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
+    READ_DBL(dbg.pwfs_pupelong);
+    READ_DCELL(dbg.dmoff);
+    READ_DCELL(dbg.gradoff);
 }
 /**
    Read in GPU options
@@ -1295,15 +1310,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(powfsi->phytypesim2==-1){
 		powfsi->phytypesim2=powfsi->phytypesim;
 	    }
-	    if(powfsi->mtchcra==-1){
-		powfsi->mtchcra=powfsi->mtchcr;
-	    }
 	    int pixpsay=powfsi->pixpsa;
 	    int pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
-	    if(pixpsax*pixpsay<4 && (powfsi->mtchcr>0 || powfsi->mtchcra>0)){
-		powfsi->mtchcr=0;
-		powfsi->mtchcra=0;
+	    if(pixpsax*pixpsay<4){
+		powfsi->mtchcr=0;//cannot do constraint.
 	    }
 	    /*Convert pixtheta to radian and do senity check*/
 	    if(powfsi->pixtheta<0){//minus means ratio to lambda/dsa
@@ -1536,13 +1547,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].noisy=0;
 	    parms->powfs[ipowfs].phystep=-1;
 	}
-	if(parms->powfs[ipowfs].mtchscl==-1){
-	    if(fabs(parms->powfs[ipowfs].sigscale-1)>EPS){
-		parms->powfs[ipowfs].mtchscl=1;
-	    }else{
-		parms->powfs[ipowfs].mtchscl=0;
-	    }
-	}
     }
     parms->hipowfs->nx=parms->nhipowfs;
     parms->lopowfs->nx=parms->nlopowfs;
@@ -1729,12 +1733,12 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->atmr.nps=nps;
     }
-    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0){
+    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0 && parms->atmr.ht->nx>1){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 	warning2("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
 	dresize(parms->atmr.wt, 1, 1);
-	parms->atmr.os->nx=1;
+	lresize(parms->atmr.os, 1, 1);
 	parms->atmr.ht->p[0]=parms->dm[0].ht;
 	parms->atmr.wt->p[0]=1;
 	parms->atmr.nps=1;
@@ -1838,33 +1842,33 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
     //Collect all beam directions 
     const int ndir=parms->nwfs+parms->evl.nevl+parms->fit.nfit+(parms->sim.ncpa_calib?parms->sim.ncpa_ndir:0);
     parms->dirs=dnew(3, ndir);
-    PDMAT(parms->dirs, pdir);
+    dmat*  pdir=parms->dirs/*PDMAT*/;
     int count=0;
 
     for(int i=0; i<parms->nwfs; i++){
-	pdir[count][0]=parms->wfs[i].thetax;
-	pdir[count][1]=parms->wfs[i].thetay;
-	pdir[count][2]=parms->wfs[i].hs;
+	IND(pdir,0,count)=parms->wfs[i].thetax;
+	IND(pdir,1,count)=parms->wfs[i].thetay;
+	IND(pdir,2,count)=parms->wfs[i].hs;
 	count++;
     }
     
     for(int i=0; i<parms->evl.nevl; i++){
-	pdir[count][0]=parms->evl.thetax->p[i];
-	pdir[count][1]=parms->evl.thetay->p[i];
-	pdir[count][2]=parms->evl.hs->p[i];
+	IND(pdir,0,count)=parms->evl.thetax->p[i];
+	IND(pdir,1,count)=parms->evl.thetay->p[i];
+	IND(pdir,2,count)=parms->evl.hs->p[i];
 	count++;
     }
     for(int i=0; i<parms->fit.nfit; i++){
-	pdir[count][0]=parms->fit.thetax->p[i];
-	pdir[count][1]=parms->fit.thetay->p[i];
-	pdir[count][2]=parms->fit.hs->p[i];
+	IND(pdir,0,count)=parms->fit.thetax->p[i];
+	IND(pdir,1,count)=parms->fit.thetay->p[i];
+	IND(pdir,2,count)=parms->fit.hs->p[i];
 	count++;
     }
     if(parms->sim.ncpa_calib){
 	for(int i=0; i<parms->sim.ncpa_ndir; i++){
-	    pdir[count][0]=parms->sim.ncpa_thetax->p[i];
-	    pdir[count][1]=parms->sim.ncpa_thetay->p[i];
-	    pdir[count][2]=parms->sim.ncpa_hs->p[i];
+	    IND(pdir,0,count)=parms->sim.ncpa_thetax->p[i];
+	    IND(pdir,1,count)=parms->sim.ncpa_thetay->p[i];
+	    IND(pdir,2,count)=parms->sim.ncpa_hs->p[i];
 	    count++;
 	}
     }
@@ -2081,7 +2085,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
   
     if(parms->recon.glao){
-	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
+	parms->wfsr=mycalloc(parms->npowfs,WFS_CFG_T);
 	parms->nwfsr=parms->npowfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->wfsr[ipowfs].thetax=0;
@@ -2089,6 +2093,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->wfsr[ipowfs].hs=parms->powfs[ipowfs].hs;
 	    parms->wfsr[ipowfs].powfs=ipowfs;
 	    parms->powfs[ipowfs].nwfsr=1;
+	    parms->powfs[ipowfs].wfsr=lnew(1,1);
+	    parms->powfs[ipowfs].wfsr->p[0]=ipowfs;
 	}
 	parms->fit.nfit=1;
 	dresize(parms->fit.thetax, 1, 1);
@@ -2103,6 +2109,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->nwfsr= parms->nwfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+	    parms->powfs[ipowfs].wfsr=lref(parms->powfs[ipowfs].wfs);
 	}
 	int nwfsfit=0;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -2233,7 +2240,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(!parms->tomo.precond){
 	    factor*=10;
 	}
-	parms->tomo.maxit=3*factor;
+	parms->tomo.maxit=4*factor;
 	if(parms->recon.mvm==1 && parms->tomo.splitlrt){
 	    warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
 	    parms->tomo.splitlrt=0;
@@ -2247,7 +2254,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->fit.alg==1 && parms->fit.maxit==0){
 	int factor;
 	factor=parms->recon.warm_restart?1:10;
-	parms->fit.maxit=4*factor;
+	parms->fit.maxit=10*factor;
     }
     /*Fitting tip/tilt constraint is only intended for multi DM*/
     if(parms->ndm<2 && parms->fit.lrt_tt){
@@ -2369,7 +2376,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	if(parms->sim.nseed<1){
 	    scheduler_finish(0);
 	    info2("There are no seed to run. Use -O to override. Exit\n");
-	    quit();
+	    sync(); exit(0);
 	}
     }
     info2("There are %d valid simulation seeds: ",parms->sim.nseed);
@@ -2423,6 +2430,16 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
 	    }
+	}
+    }
+    if(parms->dbg.dmoff){
+	if(parms->dbg.dmoff->nx!=parms->ndm){
+	    cellresize(parms->dbg.dmoff, parms->ndm, parms->dbg.dmoff->ny);
+	}
+    }
+    if(parms->dbg.gradoff){
+	if(parms->dbg.gradoff->nx!=parms->nwfs){
+	    cellresize(parms->dbg.gradoff, parms->nwfs, parms->dbg.gradoff->ny);
 	}
     }
 }
@@ -2531,10 +2548,9 @@ static void print_parms(const PARMS_T *parms){
 	info2("    %s in reconstruction. ", 
 	      parms->powfs[i].gtype_recon==0?"Gtilt":"Ztilt");
 	if(parms->powfs[i].phystep>-1){
-	    info2("Physical optics start at %d with '%s' %s",
+	    info2("Physical optics start at %d with '%s'",
 		  parms->powfs[i].phystep, 
-		  phytype[parms->powfs[i].phytypesim],
-		  parms->powfs[i].mtchscl?"scaled":"");
+		  phytype[parms->powfs[i].phytypesim]);
 	}else{
 	    info2("Geomtric optics uses %s ",
 		  parms->powfs[i].gtype_sim==0?"gtilt":"ztilt");
@@ -2684,7 +2700,7 @@ static void print_parms(const PARMS_T *parms){
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
-PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
+PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override){
     if(!mainconf){
 	mainconf="default.conf";
     }
@@ -2703,7 +2719,7 @@ PARMS_T * setup_parms(char *mainconf, char *extraconf, int override){
     free(config_path);
     open_config(mainconf,NULL,0);/*main .conf file. */
     open_config(extraconf, NULL, 1);
-    PARMS_T* parms=calloc(1, sizeof(PARMS_T));
+    PARMS_T* parms=mycalloc(1,PARMS_T);
     readcfg_sim(parms);
     readcfg_aper(parms);
     readcfg_atm(parms);
@@ -2800,7 +2816,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
     if(parms->nwfs==1 && ngpu==0) ngpu=1;
     if(use_cuda) use_cuda=gpu_init(parms, gpus, ngpu);
 #else
-    use_cuda=0;
+    use_cuda=0; (void) gpus; (void)ngpu;
 #endif
     if(use_cuda){
 	if(parms->sim.evlol){

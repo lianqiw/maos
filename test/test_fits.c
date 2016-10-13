@@ -7,7 +7,7 @@
 int main(){
     int N=4;
     dmat *A=dnew(N,N);
-    dcell *B=cellnew(2,2);
+    dcell *B=dcellnew(2,2);
     B->p[0]=dnew(N,N);
     B->p[2]=dnew(N,N);
     rand_t rstat;

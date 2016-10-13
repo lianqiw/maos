@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 2.0.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.1.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
@@ -133,14 +133,15 @@ AC_ARG_WITH(ccbin, AS_HELP_STRING([--with-ccbin=CC,],[Specify CCBIN for nvcc]), 
 AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKDIR=${withval}], [GTKDIR=])
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="default"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
+AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 if test -z "$MEXDIR" ;then
     with_matlab=no
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
-OPTScommon="-Wno-unknown-pragmas -Wno-unused-function -fno-common" 
+OPTScommon=
 if test "${USER}" = "lianqiw" ;then
-    OPTScommon="-Wshadow -Wall -Werror $OPTScommon"
+    OPTScommon+=" -Wshadow -Wall -Wextra -Werror -Wno-unknown-pragmas -Wno-unused-function -fno-common -Wno-missing-field-initializers -Wno-format-security" 
 fi
 LDEXE=
 OPTS=
@@ -148,7 +149,7 @@ OPTS=
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 COMMON_ICC="-wd193 -wd1418 -wd2259 -wd1372 -wd981 -wd1292 -wd10237 -wd858 -wd1478 -wd1786 -wd3180 -diag-disable remark -vec-report=3"
 COMMON_GCC=" -Wno-deprecated-declarations -fms-extensions -static-libgcc"
-COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments"
+COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments "
 COMMON_ALL=""
 
 OPTIM_ALL="$COMMON_ALL -O3 "
@@ -161,6 +162,7 @@ DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
 DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
 DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 
+CFLAGS+=" -fPIC"
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -174,33 +176,28 @@ case "$CN" in
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
 	    major=${CC_VERSION%%.*}
-	    minor=${CC_VERSION%.*}
-	    minor="${minor#4.}"
+	    minor=${CC_VERSION#*.}
+	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
 		unset OPENMP_CFLAGS
 	    fi
 	fi
 	;;
     GCC)
-	if test -n "$(CC -v 2>&1 |grep clang)" ;then
-            CN=CLANG
-	else
-            CN=GCC
-	fi
 	#Test GCC version
 	CC_VERSION=$($CC -dumpversion)
 	if test -n "$CC_VERSION" ;then
-	    major="${CC_VERSION%%.*}"
-	    minor="${CC_VERSION%.*}"
-	    minor="${minor#4.}"
+	    major=${CC_VERSION%%.*}
+	    minor=${CC_VERSION#*.}
+	    minor=${minor%%.*}
 	    echo major=$major minor=$minor
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
 	    fi
-	    if test "$major" -ge 4 -a "$minor" -ge 2;then
+	    OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
+	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
 		#echo "Enabling -mtune=native"
-		#OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
-		OPTIM_GCC+=" -ftree-vectorize " #introduced in GCC 4
+		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
 	    #if test $major -eq 4 -a $minor -lt 5;then
@@ -210,6 +207,11 @@ case "$CN" in
 	    if test $major -lt 4 -o $minor -lt 4 ;then
 		unset OPENMP_CFLAGS
 	    fi
+	fi
+	;;
+    CLANG)
+	if test "$system" = "apple" ;then
+	    CFLAGS+=" -stdlib=libc++"
 	fi
 	;;
     *)
@@ -253,7 +255,9 @@ case "$host_os" in
 	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
 	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
-	CFLAGS_ARCH+=" -D_GLIBC_2_5_SOURCE -fPIC"
+	if test "$use_release" = "yes" ;then
+	    CFLAGS+=" -D_GLIBC_2_5_SOURCE"
+	fi
 	if test "${host_cpu}" = "x86_64" ;then
 	    libsuffix="64"
 	else
@@ -271,7 +275,9 @@ case "$host_os" in
 	system="apple"
 	ldsuffix="dylib"
 	#for compatibility with OS X >=10.6. Don't use 10.5 which will render mex files not usable.
-	CFLAGS_ARCH+=" -mmacosx-version-min=10.7 -fPIC -stdlib=libc++"
+	if test "$use_release" = "yes" ;then
+	    CFLAGS+=" -mmacosx-version-min=10.7"
+	fi
 	;;
     *bsd*)
 	AM_CONDITIONAL(BSD, true)
@@ -296,7 +302,7 @@ PRE_DIR="${HOME}/.aos/"          #prefix for installation
 TMP_DIR="${BUILD_DIR}/external/" #temporary directory for compiling
 LIB_DIR="${PRE_DIR}/lib${libsuffix}" #external library
 LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
-CFLAGS+=" -I${PRE_DIR}/include $CFLAGS_ARCH"
+CFLAGS+=" -I${PRE_DIR}/include "
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
 
@@ -307,7 +313,7 @@ else
     CFLAGS+=" -D_FILE_OFFSET_BITS=64" #to fix error about stat() in 32bit.
     mflag="-m32"
 fi
-if ! echo $CFLAGS | grep -q -- "$mflag" ;then
+if ! echo $CFLAGS | grep -q -- "$mflag" ;then #don't repeat mflag
     CFLAGS=" $mflag $CFLAGS"
 fi
 unset mflag
@@ -430,7 +436,13 @@ function set_lapack(){
 		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
 	    #First use MKL if available. 
-	    LAPACK="-lmkl_core"
+	    LAPACK=
+	    if test "$host_cpu" = "x86_64" ;then
+		LAPACK+=" -lmkl_intel_lp64"
+	    else
+		LAPACK+=" -lmkl_intel"
+	    fi
+	    LAPACK+=" -lmkl_core"
 	    if test -n "$OPENMP_CFLAGS" ;then
 		if test "$CN" = "ICC" ;then
 		    LAPACK+=" -lmkl_intel_thread"
@@ -442,11 +454,7 @@ function set_lapack(){
 	    else
 		LAPACK+=" -lmkl_intel_thread -liomp5"
 	    fi
-	    if test "$host_cpu" = "x86_64" ;then
-		LAPACK+=" -lmkl_intel_lp64"
-	    else
-		LAPACK+=" -lmkl_intel"
-	    fi
+	 
 	    if test "$use_static" = "yes" ;then
     		LAPACK="-Wl,--start-group,${LAPACK},--end-group"
 		LAPACK=${LAPACK// /,}
@@ -458,12 +466,21 @@ function set_lapack(){
 	*default*)
 	    LAPACK="-llapack -lblas "
 	    if test "$type" = "default-link" ;then
-	       fn_blas=`ls /usr/lib${libsuffix}/libblas.so.? 2>/dev/null`
+	       if test -d $/usr/lib${libsuffix} ;then
+		   USRLIB=/usr/lib${libsuffix}
+	       else
+		   USRLIB=/usr/lib
+	       fi
+	       echo Try to link from $USRLIB
+	       fn_blas=`ls ${USRLIB}/libblas.so.* 2>/dev/null`
+	       echo fn_blas=${fn_blas}
 	       if test -n "${fn_blas}" ;then
+		   rm -rf "${LIB_DIR}/libblas.so"
 		   ln -sf "${fn_blas%% *}" "${LIB_DIR}/libblas.so"
 	       fi
-	       fn_lapack=`ls /usr/lib${libsuffix}/liblapack.so.? 2>/dev/null`
+	       fn_lapack=`ls ${USRLIB}/liblapack.so.* 2>/dev/null`
 	       if test -n "${fn_lapack}" ;then
+		   rm -rf "${LIB_DIR}/liblapack.so"
 		   ln -sf "${fn_lapack%% *}" "${LIB_DIR}/liblapack.so"
 	       fi
 	    fi
@@ -483,7 +500,7 @@ case $use_mkl in
 	trys="pkg-config default default-link"
 	;;
     default) #default order
-	trys="pkg-config default default-link mkl mkl-download"
+	trys="mkl pkg-config default default-link mkl-download"
 	;;
 esac
 
@@ -493,8 +510,9 @@ for try in ${trys}; do
 	unset nset ac_cv_lib_m_dposv_
 	set_lapack ${try}
 	if test -n "$LAPACK" ;then
-	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK])
-	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK])
+	    #the trailing -lm is necessary for ubuntu-16.04 with mkl
+	    AC_CHECK_LIB([m],[dposv_],[has_lapack=yes],[has_lapack=no],[$LAPACK -lm])
+	    AC_CHECK_LIB([m],[dgemm_],[has_blas=yes],[has_blas=no],[$LAPACK -lm])
 	fi
     fi
 done
@@ -631,7 +649,14 @@ if test "$with_gtk" != "no" ;then
 	GTK_CFLAGS=""
 	GTK_LIBS=""
     fi
-
+    if false ;then
+	#Temporarily include GTK_CFLAGS in CFLAGS to enable header search.
+	CFLAGS_SAVE=$CFLAGS
+	CFLAGS="$CFLAGS $GTK_CFLAGS $MON_CFLAGS"
+	AC_CHECK_HEADERS([gtk/gtk.h], [], [comp_draw="no"; comp_mon="no"])
+	AC_CHECK_HEADERS([libnotify/notify.h], [], [comp_monn="no"])
+	CFLAGS=$CFLAGS_SAVE
+    fi
     AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
     AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
     AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
@@ -835,7 +860,8 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
-    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS"
+    CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS -Wno-unused-parameter"
+    CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
 	CCN=CLANG
@@ -891,9 +917,9 @@ if test ! -f "${srcdir}/version.h" ;then
     (
 	cd ${srcdir}
 	if which git >/dev/null 2>&1 ;then
-	    echo static char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
+	    echo static const char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
 	else
-	    echo static char *GIT_VERSION=\"\"\; >version.h
+	    echo static const char *GIT_VERSION=\"\"\; >version.h
 	fi
     )
 fi

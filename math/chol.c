@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -36,7 +36,7 @@
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
 */
 static cholmod_sparse *dsp2chol(const dsp *A){
-    cholmod_sparse *B=calloc(1, sizeof(cholmod_sparse));
+    cholmod_sparse *B=mycalloc(1,cholmod_sparse);
     B->nrow=A->nx;
     B->ncol=A->ny;
     B->nzmax=A->nzmax;
@@ -58,9 +58,9 @@ static cholmod_sparse *dsp2chol(const dsp *A){
 static dsp *chol2sp(const cholmod_sparse *B){
     dsp *A;
     A=dspnew(B->nrow, B->ncol, 0);
-    A->p=B->p;
-    A->i=B->i;
-    A->x=B->x;
+    A->p=(spint*)B->p;
+    A->i=(spint*)B->i;
+    A->x=(double*)B->x;
     A->nzmax=B->nzmax;
     return A;
 }
@@ -68,7 +68,7 @@ static dsp *chol2sp(const cholmod_sparse *B){
    Convert our dmat type to cholmod_dense type.
 */
 static cholmod_dense* d2chol(const dmat *A, int start, int end){
-    cholmod_dense* B=calloc(1, sizeof(cholmod_dense));
+    cholmod_dense* B=mycalloc(1,cholmod_dense);
     if(end==0) end=A->ny;
     B->nrow=A->nx;
     B->ncol=end-start;
@@ -86,8 +86,8 @@ static cholmod_dense* d2chol(const dmat *A, int start, int end){
 */
 spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
-    spchol *out=calloc(1, sizeof(spchol));
-    out->c=calloc(1, sizeof(cholmod_common));
+    spchol *out=mycalloc(1,spchol);
+    out->c=mycalloc(1,cholmod_common);
     MOD(start)(out->c);
     cholmod_sparse *A=dsp2chol(A_in);
     out->c->status=CHOLMOD_OK;
@@ -165,7 +165,7 @@ void chol_convert(spchol *A, int keep){
     error("chol_convert only work with CHOL_SIMPLE=1\n");
 #endif
     cholmod_factor *L=A->L;
-    A->Cp=malloc(sizeof(spint)*A->L->n);
+    A->Cp=mymalloc(A->L->n,spint);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
     if(keep){
 	L=MOD(copy_factor)(A->L, A->c);
@@ -217,7 +217,7 @@ void chol_save(spchol *A, const char *format,...){
 		 ,L->n, L->minor,L->nzmax,L->nsuper,L->ssize,L->xsize,L->maxcsize,L->maxesize,
 		 L->ordering,L->is_ll,L->is_super,L->is_monotonic,L->itype,L->xtype,L->dtype);
 	nc=L->is_super?7:8;
-	header_t header={MCC_ANY, nc, 1, str};
+	header_t header={MCC_ANY, (uint64_t)nc, 1, str};
 	write_header(&header, fp);
 	writearr(fp, 0, sizeof(spint), M_SPINT, "Perm", L->Perm, L->n, 1);
 	writearr(fp, 0, sizeof(spint), M_SPINT, "ColCount", L->ColCount, L->n, 1);
@@ -243,9 +243,9 @@ void chol_save(spchol *A, const char *format,...){
    is saved. */
 spchol *chol_read(const char *format, ...){
     format2fn;
-    spchol *A=calloc(1, sizeof(spchol));
+    spchol *A=mycalloc(1,spchol);
     file_t *fp=zfopen(fn, "rb");
-    header_t header={0};
+    header_t header={0,0,0,0};
     read_header(&header, fp);
     if(!iscell(&header.magic)){
 	error("%s does not contain cell array\n", fn);
@@ -273,7 +273,7 @@ spchol *chol_read(const char *format, ...){
 	}
 #define READ_SIZE_T(A) L->A=(size_t)search_header_num(header.str,#A)
 #define READ_INT(A) L->A=(int)search_header_num(header.str,#A)
-	cholmod_factor *L=A->L=calloc(1, sizeof(cholmod_factor));
+	cholmod_factor *L=A->L=mycalloc(1,cholmod_factor);
 	READ_SIZE_T(n);
 	READ_SIZE_T(minor);
 	READ_SIZE_T(nzmax);
@@ -292,14 +292,14 @@ spchol *chol_read(const char *format, ...){
 #undef READ_SIZE_T
 #undef READ_INT
 	long nx, ny;
-	header_t header2={0};
+	header_t header2={0,0,0,0};
 #define READSPINT(A,N) L->A=readspint(fp, &nx, &ny);			\
-	if((N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
+	if((long)(N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
 #define READDBL(A,N) read_header(&header2,fp);				\
 	if(header2.magic!=M_DBL) error("Invalid magic: wanted %u, got %u\n", M_DBL, header2.magic); \
 	nx=header2.nx; ny=header2.ny;					\
-	if(nx*ny!=(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
-	L->A=malloc(sizeof(double)*nx*ny);				\
+	if(nx*ny!=(long)(N)) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny); \
+	L->A=mymalloc(nx*ny,double);				\
 	zfread(L->A, sizeof(double), nx*ny, fp);
 	
 	READSPINT(Perm, L->n);
@@ -319,7 +319,7 @@ spchol *chol_read(const char *format, ...){
 	    READSPINT(s, L->ssize);
 	}
 	READDBL(x, L->is_super?L->xsize:L->nzmax);
-	A->c=calloc(1, sizeof(cholmod_common));
+	A->c=mycalloc(1,cholmod_common);
 	MOD(start)(A->c);
 #undef READSPINT
 #undef READDDBL
@@ -337,7 +337,7 @@ typedef struct{
   Solve section of the columns in multi-threaded way.
 */
 static void chol_solve_each(thread_t *info){
-    CHOLSOLVE_T *data=info->data;
+    CHOLSOLVE_T *data=(CHOLSOLVE_T*)info->data;
     dmat *x=data->x;
     spchol *A=data->A;
     cholmod_dense *y2=d2chol(data->y, info->start, info->end);
@@ -371,9 +371,9 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 		error("Fix here\n");
 	    }
 	    if(!*x){
-		*x=dnew_data(x2->nrow,x2->ncol, x2->x);/*takes over the owner of x2->x. */
+		*x=dnew_data(x2->nrow,x2->ncol, (double*)x2->x);/*takes over the owner of x2->x. */
 	    }else{
-		if((*x)->nx!=x2->nrow || (*x)->ny!=x2->ncol){
+		if((*x)->nx!=(long)x2->nrow || (*x)->ny!=(long)x2->ncol){
 		    error("Matrix mismatch\n");
 		}
 		memcpy((*x)->p,x2->x,sizeof(double)*((*x)->nx)*((*x)->ny));
@@ -401,9 +401,9 @@ dsp *chol_spsolve(spchol *A, const dsp *y){
     if(!x2) error("chol_solve failed\n");
     if(x2->z) error("why is this?\n");
     dsp *x=dspnew(x2->nrow, x2->ncol, 0);
-    x->p=x2->p;
-    x->i=x2->i;
-    x->x=x2->x;
+    x->p=(spint*)x2->p;
+    x->i=(spint*)x2->i;
+    x->x=(double*)x2->x;
     x->nzmax=x2->nzmax;
     free(y2);/*don't do spfree */
     free(x2);/*don't do spfree */
@@ -413,27 +413,26 @@ dsp *chol_spsolve(spchol *A, const dsp *y){
 /**
    forward permutation.
 */
-static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
+INLINE void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{
 	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
     }
-    PDMAT(in,pin);
-    PDMAT(*out,pout);
-    if(*out==in){/*Do each column in place. */
-	double *tmp=malloc(in->nx*sizeof(double));
+    dmat* pout=*out;
+    if(pout==in){/*Do each column in place. */
+	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[icx]=pin[icy][perm[icx]];
+		tmp[icx]=IND(in,perm[icx],icy);
 	    }
-	    memcpy(pout[icy], tmp, sizeof(double)*in->nx);
+	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
 	free(tmp);
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		pout[icy][icx]=pin[icy][perm[icx]];
+		IND(pout,icx,icy)=IND(in,perm[icx],icy);
 	    }
 	}
     }
@@ -441,27 +440,26 @@ static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
 /**
    backward permutation.
 */
-static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
+INLINE void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{
 	assert((*out)->nx == in->nx && (*out)->ny == in->ny);
     }
-    PDMAT(in,pin);
-    PDMAT(*out,pout);
-    if(*out==in){/*Do each column in place. */
-	double *tmp=malloc(in->nx*sizeof(double));
+    dmat* pout=*out;
+    if(pout==in){/*Do each column in place. */
+	double *tmp=mymalloc(in->nx,double);
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		tmp[perm[icx]]=pin[icy][icx];
+		tmp[perm[icx]]=IND(in,icx,icy);
 	    }
-	    memcpy(pout[icy], tmp, sizeof(double)*in->nx);
+	    memcpy(PCOL(pout, icy), tmp, sizeof(double)*in->nx);
 	}
 	free(tmp);
     }else{
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
-		pout[icy][perm[icx]]=pin[icy][icx];
+		IND(pout,perm[icx],icy)=IND(in,icx,icy);
 	    }
 	}
     }
@@ -474,7 +472,7 @@ typedef struct{
   The performance of this is poorer than chol_solve_each. done in place
 */
 static void chol_solve_lower_each(thread_t *info){
-    CHOL_LOWER_T *data=info->data;
+    CHOL_LOWER_T *data=(CHOL_LOWER_T*)info->data;
     dsp *A=data->C->Cl;
     double *Ax=A->x;
     spint *Ap=A->p;
@@ -482,14 +480,13 @@ static void chol_solve_lower_each(thread_t *info){
     dmat *y2=data->y2;
     info2("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
-    PDMAT(y2, py);
     for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
-	    py[iy][icol]*=AxI;
-	    double val=-py[iy][icol];
+	    IND(y2,icol,iy)*=AxI;
+	    double val=-IND(y2,icol,iy);
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		py[iy][Ai[irow]]+=val*Ax[irow];/*update in place. */
+		IND(y2,Ai[irow],iy)+=val*Ax[irow];/*update in place. */
 	    }
 	}
     }
@@ -501,9 +498,9 @@ static void chol_solve_lower_each(thread_t *info){
 	    double sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
-		sum+=Ax[irow]*py[iy][Ai[irow]];
+		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
 	    }
-	    py[iy][icol]=(py[iy][icol]-sum)*AxI;
+	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
 	}
     }
 }
@@ -511,7 +508,7 @@ static void chol_solve_lower_each(thread_t *info){
   The performance of this is poorer than chol_solve_each. done in place
 */
 static void chol_solve_upper_each(thread_t *info){
-    CHOL_LOWER_T *data=info->data;
+    CHOL_LOWER_T *data=(CHOL_LOWER_T*)info->data;
     dsp *A=data->C->Cu;
     double *Ax=A->x;
     spint *Ap=A->p;
@@ -519,17 +516,16 @@ static void chol_solve_upper_each(thread_t *info){
     dmat *y2=data->y2;
     info2("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
     /*Solve L\y */
-    PDMAT(y2, py);
     /*Solve R'\y */
     for(long icol=0; icol<A->nx; icol++){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
-		sum+=Ax[irow]*py[iy][Ai[irow]];
+		sum+=Ax[irow]*IND(y2,Ai[irow],iy);
 	    }
 	    /*assert(Ai[Ap[icol+1]-1]==icol);//confirm upper right triangular */
-	    py[iy][icol]=(py[iy][icol]-sum)*AxI;
+	    IND(y2,icol,iy)=(IND(y2,icol,iy)-sum)*AxI;
 	}
     }
 	
@@ -537,11 +533,11 @@ static void chol_solve_upper_each(thread_t *info){
     for(long icol=A->nx-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
-	    py[iy][icol]*=AxI;
-	    double val=-py[iy][icol];
+	    IND(y2,icol,iy)*=AxI;
+	    double val=-IND(y2,icol,iy);
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
-		py[iy][Ai[irow]]+=val*Ax[irow];
+		IND(y2,Ai[irow],iy)+=val*Ax[irow];
 	    }
 	}
     }

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -17,21 +17,15 @@
 */
 
 #define MAT_VERBOSE 0
-
-
-
-
-
 #include <sys/mman.h>
-
 #include "../sys/sys.h"
 #include "random.h"
-
 #include "mathmisc.h"
 #include "mathdef.h"
 #include "fft.h"
 #include "defs.h"/*Defines T, X, etc */
 
+#include "blas.h"
 /*
   Group operations related to BLAS/LAPACK to this file.
 */
@@ -85,7 +79,7 @@ void X(invspd_inplace)(X(mat) *A){
     ptrdiff_t info=0, N=A->nx;
     const char uplo='U';
     /* B is identity matrix */
-    T *B=calloc(N*N,sizeof(T));
+    T *B=mycalloc(N*N,T);
     for(long i=0;i<N;i++){
 	B[i+i*N]=1;
     }
@@ -116,11 +110,11 @@ void X(inv_inplace)(X(mat)*A){
     if(!A) return;
     if(A->nx!=A->ny) error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
     ptrdiff_t info=0, N=A->nx;
-    T *B=calloc(N*N,sizeof(T));
+    T *B=mycalloc(N*N,T);
     for(int i=0;i<N;i++){
 	B[i+i*N]=1;
     }
-    ptrdiff_t *ipiv=calloc(N, sizeof(int));
+    ptrdiff_t *ipiv=mycalloc(N,ptrdiff_t);
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
 	writebin(A,"gesv");
@@ -198,6 +192,10 @@ X(mat) *X(pinv)(const X(mat) *A, const void *W){
 /**
    computes out=out*alpha+exp(A*beta) using scaling and squaring method.
    Larger scaling is more accurate but slower. Tested against matlab expm
+
+   First, scaling the matrix by 2^-n times so it is smaller than 1/threshold.
+   Then compute exp(A*beta*2^-n) using Tylor expansion.
+   Then compute the final answer by taking exponential of 2^n.
 */
 void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     const int accuracy=10;//How many terms in Taylor expansion to evaluate
@@ -208,13 +206,18 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     int scaling=0;
     {
 	R norm=sqrt(X(norm)(A));
-	scaling=(int)ceil(log2(FABS(norm*beta*threshold)));
+	R max2=X(maxabs)(A);
+	if(norm<max2){
+	    norm=max2;
+	}
+	scaling=(int)ceil(log2(fabs(norm*beta*threshold)));
 	if(scaling<0) scaling=0;
     }
     X(add)(&m_small, 0, A, beta*exp2(-scaling));
     X(mat)*result=X(new)(A->nx, A->ny);
     X(addI)(result, 1);
     X(cp)(&m_power, m_small);
+    //Compute the exponential using Taylor expansion.
     R factorial_i=1.0;
     for(int i=1; i<accuracy; i++){
 	factorial_i*=i;
@@ -229,11 +232,17 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
 	X(cp)(&m_exp1, result);
 	X(mm)(&result, 0, m_exp1, m_exp1, "nn", 1);
     }
+    X(add)(out, alpha, result, 1);
+    if(X(isnan)(*out)){
+	static int count=-1; count++;
+	info("scaling=%d. exp2=%g\n", scaling, exp2(-scaling));
+	writebin(A, "error_expm_%d_%f", count, beta);
+	error("expm returns NaN\n");
+    }
     X(free)(m_small);
     X(free)(m_exp1);
     X(free)(m_power);
     X(free)(m_power1);
-    X(add)(out, alpha, result, 1);
     X(free)(result);
 }
 /**
@@ -265,23 +274,24 @@ X(mat)* X(chol)(const X(mat) *A){
     if(A->nx!=A->ny) error("dchol requires square matrix\n");
     X(mat) *B = X(dup)(A);
     if(A->nx==1){
-	B->p[0]=SQRT(B->p[0]);
+	B->p[0]=sqrt(B->p[0]);
 	return B;
     }
     ptrdiff_t n=B->nx;
     ptrdiff_t info=0;//some take 4 byte, some take 8 byte in 64 bit machine.
     Z(potrf)("L", &n, B->p, &n, &info);
     if(info){
+	writebin(A, "error_chol_A");
 	if(info<0){
 	    error("The %td-th parameter has an illegal value\n", -info);
 	}else{
 	    error("The leading minor of order %td is not posite denifite\n", info);
 	}
     }else{/*Zero out the upper diagonal. For some reason they are not zero. */
-	PDMAT(B, Bp);
+	X(mat)*  Bp=B;
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<iy; ix++){
-		Bp[iy][ix]=0;
+		IND(Bp,ix,iy)=0;
 	    }
 	}
     }
@@ -300,6 +310,12 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	if(Sdiag) *Sdiag=0;
 	return;
     }
+    int singleton=0;
+    if(A->nx>2048 && !OMP_IN_PARALLEL){
+	singleton=1;
+	//Prevent multiple processes class gesvd simultaneously.
+	sem_lock("svd", 1);
+    }
     char jobuv='S';
     ptrdiff_t M=(int)A->nx;
     ptrdiff_t N=(int)A->ny;
@@ -315,13 +331,13 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     T work0[1];
     ptrdiff_t info=0;
 #ifdef USE_COMPLEX
-    R *rwork=malloc(nsvd*5*sizeof(R));
+    R *rwork=mymalloc(nsvd*5,R);
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
 #endif
-    lwork=(ptrdiff_t)REAL(work0[0]);
-    T *work1=malloc(sizeof(T)*lwork);
+    lwork=(ptrdiff_t)creal(work0[0]);
+    T *work1=mymalloc(lwork,T);
 #ifdef USE_COMPLEX
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
 #else
@@ -343,8 +359,70 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #ifdef USE_COMPLEX
     free(rwork);
 #endif
+    if(singleton){
+	sem_lock("svd", 0);
+    }
 }
 
+void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
+    char fnsvd[PATH_MAX];
+    int do_cache=0;
+    if(A->nx>512){
+	//Cache the result
+	uint32_t key=0;
+	key=hashlittle(A->p, A->nx*A->ny*sizeof(T), key);
+	char dirsvd[PATH_MAX];
+	snprintf(dirsvd, PATH_MAX, "%s/.aos/cache/svd", HOME);
+	snprintf(fnsvd, PATH_MAX, "%s/svd_%ld_%u.bin", dirsvd, A->nx, key);
+	if(!exist(dirsvd)){
+	    mymkdir("%s", dirsvd);
+	}else{
+	    if(zfexist(fnsvd)) zftouch(fnsvd);
+	    remove_file_older(dirsvd, 365*24*3600);
+	}
+	long avail=available_space(dirsvd);
+	long need=A->nx*A->ny*sizeof(T)*3;
+	if(avail>need){
+	    do_cache=1;
+	}
+    }
+    if(!do_cache){
+	X(svd)(U, Sdiag, VT, A);
+    }else{
+	cell *in=0;
+	while(!in){
+	    char fnlock[PATH_MAX];
+	    snprintf(fnlock, PATH_MAX, "%s.lock", fnsvd);
+	    if(exist(fnsvd)){
+		info2("Reading %s\n", fnsvd);
+		in=readbin("%s", fnsvd);
+	    }else{
+		int fd=lock_file(fnlock, 0, 0);
+		if(fd>=0){//success
+		    char fntmp[PATH_MAX];
+		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnsvd);
+		    X(svd)(U, Sdiag, VT, A);
+		    in=cellnew(3, 1);
+		    in->p[0]=(cell*)*U;
+		    in->p[1]=(cell*)*Sdiag;
+		    in->p[2]=(cell*)*VT;
+		    writebin(in, "%s", fntmp);
+		    if(rename(fntmp, fnsvd)){
+			error("Unable to rename %s to %s\n", fntmp, fnsvd);
+		    }
+		    }else{//wait
+		    warning("Waiting for previous lock to release ...");
+		    fd=lock_file(fnlock, 1 ,0);
+		}
+		close(fd); remove(fnlock);
+	    }
+	}
+	*U=X(mat_cast)(in->p[0]); in->p[0]=0;
+	*Sdiag=XR(mat_cast)(in->p[1]); in->p[1]=0;
+	*VT=X(mat_cast)(in->p[2]); in->p[2]=0;
+	cellfree(in);
+    }
+}
 
 /**
    computes pow(A,power) in place using svd.
@@ -358,10 +436,10 @@ void X(svd_pow)(X(mat) *A, R power, R thres){
     X(mat) *VT=NULL;
     X(svd)(&U, &Sdiag, &VT, A);
     /*eigen values below the threshold will not be used. the first is the biggest. */
-    R maxeig=FABS(Sdiag->p[0]);
+    R maxeig=fabs(Sdiag->p[0]);
     R thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
+	if(fabs(Sdiag->p[i])>thres0){/*only do with  */
 	    if(thres<0){/*compare adjacent eigenvalues*/
 		thres0=Sdiag->p[i]*(-thres);
 	    }

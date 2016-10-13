@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -16,34 +16,34 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <sys/file.h>
-#include "cellarr.h"
+#include "zfarr.h"
 #include "mathdef.h"
 
 /**
-   Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell
+   Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell
  */
-cellarr* cellarr_init(long nx, long ny,const char*format,...){
+zfarr* zfarr_init(long nx, long ny,const char*format,...){
     format2fn;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    cellarr *out=calloc(1, sizeof(cellarr));
+    zfarr *out=mycalloc(1,zfarr);
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=nx*ny;
-    header_t header={MCC_ANY, nx, ny, NULL};
+    header_t header={MCC_ANY, (uint64_t)nx, (uint64_t)ny, NULL};
     write_header(&header, out->fp);
     return out;
 }
 
 /**
-   Append a A of type type into the cellarr ca, at location i.
+   Append a A of type type into the zfarr ca, at location i.
 */
-void cellarr_push(cellarr *ca, int i, const void *p){
+void zfarr_push(zfarr *ca, int i, const void *p){
     if(!p){
 	warning("p is empty\n");
 	return;//nothing to be done
     }
-    if(!ca) error("cellarr is NULL\n");
+    if(!ca) error("zfarr is NULL\n");
     if(i>=0 && ca->cur>i) {
 	warning("Invalid. cur=%ld, i=%d, skip.\n", ca->cur, i);
 	return;
@@ -57,30 +57,30 @@ void cellarr_push(cellarr *ca, int i, const void *p){
     ca->cur++;
 }
 
-#define cellarr_cell(type)					\
-    void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){ \
-	cellarr_push(ca, i, A);}					\
+#define zfarr_cell(type)					\
+    void zfarr_##type##cell(zfarr *ca, int i, const type##cell *A){ \
+	zfarr_push(ca, i, A);}					\
 
-#define cellarr_mat(type)					\
-    void cellarr_##type##mat(cellarr *ca, int i, const type##mat *A){	\
-	cellarr_push(ca, i, A);}
+#define zfarr_mat(type)					\
+    void zfarr_##type##mat(zfarr *ca, int i, const type##mat *A){	\
+	zfarr_push(ca, i, A);}
 
-cellarr_cell(d);
-cellarr_cell(s);
-cellarr_cell(c);
-cellarr_cell(z);
-cellarr_mat(d);
-cellarr_mat(s);
-cellarr_mat(c);
-cellarr_mat(z);
+zfarr_cell(d);
+zfarr_cell(s);
+zfarr_cell(c);
+zfarr_cell(z);
+zfarr_mat(d);
+zfarr_mat(s);
+zfarr_mat(c);
+zfarr_mat(z);
 
 /**
-   Close the cellarr.
+   Close the zfarr.
 */
-void cellarr_close(cellarr *ca){
+void zfarr_close(zfarr *ca){
     if(!ca) return;
     if(ca->cur !=ca->tot){
-	warning2("cellarr %s is initialized with %ld elements, "
+	warning2("zfarr %s is initialized with %ld elements, "
 		 "but %ld elements are written\n",
 		 zfname(ca->fp),ca->tot,ca->cur);
     }
@@ -88,12 +88,12 @@ void cellarr_close(cellarr *ca){
     free(ca);
 }
 /**
-   Close an array of cellarr
+   Close an array of zfarr
 */
-void cellarr_close_n(cellarr **ca, int nc){
+void zfarr_close_n(zfarr **ca, int nc){
     if(!ca) return;
     for(int ic=0; ic<nc; ic++){
-	cellarr_close(ca[ic]);
+	zfarr_close(ca[ic]);
     }
     free(ca);
 }

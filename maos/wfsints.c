@@ -37,7 +37,7 @@
 */
 void wfsints(thread_t *thread_data){
     /* first, unwrap the data */
-    WFSINTS_T *data=thread_data->data;
+    WFSINTS_T *data=(WFSINTS_T*)thread_data->data;
     const PARMS_T *parms=global->parms;
     const POWFS_T *powfs=global->powfs;
     const int iwfs=data->iwfs;
@@ -104,18 +104,15 @@ void wfsints(thread_t *thread_data){
     }
     cmat *fftpsfout=NULL;
     /* hold the complex psf to save to file. */
-    cmat *(*ppsfout)[nsa]=NULL;
+    ccell *psfout=data->psfout;
     /* need to output psf time history */
-    if(data->psfout){
-	ppsfout=(void*)data->psfout->p;
+    if(psfout){
 	fftpsfout=cnew(psf->nx, psf->ny);
     }
-    dmat *(*ppistatout)[nsa]=NULL;
     double *gx=NULL; double *gy=NULL;
     /* need to output pixel itnensity averages */
     if(pistatout){
 	assert(pistatout->nx==nsa && pistatout->ny==nwvl);
-	ppistatout=(void*)pistatout->p;
 	psftmp=cnew(psf->nx,psf->ny);
 	/* the gradient reference for pistatout*/
 	if(data->gradref){
@@ -158,24 +155,23 @@ void wfsints(thread_t *thread_data){
 	    si=powfs[ipowfs].dtf[iwvl].si->p[0];
 	}
 	/* elongation due to uplink projection */
-	cmat *(*petf1)[nsa]=NULL;
-	cmat *(*petf2)[nsa]=NULL;
+	ccell *petf1=NULL, *petf2=NULL;
 	double etf1wt=1;
 	double etf2wt=0;
 	void (*pccwm3)(cmat*,const cmat*,const cmat*,double,const cmat*, double)=NULL;
 	if(hasllt){
 	    if(powfs[ipowfs].etfsim[iwvl].p1){
-		petf1=(void*)powfs[ipowfs].etfsim[iwvl].p1->p;
+		petf1=powfs[ipowfs].etfsim[iwvl].p1;
 		pccwm3=ccwm3col;
 	    }else{
-		petf1=(void*)powfs[ipowfs].etfsim[iwvl].p2->p;
+		petf1=powfs[ipowfs].etfsim[iwvl].p2;
 		pccwm3=ccwm3;
 	    }
 	    if(parms->powfs[ipowfs].llt->colsimdtrat>0){
 		if(powfs[ipowfs].etfsim2[iwvl].p1){
-		    petf2=(void*)powfs[ipowfs].etfsim2[iwvl].p1->p;
+		    petf2=powfs[ipowfs].etfsim2[iwvl].p1;
 		}else{
-		    petf2=(void*)powfs[ipowfs].etfsim2[iwvl].p2->p;
+		    petf2=powfs[ipowfs].etfsim2[iwvl].p2;
 		}
 		const int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
 		etf2wt=(double)(data->isim%dtrat)/(double)dtrat;
@@ -206,21 +202,21 @@ void wfsints(thread_t *thread_data){
 	    }
 
 	    /*output complex pupil function to use in skyc*/
-	    if(ppsfout){
+	    if(psfout){
 		ccp(&fftpsfout, psf);
 		/*notf * notf to cancel out the effect of fft pair (one here, one later in skyc)*/
 		cscale(fftpsfout, norm_psf/((double)notf*notf));
 		/*peak in corner. become WVF in center.*/
 		cfft2(fftpsfout,1);
 		/*output center of the complex pupil function.*/
-		cembedc(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
+		cembedc(IND(psfout,isa,iwvl), fftpsfout, 0, C_FULL);
 	    }
 	    /* form PSF with peak in corner*/
 	    cabs2toreal(psf);
 	    /* need to turn to otf to add llt contribution or output pixel intensities.*/
 	    if(isotf){
 		cfft2(psf,-1);   /*turn to otf. peak in corner */
-		if(ppistatout){  /*The pistat does not include uplink effect*/
+		if(pistatout){  /*The pistat does not include uplink effect*/
 		                 /*copy to temporary array. peak in in corner*/
 		    ccp(&psftmp,psf);
 		    if(gx){      /*remove tip/tilt from OTF using tilt reference. */
@@ -233,7 +229,7 @@ void wfsints(thread_t *thread_data){
 			cshift2center(psftmp,0.5,0.5);
 		    }
 		                       /*accumulate the real part of psf*/
-		    creal2d(&ppistatout[iwvl][isa],1,psftmp,norm_pistat);
+		    creal2d(PIND(pistatout,isa,iwvl),1,psftmp,norm_pistat);
 		}
 		if(lltopd){            /*add uplink otf */
 		    ccwm(psf,lotfc);   /*normalization done in gen of lotfc. */
@@ -257,7 +253,7 @@ void wfsints(thread_t *thread_data){
 		    cfft2(otf,-1);/*turn to OTF. peak in corner */
 		}
 		if(hasllt){/*has llt, multiply with DTF and ETF.*/
-		    (*pccwm3)(otf,nominal,petf1[illt][isa], etf1wt, petf2?petf2[illt][isa]:0, etf2wt);
+		    (*pccwm3)(otf,nominal,IND(petf1,isa,illt), etf1wt, petf2?IND(petf2,isa,illt):0, etf2wt);
 		}else{/*no uplink, multiply with DTF only.*/
 		    ccwm(otf,nominal);
 		}

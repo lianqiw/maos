@@ -78,8 +78,8 @@ public:
 
 }//namespace
 
-void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
-void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon);
+void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon);
 
 
 #endif

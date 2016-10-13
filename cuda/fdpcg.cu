@@ -52,7 +52,7 @@ cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
     fft=cuarray<cufftHandle>(count,1);
     ffti=cuarray<cufftHandle>(count,1);
     fftnc=count;
-    fftips=(int*)calloc(count+1, sizeof(int));
+    fftips=cuarray<int>(count+1,1);
     for(int ic=0; ic<count; ic++){
 	fftips[ic]=start[ic];
     }

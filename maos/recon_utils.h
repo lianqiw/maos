@@ -20,7 +20,7 @@
 #define AOS_RECON_UTILS_H
 #include "common.h"
 
-void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, double alpha, int nthread);
+void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, double alpha);
 void apply_invpsd(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
 void apply_fractal(dcell **xout, const void *extra, const dcell *xin, double alpha, int xb, int yb);
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
@@ -43,7 +43,7 @@ dsp *nea2sp(dmat **nea, long nsa);
 void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 void shift_grad(SIM_T *simu);
 lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
-CN2EST_T* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
+cn2est_t* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad);
 double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
 #endif

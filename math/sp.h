@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -58,20 +58,20 @@ X(sp)* X(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\
 X(mat) *X(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void X(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
 void X(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, char trans, T alpha); \
-void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, T alpha); \
+void X(spmulcreal)(T *restrict y, const X(sp) *A, const RI * restrict x, R alpha); \
 void X(spmm)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const char trans[2], const T alpha); \
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const char trans[2], const T alpha); \
 T X(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x) CHECK_UNUSED_RESULT;\
 T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x) CHECK_UNUSED_RESULT;\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const X(spcell) *B, R alpha); \
 void X(cellmm)(void *C0_, const void *A_, const void *B_, const char trans[2], const R alpha); \
-void* X(cellmm2)(const void *A_, const void *B_, const char trans[2]); \
+cell* X(cellmm2)(const void *A_, const void *B_, const char trans[2]);	\
 X(sp) *X(2sp)(X(mat)*A, R thres);				       \
 void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T f); \
 void X(spcellfull)(X(cell) **out0, const X(spcell) *A, const char trans, const T f); \
 X(sp) *X(spadd2)(const X(sp) *A, T a, const X(sp)*B,T b) CHECK_UNUSED_RESULT; \
 void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta); \
-void X(celladd)(void *A_, T ac, const void *B_, T bc);	\
+void X(celladd)(void *A_, R ac, const void *B_, R bc);	\
 void X(spaddI)(X(sp) *A0, T alpha);\
 void X(celladdI)(void *A_, T alpha);\
 X(sp) *X(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\

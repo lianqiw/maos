@@ -317,7 +317,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);
 
    sigma2n is a dmat array of all wanted sigma2n.
-   Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n]
+   Returns a zfarray of a dmat of [g0, a, T, res_sig, res_n]
 */
 dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 		   const dmat* sigma2n, int servo_type){
@@ -325,7 +325,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(SERVO_CALC_T));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     st.pmargin=pmargin;
@@ -338,7 +338,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     default:
 	error("Invalid servo_type=%d\n", servo_type);
     }
-    dcell *gm=cellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
+    dcell *gm=dcellnew(sigma2n?sigma2n->nx:1, sigma2n?sigma2n->ny:1);
     double g0_step=1e-6;
     double g0_min=1e-6;/*the minimum gain allowed.*/
     double g0_max=2.0;
@@ -365,7 +365,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
    PSD_OL=(PSD_CL-sigma2n/F_nyquist)/Hrej;
  */
 dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double sigma2n){
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdcl, dt, dtrat);
     const dmat *nu=st.nu;
     const dmat *psd=st.psd;
@@ -375,7 +375,7 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
     for(int i=0; i<nu->nx; i++){
 	dcomplex Hol=st.Hol->p[i];
 	dcomplex Hrej=1./(1.+Hol);
-	double normHrej=Hrej*conj(Hrej);
+	double normHrej=creal(Hrej*conj(Hrej));
 	//dcomplex Hcl=Hol*Hrej;
 	//dcomplex Hwfs=st.Hwfs->p[i];
 	//dcomplex Hn=Hcl/Hwfs;
@@ -399,7 +399,7 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
    Tested OK: 2010-06-11
 */
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type){
-    SERVO_CALC_T st={0};
+    SERVO_CALC_T st; memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     switch(servo_type){
@@ -423,11 +423,10 @@ double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtra
 /**
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
-static inline void 
+INLINE void 
 servo_typeII_filter(SERVO_T *st, const dcell *merrc){
     if(!merrc) return;
     const dmat *gain=st->ep;
-    PDMAT(gain,pgain);
     int indmul=0;
     if(gain->nx!=3){
 	error("Wrong format in gain\n");
@@ -459,9 +458,9 @@ servo_typeII_filter(SERVO_T *st, const dcell *merrc){
 	 */
 	for(int imod=0; imod<nmod; imod++){
 	    int indm=imod * indmul;
-	    gg=pgain[indm][0];
-	    e1a=pgain[indm][1];
-	    e1=pgain[indm][2];
+	    gg=IND(gain,0,indm);
+	    e1a=IND(gain,1,indm);
+	    e1=IND(gain,2,indm);
 	    mlead->p[imod] = e1a*mlead->p[imod]+gg*(1-e1a)/(1-e1)*(merr->p[imod]-e1*merrlast->p[imod]);
 	}
     }
@@ -506,7 +505,7 @@ void servo_update(SERVO_T *st, const dmat *ep){
    Initialize. al is additional latency
 */
 SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *ep){
-    SERVO_T *st=calloc(1, sizeof(SERVO_T));
+    SERVO_T *st=mycalloc(1,SERVO_T);
     if(ap){
 	st->ap=ddup(ap);
     }else{
@@ -516,10 +515,10 @@ SERVO_T *servo_new(dcell *merr, const dmat *ap, int al, double dt, const dmat *e
     if(st->ap->nx<2){
 	dresize(st->ap, 2, 1);//2 element to ensure we keep integrator history.
     }
-    st->mint=cellnew(st->ap->nx, 1);
+    st->mint=(dccell*)cellnew(st->ap->nx, 1);
     st->dt=dt;
     st->al=al;
-    st->merrhist=cellnew(st->al+1, 1);
+    st->merrhist=(dccell*)cellnew(st->al+1, 1);
     servo_update(st, ep);
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
 	servo_init(st, merr);
@@ -626,25 +625,25 @@ dmat* servo_test(dmat *input, double dt, int dtrat, dmat *sigma2n, dmat *gain){
 	input->nx=1;
     }
     int nmod=input->nx;
-    PDMAT(input,pinput);
+    dmat* pinput=input;
     dmat *merr=dnew(nmod,1);
-    dcell *mreal=cellnew(1,1);
+    dcell *mreal=dcellnew(1,1);
     dmat *mres=dnew(nmod,input->ny);
     dmat *sigman=NULL;
     if(dnorm(sigma2n)>0){
 	sigman=dchol(sigma2n);
     }
-    dcell *meas=cellnew(1,1);
+    dcell *meas=dcellnew(1,1);
     dmat *noise=dnew(nmod, 1);
     SERVO_T *st2t=servo_new(NULL, NULL, 0, dt*dtrat, gain);
     rand_t rstat;
     seed_rand(&rstat, 1);
-    PDMAT(mres,pmres);
+    dmat* pmres=mres;
     /*two step delay is ensured with the order of using, copy, acc*/
     for(int istep=0; istep<input->ny; istep++){
-	memcpy(merr->p, pinput[istep], nmod*sizeof(double));
+	memcpy(merr->p, PCOL(pinput,istep), nmod*sizeof(double));
 	dadd(&merr, 1, mreal->p[0], -1);
-	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
+	memcpy(PCOL(pmres,istep),merr->p,sizeof(double)*nmod);
 	if(istep % dtrat == 0){
 	    dzero(meas->p[0]);
 	}
@@ -699,9 +698,12 @@ void servo_free(SERVO_T *st){
     dfree(st->ep);
     free(st);
 }
-
-SHO_T *sho_new(double f0, double zeta){
-    SHO_T *out=calloc(1, sizeof(SHO_T));
+/**
+   Second harmonic oscillator. Initialization.
+ */
+SHO_T *sho_new(double f0,   /**<Resonance frequency*/ 
+	       double zeta  /**<Damping*/){
+    SHO_T *out=mycalloc(1,SHO_T);
     const double omega0=2*M_PI*f0;
     out->dt=0.01/f0;
     out->c1=2*zeta*omega0;
@@ -709,6 +711,9 @@ SHO_T *sho_new(double f0, double zeta){
     out->x1=out->x2=0;
     return out;
 }
+/**
+   Second harmonic oscillator. Step.
+ */
 double sho_step(SHO_T *sho, double xi, double dt){
     //divide dt to multiple time to do proper integration.
     long nover=(long)ceil(dt/sho->dt);
@@ -720,6 +725,33 @@ double sho_step(SHO_T *sho, double xi, double dt){
     }
     return sho->x2;
 }
+/**
+   Second harmonic oscillator. Reset.
+*/
 void sho_reset(SHO_T *sho){
     sho->x1=sho->x2=0;
+}
+/**
+   Second harmonic oscillator. Filter a time series for testing.
+*/
+dmat *sho_filter( const dmat *x,/**<Input time series*/
+		  double dt,     /**<Input time series sampling*/
+		  double f0,    /**<Resonance frequency*/ 
+		  double zeta  /**<Damping*/ ){
+    SHO_T *sho=sho_new(f0, zeta);
+    dmat *xi=dref(x);
+    if(xi->nx==1){
+	xi->nx=xi->ny;
+	xi->ny=1;
+    }
+    dmat *yo=dnew(xi->nx, xi->ny);
+    for(long iy=0; iy<xi->ny; iy++){
+	sho_reset(sho);
+	for(long ix=0; ix<xi->nx; ix++){
+	    IND(yo, ix, iy)=sho_step(sho, IND(xi, ix, iy), dt);
+	}
+    }
+    dfree(xi);
+    free(sho);
+    return yo;
 }

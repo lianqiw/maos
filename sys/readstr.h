@@ -23,6 +23,7 @@
    key=value pairs.
 */
 /*Check whether the char is space. We only treat real space, \t and \v as space. */
+/*
 INLINE int is_space(char c){
     if(c==' ' || c=='\t' || c=='\v'){
 	return 1;
@@ -30,6 +31,7 @@ INLINE int is_space(char c){
 	return 0;
     }
 }
+*/
 /*Check whether the current express ends. String end or newline is treated as end.*/
 INLINE int is_end(char c){
     if(c=='\0' || c=='\n' || c=='\r'){
@@ -44,3 +46,7 @@ int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const 
 int readstr_intarr(int**ret, int len, const char *data);
 void readstr_intarr_nmax(int **ret, int len, const char *data);
 void readstr_intarr_relax(int **ret, int len, const char *data);
+const char *search_header(const char *header, const char *key);
+double search_header_num(const char *header, const char *key);
+double search_header_num_valid(const char *header, const char *key);
+

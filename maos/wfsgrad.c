@@ -153,7 +153,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
+	zfarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
     }
  
     if(CL){
@@ -198,7 +198,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
+	zfarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
     }
     if(parms->plot.run){
 	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
@@ -228,12 +228,12 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     ccell *psfout=NULL;
-    cellarr *psfoutcellarr=NULL;
-    cellarr *ztiltoutcellarr=NULL;
+    zfarr *psfoutzfarr=NULL;
+    zfarr *ztiltoutzfarr=NULL;
     if(parms->powfs[ipowfs].psfout){
 	psfout=simu->wfspsfout->p[iwfs];
-	psfoutcellarr=simu->save->wfspsfout[iwfs];
-	ztiltoutcellarr=simu->save->ztiltout[iwfs];
+	psfoutzfarr=simu->save->wfspsfout[iwfs];
+	ztiltoutzfarr=simu->save->ztiltout[iwfs];
     }
     TIM(1);
     /* Now begin Physical Optics Intensity calculations */
@@ -262,8 +262,8 @@ void wfsgrad_iwfs(thread_t *info){
 		}
 	    }
 	    double ttx=0, tty=0;//FSM + wind shake induced jitter
-	    if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||do_pistatout||parms->sim.fsmideal){
-		if(do_pistatout||parms->sim.fsmideal){
+	    if((simu->fsmreal && simu->fsmreal->p[iwfs]) ||do_pistatout||parms->sim.idealfsm){
+		if(do_pistatout||parms->sim.idealfsm){
 		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
 		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
@@ -291,7 +291,7 @@ void wfsgrad_iwfs(thread_t *info){
 		loc_add_ptt(lltopd->p, ptt, powfs[ipowfs].llt->loc);
 	    }
 	    if(save_opd){
-		cellarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);
+		zfarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);
 	    }
 	}
 	if(parms->powfs[ipowfs].type==0){
@@ -310,8 +310,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    intsdata->opd=0;
 	    intsdata->lltopd=0;
 	    if(psfout){
-		cellarr_ccell(psfoutcellarr, isim, psfout);
-		cellarr_dmat(ztiltoutcellarr, isim, *gradacc);
+		zfarr_ccell(psfoutzfarr, isim, psfout);
+		zfarr_dmat(ztiltoutzfarr, isim, *gradacc);
 	    }
 	}else{//Pywfs
 	    pywfs_fft(&ints->p[0], powfs[ipowfs].pywfs, opd);
@@ -327,7 +327,7 @@ void wfsgrad_iwfs(thread_t *info){
 	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
 	    if(save_ints){
-		cellarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
+		zfarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
 	    }
 	    if(noisy){/*add noise */
 		const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
@@ -354,7 +354,7 @@ void wfsgrad_iwfs(thread_t *info){
 			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		}
 		if(save_ints){
-		    cellarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
+		    zfarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
 		}
 	    }
 	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_ogskip
@@ -402,7 +402,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-	    cellarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
+	    zfarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
     }//dtrat_out
@@ -775,7 +775,12 @@ void wfsgrad_post(thread_t *info){
 	    if(simu->gradoff->p[iwfs]){
 		dadd(gradout, 1, simu->gradoff->p[iwfs], -parms->dbg.gradoff_scale);
 	    }
-
+	    //Injected gradient offset for testing.
+	    if(parms->dbg.gradoff){
+		info_once("Add injected gradient offset vector\n");
+		int icol=(isim+1)%parms->dbg.gradoff->ny;
+		dadd(gradout, 1, IND(parms->dbg.gradoff, iwfs, icol), -1);
+	    }
 	    if(do_phy){
 		if(simu->fsmerr_store->p[iwfs]){
 		    wfsgrad_fsm(simu, iwfs);
@@ -791,7 +796,7 @@ void wfsgrad_post(thread_t *info){
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
-		cellarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
+		zfarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
 		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
@@ -843,7 +848,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		info2("Step %d: Update matched filter for powfs %d\n", simu->isim, ipowfs);
 		//For matched filter
 		if(!powfs[ipowfs].intstat){
-		    powfs[ipowfs].intstat=calloc(1, sizeof(INTSTAT_T));
+		    powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 		}
 		parms->powfs[ipowfs].radgx=0;//ensure derivate is interpreted as along x/y.
 		if(!powfs[ipowfs].intstat->i0 || powfs[ipowfs].intstat->i0->ny!=nwfs){
@@ -980,7 +985,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    }
 
 	    if(!parms->powfs[ipowfs].lo && parms->recon.alg==0){//no need to update LSR.
-		setup_recon(simu->recon, parms, powfs, simu->aper);
+		setup_recon(simu->recon, parms, powfs);
 #if USE_CUDA
 		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
 		    gpu_update_recon(parms, powfs, simu->recon);
@@ -1072,7 +1077,8 @@ void wfsgrad(SIM_T *simu){
     if(parms->itpowfs!=-1){
 	wfsgrad_twfs_recon(simu);
     }
-    if(parms->nlgspowfs){ //high pass filter lgs focus to remove sodium range variation effect
+    if(parms->nlgspowfs){ 
+	//high pass filter lgs focus to remove sodium range variation effect
 	wfsgrad_lgsfocus(simu);
     }
     if(1+simu->isim==parms->sim.end){

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,7 +18,7 @@
 
 #ifndef AOS_MATARRH_TYPE_H
 #define AOS_MATARRH_TYPE_H
-#include "../sys/sys.h"
+#include "numtype.h"
 /**
    \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.
@@ -233,16 +233,17 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }
 }
-#define IND1(A,i) (A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)]
-#define IND2(A,ix,iy) (A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)]
-#define PIND1(A,i) (A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i))
-#define PIND2(A,ix,iy) (A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy))
+#define IND1(A,i) ((A)->p[assert_1d((i), (A)->nx, (A)->ny),(i)])
+#define IND2(A,ix,iy) ((A)->p[assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)])
+//#define PIND1(A,i) ((A)->p+(assert_1d(i, (A)->nx, (A)->ny),(i)))
+//#define PIND2(A,ix,iy) ((A)->p+(assert_2d((ix), (iy), (A)->nx, (A)->ny),(ix)+(A)->nx*(iy)))
 #else
 #define IND1(A,i) ((A)->p[(i)])
 #define IND2(A,ix,iy) ((A)->p[(ix)+(A)->nx*(iy)])
+#endif
 #define PIND1(A,i) ((A)->p+(i))
 #define PIND2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
-#endif
+//#endif
 #define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
 #define PIND0(A) error("Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n");
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME

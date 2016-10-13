@@ -72,7 +72,7 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
     //cfft2plan(xsel,-1);
-    PCMAT(xsel,pxsel);
+    cmat* pxsel=xsel/*PCMAT*/;
     double dx1=1./dx;
     long offx=nx/2;
     long offy=ny/2;
@@ -80,18 +80,18 @@ fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1./(double)(nx*ny);/*cancel FFT scaling.*/
+	    IND(pxsel,ix,iy)=1./(double)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
+    double xselc=creal(IND(pxsel,nx/2,ny/2))*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
-	    if(cabs(pxsel[iy][ix])<xselc){
-		pxsel[iy][ix]=0;
+	    if(cabs(IND(pxsel,ix,iy))<xselc){
+		IND(pxsel,ix,iy)=0;
 	    }
 	}
     }
@@ -196,14 +196,14 @@ fdpcg_perm(const long *nx, const long *ny, const long *os, int bs, int nps, int 
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
 static void 
-fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
+fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     long os=(long)round(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
 	error("dsa must be multiple of dx. dsa=%g, dx=%g, diff=%g\n", dsa, dx, fabs(dsa-dx*os));
     }
  
-    double *wt=alloca(sizeof(double)*(os+1));
-    double *st=alloca(sizeof(double)*(os+1));
+    double *wt=myalloca(os+1, double);
+    double *st=myalloca(os+1, double);
     /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(double)os/dsa;
     for(long ios=1; ios<os; ios++){
@@ -250,7 +250,7 @@ fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
 static csp *
-fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
+fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
     long nx2[nps],nx3[nps];
     long ny2[nps],ny3[nps];
     long noff[nps];
@@ -368,10 +368,9 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *sel=fdpcg_saselect(nxp,nyp,dxp, saloc, powfs[hipowfs].saa->p);
     /*Gradient operator. */
     cmat *gx, *gy;
-    int ttr=parms->recon.split?1:0;
-    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx,ttr);/*tested ok. */
+    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
     /*Concatenate invpsd; */
-    dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
+    dcomplex *invpsd=mycalloc(nxtot,dcomplex);
     long offset=0;
     switch(parms->tomo.cxx){
     case 0:/*forward matrix uses biharmonic approx. We use here also. */
@@ -458,8 +457,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     double dispx[nps];
     double dispy[nps];
     /* Mhat = Mhat + propx' * Mmid * propx */
-    for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
-	int iwfs=parms->powfs[hipowfs].wfs->p[jwfs];
+    for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
+	int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
 	double neai=recon->neam->p[iwfs];
 	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
@@ -468,15 +467,15 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	      coordinate. so we are like doing parallel beam
 	      propagation. Removed scaling by 1/(1-ht[ips]/hs);
 	    */
-	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
-	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
+	    dispx[ips]=ht[ips]*parms->wfsr[iwfs].thetax;
+	    dispy[ips]=ht[ips]*parms->wfsr[iwfs].thetay;
 	    if(atm){
 		int ips0=parms->atmr.indps->p[ips]; 
 		dispx[ips]+=atm->p[ips0]->vx*parms->sim.dt*2;
 		dispy[ips]+=atm->p[ips0]->vy*parms->sim.dt*2;
 	    }
 	}
-	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
+	csp *propx=fdpcg_prop(nps,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){
 	    writebin(propx,"fdpcg_prop_wfs%d",iwfs);
 	}
@@ -510,7 +509,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.setup){
 	writebin(Mhat,"fdpcg_Mhat");
     }
-    FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
+    FDPCG_T *fdpcg=mycalloc(1,FDPCG_T);
     /*Now invert each block. */
     /*bs: blocksize. */
     int bs=0;
@@ -587,7 +586,7 @@ typedef struct{
    Copy x vector and do FFT on each layer
 */
 static void fdpcg_fft(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     ccell *xhati=data->xhati;
     const dcell *xin=data->xin;
@@ -616,7 +615,7 @@ static void fdpcg_fft(thread_t *info){
    Multiply each block in pthreads
  */
 static void fdpcg_mulblock(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     long bs=fdpcg->Mbinv->p[0]->nx;
     for(int ib=info->start; ib<info->end; ib++){
@@ -628,7 +627,7 @@ static void fdpcg_mulblock(thread_t *info){
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
 static void fdpcg_ifft(thread_t *info){
-    fdpcg_info_t *data=info->data;
+    fdpcg_info_t *data=(fdpcg_info_t*)info->data;
     FDPCG_T *fdpcg=data->fdpcg;
     ccell *xhat2i=data->xhat2i;
     dcell *xout=data->xout;
@@ -727,9 +726,8 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
 void fdpcg_free(FDPCG_T *fdpcg){
     if(!fdpcg) return;
     cspfree(fdpcg->Minv);
-    if(fdpcg->Mbinv){
-        lfree(fdpcg->perm);
-        ccellfree(fdpcg->Mbinv);
-    }
+    lfree(fdpcg->perm);
+    lfree(fdpcg->permhf);
+    ccellfree(fdpcg->Mbinv);
     free(fdpcg);
 }

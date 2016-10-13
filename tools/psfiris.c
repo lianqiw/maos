@@ -51,7 +51,7 @@ typedef struct psfiris_t{
 }psfiris_t;
 
 static void psfiris_do(thread_t *info){
-    psfiris_t *data=info->data;
+    psfiris_t *data=(psfiris_t*)info->data;
     int iwvl=info->start;
     int npix=data->npix;
     int notf1=data->notf1;
@@ -224,12 +224,12 @@ int main(int argc, char *argv[]){
 	if(skycres->nx!=3 || skycres->ny!=7){
 	    error("format is wrong\n");
 	}
-	PDCELL(skycres, pskycres);
-	dmat *skyresi=pskycres[ingscount][iza];
-	PDMAT(skyresi, pskyresi);
+	dcell*  pskycres=skycres;
+	dmat *skyresi=IND(pskycres,iza,ingscount);
+	dmat*  pskyresi=skyresi;
 	int ind=(int)round(skyp*(nsky/100.))-1;
-	tt=pskyresi[1][ind]+pskyresi[2][ind];
-	ps=pskyresi[0][ind]-tt;
+	tt=IND(pskyresi,ind,1)+IND(pskyresi,ind,2);
+	ps=IND(pskyresi,ind,0)-tt;
 	if(ps<0) ps=0;
 	dcellfree(skycres);
     }
@@ -268,9 +268,9 @@ int main(int argc, char *argv[]){
     cellfree(aloc);
     dcellfree(mode_aloc);
     dmat *cc_mode=dnew(5,5);
-    PDMAT(cc_mode, pcc_mode);
-    pcc_mode[0][0]=pcc_mode[1][1]=tt/2.;
-    pcc_mode[2][2]=pcc_mode[3][3]=pcc_mode[4][4]=ps/3.;
+    dmat*  pcc_mode=cc_mode;
+    IND(pcc_mode,0,0)=IND(pcc_mode,1,1)=tt/2.;
+    IND(pcc_mode,2,2)=IND(pcc_mode,3,3)=IND(pcc_mode,4,4)=ps/3.;
     int nploc=ploc->nloc;
     dmat *tmp=NULL;
     dmat *cc_opd=NULL;
@@ -285,10 +285,10 @@ int main(int argc, char *argv[]){
     
     dcell *psf_lgs=dcellread("za%d_%dp/evlpsfcl_ngsr_1_x%g_y%g.fits", za, prof, thetax[idir], thetay[idir]);
     
-    dcell *output=cellnew(nwvl,1);
+    dcell *output=dcellnew(nwvl,1);
     info2("%d: ", nwvl);
     psfiris_t data={npix, notf1, notf2, dx1, dx2, pixsize, pixoffx, pixoffy, blur, ploc, pamp, cc_opd, cc_zero, imperr, wvls, psf_lgs, output, msg};
-    thread_t *info=calloc(nwvl, sizeof(thread_t));
+    thread_t *info=mycalloc(nwvl,thread_t);
     thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);

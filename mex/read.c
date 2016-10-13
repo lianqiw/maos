@@ -83,7 +83,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     case MC_INT64:
 	{
 	    iscell=1;
-	    mwIndex ix;
+	    long ix;
 	    if(fp->eof) return NULL;
 	    if(nx*ny>1 || !skip_unicell){
 		out=mxCreateCellMatrix(nx,ny);
@@ -139,7 +139,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		size=0;
 		error("Invalid magic\n");
 	    }
-	    uint64_t nzmax;
+	    int64_t nzmax;
 	    if(nx!=0 && ny!=0){
 		zfread(&nzmax,sizeof(uint64_t),1,fp);
 	    }else{
@@ -160,19 +160,19 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
 		    if(size==4){
-			uint32_t* Jc2=Jc;
-			uint32_t* Ir2=Ir;
+			uint32_t* Jc2=(uint32_t*)Jc;
+			uint32_t* Ir2=(uint32_t*)Ir;
 			for(i=0; i<ny+1; i++){
 			    Jc0[i]=Jc2[i];
 			}
-			for(i=0; i<nzmax; i++){
+			for(i=0; i<(long)nzmax; i++){
 			    Ir0[i]=Ir2[i];
 			}
 			free(Jc);
 			free(Ir);
 		    }else if(size==8){
-			uint64_t* Jc2=Jc;
-			uint64_t* Ir2=Ir;
+			uint64_t* Jc2=(uint64_t*)Jc;
+			uint64_t* Ir2=(uint64_t*)Ir;
 			for(i=0; i<ny+1; i++){
 			    Jc0[i]=Jc2[i];
 			}
@@ -202,7 +202,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    default:
 		size=0;
 	    }
-	    uint64_t nzmax;
+	    int64_t nzmax;
 	    if(nx!=0 && ny!=0){
 		zfread(&nzmax,sizeof(uint64_t),1,fp);
 	    }else{
@@ -223,8 +223,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
 		    if(size==4){
-			uint32_t* Jc2=Jc;
-			uint32_t* Ir2=Ir;
+			uint32_t* Jc2=(uint32_t*)Jc;
+			uint32_t* Ir2=(uint32_t*)Ir;
 			for(i=0; i<ny+1; i++){
 			    Jc0[i]=Jc2[i];
 			}
@@ -234,8 +234,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			free(Jc);
 			free(Ir);
 		    }else if(size==8){
-			uint64_t* Jc2=Jc;
-			uint64_t* Ir2=Ir;
+			uint64_t* Jc2=(uint64_t*)Jc;
+			uint64_t* Ir2=(uint64_t*)Ir;
 			for(i=0; i<ny+1; i++){
 			    Jc0[i]=Jc2[i];
 			}
@@ -249,7 +249,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			error("Invalid sparse format\n");
 		    }
 		}
-		dcomplex *tmp=malloc(sizeof(dcomplex)*nzmax);
+		dcomplex *tmp=(dcomplex*)malloc(nzmax*sizeof(dcomplex));
 		zfread(tmp, sizeof(dcomplex), nzmax, fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
@@ -281,7 +281,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=SKIPPED;
 	}else{
-	    mwSize nxy[2]={nx,ny};
+	    mwSize nxy[2]={(mwSize)nx,(mwSize)ny};
 	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxREAL);
 	    if(nx!=0 && ny!=0){
 		zfread((float*)mxGetPr(out), sizeof(float),nx*ny, fp);
@@ -299,7 +299,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    case M_INT32: byte=4; id=mxINT32_CLASS; break;
 	    case M_INT16: byte=2; id=mxINT16_CLASS; break;
 	    case M_INT8:  byte=1; id=mxINT8_CLASS; break;
-	    default: id=0;
+	    default: id=(mxClassID)0;
 	    }
 	    if(start==-1){
 		if(zfseek(fp, byte*nx*ny, SEEK_CUR)){
@@ -325,7 +325,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
-		dcomplex*tmp=malloc(sizeof(dcomplex)*nx*ny);
+		dcomplex*tmp=(dcomplex*)malloc(nx*ny*sizeof(dcomplex));
 		zfread(tmp,sizeof(dcomplex),nx*ny,fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
@@ -345,10 +345,10 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=SKIPPED;
 	}else{
-	    mwSize nxy[2]={nx, ny};
+	    mwSize nxy[2]={(mwSize)nx, (mwSize)ny};
 	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
-		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
+		fcomplex*tmp=(fcomplex*)malloc(nx*ny*sizeof(fcomplex));
 		zfread(tmp,sizeof(fcomplex),nx*ny,fp);
 		float *Pr=(float*)mxGetPr(out);
 		float *Pi=(float*)mxGetPi(out);
@@ -376,8 +376,8 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	mxArray **headerarr=NULL;
 	while(out){
 	    icell++;
-	    outarr=realloc(outarr, sizeof(mxArray*)*icell);
-	    headerarr=realloc(headerarr, sizeof(mxArray*)*icell);
+	    outarr=(mxArray**)realloc(outarr,icell*sizeof(mxArray*));
+	    headerarr=(mxArray**)realloc(headerarr,icell*sizeof(mxArray*));
 	    if(out==SKIPPED) out=NULL;
 	    outarr[icell-1]=out;
 	    if(header) headerarr[icell-1]=*header;
@@ -411,7 +411,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 }
 static char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
-    char *fn=malloc(nlen);
+    char *fn=(char*)malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
 }

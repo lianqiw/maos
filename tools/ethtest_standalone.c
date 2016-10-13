@@ -306,7 +306,7 @@ int main(int argc, char *argv[]){
 	error("Usage: ./ethtest client servername port or ./ethtest server port");
     }
     int type=1;
-    if(!temp) temp=malloc(N*sizeof(double));
+    if(!temp) temp=mymalloc(N,double);
     if(!strcmp(argv[1], "server")){
 	int port=strtol(argv[2], NULL, 10);
 	if(argc>3){

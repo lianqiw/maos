@@ -183,7 +183,7 @@ print("static void get_data_help(){\n", end="", file=fc)
 for key in funcalls:
     print("\tinfo2(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
 print("}", file=fc)
-print("static mxArray *get_data(SIM_T *simu, char *key){\n\t", end="", file=fc)
+print("static mxArray *get_data(SIM_T *simu, const char *key){\n\t", end="", file=fc)
 for key in funcalls:
     print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
 print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)

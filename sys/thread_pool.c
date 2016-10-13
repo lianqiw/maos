@@ -112,7 +112,7 @@ static thread_pool_t pool;/*The default pool; */
  * run the job, and then acquire the mutex, and check whether the job is
  * finished.
  */
-static inline void do_job(void) {
+INLINE void do_job(void) {
     /*Take the job out of the todo list */
     jobs_t *job=pool.jobshead;
     pool.jobshead=job->next;
@@ -258,7 +258,7 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     }
     LOCK_UN(pool.mutex_pool);
     if(!job){
-	job=malloc(sizeof(jobs_t));
+	job=(jobs_t*)malloc(sizeof(jobs_t));
     }
     job->fun=fun;
     job->arg=arg;
@@ -307,13 +307,13 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
 	}
 	LOCK_UN(pool.mutex_pool);
 	if(!job){
-	    job=malloc(sizeof(jobs_t));
+	    job=(jobs_t*)malloc(sizeof(jobs_t));
 	}
 	if(fun){
 	    job->fun=fun;
 	    job->arg=arg;
 	}else{
-	    thread_t *arg2=arg;
+	    thread_t *arg2=(thread_t*)arg;
 	    job->fun=(thread_fun)(arg2[ijob].fun);
 	    job->arg=arg2+ijob;
 	    if(!job->fun || ((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){

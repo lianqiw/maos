@@ -19,7 +19,7 @@
 */
 
 #define LOCAL_RESOURCE_PATH SRCDIR"/tools"
-char *resource_path = LOCAL_RESOURCE_PATH;
+const char *resource_path = LOCAL_RESOURCE_PATH;
 /*
  * We take a strict whitelist approach to stop ../ attacks
  */
@@ -40,7 +40,6 @@ struct per_session_data__http {
 static void
 dump_handshake_info(struct libwebsocket *wsi)
 {
-    int n;
     static const char *token_names[] = {
 	/*[WSI_TOKEN_GET_URI]		=*/ "GET URI",
 	/*[WSI_TOKEN_POST_URI]		=*/ "POST URI",
@@ -86,11 +85,11 @@ dump_handshake_info(struct libwebsocket *wsi)
     };
     char buf[256];
 
-    for (n = 0; n < sizeof(token_names) / sizeof(token_names[0]); n++) {
-	if (!lws_hdr_total_length(wsi, n))
+    for (size_t n = 0; n < sizeof(token_names) / sizeof(token_names[0]); n++) {
+	if (!lws_hdr_total_length(wsi, (enum lws_token_indexes)n))
 	    continue;
 
-	lws_hdr_copy(wsi, buf, sizeof buf, n);
+	lws_hdr_copy(wsi, buf, sizeof buf, (enum lws_token_indexes)n);
 
 	fprintf(stderr, "    %s = %s\n", token_names[n], buf);
     }
@@ -124,6 +123,7 @@ static int callback_http(struct libwebsocket_context *context,
 			 void *in, 
 			 size_t len)
 {
+    (void)user;
     char buf[256];
     char leaf_path[1024];
     char b64[64];
@@ -153,9 +153,9 @@ static int callback_http(struct libwebsocket_context *context,
 
 	/* if not, send a file the easy way */
 	strcpy(buf, resource_path);
-	if (strcmp(in, "/")) {
+	if (strcmp((const char*)in, "/")) {
 	    strcat(buf, "/");
-	    strncat(buf, in, sizeof(buf) - strlen(resource_path));
+	    strncat(buf, (char*)in, sizeof(buf) - strlen(resource_path));
 	}else{ /* default file to serve */
 	    strcat(buf, "/monitor.html");
 	}
@@ -193,7 +193,7 @@ static int callback_http(struct libwebsocket_context *context,
 	break;
 
     case LWS_CALLBACK_HTTP_BODY:
-	strncpy(buf, in, 20);
+	strncpy(buf, (char*)in, 20);
 	buf[20] = '\0';
 	if (len < 20)
 	    buf[len] = '\0';
@@ -297,7 +297,7 @@ callback_maos_monitor(struct libwebsocket_context *context,
 
     case LWS_CALLBACK_PROTOCOL_DESTROY:
 	lwsl_notice("mirror protocol cleaning up\n");
-	for (n = 0; n < sizeof ringbuffer / sizeof ringbuffer[0]; n++)
+	for (n = 0; n < (int)(sizeof ringbuffer / sizeof ringbuffer[0]); n++)
 	    if (ringbuffer[n].payload)
 		free(ringbuffer[n].payload);
 	break;
@@ -312,7 +312,7 @@ callback_maos_monitor(struct libwebsocket_context *context,
 	    if(n<0){
 		lwsl_err("ERROR %d writing to mirror socket\n", n);
 		return -1;
-	    }else if(n<pss->head->len){
+	    }else if(n<(int)pss->head->len){
 		lwsl_err("mirror partial write %d vs %d\n", n, pss->head->len);
 	    }
 	    l_message *tmp=pss->head;
@@ -339,7 +339,7 @@ callback_maos_monitor(struct libwebsocket_context *context,
 		lwsl_err("ERROR %d writing to mirror socket\n", n);
 		return -1;
 	    }
-	    if (n < ringbuffer[pss->ringbuffer_tail].len)
+	    if (n < (int)ringbuffer[pss->ringbuffer_tail].len)
 		lwsl_err("mirror partial write %d vs %d\n",
 			 n, ringbuffer[pss->ringbuffer_tail].len);
 
@@ -447,7 +447,7 @@ int ws_service(){
 void ws_push(const char *in, int len){
     if(!context) return;
     free(ringbuffer[ringbuffer_head].payload);
-    ringbuffer[ringbuffer_head].payload =
+    ringbuffer[ringbuffer_head].payload =(char*)
 	malloc(LWS_SEND_BUFFER_PRE_PADDING + len +
 	       LWS_SEND_BUFFER_POST_PADDING);
     ringbuffer[ringbuffer_head].len = len;

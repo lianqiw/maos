@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,11 +18,7 @@
 
 
 #include <search.h>
-
-
-
 #include "../sys/sys.h" 
-
 #include "mathmisc.h"
 #include "type.h"
 #include "mathdef.h"
@@ -38,18 +34,18 @@ X(sp)* X(spnew)(long nx, long ny, long nzmax){
     X(sp) *sp;
     if(nx<0) nx=0;
     if(ny<0) ny=0;
-    sp = calloc(1, sizeof(X(sp)));
+    sp = mycalloc(1,X(sp));
     sp->id=M_SPT;
     if(nzmax>0){
-	sp->p=malloc((ny+1)*sizeof(spint));
-	sp->i=malloc(nzmax*sizeof(spint));
-	sp->x=malloc(nzmax*sizeof(T));
+	sp->p=mymalloc((ny+1),spint);
+	sp->i=mymalloc(nzmax,spint);
+	sp->x=mymalloc(nzmax,T);
     }
     sp->nx=nx;
     sp->ny=ny;
     sp->nzmax=nzmax;
     sp->nz=-1;
-    sp->nref=calloc(1,sizeof(int));
+    sp->nref=mycalloc(1,int);
     sp->nref[0]=1;
     return sp;
 }
@@ -82,9 +78,9 @@ void X(spfree_do)(X(sp) *sp){
 X(sp) *X(spref)(X(sp) *A){
     if(!A) return NULL;
     assert_sp(A);
-    X(sp) *out = calloc(1, sizeof(X(sp)));
+    X(sp) *out = mycalloc(1,X(sp));
     if(!A->nref){
-	A->nref=calloc(1, sizeof(int));
+	A->nref=mycalloc(1,int);
 	A->nref[0]=1;
     }
     memcpy(out,A,sizeof(X(sp)));
@@ -176,8 +172,8 @@ X(sp)* X(sp_cast)(const void *A){
 void X(spsetnzmax)(X(sp) *sp, long nzmax){
     assert(issp(sp));
     if(sp->nzmax!=nzmax){
-	sp->i=realloc(sp->i, sizeof(spint)*nzmax);
-	sp->x=realloc(sp->x, sizeof(T)*nzmax);
+	sp->i=myrealloc(sp->i,nzmax,spint);
+	sp->x=myrealloc(sp->x,nzmax,T);
 	sp->nzmax=nzmax;
     }
 }
@@ -370,11 +366,10 @@ T X(spcellwdinn)(const X(cell) *y, const X(spcell) *A, const X(cell) *x){
 	if(A){
 	    assert_sp(A);
 	    assert(x->ny==1 && y->ny==1 && A->nx==y->nx && A->ny==x->nx);
-	    /*PSPCELL(A,Ap); */
-	    X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
+	    /*PSX(cell)* Ap=A; */
 	    for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
-		    res+=X(spwdinn)(y->p[ix], Ap[iy][ix], x->p[iy]);
+		    res+=X(spwdinn)(y->p[ix], IND(A,ix,iy), x->p[iy]);
 		}
 	    }
 	}else{
@@ -402,13 +397,12 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 	    }
 	    X(mat) *out=*out0;
 	    assert(out->nx==A->nx && out->ny==A->ny);
-	    PMAT(out,pp);
 	    for(icol=0; icol<A->ny; icol++){
 		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    irow=A->i[ix];
 		    if(irow>=nx)
 			error("invalid row:%ld, %ld",irow,nx);
-		    pp[icol][irow]+=alpha*A->x[ix];
+		    IND(out,irow,icol)+=alpha*A->x[ix];
 		}
 	    }
 	}else{
@@ -423,13 +417,12 @@ void X(spfull)(X(mat) **out0, const X(sp) *A, const char trans, const T alpha){
 	    }
 	    X(mat) *out=*out0;
 	    assert(out->nx==A->ny && out->ny==A->nx);
-	    PMAT(out,pp);
 	    for(icol=0; icol<A->ny; icol++){
 		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
 		    irow=A->i[ix];
 		    if(irow>=nx)
 			error("invalid row:%ld, %ld",irow,nx);
-		    pp[irow][icol]+=alpha*A->x[ix];
+		    IND(out,icol,irow)+=alpha*A->x[ix];
 		}
 	    }
 	}else{
@@ -450,7 +443,7 @@ X(sp) *X(2sp)(X(mat)*A, R thres){
 	out->p[icol]=count;
 	for(long irow=0; irow<A->nx; irow++){
 	    T val=IND(A, irow, icol);
-	    if(ABS(val)>thres){
+	    if(fabs(val)>thres){
 		out->i[count]=irow;
 		out->x[count]=val;
 		count++;
@@ -481,7 +474,7 @@ void X(spadd)(X(sp) **A0, T alpha, const X(sp) *B, T beta){
     if(B){
 	if(!*A0){
 	    *A0=X(spdup)(B);
-	    if(beta!=1){
+	    if(beta!=(T)1){
 		X(spscale)(*A0, beta);	
 	    }
 	}else{
@@ -512,8 +505,8 @@ void X(spaddI)(X(sp) *A, T alpha){
     }
     long nzmax=A->p[A->ny];
     if(missing){//expanding storage
-	A->x=realloc(A->x, sizeof(T)*(nzmax+missing));
-	A->i=realloc(A->i, sizeof(spint)*(nzmax+missing));
+	A->x=myrealloc(A->x,(nzmax+missing),T);
+	A->i=myrealloc(A->i,(nzmax+missing),spint);
     }
     missing=0;
     for(long icol=0; icol<A->ny; icol++){
@@ -556,8 +549,10 @@ void X(spconj)(X(sp) *A){
 #ifdef USE_COMPLEX
     const long nzmax=A->p[A->ny];
     for(long i=0; i<nzmax; i++){
-	A->x[i]=CONJ(A->x[i]);
+	A->x[i]=conj(A->x[i]);
     }
+#else
+    (void)A;    
 #endif
 }
 
@@ -589,7 +584,7 @@ X(spcell) *X(spcelltrans)(const X(spcell) *spc){
     long nx,ny;
     nx=spc->nx;
     ny=spc->ny;
-    X(spcell) *spct=cellnew(ny,nx);
+    X(spcell) *spct=(X(spcell*))cellnew(ny,nx);
     
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
@@ -654,24 +649,23 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
     if(A->nx*A->ny==1){/*There is a single cell */
 	return X(spref)(A->p[0]);
     }
-    PSPCELL(A,Ap);
     long nx=0,ny=0,nzmax=0;
     long nnx[A->nx];
     long nny[A->ny];
     for(long ix=0; ix<A->nx; ix++){
 	for(long iy=0; iy<A->ny; iy++){
-	    if(Ap[iy][ix]) {
-		nnx[ix]=Ap[iy][ix]->nx;
-		nx+=Ap[iy][ix]->nx;
+	    if(IND(A,ix,iy)) {
+		nnx[ix]=IND(A,ix,iy)->nx;
+		nx+=IND(A,ix,iy)->nx;
 		break;
 	    }
 	}
     }
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(Ap[iy][ix]) {
-		nny[iy]=Ap[iy][ix]->ny;
-		ny+=Ap[iy][ix]->ny;
+	    if(IND(A,ix,iy)) {
+		nny[iy]=IND(A,ix,iy)->ny;
+		ny+=IND(A,ix,iy)->ny;
 		break;
 	    }
 	}
@@ -689,11 +683,11 @@ X(sp) *X(spcell2sp)(const X(spcell) *A){
 	    out->p[jcol+icol]=count;
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
-		if(Ap[iy][ix]){
-		    for(long ir=Ap[iy][ix]->p[icol]; 
-			ir<Ap[iy][ix]->p[icol+1]; ir++){
-			out->x[count]=Ap[iy][ix]->x[ir];
-			out->i[count]=Ap[iy][ix]->i[ir]+kr;
+		if(IND(A,ix,iy)){
+		    for(long ir=IND(A,ix,iy)->p[icol]; 
+			ir<IND(A,ix,iy)->p[icol+1]; ir++){
+			out->x[count]=IND(A,ix,iy)->x[ir];
+			out->i[count]=IND(A,ix,iy)->i[ir]+kr;
 			count++;
 		    }
 		}
@@ -756,7 +750,7 @@ X(mat) *X(spsumabs)(const X(sp) *A, int col){
 	p=v->p;
 	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
-		p[icol]+=ABS(A->x[irow]);
+		p[icol]+=fabs(A->x[irow]);
 	    }
 	}
 	break;
@@ -765,7 +759,7 @@ X(mat) *X(spsumabs)(const X(sp) *A, int col){
 	p=v->p;
 	for(int icol=0; icol<A->ny; icol++){
 	    for(int irow=A->p[icol]; irow<A->p[icol+1]; irow++){
-		p[A->i[irow]]+=ABS(A->x[irow]);
+		p[A->i[irow]]+=fabs(A->x[irow]);
 	    }
 	}
 	break;
@@ -816,13 +810,13 @@ void X(spsort)(X(sp) *A){
     if(!A || A->ny==0 || A->nx==0) return;
     assert_sp(A);
     long nelem_max=A->nzmax/A->ny*2;
-    spelem *col=malloc(nelem_max*sizeof(spelem));
+    spelem *col=mymalloc(nelem_max,spelem);
     for(long i=0; i<A->ny; i++){
 	long nelem=(A->p[i+1]-A->p[i]);
 	if(nelem==0) continue;
 	if(nelem>nelem_max){
 	    nelem_max=nelem;
-	    col=realloc(col, nelem_max*sizeof(spelem));
+	    col=myrealloc(col, nelem_max,spelem);
 	}
 	for(long j=0; j<nelem; j++){
 	    col[j].i=A->i[A->p[i]+j];
@@ -878,27 +872,27 @@ void X(spcellsym)(X(spcell) **A){
 X(sp) *X(spconvolvop)(X(mat) *A){
     /*First collect statistics on A. */
     long nini=10;
-    T *vals=calloc(nini, sizeof(T));
-    long *sepx=calloc(nini, sizeof(spint));
-    long *sepy=calloc(nini, sizeof(spint));
+    T *vals=mycalloc(nini,T);
+    spint *sepx=mycalloc(nini,spint);
+    spint *sepy=mycalloc(nini,spint);
     long count=0;
     const long nx=A->nx;
     const long ny=A->ny;
     const long nn=nx*ny;
-    PMAT(A,PA);
+    X(mat)* PA=A;
     for(long iy=0; iy<A->ny; iy++){
 	for(long ix=0; ix<A->nx; ix++){
-	    if(ABS(PA[iy][ix])>0){
-		vals[count]=PA[iy][ix];
+	    if(fabs(IND(PA,ix,iy))>0){
+		vals[count]=IND(PA,ix,iy);
 		sepx[count]=ix;
 		sepy[count]=iy;
 		count++;
 	    }
 	    if(count>=nini){
 		nini*=2;
-		vals=realloc(vals, sizeof(T)*nini);
-		sepx=realloc(sepx, sizeof(spint)*nini);
-		sepy=realloc(sepy, sizeof(spint)*nini);
+		vals=myrealloc(vals,nini,T);
+		sepx=myrealloc(sepx,nini,spint);
+		sepy=myrealloc(sepy,nini,spint);
 	    }
 	}
     }
@@ -1001,7 +995,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
     long nb=A->nx/bs;
     X(sp) *B=X(spnew)(A->nx, A->ny, nb*bs*bs);
     X(mat) *bk=X(new)(bs,bs);
-    PMAT(bk,pbk);
+    X(mat)* pbk=bk;
     for(long ib=0;ib<nb; ib++){
 	long is=ib*bs;/*starting col */
 	X(zero)(bk);
@@ -1014,7 +1008,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 		    info("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated properly.\n");
 		}
-		pbk[icol-is][ind]=A->x[irow];
+		IND(pbk,ind,icol-is)=A->x[irow];
 	    }
 	}
 	X(inv_inplace)(bk);
@@ -1022,7 +1016,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 	    B->p[icol]=icol*bs;
 	    for(long irow=0; irow<bs; irow++){
 		B->i[B->p[icol]+irow]=irow+is;
-		B->x[B->p[icol]+irow]=pbk[icol-is][irow];
+		B->x[B->p[icol]+irow]=IND(pbk,irow,icol-is);
 	    }
 	}
     }
@@ -1041,11 +1035,11 @@ X(cell) *X(spblockextract)(const X(sp) *A, long bs){
 	error("Must be a square matrix\n");
     }
     long nb=A->nx/bs;
-    X(cell) *out=cellnew(nb,1);
+    X(cell) *out=X(cellnew)(nb,1);
     for(long ib=0;ib<nb; ib++){
 	long is=ib*bs;/*starting col */
 	out->p[ib]=X(new)(bs,bs);
-	PMAT(out->p[ib],pbk);
+	X(mat)* pbk=out->p[ib];
 	for(long icol=is; icol<is+bs; icol++){
 	    for(long irow=A->p[icol]; irow<A->p[icol+1]; irow++){
 		long row=A->i[irow];
@@ -1054,7 +1048,7 @@ X(cell) *X(spblockextract)(const X(sp) *A, long bs){
 		    info("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated property\n");
 		}
-		pbk[icol-is][ind]=A->x[irow];
+		IND(pbk,ind,icol-is)=A->x[irow];
 	    }
 	}
     }

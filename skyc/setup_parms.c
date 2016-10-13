@@ -177,7 +177,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     remove(arg->confcmd);
     free(arg->conf);
     free(arg->confcmd);
-    PARMS_S *parms=calloc(1, sizeof(PARMS_S));
+    PARMS_S *parms=mycalloc(1,PARMS_S);
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
@@ -249,7 +249,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     info2("\n");
     {
 	//skip unwanted seeds
-	parms->fdlock=calloc(parms->maos.nseed, sizeof(int));
+	parms->fdlock=mycalloc(parms->maos.nseed,int);
 	char fn[81];
 	int nseed=0;
 	for(int i=0; i<parms->maos.nseed; i++){
@@ -285,7 +285,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		remove(fnpid);
 	    }
 	    scheduler_finish(0);
-	    quit();
+	    sync();exit(0);
 	}
     }
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
@@ -297,12 +297,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    error("skyc.dtrats must be specified in descending order\n");
 	}
     }
-    parms->skyc.fss=calloc(parms->skyc.ndtrat, sizeof(double));
+    parms->skyc.fss=mycalloc(parms->skyc.ndtrat,double);
     parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
     if(parms->skyc.rne<0){
 	/* Uses the new noise model based on Roger's spread sheet and document
 	   TMT.AOS.TEC.13.009.DRF01 H2RG Noise Model */
-	PDMAT(parms->skyc.rnefs,rnefs);
+	dmat* rnefs=parms->skyc.rnefs;
 	info2("Using frame rate dependent read out noise:\n");
 	if(fabs(parms->skyc.rne+1)<EPS){
 	    const double pixeltime=6.04;//time to read a pixel in us
@@ -333,9 +333,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		    double rne_floor=2.4;
 		    double rne_dark=0.0037*coadd;
 		    //0.85 is a factor expected for newer detectors
-		    rnefs[ipowfs][idtrat]=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
+		    IND(rnefs,idtrat,ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
 		    info2("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
-			  parms->skyc.fss[idtrat], rnefs[ipowfs][idtrat]);
+			  parms->skyc.fss[idtrat], IND(rnefs,idtrat,ipowfs));
 		}
 	    }
 	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
@@ -348,8 +348,8 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		    int N=parms->skyc.pixpsa[ipowfs];
 		    double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
 		    double K=1./(raw_frame_time*fs);
-		    rnefs[ipowfs][idtrat]=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
-		    info2("%5.1f ",rnefs[ipowfs][idtrat]);
+		    IND(rnefs,idtrat,ipowfs)=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
+		    info2("%5.1f ",IND(rnefs,idtrat,ipowfs));
 		}
 		info2("\n");
 	    }

@@ -33,7 +33,7 @@
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
 
-void   open_config (char*fn, const char *prefix, long protect);
+void   open_config (const char*fn, const char *prefix, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
@@ -56,7 +56,7 @@ dmat*  readcfg_dmat_nmax(int nmax, const char *format,...) CHECK_ARG(2);
 lmat*  readcfg_lmat(const char *format,...) CHECK_ARG(1);
 lmat*  readcfg_lmat_n(int n, const char *format,...) CHECK_ARG(2);
 lmat*  readcfg_lmat_nmax(int n, const char *format,...) CHECK_ARG(2);
-
+dcell*  readcfg_dcell(const char *format,...) CHECK_ARG(1);
 void   readcfg_dblarr_n(double **ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_intarr_n(   int **ret, int len, const char *format,...) CHECK_ARG(3);
 

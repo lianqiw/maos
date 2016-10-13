@@ -35,7 +35,9 @@
 #endif
 
 
-void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long ninit){
+void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
+    const long nx=p0->nx;
+    const long ny=p0->ny;
     assert(nx==ny);
     LOCK(mutex_cov);
     long step0=(nx-1)/(ninit-1);
@@ -50,19 +52,17 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
     vkcov_t *node=vkcov_calc(r0, L0, dx, nx, ninit);
     dmat *cov=node->cov;
     UNLOCK(mutex_cov);
-    PDMAT(cov, pcov);
+    dmat*  pcov=cov;
     const long nx1=nx-1;
     const long ny1=ny-1;
     const long norder=mylog2(step0);
-    const double c0=pcov[0][0];
-    double (*p)[nx]=(void*)p0;
+    const double c0=IND(pcov,0,0);
 #if FORWARD == 1
     {
 	dmat *pi=dnew(ninit,ninit);
-	PDMAT(pi, ppi);
 	for(long iy=0; iy<ninit ;iy++){
 	    for(long ix=0; ix<ninit; ix++){
-		ppi[iy][ix]=p[iy*step0][ix*step0];
+		IND(pi,ix,iy)=IND(p0,ix*step0,iy*step0);
 	    }
 	}
 	/*reshape pi; */
@@ -77,10 +77,10 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	/*reshape to square. */
 	qi->nx=ninit;
 	qi->ny=ninit;
-	PDMAT(qi, pqi);
+	dmat*  pqi=qi;
 	for(long iy=0; iy<ninit ;iy++){
 	    for(long ix=0; ix<ninit; ix++){
-		p[iy*step0][ix*step0]=pqi[iy][ix];
+		IND(p0,ix*step0,iy*step0)=IND(pqi,ix,iy);
 	    }
 	}
 	dfree(pi);
@@ -117,10 +117,10 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
     for(LOOP){
 #undef LOOP
 	long step=1<<order;/*step of the parent grid. */
-	double c1=pcov[order][0];
-	double c2=pcov[order][1];
-	double c3=pcov[order+1][0];
-	double c4=pcov[order+1][1];
+	double c1=IND(pcov,0,order);
+	double c2=IND(pcov,1,order);
+	double c3=IND(pcov,0,order+1);
+	double c4=IND(pcov,1,order+1);
 	/*for case 1: square case */
 	double qua1=c2/(c0+2*c3+c4);
 	double qua0=sqrt(c0-4.*c2*qua1);
@@ -140,11 +140,11 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	for(long offy=0; offy<ny1; offy+=step){
 	    for(long offx=0; offx<nx1; offx+=step){
 		/*case 1: square configuration */
-		QUA(p[offy+step2][offx+step2],
-		    p[offy][offx],
-		    p[offy+step][offx],
-		    p[offy+step][offx+step],
-		    p[offy][offx+step]);
+		QUA(IND(p0,offx+step2,offy+step2),
+		    IND(p0,offx,offy),
+		    IND(p0,offx,offy+step),
+		    IND(p0,offx+step,offy+step),
+		    IND(p0,offx+step,offy));
 	    }
 	}
 #endif
@@ -152,46 +152,46 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	for(long offy=0; offy<ny1; offy+=step){
 	    for(long offx=0; offx<nx1; offx+=step){
 		if(offx==0){/*do the top one, triangular  */
-		    TRI(p[offy+step2][offx],
-			p[offy][offx],
-			p[offy+step][offx],
-			p[offy+step2][offx+step2]);
+		    TRI(IND(p0,offx,offy+step2),
+			IND(p0,offx,offy),
+			IND(p0,offx,offy+step),
+			IND(p0,offx+step2,offy+step2));
 		}
 		
 		/*bottom one.  */
 		if(offx!=nx2){/*diamond */
-		    DIA(p[offy+step2][offx+step],
-			p[offy][offx+step],
-			p[offy+step2][offx+step2],
-			p[offy+step2][offx+step+step2],
-			p[offy+step][offx+step]);
+		    DIA(IND(p0,offx+step,offy+step2),
+			IND(p0,offx+step,offy),
+			IND(p0,offx+step2,offy+step2),
+			IND(p0,offx+step+step2,offy+step2),
+			IND(p0,offx+step,offy+step));
 		}else{/*do triangular case */
-		    TRI(p[offy+step2][offx+step],
-			p[offy][offx+step],
-			p[offy+step][offx+step],
-			p[offy+step2][offx+step2]);
+		    TRI(IND(p0,offx+step,offy+step2),
+			IND(p0,offx+step,offy),
+			IND(p0,offx+step,offy+step),
+			IND(p0,offx+step2,offy+step2));
 
 		}
 
 		if(offy==0){/*do the left one, triangular  */
-		    TRI(p[offy][offx+step2],
-			p[offy][offx],
-			p[offy][offx+step],
-			p[offy+step2][offx+step2]);
+		    TRI(IND(p0,offx+step2,offy),
+			IND(p0,offx,offy),
+			IND(p0,offx+step,offy),
+			IND(p0,offx+step2,offy+step2));
 		}
 
 		/*right one. */
 		if(offy!=ny2){/*diamond */
-		    DIA(p[offy+step][offx+step2],
-			p[offy+step2][offx+step2],
-			p[offy+step][offx],
-			p[offy+step][offx+step],
-			p[offy+step+step2][offx+step2]);
+		    DIA(IND(p0,offx+step2,offy+step),
+			IND(p0,offx+step2,offy+step2),
+			IND(p0,offx,offy+step),
+			IND(p0,offx+step,offy+step),
+			IND(p0,offx+step2,offy+step+step2));
 		}else{/*do triangular case */
-		    TRI(p[offy+step][offx+step2],
-			p[offy+step][offx],
-			p[offy+step][offx+step],
-			p[offy+step2][offx+step2]);
+		    TRI(IND(p0,offx+step2,offy+step),
+			IND(p0,offx,offy+step),
+			IND(p0,offx+step,offy+step),
+			IND(p0,offx+step2,offy+step2));
 		}
 	    }
 	}
@@ -200,11 +200,11 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	for(long offy=0; offy<ny1; offy+=step){
 	    for(long offx=0; offx<nx1; offx+=step){
 		/*case 1: square configuration */
-		QUA(p[offy+step2][offx+step2],
-		    p[offy][offx],
-		    p[offy+step][offx],
-		    p[offy+step][offx+step],
-		    p[offy][offx+step]);
+		QUA(IND(p0,offx+step2,offy+step2),
+		    IND(p0,offx,offy),
+		    IND(p0,offx,offy+step),
+		    IND(p0,offx+step,offy+step),
+		    IND(p0,offx+step,offy));
 	    }
 	}
 #endif
@@ -212,10 +212,10 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 #if FORWARD == 0
     {
 	dmat *pi=dnew(ninit,ninit);
-	PDMAT(pi, ppi);
+	dmat*  ppi=pi;
 	for(long iy=0; iy<ninit ;iy++){
 	    for(long ix=0; ix<ninit; ix++){
-		ppi[iy][ix]=p[iy*step0][ix*step0];
+		IND(ppi,ix,iy)=IND(p0,ix*step0,iy*step0);
 	    }
 	}
 	/*reshape pi; */
@@ -230,10 +230,10 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long
 	/*reshape to square. */
 	qi->nx=ninit;
 	qi->ny=ninit;
-	PDMAT(qi, pqi);
+	dmat*  pqi=qi;
 	for(long iy=0; iy<ninit ;iy++){
 	    for(long ix=0; ix<ninit; ix++){
-		p[iy*step0][ix*step0]=pqi[iy][ix];
+		IND(p0,ix*step0,iy*step0)=IND(pqi,ix,iy);
 	    }
 	}
 	dfree(pi);

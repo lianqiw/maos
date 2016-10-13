@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -29,7 +29,7 @@ void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha){
     assert(A && A->p);
     const long ntot=A->nx*A->ny;
     if(B){
-	if(FABS(alpha-1)>1.e-15){
+	if(fabs(alpha-1)>1.e-15){
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=conj(B->p[i])*alpha;
 	    }
@@ -39,7 +39,7 @@ void X(cwmc)(X(mat) *restrict A, const X(mat) *restrict B, const R alpha){
 	    }
 	}
     }else{
-	if(FABS(alpha-1)>1.e-15){	
+	if(fabs(alpha-1)>1.e-15){	
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
@@ -53,7 +53,7 @@ void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha){
     assert(A && A->p);
     const long ntot=A->nx*A->ny;
     if(B){
-	if(FABS(alpha-1)>1.e-15){
+	if(fabs(alpha-1)>1.e-15){
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=B->p[i]*alpha;
 	    }
@@ -63,7 +63,7 @@ void X(cwmd)(X(mat) *restrict A, const XR(mat) *restrict B, const R alpha){
 	    }
 	}
     }else{
-	if(FABS(alpha-1)>1.e-15){	
+	if(fabs(alpha-1)>1.e-15){	
 	    for(long i=0; i<ntot; i++){
 		A->p[i]*=alpha;
 	    }
@@ -88,7 +88,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
  
     R wvk=2.*M_PI/wvl;
     memset(psf, 0, sizeof(T)*npsfx*npsfy);
-    if(FABS(theta)<1.e-10){/*no rotation. */
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(npsfx-nopdx)/2;
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
@@ -153,7 +153,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 /**
    do a modules square and copy to real part of output
 */
-inline static void sq2cpy(T *out, const T *in, const long length){
+INLINE void sq2cpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=ABS2(in[i]);
     }
@@ -161,7 +161,7 @@ inline static void sq2cpy(T *out, const T *in, const long length){
 /**
    Copy the real part.
 */
-inline static void realcpy(T *out, const T *in, const long length){
+INLINE void realcpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=creal(in[i]);
     }
@@ -169,14 +169,19 @@ inline static void realcpy(T *out, const T *in, const long length){
 /**
    Copy the absolute value to output.
  */
-inline static void abscpy(T *out, const T *in, const long length){
+INLINE void abscpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
-	out[i]=ABS(in[i]);
+	out[i]=fabs(in[i]);
     }
 }
-#define RA2XY(A) (REAL(A)*COMPLEX(cos(IMAG(A)), sin(IMAG(A)))) /**<macro to convert r/a to x/y*/
-#define XY2RA(A) COMPLEX(ABS(A), atan2(IMAG(A),REAL(A))) /**<macro to convert x/y to r/a*/
-
+INLINE T RA2XY(T A){
+    //convert r/a to x/y
+    return COMPLEX(creal(A)*cos(cimag(A)), creal(A)*sin(cimag(A)));
+}
+INLINE T XY2RA(T A){
+    //convert x/y to r/a*/
+    return COMPLEX(fabs(A), atan2(cimag(A),creal(A)));
+}
 
 /**
    Embed array B into A with rotation theta CW.  Current version, preferred */
@@ -185,7 +190,6 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
     const T *restrict in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    T *restrict out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
     /*
@@ -194,8 +198,8 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
       flag==1: copy abs2;
       flag==2: copy real only.
     */
-    memset(out, 0, sizeof(T)*noutx*nouty);
-    if(FABS(theta)<1.e-10){/*no rotation. */
+    X(zero(A));
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(noutx-ninx)/2;
 	const int skipy=(nouty-niny)/2;
 	int ixstart=0, ixend=ninx;
@@ -208,7 +212,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *restrict out2=out+skipy*noutx+skipx;
+	T *restrict out2=PIND(A, skipx, skipy);
 	for(int iy=iystart; iy<iyend; iy++){
 	    T * outi=out2+iy*noutx;
 	    const T * ini=in+iy*ninx;
@@ -241,8 +245,6 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	  
 	  The original method of adding in to out is not right.
 	 */
-	T (*restrict outs)[noutx]=(T(*)[noutx])out;
-	T (*restrict ins)[ninx]=(T(*)[ninx])in;
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	const R negstheta=-stheta;
@@ -270,11 +272,11 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    for(int ix=sx; ix<mx; ix++){				\
 		ix2=ifloor(x2); x3=x2-ix2;x31=1.-x3;			\
 		iy2=ifloor(y2); y3=y2-iy2;				\
-		outs[iy][ix] =						\
-		    AFTER((CMD(ins[iy2][ix2])*(x31)			\
-			   +CMD(ins[iy2][ix2+1])*x3)*(1.-y3)		\
-			  +(CMD(ins[iy2+1][ix2])*(x31)			\
-			    +CMD(ins[iy2+1][ix2+1])*x3)*y3);		\
+		IND(A,ix,iy) =						\
+		    AFTER((CMD(IND(B,ix2,iy2))*(x31)			\
+			   +CMD(IND(B,ix2+1,iy2))*x3)*(1.-y3)		\
+			  +(CMD(IND(B,ix2,iy2+1))*(x31)			\
+			    +CMD(IND(B,ix2+1,iy2+1))*x3)*y3);		\
 		x2+=ctheta;						\
 		y2+=negstheta;						\
 	    }								\
@@ -290,10 +292,10 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    DO_LOOP(,ABS2);
 	    break;
 	case C_REAL:
-	    DO_LOOP(,REAL);
+	    DO_LOOP(,creal);
 	    break;
 	case C_ABS:
-	    DO_LOOP(,ABS);
+	    DO_LOOP(,fabs);
 	    break;
 	case C_LITERAL:
 	    DO_LOOP(RA2XY,XY2RA);
@@ -308,14 +310,12 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
    Embed or crop a XR(mat) into center of X(mat). 
  */
 void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
-    R *restrict in=B->p;
     long ninx=B->nx;
     long niny=B->ny;
-    T *out=A->p;
     const long noutx=A->nx;
     const long nouty=A->ny;
-    memset(out, 0, sizeof(T)*noutx*nouty);
-    if(FABS(theta)<1.e-10){/*no rotation. */
+    X(zero)(A);
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
 	long ixstart=0, ixend=ninx;
@@ -328,17 +328,15 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *out2=out+skipy*noutx+skipx;
+	T *out2=PIND(A, skipx, skipy);
 	for(long iy=iystart; iy<iyend; iy++){
 	    T *outi=out2+iy*noutx;
-	    const R *ini=in+iy*ninx;
+	    const R *ini=PCOL(B, iy);
 	    for(long ix=ixstart; ix<ixend; ix++){
 		outi[ix]=ini[ix];
 	    }
 	}
     }else{
-	T (*outs)[noutx]=(void*)out;
-	R (*ins)[ninx]=(void*)in;
 	const R ctheta=cos(theta);
 	const R stheta=sin(theta);
 	R x2,y2;
@@ -359,11 +357,11 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 		    iy2=ifloor(y2); 
 		    x2=x2-ix2; 
 		    y2=y2-iy2; 
-		    outs[iy][ix] =
-			ins[iy2][ix2]*((1.-x2)*(1.-y2))
-			+ins[iy2][ix2+1]*(x2*(1.-y2))
-			+ins[iy2+1][ix2]*((1-x2)*y2)
-			+ins[iy2+1][ix2+1]*(x2*y2); 
+		    IND(A,ix,iy) =
+			+IND(B,ix2,iy2)*((1.-x2)*(1.-y2))
+			+IND(B,ix2+1,iy2)*(x2*(1.-y2))
+			+IND(B,ix2,iy2+1)*((1-x2)*y2)
+			+IND(B,ix2+1,iy2+1)*(x2*y2); 
 		} 
 	    } 
 	} 
@@ -376,20 +374,15 @@ void X(embedd)(X(mat) *restrict A, XR(mat) *restrict B, const R theta){
 void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B, 
 		      R xoutscale,R youtscale,
 		      const R theta, CEMBED flag){
-    if(FABS(xoutscale-1)<1.e-10 && FABS(youtscale-1)<1.e-10){
+    if(fabs(xoutscale-1)<1.e-10 && fabs(youtscale-1)<1.e-10){
 	X(embedc)(A,B,theta,flag);
 	return;
     }
-    const T *in=B->p;
     const int ninx=B->nx;
     const int niny=B->ny;
-    T *out=A->p;
     const int noutx=A->nx;
     const int nouty=A->ny;
   
-
-    T (*outs)[noutx]=(T(*)[noutx])out;
-    T (*ins)[ninx]=(T(*)[ninx])in;
     const R ctheta=cos(theta);
     const R stheta=sin(theta);
     R x2,y2;
@@ -411,11 +404,11 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 		iy2=ifloor(y2);						\
 		x2=x2-ix2;						\
 		y2=y2-iy2;						\
-		outs[iy][ix] =AFTER(+CMD(ins[iy2][ix2])*((1.-x2)*(1.-y2)) \
-				    +CMD(ins[iy2][ix2+1])*(x2*(1.-y2))	\
-				    +CMD(ins[iy2+1][ix2])*((1-x2)*y2)	\
-				    +CMD(ins[iy2+1][ix2+1])*(x2*y2));	\
-	    }else outs[iy][ix]=0;					\
+		IND(A,ix,iy) =AFTER(+CMD(IND(B,ix2,iy2))*((1.-x2)*(1.-y2)) \
+				    +CMD(IND(B,ix2+1,iy2))*(x2*(1.-y2))	\
+				    +CMD(IND(B,ix2,iy2+1))*((1-x2)*y2)	\
+				    +CMD(IND(B,ix2+1,iy2+1))*(x2*y2));	\
+	    }else IND(A,ix,iy)=0;					\
 	}								\
     }
     /*it is not good to embed flag in the inner most loop. */
@@ -427,10 +420,10 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 	DO_LOOP(,ABS2);
 	break;
     case C_REAL:
-	DO_LOOP(,REAL);
+	DO_LOOP(,creal);
 	break;
     case C_ABS:
-	DO_LOOP(,ABS);
+	DO_LOOP(,fabs);
 	break;
     case C_LITERAL:
 	DO_LOOP(RA2XY,XY2RA);
@@ -515,7 +508,7 @@ void X(abs2toreal)(X(mat) *A){
 void X(abstoreal)(X(mat) *A){
     /*put abs to real */
     for(int i=0; i<A->nx*A->ny; i++){
-	A->p[i]=ABS(A->p[i]);
+	A->p[i]=fabs(A->p[i]);
     }
 }
 /**
@@ -544,13 +537,13 @@ void X(real2d)(XR(mat)**restrict A0, R alpha,
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(FABS(alpha)<EPS){
+    if(fabs(alpha)<EPS){
 	for(long i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=REAL(B->p[i])*beta;
+	    A->p[i]=creal(B->p[i])*beta;
 	}
     }else{
 	for(long i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=A->p[i]*alpha+REAL(B->p[i])*beta;
+	    A->p[i]=A->p[i]*alpha+creal(B->p[i])*beta;
 	}
     }
 }
@@ -566,7 +559,7 @@ void X(abs22d)(XR(mat)**restrict A0, R alpha,
     }else{
 	assert(A->nx==B->nx && A->ny==B->ny);
     }
-    if(FABS(alpha)<1.e-60){
+    if(fabs(alpha)<1.e-60){
 	for(int i=0; i<B->nx*B->ny; i++){
 	    A->p[i]=ABS2(B->p[i])*beta;
 	}
@@ -595,8 +588,6 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     T uy[ny];
     T cx=EXPI(-2*M_PI*dux*sx);
     T cy=EXPI(-2*M_PI*duy*sy);
-    PMAT(otf, potf);
-    PMAT(otfin, potfin);
     //warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
 	ux[0]=EXPI(-2*M_PI*dux*sx*(-nx/2));
@@ -628,13 +619,13 @@ void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct){
     if(otf->p==otfin->p){
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		potf[iy][ix]*=ux[ix]*uy[iy];
+		IND(otf,ix,iy)*=ux[ix]*uy[iy];
 	    }
 	}
     }else{
 	for(int iy=0; iy<ny; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		potf[iy][ix]=potfin[iy][ix]*ux[ix]*uy[iy];
+		IND(otf,ix,iy)=IND(otfin,ix,iy)*ux[ix]*uy[iy];
 	    }
 	}
     }

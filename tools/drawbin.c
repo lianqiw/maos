@@ -20,14 +20,14 @@
    draw square map.
  */
 static void draw_map(file_t *fp, int id){
-    header_t header={0};
+    header_t header={0,0,0,0};
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     if(!suf) suf=strstr(name, ".fits");
     if(suf) suf[0]='\0';
     if(iscell(&header.magic)){
-	for(int ii=0; ii<header.nx*header.ny; ii++){
+	for(size_t ii=0; ii<header.nx*header.ny; ii++){
 	    draw_map(fp, ii);
 	}
 	free(header.str);
@@ -48,14 +48,14 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
     char *suf=strstr(name, ".bin");
     if(!suf) suf=strstr(name, ".fits");
     if(suf) suf[0]='\0';
-    header_t header1={0}, header2={0};
+    header_t header1={0,0,0,0}, header2={0,0,0,0};
     read_header(&header1, fp1);
     read_header(&header2, fp2);
     if(iscell(&header1.magic) && iscell(&header2.magic)){ /*cells */
 	if(header1.nx*header1.ny!=header2.nx*header2.ny){
 	    error("cell arrays does have the same length.\n");
 	}
-	for(int ii=0; ii<header1.nx*header1.ny; ii++){
+	for(size_t ii=0; ii<header1.nx*header1.ny; ii++){
 	    draw_opd(fp1, fp2, ii);
 	}
 	free(header1.str);
@@ -76,14 +76,14 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
    A recursive loc drawing routine
 */
 static void draw_loc(file_t *fp, int id){
-    header_t header={0};
+    header_t header={0,0,0,0};
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     if(!suf) suf=strstr(name, ".fits");
     if(suf) suf[0]='\0';
     if(iscell(&header.magic)){
-   	for(int ii=0; ii<header.nx*header.ny; ii++){
+   	for(size_t ii=0; ii<header.nx*header.ny; ii++){
 	    draw_loc(fp, ii);
 	}
 	free(header.str);
@@ -92,7 +92,7 @@ static void draw_loc(file_t *fp, int id){
 	if(loc->nloc>100000){/*if too many points, we draw it. */
 	    drawloc("loc",loc,NULL,zfname(fp),"x","y","%s",zfname(fp));
 	}else{/*we plot individual points. */
-	    plot_points("loc",1, &loc, NULL, NULL,NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
+	    plot_points("loc",1, &loc, NULL, NULL,NULL,NULL,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}
 	locfree(loc);
     }

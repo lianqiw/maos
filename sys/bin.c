@@ -15,8 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -30,7 +28,6 @@
 #include "path.h"
 #include "thread.h"
 #include "bin.h"
-#include "readstr.h"
 
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
@@ -86,17 +83,17 @@ int disable_save=0;
 /*
   Process the input file name and return file names that can be open to
   read/write. If the file name does not end with .bin or .bin.gz it will add to
-  the end .bin or .bin.gz depending on the value of defaultgzip. For read only
+  the end .bin. For read only
   access, it will also look into the path for files.
 */
-static char* procfn(const char *fn, const char *mod, const int defaultgzip){
+static char* procfn(const char *fn, const char *mod){
     char *fn2;
     if(fn[0]=='~'){
-	fn2=malloc(strlen(HOME)+strlen(fn)+16);
+	fn2=(char*)malloc(strlen(HOME)+strlen(fn)+16);
 	strcpy(fn2,HOME);
 	strcat(fn2,fn+1);
     }else{
-	fn2=malloc(strlen(fn)+16);
+	fn2=(char*)malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
     }
     /*If there is no recognized suffix, add .bin in the end. */
@@ -146,7 +143,7 @@ static char* procfn(const char *fn, const char *mod, const int defaultgzip){
 */
 int zfexist(const char *format, ...){
     format2fn;
-    char *fn2=procfn(fn, "rb", 0);
+    char *fn2=procfn(fn, "rb");
     int ans=0;
     if(fn2){ 
 	ans=1;
@@ -159,7 +156,7 @@ int zfexist(const char *format, ...){
 */
 void zftouch(const char *format, ...){
     format2fn;
-    char *fn2=procfn(fn, "rb", 0);
+    char *fn2=procfn(fn, "rb");
     if(fn2 && utimes(fn2, NULL)){
 	perror("zftouch failed");
     }
@@ -170,7 +167,7 @@ PNEW(lock);
   Open a bin file from a fd that may be a socket.
 */
 static file_t* zfdopen(int sock, const char *mod){
-    file_t* fp=calloc(1, sizeof(file_t));
+    file_t* fp=mycalloc(1,file_t);
     fp->isgzip=0;
     fp->fd=sock;
     if(fp->isgzip){
@@ -195,8 +192,8 @@ static file_t* zfdopen(int sock, const char *mod){
 */
 file_t* zfopen_try(const char *fn, const char *mod){
     LOCK(lock);
-    file_t* fp=calloc(1, sizeof(file_t));
-    const char* fn2=fp->fn=procfn(fn,mod,1);
+    file_t* fp=mycalloc(1,file_t);
+    const char* fn2=fp->fn=procfn(fn,mod);
     if(!fn2){
 	if(mod[0]=='r'){
 	    error("%s does not exist for read\n", fn);
@@ -315,9 +312,9 @@ void zfclose(file_t *fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
-	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
+	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
 	    error("write to %s failed\n", fp->fn);
 	}
@@ -392,7 +389,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
    Read from the file. If in gzip mode, calls gzread, otherwise, calls
    fread. Follows the interface of fread.
 */
-static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{
@@ -506,7 +503,7 @@ void zflush(file_t *fp){
     if(fp->isgzip){
 	gzflush(fp->p,4);
     }else{
-	fflush(fp->p);
+	fflush((FILE*)fp->p);
     }
 }
 
@@ -533,7 +530,7 @@ read_bin_header(header_t *header, file_t *fp){
 		zfread(hstr2, 1, nlen, fp);
 		hstr2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 		if(header->str){
-		    header->str=realloc(header->str,((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
+		    header->str=(char*)realloc(header->str,((header->str)?strlen(header->str):0)+strlen(hstr2)+1);
 		    strncat(header->str, hstr2, nlen);
 		}else{
 		    header->str=strdup(hstr2);
@@ -652,11 +649,10 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     if(str){
 	const char *str2=str+strlen(str);
 	while(str<str2){
-	    char *nl=strchr(str, '\n');
+	    const char *nl=strchr(str, '\n');
 	    int length;
 	    if(nl){
 		length=nl-str+1;
-		if(length<=70) nl[0]=';';
 	    }else{
 		length=strlen(str);
 	    }
@@ -664,6 +660,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    FLUSH_OUT;
 	    strncpy(header[hc], "COMMENT   ", 10);
 	    strncpy(header[hc]+10, str, length);
+	    if(nl){
+		header[hc][10+length-1]=';';
+	    }
 	    hc++;
 	    str+=length;
 	}
@@ -687,7 +686,10 @@ read_fits_header(header_t *header, file_t *fp){
     while(!end){
 	int start=0;
 	if(page==0){
-	    if(zfread_try(line, 1, 80, fp)) return -1; line[80]='\0';
+	    if(zfread_try(line, 1, 80, fp)){
+		return -1;
+	    }
+	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		warning("Garbage in fits file %s\n", fp->fn);
 		return -1;
@@ -739,9 +741,9 @@ read_fits_header(header_t *header, file_t *fp){
 		}
 		if(length>0){
 		    if(header->str){
-			header->str=realloc(header->str, strlen(header->str)+length+1+newline);
+			header->str=myrealloc(header->str, strlen(header->str)+length+1+newline,char);
 		    }else{
-			header->str=malloc(length+1+newline); (header->str)[0]='\0';
+			header->str=(char*)malloc(length+1+newline); (header->str)[0]='\0';
 		    }
 		    strcat(header->str, hh);
 		}
@@ -834,60 +836,7 @@ uint64_t bytes_header(const char *header){
     write_bin_headerstr(header, fp);
     }*/
 
-/**
-   Search and return the value correspond to key. NULL if not found. Do not free the
-   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
-   and succeeded by = sign. */
-const char *search_header(const char *header, const char *key){
-    if(!header) return NULL;
-    const char *ans=NULL;
-    //const char *ans_bak=NULL;
-    const char *val=header;
-    while(val[0]!='\0' && (val=strstr(val, key))){
-	if(val>header){
-	    char prev=*(val-1);
-	    if(!isspace((int)prev) && prev!=';' && prev !=','){
-		//ans_bak=val;
-		val=val+strlen(key);
-		continue;/*Invalid */
-	    }
-	}
-	val=val+strlen(key);
-	while(val[0]==' ') val++;
-	if(val[0] == '='){
-	    val++;
-	}else{
-	    continue;//invalid key
-	}
-	while(val[0]==' ') val++;
-	ans=val;
-	break;
-    }
-    //if(!ans) ans=ans_bak;
-    return ans;
-}
-/**
-   Read a number from the header with key
-*/
-double search_header_num(const char *header, const char *key){
-    if(!header) return NAN;
-    const char *val=search_header(header, key);
-    if(val){
-	return readstr_num(val, NULL);
-    }else{
-	return NAN;/*not found. */
-    }
-}
-/**
-   Read a number from the header and verify.
-*/
-double search_header_num_valid(const char *header, const char *key){
-    double val=search_header_num(header, key);
-    if(is_nan(val)){
-	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
-    }
-    return val;
-}
+
 /**
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
@@ -924,116 +873,6 @@ void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
     writearr(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
 }
-/**
-   Write a double array of size nx*ny to file.
-*/
-void writeflt(const float *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
-}
-/**
-   Write a double complex array of size nx*ny to file.
-*/
-void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(dcomplex), M_CMP, NULL, p, nx, ny);
-}
-/**
-   Write a float complex array of size nx*ny to file.
-*/
-void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(fcomplex), M_ZMP, NULL, p, nx, ny);
-}
-/**
-   Write a int array of size nx*ny to file.
-*/
-void writeint(const int *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
-}
-/**
-   Write a long array of size nx*ny to file.
-*/
-void writelong(const long *p, long nx, long ny, const char*format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
-}
-/**
-   Write spint array of size nx*ny to file. 
-*/
-void writespint(const spint *p, long nx, long ny, const char *format,...){
-    format2fn;
-    writearr(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
-}
-/**
-   read spint array of size len from file and do optional data conversion. 
-*/
-void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
-    int size=0;
-    switch(magic & 0xFFFF){
-    case M_INT64:
-	size=8;
-	break;
-    case M_INT32:
-	size=4;
-	break;
-    case M_DBL:/*saved by matlab. */
-	size=-8;
-	break;
-    default:
-	error("This is not a valid sparse spint file. magic=%x\n", magic);
-    }
-    if(sizeof(spint)==size){/*Matched int. */
-	zfread(out, sizeof(spint), len, fp);
-    }else{
-	size=abs(size);
-	void *p=malloc(size*len);
-	zfread(p, size, len, fp);
-	switch(magic & 0xFFFF){
-	case M_INT64:{
-	    uint64_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_INT32:{
-	    uint32_t *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	case M_DBL:{
-	    double *p2=p;
-	    for(unsigned long j=0; j<len; j++){
-		out[j]=(spint)p2[j];
-	    }
-	}
-	    break;
-	}
-    }
-}
-/**
-   Read spint array of size nx*ny from file and do optional data conversion.
-*/
-spint *readspint(file_t *fp, long* nx, long* ny){
-    header_t header;
-    read_header(&header, fp);
-    free(header.str);
-    spint *out=NULL;
-    if(nx!=0 && ny!=0){
-	*nx=(long)header.nx;
-	*ny=(long)header.ny;
-	out=malloc((*nx)*(*ny)*sizeof(spint));
-	readspintdata(fp, header.magic, out, (*nx)*(*ny));
-    }else{
-	*nx=0;
-	*ny=0;
-    }
-    return out;
-}
 
 /**
    Unreference the mmaped memory. When the reference drops to zero, unmap it.
@@ -1053,7 +892,7 @@ void mmap_unref(struct mmap_t *in){
    Create a mmap_t object.
 */
 struct mmap_t *mmap_new(int fd, void *p, long n){
-    struct mmap_t *out=calloc(1, sizeof(struct mmap_t));
+    struct mmap_t *out=mycalloc(1,struct mmap_t);
     out->p=p;
     out->n=n;
     out->nref=1;
@@ -1077,7 +916,7 @@ int mmap_open(char *fn, int rw){
     if(rw && disable_save){
 	warning("Saving is disabled for %s\n", fn);
     }
-    char *fn2=procfn(fn,rw?"w":"r",0);
+    char *fn2=procfn(fn,rw?"w":"r");
     if(!fn2) return -1;
     if(fn2 && strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
 	error("new_mmap does not support gzip\n");
@@ -1133,7 +972,7 @@ void mmap_header_ro(char **p0, uint32_t *magic, long *nx, long *ny, char **heade
     char *header=NULL;
     while(((uint32_t*)p)[0]==M_HEADER){
 	p+=4;
-	long nlen=((uint64_t*)p)[0];p+=8;
+	uint64_t nlen=((uint64_t*)p)[0];p+=8;
 	header=p;
 	p+=nlen;
 	if(nlen == ((uint64_t*)p)[0]){

@@ -40,7 +40,7 @@
    Apply Laplacian2 to xin and accumulates to xout.
 */
 void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin, 
-	      double alpha, int nthread){
+	      double alpha){
     dcell *xx=NULL;
     dcellmm(&xx, L2, xin, "nn", 1.);
     dcellmm(xout, L2, xx, "tn", alpha);
@@ -54,7 +54,7 @@ void apply_L2(dcell **xout, const dspcell *L2, const dcell *xin,
 */
 void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
-    const INVPSD_T *extra=A;
+    const INVPSD_T *extra=(const INVPSD_T*)A;
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
     int ips1, ips2;
@@ -99,7 +99,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
 */
 void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
-    const FRACTAL_T *extra=A;
+    const FRACTAL_T *extra=(const FRACTAL_T*)A;
     int ips1, ips2;
     if(xb<0){/*do all cells */
 	ips1=0; 
@@ -114,9 +114,9 @@ void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, 
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
 	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc->p[ips], xin->p[ips]->p, 
 		       alpha*extra->scale, 0);
-	fractal_inv(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
+	fractal_inv(extra->xopd->p[ips],
 		    extra->xloc->p[ips]->dx, r0i, extra->L0, extra->ninit);
-	fractal_inv_trans(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
+	fractal_inv_trans(extra->xopd->p[ips],
 			  extra->xloc->p[ips]->dx, r0i, extra->L0, extra->ninit);
 	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc->p[ips], (*xout)->p[ips]->p, 1, 1);
     }
@@ -187,7 +187,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 
     assert(wt->nx==B->nx && wt->ny==1 && A->nx == B->nx);
     const int nevl=B->nx;
-    dcell *res=cellnew(A->ny, B->ny);
+    dcell *res=dcellnew(A->ny, B->ny);
     for(int iy=0; iy<B->ny; iy++){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    int ind=iy*nevl+ievl;
@@ -222,7 +222,7 @@ typedef struct Tomo_T{
    gg  = GP * HXW * xin
 */
 static void Tomo_prop_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=global->parms;
     SIM_T *simu=global->simu;
@@ -251,8 +251,8 @@ static void Tomo_prop_do(thread_t *info){
 		prop_grid_stat(&xmap, recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
-		PDSPCELL(recon->HXWtomo,HXW);
-		dspmm(&xx, HXW[ips][iwfs], data->xin->p[ips], "nn", 1);
+		dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
+		dspmm(&xx, IND(HXW,iwfs,ips), data->xin->p[ips], "nn", 1);
 	    }
 	}
 	/*Apply the gradient operation */
@@ -276,13 +276,13 @@ void Tomo_prop(Tomo_T *data, int nthread){
    gg = GP' * NEAI * gg;
 */
 static void Tomo_nea_gpt_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
-    PDSPCELL(recon->saneai, NEAI);
+    dspcell*  NEAI=recon->saneai/*PDSPCELL*/;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], "nn", 1);
+	dspmm(&gg2, IND(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
 	dfree(data->gg->p[iwfs]); /*We reuse gg. */
 	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, "tn", data->alpha);
 	dfree(gg2);
@@ -290,13 +290,13 @@ static void Tomo_nea_gpt_do(thread_t *info){
 }
 
 static void Tomo_nea_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
-    PDSPCELL(recon->saneai, NEAI);
+    dspcell*  NEAI=recon->saneai/*PDSPCELL*/;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	/*Apply the gradient operation */
-	dspmm(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], "nn", 1);
+	dspmm(&gg2, IND(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
 	dcp(&data->gg->p[iwfs], gg2);
 	dfree(gg2);
     }
@@ -315,7 +315,7 @@ void Tomo_nea(Tomo_T *data, int nthread, int gpt){
    xout = Cxx^-1 * xin + HXW * gg;
 */
 static void Tomo_iprop_do(thread_t *info){
-    Tomo_T *data=info->data;
+    Tomo_T *data=(Tomo_T*)info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=global->parms;
     SIM_T *simu=global->simu;
@@ -346,9 +346,9 @@ static void Tomo_iprop_do(thread_t *info){
 					 displace[0],displace[1], scale, 0, 0, 0);
 	    }
 	}else{
-	    PDSPCELL(recon->HXWtomo,HXW);
+	    dspcell* HXW=recon->HXWtomo/*PDSPCELL*/;
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		dspmm(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], "tn", 1);
+		dspmm(&data->xout->p[ips], IND(HXW,iwfs,ips), data->gg->p[iwfs], "tn", 1);
 	    }
 	}
 	if(data->xin){/*data->xin is empty when called from TomoR */
@@ -397,7 +397,7 @@ void TomoR(dcell **xout, const void *A,
     dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
     TTFR(gg, recon->TTF, recon->PTTF);
     if(!*xout){
-	*xout=cellnew(recon->npsr, 1);
+	*xout=dcellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, NULL, gg, *xout, 1};
     Tomo_nea(&data, recon->nthread, 1);
@@ -413,7 +413,7 @@ void TomoRt(dcell **gout, const void *A,
 	    const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     if(!*gout){
-	*gout=cellnew(recon->saneai->nx, 1);
+	*gout=dcellnew(recon->saneai->nx, 1);
     }
     Tomo_T data={recon, alpha, xin, *gout, NULL, 1};
     Tomo_prop(&data, recon->nthread);
@@ -445,9 +445,9 @@ void TomoL(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=global->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
-    dcell *gg=cellnew(parms->nwfsr, 1);
+    dcell *gg=dcellnew(parms->nwfsr, 1);
     if(!*xout){
-	*xout=cellnew(recon->npsr, 1);
+	*xout=dcellnew(recon->npsr, 1);
     }
     Tomo_T data={recon, alpha, xin, gg, *xout, 0};
   
@@ -485,7 +485,7 @@ void FitR(dcell **xout, const void *A,
 	int isim=simu->reconisim;
 	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	const int nfit=parms->fit.nfit;
-	xp=cellnew(nfit,1);
+	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -505,7 +505,7 @@ void FitR(dcell **xout, const void *A,
 	const PARMS_T *parms=global->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
-	xp=cellnew(nfit,1);
+	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
@@ -650,7 +650,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		}
 		dmm(&simu->ecov->p[ievl], 1, xx, xx, "nt", 1);
 		if(parms->dbg.ecovxx){
-		    cellarr_dmat(simu->save->ecovxx[ievl], simu->isim, xx);
+		    zfarr_dmat(simu->save->ecovxx[ievl], simu->isim, xx);
 		}
 	    }/*if psfr[ievl] */
 	}/*ievl */
@@ -686,7 +686,7 @@ void shift_grad(SIM_T *simu){
 	    if(simu->gradlastcl){
 		dcellzero(simu->gradlastcl);
 	    }else{
-		simu->gradlastcl=cellnew(parms->nwfsr, 1);
+		simu->gradlastcl=dcellnew(parms->nwfsr, 1);
 	    }
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const double scale=1./parms->powfs[ipowfs].nwfs;
@@ -717,13 +717,13 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
     double ox=aloc->map->ox;
     double oy=aloc->map->oy;
     double dx1=1./aloc->dx;
-    PDMAT(dead, ps);
+    dmat*  ps=dead/*PDMAT*/;
     lmat *out=lnew(aloc->nloc, 1);
     for(long jact=0; jact<dead->nx; jact++){
-	long mapx=(long)round((ps[0][jact]-ox)*dx1);
-	long mapy=(long)round((ps[1][jact]-oy)*dx1);
+	long mapx=(long)round((IND(ps,jact,0)-ox)*dx1);
+	long mapy=(long)round((IND(ps,jact,1)-oy)*dx1);
 	long iact=loc_map_get(map, mapx, mapy)-1;
-	out->p[iact]=(dead->ny==3?ps[2][jact]*1e9:1);//integer in nm.
+	out->p[iact]=(dead->ny==3?IND(ps,jact,2)*1e9:1);//integer in nm.
     }
     dfree(dead);
     return out;
@@ -734,7 +734,7 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 Estimation. The result will be an average of them.  */
 
 
-CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
+cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     dmat *pair=parms->cn2.pair;
     int npair=pair->nx*pair->ny;
     int ipowfs=-1;
@@ -747,10 +747,10 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	}
     }
     dmat *wfstheta=dnew(parms->nwfs, 2);
-    PDMAT(wfstheta, ptheta);
+    dmat*  ptheta=wfstheta/*PDMAT*/;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	ptheta[0][iwfs]=parms->wfs[iwfs].thetax;
-	ptheta[1][iwfs]=parms->wfs[iwfs].thetay;
+	IND(ptheta,iwfs,0)=parms->wfs[iwfs].thetax;
+	IND(ptheta,iwfs,1)=parms->wfs[iwfs].thetay;
     }
     dmat *ht=0;
     if(parms->cn2.keepht){
@@ -771,7 +771,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	hs->p[iwfs]=parms->wfs[iwfs].hs;
     }
-    CN2EST_T *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
+    cn2est_t *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
 			     hs, ht, parms->cn2.keepht, parms->atm.L0);
     cn2est->os=dnew(ht->nx, 1);
     if(!parms->cn2.keepht){
@@ -820,7 +820,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
  */
 static void cn2est_moveht(RECON_T *recon){
     (void)recon;
-    /*CN2EST_T *cn2est=recon->cn2est; */
+    /*cn2est_t *cn2est=recon->cn2est; */
     /*
       Implemented mechanism to move height of layers. Need to redo HXF, GX, etc.
     */
@@ -831,7 +831,7 @@ static void cn2est_moveht(RECON_T *recon){
    Wrapper of Cn2 Estimation operations in recon.c
 */
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
-    CN2EST_T *cn2est=recon->cn2est;
+    cn2est_t *cn2est=recon->cn2est;
     cn2est_push(cn2est, grad);
     static int icn2=-1;
     if(cn2est->count%parms->cn2.step == 0){

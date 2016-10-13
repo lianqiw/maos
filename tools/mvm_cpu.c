@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
     int nstep0=nstep>1?20:0;//warm up
     dmat *d_saind=dread("NFIRAOS_saind");
     const int nsa=(d_saind->nx-1)/fraction;
-    int *saind=(int*)malloc(sizeof(int)*(1+nsa));
+    int *saind=mymalloc((1+nsa),int);
     for(int i=0; i<nsa+1; i++){
 	saind[i]=(int)d_saind->p[i];
     }
@@ -114,8 +114,8 @@ int main(int argc, char *argv[]){
     smat *mtch=snew(totpix*2,1);
     smat *grad=snew(ng,1);
     smat *im0=snew(totpix,3);
-    short *pix=malloc(totpix*sizeof(short));
-    short *pixbias=malloc(totpix*sizeof(short));
+    short *pix=mymalloc(totpix,short);
+    short *pixbias=mymalloc(totpix,short);
     {
 	rand_t rseed;
 	seed_rand(&rseed, 1);

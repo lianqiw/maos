@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -55,13 +55,13 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 		dyd=dyi;
 	    }
 	}
-	if(fabs(dx)<tol || is_nan(dx)){
+	if(fabs(dx)<tol || isnan(dx)){
 	    dx=dxd;//use value derived from data
 	}else if(fabs(dx-dxd)>tol && isfinite(dxd)){
 	    error("Specified dx=%.15g doesn't agree with data: %.15g\n", dx, dxd);
 	}
 
-	if(fabs(dy)<tol || is_nan(dy)){
+	if(fabs(dy)<tol || isnan(dy)){
 	    dy=dyd;
 	}else if(fabs(dy-dyd)>tol && isfinite(dyd)){
 	    error("Specified dy=%.15g doesn't agree with data: %.15g\n", dy, dyd);
@@ -106,8 +106,8 @@ void mapwritedata(file_t *fp, map_t *map){
    convert a dmat to map_t.
 */
 map_t* d2map(dmat *in){
-    map_t *map=realloc(dref(in), sizeof(map_t));
-    memset((void*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
+    map_t *map=myrealloc(dref(in), 1, map_t);
+    memset((char*)map+sizeof(dmat), 0, sizeof(map_t)-sizeof(dmat));
     char *header=in->header;
     map->iac=0;
     map->ox=search_header_num(header,"ox");
@@ -117,20 +117,20 @@ map_t* d2map(dmat *in){
     map->h =search_header_num(header,"h");
     map->vx=search_header_num(header,"vx");
     map->vy=search_header_num(header,"vy");
-    if(is_nan(map->dx)){
+    if(isnan(map->dx)){
 	error("dx is not specified in header.\n");
 	map->dx=1./64.;
     }
-    if(is_nan(map->dy)){
+    if(isnan(map->dy)){
 	map->dy=map->dx;
     }
-    if(is_nan(map->ox) || is_nan(map->oy)){
+    if(isnan(map->ox) || isnan(map->oy)){
 	map->ox=-map->nx/2*map->dx;
 	map->oy=-map->ny/2*map->dy;
     }
-    if(is_nan(map->h)) map->h=0;
-    if(is_nan(map->vx)) map->vx=0;
-    if(is_nan(map->vy)) map->vy=0;
+    if(isnan(map->h)) map->h=0;
+    if(isnan(map->vx)) map->vx=0;
+    if(isnan(map->vy)) map->vy=0;
     return map;
 }
 
@@ -138,7 +138,7 @@ map_t* d2map(dmat *in){
  * convert a mmap'ed dcell to map_t array
  */
 mapcell *dcell2map(dcell *in){
-    mapcell *map=cellnew(in->nx, in->ny);
+    mapcell *map=(mapcell*)cellnew(in->nx, in->ny);
     for(long i=0; i<in->nx*in->ny; i++){
 	if(!in->p[i]->header && in->header){
 	    in->p[i]->header=strdup(in->header);
@@ -152,7 +152,7 @@ mapcell *dcell2map(dcell *in){
  * Read map_t from file
  */
 map_t *mapreaddata(file_t *fp, header_t *header){
-    header_t header2={0};
+    header_t header2={0,0,0,0};
     if(!header){
 	header=&header2;
 	read_header(header, fp);
@@ -185,8 +185,8 @@ map_t *mapreaddata(file_t *fp, header_t *header){
    convert a dmat to map_t.
 */
 rmap_t* d2rmap(dmat *in){
-    rmap_t *map=realloc(dref(in), sizeof(rmap_t));
-    memset((void*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
+    rmap_t *map=myrealloc(dref(in), 1, rmap_t);
+    memset((char*)map+sizeof(dmat), 0, sizeof(rmap_t)-sizeof(dmat));
     char *header=in->header;
     if(!in->header){
 	error("this dmat has no header\n");
@@ -200,7 +200,7 @@ rmap_t* d2rmap(dmat *in){
     map->ftel=search_header_num(header,"ftel");
     map->fexit=search_header_num(header,"fexit");
     map->fsurf=search_header_num(header,"fsurf");
-    if(is_nan(map->ox) || is_nan(map->oy) || is_nan(map->dx)|| is_nan(map->dy) || is_nan(map->fsurf)){
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)|| isnan(map->dy) || isnan(map->fsurf)){
 	error("header is needed to convert dmat to map_t\n");
     }
     return map;
@@ -211,7 +211,7 @@ rmap_t* d2rmap(dmat *in){
  */
 rmap_t **dcell2rmap(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
-    rmap_t **map=calloc(in->nx*in->ny, sizeof(rmap_t*));
+    rmap_t **map=mycalloc(in->nx*in->ny,rmap_t*);
     for(long i=0; i<in->nx*in->ny; i++){
 	map[i]=d2rmap(in->p[i]);
     }

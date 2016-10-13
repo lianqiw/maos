@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -117,15 +117,15 @@ static void init_threads(){
 #if BUILTIN_FFTW_THREADS == 0
 #if _OPENMP>200805
 #if defined(USE_SINGLE)
-    fn="libfftw3f_omp."LDSUFFIX;
+    fn="libfftw3f_omp." LDSUFFIX;
 #else
-    fn="libfftw3_omp."LDSUFFIX;
+    fn="libfftw3_omp." LDSUFFIX;
 #endif
 #else //else OPENMP
 #if defined(USE_SINGLE)
-    fn="libfftw3f_threads."LDSUFFIX;
+    fn="libfftw3f_threads." LDSUFFIX;
 #else
-    fn="libfftw3_threads."LDSUFFIX;
+    fn="libfftw3_threads." LDSUFFIX;
 #endif
 #endif //if OPENMP
 #endif //if FFTW_THREADS
@@ -141,20 +141,20 @@ static void init_threads(){
 #ifdef USE_SINGLE
 	sprintf(fnwisdom, "%s/.aos/fftwf_wisdom_thread",HOME);
 #if BUILTIN_FFTW_THREADS
-	p_fftw_init_threads=fftwf_init_threads;
-	p_fftw_plan_with_nthreads=fftwf_plan_with_nthreads;
+	p_fftw_init_threads=(int(*)())fftwf_init_threads;
+	p_fftw_plan_with_nthreads=(void(*)(int))fftwf_plan_with_nthreads;
 #else
-	p_fftw_init_threads=dlsym(libfftw_threads, "fftwf_init_threads");
-	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftwf_plan_with_nthreads");
+	p_fftw_init_threads=(int(*)())dlsym(libfftw_threads, "fftwf_init_threads");
+	p_fftw_plan_with_nthreads=(void(*)(int))dlsym(libfftw_threads, "fftwf_plan_with_nthreads");
 #endif
 #else
 	sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
 #if BUILTIN_FFTW_THREADS
-	p_fftw_init_threads=fftw_init_threads;
-	p_fftw_plan_with_nthreads=fftw_plan_with_nthreads;
+	p_fftw_init_threads=(int(*)())fftw_init_threads;
+	p_fftw_plan_with_nthreads=(void(*)(int))fftw_plan_with_nthreads;
 #else
-	p_fftw_init_threads=dlsym(libfftw_threads, "fftw_init_threads");
-	p_fftw_plan_with_nthreads=dlsym(libfftw_threads, "fftw_plan_with_nthreads");
+	p_fftw_init_threads=(int(*)())dlsym(libfftw_threads, "fftw_init_threads");
+	p_fftw_plan_with_nthreads=(void(*)(int))dlsym(libfftw_threads, "fftw_plan_with_nthreads");
 #endif
 #endif
 	p_fftw_init_threads();
@@ -213,7 +213,7 @@ static void fft_threads(long nx, long ny){
 static void X(fft2plan)(X(mat) *A, int dir){
     assert(abs(dir)==1 && A && A->p);
     if(!A->fft) {
-	A->fft=calloc(1, sizeof(fft_t));
+	A->fft=mycalloc(1,fft_t);
     }else if(A->fft->plan[dir+1]) return;
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;//Always use ESTIMATE To avoid override data.
@@ -235,13 +235,13 @@ static void X(fft2plan)(X(mat) *A, int dir){
 static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
     assert(abs(dir)==1);
     if(!A->fft){
-	A->fft=calloc(1, sizeof(fft_t));
+	A->fft=mycalloc(1,fft_t);
     } else if(A->fft->plan1d[dir+1]) return;
     const int nx=A->nx;
     const int ny=A->ny;
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;
-    PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
+    PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=mycalloc(1,PLAN1D_T);
     LOCK_FFT;
     fft_threads(A->nx, A->ny);
     /*along columns for all columns. */
@@ -337,8 +337,8 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     if(dc->nx*dc->ny!=2){
 	error("X(cell) of two elements is required\n");
     }
-    long nx=dc->p[0]->nx;
-    long ny=dc->p[0]->ny;
+    int nx=dc->p[0]->nx;
+    int ny=dc->p[0]->ny;
     if(dc->p[1]->nx!=nx || dc->p[1]->ny!=ny){
 	error("The two elements in X(cell) must be of the same size\n");
     }
@@ -347,7 +347,7 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     T *restrict p1=dc->p[0]->p;
     T *restrict p2=dc->p[1]->p;
     /*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
-    fft_t *fft=calloc(1, sizeof(fft_t));
+    fft_t *fft=mycalloc(1,fft_t);
     if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
@@ -372,7 +372,7 @@ void X(fft1plan_r2hc)(X(mat) *A, int dir){
 	error("not supported\n");
     }
     assert(abs(dir)==1 && A && A->p);
-    if(!A->fft) A->fft=calloc(1, sizeof(fft_t));
+    if(!A->fft) A->fft=mycalloc(1,fft_t);
     int FFTW_FLAGS;
     FFTW_FLAGS=FFTW_ESTIMATE;
     LOCK_FFT;
@@ -399,6 +399,7 @@ void X(fft_free_plan)(fft_t *fft){
     }
 }
 void X(fft2)(X(mat) *A, int dir){
+    (void)A; (void)dir;
     error("libfftw3f is not available\n");
 }
 #endif //!defined(USE_SINGLE) || HAS_FFTWF==1

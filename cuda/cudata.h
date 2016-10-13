@@ -71,7 +71,7 @@ typedef struct cudata_t{
 	pthread_mutex_init(&memmutex, 0);
     }
     ~cudata_t(){
-	free(memcache);
+	free(memcache); memcache=0;
     }
 }cudata_t;
 class cudata_t;

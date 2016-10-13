@@ -33,8 +33,8 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
 		      double fieldstop        /**<[in] Size of field stop (radian) if used*/
     ){
     const int nwvl=wvl->nx*wvl->ny;
-    locfft_t *locfft=calloc(sizeof(locfft_t), 1);
-    locfft->embed=cellnew(nwvl, 1);
+    locfft_t *locfft=mycalloc(1, locfft_t);
+    locfft->embed=lcellnew(nwvl, 1);
     locfft->nembed=lnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	if(iwvl==0 || (fftsize && fftsize->p[iwvl]>0 && fftsize->p[iwvl]!=locfft->nembed->p[0])){
@@ -52,7 +52,7 @@ locfft_t *locfft_init(loc_t *loc,       /**<[in] The loc*/
     locfft->ampnorm=dsumsq(amp);
     if(fieldstop){
 	locfft->fieldstop=fieldstop;
-	locfft->fieldmask=cellnew(nwvl, 1);
+	locfft->fieldmask=dcellnew(nwvl, 1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    int nembed=locfft->nembed->p[iwvl];
 	    locfft->fieldmask->p[iwvl]=dnew(nembed, nembed);
@@ -107,7 +107,7 @@ static dcomplex strehlcomp(const dmat *iopdevl, const dmat *amp, const double wv
 void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lmat *psfsize, int sum2one){
     long nwvl=locfft->wvl->nx;
     if(!*psf2s){
-	*psf2s=cellnew(nwvl, 1);
+	*psf2s=ccellnew(nwvl, 1);
     }
     if(opd->nx!=locfft->amp->nx){
 	error("The length of opd should be %ld, but is %ld\n", locfft->amp->nx, opd->nx);
@@ -179,11 +179,14 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 #endif
 }
 /**
-   Apply a field stop
+   Apply a field stop to the OPD.
 */
 void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
     int nwvl=locfft->wvl->nx;
-    ccell *wvfs=cellnew(nwvl, 1);
+    if(nwvl>1){
+	warning("Not tested for multi-wavelength case yet.\n");
+    }
+    ccell *wvfs=ccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int nembed=locfft->nembed->p[iwvl];
 	lmat *embed=locfft->embed->p[iwvl];
@@ -205,6 +208,7 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	 * for different wavelength result*/
 	error("Not implemented yet\n");
     }
+    dmat *opdold=ddup(opd); dzero(opd);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=locfft->wvl->p[iwvl];
 	double wvlh=wvl*0.5;
@@ -213,14 +217,13 @@ void locfft_fieldstop(const locfft_t *locfft, dmat *opd, const dmat *wvlwts){
 	lmat *embed=locfft->embed->p[iwvl];
 	for(int iloc=0; iloc<opd->nx; iloc++){
 	    double val=carg(wvf->p[embed->p[iloc]])*kki;
-	    if(fabs(val-opd->p[iloc])>wvlh){//need phase unwrapping
+	    if(fabs(val-opdold->p[iloc])>wvlh){//need phase unwrapping
 		warning_once("phase unwrapping is needed\n");
-		double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
+		double diff=fmod(val-opdold->p[iloc]+wvlh, wvl);
 		if(diff<0) diff+=wvl;
-		opd->p[iloc]+=diff-wvlh;
-	    }else{
-		opd->p[iloc]=val;
+		val=(diff-wvlh)+opdold->p[iloc];
 	    }
+	    opd->p[iloc]+=wvlwts->p[iwvl]*val;
 	}
     }
     ccellfree(wvfs);

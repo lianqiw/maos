@@ -30,7 +30,7 @@ static char *mx2str(const mxArray *header){
     char *str=NULL;
     if(header && mxIsChar(header)){
 	int nheader=mxGetM(header)*mxGetN(header)+1;
-	str=malloc(nheader);
+	str=(char*)malloc(nheader);
 	mxGetString(header, str, nheader);
 	//convert matlab \n (2 chars) to C \n (1 char with a space)
 	const char *str2=str+strlen(str)-1;
@@ -64,13 +64,12 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	int issparse=0;
 	mxArray *in;
 	int type2;
-	long ix;
 	if(mxGetNumberOfElements(arr)==0){
 	    in=NULL;
 	    issparse=0;
 	    type2=M_DBL;
 	}else{
-	    for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
+	    for(size_t ix=0; ix<mxGetNumberOfElements(arr); ix++){
 		in=mxGetCell(arr,ix);
 		if(in){
 		    if(mxIsSparse(in)){
@@ -107,7 +106,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	//don't write global header.
 	header_t header2={magic, m, n, 0};
 	write_header(&header2, fp);
-	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
+	for(size_t ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
 	    if(in && !mxIsEmpty(in) && mxIsSparse(in) !=issparse)
 		error("can only save cell array of all sparse or all dense");
@@ -199,7 +198,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	mexErrMsgTxt("Usage: write(var,'file') or write(var, header, 'file')\n");
     }
     int nlen=mxGetM(prhs[ifn])*mxGetN(prhs[ifn])+1;
-    char *fn=malloc(nlen);
+    char *fn=(char*)malloc(nlen);
     mxGetString(prhs[ifn],fn,nlen);
     fp=zfopen(fn,"wb");
     if(!fp){

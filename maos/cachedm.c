@@ -45,7 +45,7 @@ void prep_cachedm(SIM_T *simu){
 	return;
     }
     if(!simu->cachedm){
-	simu->cachedm=cellnew(parms->ndm, 1);
+	simu->cachedm=mapcellnew(parms->ndm, 1);
 	for(int idm=0; idm<parms->ndm; idm++){
 	    double dx=parms->dm[idm].dx/16;
 	    create_metapupil(&simu->cachedm->p[idm], 0, 0, parms->dirs, parms->aper.d,
@@ -56,11 +56,11 @@ void prep_cachedm(SIM_T *simu){
     //cachedm_ha doesn't help because it is not much faster than ray tracing and
     //is not parallelized as ray tracing.
     /*new scheme for ray tracing */
-    simu->cachedm_prop=calloc(parms->ndm, sizeof(thread_t*));
-    simu->cachedm_propdata=calloc(parms->ndm, sizeof(PROPDATA_T));
+    simu->cachedm_prop=mycalloc(parms->ndm,thread_t*);
+    simu->cachedm_propdata=mycalloc(parms->ndm,PROPDATA_T);
     PROPDATA_T *cpropdata=simu->cachedm_propdata;
     for(int idm=0; idm<parms->ndm; idm++){
-	simu->cachedm_prop[idm]=calloc(NTHREAD, sizeof(thread_t));
+	simu->cachedm_prop[idm]=mycalloc(NTHREAD,thread_t);
 	if(simu->dmrealsq){
 	    cpropdata[idm].mapin=simu->dmrealsq->p[idm];
 	}else{

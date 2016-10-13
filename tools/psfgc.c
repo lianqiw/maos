@@ -56,7 +56,7 @@ typedef struct psfiris_t{
 }psfiris_t;
 
 static void psfiris_do(thread_t *info){
-    psfiris_t *data=info->data;
+    psfiris_t *data=(psfiris_t*)info->data;
     int ipsf=info->start;
     int nwvl=data->nwvl;
     int iwvl=ipsf%nwvl;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]){
 	    }
 	    if(iwvl==nwvl){//not found.
 		nwvl++;
-		wvls=realloc(wvls, nwvl*sizeof(double));
+		wvls=myrealloc(wvls, nwvl,double);
 		wvls[nwvl-1]=wvl;
 	    }
 	}
@@ -251,10 +251,10 @@ int main(int argc, char *argv[]){
 	/*don't change sumpsf after blending.*/
 	dcellfree(psf_large);
     }
-    dcell *output=cellnew(nwvl,nexp);
+    dcell *output=dcellnew(nwvl,nexp);
     info2("%d: ", nwvl);
     psfiris_t data={notf, nwvl, dx, sumpsf, npix, pixsize, pixoffx, pixoffy, blur, imperr, wvls, psf_lgs, output, msg};
-    thread_t *info=calloc(npsf, sizeof(thread_t));
+    thread_t *info=mycalloc(npsf,thread_t);
     thread_prep(info, 0, npsf, npsf, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);

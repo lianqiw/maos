@@ -27,4 +27,5 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
 		    const double *ampout, double* phiout, 
 		    double sc, double hs, double ht,
 		    double betax, double betay);
+void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs);
 #endif

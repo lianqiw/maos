@@ -74,6 +74,7 @@ int scheduler_report(STATUS_T *status){
     (void)status; return -1;
 }
 int scheduler_listen(void(*fun)(int)){
+    (void)fun;
     return -1;
 }
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
@@ -83,9 +84,13 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     return -1;
 }
 int scheduler_send_socket(int sfd, int id){
+    (void)sfd;
+    (void)id;
     return -1;
 }
 int scheduler_recv_socket(int *sfd, int id){
+    (void)sfd;
+    (void)id;
     return -1;
 }
 #else
@@ -402,7 +407,6 @@ int call_addr2line(char *ans, int nans, const char *buf){
  */
 void print_backtrace_symbol(void *const *buffer, int size){
     //disable memory debugging as this code may be called from within malloc_dbg
-    int memdbg=malloc_dbg_disable(0);
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     static int connect_failed=0;
     char cmdstr[PATH_MAX]={0};
@@ -431,7 +435,6 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	}else{
 	    info2("Command failed\n");
 	}
-	free(ans);
     }else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
 	//Create a new connection.
@@ -461,8 +464,9 @@ void print_backtrace_symbol(void *const *buffer, int size){
     }
     UNLOCK(mutex);
     sync();
+#else
+    (void)buffer; (void)size;
 #endif
-    if(memdbg) malloc_dbg_enable();
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>

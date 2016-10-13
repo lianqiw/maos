@@ -30,6 +30,12 @@
 #include <ctype.h>
 #include "io.h"
 //static void write_timestamp(file_t *fp);
+//GNU GCC changes definition of inline to C99 compatible since 4.4
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 5 && !defined(__clang__)
+#define INLINE static inline __attribute__((gnu_inline, always_inline)) //GNU
+#else
+#define INLINE static inline __attribute__((always_inline)) //C99
+#endif //if __GNUC__ == 4 && __GNUC_MINOR__ < 5
 
 static const char *myasctime(void){
     static char st[64];
@@ -82,7 +88,7 @@ static int islink(const char *fn){
     struct stat buf;
     return !stat(fn, &buf) && S_ISLNK(buf.st_mode);
 }
-static char* procfn(const char *fn, const char *mod,const int gzip){
+static char* procfn(const char *fn, const char *mod){
     if(!fn){
 	info("fn is empty\n");
 	return NULL;
@@ -90,11 +96,11 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     char *fn2;
     if(fn[0]=='~'){
 	char *HOME=getenv("HOME");
-	fn2=malloc(strlen(HOME)+strlen(fn)+16);
+	fn2=(char*)malloc(strlen(HOME)+strlen(fn)+16);
 	strcpy(fn2,HOME);
 	strcat(fn2,fn+1);
     }else{
-	fn2=malloc(strlen(fn)+16);
+	fn2=(char*)malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
     } 
     /*If there is no recognized suffix, add .bin in the end.*/
@@ -138,13 +144,13 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     return fn2;
 }
 /*stripped down version of io.c*/
-file_t* zfopen(const char *fn, char *mod){
-    char *fn2=procfn(fn, mod, 1);
+file_t* zfopen(const char *fn, const char *mod){
+    char *fn2=procfn(fn, mod);
     if(!fn2){
 	info("%s does not exist\n", fn);
 	return NULL;
     }
-    file_t* fp=calloc(1, sizeof(file_t));
+    file_t* fp=(file_t*)calloc(1,sizeof(file_t));
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
     /*Now open the file to get a fd number that we can use to lock on the
       file.*/
@@ -214,7 +220,7 @@ file_t* zfopen(const char *fn, char *mod){
 }
 void zfclose(file_t *fp){
     if(fp->isgzip){
-	gzclose((voidp)fp->p);
+	gzclose((gzFile)fp->p);
     }else{
 	if(fclose((FILE*)fp->p)){
 	    perror("fclose\n");
@@ -222,9 +228,9 @@ void zfclose(file_t *fp){
     }
     free(fp);
 }
-static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
-	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
+	if(gzwrite((gzFile)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
 	    error("write failed\n");
 	}
@@ -293,9 +299,8 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
     }
 }
 void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
-    dcomplex *tmp=malloc(sizeof(dcomplex)*nmemb);
-    long i;
-    for(i=0; i<nmemb; i++){
+    dcomplex *tmp=(dcomplex*)malloc(nmemb*sizeof(dcomplex));
+    for(size_t i=0; i<nmemb; i++){
 	tmp[i].x=pr[i];
 	tmp[i].y=pi[i];
     }
@@ -303,18 +308,17 @@ void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, fil
     free(tmp);
 }
 void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp){
-    fcomplex *tmp=malloc(sizeof(fcomplex)*nmemb);
-    long i;
-    for(i=0; i<nmemb; i++){
+    fcomplex *tmp=(fcomplex*)malloc(nmemb*sizeof(fcomplex));
+    for(size_t i=0; i<nmemb; i++){
 	tmp[i].x=pr[i];
 	tmp[i].y=pi[i];
     }
     zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
     free(tmp);
 }
-static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
-	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
+	return gzread((gzFile)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{
 	return fread(ptr, size, nmemb, (FILE*)fp->p)==nmemb?0:-1;
     }
@@ -384,14 +388,14 @@ int zfseek(file_t *fp, long offset, int whence){
 	offset=nb*bs;
     }
     if(fp->isgzip){
-	return gzseek((voidp)fp->p,offset,whence)==-1?-1:0;
+	return gzseek((gzFile)fp->p,offset,whence)==-1?-1:0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }
 }
 long zftell(file_t *fp){
     if(fp->isgzip){
-	return gztell((voidp)fp->p);
+	return gztell((gzFile)fp->p);
     }else{
 	return ftell((FILE*)fp->p);
     }
@@ -424,7 +428,7 @@ static void write_bin_header(const char *header, file_t *fp){
     uint64_t nlen=strlen(header)+1;
     /*make header 8 byte alignment.*/
     uint64_t nlen2=(nlen/8+1)*8;
-    char *header2=calloc(sizeof(char), nlen2);
+    char *header2=(char*)calloc(nlen2, sizeof(char));
     memcpy(header2, header, nlen);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     zfwrite(&nlen2, sizeof(uint64_t), 1, fp);
@@ -463,7 +467,7 @@ static uint32_t read_bin_magic(file_t *fp, char **header){
 		    zfread(header2, 1, nlen, fp);
 		    header2[nlen-1]='\0'; /*make sure it is NULL terminated.*/
 		    if(*header){
-			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
+			*header=(char*)realloc(*header, sizeof(char)*(((*header)?strlen(*header):0)+strlen(header2)+1));
 			strncat(*header, header2, nlen);
 		    }else{
 			*header=strdup(header2);
@@ -547,11 +551,10 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	     * length limit*/
 	const char *str2=str+strlen(str);
 	while(str<str2){
-	    char *nl=strchr(str, '\n');
+	    const char *nl=strchr(str, '\n');
 	    int length;
 	    if(nl){
 		length=nl-str+1;
-		if(length<=70) nl[0]=';';
 	    }else{
 		length=strlen(str);
 	    }
@@ -559,6 +562,9 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    FLUSH_OUT;
 	    strncpy(header[hc], "COMMENT   ", 10);
 	    strncpy(header[hc]+10, str, length);
+	    if(nl){
+		header[hc][10+length-1]=';';
+	    }
 	    hc++;
 	    str+=length;
 	}
@@ -582,7 +588,8 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	int start=0;
 	if(page==0){
 	    /*First read mandatory fits headers.*/
-	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
+	    if(zfread2(line, 1, 80, fp)) return -1;
+	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		info("Garbage in fits file at %ld:\n", zftell(fp));
 		info("%s\n", line);
@@ -635,9 +642,9 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 		}
 		if(length>0){
 		    if(*str){
-			*str=realloc(*str, strlen(*str)+length+1+newline);
+			*str=(char*)realloc(*str, (strlen(*str)+length+1+newline)*sizeof(char));
 		    }else{
-			*str=malloc(length+1+newline); (*str)[0]='\0';
+			*str=(char*)malloc((length+1+newline)*sizeof(char)); (*str)[0]='\0';
 		    }
 		    strcat(*str, hh);
 		}

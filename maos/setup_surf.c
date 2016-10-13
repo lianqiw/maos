@@ -38,51 +38,28 @@
    2011-09-07: 
    Relocate simu->surfwfs to powfs.opdadd In order to perserve surface for different seeds
 */
-/**
-   Propagate tilt surface from star at hs, along direction (thetax, thetay), to loc.
-*/
-static void tsurf2loc(rmapcell *tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs){
-    for(int itsurf=0; itsurf<ntsurf; itsurf++){
-	const double alx=tsurf->p[itsurf]->txdeg/180*M_PI;
-	const double aly=tsurf->p[itsurf]->tydeg/180*M_PI;
-	const double ftel=tsurf->p[itsurf]->ftel;
-	const double fexit=tsurf->p[itsurf]->fexit;
-	const double fsurf=tsurf->p[itsurf]->fsurf;
-	const double mag=fexit/ftel;
-	const double scalex=-mag;
-	const double scaley=mag;
-	const double scaleopd=-2;
-	const double het=fexit-fsurf;/*distance between exit pupil and M3. */
-	rmap_t *mapsurf=tsurf->p[itsurf];
-
-	double d_img_focus=1./(1./ftel-1./hs)-ftel;
-	/*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
-	double d_img_exit=fexit+d_img_focus;
-		
-	/*2010-04-02: do not put - sign */
-	double bx=thetax*(d_img_focus+ftel)/d_img_exit;
-	double by=thetay*(d_img_focus+ftel)/d_img_exit;
-	proj_rect_grid(mapsurf,alx,aly,locin,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
-    }
-}
 
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info("Setting up tilt surface (M3)\n");
-    rmapcell *tsurf=cellnew(parms->ntsurf, 1);
+    rmapcell *tsurf=rmapcellnew(parms->ntsurf, 1);
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=parms->tsurf[itsurf];
 	info("Loading tilt surface from %s\n", fn);
 	tsurf->p[itsurf]=rmapread("%s",fn); 
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
-		  parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl], parms->evl.hs->p[ievl]);
+	for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+	    m3proj(tsurf->p[itsurf], aper->opdadd->p[ievl], aper->locs, 
+		   parms->evl.thetax->p[ievl], parms->evl.thetay->p[ievl], parms->evl.hs->p[ievl]);
+	}
     }
     if(parms->sim.ncpa_calib){
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-	    tsurf2loc(tsurf, parms->ntsurf, aper->opdfloc->p[ifit], recon->floc, 
-		      parms->sim.ncpa_thetax->p[ifit], parms->sim.ncpa_thetay->p[ifit], parms->sim.ncpa_hs->p[ifit]);
+	    for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+		m3proj(tsurf->p[itsurf], aper->opdfloc->p[ifit], recon->floc, 
+		       parms->sim.ncpa_thetax->p[ifit], parms->sim.ncpa_thetay->p[ifit], parms->sim.ncpa_hs->p[ifit]);
+	    }
 	}
     }
 
@@ -96,8 +73,10 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    locwfs=powfs[ipowfs].loc;
 	}
-	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfs, 
-		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
+	for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
+	    m3proj(tsurf->p[itsurf], powfs[ipowfs].opdadd->p[wfsind], locwfs, 
+		   parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->wfs[iwfs].hs);
+	}
     }
     cellfree(tsurf);
 }
@@ -119,7 +98,7 @@ typedef struct{
 }SURF_DATA;
 
 static void prop_surf_evl(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const APER_T *aper=data->aper;
     const map_t *surf=data->surf;
@@ -127,7 +106,7 @@ static void prop_surf_evl(thread_t *info){
     const int *evlcover=data->evlcover;
     const int isurf=data->isurf;
     const char *prt=" covers evl ";
-    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -153,7 +132,7 @@ static void prop_surf_evl(thread_t *info){
 }
 
 static void prop_surf_ncpa(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const APER_T *aper=data->aper;
     const RECON_T *recon=data->recon;
@@ -171,7 +150,7 @@ static void prop_surf_ncpa(thread_t *info){
 }
 
 static void prop_surf_wfs(thread_t *info){
-    SURF_DATA *data=info->data;
+    SURF_DATA *data=(SURF_DATA*)info->data;
     const PARMS_T *parms=data->parms;
     const POWFS_T *powfs=data->powfs;
     const map_t *surf=data->surf;
@@ -179,7 +158,7 @@ static void prop_surf_wfs(thread_t *info){
     const int *wfscover=data->wfscover;
     const int isurf=data->isurf;
     const char *prt=" covers WFS ";
-    char* buf=alloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
     char buf2[6];
     buf[0]='\0';
     strcat(buf, parms->surf[isurf]);
@@ -227,9 +206,9 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     const int nncpa=parms->sim.ncpa_ndir;
-    int *evlcover=malloc(nevl*sizeof(int));
-    int *wfscover=malloc(nwfs*sizeof(int));
-    int *ncpacover=malloc(nncpa*sizeof(int));
+    int *evlcover=mymalloc(nevl,int);
+    int *wfscover=mymalloc(nwfs,int);
+    int *ncpacover=mymalloc(nncpa,int);
     int opdxcover;
     SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0};
     const int nthread=NTHREAD;
@@ -299,7 +278,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    if(ncover!=nwfs){
 		if(ncover==0) error("wfscover has zero length\n");
 		warning("wfscover has wrong length of %d, expect %d\n", ncover, nwfs);
-		wfscover=realloc(wfscover, sizeof(int)*nwfs);
+		wfscover=myrealloc(wfscover,nwfs,int);
 		int val;
 		if(parms->sim.skysim){
 		    val=wfscover[ncover-1];
@@ -351,7 +330,7 @@ static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     }else{
 	error("opdfloc is not available\n");
 	//the following is wrong for two reasons: 1) ncpa_ndir may be different then evl.nevl, 2) ray tracing from locs to floc is not good because of edge effect.
-	xp=cellnew(parms->sim.ncpa_ndir, 1);
+	xp=dcellnew(parms->sim.ncpa_ndir, 1);
 	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
 	    xp->p[ievl]=dnew(recon->floc->nloc,1);
 	    prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
@@ -381,8 +360,8 @@ void FitL_NCPA(dcell **xout, const void *A,
 static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
-    recon->HA_ncpa=cellnew(nevl, ndm);
-    PDSPCELL(recon->HA_ncpa,HA);
+    recon->HA_ncpa=dspcellnew(nevl, ndm);
+    dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
 	double hs=parms->sim.ncpa_hs->p[ievl];
@@ -395,7 +374,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	    double displace[2];
 	    displace[0]=parms->sim.ncpa_thetax->p[ievl]*ht;
 	    displace[1]=parms->sim.ncpa_thetay->p[ievl]*ht;
-	    HA[idm][ievl]=mkh(recon->aloc->p[idm], recon->floc, 
+	    IND(HA,ievl,idm)=mkh(recon->aloc->p[idm], recon->floc, 
 			      displace[0], displace[1], scale);
 	}
     }
@@ -446,13 +425,13 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 		ampw->p[ix]=1;
 	    }
 	    normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
-	    PDMAT(ampw, pampw);
+	    dmat*  pampw=ampw/*PDMAT*/;
 	    
 	    double nx2=(nx-1)*0.5;
 	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 	    //normalize x,y from -1 to 1 in clear aperture
 	    double Rx2=pow(fill1d*nx/2, -2);
-	    dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
+	    dmat *opdi=dnew(nx, nx); dmat*  popdi=opdi/*PDMAT*/;
 	    double R2=0, R4=0, Rf2=0, Rf=0;
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
@@ -461,15 +440,15 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 #if MEASURED_LENSLET
 		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
 		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
-		    popdi[iy][ix]=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+		    IND(popdi,ix,iy)=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
 #else
-		    popdi[iy][ix]=rr*rr;
+		    IND(popdi,ix,iy)=rr*rr;
 #endif
-		    double amp=pampw[iy][ix];
+		    double amp=IND(pampw,ix,iy);
 		    R2+=rr*amp;
 		    R4+=rr*rr*amp;
-		    Rf+=popdi[iy][ix]*amp;
-		    Rf2+=popdi[iy][ix]*rr*rr*amp;
+		    Rf+=IND(popdi,ix,iy)*amp;
+		    Rf2+=IND(popdi,ix,iy)*rr*rr*amp;
 		}
 	    }		
 	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
@@ -478,14 +457,14 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    for(int iy=0; iy<nx; iy++){
 		for(int ix=0; ix<nx; ix++){
 		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		    popdi[iy][ix]-=a*rr+b;
-		    var+=popdi[iy][ix]*popdi[iy][ix]*pampw[iy][ix];
+		    IND(popdi,ix,iy)-=a*rr+b;
+		    var+=IND(popdi,ix,iy)*IND(popdi,ix,iy)*IND(pampw,ix,iy);
 		}
 	    }
 	    dfree(ampw);
 	    dscale(opdi, err/sqrt(var));
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		if(!powfs[ipowfs].opdadd->p[jwfs]){
@@ -511,7 +490,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
 	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
 	    const int nx=powfs[ipowfs].pts->nx;
 	    const int nxsa=nx*nx;
@@ -561,20 +540,20 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf || parms->ntsurf){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(!powfs[ipowfs].opdadd){
-		    powfs[ipowfs].opdadd=cellnew(parms->powfs[ipowfs].nwfs, 1);
+		    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 			powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 		    }
 		}
 	    }
 	    if(!aper->opdadd){
-		aper->opdadd=cellnew(parms->evl.nevl,1);
+		aper->opdadd=dcellnew(parms->evl.nevl,1);
 		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		    aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
 		}
 	    }
 	    if(!aper->opdfloc && parms->sim.ncpa_calib){
-		aper->opdfloc=cellnew(parms->sim.ncpa_ndir,1);
+		aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
 		for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
 		    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 		}

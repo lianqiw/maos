@@ -15,9 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <tgmath.h>
+#include <ctype.h> /*isspace */
 #include "readstr.h"
 #include "misc.h"
+#include "bin.h"
 
 /**
    Group all routines that are used to parse values from string that contain
@@ -25,28 +27,34 @@
 */
 
 /**
-   Obtain a string array value from the key.
+   Obtain a string array value from the key. String entries must be separated by
+   space, coma [,] or semi-column [;]. Enclosing with quote is optional, but
+   necessary to protect spaces.
+   Examples:
+   []: one empty string
+   [,]: two empty strings
+   [a b]: two strings: "a" and "b";
+   [a,b]: same as [a b]
+   ['a b']: one string "a b".
  */
 int readstr_strarr(char ***res, /**<[out] Result*/
 		   int len,     /**<[in] Length of array*/
 		   const char *sdata /**<[in] Input string*/
 		   ){
     int count=0;
-    int maxcount=5;
-    if(len && *res){
+    int maxcount=len;
+    if(len && *res){//pre allocatrd data.
 	memset(*res, 0, sizeof(char*)*len);
     }else{
-	if(len) maxcount=len;
-	*res=calloc(maxcount,sizeof(char*));
+	if(!len) maxcount=5;
+	*res=mycalloc(maxcount,char*);
     }
     if(!sdata) return count;
     const char *sdataend=sdata+strlen(sdata)-1;
     const char *sdata2=sdata;
     if(sdata[0]=='['){
 	sdata2++;
-	if(sdataend[0]==']'){
-	    sdataend--;
-	}else{
+	if(sdataend[0]!=']'){
 	    error("{%s}: Does not end in ].\n", sdata);
 	}
     }
@@ -54,38 +62,65 @@ int readstr_strarr(char ***res, /**<[out] Result*/
     while(sdata2<sdataend && sdata2[0]==' '){
 	sdata2++;
     }
-    while(sdata2<sdataend){
-	char mark=' ';
+    int end_coma=0;//end with coma. append an additional element.
+    while(sdata2<sdataend || end_coma){
+	const char *sdata4=sdataend;
+	const char *sdata3;
+	end_coma=0;
+	//If entry is quoted
 	if(sdata2[0]=='"' || sdata2[0]=='\''){
-	    mark=sdata2[0];
+	    char sep=sdata2[0];
 	    sdata2++;
+	    sdata4=strchr(sdata2, sep);//find matching quote.
+	    if(!sdata4){
+		error("{%s}: Unmatched quote in input\n", sdata);
+	    }
+	    sdata3=sdata4+1;
+	    //Skip spaces
+	    while(sdata3<sdataend && sdata3[0]==' '){
+		sdata3++;
+	    }
+	    //Ignore separator following the quote.
+	    if(sdata3[0]==',' || sdata3[0]==';'){
+		sdata3++;
+		end_coma=1;
+	    }
+	}else{
+	    //Find the next space, coma or semi-colon.
+	    char sep[]=" ,;";
+	    for(size_t is=0; is<sizeof(sep); is++){
+		const char *tmp=strchr(sdata2, sep[is]);
+		if(tmp && tmp<sdata4 && tmp<sdataend){
+		    sdata4=tmp;
+		}
+	    }
+	    if(sdata4[0]==',' || sdata4[0]==';'){
+		end_coma=1;
+	    }
+	    //skip the separator
+	    sdata3=sdata4+1;
 	}
-	const char *sdata4=strchr(sdata2, mark);
-	if(!sdata4){
-	    if(mark!=' '){
-		error("{%s}: Unmatched string\n", sdata);
+	if(count>=maxcount){//check memory
+	    if(!len){
+		maxcount*=2;
+		*res=myrealloc(*res,maxcount,char*);
 	    }else{
-		sdata4=sdataend+1;
+		error("{%s}: need %d, got more than %d elements\n", sdata, len, count);
 	    }
 	}
 	if(sdata4>sdata2){/*found non-empty str*/
-	    if(!len && count>=maxcount){
-		maxcount*=2;
-		*res=realloc(*res,sizeof(char*)*maxcount);
-	    }
-	    (*res)[count]=mystrndup(sdata2, sdata4-sdata2);
+	    (*res)[count++]=mystrndup(sdata2, sdata4-sdata2);
 	}else{/*found empty str*/
-	    (*res)[count]=NULL;
+	    (*res)[count++]=NULL;
 	}
-	count++;
-	sdata2=sdata4+1;
-	while(sdata2<sdataend && (sdata2[0]==' ' || sdata2[0]==';')){
+	sdata2=sdata3;
+	while(sdata2<sdataend && (sdata2[0]==' ')){//skip space
 	    sdata2++;
 	}
     }
     if(!len){
 	if(count>0){
-	    *res=realloc(*res,sizeof(char*)*count);
+	    *res=myrealloc(*res,count,char*);
 	}else{
 	    free(*res); *res=NULL;
 	}
@@ -110,14 +145,14 @@ double readstr_num(const char *data, /**<[in] Input string*/
 	error("{%s}: Unable to parse for a number\n", data);
 	return NAN;
     }
-    while(is_space(endptr[0])) endptr++;
+    while(isspace(endptr[0])) endptr++;
     while(endptr[0]=='/' || endptr[0]=='*'){
 	int power=1;
 	if(endptr[0]=='/'){
 	    power=-1;
 	}
 	endptr++;
-	while(is_space(endptr[0])) endptr++;
+	while(isspace(endptr[0])) endptr++;
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
@@ -128,7 +163,7 @@ double readstr_num(const char *data, /**<[in] Input string*/
 	}else{
 	    res/=tmp;
 	}
-	while(is_space(endptr[0])) endptr++;
+	while(isspace(endptr[0])) endptr++;
     }
     if(endptr0){
 	*endptr0=endptr;
@@ -168,13 +203,13 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     size_t nmax=10;
     size_t size=0;/*size of each number */
     switch(type){
-    case T_INT:
+    case M_INT:
 	size=sizeof(int);
 	break;
-    case T_LONG:
+    case M_LONG:
 	size=sizeof(long);
 	break;
-    case T_DBL:
+    case M_DBL:
 	size=sizeof(double);
 	break;
     default:
@@ -193,7 +228,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
     }
     const char *startptr=data;
-    char *endptr, *startptr2;
+    const char *endptr, *startptr2;
     double fact=1;
     int power=1;
     int addition=0; double addval=0; 
@@ -201,7 +236,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     /*process possible numbers before the array. */
     if(strchr(startptr,'[')){/*there is indeed '[' */
 	while(startptr[0]!='['){/*parse number before [*/
-	    double fact1=strtod(startptr, &endptr);/*get the number */
+	    double fact1=strtod(startptr, (char**)&endptr);/*get the number */
 	    if(startptr==endptr){
 		error("{%s}: Invalid entry to parse for numerical array\n", data);
 	    }else{/*valid number */
@@ -210,7 +245,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}else{
 		    fact/=fact1;
 		}
-		while(is_space(endptr[0])) endptr++;
+		while(isspace(endptr[0])) endptr++;
 		if(endptr[0]=='/'){
 		    power=-1;
 		}else if(endptr[0]=='*'){
@@ -231,7 +266,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     }
     if(strchr(startptr,']')){/*there is indeed ']'. Handle operations after ] */
 	endptr=strchr(startptr,']')+1;
-	while(is_space(endptr[0]) || endptr[0]=='\''){
+	while(isspace(endptr[0]) || endptr[0]=='\''){
 	    if(endptr[0]=='\'') trans=1-trans;
 	    endptr++;
 	}
@@ -250,16 +285,16 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		}
 	    }
 	    if(addition && power2){
-		error("We do not yet support * or / after + or - \n");
+		error("{%s}: We do not yet support * or / after + or - \n", data);
 	    }
 	    endptr++;
-	    while(is_space(endptr[0])) endptr++;
+	    while(isspace(endptr[0])) endptr++;
 	    startptr2=endptr;
-	    double fact2=strtod(startptr2, &endptr);
+	    double fact2=strtod(startptr2, (char**)&endptr);
 	    if(startptr2==endptr){
 		error("{%s}: Invalid entry to parse for numerical array\n", data);
 	    }
-	    while(is_space(endptr[0])) endptr++;
+	    while(isspace(endptr[0])) endptr++;
 	    if(addition){/*addition*/
 		if(addition==1){
 		    addval+=fact2;
@@ -279,23 +314,23 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	    _Exit(1);
 	}
     }
-    int count=0;
-    int nrow=0;/*number of rows*/ 
-    int ncol=0;/*number of columns*/
-    int rowbegin=0;/*beginning of this row*/
+    size_t count=0;
+    size_t nrow=0;/*number of rows*/ 
+    size_t ncol=0;/*number of columns*/
+    size_t rowbegin=0;/*beginning of this row*/
     /*Read in the array */
     while(startptr[0]!=']' && !is_end(startptr[0])){
 	if(count>=nmax){
 	    if(len){
 		error("{%s}: Needs %d numbers, but more are supplied.\n", data, len);
 	    }else{
-		*ret=realloc(*ret, size*nmax*2);
-		memset(*ret+size*nmax, 0, size*nmax);
+		*ret=myrealloc(*ret, size*nmax*2,char);
+		memset((char*)*ret+size*nmax, 0, size*nmax);
 		nmax*=2;
 	    }
 	}
 	/*parse the string for a floating point number.  */
-	double res=readstr_num(startptr, &endptr);
+	double res=readstr_num(startptr, (char**)&endptr);
 	startptr=endptr;
 	/*apply the factors appear before or after [] */
 	if(power==1){
@@ -308,19 +343,19 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	}
 	/*assign the value to appropriate array. convert to int if necessary. */
 	switch(type){
-	case T_INT:
+	case M_INT:
 	    if(fabs(res-(int)res)>EPS){
 		warning("Floating point number supplied while integer is needed: {%s}\n", data);
 	    }
 	    ((int*)(*ret))[count]=(int)res;
 	    break;
-	case T_LONG:
+	case M_LONG:
 	    if(fabs(res-(long)res)>EPS){
 		warning("Floating point number supplied while long integer is needed: {%s}\n", data);
 	    }
 	    ((long*)(*ret))[count]=(long)res;
 	    break;
-	case T_DBL:
+	case M_DBL:
 	    ((double*)(*ret))[count]=res;
 	    break;
 	default:
@@ -334,7 +369,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 		if(nrow==0){
 		    nrow=count-rowbegin;
 		}else if(nrow!=count-rowbegin){
-		    error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
+		    error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
 		}
 		rowbegin=count;
 	    }
@@ -346,42 +381,42 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	if(nrow==0){
 	    nrow=count-rowbegin;
 	}else if(nrow!=count-rowbegin){
-	    error("{%s}: last row has %d numbers while new row has %d numbers\n", data, nrow, count-rowbegin);
+	    error("{%s}: last row has %zu numbers while new row has %zu numbers\n", data, nrow, count-rowbegin);
 	}
     }
     if(nrow*ncol!=count){
-	error("nrow=%d, ncol=%d, count=%d\n", nrow, ncol, count);
+	error("{%s}: nrow=%zu, ncol=%zu, count=%zu\n", data, nrow, ncol, count);
     }
 
     if(trans && count>0){
-	info("Transposing %dx%d array\n", ncol, nrow);
+	info("Transposing %zux%zu array\n", ncol, nrow);
 	void *newer=calloc(count, size);
 	switch(type){
-	case T_INT:{
-	    int *from=(*ret);
-	    int *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	case M_INT:{
+	    int *from=(int*)(*ret);
+	    int *to=(int*)newer;
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }
 	}
 	    break;
-	case T_LONG:{
-	    long *from=(*ret);
-	    long *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	case M_LONG:{
+	    long *from=(long*)(*ret);
+	    long *to=(long*)newer;
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }
 	}
 	    break;
-	case T_DBL:{
-	    double *from=(*ret);
-	    double *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
+	case M_DBL:{
+	    double *from=(double*)(*ret);
+	    double *to=(double*)newer;
+	    for(size_t icol=0; icol<ncol; icol++){
+		for(size_t irow=0; irow<ncol; irow++){
 		    to[icol+ncol*irow]=from[irow+nrow*icol];
 		}
 	    }
@@ -395,7 +430,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	*ret=newer;
     }else if(!len){
 	if(count>0){
-	    *ret=realloc(*ret, size*count);
+	    *ret=myrealloc(*ret, size*count,char);
 	}else{
 	    free(*ret);
 	    *ret=NULL;
@@ -406,7 +441,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     return count;
 }
 int readstr_intarr(int**ret, int len, const char *data){
-    return readstr_numarr((void**)ret, len,NULL,NULL, T_INT, data);
+    return readstr_numarr((void**)ret, len,NULL,NULL, M_INT, data);
 }
 /**
    Read an integer array. Duplicate if only one number is present.
@@ -443,4 +478,58 @@ void readstr_intarr_relax(int **ret, /**<[out] Result*/
 	error("{%s}: Require %d numbers, but got %d\n", data, len, len2);
     }
     free(ret2);
+}
+/**
+   Search and return the value correspond to key. NULL if not found. Do not free the
+   returned pointer. The key must be preceeded by space, semicolon, coma or new line (isspace),
+   and succeeded by = sign. */
+const char *search_header(const char *header, const char *key){
+    if(!header) return NULL;
+    const char *ans=NULL;
+    //const char *ans_bak=NULL;
+    const char *val=header;
+    while(val[0]!='\0' && (val=strstr(val, key))){
+	if(val>header){
+	    char prev=*(val-1);
+	    if(!isspace((int)prev) && prev!=';' && prev !=','){
+		//ans_bak=val;
+		val=val+strlen(key);
+		continue;/*Invalid */
+	    }
+	}
+	val=val+strlen(key);
+	while(val[0]==' ') val++;
+	if(val[0] == '='){
+	    val++;
+	}else{
+	    continue;//invalid key
+	}
+	while(val[0]==' ') val++;
+	ans=val;
+	break;
+    }
+    //if(!ans) ans=ans_bak;
+    return ans;
+}
+/**
+   Read a number from the header with key
+*/
+double search_header_num(const char *header, const char *key){
+    if(!header) return NAN;
+    const char *val=search_header(header, key);
+    if(val){
+	return readstr_num(val, NULL);
+    }else{
+	return NAN;/*not found. */
+    }
+}
+/**
+   Read a number from the header and verify.
+*/
+double search_header_num_valid(const char *header, const char *key){
+    double val=search_header_num(header, key);
+    if(!(val==val)){
+	error("{%s}: Unable to parse a number for %s from %s\n", header, key, search_header(header, key));
+    }
+    return val;
 }

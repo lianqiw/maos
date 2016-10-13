@@ -77,8 +77,11 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}else{
 	    LOCK(cudata->memmutex);
 	    if(cudata->nmemcache<memsize){
-		cudata->nmemcache=sizeof(M)*nx*ny;
+		cudata->nmemcache=memsize;
+		/*info("GPU%d: Enlarge mem cache to %ld: %p->", 
+		  current_gpu(), memsize, cudata->memcache);*/
 		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
+		//info("%p\n", cudata->memcache);
 	    }
 	    from=(M*)cudata->memcache;
 	}
@@ -213,10 +216,10 @@ void cp2cpu(scell **out, const curcell &in, cudaStream_t stream);
 void cp2cpu(dcell **out, const curcell &in, cudaStream_t stream);
 void cp2cpu(zcell **out, const cuccell &in, cudaStream_t stream);
 void cp2cpu(ccell **out, const cuccell &in, cudaStream_t stream);
-void cellarr_cur(struct cellarr *ca, int i, const curmat &A, cudaStream_t stream);
-void cellarr_cuc(struct cellarr *ca, int i, const cucmat &A, cudaStream_t stream);
-void cellarr_curcell(struct cellarr *ca, int i, const curcell &A, cudaStream_t stream);
-void cellarr_cuccell(struct cellarr *ca, int i, const cuccell &A, cudaStream_t stream);
+void zfarr_cur(struct zfarr *ca, int i, const curmat &A, cudaStream_t stream);
+void zfarr_cuc(struct zfarr *ca, int i, const cucmat &A, cudaStream_t stream);
+void zfarr_curcell(struct zfarr *ca, int i, const curcell &A, cudaStream_t stream);
+void zfarr_cuccell(struct zfarr *ca, int i, const cuccell &A, cudaStream_t stream);
 void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t stream, 
 		    const double *amp, double *zlim,
 		    const char *title, const char *xlabel, const char *ylabel,

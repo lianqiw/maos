@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,24 +18,13 @@
 
 
 #include <stdint.h>
+#include "numtype.h"
 #include "mathmisc.h"
 #include "blas.h"
 
 /**
    Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
-double factorial(long n1, long n2){
-    double fact=1;
-    while(n2>=n1){
-	fact*=n2--;
-    }
-    if(!isfinite(fact)){
-	error("Factorial overflows\n");
-    }
-    return fact;
-}
-/**
-   Compute the factorial from n1 to n2. Overflow LONG if n2>20, so we use double as output.*/
-long double factoriall(long n1, long n2){
+long double factorial(long n1, long n2){
     long double fact=1;
     while(n2>=n1){
 	fact*=n2--;
@@ -249,7 +238,7 @@ void adddbl(double *restrict out, double alpha,
    A=B(p) <==> A(pi)=B
 */ 
 long *invperm(long *p, long np){
-    long *restrict pi=malloc(sizeof(long)*np);/*inverse of p */
+    long *restrict pi=mymalloc(np,long);/*inverse of p */
     for(long irow=0; irow<np; irow++){
 	pi[p[irow]]=irow;
     }
@@ -314,7 +303,7 @@ void remove_piston(double *p, long n){
 */
 long nextpow2(long n){
     n--;
-    for(long i=1; i<sizeof(long)*8; i<<=1){
+    for(size_t i=1; i<sizeof(long)*8; i<<=1){
 	n = n | (n >> i);
     }
     return n+1;
@@ -402,3 +391,72 @@ double golden_section_search(golden_section_fun f, void *param,
     return f2<f3?x2:x3;
 }
 
+
+/**
+   read spint array of size len from file and do optional data conversion. 
+*/
+void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
+    int size=0;
+    switch(magic & 0xFFFF){
+    case M_INT64:
+	size=8;
+	break;
+    case M_INT32:
+	size=4;
+	break;
+    case M_DBL:/*saved by matlab. */
+	size=-8;
+	break;
+    default:
+	error("This is not a valid sparse spint file. magic=%x\n", magic);
+    }
+    if(sizeof(spint)==size){/*Matched int. */
+	zfread(out, sizeof(spint), len, fp);
+    }else{
+	size=abs(size);
+	void *p=malloc(size*len);
+	zfread(p, size, len, fp);
+	switch(magic & 0xFFFF){
+	case M_INT64:{
+	    uint64_t *p2=(uint64_t*)p;
+	    for(long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	case M_INT32:{
+	    uint32_t *p2=(uint32_t*)p;
+	    for(long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	case M_DBL:{
+	    double *p2=(double*)p;
+	    for(long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	}
+    }
+}
+/**
+   Read spint array of size nx*ny from file and do optional data conversion.
+*/
+spint *readspint(file_t *fp, long* nx, long* ny){
+    header_t header;
+    read_header(&header, fp);
+    free(header.str);
+    spint *out=NULL;
+    if(nx!=0 && ny!=0){
+	*nx=(long)header.nx;
+	*ny=(long)header.ny;
+	out=mymalloc((*nx)*(*ny),spint);
+	readspintdata(fp, header.magic, out, (*nx)*(*ny));
+    }else{
+	*nx=0;
+	*ny=0;
+    }
+    return out;
+}

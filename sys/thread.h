@@ -17,16 +17,30 @@
 */
 #ifndef AOS_LIB_THREAD_H
 #define AOS_LIB_THREAD_H
+/**
+   \file thread.h
+   Functions regarding to threading
+*/
 
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-/**
-   \file thread.h
-   Functions regarding to threading
-*/
+
+#if _OPENMP >= 200805
+#define OMPTASK_SINGLE				\
+    DO_PRAGMA(omp parallel)			\
+    DO_PRAGMA(omp single)			
+#else
+#define OMPTASK_SINGLE
+#endif
+#if _OPENMP >= 200805
+#define OMP_IN_PARALLEL omp_in_parallel()
+#else
+#define OMP_IN_PARALLEL 0
+#endif
+
 /**
    Information about job to launch for each thread. start and end are the two indices.
 */
@@ -41,6 +55,7 @@ struct thread_t{
     thread_wrapfun fun;/*the function, takes data as argument */
     void *data;/*the data to pass to the function. */
 };
+long thread_id(void);
 /*
   For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
 
@@ -63,11 +78,11 @@ INLINE void THREAD_POOL_INIT(int nthread){
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
-INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
+INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     (void)urgent;
     for(int it=0; it<nthread; it++){
 #pragma omp task 
-	((thread_fun)fun)(arg);
+	fun(arg);
     }
 #pragma omp taskwait
 }
@@ -89,6 +104,9 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
 
 #define QUEUE_THREAD(group,A,urgent)		\
     (void)group;(void)urgent;			\
+    if(!OMP_IN_PARALLEL){			\
+	warning("QUEUE_THREAD is not in parallel region\n"); \
+    }							     \
     for(int it=0; it<(A)[0].nthread; it++){	\
 	if((A)[it].fun){			\
 	    _Pragma("omp task")			\
@@ -100,13 +118,19 @@ INLINE void CALL(void*fun, void *arg, int nthread, int urgent){
 /*Turn to inline function because nvcc concatenates _Pragma to } */
 INLINE void CALL_THREAD(thread_t *A, int urgent){
     (void) urgent;
-    for(int it=0; it<A[0].nthread; it++){		
-	if(A[it].fun){
+    if(!OMP_IN_PARALLEL){
+	//Wraps call in parallel region.
+	OMPTASK_SINGLE
+	    CALL_THREAD(A, urgent);
+    }else{
+	for(int it=0; it<A[0].nthread; it++){		
+	    if(A[it].fun){
 #pragma omp task
-	    A[it].fun(A+it); 
+		A[it].fun(A+it); 
+	    }
 	}
-    }
 #pragma omp taskwait
+    }
 }
 
 #else //using our thread_pool 
@@ -117,16 +141,16 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
     }else{								\
 	fun(arg);							\
     }
-#define CALL(fun,arg,nthread,urgent)					\
-    if(nthread>1){							\
-	long thgroup=0;							\
-	thread_pool_queue_many						\
-	    (&thgroup, (thread_fun)fun, (void*)arg, nthread, urgent);	\
-	thread_pool_wait(&thgroup);					\
-    }else{								\
-	fun(arg);							\
+INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+    if(nthread>1){							
+	long thgroup=0;							
+	thread_pool_queue_many						
+	    (&thgroup, fun, arg, nthread, urgent);			
+	thread_pool_wait(&thgroup);					
+    }else{								
+	fun(arg);							
     }
-
+}
 #define WAIT(group)\
     thread_pool_wait(&group);
 /**
@@ -191,7 +215,7 @@ INLINE void thread_new(thread_fun fun, void* arg){
     pthread_create(&temp, NULL, fun, arg);
 }
 void thread_block_signal();
-#endif
+
 
 INLINE int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
@@ -239,10 +263,7 @@ INLINE int atomicadd(int *ptr, int val){
 #define ICCTASK_END 
 #endif
 
-#if _OPENMP >= 200805
-#define OMPTASK_SINGLE				\
-    DO_PRAGMA(omp parallel)			\
-    DO_PRAGMA(omp single)			
-#else
-#define OMPTASK_SINGLE
-#endif
+
+
+
+#endif //ifndef AOS_LIB_THREAD_H

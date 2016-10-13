@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -28,8 +28,8 @@
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
    true, p is treated as external resource and is not reference counted.
 */
-static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    X(mat) *out=calloc(1, sizeof(X(mat)));
+INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
+    X(mat) *out=mycalloc(1,X(mat));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
@@ -40,10 +40,10 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
 	out->p=p;
     }else{
 	if(!p && nx && ny){
-	    p=calloc((nx*ny), sizeof(T));
+	    p=mycalloc((nx*ny),T);
 	}
 	out->p=p;
-	out->nref=calloc(1, sizeof(int));
+	out->nref=mycalloc(1,int);
 	out->nref[0]=1;
     }
     return out;
@@ -74,9 +74,13 @@ X(mat) *X(new)(long nx, long ny){
    check the size of matrix if exist. Otherwise create it.
 */
 void X(init)(X(mat)**A, long nx, long ny){
-    if(*A){
-	assert((*A)->nx == nx && (*A)->ny==ny);
+    if(*A && (*A)->nx > 0 && (*A)->ny > 0){
+	if((*A)->nx != nx || (*A)->ny!=ny){
+	    error("Mismatch: A is %ldx%ld, want %ldx%ld\n",
+		  (*A)->nx, (*A)->ny, nx, ny);
+	}
     }else{
+	X(free)(*A);
 	*A=X(new)(nx, ny);
     }
 }
@@ -135,7 +139,7 @@ void X(free_keepdata)(X(mat) *A){
 X(mat) *X(ref)(const X(mat) *in){
     if(!in) return NULL;
     assert_mat(in);
-    X(mat) *out=calloc(1, sizeof(X(mat)));
+    X(mat) *out=mycalloc(1,X(mat));
     memcpy(out,in,sizeof(X(mat)));
     if(!in->nref){
 	extern quitfun_t quitfun;
@@ -187,7 +191,7 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     }
     X(mat)*out=X(new)(nx, ny);
     for(int iy=0; iy<ny; iy++){
-	memcpy(out->p+iy*out->nx, in->p+(iy+sy)*in->nx+sx, sizeof(T)*nx); 
+	memcpy(PCOL(out, iy), PIND(in, sx, iy+sy), sizeof(T)*nx); 
     }
     return out;
 }
@@ -203,16 +207,16 @@ void X(resize)(X(mat) *A, long nx, long ny){
     if(!nx) nx=A->nx;
     if(!ny) ny=A->ny;
     if(A->nx==nx || A->ny==1){
-	A->p=realloc(A->p, sizeof(T)*nx*ny);
+	A->p=myrealloc(A->p,nx*ny,T);
 	if(nx*ny>A->nx*A->ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
     }else{/*copy memory to preserve data*/
-	T *p=calloc(nx*ny,sizeof(T));
+	T *p=mycalloc(nx*ny,T);
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
 	for(long iy=0; iy<miny; iy++){
-	    memcpy(p+iy*nx, A->p+iy*A->nx, sizeof(T)*minx);
+	    memcpy(p+iy*nx, PCOL(A, iy), sizeof(T)*minx);
 	}
 	free(A->p);
 	A->p=p;
@@ -245,12 +249,9 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
 		  in1->nx, in1->ny, in2->nx, in2->ny);
 	}
 	out=X(new)(in1->nx+in2->nx, in1->ny);
-	PMAT(out,pout);
-	PMAT(in1,pin1);
-	PMAT(in2,pin2);
 	for(long iy=0; iy<in1->ny; iy++){
-	    memcpy(pout[iy],pin1[iy], in1->nx*sizeof(T));
-	    memcpy(pout[iy]+in1->nx, pin2[iy], in2->nx*sizeof(T));
+	    memcpy(PCOL(out,iy),PCOL(in1,iy), in1->nx*sizeof(T));
+	    memcpy(PCOL(out,iy)+in1->nx, PCOL(in2,iy), in2->nx*sizeof(T));
 	}
     }else if(dim==2){
 	/*along y. */
@@ -303,11 +304,9 @@ X(mat) *X(trans)(const X(mat) *A){
     if(A->nx==1 || A->ny==1){
 	memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
     }else{
-	PMAT(B,Bp);
-	PMAT(A,Ap);
 	for(int ix=0; ix<A->nx; ix++){
 	    for(int iy=0; iy<A->ny; iy++){
-		Bp[ix][iy]=Ap[iy][ix];
+		IND(B,iy,ix)=IND(A,ix,iy);
 	    }
 	}
     }
@@ -333,7 +332,6 @@ void X(show)(const X(mat) *A, const char *format, ...){
     assert_mat(A);
     format2fn;
     info2("Displaying content of %s:\n",fn);
-    PMAT(A,p);
     int colmax=10;
     int iset,i,j;
     int nset=(A->ny+colmax-1)/colmax;
@@ -343,7 +341,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
 	printf("Cols %d to %d\n", iset, ncol-1);
 	for(j=0; j<A->nx; j++){
 	    for(i=iset*colmax; i<ncol; i++){
-		PRINT(p[i][j]);
+		PRINT(IND(A,j,i));
 	    }
 	    printf("\n");
 	}
@@ -364,7 +362,7 @@ T X(sum)(const X(mat) *A){
 	   point numbers.
 	*/
 	for(int i=0; i<A->nx*A->ny; i++){
-	    if(isfinite(REAL(p[i]))){
+	    if(isfinite(creal(p[i]))){
 		v+=p[i];
 	    }
 	}
@@ -511,7 +509,7 @@ X(cell) *X(cell_cast)(const void *A_){
    When a cell is empty, it is created with a (0,0) array and cannot be overriden.
 */
 X(cell) *X(cellnew2)(const X(cell) *A){
-    X(cell) *out=cellnew(A->nx, A->ny);
+    X(cell) *out=X(cellnew)(A->nx, A->ny);
     long tot=0;
     for(long i=0; i<A->nx*A->ny; i++){
 	if(!isempty(A->p[i])){
@@ -539,7 +537,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
 	tot+=nnx[i]*(nny?nny[i]:1);
     }
     if(!tot) return NULL;
-    X(cell) *out=cellnew(nx,ny);
+    X(cell) *out=X(cellnew)(nx,ny);
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
@@ -554,7 +552,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
 X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my){
     long tot=nx*ny*mx*my;    
     if(!tot) return NULL;
-    X(cell) *out=cellnew(nx,ny);
+    X(cell) *out=X(cellnew)(nx,ny);
     out->m=X(new)(tot,1);
     tot=0;
     for(long i=0; i<nx*ny; i++){
@@ -569,7 +567,7 @@ X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my){
 */
 X(cell) *X(cellref)(const X(cell) *in){
     if(!in) return NULL;
-    X(cell) *out=cellnew(in->nx, in->ny);
+    X(cell) *out=X(cellnew)(in->nx, in->ny);
     if(in->m){
 	out->m=X(ref)(in->m);
 	for(int i=0; i<in->nx*in->ny; i++){
@@ -599,12 +597,10 @@ void X(cellset)(X(cell)*dc, T val){
 */
 X(cell) *X(celltrans)(const X(cell) *A){
     if(!A) return NULL;
-    X(cell) *B=cellnew(A->ny, A->nx);
-    X(mat)* (*Bp)[B->nx]=(void*)B->p;
-    X(mat)* (*Ap)[A->nx]=(void*)A->p;
+    X(cell) *B=X(cellnew)(A->ny, A->nx);
     for(int ix=0; ix<A->nx; ix++){
 	for(int iy=0; iy<A->ny; iy++){
-	    Bp[ix][iy]=X(trans)(Ap[iy][ix]);
+	    IND(B,iy,ix)=X(trans)(IND(A,ix,iy));
 	}
     }
     return B;
@@ -619,18 +615,17 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     long nx, ny, *nxs, *nys;
     celldim(A, &nx, &ny, &nxs, &nys);
     if(nx==0 || ny==0) return NULL;
-    PCELL(A,pA);
     if(dim==1){
-	out=cellnew(1, A->ny);
+	out=X(cellnew)(1, A->ny);
 	for(long iy=0; iy<A->ny; iy++){
 	    if(nys[iy]==0) continue;
 	    out->p[iy]=X(new)(nx,nys[iy]);
 	    for(long icol=0; icol<nys[iy]; icol++){
 		long kr=0;
 		for(long ix=0; ix<A->nx; ix++){
-		    if(!isempty(pA[iy][ix])){
+		    if(!isempty(IND(A,ix,iy))){
 			memcpy(out->p[iy]->p+icol*nx+kr,
-			       pA[iy][ix]->p+icol*nxs[ix],
+			       IND(A,ix,iy)->p+icol*nxs[ix],
 			       nxs[ix]*sizeof(T));
 		    }			
 		    kr+=nxs[ix];
@@ -638,15 +633,15 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 	    }
 	}
     }else if(dim==2){
-	out=cellnew(A->nx,1);
+	out=X(cellnew)(A->nx,1);
 	for(long ix=0; ix<A->nx; ix++){
 	    if(nxs[ix]==0) continue;
 	    out->p[ix]=X(new)(nxs[ix],ny);
 	    long kr=0;
 	    for(long iy=0; iy<A->ny; iy++){
-		if(!isempty(pA[iy][ix])){
+		if(!isempty(IND(A,ix,iy))){
 		    memcpy(out->p[ix]->p+kr*nxs[ix],
-			   pA[iy][ix]->p,
+			   IND(A,ix,iy)->p,
 			   nxs[ix]*nys[iy]*sizeof(T));
 		}
 		kr+=nys[iy];
@@ -666,7 +661,6 @@ X(cell) *X(cellreduce)(const X(cell)*A, int dim){
 void X(celldropempty)(X(cell) **A0, int dim){
     X(cell) *A=*A0;
     if(!A) return;
-    PCELL(A,pA);
     if(dim==1){
 	/*drop rows */
 	int keep[A->nx];
@@ -674,7 +668,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int ix=0; ix<A->nx; ix++){
 	    keep[ix]=0;
 	    for(int iy=0; iy<A->ny; iy++){
-		if(!isempty(pA[iy][ix])){
+		if(!isempty(IND(A,ix,iy))){
 		    keep[ix]=1;
 		    break;
 		}
@@ -688,15 +682,13 @@ void X(celldropempty)(X(cell) **A0, int dim){
 		X(cellfree)(A);
 		*A0=NULL;
 	    }else{
-		X(cell) *B=calloc(1, sizeof(X(cell)*));
-		B->p=calloc((A->nx-ndrop)*A->ny, sizeof(X(mat)*));
-		PCELL(B,pB);
+		X(cell) *B=X(cellnew)(A->nx-ndrop,A->ny);
 		int count=0;
 		for(int ix=0; ix<A->nx; ix++){
 		    if(keep[ix]){
 			if(count!=ix){
 			    for(int iy=0; iy<A->ny; iy++){
-				pB[iy][count]=pA[iy][ix];
+				IND(B,count,iy)=IND(A,ix,iy);
 			    }
 			}
 			count++;
@@ -714,14 +706,14 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	for(int iy=0; iy<A->ny; iy++){
 	    int keep=0;
 	    for(int ix=0; ix<A->nx; ix++){
-		if(!isempty(pA[iy][ix])){
+		if(!isempty(IND(A,ix,iy))){
 		    keep=1;
 		    break;
 		}
 	    }
 	    if(keep){
 		for(int ix=0; ix<A->nx; ix++){
-		    pA[count][ix]=pA[iy][ix];
+		    IND(A,ix,count)=IND(A,ix,iy);
 		}
 		count++;
 	    }else{
@@ -733,7 +725,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	    X(cellfree)(A);
 	    *A0=NULL;
 	}else{
-	    A->p=realloc(A->p,sizeof(X(mat)*)*A->ny*A->nx);
+	    A->p=myrealloc(A->p,A->ny*A->nx,X(mat)*);
 	}
     }else{
 	error("Invalid dim: %d\n",dim);
@@ -757,7 +749,7 @@ X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
 	error("Shape doesn't agree. nx=%ld, nx=%ld\n", nx,A->nx);
     }
     long kr=0;
-    X(cell) *B=cellnew(ndim,1);
+    X(cell) *B=X(cellnew)(ndim,1);
     B->m=X(ref)(A);
     for(long ix=0; ix<ndim; ix++){
 	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);
@@ -783,22 +775,22 @@ void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
 	      nx,ny,A->nx,A->ny);
     }
     if(!*B){
-	*B=cellnew(ref->nx, ref->ny);
-	PCELL((*B),Bp);
+	*B=X(cellnew)(ref->nx, ref->ny);
+	X(cell)* Bp=(*B);
 	for(long iy=0; iy<ref->ny; iy++){
 	    for(long ix=0; ix<ref->nx; ix++){
-		Bp[iy][ix]=X(new)(nxs[ix],nys[iy]);
+		IND(Bp,ix,iy)=X(new)(nxs[ix],nys[iy]);
 	    }
 	}
     }
-    PCELL((*B),Bp);
+    X(cell)* Bp=(*B);
     long jcol=0;
     for(long iy=0; iy<ref->ny; iy++){
 	for(long icol=0; icol<nys[iy]; icol++){
 	    long kr=0;
 	    for(long ix=0; ix<ref->nx; ix++){
 		if(nxs[ix]>0){
-		    memcpy(Bp[iy][ix]->p+icol*Bp[iy][ix]->nx,
+		    memcpy(IND(Bp,ix,iy)->p+icol*IND(Bp,ix,iy)->nx,
 			   A->p+((icol+jcol)*nx+kr),
 			   nxs[ix]*sizeof(T));
 		    kr+=nxs[ix];
@@ -823,15 +815,13 @@ X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
     if(ny<=0){
 	ny=in->ny-sy;
     }
-    X(cell)*out=cellnew(nx, ny);
+    X(cell)*out=X(cellnew)(nx, ny);
     if(sx+nx>in->nx || sy+ny>in->ny){
 	error("Invalid parameter range\n");
     }
-    PCELL(in, pin);
-    PCELL(out, pout);
     for(int iy=0; iy<ny; iy++){
 	for(int ix=0; ix<nx; ix++){
-	    pout[iy][ix]=X(ref)(pin[iy+sy][ix+sx]);
+	    IND(out,ix,iy)=X(ref)(IND(in,ix+sx,iy+sy));
 	}
     }
     return out;

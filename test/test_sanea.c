@@ -35,8 +35,8 @@ static void test_ints(){
 		dcp(&imy, im);
 		addnoise(imy, &wfs_rand[iwfs], bkgrnd, bkgrnd, 0,0,rne);
 		dmulvec(gny, mtche->p[isa], imy->p,1.);
-		pnea[isa][isim]=gny[0]-gnf[0];
-		pnea[isa+nsa][isim]=gny[1]-gnf[1];
+		IND(pnea,isim,isa)=gny[0]-gnf[0];
+		IND(pnea,isim,isa+nsa)=gny[1]-gnf[1];
 	    }
 	}
 	writebin(nea,"test_sanea_wfs%d.bin",iwfs);
@@ -68,8 +68,8 @@ static void test_i0(){
 	    dcp(&imy, im);
 	    addnoise(imy, &i0rand, bkgrnd, bkgrnd,0,0,rne);
 	    dmulvec(gny, mtche->p[isa], imy->p,1.);
-	    pnea[isa][isim]=gny[0]-gnf[0];
-	    pnea[isa+nsa][isim]=gny[1]-gnf[1];
+	    IND(pnea,isim,isa)=gny[0]-gnf[0];
+	    IND(pnea,isim,isa+nsa)=gny[1]-gnf[1];
 	}
     }
     writebin(nea,"test_sanea_i0.bin");

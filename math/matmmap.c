@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -40,7 +40,7 @@ X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ..
     if(ftruncate(fd, msize)){
 	error("Error truncating file %s to size %zu\n", fn, msize);
     }
-    char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
+    char *map=(char*)mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
 	perror("mmap");
 	error("mmap failed\n");
@@ -76,7 +76,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     if(ftruncate(fd, msize)){
 	error("Error truncating file %s to size %lu\n", fn, msize);
     }
-    char *map=mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
+    char *map=(char*)mmap(NULL, msize, (PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
 	perror("mmap");
 	error("mmap failed\n");
@@ -85,7 +85,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     /*memset(map, 0, msize); */
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header1);
-    X(cell) *out=cellnew(nx,ny);
+    X(cell) *out=X(cellnew)(nx,ny);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header0;
     for(long ix=0; ix<nx*ny; ix++){
@@ -118,14 +118,14 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
     if(ftruncate(fd, msize)){
 	error("Error truncating file %s to size %lu\n", fn, msize);
     }
-    char *map=mmap(NULL, msize,(PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
+    char *map=(char*)mmap(NULL, msize,(PROT_WRITE|PROT_READ), MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
 	perror("mmap");
 	error("mmap failed\n");
     }
     char *map0=map;
     /*memset(map, 0, msize);*/
-    X(cell) *out=cellnew(nx,ny);
+    X(cell) *out=X(cellnew)(nx,ny);
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);
     out->mmap=mmap_new(fd, map0, msize);
@@ -164,7 +164,7 @@ X(mat*) X(read_mmap)(const char *format, ...){
     int fd=mmap_open(fn, 0);
     if(fd<0) return NULL;
     long msize=flen(fn);
-    char *map=mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
+    char *map=(char*)mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){	
 	perror("mmap");
 	error("mmap failed\n");
@@ -185,7 +185,7 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     int fd=mmap_open(fn, 0);
     if(fd<0) return NULL;
     long msize=flen(fn);
-    char *map=mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
+    char *map=(char*)mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
     if(map==MAP_FAILED){
 	perror("mmap");
 	error("mmap failed\n");
@@ -198,7 +198,7 @@ X(cell*) X(cellread_mmap)(const char *format, ...){
     if(!iscell(&magic)){
 	error("We want a cell array, File has %d\n", (int)magic);
     }
-    X(cell) *out=cellnew(nx, ny);
+    X(cell) *out=X(cellnew)(nx, ny);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header;
     for(long ix=0; ix<nx*ny; ix++){

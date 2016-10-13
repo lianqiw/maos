@@ -105,7 +105,7 @@ void tomofit(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    PDSPCELL(recon->GA, GA);
+    dspcell*  GA=recon->GA/*PDSPCELL*/;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
   	if(parms->powfs[ipowfs].psol){
 	    if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
@@ -114,7 +114,7 @@ static void calc_gradol(SIM_T *simu){
 		    int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs->p[indwfs];
 		    dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		    for(int idm=0; idm<parms->ndm && simu->wfspsol->p[ipowfs]; idm++){
-			dspmm(&simu->gradlastol->p[iwfs], GA[idm][iwfs], 
+			dspmm(&simu->gradlastol->p[iwfs], IND(GA,iwfs,idm), 
 			      simu->wfspsol->p[ipowfs]->p[idm], "nn", 1);
 		    }
 		}

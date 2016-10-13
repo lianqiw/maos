@@ -16,192 +16,62 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_COMMON_H
-#define AOS_COMMON_H
-typedef void (*quitfun_t)(const char*);
-extern quitfun_t quitfun;
-void default_quitfun(const char *msg);
 /**
    \file common.h
    Every source file in this folder should include this file
 */
+
+#ifndef AOS_COMMON_H
+#define AOS_COMMON_H
+//C standard headers
+#include <unistd.h>
+#include <time.h>
+
+typedef void (*quitfun_t)(const char*);
+extern quitfun_t quitfun;
+void default_quitfun(const char *msg);
+
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
+
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#include <alloca.h>
+#endif
+
+
 #if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
-//c++ mode
+//c++ mode, not CUDA
 #include <csignal>
-#include <cmath>
-#include <complex>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#define isfinite std::isfinite
+#include <cmath>
 using std::signbit;
+using std::isfinite;
+using std::isnan;
 using std::strerror;
-#define isnan std::isnan
-#define isinf std::isinf
-using std::complex;
-typedef complex<double> dcomplex;
-typedef complex<float> fcomplex;
-#define COMPLEX(A,B) dcomplex(A,B)
-#define DCOMPLEX(A,B) dcomplex(A,B)
-#define FCOMPLEX(A,B) fcomplex(A,B)
-#else//C99 mode
+#else//C99 mode or CUDA.
 #include <signal.h>
-#include <math.h> //don't use tgmath. cause gcc out of memory when compiling cmath.h
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-//include complex.h when called by cuda c++ compiler has compatibility
-//issues. we define in a similar way as in cuda
-#if defined(AOS_CUDA_GPU_H)
-//already defined 
-#else
-#include <complex.h>
-typedef __complex__ double dcomplex;
-typedef __complex__ float fcomplex;
-#define COMPLEX(A,B) ((A)+(B)*I)
-#define DCOMPLEX(A,B) ((double)(A)+(double)(B)*I)
-#define FCOMPLEX(A,B) ((float)(A)+(float)(B)*I)
-#endif
-#endif
+#include <math.h>
+#endif //if defined(__cplusplus) && !defined(AOS_CUDA_GPU_H)
 
 //GNU GCC changes definition of inline to C99 compatible since 4.4
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 5
-#define INLINE extern inline __attribute__((gnu_inline, always_inline)) //GNU
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 5 && !defined(__clang__)
+#define INLINE static inline __attribute__((gnu_inline, always_inline)) //GNU
 #else
-#define INLINE inline __attribute__((always_inline)) //C99
-#endif
-#include <unistd.h>
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
-#include <alloca.h>
-#endif
-#include <time.h>
-enum{
-    T_INT=1,
-    T_DBL=2,
-    T_STR=3,
-    T_LONG=4,
-    T_INTARR=11,
-    T_DBLARR=12,
-    T_LONGARR=14,
-};
-#if defined(DLONG)
-typedef unsigned long spint; /*Only optionally activated in AMD64. */
-#define M_SPINT M_INT64
-#else
-typedef unsigned int spint;  /*This is always 32 bit. */
-#define M_SPINT M_INT32
-#endif
+#define INLINE static inline __attribute__((always_inline)) //C99
+#endif //if __GNUC__ == 4 && __GNUC_MINOR__ < 5
+
 #undef	MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #undef	MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
-#if defined(__CYGWIN__)
-/*CYGWIN does not have complex.h. */
-#ifndef _Complex_I
-#define _Complex_I (__extension__ 1.0iF)
-#endif
-#define I _Complex_I
-double cabs(dcomplex __z);
-double cimag(dcomplex __z);
-double creal(dcomplex __z);
-dcomplex conj(dcomplex __z);
-#define cexp(z) exp(creal(z))*(cos(cimag(z))+I*sin(cimag(z)))
-dcomplex cpow(dcomplex x, dcomplex z);
-dcomplex csqrt(dcomplex);
-dcomplex clog(dcomplex);
-double carg(dcomplex);
-float cabsf(fcomplex __z);
-float cimagf(fcomplex __z);
-float crealf(fcomplex __z);
-fcomplex conjf(fcomplex __z);
-#define cexpf(z) expf(crealf(z))*(cosf(cimagf(z))+I*sinf(cimagf(z)))
-fcomplex cpowf(fcomplex x, fcomplex z);
-fcomplex csqrtf(fcomplex);
-fcomplex clogf(fcomplex);
-float cargf(fcomplex);
-#elif defined(__FreeBSD__) || defined(__NetBSD__)
-#include <complex.h>
-/*BSD lacks cpow in C99 implementation*/
-INLINE dcomplex clog(dcomplex x){
-  return log(cabs(x))+I*carg(x);
-}
-INLINE fcomplex clogf(fcomplex x){
-  return logf(cabsf(x))+I*cargf(x);
-}
-INLINE dcomplex cpow(dcomplex x, dcomplex z){
-  return cexp(clog(x)*z);
-}
-INLINE fcomplex cpowf(fcomplex x, fcomplex z){
-  return cexpf(clogf(x)*z);
-}
-//C99 already has definitions we need
-#elif !defined(__cplusplus)
-#include <complex.h>
-#elif defined(__cplusplus) && defined(AOS_CUDA_GPU_H)
-//we don't need to include the header as we only used __complex__ which is built-in. no function call is needed.
-//#include <complex.h>
-#else
-//C++ mode
-#define cabs abs
-#define cimag imag
-#define creal real
-#define cexp exp
-#define cpow pow
-#define csqrt sqrt
-#define clog log
-#define carg arg
-#define cabsf abs
-
-#define cimagf imag
-#define crealf real
-#define conjf conj
-#define cexpf exp
-#define cpowf pow
-#define csqrtf sqrt
-#define clogf log
-#define cargf arg
-inline fcomplex operator*(double A, const fcomplex &B){
-    return B*(float)A;
-}
-inline fcomplex operator*(const fcomplex &B, double A){
-    return B*(float)A;
-}
-inline dcomplex operator*(float A, const dcomplex &B){
-    return B*(double)A;
-}
-inline dcomplex operator*(const dcomplex &B, float A){
-    return B*(double)A;
-}
-inline fcomplex operator+(double A, const fcomplex &B){
-    return B+(float)A;
-}
-inline fcomplex operator+(const fcomplex &B, double A){
-    return B+(float)A;
-}
-inline dcomplex operator+(float A, const dcomplex &B){
-    return B+(double)A;
-}
-inline dcomplex operator+(const dcomplex &B, float A){
-    return B+(double)A;
-}
-inline fcomplex operator-(double A, const fcomplex &B){
-    return (float)A-B;
-}
-inline fcomplex operator-(const fcomplex &B, double A){
-    return B-(float)A;
-}
-inline dcomplex operator-(float A, const dcomplex &B){
-    return (double)A-B;
-}
-inline dcomplex operator-(const dcomplex &B, float A){
-    return B-(double)A;
-}
-#endif
 
 #include "mem.h"
 #ifdef __linux__
@@ -209,44 +79,17 @@ inline dcomplex operator-(const dcomplex &B, float A){
 #else
 #include <limits.h>
 #endif/*__linux__ */
+
 #ifndef restrict
 #define restrict __restrict
 #endif
-#ifndef M_PI
-#define M_PI 3.1415926535897932384626433832795
-#endif
-#define SEC2RAD 4.848136811095360e-06 //arcsec in unit of radian
-#define RAD2SEC 206264.8062470964 //radian in unit of arcsec
+
 #ifndef EPS
 #define EPS 1.e-15
 #endif
 
-/**
-   2010-01-03
-   USE_MYFLOOR = 1 reduce timing by 2s
-*/
-#if USE_MYFLOOR
-#define ifloor(A) (A<0?(int)(A)-1:(int)(A))
-#else
-#define ifloor(A) (int)floor(A)
-#endif
-#define iceil(A) (int)ceil(A)
-
-#if defined(FP_FAST_FMA)
-#define myfma fma
-#else
-#define myfma(x,y,z) (x)*(y)+(z)
-#endif
-#define SPLIT(A,B,C) {C=ifloor(A); B=(A)-(C);}
-#define not_nan(A) ((A)==(A))
-#define is_nan(A) (!((A)==(A)))
-
-#define add_valid(dest, A, B) if((B)==(B)) dest+=(A)*(B)
-#define invalid_val NAN
-
 #define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
-long thread_id(void);
-void print_backtrace();
+
 /*
   use () to make the statements a single statement.
 */
@@ -292,8 +135,7 @@ void print_backtrace();
 #define assert(A)
 #endif
 #endif
-#define error_write error("Write failed\n")
-#define error_read error("Read failed\n")
+
 /*
    Functions that return realtime:
    time(): resolution is in integer second. not enough resolution.

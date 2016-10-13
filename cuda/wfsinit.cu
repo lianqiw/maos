@@ -190,6 +190,12 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cp2gpu(cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
 		cp2gpu(cupowfs[ipowfs].saa, powfs[ipowfs].saa);
 		cp2gpu(cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gradoff);
+		if(powfs[ipowfs].pywfs->msaloc){
+		    cupowfs[ipowfs].msaloc=cuarray<culoc_t>(powfs[ipowfs].pywfs->msaloc->nx, 1);
+		    for(int i=0; i<powfs[ipowfs].pywfs->msaloc->nx;i++){
+			cupowfs[ipowfs].msaloc[i]=culoc_t(powfs[ipowfs].pywfs->msaloc->p[i]);
+		    }
+		}
 	    }
 	}
     }
@@ -435,7 +441,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		int nlx=powfs[ipowfs].llt->pts->nx;
 		int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 		cuwfs[iwfs].lltopd=curmat(nlx, nlx);
-		if(parms->powfs[ipowfs].pistatout || parms->sim.fsmideal){
+		if(parms->powfs[ipowfs].pistatout || parms->sim.idealfsm){
 		    DO(cudaMallocHost(&cuwfs[iwfs].lltg, 2*sizeof(Real)));
 		}
 		cuwfs[iwfs].lltwvf=cucmat(nlwvf, nlwvf);

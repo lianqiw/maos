@@ -100,9 +100,9 @@ static void skysim_isky(SIM_S *simu){
     int nstar;
     int nstep;
 
-    PDMAT(simu->res, pres);
-    PDMAT(simu->res_oa, pres_oa);
-    PDMAT(simu->res_geom, pres_geom);
+    dmat*  pres=simu->res;
+    dmat*  pres_oa=simu->res_oa;
+    dmat*  pres_geom=simu->res_geom;
     while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
 	double tk_1=myclockd();
 	/*Setup star parameters. */
@@ -134,7 +134,7 @@ static void skysim_isky(SIM_S *simu){
 	    /*Compute signal level. */
 	    setup_aster_copystar(&aster[iaster], star, parms);
 	    /*setup gradient operator. */
-	    setup_aster_g(&aster[iaster], star, powfs, parms);
+	    setup_aster_g(&aster[iaster], star, parms);
 	    /*Compute the reconstructor, nea, sigman and optimize controller. */
 	    setup_aster_ztilt(&aster[iaster], star, parms);
 	    setup_aster_controller(simu, &aster[iaster], star, parms);
@@ -143,7 +143,7 @@ static void skysim_isky(SIM_S *simu){
 #pragma omp taskwait
 #endif
 	/*Select asters that have good performance. */
-	setup_aster_select(pres_geom[isky],aster, naster, star, 
+	setup_aster_select(PCOL(pres_geom,isky),aster, naster, star, 
 			   parms->skyc.mtch?0.5*simu->rmsol:INFINITY,parms); 
 	double tk_2=myclockd();
 	/*Read in physical optics data (wvf) */
@@ -245,23 +245,23 @@ static void skysim_isky(SIM_S *simu){
 		selaster=iaster;
 		skymini=mini;
 		/*Field Averaged Performance. */
-		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
-		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
-		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
-		pres[isky][4]=0;/*always zero*/
-		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
+		IND(pres,1,isky)=pmini->p[0];/*ATM NGS Mode error */
+		IND(pres,2,isky)=pmini->p[1];/*ATM Tip/tilt Error. */
+		IND(pres,3,isky)=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
+		IND(pres,4,isky)=0;/*always zero*/
+		IND(pres,0,isky)=IND(pres,1,isky)+IND(pres,3,isky)+IND(pres,4,isky);/*Total */
 		/*On axis performance. */
-		pres_oa[isky][1]=pmini->p[2];
-		pres_oa[isky][2]=pmini->p[3];
-		pres_oa[isky][3]=pres[isky][3];
-		pres_oa[isky][4]=pres[isky][4];
-		pres_oa[isky][0]=pres_oa[isky][1]+pres_oa[isky][3]+pres_oa[isky][4];
+		IND(pres_oa,1,isky)=pmini->p[2];
+		IND(pres_oa,2,isky)=pmini->p[3];
+		IND(pres_oa,3,isky)=IND(pres,3,isky);
+		IND(pres_oa,4,isky)=IND(pres,4,isky);
+		IND(pres_oa,0,isky)=IND(pres_oa,1,isky)+IND(pres_oa,3,isky)+IND(pres_oa,4,isky);
 		seldtrat = mdtrat;
 		simu->fss->p[isky]=parms->skyc.fss[mdtrat];
 		if(parms->skyc.verbose){
 		    info2("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n", 
 			  simu->fss->p[isky],
-			  sqrt(pres[isky][0])*1e9, sqrt(pres[isky][1])*1e9, sqrt(pres[isky][2])*1e9);
+			  sqrt(IND(pres,0,isky))*1e9, sqrt(IND(pres,1,isky))*1e9, sqrt(IND(pres,2,isky))*1e9);
 		}
 		dcp(&simu->mres->p[isky], min_imres);
 	    }
@@ -273,19 +273,19 @@ static void skysim_isky(SIM_S *simu){
 #pragma omp taskwait
 #endif
 	simu->sel->p[isky]->ny=aster[selaster].nwfs;
-	PDMAT(simu->sel->p[isky],psel);
+	dmat* psel=simu->sel->p[isky];
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
-	    psel[iwfs][0]=aster[selaster].wfs[iwfs].thetax;
-	    psel[iwfs][1]=aster[selaster].wfs[iwfs].thetay;
+	    IND(psel,0,iwfs)=aster[selaster].wfs[iwfs].thetax;
+	    IND(psel,1,iwfs)=aster[selaster].wfs[iwfs].thetay;
 	    for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-		psel[iwfs][iwvl+2]=aster[selaster].wfs[iwfs].mags->p[iwvl];
+		IND(psel,iwvl+2,iwfs)=aster[selaster].wfs[iwfs].mags->p[iwvl];
 	    }
 	}
 	if(parms->skyc.servo>0){
 	    dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
 	}
 	if(parms->skyc.save){
-	    skysim_save(simu, aster, pres[isky], selaster, seldtrat, isky);
+	    skysim_save(simu, aster, PCOL(pres,isky), selaster, seldtrat, isky);
 	}
 	free_aster(aster, naster, parms);
 	free_star(star, nstar, parms);
@@ -298,8 +298,8 @@ static void skysim_isky(SIM_S *simu){
 	int nsky_left=simu->isky_end-simu->isky-1+nsky_tot*(parms->maos.nseed-simu->iseed-1);
 	int nsky_laps=simu->isky-simu->isky_start+1+nsky_tot*simu->iseed;
 	simu->status->rest=simu->status->laps*nsky_left/nsky_laps;
-	simu->status->clerrlo=sqrt(pres[isky][1])*1e9;
-	simu->status->clerrhi=sqrt(pres[isky][0])*1e9;
+	simu->status->clerrlo=sqrt(IND(pres,1,isky))*1e9;
+	simu->status->clerrhi=sqrt(IND(pres,0,isky))*1e9;
 	scheduler_report(simu->status);
 	UNLOCK(simu->mutex_status);
 	long totm=(long)floor(simu->status->tot/60.);
@@ -310,7 +310,7 @@ static void skysim_isky(SIM_S *simu){
 	long rest_m=simu->status->rest/60-rest_h*60;
 	info2("Field%4d,%2d stars, aster%3d/%-3d,%3.0f Hz: %6.2f nm "
 	      "Sel%3.0fs Load%3.0fs Phy%3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
-	      isky, nstar, selaster, naster, simu->fss->p[isky], sqrt(pres[isky][0])*1e9,
+	      isky, nstar, selaster, naster, simu->fss->p[isky], sqrt(IND(pres,0,isky))*1e9,
 	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while */
 }
@@ -342,11 +342,11 @@ static void skysim_update_mideal(SIM_S *simu){
 	dmat *telws=psd2time(parms->skyc.psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 	/*telws is in m. need to convert to rad since mideal is in this unit. */
 	dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
-	PDMAT(simu->mideal, pm1); 
-	PDMAT(simu->mideal_oa, pm2);
+	dmat*  pm1=simu->mideal; 
+	dmat*  pm2=simu->mideal_oa;
 	for(long i=0; i<simu->mideal->ny; i++){
-	    pm1[i][0]+=telws->p[i];
-	    pm2[i][0]+=telws->p[i];
+	    IND(pm1,0,i)+=telws->p[i];
+	    IND(pm2,0,i)+=telws->p[i];
 	}
 	dfree(telws);
     }
@@ -358,11 +358,11 @@ static void skysim_update_mideal(SIM_S *simu){
 static void skysim_calc_psd(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
     if(parms->skyc.psdcalc){
-	PDMAT(parms->maos.mcc, MCC);
+	dmat*  MCC=parms->maos.mcc;
 	dmat *x=dtrans(simu->mideal);
 	for(int im=0; im<x->ny; im++){
 	    dmat *xi=dsub(x, 20, 0, im, 1);
-	    dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
+	    dscale(xi, sqrt(IND(MCC,im,im)));/*convert to unit of m.*/
 	    dmat *psdi=psd1dt(xi, 1, parms->maos.dt);
 	    if(im<2){
 		add_psd2(&simu->psd_tt, psdi);
@@ -425,12 +425,12 @@ static void skysim_prep_gain(SIM_S *simu){
     info2("Precompute gains for different levels of noise.\n");
     /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
     dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
-    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    simu->gain_tt =mycalloc(parms->skyc.ndtrat,dcell*);
+    simu->gain_ps =mycalloc(parms->skyc.ndtrat,dcell*);
+    simu->gain_ngs=mycalloc(parms->skyc.ndtrat,dcell*);
     int servotype=parms->skyc.servo;
     if(parms->maos.nmod>5){
-	simu->gain_focus=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+	simu->gain_focus=mycalloc(parms->skyc.ndtrat,dcell*);
     }
     TIC;tic;
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
@@ -466,9 +466,9 @@ static void skysim_prep_sde(SIM_S *simu){
       kalman. kalman.P is multiplied to mcc to compute Estimation error in nm (not WFE)
     */
     dmat *x=dtrans(simu->mideal);
-    simu->psdi=cellnew(x->ny, 1);
+    simu->psdi=dcellnew(x->ny, 1);
     simu->sdecoeff=dnew(3,x->ny);
-    PDMAT(simu->sdecoeff, pcoeff);
+    dmat*  pcoeff=simu->sdecoeff;
     for(int im=0; im<x->ny; im++){
 	dmat *xi=dsub(x, 20, 0, im, 1);
 	simu->psdi->p[im]=psd1dt(xi, 1, parms->maos.dt);
@@ -477,11 +477,18 @@ static void skysim_prep_sde(SIM_S *simu){
 	    //add windshake on first mode only
 	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
 	}
-	dmat *coeff=sde_fit(simu->psdi->p[im], NULL, parms->skyc.sdetmax);
+	dmat *coeff=sde_fit(simu->psdi->p[im], NULL, parms->skyc.sdetmax, 0);
+	if(IND(coeff,0,0)>100 && parms->skyc.sdetmax){
+	    dfree(coeff);
+	    coeff=sde_fit(simu->psdi->p[im], NULL, 0, 0);
+	    if(IND(coeff,0,0)>100){
+		warning("sde_fit returns unsuitable values\n");
+	    }
+	}
 	if(coeff->ny>1){
 	    error("Please handle this case\n");
 	}
-	memcpy(pcoeff+im, coeff->p, coeff->nx*sizeof(double));
+	memcpy(PCOL(pcoeff, im), coeff->p, coeff->nx*sizeof(double));
 	dfree(coeff);
     }
     
@@ -499,14 +506,14 @@ void skysim(const PARMS_S *parms){
 	writebin(parms->skyc.resfocus, "%s/resfocus",dirsetup);
 	}*/
     const int npowfs=parms->maos.npowfs;
-    SIM_S *simu=calloc(1, sizeof(SIM_S));
-    simu->status=calloc(1, sizeof(STATUS_T));
+    SIM_S *simu=mycalloc(1,SIM_S);
+    simu->status=mycalloc(1,STATUS_T);
     simu->status->info=S_RUNNING;
     simu->status->scale=1;
     simu->status->nseed=parms->maos.nseed;
     simu->status->nthread=parms->skyc.nthread;
     simu->status->timstart=myclocki();
-    simu->powfs=calloc(npowfs, sizeof(POWFS_S));
+    simu->powfs=mycalloc(npowfs,POWFS_S);
     simu->parms=parms;
     setup_powfs(simu->powfs, parms);
     genpistat(parms, simu->powfs); 
@@ -583,7 +590,7 @@ void skysim(const PARMS_S *parms){
 #endif
 	if(simu->isky_start < simu->isky_end){
 	    simu->isky=simu->isky_start;
-	    CALL(skysim_isky, simu, nthread,0);/*isky iteration. */
+	    CALL((thread_fun)skysim_isky, simu, nthread,0);/*isky iteration. */
 	}
 	if(parms->skyc.dbgsky<0){
 	    char fn[80];

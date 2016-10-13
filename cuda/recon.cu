@@ -534,9 +534,9 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     //The following routine assemble MVM and put in recon->MVM
     if(!recon->MVM){
 	if(parms->recon.mvm==1){
-	    gpu_setup_recon_mvm_trans(parms, recon, powfs);
+	    gpu_setup_recon_mvm_trans(parms, recon);
 	}else{
-	    gpu_setup_recon_mvm_direct(parms, recon, powfs);
+	    gpu_setup_recon_mvm_direct(parms, recon);
 	}
     }
     //free existing data

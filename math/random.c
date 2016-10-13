@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,9 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
-
 #include "random.h"
 /**
    Routine to generate random numbers.
@@ -26,7 +23,7 @@
    Create a new random stream, seeded with seed.
 */
 rand_t *new_rand(int seed){
-    rand_t *out=calloc(1, sizeof(rand_t));
+    rand_t *out=mycalloc(1,rand_t);
     seed_rand(out, seed);
     return out;
 }
@@ -262,12 +259,12 @@ static  double  v;
 
 /**
    the target density */
-static inline double ff (double xr){
+INLINE double ff (double xr){
     return  exp(-xr*xr*0.5);
 }
 /**
    the inverse of the target density */
-static inline double f_inv (double y){
+INLINE double f_inv (double y){
     return  sqrt(-2.*log(y));
 }
 /**
