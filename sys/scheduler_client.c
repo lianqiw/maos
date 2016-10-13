@@ -74,6 +74,7 @@ int scheduler_report(STATUS_T *status){
     (void)status; return -1;
 }
 int scheduler_listen(void(*fun)(int)){
+    (void)fun;
     return -1;
 }
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
@@ -83,9 +84,13 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     return -1;
 }
 int scheduler_send_socket(int sfd, int id){
+    (void)sfd;
+    (void)id;
     return -1;
 }
 int scheduler_recv_socket(int *sfd, int id){
+    (void)sfd;
+    (void)id;
     return -1;
 }
 #else
