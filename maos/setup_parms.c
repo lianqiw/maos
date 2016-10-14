@@ -2505,67 +2505,67 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
     info2("\033[0;32mThere are %d powfs\033[0;0m\n", parms->npowfs);
-    for(i=0; i<parms->npowfs; i++){
-	info2("powfs %d: Order %2d, %sGS at %3.3g km. Thres %g%%",
-	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
-	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	info2("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%",
+	      ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
+	      parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 	int lrt=(parms->recon.split && parms->tomo.splitlrt);
-	if(parms->powfs[i].trs){
+	if(parms->powfs[ipowfs].trs){
 	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
-	    if(!parms->powfs[i].llt){
+	    if(!parms->powfs[ipowfs].llt){
 		warning("\n\ntrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
-	if(parms->powfs[i].dfrs){
-	    if(parms->powfs[i].nwfs<2){
-		parms->powfs[i].dfrs=0;
+	if(parms->powfs[ipowfs].dfrs){
+	    if(parms->powfs[ipowfs].nwfs<2){
+		parms->powfs[ipowfs].dfrs=0;
 	    }else{
 		info2("\033[0;32m Diff focus is removed in %s side in tomography.\033[0;0m",
 		      lrt?"both":"right hand");
 	    }
-	    if(!parms->powfs[i].llt){
+	    if(!parms->powfs[ipowfs].llt){
 		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
-	if(parms->powfs[i].pixblur>1.e-12){
-	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
+	if(parms->powfs[ipowfs].pixblur>1.e-12){
+	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[ipowfs].pixblur);
 	}
 	info2("\n");
-	if(parms->powfs[i].type==0){
+	if(parms->powfs[ipowfs].type==0){
 	    info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
-		  (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
-		  parms->powfs[i].pixpsa, 
-		  parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
-		  1./parms->sim.dt/parms->powfs[i].dtrat);
+		  (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
+		  parms->powfs[ipowfs].pixpsa, 
+		  parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
+		  1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}else{
-	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[i].dtrat);
+	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}
 	info2("wvl: [");
-	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){
-	    info2(" %g",parms->powfs[i].wvl->p[iwvl]);
+	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+	    info2(" %g",parms->powfs[ipowfs].wvl->p[iwvl]);
 	}
 	info2("]\n");
 	info2("    %s in reconstruction. ", 
-	      parms->powfs[i].gtype_recon==0?"Gtilt":"Ztilt");
-	if(parms->powfs[i].phystep>-1){
+	      parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
+	if(parms->powfs[ipowfs].phystep>-1){
 	    info2("Physical optics start at %d with '%s'",
-		  parms->powfs[i].phystep, 
-		  phytype[parms->powfs[i].phytypesim]);
+		  parms->powfs[ipowfs].phystep, 
+		  phytype[parms->powfs[ipowfs].phytypesim]);
 	}else{
 	    info2("Geomtric optics uses %s ",
-		  parms->powfs[i].gtype_sim==0?"gtilt":"ztilt");
+		  parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");
 	}
 	
-	if(parms->powfs[i].noisy){
+	if(parms->powfs[ipowfs].noisy){
 	    info2("\033[0;32m(noisy)\033[0;0m\n");
 	}else{
 	    info2("\033[0;31m(noise free)\033[0;0m\n");
 	}
-	if(parms->powfs[i].dither){
+	if(parms->powfs[ipowfs].dither){
 	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
-		  parms->powfs[i].dither_pllskip, parms->powfs[i].dither_pllrat);
+		  parms->powfs[ipowfs].dither_pllskip, parms->powfs[ipowfs].dither_pllrat);
 	    info2("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
-		  parms->powfs[i].dither_ogskip, parms->powfs[i].dither_ograt);
+		  parms->powfs[ipowfs].dither_ogskip, parms->powfs[ipowfs].dither_ograt);
 	}
     }
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
@@ -2685,7 +2685,8 @@ static void print_parms(const PARMS_T *parms){
 	    error("fit thetax or thetay is too large\n");
 	}
     }
-    info2("\033[0;32mThere are %d evaluation directions\033[0;0m\n", parms->evl.nevl);
+    info2("\033[0;32mThere are %d evaluation directions\033[0;0m at sampling 1/%g m.\n", 
+	  parms->evl.nevl, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
 	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
