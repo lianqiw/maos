@@ -231,9 +231,9 @@ OPTScc=${!optname}
 unset optname
 
 if test -z "$OPENMP_CFLAGS" ;then
-    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
+    OPTScc+=" -pthread" #enables pthreads feature and links in the library
 else
-    CFLAGS+=" $OPENMP_CFLAGS"
+    OPTScc+=" $OPENMP_CFLAGS"
 fi
 OPTSextra=""
 
@@ -369,44 +369,49 @@ fi
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
 #download LIBNANE file.tar.bz2 [outdir]
+extract(){
+    fn="$1"
+    OUTDIR="$2"
+    if test -z "$OUTDIR" ;then
+	AC_MSG_ERROR([Please specify third argument])
+	return 1
+    else
+	echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
+	mkdir -p "${OUTDIR}" || die "failed to mkdir"
+	if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
+	    rm -rf ${DOWNLOAD_DIR}/${fn}
+	    AC_MSG_NOTICE([File downloaded is not correct.])
+	    return 1
+	else
+	    return 0
+	fi
+    fi
+}
 download(){
     fn="$2"
-    if test -n "$3" ;then
-	OUTDIR="$3"
-    else
-	AC_MSG_ERROR([Please specify third argument])
-    fi
+    OUTDIR="$3"
     mkdir -p ${DOWNLOAD_DIR} || die "failed to mkdir"
-    retry=0
-    while test ${retry} -le 2 ;do
-	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-	    echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
-	    success=0
-	    for BASEURL in $BASEURLS ; do
-		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
-		if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
+    if test -f ${DOWNLOAD_DIR}/${fn} ;then
+	extract "${fn}" "$OUTDIR"
+    fi
+    if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
+	echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
+	for BASEURL in $BASEURLS ; do
+	    echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+	    if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
+		if extract "$fn" "$OUTDIR" ;then
 		    break
-		else
-		    rm -rf ${DOWNLOAD_DIR}/${fn}
-		    AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 		fi
-	    done
-	    if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-		AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
-	    fi
-	fi
-	if test -f ${DOWNLOAD_DIR}/${fn} ;then
-	    echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
-	    mkdir -p "${OUTDIR}" || die "failed to mkdir"
-	    if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
-		rm -rf ${DOWNLOAD_DIR}/${fn}
-		retry=$((retry+1))
-		AC_MSG_NOTICE([File downloaded is not correct.])
 	    else
-		break
+		rm -rf ${DOWNLOAD_DIR}/${fn}
+		AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 	    fi
+	done
+	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
+	    AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
 	fi
-    done
+    fi
+    
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -419,10 +424,11 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
+    echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
-	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} > $fnlog || \
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ > $fnlog) && \
-	make -j4 install >> $fnlog) ;then
+	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ >> $fnlog 2>&1 ) && \
+	make -j4 install >> $fnlog 2>&1) ;then
 	echo "Compiled $name successfully."
     else
 	echo "Failed to compile $name. Please see $fnlog for details"
@@ -587,17 +593,17 @@ LDCHOL="-lcholmod"
 #Check for libwebsocket
 AM_CONDITIONAL(HAS_LWS, false)
 if test "$use_websockets" = "yes" ;then
-    AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+    AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #first try to compile from source. Needs cmake
-	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITHOUT_DEBUG=ON
-	unset ac_cv_lib_websockets_libwebsocket_service
-	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON 
+	unset ac_cv_lib_websockets_lws_service
+	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
 	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
-	unset ac_cv_lib_websockets_libwebsocket_service
-	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+	unset ac_cv_lib_websockets_lws_service
+	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" != "no" ;then
 	AM_CONDITIONAL(HAS_LWS, true)
