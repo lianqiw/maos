@@ -437,15 +437,17 @@ void prop_grid(ARGIN_GRID,
     (void)nxmin; (void)nymin; 
     const int nx = mapin->nx;
     const int ny = mapin->ny;
+
     OMPTASK_FOR(iloc, start, end){
 	RUNTIME_LINEAR;
-	// The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
-	if(dplocx<0||dplocx>nxmax||dplocy<0||dplocy>nymax){
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    //Handle top/right boundary correctly
+	//If point falls between nxmax and nxmax+1, when wrap==0, comparing
+	//dplocx skips the point, while comparing nplocx includes the point.
+	SPLIT(dplocx,dplocx,nplocx);
+	SPLIT(dplocy,dplocy,nplocy);
+	//Comparing integers are faster than floating point numbers.
+	if(nplocx<0 || nplocx>nxmax || nplocy<0 || nplocy>nymax){
 	    if(wrap){
 		while(nplocx<0)
 		    nplocx+=nx;
@@ -454,23 +456,22 @@ void prop_grid(ARGIN_GRID,
 		while(nplocy<0)
 		    nplocy+=ny;
 		while(nplocy>nymax)
-		    nplocy-=ny;
-		
+		    nplocy-=ny;	
 	    }else{
 		missing++;
 		continue;
 	    }
-	}else{
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
 	}
+	
+
 	nplocx1=(nplocx==nxmax?0:nplocx+1);
 	nplocy1=(nplocy==nymax?0:nplocy+1);
-	double tmp=(+(IND(mapin,nplocx,nplocy)*(1.-dplocx)
-		      +IND(mapin,nplocx1,nplocy)*dplocx)*(1.-dplocy)
-		    +(IND(mapin,nplocx,nplocy1)*(1.-dplocx)
-		      +IND(mapin,nplocx1,nplocy1)*dplocx)*dplocy);
-	add_valid(phiout[iloc],alpha, tmp);
+	const double m00=IND(mapin,nplocx,nplocy);
+	const double m10=IND(mapin,nplocx1,nplocy);
+	const double m01=IND(mapin,nplocx,nplocy1);
+	const double m11=IND(mapin,nplocx1,nplocy1);
+	phiout[iloc]+=alpha*(+(m00+(m10-m00)*dplocx)*(1.-dplocy)
+			     +(m01+(m11-m01)*dplocx)*dplocy);
     }
     OMPTASK_END;
     WARN_MISSING;
@@ -729,7 +730,7 @@ void prop_grid_stat_cubic(ARGIN_GRID,
     PREPIN_GRID(1);
     PREPOUT_STAT;
     PREP_CUBIC_PARAM;
-    OMPTASK_FOR(icol, colstart, colend){	
+    OMPTASK_FOR(icol, colstart, colend){
 	RUNTIME_CUBIC;
 	dplocy=myfma(ostat->cols[icol].ystart,dy_in2,displacey);
 	if(dplocy>=nymin && dplocy<=nymax){

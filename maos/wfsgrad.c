@@ -155,7 +155,7 @@ void wfsgrad_iwfs(thread_t *info){
     if(save_opd){
 	zfarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
     }
- 
+    TIM(1);
     if(CL){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
@@ -235,7 +235,7 @@ void wfsgrad_iwfs(thread_t *info){
 	psfoutzfarr=simu->save->wfspsfout[iwfs];
 	ztiltoutzfarr=simu->save->ztiltout[iwfs];
     }
-    TIM(1);
+    TIM(2);
     /* Now begin Physical Optics Intensity calculations */
     if(do_phy || psfout || do_pistatout || parms->powfs[ipowfs].dither==1){
 	dmat *lltopd=NULL;
@@ -318,7 +318,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    dscale(ints->p[0], parms->wfs[iwfs].siglevsim);
 	}
     }
-    TIM(2);
+    TIM(3);
     if(dtrat_output){
 	const double rne=parms->powfs[ipowfs].rne;
 	const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
@@ -407,9 +407,9 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }//dtrat_out
     dfree(gradcalc);
-    TIM(3);
+    TIM(4);
 #if TIMING==1
-    info("wfs %d grad timing: ray %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2);
+    info2("WFS %d grad timing: atm %.2f dm %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2,tk4-tk3);
 #endif
 }
 static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */

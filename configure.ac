@@ -179,6 +179,7 @@ case "$CN" in
 	    minor=${CC_VERSION#*.}
 	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
+		AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
 		unset OPENMP_CFLAGS
 	    fi
 	fi
@@ -204,7 +205,8 @@ case "$CN" in
 	    #gnu_inline="yes"
 	    #fi
 	    #GCC introduced openmp task in 4.4
-	    if test $major -lt 4 -o $minor -lt 4 ;then
+	    if test $major -le 4 -a $minor -le 4 ;then
+		AC_MSG_ERROR([OpenMP is not supported by GCC $CC_VERSION])
 		unset OPENMP_CFLAGS
 	    fi
 	fi

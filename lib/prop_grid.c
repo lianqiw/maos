@@ -54,11 +54,11 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
     int missing=0;
     if(PROP_GRID_MAP_OPTIM){
 	if(fabs(dxout-1.)<EPS && fabs(dyout-1.)<EPS){
-	    //loc_out and loc_in has the same grid sampling.
+	    //loc_out and loc_in has the same sampling.
 	    int irows=0;
 	    double dplocx=oxout;
 	    double dplocy=oyout;
-	    int nplocx, nplocy;
+	    int nplocx, nplocy0;
 	    if(wrap){
 		dplocx-=floor(dplocx/(double)nxin)*nxin;
 	    }else if(dplocx<0){
@@ -87,9 +87,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		    nyout=coldiv;
 		}
 	    }
-	    SPLIT(dplocy,dplocy,nplocy);
-	    nplocy+=icols;
-
+	    SPLIT(dplocy,dplocy,nplocy0);
 	    const double bl=dplocx*dplocy;
 	    const double br=(1.-dplocx)*dplocy;
 	    const double tl=dplocx*(1-dplocy);
@@ -98,9 +96,10 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    if(nyout==640){
 		info("icols=%d, nyout=%ld\n", icols, nyout);
 	    }
-	    for(long icol=icols; icol<nyout; icol++, nplocy++){
+	    OMPTASK_FOR(icol, icols, nyout){
 		CONST_IN double *phicol, *phicol2;
 		CONST_OUT double *phiout2=phiout+icol*nxout;//starting address of output
+		long nplocy=nplocy0+icol;
 		while(nplocy>=nyin){
 		    nplocy-=nyin;
 		}
@@ -142,7 +141,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 		}while(wrap && irow<nxout);
 #undef GRID_ADD
 	    }/*end for icol*/
-	    //OMPTASK_END;
+	    OMPTASK_END;
 	}else{
 	    //grid size of loc_in and loc_out doesn't agree
 	    assert(dyout>0);
@@ -306,50 +305,51 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
     }else{
 	//warning_once("Using unoptmized prop_grid_map\n");
 	/*non optimized case. slower, but hopefully accurate*/
-	//OMPTASK_FOR(icol, 0, nyout){
-	double dplocy1;
-	for(long icol=0; icol<nyout; icol++){
+	OMPTASK_FOR(icol, 0, nyout){
+	    double dplocy1;
 	    double dplocx,dplocx0;
 	    int nplocx,nplocy,nplocy1, nplocx1;
 	    CONST_OUT double *phiout2=phiout+icol*nxout;
 	    double dplocy=oyout+icol*dyout;
 	    if(wrap){
 		dplocy=dplocy-floor(dplocy/(double)nyin)*nyin;
-	    }else if (dplocy<0 || dplocy>wrapy){
-		missing+=nxout;
-		goto skip;
 	    }
-	    SPLIT(dplocy,dplocy,nplocy);
-	    dplocy1=1.-dplocy;
-	    nplocy1=(nplocy==wrapx?0:nplocy+1);
-	    dplocx0=oxout;
-	    for(int irow=0; irow<nxout; irow++){
-		dplocx=dplocx0+irow*dxout;
-		if(wrap){
-		    dplocx=dplocx-floor(dplocx/(double)nxin)*nxin;
-		}else if(dplocx<0 || dplocx>wrapx){
-		    missing++;
-		    continue;
-		}
-		SPLIT(dplocx,dplocx,nplocx);
-		nplocx1=(nplocx==wrapx?0:nplocx+1);
+	    if(dplocy>=0 && dplocy <=wrapy){
+		SPLIT(dplocy,dplocy,nplocy);
+		dplocy1=1.-dplocy;
+		nplocy1=(nplocy==wrapx?0:nplocy+1);
+		dplocx0=oxout;
+
+		for(int irow=0; irow<nxout; irow++){
+		    dplocx=dplocx0+irow*dxout;
+		    if(wrap){
+			dplocx=dplocx-floor(dplocx/(double)nxin)*nxin;
+		    }
+		    if(dplocx>=0 && dplocx<=wrapx){
+			SPLIT(dplocx,dplocx,nplocx);
+			nplocx1=(nplocx==wrapx?0:nplocx+1);
 #if TRANSPOSE == 0
-		phiout2[irow]+= alpha*
-		    (dplocx * (dplocy * phiin[(nplocx1) + (nplocy1)*nxin]
-			       +dplocy1 * phiin[(nplocx1) + nplocy*nxin])
-		     + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*nxin]
-				     +dplocy1 * phiin[nplocx + nplocy*nxin]));
+			phiout2[irow]+= alpha*
+			    (dplocx * (dplocy * phiin[(nplocx1) + (nplocy1)*nxin]
+				       +dplocy1 * phiin[(nplocx1) + nplocy*nxin])
+			     + (1-dplocx) * (dplocy * phiin[nplocx + (nplocy1)*nxin]
+					     +dplocy1 * phiin[nplocx + nplocy*nxin]));
 #else
-		double tmp=alpha*phiout2[irow];
-		phiin[(nplocx1) + (nplocy1)*nxin]+=tmp*dplocx*dplocy;
-		phiin[(nplocx1) + nplocy*nxin]+=tmp*dplocx*dplocy1;
-		phiin[nplocx + (nplocy1)*nxin]+=tmp*(1-dplocx)*dplocy;
-		phiin[nplocx + nplocy*nxin]+=tmp*(1-dplocx)*dplocy1;
+			double tmp=alpha*phiout2[irow];
+			phiin[(nplocx1) + (nplocy1)*nxin]+=tmp*dplocx*dplocy;
+			phiin[(nplocx1) + nplocy*nxin]+=tmp*dplocx*dplocy1;
+			phiin[nplocx + (nplocy1)*nxin]+=tmp*(1-dplocx)*dplocy;
+			phiin[nplocx + nplocy*nxin]+=tmp*(1-dplocx)*dplocy1;
 #endif		
-	    }/*for irow*/
-	  skip:;
-	}/*for icol*/
-	//OMPTASK_END;
+		    }else{
+			missing++;
+		    }
+		}/*for irow*/
+	    }else{
+		missing+=nxout;
+	    }
+	}//OMPTASK_FOR;
+	OMPTASK_END;
     }
     return missing;
 }/*function*/

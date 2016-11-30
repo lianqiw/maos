@@ -234,8 +234,12 @@ INLINE int atomicadd(int *ptr, int val){
     }while(cmpxchg(ptr, old, old+val)!=old);
     return old+val;
 }
-
-#if _OPENMP >= 200805 
+#if _OPENMP >= 201511 //OpenMP 4.5 (taskloop introduced)
+#define OMPTASK_FOR(index, start, end, extra...)	\
+    DO_PRAGMA(omp taskloop extra)			\
+    for(long index=start; index<end; index++)
+#define OMPTASK_END
+#elif _OPENMP >= 200805 //Openmp 3.0 (task introduced)
 #define OMPTASK_FOR(index, start, end, extra...)	\
     long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
     DO_PRAGMA(omp parallel for)				\

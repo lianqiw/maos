@@ -456,7 +456,7 @@ static void process_queue(void){
 	    warning2("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 	}
     }else{
-	if(avail>1 && nrun_get(0)<NCPU && (!NGPU || nrun_get(1)<NGPU)){
+	if(avail>1 && nrun_get(0)<NTHREAD && (!NGPU || nrun_get(1)<NGPU)){
 	    static double lasttime=0;
 	    double thistime=myclockd();
 	    if(thistime>lasttime+0.001){

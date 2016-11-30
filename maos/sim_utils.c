@@ -948,8 +948,9 @@ static void init_simu_wfs(SIM_T *simu){
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
-	    simu->wfs_prop_atm[iwfs+nwfs*ips]=mycalloc(NTHREAD,thread_t);
-	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,NTHREAD,prop,data);
+	    int nthread=1;//NTHREAD;
+	    simu->wfs_prop_atm[iwfs+nwfs*ips]=mycalloc(nthread,thread_t);
+	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,nthread,prop,data);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
@@ -981,8 +982,9 @@ static void init_simu_wfs(SIM_T *simu){
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
-	    simu->wfs_prop_dm[iwfs+nwfs*idm]=mycalloc(NTHREAD,thread_t);
-	    thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, NTHREAD, prop,data);
+	    int nthread=1;//NTHREAD
+	    simu->wfs_prop_dm[iwfs+nwfs*idm]=mycalloc(nthread,thread_t);
+	    thread_prep(simu->wfs_prop_dm[iwfs+nwfs*idm], 0, tot, nthread, prop,data);
 	}/*idm */
     }/*iwfs */
     simu->wfs_intsdata=mycalloc(nwfs,WFSINTS_T);
@@ -993,8 +995,9 @@ static void init_simu_wfs(SIM_T *simu){
 	int tot=powfs[ipowfs].saloc->nloc;
 	WFSINTS_T *data=simu->wfs_intsdata+iwfs;
 	data->iwfs=iwfs;
-	simu->wfs_ints[iwfs]=mycalloc(NTHREAD,thread_t);
-	thread_prep(simu->wfs_ints[iwfs], 0, tot, NTHREAD, wfsints,data);
+	int nthread=NTHREAD;
+	simu->wfs_ints[iwfs]=mycalloc(nthread,thread_t);
+	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }
     if(parms->nlgspowfs){
 	simu->llt_tt=dcellnew(parms->nwfs, 1);
@@ -1406,7 +1409,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	gpu_recon_reset(parms);
     }
 #endif
-    filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
+    OMPTASK_SINGLE
+	filter_dm(simu);//2014-03-31. //so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
     return simu;
 }
 /**
