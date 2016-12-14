@@ -786,9 +786,10 @@ quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
     fprintf(stderr, "%s", msg);
     sync();
-    if(strncmp(msg, "ERROR", 5)){
+    if(strncmp(msg, "FATAL", 5)){
 	print_backtrace();
 	sync();
+	raise(1);
     }
     exit(0);
 }

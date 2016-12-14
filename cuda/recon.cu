@@ -605,7 +605,7 @@ void gpu_recon_reset(const PARMS_T *parms){//reset warm restart.
 	CUDA_SYNC_DEVICE;
     }
 }
-void gpu_tomo(SIM_T *simu){
+void gpu_tomo(SIM_T *simu, dcell *gradin){
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
@@ -621,12 +621,11 @@ void gpu_tomo(SIM_T *simu){
 		      || (recon->moao && !parms->gpu.moao)
 		      || parms->evl.tomo);
 	simu->cgres->p[0]->p[simu->reconisim]=
-	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, 
-			  parms->recon.psol?simu->gradlastol:simu->gradlastcl);
+	    curecon->tomo(copy2cpu?&simu->opdr:NULL, &simu->gngsmvst, gradin);
     }
 }
 
-void gpu_fit(SIM_T *simu){
+void gpu_fit(dcell **dmout, SIM_T *simu){
     gpu_set(cudata_t::recongpu);
     curecon_t *curecon=cudata->recon;
     curecon->grid->isim=simu->isim;
@@ -636,7 +635,7 @@ void gpu_fit(SIM_T *simu){
 	curecon->fit_test(simu);
     }else{
 	simu->cgres->p[1]->p[simu->reconisim]=
-	    curecon->fit(&simu->dmfit, parms->gpu.tomo?NULL:simu->opdr);
+	    curecon->fit(&dmout, parms->gpu.tomo?NULL:simu->opdr);
     }
     //Don't free opdr. Needed for warm restart in tomo.
 }
