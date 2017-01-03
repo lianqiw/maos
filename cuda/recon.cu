@@ -635,7 +635,7 @@ void gpu_fit(dcell **dmout, SIM_T *simu){
 	curecon->fit_test(simu);
     }else{
 	simu->cgres->p[1]->p[simu->reconisim]=
-	    curecon->fit(&dmout, parms->gpu.tomo?NULL:simu->opdr);
+	    curecon->fit(dmout, parms->gpu.tomo?NULL:simu->opdr);
     }
     //Don't free opdr. Needed for warm restart in tomo.
 }

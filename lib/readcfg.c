@@ -191,6 +191,12 @@ static void delete_leaf(const void *key, VISIT which, int level){
 	free(store);
     }
 }
+void erase_config(){
+   while(MROOT){
+	twalk(MROOT, delete_leaf);
+    }
+    nused=0;   
+}
 /**
    Save all configs to file and check for unused config options.
  */
@@ -204,10 +210,7 @@ void close_config(const char *format, ...){
 	if(fpout) fclose(fpout);
 	fpout=0;
     }
-    while(MROOT){
-	twalk(MROOT, delete_leaf);
-    }
-    nused=0;
+    erase_config(); 
 }
 /**
    Start the read config process by opening .conf files and fill the entries in
@@ -308,6 +311,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		protect-=10000; 
 		if(protect<0){
 		    error("__protect_end must appear after __protect_start, in the same file");
+		}
+	    }else if(!strcmp(ssline, "__replace")){
+		if(nstore>0){
+		    warning("Replacing all existing input\n");
+		    erase_config();
 		}
 	    }else{
 		error("Input (%s) is not valid\n", ssline);
