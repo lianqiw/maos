@@ -53,10 +53,10 @@
 static void *MROOT=NULL;
 
 typedef struct STORE_T{
-    char *key;
-    char *data;
-    long protect;
-    long count;
+    char *key;    //Name of the entry
+    char *data;   //Value of the entry
+    long override;//Whether the entry has been overriden
+    long used;    //Whether the entry has been used
 }STORE_T;
 static int key_cmp(const void *a, const void *b){
     return strcmp(((STORE_T*)a)->key, ((STORE_T*)b)->key);
@@ -162,7 +162,7 @@ static void print_key(const void *key, VISIT which, int level){
     (void)level;
     if(which==leaf || which==postorder){
 	if(fpout){
-	    if(!store->protect){
+	    if(!store->override){
 		fprintf(fpout, "#");
 	    }
 	    fprintf(fpout, "%s=", store->key);
@@ -173,10 +173,10 @@ static void print_key(const void *key, VISIT which, int level){
 	    }
 	}
 	if(!store->data || strcmp(store->data, "ignore")){
-	    if(store->count==0 ){
+	    if(store->used==0 ){
 		error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
-	    }else if(store->count!=1){
-		error("Key %s is used %ld times\n", store->key, store->count);
+	    }else if(store->used!=1){
+		error("Key %s is used %ld times\n", store->key, store->used);
 	    }
 	}
     }
@@ -218,8 +218,7 @@ void close_config(const char *format, ...){
    entries with the same key will override a previous entry.
  */
 void open_config(const char* config_in, /**<[in]The .conf file to read*/
-		 const char* prefix,/**<[in]if not NULL, prefix the key with this.*/
-		 long protect       /**<[in]whether we protect the value*/
+		 const char* prefix     /**<[in]if not NULL, prefix the key with this.*/
 		 ){
     if(!config_in) return;
     FILE *fd=NULL;
@@ -302,17 +301,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    if(check_suffix(ssline, ".conf")){
 		char *embeded=strextract(ssline);
 		if(embeded){
-		    open_config(embeded, prefix, protect);
+		    open_config(embeded, prefix);
 		    free(embeded);
 		}
-	    }else if(!strcmp(ssline, "__protect_start")){
-		protect+=10000;
-	    }else if(!strcmp(ssline, "__protect_end")){
-		protect-=10000; 
-		if(protect<0){
-		    error("__protect_end must appear after __protect_start, in the same file");
-		}
-	    }else if(!strcmp(ssline, "__replace")){
+	    }else if(!strcmp(ssline, "__reset__")){
 		if(nstore>0){
 		    warning("Replacing all existing input\n");
 		    erase_config();
@@ -346,7 +338,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
-		open_config(embeded,prefix,protect);
+		open_config(embeded,prefix);
 		free(embeded);
 	    }
 	}else{
@@ -387,9 +379,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    }else{
 		store->data=NULL;
 	    }
-	    store->protect=protect;
-	    store->count=0;
-
+	    store->used=0;
+	    store->override=0;
 	    void *entryfind=tfind(store, &MROOT, key_cmp);
 	    if(entryfind){ 
 		/*same key found */
@@ -410,22 +401,20 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			strncat(oldstore->data, newdata+1, nnewdata-1);
 		    }
 		}else{
-		    if(oldstore->protect<=protect){
-			if(print_override && 
-			   (((oldstore->data==NULL || store->data==NULL)
-			     &&(oldstore->data != store->data))||
-			    ((oldstore->data!=NULL && store->data!=NULL)
-			     &&strcmp(oldstore->data, store->data)))){
-			    info2("Overriding %-20s\t{%s}-->{%s}\n", 
-				  store->key, oldstore->data, store->data);
-			}
-			/*free old value */
-			free(oldstore->data);
-			/*move pointer of new value. */
-			oldstore->data=store->data; store->data=0;
-			oldstore->protect=store->protect;
-			oldstore->count=store->count;
+		    if(print_override && 
+		       (((oldstore->data==NULL || store->data==NULL)
+			 &&(oldstore->data != store->data))||
+			((oldstore->data!=NULL && store->data!=NULL)
+			 &&strcmp(oldstore->data, store->data)))){
+			info2("Overriding %-20s\t{%s}-->{%s}\n", 
+			      store->key, oldstore->data, store->data);
 		    }
+		    /*free old value */
+		    free(oldstore->data);
+		    /*move pointer of new value. */
+		    oldstore->data=store->data; store->data=0;
+		    oldstore->override++;
+		    oldstore->used=store->used;
 		}
 		countold++;
 		free(store->data);
@@ -459,10 +448,10 @@ static const STORE_T* getrecord(char *key, int mark){
     store.key=key;
     if((found=tfind(&store, &MROOT, key_cmp))){
 	if(mark){
-	    if((*(STORE_T**)found)->count){
+	    if((*(STORE_T**)found)->used){
 		error("This record %s is already read\n",key);
 	    }
-	    (*(STORE_T**)found)->count++;
+	    (*(STORE_T**)found)->used++;
 	    nused++;
 	}
     }else if(mark){
@@ -517,7 +506,7 @@ int readcfg_peek_override(const char *format,...){
     if(!store){
 	return 0;
     }else{
-	return store->protect;
+	return store->override;
     }
 }
 /**

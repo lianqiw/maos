@@ -376,7 +376,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->fnllt){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
-	    open_config(powfsi->fnllt,prefix,0);
+	    open_config(powfsi->fnllt,prefix);
 	    powfsi->llt=mycalloc(1,LLT_CFG_T);
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
@@ -2718,8 +2718,8 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     addpath(bin_path);
     free(bin_path);
     free(config_path);
-    open_config(mainconf,NULL,0);/*main .conf file. */
-    open_config(extraconf, NULL, 1);
+    open_config(mainconf,NULL);/*main .conf file. */
+    open_config(extraconf, NULL);
     PARMS_T* parms=mycalloc(1,PARMS_T);
     readcfg_sim(parms);
     readcfg_aper(parms);

@@ -33,7 +33,7 @@
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
 
-void   open_config (const char*fn, const char *prefix, long protect);
+void   open_config (const char*fn, const char *prefix);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
