@@ -489,7 +489,7 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 	writebin(lc, "CPU_FitSolve%d", i);
     }
     dcell *lhs=NULL;
-    if(!simu->parms->fit.square){
+    if(recon->FR.M){
 	muv_trans(&lhs, &recon->FR, rhsc, 1);
 	writebin(lhs, "CPU_FitRt");
     }

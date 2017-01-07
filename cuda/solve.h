@@ -108,12 +108,12 @@ public:
 
 class cusolve_cbs:public cusolve_l,nonCopyable{
 protected:
-    cusp Cl;
-    cumat<int> Cp;
-    curmat Up;
-    curmat Vp;
-    curmat y;
-    curmat Vr;
+    cusp Cl;      //Lower diagonal sparse matrix L. M=LL';
+    cumat<int> Cp;//Permutation matrix.
+    curmat Up;   //Low rank
+    curmat Vp;   //Low rank
+    curmat y;    //Temporary data.
+    curmat Vr;   //Temporary data.
 public:
     cusolve_cbs(spchol *_C, dmat *_Up, dmat *_Vp);
     void chol_solve(Real *out, const Real *in,  stream_t &stream);

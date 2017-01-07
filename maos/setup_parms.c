@@ -2033,7 +2033,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
     }
-    if(parms->sim.idealfit==1){
+    if(parms->sim.idealfit){
 	parms->recon.psol=1;
     }else if(!parms->sim.closeloop){
 	parms->recon.psol=0;//open loop does not need psol

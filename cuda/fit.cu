@@ -60,6 +60,7 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
 	}
     }
     if(parms->sim.idealfit){
+	idealfit=1;
 	floc=culoc_t(recon->floc);
     }
     dir=new dir_t[nfit];
@@ -101,13 +102,11 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
     opdfit2=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
     /*Data for ray tracing*/
     //dm -> floc
-    if(!parms->sim.idealfit){
-	if(parms->fit.cachex){
-	    hxp0.Init_l2l(grid->xcmap, grid->xmap);
-	    hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap);
-	}else{
-	    hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap);
-	}
+    if(parms->fit.cachex){
+	hxp0.Init_l2l(grid->xcmap, grid->xmap);
+	hxp1.Init_l2d(grid->fmap, dir, nfit, grid->xcmap);
+    }else{
+	hxp.Init_l2d(grid->fmap, dir, nfit,grid->xmap);
     }
     if(parms->fit.cachedm){
 	ha0.Init_l2l(acmap, grid->amap);
@@ -125,7 +124,7 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, curecon_geom 
    do HXp operation, opdfit+=Hxp*xin*/
 void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
     cuzero(opdfit.M(), stream);
-    if(!hxp){//ideal fiting.
+    if(idealfit){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
 	    gpu_atm2loc(opdfit[ifit].P(), floc, INFINITY,
 			dir[ifit].thetax, dir[ifit].thetay,
@@ -194,9 +193,12 @@ void cufit_grid::R(curcell &xout, Real beta,  curcell &xin, Real alpha, stream_t
     }else{
 	curscale(xout.M(), beta, stream);
     }
-    do_hxp(xin, stream);//153 us
-    grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);//123 us
-    do_hat(xout, alpha, stream);//390 us
+    do_hxp(xin, stream);//xin->opdfit. 153 us
+    //cuwrite(opdfit.M(), "GPU_FitR_x1");
+    grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);//opdfit->opdfit2. 123 us
+    //cuwrite(opdfit2.M(), "GPU_FitR_x2");
+    do_hat(xout, alpha, stream);//opdfit2->xout. 390 us
+    //cuwrite(xout, "GPU_FitR_x3");
 }
 void cufit_grid::Rt(curcell &xout, Real beta,  curcell &xin, Real alpha, stream_t &stream){
     if(!xout){

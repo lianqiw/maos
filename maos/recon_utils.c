@@ -520,8 +520,11 @@ void FitR(dcell **xout, const void *A,
 	    }
 	}
     }
+    //writebin(xp, "CPU_FitR_x1");
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
+    //writebin(xp, "CPU_FitR_x2");
     dcellmm(xout, recon->HA, xp, "tn", alpha);
+    //writebin(*xout, "CPU_FitR_x3");
     dcellfree(xp);
 }
 /**

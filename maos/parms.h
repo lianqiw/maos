@@ -612,7 +612,7 @@ typedef struct GPU_CFG_T{
     int wfs;         /**<Use GPU for wavefront sensor*/
     int evl;         /**<Use GPU for performance evaluation*/
     int tomo;        /**<Use GPU for tomography*/
-    int fit;         /**<Use GPU for DM fitting*/
+    int fit;         /**<Use GPU for DM fitting. Options: 1) assembled matrix 2) matrix free for RHS.*/
     int lsr;         /**<Use GPU for least square reconstruction*/
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/

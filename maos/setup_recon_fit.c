@@ -251,7 +251,7 @@ void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
     if(parms->fit.assemble){
 	setup_recon_fit_matrix(recon,parms);
     }
-    toc2("Generating fit matrix ");
+    toc2("Setting up DM Fitting.");
     /*Fall back function method if FR.M is NULL (!HXF<-idealfit) */
     recon->FR.Mfun  = FitR;
     recon->FR.Mdata = recon;
