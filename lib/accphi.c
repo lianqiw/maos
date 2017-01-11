@@ -346,8 +346,11 @@ void prop(thread_t *data){
 	}							\
     }								\
     /*Wt use sum(opd*wt)/sum(wt) to avoid edge roll off*/	\
-    if(wtsum>EPS) phiout[iloc]+=alpha*tmp/wtsum; 
-
+    if(wtsum>EPS) {						\
+	phiout[iloc]+=alpha*tmp/wtsum;				\
+    }else{							\
+	missing++;						\
+    }
 
 #define RUNTIME_CUBIC					\
     register double dplocx, dplocy, dplocx0, dplocy0;	\
@@ -498,16 +501,12 @@ void prop_nongrid(ARGIN_NONGRID,
 	RUNTIME_LINEAR;
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dy_in2,displacey);
-	if(dplocy>=nymin && dplocy<=nymax && dplocx>=nxmin && dplocx<=nxmax){
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    nplocx1=nplocx+1;
-	    nplocy1=nplocy+1;
-	    LINEAR_ADD_NONGRID;
-	}else{
-	    missing++;
-	    continue;
-	}
+	//Boundary check is performed in LINEAR_ADD_NONGRID
+	SPLIT(dplocx,dplocx,nplocx);
+	SPLIT(dplocy,dplocy,nplocy);
+	nplocx1=nplocx+1;
+	nplocy1=nplocy+1;
+	LINEAR_ADD_NONGRID;
     }
     OMPTASK_END;
     WARN_MISSING;
@@ -531,7 +530,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
     OMPTASK_FOR(iy, start, end){
 	RUNTIME_LINEAR ;
 	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
-	if(dplocy>=nymin && dplocy<=nymax){
+	if(dplocy+EPS>=nymin && dplocy<=nymax+EPS){
 	    SPLIT(dplocy,dplocy,nplocy);
 	    nplocy1=nplocy+1;
 	    for(int ix=0; ix<nxout; ix++){
