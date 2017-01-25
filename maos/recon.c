@@ -214,7 +214,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
 		double g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New Gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
+		info2("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
 		writebin(psdol, "psdol_%d", simu->reconisim);		    
 		dcellfree(coeff);
 		dfree(psdol);
@@ -245,7 +245,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
 		const double g=0.5;
 		simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New Gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		info2("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
 		dfree(psdol);
 		dcellfree(coeff);
 	    }else{

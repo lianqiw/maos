@@ -1342,10 +1342,17 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 	}
 
-	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
-	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+	if(powfsi->fieldstop>0){
+	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
+		error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+	    }
+	    powfsi->fieldstop/=206265.;
+	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+2/206265.){
+		warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
+			parms->powfs[ipowfs].fieldstop*206265, parms->powfs[ipowfs].modulate*206265*2);
+		parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].modulate*2+2/206265.;
+	    }
 	}
-	powfsi->fieldstop/=206265.;
 
 	if(powfsi->dither){
 	    parms->dither=1;

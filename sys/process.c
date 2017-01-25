@@ -45,6 +45,7 @@ const char *HOME=NULL;
 const char *USER=NULL;
 char HOST[256];
 char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts
+char CACHE[PATH_MAX];//Directory for caching files that are expensive to compute.
 char EXEP[PATH_MAX];/*absolute path of the exe.*/
 /**
    Set the HOME, TEMP, USER names.
@@ -90,9 +91,12 @@ void init_process(void){
     strcat(TEMP, "/maos-");
     strcat(TEMP, USER);
 
+    snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
+
     //Create temporary folders
     mymkdir("%s",TEMP);
     mymkdir("%s/.aos/",HOME);
+    mymkdir("%s", CACHE);
 
     {/*PATH to executable*/
 	char exepath[PATH_MAX];

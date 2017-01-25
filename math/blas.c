@@ -310,11 +310,12 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	if(Sdiag) *Sdiag=0;
 	return;
     }
-    int singleton=0;
+    int fd=-1;
     if(A->nx>2048 && !OMP_IN_PARALLEL){
-	singleton=1;
 	//Prevent multiple processes class gesvd simultaneously.
-	sem_lock("svd", 1);
+	char fnlock[PATH_MAX];
+	snprintf(fnlock, PATH_MAX,"%s/%s", TEMP, "svd");
+	fd=lock_file(fnlock, 1, 0);
     }
     char jobuv='S';
     ptrdiff_t M=(int)A->nx;
@@ -359,8 +360,8 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 #ifdef USE_COMPLEX
     free(rwork);
 #endif
-    if(singleton){
-	sem_lock("svd", 0);
+    if(fd>=0){
+	close(fd);
     }
 }
 

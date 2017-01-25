@@ -52,14 +52,12 @@ static char *get_fnatm(GENATM_T *data){
 	key=hashlittle(data->r0logpsds->p, sizeof(double)*data->r0logpsds->nx, key);
     }
     char diratm[PATH_MAX];
-    snprintf(diratm,PATH_MAX,"%s/.aos/cache/atm", HOME);
+    snprintf(diratm,PATH_MAX,"%s/atm", CACHE);
     if(!exist(diratm)) mymkdir("%s", diratm);
     char fnatm[PATH_MAX];
     const char *types[]={"vonkarman","fractal","biharmonic"};
     snprintf(fnatm,PATH_MAX,"%s/%s_%ld_%ldx%ld_%g_%ud.bin",
 	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
-    if(zfexist(fnatm)) zftouch(fnatm);
-    remove_file_older(diratm, 365*24*3600);//1 year
     long avail=available_space(diratm);
     long need=data->nx*data->ny*data->nlayer*sizeof(double)+500000000;
     if(avail>need){

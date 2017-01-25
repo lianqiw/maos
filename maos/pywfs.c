@@ -733,8 +733,8 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
     if(opdadd) key=dhash(opdadd, key);
     char fn[PATH_MAX];
     char fnlock[PATH_MAX];
-    mymkdir("%s/.aos/cache/", HOME);
-    snprintf(fn, PATH_MAX, "%s/.aos/cache/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g.bin", HOME, 
+    mymkdir("%s/G/", CACHE);
+    snprintf(fn, PATH_MAX, "%s/G/G_%u_%ld_%ld_%g_%d_%g_%g_%g_%g_%g.bin", CACHE, 
 	     key, pywfs->locfft->nembed->p[0], locin->nloc, pywfs->modulate, pywfs->modulpos,
 	     locin->iac, displacex, displacey, scale, pywfs->poke);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
@@ -780,8 +780,6 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
 #endif
 		gg=pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
 	    writebin(gg, "%s", fn);
-	    snprintf(fn, PATH_MAX, "%s/.aos/cache/", HOME);
-	    remove_file_older(fn, 365*24*3600);//one year
 	    close(fd); remove(fnlock);
 	}else{
 	    info2("Trying to lock %s\n", fnlock);

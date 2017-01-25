@@ -453,11 +453,11 @@ function set_lapack(){
 	    LAPACK+=" -lmkl_core"
 	    if test -n "$OPENMP_CFLAGS" ;then
 		if test "$CN" = "ICC" ;then
-		    LAPACK+=" -lmkl_intel_thread"
+		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
 		elif test "$CN" = "GCC" ;then
-		    LAPACK+=" -lmkl_gnu_thread"
+		    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
 		else
-		    LAPACK+=" -lmkl_intel_thread"
+		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
 		fi
 	    else
 		LAPACK+=" -lmkl_intel_thread -liomp5"
@@ -542,7 +542,7 @@ AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
     FLAGS="--enable-threads --enable-shared --enable-static"
-    if test -n "$OPENMP_FLAGS" ;then
+    if test -n "$OPENMP_CFLAGS" ;then
         FLAGS+=" --enable-openmp"
     fi
     compile FFTW fftw.tar.bz2 $FLAGS

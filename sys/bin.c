@@ -207,8 +207,13 @@ file_t* zfopen_try(const char *fn, const char *mod){
     case 'r':/*read only */
 	if((fp->fd=open(fn2, O_RDONLY))==-1){
 	    perror("open for read");
-	}else{
-	    futimes(fp->fd, NULL);
+	}else{//file exist
+	    if(!mystrcmp(fn2, CACHE)){
+		warning("Update time stamp for cached file\n");
+		futimes(fp->fd, NULL);
+		char *cpath=mydirname(fn2);
+		remove_file_older(cpath, 365*24*3600);
+	    }
 	}
 	break;
     case 'w':/*write */
