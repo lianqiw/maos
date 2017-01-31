@@ -241,6 +241,7 @@ typedef struct POWFS_CFG_T{
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
+    int    modulring; /**<Number of rings within the maximum radius to modulate*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -602,6 +603,7 @@ typedef struct DBG_CFG_T{
     double pwfs_flate;/**<pyramid flat edge angular width */
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
     double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
+    double pwfs_roof; /**<Make pyramid WFS a single roof only.*/
     dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
 }DBG_CFG_T;

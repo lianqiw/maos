@@ -209,7 +209,6 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	    perror("open for read");
 	}else{//file exist
 	    if(!mystrcmp(fn2, CACHE)){
-		warning("Update time stamp for cached file\n");
 		futimes(fp->fd, NULL);
 		char *cpath=mydirname(fn2);
 		remove_file_older(cpath, 365*24*3600);

@@ -41,9 +41,11 @@ static char *get_fnatm(GENATM_T *data){
     uint32_t key;
     key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
     key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
-    key=hashlittle(&data->dx, sizeof(double), key);
     key=hashlittle(&data->r0, sizeof(double), key);
     key=hashlittle(&data->L0, sizeof(double), key);
+    key=hashlittle(&data->dx, sizeof(double), key);
+    key=hashlittle(&data->fmin, sizeof(double), key);
+    key=hashlittle(&data->fmax, sizeof(double), key);
     key=hashlittle(&data->nx, sizeof(long), key);
     key=hashlittle(&data->ny, sizeof(long), key);
     key=hashlittle(&data->nlayer, sizeof(long), key);
@@ -86,7 +88,8 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	    break;
 	}
 	if(slope){
-	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->L0,slope, 0.5);
+	    double strength=0.0229*pow(data->r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);;
+	    data->spect=spatial_psd(data->nx,data->ny,data->dx,strength,data->L0,data->fmin,data->fmax,slope, 0.5);
 	}
 	toc2("done");
     }
@@ -113,7 +116,7 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
     dmat *spect2=0;
     dcell *dc2=0;
     rand_t rstat2;//don't consume rstat
-    if(data->r0logpsds){
+    if(data->r0logpsds){//Scale r0 across the screen.
 	double slope=data->r0logpsds->p[0];
 	double strength=data->r0logpsds->p[1]*(5./3.);//strength of log(wt)
 	double minfreq=0, maxfreq=0;
@@ -123,12 +126,12 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	if(data->r0logpsds->nx>3){
 	    maxfreq=data->r0logpsds->p[3];
 	}
-	spect2=spatial_psd(nx, ny, dx, strength, minfreq, maxfreq, slope, 0.5);
+	spect2=spatial_psd(nx, ny, dx, strength, INFINITY, minfreq, maxfreq, slope, 0.5);
 	dc2=dcellnew(2,1);
 	dc2->p[0] = dnew(nx, ny);
 	dc2->p[1] = dnew(nx, ny);
 	seed_rand(&rstat2, rstat->statevec[0]);
-	writebin(spect2, "spect_r0log");
+	//writebin(spect2, "spect_r0log");
     }
     for(int ilayer=0; ilayer<nlayer; ilayer+=2){
 	double tk1=myclockd();
@@ -358,7 +361,8 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
 dmat *spatial_psd(long nx,      /**<The size*/
 		  long ny,      /**<The size*/
 		  double dx,    /**<The sampling of spatial coordinate.*/
-		  double strength,    /**<The Fried parameter*/
+		  double strength, /**<Strength coefficient*/
+		  double outerscale, /**<Outerscale */
 		  double minfreq,  /**<Low end frequency cut off*/
 		  double maxfreq,  /**<High end frequency cut off*/
 		  double slope, /**<should be -11/3 for von karman or kolmogorov
@@ -371,8 +375,9 @@ dmat *spatial_psd(long nx,      /**<The size*/
     if(maxfreq==0) maxfreq=INFINITY;
     const double dfx=1./(nx*dx);
     const double dfy=1./(ny*dx);
+    const double zerofreq2=outerscale==0?0:pow(outerscale, -2);
     const double minfreq2=minfreq*minfreq;
-    const double maxfreq2=maxfreq*maxfreq;
+    const double maxfreq2=(maxfreq==0?INFINITY:(maxfreq*maxfreq));
     const double scrnstr=pow(strength*(dfx*dfy),power);
     const int nx2=nx/2;
     const int ny2=ny/2;
@@ -382,8 +387,8 @@ dmat *spatial_psd(long nx,      /**<The size*/
 	double r2y=pow((iy<ny2?iy:iy-ny)*dfy,2);/* to avoid fft shifting. */
 	for(int ix=0;ix<nx;ix++){
 	    double r2=pow((ix<nx2?ix:ix-nx)*dfx,2)+r2y;
-	    if(r2<=maxfreq2){
-		psd->p[ix+iy*nx] = pow(r2+minfreq2,slope)*scrnstr;
+	    if(r2<=maxfreq2 && r2>=minfreq2){
+		psd->p[ix+iy*nx] = pow(r2+zerofreq2,slope)*scrnstr;
 	    }
 	}
     }
@@ -392,7 +397,7 @@ dmat *spatial_psd(long nx,      /**<The size*/
 }
 dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power){
     double strength=0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2);
-    return spatial_psd(nx, ny, dx, strength, 1./L0, INFINITY, slope, power);
+    return spatial_psd(nx, ny, dx, strength, L0, 0, INFINITY, slope, power);
 }
 /**
    Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and

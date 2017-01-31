@@ -46,29 +46,29 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const double hs=parms->wfs[iwfs].hs;
-    //const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-    dmat *wfsopd0=dnew(powfs[ipowfs].saloc->nloc, 1);
-    for(int ips=0; ips<parms->atm.nps; ips++){
-	const double ht=parms->atm.ht->p[ips];
-	const double dispx=ht*parms->wfs[iwfs].thetax;
-	const double dispy=ht*parms->wfs[iwfs].thetay;
-	const double scale=1-ht/hs;
-	prop_grid(simu->atm->p[ips], powfs[ipowfs].saloc, wfsopd0->p, 1., dispx, dispy, scale, 1, 0, 0);
+    if(parms->sim.wfsalias==2 || parms->sim.idealwfs==2){
+	dmat *wfsopd0=dnew(powfs[ipowfs].saloc->nloc, 1);
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    const double ht=parms->atm.ht->p[ips];
+	    const double dispx=ht*parms->wfs[iwfs].thetax-simu->atm->p[ips]->vx*simu->dt*simu->isim;
+	    const double dispy=ht*parms->wfs[iwfs].thetay-simu->atm->p[ips]->vy*simu->dt*simu->isim;
+	    const double scale=1-ht/hs;
+	    prop_grid(simu->atm->p[ips], powfs[ipowfs].saloc, wfsopd0->p, 1., dispx, dispy, scale, 1, 0, 0);
+	}
+	prop_nongrid(powfs[ipowfs].saloc, wfsopd0->p, powfs[ipowfs].loc, opd->p, alpha, 0, 0, 1,  0, 0);
+	dfree(wfsopd0);
+    }else{
+	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+	for(int idm=0; idm<parms->ndm; idm++){
+	    loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    double dispx=ht*parms->wfs[iwfs].thetax;
+	    double dispy=ht*parms->wfs[iwfs].thetay;
+	    double scale=1.-ht/hs;
+	    prop_grid(simu->dmprojsq->p[idm], loc, opd->p, 
+		      alpha, dispx, dispy, scale, 0, 0, 0);
+	}
     }
-    prop_nongrid(powfs[ipowfs].saloc, wfsopd0->p, powfs[ipowfs].loc, opd->p, alpha, 0, 0, 1,  0, 0);
-    dfree(wfsopd0);
-/*
-    for(int idm=0; idm<parms->ndm; idm++){
-	loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
-	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	double dispx=ht*parms->wfs[iwfs].thetax;
-	double dispy=ht*parms->wfs[iwfs].thetay;
-	double scale=1.-ht/hs;
-	prop_grid(simu->dmprojsq->p[idm], loc, opd->p, 
-		  alpha, dispx, dispy, scale, 0,
-		  0, 0);
-    }
-*/
 }
 
 /**

@@ -509,8 +509,7 @@ typedef struct SIM_T{
 			  system, not in reconstruction since it is unknown.*/
     dmat *ttmreal;
     mapcell *dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
-    dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
-			  onto DM space directly.*/
+    dcell *dmproj;     /**<The projection of atm onto DM space directly.*/
     mapcell *dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dccell *wfspsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/

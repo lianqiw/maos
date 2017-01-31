@@ -353,6 +353,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if((parms->sim.idealwfs || parms->sim.wfsalias)
 	   && !(parms->sim.idealwfs && parms->sim.wfsalias)){
+	    if(parms->sim.idealwfs==2 || parms->sim.wfsalias==2){
+		error("Not implemented in GPU\n");
+	    }
 	    Real alpha=parms->sim.idealwfs?1:-1;
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
 		       hs, thetax, thetay, 0, 0, alpha, stream);

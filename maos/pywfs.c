@@ -67,6 +67,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     pywfs->wvlwts=ddup(parms->powfs[ipowfs].wvlwts);
     pywfs->modulate=parms->powfs[ipowfs].modulate;
     pywfs->modulpos=pywfs->modulate>0?parms->powfs[ipowfs].modulpos:1;
+    pywfs->modulring=pywfs->modulate>0?MAX(1, parms->powfs[ipowfs].modulring):1;
     long nembed=pywfs->locfft->nembed->p[0];
     double wvlmin, wvlmax;
     dmaxmin(parms->powfs[ipowfs].wvl->p, nwvl, &wvlmax, &wvlmin);
@@ -101,7 +102,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    for(long ix=skip; ix<ncomp-skip; ix++){
 		double xd=labs(ix-ncomp2);
 		double yd=labs(iy-ncomp2);
-		double opd=xd+yd;
+		double opd=parms->dbg.pwfs_roof?(xd+(iy-ncomp2)):(xd+yd);
 		if(xd<eskip||yd<eskip||(xd<vskip && yd<vskip)){
 		    opd=0;
 		}
@@ -109,7 +110,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    }
 	}
     }
-
+    //Detector transfer function (sampling onto pixels).
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
     cmat*  pn=nominal/*PCMAT*/;
     long order=parms->powfs[ipowfs].order;
@@ -252,7 +253,17 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     const int nsa=powfs[ipowfs].saloc->nloc;
     dscale(pywfs->saa, pywfs->saa->nx/dsum(pywfs->saa));//saa average to one.
     locfree(loc_fft);
-  
+    if(parms->save.setup){
+	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
+	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
+	writebin(pywfs->msaloc, "powfs%d_msaloc", ipowfs);	
+	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
+	writebin(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
+	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
+	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
+	writebin(nominal, "powfs%d_nominal", ipowfs);
+	writebin(pywfs->si, "powfs%d_si", ipowfs);
+    }
     //Determine the gain and offset of PyWFS
     {
 	//offset: grad of a flat wavefront
@@ -262,6 +273,17 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	pywfs_fft(&ints, pywfs, opd);//writebin(ints, "ints_0");
 	pywfs_grad(&goff, pywfs, ints);//writebin(goff, "goff_0");
 	dadd(&pywfs->gradoff, 1, goff, 1);
+	if(0){//test TT response
+	    double ptt[3]={0,0.001/206265,0};
+	    loc_add_ptt(opd->p, ptt, pywfs->locfft->loc);
+	    dzero(ints); dzero(goff);
+	    pywfs_fft(&ints, pywfs, opd);
+	    writebin(ints, "powfs%d_ttx_ints", ipowfs);
+	    pywfs_grad(&goff, pywfs, ints);
+	    writebin(goff, "powfs%d_ttx_grad", ipowfs);
+	    exit(0);
+	}
+	dfree(goff);
 	dfree(opd);
 	dfree(ints);
 	//gain
@@ -293,17 +315,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	}
     }
     if(parms->save.setup){
-	writebin(powfs[ipowfs].loc, "powfs%d_loc", ipowfs);
-	writebin(powfs[ipowfs].saloc, "powfs%d_saloc", ipowfs);	
-	writebin(pywfs->msaloc, "powfs%d_msaloc", ipowfs);	
-	writebin(powfs[ipowfs].saa, "powfs%d_saa", ipowfs);
-	writebin(powfs[ipowfs].amp, "powfs%d_amp", ipowfs);
-	writebin(pywfs->locfft->embed, "powfs%d_embed", ipowfs);
-	writebin(pywfs->pyramid, "powfs%d_pyramid", ipowfs);
-	writebin(nominal, "powfs%d_nominal", ipowfs);
-	writebin(pywfs->si, "powfs%d_si", ipowfs);
 	writebin(pywfs->gradoff, "powfs%d_gradoff", ipowfs);
 	writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea", ipowfs);
+	writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
     }
     if(0){//Test implementation using zernikes
 	dmat *ints=0;
@@ -465,46 +479,49 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     dmat *wvlwts=pywfs->wvlwts;
     //position of pyramid for modulation
     int pos_n=pywfs->modulpos;
+    int pos_nr=pywfs->modulring;
     double pos_r=pywfs->modulate;
-    if(pos_r<=0) pos_n=1;
     long ncomp=pywfs->nominal->nx;
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
     dmat *pupraw=dnew(ncomp, ncomp);
     //writebin(psfs, "cpu_wvf0");
-    for(int ipos=0; ipos<pos_n; ipos++){
-	//whether the first point falls on the edge or not makes little difference
-	double theta=2*M_PI*(ipos+0.)/pos_n;
-	double posx=cos(theta)*pos_r;
-	double posy=sin(theta)*pos_r;
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    double dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
-	    long offy=(long)round(posy/dtheta);
-	    long offy2=nembed2+offy-ncomp2;
-	    long iy0=MAX(-offy2, 0);
-	    long ny2=MIN(ncomp, nembed-offy2)-iy0;
+    for(int ir=0; ir<pos_nr; ir++){
+	double pos_ri=pos_r*(ir+1)/pos_nr;
+	for(int ipos=0; ipos<pos_n; ipos++){
+	    //whether the first point falls on the edge or not makes little difference
+	    double theta=2*M_PI*(ipos+0.)/pos_n;
+	    double posx=cos(theta)*pos_ri;
+	    double posy=sin(theta)*pos_ri;
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		double dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
+		long offy=(long)round(posy/dtheta);
+		long offy2=nembed2+offy-ncomp2;
+		long iy0=MAX(-offy2, 0);
+		long ny2=MIN(ncomp, nembed-offy2)-iy0;
 
-	    long offx=(long)round(posx/dtheta);
-	    long offx2=nembed/2+offx-ncomp2;
-	    long ix0=MAX(-offx2, 0);
-	    long nx2=MIN(ncomp, nembed-offx2)-ix0;
+		long offx=(long)round(posx/dtheta);
+		long offx2=nembed/2+offx-ncomp2;
+		long ix0=MAX(-offx2, 0);
+		long nx2=MIN(ncomp, nembed-offx2)-ix0;
 
-	    czero(otf);
-	    dcomplex *pyramid=pywfs->pyramid->p[iwvl]->p;
-	    for(long iy=iy0; iy<ny2; iy++){
-		for(long ix=ix0; ix<nx2; ix++){
-		    long indin=ix+offx2+(iy+offy2)*nembed;
-		    long indout=ix+iy*ncomp;
-		    otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
+		czero(otf);
+		dcomplex *pyramid=pywfs->pyramid->p[iwvl]->p;
+		for(long iy=iy0; iy<ny2; iy++){
+		    for(long ix=ix0; ix<nx2; ix++){
+			long indin=ix+offx2+(iy+offy2)*nembed;
+			long indout=ix+iy*ncomp;
+			otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
+		    }
 		}
-	    }
-	    //writebin(otf, "cpu_wvf1");
-	    cfft2(otf, 1);
-	    //writebin(otf, "cpu_wvf2");
-	    cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n));
-	    //writebin(pupraw, "cpu_wvf3");
-	}//for iwvl
-    }//for ipos
+		//writebin(otf, "cpu_wvf1");
+		cfft2(otf, 1);
+		//writebin(otf, "cpu_wvf2");
+		cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n*pos_nr));
+		//writebin(pupraw, "cpu_wvf3");exit(0);
+	    }//for iwvl
+	}//for ipos
+    }//for ir
     //writebin(pupraw, "cpu_psf"); exit(0);
     ccpd(&otf, pupraw);//pupraw sum to one.
     //writebin(otf, "cpu_wvf4");
@@ -572,10 +589,10 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
-    if(pywfs->GTT) {
+    /*if(pywfs->GTT) {
 	info2("Reusing cached pywfs->GTT\n");
 	return dref(pywfs->GTT);
-    }
+	}*/
     TIC;tic;info2("Computing pywfs_tt...");
     const loc_t *loc=pywfs->locfft->loc;
     dmat *opd=dnew(loc->nloc,1);

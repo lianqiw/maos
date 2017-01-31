@@ -365,6 +365,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,step);
     READ_POWFS_RELAX(dbl,modulate);
     READ_POWFS_RELAX(int,modulpos);
+    READ_POWFS_RELAX(int,modulring);
     READ_POWFS(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
@@ -1022,6 +1023,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DBL(dbg.gradoff_scale);
     READ_DMAT(dbg.pwfs_psx);
     READ_DMAT(dbg.pwfs_psy);
+    READ_INT(dbg.pwfs_roof);
     READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
     READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
     READ_DBL(dbg.pwfs_pupelong);
