@@ -88,11 +88,6 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
 				     0,0, parms->aper.d, parms->aper.din);
 	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], EPS, 1, NULL);
-	
-	if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
-	    int iwfs=parms->powfs[ipowfs].wfs->p[0];
-	    wfspupmask(parms, recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], iwfs);
-	}
     }
 }
 /**
