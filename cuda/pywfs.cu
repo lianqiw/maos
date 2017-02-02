@@ -100,7 +100,6 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
     cucmat &otf=cuwfs.pyotf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &wvf=cuwfs.pywvf[iwvl];
-	const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_n*pos_nr);
 	const Real wvl=locfft->wvl->p[iwvl];
 	cuzero(wvf, stream);
 	embed_wvf_do<<<DIM(phiout.Nx(),256),0,stream>>>
@@ -114,8 +113,11 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
 	for(int ir=0; ir<pos_nr; ir++){
 	    double pos_ri=pos_r*(ir+1)/pos_nr;
-	    for(int ipos=0; ipos<pos_n; ipos++){
-		const Real theta=2*M_PI*ipos/pos_n;
+	    //Scale number of points by ring size to have even surface brightness
+	    int pos_ni=pos_n*(ir+1)/pos_nr;
+	    const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr);
+	    for(int ipos=0; ipos<pos_ni; ipos++){
+		const Real theta=2*M_PI*ipos/pos_ni;
 		const Real posx=cos(theta)*pos_ri;
 		const Real posy=sin(theta)*pos_ri;
 		const long offy=(long)round(posy/dtheta);//offset of center

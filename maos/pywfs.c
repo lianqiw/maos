@@ -487,10 +487,13 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     dmat *pupraw=dnew(ncomp, ncomp);
     //writebin(psfs, "cpu_wvf0");
     for(int ir=0; ir<pos_nr; ir++){
+	//Radius of the current ring
 	double pos_ri=pos_r*(ir+1)/pos_nr;
-	for(int ipos=0; ipos<pos_n; ipos++){
+	//Scale number of points by ring size to have even surface brightness
+	int pos_ni=pos_n*(ir+1)/pos_nr;
+	for(int ipos=0; ipos<pos_ni; ipos++){
 	    //whether the first point falls on the edge or not makes little difference
-	    double theta=2*M_PI*(ipos+0.)/pos_n;
+	    double theta=2*M_PI*(ipos+0.)/pos_ni;
 	    double posx=cos(theta)*pos_ri;
 	    double posy=sin(theta)*pos_ri;
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -517,7 +520,7 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 		//writebin(otf, "cpu_wvf1");
 		cfft2(otf, 1);
 		//writebin(otf, "cpu_wvf2");
-		cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_n*pos_nr));
+		cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr));
 		//writebin(pupraw, "cpu_wvf3");exit(0);
 	    }//for iwvl
 	}//for ipos
