@@ -282,10 +282,11 @@ void print_mem(){
     info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
 static __attribute__((constructor)) void init(){
-    calloc_default=(void*(*)(size_t, size_t))dlsym(RTLD_NEXT, "calloc");
-    malloc_default=(void*(*)(size_t))dlsym(RTLD_NEXT, "malloc");
-    realloc_default=(void*(*)(void*, size_t))dlsym(RTLD_NEXT, "realloc");
-    free_default=(void(*)(void*))dlsym(RTLD_NEXT, "free");
+#define RTLD_MINE RTLD_DEFAULT
+    calloc_default=(void*(*)(size_t, size_t))dlsym(RTLD_MINE, "calloc");
+    malloc_default=(void*(*)(size_t))dlsym(RTLD_MINE, "malloc");
+    realloc_default=(void*(*)(void*, size_t))dlsym(RTLD_MINE, "realloc");
+    free_default=(void(*)(void*))dlsym(RTLD_MINE, "free");
     READ_ENV_INT(MEM_DEBUG, 0, 1);
     READ_ENV_INT(MEM_VERBOSE, 0, 2);
     mem_debug=MEM_DEBUG;

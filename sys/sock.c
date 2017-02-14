@@ -398,7 +398,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
-	    warning("connect locally failed: %s\n", strerror(errno));
+	  warning("connect locally (%s) failed: %s\n", hostname, strerror(errno));
 	    close(sock);
 	    sock=-1;
 	}

@@ -162,7 +162,6 @@ DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
 DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
 DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 
-CFLAGS+=" -fPIC"
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -256,6 +255,7 @@ case "$host_os" in
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+	CFLAGS+=" -fPIC"
 	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
 	if test "$use_release" = "yes" ;then
 	    CFLAGS+=" -D_GLIBC_2_5_SOURCE"
@@ -271,6 +271,7 @@ case "$host_os" in
 	;;
     *darwin*)
 	AM_CONDITIONAL(DARWIN, true)
+	CFLAGS+=" -fPIC"
 	CFLAGS_EXTRA=
 	mkl_avail="no"
 	libsuffix=fat
@@ -307,7 +308,9 @@ LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 CFLAGS+=" -I${PRE_DIR}/include "
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
-
+if test "$system" = "win" ;then
+    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
+fi
 if test "$host_cpu" = "x86_64" ;then
     CFLAGS+=" -DDLONG "
     mflag="-m64"
@@ -598,7 +601,7 @@ if test "$use_websockets" = "yes" ;then
     AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #first try to compile from source. Needs cmake
-	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON 
+	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
 	unset ac_cv_lib_websockets_lws_service
 	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
@@ -806,6 +809,8 @@ if test "$with_cuda" != "no" ;then
 	CUDA_L="${CUDADIR}/lib${libsuffix}"
     elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
 	CUDA_L="${CUDADIR}/lib"
+    elif test -f "${CUDADIR}/lib/x64/cudart.lib" ;then
+    	CUDA_L="${CUDADIR}/lib/x64"
     else
 	CUDA_L=""
     fi

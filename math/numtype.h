@@ -146,14 +146,14 @@ typedef __complex__ float fcomplex;
 #endif
 #define I _Complex_I
 double cabs(dcomplex __z);
-double cimag(dcomplex __z);
-double creal(dcomplex __z);
-dcomplex conj(dcomplex __z);
+//double cimag(dcomplex __z);
+//double creal(dcomplex __z);
+//dcomplex conj(dcomplex __z);
 #define cexp(z) exp(creal(z))*(cos(cimag(z))+I*sin(cimag(z)))
 dcomplex cpow(dcomplex x, dcomplex z);
 dcomplex csqrt(dcomplex);
 dcomplex clog(dcomplex);
-double carg(dcomplex);
+//double carg(dcomplex);
 float cabsf(fcomplex __z);
 float cimagf(fcomplex __z);
 float crealf(fcomplex __z);

@@ -54,7 +54,13 @@ void init_process(void){
 #if defined(__CYGWIN__)
     cygwin_internal(CW_SYNC_WINENV);
 #endif
-//Get User
+    //Local host name
+    if(gethostname(HOST,255)){
+	warning("Unable to get hostname, set to localhost\n");
+	sprintf(HOST, "localhost");
+    }
+
+    //Get User
     USER=getenv("USER");
     if(!USER){
 	USER=getenv("USERNAME");
@@ -69,20 +75,9 @@ void init_process(void){
     
 //Get Temp directory
 #if defined(__CYGWIN__)
-    const char *temp=getenv("TMP");
-    if(!temp){
-	temp=getenv("TEMP");
-    }
-    if(!temp || !exist(temp)){
-	temp="C:/Windows/Temp";
-    }
-    if(!exist(temp)){
-	temp=HOME;/*set to home */
-    }
-    if(!exist(temp)){
-	error("Unable to determine the path to temporary files");
-    }
-    temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
+    char temp2[PATH_MAX];
+    snprintf(temp2, PATH_MAX, "%s/.aos/tmp-%s", HOME, HOST);
+    const char *temp=temp2;
 #else
     const char *temp="/tmp";
 #endif
@@ -111,11 +106,6 @@ void init_process(void){
 	}else{
 	    EXEP[0]=0;
 	}
-    }
-    //Local host name
-    if(gethostname(HOST,255)){
-	warning("Unable to get hostname, set to localhost\n");
-	sprintf(HOST, "localhost");
     }
 
     NCPU= get_ncpu();
