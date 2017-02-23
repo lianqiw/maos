@@ -129,6 +129,7 @@ static int callback_http(struct lws *wsi,
     struct timeval tv;
     char *other_headers;
     const char *mimetype;
+    unsigned char* p;
     int n;
     switch (reason) {
     case LWS_CALLBACK_HTTP:
@@ -169,7 +170,7 @@ static int callback_http(struct lws *wsi,
 	/* demostrates how to set a cookie on / */
 
 	other_headers = leaf_path;
-	unsigned char* p = (unsigned char *)leaf_path;
+	p = (unsigned char *)leaf_path;
 	if (!strcmp((const char *)in, "/") &&
 	    !lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_COOKIE)) {
 	    /* this isn't very unguessable but it'll do for us */

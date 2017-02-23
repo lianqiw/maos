@@ -540,48 +540,55 @@ if test "$has_z" = "no" ;then
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
-#Check for FFTW3 header and library.
-AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
-AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
-if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    FLAGS="--enable-threads --enable-shared --enable-static"
-    if test -n "$OPENMP_CFLAGS" ;then
-        FLAGS+=" --enable-openmp"
-    fi
-    compile FFTW fftw.tar.bz2 $FLAGS
-    #compile FFTW fftw.tar.bz2 --enable-float 
-    unset ac_cv_lib_fftw3_fftw_execute
-    AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
-fi
-
-if test "$with_matlab" != "no" ;then
-    #cannot compile with single precision floating fft when compiling mex routines
-    has_fftwf=0
+#Check for FFTW interface in MKL
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
+if test "$builtin_fftw" = "yes";then
+    AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
+    fftw_threads=1
 else
-    AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
-fi
-AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-if test x$has_fftwf = x1 ;then
-    LDFFT="-lfftw3 -lfftw3f"
-else
-    LDFFT="-lfftw3"
-fi
-fftw_threads=1
-if test "$with_matlab" = "no"  ;then
-    if test -n "$OPENMP_CFLAGS" ;then
-	AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
-    else
-	AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
-    fi
-    if test x$has_fftwf = x1 ;then
+    #Check for FFTW3 header and library.
+    AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+    AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
+    if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+	FLAGS="--enable-threads --enable-shared --enable-static"
 	if test -n "$OPENMP_CFLAGS" ;then
-	    AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
-	else
-	    AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
+            FLAGS+=" --enable-openmp"
 	fi
+	compile FFTW fftw.tar.bz2 $FLAGS
+	#compile FFTW fftw.tar.bz2 --enable-float 
+	unset ac_cv_lib_fftw3_fftw_execute
+	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
     fi
-else
-    fftw_threads=0
+
+    if test "$with_matlab" != "no" ;then
+	#cannot compile with single precision floating fft when compiling mex routines
+	has_fftwf=0
+    else
+	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
+    fi
+    AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+    if test x$has_fftwf = x1 ;then
+	LDFFT="-lfftw3 -lfftw3f"
+    else
+	LDFFT="-lfftw3"
+    fi
+    fftw_threads=1
+    if test "$with_matlab" = "no"  ;then
+	if test -n "$OPENMP_CFLAGS" ;then
+	    AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
+	else
+	    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
+	fi
+	if test x$has_fftwf = x1 ;then
+	    if test -n "$OPENMP_CFLAGS" ;then
+		AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
+	    else
+		AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
+	    fi
+	fi
+    else
+	fftw_threads=0
+    fi
 fi
 AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 

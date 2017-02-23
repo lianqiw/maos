@@ -43,6 +43,10 @@
 #define FUN_NAME_BLOCK prop_grid_block_transpose
 #endif
 
+/**
+   Ray tracing from phiin with size of nxin*nyin to 
+   phiout with size of nxout*nyout, normalized spacing of dxout, dyout, origin offset of oxout, oyout.
+ */
 INLINE int 
 FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	       CONST_OUT double *phiout, long nxout, long nyout, 
@@ -444,7 +448,7 @@ void FUN_NAME_PTS(CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     long nyout=pts->ny?pts->ny:pts->nx;
     if(!saend) saend=pts->nsa;
     int missing=0;
-    OMPTASK_FOR(isa, sastart, saend){
+    OMPTASK_FOR(isa, sastart, saend,shared(missing)){
 	//for(long isa=sastart; isa<saend; isa++){
 	const double oxout=pts->origx[isa]*dx_in1*scale+displacex;
 	const double oyout=pts->origy[isa]*dy_in1*scale+displacey;
@@ -473,7 +477,6 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
 	error("transpose ray tracing is not available with iac\n");
 #endif
     }
-    CONST_IN double *phiin  = mapin->p;
     const long nxin = mapin->nx;
     const long nyin = mapin->ny;
     /*
@@ -488,12 +491,12 @@ void FUN_NAME_STAT (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*
     const long nyout=1;
     int missing=0;
     if(colend==0) colend = ostat->ncol;
-    OMPTASK_FOR(icol, colstart, colend){
+    OMPTASK_FOR(icol, colstart, colend,shared(missing)){
 	const long offset=ostat->cols[icol].pos;
 	const long nxout=ostat->cols[icol+1].pos-offset;
 	const double oxout=ostat->cols[icol].xstart*dx_in1*scale+displacex;
 	const double oyout=ostat->cols[icol].ystart*dy_in1*scale+displacey;
-	missing+=FUN_NAME_BLOCK(phiin, nxin, nyin, 
+	missing+=FUN_NAME_BLOCK(mapin->p, nxin, nyin, 
 				phiout+offset, nxout, nyout,
 				dxout, dyout, oxout, oyout, 
 				alpha, wrap);

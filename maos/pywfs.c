@@ -778,7 +778,9 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
 	double step=pow(10,0.25);
 	for(int ig=0; ig<gg1->nx; ig++){
 	    ((PYWFS_T*)pywfs)->poke=poke;
+#if USE_CUDA
 	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, mod1, displacex, displacey);
+#endif
 	    gg2->p[ig]=pywfs_mkg_do(pywfs, locin, mod1, displacex, displacey, scale);
 	    poke=poke*step;
 	}

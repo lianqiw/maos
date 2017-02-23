@@ -121,7 +121,7 @@ static void init_threads(){
 #else
     fn="libfftw3_omp." LDSUFFIX;
 #endif
-#else //else OPENMP
+#else //else 
 #if defined(USE_SINGLE)
     fn="libfftw3f_threads." LDSUFFIX;
 #else
@@ -175,13 +175,15 @@ static void init_threads(){
 static void init_threads(){}//avoid multiple init.
 #endif
 static void fft_execute(FFTW(plan) plan){
-/*#if _OPENMP>200805
-    if(has_threads && !omp_in_parallel()){//testing purpose.
-	OMPTASK_SINGLE{
-	    FFTW(execute)(plan);
-	}
-    }else
-    #endif*/
+/*
+  #if _OPENMP>200805
+  if(has_threads && !omp_in_parallel()){//testing purpose.
+  OMPTASK_SINGLE{
+  FFTW(execute)(plan);
+  }
+  }else
+  #endif
+*/
     FFTW(execute)(plan);
 }
 static void fft_threads(long nx, long ny){

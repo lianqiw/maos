@@ -19,7 +19,12 @@
 #define AOS_LIB_THREAD_H
 /**
    \file thread.h
-   Functions regarding to threading
+   Functions regarding to threading.
+
+   Openmp version:
+   3.0 (200805): Introduced task
+   4.0 (201307): Introduced taskgroup
+   4.5 (201511): Introduced taskloop and priority
 */
 
 #include "common.h"
@@ -41,6 +46,13 @@
 #define OMP_IN_PARALLEL 0
 #endif
 
+#if _OPENMP >= 201307
+#define OMP_TASKSYNC_START DO_PRAGMA(omp taskgroup)
+#define OMP_TASKSYNC_END
+#elif _OPENMP >= 200805
+#define OMP_TASKSYNC_START
+#define OMP_TASKSYNC_END DO_PRAGMA(omp taskwait)
+#endif
 /**
    Information about job to launch for each thread. start and end are the two indices.
 */
@@ -80,12 +92,13 @@ INLINE void THREAD_POOL_INIT(int nthread){
 }
 INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     (void)urgent;
+    OMP_TASKSYNC_START
     for(int it=0; it<nthread; it++){
 #pragma omp task 
 	fun(arg);
     }
-#pragma omp taskwait
-}
+    OMP_TASKSYNC_END
+	}
 
 /*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
 /*Don't turn the following into INLINE function becase task will be waited*/
@@ -93,7 +106,7 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     (void) group; (void) urgent;		\
     for(int it=0; it<nthread; it++){		\
 	_Pragma("omp task")			\
-	fun(arg);				\
+	    fun(arg);				\
     }
 
 #define WAIT(group)				\
@@ -102,34 +115,40 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 
 /*The following *_THREAD acts on thread_t array A*/
 
-#define QUEUE_THREAD(group,A,urgent)		\
-    (void)group;(void)urgent;			\
-    if(!OMP_IN_PARALLEL){			\
-	warning("QUEUE_THREAD is not in parallel region\n"); \
-    }							     \
-    for(int it=0; it<(A)[0].nthread; it++){	\
-	if((A)[it].fun){			\
-	    _Pragma("omp task")			\
-		(A)[it].fun((A)+it);		\
-        }					\
+#define QUEUE_THREAD(group,A,urgent)					\
+    (void)group;(void)urgent;						\
+    if(!OMP_IN_PARALLEL){						\
+	warning_once("QUEUE_THREAD is not in parallel region\n");	\
+    }									\
+    for(int it=0; it<(A)[0].nthread; it++){				\
+	if((A)[it].fun){						\
+	    _Pragma("omp task")						\
+		(A)[it].fun((A)+it);					\
+        }								\
     }
 #define WAIT_THREAD(group)			\
     _Pragma("omp taskwait")
 /*Turn to inline function because nvcc concatenates _Pragma to } */
-INLINE void CALL_THREAD(thread_t *A, int urgent){
-    (void) urgent;
-    if(!OMP_IN_PARALLEL){
-	//Wraps call in parallel region.
-	OMPTASK_SINGLE
-	    CALL_THREAD(A, urgent);
-    }else{
+INLINE void CALL_THREAD_DO(thread_t *A, int urgent){
+    (void)urgent;
+    OMP_TASKSYNC_START
 	for(int it=0; it<A[0].nthread; it++){		
 	    if(A[it].fun){
 #pragma omp task
 		A[it].fun(A+it); 
 	    }
 	}
-#pragma omp taskwait
+    OMP_TASKSYNC_END
+	}
+INLINE void CALL_THREAD(thread_t *A, int urgent){
+    //Split CALL_THREAD_DO to a separate routing to avoid recursiving calling CALL_THREAD. This is to work about a bug in icc that always return 0 for omp_in_parallel when nthread==1
+    (void) urgent;
+    if(!OMP_IN_PARALLEL){
+	//Wraps call in parallel region.
+	OMPTASK_SINGLE
+	    CALL_THREAD_DO(A, urgent);
+    }else{
+	CALL_THREAD_DO(A, urgent);
     }
 }
 
@@ -151,16 +170,16 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 	fun(arg);							
     }
 }
-#define WAIT(group)\
+#define WAIT(group)				\
     thread_pool_wait(&group);
 /**
    Queue jobs to group. Do not wait
 */
-#define QUEUE_THREAD(group,A,urgent)			\
+#define QUEUE_THREAD(group,A,urgent)					\
     if((A[0].nthread)>1){						\
-	thread_pool_queue_many(&group,NULL,A,A[0].nthread,urgent); \
-    }else{							\
-	(A)->fun(A);						\
+	thread_pool_queue_many(&group,NULL,A,A[0].nthread,urgent);	\
+    }else{								\
+	(A)->fun(A);							\
     }
 
 /**
@@ -198,10 +217,10 @@ extern pthread_mutex_t mutex_fftw;
 void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);
 
-#define LOCKADD(dest,src,step)\
+#define LOCKADD(dest,src,step)				\
     (({__asm__ __volatile__ ("lock; xaddl %0,%1"	\
-			   : "=r" (dest), "=m" (src)	\
-			    : "0" (step), "m" (src));}),dest)
+		: "=r" (dest), "=m" (src)		\
+		: "0" (step), "m" (src));}),dest)
 
 int lockadd(int *src, int step);
 
@@ -234,22 +253,25 @@ INLINE int atomicadd(int *ptr, int val){
     }while(cmpxchg(ptr, old, old+val)!=old);
     return old+val;
 }
-#if _OPENMP >= 201511 //OpenMP 4.5 (taskloop introduced)
+
+//Using taskloop causes memory double free error in icc.
+#if _OPENMP >= 201511 && 0//OpenMP 4.5 (taskloop introduced)
 #define OMPTASK_FOR(index, start, end, extra...)	\
     DO_PRAGMA(omp taskloop extra)			\
     for(long index=start; index<end; index++)
 #define OMPTASK_END
-#elif _OPENMP >= 200805 //Openmp 3.0 (task introduced)
+#elif _OPENMP >= 200805 //Openmp 3.0 (task introduced). Emulating taskloop.
 #define OMPTASK_FOR(index, start, end, extra...)	\
     long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
-    DO_PRAGMA(omp parallel for)				\
+    OMP_TASKSYNC_START					\
+    DO_PRAGMA(omp parallel for)/*ignored if nested*/	\
     for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\
     if(omp_end>end) omp_end=end;			\
     DO_PRAGMA(omp task extra if(omp_start<omp_end))	\
     for(long index=omp_start; index<omp_end; index++)
-#define OMPTASK_END } _Pragma("omp taskwait")
+#define OMPTASK_END } OMP_TASKSYNC_END
 #else
 #define OMPTASK_FOR(index,start,end, extra...)	\
     for(long index=start; index<end; index++)
