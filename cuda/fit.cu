@@ -126,7 +126,7 @@ void cufit_grid::do_hxp(const curcell &xin, stream_t &stream){
     cuzero(opdfit.M(), stream);
     if(idealfit){//ideal fiting.
 	for(int ifit=0; ifit<nfit; ifit++){
-	    gpu_atm2loc(opdfit[ifit].P(), floc, INFINITY,
+	    gpu_atm2loc(opdfit[ifit].P(), floc, INFINITY, 0,
 			dir[ifit].thetax, dir[ifit].thetay,
 			0, 0, grid->dt, grid->reconisim, 1, stream);
 	}

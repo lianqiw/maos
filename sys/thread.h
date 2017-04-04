@@ -264,7 +264,7 @@ INLINE int atomicadd(int *ptr, int val){
 #define OMPTASK_FOR(index, start, end, extra...)	\
     long omp_sect=(end-start+NTHREAD-1)/NTHREAD;	\
     OMP_TASKSYNC_START					\
-    DO_PRAGMA(omp parallel for)/*ignored if nested*/	\
+    /*DO_PRAGMA(omp parallel for)*//*ignored if nested*/	\
     for(long omp_j=0; omp_j<NTHREAD; omp_j++){		\
     long omp_start=start+omp_sect*omp_j;		\
     long omp_end=omp_start+omp_sect;			\

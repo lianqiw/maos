@@ -322,6 +322,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const Real hs=parms->wfs[iwfs].hs;
+	const Real hc=parms->powfs[ipowfs].hc;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	const int save_gradgeom=parms->save.gradgeom->p[iwfs];
 	const int save_opd =parms->save.wfsopd->p[iwfs];
@@ -358,10 +359,10 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 	    Real alpha=parms->sim.idealwfs?1:-1;
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
-		       hs, thetax, thetay, 0, 0, alpha, stream);
+		       hs, hc, thetax, thetay, 0, 0, alpha, stream);
 	}
 	if(simu->atm && !parms->sim.idealwfs){
-	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
+	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	}
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim];
@@ -373,7 +374,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(CL){
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmreal, parms->ndm,
-		       hs, thetax, thetay, 0, 0, -1, stream);
+		       hs, hc, thetax, thetay, 0, 0, -1, stream);
 	    Real ttx=0, tty=0;
 	    if(simu->ttmreal){
 		ttx+=simu->ttmreal->p[0];
@@ -397,7 +398,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(imoao>-1){
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dm_wfs[iwfs], 1,
-		       INFINITY, 0, 0, 0, 0, -1, stream);
+		       INFINITY, hc, 0, 0, 0, 0, -1, stream);
 	}
   
 	Real focus=(Real)wfsfocusadj(simu, iwfs);

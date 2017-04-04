@@ -291,10 +291,11 @@ void setup_recon_HXW_predict(SIM_T *simu){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
-	    double  hs = parms->wfs[iwfs].hs;
+	    const double hs = parms->wfs[iwfs].hs;
+	    const double hc=parms->powfs[ipowfs].hc;
 	    for(int ips=0; ips<npsr; ips++){
 		dspfree(IND(HXWtomo,iwfs,ips));
-		double  ht = recon->ht->p[ips];
+		double  ht = recon->ht->p[ips]-hc;
 		double  scale=1. - ht/hs;
 		double  displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
@@ -924,8 +925,9 @@ static void init_simu_wfs(SIM_T *simu){
 	const int nwfsp=parms->powfs[ipowfs].nwfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
+	const double hc=parms->powfs[ipowfs].hc;
 	for(int ips=0; ips<parms->atm.nps; ips++){
-	    const double ht=parms->atm.ht->p[ips];
+	    const double ht=parms->atm.ht->p[ips]-hc;
 	    if(ht>hs){
 		error("Layer is above guide star\n");
 	    }
@@ -953,7 +955,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    thread_prep(simu->wfs_prop_atm[iwfs+nwfs*ips],0,tot,nthread,prop,data);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+nwfs*idm];
 	    int tot;
 	    data->displacex0=ht*parms->wfs[iwfs].thetax;

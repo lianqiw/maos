@@ -1419,7 +1419,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 	if(aloc && dm_ncpa){//apply DM figure to powfs surface
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		double hs=parms->wfs[iwfs].hs;
+		const double hs=parms->wfs[iwfs].hs;
+		const double hc=parms->powfs[ipowfs].hc;
 		double thetax=parms->wfs[iwfs].thetax;
 		double thetay=parms->wfs[iwfs].thetay;
 		if(!powfs[ipowfs].opdbias){
@@ -1430,7 +1431,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(!dm_ncpa->p[idm] || dm_ncpa->p[idm]->nx==0) continue;
-		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 		    double scale=1.-ht/hs;
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;

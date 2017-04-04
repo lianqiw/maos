@@ -46,10 +46,11 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const double hs=parms->wfs[iwfs].hs;
+    const double hc=parms->powfs[ipowfs].hc;
     if(parms->sim.wfsalias==2 || parms->sim.idealwfs==2){
 	dmat *wfsopd0=dnew(powfs[ipowfs].saloc->nloc, 1);
 	for(int ips=0; ips<parms->atm.nps; ips++){
-	    const double ht=parms->atm.ht->p[ips];
+	    const double ht=parms->atm.ht->p[ips]-hc;
 	    const double dispx=ht*parms->wfs[iwfs].thetax-simu->atm->p[ips]->vx*simu->dt*simu->isim;
 	    const double dispy=ht*parms->wfs[iwfs].thetay-simu->atm->p[ips]->vy*simu->dt*simu->isim;
 	    const double scale=1-ht/hs;
@@ -61,7 +62,7 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	for(int idm=0; idm<parms->ndm; idm++){
 	    loc_t *loc=powfs[ipowfs].loc_dm?powfs[ipowfs].loc_dm->p[wfsind+idm*parms->nwfs]:powfs[ipowfs].loc;
-	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 	    double dispx=ht*parms->wfs[iwfs].thetax;
 	    double dispy=ht*parms->wfs[iwfs].thetay;
 	    double scale=1.-ht/hs;

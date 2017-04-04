@@ -124,6 +124,7 @@ typedef struct POWFS_CFG_T{
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
     double hs;     /**<height of guide star*/
+    double hc;     /**<conjugation height of WFS pupil*/
     double saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
     double safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
     double saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/

@@ -33,6 +33,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     PYWFS_T *pywfs=powfs[ipowfs].pywfs=mycalloc(1,PYWFS_T);
     map_t *map=0;
     pywfs->hs=parms->powfs[ipowfs].hs;
+    pywfs->hc=parms->powfs[ipowfs].hc;
     pywfs->sigmatch=parms->powfs[ipowfs].sigmatch;
     pywfs->siglev=parms->powfs[ipowfs].siglev;
     pywfs->poke=parms->recon.poke;//How many meters to poke

@@ -346,6 +346,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl, zoomgain);
     READ_POWFS_RELAX(int, zoomset);
     READ_POWFS(dbl,hs);
+    READ_POWFS_RELAX(dbl,hc);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
     READ_POWFS_RELAX(dbl,dx);

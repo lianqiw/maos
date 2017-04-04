@@ -427,12 +427,13 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		continue;
 	    }
 	    const double  hs = parms->wfs[iwfs].hs;
+	    const double  hc = parms->powfs[ipowfs].hc;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel->p[iwfs]){
 		loc=recon->ploc_tel->p[iwfs];
 	    }
 	    for(int ips=0; ips<npsr; ips++){
-		const double  ht = recon->ht->p[ips];
+		const double  ht = recon->ht->p[ips]-hc;
 		const double  scale=1. - ht/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
@@ -673,10 +674,11 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS
 		continue;
 	    }
-	    double  hs = parms->wfs[iwfs].hs;
+	    const double  hs = parms->wfs[iwfs].hs;
+	    const double hc=parms->powfs[ipowfs].hc;
 	    for(int idm=0; idm<ndm; idm++){
-		double  ht = parms->dm[idm].ht;
-		double  scale=1. - ht/hs;
+		const double  ht = parms->dm[idm].ht-hc;
+		const double  scale=1. - ht/hs;
 		double  dispx=0, dispy=0;
 		if(!parms->recon.glao){
 		    dispx=parms->wfsr[iwfs].thetax*ht;
