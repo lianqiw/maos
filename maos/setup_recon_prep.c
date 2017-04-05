@@ -289,7 +289,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
 	    map_t *map;
 	    if(parms->dbg.dmfullfov && !parms->fit.square){//DM covers full fov
-		double D=(parms->sim.fov*ht+parms->aper.d+guard*2);
+		double D=(parms->sim.fov*fabs(ht)+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
 		map=mapnew(nx, ny, dx, dy, 0);

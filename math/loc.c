@@ -1428,7 +1428,7 @@ void map_d_din(map_t *map, double *d, double *din){
 void create_metapupil(map_t**mapout,/**<[out] map*/
 		      long* nxout,  /**<[out] nx*/
 		      long* nyout,  /**<[out] ny*/
-		      dmat *dirs,   /**<[in] All Directions to cover*/
+		      dmat *dirs,   /**<[in] All Directions to cover (thetax, thetay, hs)*/
 		      double D,     /**<[in] Diameter (meter)*/
 		      double ht,    /**<[in] Height (meter)*/
 		      double dx,    /**<[in] Sampling along x (meter)*/
@@ -1452,10 +1452,11 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
 	sx2=(IND(dirs,0,idir)*ht)+RR;
 	sy1=(IND(dirs,1,idir)*ht)-RR;
 	sy2=(IND(dirs,1,idir)*ht)+RR;
-	if(sx1<minx) minx=sx1;
-	if(sx2>maxx) maxx=sx2;
-	if(sy1<miny) miny=sy1;
-	if(sy2>maxy) maxy=sy2;
+	//Need to work when ht<0;
+	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
+	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
+	if(sy1<miny) miny=sy1; if(sy1>maxy) maxy=sy1;
+	if(sy2<miny) miny=sy2; if(sy2>maxy) maxy=sy2;
     }
     /*ajust central point offset*/
     {

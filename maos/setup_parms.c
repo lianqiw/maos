@@ -1887,6 +1887,20 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
 	error("count=%d, ndir=%d\n", count, ndir);
     }
     dresize(parms->dirs, 3, count);
+    double rmax2=0;
+    for(int ic=0; ic<count; ic++){
+	double x=IND(parms->dirs, 0, ic);
+	double y=IND(parms->dirs, 1, ic);
+	double r2=x*x+y*y;
+	if(r2>rmax2) rmax2=r2;
+    }
+    double fov=2*sqrt(rmax2);
+    if(parms->sim.fov<fov){
+	if(parms->dbg.dmfullfov){
+	    warning("sim.fov=%g is less than actual fov=%g. Changed\n", parms->sim.fov*206265, fov*206265);
+	}
+	parms->sim.fov=fov;
+    }
 }
 /**
    compute minimum size of atm screen to cover all the beam path. same for
