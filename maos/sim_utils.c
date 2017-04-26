@@ -1352,7 +1352,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->gpu.evl){
 	thread_prep(simu->perf_evl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
 	simu->perf_evl_post=mycalloc(nevl,thread_t);
-	thread_prep(simu->perf_evl_post, 0, nevl, nevl, gpu_perfevl_sync, simu);
+	thread_prep(simu->perf_evl_post, 0, nevl, 1, gpu_perfevl_sync, simu);
     }else
 #endif
     {
@@ -1366,7 +1366,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     {
 	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
     }
-    thread_prep(simu->wfs_grad_post, 0, nwfs, nwfs, wfsgrad_post, simu);
+    thread_prep(simu->wfs_grad_post, 0, nwfs, 1, wfsgrad_post, simu);
     
     if(!parms->sim.evlol){
 	init_simu_dm(simu);
