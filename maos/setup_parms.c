@@ -755,7 +755,7 @@ static void readcfg_evl(PARMS_T *parms){
 	    ramin=ra2;
 	}
     }
-    READ_DBL(evl.dx);
+    READ_DBL(evl.dx); if(parms->evl.dx<=0) parms->evl.dx=parms->atm.dx;
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
@@ -2119,14 +2119,16 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->powfs[ipowfs].wfsr=lnew(1,1);
 	    parms->powfs[ipowfs].wfsr->p[0]=ipowfs;
 	}
-	parms->fit.nfit=1;
-	dresize(parms->fit.thetax, 1, 1);
-	dresize(parms->fit.thetay, 1, 1);
-	dresize(parms->fit.wt, 1, 1);
-	dresize(parms->fit.hs, 1, 1);
-	parms->fit.thetax->p[0]=0;
-	parms->fit.thetay->p[0]=0;
-	parms->fit.wt->p[0]=1;
+	/*
+	  parms->fit.nfit=1;
+	  dresize(parms->fit.thetax, 1, 1);
+	  dresize(parms->fit.thetay, 1, 1);
+	  dresize(parms->fit.wt, 1, 1);
+	  dresize(parms->fit.hs, 1, 1);
+	  parms->fit.thetax->p[0]=0;
+	  parms->fit.thetay->p[0]=0;
+	  parms->fit.wt->p[0]=1;
+	*/
     }else{/*Use same information as wfs. */
 	parms->wfsr = parms->wfs;
 	parms->nwfsr= parms->nwfs;
@@ -2217,7 +2219,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
 
 
-    if(parms->recon.split==1 && !parms->sim.closeloop){
+    if(parms->recon.split==1 && !parms->sim.closeloop && parms->ndm>1){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");
     }
     if(parms->recon.split==2 && parms->sim.fuseint==1){
