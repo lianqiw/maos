@@ -64,7 +64,11 @@ void cp2gpu(cumapcell &dest, const mapcell *source){
 /*
   Convert a host dsp array to GPU sprase array.
 */
-cusp::cusp(const dsp *src_csc, int tocsr)
+cusp::cusp(const dsp *src_csc, /*Source dsp in CSC*/
+	   int tocsr           /*0: Keep in CSC
+				 1: Convert to CSR
+			       */
+    )
     :p(NULL),i(NULL),x(NULL),nx(0),ny(0),nzmax(0),type(SP_CSC),nref(0){
     if(!src_csc) return;
     dsp *src_trans=0;

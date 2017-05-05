@@ -33,7 +33,7 @@ typedef struct APER_T{
     loccell *locs_dm;    /**<Distorted locs when mapped onto DM*/
     dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for
 			    performance evaluation*/
-    dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
+    dmat *amp1;          /**<amplitude map defined on locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
@@ -247,7 +247,7 @@ typedef struct RECON_T{
 
     loccell *aloc;      /**<actuator grid*/
     mapcell *amap;      /**<square grid of actuators*/
-    mapcell *acmap;     /**For caching DM to intermediate plane*/
+    mapcell *acmap;     /**For caching DM to intermediate plane during fitting (GPU)*/
     lmat *anx;        /**<Size of each amap*/
     lmat *any;        /**<Size of each amap*/
     lmat *anloc;      /**<Size of each aloc*/
@@ -509,8 +509,7 @@ typedef struct SIM_T{
 			  system, not in reconstruction since it is unknown.*/
     dmat *ttmreal;
     mapcell *dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
-    dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
-			  onto DM space directly.*/
+    dcell *dmproj;     /**<The projection of atm onto DM space directly.*/
     mapcell *dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dccell *wfspsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/

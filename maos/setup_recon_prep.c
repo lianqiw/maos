@@ -88,11 +88,6 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
 				     0,0, parms->aper.d, parms->aper.din);
 	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], EPS, 1, NULL);
-	
-	if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
-	    int iwfs=parms->powfs[ipowfs].wfs->p[0];
-	    wfspupmask(parms, recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], iwfs);
-	}
     }
 }
 /**
@@ -294,7 +289,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    double guard=parms->dm[idm].guard*MAX(dx,dy);
 	    map_t *map;
 	    if(parms->dbg.dmfullfov && !parms->fit.square){//DM covers full fov
-		double D=(parms->sim.fov*ht+parms->aper.d+guard*2);
+		double D=(parms->sim.fov*fabs(ht)+parms->aper.d+guard*2);
 		long nx=D/dx+1;
 		long ny=D/dy+1;
 		map=mapnew(nx, ny, dx, dy, 0);
@@ -432,12 +427,13 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		continue;
 	    }
 	    const double  hs = parms->wfs[iwfs].hs;
+	    const double  hc = parms->powfs[ipowfs].hc;
 	    loc_t *loc=recon->ploc;
 	    if(recon->ploc_tel && recon->ploc_tel->p[iwfs]){
 		loc=recon->ploc_tel->p[iwfs];
 	    }
 	    for(int ips=0; ips<npsr; ips++){
-		const double  ht = recon->ht->p[ips];
+		const double  ht = recon->ht->p[ips]-hc;
 		const double  scale=1. - ht/hs;
 		const double dispx=parms->wfsr[iwfs].thetax*ht;
 		const double dispy=parms->wfsr[iwfs].thetay*ht;
@@ -678,10 +674,11 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS
 		continue;
 	    }
-	    double  hs = parms->wfs[iwfs].hs;
+	    const double  hs = parms->wfs[iwfs].hs;
+	    const double hc=parms->powfs[ipowfs].hc;
 	    for(int idm=0; idm<ndm; idm++){
-		double  ht = parms->dm[idm].ht;
-		double  scale=1. - ht/hs;
+		const double  ht = parms->dm[idm].ht-hc;
+		const double  scale=1. - ht/hs;
 		double  dispx=0, dispy=0;
 		if(!parms->recon.glao){
 		    dispx=parms->wfsr[iwfs].thetax*ht;

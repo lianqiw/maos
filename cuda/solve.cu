@@ -158,7 +158,7 @@ void cusolve_cbs::chol_solve(Real *out, const Real *in, stream_t &stream){
 	y=curmat(Cl.Nx(), 1);
     }
     perm_f_do<<<DIM(n, 256),0,stream>>>(y.P(), in, Cp.P(), n);
-    //only 1 block for synchronization.
+    //only 1 block for synchronization. //todo: improve the implementation.
     const int NTH=256;
     cuchol_solve_lower_do<<<1,NTH, NTH*sizeof(Real),stream>>>(y.P(), Cl.Px(), Cl.Pp(), Cl.Pi(), n); 
     perm_i_do<<<DIM(n, 256),0,stream>>>(out, y.P(), Cp.P(), n);

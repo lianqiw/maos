@@ -17,6 +17,7 @@
 */
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
+#define CUDA_API_PER_THREAD_DEFAULT_STREAM 1
 #include <cuda.h>
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
@@ -97,6 +98,7 @@ inline int CUDAFREE(void *p){
 
 int current_gpu();
 #define DO(A...) ({int _ans=(int)(A); if(_ans!=0&& _ans!=cudaErrorNotReady){error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
+#define DORELAX(A...) ({int _ans=(int)(A); static int counter=0; if(_ans!=0&& _ans!=cudaErrorNotReady){counter++; if(counter>5) error("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));else warning("GPU %d error %d, %s\n", current_gpu(), _ans, cudaGetErrorString((cudaError_t)_ans));}})
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
 #define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
@@ -158,8 +160,8 @@ extern int NULL_STREAM;
 #else
 #define CUDA_CHECK_ERROR
 #endif
-#define CUDA_SYNC_STREAM ({CUDA_CHECK_ERROR;DO(cudaStreamSynchronize(stream));})
-#define CUDA_SYNC_DEVICE ({CUDA_CHECK_ERROR;DO(cudaDeviceSynchronize());})
+#define CUDA_SYNC_STREAM ({CUDA_CHECK_ERROR;DORELAX(cudaStreamSynchronize(stream));})
+#define CUDA_SYNC_DEVICE ({CUDA_CHECK_ERROR;DORELAX(cudaDeviceSynchronize());})
 #define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info2("Warning NULL stream\n");} else DO(cudaStreamCreate(&stream))
 #define STREAM_DONE(stream) if(!NULL_STREAM) DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream))
 #define HANDLE_NEW(handle,stream) ({DO(cublasCreate(&handle)); DO(cublasSetStream(handle, stream));})

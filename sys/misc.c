@@ -35,7 +35,9 @@
 #include "path.h"
 #include "bin.h"
 /**
-   Obtain the basename of a file. The returnned string must be freed.
+   Obtain the basename of a file. The returnned string must be freed.  Behavior
+   is the same as basename() except that this implementation is reentrant and
+   thread safe.
 */
 char *mybasename(const char *fn){
     if(!fn || strlen(fn)==0) return NULL;
@@ -50,9 +52,25 @@ char *mybasename(const char *fn){
     }else{
 	sep++;
     }
-    char *bn=(char*)malloc(strlen(sep)+1);
-    strcpy(bn,sep);
-    return bn;
+    return mystrdup(sep);
+}
+/**
+   Obtain the dirname of a path. See mybasename().
+*/
+char *mydirname(const char *fn){
+    if(!fn || strlen(fn)==0) return NULL;
+    char fn2[PATH_MAX];
+    strncpy(fn2,fn, PATH_MAX);
+    /*If this is a folder, remove the last / */
+    if(fn2[strlen(fn2)-1]=='/')
+	fn2[strlen(fn2)-1]='\0';
+    char* sep=strrchr(fn2,'/');
+    if(!sep){
+	fn2[0]='.'; fn2[1]='\0';
+    }else{
+	sep[0]='\0';
+    }
+    return mystrdup(fn2);
 }
 /**
    Copy a file from file stream src to dest.
@@ -702,45 +720,6 @@ void parse_argopt(char *cmds, ARGOPT_T *options){
 	}
     }
 }
-#include <semaphore.h>
-/**
-   Block signals in critical region.
-*/
-int sig_block(int block){
-    sigset_t set;
-    sigfillset(&set);
-    if(block){
-	return sigprocmask(SIG_BLOCK, &set, NULL);
-    }else{
-	return sigprocmask(SIG_UNBLOCK, &set, NULL);
-    }
-}
-int sem_lock(const char *key, int lock){
-    char fnsem[PATH_MAX];
-    snprintf(fnsem, PATH_MAX, "%s_%s", key, USER);
-    if(fnsem[0]!='/'){
-	fnsem[0]='/';
-    }
-    sem_t *sem=sem_open(fnsem, lock==1?O_CREAT:0, 00700, 1);
-    if(sem==SEM_FAILED){
-	info("fnsem=%s\n", fnsem);
-	perror("sem_open");
-	return -1;
-    }else{
-	int value;
-	sem_getvalue(sem, &value);
-	if(lock){
-	    info2("locking %p (value=%d) ... ", sem, value);
-	    sem_wait(sem);
-	}else{
-	    info2("unlock %p (value=%d) ... ", sem, value);
-	    sem_post(sem);
-	}
-	(void)sig_block(lock);
-	info2("done\n");
-	return 0;
-    }
-}
  
 /**
    Set scheduling priorities for the process to enable real time behavior.
@@ -786,9 +765,10 @@ quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
     fprintf(stderr, "%s", msg);
     sync();
-    if(strncmp(msg, "ERROR", 5)){
+    if(strncmp(msg, "FATAL", 5)){
 	print_backtrace();
 	sync();
+	raise(1);
     }
     exit(0);
 }

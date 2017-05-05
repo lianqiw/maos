@@ -570,7 +570,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 		    if(parms->powfs[ipowfs].type==0){//shwfs
 			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
 		    }else{//pwfs.
-			double  ht = parms->dm[idm].ht;
+			double  ht = parms->dm[idm].ht-parms->powfs[ipowfs].hc;
 			double  scale=1. - ht/parms->wfs[iwfs].hs;
 			double  dispx=0, dispy=0;
 			dispx=parms->wfsr[iwfs].thetax*ht;

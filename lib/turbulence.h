@@ -29,12 +29,14 @@ typedef struct GENATM_T{
     double r0;       /**<The Fried Parameter*/
     double L0;       /**<The outer scale*/
     double dx;       /**<The sampling*/
+    double fmin;     /**<Minimum spatial frequency*/
+    double fmax;     /**<Maximum spatial frequency*/
     long nx;         /**<Number of pixels along x*/
     long ny;         /**<Number of pixels along y*/
     long nlayer;     /**<The number of layers*/
     long ninit;      /**<In Fractal method, the size of initial screen*/
     long share;      /**<Use file backend for sharing of atmosphere*/
-    dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)*/
+    dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
     /*The following are private data. do not set when call. */
     mapcell *screen;  /**<The destination screen pointer*/
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
@@ -47,7 +49,7 @@ mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);
 mapcell *fractal_screen(GENATM_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
-dmat *spatial_psd(long nx, long ny, double dx, double strength, 
+dmat *spatial_psd(long nx, long ny, double dx, double strength, double L0,
 		  double fmin, double fmax, double slope, double power);
 dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 

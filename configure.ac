@@ -162,7 +162,6 @@ DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
 DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
 DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
 
-CFLAGS+=" -fPIC"
 #inline definition:
 
 #in GCC, extern inline will use the inline and not emit function definition.
@@ -179,6 +178,7 @@ case "$CN" in
 	    minor=${CC_VERSION#*.}
 	    minor=${minor%%.*}
 	    if test $major -lt 11 ;then
+		AC_MSG_ERROR([OpenMP is not supported by ICC $CC_VERSION])
 		unset OPENMP_CFLAGS
 	    fi
 	fi
@@ -204,7 +204,8 @@ case "$CN" in
 	    #gnu_inline="yes"
 	    #fi
 	    #GCC introduced openmp task in 4.4
-	    if test $major -lt 4 -o $minor -lt 4 ;then
+	    if test $major -le 4 -a $minor -le 4 ;then
+		AC_MSG_ERROR([OpenMP is not supported by GCC $CC_VERSION])
 		unset OPENMP_CFLAGS
 	    fi
 	fi
@@ -231,9 +232,9 @@ OPTScc=${!optname}
 unset optname
 
 if test -z "$OPENMP_CFLAGS" ;then
-    CFLAGS+=" -pthread" #enables pthreads feature and links in the library
+    OPTScc+=" -pthread" #enables pthreads feature and links in the library
 else
-    CFLAGS+=" $OPENMP_CFLAGS"
+    OPTScc+=" $OPENMP_CFLAGS"
 fi
 OPTSextra=""
 
@@ -254,6 +255,7 @@ case "$host_os" in
 	AM_CONDITIONAL(LINUX, true)
 	LDEXE+=" -lrt" #need real time library.
 	LDOPTS+=" -Wl,--no-as-needed" #as-needed is default in some system (ubuntu) and cause mkl library checking to fail
+	CFLAGS+=" -fPIC"
 	CFLAGS_EXTRA="-g -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200112L"
 	if test "$use_release" = "yes" ;then
 	    CFLAGS+=" -D_GLIBC_2_5_SOURCE"
@@ -269,6 +271,7 @@ case "$host_os" in
 	;;
     *darwin*)
 	AM_CONDITIONAL(DARWIN, true)
+	CFLAGS+=" -fPIC"
 	CFLAGS_EXTRA=
 	mkl_avail="no"
 	libsuffix=fat
@@ -305,7 +308,9 @@ LDFLAGS+=" -L${LIB_DIR} -Wl,-rpath,${LIB_DIR}" #-avoid-version
 CFLAGS+=" -I${PRE_DIR}/include "
 DOWNLOAD_DIR="${TMP_DIR}/downloads"
 OPTS+=" $CFLAGS_EXTRA "
-
+if test "$system" = "win" ;then
+    LDFLAGS+=" -Wl,-rpath,${PREDIR}/bin"
+fi
 if test "$host_cpu" = "x86_64" ;then
     CFLAGS+=" -DDLONG "
     mflag="-m64"
@@ -369,44 +374,49 @@ fi
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
 #download LIBNANE file.tar.bz2 [outdir]
+extract(){
+    fn="$1"
+    OUTDIR="$2"
+    if test -z "$OUTDIR" ;then
+	AC_MSG_ERROR([Please specify third argument])
+	return 1
+    else
+	echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
+	mkdir -p "${OUTDIR}" || die "failed to mkdir"
+	if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
+	    rm -rf ${DOWNLOAD_DIR}/${fn}
+	    AC_MSG_NOTICE([File downloaded is not correct.])
+	    return 1
+	else
+	    return 0
+	fi
+    fi
+}
 download(){
     fn="$2"
-    if test -n "$3" ;then
-	OUTDIR="$3"
-    else
-	AC_MSG_ERROR([Please specify third argument])
-    fi
+    OUTDIR="$3"
     mkdir -p ${DOWNLOAD_DIR} || die "failed to mkdir"
-    retry=0
-    while test ${retry} -le 2 ;do
-	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-	    echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
-	    success=0
-	    for BASEURL in $BASEURLS ; do
-		echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
-		if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
+    if test -f ${DOWNLOAD_DIR}/${fn} ;then
+	extract "${fn}" "$OUTDIR"
+    fi
+    if ! test -f ${DOWNLOAD_DIR}/${fn} ;then
+	echo Downloading $1 from the MAOS website to ${DOWNLOAD_DIR}/${fn}
+	for BASEURL in $BASEURLS ; do
+	    echo $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" 
+	    if $wget "${BASEURL}/${fn}" "$wgetoutput" "${DOWNLOAD_DIR}/${fn}" ;then
+		if extract "$fn" "$OUTDIR" ;then
 		    break
-		else
-		    rm -rf ${DOWNLOAD_DIR}/${fn}
-		    AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 		fi
-	    done
-	    if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
-		AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
-	    fi
-	fi
-	if test -f ${DOWNLOAD_DIR}/${fn} ;then
-	    echo Extracting "${DOWNLOAD_DIR}/${fn}" to "${OUTDIR}"
-	    mkdir -p "${OUTDIR}" || die "failed to mkdir"
-	    if ! tar -xf "${DOWNLOAD_DIR}/${fn}" -C "${OUTDIR}" ;then
-		rm -rf ${DOWNLOAD_DIR}/${fn}
-		retry=$((retry+1))
-		AC_MSG_NOTICE([File downloaded is not correct.])
 	    else
-		break
+		rm -rf ${DOWNLOAD_DIR}/${fn}
+		AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
 	    fi
+	done
+	if test ! -f ${DOWNLOAD_DIR}/${fn} ;then
+	    AC_MSG_NOTICE(["Failed to download. Please download it manually and put in ${DOWNLOAD_DIR}/${fn}"])
 	fi
-    done
+    fi
+    
 }
 #compile LIBNAME srcfile.tar.gz [compile options]
 compile(){
@@ -419,10 +429,11 @@ compile(){
     download $name $file ${TMP_DIR}/$name
     fnlog=${TMP_DIR}/compile.log
     echo "Compiling $name. Check $fnlog for details"
+    echo CFLAGS=$CFLAGS > $fnlog
     if (cd ${TMP_DIR}/$name/* && export CFLAGS="$CFLAGS -O3"  && \
-	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} > $fnlog || \
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ > $fnlog) && \
-	make -j4 install >> $fnlog) ;then
+	(./configure --libdir=${LIB_DIR} $@ --prefix=${PRE_DIR} >> $fnlog 2>&1|| \
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=${PRE_DIR} $@ >> $fnlog 2>&1 ) && \
+	make -j4 install >> $fnlog 2>&1) ;then
 	echo "Compiled $name successfully."
     else
 	echo "Failed to compile $name. Please see $fnlog for details"
@@ -445,11 +456,11 @@ function set_lapack(){
 	    LAPACK+=" -lmkl_core"
 	    if test -n "$OPENMP_CFLAGS" ;then
 		if test "$CN" = "ICC" ;then
-		    LAPACK+=" -lmkl_intel_thread"
+		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
 		elif test "$CN" = "GCC" ;then
-		    LAPACK+=" -lmkl_gnu_thread"
+		    LAPACK+=" -lmkl_gnu_thread $OPENMP_CFLAGS"
 		else
-		    LAPACK+=" -lmkl_intel_thread"
+		    LAPACK+=" -lmkl_intel_thread $OPENMP_CFLAGS"
 		fi
 	    else
 		LAPACK+=" -lmkl_intel_thread -liomp5"
@@ -529,48 +540,55 @@ if test "$has_z" = "no" ;then
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
-#Check for FFTW3 header and library.
-AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
-AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
-if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-    FLAGS="--enable-threads --enable-shared --enable-static"
-    if test -n "$OPENMP_FLAGS" ;then
-        FLAGS+=" --enable-openmp"
-    fi
-    compile FFTW fftw.tar.bz2 $FLAGS
-    #compile FFTW fftw.tar.bz2 --enable-float 
-    unset ac_cv_lib_fftw3_fftw_execute
-    AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
-fi
-
-if test "$with_matlab" != "no" ;then
-    #cannot compile with single precision floating fft when compiling mex routines
-    has_fftwf=0
+#Check for FFTW interface in MKL
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
+if test "$builtin_fftw" = "yes";then
+    AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
+    fftw_threads=1
 else
-    AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
-fi
-AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
-if test x$has_fftwf = x1 ;then
-    LDFFT="-lfftw3 -lfftw3f"
-else
-    LDFFT="-lfftw3"
-fi
-fftw_threads=1
-if test "$with_matlab" = "no"  ;then
-    if test -n "$OPENMP_CFLAGS" ;then
-	AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
-    else
-	AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
-    fi
-    if test x$has_fftwf = x1 ;then
+    #Check for FFTW3 header and library.
+    AC_CHECK_LIB([fftw3], [fftw_execute],[has_fftw="yes"],[has_fftw='no'])
+    AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
+    if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+	FLAGS="--enable-threads --enable-shared --enable-static"
 	if test -n "$OPENMP_CFLAGS" ;then
-	    AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
-	else
-	    AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
+            FLAGS+=" --enable-openmp"
 	fi
+	compile FFTW fftw.tar.bz2 $FLAGS
+	#compile FFTW fftw.tar.bz2 --enable-float 
+	unset ac_cv_lib_fftw3_fftw_execute
+	AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR([Invalid FFTW library])])
     fi
-else
-    fftw_threads=0
+
+    if test "$with_matlab" != "no" ;then
+	#cannot compile with single precision floating fft when compiling mex routines
+	has_fftwf=0
+    else
+	AC_CHECK_LIB([fftw3f], [fftwf_execute],[has_fftwf=1],[has_fftwf=0])
+    fi
+    AC_DEFINE_UNQUOTED(HAS_FFTWF, [$has_fftwf], "FFTW single precision exists")
+    if test x$has_fftwf = x1 ;then
+	LDFFT="-lfftw3 -lfftw3f"
+    else
+	LDFFT="-lfftw3"
+    fi
+    fftw_threads=1
+    if test "$with_matlab" = "no"  ;then
+	if test -n "$OPENMP_CFLAGS" ;then
+	    AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
+	else
+	    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
+	fi
+	if test x$has_fftwf = x1 ;then
+	    if test -n "$OPENMP_CFLAGS" ;then
+		AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
+	    else
+		AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
+	    fi
+	fi
+    else
+	fftw_threads=0
+    fi
 fi
 AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 
@@ -587,17 +605,17 @@ LDCHOL="-lcholmod"
 #Check for libwebsocket
 AM_CONDITIONAL(HAS_LWS, false)
 if test "$use_websockets" = "yes" ;then
-    AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+    AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     AC_CHECK_HEADERS([libwebsockets.h], [], [has_lws="no"])
     if test "$has_lws" = "no" ;then #first try to compile from source. Needs cmake
-	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITHOUT_DEBUG=ON
-	unset ac_cv_lib_websockets_libwebsocket_service
-	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+	compile LIBWEBSOCKETS libwebsockets.tar.bz2 -DLIB_SUFFIX=${libsuffix} -DLWS_WITH_SSL=OFF -DLWS_IPV6=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_DAEMONIZE=ON -DLWS_WITHOUT_CLIENT=ON -DLWS_WITH_SHARED=OFF -DLWS_WITH_STATIC=ON
+	unset ac_cv_lib_websockets_lws_service
+	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" = "no" ;then #then download pre-compiled library and header.
 	download LIBWEBSOCKETS "libwebsockets${libsuffix}.tar.bz2" ${PRE_DIR}
-	unset ac_cv_lib_websockets_libwebsocket_service
-	AC_CHECK_LIB([websockets], [libwebsocket_service], [has_lws="yes"], [has_lws="no"], [])
+	unset ac_cv_lib_websockets_lws_service
+	AC_CHECK_LIB([websockets], [lws_service], [has_lws="yes"], [has_lws="no"], [])
     fi
     if test "$has_lws" != "no" ;then
 	AM_CONDITIONAL(HAS_LWS, true)
@@ -798,6 +816,8 @@ if test "$with_cuda" != "no" ;then
 	CUDA_L="${CUDADIR}/lib${libsuffix}"
     elif test -f "${CUDADIR}/lib/libcudart.$ldsuffix" ;then
 	CUDA_L="${CUDADIR}/lib"
+    elif test -f "${CUDADIR}/lib/x64/cudart.lib" ;then
+    	CUDA_L="${CUDADIR}/lib/x64"
     else
 	CUDA_L=""
     fi

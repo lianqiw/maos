@@ -335,9 +335,9 @@ void gpu_perfevl_queue(thread_t *info){
 	}
 	if(parms->sim.idealevl){
 	    gpu_dm2loc(iopdevl.P(), cudata->perf.locs_dm[ievl], cudata->dmproj, parms->ndm,
-		       parms->evl.hs->p[ievl], thetax, thetay, 0,0,1, stream);
+		       parms->evl.hs->p[ievl], 0, thetax, thetay, 0,0,1, stream);
 	}else if(simu->atm && !parms->sim.wfsalias){
-	    gpu_atm2loc(iopdevl.P(), cudata->perf.locs, parms->evl.hs->p[ievl], thetax, thetay, 
+	    gpu_atm2loc(iopdevl.P(), cudata->perf.locs, parms->evl.hs->p[ievl], 0, thetax, thetay, 
 			0,0,parms->sim.dt,isim, 1, stream);
 	}
 	if(simu->telws){//Wind shake 
@@ -398,14 +398,14 @@ void gpu_perfevl_queue(thread_t *info){
 	    TO_IMPLEMENT;
 	}else{
 	    gpu_dm2loc(iopdevl.P(), cudata->perf.locs_dm[ievl], cudata->dmreal, parms->ndm, 
-		       parms->evl.hs->p[ievl], thetax, thetay,
+		       parms->evl.hs->p[ievl], 0, thetax, thetay,
 		       0,0,-1, stream);
 	    if(simu->ttmreal){
 		curaddptt(iopdevl, cudata->perf.locs.P(), 0, -simu->ttmreal->p[0], -simu->ttmreal->p[1], stream);
 	    }
 	    if(imoao!=-1){
 		gpu_dm2loc(iopdevl.P(), cudata->perf.locs, cudata->dm_evl[ievl], 1,
-			   INFINITY, 0, 0, 0, 0, -1, stream);
+			   INFINITY, 0, 0, 0, 0, 0, -1, stream);
 	    }
 	}
 	if(save_evlopd){

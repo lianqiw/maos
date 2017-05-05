@@ -24,9 +24,11 @@
  */
 typedef struct PYWFS_T{
     double hs;         /**<Height of guide star*/
+    double hc;         /**<Conjugation height of WFS pupil*/
     double poke;       /**<How much to poke for mkg*/
     double modulate;   /**<Amount of modulation in radian*/
     int modulpos;      /**<Number of positions per modulation cycle*/
+    int modulring;     /**<Number of rings within the maximum radius to modulate*/
     int iwfs0;         /**<First iwfs for this powfs*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/

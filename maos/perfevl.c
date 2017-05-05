@@ -480,6 +480,7 @@ static void perfevl_mean(SIM_T *simu){
 	}
 	warning("The loop is diverging: OL: %g CL: %g\n",  
 		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
+	simu->last_report_time=0; //force print out.
     }
 }
 /**

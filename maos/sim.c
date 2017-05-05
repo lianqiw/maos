@@ -118,7 +118,7 @@ void maos_isim(int isim){
     }
     OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
-	    /* teporarily disable FR.M so that Mfun is used.*/
+	    /* temporarily disable FR.M so that Mfun is used.*/
 	    cell *FRM=recon->FR.M; recon->FR.M=NULL; 
 	    muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
 	    recon->FR.M=FRM;/*set FR.M back*/

@@ -212,5 +212,11 @@ using std::strerror;
     static __attribute__((constructor)) void init(){	\
 	READ_ENV_INT(A, 0, 1);				\
     }
+#define DEF_ENV_FLAG_LOCAL(A, default_val, min_val, max_val)	\
+    static int A=-1;						\
+    if(A==-1){					\
+	A=default_val;				\
+	READ_ENV_INT(A, min_val, max_val);	\
+    }
 #endif
 

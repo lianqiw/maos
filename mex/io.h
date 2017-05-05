@@ -26,7 +26,8 @@ typedef int16_t char16_t;
 #include <mex.h>
 #include <stdint.h>
 #include <errno.h>
-#if !defined(MX_API_VER) || MX_API_VER < 0x07030000
+#ifndef MWSIZE_MAX
+//#if !defined(MX_API_VER) || MX_API_VER < 0x07030000 //MATLAB2016 dropped this def.
 typedef unsigned int mwIndex;
 #endif
 typedef struct {float x; float y;} fcomplex;

@@ -52,7 +52,7 @@
    split tomography.  
    In closedloop mode, the gradients are from time step isim-1.
 */
-void tomofit(SIM_T *simu){
+void tomofit(dcell **dmout, SIM_T *simu, dcell *gradin){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
@@ -76,21 +76,21 @@ void tomofit(SIM_T *simu){
 	TIC_tm; tic_tm;
 #if USE_CUDA
 	if(parms->gpu.tomo && parms->ndm!=0){
-	    gpu_tomo(simu);
+	    gpu_tomo(simu, gradin);
 	}else
 #endif
-	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->recon.psol?simu->gradlastol:simu->gradlastcl);
+	    simu->cgres->p[0]->p[isim]=muv_solve(&simu->opdr, &recon->RL, &recon->RR, gradin);
 	toc_tm("Tomography");
     }
     if(parms->ndm>0){
 	TIC_tm; tic_tm;
 #if USE_CUDA
 	if(parms->gpu.fit){
-	    gpu_fit(simu);
+	    gpu_fit(dmout, simu);
 	}else
 #endif
 	{
-	    simu->cgres->p[1]->p[isim]=muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
+	    simu->cgres->p[1]->p[isim]=muv_solve(dmout, &recon->FL, &recon->FR, simu->opdr);
 	}
 	toc_tm("Fitting");
     }
@@ -214,7 +214,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
 		double g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New Gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
+		info2("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
 		writebin(psdol, "psdol_%d", simu->reconisim);		    
 		dcellfree(coeff);
 		dfree(psdol);
@@ -245,7 +245,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
 		const double g=0.5;
 		simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New Gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		info2("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
 		dfree(psdol);
 		dcellfree(coeff);
 	    }else{
@@ -278,7 +278,7 @@ void reconstruct(SIM_T *simu){
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
 	dcell *dmout, *gradin;
-	if(parms->recon.psol || parms->sim.idealfit){
+	if(parms->recon.psol){
 	    dmout=simu->dmfit;
 	    gradin=simu->gradlastol;
 	}else{
@@ -303,7 +303,7 @@ void reconstruct(SIM_T *simu){
 	}else{
 	    switch(parms->recon.alg){
 	    case 0://MVR
-		tomofit(simu);//tomography and fitting. output to dmfit
+		tomofit(&dmout, simu, gradin);//tomography and fitting. 
 		break;
 	    case 1://LSR
 		if(simu->gradlastcl){
@@ -319,9 +319,9 @@ void reconstruct(SIM_T *simu){
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
 	    }
 	}
-	if(parms->recon.psol || parms->sim.idealfit || !parms->sim.closeloop){
-	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
+	if(parms->recon.psol){
 	    //form error signal in PSOL mode
+	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 	    if(0){
 		warning_once("temporarily disable recon->actinterp\n");
 	    }else if(simu->recon->actinterp){
