@@ -127,12 +127,12 @@ def readbin_do(fp, isfits):
         dname='Unknown'
         err=1
     else:
-        dname=magic2dname[magic]
+        dname=magic2dname[magic & 0xFFFF]
 
     if dname[0:2]=='MC': #cell array
         header_cell=header;
-        out=np.asmatrix(np.zeros((ny, nx), dtype=object))
-        header=np.asmatrix(np.zeros((ny, nx), dtype=object))
+        out=np.zeros((ny, nx), dtype=object)
+        header=np.zeros((ny, nx), dtype=object)
 
         for iy in range(0, ny):
             for ix in range(0, nx):
@@ -148,13 +148,13 @@ def readbin_do(fp, isfits):
             header=header[0,]
     elif 'SP' in dname and nx>0 and ny>0: #sparse matrix
         datatype=dname2type[dname]
-        nz=np.fromfile(fp, dtype=np.uint64, count=1, sep='')
+        nz=np.fromfile(fp, dtype=np.uint64, count=1, sep='')[0]
         if '64' in dname:
             ijtype=np.int64
         else:
             ijtype=np.int32
-        Jc=np.fromfile(fp, dtype=ijtype, count=ny+1, sep='')
-        Ir=np.fromfile(fp, dtype=ijtype, count=nz, sep='')
+        Jc=np.fromfile(fp, dtype=ijtype, count=ny+1, sep='').astype(int)
+        Ir=np.fromfile(fp, dtype=ijtype, count=nz, sep='').astype(int)
         P=np.fromfile(fp, dtype=datatype, count=nz, sep='')
         out=sparse.csr_matrix((P, Ir, Jc), shape=(ny, nx))
     elif dname[0:2]=='M_' and nx>0 and ny>0:
@@ -163,7 +163,10 @@ def readbin_do(fp, isfits):
             datatype=datatype.newbyteorder('>')
         out=np.fromfile(fp, dtype=datatype, count=nx*ny, sep='')
         out.shape=(ny, nx)
-        out=np.asmatrix(out)
+
+        if ny==1:
+            out=out[0,]
+
         if isfits:
             byteread=datatype.itemsize*nx*ny;
             byteleft=byteread%2880
@@ -215,22 +218,24 @@ def readfits_header(fp):
                 END=1
         page=page+1
     return (bitpix2magic[bitpix], nx, ny, header)
-
+def readbin_magic(fp):
+    magic=readuint32(fp)
+    if magic==26112: #padding
+        magic=readuint32(fp)
+    return magic
 def readbin_header(fp):
     M_SKIP=26112;
     M_HEADER=25856;
-    magic=readuint32(fp)
-    if magic==M_SKIP:
-        magic=readuint32(fp)
+    magic=readbin_magic(fp)
     header=''
     while magic==M_HEADER:
         nlen=readuint64(fp)
-        header+=fp.read(nlen)
+        header+=fp.read(nlen).strip().decode('utf-8')
         nlen2=readuint64(fp)
         magic2=readuint32(fp);
         if nlen!=nlen2 or magic!=magic2:
             raise NameError('Header verification failed')
-        magic=readuint32(fp)
+        magic=readbin_magic(fp)
         if magic==M_SKIP:
             magic=readuint32(fp)
     nx=readuint64(fp)
@@ -239,7 +244,8 @@ def readbin_header(fp):
 
 if __name__ == '__main__':
     if len(sys.argv)>1:
-        res=read(sys.argv[1])
-        print(res)
+        for fn in sys.argv[1:]:
+            res=read(fn)
+            print(fn, ' is ', res.shape)
     else:
         raise ValueError("Usage: res=readbin.read(file name)")
