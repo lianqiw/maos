@@ -48,8 +48,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 		    warning2("Amplitude map does not match aperture diameter: amp.d=(%g, %g) aper.d=(%g, %g). Disabled\n", 
 			     amp_d, amp_din, parms->aper.d, parms->aper.din);
 		    mapfree(aper->ampground);
-		    free(((PARMS_T*)parms)->aper.fnamp);
-		    ((PARMS_T*)parms)->aper.fnamp=0;
 		}else{
 		    error("Use supplied amplitude map does not match aperture diameter: amp.d=(%g, %g) aper.d=(%g, %g).\n", 
 			  amp_d, amp_din, parms->aper.d, parms->aper.din);
