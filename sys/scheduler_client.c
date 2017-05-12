@@ -187,17 +187,24 @@ static void launch_scheduler(void){
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){
     char fn[PATH_MAX];
-    if(TEMP[0]=='/'){
+    int sock=-1;
+    int retry=0;
+    do{
+      if(TEMP[0]=='/'){//try local connection first.
 	snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
-    }else{
+	sock=connect_port(fn, PORT, 0, 0);
+      }
+      if(sock<0){//try socket connection
 	snprintf(fn, PATH_MAX, "localhost");
-    }
-    int sock=connect_port(fn, PORT, 0, 0);
-    if(sock<0 && block){
+	sock=connect_port(fn, PORT, 0, 0);
+      }
+      if(sock<0){
 	/*start the scheduler if it is not running*/
 	launch_scheduler();
-	sock=connect_port(fn, PORT, block, 0);
-    }
+	sleep(1);
+      }
+      retry++;
+    }while(sock<0 && block && retry<3);
     return sock;
 }
 

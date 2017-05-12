@@ -74,10 +74,10 @@ dsp* mkhb(loc_t *locin, loc_t *locout,
     const double *py=locout->locy;
     /*-1 because we count from 1 in the map. */
     map_t *map=locin->map;
-    const int nxmin=locin->npad;
-    const int nymin=locin->npad;
-    const int nxmax=map->nx-nxmin-1;
-    const int nymax=map->ny-nxmin-1;
+    //const int nxmin=locin->npad;
+    //const int nymin=locin->npad;
+    //const int nxmax=map->nx-nxmin-1;
+    //const int nymax=map->ny-nxmin-1;
     /*transpose of hfor */
     long nzmax=locout->nloc*4;
     hback = dspnew(locin->nloc, locout->nloc, nzmax);
@@ -98,7 +98,6 @@ dsp* mkhb(loc_t *locin, loc_t *locout,
 	}
 	fx[1]=myfma(px[iloc],dx_in2,displacex);
 	fy[1]=myfma(py[iloc],dy_in2,displacey);
-	if(fy[1]<nymin || fy[1]>nymax || fx[1]<nxmin || fx[1]>nxmax) continue;
 	SPLIT(fx[1],fx[1],nplocx);
 	SPLIT(fy[1],fy[1],nplocy);
 	/*Limit the point to within active region*/

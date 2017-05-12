@@ -515,7 +515,7 @@ __global__ void prop_cubic(Real *restrict out, const Real *restrict in, const in
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real thetax, Real thetay,
+void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax, Real thetay,
 		  Real mispx, Real mispy, Real dt, int isim, Real atmalpha, cudaStream_t stream){
     cumapcell &cuatm=cudata->atm;
     if(Z(fabs)(atmalpha)<EPS) return;
@@ -525,7 +525,7 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real thetax, Real th
     for(int ips=0; ips<cudata->nps; ips++){
 	const Real dx=cuatm[ips].dx;
 	const Real dy=cuatm[ips].dy;
-	const Real ht=cuatm[ips].ht;
+	const Real ht=cuatm[ips].ht-hc;
 	const Real vx=cuatm[ips].vx;
 	const Real vy=cuatm[ips].vy;
 	const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
@@ -564,10 +564,10 @@ void gpu_map2loc(const cumap_t &map, const culoc_t &loc, Real *phiout,
    Ray tracing of dm. use locondm for each dm. so that distortion can be properly accounted for. Use the other version if no distortion.
 */
 void gpu_dm2loc(Real *phiout, const cuarray<culoc_t> &locondm, const cumapcell &cudm, int ndm,
-		Real hs,  Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+		Real hs,  Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-	const Real ht=cudm[idm].ht;
+	const Real ht=cudm[idm].ht-hc;
 	gpu_map2loc(cudm[idm], locondm[idm], phiout, 
 		    alpha, ht*thetax+mispx, ht*thetay+mispy,
 		    1-ht/hs, 0, stream);
@@ -577,10 +577,10 @@ void gpu_dm2loc(Real *phiout, const cuarray<culoc_t> &locondm, const cumapcell &
    Ray tracing of dm. 
 */
 void gpu_dm2loc(Real *phiout, const culoc_t &locout, const cumapcell &cudm, int ndm,
-		Real hs, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
+		Real hs, Real hc, Real thetax, Real thetay, Real mispx, Real mispy, Real alpha, cudaStream_t stream){
     for(int idm=0; idm<ndm; idm++){
 	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
-	const Real ht=cudm[idm].ht;
+	const Real ht=cudm[idm].ht-hc;
 	gpu_map2loc(cudm[idm], locout, phiout, 
 		    alpha, ht*thetax+mispx, ht*thetay+mispy,
 		    1-ht/hs, 0, stream);

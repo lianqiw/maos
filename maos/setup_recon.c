@@ -1284,9 +1284,10 @@ void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms)
 	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    const double hc=parms->powfs[ipowfs].hc;
 	    if(parms->powfs[ipowfs].dither>1){
 		dmat *opd=dnew(powfs[ipowfs].loc->nloc, 1);
-		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 		double scale=1.-ht/parms->powfs[ipowfs].hs;
 		double dispx=ht*parms->wfsr[iwfs].thetax;
 		double dispy=ht*parms->wfsr[iwfs].thetay;

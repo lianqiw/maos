@@ -58,12 +58,17 @@ extern "C"{
 #define BLAS_DEF_REAL(X,T)						\
     void X(gesvd)(const char* jobu, const char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
 		  ptrdiff_t* lda, T* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt, \
-		  T* work, ptrdiff_t* lwork, ptrdiff_t* info );		
-
+		  T* work, ptrdiff_t* lwork, ptrdiff_t* info );		\
+    void X(gesdd)(const char *jobz, ptrdiff_t* m, ptrdiff_t* n, T* a, ptrdiff_t* lda, \
+		  T* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt,	\
+		  T* work, ptrdiff_t* lwork, ptrdiff_t* iwork, ptrdiff_t* info);
 #define BLAS_DEF_COMP(X,T,R)						\
     void X(gesvd)(const char* jobu, const char* jobvt, ptrdiff_t* m, ptrdiff_t* n, T* a, \
 		  ptrdiff_t* lda, R* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt, \
-		  T* work, ptrdiff_t* lwork, R*rwork, ptrdiff_t* info );		
+		  T* work, ptrdiff_t* lwork, R*rwork, ptrdiff_t* info ); \
+    void X(gesdd)(const char *jobz, ptrdiff_t* m, ptrdiff_t* n, T* a, ptrdiff_t* lda, \
+		  R* s, T* u, ptrdiff_t* ldu, T* vt, ptrdiff_t* ldvt,	\
+		  T* work, ptrdiff_t* lwork, R*rwork, ptrdiff_t* iwork, ptrdiff_t* info); 
 
 #define BLAS_D(A) d##A##_
 #define BLAS_S(A) s##A##_

@@ -351,15 +351,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
    
-    if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){//for NGS WFS only.
-	if(nwfsp>1){
-	    error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
-	}
-	int iwfs=parms->powfs[ipowfs].wfs->p[0];
-	wfspupmask(parms, powfs[ipowfs].loc, powfs[ipowfs].amp, iwfs);
-
-    }
-
     setup_powfs_misreg(powfs, parms, aper, ipowfs);
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
@@ -474,13 +465,6 @@ setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowf
 		    =mkamp(powfs[ipowfs].loc_tel->p[jwfs], aper->ampground,
 			   -parms->misreg.pupil->p[0], -parms->misreg.pupil->p[1], 
 			   parms->aper.d, parms->aper.din);
-		if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
-		    if(nwfsp>1){
-			error("dbg.pupmask=1, powfs can only have 1 wfs.\n");
-		    }
-		    wfspupmask(parms, powfs[ipowfs].loc_tel->p[jwfs],
-			       powfs[ipowfs].amp_tel->p[jwfs], iwfs);	
-		}
 		if(parms->powfs[ipowfs].type==0){
 		    const int nxsa=powfs[ipowfs].pts->nx * powfs[ipowfs].pts->nx;
 		    powfs[ipowfs].saa_tel->p[jwfs]=wfsamp2saa(powfs[ipowfs].amp_tel->p[jwfs], nxsa);
@@ -707,6 +691,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}
 	if(parms->save.setup){
 	    writebin(powfs[ipowfs].sprint,"powfs%d_sprint",ipowfs);
+	    writebin(powfs[ipowfs].srot,"powfs%d_srot",ipowfs);
+	    writebin(powfs[ipowfs].srsa,"powfs%d_srsa",ipowfs);
 	}
     }
     int pixpsax=pixpsay;
@@ -1134,8 +1120,6 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	if(llt->ncpa){
 	    writebin(llt->ncpa,"powfs%d_llt_ncpa", ipowfs);
 	}
-	writebin(powfs[ipowfs].srot,"powfs%d_srot",ipowfs);
-	writebin(powfs[ipowfs].srsa,"powfs%d_srsa",ipowfs);
     }
     if(parms->save.setup>1){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -1435,7 +1419,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 	if(aloc && dm_ncpa){//apply DM figure to powfs surface
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		double hs=parms->wfs[iwfs].hs;
+		const double hs=parms->wfs[iwfs].hs;
+		const double hc=parms->powfs[ipowfs].hc;
 		double thetax=parms->wfs[iwfs].thetax;
 		double thetay=parms->wfs[iwfs].thetay;
 		if(!powfs[ipowfs].opdbias){
@@ -1446,7 +1431,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		}
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(!dm_ncpa->p[idm] || dm_ncpa->p[idm]->nx==0) continue;
-		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
 		    double scale=1.-ht/hs;
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;

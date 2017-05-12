@@ -24,6 +24,7 @@
    misc routines.
 */
 char *mybasename(const char *fn);
+char *mydirname(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
 char *argv2str(int argc, const char *argv[], const char *delim);
@@ -76,8 +77,9 @@ typedef struct ARGOPT_T{
     int *nval;  /**<If val is array, this is the counter.*/
 }ARGOPT_T;
 void parse_argopt(char *cmds, ARGOPT_T *options);
-int sig_block(int block);
-int sem_lock(const char *key, int lock);
+//sem_lock is removed in favor of lock_file which can recover when a process exits.
+//int sig_block(int block);
+//int sem_lock(const char *key, int lock);
 void maos_version(void);
 void set_realtime(int icpu, int niceness);
 void register_signal_handler(int(*)(int));

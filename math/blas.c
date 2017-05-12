@@ -310,13 +310,13 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	if(Sdiag) *Sdiag=0;
 	return;
     }
-    int singleton=0;
+    int fd=-1;
     if(A->nx>2048 && !OMP_IN_PARALLEL){
-	singleton=1;
 	//Prevent multiple processes class gesvd simultaneously.
-	sem_lock("svd", 1);
+	char fnlock[PATH_MAX];
+	snprintf(fnlock, PATH_MAX,"%s/%s", TEMP, "svd");
+	fd=lock_file(fnlock, 1, 0);
     }
-    char jobuv='S';
     ptrdiff_t M=(int)A->nx;
     ptrdiff_t N=(int)A->ny;
     /*if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
@@ -330,20 +330,47 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     ptrdiff_t lwork=-1;
     T work0[1];
     ptrdiff_t info=0;
+    DEF_ENV_FLAG_LOCAL(USE_SDD, 0, 0, INT_MAX);
+    char jobuv='S';
+    if(USE_SDD && M>USE_SDD){
+	ptrdiff_t nmax=M<N?N:M;
+	ptrdiff_t *iwork=mymalloc(nmax*8,ptrdiff_t);
+	warning_once("Using dgesdd in SVD\n");
 #ifdef USE_COMPLEX
-    R *rwork=mymalloc(nsvd*5,R);
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
+	R* rwork=0;
+	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,iwork,&info);
 #else
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
+	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,      iwork,&info);
 #endif
-    lwork=(ptrdiff_t)creal(work0[0]);
-    T *work1=mymalloc(lwork,T);
+	lwork=(ptrdiff_t)creal(work0[0]);
+	T *work1=mymalloc(lwork,T);
 #ifdef USE_COMPLEX
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
+	rwork=mymalloc(nsvd*MAX(5*nsvd+7,2*nmax+2*nsvd+1),R);
+	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,iwork,&info);
+	free(rwork);
 #else
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,&info);
+	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,      iwork,&info);
 #endif
-    free(work1);
+	free(work1);
+	free(iwork);
+    }else{
+#ifdef USE_COMPLEX
+	R* rwork=0;
+	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
+#else
+	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,      &info);
+#endif
+	lwork=(ptrdiff_t)creal(work0[0]);
+	T *work1=mymalloc(lwork,T);
+#ifdef USE_COMPLEX
+	rwork=mymalloc(nsvd*5,R);
+	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
+	free(rwork);
+#else
+	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,      &info);
+#endif
+	free(work1);
+    }
     if(info){
 	writebin(A,"A_svd_failed");
 	if(info<0){
@@ -356,11 +383,8 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     if(U) *U=u; else X(free)(u);
     if(VT) *VT=vt; else X(free)(vt);
     X(free)(tmp);
-#ifdef USE_COMPLEX
-    free(rwork);
-#endif
-    if(singleton){
-	sem_lock("svd", 0);
+    if(fd>=0){
+	close(fd);
     }
 }
 

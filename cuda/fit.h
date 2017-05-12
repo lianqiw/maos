@@ -27,6 +27,7 @@ protected:
     /*the following data are input or intermediate data for the operation*/
     curecon_geom *grid;
     int nfit;
+    int idealfit;   /**<Use input from real turbulence instead of tomography output*/
     cugridcell acmap;
     curcell dmcache;
     curcell xcache;

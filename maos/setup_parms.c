@@ -346,6 +346,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl, zoomgain);
     READ_POWFS_RELAX(int, zoomset);
     READ_POWFS(dbl,hs);
+    READ_POWFS_RELAX(dbl,hc);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
     READ_POWFS_RELAX(dbl,dx);
@@ -365,6 +366,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,step);
     READ_POWFS_RELAX(dbl,modulate);
     READ_POWFS_RELAX(int,modulpos);
+    READ_POWFS_RELAX(int,modulring);
     READ_POWFS(int,nwfs);
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
@@ -376,7 +378,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->fnllt){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
-	    open_config(powfsi->fnllt,prefix,0);
+	    open_config(powfsi->fnllt,prefix);
 	    powfsi->llt=mycalloc(1,LLT_CFG_T);
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
@@ -753,7 +755,7 @@ static void readcfg_evl(PARMS_T *parms){
 	    ramin=ra2;
 	}
     }
-    READ_DBL(evl.dx);
+    READ_DBL(evl.dx); if(parms->evl.dx<=0) parms->evl.dx=parms->atm.dx;
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
@@ -1005,7 +1007,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
     READ_INT(dbg.cmpgpu);
-    READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
     READ_INT(dbg.nocgwarm);
     if(readcfg_peek("dbg.test")){
@@ -1022,6 +1023,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DBL(dbg.gradoff_scale);
     READ_DMAT(dbg.pwfs_psx);
     READ_DMAT(dbg.pwfs_psy);
+    READ_INT(dbg.pwfs_roof);
     READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
     READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
     READ_DBL(dbg.pwfs_pupelong);
@@ -1342,10 +1344,17 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 	}
 
-	if(powfsi->fieldstop>0 && (powfsi->fieldstop>10 || powfsi->fieldstop<1e-4)){
-	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+	if(powfsi->fieldstop>0){
+	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
+		error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+	    }
+	    powfsi->fieldstop/=206265.;
+	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+2/206265.){
+		warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
+			parms->powfs[ipowfs].fieldstop*206265, parms->powfs[ipowfs].modulate*206265*2);
+		parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].modulate*2+2/206265.;
+	    }
 	}
-	powfsi->fieldstop/=206265.;
 
 	if(powfsi->dither){
 	    parms->dither=1;
@@ -1878,6 +1887,20 @@ static void setup_parms_postproc_dirs(PARMS_T *parms){
 	error("count=%d, ndir=%d\n", count, ndir);
     }
     dresize(parms->dirs, 3, count);
+    double rmax2=0;
+    for(int ic=0; ic<count; ic++){
+	double x=IND(parms->dirs, 0, ic);
+	double y=IND(parms->dirs, 1, ic);
+	double r2=x*x+y*y;
+	if(r2>rmax2) rmax2=r2;
+    }
+    double fov=2*sqrt(rmax2);
+    if(parms->sim.fov<fov){
+	if(parms->dbg.dmfullfov){
+	    warning("sim.fov=%g is less than actual fov=%g. Changed\n", parms->sim.fov*206265, fov*206265);
+	}
+	parms->sim.fov=fov;
+    }
 }
 /**
    compute minimum size of atm screen to cover all the beam path. same for
@@ -2033,7 +2056,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
     }
-    if(parms->sim.idealfit==1){
+    if(parms->sim.idealfit){
 	parms->recon.psol=1;
     }else if(!parms->sim.closeloop){
 	parms->recon.psol=0;//open loop does not need psol
@@ -2096,14 +2119,16 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->powfs[ipowfs].wfsr=lnew(1,1);
 	    parms->powfs[ipowfs].wfsr->p[0]=ipowfs;
 	}
-	parms->fit.nfit=1;
-	dresize(parms->fit.thetax, 1, 1);
-	dresize(parms->fit.thetay, 1, 1);
-	dresize(parms->fit.wt, 1, 1);
-	dresize(parms->fit.hs, 1, 1);
-	parms->fit.thetax->p[0]=0;
-	parms->fit.thetay->p[0]=0;
-	parms->fit.wt->p[0]=1;
+	/*
+	  parms->fit.nfit=1;
+	  dresize(parms->fit.thetax, 1, 1);
+	  dresize(parms->fit.thetay, 1, 1);
+	  dresize(parms->fit.wt, 1, 1);
+	  dresize(parms->fit.hs, 1, 1);
+	  parms->fit.thetax->p[0]=0;
+	  parms->fit.thetay->p[0]=0;
+	  parms->fit.wt->p[0]=1;
+	*/
     }else{/*Use same information as wfs. */
 	parms->wfsr = parms->wfs;
 	parms->nwfsr= parms->nwfs;
@@ -2194,7 +2219,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
 
 
-    if(parms->recon.split==1 && !parms->sim.closeloop){
+    if(parms->recon.split==1 && !parms->sim.closeloop && parms->ndm>1){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");
     }
     if(parms->recon.split==2 && parms->sim.fuseint==1){
@@ -2505,67 +2530,67 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
     info2("\033[0;32mThere are %d powfs\033[0;0m\n", parms->npowfs);
-    for(i=0; i<parms->npowfs; i++){
-	info2("powfs %d: Order %2d, %sGS at %3.3g km. Thres %g%%",
-	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
-	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	info2("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%",
+	      ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
+	      parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 	int lrt=(parms->recon.split && parms->tomo.splitlrt);
-	if(parms->powfs[i].trs){
+	if(parms->powfs[ipowfs].trs){
 	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
-	    if(!parms->powfs[i].llt){
+	    if(!parms->powfs[ipowfs].llt){
 		warning("\n\ntrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
-	if(parms->powfs[i].dfrs){
-	    if(parms->powfs[i].nwfs<2){
-		parms->powfs[i].dfrs=0;
+	if(parms->powfs[ipowfs].dfrs){
+	    if(parms->powfs[ipowfs].nwfs<2){
+		parms->powfs[ipowfs].dfrs=0;
 	    }else{
 		info2("\033[0;32m Diff focus is removed in %s side in tomography.\033[0;0m",
 		      lrt?"both":"right hand");
 	    }
-	    if(!parms->powfs[i].llt){
+	    if(!parms->powfs[ipowfs].llt){
 		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
-	if(parms->powfs[i].pixblur>1.e-12){
-	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
+	if(parms->powfs[ipowfs].pixblur>1.e-12){
+	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[ipowfs].pixblur);
 	}
 	info2("\n");
-	if(parms->powfs[i].type==0){
+	if(parms->powfs[ipowfs].type==0){
 	    info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
-		  (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
-		  parms->powfs[i].pixpsa, 
-		  parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
-		  1./parms->sim.dt/parms->powfs[i].dtrat);
+		  (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
+		  parms->powfs[ipowfs].pixpsa, 
+		  parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
+		  1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}else{
-	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[i].dtrat);
+	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}
 	info2("wvl: [");
-	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){
-	    info2(" %g",parms->powfs[i].wvl->p[iwvl]);
+	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+	    info2(" %g",parms->powfs[ipowfs].wvl->p[iwvl]);
 	}
 	info2("]\n");
 	info2("    %s in reconstruction. ", 
-	      parms->powfs[i].gtype_recon==0?"Gtilt":"Ztilt");
-	if(parms->powfs[i].phystep>-1){
+	      parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
+	if(parms->powfs[ipowfs].phystep>-1){
 	    info2("Physical optics start at %d with '%s'",
-		  parms->powfs[i].phystep, 
-		  phytype[parms->powfs[i].phytypesim]);
+		  parms->powfs[ipowfs].phystep, 
+		  phytype[parms->powfs[ipowfs].phytypesim]);
 	}else{
 	    info2("Geomtric optics uses %s ",
-		  parms->powfs[i].gtype_sim==0?"gtilt":"ztilt");
+		  parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");
 	}
 	
-	if(parms->powfs[i].noisy){
+	if(parms->powfs[ipowfs].noisy){
 	    info2("\033[0;32m(noisy)\033[0;0m\n");
 	}else{
 	    info2("\033[0;31m(noise free)\033[0;0m\n");
 	}
-	if(parms->powfs[i].dither){
+	if(parms->powfs[ipowfs].dither){
 	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
-		  parms->powfs[i].dither_pllskip, parms->powfs[i].dither_pllrat);
+		  parms->powfs[ipowfs].dither_pllskip, parms->powfs[ipowfs].dither_pllrat);
 	    info2("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
-		  parms->powfs[i].dither_ogskip, parms->powfs[i].dither_ograt);
+		  parms->powfs[ipowfs].dither_ogskip, parms->powfs[ipowfs].dither_ograt);
 	}
     }
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
@@ -2685,7 +2710,8 @@ static void print_parms(const PARMS_T *parms){
 	    error("fit thetax or thetay is too large\n");
 	}
     }
-    info2("\033[0;32mThere are %d evaluation directions\033[0;0m\n", parms->evl.nevl);
+    info2("\033[0;32mThere are %d evaluation directions\033[0;0m at sampling 1/%g m.\n", 
+	  parms->evl.nevl, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
 	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
@@ -2717,8 +2743,8 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     addpath(bin_path);
     free(bin_path);
     free(config_path);
-    open_config(mainconf,NULL,0);/*main .conf file. */
-    open_config(extraconf, NULL, 1);
+    open_config(mainconf,NULL);/*main .conf file. */
+    open_config(extraconf, NULL);
     PARMS_T* parms=mycalloc(1,PARMS_T);
     readcfg_sim(parms);
     readcfg_aper(parms);

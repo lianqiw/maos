@@ -95,11 +95,11 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
     const long ncomp=pywfs->nominal->nx;
     const long ncomp2=ncomp/2;
     const Real pos_r=pywfs->modulate; 
-    const int pos_n=pos_r>0?pywfs->modulpos:1;
+    const int pos_n=pywfs->modulpos;
+    const int pos_nr=pywfs->modulring;
     cucmat &otf=cuwfs.pyotf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &wvf=cuwfs.pywvf[iwvl];
-	const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_n);
 	const Real wvl=locfft->wvl->p[iwvl];
 	cuzero(wvf, stream);
 	embed_wvf_do<<<DIM(phiout.Nx(),256),0,stream>>>
@@ -111,31 +111,37 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 	cucscale(wvf, otfnorm, stream);
 	//cuwrite(wvf, "gpu_wvf0");
 	const Real dtheta=locfft->wvl->p[iwvl]/(dx*nembed);
-	for(int ipos=0; ipos<pos_n; ipos++){
-	    const Real theta=2*M_PI*ipos/pos_n;
-	    const Real posx=cos(theta)*pos_r;
-	    const Real posy=sin(theta)*pos_r;
-	    const long offy=(long)round(posy/dtheta);//offset of center
-	    const long offy2=nembed2+offy-ncomp2;//offset of corner
-	    const long iy0=MAX(-offy2, 0);
-	    const long ny2=MIN(ncomp, nembed-offy2)-iy0;
+	for(int ir=0; ir<pos_nr; ir++){
+	    double pos_ri=pos_r*(ir+1)/pos_nr;
+	    //Scale number of points by ring size to have even surface brightness
+	    int pos_ni=pos_n*(ir+1)/pos_nr;
+	    const Real alpha=pywfs->wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr);
+	    for(int ipos=0; ipos<pos_ni; ipos++){
+		const Real theta=2*M_PI*ipos/pos_ni;
+		const Real posx=cos(theta)*pos_ri;
+		const Real posy=sin(theta)*pos_ri;
+		const long offy=(long)round(posy/dtheta);//offset of center
+		const long offy2=nembed2+offy-ncomp2;//offset of corner
+		const long iy0=MAX(-offy2, 0);
+		const long ny2=MIN(ncomp, nembed-offy2)-iy0;
 
-	    const long offx=(long)round(posx/dtheta);
-	    const long offx2=nembed/2+offx-ncomp2;
-	    const long ix0=MAX(-offx2, 0);
-	    const long nx2=MIN(ncomp, nembed-offx2)-ix0;
-	    cuzero(otf, stream);
-	    cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
-		(otf.P()+ix0+iy0*ncomp, 
-		 cupowfs->pyramid[iwvl].P()+ix0+iy0*ncomp, 
-		 wvf.P()+ix0+offx2+(iy0+offy2)*nembed,
-		 ncomp, nembed, nx2, ny2);
-	    //cuwrite(otf, "gpu_wvf1_%d", ipos);
-	    CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
-	    //cuwrite(otf, "gpu_wvf2_%d", ipos);
-	    curaddcabs2(cuwfs.pypsf, 1, otf, alpha, stream);
-	    //cuwrite(cuwfs.pypsf, "gpu_wvf3_%d", ipos);
-	}
+		const long offx=(long)round(posx/dtheta);
+		const long offx2=nembed/2+offx-ncomp2;
+		const long ix0=MAX(-offx2, 0);
+		const long nx2=MIN(ncomp, nembed-offx2)-ix0;
+		cuzero(otf, stream);
+		cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
+		    (otf.P()+ix0+iy0*ncomp, 
+		     cupowfs->pyramid[iwvl].P()+ix0+iy0*ncomp, 
+		     wvf.P()+ix0+offx2+(iy0+offy2)*nembed,
+		     ncomp, nembed, nx2, ny2);
+		//cuwrite(otf, "gpu_wvf1_%d", ipos);
+		CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
+		//cuwrite(otf, "gpu_wvf2_%d", ipos);
+		curaddcabs2(cuwfs.pypsf, 1, otf, alpha, stream);
+		//cuwrite(cuwfs.pypsf, "gpu_wvf3_%d", ipos);
+	    }//iposr: points along a ring.
+	}//ir: ring of dithering
 	embed_do<<<DIM(ncomp*ncomp, 256),0,stream>>>
 	    (otf, cuwfs.pypsf, ncomp*ncomp);
 	//cuwrite(otf, "gpu_wvf4");
@@ -231,7 +237,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
 	cp2gpu(cumapin, mapinsq);
 	//cuzero(phiout, stream);
 	curcp(phiout, phiout0, stream);
-	gpu_dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, displacex, displacey, 0, 0, 1, stream);
+	gpu_dm2loc(phiout, culocout, cumapin, cumapin.Nx(), pywfs->hs, pywfs->hc, displacex, displacey, 0, 0, 1, stream);
 	//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
 	//cuwrite(phiout, "gpu_phiout_%d", imod);
 	cuzero(ints, stream);

@@ -233,10 +233,11 @@ static void Tomo_prop_do(thread_t *info){
 	if(parms->powfs[ipowfs].skip) continue;
 	dmat *xx=dnew(recon->ploc->nloc, 1);
 	const double hs=parms->wfs[iwfs].hs;
+	const double hc=parms->powfs[ipowfs].hc;
 	for(int ips=0; ips<nps; ips++){
 	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
 		/*Do the ray tracing instead of using HXW. */
-		double ht=recon->ht->p[ips];
+		double ht=recon->ht->p[ips]-hc;
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
@@ -333,9 +334,11 @@ static void Tomo_iprop_do(thread_t *info){
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
 		const double hs=parms->wfs[iwfs].hs;
+		const int ipowfs=parms->wfs[iwfs].powfs;
+		const double hc=parms->powfs[ipowfs].hc;
 		double displace[2];
-		displace[0]=parms->wfsr[iwfs].thetax*ht;
-		displace[1]=parms->wfsr[iwfs].thetay*ht;
+		displace[0]=parms->wfsr[iwfs].thetax*(ht-hc);
+		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc);
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
 		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
@@ -520,8 +523,11 @@ void FitR(dcell **xout, const void *A,
 	    }
 	}
     }
+    //writebin(xp, "CPU_FitR_x1");
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
+    //writebin(xp, "CPU_FitR_x2");
     dcellmm(xout, recon->HA, xp, "tn", alpha);
+    //writebin(*xout, "CPU_FitR_x3");
     dcellfree(xp);
 }
 /**
@@ -682,11 +688,16 @@ void shift_grad(SIM_T *simu){
 	}
     }else{
 	if(parms->recon.glao){
-	    /* Every the gradients in GLAO mode. */
+	    /* Average the gradients in GLAO mode. */
 	    if(simu->gradlastcl){
 		dcellzero(simu->gradlastcl);
 	    }else{
-		simu->gradlastcl=dcellnew(parms->nwfsr, 1);
+		long nnx[parms->nwfsr];
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		    int ipowfs=parms->wfsr[iwfs].powfs;
+		    nnx[iwfs]=simu->powfs[ipowfs].saloc->nloc*2;
+		}
+		simu->gradlastcl=dcellnew3(parms->nwfsr, 1, nnx, NULL);
 	    }
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		const double scale=1./parms->powfs[ipowfs].nwfs;

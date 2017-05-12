@@ -43,7 +43,10 @@ void zfarr_push(zfarr *ca, int i, const void *p){
 	warning("p is empty\n");
 	return;//nothing to be done
     }
-    if(!ca) error("zfarr is NULL\n");
+    if(!ca){
+	warning("zfarr is NULL\n");
+	return;
+    }
     if(i>=0 && ca->cur>i) {
 	warning("Invalid. cur=%ld, i=%d, skip.\n", ca->cur, i);
 	return;

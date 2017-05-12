@@ -22,14 +22,14 @@
 namespace cuda_recon{
 
 W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
-    nxx=R_nxx; nxx=0;
+    nxx=R_nxx; 
     if(!R_W0 || !R_W1){
 	error("R0, R1 must not be empty\n");
     }
     cp2gpu(W1, R_W1);
-    {
-	/*W0 of partially illuminates subaps are stored as sparse matrix in W0f in
-	  GPU. W0 of fully illuminated subaps are stored in W0p.*/
+    if(1){
+	/*W0 of partially illuminates points are stored as sparse matrix in W0f in
+	  GPU. W0 of fully illuminated points are stored in W0p.*/
 	spint *pp=R_W0->p;
 	spint *pi=R_W0->i;
 	double *px=R_W0->x;
@@ -59,10 +59,14 @@ W01_T::W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx){
 	}
 	pp2[R_W0->ny]=count;
 	W0new->nzmax=count;
-	W0p=cusp(W0new, 1);
+	//W0new is the transpose of W0p.
+	dsp *W0new2=dsptrans(W0new); dspfree(W0new);
+	W0p=cusp(W0new2, 1);
 	cp2gpu(W0f, full, count2, 1);
-	dspfree(W0new);
+	dspfree(W0new2);
 	cudaFreeHost(full);
+    }else{
+	W0p=cusp(R_W0, 1);	
     }
 }
 /**

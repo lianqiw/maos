@@ -134,14 +134,17 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }
     char fnotf[PATH_MAX];
     char fnlock[PATH_MAX];
-    snprintf(fnotf,PATH_MAX,"%s/.aos/cache/",HOME);
-    if(!exist(fnotf)) 
+    snprintf(fnotf,PATH_MAX,"%s/SEOTF/",CACHE);
+    if(!exist(fnotf)) {
 	mymkdir("%s",fnotf);
+    }else{
+	remove_file_older(fnotf, 365*24*3600);
+    }
     long nsa=powfs[ipowfs].saloc->nloc;
-    snprintf(fnotf,PATH_MAX,"%s/.aos/cache/%s_D%g_%g_"
+    snprintf(fnotf,PATH_MAX,"%s/SEOTF/%s_D%g_%g_"
 	     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
 	     "nwvl%d_%g_embfac%d_ncompx%d_%dx%d_v2",
-	     HOME, fnprefix,
+	     CACHE, fnprefix,
 	     parms->aper.d,parms->aper.din, 
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].pts->dsa,nsa,
@@ -222,10 +225,16 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     }
     snprintf(fnprefix,80,"SELOTF_%0x",key);
     char fnlotf[PATH_MAX];
-    snprintf(fnlotf,PATH_MAX,"%s/.aos/cache/%s_"
+    snprintf(fnlotf,PATH_MAX,"%s/SELOTF/", CACHE);
+    if(!exist(fnlotf)){
+	mymkdir("%s",fnlotf);
+    }else{
+	remove_file_older(fnlotf, 365*24*3600);
+    }
+    snprintf(fnlotf,PATH_MAX,"%s/SELOTF/%s_"
 	     "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
 	     "nwvl%d_%g_embfac%d_v2", 
-	     HOME, fnprefix,
+	     CACHE, fnprefix,
 	     parms->powfs[ipowfs].r0, parms->powfs[ipowfs].L0, 
 	     powfs[ipowfs].llt->pts->dsa,
 	     1./powfs[ipowfs].llt->pts->dx,

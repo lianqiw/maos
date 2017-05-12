@@ -124,6 +124,7 @@ typedef struct POWFS_CFG_T{
 		      to disable*/
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
     double hs;     /**<height of guide star*/
+    double hc;     /**<conjugation height of WFS pupil*/
     double saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
     double safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
     double saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
@@ -241,6 +242,7 @@ typedef struct POWFS_CFG_T{
     /*Options for Pywfs*/
     double modulate;  /**<Pyramid modulation diamter in arcsec*/
     int    modulpos;  /**<Number of positions per modulation cycle*/
+    int    modulring; /**<Number of rings within the maximum radius to modulate*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -602,6 +604,7 @@ typedef struct DBG_CFG_T{
     double pwfs_flate;/**<pyramid flat edge angular width */
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
     double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
+    double pwfs_roof; /**<Make pyramid WFS a single roof only.*/
     dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
 }DBG_CFG_T;
@@ -612,7 +615,7 @@ typedef struct GPU_CFG_T{
     int wfs;         /**<Use GPU for wavefront sensor*/
     int evl;         /**<Use GPU for performance evaluation*/
     int tomo;        /**<Use GPU for tomography*/
-    int fit;         /**<Use GPU for DM fitting*/
+    int fit;         /**<Use GPU for DM fitting. Options: 1) assembled matrix 2) matrix free for RHS.*/
     int lsr;         /**<Use GPU for least square reconstruction*/
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/

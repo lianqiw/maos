@@ -166,15 +166,15 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(parms->gpu.evl){
 	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2);
 	}
-	if(parms->gpu.wfs){
+	if(parms->gpu.wfs && !parms->sim.idealfit){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*4;
 	    }
 	}
-	if(parms->gpu.tomo || parms->gpu.fit){
+	if((parms->gpu.tomo || parms->gpu.fit)&& !parms->sim.idealfit){
 	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*4;
 	}
-	mem_minimum*=2;
+	//mem_minimum*=2;
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{
