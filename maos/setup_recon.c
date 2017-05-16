@@ -99,7 +99,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->recon.glao && saneaxy->ny!=1){
 		error("Please average powfs[ipowfs].saneaxy for GLAO mode.\n");
 	    }
-	    if(saneaxy->ny>1 || iwfs==iwfs0 || parms->wfs[iwfs].sabad){
+	    if(saneaxy->ny>1 || iwfs==iwfs0 || parms->wfs[iwfs].sabad || parms->wfs[iwfs0].sabad){
 		int ind=saneaxy->ny>1?parms->powfs[ipowfs].wfsind->p[iwfs]:0;
 		dcell *saneaxyi=dcellnew(nsa, 1);
 		dcell *saneaxyl=dcellnew(nsa, 1);
@@ -126,7 +126,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}else{
 	    /*compute nea from nearecon, scaled by area and dtrat. nea scales as sqrt(1/dtrat) */
-	    if(iwfs==iwfs0  || parms->wfs[iwfs].sabad){
+	    if(iwfs==iwfs0  || parms->wfs[iwfs].sabad || parms->wfs[iwfs0].sabad){
 		const double neasq=pow(parms->powfs[ipowfs].nearecon/206265000.,2)/parms->powfs[ipowfs].dtrat;
 		if(neasq<1.e-30) error("nea is too small\n");
 		dmat *nea=dnew(nsa,2);
