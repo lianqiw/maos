@@ -27,8 +27,10 @@
 #include "pywfs.h"
 /**
    \file maos/ahst.c Contains functions to setup NGS modes and reconstructor
-   using AHST for one or two DMs.  Use parms->wfsr instead of parms->wfs for wfs
+   using AHST for one or more DMs.  Use parms->wfsr instead of parms->wfs for wfs
    information, which hands GLAO mode correctly.
+
+   The number of modes controlled by NGS is either 2 (ndm==1) or 5 (ndm>1) plus focus (optional)
    */
 
 static TIC;
@@ -481,7 +483,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
-    if(ndm==2 && fabs(parms->dm[0].ht)>1.e-10){
+    if(ndm>1 && fabs(parms->dm[0].ht)>1.e-10){
 	error("Error configuration. First DM is not on ground\n");
     }
     double hs=NAN;
@@ -500,8 +502,8 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }
     ngsmod->nmod=ngsmod_nmod(ndm, hs);
     if(isfinite(hs) && (parms->sim.mffocus || parms->tomo.ahst_idealngs || parms->sim.ahstfocus)){
-	if(parms->ndm==1){
-	    error("Not implemented\n");
+	if(parms->ndm!=2){
+	    warning("Not tested.\n");
 	}
 	ngsmod->nmod++;/*add a global focus mode.*/
     }
