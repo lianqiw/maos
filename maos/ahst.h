@@ -26,7 +26,7 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
 
 void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain);
 
-void ngsmod2science(dmat *iopd, loc_t *loc, const NGSMOD_T *ngsmod, 
+void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod, 
 		    double thetax, double thetay,
 		    const double *mod, double alpha);
 void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 

@@ -1730,11 +1730,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.r0z=%g\n",parms->atm.r0z);
     fprintf(fp,"maos.dt=%g\n",parms->sim.dt);
     fprintf(fp,"maos.zadeg=%g\n",zadeg);
-    if(parms->ndm==2){
-	fprintf(fp,"maos.hc=%g\n",parms->dm[1].ht);
-    }else{
-	error("Invalid");
-    }
+    fprintf(fp,"maos.hc=%g\n",parms->dm[parms->ndm-1].ht);
     fprintf(fp,"maos.hs=%g\n",recon->ngsmod->hs);
     fprintf(fp,"maos.nmod=%d\n",recon->ngsmod->nmod);
     fprintf(fp,"maos.D=%g\n",parms->aper.d);

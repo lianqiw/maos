@@ -34,7 +34,7 @@
    Compatibility mode: old keys are automatically renamed to new keys.
 */
 #define COMPATIBILITY 1
-
+DEF_ENV_FLAG(PERMISSIVE, 0)
 #if COMPATIBILITY == 1
 #define RENAME(old,new)							\
     if(!strcmp(var,#old)){						\
@@ -172,11 +172,19 @@ static void print_key(const void *key, VISIT which, int level){
 		fprintf(fpout, "\n");
 	    }
 	}
-	if(!store->data || strcmp(store->data, "ignore")){
+	if(store->used!=1 && (!store->data || strcmp(store->data, "ignore"))){
 	    if(store->used==0 ){
-		error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+		if(PERMISSIVE){
+		    warning("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+		}else{
+		    error("key \"%s\" is not recognized, value is %s\n", store->key, store->data);
+		}
 	    }else if(store->used!=1){
-		error("Key %s is used %ld times\n", store->key, store->used);
+		if(PERMISSIVE){
+		    warning("Key %s is used %ld times\n", store->key, store->used);
+		}else{
+		    error("Key %s is used %ld times\n", store->key, store->used);
+		}
 	    }
 	}
     }

@@ -1239,9 +1239,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	parms->sim.dmproj=1;/*need dmproj */
     }
     if(parms->sim.ahstfocus){
-	if(parms->recon.split!=1 || !parms->sim.mffocus){
-	    parms->sim.ahstfocus=0;
-	    warning("Disable ahstfocus\n");
+	if(parms->recon.split!=1 || !parms->sim.mffocus || parms->ndm==1){
+	    parms->sim.ahstfocus=0;//no need ahstfocus
+	    info("Disable sim.ahstfocus.\n");
 	}
     }
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){

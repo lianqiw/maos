@@ -155,9 +155,11 @@ typedef struct NGSMOD_T{
     dcell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
     dcell *Pngs;    /**<Project DM command to NGS modes */
     dcell *Modes;   /**<DM vector for the modes*/
-    dspcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
+    dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahstfocus;  /**<records parms->sim.ahstfocus*/
+    int withfocus;  /**<Include focus in NGS controlled modes*/
+    int withps;     /**<Include plate scale in NGS controlled modes*/
 }NGSMOD_T;
 /**
    contains data for Fourier Domain Preconditioner.
