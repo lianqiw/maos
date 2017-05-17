@@ -526,8 +526,7 @@ typedef struct SIM_CFG_T{
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
-    int ahstfocus;   /**<New new mode split in ahst + focus tracking*/
-
+    int ahstfocus;   /**<Make magnification mode free of focus in science*/
     int mvmport;     /**<Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction.*/
     char *mvmhost;   /**<Which host does the MVM server run*/
     int mvmsize;     /**<number of gradients to send each time. 0 is all.*/

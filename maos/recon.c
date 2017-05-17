@@ -139,16 +139,15 @@ void recon_split(SIM_T *simu){
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
+	    if(!parms->tomo.ahst_idealngs){//Low order NGS recon. 
 		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-		if(parms->sim.mffocus && recon->ngsmod->nmod==6){
-		    //Do LPF on focus.
+		if(parms->sim.mffocus && ngsmod->withfocus){ //Do LPF on focus.
 		    const double lpfocus=parms->sim.lpfocuslo;
-		    double ngsfocus=simu->Merr_lo->p[0]->p[5];
+		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->nmod-1];
 		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-		    simu->Merr_lo->p[0]->p[5]=simu->ngsfocuslpf;
+		    simu->Merr_lo->p[0]->p[ngsmod->nmod-1]=simu->ngsfocuslpf;
 		}
-	    }/*else: there is ideal NGS correction done in perfevl. */
+	    }//else: there is ideal NGS correction done in perfevl. 
 	}
 	    break;
 	case 2:{

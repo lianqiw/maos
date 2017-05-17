@@ -660,7 +660,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
    if sim.mffocus==2: We apply a LPF on the average focus from six LGS WFS, and
    then remove this value from all LGS WFS. The differential focus is still
    present and powfs.dfrs need to be set to 1 to handle it in tomography. This
-   is the original focus tracking method.
+   is the original focus tracking method, and is no longer recommended.
 */
 static void wfsgrad_lgsfocus(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
