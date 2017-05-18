@@ -37,8 +37,8 @@ typedef struct MAOS_S{
     double D;      /**<Diameter of telescope*/
     double *wvl;   /**<Wavelength vector*/
     int nwvl;      /**<Number of wavelength*/
-    int npowfs;    /**<number of types of wfs.*/
-    int nmod;      /**<must be 5;*/
+    int npowfs;    /**<Number of types of wfs.*/
+    int nmod;      /**<Number of modes controlled by LOW NGS WFS;*/
     int *seeds;    /**<List of seed for maos PSF outputs.*/
     int nseed;     /**<Number of seeds*/
     double *wddeg; /**<wind direction list for each layer. just to propagate to
@@ -66,6 +66,8 @@ typedef struct MAOS_S{
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
     int mffocus;     /**<1: maos already does sodium tracking*/
+    int withfocus;   /**<1: Contains focus mode*/
+    int withps;      /**<1: Contains plate scale mode*/
     char *fnrange;   /**<sodium range time series. forward to maos.*/
 }MAOS_S;
 

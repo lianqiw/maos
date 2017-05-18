@@ -323,10 +323,14 @@ static void skysim_read_mideal(SIM_S *simu){
     dfree(simu->mideal);
     dfree(simu->mideal_oa);
     simu->mideal=dread("%s_%d.bin",parms->maos.fnmideal,simu->seed_maos);
-    if(parms->maos.nmod>5 && simu->mideal->nx==5){
-	warning("Resize mideal (compatible mode)\n");
-	dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
-    }	
+    if(parms->maos.nmod != simu->mideal->nx){
+	if(parms->maos.nmod>5 && simu->mideal->nx==5){
+	    warning("Resize mideal (compatible mode)\n");
+	    dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
+	}else{
+	    error("Loaded mideal (%ld rows) does not agree with nmod=%d\n", simu->mideal->nx, parms->maos.nmod);
+	}
+    }
     dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
     simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
     dcellfree(midealp);
@@ -366,16 +370,20 @@ static void skysim_calc_psd(SIM_S *simu){
 	    dmat *psdi=psd1dt(xi, 1, parms->maos.dt);
 	    if(im<2){
 		add_psd2(&simu->psd_tt, psdi);
-	    }else if(im<5){
+	    }else if(parms->maos.withps && im<5){
 		add_psd2(&simu->psd_ps, psdi);
-	    }else if(im==5){
+	    }else{
 		add_psd2(&simu->psd_focus, psdi);
 	    }
 	    dfree(xi);
 	    dfree(psdi);
 	}
 	dfree(x);
-	simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
+	if(simu->psd_ps){
+	    simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
+	}else{
+	    simu->psd_ngs=dref(simu->psd_tt);
+	}
     }else{
 	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
 	simu->psd_ps=ddup(parms->skyc.psd_ps);
@@ -429,7 +437,7 @@ static void skysim_prep_gain(SIM_S *simu){
     simu->gain_ps =mycalloc(parms->skyc.ndtrat,dcell*);
     simu->gain_ngs=mycalloc(parms->skyc.ndtrat,dcell*);
     int servotype=parms->skyc.servo;
-    if(parms->maos.nmod>5){
+    if(parms->maos.withfocus){
 	simu->gain_focus=mycalloc(parms->skyc.ndtrat,dcell*);
     }
     TIC;tic;
@@ -437,11 +445,13 @@ static void skysim_prep_gain(SIM_S *simu){
 	long dtrat=parms->skyc.dtrats->p[idtrat];
 	simu->gain_tt[idtrat]=servo_optim(simu->psd_tt, parms->maos.dt,
 					  dtrat, parms->skyc.pmargin, sigma2, servotype);
-	simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
-					  dtrat, parms->skyc.pmargin, sigma2, servotype);
+	if(parms->maos.withps){
+	    simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
+					      dtrat, parms->skyc.pmargin, sigma2, servotype);
+	}
 	simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs, parms->maos.dt,
 					   dtrat, parms->skyc.pmargin, sigma2, servotype);
-	if(parms->maos.nmod>5){
+	if(parms->maos.withfocus){
 	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
 						 dtrat, parms->skyc.pmargin, sigma2, servotype);
 	}

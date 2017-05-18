@@ -389,7 +389,6 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
     const double scale=pow(1.-hc/hs, -2);
     const double scale1=1.-scale;
     const int nmod=parms->maos.nmod;
-    assert(nmod>=5 && nmod<=6);
     for(int istar=0; istar<nstar; istar++){
 	star[istar].g=dcellnew(npowfs, 1);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -402,22 +401,24 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 		const double xm=powfs[ipowfs].locxamp[isa];/*dot of x with amp. */
 		const double ym=powfs[ipowfs].locyamp[isa];
 
-		IND(pg,isa,0)     = 1.;
-		IND(pg,isa+nsa,1) = 1.;
-		if(parms->maos.ahstfocus){/*This mode has no global focus*/
-		    IND(pg,isa,2)     = ( - 2*thetax*hc*scale);
-		    IND(pg,isa+nsa,2) = ( - 2*thetay*hc*scale);
-		}else{
-		    IND(pg,isa,2)     = (scale1*2*xm - 2*thetax*hc*scale);
-		    IND(pg,isa+nsa,2) = (scale1*2*ym - 2*thetay*hc*scale);
+		IND(pg,isa,0)     = 1.;//tip
+		IND(pg,isa+nsa,1) = 1.;//tilt
+		if(parms->maos.withps){
+		    if(parms->maos.ahstfocus){/*This mode has no global focus*/
+			IND(pg,isa,2)     = ( - 2*thetax*hc*scale);
+			IND(pg,isa+nsa,2) = ( - 2*thetay*hc*scale);
+		    }else{
+			IND(pg,isa,2)     = (scale1*2*xm - 2*thetax*hc*scale);
+			IND(pg,isa+nsa,2) = (scale1*2*ym - 2*thetay*hc*scale);
+		    }
+		    IND(pg,isa,3)     = (scale1*2*xm - 2*thetax*hc*scale);
+		    IND(pg,isa+nsa,3) = (-scale1*2*ym+ 2*thetay*hc*scale);
+		    IND(pg,isa,4)     = (scale1*ym   - thetay*hc*scale);
+		    IND(pg,isa+nsa,4) = (scale1*xm   - thetax*hc*scale);
 		}
-		IND(pg,isa,3)     = (scale1*2*xm - 2*thetax*hc*scale);
-		IND(pg,isa+nsa,3) = (-scale1*2*ym+ 2*thetay*hc*scale);
-		IND(pg,isa,4)     = (scale1*ym   - thetay*hc*scale);
-		IND(pg,isa+nsa,4) = (scale1*xm   - thetax*hc*scale);
-		if(nmod>5){/*include a defocus term*/
-		    IND(pg,isa,5)     = xm*2;
-		    IND(pg,isa+nsa,5) = ym*2;
+		if(parms->maos.withfocus){
+		    IND(pg,isa,nmod-1)     = xm*2;
+		    IND(pg,isa+nsa,nmod-1) = ym*2;
 		}
 	    }
 	}

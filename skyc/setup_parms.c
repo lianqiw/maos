@@ -197,6 +197,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.maxdtrat<=0){
 	parms->skyc.maxdtrat=parms->skyc.ndtrat;
     }
+    if(parms->maos.nmod==3 || parms->maos.nmod==6){
+	parms->maos.withfocus=1;
+    }
+    if(parms->maos.nmod>=5){
+	parms->maos.withps=1;
+    }
     if(parms->maos.ahstfocus){
 	if(parms->skyc.addws==-1){//auto
 	    parms->skyc.addws=1;

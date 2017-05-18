@@ -180,9 +180,9 @@ gradients. Similar to Z tilt since the mode is low order */
 void setup_aster_g(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     /*2010-06-08: Tested against MATLAB skycoverage code. */
     aster->g=dcellnew(aster->nwfs,1);
-    if(parms->maos.nmod<5 || parms->maos.nmod>6){
+    /*if(parms->maos.nmod<5 || parms->maos.nmod>6){
 	error("Not compatible with the number of NGS modes\n");
-    }
+	}*/
     aster->ngs=mycalloc(aster->nwfs,long);
     aster->tsa=0;
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -293,6 +293,7 @@ void setup_aster_lsr(ASTER_S *aster, const PARMS_S *parms){
     aster->sigman=dcellnew(ndtrat,1);
     dmat *gm=ddup(aster->gm);
     if(aster->nwfs==1 && parms->maos.nmod==6 && gm->nx==8){
+	//focus and magnification mode degenerate in single GS mode.
 	info2("set 3rd column of gm to zero\n");
 	memset(gm->p+gm->nx*2, 0, sizeof(double)*gm->nx);
     }
@@ -382,33 +383,45 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	    double pg_focus[ng+2];
 	    if(parms->skyc.interpg){
 		interp_gain(pg_tt, simu->gain_tt[idtrat], simu->gain_x, sigma_tt);
-		interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
-		interp_gain(pg_focus, simu->gain_focus[idtrat], simu->gain_x, sigma_focus);
+		if(parms->maos.withps){
+		    interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
+		}else{
+		    memset(pg_ps, 0, (ng+2)*sizeof(double));
+		}
+		if(parms->maos.withfocus){
+		    interp_gain(pg_focus, simu->gain_focus[idtrat], simu->gain_x, sigma_focus);
+		}else{
+		    memset(pg_focus, 0, (ng+2)*sizeof(double));
+		}
 	    }else{
 		dmat *sigma2=dnew(1,1); 
 		dcell *tmp;
 		sigma2->p[0]=sigma_tt;
 		tmp=servo_optim(simu->psd_tt, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
 		memcpy(pg_tt, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
-
-		sigma2->p[0]=sigma_ps;
-		tmp=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
-		memcpy(pg_ps, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
-
-		if(nmod>5){
+		if(parms->maos.withps){
+		    sigma2->p[0]=sigma_ps;
+		    tmp=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
+		    memcpy(pg_ps, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
+		}else{
+		    memset(pg_ps, 0, (ng+2)*sizeof(double));
+		}
+		if(parms->maos.withfocus){
 		    sigma2->p[0]=sigma_focus;
 		    tmp=servo_optim(simu->psd_focus, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, servotype);
 		    memcpy(pg_focus, tmp->p[0]->p, (ng+2)*sizeof(double)); dcellfree(tmp);
+		}else{
+		    memset(pg_focus, 0, (ng+2)*sizeof(double));
 		}
 		dfree(sigma2);
 	    }
 	    res_ngs  = pg_tt[ng] + pg_ps[ng] + pg_focus[ng];//residual mode
 	    res_ngsn = pg_tt[ng+1] + pg_ps[ng+1] + pg_focus[ng+1];//error due to noise
-	    for(int imod=0; imod<MIN(nmod,5); imod++){
+	    for(int imod=0; imod<nmod-(parms->maos.withfocus?1:0); imod++){
 		memcpy(PCOL(pgain,imod), imod<2?pg_tt:pg_ps, sizeof(double)*ng);
 	    }
-	    if(nmod>5){
-		memcpy(PCOL(pgain,5), pg_focus, sizeof(double)*ng);
+	    if(parms->maos.withfocus){
+		memcpy(PCOL(pgain,nmod-1), pg_focus, sizeof(double)*ng);
 	    }
 	}else{
 	    double pg_ngs[ng+2];
