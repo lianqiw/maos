@@ -358,9 +358,6 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    detector from short expsoure PSF, the elongation transfer function of the
    sodium layer, and the detector transfer function. */
 void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    if(parms->powfs[ipowfs].radrot){
-	info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
-    }
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;

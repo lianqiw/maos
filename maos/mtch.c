@@ -91,7 +91,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	const int radgx=parms->powfs[ipowfs].radgx;
 	for(int isa=0; isa<nsa; isa++){
 	    double pixrot=0;//pixel rotation
-	    if(srot){
+	    if(srot && parms->powfs[ipowfs].radpix){
 		pixrot=srot[isa]; 
 	    }
 	    if(mtchadp){

@@ -860,6 +860,9 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			    powfs[ipowfs].srot,
 			    parms->powfs[ipowfs].radpix,
 			    parms->powfs[ipowfs].radrot);
+    if(parms->powfs[ipowfs].radrot){
+	info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
+    }
     int nwvl=parms->powfs[ipowfs].nwvl;
     powfs[ipowfs].dtheta=dnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){

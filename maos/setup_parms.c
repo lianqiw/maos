@@ -1300,6 +1300,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->radrot=0;
 	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
 	}
+	if(powfsi->radgx && !powfsi->radpix){
+	    powfsi->radgx=0;
+	}
 	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
 	    powfsi->mtchcpl=1;
 	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
