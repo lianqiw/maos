@@ -40,11 +40,11 @@ zfarr* zfarr_init(long nx, long ny,const char*format,...){
 */
 void zfarr_push(zfarr *ca, int i, const void *p){
     if(!p){
-	warning("p is empty\n");
+	warning_once("p is empty\n");
 	return;//nothing to be done
     }
     if(!ca){
-	warning("zfarr is NULL\n");
+	warning_once("zfarr is NULL\n");
 	return;
     }
     if(i>=0 && ca->cur>i) {

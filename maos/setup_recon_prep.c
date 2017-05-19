@@ -951,43 +951,20 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
     if(lrt_tt){
 	double factor=0;
-	if(lrt_tt==1){
-	    info2("Adding TT cr on upper DMs to fit matrix.\n");
-	    factor=scl*2./parms->aper.d;
-	    for(int idm=1; idm<ndm; idm++){
-		int nloc=recon->aloc->p[idm]->nloc;
-		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
-		double *p2x=p;
-		double *p2y=p+nloc;
-		const double *cpl=actcpl->p[idm]->p;
-		for(int iloc=0; iloc<nloc; iloc++){
-		    if(cpl[iloc]>0.1){
-			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    }
+	info2("Adding TT cr on upper DMs to fit matrix.\n");
+	factor=scl*2./parms->aper.d;
+	for(int idm=1; idm<ndm; idm++){
+	    int nloc=recon->aloc->p[idm]->nloc;
+	    double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
+	    double *p2x=p;
+	    double *p2y=p+nloc;
+	    const double *cpl=actcpl->p[idm]->p;
+	    for(int iloc=0; iloc<nloc; iloc++){
+		if(cpl[iloc]>0.1){
+		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
+		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
 		}
 	    }
-	}else if(lrt_tt==2){/*Canceling TT. only valid for 2 DMs */
-	    warning("Adding Canceling TT cr to fit matrix. Deprecated\n");
-	    if(ndm!=2){
-		error("Only ndm=2 case is implemented\n");
-	    }
-	    for(int idm=0; idm<ndm; idm++){
-		int nloc=recon->aloc->p[idm]->nloc;
-		double *p=recon->fitNW->p[idm]->p+inw*nloc;
-		if(idm==0) factor=scl*2/parms->aper.d;
-		else if(idm==1) factor=-scl*2./parms->aper.d;
-		double *p2x=p;
-		double *p2y=p+nloc;
-		const double *cpl=actcpl->p[idm]->p;
-		for(int iloc=0; iloc<nloc; iloc++){
-		    if(cpl[iloc]>0.1){
-			p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-			p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		    }
-		}
-	    }
-
 	}
 	inw+=2*(ndm-1);
     }
