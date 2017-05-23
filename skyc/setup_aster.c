@@ -642,7 +642,7 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    if(rms<mini){
 		mini=rms;
 		aster[iaster].mdtrat=idtrat;
-		aster[iaster].mresol=rms;
+		aster[iaster].mresest=rms;
 	    }
 	}
 	IND(pimin,0,iaster)=mini;
@@ -707,8 +707,9 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
     }
     qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
     result[0]=minimum;
+    result[1]=master;
     if(aster[master].mdtrat!=-1){
-	result[1]=parms->skyc.fss[aster[master].mdtrat];
+	result[2]=parms->skyc.fss[aster[master].mdtrat];
     }
     int count=0;
     if(minimum<maxerror){
@@ -722,10 +723,18 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		count++;
 		int iaster=(int)IND(pimin,1,jaster);
 		aster[iaster].use=1;/*mark as valid. */
+		char temp1[1024], temp2[1024]; temp1[0]='\0';
 		for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
 		    int istar=aster[iaster].wfs[iwfs].istar;
 		    int ipowfs=aster[iaster].wfs[iwfs].ipowfs;
 		    star[istar].use[ipowfs]=1;
+		    if(parms->skyc.estimate){
+			snprintf(temp2, 1023,"(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, star[istar].mags->p[0]);
+			strncat(temp1, temp2, 1023);
+		    }
+		}
+		if(parms->skyc.estimate){
+		    info2("%s, %g Hz, %g nm\n", temp1, parms->skyc.fss[aster[iaster].mdtrat], sqrt(aster[iaster].mresest)*1e9);
 		}
 	    }
 	}

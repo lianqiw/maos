@@ -64,7 +64,6 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_dblarr_n(&parms->skyc.pixoffy, parms->skyc.npowfs,"skyc.pixoffy");
     readcfg_strarr_nmax(&parms->skyc.fnpsf1, parms->skyc.npowfs, "skyc.fnpsf1");
     READ_INT(skyc.limitnstep);
-    READ_DBL(skyc.intgain);
     READ_DBL(skyc.rne);
     READ_DBL(skyc.imperrnm);
     READ_DBL(skyc.imperrnmb);
@@ -108,6 +107,8 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.multirate);
     READ_MAT(skyc.snrmin);
     READ_INT(skyc.usephygrad);
+
+    READ_INT(skyc.estimate);
 }
 /**
    Setup infromation output from maos run.

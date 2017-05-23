@@ -120,7 +120,7 @@ typedef struct ASTER_S{
     dmat *res_ws;      /**<residual windshake after servo rejection.*/
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
-    double mresol;     /**<miminum rms on OL restimation.*/
+    double mresest;    /**<miminum rms on servo restimation.*/
     rand_t rand;  /**<random stream*/
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/

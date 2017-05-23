@@ -117,7 +117,6 @@ typedef struct SKYC_S{
     double *pixoffx; /**<pixel offset along x in units of pixel*/
     double *pixoffy; /**<pixel offset along y in units of pixel*/
     double keepout;  /**<NGS probe keep out range in arcsec.*/
-    double intgain;  /**<gain of simple integrator.*/
     double rne;      /**<detector read out noise in electron. -1 to use the formula.*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
     double *telthruput;/**<Telescope throughput at each wvl*/
@@ -160,7 +159,8 @@ typedef struct SKYC_S{
     double sdetmax;  /**<tmax for SDE fitting*/
     int multirate;   /**<Each OIWFS can run at different dtrat*/
     dmat* snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
-    int usephygrad;
+    int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
+    int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

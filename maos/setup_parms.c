@@ -50,6 +50,7 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
 	dfree(powfscfg->llt->oy);
 	dfree(powfscfg->llt->misreg);
 	free(powfscfg->llt);
+	powfscfg->llt=NULL;
     }
     lfree(powfscfg->wfs);
     lfree(powfscfg->wfsind);
