@@ -403,22 +403,30 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 
 		IND(pg,isa,0)     = 1.;//tip
 		IND(pg,isa+nsa,1) = 1.;//tilt
-		if(parms->maos.withps){
+		if(parms->maos.indps){
+		    int indps=parms->maos.indps;
 		    if(parms->maos.ahstfocus){/*This mode has no global focus*/
-			IND(pg,isa,2)     = ( - 2*thetax*hc*scale);
-			IND(pg,isa+nsa,2) = ( - 2*thetay*hc*scale);
+			IND(pg,isa,indps)     = ( - 2*thetax*hc*scale);
+			IND(pg,isa+nsa,indps) = ( - 2*thetay*hc*scale);
 		    }else{
-			IND(pg,isa,2)     = (scale1*2*xm - 2*thetax*hc*scale);
-			IND(pg,isa+nsa,2) = (scale1*2*ym - 2*thetay*hc*scale);
+			IND(pg,isa,indps)     = (scale1*2*xm - 2*thetax*hc*scale);
+			IND(pg,isa+nsa,indps) = (scale1*2*ym - 2*thetay*hc*scale);
 		    }
-		    IND(pg,isa,3)     = (scale1*2*xm - 2*thetax*hc*scale);
-		    IND(pg,isa+nsa,3) = (-scale1*2*ym+ 2*thetay*hc*scale);
-		    IND(pg,isa,4)     = (scale1*ym   - thetay*hc*scale);
-		    IND(pg,isa+nsa,4) = (scale1*xm   - thetax*hc*scale);
+		    IND(pg,isa,indps+1)     = (scale1*2*xm - 2*thetax*hc*scale);
+		    IND(pg,isa+nsa,indps+1) = (-scale1*2*ym+ 2*thetay*hc*scale);
+		    IND(pg,isa,indps+2)     = (scale1*ym   - thetay*hc*scale);
+		    IND(pg,isa+nsa,indps+2) = (scale1*xm   - thetax*hc*scale);
 		}
-		if(parms->maos.withfocus){
-		    IND(pg,isa,nmod-1)     = xm*2;
-		    IND(pg,isa+nsa,nmod-1) = ym*2;
+		if(parms->maos.indastig){
+		    const int indastig=parms->maos.indastig;
+		    IND(pg,isa,indastig+1)     = (2*xm);//d(x^2-y^2)/dx
+		    IND(pg,isa+nsa,indastig+1) = (-2*ym);
+		    IND(pg,isa,indastig+2)     = (ym);
+		    IND(pg,isa+nsa,indastig+2) = (xm);
+		}
+		if(parms->maos.indfocus){
+		    IND(pg,isa,parms->maos.indfocus)     = xm*2;
+		    IND(pg,isa+nsa,parms->maos.indfocus) = ym*2;
 		}
 	    }
 	}

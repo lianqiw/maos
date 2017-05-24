@@ -66,8 +66,9 @@ typedef struct MAOS_S{
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
     int mffocus;     /**<1: maos already does sodium tracking*/
-    int withfocus;   /**<1: Contains focus mode*/
-    int withps;      /**<1: Contains plate scale mode*/
+    int indfocus;    /**<Index of focus mode. 0: disable*/
+    int indps;       /**<Index of plate scale mode. 0: disable*/
+    int indastig;    /**<Index of astigmatism mode. 0: disable*/
     char *fnrange;   /**<sodium range time series. forward to maos.*/
 }MAOS_S;
 

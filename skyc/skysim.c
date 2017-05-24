@@ -142,12 +142,12 @@ static void skysim_isky(SIM_S *simu){
 #endif
 	/*Select asters that have good performance. */
 	setup_aster_select(PCOL(pres_geom,isky),aster, naster, star, 
-			   parms->skyc.mtch?0.5*simu->rmsol:INFINITY,parms); 
+			   parms->skyc.mtch?0.5*simu->varol:INFINITY,parms); 
 	double tk_2=myclockd();
 	double tk_3=tk_2;
 	int selaster=0;
 	int seldtrat=0;
-	double skymini=simu->rmsol;
+	double skymini=simu->varol;
 	if(!parms->skyc.estimate){
 	    /*Read in physical optics data (wvf) */
 	    setup_star_read_ztilt(star,nstar,parms,seed_maos);
@@ -195,7 +195,7 @@ static void skysim_isky(SIM_S *simu){
 		/*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 		//setup_aster_controller(simu, asteri, parms);
 
-		mini=simu->rmsol;
+		mini=simu->varol;
 
 		for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
 #if _OPENMP >= 200805
@@ -209,7 +209,7 @@ static void skysim_isky(SIM_S *simu){
 		    }
 		    dmat *ires=NULL;
 		    dmat *imres=NULL;
-		    if((ires=skysim_sim(&imres, simu->mideal, simu->mideal_oa, simu->rmsol,
+		    if((ires=skysim_sim(&imres, simu->mideal, simu->mideal_oa, simu->varol,
 					asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart))){
 			if(parms->skyc.verbose){
 			    info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
@@ -370,42 +370,50 @@ static void skysim_update_mideal(SIM_S *simu){
    ones. Combine them with windshake.  */
 static void skysim_calc_psd(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
+    double var_all=0;
     if(parms->skyc.psdcalc){
 	dmat*  MCC=parms->maos.mcc;
 	dmat *x=dtrans(simu->mideal);
+	int npsd, iratio;
+	if(parms->skyc.gsplit){
+	    npsd=parms->maos.nmod;
+	    iratio=1;
+	}else{
+	    npsd=1;
+	    iratio=0;
+	}
+	simu->psds=dcellnew(npsd, 1);
 	for(int im=0; im<x->ny; im++){
 	    dmat *xi=dsub(x, 20, 0, im, 1);
 	    dscale(xi, sqrt(IND(MCC,im,im)));/*convert to unit of m.*/
 	    dmat *psdi=psd1dt(xi, 1, parms->maos.dt);
-	    if(im<2){
-		add_psd2(&simu->psd_tt, psdi);
-	    }else if(parms->maos.withps && im<5){
-		add_psd2(&simu->psd_ps, psdi);
-	    }else{
-		add_psd2(&simu->psd_focus, psdi);
-	    }
+	    add_psd2(&simu->psds->p[im*iratio], psdi);
+	    var_all+=psd_inte2(psdi);
 	    dfree(xi);
 	    dfree(psdi);
 	}
 	dfree(x);
+	/*
 	if(simu->psd_ps){
 	    simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
 	}else{
 	    simu->psd_ngs=dref(simu->psd_tt);
-	}
+	    }*/
     }else{
+	error("Please implement interpolating modes\n");
+	/*
 	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
 	simu->psd_ps=ddup(parms->skyc.psd_ps);
 	simu->psd_tt=ddup(parms->skyc.psd_tt);
 	simu->psd_focus=ddup(parms->skyc.psd_focus);
-	/*renormalize PSD*/
+	//renormalize PSD
 	double rms_ngs=psd_inte2(simu->psd_ngs);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
-	    double rms_ratio=simu->rmsol/rms_ngs;
+	    double rms_ratio=simu->varol/rms_ngs;
 	    info2("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
-	    /*scale PSF in place. */
+	    //scale PSF in place. //
 	    double *p_ngs=simu->psd_ngs->p+nx;
 	    double *p_tt=simu->psd_tt->p+nx;
 	    double *p_ps=simu->psd_ps->p+nx;
@@ -414,26 +422,19 @@ static void skysim_calc_psd(SIM_S *simu){
 		p_tt[i]*=rms_ratio;
 		p_ps[i]*=rms_ratio;
 	    }
-	}
+	    }*/
     }
-    //add focus PSD to ngs
-    add_psd2(&simu->psd_ngs, simu->psd_focus);
 
-    double rms_ngs=psd_inte2(simu->psd_ngs);
-    info2("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
+    info2("PSD integrates to %.2f nm. varol=%.2f nm\n", sqrt(var_all)*1e9, sqrt(simu->varol)*1e9);
     
-    double rms_ws=psd_inte2(parms->skyc.psd_ws);
-    info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
-    simu->rmsol+=rms_ws;//testing
+    double var_ws=psd_inte2(parms->skyc.psd_ws);
+    info2("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
+    simu->varol+=var_ws;//testing
  
     //add windshake PSD to ngs/tt
-    add_psd2(&simu->psd_ngs, parms->skyc.psd_ws);
-    add_psd2(&simu->psd_tt, parms->skyc.psd_ws);
+    add_psd2(&simu->psds->p[0], parms->skyc.psd_ws);
     if(parms->skyc.dbg){
-	writebin(simu->psd_tt, "psd_tt");
-	writebin(simu->psd_ps, "psd_ps");
-	writebin(simu->psd_ngs, "psd_ngs");
-	writebin(simu->psd_focus, "psd_focus");
+	writebin(simu->psds, "psds");
     }
 }
 
@@ -442,34 +443,19 @@ static void skysim_prep_gain(SIM_S *simu){
     info2("Precompute gains for different levels of noise.\n");
     /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
     dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
-    simu->gain_tt =mycalloc(parms->skyc.ndtrat,dcell*);
-    simu->gain_ps =mycalloc(parms->skyc.ndtrat,dcell*);
-    simu->gain_ngs=mycalloc(parms->skyc.ndtrat,dcell*);
+    simu->gain_pre=(dcccell*)cellnew(parms->skyc.ndtrat, 1);
     int servotype=parms->skyc.servo;
-    if(parms->maos.withfocus){
-	simu->gain_focus=mycalloc(parms->skyc.ndtrat,dcell*);
-    }
     TIC;tic;
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	long dtrat=parms->skyc.dtrats->p[idtrat];
-	simu->gain_tt[idtrat]=servo_optim(simu->psd_tt, parms->maos.dt,
-					  dtrat, parms->skyc.pmargin, sigma2, servotype);
-	if(parms->maos.withps){
-	    simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
-					      dtrat, parms->skyc.pmargin, sigma2, servotype);
-	}
-	simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs, parms->maos.dt,
-					   dtrat, parms->skyc.pmargin, sigma2, servotype);
-	if(parms->maos.withfocus){
-	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
-						 dtrat, parms->skyc.pmargin, sigma2, servotype);
-	}
-	if(parms->skyc.dbg){
-	    writebin(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
-	    writebin(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-	    writebin(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+	simu->gain_pre->p[idtrat]=(dccell*)cellnew(simu->psds->nx, 1);
+	for(int ip=0; ip<simu->psds->nx; ip++){
+	    simu->gain_pre->p[idtrat]->p[ip]=servo_optim(simu->psds->p[ip], parms->maos.dt,
+							 dtrat, parms->skyc.pmargin, sigma2, servotype);
 	}
     }
+    writebin(simu->gain_pre, "gain_pre.bin");
+    writebin(simu->gain_x, "gain_x.bin");
     toc2("servo_optim");
     simu->gain_x=dref(sigma2);
     dfree(sigma2);
@@ -551,8 +537,8 @@ void skysim(const PARMS_S *parms){
 	    simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
 	}
 	skysim_read_mideal(simu);
-	simu->rmsol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
-    	info2("Open loop error: NGS: %.2f\n", sqrt(simu->rmsol)*1e9);
+	simu->varol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
+    	info2("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
 	if(parms->skyc.servo<0){//LQG
 	    skysim_prep_sde(simu);
 	}else{
@@ -582,6 +568,9 @@ void skysim(const PARMS_S *parms){
 	    simu->stars->nx*=simu->stars->ny;
 	    simu->stars->ny=1;
 	}
+	if(simu->stars->nx>parms->skyc.nsky){
+	    cellresize(simu->stars, parms->skyc.nsky, 1);
+	}
 	sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
 	writebin(simu->stars, "Res%d_%d_stars",simu->seed_maos,parms->skyc.seed);
 	if(parms->skyc.addws){
@@ -599,8 +588,8 @@ void skysim(const PARMS_S *parms){
 				       NULL,"Res%d_%d_sel", seed_maos, parms->skyc.seed);
 	simu->mres  =dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,
 				       NULL,"Res%d_%d_mres",  seed_maos, parms->skyc.seed);
-	dset(simu->res, simu->rmsol);
-	dset(simu->res_oa, simu->rmsol);
+	dset(simu->res, simu->varol);
+	dset(simu->res_oa, simu->varol);
 	simu->isky_start=parms->skyc.start;
 	simu->isky_end=nsky;
 	if(parms->skyc.dbgsky>-1){
@@ -636,10 +625,7 @@ void skysim(const PARMS_S *parms){
 	dcellfree(simu->mres);
 	dfree(simu->mideal);
 	dfree(simu->mideal_oa);
-	dfree(simu->psd_ngs);
-	dfree(simu->psd_ps);
-	dfree(simu->psd_tt);
-	dfree(simu->psd_focus);
+	dcellfree(simu->psds);
 	dcellfree(simu->psdi);
 	dfree(simu->sdecoeff);
 	/*Free the data used to do bicubic spline. */
@@ -648,12 +634,7 @@ void skysim(const PARMS_S *parms){
 	}
 	free(simu->bspstrehl);
 	dfree(simu->bspstrehlxy);
-	if(parms->skyc.interpg){
-	    dcellfreearr(simu->gain_ps, parms->skyc.ndtrat);
-	    dcellfreearr(simu->gain_tt, parms->skyc.ndtrat);
-	    dcellfreearr(simu->gain_ngs, parms->skyc.ndtrat);
-	    dcellfreearr(simu->gain_focus, parms->skyc.ndtrat);
-	}
+	cellfree(simu->gain_pre);
 	dfree(simu->gain_x);
 	dcellfreearr(simu->nonlin, parms->maos.npowfs);free(simu->nonlin);
     }/*iseed_maos */
