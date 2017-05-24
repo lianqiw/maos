@@ -1212,6 +1212,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     rand_t rstat;
     double neaspeckle2=0;
     dcell *sanea=NULL;
+    if(!intstat->i0){
+	error("i0 is not available\n");
+    }
     if(parms->powfs[ipowfs].phytype==2 && parms->powfs[ipowfs].skip!=3){/*need nea in reconstruction*/
 	do_nea=1;
 	powfs[ipowfs].saneaxy=dcellnew(nsa, intstat->i0->ny);

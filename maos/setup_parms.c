@@ -639,7 +639,7 @@ static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.L0);
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
-    READ_INT(atm.fractal);
+    READ_INT(atm.method);
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
     READ_INT(atm.share);
@@ -1000,7 +1000,7 @@ static void readcfg_plot(PARMS_T *parms){
 */
 static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.wamethod);
-    READ_DBL(dbg.atm);
+    READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0) {dfree(parms->dbg.atm); parms->dbg.atm=NULL;}
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     READ_LMAT(dbg.tomo_maxit);
@@ -1831,18 +1831,20 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	warning("There is no ground layer\n");
     }
     parms->atm.frozenflow = (parms->atm.frozenflow || parms->sim.closeloop);
-    if(!parms->atm.frozenflow || parms->dbg.atm>0){
+    if(!parms->atm.frozenflow || parms->dbg.atm){
 	parms->atm.r0evolve=0;/*disable r0 evolution*/
     }
-    if(parms->dbg.atm==0){
-	if(parms->atm.fractal){
-	    parms->atm.fun=fractal_screen;
-	}else{
+    if(!parms->dbg.atm){
+	switch(parms->atm.method){
+	case 0:
 	    parms->atm.fun=vonkarman_screen;
+	    break;
+	case 1:
+	    parms->atm.fun=fractal_screen;
+	    break;
+	case 2:
+	    parms->atm.fun=biharmonic_screen;
 	}
-    }else if(parms->dbg.atm==-1){
-	info2("Generating Biharmonic Atmospheric Screen...");
-	parms->atm.fun=biharmonic_screen;
     }else{
 	parms->atm.fun=NULL;
     }
@@ -1936,7 +1938,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 	if(parms->atm.nx<parms->atm.nxm) parms->atm.nx=parms->atm.nxm;
 	if(parms->atm.ny<parms->atm.nym) parms->atm.ny=parms->atm.nym;
     }
-    if(parms->atm.fractal){/*must be square and 1+power of 2 */
+    if(parms->atm.method==1){/*must be square and 1+power of 2 */
 	int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
 	parms->atm.nx=1+nextpow2(nn);
 	parms->atm.ny=parms->atm.nx;

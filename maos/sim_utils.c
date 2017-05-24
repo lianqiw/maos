@@ -37,7 +37,7 @@ static mapcell *genatm_do(SIM_T *simu){
     const ATM_CFG_T *atm=&parms->atm;
     TIC;
     mapcell *screens;
-    if(parms->dbg.atm == 0){
+    if(!parms->dbg.atm){
 	GENATM_T *gs=simu->atmcfg;
 	if(!gs){
 	    simu->atmcfg=mycalloc(1,GENATM_T);/*the data for generating screens. */
@@ -82,52 +82,46 @@ static mapcell *genatm_do(SIM_T *simu){
 	int nx=atm->nx;
 	int ny=atm->ny;
 	screens=mapcellnew(atm->nps, 1);
-	double hs=9000;
 	double dx=atm->dx;
-	for(int is=0; is<atm->nps; is++){
-	    screens->p[is]=mapnew(nx, ny, dx, dx, NULL);
-	    screens->p[is]->h=atm->ht->p[is];
+	int iratio=0;
+	if(parms->dbg.atm->nx>=atm->nps){
+	    iratio=1;
 	}
-	double strength=100e-9;
-	if(parms->dbg.atm>0){//represent a Fourier mode.
-	    double kk=2*M_PI/parms->dbg.atm*dx;
-	    long nn=MAX(nx, ny);
-	    dmat *sind=dnew(nn, 1);
-	    for(int ii=0; ii<nn; ii++){
-		sind->p[ii]=sin((ii-nn/2)*kk);
-	    }
-	    for(int iy=0; iy<ny; iy++){
-		for(int ix=0; ix<nx; ix++){
-		    IND(screens->p[0], ix, iy)=strength*2*sind->p[ix]*sind->p[iy];
+	loc_t *psloc=0;
+	const double strength=sqrt(1.0299*pow(parms->aper.d/atm->r0, 5./3.))*(0.5e-6/(2*M_PI));//PR WFE.
+	info("Strength=%g\n", strength);
+	for(int ips=0; ips<atm->nps; ips++){
+	    screens->p[ips]=mapnew(nx, ny, dx, dx, NULL);
+	    screens->p[ips]->h=atm->ht->p[ips];
+	    double dbgatm=parms->dbg.atm->p[ips*iratio];
+	    if(dbgatm>0){//zernike mode
+		if(!psloc){
+		    psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
 		}
-	    }
-	    dfree(sind);
-	    for(int ips=1; ips<atm->nps; ips++){
-		dadd((dmat**)&screens->p[ips], 0, (dmat*)screens->p[ips], atm->wt->p[ips]);
-	    }
-	    dscale((dmat*)screens->p[0], atm->wt->p[0]);
-	}else if(parms->dbg.atm==-1){
-	    double scale=-pow(1.-screens->p[5]->h/hs,-2);
-	    double dx2=2./nx;
-	    //plate scale mode (focus) only
-	    for(int iy=0; iy<ny; iy++){
-		double *p0=screens->p[0]->p+iy*nx;
-		double *p1=screens->p[5]->p+iy*nx;
-		double y=(iy-ny/2)*dx2;
-		double yy=y*y;
-		for(int ix=0; ix<nx; ix++){
-		    double x=(ix-nx/2)*dx2;
-		    double xx=x*x;
-		    /*double xy=x*y; */
-		    /*p0[ix]=(iy-nx/2)*dx*strength; */
-		    /*p0[ix]=(x*0.2+y*0.1+xx*0.3-yy*0.7+xy*0.3)*strength; */
-		    p0[ix]=(xx+yy)*strength;
-		    p1[ix]=scale*(p0[ix]);
+		dmat *opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
+		dmat *opd2=dref_reshape(opd, nx, ny);
+		dadd((dmat**)&screens->p[ips], 0, opd2, atm->wt->p[ips]*strength);
+		dfree(opd);
+		dfree(opd2);
+	    }else if(dbgatm<0){//Fourier mode;
+		double kk=2*M_PI/dbgatm*dx;
+		long nn=MAX(nx, ny);
+		dmat *sind=dnew(nn, 1);
+		for(int ii=0; ii<nn; ii++){
+		    sind->p[ii]=sin((ii-nn/2)*kk);
 		}
+		const double alpha=2*strength*atm->wt->p[ips];
+		for(int iy=0; iy<ny; iy++){
+		    for(int ix=0; ix<nx; ix++){
+			IND(screens->p[ips], ix, iy)=alpha*sind->p[ix]*sind->p[iy];
+		    }
+		}
+		dfree(sind);
+	    }else{
+		//empty screen.
 	    }
-	}else{
-	    error("dbg.atm has invalid value: %g\n", parms->dbg.atm);
-	} 
+	}
+	locfree(psloc);
     }
  
     return screens;
@@ -1860,6 +1854,9 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
     fprintf(fp,"maos.mffocus=%d\n", parms->sim.mffocus);
     fprintf(fp,"maos.fnrange=%s\n", parms->powfs[parms->hipowfs->p[0]].llt->fnrange);
+    fprintf(fp,"maos.indps=%d", recon->ngsmod->indps);
+    fprintf(fp,"maos.indastig=%d", recon->ngsmod->indastig);
+    fprintf(fp,"maos.indfocus=%d", recon->ngsmod->indfocus);
     fclose(fp);
     for(int jpowfs=0; jpowfs<npowfs_ngs; jpowfs++){
 	int ipowfs=powfs_ngs[jpowfs];

@@ -256,7 +256,7 @@ void curecon_t::reset_runtime(){
     dm_evl.zero(0);
 }
     
-#define DBG_RECON 1
+#define DBG_RECON 0
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, 
 		     const dcell *_gradin){
     cp2gpu(gradin, _gradin);
