@@ -859,13 +859,16 @@ if test "$with_cuda" != "no" ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
     fi
     if test "$cudaver" -ge 40 ;then
-	CUDAOPT+=" -gencode arch=compute_20,code=sm_20"
+	CUDAOPT+=" -gencode arch=compute_20,code=compute_20"
     fi
     if test "$cudaver" -ge 42 ;then
-	CUDAOPT+=" -gencode arch=compute_30,code=sm_30"
+	CUDAOPT+=" -gencode arch=compute_30,code=compute_30"
     fi
     if test "$cudaver" -ge 65 ;then
-        CUDAOPT="$CUDAOPT -gencode arch=compute_52,code=sm_52"
+        CUDAOPT+=" -gencode arch=compute_50,code=compute_50"
+    fi
+    if test "$cudaver" -ge 80 ;then
+	CUDAOPT+=" -gencode arch=compute_60,code=compute_60"
     fi
     #if test -n "$OPENMP_CFLAGS";then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"

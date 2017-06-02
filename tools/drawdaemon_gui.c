@@ -236,6 +236,7 @@ on_configure_event(GtkWidget *widget, GdkEventConfigure *event, gpointer pdata){
 #if GTK_MAJOR_VERSION>=3
 static gboolean
 on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer pdata){
+    (void)widget;
     drawdata_t* drawdata=*((drawdata_t**)pdata);
     if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
 	update_pixmap(drawdata);
