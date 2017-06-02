@@ -577,6 +577,9 @@ typedef struct SIM_T{
     dmat *ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
 
+    //Temporary
+    dmat *ngsmodlpf;  /**<For removal low frequency component of ngsmod from LGS recon*/
+
     /*MOAO*/
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
     dcell *dm_evl;   /**<moao DM command computed for science field*/

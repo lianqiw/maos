@@ -541,7 +541,7 @@ if test "$has_z" = "no" ;then
 fi
 
 #Check for FFTW interface in MKL
-AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1
@@ -975,7 +975,7 @@ echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
-
+echo LDEXE_FULL=$LDEXE_FULL
 if test "$with_gtk" != "no" ;then
     echo Compile Drawdaemon=$comp_draw
     echo Compile Monitor=$comp_mon

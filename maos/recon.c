@@ -373,6 +373,5 @@ void reconstruct(SIM_T *simu){
 #endif
 	    moao_recon(simu);
     }
-    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
 }

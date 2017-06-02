@@ -81,7 +81,9 @@ __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, R
 __global__ void add_ptt_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real *ptt, Real pis, Real tx, Real ty);
 __global__ void add_focus_do(Real *restrict opd, Real (*restrict loc)[2], int n, Real focus);
 __global__ void add_ngsmod_do(Real *restrict opd, Real (*restrict loc)[2], int n, 
-			      Real m0, Real m1, Real m2, Real m3, Real m4, Real focus,
+			      Real ttx, Real tty, 
+			      Real ps1, Real ps2, Real ps3, 
+			      Real astig1, Real astig2, Real focus,
 			      Real thetax, Real thetay, Real scale, Real ht, Real alpha);
 
 __global__ void add_do(Real *vec, Real beta, int n);

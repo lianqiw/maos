@@ -227,6 +227,9 @@ static void X(fft2plan)(X(mat) *A, int dir){
     }else{
 	A->fft->plan[dir+1]=FFTW(plan_dft_2d)(A->ny, A->nx,COMP(A->p), COMP(A->p), dir, FFTW_FLAGS);
     }
+    if(!A->fft->plan[dir+1]){
+	error("Plan is empty\n");
+    }
     UNLOCK_FFT;  
     /*info("Plan %p created\n", A->fft->plan[dir+1]); */
 }
@@ -356,6 +359,9 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
 	fft_threads(nx, ny);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
+	if(!fft->plan[dir+1]){
+	    error("Plan is empty\n");
+	}
 	UNLOCK_FFT;
 	toc2("done");
     }
@@ -383,6 +389,9 @@ void X(fft1plan_r2hc)(X(mat) *A, int dir){
 	    A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, A->p, A->p, FFTW_R2HC, FFTW_FLAGS);
 	}else{
 	    A->fft->plan[dir+1]=FFTW(plan_r2r_1d)(A->nx*A->ny, A->p, A->p, FFTW_HC2R, FFTW_FLAGS);
+	}
+	if(!A->fft->plan[dir+1]){
+	    error("fftw_plan_r2r_1d: Plan is empty. Please check FFT library.\n");
 	}
     }
     UNLOCK_FFT;

@@ -204,6 +204,7 @@ void erase_config(){
 	twalk(MROOT, delete_leaf);
     }
     nused=0;   
+    nstore=0;
 }
 /**
    Save all configs to file and check for unused config options.

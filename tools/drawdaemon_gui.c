@@ -89,6 +89,9 @@ static void set_cur_window(GtkWidget *window){
 /*Get the current page for notebook*/
 static GtkWidget *get_current_page(GtkWidget *notebook){
     int n=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+    if(n<0){
+	warning_once("get_current_page returns %d\n", n);
+    }
     return gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), n);
 }
 static drawdata_t *get_current_drawdata(void){
@@ -649,14 +652,14 @@ static void page_changed(int topn, int subn){
     }
     if(!subpage) return;
     const char *fn=subnb_label_get(subnb, subpage);
-    info("send fig=%s, fn=%s", fig, fn);
+    //info2("send fig=%s, fn=%s", fig, fn);
     if(stwriteint(sock, DRAW_FIGFN)||
        stwritestr(sock, fig)||
        stwritestr(sock, fn)){
 	warning("Talk to display_server failed\n");
 	sock_block=1;
     }
-    info("done");
+    //info2("done\n");
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook *topnb, GtkWidget *page, guint n,  GtkWidget *toolbar){
@@ -704,19 +707,23 @@ gboolean addpage(gpointer indata){
     if(!drawdata->fig) error("Must set fig before calling addpage");
     GSList *subnbs=NULL;
     int nsubnb=0;
-    for(GSList *p=windows; p; p=p->next){
+    GtkWidget *window=0;
+    GtkWidget *topnb=0;
+    int itab=0;
+    for(GSList *p=windows; p && !nsubnb; p=p->next){
 	//scan through all window to find all topnb page that has the same "fig"
-	GtkWidget *window=(GtkWidget*)p->data;
-	GtkWidget *topnb=(GtkWidget*)get_topnb(window);
-	for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
+	window=(GtkWidget*)p->data;
+	topnb=(GtkWidget*)get_topnb(window);
+	for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb)); itab++){
 	    GtkWidget *subnb=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), itab);
 	    const gchar *text=topnb_label_get(topnb, subnb);
-	    if(!strcmp(text,drawdata->fig)){
+	    int res=strcmp(text,drawdata->fig);
+	    if(!res){//found
 		subnbs=g_slist_append(subnbs,subnb);
 		nsubnb++;/*number of subnbs find. */
 		break;
-	    }else{
-		subnb=NULL;
+	    }else if(res>0){//not found. Insert here.
+		break;
 	    }
 	}
     }
@@ -740,22 +747,24 @@ gboolean addpage(gpointer indata){
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
 	g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), subnb);
 	gtk_widget_show_all(eventbox);
-	GtkWidget *topnb=get_topnb(GTK_WIDGET(windows->data));
-	gtk_notebook_append_page(GTK_NOTEBOOK(topnb),subnb,eventbox);
+	gtk_notebook_insert_page(GTK_NOTEBOOK(topnb),subnb,eventbox, itab);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), subnb, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), subnb, TRUE);
     }
     GtkWidget *page=NULL;
-    for(GSList *p=subnbs; p; p=p->next){
+    GtkWidget *subnb=NULL;
+    for(GSList *p=subnbs; p && !page; p=p->next){
 	/*scan through all the subnb pages with same label */
-	GtkWidget *subnb=(GtkWidget*)p->data;
-	for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
-	    page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), itab);
-	    const gchar *labeltext=subnb_label_get(subnb, page);
-	    if(labeltext && !strcmp(labeltext,drawdata->name)){
+	subnb=(GtkWidget*)p->data;
+	for(itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(subnb)); itab++){
+	    GtkWidget *tmp=gtk_notebook_get_nth_page(GTK_NOTEBOOK(subnb), itab);
+	    const gchar *labeltext=subnb_label_get(subnb, tmp);
+	    int res=strcmp(labeltext,drawdata->name);
+	    if(!res){
+		page=tmp;
 		break;
-	    }else{
-		page=NULL;
+	    }else if(res>0){
+		break;
 	    }
 	}
     }
@@ -858,8 +867,7 @@ gboolean addpage(gpointer indata){
 	gtk_container_add(GTK_CONTAINER(page), drawarea);
 #endif
 	GtkWidget *button=subnb_label_new(drawdatawrap);
-	GtkWidget *subnb=(GtkWidget*)subnbs->data;/*choose first. */
-	gtk_notebook_append_page(GTK_NOTEBOOK(subnb), page,button);
+	gtk_notebook_insert_page(GTK_NOTEBOOK(subnb), page,button,itab);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(subnb), page, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(subnb), page, TRUE);
 #if GTK_MAJOR_VERSION>=3

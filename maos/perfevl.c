@@ -102,14 +102,14 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
   evaluations.*/
 #define PERFEVL_WFE(pclep, pclmp, cleNGSmp)				\
     if(parms->recon.split){/*for split tomography */			\
-	dmat*  pcleNGSmp=cleNGSmp->p[ievl]/*PDMAT*/;				\
+	dmat*  pcleNGSmp=cleNGSmp->p[ievl]/*PDMAT*/;			\
 	/*compute the dot product of wavefront with NGS mode for that direction */ \
 	if(nmod==3){							\
 	    calc_ngsmod_dot(PCOL(pclep,isim),PCOL(pclmp,isim), PCOL(pcleNGSmp,isim), \
-			    parms,recon,aper, iopdevl->p,ievl);		\
+			    parms,recon->ngsmod,aper, iopdevl->p,ievl);	\
 	}else{/*more modes are wanted. */				\
 	    calc_ngsmod_dot(NULL,NULL, PCOL(pcleNGSmp,isim),		\
-			    parms,recon,aper, iopdevl->p,ievl);		\
+			    parms,recon->ngsmod,aper, iopdevl->p,ievl);	\
 	    loc_calc_mod(PCOL(pclep,isim),PCOL(pclmp,isim), aper->mod,aper->amp->p,iopdevl->p); \
 	}								\
     }else{/*for integrated tomography. */				\
@@ -338,11 +338,11 @@ static void perfevl_mean(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->isim;
-    const int nmod=parms->evl.nmod;
+    const int nevlmod=parms->evl.nmod;
     const int nevl=parms->evl.nevl;
     /*Field average the OL error */
-    for(int imod=0; imod<nmod; imod++){
-	int ind=imod+nmod*isim;
+    for(int imod=0; imod<nevlmod; imod++){
+	int ind=imod+nevlmod*isim;
 	simu->ole->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    double wt=parms->evl.wt->p[ievl];
@@ -353,8 +353,8 @@ static void perfevl_mean(SIM_T *simu){
 	return;
 
     /*Field average the CL error */
-    for(int imod=0; imod<nmod; imod++){
-	int ind=imod+nmod*isim;
+    for(int imod=0; imod<nevlmod; imod++){
+	int ind=imod+nevlmod*isim;
 	simu->cle->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    double wt=parms->evl.wt->p[ievl];
@@ -389,18 +389,26 @@ static void perfevl_mean(SIM_T *simu){
 	}
 	double tt=dwdot2(pcleNGSdot, recon->ngsmod->IMCC_TT, pcleNGSdot);
 	double ngs=dwdot(pcleNGSdot, recon->ngsmod->IMCC,    pcleNGSdot);
-	double tot=simu->cle->p[isim*nmod];
+	double tot=simu->cle->p[isim*nevlmod];
 	double lgs=tot-ngs;
 	/*turn dot product to modes */
 	double *pcleNGSm=simu->cleNGSm->p+isim*nngsmod;
 	dmulvec(pcleNGSm,recon->ngsmod->IMCC,pcleNGSdot,1);
 	double *poleNGSm=simu->oleNGSm->p+isim*nngsmod;
 	dmulvec(poleNGSm,recon->ngsmod->IMCC,poleNGSdot,1);
-	if(simu->parms->tomo.ahst_idealngs){
+	if(simu->parms->tomo.ahst_idealngs==1){
 	    /*we no longer add ideal ngs modes to DM. Instead, we add them
 	      to NGS wavefront only. This prevents it to capture all the
 	      focus mode in the atmosphere.*/
 	    ngs=0; tt=0;
+	}else if(simu->parms->tomo.ahst_idealngs==2){
+	    //Simulate close loop correction using ideal NGS mod.
+	    simu->Merr_lo=simu->Merr_lo_store;
+	    memcpy(simu->Merr_lo->p[0]->p, pcleNGSm, nngsmod*sizeof(double));
+	    //Add current low order command to form PSOL measurement for skyc.
+	    for(int imod=0; imod<nngsmod; imod++){
+		pcleNGSm[imod]+=simu->Mint_lo->mint->p[0]->p[0]->p[imod];
+	    }
 	}
 	simu->clem->p[isim*3]=lgs; /*lgs mode */
 	simu->clem->p[isim*3+1]=tt;    /*tt mode */
@@ -425,10 +433,10 @@ static void perfevl_mean(SIM_T *simu){
 		sum+=pcleNGSmp[imod]*pcleNGSm[imod];
 	    }
 	    double sum2=dwdot(pcleNGSm, recon->ngsmod->MCCP->p[ievl], pcleNGSm);
-	    double tot2=simu->clep->p[ievl]->p[isim*nmod]-2.*sum+sum2;
+	    double tot2=simu->clep->p[ievl]->p[isim*nevlmod]-2.*sum+sum2;
 	    simu->clemp->p[ievl]->p[isim*3]=tot2;/*LGS mode */
 	    simu->clemp->p[ievl]->p[isim*3+1]=tt;/*TT mode */
-	    simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nmod*isim]-tot2;/*PR-LGS */
+	    simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nevlmod*isim]-tot2;/*PR-LGS */
 	}
 	int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
 	if(isim>=parms->evl.psfisim && (do_psf || parms->evl.cov)){
@@ -468,18 +476,18 @@ static void perfevl_mean(SIM_T *simu){
 #endif
 	}/*ideal ngs */
     }else{/*if not split */
-	simu->status->clerrhi=sqrt(simu->cle->p[nmod*isim]*1e18);
-	simu->status->clerrlo=sqrt(simu->cle->p[nmod*isim+1]*1e18);
+	simu->status->clerrhi=sqrt(simu->cle->p[nevlmod*isim]*1e18);
+	simu->status->clerrlo=sqrt(simu->cle->p[nevlmod*isim+1]*1e18);
     }/*if split */
     
-    if(parms->sim.noatm==0 && simu->cle->p[nmod*isim] > MAX(simu->ole->p[nmod*isim]*100, 1e-13)){
+    if(parms->sim.noatm==0 && simu->cle->p[nevlmod*isim] > MAX(simu->ole->p[nevlmod*isim]*100, 1e-13)){
 	static int ct=0; 
 	ct++;
 	if(ct>10){
 	    error("Divergent simulation.");
 	}
 	warning("The loop is diverging: OL: %g CL: %g\n",  
-		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
+		simu->ole->p[nevlmod*isim],  simu->cle->p[nevlmod*isim]);
 	simu->last_report_time=0; //force print out.
     }
 }

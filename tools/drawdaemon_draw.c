@@ -413,7 +413,7 @@ void update_limit(drawdata_t *drawdata){
 */
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     /*fill white background */
-    TIC;tic;
+    //TIC;tic;
     drawdata->font_name_version=font_name_version;
     PangoLayout *layout=pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
@@ -579,7 +579,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=ymin-(ofy/drawdata->ny)*ydiff;
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
-	toc2("cairo_draw image");
+	//toc2("cairo_draw image");
     }
     if(drawdata->npts>0){
 	cairo_save(cr);
@@ -804,7 +804,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
 
 	cairo_restore(cr);
-	toc2("cairo_draw pts");
+	//toc2("cairo_draw pts");
     }
 
     if(drawdata->ncir>0){
@@ -1072,5 +1072,5 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->zoomxlast=drawdata->zoomx;
     drawdata->zoomylast=drawdata->zoomy;
     drawdata->drawn=1;
-    toc2("cairo_draw");
+    //toc2("cairo_draw");
 }
