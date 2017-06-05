@@ -110,5 +110,10 @@ RMS[$ii]=$(./maos $args aper.d=$D  -cscao_lgs.conf recon.split=0 2>>maos_check.s
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
+echo -n "LGS LTAO (split):"
+RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf fov_oa.conf 2>>maos_check.stderr)
+echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
+ii=$((ii+1)) 
+
 echo ${RMS[*]}
 

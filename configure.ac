@@ -541,7 +541,7 @@ if test "$has_z" = "no" ;then
 fi
 
 #Check for FFTW interface in MKL
-AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1
@@ -859,13 +859,16 @@ if test "$with_cuda" != "no" ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
     fi
     if test "$cudaver" -ge 40 ;then
-	CUDAOPT+=" -gencode arch=compute_20,code=sm_20"
+	CUDAOPT+=" -gencode arch=compute_20,code=compute_20"
     fi
     if test "$cudaver" -ge 42 ;then
-	CUDAOPT+=" -gencode arch=compute_30,code=sm_30"
+	CUDAOPT+=" -gencode arch=compute_30,code=compute_30"
     fi
     if test "$cudaver" -ge 65 ;then
-        CUDAOPT="$CUDAOPT -gencode arch=compute_52,code=sm_52"
+        CUDAOPT+=" -gencode arch=compute_50,code=compute_50"
+    fi
+    if test "$cudaver" -ge 80 ;then
+	CUDAOPT+=" -gencode arch=compute_60,code=compute_60"
     fi
     #if test -n "$OPENMP_CFLAGS";then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
@@ -975,7 +978,7 @@ echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
-
+echo LDEXE_FULL=$LDEXE_FULL
 if test "$with_gtk" != "no" ;then
     echo Compile Drawdaemon=$comp_draw
     echo Compile Monitor=$comp_mon

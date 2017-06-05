@@ -618,7 +618,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs = parms->wfsr[iwfs].powfs;
-		if(parms->sim.skysim && parms->powfs[ipowfs].lo){
+		if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].lo){
 		    continue;
 		}
 		int nsa=powfs[ipowfs].saloc->nloc;
@@ -668,7 +668,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
-	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
+	    if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].lo){
 		continue;
 	    }
 	    if(parms->powfs[ipowfs].skip==2){//no need for TWFS

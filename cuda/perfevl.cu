@@ -25,6 +25,7 @@
 extern "C"{
 #endif
 #include "../maos/utils.h"
+#include "../maos/ahst.h"
 #ifdef __cplusplus
 }
 #endif
@@ -134,58 +135,6 @@ static int calc_ptt_post(double *rmsout, double *coeffout,
     }
     return ans;
 }
-static int calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
-		       double *ngsmod_out, int nmod,
-		       double MCC_fcp, double ht, double scale,
-		       double thetax, double thetay,
-		       const double ipcc, const dmat *imcc,
-		       const PARMS_T *parms,
-		       Real *ccb){
-    double tot=(double)ccb[0];
-    double coeff[6];//convert to double
-    coeff[0]=ccb[1]; coeff[1]=ccb[2]; 
-    coeff[2]=ccb[3]; coeff[3]=ccb[4];
-    coeff[4]=ccb[5]; coeff[5]=ccb[6];
-    
-    if(pttrcoeff_out){//p/t/t
-	memset(pttrcoeff_out, 0, sizeof(double)*3);
-	dmulvec(pttrcoeff_out, imcc, coeff, 1);
-    }
-    int ans=0;
-    if(pttr_out){
-	//compute TT removed wavefront variance as a side product 
-	double pis=ipcc*coeff[0]*coeff[0];
-	double ptt=dwdot3(coeff, imcc, coeff);
-	pttr_out[0]=tot-pis;//PR
-	pttr_out[1]=ptt-pis;//TT
-	pttr_out[2]=tot-ptt;//PTTR
-	if(tot+1e-18<pis || tot+1e-18<ptt || ptt+1e-18<pis || pis<-1e-18){
-	    warning("tot=%g, pis=%g, ptt=%g\n", tot, pis, ptt);
-	    ans=1;
-	}
-    }
-    //don't use +=. need locking
-    ngsmod_out[0]=coeff[1];
-    ngsmod_out[1]=coeff[2];
-    const double scale1=1.-scale;
-    if(nmod>=5){
-	if(parms->sim.ahstfocus){
-	    ngsmod_out[2]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
-	}else{
-	    ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-			   -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
-	}
-	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
-		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
-	ngsmod_out[4]=(scale1*(coeff[5])
-		       -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
-	if(nmod>5){
-	    ngsmod_out[5]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
-	}
-    }
-    return ans;
-}
-
 
 
 __global__ static void 
@@ -293,11 +242,12 @@ static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc
     int ans=0;								\
     if(parms->recon.split){						\
 	double *pcleNGSmp=PCOL(cleNGSmp->p[ievl], isim);		\
-	ans=calc_ngsmod(nmod==3?pclep:0, nmod==3?pclmp:0,		\
-			pcleNGSmp,recon->ngsmod->nmod,			\
-			recon->ngsmod->aper_fcp, recon->ngsmod->ht,	\
-			recon->ngsmod->scale, thetax, thetay,		\
-			aper->ipcc, aper->imcc,	parms, ccb);		\
+	double coeff[6];						\
+	coeff[0]=ccb[1]; coeff[1]=ccb[2];				\
+	coeff[2]=ccb[3]; coeff[3]=ccb[4];				\
+	coeff[4]=ccb[5]; coeff[5]=ccb[6];				\
+	calc_ngsmod_post(nmod==3?pclep:0, nmod==3?pclmp:0,		\
+			 pcleNGSmp,ccb[0],coeff,recon->ngsmod, aper,thetax,thetay); \
     }else{								\
 	ans=calc_ptt_post(pclep, pclmp, aper->ipcc, aper->imcc, ccb);	\
     }

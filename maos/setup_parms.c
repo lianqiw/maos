@@ -50,6 +50,7 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
 	dfree(powfscfg->llt->oy);
 	dfree(powfscfg->llt->misreg);
 	free(powfscfg->llt);
+	powfscfg->llt=NULL;
     }
     lfree(powfscfg->wfs);
     lfree(powfscfg->wfsind);
@@ -638,7 +639,7 @@ static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.L0);
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
-    READ_INT(atm.fractal);
+    READ_INT(atm.method);
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
     READ_INT(atm.share);
@@ -999,7 +1000,7 @@ static void readcfg_plot(PARMS_T *parms){
 */
 static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.wamethod);
-    READ_DBL(dbg.atm);
+    READ_DMAT(dbg.atm); if(dsumabs(parms->dbg.atm)==0) {dfree(parms->dbg.atm); parms->dbg.atm=NULL;}
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     READ_LMAT(dbg.tomo_maxit);
@@ -1148,14 +1149,11 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	/*if(parms->recon.alg!=0){
 	    error("skysim need MVR");
 	}*/
-	parms->tomo.ahst_idealngs=1;
-	if(parms->tomo.ahst_wt==1){//gradient weighting not available.
-	    /*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
-	    warning("in skycoverage presimulation, ahst_wt need to be 3. Changed\n");
-	    parms->tomo.ahst_wt=3;
+	if(!parms->tomo.ahst_idealngs){
+	    parms->tomo.ahst_idealngs=1;
 	}
 	if(parms->ndm>0 && parms->recon.split!=1){
-	    warning("Can only do skysim in split tomography mode 1. Changed\n");
+	    info2("Can only do skysim in split tomography mode 1. Changed\n");
 	    parms->recon.split=1;
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1164,6 +1162,17 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    }
 	}
 	parms->save.extra=1;
+    }
+    if(parms->tomo.ahst_idealngs){
+	if(parms->sim.fuseint){
+	    info2("Disabling sim.fuseint\n");
+	    parms->sim.fuseint=0;
+	}
+	if(parms->tomo.ahst_wt==1){//gradient weighting not available.
+	    /*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
+	    info2("When tomo.ahst_idealngs=1, ahst_wt need to be 3. Changed\n");
+	    parms->tomo.ahst_wt=3;
+	}
     }
     if(parms->dbg.tomo_maxit->nx){
 	warning("dbg.tomo_maxit is set. Will run in open loop mode\n to repeat the simulations"
@@ -1605,8 +1614,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
     if(parms->sim.fcfocus<=0){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
-	if(parms->sim.fcfocus<10){
-	    parms->sim.fcfocus=10;
+	if(parms->sim.fcfocus<1){
+	    parms->sim.fcfocus=1;
 	}
     }
     parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
@@ -1830,18 +1839,20 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	warning("There is no ground layer\n");
     }
     parms->atm.frozenflow = (parms->atm.frozenflow || parms->sim.closeloop);
-    if(!parms->atm.frozenflow || parms->dbg.atm>0){
+    if(!parms->atm.frozenflow || parms->dbg.atm){
 	parms->atm.r0evolve=0;/*disable r0 evolution*/
     }
-    if(parms->dbg.atm==0){
-	if(parms->atm.fractal){
-	    parms->atm.fun=fractal_screen;
-	}else{
+    if(!parms->dbg.atm){
+	switch(parms->atm.method){
+	case 0:
 	    parms->atm.fun=vonkarman_screen;
+	    break;
+	case 1:
+	    parms->atm.fun=fractal_screen;
+	    break;
+	case 2:
+	    parms->atm.fun=biharmonic_screen;
 	}
-    }else if(parms->dbg.atm==-1){
-	info2("Generating Biharmonic Atmospheric Screen...");
-	parms->atm.fun=biharmonic_screen;
     }else{
 	parms->atm.fun=NULL;
     }
@@ -1935,7 +1946,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 	if(parms->atm.nx<parms->atm.nxm) parms->atm.nx=parms->atm.nxm;
 	if(parms->atm.ny<parms->atm.nym) parms->atm.ny=parms->atm.nym;
     }
-    if(parms->atm.fractal){/*must be square and 1+power of 2 */
+    if(parms->atm.method==1){/*must be square and 1+power of 2 */
 	int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
 	parms->atm.nx=1+nextpow2(nn);
 	parms->atm.ny=parms->atm.nx;

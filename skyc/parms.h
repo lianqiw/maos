@@ -66,8 +66,9 @@ typedef struct MAOS_S{
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
     int mffocus;     /**<1: maos already does sodium tracking*/
-    int withfocus;   /**<1: Contains focus mode*/
-    int withps;      /**<1: Contains plate scale mode*/
+    int indfocus;    /**<Index of focus mode. 0: disable*/
+    int indps;       /**<Index of plate scale mode. 0: disable*/
+    int indastig;    /**<Index of astigmatism mode. 0: disable*/
     char *fnrange;   /**<sodium range time series. forward to maos.*/
 }MAOS_S;
 
@@ -117,7 +118,6 @@ typedef struct SKYC_S{
     double *pixoffx; /**<pixel offset along x in units of pixel*/
     double *pixoffy; /**<pixel offset along y in units of pixel*/
     double keepout;  /**<NGS probe keep out range in arcsec.*/
-    double intgain;  /**<gain of simple integrator.*/
     double rne;      /**<detector read out noise in electron. -1 to use the formula.*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
     double *telthruput;/**<Telescope throughput at each wvl*/
@@ -160,7 +160,8 @@ typedef struct SKYC_S{
     double sdetmax;  /**<tmax for SDE fitting*/
     int multirate;   /**<Each OIWFS can run at different dtrat*/
     dmat* snrmin;   /**<Minimum SNR to determine minimum dtrat. SNR computed as pixtheta/nea*/
-    int usephygrad;
+    int usephygrad;  /**<1: Use physical optics grad instead of ztilt*/
+    int estimate;    /**<1: Estiamte performance only, without time domain simulation*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

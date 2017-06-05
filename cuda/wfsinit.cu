@@ -451,8 +451,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}/*if phy */
 	CUDA_SYNC_DEVICE;
-	gpu_print_mem("wfs init");
     }/*for iwfs */
+    gpu_print_mem("wfs init");
     gpu_wfsgrad_update_etf(parms, powfs);
     gpu_wfsgrad_update_mtche(parms, powfs);
 }

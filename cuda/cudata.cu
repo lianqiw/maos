@@ -350,7 +350,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
-		info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
+		//info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
 	    }
 	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;

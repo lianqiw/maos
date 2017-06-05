@@ -19,6 +19,7 @@
 #include "common.h"
 #include "sim.h"
 #include "ahst.h"
+#include "save.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -512,6 +513,7 @@ void update_dm(SIM_T *simu){
  */
 void filter_dm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
+    save_recon(simu);
     if(parms->sim.evlol) return;
     if(parms->sim.closeloop){
 	filter_cl(simu);

@@ -30,8 +30,8 @@
    using AHST for one or more DMs.  Use parms->wfsr instead of parms->wfs for wfs
    information, which hands GLAO mode correctly.
 
-   The number of modes controlled by NGS is either 2 (ndm==1) or 5 (ndm>1) plus focus (optional)
-   */
+   Notice that update of this file may require GPU code update accordingly
+*/
 
 static TIC;
 
@@ -92,25 +92,32 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 		double xy=x[iloc]*y[iloc];
 		double yy=y[iloc]*y[iloc];
 		//remove piston in focus 
-		if(ngsmod->withps){
-		    if(parms->sim.ahstfocus){
-			mod[2][iloc]=//mod[2] has no focus effect on science
+		if(ngsmod->indps){
+		    if(ngsmod->ahstfocus){
+			mod[ngsmod->indps][iloc]=//mod[2] has no focus effect on science
 			    -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
 		    }else{
-			mod[2][iloc]=scale1*(xx+yy-MCC_fcp)
+			mod[ngsmod->indps][iloc]=scale1*(xx+yy-MCC_fcp)
 			    -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
 		    }
-		    mod[3][iloc]=scale1*(xx-yy)
+		    mod[ngsmod->indps+1][iloc]=scale1*(xx-yy)
 			-2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]);
-		    mod[4][iloc]=scale1*(xy)
+		    mod[ngsmod->indps+2][iloc]=scale1*(xy)
 			-ht*scale*(thetay*x[iloc]+thetax*y[iloc]);
 		}
-		if(ngsmod->withfocus){
-		    mod[nmod-1][iloc]=(xx+yy-MCC_fcp);//for focus tracking
+		if(ngsmod->indastig){
+		    mod[ngsmod->indastig][iloc]=(xx-yy);
+		    mod[ngsmod->indastig+1][iloc]=(xy);
+		}
+		if(ngsmod->indfocus){
+		    mod[ngsmod->indfocus][iloc]=(xx+yy-MCC_fcp);//for focus tracking
 		}
 	    }
 
 	    for(int jmod=0; jmod<nmod; jmod++){
+		/*if(parms->save.setup){
+		    writedbl(mod[jmod], nloc, 1, "ahst_mode_%d", jmod);
+		    }*/
 		for(int imod=jmod; imod<nmod; imod++){
 		    if(imod<2&&jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
@@ -227,24 +234,28 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		double xy=x[iloc]*y[iloc];
 		double yy=y[iloc]*y[iloc];
 		/*remove piston in focus */
-		if(ngsmod->withps){
-		    if(parms->sim.ahstfocus){
-			IND(mod,iloc,2)=amp[iloc]
+		if(ngsmod->indps){
+		    if(ngsmod->ahstfocus){
+			IND(mod,iloc,ngsmod->indps)=amp[iloc]
 			    *(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		    }else{
-			IND(mod,iloc,2)=amp[iloc]
+			IND(mod,iloc,ngsmod->indps)=amp[iloc]
 			    *(scale1*(xx+yy-MCC_fcp)
 			      -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		    }
-		    IND(mod,iloc,3)=amp[iloc]
+		    IND(mod,iloc,ngsmod->indps+1)=amp[iloc]
 			*(scale1*(xx-yy)
 			  -2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]));
-		    IND(mod,iloc,4)=amp[iloc]
+		    IND(mod,iloc,ngsmod->indps+2)=amp[iloc]
 			*(scale1*(xy)
 			  -ht*scale*(thetay*x[iloc]+thetax*y[iloc]));
 		}
-		if(ngsmod->withfocus){
-		    IND(mod,iloc,nmod-1)=amp[iloc]*(xx+yy-MCC_fcp);
+		if(ngsmod->indastig){
+		    IND(mod,iloc,ngsmod->indastig)=amp[iloc]*(xx-yy);
+		    IND(mod,iloc,ngsmod->indastig+1)=amp[iloc]*(xy);
+		}
+		if(ngsmod->indfocus){
+		    IND(mod,iloc,ngsmod->indfocus)=amp[iloc]*(xx+yy-MCC_fcp);
 		}
 	    }
 	}
@@ -355,7 +366,8 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 /**
    DM modes for all the low order modes, defined on DM grid. It uses ngsmod2dm
    to define the modes*/
-static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
+
+static dcell *ngsmod_dm(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod; 
     int ndm=parms->ndm;
     int nmod=ngsmod->nmod;
@@ -386,8 +398,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 /**
    Compute NGS modes Ha*M in the science directon using ray tracing. Not used
 */
-dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
-    /*Build NGS mod in science direction using accphi */
+/*dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     NGSMOD_T *ngsmod=recon->ngsmod;
     loc_t **aloc=recon->aloc->p;
     const int ndm=parms->ndm;
@@ -398,8 +409,8 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
     dcell *M=dcellnew(1,1);
     const int nmod=ngsmod->nmod;
     M->p[0]=dnew(nmod,1);
-    dcell *HMC=dcellnew(parms->evl.nevl,nmod);/*fine with SCAO or GLAO */
-    dcell* HM=HMC;/*PDELL*/;
+    dcell *HMC=dcellnew(parms->evl.nevl,nmod);
+    dcell* HM=HMC;
     int nloc=aper->locs->nloc;
     for(int imod=0; imod<nmod; imod++){
 	dzero(M->p[0]);
@@ -419,12 +430,13 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper
 	}
     }
     return HMC;
-}
+}*/
 /**
    Compute NGS modes Ha*M in the science directon using analytic formula. Not used
- */
+   confirmed to agree with ngsmod_hm_accphi except DM artifacts 
+*/
+/*
 dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
-    /*confirmed to agree with ngsmod_hm_accphi except DM artifacts */
     NGSMOD_T *ngsmod=recon->ngsmod;
     const double hs=ngsmod->hs;
     const double ht=ngsmod->ht;
@@ -433,7 +445,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
     const int nmod=ngsmod->nmod;
     const double MCC_fcp=recon->ngsmod->aper_fcp;
     dcell *HMC=dcellnew(parms->evl.nevl,nmod);
-    dcell* HM=HMC;/*PDELL*/;
+    dcell* HM=HMC;
     double *x=aper->locs->locx;
     double *y=aper->locs->locy;
     int nloc=aper->locs->nloc;
@@ -455,25 +467,30 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
 		double xy=x[iloc]*y[iloc];
 		IND(HM,ievl,0)->p[iloc]=x[iloc];
 		IND(HM,ievl,1)->p[iloc]=y[iloc];
-		if(ngsmod->withps){
-		    if(parms->sim.ahstfocus){
-			IND(HM,ievl,2)->p[iloc]=
+		if(ngsmod->indps){
+		    if(ngsmod->ahstfocus){
+			IND(HM,ievl,ngsmod->indps)->p[iloc]=
 			    -2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
 		    }else{
-			IND(HM,ievl,2)->p[iloc]=(xx+yy-MCC_fcp)*scale1
+			IND(HM,ievl,ngsmod->indps)->p[iloc]=(xx+yy-MCC_fcp)*scale1
 			    -2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
 		    }
-		    IND(HM,ievl,3)->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
-		    IND(HM,ievl,4)->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
+		    IND(HM,ievl,ngsmod->indps+1)->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
+		    IND(HM,ievl,ngsmod->indps+2)->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
 		}
-		if(ngsmod->withfocus){
-		    IND(HM,ievl,nmod-1)->p[iloc]=(xx+yy-MCC_fcp);
+		if(ngsmod->indastig){
+		    IND(HM,ievl,ngsmod->indastig)->p[iloc]=(xx-yy);
+		    IND(HM,ievl,ngsmod->indastig+1)->p[iloc]=(xy);
+		}
+		if(ngsmod->indfocus){
+		    IND(HM,ievl,ngsmod->indfocus)->p[iloc]=(xx+yy-MCC_fcp);
 		}
 	    }
 	}
     }
     return HMC;
 }
+*/
 /**
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
@@ -502,15 +519,20 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
     }
-    if(!isfinite(hs) || ndm==1){//Single DM, or NGS HI WFS, only two modes
-	ngsmod->nmod=2;
-    }else{
-	ngsmod->nmod=5;
-	ngsmod->withps=1;
-    }
-    if(isfinite(hs) && (parms->sim.mffocus || parms->tomo.ahst_idealngs)){
-	ngsmod->withfocus=1;
-	ngsmod->nmod++;/*add a global focus mode.*/
+    ngsmod->nmod=2; //Basic tip/tilt mode.
+    if(isfinite(hs)){
+	//LGS WFS.
+	if(ndm==2){//Plate scale mode
+	    ngsmod->indps=ngsmod->nmod;
+	    ngsmod->nmod+=3;
+	}else if(parms->nhiwfs>1){//LGS AO
+	    ngsmod->indastig=ngsmod->nmod;
+	    ngsmod->nmod+=2;
+	}
+	if(parms->sim.mffocus || ngsmod->indastig){
+	    ngsmod->indfocus=ngsmod->nmod;
+	    ngsmod->nmod+=1;
+	}
     }
     info2("ngsmod nmod=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.ahstfocus);
     ngsmod->hs=hs;
@@ -545,7 +567,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->IMCC_TT->p[3]=IND(MCC,1,1);
     dinvspd_inplace(ngsmod->IMCC_TT);
     /*the ngsmodes defined on the DM.*/
-    ngsmod->Modes=ngsmod_m(parms,recon);
+    ngsmod->Modes=ngsmod_dm(parms,recon);
     if(recon->actstuck && !parms->recon.modal){
 	warning2("Apply stuck actuators to ngs modes\n");
 	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
@@ -556,8 +578,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
       act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
       }*/
 
-    if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
-	/*we disabled GA for low order wfs in skysim mode. */
+    if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	ngsmod->GM=dcellnew(parms->nwfsr, 1);
 	int nttwfs=0;
 	int nttfwfs=0;
@@ -669,7 +690,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
  */
 void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod;
-    if(parms->recon.split==1 && !parms->sim.skysim && parms->ntipowfs){
+    if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	cellfree(ngsmod->Rngs);
 	/*
 	  W is recon->saneai;
@@ -696,21 +717,13 @@ void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
    used in performance evaluation on science opds. accumulate to out*/
 void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 		     double *ngsmod_out,
-		     const PARMS_T *parms,
-		     const RECON_T *recon, const APER_T *aper, 
-		     const double *opd, int ievl){
-    const NGSMOD_T *ngsmod=recon->ngsmod;
+		     const PARMS_T *parms, const NGSMOD_T *ngsmod,
+		     const APER_T *aper, const double *opd, int ievl){
     const double *restrict amp=aper->amp->p;
     const double *restrict locx=aper->locs->locx;
     const double *restrict locy=aper->locs->locy;
-    const double MCC_fcp=ngsmod->aper_fcp;
-    const double ht=ngsmod->ht;
-    const double scale=recon->ngsmod->scale;
-    const double scale1=1.-scale;
     double coeff[6]={0,0,0,0,0,0};
     double tot=0;
-    const double thetax=parms->evl.thetax->p[ievl]; 
-    const double thetay=parms->evl.thetay->p[ievl]; 
     const int nmod=ngsmod->nmod;
     if(nmod==2){
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
@@ -736,6 +749,21 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 	    coeff[5]+=locx[iloc]*junky;//xy
 	}
     }
+    const double thetax=parms->evl.thetax->p[ievl]; 
+    const double thetay=parms->evl.thetay->p[ievl]; 
+    calc_ngsmod_post(pttr_out, pttrcoeff_out, ngsmod_out, tot, coeff, ngsmod, aper, thetax, thetay);
+}
+/**
+   Separate post processing part so that GPU code can call it.
+*/
+void calc_ngsmod_post(double *pttr_out, double *pttrcoeff_out, double *ngsmod_out,
+		      double tot, const double *coeff,  const NGSMOD_T *ngsmod, 
+		      const APER_T *aper,double thetax, double thetay){
+    const double MCC_fcp=ngsmod->aper_fcp;
+    const double ht=ngsmod->ht;
+    const double scale=ngsmod->scale;
+    const double scale1=1.-scale;
+
     if(pttrcoeff_out){
 	memset(pttrcoeff_out, 0, sizeof(double)*3);
 	dmulvec(pttrcoeff_out, aper->imcc, coeff, 1);
@@ -751,20 +779,25 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
     /*don't use +=. need locking */
     ngsmod_out[0]=coeff[1];
     ngsmod_out[1]=coeff[2];
-    if(ngsmod->withps){
-	if(parms->sim.ahstfocus){
-	    ngsmod_out[2]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+
+    if(ngsmod->indps){
+	if(ngsmod->ahstfocus){
+	    ngsmod_out[ngsmod->indps]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
 	}else{
-	    ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-			   -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	    ngsmod_out[ngsmod->indps]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
+				-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
 	}
-	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
-		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
-	ngsmod_out[4]=(scale1*(coeff[5])
-		       -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
+	ngsmod_out[ngsmod->indps+1]=(scale1*(coeff[3]-coeff[4])
+			    -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
+	ngsmod_out[ngsmod->indps+2]=(scale1*(coeff[5])
+			    -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
     }
-    if(ngsmod->withfocus){
-	ngsmod_out[nmod-1]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
+    if(ngsmod->indastig){
+	ngsmod_out[ngsmod->indastig]=(coeff[3]-coeff[4]);
+	ngsmod_out[ngsmod->indastig+1]=(coeff[5]);
+    }
+    if(ngsmod->indfocus){
+	ngsmod_out[ngsmod->indfocus]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
     }
 }
 /**
@@ -805,19 +838,22 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 		}
 	    }else{//with platescale and/or focus
 		double focus=0, astigx=0, astigy=0;
-		if(ngsmod->withfocus){//focus is a mode
-		    focus+=pm[nmod-1];
+		if(ngsmod->indfocus){//focus is a mode
+		    focus+=pm[ngsmod->indfocus];
 		}
-		if(ngsmod->withps){//ps mode
+		if(ngsmod->indps){//ps mode
 		    if(ngsmod->ahstfocus){
-			focus+=pm[2]*scale;//scaled to avoid cause focus mode in science.
+			focus+=pm[ngsmod->indps]*scale;//scaled to avoid cause focus mode in science.
 		    }else{
-			focus+=pm[2];
+			focus+=pm[ngsmod->indps];
 		    }
-		    astigx=pm[3];
-		    astigy=pm[4];
+		    astigx+=pm[ngsmod->indps+1];
+		    astigy+=pm[ngsmod->indps+2];
 		}
-		
+		if(ngsmod->indastig){
+		    astigx+=pm[ngsmod->indastig];
+		    astigy+=pm[ngsmod->indastig+1];
+		}
 		for(unsigned long iloc=0; iloc<nloc; iloc++){
 		    double xx=xloc[iloc]*xloc[iloc];
 		    double xy=xloc[iloc]*yloc[iloc];
@@ -829,15 +865,15 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 				   +astigy*(xy));
 		}
 	    }
-	}else if(idm+1==ndm && ngsmod->withps){
+	}else if(idm+1==ndm && ngsmod->indps){
 	    double scale2=-scale*gain;
 	    for(unsigned long iloc=0; iloc<nloc; iloc++){
 		double xx=xloc[iloc]*xloc[iloc];
 		double xy=xloc[iloc]*yloc[iloc];
 		double yy=yloc[iloc]*yloc[iloc];
-		p[iloc]+=scale2*(pm[2]*(xx+yy-MCC_fcp)
-				 +pm[3]*(xx-yy)
-				 +pm[4]*(xy));
+		p[iloc]+=scale2*(pm[ngsmod->indps]*(xx+yy-MCC_fcp)
+				 +pm[ngsmod->indps+1]*(xx-yy)
+				 +pm[ngsmod->indps+2]*(xy));
 	    }
 	}	
     }
@@ -859,17 +895,21 @@ void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod,
 	const double ht=ngsmod->ht;
 	const double scale=ngsmod->scale;
 	const double scale1=1.-scale;
-	double focus=0, ps1=0, ps2=0, ps3=0;
-	if(ngsmod->withfocus){
-	    focus+=mod[nmod-1];
+	double focus=0, ps1=0, ps2=0, ps3=0,astigx=0,astigy=0;
+	if(ngsmod->indfocus){
+	    focus+=mod[ngsmod->indfocus];
 	}
-	if(ngsmod->withps){
+	if(ngsmod->indps){
 	    if(!ngsmod->ahstfocus){
-		focus+=mod[2]*scale1;
+		focus+=mod[ngsmod->indps]*scale1;
 	    }
-	    ps1=mod[2];
-	    ps2=mod[3];
-	    ps3=mod[4];
+	    ps1=mod[ngsmod->indps];
+	    ps2=mod[ngsmod->indps+1];
+	    ps3=mod[ngsmod->indps+2];
+	}
+	if(ngsmod->indastig){
+	    astigx=mod[ngsmod->indastig];
+	    astigy=mod[ngsmod->indastig+1];
 	}
 	for(int iloc=0; iloc<loc->nloc; iloc++){
 	    double x=locx[iloc];
@@ -882,7 +922,9 @@ void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod,
 		+focus*(x2+y2)
 		+ps1*(-2*scale*ht*(thetax*x+thetay*y))
 		+ps2*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
-		+ps3*(xy*scale1-scale*ht*(thetay*x+thetax*y));
+		+ps3*(xy*scale1-scale*ht*(thetay*x+thetax*y))
+		+astigx*(x2-y2)
+		+astigy*(xy);
 	    iopd->p[iloc]+=tmp*alpha;
 	}
     }
@@ -909,15 +951,31 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     if(!dmerr) return;
     const RECON_T *recon=simu->recon;
     const NGSMOD_T *ngsmod=recon->ngsmod;
+
     dcellzero(simu->Mngs);
     dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn",1);
-    //zero out global focus mode if any so we don't remove it from DM commands.
-    if(ngsmod->withfocus){
-	if(ngsmod->withps && simu->parms->sim.ahstfocus){
+    double *mngs=simu->Mngs->p[0]->p;
+    if(!simu->parms->sim.mffocus && ngsmod->indastig && 0){
+	//Temporary: remove LPF'ed focus/astigmatism from LGS DM command.
+	if(!simu->ngsmodlpf){
+	    simu->ngsmodlpf=dnew(3,1);
+	}
+	const double lpfocus=simu->parms->sim.lpfocushi;
+	warning_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
+	simu->ngsmodlpf->p[0]=simu->ngsmodlpf->p[0]*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
+	simu->ngsmodlpf->p[1]=simu->ngsmodlpf->p[1]*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
+	simu->ngsmodlpf->p[2]=simu->ngsmodlpf->p[2]*(1-lpfocus)+mngs[ngsmod->indastig+1]*lpfocus;
+	mngs[ngsmod->indfocus]=simu->ngsmodlpf->p[0];
+	mngs[ngsmod->indastig]=simu->ngsmodlpf->p[1];
+	mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
+    }
+    if(ngsmod->indfocus && simu->parms->sim.mffocus){
+	//zero out global focus mode if any so we don't remove it from DM commands.
+	if(ngsmod->indps && ngsmod->ahstfocus){
 	    const double scale=ngsmod->scale;
-	    simu->Mngs->p[0]->p[ngsmod->nmod-1]=simu->Mngs->p[0]->p[2]*(1-scale);
+	    mngs[ngsmod->indfocus]=mngs[2]*(1-scale);
 	}else{
-	    simu->Mngs->p[0]->p[ngsmod->nmod-1]=0;
+	    mngs[ngsmod->indfocus]=0;
 	}
     }
     dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);

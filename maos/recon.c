@@ -141,11 +141,11 @@ void recon_split(SIM_T *simu){
 	    NGSMOD_T *ngsmod=recon->ngsmod;
 	    if(!parms->tomo.ahst_idealngs){//Low order NGS recon. 
 		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-		if(parms->sim.mffocus && ngsmod->withfocus){ //Do LPF on focus.
+		if(parms->sim.mffocus && ngsmod->indfocus){ //Do LPF on focus.
 		    const double lpfocus=parms->sim.lpfocuslo;
-		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->nmod-1];
+		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
 		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-		    simu->Merr_lo->p[0]->p[ngsmod->nmod-1]=simu->ngsfocuslpf;
+		    simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
 		}
 	    }//else: there is ideal NGS correction done in perfevl. 
 	}
@@ -373,6 +373,5 @@ void reconstruct(SIM_T *simu){
 #endif
 	    moao_recon(simu);
     }
-    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
 }

@@ -151,7 +151,7 @@ void maos_isim(int isim){
 		//Queue tasks on GPU, no stream sync is done
 		QUEUE_THREAD(group, simu->perf_evl_pre, 0);
 	    }
-	    if(!parms->tomo.ahst_idealngs && parms->gpu.wfs && !NO_WFS){
+	    if(parms->tomo.ahst_idealngs!=1 && parms->gpu.wfs && !NO_WFS){
 		//task for each wfs
 		QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
 	    }
@@ -167,8 +167,8 @@ void maos_isim(int isim){
 		QUEUE(group, perfevl, simu, 1, 0);
 	    }
 	    if(!NO_WFS){
-		if(parms->tomo.ahst_idealngs || (parms->gpu.wfs && !parms->gpu.evl)){
-		    //in ahst_idealngs mode, weight for perfevl to finish.
+		if(parms->tomo.ahst_idealngs==1 || (parms->gpu.wfs && !parms->gpu.evl)){
+		    //in ahst_idealngs==1 mode, wait for perfevl to finish.
 		    //otherwise, wait for GPU tasks to be queued before calling sync
 		    WAIT(group);
 		}

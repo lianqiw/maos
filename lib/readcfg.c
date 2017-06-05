@@ -204,6 +204,7 @@ void erase_config(){
 	twalk(MROOT, delete_leaf);
     }
     nused=0;   
+    nstore=0;
 }
 /**
    Save all configs to file and check for unused config options.
@@ -355,6 +356,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	      Compatibility mode: rename old key names to new key names. Will
 	      remove in the future.
 	     */
+	    RENAME(atm.fractal, atm.method);
 	    RENAME(atm.zadeg, sim.zadeg);
 	    /*Added on 2011-04-28 */
 	    RENAME(dbg.noatm, sim.noatm);

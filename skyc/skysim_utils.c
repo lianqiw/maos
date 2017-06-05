@@ -452,8 +452,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
     }
     writebin(aster[selaster].gain->p[seldtrat], "%s/gain",path);
     writebin(simu->mres->p[isky], "%s/mres",path);
-    writebin(simu->psd_tt,"%s/psd_tt",path);
-    writebin(simu->psd_ps,"%s/psd_ps",path);
+    writebin(simu->psds,"%s/psds",path);
     char fnconf[PATH_MAX];
     snprintf(fnconf,PATH_MAX,"%s/base.conf",path);
     FILE *fp=fopen(fnconf,"w");

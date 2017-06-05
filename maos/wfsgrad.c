@@ -192,7 +192,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
 	}
     }
-    if(parms->powfs[ipowfs].skip && parms->tomo.ahst_idealngs){
+    if(parms->powfs[ipowfs].skip && parms->tomo.ahst_idealngs==1){
 	//apply ideal NGS modes to NGS WFS
 	ngsmod2science(opd, powfs[ipowfs].loc, recon->ngsmod, 
 		       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
@@ -1090,9 +1090,9 @@ void wfsgrad(SIM_T *simu){
     if(parms->sim.idealfit || parms->sim.evlol) return;
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
     extern int PARALLEL;
-    if(!PARALLEL || parms->tomo.ahst_idealngs || !parms->gpu.wfs){
+    if(!PARALLEL || parms->tomo.ahst_idealngs==1 || !parms->gpu.wfs){
 	CALL_THREAD(simu->wfs_grad_pre, 0);
-    }
+    }//else: already called by sim.c
     CALL_THREAD(simu->wfs_grad_post, 0);
     wfsgrad_dither_post(simu);//must be before wfsgrad_lgsfocus because wfsgrad_lgsfocus runs zoom integrator.
     if(parms->itpowfs!=-1){

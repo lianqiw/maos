@@ -389,8 +389,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 	}
 
-	if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].lo){
-
+	if(parms->tomo.ahst_idealngs==1 && parms->powfs[ipowfs].lo){
 	    const double *cleNGSm=simu->cleNGSm->p+isim*recon->ngsmod->nmod;
 	    gpu_ngsmod2science(phiout, cupowfs[ipowfs].loc.P(), recon->ngsmod, cleNGSm, 
 			       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 

@@ -182,7 +182,7 @@ map_t *mapreaddata(file_t *fp, header_t *header){
 }
 
 /**
-   convert a dmat to map_t.
+   convert a dmat to rmap_t.
 */
 rmap_t* d2rmap(dmat *in){
     rmap_t *map=myrealloc(dref(in), 1, rmap_t);

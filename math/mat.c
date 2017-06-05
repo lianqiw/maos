@@ -392,7 +392,7 @@ void X(fftshift)(X(mat) *A){
     const long nx=A->nx;
     const long ny=A->ny;
     if((nx&1)==1){
-	warning("nx=%ld is not multiple of 2\n", nx);
+	warning_once("nx=%ld is not multiple of 2\n", nx);
     }
     const long nx2=nx/2;
     const long ny2=ny/2;

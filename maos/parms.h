@@ -56,7 +56,7 @@ typedef struct ATM_CFG_T{
     int nym;      /**<minimum turbulence screen size along y for fft*/
     int nxn;      /**<minimum turbulence screen size along to cover meta pupil*/
     int nyn;      /**<minimum turbulence screen size along to cover meta pupil*/
-    int fractal;  /**<1: Use fractal method to generate atmosphere screen.*/
+    int method;   /**<0: FFT Von Karman. 1: FFT Biharmonic. 2: Fractal method.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/
@@ -596,7 +596,7 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
-    double atm;         /**<test special atmosphere*/
+    dmat *atm;         /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/
     dmat *pwfs_psy;  /**<pyramid WFS pupil shift along y (in pixel).*/

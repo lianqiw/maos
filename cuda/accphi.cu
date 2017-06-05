@@ -597,18 +597,27 @@ void gpu_ngsmod2science(curmat &opd, Real (*restrict loc)[2],
     }else{
 	const Real ht=ngsmod->ht;
 	const Real scale=ngsmod->scale;
-	Real focus;
-	if(ngsmod->nmod>5){
-	    focus=mod[5];
-	    if(!ngsmod->ahstfocus){
-		focus+=mod[2]*(1.-scale);
-	    }
-	}else{
-	    focus=mod[2]*(1.-scale);
+
+	Real focus=0, ps1=0, ps2=0, ps3=0,astigx=0,astigy=0;
+	if(ngsmod->indfocus){
+	    focus+=mod[ngsmod->indfocus];
 	}
+	if(ngsmod->indps){
+	    if(!ngsmod->ahstfocus){
+		focus+=mod[ngsmod->indps]*(1.f-scale);
+	    }
+	    ps1=mod[ngsmod->indps];
+	    ps2=mod[ngsmod->indps+1];
+	    ps3=mod[ngsmod->indps+2];
+	}
+	if(ngsmod->indastig){
+	    astigx=mod[ngsmod->indastig];
+	    astigy=mod[ngsmod->indastig+1];
+	}
+
 	add_ngsmod_do<<<DIM(opd.N(), 256), 0, stream>>>
 	    (opd.P(), loc, opd.N(),
-	     mod[0], mod[1], mod[2], mod[3], mod[4], focus,
+	     mod[0], mod[1], ps1, ps2, ps3, astigx, astigy, focus,
 	     thetax, thetay, scale, ht, alpha);
     }
 }

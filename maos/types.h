@@ -158,8 +158,9 @@ typedef struct NGSMOD_T{
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahstfocus;  /**<records parms->sim.ahstfocus*/
-    int withfocus;  /**<Include focus in NGS controlled modes*/
-    int withps;     /**<Include plate scale in NGS controlled modes*/
+    int indfocus;  /**<Include focus in NGS controlled modes. Records the index*/
+    int indps;     /**<Include plate scale in NGS controlled modes. Records the index*/
+    int indastig;  /**<Include astigmatism mode in NGS controlled modes. Records the index*/
 }NGSMOD_T;
 /**
    contains data for Fourier Domain Preconditioner.
@@ -575,6 +576,9 @@ typedef struct SIM_T{
     dcell *olmp;       /**<OL mode coefficient per direction.*/
     dmat *ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
+
+    //Temporary
+    dmat *ngsmodlpf;  /**<For removal low frequency component of ngsmod from LGS recon*/
 
     /*MOAO*/
     dcell *dm_wfs;   /**<moao DM command computed for wfs*/
