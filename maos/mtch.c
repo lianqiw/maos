@@ -136,7 +136,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    IND(saneaxy, isa, ii0)=nea2;
 	}/*isa  */
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	if(i0summax<siglev*0.1 || i0summax>siglev){
+	if(i0summax<siglev*0.1 || i0summax>siglev*1.1){
 	    warning("i0 sum to maximum of %g, wfs %d has siglev of %g\n",
 		    i0summax, iwfs, siglev);
 	}
@@ -171,23 +171,23 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		}
 	    }
 	}else{
-	    for(int ii0=0; ii0<ni0; ii0++){
-		info2("ii0=%d:\n",ii0);
-		dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
-		double dsa=powfs[ipowfs].saloc->dx;
-		double llimit=-dsa/2;
-		double ulimit=dsa/2;
-		info2("sa index: radius   noise equivalent angle\n");
-		for(int isa=0; isa<nsa; isa++){
-		    double locx=powfs[ipowfs].saloc->locx[isa];
-		    double locy=powfs[ipowfs].saloc->locy[isa];
-		    if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
-			info2("sa %5d: %5.1f m, (%6.2f, %6.2f) mas\n", 
-			      isa, locx, sqrt(IND(psanea,isa,0))*206265000,
-			      sqrt(IND(psanea,isa,1))*206265000);
-		    }
-		}/*isa  */
-	    }/*ii0 */
+	    double dsa=powfs[ipowfs].saloc->dx;
+	    double llimit=-dsa/2;
+	    double ulimit=dsa/2;
+	    info2("sa index: radius   noise equivalent angle\n");
+	    for(int isa=0; isa<nsa; isa++){
+		double locx=powfs[ipowfs].saloc->locx[isa];
+		double locy=powfs[ipowfs].saloc->locy[isa];
+		info2("sa %5d:%4.1fm",isa, locx);
+		if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
+		    for(int ii0=0; ii0<ni0; ii0++){
+			info2(" (%4.1f,%4.1f)", 
+			      sqrt(IND(sanea->p[ii0],isa,0))*206265000,
+			      sqrt(IND(sanea->p[ii0],isa,1))*206265000);
+		    }//for ii0
+		    info2("mas\n");
+		}
+	    }/*isa  */
 	}
     }
     if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){

@@ -955,7 +955,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     dcellzero(simu->Mngs);
     dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn",1);
     double *mngs=simu->Mngs->p[0]->p;
-    if(!simu->parms->sim.mffocus && ngsmod->indastig && 0){
+    if(ngsmod->indastig){
 	//Temporary: remove LPF'ed focus/astigmatism from LGS DM command.
 	if(!simu->ngsmodlpf){
 	    simu->ngsmodlpf=dnew(3,1);

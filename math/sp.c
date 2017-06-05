@@ -91,12 +91,16 @@ X(sp) *X(spref)(X(sp) *A){
    move the matrix from res to A without change value of A itself.
 */
 void X(spmove)(X(sp) *A, X(sp) *res){
-    if(!res || !A) 
-	error("Trying to move an NULL matrix\n");
-    assert(issp(res) && issp(A));
-    X(spfree_content)(A);
-    memcpy(A,res,sizeof(X(sp)));
-    memset(res, 0, sizeof(X(sp)));
+    if(res && A){
+	assert(issp(res) && issp(A));
+	X(spfree_content)(A);
+	memcpy(A,res,sizeof(X(sp)));
+	memset(res, 0, sizeof(X(sp)));
+    }else{
+	if(!(!res && !A)){
+	    error("Trying to move an NULL matrix\n");
+	}
+    }
 }
 
 /**
@@ -464,6 +468,9 @@ X(sp) *X(spadd2)(const X(sp) *A,T a, const X(sp)*B,T b){
 	      A->nx, A->ny, B->nx, B->ny);
     }
     X(sp) *C=X(ss_add)(A,B,a,b);
+    if(!C){
+	warning("ss_add returned null\n");
+    }
     X(ss_dropzeros)(C);
     return C;
 }

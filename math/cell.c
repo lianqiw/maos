@@ -358,7 +358,6 @@ cell *readdata_by_id(file_t *fp, uint32_t id, int level, header_t *header){
 	}
     }else{
 	if(!iscell(&header->magic)){//wrap array into 1x1 cell
-	    info2("Read cell from non cell data\n");
 	    cell *dcout=cellnew(1,1);
 	    dcout->p[0]=readdata_by_id(fp, id, level-1, header);
 	    out=dcout;
