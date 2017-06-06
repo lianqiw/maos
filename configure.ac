@@ -442,7 +442,7 @@ compile(){
 function set_lapack(){
     type=$1
     case $type in
-	*mkl*)
+	mkl)
 	    if test "$type" = "mkl-download" -a "$mkl_avail" = "yes";then
 		download MKL "mkl${libsuffix}.tar.bz2" ${PRE_DIR}
 	    fi
@@ -471,10 +471,19 @@ function set_lapack(){
 		LAPACK=${LAPACK// /,}
 	    fi
 	    ;;
-	*pkg-config*)
+	pkg-config)
 	    LAPACK=`pkg-config --libs blas lapack 2>/dev/null`
 	    ;;
-	*default*)
+	openblas-openmp)
+	    LAPACK="-lopenblaso"
+	    ;;
+	openblas-threads)
+	    LAPACK="-lopenblasp"
+	    ;;
+	openblas)
+	    LAPACK="-lopenblas"
+	    ;;
+	default*)
 	    LAPACK="-llapack -lblas "
 	    if test "$type" = "default-link" ;then
 	       if test -d $/usr/lib${libsuffix} ;then
@@ -503,15 +512,16 @@ function set_lapack(){
     echo trying LAPACK=$LAPACK
 }
 has_lapack=no
+base_lapack="pkg-config openblas-openmp openblas-threads openblas default default-link"
 case $use_mkl in
     yes) #prefer MKL
-	trys="mkl mkl-download pkg-config default default-link"
+	trys="mkl mkl-download $base_lapack"
 	;;
     no) #disable MKL
-	trys="pkg-config default default-link"
+	trys="$base_lapack"
 	;;
     default) #default order
-	trys="mkl pkg-config default default-link mkl-download"
+	trys="mkl $base_lapack mkl-download"
 	;;
 esac
 
