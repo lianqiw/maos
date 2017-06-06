@@ -124,7 +124,7 @@ using std::strerror;
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stderr,"%s\033[00;00m", fline); })
 
-#define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
+#define warning_once(A...) ({static int done=0; if(!done){done=1; warning2(A);}})
 #define info_once(A...) ({static int done=0; if(!done){done=1; info2(A);}})
 
 #endif

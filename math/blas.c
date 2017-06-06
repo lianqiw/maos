@@ -330,7 +330,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     ptrdiff_t lwork=-1;
     T work0[1];
     ptrdiff_t info=0;
-    DEF_ENV_FLAG_LOCAL(USE_SDD, 0, 0, INT_MAX);
+    DEF_ENV_FLAG_LOCAL(USE_SDD, 500, 0, INT_MAX);
     char jobuv='S';
     if(USE_SDD && M>USE_SDD){
 	ptrdiff_t nmax=M<N?N:M;
