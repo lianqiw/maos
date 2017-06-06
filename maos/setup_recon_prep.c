@@ -687,7 +687,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		if(parms->powfs[ipowfs].type==1){//PWFS
 		    if(!parms->powfs[ipowfs].lo){
 			dmat *opdadd=0;
-			if(!parms->recon.glao){
+			if(!parms->recon.glao && powfs[ipowfs].opdadd){
 			    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 			    opdadd=powfs[ipowfs].opdadd->p[wfsind];
 			}
