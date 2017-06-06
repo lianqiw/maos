@@ -336,17 +336,17 @@ int main(int argc, char *argv[]){
 	    legs[iseed]=legs0[iseed];
 	}
 	if(restype==1){
-	    plot_points("Res", nseed, NULL, restot, NULL, NULL, xylog, NULL, legs,
+	    plot_points("CL", nseed, NULL, restot, NULL, NULL, xylog, NULL, legs,
 			"Total Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
+	    plot_points("CL hi", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
 			"High order Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
+	    plot_points("CL lo", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
 			"Low order Wavefront Error", xlabel,ylabel, "Low");
-	    plot_points("ResOL", nseed, NULL, resol, NULL, NULL, xylog, NULL, legs,
+	    plot_points("OL", nseed, NULL, resol, NULL, NULL, xylog, NULL, legs,
 			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, xylog, NULL, legs,
+	    plot_points("OL hi", nseed, NULL, resolhi, NULL, NULL, xylog, NULL, legs,
 			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, xylog, NULL, legs,
+	    plot_points("OL lo", nseed, NULL, resollo, NULL, NULL, xylog, NULL, legs,
 			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
 	}else{
 	    plot_points("Tot", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
@@ -367,17 +367,17 @@ int main(int argc, char *argv[]){
 	    pathtag[ipath]=pathtag0[ipath];
 	}
 	if(restype==1){
-	    plot_points("Res", npath, NULL, restotm, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("CL", npath, NULL, restotm, NULL, NULL, xylog, NULL, pathtag,
 			"Total Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("Reshi", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("CL hi", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
 			"High order Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("Reslo", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("CL lo", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
 			"Low order Wavefront Error", xlabel,ylabel, "Low");
-	    plot_points("ResOL", npath, NULL, resolm, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("OL", npath, NULL, resolm, NULL, NULL, xylog, NULL, pathtag,
 			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
-	    plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("OL hi", npath, NULL, resolhim, NULL, NULL, xylog, NULL, pathtag,
 			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
-	    plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, xylog, NULL, pathtag,
+	    plot_points("OL lo", npath, NULL, resollom, NULL, NULL, xylog, NULL, pathtag,
 			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
 	}else{
 	    plot_points("Tot", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
@@ -393,17 +393,17 @@ int main(int argc, char *argv[]){
 		dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
 		dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1); 
 		dcell *resol_i=dcellsub(resol, 0,0,iseed, 1); 
-		plot_points("Res", npath, NULL, restot_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("CL", npath, NULL, restot_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
-		plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("CL hi", npath, NULL, reshi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-		plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("CL lo", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Low order Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
-		plot_points("ResOL", npath, NULL, resol_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("OL", npath, NULL, resol_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Total Openloop Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
-		plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("OL hi", npath, NULL, resolhi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "High order Openloop Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-		plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, NULL, pathtag,
+		plot_points("OL lo", npath, NULL, resollo_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Low order Openloop Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
 		dcellfree(resolhi_i);dcellfree(resollo_i);
 		dcellfree(resol_i);dcellfree(restot_i);

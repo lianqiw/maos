@@ -1361,10 +1361,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	    }
 	    powfsi->fieldstop/=206265.;
-	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+2/206265.){
+	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+0.5/206265.){
 		warning("Field stop=%g\" is too small for modulation diameter %g\". Changed.\n",
 			parms->powfs[ipowfs].fieldstop*206265, parms->powfs[ipowfs].modulate*206265*2);
-		parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].modulate*2+2/206265.;
+		parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].modulate*2+0.5/206265.;
 	    }
 	}
 

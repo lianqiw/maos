@@ -89,7 +89,12 @@ static cs *ss_spalloc (SS_INT m, SS_INT n, SS_INT nzmax, SS_INT values, SS_INT t
     A->x = values ? (SS_ENTRY*)ss_malloc (nzmax, sizeof (SS_ENTRY)) : NULL ;
     A->nref=mycalloc(1,int);
     A->nref[0]=1;
-    return ((!A->p || !A->i || (values && !A->x)) ? ss_spfree (A) : A) ;
+    if((!A->p || !A->i || (values && !A->x))){
+	error("Out of memory: p=%p, i=%p, x=%p\n", A->p, A->i, A->x);
+	ss_spfree(A); 
+	A=NULL;
+    }
+    return A;
 }
 
 /**
@@ -146,20 +151,30 @@ cs* X(ss_multiply) (const cs *A, const cs *B)
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values, *Bi ;
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
-    if (!SS_CSC (A) || !SS_CSC (B)) return (NULL) ;      /* check inputs */
-    if (A->ny != B->nx) return (NULL) ;
+    if (!SS_CSC (A) || !SS_CSC (B)) {
+	error("A or B is not in CSC format\n");
+	return (NULL) ;      /* check inputs */
+    }
+    if (A->ny != B->nx) {
+	error("Matrix mismatch\n");
+	return (NULL) ;
+    }
     m = A->nx ; anz = A->p [A->ny] ;
     n = B->ny ; Bp = B->p ; Bi = B->i ; Bx = B->x ; bnz = Bp [n] ;
     w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                    /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
     x = values ? (SS_ENTRY*)ss_malloc (m, sizeof (SS_ENTRY)) : NULL ; /* get workspace */
     C = ss_spalloc (m, n, anz + bnz, values, 0) ;        /* allocate result */
-    if (!C || !w || (values && !x)) return (ss_done (C, w, x, 0)) ;
+    if (!C || !w || (values && !x)){
+	error("Out of memory\n");
+	return (ss_done (C, w, x, 0)) ;
+    }
     Cp = C->p ;
     for (j = 0 ; j < n ; j++)
     {
         if (nz + m > C->nzmax && !ss_sprealloc (C, 2*(C->nzmax)+m))
         {
+	    error("Out of memory. \n");
             return (ss_done (C, w, x, 0)) ;             /* out of memory */
         } 
         Ci = C->i ; Cx = C->x ;         /* C->i and C->x may be reallocated */
@@ -182,15 +197,28 @@ cs* X(ss_add) (const cs *A, const cs *B, SS_ENTRY alpha, SS_ENTRY beta)
     SS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values ;
     SS_ENTRY *x, *Bx, *Cx ;
     cs *C ;
-    if (!SS_CSC (A) || !SS_CSC (B)) return (NULL) ;         /* check inputs */
-    if (A->nx != B->nx || A->ny != B->ny) return (NULL) ;
+    if (!SS_CSC (A) || !SS_CSC (B)){
+	error("A or B is not in CSC format\n");
+	return (NULL) ;         /* check inputs */
+    }
+    if (A->nx != B->nx || A->ny != B->ny) {
+	error("Matrix mismatch\n");
+	return (NULL) ;
+    }
     m = A->nx ; anz = A->p [A->ny] ;
     n = B->ny ; Bp = B->p ; Bx = B->x ; bnz = Bp [n] ;
     w = (SS_INT*)ss_calloc (m, sizeof (SS_INT)) ;                       /* get workspace */
     values = (A->x != NULL) && (Bx != NULL) ;
     x = values ? (SS_ENTRY*)ss_malloc (m, sizeof (SS_ENTRY)) : NULL ;    /* get workspace */
-    C = ss_spalloc (m, n, anz + bnz, values, 0) ;           /* allocate result*/
-    if (!C || !w || (values && !x)) return (ss_done (C, w, x, 0)) ;
+    SS_INT cnz=anz + bnz;
+    if(cnz>m*n){
+	cnz=m*n;
+    }
+    C = ss_spalloc (m, n, cnz, values, 0) ;           /* allocate result*/
+    if (!C || !w || (values && !x)) {
+	error("Out of memory\n");
+	return (ss_done (C, w, x, 0)) ;
+    }
     Cp = C->p ; Ci = C->i ; Cx = C->x ;
     for (j = 0 ; j < n ; j++)
     {
