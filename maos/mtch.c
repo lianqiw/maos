@@ -178,8 +178,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    for(int isa=0; isa<nsa; isa++){
 		double locx=powfs[ipowfs].saloc->locx[isa];
 		double locy=powfs[ipowfs].saloc->locy[isa];
-		info2("sa %5d:%4.1fm",isa, locx);
-		if(nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)){
+		if((parms->powfs[ipowfs].llt && (nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)))
+		   ||(!parms->powfs[ipowfs].llt && locx>=0 && locx<dsa*0.6 && locy>=0 && locy<dsa*0.6)
+		    ){
+		    info2("sa%4d:%4.1fm",isa, locx);
 		    for(int ii0=0; ii0<ni0; ii0++){
 			info2(" (%4.1f,%4.1f)", 
 			      sqrt(IND(sanea->p[ii0],isa,0))*206265000,

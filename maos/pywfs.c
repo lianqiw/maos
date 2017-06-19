@@ -25,6 +25,7 @@
 #include "pywfs.h"
 #include "../cuda/gpu.h"
 #define PYWFS_GUARD 1.5 //separate the pupil by 1.1 times more
+#define PWFS_DEBUG 0 //For testing
 /**
    Setup pyramid WFS based on configuration.
 */
@@ -302,7 +303,6 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	pywfs->GTT=TT;
 	info("pywfs_gain=%g\n", pywfs->gain);
     }
-
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
     {
 	powfs[ipowfs].saneaxy=dcellnew(nsa,1);
@@ -320,6 +320,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea", ipowfs);
 	writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
     }
+#if PWFS_DEBUG
+    exit(0);
+#endif
     if(0){//Test implementation using zernikes
 	dmat *ints=0;
 	int nn=1;
@@ -486,7 +489,10 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     long ncomp2=ncomp/2;
     cmat *otf=cnew(ncomp, ncomp);
     dmat *pupraw=dnew(ncomp, ncomp);
-    //writebin(psfs, "cpu_wvf0");
+#if PWFS_DEBUG
+    static int savec=-1; savec++;
+    writebin(psfs, "pwfs_fft_cpu_psf_%d", savec);
+#endif
     for(int ir=0; ir<pos_nr; ir++){
 	//Radius of the current ring
 	double pos_ri=pos_r*(ir+1)/pos_nr;
@@ -518,14 +524,14 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
 			otf->p[indout]=psfs->p[iwvl]->p[indin]*pyramid[indout];
 		    }
 		}
-		//writebin(otf, "cpu_wvf1");
 		cfft2(otf, 1);
-		//writebin(otf, "cpu_wvf2");
 		cabs22d(&pupraw, 1., otf, wvlwts->p[iwvl]/(ncomp*ncomp*pos_ni*pos_nr));
-		//writebin(pupraw, "cpu_wvf3");exit(0);
 	    }//for iwvl
 	}//for ipos
     }//for ir
+#if PWFS_DEBUG
+    writebin(pupraw, "pwfs_fft_cpu_pupil_%d", savec);
+#endif
     //writebin(pupraw, "cpu_psf"); exit(0);
     ccpd(&otf, pupraw);//pupraw sum to one.
     //writebin(otf, "cpu_wvf4");
@@ -534,7 +540,6 @@ void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd){
     //writebin(otf, "cpu_wvf5");
     ccwm(otf, pywfs->nominal);
     cfft2(otf, 1);
-    //writebin(otf, "cpu_wvf6");
     const int nsa=pywfs->si->p[0]->nx;
     if(!(*ints)){
 	(*ints)=dnew(nsa, 4);

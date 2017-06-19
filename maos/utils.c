@@ -876,7 +876,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     }
     double *pgradx=(*pgrad)->p;
     double *pgrady=pgradx+nsa;
-    double scaleg=1;
+    double sigratio=1;
     if(parms->powfs[ipowfs].sigmatch==2){
 	double i0sumg=0;
 	double i1sumg=0;
@@ -884,13 +884,13 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    i0sumg+=i0sum[isa];
 	    i1sumg+=dsum(ints[isa]);
 	}
-	scaleg=i0sumg/i1sumg;
+	info("i0sumg/nsa=%g. Siglev=%g\n", i0sumg/nsa, parms->powfs[ipowfs].siglev);
+	sigratio=i0sumg/i1sumg;
     }
     for(int isa=0; isa<nsa; isa++){
 	double geach[3]={0,0,1};
 	switch(phytype){
 	case 1:{//matched filter
-	    dmulvec(geach, mtche[isa],ints[isa]->p,1.);
 	    double scale=1.;
 	    switch(parms->powfs[ipowfs].sigmatch){
 	    case 0://no normalization
@@ -899,24 +899,22 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 		scale=i0sum[isa]/dsum(ints[isa]);
 		break;
 	    case 2://match globally.
-		scale=scaleg;
+		scale=sigratio;
 		break;
 	    }
-	    geach[0]*=scale;
-	    geach[1]*=scale;
+	    dmulvec(geach, mtche[isa],ints[isa]->p,scale);
 	}
 	    break;
 	case 2:{//CoG
 	    double sumi=0;
 	    switch(parms->powfs[ipowfs].sigmatch){
-	    case 0://normalization use nominal intensity (linear model)
-		sumi=i0sum[isa];
+	    case 0://normalization use model intensity (linear model)
+		sumi=powfs[ipowfs].saa->p[isa]*parms->powfs[ipowfs].siglev;
 		break;
 	    case 1://normalization use current intensity (non-linear)
 		break;
 	    case 2://normalized use scaled current intensity (non-linear)
-		sumi=i0sum[isa]/scaleg;
-		error("To implement\n");
+		sumi=powfs[ipowfs].saa->p[isa]*parms->powfs[ipowfs].siglev/sigratio;
 		break;
 	    }
 	    dcog(geach,ints[isa],0.,0.,

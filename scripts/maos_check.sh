@@ -13,12 +13,15 @@ fi
 case $D in
     2)
 	#4/4/2017
-	REF=(89.4582 91.262 133.036 166.016 133.689 139.809 130.262 139.625 113.996 130.983 255.921 588.795 220.674 117.581 121.81 211.419 588.795)
+	REF=(90.1682 91.9371 166.001 133.074 133.682 140.137 130.599 138.509 131.078 589.324 225.003 588.795 220.674 117.774 120.16 588.795 211.419 150.461 135.644)
 	;;
     5)
-	#4/4/2017
-	REF=(106.928 108.742 131.49 300.934 131.598 130.543 131.413 131.047 113.377 120.46 260.973 103.228 105.737 123.973 128.552 121.414 121.147)
+	#6/7/2017
+	REF=(107.097 108.903 131.723 300.899 131.963 130.855 131.537 131.225 120.296 510.726 259.064 103.228 105.381 123.893 128.491 121.224 121.539 252.901 135.646)
 	;;
+    30)
+	#6/7/2017
+	REF=(113.724 115.872 133.825 167.16 133.935 Unknown 114.086 117.495 365.903 110.422 110.985 144.098 145.37 362.133 362.086 126.993)
 esac
 
 echo > maos_check.stderr
@@ -34,13 +37,13 @@ RMS[$ii]=$(./maos $args aper.d=$D sim.idealtomo=1 -g-1 2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
-echo -n "LGS MCAO (split):"
-RMS[$ii]=$(./maos $args aper.d=$D  2>>maos_check.stderr)
+echo -n "LGS MCAO (inte): "
+RMS[$ii]=$(./maos $args aper.d=$D recon.split=0 2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
-echo -n "LGS MCAO (inte): "
-RMS[$ii]=$(./maos $args aper.d=$D recon.split=0 2>>maos_check.stderr)
+echo -n "LGS MCAO (split):"
+RMS[$ii]=$(./maos $args aper.d=$D  2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
@@ -65,18 +68,19 @@ RMS[$ii]=$(./maos $args aper.d=$D atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 fi
-echo -n "LGS MCAO ($((D*4))x$((D*4))):  "
-RMS[$ii]=$(./maos $args aper.d=$D dm.dx=[0.25 0.25] 2>>maos_check.stderr )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
 
 echo -n "LGS MOAO:        "
 RMS[$ii]=$(./maos $args aper.d=$D evl.moao=0 moao.dx=[1/2] 2>>maos_check.stderr )
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
-echo -n "LGS GLAO:        "
-RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf  recon.glao=1 wfs_lgs_ttf.conf 2>>maos_check.stderr )
+echo -n "LGS GLAO (inte): "
+RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf  recon.glao=1 recon.split=0 wfs_lgs_ttf.conf 2>>maos_check.stderr )
+echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
+ii=$((ii+1)) 
+
+echo -n "LGS GLAO (split):"
+RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf  recon.glao=1 recon.split=1 wfs_lgs_ttf.conf 2>>maos_check.stderr )
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
@@ -100,18 +104,23 @@ RMS[$ii]=$(./maos $args aper.d=$D -cmcao_ngs.conf recon.split=1 2>>maos_check.st
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
-echo -n "SCAO LGS (split):"
-RMS[$ii]=$(./maos $args aper.d=$D  -cscao_lgs.conf recon.split=1 2>>maos_check.stderr )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
-
 echo -n "SCAO LGS (inte): "
 RMS[$ii]=$(./maos $args aper.d=$D  -cscao_lgs.conf recon.split=0 2>>maos_check.stderr )
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
+echo -n "SCAO LGS (split):"
+RMS[$ii]=$(./maos $args aper.d=$D  -cscao_lgs.conf recon.split=1 2>>maos_check.stderr )
+echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
+ii=$((ii+1)) 
+
+echo -n "LGS LTAO (inte):"
+RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf fov_oa.conf recon.split=0 2>>maos_check.stderr)
+echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
+ii=$((ii+1)) 
+
 echo -n "LGS LTAO (split):"
-RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf fov_oa.conf 2>>maos_check.stderr)
+RMS[$ii]=$(./maos $args aper.d=$D dm_single.conf fov_oa.conf recon.split=1 2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 

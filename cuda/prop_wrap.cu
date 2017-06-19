@@ -399,23 +399,23 @@ void gpu_map2map_prep(PROP_WRAP_T*res, const cugrid_t &g_dir, const cugrid_t &g_
     int ny=(int)Z(floor)((nyps-1-dispy-EPS)*yratio1+1);
     //Sanity check.
     while((nx-1)*xratio+dispx+1>=nxps){
-	warning("out point is at %g with ratio %g, and input %d\n",
-		(nx-1)*xratio+dispx, xratio, nxps-1);
+	//warning("out point is at %g with ratio %g, and input %d\n",
+	//	(nx-1)*xratio+dispx, xratio, nxps-1);
 	nx--;
     }
     while((nx)*xratio+dispx+1<nxps){
-	warning("out point is at %g with ratio %g, and input %d\n",
-		(nx-1)*xratio+dispx, xratio, nxps-1);
+	//warning("out point is at %g with ratio %g, and input %d\n",
+	//	(nx-1)*xratio+dispx, xratio, nxps-1);
 	nx++;
     }
     while((ny-1)*yratio+dispy+1>=nyps){
-	warning("out point is at %g with ratio %g, and input %d\n",
-		(ny-1)*yratio+dispy, yratio, nyps-1);
+	//warning("out point is at %g with ratio %g, and input %d\n",
+	//	(ny-1)*yratio+dispy, yratio, nyps-1);
 	ny--;
     }
     while((ny)*yratio+dispy+1<nyps){
-	warning("out point is at %g with ratio %g, and input %d\n",
-		(ny-1)*yratio+dispy, yratio, nyps-1);
+	//warning("out point is at %g with ratio %g, and input %d\n",
+	//	(ny-1)*yratio+dispy, yratio, nyps-1);
 	ny++;
     }
     if(nx>nxdir-offx1) nx=nxdir-offx1;

@@ -618,7 +618,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		const double dispy=parms->evl.thetay->p[ievl]*hl;
 		const double scale=1-hl/parms->evl.hs->p[ievl];
 		prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p,
-			     aper->locs, aper->opdadd->p[idm]->p,
+			     aper->locs, aper->opdadd->p[ievl]->p,
 			     1, dispx, dispy, scale, 0, 0);   
 	    }
 	}

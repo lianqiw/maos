@@ -44,7 +44,15 @@ typedef struct {double x; double y;} dcomplex;
 	fprintf(stderr, "\033[01;31m%-15s:%-3d Fatal error\t",__FILE__, __LINE__); \
 	fprintf(stderr, A);						\
 	fprintf(stderr,"\033[00;00m");					\
-	mexErrMsgTxt("Error happend\n");				\
+	mexErrMsgTxt("Error happened\n");				\
+    }while(0)
+
+#define error2(A...) \
+    do{									\
+	fprintf(stderr, "\033[01;31m");					\
+	fprintf(stderr, A);						\
+	fprintf(stderr,"\033[00;00m");					\
+	mexErrMsgTxt("Error happened\n");				\
     }while(0)
 
 typedef struct file_t{
