@@ -38,14 +38,14 @@ dname2type={
     'M_CSP32': np.complex64,
     'M_CSP64': np.complex128,
     'M_DBL': np.double,
-    'M_FLT': np.float,
+    'M_FLT': np.float32,
     'M_HEADER': object,
     'M_INT16': np.int16,
     'M_INT32': np.int32,
     'M_INT64': np.int64,
     'M_INT8': np.int8,
     'M_SKIP': object,
-    'M_SP32': np.float,
+    'M_SP32': np.float32,
     'M_SP64': np.double
 }
 
@@ -222,6 +222,7 @@ def readbin_magic(fp):
     magic=readuint32(fp)
     if magic==26112: #padding
         magic=readuint32(fp)
+
     return magic
 def readbin_header(fp):
     M_SKIP=26112;
