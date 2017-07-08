@@ -70,7 +70,8 @@ typedef struct INTSTAT_T{
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/
     dcell *gy;          /**<gradient of i0 along y*/
-    dmat *i0sum;        /**<sum of i0*/
+    dmat *i0sum;        /**<sum of i0 for each subaperture*/
+    dmat *i0sumsum;     /**<sum of i0sum for all subapertures*/
     dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
@@ -84,7 +85,8 @@ typedef struct POWFS_T{
     /*Parameters about subapertures. */
     loc_t *saloc;       /**<lower left corner of the subaperture*/
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
-    dmat *saa;          /**<Subaperture area*/
+    dmat *saa;          /**<Subaperture normalized area*/
+    double saasum;      /**<sum of saa*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
     loccell *loc_dm;     /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/

@@ -869,16 +869,25 @@ if test "$with_cuda" != "no" ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
     fi
     if test "$cudaver" -ge 40 ;then
-	CUDAOPT+=" -gencode arch=compute_20,code=compute_20"
+	CUDAOPT+=" -gencode arch=compute_20,code=compute_20" #Fermi
     fi
     if test "$cudaver" -ge 42 ;then
-	CUDAOPT+=" -gencode arch=compute_30,code=compute_30"
+	CUDAOPT+=" -gencode arch=compute_30,code=compute_30" #Kepler. Introduced unified memory
     fi
     if test "$cudaver" -ge 65 ;then
-        CUDAOPT+=" -gencode arch=compute_50,code=compute_50"
+        CUDAOPT+=" -gencode arch=compute_50,code=compute_50" #Maxwell
     fi
     if test "$cudaver" -ge 80 ;then
-	CUDAOPT+=" -gencode arch=compute_60,code=compute_60"
+	CUDAOPT+=" -gencode arch=compute_60,code=compute_60" #Pascal. UM transparent migration.
+    fi
+    if test "$cudaver" -ge 90 ;then
+	CUDAOPT+=" -gencode arch=compute_70,code=compute_70" #Volta. UM access counter. ATS over NVlink. Cooperative Groups.
+    fi
+    if test "$cudaver" -ge 100 ;then
+	CUDAOPT+=" -gencode arch=compute_80,code=compute_80" #?
+    fi
+    if test "$cudaver" -ge 1100 ;then
+	CUDAOPT+=" -gencode arch=compute_90,code=compute_90" #?
     fi
     #if test -n "$OPENMP_CFLAGS";then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"

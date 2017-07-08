@@ -116,7 +116,7 @@ void cuztilt(Real *restrict g, Real *restrict opd,
    Apply matched filter. \todo this implementation relies on shared variable. It
 is probably causing competition.  */
 __global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
-				const Real *restrict ints, const Real *restrict i0sum, 
+				const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
 				int pixpsa, int nsa){
     extern __shared__ Real g0[];
     Real *g[3];
@@ -143,38 +143,40 @@ __global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
     }
     __syncthreads();
     if(threadIdx.x<2){
-	if(i0sum){/*normalize gradients according to siglev.*/
+	if(sigmatch==1){/*normalize gradients according to siglev.*/
 	    g[threadIdx.x][0]*=i0sum[isa]/g[2][0];
+	}else if(sigmatch==2){
+	    g[threadIdx.x][0]*=scale;
 	}
 	grad[isa+nsa*threadIdx.x]=g[threadIdx.x][0];
     }
 }
 
 static void mtche(Real *restrict grad, Real (*mtches)[2],
-		  const Real *restrict ints, const Real *restrict i0sum, 
+		  const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
 		  int pixpsa, int nsa, int msa, cudaStream_t stream){
     for(int isa=0; isa<nsa; isa+=msa){
 	int ksa=MIN(msa, nsa-isa);
 	mtche_do<<<ksa, 16, 16*3*sizeof(Real), stream>>>
-	    (grad+isa, mtches+pixpsa*isa, ints+pixpsa*isa, i0sum?i0sum+isa:0, pixpsa, nsa);
+	    (grad+isa, mtches+pixpsa*isa, ints+pixpsa*isa, sigmatch, i0sum?i0sum+isa:0, scale, pixpsa, nsa);
     }
 }
 /**
    Apply tCoG.
 */
-__global__ static void tcog_do(Real *grad, const Real *restrict ints, 
+__global__ static void tcog_do(Real *grad, const Real *restrict ints, Real siglev, Real *saa,
 			       int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real (*cogcoeff)[2], Real *srot){
     __shared__ Real sum[3];
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
     int isa=blockIdx.x;
     ints+=isa*nx*ny;
-    Real cogthres=cogcoeff[isa][0];
-    Real cogoff=cogcoeff[isa][1];
+    Real thres=cogcoeff[isa][0];
+    Real bkgrnd=cogcoeff[isa][1];
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    Real im=ints[ix+iy*nx]-cogoff;
-	    if(im>cogthres){
+	    Real im=ints[ix+iy*nx]-bkgrnd;
+	    if(im>thres){
 		atomicAdd(&sum[0], im);
 		atomicAdd(&sum[1], im*ix);
 		atomicAdd(&sum[2], im*iy);
@@ -183,6 +185,9 @@ __global__ static void tcog_do(Real *grad, const Real *restrict ints,
     }
     __syncthreads();
     if(threadIdx.x==0 && threadIdx.y==0){
+	if(saa){
+	    sum[0]=siglev*saa[isa];
+	}
 	if(Z(fabs)(sum[0])>0){
 	    Real gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;
 	    Real gy=(sum[2]/sum[0]-(ny-1)*0.5)*pixthetay;
@@ -423,7 +428,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}
 	if(parms->powfs[ipowfs].type==1){
 	    CUDA_CHECK_ERROR;
-	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].siglevsim, stream);
+	    pywfs_ints(cuwfs[iwfs].ints[0], phiout, cuwfs[iwfs],parms->wfs[iwfs].siglevsim);
 	    CUDA_CHECK_ERROR;
 	}else{
 	    if(do_geom){
@@ -455,7 +460,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 	    if(do_phy || parms->powfs[ipowfs].psfout || parms->powfs[ipowfs].dither || do_pistatout){/*physical optics */
 		CUDA_CHECK_ERROR;
-		gpu_wfsints(simu, phiout, gradref, iwfs, isim, stream);
+		gpu_wfsints(simu, phiout, gradref, iwfs, isim);
 		CUDA_CHECK_ERROR;
 	    }/*do phy */
 	}
@@ -505,18 +510,26 @@ void gpu_wfsgrad_queue(thread_t *info){
 		case 0:
 		    break; //no-op
 		case 1:
-		    mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche.P()), ints.M(), 
-			  parms->powfs[ipowfs].sigmatch?cuwfs[iwfs].i0sum.P():NULL,
-			  pixpsa, nsa, cuwfs[iwfs].msa, stream);
+		    {
+			Real sigratio=parms->powfs[ipowfs].sigmatch==2?(cuwfs[iwfs].i0sumsum/cursum(ints.M(),stream)):0;
+			mtche(gradcalc, (Real(*)[2])(cuwfs[iwfs].mtche.P()), ints.M(), 
+			      parms->powfs[ipowfs].sigmatch, cuwfs[iwfs].i0sum.P(), sigratio,
+			      pixpsa, nsa, cuwfs[iwfs].msa, stream);
+		    }
 		    break;
 		case 2:{
 		    Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
 		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
 		    int pixpsax=powfs[ipowfs].pixpsax;
 		    int pixpsay=powfs[ipowfs].pixpsay;
+		    double siglev=parms->powfs[ipowfs].siglev;
+		    if(parms->powfs[ipowfs].sigmatch==2){
+			siglev=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
+		    }
+		    Real *saa=(parms->powfs[ipowfs].sigmatch!=1)?cupowfs[ipowfs].saa.P():0;
 		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot.P():NULL;
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
-			(gradcalc, ints[0], 
+			(gradcalc, ints[0], siglev, saa,
 			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
 			 (Real(*)[2])cuwfs[iwfs].cogcoeff.P(), srot);
 		}

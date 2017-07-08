@@ -288,7 +288,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dfree(goff);
 	dfree(opd);
 	dfree(ints);
-	//gain
+	//Determine optical gain.
 	dmat *TT=pywfs_tt(pywfs);
 	double gxm=0, gym=0;
 	for(int isa=0; isa<nsa; isa++){
@@ -296,7 +296,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    gym+=TT->p[isa+nsa*3];
 	}
 	double gainscl=2.*nsa/(gxm+gym);
-	//gainscl*=2;//inject an error;
+	/*
+	  pywfs->gain is inverse of optical gain, to insure 1rad of input
+	  tip/tilt wavefront gives 1rad of gradient output.*/
 	pywfs->gain*=gainscl;
 	dscale(pywfs->gradoff, gainscl);
 	dscale(TT, gainscl);
@@ -571,15 +573,15 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
 	double isum=0;
 	switch(pywfs->sigmatch){
 	case 0:
-	    info_once("No siglev correction\n");
+	    info_once("PWFS: No siglev correction.\n");
 	    isum=pywfs->siglev*pywfs->saa->p[isa]; 
 	    break;
 	case 1:
-	    info_once("Individual correction\n");
+	    info_once("PWFS: Individual siglev correction.\n");
 	    isum=(IND(ints,isa,0)+IND(ints,isa,1)+IND(ints,isa,2)+IND(ints,isa,3));
 	    break;
 	case 2:
-	    info_once("Global correction (preferred);\n");
+	    info_once("PWFS: Global siglev correction.\n");//preferred.
 	    isum=imean*pywfs->saa->p[isa];
 	    break;
 	}
@@ -598,10 +600,6 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
-    /*if(pywfs->GTT) {
-	info2("Reusing cached pywfs->GTT\n");
-	return dref(pywfs->GTT);
-	}*/
     TIC;tic;info2("Computing pywfs_tt...");
     const loc_t *loc=pywfs->locfft->loc;
     dmat *opd=dnew(loc->nloc,1);
@@ -610,8 +608,6 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dmat *out=dnew(nsa*2,2);
     dmat *gradx=drefcols(out, 0, 1);
     dmat *grady=drefcols(out, 1, 1);
-    dmat *gradx2=dnew(nsa*2,1);
-    dmat *grady2=dnew(nsa*2,1);
 
     double ptt[3]={0,0,0};
     double alpha=0.005/206265.;
@@ -628,6 +624,10 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dzero(ints);
     pywfs_fft(&ints, pywfs, opd);
     pywfs_grad(&grady, pywfs, ints);
+#define PYWFS_TT_DUAL 0
+#if PYWFS_TT_DUAL
+    dmat *gradx2=dnew(nsa*2,1);
+    dmat *grady2=dnew(nsa*2,1);
     //-x
     ptt[1]=-alpha; ptt[2]=-alpha;
     loc_add_ptt(opd->p, ptt, loc);
@@ -644,10 +644,13 @@ dmat *pywfs_tt(const PYWFS_T *pywfs){
     dadd(&gradx, 1, gradx2, -1);
     dadd(&grady, 1, grady2, -1);
     dscale(out, 0.5/alpha);
-    dfree(gradx);
-    dfree(grady);
     dfree(gradx2);
     dfree(grady2);
+#else
+    dscale(out, 1./alpha);
+#endif
+    dfree(gradx);
+    dfree(grady);
     dfree(opd);
     dfree(ints);
     toc2("done");

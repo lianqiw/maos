@@ -160,7 +160,9 @@ __global__ void sum_do(Real *restrict res, const Real *a, const int n){
     }
 }
 /*
-  In each block, we first do the reduction in each warp. This avoid syncthreads and if test. Then we copy results from each wrap to the first wrap and do the reduction again.
+  In each block, we first do the reduction in each warp. This avoid syncthreads
+  and if test. Then we copy results from each wrap to the first wrap and do the
+  reduction again.
 */
 __global__ void sum2_do(Real *restrict res, const Real *a, const int n){
     __shared__ Real sb[REDUCE_WRAP*REDUCE_STRIDE];

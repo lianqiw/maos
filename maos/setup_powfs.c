@@ -205,6 +205,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea, int reduce_isolated){
     locresize(powfs[ipowfs].loc, count*nxsa);
     dresize(powfs[ipowfs].saa, count, 1);
     dresize(powfs[ipowfs].amp, count*nxsa, 1);
+    powfs[ipowfs].saasum=dsum(powfs[ipowfs].saa);
     if(powfs[ipowfs].loc_tel){
 	for(int jwfs=0; jwfs<powfs[ipowfs].saa_tel->nx; jwfs++){
 	    locresize(powfs[ipowfs].loc_tel->p[jwfs], count*nxsa);
@@ -1213,10 +1214,15 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     rand_t rstat;
     double neaspeckle2=0;
     dcell *sanea=NULL;
-    if(!intstat->i0){
-	error("i0 is not available\n");
+    if(!intstat || !intstat->i0){
+	if(!parms->powfs[ipowfs].phyusenea){
+	    error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
+	}
+	if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
+	     error("i0 is not available, please specify powfs.cogthres and powfs.cogoff to non-negative numbers.\n");
+	}
     }
-    if(parms->powfs[ipowfs].phytype==2 && parms->powfs[ipowfs].skip!=3){/*need nea in reconstruction*/
+    if(parms->powfs[ipowfs].phytype==2 && parms->powfs[ipowfs].skip!=3 && !parms->powfs[ipowfs].phyusenea){/*need nea in reconstruction*/
 	do_nea=1;
 	powfs[ipowfs].saneaxy=dcellnew(nsa, intstat->i0->ny);
 	sanea=dcellnew(intstat->i0->ny, 1);
@@ -1325,7 +1331,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     if(powfs[ipowfs].intstat){
 	error("Should only be called once\n");
     }
-    if(parms->powfs[ipowfs].phytype==1 || parms->powfs[ipowfs].phytypesim==1){
+    if(parms->powfs[ipowfs].phytype==1 || parms->powfs[ipowfs].phytypesim==1 || !parms->powfs[ipowfs].phyusenea){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
 	if(parms->load.i0){
 	    warning("Loading i0, gx, gy\n");

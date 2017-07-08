@@ -49,6 +49,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell *sanea=dcellnew(ni0,1);
     
     intstat->i0sum=dnew(nsa,ni0);
+    intstat->i0sumsum=dnew(ni0, 1);
+
     dcell *i0s=intstat->i0;
     dcell* gxs=intstat->gx/*PDELL*/;
     dcell* gys=intstat->gy/*PDELL*/;
@@ -86,6 +88,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	sanea->p[ii0]=dnew(nsa,2);
 	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 	double i0summax=0;
+	double i0sumsum=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
 	const int radgx=parms->powfs[ipowfs].radgx;
@@ -117,6 +120,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 				     pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
 	    
 	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
+	    i0sumsum+=IND(i0sum,isa,ii0);
 	    if(IND(i0sum,isa,ii0)>i0summax){
 		i0summax=IND(i0sum,isa,ii0);
 	    }
@@ -144,6 +148,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 		  ncrdisable, nsa);
 	}
+	intstat->i0sumsum->p[ii0]=i0sumsum;
     }/*ii0 */
     if(print_nea){
 	info2("Matched filter sanea:\n");

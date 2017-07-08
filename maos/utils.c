@@ -858,13 +858,16 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     dmat **mtche=NULL;
     double *i0sum=NULL;
+    double i0sumg=0;
     if(phytype==1){
 	if(powfs[ipowfs].intstat->mtche->ny==1){
 	    mtche=powfs[ipowfs].intstat->mtche->p;
 	    i0sum=powfs[ipowfs].intstat->i0sum->p;
+	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[0];
 	}else{
 	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
 	    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
+	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
 	}
     }
     const double *srot=(parms->powfs[ipowfs].radpix)?powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
@@ -876,17 +879,13 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     }
     double *pgradx=(*pgrad)->p;
     double *pgrady=pgradx+nsa;
-    double sigratio=1;
+    double i1sum=0;
     if(parms->powfs[ipowfs].sigmatch==2){
-	double i0sumg=0;
-	double i1sumg=0;
 	for(int isa=0; isa<nsa; isa++){
-	    i0sumg+=i0sum[isa];
-	    i1sumg+=dsum(ints[isa]);
+	    i1sum+=dsum(ints[isa]);
 	}
-	info("i0sumg/nsa=%g. Siglev=%g\n", i0sumg/nsa, parms->powfs[ipowfs].siglev);
-	sigratio=i0sumg/i1sumg;
     }
+
     for(int isa=0; isa<nsa; isa++){
 	double geach[3]={0,0,1};
 	switch(phytype){
@@ -899,7 +898,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 		scale=i0sum[isa]/dsum(ints[isa]);
 		break;
 	    case 2://match globally.
-		scale=sigratio;
+		scale=i0sumg/i1sum;
 		break;
 	    }
 	    dmulvec(geach, mtche[isa],ints[isa]->p,scale);
@@ -914,7 +913,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    case 1://normalization use current intensity (non-linear)
 		break;
 	    case 2://normalized use scaled current intensity (non-linear)
-		sumi=powfs[ipowfs].saa->p[isa]*parms->powfs[ipowfs].siglev/sigratio;
+		sumi=powfs[ipowfs].saa->p[isa]*i1sum/powfs[ipowfs].saasum;
 		break;
 	    }
 	    dcog(geach,ints[isa],0.,0.,

@@ -49,6 +49,7 @@ void curadd(curmat &A, Real beta, cudaStream_t stream);
 */
 Real curinn(const curmat &a, const curmat &b, cudaStream_t stream);
 void cursum2(Real *restrict, const curmat &a, cudaStream_t stream);
+Real cursum(const curmat &a, cudaStream_t stream);
 void curcellscale(curcell &A, Real alpha, cudaStream_t stream);
 Real curmax(const curmat &a, cudaStream_t stream);
 Real curmaxabs(const curmat &a, cudaStream_t stream);

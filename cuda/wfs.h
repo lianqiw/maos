@@ -62,6 +62,7 @@ public:
 class cuwfs_t{//one for each WFS.
 public:
     stream_t stream;
+    cuarray<stream_t> streams;
     cupowfs_t *powfs;
     cuarray<culoc_t> loc_dm;  /**<Grid for ray tracing from DM to WFS*/
     culoc_t loc_tel;  /**<Grid for ray tracing from Telescope to WFS*/
@@ -74,6 +75,7 @@ public:
     curmat srot;      /**<angle to rotate PSF/OTF*/
     curmat mtche;     /**<matched filter gradient operator.*/
     curmat i0sum;     /**<sum of i0 for each subaperture.*/
+    float i0sumsum;   /**<sum of i0sum for all subaps*/
     curmat bkgrnd2;   /**<background as an image*/
     curmat bkgrnd2c;  /**<calibration of background to subtract.*/
     curmat cogcoeff;
@@ -111,12 +113,16 @@ public:
     cucmat pyotf; //Truncated OTF to be multiplied by pyramid and FFT.
     curmat pypsf; //stores psf during modulation.
     curmat isum;//stores sum of psf for all subapertures at each frame in GPU.
+
     cufftHandle plan_py;
-    cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),lltg(0){
+    cuarray<cufftHandle> plan_pys;
+    cuccell pyotfs;
+    curcell pypsfs;
+    cuwfs_t():powfs(0),dtf(0),msa(0),custatb(0),custatt(0),lltg(0),i0sumsum(0){
     }
 };
 
-void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim, cudaStream_t stream);
+void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim);
 
 void cuztilt(Real *restrict g, Real *restrict opd, 
 	     const int nsa, const Real dx, const int nx, Real *imcc,
@@ -124,6 +130,6 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 __global__ void cpcenter_do(Comp *restrict out, int noutx, int nouty,
 			    const Comp *restrict in, int ninx, int niny);
 void pywfs_grad(curmat &grad, const curmat &ints, const curmat &saa, curmat &isum, const curmat &goff, const PYWFS_T *pywfs, cudaStream_t stream);
-void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaStream_t stream);
+void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev);
 dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm);
 #endif

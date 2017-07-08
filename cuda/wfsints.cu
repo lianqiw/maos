@@ -357,11 +357,14 @@ __global__ static void sa_add_otf_tilt_corner_do(Comp *restrict otf, int nx, int
 }
 /**
    Do physical wfs images in GPU. please check wfsints() in CPU code for comments.
+
+   stream is no longer an input parameter, as the FFT plan depends on it.
 */
-void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim, cudaStream_t stream){
+void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim){
     TIC;tic;
     cuarray<cupowfs_t>&cupowfs=cudata->powfs;
     cuarray<cuwfs_t>&cuwfs=cudata->wfs;
+    stream_t &stream=cuwfs[iwfs].stream;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;

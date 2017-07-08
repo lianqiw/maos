@@ -308,7 +308,19 @@ void cursum2(Real *restrict res, const curmat &a, cudaStream_t stream){
     cudaMemsetAsync(res, 0,sizeof(Real), stream);
     sum_wrap(res, a.P(), a.Nx()*a.Ny(), stream);
 }
-
+/**
+   Sum all the elements in an array, and return a value.
+*/
+Real cursum(const curmat &a, cudaStream_t stream){
+    Real out;
+    Real *res;
+    DO(cudaMalloc(&res, sizeof(Real)));
+    cudaMemsetAsync(res, 0, sizeof(Real), stream);
+    sum_wrap(res, a.P(), a.Nx()*a.Ny(), stream);
+    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    cudaFree(res);
+    return out;
+}
 
 /**
    Find the maximum value

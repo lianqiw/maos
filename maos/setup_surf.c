@@ -380,7 +380,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     if(recon->actinterp){
-	warning2("Replacing HA by HA*actinterp");
+	info2("Replacing HA by HA*actinterp");
 	dspcell *HA2=0;
 	dcellmm(&HA2, recon->HA_ncpa, recon->actinterp, "nn", 1);
 	dspcellfree(recon->HA_ncpa);

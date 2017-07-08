@@ -114,16 +114,18 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 		    dmat *mtche=concat_dcell_as_vector(mtchec);
 		    dcellfree(mtchec);
 		    if(iwfs!=iwfs0 && cuwfs[iwfs].mtche.P()==cuwfs[iwfs0].mtche.P()){
-			info("Reset mtche to 0\n");
+			//Delete old values.
 			cuwfs[iwfs].mtche=0;
 			cuwfs[iwfs].i0sum=0;
 		    }
 		    cp2gpu(cuwfs[iwfs].mtche, mtche);
 		    dfree(mtche);
 		    cp2gpu(cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*icol, nsa, 1);
+		    cuwfs[iwfs].i0sumsum=powfs[ipowfs].intstat->i0sumsum->p[icol];
 		}else{
 		    cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
 		    cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
+		    cuwfs[iwfs].i0sumsum=cuwfs[iwfs0].i0sumsum;
 		}
 	    }
 	}
@@ -184,11 +186,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    }
 		}
 	    }
+	    cp2gpu(cupowfs[ipowfs].saa, powfs[ipowfs].saa);
 	    if(powfs[ipowfs].pywfs){
 		cupowfs[ipowfs].pywfs=powfs[ipowfs].pywfs;
 		cp2gpu(cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
 		cp2gpu(cupowfs[ipowfs].pynominal, powfs[ipowfs].pywfs->nominal);
-		cp2gpu(cupowfs[ipowfs].saa, powfs[ipowfs].saa);
 		cp2gpu(cupowfs[ipowfs].pyoff, powfs[ipowfs].pywfs->gradoff);
 		if(powfs[ipowfs].pywfs->msaloc){
 		    cupowfs[ipowfs].msaloc=cuarray<culoc_t>(powfs[ipowfs].pywfs->msaloc->nx, 1);
@@ -207,7 +209,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuarray<cupowfs_t> &cupowfs=cudata->powfs;
 	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
-	cuwfs[iwfs].stream.reset();
+	cuwfs[iwfs].stream.reset();//Recreate streams in current GPU.
 	cuwfs[iwfs].powfs=&cupowfs[ipowfs];
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const int nwvl=parms->powfs[ipowfs].nwvl;

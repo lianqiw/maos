@@ -1018,7 +1018,7 @@ setup_recon_TT(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    TTy[isa]=1;
 		}
 	    }else if(parms->powfs[ipowfs].type==1){//PYWFS
-		TT=pywfs_tt(powfs[ipowfs].pywfs);
+		TT=powfs[ipowfs].pywfs->GTT; //pywfs_tt(powfs[ipowfs].pywfs);
 	    }else{
 		error("Invalid powfs.type\n");
 	    }

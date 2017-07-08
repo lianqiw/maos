@@ -80,11 +80,24 @@ void pywfs_grad(curmat &grad, /**<[out] gradients*/
 	cursum2(isum, ints, stream);//sum of ints
 	pywfs_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
 	    (grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
+	break;
+    default:
+	error("Invalid sigmatch.\n");
     }
 }
-void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaStream_t stream){
+/**
+   FFT for PYWFS.
+
+   stream is no longer an input parameter, as the FFT plan depends on it.
+
+   2017-06-22: Tried to parallelize the modulation step to multiple streams
+   within a GPU. Does not help since each FFT occupies the full GPU, preventing
+   stream concurrency.
+ */
+void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
     //Pyramid WFS
     cupowfs_t *cupowfs=cuwfs.powfs;
+    stream_t &stream=cuwfs.stream;
     PYWFS_T *pywfs=cupowfs->pywfs;
     cuzero(cuwfs.pypsf, stream);
     locfft_t *locfft=pywfs->locfft;
@@ -129,6 +142,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev, cudaS
 		const long offx2=nembed/2+offx-ncomp2;
 		const long ix0=MAX(-offx2, 0);
 		const long nx2=MIN(ncomp, nembed-offx2)-ix0;
+
 		cuzero(otf, stream);
 		cwm_do<<<DIM2(nx2, ny2,16),0,stream>>>
 		    (otf.P()+ix0+iy0*ncomp, 
@@ -209,7 +223,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     curmat grad0(nsa*2,1);
     cuzero(ints, stream);
     curadd(phiout, 1, phiout0, 1, stream);
-    pywfs_ints(ints, phiout, cuwfs, siglev, stream);
+    pywfs_ints(ints, phiout, cuwfs, siglev);
     pywfs_grad(grad0, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
     TIC;tic;
     //cuwrite(grad0, "grad0_gpu");
@@ -241,7 +255,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
 	//cuwrite(cumapin[0].p, "gpu_cumapin_%d", imod);
 	//cuwrite(phiout, "gpu_phiout_%d", imod);
 	cuzero(ints, stream);
-	pywfs_ints(ints, phiout, cuwfs, siglev, stream);
+	pywfs_ints(ints, phiout, cuwfs, siglev);
 	//cuwrite(ints, "gpu_ints_%d", imod);
 	pywfs_grad(grad, ints, cupowfs->saa, cuwfs.isum, cupowfs->pyoff, pywfs, stream);
 	curadd(grad, 1, grad0, -1, stream);
