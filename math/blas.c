@@ -335,7 +335,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     if(USE_SDD && M>USE_SDD){
 	ptrdiff_t nmax=M<N?N:M;
 	ptrdiff_t *iwork=mymalloc(nmax*8,ptrdiff_t);
-	warning_once("Using dgesdd in SVD\n");
+	info2("(dgesdd)");
 #ifdef USE_COMPLEX
 	R* rwork=0;
 	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,iwork,&info);
@@ -354,6 +354,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	free(work1);
 	free(iwork);
     }else{
+	info2("(dgesvd)");
 #ifdef USE_COMPLEX
 	R* rwork=0;
 	Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
