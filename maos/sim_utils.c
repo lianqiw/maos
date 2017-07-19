@@ -21,6 +21,7 @@
 #include "sim_utils.h"
 #include "setup_surf.h"
 #include "setup_powfs.h"
+#include "pywfs.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -741,7 +742,7 @@ static void init_simu_wfs(SIM_T *simu){
 		}		
 	    }else{
 		simu->ints->p[iwfs]=dcellnew(1,1);
-		simu->ints->p[iwfs]->p[0]=dnew(powfs[ipowfs].saloc->nloc,4);
+		simu->ints->p[iwfs]->p[0]=dnew(powfs[ipowfs].saloc->nloc,powfs[ipowfs].pywfs->nside);
 	    }
 	}
 	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom->p[iwfs] || parms->powfs[ipowfs].pistatout){

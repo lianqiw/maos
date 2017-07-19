@@ -30,6 +30,7 @@ typedef struct PYWFS_T{
     int modulpos;      /**<Number of positions per modulation cycle*/
     int modulring;     /**<Number of rings within the maximum radius to modulate*/
     int iwfs0;         /**<First iwfs for this powfs*/
+    int nside;         /**<Number of sides*/
     dmat *wvlwts;      /**<parms->powfs.wvlwts*/
     loc_t *loc;        /**<Pupil plane grid*/
     dmat  *amp;        /**<Pupil plane amplitude map*/
@@ -37,6 +38,7 @@ typedef struct PYWFS_T{
     ccell *pyramid;    /**<OPD of pyramid. Angular size of clear aperture is different*/
     cmat *nominal;     /**<For sampling results onto detector*/
     dspcell *si;       /**<For sampling results onto detector*/
+    dmat *sioff;       /**<Offset for si*/
     double gain;       /**<Optical gain of PYWFS*/
     dmat *saa;         /**<Subaperture area. Average is one*/
     dmat *gradoff;     /**<Gradient of a flat wavefront*/

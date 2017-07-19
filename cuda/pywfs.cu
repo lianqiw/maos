@@ -29,31 +29,59 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
+#define triscalex 0.866025403784439 //sqrt(3.)/2;
+#define PYWFS4_GRAD_CALC\
+    grad[i]=(ints[i]-ints[i+nsa]+ints[nsa*2+i]-ints[nsa*3+i])*alpha-goff[i]; \
+    grad[i+nsa]=(ints[i]+ints[i+nsa]-ints[nsa*2+i]-ints[nsa*3+i])*alpha-goff[i+nsa]
+
+#define PYWFS3_GRAD_CALC\
+    grad[i]=(ints[i+nsa]-ints[nsa*2+i])*alpha*triscalex-goff[i]; \
+    grad[i+nsa]=(ints[i]-0.5*(ints[i+nsa]+ints[nsa*2+i]))*alpha-goff[i+nsa]
 
 __global__ static void
-pywfs_grad_0_do(Real *grad, const Real *ints, const Real *saa, const Real isum, const Real *goff, Real gain, int nsa){
-    const Real alpha0=gain/isum;
+pywfs4_grad_0_do(Real *grad, const Real *ints, const Real *saa, const Real siglev, const Real *goff, Real gain, int nsa){
+    const Real alpha0=gain/siglev;
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
 	const Real alpha=alpha0/saa[i];
-	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
-	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
+	PYWFS4_GRAD_CALC;
     }
 }
 __global__ static void
-pywfs_grad_1_do(Real *grad, const Real *ints, const Real *saa, const Real *goff, Real gain, int nsa){
+pywfs4_grad_1_do(Real *grad, const Real *ints, const Real *saa, const Real *goff, Real gain, int nsa){
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
 	const Real alpha=gain/(ints[i]+ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i]);
-	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
-	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
+	PYWFS4_GRAD_CALC;
     }
 }
 __global__ static void
-pywfs_grad_2_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
+pywfs4_grad_2_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
     const Real alpha0=gain*nsa/(*isum);
     for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
 	const Real alpha=alpha0/saa[i];
-	grad[i]=(-ints[i]+ints[i+nsa]-ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i];
-	grad[i+nsa]=(-ints[i]-ints[i+nsa]+ints[nsa*2+i]+ints[nsa*3+i])*alpha-goff[i+nsa];
+	PYWFS4_GRAD_CALC;
+    }
+}
+__global__ static void
+pywfs3_grad_0_do(Real *grad, const Real *ints, const Real *saa, const Real siglev, const Real *goff, Real gain, int nsa){
+    const Real alpha0=gain/siglev;
+    for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
+	const Real alpha=alpha0/saa[i];
+	PYWFS3_GRAD_CALC;
+    }
+}
+__global__ static void
+pywfs3_grad_1_do(Real *grad, const Real *ints, const Real *saa, const Real *goff, Real gain, int nsa){
+    for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
+	const Real alpha=gain/(ints[i]+ints[i+nsa]+ints[nsa*2+i]);
+	PYWFS3_GRAD_CALC;
+    }
+}
+__global__ static void
+pywfs3_grad_2_do(Real *grad, const Real *ints, const Real *saa, const Real *isum, const Real *goff, Real gain, int nsa){
+    const Real alpha0=gain*nsa/(*isum);
+    for(int i=threadIdx.x + blockIdx.x * blockDim.x; i<nsa; i+=blockDim.x * gridDim.x){
+	const Real alpha=alpha0/saa[i];
+	PYWFS3_GRAD_CALC;
     }
 }
 
@@ -67,19 +95,43 @@ void pywfs_grad(curmat &grad, /**<[out] gradients*/
     switch(pywfs->sigmatch){
     case 0://No siglev correction
 	info_once("No siglev correction\n");
-	pywfs_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-	    (grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
+	switch(pywfs->nside){
+	case 3:
+	    pywfs3_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx()); 
+	    break;
+	case 4:
+	    pywfs4_grad_0_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, pywfs->siglev, goff, pywfs->gain, ints.Nx());
+	    break;
+	}
 	break;
     case 1:
 	info_once("Individual correction\n");
-        pywfs_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-	    (grad, ints, saa, goff, pywfs->gain, ints.Nx());
+	switch(pywfs->nside){
+	case 3:
+	    pywfs3_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, goff, pywfs->gain, ints.Nx());
+	    break;
+	case 4:
+	    pywfs4_grad_1_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, goff, pywfs->gain, ints.Nx());
+	    break;
+	}
 	break;
     case 2:
 	info_once("Global correction (preferred);\n");
 	cursum2(isum, ints, stream);//sum of ints
-	pywfs_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
-	    (grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
+	switch(pywfs->nside){
+	case 3:
+	    pywfs3_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx()); 
+	    break;
+	case 4:
+	    pywfs4_grad_2_do<<<DIM(ints.Nx(), 256), 0, stream>>>
+		(grad, ints, saa, isum, goff, pywfs->gain, ints.Nx());
+	    break;
+	}
 	break;
     default:
 	error("Invalid sigmatch.\n");
@@ -169,29 +221,27 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	const Real dx2=dx*nembed/ncomp;
 	const int nsa=cupowfs->saloc.Nloc();
 	const Real scale=(Real)nsa*siglev/(Real)(ncomp*ncomp);
-
-	for(int iy=0; iy<2; iy++){
-	    for(int ix=0; ix<2; ix++){
-		const int ind=ix+iy*2;
-		Real shx=0, shy=0;
-		culoc_t saloc;
-		if(cupowfs->msaloc){
-		    saloc=cupowfs->msaloc[ind];
-		}else{
-		    saloc=cupowfs->saloc;
-		}
-		if(pywfs->pupilshift){
-		    shx=IND(pywfs->pupilshift, ind, 0)*saloc.Dx();
-		    shy=IND(pywfs->pupilshift, ind, 1)*saloc.Dy();
-		}
-		Real* pout=ints.P()+ind*nsa;
-		prop_linear<<<DIM(nsa, 256), 0, stream>>>
-		    (pout, otf, otf.Nx(), otf.Ny(), 
-		     saloc, saloc.Nloc(),
-		     1./dx2, 1./dx2, 
-		     ((ix-0.5)*ncomp2)-(-ncomp2+0.5)+shx,
-		     ((iy-0.5)*ncomp2)-(-ncomp2+0.5)+shy, scale);
+	for(int ind=0; ind<pywfs->nside; ind++){
+	    Real shx=0, shy=0;
+	    culoc_t saloc;
+	    if(cupowfs->msaloc){
+		saloc=cupowfs->msaloc[ind];
+	    }else{
+		saloc=cupowfs->saloc;
 	    }
+	    if(pywfs->pupilshift){
+		shx=IND(pywfs->pupilshift, ind, 0)*saloc.Dx();
+		shy=IND(pywfs->pupilshift, ind, 1)*saloc.Dy();
+	    }
+	    Real* pout=ints.P()+ind*nsa;
+	    Real offx=IND(pywfs->sioff, ind, 0);
+	    Real offy=IND(pywfs->sioff, ind, 1);
+	    prop_linear<<<DIM(nsa, 256), 0, stream>>>
+		(pout, otf, otf.Nx(), otf.Ny(), 
+		 saloc, saloc.Nloc(),
+		 1./dx2, 1./dx2, 
+		 (offx*ncomp2)-(-ncomp2+0.5)+shx,
+		 (offy*ncomp2)-(-ncomp2+0.5)+shy, scale);
 	}
 	//cuwrite(ints, "gpu_ints"); exit(0);
     }
@@ -218,7 +268,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     }
     culoc_t culocout(pywfs->locfft->loc); 
     const int nsa=cupowfs->saloc.Nloc();
-    curmat ints(nsa,4);
+    curmat ints(nsa, pywfs->nside);
     curmat grad(nsa*2,1);
     curmat grad0(nsa*2,1);
     cuzero(ints, stream);

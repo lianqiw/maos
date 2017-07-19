@@ -1024,7 +1024,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DBL(dbg.gradoff_scale);
     READ_DMAT(dbg.pwfs_psx);
     READ_DMAT(dbg.pwfs_psy);
-    READ_INT(dbg.pwfs_roof);
+    READ_INT(dbg.pwfs_side);
     READ_DBL(dbg.pwfs_flate); parms->dbg.pwfs_flate/=206265000.;
     READ_DBL(dbg.pwfs_flatv); parms->dbg.pwfs_flatv/=206265000.;
     READ_DBL(dbg.pwfs_pupelong);

@@ -603,7 +603,7 @@ typedef struct DBG_CFG_T{
     double pwfs_flate;/**<pyramid flat edge angular width */
     double pwfs_flatv;/**<pyramid flat vertex angular width*/
     double pwfs_pupelong;/**<pyramid pupil (detector) elongation ratio (long axis / short axis).*/
-    double pwfs_roof; /**<Make pyramid WFS a single roof only.*/
+    int pwfs_side; /**<Make pyramid WFS a single roof only.*/
     dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
 }DBG_CFG_T;

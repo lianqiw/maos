@@ -470,7 +470,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    if(do_phy || parms->powfs[ipowfs].dither){
 		/*signal level was already multiplied in ints. */
 		curcell &ints=cuwfs[iwfs].ints;
-		const int pixpsa=(ints.N()==1)?4:(ints[0].N());//PyWFs and SHWFS
+		const int pixpsa=(ints.N()==1)?powfs[ipowfs].pywfs->nside:(ints[0].N());//PyWFs and SHWFS
 		if(save_ints){
 		    CUDA_CHECK_ERROR;
 		    zfarr_curcell(simu->save->intsnf[iwfs], simu->isim/dtrat, ints, stream);
