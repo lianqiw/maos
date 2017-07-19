@@ -704,9 +704,7 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     dcell *acc=dcellnew3(nwfs, 1, ngs, 0);
     dcell *meas=dcellnew3(nwfs, 1, ngs, 0);
     int nmod=input->nx;
-    dmat* pinput=input;
     dmat *mres=ddup(input);
-    dmat*  pmres=mres;
     kalman_init(kalman);
     rand_t rstat;
     seed_rand(&rstat, 1);
@@ -714,8 +712,8 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     dcell *inic=dcellnew(1,1); inic->p[0]=dnew_ref(nmod,1,(double*)1);//wrapper
     dmat *ini=inic->p[0];
     for(int istep=0; istep<input->ny; istep++){
-	ini->p=(double*)(pinput+istep);
-	outi->p=(double*)(pmres+istep);
+	ini->p=PCOL(input, istep);
+	outi->p=PCOL(mres,istep);
 	kalman_output(kalman, &outi, 1, -1);
 	int indk=0;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){

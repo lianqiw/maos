@@ -263,26 +263,27 @@ INLINE dcell *mx2dcell(const mxArray *A){
     return out;
     }*/
 static void *mx2any(const mxArray *A){
-    if(!mxIsCell(A)){
-	mexErrMsgTxt("A is not cell");
-    }
-    cell *out=0;
-    if(A && mxGetM(A) && mxGetN(A)){
-	out=cellnew(mxGetM(A), mxGetN(A));
-	for(int i=0; i<out->nx*out->ny; i++){
-	    mxArray *Ai=mxGetCell(A, i);
-	    if(mxIsCell(Ai)){
+    if(!A) return NULL;
+    else if(!mxIsCell(A)){
+	if(mxGetPi(A)){
+	    error("Complex type not handled by mx2any\n");
+	    return NULL;
+	}else if(mxIsSparse(A)){
+	    return mx2dsp(A);
+	}else{
+	    return mx2d(A);
+	}
+    }else{
+	cell *out=0;
+	if(A && mxGetM(A) && mxGetN(A)){
+	    out=cellnew(mxGetM(A), mxGetN(A));
+	    for(int i=0; i<out->nx*out->ny; i++){
+		mxArray *Ai=mxGetCell(A, i);
 		out->p[i]=(cell*)mx2any(Ai);
-	    }else if(mxGetPi(Ai)){
-		error("Complex type not handled by mx2any\n");
-	    }else if(mxGetIr(Ai)){
-		out->p[i]=(cell*)mx2dsp(Ai);
-	    }else{
-		out->p[i]=(cell*)mx2d(Ai);
 	    }
 	}
+	return out;
     }
-    return out;
 }
 static kalman_t *mx2kalman(const mxArray*A){
     kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
