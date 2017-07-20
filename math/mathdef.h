@@ -87,8 +87,9 @@ AOS_FFT_DEF(AOS_CMAT)
 AOS_MAT_DEF(AOS_LMAT, long)
 AOS_MATBIN_DEF(AOS_LMAT,long)
 
-#define cabs2f(A)     (powf(crealf(A),2)+powf(cimagf(A),2))
-#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
+#define abs2(A)      ((A)*(A))
+#define cabs2f(A)    (abs2(crealf(A))+abs2(cimagf(A)))
+#define cabs2(A)     (abs2(creal(A))+abs2(cimag(A)))
 
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)

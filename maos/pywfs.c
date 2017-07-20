@@ -177,9 +177,9 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	//const double ratio2=acos(sqrt(0.5))/acos(0.5);
 	for(long iy=skip; iy<ncomp-skip; iy++){
 	    for(long ix=skip; ix<ncomp-skip; ix++){
-		double xd=labs(ix-ncomp2);
+		double xd=fabs(ix-ncomp2);
 		double yy=iy-ncomp2;
-		double yd=labs(yy);
+		double yd=fabs(yy);
 		double opd=0;
 		if(!(pyside==4 && (xd<eskip||yd<eskip||(xd<vskip && yd<vskip)))
 		   && (xd*xd+yd*yd)<radius2){
@@ -197,7 +197,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 			    opd=yy;
 			}else{
 			    //Rotate the coordinate by 120 and apply above surface formula.
-			    opd=labs(yy-xd*sqrt3)*0.5;
+			    opd=fabs(yy-xd*sqrt3)*0.5;
 			}
 			break;
 		    case 4://4-sided pyramid

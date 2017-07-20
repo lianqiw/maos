@@ -21,25 +21,25 @@
 #include "../math/mathdef.h"
 dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid);
 typedef struct{
-    dmat *Ad; /*discrete state propagation at dT*/
-    dcell *Cd; /*From discrete state to WFS measurement*/
-    dmat *AdM;/*discrete state propagation at dthi*/
-    dmat *FdM;/*From discrete state to averaged mode for dthi*/
-    dmat *Qn;
-    dcell *M;  /*M is innovation gain.*/
-    dmat *P;  /*Error covariance matrix*/
-    double dthi;
-    dmat *dtrat;
-    dcell *Gwfs;
-    dcell *Rwfs;
-    dcell *Rn;
-    dmat *xhat;
-    dmat *xhat2;
-    dmat *xhat3;
+    dmat *Ad;  /**<discrete state propagation at dT*/
+    dcell *Cd; /**<From discrete state to WFS measurement*/
+    dmat *AdM; /**<discrete state propagation at dthi*/
+    dmat *FdM; /**<From discrete state to averaged mode for dthi*/
+    dmat *Qn;  /**<Covariance of the process noise term e_k*/
+    dcell *M;  /**<M is innovation gain.*/
+    dmat *P;   /**<Error covariance matrix*/
+    double dthi;/**<Sampling period of control loop*/
+    dmat *dtrat;/**<WFS sampling period over dthi*/
+    dcell *Gwfs;/**<WFS measurement from modes. Can be identity.*/
+    dcell *Rwfs;/**<WFS measurement noise covariance due to photon and RoN.*/
+    dcell *Rn;  /**<Total WFS measurement error due to signal evolution and Rwfs. */
+    dmat *xhat; /**<Temporary state*/
+    dmat *xhat2;/**<Temporary state*/
+    dmat *xhat3;/**<Temporary state*/
 }kalman_t;
 dmat* reccati(dmat **Pout, const dmat *A, const dmat *Qn, const dmat *C, const dmat *Rn);
 dcell* reccati_cell(dmat **Pout, const dmat *A, const dmat *Qn, const dcell *C, const dcell *Rn);
-kalman_t* sde_kalman(const dmat *coeff, double dthi, const dmat* dtrat, 
+kalman_t* sde_kalman(const dmat *coeff, const double dthi, const dmat* dtrat, 
 		     const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 void kalman_free(kalman_t *kalman);
 dmat *kalman_test(kalman_t *kalman, dmat *input);

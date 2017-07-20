@@ -158,7 +158,7 @@ int X(minsearch)(T *x, int nmod, T ftol, X(minsearch_fun) fun, void *info){
 	    pinit[i][j]=x[j];
 	}
 	if(i<nmod){
-	    pinit[i][i]*=1.15;//15% perturbation
+	    pinit[i][i]*=1.15;//115% perturbation (was 15%, 2017-07-19)
 	}
 	yinit[i]=fun(pinit[i], info);
 	if(!isfinite(yinit[i])){
