@@ -106,7 +106,7 @@
     void X(sort)(X(mat) *A, int ascend);				\
     X(mat) *X(enc)(X(mat) *A, X(mat) *dvec, int type, int nthread);	\
     typedef T (*X(minsearch_fun))(const T *x, void *info);		\
-    int X(minsearch)(T *x, int nmod, T ftol, X(minsearch_fun) fun, void *info); \
+    int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info); \
     void X(bessik)(T x, T xnu, T *ri, T *rk, T *rip, T *rkp);		\
     T X(trapz)(const X(mat)*x, const X(mat)*y);				\
 									\

@@ -769,7 +769,7 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
     ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     //info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
-    int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, (dminsearch_fun)mapfun, &data);
+    int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);
     ccellfree(data.otf);
     /* convert to native format along x/y or r/a to check for overflow*/
     if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radrot){

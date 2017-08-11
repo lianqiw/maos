@@ -61,3 +61,10 @@ cn2est_t *cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
     return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
 }
+dmat *sdepsd(const dmat *ff, const dmat *coeff){
+    info("here");
+    dmat *psd=0;
+    info("here");
+    sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
+    return psd;
+}

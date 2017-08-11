@@ -40,8 +40,24 @@ def handle_type(argtype):
         mx2c='mx2str'
         c2mx='str2mx'
         free_c='free'
-    elif argtype=='void*' or argtype[-5:]=='cell*':
-        mx2c='mx2any'
+    elif argtype=='dcell*':
+        mx2c='mx2dcell'
+        c2mx='any2mx'
+        free_c='cellfree'
+    elif argtype=='lcell*':
+        mx2c='mx2lcell'
+        c2mx='any2mx'
+        free_c='cellfree'
+    elif argtype=='loccell*':
+        mx2c='mx2loccell'
+        c2mx='any2mx'
+        free_c='cellfree'
+    elif argtype=='dspcell*':
+        mx2c='mx2dspcell'
+        c2mx='any2mx'
+        free_c='cellfree'
+    elif argtype=='cell*':
+        mx2c='mx2cell'
         c2mx='any2mx'
         free_c='cellfree'
     elif argtype[-2:]=='**': #output
@@ -93,7 +109,7 @@ for funname in funcs: #loop over functions
         argname=arg[1]
         mx2c, c2mx, free_c=handle_type(argtype)
         if len(mx2c)>0: #input argument
-            fundef+='    '+argtype+' '+argname+'=('+argtype+")"+mx2c+'(prhs['+str(count)+']);\n' #input from matlab
+            fundef+='    '+argtype+' '+argname+'='+mx2c+'(prhs['+str(count)+']);\n' #input from matlab
             count=count+1
         else: #output argument
             fundef+='    '+argtype[0:-1]+' '+argname+'=0;\n' #output

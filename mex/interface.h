@@ -110,16 +110,26 @@ INLINE mxArray *c2mx(const cmat *A){
     }
     return out;
 }
-INLINE mxArray *lmat2mx(const lmat *A){
-    if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
-    mxArray *out;
-    if(sizeof(long)==8){
-	out=mxCreateNumericMatrix(A->nx, A->ny,mxINT64_CLASS,mxREAL);
-    }else{
-	out=mxCreateNumericMatrix(A->nx, A->ny,mxINT32_CLASS,mxREAL);
+lmat *d2l(const dmat *A){
+    lmat *out=lnew(A->nx, A->ny);
+    for(long i=0; i<A->nx*A->ny; i++){
+	out->p[i]=(long)(A->p[i]);
     }
-    memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(long));
     return out;
+}
+dmat *l2d(const lmat *A){
+    dmat *out=dnew(A->nx, A->ny);
+    for(long i=0; i<A->nx*A->ny; i++){
+	out->p[i]=(double)(A->p[i]);
+    }
+    return out;
+}
+
+INLINE mxArray *l2mx(const lmat *A){
+    dmat *out=l2d(A);
+    mxArray *B=d2mx(out);
+    dfree(out);
+    return B;
 }
 /*
 INLINE mxArray *dcell2mx(const dcell *A){
@@ -168,10 +178,10 @@ mxArray *any2mx(const void *A_){
 	out=dsp2mx((dsp*)A_);
 	break;
     case M_INT64:
-	out=lmat2mx((lmat*)A_);
+	out=l2mx((lmat*)A_);
 	break;
     case M_INT32:
-	out=lmat2mx((lmat*)A_);
+	out=l2mx((lmat*)A_);
 	break;
     default:
 	info("id=%ld is not handled.\n", id);
@@ -236,6 +246,12 @@ INLINE dmat *mx2d(const mxArray *A){
     }
     return out;
 }
+INLINE lmat *mx2l(const mxArray *A){
+    dmat *B=mx2d(A);
+    lmat *out=d2l(B);
+    dfree(B);
+    return out;
+}
 /*
 INLINE dmat *mx2dvec(const mxArray *A){
     dmat *out=mx2d(A);
@@ -262,10 +278,12 @@ INLINE dcell *mx2dcell(const mxArray *A){
     }
     return out;
     }*/
-static void *mx2any(const mxArray *A){
+static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
     if(!A) return NULL;
     else if(!mxIsCell(A)){
-	if(mxGetPi(A)){
+	if(fun){
+	    return fun(A);
+	}else if(mxGetPi(A)){
 	    error("Complex type not handled by mx2any\n");
 	    return NULL;
 	}else if(mxIsSparse(A)){
@@ -279,24 +297,40 @@ static void *mx2any(const mxArray *A){
 	    out=cellnew(mxGetM(A), mxGetN(A));
 	    for(int i=0; i<out->nx*out->ny; i++){
 		mxArray *Ai=mxGetCell(A, i);
-		out->p[i]=(cell*)mx2any(Ai);
+		out->p[i]=(cell*)mx2any(Ai, fun);
 	    }
 	}
 	return out;
     }
 }
+static dcell *mx2dcell(const mxArray *A){
+    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2d);
+}
+static lcell *mx2lcell(const mxArray *A){
+    return (lcell*)mx2any(A, (void*(*)(const mxArray*))mx2l);
+}
+static loccell *mx2loccell(const mxArray *A){
+    return (loccell*)mx2any(A, (void*(*)(const mxArray*))mx2loc);
+}
+static dcell *mx2dspcell(const mxArray *A){
+    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2dsp);
+}
+static cell *mx2cell(const mxArray*A){
+    return (cell*) mx2any(A, NULL);
+}
+
 static kalman_t *mx2kalman(const mxArray*A){
     kalman_t *kalman=(kalman_t*)calloc(1, sizeof(kalman_t));
-    kalman->Ad=(dmat*)mx2any(mxGetField(A,0,"Ad"));
-    kalman->Cd=(dcell*)mx2any(mxGetField(A,0,"Cd"));
-    kalman->AdM=(dmat*)mx2any(mxGetField(A,0,"AdM"));
-    kalman->FdM=(dmat*)mx2any(mxGetField(A,0,"FdM"));
-    kalman->M=(dcell*)mx2any(mxGetField(A,0,"M"));
-    kalman->P=(dmat*)mx2any(mxGetField(A,0,"P"));
+    kalman->Ad=mx2d(mxGetField(A,0,"Ad"));
+    kalman->Cd=mx2dcell(mxGetField(A,0,"Cd"));
+    kalman->AdM=mx2d(mxGetField(A,0,"AdM"));
+    kalman->FdM=mx2d(mxGetField(A,0,"FdM"));
+    kalman->M=mx2dcell(mxGetField(A,0,"M"));
+    kalman->P=mx2d(mxGetField(A,0,"P"));
     kalman->dthi=(double)mxGetScalar(mxGetField(A,0,"dthi"));
-    kalman->dtrat=(dmat*)mx2any(mxGetField(A,0,"dtrat"));
-    kalman->Gwfs=(dcell*)mx2any(mxGetField(A,0,"Gwfs"));
-    kalman->Rwfs=(dcell*)mx2any(mxGetField(A,0,"Rwfs"));
+    kalman->dtrat=mx2d(mxGetField(A,0,"dtrat"));
+    kalman->Gwfs=mx2dcell(mxGetField(A,0,"Gwfs"));
+    kalman->Rwfs=mx2dcell(mxGetField(A,0,"Rwfs"));
     return kalman;
 }
 static mxArray* kalman2mx(kalman_t *kalman){

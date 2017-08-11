@@ -56,7 +56,6 @@ static T amotry(T **p, T y[], T psum[], int ndim,
     return ytry;
 }
 
-#define NMAX 5000
 #define GET_PSUM					\
     for (j=0;j<ndim;j++) {				\
 	for (sum=0.0,i=0;i<mpts;i++) sum += p[i][j];	\
@@ -85,6 +84,7 @@ static void amoeba(T **p, T y[], int ndim, T ftol,
     int i,ihi,ilo,inhi,j,mpts=ndim+1;
     T rtol,sum,swap,ysave,ytry;
     T psum[ndim];
+    int nmax=*nfunk; if(nmax<=0) nmax=5000;
     *nfunk=0;
     GET_PSUM;
     for (;;) {
@@ -111,7 +111,7 @@ static void amoeba(T **p, T y[], int ndim, T ftol,
 	    }
 	    break;
 	}
-	if (*nfunk >= NMAX) {
+	if (*nfunk >= nmax) {
 	    warning("NMAX exceeded\n");
 	    SWAP(y[0],y[ilo]);
 	    for (i=0;i<ndim;i++) {
@@ -142,13 +142,12 @@ static void amoeba(T **p, T y[], int ndim, T ftol,
 }
 #undef SWAP
 #undef GET_PSUM
-#undef NMAX
 #undef NRANSI
 /**
   Search minimum along multiple dimenstions. scale contains the scale of each dimension. x
   contains initial warm restart values.
 */
-int X(minsearch)(T *x, int nmod, T ftol, X(minsearch_fun) fun, void *info){
+int X(minsearch)(T *x, int nmod, T ftol, int nmax, X(minsearch_fun) fun, void *info){
     T pinit[nmod+1][nmod];
     T *pinit2[nmod+1];
     T yinit[nmod+1];
@@ -165,7 +164,7 @@ int X(minsearch)(T *x, int nmod, T ftol, X(minsearch_fun) fun, void *info){
 	    warning("yinit[%d]=%g\n",i, yinit[i]);
 	}
     }
-    int ncall=0;
+    int ncall=nmax>0?nmax:0;
     amoeba(pinit2, yinit, nmod, ftol, fun, info, &ncall);
     for(int j=0; j<nmod; j++){
 	x[j]=pinit[0][j];

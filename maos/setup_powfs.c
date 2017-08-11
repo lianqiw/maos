@@ -1278,7 +1278,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dmat *ints=intstat->i0->p[isa+iwfs*nsa];/*equivalent noise*/
 		    cogdata_t data={ints, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne, &rstat, 100};
 		    double ftol=0.0001;/*tolerance of nea^2 in pixel*/
-		    int ncall=dminsearch(coeff, 2, ftol, (dminsearch_fun)cogfun, &data);
+		    int ncall=dminsearch(coeff, 2, ftol, 5000, (dminsearch_fun)cogfun, &data);
 		    IND(cogcoeff,0,isa)=coeff[0];
 		    IND(cogcoeff,1,isa)=coeff[1];
 		    info("isa %d:, ncall=%3d, coeff=%g %g\n", isa, ncall, coeff[0], coeff[1]);
