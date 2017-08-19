@@ -461,6 +461,10 @@ static int test_crashed(int status, double frac){
     (void)frac;
     return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
 }
+static int test_all(int status, double frac){
+    (void)frac;
+    return status == S_FINISH || status==S_CRASH || status==S_KILLED || status==S_TOKILL;
+}
 static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
     (void)btn;
     int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
@@ -487,6 +491,9 @@ static void clear_jobs_crashed(GtkAction *btn){
 }
 static void clear_jobs_skipped(GtkAction *btn){
     clear_jobs(btn, test_skipped);
+}
+static void clear_jobs_all(GtkAction *btn){
+    clear_jobs(btn, test_all);
 }
 static void save_all_jobs(GtkAction *btn){
     (void)btn;
@@ -749,6 +756,10 @@ int main(int argc, char *argv[])
     {
 	/*first create actions*/
 	topgroup=gtk_action_group_new("topgroup");
+	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
+	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
+	gtk_action_group_add_action(topgroup, action_connect_all);
+
 	GtkAction *action_clear_finish=gtk_action_new("act-clear-finish", "Clear finished", "Clear finished jobs", GTK_STOCK_APPLY);
 	g_signal_connect(action_clear_finish, "activate", G_CALLBACK(clear_jobs_finished),NULL);
 	gtk_action_group_add_action(topgroup, action_clear_finish);
@@ -761,9 +772,9 @@ int main(int argc, char *argv[])
 	g_signal_connect(action_clear_crash, "activate", G_CALLBACK(clear_jobs_crashed),NULL);
 	gtk_action_group_add_action(topgroup, action_clear_crash);
 
-	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
-	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
-	gtk_action_group_add_action(topgroup, action_connect_all);
+	GtkAction *action_clear_all=gtk_action_new("act-clear-all", "Clear all", "Clear all jobs", GTK_STOCK_CLEAR);
+	g_signal_connect(action_clear_all, "activate", G_CALLBACK(clear_jobs_all),NULL);
+	gtk_action_group_add_action(topgroup, action_clear_all);
 
 	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill all jobs", GTK_STOCK_CANCEL);
 	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
@@ -780,6 +791,7 @@ int main(int argc, char *argv[])
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_skip)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_all)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_save_jobs)), -1);
