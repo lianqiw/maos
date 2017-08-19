@@ -319,9 +319,6 @@ void redirect(void){
 	    redirect2fd(pfd[1]);
 	}
     }
-    remove("run_recent.log");
-    mysymlink(fn, "run_recent.log");
-
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

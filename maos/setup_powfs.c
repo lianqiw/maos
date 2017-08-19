@@ -865,6 +865,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     if(parms->powfs[ipowfs].radrot){
 	info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
     }
+ 
     int nwvl=parms->powfs[ipowfs].nwvl;
     powfs[ipowfs].dtheta=dnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -875,6 +876,22 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    writebin(powfs[ipowfs].dtf[iwvl].si,
 		     "powfs%d_dtf%d_si",ipowfs,iwvl);
 	}
+    }
+    if(parms->powfs[ipowfs].qe){
+	warning("powfs.qe is specified\n");
+	powfs[ipowfs].qe=dread("%s", parms->powfs[ipowfs].qe);
+	dmat *qe=dref_reshape(powfs[ipowfs].qe, powfs[ipowfs].qe->nx*powfs[ipowfs].qe->ny, 1);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+		dsp*si=powfs[ipowfs].dtf[iwvl].si->p[isa];
+		dspscalex(si, qe);
+	    }
+	    if(parms->save.setup>1){
+		writebin(powfs[ipowfs].dtf[iwvl].si,
+			 "powfs%d_dtf%d_siqe",ipowfs,iwvl);
+	    }
+	}
+	dfree(qe);
     }
 }
 /**

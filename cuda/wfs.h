@@ -72,6 +72,7 @@ public:
     curmat  amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
     cuarray<cudtf_t> dtf;       /**<array for each wvl.*/
+    curmat qe;        /**<See powfs.qe*/
     curmat srot;      /**<angle to rotate PSF/OTF*/
     curmat mtche;     /**<matched filter gradient operator.*/
     curmat i0sum;     /**<sum of i0 for each subaperture.*/

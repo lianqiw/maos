@@ -98,36 +98,25 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 			int jx=ix-ncompx2;
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
+			//Pixel function
 			IND(pn,ix,iy)=sinc(ir*duxp)*sinc(ia*duyp)*pdtheta;
-			if(do_blur){
+			if(do_blur){//Charge diffusion.
 			    IND(pn,ix,iy)*=exp(e0x*(ir*ir*dux2)+e0y*(ia*ia*duy2));
 			}
 		    }
 		}
-		/*put peak in corner. pretreat nominal so
-		  that we avoid fftshift when forming i0.*/
-		
+		/*put peak in corner. */
 		cfftshift(nominal);
+		/*Embed a fftshift operation in nominal so that we avoid fftshift when forming i0.*/
 		cfft2(nominal,-1);
 		cfftshift(nominal);
 		cfft2(nominal,1);
-		//cancel FFT effect.
+		//cancel FFT scaling effect.
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
 		ccp(PIND(nominals,isa,iwfs), nominal);
-		//Coordinate of PSF pixels
+		//Coordinate of pixels
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
 		IND(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
-		{
-		    dmat *sisum=dspsum(IND(sis,isa,iwfs),1);
-		    double sum=dsum(sisum);
-		    dfree(sisum);
-		    sum*=pdtheta/(ncompx*ncompy);
-		    if(sum>1){
-			//sum can be smaller than one because we only sampled
-			//part of the psf. But it should never be more than 1.
-			warning("The image will be scaled by %g\n", sum);
-		    }
-		}
 		locfree(loc_ccd);
 	    }/*isa */
 	}/*iwfs */

@@ -452,17 +452,17 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
     return cov2d;
 }
 /**
-   shift i0 without wraping into i0x1 (+1) and i0x2 (-1)
+   shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
 */
-static void mki0shx(double *i0x1, double *i0x2, const dmat *i0, double scale){
+static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, const dmat *qe, double scale, long sx, long sy){
     int nx=i0->nx;
     typedef double pcol[nx];
     pcol *i0x1p=(pcol*)i0x1;
     pcol *i0x2p=(pcol*)i0x2;
-    for(int iy=0; iy<i0->ny; iy++){
-	for(int ix=0; ix<i0->nx-1; ix++){
-	    i0x1p[iy][ix+1]=IND(i0,ix,iy)*scale;
-	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
+    for(int iy=0; iy<i0->ny-sy; iy++){
+	for(int ix=0; ix<i0->nx-sx; ix++){
+	    i0x1p[iy+sy][ix+sx]=IND(i0,ix,iy)*scale*(qe?(IND(qe,ix+sx,iy+sy)/IND(qe,ix,iy)):1);
+	    i0x2p[iy][ix]=IND(i0,ix+sx,iy+sy)*scale*(qe?(IND(qe,ix,iy)/IND(qe,ix+sx,iy+sy)):1);
 	}
     }
 }
@@ -470,7 +470,8 @@ static void mki0shx(double *i0x1, double *i0x2, const dmat *i0, double scale){
 /**
   shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
 */
-static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
+/*
+static void mki0shy(double *i0y1, double *i0y2, const dmat *i0,  const dmat *qe, double scale){
     int nx=i0->nx;
     typedef double pcol[nx];
     pcol *i0y1p=(pcol*)i0y1;
@@ -481,7 +482,7 @@ static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
 	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
 	}
     }
-}
+    }*/
 /**
    Generating matched filter from averaged short exposure images.
 */
@@ -490,6 +491,7 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *i0, /**<Averaged subaperture image*/
 	   const dmat *gx, /**<derivative of i0 along x*/
 	   const dmat *gy, /**<derivative of i0 along y*/
+	   const dmat *qe, /**<non uniform quantum efficiency (optional)*/
 	   const dmat *dbkgrnd2, /**<background*/
 	   const dmat *dbkgrnd2c, /**<background calibration*/
 	   double bkgrnd,  /**<global background*/
@@ -545,14 +547,14 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
     adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
     if(mtchcrx){
-	mki0shx(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,kpx);
+	mki0sh(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,qe,kpx,1,0);
 	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
 	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
     }
     if(mtchcry){
-	mki0shy(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,kpy);
+	mki0sh(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,qe,kpy,0,1);
 	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
 	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);

@@ -131,8 +131,13 @@ __global__ void corner2center_abs2_atomic_do(Real *restrict out, int noutx, int 
 					     const Comp *restrict in, int ninx, int niny);
 __global__ void fftshift_do(Comp *wvf, const int nx, const int ny);
 __global__ void add_tilt_do(Real *opd, int nx, int ny, Real ox, Real oy, Real dx, Real ttx, Real tty);
-__global__ void cwm_do(Comp *dest, Real *from, int n);
-__global__ void cwm_do(Comp *dest, Comp *from, int n);
+template<typename D,typename F>
+__global__ void cwm_do(D* dest, F* from, long n){
+    for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
+	dest[i]*=from[i];
+    }
+}
+
 __global__ void cwm_do(Comp *dest, Comp *from, int lda, int ldb, int nx, int ny);
 __global__ void cwm_do(Comp *dest, Comp *from1, Comp *from2, int lda, int ldb, int nx, int ny);
 __global__ void unwrap_phase_do(Comp *wvf, Real *opd, int *embed, int n, Real wvl);

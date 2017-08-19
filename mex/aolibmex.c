@@ -59,7 +59,7 @@ cn2est_t *cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
     return cn2est;
 }
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
-    return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
+    return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
 }
 dmat *sdepsd(const dmat *ff, const dmat *coeff){
     info("here");

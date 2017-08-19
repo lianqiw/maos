@@ -99,7 +99,7 @@ void genmtch(dcell **mtche, dmat **sanea,
     }
     for(long isa=0; isa<nsa; isa++){    
 	dmat *nea2=0;
-	IND(*mtche, isa)=mtch(&nea2, IND(i0, isa), IND(gx, isa), IND(gy, isa), 0, 0,
+	IND(*mtche, isa)=mtch(&nea2, IND(i0, isa), IND(gx, isa), IND(gy, isa), 0, 0, 0,
 			      bkgrnd, bkgrnd, rne, pixtheta, pixtheta, 0, 0, cr);
 	/*Drop coupling in x/y gradients. */
 	(*sanea)->p[isa]=sqrt(nea2->p[0]);

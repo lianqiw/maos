@@ -60,6 +60,7 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     free(powfscfg->neareconfile);
     free(powfscfg->neasimfile);
     free(powfscfg->bkgrndfn);
+    free(powfscfg->qe);
 }
 void free_strarr(char **str, int n){
     if(str){
@@ -300,6 +301,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,bkgrndc);
     READ_POWFS_RELAX(str,bkgrndfn);
     READ_POWFS_RELAX(str,bkgrndfnc);
+    READ_POWFS_RELAX(str,qe);
     READ_POWFS_RELAX(dbl,pixblur);
     READ_POWFS_RELAX(dbl,radpixtheta);
     READ_POWFS_RELAX(int,radgx);
@@ -1053,6 +1055,7 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.recon);
     READ_INT(save.mvst);
     READ_INT(save.ncpa);
+    READ_INT(save.fdpcg);
     READ_INT(save.atm);/*Save atmosphere */
     READ_INT(save.run);
     READ_INT(save.opdr);/*reconstructed OPD on XLOC */
@@ -2381,7 +2384,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
    postproc misc parameters.
 */
 static void setup_parms_postproc_misc(PARMS_T *parms, int override){
-    if(!disable_save){
+    if(!disable_save && parms->sim.end>parms->sim.start){
 	/*Remove seeds that are already done. */
 	char fn[80];
 	int iseed=0; 
@@ -2418,13 +2421,15 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    sync(); exit(0);
 	}
     }
-    info2("There are %d valid simulation seeds: ",parms->sim.nseed);
-    for(int i=0; i<parms->sim.nseed; i++){
-	info2(" %ld", parms->sim.seeds->p[i]);
-    }
-    info2("\n");
-    if(parms->sim.nseed>1 && parms->dither){
-	warning("Some of the dither mode updates parameters still persist for different seeds.\n");
+    if(parms->sim.end>parms->sim.start){
+	info2("There are %d valid simulation seeds: ",parms->sim.nseed);
+	for(int i=0; i<parms->sim.nseed; i++){
+	    info2(" %ld", parms->sim.seeds->p[i]);
+	}
+	info2("\n");
+	if(parms->sim.nseed>1 && parms->dither){
+	    warning("Some of the dither mode updates parameters still persist for different seeds.\n");
+	}
     }
     if(parms->save.ngcov>0 && parms->save.gcovp<10){
 	warning("parms->save.gcovp=%d is too small. It may fill your disk!\n",
@@ -2786,15 +2791,12 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
       Output all the readed parms to a single file that can be used to reproduce
       the same simulation.
     */
-
     if(disable_save){
 	close_config(NULL);
     }else{
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
 	close_config("%s", fn);
-	remove("maos_recent.conf");
-	mysymlink(fn, "maos_recent.conf");
     }
     /*
       Postprocess the parameters for integrity. The ordering of the following
@@ -2816,6 +2818,18 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     setup_parms_postproc_recon(parms);
     setup_parms_postproc_misc(parms, override);
     print_parms(parms);
+
+    if(!disable_save){
+	//Make symlink after simulation runs.
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+	remove("maos_recent.conf");
+	mysymlink(fn, "maos_recent.conf");
+	
+	remove("run_recent.log");
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	mysymlink(fn, "run_recent.log");
+    }
     return parms;
 }
 /**

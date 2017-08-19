@@ -44,6 +44,7 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *i0, /**<Averaged subaperture image*/
 	   const dmat *gx, /**<derivative of i0 along x*/
 	   const dmat *gy, /**<derivative of i0 along y*/
+	   const dmat *qe, /**<non uniform quantum efficiency (optional)*/
 	   const dmat *dbkgrnd2, /**<background*/
 	   const dmat *dbkgrnd2c, /**<background calibration*/
 	   double bkgrnd,  /**<global background*/

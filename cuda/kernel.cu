@@ -407,18 +407,12 @@ __global__ void add_tilt_do(Real *opd, int nx, int ny, Real ox, Real oy, Real dx
 /**
    component wise multiply.
 */
-__global__ void cwm_do(Comp *dest, Real *from, int n){
+
+template <>
+__global__ void cwm_do(Comp *dest, Real *from,long n){
     for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
 	dest[i].x*=from[i];
 	dest[i].y*=from[i];
-    }
-}
-/**
-   component wise multiply.
-*/
-__global__ void cwm_do(Comp *dest, Comp *from, int n){
-    for(int i=threadIdx.x+blockIdx.x*blockDim.x; i<n; i+=blockDim.x*gridDim.x){
-	dest[i]*=from[i];
     }
 }
 

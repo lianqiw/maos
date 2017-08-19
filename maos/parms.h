@@ -145,6 +145,8 @@ typedef struct POWFS_CFG_T{
 		       each subaperture in each wfs. */
     char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
 		       calibrated out. depends on variability.*/
+    char *qe;       /**<File containing matrix of pixpsax*pixpsay specifying QE
+		     * of each pixel. To simulate PCCD non uniform response*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dsa;     /**<Size of subaperture in 1 dimension*/
@@ -673,7 +675,8 @@ typedef struct SAVE_CFG_T{
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/
     int mvst;        /**<MVST computation intermediate matrices*/
-    int ncpa;        /**<Save NCPA surface OPD on aper and powfs*/
+    int ncpa;        /**<save NCPA surface OPD on aper and powfs*/
+    int fdpcg;       /**<save FDPCG matrices*/
     /*run time */
     int atm;         /**<save atmosphere*/
     int run;         /**<save run time informaton for each time step*/

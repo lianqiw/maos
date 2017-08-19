@@ -260,7 +260,7 @@ void gpu_fieldstop(curmat &opd, curmat &amp, int *embed, int nembed,
     cucmat wvf(nembed, nembed);
     embed_wvf_do<<<DIM(opd.Nx(), 256), 0, stream>>> (wvf, opd, amp, embed, opd.Nx(), wvl);
     CUFFT(fftplan, wvf, CUFFT_FORWARD);
-    cwm_do<<<DIM(wvf.N(), 256),0,stream>>> (wvf, fieldstop, wvf.N());
+    cwm_do<<<DIM(wvf.N(), 256),0,stream>>> (wvf.P(), fieldstop.P(), wvf.N());
     CUFFT(fftplan, wvf, CUFFT_INVERSE);
     unwrap_phase_do<<<DIM2(wvf.Nx(), wvf.Ny(), 16),0,stream>>> (wvf, opd, embed, opd.Nx(), wvl);
 }

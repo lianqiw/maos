@@ -931,7 +931,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    }
 	}
 	    break;
-	case 3:{
+	case 3:{//This algorithm is not very useful.
 	    geach[0]=pgradx[isa];//warm restart
 	    geach[1]=pgrady[isa];
 	    maxapriori(geach, ints[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);

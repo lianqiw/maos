@@ -115,8 +115,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
 	    dmat *nea2=0;
-	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0), IND(gxs,isa,ii0),  IND(gys,isa,ii0),
-				     bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay, 
+	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0), IND(gxs,isa,ii0), IND(gys,isa,ii0),powfs[ipowfs].qe,
+				    bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay, 
 				     pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
 	    
 	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));

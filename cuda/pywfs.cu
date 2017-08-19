@@ -214,7 +214,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	CUFFT(cuwfs.plan_py, otf, CUFFT_FORWARD);
 	//cuwrite(otf, "gpu_wvf5");
 	cwm_do<<<DIM(ncomp*ncomp, 256), 0, stream>>>
-	    (otf, cupowfs->pynominal, ncomp*ncomp);
+	    (otf.P(), cupowfs->pynominal.P(), ncomp*ncomp);
 	CUFFT(cuwfs.plan_py, otf, CUFFT_INVERSE);
 	//cuwrite(otf, "gpu_wvf6");
 	//Use ray tracing for si

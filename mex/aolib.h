@@ -59,6 +59,6 @@ double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtra
 kalman_t* sde_kalman(const dmat *coeff, double dthi, const dmat* dtrat, const dcell *Gwfs, const dcell *Rwfs, const dmat *Proj);
 dmat *kalman_test(kalman_t *kalman, dmat *input);
 dspcell *slaving(loccell *aloc, const dcell *actcpl, dcell *NW, const lcell *actstuck, const lcell *actfloat, double thres, double scl);
-dmat *mtch(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, const dmat *bkbrnd2, const dmat *bkgrnd2c, double bkgrnd, double bkgrndc, double rne, double pixthetax, double pixthetay, double pixrot, int radgx, int cr);
+dmat *mtch(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, const dmat *qe, const dmat *bkbrnd2, const dmat *bkgrnd2c, double bkgrnd, double bkgrndc, double rne, double pixthetax, double pixthetay, double pixrot, int radgx, int cr);
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
 dmat *sdepsd(const dmat *ff, const dmat *coeff);

@@ -444,7 +444,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cspfree(tmp2);
     }
     /*Ray tracing operator for each WFS */
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(sel,"fdpcg_sel");
 	writebin(gx,"fdpcg_gx");
 	writebin(gy,"fdpcg_gy");
@@ -477,7 +477,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    }
 	}
 	csp *propx=fdpcg_prop(nps,nxp,nyp,nx,ny,dxp,dispx,dispy);
-	if(parms->save.setup){
+	if(parms->save.fdpcg){
 	    writebin(propx,"fdpcg_prop_wfs%d",iwfs);
 	}
 	/*need to test this in spatial domain. */
@@ -508,7 +508,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cfree(sc);
     }
 
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(Mhat,"fdpcg_Mhat");
     }
     FDPCG_T *fdpcg=mycalloc(1,FDPCG_T);
@@ -529,7 +529,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     lfree(perm);
 
     perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(perm, "fdpcg_perm");
     }
 #if PRE_PERMUT == 1//Permutat the sparse matrix.
@@ -538,20 +538,20 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     lfree(perm); perm=NULL;
     cspfree(Minvp);
     fdpcg->Minv=Minv;
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(Minv,"fdpcg_Minv");
     }
 #else//use block diagonal matrix
     fdpcg->perm=perm; perm=NULL;
     if(parms->gpu.tomo){
 	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
-	if(parms->save.setup>1){
+	if(parms->save.fdpcg){
 	    writebin(fdpcg->permhf, "fdpcg_permhf");
 	}
     }
     
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
     double svd_thres=1e-7;
@@ -565,7 +565,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	*/
 	csvd_pow(fdpcg->Mbinv->p[ib], -1, svd_thres);
     }
-    if(parms->save.setup){
+    if(parms->save.fdpcg){
 	writebin(fdpcg->Mbinv,"fdpcg_Minvb");
     }
 #endif

@@ -359,6 +359,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			if(notfused){
 			    int icol=powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0;
 			    ccell *nominalc=ccellsub(powfs[ipowfs].dtf[iwvl].nominal, 0, 0, icol, 1);
+			    //Convert nominal from cell of vector to matrix so
+			    //that cuda kernel can address multiple subapertures
 			    cmat *nominal=concat_ccell_as_vector(nominalc);
 			    ccellfree(nominalc);
 			    cp2gpu(cuwfs[iwfs].dtf[iwvl].nominal, nominal);
@@ -372,6 +374,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}else{
 		    cuwfs[iwfs].dtf  = cuwfs[iwfs0].dtf;
 		    cuwfs[iwfs].srot = cuwfs[iwfs0].srot;
+		}
+		if(wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+		    cp2gpu(cuwfs[iwfs].qe, powfs[ipowfs].qe);
+		}else{
+		    cuwfs[iwfs].qe=cuwfs[iwfs0].qe;
 		}
 		/*Matched filter */
 		if(parms->powfs[ipowfs].phytypesim==1){
