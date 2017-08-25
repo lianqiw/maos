@@ -62,13 +62,6 @@ dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr){
     return mtch(nea, i0, gx, gy, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, cr);
 }
 dmat *sdepsd(const dmat *ff, const dmat *coeff){
-    info("here");
-    dmat *psd=0;
-    info("here");
-    sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
-    return psd;
-}
-dmat *sdepsd(const dmat *ff, const dmat *coeff){
     dmat *psd=0;
     sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
     return psd;
