@@ -68,3 +68,8 @@ dmat *sdepsd(const dmat *ff, const dmat *coeff){
     sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
     return psd;
 }
+dmat *sdepsd(const dmat *ff, const dmat *coeff){
+    dmat *psd=0;
+    sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
+    return psd;
+}

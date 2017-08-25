@@ -19,4 +19,7 @@ cell *genotfmex(loc_t *loc, const dmat *amp, const dmat *opdbias, const dmat *ar
 dmat *m3projmex(dmat *mapin_0, char *header, loc_t *locout, double thetax, double thetay, double hs);
 dmat *mkcirmap(long nx, long ny, double cx, double cy, double r);
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
+cn2est_t *cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
+		    const dmat *saa, const double saat, const dmat* hs,
+		    const dmat *htrecon, int keepht, double l0, dcell *grad);
 dmat *sdepsd(const dmat *ff, const dmat *coeff);

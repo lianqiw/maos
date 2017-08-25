@@ -258,7 +258,7 @@ static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     dminsearch(coeff->p, ncoeff*nmod, tol, nmax, sde_diff, &data);
     //Do not scale coeff after the solution.
     double diff1=sde_diff(coeff->p, &data);
-    info2("sde_fit: %d interations: %g->%g. ", data.count, diff0, diff1);
+    info2("sde_fit: %d interations: %g->%g.\n", data.count, diff0, diff1);
     //Scale to make sure total energy is preserved.
     /*
       if(diff1>0.2 && diff1>diff0*0.75){
