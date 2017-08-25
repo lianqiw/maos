@@ -21,5 +21,5 @@
 void addnoise(dmat *A, rand_t* rstat, 
 	      const double bkgrnd, const double bkgrndc, 
 	      const dmat *bkgrnd2, const dmat *bkgrnd2c,
-	      const double rne);
+	      const dmat* qe, double rne);
 #endif

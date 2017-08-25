@@ -454,15 +454,15 @@ dmat *mk2dcov(loc_t *loc, const dmat *amp, double ampthres, const dmat *cov, int
 /**
    shift i0 along x or ywithout wraping into i0s1 (+sx/sy) and i0s2 (-sx/sy)
 */
-static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, const dmat *qe, double scale, long sx, long sy){
+static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, double scale, long sx, long sy){
     int nx=i0->nx;
     typedef double pcol[nx];
     pcol *i0x1p=(pcol*)i0x1;
     pcol *i0x2p=(pcol*)i0x2;
     for(int iy=0; iy<i0->ny-sy; iy++){
 	for(int ix=0; ix<i0->nx-sx; ix++){
-	    i0x1p[iy+sy][ix+sx]=IND(i0,ix,iy)*scale*(qe?(IND(qe,ix+sx,iy+sy)/IND(qe,ix,iy)):1);
-	    i0x2p[iy][ix]=IND(i0,ix+sx,iy+sy)*scale*(qe?(IND(qe,ix,iy)/IND(qe,ix+sx,iy+sy)):1);
+	    i0x1p[iy+sy][ix+sx]=IND(i0,ix,iy)*scale;
+	    i0x2p[iy][ix]=IND(i0,ix+sx,iy+sy)*scale;
 	}
     }
 }
@@ -471,7 +471,7 @@ static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, const dmat *qe, d
   shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
 */
 /*
-static void mki0shy(double *i0y1, double *i0y2, const dmat *i0,  const dmat *qe, double scale){
+static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
     int nx=i0->nx;
     typedef double pcol[nx];
     pcol *i0y1p=(pcol*)i0y1;
@@ -547,30 +547,29 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     adddbl(PCOL(i0g,2), 1, bkgrnd2, i0n, 1, bkgrnd_res);
     adddbl(PCOL(i0g,2), 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
     if(mtchcrx){
-	mki0sh(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,qe,kpx,1,0);
+	mki0sh(PCOL(i0g,mtchcrx),PCOL(i0g,mtchcrx+1),i0,kpx,1,0);
 	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2,  i0n,  1, bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcrx),   1, bkgrnd2c, i0n, -1, 0);
 	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2,  i0n,  1,bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcrx+1), 1, bkgrnd2c, i0n, -1, 0);
     }
     if(mtchcry){
-	mki0sh(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,qe,kpy,0,1);
+	mki0sh(PCOL(i0g,mtchcry),PCOL(i0g,mtchcry+1),i0,kpy,0,1);
 	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2,  i0n,  1, bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcry),  1, bkgrnd2c, i0n, -1, 0);
 	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2,  i0n,  1, bkgrnd_res);
 	adddbl(PCOL(i0g,mtchcry+1),1, bkgrnd2c ,i0n, -1, 0);
     }
 
-    if(bkgrnd2){
-	/*adding rayleigh backscatter poisson noise. */
-	for(int i=0; i<i0n; i++){/*noise weighting. */
-	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]+bkgrnd2[i]);
-	}	
-    }else{
-	for(int i=0; i<i0n; i++){/*noise weighting. */
-	    wt->p[i]=1./(rne*rne+bkgrnd+i0->p[i]);
+    /*adding rayleigh backscatter poisson noise. */
+    double rne2=rne*rne; 
+    for(int i=0; i<i0n; i++){/*noise weighting. */
+	if(qe){
+	    wt->p[i]=qe->p[i]/(rne2/(qe->p[i])+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));
+	}else{
+	    wt->p[i]=1./(rne2+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));
 	}
-    }
+    }	
 
     dmat *tmp=dpinv(i0g, wt);
     dmat *mtche=0;

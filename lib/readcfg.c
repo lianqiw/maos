@@ -55,7 +55,7 @@ static void *MROOT=NULL;
 typedef struct STORE_T{
     char *key;    //Name of the entry
     char *data;   //Value of the entry
-    long override;//Whether the entry has been overriden
+    long priority;//Priority of the entry
     long used;    //Whether the entry has been used
 }STORE_T;
 static int key_cmp(const void *a, const void *b){
@@ -162,7 +162,7 @@ static void print_key(const void *key, VISIT which, int level){
     (void)level;
     if(which==leaf || which==postorder){
 	if(fpout){
-	    if(!store->override){
+	    if(!store->priority){
 		fprintf(fpout, "#");
 	    }
 	    fprintf(fpout, "%s=", store->key);
@@ -223,20 +223,21 @@ void close_config(const char *format, ...){
 }
 /**
    Start the read config process by opening .conf files and fill the entries in
-   a hash table. A key can be protected. If a key is not protected, newer
-   entries with the same key will override a previous entry.
+   a hash table. A key has a priority or 0 or higher. A new key with same or
+   higher priority can override previous entry.
  */
 void open_config(const char* config_in, /**<[in]The .conf file to read*/
-		 const char* prefix     /**<[in]if not NULL, prefix the key with this.*/
+		 const char* prefix,    /**<[in]if not NULL, prefix the key with this.*/
+		 const int priority     /**<[in]Priorities of keys.*/
 		 ){
     if(!config_in) return;
     FILE *fd=NULL;
     char *config_file=NULL;
     int print_override=1;
     if(check_suffix(config_in, ".conf")){
-	if(exist(config_in)){
+	if(exist(config_in)){//from current path
 	    config_file=strdup(config_in);
-	}else{
+	}else{//from config dir
 	    config_file=find_file(config_in);
 	    print_override=0;
 	}
@@ -262,7 +263,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
     char *sline=NULL;
     int countnew=0;
     int countold=0;
-    
+    int countskip=0;
 #define MAXLN 40960
     char ssline[MAXLN];
     ssline[0]='\0';/*stores the available line. */
@@ -309,10 +310,8 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	if(!eql){//no equal sign
 	    if(check_suffix(ssline, ".conf")){
 		char *embeded=strextract(ssline);
-		if(embeded){
-		    open_config(embeded, prefix);
-		    free(embeded);
-		}
+		open_config(embeded, prefix, priority);
+		free(embeded);
 	    }else if(!strcmp(ssline, "__reset__")){
 		if(nstore>0){
 		    warning("Replacing all existing input\n");
@@ -347,7 +346,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
-		open_config(embeded,prefix);
+		open_config(embeded,prefix, priority);
 		free(embeded);
 	    }
 	}else{
@@ -390,12 +389,16 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		store->data=NULL;
 	    }
 	    store->used=0;
-	    store->override=0;
+	    store->priority=priority;
 	    void *entryfind=tfind(store, &MROOT, key_cmp);
 	    if(entryfind){ 
 		/*same key found */
 		STORE_T *oldstore=*(STORE_T**)entryfind;
-		if(append){
+		if(oldstore->priority > priority){
+		    countskip++;
+		    info2("Not overriding %-20s=%s", store->key, oldstore->data);
+		    //Skip the entry.
+		}else if(append){
 		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
 		    const char *olddata=oldstore->data;
 		    const char *newdata=store->data;
@@ -423,7 +426,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		    free(oldstore->data);
 		    /*move pointer of new value. */
 		    oldstore->data=store->data; store->data=0;
-		    oldstore->override++;
+		    oldstore->priority=priority;
 		    oldstore->used=store->used;
 		}
 		countold++;
@@ -441,7 +444,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew, fd?config_file:"command line");
+    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew,fd?config_file:"command line");
     if(fd){
 	fclose(fd);
     }
@@ -516,7 +519,7 @@ int readcfg_peek_override(const char *format,...){
     if(!store){
 	return 0;
     }else{
-	return store->override;
+	return store->priority;
     }
 }
 /**

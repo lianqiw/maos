@@ -99,7 +99,6 @@ typedef struct POWFS_T{
     dcell *gradncpa;    /**<Offset to grads due to ncpa. Copied to simu->gradoff*/
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
-    dmat *qe;           /**<Detector QE, one number per pixel. To simulate PCCD non uniform response*/
     /*LGS Physical Optics */
     dcell *sodium;      /**<Loaded and downsampled sodium profile from the file.*/
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/

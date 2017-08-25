@@ -644,11 +644,6 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("final");
-		if(cuwfs[iwfs].qe){
-		    warning_once("Applying QE\n");
-		    sa_ccwm_do<<<ksa, 64, 0, stream>>>
-			(ints[isa].P(), pixpsax*pixpsay, cuwfs[iwfs].qe.P(), 1);
-		}
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */

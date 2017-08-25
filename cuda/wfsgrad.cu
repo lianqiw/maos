@@ -43,9 +43,9 @@ extern "C"
 extern const char *dirskysim;
 /*
   Notice that both blocks and threads are partitioning isa
- */
+*/
 __global__ static void add_geom_noise_do(Real *restrict g, const Real *restrict nea, 
-				      int nsa, curandState *restrict rstat){
+					 int nsa, curandState *restrict rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
     curandState lstat=rstat[id];
     const int nstep=blockDim.x * gridDim.x;
@@ -114,7 +114,7 @@ void cuztilt(Real *restrict g, Real *restrict opd,
 }
 /**
    Apply matched filter. \todo this implementation relies on shared variable. It
-is probably causing competition.  */
+   is probably causing competition.  */
 __global__ static void mtche_do(Real *restrict grad, Real (*mtches)[2],
 				const Real *restrict ints, int sigmatch, const Real *restrict i0sum, Real scale,
 				int pixpsa, int nsa){
@@ -236,7 +236,7 @@ __device__ static Real curandp(curandState *rstat, Real xm){
 __global__ static void addnoise_do(Real *restrict ints0, int nsa, int pixpsa, Real bkgrnd, Real bkgrndc, 
 				   const Real* restrict bkgrnd2s,
 				   const Real* restrict bkgrnd2cs,
-				   Real rne, curandState *rstat){
+				   const Real* restrict qe, Real rne, curandState *rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
     const int nstep=blockDim.x * gridDim.x;
     curandState lstat=rstat[id];
@@ -245,11 +245,12 @@ __global__ static void addnoise_do(Real *restrict ints0, int nsa, int pixpsa, Re
 	const Real *restrict bkgrnd2=bkgrnd2s?(bkgrnd2s+isa*pixpsa):NULL;
 	const Real *restrict bkgrnd2c=bkgrnd2cs?(bkgrnd2cs+isa*pixpsa):NULL;
 	for(int ipix=0; ipix<pixpsa; ipix++){
+	    Real tot=(ints[ipix]+bkgrnd+(bkgrnd2?bkgrnd2[ipix]:0));
 	    Real corr=bkgrnd2c?(bkgrnd2c[ipix]+bkgrndc):bkgrndc;
-	    if(bkgrnd2){
-		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd+bkgrnd2[ipix])+rne*curand_normal(&lstat)-corr;
+	    if(qe){
+		ints[ipix]=(curandp(&lstat, tot*qe[ipix])+rne*curand_normal(&lstat))/qe[ipix]-corr;
 	    }else{
-		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd)+rne*curand_normal(&lstat)-corr;
+		ints[ipix]=curandp(&lstat, tot)+rne*curand_normal(&lstat)-corr;
 	    }
 	}
     }
@@ -483,7 +484,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
 			(ints[0], nsa, pixpsa, bkgrnd, bkgrnd*parms->powfs[ipowfs].bkgrndc,
 			 cuwfs[iwfs].bkgrnd2.P(), cuwfs[iwfs].bkgrnd2c.P(), 
-			 rne, cuwfs[iwfs].custat);
+			 cuwfs[iwfs].qe, rne, cuwfs[iwfs].custat);
 		    ctoc("noise");
 		    if(save_ints){
 			zfarr_curcell(simu->save->intsny[iwfs], simu->isim/dtrat, ints, stream);
@@ -616,10 +617,10 @@ void gpu_save_gradstat(SIM_T *simu){
 		curcellscale(tmp, 1.f/(Real)nstep, stream);
 		if(parms->sim.skysim){
 		    cuwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
-				 dirskysim,simu->seed,
-				 parms->powfs[ipowfs].order,
-				 parms->wfs[iwfs].thetax*206265,
-				 parms->wfs[iwfs].thetay*206265);
+			    dirskysim,simu->seed,
+			    parms->powfs[ipowfs].order,
+			    parms->wfs[iwfs].thetax*206265,
+			    parms->wfs[iwfs].thetay*206265);
 		}else{
 		    cuwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}

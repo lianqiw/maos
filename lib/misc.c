@@ -21,6 +21,7 @@
    Miscellaneous routines.
 */
 #include "misc.h"
+
 /**
    add photon and read out noise.  pcalib part of bkgrnd is calibrated
 out. pcalib2 part of bkgrnd2 is calibrated out.  */
@@ -30,31 +31,19 @@ void addnoise(dmat *A,              /**<[in/out]The pixel intensity array*/
 	      const double bkgrndc, /**<[in]Removed background in PDEs per pixel per frame*/
 	      const dmat *bkgrnd2,  /**<[in]Real background in PDEs of each pixel per frame.*/
 	      const dmat *bkgrnd2c, /**<[in]Removed background in PDEs of each pixel per frame.*/
+	      const dmat *qe,       /**<[in]Quantum Efficiency*/
 	      const double rne      /**<[in]Read out noise per pixel per read*/
 	      ){
+    assert(!bkgrnd2 || bkgrnd2->nx*bkgrnd2->ny==np);
+    assert(!bkgrnd2c || bkgrnd2c->nx*bkgrnd2c->ny==np);
     long np=A->nx*A->ny;
-    if(bkgrnd2){
-	assert(bkgrnd2->nx*bkgrnd2->ny==np);
-	if(bkgrnd2c){
-	    assert(bkgrnd2c->nx*bkgrnd2c->ny==np);
-	    for(int ix=0; ix<np; ix++){
-		A->p[ix]=randp(rstat,A->p[ix]+bkgrnd+bkgrnd2->p[ix])+rne*randn(rstat)-(bkgrndc+bkgrnd2c->p[ix]);
-	    }
+    for(int ix=0; ix<np; ix++){
+	double tot=A->p[ix]+bkgrnd+(bkgrnd2?bkgrnd2->p[ix]:0);
+	double corr=bkgrndc+(bkgrnd2c?bkgrnd2c->p[ix]:0);
+	if(qe){
+	    A->p[ix]=(randp(rstat, qe->p[ix]*tot)+rne*randn(rstat))/qe->p[ix]-corr;
 	}else{
-	    for(int ix=0; ix<np; ix++){
-		A->p[ix]=randp(rstat,A->p[ix]+bkgrnd+bkgrnd2->p[ix])+rne*randn(rstat)-bkgrndc ;
-	    }
-	}
-    }else{
-	if(bkgrnd2c){
-	    assert(bkgrnd2c->nx*bkgrnd2c->ny==np);
-	    for(int ix=0; ix<np; ix++){
-		A->p[ix]=randp(rstat,A->p[ix]+bkgrnd)-bkgrndc+rne*randn(rstat)-bkgrnd2c->p[ix];
-	    }
-	}else{
-	    for(int ix=0; ix<np; ix++){
-		A->p[ix]=randp(rstat,A->p[ix]+bkgrnd)-bkgrndc+rne*randn(rstat);
-	    }
+	    A->p[ix]=randp(rstat, tot)+rne*randn(rstat)-corr;
 	}
     }
 }

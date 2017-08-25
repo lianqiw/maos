@@ -877,22 +877,6 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		     "powfs%d_dtf%d_si",ipowfs,iwvl);
 	}
     }
-    if(parms->powfs[ipowfs].qe){
-	warning("powfs.qe is specified\n");
-	powfs[ipowfs].qe=dread("%s", parms->powfs[ipowfs].qe);
-	dmat *qe=dref_reshape(powfs[ipowfs].qe, powfs[ipowfs].qe->nx*powfs[ipowfs].qe->ny, 1);
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-		dsp*si=powfs[ipowfs].dtf[iwvl].si->p[isa];
-		dspscalex(si, qe);
-	    }
-	    if(parms->save.setup>1){
-		writebin(powfs[ipowfs].dtf[iwvl].si,
-			 "powfs%d_dtf%d_siqe",ipowfs,iwvl);
-	    }
-	}
-	dfree(qe);
-    }
 }
 /**
    setup the range to sodium layer as an additional parameter.
@@ -1180,7 +1164,7 @@ static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int
     nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
     for(int i=0; i<ntry; i++){
 	dcp(&ints2, ints);
-	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
+	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, 0, rne);
 	dcog(gny, ints2, 0, 0, cogthres, cogoff, 0);
 	double errx=gny[0]-gnf[0];
 	double erry=gny[1]-gnf[1];

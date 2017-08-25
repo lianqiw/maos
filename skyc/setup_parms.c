@@ -191,8 +191,8 @@ PARMS_S *setup_parms(const ARG_S *arg){
     char *config_path=find_config("skyc");
     addpath(config_path);
     free(config_path);
-    open_config(arg->conf,NULL);
-    open_config(arg->confcmd,NULL);
+    open_config(arg->conf,NULL,0);
+    open_config(arg->confcmd,NULL,1);
     remove(arg->confcmd);
     free(arg->conf);
     free(arg->confcmd);

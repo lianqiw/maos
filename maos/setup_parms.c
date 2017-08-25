@@ -222,6 +222,11 @@ INLINE int sum_dblarr(int n, double *a){
     readcfg_##A##arr_n((&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
+    }	
+#define READ_POWFS_MAT(A,B)				\
+    readcfg_strarr_nmax((&strtmp), npowfs, "powfs."#B);	\
+    for(i=0; i<npowfs; i++){					\
+	parms->powfs[i].B = readstr_##A##mat(strtmp[i]);/*doesn't need ## in B*/ \
     }								
 #define READ_POWFS_RELAX(A,B)						\
     readcfg_##A##arr_nmax((&A##tmp), npowfs, "powfs."#B);	\
@@ -301,7 +306,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,bkgrndc);
     READ_POWFS_RELAX(str,bkgrndfn);
     READ_POWFS_RELAX(str,bkgrndfnc);
-    READ_POWFS_RELAX(str,qe);
     READ_POWFS_RELAX(dbl,pixblur);
     READ_POWFS_RELAX(dbl,radpixtheta);
     READ_POWFS_RELAX(int,radgx);
@@ -352,6 +356,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,hc);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
+    READ_POWFS_MAT(d,qe);
     READ_POWFS_RELAX(dbl,dx);
     READ_POWFS(dbl,pixtheta);
     READ_POWFS(str,fnllt);
@@ -381,7 +386,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(powfsi->fnllt){
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
-	    open_config(powfsi->fnllt,prefix);
+	    open_config(powfsi->fnllt,prefix,0);
 	    powfsi->llt=mycalloc(1,LLT_CFG_T);
 	    powfsi->llt->d=readcfg_dbl("%sllt.d",prefix);
 	    powfsi->llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
@@ -1327,8 +1332,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(powfsi->phytypesim2==-1){
 		powfsi->phytypesim2=powfsi->phytypesim;
 	    }
-	    int pixpsay=powfsi->pixpsa;
-	    int pixpsax=powfsi->radpix;
+	    long pixpsay=powfsi->pixpsa;
+	    long pixpsax=powfsi->radpix;
 	    if(!pixpsax) pixpsax=pixpsay;
 	    if(pixpsax*pixpsay<4){
 		powfsi->mtchcr=0;//cannot do constraint.
@@ -1350,6 +1355,18 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
 	    //Input of modulate is in unit of wvl/D. Convert to radian
 	    powfsi->modulate*=wvlmax/parms->aper.d;
+	}
+	if(parms->powfs[ipowfs].qe){
+	    //Check rne input.
+	    long pixpsay=powfsi->pixpsa;
+	    long pixpsax=powfsi->radpix;
+	    if(!pixpsax) pixpsax=pixpsay;
+	    
+		if(parms->powfs[ipowfs].qe->nx*parms->powfs[ipowfs].qe->ny
+		   !=pixpsax*pixpsay){
+		    error("Input qe [%ldx%ld] does not match subaperture pixel [%ldx%ld]\n.", 
+			  parms->powfs[ipowfs].qe->nx, parms->powfs[ipowfs].qe->ny, pixpsax, pixpsay);
+	    }
 	}
 	if(powfsi->dither && powfsi->phystep!=0){
 	    warning("Dither requrie physical optics mode from the beginning, changed.\n");
@@ -2762,8 +2779,8 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     addpath(bin_path);
     free(bin_path);
     free(config_path);
-    open_config(mainconf,NULL);/*main .conf file. */
-    open_config(extraconf, NULL);
+    open_config(mainconf,NULL,0);/*main .conf file. */
+    open_config(extraconf, NULL,1);
     PARMS_T* parms=mycalloc(1,PARMS_T);
     readcfg_sim(parms);
     readcfg_aper(parms);

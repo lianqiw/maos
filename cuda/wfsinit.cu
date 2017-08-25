@@ -376,7 +376,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].srot = cuwfs[iwfs0].srot;
 		}
 		if(wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-		    cp2gpu(cuwfs[iwfs].qe, powfs[ipowfs].qe);
+		    cp2gpu(cuwfs[iwfs].qe, parms->powfs[ipowfs].qe);
 		}else{
 		    cuwfs[iwfs].qe=cuwfs[iwfs0].qe;
 		}

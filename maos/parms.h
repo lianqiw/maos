@@ -145,7 +145,7 @@ typedef struct POWFS_CFG_T{
 		       each subaperture in each wfs. */
     char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
 		       calibrated out. depends on variability.*/
-    char *qe;       /**<File containing matrix of pixpsax*pixpsay specifying QE
+    dmat *qe;       /**<File containing matrix of pixpsax*pixpsay specifying QE
 		     * of each pixel. To simulate PCCD non uniform response*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/

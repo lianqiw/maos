@@ -330,11 +330,11 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    case 1:/*both poisson and read out noise. */
 				{
 				    double bkgrnd=aster->wfs[iwfs].bkgrnd*dtrati;
-				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,IND(rnefs,idtrat,ipowfs));
+				    addnoise(ints[iwfs]->p[isa], &aster->rand, bkgrnd, bkgrnd, 0,0,0,IND(rnefs,idtrat,ipowfs));
 				}
 				break;
 			    case 2:/*there is still poisson noise. */
-				addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 0, 0,0,0);
+				addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 0, 0,0,0,0);
 				break;
 			    default:
 				error("Invalid noisy\n");

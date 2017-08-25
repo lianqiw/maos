@@ -262,19 +262,23 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 	}
     }
-    if(parms->save.setup){//Save PSF is uplink LLT.
+    if(parms->save.setup){//Save uplink PSF.
 	int nwvl=intstat->lotf->nx;
 	ccell*  lotf=intstat->lotf/*PCELL*/;
 	int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 	cmat *psfhat=cnew(nlpsf, nlpsf);
 	dmat *psf=dnew(nlpsf, nlpsf);
+	char header[64];
 	zfarr *lltpsfsave=NULL;
 	lltpsfsave=zfarr_init(nwvl, intstat->lotf->ny, "powfs%d_llt_psf", ipowfs);
-	for(int illt=0; illt<intstat->lotf->ny; illt++){
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		const double dx=powfs[ipowfs].llt->pts->dx;
-		const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
-		const double dpsf=wvl/(nlpsf*dx)*206265.;
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    const double dx=powfs[ipowfs].llt->pts->dx;
+	    const double wvl=parms->powfs[ipowfs].wvl->p[iwvl];
+	    const double dpsf=wvl/(nlpsf*dx)*206265.;
+	    snprintf(header, 64,"dtheta=%g #arcsecond\n", dpsf); 
+	    free(psf->header); psf->header=strdup(header);	    
+	    for(int illt=0; illt<intstat->lotf->ny; illt++){
+
 		ccp(&psfhat, IND(lotf,iwvl,illt));
 		cfftshift(psfhat);
 		cfft2i(psfhat, 1);
