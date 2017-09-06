@@ -198,7 +198,8 @@ static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
 static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
     LOCK(cudata->perf.mutex);/*wvf and psf is allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	cucmat &wvf=cudata->perf.wvf[iwvl];
+	//cucmat &wvf=cudata->perf.wvf[iwvl];
+	cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
 	cuzero(wvf, stream);
 	if(!psf[iwvl]) psf[iwvl]=curmat(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 	if(cuperf_t::psfsize[iwvl]==1){
@@ -303,7 +304,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    zfarr_cur(simu->save->evlopdol[ievl], isim, iopdevl, stream);
 	}
 	if(parms->plot.run){
-	    drawopdamp_gpu("OL", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
+	    drawopdamp_gpu("Evlol", aper->locs, iopdevl, stream, aper->amp1->p, NULL,
 			   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	}
 	PERFEVL_WFE_GPU(cuperf_t::cc_ol[ievl].P(), cuperf_t::ccb_ol[ievl]);
@@ -363,7 +364,7 @@ void gpu_perfevl_queue(thread_t *info){
 	}
 
 	if(parms->plot.run){
-	    drawopdamp_gpu("CL", aper->locs,iopdevl, stream , aper->amp1->p, NULL,
+	    drawopdamp_gpu("Evlcl", aper->locs,iopdevl, stream , aper->amp1->p, NULL,
 			   "Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
 	}
 	PERFEVL_WFE_GPU(cuperf_t::cc_cl[ievl].P(), cuperf_t::ccb_cl[ievl]);
