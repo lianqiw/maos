@@ -181,7 +181,7 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 	}
     }
     if(isnan(creal(res))){
-	error("NaN found\n");
+	warning("NaN found.\n");
     }
     return res;
 }

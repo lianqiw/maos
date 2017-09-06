@@ -705,7 +705,9 @@ gboolean addpage(gpointer indata){
     drawdata_t **drawdatawrap=(drawdata_t**)indata;
     drawdata_t *drawdata=*drawdatawrap;
     GtkWidget *drawarea;
-    if(!drawdata->fig) error("Must set fig before calling addpage");
+    if(!drawdata->fig) {
+	warning("Must set fig before calling addpage");
+    }
     GSList *subnbs=NULL;
     int nsubnb=0;
     GtkWidget *window=0;

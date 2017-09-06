@@ -377,26 +377,26 @@ void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *field
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
 		const APER_T *aper, const RECON_T *recon){
     if(!parms->plot.setup) return;
-    plotdir("FoV",parms,parms->sim.fov*206265,"fov");/*plot wfs/evaluation direction */
-    plotloc("FoV",parms,recon->ploc,0, "ploc");
-    plotloc("FoV",parms,recon->floc,0, "floc");
+    plotdir("Setup",parms,parms->sim.fov*206265,"fov");/*plot wfs/evaluation direction */
+    plotloc("Setup",parms,recon->ploc,0, "ploc");
+    plotloc("Setup",parms,recon->floc,0, "floc");
     for(int idm=0; idm<parms->ndm; idm++){
 	double ht=parms->dm[idm].ht;
-	plotloc("FoV", parms, recon->aloc->p[idm], ht, "aloc%d", idm);
+	plotloc("Setup", parms, recon->aloc->p[idm], ht, "aloc%d", idm);
     }
     for(int ips=0; ips<recon->npsr; ips++){
 	const double ht=recon->ht->p[ips];
-	plotloc("FoV",parms,recon->xloc->p[ips],ht, "xloc%d",ips);
+	plotloc("Setup",parms,recon->xloc->p[ips],ht, "xloc%d",ips);
     }
-    drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
+    drawopd("Setup",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 	    "x (m)","y (m)","aper");
     
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
+	drawopd("Setup", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
 	if(powfs[ipowfs].amp_tel){
 	    for(int wfsind=0; wfsind<parms->powfs[ipowfs].nwfs; wfsind++){
-		drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind]->p,NULL,
+		drawopd("Setup", powfs[ipowfs].loc, powfs[ipowfs].amp_tel->p[wfsind]->p,NULL,
 			"WFS Amplitude Map","x (m)","y (m)","powfs %d tel2wfs", ipowfs);
 	    }
 	}

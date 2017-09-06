@@ -65,9 +65,6 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		info("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n", 
 		     ipowfs, iwfs, ipowfs, diff);
 		different=1;
-	    }else{
-		info("powfs[%d].opdbias[%d] is same as powfs[%d].opdbias[0]\n", 
-		     ipowfs, iwfs, ipowfs);
 	    }
 	}
 	if(different){
@@ -556,8 +553,10 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
 		ccpd(&sepsf,IND(psepsf,isa,iwvl));
-		cembedc(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
-
+		//cembedc(seotfk,sepsf,-angle,C_ABS);/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
+		cembed(seotfk, sepsf, -angle);
+		if(isa==1401) writebin(sepsf, "sepsf_%d", isa);
+		if(isa==1401) writebin(seotfk, "sepsfrot_%d", isa);
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
@@ -576,6 +575,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    ccp(&intstat->fotf->p[isepsf]->p[iwvl*nsa+isa], seotfk);
 		}
 		cfft2(seotfk,1);/*PSF with peak in center. sum to (pixtheta/dtheta)^2 due to nominal.*/
+		if(isa==1401) writebin(seotfk, "seotfk_%d", isa);
 		/*no need fftshift becaose nominal is pre-treated */
 		dspmulcreal(IND(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);

@@ -1471,6 +1471,9 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 		}
 		dfree(mcc);
 	    }
+	    if(parms->save.setup){
+		writebin(powfs[ipowfs].opdbias, "powfs%d_opdbias", ipowfs);
+	    }
 	    if(parms->powfs[ipowfs].ncpa_method==1){//gradient offset
 		if(!powfs[ipowfs].gradncpa){
 		    powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
@@ -1494,7 +1497,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcel
 			}
 		    }
 		}
-		if(powfs[ipowfs].gradncpa){
+		if(powfs[ipowfs].gradncpa && parms->save.setup){
 		    writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
 		}
 	    }

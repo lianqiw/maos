@@ -1558,7 +1558,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 		parms->powfs[ipowfs].mtchstc=0;
 	    }
-	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].phytypesim2!=1)
+	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].phytypesim2!=1 || parms->powfs[ipowfs].phytype!=1)
 	       && parms->powfs[ipowfs].ncpa_method==2){
 		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs or CoG mode\n", ipowfs);
 		parms->powfs[ipowfs].ncpa_method=1;

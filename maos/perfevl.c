@@ -90,7 +90,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 	    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 	    dcwlog10(psftemp);
 	    double xylim[4]={-12,12,-12,12};
-	    ddraw("CL PSF", psftemp, xylim, opdzlim, 
+	    ddraw("PSFcl", psftemp, xylim, opdzlim, 
 		  "Science Closed Loop PSF", 
 		  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 	    dfree(psftemp);
@@ -191,7 +191,7 @@ void perfevl_ievl(thread_t *info){
 	    zfarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
 	}
 	if(parms->plot.run){
-	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
+	    drawopdamp("Evlol", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
 		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	}
 	PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
@@ -226,7 +226,7 @@ void perfevl_ievl(thread_t *info){
 		    dmat *psftemp=NULL;
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-			ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
+			ddraw("PSFol", psftemp, NULL, NULL, "Science Openloop PSF", 
 			      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl->p[iwvl]*1e6);
 			dfree(psftemp);
 		    }
@@ -289,7 +289,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	
 	if(parms->plot.run){
-	    drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
+	    drawopdamp("EvlcL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
 		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
 	}
 	if(save_evlopd){

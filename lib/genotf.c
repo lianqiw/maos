@@ -127,7 +127,8 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
     return B2;
 }
 /**
-   Generate OTF from the B or tip/tilted removed B matrix.
+   Generate OTF from the B or tip/tilted removed B matrix. Notice that tip/tilt
+   in opdbias is NOT removed.
 */
 static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
 		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
@@ -168,19 +169,18 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
     for(long jm=0; jm<notfy; jm++){
 	for(long im=0; im<notfx; im++){
 	    long (*jloc)[2]=qval[jm][im].loc;
-	    double tmp1,tmp2; dcomplex tmp3;
 	    dcomplex tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		tmp1=BPD[iloc1]*IND(BP, iloc2, iloc1);
-		tmp2=BPD[iloc2];
+		double tmp1=BPD[iloc1]*IND(BP, iloc2, iloc1);
+		double tmp2=BPD[iloc2];
 		if(amp){
 		    tmp1*=amp[iloc1];
 		    tmp2*=amp[iloc2];
 		}
 		if(opdbias){
-		    tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
+		    dcomplex tmp3=cexp(wvk*(opdbias[iloc1]-opdbias[iloc2]));
 		    tmp+=tmp1*tmp2*tmp3;
 		}else{
 		    tmp+=tmp1*tmp2;
@@ -359,23 +359,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     }
     
     GENOTF_T data={otf, loc, amp, opdbias, area, thres, wvl, ncompx, ncompy, nsa, pttr, B, pval, isafull, otffull};
-    /*
-    data.otf=otf;
-    data.loc=loc;
-    data.amp=amp;
-    data.opdbias=opdbias;
-    data.area=area;
-    data.thres=thres;
-    data.wvl=wvl;
-    data.ncompx=ncompx;
-    data.ncompy=ncompy;
-    data.nsa=nsa;
-    data.pttr=pttr;
-    data.B=B;
-    data.pval=pval;
-    data.isafull=isafull;
-    data.otffull=otffull;
-    */
+   
     thread_t info[NCPU];
     thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
     CALL_THREAD(info, 1);
@@ -564,7 +548,9 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     /*adding rayleigh backscatter poisson noise. */
     double rne2=rne*rne; 
     for(int i=0; i<i0n; i++){/*noise weighting. */
-	if(qe){
+	if(i0->p[i]<0){//ignore negative pixels.
+	    wt->p[i]=1./rne2;
+	}else if(qe){
 	    wt->p[i]=qe->p[i]/(rne2/(qe->p[i])+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));
 	}else{
 	    wt->p[i]=1./(rne2+bkgrnd+i0->p[i]+(bkgrnd2?bkgrnd2[i]:0));

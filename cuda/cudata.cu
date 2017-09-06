@@ -161,18 +161,18 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    const int nps=parms->atm.nps;
 	    long nxn=parms->atm.nxn;
 	    long nyn=parms->atm.nyn;
-	    mem_minimum+=sizeof(Real)*nps*nxn*nyn;
+	    mem_minimum+=sizeof(Real)*nps*nxn*nyn*2;
 	}
 	if(parms->gpu.evl){
-	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2);
+	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2)*8;
 	}
 	if(parms->gpu.wfs && !parms->sim.idealfit){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*4;
+		mem_minimum+=sizeof(Real)*parms->powfs[ipowfs].nwfs*(long)pow(parms->aper.d/parms->powfs[ipowfs].dx, 2)*8;
 	    }
 	}
 	if((parms->gpu.tomo || parms->gpu.fit)&& !parms->sim.idealfit){
-	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*4;
+	    mem_minimum+=sizeof(Real)*parms->atmr.nps*(long)pow(parms->aper.d*parms->tomo.pos/parms->atmr.dx, 2)*8;
 	}
 	//mem_minimum*=2;
 	if(mem_minimum==0){//gpu is disabled

@@ -253,7 +253,7 @@ void listen_draw(){
 			}
 		    }
 		}
-		if(!drawdata->fig) drawdata->fig=NULL;
+		if(!drawdata->fig) drawdata->fig=strdup("unkown");
 		drawdata_t **drawdatawrap=mycalloc(1,drawdata_t*);
 		drawdatawrap[0]=drawdata;
 		gdk_threads_add_idle(addpage, drawdatawrap);
