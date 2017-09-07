@@ -490,20 +490,21 @@ static uint32_t read_bin_magic(file_t *fp, char **header){
    Write fits header. extra is extra header that will be put in fits comment
 */
 static void
-write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
+write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mwSize *dims){
+    /*
     uint64_t naxis[count];
     va_list ap;
-    va_start (ap, count);              /*Initialize the argument list. */
+    va_start (ap, count);       
     int empty=0;
     for (int i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
+	uint64_t *addr=va_arg (ap, uint64_t*); 
 	if((*addr)==0) empty=1;
 	naxis[i]=*addr;
-    }
+	}
     va_end(ap);
 
     if(empty) count=0;
-
+    */
     int bitpix;
     switch(magic){
     case M_FLT:
@@ -536,16 +537,16 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
     }
     snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
-    snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
+    snprintf(header[hc], 80, "%-8s= %20llu", "NAXIS", ndim);   header[hc][30]=' '; hc++;
 #define FLUSH_OUT /*write the block and reset */	\
 	if(hc==nh){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
 	    memset(header, ' ', sizeof(char)*36*80);	\
 	    hc=0;					\
 	}
-    for (int i = 0; i < count; i++){
+    for (uint64_t i = 0; i < ndim; i++){
 	FLUSH_OUT;
-	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-5s%-3llu= %20lu", "NAXIS", i+1, (unsigned long)(dims[i])); header[hc][30]=' '; hc++;
     }
     if(str){/*We wrap our header in COMMENT section to avoid dealing with name
 	     * length limit*/
@@ -578,12 +579,11 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 /**
    Read fits header
  */
-int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
+int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mwSize **dims){
     char line[82];//extra space for \n and \0
     int end=0;
     int page=0;
     int bitpix=0;
-    int naxis=0;
     while(!end){
 	int start=0;
 	if(page==0){
@@ -598,21 +598,16 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	    zfread(line, 1, 80, fp); line[80]='\0';
 	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
 	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(sscanf(line+10, "%20d", &naxis)!=1) error("Unable to determine naxis\n");
-	    if(naxis>2) error("Data type not supported\n");
-	    if(naxis>0){
-		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20lu", (long unsigned int*)nx)!=1) error("Unable to determine nx\n");
-	    }else{
-		*nx=0;
+	    if(sscanf(line+10, "%20llu", ndim)!=1) error("Unable to determine naxis\n");
+	    if(*ndim>0){
+		*dims=calloc(sizeof(mwSize), *ndim);
+		for(uint64_t idim=0; idim<*ndim; idim++){
+		    zfread(line, 1, 80, fp); line[80]='\0';
+		    if(sscanf(line+10, "%20lu", &((*dims)[idim]))!=1)
+			error("Unable to determine nx\n");
+		}
 	    }
-	    if(naxis>1){
-		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20lu", (long unsigned int*)ny)!=1) error("Unable to determine ny\n");
-	    }else{
-		*ny=1;
-	    }
-	    start=3+naxis;
+	    start=3+*ndim;
 	}
 	for(int i=start; i<36; i++){
 	    zfread(line, 1, 80, fp); line[80]='\0';
@@ -707,14 +702,14 @@ information and string header if any.  */
 void write_header(const header_t *header, file_t *fp){
     if(fp->isfits){
 	if(!iscell(header->magic)){
-	    write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
+	    write_fits_header(fp, header->str, header->magic, header->ndim, header->dims);
 	}
     }else{
 	if(header){
 	    write_bin_header(header->str, fp);
 	}
 	write_bin_magic(header->magic, fp);
-	zfwritelarr(fp, 2, &header->nx, &header->ny);
+	zfwrite(header->dims, sizeof(uint64_t), 2, fp);
     }
 }
 /**
@@ -724,15 +719,20 @@ int read_header2(header_t *header, file_t *fp){
     int ans;
     header->str=NULL;
     if(fp->isfits){
-	ans=read_fits_header(fp, &header->str, &header->magic, &header->nx, &header->ny);
+	ans=read_fits_header(fp, &header->str, &header->magic, &header->ndim, &header->dims);
     }else{
 	header->magic=read_bin_magic(fp, &header->str);
 	if(header->magic==0){
 	    ans=0;
 	}else{
 	    ans=0;
-	    zfreadlarr(fp, 2, &header->nx, &header->ny);
+	    if(!header->dims) header->dims=calloc(2, sizeof(mwSize));
+	    zfread(header->dims, sizeof(mwSize), 2, fp);
 	}
+    }
+    header->ntot=header->ndim>0?1:0;
+    for(uint64_t idim=0; idim<header->ndim; idim++){
+	header->ntot*=header->dims[idim];
     }
     return ans;
 }

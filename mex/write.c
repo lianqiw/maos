@@ -45,22 +45,29 @@ static char *mx2str(const mxArray *header){
 }
 static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *header){
     char *str=mx2str(header);
-    uint32_t magic;
-    uint64_t m,n;
+    header_t header2={0,0,0,0};
+   
+    //uint64_t m,n;
     if(!arr){
-	m=0; n=0;
+	header2.ndim=0;
+	header2.dims=0;
     }else{
-	if(mxGetNumberOfDimensions(arr)>2){
-	    error("Arrays with more than 2 dimensions cannot be handled\n");
+	header2.ndim=mxGetNumberOfDimensions(arr);
+	header2.dims=(mwSize*)mxGetDimensions(arr);
+	if(header2.ndim==0){
+	    header2.ntot=0;
+	}else{
+	    header2.ntot=1;
+	    for(uint64_t id=0; id<header2.ndim; id++){
+		header2.ntot*=header2.dims[id];
+	    }
 	}
-	m=mxGetM(arr);
-	n=mxGetN(arr);
-        if(!m || !n){
+	if(!header2.ntot){
 	    arr=NULL;
 	}
     }
     if(arr && mxIsCell(arr)){
-	magic=MCC_ANY;
+	header2.magic=MCC_ANY;
 	int issparse=0;
 	mxArray *in;
 	int type2;
@@ -104,7 +111,6 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    type2=M_DBL;
 	}
 	//don't write global header.
-	header_t header2={magic, m, n, 0};
 	write_header(&header2, fp);
 	for(size_t ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
@@ -119,14 +125,14 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
     }else{/*not cell.*/
 	if(type == MAT_SP || ((arr) && mxIsSparse(arr))){
 	    if(sizeof(mwIndex)==4){
-		magic=M_SP32;
+		header2.magic=M_SP32;
 	    }else{
-		magic=M_SP64;
+		header2.magic=M_SP64;
 	    }
-	    header_t header2={magic, m, n, str};
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
+	    if(header2.ntot){
 		mwIndex *Jc=mxGetJc(arr);
+		long n=header2.dims[1];
 		long nzmax=Jc[n];
 		zfwrite(&nzmax, sizeof(double), 1, fp);
 		zfwrite(mxGetJc(arr), sizeof(mwIndex), n+1, fp);
@@ -135,14 +141,14 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }
 	}else if(type == MAT_CSP || ((arr) && mxIsSparse(arr))){
 	    if(sizeof(mwIndex)==4){
-		magic=M_CSP32;
+		header2.magic=M_CSP32;
 	    }else{
-		magic=M_CSP64;
+		header2.magic=M_CSP64;
 	    }
-	    header_t header2={magic, m, n, str};
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
+	    if(header2.ntot){
 		mwIndex *Jc=mxGetJc(arr);
+		long n=header2.dims[1];
 		long nzmax=Jc[n];
 		zfwrite(&nzmax, sizeof(double), 1, fp);
 		zfwrite(mxGetJc(arr), sizeof(mwIndex), n+1, fp);
@@ -150,32 +156,28 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr),nzmax,fp);
 	    }
 	}else if(type == M_DBL || ((arr) && mxIsDouble(arr) && !mxIsComplex(arr))){
-	    magic=M_DBL;
-	    header_t header2={magic, m, n, str};
+	    header2.magic=M_DBL;
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
-		zfwrite(mxGetPr(arr), sizeof(double), m*n, fp);
+	    if(header2.ntot){
+		zfwrite(mxGetPr(arr), sizeof(double), header2.ntot, fp);
 	    }  
 	}else if(type == M_FLT || ((arr) && mxIsSingle(arr) && !mxIsComplex(arr))){
-	    magic=M_FLT;
-	    header_t header2={magic, m, n, str};
+	    header2.magic=M_FLT;
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
-		zfwrite(mxGetPr(arr), sizeof(float), m*n, fp);
+	    if(header2.ntot){
+		zfwrite(mxGetPr(arr), sizeof(float), header2.ntot, fp);
 	    }
 	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr) && mxIsComplex(arr))){
-	    magic=M_CMP;
-	    header_t header2={magic, m, n, str};
+	    header2.magic=M_CMP;
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
-		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), m*n, fp);
+	    if(header2.ntot){
+		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), header2.ntot, fp);
 	    }
 	}else if(type == M_ZMP || ((arr)&& mxIsSingle(arr) && mxIsComplex(arr))){
-	    magic=M_ZMP;
-	    header_t header2={magic, m, n, str};
+	    header2.magic=M_ZMP;
 	    write_header(&header2, fp);
-	    if(m!=0 && n!=0){
-		zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), m*n, fp);
+	    if(header2.ntot){
+		zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), header2.ntot, fp);
 	    }
 	}else{
 	    error("Unrecognized data type");

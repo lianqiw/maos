@@ -95,8 +95,9 @@ typedef struct file_t{
 
 typedef struct {
     uint32_t magic;
-    uint64_t nx;
-    uint64_t ny;
+    uint64_t ntot;
+    uint64_t ndim;
+    mwSize *dims;
     char *str;
 }header_t;
 file_t* zfopen(const char *fn, const char *mod);
