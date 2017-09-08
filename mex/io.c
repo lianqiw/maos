@@ -28,6 +28,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <inttypes.h>
 #include "io.h"
 //static void write_timestamp(file_t *fp);
 //GNU GCC changes definition of inline to C99 compatible since 4.4
@@ -537,16 +538,16 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
 	snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
     }
     snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
-    snprintf(header[hc], 80, "%-8s= %20llu", "NAXIS", ndim);   header[hc][30]=' '; hc++;
+    snprintf(header[hc], 80, "%-8s= %20ld", "NAXIS", (long)ndim);   header[hc][30]=' '; hc++;
 #define FLUSH_OUT /*write the block and reset */	\
 	if(hc==nh){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
 	    memset(header, ' ', sizeof(char)*36*80);	\
 	    hc=0;					\
 	}
-    for (uint64_t i = 0; i < ndim; i++){
+    for (unsigned long i = 0; i < ndim; i++){
 	FLUSH_OUT;
-	snprintf(header[hc], 80, "%-5s%-3llu= %20lu", "NAXIS", i+1, (unsigned long)(dims[i])); header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-5s%-3lu= %20ld", "NAXIS", i+1, (long)(dims[i])); header[hc][30]=' '; hc++;
     }
     if(str){/*We wrap our header in COMMENT section to avoid dealing with name
 	     * length limit*/
@@ -598,7 +599,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	    zfread(line, 1, 80, fp); line[80]='\0';
 	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
 	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(sscanf(line+10, "%20llu", ndim)!=1) error("Unable to determine naxis\n");
+	    if(sscanf(line+10, "%"SCNu64, ndim)!=1) error("Unable to determine naxis\n");
 	    if(*ndim>0){
 		*dims=calloc(sizeof(mwSize), *ndim);
 		for(uint64_t idim=0; idim<*ndim; idim++){
