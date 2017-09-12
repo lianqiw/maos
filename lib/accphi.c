@@ -626,6 +626,7 @@ void prop_grid_cubic(ARGIN_GRID,
 	    SPLIT(dplocy,dplocy,nplocy);
 	    dplocy0=1.-dplocy;
 	    dplocx0=1.-dplocx;
+
 	    CUBIC_ADD_GRID;
 	}else{
 	    missing++;

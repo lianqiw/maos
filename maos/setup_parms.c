@@ -2387,12 +2387,15 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
  
     if(parms->recon.misreg_tel2wfs){
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    if(parms->recon.misreg_tel2wfs[iwfs]){
+	    if(parms->recon.misreg_tel2wfs[iwfs] && !parms->dbg.tomo_hxw){
 		warning("Set dbg.tomo_hxw=1\n");
 		parms->dbg.tomo_hxw=1;
-		parms->gpu.tomo=0;
 	    }
 	}
+    }
+    if(parms->dbg.tomo_hxw==1 && parms->gpu.tomo){
+	warning("Disable gpu.tomo when dbg.tomo_hxw=1\n");
+	parms->gpu.tomo=0;
     }
 }
 

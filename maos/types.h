@@ -89,9 +89,9 @@ typedef struct POWFS_T{
     double saasum;      /**<sum of saa*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     dmat *amp;          /**<amplitude map defined on loc, max at 1.*/
-    loccell *loc_dm;     /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
-    loccell *loc_tel;  /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
-    dcell *amp_tel;   /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
+    loccell *loc_dm;    /**<distorted loc mapped onto DM. size: (nwfs, ndm)*/
+    loccell *loc_tel;   /**<distorted loc mapped onto pupil. size: (nwfs, 1) */
+    dcell *amp_tel;     /**<real amplitude map on misregistered grid, loc_tel. used for gradient computing*/
     dcell *saa_tel;        /**<mis-registered saa, if any*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     /*NCPA */
@@ -123,7 +123,7 @@ typedef struct POWFS_T{
     dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     //subaperture noise equivalent angles.
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
-    int namp;           /**<number of amplitude maps*/
+    //int namp;           /**<number of amplitude maps*/
     int pixpsax;        /**<number of detector pixels along x*/
     int pixpsay;        /**<number of detector pixels along y*/
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/

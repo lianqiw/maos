@@ -601,7 +601,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	    zfread(line, 1, 80, fp); line[80]='\0';
 	    if(sscanf(line+10, "%"SCNu64, ndim)!=1) error("Unable to determine naxis\n");
 	    if(*ndim>0){
-		*dims=calloc(sizeof(mwSize), *ndim);
+		*dims=calloc(sizeof(mwSize), MAX(2,*ndim));
 		for(uint64_t idim=0; idim<*ndim; idim++){
 		    zfread(line, 1, 80, fp); line[80]='\0';
 		    if(sscanf(line+10, "%20lu", &((*dims)[idim]))!=1)
@@ -710,6 +710,9 @@ void write_header(const header_t *header, file_t *fp){
 	    write_bin_header(header->str, fp);
 	}
 	write_bin_magic(header->magic, fp);
+	if(header->ndim>2){
+	    warning("Third dimension and more will not be saved.\n");
+	}
 	zfwrite(header->dims, sizeof(uint64_t), 2, fp);
     }
 }
@@ -727,6 +730,7 @@ int read_header2(header_t *header, file_t *fp){
 	    ans=0;
 	}else{
 	    ans=0;
+	    header->ndim=2;
 	    if(!header->dims) header->dims=calloc(2, sizeof(mwSize));
 	    zfread(header->dims, sizeof(mwSize), 2, fp);
 	}

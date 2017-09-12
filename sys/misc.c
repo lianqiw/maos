@@ -256,8 +256,8 @@ char *myabspath(const char *path){
 	    free(cwd);
 	}
     }
-    if(!isdir(path)){
-	error("path %s does not exist\n", path);
+    if(!isdir(path2)){
+	error("path %s:%s does not exist\n", path, path2);
 	return 0;
     }else{
 	return strdup(path2);

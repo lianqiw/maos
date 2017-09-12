@@ -309,7 +309,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].pts->origy[isa]=powfs[ipowfs].saloc->locy[isa]+dxoffset;
     }
     /*Calculate the amplitude for each subaperture OPD point by ray tracing from
-      the pupil amplitude map.*/
+      the pupil amplitude map. Pupil istortion is accounted for.*/
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
     powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
@@ -351,8 +351,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
 
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
+
    
-    setup_powfs_misreg(powfs, parms, aper, ipowfs);
+    setup_powfs_misreg_tel(powfs, parms, aper, ipowfs);
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
       the are threshold*/
@@ -379,6 +380,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc){
 	sa_reduce(powfs, ipowfs, thresarea, 0);
     }
+    setup_powfs_misreg_dm(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realsaa=dcellnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
 	if(powfs[ipowfs].loc_tel){
@@ -439,7 +441,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
 }
 void 
-setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
+setup_powfs_misreg_tel(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
     int nwfsp=parms->powfs[ipowfs].nwfs;
     if(parms->misreg.tel2wfs){
 	TIC;tic;
@@ -480,7 +482,11 @@ setup_powfs_misreg(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowf
 	    toc2("misreg.tel2wfs");
 	}
     }/*if misreg */ 
-  
+}
+void 
+setup_powfs_misreg_dm(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs){
+    (void)aper;
+    int nwfsp=parms->powfs[ipowfs].nwfs;
     if(parms->misreg.dm2wfs){
 	TIC;tic;
 	/*

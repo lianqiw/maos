@@ -289,7 +289,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	
 	if(parms->plot.run){
-	    drawopdamp("EvlcL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
+	    drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p,NULL,
 		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
 	}
 	if(save_evlopd){

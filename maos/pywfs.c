@@ -123,7 +123,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     //For convenience.
     pywfs->loc=powfs[ipowfs].loc;
     pywfs->amp=powfs[ipowfs].amp;
-    setup_powfs_misreg(powfs, parms, aper, ipowfs);
+    setup_powfs_misreg_tel(powfs, parms, aper, ipowfs);
+    setup_powfs_misreg_dm(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realamp=dcellnew(parms->powfs[ipowfs].nwfs,1);
     for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];

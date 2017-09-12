@@ -1229,12 +1229,13 @@ static dmat *parse_poly(const char *_ps){
     
 }
 /**
-   Transform coordinate. loc contains x,y; locm contains xm, ym.
+   Transform coordinate. loc (input) contains x,y; locm (return) contains xm, ym.
    polyn contains the formula
-   xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
-   ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
+   xm{ip}=\{sum}_{ic}(coeff[0](0,ic)*pow(x,coeff[0](1,ic))*pow(y,coeff[0](2,ic)))
+   ym{ip}=\{sum}_{ic}(coeff[1](0,ic)*pow(x,coeff[1](1,ic))*pow(y,coeff[1](2,ic)))
+   was using string input. New scheme uses bin files to preserve precision.
 */
-loc_t *loctransform(loc_t *loc, const char *_polyn){
+loc_t *loctransform(loc_t *loc, const char *polycoeff){
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
     /*Test whether the transform is pure shift. */
@@ -1243,8 +1244,23 @@ loc_t *loctransform(loc_t *loc, const char *_polyn){
     double *restrict ym=locm->locy;
     //Parse from string to 3xn array
     dmat *cx=0, *cy=0;
-    {
-	char *polyn=strdup(_polyn);
+    if(check_suffix(polycoeff, ".bin")){
+	dmat *coeff=dread(polycoeff);
+	if(coeff->ny==4){
+	    cx=dnew(3, coeff->nx);
+	    cy=dnew(3, coeff->nx);
+	    for(int ic=0; ic<cx->ny; ic++){
+		IND(cx, 0, ic)=IND(coeff, ic, 2);//coeff for x
+		IND(cy, 0, ic)=IND(coeff, ic, 3);//coeff for y
+		IND(cx, 1, ic)=IND(cy, 1, ic)=IND(coeff, ic, 0);//power for x
+		IND(cx, 2, ic)=IND(cy, 2, ic)=IND(coeff, ic, 1);//power for y
+	    }
+	    dfree(coeff);
+	}else{
+	    error("coeff is in wrong format\n");
+	}
+    }else{
+	char *polyn=strdup(polycoeff);
 	char *px=polyn;
 	char *py=strchr(polyn, ';');
 	if(py==polyn || !py) error("Wrong format '%s'\n", polyn);

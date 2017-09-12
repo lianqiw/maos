@@ -34,9 +34,9 @@ void addnoise(dmat *A,              /**<[in/out]The pixel intensity array*/
 	      const dmat *qe,       /**<[in]Quantum Efficiency*/
 	      const double rne      /**<[in]Read out noise per pixel per read*/
 	      ){
+    long np=A->nx*A->ny;
     assert(!bkgrnd2 || bkgrnd2->nx*bkgrnd2->ny==np);
     assert(!bkgrnd2c || bkgrnd2c->nx*bkgrnd2c->ny==np);
-    long np=A->nx*A->ny;
     for(int ix=0; ix<np; ix++){
 	double tot=A->p[ix]+bkgrnd+(bkgrnd2?bkgrnd2->p[ix]:0);
 	double corr=bkgrndc+(bkgrnd2c?bkgrnd2c->p[ix]:0);

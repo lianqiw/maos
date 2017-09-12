@@ -536,37 +536,39 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     ...){
     format2fn;
     if(disable_draw || !draw_current(fig, fn)) return;
-    //Skip this drawing if line is busy.
-    if((TRYLOCK(lock))){
-	return;
-    }else{
-	UNLOCK(lock);
-	//We copy all the data and put the imagesc job into a task
-	//The task will free the data after it finishes.
-	struct imagesc_t data;
-	data.nx=nx;
-	data.ny=ny;
-#define datastrdup(x) data.x=(x)?strdup(x):0
-#define datamemdup(x, size,type)			\
-	if(x){						\
-	    data.x=mymalloc(size,type);			\
-	    memcpy(data.x, x,size*sizeof(type));	\
-	}else{						\
-	    data.x=0;					\
+    if (draw_single){
+	//Skip this drawing if line is busy.
+	if((TRYLOCK(lock))){//lock failed
+	    return;
+	}else{
+	    UNLOCK(lock);
 	}
-	datastrdup(fig);
-	datamemdup(limit, 4, double);
-	datamemdup(zlim, 2, double);
-	datamemdup(p, nx*ny, double);
-	datastrdup(title);
-	datastrdup(xlabel);
-	datastrdup(ylabel);
-	data.fn=format?strdup(fn):0;
+    }
+    //We copy all the data and put the imagesc job into a task
+    //The task will free the data after it finishes.
+    struct imagesc_t data;
+    data.nx=nx;
+    data.ny=ny;
+#define datastrdup(x) data.x=(x)?strdup(x):0
+#define datamemdup(x, size,type)		\
+    if(x){					\
+	data.x=mymalloc(size,type);		\
+	memcpy(data.x, x,size*sizeof(type));	\
+    }else{					\
+	data.x=0;				\
+    }
+    datastrdup(fig);
+    datamemdup(limit, 4, double);
+    datamemdup(zlim, 2, double);
+    datamemdup(p, nx*ny, double);
+    datastrdup(title);
+    datastrdup(xlabel);
+    datastrdup(ylabel);
+    data.fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
-	long group;
-	QUEUE(group, imagesc_do, &data, 1, 0);
-    }
+    long group;
+    QUEUE(group, imagesc_do, &data, 1, 0);
 }
 
 /**

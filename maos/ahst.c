@@ -31,6 +31,10 @@
    information, which hands GLAO mode correctly.
 
    Notice that update of this file may require GPU code update accordingly
+
+   2017-09-11: When there is misregistration/distortion between the DM and
+   science pupil, the assumed NGS mode on DM remain intact, but the influence on
+   Science OPD needs to use ray tracing. 
 */
 
 static TIC;
@@ -801,7 +805,8 @@ void calc_ngsmod_post(double *pttr_out, double *pttrcoeff_out, double *ngsmod_ou
     }
 }
 /**
-   Convert NGS modes to DM actuator commands using analytical expression. For >2 DMs, we only put NGS modes on ground and top-most DM.
+   Convert NGS modes to DM actuator commands using analytical expression. For >2
+   DMs, we only put NGS modes on ground and top-most DM.
 */
 void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(!M || !M->p[0]) return;
@@ -879,7 +884,11 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     }
 }
 /**
-   Convert NGS mode vector to aperture grid for science directions.  */
+   Convert NGS mode vector to aperture grid for science directions. 
+
+   2017-09-11: Deprecated. This routine does not take into account DM 2 science misregistration.
+*/
+
 void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod, 
 		    double thetax, double thetay,
 		    const double *mod, double alpha){
