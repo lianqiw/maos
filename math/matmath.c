@@ -905,6 +905,27 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
     }
 }
 /**
+   compute B=bc*B+ac*A. Use smallest dimension of both.
+   behavior changed on 2009-11-02. if A is NULL, don't do anything.
+*/
+void X(add_relax)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
+    if(A && A->nx && fabs(ac)>EPS){
+	if(!*B0){
+	    *B0=X(new)(A->nx, A->ny); 
+	    bc=0;/*no bother to accumulate. */
+	}
+	X(mat) *B=*B0;
+	long nx=MIN(A->nx, B->nx);
+	long ny=MIN(A->ny, B->ny);
+
+	for(long iy=0; iy<ny; iy++){
+	    for(long ix=0; ix<nx; ix++){
+		IND(B,ix,iy)=IND(B,ix,iy)*bc+IND(A,ix,iy)*ac;
+	    }
+	}
+    }
+}
+/**
    Add a scalar to matrix
 */
 void X(adds)(X(mat*)A, const T ac){

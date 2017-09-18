@@ -86,6 +86,7 @@
     void X(polyval)(X(mat) *A, XR(mat)*p);				\
     void X(addI)(X(mat) *A, T val);					\
     void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
+    void X(add_relax)(X(mat) **B0, T bc,const X(mat) *A, const T ac);		\
     void X(adds)(X(mat*)A, const T ac);					\
     void X(tikcr)(X(mat) *A, T thres);					\
     X(mat)* X(logspace)(R emin, R emax, long n) CHECK_UNUSED_RESULT;	\

@@ -60,6 +60,7 @@ static ARG_T * parse_args(int argc, char **argv){
     arg->iarg=optind;
     return arg;
 }
+
 /**
    The main.
 */
@@ -272,11 +273,11 @@ int main(int argc, char *argv[]){
 		error("Invalid restype=%d\n", restype);
 	    }
 
-	    dadd(&reshim->p[ipath], 1, reshi->p[ii], 1);
-	    dadd(&reslom->p[ipath], 1, reslo->p[ii], 1);
+	    dadd_relax(&reshim->p[ipath], 1, reshi->p[ii], 1);
+	    dadd_relax(&reslom->p[ipath], 1, reslo->p[ii], 1);
 	    if(restype==1){//maos
-		dadd(&resolhim->p[ipath], 1, resolhi->p[ii], 1);
-		dadd(&resollom->p[ipath], 1, resollo->p[ii], 1);
+		dadd_relax(&resolhim->p[ipath], 1, resolhi->p[ii], 1);
+		dadd_relax(&resollom->p[ipath], 1, resollo->p[ii], 1);
 	    }
 	    /*
 	      snprintf(fn, PATH_MAX, "%s/Resuptcmd_%ld.bin", path[ipath], seed[iseed]);
