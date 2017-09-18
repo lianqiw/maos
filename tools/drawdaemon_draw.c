@@ -159,7 +159,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, spacing=%g, ntic=%d, order1=%g\n",
 	      xmin, xmax, diff, *tic1, spacing, *ntic, order1);
     }
-    if(fabs(*order)<3){
+    if(abs(*order)<3){
 	*tic1=*tic1*pow(10,*order);
 	*dtic=*dtic*pow(10,*order);
 	*order=0;
