@@ -36,7 +36,7 @@ cumoao_t::cumoao_t(const PARMS_T *parms, MOAO_T *moao, dir_t *dir, int _ndir, cu
 	actslave=cusp(moao->actslave->p[0], 1);
     }
 
-    dir_t dir0={0,0,INFINITY,0};
+    dir_t dir0;
     ha.Init_l2d(grid->fmap, &dir0, 1, amap);
     opdfit=curcell(1,1,grid->fmap.nx,grid->fmap.ny);
     opdfit2=curcell(1,1,grid->fmap.nx,grid->fmap.ny);

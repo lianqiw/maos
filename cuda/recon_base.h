@@ -25,7 +25,11 @@ struct dir_t{
     Real thetax;
     Real thetay;
     Real hs;
+    Real misregx;
+    Real misregy;
     int skip;
+public:
+    dir_t():thetax(0),thetay(0),hs(INFINITY),misregx(0),misregy(0),skip(0){}
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T{

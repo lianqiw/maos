@@ -185,8 +185,8 @@ void map_ray::Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //outpu
 	const Real ht=in[ilayer].ht;
 	for(int idir=0; idir<ndir; idir++){
 	    if(!dir[idir].skip){
-		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dt;
-		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dt;
+		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dt+dir[idir].misregx;
+		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dt+dir[idir].misregy;
 		const Real hs=dir[idir].hs;
 		const Real scale=1.f-ht/hs;
 		cugrid_t outscale=out.Scale(scale);

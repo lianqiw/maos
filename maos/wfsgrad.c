@@ -678,7 +678,8 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	      HPF in the LGS path removed the influence of this focus mode. set
 	      sim.ahstfocus=2 to enable adjust gradients.*/
 	    double scale=simu->recon->ngsmod->scale;
-	    double focus=-simu->Mint_lo->mint->p[1]->p[0]->p[2]*(scale-1);
+	    int indps=simu->recon->ngsmod->indps;
+	    double focus=-simu->Mint_lo->mint->p[1]->p[0]->p[indps]*(scale-1);
 	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
 	}
     }

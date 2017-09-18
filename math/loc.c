@@ -1154,6 +1154,18 @@ loc_t *locdup(loc_t *loc){
     res->ht=loc->ht;
     return res;
 }
+/**
+   Compute average of locx, locy*/
+void locmean(double *xm, double *ym, const loc_t *loc){
+    double x=0, y=0;
+    for(long i=0; i<loc->nloc; i++){
+	x+=loc->locx[i];
+	y+=loc->locy[i];
+    }
+    *xm=x/loc->nloc;
+    *ym=y/loc->nloc;
+}
+
 /**Parse string representation of polynominal to array representation.*/
 static dmat *parse_poly(const char *_ps){
     char *ps=(char *)_ps;

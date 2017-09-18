@@ -246,8 +246,7 @@ void pywfs_ints(curmat &ints, curmat &phiout, cuwfs_t &cuwfs, Real siglev){
 	//cuwrite(ints, "gpu_ints"); exit(0);
     }
 }
-//dsp *gpu_pywfs_mkg(const PARMS_T *parms, const POWFS_T *powfs, loc_t *aloc, int iwfs, int idm){
-dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, double displacex, double displacey){
+dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locfft, const dmat *mod, double displacex, double displacey){
     gpu_set(cudata_t::wfsgpu[pywfs->iwfs0]);
     cuwfs_t &cuwfs=cudata->wfs[pywfs->iwfs0];
     cupowfs_t *cupowfs=cuwfs.powfs;
@@ -261,12 +260,12 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, d
     }
     cumapcell cumapin(1,1);
     cp2gpu(cumapin, mapinsq);
-    curmat phiout(pywfs->locfft->loc->nloc,1);
-    curmat phiout0(pywfs->locfft->loc->nloc,1);
+    curmat phiout(locfft->nloc,1);
+    curmat phiout0(locfft->nloc,1);
     if(pywfs->opdadd){
 	cp2gpu(phiout0, pywfs->opdadd);
     }
-    culoc_t culocout(pywfs->locfft->loc); 
+    culoc_t culocout(locfft); 
     const int nsa=cupowfs->saloc.Nloc();
     curmat ints(nsa, pywfs->nside);
     curmat grad(nsa*2,1);

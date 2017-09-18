@@ -309,11 +309,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].pts->origy[isa]=powfs[ipowfs].saloc->locy[isa]+dxoffset;
     }
     /*Calculate the amplitude for each subaperture OPD point by ray tracing from
-      the pupil amplitude map. Pupil istortion is accounted for.*/
+      the pupil amplitude map. Pupil distortion is accounted for.*/
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
     powfs[ipowfs].amp=mkamp(powfs[ipowfs].loc, aper->ampground, 
-			    parms->misreg.pupil->p[0],parms->misreg.pupil->p[1], 
+			    -parms->misreg.pupil->p[0],-parms->misreg.pupil->p[1], 
 			    parms->aper.d, parms->aper.din);
     /*The threashold for normalized area (by areafulli) to keep subaperture. */
     double thresarea=parms->powfs[ipowfs].saat;

@@ -255,6 +255,8 @@ typedef struct WFS_CFG_T{
     char *sabad;    /**<coordinate of bad subaperture due to bad detector or lenslet array.*/
     double thetax;  /**<x direction*/
     double thetay;  /**<y direction*/
+    double misregx_tel; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
+    double misregy_tel; /**<misregistration wrt telescope pupil. This is pure shift extracted from recon.misreg_tel2wfs.*/
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
@@ -447,6 +449,7 @@ typedef struct RECON_CFG_T{
     char **misreg_dm2wfs; /**<Distortion from DM to each WFS model used in reconstruction. Affects GA*/
     char **misreg_dm2sci; /**<Distortion from DM to each science model used in reconstruction. Affects HA*/
     char **misreg_tel2wfs;/**<Distortion from Telescope to each WFS model used in reconstruction. Affects HXW*/
+
     double poke;    /**<How much WFE (meter) to apply to OPD for computing experimental interaction matrix*/
     int psd;        /**<Flag: compute PSDs of DM error signal averaged over aperture and field points.*/
     int psddtrat;   /**<how many time step to sample for PSD computation.*/
@@ -598,6 +601,7 @@ typedef struct DBG_CFG_T{
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
+    int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;         /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     double gradoff_scale;/**<Scale the reference vector*/
     dmat *pwfs_psx;  /**<pyramid WFS pupil shift along x (in pixel). pupil ordering: -x+y, +x+y, -x-y, +x-y.*/

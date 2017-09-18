@@ -1028,6 +1028,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ncpa_preload);
     READ_INT(dbg.ncpa_nouncorr);
     READ_INT(dbg.i0drift);
+    READ_INT(dbg.gp_noamp);
     READ_DBL(dbg.gradoff_scale);
     READ_DMAT(dbg.pwfs_psx);
     READ_DMAT(dbg.pwfs_psy);
@@ -1255,12 +1256,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    if(parms->sim.ahstfocus){
-	if(parms->recon.split!=1 || !parms->sim.mffocus || parms->ndm==1){
-	    parms->sim.ahstfocus=0;//no need ahstfocus
-	    info("Disable sim.ahstfocus.\n");
-	}
-    }
+    
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
 	info2("Using evaluation directions as ncpa calibration directions if needed.\n");
 	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
@@ -2338,15 +2334,22 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->lsr.maxit=30*factor;
     }
  
-    if(parms->sim.mffocus){
-	if(!parms->sim.closeloop || parms->sim.idealfit){
-	    warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
-	    parms->sim.mffocus=0;
-	}
-	if(parms->sim.mffocus<0 || parms->sim.mffocus>2){
-	    error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
+    if(parms->sim.mffocus && (!parms->recon.split || !parms->nlgspowfs || parms->sim.idealfit)){
+	//no need focus tracking in the following cases: 1)integrated control mode, 2)no LGS, 3) idealfit
+	warning("parms->sim.mffocus is reset to 0\n");
+	parms->sim.mffocus=0;
+    }
+
+    if(parms->sim.mffocus<0 || parms->sim.mffocus>2){
+	error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
+    }
+    if(parms->sim.ahstfocus){
+	if(parms->recon.split!=1 || !parms->sim.mffocus){
+	    parms->sim.ahstfocus=0;//no need ahstfocus
+	    info("Disable sim.ahstfocus.\n");
 	}
     }
+ 
     if(!parms->recon.mvm){
 	if(parms->tomo.alg!=1 && parms->load.mvmi){
 	    free(parms->load.mvmi);
@@ -2385,17 +2388,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
  
-    if(parms->recon.misreg_tel2wfs){
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    if(parms->recon.misreg_tel2wfs[iwfs] && !parms->dbg.tomo_hxw){
-		warning("Set dbg.tomo_hxw=1\n");
-		parms->dbg.tomo_hxw=1;
-	    }
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs] && !parms->dbg.tomo_hxw){
+	    warning_once("Without dbg.tomo_hxw, only pure shift between telescope and LGS WFS is calibrated.\n");
 	}
-    }
-    if(parms->dbg.tomo_hxw==1 && parms->gpu.tomo){
-	warning("Disable gpu.tomo when dbg.tomo_hxw=1\n");
-	parms->gpu.tomo=0;
     }
 }
 
@@ -2864,11 +2860,16 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	use_cuda=1;
     }
     if(use_cuda){
+
 	if(parms->evl.tomo){
 	    parms->gpu.evl=0;
 	}
 	if(parms->recon.alg==0){/*MV*/
 	    parms->gpu.lsr=0;
+	    if(parms->gpu.tomo && parms->dbg.tomo_hxw){
+		warning("Disable gpu.tomo when dbg.tomo_hxw=1\n");
+		parms->gpu.tomo=0;
+	    }
 	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for tomo.cxx==0. Disable GPU Tomography.\n");

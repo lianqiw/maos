@@ -779,9 +779,8 @@ static uint32_t pywfs_hash(const PYWFS_T *pywfs, uint32_t key){
    radian of tilt, which is gauranteed when pywfs->gain is computed under the
    same conditions.
  */
-static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, 
+static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const loc_t *locfft, const dmat *mod, 
 			  double displacex, double displacey, double scale){
-    const loc_t *locfft=pywfs->locfft->loc;
     const int nsa=pywfs->si->p[0]->nx;
     dmat *grad0=dnew(nsa*2,1);
     dmat *opd0;
@@ -850,16 +849,19 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const dmat *
 /**
    locin is on pupil.
  */
-dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat *opdadd, 
+dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, const dmat *mod, const dmat *opdadd, 
 		double displacex, double displacey, double scale){
     if(opdadd){
 	dfree(pywfs->opdadd);
 	pywfs->opdadd=dnew(pywfs->locfft->loc->nloc, 1);
 	prop_nongrid(pywfs->loc, opdadd->p, pywfs->locfft->loc, pywfs->opdadd->p, 1, 0, 0, 1, 0, 0);
     }
-    
+    loc_t *locfft=pywfs->locfft->loc;
+    if(distortion){
+	locfft=loctransform(locfft, distortion);
+    }
     if(mod && mod->ny<=6){
-	return pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
+	return pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey, scale);
     }
     uint32_t key=0;
     key=lochash(locin, key);
@@ -894,9 +896,9 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
 	for(int ig=0; ig<gg1->nx; ig++){
 	    ((PYWFS_T*)pywfs)->poke=poke;
 #if USE_CUDA
-	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, mod1, displacex, displacey);
+	    gg1->p[ig]=gpu_pywfs_mkg(pywfs, locin, locfft, mod1, displacex, displacey);
 #endif
-	    gg2->p[ig]=pywfs_mkg_do(pywfs, locin, mod1, displacex, displacey, scale);
+	    gg2->p[ig]=pywfs_mkg_do(pywfs, locin, locfft, mod1, displacex, displacey, scale);
 	    poke=poke*step;
 	}
 	writebin(gg1, "gg1g");
@@ -912,10 +914,10 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
 	    info2("Generating PYWFS poke matrix\n");
 #if USE_CUDA
 	    if(global->parms->gpu.wfs){
-		gg=gpu_pywfs_mkg(pywfs, locin, mod, displacex, displacey);
+		gg=gpu_pywfs_mkg(pywfs, locin, locfft, mod, displacex, displacey);
 	    }else
 #endif
-		gg=pywfs_mkg_do(pywfs, locin, mod, displacex, displacey, scale);
+		gg=pywfs_mkg_do(pywfs, locin, locfft, mod, displacex, displacey, scale);
 	    writebin(gg, "%s", fn);
 	    close(fd); remove(fnlock);
 	}else{
@@ -926,6 +928,9 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const dmat *mod, const dmat 
 	}
     }else{
 	gg=dread("%s", fn);
+    }
+    if(distortion){
+	locfree(locfft);
     }
     return gg;
 }

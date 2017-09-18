@@ -114,28 +114,28 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     /*first get the order of magnitude. */
     double rmax=fabs(xmax);
     if(fabs(xmin)>rmax) rmax=fabs(xmin);
-    int order1=(int)floor(log10(rmax));
-    if(rmax<EPS){
+    double order1=floor(log10(rmax));
+    if(isnan(order1) || fabs(order1)>1000){
 	order1=0;
-	*order=order1;
-	*ntic=2;
-	*dtic=0;
-	*tic1=xmin;
-    }else if(fabs(diff)<fabs(1.e-4*rmax)){/*very small separation */
+    }
+    if(fabs(diff)<fabs(1.e-4*rmax) && 0){/*very small separation */
 	xmax/=pow(10,order1);
 	xmin/=pow(10,order1);
-	*order=order1;
+	*order=(int)order1;
 	*ntic=2;
 	*dtic=xmax-xmin;
 	*tic1=xmin;
     }else{
 	diff/=pow(10,order1);
-	if(!logscale){
+	xmax/=pow(10,order1); 
+	xmin/=pow(10,order1);
+
+	/*if(!logscale){
 	    while(diff<2){
 		order1-=1;
 		diff=diff*10;
 	    }
-	}
+	    }*/
 	double spacing=0;
 	if(logscale){
 	    spacing=1;
@@ -146,14 +146,20 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	}else{
 	    spacing=0.5;
 	}
-	xmax/=pow(10,order1); 
-	xmin/=pow(10,order1);
-	*tic1=myceil(xmin/spacing)*spacing;
+
+
+	*tic1=myfloor(xmin/spacing)*spacing;
 	*dtic=spacing;
-	*ntic=(int)(myfloor(xmax/spacing)-myceil(xmin/spacing)+1);
-	*order=order1;
+	*ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
+	if(*ntic<2) {
+	    *ntic=2;
+	    *dtic=0;
+	}
+	*order=(int)order1;
+	info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, spacing=%g, ntic=%d, order1=%g\n",
+	      xmin, xmax, diff, *tic1, spacing, *ntic, order1);
     }
-    if(*order<3 && *order>-3){
+    if(fabs(*order)<3){
 	*tic1=*tic1*pow(10,*order);
 	*dtic=*dtic*pow(10,*order);
 	*order=0;
@@ -176,6 +182,10 @@ void round_limit(double *xmin, double *xmax, int logscale){
 	calc_tic(&tic1, &dtic, &ntic, &order, *xmax, *xmin, 12, logscale);
 	double xmin0=tic1*pow(10,order);
 	double xmax0=(tic1+dtic*(ntic-1))*pow(10,order);
+#if 1
+	*xmin=xmin0;
+	*xmax=xmax0;
+#else
 	if(fabs(xmin0-*xmin)<1e-5*xmin0){
 	    *xmin=xmin0;
 	}else if(*xmin < xmin0){
@@ -186,6 +196,7 @@ void round_limit(double *xmin, double *xmax, int logscale){
 	}else if(*xmax > xmax0){
 	    *xmax=xmax0+dtic*pow(10,order);
 	}
+#endif
     }
     if(logscale){
 	*xmin=pow(10, *xmin);
@@ -859,7 +870,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-xmin0)/sep;
 	double xpos=xoff+widthim*frac;
 	/*draw the tic */
-	if(fabs(frac)>0.0 && fabs(frac)<1){
+	if(frac>0.0 && frac<1){
 	    cairo_move_to(cr,xpos,yoff+heightim);
 	    cairo_line_to(cr,xpos,yoff+heightim+ticlength);
 	    cairo_stroke(cr);
@@ -873,8 +884,10 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_restore(cr);
 	    }
 	}
-	snprintf(ticval,80,"%g",(xlog?pow(10,ticv):ticv));
-	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0.5, 0);
+	if(frac>=0 && frac<=1){
+	    snprintf(ticval,80,"%g",(xlog?pow(10,ticv):ticv));
+	    pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0.5, 0);
+	}
     }
     if(xlog || 1){//draw the minor ticks
 	cairo_save(cr);
@@ -903,7 +916,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-ymin0)/sep;
 	double ypos=yoff+heightim*(1-frac);
 	/*draw the tic */
-	if(fabs(frac)>0. && fabs(frac)<1){
+	if(frac>0. && frac<1){
 	    cairo_move_to(cr,xoff,ypos);
 	    cairo_line_to(cr,xoff-ticlength,ypos);
 	    cairo_stroke(cr);
@@ -917,8 +930,10 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_restore(cr);
 	    }
 	}
-	snprintf(ticval,80,"%g",(ylog?pow(10,ticv):ticv));
-	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,0.5,0.5,1);
+	if(frac>=0 && frac<=1){
+	    snprintf(ticval,80,"%g",(ylog?pow(10,ticv):ticv));
+	    pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,0.5,0.5,1);
+	}
     }
     if(ylog || 1){//draw minor ticks
 	cairo_save(cr);
@@ -973,13 +988,17 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		else if(itic==1) frac=1;
 		else frac=-1;
 	    }
-	    cairo_move_to(cr,0,heightim*(1-frac));
-	    cairo_line_to(cr,4,heightim*(1-frac));
-	    cairo_move_to(cr,LEN_LEG,heightim*(1-frac));
-	    cairo_line_to(cr,LEN_LEG-4,heightim*(1-frac));
-	    cairo_stroke(cr);
-	    snprintf(ticval,80,"%g",ticv);
-	    pango_text(cr,layout,LEN_LEG+4,heightim*(1-frac), ticval,0,0,0);
+	    if(frac>0 && frac<1){
+		cairo_move_to(cr,0,heightim*(1-frac));
+		cairo_line_to(cr,4,heightim*(1-frac));
+		cairo_move_to(cr,LEN_LEG,heightim*(1-frac));
+		cairo_line_to(cr,LEN_LEG-4,heightim*(1-frac));
+		cairo_stroke(cr);
+	    }
+	    if(frac>=0 && frac<=1){
+		snprintf(ticval,80,"%g",ticv);
+		pango_text(cr,layout,LEN_LEG+4,heightim*(1-frac), ticval,0,0,0);
+	    }
 	}
 	pango_text_powindex(cr,layout,LEN_LEG/2,-font_size*1.4-2,order,0);
 	cairo_restore(cr);

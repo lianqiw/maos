@@ -54,14 +54,13 @@ static unsigned int crp(double x, double x0){
 
 /**
    convert double to char with color map*/
-void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info){
-    double max,min;
-    if(info[1]>info[0]){
-	min=info[0]; max=info[1];
-    }else{
-	dmaxmin(p, nx*ny, &max, &min);
-	info[0]=min; info[1]=max;
+void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *zlim){
+    if(zlim[0]>=zlim[1]){
+	dmaxmin(p, nx*ny, zlim+1, zlim);
     }
+    round_limit(zlim, zlim+1, 0);
+    double min=zlim[0];
+    double max=zlim[1];
     if(color){/*colored */
 	int *pi=(int*)pout;
 	double scale,offset;

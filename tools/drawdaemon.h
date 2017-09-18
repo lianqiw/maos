@@ -156,4 +156,5 @@ gboolean addpage(gpointer junk);
 void listen_draw();
 void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);
 void dmaxmin(const double *p, long n, double *max, double *min);
+void round_limit(double *xmin, double *xmax, int logscale);
 #endif

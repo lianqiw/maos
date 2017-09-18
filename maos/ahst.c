@@ -82,14 +82,6 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 	    if(fabs(wt[ievl])<1.e-12) continue;
 	    double thetax=parms->evl.thetax->p[ievl];
 	    double thetay=parms->evl.thetay->p[ievl];
-	    /*for(int imod=2; imod<nmod; imod++){
-		dmat *iopd=dnew_ref(nloc, 1, mod[imod]);
-		dzero(iopd);
-		dzero(modvec); 
-		modvec->p[imod]=1;
-		ngsmod2science(iopd, plocs, ngsmod, thetax, thetay, modvec->p, 1);
-		dfree(iopd);
-		}*/
 	    
 	    for(int iloc=0; iloc<nloc; iloc++){
 		double xx=x[iloc]*x[iloc];
@@ -538,7 +530,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->nmod+=1;
 	}
     }
-    info2("ngsmod nmod=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.ahstfocus);
+    info2("ahst: nmod=%d, mffocus=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->sim.ahstfocus);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
@@ -546,7 +538,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	ngsmod->ht=0;
     }
     ngsmod->scale=pow(1.-ngsmod->ht/ngsmod->hs,-2);
-    /*modal cross coupling matrix along science*/
+    /*modal cross coupling matrix along science for performance evaluation. */
     ngsmod->MCCP=ngsmod_mcc(parms,recon,aper, parms->evl.wt->p);
     if(ngsmod->MCCP->nx==1){
 	ngsmod->MCC=dref(ngsmod->MCCP->p[0]);
@@ -582,6 +574,10 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
       act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
       }*/
 
+    /*
+      ngsmod to NGS gradient interaction matrix.
+    */
+
     if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	ngsmod->GM=dcellnew(parms->nwfsr, 1);
 	int nttwfs=0;
@@ -607,7 +603,8 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 			double  dispx=0, dispy=0;
 			dispx=parms->wfsr[iwfs].thetax*ht;
 			dispy=parms->wfsr[iwfs].thetay*ht;
-			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm],
+			dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 
+					    parms->misreg.dm2wfs[iwfs+idm*parms->nwfs],
 					    IND(ngsmod->Modes, idm), 0, dispx, dispy, scale);
 			dadd(PIND(ngsmod->GM, iwfs), 1, tmp, 1);//accumulate
 		    }
@@ -639,6 +636,9 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     /**
+
+       Next, decouple LGS reconstruction from ngsmodes. 
+
        parms->tomo.ahst_wt control NGS modes removal from LGS DM commands
        if ahst_wt==1
        Rngs*GA*dmerr is zero

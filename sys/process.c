@@ -47,6 +47,7 @@ char HOST[256];
 char TEMP[PATH_MAX];//Do not put temp in user home as it may be shared by hosts
 char CACHE[PATH_MAX];//Directory for caching files that are expensive to compute.
 char EXEP[PATH_MAX];/*absolute path of the exe.*/
+char DIRSTART[PATH_MAX];//Start up directory.
 /**
    Set the HOME, TEMP, USER names.
 */
@@ -87,7 +88,9 @@ void init_process(void){
     strcat(TEMP, USER);
 
     snprintf(CACHE, PATH_MAX, "%s/.aos/cache", HOME);
-
+    if(!getcwd(DIRSTART, PATH_MAX)){
+	snprintf(DIRSTART, PATH_MAX, "./");
+    }
     //Create temporary folders
     mymkdir("%s",TEMP);
     mymkdir("%s/.aos/",HOME);

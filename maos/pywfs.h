@@ -54,7 +54,8 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 void pywfs_free(PYWFS_T *pywfs);
 void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints);
 void pywfs_fft(dmat **ints, const PYWFS_T *pywfs, const dmat *opd);
-dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* ploc, const dmat *mod, const dmat *opdadd, double displacex,  double displacey, double scale);
+dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* ploc, const char *distortion, 
+		const dmat *mod, const dmat *opdadd, double displacex,  double displacey, double scale);
 dmat *pywfs_tt(const PYWFS_T *pywfs);
 
 #endif

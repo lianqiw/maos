@@ -96,6 +96,7 @@ loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
 void locstretch(loc_t *loc, const double theta, const double frac);
 loc_t *locdup(loc_t *loc);
+void locmean(double *xm, double *ym, const loc_t *loc);
 loc_t *loctransform(loc_t *loc, const char *ps);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);

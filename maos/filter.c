@@ -433,12 +433,12 @@ static void filter_cl(SIM_T *simu){
 static void filter_ol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     assert(!parms->sim.closeloop);
-    if(simu->dmerr){
+    if(simu->dmerr && parms->sim.epdm->p[0]>0){
 	dcellcp(&simu->dmcmd, simu->dmerr);
     }else{
 	dcellzero(simu->dmcmd);
     }
-    if(simu->Merr_lo){
+    if(simu->Merr_lo && parms->sim.eplo->p[0]>0){
 	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
     }
     extern int DM_NCPA;

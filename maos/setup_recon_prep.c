@@ -62,12 +62,21 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     recon->pmap=recon->ploc->map;
     loc_create_stat(recon->ploc);
     if(parms->recon.misreg_tel2wfs){
+	double ploc_xm=0, ploc_ym=0;
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    if(parms->recon.misreg_tel2wfs[iwfs]){
 		if(!recon->ploc_tel){
 		    recon->ploc_tel=loccellnew(parms->nwfsr, 1);
+		    locmean(&ploc_xm, &ploc_ym, recon->ploc);
 		}
 		recon->ploc_tel->p[iwfs]=loctransform(recon->ploc, parms->recon.misreg_tel2wfs[iwfs]);
+		loc_t *ploc2=recon->ploc_tel->p[iwfs];
+		double xm, ym;
+		locmean(&xm, &ym, ploc2);
+		parms->wfsr[iwfs].misregx_tel=xm-ploc_xm;
+		parms->wfsr[iwfs].misregy_tel=ym-ploc_ym;
+		warning("ploc for wfs%d shifted by (%g, %g)\n", iwfs, 
+			parms->wfsr[iwfs].misregx_tel, parms->wfsr[iwfs].misregy_tel);
 	    }
 	}
     }
@@ -76,20 +85,65 @@ static void
 setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
     //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
     recon->gloc=loccellnew(parms->npowfs, 1);
+    //recon->gamp=dcellnew(parms->nwfsr, 1);
     recon->gamp=dcellnew(parms->npowfs, 1);
-
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	map_t *map=0;
 	double dx=parms->powfs[ipowfs].dx;
 	create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-	recon->gloc->p[ipowfs]=map2loc(map, 0); 
+	loc_t *gloc=recon->gloc->p[ipowfs]=map2loc(map, 0); 
 	mapfree(map);
-	//do not use misregistration since this is the model
-	recon->gamp->p[ipowfs]=mkamp(recon->gloc->p[ipowfs], aper->ampground, 
-				     0,0, parms->aper.d, parms->aper.din);
-	loc_reduce(recon->gloc->p[ipowfs], recon->gamp->p[ipowfs], EPS, 1, NULL);
+	map_t *ampground=parms->dbg.gp_noamp?0:aper->ampground;
+	if(parms->recon.misreg_tel2wfs){
+	    /*Unable to obtain actual pupil with distortion. Use annular one instead*/
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
+		if(parms->recon.misreg_tel2wfs[iwfs]){
+		    ampground=0;
+		}
+	    }
+	}
+	recon->gamp->p[ipowfs]=mkamp(gloc, ampground, 0,0, parms->aper.d, parms->aper.din);
+	/*int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
+	  if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs0]){
+	  warning("Only first WFS tel2wfs pupil distortion is used for testing\n");
+	  gloc=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs0]);
+	  }
+
+	  
+	*/
+	/*
+	int misreg=0;
+	if(parms->recon.misreg_tel2wfs){
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
+		if(parms->recon.misreg_tel2wfs[iwfs]){
+		    misreg=1;
+		}
+	    }
+	}
+	if(misreg){
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
+		if(parms->recon.misreg_tel2wfs[iwfs]){
+		    gloc=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs]);
+		}
+		recon->gamp->p[iwfs]=mkamp(gloc, aper->ampground, 0,0, parms->aper.d, parms->aper.din);
+	    }
+	}else{
+
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
+		if (jwfs==0){
+		    recon->gamp->p[iwfs]=mkamp(gloc, aper->ampground, 0,0, parms->aper.d, parms->aper.din);
+		}else{
+		    recon->gamp->p[iwfs]=dref(recon->gamp->p[iwfs0]);
+		}
+	    }
+	    }*/		
     }
 }
+
 /**
    Like ploc, but for DM fitting
 */
@@ -693,14 +747,16 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			}
 			if(!parms->recon.modal){
 			    info2("\nPyWFS from aloc to saloc directly\n");
-			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], 0, opdadd, dispx, dispy, scale);
+			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+						0, opdadd, dispx, dispy, scale);
 			    IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 			    dfree(tmp);
 			}else{
 			    info2("\nPyWFS from amod to saloc directly\n");
 			   
 			    //We compute the GM for full set of modes so that it is cached only once.
-			    IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], recon->amod->p[idm], opdadd, dispx, dispy, scale);
+			    IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
+								recon->amod->p[idm], opdadd, dispx, dispy, scale);
 			}
 		    }
 		}else{//SHWFS
@@ -876,7 +932,7 @@ setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    if(parms->powfs[ipowfs].type==1){//PWFS
-		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, opd, 0, 0, 0, 1);
+		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0, 1);
 	    }else{//SHWFS
 		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
 	    }

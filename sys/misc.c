@@ -250,14 +250,10 @@ char *myabspath(const char *path){
 	snprintf(path2, PATH_MAX, "%s", path);
 	break;
     default:
-	{
-	    char *cwd=mygetcwd();
-	    snprintf(path2, PATH_MAX, "%s/%s", cwd, path);
-	    free(cwd);
-	}
+	snprintf(path2, PATH_MAX, "%s/%s", DIRSTART, path);
     }
     if(!isdir(path2)){
-	error("path %s:%s does not exist\n", path, path2);
+	error("path %s does not exist\n", path2);
 	return 0;
     }else{
 	return strdup(path2);
