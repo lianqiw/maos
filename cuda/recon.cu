@@ -260,42 +260,10 @@ void curecon_t::reset_runtime(){
 Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst, 
 		     const dcell *_gradin){
     cp2gpu(gradin, _gradin);
-#if DBG_RECON
-    curcellcp(opdr_save, opdr, cgstream);
-#endif
+
     RR->R(tomo_rhs, 0, gradin, 1, cgstream);
     Real cgres=RL->solve(opdr, tomo_rhs, cgstream);
-#if DBG_RECON
-    static Real cgres_last=INFINITY;
-    if(cgres>MAX(cgres_last*5, EPS)){
-	int isim=grid->reconisim;
-	Real omax=curmax(opdr.M(), cgstream);
-	static Real omax_last=INFINITY;
-	if(omax>omax_last*5 || cgres>cgres_last*5){
-	    info("tomo[%d]: cgres=%g cgres_last=%g. omax=%g, omax_last=%g\n", isim, cgres, cgres_last, omax, omax_last);
-	    if(!disable_save){
-		writebin(_gradin, "tomo_gradin_%d", isim);
-		cuwrite(opdr, "tomo_opdr_%d", isim);
-		cuwrite(tomo_rhs, "tomo_rhs_%d", isim);
-	    }
 
-	    curcellcp(opdr, opdr_save, cgstream);
-	    Real newres=RL->solve(opdr, tomo_rhs, cgstream);
-	    Real newomax=curmax(opdr.M(), cgstream);
-	    info2("tomo redo: cgres=%g, cgres_last=%g. omax=%g\n", newres, cgres, newomax);
-	    if(newres*2>=cgres){
-		warning("Redo tomography does not help\n");
-	    }
-	    if(!disable_save){
-		cuwrite(opdr_save, "tomo_opdrlast_%d", isim);
-		cuwrite(opdr, "tomo_opdrredo_%d", isim);
-	    }
-	    cgres=newres;
-	}
-	omax_last=omax;
-    }
-    cgres_last=cgres;
-#endif
     if(_opdr){
 	cp2cpu(_opdr, opdr_vec, cgstream);
     }
@@ -305,43 +273,16 @@ Real curecon_t::tomo(dcell **_opdr, dcell **_gngsmvst,
 	add2cpu(_gngsmvst, 1, gngsmvst, 1, cgstream);
     }
     cgstream.sync();
-return cgres;
+    return cgres;
 }
 Real curecon_t::fit(dcell **_dmfit, dcell *_opdr){
     if(_opdr){
 	cp2gpu(opdr_vec, _opdr);
     }
-#if DBG_RECON
-    curcellcp(dmfit_save, dmfit, cgstream);
-#endif
+
     FR->R(fit_rhs, 0, opdr, 1, cgstream);
     Real cgres=FL->solve(dmfit, fit_rhs, cgstream);
-#if DBG_RECON
-    static Real cgres_last=INFINITY;
-    if(cgres>MAX(cgres_last*5, EPS)){
-	int isim=grid->reconisim;
-	info("fit[%d]: cgres=%g, cgres_last=%g\n", isim, cgres, cgres_last);
-	if(!disable_save){
-	    cuwrite(opdr, "fit_opdr_%d", isim);
-	    cuwrite(dmfit, "fit_dmfit_%d", isim);
-	    cuwrite(fit_rhs, "fit_rhs_%d", isim);
-	}
 
-	curcellcp(dmfit, dmfit_save, cgstream);
-	Real newres=FL->solve(dmfit, fit_rhs, cgstream);
-	info2("fit redo: oldres=%g. newres=%g\n", cgres, newres);
-	if(newres*2>=cgres){
-	    warning("Redo fitting does not help\n");
-	}
-	if(!disable_save){
-	    cuwrite(dmfit_save, "fit_dmfitlast_%d", isim);
-	    cuwrite(dmfit, "fit_dmfitredo_%d", isim);
-	}
-	cgres=newres;
-
-    }
-    cgres_last=cgres;
-#endif
     add2cpu(_dmfit, 0, dmfit_vec, 1, cgstream);
     cgstream.sync();
     return cgres;

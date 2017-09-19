@@ -38,16 +38,10 @@
 */
 static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     /*create a grid representing the sub-aperture. */
-    loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
+    loc_t *loc=mksqloc_auto(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->dx,
-		       powfs[ipowfs].pts->dy,
-		       0,0);
-    /*size of the OTF grid */
-    //int ncompx=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;
-    //int ncompy=ncompx;
-    //2015-04-27:replaced by powfs[ipowfs].ncompx/y, which maybe different
-    
+		       powfs[ipowfs].pts->dy);
     /*The embeding factor for embedding the aperture */
     const int embfac=parms->powfs[ipowfs].embfac;
     const double dxsa=powfs[ipowfs].pts->dsa;
@@ -315,6 +309,8 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cellfree(powfs[ipowfs].intstat->sepsf);
     }
     powfs[ipowfs].intstat->sepsf=dccellnew(powfs[ipowfs].intstat->nsepsf, 1);
+    const int ncompx=powfs[ipowfs].ncompx;
+    const int ncompy=powfs[ipowfs].ncompy;
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
 	int ilotf=nlotf>1?isepsf:0;
@@ -324,12 +320,14 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcell*  psepsf=powfs[ipowfs].intstat->sepsf->p[isepsf]/*PDELL*/;
 	const double *area=powfs[ipowfs].realsaa->p[isepsf]->p;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    const int notfx=IND(otf,0,iwvl)->nx;
-	    const int notfy=IND(otf,0,iwvl)->ny;
-	    cmat *sepsf=cnew(notfx,notfy);
+	    cmat *sepsf=cnew(ncompx, ncompy);
 	    for(int isa=0; isa<nsa; isa++){
-		double norm=area[isa]/((double)(notfx*notfy));
-		ccp(&sepsf,IND(otf,isa,iwvl));/*peak in center */
+		double norm=area[isa]/((double)(ncompx*ncompy));
+		if(IND(otf,isa,iwvl)){
+		    ccp(&sepsf,IND(otf,isa,iwvl));/*peak in center */
+		}else{
+		    czero(sepsf);
+		}
 		if(nllt>0){/*has laser launch */
 		    if(sepsf->nx == lotf[iwvl]->nx){
 			ccwm(sepsf,lotf[iwvl]);

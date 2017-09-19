@@ -126,10 +126,15 @@ static void
 sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea, int reduce_isolated){
     dmat *saa=NULL;
     if(powfs[ipowfs].saa_tel){
-	warning_once("Todo: Improve to allow different sa for same wfs type\n");
-	const double scale=1./(double)powfs[ipowfs].saa_tel->nx;
-	for(int i=0; i<powfs[ipowfs].saa_tel->nx; i++){
-	    dadd(&saa, 1, powfs[ipowfs].saa_tel->p[i], scale);
+	warning_once("Todo: Improve to allow different sa for same wfs type. Use maximum size.\n");
+	long nsa=powfs[ipowfs].saa_tel->p[0]->nx;
+	saa=dnew(nsa,1);
+	for(long iwfs=0; iwfs<powfs[ipowfs].saa_tel->nx; iwfs++){
+	    for(long isa=0; isa<nsa; isa++){
+		if(IND(saa,isa)<powfs[ipowfs].saa_tel->p[iwfs]->p[isa]){
+		    IND(saa,isa)=powfs[ipowfs].saa_tel->p[iwfs]->p[isa];
+		}
+	    }
 	}
     }else{
 	saa=ddup(powfs[ipowfs].saa);
@@ -1520,11 +1525,11 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].type==0){
-	    info2("\n\033[0;32mSetting up powfs %d geom\033[0;0m\n\n", ipowfs);
+	    info2("\n%sSetting up powfs %d geom%s\n\n", GREEN,ipowfs,BLACK);
 	    setup_powfs_geom(powfs,parms,aper,ipowfs);
 	    setup_powfs_grad(powfs,parms,ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){
-	    info2("\n\033[0;32mSetting up powfs %d in Pyramid mode\033[0;0m\n\n", ipowfs);
+	    info2("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN,ipowfs,BLACK);
 	    pywfs_setup(powfs, parms, aper, ipowfs);
 	}else{
 	    error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);

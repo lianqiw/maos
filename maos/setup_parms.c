@@ -1093,6 +1093,7 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.run=parms->save.all;/*see following */
 	parms->save.ncpa=parms->save.all;
 	parms->save.dither=parms->save.all;
+	parms->save.extra=1;
     }
 
     if(parms->save.run){

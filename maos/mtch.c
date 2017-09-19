@@ -34,7 +34,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
-
     int ni0=intstat->i0->ny;
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
@@ -80,6 +79,9 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     double neaspeckle2=pow(neaspeckle,2);
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
+	const double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
+	double i0thres=MAX(MAX(0.1,parms->powfs[ipowfs].saat)*siglev, rne*10);
+	double nea2thres=pixthetax*pixthetay*100;
 	double *srot=NULL;
 	if(powfs[ipowfs].srot){
 	    int irot=ii0*irot_multiplier;
@@ -87,7 +89,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
 	sanea->p[ii0]=dnew(nsa,2);
 	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
-	double i0summax=0;
 	double i0sumsum=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
@@ -122,14 +123,14 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    
 	    IND(i0sum,isa,ii0)=dsum(IND(i0s,isa,ii0));
 	    i0sumsum+=IND(i0sum,isa,ii0);
-	    if(IND(i0sum,isa,ii0)>i0summax){
-		i0summax=IND(i0sum,isa,ii0);
-	    }
 
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
-	    if(IND(i0sum,isa,ii0)<EPS){//zero flux
-		nea2->p[0]=nea2->p[3]=pixthetax*10;
+	    if(IND(i0sum,isa,ii0)<i0thres || nea2->p[0]>nea2thres || nea2->p[3]>nea2thres){
+		//Signal level too low or error to high.
+		nea2->p[0]=nea2->p[3]=nea2thres;
+		nea2->p[1]=nea2->p[2]=0;
+		dset(IND(mtche,isa,ii0), 0);
 	    }
 	    if(parms->powfs[ipowfs].mtchcpl==0 
 	       && (!parms->powfs[ipowfs].radpix || parms->powfs[ipowfs].radgx)){
@@ -140,11 +141,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    IND(psanea,isa,1)=nea2->p[3];
 	    IND(saneaxy, isa, ii0)=nea2;
 	}/*isa  */
-	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	if(i0summax<siglev*0.1 || i0summax>siglev*1.1){
-	    warning("i0 sum to maximum of %g, wfs %d has siglev of %g\n",
-		    i0summax, iwfs, siglev);
-	}
+
 	if(mtchadp){
 	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 		  ncrdisable, nsa);

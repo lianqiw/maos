@@ -591,7 +591,6 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
     int nogacc=(simu->isim-parms->powfs[ipowfs].dither_ogskip+1)/parms->powfs[ipowfs].dtrat;
     if(nogacc>0 && nogacc%npll==0){
 	if(parms->powfs[ipowfs].dither==1){
-	    /* Update drift mode computation. Only useful when wfs t/t is removed*/
 	    double scale1=1./npll;
 	    double amp=pd->a2m*parms->powfs[ipowfs].dither_amp;
 	    double scale2=scale1*2./(amp);
@@ -600,6 +599,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 		dmat *ibgrad=0;
 		calc_phygrads(&ibgrad, pd->imb->p, parms, powfs, iwfs, 2);
 		if(parms->powfs[ipowfs].trs){//tip/tilt drift dithersig
+		    /* Update drift mode computation. Only useful when wfs t/t is removed*/
 		    dmat *tt=dnew(2,1);
 		    const int ind=parms->recon.glao?(ipowfs+ipowfs*parms->npowfs):(iwfs+iwfs*parms->nwfs);
 		    dmat *PTT=recon->PTT?(recon->PTT->p[ind]):0;
@@ -618,7 +618,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 		    dfree(focus);
 		}
 		dfree(ibgrad);
-	    
+		//Accumulate data for matched filter
 		dcelladd(&pd->i0, 1, pd->imb, 1);//imb was already scaled
 		dcelladd(&pd->gx, 1, pd->imx, scale2);
 		dcelladd(&pd->gy, 1, pd->imy, scale2);

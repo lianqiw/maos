@@ -93,6 +93,10 @@ using std::strerror;
 /*
   use () to make the statements a single statement.
 */
+extern int detached;
+#define BLACK (detached?"":"\033[00;00m")
+#define RED (detached?"":"\033[01;31m")
+#define GREEN (detached?"":"\033[0;32m")
 #ifndef error
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
 #define info(A...) ({char fline[4096]; int n__;			      \
@@ -101,18 +105,20 @@ using std::strerror;
 	    fprintf(stderr,"%s", fline); })
 
 #define error(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "\033[01;31mFATAL(%s:%d): ", BASEFILE, __LINE__); \
+	    snprintf(fline,4096, "%sFATAL(%s:%d): ", RED, BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, "\033[00;00m"); \
+	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, BLACK); \
 	    QUIT_FUN(fline);})
 
 #define warning(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "\033[01;31mWARN(%s:%d): ", BASEFILE, __LINE__); \
+	    snprintf(fline,4096, "WARN(%s:%d): ", BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stderr,"%s\033[00;00m", fline); })
+	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
 
 #define info2(A...) fprintf(stderr, A)
-#define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
+#define warning2(A...) ({char fline[4096];				\
+	    snprintf(fline, 4095, A);					\
+	    fprintf(stderr,"%sWarning:%s%s", RED, fline, BLACK); })
 
 #define info_time(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
@@ -120,9 +126,9 @@ using std::strerror;
 	    fprintf(stderr,"%s", fline); })
 
 #define warning_time(A...) ({char fline[4096]; int n__;			\
-	    snprintf(fline,4096, "\033[01;31mWARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
+	    snprintf(fline,4096, "WARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stderr,"%s\033[00;00m", fline); })
+	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
 
 #define warning_once(A...) ({static int done=0; if(!done){done=1; warning2(A);}})
 #define info_once(A...) ({static int done=0; if(!done){done=1; info2(A);}})

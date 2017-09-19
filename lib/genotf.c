@@ -133,6 +133,11 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
 static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
 		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
 		      const dmat* B,  const T_VALID *pval){
+    double ampsum=dblsum(amp, loc->nloc);
+    if(ampsum<=0){
+	warning("genotf_do: amplitude sum to zero or negative\n");
+	return;
+    }
     long nloc=loc->nloc;
     dmat *B2;
     if(pttr){/*remove p/t/t from the B matrix */

@@ -191,7 +191,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     /*Spacing of half subaperture on pupil plane.*/
     dsa2=dsa/2.*dp2;
     /*To store the weights.*/
-
+    double amp_thres=dsa2*dsa2*4*0.01;/*1% area is the lower threshold to use subaperture*/
     poffset[0]+=dsa2;/*offset to SALOC to make it subaperture center.*/
     poffset[1]+=dsa2;
     double amp2[3][3];
@@ -430,7 +430,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	    }/*limx*/
 	}/*limy*/
 	/*info2("ampsum=%g\n",ampsum); */
-	if(ampsum>TOL){
+	if(ampsum>amp_thres){//2017-09-19: was TOL. Changed to amp_thres to filter weak subapertures
 	    ampsum=1./ampsum;
 	}else{
 	    ampsum=0;

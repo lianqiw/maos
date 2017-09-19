@@ -118,35 +118,23 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     if(isnan(order1) || fabs(order1)>1000){
 	order1=0;
     }
-    if(fabs(diff)<fabs(1.e-4*rmax) && 0){/*very small separation */
-	xmax/=pow(10,order1);
-	xmin/=pow(10,order1);
+    xmax/=pow(10,order1);
+    xmin/=pow(10,order1);
+    diff/=pow(10,order1);
+    if(fabs(diff)<fabs(1.e-4*rmax)){/*very small separation */
 	*order=(int)order1;
 	*ntic=2;
 	*dtic=xmax-xmin;
 	*tic1=xmin;
     }else{
-	diff/=pow(10,order1);
-	xmax/=pow(10,order1); 
-	xmin/=pow(10,order1);
+	double spacing=1;
+	(void)maxtic;
+	if(!logscale){
+	    spacing=diff/(diff>0.1?10:5);
 
-	/*if(!logscale){
-	    while(diff<2){
-		order1-=1;
-		diff=diff*10;
-	    }
-	    }*/
-	double spacing=0;
-	if(logscale){
-	    spacing=1;
-	}else if(diff>=maxtic){
-	    spacing=ceil(diff/maxtic);
-	}else if(diff>=6){
-	    spacing=1;
-	}else{
-	    spacing=0.5;
+	    double scale=pow(10., floor(log10(spacing)));
+	    spacing=round(spacing/scale)*scale;
 	}
-
 
 	*tic1=myfloor(xmin/spacing)*spacing;
 	*dtic=spacing;
@@ -156,8 +144,8 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	    *dtic=0;
 	}
 	*order=(int)order1;
-	info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, spacing=%g, ntic=%d, order1=%g\n",
-	      xmin, xmax, diff, *tic1, spacing, *ntic, order1);
+	/*info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, spacing=%g, ntic=%d, order1=%g\n",
+	  xmin, xmax, diff, *tic1, spacing, *ntic, order1);*/
     }
     if(abs(*order)<3){
 	*tic1=*tic1*pow(10,*order);
@@ -343,18 +331,19 @@ void update_limit(drawdata_t *drawdata){
 	drawdata->zoomy=1;
     }
     double gain=1;
-    if(!drawdata->limit){
-	if(drawdata->cumu){
+    if(drawdata->cumu){
+	if(!drawdata->limit_cumu){
 	    drawdata->limit_cumu=mycalloc(4,double);
-	    drawdata->limit=drawdata->limit_cumu;
-	}else{
-	    drawdata->limit_data=mycalloc(4,double);
-	    drawdata->limit=drawdata->limit_data;
 	}
+	drawdata->limit=drawdata->limit_cumu;
     }else{
-	if(drawdata->dtime<1){
-	    gain=drawdata->dtime;
+	if(!drawdata->limit_data){
+	    drawdata->limit_data=mycalloc(4,double);
 	}
+	drawdata->limit=drawdata->limit_data;
+    }
+    if(drawdata->dtime<1){
+	gain=drawdata->dtime;
     }
 
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
@@ -408,6 +397,7 @@ void update_limit(drawdata_t *drawdata){
 	if(ymin<ymin0) ymin0=ymin;
 	if(ymax>ymax0) ymax0=ymax;
     }
+    //info2("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
     int xlog=drawdata->xylog[0]=='n'?0:1;
     int ylog=drawdata->xylog[1]=='n'?0:1;
     round_limit(&xmin0, &xmax0, xlog);

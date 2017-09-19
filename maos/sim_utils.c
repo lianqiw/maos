@@ -1654,17 +1654,17 @@ void print_progress(const SIM_T *simu){
     const int nmod=parms->evl.nmod;
     
     if(parms->sim.evlol){
-	info2("\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm\033[00;00m\n",
+	info2("%sStep %5d: OL: %6.1f %6.1f %6.1f nm%s\n", GREEN,
 	      isim,
 	      mysqrt(simu->ole->p[isim*nmod])*1e9,
 	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-	      mysqrt(simu->ole->p[2+isim*nmod])*1e9);
+	      mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
 	
 	info2("Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
 	      status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
     }else{    
-	info2("\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
-	      isim,
+	info2("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
+	      GREEN, isim,
 	      mysqrt(simu->ole->p[isim*nmod])*1e9,
 	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
 	      mysqrt(simu->ole->p[2+isim*nmod])*1e9,
@@ -1677,7 +1677,7 @@ void print_progress(const SIM_T *simu){
 		  mysqrt(simu->clem->p[1+isim*3])*1e9,
 		  mysqrt(simu->clem->p[2+isim*3])*1e9);
 	}
-	info2("\033[00;00m\n");
+	info2("%s\n", BLACK);
     
 	info2("Timing: WFS %.3f Recon %.3f EVAL %.3f Other %.3f Tot %.3f Mean %.3f."
 	      " Used %ld:%02ld, Left %ld:%02ld\n",
