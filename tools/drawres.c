@@ -215,11 +215,13 @@ int main(int argc, char *argv[]){
 		error("Invalid restype=%d\n", restype);
 	    }
 	    if(!zfexist(fn)) continue;
-	    seedcount++;
 	    int ii=ipath+npath*iseed;
 	    if(restype==1){
 		dcell *res;
 		res=dcellread("%s",fn);
+		if(res->nx<3 || !res->p){
+		    continue;
+		}
 		int ind=0;
 		int indlo=0;
 		int indhi=0;
@@ -292,6 +294,7 @@ int main(int argc, char *argv[]){
 	      upterr->p[ii]=dtrans(tmp);
 	      dfree(tmp);
 	      dcellfree(upt);*/
+	    seedcount++;
 	}
 	if(seedcount>0){
 	    dscale(reshim->p[ipath], 1./seedcount);

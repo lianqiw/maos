@@ -59,16 +59,13 @@ static dmat* pttr_B(const dmat *B,   /**<The B matrix. */
   
     double *mod[3];
     dmat *mcc=dnew(3,3);/*modal cross coupling matrix. */
-    dmat*  cc=mcc;
  
     mod[0]=NULL;
     mod[1]=locx;
     mod[2]=locy;
     for(int im=0; im<3;im++){
 	for(int jm=im;jm<3;jm++){
-	    IND(cc,im,jm)=dotdbl(mod[im], mod[jm], amp, nloc);
-	    if(im!=jm)
-		IND(cc,jm,im)=IND(cc,im,jm);
+	    IND(mcc,im,jm)=IND(mcc,jm,im)=dotdbl(mod[im], mod[jm], amp, nloc);
 	}
     }
     dinvspd_inplace(mcc);
@@ -134,8 +131,8 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
 		      const dmat* B,  const T_VALID *pval){
     double ampsum=dblsum(amp, loc->nloc);
-    if(ampsum<=0){
-	warning("genotf_do: amplitude sum to zero or negative\n");
+    if(ampsum<=loc->nloc*0.01){
+	warning("genotf_do: amplitude sum to less than 1%%. Skip\n");
 	return;
     }
     long nloc=loc->nloc;
@@ -233,7 +230,7 @@ static void genotf_wrap(thread_t *info){
 	}
 	if(otffull && (!area || area->p[isa]>thres)){
 	    ccp(&otf[isa],otffull);/*just copy the full array */
-	}else if(!area || area->p[isa]>0){ 
+	}else if(!area || area->p[isa]>0.01){ 
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }

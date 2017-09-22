@@ -255,6 +255,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    else break;
 	}
 	if(end<config_file) {
+	    warning("config %s is empty\n", config_in);
 	    free(config_file);
 	    return;
 	}

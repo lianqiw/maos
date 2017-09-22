@@ -99,8 +99,8 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	create_metapupil(&map, 0, 0, parms->dirs, dout, 0, dx, dx, 0, 0, 0, 0, 0, 0);
 	loc_t *gloc=recon->gloc->p[ipowfs]=map2loc(map, 0); 
 	mapfree(map);
-	map_t *ampground=parms->dbg.gp_noamp?0:aper->ampground;
-	if(ampground && parms->recon.misreg_tel2wfs){
+	map_t *ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
+	if(ampground && parms->recon.misreg_tel2wfs && parms->dbg.gp_noamp==0){
 	    /*Unable to obtain actual pupil with distortion. Use annular one instead*/
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
@@ -111,6 +111,8 @@ setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
 	}
 	if(aper->ampground && !ampground){
 	    warning("Do not use amplitude map when building GP\n");
+	}else{
+	    info("Use amplitude map when building GP\n");
 	}
 	recon->gamp->p[ipowfs]=mkamp(gloc, ampground, 0,0, dout, din);
 	/*int iwfs0=parms->powfs[ipowfs].wfsr->p[0];

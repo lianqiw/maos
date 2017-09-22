@@ -113,11 +113,9 @@ static char* procfn(const char *fn, const char *mod){
 	    }
 	    fnr=search_file(fn2);
 	}
+	//It is ok to have NUL fnr.
 	free(fn2);
 	fn2=fnr;
-	if(!fnr){
-	  
-	}
     }else if (mod[0]=='w' || mod[0]=='a'){
 	if(disable_save){//When saving is disabled, allow writing to cache folder.
 	    char fncache[PATH_MAX];
