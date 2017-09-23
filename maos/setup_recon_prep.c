@@ -81,78 +81,28 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
 }
-static void
-setup_recon_gloc(RECON_T *recon, const PARMS_T *parms, const APER_T *aper){
-    //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
-    recon->gloc=loccellnew(parms->npowfs, 1);
-    //recon->gamp=dcellnew(parms->nwfsr, 1);
-    recon->gamp=dcellnew(parms->npowfs, 1);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	map_t *map=0;
-	double dx=parms->powfs[ipowfs].dx;
+static loc_t* 
+make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfs){
+    //Create loc/amp that can be used to build GP. It has points on edge of subapertures
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    double dx=parms->powfs[ipowfs].dx;
+    loc_t *gloc=mkannloc(parms->aper.d+1, 0, dx, 0);
+    if(gamp){
 	double dout=parms->aper.d;
 	double din=parms->aper.din;
+	map_t *ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
 	if(parms->dbg.gp_noamp==2){
 	    dout+=1;
 	    din=0;
 	}
-	create_metapupil(&map, 0, 0, parms->dirs, dout, 0, dx, dx, 0, 0, 0, 0, 0, 0);
-	loc_t *gloc=recon->gloc->p[ipowfs]=map2loc(map, 0); 
-	mapfree(map);
-	map_t *ampground=parms->dbg.gp_noamp>0?0:aper->ampground;
-	if(ampground && parms->recon.misreg_tel2wfs && parms->dbg.gp_noamp==0){
-	    /*Unable to obtain actual pupil with distortion. Use annular one instead*/
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
-		if(parms->recon.misreg_tel2wfs[iwfs]){
-		    ampground=0;
-		}
-	    }
+	loc_t *gloc2=0;
+	if(ampground && parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs]){
+	    gloc2=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs]);
 	}
-	if(aper->ampground && !ampground){
-	    warning("Do not use amplitude map when building GP\n");
-	}else{
-	    info("Use amplitude map when building GP\n");
-	}
-	recon->gamp->p[ipowfs]=mkamp(gloc, ampground, 0,0, dout, din);
-	/*int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
-	  if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs0]){
-	  warning("Only first WFS tel2wfs pupil distortion is used for testing\n");
-	  gloc=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs0]);
-	  }
-
-	  
-	*/
-	/*
-	int misreg=0;
-	if(parms->recon.misreg_tel2wfs){
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
-		if(parms->recon.misreg_tel2wfs[iwfs]){
-		    misreg=1;
-		}
-	    }
-	}
-	if(misreg){
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
-		if(parms->recon.misreg_tel2wfs[iwfs]){
-		    gloc=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs]);
-		}
-		recon->gamp->p[iwfs]=mkamp(gloc, aper->ampground, 0,0, parms->aper.d, parms->aper.din);
-	    }
-	}else{
-
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
-		if (jwfs==0){
-		    recon->gamp->p[iwfs]=mkamp(gloc, aper->ampground, 0,0, parms->aper.d, parms->aper.din);
-		}else{
-		    recon->gamp->p[iwfs]=dref(recon->gamp->p[iwfs0]);
-		}
-	    }
-	    }*/		
+	*gamp=mkamp(gloc2?gloc2:gloc, ampground, 0, 0, dout, din);
+	locfree(gloc2);
     }
+    return gloc;
 }
 
 /**
@@ -606,64 +556,75 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
-    dspcell *GP=NULL;
+    recon->GP=dspcellnew(nwfs, 1);
     if(parms->load.GP){
 	warning2("Loading saved GP\n");
-	GP=dspcellread("%s",parms->load.GP);
-	int nploc=ploc->nloc;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    int nsa=powfs[ipowfs].saloc->nloc;
-	    if(GP->p[ipowfs]->nx!=nsa*2 || GP->p[ipowfs]->ny!=nploc){
-		error("Wrong saved GP: size is %ldx%ld, need %dx%d\n",
-		      GP->p[ipowfs]->nx, GP->p[ipowfs]->ny, nsa*2, nploc);
+	dspcell *GPload=dspcellread("%s",parms->load.GP);
+	int assign=0;
+	if(GPload->nx==nwfs){
+	    assign=1;
+	}else if(GPload->nx==parms->npowfs){
+	    assign=2;
+	}else{
+	    error("GP loaded from %s has wrong size.\n", parms->load.GP);
+	}
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs=parms->wfs[iwfs].powfs;
+	    const long nsa=powfs[ipowfs].saloc->nloc;
+	    recon->GP->p[iwfs]=dspref(GPload->p[assign==1?iwfs:ipowfs]);
+	    if(recon->GP->p[iwfs]->nx!=nsa*2 || recon->GP->p[iwfs]->ny!=ploc->nloc){
+		error("Wrong saved GP[%d]: size is %ldx%ld, need %ldx%ld\n", iwfs,
+		      recon->GP->p[iwfs]->nx,  recon->GP->p[iwfs]->ny, nsa*2, ploc->nloc);
 	    }
 	}
+	dspcellfree(GPload);
     }else{
-	GP=dspcellnew(parms->npowfs, 1);
+	int share_gp=1;
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs]){
+		share_gp=0;
+	    }
+	    
+	}
 	info2("Generating GP with ");TIC;tic;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(parms->powfs[ipowfs].nwfs==0) continue;
-	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
-	      (non-misregistered)*/
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    const int ipowfs=parms->wfs[iwfs].powfs;
+	    const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	    if(parms->powfs[ipowfs].type==1){
 		info2(" PWFS (skip)");
-		/*if(parms->recon.alg==0){
-		    GP->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, ploc,0,0,1);
-		    }*/
-	    }else if(parms->powfs[ipowfs].gtype_recon==0){
-		/*Create averaging gradient operator (gtilt) from PLOC,
-		  using fine sampled powfs.gloc as intermediate plane*/
-		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,recon->gloc->p[ipowfs],recon->gamp->p[ipowfs],
-				  powfs[ipowfs].saloc,1,0,0,1);
-	    }else if(parms->powfs[ipowfs].gtype_recon==1){
-		/*Create ztilt operator from PLOC, using fine sampled
-		  powfs.gloc as intermediate plane.*/
-		dsp* ZS0=mkz(recon->gloc->p[ipowfs],recon->gamp->p[ipowfs]->p,
-			     (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
-		info2(" Zploc");
-		dsp *H=mkh(ploc,recon->gloc->p[ipowfs], 0,0,1);
-		GP->p[ipowfs]=dspmulsp(ZS0,H,"nn");
-		dspfree(H);
-		dspfree(ZS0);
-	    }else{
-		error("Invalid gtype_recon\n");
+		continue;
 	    }
+	    dmat *gamp=0;
+	    loc_t *gloc=make_gloc(&gamp, parms, aper, iwfs);
+	    if(!share_gp || iwfs==iwfs0){
+		dsp *gp=0;
+		if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
+		    info2(" Gploc");
+		    gp=mkg(ploc,gloc, gamp, powfs[ipowfs].saloc,1,0,0,1);
+		}else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
+		    info2(" Zploc");
+		    dsp* ZS0=mkz(gloc, gamp->p, (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
+		    dsp *H=mkh(ploc,gloc, 0,0,1);
+		    gp=dspmulsp(ZS0,H,"nn");
+		    dspfree(H);
+		    dspfree(ZS0);
+		}else{
+		    error("Invalid gtype_recon\n");
+		}
+		recon->GP->p[iwfs]=gp;
+	    }else{
+		recon->GP->p[iwfs]=dspref(recon->GP->p[iwfs0]);
+	    }
+	    locfree(gloc);
+	    dfree(gamp);
 	}
 	toc2(" ");
-    }
-    if(parms->save.setup){
-	writebin(GP,"GP");
-    }
-    /*assign GP for powfs to recon->GP for each wfs */
-    recon->GP=GP;
-    recon->GP2=dspcellnew(nwfs,1);
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	int ipowfs = parms->wfsr[iwfs].powfs;
-	recon->GP2->p[iwfs]=dspref(recon->GP->p[ipowfs]);
+	if(parms->save.setup){
+	    writebin(recon->GP, "GP");
+	}
     }
 }
 /**
@@ -778,7 +739,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			freeloc=1;
 		    }
 		    dsp *H=mkh(recon->aloc->p[idm], loc, dispx,dispy,scale);
-		    IND(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[ipowfs], H,"nn");
+		    IND(recon->GA, iwfs, idm)=dspmulsp(recon->GP->p[iwfs], H,"nn");
 		    dspfree(H);
 		    if(freeloc){
 			locfree(loc);
@@ -881,7 +842,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 	for(int ips=0; ips<npsr; ips++){
-	    IND(GX,iwfs,ips)=dspmulsp(recon->GP2->p[iwfs], IND(HXW,iwfs,ips),"nn");
+	    IND(GX,iwfs,ips)=dspmulsp(recon->GP->p[iwfs], IND(HXW,iwfs,ips),"nn");
 	}/*ips */
     }
     toc2(" ");
@@ -913,18 +874,16 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
     /*Create GFall: Focus mode -> WFS grad. This is model*/
-    recon->GFall=dcellnew(parms->npowfs, 1);
-    recon->GFngs=dcellnew(parms->nwfs, 1);
+    recon->GFall=dcellnew(parms->nwfsr, 1);
+    recon->GFngs=dcellnew(parms->nwfsr, 1);
     {
 	dmat *opd=dnew(recon->ploc->nloc,1);
 	loc_add_focus(opd->p, recon->ploc, 1);
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){ 
-	    dspmm(&recon->GFall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    const int ipowfs=parms->wfsr[iwfs].powfs;
+	    dspmm(&recon->GFall->p[iwfs], recon->GP->p[iwfs], opd, "nn", 1);
 	    if(parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].llt){
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
-		    recon->GFngs->p[iwfs]=dref(recon->GFall->p[ipowfs]);
-		}
+		recon->GFngs->p[iwfs]=dref(recon->GFall->p[iwfs]);
 	    }
 	}
 	dfree(opd);
@@ -938,14 +897,15 @@ setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
  */
 static void
 setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
-    recon->GRall=dcellnew(parms->npowfs, 1);
+    recon->GRall=dcellnew(parms->nwfsr, 1);
     dmat *opd=zernike(recon->ploc, parms->aper.d, 3, parms->powfs[parms->itpowfs].order, 1);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs; 
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    if(parms->powfs[ipowfs].type==1){//PWFS
-		recon->GRall->p[ipowfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0, 1);
+		recon->GRall->p[iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0, 1);
 	    }else{//SHWFS
-		dspmm(&recon->GRall->p[ipowfs], recon->GP->p[ipowfs], opd, "nn", 1);
+		dspmm(&recon->GRall->p[iwfs], recon->GP->p[iwfs], opd, "nn", 1);
 	    }
 	}
     }
@@ -1190,14 +1150,12 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
     recon->nthread=NTHREAD;
     /*setup pupil coarse grid for gradient operator*/
     setup_recon_ploc(recon,parms);
-    /*fine sampled pupil loc*/
-    setup_recon_gloc(recon,parms, aper);
     /*setup DM actuator grid */
     setup_recon_aloc(recon,parms);
     /*Grid for DM fitting*/
     setup_recon_floc(recon,parms);
     /*Gradient operators*/
-    setup_recon_GP(recon, parms, powfs);
+    setup_recon_GP(recon, parms, powfs, aper);
     //TT Removal
     setup_recon_TT(recon,parms,powfs);
     //DF removal. //Deprecated

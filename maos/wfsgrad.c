@@ -680,7 +680,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	    double scale=simu->recon->ngsmod->scale;
 	    int indps=simu->recon->ngsmod->indps;
 	    double focus=-simu->Mint_lo->mint->p[1]->p[0]->p[indps]*(scale-1);
-	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], focus);
+	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], focus);
 	}
     }
 
@@ -714,7 +714,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		    simu->zoomint->p[iwfs]=LGSfocus->p[iwfs]->p[0]; 
 		}
 		LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->zoomint->p[iwfs]);
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->zoomint->p[iwfs]);
 		info2("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
 	    }
 	}
@@ -733,7 +733,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		    infocus=lgsfocusm;
 		}
 		simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+infocus*lpfocus;
-		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[ipowfs], -simu->lgsfocuslpf->p[iwfs]);
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
 	    }
 	    if(zoom_from_grad){//Trombone averager
 		if(parms->powfs[ipowfs].zoomshare){//all lgs share the same trombone.
@@ -1036,7 +1036,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].llt){
-		dmm(&simu->gradoff->p[iwfs], 1, simu->recon->GRall->p[ipowfs], Rmod->p[0], "nn", -simu->eptwfs); 
+		dmm(&simu->gradoff->p[iwfs], 1, simu->recon->GRall->p[iwfs], Rmod->p[0], "nn", -simu->eptwfs); 
 	    }
 
 	    if(parms->plot.run){

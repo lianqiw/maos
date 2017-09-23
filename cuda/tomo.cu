@@ -204,27 +204,26 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	dcellfree(pdftt);
     }
     {
-	const int npowfs=parms->npowfs;
 	GPp=cucell<short2>(nwfs, 1);
 	GP=cuspcell(nwfs, 1);
-	GPscale=new Real[npowfs];
-	saptr=cucell<int>(npowfs, 1);
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	GPscale=new Real[nwfs];
+	saptr=cucell<int>(nwfs, 1);
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs=parms->wfs[iwfs].powfs;
+	    const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	    if(parms->powfs[ipowfs].skip) continue;
-	    cusp GPf;
-	    cumat<short2> GPpi;
-	    prep_GP(GPpi, &GPscale[ipowfs], GPf,
-		    recon->GP->p[ipowfs], powfs[ipowfs].saloc, recon->ploc);
-	    saptr[ipowfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		if(ipowfs==parms->wfsr[iwfs].powfs){
-		    if(GPpi){
-			GPp[iwfs]=GPpi;
-		    }
-		    if(GPf){
-			GP[iwfs]=GPf;
-		    }
-		}
+	    if(iwfs==iwfs0 || recon->GP->p[iwfs]->p!=recon->GP->p[iwfs0]->p){
+		prep_GP(GPp[iwfs], &GPscale[iwfs], GP[iwfs], recon->GP->p[iwfs], powfs[ipowfs].saloc, recon->ploc);
+	    }else{
+		GPp[iwfs]=GPp[iwfs0];
+		GPscale[iwfs]=GPscale[iwfs0];
+		GP[iwfs]=GP[iwfs0];
+		saptr[iwfs]=saptr[iwfs0];
+	    }
+	    if(iwfs==iwfs0){
+		saptr[iwfs]=prep_saptr(powfs[ipowfs].saloc, recon->pmap);
+	    }else{
+		saptr[iwfs]=saptr[iwfs0];
 	    }
 	}
     }
@@ -259,9 +258,9 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	    GPDATA[iwfs].jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];//wfs index in this group
 	    GPDATA[iwfs].dsa=powfs[ipowfs].pts->dsa;
 	    GPDATA[iwfs].pos=parms->tomo.pos;
-	    GPDATA[iwfs].saptr=(int(*)[2])saptr[ipowfs].P();
+	    GPDATA[iwfs].saptr=(int(*)[2])saptr[iwfs].P();
 	    GPDATA[iwfs].GPp=(short2*)GPp[iwfs].P();
-	    GPDATA[iwfs].GPscale=GPscale[ipowfs];
+	    GPDATA[iwfs].GPscale=GPscale[iwfs];
 	    if(parms->powfs[ipowfs].trs){
 		GPDATA[iwfs].PTT=PTT(iwfs,iwfs).P();
 	    }

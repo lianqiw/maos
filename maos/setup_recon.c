@@ -801,16 +801,15 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 		    continue;
 		}
 		dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		      recon->GFall->p[ipowfs],"nn",1);
-		dmm(&GMGngs,1,recon->GFall->p[ipowfs], GMngs->p[iwfs], "tn",1);
+		      recon->GFall->p[iwfs],"nn",1);
+		dmm(&GMGngs,1,recon->GFall->p[iwfs], GMngs->p[iwfs], "tn",1);
 	    }
 	    dinvspd_inplace(GMGngs);
 	    /*A focus reconstructor from all NGS measurements.*/
 	    dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
   
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
-		if(!recon->GFall->p[ipowfs]) continue;
+		if(!recon->GFall->p[iwfs]) continue;
 		//NGS gradient to Focus mode reconstructor.
 		dmm(&RFngsg->p[iwfs], 0, GMGngs, GMngs->p[iwfs],"nt",1);
 	    }
@@ -829,7 +828,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 		if(iwfs==iwfs0 || !parms->recon.glao){
-		    IND(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[ipowfs], IND(recon->saneai, iwfs, iwfs));
+		    IND(recon->RFlgsg, iwfs, iwfs)=dpinv(recon->GFall->p[iwfs], IND(recon->saneai, iwfs, iwfs));
 		}else{
 		    IND(recon->RFlgsg, iwfs, iwfs)=dref(IND(recon->RFlgsg, iwfs0, iwfs0));
 		}
@@ -865,7 +864,7 @@ setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip==2){//twfs
-	    GRtwfs->p[iwfs]=dref(recon->GRall->p[ipowfs]);
+	    GRtwfs->p[iwfs]=dref(recon->GRall->p[iwfs]);
 	    neai->p[iwfs+iwfs*parms->nwfsr]=dspref(recon->saneai->p[iwfs+parms->nwfsr*iwfs]);
 	}
     }
@@ -1359,8 +1358,6 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
     }
-    cellfree(recon->gloc);
-    cellfree(recon->gamp);
     if(parms->recon.split){
 	/*split tomography */
 	setup_ngsmod_recon(parms,recon);
@@ -1484,7 +1481,6 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 
     if(recon->RR.M){
 	dspcellfree(recon->GP);
-	dspcellfree(recon->GP2);
     }
 
     /*The following have been used in fit matrix. */
@@ -1543,7 +1539,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dspcellfree(recon->GXlo);
     dspcellfree(recon->GXtomo);
     dspcellfree(recon->GP);
-    dspcellfree(recon->GP2);
     dspcellfree(recon->GA); 
     dspcellfree(recon->GAlo);
     dspcellfree(recon->GAhi);
@@ -1611,8 +1606,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);
-    cellfree(recon->gloc);
-    cellfree(recon->gamp);
     cellfree(recon->DMTT);
     cellfree(recon->DMPTT);
     free(recon);

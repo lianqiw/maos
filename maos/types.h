@@ -262,8 +262,8 @@ typedef struct RECON_T{
     dcell *amod;       /**<Zernike/KL modes defined on aloc for modal control*/
     lmat *anmod;       /**<Sizeof of amod*/
 
-    loccell *gloc;        /**<loc used to generate GP*/
-    dcell *gamp;        /**<amplitude defined on gloc*/
+    //loccell *gloc;        /**<loc used to generate GP*/
+    //dcell *gamp;        /**<amplitude defined on gloc*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/
@@ -274,8 +274,7 @@ typedef struct RECON_T{
     INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
     FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
-    dspcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each powfs.*/
-    dspcell *GP2;        /**<Gradient operator from HXW. GX=GP*H for each wfs, referenced from GP.*/
+    dspcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each wfs..*/
     dspcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
     dspcell *HXWtomo;   /**<Like GXtomo*/
     dspcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/

@@ -257,7 +257,7 @@ static void Tomo_prop_do(thread_t *info){
 	    }
 	}
 	/*Apply the gradient operation */
-	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, "nn", 1);
+	dspmm(&data->gg->p[iwfs], recon->GP->p[iwfs], xx, "nn", 1);
 	dfree(xx);
 	/* For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms. */
     }
@@ -285,7 +285,7 @@ static void Tomo_nea_gpt_do(thread_t *info){
 	/*Apply the gradient operation */
 	dspmm(&gg2, IND(NEAI,iwfs,iwfs), data->gg->p[iwfs], "nn", 1);
 	dfree(data->gg->p[iwfs]); /*We reuse gg. */
-	dspmm(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, "tn", data->alpha);
+	dspmm(&data->gg->p[iwfs], recon->GP->p[iwfs], gg2, "tn", data->alpha);
 	dfree(gg2);
     }
 }
