@@ -75,10 +75,7 @@ void free_strarr(char **str, int n){
 */
 static double fc2lp(double fc, double dt){
     double lp=2*M_PI*fc*dt;
-    if(lp>1){
-	lp=1;
-    }
-    return lp;
+    return 1-exp(-lp);//2017-09-26 was lp.
 }
 /**
    Free the parms struct.
