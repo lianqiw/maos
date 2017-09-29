@@ -291,7 +291,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    cudata_t::evlgpu=cuarray<int>(parms->evl.nevl, 1);
 	    cudata_t::wfsgpu=cuarray<int>(parms->nwfs, 1);
 	    int ntask=0;
-	    if(parms->gpu.tomo || parms->gpu.fit) ntask++;
+	    if(parms->gpu.tomo || parms->gpu.fit|| parms->gpu.lsr) ntask++;
 	    if(parms->gpu.evl) ntask+=parms->evl.nevl;
 	    if(parms->gpu.wfs) ntask+=parms->nwfs;
 	    if(ntask==0){
@@ -303,7 +303,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    struct task_t *tasks=(task_t*)calloc(ntask, sizeof(task_t));
 	    //recon
 	    int count=0;
-	    if(parms->gpu.tomo || parms->gpu.fit){
+	    if(parms->gpu.tomo || parms->gpu.fit || parms->gpu.lsr){
 		tasks[count].timing=20;//ms
 		tasks[count].dest=&cudata_t::recongpu;
 		snprintf(tasks[count].name, 64, "RECON");
@@ -358,6 +358,15 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		info2("Reset nthread to %d\n", NTHREAD);
 	    }
 	    free(tasks);
+	    {
+		info2("Use %d GPUs for %s%s%s%s%s\n", NGPU, 
+		      parms->gpu.wfs?" WFS":"",
+		      parms->gpu.lsr?" LSR":"",
+		      parms->gpu.tomo?" Tomo":"",
+		      parms->gpu.fit?" Fit":"",
+		      parms->gpu.evl?" Evl":""
+		    );
+	    }
 	}
     }
  end:

@@ -558,7 +558,7 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(dbl,dx);
     READ_DM_RELAX(dbl,ar);
     for(int idm=0; idm<ndm; idm++){
-	parms->dm[idm].order=parms->aper.d/parms->dm[idm].dx;
+	parms->dm[idm].order=ceil(parms->aper.d/parms->dm[idm].dx);
 	parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
 	if(parms->dm[idm].ar<=0){
 	    error("ar must be positive\n");
@@ -620,7 +620,7 @@ static void readcfg_moao(PARMS_T *parms){
     char **strtmp=NULL;
     READ_MOAO_RELAX(dbl,dx);
     for(int imoao=0; imoao<nmoao; imoao++){
-	parms->moao[imoao].order=parms->aper.d/parms->moao[imoao].dx;
+	parms->moao[imoao].order=ceil(parms->aper.d/parms->moao[imoao].dx);
     }
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,gdm);
@@ -1303,7 +1303,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->powfs[ipowfs].dsa=0.5;
 	    }
 	}
-	parms->powfs[ipowfs].order=round(parms->aper.d/parms->powfs[ipowfs].dsa);
+	parms->powfs[ipowfs].order=ceil(parms->aper.d/parms->powfs[ipowfs].dsa);
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
@@ -2643,7 +2643,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d DMs\033[0;0m\n",parms->ndm);
     for(i=0; i<parms->ndm; i++){
-	info2("DM %d: Order %g, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+	info2("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 	      i, parms->dm[i].order,
 	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
@@ -2858,7 +2858,6 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	use_cuda=1;
     }
     if(use_cuda){
-
 	if(parms->evl.tomo){
 	    parms->gpu.evl=0;
 	}

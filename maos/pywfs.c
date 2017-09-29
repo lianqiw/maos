@@ -129,7 +129,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	if(parms->misreg.tel2wfs && parms->misreg.tel2wfs[iwfs]){
-	    error("To be implemented\n");
+	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp_tel->p[jwfs]); 
 	}else{
 	    powfs[ipowfs].realamp->p[jwfs]=dref(powfs[ipowfs].amp); 
 	}
@@ -221,7 +221,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     cmat *nominal=pywfs->nominal=cnew(ncomp, ncomp);
     cmat*  pn=nominal/*PCMAT*/;
     long order=parms->powfs[ipowfs].order;
-    double dsa=parms->aper.d/order;//size of detector pixel mapped on pupil
+    double dsa=parms->powfs[ipowfs].dsa;//size of detector pixel mapped on pupil
     double dx2=dx*nembed/ncomp;//sampling of pupil after inverse fft
     double du=1./(dx2*ncomp);
     double dupix=dsa*du;
@@ -273,12 +273,12 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
 	if(fabs(powfs[ipowfs].saloc->dx-dsa)>1e-6*fabs(dsa)){
-	    error("loaded saloc has dx=%g, while powfs.dsa=%g\n",
+	    warning("loaded saloc has dx=%g, while powfs.dsa=%g\n",
 		  powfs[ipowfs].saloc->dx, dsa);
 	}
     }else{
 	//Pad the grid to avoid missing significant pixels (subapertures).
-	long order2=order+2*MAX(0, ceil(parms->dbg.pwfs_pupelong));
+	long order2=ceil(order)+2*MAX(0, ceil(parms->dbg.pwfs_pupelong));
 	if(order2>order){
 	    warning("order=%ld, order2=%ld.\n", order, order2);
 	}

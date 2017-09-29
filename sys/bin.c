@@ -194,6 +194,7 @@ file_t* zfopen_try(const char *fn, const char *mod){
     const char* fn2=fp->fn=procfn(fn,mod);
     if(!fn2){
 	if(mod[0]=='r'){
+	    printpath();
 	    error("%s does not exist for read\n", fn);
 	}
 	free(fp); fp=0;

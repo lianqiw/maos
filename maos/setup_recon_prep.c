@@ -636,7 +636,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
     if(parms->load.GA){
-	warning2("Loading saved GA\n");
+	warning2("Loading GA from %s\n", parms->load.GA);
 	recon->GA=dspcellread("%s", parms->load.GA);
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
 	    error("Wrong saved GA\n");

@@ -288,7 +288,7 @@ typedef struct DM_CFG_T{
     double histbin; /**<The bin width for histogram.*/
     int histn;      /**<Number of bins in histogram.*/
     int hist;       /**<Compute histogram of commands of each actuator*/
-    double order;   /**<Order of the DM within telescope clear subaperture*/
+    int order;      /**<Nominal order of the DM within telescope clear subaperture*/
     int isground;   /**<Is this DM the ground DM (derived)*/
     char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
     char *actstuck; /**<file containing stuck actuators. nx2 coordinate.*/
@@ -630,7 +630,7 @@ typedef struct GPU_CFG_T{
 */
 typedef struct MOAO_CFG_T{
     double dx;       /**<Spacing of MOAO DM act*/
-    double order;    /**<Order of this MOAO*/
+    int order;       /**<Nominal order of this MOAO*/
     int used;        /**<This moao is used*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
