@@ -27,8 +27,8 @@ void save_gradstat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     //Save pistat in the end of simulation
-    for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-	int ipowfs=parms->wfsr[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	double scale;
 	if(parms->powfs[ipowfs].usephy){

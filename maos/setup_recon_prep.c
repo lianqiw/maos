@@ -82,9 +82,9 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     }
 }
 static loc_t* 
-make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfs){
+make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfsr){
     //Create loc/amp that can be used to build GP. It has points on edge of subapertures
-    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int ipowfs=parms->wfsr[iwfsr].powfs;
     double dx=parms->powfs[ipowfs].dx;
     loc_t *gloc=mkannloc(parms->aper.d+1, 0, dx, 0);
     if(gamp){
@@ -96,8 +96,8 @@ make_gloc(dmat **gamp, const PARMS_T *parms, const APER_T *aper, int iwfs){
 	    din=0;
 	}
 	loc_t *gloc2=0;
-	if(ampground && parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs]){
-	    gloc2=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfs]);
+	if(ampground && parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfsr]){
+	    gloc2=loctransform(gloc, parms->recon.misreg_tel2wfs[iwfsr]);
 	}
 	*gamp=mkamp(gloc2?gloc2:gloc, ampground, 0, 0, dout, din);
 	locfree(gloc2);
@@ -279,7 +279,8 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	warning("Loading aloc from %s\n",fn);
 	recon->aloc=loccellread("%s",fn);
 	if(recon->aloc->nx!=ndm || recon->aloc->ny!=1) {
-	    error("Loaded aloc should have %dx1 cells\n", ndm);
+	    error("Loaded aloc should have %dx1 cells but has %ldx%ld.\n", 
+		  ndm, recon->aloc->nx, recon->aloc->ny);
 	}
 	for(int idm=0; idm<ndm; idm++){
 	    if(fabs(parms->dm[idm].dx-recon->aloc->p[idm]->dx)>1e-7){
@@ -590,9 +591,9 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	    
 	}
 	info2("Generating GP with ");TIC;tic;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    const int ipowfs=parms->wfsr[iwfs].powfs;
+	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    if(parms->powfs[ipowfs].type==1){
 		info2(" PWFS (skip)");
 		continue;
@@ -639,7 +640,8 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	warning2("Loading GA from %s\n", parms->load.GA);
 	recon->GA=dspcellread("%s", parms->load.GA);
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
-	    error("Wrong saved GA\n");
+	    error("Wrong saved GA (%ldx%ld). Need (%dx%d)\n",
+		  recon->GA->nx, recon->GA->ny, nwfs, ndm);
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
