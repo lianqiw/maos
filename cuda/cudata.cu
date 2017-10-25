@@ -164,7 +164,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    mem_minimum+=sizeof(Real)*nps*nxn*nyn*2;
 	}
 	if(parms->gpu.evl){
-	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2)*8;
+	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2);
 	}
 	if(parms->gpu.wfs && !parms->sim.idealfit){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

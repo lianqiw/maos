@@ -204,7 +204,10 @@ void maos_isim(int isim){
     double ck_end=myclockd();
     long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
     long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
-    if(isim!=simstart){
+    if(isim==simstart){//first step, rough estimate.
+	simu->status->mean=ck_end-ck_0;
+	simu->status->rest=simu->status->mean*parms->sim.nseed*(simend-simstart);
+    }else{
 	simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_1)*(iseed+1))/steps_done*steps_rest
 				  +(tk_atm-tk_1)*(parms->sim.nseed-iseed-1));
 	simu->status->mean=(ck_end-tk_atm)/(double)(isim-simstart);

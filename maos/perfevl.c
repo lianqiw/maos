@@ -488,7 +488,8 @@ static void perfevl_mean(SIM_T *simu){
 	    error("Divergent simulation.");
 	}
 	warning2("Step %5d: The loop is diverging: OL: %g CL: %g\n",  
-		 isim, simu->ole->p[nevlmod*isim],  simu->cle->p[nevlmod*isim]);
+		 isim, sqrt(simu->ole->p[nevlmod*isim])*1e9,
+		 sqrt(simu->cle->p[nevlmod*isim])*1e9);
 	simu->last_report_time=0; //force print out.
     }
 }

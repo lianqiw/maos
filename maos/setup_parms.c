@@ -2122,6 +2122,12 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
 	}
+	if(parms->powfs[ipowfs].nwfs<2 && parms->powfs[ipowfs].dfrs){
+	    parms->powfs[ipowfs].dfrs=0;
+	}
+	if(parms->powfs[ipowfs].dfrs && !parms->powfs[ipowfs].llt){
+	    warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
+	}
 	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
 	    parms->powfs[ipowfs].psol=1;
@@ -2510,28 +2516,28 @@ static void print_parms(const PARMS_T *parms){
     int i;
     const char *phytype[]={
 	"Skip",
-	"\033[0;32mmatched filter\033[0;0m",
-	"\033[0;31mthresholded center of gravity\033[0;0m",
-	"\033[0;31mMaximum A Priori Tracing (MAP)\033[0;0m"
+	"matched filter",
+	"thresholded center of gravity",
+	"Maximum A Priori Tracing (MAP)"
     };
     const char* tomo_precond[]={
-	"\033[0;32mNo\033[0;0m",
-	"\033[0;32mFourer Domain\033[0;0m",
-	"\033[0;32mInvalid\033[0;0m"
+	"No",
+	"Fourer Domain",
+	"Invalid"
     };
     const char *closeloop[]={
-	"\033[0;31mopen\033[0;0m",
-	"\033[0;32mclose\033[0;0m"
+	"open",
+	"close"
     };
 
-    info2("\033[0;32mAperture\033[0;0m is %g m with sampling 1/%g m\n",
+    info2("%sAperture%s is %g m with sampling 1/%g m\n", GREEN, BLACK,
 	  parms->aper.d, 1/parms->evl.dx);
     double fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
     double theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
     
-    info2("\033[0;32mTurbulence at zenith:\033[0;0m\n"
+    info2("%sTurbulence at zenith:%s\n"
 	  "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
-	  "Anisoplanatic angle is %.2f\"",
+	  "Anisoplanatic angle is %.2f\"",GREEN, BLACK,
 	  parms->atm.r0, parms->atm.L0, fgreen, theta0z*206265);
     if(parms->ndm==2){
 	double H1=parms->dm[0].ht;
@@ -2551,8 +2557,8 @@ static void print_parms(const PARMS_T *parms){
 	      ips,parms->atm.ht->p[ips],parms->atm.wt->p[ips],parms->atm.ws->p[ips]);
     }
     if(parms->recon.alg==0){
-	info2("\033[0;32mReconstruction\033[0;0m: r0=%gm l0=%gm "
-	      "ZA is %g deg. %d layers.%s\n", 
+	info2("%sReconstruction%s: r0=%gm l0=%gm "
+	      "ZA is %g deg. %d layers.%s\n", GREEN, BLACK,
 	      parms->atmr.r0, parms->atmr.L0,  
 	      parms->sim.za*180/M_PI, 
 	      parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
@@ -2562,38 +2568,24 @@ static void print_parms(const PARMS_T *parms){
 		  ips,parms->atmr.ht->p[ips],parms->atmr.wt->p[ips]);
 	}
     }
-    info2("\033[0;32mThere are %d powfs\033[0;0m\n", parms->npowfs);
+    info2("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	info2("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%",
+	info2("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
 	      ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
 	      parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 	int lrt=(parms->recon.split && parms->tomo.splitlrt);
-	if(parms->powfs[ipowfs].trs){
-	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
-	    if(!parms->powfs[ipowfs].llt){
-		warning("\n\ntrs=1, but this powfs doesn't have LLT!\n\n");
-	    }
-	}
-	if(parms->powfs[ipowfs].dfrs){
-	    if(parms->powfs[ipowfs].nwfs<2){
-		parms->powfs[ipowfs].dfrs=0;
-	    }else{
-		info2("\033[0;32m Diff focus is removed in %s side in tomography.\033[0;0m",
-		      lrt?"both":"right hand");
-	    }
-	    if(!parms->powfs[ipowfs].llt){
-		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
-	    }
-	}
-	if(parms->powfs[ipowfs].pixblur>1.e-12){
-	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[ipowfs].pixblur);
+	if(parms->powfs[ipowfs].trs || parms->powfs[ipowfs].dfrs){
+	    info2("%s%s%sis removed in %s side in tomography.%s", GREEN,
+		  parms->powfs[ipowfs].trs?"T/T ":"", parms->powfs[ipowfs].dfrs?"Diff Focus ":"",
+		  lrt?"both":"right hand",  BLACK);
 	}
 	info2("\n");
 	if(parms->powfs[ipowfs].type==0){
-	    info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
+	    info2("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ", 
 		  (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
 		  parms->powfs[ipowfs].pixpsa, 
 		  parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
+		  parms->powfs[ipowfs].pixblur,
 		  1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}else{
 	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
@@ -2606,18 +2598,18 @@ static void print_parms(const PARMS_T *parms){
 	info2("    %s in reconstruction. ", 
 	      parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
 	if(parms->powfs[ipowfs].phystep>-1){
-	    info2("Physical optics start at %d with '%s'",
+	    info2("Physical optics start at %d with %s'%s'%s",
 		  parms->powfs[ipowfs].phystep, 
-		  phytype[parms->powfs[ipowfs].phytypesim]);
+		  parms->powfs[ipowfs].phytypesim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytypesim], BLACK);
 	}else{
 	    info2("Geomtric optics uses %s ",
 		  parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");
 	}
 	
 	if(parms->powfs[ipowfs].noisy){
-	    info2("\033[0;32m(noisy)\033[0;0m\n");
+	    info2("%s(noisy)%s\n", GREEN,BLACK);
 	}else{
-	    info2("\033[0;31m(noise free)\033[0;0m\n");
+	    info2("%s(noise free)%s\n", RED, BLACK);
 	}
 	if(parms->powfs[ipowfs].dither){
 	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
@@ -2626,7 +2618,7 @@ static void print_parms(const PARMS_T *parms){
 		  parms->powfs[ipowfs].dither_ogskip, parms->powfs[ipowfs].dither_ograt);
 	}
     }
-    info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
+    info2("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
     for(i=0; i<parms->nwfs; i++){
 	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 	      i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
@@ -2641,7 +2633,7 @@ static void print_parms(const PARMS_T *parms){
 	    error("wfs thetax or thetay is too large\n");
 	}
     }
-    info2("\033[0;32mThere are %d DMs\033[0;0m\n",parms->ndm);
+    info2("%sThere are %d DMs%s\n",GREEN, parms->ndm, BLACK);
     for(i=0; i<parms->ndm; i++){
 	info2("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 	      i, parms->dm[i].order,
@@ -2656,7 +2648,7 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
     if(parms->recon.alg==0){
-	info2("\033[0;32mTomography\033[0;0m is using ");
+	info2("%sTomography%s is using ", GREEN, BLACK);
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
 	}
@@ -2665,8 +2657,8 @@ static void print_parms(const PARMS_T *parms){
 	    info2("Cholesky back solve ");
 	    break;
 	case 1:
-	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
-		  tomo_precond[parms->tomo.precond], parms->tomo.maxit);
+	    info2("CG, with %s%s%s preconditioner, %s%d%s iterations",
+		  GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
 	    break;
 	case 2:
 	    info2("SVD direct solve ");
@@ -2679,15 +2671,15 @@ static void print_parms(const PARMS_T *parms){
 	}
 	switch(parms->recon.split){
 	case 0:
-	    info2(" integrated tomo.\n");break;
+	    info2(", integrated tomo.\n");break;
 	case 1:
-	    info2(" ad hoc split tomo.\n"); break;
+	    info2(", ad hoc split tomo.\n"); break;
 	case 2:
-	    info2(" minimum variance split tomo\n"); break;
+	    info2(", minimum variance split tomo\n"); break;
 	default:
-	    error(" Invalid\n");
+	    error(", Invalid\n");
 	}
-	info2("\033[0;32mDM Fitting\033[0;0m is using ");
+	info2("%sDM Fitting %sis using ", GREEN, BLACK);
 	if(parms->fit.bgs){
 	    info2("Block Gauss Seidel with ");
 	}
@@ -2696,8 +2688,8 @@ static void print_parms(const PARMS_T *parms){
 	    info2("Cholesky back solve");
 	    break;
 	case 1:
-	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
-		  tomo_precond[parms->fit.precond], parms->fit.maxit);
+	    info2("CG, with %s%s%s preconditioner, %s%d%s iterations ",
+		  GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
 	    break;
 	case 2:
 	    info2("SVD direct solve ");
@@ -2709,7 +2701,7 @@ static void print_parms(const PARMS_T *parms){
 	    error("Invalid");
 	}
     }else if(parms->recon.alg==1){
-	info2("\033[0;32mLeast square reconstructor\033[0;0m is using ");
+	info2("%sLeast square reconstructor%s is using ", GREEN, BLACK);
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
 	}
@@ -2727,14 +2719,14 @@ static void print_parms(const PARMS_T *parms){
 	    error("Invalid\n");
 	}
     }else{
-	error("parms->recon.alg=%d is illegal\n", parms->recon.alg);
+	error("parms->recon.alg=%d is illegal.\n", parms->recon.alg);
     }
     info2("\n");
-    info2("\033[0;32mSimulation\033[0;0m start at step %d, end at step %d, "
-	  "with time step 1/%gs, %s loop \n", 
-	  parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
-	  closeloop[parms->sim.closeloop]);
-    info2("\033[0;32mThere are %d fit directions\033[0;0m\n", parms->fit.nfit);
+    info2("%sSimulation%s start at step %d, end at step %d, "
+	  "with time step 1/%gs, %s%s loop%s.\n", 
+	  GREEN, BLACK, parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
+	  parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
+    info2("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
     for(i=0; i<parms->fit.nfit; i++){
 	info2("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
@@ -2743,8 +2735,8 @@ static void print_parms(const PARMS_T *parms){
 	    error("fit thetax or thetay is too large\n");
 	}
     }
-    info2("\033[0;32mThere are %d evaluation directions\033[0;0m at sampling 1/%g m.\n", 
-	  parms->evl.nevl, 1./parms->evl.dx);
+    info2("%sThere are %d evaluation directions%s at sampling 1/%g m.\n", 
+	  GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
 	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 

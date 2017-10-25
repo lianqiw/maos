@@ -893,11 +893,11 @@ if test "$with_cuda" != "no" ;then
     #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
     #fi
     if test "$debug" = "yes" ;then
-        CUDAOPT+=" -O0"
+        CUDAOPT+=" -O0 -G -g"
     else
-	CUDAOPT+=" -O3"
+	CUDAOPT+=" -O3 -lineinfo"
     fi
-    CUDAOPT+=" -g -lineinfo -DHAVE_CONFIG_H -I.. "
+    CUDAOPT+=" -DHAVE_CONFIG_H -I.. "
     #CUDAOPT+="-Xptxas=-v -dlcm=cg"
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
