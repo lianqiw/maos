@@ -734,7 +734,9 @@ lmat* loc_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
 	long mapx=(long)round((IND(ps,jact,0)-ox)*dx1);
 	long mapy=(long)round((IND(ps,jact,1)-oy)*dx1);
 	long iact=loc_map_get(map, mapx, mapy)-1;
-	out->p[iact]=(dead->ny==3?IND(ps,jact,2)*1e9:1);//integer in nm.
+	if(iact>=0){
+	    out->p[iact]=(dead->ny==3?IND(ps,jact,2)*1e9:1);//integer in nm.
+	}
     }
     dfree(dead);
     return out;

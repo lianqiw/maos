@@ -308,8 +308,8 @@ void reconstruct(SIM_T *simu){
 		if(simu->gradlastcl){
 #if USE_CUDA
 		    if(parms->gpu.lsr){
-			error("To implement. MVM is done in as in MV case\n");
-		    }else
+			warning_once("Not implemented. Use CPU instead\n");
+		    }
 #endif
 			muv_solve(&dmout,&(recon->LL), &(recon->LR), gradin);
 		}

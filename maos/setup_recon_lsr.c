@@ -82,23 +82,26 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    NW=dcellnew(ndm,1);
 	    int nmod=2;/*two modes. */
 	    for(int idm=0; idm<ndm; idm++){
-		loc_create_map(recon->aloc->p[idm]);
 		const long nloc=recon->aloc->p[idm]->nloc;
 		NW->p[idm]=dnew(nloc, ndm*nmod);
-		double *p=NW->p[idm]->p+nmod*idm*nloc;
+		double *p=PCOL(NW->p[idm], idm*nmod);
+		
+		//First mode: piston mode.
 		const double *cpl=recon->actcpl->p[idm]->p;
 		for(long iloc=0; iloc<nloc; iloc++){
 		    if(cpl[iloc]>0.1){
-			p[iloc]=1;/*piston mode */
+			p[iloc]=1;
 		    }
 		}
-		/*notice offset of 1 because map start count at 1 */
-		p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
+		
+		//Second mode: waffle mode
+		p=PCOL(NW->p[idm], idm*nmod+1);
+		loc_create_map(recon->aloc->p[idm]);
 		map_t *map=recon->aloc->p[idm]->map;
 		for(long iy=0; iy<map->ny; iy++){
 		    for(long ix=0; ix<map->nx; ix++){
-			if(IND(map,ix,iy)){
-			    p[(long)IND(map,ix,iy)]=(double)2*((iy+ix)&1)-1;
+			if(IND(map,ix,iy)>0){//Some may be negative due to extend.
+			    p[(long)IND(map,ix,iy)-1]=(double)2*((iy+ix)&1)-1;
 			}
 		    }
 		}
