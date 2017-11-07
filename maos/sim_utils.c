@@ -317,6 +317,9 @@ void setup_recon_HXW_predict(SIM_T *simu){
 void atm2xloc(dcell **opdx, const SIM_T *simu){
     const RECON_T *recon=simu->recon;
     const PARMS_T *parms=simu->parms;
+    if(parms->recon.glao){
+	return;
+    }
     /*in close loop mode, opdr is from last time step. */
     int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
     if(!*opdx){

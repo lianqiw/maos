@@ -174,7 +174,8 @@ void save_recon(SIM_T *simu){
 	}
 	dcellfree(dmlo);
     }
-    if(parms->recon.alg==0 && !parms->sim.idealfit){/*minimum variance tomo/fit reconstructor */
+    if(parms->recon.alg==0 && !parms->sim.idealfit && !parms->recon.glao){
+	/*minimum variance tomo/fit reconstructor */
 	if(parms->save.opdr){
 	    zfarr_dcell(simu->save->opdr, simu->reconisim, simu->opdr);
 	}

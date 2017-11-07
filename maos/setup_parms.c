@@ -1092,7 +1092,9 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.dither=parms->save.all;
 	parms->save.extra=1;
     }
-
+    if(parms->recon.glao){
+	parms->save.opdx=0;
+    }
     if(parms->save.run){
 	parms->save.dm=1;
 	if(!parms->sim.idealfit){

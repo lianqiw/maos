@@ -31,18 +31,21 @@ void prep_GP(cumat<short2> &GPp, Real *GPscale, cusp &GPf,
 	     const dsp *GP, const loc_t *saloc, const loc_t *ploc){
     if(!GP){ 
 	error("GP is required\n");
+    }else if (GP->nx!=saloc->nloc*2 || GP->ny!=ploc->nloc){
+	error("GP has wrong dimension: %ldx%ld. (%ldx%ld is expected).\n",
+	      GP->nx, GP->ny, saloc->nloc*2, ploc->nloc);
     }
-    int pos=(int)round(saloc->dx/ploc->dx);
-    if(pos==1 || pos==2){//normally true
+    double pos=saloc->dx/ploc->dx;
+    if((fabs(pos-1)<1e-12 || fabs(pos-2)<1e-12)){//This case is accelerated.
 	dsp *GPt=dsptrans(GP);
 	const spint *pp=GPt->p;
 	const spint *pi=GPt->i;
 	const double *px=GPt->x;
 	//convert the max Real to max 2 byte integer
 	const double pxscale=floor(32767./maxabs(px, GPt->nzmax));
-	const int np1=pos+1;
+	const int zmax=(int)round(pos);
+	const int np1=zmax+1;
 	const int np=np1*np1;
-	const int zmax=pos;
 	int nsa=saloc->nloc;
 	short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
 	double dx1=1./ploc->dx;
@@ -209,8 +212,8 @@ cutomo_grid::cutomo_grid(const PARMS_T *parms, const RECON_T *recon,
 	GPscale=new Real[nwfs];
 	saptr=cucell<int>(nwfs, 1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	    const int ipowfs=parms->wfsr[iwfs].powfs;
+	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    if(parms->powfs[ipowfs].skip) continue;
 	    if(iwfs==iwfs0 || recon->GP->p[iwfs]->p!=recon->GP->p[iwfs0]->p){
 		prep_GP(GPp[iwfs], &GPscale[iwfs], GP[iwfs], recon->GP->p[iwfs], powfs[ipowfs].saloc, recon->ploc);

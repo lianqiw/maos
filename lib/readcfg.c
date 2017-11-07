@@ -397,7 +397,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		STORE_T *oldstore=*(STORE_T**)entryfind;
 		if(oldstore->priority > priority){
 		    countskip++;
-		    info2("Not overriding %-20s=%s", store->key, oldstore->data);
+		    info2("Not overriding %-20s=%s by %s\n", store->key, oldstore->data, store->data);
 		    //Skip the entry.
 		}else if(append){
 		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
