@@ -18,6 +18,7 @@
 #ifndef AOS_CUDA_KERNEL_H
 #define AOS_CUDA_KERNEL_H
 #include "common.h"
+#if defined( __CUDA_ARCH__ )
 #if  __CUDA_ARCH__ <200
 __device__ inline float atomicAdd(float* address, float val)
 {
@@ -45,6 +46,7 @@ __device__ inline double atomicAdd(double* address, double val)
     } while (assumed != old);
     return old;
 }
+#endif
 #endif
 __device__ inline float atomicMax(float* address, float val)
 {
