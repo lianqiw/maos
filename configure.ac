@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 2.2.0, lianqiw@gmail.com)
+AC_INIT(maos, 2.2.0-r1, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
@@ -868,7 +868,7 @@ if test "$with_cuda" != "no" ;then
     if test "$cudaver" -lt 40 ;then
 	AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
     fi
-    if test "$cudaver" -ge 40 ;then
+    if test "$cudaver" -ge 40 -a "$cudaver" -lt 90 ;then
 	CUDAOPT+=" -gencode arch=compute_20,code=compute_20" #Fermi
     fi
     if test "$cudaver" -ge 42 ;then
@@ -886,7 +886,7 @@ if test "$with_cuda" != "no" ;then
     if test "$cudaver" -ge 100 ;then
 	CUDAOPT+=" -gencode arch=compute_80,code=compute_80" #?
     fi
-    if test "$cudaver" -ge 1100 ;then
+    if test "$cudaver" -ge 110 ;then
 	CUDAOPT+=" -gencode arch=compute_90,code=compute_90" #?
     fi
     #if test -n "$OPENMP_CFLAGS";then
