@@ -45,7 +45,7 @@ static char *mx2str(const mxArray *header){
 }
 static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *header){
     char *str=mx2str(header);
-    header_t header2={0,0,0,0};
+    header_t header2={0,0,0,0,str};
    
     //uint64_t m,n;
     if(!arr){

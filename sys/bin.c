@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */
+#include <errno.h>
 #include "process.h"
 #include "misc.h"
 #include "path.h"
@@ -232,7 +233,7 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	error("Unknown mod=%s\n", mod);
     }
     if(fp->fd==-1){
-	error("Unable to open file %s for %s\n", fn2, mod[0]=='r'?"reading":"writing");
+	error("Unable to open file %s for %s (%s)\n", fn2, mod[0]=='r'?"reading":"writing", strerror(errno));
 	free(fp->fn);
 	free(fp);
 	fp=0;
@@ -638,6 +639,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     }
     snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
     snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
+ 
 #define FLUSH_OUT /*write the block and reset */	\
 	if(hc==nh){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
@@ -648,6 +650,12 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	FLUSH_OUT;
 	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, 
 		 (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+    }
+    if(fp->isfits==1){//Write the extend keyword which does not mendate extension to be present.
+	snprintf(header[hc], 80, "%-8s= %20s", "EXTEND", "T");    header[hc][30]=' '; hc++;	
+    }else{
+	snprintf(header[hc], 80, "%-8s= %20s", "PCOUNT", "0");    header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-8s= %20s", "GCOUNT", "1");    header[hc][30]=' '; hc++;
     }
     if(str){
 	const char *str2=str+strlen(str);
@@ -724,7 +732,14 @@ read_fits_header(header_t *header, file_t *fp){
 		char *hh=line;
 		int length=80;
 		int newline=1;
-		if(!strncmp(line, "COMMENT", 7)){
+		//Ignore a few keys
+		if(!strncmp(line, "EXTEND", 6)){
+		    continue;
+		}else if(!strncmp(line, "PCOUNT", 6)){
+		    continue;
+		}else if(!strncmp(line, "GCOUNT", 6)){
+		    continue;
+		}else if(!strncmp(line, "COMMENT", 7)){
 		    hh=line+10;
 		    length-=10;
 		    newline=0;

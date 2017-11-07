@@ -539,6 +539,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
     }
     snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
     snprintf(header[hc], 80, "%-8s= %20ld", "NAXIS", (long)ndim);   header[hc][30]=' '; hc++;
+
 #define FLUSH_OUT /*write the block and reset */	\
 	if(hc==nh){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
@@ -548,6 +549,12 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
     for (unsigned long i = 0; i < ndim; i++){
 	FLUSH_OUT;
 	snprintf(header[hc], 80, "%-5s%-3lu= %20ld", "NAXIS", i+1, (long)(dims[i])); header[hc][30]=' '; hc++;
+    }
+    if(fp->isfits==1){//Write the extend keyword which does not mendate extension to be present.
+	snprintf(header[hc], 80, "%-8s= %20s", "EXTEND", "T");    header[hc][30]=' '; hc++;	
+    }else{
+	snprintf(header[hc], 80, "%-8s= %20s", "PCOUNT", "0");    header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-8s= %20s", "GCOUNT", "1");    header[hc][30]=' '; hc++;
     }
     if(str){/*We wrap our header in COMMENT section to avoid dealing with name
 	     * length limit*/
@@ -589,26 +596,28 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	int start=0;
 	if(page==0){
 	    /*First read mandatory fits headers.*/
-	    if(zfread2(line, 1, 80, fp)) return -1;
+	    if(zfread2(line, 1, 80, fp)) return -1; start++;
 	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		info("Garbage in fits file at %ld:\n", zftell(fp));
 		info("%s\n", line);
 		return -1;
 	    }
-	    zfread(line, 1, 80, fp); line[80]='\0';
+	    zfread(line, 1, 80, fp); line[80]='\0'; start++;
 	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
-	    zfread(line, 1, 80, fp); line[80]='\0';
+	    zfread(line, 1, 80, fp); line[80]='\0'; start++;
 	    if(sscanf(line+10, "%"SCNu64, ndim)!=1) error("Unable to determine naxis\n");
 	    if(*ndim>0){
 		*dims=calloc(sizeof(mwSize), MAX(2,*ndim));
 		for(uint64_t idim=0; idim<*ndim; idim++){
-		    zfread(line, 1, 80, fp); line[80]='\0';
+		    do{
+			//skip illegal lines.
+			zfread(line, 1, 80, fp); line[80]='\0'; start++;
+		    }while(strncmp(line, "NAXIS", 5));
 		    if(sscanf(line+10, "%20lu", &((*dims)[idim]))!=1)
 			error("Unable to determine nx\n");
 		}
 	    }
-	    start=3+*ndim;
 	}
 	for(int i=start; i<36; i++){
 	    zfread(line, 1, 80, fp); line[80]='\0';
@@ -618,7 +627,13 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 		char *hh=line;
 		int length=80;
 		int newline=1;
-		if(!strncmp(line, "COMMENT", 7)){
+		if(!strncmp(line, "EXTEND", 6)){
+		    continue;
+		}else if(!strncmp(line, "PCOUNT", 6)){
+		    continue;
+		}else if(!strncmp(line, "GCOUNT", 6)){
+		    continue;
+		}else if(!strncmp(line, "COMMENT", 7)){
 		    hh=line+10;
 		    length-=10;
 		    newline=0;
