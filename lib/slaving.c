@@ -620,10 +620,11 @@ dsp* act_extrap_do(loc_t *aloc,        /**<[in] Actuator grid array*/
     pp[nact]=count;
     out=dsptrans(outit);
     dspfree(outit);
-	
+    //estimate number of weakly coupled rings.
+    int nring=(int)ceil(sqrt(nact/M_PI)-sqrt(dsum(actcplc)/M_PI));
     /*The above interpolation only propagate the value one step. Multiple the
       interpolator a few times to propagate longer.*/
-    for(int i=0; i<5; i++){
+    for(int i=0; i<nring; i++){
 	dsp *tmp=dspmulsp(out,out,"nn");
 	dspfree(out);
 	out=tmp;
