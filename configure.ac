@@ -897,7 +897,7 @@ if test "$with_cuda" != "no" ;then
     else
 	CUDAOPT+=" -O3"
     fi
-    CUDAOPT+=" -G -g -lineinfo -DHAVE_CONFIG_H -I.. "
+    CUDAOPT+=" -g -lineinfo -DHAVE_CONFIG_H -I.. "
     #CUDAOPT+="-Xptxas=-v -dlcm=cg"
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
