@@ -29,6 +29,11 @@
 
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
+
+#if HAS_OPENMP == 1 && !defined(_OPENMP)
+#error "-fopenmp is not properly passed"
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif

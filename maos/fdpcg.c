@@ -331,7 +331,7 @@ fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs, mapcell *atm){
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(!parms->powfs[ipowfs].lo){
+	if(!parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip){
 	    if(hipowfs==-1){
 		hipowfs=ipowfs;
 	    }else{
@@ -555,8 +555,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
     double svd_thres=1e-7;
-    info2("FDPCG SVD Threshold is %g\n", svd_thres);
-#pragma omp for
+    info2("FDPCG SVD Threshold is %g (in parallel=%d)...", svd_thres, omp_in_parallel());
+
     for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
@@ -569,6 +569,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	writebin(fdpcg->Mbinv,"fdpcg_Minvb");
     }
 #endif
+    info2("done\n");
     cspfree(Mhatp);
     fdpcg->xloc=recon->xloc;
     fdpcg->square=parms->tomo.square;

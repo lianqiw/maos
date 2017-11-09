@@ -1296,9 +1296,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     //Check powfs.dsa
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dsa<0){
+	if(parms->powfs[ipowfs].dsa<=-1){//Order
+	    parms->powfs[ipowfs].dsa=parms->aper.d/(-parms->powfs[ipowfs].dsa);
+	}else if(parms->powfs[ipowfs].dsa<0){//In unit of d
 	    parms->powfs[ipowfs].dsa*=-parms->aper.d;
-	}else if(parms->powfs[ipowfs].dsa==0){
+	}else if(parms->powfs[ipowfs].dsa==0){//Follow ground DM.
 	    if(parms->ndm){
 		parms->powfs[ipowfs].dsa=parms->dm[0].dx;
 	    }else{

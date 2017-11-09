@@ -674,8 +674,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		if(rsa2>rsa2max) rsa2max=rsa2;
 	    }
 	    powfs[ipowfs].srsamax->p[illt]=sqrt(rsa2max);
-	    double dprint=parms->aper.d*0.1;
-	    int pnsa=(int)ceil(sqrt(rsa2max)/dsa)+1;
+	    double dprint=MAX(parms->aper.d*0.1, dsa);
+	    int pnsa=(int)ceil(sqrt(rsa2max)/dprint)+1;
 	    
 	    double prot[pnsa];
 	    powfs[ipowfs].sprint->p[illt]=dnew(pnsa,1);
@@ -696,6 +696,9 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    for(int isa=0; isa<nsa; isa++){
 		int ind=(int)round(powfs[ipowfs].srsa->p[illt]->p[isa]/dprint);
 		double irot=fabs(powfs[ipowfs].srot->p[illt]->p[isa]-desrot);
+		if(ind>=pnsa){
+		    error("ind=%d>=pnsa=%d\n", ind, pnsa);
+		}
 		if(irot<prot[ind]){
 		    prot[ind]=irot;
 		    pp[ind]=(double)isa;

@@ -233,8 +233,10 @@ unset optname
 
 if test -z "$OPENMP_CFLAGS" ;then
     OPTScc+=" -pthread" #enables pthreads feature and links in the library
+    AC_DEFINE(HAS_OPENMP,[1],["Openmp is enabled"])
 else
     OPTScc+=" $OPENMP_CFLAGS"
+    AC_DEFINE(HAS_OPENMP,[0],["Openmp is disabled"])
 fi
 OPTSextra=""
 
@@ -889,9 +891,6 @@ if test "$with_cuda" != "no" ;then
     if test "$cudaver" -ge 110 ;then
 	CUDAOPT+=" -gencode arch=compute_90,code=compute_90" #?
     fi
-    #if test -n "$OPENMP_CFLAGS";then
-    #    CUDAOPT="$CUDAOPT -Xcompiler $OPENMP_CFLAGS"
-    #fi
     if test "$debug" = "yes" ;then
         CUDAOPT+=" -O0"
     else
@@ -918,7 +917,9 @@ if test "$with_cuda" != "no" ;then
     fi
     optname=${ccprefix}_${CCN}
     CCBINOPT+=" ${!optname}"
-
+    if test -n "$OPENMP_CFLAGS";then
+        CCBINOPT+=" $OPENMP_CFLAGS"
+    fi
 else
     with_cuda="no"
 fi

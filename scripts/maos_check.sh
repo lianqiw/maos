@@ -17,7 +17,7 @@ case $D in
 	;;
     5)
 	#6/7/2017
-	REF=(107.097 108.903 131.723 300.899 131.963 130.855 131.537 131.225 120.296 510.726 259.064 103.228 105.381 123.893 128.491 121.224 121.539 252.901 135.646)
+	REF=(107.10 108.90 137.96 132.96 132.58 132.10 132.73 132.85 121.69 510.76 259.97 104.77 107.74 125.48 130.55 121.69 122.34 253.28 136.87)
 	;;
     30)
 	#6/7/2017
@@ -38,12 +38,12 @@ echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
 echo -n "LGS MCAO (inte): "
-RMS[$ii]=$(./maos $args aper.d=$D recon.split=0 2>>maos_check.stderr)
+RMS[$ii]=$(./maos $args aper.d=$D recon.split=0 tomo.precond=0 2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
-echo -n "LGS MCAO (split):"
-RMS[$ii]=$(./maos $args aper.d=$D  2>>maos_check.stderr)
+echo -n "LGS MCAO (CG):   "
+RMS[$ii]=$(./maos $args aper.d=$D tomo.precond=0 2>>maos_check.stderr)
 echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
 ii=$((ii+1)) 
 
