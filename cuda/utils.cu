@@ -448,12 +448,12 @@ int cuda_free(void *pp){
 	if(cudata->memcount.count(pp)){
 	    if(cudata->memcount[pp]>1){
 		cudata->memcount[pp]--;
-		warning("Freeing referenced pointer %p\n", pp);
+		//warning("Do not free referenced pointer %p\n", pp);
 		tofree=0;
 	    }else if(cudata->memcount[pp]==1){
 		cudata->memcount.erase(pp);
 	    }else{
-		warning("memcount[%p]=%d\n", pp, cudata->memcount[pp]);
+		warning("Illegal: memcount[%p]=%d\n", pp, cudata->memcount[pp]);
 	    }
 	}
 	UNLOCK(cudata->memmutex);

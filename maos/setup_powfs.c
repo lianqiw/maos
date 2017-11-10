@@ -728,8 +728,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     /*size required to form detector image. */
     int ncompx, ncompy;
     if(parms->powfs[ipowfs].ncomp){
-	ncompx=parms->powfs[ipowfs].ncomp;
-	ncompy=parms->powfs[ipowfs].ncomp;
+	ncompx=ncompy=parms->powfs[ipowfs].ncomp;
 	warning2("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
     }else{
 	/*
@@ -744,10 +743,17 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    if(wvlmin>parms->powfs[ipowfs].wvl->p[iwvl])
 		wvlmin=parms->powfs[ipowfs].wvl->p[iwvl];
 	}
-	double dtheta=wvlmin/(dsa*embfac);/*Min PSF sampling. */
-	ncompx=ceil(pixpsax*pixthetax/dtheta);
-	ncompy=ceil(pixpsay*pixthetay/dtheta);
-	
+	double dtheta=wvlmin/(dsa*embfac);/*PSF sampling. */
+	ncompx=ncompy=powfs[ipowfs].pts->nx*embfac;
+	double safov=ncompx*dtheta;
+	if(safov < pixpsax*pixthetax || safov < pixpsay*pixthetay){
+	    warning("PSF Size (%.1f\"x%.1f\") is less than pixel FoV (%.1f\"x%.1f\"\n",
+		    safov*206265, safov*206265,
+		    pixpsax*pixthetax*206265, pixpsay*pixthetay*206265);
+	}
+	//ncompx=ceil(pixpsax*pixthetax/dtheta);
+	//ncompy=ceil(pixpsay*pixthetay/dtheta);
+
 	/*
 	  Found that: Must set ncompx==ncompy even for rotationg either psf or
 	  otf. reduce aliasing and scattering of image intensities.

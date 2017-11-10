@@ -354,8 +354,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    }
 	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		NTHREAD=NGPU+1;
-		THREAD_POOL_INIT(NTHREAD);
 		info2("Reset nthread to %d\n", NTHREAD);
+		//THREAD_POOL_INIT(NTHREAD);Don't call this now. Too early
 	    }
 	    free(tasks);
 	    {

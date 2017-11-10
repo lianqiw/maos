@@ -40,7 +40,6 @@ struct cuperf_t{
     static curcell cc_ol, cc_cl, coeff;
     static Real **ccb_ol, **ccb_cl;
     static pthread_mutex_t perfmutex;
-    pthread_mutex_t mutex;
     culoc_t locs;
     cuarray<cuarray<culoc_t> > locs_dm;
     curmat imcc;

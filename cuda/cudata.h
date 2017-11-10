@@ -52,6 +52,7 @@ typedef struct cudata_t{
     int nps; /**<number of phase screens*/
     /*for perfevl */
     cuperf_t perf;
+    stream_t perf_stream;/**<Default stream for perfevl. One per GPU. This allows sharing resource per GPU.*/
     /*for wfsgrad */
     cuarray<cupowfs_t>powfs;
     static cuarray<cuwfs_t>wfs;//must be static so we can address all elements.

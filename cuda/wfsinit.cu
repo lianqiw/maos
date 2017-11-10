@@ -232,7 +232,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    cuwfs[iwfs].loc_tel=culoc_t(powfs[ipowfs].loc);
 	}
 	cuwfs[iwfs].phiout=curmat(powfs[ipowfs].loc->nloc, 1);
-
 	if(cupowfs[ipowfs].nembed){
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed[0], cupowfs[ipowfs].nembed[0], FFT_T_C2C));
 	    DO(cufftSetStream(cuwfs[iwfs].plan_fs, cuwfs[iwfs].stream));
@@ -293,7 +292,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].lltamp=cuwfs[iwfs0].lltamp;
 		}
 	    }
-
 	    /*CUFFTW is row major. */
 	    int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
 	    int nwvf2[2]={nwvf, nwvf};
@@ -329,7 +327,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}
 		cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
 	    }
-
 	    if(parms->powfs[ipowfs].llt){
 		int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 		int nlwvf2[2]={nlwvf, nlwvf};
@@ -461,9 +458,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}/*if phy */
 	CUDA_SYNC_DEVICE;
     }/*for iwfs */
-    gpu_print_mem("wfs init");
     gpu_wfsgrad_update_etf(parms, powfs);
     gpu_wfsgrad_update_mtche(parms, powfs);
+    gpu_print_mem("wfs init");
 }
 void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
     int *wfsgpu=cudata_t::wfsgpu;

@@ -169,7 +169,9 @@ strehlcomp_do(Comp *strehlc,
    Compute complex PSF and return.
 */
 static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
-    LOCK(cudata->perf.mutex);/*wvf is allocated per GPU.*/
+    /* Using mutex to protect psf data that is allocated per GPU does not work
+     * because the process happens in streams that is outside of the
+     * lock. Streams are not allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &psf=cudata->perf.psfs[iwvl];
 	if(cuperf_t::psfsize[iwvl]==1){
@@ -190,16 +192,14 @@ static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
 	    }
 	}
     }
-    UNLOCK(cudata->perf.mutex);
 }
 /**
    Compute only PSF and add to result.
 */
 static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
-    LOCK(cudata->perf.mutex);/*wvf and psf is allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	//cucmat &wvf=cudata->perf.wvf[iwvl];
-	cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
+	cucmat &wvf=cudata->perf.wvf[iwvl];
+	//cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
 	cuzero(wvf, stream);
 	if(!psf[iwvl]) psf[iwvl]=curmat(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 	if(cuperf_t::psfsize[iwvl]==1){
@@ -220,7 +220,6 @@ static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc
 	    }
 	}
     }
-    UNLOCK(cudata->perf.mutex);
 }
 #define PERFEVL_WFE_GPU(cc,ccb)						\
     if((parms->recon.split && recon->ngsmod->nmod==2)			\

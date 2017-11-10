@@ -95,6 +95,9 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	DO(cudaMemcpyAsync(dest, from, sizeof(M)*nx*ny, cudaMemcpyHostToDevice, stream));
     }
     if(free_from){
+	if(stream!=(cudaStream_t)0){
+	    CUDA_SYNC_STREAM;
+	}
 	free(from);
     }else if(sizeof(M)!=sizeof(N)){
 	UNLOCK(cudata->memmutex);
@@ -102,9 +105,10 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 }
 /*Async copy does not make sense here because malloc pinned memory is too expensive.*/
 template<typename M, typename N>
-void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
-    if(!src) return;
+int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
+    if(!src) return -1;
     uint64_t key=0;
+    int own=0;//whether the returned process owns the pointer (yes if created).
     if(cuda_dedup && !*dest){
 	key=hashlittle(src, nx*ny*sizeof(N), 0);
 	key=(key<<32) | (nx*ny);
@@ -112,18 +116,19 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	if(cudata->memhash.count(key)){
 	    *dest=(M*)cudata->memhash[key];
 	    cudata->memcount[*dest]++;
-	    return;
+	    return 0;
 	}
     }else if(!cuda_dedup && *dest && cudata){
 	//Avoid overriding previously referenced memory
 	lock_t tmp(cudata->memmutex);
 	if(cudata->memcount.count(*dest) && cudata->memcount[*dest]>1){
-	    info("Deferencing data: %p\n", *dest);
+	    //info("Deferencing data: %p\n", *dest);
 	    cudata->memcount[*dest]--;
 	    *dest=0;
 	}
     }
     if(!*dest){
+	own=1;
 	DO(cudaMalloc(dest, nx*ny*sizeof(M)));
 	if(cuda_dedup){
 	    lock_t tmp(cudata->memmutex);
@@ -132,6 +137,7 @@ void cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	}
     }
     cp2gpu(*dest, src, nx, ny, stream);
+    return own;
 }
 
 template<typename M, typename N> inline void
@@ -141,10 +147,12 @@ cp2gpu(cumat<M>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	if(dest.N()!=nx*ny){
 	    error("cumat is %ldx%ld, input is %dx%d\n", dest.Nx(), dest.Ny(), nx, ny);
 	}
+	cp2gpu(dest.P(), src, nx, ny, stream);
     }else{
-	dest=cumat<M>(nx, ny);
+	M *tmp=0;
+	int own=cp2gpu(&tmp, src, nx, ny, stream);
+	dest=cumat<M>(nx, ny, tmp, own);
     }
-    cp2gpu(dest.P(), src, nx, ny, stream);
 }
 inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){
     if(!src) return;

@@ -44,6 +44,7 @@ Real **cuperf_t::ccb_cl=0;
 Real **cuperf_t::ccb_ol=0;
 pthread_mutex_t cuperf_t::perfmutex=PTHREAD_MUTEX_INITIALIZER;
 cuperf_t::~cuperf_t(){
+    //The static members are shared across devices. Need to lock mutex before reinitializing.
     lock_t tmp(perfmutex);
     surf=curcell();
     opd=curcell();
@@ -89,7 +90,6 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     /*The following lives in GPU. */
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	pthread_mutex_init(&cudata->perf.mutex, 0);
 	cudata->perf.locs=culoc_t(aper->locs);
 	cp2gpu(cudata->perf.amp, aper->amp);
 	cp2gpu(cudata->perf.imcc, aper->imcc);
@@ -123,7 +123,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     }
     for(int ievl=0; ievl<nevl; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
-	STREAM_NEW(cuperf_t::stream[ievl]);
+	//STREAM_NEW(cuperf_t::stream[ievl]);
+	//Use stream created per GPU in order to share resource within GPU between different evl dir.
+	cuperf_t::stream[ievl]=cudata->perf_stream;
 	cublasCreate(&cuperf_t::handle[ievl]);
 	cublasSetStream(cuperf_t::handle[ievl], cuperf_t::stream[ievl]);
 	if(parms->evl.psfmean || parms->evl.psfhist){
