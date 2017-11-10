@@ -233,10 +233,10 @@ unset optname
 
 if test -z "$OPENMP_CFLAGS" ;then
     OPTScc+=" -pthread" #enables pthreads feature and links in the library
-    AC_DEFINE(HAS_OPENMP,[1],["Openmp is enabled"])
+    AC_DEFINE(HAS_OPENMP,[0],["Openmp is disabled"])
 else
     OPTScc+=" $OPENMP_CFLAGS"
-    AC_DEFINE(HAS_OPENMP,[0],["Openmp is disabled"])
+    AC_DEFINE(HAS_OPENMP,[1],["Openmp is enabled"])
 fi
 OPTSextra=""
 

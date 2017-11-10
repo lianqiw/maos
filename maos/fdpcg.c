@@ -555,7 +555,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	writebin(fdpcg->Mbinv,"fdpcg_Mhatb");
     }
     double svd_thres=1e-7;
-    info2("FDPCG SVD Threshold is %g (in parallel=%d)...", svd_thres, omp_in_parallel());
+    info2("FDPCG SVD Threshold is %g...", svd_thres);
 
     for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
