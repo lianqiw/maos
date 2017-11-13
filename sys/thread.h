@@ -30,8 +30,8 @@
 #include "common.h"
 #define DO_PRAGMA(A...) _Pragma(#A)
 
-#if HAS_OPENMP == 1 && !defined(_OPENMP)
-#error "-fopenmp is not properly passed"
+#if HAS_OPENMP && !defined(_OPENMP)
+#define _OPENMP 200805 //Sometimes GPU gpu does not define this
 #endif
 
 #ifdef _OPENMP
