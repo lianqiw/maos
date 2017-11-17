@@ -26,17 +26,21 @@ static void draw_map(file_t *fp, int id){
     char *suf=strstr(name, ".bin");
     if(!suf) suf=strstr(name, ".fits");
     if(suf) suf[0]='\0';
+
     if(iscell(&header.magic)){
 	for(size_t ii=0; ii<header.nx*header.ny; ii++){
 	    draw_map(fp, ii);
 	}
 	free(header.str);
     }else{
-	dmat *in=dreaddata(fp, &header);
-	map_t *data=d2map(in);
-	drawmap("map", data, NULL, name,"x", "y", "%s:%d", name, id);
-	mapfree(data);
-	dfree(in);
+	do{
+	    dmat *in=dreaddata(fp, &header);
+	    if(!in) break;
+	    map_t *data=d2map(in);
+	    drawmap("map", data, NULL, name,"x", "y", "%s[%d]", name, id++);
+	    mapfree(data);
+	    dfree(in);
+	}while(zfisfits(fp));
     }
     free(name);
 }

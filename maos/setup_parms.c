@@ -990,12 +990,16 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.atm);
     READ_INT(plot.run);
     READ_INT(plot.opdx);
+    READ_INT(plot.psf);
     READ_INT(plot.all);
     if(parms->plot.all){
 	parms->plot.setup=parms->plot.all;
 	parms->plot.run=parms->plot.all;
+	if(!parms->plot.psf){
+	    parms->plot.psf=1;
+	}
     }
-    if(parms->plot.setup || parms->plot.atm || parms->plot.run || parms->plot.opdx || parms->plot.all){
+    if(parms->plot.setup || parms->plot.atm || parms->plot.run || parms->plot.opdx || parms->plot.all || parms->plot.psf){
 	draw_helper();
     }
 }

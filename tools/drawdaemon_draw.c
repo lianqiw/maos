@@ -855,7 +855,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     calc_tic(&tic1,&dtic,&ntic,&order,xmax0,xmin0,maxtic_x, xlog);
     sep=xmax0-xmin0;
     for(int itic=0; itic<ntic; itic++){
-	double ticv=(tic1+dtic*itic);
+	double ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
 	double val=ticv*pow(10,order);
 	double frac=(val-xmin0)/sep;
 	double xpos=xoff+widthim*frac;
@@ -901,7 +901,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0,maxtic_y, ylog);
     sep=ymax0-ymin0;
     for(int itic=0; itic<ntic; itic++){
-	double ticv=(tic1+dtic*itic);
+	double ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
 	double val=ticv*pow(10,order);
 	double frac=(val-ymin0)/sep;
 	double ypos=yoff+heightim*(1-frac);
@@ -968,7 +968,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	sep=drawdata->zlim[1]-drawdata->zlim[0];
 
 	for(int itic=0; itic<ntic; itic++){
-	    double ticv=tic1+dtic*itic;
+	    double ticv=tic1+dtic*itic; if(fabs(ticv)<1e-12) ticv=0;
 	    double val=ticv*pow(10,order);
 	    double frac;
 	    if(sep>1.e-10*fabs(drawdata->zlim[1])){

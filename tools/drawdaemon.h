@@ -56,10 +56,11 @@ struct drawdata_t{
     double (*cir)[4];
     int ncir;
     /*limit */
-    double *limit_data;/*x,y,limit of data. might be suplied by user. */
+    double *limit_data;/*x,y,limit of data. might be supplied by user. */
     double *limit_cumu;/*x,y,limit of cumulatively averaged data. */
     double *limit;/*points to either limit_data or limit_cumu */
     double *zlim;
+    int limit_manual; /*limit_data is supplied by user*/
     char xylog[2];
     /*The following are for surfaces */
     int nx, ny;   /*array size */

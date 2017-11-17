@@ -372,7 +372,7 @@ void plot_points(const char *fig,    /**<Category of the figure*/
     format2fn;
     LOCK(lock);
     if(open_drawdaemon()){/*failed to open. */
-	warning("Failed to open\n");
+	warning("Failed to open drawdaemon\n");
 	goto end;
     }
     for(int ifd=0; ifd<sock_ndraw; ifd++){
@@ -535,6 +535,10 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
     format2fn;
+    if(open_drawdaemon()){/*failed to open. */
+	warning("Failed to open drawdaemon\n");
+	return;
+    }
     if(disable_draw || !draw_current(fig, fn)) return;
     if (draw_single){
 	//Skip this drawing if line is busy.

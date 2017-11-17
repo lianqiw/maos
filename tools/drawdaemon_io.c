@@ -123,6 +123,7 @@ void listen_draw(){
 	    drawdata->xylog[0]='n';
 	    drawdata->xylog[1]='n';
 	    drawdata->cumulast=-1;/*mark as unknown. */
+	    drawdata->limit_manual=0;
 	    drawdata->time=myclockd();
 	    break;
 	case DRAW_DATA:/*image data. */
@@ -178,6 +179,7 @@ void listen_draw(){
 	case DRAW_LIMIT:
 	    drawdata->limit_data=mycalloc(4,double);
 	    STREAD(drawdata->limit_data, 4*sizeof(double));
+	    drawdata->limit_manual=1;
 	    break;
 	case DRAW_FIG:
 	    STREADSTR(drawdata->fig);
@@ -226,8 +228,10 @@ void listen_draw(){
 			size=4;
 		    }
 		    int stride=cairo_format_stride_for_width(drawdata->format, nx);
-		    if(!drawdata->limit_data){
-			drawdata->limit_data=mycalloc(4,double);
+		    if(!drawdata->limit_manual){
+			if(!drawdata->limit_data){
+			    drawdata->limit_data=mycalloc(4,double);
+			}
 			drawdata->limit_data[0]=0;
 			drawdata->limit_data[1]=drawdata->nx;
 			drawdata->limit_data[2]=0;

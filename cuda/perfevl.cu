@@ -169,9 +169,7 @@ strehlcomp_do(Comp *strehlc,
    Compute complex PSF and return.
 */
 static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
-    /* Using mutex to protect psf data that is allocated per GPU does not work
-     * because the process happens in streams that is outside of the
-     * lock. Streams are not allocated per GPU.*/
+  
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &psf=cudata->perf.psfs[iwvl];
 	if(cuperf_t::psfsize[iwvl]==1){
@@ -198,8 +196,8 @@ static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
 */
 static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	cucmat &wvf=cudata->perf.wvf[iwvl];
-	//cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
+	//cucmat &wvf=cudata->perf.wvf[iwvl];
+	cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
 	cuzero(wvf, stream);
 	if(!psf[iwvl]) psf[iwvl]=curmat(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 	if(cuperf_t::psfsize[iwvl]==1){
@@ -335,6 +333,18 @@ void gpu_perfevl_queue(thread_t *info){
 	    }
 	    if(parms->evl.psfmean){
 		psfcomp_r(cudata->perf.psfol.P(), opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
+		if(parms->plot.run){
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			dmat *psftemp=0;
+			cp2cpu(&psftemp, cudata->perf.psfol[iwvl], stream);
+			if(parms->plot.psf==2){
+			    dcwlog10(psftemp);
+			}
+			ddraw("PSFol", psftemp, NULL, NULL, "Science Open Loop PSF", 
+			      "x", "y", "OL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+			dfree(psftemp);
+		    }
+		}
 		if(!parms->gpu.psf){ //need to move psf from GPU to CPU for accumulation.
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			add2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->perf.psfol[iwvl], 1, stream);
@@ -400,6 +410,18 @@ void gpu_perfevl_queue(thread_t *info){
 		    }
 		}else if(parms->evl.psfmean){
 		    psfcomp_r(cuperf_t::psfcl+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
+		}
+		if(parms->plot.run){
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			dmat *psftemp=NULL;
+			cp2cpu(&psftemp, cuperf_t::psfcl[iwvl+nwvl*ievl], stream);
+			if(parms->plot.psf==2){
+			    dcwlog10(psftemp);
+			}
+			ddraw("PSFcl", psftemp, NULL, NULL, "Science Closed Loop PSF", 
+			      "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+			dfree(psftemp);
+		    }
 		}
 		if(!parms->gpu.psf){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){

@@ -118,7 +118,7 @@ map_t* d2map(dmat *in){
     map->vx=search_header_num(header,"vx");
     map->vy=search_header_num(header,"vy");
     if(isnan(map->dx)){
-	error("dx is not specified in header.\n");
+	warning("dx is not specified in header, set to 1/64.\n");
 	map->dx=1./64.;
     }
     if(isnan(map->dy)){

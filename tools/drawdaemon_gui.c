@@ -169,7 +169,8 @@ static void update_pixmap(drawdata_t *drawdata){
     gint width=drawdata->width;
     gint height=drawdata->height;
     if(drawdata->pixmap){
-	if(width != drawdata->pwidth || height != drawdata->pheight){
+	if(width != drawdata->pwidth || height != drawdata->pheight
+	   || drawdata->limit_changed){
 #if GTK_MAJOR_VERSION>=3 
 	    cairo_surface_destroy(drawdata->pixmap);
 #else
@@ -802,10 +803,16 @@ gboolean addpage(gpointer indata){
 	    if(!drawdata_old->limit_data){
 		drawdata_old->limit_data=mycalloc(4,double);
 	    }
+	    for(int i=0; i<4; i++){
+		if(fabs(drawdata_old->limit_data[i]-drawdata->limit_data[i])>0.1){
+		    drawdata_old->limit_changed=1;
+		}
+	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}else{
 	    free(drawdata_old->limit_data);
 	    drawdata_old->limit_data=NULL;
+	    drawdata_old->limit_changed=1;
 	}
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 	drawdata_old->zlim=drawdata->zlim;
