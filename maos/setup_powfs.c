@@ -747,7 +747,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	ncompx=ncompy=powfs[ipowfs].pts->nx*embfac;
 	double safov=ncompx*dtheta;
 	if(safov < pixpsax*pixthetax || safov < pixpsay*pixthetay){
-	    warning("PSF Size (%.1f\"x%.1f\") is less than pixel FoV (%.1f\"x%.1f\"\n",
+	    warning("PSF Size (%.1f\"x%.1f\") < SA FoV (%.1f\"x%.1f\")\n",
 		    safov*206265, safov*206265,
 		    pixpsax*pixthetax*206265, pixpsay*pixthetay*206265);
 	}

@@ -26,10 +26,7 @@ PNEW2(mutex_fftw);
 */
 void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data){
-    if(nthread==0)return;
-    if(end<=start && nthread>1){
-	error("start=%ld, end=%ld. end need to be larger than start\n",start, end);
-    }
+    if(nthread==0 || end<=start) return;
     long nt=(end-start+nthread-1)/nthread;
     if(nt==0){
 	error("nt=%ld\n",nt);

@@ -51,8 +51,8 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	dmat *wfsopd0=dnew(powfs[ipowfs].saloc->nloc, 1);
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht->p[ips]-hc;
-	    const double dispx=ht*parms->wfs[iwfs].thetax-simu->atm->p[ips]->vx*simu->dt*simu->isim;
-	    const double dispy=ht*parms->wfs[iwfs].thetay-simu->atm->p[ips]->vy*simu->dt*simu->isim;
+	    const double dispx=ht*parms->wfs[iwfs].thetax-simu->atm->p[ips]->vx*parms->sim.dt*simu->isim;
+	    const double dispy=ht*parms->wfs[iwfs].thetay-simu->atm->p[ips]->vy*parms->sim.dt*simu->isim;
 	    const double scale=1-ht/hs;
 	    prop_grid(simu->atm->p[ips], powfs[ipowfs].saloc, wfsopd0->p, 1., dispx, dispy, scale, 1, 0, 0);
 	}
@@ -99,7 +99,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int CL=parms->sim.closeloop;
     const int nps=parms->atm.nps;
     const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
-    const double dt=simu->dt;
+    const double dt=parms->sim.dt;
     TIM(0);
     /*The following are truly constants for this powfs */
     const int imoao=parms->powfs[ipowfs].moao;

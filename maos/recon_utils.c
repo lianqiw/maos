@@ -243,8 +243,8 @@ static void Tomo_prop_do(thread_t *info){
 		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misregy_tel;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
+		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
 		}
 		double scale=1. - ht/hs;
 		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
@@ -341,8 +341,8 @@ static void Tomo_iprop_do(thread_t *info){
 		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc)+parms->wfsr[iwfs].misregy_tel;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
+		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
 		}
 		double scale=1. - ht/hs;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
@@ -496,8 +496,8 @@ void FitR(dcell **xout, const void *A,
 		const double ht = parms->atm.ht->p[ips];
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*simu->dt;
-		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*simu->dt;
+		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*parms->sim.dt;
+		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*parms->sim.dt;
 		prop_grid(simu->atm->p[ips], recon->floc, xp->p[ifit]->p, 
 			  atmscale, displace[0], displace[1], scale, 1, 0, 0);
 	    }

@@ -1696,7 +1696,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
    The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
 */
 static void setup_parms_postproc_siglev(PARMS_T *parms){
-    double sigscale=parms->sim.dt*800;
+    double sigscale=parms->sim.dt>0?(parms->sim.dt*800):1;
     if(fabs(sigscale-1.)>EPS){
 	info2("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1878,9 +1878,12 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     }else{
 	parms->atm.fun=NULL;
     }
-    if(!parms->atm.frozenflow && parms->sim.end>parms->sim.start+10){
-	warning("Disable turbulence file based sharing in open loop nonfrozenflow simulation\n");
-	parms->atm.share=0;
+    if(!parms->atm.frozenflow){
+	if(parms->sim.end>parms->sim.start+10){
+	    warning("Disable turbulence file based sharing in open loop nonfrozenflow simulation\n");
+	    parms->atm.share=0;
+	}
+	parms->sim.dt=0;
     }
 }
 static void setup_parms_postproc_dirs(PARMS_T *parms){
@@ -2858,6 +2861,19 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	use_cuda=1;
     }
     if(use_cuda){
+	if(parms->sim.evlol){
+	    parms->gpu.tomo=0;
+	    parms->gpu.fit=0;
+	    parms->gpu.wfs=0;
+	    parms->gpu.lsr=0;
+	}
+	if(parms->sim.idealfit){
+	    parms->gpu.tomo=0;/*no need tomo.*/
+	    parms->fit.cachex=0;
+	}
+	if(parms->sim.idealtomo){
+	    parms->gpu.tomo=0;
+	}
 	if(parms->evl.tomo){
 	    parms->gpu.evl=0;
 	}
@@ -2879,9 +2895,18 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
 		parms->gpu.fit=0;
 	    }
+	    if(parms->sim.idealfit && parms->gpu.fit){
+		parms->gpu.fit=2;//In idealfit, FR is not assembled.
+	    }
+	  
 	}else if(parms->recon.alg==1){
 	    parms->gpu.tomo=0;
 	    parms->gpu.fit=0;
+	}
+	if(!parms->atm.frozenflow){
+	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
+	    parms->gpu.evl=0;
+	    parms->gpu.wfs=0;
 	}
     }
     /*use a max of one gpu if there is only 1 wfs.*/
@@ -2890,21 +2915,9 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 #else
     use_cuda=0; (void) gpus; (void)ngpu;
 #endif
+    //Other flags that depends on GPU enabling flags
     if(use_cuda){
-	if(parms->sim.evlol){
-	    memset(&parms->gpu, 0, sizeof(GPU_CFG_T));
-	}
-	if(parms->sim.idealfit){
-	    parms->gpu.tomo=0;/*no need tomo.*/
-	    parms->fit.cachex=0;
-	}
-	if(parms->sim.idealtomo){
-	    parms->gpu.tomo=0;
-	}
 	if(parms->recon.alg==0){/*MV*/
-	    if(parms->sim.idealfit && parms->gpu.fit){
-		parms->gpu.fit=2;//In idealfit, FR is not assembled.
-	    }
 	    if(parms->gpu.fit==1 && !parms->fit.assemble){
 		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
 		parms->fit.assemble=1;
@@ -2928,11 +2941,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	}else{
 	    parms->fit.square=0;
 	}
-	if(!parms->atm.frozenflow){
-	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
-	    parms->gpu.evl=0;
-	    parms->gpu.wfs=0;
-	}
+
 	if(parms->gpu.evl && parms->gpu.wfs){
 	    parms->sim.cachedm=0; /*No need in CUDA. */
 	}

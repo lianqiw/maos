@@ -297,8 +297,8 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*simu->dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*simu->dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
+		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
 		}
 		IND(HXWtomo,iwfs,ips)=mkh(recon->xloc->p[ips], ploc, 
 				       displace[0],displace[1],scale);
@@ -334,8 +334,8 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
     }
     if(simu->atm){
 	for(int ips=0; ips<parms->atm.nps; ips++){
-	    double disx=-simu->atm->p[ips]->vx*isim*simu->dt;
-	    double disy=-simu->atm->p[ips]->vy*isim*simu->dt;
+	    double disx=-simu->atm->p[ips]->vx*isim*parms->sim.dt;
+	    double disy=-simu->atm->p[ips]->vy*isim*parms->sim.dt;
 	    int ipsr=parms->atm.ipsr->p[ips];
 	    prop_grid(simu->atm->p[ips],recon->xloc->p[ipsr],(*opdx)->p[ipsr]->p,
 		      1,disx,disy,1,1,0,0);
@@ -1325,13 +1325,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->nthread=NTHREAD;
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
-
-    /* dtrat */
-    if(parms->atm.frozenflow){
-	simu->dt=parms->sim.dt;
-    }else{
-	simu->dt=0;
-    }
 
     if(parms->sim.wspsd){
 	/* Telescope wind shake added to TT input. */

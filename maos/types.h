@@ -628,7 +628,6 @@ typedef struct SIM_T{
     const APER_T *aper;/**<pointer to aper*/
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
-    double dt;         /**<System baseline clock period. 1/800 s*/
     double last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)>=(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))

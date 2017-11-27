@@ -133,7 +133,7 @@ void perfevl_ievl(thread_t *info){
     const int nps=parms->atm.nps;
     const int npsr=parms->atmr.nps;
     const int imoao=parms->evl.moao;
-    const double dt=simu->dt;
+    const double dt=parms->sim.dt;
     dmat *iopdevl=0;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov)
@@ -601,7 +601,7 @@ void perfevl(SIM_T *simu){
 	    const int ievl=0;//doesn't matter for ground layer. 
 	    int ind=ievl+parms->evl.nevl*ips;
 	    const int isim=simu->isim;
-	    const double dt=simu->dt;
+	    const double dt=parms->sim.dt;
 	    const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
 	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	    simu->evl_propdata_atm[ind].displacex1=-simu->atm->p[ips]->vx*isim*dt;
