@@ -175,8 +175,10 @@ curecon_geom::curecon_geom(const PARMS_T *parms, const RECON_T *recon)
 
 void map_ray::Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //output.
 		       const cugridcell &in,//input.
-		       Real dt){//directions and star height.
-    if(nlayer) error("Already initialized\n");
+		       Real delay){//directions and star height.
+    if(hdata) {
+	deinit();
+    }
     nlayer=in.N();
     ndir=_ndir;
     PROP_WRAP_T *hdata_cpu=new PROP_WRAP_T[nlayer*ndir];
@@ -185,8 +187,8 @@ void map_ray::Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, //outpu
 	const Real ht=in[ilayer].ht;
 	for(int idir=0; idir<ndir; idir++){
 	    if(!dir[idir].skip){
-		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dt+dir[idir].misregx;
-		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dt+dir[idir].misregy;
+		const Real dispx=dir[idir].thetax*ht+in[ilayer].vx*dir[idir].delay+dir[idir].misregx;
+		const Real dispy=dir[idir].thetay*ht+in[ilayer].vy*dir[idir].delay+dir[idir].misregy;
 		const Real hs=dir[idir].hs;
 		const Real scale=1.f-ht/hs;
 		cugrid_t outscale=out.Scale(scale);

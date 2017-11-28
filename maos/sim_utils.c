@@ -281,11 +281,12 @@ void setup_recon_HXW_predict(SIM_T *simu){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
-    warning("Generating Predictive HXW\n");
+    info2("Generating Predictive HXW\n");
     dspcell* HXWtomo=recon->HXWtomo/*PDSPCELL*/;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){/*for tomography */
+	    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	    const double hs = parms->wfs[iwfs].hs;
 	    const double hc=parms->powfs[ipowfs].hc;
 	    for(int ips=0; ips<npsr; ips++){
@@ -297,8 +298,8 @@ void setup_recon_HXW_predict(SIM_T *simu){
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*delay;
+		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
 		IND(HXWtomo,iwfs,ips)=mkh(recon->xloc->p[ips], ploc, 
 				       displace[0],displace[1],scale);
@@ -1161,8 +1162,8 @@ static void init_simu_dm(SIM_T *simu){
     }
 #endif
     simu->wfspsol=dccellnew(parms->npowfs, 1);
-    simu->dmint=servo_new(simu->dmerr_store, parms->sim.apdm, parms->sim.aldm, 
-			  parms->sim.dthi, parms->sim.epdm);
+    simu->dmint=servo_new(simu->dmerr_store, parms->sim.aphi, parms->sim.alhi, 
+			  parms->sim.dthi, parms->sim.ephi);
     if(parms->dbg.ncpa_preload && recon->dm_ncpa){//set the integrator
 	warning_once("Preload integrator with NCPA\n");
 	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);

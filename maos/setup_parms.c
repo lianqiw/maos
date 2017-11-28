@@ -112,8 +112,8 @@ void free_parms(PARMS_T *parms){
     dfree(parms->fit.wt);
     dfree(parms->fit.hs);
 
-    dfree(parms->sim.apdm);
-    dfree(parms->sim.epdm);
+    dfree(parms->sim.aphi);
+    dfree(parms->sim.ephi);
     dfree(parms->sim.aplo);
     dfree(parms->sim.eplo);
     dfree(parms->sim.apfsm);
@@ -888,8 +888,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.focus2tel);
     READ_INT(sim.idealfsm);
     READ_INT(sim.commonfsm);
-    READ_DMAT(sim.apdm);
-    READ_DMAT(sim.epdm);
+    READ_DMAT(sim.aphi);
+    READ_DMAT(sim.ephi);
     READ_DMAT(sim.aplo);
     READ_DMAT(sim.eplo);
     READ_DMAT(sim.apfsm);
@@ -898,15 +898,15 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.f0fsm);
     READ_DBL(sim.aptwfs);
     READ_DBL(sim.eptwfs);
-    READ_INT(sim.aldm);
+    READ_INT(sim.alhi);
     READ_INT(sim.allo);
     READ_INT(sim.alfsm);
     /*We append a 0 so that we keep a time history of the integrator. */
-    if(parms->sim.apdm->nx==1){
-	dresize(parms->sim.apdm, 2, 1);
+    if(parms->sim.aphi->nx==1){
+	dresize(parms->sim.aphi, 2, 1);
     }
-    if(parms->sim.apdm->nx>2 || parms->sim.apdm->ny!=1){
-	error("Invalid use of apdm\n");
+    if(parms->sim.aphi->nx>2 || parms->sim.aphi->ny!=1){
+	error("Invalid use of aphi\n");
     }
     if(parms->sim.aplo->nx==1){
 	dresize(parms->sim.aplo, 2, 1);

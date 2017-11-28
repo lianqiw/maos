@@ -119,7 +119,7 @@
    - Change gain of the main integrator to 0.3
    
    \verbatim
-   maos sim.epdm=0.3
+   maos sim.ephi=0.3
    \endverbatim
 
    \section sect-perfevl Performance Evaluation

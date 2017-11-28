@@ -376,6 +376,10 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(tomo.split, recon.split);
 	    RENAME(evl.opdcov, evl.cov);
 	    RENAME(evl.psfpttr, evl.pttr);
+	    /*Added 2017-11-27*/
+	    RENAME(sim.apdm, sim.aphi);
+	    RENAME(sim.epdm, sim.ephi);
+	    RENAME(sim.aldm, sim.alhi);
 #endif
 	    STORE_T *store=mycalloc(1,STORE_T);
 	    if(prefix){

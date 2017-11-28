@@ -224,7 +224,7 @@ static void filter_cl(SIM_T *simu){
       dm command for next cycle instead of maintianing last
       step error information.
 
-      2010-01-13: Implemented apdm. 
+      2010-01-13: Implemented aphi. 
       a(n)=a(n-1)+ep*e(n-2) or 
       a(n)=0.5*(a(n-1)+a(n-2))+ep*e(n-2);
     */
@@ -234,18 +234,18 @@ static void filter_cl(SIM_T *simu){
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
     const int isim=simu->isim;
-    {/*Auto adjusting epdm for testing different epdm*/
-    	static int epdm_is_auto=0;
-	if(simcfg->epdm->p[0]<0){
-	    epdm_is_auto=1;
-	    simcfg->epdm->p[0]=0.5;
+    {/*Auto adjusting ephi for testing different ephi*/
+    	static int ephi_is_auto=0;
+	if(simcfg->ephi->p[0]<0){
+	    ephi_is_auto=1;
+	    simcfg->ephi->p[0]=0.5;
 	}
-	if(epdm_is_auto){
+	if(ephi_is_auto){
 	    if((isim*10)<parms->sim.end){//initial steps
-		simcfg->epdm->p[0]=0.5;
+		simcfg->ephi->p[0]=0.5;
 	    }else if((isim*10)%parms->sim.end==0){
-		simcfg->epdm->p[0]=(double)isim/(double)parms->sim.end;
-		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], isim);
+		simcfg->ephi->p[0]=(double)isim/(double)parms->sim.end;
+		info("ephi is set to %.1f at step %d\n", simcfg->ephi->p[0], isim);
 	    }
 	}
     }
@@ -433,7 +433,7 @@ static void filter_cl(SIM_T *simu){
 static void filter_ol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     assert(!parms->sim.closeloop);
-    if(simu->dmerr && parms->sim.epdm->p[0]>0){
+    if(simu->dmerr && parms->sim.ephi->p[0]>0){
 	dcellcp(&simu->dmcmd, simu->dmerr);
     }else{
 	dcellzero(simu->dmcmd);

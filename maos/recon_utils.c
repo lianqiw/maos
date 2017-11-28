@@ -231,6 +231,7 @@ static void Tomo_prop_do(thread_t *info){
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
+	const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 	dmat *xx=dnew(recon->ploc->nloc, 1);
 	const double hs=parms->wfs[iwfs].hs;
 	const double hc=parms->powfs[ipowfs].hc;
@@ -243,8 +244,8 @@ static void Tomo_prop_do(thread_t *info){
 		displace[1]=parms->wfsr[iwfs].thetay*ht+parms->wfsr[iwfs].misregy_tel;
 		if(parms->tomo.predict){
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*delay;
+		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
 		double scale=1. - ht/hs;
 		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
@@ -340,9 +341,10 @@ static void Tomo_iprop_do(thread_t *info){
 		displace[0]=parms->wfsr[iwfs].thetax*(ht-hc)+parms->wfsr[iwfs].misregx_tel;
 		displace[1]=parms->wfsr[iwfs].thetay*(ht-hc)+parms->wfsr[iwfs].misregy_tel;
 		if(parms->tomo.predict){
+		    const double delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
 		    int ips0=parms->atmr.indps->p[ips];
-		    displace[0]+=simu->atm->p[ips0]->vx*parms->sim.dt*2;
-		    displace[1]+=simu->atm->p[ips0]->vy*parms->sim.dt*2;
+		    displace[0]+=simu->atm->p[ips0]->vx*delay;
+		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
 		double scale=1. - ht/hs;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 

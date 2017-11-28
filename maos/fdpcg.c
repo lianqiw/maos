@@ -454,6 +454,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cfree(gx);
     cfree(gy);
     cspfree(sel);
+    const double delay=parms->sim.dt*(parms->powfs[hipowfs].dtrat+1+parms->sim.alhi);
+
     /* Mhat = Mhat + propx' * Mmid * propx */
 #pragma omp parallel for
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfsr; jwfs++){
@@ -472,8 +474,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dispy[ips]=ht[ips]*parms->wfsr[iwfs].thetay;
 	    if(atm){
 		int ips0=parms->atmr.indps->p[ips]; 
-		dispx[ips]+=atm->p[ips0]->vx*parms->sim.dt*2;
-		dispy[ips]+=atm->p[ips0]->vy*parms->sim.dt*2;
+		dispx[ips]+=atm->p[ips0]->vx*delay;
+		dispy[ips]+=atm->p[ips0]->vy*delay;
 	    }
 	}
 	csp *propx=fdpcg_prop(nps,nxp,nyp,nx,ny,dxp,dispx,dispy);

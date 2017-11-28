@@ -22,22 +22,23 @@
 
 namespace cuda_recon{
 struct dir_t{
-    Real thetax;
-    Real thetay;
-    Real hs;
-    Real misregx;
-    Real misregy;
-    int skip;
+    Real thetax; /**<Direction of guide star*/
+    Real thetay; /**<Direction of guide star*/
+    Real hs;     /**<Height of guide star*/
+    Real misregx;/**<Misregistration*/
+    Real misregy;/**<Misregistration*/
+    Real delay;  /**<The delay used for tomo.predict*/
+    int skip;    /**<Skip this direction*/
 public:
-    dir_t():thetax(0),thetay(0),hs(INFINITY),misregx(0),misregy(0),skip(0){}
+    dir_t():thetax(0),thetay(0),hs(INFINITY),misregx(0),misregy(0),delay(0),skip(0){}
 };
 /*Data for aperture bi-linear weighting, used in fitting*/
 class W01_T{
     curmat W1;    /**< The aperture weighting, piston removal*/
     cusp   W0p;   /**< W0 for partial points*/
-    cumat<int>W0f;   /**< index for fully illuminated points.*/
+    cumat<int>W0f;/**< index for fully illuminated points.*/
     Real   W0v;   /**< maximum Value of W0*/
-    int     nxx;   /**< First dimension of grid*/
+    int     nxx;  /**< First dimension of grid*/
     curmat pis;   /**< Temporary data*/
 public:
     W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
@@ -72,6 +73,22 @@ class map_ray:public nonCopyable{
 protected:
     PROP_WRAP_T *hdata;
     int nlayer, ndir;
+    void deinit(){
+	if(hdata){
+	    PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
+	    cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
+	    for(int i=0; i<ndir*nlayer; i++){
+		if(pcpu[i].reverse){
+		    cudaFree(pcpu[i].reverse);
+		}
+	    }
+	    delete [] pcpu;
+	    cudaFree(hdata);
+	    hdata=0;
+	    nlayer=0;
+	    ndir=0;
+	}
+    }
 public:
     map_ray():hdata(0),nlayer(0),ndir(0){};
     void Init_l2d(const cugrid_t &out, const dir_t *dir, int _ndir, const cugridcell &in, Real dt=0);
@@ -87,17 +104,7 @@ public:
 	    (hdata, out, in, ndir, nlayer, alpha, wt, 't');
     }
     virtual ~map_ray(){
-	if(hdata){
-	    PROP_WRAP_T *pcpu=new PROP_WRAP_T[ndir*nlayer];
-	    cudaMemcpy(pcpu, hdata, sizeof(PROP_WRAP_T), cudaMemcpyDeviceToHost);
-	    for(int i=0; i<ndir*nlayer; i++){
-		if(pcpu[i].reverse){
-		    cudaFree(pcpu[i].reverse);
-		}
-	    }
-	    delete [] pcpu;
-	    cudaFree(hdata);
-	}
+	deinit();
     }
     operator bool()const{
 	return nlayer||ndir;

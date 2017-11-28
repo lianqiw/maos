@@ -148,12 +148,11 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	dir[iwfs].thetay=parms->wfsr[iwfs].thetay;
 	dir[iwfs].misregx=parms->wfsr[iwfs].misregx_tel;
 	dir[iwfs].misregy=parms->wfsr[iwfs].misregy_tel;
+	if(parms->tomo.predict){
+	    dir[iwfs].delay=parms->sim.dt*(parms->powfs[ipowfs].dtrat+1+parms->sim.alhi);
+	}
     }
-    Real dt=parms->tomo.predict?parms->sim.dt*2:0;
-    if(dt>0){
-	info("dt=%g. vx[0]=%g\n", dt, grid->xmap[0].vx);
-    }
-    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap, dt);
+    hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap);
 
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 

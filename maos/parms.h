@@ -479,16 +479,16 @@ typedef struct SIM_CFG_T{
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
-    dmat *apdm;      /**<servo coefficient for high order dm.  A is command. e is
+    dmat *aphi;      /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
 		     */
-    dmat *epdm;      /**<error gain for DM commands (high order)*/
+    dmat *ephi;      /**<error gain for DM commands (high order)*/
     dmat *aplo;      /**<servo coefficient for ngs modes.*/
     dmat *eplo;      /**<error gain for NGS modes (low order)*/
     dmat *apfsm;     /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epfsm;     /**<error gain for uplink pointing*/
-    int aldm;        /**<Additional latency (*sim.dt) of the high order loop*/
+    int alhi;        /**<Additional latency (*sim.dt) of the high order loop*/
     int allo;        /**<Additional latnecy (*sim.dt) of the low order loop*/
     int alfsm;       /**<Additional latency (*sim.dt) of the uplink loop*/
     int commonfsm;   /**<Make FSM common for each powfs (LLT)*/
