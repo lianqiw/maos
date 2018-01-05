@@ -433,8 +433,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     switch(nrhs){
     case 3:
 	start=(long)mxGetScalar(prhs[2]);//starting block to read. matlab index.
+	//fallthrough
     case 2:
-	howmany=(long)mxGetScalar(prhs[1]);//do not break
+	howmany=(long)mxGetScalar(prhs[1]);
+	//fallthrough
     case 1:
 	fn=mx2str(prhs[0]);
 	break;

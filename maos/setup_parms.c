@@ -705,7 +705,8 @@ static void readcfg_aper(PARMS_T *parms){
     int nd=readcfg_dblarr(&dtmp, "aper.d");
     switch(nd){
     case 2:
-	parms->aper.din=dtmp[1];/*don't break here. */
+	parms->aper.din=dtmp[1];
+	//fallthrough
     case 1:
 	parms->aper.d=dtmp[0];
 	break;

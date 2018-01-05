@@ -124,7 +124,7 @@ static int proc_read_status(char *fnjob,  char *exename, char *cstat,long* nthre
 int get_usage_running(void){
   
     struct dirent *dp, *dpsub;
-    char fnjob[64],fnsub[64];
+    char fnjob[256],fnsub[256];
     char cstat;
     char exename[256];
     int nrunning=0;
@@ -141,7 +141,7 @@ int get_usage_running(void){
 	if(dp->d_name[0]>'9' || dp->d_name[0]<'0' || !strcmp(dp->d_name, mypid)){
 	    continue;
 	}
-	snprintf(fnjob,64,"/proc/%s/stat",dp->d_name);
+	snprintf(fnjob,sizeof(fnjob),"/proc/%s/stat",dp->d_name);
 	if(proc_read_status(fnjob,  exename, &cstat,&nthread)){
 	    continue;
 	}
@@ -155,7 +155,7 @@ int get_usage_running(void){
 	    /*Only count 1 thread of MATLAB*/
 	    nthread=1;
 	}else if(nthread>1){/*There are many threads. Check each one. */
-	    snprintf(fnsub,64,"/proc/%s/task",dp->d_name);
+	    snprintf(fnsub,sizeof(fnsub),"/proc/%s/task",dp->d_name);
 	    DIR* dirsub=opendir(fnsub);
 	    nthread=0;
 		

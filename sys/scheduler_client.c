@@ -131,7 +131,7 @@ void init_hosts(){
     }
     nhost=0;
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
-    memset(hosts, 0, MAX_HOST);
+    memset(hosts, 0, MAX_HOST*sizeof(char*));
     if(exist(fn)){
 	FILE *fp=fopen(fn,"r");
 	if(fp){

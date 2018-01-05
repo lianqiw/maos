@@ -136,6 +136,8 @@ AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex r
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
 if test -z "$MEXDIR" ;then
     with_matlab=no
+else
+    with_matlab=yes
 fi
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
@@ -198,6 +200,9 @@ case "$CN" in
 	    if test "$major" -gt 4 -o "$minor" -ge 2 ;then
 		#echo "Enabling -mtune=native"
 		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
+	    fi
+	    if test "$major" -gt 7 ;then #GCC 7 introduces more checking.
+		COMMON_GCC+=" -Wno-format-truncation -Wno-misleading-indentation -Wimplicit-fallthrough=2"
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
 	    #if test $major -eq 4 -a $minor -lt 5;then
@@ -689,6 +694,7 @@ if test "$with_gtk" != "no" ;then
     fi
     AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
     AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
+
     AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
     if test "$comp_mon" = "yes" ;then
 	if ! echo "$MON_LIBS" | grep -q gthread ;then
@@ -701,7 +707,6 @@ if test "$with_gtk" != "no" ;then
 	    fi
 	fi
     fi
-
     #The following will substitute the variables name 
     AC_SUBST(DRAW_CFLAGS)
     AC_SUBST(DRAW_LIBS)
@@ -857,6 +862,7 @@ if test "$with_cuda" != "no" ;then
 	fi
     fi
 fi
+
 if test "$with_cuda" != "no" ;then
     AC_MSG_NOTICE(["Use cuda in directory $CUDADIR"])
     cudaver="$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)"
@@ -921,7 +927,7 @@ if test "$with_cuda" != "no" ;then
         CCBINOPT+=" $OPENMP_CFLAGS"
     fi
 else
-    with_cuda="no"
+    cudaver="no"
 fi
 if test "$with_cuda" != "no" ;then
     if test "$cuda_double" = "yes" ;then
@@ -1000,30 +1006,33 @@ echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
 echo LDEXE_FULL=$LDEXE_FULL
 if test "$with_gtk" != "no" ;then
-    echo Compile Drawdaemon=$comp_draw
-    echo Compile Monitor=$comp_mon
-    echo Compile Monitor with Libnotify=$comp_monn
     echo DRAW_LIBS=$DRAW_LIBS
     echo GTK_LIBS=$GTK_LIBS
-    echo Using GTK+-${gtk_ver}
-else
-    echo "Without GTK"
 fi
-echo Compile websocket server=$has_lws
 if test "$with_cuda" != "no" ;then
     echo NVCC=$NVCC
     echo CUDAOPT=$CUDAOPT
     echo LIBCUDA=$LIBCUDA
-else
-    echo "Without CUDA support"
 fi
 if test "$with_matlab" != "no" ;then
     echo MEXDIR=$MEXDIR
     echo LIBMEX=$LIBMEX
     echo MEXOPT=$MEXOPT
-else
-    echo "Without matlab support"
 fi
+echo
+echo Compiling options:
+echo
+if test "$with_gtk" != "no" ;then
+    echo "Drawdaemon:      $comp_draw"
+    echo "Monitor:         $comp_mon (libnotify: $comp_monn)"
+    echo "GTK version:     ${gtk_ver}"
+fi
+if true ;then
+    echo "Websocket:       $has_lws"
+    echo "CUDA:            $cudaver"
+    echo "MATLAB MEX:      $with_matlab"
+fi
+echo
 
 echo "*************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos ***"
