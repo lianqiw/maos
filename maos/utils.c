@@ -108,9 +108,11 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
     IND(cir,3,0)=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     ngroup+=1;
+    const char *legend[ngroup];
     loccell *locs=(loccell*)cellnew(ngroup, 1);
     int32_t *style=mycalloc(ngroup,int32_t);
     int count=0;
+    legend[count]="Evaluation";
     style[count]=(0xFF0000<<8)+(4<<4)+3;
     locs->p[count]=locnew(parms->evl.nevl, 0, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -118,7 +120,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
 	locs->p[count]->locy[ievl]=parms->evl.thetay->p[ievl]*206265;
     }
     count++;
-
+    legend[count]="DM Fitting";
     style[count]=(0xFF22DD<<8)+(4<<4)+3;
     locs->p[count]=locnew(parms->fit.nfit, 0, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
@@ -126,6 +128,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
 	locs->p[count]->locy[ifit]=parms->fit.thetay->p[ifit]*206265;
     }
     count++;
+    legend[count]="NCPA";
     style[count]=(0x22FF00<<8)+(4<<4)+3;
     locs->p[count]=locnew(parms->sim.ncpa_ndir, 0, 0);
     for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
@@ -133,7 +136,34 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
 	locs->p[count]->locy[ifit]=parms->sim.ncpa_thetay->p[ifit]*206265;
     }
     count++;
+    char* const legwfs[]={
+	"LGS WFS",
+	"NGS WFS",
+	"PWFS",
+	"TTF WFS",
+	"TT WFS",
+	"Other WFS",
+    };
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	int ilegwfs=6;
+	if(parms->powfs[ipowfs].lo){
+	    if(parms->powfs[ipowfs].order==1){
+		ilegwfs=4;
+	    }else{
+		ilegwfs=3;
+	    }
+	}else{
+	    if(parms->powfs[ipowfs].trs){
+		ilegwfs=0;
+	    }else{
+		if(parms->powfs[ipowfs].type==1){
+		    ilegwfs=2;
+		}else{
+		    ilegwfs=1;
+		}
+	    }
+	}
+	legend[count]=legwfs[ilegwfs];
 	locs->p[count]=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
@@ -157,7 +187,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
     double limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
-    plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL, cir, NULL,
+    plot_points(fig, ngroup, locs->p, NULL, style,limit,NULL, cir, legend,
 		"Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
     dfree(cir);
     cellfree(locs);

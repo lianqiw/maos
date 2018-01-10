@@ -110,32 +110,31 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
 
 static void calc_tic(double *tic1, double *dtic, int *ntic, int *order, 
 		     double xmax, double xmin, int maxtic, int logscale){
+    (void)maxtic;
     double diff=xmax-xmin;
     /*first get the order of magnitude. */
-    double rmax=fabs(xmax);
-    if(fabs(xmin)>rmax) rmax=fabs(xmin);
+    double rmax=MAX(fabs(xmin),fabs(xmax));
     double order1=floor(log10(rmax));
-    if(isnan(order1) || fabs(order1)>1000){
+    if(isnan(order1) || order1<-1000){
 	order1=0;
     }
     xmax/=pow(10,order1);
     xmin/=pow(10,order1);
     diff/=pow(10,order1);
-    if(fabs(diff)<fabs(1.e-4*rmax)){/*very small separation */
+    rmax/=pow(10,order1);
+    if(fabs(diff)<1.e-4*rmax){/*very small separation */
 	*order=(int)order1;
 	*ntic=2;
 	*dtic=xmax-xmin;
 	*tic1=xmin;
     }else{
 	double spacing=1;
-	(void)maxtic;
 	if(!logscale){
 	    spacing=diff/(diff>0.1?10:5);
-
 	    double scale=pow(10., floor(log10(spacing)));
 	    spacing=round(spacing/scale)*scale;
 	}
-
+	
 	*tic1=myfloor(xmin/spacing)*spacing;
 	*dtic=spacing;
 	*ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
@@ -144,9 +143,10 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	    *dtic=0;
 	}
 	*order=(int)order1;
-	/*info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, spacing=%g, ntic=%d, order1=%g\n",
-	  xmin, xmax, diff, *tic1, spacing, *ntic, order1);*/
     }
+    /*info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
+      xmin, xmax, diff, *tic1, *dtic, *ntic, order1);*/
+    
     if(abs(*order)<3){
 	*tic1=*tic1*pow(10,*order);
 	*dtic=*dtic*pow(10,*order);

@@ -522,6 +522,7 @@ static void imagesc_do(struct imagesc_t *data){
     free(data->xlabel);
     free(data->ylabel);
     free(data->fn);
+    free(data);
 }
 void imagesc(const char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
@@ -550,16 +551,16 @@ void imagesc(const char *fig, /**<Category of the figure*/
     }
     //We copy all the data and put the imagesc job into a task
     //The task will free the data after it finishes.
-    struct imagesc_t data;
-    data.nx=nx;
-    data.ny=ny;
-#define datastrdup(x) data.x=(x)?strdup(x):0
+    struct imagesc_t *data=calloc(1, sizeof(struct imagesc_t));
+    data->nx=nx;
+    data->ny=ny;
+#define datastrdup(x) data->x=(x)?strdup(x):0
 #define datamemdup(x, size,type)		\
     if(x){					\
-	data.x=mymalloc(size,type);		\
-	memcpy(data.x, x,size*sizeof(type));	\
+	data->x=mymalloc(size,type);		\
+	memcpy(data->x, x,size*sizeof(type));	\
     }else{					\
-	data.x=0;				\
+	data->x=0;				\
     }
     datastrdup(fig);
     datamemdup(limit, 4, double);
@@ -568,11 +569,11 @@ void imagesc(const char *fig, /**<Category of the figure*/
     datastrdup(title);
     datastrdup(xlabel);
     datastrdup(ylabel);
-    data.fn=format?strdup(fn):0;
+    data->fn=format?strdup(fn):0;
 #undef datastrdup
 #undef datamemdup
     long group;
-    QUEUE(&group, (thread_fun)imagesc_do, &data, 1, 0);
+    QUEUE(&group, (thread_fun)imagesc_do, (void*)data, 1, 0);
 }
 
 /**

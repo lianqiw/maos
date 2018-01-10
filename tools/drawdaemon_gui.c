@@ -37,8 +37,8 @@
 #endif
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
-#define MAX_ZOOM 1000
-#define MIN_ZOOM 0.1
+#define MAX_ZOOM 10000
+#define MIN_ZOOM 0.01
 static GSList *windows=NULL;
 static int iwindow=0;
 static GtkWidget *curwindow=NULL;
@@ -89,9 +89,9 @@ static void set_cur_window(GtkWidget *window){
 /*Get the current page for notebook*/
 static GtkWidget *get_current_page(GtkWidget *notebook){
     int n=gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
-    if(n<0){
+    /*if(n<0){
 	warning_once("get_current_page returns %d\n", n);
-    }
+	}*/
     return gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), n);
 }
 static drawdata_t *get_current_drawdata(void){
@@ -205,15 +205,19 @@ static gboolean update_pixmap_timer(updatetimer_t * timer){
     free(timer);
     return FALSE;
 }
+/**
+   Call the update_pixmap after time out. If another call is queue within
+   the time, the "pending" counter will mismatch and no action will be taken.
+ */
 static void delayed_update_pixmap(drawdata_t *drawdata){
-    drawdata->pending++;
     if(!drawdata->pixmap){
 	update_pixmap(drawdata);
     }else{
+	drawdata->pending++;
 	updatetimer_t *tmp=mycalloc(1,updatetimer_t);
 	tmp->pending=drawdata->pending;
 	tmp->drawdata=drawdata;
-	g_timeout_add(100, (GSourceFunc)update_pixmap_timer, tmp);
+	g_timeout_add(20, (GSourceFunc)update_pixmap_timer, tmp);
     }
 }
 
@@ -251,7 +255,7 @@ static gboolean
 on_expose_event(GtkWidget *widget, GdkEventExpose *event, gpointer pdata){
     drawdata_t* drawdata=*((drawdata_t**)pdata);
     if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
-	update_pixmap(drawdata);
+	delayed_update_pixmap(drawdata);
     }
     if(drawdata->pixmap){
 	gdk_draw_drawable(widget->window, 
@@ -401,7 +405,7 @@ static const char *subnb_label_get(GtkWidget *subnb, GtkWidget *page){
 static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
     drawdata->offx+=xdiff/drawdata->zoomx;
     drawdata->offy+=ydiff/drawdata->zoomy;
-    update_pixmap(drawdata);/*no need delay since motion notify already did it. */
+    delayed_update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 
 static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event, 
@@ -509,7 +513,7 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
 	double factory=1/old_zoomy-1/drawdata->zoomy;
 	drawdata->offy-=ydiff*factory;
     }
-    update_pixmap(drawdata);
+    delayed_update_pixmap(drawdata);
 }
 
 static gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event, 
@@ -658,7 +662,7 @@ static void page_changed(int topn, int subn){
     if(stwriteint(sock, DRAW_FIGFN)||
        stwritestr(sock, fig)||
        stwritestr(sock, fn)){
-	warning("Talk to display_server failed\n");
+	warning("Talk to client failed\n");
 	sock_block=1;
     }
     //info2("done\n");
@@ -1467,7 +1471,7 @@ GtkWidget *create_window(){
 		     G_CALLBACK(tool_font_set),NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_tool_button_new(NULL, "P_ause");
+    item=gtk_toggle_tool_button_new();
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "media-playback-pause");
     g_signal_connect(item, "toggled", G_CALLBACK(togglebutton_pause), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
