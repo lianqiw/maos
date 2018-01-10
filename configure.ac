@@ -154,15 +154,10 @@ COMMON_GCC=" -Wno-deprecated-declarations -fms-extensions -static-libgcc"
 COMMON_CLANG="-Wno-deprecated-declarations -Qunused-arguments "
 COMMON_ALL=""
 
-OPTIM_ALL="$COMMON_ALL -O3 "
-OPTIM_ICC="$COMMON_ICC $OPTIM_ALL"
-OPTIM_GCC="$COMMON_GCC $OPTIM_ALL"
-OPTIM_CLANG="$COMMON_CLANG $OPTIM_ALL"
+OPTIM_ALL="-O3 "
+DEBUG_ALL=" -g -O0 -DDEBUG_TRACE"
 
-DEBUG_ALL="$COMMON_ALL -g -O0 -DDEBUG_TRACE"
-DEBUG_ICC="$COMMON_ICC $DEBUG_ALL"
-DEBUG_GCC="$COMMON_GCC $DEBUG_ALL -ggdb"
-DEBUG_CLANG="$COMMON_CLANG $DEBUG_ALL"
+DEBUG_GCC="-ggdb"
 
 #inline definition:
 
@@ -191,7 +186,11 @@ case "$CN" in
 	if test -n "$CC_VERSION" ;then
 	    major=${CC_VERSION%%.*}
 	    minor=${CC_VERSION#*.}
-	    minor=${minor%%.*}
+	    if test $minor = $CC_VERSION ;then
+		minor=0
+	    else
+		minor=${minor%%.*}
+	    fi
 	    echo major=$major minor=$minor
 	    if test "$major" -lt 4 ;then
 		AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
@@ -201,7 +200,7 @@ case "$CN" in
 		#echo "Enabling -mtune=native"
 		OPTIM_GCC+=" -mtune=native" #introduced in GCC 4.2
 	    fi
-	    if test "$major" -gt 7 ;then #GCC 7 introduces more checking.
+	    if test "$major" -ge 7 ;then #GCC 7 introduces more checking.
 		COMMON_GCC+=" -Wno-format-truncation -Wno-misleading-indentation -Wimplicit-fallthrough=2"
 	    fi
 	    #GCC4.3 changed meaning of inline to C99
@@ -232,9 +231,14 @@ else
     AC_DEFINE(DEBUG,[0],["Do not debug"])
     ccprefix=OPTIM
 fi
-optname=${ccprefix}_${CN}
-OPTScc=${!optname}
-unset optname
+optname1=COMMON_ALL
+optname2=COMMON_${CN}
+optname3=${ccprefix}_ALL
+optname4=${ccprefix}_${CN}
+echo OPTScc="${optname1} ${optname2} ${optname3} ${optname4}"
+OPTScc="${!optname1} ${!optname2} ${!optname3} ${!optname4}"
+echo OPTScc=$OPTScc
+unset optname1 optname2 optname3 optname4
 
 if test -z "$OPENMP_CFLAGS" ;then
     OPTScc+=" -pthread" #enables pthreads feature and links in the library

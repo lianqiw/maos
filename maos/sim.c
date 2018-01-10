@@ -149,22 +149,22 @@ void maos_isim(int isim){
 	    long group=0;
 	    if(parms->gpu.evl && !NO_EVL){
 		//Queue tasks on GPU, no stream sync is done
-		QUEUE_THREAD(group, simu->perf_evl_pre, 0);
+		QUEUE_THREAD(&group, simu->perf_evl_pre, 0);
 	    }
 	    if(parms->tomo.ahst_idealngs!=1 && parms->gpu.wfs && !NO_WFS){
 		//task for each wfs
-		QUEUE_THREAD(group, simu->wfs_grad_pre, 0);
+		QUEUE_THREAD(&group, simu->wfs_grad_pre, 0);
 	    }
 	    if(!NO_RECON){
 		//don't put this first. It has cpu overhead in computing gradol
-		QUEUE(group, reconstruct, simu, 1, 0);
+		QUEUE(&group, (thread_fun)reconstruct, simu, 1, 0);
 	    }
 	    if(!NO_EVL){
 		if(parms->gpu.evl){
 		    //wait for GPU tasks to be queued before calling sync
 		    WAIT(group);
 		}
-		QUEUE(group, perfevl, simu, 1, 0);
+		QUEUE(&group, (thread_fun)perfevl, simu, 1, 0);
 	    }
 	    if(!NO_WFS){
 		if(parms->tomo.ahst_idealngs==1 || (parms->gpu.wfs && !parms->gpu.evl)){
@@ -172,7 +172,7 @@ void maos_isim(int isim){
 		    //otherwise, wait for GPU tasks to be queued before calling sync
 		    WAIT(group);
 		}
-		QUEUE(group, wfsgrad, simu, 1, 0);
+		QUEUE(&group, (thread_fun)wfsgrad, simu, 1, 0);
 	    }
 	    if(!NO_RECON){
 		//wait for all tasks to finish before modifying dmreal

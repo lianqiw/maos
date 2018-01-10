@@ -345,7 +345,6 @@ void update_limit(drawdata_t *drawdata){
     if(drawdata->dtime<1){
 	gain=drawdata->dtime;
     }
-
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
     for(int ipts=0; ipts<drawdata->npts; ipts++){
 	const double *ptsx=drawdata->pts[ipts], *ptsy=0;
@@ -368,24 +367,27 @@ void update_limit(drawdata_t *drawdata){
 	    }
 	    double y_cumu=0,y=0;
 		  
+	    int first=1;
 	    if(drawdata->cumuquad){
 		for(int ips=ips0; ips<ptsnx; ips++){
 		    const double tmp=ptsy[ips];
-		    if(tmp!=0){
+		    if(tmp!=0 || first){
 			y_cumu+=tmp*tmp;
 			y=sqrt(y_cumu/(ips-ips0+1));
 			if(y>ymax) ymax=y;
 			if(y<ymin) ymin=y;
+			first=0;
 		    }
 		}
 	    }else{
 		for(int ips=ips0; ips<ptsnx; ips++){
 		    const double tmp=ptsy[ips];
-		    if(tmp!=0){
+		    if(tmp!=0 || first){
 			y_cumu+=tmp;
 			y=y_cumu/(ips-ips0+1);
 			if(y>ymax) ymax=y;
 			if(y<ymin) ymin=y;
+			first=0;
 		    }
 		}
 	    } 
@@ -397,6 +399,8 @@ void update_limit(drawdata_t *drawdata){
 	if(ymin<ymin0) ymin0=ymin;
 	if(ymax>ymax0) ymax0=ymax;
     }
+    if(isinf(ymin0)) ymin0=0;
+    if(isinf(ymax0)) ymax0=0;
     //info2("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
     int xlog=drawdata->xylog[0]=='n'?0:1;
     int ylog=drawdata->xylog[1]=='n'?0:1;

@@ -207,12 +207,12 @@ static gboolean update_pixmap_timer(updatetimer_t * timer){
 }
 static void delayed_update_pixmap(drawdata_t *drawdata){
     drawdata->pending++;
-    updatetimer_t *tmp=mycalloc(1,updatetimer_t);
-    tmp->pending=drawdata->pending;
-    tmp->drawdata=drawdata;
     if(!drawdata->pixmap){
 	update_pixmap(drawdata);
     }else{
+	updatetimer_t *tmp=mycalloc(1,updatetimer_t);
+	tmp->pending=drawdata->pending;
+	tmp->drawdata=drawdata;
 	g_timeout_add(100, (GSourceFunc)update_pixmap_timer, tmp);
     }
 }
