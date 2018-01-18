@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -28,7 +28,8 @@ const char *dirskysim=NULL;
 /** begin variable overridable by environment variable MAOS_ .  These are for
  debugging maos itself. Not pertinent to a particular simulation*/
 double TOMOSCALE=1e-12;
-int PARALLEL=1;
+int PARALLEL=1; //DO wfs, evl, and recon in parallel
+int KEEP_MEM=0; //keep allocated memory during steps.
 int NO_WFS=0;
 int NO_EVL=0;
 int NO_RECON=0;
@@ -39,6 +40,7 @@ static void read_env(){
     READ_ENV_INT(NO_WFS,0,1);
     READ_ENV_INT(NO_EVL,0,1);
     READ_ENV_INT(NO_RECON,0,1);
+    READ_ENV_INT(KEEP_MEM,0,1);
     info2("TOMOSCALE=%g\n", TOMOSCALE);
 }
 void maos_setup(const PARMS_T *parms){

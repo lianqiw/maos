@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -70,7 +70,8 @@ struct thread_t{
     long ithread;/*which thread this is. */
     long nthread;/*max number of threads*/
     thread_wrapfun fun;/*the function, takes data as argument */
-    void *data;/*the data to pass to the function. */
+    void *data;/*shared data between threads*/
+    void *thread_data; /*private data for each thread*/
 };
 long thread_id(void);
 /*

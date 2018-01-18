@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -47,6 +47,7 @@
 #else
 #define TIM(A)
 #endif
+extern int KEEP_MEM;
 static double *opdzlim=NULL;
 static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
@@ -135,6 +136,12 @@ void perfevl_ievl(thread_t *info){
     const int imoao=parms->evl.moao;
     const double dt=parms->sim.dt;
     dmat *iopdevl=0;
+    if(KEEP_MEM && 0){
+	if(!info->thread_data){
+	    info->thread_data=dnew(aper->locs->nloc,1);
+	}
+	iopdevl=(dmat*)info->thread_data;
+    }
     for(int ievl=info->start; ievl<info->end; ievl++){
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov)
 	    && isim>=parms->evl.psfisim && parms->evl.psf->p[ievl];
@@ -332,7 +339,9 @@ void perfevl_ievl(thread_t *info){
 	      ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4);
 #endif
     }
-    dfree(iopdevl);
+    if(!KEEP_MEM){
+	dfree(iopdevl);
+    }
 }
 /**
    Evaluation field averaged performance.

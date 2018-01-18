@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -7,7 +7,7 @@
   terms of the GNU General Public License as published by the Free Software
   Foundation, either version 3 of the License, or (at your option) any later
   version.
-  
+
   MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.

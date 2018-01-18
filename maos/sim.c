@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2016 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -38,6 +38,7 @@
 #include <numa.h>
 #endif
 extern int PARALLEL;
+extern int KEEP_MEM;
 extern int draw_single;
 static double tk_0;
 static double tk_1;
