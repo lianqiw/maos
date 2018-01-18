@@ -141,22 +141,6 @@ void maos_setup(const PARMS_T *parms){
     //free_recon_unused(parms, recon);
     toc2("Presimulation");
 }
-/**
-   This is the routine that calls various functions to do the simulation. maos()
-   calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
-   (of type APER_T), wfs (of type POWFS_T), and reconstructor (of type RECON_T)
-   structs and then hands control to sim(), which then stars the simulation.
-   \callgraph */
-void maos(const PARMS_T *parms){
-    info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
-    maos_setup(parms);
-    if(parms->sim.end>parms->sim.start){
-	info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),HOST);
-	maos_sim();
-    }
-    maos_reset();
-    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
-}
 
 void maos_reset(){
     /*Free all allocated memory in setup_* functions. So that we

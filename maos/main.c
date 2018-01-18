@@ -139,32 +139,33 @@ int main(int argc, const char *argv[]){
     if(arg->confcmd){
 	remove(arg->confcmd); free(arg->confcmd); arg->confcmd=0;
     }
-    info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
-    /*register signal handler */
-    register_signal_handler(maos_signal_handler);
+    if(parms->sim.nseed>0){
+	/*register signal handler */
+	register_signal_handler(maos_signal_handler);
  
-    if(!arg->force){
-	/*
-	  Ask job scheduler for permission to proceed. If no CPUs are
-	  available, will block until ones are available.
-	  if arg->force==1, will run immediately.
-	*/
-	info2("Waiting start signal from the scheduler ...\n");
-	int count=0;
-	while(scheduler_wait()&& count<60){
-	    /*Failed to wait. fall back to own checking.*/
-	    warning_time("failed to get reply from scheduler. retry\n");
-	    sleep(10);
-	    count++;
-	    scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
+	if(!arg->force){
+	    /*
+	      Ask job scheduler for permission to proceed. If no CPUs are
+	      available, will block until ones are available.
+	      if arg->force==1, will run immediately.
+	    */
+	    info2("Waiting start signal from the scheduler ...\n");
+	    int count=0;
+	    while(scheduler_wait()&& count<60){
+		/*Failed to wait. fall back to own checking.*/
+		warning_time("failed to get reply from scheduler. retry\n");
+		sleep(10);
+		count++;
+		scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
+	    }
+	    if(count>=60){
+		warning_time("fall back to own checker\n");
+		wait_cpu(NTHREAD);
+	    }
 	}
-	if(count>=60){
-	    warning_time("fall back to own checker\n");
-	    wait_cpu(NTHREAD);
-	}
+	thread_new((thread_fun)scheduler_listen, (void*)maos_daemon);
+	setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     }
-    thread_new((thread_fun)scheduler_listen, (void*)maos_daemon);
-    setup_parms_gpu(parms, arg->gpus, arg->ngpu);
     free(scmd);
     free(arg->dirout);
     free(arg->gpus);
@@ -172,8 +173,17 @@ int main(int argc, const char *argv[]){
     /* do not use prallel single in maos(). It causes blas to run single threaded
      * during preparation. Selective enable parallel for certain setup functions
      * that doesn't use blas*/
-    maos(parms);
-    rename_file(0);
+    if(parms->sim.nseed>0){
+	info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
+	maos_setup(parms);
+	if(parms->sim.end>parms->sim.start){
+	    info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),HOST);
+	    maos_sim();
+	}
+	rename_file(0);
+    }
+    maos_reset();
+    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
     scheduler_finish(0);
     return 0;
 }

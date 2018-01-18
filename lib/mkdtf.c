@@ -443,7 +443,7 @@ void etf_free_do(ETF_T *etfs, int nwvl){
    is function of coordinate. This routine smoothes the profile on new
    coordinate with spacing of dxnew.
  */
-dmat* smooth(dmat *prof, double dxnew){
+dmat* smooth(const dmat *prof, double dxnew){
     const long nxin=prof->nx;
     const double x0in=prof->p[0];
     const double dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
@@ -460,9 +460,9 @@ dmat* smooth(dmat *prof, double dxnew){
 #pragma omp parallel for default(shared)
 	for(long icol=1; icol<prof->ny; icol++){
 	    /*input profile */
-	    double *pin=prof->p + nxin * icol;
+	    const double *pin=PCOL(prof,icol);
 	    /*output profile */
-	    double *pout=out->p + nxnew*icol;
+	    double *pout=PCOL(out, icol);
 	    /*preserve sum of input profile */
 	    double Nasum=dblsum(pin, nxin);
 	    dspmulvec(pout, ht, pin, 'n', 1);

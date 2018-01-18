@@ -1609,6 +1609,7 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcellfree(intstat->mtche);
 
 	dfree(intstat->i0sum);
+	dfree(intstat->i0sumsum);
 	free(intstat);
 	powfs[ipowfs].intstat=NULL;
     }

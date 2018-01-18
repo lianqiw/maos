@@ -53,6 +53,7 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
 	powfscfg->llt=NULL;
     }
     lfree(powfscfg->wfs);
+    lfree(powfscfg->wfsr);
     lfree(powfscfg->wfsind);
     free(powfscfg->fnllt);
     free(powfscfg->piinfile);
@@ -2447,13 +2448,11 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	if(jseed!=parms->sim.nseed){
 	    parms->sim.nseed=jseed;
 	}
-	if(parms->sim.nseed<1){
-	    scheduler_finish(0);
-	    info2("There are no seed to run. Use -O to override. Exit\n");
-	    sync(); exit(0);
-	}
     }
-    if(parms->sim.end>parms->sim.start){
+    if(parms->sim.nseed<1){
+	scheduler_finish(0);
+	info2("There are no seed to run. Use -O to override. Exit\n");
+    }else if(parms->sim.end>parms->sim.start){
 	info2("There are %d valid simulation seeds: ",parms->sim.nseed);
 	for(int i=0; i<parms->sim.nseed; i++){
 	    info2(" %ld", parms->sim.seeds->p[i]);
@@ -2835,18 +2834,20 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     setup_parms_postproc_dm(parms);
     setup_parms_postproc_recon(parms);
     setup_parms_postproc_misc(parms, override);
-    print_parms(parms);
-
-    if(!disable_save){
-	//Make symlink after simulation runs.
-	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
-	remove("maos_recent.conf");
-	mysymlink(fn, "maos_recent.conf");
+    if(parms->sim.nseed>0){
+	print_parms(parms);    
+	if(!disable_save){
+	    //Make symlink after simulation runs.
+	    char fn[PATH_MAX];
+	    snprintf(fn, PATH_MAX, "maos_%s_%ld.conf", HOST, (long)getpid());
+	    remove("maos_recent.conf");
+	    mysymlink(fn, "maos_recent.conf");
 	
-	remove("run_recent.log");
-	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-	mysymlink(fn, "run_recent.log");
+	    remove("run_recent.log");
+	    snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	    mysymlink(fn, "run_recent.log");
+	}
+	info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
     }
     return parms;
 }

@@ -249,13 +249,15 @@ INLINE void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){
 }
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 typedef struct stream_t{
+    int ref;//1: we don't own these.
     cudaStream_t stream;
     cublasHandle_t handle;
     cusparseHandle_t sphandle;
-    stream_t(){
+    stream_t():ref(0){
 	init();
     }
     void init(){
+	ref=0;
 	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
 	HANDLE_NEW(handle, stream);
 	SPHANDLE_NEW(sphandle, stream);
@@ -264,9 +266,11 @@ typedef struct stream_t{
 	deinit();
     }
     void deinit(){
-	SPHANDLE_DONE(sphandle);
-	HANDLE_DONE(handle);
-	STREAM_DONE(stream);
+	if(!ref){
+	    SPHANDLE_DONE(sphandle);
+	    HANDLE_DONE(handle);
+	    STREAM_DONE(stream);
+	}
     }
     void reset(){//to place on correct gpu.
 	deinit();
@@ -288,9 +292,17 @@ typedef struct stream_t{
 	//assert(this);
 	return sphandle;
     }
+    stream_t & operator=(const stream_t &in){
+	deinit();
+	ref=1;
+	stream=in.stream;
+	handle=in.handle;
+	sphandle=in.sphandle;
+	return *this;
+    }
 private:
     stream_t(const stream_t &);
-    stream_t & operator=(const stream_t &);
+
 }stream_t;
 typedef struct event_t{
     cudaEvent_t event;

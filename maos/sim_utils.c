@@ -1657,7 +1657,7 @@ void print_progress(const SIM_T *simu){
 	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
 	      mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
 	
-	info2("Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
+	info2("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
 	      status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
     }else{    
 	info2("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",

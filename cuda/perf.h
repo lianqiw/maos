@@ -26,8 +26,7 @@ struct cuperf_t{
     static cuarray<int> nembed;
     static cuarray<int> psfsize;
     static cuarray<Real> wvls;
-    static cuarray<cudaStream_t>   stream;
-    static cuarray<cublasHandle_t> handle;
+    static cuarray<stream_t>   stream;
     static cuarray<cufftHandle>    plan;
     static curcell surf;
     static curcell opd;

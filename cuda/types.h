@@ -204,7 +204,7 @@ public:
 	return P()==in.P();
     }
     void p2pm(cudaStream_t stream=(cudaStream_t)-1){
-	if(nref && nref[0]>1){
+	if(!nref || nref[0]>1){
 	    error("cannot act on referenced array\n");
 	}
 	if(!p) error("p must not be null\n");

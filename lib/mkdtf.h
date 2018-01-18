@@ -81,5 +81,5 @@ void dtf_free_do(DTF_T *dtfs, int nwvl);
 void etf_free_do(ETF_T *etfs, int nwvl);
 #define dtf_free(dtfs, nwvl) ({dtf_free_do(dtfs, nwvl); dtfs=0;})
 #define etf_free(etfs, nwvl) ({etf_free_do(etfs, nwvl); etfs=0;})
-dmat* smooth(dmat *profile, double dxnew);
+dmat* smooth(const dmat *profile, double dxnew);
 #endif

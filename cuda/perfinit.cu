@@ -25,8 +25,7 @@
 cuarray<int> cuperf_t::nembed;
 cuarray<int> cuperf_t::psfsize;
 cuarray<Real> cuperf_t::wvls;
-cuarray<cudaStream_t> cuperf_t::stream;
-cuarray<cublasHandle_t> cuperf_t::handle;
+cuarray<stream_t> cuperf_t::stream;
 cuarray<cufftHandle> cuperf_t::plan;
 int cuperf_t::nevl;
 curcell cuperf_t::surf;
@@ -116,8 +115,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	    cudata->perf.locs_dm[ievl][idm]=culoc_t(loc_dm);
 	}
     }
-    cuperf_t::stream=cuarray<cudaStream_t>(nevl, 1);
-    cuperf_t::handle=cuarray<cublasHandle_t>(nevl, 1);
+    cuperf_t::stream=cuarray<stream_t>(nevl, 1);
     if(parms->evl.psfmean || parms->evl.psfhist){
 	cuperf_t::plan  = cuarray<cufftHandle>(nwvl*nevl,1);
     }
@@ -126,8 +124,6 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	//STREAM_NEW(cuperf_t::stream[ievl]);
 	//Use stream created per GPU in order to share resource within GPU between different evl dir.
 	cuperf_t::stream[ievl]=cudata->perf_stream;
-	cublasCreate(&cuperf_t::handle[ievl]);
-	cublasSetStream(cuperf_t::handle[ievl], cuperf_t::stream[ievl]);
 	if(parms->evl.psfmean || parms->evl.psfhist){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		DO(cufftPlan2d(&cuperf_t::plan[iwvl+nwvl*ievl],cuperf_t::nembed[iwvl],
