@@ -91,6 +91,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny,
     for(long ix=0; ix<nx*ny; ix++){
 	mmap_header_rw(&map, &header0, M_T, nnx[ix], nny[ix], header2?header2[ix]:NULL);
 	out->p[ix]=X(new_data)(nnx[ix], nny[ix], (T*)map);
+	memset(map, 0, nnx[ix]*nny[ix]*sizeof(T));//temporary
 	map+=nnx[ix]*nny[ix]*sizeof(T);
 	if(out->p[ix]) {
 	    out->p[ix]->mmap=mmap_ref(out->mmap);/*reference */

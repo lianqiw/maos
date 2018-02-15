@@ -136,7 +136,7 @@ void perfevl_ievl(thread_t *info){
     const int imoao=parms->evl.moao;
     const double dt=parms->sim.dt;
     dmat *iopdevl=0;
-    if(KEEP_MEM && 0){
+    if(KEEP_MEM){
 	if(!info->thread_data){
 	    info->thread_data=dnew(aper->locs->nloc,1);
 	}

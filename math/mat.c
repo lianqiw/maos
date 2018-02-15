@@ -28,14 +28,14 @@
    fields are properly initialized. If p is NULL, memory is allocated. If ref is
    true, p is treated as external resource and is not reference counted.
 */
-INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
+INLINE X(mat) *X(new_do)(long nx, long ny, T *p, int foreign){
     X(mat) *out=mycalloc(1,X(mat));
     out->id=M_T;
     out->nx=nx;
     out->ny=ny;
-    if(ref){/*the data does not belong to us. */
+    if(foreign){/*the data does not belong to us. */
 	if(!p){
-	    error("When ref is 1, p must not be NULL.\n");
+	    error("When foreign is 1, p must not be NULL.\n");
 	}
 	out->p=p;
     }else{

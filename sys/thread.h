@@ -224,7 +224,9 @@ int lockadd(int *src, int step);
 */
 INLINE void thread_new(thread_fun fun, void* arg){
     pthread_t temp;
-    pthread_create(&temp, NULL, fun, arg);
+    pthread_attr_t stat;
+    pthread_attr_setdetachstate(&stat, PTHREAD_CREATE_DETACHED);
+    pthread_create(&temp, &stat, fun, arg);
 }
 void thread_block_signal();
 
