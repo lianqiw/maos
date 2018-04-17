@@ -92,9 +92,9 @@ spchol* chol_factorize(dsp *A_in){
     cholmod_sparse *A=dsp2chol(A_in);
     out->c->status=CHOLMOD_OK;
 #if CHOL_SIMPLE
-	out->c->final_super=0;/*we want a simplicity result. */
-	out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
-	out->c->final_asis=0; /*do the conversion as shown above. */
+    out->c->final_super=0;/*we want a simplicity result. */
+    out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
+    out->c->final_asis=0; /*do the conversion as shown above. */
 #endif    
     /*Try AMD ordering only: SLOW */
     /*
@@ -103,9 +103,12 @@ spchol* chol_factorize(dsp *A_in){
       out->c.postorder=1;
       out->c.supernodal=CHOLMOD_SIMPLICIAL; force simplicial only. 
     */
-    
+    int success=0;
     out->L=MOD(analyze)(A,out->c);
-    if(!out->L) {
+    if(out->L){
+	success=MOD(factorize)(A,out->L, out->c);
+    }
+    if(!success) {
 	info("\nCholmod error:");
 	switch(out->c->status){
 	case CHOLMOD_OK:
@@ -128,7 +131,6 @@ spchol* chol_factorize(dsp *A_in){
 	warning("Common->status=%d\n", out->c->status);
 	error("Analyze failed\n");
     }
-    MOD(factorize)(A,out->L, out->c);
 #if CHOLMOD_SIMPLE
     if(!out->c->final_asis){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */

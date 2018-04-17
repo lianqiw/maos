@@ -2305,7 +2305,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->tomo.alg==1 && parms->tomo.maxit==0){
 	int factor;
 	if(parms->recon.mvm){
-	    factor=parms->load.mvmi?1:10;
+	    factor=parms->load.mvmi?1:25;
 	}else{
 	    factor=parms->recon.warm_restart?1:10;
 	}

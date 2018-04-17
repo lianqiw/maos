@@ -190,7 +190,7 @@ static void servo_calc_free(SERVO_CALC_T *st){
     dfree(st->nu);
     dfree(st->psd);
 }
-static int servo_isstable(dmat *nu, cmat *Hol){
+static int servo_isstable(const dmat *nu, const cmat *Hol){
     double fp, fg;
     double pmargin=phase_at_gain(&fp, nu, Hol, 1);
     double gmargin=gain_at_phase(&fg, nu, Hol, -M_PI);
@@ -221,7 +221,7 @@ static double servo_calc_max_gain(SERVO_CALC_T *st, double pmargin){
    Calculate total error. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
 */
 static double servo_calc_do(SERVO_CALC_T *st, double g0){
-    dmat *nu=st->nu;
+    const dmat *nu=st->nu;
     if(!st->Hol){
 	st->Hol=cnew(nu->nx,1);
     }
@@ -230,8 +230,8 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	st->g=g0;
     }
     cadd(&st->Hol, 0, st->Hsys, st->g);
-    double g2=1;/*additional g to multiply. !=1 if g0 is nonzero and type is 2.*/
     if(st->type==2){//type II controller
+	double g2=1;/*additional g to multiply. !=1 if g0 is nonzero and type is 2.*/
 	ccwm(st->Hol, st->Hint);/*multiply the second integrator*/
         if(fabs(g0)>EPS){/*figure out a, T from new g0*/
 	    double margin, fcross;
@@ -262,7 +262,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
     }
     double res_sig=0;
     double sum_n=0, sum_1=0;
-    dmat *psd=st->psd;
+    const dmat *psd=st->psd;
     for(int i=0; i<nu->nx; i++){
 	dcomplex Hol=st->Hol->p[i];
 	dcomplex Hrej=1./(1.+Hol);
@@ -325,7 +325,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
-    SERVO_CALC_T st; memset(&st, 0, sizeof(SERVO_CALC_T));
+    SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(SERVO_CALC_T));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     st.pmargin=pmargin;
@@ -399,7 +399,7 @@ dmat *servo_rej2ol(const dmat *psdcl, double dt, long dtrat, double gain, double
    Tested OK: 2010-06-11
 */
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type){
-    SERVO_CALC_T st; memset(&st, 0, sizeof(st));
+    SERVO_CALC_T st={0}; //memset(&st, 0, sizeof(st));
     servo_calc_init(&st, psdin, dt, dtrat);
     st.type=servo_type;
     switch(servo_type){

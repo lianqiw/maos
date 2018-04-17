@@ -785,3 +785,36 @@ dmat *kalman_test(kalman_t *kalman, dmat *input){
     dcellfree(inic);
     return mres;
 }
+/**
+   Save kalman_t to file
+*/
+void kalman_write(kalman_t *kalman, const char *format, ...){
+    format2fn;
+    file_t *fp=zfopen(fn, "wb");
+    if(kalman){
+	header_t header={MCC_ANY, 12, 1, "type=struct"};
+	write_header(&header, fp);
+	char *tmp;
+#define WRITE_KEY(fp, str, key)			\
+	tmp=str->key->header;			\
+	str->key->header=#key;			\
+	writebindata(fp, str->key);		\
+	str->key->header=tmp;
+
+	WRITE_KEY(fp, kalman, Ad);
+	WRITE_KEY(fp, kalman, Cd);
+	WRITE_KEY(fp, kalman, AdM);
+	WRITE_KEY(fp, kalman, FdM);
+	
+	WRITE_KEY(fp, kalman, Qn);
+	WRITE_KEY(fp, kalman, M);
+	WRITE_KEY(fp, kalman, P);
+	WRITE_KEY(fp, kalman, dtrat);
+	
+	WRITE_KEY(fp, kalman, Gwfs);
+	WRITE_KEY(fp, kalman, Rwfs);
+	WRITE_KEY(fp, kalman, Rn);
+	writearr(fp, 0, sizeof(double), M_DBL, "dthi", &kalman->dthi, 1, 1);
+    }
+    zfclose(fp);
+}

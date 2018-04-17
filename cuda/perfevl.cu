@@ -477,7 +477,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	if(parms->evl.psfngsr->p[ievl]==0){
 	    continue;
 	}
-	warning("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
+	warning_once("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
 	gpu_set(cudata_t::evlgpu[ievl]);
 	curmat &iopdevl=cuperf_t::opd[ievl];
 	stream_t &stream=cuperf_t::stream[ievl];

@@ -273,9 +273,10 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     dmat* rnefs=parms->skyc.rnefs;
  
     for(int istar=0; istar<nstar; istar++){
-	if(!star[istar].idtrat){
-	    star[istar].idtrat=dnew(npowfs, 1);
+	if(!star[istar].minidtrat){
+	    star[istar].minidtrat=dnew(npowfs, 1);
 	}
+	dset(star[istar].minidtrat, -1);
 	double radius=sqrt(pow(star[istar].thetax,2)+pow(star[istar].thetay,2));
 	int igg=round(radius*206265/parms->maos.ngsgrid);
 	//info("radius=%g as, igg=%d\n", radius*206265, igg);
@@ -353,24 +354,26 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 		    writebin(pistat->mtche[idtrat], "%s/star%d_ipowfs%d_mtche_dtrat%d",
 			       dirsetup,istar,ipowfs,dtrat);
 		}
-#if 1
 		double nea=sqrt(dsumsq(pistat->sanea->p[idtrat])/(nsa*2));
-#else
-		double nea=dmax(pistat->sanea->p[idtrat]);
-#endif
 		double snr=sigma_theta/nea;
 		pistat->snr->p[idtrat]=snr;
-		if(parms->skyc.verbose) info2("dtrat=%3d, snr=%4.1f, nea=%5.1fmas\n",
-					      (int)parms->skyc.dtrats->p[idtrat], snr, nea*206265000);
-		if(snr>parms->skyc.snrmin->p[parms->skyc.snrmin->nx==1?0:idtrat]){
-		    star[istar].idtrat->p[ipowfs]=idtrat;
+		if(snr>=parms->skyc.snrmin->p[parms->skyc.snrmin->nx==1?0:idtrat]){
+		    star[istar].minidtrat->p[ipowfs]=idtrat;
 		}
 	    }//for idtrat
-	    if(parms->skyc.dbg){
-		info2("star %2d optim: powfs %1d: dtrat=%3d\n", istar, ipowfs,
-		      (int)parms->skyc.dtrats->p[(int)star[istar].idtrat->p[ipowfs]]);
-		writebin(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
-			   dirsetup,istar,ipowfs);
+	    if(star[istar].minidtrat->p[ipowfs]==-1){
+		star[istar].use[ipowfs]=-1;
+		if(parms->skyc.dbg){
+		    info2("star %2d, powfs %1d: skipped\n", istar, ipowfs);
+		}
+	    }else{
+		if(parms->skyc.dbg){
+		    int idtrat=(int)star[istar].minidtrat->p[ipowfs];
+		    info2("star %2d, powfs %1d: min dtrat=%3d, snr=%4.1f\n", istar, ipowfs,
+			  (int)parms->skyc.dtrats->p[idtrat], pistat->snr->p[idtrat]);
+		    //writebin(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
+		    //dirsetup,istar,ipowfs);
+		}
 	    }/*idtrat */
 	    dcellfree(i0s);
 	    dcellfree(gxs);
@@ -735,7 +738,7 @@ void free_istar(STAR_S *star, const PARMS_S *parms){
     dcellfree(star->siglev);
     dfree(star->siglevtot);
     dfree(star->bkgrnd);
-    dfree(star->idtrat);
+    dfree(star->minidtrat);
 }
 /**
    Free array of STAR_S.

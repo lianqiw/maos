@@ -46,5 +46,6 @@ dmat *kalman_test(kalman_t *kalman, dmat *input);
 void kalman_init(kalman_t *kalman);
 void kalman_update(kalman_t *kalman, dmat *meas, int ik);
 void kalman_output(kalman_t *kalman, dmat **out, double alpha, double beta);
+void kalman_write(kalman_t *kalman, const char *format, ...) CHECK_ARG(2);
 void sde_psd(dmat **psd, const dmat *f, const double *coeff, int ncoeff, int nmod);
 #endif

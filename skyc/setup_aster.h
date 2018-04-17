@@ -20,7 +20,7 @@
 #define SKYC_SETUP_ASTER_H
 #include "parms.h"
 #include "types.h"
-ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms);
+ASTER_S *setup_aster_comb(int *naster, const STAR_S *star, int nstar, const PARMS_S *parms);
 ASTER_S *setup_aster_sample(void);
 void setup_aster(ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms, SIM_S *simu);
 void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms);

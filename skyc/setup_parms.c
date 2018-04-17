@@ -65,6 +65,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_strarr_nmax(&parms->skyc.fnpsf1, parms->skyc.npowfs, "skyc.fnpsf1");
     READ_INT(skyc.limitnstep);
     READ_DBL(skyc.rne);
+    READ_DBL(skyc.excess);
     READ_DBL(skyc.imperrnm);
     READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
@@ -230,12 +231,16 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.servo<0 && parms->skyc.multirate){
 	dfree(parms->skyc.dtrats);
 	parms->skyc.dtrats=parms->skyc.dtrats_mr;
+	parms->skyc.dtrats_mr=0;
     }else{
 	dfree(parms->skyc.dtrats_mr);
     }
     parms->skyc.ndtrat=parms->skyc.dtrats->nx*parms->skyc.dtrats->ny;
     if(parms->skyc.addws==-1){
-	parms->skyc.addws=0;
+	parms->skyc.addws=1;
+    }
+    if(parms->skyc.snrmin->nx > 1 && parms->skyc.snrmin->nx != parms->skyc.ndtrat){
+	error("snrmin size does not match dtrats\n");
     }
     switch(parms->skyc.servo){
     case -1://LQG
@@ -319,6 +324,10 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	}
     }
     parms->skyc.fss=mycalloc(parms->skyc.ndtrat,double);
+    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+	int dtrat=parms->skyc.dtrats->p[idtrat];
+	parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
+    }
     parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
     if(parms->skyc.rne<0){
 	/* Uses the new noise model based on Roger's spread sheet and document
@@ -329,10 +338,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    const double pixeltime=6.04;//time to read a pixel in us
 	    const double linetime=2;//time to read a line in us
 	    const double frametime=3;//time to read a frame in us
-	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats->p[idtrat];
-		parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
-	    }
+	  
 	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		int N=parms->skyc.pixpsa[ipowfs];
 		int Nb=parms->skyc.pixguard[ipowfs];
@@ -363,7 +369,6 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats->p[idtrat];
 		double fs=1./(parms->maos.dt*dtrat);
-		parms->skyc.fss[idtrat]=fs;
 		info2("%5.1f Hz: ", fs);
 		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		    int N=parms->skyc.pixpsa[ipowfs];
@@ -477,6 +482,7 @@ void free_parms(PARMS_S *parms){
     dfree(parms->skyc.psd_tt);
     dfree(parms->skyc.psd_ws);
     dfree(parms->skyc.psd_ps);
+    dfree(parms->skyc.dtrats);
     dfree(parms->maos.mcc);
     dfree(parms->maos.mcc_oa);
     dfree(parms->maos.mcc_tt);

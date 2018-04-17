@@ -119,6 +119,7 @@ typedef struct SKYC_S{
     double *pixoffy; /**<pixel offset along y in units of pixel*/
     double keepout;  /**<NGS probe keep out range in arcsec.*/
     double rne;      /**<detector read out noise in electron. -1 to use the formula.*/
+    double excess;   /**<detector excess photon noise factor*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
     double *telthruput;/**<Telescope throughput at each wvl*/
     double *qe;      /**<quantum efficiency at each wvl.*/

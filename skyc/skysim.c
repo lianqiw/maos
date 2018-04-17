@@ -112,8 +112,8 @@ static void skysim_isky(SIM_S *simu){
 	    continue;
 	}
 	int naster;
-	ASTER_S *aster=setup_aster_comb(&naster, nstar, parms);
-	if(!aster || aster==0){
+	ASTER_S *aster=setup_aster_comb(&naster, star, nstar, parms);
+	if(!aster || naster==0){
 	    info2("Field %d, Aster is empty. skip\n", isky);
 	    continue;
 	}
@@ -128,14 +128,16 @@ static void skysim_isky(SIM_S *simu){
 #pragma omp task default(shared) firstprivate(iaster)
 #endif
 	{
-	    /*Parallelizing over aster gives same random stream. */
-	    seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
-	    /*Compute signal level. */
-	    setup_aster_copystar(&aster[iaster], star, parms);
-	    /*setup gradient operator. */
-	    setup_aster_g(&aster[iaster], star, parms);
-	    /*Compute the reconstructor, nea, sigman and optimize controller. */
-	    setup_aster_controller(simu, &aster[iaster], star, parms);
+	    if(parms->skyc.dbgaster<0 || iaster==parms->skyc.dbgaster){	    
+		/*Parallelizing over aster gives same random stream. */
+		seed_rand(&aster[iaster].rand, parms->skyc.seed+iaster+40);
+		/*Compute signal level. */
+		setup_aster_copystar(&aster[iaster], star, parms);
+		/*setup gradient operator. */
+		setup_aster_g(&aster[iaster], star, parms);
+		/*Compute the reconstructor, nea, sigman and optimize controller. */
+		setup_aster_controller(simu, &aster[iaster], star, parms);
+	    }
 	}
 #if _OPENMP >= 200805
 #pragma omp taskwait
@@ -162,9 +164,8 @@ static void skysim_isky(SIM_S *simu){
 #endif
 	    {
 		ASTER_S *asteri=&aster[iaster];
-		double mini;
-		dmat *pmini=NULL, *min_imres=NULL;
-		int mdtrat=0;
+		double asterMinPhy=0;//best performance of this asterism.
+		int asterMinRat=0;//dtrat at best performance.
 		asteri->nstep=nstep;
 		if(parms->skyc.dbgaster>-1){
 		    if(iaster!=parms->skyc.dbgaster){
@@ -195,60 +196,61 @@ static void skysim_isky(SIM_S *simu){
 		/*Compute the reconstructor, nea, sigman and optimize controller again. no need redo?*/
 		//setup_aster_controller(simu, asteri, parms);
 
-		mini=simu->varol;
-
+		asterMinPhy=simu->varol;
+		asteri->phyRes=dcellnew(asteri->idtratmax, 1);
+		asteri->phyMRes=dcellnew(asteri->idtratmax, 1);
 		for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++)
 #if _OPENMP >= 200805
 #pragma omp task default(shared) firstprivate(idtrat)
 #endif
 		{
+		  
+		    asteri->phyRes->p[idtrat]=skysim_sim(&asteri->phyMRes->p[idtrat],
+							 simu->mideal, simu->mideal_oa, simu->varol,
+							 asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart);
+		}
+#if _OPENMP >= 200805
+#pragma omp taskwait
+#endif
+		for(int idtrat=asteri->idtratmin; idtrat<asteri->idtratmax; idtrat++) {
 		    /*focus and windshake residual; */
 		    double resadd=0;
 		    if(!parms->skyc.addws){
 			resadd+=asteri->res_ws->p[idtrat];
 		    }
-		    dmat *ires=NULL;
-		    dmat *imres=NULL;
-		    if((ires=skysim_sim(&imres, simu->mideal, simu->mideal_oa, simu->varol,
-					asteri, powfs, parms, idtrat, noisy, parms->skyc.phystart))){
+		    dmat *ires;
+		    if((ires=asteri->phyRes->p[idtrat])){
 			if(parms->skyc.verbose){
-			    info2("%5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
+			    info2("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat], 
 				  sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
 				  sqrt(ires->p[0]+resadd)*1e9);
 			}
 			/*Add windshake contribution. */
-			double tot_1=ires->p[0] + resadd;	
-#if _OPENMP >= 200805 
-#pragma omp critical 
-#endif
-			if(tot_1 < mini){
-			    mini=tot_1;
-			    mdtrat=idtrat;
-			    dfree(pmini); pmini=dref(ires);
-			    dfree(min_imres); min_imres=dref(imres);
+			double thisVar=ires->p[0] + resadd;	
+			if(thisVar < asterMinPhy){
+			    asterMinPhy=thisVar;
+			    asterMinRat=idtrat;
 			    if(parms->skyc.verbose){
-				info2("Selected: %5.1f Hz %7.2f +%7.2f =%7.2f\n", parms->skyc.fss[idtrat], 
-				      sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
-				      sqrt(ires->p[0]+resadd)*1e9);
+				info2(" [Selected]");
 			    }
 			}
-			dfree(ires);
+			if(parms->skyc.verbose){
+			    info2("\n");
+			}
 		    }
-		    dfree(imres);
 		}
-#if _OPENMP >= 200805
-#pragma omp taskwait
-#endif
 #if _OPENMP >= 200805 
 #pragma omp critical 
 #endif	
-		if(mini<skymini){
+		if(asterMinPhy<skymini){
 		    selaster=iaster;
-		    skymini=mini;
+		    seldtrat=asterMinRat;
+		    skymini=asterMinPhy;
+		    dmat *pmini=asteri->phyRes->p[asterMinRat];
 		    /*Field Averaged Performance. */
 		    IND(pres,1,isky)=pmini->p[0];/*ATM NGS Mode error */
 		    IND(pres,2,isky)=pmini->p[1];/*ATM Tip/tilt Error. */
-		    IND(pres,3,isky)=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
+		    IND(pres,3,isky)=parms->skyc.addws?0:asteri->res_ws->p[asterMinRat];/*Residual wind shake TT*/
 		    IND(pres,4,isky)=0;/*always zero*/
 		    IND(pres,0,isky)=IND(pres,1,isky)+IND(pres,3,isky)+IND(pres,4,isky);/*Total */
 		    /*On axis performance. */
@@ -257,16 +259,14 @@ static void skysim_isky(SIM_S *simu){
 		    IND(pres_oa,3,isky)=IND(pres,3,isky);
 		    IND(pres_oa,4,isky)=IND(pres,4,isky);
 		    IND(pres_oa,0,isky)=IND(pres_oa,1,isky)+IND(pres_oa,3,isky)+IND(pres_oa,4,isky);
-		    seldtrat = mdtrat;
+
 		    if(parms->skyc.verbose){
 			info2("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n", 
-			      simu->fss->p[isky],
+			      parms->skyc.fss[seldtrat],
 			      sqrt(IND(pres,0,isky))*1e9, sqrt(IND(pres,1,isky))*1e9, sqrt(IND(pres,2,isky))*1e9);
 		    }
-		    dcp(&simu->mres->p[isky], min_imres);
+		    dcp(&simu->mres->p[isky], asteri->phyMRes->p[asterMinRat]);
 		}
-		dfree(pmini);
-		dfree(min_imres);
 	      skip1:;
 	    }/*iaster */
 #if _OPENMP >= 200805
@@ -289,9 +289,11 @@ static void skysim_isky(SIM_S *simu){
 		IND(psel,iwvl+2,iwfs)=aster[selaster].wfs[iwfs].mags->p[iwvl];
 	    }
 	}
-	if(parms->skyc.servo>0 && seldtrat!=-1){
-	    dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
+	if(seldtrat!=-1){
 	    simu->fss->p[isky]=parms->skyc.fss[seldtrat];
+	    if(parms->skyc.servo>0){
+		dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
+	    }
 	}
 	if(parms->skyc.save){
 	    skysim_save(simu, aster, PCOL(pres,isky), selaster, seldtrat, isky);
@@ -343,6 +345,11 @@ static void skysim_read_mideal(SIM_S *simu){
     dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
     simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
     dcellfree(midealp);
+    if(0){
+	double scale=0;
+	dscale(simu->mideal, scale);
+	dscale(simu->mideal_oa, scale);
+    }
 }
 /**
    Update ideal NGS modes with focus or wind shake
@@ -576,6 +583,7 @@ void skysim(const PARMS_S *parms){
 	if(parms->skyc.addws){
 	    skysim_update_mideal(simu);
 	}
+	writebin(simu->mideal, "Res%d_%d_minput", seed_maos, parms->skyc.seed);
 	int nsky=MIN(simu->stars->nx, parms->skyc.nsky);
 	simu->res   =dnew_mmap(5,nsky,NULL, "Res%d_%d", seed_maos, parms->skyc.seed);//Total, ATM NGS, ATM TT, WS, 0
 	simu->res_oa=dnew_mmap(5,nsky,NULL, "Res%d_%d_oa", seed_maos, parms->skyc.seed);//On axis version

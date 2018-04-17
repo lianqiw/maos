@@ -366,7 +366,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    dmat *bkgrnd2i=(bkgrnd2)?bkgrnd2[isa]:NULL;
 		    dmat *bkgrnd2ic=(bkgrnd2c)?bkgrnd2c[isa]:NULL;
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
-			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, parms->powfs[ipowfs].qe, rne);
+			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, parms->powfs[ipowfs].qe, rne, 1.);
 		}
 		if(save_ints){
 		    zfarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);

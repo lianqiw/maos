@@ -98,7 +98,7 @@ typedef struct STAR_S{
     dcell *ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
     dcell *goff;       /**<gradient offset for NCPA calibration.*/
     int   nstep;       /**<number of time steps available.*/
-    dmat* idtrat;       /**<prefered dtrat for minimum snr*/
+    dmat* minidtrat;   /**<prefered dtrat for minimum snr*/
 }STAR_S;
 /**
    asterism dependent data.*/
@@ -121,13 +121,15 @@ typedef struct ASTER_S{
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
     double mresest;    /**<miminum rms on servo restimation.*/
-    rand_t rand;  /**<random stream*/
+    rand_t rand;       /**<random stream*/
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
     kalman_t**kalman;
     dmat *idtrats;
     dmat *dtrats;
     long *ngs;         /**<number of gradients for each wfs*/
+    dcell *phyRes;      /**<Wavefront variance result from physical optics simulations.*/
+    dcell *phyMRes;     /**<Residual modes from physical optics simulation*/
 }ASTER_S;
 /**
    A few simulation parameters.*/

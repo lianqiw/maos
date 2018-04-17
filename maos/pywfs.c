@@ -453,7 +453,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    pywfs_fft(&ints, powfs[ipowfs].pywfs, opdi);
 	    for (int in=0; in<nn; in++){
 		dadd(&ints2, 0, ints, 100);
-		addnoise(ints2, &rstat, 0, 0, 0, 0, 0, in);
+		addnoise(ints2, &rstat, 0, 0, 0, 0, 0, in, 1);
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
 		dmm(&tmp, 0, reg, grad, "nn", 1);
 		IND(res, j, in)=tmp->p[0];

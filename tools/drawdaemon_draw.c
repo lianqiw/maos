@@ -110,54 +110,49 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
 
 static void calc_tic(double *tic1, double *dtic, int *ntic, int *order, 
 		     double xmax, double xmin, int maxtic, int logscale){
+    //when logscale is true, the xmin, xmax are already log of data.
+    //info("xmin=%g, xmax=%g, \n", xmin, xmax);
     (void)maxtic;
     double diff=xmax-xmin;
     /*first get the order of magnitude. */
     double rmax=MAX(fabs(xmin),fabs(xmax));
     double order1=floor(log10(rmax));
-    if(isnan(order1) || order1<-1000){
+    if(isnan(order1) || order1<-1000 || fabs(order1)<2){
 	order1=0;
     }
     xmax/=pow(10,order1);
     xmin/=pow(10,order1);
     diff/=pow(10,order1);
     rmax/=pow(10,order1);
-    if(fabs(diff)<1.e-4*rmax){/*very small separation */
-	*order=(int)order1;
+   
+    double spacing=1;
+    if(!logscale){
+	spacing=diff/(diff>0.1?10:5);
+	double scale=pow(10., floor(log10(spacing)));
+	spacing=round(spacing/scale)*scale;
+    }
+	
+    *tic1=myfloor(xmin/spacing)*spacing;
+    *dtic=spacing;
+    *ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
+    /*if(*ntic<2 || (*tic1<xmin && *tic1+spacing>xmax)) {
+	info("*ntic=%d\n", *ntic);
 	*ntic=2;
 	*dtic=xmax-xmin;
 	*tic1=xmin;
-    }else{
-	double spacing=1;
-	if(!logscale){
-	    spacing=diff/(diff>0.1?10:5);
-	    double scale=pow(10., floor(log10(spacing)));
-	    spacing=round(spacing/scale)*scale;
-	}
-	
-	*tic1=myfloor(xmin/spacing)*spacing;
-	*dtic=spacing;
-	*ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
-	if(*ntic<2) {
-	    *ntic=2;
-	    *dtic=0;
-	}
-	*order=(int)order1;
-    }
-    /*info2("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
-      xmin, xmax, diff, *tic1, *dtic, *ntic, order1);*/
+	}*/
+    *order=(int)order1;
     
-    if(abs(*order)<3){
-	*tic1=*tic1*pow(10,*order);
-	*dtic=*dtic*pow(10,*order);
-	*order=0;
-    }
+    //info("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
+    //xmin, xmax, diff, *tic1, *dtic, *ntic, order1);
 }
 /**
    adjust xmin, xmax properly.
 */
 void round_limit(double *xmin, double *xmax, int logscale){
     if(logscale){
+	if(*xmin<=0) *xmin=0.1;
+	if(*xmax<=0) *xmax=1;
 	*xmin=log10(*xmin);
 	*xmax=log10(*xmax);
     }
@@ -224,11 +219,12 @@ void apply_limit(drawdata_t *drawdata){
     double diffy1=drawdata->limit0[3]-drawdata->limit0[2];
     double midx1=(drawdata->limit0[1]+drawdata->limit0[0])*0.5;
     double midy1=(drawdata->limit0[3]+drawdata->limit0[2])*0.5;
-
+    if(diffx1<=0) diffx1=1;
+    if(diffy1<=0) diffy1=1;
     if(diffx1 > diffx0*1e-5 && diffy1 > diffy0 *1e-5){/*limit allowable range */
 	/*the new zoom */
-	double ratiox=diffx0/diffx1;
-	double ratioy=diffy0/diffy1;
+	double ratiox=diffx0/diffx1; if(ratiox==0) ratiox=1;
+	double ratioy=diffy0/diffy1; if(ratioy==0) ratioy=1;
 	if(drawdata->square){/*make the ratio equal. */
 	    if(fabs(ratiox-drawdata->zoomx)>1e-2 && fabs(ratioy-drawdata->zoomy)<1e-2){
 		/*only x changed */
@@ -245,6 +241,8 @@ void apply_limit(drawdata_t *drawdata){
 	drawdata->offx=-(midx1-midx0)*drawdata->widthim/(diffx1*drawdata->zoomx);
 	drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
     }
+    
+    //info("zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 }
 /*
   Definition of style: (bits count from lowest end0
@@ -401,12 +399,12 @@ void update_limit(drawdata_t *drawdata){
     }
     if(isinf(ymin0)) ymin0=0;
     if(isinf(ymax0)) ymax0=0;
-    //info2("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
+
     int xlog=drawdata->xylog[0]=='n'?0:1;
     int ylog=drawdata->xylog[1]=='n'?0:1;
-    round_limit(&xmin0, &xmax0, xlog);
-    round_limit(&ymin0, &ymax0, ylog);
-    
+    if(!xlog) round_limit(&xmin0, &xmax0, xlog);
+    if(!ylog) round_limit(&ymin0, &ymax0, ylog);
+    //info("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
     drawdata->limit[0]=xmin0;
     drawdata->limit[1]=xmax0;
     drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
@@ -481,6 +479,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	xdim=xmax-xmin;
 	ydim=ymax-ymin;
     }
+    if(xdim==0) xdim=1;
+    if(ydim==0) ydim=1;
+    //info("xdim=%g, ydim=%g\n", xdim, ydim);
     double sp_xr=20;
     if(drawdata->image){/*there is a colorbar */
 	sp_xr=SP_XR;
@@ -776,9 +777,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }/*if */
 	    /*if(!drawdata->style){
 		tic;
-		info2("stroke");
+		info("stroke");
 		cairo_stroke(cr);//stroke all together. 
-		toc2("stroke");
+		toc("stroke");
 	    }*/
 	    if(drawdata->cumu && ptsnx>0){
 		cairo_save(cr);
@@ -858,6 +859,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     double sep;
     calc_tic(&tic1,&dtic,&ntic,&order,xmax0,xmin0,maxtic_x, xlog);
     sep=xmax0-xmin0;
+    int nXticShown=0;
+
     for(int itic=0; itic<ntic; itic++){
 	double ticv=(tic1+dtic*itic); if(fabs(ticv)<1e-12) ticv=0;
 	double val=ticv*pow(10,order);
@@ -881,25 +884,38 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	if(frac>=0 && frac<=1){
 	    snprintf(ticval,80,"%g",(xlog?pow(10,ticv):ticv));
 	    pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0.5, 0);
+	    nXticShown++;
 	}
     }
+
     if(xlog || 1){//draw the minor ticks
-	cairo_save(cr);
+
 	for(int itic=-1; itic<ntic; itic++){
 	    double ticv=(tic1+dtic*itic);
 	    for(int im=1; im<10; im++){
-		double ticvm=ticv+(xlog?log10(1+im):im*dtic*0.1);
+		double ticvm=ticv+(xlog?log10(1+im):im*0.1)*dtic;
 		double valm=ticvm*pow(10,order);
 		double fracm=(valm-xmin0)/sep;
 		double xposm=xoff+widthim*fracm;
 		if((fracm)>0. && (fracm)<1){
 		    cairo_move_to(cr,xposm,yoff+heightim);
 		    cairo_line_to(cr,xposm,yoff+heightim+ticlength/2);
+		    cairo_stroke(cr);
+		    if(drawdata->grid && nXticShown<3){
+			cairo_save(cr);
+			cairo_set_dash(cr, stroke_dot, 2, 0);
+			cairo_move_to(cr, xposm, yoff);
+			cairo_line_to(cr, xposm, yoff+heightim);
+			cairo_stroke(cr);
+			cairo_restore(cr);
+		    }
+		}
+		if((fracm)>=0. && (fracm)<=1 && nXticShown<3){//shown minor tic values
+		    snprintf(ticval,80,"%g",(xlog?pow(10,ticvm):ticvm));
+		    pango_text(cr, layout, xposm, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0.5, 0);
 		}
 	    }
 	}
-	cairo_stroke(cr);
-	cairo_restore(cr);
     }
     pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2,order, 0);
     calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0,maxtic_y, ylog);
@@ -934,7 +950,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	for(int itic=-1; itic<ntic; itic++){
 	    double ticv=(tic1+dtic*itic);
 	    for(int im=(itic==0?-9:1); im<10; im++){
-		double ticvm=ticv+(ylog?log10(im+1):im*dtic*0.1);
+		double ticvm=ticv+(ylog?log10(im+1):im*0.1)*dtic;
 		double valm=ticvm*pow(10,order);
 		double fracm=(valm-ymin0)/sep;
 		double yposm=yoff+heightim*(1-fracm);

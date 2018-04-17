@@ -1184,7 +1184,7 @@ static void cog_nea(double *nea, dmat *ints, double cogthres, double cogoff, int
     nea[0]=0; nea[1]=0; nea[2]=0; nea[3]=0;
     for(int i=0; i<ntry; i++){
 	dcp(&ints2, ints);
-	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, 0, rne);
+	addnoise(ints2, rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, 0, rne, 1);
 	dcog(gny, ints2, 0, 0, cogthres, cogoff, 0);
 	double errx=gny[0]-gnf[0];
 	double erry=gny[1]-gnf[1];

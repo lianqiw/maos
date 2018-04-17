@@ -1852,9 +1852,9 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
     fprintf(fp,"maos.mffocus=%d\n", parms->sim.mffocus);
     fprintf(fp,"maos.fnrange=%s\n", parms->powfs[parms->hipowfs->p[0]].llt->fnrange);
-    fprintf(fp,"maos.indps=%d", recon->ngsmod->indps);
-    fprintf(fp,"maos.indastig=%d", recon->ngsmod->indastig);
-    fprintf(fp,"maos.indfocus=%d", recon->ngsmod->indfocus);
+    fprintf(fp,"maos.indps=%d\n", recon->ngsmod->indps);
+    fprintf(fp,"maos.indastig=%d\n", recon->ngsmod->indastig);
+    fprintf(fp,"maos.indfocus=%d\n", recon->ngsmod->indfocus);
     fclose(fp);
     for(int jpowfs=0; jpowfs<npowfs_ngs; jpowfs++){
 	int ipowfs=powfs_ngs[jpowfs];

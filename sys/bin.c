@@ -221,7 +221,7 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
 	}else{
-	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
+	    if(flock(fp->fd, LOCK_EX)){//2018-03-07: Removed LOCK_NB
 		perror("flock");
 		close(fp->fd);
 		fp->fd=-1;

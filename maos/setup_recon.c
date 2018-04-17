@@ -546,9 +546,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcellfree(GPTTDF);
 	}else{
 	    warning2("Skipping RL Low rank terms in split tomography\n");
-	    warning2("Skipping RL Low rank terms in split tomography\n");
-	    warning2("Skipping RL Low rank terms in split tomography\n");
-	    warning2("Skipping RL Low rank terms in split tomography\n");
 	}
 	dcellfree(ULo);
 	dcellfree(VLo);

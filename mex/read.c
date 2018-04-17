@@ -45,7 +45,6 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	else
 	    *header=mxCreateString("");
     }
-    free(header2.str); header2.str=NULL;
     long ntot=header2.ntot;
     int start_save=start;
     if(iscell(magic)){
@@ -84,8 +83,14 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    iscell=1;
 	    long ix;
 	    if(fp->eof) return NULL;
-	    if(ntot>1 || !skip_unicell){
-		out=mxCreateCellArray(header2.ndim, header2.dims);
+	    /*if(strstr(header2.str,"type=struct"))
+	      {
+	      out=mxCreateStructMatrix(1,1,ntot);
+	      }else*/
+	    {
+		if(ntot>1 || !skip_unicell){
+		    out=mxCreateCellArray(header2.ndim, header2.dims);
+		}
 	    }
 	    mxArray *header0=mxCreateCellMatrix(ntot+1,1);
 	    int nheader0=0;
@@ -100,10 +105,25 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		    break;
 		}
 		if(tmp && tmp!=SKIPPED){
-		    if(ntot>1 || !skip_unicell){
-			mxSetCell(out, ix, tmp);
+		    if(mxIsStruct(out)){
+			/*
+			char *key=strstr(header3.str, "struct_key=");
+			char *key2=strstr(key, ";\n");
+			char field[64];
+			if(!key){
+			    warning("key name is not found.\n");
+			    snprintf(field, 64, "key%d", ix);
+			}else{
+			    key+=11;
+			    strncpy(field, 64, key, key2-key);
+			}
+			mxSetField(out, ix, field, tmp);*/
 		    }else{
-			out=tmp;
+			if(ntot>1 || !skip_unicell){
+			    mxSetCell(out, ix, tmp);
+			}else{
+			    out=tmp;
+			}
 		    }
 		    if(header3){
 			mxSetCell(header0, ix, header3);
@@ -415,6 +435,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	out=mxCreateDoubleMatrix(0,0,mxREAL);
     }
     free(header2.dims);
+    free(header2.str); header2.str=NULL;
     return out;
 }
 static char *mx2str(const mxArray *A){

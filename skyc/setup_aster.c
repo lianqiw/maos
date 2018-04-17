@@ -69,7 +69,7 @@ static int comb_next(int *comb, long n, long k){
 /**
    Create combination of stars to form asterism. It has the option to put TTF
    always on the brightest for testing purpose.  */
-ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
+ASTER_S *setup_aster_comb(int *naster, const STAR_S *star, int nstar, const PARMS_S *parms){
     if(nstar==0){
 	*naster=0;
 	return NULL;
@@ -131,21 +131,26 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
     }
     aster=mycalloc(ncomb,ASTER_S);
     int count=0;
-    int *comb=comb_init(nwfstot);
+    int *comb=comb_init(nwfstot);//select nwfstot stars from all available stars
     do{
 	if(npowfs==1){
 	    aster[count].nwfs=nwfs[0];
 	    aster[count].wfs=mycalloc(nwfs[0], WFS_S);
 	    aster[count].iaster=count;
+	    int skip=0;
 	    for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
-		aster[count].wfs[iwfs].istar=comb[iwfs];
 		aster[count].wfs[iwfs].ipowfs=0;
+		aster[count].wfs[iwfs].istar=comb[iwfs];
+		if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
+		    skip=1;
+		}
 	    }
-	    count++;
+	    if(!skip) count++; else free(aster[count].wfs);
 	}else if(npowfs==2){
-	    int mask[nwfstot];
-	    int *comb2=comb_init(nwfs[0]);
+	    int mask[nwfstot];//mask stars that are selected already.
+	    int *comb2=comb_init(nwfs[0]);//select nwfs[0] from nwfstot for first ipowfs.
 	    do{
+		int skip=0;
 		memset(mask, 0, sizeof(int)*nwfstot);
 		aster[count].nwfs=nwfstot;
 		aster[count].wfs=mycalloc(nwfstot,WFS_S);
@@ -153,6 +158,9 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 		for(int iwfs=0; iwfs<nwfs[0]; iwfs++){
 		    aster[count].wfs[iwfs].ipowfs=0;
 		    aster[count].wfs[iwfs].istar=comb[comb2[iwfs]];
+		    if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
+			skip=1;
+		    }
 		    mask[comb2[iwfs]]=1;
 		}
 		int jstar=0;
@@ -160,17 +168,17 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 		    aster[count].wfs[iwfs+nwfs[0]].ipowfs=1;
 		    while(mask[jstar]) jstar++;
 		    aster[count].wfs[iwfs+nwfs[0]].istar=comb[jstar];
+		    if(star[aster[count].wfs[iwfs].istar].use[aster[count].wfs[iwfs].ipowfs]==-1){
+			skip=1;
+		    }
 		    mask[jstar]=1;
 		}
-		count++;
+		if(!skip) count++; else free(aster[count].wfs);
 	    }while(comb_next(comb2,nwfstot,nwfs[0]) && !parms->skyc.ttfbrightest);
 	    free(comb2);
 	}
     }while(comb_next(comb,nstar,nwfstot));
     free(comb);
-    if(count!=ncomb){
-	warning("ncomb=%d, count=%d. They should equal.\n", ncomb, count);
-    }
     *naster=count;
     return aster;
 }
@@ -366,6 +374,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	/*gsplit:
 	  0: All modes use the same gain.
 	  1: Different mode use defferent gain (2017-0-24) was only tt/ps separate.
+	  note that simu->psds->p[0] contains windshake PSD.
 	*/
 	double res_ngs=0;/*residual error due to signal after servo rejection. */
 	double res_ngsn=0;/*residual error due to noise. */
@@ -401,7 +410,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 	dmat *g_tt=dnew_ref(ng,1,PCOL(pgain,0));
 	double gain_n;
 	aster->res_ws->p[idtrat]=servo_residual(&gain_n, parms->skyc.psd_ws, 
-						parms->maos.dt, dtrat, g_tt, 2);
+						parms->maos.dt, dtrat, g_tt, servotype);
 	dfree(g_tt);
     }//for dtrat
     if(parms->skyc.dbg){
@@ -474,7 +483,8 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    setup_aster_kalman_dtrat(aster, parms, idtrat_limit);
 	    aster->kalman[0]=sde_kalman(simu->sdecoeff, parms->maos.dt, aster->dtrats, aster->g, aster->neam[0], 0);
 	    dmat *rests=0;
-#if 1   //more accurate
+#define USE_SIM 0 //ztiltout is not available here.
+#if USE_SIM   //more accurate
 	    dmat *res=skysim_sim(parms->skyc.dbg?&rests:0, simu->mideal, simu->mideal_oa, simu->varol,
 				 aster, 0, parms, -1, 1, -1);
 	    double res0=res?res->p[0]:simu->varol;
@@ -505,6 +515,9 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	if(parms->skyc.verbose) info2("selected\n");
 	aster->res_ngs->p[0]=resmin;
 	aster->kalman[0]=kalman_min;
+	if(parms->skyc.dbg){
+	    kalman_write(aster->kalman[0],"%s/aster%d_kalman_%g",dirsetup,aster->iaster, parms->skyc.dtrats->p[idtrat_min]);
+	}
     }else{
 	if(aster->neam) dcellfreearr(aster->neam, ndtrat);
 	aster->neam=mycalloc(ndtrat,dcell*);
@@ -530,7 +543,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    }
 	    aster->kalman[idtrat]=sde_kalman(simu->sdecoeff, parms->maos.dt, dtrats, aster->g, aster->neam[idtrat], 0);
 	    //toc("kalman");
-#if 1
+#if USE_SIM 
 	    dmat *res=skysim_sim(0, simu->mideal, simu->mideal_oa, simu->varol, aster, 0, parms, idtrat, 1, -1);
 	    double rms=res?res->p[0]:simu->varol;
 	    dfree(res);
@@ -541,6 +554,9 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 #endif
 	    //toc("estimate");
 	    IND(pres_ngs,idtrat,0)=rms;
+	    if(parms->skyc.dbg){
+		kalman_write(aster->kalman[idtrat],"%s/aster%d_kalman_%d",dirsetup,aster->iaster,dtrat);
+	    }
 	}
 	dfree(dtrats);
     }
@@ -566,65 +582,58 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
  
     int ndtrat=parms->skyc.ndtrat;
     dmat *res=dnew(ndtrat, naster);
-    dmat* pres=res;
-    dmat *imin=dnew(2,naster);
-    dmat*  pimin=imin;
+    dmat *imin=dnew(2,naster);//record best performance of each asterism.
+    dset(imin, INFINITY);
     int master=-1;
-    double mini;
-    double minimum=INFINITY;
-    //int dtrat_h=(parms->skyc.maxdtrat+1)/2;
+    double fieldMinRes=INFINITY;//minimum of this field.
+    const double wvfMargin=6400e-18; //Allow asterism that is worse by this much to be evaluated.
+	
     for(int iaster=0; iaster<naster; iaster++){
-	mini=maxerror;
-	aster[iaster].mdtrat=-1;
+	aster[iaster].mdtrat=-1;//idtrat at asterMinRes
+	if(parms->skyc.dbgaster>-1 && iaster != parms->skyc.dbgaster){
+	    continue;
+	}
+	double asterMinRes=maxerror;//minimum of this asterism.
 	for(int idtrat=0; idtrat<(parms->skyc.multirate?1:ndtrat); idtrat++){
 	    /*should not add res_ws here since res_ngs already includes that.*/
-	    double rms=aster[iaster].res_ngs->p[idtrat];
-	    IND(pres,idtrat,iaster)=rms;
-	    if(rms<mini){
-		mini=rms;
+	    double wfv=aster[iaster].res_ngs->p[idtrat];
+	    IND(res,idtrat,iaster)=wfv;
+	    if(wfv<asterMinRes){
+		asterMinRes=wfv;
 		aster[iaster].mdtrat=idtrat;
-		aster[iaster].mresest=rms;
+		aster[iaster].mresest=wfv;
 	    }
 	}
-	IND(pimin,0,iaster)=mini;
-	IND(pimin,1,iaster)=iaster;
-	if(mini<minimum){
+	IND(imin,0,iaster)=asterMinRes;
+	IND(imin,1,iaster)=iaster;
+	if(asterMinRes<fieldMinRes){
 	    master=iaster;
-	    minimum=mini;
+	    fieldMinRes=asterMinRes;
 	}
 	if(!parms->skyc.multirate){
 	    if(aster[iaster].mdtrat!=-1){
 		if(parms->skyc.maxdtrat>1){
 		    /*This is variance. allow a threshold */
-		    double thres=mini*3;
-		    double thres2=mini*3;
-		    if(thres>maxerror) thres=maxerror;
-		    if(thres2>maxerror) thres2=maxerror;
-		    /*Find upper and minimum good dtrats. */
-		    //MIN(ndtrat, aster[iaster].mdtrat+dtrat_h+1)
+		    double thres=MIN(asterMinRes+wvfMargin, maxerror);//threshold at low freq end
+		    double thres2=MIN(asterMinRes+wvfMargin, maxerror);//threshold at high freq end
+		    /*Find upper and fieldMinRes good dtrats. */
 		    for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
-			if(IND(pres,idtrat,iaster)<thres){
+			if(IND(res,idtrat,iaster)<thres){
 			    aster[iaster].idtratmax=idtrat+1;
 			}else{
 			    break;
 			}
 		    }
-		    //MAX(aster[iaster].mdtrat-dtrat_h, 0)
 		    for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
-			if(IND(pres,idtrat,iaster)<thres2){
+			if(IND(res,idtrat,iaster)<thres2){
 			    aster[iaster].idtratmin=idtrat;
 			}else{
 			    break;
 			}
 		    }
-		    /*prefer low frame rate to have good S/N*/
+		    //2018-02-28: changed to prefer high frame rate
 		    if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat+1){
-			aster[iaster].idtratmax=aster[iaster].idtratmin+parms->skyc.maxdtrat+1;
-			/*int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
-			  int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
-			  int max2=floor(mid+parms->skyc.maxdtrat*0.5);
-			  aster[iaster].idtratmin=min2;
-			  aster[iaster].idtratmax=max2;*/
+			aster[iaster].idtratmin=aster[iaster].idtratmax-(parms->skyc.maxdtrat+1);
 		    }
 		}else{
 		    aster[iaster].idtratmin=aster[iaster].mdtrat;
@@ -637,52 +646,59 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    aster[iaster].idtratmax=aster[iaster].idtratmin+1;
 	}
 	if(parms->skyc.verbose){
-	    info2("aster%d, dtrats=[%d, %d], best:%d res=%.1f nm\n", 
-		  iaster, (int)parms->skyc.dtrats->p[aster[iaster].idtratmin], 
+	    info2("aster%2d, dtrats=[%2d,%2d,%2d], res=[%.2f %.2f %.2f]nm\n", 
+		  iaster, (int)parms->skyc.dtrats->p[aster[iaster].idtratmin],
+		  (int)parms->skyc.dtrats->p[aster[iaster].mdtrat],
 		  (int)parms->skyc.dtrats->p[aster[iaster].idtratmax-1], 
-		  (int)parms->skyc.dtrats->p[aster[iaster].mdtrat], sqrt(mini)*1e9);
+		  sqrt(IND(res,aster[iaster].idtratmin,iaster))*1e9,
+		  sqrt(IND(res,aster[iaster].mdtrat,iaster))*1e9,
+		  sqrt(IND(res,aster[iaster].idtratmax-1,iaster))*1e9);
 	}
     }
     if(parms->skyc.dbgsky>-1){
 	writebin(imin, "sky%d_imin", parms->skyc.dbgsky);
     }
-    qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
-    result[0]=minimum;
+  
+    result[0]=fieldMinRes;
     result[1]=master;
     if(aster[master].mdtrat!=-1){
 	result[2]=parms->skyc.fss[aster[master].mdtrat];
     }
+  
+    //Mark asterisms and stars to be evaluated further.
     int count=0;
-    if(minimum<maxerror){
-	double thres=MIN(minimum*3, maxerror);
+    if(fieldMinRes<maxerror){
+	double thres=MIN(fieldMinRes+wvfMargin, maxerror);
 	int taster=naster;
 	if(parms->skyc.maxaster>0 && naster>parms->skyc.maxaster){
 	    taster=parms->skyc.maxaster;
 	}
+	qsort(imin->p, naster, 2*sizeof(double),(int(*)(const void*,const void*))sortfun);
 	for(int jaster=0; jaster<taster; jaster++){
-	    if(aster[jaster].mdtrat!=-1 && IND(pimin,0,jaster)<thres){
-		count++;
-		int iaster=(int)IND(pimin,1,jaster);
-		aster[iaster].use=1;/*mark as valid. */
-		char temp1[1024], temp2[1024]; temp1[0]='\0';
-		for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-		    int istar=aster[iaster].wfs[iwfs].istar;
-		    int ipowfs=aster[iaster].wfs[iwfs].ipowfs;
-		    star[istar].use[ipowfs]=1;
-		    if(parms->skyc.estimate && parms->skyc.nsky==1){
-			snprintf(temp2, 1023,"(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, star[istar].mags->p[0]);
-			strncat(temp1, temp2, 1023);
-		    }
+	    if(IND(imin,0,jaster)>thres) continue;
+	    int iaster=(int)IND(imin,1,jaster);
+	    if(aster[iaster].mdtrat==-1) continue; 
+	    count++;
+	    aster[iaster].use=1;/*mark as valid. */
+	    char temp1[1024]; temp1[0]='\0';
+	    for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
+		int istar=aster[iaster].wfs[iwfs].istar;
+		int ipowfs=aster[iaster].wfs[iwfs].ipowfs;
+		star[istar].use[ipowfs]=1;
+		if(parms->skyc.estimate && parms->skyc.nsky==1){
+		    char temp2[1024];
+		    snprintf(temp2, 1023,"(x=%.1f, y=%.1f, J=%.1f) ", star[istar].thetax*206265, star[istar].thetay*206265, star[istar].mags->p[0]);
+		    strncat(temp1, temp2, 1023);
 		}
-		if(parms->skyc.estimate){
-		    info2("%s, %g Hz, %g nm\n", temp1, parms->skyc.fss[aster[iaster].mdtrat], sqrt(aster[iaster].mresest)*1e9);
-		}
+	    }
+	    if(parms->skyc.estimate){
+		info2("%s, %g Hz, %g nm\n", temp1, parms->skyc.fss[aster[iaster].mdtrat], sqrt(aster[iaster].mresest)*1e9);
 	    }
 	}
     }
     if(parms->skyc.verbose){
-	info2("Minimum is found at aster %d at %.1f Hz: %.2f nm. Will evaluate %d asterisms.\n", 
-	      master,result[1],sqrt(minimum)*1e9, count);
+	info2("FieldMinRes is found at aster %g at %.1f Hz: %.2f nm. Will evaluate %d asterisms.\n", 
+	      result[1],result[2],sqrt(result[0])*1e9, count);
     }
     if(parms->skyc.dbg){
 	writebin(res, "%s/aster_resol",dirsetup);
@@ -723,6 +739,8 @@ void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
 	dfree(aster[iaster].dtrats);
 	dfree(aster[iaster].idtrats);
 	free(aster[iaster].ngs);
+	dcellfree(aster[iaster].phyRes);
+	dcellfree(aster[iaster].phyMRes);
     }
     free(aster);
 }

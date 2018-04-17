@@ -56,9 +56,9 @@ static int cursor_type=0;/*cursor type of the drawing area. */
   Routines in this file are about the GUI.
 */
   
-GdkCursor *cursors[2];
-GdkPixbuf *pix_hand=NULL;
-GdkPixbuf *pix_arrow=NULL;
+GdkCursor *cursors[2]={0,0};
+//GdkPixbuf *pix_hand=NULL;
+//GdkPixbuf *pix_arrow=NULL;
 #if GTK_MAJOR_VERSION < 3
 static const char *rc_string_notebook={
     "style \"noborder\"{                      \n"
@@ -413,20 +413,19 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
     if(((event->state & GDK_BUTTON1_MASK) || (event->state & GDK_BUTTON3_MASK))
-       && drawdata->valid){/*move with left cursor */
+       && drawdata->valid){
 	double x, y;
 	x = event->x;
 	y = event->y;
 	double dx, dy;
 	dx = x - drawdata->mxdown;
 	dy = y - drawdata->mydown;
-
-	if(((event->state & GDK_BUTTON1_MASK) && cursor_type==0)
-	   ||((event->state & GDK_BUTTON3_MASK) && cursor_type==1)){/*move */
+	/*move with left cursor */
+	if((event->state & GDK_BUTTON1_MASK)){
 	    do_move(drawdata, dx, -dy);/*notice the reverse sign. */
 	    drawdata->mxdown=x;
 	    drawdata->mydown=y;
-	}else{/*select and zoom. */
+	}else if(event->state & GDK_BUTTON3_MASK){/*select and zoom. */
 	    if(drawdata->square){/*for a square */
 		if(fabs(dx)<fabs(dy)){
 		    dy*=fabs(dx/dy);
@@ -436,15 +435,15 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    }
 	    if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
 #if GTK_MAJOR_VERSION>=3
-	cairo_t *cr=gdk_cairo_create(gtk_widget_get_window(widget));
-	cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
-	cairo_paint(cr);
-	cairo_destroy(cr);
+		cairo_t *cr=gdk_cairo_create(gtk_widget_get_window(widget));
+		cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
+		cairo_paint(cr);
+		cairo_destroy(cr);
 #else
-	gdk_draw_drawable(widget->window, 
-			  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-			  drawdata->pixmap,
-			  0,0,0,0,-1,-1);
+		gdk_draw_drawable(widget->window, 
+				  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+				  drawdata->pixmap,
+				  0,0,0,0,-1,-1);
 #endif
 	    }
 	    /*do not draw to pixmap, use window */
@@ -469,12 +468,24 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
        && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
 	if(!drawdata->cursorinside){
 	    drawdata->cursorinside=1;
-	    gdk_window_set_cursor(gtk_widget_get_window(widget), cursors[cursor_type]);
+	    gdk_window_set_cursor(gtk_widget_get_window(widget), cursors[0]);
+	    gtk_widget_set_has_tooltip(widget, 1);
 	}
-    }else{
+	if(drawdata->limit0){
+	    double x=(event->x-drawdata->xoff)/(double)(drawdata->widthim);
+	    double y=(event->y-drawdata->yoff)/(double)(drawdata->heightim);
+	    x=(1.-x)*drawdata->limit0[0]+x*drawdata->limit0[1];
+	    y=(1.-y)*drawdata->limit0[3]+y*drawdata->limit0[2];
+	    if(drawdata->xylog[0]!='n') x=pow(10, x);
+	    if(drawdata->xylog[1]!='n') y=pow(10, y);
+	    snprintf(drawdata->tooltip, sizeof(drawdata->tooltip), "(%g, %g)",x,y);
+	    gtk_widget_set_tooltip_text(widget, drawdata->tooltip);
+	}
+    }else{	    
 	if(drawdata->cursorinside){
 	    drawdata->cursorinside=0;
 	    gdk_window_set_cursor(gtk_widget_get_window(widget), NULL);
+	    gtk_widget_set_has_tooltip(widget, 0);
 	}
     }
     return FALSE;
@@ -1319,12 +1330,12 @@ static gboolean window_state(GtkWidget *window, GdkEvent *event){
     return FALSE;
 }
 GtkWidget *create_window(){
-    if(!pix_hand){
+    if(!cursors[1]){
 	GdkDisplay *display=gdk_display_get_default();
-	pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
-	pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
-	cursors[0]=gdk_cursor_new_from_pixbuf(display, pix_hand, 8, 5);
-	cursors[1]=gdk_cursor_new_from_pixbuf(display, pix_arrow, 3, 0);
+	//pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
+	//pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
+	cursors[0]=gdk_cursor_new_from_name(display, "default");
+	cursors[1]=gdk_cursor_new_from_name(display, "crosshair");
 #if GTK_MAJOR_VERSION < 3
 	gtk_rc_parse_string(rc_string_notebook);
 #endif
@@ -1418,7 +1429,7 @@ GtkWidget *create_window(){
     item=gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_radio_tool_button_new(NULL);
+    /*item=gtk_radio_tool_button_new(NULL);
     gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_hand));
     g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(0));
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
@@ -1427,11 +1438,11 @@ GtkWidget *create_window(){
     gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_arrow));
     g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(1));
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-	
+    
 	
     item=gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
-
+    */
     item=gtk_tool_button_new(NULL, "Zoom_In");
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "zoom-in");
     g_signal_connect(item,"clicked",G_CALLBACK(tool_zoom),GINT_TO_POINTER(1));

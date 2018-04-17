@@ -262,6 +262,11 @@ int main(int argc, char *argv[]){
 		    }
 		}
 		
+		if(res->nx!=ysky->nx){
+		    warning("Mismatch: %ld vs %ld\n", res->nx, ysky->nx);
+		    dfree(res);
+		    continue;
+		}
 		tmp=dsub(res, 0, 0, 0, 1);
 		dsort(tmp, 1);
 		reshi->p[ii]=dcat(tmp, ysky, 2); 
@@ -271,6 +276,7 @@ int main(int argc, char *argv[]){
 		dsort(tmp, 1);
 		reslo->p[ii]=dcat(tmp, ysky, 2); 
 		dfree(tmp);
+		dfree(res);
 	    }else{
 		error("Invalid restype=%d\n", restype);
 	    }
@@ -355,8 +361,8 @@ int main(int argc, char *argv[]){
 	}else{
 	    plot_points("Tot", nseed, NULL, reshi, NULL, NULL, xylog, NULL, legs,
 			"Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All");
-	    plot_points("Atm TT", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
-			"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
+	    //plot_points("TTatm", nseed, NULL, reslo, NULL, NULL, xylog, NULL,legs,
+	    //		"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
 	    free(legs0[iseed]);
@@ -386,8 +392,8 @@ int main(int argc, char *argv[]){
 	}else{
 	    plot_points("Tot", npath, NULL, reshim, NULL, NULL, xylog, NULL, pathtag,
 			"Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All");
-	    plot_points("Atm TT", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
-			"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
+	    //plot_points("TTatm", npath, NULL, reslom, NULL, NULL, xylog, NULL, pathtag,
+	    //		"ATM T/T Wavefront Error", xlabel,ylabel, "TT");
 	}
 	for(int iseed=0; iseed<nseed; iseed++){
 	    dcell *reshi_i=dcellsub(reshi, 0,0,iseed, 1);
@@ -414,8 +420,8 @@ int main(int argc, char *argv[]){
 	    }else{
 		plot_points("Tot", npath, NULL, reshi_i, NULL, NULL, xylog, NULL, pathtag,
 			    "Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All_%ld",seed[iseed]);
-		plot_points("Atm TT", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
-			    "ATM T/T Wavefront Error", xlabel,ylabel, "TT_%ld",seed[iseed]);
+		//plot_points("TTatm", npath, NULL, reslo_i, NULL, NULL, xylog, NULL, pathtag,
+		//"ATM T/T Wavefront Error", xlabel,ylabel, "TT_%ld",seed[iseed]);
 	    }
 	    dcellfree(reshi_i);dcellfree(reslo_i);
 	}
