@@ -471,7 +471,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	    gdk_window_set_cursor(gtk_widget_get_window(widget), cursors[0]);
 	    gtk_widget_set_has_tooltip(widget, 1);
 	}
-	if(drawdata->limit0){
+	{
 	    double x=(event->x-drawdata->xoff)/(double)(drawdata->widthim);
 	    double y=(event->y-drawdata->yoff)/(double)(drawdata->heightim);
 	    x=(1.-x)*drawdata->limit0[0]+x*drawdata->limit0[1];
