@@ -359,15 +359,11 @@ ARG_T * parse_args(int argc, const char *argv[]){
     return arg;
 }
 
-char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
+char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim){
     char header[320];
     int nembed=aper->embed->nembed->p[iwvl];
     double wvl=parms->evl.wvl->p[iwvl];
     double sumamp2=aper->sumamp2;
-    int npos=parms->evl.psfmean;
-    if(npos==1) {
-	npos=parms->sim.end-parms->evl.psfisim;
-    }
     snprintf(header, 320, 
 	     "Science PSF at (%.15g, %.15g) arcsec\n"
 	     "Turbulence: r0=%g, l0=%g\n"
@@ -380,7 +376,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     ievl<0?0:parms->evl.thetax->p[ievl]*206265, ievl<0?0:parms->evl.thetay->p[ievl]*206265,
 	     parms->atm.r0, parms->atm.L0,
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
-	     sumamp2*nembed*nembed, parms->sim.dt*npos);
+	     sumamp2*nembed*nembed, parms->sim.dt*(isim-parms->evl.psfisim+1));
     return strdup(header);
 }
 void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat *fieldstop, double wvl){

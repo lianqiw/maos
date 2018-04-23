@@ -30,7 +30,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 void rename_file(int sig);
 int maos_signal_handler(int sig);
 ARG_T* parse_args(int argc, const char *argv[]);
-char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl);
+char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, int isim);
 void apply_fieldstop(dmat *opd, dmat *amp, lmat *embed, long nembed, dmat* fieldstop, double wvl);
 void display_server(int sock);
 void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);

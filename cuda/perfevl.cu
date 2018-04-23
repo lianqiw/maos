@@ -551,7 +551,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	    }
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(!temp || !temp->p[iwvl]) continue;
-		temp->p[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
+		temp->p[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl, isim);
 		zfarr_mat(simu->save->evlpsfolmean, isim*nwvl+iwvl, temp->p[iwvl]);
 		free(temp->p[iwvl]->header); temp->p[iwvl]->header=NULL;
 	    }
@@ -566,9 +566,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuperf_t::psfcl[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
-		    if(!pp.header){
-			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		    }
+		    free(pp.header);
+		    pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_cur(simu->save->evlpsfmean[ievl], isim*nwvl+iwvl, pp, stream);
 		    curscale(pp, 1./scale, stream);
 		}
@@ -582,9 +581,8 @@ void gpu_perfevl_save(SIM_T *simu){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curmat &pp=cuperf_t::psfcl_ngsr[iwvl+nwvl*ievl];
 		    curscale(pp, scale, stream);
-		    if(!pp.header){
-			pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		    }
+		    free(pp.header);
+		    pp.header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_cur(simu->save->evlpsfmean_ngsr[ievl], isim*nwvl+iwvl, pp, stream);
 		    curscale(pp, 1./scale, stream);
 		}

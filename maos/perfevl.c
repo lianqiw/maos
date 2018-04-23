@@ -523,9 +523,8 @@ static void perfevl_save(SIM_T *simu){
 		if(!simu->save->evlpsfmean[ievl]
 		    ||!simu->evlpsfmean->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    if(!IND(pcl,iwvl,ievl)->header){
-			IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		    }
+		    free(IND(pcl,iwvl,ievl)->header);
+		    IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_dmat(simu->save->evlpsfmean[ievl], isim*parms->evl.nwvl+iwvl, IND(pcl,iwvl,ievl));
 		}
 	    }
@@ -538,9 +537,8 @@ static void perfevl_save(SIM_T *simu){
 		if(!simu->save->evlpsfmean_ngsr[ievl]
 		    ||!simu->evlpsfmean_ngsr->p[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    if(!IND(pcl,iwvl,ievl)->header){
-			IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		    }
+		    free(IND(pcl,iwvl,ievl)->header);
+		    IND(pcl,iwvl,ievl)->header=evl_header(simu->parms, simu->aper, ievl, iwvl, isim);
 		    zfarr_dmat(simu->save->evlpsfmean_ngsr[ievl], isim*parms->evl.nwvl+iwvl, IND(pcl,iwvl,ievl));
 		}
 	    }
@@ -552,9 +550,8 @@ static void perfevl_save(SIM_T *simu){
 	    dmat **pcl=simu->evlpsfolmean->p;
 	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		if(!simu->evlpsfolmean->p[iwvl]) continue;
-		if(!pcl[iwvl]->header){
-		    pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
-		}
+		free(pcl[iwvl]->header);
+		pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl, isim);
 		zfarr_dmat(simu->save->evlpsfolmean, isim*parms->evl.nwvl+iwvl, pcl[iwvl]);
 	    }
 	    dcellscale(simu->evlpsfolmean, 1./scaleol);
