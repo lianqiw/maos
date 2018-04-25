@@ -1470,14 +1470,13 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    int lgspowfs=parms->ilgspowfs;
 	    if(lgspowfs!=-1){
 		warning("powfs %d is TWFS for powfs %d\n", ipowfs, lgspowfs);
-		if(parms->powfs[ipowfs].dtrat<1){
+		if(parms->powfs[ipowfs].dtrat<1){//automatic dtrat: matched filter update rate.
 		    int mtchdtrat=parms->powfs[lgspowfs].dtrat*parms->powfs[lgspowfs].dither_ograt;
 		    parms->powfs[ipowfs].dtrat=mtchdtrat;
 		    warning("powfs %d dtrat is set to %d\n", ipowfs, mtchdtrat);
-		    //Set TWFS integration start time to LGS matched filter acc step
-		    parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_ogskip;
-		}else if(parms->powfs[lgspowfs].dither && parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
-		    //Set TWFS integration start time to pll start time to synchronize with matched filter.
+		}
+		//Set TWFS integration start time to pll start time to synchronize with matched filter update.
+		if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 		    parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}
 		//floor to multiple of dtrat.
@@ -1557,12 +1556,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. "
 		    "background won't be effective.\n", ipowfs);
 	} 
-	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf)){
+	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf || parms->load.ncpa)){
 	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
 		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 		parms->powfs[ipowfs].mtchstc=0;
 	    }
-	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].phytypesim2!=1 || parms->powfs[ipowfs].phytype!=1)
+	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].phytypesim!=1 || parms->powfs[ipowfs].phytype!=1)
 	       && parms->powfs[ipowfs].ncpa_method==2){
 		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs or CoG mode\n", ipowfs);
 		parms->powfs[ipowfs].ncpa_method=1;

@@ -104,30 +104,15 @@ static void prop_surf_evl(thread_t *info){
     const map_t *surf=data->surf;
     const double hl=surf->h;
     const int *evlcover=data->evlcover;
-    const int isurf=data->isurf;
-    const char *prt=" covers evl ";
-    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
-    char buf2[6];
-    buf[0]='\0';
-    strcat(buf, parms->surf[isurf]);
-    strcat(buf, prt);
-    int any=0;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	if(!evlcover[ievl]){
 	    continue;
 	}
-	any=1;
-	snprintf(buf2, 6, "%d ", ievl);
-	strcat(buf, buf2);
 	const double displacex=parms->evl.thetax->p[ievl]*hl;
 	const double displacey=parms->evl.thetay->p[ievl]*hl;
 	const double scale=1-hl/parms->evl.hs->p[ievl];
 	prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
 		       1, displacex, displacey, scale, 0, 0, 0);
-    }
-    if(any){
-	strcat(buf, "\n");
-	info2("%s", buf);
     }
 }
 
@@ -156,21 +141,10 @@ static void prop_surf_wfs(thread_t *info){
     const map_t *surf=data->surf;
     const double hl=surf->h;
     const int *wfscover=data->wfscover;
-    const int isurf=data->isurf;
-    const char *prt=" covers WFS ";
-    char* buf=myalloca(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*5, char);
-    char buf2[6];
-    buf[0]='\0';
-    strcat(buf, parms->surf[isurf]);
-    strcat(buf, prt);
-    int any=0;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	if(!wfscover[iwfs]){
 	    continue;
 	}
-	any=1;
-	snprintf(buf2, 6, "%d ", iwfs);
-	strcat(buf, buf2);
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	const double hs=parms->wfs[iwfs].hs;
@@ -187,9 +161,6 @@ static void prop_surf_wfs(thread_t *info){
 	}
 	prop_grid(surf, locwfs, powfs[ipowfs].opdadd->p[wfsind]->p, 
 		  1, displacex, displacey, scale, 1., 0, 0); 
-    }
-    if(any){
-	info2("%s\n", buf);
     }
 }
 
@@ -246,17 +217,27 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		dfree(B);
 	    }
 	}
+	int evlct=0;
 	if(!strevl){
-	    warning2("surf->p[%d] does not contain SURFEVL\n", isurf);
+	    warning2("%s does not contain SURFEVL. Assume it covers all science.\n", fn);
 	    for(int ievl=0; ievl<nevl; ievl++){
 		evlcover[ievl]=1;
 	    }
+	    evlct=nevl;
 	}else{
 	    readstr_intarr_relax(&evlcover, nevl, strevl);
-	}
-	int evlct=0;
-	for(int ievl=0; ievl<nevl; ievl++){
-	    evlct+=evlcover[ievl]?1:0;
+	    for(int ievl=0; ievl<nevl; ievl++){
+		evlct+=evlcover[ievl]?1:0;
+	    }
+	    if(evlct>0){
+		info2("%s covers evl", fn);
+		for(int ievl=0; ievl<nevl; ievl++){
+		    if(evlcover[ievl]){
+			info2(" %d", ievl);
+		    }
+		}
+		info2("\n");
+	    }
 	}
 	if(evlct==0){
 	    for(int idir=0; idir<nncpa; idir++){
@@ -270,7 +251,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    error("Not handled\n");
 	}
 	if(!strwfs){
-	    warning2("surf->p[%d] does not contain SURFWFS, assume 1\n", isurf);
+	    warning2("%s does not contain SURFWFS, Assume it covers all WFS.\n", fn);
 	    for(int iwfs=0;iwfs<nwfs; iwfs++){
 		wfscover[iwfs]=1;
 	    }
@@ -278,22 +259,35 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    int ncover=readstr_intarr(&wfscover, 0, strwfs);
 	    if(ncover!=nwfs){
 		if(ncover==0) error("wfscover has zero length\n");
-		warning("wfscover has wrong length of %d, expect %d\n", ncover, nwfs);
 		wfscover=myrealloc(wfscover,nwfs,int);
 		int val;
+		warning2("SURFWFS has length of %d, expect %d, replicated ", ncover, nwfs);
 		if(parms->sim.skysim){
 		    val=wfscover[ncover-1];
-		    warning("Replicate from last wfs: %d\n", val);
+		    info2("last wfs: %d\n", val);
 		}else{
 		    val=wfscover[0];
-		    warning("Replicate from lowest value: %d\n", val);
 		    for(int i=1; i<ncover; i++){
 			if(val>wfscover[i]) val=wfscover[i];
 		    }
+		    info2("lowest value: %d\n", val);
 		}
 		for(int i=ncover; i<nwfs; i++){
 		    wfscover[i]=val;
 		}
+	    }
+	    ncover=0;
+	    for(int i=0; i<nwfs; i++){
+		ncover+=wfscover[i]?1:0;
+	    }
+	    if(ncover){
+		info2("%s covers WFS", fn);
+		for(int i=0; i<nwfs; i++){
+		    if(wfscover[i]){
+			info2(" %d", i);
+		    }
+		}
+		info2("\n");
 	    }
 	}
 	if(!stropdx){

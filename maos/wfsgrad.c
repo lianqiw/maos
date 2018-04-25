@@ -1027,7 +1027,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
     const int itpowfs=parms->itpowfs;
     const int ntstep=(simu->isim-parms->powfs[itpowfs].step+1);
     if(ntstep>0 && ntstep%parms->powfs[itpowfs].dtrat==0){
-	info2("Step %5d: TWFS has output with gain %g\n", simu->isim, simu->eptwfs);
+	info2("Step %5d: TWFS[%d] has output with gain %g, step=%d\n", simu->isim, itpowfs, simu->eptwfs, parms->powfs[itpowfs].step);
 	dcell *Rmod=0;
 	//Build radial mode error using closed loop TWFS measurements from this time step.
 	dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);

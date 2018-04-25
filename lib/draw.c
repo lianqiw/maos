@@ -281,8 +281,9 @@ static int open_drawdaemon(){
 	int sock=-1;
 	if(scheduler_recv_socket(&sock, DRAW_ID)){
 	    sock=-1;
+	}else{
+	    info("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
 	}
-	info("sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch
 		sock=launch_drawdaemon();
