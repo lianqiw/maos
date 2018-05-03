@@ -341,11 +341,44 @@ void reconstruct(SIM_T *simu){
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
-
+	if(parms->plot.run){
+	    if(parms->recon.alg==0){
+		for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
+		    if(simu->opdr->p[i]){
+			drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, NULL,
+				"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
+		    }
+		}
+		for(int i=0; simu->dmfit && i<simu->dmfit->nx; i++){
+		    if(simu->dmfit->p[i]){
+			drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p,NULL,
+				"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+		    }
+		}
+	    }
+	    if(!parms->recon.modal){
+		for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+		    if(simu->dmerr->p[idm]){
+			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
+				"DM Error Signal (Hi)","x (m)","y (m)",
+				"Err Hi %d",idm);
+		    }
+		}
+	    }
+	}
 	if(parms->recon.split){
 	    if(parms->recon.alg==0){//ahst 
 		remove_dm_ngsmod(simu, simu->dmerr);
 	    }
+	    if(parms->plot.run && !parms->recon.modal){
+		for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+		    if(simu->dmerr->p[idm]){
+			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
+				"DM Error Signal (Hi)","x (m)","y (m)",
+				"Err Hi %d ngsmr",idm);
+		    }
+		}
+	    } 
 	}
 	
 	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators

@@ -582,7 +582,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}
 
 	if(any_evl){
-	    info("calibrating NCPA\n");
+	    info2("calibrating NCPA\n");
 	    setup_recon_HAncpa(recon, parms);
 	    dcell *rhs=NULL;
 	    FitR_NCPA(&rhs, recon, aper);
@@ -592,8 +592,52 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    dcellfree(rhs);
 	    writebin(recon->dm_ncpa, "dm_ncpa");
 	    dspcellfree(recon->HA_ncpa);
-	}
-	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
+	
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		    const double hs=parms->wfs[iwfs].hs;
+		    const double hc=parms->powfs[ipowfs].hc;
+		    double thetax=parms->wfs[iwfs].thetax;
+		    double thetay=parms->wfs[iwfs].thetay;
+		    if(!powfs[ipowfs].opdbias){
+			powfs[ipowfs].opdbias=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		    }
+		    if(!powfs[ipowfs].opdbias->p[jwfs]){
+			powfs[ipowfs].opdbias->p[jwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
+		    }
+		    for(int idm=0; idm<parms->ndm; idm++){
+			if(!recon->dm_ncpa->p[idm] || recon->dm_ncpa->p[idm]->nx==0) continue;
+			double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
+			double scale=1.-ht/hs;
+			double dispx=ht*thetax;
+			double dispy=ht*thetay;
+			prop_nongrid(recon->aloc->p[idm], recon->dm_ncpa->p[idm]->p, 
+				     powfs[ipowfs].loc, powfs[ipowfs].opdbias->p[jwfs]->p, 
+				     -1, dispx, dispy, scale, 0, 0);
+		    }
+		}
+
+		if(parms->sim.ncpa_ttr){
+		    /*remove average tilt from opdbias and same amount from
+		      opdadd. Does not need to be very accurate.*/
+		    dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
+		    dinvspd_inplace(mcc);
+		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+			double ptt[3]={0,0,0};
+			loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
+				     powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[jwfs]->p);
+			loc_remove_ptt(powfs[ipowfs].opdbias->p[jwfs]->p, ptt, powfs[ipowfs].loc);
+			loc_remove_ptt(powfs[ipowfs].opdadd->p[jwfs]->p, ptt, powfs[ipowfs].loc);
+		    }
+		    dfree(mcc);
+		}
+		if(parms->save.setup){
+		    writebin(powfs[ipowfs].opdbias, "powfs%d_opdbias", ipowfs);
+		}
+	    }//for ipowfs
+	}//if any_evl
     }
     if(parms->save.setup || parms->save.ncpa){
 	writebin(aper->opdadd, "surfevl.bin");

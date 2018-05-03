@@ -421,7 +421,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     intstat->i0=dcellnew(nsa,ni0);
     intstat->gx=dcellnew(nsa,ni0);
     intstat->gy=dcellnew(nsa,ni0);
-    if(parms->powfs[ipowfs].phytypesim==3 ){
+    if(parms->powfs[ipowfs].phytype_sim==3 ){
 	intstat->fotf=cccellnew(nsepsf, 1);
 	for(int i=0; i<nsepsf; i++){
 	    intstat->fotf->p[i]=ccellnew(nsa,nwvl);

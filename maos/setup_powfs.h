@@ -23,7 +23,7 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper);
 void setup_powfs_misreg_tel(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
 void setup_powfs_misreg_dm(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs);
 void setup_powfs_phy(const PARMS_T *parms,  POWFS_T *powfs);
-void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loccell *aloc, dcell *dm_ncpa);
+void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs);
 void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs);
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void test_powfs(const PARMS_T *parms, POWFS_T *powfs);

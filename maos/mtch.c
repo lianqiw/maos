@@ -55,7 +55,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell* gys=intstat->gy/*PDELL*/;
     dmat *i0sum=intstat->i0sum;
     dcell *mtche=intstat->mtche;
-    if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
+    if(parms->powfs[ipowfs].phytype_recon==1){//use MF nea for recon
 	dcellfree(powfs[ipowfs].saneaxy);
 	powfs[ipowfs].saneaxy=dcellnew(nsa,ni0);
     }
@@ -195,10 +195,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }/*isa  */
 	}
     }
-    if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
+    if(parms->powfs[ipowfs].phytype_recon==1 && parms->save.setup){
 	writebin(sanea, "powfs%d_sanea", ipowfs);
     }
-    if(parms->powfs[ipowfs].phytype==1 && parms->recon.glao && ni0>0){
+    if(parms->powfs[ipowfs].phytype_recon==1 && parms->recon.glao && ni0>0){
 	info2("Averaging saneaxy of different WFS for GLAO mode\n");
 	dcell *saneaxy2=dcellnew(nsa, 1);
 	double scale=1./ni0;

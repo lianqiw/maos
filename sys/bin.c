@@ -118,14 +118,11 @@ static char* procfn(const char *fn, const char *mod){
 	free(fn2);
 	fn2=fnr;
     }else if (mod[0]=='w' || mod[0]=='a'){
-	if(disable_save){//When saving is disabled, allow writing to cache folder.
-	    char fncache[PATH_MAX];
-	    snprintf(fncache, PATH_MAX, "%s/.aos/cache", HOME);
-	    if(mystrcmp(fn2, fncache)){
-		warning("Saving is disabled for %s.\n", fn2);
-		free(fn2);
-		fn2=0;
-	    }
+	if(disable_save && mystrcmp(fn2, CACHE)){
+	    //When saving is disabled, allow writing to cache folder.
+	    warning("Saving is disabled for %s.\n", fn2);
+	    free(fn2);
+	    fn2=0;
 	}
 	if(fn2 && islink(fn2)){/*remove old file to avoid write over a symbolic link. */
 	    if(remove(fn2)){
@@ -282,7 +279,7 @@ file_t* zfopen_try(const char *fn, const char *mod){
 }
 file_t *zfopen(const char *fn, const char *mod){
     file_t *fp=zfopen_try(fn, mod);
-    if(!fp){
+    if(!fp && !disable_save){
 	error("Open file %s for %s failed\n", fn, mod[0]=='r'?"read":"write");
     }
     return fp;
@@ -878,7 +875,9 @@ void writearr(const void *fpn,     /**<[in] The file pointer*/
 	fp=(file_t*) fpn;
     }
     if(!fp){
-	warning("fp is empty\n");
+	if(!disable_save){
+	    warning_once("fp is empty\n");
+	}
 	return;
     }
     write_header(&header, fp);
@@ -932,7 +931,7 @@ mmap_t*mmap_ref(mmap_t *in){
    control.
 */
 int mmap_open(char *fn, int rw){
-    if(rw && disable_save){
+    if(rw && disable_save && mystrcmp(fn, CACHE)){
 	warning("Saving is disabled for %s\n", fn);
     }
     char *fn2=procfn(fn,rw?"w":"r");

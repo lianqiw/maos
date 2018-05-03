@@ -93,29 +93,6 @@ void save_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     if(parms->plot.run){
-	if(parms->recon.alg==0){
-	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		if(simu->opdr->p[i]){
-		    drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, NULL,
-			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
-		}
-	    }
-	    for(int i=0; simu->dmfit && i<simu->dmfit->nx; i++){
-		if(simu->dmfit->p[i]){
-		    drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p,NULL,
-			    "DM Fitting Output","x (m)", "y (m)","Fit %d",i);
-		}
-	    }
-	}
-	if(!parms->recon.modal){
-	    for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-		if(simu->dmerr->p[idm]){
-		    drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
-			    "DM Error Signal (Hi)","x (m)","y (m)",
-			    "Err Hi %d",idm);
-		}
-	    }
-	}
 	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
 	    if(simu->dmint->mint->p[0]->p[idm]){
 		drawopd("DM",recon->aloc->p[idm], simu->dmint->mint->p[0]->p[idm]->p,NULL,

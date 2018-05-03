@@ -107,7 +107,7 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(parms->powfs[ipowfs].usephy){
-	    if(parms->powfs[ipowfs].phytypesim==1){
+	    if(parms->powfs[ipowfs].phytype_sim==1){
 		if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    int icol=powfs[ipowfs].intstat->mtche->ny>1?wfsind:0;
 		    dcell *mtchec=dcellsub(powfs[ipowfs].intstat->mtche, 0, 0, icol, 1);
@@ -378,9 +378,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].qe=cuwfs[iwfs0].qe;
 		}
 		/*Matched filter */
-		if(parms->powfs[ipowfs].phytypesim==1){
+		if(parms->powfs[ipowfs].phytype_sim==1){
 		    //Separated with gpu_wfsgrad_upate_mtche();
-		}else if(parms->powfs[ipowfs].phytypesim==2){/*cog*/
+		}else if(parms->powfs[ipowfs].phytype_sim==2){/*cog*/
 		    if(powfs[ipowfs].cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			cp2gpu(cuwfs[iwfs].cogcoeff, 
 			       powfs[ipowfs].cogcoeff->p[powfs[ipowfs].cogcoeff->nx>1?wfsind:0]->p, nsa*2, 1);

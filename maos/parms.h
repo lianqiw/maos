@@ -191,9 +191,9 @@ typedef struct POWFS_CFG_T{
     int gtype_recon;/**<wfs type if not using physical optics in simulation. 
 		       - 0: geometric
 		       - 1: ztilt.*/
-    int phytype;    /**<physical optics type for reconstruction. 1: mtch, 2: tcog, 3: MAP*/
-    int phytypesim; /**<physical optics type for simulation. -1 to follow phytype*/
-    int phytypesim2;/**<physical optics type after dithering update. -1 to follow phytypesim*/
+    int phytype_recon;/**<physical optics type for reconstruction. 1: mtch, 2: tcog, 3: MAP*/
+    int phytype_sim;  /**<physical optics type for simulation. -1 to follow phytype_recon*/
+    int phytype_sim2; /**<physical optics type after dithering update. -1 to follow phytype_sim*/
     int phystep;    /**<frame to start using physical optics. 
 		       -  0: means from frame 0.
 		       - >0: need to compute GS0 to calculate geometric optics
@@ -216,8 +216,8 @@ typedef struct POWFS_CFG_T{
     int noisy;      /**<noisy or not during *simulation* */
     int ncpa_method;/**<Method to correct ncpa.
 		       - 0: do nothing.
-		       - 1: apply gradient electronic offset. 
-		       - 2: apply ncpa to average pixel intensity i0, better than 1 */
+		       - 1: derive gradient offset from OPD
+		       - 2: derive gradient offset(CoG) or matched filter from i0 with bias OPD*/
     int pistatout;  /**<output time averaged short exposure image. 1: shift to center, 2: do not shift*/
     int pistatstart;/**<time step to compute pistatout*/
     int pistatstc;  /**<1: shift to center using fft method. 0: use geometric gradients.*/

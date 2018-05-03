@@ -468,7 +468,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
     dmat **mtche=NULL;
-    if(parms->powfs[ipowfs].phytypesim==1){
+    if(parms->powfs[ipowfs].phytype_sim==1){
 	if(powfs[ipowfs].intstat->mtche->ny==1){
 	    mtche=powfs[ipowfs].intstat->mtche->p;
 	}else{
@@ -521,7 +521,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     if(parms->powfs[ipowfs].mtchcr){
 	types[1]="MFC";
     }
-    int type=parms->powfs[ipowfs].phytypesim;
+    int type=parms->powfs[ipowfs].phytype_sim;
     for(int dir=0; dir<ndir; dir++){
 	dzero(gnfra);
 	dzero(gnfxy);

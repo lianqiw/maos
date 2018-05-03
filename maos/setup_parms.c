@@ -321,9 +321,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,pistatstc);
     READ_POWFS_RELAX(int,gtype_sim);
     READ_POWFS_RELAX(int,gtype_recon);
-    READ_POWFS_RELAX(int,phytype);
-    READ_POWFS_RELAX(int,phytypesim);
-    READ_POWFS_RELAX(int,phytypesim2);
+    READ_POWFS_RELAX(int,phytype_recon);
+    READ_POWFS_RELAX(int,phytype_sim);
+    READ_POWFS_RELAX(int,phytype_sim2);
     READ_POWFS_RELAX(dbl,r0);
     READ_POWFS_RELAX(dbl,L0);
     READ_POWFS_RELAX(int,mtchcpl);
@@ -1330,11 +1330,19 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	double wvlmax=dmax(powfsi->wvl);
 	if(powfsi->type==0){//shwfs
-	    if(powfsi->phytypesim==-1){
-		powfsi->phytypesim=powfsi->phytype;
+	    if(powfsi->phytype_sim==-1){
+		powfsi->phytype_sim=powfsi->phytype_recon;
 	    }
-	    if(powfsi->phytypesim2==-1){
-		powfsi->phytypesim2=powfsi->phytypesim;
+	    if(powfsi->phytype_sim2==-1){
+		powfsi->phytype_sim2=powfsi->phytype_sim;
+	    }
+	    if(powfsi->phyusenea==-1){
+		if(powfsi->phytype_recon==2){
+		    //COG use NEA by default
+		    powfsi->phyusenea=1;
+		}else{
+		    powfsi->phyusenea=0;
+		}
 	    }
 	    long pixpsay=powfsi->pixpsa;
 	    long pixpsax=powfsi->radpix;
@@ -1351,7 +1359,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		powfsi->pixtheta/=206265.;/*convert form arcsec to radian. */
 	    }
 	}else if(powfsi->type==1){//pywfs only uses cog for the moment
-	    powfsi->phytype=powfsi->phytypesim=powfsi->phytypesim2=2;//like quad cell cog
+	    powfsi->phytype_recon=powfsi->phytype_sim=powfsi->phytype_sim2=2;//like quad cell cog
 	    if(powfsi->phystep!=0){
 		warning("PWFS must run in physical optics mode, changed.\n");
 		powfsi->phystep=0;
@@ -1359,6 +1367,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    powfsi->pixpsa=2;//always 2x2 pixels by definition.
 	    //Input of modulate is in unit of wvl/D. Convert to radian
 	    powfsi->modulate*=wvlmax/parms->aper.d;
+	    if(powfsi->phyusenea==-1){
+		powfsi->phyusenea=1;
+	    }else if(powfsi->phyusenea!=1){
+		error("PWFS must have phyusenea=1;\n");
+	    }
 	}
 	if(parms->powfs[ipowfs].qe){
 	    //Check rne input.
@@ -1561,9 +1574,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 		parms->powfs[ipowfs].mtchstc=0;
 	    }
-	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].phytypesim!=1 || parms->powfs[ipowfs].phytype!=1)
+	    if((!parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].type==1)
 	       && parms->powfs[ipowfs].ncpa_method==2){
-		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs or CoG mode\n", ipowfs);
+		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs, PWFS, or CoG mode\n", ipowfs);
 		parms->powfs[ipowfs].ncpa_method=1;
 	    }
 	    if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].skip){
@@ -1589,7 +1602,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(parms->sim.wfsalias){
 	    parms->powfs[ipowfs].noisy=0;
-	    parms->powfs[ipowfs].phystep=-1;
 	}
     }
     parms->hipowfs->nx=parms->nhipowfs;
@@ -2610,7 +2622,7 @@ static void print_parms(const PARMS_T *parms){
 	if(parms->powfs[ipowfs].phystep>-1){
 	    info2("Physical optics start at %d with %s'%s'%s",
 		  parms->powfs[ipowfs].phystep, 
-		  parms->powfs[ipowfs].phytypesim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytypesim], BLACK);
+		  parms->powfs[ipowfs].phytype_sim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
 	}else{
 	    info2("Geomtric optics uses %s ",
 		  parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");

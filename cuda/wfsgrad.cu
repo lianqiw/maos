@@ -491,7 +491,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    }
 		}
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_ogskip 
-		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytypesim2==1){
+		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytype_sim2==1){
 		    double cs, ss;
 		    dither_position(&cs, &ss, parms, ipowfs, isim, simu->dither[iwfs]->deltam);
 		    int npll=parms->powfs[ipowfs].dither_pllrat;
@@ -507,7 +507,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 		cuzero(gradcalc, stream);
 		curcell &ints=cuwfs[iwfs].ints;
 		const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
-		switch(parms->powfs[ipowfs].phytypesim){
+		switch(parms->powfs[ipowfs].phytype_sim){
 		case 0:
 		    break; //no-op
 		case 1:
@@ -588,7 +588,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	curmat &gradcalc=cuwfs[iwfs].gradcalc;
 	dmat *gradcl=simu->gradcl->p[iwfs];
 	if(do_phy){
-	    if(parms->powfs[ipowfs].phytypesim!=3){//3 is handled in cpu.
+	    if(parms->powfs[ipowfs].phytype_sim!=3){//3 is handled in cpu.
 		cp2cpu(&gradcl, gradcalc, stream);
 	    }
 	    if(save_gradgeom){//also do geom grad during phy grad sims

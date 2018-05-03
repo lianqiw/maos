@@ -76,6 +76,8 @@ void maos_setup(const PARMS_T *parms){
 	setup_surf(parms, aper, powfs, recon);
 	/*set up physical optics powfs data. It needs dmncpa and wfsadd from setup_surf()*/
 	setup_powfs_phy(parms, powfs);
+	/*calibrate gradient offset*/
+	setup_powfs_calib(parms, powfs);
     }
     if(parms->plot.setup){
 	plot_setup(parms, powfs, aper, recon);

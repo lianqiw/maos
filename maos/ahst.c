@@ -208,9 +208,9 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     y=loc->locy;
     nloc=loc->nloc;
 
-    dcell *modc=dcellnew(1,1);/*W*Hm*M */
-    modc->p[0]=dnew(nloc,nmod);
-    dmat *mod=modc->p[0];
+    dcell *WHm=dcellnew(1,1);/* W_amp*Hm */
+    WHm->p[0]=dnew(nloc,nmod);
+    dmat *mod=WHm->p[0];
     for(int iloc=0; iloc<nloc; iloc++){
 	IND(mod,iloc,0)=x[iloc]*amp[iloc];
 	IND(mod,iloc,1)=y[iloc]*amp[iloc];
@@ -218,7 +218,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     const double MCC_fcp=ngsmod->aper_fcp;
     /*dc component of the focus mod. subtract during evaluation. */
     /*this is not precisely R^2/2 due to obscuration */
-    dcell *HatWHmt=dcellnew(ndm,1);
+    dcell *HatWHm=dcellnew(ndm,1);
     dsp *HatGround=NULL;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	if(fabs(wt[ievl])<1.e-12) continue;
@@ -261,7 +261,6 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
 	    if(parms->dm[idm].isground && HatGround){
-		info("Reusing HatGround\n");
 		Hat->p[idm]=dspref(HatGround);
 	    }else{
 		/*from DM to ploc (plocs) science beam */
@@ -271,94 +270,23 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	dcellmm(&HatWHmt,Hat,modc,"nn",wt[ievl]);
+	dcellmm(&HatWHm,Hat,WHm,"nn",wt[ievl]);
 	dspcellfree(Hat);
     }
     dspfree(HatGround);
     dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC);
     dcell *Pngs=NULL;
-    dcellmm(&Pngs,IMCC,HatWHmt,"nt",1);
+    dcellmm(&Pngs,IMCC,HatWHm,"nt",1);
     dcellfree(IMCC);
-    dcellfree(modc);
+    dcellfree(WHm);
     if(use_ploc){
 	free(amp);
     }
-    dcellfree(HatWHmt);
+    dcellfree(HatWHm);
     return Pngs;
 }
-/**
-   compute tip/tilt mode removal from each DM commands using aperture
-   weighting. Ptt=(MCC_TT)^-1 *(Hmtt * W * Ha)
-*/
-static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon, 
-			    const APER_T *aper, int use_ploc){
-    NGSMOD_T *ngsmod=recon->ngsmod;
-    const double *wt=parms->evl.wt->p;
-    const int ndm=parms->ndm;
-    const int nmod=2;
-    loc_t *loc;
-    double *x, *y;
-    int nloc;
-    double *amp=NULL;
-    if(use_ploc){
-	loc=recon->floc;
-	amp=mycalloc(loc->nloc,double);
-	prop_nongrid_bin(aper->locs, aper->amp->p,loc,amp,1,0,0,1);
-	normalize_sum(amp,loc->nloc,1);
-    }else{
-	amp=aper->amp->p;
-	loc=aper->locs;
-    }
-    x=loc->locx;
-    y=loc->locy;
-    nloc=loc->nloc;
 
-    dcell *modc=dcellnew(1,1);/*W*Hm*M */
-    modc->p[0]=dnew(nloc,nmod);
-    dmat *mod=modc->p[0];
-    for(int iloc=0; iloc<nloc; iloc++){
-	IND(mod,iloc,0)=x[iloc]*amp[iloc];
-	IND(mod,iloc,1)=y[iloc]*amp[iloc];
-    }
-    dcell *HatWHmt=dcellnew(ndm,1);
-    dsp *HatGround=NULL;
-    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	if(fabs(wt[ievl])<1.e-12) continue;
-	double thetax=parms->evl.thetax->p[ievl];
-	double thetay=parms->evl.thetay->p[ievl];
-	dspcell *Hat=dspcellnew(ndm,1);
-	for(int idm=0; idm<ndm; idm++){
-	    double hc = parms->dm[idm].ht;
-	    double displacex=thetax*hc;
-	    double displacey=thetay*hc;
-	    if(!parms->dm[idm].isground || !HatGround){
-		/*from DM to ploc (plocs) science beam */
-		Hat->p[idm]=mkhb(recon->aloc->p[idm], loc, displacex,displacey,1.);
-		if(parms->dm[idm].isground){
-		    HatGround=dspref(Hat->p[idm]);
-		}
-	    }else{
-		Hat->p[idm]=dspref(HatGround);
-	    }
-	    dspmm(&HatWHmt->p[idm],Hat->p[idm],modc->p[0],"nn",wt[ievl]);
-	}
-	dspcellfree(Hat);
-    }
-    dcell *IMCC=dcellnew(1,1);
-    IMCC->p[0]=dref(ngsmod->IMCC_TT);
-    dcell *Ptt=dcellnew(ndm,1);
-    for(int idm=0; idm<ndm; idm++){
-	dmm(&(Ptt->p[idm]),0,IMCC->p[0],HatWHmt->p[idm],"nt",1);
-    }
-    dcellfree(IMCC);
-    dcellfree(modc);
-    if(use_ploc){
-	free(amp);
-    }
-    dcellfree(HatWHmt);
-    return Ptt;
-}
 /**
    DM modes for all the low order modes, defined on DM grid. It uses ngsmod2dm
    to define the modes*/
@@ -391,102 +319,6 @@ static dcell *ngsmod_dm(const PARMS_T *parms, RECON_T *recon){
     return mod;
 }
 
-/**
-   Compute NGS modes Ha*M in the science directon using ray tracing. Not used
-*/
-/*dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
-    NGSMOD_T *ngsmod=recon->ngsmod;
-    loc_t **aloc=recon->aloc->p;
-    const int ndm=parms->ndm;
-    dcell *dmt=dcellnew(ndm,1);
-    for(int idm=0; idm<ndm; idm++){
-	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
-    }
-    dcell *M=dcellnew(1,1);
-    const int nmod=ngsmod->nmod;
-    M->p[0]=dnew(nmod,1);
-    dcell *HMC=dcellnew(parms->evl.nevl,nmod);
-    dcell* HM=HMC;
-    int nloc=aper->locs->nloc;
-    for(int imod=0; imod<nmod; imod++){
-	dzero(M->p[0]);
-	M->p[0]->p[imod]=1;
-	dcellzero(dmt);
-	ngsmod2dm(&dmt,recon,M,1.);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    IND(HM,ievl,imod)=dnew(nloc,1);
-	    for(int idm=0; idm<parms->ndm; idm++){
-		double ht=parms->dm[idm].ht;
-		double displacex=parms->evl.thetax->p[ievl]*ht;
-		double displacey=parms->evl.thetay->p[ievl]*ht;
-		prop_nongrid(aloc[idm], dmt->p[idm]->p,
-			     aper->locs, IND(HM,ievl,imod)->p,1,
-			     displacex, displacey, 1.,0,0);
-	    }
-	}
-    }
-    return HMC;
-}*/
-/**
-   Compute NGS modes Ha*M in the science directon using analytic formula. Not used
-   confirmed to agree with ngsmod_hm_accphi except DM artifacts 
-*/
-/*
-dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, const APER_T *aper){
-    NGSMOD_T *ngsmod=recon->ngsmod;
-    const double hs=ngsmod->hs;
-    const double ht=ngsmod->ht;
-    const double scale=pow(1.-ht/hs,-2);
-    const double scale1=1.-scale;
-    const int nmod=ngsmod->nmod;
-    const double MCC_fcp=recon->ngsmod->aper_fcp;
-    dcell *HMC=dcellnew(parms->evl.nevl,nmod);
-    dcell* HM=HMC;
-    double *x=aper->locs->locx;
-    double *y=aper->locs->locy;
-    int nloc=aper->locs->nloc;
-    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	double sx=parms->evl.thetax->p[ievl];
-	double sy=parms->evl.thetay->p[ievl];
-	for(int imod=0; imod<nmod; imod++){
-	    IND(HM,ievl,imod)=dnew(nloc,1);
-	}
-	if(nmod==2){
-	    for(int iloc=0; iloc<nloc; iloc++){
-		IND(HM,ievl,0)->p[iloc]=x[iloc];
-		IND(HM,ievl,1)->p[iloc]=y[iloc];
-	    }
-	}else{
-	    for(int iloc=0; iloc<nloc; iloc++){
-		double xx=pow(x[iloc],2);
-		double yy=pow(y[iloc],2);
-		double xy=x[iloc]*y[iloc];
-		IND(HM,ievl,0)->p[iloc]=x[iloc];
-		IND(HM,ievl,1)->p[iloc]=y[iloc];
-		if(ngsmod->indps){
-		    if(ngsmod->ahstfocus){
-			IND(HM,ievl,ngsmod->indps)->p[iloc]=
-			    -2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
-		    }else{
-			IND(HM,ievl,ngsmod->indps)->p[iloc]=(xx+yy-MCC_fcp)*scale1
-			    -2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
-		    }
-		    IND(HM,ievl,ngsmod->indps+1)->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
-		    IND(HM,ievl,ngsmod->indps+2)->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
-		}
-		if(ngsmod->indastig){
-		    IND(HM,ievl,ngsmod->indastig)->p[iloc]=(xx-yy);
-		    IND(HM,ievl,ngsmod->indastig+1)->p[iloc]=(xy);
-		}
-		if(ngsmod->indfocus){
-		    IND(HM,ievl,ngsmod->indfocus)->p[iloc]=(xx+yy-MCC_fcp);
-		}
-	    }
-	}
-    }
-    return HMC;
-}
-*/
 /**
    AHST parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
@@ -521,11 +353,11 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	if(ndm==2){//Plate scale mode
 	    ngsmod->indps=ngsmod->nmod;
 	    ngsmod->nmod+=3;
-	}else if(parms->nhiwfs>1){//LGS AO
+	}else if(parms->nhiwfs>1){//Astigmatism for LTAO
 	    ngsmod->indastig=ngsmod->nmod;
 	    ngsmod->nmod+=2;
 	}
-	if(parms->sim.mffocus || ngsmod->indastig){
+	if(parms->sim.mffocus || ngsmod->indastig){//Focus for LTAO or focus tracking
 	    ngsmod->indfocus=ngsmod->nmod;
 	    ngsmod->nmod+=1;
 	}
@@ -651,12 +483,12 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     if(parms->tomo.ahst_wt==1){
 	//Do it in setup_ngsmod_recon();
     }else if(parms->tomo.ahst_wt==2){
-	/*Use science based weighting. */
+	/*Use science based weighting to isolate active meta pupil. */
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
 
 	    tic;
-	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,0);
+	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,1);
 	    /*
 	      Add tikhonov regularization. H is from aloc to some other loc. 
 	      the eigen value of H'*amp*H is about 4/aloc->nloc.
@@ -670,6 +502,10 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes,ngsmod->Wa);
+	    if(parms->save.setup){
+		writebin(ngsmod->Wa, "ahst_Wa");
+	    }
+	    cellfree(ngsmod->Wa);
 	    toc("Pngs");
 	}else{
 	    info("Wa using science mode\n");
