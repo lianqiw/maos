@@ -102,9 +102,11 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 		nover, nloc, rover);
     }
     int cmod=0;
+    TIC;tic;
     for(int ir=rmin; ir<=rmax; ir++){
-	if(rmax > 10){
+	if(toc3>1){
 	    info2("Zernike radial order %d of %d\n", ir, rmax);
+	    tic;
 	}
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;

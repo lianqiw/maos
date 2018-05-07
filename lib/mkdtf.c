@@ -161,16 +161,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     const int nsa=srot->p[0]->nx;
     dmat *sodium0=sodium->p[0];
     const int ncol=(sodium0->ny-1);
-    if(icol<0 || ncol<=1){
-	icol=0;
-    }else{
-	/*We wrap the sodium profile in a way that has no abrupt jump. i.e.,
-	 * 0,1,2,3,2,1,...*/
-	icol=icol%(ncol+ncol-2);
-	if(icol>=ncol){
-	    icol=ncol*2-icol-2;
-	}
-    }
+    icol=wrap(icol, ncol);
     info2("Na using column %d.\n",icol);
     const int nhp=sodium0->nx; 
     //adjusting sodium height for the zenith angle;

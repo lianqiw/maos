@@ -234,7 +234,7 @@ static void genotf_wrap(thread_t *info){
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp->p+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
-    if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
+    //if(!detached && nsa>10) info2("Thread %ld done\n", info->ithread);
 }
 /**
    Generate pairs of overlapping points for structure function.  

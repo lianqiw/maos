@@ -55,7 +55,7 @@ SIM_T *maos_iseed(int iseed){
 		parms->sim.seeds->p[iseed]);
 	return 0;
     }
-    if(!parms->sim.pause){
+    if(parms->sim.pause!=1){
 	draw_single=1;//Only draw active frame.
     }else{
 	draw_single=0;
@@ -228,7 +228,7 @@ void maos_isim(int isim){
 	simu->timing->p[isim*simu->timing->nx+4]=simu->status->eval;
     }
     double this_time=myclockd();
-    if(this_time>simu->last_report_time+1 || isim+1==simend || parms->sim.pause){
+    if(this_time>simu->last_report_time+1 || isim+1==simend || parms->sim.pause==1){
 	/*we don't print out or report too frequently. */
 	simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
@@ -284,7 +284,7 @@ void maos_sim(){
 #endif
 	for(int isim=simstart; isim<simend; isim++){
 	    maos_isim(isim);
-	    if(parms->sim.pause){
+	    if(parms->sim.pause>0 && isim%parms->sim.pause==0){
 		mypause();
 	    }
 	}/*isim */

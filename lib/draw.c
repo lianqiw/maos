@@ -287,6 +287,7 @@ static int open_drawdaemon(){
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch
 		sock=launch_drawdaemon();
+		info("directly launch: sock=%d\n", sock);
 	    }else if(sock_helper!=-2){//use help to launch
 		if(sock_helper==-1){
 		    draw_helper();
@@ -298,13 +299,14 @@ static int open_drawdaemon(){
 		    sock_helper=-1;
 		    warning("Unable to talk to the helper to launch drawdaemon\n");
 		}
+		info("launch using sock helper: sock=%d\n", sock);
 	    }
 	}
 	if(sock!=-1){
 	    draw_add(sock);
 	}
     }
-    return sock_ndraw==0?-1:0;
+    return (sock_ndraw>0)?0:1;
 }
 
 /* 
@@ -513,6 +515,8 @@ static void imagesc_do(struct imagesc_t *data){
 	    STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	    STWRITEINT(DRAW_END);
 	}
+    }else{
+	warning("Failed to open drawdaemon()\n");
     }
     UNLOCK(lock);
     free(data->fig);
@@ -537,10 +541,6 @@ void imagesc(const char *fig, /**<Category of the figure*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
     format2fn;
-    if(open_drawdaemon()){/*failed to open. */
-	warning("Failed to open drawdaemon\n");
-	return;
-    }
     if(disable_draw || !draw_current(fig, fn)) return;
     if (draw_single){
 	//Skip this drawing if line is busy.

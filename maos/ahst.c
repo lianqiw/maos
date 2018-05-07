@@ -485,7 +485,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting to isolate active meta pupil. */
 	if(parms->dbg.wamethod==0){
-	    info("Wa using DM mode\n");
+	    info2("Wa using DM mode\n");
 
 	    tic;
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,1);
@@ -500,18 +500,18 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    double maxeig=4./nact;
 	    dcelladdI(ngsmod->Wa, 1e-9*maxeig);
 	    
-	    toc("Wa");
+	    toc2("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Modes,ngsmod->Wa);
 	    if(parms->save.setup){
 		writebin(ngsmod->Wa, "ahst_Wa");
 	    }
 	    cellfree(ngsmod->Wa);
-	    toc("Pngs");
+	    toc2("Pngs");
 	}else{
 	    info("Wa using science mode\n");
 	    tic;
 	    ngsmod->Pngs=ngsmod_Pngs_Wa(parms,recon,aper,0);
-	    toc("Pngs_Wa");
+	    toc2("Pngs_Wa");
 	}
     }else if(parms->tomo.ahst_wt==3){/*Identity weighting. */
 	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL);

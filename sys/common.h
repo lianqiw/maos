@@ -159,7 +159,6 @@ extern int detached;
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
 #define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stderr, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
-#define toc22(A) info2("%s takes %.6f seconds.\n", A, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

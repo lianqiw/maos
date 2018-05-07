@@ -30,6 +30,18 @@ typedef int spint;  /*This is always 32 bit. */
 #endif
 
 /**
+   Wrap the index for dataset with total of n frames for continuity. The actual data becomes
+   0, 1, 2, ..., n-2, n-1, n-2, ..., 0, 1
+*/
+INLINE int wrap(long index, long n){
+    long m=n*2-1;
+    index=index%m;
+    if(index<0) index+=m;
+    if(index>=n) index=m-1-index;
+    return index;
+}
+
+/**
    2010-01-03
    USE_MYFLOOR = 1 reduce timing by 2s
 */

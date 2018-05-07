@@ -237,7 +237,7 @@ static int respond(int sock){
 	mvm_data->icols=(int*)calloc(NGPU, sizeof(int));
 	mvm_data->kcols=(int*)calloc(NGPU, sizeof(int));
 
-	toc22("Read mvm");tic;
+	toc2("Read mvm");tic;
 	if(!threads){
 	    threads=(pthread_t*)calloc(NCPU, sizeof(pthread_t));
 	    cmds=(int*)calloc(NCPU, sizeof(int));
@@ -252,7 +252,7 @@ static int respond(int sock){
 		usleep(1);
 	    }
 	}
-	toc22("copy mvm to gpu");
+	toc2("copy mvm to gpu");
 	info2("done");
 	X(free)(mvm_data->mvm);
     }
@@ -360,7 +360,7 @@ static void* gpu_mvm_gpu_init(void *A){
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);
 	stream_t temp;
-	toc22("init gpu");
+	toc2("init gpu");
     }
     NCPU=NGPU;
     NGPU_MAX=NGPU;

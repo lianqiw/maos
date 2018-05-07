@@ -867,8 +867,7 @@ setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     }
     recon->RRtwfs=dcellpinv(GRtwfs, neai);
     if(parms->save.setup){
-	writebin(recon->GRall, "GRall");
-	writebin(recon->RRtwfs, "RRtwfs");
+	writebin(recon->RRtwfs, "twfs_recon");
     }
     /*if(parms->recon.fnsphpsd){
 	recon->eptwfs=twfs_gain_optim(parms, recon, powfs);

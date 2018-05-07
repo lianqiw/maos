@@ -251,4 +251,12 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 #define PIND(...) IND_GET(_0,__VA_ARGS__,PIND2,PIND1,PIND0,PIND0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
 
+//Define indexing using wrapping. See wrap()
+#define IND1R(A,i) error("Invalid use. Use INDR(A,i,j)");
+#define IND2R(A,ix,iy) IND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+#define INDR(...) IND_GET(_0,__VA_ARGS__,IND2R,IND1R,IND1R,IND1R)(__VA_ARGS__)
+#define PIND1R(A,i) error("Invalid use. Use PINDR(A,i,j)");
+#define PIND2R(A,ix,iy) PIND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+#define PINDR(...) IND_GET(_0,__VA_ARGS__,PIND2R,PIND1R,PIND1R,PIND1R)(__VA_ARGS__)
+
 #endif

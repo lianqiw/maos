@@ -235,7 +235,7 @@ void wfsgrad_iwfs(thread_t *info){
 		      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    dspmm(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,"nn",1);
+	    dspmm(&gradcalc,INDR(powfs[ipowfs].GS0,wfsind,0),opd,"nn",1);
 	}
 	if(gradcalc->p!=(*gradacc)->p){
 	    dadd(gradacc, 1, gradcalc, 1);
@@ -256,11 +256,9 @@ void wfsgrad_iwfs(thread_t *info){
 	dmat *lltopd=NULL;
 	if(powfs[ipowfs].llt){//If there is LLT, apply FSM onto LLT
 	    if(powfs[ipowfs].llt->ncpa){
-		int iotf=powfs[ipowfs].llt->ncpa->nx==1?0:wfsind;
-		lltopd=ddup(powfs[ipowfs].llt->ncpa->p[iotf]);
+		lltopd=ddup(INDR(powfs[ipowfs].llt->ncpa, wfsind, 0));
 	    }else{
-		lltopd=dnew(powfs[ipowfs].llt->pts->nx,
-			    powfs[ipowfs].llt->pts->nx);
+		lltopd=dnew(powfs[ipowfs].llt->pts->nx, powfs[ipowfs].llt->pts->nx);
 	    }
 	    const long illt=parms->powfs[ipowfs].llt->i->p[wfsind];
 	    if(atm){/*LLT OPD */
@@ -1036,7 +1034,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
     const int itpowfs=parms->itpowfs;
     const int ntstep=(simu->isim-parms->powfs[itpowfs].step+1);
     if(ntstep>0 && ntstep%parms->powfs[itpowfs].dtrat==0){
-	info2("Step %5d: TWFS[%d] has output with gain %g, step=%d\n", simu->isim, itpowfs, simu->eptwfs, parms->powfs[itpowfs].step);
+	info2("Step %5d: TWFS[%d] has output with gain %g\n", simu->isim, itpowfs, simu->eptwfs);
 	dcell *Rmod=0;
 	//Build radial mode error using closed loop TWFS measurements from this time step.
 	dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
@@ -1046,14 +1044,14 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].llt){
 		dmm(&simu->gradoff->p[iwfs], 1, simu->recon->GRall->p[iwfs], Rmod->p[0], "nn", -simu->eptwfs); 
-	    }
-
-	    if(parms->plot.run){
-		const int nsa=simu->powfs[ipowfs].saloc->nloc;
-		drawopd("Goffx",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p,NULL,
-			"WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		drawopd("Goffy",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p+nsa, NULL,
-			"WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+		
+		if(parms->plot.run){
+		    const int nsa=simu->powfs[ipowfs].saloc->nloc;
+		    drawopd("Goffx",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p,NULL,
+			    "WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
+		    drawopd("Goffy",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p+nsa, NULL,
+			    "WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
+		}
 	    }
 	    if(parms->save.dither){
 		writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_twfs_%d", iwfs, simu->isim);

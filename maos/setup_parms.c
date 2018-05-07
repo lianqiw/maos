@@ -1302,6 +1302,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     //Check powfs.dsa
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
 	if(parms->powfs[ipowfs].dsa<=-1){//Order
 	    parms->powfs[ipowfs].dsa=parms->aper.d/(-parms->powfs[ipowfs].dsa);
 	}else if(parms->powfs[ipowfs].dsa<0){//In unit of d
@@ -1314,9 +1315,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
 	parms->powfs[ipowfs].order=ceil(parms->aper.d/parms->powfs[ipowfs].dsa);
-    }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
+	if(powfsi->cogthres<0){
+	    powfsi->cogthres=-powfsi->cogthres * powfsi->rne;
+	}
+
 	if(powfsi->radrot && !powfsi->radpix){
 	    powfsi->radrot=0;
 	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);

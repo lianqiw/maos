@@ -29,6 +29,5 @@ extern int exit_fail;
 extern const char *dirskysim;
 #define EXIT raise(SIGTERM)
 extern GLOBAL_T *global;
-#define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #endif
 

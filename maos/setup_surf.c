@@ -529,6 +529,12 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    powfs[ipowfs].opdadd=dcellread("%s/surfpowfs_%d.bin", parms->load.ncpa, ipowfs);
 	    if(powfs[ipowfs].opdadd->nx!=parms->powfs[ipowfs].nwfs){
 		error("surfpowfs_%d is in wrong format\n", ipowfs);
+	    }else{
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    if(powfs[ipowfs].opdadd->p[jwfs]->nx!=powfs[ipowfs].saloc->nloc){
+			error("surfpowfs_%d is in wrong format\n", ipowfs);
+		    }
+		}
 	    }
 	}
     }else{

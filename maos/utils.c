@@ -839,8 +839,7 @@ double wfsfocusadj(SIM_T *simu, int iwfs){
     double focus=0;
     if(parms->powfs[ipowfs].llt){
 	if(powfs[ipowfs].focus){
-	    const long nx=powfs[ipowfs].focus->nx;
-	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+	    focus+=INDR(powfs[ipowfs].focus, isim, wfsind);
 	}
 	if(simu->zoomreal && parms->powfs[ipowfs].llt){
 	    if(simu->zoompos && simu->zoompos->p[iwfs]){
