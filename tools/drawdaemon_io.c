@@ -91,13 +91,13 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 #define STREAD(p,len) if(stread(sock,p,len)) goto end;
 #define STREADSTR(p) if(streadstr(sock, &p)) goto end;
 void listen_draw(){
-    info("listen_draw is listening at %d\n", sock);
+    dbg("listen_draw is listening at %d\n", sock);
     //TIC;tic;
     static drawdata_t *drawdata=NULL;
     int cmd=0;
     static int errcount=0;
     while(!streadint(sock, &cmd)){
-	//info("cmd=%d\n", cmd);
+	//dbg("cmd=%d\n", cmd);
 	sock_block=0;//Indicate connection is active
 	switch (cmd){
 	case DRAW_START:
@@ -142,7 +142,7 @@ void listen_draw(){
 	    break;
 	case DRAW_POINTS:
 	    {
-		//info("DRAW_POINTS\n");
+		//dbg("DRAW_POINTS\n");
 		int nptsx, nptsy;
 		int ipts=drawdata->npts;
 		drawdata->npts++;
@@ -210,7 +210,7 @@ void listen_draw(){
 	    STREAD(drawdata->xylog, sizeof(char)*2);
 	    break;
 	case DRAW_FINAL:
-	    info("client is done\n");
+	    dbg("client is done\n");
 	    sock_block=1;
 	    break;
 	case DRAW_END:

@@ -10,14 +10,14 @@ rand_t rstat2;
 static void test_number(){
     rand_t a,b;
     seed_rand(&a,1);
-    info("First number is %g\n",randn(&a));
+    dbg("First number is %g\n",randn(&a));
     seed_rand(&a,1);
     unsigned int i=lrand(&a);
-    info("First number is %u\n",i);
+    dbg("First number is %u\n",i);
     i=lrand(&a);
-    info("First number is %u\n",i);
+    dbg("First number is %u\n",i);
     seed_rand(&b,i);
-    info("First number is %g\n",randn(&b));
+    dbg("First number is %g\n",randn(&b));
 }
 static void test_speed(){
     double *p;

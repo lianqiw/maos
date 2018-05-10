@@ -100,9 +100,9 @@ static void mvm_trans_igpu(thread_t *info){
 	int curact=curp[iact][1];
 	if(info->ithread==0){
 	    if(!detached){
-		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*NGPU, ntotact);
+		info("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*NGPU, ntotact);
 	    }else if(iact % 100==0){
-		info2("%6d of %6d\n", iact*NGPU, ntotact);
+		info("%6d of %6d\n", iact*NGPU, ntotact);
 	    }
 	}
 	if(eyec){
@@ -167,7 +167,7 @@ static void mvm_trans_igpu(thread_t *info){
     cudaMemcpyAsync(mvmtc, mvmt.P(), nn, cudaMemcpyDeviceToDevice, stream);
     stream.sync();
     tk_cp+=toc3;tic;
-    info2("GPU %d: Prep %.2f FitL %.2f FitR %.2f TomoL %.1f TomoR %.1f cp %.2f\n", 
+    info("GPU %d: Prep %.2f FitL %.2f FitR %.2f TomoL %.1f TomoR %.1f cp %.2f\n", 
 	  igpu, tk_prep, tk_fitL, tk_fitR, tk_TomoL, tk_TomoR, tk_cp);
 }
 
@@ -177,7 +177,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	error("Please adapt to LSR\n");
     } 
     if(!parms->load.mvm){
-	info2("Assembling MVR MVM (transpose) in GPU\n");
+	info("Assembling MVR MVM (transpose) in GPU\n");
 	int ntotact=0;
 	int ntotgrad=0;
 	int ntotxloc=0;

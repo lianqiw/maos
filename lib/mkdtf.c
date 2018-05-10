@@ -162,7 +162,7 @@ ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
     dmat *sodium0=sodium->p[0];
     const int ncol=(sodium0->ny-1);
     icol=wrap(icol, ncol);
-    info2("Na using column %d.\n",icol);
+    info("Na using column %d.\n",icol);
     const int nhp=sodium0->nx; 
     //adjusting sodium height for the zenith angle;
     double hpmin=0, dhp1=0;
@@ -464,7 +464,7 @@ dmat* smooth(const dmat *prof, double dxnew){
 	locfree(loc_out);
 	toc2("done");
     }else{
-	info("smooth: Referencing");
+	dbg("smooth: Referencing");
 	out=dref(prof);
     }
     return out;

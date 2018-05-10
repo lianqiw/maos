@@ -63,9 +63,9 @@ void test_sum(){
     double tim2=toc3*1024*1024*1024;
     toc("sum2_wrap");
 
-    info("sum_wrap  %.2f GB/s\n", N*sizeof(Real)/tim);
-    info("sum2_wrap %.2f GB/s\n", N*sizeof(Real)/tim2);
-    info("Result: %g %g %g %g\n", res[0], res[1]-res[0], res[2]-res[1], res[3]-res[2]);
+    dbg("sum_wrap  %.2f GB/s\n", N*sizeof(Real)/tim);
+    dbg("sum2_wrap %.2f GB/s\n", N*sizeof(Real)/tim2);
+    dbg("Result: %g %g %g %g\n", res[0], res[1]-res[0], res[2]-res[1], res[3]-res[2]);
 }
 /*Test ray tracing*/
 void test_prop(){

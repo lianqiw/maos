@@ -103,7 +103,7 @@ static void draw_loc(file_t *fp, int id){
     free(name);
 }
 static void usage(){
-	info2("Usage:\n"
+	info("Usage:\n"
 "drawbin loc ploc.bin\n"
 "drawbin opd powfs0_loc.bin powfs0_amp.bin\n"
 );

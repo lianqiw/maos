@@ -137,7 +137,7 @@ static void __global__ dither_acc_do(const short *pix,
    
 */
 void mvmfull_real(int *gpus, int ngpu, int nstep){
-    info("Using %d gpus. nstep=%d\n", ngpu, nstep);
+    dbg("Using %d gpus. nstep=%d\n", ngpu, nstep);
     int nstep0=nstep>1?1000:0;//for warm up
     //Load subaperture actual pixel numbers along radial direction and offset of pixel of each subaperture.
     dmat *d_saind=dread("NFIRAOS_saind");
@@ -205,12 +205,12 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	char *MVM_NSM=getenv("MVM_NSM");
 	if(MVM_NSM){
 	    nsm=strtol(MVM_NSM, NULL, 10);
-	    info2("nsm is set to %d\n", nsm);
+	    info("nsm is set to %d\n", nsm);
 	}
 	char *MVM_NGRID=getenv("MVM_NGRID");
 	if(MVM_NGRID){
 	    mtch_ngrid=strtol(MVM_NGRID, NULL, 10);
-	    info2("mtch_ngrid is set to %d\n", mtch_ngrid);
+	    info("mtch_ngrid is set to %d\n", mtch_ngrid);
 	}
 	char *MVM_NOVER=getenv("MVM_NOVER");
 	if(MVM_NOVER){
@@ -225,10 +225,10 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    if(MVM_PORT){
 		port=strtol(MVM_PORT, NULL, 10);
 	    }
-	    info2("Connecting to server %s\n", MVM_CLIENT);
+	    info("Connecting to server %s\n", MVM_CLIENT);
 	    sock=connect_port(MVM_CLIENT, port, 0 ,1);
 	    if(sock!=-1) {
-		info2("Connected");
+		info("Connected");
 		int cmd[7];
 		cmd[0]=nact;
 		cmd[1]=nsa;
@@ -244,7 +244,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    warning("Failed: %s\n", strerror(errno));
 		}
 	    } else {
-		info2("Failed\n");
+		info("Failed\n");
 	    }
 	}
     }
@@ -300,7 +300,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	close(sock); sock=-1;
     }
     int nblock;
-    info2("Ready\n");
+    info("Ready\n");
     int ibuf=0;//buffer to use for statistics
     int ibuf_mtch=0;//buffer for matched filter
     int ibuf_stat=0;//buffer for matched filter computation
@@ -479,7 +479,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    nsaleft=nc;
 		}
 		if(datai->ic==0){
-		    info2("step %d: gpu %d uploading mvm\n", istep, igpu);
+		    info("step %d: gpu %d uploading mvm\n", istep, igpu);
 		}
 		DO(cudaMemcpyAsync(datai->cumvm_next.P()+datai->ic*mvm->nx, 
 				   mvm->p+datai->ic*mvm->nx, sizeof(Real)*mvm->nx*nsaleft, 
@@ -492,7 +492,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 		    curmat tmp=datai->cumvm;
 		    datai->cumvm=datai->cumvm_next;
 		    datai->cumvm_next=tmp;
-		    info2("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
+		    info("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
 		}
 	    }
 	}
@@ -570,7 +570,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 
 	if(istep>0 && (istep+1)%2400==0){
 	    ibuf_stat=ibuf;
-	    info2("Download statistics to CPU at step %d\n", istep);
+	    info("Download statistics to CPU at step %d\n", istep);
 	    ibuf=(ibuf+1)%nbuf;
 	    mtch_down=1;
 	    memset(copied_mtch, 0, sizeof(char)*nset*3);
@@ -605,7 +605,7 @@ void mvmfull_real(int *gpus, int ngpu, int nstep){
 	    if(tim_min>timing->p[istep]) tim_min=timing->p[istep];
 	    if(tim_max<timing->p[istep]) tim_max=timing->p[istep];
 	    if(istep%1000==0){
-		info2("Step %d, mean=%g, min=%g, max=%g ms\n", istep, tim_tot/(istep)*1e3, tim_min*1e3, tim_max*1e3);
+		info("Step %d, mean=%g, min=%g, max=%g ms\n", istep, tim_tot/(istep)*1e3, tim_min*1e3, tim_max*1e3);
 	    }
 	}
     }

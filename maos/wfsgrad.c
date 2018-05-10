@@ -422,7 +422,7 @@ void wfsgrad_iwfs(thread_t *info){
     dfree(gradcalc);
     TIM(4);
 #if TIMING==1
-    info2("WFS %d grad timing: atm %.2f dm %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2,tk4-tk3);
+    info("WFS %d grad timing: atm %.2f dm %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2,tk4-tk3);
 #endif
 }
 static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
@@ -443,7 +443,7 @@ static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
 	    }
 	}
 	slope/=(npoint*nmod*offset);
-	//info("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
+	//dbg("slope=%g. npoint=%ld, nmod=%ld, nframe=%ld, offset=%ld\n", slope, npoint, nmod, nframe, offset);
     }
     double anglei=M_PI*2/npoint;
     double ipv=0, qdv=0;
@@ -472,7 +472,7 @@ static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
     /*{
 	static int count=0;
 	writebin(dithersig, "dithersig_%d", count);
-	info("a2m=%g, slope=%g, npoint=%ld, dtrat=%ld, detrend=%d\n", a2m, slope, npoint, dtrat, detrend);
+	dbg("a2m=%g, slope=%g, npoint=%ld, dtrat=%ld, detrend=%d\n", a2m, slope, npoint, dtrat, detrend);
 	count++;
 	if(count==2){ exit(0);}
 	}*/
@@ -576,8 +576,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    
 	if(iwfs==parms->powfs[ipowfs].wfs->p[0]){
 	    const double anglei=(2*M_PI/parms->powfs[ipowfs].dither_npoint);
-	    info2("Step %d wfs%d PLL: deltam=%.2f frame, a2m=%.2f, a2me/a2m=%.2f\n",
-		  isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me/pd->a2m);
+	    info("Step %d wfs%d PLL: delay=%.2f frame, dither amplitude=%.2f, estimate=%.2f\n",
+		  isim, iwfs, pd->deltam/anglei, pd->a2m, pd->a2me);
 	}
 	if(simu->resdither){
 	    int ic=(npllacc-1)/(npll);
@@ -713,7 +713,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		}
 		LGSfocus->p[iwfs]->p[0]-=simu->zoomint->p[iwfs];
 		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->zoomint->p[iwfs]);
-		info2("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
+		info("wfs %d: Set trombone position to %g.\n", iwfs, simu->zoomint->p[iwfs]);
 	    }
 	}
 	//In RTC. LPF can be put after using the value to put it off critical path.
@@ -868,7 +868,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    double scale1=(double)parms->powfs[ipowfs].dither_pllrat/(double)parms->powfs[ipowfs].dither_ograt;
 	    if(parms->powfs[ipowfs].phytype_sim2==1 && parms->powfs[ipowfs].type==0){
-		info2("Step %d: Update matched filter for powfs %d\n", simu->isim, ipowfs);
+		info("Step %d: Update matched filter for powfs %d\n", simu->isim, ipowfs);
 		//For matched filter
 		if(!powfs[ipowfs].intstat){
 		    powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
@@ -963,19 +963,22 @@ static void wfsgrad_dither_post(SIM_T *simu){
 				simu->gradscale->p[iwfs]->p[ig]+=-adj;
 			    }
 #else
-			    simu->gradscale->p[iwfs]->p[ig]*=pow(pd->gg0->p[ig], -parms->powfs[ipowfs].dither_gog);
+			    if(pd->gg0->p[ig]>0.01){//skip weakly determined subapertures.
+				simu->gradscale->p[iwfs]->p[ig]*=pow(pd->gg0->p[ig], -parms->powfs[ipowfs].dither_gog);
+			    }
 #endif
 			}
 			mgnew=dsum(simu->gradscale->p[iwfs])/ng;
 			dzero(pd->gg0);
 		    }
-		    info2("Step %5d wfs %d CoG gain adjusted by %g %s.\n", 
-			  simu->isim, iwfs, mgnew, pd->gg0?"on average":"globally");
+		    info("Step %5d wfs %d CoG gain adjusted from %g to %g %s.\n", 
+			  simu->isim, iwfs, mgold, mgnew, pd->gg0?"on average":"globally");
 		    if(simu->resdither){
 			int ic=(npllacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgnew;
 		    }			   
 		    //adjust WFS measurement dither dithersig by gain adjustment. used for dither t/t removal from gradients.
+		    //dbg("a2me=%g, mgold=%g, mgnew=%g\n", pd->a2me, mgold, mgnew);
 		    pd->a2me*=(mgnew/mgold);
 		    dcellscale(powfs[ipowfs].saneaxy, pow(mgnew/mgold, 2));
 		    if(parms->save.dither){
@@ -989,7 +992,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    if(parms->powfs[ipowfs].phytype_sim != parms->powfs[ipowfs].phytype_sim2){
 		parms->powfs[ipowfs].phytype_sim=parms->powfs[ipowfs].phytype_sim2;
 		parms->powfs[ipowfs].phytype_recon=parms->powfs[ipowfs].phytype_sim;
-		info2("Step %5d: powfs %d changed to %s\n", simu->isim, ipowfs, 
+		info("Step %5d: powfs %d changed to %s\n", simu->isim, ipowfs, 
 		      parms->powfs[ipowfs].phytype_sim==1?"matched filter":"CoG");
 	    }
 	    if(parms->powfs[ipowfs].phytype_sim==1){//Matched filter
@@ -1007,7 +1010,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		}
 #if USE_CUDA
 		if(parms->gpu.wfs){
-		    info2("Update matched filter in GPU\n");
+		    info("Update matched filter in GPU\n");
 		    gpu_wfsgrad_update_mtche(parms, powfs);
 		}
 #endif
@@ -1021,8 +1024,8 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		}
 #endif
 	    }
-
 	}
+
     }
 }
 /**
@@ -1034,7 +1037,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
     const int itpowfs=parms->itpowfs;
     const int ntstep=(simu->isim-parms->powfs[itpowfs].step+1);
     if(ntstep>0 && ntstep%parms->powfs[itpowfs].dtrat==0){
-	info2("Step %5d: TWFS[%d] has output with gain %g\n", simu->isim, itpowfs, simu->eptwfs);
+	info("Step %5d: TWFS[%d] has output with gain %g\n", simu->isim, itpowfs, simu->eptwfs);
 	dcell *Rmod=0;
 	//Build radial mode error using closed loop TWFS measurements from this time step.
 	dcellmm(&Rmod, simu->recon->RRtwfs, simu->gradcl, "nn", 1);
@@ -1066,7 +1069,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 	    const int ntacc=ntstep/parms->powfs[itpowfs].dtrat;
 	    const int dtrat=parms->recon.psddtrat_twfs;
 	    if(ntacc % dtrat==0){//output
-		info("Step %5d: TWFS output psd\n", simu->isim);
+		dbg("Step %5d: TWFS output psd\n", simu->isim);
 		dmat *ts=dsub(simu->restwfs, 0, 0, ntacc-dtrat, dtrat);
 		dmat *tts=dtrans(ts);dfree(ts);
 		const double dt=parms->sim.dt*parms->powfs[itpowfs].dtrat;	
@@ -1080,7 +1083,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->powfs[itpowfs].dtrat, M_PI*0.25, 0, 1);
 		const double g=0.5;
 		simu->eptwfs=simu->eptwfs*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %5d New gain (twfs): %.3f\n", simu->isim, simu->eptwfs);
+		info("Step %5d New gain (twfs): %.3f\n", simu->isim, simu->eptwfs);
 		dfree(psdol);
 		cellfree(coeff);
 		dfree(psd);

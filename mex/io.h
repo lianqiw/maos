@@ -33,7 +33,7 @@ typedef unsigned int mwIndex;
 #define MAX(A,B) (A)>(B)?(A):(B)
 typedef struct {float x; float y;} fcomplex;
 typedef struct {double x; double y;} dcomplex;
-#define info(A...) fprintf(stderr,A)
+#define dbg(A...) fprintf(stderr,A)
 #define warning(A...)							\
     do{									\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\

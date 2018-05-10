@@ -156,11 +156,11 @@ static double sde_diff(const double *coeff, void *pdata){
     if(!isfinite(diff)){
 	error("Diff is not finite\n");
     }
-    /*info2("coeff=");
+    /*info("coeff=");
     for(int imod=0; imod<data->nmod; imod++){
-	info2("[%g %.2f %g] ", coeff[3*imod], coeff[3*imod+1], coeff[3*imod+2]);
+	info("[%g %.2f %g] ", coeff[3*imod], coeff[3*imod+1], coeff[3*imod+2]);
     }
-    info2("ncov=%d. cov0=[%g, %g] diff=%g. count=%d\n", data->ncov, data->psdcov_in->p[0], data->psdcov_sde->p[0], diff, data->count);
+    info("ncov=%d. cov0=[%g, %g] diff=%g. count=%d\n", data->ncov, data->psdcov_in->p[0], data->psdcov_sde->p[0], diff, data->count);
     */
     return diff;
 }
@@ -258,7 +258,7 @@ static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
     dminsearch(coeff->p, ncoeff*nmod, tol, nmax, sde_diff, &data);
     //Do not scale coeff after the solution.
     double diff1=sde_diff(coeff->p, &data);
-    info2("sde_fit: %d interations: %g->%g.\n", data.count, diff0, diff1);
+    info("sde_fit: %d interations: %g->%g.\n", data.count, diff0, diff1);
     //Scale to make sure total energy is preserved.
     /*
       if(diff1>0.2 && diff1>diff0*0.75){
@@ -267,14 +267,14 @@ static dmat* sde_fit_do(const dmat *psdin, const dmat *coeff0, double tmax_fit){
 	writebin(coeff0,"sde_fit_coeff_%d_%g", count, tmax_fit);
 	count++;
 	if(tmax_fit>0){
-	    info2("Redo with PSD fitting.\n");
+	    info("Redo with PSD fitting.\n");
 	    dfree(coeff);
 	    coeff=sde_fit_do(psdin, coeff0, 0);
 	}else{
-	    warning2("Failed to converge.\n");
+	    warning("Failed to converge.\n");
 	}
     }else{
-	info2("\n");
+	info("\n");
 	}*/
     dfree(freq);
     dfree(psdcov_in);
@@ -306,7 +306,7 @@ dmat* sde_fit(const dmat *psdin, const dmat *coeff0, double tmax_fit, int vibid)
 	dmat *coeffi=dnew(3,1);
 	dmat *psd2=ddup(psdin);
 	if(vibs && vibs->ny>0){
-	    info("\nnvib=%ld\n", vibs->ny);
+	    dbg("\nnvib=%ld\n", vibs->ny);
 	    for(int ivib=0; ivib<vibs->ny; ivib++){
 		double fi=vibs->p[ivib*4+0];
 		int i1=vibs->p[ivib*4+2];

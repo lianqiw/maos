@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
     }
     dspcell *RLM=dspcellread("%s",argv[1]);
     dsp *RLMc=dspcell2sp(RLM);
-    tic;info2("chol ...");
+    tic;info("chol ...");
     spchol *R1=chol_factorize(RLMc);
     toc("done");
     rand_t rstat;

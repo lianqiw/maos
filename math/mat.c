@@ -331,7 +331,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
     if(!A) return;
     assert_mat(A);
     format2fn;
-    info2("Displaying content of %s:\n",fn);
+    info("Displaying content of %s:\n",fn);
     int colmax=10;
     int iset,i,j;
     int nset=(A->ny+colmax-1)/colmax;

@@ -39,7 +39,7 @@
 #define DEBUG 0
 #endif
 #if DEBUG == 1
-#define pline info2("Line: %d\n", __LINE__);
+#define pline info("Line: %d\n", __LINE__);
 #else
 #define pline
 #endif
@@ -173,7 +173,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	dispy=(dispy-xloc->map->oy)*dx1;	
 	dp2=dp1;
 	if(fabs(scale-1)>1.e-10)
-	    info2("This is a bug in mkg to do three plane mkg when scale!=1\n");
+	    info("This is a bug in mkg to do three plane mkg when scale!=1\n");
     }else{
 	/*
 	  If XLOC is missing or XLOC and PLOC are the same, treat the
@@ -383,8 +383,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				plocy=ploc->locy[ipix]*dx2+dispy;
 				SPLIT(plocx,dplocx,nplocx);
 				SPLIT(plocy,dplocy,nplocy);
-				/*info2("weight[%d]=%g\n",iw,weight[iw]); */
-				/*info2("(%g, %g, %d), (%g, %g, %d)\n", */
+				/*info("weight[%d]=%g\n",iw,weight[iw]); */
+				/*info("(%g, %g, %d), (%g, %g, %d)\n", */
 				/*    plocx,dplocx,nplocx, */
 				/*   plocy,dplocy,nplocy); */
 				wtsum=0;
@@ -392,7 +392,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				ADDWT(1+nplocx,dplocx,nplocy,1-dplocy);
 				ADDWT(nplocx,1-dplocx,1+nplocy,dplocy);
 				ADDWT(1+nplocx,dplocx,1+nplocy,dplocy);
-				/*info2("wtsum=%g\n",wtsum); */
+				/*info("wtsum=%g\n",wtsum); */
 				wtsum=1./wtsum;
 				/*We are computing gradients on the PLOC.
 				  This gradient is scaled by 1/scale in XLOC*/
@@ -404,7 +404,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	iphi--;								\
 	/*Check whether we already have the weight for this point.*/	\
 	if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)>TOL){			\
-	    /*info2("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/		\
+	    /*info("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/		\
 	    for(itmp=pp[iw][isa]; itmp<count[iw]; itmp++){		\
 		if(pi[iw][itmp]==iphi){					\
 		    px[iw][itmp]+=wt0;					\
@@ -429,7 +429,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		}/*if ipix*/
 	    }/*limx*/
 	}/*limy*/
-	/*info2("ampsum=%g\n",ampsum); */
+	/*info("ampsum=%g\n",ampsum); */
 	if(ampsum>amp_thres){//2017-09-19: was TOL. Changed to amp_thres to filter weak subapertures
 	    ampsum=1./ampsum;
 	}else{

@@ -86,7 +86,7 @@ public:
 	    if(!p){
 		DO(cudaMalloc(&p, nx*ny*sizeof(T)));
 		DO(cudaMemset(p, 0, nx*ny*sizeof(T)));
-		//info2("%p allocated with size %ld\n", p, nx*ny*sizeof(T));
+		//info("%p allocated with size %ld\n", p, nx*ny*sizeof(T));
 		own=1;
 	    }
 	    if(own){

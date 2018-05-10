@@ -174,7 +174,7 @@ int get_cpu_avail(void){
     double load=get_usage_load();
     double cent=get_usage_cpu();
     int nrunning=get_usage_running();
-    info2("load=%g, %d%%, nrun=%d, ncpu=%d\n", load, (int)(cent*100), nrunning, NCPU);
+    info("load=%g, %d%%, nrun=%d, ncpu=%d\n", load, (int)(cent*100), nrunning, NCPU);
     if(load>NCPU+1){/*don't want to put too much load on the machine. */
 	return 0;
     }
@@ -183,7 +183,7 @@ int get_cpu_avail(void){
 	avail=NCPU-nrunning;
     }
     if(avail<0) avail=0;
-    /*info("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
+    /*dbg("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
     return avail;
 }
 /**

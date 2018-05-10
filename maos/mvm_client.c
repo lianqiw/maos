@@ -59,7 +59,7 @@ void mvm_client_send_m(dmat *mvmd, int ngpu){
     cmd[1]=ngpu;
     cmd[2]=mvmd->nx;
     cmd[3]=mvmd->ny;
-    info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
+    info("sending mvm %dx%d ...", cmd[2], cmd[3]);
     WRITE_CMD(cmd);
     float *fmvm=mymalloc((mvmd->nx*mvmd->ny),float);
     for(int i=0; i<mvmd->nx*mvmd->ny; i++){
@@ -67,7 +67,7 @@ void mvm_client_send_m(dmat *mvmd, int ngpu){
     }
     WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
     free(fmvm);
-    info2(" done\n");
+    info(" done\n");
 }
 void mvm_client_init(const char *host, int port, dmat *mvm, int ngpu){
     if((sock_mvm=connect_port(host, port, 1, 1))<0){
@@ -138,7 +138,7 @@ void mvm_client_recon(int mvmsize, dcell *dm, dcell *grad){
 	}
     }
     double tim_acp=toc3; tic;
-    info2("k=%d, gsend %3.0f, dmread %4.0f, dmcopy %2.0f, total %4.0f\n", neach,
+    info("k=%d, gsend %3.0f, dmread %4.0f, dmcopy %2.0f, total %4.0f\n", neach,
 	  tim_gsend*1e6, tim_aread*1e6, tim_acp*1e6, (myclockd()-tk0)*1e6);
     free(dmall);
     free(gall);

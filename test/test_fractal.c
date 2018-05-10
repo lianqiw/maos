@@ -42,13 +42,13 @@ static void test_accuracy(){
     dmat *v=dread("atm_rand.bin");
     double dot1=dotdbl(u->p, Av->p, NULL, nx*ny);
     double dot2=dotdbl(v->p, Atu->p, NULL, nx*ny);
-    info("dot1=%g, dot2=%g, diff=%g\n", dot1, dot2, dot1-dot2);
+    dbg("dot1=%g, dot2=%g, diff=%g\n", dot1, dot2, dot1-dot2);
 
     dmat *u2=dread("atm2_frac_inv_trans.bin");
     dmat *v2=dread("atm_frac_inv.bin");
     double d1=ddiff(u, u2);
     double d2=ddiff(v, v2);
-    info("d1=%g, d2=%g\n", d1, d2);
+    dbg("d1=%g, d2=%g\n", d1, d2);
 }
 static void test_cov(){/*not good */
     rand_t rstat;
@@ -79,7 +79,7 @@ static void test_cov(){/*not good */
     
     dzero(atmhattot);
     for(long i=0; i<nframe; i++){
-	info("%ld of %ld\n", i, nframe);
+	dbg("%ld of %ld\n", i, nframe);
 	
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
@@ -118,7 +118,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     dmat *vec=dref_reshape((dmat*)atm, N*N, 1);
     dmat *cov=NULL;
     for(long i=0; i<nframe; i++){
-	info("%ld of %ld\n", i, nframe);
+	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
@@ -145,7 +145,7 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
     dmat *cov=NULL;
     dmat* pp=(dmat*)atm;
     for(long i=0; i<nframe; i++){
-	info("%ld of %ld\n", i, nframe);
+	dbg("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
@@ -190,7 +190,7 @@ static void test_stfun(){
 	    stfun_push(data, (dmat*)atm);
 	    zfarr_dmat(save, i, (dmat*)atm);
 	    if(i%100==0)
-		info("%ld of %ld\n", i, nframe);
+		dbg("%ld of %ld\n", i, nframe);
 	}
 	zfarr_close(save);
 	dmat *st=stfun_finalize(data);
@@ -218,7 +218,7 @@ static void test_stfun(){
 	    stfun_push(data, atmr);
 	    stfun_push(data, atmi);
 	    if(ii%100==0)
-		info("%ld of %ld\n", ii, nframe);
+		dbg("%ld of %ld\n", ii, nframe);
 	}
 	dmat *st=stfun_finalize(data);
 	writebin(st, "stfun_fft.bin");
@@ -247,7 +247,7 @@ static void test_psd(){
 	dmat *hattot=dnew(nx*ratio, ny*ratio);
 
 	for(long i=0; i<nframe; i++){
-	    info2("%ld of %ld\n", i, nframe);
+	    info("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
@@ -280,7 +280,7 @@ static void test_psd(){
 	dmat*  patmr=atmr;
 	dmat*  patmi=atmi;
 	for(long ii=0; ii<nframe; ii+=2){
-	    info2("%ld of %ld\n", ii, nframe);
+	    info("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
 		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
 	    }
@@ -330,7 +330,7 @@ static void test_cxx(){
 	dmat *cxx=dnew(N*N,N*N);
 	map_t *atm=mapnew(nx+1, ny+1, dx, dx,NULL);
 	for(long i=0; i<nframe; i++){
-	    info("%ld of %ld\n", i, nframe);
+	    dbg("%ld of %ld\n", i, nframe);
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
@@ -355,7 +355,7 @@ static void test_cxx(){
 	dmat *atmr=dnew(nx*ny,1);
 	dmat *atmi=dnew(nx*ny,1);
 	for(long ii=0; ii<nframe; ii+=2){
-	    info("%ld of %ld\n", ii, nframe);
+	    dbg("%ld of %ld\n", ii, nframe);
 	    for(long i=0; i<atm->nx*atm->ny; i++){
 		atm->p[i]=COMPLEX(randn(&rstat), randn(&rstat))*spect->p[i];
 	    }

@@ -74,7 +74,7 @@ typedef struct{
 sockinfo_t sock_draws[MAXDRAW];
 
 #define CATCH(A) if(A){\
-	info("stwrite to %d failed with %s\n", \
+	dbg("stwrite to %d failed with %s\n", \
 	     sock_draw, strerror(errno));				\
 	warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);	\
 	if(sock_helper<0&&!DRAW_DIRECT){				\
@@ -96,7 +96,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
     listening=1;
     int sock_draw=sock_data->fd;
     char **figfn=sock_data->figfn;
-    //info2("draw is listening to drawdaemon at %d\n", sock_draw);
+    //info("draw is listening to drawdaemon at %d\n", sock_draw);
     int cmd;
     while(!streadint(sock_draw, &cmd)){
 	switch(cmd){
@@ -106,7 +106,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 		streadstr(sock_draw, &fig);
 		streadstr(sock_draw, &fn);
 		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
-		    info2("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+		    info("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 		}
 		free(figfn[0]);
 		free(figfn[1]);
@@ -116,17 +116,17 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 	    break;
 	case DRAW_PAUSE:
 	    sock_data->pause=1;
-	    info2("draw %d paused\n", sock_draw);
+	    info("draw %d paused\n", sock_draw);
 	    break;
 	case DRAW_RESUME:
 	    sock_data->pause=0;
-	    info2("draw %d resumed\n", sock_draw);
+	    info("draw %d resumed\n", sock_draw);
 	    break;
 	default:
 	    warning("cmd=%d is not understood\n", cmd);
 	}
     }
-    //info2("draw stop lisening to drawdaemon at %d\n", sock_draw);
+    //info("draw stop lisening to drawdaemon at %d\n", sock_draw);
     listening=0;
 }
 
@@ -282,12 +282,12 @@ static int open_drawdaemon(){
 	if(scheduler_recv_socket(&sock, DRAW_ID)){
 	    sock=-1;
 	}else{
-	    info("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
+	    dbg("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
 	}
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch
 		sock=launch_drawdaemon();
-		info("directly launch: sock=%d\n", sock);
+		dbg("directly launch: sock=%d\n", sock);
 	    }else if(sock_helper!=-2){//use help to launch
 		if(sock_helper==-1){
 		    draw_helper();
@@ -299,7 +299,7 @@ static int open_drawdaemon(){
 		    sock_helper=-1;
 		    warning("Unable to talk to the helper to launch drawdaemon\n");
 		}
-		info("launch using sock helper: sock=%d\n", sock);
+		dbg("launch using sock helper: sock=%d\n", sock);
 	    }
 	}
 	if(sock!=-1){

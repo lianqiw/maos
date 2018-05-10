@@ -184,7 +184,7 @@ void mvm_test(int igpu){
 	event[1].record(stream[0]);
 	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
-	info("cublas?gemv takes %.6f ms\n", tm);
+	dbg("cublas?gemv takes %.6f ms\n", tm);
 	cuwrite(cuy, "y_cugemv");
     }
     {
@@ -212,7 +212,7 @@ void mvm_test(int igpu){
 		for(is=0; is<nstream; is++){
 		    stream[is].sync();
 		}
-		info("nover=%d,  %.6f ms\n", nover, toc3*1000);
+		dbg("nover=%d,  %.6f ms\n", nover, toc3*1000);
 	    }
 	cuwrite(cuy, "y_multimv");
     }
@@ -232,7 +232,7 @@ void mvm_test(int igpu){
 	event[1].record(stream[0]);
 	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
-	info("mvm_g_mul takes %.6f ms\n", tm);
+	dbg("mvm_g_mul takes %.6f ms\n", tm);
 	cuwrite(cuy, "y_gmul");
 	}
     /*  {
@@ -253,7 +253,7 @@ void mvm_test(int igpu){
 	stream[0].sync();
 	cudaProfilerStop();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
-	info("blockmv takes %.6f ms\n", tm);
+	dbg("blockmv takes %.6f ms\n", tm);
 	cuwrite(cuy, "y_blockmv");
 	}*/
     /*{
@@ -276,10 +276,10 @@ void mvm_test(int igpu){
 	    Real tm1, tm2;
 	    DO(cudaEventElapsedTime(&tm1, event[0], event[2*is]));
 	    DO(cudaEventElapsedTime(&tm2, event[0], event[2*is+1]));
-	    info2("%.6f %.6f %.6f\n", tm1, tm2, tm2-tm1);
+	    info("%.6f %.6f %.6f\n", tm1, tm2, tm2-tm1);
 	}
 	DO(cudaEventElapsedTime(&tm, event[0], event[nevent-1]));
-	info("test_read takes %.6f ms, BW=%.1f GB/s\n", tm, M*N*4/tm*1e-6);
+	dbg("test_read takes %.6f ms, BW=%.1f GB/s\n", tm, M*N*4/tm*1e-6);
 
 	}*/
 
@@ -311,7 +311,7 @@ void mvm_test(int igpu){
 		}
 	
 	    }
-info2("N=%d nstream=%d, BW=%g\n", N, i0, M*N*4/t0*1e-6*ncase);
+info("N=%d nstream=%d, BW=%g\n", N, i0, M*N*4/t0*1e-6*ncase);
 	}
 	cudaProfilerStop();
     }*/

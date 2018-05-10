@@ -221,7 +221,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double patfov=parms->skyc.patfov;
     double ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
-    info2("Genpistat..");
+    info("Genpistat..");
     GENPISTAT_S *data=mycalloc(1,GENPISTAT_S);
     data->parms=parms;
     data->powfs=powfs;
@@ -249,12 +249,12 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 	    }/*for gx */
 	}/*for gy */
     }/*for iseed */
-    /*info("count=%ld, data->ncase=%ld\n",count,data->ncase); */
+    /*dbg("count=%ld, data->ncase=%ld\n",count,data->ncase); */
     data->ncase=count;
     data->icase=0;
     data->cases=myrealloc(data->cases,data->ncase,long4);
     CALL((thread_fun)calc_pistat, (void*)data, parms->skyc.nthread,0);
-    info2("done\n");
+    info("done\n");
   
     dcellfree(data->unwrap);
     free(data->cases);
@@ -398,7 +398,7 @@ dcell** wfs_nonlinearity(const PARMS_S *parms, POWFS_S *powfs, long seed){
 			if(!zfexist(fnpistat)){
 			    error("%s doesn't exist\n", fnpistat);
 			}else{
-			    info2("reading %s\n", fnpistat);
+			    info("reading %s\n", fnpistat);
 			    dcell *pistat=dcellread("%s", fnpistat);
 			    dcelladd(&avgpi, 1, pistat, 1);
 			    dcellfree(pistat);

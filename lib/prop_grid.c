@@ -98,7 +98,7 @@ FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	    const double tr=(1.-dplocx)*(1-dplocy);
 	    phiin+=nplocx;
 	    if(nyout==640){
-		info("icols=%d, nyout=%ld\n", icols, nyout);
+		dbg("icols=%d, nyout=%ld\n", icols, nyout);
 	    }
 	    OMPTASK_FOR(icol, icols, nyout){
 		CONST_IN double *phicol, *phicol2;

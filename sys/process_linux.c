@@ -288,7 +288,7 @@ double read_self_cpu(void){
     fclose(fp);
     double t_tot=(double)(t_usr+t_nice+t_sys+t_idle);
     double s_tot=(double)(stime+utime);
-    /*info("t_tot/TCK=%g\n",(t_tot-t_last)/TCK); == NCPU */
+    /*dbg("t_tot/TCK=%g\n",(t_tot-t_last)/TCK); == NCPU */
     double frac=(s_tot-s_last)/(t_tot-t_last)*NCPU;
     t_last=t_tot;
     s_last=s_tot;

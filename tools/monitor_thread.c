@@ -128,7 +128,7 @@ static void host_added(int ihost, int sock){
     FD_SET(sock, &active_fd_set);
     UNLOCK(mhost);
     add_host_wrap(-1);//wakes up listen_host().
-    info2("connected to %s\n", hosts[ihost]);
+    info("connected to %s\n", hosts[ihost]);
     gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 }
 
@@ -144,7 +144,7 @@ static void host_removed(int sock){
     UNLOCK(mhost);
     add_host_wrap(-1);
     gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
-    info2("disconnected from %s\n", hosts[ihost]);
+    info("disconnected from %s\n", hosts[ihost]);
 }
 //connect to scheduler(host)
 static void add_host(gpointer data){
@@ -192,7 +192,7 @@ static int respond(int sock){
     int pid=cmd[2];
     switch(cmd[0]){
     case -1:{//server request shutdown
-	info2("disconnect from %s\n", hosts[ihost]);
+	info("disconnect from %s\n", hosts[ihost]);
 	return -1;
     }
 	break;
@@ -303,7 +303,7 @@ void listen_host(){
 	    if(hsock[ihost]>-1){
 		if(htime[ihost]+10<ntime){
 		    //10 seconds grace period
-		    info2("10 seconds no respond. disconnect\n");
+		    info("10 seconds no respond. disconnect\n");
 		    host_removed(hsock[ihost]);
 		}
 	    }

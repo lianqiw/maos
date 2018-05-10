@@ -271,7 +271,7 @@ void maos_sim(){
 	dcellfree(evlpsfdl);
 	dfree(iopdevl);
     }
-    info2("PARALLEL=%d\n", PARALLEL);
+    info("PARALLEL=%d\n", PARALLEL);
     if(simstart>=simend) return;
     double restot=0; long rescount=0;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){

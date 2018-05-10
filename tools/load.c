@@ -60,7 +60,7 @@ int main(int argc, char **argv){
     if(!strcmp(argv[1]+strlen(argv[1])-2,".m")){
 	argv[1][strlen(argv[1])-2]='\0';
     }
-    info2("Will launch %s\n",scmd);
+    info("Will launch %s\n",scmd);
     long pid=fork();
     if(pid<0){
 	exit(EXIT_FAILURE);
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
     }
 
     /*Now we are in the background. */
-    /*info("Waiting for the scheduelr\n"); */
+    /*dbg("Waiting for the scheduelr\n"); */
     scheduler_start(scmd,1,0,1);
     int count=0;
     while(scheduler_wait()&& count<60){
@@ -91,7 +91,7 @@ int main(int argc, char **argv){
 	warning_time("fall back to own checker\n");
 	wait_cpu(1);
     }
-    /*info("Ready to go\n"); */
+    /*dbg("Ready to go\n"); */
     
     pid=fork();
     if(pid<0){
@@ -102,7 +102,7 @@ int main(int argc, char **argv){
 	int status;
 	double starttime=myclocki();
 	waitpid(pid,&status,WUNTRACED | WCONTINUED);
-	info("status=%d\n",status);
+	dbg("status=%d\n",status);
 	STATUS_T *st=mycalloc(1,STATUS_T);
 	st->laps=0;
 	st->rest=myclocki()-starttime;

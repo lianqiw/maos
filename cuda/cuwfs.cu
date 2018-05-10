@@ -24,9 +24,9 @@
    This file is work in progress and is not used.
  */
 namespace cuda_wfs{
-cuwfs_info::cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu)
+cuwfs_info::cuwfs_dbg(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu)
     :iwfs(_iwfs),igpu(_igpu){
-    info("cuwfs_info[%d]\n", iwfs);
+    dbg("cuwfs_info[%d]\n", iwfs);
     int ipowfs=parms->wfs[iwfs].powfs;
     int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     loc=new culoc_t(powfs[ipowfs].loc);
@@ -322,7 +322,7 @@ cushphy_t::cushphy_t(wfscfg_t *wfscfg)
 cuwfs_t::cuwfs_t(const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int igpu)
     :gradoff(0),opdadd(0),opd(0),geom(0),phy(0),llt(0){
     gpu_set(igpu);
-    wfsinfo=new cuwfs_info(parms, powfs, iwfs, igpu);
+    wfsinfo=new cuwfs_dbg(parms, powfs, iwfs, igpu);
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
     wfscfg_t wfscfg(parms, powfs, iwfs, stream);

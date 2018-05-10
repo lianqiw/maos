@@ -39,7 +39,7 @@
 	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
 	    fprintf(stderr, A);						\
 	    raise(SIGTERM);})
-#define info(A...) fprintf(stderr, A)
+#define dbg(A...) fprintf(stderr, A)
 #define warning(A...) ({					\
 	    fprintf(stderr,"\033[00;31m");			\
 	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
@@ -85,7 +85,7 @@ int bind_socket (uint16_t port, int type){
     name.sin_addr.s_addr = htonl(INADDR_ANY);
     int count=0;
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
-	info("errno=%d. port=%d,sock=%d: ",errno,port,sock);
+	dbg("errno=%d. port=%d,sock=%d: ",errno,port,sock);
 	perror ("bind");
 	sleep(10);
 	count++;
@@ -93,7 +93,7 @@ int bind_socket (uint16_t port, int type){
 	    error("Failed to bind to port %d\n",port);
 	}
     }
-    info("binded to port %hd at sock %d\n",port,sock);
+    dbg("binded to port %hd at sock %d\n",port,sock);
     return sock;
 }
 
@@ -273,7 +273,7 @@ int server(int sock){
     double tim4=myclockd();
     WRITE(sock, temp, sizeof(double));
     double tim5=myclockd();
-    //info("read %5.1f, send %5.1f, read2 %5.1f send2 %5.1f\n", (tim2-tim1)*1e6, (tim3-tim2)*1e6, (tim4-tim3)*1e6, (tim5-tim4)*1e6);
+    //dbg("read %5.1f, send %5.1f, read2 %5.1f send2 %5.1f\n", (tim2-tim1)*1e6, (tim3-tim2)*1e6, (tim4-tim3)*1e6, (tim5-tim4)*1e6);
     return 0;
 }
 int client(const char *hostname, int port, int type){
@@ -293,7 +293,7 @@ int client(const char *hostname, int port, int type){
 		double tim4=myclockd();
 		READ(sock, temp, sizeof(double));
 		double tim5=myclockd();
-		info("N=%ld, send %5.1f, read %5.1f, send2 %5.1f read2 %5.1f\n", iN, (tim2-tim1)*1e6, (tim3-tim2)*1e6, (tim4-tim3)*1e6, (tim5-tim4)*1e6);
+		dbg("N=%ld, send %5.1f, read %5.1f, send2 %5.1f read2 %5.1f\n", iN, (tim2-tim1)*1e6, (tim3-tim2)*1e6, (tim4-tim3)*1e6, (tim5-tim4)*1e6);
 	    }
 	}
     }else{

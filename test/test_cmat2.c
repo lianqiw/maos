@@ -296,8 +296,8 @@ int main(){
     test_sq2();/*passed */
     test_cwm();/*passed */
     dcomplex a=COMPLEX(2342,3);
-    info("a*conj(a)=%g\n",creal(a*conj(a)));
-    info("abs2(a)=%g\n", cabs2(a));
+    dbg("a*conj(a)=%g\n",creal(a*conj(a)));
+    dbg("abs2(a)=%g\n", cabs2(a));
     test_ctilt();
 #endif
     /*bench_cembed(); */

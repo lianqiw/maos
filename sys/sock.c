@@ -174,7 +174,7 @@ static int bind_socket_local(char *sockpath){
 	sock=-1;
     }
     if(sock!=-1){
-	info2("binded to %s at sock %d\n", sockpath, sock);
+	info("binded to %s at sock %d\n", sockpath, sock);
     }
     return sock;
 }
@@ -215,7 +215,7 @@ static int bind_socket (char *ip, uint16_t port){
 	}
     }
     if(sock!=-1){
-	info2("binded to port %hd at sock %d\n",port,sock);
+	info("binded to port %hd at sock %d\n",port,sock);
     }
     return sock;
 }
@@ -250,7 +250,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	    //also bind to AF_UNIX
 	    sock_local = bind_socket_local(localpath);
 	    if(sock_local==-1){
-		info("bind to %s failed\n", localpath);
+		dbg("bind to %s failed\n", localpath);
 	    }else{
 		if(!listen(sock_local, 1)){
 		    FD_SET(sock_local, &active_fd_set);
@@ -334,7 +334,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			close(i);
 		    }else{
-			info2("port %d is connected\n", port2);
+			info("port %d is connected\n", port2);
 			FD_SET(port2, &active_fd_set);
 		    }
 		}else if(i==sock_local){
@@ -346,7 +346,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			close(i);
 		    }else{
-			info2("port %d is connected locally\n", port2);
+			info("port %d is connected locally\n", port2);
 			FD_SET(port2, &active_fd_set);
 		    }
 		}else{
@@ -359,7 +359,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		    if(ans<0){
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
-			    warning2("close port %d\n", i);
+			    warning("close port %d\n", i);
 			    close(i);
 			}else{
 			    warning("ans=%d is not understood.\n", ans);
@@ -431,7 +431,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	    freeaddrinfo(result);
 	    /* Give the socket the target hostname. */
 	    if(res<0){
-		warning2("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
+		warning("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
 		close(sock);
 		if(!block){
 		    return -1;

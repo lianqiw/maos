@@ -67,7 +67,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	Jind=-1;
 	error("We only have stars for J+H and J+H+K band. Please fill this part\n");
     }
-    info2("Loading star catalogue from %s\n",fn);
+    info("Loading star catalogue from %s\n",fn);
     dmat *catalog=dread("%s",fn);
     if(catalog->ny!=nwvl){
 	error("Catalogue and wanted doesn't match\n");
@@ -82,7 +82,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     double navg0=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot;
     if(catscl>0){//regular sky coverage sim
 	double navg=navg0*catscl;
-	info2("Average number of stars: %g, after scaled by %g\n", navg, catscl);
+	info("Average number of stars: %g, after scaled by %g\n", navg, catscl);
 	/*generate nstart && magnitude according to distribution.*/
 	for(long isky=0; isky<nsky; isky++){
 	    long nstar=randp(rstat, navg);

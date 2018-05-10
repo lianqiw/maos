@@ -35,7 +35,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     APER_T *aper = mycalloc(1,APER_T);
     tic;
     if(parms->aper.fnamp){
-	info2("Reading aperture amplitude map from %s\n", parms->aper.fnamp);
+	info("Reading aperture amplitude map from %s\n", parms->aper.fnamp);
 	aper->ampground=mapread("%s",parms->aper.fnamp);
 	if(fabs(aper->ampground->h)>1.e-14){
 	    warning("ampground is not on ground, this is not tested\n");
@@ -44,7 +44,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    map_d_din(aper->ampground, &amp_d, &amp_din);
 	    if(fabs(parms->aper.d - amp_d) > 1 ||
 	       fabs(parms->aper.din - amp_din) > 0.5){
-		info2("Amplitude map (%g, %g) does not match aperture diameter (%g, %g). Disabled\n", 
+		info("Amplitude map (%g, %g) does not match aperture diameter (%g, %g). Disabled\n", 
 			 amp_d, amp_din, parms->aper.d, parms->aper.din);
 		mapfree(aper->ampground);
 	    }
@@ -157,7 +157,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    if(parms->evl.psfsize->p[iwvl]<1 || parms->evl.psfsize->p[iwvl] > nembed){
 		parms->evl.psfsize->p[iwvl] = nembed;
 	    }
-	    info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
+	    info("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
 		  iwvl, nembed, aper->sumamp2*nembed*nembed);
 	}
     }

@@ -668,7 +668,7 @@ void cutomo_grid::L(curcell &xout, Real beta, const curcell &xin, Real alpha, st
     RECORD(5);
 #if TIMING==2
     EVENT_TOC;
-    info2("TomoL: Hx %.0f, Gp %.0f, Gpt %.0f, Hxt %.0f, L2 %.0f\n", 
+    info("TomoL: Hx %.0f, Gp %.0f, Gpt %.0f, Hxt %.0f, L2 %.0f\n", 
 	  times[1], times[2], times[3], times[4], times[5]);
     EVENT_DEINIT;
 #endif

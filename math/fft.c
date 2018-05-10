@@ -48,12 +48,12 @@ void X(fft_free_plan)(fft_t *fft){
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[0]);
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[1]);
 	    FFTW(destroy_plan)(fft->plan1d[idir+1]->plan[2]);
-	    /*info("Plan %p destroyed\n", fft->plan1d[idir+1]); */
+	    /*dbg("Plan %p destroyed\n", fft->plan1d[idir+1]); */
 	    free(fft->plan1d[idir+1]);
 	}
 	if(fft->plan[idir+1]){
 	    FFTW(destroy_plan)(fft->plan[idir+1]);
-	    /*info("Plan %p destroyed\n", fft->plan[idir+1]); */
+	    /*dbg("Plan %p destroyed\n", fft->plan[idir+1]); */
 
 	}
 	UNLOCK_FFT;
@@ -132,9 +132,9 @@ static void init_threads(){
     
     if(!fn || (libfftw_threads=dlopen(fn, RTLD_LAZY))){
 	if(!fn){
-	    info2("FFTW thread library is built in\n");
+	    info("FFTW thread library is built in\n");
 	}else{
-	    info2("Open FFTW thread library %s: success\n", fn);
+	    info("Open FFTW thread library %s: success\n", fn);
 	}
 	int (*p_fftw_init_threads)(void)=NULL;
 	has_threads=1;
@@ -160,7 +160,7 @@ static void init_threads(){
 	p_fftw_init_threads();
     }else{
 	if(!quitfun){
-	    info2("Open FFTW thread library %s: failed\n", fn);
+	    info("Open FFTW thread library %s: failed\n", fn);
 	}
 	has_threads=0;
 #ifdef USE_SINGLE
@@ -190,13 +190,13 @@ static void fft_threads(long nx, long ny){
     if(has_threads==-1){
 	init_threads();
 	if(FFTW_VERBOSE){
-	    info2("FFTW: has_threads=%d\n", has_threads);
+	    info("FFTW: has_threads=%d\n", has_threads);
 	}
     }
     if(has_threads==1){
 	int nth=(nx*ny>256*256)?NTHREAD:1;
 	if(FFTW_VERBOSE){
-	    info2("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
+	    info("FFTW %ldx%ld using %d threads \n", nx, ny, nth);
 	}
 	p_fftw_plan_with_nthreads(nth);
     }
@@ -231,7 +231,7 @@ static void X(fft2plan)(X(mat) *A, int dir){
 	error("Plan is empty\n");
     }
     UNLOCK_FFT;  
-    /*info("Plan %p created\n", A->fft->plan[dir+1]); */
+    /*dbg("Plan %p created\n", A->fft->plan[dir+1]); */
 }
 
 /**
@@ -266,7 +266,7 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
 					dir,FFTW_FLAGS);
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
-    /*info("Plan %p created\n", A->fft->plan1d[dir+1]); */
+    /*dbg("Plan %p created\n", A->fft->plan1d[dir+1]); */
 }
 
 /**

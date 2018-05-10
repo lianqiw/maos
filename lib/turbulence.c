@@ -75,7 +75,7 @@ static char *get_fnatm(GENATM_T *data){
  */
 static void spect_screen_do(zfarr *fc, GENATM_T *data){
     if(!data->spect){
-	info2("Generating spect..."); TIC; tic;
+	info("Generating spect..."); TIC; tic;
 	double slope=0;
 	switch(data->method){
 	case T_VONKARMAN:
@@ -173,7 +173,7 @@ static void spect_screen_do(zfarr *fc, GENATM_T *data){
 	    }
 	}
 	double tk4=myclockd();
-	info2("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n", 
+	info("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n", 
 	      ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy",tk4-tk3);
     }
     dcellfree(dc);
@@ -231,7 +231,7 @@ static mapcell* create_screen(GENATM_T *data, void (*atmfun)(zfarr *fc, GENATM_T
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnatm)){
-		info2("Reading %s\n", fnatm);
+		info("Reading %s\n", fnatm);
 		in=dcellread_mmap("%s",fnatm);
 	    }else{
 		/*non blocking exclusive lock. */

@@ -49,14 +49,14 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	    GAlsr=(cell*)tmp2;
 	}
     }
-    info2("Building recon->LR\n");
+    info("Building recon->LR\n");
     recon->LR.M=dcellmm2(GAlsr, recon->saneai, "tn");
     // Tip/tilt and diff focus removal low rand terms for LGS WFS.
     if(recon->TTF){
 	dcellmm(&recon->LR.U, recon->LR.M, recon->TTF, "nn", 1);
 	recon->LR.V=dcelltrans(recon->PTTF);
     }
-    info2("Building recon->LL\n");
+    info("Building recon->LL\n");
     recon->LL.M=dcellmm2(recon->LR.M, GAlsr, "nn");
     if(free_GAlsr){
 	cellfree(GAlsr);
@@ -71,8 +71,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
 	maxeig*=strength;
     }
     if(fabs(parms->lsr.tikcr)>EPS){
-	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
-	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
+	info("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
+	info("The maximum eigen value is estimated to be around %g\n", maxeig);
 	dcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
@@ -149,7 +149,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms){
     dcellfree(ULo);
     dcellfree(VLo);
     if(!parms->recon.modal && NW){
-	info2("Create piston and check board modes that are in NULL space of GA.\n");
+	info("Create piston and check board modes that are in NULL space of GA.\n");
 	/*add to low rank terms. */
 	dcell *tmp=recon->LL.U;
 	recon->LL.U=dcellcat(tmp, NW, 2);

@@ -44,6 +44,10 @@ def handle_type(argtype):
         mx2c='mx2dcell'
         c2mx='any2mx'
         free_c='cellfree'
+    elif argtype=='ccell*':
+        mx2c='mx2ccell'
+        c2mx='any2mx'
+        free_c='cellfree'
     elif argtype=='lcell*':
         mx2c='mx2lcell'
         c2mx='any2mx'

@@ -77,7 +77,7 @@ static void test_spmul(){
     dmat *x=dnew(A->ny,1);
     drandn(x,1,&rstat);
     dmat *y=dnew(A->nx,1);
-    info("x->p=%p\n",x);
+    dbg("x->p=%p\n",x);
     tic;
     dspmulvec(y->p,A,x->p,'n',1);
     toc("mul");

@@ -279,7 +279,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(fabs(dsa - nx * dx)>EPS){
 	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dsa, dx);
     }
-    info2("There are %d points in each subaperture of %gm.\n", nx, dsa);
+    info("There are %d points in each subaperture of %gm.\n", nx, dsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     if(parms->powfs[ipowfs].saloc){
 	powfs[ipowfs].saloc=locread("%s", parms->powfs[ipowfs].saloc);
@@ -746,7 +746,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     int ncompx, ncompy;
     if(parms->powfs[ipowfs].ncomp){
 	ncompx=ncompy=parms->powfs[ipowfs].ncomp;
-	warning2("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
+	warning("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
     }else{
 	/*
 	  compute required otf size to cover the detector FoV
@@ -789,20 +789,20 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    }
 	}
 	ncompx=ncompy=nextfftsize(ncompx);
-	info2("Subaperture DTF is %dx%d\n", ncompx,ncompy);
+	info("Subaperture DTF is %dx%d\n", ncompx,ncompy);
     }/*ncomp */
     powfs[ipowfs].ncompx=ncompx;
     powfs[ipowfs].ncompy=ncompy;
 
     if(parms->powfs[ipowfs].bkgrndfn){
 	char *fn=parms->powfs[ipowfs].bkgrndfn;
-	info2("Loading sky background/rayleigh backscatter from %s\n",fn);
+	info("Loading sky background/rayleigh backscatter from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrnd);
 	powfs[ipowfs].bkgrnd=dcellread("%s",fn);
     }
     if(parms->powfs[ipowfs].bkgrndfnc){
 	char *fn=parms->powfs[ipowfs].bkgrndfnc;
-	info2("Loading sky background/rayleigh backscatter correction from %s\n",fn);
+	info("Loading sky background/rayleigh backscatter correction from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrndc);
 	powfs[ipowfs].bkgrndc=dcellread("%s",fn);
     }
@@ -900,7 +900,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			    parms->powfs[ipowfs].radpix,
 			    parms->powfs[ipowfs].radrot);
     if(parms->powfs[ipowfs].radrot){
-	info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
+	info("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
     }
  
     int nwvl=parms->powfs[ipowfs].nwvl;
@@ -960,7 +960,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    const double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	    powfs[ipowfs].sodium->p[i]=smooth(Nain, dxnew);
 	}else{
-	    info2("Not smoothing sodium profile\n");
+	    info("Not smoothing sodium profile\n");
 	    powfs[ipowfs].sodium->p[i]=dref(Nain);
 	}
     }
@@ -1252,8 +1252,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
 	}
 	if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
-	     error("i0 is not available, please specify powfs.cogthres and powfs.cogoff to non-negative numbers.\n");
+	    error("i0 is not available, please specify powfs.cogthres and powfs.cogoff to non-negative numbers.\n");
 	}
+	warning("i0 is not available\n");
     }
     if(parms->powfs[ipowfs].phytype_recon==2 && parms->powfs[ipowfs].skip!=3 && !parms->powfs[ipowfs].phyusenea){
 	/*need nea in reconstruction*/
@@ -1267,7 +1268,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		  ipowfs, neaspeckle);
 	}
 	if(neaspeckle>0){
-	    warning2("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
+	    warning("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
 	}
 	neaspeckle2=pow(neaspeckle,2);
     }
@@ -1331,7 +1332,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}else{
 	    powfs[ipowfs].cogcoeff->p[jwfs]=dref(powfs[ipowfs].cogcoeff->p[0]);
 	}
-	
 	if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].phytype_sim==2 && parms->powfs[ipowfs].ncpa_method==2){//cog
 	    if(!powfs[ipowfs].gradncpa){
 		powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
@@ -1374,7 +1374,7 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	}else{
 	    if(parms->powfs[ipowfs].piinfile){
 		/*load psf. 1 for each wavefront sensor. */
-		info2("Using 1 sepsf for each wfs when loading sepsf\n");
+		info("Using 1 sepsf for each wfs when loading sepsf\n");
 		intstat->nsepsf=parms->powfs[ipowfs].nwfs;
 		intstat->sepsf=dccellnew(parms->powfs[ipowfs].nwfs, 1);
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1461,7 +1461,7 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//if opdadd is null, but dm_ncpa is not, there will still be opdbias.
 	if(powfs[ipowfs].opdbias){
-	    //info("parms->powfs[%d].ncpa_method=%d\n", ipowfs, parms->powfs[ipowfs].ncpa_method);
+	    //dbg("parms->powfs[%d].ncpa_method=%d\n", ipowfs, parms->powfs[ipowfs].ncpa_method);
 	    if(parms->powfs[ipowfs].ncpa_method==1 || parms->powfs[ipowfs].type==1){//gradient offset
 		if(!powfs[ipowfs].gradncpa){
 		    powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
@@ -1505,11 +1505,11 @@ POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].type==0){
-	    info2("\n%sSetting up powfs %d geom%s\n\n", GREEN,ipowfs,BLACK);
+	    info("\n%sSetting up powfs %d geom%s\n\n", GREEN,ipowfs,BLACK);
 	    setup_powfs_geom(powfs,parms,aper,ipowfs);
 	    setup_powfs_grad(powfs,parms,ipowfs);
 	}else if(parms->powfs[ipowfs].type==1){
-	    info2("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN,ipowfs,BLACK);
+	    info("\n%sSetting up powfs %d in Pyramid mode%s\n\n", GREEN,ipowfs,BLACK);
 	    pywfs_setup(powfs, parms, aper, ipowfs);
 	}else{
 	    error("powfs %d: invalid wfstype=%d\n", ipowfs, parms->powfs[ipowfs].type);
@@ -1528,7 +1528,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
 	   ||parms->powfs[ipowfs].neaphy){
-	    info2("\n\033[0;32mSetting up powfs %d PO WFS\033[0;0m\n\n", ipowfs);
+	    info("\n\033[0;32mSetting up powfs %d PO WFS\033[0;0m\n\n", ipowfs);
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
 	    setup_powfs_dtf(powfs,parms,ipowfs);

@@ -6,7 +6,7 @@ int main(){
 	zfarr *ca=zfarr_init(nsim,1,"psfout_wfs%d.bin",iwfs);
 	for(int isim=0; isim<nsim; isim++){
 	    if(isim%100==0)
-		info("iwfs=%d, isim=%d\n",iwfs,isim);
+		dbg("iwfs=%d, isim=%d\n",iwfs,isim);
 	    psf=ccellread("psfout/psfout_wfs%d_isim%d.bin",iwfs,isim);
 	    zfarr_ccell(ca, isim, psf);
 	    ccellfree(psf);

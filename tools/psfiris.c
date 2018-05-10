@@ -26,7 +26,7 @@
 #include "../lib/aos.h"
 
 static void usage(){
-    info2("Usage: psfiris output.fits prof za ngscount skyp idir npix pixsize("") pixoffx pixoffy blur\n");
+    info("Usage: psfiris output.fits prof za ngscount skyp idir npix pixsize("") pixoffx pixoffy blur\n");
 }
 
 typedef struct psfiris_t{
@@ -74,7 +74,7 @@ static void psfiris_do(thread_t *info){
     cmat *otf=cnew(notf2, notf2);
     //cfft2plan(otf,1);
     //cfft2plan(otf,-1);
-    info2("%d ",iwvl);
+    info("%d ",iwvl);
     /*first create OTF of tt/ps modes on coarse sampling.*/
     cmat *otf0=NULL;
     cmat *otf2=NULL;
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
 
     if(argc!=P_TOT){
 	usage();
-	warning2("Invalid input\n");
+	warning("Invalid input\n");
 	_exit(1);
     }
     char *outfile;
@@ -217,7 +217,7 @@ int main(int argc, char *argv[]){
 	     prof, za, ngscount, skyp, thetax[idir], thetay[idir],
 	     pixsize*206265, pixoffx, pixoffy, blur
 	     );
-    info2("%s",msg);
+    info("%s",msg);
     double tt=0,ps=0;
     if(skyp>0){
 	dcell *skycres=dcellread("resfull_%dp.bin", prof);
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]){
 	dcellfree(skycres);
     }
   
-    info2("NGS mode wavefront error: \nTip/tilt:%g nm PS: %g nm\n", sqrt(tt)*1e9, sqrt(ps)*1e9);
+    info("NGS mode wavefront error: \nTip/tilt:%g nm PS: %g nm\n", sqrt(tt)*1e9, sqrt(ps)*1e9);
     loccell *aloc=loccellread("setup/setup/aloc");
     int naloc=aloc->nx;
     dcell *mode_aloc=dcellread("setup/setup/ahst_Modes");
@@ -286,7 +286,7 @@ int main(int argc, char *argv[]){
     dcell *psf_lgs=dcellread("za%d_%dp/evlpsfcl_ngsr_1_x%g_y%g.fits", za, prof, thetax[idir], thetay[idir]);
     
     dcell *output=dcellnew(nwvl,1);
-    info2("%d: ", nwvl);
+    info("%d: ", nwvl);
     psfiris_t data={npix, notf1, notf2, dx1, dx2, pixsize, pixoffx, pixoffy, blur, ploc, pamp, cc_opd, cc_zero, imperr, wvls, psf_lgs, output, msg};
     thread_t *info=mycalloc(nwvl,thread_t);
     thread_prep(info, 0, nwvl, nwvl, psfiris_do, &data);

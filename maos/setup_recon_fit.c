@@ -28,7 +28,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	warning("Loading saved HXF\n");
 	recon->HXF=dspcellread("%s",parms->load.HXF);
     }else{
-	info2("Generating HXF");TIC;tic;
+	info("Generating HXF");TIC;tic;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
 	recon->HXF=dspcellnew(nfit, npsr);
@@ -73,7 +73,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     dspcell*  HAT=HATc/*PDSPCELL*/;
     dspcell* HA=recon->HA/*PDSPCELL*/;
 
-    info2("Before assembling fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    info("Before assembling fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     /*Assemble Fit matrix. */
     int npsr=recon->npsr;
     if(parms->load.fit){
@@ -86,7 +86,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	recon->FR.V=dcellread("FRV");
     }else{
 	if(recon->HXF){
-	    info2("Building recon->FR\n");
+	    info("Building recon->FR\n");
 	    recon->FR.M=cellnew(ndm, npsr);
 	    dspcell*  FRM=(dspcell*)recon->FR.M/*PDSPCELL*/;
 	    dspcell*  HXF=recon->HXF/*PDSPCELL*/;
@@ -121,7 +121,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		writebin(recon->FR.V,"FRV");
 	    }
 	}else{
-	    info("Avoid building recon->FR.M\n");
+	    dbg("Avoid building recon->FR.M\n");
 	    recon->FR.M=NULL;
 	    recon->FR.V=NULL;
 	}
@@ -154,7 +154,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	recon->FL.U=dcellread("FLU");
 	recon->FL.V=dcellread("FLV");
     }else{
-	info2("Building recon->FL\n");
+	info("Building recon->FL\n");
 	recon->FL.M=cellnew(ndm, ndm);
 	dspcell *FLM=(dspcell*)recon->FL.M;
 	for(int idm=0; idm<ndm; idm++){
@@ -178,8 +178,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 		nact+=recon->aloc->p[idm]->nloc;
 	    }
 	    double maxeig=4./nact;
-	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
-	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
+	    info("Adding tikhonov constraint of %g to FLM\n", tikcr);
+	    info("The maximum eigen value is estimated to be around %e\n", maxeig);
 	    dcelladdI(recon->FL.M,tikcr*maxeig);
 	}
 
@@ -194,7 +194,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcelladd(&recon->FL.M, 1, recon->actslave, 1);
 	}
 	/*dspcellsym(recon->FL.M); */
-	info2("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",
+	info("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",
 	      recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
 	if(parms->save.recon){
 	    writebin(recon->FL.M,"FLM.bin");
@@ -210,7 +210,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    warning("tickcr=%g is too small, chol may fail.\n", parms->fit.tikcr);
 	}
 	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
-	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	info("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
  
     if(parms->save.recon){
@@ -233,7 +233,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    writebin(recon->FL.MIB,"FLMIB");
 	}
     }
-    info2("After assemble fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    info("After assemble fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
 }
 
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){

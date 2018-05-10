@@ -71,7 +71,7 @@ void proj_rect_grid(rmap_t *mapin, double thetax, double thetay,
   
     int nplocx,nplocy,nplocx1,nplocy1;
     if(fabs(thetax-M_PI*0.5)>M_PI*.45 || fabs(thetay-M_PI*0.5)>M_PI*0.45){
-	info2("Tilting angle is too much\n");
+	info("Tilting angle is too much\n");
 	return;
     }
     
@@ -126,7 +126,7 @@ void m3proj(rmap_t *tsurf, dmat *opd, loc_t *locout, double thetax, double theta
     const double het=fexit-fsurf;/*distance between exit pupil and M3. */
 
     double d_img_focus=1./(1./ftel-1./hs)-ftel;
-    /*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
+    /*info("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
     double d_img_exit=fexit+d_img_focus;
 		
     /*2010-04-02: do not put - sign */

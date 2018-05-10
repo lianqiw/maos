@@ -23,7 +23,7 @@ Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
     if((ans=gpu_pcg(xout, this, precond, xin, cgtmp,
 		    warm_restart, maxit, stream))>1){
 	cgtmp.count_fail++;
-	warning2("CG %5d(%5d) does not converge. residual=%g. maxit=%d. Result saved.\n", 
+	warning("CG %5d(%5d) does not converge. residual=%g. maxit=%d. Result saved.\n", 
 		 cgtmp.count, cgtmp.count_fail, ans, maxit);
 	if(!disable_save){
 	    cuwrite(xin,  "cucg_solve_xin_%d", cgtmp.count_fail);

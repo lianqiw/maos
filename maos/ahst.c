@@ -362,7 +362,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->nmod+=1;
 	}
     }
-    info2("ahst: nmod=%d, mffocus=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->sim.ahstfocus);
+    info("ahst: nmod=%d, mffocus=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->sim.ahstfocus);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
@@ -397,12 +397,12 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_dm(parms,recon);
     if(recon->actstuck && !parms->recon.modal){
-	warning2("Apply stuck actuators to ngs modes\n");
+	warning("Apply stuck actuators to ngs modes\n");
 	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
     }
    /*if(recon->actfloat){
       We do extrapolation to float actuators, so no need to modify Pngs/Ptt.
-      warning2("Apply float actuators to Pngs, Ptt\n");
+      warning("Apply float actuators to Pngs, Ptt\n");
       act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
       }*/
 
@@ -414,7 +414,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	ngsmod->GM=dcellnew(parms->nwfsr, 1);
 	int nttwfs=0;
 	int nttfwfs=0;
-	info2("Low order control includes WFS");
+	info("Low order control includes WFS");
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip==3) continue;
@@ -425,7 +425,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 		}else{
 		    nttfwfs++;
 		}
-		info2(" %d", iwfs);
+		info(" %d", iwfs);
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(parms->powfs[ipowfs].type==0){//shwfs
 			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
@@ -443,7 +443,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 		}
 	    }
 	}
-	info2("\n");
+	info("\n");
 	if(ngsmod->nmod>2 && nttfwfs==0){
 	    error("Only TT wfs cannot control plate scale or focus\n");
 	}
@@ -485,7 +485,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     }else if(parms->tomo.ahst_wt==2){
 	/*Use science based weighting to isolate active meta pupil. */
 	if(parms->dbg.wamethod==0){
-	    info2("Wa using DM mode\n");
+	    info("Wa using DM mode\n");
 
 	    tic;
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,1);
@@ -508,7 +508,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    cellfree(ngsmod->Wa);
 	    toc2("Pngs");
 	}else{
-	    info("Wa using science mode\n");
+	    dbg("Wa using science mode\n");
 	    tic;
 	    ngsmod->Pngs=ngsmod_Pngs_Wa(parms,recon,aper,0);
 	    toc2("Pngs_Wa");

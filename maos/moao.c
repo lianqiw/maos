@@ -261,7 +261,7 @@ void moao_recon(SIM_T *simu){
 				-parms->moao[imoao].stroke,
 				parms->moao[imoao].stroke);
 		if(nclip>0){
-		    info("wfs %d: %d actuators clipped\n", iwfs, nclip);
+		    dbg("wfs %d: %d actuators clipped\n", iwfs, nclip);
 		}
 	    }
 	    if(parms->plot.run){
@@ -307,7 +307,7 @@ void moao_recon(SIM_T *simu){
 				-parms->moao[imoao].stroke,
 				parms->moao[imoao].stroke);
 		if(nclip>0){
-		    info("evl %d: %d actuators clipped\n", ievl, nclip);
+		    dbg("evl %d: %d actuators clipped\n", ievl, nclip);
 		}
 	    }
 	    if(parms->plot.run){

@@ -327,7 +327,7 @@ static void drawdata_free(drawdata_t *drawdata){
 */
 static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     (void)btn;
-    info2("deleting page\n");
+    info("deleting page\n");
     GtkWidget *root;
     /*First find the root page */
     GtkWidget *topnb=curtopnb;
@@ -338,7 +338,7 @@ static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     drawdata_free(*drawdatawrap);
     free(drawdatawrap);
     if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(root))==0){
-	info2("delete top page");
+	info("delete top page");
 	int jpage=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), root);
 	gtk_notebook_remove_page(GTK_NOTEBOOK(topnb),jpage);
     }
@@ -651,7 +651,7 @@ static gboolean key_press(GtkWidget *widget, GdkEventKey *event,
     return TRUE;
 }
 static void page_changed(int topn, int subn){
-    //info("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
+    //dbg("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
     if(sock==-1 || sock_block) return;
     GtkWidget *topnb=curtopnb;
     GtkWidget *subnb, *subpage;
@@ -669,14 +669,14 @@ static void page_changed(int topn, int subn){
     }
     if(!subpage) return;
     const char *fn=subnb_label_get(subnb, subpage);
-    //info2("send fig=%s, fn=%s", fig, fn);
+    //info("send fig=%s, fn=%s", fig, fn);
     if(stwriteint(sock, DRAW_FIGFN)||
        stwritestr(sock, fig)||
        stwritestr(sock, fn)){
 	warning("Talk to client failed\n");
 	sock_block=1;
     }
-    //info2("done\n");
+    //info("done\n");
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook *topnb, GtkWidget *page, guint n,  GtkWidget *toolbar){

@@ -38,7 +38,7 @@ struct per_session_data__http {
  * content
  */
 static void
-dump_handshake_info(struct lws *wsi)
+dump_handshake_dbg(struct lws *wsi)
 {
     static const char *token_names[] = {
 	/*[WSI_TOKEN_GET_URI]		=*/ "GET URI",
@@ -133,7 +133,7 @@ static int callback_http(struct lws *wsi,
     int n;
     switch (reason) {
     case LWS_CALLBACK_HTTP:
-	dump_handshake_info(wsi);
+	dump_handshake_dbg(wsi);
 	if (len < 1) {
 	    lws_return_http_status(wsi, HTTP_STATUS_BAD_REQUEST, NULL);
 	    return -1;

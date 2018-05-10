@@ -181,7 +181,7 @@ for key in keys:
     print(fundefs[key], file=fc)
 print("static void get_data_help(){\n", end="", file=fc)
 for key in funcalls:
-    print("\tinfo2(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
+    print("\tinfo(\""+key+"=maos('get','"+key+"')\\n\");", file=fc)
 print("}", file=fc)
 print("static mxArray *get_data(SIM_T *simu, const char *key){\n\t", end="", file=fc)
 for key in funcalls:

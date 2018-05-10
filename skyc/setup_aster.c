@@ -127,7 +127,7 @@ ASTER_S *setup_aster_comb(int *naster, const STAR_S *star, int nstar, const PARM
 	}
     }
     if(parms->skyc.verbose){
-	info2("Number of stars: %d, number of asterisms: %d\n", nstar, ncomb);
+	info("Number of stars: %d, number of asterisms: %d\n", nstar, ncomb);
     }
     aster=mycalloc(ncomb,ASTER_S);
     int count=0;
@@ -304,7 +304,7 @@ void setup_aster_lsr(ASTER_S *aster, const PARMS_S *parms){
     dmat *gm=ddup(aster->gm);
     if(aster->nwfs==1 && parms->maos.nmod==6 && gm->nx==8){
 	//focus and magnification mode degenerate in single GS mode.
-	info2("set 3rd column of gm to zero\n");
+	info("set 3rd column of gm to zero\n");
 	memset(gm->p+gm->nx*2, 0, sizeof(double)*gm->nx);
     }
 
@@ -421,7 +421,7 @@ static void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms)
 }
 static void setup_aster_kalman_dtrat(ASTER_S *aster, const PARMS_S *parms, int idtrat_wfs0){
     if(parms->skyc.verbose){
-	info2("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, 
+	info("aster %d dtrat_wfs0=%3d, dtrat=", aster->iaster, 
 	      (int)parms->skyc.dtrats->p[idtrat_wfs0]);
     }
     for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -445,7 +445,7 @@ static void setup_aster_kalman_dtrat(ASTER_S *aster, const PARMS_S *parms, int i
 	    dset(aster->neam[0]->p[iwfs+aster->nwfs*iwfs], 0);
 	}
 	if(parms->skyc.verbose){
-	    info2("%3d ", (int)parms->skyc.dtrats->p[idtrat]);
+	    info("%3d ", (int)parms->skyc.dtrats->p[idtrat]);
 	}
     }//for iwfs
 }
@@ -496,7 +496,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    if(parms->skyc.dbg){
 		writebin(rests, "isky%d_iaster%d_dtrat%d_rest", simu->isky, aster->iaster, idtrat_limit);
 	    }
-	    if(parms->skyc.verbose) info2("res0=%g, resmin=%g\n", sqrt(res0)*1e9, sqrt(resmin)*1e9);
+	    if(parms->skyc.verbose) info("res0=%g, resmin=%g\n", sqrt(res0)*1e9, sqrt(resmin)*1e9);
 	    dfree(rests);
 	    if(res0<resmin-100e-18){//better by 10 nm
 		resmin=res0;
@@ -512,7 +512,7 @@ static void setup_aster_kalman(SIM_S *simu, ASTER_S *aster, STAR_S *star, const 
 	    }
 	}
 	setup_aster_kalman_dtrat(aster, parms, idtrat_min);
-	if(parms->skyc.verbose) info2("selected\n");
+	if(parms->skyc.verbose) info("selected\n");
 	aster->res_ngs->p[0]=resmin;
 	aster->kalman[0]=kalman_min;
 	if(parms->skyc.dbg){
@@ -646,7 +646,7 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    aster[iaster].idtratmax=aster[iaster].idtratmin+1;
 	}
 	if(parms->skyc.verbose){
-	    info2("aster%2d, dtrats=[%2d,%2d,%2d], res=[%.2f %.2f %.2f]nm\n", 
+	    info("aster%2d, dtrats=[%2d,%2d,%2d], res=[%.2f %.2f %.2f]nm\n", 
 		  iaster, (int)parms->skyc.dtrats->p[aster[iaster].idtratmin],
 		  (int)parms->skyc.dtrats->p[aster[iaster].mdtrat],
 		  (int)parms->skyc.dtrats->p[aster[iaster].idtratmax-1], 
@@ -692,12 +692,12 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 		}
 	    }
 	    if(parms->skyc.estimate){
-		info2("%s, %g Hz, %g nm\n", temp1, parms->skyc.fss[aster[iaster].mdtrat], sqrt(aster[iaster].mresest)*1e9);
+		info("%s, %g Hz, %g nm\n", temp1, parms->skyc.fss[aster[iaster].mdtrat], sqrt(aster[iaster].mresest)*1e9);
 	    }
 	}
     }
     if(parms->skyc.verbose){
-	info2("FieldMinRes is found at aster %g at %.1f Hz: %.2f nm. Will evaluate %d asterisms.\n", 
+	info("FieldMinRes is found at aster %g at %.1f Hz: %.2f nm. Will evaluate %d asterisms.\n", 
 	      result[1],result[2],sqrt(result[0])*1e9, count);
     }
     if(parms->skyc.dbg){

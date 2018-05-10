@@ -262,7 +262,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
 	startptr++;/*points to the beginning of the array in [] */
 	/*process possible numbers after the array. do not use startptr here.*/
     }else{
-	/*warning2("Expecting array: {%s} should start with [\n", data); */
+	/*warning("Expecting array: {%s} should start with [\n", data); */
     }
     if(strchr(startptr,']')){/*there is indeed ']'. Handle operations after ] */
 	endptr=strchr(startptr,']')+1;
@@ -389,7 +389,7 @@ int readstr_numarr(void **ret, /**<[out] Result*/
     }
 
     if(trans && count>0){
-	info("Transposing %zux%zu array\n", ncol, nrow);
+	dbg("Transposing %zux%zu array\n", ncol, nrow);
 	void *newer=calloc(count, size);
 	switch(type){
 	case M_INT:{

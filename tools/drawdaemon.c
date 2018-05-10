@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
     if(sock<0){
 	error("sock=%d\n", sock);
     }
-    //info("sock=%d\n", sock);
+    //dbg("sock=%d\n", sock);
     socket_block(sock, 0);
     {
 	char fnlog[PATH_MAX];

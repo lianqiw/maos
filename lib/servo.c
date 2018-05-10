@@ -82,7 +82,7 @@ static double phase_at_gain(double *fcross, /**<[out] Cross over frequency*/
 	    diff=diff-round(diff);
 	    phi1=phi0+diff*2*M_PI;
 	    phi=phi0*(1-rat)+phi1*rat;
-	    //info2("valpre=%g, val=%g, phi0=%g, phi1=%g, phi=%g\n", valpre, val, phi0, phi1, phi);
+	    //info("valpre=%g, val=%g, phi0=%g, phi1=%g, phi=%g\n", valpre, val, phi0, phi1, phi);
 	    found=1;
 	    break;
 	}
@@ -133,7 +133,7 @@ static double gain_at_phase(double *fcross, /**<[out] Cross over frequency*/
 	gain=NAN;
     }
     /*{
-	info2("gain=%g, angle=%g\n", gain, angle);
+	info("gain=%g, angle=%g\n", gain, angle);
 	static int saved=0;
 	if(!saved){
 	    saved=1;
@@ -196,7 +196,7 @@ static int servo_isstable(const dmat *nu, const cmat *Hol){
     double gmargin=gain_at_phase(&fg, nu, Hol, -M_PI);
     int isstable=pmargin>M_PI/4.1 && fp<fg && gmargin>0;
     /*if(!isstable){
-       info2("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
+       info("Unstable: phase margin: %4.0f deg at %3.0f Hz. Gain margin: %2.0fdB at %3.0f Hz.\n",
 	     pmargin*180/M_PI, fp, gmargin, fg);
 	     }*/
     return isstable;
@@ -251,7 +251,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	    st->g=g0*g2;
 	    st->a=a;
 	    st->T=T;
-	    //info("g0=%g, g2=%g, phineed=%.1f\n", g0, g2, phineed*180/M_PI);
+	    //dbg("g0=%g, g2=%g, phineed=%.1f\n", g0, g2, phineed*180/M_PI);
 	}
 	double a=st->a;
 	double T=st->T;
@@ -285,14 +285,14 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	st->gain_n=100;
 	/*put a high penalty to drive down the gain*/
 	st->res_n=10*(1+g0)*(st->var_sig+st->sigma2n);
-	/*warning2("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+	/*warning("Unstable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
 		 g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
     }else{
 	if(st->gain_n>1){
 	    st->gain_n=pow(st->gain_n,3);/*a fudge factor to increase the penalty*/
 	}
         st->res_n=st->sigma2n*st->gain_n;
-        /*info2("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
+        /*info("  Stable: g0=%g, g2=%g, res_sig=%g, res_n=%g, tot=%g, gain_n=%g sigma2n=%g\n",
 	  g0, g2, res_sig, st->res_n, st->res_n+res_sig, st->gain_n, st->sigma2n);*/
     }
     return res_sig+st->res_n;
@@ -354,7 +354,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 	}
 	gm->p[ins]->p[ng]=st.res_sig;
 	gm->p[ins]->p[ng+1]=st.res_n;
-	/*info2("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigma2n=%.1g\n",
+	/*info("g0=%.1g, g2=%.1g, res_sig=%.1g, res_n=%.1g, tot=%.1g, gain_n=%.1g sigma2n=%.1g\n",
 	  g0, st.g, st.res_sig, st.res_n, st.res_n+st.res_sig, st.gain_n, st.sigma2n);*/
     }/*for ins. */
     servo_calc_free(&st);

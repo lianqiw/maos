@@ -209,7 +209,7 @@ static int respond(int sock){
 	int ngpu=cmd[1];
 	int nact=cmd[2];
 	int ngtot=cmd[3];
-	info("Receiving mvm %dx%d\n", nact, ngtot);
+	dbg("Receiving mvm %dx%d\n", nact, ngtot);
 	if(mvm_data){
 	    mvm_data_free();
 	}
@@ -253,7 +253,7 @@ static int respond(int sock){
 	    }
 	}
 	toc2("copy mvm to gpu");
-	info2("done");
+	info("done");
 	X(free)(mvm_data->mvm);
     }
 	break;
@@ -316,7 +316,7 @@ static int respond(int sock){
 	tim_dmsum+=toc3;tic;
 	stwrite(sock_mvm, mvm_data->a, mvm_data->nact*sizeof(ATYPE));
 	tim_dmsend+=toc3;tic;
-	info2("k=%4d CMD %1.0f, gsend %2.0f, gcp %3.0f, queue %3.0f, sync %3.0f sum %3.0f, send %2.0f, total %4.0f\n", ngeach,
+	info("k=%4d CMD %1.0f, gsend %2.0f, gcp %3.0f, queue %3.0f, sync %3.0f sum %3.0f, send %2.0f, total %4.0f\n", ngeach,
 	      tim_cmd*1e6, tim_gsend*1e6, tim_gcp*1e6, tim_queue*1e6, tim_dmcp*1e6, 
 	      tim_dmsum*1e6, tim_dmsend*1e6, (myclockd()-tim_gfirst)*1e6);
 	tim_cmd=tim_gsend=tim_gcp=tim_dmcp=tim_queue=tim_dmsum=tim_dmsend=0;
@@ -370,7 +370,7 @@ void gpu_mvm_daemon(int port){
     /* GPU initialization may take a few seconds to finish. Launch in a separate
      * thread and join before using GPU.*/
     pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
-    info2("Starting MVM daemon at port %d\n", port);
+    info("Starting MVM daemon at port %d\n", port);
     redirect();
     listen_port(port, NULL, respond, -1, NULL, 1);
 }

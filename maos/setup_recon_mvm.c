@@ -28,7 +28,7 @@
  */
 static void 
 setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    info2("Assembling LSR MVM in CPU\n");
+    info("Assembling LSR MVM in CPU\n");
     dcell *MVM=NULL;
     if(recon->LR.Mfun || parms->lsr.alg==1){
 	/*
@@ -58,9 +58,9 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dcell *eyec=d2cellref(eye, ngrad, nwfs);
 	for(int ig=0; ig<ntotgrad; ig++){
 	    if(!detached){
-		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
+		info("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
 	    }else if(ig%100==0){
-		info2("%6d of %6d\n", ig, ntotgrad);
+		info("%6d of %6d\n", ig, ntotgrad);
 	    }
 	    if(ig) eye->p[ig-1]=0;
 	    eye->p[ig]=1;
@@ -137,9 +137,9 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	}
 	if(info->ithread==0){
 	    if(!detached){
-		info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
+		info("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
 	    }else if(iact % 100==0){
-		info2("%6ld of %6ld\n", iact*nthread, ntotact);
+		info("%6ld of %6ld\n", iact*nthread, ntotact);
 	    }
 	}
 	//TIC;tic;
@@ -188,7 +188,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
  */
 static void 
 setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    info2("Assembling MVR MVM in CPU\n");
+    info("Assembling MVR MVM in CPU\n");
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
     long ntotact=0;

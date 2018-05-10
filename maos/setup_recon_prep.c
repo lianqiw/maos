@@ -51,7 +51,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	double guard=parms->tomo.guard*dxr;
 	map_t *pmap=0;
 	create_metapupil(&pmap, 0, 0, parms->dirs, parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
-	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
+	info("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap, 0);/*convert map_t to loc_t */
 	mapfree(pmap);
     }
@@ -122,7 +122,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=0;
 	create_metapupil(&fmap,0,0,parms->dirs,parms->aper.d,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
-	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
+	info("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->floc=map2loc(fmap, 0);/*convert map_t to loc_t */
 	mapfree(fmap);
 	/*Do not restrict fmap to within active pupil. */
@@ -184,7 +184,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	}
     }else{
 	recon->xloc=loccellnew(npsr, 1);
-	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
+	info("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
 	/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
 	if(parms->tomo.nxbase){
 	    nin0=parms->tomo.nxbase;
@@ -223,7 +223,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    create_metapupil(&map, 0, 0, parms->dirs, parms->aper.d,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc->p[ips]=map2loc(map, 0);
 	    loc_create_stat(recon->xloc->p[ips]);
-	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
+	    info("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
 		  ips, map->nx,map->ny,dxr, recon->xloc->p[ips]->nloc);
 	    mapfree(map);
 	}
@@ -315,7 +315,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    }else{
 		create_metapupil(&map,0,0,parms->dirs, parms->aper.d,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    }
-	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
+	    info("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc->p[idm]=map2loc(map, 0);
 	    mapfree(map);
 	}
@@ -334,7 +334,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    const double dy2=dx2;
 	    create_metapupil(&recon->acmap->p[idm],0,0, parms->dirs, parms->aper.d,
 			     ht,dx2,dy2,offset*dx/dx2,dx2,0,0,0,parms->fit.square);
-	    info2("amap origin is %g, %g. acmap is %g, %g\n", 
+	    info("amap origin is %g, %g. acmap is %g, %g\n", 
 		 recon->aloc->p[idm]->map->ox, recon->aloc->p[idm]->map->oy,
 		 recon->acmap->p[idm]->ox, recon->acmap->p[idm]->oy);
 	}
@@ -414,7 +414,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
     if(parms->load.HXW){
-	warning2("Loading saved HXW\n");
+	warning("Loading saved HXW\n");
 	recon->HXW=dspcellread("%s",parms->load.HXW);
 	if(recon->HXW->nx!=nwfs || recon->HXW->ny!=npsr){
 	    error("Wrong saved HXW\n");
@@ -432,7 +432,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
     }else{
-	info2("Generating HXW");TIC;tic;
+	info("Generating HXW");TIC;tic;
 	recon->HXW=dspcellnew(nwfs,npsr);
 	dspcell* HXW=recon->HXW/*PDSPCELL*/;
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -487,7 +487,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	const int ndm=parms->ndm;
 	recon->HA=dspcellnew(nfit, ndm);
 	dspcell* HA=recon->HA/*PDSPCELL*/;
-	info2("Generating HA ");TIC;tic;
+	info("Generating HA ");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.hs->p[ifit];
 	    for(int idm=0; idm<ndm; idm++){
@@ -533,7 +533,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
 	  account during DM fitting.
 	 */
-	info2("Replacing HA by HA*actinterp\n");
+	info("Replacing HA by HA*actinterp\n");
 	
 	dspcell *HA2=0;
 	dcellmm(&HA2, recon->HA, recon->actinterp, "nn", 1);
@@ -562,7 +562,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
     const int nwfs=parms->nwfsr;
     recon->GP=dspcellnew(nwfs, 1);
     if(parms->load.GP){
-	warning2("Loading saved GP\n");
+	warning("Loading saved GP\n");
 	dspcell *GPload=dspcellread("%s",parms->load.GP);
 	int assign=0;
 	if(GPload->nx==nwfs){
@@ -590,12 +590,12 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	    }
 	    
 	}
-	info2("Generating GP with ");TIC;tic;
+	info("Generating GP with ");TIC;tic;
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    const int ipowfs=parms->wfsr[iwfs].powfs;
 	    const int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    if(parms->powfs[ipowfs].type==1){
-		info2(" PWFS (skip)");
+		info(" PWFS (skip)");
 		continue;
 	    }
 	    dmat *gamp=0;
@@ -603,10 +603,10 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	    if(!share_gp || iwfs==iwfs0){
 		dsp *gp=0;
 		if(parms->powfs[ipowfs].gtype_recon==0){//Average tilt
-		    info2(" Gploc");
+		    info(" Gploc");
 		    gp=mkg(ploc,gloc, gamp, powfs[ipowfs].saloc,1,0,0,1);
 		}else if(parms->powfs[ipowfs].gtype_recon==1){//Zernike fit
-		    info2(" Zploc");
+		    info(" Zploc");
 		    dsp* ZS0=mkz(gloc, gamp->p, (loc_t*)powfs[ipowfs].pts, 1,1,0,0);
 		    dsp *H=mkh(ploc,gloc, 0,0,1);
 		    gp=dspmulsp(ZS0,H,"nn");
@@ -637,7 +637,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
     if(parms->load.GA){
-	warning2("Loading GA from %s\n", parms->load.GA);
+	warning("Loading GA from %s\n", parms->load.GA);
 	recon->GA=dspcellread("%s", parms->load.GA);
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
 	    error("Wrong saved GA (%ldx%ld). Need (%dx%d)\n",
@@ -657,7 +657,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}
     }else{
-	info2("Generating GA ");TIC;tic;
+	info("Generating GA ");TIC;tic;
 	recon->GA=dspcellnew(nwfs, ndm);
 	if(parms->recon.modal) {
 	    recon->GM=dcellnew(nwfs, ndm);
@@ -720,13 +720,13 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 			    opdadd=powfs[ipowfs].opdadd->p[wfsind];
 			}
 			if(!parms->recon.modal){
-			    info2("\nPyWFS from aloc to saloc directly\n");
+			    info("\nPyWFS from aloc to saloc directly\n");
 			    dmat *tmp=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
 						0, opdadd, dispx, dispy, scale);
 			    IND(recon->GA, iwfs, idm)=d2sp(tmp, dmaxabs(tmp)*1e-6);
 			    dfree(tmp);
 			}else{
-			    info2("\nPyWFS from amod to saloc directly\n");
+			    info("\nPyWFS from amod to saloc directly\n");
 			   
 			    //We compute the GM for full set of modes so that it is cached only once.
 			    IND(recon->GM, iwfs, idm)=pywfs_mkg(powfs[ipowfs].pywfs, recon->aloc->p[idm], parms->recon.misreg_dm2wfs[iwfs+idm*nwfs],
@@ -783,7 +783,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    /*This is need for LSR reconstructor to skip stuck actuators.  GA is
 	      also used to form PSOL gradients, but that one doesn't need this
 	      modification because actuator extropolation was already applied.*/
-	    warning2("Apply stuck actuators to GA\n");
+	    warning("Apply stuck actuators to GA\n");
 	    act_stuck(recon->aloc, recon->GA,recon->actstuck);
 	    if(parms->save.setup){
 		writebin(recon->GA,"GA_stuck");
@@ -840,7 +840,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     recon->GX=dspcellnew(nwfs, npsr);
     dspcell* GX=recon->GX/*PDSPCELL*/;
     dspcell* HXW=recon->HXW/*PDSPCELL*/;
-    info2("Generating GX ");TIC;tic;
+    info("Generating GX ");TIC;tic;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	/*gradient from xloc. Also useful for lo WFS in MVST mode. */
 	for(int ips=0; ips<npsr; ips++){
@@ -968,7 +968,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
     int inw=0;/*current column */
     if(parms->fit.lrt_piston){
-	info2("Adding piston cr to fit matrix\n");
+	info("Adding piston cr to fit matrix\n");
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
 	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
@@ -984,7 +984,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
     if(lrt_tt){
 	double factor=0;
-	info2("Adding TT cr on upper DMs to fit matrix.\n");
+	info("Adding TT cr on upper DMs to fit matrix.\n");
 	factor=scl*2./parms->aper.d;
 	for(int idm=1; idm<ndm; idm++){
 	    int nloc=recon->aloc->p[idm]->nloc;
@@ -1120,9 +1120,9 @@ setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
     RECON_T * recon = mycalloc(1,RECON_T); 
     if(parms->recon.warm_restart){
-	info2("Using warm restart\n");
+	info("Using warm restart\n");
     }else{
-	warning2("Do not use warm restart\n");
+	warning("Do not use warm restart\n");
     }
     if(parms->cn2.pair && parms->cn2.pair->nx>0 && !recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */

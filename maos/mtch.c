@@ -74,7 +74,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	      ipowfs, neaspeckle);
     }
     if(neaspeckle>0){
-	warning2("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
+	warning("powfs%d: Adding speckle noise of %.2f mas\n", ipowfs, neaspeckle*206265000);
     }
     double neaspeckle2=pow(neaspeckle,2);
     for(int ii0=0; ii0<ni0; ii0++){
@@ -143,13 +143,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}/*isa  */
 
 	if(mtchadp){
-	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
+	    info("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 		  ncrdisable, nsa);
 	}
 	intstat->i0sumsum->p[ii0]=i0sumsum;
     }/*ii0 */
     if(print_nea){
-	info2("Matched filter sanea:\n");
+	info("Matched filter sanea:\n");
 	if(powfs[ipowfs].sprint){/*print nea for select subapertures.*/
 	    for(int ii0=0; ii0<ni0; ii0++){
 		int illt=0;
@@ -160,13 +160,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		}else{
 		    error("Invalid combination\n");
 		}
-		info2("ii0 %d, llt %d.\n", ii0, illt);
-		info2("sa index   dist   noise equivalent angle\n");
+		info("ii0 %d, llt %d.\n", ii0, illt);
+		info("sa index   dist   noise equivalent angle\n");
 		dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 		for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
 		    int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
 		    if(isa>0){
-			info2("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
+			info("sa %4d: %5.1f m, (%6.2f, %6.2f) mas\n", 
 			      isa, powfs[ipowfs].srsa->p[illt]->p[isa], 
 			      sqrt(IND(psanea,isa,0))*206265000,
 			      sqrt(IND(psanea,isa,1))*206265000);
@@ -177,20 +177,20 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    double dsa=powfs[ipowfs].saloc->dx;
 	    double llimit=-dsa/2;
 	    double ulimit=dsa/2;
-	    info2("sa index: radius   noise equivalent angle\n");
+	    info("sa index: radius   noise equivalent angle\n");
 	    for(int isa=0; isa<nsa; isa++){
 		double locx=powfs[ipowfs].saloc->locx[isa];
 		double locy=powfs[ipowfs].saloc->locy[isa];
 		if((parms->powfs[ipowfs].llt && (nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)))
 		   ||(!parms->powfs[ipowfs].llt && locx>=0 && locx<dsa*0.6 && locy>=0 && locy<dsa*0.6)
 		    ){
-		    info2("sa%4d:%4.1fm",isa, locx);
+		    info("sa%4d:%4.1fm",isa, locx);
 		    for(int ii0=0; ii0<ni0; ii0++){
-			info2(" (%4.1f,%4.1f)", 
+			info(" (%4.1f,%4.1f)", 
 			      sqrt(IND(sanea->p[ii0],isa,0))*206265000,
 			      sqrt(IND(sanea->p[ii0],isa,1))*206265000);
 		    }//for ii0
-		    info2("mas\n");
+		    info("mas\n");
 		}
 	    }/*isa  */
 	}
@@ -199,7 +199,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	writebin(sanea, "powfs%d_sanea", ipowfs);
     }
     if(parms->powfs[ipowfs].phytype_recon==1 && parms->recon.glao && ni0>0){
-	info2("Averaging saneaxy of different WFS for GLAO mode\n");
+	info("Averaging saneaxy of different WFS for GLAO mode\n");
 	dcell *saneaxy2=dcellnew(nsa, 1);
 	double scale=1./ni0;
 	for(int isa=0; isa<nsa; isa++){

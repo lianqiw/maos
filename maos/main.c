@@ -49,27 +49,27 @@ static void maos_daemon(int sock){
     }
 }
 void maos_version(void){
-    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+    info("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info2(", w/t CUDA(double)");
+    info(", w/t CUDA(double)");
 #else
-    info2(", w/t CUDA(single)");
+    info(", w/t CUDA(single)");
 #endif
 #else
-    info2(", w/o CUDA");
+    info(", w/o CUDA");
 #endif
 #ifdef __OPTIMIZE__
-    info2(", w/t optimization.\n");
+    info(", w/t optimization.\n");
 #else
-    info2(", w/o optimization\n");
+    info(", w/o optimization\n");
 #endif
-    info2("Source: %s %s\n", SRCDIR, GIT_VERSION);
-    info2("BUILD: %s\n", BUILDDIR);
-    info2("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
+    info("Source: %s %s\n", SRCDIR, GIT_VERSION);
+    info("BUILD: %s\n", BUILDDIR);
+    info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;
-    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+    info("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
 #endif
 }
 
@@ -130,8 +130,8 @@ int main(int argc, const char *argv[]){
     ngpu=0;
 #endif
     scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
-    info2("%s\n", scmd);
-    info2("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
+    info("%s\n", scmd);
+    info("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
     maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->override);
@@ -149,7 +149,7 @@ int main(int argc, const char *argv[]){
 	      available, will block until ones are available.
 	      if arg->force==1, will run immediately.
 	    */
-	    info2("Waiting start signal from the scheduler ...\n");
+	    info("Waiting start signal from the scheduler ...\n");
 	    int count=0;
 	    while(scheduler_wait()&& count<60){
 		/*Failed to wait. fall back to own checking.*/
@@ -174,16 +174,16 @@ int main(int argc, const char *argv[]){
      * during preparation. Selective enable parallel for certain setup functions
      * that doesn't use blas*/
     if(parms->sim.nseed>0){
-	info2("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
+	info("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
 	maos_setup(parms);
 	if(parms->sim.end>parms->sim.start){
-	    info2("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),HOST);
+	    info("\n*** Simulation  started at %s in %s. ***\n\n",myasctime(),HOST);
 	    maos_sim();
 	}
 	rename_file(0);
     }
     maos_reset();
-    info2("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
+    info("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
     scheduler_finish(0);
     return 0;
 }

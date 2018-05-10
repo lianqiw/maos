@@ -85,7 +85,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
-			info2("%d is sending TERM signal to old executive\n", getpid());
+			info("%d is sending TERM signal to old executive\n", getpid());
 			if(!kill(pid,SIGTERM)){//signal sent
 			    sleep(5);
 			    if(!kill(pid,0)){//still running

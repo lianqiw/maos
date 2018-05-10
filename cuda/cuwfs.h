@@ -36,7 +36,7 @@ public:
     int iwfs;
     int igpu;
     int nsa;
-    cuwfs_info(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu);
+    cuwfs_dbg(const PARMS_T *parms, const POWFS_T *powfs, int _iwfs, int _igpu);
 };
 /*For field stop implementation*/
 class cufieldstop_t{

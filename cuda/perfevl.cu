@@ -265,7 +265,7 @@ void gpu_perfevl_queue(thread_t *info){
     const int nwvl=parms->evl.nwvl;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	gpu_set(cudata_t::evlgpu[ievl]);
-	//info2("thread %ld gpu %d ievl %d start\n", thread_id(), cudata->igpu, ievl);
+	//info("thread %ld gpu %d ievl %d start\n", thread_id(), cudata->igpu, ievl);
 	const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.cov) 
 	    && isim>=parms->evl.psfisim && parms->evl.psf->p[ievl]!=0;
 	const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
@@ -430,7 +430,7 @@ void gpu_perfevl_queue(thread_t *info){
 		}
 	    }
 	}
-	//info2("thread %ld gpu %d ievl %d queued\n", thread_id(), cudata->igpu, ievl);
+	//info("thread %ld gpu %d ievl %d queued\n", thread_id(), cudata->igpu, ievl);
 	ctoc("queued");
     }//for ievl
 }
@@ -461,7 +461,7 @@ void gpu_perfevl_sync(thread_t *info){
 	    gpu_perfevl_queue(info);
 	    gpu_perfevl_sync(info);
 	}
-	//info2("thread %ld gpu %d ievl %d end\n", thread_id(), cudata->igpu, ievl);
+	//info("thread %ld gpu %d ievl %d end\n", thread_id(), cudata->igpu, ievl);
     }//for ievl
     ctoc("done");
 }
@@ -534,7 +534,7 @@ void gpu_perfevl_save(SIM_T *simu){
     if(!parms->evl.nevl) return;
     const int isim=simu->isim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-	info2("Step %d: Output PSF\n", isim);
+	info("Step %d: Output PSF\n", isim);
 	const int nwvl=parms->evl.nwvl;
 	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
@@ -590,7 +590,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	}
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
-	info2("Step %d: Output opdcov\n", isim);
+	info("Step %d: Output opdcov\n", isim);
 	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){

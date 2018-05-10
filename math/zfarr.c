@@ -83,7 +83,7 @@ zfarr_mat(z);
 void zfarr_close(zfarr *ca){
     if(!ca) return;
     if(ca->cur !=ca->tot){
-	warning2("zfarr %s is initialized with %ld elements, "
+	warning("zfarr %s is initialized with %ld elements, "
 		 "but %ld elements are written\n",
 		 zfname(ca->fp),ca->tot,ca->cur);
     }

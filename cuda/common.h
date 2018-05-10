@@ -89,8 +89,8 @@ inline int CUDAFREE(void *p){
 }
 #define DEBUG_MEM 0
 #if DEBUG_MEM
-#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((void**)(void*)p,size);})
-#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((void*)p);})
+#define cudaMalloc(p,size) ({dbg("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((void**)(void*)p,size);})
+#define cudaFree(p)        ({dbg("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((void*)p);})
 #else
 #define cudaMalloc(p,size) CUDAMALLOC((void**)(void*)p,size)
 #define cudaFree(p) CUDAFREE((void*)p)
@@ -162,7 +162,7 @@ extern int NULL_STREAM;
 #endif
 #define CUDA_SYNC_STREAM ({CUDA_CHECK_ERROR;DORELAX(cudaStreamSynchronize(stream));})
 #define CUDA_SYNC_DEVICE ({CUDA_CHECK_ERROR;DORELAX(cudaDeviceSynchronize());})
-#define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info2("Warning NULL stream\n");} else DO(cudaStreamCreate(&stream))
+#define STREAM_NEW(stream) if(NULL_STREAM) {stream=0; info("Warning NULL stream\n");} else DO(cudaStreamCreate(&stream))
 #define STREAM_DONE(stream) if(!NULL_STREAM) DO(cudaStreamSynchronize(stream),cudaStreamDestroy(stream))
 #define HANDLE_NEW(handle,stream) ({DO(cublasCreate(&handle)); DO(cublasSetStream(handle, stream));})
 #define SPHANDLE_NEW(handle,stream) ({DO(cusparseCreate(&handle)); DO(cusparseSetStream(handle, stream));})

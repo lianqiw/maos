@@ -23,7 +23,7 @@ extern "C"{
 #include "../lib/aos.h"
 #include "../maos/parms.h"
 #include "../maos/types.h"
-void gpu_info(void);
+void gpu_dbg(void);
 int  gpu_init(const PARMS_T *parms, int *gpus, int ngpu);
 void gpu_cleanup(void);
 void gpu_atm2gpu(const mapcell *atm, const dmat *atmscale, const PARMS_T *parms, int iseed, int isim);

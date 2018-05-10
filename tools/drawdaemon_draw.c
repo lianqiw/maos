@@ -111,7 +111,7 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
 static void calc_tic(double *tic1, double *dtic, int *ntic, int *order, 
 		     double xmax, double xmin, int maxtic, int logscale){
     //when logscale is true, the xmin, xmax are already log of data.
-    //info("xmin=%g, xmax=%g, \n", xmin, xmax);
+    //dbg("xmin=%g, xmax=%g, \n", xmin, xmax);
     (void)maxtic;
     double diff=xmax-xmin;
     /*first get the order of magnitude. */
@@ -136,14 +136,14 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     *dtic=spacing;
     *ntic=(int)(myceil(xmax/spacing)-myfloor(xmin/spacing)+1);
     /*if(*ntic<2 || (*tic1<xmin && *tic1+spacing>xmax)) {
-	info("*ntic=%d\n", *ntic);
+	dbg("*ntic=%d\n", *ntic);
 	*ntic=2;
 	*dtic=xmax-xmin;
 	*tic1=xmin;
 	}*/
     *order=(int)order1;
     
-    //info("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
+    //dbg("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
     //xmin, xmax, diff, *tic1, *dtic, *ntic, order1);
 }
 /**
@@ -242,7 +242,7 @@ void apply_limit(drawdata_t *drawdata){
 	drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
     }
     
-    //info("zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
+    //dbg("zoom=%g %g, off=%g %g\n", drawdata->zoomx, drawdata->zoomy, drawdata->offx, drawdata->offy);
 }
 /*
   Definition of style: (bits count from lowest end0
@@ -404,7 +404,7 @@ void update_limit(drawdata_t *drawdata){
     int ylog=drawdata->xylog[1]=='n'?0:1;
     if(!xlog) round_limit(&xmin0, &xmax0, xlog);
     if(!ylog) round_limit(&ymin0, &ymax0, ylog);
-    //info("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
+    //dbg("xmin0=%g, xmax0=%g, ymin0=%g, ymax0=%g\n", xmin0, xmax0, ymin0, ymax0);
     drawdata->limit[0]=xmin0;
     drawdata->limit[1]=xmax0;
     drawdata->limit[2]=ymin0*gain+(1-gain)*drawdata->limit[2];
@@ -481,7 +481,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     if(xdim==0) xdim=1;
     if(ydim==0) ydim=1;
-    //info("xdim=%g, ydim=%g\n", xdim, ydim);
+    //dbg("xdim=%g, ydim=%g\n", xdim, ydim);
     double sp_xr=20;
     if(drawdata->image){/*there is a colorbar */
 	sp_xr=SP_XR;
@@ -777,7 +777,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }/*if */
 	    /*if(!drawdata->style){
 		tic;
-		info("stroke");
+		dbg("stroke");
 		cairo_stroke(cr);//stroke all together. 
 		toc("stroke");
 	    }*/

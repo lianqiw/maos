@@ -56,7 +56,7 @@ static int test_fft_speed_small(){
     }
     TIC;
     for(int ii=0; ii<nis; ii++){
-	info2("size %4d: ",is[ii]);
+	info("size %4d: ",is[ii]);
 	tic;
 	for(int i=0; i<1000; i++){
 	    cfft2(ac->p[ii],-1);
@@ -79,7 +79,7 @@ static void test_fft_speed(){
     seed_rand(&stat,1);
     TIC;
     for(int ii=0; ii<nis; ii++){
-	info2("size %4d: ",is[ii]);
+	info("size %4d: ",is[ii]);
 	tic;
 	ac->p[ii]=cnew(is[ii],is[ii]);
 	//cfft2plan(ac->p[ii],-1);
@@ -88,7 +88,7 @@ static void test_fft_speed(){
     }
     toc("plan");
     for(int ii=0; ii<nis; ii++){
-	info2("size %4d: ",is[ii]);
+	info("size %4d: ",is[ii]);
 	tic;
 	int nrepeat;
 	if(is[ii]<300)
@@ -117,7 +117,7 @@ static void test_fft_special(){
     seed_rand(&rstat,1);
     TIC;
     for(int ii=0; ii<nis; ii++){
-	info2("size %4d: ",is[ii]);
+	info("size %4d: ",is[ii]);
 	tic;
 	ac->p[ii]=cnew(is[ii],is[ii]);
 	//cfft2plan(ac->p[ii],-1);
@@ -127,7 +127,7 @@ static void test_fft_special(){
     }
 
     for(int ii=0; ii<nis; ii++){
-	info2("size %4d: ",is[ii]);
+	info("size %4d: ",is[ii]);
 	tic;
 	int nrepeat;
 	if(is[ii]<300)

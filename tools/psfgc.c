@@ -25,7 +25,7 @@
 #include "../lib/aos.h"
 
 static void usage(){
-    info2("Usage: psfgc output.fits seed exposure x y npix pixsize pixoffx pixoffy blur\n"
+    info("Usage: psfgc output.fits seed exposure x y npix pixsize pixoffx pixoffy blur\n"
 	  "output.fits: stores the output\n"
 	  "seed:        the atmospheric seed. valid: integers from 1 to 10\n"
 	  "exposure:    in seconds. valid: 0, 4, 8, 12, 16, 20. 0 is for all length\n"
@@ -77,7 +77,7 @@ static void psfiris_do(thread_t *info){
     cmat *otf=cnew(ncomp, ncomp);
     //cfft2plan(otf,1);
     //cfft2plan(otf,-1);
-    info2("%d ",ipsf);
+    info("%d ",ipsf);
     /*first create OTF of tt/ps modes on coarse sampling.*/
     double wvl=wvls[iwvl];
     double dtheta=wvl/(notf*dx);
@@ -91,7 +91,7 @@ static void psfiris_do(thread_t *info){
 	wvlmat->p[0]=wvl;
 	double dxsa=30;//30 meter
 	double embfac=wvl/dtheta/dxsa;
-	info("embfac=%g\n", embfac);
+	dbg("embfac=%g\n", embfac);
 	DTF_T *dtf=mkdtf(wvlmat, dxsa, embfac, ncomp, ncomp, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur, NULL, 0, 0);
 	ccwm(otf, dtf->nominal->p[0]);
 	cfft2(otf,-1);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]){
 
     if(argc!=P_TOT){
 	usage();
-	warning2("Invalid input\n");
+	warning("Invalid input\n");
 	_exit(1);
     }
     char *outfile=NULL;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
 	     thetax, thetay,
 	     pixsize*206265, pixoffx, pixoffy, blur
 	     );
-    info2("%s",msg);
+    info("%s",msg);
     dcell *psf_lgs=NULL;
     if(zfexist("evlpsfcl_%d_x%g_y%g.fits", seed, thetax, thetay)){
 	psf_lgs=dcellread("evlpsfcl_%d_x%g_y%g.fits", seed, thetax, thetay);
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]){
     double dtheta1=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sampling")/206265.;
     int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
     if(image_size>dtheta1*psfsizevalid){/*need blending*/
-	info("Enlarging PSF\n");
+	dbg("Enlarging PSF\n");
 	dcell *psf_large=dcellread("evlpsfcl_4096.fits");
 	dx=search_header_num_valid(psf_large->p[0]->header, "OPD Sampling");
 	notf=(int)search_header_num_valid(psf_large->p[0]->header, "FFT Grid");
@@ -252,13 +252,13 @@ int main(int argc, char *argv[]){
 	dcellfree(psf_large);
     }
     dcell *output=dcellnew(nwvl,nexp);
-    info2("%d: ", nwvl);
+    info("%d: ", nwvl);
     psfiris_t data={notf, nwvl, dx, sumpsf, npix, pixsize, pixoffx, pixoffy, blur, imperr, wvls, psf_lgs, output, msg};
     thread_t *info=mycalloc(npsf,thread_t);
     thread_prep(info, 0, npsf, npsf, psfiris_do, &data);
     THREAD_POOL_INIT(NCPU);
     CALL_THREAD(info, 0);
-    info2(" done\n");
+    info(" done\n");
     writebin(output, "%s", outfile);
 
     dcellfree(psf_lgs);

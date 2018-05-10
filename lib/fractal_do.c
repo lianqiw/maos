@@ -43,7 +43,7 @@ void FRACTAL(dmat *p0, double dx, double r0, double L0, long ninit){
     long step0=(nx-1)/(ninit-1);
 #ifndef NDEBUG
     if(ninit<1 || (ninit-1)*step0!=(nx-1) || (step0 & (step0-1)) !=0){
-	info("nx=%ld, ninit=%ld, step0=%ld\n", nx, ninit, step0);
+	dbg("nx=%ld, ninit=%ld, step0=%ld\n", nx, ninit, step0);
     }
 #endif
     assert(ninit>1);

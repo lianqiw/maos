@@ -163,7 +163,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	avail_min-=256<<19;//reserve 128MiB 
 	avail_max-=256<<19;
 	long need=nps*sizeof(Real)*nxn*nyn;
-	info2("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
+	info("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
 	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
 	if(avail_min<need){
 	    if(avail_max<need){
@@ -187,7 +187,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	}else{
 	    /*we are able to host this amount. */
 	    long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
-	    info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
+	    info("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
@@ -195,7 +195,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		nx0=MIN(nxa, nxn*2);
 		ny0=MIN(nxa, nyn*2);
 	    }
-	    info2("We will host %dx%d in GPU, taking %zd MiB\n", 
+	    info("We will host %dx%d in GPU, taking %zd MiB\n", 
 		  nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 	}
     }

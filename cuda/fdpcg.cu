@@ -220,7 +220,7 @@ void cufdpcg_t::P(curcell &xout, const curcell &xin, stream_t &stream){
     RECORD(3);
 #if TIMING
     EVENT_TOC;
-    info2("FDPCG: FFT %3.0f MUL %3.0f FFTI %3.0f Total %3.0f\n", 
+    info("FDPCG: FFT %3.0f MUL %3.0f FFTI %3.0f Total %3.0f\n", 
 	  times[1], times[2], times[3], times[0]);
 #endif
 }

@@ -174,7 +174,7 @@ void muv_direct_prep(MUV_T *A, double svd){
     if(use_svd){/*Do SVD */
 	dfree(A->MI);
 	A->MI=dcell2m(A->M);
-	info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
+	info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", A->MI->nx, A->MI->ny);
 	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, svd);
 	}else{/*use a threshold good for lsr. */
@@ -182,7 +182,7 @@ void muv_direct_prep(MUV_T *A, double svd){
 	}
     }else{/*Do Cholesky decomposition. */
 	dsp *muvM=dspcell2sp((const dspcell*)A->M);
-	info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->nx, muvM->ny);
+	info("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->nx, muvM->ny);
 	A->C=chol_factorize(muvM);
 	dspfree(muvM);
     }
@@ -217,7 +217,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
     assert(A->M->nx == A->M->ny);
-    info2("muv_direct_prep_diag: (%s) ", use_svd?"svd":"chol");
+    info("muv_direct_prep_diag: (%s) ", use_svd?"svd":"chol");
     TIC;tic;
     muv_direct_diag_free(A);
     

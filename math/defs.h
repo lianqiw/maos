@@ -19,9 +19,9 @@
   To be included in mat.c, cell.c and matbin.c
 */
 #if MAT_VERBOSE == 1
-#define matinfo(A...) {fprintf(stderr, A);}
+#define matdbg(A...) {fprintf(stderr, A);}
 #else
-#define matinfo(A...)
+#define matdbg(A...)
 #endif
 #ifndef AOS_MATH_DEFS_H
 #define AOS_MATH_DEFS_H

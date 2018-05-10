@@ -348,7 +348,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    }
 			    if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
 				if(!parms->skyc.mtch){
-				    warning2("fall back to cog\n");
+				    warning("fall back to cog\n");
 				}else{
 				    warning_once("mtch is out of range\n");
 				}

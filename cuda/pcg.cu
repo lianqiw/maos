@@ -163,7 +163,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 		times[i]*=1e3;
 	    }
-	    info2("CG %d k=0 Prep %3.0f CP %3.0f Amul %3.0f Mmul %3.0f cp %3.0f inn %3.0f \n", 
+	    info("CG %d k=0 Prep %3.0f CP %3.0f Amul %3.0f Mmul %3.0f cp %3.0f inn %3.0f \n", 
 		  maxiter, times[1], times[2], times[3], times[4], times[5], times[6]);
 #endif
 	}
@@ -172,7 +172,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 	}
 	RECORD(7);
 #if PRINT_RES == 2
-	info2("%.5f ", diff[k]);
+	info("%.5f ", diff[k]);
 #endif
 	/*Ap=A*p0*/
 	(*Amul)(Ap, 0.f, p0, 1.f, stream); RECORD(8);
@@ -193,7 +193,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 		times[i]*=1e3;
 	    }
-	    info2("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f\n",
+	    info("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f\n",
 		  maxiter, k, times[8], times[9], times[10], times[11]);
 #endif
 	    break;
@@ -220,7 +220,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 	    DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 	    times[i]*=1e3;
 	}
-	info2("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f Mmul %3.0f inn %3.0f add %3.0f\n",
+	info("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f Mmul %3.0f inn %3.0f add %3.0f\n",
 	      maxiter, k, times[8], times[9], times[10], times[11], times[12], times[13], times[14]);
 #endif
     }
@@ -236,7 +236,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
 #if TIMING 
     DO(cudaEventElapsedTime(&times[15], event[0], event[15]));
     times[15]*=1e3;
-    info2("CG %d total %4.0f\n", maxiter, times[15]);
+    info("CG %d total %4.0f\n", maxiter, times[15]);
 #endif
     return residual;
 }

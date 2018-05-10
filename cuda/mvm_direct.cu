@@ -56,7 +56,7 @@ static void mvm_direct_igpu(thread_t *info){
     }
     if(igpu==-1) return;
     gpu_set(igpu);
-    info2("thread %ld is using GPU %d\n", info->ithread, igpu);
+    info("thread %ld is using GPU %d\n", info->ithread, igpu);
 #if TIMING
 #define RECORD(i) DO(cudaEventRecord(event[i], stream))
 #define NEVENT 4
@@ -97,7 +97,7 @@ static void mvm_direct_igpu(thread_t *info){
     }
     curmat mvmi;
     if(parms->load.mvmi || parms->save.mvmi){
-	info("Creating mvmi of size %ldx %ld\n", ntotxloc, info->end-info->start);
+	dbg("Creating mvmi of size %ldx %ld\n", ntotxloc, info->end-info->start);
 	mvmi=curmat(ntotxloc, info->end-info->start);
 	if(parms->load.mvmi){
 	    cudaMemcpyAsync(mvmi.P(), data->mvmi->p+info->start*ntotxloc,
@@ -114,9 +114,9 @@ static void mvm_direct_igpu(thread_t *info){
 	RECORD(0);
 	if(info->ithread==0){
 	    if(!detached){
-		info2("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
+		info("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
 	    }else if(ig % 100==0){
-		info2("%6d of %6ld\n", ig*NGPU, ntotgrad);
+		info("%6d of %6ld\n", ig*NGPU, ntotgrad);
 	    }
 	}
 	if(ig){
@@ -141,7 +141,7 @@ static void mvm_direct_igpu(thread_t *info){
 	    DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
 	    times[i]*=1e3;//micro-second
 	}
-	info2("copy=%3.0f, Tomo=%3.0f, Fit=%3.0f\n", times[1], times[2], times[3]);
+	info("copy=%3.0f, Tomo=%3.0f, Fit=%3.0f\n", times[1], times[2], times[3]);
 #endif	
     }
     DO(cudaMemcpyAsync(data->mvmc->p+info->start*ntotact, 
@@ -159,7 +159,7 @@ static void mvm_direct_igpu(thread_t *info){
 	gpu_avail[gpu_pos++]=igpu;
 	UNLOCK(gpu_mutex);
     }
-    info("thread %ld finish.\n", info->ithread);
+    dbg("thread %ld finish.\n", info->ithread);
 }
 /**
    Assemble the MVM control matrix.
@@ -170,7 +170,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	error("Please adapt to LSR\n");
     } 
     if(!parms->load.mvm){
-	info2("Assembling MVR MVM (direct) in GPU\n");
+	info("Assembling MVR MVM (direct) in GPU\n");
 	
 	long ntotact=0;
 	long ntotgrad=0;
@@ -193,7 +193,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	}
 	X(mat) *mvmi=NULL;//intermediate result
 	if(parms->load.mvmi){
-	    tic; info2("Loading mvmi ...");
+	    tic; info("Loading mvmi ...");
 	    mvmi=X(read)("%s", parms->load.mvmi);
 	    toc2("done");
 	}else if(parms->save.mvmi){
@@ -208,9 +208,9 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	      runs. Do multiple pass to avoid memroy overflow. Assemes each GPU
 	      has more than 2G free space.*/
 	    int npass=iceil((double)ntotxloc*(double)ntotgrad*sizeof(Real)/NGPU/2000000000);
-	    info("mul=%ld\n", ntotxloc*ntotgrad*sizeof(Real));
-	    info("NGPU=%d\n", NGPU);
-	    info("npass=%d\n", npass);
+	    dbg("mul=%ld\n", ntotxloc*ntotgrad*sizeof(Real));
+	    dbg("NGPU=%d\n", NGPU);
+	    dbg("npass=%d\n", npass);
 	    nthread=NGPU*npass;
 	}
 	thread_t info[nthread];
@@ -235,7 +235,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon){
 	    writebin(mvmc, "mvmf.bin");
 	}
 	if(parms->save.mvmi){
-	    tic; info2("Saving mvmi ...");
+	    tic; info("Saving mvmi ...");
 	    writebin(mvmi, "mvmi.bin");
 	    toc2("done");
 	}

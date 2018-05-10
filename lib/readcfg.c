@@ -38,7 +38,7 @@ DEF_ENV_FLAG(PERMISSIVE, 0)
 #if COMPATIBILITY == 1
 #define RENAME(old,new)							\
     if(!strcmp(var,#old)){						\
-	warning2("Deprecated: please change %s to %s.\n",#old,#new);	\
+	warning("Deprecated: please change %s to %s.\n",#old,#new);	\
 	var=#new;/*strcpy may overflow. just reference the char*/	\
     }
 #define IGNORE(old)				\
@@ -213,7 +213,7 @@ void close_config(const char *format, ...){
     format2fn;
     const char *fnout=format?fn:NULL;
     if(MROOT){
-	info2("Used %ld of %ld supplied keys\n",nused, nstore);
+	info("Used %ld of %ld supplied keys\n",nused, nstore);
 	if(fnout && strlen(fnout)>0 && !disable_save) fpout=fopen(fnout, "w");
 	twalk(MROOT, print_key);
 	if(fpout) fclose(fpout);
@@ -344,7 +344,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    addpath(val2);
 	    free(val2);
 	}else if(!strcmp(var,"include")){
-	    /*info("Opening embeded config file %s\n",value); */
+	    /*dbg("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
 		open_config(embeded,prefix, priority);
@@ -401,7 +401,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		STORE_T *oldstore=*(STORE_T**)entryfind;
 		if(oldstore->priority > priority){
 		    countskip++;
-		    info2("Not overriding %-20s=%s by %s\n", store->key, oldstore->data, store->data);
+		    info("Not overriding %-20s=%s by %s\n", store->key, oldstore->data, store->data);
 		    //Skip the entry.
 		}else if(append){
 		    /*concatenate new value with old value for arrays. both have to start/end with [/]*/
@@ -424,7 +424,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 			 &&(oldstore->data != store->data))||
 			((oldstore->data!=NULL && store->data!=NULL)
 			 &&strcmp(oldstore->data, store->data)))){
-			info2("Overriding %-20s\t{%s}-->{%s}\n", 
+			info("Overriding %-20s\t{%s}-->{%s}\n", 
 			      store->key, oldstore->data, store->data);
 		    }
 		    /*free old value */
@@ -449,7 +449,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	}
 	ssline[0]='\0';
     }
-    info2("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew,fd?config_file:"command line");
+    info("loaded %3d (%3d new) records from '%s'\n",countnew+countold,countnew,fd?config_file:"command line");
     if(fd){
 	fclose(fd);
     }

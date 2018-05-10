@@ -310,7 +310,7 @@ void dither_t::acc(DITHER_T *dither, curcell &ints, Real cs, Real ss, int npll, 
 void gpu_wfsgrad_queue(thread_t *info){
     SIM_T *simu=(SIM_T*)info->data;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
-	//info2("thread %ld gpu %d iwfs %d start\n", thread_id(), cudata->igpu, iwfs);
+	//info("thread %ld gpu %d iwfs %d start\n", thread_id(), cudata->igpu, iwfs);
 	gpu_set(cudata_t::wfsgpu[iwfs]);
 	cuarray<cupowfs_t> &cupowfs=cudata->powfs;
 	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
@@ -565,7 +565,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	    }
 
 	}/*dtrat_output */
-	//info2("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
+	//info("thread %ld gpu %d iwfs %d queued\n", thread_id(), cudata->igpu, iwfs);
 	ctoc("done");
 	CUDA_CHECK_ERROR;
     }//for iwfs

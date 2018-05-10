@@ -91,7 +91,7 @@ static void test_accuracy(int argc, char **argv){
     double cubic=0.3;
     int ii;
 	    
-    info2("displacex=%g, displacey=%g, scale=%g, wrap=%d\n",
+    info("displacex=%g, displacey=%g, scale=%g, wrap=%d\n",
 	 displacex, displacey,scale,wrap);
 	
     double diff1, diff2,diff3,diff14,diff15;
@@ -191,7 +191,7 @@ static void test_accuracy(int argc, char **argv){
 	diff46+=fabs(phi_cub[ii]-phi_cub2[ii]);
 	diff47+=fabs(phi_cub[ii]-phi_cub3[ii]);
     }
-    info2("(pts-loc)=\t%g\n(stat-loc)=\t%g\n(stat-pts)=\t%g\n"
+    info("(pts-loc)=\t%g\n(stat-loc)=\t%g\n(stat-pts)=\t%g\n"
 	  "(loc2loc-pts)=\t%g\n(h-pts)=\t%g\n"
 	  "(loc2loc-h)=\t%g\n"
 	  "(cub:h-loc2loc)=\t%g\n"
@@ -221,7 +221,7 @@ static void test_accuracy(int argc, char **argv){
 	writedbl(phi_cub3,loc->nloc,1,"accphi_cub_locmap2loc.bin");
 	writedbl(phi_cub4,loc->nloc,1,"accphi_cub_locmap2stat.bin");
 	writedbl(phi_cubh,loc->nloc,1,"accphi_cub_loc2h.bin");
-	info2("saved\n");
+	info("saved\n");
 
 	writedbl(phi_pts,loc->nloc,1,"accphi_pts.bin");
 	writedbl(phi_cub,loc->nloc,1,"accphi_cub.bin");

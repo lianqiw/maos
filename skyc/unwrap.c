@@ -89,7 +89,7 @@ static dmat* gen_unwrap(long nx, long ny){
     }
     pp[col]=count;
     
-    info("col=%ld,count=%ld\n",col,count);
+    dbg("col=%ld,count=%ld\n",col,count);
     dspsetnzmax(Ht,count);
     /*writebin(Ht,"Ht"); */
     dsp *H=dsptrans(Ht);
@@ -166,7 +166,7 @@ static void convert_wvf(GENPISTAT_S *data){
     if(!zfexist(fnwvf) || zfexist(fnphase)){
 	continue;
     }
-    info("processing %s\n", fnwvf);
+    dbg("processing %s\n", fnwvf);
     file_t *fp_wvf=zfopen(fnwvf,"rb");
     uint32_t magic;
     /*zfread(&magic, sizeof(uint32_t),1,fp_wvf); */

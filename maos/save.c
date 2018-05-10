@@ -83,7 +83,7 @@ void save_gradol(SIM_T *simu){
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
 	    int iwfs1=parms->save.gcov->p[igcov*2];
 	    int iwfs2=parms->save.gcov->p[igcov*2+1];
-	    //info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
+	    //dbg("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
 	    dmm(&simu->gcov->p[igcov], 1, simu->gradlastol->p[iwfs1], simu->gradlastol->p[iwfs2],"nt",1);
 	}
     }
@@ -206,7 +206,7 @@ void save_recon(SIM_T *simu){
 	dcellscale(simu->gcov, 1./scale); //2016-06-07: Do not reset.
     }
     if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
-	info2("Output PSF Recon Telemetry\n");
+	info("Output PSF Recon Telemetry\n");
 	long nstep=simu->reconisim+1-parms->evl.psfisim;
 	double scale=1./nstep;
 	dcellscale(simu->ecov, scale);

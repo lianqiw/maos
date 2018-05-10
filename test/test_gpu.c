@@ -8,7 +8,7 @@
 #include "../cuda/gpu.h"
 
 int main(int argc, char *argv[]){
-    info2("HOST is %s\n", HOST);
+    info("HOST is %s\n", HOST);
     int ngpu;
     int gpus[8];
     if(!strcmp(HOST, "cassiopeia") || !strcmp(HOST, "kepler")){

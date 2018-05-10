@@ -105,7 +105,7 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
     TIC;tic;
     for(int ir=rmin; ir<=rmax; ir++){
 	if(toc3>1){
-	    info2("Zernike radial order %d of %d\n", ir, rmax);
+	    info("Zernike radial order %d of %d\n", ir, rmax);
 	    tic;
 	}
 	for(int im=0; im<=ir; im++){
@@ -367,17 +367,17 @@ dmat *KL_vonkarman(const loc_t *loc, int nmod, double L0){
     }else if(!exist(fnlock) && zfexist(fn)){
 	kl=dread("%s", fn);
     }else{
-	info("trying to lock %s\n", fnlock);
+	dbg("trying to lock %s\n", fnlock);
 	int fd=lock_file(fnlock, 0, 0);
 	if(fd>=0){//start preparing
-	    info2("locked\n");
+	    info("locked\n");
 	    kl=KL_vonkarman_do(loc, L0);
 	    writebin(kl, "%s", fn);
 	    close(fd); remove(fnlock);
 	}else{
-	    info("waiting to lock %s\n", fnlock);
+	    dbg("waiting to lock %s\n", fnlock);
 	    fd=lock_file(fnlock, 1, 0);
-	    info2("locked\n");
+	    info("locked\n");
 	    close (fd); remove(fnlock);
 	    goto redo;
 	}

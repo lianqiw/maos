@@ -128,7 +128,7 @@ static void print_usage(const void *key, VISIT which, int level){
     const T_STATKEY *key2=*((const T_STATKEY**)key);
     (void) level;
     if(which==leaf || which==postorder){
-	info2("size %4zu B@%p", (key2->size), key2->p);
+	info("size %4zu B@%p", (key2->size), key2->p);
 	print_backtrace_symbol(key2->func, key2->nfunc);
     }
 }
@@ -173,10 +173,10 @@ static void memkey_add(void *p,size_t size){
     memalloc+=size;
     UNLOCK(mutex_mem);    
     if(MEM_VERBOSE==1){
-	info("%p malloced with %zu bytes\n",p, size);
+	dbg("%p malloced with %zu bytes\n",p, size);
 	print_backtrace();
     }else if(MEM_VERBOSE==2 && size>1024){
-	info2("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+	info("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
     }
 
 }
@@ -193,19 +193,19 @@ static int memkey_del(void*p){
 	memfree+=key1->size;
 	memcnt--;
 	if(MEM_VERBOSE==1){
-	    info2("Free: %p freed with %zu bytes\n",p, key1->size);
+	    info("Free: %p freed with %zu bytes\n",p, key1->size);
 	}else if(MEM_VERBOSE==2 && key1->size>1024){
-	    info2("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+	    info("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 	}
 	if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
-	    warning2("Free: Error deleting old record\n");
+	    warning("Free: Error deleting old record\n");
 	}
 	UNLOCK(mutex_mem);
 	free_default(key1);
 	return 0;
     }else{
 	UNLOCK(mutex_mem);
-	warning2("Free: %p not found\n", p);
+	warning("Free: %p not found\n", p);
 	print_backtrace();
 	return 1;
     }
@@ -273,13 +273,13 @@ void print_mem(){
 	twalk(MROOT,stat_usage);
 	twalk(MSTATROOT, print_usage);
     }else{
-	info2("All allocated memory are freed.\n");
+	info("All allocated memory are freed.\n");
 	if(memcnt>0){
 	    warning("But memory count is still none zero: %ld\n",memcnt);
 	}
     }
-    info2("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
-    info2("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
+    info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
+    info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
 }
 static __attribute__((constructor)) void init(){
 #define RTLD_MINE RTLD_DEFAULT
@@ -327,7 +327,7 @@ static __attribute__((destructor)) void deinit(){
 	    if(!mem_debug) return;
 	    print_mem();
 	}else{
-	    info("exit_fail=%d\n", exit_fail);
+	    dbg("exit_fail=%d\n", exit_fail);
 	}
     }
 }

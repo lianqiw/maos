@@ -41,11 +41,11 @@
 
 static void 
 setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    info("Setting up tilt surface (M3)\n");
+    dbg("Setting up tilt surface (M3)\n");
     rmapcell *tsurf=rmapcellnew(parms->ntsurf, 1);
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=parms->tsurf[itsurf];
-	info("Loading tilt surface from %s\n", fn);
+	dbg("Loading tilt surface from %s\n", fn);
 	tsurf->p[itsurf]=rmapread("%s",fn); 
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -170,7 +170,7 @@ static void prop_surf_wfs(thread_t *info){
 */
 static void 
 setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    info2("Setting up surface OPD (M1/M2/M3)\n");
+    info("Setting up surface OPD (M1/M2/M3)\n");
     if(fabs(parms->misreg.pupil->p[0])>EPS || fabs(parms->misreg.pupil->p[1])>EPS){
 	warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 		"in maos because some surfaces may belong to instrument.\n");
@@ -194,7 +194,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	char *fn=parms->surf[isurf];
 	if(!fn) continue;
-	info2("Loading surface OPD from %s\n", fn);
+	info("Loading surface OPD from %s\n", fn);
 	map_t *surf=mapread("%s",fn);
 	if(surf->ny<2 || surf->nx<2){
 	    error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
@@ -219,7 +219,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}
 	int evlct=0;
 	if(!strevl){
-	    warning2("%s does not contain SURFEVL. Assume it covers all science.\n", fn);
+	    warning("%s does not contain SURFEVL. Assume it covers all science.\n", fn);
 	    for(int ievl=0; ievl<nevl; ievl++){
 		evlcover[ievl]=1;
 	    }
@@ -230,13 +230,13 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		evlct+=evlcover[ievl]?1:0;
 	    }
 	    if(evlct>0){
-		info2("%s covers evl", fn);
+		info("%s covers evl", fn);
 		for(int ievl=0; ievl<nevl; ievl++){
 		    if(evlcover[ievl]){
-			info2(" %d", ievl);
+			info(" %d", ievl);
 		    }
 		}
-		info2("\n");
+		info("\n");
 	    }
 	}
 	if(evlct==0){
@@ -251,7 +251,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    error("Not handled\n");
 	}
 	if(!strwfs){
-	    warning2("%s does not contain SURFWFS, Assume it covers all WFS.\n", fn);
+	    warning("%s does not contain SURFWFS, Assume it covers all WFS.\n", fn);
 	    for(int iwfs=0;iwfs<nwfs; iwfs++){
 		wfscover[iwfs]=1;
 	    }
@@ -261,16 +261,16 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		if(ncover==0) error("wfscover has zero length\n");
 		wfscover=myrealloc(wfscover,nwfs,int);
 		int val;
-		warning2("SURFWFS has length of %d, expect %d, replicated ", ncover, nwfs);
+		warning("SURFWFS has length of %d, expect %d. Will replicate ", ncover, nwfs);
 		if(parms->sim.skysim){
 		    val=wfscover[ncover-1];
-		    info2("last wfs: %d\n", val);
+		    info("last wfs: %d\n", val);
 		}else{
 		    val=wfscover[0];
 		    for(int i=1; i<ncover; i++){
 			if(val>wfscover[i]) val=wfscover[i];
 		    }
-		    info2("lowest value: %d\n", val);
+		    info("lowest value: %d\n", val);
 		}
 		for(int i=ncover; i<nwfs; i++){
 		    wfscover[i]=val;
@@ -281,13 +281,13 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		ncover+=wfscover[i]?1:0;
 	    }
 	    if(ncover){
-		info2("%s covers WFS", fn);
+		info("%s covers WFS", fn);
 		for(int i=0; i<nwfs; i++){
 		    if(wfscover[i]){
-			info2(" %d", i);
+			info(" %d", i);
 		    }
 		}
-		info2("\n");
+		info("\n");
 	    }
 	}
 	if(!stropdx){
@@ -357,7 +357,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     recon->HA_ncpa=dspcellnew(nevl, ndm);
     dspcell* HA=recon->HA_ncpa/*PDSPCELL*/;
-    info2("Generating HA ");TIC;tic;
+    info("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
 	double hs=parms->sim.ncpa_hs->p[ievl];
 	for(int idm=0; idm<ndm; idm++){
@@ -374,7 +374,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     if(recon->actinterp){
-	info2("Replacing HA by HA*actinterp");
+	info("Replacing HA by HA*actinterp");
 	dspcell *HA2=0;
 	dcellmm(&HA2, recon->HA_ncpa, recon->actinterp, "nn", 1);
 	dspcellfree(recon->HA_ncpa);
@@ -483,7 +483,7 @@ void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
 		error("powfs%d: safocuspv should be in nm.\n", ipowfs);
 	    }
 	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
-	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
+	    dbg("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
 	    if(!powfs[ipowfs].opdadd){
 		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    }
@@ -577,18 +577,20 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	lenslet_saspherical(parms, powfs);
 	lenslet_safocuspv(parms, powfs);
     }
+  
     if(parms->sim.ncpa_calib){//calibrate NCPA
 	int any_evl=0;
 	if(aper->opdadd){
 	    for(int i=0; i<parms->evl.nevl; i++){
-		if(maxabs(aper->opdadd->p[i]->p, aper->opdadd->p[i]->nx)>1e-15){
+		if(dmaxabs(aper->opdadd->p[i])>1e-15){
 		    any_evl=1;
+		    break;
 		}
 	    }
 	}
-
+	
 	if(any_evl){
-	    info2("calibrating NCPA\n");
+	    info("calibrating NCPA\n");
 	    setup_recon_HAncpa(recon, parms);
 	    dcell *rhs=NULL;
 	    FitR_NCPA(&rhs, recon, aper);
@@ -598,9 +600,10 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    dcellfree(rhs);
 	    writebin(recon->dm_ncpa, "dm_ncpa");
 	    dspcellfree(recon->HA_ncpa);
-	
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
+	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
+	    if(any_evl){//apply NCPA DM command.
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 		    const double hs=parms->wfs[iwfs].hs;
@@ -624,26 +627,30 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 				     -1, dispx, dispy, scale, 0, 0);
 		    }
 		}
-
-		if(parms->sim.ncpa_ttr){
-		    /*remove average tilt from opdbias and same amount from
-		      opdadd. Does not need to be very accurate.*/
-		    dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
-		    dinvspd_inplace(mcc);
-		    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    }
+	    if(parms->sim.ncpa_ttr && powfs[ipowfs].opdbias){
+		/*remove average tilt from opdbias and same amount from
+		  opdadd. Does not need to be very accurate.*/
+		dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
+		dinvspd_inplace(mcc);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    if(powfs[ipowfs].opdbias->p[jwfs]){
 			double ptt[3]={0,0,0};
 			loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
 				     powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[jwfs]->p);
 			loc_remove_ptt(powfs[ipowfs].opdbias->p[jwfs]->p, ptt, powfs[ipowfs].loc);
+			if(!powfs[ipowfs].opdadd->p[jwfs]){
+			    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].loc->nloc,1);
+			}
 			loc_remove_ptt(powfs[ipowfs].opdadd->p[jwfs]->p, ptt, powfs[ipowfs].loc);
 		    }
-		    dfree(mcc);
 		}
-		if(parms->save.setup){
-		    writebin(powfs[ipowfs].opdbias, "powfs%d_opdbias", ipowfs);
-		}
-	    }//for ipowfs
-	}//if any_evl
+		dfree(mcc);
+	    }
+	    if(parms->save.setup){
+		writebin(powfs[ipowfs].opdbias, "powfs%d_opdbias", ipowfs);
+	    }
+	}//for ipowfs
     }
     if(parms->save.setup || parms->save.ncpa){
 	writebin(aper->opdadd, "surfevl.bin");

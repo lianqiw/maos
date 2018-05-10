@@ -25,18 +25,18 @@
 char *dirstart;
 
 void skyc_version(void){
-    info2("Skyc Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+    info("Skyc Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
 #ifdef __OPTIMIZE__
-    info2(", w/t optimization.\n");
+    info(", w/t optimization.\n");
 #else
-    info2(", w/o optimization\n");
+    info(", w/o optimization\n");
 #endif
-    info2("Source: %s %s\n", SRCDIR, GIT_VERSION);
-    info2("BUILD: %s\n", BUILDDIR);
-    info2("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
+    info("Source: %s %s\n", SRCDIR, GIT_VERSION);
+    info("BUILD: %s\n", BUILDDIR);
+    info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;
-    info2("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
+    info("The web based job monitor can be accessed at http://localhost:%d\n", 1+PORT);
 #endif
 }
 /**
@@ -53,8 +53,8 @@ int main(int argc, const char *argv[]){
     }else{
 	redirect();
     }
-    info2("%s\n", scmd);
-    info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
+    info("%s\n", scmd);
+    info("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
     skyc_version();
     /*register signal handler */
     register_signal_handler(skyc_signal_handler);
@@ -71,7 +71,7 @@ int main(int argc, const char *argv[]){
 	mymkdir("%s",dirsetup);
     }
     if(!arg->force){
-	info2("Waiting start signal from the scheduler ...\n");
+	info("Waiting start signal from the scheduler ...\n");
 	/*Failed to wait. fall back to own checking.*/
 	int count=0;
 	while(scheduler_wait()&& count<60){
@@ -85,7 +85,7 @@ int main(int argc, const char *argv[]){
 	    wait_cpu(arg->nthread);
 	}
     }
-    info2("Simulation started at %s in %s.\n",myasctime(),HOST);
+    info("Simulation started at %s in %s.\n",myasctime(),HOST);
     free(scmd);
     free(arg->dirout);
     free(arg);
@@ -97,7 +97,7 @@ int main(int argc, const char *argv[]){
     free(dirstart);
     rename_file(0);
     scheduler_finish(0);
-    info2("End:\t%.2f MiB\n",get_job_mem()/1024.);
-    info2("Simulation finished at %s in %s.\n",myasctime(),HOST);
+    info("End:\t%.2f MiB\n",get_job_mem()/1024.);
+    info("Simulation finished at %s in %s.\n",myasctime(),HOST);
     return 0;
 }

@@ -53,7 +53,7 @@ int main(int argc, char**argv){
     long stime,utime;
     double tck=sysconf(_SC_CLK_TCK)*sec;
     snprintf(fn,PATH_MAX,"%ld.cpu",pid);
-    info("Recording PID %ld every %g second, and save to %s\n", pid, sec, fn);
+    dbg("Recording PID %ld every %g second, and save to %s\n", pid, sec, fn);
     FILE *fpout=fopen(fn,"w");
     if(fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
 	      &stime, &utime)!=2){

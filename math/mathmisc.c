@@ -368,8 +368,8 @@ double golden_section_search(golden_section_fun f, void *param,
 #ifdef DBG_GF 
 	double f1=f(param,x1);
 	double f4=f(param,x4);
-	info2("x=%.4g, %.4g, %.4g, %.4g\n", x1, x2, x3, x4);
-	info2("f=%.4g, %.4g, %.4g, %.4g\n", f1, f2, f3, f4);
+	info("x=%.4g, %.4g, %.4g, %.4g\n", x1, x2, x3, x4);
+	info("f=%.4g, %.4g, %.4g, %.4g\n", f1, f2, f3, f4);
 #endif
 	if(f3<f2){
 	    x1=x2;

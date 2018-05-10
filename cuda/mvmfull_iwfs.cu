@@ -152,7 +152,7 @@ multimv_do(const Real *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g,
    
 */
 void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
-    info("Using %d gpus. nstep=%d\n", ngpu, nstep);
+    dbg("Using %d gpus. nstep=%d\n", ngpu, nstep);
     int nstep0=20;//for warm up
 #if 1
     //const int nact=7673;//total
@@ -195,12 +195,12 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	char *MVM_NSM=getenv("MVM_NSM");
 	if(MVM_NSM){
 	    nsm=strtol(MVM_NSM, NULL, 10);
-	    info2("nsm is set to %d\n", nsm);
+	    info("nsm is set to %d\n", nsm);
 	}
 	char *MVM_NGRID=getenv("MVM_NGRID");
 	if(MVM_NGRID){
 	    mtch_ngrid=strtol(MVM_NGRID, NULL, 10);
-	    info2("mtch_ngrid is set to %d\n", mtch_ngrid);
+	    info("mtch_ngrid is set to %d\n", mtch_ngrid);
 	}
 	char *MVM_NOVER=getenv("MVM_NOVER");
 	if(MVM_NOVER){
@@ -215,10 +215,10 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	    if(MVM_PORT){
 		port=strtol(MVM_PORT, NULL, 10);
 	    }
-	    info2("Connecting to server %s\n", MVM_CLIENT);
+	    info("Connecting to server %s\n", MVM_CLIENT);
 	    sock=connect_port(MVM_CLIENT, port, 0 ,1);
 	    if(sock!=-1) {
-		info2("Connected");
+		info("Connected");
 		int cmd[7];
 		cmd[0]=nact;
 		cmd[1]=nsa;
@@ -232,7 +232,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		    warning("Failed: %s\n", strerror(errno));
 		}
 	    } else {
-		info2("Failed\n");
+		info("Failed\n");
 	    }
 	}
     }
@@ -302,7 +302,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	warning("error send ready signal: %s\n", strerror(errno));
 	close(sock); sock=-1;
     }
-    info2("Ready\n");
+    info("Ready\n");
     int nblock;
     for(int jstep=-nstep0; jstep<nstep; jstep++){
 	//run 20 frames to warm up before timing.
@@ -440,7 +440,7 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 		    curmat tmp=datai->cumvm;
 		    datai->cumvm=datai->cumvm_next;
 		    datai->cumvm_next=tmp;
-		    info2("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
+		    info("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
 		}
 	    }
 	}
@@ -486,9 +486,9 @@ void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
 	}
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	usleep(50);//yield
-	/*info2("\rStep %d takes %.0f us", istep, timing->p[istep]*1e6);
+	/*info("\rStep %d takes %.0f us", istep, timing->p[istep]*1e6);
 	if(timing->p[istep]>1.25e-3){
-	    info2("\n");
+	    info("\n");
 	}	
 	*/
 	//Wait for MVM matrix copy to finish and time.

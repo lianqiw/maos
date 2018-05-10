@@ -235,7 +235,7 @@ void X(expm)(X(mat)**out, R alpha, const X(mat) *A, R beta){
     X(add)(out, alpha, result, 1);
     if(X(isnan)(*out)){
 	static int count=-1; count++;
-	info("scaling=%d. exp2=%g\n", scaling, exp2(-scaling));
+	dbg("scaling=%d. exp2=%g\n", scaling, exp2(-scaling));
 	writebin(A, "error_expm_%d_%f", count, beta);
 	error("expm returns NaN\n");
     }
@@ -335,7 +335,7 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     if(USE_SDD && M>USE_SDD){
 	ptrdiff_t nmax=M<N?N:M;
 	ptrdiff_t *iwork=mymalloc(nmax*8,ptrdiff_t);
-	info2("(dgesdd)");
+	info("(dgesdd)");
 #ifdef USE_COMPLEX
 	R* rwork=0;
 	Z(gesdd)(&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,iwork,&info);
@@ -418,7 +418,7 @@ void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	    char fnlock[PATH_MAX];
 	    snprintf(fnlock, PATH_MAX, "%s.lock", fnsvd);
 	    if(exist(fnsvd)){
-		info2("Reading %s\n", fnsvd);
+		info("Reading %s\n", fnsvd);
 		in=readbin("%s", fnsvd);
 	    }else{
 		int fd=lock_file(fnlock, 0, 0);

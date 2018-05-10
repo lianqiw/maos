@@ -313,7 +313,7 @@ dmat *gpu_pywfs_mkg(const PYWFS_T *pywfs, const loc_t* locin, const loc_t* locff
 	cp2cpu(&gradc, grad, stream);
 	if(imod%10==0){
 	    Real ts=myclockd()-tk;
-	    info2("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", imod, locin->nloc, ts, ts/(imod+1)*locin->nloc, dstd(gradc));
+	    info("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", imod, locin->nloc, ts, ts/(imod+1)*locin->nloc, dstd(gradc));
 	}
 	dfree(gradc);
     }

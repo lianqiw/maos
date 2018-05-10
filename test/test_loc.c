@@ -9,7 +9,7 @@ static void test_w1(){
     dsp *W0=NULL;
     dmat *W1=NULL;
     mkw_amp(loc,amp,&W0,&W1);
-    info("Sum W1=%g",dsum(W1));
+    dbg("Sum W1=%g",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
     writebin(W1,"W1");
     writebin(W0,"W0");
@@ -30,7 +30,7 @@ static void test_wploc(){
     dsp *W0=NULL;
     dmat *W1=NULL;
     mkw_amp(loc,amp,&W0,&W1);
-    info("Sum W1=%g\n",dsum(W1));
+    dbg("Sum W1=%g\n",dsum(W1));
     writedbl(amp,loc->nloc,1,"amp");
     writebin(W1,"pW1");
     writebin(W0,"pW0");
@@ -63,7 +63,7 @@ static void test_int_reg(){
 	}
     }
     double ar=(double)area/(double)(n*n);
-    info("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
+    dbg("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
 }
 static void test_int_rand(){
     int n=10000;
@@ -82,7 +82,7 @@ static void test_int_rand(){
 	}
     } 
     double ar=(double)area/(double)(n);
-    info("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
+    dbg("Area=%g, Err=%g\n",ar,ar-M_PI*cr2/4);
 }
 */
 /*
@@ -151,6 +151,6 @@ int main(){
     test_embed();
     */
     for(long i=1; i<1000;i++){
-	info("i=%ld, %ld\n", i, nextpow2(i));
+	dbg("i=%ld, %ld\n", i, nextpow2(i));
     }
 }

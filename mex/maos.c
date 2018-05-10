@@ -41,7 +41,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     exception_env=(jmp_buf*)malloc(sizeof(jmp_buf));
     if(setjmp(*exception_env)){
 	//We use longjump because calling mexErrMsgTxt causing matlab to crash (bug?)
-	info2("Exception happened\n");
+	info("Exception happened\n");
 	return;
     }else{
 	const PARMS_T *parms=0;
@@ -119,17 +119,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
 	    addpath(".");
 	    if(dirout){
-		info2("dirout=%s\n", dirout);
+		info("dirout=%s\n", dirout);
 		mymkdir("%s",dirout);
 		if(chdir(dirout)){
 		    error("Unable to chdir to %s\n", dirout);
 		}
 	    }else{
-		warning2("Disable saving when no -o is supplied.\n");
+		warning("Disable saving when no -o is supplied.\n");
 		disable_save=1;
 	    }
 	    parms=setup_parms(mainconf, conf, override);
-	    info2("setup_parms done\n");
+	    info("setup_parms done\n");
 	    setup_parms_gpu((PARMS_T*)parms, gpus, ngpu);
 	    maos_setup(parms);//sets global
 	}
@@ -154,7 +154,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			while(!(simu=maos_iseed(iseed))){
 			    iseed++;
 			    if(iseed==parms->sim.nseed){
-				info2("All seeds are finished\n");
+				info("All seeds are finished\n");
 				goto end;
 			    }
 			}
@@ -170,12 +170,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 			    break;
 			}
 			if(utIsInterruptPending()){
-			    info2("Simulation interrupted\n");
+			    info("Simulation interrupted\n");
 			    goto end;
 			}
 		    }
 		}else{
-		    info2("Simulation finished\n");
+		    info("Simulation finished\n");
 		}
 	    }
 	}

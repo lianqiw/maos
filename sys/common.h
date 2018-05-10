@@ -99,7 +99,7 @@ extern int detached;
 #define GREEN (detached?"":"\033[0;32m")
 #ifndef error
 #define QUIT_FUN(A) quitfun?quitfun(A):default_quitfun(A);
-#define info(A...) ({char fline[4096]; int n__;			      \
+#define dbg(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d): ", BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
 	    fprintf(stderr,"%s", fline); })
@@ -115,10 +115,7 @@ extern int detached;
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
 
-#define info2(A...) fprintf(stderr, A)
-#define warning2(A...) ({char fline[4096];				\
-	    snprintf(fline, 4095, A);					\
-	    fprintf(stderr,"%sWarning:%s%s", RED, fline, BLACK); })
+#define info(A...) fprintf(stderr, A)
 
 #define info_time(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
@@ -130,8 +127,8 @@ extern int detached;
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
 	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
 
-#define warning_once(A...) ({static int done=0; if(!done){done=1; warning2(A);}})
-#define info_once(A...) ({static int done=0; if(!done){done=1; info2(A);}})
+#define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
+#define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
 
 #endif
 #ifndef assert
@@ -199,7 +196,7 @@ extern int detached;
 #define READ_ENV_INT(A,min,max)				\
     if(getenv("MAOS_"#A)){				\
 	A=strtol(getenv("MAOS_"#A),NULL,10);		\
-	info2(#A"=%d\n", A);				\
+	info(#A"=%d\n", A);				\
 	if(A>max || A<min){				\
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\
@@ -207,7 +204,7 @@ extern int detached;
 #define READ_ENV_DBL(A,min,max)				\
     if(getenv("MAOS_"#A)){				\
 	A=strtod(getenv("MAOS_"#A),NULL);		\
-	info2(#A"=%g\n", A);				\
+	info(#A"=%g\n", A);				\
 	if(A>max || A<min){				\
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\

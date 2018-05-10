@@ -206,13 +206,13 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     toc("landr");
     {
 	/* print ritz values and error bounds */
-	info("\n");
-	info(" ...... NUMBER OF LANCZOS STEPS = %3ld       NEIG = %3ld\n", j+1, neig);
-	info(" ...... \n");
-	info(" ......         COMPUTED RITZ VALUES  (ERROR BNDS)\n");
-	info(" ...... \n");
+	dbg("\n");
+	dbg(" ...... NUMBER OF LANCZOS STEPS = %3ld       NEIG = %3ld\n", j+1, neig);
+	dbg(" ...... \n");
+	dbg(" ......         COMPUTED RITZ VALUES  (ERROR BNDS)\n");
+	dbg(" ...... \n");
 	for (i = 0; i <= j; i++)
-	    info("...... %3ld   %22.14E  (%11.2E)\n", i + 1, ritz[i], bnd[i]);
+	    dbg("...... %3ld   %22.14E  (%11.2E)\n", i + 1, ritz[i], bnd[i]);
     }
 
     if(vectors){/*we do want eigen vectors */
@@ -249,17 +249,17 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	toc("done");
 	long count1=(mxvcount-nsig)/2 + nsig;
 	long count2=(mxvcount-nsig)/2;
-	info(" ...... \n");
-	info(" ...... NO. MULTIPLICATIONS BY A  =%10ld\n", count1);
-	info(" ...... NO. MULT. BY TRANSPOSE(A) =%10ld\n", count2);
-	info("\n");
-	info(" ...... \n");
-	info(" ......        NSIG = %4ld\n", nsig);
-	info(" ...... \n");
-	info(" ......         COMPUTED S-VALUES     (RES. NORMS)\n");
-	info(" ...... \n");
+	dbg(" ...... \n");
+	dbg(" ...... NO. MULTIPLICATIONS BY A  =%10ld\n", count1);
+	dbg(" ...... NO. MULT. BY TRANSPOSE(A) =%10ld\n", count2);
+	dbg("\n");
+	dbg(" ...... \n");
+	dbg(" ......        NSIG = %4ld\n", nsig);
+	dbg(" ...... \n");
+	dbg(" ......         COMPUTED S-VALUES     (RES. NORMS)\n");
+	dbg(" ...... \n");
 	for (i = 0; i < nsig; i++)
-	    info(" ...... %3ld   %22.14E  (%11.2E)\n",
+	    dbg(" ...... %3ld   %22.14E  (%11.2E)\n",
 		    i + 1, d[i], bnd[i]);
     }
     else {
@@ -269,19 +269,19 @@ static void dspsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 
 	long count1=(mxvcount-nsig)/2 + nsig;
 	long count2=(mxvcount-nsig)/2;
-	info(" ...... \n");
-	info(" ...... NO. MULTIPLICATIONS BY A  =%10ld\n", count1);
-	info(" ...... NO. MULT. BY TRANSPOSE(A) =%10ld\n", count2);
-	info("\n");
-	info(" ...... \n");
-	info(" ......         NSIG = %4ld\n" , nsig);
-	info(" ...... \n");
-	info(" ......         COMPUTED S-VALUES   (ERROR BNDS)\n");
-	info(" ...... \n");
+	dbg(" ...... \n");
+	dbg(" ...... NO. MULTIPLICATIONS BY A  =%10ld\n", count1);
+	dbg(" ...... NO. MULT. BY TRANSPOSE(A) =%10ld\n", count2);
+	dbg("\n");
+	dbg(" ...... \n");
+	dbg(" ......         NSIG = %4ld\n" , nsig);
+	dbg(" ...... \n");
+	dbg(" ......         COMPUTED S-VALUES   (ERROR BNDS)\n");
+	dbg(" ...... \n");
 
 	long k = j + 1 - nsig;
 	for (i = 1 ; i <= nsig; i++) {
-	    info(" ...... %3ld   %22.14E  (%11.2E)\n", 
+	    dbg(" ...... %3ld   %22.14E  (%11.2E)\n", 
 		    i, sqrt(ritz[k]), bnd[k]);
 	    k++;
 	    (*Sdiag)->p[i]=sqrt(ritz[k]);
@@ -363,7 +363,7 @@ static long check_parameters(long maxprs, long lanmax, long n,
 	    if (ncells > LMTNW) error_inbex = 8;
 	}
     }
-    if (error_inbex) info("%s\n", error[error_inbex]);
+    if (error_inbex) dbg("%s\n", error[error_inbex]);
     return(error_inbex);
 }
 
@@ -490,7 +490,7 @@ static long landr(long n, long lanmax, long maxprs, long nnzero, double endl,
 
     /* compute eigenvectors */
     if (vectors) {
-	info("j=%ld\n",j);
+	dbg("j=%ld\n",j);
 	xv1 = mymalloc((nrow+ncol)*(j+1) ,double);
 	xv2 = mymalloc(ncol ,double);
 

@@ -184,7 +184,7 @@ mxArray *any2mx(const void *A_){
 	out=l2mx((lmat*)A_);
 	break;
     default:
-	info("id=%ld is not handled.\n", id);
+	dbg("id=%ld is not handled.\n", id);
 	out=mxCreateCellMatrix(0,0);
     }
     return out;
@@ -246,6 +246,11 @@ INLINE dmat *mx2d(const mxArray *A){
     }
     return out;
 }
+INLINE dmat *mx2c(const mxArray *A){
+    mexErrMsgTxt("mx2c is not yet implemented\n");
+    (void)A;
+    return 0;
+}
 INLINE lmat *mx2l(const mxArray *A){
     dmat *B=mx2d(A);
     lmat *out=d2l(B);
@@ -305,6 +310,9 @@ static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
 }
 static dcell *mx2dcell(const mxArray *A){
     return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2d);
+}
+static dcell *mx2ccell(const mxArray *A){
+    return (dcell*)mx2any(A, (void*(*)(const mxArray*))mx2c);
 }
 static lcell *mx2lcell(const mxArray *A){
     return (lcell*)mx2any(A, (void*(*)(const mxArray*))mx2l);
@@ -394,16 +402,16 @@ static void mex_signal_handler(int sig){
     if(sig){
 	mexErrMsgTxt("Signal caught.\n");
     }else{
-	info("signal 0 caught\n");
+	dbg("signal 0 caught\n");
     }
 }
 static jmp_buf *exception_env;
 static void mex_quitfun(const char *msg){
     if(exception_env){
-	info2("error: %s\n", msg);
+	info("error: %s\n", msg);
 	longjmp(*exception_env, 1);
     }else{
-	info2("mexerrmsg\n");
+	info("mexerrmsg\n");
 	mexErrMsgTxt(msg);
     }
 }

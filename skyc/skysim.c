@@ -108,13 +108,13 @@ static void skysim_isky(SIM_S *simu){
 	/*Setup star parameters. */
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);
 	if(!star || nstar==0){
-	    info2("Field %d, No stars available\n", isky);
+	    info("Field %d, No stars available\n", isky);
 	    continue;
 	}
 	int naster;
 	ASTER_S *aster=setup_aster_comb(&naster, star, nstar, parms);
 	if(!aster || naster==0){
-	    info2("Field %d, Aster is empty. skip\n", isky);
+	    info("Field %d, Aster is empty. skip\n", isky);
 	    continue;
 	}
 	/*
@@ -178,15 +178,15 @@ static void skysim_isky(SIM_S *simu){
 		}
 		if(parms->skyc.verbose>1){
 		    for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){
-			info2("wfs %d: istar=%d, ipowfs=%d\n",iwfs,aster[iaster].wfs[iwfs].istar,
+			info("wfs %d: istar=%d, ipowfs=%d\n",iwfs,aster[iaster].wfs[iwfs].istar,
 			      aster[iaster].wfs[iwfs].ipowfs);
-			info2("wfs %d: at (%g,%g). siglev=%g\n",iwfs,
+			info("wfs %d: at (%g,%g). siglev=%g\n",iwfs,
 			      aster[iaster].wfs[iwfs].thetax*206265,
 			      aster[iaster].wfs[iwfs].thetay*206265, aster[iaster].wfs[iwfs].siglevtot);
 		    }
 		}
 		if(parms->skyc.verbose){
-		    info2("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
+		    info("Aster %d, Estimated minimum error is %.2fnm at %.1f Hz. Try %.1f to %.1f Hz\n", iaster,
 			  sqrt(asteri->mresest)*1e9, parms->skyc.fss[asteri->mdtrat], 
 			  parms->skyc.fss[asteri->idtratmin], parms->skyc.fss[asteri->idtratmax-1]);
 		}
@@ -221,7 +221,7 @@ static void skysim_isky(SIM_S *simu){
 		    dmat *ires;
 		    if((ires=asteri->phyRes->p[idtrat])){
 			if(parms->skyc.verbose){
-			    info2("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat], 
+			    info("%5.1f Hz %7.2f +%7.2f =%7.2f", parms->skyc.fss[idtrat], 
 				  sqrt(ires->p[0])*1e9, sqrt(resadd)*1e9,
 				  sqrt(ires->p[0]+resadd)*1e9);
 			}
@@ -231,11 +231,11 @@ static void skysim_isky(SIM_S *simu){
 			    asterMinPhy=thisVar;
 			    asterMinRat=idtrat;
 			    if(parms->skyc.verbose){
-				info2(" [Selected]");
+				info(" [Selected]");
 			    }
 			}
 			if(parms->skyc.verbose){
-			    info2("\n");
+			    info("\n");
 			}
 		    }
 		}
@@ -261,7 +261,7 @@ static void skysim_isky(SIM_S *simu){
 		    IND(pres_oa,0,isky)=IND(pres_oa,1,isky)+IND(pres_oa,3,isky)+IND(pres_oa,4,isky);
 
 		    if(parms->skyc.verbose){
-			info2("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n", 
+			info("%5.1f Hz: Update Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm\n", 
 			      parms->skyc.fss[seldtrat],
 			      sqrt(IND(pres,0,isky))*1e9, sqrt(IND(pres,1,isky))*1e9, sqrt(IND(pres,2,isky))*1e9);
 		    }
@@ -319,7 +319,7 @@ static void skysim_isky(SIM_S *simu){
 	long laps_m=simu->status->laps/60-laps_h*60;
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
-	info2("Field%4d,%2d stars, aster%3d/%-3d,%3.0f Hz: %6.2f nm "
+	info("Field%4d,%2d stars, aster%3d/%-3d,%3.0f Hz: %6.2f nm "
 	      "Sel%3.0fs Load%3.0fs Phy%3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
 	      isky, nstar, selaster, naster, simu->fss->p[isky], sqrt(skymini)*1e9,
 	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
@@ -416,9 +416,9 @@ static void skysim_calc_psd(SIM_S *simu){
 	//renormalize PSD
 	double rms_ngs=psd_inte2(simu->psd_ngs);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
-	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
+	    info("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
 	    double rms_ratio=simu->varol/rms_ngs;
-	    info2("Scaling PSD by %g\n", rms_ratio);
+	    info("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
 	    //scale PSF in place. //
 	    double *p_ngs=simu->psd_ngs->p+nx;
@@ -432,10 +432,10 @@ static void skysim_calc_psd(SIM_S *simu){
 	    }*/
     }
 
-    info2("PSD integrates to %.2f nm. varol=%.2f nm\n", sqrt(var_all)*1e9, sqrt(simu->varol)*1e9);
+    info("PSD integrates to %.2f nm. varol=%.2f nm\n", sqrt(var_all)*1e9, sqrt(simu->varol)*1e9);
     
     double var_ws=psd_inte2(parms->skyc.psd_ws);
-    info2("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
+    info("Windshake PSD integrates to %g nm\n", sqrt(var_ws)*1e9);
     simu->varol+=var_ws;//testing
  
     //add windshake PSD to ngs/tt
@@ -447,7 +447,7 @@ static void skysim_calc_psd(SIM_S *simu){
 
 static void skysim_prep_gain(SIM_S *simu){
     const PARMS_S *parms=simu->parms;
-    info2("Precompute gains for different levels of noise.\n");
+    info("Precompute gains for different levels of noise.\n");
     /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
     dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
     simu->gain_pre=(dcccell*)cellnew(parms->skyc.ndtrat, 1);
@@ -545,7 +545,7 @@ void skysim(const PARMS_S *parms){
 	}
 	skysim_read_mideal(simu);
 	simu->varol=calc_rms(simu->mideal, parms->maos.mcc, parms->skyc.evlstart);
-    	info2("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
+    	info("Open loop error: NGS: %.2f\n", sqrt(simu->varol)*1e9);
 	if(parms->skyc.servo<0){//LQG
 	    skysim_prep_sde(simu);
 	}else{
@@ -556,7 +556,7 @@ void skysim(const PARMS_S *parms){
 	}
 	/*generate star fields. */
 	if(parms->skyc.stars){
-	    info2("Loading stars from %s\n",parms->skyc.stars);
+	    info("Loading stars from %s\n",parms->skyc.stars);
 	    if(check_suffix(parms->skyc.stars, ".bin.gz") 
 	       || check_suffix(parms->skyc.stars, ".bin") 
 	       || check_suffix(parms->skyc.stars, ".fits")){

@@ -274,7 +274,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			free(Jc);
 			free(Ir);
 		    }else{
-			info("size=%lu\n", size);
+			dbg("size=%lu\n", size);
 			error("Invalid sparse format\n");
 		    }
 		}

@@ -61,7 +61,7 @@ static void test_dcircle(){
     dzero(A);
     writebin(A,"dcircle");
     double r2=sqrt(dsum(A)/M_PI);
-    info("r=%g, r2=%g\n",r,r2);
+    dbg("r=%g, r2=%g\n",r,r2);
 }
 static void test_d2cell(){
     dcell *A=dcellread("bcell.bin");
@@ -141,7 +141,7 @@ static void test_dcellcat(int argc, char**argv){
     exit(0);
 }
 static void test_save(void){/*passed */
-    /*info("page size is %ld\n",sysconf(_SC_PAGE_SIZE)); */
+    /*dbg("page size is %ld\n",sysconf(_SC_PAGE_SIZE)); */
     dmat *a=dnew_mmap(20,20,NULL,"a");
     rand_t rstat;
     seed_rand(&rstat,1);
@@ -267,7 +267,7 @@ static void test_svd2(void){
 }
 static void test_kalman(){
     //dmat *psd=dread("MODE_TT");
-    info("sde_fit\n");
+    dbg("sde_fit\n");
     //dmat *coeff0=dread("coeff0");
     //dmat *coeff=sde_fit(psd, coeff0, 0.1, 0, 1e5, 0);
     dmat *coeff=dread("coeff");

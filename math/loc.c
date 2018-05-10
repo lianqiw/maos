@@ -1278,7 +1278,7 @@ loc_t *loctransform(loc_t *loc, const char *polycoeff){
 	if(py==polyn || !py) error("Wrong format '%s'\n", polyn);
 	py[0]='\0';
 	py++;
-	//info2("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
+	//info("polyn=(%s)\npx=(%s)\npy=(%s)\n", _polyn, px, py);
 	//Now parse the strings.
 	cx=parse_poly(px);
 	cy=parse_poly(py);

@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
 	if(!isdir(path[ipath])){
 	    continue;
 	}
-	/*info("Try path %s\n", path[ipath]); */
+	/*dbg("Try path %s\n", path[ipath]); */
 	DIR *dir=opendir(path[ipath]);
 	if(!dir){
 	    warning("Unable to read directory %s\n", path[0]);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
 			    }
 			}
 			if(!wanted) {
-			    warning2("Skip seed %ld\n", seedi);
+			    warning("Skip seed %ld\n", seedi);
 			    continue;
 			}
 		    }
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]){
 			}
 		    }
 		    if(!found){
-			info2("Found unique seed %ld\n", seedi);
+			info("Found unique seed %ld\n", seedi);
 			nseed++;
 			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
 			}
 		    }
 		    if(!found){
-			info("Found unique seed %ld %ld\n", seedi, seedi2);
+			dbg("Found unique seed %ld %ld\n", seedi, seedi2);
 			nseed++;
 			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
@@ -163,21 +163,21 @@ int main(int argc, char *argv[]){
 	closedir(dir);
 	if(nseedfound){ /*record the path as valid */
 	    path[jpath]=path[ipath];
-	    info2("Found path: %s\n", path[jpath]);
+	    info("Found path: %s\n", path[jpath]);
 	    jpath++; mpath++;
 	}
     }
     npath=mpath;
     if(npath==0){
-	info2("Nothing to display\n");
+	info("Nothing to display\n");
 	return 1;
     }
   
-    info2("Found seed:");
+    info("Found seed:");
     for(int i=0; i<nseed; i++){
-	info2("%ld ", seed[i]);
+	info("%ld ", seed[i]);
     }
-    info2("\n");
+    info("\n");
 
     dcell *resolhi=dcellnew(npath,nseed);
     dcell *resollo=dcellnew(npath,nseed);

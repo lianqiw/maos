@@ -37,7 +37,7 @@ static __attribute((constructor)) void init(){
     if(tmp){
 	int blocking=strtol(tmp, NULL, 10);
 	if(blocking){
-	    warning2("CUDA_LAUNCH_BLOCKING is enabled. Use only NULL stream\n");
+	    warning("CUDA_LAUNCH_BLOCKING is enabled. Use only NULL stream\n");
 	    NULL_STREAM=1; //Use only default stream
 	}
     }
@@ -50,10 +50,10 @@ dmat *cudata_t::atmscale=0;
 /**
    Get GPU info.
 */
-void gpu_info(){
+void gpu_dbg(){
     struct cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
-    info("name=%s\n"
+    dbg("name=%s\n"
 	 "TotalGlobalMem=%d\n"
 	 "SharedMemPerBlock=%d\n"
 	 "regsPerBlock=%d\n"
@@ -74,7 +74,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU (%d) mem used %ld MB (%s)\n",current_gpu(),(long)(tot-fr)/1024/1024, msg);
+    info("GPU (%d) mem used %ld MB (%s)\n",current_gpu(),(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -91,9 +91,9 @@ static long gpu_get_free_mem_ratio(int igpu, long minimum){
     size_t fr=0, tot=0;
     int ans;
     if((ans=cudaMemGetInfo(&fr, &tot))){
-	warning2("cudaMemGetInfo failed with error %d\n", ans);
+	warning("cudaMemGetInfo failed with error %d\n", ans);
     }
-    info2("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
+    info("GPU%2d has %.1fGB free, %.1fGB total device memory.\n", 
 	  igpu, fr*9.3e-10, tot*9.3e-10);
     if((long)fr>minimum){
 	return (long)(fr*100./tot);
@@ -144,13 +144,13 @@ static int task_cmp(const task_t *a, const task_t *b){
 int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     int ans;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&MAXGPU)) || MAXGPU==0){//no GPUs available.
-	info2("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
+	info("No GPUs available. ans=%d (%s)\n", ans, cudaGetErrorString((cudaError_t)ans));
 	return 0;
     }
     if(gpus && ngpu>0){
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
-		info2("CUDA is disabled by user.\n");
+		info("CUDA is disabled by user.\n");
 		return 0;
 	    }
 	}
@@ -178,7 +178,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	if(mem_minimum==0){//gpu is disabled
 	    return 0;
 	}else{
-	    info2("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(double)(1024*1024*1024));
+	    info("CUDA: minimum memory requirement is %.1fGB\n", mem_minimum/(double)(1024*1024*1024));
 	}
     }
     char fnlock[PATH_MAX];
@@ -210,7 +210,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	GPUS=cuarray<int>(ngpu, 1);
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
-		info2("CUDA is disabled by user.\n");
+		info("CUDA is disabled by user.\n");
 		GPUS=cuarray<int>();
 		NGPU=0;
 		goto end;
@@ -267,7 +267,7 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     if(NGPU) {
 	cudata_all=new cudata_t*[NGPU];
 	register_deinit(NULL, cudata_all);
-	info2("Using GPU");
+	info("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    cudaSetDevice(GPUS[i]);
 	    cudata_all[i]=new cudata_t;//make sure allocation on the right gpu.
@@ -278,11 +278,11 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		    break;
 		}
 	    }
-	    info2(" %d", cudata->igpu);
+	    info(" %d", cudata->igpu);
 	    //Reserve memory in GPU so the next maos will not pick this GPU.
 	    DO(cudaMalloc(&cudata->reserve, MEM_RESERVE));
 	}
-	info2("\n");
+	info("\n");
 	if(parms){
 	    /*Assign task to gpu evenly based on empirical data to maximum GPU
 	     * usage. We first gather together all the tasks and assign a timing
@@ -350,16 +350,16 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		}
 		*(tasks[it].dest)=min_gpu;
 		timtot[min_gpu]+=tasks[it].timing;
-		//info2("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
+		//info("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
 	    }
 	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
-		NTHREAD=NGPU+1;
-		info2("Reset nthread to %d\n", NTHREAD);
+		//NTHREAD=NGPU+1;
+		//info("Reset nthread to %d\n", NTHREAD);
 		//THREAD_POOL_INIT(NTHREAD);Don't call this now. Too early
 	    }
 	    free(tasks);
 	    {
-		info2("Use %d GPUs for %s%s%s%s%s\n", NGPU, 
+		info("Use %d GPUs for %s%s%s%s%s\n", NGPU, 
 		      parms->gpu.wfs?" WFS":"",
 		      parms->gpu.lsr?" LSR":"",
 		      parms->gpu.tomo?" Tomo":"",

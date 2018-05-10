@@ -91,7 +91,7 @@ static int islink(const char *fn){
 }
 static char* procfn(const char *fn, const char *mod){
     if(!fn){
-	info("fn is empty\n");
+	dbg("fn is empty\n");
 	return NULL;
     }
     char *fn2;
@@ -135,7 +135,7 @@ static char* procfn(const char *fn, const char *mod){
 	if(islink(fn2)){
 	    /*remove old file to avoid write over a symbolic link.*/
 	    if(remove(fn2)){
-		info("Failed to remove %s\n", fn2);
+		dbg("Failed to remove %s\n", fn2);
 		return NULL;
 	    }
 	}
@@ -148,7 +148,7 @@ static char* procfn(const char *fn, const char *mod){
 file_t* zfopen(const char *fn, const char *mod){
     char *fn2=procfn(fn, mod);
     if(!fn2){
-	info("%s does not exist\n", fn);
+	dbg("%s does not exist\n", fn);
 	return NULL;
     }
     file_t* fp=(file_t*)calloc(1,sizeof(file_t));
@@ -163,7 +163,7 @@ file_t* zfopen(const char *fn, const char *mod){
     case 'a':
 	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
 	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
-	    info("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	    dbg("Trying to write to a file that is already opened for writing: %s\n", fn2);
 	    close(fp->fd);
 	    return NULL;
 	}else{
@@ -173,11 +173,11 @@ file_t* zfopen(const char *fn, const char *mod){
 	}
 	break;
     default:
-	info("Unknown mod=%s\n", mod);
+	dbg("Unknown mod=%s\n", mod);
 	return NULL;
     }
     if(fp->fd==-1){
-	info("Unable to open file %s\n", fn2);
+	dbg("Unable to open file %s\n", fn2);
 	return NULL;
     }
     if(mod[0]=='w'){
@@ -189,7 +189,7 @@ file_t* zfopen(const char *fn, const char *mod){
     }else{ 
 	uint16_t magic;
 	if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-	    info("Read magic failed\n");
+	    dbg("Read magic failed\n");
 	    close(fp->fd); return NULL;
 	}
 	if(magic==0x8b1f){
@@ -201,12 +201,12 @@ file_t* zfopen(const char *fn, const char *mod){
     }
     if(fp->isgzip){
 	if(!(fp->p=gzdopen(fp->fd,mod))){
-	    info("Error gzdopen for %s\n",fn2);
+	    dbg("Error gzdopen for %s\n",fn2);
 	    close(fp->fd); return NULL;
 	}
     }else{
 	if(!(fp->p=fdopen(fp->fd,mod))){
-	    info("Error fdopen for %s\n",fn2);
+	    dbg("Error fdopen for %s\n",fn2);
 	    close(fp->fd); return NULL;
 	}
     }
@@ -599,8 +599,8 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	    if(zfread2(line, 1, 80, fp)) return -1; start++;
 	    line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
-		info("Garbage in fits file at %ld:\n", zftell(fp));
-		info("%s\n", line);
+		dbg("Garbage in fits file at %ld:\n", zftell(fp));
+		dbg("%s\n", line);
 		return -1;
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0'; start++;

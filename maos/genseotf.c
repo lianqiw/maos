@@ -56,7 +56,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 	    double diff=ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs]);
 	    if(diff>1e-4){
-		info("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n", 
+		dbg("powfs[%d].opdbias[%d] is different from powfs[%d].opdbias[0] by %g.\n", 
 		     ipowfs, iwfs, ipowfs, diff);
 		different=1;
 	    }
@@ -69,7 +69,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(powfs[ipowfs].loc_tel){
 	notf=MAX(notf,parms->powfs[ipowfs].nwfs);
     }
-    info2("notf=%d\n", notf);
+    info("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
 	cellfree(powfs[ipowfs].intstat->otf);
     }
@@ -84,7 +84,7 @@ static void genseotf_do(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	for(int iotf=0; iotf<notf; iotf++){
 	    dmat* opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]:NULL;
 	    double thres=opdbias?1:(1-1e-10);
-	    info2("There is %s bias\n", opdbias?"NCPA":"no");
+	    info("There is %s bias\n", opdbias?"NCPA":"no");
 	    OMPTASK_SINGLE
 		genotf(powfs[ipowfs].intstat->otf->p[iotf]->p+iwvl*nsa,
 		       loc, powfs[ipowfs].realamp->p[iotf], opdbias, 
@@ -110,7 +110,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }else{
 	key=dhash(powfs[ipowfs].amp, key);
     }
-    info2("powfs %d: ncpa_method=%d, opdbias=%p\n",
+    info("powfs %d: ncpa_method=%d, opdbias=%p\n",
 	 ipowfs, parms->powfs[ipowfs].ncpa_method, powfs[ipowfs].opdbias);
     if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
 	for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
@@ -149,7 +149,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
 	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 	    if(fd>=0){/*succeed */
-		info2("Generating WFS OTF for %s...", fnotf);
+		info("Generating WFS OTF for %s...", fnotf);
 		TIC;tic; genseotf_do(parms,powfs,ipowfs); toc2("done");
 		writebin(intstat->otf, "%s", fnotf);
 	    }else{
@@ -158,7 +158,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }
 	    close(fd); remove(fnlock);
 	}else{
-	    info2("Reading WFS OTF from %s\n", fnotf);
+	    info("Reading WFS OTF from %s\n", fnotf);
 	    intstat->otf=cccellread("%s",fnotf);
 	    intstat->notf=intstat->otf->nx*intstat->otf->ny;
 	    if(!intstat->notf) error("Invalid otf\n");
@@ -239,7 +239,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	if(exist(fnlock) || !zfexist(fnlotf)){/*need to create data */
 	    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 	    if(fd>=0){/*succeed */
-		info2("Generating WFS LLT OTF for %s\n", fnlotf);
+		info("Generating WFS LLT OTF for %s\n", fnlotf);
 		genselotf_do(parms,powfs,ipowfs);
 		writebin(intstat->lotf, "%s",fnlotf);
 	    }else{//waiting by retry locking with blocking.
@@ -248,7 +248,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    }
 	    close(fd); remove(fnlock);
 	}else{
-	    info2("Reading WFS LLT OTF from %s\n", fnlotf);
+	    info("Reading WFS LLT OTF from %s\n", fnlotf);
 	    intstat->lotf=ccellread("%s",fnlotf);
 	    if(!intstat->lotf || !intstat->lotf->nx) error("Invalid lotf\n");
 	}
@@ -275,7 +275,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 		cfft2i(psfhat, 1);
 		cfftshift(psfhat);
 		creal2d(&psf, 0, psfhat, 1);
-		info2("illt %d, iwvl %d has FWHM of %g\"\n",
+		info("illt %d, iwvl %d has FWHM of %g\"\n",
 		      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
 		zfarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
 	    }
@@ -406,7 +406,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	ni0=parms->powfs[ipowfs].nwfs;
     }
     if(ni0>1){
-	info2("number of i0 for matched filter is %d\n",ni0);
+	info("number of i0 for matched filter is %d\n",ni0);
     }
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",

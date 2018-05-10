@@ -92,7 +92,7 @@ int main(int argc, char *argv[]){
 	P_TOT,
     };
     if(argc!=P_TOT){
-	info2("Usage: \n\tenv MVM_CLIENT=hostname MVM_PORT=port MVM_SASTEP=sastep ./mvm_cpu fraction nstep\n");
+	info("Usage: \n\tenv MVM_CLIENT=hostname MVM_PORT=port MVM_SASTEP=sastep ./mvm_cpu fraction nstep\n");
 	_Exit(0);
     }
     int fraction=strtol(argv[P_FRAC], NULL, 10);
@@ -141,14 +141,14 @@ int main(int argc, char *argv[]){
     if(getenv("MVM_SASTEP")){
 	sastep=strtol(getenv("MVM_SASTEP"), NULL, 10);
     }
-    info2("use_trans=%d, nrep=%d, sastep=%d\n", use_trans, nrep, sastep);
+    info("use_trans=%d, nrep=%d, sastep=%d\n", use_trans, nrep, sastep);
     int sock=-1;
     char* MVM_CLIENT=getenv("MVM_CLIENT");
     if(MVM_CLIENT){
 	short port=(short)strtol(getenv("MVM_PORT"), NULL, 10);
 	sock=connect_port(MVM_CLIENT, port, 0 ,1);
 	if(sock!=-1) {
-	    info2("Connected\n");
+	    info("Connected\n");
 	    int cmd[7];
 	    cmd[0]=nact;
 	    cmd[1]=nsa;
@@ -240,7 +240,7 @@ int main(int argc, char *argv[]){
 	}
     }//for istep
     float timmean=timtot/nstep;
-    info2("Timing is mean %.3f, max %.3f min %.3f. BW is %.1f of 51.2GB/s\n",
+    info("Timing is mean %.3f, max %.3f min %.3f. BW is %.1f of 51.2GB/s\n",
 	  timmean*1e3, timmax*1e3, timmin*1e3, nrep*(nact*ng+nact+ng)*sizeof(float)/timmean/(1024*1024*1024));
     writebin(timing, "cpu_timing_%s", HOST);
     if(nstep==1){

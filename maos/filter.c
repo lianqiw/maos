@@ -116,7 +116,7 @@ INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
 				-parms->dm[idm].stroke->p[0],
 				parms->dm[idm].stroke->p[0]);
 		if(nclip>0){
-		    info2("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
+		    info("step %d DM %d: %d actuators clipped\n", simu->isim, idm, nclip);
 		}
 	    }else if(parms->dm[idm].stroke->nx==nact){
 		if(parms->dm[idm].stroke->ny!=2){
@@ -187,11 +187,11 @@ INLINE void clipdm(SIM_T *simu, dcell *dmcmd){
 		}
 		trials++;
 		if(trials==1 && count>0) {
-		    info2("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
+		    info("Step %d, DM %d: %d actuators over ia limit. ", simu->isim, idm, count);
 		}
 	    }while(count>0 && trials<100);
 	    if(trials>1){
-		info2("trials=%d: %s\n", trials, count?"failed.":"success.");
+		info("trials=%d: %s\n", trials, count?"failed.":"success.");
 	    }
 	    if(!parms->fit.square){//copy data back
 		loc_extract(simu->dmreal->p[idm], simu->recon->aloc->p[idm], simu->dmrealsq->p[idm]);
@@ -245,7 +245,7 @@ static void filter_cl(SIM_T *simu){
 		simcfg->ephi->p[0]=0.5;
 	    }else if((isim*10)%parms->sim.end==0){
 		simcfg->ephi->p[0]=(double)isim/(double)parms->sim.end;
-		info("ephi is set to %.1f at step %d\n", simcfg->ephi->p[0], isim);
+		dbg("ephi is set to %.1f at step %d\n", simcfg->ephi->p[0], isim);
 	    }
 	}
     }

@@ -201,7 +201,7 @@ int stcheck(int sfd){
     int ans=0;
     struct pollfd data={sfd, POLLIN|POLLPRI|POLLOUT, 0 };
     if(poll(&data, 1, 1)){
-	info("data.revents=%d\n", data.revents);
+	dbg("data.revents=%d\n", data.revents);
 	if(data.revents&POLLERR || data.revents & POLLHUP || data.revents & POLLNVAL){
 	    warning("socket %d is no longer valid\n", sfd);
 	    ans=1;

@@ -189,9 +189,9 @@ void X(spdisp)(const X(sp) *sp){
     long imax;
     assert(issp(sp));
     if(sp->nzmax==0){
-	info("X(spdisp): All zeros\n");
+	dbg("X(spdisp): All zeros\n");
     }else{
-	info("X(spdisp):\n");
+	dbg("X(spdisp):\n");
 	for(ic=0; ic<sp->ny; ic++){
 	    imax=-1;
 	    for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){ 
@@ -1045,7 +1045,7 @@ X(sp) *X(spinvbdiag)(const X(sp) *A, long bs){
 		long row=A->i[irow];
 		long ind=row-is;
 		if(ind<0 || ind>=bs){
-		    info("solving block %ld\n",ib);
+		    dbg("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated properly.\n");
 		}
 		IND(pbk,ind,icol-is)=A->x[irow];
@@ -1085,7 +1085,7 @@ X(cell) *X(spblockextract)(const X(sp) *A, long bs){
 		long row=A->i[irow];
 		long ind=row-is;
 		if(ind<0 || ind>=bs){
-		    info("solving block %ld\n",ib);
+		    dbg("solving block %ld\n",ib);
 		    error("The array is not block diagonal matrix or not calculated property\n");
 		}
 		IND(pbk,ind,icol-is)=A->x[irow];

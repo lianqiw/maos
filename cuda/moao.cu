@@ -53,11 +53,11 @@ Real cumoao_t::moao_solve(curccell &xout, const curcell &xin, const curcell &ain
     for(int idir=0; idir<ndir; idir++){
 	cuzero(opdfit.M(), stream);
 	//cuwrite(xin, "xin_%d", idir);
-	//info("hxp[%d]\n", idir);
+	//dbg("hxp[%d]\n", idir);
 	hxp[idir].forward(opdfit.pm, xin.pm, 1.f, NULL, stream);//tomography
 	//cuwrite(opdfit, "opdfit0_%d", idir);
 	//cuwrite(ain, "ain_%d", idir);
-	//info("hap[%d]\n", idir);
+	//dbg("hap[%d]\n", idir);
 	hap[idir].forward(opdfit.pm, ain.pm, -1.f, NULL, stream);//minus common DM.
 	//cuwrite(opdfit, "opdfit1_%d", idir);
 	grid->W01.apply(opdfit2.M().P(), opdfit.M().P(), opdfit.Nx(), stream);

@@ -431,7 +431,7 @@ void remove_file_older(const char *fndir, long sec){
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
 	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_atime<=sec2 || sec==0)){
 	    remove(fnfull);
-	    info2("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
+	    info("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
 	}
     }
     closedir(dir);
@@ -745,7 +745,7 @@ void set_realtime(int icpu, int niceness){
     }
     //Set only if we are root.
     if(getuid()==0){
-	info2("Set priority to -20\n");
+	info("Set priority to -20\n");
 	setpriority(PRIO_PROCESS, getpid(), -20);//is this necessary?
 #ifdef __linux__
 	struct sched_param param;
@@ -772,7 +772,7 @@ static int (*signal_handler)(int)=0;
 static volatile sig_atomic_t fatal_error_in_progress=0;
 void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     (void)unused;
-    info2("default_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
+    info("default_signal_handler: %s (%d).\n", sys_siglist[sig], sig);sync();
     int cancel_action=0;
     struct sigaction act={{0}};
     act.sa_flags=0;
@@ -780,7 +780,7 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     sigaction(sig, &act, 0);
     /*prevent recursive call of handler*/
     if(sig==0){
-	info2("Signal 0 caught. do nothing\n");
+	info("Signal 0 caught. do nothing\n");
 	sync();
 	return;
     }
@@ -791,18 +791,18 @@ void default_signal_handler(int sig, siginfo_t *siginfo, void *unused){
     exit_fail=1;
     fatal_error_in_progress++;
     if(sig != SIGABRT && siginfo && siginfo->si_addr){
-	info2("Memory location: %p\n", siginfo->si_addr);
+	info("Memory location: %p\n", siginfo->si_addr);
     }
     if(sig==SIGBUS || sig==SIGILL || sig==SIGSEGV || sig==SIGABRT){
 	print_backtrace();
     }
     if(signal_handler){
-	info2("Signal %d caught. Call signal handler.\n", sig);
+	info("Signal %d caught. Call signal handler.\n", sig);
 	if(signal_handler(sig)){
 	    cancel_action=1; 
 	}
     }else{
-	info2("Signal %d caught without active handler.\n", sig);
+	info("Signal %d caught without active handler.\n", sig);
     }
     sync();
     if(!cancel_action){//Propagate signal to default handler.
@@ -834,9 +834,9 @@ void register_signal_handler(int (*func)(int)){
    Pause, waiting for user input
 */
 void mypause(){
-    info2("Press Any Key to Continue:"); 
+    info("Press Any Key to Continue:"); 
     while(getchar()!=0x0a); 
-    info2("continuing...\n"); 
+    info("continuing...\n"); 
 }
 #undef strdup
 char* (*strdup0)(const char *)=strdup;

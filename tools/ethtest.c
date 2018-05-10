@@ -80,7 +80,7 @@ int server(int sock){
        || stread(sock, &nrep, sizeof(int))){
 	return -1;
     }
-    info2("nstep=%d, nmin=%d, nmax=%d, nrep=%d\n", nstep,nmin, nmax, nrep);
+    info("nstep=%d, nmin=%d, nmax=%d, nrep=%d\n", nstep,nmin, nmax, nrep);
     buf2=(char*)malloc(nmax*nstep);
     //warm up
     for(int i=0; i<10; i++){
@@ -122,10 +122,10 @@ int client(const char *hostname, int port, int nmin, int nmax, int nstep, int nr
     int ilen=-1;
     for(int len=nmin; len<=nmax; len+=nstep){
 	ilen++;
-	info2("len=%d\n", len);
+	info("len=%d\n", len);
 	for(int irep=0; irep<nrep; irep++){
 	    if(irep%800==0){
-		info2("irep=%d of %d\n", irep, nrep);
+		info("irep=%d of %d\n", irep, nrep);
 	    }
 	    usleep(500);
 	    tim1=myclockd();
@@ -140,7 +140,7 @@ int client(const char *hostname, int port, int nmin, int nmax, int nstep, int nr
     close(sock);
     writebin(timing, "pix_timing_%s_%d_%d_%d", HOST, nmin, nmax, nstep);
     writebin(timing2, "pix_timing2_%s_%d_%d_%d", HOST, nmin, nmax, nstep);
-    info("done\n");
+    dbg("done\n");
     return 0;
 }
 //server for mvmfull_real
@@ -157,7 +157,7 @@ int mvm_server(int sock){
     int nstep=cmd[4];
     int nstep0=cmd[5];
     int type=cmd[6];
-    info("type=%d, nact=%d, nsa=%d, sastep=%d, %s=%d, nstep=%d\n",type,
+    dbg("type=%d, nact=%d, nsa=%d, sastep=%d, %s=%d, nstep=%d\n",type,
 	 nact, nsa, sastep, type==1?"pixpsa":"totpix", totpix, nstep);
     int *saind=NULL;
     if(type==1){//mvmfull_iwfs
@@ -194,7 +194,7 @@ int mvm_server(int sock){
 #endif
     TIC;tic;
     for(int istep=-nstep0; istep<nstep; istep++){
-	//info2("\rSend trigger ");
+	//info("\rSend trigger ");
 #if __linux__
 	//scheduled start time of the frame.
 	double tk0=(double)ct.tv_sec+(double)ct.tv_nsec*1.e-9;
@@ -239,7 +239,7 @@ int mvm_server(int sock){
 	ready=(int)(toc3*1e6);//mvm is finished.
 #if __linux__
 	if(nstep<100){
-	    info("tk=%.6f tic=%.6f, toc=%.6f, ready=%.6f\n", tk0, tk, myclockd(), ready*1e-6);
+	    dbg("tk=%.6f tic=%.6f, toc=%.6f, ready=%.6f\n", tk0, tk, myclockd(), ready*1e-6);
 	}
 #endif
 	if(stwriteint(sock, ready)){
@@ -255,11 +255,11 @@ int mvm_server(int sock){
 	}
 #endif
 	if((istep & 0xFF) == 0xFF){
-	    info2("%d %d us.\n", istep, ready);
+	    info("%d %d us.\n", istep, ready);
 	}
 
     }
-    info2("\n");
+    info("\n");
     return -1;
 }
 int main(int argc, char *argv[]){
@@ -273,7 +273,7 @@ int main(int argc, char *argv[]){
     char *NBUF=getenv("NBUF");
     if(NBUF){
 	nbuf=strtol(NBUF, NULL, 10);
-	info("nbuf=%d\n", nbuf);
+	dbg("nbuf=%d\n", nbuf);
     }
     char *ip=0;
     if(argc>3){

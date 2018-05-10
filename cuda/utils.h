@@ -78,10 +78,10 @@ void cp2gpu(M*dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	    LOCK(cudata->memmutex);
 	    if(cudata->nmemcache<memsize){
 		cudata->nmemcache=memsize;
-		/*info("GPU%d: Enlarge mem cache to %ld: %p->", 
+		/*dbg("GPU%d: Enlarge mem cache to %ld: %p->", 
 		  current_gpu(), memsize, cudata->memcache);*/
 		cudata->memcache=realloc(cudata->memcache, cudata->nmemcache);
-		//info("%p\n", cudata->memcache);
+		//dbg("%p\n", cudata->memcache);
 	    }
 	    from=(M*)cudata->memcache;
 	}
@@ -122,7 +122,7 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	//Avoid overriding previously referenced memory
 	lock_t tmp(cudata->memmutex);
 	if(cudata->memcount.count(*dest) && cudata->memcount[*dest]>1){
-	    //info("Deferencing data: %p\n", *dest);
+	    //dbg("Deferencing data: %p\n", *dest);
 	    cudata->memcount[*dest]--;
 	    *dest=0;
 	}

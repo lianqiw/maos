@@ -109,24 +109,24 @@ spchol* chol_factorize(dsp *A_in){
 	success=MOD(factorize)(A,out->L, out->c);
     }
     if(!success) {
-	info("\nCholmod error:");
+	dbg("\nCholmod error:");
 	switch(out->c->status){
 	case CHOLMOD_OK:
-	    info2("Success\n");break;
+	    info("Success\n");break;
 	case CHOLMOD_NOT_INSTALLED:
-	    info2("Method not installed\n"); break;
+	    info("Method not installed\n"); break;
 	case CHOLMOD_OUT_OF_MEMORY:
-	    info2("Out of memory\n");break;
+	    info("Out of memory\n");break;
 	case CHOLMOD_TOO_LARGE:
-	    info2("Integer overflow occured\n"); break;
+	    info("Integer overflow occured\n"); break;
 	case CHOLMOD_INVALID:
-	    info2("Invalid input\n"); break;
+	    info("Invalid input\n"); break;
 	case CHOLMOD_NOT_POSDEF:
-	    info2("Warning: Matrix not positive definite\n"); break;
+	    info("Warning: Matrix not positive definite\n"); break;
 	case CHOLMOD_DSMALL:
-	    info2("Warning: D for LDL' or diag(L) for LL' has tiny absolute value\n"); break;
+	    info("Warning: D for LDL' or diag(L) for LL' has tiny absolute value\n"); break;
 	default:
-	    info2("Unknown error\n");
+	    info("Unknown error\n");
 	}
 	warning("Common->status=%d\n", out->c->status);
 	error("Analyze failed\n");
@@ -134,7 +134,7 @@ spchol* chol_factorize(dsp *A_in){
 #if CHOLMOD_SIMPLE
     if(!out->c->final_asis){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
-	warning2("Converted to our format.");
+	warning("Converted to our format.");
 	cholmod_factor *L=out->L;
 	out->Cp=L->Perm; L->Perm=NULL;
 	dsp *C=out->Cl=dspnew(L->n, L->n, 0);
@@ -307,14 +307,14 @@ spchol *chol_read(const char *format, ...){
 	READSPINT(Perm, L->n);
 	READSPINT(ColCount, L->n);
 	if(L->is_super==0){/*Simplicity */
-	    info2("Reading simplicity cholmod_factor\n");
+	    info("Reading simplicity cholmod_factor\n");
 	    READSPINT(p, L->n+1);
 	    READSPINT(i, L->nzmax);
 	    READSPINT(nz, L->n);
 	    READSPINT(next, L->n+2);
 	    READSPINT(prev, L->n+2);
 	}else{
-	    info2("Reading supernodal cholmod_factor\n");
+	    info("Reading supernodal cholmod_factor\n");
 	    READSPINT(super, L->nsuper+1);
 	    READSPINT(pi, L->nsuper+1);
 	    READSPINT(px, L->nsuper+1);
@@ -480,7 +480,7 @@ static void chol_solve_lower_each(thread_t *info){
     spint *Ap=A->p;
     spint *Ai=A->i;
     dmat *y2=data->y2;
-    info2("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
+    info("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
@@ -516,7 +516,7 @@ static void chol_solve_upper_each(thread_t *info){
     spint *Ap=A->p;
     spint *Ai=A->i;
     dmat *y2=data->y2;
-    info2("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
+    info("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     /*Solve R'\y */
     for(long icol=0; icol<A->nx; icol++){
@@ -564,7 +564,7 @@ static void chol_solve_upper_each(thread_t *info){
    multi-threaded. I don't call blas here.  */
 void chol_solve_lower(dmat **x, spchol *C, dmat *y){
     if(!C->Cl){
-	info2("Converting spchol\n");
+	info("Converting spchol\n");
 	chol_convert(C, 1);
     }
     dsp *A=C->Cl;
@@ -624,10 +624,10 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 void chol_solve_upper(dmat **x, spchol *C, dmat *y){
     if(!C->Cu){
 	if(!C->Cl){
-	    info2("Converting spchol\n");
+	    info("Converting spchol\n");
 	    chol_convert(C, 1);
 	}
-	info2("Transposing C->Cl");
+	info("Transposing C->Cl");
 	C->Cu=dsptrans(C->Cl);
     }
     dsp *A=C->Cu;

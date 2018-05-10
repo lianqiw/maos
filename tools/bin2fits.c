@@ -25,14 +25,14 @@
 
 int main(int argc, char *argv[]){
     if(argc==1){
-	info("Usage: %s file1.bin file2.bin \n", argv[0]);
+	dbg("Usage: %s file1.bin file2.bin \n", argv[0]);
 	exit(0);
     }
     int jarg=1;
     char **header=NULL;
     if(!strcmp(argv[jarg], "gc")){
 	jarg++;
-	info("Creating headers for GC\n");
+	dbg("Creating headers for GC\n");
 	header=mymalloc(25,char*);
 	char tmp[320];
 	double wvl[5]={0.9, 0.975, 1, 1.025, 1.1};
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
 	    continue;
 	}
 	strcpy(tmp, ".fits");
-	info2("Copying from %s to %s\n", fn, fn2);
+	info("Copying from %s to %s\n", fn, fn2);
 	dcell *temp=dcellread("%s", fn);
 	if(header){
 	    for(int i=0; i<temp->nx*temp->ny; i++){

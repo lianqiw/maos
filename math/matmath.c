@@ -214,7 +214,7 @@ T X(wdot3)(const T *a, const X(mat) *w, const T *b){
 */
 void X(cwm)(X(mat) *A, const X(mat) *B){
     assert(B->nx==A->nx && B->ny==A->ny);
-    for(int i=0; i<B->nx*B->ny; i++){
+    for(long i=0; i<B->nx*B->ny; i++){
 	A->p[i]*=B->p[i];
     }
 }
@@ -684,7 +684,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
     R Amax=X(max)(A);
     X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2, 0);
     if(fabs(grad[0])>0.1 || fabs(grad[1])>0.1){
-	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
+	/*dbg("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(mat) *B=XC(new)(A->nx,A->ny);
 	//XC(fft2plan)(B,-1);
 	//XC(fft2plan)(B,1);
@@ -706,7 +706,7 @@ void X(shift2center)(X(mat) *A, R offsetx, R offsety){
 	XC(real2d)(&A,0,B,1);
 #endif
 	X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2, 0);
-	/*info("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
+	/*dbg("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	XC(free)(B);
     }
 }
@@ -733,7 +733,7 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     memset(nonvalid, 0, sizeof(int)*nmod);
     for(int imod=0; imod<nmod; imod++){
 	if(nmod>10){
-	    info2("Gramschmidt: %d of %d\n", imod, nmod);
+	    info("Gramschmidt: %d of %d\n", imod, nmod);
 	}
 	if(imod>0){/*orthogonalize */
 	    T cross;

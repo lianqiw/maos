@@ -239,7 +239,7 @@ int maos_signal_handler(int sig){
    Print out usage information.
  */
 static void print_usage(void){
-    info2(
+    info(
 "Usage: maos [OPTION...] [FILE]...\n"
 "maos is a simulation tool developed to adaptive optics systems\n\n"
 "Examples:\n"
@@ -353,7 +353,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    error("Unable to chdir to %s\n", arg->dirout);
 	}
     }else{
-	warning2("Disable saving when no -o is supplied.\n");
+	warning("Disable saving when no -o is supplied.\n");
 	disable_save=1;
     }
     return arg;
@@ -526,7 +526,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	dzero(gnfra);
 	dzero(gnfxy);
 	for(int isa=0; isa<nsa; isa++){
-	    info2("isa=%4d\b\b\b\b\b\b\b\b", nsa);
+	    info("isa=%4d\b\b\b\b\b\b\b\b", nsa);
 	    if(srot){
 		theta=srot[isa];
 		cx=cos(theta);
@@ -777,7 +777,7 @@ static double mapfun(double *x, mapdata_t *info){
 	    sigma+=pow(ints->p[i]-ints2->p[i],2);
 	}
     }
-    /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);*/
+    /*dbg("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);*/
     dfree(ints2);
     return sigma;
 }
@@ -794,7 +794,7 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *fotf=intstat->fotf->p[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
-    //info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
+    //info("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
     int ncall=dminsearch(g, 3, MIN(pixthetax, pixthetay)*1e-2, 5000, (dminsearch_fun)mapfun, &data);
     ccellfree(data.otf);
     /* convert to native format along x/y or r/a to check for overflow*/
@@ -809,14 +809,14 @@ void maxapriori(double *g, const dmat *ints, const PARMS_T *parms,
     double gx=g[0]/pixthetax*2./ints->nx;
     double gy=g[1]/pixthetay*2./ints->ny;
     if(fabs(gx)>0.55||fabs(gy)>0.55){
-	warning2("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
+	warning("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
 	gx=gx-floor(gx+0.5);
 	gy=gy-floor(gy+0.5);
-	warning2("gx=%6.3f, gy=%6.3f\n", gx, gy);
+	warning("gx=%6.3f, gy=%6.3f\n", gx, gy);
 	g[0]=pixthetax*ints->nx/2*gx;
 	g[1]=pixthetay*ints->ny/2*gy;
     }
-    //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
+    //info("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
     if(parms->powfs[ipowfs].radpix){
 	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
 	double cx=cos(theta);

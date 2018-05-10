@@ -59,7 +59,7 @@ void MUV(dcell **xout, const void *A,
 
 TIC;
 static int test_tomo(){
-    info("Tomo\n");
+    dbg("Tomo\n");
     dcell *grad=dcellread("grad.bin");
     MUV_T RR;
     RR.M=dspcellread("RRM.bin"); 
@@ -98,13 +98,13 @@ static int test_tomo(){
     TomoL(&junk2, recon, rhs, 1);
     toc("");
     writebin(junk2,"TomoL1.bin");
-    info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
-    info("Diff between lhs is %g\n", dcelldiff(junk,junk2));
+    dbg("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
+    dbg("Diff between lhs is %g\n", dcelldiff(junk,junk2));
 
     return 0;
 }
 static int test_fit(){
-    info("Fit\n");
+    dbg("Fit\n");
     dcell *opdr=dcellread("opdr.bin");
     MUV_T FR;
     FR.M=dspcellread("FRM.bin");
@@ -145,8 +145,8 @@ static int test_fit(){
 	FitL(&FitL_f, recon, rhs2, 1);
     toc("");
     writebin(FitL_f,"FitL_f.bin");
-    info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
-    info("Diff between lhs is %g\n", dcelldiff(MUV_f, FitL_f));
+    dbg("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
+    dbg("Diff between lhs is %g\n", dcelldiff(MUV_f, FitL_f));
     dcellfree(rhs);
     dcellfree(MUV_f);
     dcellfree(rhs2);

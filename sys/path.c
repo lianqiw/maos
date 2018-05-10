@@ -45,7 +45,7 @@ PNEW(mutex_path);
 void addpath(const char*path){
     char *abspath=myabspath(path);
     if(!path || !abspath){
-	warning2("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
+	warning("Path not found: path=%s; abspath=%s; pwd=%s. Ignored.\n", path, abspath,mygetcwd());
 	return;
     }
     PATH_T *node=mycalloc(1,PATH_T);
@@ -84,9 +84,9 @@ void rmpath(const char *path){
    Print current path.
 */
 void printpath(void){
-    info2("PATH is :\n");
+    info("PATH is :\n");
     for(PATH_T *ia=PATH;ia;ia=ia->next){
-	info2("%s\n",ia->path);
+	info("%s\n",ia->path);
     }
 }
 /**
@@ -132,7 +132,7 @@ char *search_file(const char *fn){
 char *find_file(const char *fn){
     char *fnout=search_file(fn);
     if(!fnout || !exist(fnout)){
-	info("Looking for %s, found %s\n",fn, fnout);
+	dbg("Looking for %s, found %s\n",fn, fnout);
 	printpath();
 	error("Unable to find file %s.\n",fn);
 	return NULL;
@@ -171,11 +171,11 @@ char *find_config(const char *name){
     if(!exist(config_path)){
 	free(config_path);
 	config_path=NULL;
-	warning2("Unable to determine the path to the configuration files.\n");
-	warning2("Tried %s/config/%s\n", SRCDIR, name);
-	warning2("Tried %s/config/%s\n", EXEP, name);
-	warning2("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
-	warning2("Please set env MAOS_CONFIG_PATH=/path/to/config");
+	warning("Unable to determine the path to the configuration files.\n");
+	warning("Tried %s/config/%s\n", SRCDIR, name);
+	warning("Tried %s/config/%s\n", EXEP, name);
+	warning("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
+	warning("Please set env MAOS_CONFIG_PATH=/path/to/config");
     }
     return config_path;
 }

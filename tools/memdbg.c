@@ -56,24 +56,24 @@ static void (*munmap_default)(void *addr, size_t len)=0;
   where the call from eventually from ans is not useful.
 */
 #define MIN(a,b) (((a)<(b))?(a):(b))
-#define info(A...) fprintf(stderr, A)
+#define dbg(A...) fprintf(stderr, A)
 #define error(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); exit(1);})
 #define warning(A...) fprintf(stderr, "\033[01;31mWarning\033[00;00m\t" A)
 #define LOCK(A) pthread_mutex_lock(&A)
 #define UNLOCK(A) pthread_mutex_unlock(&A)
 /*
-#define LOCK(A) ({int tid=syscall(SYS_gettid); info("%d locking...%p, ", tid, &A); \
+#define LOCK(A) ({int tid=syscall(SYS_gettid); dbg("%d locking...%p, ", tid, &A); \
 	    pthread_mutex_lock(&A);					\
-	    info("%d locked %p\n", tid, &A);})
-#define UNLOCK(A) ({int tid=syscall(SYS_gettid); info("%d unlocking...%p, ", tid, &A);\
+	    dbg("%d locked %p\n", tid, &A);})
+#define UNLOCK(A) ({int tid=syscall(SYS_gettid); dbg("%d unlocking...%p, ", tid, &A);\
 	    pthread_mutex_unlock(&A); \
-	    info("%d unlocked %p\n", tid, &A);})
+	    dbg("%d unlocked %p\n", tid, &A);})
 */
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #define READ_ENV_INT(A,min,max)				\
     if(getenv("MAOS_"#A)){				\
 	A=strtol(getenv("MAOS_"#A),NULL,10);		\
-	info(#A"=%d\n", A);				\
+	dbg(#A"=%d\n", A);				\
 	if(A>max || A<min){				\
 	    error("MAOS_%s: invalid range\n", #A);	\
 	}						\
@@ -82,10 +82,10 @@ PNEW(mutex_mem);
 void memdbg_report(void);
 void memdbg_enable(int flag){
     if(flag){
-	info("memdbg enabled\n");
+	dbg("memdbg enabled\n");
 	disable_memdbg=0;
     }else{
-	info("memdbg disabled\n");
+	dbg("memdbg disabled\n");
 	disable_memdbg=1;
     }
 }
@@ -152,7 +152,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	strcat(cmdstr, add);
     }
     char *ans=call_addr2line(cmdstr);
-    info("%s\n", ans);
+    dbg("%s\n", ans);
     free(ans);
     sync();
   end:
@@ -235,7 +235,7 @@ static void print_usage(const void *key, VISIT which, int level){
     const T_STATKEY *key2=*((const T_STATKEY**)key);
     (void) level;
     if(which==leaf || which==postorder){
-	info("size %4zu B@%p\n", (key2->size), key2->p);
+	dbg("size %4zu B@%p\n", (key2->size), key2->p);
 	print_backtrace_symbol(key2->func, key2->nfunc);
     }
 }
@@ -279,9 +279,9 @@ static void memkey_add(void *p,size_t size){
     }
     disable_memdbg=disable_save;
     if(MEM_VERBOSE==1){
-	info("%p malloced with %zu bytes: %s\n",p, size, found?"collision":"success");
+	dbg("%p malloced with %zu bytes: %s\n",p, size, found?"collision":"success");
     }else if(MEM_VERBOSE==2 && size>1024){
-	info("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+	dbg("Alloc:%.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
     }
     UNLOCK(mutex_mem);
     if(found) print_backtrace();
@@ -299,9 +299,9 @@ static void memkey_del(void*p){
     if(found){
 	T_MEMKEY* key1=*found;/*the address of allocated T_MEMKEY. */
 	if(MEM_VERBOSE==1){
-	    info("%p freed with %zu bytes: success\n",p, key1->size);
+	    dbg("%p freed with %zu bytes: success\n",p, key1->size);
 	}else if(MEM_VERBOSE==2 && key1->size>1024){
-	    info("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
+	    dbg("Free: %.3f MB mem used\n", (memalloc-memfree)/1024./1024.);
 	}
 	memfree+=key1->size;
 	memcnt--;
@@ -322,7 +322,7 @@ static int inited=0;
 static void get_default(){
     inited=1;//Mark as false so if dlsym calls malloc/calloc won't cycle
     LOCK(mutex_mem);
-    info("Overridding default malloc with customized one.\n");
+    dbg("Overridding default malloc with customized one.\n");
     malloc_default   = dlsym(RTLD_NEXT, "malloc");
     calloc_default   = dlsym(RTLD_NEXT, "calloc");
     realloc_default  = dlsym(RTLD_NEXT, "realloc");
@@ -426,24 +426,24 @@ void memdbg_report(void){
     int disable_save=disable_memdbg;
     disable_memdbg=1;
     if(MROOT){
-	info("%ld (%.3f B) allocated memory not freed!!!\n",
+	dbg("%ld (%.3f B) allocated memory not freed!!!\n",
 	     memcnt, (memalloc-memfree));
 	twalk(MROOT,stat_usage);
-	info("stat_usage is done\n");
+	dbg("stat_usage is done\n");
 	twalk(MSTATROOT, print_usage);
     }else{
-	info("All allocated memory are freed.\n");
+	dbg("All allocated memory are freed.\n");
 	if(memcnt>0){
-	    info("But memory count is still none zero: %ld\n",memcnt);
+	    dbg("But memory count is still none zero: %ld\n",memcnt);
 	}
     }
-    info("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
-    info("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
+    dbg("Total allocated memory is %.3f MB\n", memalloc/1024./1024.);
+    dbg("Total freed     memory is %.3f MB\n", memfree/1024./1024.);
     disable_memdbg=disable_save;
 }
 __attribute__((constructor)) void init(){
     unsetenv("LD_PRELOAD");//prevent ld_preload on child process.
-    info("constructor called\n");
+    dbg("constructor called\n");
     /*
       Don't assign malloc in constructor because other constructor may execute
       earlier than this constructor and already calls malloc. This is confirmed

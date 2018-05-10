@@ -335,7 +335,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	TIM(5);
 #if TIMING==1
-	info2("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f\n",
+	info("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f\n",
 	      ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4);
 #endif
     }
@@ -499,7 +499,7 @@ static void perfevl_mean(SIM_T *simu){
 	    sync();
 	    error("Divergent simulation.");
 	}
-	warning2("Step %5d: The loop is diverging: OL: %g CL: %g\n",  
+	warning("Step %5d: The loop is diverging: OL: %g CL: %g\n",  
 		 isim, sqrt(simu->ole->p[nevlmod*isim])*1e9,
 		 sqrt(simu->cle->p[nevlmod*isim])*1e9);
 	simu->last_report_time=0; //force print out.
@@ -513,7 +513,7 @@ static void perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-	info2("Step %d: Output PSF (cumulative average).\n", isim);
+	info("Step %d: Output PSF (cumulative average).\n", isim);
 	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	if(!parms->sim.evlol){
@@ -558,7 +558,7 @@ static void perfevl_save(SIM_T *simu){
 	}
     }
     if(parms->evl.cov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.cov)){
-	info2("Step %d: Output opdcov (non-cumulative average)\n", isim);
+	info("Step %d: Output opdcov (non-cumulative average)\n", isim);
 	int nacc=(simu->isim+1-parms->evl.psfisim);//total accumulated.
 	const double scale=1./(double)nacc;
 	dcellscale(simu->evlopdcov, scale);

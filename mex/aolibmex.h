@@ -23,3 +23,4 @@ cn2est_t *cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 		    const dmat *saa, const double saat, const dmat* hs,
 		    const dmat *htrecon, int keepht, double l0, dcell *grad);
 dmat *sdepsd(const dmat *ff, const dmat *coeff);
+ccell *mkdtfmex(dspcell **si, dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, double pixoffx, double pixoffy, double pixblur);

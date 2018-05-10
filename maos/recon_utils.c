@@ -864,7 +864,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 	}
 
 	if(parms->cn2.verbose){
-	    info2("Updating tomography weights\n");
+	    info("Updating tomography weights\n");
 	}
 	/*Changes recon parameters. cannot be parallel with tomofit(). */
 	/*wtrecon is referenced so should be updated automaticaly. */
@@ -885,11 +885,11 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
     dcell *tmp2=0;
     dcellmm(&tmp2, tmp, tmp, "nt", 1);
     //The Spherical modes are defined (by zernike()) to have one unit WFE.
-    info2("TWFS mode due to measurement noise is %g\n", sqrt(tmp2->p[0]->p[0]));
+    info("TWFS mode due to measurement noise is %g\n", sqrt(tmp2->p[0]->p[0]));
     dmat *sphpsd=dread("%s", parms->recon.fnsphpsd);//spherical mode only
     dcell *coeff=servo_optim(sphpsd, parms->sim.dt, parms->powfs[parms->itpowfs].dtrat, M_PI*0.25, tmp2->p[0], 1);
     double eptwfs=coeff->p[0]->p[0];
-    info("TWFS gain is set to %g\n", eptwfs);
+    dbg("TWFS gain is set to %g\n", eptwfs);
     cellfree(tmp);
     cellfree(tmp2);
     dfree(sphpsd);

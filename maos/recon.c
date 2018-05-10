@@ -68,7 +68,7 @@ void tomofit(dcell **dmout, SIM_T *simu, dcell *gradin){
 	    if(isim<parms->dbg.tomo_maxit->nx){
 		maxit=parms->dbg.tomo_maxit->p[isim];
 		recon->RL.maxit=maxit;/*update maxit information */
-		info2("Running tomo.maxit=%d\n",maxit);
+		info("Running tomo.maxit=%d\n",maxit);
 	    }else{
 		error("Out of range\n");
 	    }
@@ -213,7 +213,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_hi, M_PI*0.25, 0, 1);
 		double g=0.5;
 		simu->dmint->ep->p[0]=simu->dmint->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
+		info("Step %d New gain (high): %.3f\n", simu->reconisim, simu->dmint->ep->p[0]);
 		writebin(psdol, "psdol_%d", simu->reconisim);		    
 		dcellfree(coeff);
 		dfree(psdol);
@@ -244,7 +244,7 @@ void recon_servo_update(SIM_T *simu){
 		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
 		const double g=0.5;
 		simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info2("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
 		dfree(psdol);
 		dcellfree(coeff);
 	    }else{
@@ -341,6 +341,14 @@ void reconstruct(SIM_T *simu){
 	    }
 	    dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	}
+	if(parms->recon.split){
+	    if(parms->recon.alg==0){//mvr
+		remove_dm_ngsmod(simu, simu->dmerr);
+	    }
+	}
+	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators
+	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
+	}
 	if(parms->plot.run){
 	    if(parms->recon.alg==0){
 		for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
@@ -365,24 +373,6 @@ void reconstruct(SIM_T *simu){
 		    }
 		}
 	    }
-	}
-	if(parms->recon.split){
-	    if(parms->recon.alg==0){//ahst 
-		remove_dm_ngsmod(simu, simu->dmerr);
-	    }
-	    if(parms->plot.run && !parms->recon.modal){
-		for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
-		    if(simu->dmerr->p[idm]){
-			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
-				"DM Error Signal (Hi)","x (m)","y (m)",
-				"Err Hi %d ngsmr",idm);
-		    }
-		}
-	    } 
-	}
-	
-	if(recon->actstuck && !parms->recon.modal){//zero stuck actuators
-	    act_stuck_cmd(recon->aloc, simu->dmerr, recon->actstuck);
 	}
     }
     

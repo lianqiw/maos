@@ -270,7 +270,7 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
 	if(psdin->nx>3){
 	    imax=(long)round(psdin->p[3]/df);
 	}
-	info("fmin=%g, fmax=%g, df=%g, i0=%ld, imax=%ld\n", 
+	dbg("fmin=%g, fmax=%g, df=%g, i0=%ld, imax=%ld\n", 
 	     psdin->p[2], psdin->p[3], df, i0, imax);
 	for(long i=i0; i<imax; i++){
 	    psd->p[i]=beta*pow(i*df, alpha);

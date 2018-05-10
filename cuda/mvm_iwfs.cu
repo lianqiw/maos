@@ -214,7 +214,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 		    curmat tmp=datai->cumvm;
 		    datai->cumvm=datai->cumvm_next;
 		    datai->cumvm_next=tmp;
-		    info2("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
+		    info("gpu %d switched over at step %d\n", datai->gpu, datai->istep);
 		}
 	    }
 	}
@@ -238,7 +238,7 @@ void mvm_iwfs(int *gpus, int ngpu, int nstep){
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	timing->p[istep]=toc3;
 	if(istep%1000==0 || timing->p[istep]>2e-3){
-	    info2("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[istep]*1e6);
+	    info("Step %d takes %.0f %.0fus\n", istep, timing->p[istep]*1e6, timing_mvm->p[istep]*1e6);
 	}
     }
     writebin(timing, "timing_%dgpu", ngpu);

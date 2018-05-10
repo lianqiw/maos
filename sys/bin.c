@@ -541,7 +541,7 @@ read_bin_header(header_t *header, file_t *fp){
 	    zfread(&nlen2, sizeof(uint64_t),1,fp);
 	    zfread(&magic2, sizeof(uint32_t),1,fp);
 	    if(magic!=magic2 || nlen!=nlen2){
-		info("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n", 
+		dbg("magic=%u, magic2=%u, nlen=%lu, nlen2=%lu\n", 
 		     magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
 		error("Header string verification failed\n");
 	    }

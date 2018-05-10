@@ -24,7 +24,7 @@ char *dirsetup;
    Print out usage information.
  */
 static void print_usage(void){
-    info2(
+    info(
 	  "Usage: skyc [OPTION...] [FILE]...\n"
 	  "skyc is a simulation tool developed to do sky coveragepostprocessing\n\n"
 	  "Options: \n"

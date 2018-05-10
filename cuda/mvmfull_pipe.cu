@@ -87,8 +87,8 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     }
     const int nsm=6;
 
-    info("Using %d gpus\n", ngpu);
-    //warning2("Notice that here we group x/y gradients together like xyxyxy instead of like"
+    dbg("Using %d gpus\n", ngpu);
+    //warning("Notice that here we group x/y gradients together like xyxyxy instead of like"
     //	    "xxxyyy in matched filter and MVM here.\n");
     X(mat) *mvm1=X(read)("%s", fnmvm1);
     X(mat) *mvm2=X(read)("%s", fnmvm2);
@@ -231,7 +231,7 @@ void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	timing->p[istep]=toc3;//do not tic.
 	if(istep%1000==0 || timing->p[istep]>2.e-3){
-	    info2("Step %d takes %.0f us\n", istep, timing->p[istep]*1e6);
+	    info("Step %d takes %.0f us\n", istep, timing->p[istep]*1e6);
 	}
 	tic;
     }

@@ -377,7 +377,7 @@ static void readcfg_powfs(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	POWFS_CFG_T *powfsi=&parms->powfs[ipowfs];
 	if(!isfinite(powfsi->hs) && powfsi->fnllt){
-	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
+	    warning("powfs %d is at infinity, disable LLT\n", ipowfs);
 	    free(powfsi->fnllt);
 	    powfsi->fnllt=NULL;
 	}
@@ -405,11 +405,11 @@ static void readcfg_powfs(PARMS_T *parms){
 	}else{/*there is no LLT. */
 	    powfsi->llt=NULL;
 	    if(isfinite(powfsi->hs)){
-		warning2("powfs%d has finite hs at %g but no llt specified\n",
+		warning("powfs%d has finite hs at %g but no llt specified\n",
 			ipowfs, powfsi->hs);
 	    }
 	    if(powfsi->radpix){
-		warning2("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
+		warning("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
 		powfsi->radpix=0;
 	    }
 	}
@@ -976,7 +976,7 @@ static void readcfg_cn2(PARMS_T *parms){
     READ_INT(cn2.psol);
     READ_DBL(cn2.hmax);
     READ_DBL(cn2.saat);
-    if(parms->cn2.pair && !parms->cn2.pair->nx){
+    if(parms->cn2.pair && (!parms->cn2.pair->nx || parms->sim.noatm==1)){
 	dfree(parms->cn2.pair);
     }
     if(!parms->cn2.pair){/*we are not doing cn2 estimation. */
@@ -1168,7 +1168,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    parms->tomo.ahst_idealngs=1;
 	}
 	if(parms->ndm>0 && parms->recon.split!=1){
-	    info2("Can only do skysim in split tomography mode 1. Changed\n");
+	    info("Can only do skysim in split tomography mode 1. Changed\n");
 	    parms->recon.split=1;
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1180,12 +1180,12 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     }
     if(parms->tomo.ahst_idealngs){
 	if(parms->sim.fuseint){
-	    info2("Disabling sim.fuseint\n");
+	    info("Disabling sim.fuseint\n");
 	    parms->sim.fuseint=0;
 	}
 	if(parms->tomo.ahst_wt==1){//gradient weighting not available.
 	    /*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
-	    info2("When tomo.ahst_idealngs=1, ahst_wt need to be 3. Changed\n");
+	    info("When tomo.ahst_idealngs=1, ahst_wt need to be 3. Changed\n");
 	    parms->tomo.ahst_wt=3;
 	}
     }
@@ -1264,7 +1264,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     }
     
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
-	info2("Using evaluation directions as ncpa calibration directions if needed.\n");
+	info("Using evaluation directions as ncpa calibration directions if needed.\n");
 	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
 	dfree(parms->sim.ncpa_thetax);
 	dfree(parms->sim.ncpa_thetay);
@@ -1321,14 +1321,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 
 	if(powfsi->radrot && !powfsi->radpix){
 	    powfsi->radrot=0;
-	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
+	    warning("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
 	}
 	if(powfsi->radgx && !powfsi->radpix){
 	    powfsi->radgx=0;
 	}
 	if(powfsi->llt && !powfsi->radpix && !powfsi->mtchcpl){
 	    powfsi->mtchcpl=1;
-	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+	    warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	}
 	double wvlmax=dmax(powfsi->wvl);
 	if(powfsi->type==0){//shwfs
@@ -1456,12 +1456,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].hs<=EPS){
 	    if(wfs_hs>EPS){
 		parms->powfs[ipowfs].hs=wfs_hs;
-		warning2("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
+		warning("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
 	    }else{
 		error("either wfs.wfs or powfs.hs has to be specified\n");
 	    }
 	}else if(wfs_hs>0 && fabs(wfs_hs-parms->powfs[ipowfs].hs)>10000){
-	    warning2("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
+	    warning("powfs[%d].hs is %g, but wfs average hs is %g\n", ipowfs, parms->powfs[ipowfs].hs, wfs_hs);
 	}
     }//for ipowfs
     
@@ -1695,8 +1695,8 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 		if(isfinite(parms->wfs[iwfs].hs)){
 		    double siglev=parms->wfs[iwfs].siglev;
 		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
-		    info2("iwfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
-		    warning2("Need to update to account for the transmittance\n");
+		    info("iwfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+		    warning("Need to update to account for the transmittance\n");
 		}
 	    }
 	}
@@ -1713,17 +1713,17 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 static void setup_parms_postproc_siglev(PARMS_T *parms){
     double sigscale=parms->sim.dt>0?(parms->sim.dt*800):1;
     if(fabs(sigscale-1.)>EPS){
-	info2("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
+	info("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    double siglev=parms->wfs[iwfs].siglev;
 	    parms->wfs[iwfs].siglev=siglev*sigscale;
-	    info2("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+	    info("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    double bkgrnd=parms->powfs[ipowfs].bkgrnd;
 	    if(bkgrnd>0){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
-		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
+		info("powfs%d: bkgrnd scaled from %g to %g\n", 
 		      ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
 	    }
 	}
@@ -1793,7 +1793,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     }
     if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0 && parms->atmr.ht->nx>1){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
-	warning2("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
+	warning("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
 	dresize(parms->atmr.wt, 1, 1);
 	lresize(parms->atmr.os, 1, 1);
@@ -1825,7 +1825,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 		}
 	    }
 	    parms->atm.ipsr->p[ips]=kpsr;
-	    /*info("atm layer %d is maped to atmr %d\n", ips,kpsr); */
+	    /*dbg("atm layer %d is maped to atmr %d\n", ips,kpsr); */
 	}
     
 	/* Map reconstructed layers to input layers. for testing tomo.predict*/
@@ -2126,7 +2126,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    if(parms->ntrpowfs>=parms->nhipowfs){
 		warning("There is no WFS controlling tip/tilt.\n");
 	    }else{
-		info2("Split reconstruction is enabled when there is no low order WFS."
+		info("Split reconstruction is enabled when there is no low order WFS."
 		      " Will split the tip/tilt modes from high order wfs\n");
 	    }
 	}
@@ -2134,7 +2134,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    error("There is only high or low order WFS. can not do skycoverage presimulation\n");
 	}
 	if(!parms->nlopowfs && parms->tomo.ahst_wt==1){
-	    info2("When there is no lowfs. Change ahst_wt from 1 to 3\n");
+	    info("When there is no lowfs. Change ahst_wt from 1 to 3\n");
 	    parms->tomo.ahst_wt=3;
 	}
     }
@@ -2212,7 +2212,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 		if(parms->wfs[iwfs].fitwt<EPS){
 		    continue;
 		}
-		warning2("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
+		warning("Including wfs %d with wt %g in fitting\n", iwfs, parms->wfs[iwfs].fitwt);
 		parms->fit.thetax->p[parms->fit.nfit]=parms->wfs[iwfs].thetax;
 		parms->fit.thetay->p[parms->fit.nfit]=parms->wfs[iwfs].thetay;
 		parms->fit.hs->p[parms->fit.nfit]=parms->wfs[iwfs].hs;
@@ -2376,7 +2376,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.ahstfocus){
 	if(parms->recon.split!=1 || !parms->sim.mffocus){
 	    parms->sim.ahstfocus=0;//no need ahstfocus
-	    info("Disable sim.ahstfocus.\n");
+	    dbg("Disable sim.ahstfocus.\n");
 	}
     }
  
@@ -2407,7 +2407,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(fnd==0){
 	    error("sim.psfr is specified, but evl.psfr are all zero\n");
 	}else{
-	    info2("Output PSF reconstruction telemetry for %d directions\n", fnd);
+	    info("Output PSF reconstruction telemetry for %d directions\n", fnd);
 	}
 	parms->evl.psfmean=1;/*Saves psfmean for verification. */
 	/*required memory to hold memory. */
@@ -2440,13 +2440,13 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	    snprintf(fn, 80, "Res_%ld.done",parms->sim.seeds->p[iseed]);
 	    if(exist(fn) && !override){
 		parms->fdlock->p[iseed]=-1;
-		warning2("Skip seed %ld because %s exist.\n", parms->sim.seeds->p[iseed], fn);
+		warning("Skip seed %ld because %s exist.\n", parms->sim.seeds->p[iseed], fn);
 	    }else{
 		remove(fn);
 	    	snprintf(fn, 80, "Res_%ld.lock",parms->sim.seeds->p[iseed]);
 		parms->fdlock->p[iseed]=lock_file(fn, 0, 0);
 		if(parms->fdlock->p[iseed]<0){
-		    warning2("Skip seed %ld because it is already running.\n",
+		    warning("Skip seed %ld because it is already running.\n",
 			     parms->sim.seeds->p[iseed]);
 		}else{
 		    cloexec(parms->fdlock->p[iseed]);
@@ -2464,13 +2464,13 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     }
     if(parms->sim.nseed<1){
 	scheduler_finish(0);
-	info2("There are no seed to run. Use -O to override. Exit\n");
+	info("There are no seed to run. Use -O to override. Exit\n");
     }else if(parms->sim.end>parms->sim.start){
-	info2("There are %d valid simulation seeds: ",parms->sim.nseed);
+	info("There are %d valid simulation seeds: ",parms->sim.nseed);
 	for(int i=0; i<parms->sim.nseed; i++){
-	    info2(" %ld", parms->sim.seeds->p[i]);
+	    info(" %ld", parms->sim.seeds->p[i]);
 	}
-	info2("\n");
+	info("\n");
 	if(parms->sim.nseed>1 && parms->dither){
 	    warning("Some of the dither mode updates parameters still persist for different seeds.\n");
 	}
@@ -2489,7 +2489,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     }
   
     if(!parms->atm.frozenflow){
-	warning2("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
+	warning("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
 	parms->evl.psfisim=parms->sim.start;
     }
     if(parms->evl.psfisim<parms->sim.start){
@@ -2505,7 +2505,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	if(fnd==0){
 	    error("Required to output PSF, but evl.psf are all zero\n");
 	}else{
-	    info2("Output PSF for %d directions\n", fnd);
+	    info("Output PSF for %d directions\n", fnd);
 	}
     }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -2554,12 +2554,12 @@ static void print_parms(const PARMS_T *parms){
 	"close"
     };
 
-    info2("%sAperture%s is %g m with sampling 1/%g m\n", GREEN, BLACK,
+    info("%sAperture%s is %g m with sampling 1/%g m\n", GREEN, BLACK,
 	  parms->aper.d, 1/parms->evl.dx);
     double fgreen=calc_greenwood(parms->atm.r0z, parms->atm.nps, parms->atm.ws->p, parms->atm.wt->p);
     double theta0z=calc_aniso(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p);
     
-    info2("%sTurbulence at zenith:%s\n"
+    info("%sTurbulence at zenith:%s\n"
 	  "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
 	  "Anisoplanatic angle is %.2f\"",GREEN, BLACK,
 	  parms->atm.r0, parms->atm.L0, fgreen, theta0z*206265);
@@ -2567,177 +2567,177 @@ static void print_parms(const PARMS_T *parms){
 	double H1=parms->dm[0].ht;
 	double H2=parms->dm[1].ht;
 	double theta2z=calc_aniso2(parms->atm.r0z, parms->atm.nps, parms->atm.ht->p, parms->atm.wt->p, H1, H2);
-	info2(", generalized is %.2f\"", theta2z*206265);
+	info(", generalized is %.2f\"", theta2z*206265);
     }
-    info2("\n");
-    info2("There are %d layers, sampled %dx%d at 1/%gm. ZA is %g deg. wind dir is%s randomized.\n",
+    info("\n");
+    info("There are %d layers, sampled %dx%d at 1/%gm. ZA is %g deg. wind dir is%s randomized.\n",
 	  parms->atm.nps, parms->atm.nx, parms->atm.ny,  1./parms->atm.dx,  
 	  parms->sim.za*180/M_PI, (parms->atm.wdrand?"":" not"));
     if(parms->atm.nps>1 && theta0z*206265>4){
 	warning("Atmosphere theta0 maybe wrong\n");
     }
     for(int ips=0; ips<parms->atm.nps; ips++){
-	info2("layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
+	info("layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 	      ips,parms->atm.ht->p[ips],parms->atm.wt->p[ips],parms->atm.ws->p[ips]);
     }
     if(parms->recon.alg==0){
-	info2("%sReconstruction%s: r0=%gm l0=%gm "
+	info("%sReconstruction%s: r0=%gm l0=%gm "
 	      "ZA is %g deg. %d layers.%s\n", GREEN, BLACK,
 	      parms->atmr.r0, parms->atmr.L0,  
 	      parms->sim.za*180/M_PI, 
 	      parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
   
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    info2("layer %d: ht= %6.0f m, wt= %5.3f\n",
+	    info("layer %d: ht= %6.0f m, wt= %5.3f\n",
 		  ips,parms->atmr.ht->p[ips],parms->atmr.wt->p[ips]);
 	}
     }
-    info2("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
+    info("%sThere are %d powfs%s\n", GREEN, parms->npowfs, BLACK);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	info2("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
+	info("powfs %d: Order %2d, %sGS at %3.3g km. Sampling 1/%g m. Thres %g%%. ",
 	      ipowfs,parms->powfs[ipowfs].order, (parms->powfs[ipowfs].llt?"L":"N"),
 	      parms->powfs[ipowfs].hs/1000,1./parms->powfs[ipowfs].dx,parms->powfs[ipowfs].saat*100);
 	int lrt=(parms->recon.split && parms->tomo.splitlrt);
 	if(parms->powfs[ipowfs].trs || parms->powfs[ipowfs].dfrs){
-	    info2("%s%s%sis removed in %s side in tomography.%s", GREEN,
+	    info("%s%s%sis removed in %s side in tomography.%s", GREEN,
 		  parms->powfs[ipowfs].trs?"T/T ":"", parms->powfs[ipowfs].dfrs?"Diff Focus ":"",
 		  lrt?"both":"right hand",  BLACK);
 	}
-	info2("\n");
+	info("\n");
 	if(parms->powfs[ipowfs].type==0){
-	    info2("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ", 
+	    info("    CCD image is %dx%d @ %gx%gmas, blur %g%% (sigma), %gHz, ", 
 		  (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
 		  parms->powfs[ipowfs].pixpsa, 
 		  parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
 		  parms->powfs[ipowfs].pixblur,
 		  1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}else{
-	    info2("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
+	    info("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}
-	info2("wvl: [");
+	info("wvl: [");
 	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-	    info2(" %g",parms->powfs[ipowfs].wvl->p[iwvl]);
+	    info(" %g",parms->powfs[ipowfs].wvl->p[iwvl]);
 	}
-	info2("]\n");
-	info2("    %s in reconstruction. ", 
+	info("]\n");
+	info("    %s in reconstruction. ", 
 	      parms->powfs[ipowfs].gtype_recon==0?"Gtilt":"Ztilt");
 	if(parms->powfs[ipowfs].phystep>-1){
-	    info2("Physical optics start at %d with %s'%s'%s",
+	    info("Physical optics start at %d with %s'%s'%s",
 		  parms->powfs[ipowfs].phystep, 
 		  parms->powfs[ipowfs].phytype_sim==1?GREEN:RED, phytype[parms->powfs[ipowfs].phytype_sim], BLACK);
 	}else{
-	    info2("Geomtric optics uses %s ",
+	    info("Geomtric optics uses %s ",
 		  parms->powfs[ipowfs].gtype_sim==0?"gtilt":"ztilt");
 	}
 	
 	if(parms->powfs[ipowfs].noisy){
-	    info2("%s(noisy)%s\n", GREEN,BLACK);
+	    info("%s(noisy)%s\n", GREEN,BLACK);
 	}else{
-	    info2("%s(noise free)%s\n", RED, BLACK);
+	    info("%s(noise free)%s\n", RED, BLACK);
 	}
 	if(parms->powfs[ipowfs].dither){
-	    info2("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
+	    info("    Delay locked loop starts at step %d and outputs every %d WFS frames.\n",
 		  parms->powfs[ipowfs].dither_pllskip, parms->powfs[ipowfs].dither_pllrat);
-	    info2("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
+	    info("    Pixel processing update starts at step %d and outputs every %d WFS frames.\n",
 		  parms->powfs[ipowfs].dither_ogskip, parms->powfs[ipowfs].dither_ograt);
 	}
     }
-    info2("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
+    info("%sThere are %d wfs%s\n", GREEN, parms->nwfs, BLACK);
     for(i=0; i<parms->nwfs; i++){
-	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
+	info("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec, %g km, siglev is %g",
 	      i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
 	      parms->wfs[i].thetay*206265, parms->wfs[i].hs*1e-3, parms->wfs[i].siglev);
 	if((parms->wfs[i].siglev-parms->wfs[i].siglevsim)>EPS){
-	    info2(" (%g in simulation)", parms->wfs[i].siglevsim);
+	    info(" (%g in simulation)", parms->wfs[i].siglevsim);
 	}
 	const int ipowfs=parms->wfs[i].powfs;
-	info2(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
-	info2("\n");
+	info(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
+	info("\n");
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
 	    error("wfs thetax or thetay is too large\n");
 	}
     }
-    info2("%sThere are %d DMs%s\n",GREEN, parms->ndm, BLACK);
+    info("%sThere are %d DMs%s\n",GREEN, parms->ndm, BLACK);
     for(i=0; i<parms->ndm; i++){
-	info2("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+	info("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
 	      i, parms->dm[i].order,
 	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
 	      fabs(parms->dm[i].stroke->p[0])*1e6);
 	if(parms->dm[i].iac){
-	    info2("     Normalized cubic influence function with inter-actuator coupling of %g\n",
+	    info("     Normalized cubic influence function with inter-actuator coupling of %g\n",
 		  parms->dm[i].iac);
 	}else{
-	    info2("     Bilinear influence function.\n");
+	    info("     Bilinear influence function.\n");
 	}
     }
     if(parms->recon.alg==0){
-	info2("%sTomography%s is using ", GREEN, BLACK);
+	info("%sTomography%s is using ", GREEN, BLACK);
 	if(parms->tomo.bgs){
-	    info2("Block Gauss Seidel with ");
+	    info("Block Gauss Seidel with ");
 	}
 	switch(parms->tomo.alg){
 	case 0:
-	    info2("Cholesky back solve ");
+	    info("Cholesky back solve ");
 	    break;
 	case 1:
-	    info2("CG, with %s%s%s preconditioner, %s%d%s iterations",
+	    info("CG, with %s%s%s preconditioner, %s%d%s iterations",
 		  GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
 	    break;
 	case 2:
-	    info2("SVD direct solve ");
+	    info("SVD direct solve ");
 	    break;
 	case 3:
-	    info2("Block Gauss Seidel ");
+	    info("Block Gauss Seidel ");
 	    break;
 	default:
 	    error("Invalid\n");
 	}
 	switch(parms->recon.split){
 	case 0:
-	    info2(", integrated tomo.\n");break;
+	    info(", integrated tomo.\n");break;
 	case 1:
-	    info2(", ad hoc split tomo.\n"); break;
+	    info(", ad hoc split tomo.\n"); break;
 	case 2:
-	    info2(", minimum variance split tomo\n"); break;
+	    info(", minimum variance split tomo\n"); break;
 	default:
 	    error(", Invalid\n");
 	}
-	info2("%sDM Fitting %sis using ", GREEN, BLACK);
+	info("%sDM Fitting %sis using ", GREEN, BLACK);
 	if(parms->fit.bgs){
-	    info2("Block Gauss Seidel with ");
+	    info("Block Gauss Seidel with ");
 	}
 	switch(parms->fit.alg){
 	case 0:
-	    info2("Cholesky back solve");
+	    info("Cholesky back solve");
 	    break;
 	case 1:
-	    info2("CG, with %s%s%s preconditioner, %s%d%s iterations ",
+	    info("CG, with %s%s%s preconditioner, %s%d%s iterations ",
 		  GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
 	    break;
 	case 2:
-	    info2("SVD direct solve ");
+	    info("SVD direct solve ");
 	    break;
 	case 3:
-	    info2("Block Gauss Seidel ");
+	    info("Block Gauss Seidel ");
 	    break;
 	default:
 	    error("Invalid");
 	}
     }else if(parms->recon.alg==1){
-	info2("%sLeast square reconstructor%s is using ", GREEN, BLACK);
+	info("%sLeast square reconstructor%s is using ", GREEN, BLACK);
 	if(parms->tomo.bgs){
-	    info2("Block Gauss Seidel with ");
+	    info("Block Gauss Seidel with ");
 	}
 	switch(parms->lsr.alg){
 	case 0:
-	    info2("Cholesky back solve ");
+	    info("Cholesky back solve ");
 	    break;
 	case 1:
-	    info2("CG%d", parms->tomo.maxit);
+	    info("CG%d", parms->tomo.maxit);
 	    break;
 	case 2:
-	    info2("SVD direct solve ");
+	    info("SVD direct solve ");
 	    break;
 	default:
 	    error("Invalid\n");
@@ -2745,24 +2745,24 @@ static void print_parms(const PARMS_T *parms){
     }else{
 	error("parms->recon.alg=%d is illegal.\n", parms->recon.alg);
     }
-    info2("\n");
-    info2("%sSimulation%s start at step %d, end at step %d, "
+    info("\n");
+    info("%sSimulation%s start at step %d, end at step %d, "
 	  "with time step 1/%gs, %s%s loop%s.\n", 
 	  GREEN, BLACK, parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
 	  parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
-    info2("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
+    info("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
     for(i=0; i<parms->fit.nfit; i++){
-	info2("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
 	      parms->fit.thetay->p[i]*206265);
 	if(fabs(parms->fit.thetax->p[i])>1 || fabs(parms->fit.thetay->p[i])>1){
 	    error("fit thetax or thetay is too large\n");
 	}
     }
-    info2("%sThere are %d evaluation directions%s at sampling 1/%g m.\n", 
+    info("%sThere are %d evaluation directions%s at sampling 1/%g m.\n", 
 	  GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
-	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
 	      parms->evl.thetay->p[i]*206265);
 	if(fabs(parms->evl.thetax->p[i])>1 || fabs(parms->evl.thetay->p[i])>1){
@@ -2779,14 +2779,14 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
     if(!mainconf){
 	mainconf="default.conf";
     }
-    info2("Main config file is %s\n", mainconf);
+    info("Main config file is %s\n", mainconf);
 
     /*Setup PATH and result directory so that the config_path is in the back of path */
     char *config_path=find_config("maos");
     if(!config_path || !exist(config_path)){
 	error("Unable to find usable configuration file\n");
     }
-    /*info2("Using config files found in %s\n", config_path); */
+    /*info("Using config files found in %s\n", config_path); */
     char *bin_path=stradd(config_path, "/bin", NULL);
     addpath(config_path);
     addpath(bin_path);
@@ -2860,7 +2860,7 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
 	    snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
 	    mysymlink(fn, "run_recent.log");
 	}
-	info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
+	info("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
     }
     return parms;
 }
@@ -2944,11 +2944,11 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    if(parms->nmoao>0){
 		if(parms->gpu.moao || parms->gpu.fit){
 		    if(!parms->fit.square){
-			info2("GPU moao=1 requires fit.square=1. Changed\n");
+			info("GPU moao=1 requires fit.square=1. Changed\n");
 			parms->fit.square=1;
 		    }
 		    if(!parms->tomo.square){
-			info2("GPU moao=1 requires tomo.square=1. Changed\n");
+			info("GPU moao=1 requires tomo.square=1. Changed\n");
 			parms->tomo.square=1;
 		    }
 		}

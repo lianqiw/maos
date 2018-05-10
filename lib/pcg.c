@@ -49,7 +49,7 @@ double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart
     double r0z0=dcellinn(b,b);/*|b| */
     double res[maxiter+1];
 #if PRINT_RES == 2
-    info2("CPU %sCG %d:", M?"P":"",maxiter);
+    info("CPU %sCG %d:", M?"P":"",maxiter);
 #endif
     for(int k=0; k<maxiter; k++){
 	if(k%100==0){ /*restart every 100 steps exclude beginning */
@@ -72,7 +72,7 @@ double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart
 	    }
 	}
 #if PRINT_RES == 2
-	info2("%.5f ", res[k]);
+	info("%.5f ", res[k]);
 #endif
 	if(Ap) dcellzero(Ap);
 	(*Amul)(&Ap, A, p0, 1);
@@ -98,9 +98,9 @@ double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart
 	r0z1=r0z2;
     }
 #if PRINT_RES == 1
-    info2("CPU %sCG %2d: %.5f ==> %.5f\n", M?"P":"",maxiter, res[0], res[maxiter]);
+    info("CPU %sCG %2d: %.5f ==> %.5f\n", M?"P":"",maxiter, res[0], res[maxiter]);
 #elif PRINT_RES==2
-    info2("\n");
+    info("\n");
 #endif
  end:
     dcellfree(r0); 

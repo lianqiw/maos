@@ -372,7 +372,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	    gxm+=TT->p[isa];
 	    gym+=TT->p[isa+nsa*3];
 	}
-	info2("gxm=%g, gym=%g.\n", gxm/nsa, gym/nsa);
+	info("gxm=%g, gym=%g.\n", gxm/nsa, gym/nsa);
 	double gainscl=2.*nsa/(gxm+gym);
 	/*
 	  pywfs->gain is inverse of optical gain, to insure 1rad of input
@@ -381,7 +381,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dscale(pywfs->gradoff, gainscl);
 	dscale(TT, gainscl);
 	pywfs->GTT=TT;
-	info("pywfs_gain=%g\n", pywfs->gain);
+	dbg("pywfs_gain=%g\n", pywfs->gain);
     }
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
     {
@@ -412,7 +412,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	dmat *grad=0;
 	for(int im=0; im<opds->ny; im++){
 	    for(int j=0; j<nn; j++){
-		info2("im=%d, j=%d\n", im, j);
+		info("im=%d, j=%d\n", im, j);
 		opd=dsub(opds, 0, 0, im, 1);
 		dscale(opd, pow(2, j)*wve);
 		dzero(ints);
@@ -457,7 +457,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints2);
 		dmm(&tmp, 0, reg, grad, "nn", 1);
 		IND(res, j, in)=tmp->p[0];
-		info2("%d of %d, %d of %d: %g\n", j, nj, in, nn, tmp->p[0]);
+		info("%d of %d, %d of %d: %g\n", j, nj, in, nn, tmp->p[0]);
 	    }
 	}
 	writebin(opds, "dither_opd");
@@ -476,7 +476,7 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
 	const double atmscale=1;
 #pragma omp parallel for
 	for(int i=0; i<100; i++){
-	    info2("%d ", i);
+	    info("%d ", i);
 	    dmat *ints=0;
 	    dmat *grad=0;
 	    dmat *opd=0;
@@ -691,7 +691,7 @@ void pywfs_grad(dmat **pgrad, const PYWFS_T *pywfs, const dmat *ints){
    Return measurement of T/T mode, normalized for 1 unit of input.
 */
 dmat *pywfs_tt(const PYWFS_T *pywfs){
-    TIC;tic;info2("Computing pywfs_tt...");
+    TIC;tic;info("Computing pywfs_tt...");
     const loc_t *loc=pywfs->locfft->loc;
     dmat *opd=dnew(loc->nloc,1);
     dmat *ints=0;
@@ -834,14 +834,14 @@ static dmat *pywfs_mkg_do(const PYWFS_T *pywfs, const loc_t* locin, const loc_t 
 	atomicadd(&count, 1);
 	if(count%10==0){
 	    double ts=myclockd()-tk;
-	    info2("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", count, locin->nloc, ts, ts/count*locin->nloc, dstd(grad));
+	    info("%d of %ld. %.2f of %.2f seconds. std(grad)=%g.\n", count, locin->nloc, ts, ts/count*locin->nloc, dstd(grad));
 	}
 	dfree(opdfft);
 	dfree(opdin);
 	dfree(grad);
 	dfree(ints);
     }
-    info2("\n");
+    info("\n");
     dfree(grad0);
     dfree(opd0);
     return ggd;
@@ -875,7 +875,7 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
 	     key, pywfs->locfft->nembed->p[0], locin->nloc, pywfs->modulate, pywfs->modulpos,
 	     locin->iac, displacex, displacey, scale, pywfs->poke);
     snprintf(fnlock, PATH_MAX, "%s.lock", fn);
-    info2("Using G in %s\n", fn);
+    info("Using G in %s\n", fn);
     dmat *gg=0;
     if(0){//test amount of poke 
 	dmat *mod1=dnew(locin->nloc, 3);
@@ -911,7 +911,7 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
     if(exist(fnlock) || !zfexist(fn)){
 	int fd=lock_file(fnlock, 0, 0);//non blocking, exclusive
 	if(fd>0){//succeed
-	    info2("Generating PYWFS poke matrix\n");
+	    info("Generating PYWFS poke matrix\n");
 #if USE_CUDA
 	    if(global->parms->gpu.wfs){
 		gg=gpu_pywfs_mkg(pywfs, locin, locfft, mod, displacex, displacey);
@@ -921,7 +921,7 @@ dmat* pywfs_mkg(PYWFS_T *pywfs, const loc_t* locin, const char *distortion, cons
 	    writebin(gg, "%s", fn);
 	    close(fd); remove(fnlock);
 	}else{
-	    info2("Trying to lock %s\n", fnlock);
+	    info("Trying to lock %s\n", fnlock);
 	    fd=lock_file(fnlock, 1, 0);
 	    close(fd); remove(fnlock);
 	    goto retry;

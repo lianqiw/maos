@@ -48,7 +48,7 @@ static vkcov_t *vkcov_get(double r0, double L0, double dx, long n, long ninit){
 	    return p;
 	}
     }
-    info2("compute vkcov with r0=%g, L0=%g, dx=%g, n=%ld, ninit=%ld\n",
+    info("compute vkcov with r0=%g, L0=%g, dx=%g, n=%ld, ninit=%ld\n",
 	 r0, L0, dx, n, ninit);
     return NULL;
 }

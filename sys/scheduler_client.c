@@ -165,10 +165,10 @@ static void launch_scheduler_do(void *junk){
     char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler", NULL);
 #endif
     if(exist(fn_scheduler)){
-	info2("Run %s\n", fn_scheduler);
+	info("Run %s\n", fn_scheduler);
 	execl(fn_scheduler, "scheduler", NULL);
     }else{/*fall back. this won't have the right argv set. */
-	info2("Launch scheduler using shell\n");
+	info("Launch scheduler using shell\n");
 	if(execlp("scheduler", "scheduler", NULL)){
 	    warning("scheduler not found\n");
 	}
@@ -324,7 +324,7 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     int ret=0;
     int sock=connect_port(host, PORT, 0, 0);
     if(sock<=-1){
-	warning2("Failed to connect to %s:%d: %s\n", host, PORT, strerror(errno));
+	warning("Failed to connect to %s:%d: %s\n", host, PORT, strerror(errno));
 	return -1;
     }
     int cmd[2]={CMD_LAUNCH, 2};
@@ -333,7 +333,7 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
        || stwritestr(sock, argv[0]) 
        || stwritestr(sock, scmd) 
        || streadint(sock, &ret)){
-	warning2("Failed to write to scheduler at %s\n", host);
+	warning("Failed to write to scheduler at %s\n", host);
 	ret=-1;
     }
     free(scmd);
@@ -372,9 +372,9 @@ int scheduler_recv_socket(int *sfd, int id){
 	    warning("Talk to scheduler failed\n");
 	}else if(!ans2 && !streadfd(ssock, sfd)){
 	    ans=0;
-	    info("received %d from scheduler\n", *sfd);
+	    dbg("received %d from scheduler\n", *sfd);
 	}else{
-	    info("scheduler had no valid fd\n");
+	    dbg("scheduler had no valid fd\n");
 	}
 	close(ssock);
     }else{
@@ -429,18 +429,18 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	strncat(cmdstr, add, PATH_MAX-strlen(cmdstr)-1);
     }
     if(connect_failed){
-	info("%s\n", cmdstr);
+	dbg("%s\n", cmdstr);
 	return;
     }
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
     if(MAOS_DISABLE_SCHEDULER || is_scheduler){
-	info("backtrace directly\n");
+	dbg("backtrace directly\n");
 	char ans[10000];
 	if(!call_addr2line(ans, 10000, cmdstr)){
-	    info2("%s\n", ans);
+	    info("%s\n", ans);
 	}else{
-	    info2("Command failed\n");
+	    info("Command failed\n");
 	}
     }else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
@@ -452,13 +452,13 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    cmd[1]=getpid();
 	    char *ans=NULL;
 	    if(stwrite(sock, cmd, sizeof(int)*2)){
-		warning2("write cmd %d failed\n", cmd[0]);
+		warning("write cmd %d failed\n", cmd[0]);
 	    }else if(stwritestr(sock,cmdstr)){
-		warning2("write cmd %s failed\n", cmdstr);
+		warning("write cmd %s failed\n", cmdstr);
 	    }else if(streadstr(sock, &ans)){
-		warning2("read cmd failed\n");
+		warning("read cmd failed\n");
 	    }else{
-		info2(" %s\n",ans); free(ans);
+		info(" %s\n",ans); free(ans);
 	    }
 	    close(sock);
 	}else{
@@ -466,7 +466,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    connect_failed=1;
 	}
 #else
-	info2("MAOS_DISABLE_SCHEDULER is set\n");
+	info("MAOS_DISABLE_SCHEDULER is set\n");
 #endif
     }
     UNLOCK(mutex);

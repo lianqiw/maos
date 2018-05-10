@@ -101,7 +101,7 @@ dspcell *slaving(loccell *aloc,  /**<[in]The actuator grid*/
 	const long *floated=actfloat?(actfloat->p[idm]?actfloat->p[idm]->p:0):0;
 
 	nslavetot+=nslave;
-	info2("dm %d: there are %d slave actuators\n", idm, nslave);
+	info("dm %d: there are %d slave actuators\n", idm, nslave);
 	if(nslave==0) {
 	    continue;
 	}

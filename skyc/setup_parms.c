@@ -255,24 +255,24 @@ PARMS_S *setup_parms(const ARG_S *arg){
     default:
 	error("Invalid skyc.servo=%d\n", parms->skyc.servo);
     }
-    info("maos.mffocus=%d\n",  parms->maos.mffocus);
-    info("skyc.addws=%d\n",    parms->skyc.addws);
+    dbg("maos.mffocus=%d\n",  parms->maos.mffocus);
+    dbg("skyc.addws=%d\n",    parms->skyc.addws);
     if(!parms->skyc.stars){
 	if(parms->skyc.keeporder){
 	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
 	}
     }else{
 	if(parms->skyc.interpg==1){
-	    info2("disable interpg when skyc.stars is set\n");
+	    info("disable interpg when skyc.stars is set\n");
 	    parms->skyc.interpg=0;
 	}
     }
 
-    info2("There are %d MAOS PSF seeds: ",parms->maos.nseed);
+    info("There are %d MAOS PSF seeds: ",parms->maos.nseed);
     for(int i=0; i<parms->maos.nseed; i++){
-	info2(" %d", parms->maos.seeds[i]);
+	info(" %d", parms->maos.seeds[i]);
     }
-    info2("\n");
+    info("\n");
     {
 	//skip unwanted seeds
 	parms->fdlock=mycalloc(parms->maos.nseed,int);
@@ -283,12 +283,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    snprintf(fn, 80, "Res%ld_%d.done", maos_seed, parms->skyc.seed);
 	    if(exist(fn) && !arg->override){
 		parms->fdlock[i]=-1;
-		warning2("Will skip seed %ld because %s exist.\n", maos_seed, fn);
+		warning("Will skip seed %ld because %s exist.\n", maos_seed, fn);
 	    }else{
 		snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
 		parms->fdlock[i]=lock_file(fn, 0, 0);
 		if(parms->fdlock[i]<0){
-		    warning2("Will skip seed %ld because it is already running.\n", maos_seed);
+		    warning("Will skip seed %ld because it is already running.\n", maos_seed);
 		}else{
 		    cloexec(parms->fdlock[i]);
 		    if(nseed!=i){
@@ -300,7 +300,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    }
 	}
 	if(nseed != parms->maos.nseed){
-	    info2("Skip %d seeds.\n", parms->maos.nseed - nseed);
+	    info("Skip %d seeds.\n", parms->maos.nseed - nseed);
 	    parms->maos.nseed=nseed;
 	}
 	if(!parms->maos.nseed){
@@ -316,7 +316,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 	parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
-	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
+	info("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
     }
     for(int idtrat=1; idtrat<parms->skyc.ndtrat; idtrat++){
 	if(parms->skyc.dtrats->p[idtrat]>=parms->skyc.dtrats->p[idtrat-1]){
@@ -333,7 +333,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	/* Uses the new noise model based on Roger's spread sheet and document
 	   TMT.AOS.TEC.13.009.DRF01 H2RG Noise Model */
 	dmat* rnefs=parms->skyc.rnefs;
-	info2("Using frame rate dependent read out noise:\n");
+	info("Using frame rate dependent read out noise:\n");
 	if(fabs(parms->skyc.rne+1)<EPS){
 	    const double pixeltime=6.04;//time to read a pixel in us
 	    const double linetime=2;//time to read a line in us
@@ -361,7 +361,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 		    double rne_dark=0.0037*coadd;
 		    //0.85 is a factor expected for newer detectors
 		    IND(rnefs,idtrat,ipowfs)=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
-		    info2("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
+		    info("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
 			  parms->skyc.fss[idtrat], IND(rnefs,idtrat,ipowfs));
 		}
 	    }
@@ -369,21 +369,21 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats->p[idtrat];
 		double fs=1./(parms->maos.dt*dtrat);
-		info2("%5.1f Hz: ", fs);
+		info("%5.1f Hz: ", fs);
 		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		    int N=parms->skyc.pixpsa[ipowfs];
 		    double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
 		    double K=1./(raw_frame_time*fs);
 		    IND(rnefs,idtrat,ipowfs)=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
-		    info2("%5.1f ",IND(rnefs,idtrat,ipowfs));
+		    info("%5.1f ",IND(rnefs,idtrat,ipowfs));
 		}
-		info2("\n");
+		info("\n");
 	    }
 	}else{
 	    error("Invalid skyc.rne\n");
 	}
     }else{
-	info2("Using constant read out noise of %g\n", parms->skyc.rne);
+	info("Using constant read out noise of %g\n", parms->skyc.rne);
 	dset(parms->skyc.rnefs, parms->skyc.rne);
     }
     /*parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
@@ -404,11 +404,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	error("skyc.npowfs should match maos.npowfs\n");
     }
     if(parms->skyc.ngsalign){
-	warning2("NGS are aligned to grid spaced by %g\"\n", parms->maos.ngsgrid);
+	warning("NGS are aligned to grid spaced by %g\"\n", parms->maos.ngsgrid);
     }
 
     if(parms->skyc.psdcalc){
-	info("Calculating PSDs from time series\n");
+	dbg("Calculating PSDs from time series\n");
     }else{
 	error("Please implement PSD load\n");
     }
@@ -416,16 +416,16 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_ngs=dread("%s",temp); 
-	info2("Loading PSD of NGS modes from %s\n", temp);
+	info("Loading PSD of NGS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_TT_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_tt=dread("%s",temp); 
-	info2("Loading PSD of TT modes from %s\n", temp);
+	info("Loading PSD of TT modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_ps=dread("%s",temp); 
-	info2("Loading PSD of PS modes from %s\n", temp);
+	info("Loading PSD of PS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_FOCUS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_focus=dread("%s",temp); 
-	info2("Loading PSD of FOCUS modes from %s\n", temp);
+	info("Loading PSD of FOCUS modes from %s\n", temp);
     }else{
 	if(!parms->skyc.psd_scale){
 	    warning("Setting psd_scale to 1\n");
@@ -434,24 +434,24 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS.bin");
 	parms->skyc.psd_ngs=dread("PSD/PSD_NGS.bin");
-	info2("Loading PSD of NGS modes from %s\n", temp);
+	info("Loading PSD of NGS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_TT.bin");
 	parms->skyc.psd_tt=dread("%s",temp); 
-	info2("Loading PSD of TT modes from %s\n", temp);
+	info("Loading PSD of TT modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_PS.bin");
 	parms->skyc.psd_ps=dread("%s",temp); 
-	info2("Loading PSD of PS modes from %s\n", temp);
+	info("Loading PSD of PS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_FOCUS.bin");
 	parms->skyc.psd_focus=dread("%s",temp); 
-	info2("Loading PSD of focus modes from %s\n", temp);
+	info("Loading PSD of focus modes from %s\n", temp);
     }
 */
     close_config("skyc_recent.conf");
 
     if(parms->skyc.neaaniso){
-	info2("Variance of the gradients in stored PSF is added to NEA\n");
+	info("Variance of the gradients in stored PSF is added to NEA\n");
     }
-    info2("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
+    info("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
     
     if(parms->skyc.dbg || parms->skyc.dbgsky>-1){
 	warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);

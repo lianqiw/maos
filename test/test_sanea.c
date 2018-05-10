@@ -19,7 +19,7 @@ static void test_ints(){
     double siglev=1000;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	for(int isim=0; isim<nsim; isim++){
-	    info("iwfs %d isim=%d\n",iwfs,isim);
+	    dbg("iwfs %d isim=%d\n",iwfs,isim);
 	    /*dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs); */
 	    dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs);
 	    /*dcell *i0=dcellread("powfs0_i0.bin"); */
@@ -56,7 +56,7 @@ static void test_i0(){
     double siglev=1000;
     dcell *i0=dcellread("powfs0_i0.bin");
     for(int isim=0; isim<nsim; isim++){
-	info("isim=%d\n",isim);
+	dbg("isim=%d\n",isim);
 	dmat *im=NULL, *imy=NULL;
 	double gnf[2], gny[2];
 	for(int isa=0; isa<nsa; isa++){

@@ -34,7 +34,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 					   * from native slodar heights*/
 		     double L0            /**<The Outer scale*/
     ){
-    info2("Cn2 estimation:");
+    info("Cn2 estimation:");
     /*We need at least a pair */
     if(!wfspair) return 0;
     int npair=wfspair->nx*wfspair->ny;
@@ -134,11 +134,11 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
     cn2est->wtrecon=dcellnew(1,1);
     cn2est->wtrecon->p[0]=dnew(cn2est->htrecon->nx,1);
     {
-	info2("htrecon=[");
+	info("htrecon=[");
 	for(int iht=0; iht<cn2est->htrecon->nx; iht++){
-	    info2("%.2f ", cn2est->htrecon->p[iht]*0.001);
+	    info("%.2f ", cn2est->htrecon->p[iht]*0.001);
 	}
-	info2("]km\n");
+	info("]km\n");
     }
     /*stores cross-covariance data during simulation */
     cn2est->covc=ccellnew(nwfspair,1);
@@ -246,7 +246,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 #else
         cn2est->cov1->p[iwfspair]=dref_reshape(cn2est->cov2->p[iwfspair], nxnx, 1);
 #endif
-	/*info2("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
+	/*info("Pair %d: wfs %d and %d. dtheta=%4f\" iht=[%d, %d)\n", 
 	  iwfspair, wfs0, wfs1, pair->dtheta*206265, pair->iht0, pair->iht1);*/
  
 
@@ -268,7 +268,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	cmat* pmc=mc;
 	/*the forward operator from layer weights to cross-covariance */
  	dmat *Pnk=dnew(nsep, pair->nht);
-	info2("Pair %d: hk=[", iwfspair);
+	info("Pair %d: hk=[", iwfspair);
 	for(int iht=pair->iht0; iht<pair->iht1; iht++){
 	    /*the height of each layer */
 	    double hk;
@@ -279,7 +279,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 	    }else{
 		hk=dsa*iht/(dtheta*slang+dsa*iht/hsm);
 	    }
-	    info2("%.2f ",hk*0.001);
+	    info("%.2f ",hk*0.001);
 	    cn2est->ht->p[iwfspair]->p[iht-pair->iht0]=hk;
 	    /*the cone effect */
 	    const double zeta=1.-hk/hsm;
@@ -344,7 +344,7 @@ cn2est_t *cn2est_new(const dmat *wfspair, /**<2n*1 vector for n pair of WFS indi
 		}
 	    }
 	}
-	info2("]km\n");
+	info("]km\n");
 	/*
 	  iPnk is a block diagonal matrix for Cn2 Estimation.
 	*/
@@ -447,7 +447,7 @@ DEF_ENV_FLAG(CN2EST_NO_NEGATIVE, 1);
    Do the Cn2 Estimation.
 */
 void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
-    info2("cn2est from %d measurements\n", cn2est->count);
+    info("cn2est from %d measurements\n", cn2est->count);
     cmat *covi=cnew(cn2est->nembed, cn2est->nembed);
 #if COV_ROTATE
     dmat *covr=dnew(cn2est->nembed, cn2est->nembed);
@@ -532,16 +532,16 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
 	}
 	dscale(wt, 1./wtsum);
 	if(verbose){
-	    info2("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
+	    info("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
 	    if(cn2est->dmht && cn2est->dmht->nx==2){
-		info2("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
+		info("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
 						   cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	    }
-	    info2("wt=[");
+	    info("wt=[");
 	    for(int iht=0; iht<wt->nx; iht++){
-		info2("%.4f ", wt->p[iht]);
+		info("%.4f ", wt->p[iht]);
 	    }
-	    info2("]\n");
+	    info("]\n");
 	}
     }
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
@@ -550,23 +550,23 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
 /*only 1 cell. norm to sum to 1. */
     normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){
-	info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
+	info("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
 	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 			 cn2est->htrecon->p,cn2est->wtrecon->p[0]->p)*206265);
 	if(cn2est->dmht && cn2est->dmht->nx==2){
-	    info2("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
+	    info("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
 					       cn2est->htrecon->p,cn2est->wtrecon->p[0]->p,
 					       cn2est->dmht->p[0], cn2est->dmht->p[1])*206265);
 	}
-	info2("wt=[");
+	info("wt=[");
 	for(int iht=0; iht<cn2est->wtrecon->p[0]->nx; iht++){
-	    info2("%.4f ", cn2est->wtrecon->p[0]->p[iht]);
+	    info("%.4f ", cn2est->wtrecon->p[0]->p[iht]);
 	}
-	info2("]\n");
+	info("]\n");
     }
 /*divide by the number of accumulated frames. */
     if(reset){
-	if(verbose) info2("reset the covariance");
+	if(verbose) info("reset the covariance");
 	cn2est->count=0;/*reset the counter; */
 	ccellzero(cn2est->covc);/*reset the numbers. */
     }
