@@ -232,11 +232,13 @@ void zfclose(file_t *fp){
 INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((gzFile)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
+	    zfclose(fp);
 	    perror("gzwrite");
 	    error("write failed\n");
 	}
     }else{
 	if(fwrite(ptr, size, nmemb, (FILE*)fp->p)!=nmemb){
+	    zfclose(fp);
 	    perror("fwrite");
 	    error("writefailed\n");
 	}
@@ -286,6 +288,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 		}
 		break;
 	    default:
+		zfclose(fp);
 		error("Invalid\n");
 	    }
 	    /* use bs instead of nd to test tailing blanks*/
@@ -368,6 +371,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 		}
 		break;
 	    default:
+		zfclose(fp);
 		error("Invalid\n");
 	    }
 	    out+=bs;
@@ -408,7 +412,10 @@ int zfeof(file_t *fp){
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
 */
 static void write_bin_magic(uint32_t magic, file_t *fp){
-    if(fp->isfits) error("fits file is not supported\n");
+    if(fp->isfits) {
+	zfclose(fp);
+	error("fits file is not supported\n");
+    }
     uint32_t magic2=M_SKIP;
     zfwrite(&magic2, sizeof(uint32_t), 1, fp);
     zfwrite(&magic,  sizeof(uint32_t), 1, fp);
@@ -424,7 +431,10 @@ static void write_bin_magic(uint32_t magic, file_t *fp){
    files. The entries should be separated by new line charactor. */
 static void write_bin_header(const char *header, file_t *fp){
     if(!header) return;
-    if(fp->isfits) error("fits file is not supported\n");
+    if(fp->isfits){
+	zfclose(fp);
+	error("fits file is not supported\n");
+    }
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
     /*make header 8 byte alignment.*/
@@ -453,7 +463,10 @@ header is not NULL.  The header will be appended to the output header.*/
 static uint32_t read_bin_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
     uint64_t nlen, nlen2;
-    if(fp->isfits) error("fits file is not supported\n");
+    if(fp->isfits){
+	zfclose(fp);
+	error("fits file is not supported\n");
+    }
     while(1){
 	/*read the magic number.*/
 	if(zfread2(&magic, sizeof(uint32_t), 1, fp)) return 0;
@@ -480,7 +493,8 @@ static uint32_t read_bin_magic(file_t *fp, char **header){
 	    zfread(&nlen2, sizeof(uint64_t),1,fp);
 	    zfread(&magic2, sizeof(uint32_t),1,fp);
 	    if(magic!=magic2 || nlen!=nlen2){
-	      error("Header verification failed: %u<>%u, %lu<>%lu\n", magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
+		zfclose(fp);
+		error("Header verification failed: %u<>%u, %lu<>%lu\n", magic, magic2, (unsigned long)nlen, (unsigned long)nlen2);
 	    }
 	}else{ /*otherwise return the magic number*/
 	    return magic;
@@ -512,7 +526,11 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
 	bitpix=-32;
 	break;
     case M_DBL:
+    case M_SP64:
 	bitpix=-64;
+	break;
+    case M_INT64:
+	bitpix=64;
 	break;
     case M_INT32:
 	bitpix=32;
@@ -525,7 +543,8 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, uint64_t ndim, mw
 	break;
     default:
 	bitpix=0;
-	error("Data type is not yet supported.\n");
+	zfclose(fp);
+	error("Data type magic=%x is not yet supported.\n", magic);
     }
     const int nh=36;
     char header[nh][80];
@@ -604,9 +623,15 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 		return -1;
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0'; start++;
-	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
+	    if(sscanf(line+10, "%20d", &bitpix)!=1) {
+		zfclose(fp);
+		error("Unable to determine bitpix\n");
+	    }
 	    zfread(line, 1, 80, fp); line[80]='\0'; start++;
-	    if(sscanf(line+10, "%"SCNu64, ndim)!=1) error("Unable to determine naxis\n");
+	    if(sscanf(line+10, "%"SCNu64, ndim)!=1) {
+		zfclose(fp);
+		error("Unable to determine naxis\n");
+	    }
 	    if(*ndim>0){
 		*dims=calloc(sizeof(mwSize), MAX(2,*ndim));
 		for(uint64_t idim=0; idim<*ndim; idim++){
@@ -614,8 +639,10 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 			//skip illegal lines.
 			zfread(line, 1, 80, fp); line[80]='\0'; start++;
 		    }while(strncmp(line, "NAXIS", 5));
-		    if(sscanf(line+10, "%20lu", &((*dims)[idim]))!=1)
+		    if(sscanf(line+10, "%20lu", &((*dims)[idim]))!=1){
+			zfclose(fp);
 			error("Unable to determine nx\n");
+		    }
 		}
 	    }
 	}
@@ -670,6 +697,9 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
     case -64:
 	*magic=M_DBL;
 	break;
+    case 64:
+	*magic=M_INT64;
+	break;
     case 32:
 	*magic=M_INT32;
 	break;
@@ -680,6 +710,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *ndim, mw
 	*magic=M_INT8;
 	break;
     default:
+	zfclose(fp);
 	error("bitpix=%d is not yet handled.\n", bitpix);
     }
     return 0;
@@ -760,6 +791,29 @@ int read_header2(header_t *header, file_t *fp){
    calls read_header2 and abort if error happens.*/
 void read_header(header_t *header, file_t *fp){
     if(read_header2(header, fp)){
+	zfclose(fp);
 	error("read_header failed\n");
+    }
+}
+/**
+   Parse an integer from header str
+ */
+int search_header_int(const char *str, const char *name){
+    char *tmp=strstr(str, name);
+    if(tmp){
+	return strtol(tmp+strlen(name), NULL, 10);
+    }else{
+	return 0;
+    }
+}
+/**
+   Parse an integer from header str
+*/
+double search_header_dbl(const char *str, const char *name){
+    char *tmp=strstr(str, name);
+    if(tmp){
+	return strtod(tmp+strlen(name), NULL);
+    }else{
+	return 0;
     }
 }

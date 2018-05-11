@@ -67,12 +67,12 @@ typedef struct file_t{
 #define M_SP64  0x6401
 #define M_DBL   0x6402
 #define M_INT64 0x6403
-#define M_CMP   0x6404
+#define M_CMP   0x6404 //double complex
 #define M_INT32 0x6405
 #define M_CSP32 0x6406
 #define M_SP32  0x6407
 #define M_FLT   0x6408
-#define M_ZMP   0x6409
+#define M_ZMP   0x6409 //float complex
 #define M_INT8  0x640A
 #define M_INT16 0x640B
 
@@ -124,4 +124,6 @@ void zfreadlarr(file_t* fp,int count, ...);
 void write_header(const header_t *header, file_t *fp);
 int read_header2(header_t *header, file_t *fp);
 void read_header(header_t *header, file_t *fp);
+int search_header_int(const char *header, const char *name);
+double search_header_dbl(const char *header, const char *name);
 #endif

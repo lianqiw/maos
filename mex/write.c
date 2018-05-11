@@ -22,8 +22,8 @@
 
 
 /*compile with 
-mex write.c -largeArrayDims
-usage write(filename, data);
+  mex write.c -largeArrayDims
+  usage write(filename, data);
 */
 #include "io.h"
 static char *mx2str(const mxArray *header){
@@ -43,22 +43,18 @@ static char *mx2str(const mxArray *header){
     }
     return str;
 }
-static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *header){
+static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
     char *str=mx2str(header);
     header_t header2={0,0,0,0,str};
-   
     //uint64_t m,n;
-    if(!arr){
-	header2.ndim=0;
-	header2.dims=0;
-    }else{
+    if(arr){
 	header2.ndim=mxGetNumberOfDimensions(arr);
 	header2.dims=(mwSize*)mxGetDimensions(arr);
 	if(header2.ndim==0){
 	    header2.ntot=0;
 	}else{
 	    header2.ntot=1;
-	    for(uint64_t id=0; id<header2.ndim; id++){
+	    for(unsigned long id=0; id<header2.ndim; id++){
 		header2.ntot*=header2.dims[id];
 	    }
 	}
@@ -66,121 +62,115 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    arr=NULL;
 	}
     }
-    if(arr && mxIsCell(arr)){
+    if(!arr){
+	header2.ndim=0;
+	header2.dims=0;
+	header2.magic=M_DBL;
+	write_header(&header2, fp);
+	return;
+    }
+    if(mxIsCell(arr)){
 	header2.magic=MCC_ANY;
-	int issparse=0;
-	mxArray *in;
-	int type2;
-	if(mxGetNumberOfElements(arr)==0){
-	    in=NULL;
-	    issparse=0;
-	    type2=M_DBL;
-	}else{
-	    for(size_t ix=0; ix<mxGetNumberOfElements(arr); ix++){
-		in=mxGetCell(arr,ix);
-		if(in){
-		    if(mxIsSparse(in)){
-			issparse=1;
-			if(mxIsComplex(in)){
-			    type2=MAT_CSP;
-			}else{
-			    type2=MAT_SP;
-			}
-		    }else{
-			issparse=0;
-			if(mxIsComplex(in)){
-			    if(mxIsSingle(in)){
-				type2=M_ZMP;
-			    }else{
-				type2=M_CMP;
-			    }
-			}else{
-			    if(mxIsSingle(in)){
-				type2=M_FLT;
-			    }else{
-				type2=M_DBL;
-			    }
-			}
-		    }
-		    break;
-		}
-	    }
-	}
-	if(!in){//all cell empty
-	    issparse=0;
-	    type2=M_DBL;
-	}
-	//don't write global header.
 	write_header(&header2, fp);
 	for(size_t ix=0; ix<mxGetNumberOfElements(arr); ix++){
-	    in=mxGetCell(arr, ix);
-	    if(in && !mxIsEmpty(in) && mxIsSparse(in) !=issparse)
-		error("can only save cell array of all sparse or all dense");
+	    const mxArray *in=mxGetCell(arr, ix);
 	    if(header && mxIsCell(header)){
-		writedata(fp, type2, in, mxGetCell(header, ix));
+		writedata(fp, in, mxGetCell(header, ix));
 	    }else{
-		writedata(fp, type2, in, header);
+		writedata(fp, in, header);
 	    }
 	}
     }else{/*not cell.*/
-	if(type == MAT_SP || ((arr) && mxIsSparse(arr))){
-	    if(sizeof(mwIndex)==4){
-		header2.magic=M_SP32;
+	if(mxIsSparse(arr)){
+	    if(header2.ndim!=2){
+		zfclose(fp);
+		error("Invalid format. Must have 2 dimensions.\n");
+	    }
+	    if(!fp->isfits){
+		if(mxIsComplex(arr)){
+		    if(sizeof(mwIndex)==4){
+			header2.magic=M_CSP32;
+		    }else{
+			header2.magic=M_CSP64;
+		    }
+		}else{
+		    if(sizeof(mwIndex)==4){
+			header2.magic=M_SP32;
+		    }else{
+			header2.magic=M_SP64;
+		    }
+		}
+		write_header(&header2, fp);
+	    }
+	    if(header2.ntot){
+		long ny=header2.dims[1];
+		const mwIndex *Jc=mxGetJc(arr);
+		const mwIndex *Ir=mxGetIr(arr);
+		const uint64_t nz=Jc[ny];
+		if(!fp->isfits){
+		    zfwrite(&nz, sizeof(uint64_t), 1, fp);
+		}
+		//Do not use getNz. It shows available slots, but not actual data.
+		if(fp->isfits){
+		    //write Jc header
+		    header2.magic=(sizeof(mwIndex)==4?M_INT32:M_INT64);
+		    header2.str="Jc";
+		    header2.dims[0]=ny+1;
+		    header2.dims[1]=1;
+		    write_header(&header2, fp);
+		}
+		zfwrite(Jc, sizeof(mwIndex), ny+1, fp);
+		if(fp->isfits){
+		    //write Ir header
+		    header2.magic=(sizeof(mwIndex)==4?M_INT32:M_INT64);
+		    header2.str="Ir";
+		    header2.dims[0]=nz;
+		    header2.dims[1]=1;
+		    write_header(&header2, fp);
+		}
+		zfwrite(Ir, sizeof(mwIndex), nz, fp);
+		if(fp->isfits){
+		    //Write P header
+		    header2.magic=(mxIsComplex(arr)?M_CMP:M_DBL);
+		    header2.str="P";
+		    header2.dims[0]=nz;
+		    header2.dims[1]=1;
+		    write_header(&header2, fp);
+		}
+		if(mxIsComplex(arr)){
+		    zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr),nz,fp);
+		}else{
+		    zfwrite(mxGetPr(arr), sizeof(double), nz, fp);
+		}
+	    }
+	}else if(mxIsComplex(arr)){
+	    if(mxIsDouble(arr)){
+		header2.magic=M_CMP;
+		write_header(&header2, fp);
+		if(header2.ntot){
+		    zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), header2.ntot, fp);
+		}
 	    }else{
-		header2.magic=M_SP64;
-	    }
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		mwIndex *Jc=mxGetJc(arr);
-		long n=header2.dims[1];
-		long nzmax=Jc[n];
-		zfwrite(&nzmax, sizeof(double), 1, fp);
-		zfwrite(mxGetJc(arr), sizeof(mwIndex), n+1, fp);
-		zfwrite(mxGetIr(arr), sizeof(mwIndex), nzmax, fp);
-		zfwrite(mxGetPr(arr), sizeof(double), nzmax, fp);
-	    }
-	}else if(type == MAT_CSP || ((arr) && mxIsSparse(arr))){
-	    if(sizeof(mwIndex)==4){
-		header2.magic=M_CSP32;
-	    }else{
-		header2.magic=M_CSP64;
-	    }
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		mwIndex *Jc=mxGetJc(arr);
-		long n=header2.dims[1];
-		long nzmax=Jc[n];
-		zfwrite(&nzmax, sizeof(double), 1, fp);
-		zfwrite(mxGetJc(arr), sizeof(mwIndex), n+1, fp);
-		zfwrite(mxGetIr(arr), sizeof(mwIndex), nzmax, fp);
-		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr),nzmax,fp);
-	    }
-	}else if(type == M_DBL || ((arr) && mxIsDouble(arr) && !mxIsComplex(arr))){
-	    header2.magic=M_DBL;
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		zfwrite(mxGetPr(arr), sizeof(double), header2.ntot, fp);
-	    }  
-	}else if(type == M_FLT || ((arr) && mxIsSingle(arr) && !mxIsComplex(arr))){
-	    header2.magic=M_FLT;
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		zfwrite(mxGetPr(arr), sizeof(float), header2.ntot, fp);
-	    }
-	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr) && mxIsComplex(arr))){
-	    header2.magic=M_CMP;
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), header2.ntot, fp);
-	    }
-	}else if(type == M_ZMP || ((arr)&& mxIsSingle(arr) && mxIsComplex(arr))){
-	    header2.magic=M_ZMP;
-	    write_header(&header2, fp);
-	    if(header2.ntot){
-		zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), header2.ntot, fp);
+		header2.magic=M_ZMP;
+		write_header(&header2, fp);
+		if(header2.ntot){
+		    zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), header2.ntot, fp);
+		}
 	    }
 	}else{
-	    error("Unrecognized data type");
+	    if(mxIsDouble(arr)){
+		header2.magic=M_DBL;
+		write_header(&header2, fp);
+		if(header2.ntot){
+		    zfwrite(mxGetPr(arr), sizeof(double), header2.ntot, fp);
+		}  
+	    }else{
+		header2.magic=M_FLT;
+		write_header(&header2, fp);
+		if(header2.ntot){
+		    zfwrite(mxGetPr(arr), sizeof(float), header2.ntot, fp);
+		}
+	    }
 	}
     }
     free(str);
@@ -208,6 +198,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	return;
     }
     free(fn);
-    writedata(fp, 0, prhs[0], header);
+    writedata(fp, prhs[0], header);
     zfclose(fp);
 }

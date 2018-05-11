@@ -28,7 +28,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
       if start!=0 || howmany!=0 and data is cell, will only read cell from start to start+howmany
       if data is not cell and start==-1, will skip the data.
       Only the first call to readdata will possibly have howmany!=0
-     */
+    */
     if(fp->eof) return NULL;
     header_t header2={0,0,0,0};
     if(read_header2(&header2, fp)){
@@ -55,6 +55,9 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    howmany=ntot-start;
 	}
     }else if(fp->isfits){
+	if(search_header_int(header2.str,"Sparse=")){
+	    magic=M_SP64;
+	}
 	if(howmany!=0){
 	    /*first read of fits file. determine if we need it*/
 	    if(start>0){
@@ -107,17 +110,17 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		if(tmp && tmp!=SKIPPED){
 		    if(mxIsStruct(out)){
 			/*
-			char *key=strstr(header3.str, "struct_key=");
-			char *key2=strstr(key, ";\n");
-			char field[64];
-			if(!key){
-			    warning("key name is not found.\n");
-			    snprintf(field, 64, "key%d", ix);
-			}else{
-			    key+=11;
-			    strncpy(field, 64, key, key2-key);
-			}
-			mxSetField(out, ix, field, tmp);*/
+			  char *key=strstr(header3.str, "struct_key=");
+			  char *key2=strstr(key, ";\n");
+			  char field[64];
+			  if(!key){
+			  warning("key name is not found.\n");
+			  snprintf(field, 64, "key%d", ix);
+			  }else{
+			  key+=11;
+			  strncpy(field, 64, key, key2-key);
+			  }
+			  mxSetField(out, ix, field, tmp);*/
 		    }else{
 			if(ntot>1 || !skip_unicell){
 			    mxSetCell(out, ix, tmp);
@@ -147,30 +150,40 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	break;
     case M_SP64:
     case M_SP32:
+    case M_CSP64:/*complex sparse*/
+    case M_CSP32:/*complex sparse*/
 	{
 	    if(start==-1) error("Invalid use\n");
 	    size_t size;
-	    if(magic==M_SP32){
-		size=4;
-	    }else if(magic==M_SP64){
-		size=8;
-	    }else{
+	    switch(magic){
+	    case M_CSP32:
+	    case M_SP32:
+		size=4;break;
+	    case M_CSP64:
+	    case M_SP64:
+		size=8;break;
+	    default:
 		size=0;
+		zfclose(fp);
 		error("Invalid magic\n");
 	    }
+	    int isreal=(magic==M_SP32 || magic==M_SP64);
+	   
 	    int64_t nzmax;
+	    int64_t nx, ny;
 	    if(header2.ndim!=2){
 		error("Invalid dims\n");
 	    }
-	    long nx=header2.dims[0];
-	    long ny=header2.dims[1];
+
+	    nx=header2.dims[0];
+	    ny=header2.dims[1];
 	    if(nx!=0 && ny!=0){
 		zfread(&nzmax,sizeof(uint64_t),1,fp);
 	    }else{
 		nzmax=0;
 	    }
 	    if(fp->eof) return NULL;
-	    out=mxCreateSparse(nx,ny,nzmax,mxREAL);
+	    out=mxCreateSparse(nx,ny,nzmax,isreal?mxREAL:mxCOMPLEX);
 	    if(nx!=0 && ny!=0 && nzmax!=0){
 		if(sizeof(mwIndex)==size){/*Match*/
 		    zfread(mxGetJc(out), size,ny+1,fp);
@@ -209,84 +222,20 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			mexErrMsgTxt("Invalid sparse format\n");
 		    }
 		}
-		zfread(mxGetPr(out), sizeof(double), nzmax, fp);
-	    }
-	}
-	break;
-    case M_CSP64:
-    case M_CSP32:/*complex sparse*/
-	{
-	    if(start==-1) error("Invalid use\n");
-	    size_t size;
-	    switch(magic){
-	    case M_CSP32:
-		size=4;break;
-	    case M_CSP64:
-		size=8;break;
-	    default:
-		size=0;
-	    }
-	    int64_t nzmax;
-	    if(header2.ndim!=2){
-		error("Invalid dims\n");
-	    }
-	    long nx=header2.dims[0];
-	    long ny=header2.dims[1];
-	    if(nx!=0 && ny!=0){
-		zfread(&nzmax,sizeof(uint64_t),1,fp);
-	    }else{
-		nzmax=0;
-	    }
-	    if(fp->eof) return NULL;
-	    out=mxCreateSparse(nx,ny,nzmax,mxCOMPLEX);
-	    if(nx!=0 && ny!=0){
-		long i;
-		if(sizeof(mwIndex)==size){
-		    zfread(mxGetJc(out), size,ny+1,fp);
-		    zfread(mxGetIr(out), size,nzmax, fp);
+
+		if(isreal){
+		    zfread(mxGetPr(out), sizeof(double), nzmax, fp);
 		}else{
-		    mwIndex *Jc0=mxGetJc(out);
-		    mwIndex *Ir0=mxGetIr(out);
-		    void *Jc=malloc(size*(ny+1));
-		    void *Ir=malloc(size*nzmax);
-		    zfread(Jc, size, ny+1, fp);
-		    zfread(Ir, size, nzmax, fp);
-		    if(size==4){
-			uint32_t* Jc2=(uint32_t*)Jc;
-			uint32_t* Ir2=(uint32_t*)Ir;
-			for(i=0; i<ny+1; i++){
-			    Jc0[i]=Jc2[i];
-			}
-			for(i=0; i<nzmax; i++){
-			    Ir0[i]=Ir2[i];
-			}
-			free(Jc);
-			free(Ir);
-		    }else if(size==8){
-			uint64_t* Jc2=(uint64_t*)Jc;
-			uint64_t* Ir2=(uint64_t*)Ir;
-			for(i=0; i<ny+1; i++){
-			    Jc0[i]=Jc2[i];
-			}
-			for(i=0; i<nzmax; i++){
-			    Ir0[i]=Ir2[i];
-			}
-			free(Jc);
-			free(Ir);
-		    }else{
-			dbg("size=%lu\n", size);
-			error("Invalid sparse format\n");
+		    dcomplex *tmp=(dcomplex*)malloc(nzmax*sizeof(dcomplex));
+		    zfread(tmp, sizeof(dcomplex), nzmax, fp);
+		    double *Pr=mxGetPr(out);
+		    double *Pi=mxGetPi(out);
+		    for(long i=0; i<nzmax; i++){
+			Pr[i]=tmp[i].x;
+			Pi[i]=tmp[i].y;
 		    }
+		    free(tmp);
 		}
-		dcomplex *tmp=(dcomplex*)malloc(nzmax*sizeof(dcomplex));
-		zfread(tmp, sizeof(dcomplex), nzmax, fp);
-		double *Pr=mxGetPr(out);
-		double *Pi=mxGetPi(out);
-		for(i=0; i<nzmax; i++){
-		    Pr[i]=tmp[i].x;
-		    Pi[i]=tmp[i].y;
-		}
-		free(tmp);
 	    }
 	}
 	break;
