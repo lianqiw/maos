@@ -344,6 +344,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,dither_gpll);
     READ_POWFS_RELAX(int,dither_ogskip);
     READ_POWFS_RELAX(int,dither_ograt);
+    READ_POWFS_RELAX(int,dither_ogsingle);
     READ_POWFS_RELAX(dbl,dither_gog);
 
     READ_POWFS_RELAX(int, zoomdtrat);
@@ -397,7 +398,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    powfsi->llt->ttfr=readcfg_int("%sllt.ttfr",prefix);
 	    powfsi->llt->colprep=readcfg_int("%sllt.colprep",prefix); 
 	    powfsi->llt->colsim=readcfg_int("%sllt.colsim",prefix);
-	    powfsi->llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
+	    powfsi->llt->coldtrat=readcfg_int("%sllt.coldtrat",prefix);
 	    powfsi->llt->misreg=readcfg_dmat_n(2, "%sllt.misreg",prefix);
 	    powfsi->llt->ox=readcfg_dmat("%sllt.ox",prefix);
 	    powfsi->llt->oy=readcfg_dmat("%sllt.oy",prefix);

@@ -659,7 +659,7 @@ void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const
     dmat *gradmf=dnew(nsa, 2);
     dmat *gradcg=dnew(nsa, 2);
     int ncol=1000;
-    int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+    int dtrat=parms->powfs[ipowfs].llt->coldtrat;
     dmat *rmodmf=dnew(RR->nx, ncol/dtrat);
     dmat *rmodcg=dnew(RR->nx, ncol/dtrat);
     double scale=1;

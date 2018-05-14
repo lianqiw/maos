@@ -109,8 +109,8 @@ typedef struct LLT_CFG_T{
     int colprep;   /**<starting column to use in fn for ETF in preparation of
 		      matched filter*/
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
-    int colsimdtrat;/**<change to next sodium profile during simulation every
-		       colsimdtrat time step*/
+    int coldtrat;/**<change to next sodium profile during simulation every
+		       coldtrat time step*/
     double ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
 } LLT_CFG_T;
 /**
@@ -236,6 +236,7 @@ typedef struct POWFS_CFG_T{
     int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
     int dither_ogskip; /**<Number of WFS frames to skip before computing averaged images*/
     int dither_ograt;  /**<Number of WFS frames to update pixel processing algorithm (MF/CoG)*/
+    int dither_ogsingle;/**<*Force using single gain update (when dither==1 for SHWFS)*/
     //options for zoom corrector
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
@@ -359,7 +360,11 @@ typedef struct TOMO_CFG_T{
     int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
     int piston_cr;   /**<single point piston constraint. */
  
-    int ahst_wt;     /**<0: use Wg, 1: using Wa*/
+    int ahst_wt;     /**<Weight used to compute low order model removal in AHST
+			1: remove effect on NGS WFS (not good if WFS is outside of science FoV)
+			2: remove effect on Science
+			3: Identity weighting (bad)
+		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)

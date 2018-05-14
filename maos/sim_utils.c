@@ -357,10 +357,10 @@ void sim_update_etf(SIM_T *simu){
 	    ||parms->powfs[ipowfs].psfout
 	    ||parms->powfs[ipowfs].pistatout) 
 	   && parms->powfs[ipowfs].llt
-	   && parms->powfs[ipowfs].llt->colsimdtrat>0
-	   && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
+	   && parms->powfs[ipowfs].llt->coldtrat>0
+	   && isim %parms->powfs[ipowfs].llt->coldtrat == 0){
 	    info("Step %d: powfs %d: Updating ETF\n",isim, ipowfs);
-	    int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+	    int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 	    int colsim=parms->powfs[ipowfs].llt->colsim;
 	    setup_powfs_etf(powfs,parms,ipowfs,1, colsim+isim/dtrat);
 	    setup_powfs_etf(powfs,parms,ipowfs,2, colsim+isim/dtrat+1);
@@ -1337,28 +1337,28 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 
     /* Select GPU or CPU for the tasks.*/
-    simu->wfs_grad_pre=mycalloc(nwfs,thread_t);
-    simu->wfs_grad_post=mycalloc(nwfs,thread_t);
-    simu->perf_evl_pre=mycalloc(nevl,thread_t);
+    simu->wfsgrad_pre=mycalloc(nwfs,thread_t);
+    simu->wfsgrad_post=mycalloc(nwfs,thread_t);
+    simu->perfevl_pre=mycalloc(nevl,thread_t);
 #if USE_CUDA
     if(parms->gpu.evl){
-	thread_prep(simu->perf_evl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
-	simu->perf_evl_post=mycalloc(nevl,thread_t);
-	thread_prep(simu->perf_evl_post, 0, nevl, 1, gpu_perfevl_sync, simu);
+	thread_prep(simu->perfevl_pre, 0, nevl, nevl, gpu_perfevl_queue, simu);
+	simu->perfevl_post=mycalloc(nevl,thread_t);
+	thread_prep(simu->perfevl_post, 0, nevl, 1, gpu_perfevl_sync, simu);
     }else
 #endif
     {
-	thread_prep(simu->perf_evl_pre, 0, nevl, nevl, perfevl_ievl, simu);
+	thread_prep(simu->perfevl_pre, 0, nevl, nevl, perfevl_ievl, simu);
     }
 #if USE_CUDA
     if(parms->gpu.wfs){
-	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
+	thread_prep(simu->wfsgrad_pre, 0, nwfs, nwfs, gpu_wfsgrad_queue, simu);
     }else
 #endif
     {
-	thread_prep(simu->wfs_grad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
+	thread_prep(simu->wfsgrad_pre, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
     }
-    thread_prep(simu->wfs_grad_post, 0, nwfs, 1, wfsgrad_post, simu);
+    thread_prep(simu->wfsgrad_post, 0, nwfs, 1, wfsgrad_post, simu);
     
     if(!parms->sim.evlol){
 	init_simu_dm(simu);
@@ -1473,10 +1473,10 @@ void free_simu(SIM_T *simu){
     free(simu->evl_propdata_atm);
     free(simu->evl_prop_dm);
     free(simu->evl_propdata_dm);
-    free(simu->wfs_grad_pre);
-    free(simu->wfs_grad_post);
-    free(simu->perf_evl_pre);
-    free(simu->perf_evl_post);
+    free(simu->wfsgrad_pre);
+    free(simu->wfsgrad_post);
+    free(simu->perfevl_pre);
+    free(simu->perfevl_post);
     free(simu->status);
     dfree(simu->opdevlground);
     dcellfree(simu->wfsopd);

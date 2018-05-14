@@ -598,7 +598,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		/*now we have otf. multiply with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf2){
 		    ctoc("before ccwm");
-		    const int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+		    const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 		    Real wt2=(Real)(isim%dtrat)/(double)dtrat;
 		    Real wt1=1.-wt2;
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){

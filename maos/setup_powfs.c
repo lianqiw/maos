@@ -1285,6 +1285,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    dmat **bkgrnd2c=NULL;
 	    if(do_nea){
 		sanea->p[jwfs]=dnew(nsa,2);
+		warning("Compute NEA in CoG using Monte Carlo simulation\n");
 	    }
 	    if(powfs[ipowfs].bkgrnd){
 		if(powfs[ipowfs].bkgrnd->ny==1){
@@ -1536,7 +1537,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 		/*prepare Laser launch telescope. */
 		setup_powfs_sodium(powfs,parms,ipowfs);/*read sodium profile and smooth it */
 		setup_powfs_etf(powfs,parms,ipowfs,0,parms->powfs[ipowfs].llt->colprep);/*etf for prep */
-		if(!parms->powfs[ipowfs].llt->colsimdtrat){/*const etf for sim */
+		if(!parms->powfs[ipowfs].llt->coldtrat){/*const etf for sim */
 		    if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim){
 			powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
 		    }else{

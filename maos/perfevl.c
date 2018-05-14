@@ -618,10 +618,10 @@ void perfevl(SIM_T *simu){
     }
     extern int PARALLEL;
     if(!PARALLEL || !parms->gpu.evl){
-	CALL_THREAD(simu->perf_evl_pre, 0);
+	CALL_THREAD(simu->perfevl_pre, 0);
     }
-    if(simu->perf_evl_post){//only in GPU mode
-	CALL_THREAD(simu->perf_evl_post, 0);
+    if(simu->perfevl_post){//only in GPU mode
+	CALL_THREAD(simu->perfevl_post, 0);
     }
     perfevl_mean(simu);
 #if USE_CUDA

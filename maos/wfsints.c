@@ -167,13 +167,13 @@ void wfsints(thread_t *thread_data){
 		petf1=powfs[ipowfs].etfsim[iwvl].p2;
 		pccwm3=ccwm3;
 	    }
-	    if(parms->powfs[ipowfs].llt->colsimdtrat>0){
+	    if(parms->powfs[ipowfs].llt->coldtrat>0){
 		if(powfs[ipowfs].etfsim2[iwvl].p1){
 		    petf2=powfs[ipowfs].etfsim2[iwvl].p1;
 		}else{
 		    petf2=powfs[ipowfs].etfsim2[iwvl].p2;
 		}
-		const int dtrat=parms->powfs[ipowfs].llt->colsimdtrat;
+		const int dtrat=parms->powfs[ipowfs].llt->coldtrat;
 		etf2wt=(double)(data->isim%dtrat)/(double)dtrat;
 		etf1wt=1.-etf2wt;
 	    }

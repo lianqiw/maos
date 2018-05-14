@@ -604,10 +604,10 @@ typedef struct SIM_T{
     WFSINTS_T *wfs_intsdata;  /**<wrap of data for wfsints.c*/
     thread_t **wfs_ints;     /**<wrap of wfs_intsdata for threaded processing*/
 
-    thread_t *wfs_grad_pre;  /**to call wfsgrad_iwfs or gpu_wfsgrad_queue in threads.*/
-    thread_t *wfs_grad_post; /**to call wfsgrad_post in threads.*/
-    thread_t *perf_evl_pre;  /**to call perfevl_ievl or gpu_perfevl_queue in threads.*/
-    thread_t *perf_evl_post; /**to call gpu_perfevl_sync in threads.*/
+    thread_t *wfsgrad_pre;  /**to call wfsgrad_iwfs or gpu_wfsgrad_queue in threads.*/
+    thread_t *wfsgrad_post; /**to call wfsgrad_post in threads.*/
+    thread_t *perfevl_pre;  /**to call perfevl_ievl or gpu_perfevl_queue in threads.*/
+    thread_t *perfevl_post; /**to call gpu_perfevl_sync in threads.*/
 
     SIM_SAVE_T *save;  /**<Telemetry output*/
     STATUS_T *status;  /**<status report to scheduler.*/

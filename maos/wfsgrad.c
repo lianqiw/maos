@@ -510,9 +510,9 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	return;
     }
     DITHER_T *pd=simu->dither[iwfs];
-    if(parms->powfs[ipowfs].dither==1){
+    if(parms->powfs[ipowfs].dither==1){ //T/T dithering.
 	double cs, ss;
-	//For T/T dithering. Compute gradient derivative for every subaperture
+	//Compute gradient derivative for every subaperture
 	dither_position(&cs, &ss, parms, ipowfs, isim, pd->deltam);
 	if(parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytype_sim2!=1){
 	    const int nsa=powfs[ipowfs].saloc->nloc;
@@ -534,8 +534,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	err=(-sd*(simu->fsmerr->p[iwfs]->p[0])
 	     +cd*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
 	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
-    }else if(parms->powfs[ipowfs].dither>1){
-	//DM dithering.  Compute dither dithersig in input (DM) and output (gradients) dithersig.
+    }else if(parms->powfs[ipowfs].dither>1){ //DM dithering.
+	//Compute dither signal strength in input (DM) and output (gradients) by correlation.
 	dmat *tmp=0;
 	const int idm=parms->idmground;
 	dmm(&tmp, 0, IND(recon->dither_ra, idm, idm), simu->dmreal->p[idm], "nn", 1);
@@ -551,10 +551,10 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
     if(npllacc%npll==0){
 	//Synchronous detection of dither dithersig in input (DM) and output
 	//(gradients) dithersig. The ratio between the two is used for optical gain adjustment.
-	pd->deltam=pd->delta;
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
-	int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
+	const int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
 	if(parms->powfs[ipowfs].dither==1){//TT
+	    pd->deltam=pd->delta;
 	    dmat *tmp=0;
 	    const double norm=1./parms->powfs[ipowfs].dither_amp;
 	    const int detrend=parms->powfs[ipowfs].llt?0:1;
@@ -564,7 +564,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	    tmp=drefcols(simu->fsmerrs->p[iwfs], simu->isim-ncol+1, ncol);
 	    pd->a2me=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, detrend)*norm;
 	    dfree(tmp);
-	}else{
+	}else if(parms->powfs[ipowfs].dither>1){//DM
 	    dmat *tmp=0;
 	    tmp=drefcols(pd->mr->p[0], simu->isim-ncol+1, ncol);//DM
 	    pd->a2m=calc_dither_amp(tmp, parms->powfs[ipowfs].dtrat, npoint, 1);
@@ -587,8 +587,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	}
     }
     int nogacc=(simu->isim-parms->powfs[ipowfs].dither_ogskip+1)/parms->powfs[ipowfs].dtrat;
-    if(nogacc>0 && nogacc%npll==0){
-	if(parms->powfs[ipowfs].dither==1){
+    if(nogacc>0 && nogacc%npll==0){//Gain update output
+	if(parms->powfs[ipowfs].dither==1){//TT Dither
 	    double scale1=1./npll;
 	    double amp=pd->a2m*parms->powfs[ipowfs].dither_amp;
 	    double scale2=scale1*2./(amp);
@@ -683,7 +683,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
     }
 
 
-    dcell *LGSfocus=simu->LGSfocus;//computed in wfsgrad_post.
+    dcell *LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(simu->isim<parms->powfs[ipowfs].step) continue;
 	if(parms->sim.closeloop && (simu->isim+1-parms->powfs[ipowfs].step)%parms->sim.dtrat_hi!=0) continue;
@@ -934,8 +934,10 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    }
 		    double mgold=dsum(simu->gradscale->p[iwfs])/ng;
 		    double mgnew;
+		    const char *ogtype=0;
 		    //gg0 is output/input of dither dithersig.
-		    if(!pd->gg0){//single gain for all subapertures. For Pyramid WFS
+		    if(!pd->gg0 || parms->powfs[ipowfs].dither_ogsingle){//single gain for all subapertures. For Pyramid WFS
+			ogtype="globally";
 			double gerr=pd->a2me/pd->a2m;
 #define HIA_G_UPDATE 0
 #if HIA_G_UPDATE //HIA method.
@@ -953,6 +955,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			mgnew=mgold*adj;
 #endif
 		    }else{//separate gain for each gradient. For shwfs.
+			ogtype="on average";
 			dscale(pd->gg0, scale1); //Scale value at end of accumulation
 			for(long ig=0; ig<ng; ig++){
 #if HIA_G_UPDATE
@@ -972,7 +975,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			dzero(pd->gg0);
 		    }
 		    info("Step %5d wfs %d CoG gain adjusted from %g to %g %s.\n", 
-			  simu->isim, iwfs, mgold, mgnew, pd->gg0?"on average":"globally");
+			 simu->isim, iwfs, mgold, mgnew, ogtype);
 		    if(simu->resdither){
 			int ic=(npllacc-1)/(npll);
 			IND(simu->resdither->p[iwfs], 3, ic)=mgnew;
@@ -1102,9 +1105,9 @@ void wfsgrad(SIM_T *simu){
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
     extern int PARALLEL;
     if(!PARALLEL || parms->tomo.ahst_idealngs==1 || !parms->gpu.wfs){
-	CALL_THREAD(simu->wfs_grad_pre, 0);
+	CALL_THREAD(simu->wfsgrad_pre, 0);
     }//else: already called by sim.c
-    CALL_THREAD(simu->wfs_grad_post, 0);
+    CALL_THREAD(simu->wfsgrad_post, 0);
     wfsgrad_dither_post(simu);//must be before wfsgrad_lgsfocus because wfsgrad_lgsfocus runs zoom integrator.
     if(parms->itpowfs!=-1){
 	wfsgrad_twfs_recon(simu);

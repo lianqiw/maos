@@ -150,11 +150,11 @@ void maos_isim(int isim){
 	    long group=0;
 	    if(parms->gpu.evl && !NO_EVL){
 		//Queue tasks on GPU, no stream sync is done
-		QUEUE_THREAD(&group, simu->perf_evl_pre, 0);
+		QUEUE_THREAD(&group, simu->perfevl_pre, 0);
 	    }
 	    if(parms->tomo.ahst_idealngs!=1 && parms->gpu.wfs && !NO_WFS){
 		//task for each wfs
-		QUEUE_THREAD(&group, simu->wfs_grad_pre, 0);
+		QUEUE_THREAD(&group, simu->wfsgrad_pre, 0);
 	    }
 	    if(!NO_RECON){
 		//don't put this first. It has cpu overhead in computing gradol
