@@ -493,7 +493,6 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 
 
 static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
-
     double old_zoomx=drawdata->zoomx;
     double old_zoomy=drawdata->zoomy;
     if(mode==1){/*zoom in */
@@ -566,15 +565,14 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     double x, y;
     x = event->x;
     y = event->y;
+    double dx = x - drawdata->mxdown;
+    double dy = y - drawdata->mydown;
     if((cursor_type==0 && event->button==1)
        ||(cursor_type==1 && event->button==3)){/*move only on left button */
-	double dx = x - drawdata->mxdown;
-	double dy = y - drawdata->mydown;
 	do_move(drawdata, dx, -dy);
-    }else{/*select and zoom. */
+    }else if(fabs(dx)>2 && fabs(dy)>2){/*select and zoom. */
 	double xx = drawdata->mxdown;
-	double dx = x - drawdata->mxdown;
-	double dy = y - drawdata->mydown;
+	double yy = drawdata->mydown;
 	if(drawdata->square){
 	    if(fabs(dx)<fabs(dy)){
 		dy*=fabs(dx/dy);
@@ -583,7 +581,6 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
 	    }
 	}
 	if(dx<0) xx+=dx;
-	double yy=drawdata->mydown;
 	if(dy>0) yy+=dy;
 	double diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
 	double diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
@@ -1017,14 +1014,14 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     int mode=GPOINTER_TO_INT(data);
     do_zoom(drawdata,0,0,mode);
 }
-static void tool_toggled(GtkToggleToolButton *button, gpointer data){
+/*static void tool_toggled(GtkToggleToolButton *button, gpointer data){
     int active=gtk_toggle_tool_button_get_active(button);
     if(active){
 	cursor_type=(GPOINTER_TO_INT(data));
     }
     drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
-}
+    }*/
 
 static void limit_change(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
