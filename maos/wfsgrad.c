@@ -506,6 +506,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int isim=simu->isim;
+    const int npll=parms->powfs[ipowfs].dither_pllrat;
     if(!parms->powfs[ipowfs].dither || isim<parms->powfs[ipowfs].dither_pllskip){
 	return;
     }
@@ -533,7 +534,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	dither_position(&cd, &sd, parms, ipowfs, isim, pd->deltam);
 	err=(-sd*(simu->fsmerr->p[iwfs]->p[0])
 	     +cd*(simu->fsmerr->p[iwfs]->p[1]))/(parms->powfs[ipowfs].dither_amp);
-	pd->delta+=parms->powfs[ipowfs].dither_gpll*err;
+	pd->delta+=parms->powfs[ipowfs].dither_gpll*(err/npll);
     }else if(parms->powfs[ipowfs].dither>1){ //DM dithering.
 	//Compute dither signal strength in input (DM) and output (gradients) by correlation.
 	dmat *tmp=0;
@@ -546,7 +547,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
     }
     
   
-    const int npll=parms->powfs[ipowfs].dither_pllrat;
+
     int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
     if(npllacc%npll==0){
 	//Synchronous detection of dither dithersig in input (DM) and output
@@ -554,7 +555,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
 	const int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
 	if(parms->powfs[ipowfs].dither==1){//TT
-	    pd->deltam=pd->delta;
+	    pd->deltam=(pd->delta/npll);
 	    dmat *tmp=0;
 	    const double norm=1./parms->powfs[ipowfs].dither_amp;
 	    const int detrend=parms->powfs[ipowfs].llt?0:1;
@@ -1017,18 +1018,18 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    gpu_wfsgrad_update_mtche(parms, powfs);
 		}
 #endif
-	    }
+	    
 
-	    if(!parms->powfs[ipowfs].lo && parms->recon.alg==0){//no need to update LSR.
-		setup_recon(simu->recon, parms, powfs);
+		if(!parms->powfs[ipowfs].lo && parms->recon.alg==0){//no need to update LSR.
+		    setup_recon(simu->recon, parms, powfs);
 #if USE_CUDA
-		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
-		    gpu_update_recon(parms, powfs, simu->recon);
-		}
+		    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+			gpu_update_recon(parms, powfs, simu->recon);
+		    }
 #endif
+		}
 	    }
 	}
-
     }
 }
 /**

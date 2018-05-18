@@ -605,7 +605,7 @@ typedef struct DBG_CFG_T{
     int na_smooth;   /**<1: smooth sodium profile to coarser grid before computing etf*/
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
-    int ncpa_nouncorr;/**<1: do not include uncorrelatable error in science path.*/
+    int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
     int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;         /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/

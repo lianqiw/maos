@@ -414,6 +414,9 @@ static void readcfg_powfs(PARMS_T *parms){
 		powfsi->radpix=0;
 	    }
 	}
+	if(parms->powfs[ipowfs].dither && parms->powfs[ipowfs].dither_gpll<0.1){
+	    error("dither_gpll is now scaled by pllrat. A larger number is needed\n");
+	}
     }
     free(inttmp);
     free(dbltmp);
@@ -1030,7 +1033,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.na_smooth);
     READ_INT(dbg.na_interp);
     READ_INT(dbg.ncpa_preload);
-    READ_INT(dbg.ncpa_nouncorr);
+    READ_INT(dbg.ncpa_rmsci);
     READ_INT(dbg.i0drift);
     READ_INT(dbg.gp_noamp);
     READ_DBL(dbg.gradoff_scale);
