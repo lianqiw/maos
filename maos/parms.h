@@ -155,7 +155,6 @@ typedef struct POWFS_CFG_T{
     double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
     double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
-    double radgx;   /*Create and/or use gx, gy along radial/azimuthal direction.*/
     double fieldstop;/**<size of field stop in arcsec.*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
@@ -181,7 +180,8 @@ typedef struct POWFS_CFG_T{
     int order;      /**<order of wavefront sensing along one dimension.*/
     int pixpsa;     /**<number of detector pixels along x/y or azimuthal if radial CCD.*/
     int radpix;     /**<number of detector pixels along radial direction if radial CCD*/
-    int radrot;     /**<For radial format CCD, rotate OTF into coordinate plane. uses less memory*/
+    int radrot;     /**<For radial format CCD, rotate OTF into R/A coordinate plane to multiply 1-d ETF. uses less memory*/
+    int radgx;      /**<1: gx/gy is along R/A coordinate. Only valid radpix and radrot are valid.*/
     int ncomp;      /**<number of PSF points before forming detector image. 0 for automatic*/
     int embfac;     /**<Embed subaperture atm OPD before fft. set to 2.*/
     int nwvl;       /**<Number of wavelength. 1 for LGS, 2 for NGS J+H sensing.*/
@@ -231,6 +231,7 @@ typedef struct POWFS_CFG_T{
     double dither_amp; /**<Dither amplitude in arcsec for tip/tilt mode*/
     double dither_gpll;/**<Gain of phase locked loop*/
     double dither_gog; /**<Gain for updating optical gain for cog*/
+    double dither_gdrift;/**<Gain for drift control*/
     int dither_npoint;/**<Number of points in each dither peroid (4)*/
     int dither_pllskip;/**<Skip WFS frames for uplink loop to stable*/
     int dither_pllrat; /**<Number of WFS frames for updating PLL.*/
@@ -606,7 +607,6 @@ typedef struct DBG_CFG_T{
     int na_interp;   /**<1: Interpolate sodium profile and use FFT to build etf. 0: direct sum, slow*/
     int ncpa_preload;/**<preload integrator with DM sys flat*/
     int ncpa_rmsci;  /**<1: do not include calibration residual in science path.*/
-    int i0drift;     /**<Control drift of i0 by driving it toward gradncpa*/
     int gp_noamp;    /**<Use annular instead of ampground for GP*/
     dmat *atm;         /**<test special atmosphere. <0: fourier mode with spatial frequency 1/dbg.atm m^-1. >0: zernike mode*/
     double gradoff_scale;/**<Scale the reference vector*/

@@ -755,7 +755,8 @@ static void init_simu_wfs(SIM_T *simu){
 	if(parms->powfs[ipowfs].pistatout){
 	    simu->pistatout->p[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
 	}
-	if(powfs[ipowfs].gradncpa){
+	if(powfs[ipowfs].gradncpa && !(parms->powfs[ipowfs].phytype_sim==1 && parms->powfs[ipowfs].ncpa_method==2)){
+	    //CMF has gradncpa with in matched filter
 	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	    dadd(&simu->gradoff->p[iwfs], 1, powfs[ipowfs].gradncpa->p[wfsind], 1);
 	}

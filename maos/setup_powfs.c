@@ -150,7 +150,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea){
 	double dx1=1./ptsloc->dx;
 	double dy1=1./ptsloc->dy;
 	int changed=0;
-
+	const double thresarea2=0.1;//secondary threshold to enable being surrounded subaperturs.
 	do{//validata subapertures that have enough neighbors. Disable isolated subapertures
 	    changed=0;
 	    for(long isa=0; isa<ptsloc->nloc; isa++){
@@ -178,12 +178,12 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea){
 		    }
 		}
 		if(nself){//disable isolated valid subaperture
-		    if(ncorner==0 && nedge<=1){
+		    if(ncorner+nedge<=2){
 			saa->p[isa]=0;
 			changed++;
 		    }
 		}else{//enable isolated in-valid subaperture
-		    if(nedge>=2 && ncorner>=3){
+		    if(nedge+ncorner>=6 && saa->p[isa]>=thresarea2){
 			saa->p[isa]=1;
 			changed++;
 		    }
@@ -933,7 +933,9 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     /*1./cos() is for zenith angle adjustment of the range.*/
     double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2)*(1./cos(parms->sim.za));
     dscale(powfs[ipowfs].focus, range2focus);
-    writebin(powfs[ipowfs].focus, "powfs%d_focus", ipowfs);
+    if(parms->save.setup){
+	writebin(powfs[ipowfs].focus, "powfs%d_focus", ipowfs);
+    }
 }
 
 /**
@@ -1175,7 +1177,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 			   "powfs%d_etfprep%d_2d",ipowfs,iwvl);
 	    }
 	}
-	if(powfs[ipowfs].etfsim != powfs[ipowfs].etfprep){
+	if(powfs[ipowfs].etfsim && powfs[ipowfs].etfsim != powfs[ipowfs].etfprep){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		if(powfs[ipowfs].etfsim[iwvl].p1){
 		    writebin(powfs[ipowfs].etfsim[iwvl].p1, 
@@ -1254,7 +1256,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
 	    error("i0 is not available, please specify powfs.cogthres and powfs.cogoff to non-negative numbers.\n");
 	}
-	warning("i0 is not available\n");
     }
     if(parms->powfs[ipowfs].phytype_recon==2 && parms->powfs[ipowfs].skip!=3 && !parms->powfs[ipowfs].phyusenea){
 	/*need nea in reconstruction*/
@@ -1462,36 +1463,34 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//if opdadd is null, but dm_ncpa is not, there will still be opdbias.
 	if(powfs[ipowfs].opdbias){
-	    //dbg("parms->powfs[%d].ncpa_method=%d\n", ipowfs, parms->powfs[ipowfs].ncpa_method);
-	    if(parms->powfs[ipowfs].ncpa_method==1 || parms->powfs[ipowfs].type==1){//gradient offset
-		if(!powfs[ipowfs].gradncpa){
-		    powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
-		}else{
-		    warning("gradncpa already exists\n");
-		    dcellzero(powfs[ipowfs].gradncpa);
-		}
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    if(powfs[ipowfs].opdbias->p[jwfs]){
-			double *realamp=powfs[ipowfs].realamp->p[jwfs]->p;
-			if(parms->powfs[ipowfs].type==1){//pywfs
-			    dmat *ints=0;
-			    pywfs_fft(&ints, powfs[ipowfs].pywfs, powfs[ipowfs].opdbias->p[jwfs]);
-			    //writebin(powfs[ipowfs].opdbias->p[jwfs], "opdbias\n");exit(0);
-			    pywfs_grad(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pywfs, ints);
-			    dfree(ints);
-			}else if(parms->powfs[ipowfs].gtype_sim==1){
-			    pts_ztilt(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pts,
-				      powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
-				      realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
-			}else{
-			    dspmm(&powfs[ipowfs].gradncpa->p[jwfs],INDR(powfs[ipowfs].GS0, jwfs, 0),
-				  powfs[ipowfs].opdbias->p[jwfs],"nn",1);
-			}
+	    //Always compute gradncpa. May not use it in CMF non updated case.
+	    if(!powfs[ipowfs].gradncpa){
+		powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
+	    }else{
+		warning("gradncpa already exists\n");
+		dcellzero(powfs[ipowfs].gradncpa);
+	    }
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		if(powfs[ipowfs].opdbias->p[jwfs]){
+		    double *realamp=powfs[ipowfs].realamp->p[jwfs]->p;
+		    if(parms->powfs[ipowfs].type==1){//pywfs
+			dmat *ints=0;
+			pywfs_fft(&ints, powfs[ipowfs].pywfs, powfs[ipowfs].opdbias->p[jwfs]);
+			//writebin(powfs[ipowfs].opdbias->p[jwfs], "opdbias\n");exit(0);
+			pywfs_grad(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pywfs, ints);
+			dfree(ints);
+		    }else if(parms->powfs[ipowfs].gtype_sim==1){
+			pts_ztilt(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pts,
+				  powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
+				  realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
+		    }else{
+			dspmm(&powfs[ipowfs].gradncpa->p[jwfs],INDR(powfs[ipowfs].GS0, jwfs, 0),
+			      powfs[ipowfs].opdbias->p[jwfs],"nn",1);
 		    }
 		}
-		if(parms->save.setup){
-		    writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa1", ipowfs);
-		}
+	    }
+	    if(parms->save.setup){
+		writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
 	    }
 	}
     }
@@ -1529,7 +1528,7 @@ void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
 	   ||parms->powfs[ipowfs].neaphy){
-	    info("\n\033[0;32mSetting up powfs %d PO WFS\033[0;0m\n\n", ipowfs);
+	    info("\n%sSetting up powfs %d PO WFS%s\n\n", GREEN, ipowfs, BLACK);
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
 	    setup_powfs_dtf(powfs,parms,ipowfs);

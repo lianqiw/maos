@@ -362,6 +362,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const int nllt=parms->powfs[ipowfs].llt?parms->powfs[ipowfs].llt->n:0;
+    const int radgx=parms->powfs[ipowfs].radgx;
     /**
        ni0 may be greater than 1 in the following two cases
        1) multiple LLT
@@ -471,13 +472,13 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	const double norm=1./(double)(ncompx*ncompy);
 	const ccell *petf=NULL;
 	void (*pccwm)(cmat*,const cmat*)=NULL;
-	int rotpsf=0;
+	int radrot=0;
 	int ietf_multiplier=0;
 	if(nllt){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		petf=powfs[ipowfs].etfprep[iwvl].p1;
 		pccwm=ccwmcol;
-		rotpsf=1;
+		radrot=1;
 		if(powfs[ipowfs].etfprep[iwvl].p1->ny==1)
 		    ietf_multiplier=0;
 		else
@@ -485,7 +486,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }else{
 		petf=powfs[ipowfs].etfprep[iwvl].p2;
 		pccwm=ccwm;
-		rotpsf=0;
+		radrot=0;
 		if(powfs[ipowfs].etfprep[iwvl].p2->ny==1)
 		    ietf_multiplier=0;
 		else
@@ -518,7 +519,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		int ith=0;
 		double angle=0;/*angle to rotate otf/psf */
 		double angleg=0;/*angle to derivative of i0 to r/a from x/y */
-		double anglegoff=0;
 
 #ifdef _OPENMP
 		ith = omp_get_thread_num();
@@ -536,11 +536,16 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(nominals) nominal=nominals[isadtf];
 		si=sis[isadtf];
 		if(nllt && parms->powfs[ipowfs].radpix){
-		    /*Polar CCD. */
-		    if(rotpsf){/*OTF is along R/A direction. angleg is 0. */
-			angle=angles[isa];
+		    /*For polar CCD. If radrot==1, then 1-d ETF is used, DTF is defined along r/a axis. */
+		    if(radrot){/*OTF is along R/A direction. angleg is 0. */
+			angle=-angles[isa];
+			if(!radgx){
+			    angleg=-angles[isa];
+			}
 		    }else{
-			angleg=angles[isa];
+			if(radgx){
+			    angleg=angles[isa];
+			}
 		    }
 		}
 		double pgrad[2];
@@ -551,8 +556,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
 		ccpd(&sepsf,IND(psepsf,isa,iwvl));
-		//cembedc(seotfk,sepsf,-angle,C_ABS);/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
-		cembed(seotfk, sepsf, -angle);
+		/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
+		cembed(seotfk, sepsf, angle);//if radrot: rotate from x/y to r/a coordinate
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
@@ -575,8 +580,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		dspmulcreal(IND(i0,isa,ii0)->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
 		
-		double ct=cos(angleg+anglegoff);
-		double st=sin(angleg+anglegoff);
+		double ct=cos(angleg);
+		double st=sin(angleg);
 		
 		for(int iy=0; iy<ncompy; iy++){
 		    for(int ix=0; ix<ncompx; ix++){

@@ -306,13 +306,13 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(str,bkgrndfnc);
     READ_POWFS_RELAX(dbl,pixblur);
     READ_POWFS_RELAX(dbl,radpixtheta);
-    READ_POWFS_RELAX(int,radgx);
     READ_POWFS_RELAX(dbl,fieldstop);
     READ_POWFS_RELAX(dbl,pixoffx);
     READ_POWFS_RELAX(dbl,pixoffy);
     READ_POWFS_RELAX(int,phyusenea);
     READ_POWFS_RELAX(int,radpix);
     READ_POWFS_RELAX(int,radrot);
+    READ_POWFS_RELAX(int,radgx);
     READ_POWFS_RELAX(int,embfac);
     READ_POWFS_RELAX(int,ncomp);
     READ_POWFS_RELAX(int,psfout);
@@ -346,6 +346,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,dither_ograt);
     READ_POWFS_RELAX(int,dither_ogsingle);
     READ_POWFS_RELAX(dbl,dither_gog);
+    READ_POWFS_RELAX(dbl,dither_gdrift);
 
     READ_POWFS_RELAX(int, zoomdtrat);
     READ_POWFS_RELAX(int, zoomshare);
@@ -1034,7 +1035,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.na_interp);
     READ_INT(dbg.ncpa_preload);
     READ_INT(dbg.ncpa_rmsci);
-    READ_INT(dbg.i0drift);
     READ_INT(dbg.gp_noamp);
     READ_DBL(dbg.gradoff_scale);
     READ_DMAT(dbg.pwfs_psx);

@@ -555,7 +555,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
 	const int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
 	if(parms->powfs[ipowfs].dither==1){//TT
-	    pd->deltam=(pd->delta/npll);
+	    pd->deltam=pd->delta;
 	    dmat *tmp=0;
 	    const double norm=1./parms->powfs[ipowfs].dither_amp;
 	    const int detrend=parms->powfs[ipowfs].llt?0:1;
@@ -897,13 +897,20 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    dcellzero(pd->i0);
 		    dcellzero(pd->gx);
 		    dcellzero(pd->gy);
-		    /*Compute the gradient of i0 using old gradient algorithm
-		      and subtract from the gradient offset to prevent sudden
-		      jump of gradient measurement.*/
 		    dmat *goff=0;
-		    calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
-		    dadd(&simu->gradoff->p[iwfs], 1, goff, -1);
-		    if(parms->dbg.i0drift){//outer loop to prevent i0 from drifting.
+		    if(1){//Always use this
+			/*Compute the gradient of i0 using old gradient algorithm
+			  and subtract from the gradient offset to prevent sudden
+			  jump of gradient measurement.*/
+			calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+			dadd(&simu->gradoff->p[iwfs], 1, goff, -1);
+		    }else{
+			dzero(simu->gradoff->p[iwfs]);
+		    }
+		    if(parms->save.dither){
+			writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_%d", iwfs, simu->isim);
+		    }
+		    if(parms->powfs[ipowfs].dither_gdrift>0){//outer loop to prevent i0 from drifting.
 			dzero(goff);
 			//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
 			calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, 2);
@@ -911,7 +918,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			if(powfs[ipowfs].gradncpa){
 			    dadd(&goff, 1, powfs[ipowfs].gradncpa->p[jwfs], -1);
 			}
-			dadd(&simu->gradoff->p[iwfs], 1, goff, -0.1);
+			dadd(&simu->gradoff->p[iwfs], 1, goff, -parms->powfs[ipowfs].dither_gdrift);
 		    }
 		    dfree(goff);
 		    if(parms->save.dither){
