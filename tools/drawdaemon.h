@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <cairo.h>
 #include <cairo-ps.h>
+#include <cairo-pdf.h>
 #include <cairo-svg.h>
 #include <pango/pango.h>
 #include <glib.h>
@@ -112,7 +113,8 @@ struct drawdata_t{
     int ticinside;/*put tick inside. */
     int cursorinside;
     int limit_changed;/*limit has changed. */
-    int legendbox;/*whether draw legend box or not. */
+    int legendbox;/*draw the legend */
+    int legendcurve;/*mark each line with legend entry*/
     double legendoffx;/*location of legend along x. */
     double legendoffy;/*location of legend along y */
     int drawn;/*whether we have been drawn.  */

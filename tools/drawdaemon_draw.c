@@ -117,7 +117,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     /*first get the order of magnitude. */
     double rmax=MAX(fabs(xmin),fabs(xmax));
     double order1=floor(log10(rmax));
-    if(isnan(order1) || order1<-1000 || fabs(order1)<2){
+    if(isnan(order1) || order1<-1000 || fabs(order1)<=2){
 	order1=0;
     }
     xmax/=pow(10,order1);
@@ -781,14 +781,16 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_stroke(cr);//stroke all together. 
 		toc("stroke");
 	    }*/
-	    if(drawdata->cumu && ptsnx>0){
+	    if(ptsnx>0){
 		cairo_save(cr);
-		char val[80];
-		snprintf(val, 80, "%.2f", y);
-		cairo_translate(cr, ix-10, round((iy-font_size-5)/1)*1);
+		cairo_translate(cr, ix, round((iy-font_size*0.5)/1)*1);
 		cairo_scale(cr,1,-1);
-		pango_text(cr, layout, 0, 0, val, 1, 1, 0);
-		if(drawdata->legend){
+		if(drawdata->cumu){
+		    char val[80];
+		    snprintf(val, 80, "%.2f", y);
+		    pango_text(cr, layout, 0, 0, val, 1, 1, 0);
+		}
+		if(drawdata->legend && drawdata->legendcurve){
 		    pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 1, 0);
 		}
 		cairo_restore(cr);
@@ -1022,7 +1024,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     if(drawdata->ylabel){
 	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,0.5,0.5,1);
     }
-    if(drawdata->legend && drawdata->npts){
+    if(drawdata->legend && drawdata->npts && drawdata->legendbox){
 	int style, color, connectpts;
 	double size=0;//???
 	cairo_save(cr);
@@ -1055,7 +1057,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double legheight=tall*ng+legmarin*2;
 	cairo_translate(cr, xoff + legmarout + drawdata->legendoffx*(widthim - legwidth - 2*legmarout), 
 			yoff + legmarout + drawdata->legendoffy*(heightim -legheight - 2*legmarout));
-	if(drawdata->legendbox){
+	if(1){//box
 	    cairo_save(cr);
 	    cairo_rectangle(cr, 0, 0, legwidth, legheight);
 	    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0,1.0);

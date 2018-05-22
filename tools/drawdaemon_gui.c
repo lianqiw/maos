@@ -976,6 +976,24 @@ static void tool_save(GtkToolButton *button){
 	error_msg("ps surface is unavailable");
 	goto retry;
 #endif
+    }else if(strcmp(suffix,".pdf")==0){
+#if CAIRO_HAS_PDF_SURFACE == 1
+	width=72*8;
+	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
+	surface=cairo_pdf_surface_create(filename, width,height);
+#else
+	error_msg("pdf surface is unavailable");
+	goto retry;
+#endif
+    }else if(strcmp(suffix,".svg")==0){
+#if CAIRO_HAS_SVG_SURFACE == 1
+	width=72*8;
+	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
+	surface=cairo_svg_surface_create(filename, width,height);
+#else
+	error_msg("svg surface is unavailable");
+	goto retry;
+#endif
     }else if(strcmp(suffix,".png")==0){
 	width=(drawdata)->width;/*same size as the widget. */
 	height=(drawdata)->height;
@@ -1139,9 +1157,13 @@ static void tool_property(GtkToolButton *button, gpointer data){
     gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 
+    checkbtn=gtk_check_button_new_with_label("Legend on curve");
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendcurve);
+    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendcurve);
+    
     hbox=gtk_hbox_new(FALSE,0);
-
-    checkbtn=gtk_check_button_new_with_label("Legend box. ");
+    checkbtn=gtk_check_button_new_with_label("Legend.");
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
     gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
     gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);

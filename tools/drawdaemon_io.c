@@ -117,6 +117,7 @@ void listen_draw(){
 	    drawdata->gray=0;
 	    drawdata->ticinside=1;
 	    drawdata->legendbox=1;
+	    drawdata->legendcurve=1;
 	    drawdata->legendoffx=1;
 	    drawdata->legendoffy=0;
 	    drawdata->fig=NULL;
