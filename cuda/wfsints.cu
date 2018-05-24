@@ -298,12 +298,14 @@ __global__ static void sa_acc_real_do(Real *out, const Comp*restrict in, int nin
    Output ints is sampled with pixpsax*pixpsay, at pixtheta.
 */
 __global__ static void sa_si_rot_do(Real *restrict ints, int pixpsax, int pixpsay, 
-				 Real pixoffx, Real pixoffy, Real pixthetax, Real pixthetay,
-				 const Comp *restrict otf, Real dtheta, int notfx, int notfy,
-				 const Real *restrict srot, Real alpha){
-    Real pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;
-    Real pyo=-(pixpsay*0.5-0.5+pixoffy)*pixthetay;
+				    const Real* pixoffx, const Real* pixoffy,
+				    Real pixthetax, Real pixthetay,
+				    const Comp *restrict otf, Real dtheta, int notfx, int notfy,
+				    const Real *restrict srot, Real alpha){
     int isa=blockIdx.x;
+    Real pxo=-(pixpsax*0.5-0.5+(pixoffx?pixoffx[isa]:0))*pixthetax;
+    Real pyo=-(pixpsay*0.5-0.5+(pixoffy?pixoffy[isa]:0))*pixthetay;
+
     Real dispx=notfx/2;
     Real dispy=notfy/2;
     Real dtheta1=1.f/dtheta;
@@ -380,10 +382,16 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
     const Real pixthetax=parms->powfs[ipowfs].radpixtheta;
     const Real pixthetay=parms->powfs[ipowfs].pixtheta;
     const Real siglev=parms->wfs[iwfs].siglevsim;
-    const Real *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot.P():NULL;
+    const Real *srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot.P():NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
 			 && parms->powfs[ipowfs].radpix);
-    const Real *restrict const srot2=multi_dtf?cuwfs[iwfs].srot.P():NULL;
+    const Real *srot2=multi_dtf?cuwfs[iwfs].srot.P():NULL;
+    const Real *pixoffx=0, *pixoffy=0;
+    if(cupowfs[ipowfs].pixoffx){
+	int icol=cupowfs[ipowfs].pixoffx>1?wfsind:0;
+	pixoffx=cupowfs[ipowfs].pixoffx.P()+cupowfs[ipowfs].pixoffx.Nx()*icol;
+	pixoffy=cupowfs[ipowfs].pixoffy.P()+cupowfs[ipowfs].pixoffy.Nx()*icol;
+    }
     const int nwvl=parms->powfs[ipowfs].nwvl;
     curcell &ints=cuwfs[iwfs].ints;
     curcell pistatout;
@@ -639,8 +647,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		CUFFT(cuwfs[iwfs].plan3, otf, CUFFT_INVERSE);
 		ctoc("fft");
 		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
-		    (ints[isa], pixpsax, pixpsay, 
-		     (Real)parms->powfs[ipowfs].pixoffx, (Real)parms->powfs[ipowfs].pixoffy,
+		    (ints[isa], pixpsax, pixpsay, pixoffx?pixoffx+isa:NULL, pixoffy?pixoffy+isa:NULL,
 		     pixthetax, pixthetay, otf, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts->p[iwvl]);
 		ctoc("final");

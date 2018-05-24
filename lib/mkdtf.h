@@ -51,7 +51,7 @@ typedef struct ETF_T{
     ccell *p2;           /**<Store the 2D ETF when radrot==0*/
 }ETF_T;
 
-DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
+DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     double dxsa,/**<Subaperture size*/
 	     double embfac,/**<Embedding factor (2)*/
 	     long ncompx,/**<FFT size along x*/
@@ -60,20 +60,20 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	     long pixpsay,/**<Number of pixels along y(a)*/
 	     double pixthetax,/**<Pixel size along x (r)*/
 	     double pixthetay,/**<Pixel size along y (a)*/
-	     double pixoffx,  /**<offset of image center from center of detector*/
-	     double pixoffy,  /**<offset of image center from center of detector*/
+	     const dmat* pixoffx,  /**<offset of image center from center of detector*/
+	     const dmat* pixoffy,  /**<offset of image center from center of detector*/
 	     double pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
-	     dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     );
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double hs,    /**<Guide star focus range*/
-	     dcell *sodium, /**<The sodium profile. First column is coordinate.*/
+	     const dcell *sodium, /**<The sodium profile. First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     int nwvl,     /**<Number of wavelength*/
-	     dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     dcell *srsa,  /**<Subaperture to LLT distance*/
+	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     const dcell *srsa,  /**<Subaperture to LLT distance*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     );

@@ -66,7 +66,7 @@ dmat *sdepsd(const dmat *ff, const dmat *coeff){
     sde_psd(&psd, ff, coeff->p, coeff->nx, coeff->ny);
     return psd;
 }
-ccell *mkdtfmex(dspcell **si, dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, double pixoffx, double pixoffy, double pixblur){
+ccell *mkdtfmex(dspcell **si, const dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur){
     DTF_T *dtf=mkdtf(wvls, dxsa, embfac, ncompx, ncompy, pixpsax, pixpsay, pixthetax, pixthetay, pixoffx, pixoffy, pixblur, 0, 0, 0);
     int nwvl=wvls->nx;
     ccell *nominal=ccellnew(nwvl, 1);

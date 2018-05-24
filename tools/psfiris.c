@@ -59,8 +59,8 @@ static void psfiris_do(thread_t *info){
     double dx1=data->dx1;
     double dx2=data->dx2;
     double pixsize=data->pixsize;
-    double pixoffx=data->pixoffx;
-    double pixoffy=data->pixoffy;
+    dmat* pixoffx=dnew(1,1); pixoffx->p[0]=data->pixoffx;
+    dmat* pixoffy=dnew(1,1); pixoffy->p[0]=data->pixoffy;
     double blur=data->blur;
     loc_t *ploc=data->ploc;
     dmat *pamp=data->pamp;
@@ -128,7 +128,8 @@ static void psfiris_do(thread_t *info){
     output->p[iwvl]->header=strdup(header);
 
     cfree(otf);
-
+    dfree(pixoffx);
+    dfree(pixoffy);
 }
 
 

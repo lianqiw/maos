@@ -110,6 +110,8 @@ typedef struct POWFS_T{
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
+    dmat *pixoffx;      /**<Actual pixel offset wrt lenslet. Along r/a if radpix is true.*/
+    dmat *pixoffy;      /**<Actual pixel offset wrt lenslet*/
     /*Geometric gradient */
     dspcell *GS0;        /**<gtilt (average gradient) on ampm*/
     dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation

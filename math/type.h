@@ -258,5 +258,5 @@ INLINE void assert_2d(long ix, long iy, long nx, long ny){
 #define PIND1R(A,i) error("Invalid use. Use PINDR(A,i,j)");
 #define PIND2R(A,ix,iy) PIND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
 #define PINDR(...) IND_GET(_0,__VA_ARGS__,PIND2R,PIND1R,PIND1R,PIND1R)(__VA_ARGS__)
-
+#define PCOLR(A,iy) ((A)->p+wrap(iy, A->ny)*(A)->nx)
 #endif

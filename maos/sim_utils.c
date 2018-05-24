@@ -758,8 +758,9 @@ static void init_simu_wfs(SIM_T *simu){
 	if(powfs[ipowfs].gradncpa && !(parms->powfs[ipowfs].phytype_sim==1 && parms->powfs[ipowfs].ncpa_method==2)){
 	    //CMF has gradncpa with in matched filter
 	    int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	    dadd(&simu->gradoff->p[iwfs], 1, powfs[ipowfs].gradncpa->p[wfsind], 1);
+	    dadd(&simu->gradoff->p[iwfs], 1, INDR(powfs[ipowfs].gradncpa, wfsind,1), 1);
 	}
+
     }
     if(parms->sim.mffocus){
 	if(fabs(parms->sim.lpfocushi)<1.e-15){

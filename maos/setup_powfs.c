@@ -676,7 +676,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	powfs[ipowfs].sprint=dcellnew(nllt,1);
 
 	for(int illt=0;illt<nllt;illt++){
-	    /*adjusted llt center because pts->orig is corner */
+	    /*adjusted llt center because saloc->locx/y is corner */
 	    double ox2=parms->powfs[ipowfs].llt->ox->p[illt]-dsa*0.5;
 	    double oy2=parms->powfs[ipowfs].llt->oy->p[illt]-dsa*0.5;
 	    powfs[ipowfs].srot->p[illt]=dnew(nsa,1);
@@ -884,6 +884,74 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 */
 static void 
 setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
+    dmat *pixoffx=0;
+    dmat *pixoffy=0;
+    if(parms->powfs[ipowfs].pixoffx||parms->powfs[ipowfs].pixoffy){
+	const int nsa=powfs[ipowfs].pts->nsa;
+	if(fabs(parms->powfs[ipowfs].pixoffx)<1 && fabs(parms->powfs[ipowfs].pixoffy)<1){
+	    info("powfs%d: uniform pixel offset\n", ipowfs);
+	    //both pixoff within 1 denotes constant offset in unit of pixel.
+	    pixoffx=dnew(nsa,1); dset(pixoffx, parms->powfs[ipowfs].pixoffx);
+	    pixoffy=dnew(nsa,1); dset(pixoffy, parms->powfs[ipowfs].pixoffy);
+	}else{
+	    const int nwfs=1; //parms->powfs[ipowfs].nwfs;
+	    pixoffx=dnew(nsa, nwfs);
+	    pixoffy=dnew(nsa, nwfs);
+	    if(parms->powfs[ipowfs].pixoffx==1){
+		info("powfs%d: CCD rotation wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
+		//pixoffx==1 denotes clocking effect with pixoffy denotes maximum amount in unit of pixel CCW.
+		double pixtheta=0.5*(parms->powfs[ipowfs].pixtheta+parms->powfs[ipowfs].radpixtheta);
+		const double dsah=powfs[ipowfs].pts->dsa*0.5;
+		const double angle=parms->powfs[ipowfs].pixoffy*pixtheta/(parms->aper.d*0.5-dsah);
+		const double ct=cos(angle);
+		const double st=sin(angle);
+	
+		for(int jwfs=0; jwfs<nwfs; jwfs++){
+		    for(int isa=0; isa<nsa; isa++){
+			double ox=powfs[ipowfs].saloc->locx[isa]+dsah;
+			double oy=powfs[ipowfs].saloc->locy[isa]+dsah;
+			double dx=ox*ct-oy*st-ox;
+			double dy=ox*st+oy*ct-oy;
+			if(parms->powfs[ipowfs].radpix){//radial coordinate.
+			    dy=sqrt(dx*dx+dy*dy);
+			    dx=0;
+			}
+			IND(pixoffx, isa, jwfs)=dx/pixtheta;
+			IND(pixoffy, isa, jwfs)=dy/pixtheta;
+		    }
+		}
+	
+	    }else if(parms->powfs[ipowfs].pixoffx==2){
+		info("powfs%d: CCD global shift wrt lenslet @ %g pixel.\n", ipowfs, parms->powfs[ipowfs].pixoffy);
+		for(int jwfs=0; jwfs<nwfs; jwfs++){
+		    for(int isa=0; isa<nsa; isa++){
+			double gx=parms->powfs[ipowfs].pixoffy;
+			double gy=0;
+			if(parms->powfs[ipowfs].radpix){
+			    double angle=INDR(INDR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
+			    double ct=cos(angle);
+			    double st=sin(angle);
+			    double gx2=gx*ct+gy*st;//XY->RA: CW
+			    gy=-gx*st+gy*ct;
+			    gx=gx2;
+			}
+			IND(pixoffx, isa, jwfs)=gx;
+			IND(pixoffy, isa, jwfs)=gy;
+		    }
+		}
+	    }else{
+		error("Invalid input in pixoffx\n");
+	    }
+	}
+	if(parms->save.setup>1){
+	    writebin(pixoffx, "powfs%d_pixoffx", ipowfs);
+	    writebin(pixoffy, "powfs%d_pixoffy", ipowfs);
+	}
+    }
+
+    powfs[ipowfs].pixoffx=pixoffx;
+    powfs[ipowfs].pixoffy=pixoffy;
+    
     powfs[ipowfs].dtf=mkdtf(parms->powfs[ipowfs].wvl, 
 			    powfs[ipowfs].pts->dsa,
 			    parms->powfs[ipowfs].embfac,
@@ -893,8 +961,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			    powfs[ipowfs].pixpsay,
 			    parms->powfs[ipowfs].radpixtheta,
 			    parms->powfs[ipowfs].pixtheta,
-			    parms->powfs[ipowfs].pixoffx,
-			    parms->powfs[ipowfs].pixoffy,
+			    powfs[ipowfs].pixoffx,
+			    powfs[ipowfs].pixoffy,
 			    parms->powfs[ipowfs].pixblur,
 			    powfs[ipowfs].srot,
 			    parms->powfs[ipowfs].radpix,
@@ -902,7 +970,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     if(parms->powfs[ipowfs].radrot){
 	info("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
     }
- 
+
     int nwvl=parms->powfs[ipowfs].nwvl;
     powfs[ipowfs].dtheta=dnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -1276,7 +1344,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     powfs[ipowfs].cogcoeff=dcellnew(nwfs,1);
     
     for(int jwfs=0; jwfs<nwfs; jwfs++){
-	int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	//int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	if(jwfs==0 || (intstat && intstat->i0->ny>1)){
 	    double *srot=NULL;
 	    if(parms->powfs[ipowfs].radpix){
@@ -1333,16 +1401,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    }
 	}else{
 	    powfs[ipowfs].cogcoeff->p[jwfs]=dref(powfs[ipowfs].cogcoeff->p[0]);
-	}
-	if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].phytype_sim==2 && parms->powfs[ipowfs].ncpa_method==2){//cog
-	    if(!powfs[ipowfs].gradncpa){
-		powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
-	    }
-	    dzero(powfs[ipowfs].gradncpa->p[jwfs]);
-	    calc_phygrads(&powfs[ipowfs].gradncpa->p[jwfs], PCOL(intstat->i0,intstat->i0->ny==nwfs?iwfs:0), parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
-	    if(parms->save.setup){
-		writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa2", ipowfs);
-	    }
 	}
     }//for jwfs
     if(parms->save.setup){
@@ -1479,19 +1537,58 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs){
 			//writebin(powfs[ipowfs].opdbias->p[jwfs], "opdbias\n");exit(0);
 			pywfs_grad(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pywfs, ints);
 			dfree(ints);
-		    }else if(parms->powfs[ipowfs].gtype_sim==1){
+		    }else if(parms->powfs[ipowfs].gtype_sim==1){//Ztilt
 			pts_ztilt(&powfs[ipowfs].gradncpa->p[jwfs], powfs[ipowfs].pts,
 				  powfs[ipowfs].saimcc->p[powfs[ipowfs].nsaimcc>1?jwfs:0], 
 				  realamp, powfs[ipowfs].opdbias->p[jwfs]->p);
-		    }else{
-			dspmm(&powfs[ipowfs].gradncpa->p[jwfs],INDR(powfs[ipowfs].GS0, jwfs, 0),
-			      powfs[ipowfs].opdbias->p[jwfs],"nn",1);
+		    }else{//Gtilt
+			if(parms->powfs[ipowfs].ncpa_method==1){//GS0*opd
+			    dspmm(&powfs[ipowfs].gradncpa->p[jwfs],INDR(powfs[ipowfs].GS0, jwfs, 0),
+				  powfs[ipowfs].opdbias->p[jwfs],"nn",1);
+			}else if(parms->powfs[ipowfs].ncpa_method==2){//CoG(i0)
+			    if(!powfs[ipowfs].gradncpa){
+				powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
+			    }
+			    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+			    calc_phygrads(&powfs[ipowfs].gradncpa->p[jwfs],
+					  PCOLR(powfs[ipowfs].intstat->i0, jwfs),
+					  parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+			    
+			}
 		    }
 		}
 	    }
-	    if(parms->save.setup){
-		writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
+	}
+	if(powfs[ipowfs].pixoffx){
+	    if(!powfs[ipowfs].gradncpa){
+		powfs[ipowfs].gradncpa=dcellnew(parms->powfs[ipowfs].nwfs,1);
 	    }
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int nsa=powfs[ipowfs].pts->nsa;
+		if(!powfs[ipowfs].gradncpa->p[jwfs]){
+		    powfs[ipowfs].gradncpa->p[jwfs]=dnew(nsa*2, 1);
+		}
+		
+		double pixthetax=parms->powfs[ipowfs].pixtheta;
+		double pixthetay=parms->powfs[ipowfs].radpixtheta;
+		for(int isa=0; isa<nsa; isa++){
+		    double gx=pixthetax*INDR(powfs[ipowfs].pixoffx, isa, jwfs);
+		    double gy=pixthetay*INDR(powfs[ipowfs].pixoffy, isa, jwfs);
+		    if(parms->powfs[ipowfs].radpix){
+			double angle=INDR(INDR(powfs[ipowfs].srot, jwfs, 1), isa, 1);
+			double ct=cos(angle);
+			double st=sin(angle);
+			double gx2=gx*ct-gy*st;//RA->XY; CCW
+			gy=gx*st+gy*ct;
+			gx=gx2;
+		    }
+		    IND(powfs[ipowfs].gradncpa->p[jwfs], isa)+=gx;
+		    IND(powfs[ipowfs].gradncpa->p[jwfs], isa+nsa)+=gy;
+		}
+	    }
+	}
+	if(parms->save.setup){
+	    writebin(powfs[ipowfs].gradncpa, "powfs%d_gradncpa", ipowfs);
 	}
     }
 }
@@ -1590,6 +1687,8 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcellfree(powfs[ipowfs].srsa);
 	dfree(powfs[ipowfs].srsamax);
 	dcellfree(powfs[ipowfs].sprint);
+	dfree(powfs[ipowfs].pixoffx);
+	dfree(powfs[ipowfs].pixoffy);
     }
 
     cellfree(powfs[ipowfs].saimcc);

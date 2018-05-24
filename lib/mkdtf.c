@@ -20,7 +20,7 @@
 #include "mkdtf.h"
 #include "mkh.h"
 
-DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
+DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	     double dxsa,/**<Subaperture size*/
 	     double embfac,/**<Embedding factor (2)*/
 	     long ncompx,/**<FFT size along x*/
@@ -29,10 +29,10 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	     long pixpsay,/**<Number of pixels along y(a)*/
 	     double pixthetax,/**<Pixel size along x (r)*/
 	     double pixthetay,/**<Pixel size along y (a)*/
-	     double pixoffx,  /**<offset of image center from center of detector*/
-	     double pixoffy,  /**<offset of image center from center of detector*/
+	     const dmat* pixoffx,  /**<offset of image center from center of pixel array, along x or radial*/
+	     const dmat* pixoffy,  /**<offset of image center from center of pixel array, along y or azimuthal*/
 	     double pixblur,  /**<Pixel blur sigma(fraction of pixel)*/
-	     dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     const dcell *srot, /**<Rotation angle of each subaperture. NULL for NGS WFS*/
 	     int radpix,  /**<1: Pixels are along radial/azimuthal direction*/
 	     int radrot  /**<For radial format CCD, rotate PSF/OTF into r/a coord. uses less memory*/
     ){
@@ -45,8 +45,27 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
     const int do_blur=fabs(blurx)>EPS && fabs(blury)>EPS;
     const long ncompx2=ncompx>>1;
     const long ncompy2=ncompy>>1;
-    const double pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;
-    const double pyo=-(pixpsay*0.5-0.5+pixoffy)*pixthetay;
+    const double pxo=-(pixpsax*0.5-0.5)*pixthetax;
+    const double pyo=-(pixpsay*0.5-0.5)*pixthetay;
+    double pxo2=pxo;
+    double pyo2=pyo;
+    if(pixoffx || pixoffy){
+	int nwfs=1; int nsa=1;
+	if(srot){
+	    nwfs=srot->nx;
+	    nsa=srot->p[0]->nx;
+	}
+	if(!pixoffx || !pixoffy){
+	    error("pixoffx and pixoffy must simultaneously be supplied\n");
+	}
+	if(pixoffx->nx!=1 && pixoffx->nx!=nsa && pixoffx->ny!=1 && pixoffx->ny!=nwfs){
+	    error("pixoffx has wrong format\n");
+	}
+	if(pixoffy->nx!=pixoffx->nx || pixoffy->ny!=pixoffy->ny){
+	    error("pixoffy must have the same format as pixoffx\n");
+	}
+    }
+
     /*both nominal and si depends on wavelength.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double wvl=wvls->p[iwvl];
@@ -63,9 +82,11 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	  nominal/si for each subaperture. The PSF/OTF and hence DTF are on x/y
 	  coordinate, so pixels and pixel coordinates need to rotated to r/a
 	  direction. */
-	const int multi_dtf=(srot && radpix && !radrot);
-	const int nwfs=multi_dtf?srot->nx:1;
-	const int ndtf=multi_dtf?srot->p[0]->nx:1; 
+	const int multi_dtf=(srot && radpix && !radrot);//DTF is along x/y coord, pixel is r/a coord.
+	const int ndtf=(multi_dtf || (pixoffx && pixoffx->nx>1))?srot->p[0]->nx:1;
+	const int multi_wfs=((srot && srot->nx>1 && radpix && !radrot) || (pixoffx && pixoffx->ny>1));
+	const int nwfs=multi_wfs?MAX(srot->nx, pixoffx->ny):1;
+
 	dtfs[iwvl].dtheta=dtheta;
 	dtfs[iwvl].dxsa=dxsa;
 	dtfs[iwvl].radpix=radpix;
@@ -87,11 +108,11 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    for(int isa=0; isa<ndtf; isa++){
 		if(multi_dtf){
-		    theta=srot->p[iwfs]->p[isa];
+		    theta=INDR(srot, iwfs, 1)->p[isa];
 		    ct=cos(theta);
 		    st=sin(theta);
 		}
-
+		
 		for(int iy=0; iy<ncompy; iy++){
 		    int jy=iy-ncompy2;
 		    for(int ix=0; ix<ncompx; ix++){
@@ -115,7 +136,18 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
 		ccp(PIND(nominals,isa,iwfs), nominal);
 		//Coordinate of pixels
-		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
+		if(pixoffx){
+		    double dx=INDR(pixoffx, isa, iwfs)*pixthetax;
+		    double dy=INDR(pixoffy, isa, iwfs)*pixthetay;
+		    /*if(radpix){//Rotate from x/y to r/a coordinate.
+			double dx2=dx*ct+dy*st;
+			dy=-dx*st+dy*ct;
+			dx=dx2;
+		    }*/
+		    pxo2=pxo-dx;
+		    pyo2=pyo-dy;
+		}
+		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo2,pyo2,theta);
 		IND(sis,isa,iwfs)=mkh(loc_psf,loc_ccd,0,0,1);
 		locfree(loc_ccd);
 	    }/*isa */
@@ -146,11 +178,11 @@ DTF_T *mkdtf(dmat *wvls, /**<List of wavelength*/
 
 ETF_T *mketf(DTF_T *dtfs,  /**<The dtfs*/
 	     double hs,    /**<Guide star focus range*/
-	     dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
+	     const dcell *sodium,/**<The sodium profile. In each cell First column is coordinate.*/
 	     int icol,     /**<Which sodium profile to use*/
 	     int nwvl,     /**<Number of wavelength*/
-	     dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
-	     dcell *srsa,  /**<Subaperture to LLT distance*/
+	     const dcell *srot,  /**<Rotation angle of each subaperture. NULL for NGS WFS*/
+	     const dcell *srsa,  /**<Subaperture to LLT distance*/
 	     double za,    /**<Zenith angle*/
 	     int no_interp /**<Use direct sum instead of interpolation + FFT. Slower */
     ){

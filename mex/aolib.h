@@ -62,8 +62,8 @@ dspcell *slaving(loccell *aloc, const dcell *actcpl, dcell *NW, const lcell *act
 dmat *mtch(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, const dmat *qe, const dmat *bkbrnd2, const dmat *bkgrnd2c, double bkgrnd, double bkgrndc, double rne, double pixthetax, double pixthetay, double pixrot, int radgx, int cr);
 dmat *mtch2(dmat **nea, const dmat *i0, const dmat *gx, const dmat *gy, int cr);
 dmat *sdepsd(const dmat *ff, const dmat *coeff);
-cn2est_t *cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
+cn2est_t *cn2est=cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *saloc,
 		    const dmat *saa, const double saat, const dmat* hs,
 		    const dmat *htrecon, int keepht, double l0, dcell *grad);
 
-ccell *mkdtfmex(dspcell **si, dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, double pixoffx, double pixoffy, double pixblur);
+ccell *mkdtf=mkdtfmex(dspcell **si, const dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur);

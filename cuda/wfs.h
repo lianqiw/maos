@@ -46,6 +46,8 @@ typedef struct cupowfs_t{
     cucmat pynominal;
     curmat saa;
     curmat pyoff; //pywfs->gradoff
+    curmat pixoffx;
+    curmat pixoffy;
     cupowfs_t():embed(0),nembed(0),pywfs(0){};
 }cupowfs_t;
 /**For matched filter update*/

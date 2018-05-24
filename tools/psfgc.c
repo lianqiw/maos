@@ -65,8 +65,8 @@ static void psfiris_do(thread_t *info){
     double sumpsf=data->sumpsf;
     double dx=data->dx;
     double pixsize=data->pixsize;
-    double pixoffx=data->pixoffx;
-    double pixoffy=data->pixoffy;
+    dmat* pixoffx=dnew(1,1); pixoffx->p[0]=data->pixoffx;
+    dmat* pixoffy=dnew(1,1); pixoffy->p[0]=data->pixoffy;
     double blur=data->blur;
     double imperr=data->imperr;
     double *wvls=data->wvls;
@@ -111,7 +111,8 @@ static void psfiris_do(thread_t *info){
     output->p[ipsf]->header=strdup(header);
 
     cfree(otf);
-
+    dfree(pixoffx);
+    dfree(pixoffy);
 }
 
 

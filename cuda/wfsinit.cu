@@ -187,6 +187,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}
 	    }
 	    cp2gpu(cupowfs[ipowfs].saa, powfs[ipowfs].saa);
+	    cp2gpu(cupowfs[ipowfs].pixoffx, powfs[ipowfs].pixoffx);
+	    cp2gpu(cupowfs[ipowfs].pixoffy, powfs[ipowfs].pixoffy);
 	    if(powfs[ipowfs].pywfs){
 		cupowfs[ipowfs].pywfs=powfs[ipowfs].pywfs;
 		cp2gpu(cupowfs[ipowfs].pyramid, powfs[ipowfs].pywfs->pyramid);
