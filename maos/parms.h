@@ -510,10 +510,10 @@ typedef struct SIM_CFG_T{
     double fov;      /**<The diameter of total fov in arcsec*/
     int focus2tel;   /**<Offload focus to telescope*/
     double epfocus2tel;/*Gain for telescope focus control*/
-    int mffocus;     /**<method for focus tracing.
-			- 0: no focus tracking.
-			- 1: Focus tracking using CL gradients, for each LGS independently.
-			- 2: Focus tracking using CL gradinets, for common LGS focus only.
+    int mffocus;     /**<method for focus blending between LGS and LO NGS
+			- 0: no focus blending.
+			- 1: Focus blending using CL gradients, for each LGS independently.
+			- 2: Focus blending using CL gradinets, for common LGS focus only.
 		     */
     int idealfsm;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
@@ -618,6 +618,7 @@ typedef struct DBG_CFG_T{
     int pwfs_side; /**<Make pyramid WFS a single roof only.*/
     dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
+    int twfsflag;      /**<use TWFS to control 0: all modes, 1: radial only*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

@@ -612,7 +612,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 		    dmat *focus=dnew(1,1);
 		    dmat *RFlgsg=IND(recon->RFlgsg, iwfs, iwfs);
 		    dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
-		    //zoomerr is adjust by the gain, and scaling due to zoh.
+		    //zoomerr is adjust by the gain, and scaling due to zoh for npll frames.
 		    simu->zoomerr->p[iwfs]=focus->p[0]*(parms->powfs[ipowfs].zoomgain/npll);
 		    dfree(focus);
 		}

@@ -1045,6 +1045,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DBL(dbg.pwfs_pupelong);
     READ_DCELL(dbg.dmoff);
     READ_DCELL(dbg.gradoff);
+    READ_INT(dbg.twfsflag);
 }
 /**
    Read in GPU options

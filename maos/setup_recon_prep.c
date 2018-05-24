@@ -900,7 +900,7 @@ setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
     recon->GRall=dcellnew(parms->nwfsr, 1);
-    dmat *opd=zernike(recon->ploc, 0, 3, parms->powfs[parms->itpowfs].order, 1);
+    dmat *opd=zernike(recon->ploc, 0, 3, parms->powfs[parms->itpowfs].order, parms->dbg.twfsflag);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	const int ipowfs=parms->wfsr[iwfs].powfs; 
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){

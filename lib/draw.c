@@ -106,7 +106,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 		streadstr(sock_draw, &fig);
 		streadstr(sock_draw, &fn);
 		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
-		    info("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+		    //info("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 		}
 		free(figfn[0]);
 		free(figfn[1]);
