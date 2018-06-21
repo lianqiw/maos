@@ -39,10 +39,10 @@ class W01_T{
     cumat<int>W0f;/**< index for fully illuminated points.*/
     Real   W0v;   /**< maximum Value of W0*/
     int     nxx;  /**< First dimension of grid*/
-    curmat pis;   /**< Temporary data*/
+    mutable curmat pis;   /**< Temporary data*/
 public:
     W01_T(const dsp *R_W0, const dmat *R_W1, int R_nxx);
-    void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream);
+    void apply(Real *restrict out, const Real *in, int ndir, stream_t &stream) const;
 };
 
 /**

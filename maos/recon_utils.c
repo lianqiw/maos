@@ -845,7 +845,7 @@ static void cn2est_moveht(RECON_T *recon){
 /**
    Wrapper of Cn2 Estimation operations in recon.c
 */
-void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
+void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_update){
     cn2est_t *cn2est=recon->cn2est;
     cn2est_push(cn2est, grad);
     static int icn2=-1;
@@ -874,6 +874,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad){
 	}
 	recon->r0=cn2est->r0m;
 	recon->L0=cn2est->L0;
+	*tomo_update=1;
     }
 }
 /**

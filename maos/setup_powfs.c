@@ -182,7 +182,7 @@ sa_reduce(POWFS_T *powfs, int ipowfs, double thresarea){
 			saa->p[isa]=0;
 			changed++;
 		    }
-		}else{//enable isolated in-valid subaperture
+		}else if(0){//enable isolated in-valid subaperture
 		    if(nedge+ncorner>=6 && saa->p[isa]>=thresarea2){
 			saa->p[isa]=1;
 			changed++;
@@ -402,6 +402,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(!parms->powfs[ipowfs].saloc){
 	sa_reduce(powfs, ipowfs, thresarea);
     }
+    info("There are %ld valid subaperture in saloc.\n", powfs[ipowfs].saloc->nloc);
     setup_powfs_misreg_dm(powfs, parms, aper, ipowfs);
     powfs[ipowfs].realsaa=dcellnew(nwfsp, 1);
     for(int jwfs=0; jwfs<nwfsp; jwfs++){
@@ -1661,6 +1662,10 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
 	    cellfree(powfs[ipowfs].intstat->i0);
 	    cellfree(powfs[ipowfs].intstat->gx);
 	    cellfree(powfs[ipowfs].intstat->gy);
+	}
+	if(!parms->powfs[ipowfs].needGS0 && powfs[ipowfs].GS0){
+	    dspcellfree(powfs[ipowfs].GS0);
+	    powfs[ipowfs].GS0=NULL;
 	}
     }
 }

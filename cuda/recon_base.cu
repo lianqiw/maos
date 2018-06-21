@@ -117,7 +117,7 @@ apply_W0_do(Real *outs, const Real *ins, const int *W0f, Real W0v, int nx, int n
 		       +0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
     }
 }
-void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stream){
+void W01_T::apply(Real *restrict xout, const Real *xin, int ndir, stream_t &stream) const{
     if(pis.Nx() < ndir){
 	pis=curmat(ndir,1);
     }else{

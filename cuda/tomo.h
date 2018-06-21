@@ -48,7 +48,7 @@ struct LAP_T{
     Real zzv;
 };
 class cutomo_grid:public cusolve_r, public cucg_t{
-    curecon_geom *grid;
+    const curecon_geom *grid;
     /*Temporary data*/
     curcell opdwfs;
     curcell grad;  
@@ -73,7 +73,7 @@ class cutomo_grid:public cusolve_r, public cucg_t{
     void do_gpt(curcell &opdwfs, curcell &grad, int ptt, stream_t &stream);
 public:
     cutomo_grid(const PARMS_T *parms, const RECON_T *recon, 
-		const POWFS_T *powfs, curecon_geom *_grid);
+		const POWFS_T *powfs, const curecon_geom *_grid);
     void init_hx(const PARMS_T *parms, const RECON_T *recon);
     void update_fdpcg(FDPCG_T *fdpcg){
 	dynamic_cast<cufdpcg_t*>(precond)->update(fdpcg);

@@ -1112,6 +1112,92 @@ setup_recon_DF(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }
 }
 /**
+   Dither using command path (DM) aberration
+ */
+void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
+    int any=0;
+    int dither_mode=0;
+    double dither_amp=0;
+    int dither_npoint=0;
+    int dither_dtrat=0;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].dither>1){//common path dithering
+	    if(any){//already found, check consistency
+		if(dither_mode!=-parms->powfs[ipowfs].dither ||
+		   fabs(dither_amp-parms->powfs[ipowfs].dither_amp)>dither_amp*1e-5
+		    || dither_npoint!=parms->powfs[ipowfs].dither_npoint
+		    || dither_dtrat!=parms->powfs[ipowfs].dtrat){
+		    error("Multiple dither with different configuration is not supported\n");
+		}
+	    }
+	    dither_mode=-parms->powfs[ipowfs].dither;
+	    dither_amp=parms->powfs[ipowfs].dither_amp;
+	    dither_npoint=parms->powfs[ipowfs].dither_npoint;
+	    dither_dtrat=parms->powfs[ipowfs].dtrat;
+	    any=1;
+	}
+    }
+    if(any){
+	const int idm=parms->idmground;
+	recon->dither_npoint=dither_npoint;
+	recon->dither_dtrat=dither_dtrat;
+	dcellfree(recon->dither_m);
+	dcellfree(recon->dither_ra);
+	dcellfree(recon->dither_rg);
+	recon->dither_m=dcellnew(parms->ndm, 1);
+	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
+	dscale(recon->dither_m->p[idm], dither_amp);
+	recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
+	IND(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
+	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    const double hc=parms->powfs[ipowfs].hc;
+	    if(parms->powfs[ipowfs].dither>1){
+		dmat *opd=dnew(powfs[ipowfs].loc->nloc, 1);
+		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
+		double scale=1.-ht/parms->powfs[ipowfs].hs;
+		double dispx=ht*parms->wfsr[iwfs].thetax;
+		double dispy=ht*parms->wfsr[iwfs].thetay;
+		prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
+			     powfs[ipowfs].loc, opd->p, 
+			     -1, dispx, dispy, scale, 0, 0);
+		dmat *ints=0;
+		dmat *grad=0;
+		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+		IND(recon->dither_rg, iwfs, iwfs)=dpinv(grad, IND(recon->saneai, iwfs, iwfs));
+		if(0){//test linearity
+		    dscale(opd, 1./4.);
+		    dmat *tmp=0;
+		    dmat *res=dnew(10,1);
+		    for(int i=0; i<10; i++){
+			dscale(opd, 2);
+			dzero(ints);
+			pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
+			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
+			dmm(&tmp, 0, IND(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
+			res->p[i]=tmp->p[0];
+		    }
+		    writebin(res, "linearity");
+		    dfree(tmp);
+		    dfree(res);
+		    exit(0);
+		}
+		dfree(ints);
+		dfree(opd);
+		dfree(grad);
+	    }
+	}
+	if(parms->save.setup){
+	    writebin(recon->dither_m, "dither_m");
+	    writebin(recon->dither_ra, "dither_ra");
+	    writebin(recon->dither_rg, "dither_rg");
+	}
+    }
+}
+
+/**
    Create reconstruction parameters that are related to the geometry only, and
    will not be updated when estimated WFS measurement noise changes.
    
@@ -1223,14 +1309,15 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	fit_prep_lrt(recon, parms);
     }
     setup_recon_dmttr(recon, parms);
+    setup_recon_dither_dm(recon, powfs, parms);
     return recon;
 }
 /**
    That may depend on GPU data.
  */
 void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
-    setup_recon_GA(recon, parms, powfs);
-    setup_recon_GF(recon, parms);
+    setup_recon_GA(recon, parms, powfs);//PWFS uses GPU data.
+    setup_recon_GF(recon, parms);//GF depends on GA.
     if(parms->itpowfs!=-1){
 	setup_recon_GR(recon,powfs,parms);
     }

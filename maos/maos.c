@@ -141,7 +141,7 @@ void maos_setup(const PARMS_T *parms){
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
     */
-    //free_powfs_unused(parms, powfs);
+    free_powfs_unused(parms, powfs);
     //free_recon_unused(parms, recon);
     toc2("Presimulation");
 }

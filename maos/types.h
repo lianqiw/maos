@@ -427,6 +427,7 @@ typedef struct DITHER_T{
     //For PLL
     double delta; /**<PLL estimation of servo lag (only) at every time step*/
     double deltam;/**<Average of delta*/
+    double deltao;/**<Offset of delta from outer loop*/
     double delay; /**<Diference of delay from 2 frame due to beam propagation*/
     double a2m;   /**<actual dither amplitude*/
     double a2me;   /**<actual dither amplitude*/
@@ -631,6 +632,7 @@ typedef struct SIM_T{
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
     double last_report_time;/**<The time we lasted reported status to the scheduler.*/
+    int tomo_update;   /**<Triggering setup_recon_tomo_upate*/
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)>=(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 

@@ -77,16 +77,16 @@ namespace cuda_recon{
 	    opdr_vec[ips]=opdr[ips].Vector();
 	}
     }
+    if(parms->recon.alg==0 && !(parms->recon.mvm && parms->load.mvm)){
+	grid=new curecon_geom(parms, recon);//does not change
+    }
     update(parms, powfs, recon);
     gpu_print_mem("recon init");
 }
 void curecon_t::reset_config(){
-    delete grid; grid=0;
     if(FL && FL!=dynamic_cast<cusolve_l*>(FR)) delete FL; FL=0;
     delete FR; FR=0;
-    if(RL && RL!=dynamic_cast<cusolve_l*>(RR)) {
-	delete RL; RL=0;
-    }
+    if(RL && RL!=dynamic_cast<cusolve_l*>(RR)) delete RL; RL=0;
     delete RR; RR=0;//problematic.
     delete MVM; MVM=0;
     if(moao){
@@ -107,9 +107,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    return; //Use CPU to assemble MVM
 	}
     }
-    if(parms->recon.alg==0 && !(parms->recon.mvm && parms->load.mvm)){
-	grid=new curecon_geom(parms, recon);
-    }
+  
     if(parms->gpu.fit){
 	switch(parms->gpu.fit){
 	case 1:
@@ -119,7 +117,8 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	case 2:
 	    FR=new cufit_grid(parms, recon, grid);
 	    break;
-	default:error("Invalid");
+	default:
+	    error("Invalid");
 	}
 	switch(parms->fit.alg){
 	case 0:

@@ -27,6 +27,7 @@
 #include "recon.h"
 #include "recon_utils.h"
 #include "setup_powfs.h"
+#include "setup_recon.h"
 #include "sim.h"
 #include "sim_utils.h"
 #include "fdpcg.h"
@@ -200,6 +201,19 @@ void maos_isim(int isim){
 		}
 		if(!NO_EVL) perfevl(simu);
 	    }
+	}
+	if(simu->tomo_update){//This part causes random CUDA error in Geforce.
+	    if(simu->tomo_update==1){//Only update cn2
+		setup_recon_tomo_update(simu->recon, simu->parms);
+	    }else{//Also update noise.
+		setup_recon_update(simu->recon, simu->parms, simu->powfs);
+#if USE_CUDA
+		if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+		    gpu_update_recon(parms, simu->powfs, simu->recon);
+		}
+#endif
+	    }
+	    simu->tomo_update=0;
 	}
     }
     double ck_end=myclockd();

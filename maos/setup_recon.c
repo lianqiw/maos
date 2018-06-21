@@ -69,28 +69,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(parms->wfs[iwfs].sabad){
 	    samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
 	}
-	if(parms->powfs[ipowfs].neareconfile){/*load sanea from file */
-	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
-	    if(nea && nea->p[0]<1e-11) {
-		error("Supplied NEA is too small\n");
-	    }
-	    if(samask){
-		for(int isa=0; isa<nsa; isa++){
-		    if(samask->p[isa]){
-			warning("wfs %d sa %d is masked\n", iwfs, isa);
-			nea->p[isa]=INFINITY;
-			nea->p[isa+nsa]=INFINITY;
-		    }
-		}
-	    }
-	    /*rad */
-	    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
-	    dcwpow(nea, 2);/*rad^2 */
-	    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
-	    dcwpow(nea,-1);/*rad^-2 */
-	    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
-	    dfree(nea);
-	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && !parms->powfs[ipowfs].phyusenea){
+	if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && !parms->powfs[ipowfs].phyusenea){
 	    /*Physical optics use nea from intstat*/
 	    if(!powfs[ipowfs].saneaxy){
 		error("saneaxy cannot be null\n");
@@ -124,6 +103,31 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }else{
 		do_ref=1;
 	    }
+	}else if(parms->powfs[ipowfs].neareconfile){/*load sanea from file */
+	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
+	    if(nea && nea->p[0]<1e-11) {
+		error("Supplied NEA is too small\n");
+	    }
+	    if(nea->nx!=nsa || nea->ny!=2){
+		error("Supplied NEA has wrong dimension: got %ldx%ld, want %dx%d.\n",
+		      nea->nx, nea->ny, nsa, 2);
+	    }
+	    if(samask){
+		for(int isa=0; isa<nsa; isa++){
+		    if(samask->p[isa]){
+			warning("wfs %d sa %d is masked\n", iwfs, isa);
+			nea->p[isa]=INFINITY;
+			nea->p[isa+nsa]=INFINITY;
+		    }
+		}
+	    }
+	    /*rad */
+	    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
+	    dcwpow(nea, 2);/*rad^2 */
+	    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
+	    dcwpow(nea,-1);/*rad^-2 */
+	    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,nea->p,1.);
+	    dfree(nea);
 	}else{
 	    /*compute nea from nearecon, scaled by area and dtrat. nea scales as sqrt(1/dtrat) */
 	    if(iwfs==iwfs0  || parms->wfs[iwfs].sabad || parms->wfs[iwfs0].sabad){
@@ -209,10 +213,17 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	const char *neatype;
 	if(parms->powfs[ipowfs].neareconfile){
-	    neatype="FILE";
+	    neatype="file";
 	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
 		 !parms->powfs[ipowfs].phyusenea){
-	    neatype="mtch";
+	    switch(parms->powfs[ipowfs].phytype_recon){
+	    case 1:
+		neatype="cmf";break;
+	    case 2:
+		neatype="cog";break;
+	    default:
+		neatype="unknown";break;
+	    }
 	}else{
 	    neatype="geom";
 	}
@@ -278,6 +289,7 @@ static void free_cxx(RECON_T *recon){
 */
 void
 setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
+    info("setup_recon_tomo_prep.\n");
     /*Free existing struct if already exist.  */
     free_cxx(recon);
     if(parms->tomo.assemble){
@@ -872,9 +884,8 @@ setup_recon_twfs(RECON_T *recon, const PARMS_T *parms){
     /*if(parms->recon.fnsphpsd){
 	recon->eptwfs=twfs_gain_optim(parms, recon, powfs);
 	warning("eptwfs is reset to %g\n", parms->sim.eptwfs);
-	}else{*/
+	}else*/
     recon->eptwfs=parms->sim.eptwfs;
-//}
     cellfree(GRtwfs);
     cellfree(neai);
 }
@@ -1241,88 +1252,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     
     toc2("setup_recon_tomo");
 }
-/**
-   Dither using command path (DM) aberration
- */
-void setup_recon_dither_dm(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
-    int any=0;
-    int dither_mode=0;
-    double dither_amp=0;
-    int dither_npoint=0;
-    int dither_dtrat=0;
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dither>1){//common path dithering
-	    if(any){//already found, check consistency
-		if(dither_mode!=-parms->powfs[ipowfs].dither ||
-		   fabs(dither_amp-parms->powfs[ipowfs].dither_amp)>dither_amp*1e-5
-		    || dither_npoint!=parms->powfs[ipowfs].dither_npoint
-		    || dither_dtrat!=parms->powfs[ipowfs].dtrat){
-		    error("Multiple dither with different configuration is not supported\n");
-		}
-	    }
-	    dither_mode=-parms->powfs[ipowfs].dither;
-	    dither_amp=parms->powfs[ipowfs].dither_amp;
-	    dither_npoint=parms->powfs[ipowfs].dither_npoint;
-	    dither_dtrat=parms->powfs[ipowfs].dtrat;
-	    any=1;
-	}
-    }
-    if(any){
-	const int idm=parms->idmground;
-	recon->dither_npoint=dither_npoint;
-	recon->dither_dtrat=dither_dtrat;
-	recon->dither_m=dcellnew(parms->ndm, 1);
-	recon->dither_m->p[idm]=zernike(recon->aloc->p[idm], parms->aper.d, 0, 0, dither_mode);
-	dscale(recon->dither_m->p[idm], dither_amp);
-	recon->dither_ra=dcellnew(parms->ndm, parms->ndm);
-	IND(recon->dither_ra, idm, idm)=dpinv(recon->dither_m->p[idm], 0);
-	recon->dither_rg=dcellnew(parms->nwfsr, parms->nwfsr);
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    const double hc=parms->powfs[ipowfs].hc;
-	    if(parms->powfs[ipowfs].dither>1){
-		dmat *opd=dnew(powfs[ipowfs].loc->nloc, 1);
-		double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg-hc;
-		double scale=1.-ht/parms->powfs[ipowfs].hs;
-		double dispx=ht*parms->wfsr[iwfs].thetax;
-		double dispy=ht*parms->wfsr[iwfs].thetay;
-		prop_nongrid(recon->aloc->p[idm], recon->dither_m->p[idm]->p, 
-			     powfs[ipowfs].loc, opd->p, 
-			     -1, dispx, dispy, scale, 0, 0);
-		dmat *ints=0;
-		dmat *grad=0;
-		pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
-		pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-		IND(recon->dither_rg, iwfs, iwfs)=dpinv(grad, IND(recon->saneai, iwfs, iwfs));
-		if(0){//test linearity
-		    dscale(opd, 1./4.);
-		    dmat *tmp=0;
-		    dmat *res=dnew(10,1);
-		    for(int i=0; i<10; i++){
-			dscale(opd, 2);
-			dzero(ints);
-			pywfs_fft(&ints, powfs[ipowfs].pywfs, opd);
-			pywfs_grad(&grad, powfs[ipowfs].pywfs, ints);
-			dmm(&tmp, 0, IND(recon->dither_rg, iwfs, iwfs), grad, "nn", 1);
-			res->p[i]=tmp->p[0];
-		    }
-		    writebin(res, "linearity");
-		    dfree(tmp);
-		    dfree(res);
-		    exit(0);
-		}
-		dfree(ints);
-		dfree(opd);
-		dfree(grad);
-	    }
-	}
-	if(parms->save.setup){
-	    writebin(recon->dither_m, "dither_m");
-	    writebin(recon->dither_ra, "dither_ra");
-	    writebin(recon->dither_rg, "dither_rg");
-	}
-    }
-}
+
 
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
@@ -1361,16 +1291,49 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    setup_recon_mvst(recon, parms);
 	}
     }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(!parms->powfs[ipowfs].needGS0 && powfs[ipowfs].GS0){
-	    dspcellfree(powfs[ipowfs].GS0);
-	    powfs[ipowfs].GS0=NULL;
-	}
-    }
-    setup_recon_dither_dm(recon, powfs, parms);
     toc2("setup_recon");
 }
+
+/**
+   Update reconstructor
+*/
+void setup_recon_update(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    TIC;tic;
+    /*assemble noise equiva angle inverse from powfs information */
+    setup_recon_saneai(recon,parms,powfs);
+    /*setup LGS tip/tilt/diff focus removal */
+    setup_recon_TTFR(recon,parms);
+    /*mvst uses information here*/
+    setup_recon_focus(recon, parms);
+    if(parms->itpowfs!=-1){ /*setup Truth wfs*/
+	setup_recon_twfs(recon,parms);
+    }
+    if(!parms->sim.idealfit){
+	if(parms->recon.mvm && parms->load.mvm){
+	    recon->MVM=dread("%s", parms->load.mvm);
+	}else{
+	    switch(parms->recon.alg){
+	    case 0:
+		setup_recon_tomo(recon, parms, powfs);
+		break;
+	    case 1:
+		setup_recon_lsr(recon, parms);
+		break;
+	    default:
+		error("recon.alg=%d is not recognized\n", parms->recon.alg);
+	    }
+	}
+    }
+    if(parms->recon.split){
+    //split tomography 
+	setup_ngsmod_recon(parms,recon);
+	if(!parms->sim.idealfit && parms->recon.split==2 && parms->recon.alg==0){//Need to be after fit
+	    setup_recon_mvst(recon, parms);
+	}
+    }
+    toc2("setup_recon");
+}
+
 
 /**
    PSD computation for gian update

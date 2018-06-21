@@ -29,7 +29,7 @@ void cufdpcg_t::update(FDPCG_T *fdpcg){
     cp2gpu(Mb, fdpcg->Mbinv);
     fdpcg->Mbinv->nx=nxsave;
 }
-cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, curecon_geom *_grid)
+cufdpcg_t::cufdpcg_t(FDPCG_T *fdpcg, const curecon_geom *_grid)
     :grid(_grid),fftnc(0),fftips(0),nb(0),bs(0),nby(0),nbz(0),scale(0){
     if(!fdpcg) return;
     scale=fdpcg->scale;

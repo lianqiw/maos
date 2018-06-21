@@ -123,7 +123,7 @@ static const char *scsrmv_err[]={
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
 
-void cuspmul(Real *y, cusp &A, const Real *x, int ncolvec, char trans, Real alpha, cusparseHandle_t handle){
+void cuspmul(Real *y, const cusp &A, const Real *x, int ncolvec, char trans, Real alpha, cusparseHandle_t handle){
     cusparseOperation_t opr;
     int istrans=(trans=='t' || trans==1);
     if(A.Type()==SP_CSC){

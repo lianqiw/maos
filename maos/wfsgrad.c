@@ -555,7 +555,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
 	const int ncol=(npll-1)*parms->powfs[ipowfs].dtrat+1;
 	if(parms->powfs[ipowfs].dither==1){//TT
-	    pd->deltam=pd->delta;
+	    pd->deltam=pd->delta+pd->deltao;
 	    dmat *tmp=0;
 	    const double norm=1./parms->powfs[ipowfs].dither_amp;
 	    const int detrend=parms->powfs[ipowfs].llt?0:1;
@@ -614,6 +614,7 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 		    dmm(&focus, 0, RFlgsg, ibgrad, "nn", 1);
 		    //zoomerr is adjust by the gain, and scaling due to zoh for npll frames.
 		    simu->zoomerr->p[iwfs]=focus->p[0]*(parms->powfs[ipowfs].zoomgain/npll);
+		    //if(iwfs==0) info("zoomerr_ib[%d]=%g nm\n", isim, focus->p[0]*1e9);
 		    dfree(focus);
 		}
 		dfree(ibgrad);
@@ -721,7 +722,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	double lpfocus=parms->sim.lpfocushi;
 	double infocus=0;
 	//For those WFS that dither and run mtch, use focus error from ib instead
-	const int zoom_from_grad=(parms->powfs[ipowfs].dither!=1 || parms->powfs[ipowfs].phytype_sim!=1);
+	const int zoom_from_grad=(parms->powfs[ipowfs].dither!=1 || parms->powfs[ipowfs].phytype_sim2!=1);
 	const int zoomavg_output=((simu->reconisim+1)%parms->powfs[ipowfs].zoomdtrat==0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
@@ -743,6 +744,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 		if(zoomavg_output){
 		    /*zoom error is zero order hold even if no output from averager*/
 		    simu->zoomerr->p[iwfs]=simu->zoomavg->p[iwfs]*parms->powfs[ipowfs].zoomgain*pow(parms->powfs[ipowfs].zoomdtrat,-2);
+		    //info("zoomerr_grad[%d]=%g nm\n", simu->isim, simu->zoomerr->p[0]/parms->powfs[ipowfs].zoomgain*parms->powfs[ipowfs].zoomdtrat*1e9);
 		    simu->zoomavg->p[iwfs]=0;
 		}
 	    }
@@ -910,7 +912,8 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    if(parms->save.dither){
 			writebin(simu->gradoff->p[iwfs], "wfs%d_gradoff_%d", iwfs, simu->isim);
 		    }
-		    if(parms->powfs[ipowfs].dither_gdrift>0){//outer loop to prevent i0 from drifting.
+		    if(parms->powfs[ipowfs].dither_gdrift>0){
+			//outer loop to prevent i0 from drifting in COG
 			dzero(goff);
 			//Compute CoG of i0 + goff and drive it toward gradncpa with low gain (0.1)
 			calc_phygrads(&goff, powfs[ipowfs].intstat->i0->p+jwfs*nsa, parms, powfs, iwfs, 2);
@@ -918,7 +921,34 @@ static void wfsgrad_dither_post(SIM_T *simu){
 			if(powfs[ipowfs].gradncpa){
 			    dadd(&goff, 1, powfs[ipowfs].gradncpa->p[jwfs], -1);
 			}
+			if(parms->powfs[ipowfs].llt){
+			    //Remove focus drift control in LGS WFS as it is fixed using HFP and trombone.
+			    dmat *focus=dnew(1,1);
+			    dmm(&focus, 0, IND(simu->recon->RFlgsg, iwfs, iwfs), goff, "nn", 1);
+			    info("Step %d, wfs %d: removing focus=%g\n", simu->isim, iwfs, focus->p[0]);
+			    dadd(&goff, 1, simu->recon->GFall->p[iwfs], -focus->p[0]);
+			    dfree(focus);
+			}	
 			dadd(&simu->gradoff->p[iwfs], 1, goff, -parms->powfs[ipowfs].dither_gdrift);
+			//outer loop to prevent i0 derivative from drifting.
+			dmat *i0sx=0, *i0sy=0;
+			double theta=0;
+			const double gshift=parms->powfs[ipowfs].pixtheta*0.1;
+			for(int isa=0; isa<nsa; isa++){
+			    double g0[3], gx[3], gy[3];
+			    dcp(&i0sx, INDR(powfs[ipowfs].intstat->i0, isa, jwfs));
+			    dcog(g0, i0sx,0.,0., powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2], powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2+1], 0);
+			    dcp(&i0sy, INDR(powfs[ipowfs].intstat->i0, isa, jwfs));
+			    dadd(&i0sx, 1, INDR(powfs[ipowfs].intstat->gx, isa, jwfs), gshift);
+			    dadd(&i0sy, 1, INDR(powfs[ipowfs].intstat->gy, isa, jwfs), gshift);
+			    dcog(gx, i0sx,0.,0., powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2], powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2+1], 0);
+			    dcog(gy, i0sy,0.,0., powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2], powfs[ipowfs].cogcoeff->p[jwfs]->p[isa*2+1], 0);
+			    //Works in both x/y and r/a coordinate.
+			    theta+=(atan2(gx[1]-g0[1], gx[0]-g0[0])+atan2(gy[1]-g0[1], gy[0]-g0[0]));
+			}
+			theta*=0.5/nsa;
+			pd->deltao=-theta;
+			info("wfs[%d] deltao is %g.\n", iwfs, pd->deltao);
 		    }
 		    dfree(goff);
 		    if(parms->save.dither){
@@ -1028,12 +1058,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 	    
 
 		if(!parms->powfs[ipowfs].lo && parms->recon.alg==0){//no need to update LSR.
-		    setup_recon(simu->recon, parms, powfs);
-#if USE_CUDA
-		    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
-			gpu_update_recon(parms, powfs, simu->recon);
-		    }
-#endif
+		    simu->tomo_update=2;
 		}
 	    }
 	}

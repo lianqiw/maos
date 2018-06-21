@@ -80,7 +80,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs->p[ii0];
 	const double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	double i0thres=MAX(MAX(0.1,parms->powfs[ipowfs].saat)*siglev, rne*10);
+	double i0thres=MAX(0.1*siglev, rne*10);
 	double nea2thres=pixthetax*pixthetay*100;
 	double *srot=NULL;
 	if(powfs[ipowfs].srot){

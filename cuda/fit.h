@@ -25,7 +25,7 @@ namespace cuda_recon{
 class cufit_grid:public cusolve_r,public cucg_t{/*grid based*/
 protected:
     /*the following data are input or intermediate data for the operation*/
-    curecon_geom *grid;
+    const curecon_geom *grid;
     int nfit;
     int idealfit;   /**<Use input from real turbulence instead of tomography output*/
     cugridcell acmap;
@@ -48,7 +48,7 @@ protected:
     void do_ha(const curcell &xin, stream_t &stream);
     void do_hat(curcell &xout,  Real alpha, stream_t &stream);
 public:
-    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, curecon_geom *_grid=0);
+    cufit_grid(const PARMS_T *parms=0, const RECON_T *recon=0, const curecon_geom *_grid=0);
     virtual ~cufit_grid(){
 	info("cufit_grid::destructor\n");
 	delete dir;
