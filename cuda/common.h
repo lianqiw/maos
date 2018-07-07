@@ -18,6 +18,9 @@
 #ifndef AOS_CUDA_COMMON_H
 #define AOS_CUDA_COMMON_H
 #define CUDA_API_PER_THREAD_DEFAULT_STREAM 1
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <cuda.h>
 #include <cublas_v2.h>
 #include <cusparse_v2.h>
@@ -33,7 +36,7 @@ typedef float2 fcomplex;
 #define REDUCE_WRAP_LOG2 3
 #define DIM_REDUCE (WRAP_SIZE*REDUCE_WRAP)
 #define REDUCE_STRIDE (WRAP_SIZE+WRAP_SIZE/2+1)
-#if CUDA_DOUBLE == 1
+#if CUDA_DOUBLE
 typedef double2 Comp;
 typedef double  Real;
 typedef dmat rmat;

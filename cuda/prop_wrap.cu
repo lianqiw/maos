@@ -230,13 +230,10 @@ gpu_map2map_do(PROP_WRAP_T *data, Real **pdirs, Real **ppss, int ndir, int nps, 
 			    Real jy;
 			    const Real y=Z(modf)(dispy+my*yratio, &jy);
 			    const int iy=(int)jy;	
-			    //if(threadIdx.x==0 && threadIdx.y==0){
-				fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
-				fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
-				fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
-				fy[3]=y*y*(cc[3]+cc[4]*y); 
-				//}
-				//__syncthreads();
+			    fy[0]=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
+			    fy[1]=cc[0]+y*y*(cc[1]+cc[2]*y); 
+			    fy[2]=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
+			    fy[3]=y*y*(cc[3]+cc[4]*y); 
 			    for(int mx=ix0; mx<nx; mx+=stepx){
 				Real jx;
 				const Real x=Z(modf)(dispx+mx*xratio, &jx);

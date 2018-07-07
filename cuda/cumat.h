@@ -24,9 +24,13 @@
 template <typename T>
     inline void cuwritedata(const cumat<T> &A, file_t *fp){
     uint32_t magic;
-    if(typeid(T)==typeid(Real)){
+    if(typeid(T)==typeid(float)){
 	magic=M_FLT;
-    }else if(typeid(T)==typeid(Comp)){
+    }else if(typeid(T)==typeid(double)){
+	magic=M_DBL;
+    }else if(typeid(T)==typeid(double2)){
+	magic=M_CMP;
+    }else if(typeid(T)==typeid(float2)){
 	magic=M_ZMP;
     }else{
 	error("Invalid type\n");

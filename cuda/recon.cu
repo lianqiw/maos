@@ -457,7 +457,14 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
     for(int i=0; i<5; i++){
 	FL->solve(lg, rhsg, stream);
 	cuwrite(lg, "GPU_FitSolve%d", i);
-    }    
+    }
+    //Start from the same RHS.
+    cp2gpu(rhsg, rhsc);
+    cuzero(lg, stream);
+    for(int i=0; i<5; i++){
+	FL->solve(lg, rhsg, stream);
+	cuwrite(lg, "GPU_FitSolveCPU%d", i);
+    }
     curcell lhsg;
     FR->Rt(lhsg, 0, rhsg, 1, stream);
     cuwrite(lhsg, "GPU_FitRt");

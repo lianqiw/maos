@@ -1206,9 +1206,9 @@ void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *
 RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs){
     RECON_T * recon = mycalloc(1,RECON_T); 
     if(parms->recon.warm_restart){
-	info("Using warm restart\n");
+	info("Wavefront reconstruction uses warm restart.\n");
     }else{
-	warning("Do not use warm restart\n");
+	warning("Wavefront reconstruction does not use warm restart.\n");
     }
     if(parms->cn2.pair && parms->cn2.pair->nx>0 && !recon->cn2est){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can be fed to the tomography */

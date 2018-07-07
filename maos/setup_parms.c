@@ -1547,7 +1547,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }else{
 		if(isfinite(parms->powfs[ipowfs].hs)){
-		    warning("powfs without llt should infinite hs\n");
+		    warning("powfs without llt should have infinite hs\n");
 		}
 	    }
 	}
@@ -2924,7 +2924,7 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 	    parms->gpu.fit=0;
 	}
 	if(!parms->atm.frozenflow){
-	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
+	    warning("Atm is not frozen flow. Disabled gpu.evl and gpu.wfs.\n");
 	    parms->gpu.evl=0;
 	    parms->gpu.wfs=0;
 	}

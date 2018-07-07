@@ -131,7 +131,7 @@ spchol* chol_factorize(dsp *A_in){
 	warning("Common->status=%d\n", out->c->status);
 	error("Analyze failed\n");
     }
-#if CHOLMOD_SIMPLE
+#if CHOL_SIMPLE
     if(!out->c->final_asis){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
 	warning("Converted to our format.");

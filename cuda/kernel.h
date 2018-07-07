@@ -18,8 +18,7 @@
 #ifndef AOS_CUDA_KERNEL_H
 #define AOS_CUDA_KERNEL_H
 #include "common.h"
-#if defined( __CUDA_ARCH__ )
-#if  __CUDA_ARCH__ <200
+/*
 __device__ inline float atomicAdd(float* address, float val)
 {
     float old = *address;
@@ -33,7 +32,8 @@ __device__ inline float atomicAdd(float* address, float val)
     return old;
 }
 #endif
-#if  __CUDA_ARCH__ <600
+*/
+#if !defined( __CUDA_ARCH__ ) || __CUDA_ARCH__ <600
 __device__ inline double atomicAdd(double* address, double val)
 {
     double old = *address;
@@ -46,7 +46,6 @@ __device__ inline double atomicAdd(double* address, double val)
     } while (assumed != old);
     return old;
 }
-#endif
 #endif
 __device__ inline float atomicMax(float* address, float val)
 {

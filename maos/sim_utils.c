@@ -61,12 +61,6 @@ static mapcell *genatm_do(SIM_T *simu){
 	info("Generating Atmospheric Screen...\n");
 	tic;
 	screens = parms->atm.fun(gs);
-	for(int i=0; i<atm->nps; i++){
-	    screens->p[i]->h=atm->ht->p[i];
-	    double angle=simu->winddir->p[i];
-	    screens->p[i]->vx=cos(angle)*atm->ws->p[i];
-	    screens->p[i]->vy=sin(angle)*atm->ws->p[i];
-	}
 	toc2("Atmosphere ");
     }else{
 	info("Generating Testing Atmosphere Screen\n");
@@ -233,6 +227,14 @@ void genatm(SIM_T *simu){
 	if(simu->atm->nx!=atm->nps) error("ATM Mismatch\n");
     }else{
 	simu->atm=genatm_do(simu);
+    }
+    if(!parms->dbg.atm){
+	for(int i=0; i<atm->nps; i++){
+	    double angle=simu->winddir->p[i];
+	    simu->atm->p[i]->h=parms->atm.ht->p[i];
+	    simu->atm->p[i]->vx=cos(angle)*parms->atm.ws->p[i];
+	    simu->atm->p[i]->vy=sin(angle)*parms->atm.ws->p[i];
+	}
     }
     if(simu->parms->save.atm){
 	writebin(simu->atm,"atm_%d.bin",simu->seed);

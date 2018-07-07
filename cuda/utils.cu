@@ -362,7 +362,7 @@ cp2cpu_same(dmat,dzero,dnew,double)
 cp2cpu_same(cmat,czero,cnew,double2)
 cp2cpu_same(smat,szero,snew,float)
 cp2cpu_same(zmat,zzero,znew,float2)
-#if CUDA_DOUBLE == 0
+#if ! CUDA_DOUBLE 
 void cp2cpu(dmat **out, const curmat &in, cudaStream_t stream){
     add2cpu(out, 0, in, 1, stream, 0);
 }

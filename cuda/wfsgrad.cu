@@ -358,17 +358,17 @@ void gpu_wfsgrad_queue(thread_t *info){
 	}else{
 	    cuzero(phiout, stream);
 	}
-	if((parms->sim.idealwfs || parms->sim.wfsalias)
-	   && !(parms->sim.idealwfs && parms->sim.wfsalias)){
-	    if(parms->sim.idealwfs==2 || parms->sim.wfsalias==2){
-		error("Not implemented in GPU\n");
+
+	if(simu->atm && !parms->sim.idealwfs){
+	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
+	}
+	if(parms->sim.idealwfs || parms->sim.wfsalias){
+        if(parms->sim.idealwfs==2 || parms->sim.wfsalias==2){
+		    error("Not implemented in GPU\n");
 	    }
 	    Real alpha=parms->sim.idealwfs?1:-1;
 	    gpu_dm2loc(phiout, cuwfs[iwfs].loc_dm, cudata->dmproj, parms->ndm,
 		       hs, hc, thetax, thetay, 0, 0, alpha, stream);
-	}
-	if(simu->atm && !parms->sim.idealwfs){
-	    gpu_atm2loc(phiout, cuwfs[iwfs].loc_tel, hs, hc, thetax, thetay, 0, 0, parms->sim.dt, isim, 1, stream);
 	}
 	if(simu->telws){
 	    Real tt=simu->telws->p[isim];

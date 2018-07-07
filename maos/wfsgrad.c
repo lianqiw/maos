@@ -129,10 +129,7 @@ void wfsgrad_iwfs(thread_t *info){
 	dzero(*gradacc);
     }
     /* Now begin ray tracing. */
-    if(parms->sim.idealwfs && !parms->powfs[ipowfs].lo){
-	/* Add subspace of atm projected onto range of DM.*/
-	wfs_ideal_atm(simu, opd, iwfs, 1);
-    }else if(atm){
+    if(atm && !parms->sim.idealwfs){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
@@ -143,12 +140,18 @@ void wfsgrad_iwfs(thread_t *info){
 	    /* have to wait to finish before another phase screen. */
 	    CALL_THREAD(wfs_prop, 0);
 	}
-	/* most expensive 0.10 per LGS for*/
-	if(parms->sim.wfsalias){
-	    /* Remove subspace of atm projected onto range of DM.*/
-	    wfs_ideal_atm(simu, opd, iwfs, -1);
-	}
     }
+    /* 
+       Propagate controllable component of atm (within range of DM) to wfs.
+       wfsalias: atm - controllable.
+       idealwfs: just controllable.
+    */
+    /* timing: most expensive 0.10 per LGS for*/
+    if(parms->sim.wfsalias || parms->sim.idealwfs){
+	double alpha=parms->sim.idealwfs?1:-1;
+	wfs_ideal_atm(simu, opd, iwfs, alpha);
+    }
+
 
     if(simu->telws){/*Wind shake */
 	double tmp=simu->telws->p[isim];

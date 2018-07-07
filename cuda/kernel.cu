@@ -21,7 +21,6 @@
 */
 /*somehow I must test both CUDA_ARCH existance and version.*/
 
-
 __global__ void set_do(Real *a, Real alpha, int n){
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
