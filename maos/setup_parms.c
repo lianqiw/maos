@@ -1226,6 +1226,10 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	if(parms->sim.idealwfs){
 	    error("idealwfs and idealtomo/idealfit conflicts\n");
 	}
+	if(parms->sim.closeloop==1){
+	    warning("closeloop changed to 0.\n");
+	    parms->sim.closeloop=0;
+	}
     }
     if(parms->sim.evlol){
 	parms->recon.split=0;
@@ -2115,15 +2119,17 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("load.aloc contradicts with fit.square. disable fit.square\n");
 	parms->fit.square=0;
     }
-    if(parms->sim.idealfit){
-	parms->recon.psol=1;
-    }else if(!parms->sim.closeloop){
+    if(!parms->sim.closeloop){
 	parms->recon.psol=0;//open loop does not need psol
-    }else if(parms->recon.psol==-1){//automatic.
-	if(parms->recon.alg==0){//MV perfers psol
+    }else{
+	if(parms->sim.idealfit){
 	    parms->recon.psol=1;
-	}else{//LSR perfers cl
-	    parms->recon.psol=0;
+	}else if(parms->recon.psol==-1){//automatic.
+	    if(parms->recon.alg==0){//MV perfers psol
+		parms->recon.psol=1;
+	    }else{//LSR perfers cl
+		parms->recon.psol=0;
+	    }
 	}
     }
     if(parms->recon.split){
