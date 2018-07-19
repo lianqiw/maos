@@ -255,7 +255,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 		dmat *eye=dnew(ntotact, ntotact);
 		daddI(eye, 1);
 		FLId=dnew(ntotact, ntotact);
-		muv_direct_solve_mat(&FLId, &recon->FL, eye);
+		muv_direct_solve_mat(&FLId, &recon->fit->FL, eye);
 		dfree(eye);
 		toc("Fit CBS");tic;
 	    }
@@ -263,7 +263,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon){
 	    case 1://Use GPU.
 		break;
 	    case 2:
-		FLId=dref(recon->FL.MI);
+		FLId=dref(recon->fit->FL.MI);
 		break;
 	    default:
 		error("Invalid fit.alg=%d\n", parms->fit.alg);

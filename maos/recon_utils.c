@@ -482,53 +482,50 @@ void TomoL(dcell **xout, const void *A,
 */
 void FitR(dcell **xout, const void *A, 
 	  const dcell *xin, const double alpha){
-    const RECON_T *recon=(const RECON_T *)A;
-    dcell *xp=NULL;
+    const FIT_T *fit=(const FIT_T *)A;
+    const int nfit=fit->thetax->nx;
+    dcell *xp=dcellnew(nfit,1);
+
     if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
 	const PARMS_T *parms=global->parms;
 	SIM_T *simu=global->simu;
-	int isim=simu->reconisim;
+	int isim=fit->notrecon?simu->isim:simu->reconisim;
 	const double atmscale=simu->atmscale?simu->atmscale->p[isim]:1;
-	const int nfit=parms->fit.nfit;
-	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs->p[ifit];
-	    xp->p[ifit]=dnew(recon->floc->nloc,1);
+	    double hs=fit->hs->p[ifit];
+	    xp->p[ifit]=dnew(fit->floc->nloc,1);
 	    for(int ips=0; ips<parms->atm.nps; ips++){
-		const double ht = parms->atm.ht->p[ips];
+		const double ht = parms->atm.ht->p[ips]-fit->floc->ht;
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*parms->sim.dt;
-		displace[1]=parms->fit.thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*parms->sim.dt;
-		prop_grid(simu->atm->p[ips], recon->floc, xp->p[ifit]->p, 
+		displace[0]=fit->thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*parms->sim.dt;
+		displace[1]=fit->thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*parms->sim.dt;
+		prop_grid(simu->atm->p[ips], fit->floc, xp->p[ifit]->p, 
 			  atmscale, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
-    }else if(recon->HXF){
-	dcellmm(&xp, recon->HXF, xin, "nn", 1.);
+    }else if(fit->HXF){
+	dcellmm(&xp, fit->HXF, xin, "nn", 1.);
     }else{/*Do the ray tracing from xloc to ploc */
-	const PARMS_T *parms=global->parms;
-	const int nfit=parms->fit.nfit;
-	const int npsr=recon->npsr;
-	xp=dcellnew(nfit,1);
+	const int npsr=fit->xloc->nx;
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs->p[ifit];
-	    xp->p[ifit]=dnew(recon->floc->nloc,1);
+	    double hs=fit->hs->p[ifit];
+	    xp->p[ifit]=dnew(fit->floc->nloc,1);
 	    for(int ips=0; ips<npsr; ips++){
-		const double ht = recon->ht->p[ips];
+		const double ht = fit->xloc->p[ips]->ht-fit->floc->ht;
 		double scale=1-ht/hs;
 		double displace[2];
-		displace[0]=parms->fit.thetax->p[ifit]*ht;
-		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		prop_nongrid(recon->xloc->p[ips], xin->p[ips]->p, recon->floc, 
+		displace[0]=fit->thetax->p[ifit]*ht;
+		displace[1]=fit->thetay->p[ifit]*ht;
+		prop_nongrid(fit->xloc->p[ips], xin->p[ips]->p, fit->floc, 
 			     xp->p[ifit]->p, 1, displace[0], displace[1], scale, 0, 0);
 	    }
 	}
     }
     //writebin(xp, "CPU_FitR_x1");
-    applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
+    applyW(xp, fit->W0, fit->W1, fit->wt->p);
     //writebin(xp, "CPU_FitR_x2");
-    dcellmm(xout, recon->HA, xp, "tn", alpha);
+    dcellmm(xout, fit->HA, xp, "tn", alpha);
     //writebin(*xout, "CPU_FitR_x3");
     dcellfree(xp);
 }
@@ -538,17 +535,17 @@ void FitR(dcell **xout, const void *A,
    directions.  */
 void FitL(dcell **xout, const void *A, 
 	  const dcell *xin, const double alpha){
-    const RECON_T *recon=(const RECON_T *)A;
+    const FIT_T *fit=(const FIT_T *)A;
     dcell *xp=NULL;
-    dcellmm(&xp, recon->HA, xin, "nn", 1.);
-    applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
-    dcellmm(xout, recon->HA, xp, "tn", alpha);
+    dcellmm(&xp, fit->HA, xin, "nn", 1.);
+    applyW(xp, fit->W0, fit->W1, fit->wt->p);
+    dcellmm(xout, fit->HA, xp, "tn", alpha);
     dcellfree(xp);xp=NULL;
-    dcellmm(&xp,recon->fitNW, xin, "tn", 1);
-    dcellmm(xout,recon->fitNW, xp, "nn", alpha);
+    dcellmm(&xp,fit->NW, xin, "tn", 1);
+    dcellmm(xout,fit->NW, xp, "nn", alpha);
     dcellfree(xp);
-    if(recon->actslave){
-	dcellmm(xout, recon->actslave, xin, "nn", alpha);
+    if(fit->actslave){
+	dcellmm(xout, fit->actslave, xin, "nn", alpha);
     }
 }
 

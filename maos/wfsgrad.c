@@ -38,26 +38,24 @@
 #else
 #define TIM(A)
 #endif
+
 /**
    Propagate atm onto WFS subaperture grid, and then to fine lenslet grid.
  */
-static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
+void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
+    const int jwfs=parms->powfs[ipowfs].wfsind->p[iwfs];
     const double hs=parms->wfs[iwfs].hs;
     const double hc=parms->powfs[ipowfs].hc;
     if(parms->sim.wfsalias==2 || parms->sim.idealwfs==2){
-	dmat *wfsopd0=dnew(powfs[ipowfs].saloc->nloc, 1);
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    const double ht=parms->atm.ht->p[ips]-hc;
-	    const double dispx=ht*parms->wfs[iwfs].thetax-simu->atm->p[ips]->vx*parms->sim.dt*simu->isim;
-	    const double dispy=ht*parms->wfs[iwfs].thetay-simu->atm->p[ips]->vy*parms->sim.dt*simu->isim;
-	    const double scale=1-ht/hs;
-	    prop_grid(simu->atm->p[ips], powfs[ipowfs].saloc, wfsopd0->p, 1., dispx, dispy, scale, 1, 0, 0);
-	}
-	prop_nongrid(powfs[ipowfs].saloc, wfsopd0->p, powfs[ipowfs].loc, opd->p, alpha, 0, 0, 1,  0, 0);
-	dfree(wfsopd0);
+	loc_t *aloc=powfs[ipowfs].fit[jwfs].aloc->p[0];
+	dcell *wfsopd=dcellnew(1,1); wfsopd->p[0]=dnew(aloc->nloc, 1);
+	FIT_T *fit=&powfs[ipowfs].fit[jwfs];
+	muv_solve(&wfsopd, &fit->FL, &fit->FR, 0);
+	prop_nongrid(aloc, wfsopd->p[0]->p, powfs[ipowfs].loc, opd->p, alpha, 0, 0, 1,  0, 0);
+	dcellfree(wfsopd);
     }else{
 	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -129,7 +127,8 @@ void wfsgrad_iwfs(thread_t *info){
 	dzero(*gradacc);
     }
     /* Now begin ray tracing. */
-    if(atm && !parms->sim.idealwfs){
+    if(atm && ((!parms->sim.idealwfs && !parms->powfs[ipowfs].lo)
+	       || (!parms->sim.wfsalias && parms->powfs[ipowfs].lo))){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
@@ -147,7 +146,7 @@ void wfsgrad_iwfs(thread_t *info){
        idealwfs: just controllable.
     */
     /* timing: most expensive 0.10 per LGS for*/
-    if(parms->sim.wfsalias || parms->sim.idealwfs){
+    if(!parms->powfs[ipowfs].lo && (parms->sim.wfsalias || parms->sim.idealwfs)){
 	double alpha=parms->sim.idealwfs?1:-1;
 	wfs_ideal_atm(simu, opd, iwfs, alpha);
     }
@@ -219,7 +218,7 @@ void wfsgrad_iwfs(thread_t *info){
 	zfarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
     }
     if(parms->plot.run){
-	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
+	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,parms->dbg.draw_opdmax->p,
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
     }
     if(do_geom){
@@ -786,11 +785,13 @@ void wfsgrad_post(thread_t *info){
 	}
 	if(dtrat_output){
 	    if(parms->plot.run>1 && (simu->gradoff->p[iwfs]|| parms->dbg.gradoff)){
-		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
+		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p,
+			parms->dbg.draw_gmax->p,
 			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
 			"raw x %d",  iwfs);
 		drawopd("Gcly", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p+
-			simu->powfs[ipowfs].saloc->nloc, NULL,
+			simu->powfs[ipowfs].saloc->nloc,
+			parms->dbg.draw_gmax->p,
 			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
 			"raw y %d",  iwfs);
 	    }
@@ -828,11 +829,13 @@ void wfsgrad_post(thread_t *info){
 		zfarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
-		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p, NULL,
+		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p,
+			parms->dbg.draw_gmax->p,
 			"WFS Closeloop Gradients (x)","x (m)", "y (m)",
 			"x %d",  iwfs);
 		drawopd("Gcly", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p+
-			simu->powfs[ipowfs].saloc->nloc, NULL,
+			simu->powfs[ipowfs].saloc->nloc,
+			parms->dbg.draw_gmax->p,
 			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
 			"y %d",  iwfs);
 	    }
@@ -1089,9 +1092,11 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 		
 		if(parms->plot.run){
 		    const int nsa=simu->powfs[ipowfs].saloc->nloc;
-		    drawopd("Goffx",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p,NULL,
+		    drawopd("Goffx",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p,
+			    parms->dbg.draw_gmax->p,
 			    "WFS Offset (x)","x (m)", "y (m)", "x %d",  iwfs);
-		    drawopd("Goffy",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p+nsa, NULL,
+		    drawopd("Goffy",simu->powfs[ipowfs].saloc, simu->gradoff->p[iwfs]->p+nsa,
+			    parms->dbg.draw_gmax->p,
 			    "WFS Offset (y)","x (m)", "y (m)", "y %d",  iwfs);
 		}
 	    }

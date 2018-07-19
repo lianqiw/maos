@@ -54,6 +54,7 @@ int X(spcheck)(const X(sp) *sp);\
 void X(spscale)(X(sp) *A, const T beta);\
 void X(spscalex)(X(sp) *A, const X(mat) *xs);	\
 void X(spscaley)(X(sp) *A, const X(mat) *ys);	\
+X(spcell) *X(spcellref)(const X(spcell)*in);\
 X(spcell) *X(spcell_cast)(const void *A_);\
 void X(spcellscale)(X(spcell) *A, const T beta);\
 X(sp)* X(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\

@@ -78,12 +78,7 @@ void maos_setup(const PARMS_T *parms){
 	setup_powfs_phy(parms, powfs);
 	/*calibrate gradient offset*/
 	setup_powfs_calib(parms, powfs);
-    }
-    if(parms->plot.setup){
-	plot_setup(parms, powfs, aper, recon);
-    }
-    global->setupdone=1;
-    if(!parms->sim.evlol){
+    
 #if USE_CUDA
 	extern int cuda_dedup;
 	cuda_dedup=1;
@@ -95,8 +90,11 @@ void maos_setup(const PARMS_T *parms){
 	setup_recon_prep2(recon, parms, aper, powfs);
 	//Don't put this inside parallel, otherwise svd will run single threaded.
 	setup_recon(recon, parms, powfs);
-	if(parms->recon.alg==0 || parms->sim.dmproj){
+	if(parms->recon.alg==0 || parms->sim.dmproj || parms->sim.ncpa_calib){
 	    setup_recon_fit(recon, parms);
+	}
+	if(parms->sim.wfsalias==2 || parms->sim.idealwfs==2){
+	    setup_powfs_fit(powfs, recon, parms);
 	}
 	if(parms->recon.alg==0 && parms->nmoao){
 	    setup_recon_moao(recon, parms);
@@ -136,6 +134,10 @@ void maos_setup(const PARMS_T *parms){
 	setup_recon_mvm(parms, recon, powfs);
     }
     setup_recon_post(recon, parms, aper);
+    if(parms->plot.setup){
+	plot_setup(parms, powfs, aper, recon);
+    }
+    global->setupdone=1;
     if(parms->save.setup && chdir("..")){}
     /*
       Before entering real simulation, make sure to delete all variables that

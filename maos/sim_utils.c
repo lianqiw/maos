@@ -1105,16 +1105,19 @@ static void init_simu_dm(SIM_T *simu){
 	}
     }
     /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
+    simu->dmerr_store=dcellnew3(parms->ndm,1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
     simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
-    if(parms->recon.psol){
+    if(parms->fit.cgwarm){
 	simu->dmfit=dcellnew3(parms->ndm,1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
+    }else{
+	simu->dmfit=simu->dmerr_store;
     }
     if(parms->sim.lpttm>EPS){
 	simu->ttmreal=dnew(2,1);
     }
     simu->dmrealsq=mapcellnew(parms->ndm, 1);
-    simu->dmerr_store=dcellnew3(parms->ndm,1, parms->recon.modal?recon->anmod->p:recon->anloc->p, NULL);
+
     if(parms->sim.dmproj){
 	simu->dmproj=dcellnew3(parms->ndm,1, recon->anloc->p, NULL);
 	simu->dmprojsq=mapcellnew(parms->ndm, 1);
@@ -1215,9 +1218,7 @@ static void init_simu_dm(SIM_T *simu){
     if(parms->save.dm){
 	save->dmerr=zfarr_init(nrstep, 1,"dmerr_%d.bin", seed);
 	save->dmint=zfarr_init(nrstep, 1,"dmint_%d.bin", seed);
-	if(parms->recon.psol){
-	    save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
-	}
+	save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	if(parms->recon.split){
 	    save->Merr_lo=zfarr_init(nstep-parms->sim.dtrat_lo, 1, "Merr_lo_%d.bin", seed);
 	    if(!parms->sim.fuseint){
@@ -1500,7 +1501,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmproj);
     cellfree(simu->wfspsol);
     dcellfree(simu->dmcmd);
-    dcellfree(simu->dmcmd0);
+    dcellfree(simu->dmtmp);
     dcellfree(simu->dmadd);
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
@@ -1508,8 +1509,10 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerrts);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
+    if(simu->dmfit!=simu->dmerr_store){
+	dcellfree(simu->dmfit);
+    }
     dcellfree(simu->dmerr_store);
-    dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo_store);
     dcellfree(simu->fsmerr_store);

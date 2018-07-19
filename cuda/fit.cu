@@ -71,14 +71,14 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon
 	dir[ifit].skip=0;
     }
     /*Various*/
-    if(recon->fitNW){
-	dmat *_fitNW=dcell2m(recon->fitNW);
+    if(recon->fit->NW){
+	dmat *_fitNW=dcell2m(recon->fit->NW);
 	cp2gpu(fitNW, _fitNW);
 	dfree(_fitNW);
 	dotNW=curmat(fitNW.Ny(), 1);
     }
-    if(recon->actslave){
-	cp2gpu(actslave, recon->actslave, 1);
+    if(recon->fit->actslave){
+	cp2gpu(actslave, recon->fit->actslave, 1);
     }
     if(parms->fit.cachedm){
 	long acnx[ndm], acny[ndm];
@@ -96,7 +96,7 @@ cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon
 	}
 	xcache=curcell(npsr, 1, xcnx, xcny);
     } 
-    cp2gpu(fitwt, recon->fitwt);
+    cp2gpu(fitwt, recon->fit->wt);
  
     opdfit=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);
     opdfit2=curcell(nfit, 1, grid->fmap.nx, grid->fmap.ny);

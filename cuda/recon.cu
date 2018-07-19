@@ -107,12 +107,11 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    return; //Use CPU to assemble MVM
 	}
     }
-  
     if(parms->gpu.fit){
 	switch(parms->gpu.fit){
 	case 1:
 	    FR=new cusolve_sparse(parms->fit.maxit, parms->recon.warm_restart,
-				  &recon->FR, &recon->FL);
+				  &recon->fit->FR, &recon->fit->FL);
 	    break;
 	case 2:
 	    FR=new cufit_grid(parms, recon, grid);
@@ -122,13 +121,13 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	}
 	switch(parms->fit.alg){
 	case 0:
-	    FL=new cusolve_cbs(recon->FL.C, recon->FL.Up, recon->FL.Vp);
+	    FL=new cusolve_cbs(recon->fit->FL.C, recon->fit->FL.Up, recon->fit->FL.Vp);
 	    break;
 	case 1:
 	    FL=dynamic_cast<cusolve_l*>(FR);
 	    break;
 	case 2:
-	    FL=new cusolve_mvm(recon->FL.MI);
+	    FL=new cusolve_mvm(recon->fit->FL.MI);
 	    break;
 	default:
 	    error("Invalid");
@@ -426,20 +425,20 @@ void curecon_t::fit_test(SIM_T *simu){	//Debugging.
 	cp2gpu(opdr_vec, simu->opdr);
     }
     writebin(simu->opdr, "opdr");
-    muv(&rhsc, &recon->FR, simu->opdr, 1);
+    muv(&rhsc, &recon->fit->FR, simu->opdr, 1);
     writebin(rhsc, "CPU_FitR");
-    muv(&lc, &recon->FL, rhsc, 1);
+    muv(&lc, &recon->fit->FL, rhsc, 1);
     writebin(lc, "CPU_FitL");
-    muv(&lc, &recon->FL, rhsc, -1);
+    muv(&lc, &recon->fit->FL, rhsc, -1);
     writebin(lc, "CPU_FitL2");
     dcellzero(lc);
     for(int i=0; i<5; i++){
-	muv_solve(&lc, &recon->FL, NULL, rhsc);
+	muv_solve(&lc, &recon->fit->FL, NULL, rhsc);
 	writebin(lc, "CPU_FitSolve%d", i);
     }
     dcell *lhs=NULL;
-    if(recon->FR.M){
-	muv_trans(&lhs, &recon->FR, rhsc, 1);
+    if(recon->fit->FR.M){
+	muv_trans(&lhs, &recon->fit->FR, rhsc, 1);
 	writebin(lhs, "CPU_FitRt");
     }
     curcell rhsg;

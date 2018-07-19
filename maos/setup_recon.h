@@ -23,6 +23,8 @@
 RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs);
 void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper, const POWFS_T *powfs);
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms);
+void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms);
+void free_fit(FIT_T *fit);
 //Called by setup_recon.c
 void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
@@ -41,5 +43,6 @@ void test_recon_GX(RECON_T *recon, const PARMS_T *parms,
 void test_recon_GA(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);
 void setup_recon_mvst(RECON_T *recon, const PARMS_T *parms);
-
+void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_dither_dm(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms);
 #endif

@@ -14,6 +14,7 @@ simu_all=list();
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
           'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h']
 
+#Obtain the definition of all structs
 structs=maos.parse_structs(srcdir, headlist)
 
 simu=dict()
@@ -22,10 +23,13 @@ simu=structs['SIM_T']
 rdone=dict()
 todo=list()
 rdone['SIM_T']=1
-for level in range(5):
+maxlevel=10
+for level in range(maxlevel):
     todo.append(list())
+
+#Expand the simu struct into more basic types interatively.
 todo[0].append(simu)
-def replace_struct(struct, level):
+def expand_struct(struct, level):
     for key in struct:
         val0=struct[key]
         val=val0;
@@ -35,24 +39,24 @@ def replace_struct(struct, level):
             ispointer=1
         else:
             ispointer=0
-
+        if type(val)!=type(''):
+            print('Warning: please handle\n')
+            continue
         if val in rdone:
             pass #avoid repeat
-        elif val in structs:
+        elif val in structs: #requires further expansion.
             if val=='parms' or val=='recon' or val=='aper' or val=='powfs':
                 rdone[val]=1
             struct[key]=[val0, structs[val]]
+
             if type(structs[val])==type(dict()): #other types
-                todo[level].append(struct[key][1])
+                todo[level].append(structs[val])
         else:
             struct[key]=val0
 
-for level in range(5):
-    if len(todo)<=level:
-        continue
+for level in range(maxlevel):
     for struct in todo[level]:
-        replace_struct(struct, level+1)
-
+        expand_struct(struct, level+1)
 
 def var2mx(mexname, cname, ctype):
     out=""

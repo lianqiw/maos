@@ -211,7 +211,7 @@ INLINE dsp *mx2dsp(const mxArray *A){
 INLINE loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
-    loc->ref=1;
+    loc->nref=malloc(sizeof(int)); loc->nref[0]=1;
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;

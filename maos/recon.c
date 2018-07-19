@@ -90,7 +90,7 @@ void tomofit(dcell **dmout, SIM_T *simu, dcell *gradin){
 	}else
 #endif
 	{
-	    simu->cgres->p[1]->p[isim]=muv_solve(dmout, &recon->FL, &recon->FR, simu->opdr);
+	    simu->cgres->p[1]->p[isim]=muv_solve(dmout, &recon->fit->FL, &recon->fit->FR, simu->opdr);
 	}
 	toc_tm("Fitting");
     }
@@ -276,12 +276,11 @@ void reconstruct(SIM_T *simu){
     }
     if(hi_output || parms->sim.idealfit || parms->sim.idealtomo){
 	simu->dmerr=simu->dmerr_store;
-	dcell *dmout, *gradin;
+	dcell *dmout=simu->dmfit;//always output to dmfit to enable warm restart.
+	dcell *gradin;
 	if(parms->recon.psol){
-	    dmout=simu->dmfit;
 	    gradin=simu->gradlastol;
 	}else{
-	    dmout=simu->dmerr;
 	    gradin=simu->gradlastcl;
 	}
 	if(!dmout) error("dmout cannot be empty\n");
@@ -318,16 +317,18 @@ void reconstruct(SIM_T *simu){
 		error("recon.alg=%d is not recognized\n", parms->recon.alg);
 	    }
 	}
+	if(simu->dmfit!=simu->dmerr){
+	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
+	}
 	if(parms->recon.psol){
 	    //form error signal in PSOL mode
-	    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 	    if(0){
 		warning_once("temporarily disable recon->actinterp\n");
 	    }else if(simu->recon->actinterp){
 		//extrapolate DM fitting result to float and edge actuators
-		dcellcp(&simu->dmcmd0, simu->dmerr);
+		dcellcp(&simu->dmtmp, simu->dmerr);
 		dcellzero(simu->dmerr);
-		dcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+		dcellmm(&simu->dmerr, simu->recon->actinterp, simu->dmtmp, "nn", 1);
 	    }
 
 	    dcell *dmpsol;
@@ -353,21 +354,23 @@ void reconstruct(SIM_T *simu){
 	    if(parms->recon.alg==0){
 		for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
 		    if(simu->opdr->p[i]){
-			drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, NULL,
+			drawopd("opdr", recon->xloc->p[i], simu->opdr->p[i]->p, parms->dbg.draw_opdmax->p,
 				"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
 		    }
 		}
-		for(int i=0; simu->dmfit && i<simu->dmfit->nx; i++){
-		    if(simu->dmfit->p[i]){
-			drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p,NULL,
-				"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+		if(simu->dmfit && simu->dmfit!=simu->dmerr){
+		    for(int i=0; i<simu->dmfit->nx; i++){
+			if(simu->dmfit->p[i]){
+			    drawopd("DM", recon->aloc->p[i], simu->dmfit->p[i]->p, parms->dbg.draw_opdmax->p,
+				    "DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+			}
 		    }
 		}
 	    }
 	    if(!parms->recon.modal){
 		for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
 		    if(simu->dmerr->p[idm]){
-			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p,NULL,
+			drawopd("DM",recon->aloc->p[idm], simu->dmerr->p[idm]->p, parms->dbg.draw_opdmax->p,
 				"DM Error Signal (Hi)","x (m)","y (m)",
 				"Err Hi %d",idm);
 		    }

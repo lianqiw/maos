@@ -414,6 +414,7 @@ typedef struct FIT_CFG_T{
     int indoa;       /**<Index of on axis point.*/
     int cachedm;     /**<Cache DM command in intermediate plane*/
     int cachex;      /**<Cache X (xloc) in intermediate plane*/
+    int cgwarm;      /**<Warm restart in CG. inherits recon.warm_restart*/
 }FIT_CFG_T;
 /**
    contains input parameters for the least square reconstructor.
@@ -619,6 +620,8 @@ typedef struct DBG_CFG_T{
     dcell *dmoff;     /**<DM offset for simulating turbulence on the DM. dimension: ndm*nstep*/
     dcell *gradoff;   /**<Introduced additional gradient offset. dimension: nwfs*nstep*/
     int twfsflag;      /**<use TWFS to control 0: all modes, 1: radial only*/
+    dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
+    dmat* draw_gmax;  /**<Set zlim for gradient drawing*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -660,9 +663,9 @@ typedef struct LOAD_CFG_T{
     char *ploc;      /**<load ploc for recon from*/
     char *floc;      /**<load floc for recon from*/
     char *cxx;       /**<load laplacian from to do Cxx^-1 in tomo.*/
-    char *HXF;       /**<load HXF from.*/
+    //char *HXF;       /**<load HXF from.*/
     char *HXW;       /**<load HXW from.*/
-    char *HA;        /**<load HA from.*/
+    //char *HA;        /**<load HA from.*/
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
     char *mvm;       /**<load mvm from.*/

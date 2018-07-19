@@ -121,9 +121,9 @@ void maos_isim(int isim){
     OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
 	    /* temporarily disable FR.M so that Mfun is used.*/
-	    cell *FRM=recon->FR.M; recon->FR.M=NULL; 
-	    muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
-	    recon->FR.M=FRM;/*set FR.M back*/
+	    cell *FRM=recon->fit->FR.M; recon->fit->FR.M=NULL; 
+	    muv_solve(&simu->dmproj, &recon->fit->FL, &recon->fit->FR, NULL);
+	    recon->fit->FR.M=FRM;/*set FR.M back*/
 	    if(parms->save.dm){
 		zfarr_dcell(simu->save->dmproj, simu->isim, simu->dmproj);
 	    }

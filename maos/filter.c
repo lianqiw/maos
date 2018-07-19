@@ -281,9 +281,9 @@ static void filter_cl(SIM_T *simu){
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
-    dcellcp(&simu->dmcmd0,simu->dmint->mint->p[0]);
+    dcellcp(&simu->dmtmp,simu->dmint->mint->p[0]);
     if(!parms->sim.fuseint){
-	addlow2dm(&simu->dmcmd0,simu,simu->Mint_lo->mint->p[0], 1);
+	addlow2dm(&simu->dmtmp,simu,simu->Mint_lo->mint->p[0], 1);
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	//Record dmpsol for this time step for each powfs before updating it (z^-1).
@@ -292,17 +292,17 @@ static void filter_cl(SIM_T *simu){
 	double alpha=(isim % parms->powfs[ipowfs].dtrat == 0)?0:1;
 	dcelladd(&simu->wfspsol->p[ipowfs], alpha, simu->dmpsol, 1./parms->powfs[ipowfs].dtrat);
     }
-    dcellcp(&simu->dmpsol, simu->dmcmd0);
+    dcellcp(&simu->dmpsol, simu->dmtmp);
     if(parms->recon.modal){
 	dcellzero(simu->dmcmd);
-	dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmcmd0, "nn", 1);
+	dcellmm(&simu->dmcmd, simu->recon->amod, simu->dmtmp, "nn", 1);
 	//convert DM command from modal to zonal spae
     }else if(simu->recon->actinterp && !parms->recon.psol){
 	//Extrapolate to edge actuators
 	dcellzero(simu->dmcmd);
-	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
     }else{
-	dcellcp(&simu->dmcmd, simu->dmcmd0);
+	dcellcp(&simu->dmcmd, simu->dmtmp);
     }
     
     //The DM commands are always on zonal modes from this moment
@@ -455,9 +455,9 @@ static void filter_ol(SIM_T *simu){
     }
     //Extrapolate to edge actuators
     if(simu->recon->actinterp && !parms->recon.modal){
-	dcellcp(&simu->dmcmd0, simu->dmcmd);
+	dcellcp(&simu->dmtmp, simu->dmcmd);
 	dcellzero(simu->dmcmd);
-	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmcmd0, "nn", 1);
+	dcellmm(&simu->dmcmd, simu->recon->actinterp, simu->dmtmp, "nn", 1);
     }
     if(simu->ttmreal){
 	ttsplit_do(simu->recon, simu->dmcmd, simu->ttmreal, parms->sim.lpttm);
@@ -533,7 +533,7 @@ void filter_dm(SIM_T *simu){
     turb_dm(simu);
     update_dm(simu);
 
-    dcellzero(simu->dmerr);
+    //dcellzero(simu->dmerr);//why?
     simu->dmerr=0;//mark no output.
     dcellzero(simu->Merr_lo);
     simu->Merr_lo=0;

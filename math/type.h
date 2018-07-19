@@ -154,7 +154,7 @@ typedef struct loc_t{
     locstat_t *stat;/**<points to column statistics*/
     map_t *map;    /**< point to the map used for identifying neihboring points.*/
     int npad;      /*padding when create map*/
-    int ref;       /**<Data is referenced*/
+    int *nref;       /**<Reference counting*/
 }loc_t;
 /**
    low left point of each subaperture.
@@ -176,6 +176,7 @@ typedef struct pts_t{
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     map_t *map;    /**<treat pts_t as loc_t and compute the MAP*/
     int npad;      /*padding when create map*/
+    int *nref;     /**<Reference counting*/
     int nx;        /**<number of cols per subaperture*/
     int ny;        /**<number of rows per subaperture*/
     double dx;     /**<sampling of points in each subaperture*/

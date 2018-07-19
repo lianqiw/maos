@@ -14,6 +14,7 @@ include $(top_srcdir)/aminclude.am
 #dist-hook:
 #	rm -rf $(distdir)/configure.ac 
 
+#For documentation only.
 all-local:$(srcdir)/math/tmp.c
 $(srcdir)/math/tmp.c:$(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c \
 	$(srcdir)/math/spbin.c $(srcdir)/math/sp.c

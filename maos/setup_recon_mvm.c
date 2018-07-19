@@ -147,10 +147,10 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 	dcellzero(RRT);
 	/*Apply F_L*/
 	eye->p[iact]=1;
-	muv_solve(&FLI, &recon->FL, NULL, eyec);
+	muv_solve(&FLI, &recon->fit->FL, NULL, eyec);
 	eye->p[iact]=0;
 	/*Apply F_R'*/
-	muv_trans(&FRT, &recon->FR, FLI, 1);
+	muv_trans(&FRT, &recon->fit->FR, FLI, 1);
 	//toc2("fit");
 	/*Apply R_L*/
 	dcellzero(RLT);//warm restart.

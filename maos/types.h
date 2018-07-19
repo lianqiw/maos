@@ -139,7 +139,8 @@ typedef struct POWFS_T{
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     locfft_t *fieldstop;/**<For computing field stop (aka focal plane mask, spatial filter)*/
-    struct PYWFS_T *pywfs;     /**<For pyramid WFS*/
+    struct PYWFS_T *pywfs;/**<For pyramid WFS*/
+    struct FIT_T *fit;  /**<Fit turbulence to lenslet grid. For aliasing computation.*/
 }POWFS_T;
 
 /**
@@ -211,7 +212,7 @@ typedef struct MOAO_T{
 typedef struct INVPSD_T{
     dcell *invpsd;    /**<inverse of the turbulence PSF*/
     ccell *fftxopd;   /**<temporary array to apply inverse PSD in Fourier domain.*/
-    loccell *xloc;      /**<points to recon->xloc*/
+    loccell *xloc;     /**<points to recon->xloc*/
     int     square;    /**<whether opd is on square xloc or not.*/
 }INVPSD_T;
 /**
@@ -227,6 +228,38 @@ typedef struct FRACTAL_T{
     double  scale;     /**<An additional scaling factor*/
     long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
+/**
+   Holding parameters for DM fitting.
+ */
+typedef struct FIT_T{
+    //Input data from recon and parms. Do not free.
+    loccell *xloc;     /**<Input grid for DM fitting*/
+    loc_t   *floc;     /**<intermediate pupil plane grid. */
+    loccell *aloc;     /**<Destination grid (DM actuator)*/
+    dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
+    dmat *W1;          /**<floc weighting for circle of diam aper.d*/
+    dmat *thetax;      /**<DM fitting directions*/
+    dmat *thetay;      /**<DM fitting directions*/
+    dmat *wt;          /**<DM fitting weights*/
+    dmat *hs;          /**<DM fitting GS height*/
+    lcell *actstuck;
+    lcell *actfloat;    
+    //Flags
+    char **misreg;
+    FIT_CFG_T flag;
+    int notrecon;      /**<Not for reconstruction*/
+    //Generated data
+    dspcell *HXF;      /**<ray tracing propagator from xloc to floc for fitting directions.*/
+    dspcell *HA;       /**<ray tracing from aloc to floc for fitting directions.*/
+    dcell *actcpl;
+    dspcell* actinterp;     /**<actautor interpolation*/
+    dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
+    dcell *NW;         /**<null modes for DM fit.*/
+    
+    MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
+    MUV_T FL;          /**<DM fit left hand size matrix*/
+    
+}FIT_T;
 
 /**
    contains data related to wavefront reconstruction and DM fitting. */
@@ -264,13 +297,12 @@ typedef struct RECON_T{
     dcell *amod;       /**<Zernike/KL modes defined on aloc for modal control*/
     lmat *anmod;       /**<Sizeof of amod*/
 
-    //loccell *gloc;        /**<loc used to generate GP*/
-    //dcell *gamp;        /**<amplitude defined on gloc*/
+    FIT_T *fit;        /**<Holding data and parameters for DM fitting.*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/
-    dmat *fitwt;       /**<fit weighting in each direction.*/
+    //dmat *fitwt;       /**<fit weighting in each direction.*/
     dspcell *L2;        /**<Laplacian square regularization.*/
     dspcell *L2save;    /**<save old L2 to update the tomography matrix.*/
     INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
@@ -292,8 +324,6 @@ typedef struct RECON_T{
     dspcell *GAhi;      /**<GA of high order WFS.*/
     dcell *GM;          /**<GM for all WFS.*/
     dcell *GMhi;        /**<GM for high order WFS.*/
-    dspcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
-    dspcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
     dspcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
@@ -304,11 +334,8 @@ typedef struct RECON_T{
     dspcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *DMTT;       /**<DM tip/tilt mode.*/
     dcell *DMPTT;      /**<DM tip/tilt reconstructor.*/
-    dcell *fitNW;      /**<null modes for DM fit.*/
     dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
-    dspcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     dspcell *actinterp; /**<Interpolation operator for floating actuators and edge actuators. Slaving does not work well in CG. */
-    double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
     dspcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
     dspcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
     dspcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
@@ -320,8 +347,6 @@ typedef struct RECON_T{
     
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
     MUV_T RL;          /**<tomography left hand side matrix*/
-    MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
-    MUV_T FL;          /**<DM fit left hand size matrix*/
     MUV_T LR;          /**<least square reconstructor rhs*/
     MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
     dmat *MVM;        /**<Matrix vector multiply*/
@@ -509,7 +534,7 @@ typedef struct SIM_T{
     dmat *restwfs;    /**<Truth wfs output*/
     /*DM commands.*/
     dcell *dmpsol;     /**<DM command for PSOL feedback*/
-    dcell *dmcmd0;     /**<This is the DM command before extrapolation.*/
+    dcell *dmtmp;      /**<Holds a temporary dm vector.*/
     dcell *dmcmd;      /**<This is the final DM command send to DME (known to RTC).*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in

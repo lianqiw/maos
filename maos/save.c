@@ -69,9 +69,9 @@ void save_gradol(SIM_T *simu){
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(!parms->powfs[ipowfs].psol || !simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
-	    drawopd("Gpolx",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p,NULL,
+	    drawopd("Gpolx",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p, parms->dbg.draw_opdmax->p,
 		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)", "x %d",  iwfs);
-	    drawopd("Gpoly",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p+nsa, NULL,
+	    drawopd("Gpoly",powfs[ipowfs].saloc, simu->gradlastol->p[iwfs]->p+nsa, parms->dbg.draw_opdmax->p,
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
@@ -112,7 +112,7 @@ void save_recon(SIM_T *simu){
 	if(simu->dm_evl){
 	    int imoao=parms->evl.moao;
 	    for(int ievl=0; ievl<parms->evl.nevl && imoao>=0; ievl++){
-		drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_evl->p[ievl]->p, NULL,
+		drawopd("moao", recon->moao[imoao].aloc->p[0], simu->dm_evl->p[ievl]->p, parms->dbg.draw_opdmax->p,
 			"MOAO", "x(m)", "y(m)", "Evl %d", ievl);
 	    }
 	}
@@ -128,7 +128,7 @@ void save_recon(SIM_T *simu){
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,NULL,
+	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
 		    "DM Error Signal (Lo)","x (m)","y (m)",
 		    "Err Lo %d",idm);
 	}
@@ -145,7 +145,7 @@ void save_recon(SIM_T *simu){
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,NULL,
+	    drawopd("DM",recon->aloc->p[idm], dmlo->p[idm]->p,parms->dbg.draw_opdmax->p,
 		    "DM Integrator (Lo)","x (m)","y (m)",
 		    "Int Lo %d",idm);
 	}
@@ -167,7 +167,7 @@ void save_recon(SIM_T *simu){
 	    if(parms->plot.opdx){ /*draw opdx */
 		for(int i=0; i<opdx->nx; i++){
 		    if(opdx->p[i]){
-			drawopd("opdx", recon->xloc->p[i], opdx->p[i]->p, NULL,
+			drawopd("opdx", recon->xloc->p[i], opdx->p[i]->p, parms->dbg.draw_opdmax->p,
 				"Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
 		    }
 		}
@@ -236,7 +236,7 @@ void save_dmreal(SIM_T *simu){
     if(parms->plot.run){
     	for(int idm=0; idm<parms->ndm; idm++){
 	    if(simu->dmproj && simu->dmproj->p[idm]){
-		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,NULL,
+		drawopd("DM",recon->aloc->p[idm], simu->dmproj->p[idm]->p,parms->dbg.draw_opdmax->p,
 			"ATM to DM Projection (Hi)","x (m)","y (m)",
 			"Proj Hi %d",idm);
 	    }
@@ -244,7 +244,7 @@ void save_dmreal(SIM_T *simu){
 	//2014-05-28: moved from filter.c to here for synchronous display with dmint.
 	for(int idm=0; idm<parms->ndm; idm++){
 	    if(simu->dmreal && simu->dmreal->p[idm]){
-		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,NULL,
+		drawopd("DM", simu->recon->aloc->p[idm], simu->dmreal->p[idm]->p,parms->dbg.draw_opdmax->p,
 			"Actual DM Actuator Position","x (m)", "y (m)", "Real %d",idm);
 	    }
 	}

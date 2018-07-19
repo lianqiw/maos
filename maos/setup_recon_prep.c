@@ -476,84 +476,6 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 }
 
 /**
-   Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
-static void
-setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
-    if(parms->load.HA && zfexist(parms->load.HA)){
-	warning("Loading saved HA\n");
-	recon->HA=dspcellread("%s",parms->load.HA);
-    }else{
-	const int nfit=parms->fit.nfit;
-	const int ndm=parms->ndm;
-	recon->HA=dspcellnew(nfit, ndm);
-	dspcell* HA=recon->HA/*PDSPCELL*/;
-	info("Generating HA ");TIC;tic;
-	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.hs->p[ifit];
-	    for(int idm=0; idm<ndm; idm++){
-		const double ht=parms->dm[idm].ht;
-		const double scale=1.-ht/hs;
-		double displace[2];
-		displace[0]=parms->fit.thetax->p[ifit]*ht;
-		displace[1]=parms->fit.thetay->p[ifit]*ht;
-		loc_t *loc=recon->floc;
-		if(parms->recon.misreg_dm2sci && parms->recon.misreg_dm2sci[ifit+idm*nfit]){
-		    loc=loctransform(loc, parms->recon.misreg_dm2sci[ifit+idm*nfit]);
-		}
-		IND(HA,ifit,idm)=mkh(recon->aloc->p[idm], loc, 
-				  displace[0], displace[1], scale);
-		if(loc!=recon->floc){
-		    locfree(loc);
-		}
-	    }
-	}
-	toc2(" ");
-    }
-    if(parms->save.setup){
-	writebin(recon->HA,"HA");
-    }
-    recon->actcpl=genactcpl(recon->HA, recon->W1);
-    //if(1){//new 
-    //cpl accounts for floating actuators, but not stuck actuators.
-    act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
-    //Do not modify HA by floating actuators, otherwise, HA*actinterp will not work.
-    act_stuck(recon->aloc, recon->HA, recon->actstuck);
-    if(parms->save.setup){
-	writebin(recon->HA,"HA_float");
-    }
-    if(parms->fit.actinterp){
-	recon->actinterp=act_extrap(recon->aloc, recon->actcpl, parms->fit.actthres);
-    }else if(recon->actfloat){
-	warning("There are float actuators, but fit.actinterp is off\n");
-    }
-    if(recon->actinterp){
-	/*
-	  DM fitting output a is extrapolated to edge actuators by
-	  actinterp*a. The corresponding ray tracing from DM would be
-	  HA*actinterp*a. We replace HA by HA*actinterp to take this into
-	  account during DM fitting.
-	 */
-	info("Replacing HA by HA*actinterp\n");
-	
-	dspcell *HA2=0;
-	dcellmm(&HA2, recon->HA, recon->actinterp, "nn", 1);
-	dspcellfree(recon->HA);
-	recon->HA=HA2;
-	if(parms->save.setup){
-	    writebin(recon->HA,"HA_final");
-	}
-    }
-    
-    if(parms->save.setup){
-	if(recon->actinterp){
-	    writebin(recon->actinterp, "actinterp");
-	}
-	if(recon->actcpl){
-	    writebin(recon->actcpl, "actcpl");
-	}
-    }
-}
-/**
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
@@ -775,10 +697,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    writebin(recon->GM, "GM");
 	}
     }
-    if(parms->recon.alg==1 && !parms->recon.modal){
+    if(!parms->recon.modal){//LSR.
 	recon->actcpl=genactcpl(recon->GA, 0);
 	act_stuck(recon->aloc, recon->actcpl, recon->actfloat);
-	
 	if(recon->actstuck){
 	    /*This is need for LSR reconstructor to skip stuck actuators.  GA is
 	      also used to form PSOL gradients, but that one doesn't need this
@@ -917,6 +838,9 @@ setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
     }
     dfree(opd);
 }
+/**
+   Tilt removal from DM command. Used by filter.c
+ */
 void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
     recon->DMTT=dcellnew(parms->ndm, 1);
     recon->DMPTT=dcellnew(parms->ndm, 1);
@@ -934,94 +858,6 @@ void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
 	writebin(recon->DMTT, "DMTT");
 	writebin(recon->DMPTT, "DMPTT");
     }
-}
-
-/**
-   Setup fitting low rank terms that are in the NULL space of DM fitting
-   operator. typically include piston on each DM and tip/tilt on certain
-   DMs. Becareful with tip/tilt contraint when using CBS.  */
-static void 
-fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
-    const int ndm=parms->ndm;
-    if(ndm>=3) warning("Low rank terms for 3 or more dms are not tested\n");
-    recon->fitNW=dcellnew(ndm,1);
-    double scl=recon->fitscl=1./recon->floc->nloc;
-    if(fabs(scl)<1.e-15){
-	error("recon->fitscl is too small\n");
-    }
-    /*computed outside. */
-    int lrt_tt=parms->fit.lrt_tt;
-    int nnw=0;
-    if(parms->fit.lrt_piston){
-	nnw+=ndm;
-    }
-    if(lrt_tt){
-	nnw+=2*(ndm-1);
-    }
-    if(nnw==0) return;
-    dcell* actcpl=dcelldup(recon->actcpl);
-    //include stuck actuator
-    act_stuck(recon->aloc, actcpl, recon->actstuck);
-    for(int idm=0; idm<ndm; idm++){
-	int nloc=recon->aloc->p[idm]->nloc;
-	recon->fitNW->p[idm]=dnew(nloc, nnw);
-    }
-    int inw=0;/*current column */
-    if(parms->fit.lrt_piston){
-	info("Adding piston cr to fit matrix\n");
-	for(int idm=0; idm<ndm; idm++){
-	    int nloc=recon->aloc->p[idm]->nloc;
-	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
-	    const double *cpl=actcpl->p[idm]->p;
-	    for(int iloc=0; iloc<nloc; iloc++){
-		if(cpl[iloc]>0.1){
-		    //don't count floating or stuck actuators
-		    p[iloc]=scl;
-		}
-	    }
-	}
-	inw+=ndm;
-    }
-    if(lrt_tt){
-	double factor=0;
-	info("Adding TT cr on upper DMs to fit matrix.\n");
-	factor=scl*2./parms->aper.d;
-	for(int idm=1; idm<ndm; idm++){
-	    int nloc=recon->aloc->p[idm]->nloc;
-	    double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
-	    double *p2x=p;
-	    double *p2y=p+nloc;
-	    const double *cpl=actcpl->p[idm]->p;
-	    for(int iloc=0; iloc<nloc; iloc++){
-		if(cpl[iloc]>0.1){
-		    p2x[iloc]=recon->aloc->p[idm]->locx[iloc]*factor;/*x tilt */
-		    p2y[iloc]=recon->aloc->p[idm]->locy[iloc]*factor;/*y tilt */
-		}
-	    }
-	}
-	inw+=2*(ndm-1);
-    }
-    if(parms->fit.actslave){
-	/*
-	  2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found
-	  that slaving is causing mis-measurement of a few edge
-	  actuators. First try to remove W1. Or lower the weight. Revert
-	  back.
-	  1./floc->nloc is on the same order of norm of Ha'*W*Ha. 
-	*/
-	TIC;tic;
-	recon->actslave=slaving(recon->aloc, recon->actcpl,
-				recon->fitNW, recon->actstuck,
-				recon->actfloat, parms->fit.actthres, 1./recon->floc->nloc);
-	toc2("slaving");
-	if(parms->save.setup){
-	    writebin(recon->actslave,"actslave");
-	}
-    }
-    if(parms->save.setup){
-	writebin(recon->fitNW,"fitNW");
-    }
-    cellfree(actcpl);
 }
 /**
    setting up global tip/tilt remove operator from LGS gradients.
@@ -1302,14 +1138,8 @@ RECON_T *setup_recon_prep(const PARMS_T *parms, const APER_T *aper, const POWFS_
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);//uses HXW.
 	dspcellfree(recon->HXW);/*only keep HXWtomo for tomography */
+    }
 
-    }
-    if(parms->recon.alg==0 || parms->sim.ncpa_calib){
-	setup_recon_HA(recon,parms);
-	fit_prep_lrt(recon, parms);
-    }
-    setup_recon_dmttr(recon, parms);
-    setup_recon_dither_dm(recon, powfs, parms);
     return recon;
 }
 /**
@@ -1324,4 +1154,6 @@ void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper,
     if(parms->recon.split){
 	setup_ngsmod_prep(parms,recon,aper,powfs);
     }
+    setup_recon_dmttr(recon, parms);
+    setup_recon_dither_dm(recon, powfs, parms);
 }

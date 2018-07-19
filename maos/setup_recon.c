@@ -698,9 +698,9 @@ static dcell * setup_recon_ecnn(RECON_T *recon, const PARMS_T *parms, loc_t *loc
 	muv_direct_solve(&tmp2, &recon->RL, tmp); dcellfree(tmp);
 	toc2("RL ");tic;
 	//2015-06-29: Put in ommited DM fitting operation
-	muv(&tmp, &recon->FR, tmp2, 1); dcellfree(tmp2);
+	muv(&tmp, &recon->fit->FR, tmp2, 1); dcellfree(tmp2);
 	toc2("FR ");tic;
-	muv_direct_solve(&tmp2, &recon->FL, tmp); dcellfree(tmp);
+	muv_direct_solve(&tmp2, &recon->fit->FL, tmp); dcellfree(tmp);
 	toc2("FL ");tic;
 	t1=dcell2m(tmp2); dcellfree(tmp2);
     }else{//LSR
@@ -997,16 +997,16 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	if(!recon->RL.C && !recon->RL.MI){
 	    muv_direct_prep(&(recon->RL), 0);
 	}
-	if(!recon->FL.C && !recon->FL.MI){
-	    muv_direct_prep(&(recon->FL), 0);
+	if(!recon->fit->FL.C && !recon->fit->FL.MI){
+	    muv_direct_prep(&(recon->fit->FL), 0);
 	}
 	toc2("MVST: svd prep");
 	dcell *GXLT=dcelltrans(recon->GXL);
 	muv_direct_solve(&U, &recon->RL, GXLT);
 	dcellfree(GXLT);
 	dcell *rhs=NULL;
-	muv(&rhs, &recon->FR, U, 1);
-	muv_direct_solve(&FU, &recon->FL, rhs);
+	muv(&rhs, &recon->fit->FR, U, 1);
+	muv_direct_solve(&FU, &recon->fit->FL, rhs);
 	dcellfree(rhs);
 	toc2("MVST: U, FU");
     
@@ -1041,8 +1041,8 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcell *QwQc=NULL;
     {
 	dcell *Q=NULL;/*the NGS modes in ploc. */
-	dcellmm(&Q, recon->HA, FUw, "nn", 1);
-	QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
+	dcellmm(&Q, recon->fit->HA, FUw, "nn", 1);
+	QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,parms->fit.wt);
 	dcellfree(Q);
     }
     /*Compute the wavefront error due to measurement noise. Verified on
@@ -1143,7 +1143,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     dcellfree(Uw);
     if(parms->save.setup){
 	dcell *Qn=NULL;
-	dcellmm(&Qn, recon->HA, recon->MVModes, "nn", 1);
+	dcellmm(&Qn, recon->fit->HA, recon->MVModes, "nn", 1);
 	dcell *Qntt=dcellnew(Qn->nx,Qn->ny);
 	dmat *TTploc=loc2mat(recon->floc,1);/*TT mode. need piston mode too! */
 	dmat *PTTploc=dpinv(TTploc,recon->W0);/*TT projector. no need w1 since we have piston. */
@@ -1184,7 +1184,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     /*
     if(parms->save.setup){
 	dcell *QQ=NULL;
-	dcellmm(&QQ, recon->HA, recon->MVModes,"nn", 1);
+	dcellmm(&QQ, recon->fit.HA, recon->MVModes,"nn", 1);
 	dcell *MCC=calcWmcc(QQ,QQ,recon->W0,recon->W1,recon->fitwt);
 	writebin(MCC,"mvst_MCC");
     
@@ -1291,6 +1291,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    setup_recon_mvst(recon, parms);
 	}
     }
+
     toc2("setup_recon");
 }
 
@@ -1426,34 +1427,15 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->TTF);
 	dcellfree(recon->PTTF);
     }
-    if(parms->fit.alg!=1 && !parms->fit.bgs){
-	cellfree(recon->FL.M);
-	dcellfree(recon->FL.U);
-	dcellfree(recon->FL.V);
-    }
+    
     if(parms->tomo.alg==1){
 	muv_direct_free(&recon->RL);
     }
-    if(parms->fit.alg==1){
-	muv_direct_free(&recon->FL);
-    }
-
+    
     if(recon->RR.M){
 	dspcellfree(recon->GP);
     }
-
-    /*The following have been used in fit matrix. */
-    if(parms->fit.assemble || parms->gpu.fit){
-	dcellfree(recon->fitNW);
-	dspcellfree(recon->actslave);
-    }
-    /* when sim.dmproj=1, we need these matrices to use in FR.Mfun*/
-    if(recon->FR.M && !parms->sim.dmproj && parms->fit.assemble && !parms->gpu.moao && !parms->sim.ncpa_calib){
-	dspfree(recon->W0); 
-	dfree(recon->W1); 
-	dspcellfree(recon->HA); 
-	dspcellfree(recon->HXF); 
-    }
+   
     /*
       The following arrys are not used after preparation is done.
     */
@@ -1468,10 +1450,9 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     if(parms->recon.mvm){
 	muv_free(&recon->RR);
 	muv_free(&recon->RL);
-	muv_free(&recon->FR);
-	muv_free(&recon->FL);
 	muv_free(&recon->LR);
 	muv_free(&recon->LL);
+	free_fit(recon->fit);
 	fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
 	if(parms->gpu.tomo && parms->gpu.fit){
 	    dfree(recon->MVM);//keep GPU copy.
@@ -1486,6 +1467,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     ngsmod_free(recon->ngsmod); recon->ngsmod=0;
     free_recon_unused(parms, recon);
     free_recon_moao(recon, parms);
+    free_fit(recon->fit);
     dfree(recon->ht);
     dfree(recon->os);
     dfree(recon->wt);
@@ -1519,14 +1501,10 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->GRall);
     dcellfree(recon->RRtwfs);
     dspcellfree(recon->ZZT);
-    dspcellfree(recon->HXF); 
     dspcellfree(recon->HXW);
     dspcellfree(recon->HXWtomo);
-    dspcellfree(recon->HA); 
     dspfree(recon->W0); 
     dfree(recon->W1); 
-    dcellfree(recon->fitNW);
-    dfree(recon->fitwt);
 
     cellfree(recon->xloc);
     cellfree(recon->xmap);
@@ -1549,13 +1527,10 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     cellfree(recon->actstuck);
     cellfree(recon->actfloat);
     cellfree(recon->actinterp);
-    cellfree(recon->actslave);
     cellfree(recon->actcpl);
     cellfree(recon->aimcc);/*used in filter.c */
     muv_free(&recon->RR);
     muv_free(&recon->RL);
-    muv_free(&recon->FR);
-    muv_free(&recon->FL);
     muv_free(&recon->LR);
     muv_free(&recon->LL);
     dfree(recon->MVM);

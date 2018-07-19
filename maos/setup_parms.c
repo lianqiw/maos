@@ -191,6 +191,8 @@ void free_parms(PARMS_T *parms){
     dfree(parms->dbg.pwfs_psy);
     dcellfree(parms->dbg.dmoff);
     dcellfree(parms->dbg.gradoff);
+    dfree(parms->dbg.draw_opdmax);
+    dfree(parms->dbg.draw_gmax);
     free(parms);
 }
 INLINE int sum_intarr(int n, long *a){
@@ -1011,6 +1013,15 @@ static void readcfg_plot(PARMS_T *parms){
     }
 }
 /**
+   Convert double to value pair of [-val, val].
+*/
+dmat *dbl2pair(double val){
+    dmat *out=dnew(2,1);
+    out->p[0]=-fabs(val);
+    out->p[1]=-out->p[0];
+    return out;
+}
+/**
    Read in debugging parameters
 */
 static void readcfg_dbg(PARMS_T *parms){
@@ -1046,6 +1057,8 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_DCELL(dbg.dmoff);
     READ_DCELL(dbg.gradoff);
     READ_INT(dbg.twfsflag);
+    parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
+    parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
 }
 /**
    Read in GPU options
@@ -1142,9 +1155,9 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.ploc);
     READ_STR(load.floc);
     READ_STR(load.cxx);
-    READ_STR(load.HXF);
+    //READ_STR(load.HXF);
     READ_STR(load.HXW);
-    READ_STR(load.HA);
+    //READ_STR(load.HA);
     READ_STR(load.GP);
     READ_STR(load.GA);
     READ_STR(load.mvm);
@@ -1271,7 +1284,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    
+
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
 	info("Using evaluation directions as ncpa calibration directions if needed.\n");
 	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
@@ -2120,18 +2133,17 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->fit.square=0;
     }
     if(!parms->sim.closeloop){
-	parms->recon.psol=0;//open loop does not need psol
-    }else{
+	parms->recon.psol=0;//open loop cannot use psol
+    }else if(parms->recon.psol==-1){
 	if(parms->sim.idealfit){
 	    parms->recon.psol=1;
-	}else if(parms->recon.psol==-1){//automatic.
-	    if(parms->recon.alg==0){//MV perfers psol
-		parms->recon.psol=1;
-	    }else{//LSR perfers cl
-		parms->recon.psol=0;
-	    }
+	}else if(parms->recon.alg==0){//MV perfers psol
+	    parms->recon.psol=1;
+	}else{//LSR perfers cl
+	    parms->recon.psol=0;
 	}
     }
+
     if(parms->recon.split){
 	if(parms->nlopowfs==0){
 	    if(parms->ntrpowfs>=parms->nhipowfs){
@@ -2237,6 +2249,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
 
     parms->recon.warm_restart = !parms->dbg.nocgwarm && parms->atm.frozenflow && !(parms->dbg.tomo_maxit && parms->dbg.tomo_maxit->nx>0);
+    parms->fit.cgwarm=parms->recon.warm_restart && parms->fit.alg==1;
     {
 	double hs=NAN;
 	/*find out the height to setup cone coordinate. */

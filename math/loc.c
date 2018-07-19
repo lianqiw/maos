@@ -26,7 +26,7 @@
    Free pts_t data
 */
 void ptsfree_do(pts_t *pts){
-    if(pts){
+    if(pts && pts->nref && !atomicadd(pts->nref, -1)){
 	if(pts->origx){
 	    free(pts->origx);
 	    free(pts->origy);
@@ -35,8 +35,8 @@ void ptsfree_do(pts_t *pts){
 	    free(pts->map->p);
 	    free(pts->map);
 	}
-	free(pts);
     }
+    free(pts);
 }
 
 /**
@@ -62,12 +62,13 @@ void loc_free_stat(loc_t *loc){
    Free loc_t data
  */
 void locfree_do(loc_t *loc){
-    if(!loc) return;
-    loc_free_stat(loc);
-    loc_free_map(loc);
-    if(!loc->ref){
-	free(loc->locx);
-	free(loc->locy);
+    if(loc && loc->nref && !atomicadd(loc->nref, -1)){
+	loc_free_stat(loc);
+	loc_free_map(loc);
+	if(!loc->nref){
+	    free(loc->locx);
+	    free(loc->locy);
+	}
     }
     free(loc);
 }
@@ -117,7 +118,19 @@ loc_t *locnew(long nloc,double dx, double dy){
     loc->nloc=nloc;
     loc->dx=dx;
     loc->dy=dy;
+    loc->nref=mycalloc(1, int); loc->nref[0]=1;
     return loc;
+}
+/**
+   Reference an existing loc
+ */
+loc_t *locref(const loc_t *in){
+    loc_t *out=mycalloc(1, loc_t);
+    memcpy(out, in, sizeof(loc_t));
+    if(out->nref){
+	atomicadd(out->nref, 1);
+    }
+    return out;
 }
 /**
    Create a pts with nsa, dsa, nx, dx
@@ -129,6 +142,7 @@ pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy)
     pts->origy=mycalloc(nsa,double);
     pts->dsa=dsax;
     pts->dsay=dsay;
+    pts->nref=mycalloc(1, int); pts->nref[0]=1;
     pts->nx=nx;
     pts->dx=dx;
     pts->dy=dy;

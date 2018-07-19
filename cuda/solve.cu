@@ -62,8 +62,7 @@ void cumuv_t::Trans(curcell &out, Real beta, const curcell &in, Real alpha, stre
     }
 }
 void cumuv_t::Init(const MUV_T *in){
-    if(!in) return;
-    if(M || !in->M) error("in.M() should not be NULL and M should be NULL\n");
+    if(!in || !in->M) return;
     dspcell *inM=dspcell_cast(in->M);
     dsp *Mc=dspcell2sp(inM);
     dmat *Uc=dcell2m(in->U);

@@ -291,6 +291,17 @@ void X(spscaley)(X(sp) *A, const X(mat) *ys){
     }
 }
 /**
+   Reference a spcell array.
+ */
+X(spcell) *X(spcellref)(const X(spcell) *A){
+    if(!A) return NULL;
+    X(spcell) *out=(X(spcell*))cellnew(A->nx, A->ny);
+    for(long i=0; i<A->nx*A->ny; i++){
+	out->p[i]=X(spref)(A->p[i]);
+    }
+    return out;
+}
+/**
    cast a cell object to X(spcell) after checking
  */
 X(spcell) *X(spcell_cast)(const void *A_){

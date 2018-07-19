@@ -48,7 +48,6 @@
 #define TIM(A)
 #endif
 extern int KEEP_MEM;
-static double *opdzlim=NULL;
 static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
@@ -198,7 +197,7 @@ void perfevl_ievl(thread_t *info){
 	    zfarr_dmat(simu->save->evlopdol[ievl], simu->isim, iopdevl);
 	}
 	if(parms->plot.run){
-	    drawopdamp("Evlol", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
+	    drawopdamp("Evlol", aper->locs,iopdevl->p , aper->amp1->p, parms->dbg.draw_opdmax->p,
 		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	}
 	PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
@@ -299,7 +298,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	
 	if(parms->plot.run){
-	    drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p,NULL,
+	    drawopdamp("Evlcl", aper->locs, iopdevl->p, aper->amp1->p, parms->dbg.draw_opdmax->p,
 		       "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
 	}
 	if(save_evlopd){
@@ -492,17 +491,21 @@ static void perfevl_mean(SIM_T *simu){
 	simu->status->clerrlo=sqrt(simu->cle->p[nevlmod*isim+1]*1e18);
     }/*if split */
     
-    if(parms->sim.noatm==0 && simu->cle->p[nevlmod*isim] > MAX(simu->ole->p[nevlmod*isim]*100, 1e-13)){
+    if(parms->sim.noatm==0){
 	static int ct=0; 
-	ct++;
-	if(ct>10){
-	    sync();
-	    error("Divergent simulation.");
+	if(simu->cle->p[nevlmod*isim] > MAX(simu->ole->p[nevlmod*isim]*100, 1e-12)){
+	    ct++;
+	    if(ct>10){
+		sync();
+		error("Divergent simulation.");
+	    }
+	    warning("Step %5d: The loop is diverging: OL: %g CL: %g\n",  
+		    isim, sqrt(simu->ole->p[nevlmod*isim])*1e9,
+		    sqrt(simu->cle->p[nevlmod*isim])*1e9);
+	    simu->last_report_time=0; //force print out.
+	}else{
+	    ct=0;
 	}
-	warning("Step %5d: The loop is diverging: OL: %g CL: %g\n",  
-		 isim, sqrt(simu->ole->p[nevlmod*isim])*1e9,
-		 sqrt(simu->cle->p[nevlmod*isim])*1e9);
-	simu->last_report_time=0; //force print out.
     }
 }
 /**
