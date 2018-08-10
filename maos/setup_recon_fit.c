@@ -25,6 +25,7 @@
 static dspcell *
 setup_fit_HXF(const FIT_T *fit){
     info("Generating HXF");TIC;tic;
+    if(!fit->xloc) return 0;
     const int nfit=fit->thetax->nx;
     const int npsr=fit->xloc->nx;
     dspcell *HXF=dspcellnew(nfit, npsr);
@@ -322,7 +323,7 @@ setup_fit_matrix(FIT_T *fit){
  */
 void setup_fit(FIT_T *fit, int idealfit){
     TIC;tic;
-    if(!idealfit){
+    if(!idealfit && fit->xloc){
 	fit->HXF=setup_fit_HXF(fit);
     }
     fit->HA=setup_fit_HA(fit);
