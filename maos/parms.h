@@ -622,6 +622,7 @@ typedef struct DBG_CFG_T{
     int twfsflag;      /**<use TWFS to control 0: all modes, 1: radial only*/
     dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
     dmat* draw_gmax;  /**<Set zlim for gradient drawing*/
+    int wfs_iac;      /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

@@ -1059,6 +1059,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.twfsflag);
     parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
     parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
+    READ_INT(dbg.wfs_iac);
 }
 /**
    Read in GPU options
@@ -1626,6 +1627,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(parms->sim.wfsalias){
 	    parms->powfs[ipowfs].noisy=0;
+	    parms->powfs[ipowfs].phystep=-1;
 	}
     }
     parms->hipowfs->nx=parms->nhipowfs;

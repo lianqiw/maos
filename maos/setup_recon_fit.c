@@ -437,7 +437,7 @@ void setup_powfs_fit(POWFS_T *powfs, const RECON_T *recon, const PARMS_T *parms)
 	FIT_T *fitall=powfs[ipowfs].fit=calloc(nwfs, sizeof(FIT_T));
 	loc_t *wfsloc=mkannloc(parms->aper.d+parms->powfs[ipowfs].dsa*2, 0, parms->powfs[ipowfs].dsa, 0);
 	wfsloc->ht=parms->powfs[ipowfs].hc;
-	wfsloc->iac=0.2;//cubic spline better fits the turbulence.
+	wfsloc->iac=parms->dbg.wfs_iac;//cubic spline better fits the turbulence.
 	for(int jwfs=0; jwfs<nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
 	    FIT_T *fit=fitall+jwfs;
