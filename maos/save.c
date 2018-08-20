@@ -205,7 +205,7 @@ void save_recon(SIM_T *simu){
 	}
 	dcellscale(simu->gcov, 1./scale); //2016-06-07: Do not reset.
     }
-    if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
+    if(parms->save.ecov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.ecov)){
 	info("Output PSF Recon Telemetry\n");
 	long nstep=simu->reconisim+1-parms->evl.psfisim;
 	double scale=1./nstep;

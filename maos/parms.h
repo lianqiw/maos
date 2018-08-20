@@ -718,10 +718,11 @@ typedef struct SAVE_CFG_T{
     int gradgeomhi;  /**<save WFS geometric gradient during physical optics simulations.(derived)*/
     int gradgeomlo;  /**<save WFS geometric gradient during physical optics simulations.(derived)*/
 
+    /*Others*/
     int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
     int ngcov;       /**<number of pairs of gradient covariance to compute*/
-    lmat *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
-
+    lmat *gcov;      /**<size of 2*ngcov, specifying wfs for each pair*/
+    int ecov;        /**<save covariance of DM error vector*/
     int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
     int mvm;         /**<save computed mvm control matrix*/

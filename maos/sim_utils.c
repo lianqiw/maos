@@ -611,7 +611,7 @@ static void init_simu_evl(SIM_T *simu){
 	}
     }
 
-    if(parms->sim.psfr){
+    if(parms->save.ecov){
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
 	    simu->ecov=dcellnew(parms->ndm,parms->ndm);/*not really need. */
 	}else{/*deprecated */

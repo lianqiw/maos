@@ -1134,6 +1134,7 @@ static void readcfg_save(PARMS_T *parms){
     READ_LMAT(save.gcov);
     parms->save.ngcov=parms->save.gcov->nx/2;
     READ_INT(save.gcovp);
+    READ_INT(save.ecov);
     READ_INT(save.mvmi);
     READ_INT(save.mvmf);
     READ_INT(save.mvm);
@@ -2435,7 +2436,12 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    info("Output PSF reconstruction telemetry for %d directions\n", fnd);
 	}
-	parms->evl.psfmean=1;/*Saves psfmean for verification. */
+	if(!parms->evl.psfmean){
+	    parms->evl.psfmean=1;/*Saves psfmean for verification. */
+	}
+	if(!parms->save.ecov){
+	    parms->save.ecov=1;
+	}
 	/*required memory to hold memory. */
 	long covmem=(long)round(pow(parms->aper.d/parms->evl.dx,4))*8*fnd;
 	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->evl.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */

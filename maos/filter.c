@@ -275,7 +275,8 @@ static void filter_cl(SIM_T *simu){
     if(parms->recon.split){ 
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
-	    /*accumulate to the main integrator.*/
+	    /*accumulate to the main integrator. Use mpreint to properly account
+	     * for type II controler.*/
 	    addlow2dm(&simu->dmint->mint->p[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }
@@ -532,11 +533,8 @@ void filter_dm(SIM_T *simu){
 #endif
     turb_dm(simu);
     update_dm(simu);
-
-    //dcellzero(simu->dmerr);//why?
-    simu->dmerr=0;//mark no output.
-    dcellzero(simu->Merr_lo);
+    //mark no output to handle mutiple dtrat case.
+    simu->dmerr=0;
     simu->Merr_lo=0;
-    dcellzero(simu->fsmerr);
     simu->fsmerr=0;
 }

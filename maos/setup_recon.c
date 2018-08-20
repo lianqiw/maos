@@ -1214,7 +1214,7 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     /*setup inverse noise covariance matrix. */
     /*prepare for tomography setup */
     setup_recon_tomo_prep(recon,parms);
-    if(parms->tomo.assemble || parms->recon.split==2 || parms->sim.psfr || parms->recon.psd){
+    if(parms->tomo.assemble || parms->recon.split==2 || parms->recon.psd){
 	/*assemble the matrix only if not using CG CG apply the
 	  individual matrices on fly to speed up and save memory. */
 	setup_recon_tomo_matrix(recon,parms);

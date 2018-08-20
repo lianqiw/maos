@@ -136,6 +136,7 @@ void recon_split(SIM_T *simu){
     /*Low order WFS has output */
     if(lo_output){
 	simu->Merr_lo=simu->Merr_lo_store;
+	dcellzero(simu->Merr_lo);
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
@@ -385,7 +386,7 @@ void reconstruct(SIM_T *simu){
     if(parms->recon.psd){
 	recon_servo_update(simu);
     }
-    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
+    if(hi_output && parms->save.ecov && isim>=parms->evl.psfisim){
 	//For PSF reconstruction.
 	psfr_calc(simu, simu->opdr, simu->wfspsol->p[parms->hipowfs->p[0]],
 		  simu->dmerr,  simu->Merr_lo);
