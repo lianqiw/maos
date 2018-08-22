@@ -159,9 +159,8 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
     if(parms){
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    const int nps=parms->atm.nps;
-	    long nxn=parms->atm.nxn;
-	    long nyn=parms->atm.nyn;
-	    mem_minimum+=sizeof(Real)*nps*nxn*nyn*2;
+	    long nxn=parms->atm.nxnmax;
+	    mem_minimum+=sizeof(Real)*nps*nxn*nxn*2;
 	}
 	if(parms->gpu.evl){
 	    mem_minimum+=sizeof(Real)*parms->evl.nevl*(long)pow(parms->aper.d/parms->evl.dx, 2);

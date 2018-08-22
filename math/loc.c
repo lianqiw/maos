@@ -1484,21 +1484,26 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
     ){
     const double R=D/2;
     double minx=INFINITY,miny=INFINITY,maxx=-INFINITY,maxy=-INFINITY;
-    double sx1, sx2, sy1, sy2; /*temporary variables */
     if(dirs->nx<3 || dirs->ny<=0){ 
 	error("dirs should have no less than 3 rows and positive number of cols.\n");
     }
     for(int idir=0; idir<dirs->ny; idir++){
 	double RR=(1.-ht/IND(dirs,2,idir))*R+guard;
-	sx1=(IND(dirs,0,idir)*ht)-RR;
-	sx2=(IND(dirs,0,idir)*ht)+RR;
-	sy1=(IND(dirs,1,idir)*ht)-RR;
-	sy2=(IND(dirs,1,idir)*ht)+RR;
+	double sx1=(IND(dirs,0,idir)*ht)-RR;
+	double sx2=(IND(dirs,0,idir)*ht)+RR;
+	double sy1=(IND(dirs,1,idir)*ht)-RR;
+	double sy2=(IND(dirs,1,idir)*ht)+RR;
 	//Need to work when ht<0;
 	if(sx1<minx) minx=sx1; if(sx1>maxx) maxx=sx1;
 	if(sx2<minx) minx=sx2; if(sx2>maxx) maxx=sx2;
 	if(sy1<miny) miny=sy1; if(sy1>maxy) maxy=sy1;
 	if(sy2<miny) miny=sy2; if(sy2>maxy) maxy=sy2;
+    }
+    if(square){//if square, also make symmetric.
+	maxx=MAX(fabs(minx), fabs(maxx));
+	minx=-maxx;
+	maxy=MAX(fabs(miny), fabs(maxy));
+	miny=-maxy;
     }
     /*ajust central point offset*/
     {
@@ -1520,6 +1525,7 @@ void create_metapupil(map_t**mapout,/**<[out] map*/
     double oy=miny;
     long nx=ceil((maxx-ox)/dx)+1;
     long ny=ceil((maxy-oy)/dy)+1;
+
     /*Make it square */
     if(square){
 	ny=nx=(nx<ny)?ny:nx;

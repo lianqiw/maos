@@ -1060,6 +1060,7 @@ static void readcfg_dbg(PARMS_T *parms){
     parms->dbg.draw_opdmax=dbl2pair(readcfg_dbl("dbg.draw_opdmax"));
     parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
     READ_INT(dbg.wfs_iac);
+    READ_INT(dbg.fullatm);
 }
 /**
    Read in GPU options
@@ -1990,26 +1991,25 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     const int nps=parms->atm.nps;
     int Nmax=0;
     long nxout[nps],nyout[nps];
+    parms->atm.nxn=lnew(nps, 1);
     for(int ips=0; ips<nps; ips++){
 	create_metapupil(0,&nxout[ips],&nyout[ips],parms->dirs, parms->aper.d,parms->atm.ht->p[ips],
 			 parms->atm.dx,parms->atm.dx,0.5,
 			 parms->atm.dx*3,0,0,0,1);
-	if(nxout[ips]>Nmax) Nmax=nxout[ips];
-	if(nyout[ips]>Nmax) Nmax=nyout[ips];
+	parms->atm.nxn->p[ips]=MAX(nxout[ips], nyout[ips]);
+	Nmax=MAX(Nmax, parms->atm.nxn->p[ips]);
     }
     /*Minimum screen size required. Used to transport atm to GPU. */
-    parms->atm.nxn=Nmax;
-    parms->atm.nyn=Nmax;
-    parms->atm.nxm=nextpow2(Nmax);
-    parms->atm.nym=parms->atm.nxm;
+    parms->atm.nxnmax=Nmax;
+    Nmax=nextpow2(Nmax);
     if(fabs(parms->atm.size->p[0])<EPS ||fabs(parms->atm.size->p[1])<EPS){
-	parms->atm.nx=parms->atm.nxm;
-	parms->atm.ny=parms->atm.nym;
+	parms->atm.nx=Nmax;
+	parms->atm.ny=Nmax;
     }else{/*user specified.*/
 	parms->atm.nx=2*(int)round(0.5*parms->atm.size->p[0]/parms->atm.dx);
 	parms->atm.ny=2*(int)round(0.5*parms->atm.size->p[1]/parms->atm.dx);
-	if(parms->atm.nx<parms->atm.nxm) parms->atm.nx=parms->atm.nxm;
-	if(parms->atm.ny<parms->atm.nym) parms->atm.ny=parms->atm.nym;
+	if(parms->atm.nx<Nmax) parms->atm.nx=Nmax;
+	if(parms->atm.ny<Nmax) parms->atm.ny=Nmax;
     }
     if(parms->atm.method==1){/*must be square and 1+power of 2 */
 	int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;

@@ -52,10 +52,8 @@ typedef struct ATM_CFG_T{
     lmat *ipsr;    /**<corresponding reconstruction layer*/
     int nx;       /**<turbulence screen size along x*/
     int ny;       /**<turbulence screen size along y*/
-    int nxm;      /**<minimum turbulence screen size along x for fft*/
-    int nym;      /**<minimum turbulence screen size along y for fft*/
-    int nxn;      /**<minimum turbulence screen size along to cover meta pupil*/
-    int nyn;      /**<minimum turbulence screen size along to cover meta pupil*/
+    lmat *nxn;    /**<minimum turbulence screen size along to cover meta pupil*/
+    int nxnmax;   /**<max of nxn*/
     int method;   /**<0: FFT Von Karman. 1: FFT Biharmonic. 2: Fractal method.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
@@ -623,6 +621,7 @@ typedef struct DBG_CFG_T{
     dmat* draw_opdmax;/**<Set zlim for OPD drawing*/
     dmat* draw_gmax;  /**<Set zlim for gradient drawing*/
     int wfs_iac;      /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
+    int fullatm;      /**<Always copy full atm to GPU.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

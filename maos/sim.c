@@ -78,7 +78,7 @@ SIM_T *maos_iseed(int iseed){
     }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
-	/*put here to avoid messing up timing due to transfering. */
+	/*Put here for the initial transfer to avoid messing up timing due to transfering. */
 	gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, parms->sim.start);/*takes 0.4s for NFIRAOS. */
 	if(parms->tomo.predict){
 	    gpu_update_recon_cn2(parms, recon);
@@ -105,19 +105,18 @@ void maos_isim(int isim){
     simu->isim=isim;
     simu->status->isim=isim;
     sim_update_etf(simu);
-    if(parms->atm.frozenflow){
-#if USE_CUDA
-	if(parms->gpu.evl || parms->gpu.wfs){
-	    /*may need to copy another part */
-	    gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
-	}
-#endif
-    }else{
+    if(!parms->atm.frozenflow){
 	//Do not put this one inside parallel 
 	genatm(simu);
 	/*re-seed the atmosphere in case atm is loaded from shm/file */
 	seed_rand(simu->atm_rand, lrand(simu->init_rand));
     }
+#if USE_CUDA
+    if(parms->gpu.evl || parms->gpu.wfs){
+	/*may need to copy another part */
+	gpu_atm2gpu(simu->atm, simu->atmscale, parms, iseed, isim);
+    }
+#endif
     OMPTASK_SINGLE{
 	if(parms->sim.dmproj){
 	    /* temporarily disable FR.M so that Mfun is used.*/

@@ -168,10 +168,9 @@ strehlcomp_do(Comp *strehlc,
 /**
    Compute complex PSF and return.
 */
-static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
-  
+static void psfcomp(cuccell psfs, const curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	cucmat &psf=cudata->perf.psfs[iwvl];
+	cucmat &psf=psfs[iwvl];
 	if(cuperf_t::psfsize[iwvl]==1){
 	    strehlcomp_do<<<REDUCE(nloc), DIM_REDUCE*sizeof(Comp),stream>>>
 		(psf.P(), iopdevl.P(), cudata->perf.amp, nloc, 2.*M_PI/cuperf_t::wvls[iwvl]);
@@ -194,7 +193,7 @@ static void psfcomp(curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t 
 /**
    Compute only PSF and add to result.
 */
-static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
+static void psfcomp_r(curmat *psf, const curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	//cucmat &wvf=cudata->perf.wvf[iwvl];
 	cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
@@ -215,7 +214,7 @@ static void psfcomp_r(curmat *psf, curmat &iopdevl, int nwvl, int ievl, int nloc
 	    }else{
 		corner2center_abs2_do<<<DIM2((psf[iwvl]).Nx(),(psf[iwvl]).Ny(),16),0,stream>>>
 		    ((psf[iwvl]).P(), (psf[iwvl]).Nx(), (psf[iwvl]).Ny(), wvf.P(), wvf.Nx(), wvf.Ny());
-	    }
+		    }
 	}
     }
 }
@@ -398,13 +397,14 @@ void gpu_perfevl_queue(thread_t *info){
 	    }//opdcov 
 	    if(parms->evl.psfhist || parms->evl.psfmean){
 		if(parms->evl.psfhist){
-		    //Compute complex. 
-		    psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		    zfarr_cuccell(simu->save->evlpsfhist[ievl], isim, cudata->perf.psfs, stream);
+		    //Compute complex.
+		    cuccell psfs(nwvl,1);
+		    psfcomp(psfs, iopdevl, nwvl, ievl, nloc, stream);
+		    zfarr_cuccell(simu->save->evlpsfhist[ievl], isim, psfs, stream);
 		    if(parms->evl.psfmean){
 			for(int iwvl=0; iwvl<nwvl; iwvl++){
 			    curaddcabs2(cuperf_t::psfcl[iwvl+nwvl*ievl], 1, 
-					cudata->perf.psfs[iwvl], 1, stream);
+					psfs[iwvl], 1, stream);
 			}
 		    }
 		}else if(parms->evl.psfmean){
@@ -508,12 +508,13 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	if(parms->evl.psfhist||parms->evl.psfmean){
 	    if(parms->evl.psfhist){
 		/*Compute complex. */
-		psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		zfarr_cuccell(simu->save->evlpsfhist_ngsr[ievl], simu->isim, cudata->perf.psfs, stream);
+		cuccell psfs(nwvl, 1);
+		psfcomp(psfs, iopdevl, nwvl, ievl, nloc, stream);
+		zfarr_cuccell(simu->save->evlpsfhist_ngsr[ievl], simu->isim, psfs, stream);
 		if(parms->evl.psfmean){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			curaddcabs2(cuperf_t::psfcl_ngsr[iwvl+nwvl*ievl], 1, 
-				    cudata->perf.psfs[iwvl], 1, stream);
+				    psfs[iwvl], 1, stream);
 		    }
 		}
 	    }else if(parms->evl.psfmean){

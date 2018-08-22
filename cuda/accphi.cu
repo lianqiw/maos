@@ -52,7 +52,6 @@ static int WRAP_ATM;
 
 typedef struct{
     int ips;
-    Real *next_atm;
     int nx0;
     int ny0;
     int offx;
@@ -60,6 +59,10 @@ typedef struct{
     int isim;
     int isim_next;
     map_t *atm;
+    Real ox;
+    Real oy;
+    Real *next_atm;
+    pthread_t threads;
 }atm_prep_t;
 static void atm_prep(atm_prep_t *data){
     PNEW(lock);
@@ -107,7 +110,6 @@ static void atm_prep(atm_prep_t *data){
     }
     toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
-    free(data);/*allocated in parent thread. we free it here. */
 }
 /**
    Transfer atmospheric data to GPU.
@@ -138,65 +140,69 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
     if(!atmc) return;
     map_t **atm=atmc->p;
     const int nps=parms->atm.nps;
-    static int nx0=0,ny0=0;
     static int iseed0=-1;
-    if(iseed0!=iseed && atmscale){
+    if(iseed0!=iseed){
 	dfree(cudata_t::atmscale);
 	if(atmscale) cudata_t::atmscale=ddup(atmscale);
     }
+    /*The minimum size to cover the meta-pupil*/
+    const long nxn=parms->atm.nxnmax;
+    static int nx0=0,ny0=0;
     if(!nx0){
-	/*The minimum size to cover the meta-pupil*/
-	long nxn=parms->atm.nxn;
-	long nyn=parms->atm.nyn;
-	
-	long avail_min=LONG_MAX, avail_max=0;
-	for(int igpu=0; igpu<NGPU; igpu++){
-	    gpu_set(igpu);
-	    long availi=gpu_get_mem();
-	    if(avail_min>availi){
-		avail_min=availi;
-	    }
-	    if(avail_max<availi){
-		avail_max=availi;
-	    }
-	}
-	avail_min-=256<<19;//reserve 128MiB 
-	avail_max-=256<<19;
-	long need=nps*sizeof(Real)*nxn*nyn;
-	info("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
-	      nxn, nyn, avail_min>>20, avail_max>>20, need>>20);
-	if(avail_min<need){
-	    if(avail_max<need){
-		error("No GPU has enough memory\n");
-	    }else{
-		char *gcmd=NULL;
-		for(int igpu=0; igpu<NGPU; igpu++){
-		    extern cuarray<int> GPUS;
-		    gpu_set(igpu);
-		    if(gpu_get_mem()>need){
-			char tmp[8];
-			snprintf(tmp,8," -g%d", GPUS[igpu]);
-			char *tmp2=gcmd;
-			gcmd=stradd(tmp, tmp2, (void*)NULL);
-			free(tmp2);
-		    }
-		}
-		error("Please rerun maos with %s\n", gcmd);
-	    }
-	    _Exit(0);
+	if(parms->dbg.fullatm){
+	    info("Always host full atmosphere in GPU. Set dbg.fullatm=0 to disable\n");
+	    nx0=parms->atm.nx;
+	    ny0=parms->atm.ny;
 	}else{
-	    /*we are able to host this amount. */
-	    long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
-	    info("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
-	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
-		nx0=parms->atm.nx;
-		ny0=parms->atm.ny;
+	    long avail_min=LONG_MAX, avail_max=0;
+	    for(int igpu=0; igpu<NGPU; igpu++){
+		gpu_set(igpu);
+		long availi=gpu_get_mem();
+		if(avail_min>availi){
+		    avail_min=availi;
+		}
+		if(avail_max<availi){
+		    avail_max=availi;
+		}
+	    }
+	    avail_min-=256<<19;//reserve 128MiB 
+	    avail_max-=256<<19;
+	    long need=nps*sizeof(Real)*nxn*nxn;
+	    info("Min atm is %ldx%ld, available memory is %ld~%ld MB, need at least %ldMB\n", 
+		 nxn, nxn, avail_min>>20, avail_max>>20, need>>20);
+	    if(avail_min<need){
+		if(avail_max<need){
+		    error("No GPU has enough memory\n");
+		}else{
+		    char *gcmd=NULL;
+		    for(int igpu=0; igpu<NGPU; igpu++){
+			extern cuarray<int> GPUS;
+			gpu_set(igpu);
+			if(gpu_get_mem()>need){
+			    char tmp[8];
+			    snprintf(tmp,8," -g%d", GPUS[igpu]);
+			    char *tmp2=gcmd;
+			    gcmd=stradd(tmp, tmp2, (void*)NULL);
+			    free(tmp2);
+			}
+		    }
+		    error("Please rerun maos with %s\n", gcmd);
+		}
+		_Exit(0);
 	    }else{
-		nx0=MIN(nxa, nxn*2);
-		ny0=MIN(nxa, nyn*2);
+		/*we are able to host this amount. */
+		long nxa=(long)floor(sqrt((avail_min)/nps/sizeof(Real)));
+		info("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
+		if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
+		    nx0=parms->atm.nx;
+		    ny0=parms->atm.ny;
+		}else{
+		    nx0=MIN(nxa, nxn*2);
+		    ny0=MIN(nxa, nxn*2);
+		}
 	    }
 	    info("We will host %dx%d in GPU, taking %zd MiB\n", 
-		  nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
+		 nx0, ny0, (nx0*ny0*nps*sizeof(Real))>>20);
 	}
     }
     /*The atm in GPU is the same as in CPU. */
@@ -209,21 +215,21 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	return;
     }
     WRAP_ATM=0;
-    static int need_init=1;
-    static int *next_isim=NULL;/*next time step to update this atmosphere. */
+    const double dt=parms->sim.dt;
+    const double dx=parms->atm.dx;
+    static atm_prep_t *prep_data=NULL;
+    /*static int *next_isim=NULL;
     static Real *next_ox=NULL;
     static Real *next_oy=NULL;
     static Real **next_atm=NULL;
-    static pthread_t *next_threads=NULL;
-    if(need_init){
-	need_init=0;
+    static pthread_t *next_threads=NULL;*/
+    if(iseed0==-1){//Initializing data
 	/*The atm in GPU is smaller than in CPU. */
-	next_isim=(int*)calloc(nps, sizeof(int));
-	next_ox=(Real*)calloc(nps, sizeof(Real));
-	next_oy=(Real*)calloc(nps, sizeof(Real));
-	next_threads=(pthread_t*)calloc(nps, sizeof(pthread_t));
-	next_atm=(Real **)calloc(nps, sizeof(void*));
-
+	prep_data=(atm_prep_t*)calloc(nps, sizeof(atm_prep_t));
+	for(int ips=0; ips<nps; ips++){
+	    prep_data[ips].nx0=nx0;
+	    prep_data[ips].ny0=ny0;
+	}
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
 	    cudata->atm=cumapcell(nps, 1);
@@ -232,15 +238,11 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		cudata->atm[ips].p=curmat(nx0, ny0);
 		cudata->atm[ips].nx=nx0;
 		cudata->atm[ips].ny=ny0;
-
 	    }
 	}/*for im */
     }/*if need_init; */
-    const double dt=parms->sim.dt;
-    const double dx=parms->atm.dx;
     if(iseed0!=iseed){/*A new seed or initialization update vx, vy, ht, etc. */
 	iseed0=iseed;
-
     	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
 	    cumapcell &cuatm=cudata->atm;
@@ -256,105 +258,92 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 	    }
 	}
 	for(int ips=0; ips<nps; ips++){
-	    if(next_atm[ips]){
-		free(next_atm[ips]); next_atm[ips]=NULL;
+	    if(prep_data[ips].next_atm){
+		warning("next_atm is not empty\n");
+		free(prep_data[ips].next_atm);
+		prep_data[ips].next_atm=NULL;
 	    }
-	    next_isim[ips]=isim;/*right now. */
-	    /*copy from below. */
-	    if(atm[ips]->vx>0){/*align right */
-		next_ox[ips]=(parms->atm.nxn/2+1-nx0)*dx-atm[ips]->vx*dt*next_isim[ips];
-	    }else{/*align left */
-		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
-	    }
-	    if(atm[ips]->vy>0){/*align right */
-		next_oy[ips]=(parms->atm.nyn/2+1-ny0)*dx-atm[ips]->vy*dt*next_isim[ips];
-	    }else{/*align left */
-		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
-	    }
+	    prep_data[ips].isim_next=isim;/*right now. */
 	}
     }
-    for(int ips=0; ips<nps; ips++)
-#if _OPENMP >= 200805 
-#pragma omp task
-#endif
-    {
+    for(int ips=0; ips<nps; ips++) {
 	/*Load atmosphere to Real memory in advance. This takes time if atm is
 	  stored in file.*/
-	if(isim>next_isim[ips]-100 && !next_atm[ips]){
-	    /*pinned memory is faster for copying to GPU. */
-	    next_atm[ips]=(Real*)malloc(sizeof(Real)*nx0*ny0);
+	if(isim+100 > prep_data[ips].isim_next && !prep_data[ips].next_atm){
+	    const int nxni=parms->atm.nxn->p[ips];
+	    prep_data[ips].next_atm=(Real*)malloc(sizeof(Real)*nx0*ny0);
+	    const int margin=1;//to avoid going out of range due to interpolation.
+	    //Compute the origin of the subset phase screen to be copied to GPU.
+	    if(atm[ips]->vx>0){/*align right */
+		prep_data[ips].ox=(nxni/2+1-nx0+margin)*dx-atm[ips]->vx*dt*prep_data[ips].isim_next;
+	    }else{/*align left */
+		prep_data[ips].ox=(-nxni/2-margin)*dx-atm[ips]->vx*dt*prep_data[ips].isim_next;
+	    }
+	    if(atm[ips]->vy>0){/*align top */
+		prep_data[ips].oy=(nxni/2+1-ny0+margin)*dx-atm[ips]->vy*dt*prep_data[ips].isim_next;
+	    }else{/*align bottom */
+		prep_data[ips].oy=(-nxni/2-margin)*dx-atm[ips]->vy*dt*prep_data[ips].isim_next;
+	    }
+	    //Compute the offset of the subset phase screen
+	    int offx=(int)round((prep_data[ips].ox-atm[ips]->ox)/dx);
+	    int offy=(int)round((prep_data[ips].oy-atm[ips]->oy)/dx);
+	    prep_data[ips].ox=atm[ips]->ox+offx*dx;
+	    prep_data[ips].oy=atm[ips]->oy+offy*dx;
+
+	    //Wrapping
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
-	    int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
-	    int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
-	    next_ox[ips]=atm[ips]->ox+offx*dx;
-	    next_oy[ips]=atm[ips]->oy+offy*dx;
 	    offx=offx%nxi; if(offx<0) offx+=nxi;
 	    offy=offy%nyi; if(offy<0) offy+=nyi;
-	    atm_prep_t *data=(atm_prep_t*)calloc(1, sizeof(atm_prep_t));/*cannot use local variable. */
-	    data->ips=ips;
-	    data->next_atm=next_atm[ips];
-	    data->nx0=nx0;
-	    data->ny0=ny0;
-	    data->offx=offx;
-	    data->offy=offy;
-	    data->isim=isim;
-	    data->isim_next=next_isim[ips];
-	    data->atm=atm[ips];
+
+	    prep_data[ips].ips=ips;
+	    prep_data[ips].isim=isim;
+	    prep_data[ips].offx=offx;
+	    prep_data[ips].offy=offy;
+	    prep_data[ips].atm=atm[ips];
+	    
 	    /*launch an independent thread to pull data in. thread will exit when it is done. */
-	    pthread_create(&next_threads[ips], NULL, (void *(*)(void *))atm_prep, data);
+	    pthread_create(&prep_data[ips].threads, NULL, (void *(*)(void *))atm_prep, prep_data+ips);
 	}/*need to cpy atm to next_atm. */
-	if(isim==next_isim[ips]){
+    }
+    for(int ips=0; ips<nps; ips++) {
+	if(isim==prep_data[ips].isim_next){
 	    /*need to copy atm to gpu. and update next_isim */
 	    TIC;tic;
-	    pthread_join(next_threads[ips], NULL);
+	    pthread_join(prep_data[ips].threads, NULL);
 	    for(int im=0; im<NGPU; im++)
-#if _OPENMP >= 200805 
-#pragma omp task
-#endif
 	    {
 		gpu_set(im);
 		cumapcell &cuatm=cudata->atm;
-		cuatm[ips].ox=next_ox[ips];
-		cuatm[ips].oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips].P(), (Real*)next_atm[ips],
+		cuatm[ips].ox=prep_data[ips].ox;
+		cuatm[ips].oy=prep_data[ips].oy;
+		DO(cudaMemcpy(cuatm[ips].P(), prep_data[ips].next_atm,
 			      nx0*ny0*sizeof(Real), cudaMemcpyHostToDevice));
 	    }/*for im */
-#if _OPENMP >= 200805 
-#pragma omp taskwait
-#endif
-	    free(next_atm[ips]);next_atm[ips]=0;
+	    free(prep_data[ips].next_atm);prep_data[ips].next_atm=0;
 	    /*Update next_isim. */
 	    long isim1, isim2;
+	    const int nxni=parms->atm.nxn->p[ips];
 	    if(fabs(atm[ips]->vx)<EPS){
 		isim1=INT_MAX;
 	    }else if(atm[ips]->vx>0){/*align right. */
-		isim1=(long)floor(-(next_ox[ips]+(parms->atm.nxn/2)*dx)/(atm[ips]->vx*dt));
+		isim1=(long)floor(-(prep_data[ips].ox+(nxni/2)*dx)/(atm[ips]->vx*dt));
 	    }else{/*align left */
-		isim1=(long)floor(-(next_ox[ips]+(nx0-(parms->atm.nxn/2+1))*dx)/(atm[ips]->vx*dt));
+		isim1=(long)floor(-(prep_data[ips].ox+(nx0-(nxni/2+1))*dx)/(atm[ips]->vx*dt));
 	    }
 	    if(fabs(atm[ips]->vy)<EPS){
 		isim2=INT_MAX;
 	    }else if(atm[ips]->vy>0){/*align right. */
-		isim2=(long)floor(-(next_oy[ips]+(parms->atm.nyn/2)*dx)/(atm[ips]->vy*dt));
+		isim2=(long)floor(-(prep_data[ips].oy+(nxni/2)*dx)/(atm[ips]->vy*dt));
 	    }else{/*align left */
-		isim2=(long)floor(-(next_oy[ips]+(ny0-(parms->atm.nyn/2+1))*dx)/(atm[ips]->vy*dt));
+		isim2=(long)floor(-(prep_data[ips].oy+(ny0-(nxni/2+1))*dx)/(atm[ips]->vy*dt));
 	    }
-	    next_isim[ips]=isim1<isim2?isim1:isim2;
-	    if(next_isim[ips]>parms->sim.end){/*no need to do */
-		next_isim[ips]=INT_MAX;
+	    prep_data[ips].isim_next=isim1<isim2?isim1:isim2;
+	    if(prep_data[ips].isim_next>parms->sim.end){/*no need to do */
+		prep_data[ips].isim_next=INT_MAX;
 	    }
-	    if(atm[ips]->vx>0){/*align right */
-		next_ox[ips]=(parms->atm.nxn/2+1-nx0)*dx-atm[ips]->vx*dt*next_isim[ips];
-	    }else{/*align left */
-		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
-	    }
-	    if(atm[ips]->vy>0){/*align right */
-		next_oy[ips]=(parms->atm.nyn/2+1-ny0)*dx-atm[ips]->vy*dt*next_isim[ips];
-	    }else{/*align left */
-		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
-	    }
-	    toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, next_isim[ips]); 
+	 
+	    toc2("Step %d: Layer %d transfered. next in step %d. ",isim, ips, prep_data[ips].isim_next); 
 	}//if isim
     }//for ips
 #if _OPENMP >= 200805 
@@ -397,7 +386,8 @@ void gpu_dmproj2gpu(mapcell *dmproj){
 
 
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear(Real *restrict out, const Real *restrict in, const int nx, const int ny, KARG_COMMON){
+__global__ void prop_linear(Real *restrict out, const Real *restrict in,
+			    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	Real x=loc[i][0]*dxi+dispx;
@@ -414,7 +404,8 @@ __global__ void prop_linear(Real *restrict out, const Real *restrict in, const i
 }
 
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear(Real *restrict out, const Comp *restrict in, const int nx, const int ny, KARG_COMMON){
+__global__ void prop_linear(Real *restrict out, const Comp *restrict in,
+			    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	Real x=loc[i][0]*dxi+dispx;
@@ -429,7 +420,6 @@ __global__ void prop_linear(Real *restrict out, const Comp *restrict in, const i
 	}
     }
 }
-
 /*This is memory bound. So increasing # of points processed does not help. */
 __global__ void prop_linear_nocheck(Real *restrict out, const Real *restrict in, 
 				    const int nx, const int ny, KARG_COMMON){
@@ -445,8 +435,8 @@ __global__ void prop_linear_nocheck(Real *restrict out, const Real *restrict in,
     }
 }
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_linear_wrap(Real *restrict out, const Real *restrict in, const int nx, const int ny,
-				 KARG_COMMON){
+__global__ void prop_linear_wrap(Real *restrict out, const Real *restrict in,
+				 const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	Real x=loc[i][0]*dxi+dispx;
@@ -466,8 +456,8 @@ __global__ void prop_linear_wrap(Real *restrict out, const Real *restrict in, co
 }
 
 /*This is memory bound. So increasing # of points processed does not help. */
-__global__ void prop_cubic(Real *restrict out, const Real *restrict in, const int nx, const int ny,
-			   KARG_COMMON, const Real *cc){
+__global__ void prop_cubic(Real *restrict out, const Real *restrict in,
+			   const int nx, const int ny, KARG_COMMON, const Real *cc){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	Real x=loc[i][0]*dxi+dispx;

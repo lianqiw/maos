@@ -219,41 +219,6 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
     }
 	
     if(parms->evl.psfmean || parms->evl.psfhist){
-	for(int im=0; im<NGPU; im++){
-	    gpu_set(im);
-	    /**
-	       Using mutex to protect psf data that is allocated per GPU does
-	       not work because the process happens in streams that is outside
-	       of the lock. Streams are not allocated per GPU.
-	    
-	       Even if same stream is used for different EVL directions on the
-	       same GPU. It is still not ok to share the perf.wvf or perf.psfs as different
-	       EVL directions are running in different threads and will step
-	       onto each other.
-	     */
-	    /*
-	    if(!cudata->perf.wvf){
-		cudata->perf.wvf=cuccell(nwvl, 1);
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    if(0 && !parms->evl.psfhist && iwvl>0 && cuperf_t::nembed[iwvl] == cuperf_t::nembed[iwvl-1]){
-			cudata->perf.wvf[iwvl]=cudata->perf.wvf[iwvl-1];
-		    }else{
-			cudata->perf.wvf[iwvl]=cucmat(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
-		    }
-		}
-		}*/
-	    if(parms->evl.psfhist){
-		warning("Need to revise how the PSF history is stored. Per GPU storage is only valid if EVL operations are seralized within each GPU\n");
-		cudata->perf.psfs=cuccell(nwvl, 1);
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    if(0 && cuperf_t::psfsize[iwvl]<cuperf_t::nembed[iwvl]){
-			cudata->perf.psfs[iwvl]=cucmat(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
-		    }else{
-			cudata->perf.psfs[iwvl]=cudata->perf.wvf[iwvl];
-		    }
-		}
-		}
-	}
 	if(!parms->sim.evlol){
 	    for(int ievl=0; ievl<nevl; ievl++){
 		if(parms->evl.psf->p[ievl]==0){
