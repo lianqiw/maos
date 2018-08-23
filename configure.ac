@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 2.2.0-r2, lianqiw@gmail.com)
+AC_INIT(maos, 2.3.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define subdir-objects])
 #silent building
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
