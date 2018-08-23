@@ -510,7 +510,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 	    if(parms->recon.misreg_tel2wfs && parms->recon.misreg_tel2wfs[iwfs]){
 		share_gp=0;
 	    }
-	    
+	   
 	}
 	info("Generating GP with ");TIC;tic;
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){

@@ -21,7 +21,7 @@
 #include "mtch.h"
 #include "genseotf.h"
 #include "pywfs.h"
-
+#include "setup_recon.h"
 #define MOVES(p,i,j) p[i]=p[j]
 #define MOVED(p,n,i,j) memcpy(p+n*i, p+n*j, sizeof(double)*n)
 #define MOVEPTS(pts,count,isa)			\
@@ -1131,22 +1131,18 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     double wvl0=parms->powfs[ipowfs].wvl->p[0];
     LLT_T *llt=powfs[ipowfs].llt=mycalloc(1,LLT_T);
     LLT_CFG_T *lltcfg=parms->powfs[ipowfs].llt;
-    pts_t *lpts=llt->pts=mycalloc(1,pts_t);
-    lpts->nsa=1;
+
     double lltd=lltcfg->d;
-    lpts->dsay=lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
+
     int notf=MAX(powfs[ipowfs].ncompx, powfs[ipowfs].ncompy);
     /*The otf would be dx/lambda. Make it equal to embfac*pts->dsa/lambda/notf)*/
-    const double dx=lpts->dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
-    lpts->dy=lpts->dx;
-    const int nx=lpts->nx=round(lpts->dsa/lpts->dx);
-    lpts->dsay=lpts->dsa=lpts->dx*lpts->nx;
-    
-    lpts->origx=mycalloc(1,double);
-    lpts->origy=mycalloc(1,double);
+    double dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
+    double lltdsa=MAX(lltd, powfs[ipowfs].pts->dsa);
+    int nx=round(lltdsa/dx); lltdsa=dx*nx;
+    pts_t *lpts=llt->pts=ptsnew(1, lltdsa, lltdsa, nx, dx, dx);
 
-    double oy=lpts->origx[0]=(dx-lpts->dsa)*0.5;
-    double ox=lpts->origy[0]=(dx-lpts->dsa)*0.5;
+    double oy=llt->pts->origx[0]=(dx-lltdsa)*0.5;
+    double ox=llt->pts->origy[0]=(dx-lltdsa)*0.5;
     double sumamp2=0;
     llt->amp=dnew(nx*nx, 1);
     if(lltcfg->fnamp){
@@ -1728,6 +1724,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	}else if(parms->powfs[ipowfs].type==1){
 	    pywfs_free(powfs[ipowfs].pywfs);
 	}
+	free_fit(powfs[ipowfs].fit, parms->powfs[ipowfs].nwfs);
     }
     free(powfs);
 }

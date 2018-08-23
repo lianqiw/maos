@@ -22,6 +22,8 @@
 #include "../sys/sys.h"
 #include "mathdef.h"
 #include "loc.h"
+struct loc_private{
+};
 /**
    Free pts_t data
 */
@@ -32,9 +34,9 @@ void ptsfree_do(pts_t *pts){
 	    free(pts->origy);
 	}
 	if(pts->map){
-	    free(pts->map->p);
-	    free(pts->map);
+	    mapfree(pts->map);
 	}
+	free(pts->nref);
     }
     free(pts);
 }
@@ -65,10 +67,9 @@ void locfree_do(loc_t *loc){
     if(loc && loc->nref && !atomicadd(loc->nref, -1)){
 	loc_free_stat(loc);
 	loc_free_map(loc);
-	if(!loc->nref){
-	    free(loc->locx);
-	    free(loc->locy);
-	}
+	free(loc->locx);
+	free(loc->locy);
+	free(loc->nref);
     }
     free(loc);
 }

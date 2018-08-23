@@ -139,6 +139,7 @@ typedef struct locstat_t{
     long   ncol;        /**<Number of consecutive columns found*/
     long   nx,ny;       /**<Size for embedding*/
 }locstat_t;
+
 /**
    Struct for coordinates like plocs, xloc, aloc etc.
 */

@@ -80,11 +80,14 @@ X(sp) *X(spref)(X(sp) *A){
     assert_sp(A);
     X(sp) *out = mycalloc(1,X(sp));
     if(!A->nref){
-	A->nref=mycalloc(1,int);
-	A->nref[0]=1;
+	extern quitfun_t quitfun;
+	if(quitfun==&default_quitfun){
+	    warning_once("Referencing non-referenced data. This may cause error.\n");
+	}
+    }else{
+	atomicadd(A->nref,1);
     }
     memcpy(out,A,sizeof(X(sp)));
-    atomicadd(out->nref,1);
     return out;
 }
 /**

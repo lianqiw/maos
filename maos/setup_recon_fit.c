@@ -345,14 +345,19 @@ void setup_fit(FIT_T *fit, int idealfit){
     fit->FL.maxit = fit->flag.maxit;
     toc2("Setting up DM Fitting.");
 }
-void free_fit(FIT_T *fit){
-    cellfree(fit->HXF);
-    cellfree(fit->HA);
-    cellfree(fit->actcpl);
-    cellfree(fit->actinterp);
-    cellfree(fit->NW);
-    muv_free(&fit->FR);
-    muv_free(&fit->FL);
+void free_fit(FIT_T *fit, int nfit){
+    if(!fit) return;
+    for(int ifit=0; ifit<nfit; ifit++){
+	cellfree(fit[ifit].HXF);
+	cellfree(fit[ifit].HA);
+	cellfree(fit[ifit].actcpl);
+	cellfree(fit[ifit].actinterp);
+	cellfree(fit[ifit].actslave);
+	cellfree(fit[ifit].NW);
+	muv_free(&fit[ifit].FR);
+	muv_free(&fit[ifit].FL);
+    }
+    free(fit);
 }
 void setup_recon_fit(RECON_T *recon, const PARMS_T *parms){
     FIT_T *fit=calloc(1, sizeof(FIT_T));

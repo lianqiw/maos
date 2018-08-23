@@ -44,11 +44,7 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=mycalloc(nmax,long);
-    loc_t *sloc=mycalloc(1,loc_t);
-    sloc->dx=xloc->dx;
-    sloc->dy=xloc->dy;
-    sloc->locx=mycalloc(nmax,double);
-    sloc->locy=mycalloc(nmax,double);
+    loc_t *sloc=locnew(nmax, xloc->dx, xloc->dy);
     double *amploc=NULL;
     if(amp) amploc=mycalloc(nmax,double);
 

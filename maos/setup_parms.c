@@ -93,6 +93,7 @@ void free_parms(PARMS_T *parms){
     lfree(parms->atm.ipsr);
     lfree(parms->atm.overx);
     lfree(parms->atm.overy);
+    lfree(parms->atm.nxn);
     lfree(parms->atmr.indps);
     dfree(parms->atm.r0logpsdt);
     dfree(parms->atm.r0logpsds);
