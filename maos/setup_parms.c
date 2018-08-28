@@ -2496,8 +2496,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
 	}
     }
     if(parms->sim.nseed<1){
-	scheduler_finish(0);
 	info("There are no seed to run. Use -O to override. Exit\n");
+	return;
     }else if(parms->sim.end>parms->sim.start){
 	info("There are %d valid simulation seeds: ",parms->sim.nseed);
 	for(int i=0; i<parms->sim.nseed; i++){

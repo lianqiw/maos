@@ -1291,6 +1291,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    setup_recon_mvst(recon, parms);
 	}
     }
+    setup_recon_dither_dm(recon, powfs, parms);//depends on saneai
 
     toc2("setup_recon");
 }

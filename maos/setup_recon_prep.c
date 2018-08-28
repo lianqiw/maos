@@ -1155,5 +1155,4 @@ void setup_recon_prep2(RECON_T *recon, const PARMS_T *parms, const APER_T *aper,
 	setup_ngsmod_prep(parms,recon,aper,powfs);
     }
     setup_recon_dmttr(recon, parms);
-    setup_recon_dither_dm(recon, powfs, parms);
 }

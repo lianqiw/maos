@@ -252,15 +252,19 @@ static RUN_T* running_add(int pid,int sock){
 	if(irun->sock!=sock) irun->sock=sock;
 	return irun;
     }else{
+	char progname[PATH_MAX];
+	if(pid>0){
+	    if(get_job_progname(progname, PATH_MAX, pid)){//failed. Already exited.
+		return NULL;
+	    }
+	}
+		
 	info("adding %d to running\n", pid); /*create the node */
 	irun=mycalloc(1,RUN_T);
 	irun->pidnew=irun->pid=pid;
 	irun->sock=sock;
-	if(pid>0 && !irun->exe){
-	    char progname[PATH_MAX];
-	    if(!get_job_progname(progname, PATH_MAX, pid)){
-		irun->exe=strdup(progname);
-	    }
+	if(pid>0){
+	    irun->exe=strdup(progname);
 	}
 	/*record the launch time */
 	if(pid>0){
@@ -420,14 +424,13 @@ static void process_queue(void){
     timestamp=myclockd();
     if(nrun_get(0)>=NCPU) return;
     int avail=get_cpu_avail();
-    info("process_queue: nrun=%d avail=%d\n", nrun_get(0), avail);
+    //info("process_queue: nrun=%d avail=%d\n", nrun_get(0), avail);
     if(avail<1) return;
     RUN_T *irun=running_get_wait(S_WAIT);
     while(irun && irun->pid>0 && kill(irun->pid,0)){//job exited
 	running_remove(irun->pid, S_NONEXIST);
 	irun=running_get_wait(S_WAIT);
     }
-    dbg("irun=%p\n", irun);
     if(irun){//There are jobs waiting.
 	if(irun->sock>0){
 	    int nthread=irun->nthread;
@@ -435,7 +438,7 @@ static void process_queue(void){
 		/*don't close the socket. will close it in select loop. */
 		/*warning_time("process %d launched. write to sock %d cmd %d\n", */
 		/*irun->pid, irun->sock, S_START); */
-		info("process_queue: Notify %d at %d\n", irun->pid, irun->sock);
+		info("process_queue: Start %d at %d\n", irun->pid, irun->sock);
 		if(stwriteint(irun->sock,S_START)){
 		    perror("stwriteint");
 		    warning("failed to notify maos\n");
@@ -487,7 +490,7 @@ static void process_queue(void){
     }
 }
 /** replace \n by space*/
-static char *convert_path(const char *path0){
+static char *remove_endl(const char *path0){
     char *path=strdup(path0);
     for(char *tmp=path; tmp[0]; tmp++){
 	if(tmp[0]=='\n'){
@@ -496,12 +499,16 @@ static char *convert_path(const char *path0){
     }
     return path;
 }
-static void new_job(char *exename, char *execmd){
+static void new_job(const char *exename, const char *execmd){
     RUN_T *irun=running_add(--counter, -1);
+    if(!irun){
+	warning("scheduler: running_add\n");
+	return;
+    }
     irun->status.info=S_QUEUED;
-    irun->exe=exename;
-    irun->path0=execmd;
-    irun->path=convert_path(irun->path0);
+    irun->exe=strdup(exename);
+    irun->path0=strdup(execmd);
+    irun->path=remove_endl(irun->path0);
     info("new_job: (%s) (%s)\n", exename, execmd);
     monitor_send(irun, irun->path);
     monitor_send(irun, NULL);
@@ -525,7 +532,7 @@ static int respond(int sock){
 	goto end;
     }
     pid=cmd[1];
-    info("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
+    //info("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
     switch(cmd[0]){
     case CMD_START://1: Called by maos when job starts.
 	{
@@ -548,6 +555,10 @@ static int respond(int sock){
 	    else if(nthread>NCPU)
 		nthread=NCPU;
 	    RUN_T *irun=running_add(pid,sock);
+	    if(!irun){
+		warning("scheduler: running_add %d failed. Exe already exited.\n", pid);
+		break;
+	    }
 	    irun->nthread=nthread;
 	    irun->ngpu=ngpu;
 	    if(waiting & 0x1){
@@ -572,7 +583,12 @@ static int respond(int sock){
 	{
 	    RUN_T *irun=running_get(pid);
 	    if(!irun){/*started before scheduler is relaunched. */
+		warning("pid=%d is already running\n", pid);
 		irun=running_add(pid,sock);
+		if(!irun){
+		    warning("scheduler: running_add %d failed. Exe already exited.\n", pid);
+		    break;
+		}
 		irun->status.info=S_START;
 		irun->nthread=irun->status.nthread;
 		nrun_add(pid, irun->nthread, irun->ngpu);
@@ -599,13 +615,17 @@ static int respond(int sock){
     case CMD_PATH://6: Called by MAOS to report the PATH.
 	{
 	    RUN_T *irun=running_add(pid, sock);
+	    if(!irun){
+		warning("scheduler: running_add %d failed. Exe already exited.\n", pid);
+		break;
+	    }
 	    free(irun->path0);
 	    free(irun->path);
 	    if(streadstr(sock, &irun->path0)){
 		ret=-1;
 		break;
 	    }
-	    irun->path=convert_path(irun->path0);
+	    irun->path=remove_endl(irun->path0);
 	    info("Received path: %s\n",irun->path);
 	    monitor_send(irun,irun->path);
 	}
@@ -786,6 +806,9 @@ static int respond(int sock){
 	if(stwriteint(sock, ret)){
 	    ret=-1;
 	}
+	free(exename);
+	free(execwd);
+	free(execmd);
     }
 	break;
     default:

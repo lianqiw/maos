@@ -132,6 +132,8 @@ int main(int argc, const char *argv[]){
     scheduler_start(scmd,NTHREAD,ngpu,!arg->force);
     info("%s\n", scmd);
     info("Output folder is '%s'. %d threads\n",arg->dirout, NTHREAD);
+    free(arg->dirout); arg->dirout = NULL;
+
     maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg->conf, arg->confcmd, arg->override);
@@ -165,15 +167,12 @@ int main(int argc, const char *argv[]){
 	}
 	thread_new((thread_fun)scheduler_listen, (void*)maos_daemon);
 	setup_parms_gpu(parms, arg->gpus, arg->ngpu);
-    }
-    free(scmd);
-    free(arg->dirout);
-    free(arg->gpus);
-    free(arg);
+    
+ 
     /* do not use prallel single in maos(). It causes blas to run single threaded
      * during preparation. Selective enable parallel for certain setup functions
      * that doesn't use blas*/
-    if(parms->sim.nseed>0){
+
 	info("\n*** Preparation started at %s in %s. ***\n\n",myasctime(),HOST);
 	maos_setup(parms);
 	if(parms->sim.end>parms->sim.start){
@@ -182,8 +181,12 @@ int main(int argc, const char *argv[]){
 	}
 	rename_file(0);
     }
+    
     maos_reset();
     info("\n*** Simulation finished at %s in %s. ***\n\n",myasctime(),HOST);
+    free(scmd);
+    free(arg->gpus);
+    free(arg);
     scheduler_finish(0);
     return 0;
 }
