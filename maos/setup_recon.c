@@ -1078,7 +1078,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 		dfree(psd_ws);
 		dmat *psd_ws_y=dnew_ref(psd_ws_m->nx,1,psd_ws_m->p+psd_ws_m->nx);
 		dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
-		add_psd2(&psd_ngs, psd_ws_m); dfree(psd_ws_m);
+		add_psd2(&psd_ngs, psd_ws_m, 1); dfree(psd_ws_m);
 	    }
 	    writebin(psd_ngs, "psd_ngs_servo");
 	    dmat *rss2=dnew(1,1); rss2->p[0]=rss;

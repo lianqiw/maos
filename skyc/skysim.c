@@ -394,7 +394,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	    dmat *xi=dsub(x, 20, 0, im, 1);
 	    dscale(xi, sqrt(IND(MCC,im,im)));/*convert to unit of m.*/
 	    dmat *psdi=psd1dt(xi, 1, parms->maos.dt);
-	    add_psd2(&simu->psds->p[im*iratio], psdi);
+	    add_psd2(&simu->psds->p[im*iratio], psdi,1);
 	    var_all+=psd_inte2(psdi);
 	    dfree(xi);
 	    dfree(psdi);
@@ -439,9 +439,9 @@ static void skysim_calc_psd(SIM_S *simu){
     simu->varol+=var_ws;//testing
  
     //add windshake PSD to ngs/tt
-    add_psd2(&simu->psds->p[0], parms->skyc.psd_ws);
-    if(parms->skyc.dbg){
-	writebin(simu->psds, "psds");
+    add_psd2(&simu->psds->p[0], parms->skyc.psd_ws,1);
+    if(parms->skyc.dbg || 1){
+	writebin(simu->psds, "psds_m2.bin");
     }
 }
 
@@ -487,7 +487,8 @@ static void skysim_prep_sde(SIM_S *simu){
 	dfree(xi);
 	if(im==0 && parms->skyc.psd_ws){
 	    //add windshake on first mode only
-	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws);
+	    //2018-09-05: need to scale psd_ws by 1/sqrt(mcc) to convert to radian.
+	    add_psd2(&simu->psdi->p[im], parms->skyc.psd_ws, 1./sqrt(IND(parms->maos.mcc,0,0)));
 	}
 	dmat *coeff=sde_fit(simu->psdi->p[im], NULL, parms->skyc.sdetmax, 0);
 	if(IND(coeff,0,0)>100 && parms->skyc.sdetmax){
@@ -507,7 +508,7 @@ static void skysim_prep_sde(SIM_S *simu){
     dfree(x);
     if(parms->skyc.dbg || 1){
 	writebin(simu->sdecoeff, "coeff");
-	writebin(simu->psdi, "psdi");
+	writebin(simu->psdi, "psds_rad2.bin");
     }
 }
 /**

@@ -30,7 +30,7 @@ dmat *psds2t(const dmat *psdt, double vmean);
 double psd_inte(const double *nu, const double *psd, long n);
 double psd_inte2(const dmat *psdin);
 dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstep);
-dmat* add_psd(const dmat *psd1, const dmat *psd2);
-void add_psd2(dmat **out, const dmat *in);
+dmat* add_psd(const dmat *psd1, const dmat *psd2, double scale2);
+void add_psd2(dmat **out, const dmat *in, double scale);
 void psd_sum(dmat *psd, double scale);
 #endif

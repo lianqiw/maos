@@ -67,3 +67,4 @@ cn2est_t *cn2est=cn2estmex(const dmat *wfspair, dmat *wfstheta, const loc_t *sal
 		    const dmat *htrecon, int keepht, double l0, dcell *grad);
 
 ccell *mkdtf=mkdtfmex(dspcell **si, const dmat *wvls, double dxsa, double embfac, long ncompx, long ncompy, long pixpsax, long pixpsay, double pixthetax, double pixthetay, const dmat* pixoffx, const dmat* pixoffy, double pixblur);
+dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2);

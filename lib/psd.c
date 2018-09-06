@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "../math/mathdef.h"
+#include "psd.h"
 /**
    Compute the PSD from a sequence.
 */
@@ -300,58 +301,59 @@ dmat* psd2time(const dmat *psdin, rand_t *rstat, double dt, int nstepin){
 }
 
 /**
-   Add two PSDs that doesn't have the same frequency. the first column of each
-   dmat is the frequency nu, and the second column is PSD. Bug discovered on
-   2013-03-24:only psd2 was added to to psd.*/
-static dmat *add_psd_nomatch(const dmat *psd1,const dmat *psd2){
-    dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
-    dmat *p2ynew=dinterp1(psd2, 0, nu1, 1e-40);
-    dmat *psd=dnew(nu1->nx,2);
-    double *py=psd->p+psd->nx;
-    const double *p1y=psd1->p+psd1->nx;
-    for(long i=0; i<psd->nx; i++){
-	psd->p[i]=nu1->p[i];
-	py[i]=p1y[i]+p2ynew->p[i];
+   Check whether two PSDs has the same frequency. the first column of each
+   dmat is the frequency nu, and the second column is PSD.
+*/
+
+static int check_psd_match(const dmat *psd1, const dmat *psd2){
+    double ans=1;
+    if(psd1->nx!=psd2->nx){
+	ans=0;
+    }else{
+	for(long i=0; i<psd1->nx; i++){
+	    if(fabs(psd1->p[i]-psd2->p[i])>fabs(psd1->p[i]+psd2->p[i])*1.e-6){
+		ans=0;
+		break;
+	    }
+	}
     }
-    dfree(nu1);
-    dfree(p2ynew);
-    return psd;
+    return ans;
+}
+/**
+   Add two PSDs. The first column of each dmat is the frequency nu, and the
+   second column is PSD*/
+dmat *add_psd(const dmat *psd1, const dmat *psd2, double scale2){
+    dmat *out=ddup(psd1);
+    add_psd2(&out, psd2, scale2);
+    return out;
 }
 
-/**
-   Add two PSDs. the first column of each dmat is the frequency nu, and the
-   second column is PSD*/
-dmat *add_psd(const dmat *psd1, const dmat *psd2){
-    if(psd1->nx!=psd2->nx){
-	//warning("The two PSDs have different length\n");
-	return add_psd_nomatch(psd1, psd2);
-    }
-    dmat *psd=dnew(psd1->nx,2);
-    double *restrict pp=psd->p+psd->nx;
-    const double *p1=psd1->p+psd1->nx;
-    const double *p2=psd2->p+psd2->nx;
-    for(long i=0; i<psd->nx; i++){
-	if(fabs(psd1->p[i]-psd2->p[i])>1.e-2){
-	    warning("The two PSDs doesn't have the same freq.");
-	    dfree(psd);
-	    return add_psd_nomatch(psd1,psd2);
-	    /*todo: apply interp1 to interpolate the second PSD. */
-	}
-	psd->p[i]=psd1->p[i];
-	pp[i]=p1[i]+p2[i];
-    }
-    return psd;
-}
 /*
-  Add a PSD to another.
+  Add a PSD scaled by scale to another. The first column of each dmat is the
+   frequency nu, and the second column is PSD.
 */
-void add_psd2(dmat **out, const dmat *in){
-    if(!*out){
-	*out=ddup(in);
+void add_psd2(dmat **pout, const dmat *in, double scale){
+    if(!*pout){
+	*pout=ddup(in);
     }else{
-	dmat *tmp=*out;
-	*out=add_psd(tmp, in);
-	dfree(tmp);
+	dmat *out=*pout;
+	double *p1=PCOL(out,1);
+	dmat *p2new=0;
+	const long nx=out->nx;
+	const double *p2=0;
+	if(check_psd_match(out, in)){
+	    p2=PCOL(in, 1);
+	}else{
+	    dmat *nu1=dsub(out,0, nx,0,1);
+	    p2new=dinterp1(in, 0, nu1, 1e-40);
+	    p2=PCOL(p2new,0);
+	    dfree(nu1);
+	}
+	
+	for(long i=0; i<nx; i++){
+	    p1[i]+=p2[i]*scale;
+	}
+	dfree(p2new);
     }
 }
 /**
