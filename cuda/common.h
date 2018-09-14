@@ -80,7 +80,7 @@ extern "C"{
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 typedef Real Real2[2];
-int cuda_free(void *p);
+int mycudaFree(void *p);//Unreference deduplicated memory
 /*static int tot_mem=0; */
 #undef cudaMalloc
 #undef cudaFree
@@ -88,7 +88,7 @@ inline int CUDAMALLOC(void **p, size_t size){
     return cudaMalloc(p,size);
 }
 inline int CUDAFREE(void *p){
-    return cuda_free(p);
+    return mycudaFree(p);
 }
 #define DEBUG_MEM 0
 #if DEBUG_MEM

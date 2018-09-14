@@ -441,7 +441,7 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t
    Free data if not referenced or reference is 1.
 */
 #undef cudaFree
-int cuda_free(void *pp){
+int mycudaFree(void *pp){
     int tofree=1;
     if(cudata){
 	LOCK(cudata->memmutex);

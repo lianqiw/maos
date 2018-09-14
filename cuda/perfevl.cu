@@ -169,14 +169,18 @@ strehlcomp_do(Comp *strehlc,
    Compute complex PSF and return.
 */
 static void psfcomp(cuccell psfs, const curmat &iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
+    cucmat wvf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat &psf=psfs[iwvl];
 	if(cuperf_t::psfsize[iwvl]==1){
 	    strehlcomp_do<<<REDUCE(nloc), DIM_REDUCE*sizeof(Comp),stream>>>
 		(psf.P(), iopdevl.P(), cudata->perf.amp, nloc, 2.*M_PI/cuperf_t::wvls[iwvl]);
 	}else{
-	    cucmat &wvf=cudata->perf.wvf[iwvl];
-	    cuzero(wvf, stream);
+	    if(wvf.Nx()!=cuperf_t::nembed[iwvl]){
+		wvf=cucmat(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
+	    }else{
+		cuzero(wvf, stream);
+	    }
 	    embed_wvf_do<<<DIM(iopdevl.Nx(),256),0,stream>>>
 		(wvf.P(), iopdevl.P(), cudata->perf.amp, cudata->perf.embed[iwvl], nloc, cuperf_t::wvls[iwvl]);
 	    CUFFT(cuperf_t::plan[iwvl+nwvl*ievl], wvf.P(), CUFFT_FORWARD);
@@ -194,10 +198,14 @@ static void psfcomp(cuccell psfs, const curmat &iopdevl, int nwvl, int ievl, int
    Compute only PSF and add to result.
 */
 static void psfcomp_r(curmat *psf, const curmat &iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
+    cucmat wvf;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	//cucmat &wvf=cudata->perf.wvf[iwvl];
-	cucmat wvf(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
-	cuzero(wvf, stream);
+	if(wvf.Nx()!=cuperf_t::nembed[iwvl]){
+	    wvf=cucmat(cuperf_t::nembed[iwvl], cuperf_t::nembed[iwvl]);
+	}else{
+	    cuzero(wvf, stream);
+	}
 	if(!psf[iwvl]) psf[iwvl]=curmat(cuperf_t::psfsize[iwvl], cuperf_t::psfsize[iwvl]);
 	if(cuperf_t::psfsize[iwvl]==1){
 	    strehlcomp_do<<<REDUCE(nloc), DIM_REDUCE*sizeof(Real)*2,stream>>>
@@ -214,7 +222,7 @@ static void psfcomp_r(curmat *psf, const curmat &iopdevl, int nwvl, int ievl, in
 	    }else{
 		corner2center_abs2_do<<<DIM2((psf[iwvl]).Nx(),(psf[iwvl]).Ny(),16),0,stream>>>
 		    ((psf[iwvl]).P(), (psf[iwvl]).Nx(), (psf[iwvl]).Ny(), wvf.P(), wvf.Nx(), wvf.Ny());
-		    }
+	    }
 	}
     }
 }

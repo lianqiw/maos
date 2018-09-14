@@ -2528,6 +2528,15 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     if(parms->evl.psfisim<parms->sim.start){
 	parms->evl.psfisim=parms->sim.start;
     }
+    if(parms->evl.psfisim>=parms->sim.end){
+	if(parms->evl.psfmean){
+	    warning("psfisim>=sim.end, disable psfmean\n");
+	    parms->evl.psfmean=0;
+	}
+	if(parms->evl.psfhist){
+	    warning("psfisim>=sim.end, disable psfhist\n");
+	}
+    }
     if(parms->sim.closeloop==0 || parms->evl.tomo){
 	/*disable parallelizing the big loop. */
 	extern int PARALLEL;

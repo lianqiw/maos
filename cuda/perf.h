@@ -45,7 +45,6 @@ struct cuperf_t{
     curmat amp;
     int    **embed;
 
-    cuccell wvf;
     curcell psfol;
     curmat  opdcovol;
     curmat  opdmeanol;
