@@ -1,4 +1,5 @@
 ACLOCAL_AMFLAGS=-I m4 --install
+
 SUBDIRS=
 SUBDIRS+=sys math lib
 if USE_CUDA
@@ -22,3 +23,10 @@ $(srcdir)/math/tmp.c:$(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/m
 	@cat $(srcdir)/math/mat.c $(srcdir)/math/cell.c $(srcdir)/math/matbin.c $(srcdir)/math/spbin.c $(srcdir)/math/sp.c >> $(srcdir)/math/tmp.c
 
 EXTRA_DIST = doxygen.cfg docs version.h scripts config
+
+BUILT_SOURCES=version #non existent file will always run
+version:
+	@cd $(srcdir)
+	@echo static const char \*GIT_VERSION=\"`git describe --tags`\"\; >$(srcdir)/version.h
+
+.ONESHELL:

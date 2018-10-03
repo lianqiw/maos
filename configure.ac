@@ -966,16 +966,7 @@ AC_CONFIG_FILES( [Makefile
 if test -d "${srcdir}/test" ;then
     AC_CONFIG_FILES([test/Makefile])
 fi
-if test ! -f "${srcdir}/version.h" ;then
-    (
-	cd ${srcdir}
-	if which git >/dev/null 2>&1 ;then
-	    echo static const char *GIT_VERSION=\"$(git describe --tags)\"\; >version.h
-	else
-	    echo static const char *GIT_VERSION=\"\"\; >version.h
-	fi
-    )
-fi
+
 LDOPTS+=" -no-fast-install -avoid-version"
 LDEXE+=" -lz -lm -ldl"
 LDEXE_FULL="$LDFFT $LDCHOL $LAPACK $LDEXE" #when require libaos
