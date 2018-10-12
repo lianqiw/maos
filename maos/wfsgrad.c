@@ -1142,7 +1142,7 @@ void wfsgrad_twfs_recon(SIM_T *simu){
 void wfsgrad(SIM_T *simu){
     double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.idealfit || parms->sim.evlol) return;
+    if(parms->sim.idealfit || parms->sim.evlol || parms->sim.idealtomo) return;
     // call the task in parallel and wait for them to finish. It may be done in CPU or GPU.
     extern int PARALLEL;
     if(!PARALLEL || parms->tomo.ahst_idealngs==1 || !parms->gpu.wfs){

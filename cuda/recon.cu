@@ -66,7 +66,8 @@ namespace cuda_recon{
 	}
     }
 
-    if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit && !parms->load.mvm){
+    if(parms->recon.alg==0 && (parms->gpu.tomo || parms->gpu.fit)
+       && !parms->sim.idealfit && !parms->load.mvm){
 	if(parms->tomo.square){
 	    opdr=curcell(recon->npsr, 1, recon->xnx->p, recon->xny->p);
 	}else{

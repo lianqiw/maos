@@ -322,6 +322,7 @@ void gpu_perfevl_queue(thread_t *info){
 	    curcp(opdcopy, iopdevl, stream);
 	    if(parms->evl.pttr->p[ievl]){//remove piston/tip/tilt
 		curaddptt(opdcopy, cudata->perf.locs.P(), cuperf_t::coeff[ievl].P(), -1,-1,-1,stream);
+		warning_once("Removing piston/tip/tilt from OPD.\n");
 	    }else{//remove piston only
 		curaddptt(opdcopy, cudata->perf.locs.P(), cuperf_t::coeff[ievl].P(), -1, 0, 0, stream);
 	    }

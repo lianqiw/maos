@@ -315,7 +315,7 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 		free(embeded);
 	    }else if(!strcmp(ssline, "__reset__")){
 		if(nstore>0){
-		    warning("Replacing all existing input\n");
+		    info("Replacing all existing input\n");
 		    erase_config();
 		}
 	    }else{

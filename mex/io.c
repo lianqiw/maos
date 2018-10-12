@@ -799,6 +799,7 @@ void read_header(header_t *header, file_t *fp){
    Parse an integer from header str
  */
 int search_header_int(const char *str, const char *name){
+    if(!str || !name) return 0;
     char *tmp=strstr(str, name);
     if(tmp){
 	return strtol(tmp+strlen(name), NULL, 10);

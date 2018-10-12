@@ -1268,7 +1268,7 @@ void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     if(parms->itpowfs!=-1){ /*setup Truth wfs*/
 	setup_recon_twfs(recon,parms);
     }
-    if(!parms->sim.idealfit){
+    if(!parms->sim.idealfit && !parms->sim.idealtomo){
 	if(parms->recon.mvm && parms->load.mvm){
 	    recon->MVM=dread("%s", parms->load.mvm);
 	}else{

@@ -766,7 +766,7 @@ static void init_simu_wfs(SIM_T *simu){
     }
     if(parms->sim.mffocus){
 	if(fabs(parms->sim.lpfocushi)<1.e-15){
-	    error("When mffocus is nonzero, lpfocus need to be non zero\n");
+	    warning("sim.mffocus is enabled but sim.lpfocus is zero.\n");
 	}
 	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
 	simu->ngsfocuslpf=0;

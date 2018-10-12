@@ -134,7 +134,7 @@ spchol* chol_factorize(dsp *A_in){
 #if CHOL_SIMPLE
     if(!out->c->final_asis){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
-	warning("Converted to our format.");
+	//warning("Converted to our format.");
 	cholmod_factor *L=out->L;
 	out->Cp=L->Perm; L->Perm=NULL;
 	dsp *C=out->Cl=dspnew(L->n, L->n, 0);
@@ -480,7 +480,7 @@ static void chol_solve_lower_each(thread_t *info){
     spint *Ap=A->p;
     spint *Ai=A->i;
     dmat *y2=data->y2;
-    info("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
+    //info("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     for(long icol=0; icol<A->ny; icol++){
 	double AxI=1./Ax[Ap[icol]];
@@ -516,7 +516,7 @@ static void chol_solve_upper_each(thread_t *info){
     spint *Ap=A->p;
     spint *Ai=A->i;
     dmat *y2=data->y2;
-    info("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
+    //info("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
     /*Solve L\y */
     /*Solve R'\y */
     for(long icol=0; icol<A->nx; icol++){

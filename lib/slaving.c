@@ -44,7 +44,7 @@ dcell *genactcpl(const dspcell *HA, const dmat *W1){
 	double scale=1./thres;
 	double *p=actcplc->p[idm]->p;
 	for(long i=0; i<actcplc->p[idm]->nx; i++){
-	    if(p[i]>thres){
+	    if(p[i]>thres || thres==0){
 		p[i]=1;
 	    }else{
 		p[i]*=scale;

@@ -316,9 +316,7 @@ void perfevl_ievl(thread_t *info){
 	    if(parms->evl.psfngsr->p[ievl]!=2){/*ngsr==2 means only want ngsr. */
 		/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 		if(parms->evl.pttr->p[ievl]){
-		    if(isim==parms->evl.psfisim && ievl==0){
-			warning("Removing piston/tip/tilt from OPD.\n");
-		    }
+		    warning_once("Removing piston/tip/tilt from OPD.\n");
 		    loc_remove_ptt(iopdevl->p, PCOL(pclmp,isim), aper->locs);
 		}else if(parms->evl.cov){/*remove piston */
 		    dadds(iopdevl, -IND(pclmp,0,isim));

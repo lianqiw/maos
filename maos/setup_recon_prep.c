@@ -555,6 +555,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs, const
 */
 static void
 setup_recon_GA(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+    if(parms->nwfs==0) return;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
@@ -844,7 +845,7 @@ setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
 void setup_recon_dmttr(RECON_T *recon, const PARMS_T *parms){
     recon->DMTT=dcellnew(parms->ndm, 1);
     recon->DMPTT=dcellnew(parms->ndm, 1);
-    if(!recon->actcpl){
+    if(!recon->actcpl && parms->nwfs>0){
 	error("actcpl must not be null\n");
     }
     for(int idm=0; idm<parms->ndm; idm++){

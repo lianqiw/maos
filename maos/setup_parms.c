@@ -567,6 +567,9 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(dbl,dx);
     READ_DM_RELAX(dbl,ar);
     for(int idm=0; idm<ndm; idm++){
+	if(parms->dm[idm].dx<0){//this is the order.
+	    parms->dm[idm].dx=-parms->aper.d/parms->dm[idm].dx;
+	}
 	parms->dm[idm].order=ceil(parms->aper.d/parms->dm[idm].dx);
 	parms->dm[idm].dy=parms->dm[idm].dx*parms->dm[idm].ar;
 	if(parms->dm[idm].ar<=0){
@@ -1247,6 +1250,10 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    warning("closeloop changed to 0.\n");
 	    parms->sim.closeloop=0;
 	}
+	parms->npowfs=0;
+	parms->nwfs=0;
+	parms->nwfsr=0;
+	parms->gpu.tomo=0;
     }
     if(parms->sim.evlol){
 	parms->recon.split=0;
@@ -1676,11 +1683,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
-    if(parms->sim.fcfocus<=0){
-	parms->sim.fcfocus=1./parms->sim.dtlo/10;
-	if(parms->sim.fcfocus<1){
-	    parms->sim.fcfocus=1;
-	}
+    if(parms->sim.fcfocus<0){
+	parms->sim.fcfocus=0.1/parms->sim.dtlo;
     }
     parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
     parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dtlo);
@@ -1818,7 +1822,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->atmr.nps=nps;
     }
-    if((parms->recon.glao || parms->nhiwfs<=1) && parms->recon.alg==0 && parms->atmr.ht->nx>1){
+    if((parms->recon.glao || parms->nhiwfs==1) && parms->recon.alg==0 && parms->atmr.ht->nx>1 && !parms->sim.idealtomo){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 	warning("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
@@ -1899,10 +1903,10 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	    parms->atmr.hmax=parms->atmr.ht->p[ips];
 	}
     }
-    if(parms->atm.iground==-1){
-	warning("There is no ground layer\n");
+    if(parms->sim.closeloop){
+	parms->atm.frozenflow = 1;
     }
-    parms->atm.frozenflow = (parms->atm.frozenflow || parms->sim.closeloop);
+	    
     if(!parms->atm.frozenflow || parms->dbg.atm){
 	parms->atm.r0evolve=0;/*disable r0 evolution*/
     }
@@ -2391,13 +2395,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	factor=parms->recon.warm_restart?1:10;
 	parms->lsr.maxit=30*factor;
     }
- 
-    if(parms->sim.mffocus && (!parms->recon.split || !parms->nlgspowfs || parms->sim.idealfit)){
+    if(parms->sim.mffocus==-1){
+	parms->sim.mffocus=(parms->nlgspowfs)?1:0;
+    }else if(parms->sim.mffocus>0 && (!parms->recon.split || !parms->nlgspowfs || parms->sim.idealfit)){
 	//no need focus tracking in the following cases: 1)integrated control mode, 2)no LGS, 3) idealfit
 	warning("parms->sim.mffocus is reset to 0\n");
 	parms->sim.mffocus=0;
     }
-
+    
     if(parms->sim.mffocus<0 || parms->sim.mffocus>2){
 	error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
     }
@@ -2714,36 +2719,38 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
     if(parms->recon.alg==0){
-	info("%sTomography%s is using ", GREEN, BLACK);
-	if(parms->tomo.bgs){
-	    info("Block Gauss Seidel with ");
-	}
-	switch(parms->tomo.alg){
-	case 0:
-	    info("Cholesky back solve ");
-	    break;
-	case 1:
-	    info("CG, with %s%s%s preconditioner, %s%d%s iterations",
-		  GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
-	    break;
-	case 2:
-	    info("SVD direct solve ");
-	    break;
-	case 3:
-	    info("Block Gauss Seidel ");
-	    break;
-	default:
-	    error("Invalid\n");
-	}
-	switch(parms->recon.split){
-	case 0:
-	    info(", integrated tomo.\n");break;
-	case 1:
-	    info(", ad hoc split tomo.\n"); break;
-	case 2:
-	    info(", minimum variance split tomo\n"); break;
-	default:
-	    error(", Invalid\n");
+	if(!parms->sim.idealfit){
+	    info("%sTomography%s is using ", GREEN, BLACK);
+	    if(parms->tomo.bgs){
+		info("Block Gauss Seidel with ");
+	    }
+	    switch(parms->tomo.alg){
+	    case 0:
+		info("Cholesky back solve ");
+		break;
+	    case 1:
+		info("CG, with %s%s%s preconditioner, %s%d%s iterations",
+		     GREEN, tomo_precond[parms->tomo.precond], BLACK, GREEN, parms->tomo.maxit, BLACK);
+		break;
+	    case 2:
+		info("SVD direct solve ");
+		break;
+	    case 3:
+		info("Block Gauss Seidel ");
+		break;
+	    default:
+		error("Invalid\n");
+	    }
+	    switch(parms->recon.split){
+	    case 0:
+		info(", integrated tomo.\n");break;
+	    case 1:
+		info(", ad hoc split tomo.\n"); break;
+	    case 2:
+		info(", minimum variance split tomo\n"); break;
+	    default:
+		error(", Invalid\n");
+	    }
 	}
 	info("%sDM Fitting %sis using ", GREEN, BLACK);
 	if(parms->fit.bgs){
@@ -2751,20 +2758,29 @@ static void print_parms(const PARMS_T *parms){
 	}
 	switch(parms->fit.alg){
 	case 0:
-	    info("Cholesky back solve");
+	    info("Cholesky back solve (CBS)");
 	    break;
 	case 1:
 	    info("CG, with %s%s%s preconditioner, %s%d%s iterations ",
 		  GREEN, tomo_precond[parms->fit.precond], BLACK, GREEN, parms->fit.maxit, BLACK);
 	    break;
 	case 2:
-	    info("SVD direct solve ");
+	    info("SVD");
 	    break;
 	case 3:
-	    info("Block Gauss Seidel ");
+	    info("Block Gauss Seidel (BGS)");
 	    break;
 	default:
 	    error("Invalid");
+	}
+	info("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
+	for(i=0; i<parms->fit.nfit; i++){
+	    info("Fit %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+		 i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
+		 parms->fit.thetay->p[i]*206265);
+	    if(fabs(parms->fit.thetax->p[i])>1 || fabs(parms->fit.thetay->p[i])>1){
+		error("fit thetax or thetay is too large\n");
+	    }
 	}
     }else if(parms->recon.alg==1){
 	info("%sLeast square reconstructor%s is using ", GREEN, BLACK);
@@ -2773,13 +2789,13 @@ static void print_parms(const PARMS_T *parms){
 	}
 	switch(parms->lsr.alg){
 	case 0:
-	    info("Cholesky back solve ");
+	    info("Cholesky back solve (CBS)");
 	    break;
 	case 1:
 	    info("CG%d", parms->tomo.maxit);
 	    break;
 	case 2:
-	    info("SVD direct solve ");
+	    info("SVD");
 	    break;
 	default:
 	    error("Invalid\n");
@@ -2788,29 +2804,22 @@ static void print_parms(const PARMS_T *parms){
 	error("parms->recon.alg=%d is illegal.\n", parms->recon.alg);
     }
     info("\n");
-    info("%sSimulation%s start at step %d, end at step %d, "
-	  "with time step 1/%gs, %s%s loop%s.\n", 
-	  GREEN, BLACK, parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
-	  parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
-    info("%sThere are %d fit directions%s\n", GREEN, parms->fit.nfit, BLACK);
-    for(i=0; i<parms->fit.nfit; i++){
-	info("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-	      i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
-	      parms->fit.thetay->p[i]*206265);
-	if(fabs(parms->fit.thetax->p[i])>1 || fabs(parms->fit.thetay->p[i])>1){
-	    error("fit thetax or thetay is too large\n");
-	}
-    }
+  
     info("%sThere are %d evaluation directions%s at sampling 1/%g m.\n", 
 	  GREEN, parms->evl.nevl, BLACK, 1./parms->evl.dx);
     for(i=0; i<parms->evl.nevl; i++){
-	info("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info("Eval %d: weight is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
 	      parms->evl.thetay->p[i]*206265);
 	if(fabs(parms->evl.thetax->p[i])>1 || fabs(parms->evl.thetay->p[i])>1){
 	    error("evl thetax or thetay is too large\n");
 	}
     }
+
+    info("%sSimulation%s start at step %d, end at step %d, "
+	 "with time step 1/%gs, %s%s loop%s.\n", 
+	  GREEN, BLACK, parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
+	 parms->sim.closeloop==1?GREEN:RED,closeloop[parms->sim.closeloop],BLACK);
 }
 
 /**
