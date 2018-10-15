@@ -12,51 +12,31 @@ else:
 simu_all=list();
 
 headlist=['maos/parms.h','maos/types.h','lib/accphi.h','lib/cn2est.h','lib/kalman.h',
-          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h']
+          'lib/locfft.h','lib/muv.h','lib/servo.h','lib/stfun.h','lib/turbulence.h',
+          'lib/mkdtf.h', 'math/chol.h','sys/scheduler.h']
 
 #Obtain the definition of all structs
-structs=maos.parse_structs(srcdir, headlist)
+dictall=maos.parse_structs(srcdir, headlist)
 
 simu=dict()
-simu_type=dict()
-simu=structs['SIM_T']
-rdone=dict()
-todo=list()
-rdone['SIM_T']=1
-maxlevel=10
-for level in range(maxlevel):
-    todo.append(list())
+simu=dictall['SIM_T']
 
-#Expand the simu struct into more basic types interatively.
-todo[0].append(simu)
-def expand_struct(struct, level):
+def expand_struct(struct):
     for key in struct:
         val0=struct[key]
-        val=val0;
-
-        if val[-1]=='*':
-            val=val[0:-1];
+    
+        if type(val0)==type('') and val0[-1]=='*':
+            val=val0[0:-1]
             ispointer=1
         else:
+            val=val0
             ispointer=0
-        if type(val)!=type(''):
-            print('Warning: please handle\n')
-            continue
-        if val in rdone:
-            pass #avoid repeat
-        elif val in structs: #requires further expansion.
-            if val=='parms' or val=='recon' or val=='aper' or val=='powfs':
-                rdone[val]=1
-            struct[key]=[val0, structs[val]]
+        if type(val)==type('') and dictall.get(val):
+            if type(dictall[val])==type(dict()): #other types
+                expand_struct(dictall[val])
+            struct[key]=[val0, dictall[val]]
 
-            if type(structs[val])==type(dict()): #other types
-                todo[level].append(structs[val])
-        else:
-            struct[key]=val0
-
-for level in range(maxlevel):
-    for struct in todo[level]:
-        expand_struct(struct, level+1)
+expand_struct(simu)
 
 def var2mx(mexname, cname, ctype):
     out=""
@@ -65,8 +45,6 @@ def var2mx(mexname, cname, ctype):
     if ctype[-1]=='*':
         ccast=''
         ctype=ctype[0:-1]
-        if cname=='simu->atm':
-            return ''
         if ctype[-2:]=='_t':
             ctype=ctype[0:-2];
         if ctype=='map' or ctype[1:]=='mat' or ctype[-4:]=='cell' or ctype=='loc' or ctype=='pts' or ctype[1:]=='sp':
@@ -78,13 +56,13 @@ def var2mx(mexname, cname, ctype):
         if len(fun_c)>0:
             return mexname+"="+fun_c+'2mx('+ccast+cname+');'
         else:
-            print("//unknown1 type "+cname+":"+ctype0)
+            print("//unknown pointer "+cname+":"+ctype0)
             return ''
     else:
         if ctype=='int' or ctype=='double' or ctype=='long':
             return mexname+'=mxCreateDoubleScalar('+cname+');'
         else:
-            print("//unknown2 type "+cname+":"+ctype0)
+            print("//unknown type    "+cname+":"+ctype0)
             return ''
 
 fundefs=dict()
@@ -118,10 +96,11 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
         childpointer=varname+'->'
     else:
         childpointer=varname+'[i_n].'
-    if funprefix=="simu_":
-        funname=varname
-    else:
-        funname=funprefix+varname;
+#    if funprefix=="simu_":
+#        funname=varname
+#    else:
+#        funname=funprefix+varname;
+    funname=vartype.replace('_T','').replace('*','').lower();
     if nvar!="1":
         funheader="static mxArray *get_"+funname+"(const "+vartype+" "+varname+", int nvar);";
     else:
@@ -156,7 +135,9 @@ def struct2mx(vartype, nvar, funprefix, parentpointer, fullpointer, varname, str
     fundef+="\treturn tmp;\n}\n"
     fundefs[funname]=fundef
     funheaders[funname]=funheader
-    if funname.replace('simu_','').find('_')==-1:
+    #print(funname, funprefix)
+    #if funname.replace('simu_','').find('_')==-1:
+    if (funprefix=='' or funprefix=="sim_") and varname.find('_')==-1:
         if ispointer==0:
             funcalls[funname]="get_"+funname+"(&("+fullpointer+varname+"));"
         elif nvar!="1":
@@ -189,6 +170,7 @@ for key in funcalls:
 print("}", file=fc)
 print("static mxArray *get_data(SIM_T *simu, const char *key){\n\t", end="", file=fc)
 for key in funcalls:
+    print(key)
     print("if(!strcmp(key, \""+key.replace("simu_","")+"\")) return "+funcalls[key]+"\n\telse ", end="", file=fc)
 print("{get_data_help();return mxCreateDoubleMatrix(0,0,mxREAL);}\n}", file=fc)
 fc.close()

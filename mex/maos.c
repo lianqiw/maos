@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	static int isim=0;
 	static int iseed=0;
 	int nstep=0;
-	const char *cmd=0;//default action is sim
+	const char *cmd="help";//default action is sim
 	int free_cmd=0;
 	if(nrhs>0 && mxIsChar(prhs[0])){
 	    cmd=mxArrayToString(prhs[0]);
@@ -59,12 +59,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		nstep=(int)mxGetScalar(prhs[0]);
 	    }
 	}
-	if(!strcmp(cmd, "-h")){
-	    printf("Usage: maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
+	if(strcmp(cmd,"setup") && strcmp(cmd, "sim") && strcmp(cmd, "get")){
+	    printf("Usage: "
+		 "       maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
 		 "  simu=maos('sim', nstep)\n"
 		 "       maos('reset')\n"
 		 "  simu=maos('get','simu')\n"
-		 "dmreal=maos('get','dmreal')\n"
+		 " parms=maos('get','parms')\n"
 		);
 	}
 	if(!strcmp(cmd, "reset")){
@@ -143,7 +144,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		if(nstep<0){
 		    nstep=parms->sim.end-parms->sim.start;
 		}
-	    }else{
+	    }else if(!nstep){
 		nstep=1;
 	    }
 
@@ -190,7 +191,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		    valname="";
 		}
 	    }else if(nlhs>0){
-		valname="simu";
+		valname="sim";
 	    }
 	    if(valname){
 		if(global){
