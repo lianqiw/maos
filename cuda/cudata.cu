@@ -311,9 +311,9 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 	    //evl
 	    for(int ievl=0; parms->gpu.evl && ievl<parms->evl.nevl; ievl++){
 		if(parms->evl.psfmean==1 && parms->evl.psf->p[ievl]){
-		    tasks[count].timing=20;//ms; more time for PSF
+		    tasks[count].timing=100;//ms; more time for PSF
 		}else{
-		    tasks[count].timing=4.7;//ms
+		    tasks[count].timing=10;//ms
 		}
 		tasks[count].dest=cudata_t::evlgpu+ievl;
 		snprintf(tasks[count].name, 64, "EVL %d", ievl);
@@ -325,9 +325,9 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		if(parms->powfs[ipowfs].type==1){//pwfs is slower
 		    tasks[count].timing=50;
 		}else if(parms->powfs[ipowfs].usephy){
-		    tasks[count].timing=17;
+		    tasks[count].timing=20;
 		}else{
-		    tasks[count].timing=1.5;
+		    tasks[count].timing=10;
 		}
 		tasks[count].dest=cudata_t::wfsgpu+iwfs;
 		snprintf(tasks[count].name, 64, "WFS %d", iwfs);
@@ -351,12 +351,12 @@ int gpu_init(const PARMS_T *parms, int *gpus, int ngpu){
 		timtot[min_gpu]+=tasks[it].timing;
 		//info("%s --> GPU %d\n", tasks[it].name, *tasks[it].dest);
 	    }
-	    if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
+	    free(tasks);
+	    //if(NTHREAD>NGPU && (parms->gpu.tomo || parms->gpu.fit) && parms->gpu.evl && parms->gpu.wfs){
 		//NTHREAD=NGPU+1;
 		//info("Reset nthread to %d\n", NTHREAD);
 		//THREAD_POOL_INIT(NTHREAD);Don't call this now. Too early
-	    }
-	    free(tasks);
+	    //}
 	    {
 		info("Use %d GPUs for %s%s%s%s%s\n", NGPU, 
 		      parms->gpu.wfs?" WFS":"",

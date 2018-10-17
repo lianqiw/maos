@@ -452,7 +452,6 @@ void gpu_perfevl_sync(thread_t *info){
     const RECON_T *recon=simu->recon;
     const int nmod=parms->evl.nmod;
     for(int ievl=info->start; ievl<info->end; ievl++){
-	/*lock the mutex because iopdevl, evlwvf is allocated per GPU.*/
 	gpu_set(cudata_t::evlgpu[ievl]);
 	cudaStream_t stream=cuperf_t::stream[ievl];
 	const double thetax=parms->evl.thetax->p[ievl];

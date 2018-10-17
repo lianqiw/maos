@@ -620,7 +620,9 @@ int main(int argc, char *argv[])
 #endif
     if(argc>1){
 	for(int i=1; i<argc; i++){
-	    if(isalnum((int)argv[i][0])){
+	    if(isdigit((int)argv[i][0])){
+		PORT=strtol(argv[i], NULL, 10);
+	    }else if(isalnum((int)argv[i][0])){
 		hosts[nhost]=strdup(argv[i]);
 		nhost++;
 		if(nhost>=1024){

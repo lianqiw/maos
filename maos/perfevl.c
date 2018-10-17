@@ -307,6 +307,7 @@ void perfevl_ievl(thread_t *info){
 
 	/*Evaluate closed loop performance. */
 	PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
+	TIM(5);
 	if(do_psf_cov){
 	    if(parms->evl.psfngsr->p[ievl]!=0){
 		/* even if psfpttr=1, referencing is ok.  Change to copy if
@@ -330,10 +331,10 @@ void perfevl_ievl(thread_t *info){
 		}/*do_psf */
 	    }
 	}
-	TIM(5);
+	TIM(6);
 #if TIMING==1
-	info("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f\n",
-	      ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4);
+	info("Evl %d timing:ray atm %.4f evlol %.4f ray dm %.4f evlcl %.4f PSF %.4f\n",
+	     ievl, tk1-tk0, tk2-tk1, tk4-tk2, tk5-tk4, tk6-tk5);
 #endif
     }
     if(!KEEP_MEM){

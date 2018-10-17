@@ -264,6 +264,9 @@ static void X(fft2partialplan)(X(mat) *A, int ncomp, int dir){
 					COMP(A->p)+nx-ncomp/2,NULL,nx,1,
 					COMP(A->p)+nx-ncomp/2,NULL,nx,1,
 					dir,FFTW_FLAGS);
+    if(!plan1d->plan[0]||!plan1d->plan[1]||!plan1d->plan[2]){
+	error("Plan is empty\n");
+    }
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
     /*dbg("Plan %p created\n", A->fft->plan1d[dir+1]); */

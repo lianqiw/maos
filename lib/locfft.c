@@ -17,6 +17,12 @@
 */
 #include "../math/mathdef.h"
 #include "locfft.h"
+#define TIMING 0
+#if TIMING == 1
+#define TIM(A) double tk##A=myclockd()
+#else
+#define TIM(A)
+#endif
 
 /**
    \file locfft.c
@@ -123,37 +129,40 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 	    }
 	    (*psf2s)->p[iwvl]->p[0]=strehlcomp(opd, locfft->amp, locfft->wvl->p[iwvl]);
 	}else{
+	    TIM(0);
 	    long nembed=locfft->nembed->p[iwvl];
 	    long *embed=locfft->embed->p[iwvl]->p;
 	    const double *amp=locfft->amp->p;
 	    const int ref=!psfsize || psfsize->p[iwvl]==nembed;
 	    cmat *psf2=0;
-	    if(ref){
+	    if(ref){//Full PSF is returned
 		if(!(*psf2s)->p[iwvl]){
 		    (*psf2s)->p[iwvl]=cnew(nembed,nembed);
 		}
 		psf2=(*psf2s)->p[iwvl];
-	    }else{
+	    }else{//Crop of PSF is returned.
 		psf2=cnew(nembed,nembed);
 	    }
 
-	    int use1d;
-	    int use1d_enable=0;
-	    if(psfsize && psfsize->p[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
+	    int use1d=0;
+#define USE1D_ENABLED 1
+#if     USE1D_ENABLED
+	    if(psfsize && psfsize->p[iwvl]+200<nembed){/*Want smaller PSF. */
 		use1d=1;
-	    }else{
-		use1d=0;
 	    }
+#endif
 
 	    dcomplex i2pi=COMPLEX(0, 2*M_PI/locfft->wvl->p[iwvl]);
 	    for(int iloc=0; iloc<opd->nx; iloc++){
 		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*opd->p[iloc]);
 	    }
+	    TIM(1);
 	    if(use1d==1){
 		cfft2partial(psf2, psfsize->p[iwvl], -1);
 	    }else{
 		cfft2(psf2,-1);
 	    }
+	    TIM(2);
 	    if(ref){/*just reference */
 		cfftshift(psf2);
 	    }else{/*create a new array, smaller. */
@@ -163,6 +172,11 @@ void locfft_psf(ccell **psf2s, const locfft_t *locfft, const dmat *opd, const lm
 		ccpcorner2center((*psf2s)->p[iwvl], psf2);
 		cfree(psf2); 
 	    }
+	    TIM(3);
+#if TIMING
+	    info("locfft_psf(%d:%ldx%ld): exp %.4f, fft %.4f (%.2f GFLOPS), abs2 %.2f.\n", iwvl,nembed, nembed,
+		 tk1-tk0, tk2-tk1, 8L*(use1d?psfsize->p[iwvl]:nembed)*nembed*log2(nembed)/(tk2-tk1)*1e-9, tk3-tk2);
+#endif		
 	}
 	double psfnorm;
 	if(sum2one){/**PSF sum to 1*/

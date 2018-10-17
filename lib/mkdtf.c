@@ -61,7 +61,7 @@ DTF_T *mkdtf(const dmat *wvls, /**<List of wavelength*/
 	if(pixoffx->nx!=1 && pixoffx->nx!=nsa && pixoffx->ny!=1 && pixoffx->ny!=nwfs){
 	    error("pixoffx has wrong format\n");
 	}
-	if(pixoffy->nx!=pixoffx->nx || pixoffy->ny!=pixoffy->ny){
+	if(pixoffy->nx!=pixoffx->nx || pixoffy->ny!=pixoffx->ny){
 	    error("pixoffy must have the same format as pixoffx\n");
 	}
     }

@@ -129,7 +129,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
     dcell *MVMt=data->MVMt;
     int nthread=recon->nthread;
     for(long iact=info->start; iact<info->end; iact++){
-	TIC;tic;
+	//TIC;tic;
 	int curdm=curp[iact][0];
 	int curact=curp[iact][1];
 	if(recon->actcpl && recon->actcpl->p[curdm]->p[curact]<EPS){
@@ -165,7 +165,7 @@ setup_recon_mvr_mvm_iact(thread_t *info){
 		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
 	    }
 	}
-	toc2(" %ld", iact);
+	//toc2(" %ld", iact);
 	/*{
 	    writebin(FLI, "cpu_dmfit_%ld", iact);
 	    writebin(FRT, "cpu_opdx_%ld", iact);

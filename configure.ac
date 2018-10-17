@@ -134,7 +134,7 @@ AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKD
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="default"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
-if test -z "$MEXDIR" ;then
+if test -z "$MEXDIR" -o "$MEXDIR"="no" ;then
     with_matlab=no
 else
     with_matlab=yes
@@ -562,7 +562,7 @@ if test "$has_z" = "no" ;then
 fi
 
 #Check for FFTW interface in MKL
-AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1
@@ -593,23 +593,7 @@ else
     else
 	LDFFT="-lfftw3"
     fi
-    fftw_threads=1
-    if test "$with_matlab" = "no"  ;then
-	if test -n "$OPENMP_CFLAGS" ;then
-	    AC_CHECK_LIB([fftw3_omp], [fftw_init_threads], [LDFFT+=" -lfftw3_omp"], [fftw_threads=0], [-lfftw3 $OPENMP_CFLAGS])
-	else
-	    AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [LDFFT+=" -lfftw3_threads"], [fftw_threads=0], [-lfftw3 -lpthread])
-	fi
-	if test x$has_fftwf = x1 ;then
-	    if test -n "$OPENMP_CFLAGS" ;then
-		AC_CHECK_LIB([fftw3f_omp], [fftwf_init_threads], [LDFFT+=" -lfftw3f_omp"], [fftw_threads=0], [-lfftw3f $OPENMP_CFLAGS])
-	    else
-		AC_CHECK_LIB([fftw3f_threads], [fftwf_init_threads], [LDFFT+=" -lfftw3f_threads"], [fftw_threads=0], [-lfftw3f -lpthread])
-	    fi
-	fi
-    else
-	fftw_threads=0
-    fi
+    fftw_threads=0 #To avoid crush in matlab, we use optional dynamic loading from sys/fft.c instead.
 fi
 AC_DEFINE_UNQUOTED(BUILTIN_FFTW_THREADS, [$fftw_threads], "Built-in FFTW3 threads support.")
 
@@ -808,7 +792,7 @@ else
     AM_CONDITIONAL(USE_MEX, false)
 fi
 
-if test -z "$CUDADIR" ;then
+if test -z "$CUDADIR" -o "$CUDADIR" = "no" ;then
     with_cuda="no"
 fi
 if test "$with_cuda" != "no" ;then
