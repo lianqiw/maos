@@ -252,7 +252,7 @@ int main(int argc, char *argv[]){
     loc_t *ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1, dx1);
     dmat  *pamp=dnew(ploc->nloc, 1);
     locannular(pamp->p, ploc, 0, 0, 15, 1.8, 1);
-    dmat *pwt=ddup(pamp); normalize_sum(pwt->p, pwt->nx, 1);
+    dmat *pwt=ddup(pamp); normalize_sumabs(pwt->p, pwt->nx, 1);
     dmat *mode_ploc=dnew(ploc->nloc, nmod);
     for(int imod=0; imod<nmod; imod++){
 	for(int ialoc=0; ialoc<naloc; ialoc++){

@@ -348,7 +348,7 @@ void gpu_perfevl_queue(thread_t *info){
 			    dcwlog10(psftemp);
 			}
 			ddraw("PSFol", psftemp, NULL, NULL, "Science Open Loop PSF", 
-			      "x", "y", "OL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+			      "x", "y", "OL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 			dfree(psftemp);
 		    }
 		}
@@ -427,7 +427,7 @@ void gpu_perfevl_queue(thread_t *info){
 			    dcwlog10(psftemp);
 			}
 			ddraw("PSFcl", psftemp, NULL, NULL, "Science Closed Loop PSF", 
-			      "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+			      "x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 			dfree(psftemp);
 		    }
 		}

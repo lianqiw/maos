@@ -230,6 +230,7 @@ void wfsgrad_iwfs(thread_t *info){
 	   pistat always peak in center no matter what NCPA is present.
 	*/
 	if(!do_pistatout || parms->powfs[ipowfs].pistatstc || dtrat==1){
+	    //we do not need separate gradcalc.
 	    gradcalc=dref(*gradacc);
 	}//else: calculate first to gradcalc then add to gradacc
 	if(parms->powfs[ipowfs].gtype_sim==1){ /*compute ztilt. */
@@ -838,6 +839,19 @@ void wfsgrad_post(thread_t *info){
 			parms->dbg.draw_gmax->p,
 			"WFS Closeloop Gradients (y)","x (m)", "y (m)",
 			"y %d",  iwfs);
+		if(do_phy){
+		    if(simu->ints->p[iwfs]->nx==1){
+			ddraw("Ints", simu->ints->p[iwfs]->p[0], NULL,NULL, "WFS Subaperture Images",
+			      "x", "y", "wfs %d", iwfs);
+		    }else if(simu->ints->p[iwfs]->nx==4){
+			cellreshape(simu->ints->p[iwfs], 2, 2);
+			dmat *ints2=dcell2m(simu->ints->p[iwfs]);
+			cellreshape(simu->ints->p[iwfs], 4, 1);
+			ddraw("Ints", ints2, NULL, NULL, "WFS Subaperture Images",
+			      "x", "y", "wfs %d", iwfs);
+			dfree(ints2);
+		    }
+		}
 	    }
 	}
     }//for iwfs
@@ -1160,10 +1174,10 @@ void wfsgrad(SIM_T *simu){
     if(1+simu->isim==parms->sim.end){
 #if USE_CUDA
 	if(parms->gpu.wfs){
-	    gpu_save_gradstat(simu);
+	    gpu_save_pistat(simu);
 	}else
 #endif
-	    save_gradstat(simu);
+	    save_pistat(simu);
     }
     simu->tk_wfs=myclockd()-tk_start;
 }

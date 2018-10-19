@@ -489,7 +489,7 @@ dmat* smooth(const dmat *prof, double dxnew){
 	    /*preserve sum of input profile */
 	    double Nasum=dblsum(pin, nxin);
 	    dspmulvec(pout, ht, pin, 'n', 1);
-	    normalize_sum(pout, nxnew, Nasum);
+	    normalize_sumabs(pout, nxnew, Nasum);
 	}
 	dspfree(ht);
 	locfree(loc_in);

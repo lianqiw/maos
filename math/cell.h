@@ -32,6 +32,15 @@ void cellinit(cell **A, long nx, long ny);
 void cellinit2(cell **A, const cell *B);
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);
 void cellresize(void *in, long nx, long ny);
+INLINE void cellreshape(void *in_, long nx, long ny){
+    cell *in=cell_cast(in_);
+    if(in->nx*in->ny != nx*ny){
+	error("Incorrect new dimension\n");
+    }else{
+	in->nx=nx;
+	in->ny=ny;
+    }
+}
 void cellfree_do(void* dc);
 void writedata_by_id(file_t *fd, const void* pix, uint32_t id);
 void write_by_id(const void* dc, uint32_t id, const char* format,...) CHECK_ARG(3);

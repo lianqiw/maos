@@ -419,7 +419,7 @@ void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
 	    for(int ix=0; ix<nx*nx; ix++){
 		ampw->p[ix]=1;
 	    }
-	    normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
+	    normalize_sumabs(ampw->p, ampw->nx*ampw->ny, 1);
 	    dmat*  pampw=ampw/*PDMAT*/;
 	    
 	    double nx2=(nx-1)*0.5;

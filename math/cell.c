@@ -137,7 +137,7 @@ void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys){
    Resize a generic cell array.
 */
 void cellresize(void *in, long nx, long ny){
-    cell *A=(cell*)in;
+    cell *A=cell_cast(in);
     if(A->nx==nx || A->ny==1){
 	int nold=A->nx*A->ny;
 	int nnew=nx*ny;
@@ -171,6 +171,8 @@ void cellresize(void *in, long nx, long ny){
     A->nx=nx;
     A->ny=ny;
 }
+
+
 /**
    free a mat or cell object.
 */

@@ -233,10 +233,10 @@ void listen_draw(){
 			if(!drawdata->limit_data){
 			    drawdata->limit_data=mycalloc(4,double);
 			}
-			drawdata->limit_data[0]=0;
-			drawdata->limit_data[1]=drawdata->nx;
-			drawdata->limit_data[2]=0;
-			drawdata->limit_data[3]=drawdata->ny;
+			drawdata->limit_data[0]=-0.5;
+			drawdata->limit_data[1]=drawdata->nx-0.5;
+			drawdata->limit_data[2]=-0.5;
+			drawdata->limit_data[3]=drawdata->ny-0.5;
 		    }
 		    /*convert data from double to int/char. */
 		    if(!drawdata->zlim){

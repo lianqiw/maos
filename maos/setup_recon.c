@@ -304,7 +304,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
       regularization unstability issues.*/
     dclip(recon->wt, 0.01, 1);
     /*normalize the weights to sum to 1. */
-    normalize_sum(recon->wt->p, recon->npsr, 1);
+    normalize_sumabs(recon->wt->p, recon->npsr, 1);
     const int npsr=recon->npsr;
     recon->cxx=parms->tomo.cxx;
     /*test_cxx(recon, parms); */

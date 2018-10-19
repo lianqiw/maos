@@ -276,7 +276,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(wvlwts->nx){
 	    parms->powfs[ipowfs].wvlwts=dnew(nwvl, 1);
 	    memcpy(parms->powfs[ipowfs].wvlwts->p, wvlwts->p+count,sizeof(double)*nwvl);
-	    normalize_sum(parms->powfs[ipowfs].wvlwts->p, nwvl, 1);
+	    normalize_sumabs(parms->powfs[ipowfs].wvlwts->p, nwvl, 1);
 	}
 	if(siglev->nx){
 	    parms->powfs[ipowfs].siglev=siglev->p[ipowfs];
@@ -746,7 +746,7 @@ static void readcfg_evl(PARMS_T *parms){
     parms->evl.thetay=readcfg_dmat_n(parms->evl.nevl, "evl.thetay");
     parms->evl.wt=readcfg_dmat_nmax(parms->evl.nevl, "evl.wt");
     parms->evl.hs=readcfg_dmat_nmax(parms->evl.nevl, "evl.hs");
-    normalize_sum(parms->evl.wt->p, parms->evl.nevl, 1);
+    normalize_sumabs(parms->evl.wt->p, parms->evl.nevl, 1);
     parms->evl.psf=readcfg_lmat_nmax(parms->evl.nevl, "evl.psf");
     parms->evl.psfr=readcfg_lmat_nmax(parms->evl.nevl, "evl.psfr");
     READ_DMAT(evl.wvl);
@@ -967,7 +967,7 @@ static void readcfg_sim(PARMS_T *parms){
     parms->sim.ncpa_hs=readcfg_dmat_nmax(parms->sim.ncpa_ndir, "sim.ncpa_hs");
     dscale(parms->sim.ncpa_thetax, 1./206265);
     dscale(parms->sim.ncpa_thetay, 1./206265);
-    normalize_sum(parms->sim.ncpa_wt->p, parms->sim.ncpa_ndir, 1);
+    normalize_sumabs(parms->sim.ncpa_wt->p, parms->sim.ncpa_ndir, 1);
     READ_STR(sim.dmadd);
 }
 /**
@@ -1349,7 +1349,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	parms->powfs[ipowfs].order=ceil(parms->aper.d/parms->powfs[ipowfs].dsa);
 	if(powfsi->cogthres<0){
-	    powfsi->cogthres=-powfsi->cogthres * powfsi->rne;
+	    powfsi->cogthres*=-powfsi->rne;
+	}
+	if(powfsi->cogoff<0){
+	    powfsi->cogoff*=-powfsi->rne;
 	}
 
 	if(powfsi->radrot && !powfsi->radpix){
@@ -1600,6 +1603,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}else{
 	    parms->powfs[ipowfs].usephy=0;
 	}
+	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].sigmatch==2){
+	    warning("sigmatch==2 is not working well with SHWFS and offset/threshold is not implemented in CUDA.\n");
+	}
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. "
 		    "background won't be effective.\n", ipowfs);
@@ -1785,7 +1791,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     */
     int jps=0;
     for(int ips=0; ips<parms->atm.nps; ips++){
-	if(parms->atm.wt->p[ips]>1.e-3){
+	if(parms->atm.wt->p[ips]>1.e-4){
 	    if(ips!=jps){
 		parms->atm.ht->p[jps]=parms->atm.ht->p[ips];
 		parms->atm.wt->p[jps]=parms->atm.wt->p[ips];
@@ -1832,9 +1838,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atmr.wt->p[0]=1;
 	parms->atmr.nps=1;
     }
-    normalize_sum(parms->atm.wt->p, parms->atm.nps, 1);
-    normalize_sum(parms->atmr.wt->p, parms->atmr.nps, 1);
-    normalize_sum(parms->fit.wt->p, parms->fit.nfit, 1);
+    normalize_sumabs(parms->atm.wt->p, parms->atm.nps, 1);
+    normalize_sumabs(parms->atmr.wt->p, parms->atmr.nps, 1);
+    normalize_sumabs(parms->fit.wt->p, parms->fit.nfit, 1);
     /*
       We don't drop weak turbulence layers in reconstruction. Instead, we make
       it as least parms->tomo.minwt in setup_recon_tomo_prep

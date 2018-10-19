@@ -120,16 +120,24 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     if(isnan(order1) || order1<-1000 || fabs(order1)<=2){
 	order1=0;
     }
-    xmax/=pow(10,order1);
-    xmin/=pow(10,order1);
-    diff/=pow(10,order1);
-    rmax/=pow(10,order1);
-   
-    double spacing=1;
-    if(!logscale){
-	spacing=diff/(diff>0.1?10:5);
+    const double scale1=pow(10, -order1);
+    xmax*=scale1;
+    xmin*=scale1;
+    diff*=scale1;
+    
+    double spacing;
+    if(logscale || diff<1e-3){
+	spacing=1;
+    }else{
+	spacing=diff*0.1;
 	double scale=pow(10., floor(log10(spacing)));
-	spacing=round(spacing/scale)*scale;
+	int ratio=(int)round(spacing/scale);
+	const double ratio2[11]={1, 1, 1, 5, 5, 5, 5, 5, 10, 10, 10};
+	if(ratio<0 || ratio>10){
+	    warning("ratio=%d, spacing=%g\n", ratio, spacing);
+	    ratio=1;
+	}
+	spacing=ratio2[ratio]*scale;
     }
 	
     *tic1=myfloor(xmin/spacing)*spacing;
@@ -142,9 +150,10 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*tic1=xmin;
 	}*/
     *order=(int)order1;
-    
-    //dbg("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
-    //xmin, xmax, diff, *tic1, *dtic, *ntic, order1);
+    if(*ntic<2){
+	dbg("xmin=%g, xmax=%g, diff=%g, tic1=%g, dtic=%g, ntic=%d, order1=%g\n",
+	    xmin, xmax, diff, *tic1, *dtic, *ntic, order1);
+    }
 }
 /**
    adjust xmin, xmax properly.

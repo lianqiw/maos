@@ -84,7 +84,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
     if(parms->evl.psfhist){
 	zfarr_ccell(evlpsfhist[ievl], -1, psf2s);
     }
-    if(parms->plot.psf){
+    if(parms->plot.run){
 	dmat *psftemp=NULL;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
@@ -92,7 +92,7 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 		dcwlog10(psftemp);
 	    }
 	    ddraw("PSFcl", psftemp, NULL, NULL, "Science Closed Loop PSF", 
-		  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
+		  "x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 	    dfree(psftemp);
 	}
     }
@@ -236,7 +236,7 @@ void perfevl_ievl(thread_t *info){
 			    dcwlog10(psftemp);
 			}
 			ddraw("PSFol", psftemp, NULL, NULL, "Science Openloop PSF", 
-			      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl->p[iwvl]*1e6);
+			      "x", "y", "OL%2d %.2f", ievl,  parms->evl.wvl->p[iwvl]*1e6);
 			dfree(psftemp);
 		    }
 		}

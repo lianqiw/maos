@@ -765,9 +765,9 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	ncompx=ncompy=powfs[ipowfs].pts->nx*embfac;
 	double safov=ncompx*dtheta;
 	if(safov < pixpsax*pixthetax || safov < pixpsay*pixthetay){
-	    warning("PSF Size (%.1f\"x%.1f\") < SA FoV (%.1f\"x%.1f\")\n",
-		    safov*206265, safov*206265,
-		    pixpsax*pixthetax*206265, pixpsay*pixthetay*206265);
+	    info("PSF Size (%.1f\"x%.1f\") < SA FoV (%.1f\"x%.1f\")\n",
+		 safov*206265, safov*206265,
+		 pixpsax*pixthetax*206265, pixpsay*pixthetay*206265);
 	}
 	//ncompx=ceil(pixpsax*pixthetax/dtheta);
 	//ncompy=ceil(pixpsay*pixthetay/dtheta);
@@ -1317,9 +1317,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(!intstat || !intstat->i0){
 	if(!parms->powfs[ipowfs].phyusenea){
 	    error("powfs[%d].i0 is not available, please enable phyusenea.\n", ipowfs);
-	}
-	if(parms->powfs[ipowfs].cogthres<0 && parms->powfs[ipowfs].cogoff<0){
-	    error("i0 is not available, please specify powfs.cogthres and powfs.cogoff to non-negative numbers.\n");
 	}
     }
     if(parms->powfs[ipowfs].phytype_recon==2 && parms->powfs[ipowfs].skip!=3 && !parms->powfs[ipowfs].phyusenea){

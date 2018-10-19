@@ -38,7 +38,7 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 void gpu_wfsgrad_queue(thread_t *info);
 void gpu_wfsgrad_sync(SIM_T *simu, int iwfs);
 dmat* gpu_pywfs_mkg(const struct PYWFS_T *pywfs, const loc_t* locin, const loc_t* locfft, const dmat *mod, double displacex, double displacey);
-void gpu_save_gradstat(SIM_T *simu);
+void gpu_save_pistat(SIM_T *simu);
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs);
 void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper);
 void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm);

@@ -148,7 +148,7 @@ static dspcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	loc=recon->floc;
 	amp=mycalloc(loc->nloc,double);
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
-	normalize_sum(amp,loc->nloc,1);
+	normalize_sumabs(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
 	loc=aper->locs;
@@ -199,7 +199,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	loc=recon->floc;
 	amp=mycalloc(loc->nloc,double);
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,amp,1,0,0,1);
-	normalize_sum(amp,loc->nloc,1);
+	normalize_sumabs(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
 	loc=aper->locs;

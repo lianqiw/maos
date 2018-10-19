@@ -907,7 +907,14 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     double i1sum=0;
     if(parms->powfs[ipowfs].sigmatch==2){
 	for(int isa=0; isa<nsa; isa++){
-	    i1sum+=dsum(ints[isa]);
+	    const double thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
+	    const double offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
+	    for(int ip=0; ip<ints[isa]->nx*ints[isa]->ny; ip++){
+		double sig=ints[isa]->p[ip]-offset;
+		if(sig>thres){
+		    i1sum+=sig;
+		}
+	    }
 	}
     }
 
@@ -938,7 +945,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    case 1://normalization use current intensity (non-linear)
 		break;
 	    case 2://normalized use scaled current intensity (non-linear)
-		sumi=powfs[ipowfs].saa->p[isa]*i1sum/powfs[ipowfs].saasum;
+		sumi=powfs[ipowfs].saa->p[isa]*(i1sum/powfs[ipowfs].saasum);
 		break;
 	    }
 	    dcog(geach,ints[isa],0.,0.,

@@ -23,7 +23,7 @@
 #include "sim_utils.h"
 #include "sim.h"
 
-void save_gradstat(SIM_T *simu){
+void save_pistat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     //Save pistat in the end of simulation

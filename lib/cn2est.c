@@ -548,7 +548,7 @@ void cn2est_est(cn2est_t *cn2est, int verbose, int reset){
     dcellzero(cn2est->wtrecon);
     dcellmm(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, "nn", 1);
 /*only 1 cell. norm to sum to 1. */
-    normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
+    normalize_sumabs(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(verbose){
 	info("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
 	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,

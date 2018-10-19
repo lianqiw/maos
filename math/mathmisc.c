@@ -44,6 +44,19 @@ void normalize_sum(double *p, long nloc, double norm){
     }
 }
 /**
+   normalize vector to sum of abs to norm;*/
+void normalize_sumabs(double *p, long nloc, double norm){
+    if(!nloc) return;
+    double ss=0;
+    for (long i=0; i<nloc; i++){
+	ss+=fabs(p[i]);
+    }
+    ss=norm/ss;
+    for(int i=0; i<nloc; i++){
+	p[i]*=ss;
+    }
+}
+/**
    normalize vector to max to max;*/
 void normalize_max(double *p, long nloc, double max){
     if(!nloc) return;
