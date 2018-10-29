@@ -315,7 +315,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    intsdata->ints=ints;
 	    intsdata->psfout=psfout;
 	    intsdata->pistatout=simu->pistatout->p[iwfs];
-	    if(parms->powfs[ipowfs].pistatout==1){
+	    if(parms->powfs[ipowfs].pistatout){
 		intsdata->gradref=gradcalc;
 	    }
 	    intsdata->opd=opd;
@@ -373,6 +373,9 @@ void wfsgrad_iwfs(thread_t *info){
 		    zfarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
 		}
 	    }
+	    if(parms->powfs[ipowfs].i0save==2){
+		dcelladd(&simu->ints->p[iwfs], 1, ints, 1);
+	    }
 	    if(parms->powfs[ipowfs].dither==1 && isim>=parms->powfs[ipowfs].dither_ogskip
 	       && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytype_sim2==1){
 		/*Collect statistics with dithering*/
@@ -386,6 +389,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
 	if(do_phy){
+
 	    if(parms->powfs[ipowfs].type==0){
 		calc_phygrads(gradout, ints->p, parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
 	    }else{

@@ -856,22 +856,25 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_up
 	    memcpy(global->simu->cn2est->p[1]->p+icn2*cn2est->htrecon->nx,cn2est->wtrecon->p[0]->p, 
 		   cn2est->htrecon->nx*sizeof(double));
 	}
-	if(parms->cn2.moveht){
-	    cn2est_moveht(recon);
-	}
+	if(parms->cn2.tomo){
+	    if(parms->cn2.moveht){
+		cn2est_moveht(recon);
+	    }
 
-	if(parms->cn2.verbose){
-	    info("Updating tomography weights\n");
+	    if(parms->cn2.verbose){
+		info("Updating tomography weights\n");
+	    }
+	    /*Changes recon parameters. cannot be parallel with tomofit(). */
+	    /*wtrecon is referenced so should be updated automaticaly. */
+	    if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
+		dfree(recon->wt);
+		recon->wt=dref(cn2est->wtrecon->p[0]);
+	    }
+	    recon->r0=cn2est->r0m;
+	    recon->L0=cn2est->L0;
+	
+	    *tomo_update=1;
 	}
-	/*Changes recon parameters. cannot be parallel with tomofit(). */
-	/*wtrecon is referenced so should be updated automaticaly. */
-	if(recon->wt->p!=cn2est->wtrecon->p[0]->p){
-	    dfree(recon->wt);
-	    recon->wt=dref(cn2est->wtrecon->p[0]);
-	}
-	recon->r0=cn2est->r0m;
-	recon->L0=cn2est->L0;
-	*tomo_update=1;
     }
 }
 /**

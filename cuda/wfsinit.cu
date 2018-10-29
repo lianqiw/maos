@@ -473,7 +473,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	int nsa=powfs[ipowfs].saloc->nloc;
 	//gradacc is used for accumulation in geom mode and for output in phy mode
 	initzero(cuwfs[iwfs].gradacc, nsa*2, 1);
-	initzero(cuwfs[iwfs].gradcalc,nsa*2,1);
+	initzero(cuwfs[iwfs].gradcalc,nsa*2, 1);
 	if(parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].dither){
 	    if(!cuwfs[iwfs].ints){
 		if(parms->powfs[ipowfs].type==1){//PYWFS
@@ -497,6 +497,9 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	    }else{
 		cuzero(cuwfs[iwfs].pistatout);
 	    }
+	}
+	if(parms->powfs[ipowfs].i0save){
+	    cuzero(cuwfs[iwfs].intsout);
 	}
 	CUDA_SYNC_DEVICE;
     }

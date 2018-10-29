@@ -134,11 +134,13 @@ AC_ARG_WITH(gtk,  AS_HELP_STRING([--with-gtk[=DIR]],[Enable gtk support]), [GTKD
 AC_ARG_ENABLE(gtk-3, AS_HELP_STRING([--enable-gtk-3],[Using GTK+-3]), [use_gtk_3="$enableval"], [use_gtk_3="default"])
 AC_ARG_WITH(matlab, AS_HELP_STRING([--with-matlab[=DIR]],[Enable compiling mex routines for matlab]), [MEXDIR=${withval}], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(release, AS_HELP_STRING([--enable-release], [Compile for broad compatibility]), [use_release="$enableval"],[use_release="no"])
-if test -z "$MEXDIR" -o "$MEXDIR"="no" ;then
+
+if test -z "$MEXDIR" -o "$MEXDIR" = "no" ;then
     with_matlab=no
 else
     with_matlab=yes
 fi
+
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 #-all-static will produce a static exe if all libraries are available in static linking mode.
 OPTScommon=
@@ -708,7 +710,6 @@ fi
 
 AC_CHECK_HEADERS([unistd.h])
 OPTS+=" $OPTScommon $OPTScc $OPTSprof $OPTSextra"
-
 
 if test "$with_matlab" != "no" ;then
     if test ${MEXDIR:0:1} = '~' ;then

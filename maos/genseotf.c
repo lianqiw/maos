@@ -555,6 +555,9 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    double pmax=dmax(IND(psepsf,isa,iwvl));
 		    dcog(pgrad,IND(psepsf,isa,iwvl),0.5,0.5,0.1*pmax,0.2*pmax, 0);
 		}
+		if(dsum(IND(psepsf,isa,iwvl))>1.1){
+		    error("Short exposure PSF has wrong scaling. It should total to <=1\n");
+		}
 		ccpd(&sepsf,IND(psepsf,isa,iwvl));
 		/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
 		cembed(seotfk, sepsf, angle);//if radrot: rotate from x/y to r/a coordinate

@@ -282,7 +282,7 @@ static int open_drawdaemon(){
 	if(scheduler_recv_socket(&sock, DRAW_ID)){
 	    sock=-1;
 	}else{
-	    dbg("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
+	    //dbg("received sock=%d, DRAW_ID=%d\n", sock, DRAW_ID);
 	}
 	if(sock==-1){
 	    if(DRAW_DIRECT){//directly fork and launch

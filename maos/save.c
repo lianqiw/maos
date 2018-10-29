@@ -26,38 +26,41 @@
 void save_pistat(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
-    //Save pistat in the end of simulation
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	const int dtrat=parms->powfs[ipowfs].dtrat;
-	double scale;
-	if(parms->powfs[ipowfs].usephy){
-	    scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
-	}else{
-	    scale=(simu->isim+1)/dtrat;
-	}
-	if(scale<=0) continue;	    
-	if(simu->pistatout && simu->pistatout->p[iwfs]){
-	    int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
-	    scale=1./(double)nstep;
-	    dcell *pp=simu->pistatout->p[iwfs];
-	    dcellscale(pp,scale);
-	    if(parms->sim.skysim){/*need peak in corner */
-		for(long ic=0; ic<pp->nx*pp->ny; ic++){
-		    dfftshift(pp->p[ic]);
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].pistatout){
+	    //Should not use dtrat here since pistat is accumuilated at every time step.
+	    const int nstep=(isim+1-parms->powfs[ipowfs].pistatstart);
+	    if(nstep>0){
+		dcell *pp=simu->pistatout->p[iwfs];
+		dcellscale(pp,1./(double)nstep);
+		if(parms->sim.skysim){/*need peak in corner */
+		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
+			dfftshift(pp->p[ic]);
+		    }
+		    writebin(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+			     dirskysim,simu->seed,
+			     parms->powfs[ipowfs].order,
+			     parms->wfs[iwfs].thetax*206265,
+			     parms->wfs[iwfs].thetay*206265);
+		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
+			dfftshift(pp->p[ic]);
+		    }
+		}else{/*need peak in center*/
+		    writebin(pp,"pistat_%d_wfs%d.bin", simu->seed,iwfs);
 		}
-		writebin(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
-			 dirskysim,simu->seed,
-			 parms->powfs[ipowfs].order,
-			 parms->wfs[iwfs].thetax*206265,
-			 parms->wfs[iwfs].thetay*206265);
-		for(long ic=0; ic<pp->nx*pp->ny; ic++){
-		    dfftshift(pp->p[ic]);
-		}
-	    }else{/*need peak in center */
-		writebin(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+		dcellscale(pp, nstep);
 	    }
-	    dcellzero(pp);
+	}
+	if(parms->powfs[ipowfs].i0save){
+	    const int dtrat=parms->powfs[ipowfs].dtrat;
+	    const int nstep=(isim+1-parms->powfs[ipowfs].phystep)/dtrat;
+	    if(nstep>0){
+		dcell *pp=simu->intsout->p[iwfs];
+		dcellscale(pp, 1.f/(double)nstep);
+		writebin(pp, "ints_%d_wfs%d.bin", simu->seed,iwfs);
+		dcellscale(pp, nstep);
+	    }
 	}
     }
 }

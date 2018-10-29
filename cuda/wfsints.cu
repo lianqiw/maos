@@ -557,7 +557,7 @@ void gpu_wfsints(SIM_T *simu, Real *phiout, curmat &gradref, int iwfs, int isim)
 		if(pistatout){
 		    cudaMemcpyAsync(psfstat, psf, sizeof(Comp)*notf*notf*ksa, 
 				    MEMCPY_D2D, stream);
-		    if(parms->powfs[ipowfs].pistatout==1){
+		    if(parms->powfs[ipowfs].pistatout){
 			sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
 			    (psfstat, notf,notf, gradref.P()+isa, gradref.P()+nsa+isa, -1.f/dtheta);
 		    }

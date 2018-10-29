@@ -716,6 +716,7 @@ static void init_simu_wfs(SIM_T *simu){
     const int seed=simu->seed;
     simu->eptwfs=recon->eptwfs;
     simu->ints=dccellnew(nwfs, 1);
+    simu->intsout=dccellnew(nwfs, 1);
     simu->wfspsfout=cccellnew(nwfs, 1);
     simu->pistatout=dccellnew(nwfs, 1);
     save->wfspsfout=mycalloc(nwfs,zfarr*);

@@ -759,7 +759,12 @@ void write_header(const header_t *header, file_t *fp){
 	if(header->ndim>2){
 	    warning("Third dimension and more will not be saved.\n");
 	}
-	zfwrite(header->dims, sizeof(uint64_t), 2, fp);
+	if(header->dims){
+	    zfwrite(header->dims, sizeof(uint64_t), 2, fp);
+	}else{
+	    uint64_t temp[2]={0,0};
+	    zfwrite(temp, sizeof(uint64_t), 2, fp);
+	}
     }
 }
 /**

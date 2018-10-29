@@ -495,6 +495,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 			zfarr_curcell(simu->save->intsny[iwfs], simu->isim/dtrat, ints, stream);
 		    }
 		}
+		if(parms->powfs[ipowfs].i0save){
+		    curcelladd(cuwfs[iwfs].intsout, 1, ints, 1, stream);
+		}
 		if(parms->powfs[ipowfs].dither && isim>=parms->powfs[ipowfs].dither_ogskip 
 		   && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].phytype_sim2==1){
 		    double cs, ss;
@@ -618,8 +621,8 @@ void gpu_save_pistat(SIM_T *simu){
 	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
 	const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	stream_t &stream=cuwfs[iwfs].stream;
-	if(cuwfs[iwfs].pistatout){
-	    int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
+	if(parms->powfs[ipowfs].pistatout){
+	    int nstep=(isim+1-parms->powfs[ipowfs].pistatstart);
 	    if(nstep>0){
 		curcell tmp=cuwfs[iwfs].pistatout;
 		curcellscale(tmp, 1.f/(Real)nstep, stream);
@@ -632,6 +635,17 @@ void gpu_save_pistat(SIM_T *simu){
 		}else{
 		    cuwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}
+		curcellscale(tmp, nstep, stream);
+	    }
+	}
+	
+	if(parms->powfs[ipowfs].i0save){
+	    const int dtrat=parms->powfs[ipowfs].dtrat;
+	    const int nstep=(isim+1-parms->powfs[ipowfs].phystep)/dtrat;
+	    if(nstep>0){
+		curcell tmp=cuwfs[iwfs].intsout;
+		curcellscale(tmp, 1.f/(Real)nstep, stream);
+		cuwrite(tmp,"ints_%d_wfs%d.bin", simu->seed,iwfs);
 		curcellscale(tmp, nstep, stream);
 	    }
 	}

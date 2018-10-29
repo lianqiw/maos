@@ -336,6 +336,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(dbl,cogoff);
     READ_POWFS_RELAX(int,ncpa_method);
     READ_POWFS_RELAX(int,i0scale);
+    READ_POWFS_RELAX(int,i0save);
+    READ_POWFS_RELAX(str,i0load);
     READ_POWFS_RELAX(dbl,sigscale);
     READ_POWFS_RELAX(int,moao);
     READ_POWFS_RELAX(int,dither);
@@ -1430,7 +1432,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    /*round phystep to be multiple of dtrat. */
 	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 	}
-
+	if(powfsi->phystep>=0 && powfsi->phystep < powfsi->step){
+	    powfsi->phystep=powfsi->step;
+	}
 	if(powfsi->fieldstop>0){
 	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
 		error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);

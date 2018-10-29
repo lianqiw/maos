@@ -106,6 +106,7 @@ public:
     cucmat otf;
     curcell ints;       /**<For accumulating subaperture image.*/
     curcell pistatout;  /**<For output pistatout*/
+    curcell intsout;    /**<For output time averaged subaperture iamges*/
     cuccell wvfout;
     cucmat psfout;
     cucmat psfstat;

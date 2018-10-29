@@ -1420,11 +1420,11 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].phytype_recon==1 || parms->powfs[ipowfs].phytype_sim==1 || !parms->powfs[ipowfs].phyusenea
        || (powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2)){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat=mycalloc(1,INTSTAT_T);
-	if(parms->load.i0){
-	    warning("Loading i0, gx, gy\n");
-	    intstat->i0=dcellread("%s/powfs%d_i0",parms->load.i0, ipowfs);
-	    intstat->gx=dcellread("%s/powfs%d_gx",parms->load.i0, ipowfs);
-	    intstat->gy=dcellread("%s/powfs%d_gy",parms->load.i0, ipowfs);
+	if(parms->powfs[ipowfs].i0load){
+	    info("Loading i0, gx, gy\n");
+	    intstat->i0=dcellread("%s/powfs%d_i0",parms->powfs[ipowfs].i0load, ipowfs);
+	    intstat->gx=dcellread("%s/powfs%d_gx",parms->powfs[ipowfs].i0load, ipowfs);
+	    intstat->gy=dcellread("%s/powfs%d_gy",parms->powfs[ipowfs].i0load, ipowfs);
 	}else{
 	    if(parms->powfs[ipowfs].piinfile){
 		/*load psf. 1 for each wavefront sensor. */
@@ -1461,12 +1461,12 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 	    }
 	    /*generate short exposure i0,gx,gy from psf. */
 	    gensei(parms,powfs,ipowfs);
-	    if(parms->save.setup){
-		writebin(intstat->i0,"powfs%d_i0",ipowfs);
-		writebin(intstat->gx,"powfs%d_gx",ipowfs);
-		writebin(intstat->gy,"powfs%d_gy",ipowfs);
-	    }
-   	}
+	}
+	if(parms->save.setup){
+	    writebin(intstat->i0,"powfs%d_i0",ipowfs);
+	    writebin(intstat->gx,"powfs%d_gx",ipowfs);
+	    writebin(intstat->gy,"powfs%d_gy",ipowfs);
+	}
     }
     /*Generating Matched filter */
     if(parms->powfs[ipowfs].phytype_recon==1 || parms->powfs[ipowfs].phytype_sim==1){

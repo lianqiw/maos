@@ -65,7 +65,7 @@ typedef struct INTSTAT_T{
     cccell *otf;        /**<short exposure OTF. time consuming to calculate. */
     cccell *fotf;       /**<The final optf before fft and multiply with si to
 			   get i0. Used for MAP tracking.*/
-    cccell *potf;       /**<Point source otf. potf.*etf=fotf*/
+    cccell *potf;       /**<Point source otf. potf.*etf=fotf. Used for wfslinearity.*/
     dccell *sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/
@@ -501,6 +501,7 @@ typedef struct SIM_T{
     /*WFS data for each time step. Each has a cell for each wfs*/
     dcell *wfsopd;     /**<WFS Ray tracing result*/
     dccell *ints;      /**<WFS subaperture images.*/
+    dccell *intsout;   /**<Time averaged subaperture image*/
     cccell *wfspsfout; /**<output WFS PSF history.*/
     dccell *pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
