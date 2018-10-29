@@ -799,25 +799,25 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
     if(parms->nlgspowfs){
 	if(parms->recon.split==2 && parms->sim.mffocus){//For MVST.
 	    dmat *GMGngs=NULL;
-	    dcell *GMngs=dcellnew(1, parms->nwfsr);
+	    dcell *GMngs=dcellnew(1, parms->nwfs);
 	    /*Compute focus reconstructor from NGS Grads. fuse grads
 	      together to construct a single focus measurement*/
-	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		int ipowfs=parms->wfsr[iwfs].powfs;
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1 && parms->powfs[ipowfs].skip!=2){
 		    info("wfs %d will be used to track focus\n", iwfs);
 		}else{
 		    continue;
 		}
-		dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
+		dspmm(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfs*iwfs], 
 		      recon->GFall->p[iwfs],"nn",1);
 		dmm(&GMGngs,1,recon->GFall->p[iwfs], GMngs->p[iwfs], "tn",1);
 	    }
 	    dinvspd_inplace(GMGngs);
 	    /*A focus reconstructor from all NGS measurements.*/
-	    dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
+	    dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfs);
   
-	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		if(!recon->GFall->p[iwfs]) continue;
 		//NGS gradient to Focus mode reconstructor.
 		dmm(&RFngsg->p[iwfs], 0, GMGngs, GMngs->p[iwfs],"nt",1);
@@ -827,7 +827,7 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 	}
 	/*
 	  Compute focus constructor from LGS grads. A constructor for each LGS
-	  because each LGS may have different range error. Applyes to parms->wfs, not parms->wfsr.
+	  because each LGS may have different range error. Applyes to parms->wfs, not parms->wfs.
 	*/
 	cellfree(recon->RFlgsg);
 	recon->RFlgsg=dcellnew(parms->nwfs, parms->nwfs);

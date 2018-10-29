@@ -445,7 +445,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	}
 	info("\n");
 	if(ngsmod->nmod>2 && nttfwfs==0){
-	    error("Only TT wfs cannot control plate scale or focus\n");
+	    error("Only TTF wfs cannot control plate scale or focus\n");
 	}
 	if(ngsmod->nmod==6 && nttfwfs==1 && nttwfs==0){
 	    warning("There is only one wfs, remove first plate scale mode as it degenerates with focus mode");

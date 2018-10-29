@@ -306,9 +306,9 @@ void maos_sim(){
 	    int isim0;
 	    if(parms->sim.closeloop){
 		if(parms->sim.end>100){
-		    isim0=MAX(50,parms->sim.end/10);
+		    isim0=MAX(50,parms->sim.end*0.2);
 		}else{
-		    isim0=MIN(20, parms->sim.end/2);
+		    isim0=MIN(20,parms->sim.end*0.5);
 		}
 	    }else{
 		isim0=0;
@@ -323,5 +323,5 @@ void maos_sim(){
 	free_simu(simu);
 	global->simu=0;
     }/*seed */
-    info("%.2f\n", sqrt(restot/rescount)*1e9);
+    info("Mean: %.2f\n", sqrt(restot/rescount)*1e9);
 }

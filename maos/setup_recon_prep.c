@@ -793,19 +793,19 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 }
 
 /**
-   From focus mode to gradients
+   From focus mode to gradients. This acts on WFS, not WFSR.
  */
 static void
 setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
     /*Create GFall: Focus mode -> WFS grad. This is model*/
-    recon->GFall=dcellnew(parms->nwfsr, 1);
-    recon->GFngs=dcellnew(parms->nwfsr, 1);
+    recon->GFall=dcellnew(parms->nwfs, 1);
+    recon->GFngs=dcellnew(parms->nwfs, 1);
     {
 	dmat *opd=dnew(recon->ploc->nloc,1);
 	loc_add_focus(opd->p, recon->ploc, 1);
-	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	    const int ipowfs=parms->wfsr[iwfs].powfs;
-	    dspmm(&recon->GFall->p[iwfs], recon->GP->p[iwfs], opd, "nn", 1);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    const int ipowfs=parms->wfs[iwfs].powfs;
+	    dspmm(&recon->GFall->p[iwfs], recon->GP->p[parms->recon.glao?ipowfs:iwfs], opd, "nn", 1);
 	    if(parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].llt){
 		recon->GFngs->p[iwfs]=dref(recon->GFall->p[iwfs]);
 	    }
@@ -821,15 +821,15 @@ setup_recon_GF(RECON_T *recon, const PARMS_T *parms){
  */
 static void
 setup_recon_GR(RECON_T *recon, const POWFS_T *powfs, const PARMS_T *parms){
-    recon->GRall=dcellnew(parms->nwfsr, 1);
+    recon->GRall=dcellnew(parms->nwfs, 1);
     dmat *opd=zernike(recon->ploc, 0, 3, parms->powfs[parms->itpowfs].order, parms->dbg.twfsflag);
-    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	const int ipowfs=parms->wfsr[iwfs].powfs; 
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs; 
 	if(parms->powfs[ipowfs].skip==2 || parms->powfs[ipowfs].llt){
 	    if(parms->powfs[ipowfs].type==1){//PWFS
 		recon->GRall->p[iwfs]=pywfs_mkg(powfs[ipowfs].pywfs, recon->ploc, NULL, opd, 0, 0, 0, 1);
 	    }else{//SHWFS
-		dspmm(&recon->GRall->p[iwfs], recon->GP->p[iwfs], opd, "nn", 1);
+		dspmm(&recon->GRall->p[iwfs], recon->GP->p[parms->recon.glao?ipowfs:iwfs], opd, "nn", 1);
 	    }
 	}
     }
