@@ -19,7 +19,7 @@
   To be included in mat.c, cell.c and matbin.c
 */
 #if MAT_VERBOSE == 1
-#define matdbg(A...) {fprintf(stderr, A);}
+#define matdbg(A...) {dbg( A);}
 #else
 #define matdbg(A...)
 #endif
@@ -52,7 +52,7 @@
 #undef fabs
 #define fabs(A) abs(A)
 #define M_T M_LONG
-#define PRINT(A) fprintf(stderr," %ld",A);
+#define PRINT(A) info(" %ld",A);
 #else //if USE_LONG
 
 #define MAT_TYPE
@@ -74,7 +74,7 @@
 #define M_SPT32 M_DSP32
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
-#define PRINT(A) fprintf(stderr," %10.3e",A);
+#define PRINT(A) info(" %10.3e",A);
 #define DOT dotdbl
 #else/*Double Complex */
 #define X(A) c##A
@@ -87,7 +87,7 @@
 #define COMPLEX DCOMPLEX
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
-#define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",creal(A),cimag(A));
+#define PRINT(A) info("(%10.3e %10.3eI)",creal(A),cimag(A));
 #define DOT dotcmp
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
@@ -109,7 +109,7 @@
 #define M_SPT32 M_SSP32
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
-#define PRINT(A) fprintf(stderr,"%10.3e",A);
+#define PRINT(A) info("%10.3e",A);
 #define DOT dotflt
 #else
 /*Single Complex */
@@ -123,7 +123,7 @@
 #define COMPLEX FCOMPLEX
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
-#define PRINT(A) fprintf(stderr,"(%10.3e %10.3eI)",crealf(A),cimagf(A));
+#define PRINT(A) info("(%10.3e %10.3eI)",crealf(A),cimagf(A));
 #define DOT dotzmp
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define USE_COMPLEX */

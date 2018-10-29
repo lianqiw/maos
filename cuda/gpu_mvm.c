@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 	P_TOT,
     };
     if(argc<P_TOT){
-	fprintf(stderr, "Usage: %s port\n", argv[0]);
+	fprintf(stderr,"Usage: %s port\n", argv[0]);
 	exit(0);
     }
     int port=strtol(argv[P_PORT], NULL, 10);

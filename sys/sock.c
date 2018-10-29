@@ -223,7 +223,7 @@ static int bind_socket (char *ip, uint16_t port){
 static volatile int quit_listen=0;
 static int scheduler_signal_handler(int sig){
     /*quit listening upon signal and do clean up.*/
-    psignal(sig, "scheduler");
+    info("scheduler: %s", sys_siglist[sig]);
     if(sig!=15) print_backtrace();
     quit_listen=1;
     return 1;

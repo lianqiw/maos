@@ -122,7 +122,7 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
     Real *&diff=cg_data.diff;
     memset(diff, 0, sizeof(Real)*(maxiter+1));
 #if PRINT_RES == 2
-    fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
+    info("GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
     /*computes r0=b-A*x0 */
     if(!x0){
@@ -227,9 +227,9 @@ Real gpu_pcg(curcell &x0, cucg_t *Amul, cucgpre_t *Mmul,
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
-    fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter]);
+    info("GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter]);
 #elif PRINT_RES==2
-    fprintf(stderr, "\n");
+    info("\n");
 #endif
     Real residual=-1;/*Only useful if PRINT_RES is set*/
     residual=diff[maxiter];

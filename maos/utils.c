@@ -227,7 +227,7 @@ void rename_file(int sig){
    Handles signals.
  */
 int maos_signal_handler(int sig){
-    psignal(sig, "maos signal handler:");
+    info("maos: %s", sys_siglist[sig]);
     rename_file(sig);/*handles signal */
     if(global && global->parms && global->parms->sim.mvmport){
 	mvm_client_close();
@@ -526,7 +526,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 	dzero(gnfra);
 	dzero(gnfxy);
 	for(int isa=0; isa<nsa; isa++){
-	    info("isa=%4d\b\b\b\b\b\b\b\b", nsa);
+	    info2("isa=%4d\b\b\b\b\b\b\b\b", nsa);
 	    if(srot){
 		theta=srot[isa];
 		cx=cos(theta);

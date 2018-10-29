@@ -129,7 +129,7 @@ void rename_file(int sig){
    Handles signals. 
  */
 int skyc_signal_handler(int sig){
-    psignal(sig, "skyc");
+    info("skyc: %s", sys_siglist[sig]);
     rename_file(sig);/*handles signal */
     scheduler_finish(sig);
     return 0;
