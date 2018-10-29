@@ -100,9 +100,9 @@ static void mvm_trans_igpu(thread_t *info){
 	int curact=curp[iact][1];
 	if(info->ithread==0){
 	    if(!detached){
-		info("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*NGPU, ntotact);
+		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*NGPU, ntotact);
 	    }else if(iact % 100==0){
-		info("%6d of %6d\n", iact*NGPU, ntotact);
+		info2("%6d of %6d\n", iact*NGPU, ntotact);
 	    }
 	}
 	if(eyec){

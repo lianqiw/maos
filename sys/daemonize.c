@@ -228,9 +228,9 @@ typedef struct{
     int pfd;
     int stdoutfd;
     char *fn;
-}redirect_t;
+}dup_stdout_t;
 
-static void* fputs_stderr(redirect_t *data){
+static void* dup_stdout(dup_stdout_t *data){
     int fd=data->pfd;
     int stdoutfd=data->stdoutfd;
     char *fn=data->fn;
@@ -266,23 +266,29 @@ static void* fputs_stderr(redirect_t *data){
    Redirect stdout (1) and stderr (2) to fd
  */
 static void redirect2fd(int fd){
-    if(dup2(fd, 1)<0 || dup2(fd, 2)<0){
-	warning("Error redirecting stdout/stderr\n");
+    setbuf(stdout, NULL);//disable buffering to see immediate output.
+    if(dup2(fd, 1)<0){
+	warning("Error redirecting stdout\n");
     }
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    //2018-10-29: We no longer redirecting stderr to file to keep it clean.
+    /*if(dup2(fd, 2)<0){
+      warning("Error redirecting stderr\n");
+      }*/
+
+    //setbuf(stderr, NULL);
 }
 /*
    Redirect stdout and stderr to fn
  */
 static void redirect2fn(const char *fn){
+    setbuf(stdout, NULL);
     if(!freopen(fn, "w", stdout)){
 	warning("Error redirecting stdout/stderr\n");
     }
+    //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     //Redirect stderr to stdout 
-    dup2(fileno(stdout), fileno(stderr));
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
+    //dup2(fileno(stdout), fileno(stderr));
+    //setbuf(stderr, NULL);
 }
 /**
   Redirect output. 
@@ -296,7 +302,7 @@ void redirect(void){
     (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
-	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
+	if(!freopen("/dev/null","r",stdin)) warning("Error redirecting stdin\n");
     }else{
 	/* output to both file and screen. we first keep a reference to our
 	   console output fd. The stdout and stderr is redirected to one of of
@@ -305,16 +311,17 @@ void redirect(void){
 	int stdoutfd=dup(fileno(stdout));
 	int pfd[2];
 	if(pipe(pfd)){//fail to create pipe.
-	    warning("pipe failed\n");
+	    close(stdoutfd);
+	    warning("pipe failed, failed to redirect stdout.\n");
 	}else{
-	    redirect_t *data=mycalloc(1,redirect_t);
+	    dup_stdout_t *data=mycalloc(1,dup_stdout_t);
 	    data->pfd=pfd[0];//read
 	    data->stdoutfd=stdoutfd;//write to console
 	    data->fn=strdup(fn);
 	    //spawn a thread to handle output.
 	    pthread_t thread;
 	    //child thread read from pfd[0] and write to stdout.
-	    pthread_create(&thread, NULL, (void *(*)(void *))fputs_stderr, data);
+	    pthread_create(&thread, NULL, (void *(*)(void *))dup_stdout, data);
 	    //master threads redirects stderr and stdout to pfd[1]
 	    redirect2fd(pfd[1]);
 	}

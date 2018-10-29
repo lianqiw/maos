@@ -114,9 +114,9 @@ static void mvm_direct_igpu(thread_t *info){
 	RECORD(0);
 	if(info->ithread==0){
 	    if(!detached){
-		info("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
+		info2("%6d of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig*NGPU, ntotgrad);
 	    }else if(ig % 100==0){
-		info("%6d of %6ld\n", ig*NGPU, ntotgrad);
+		info2("%6d of %6ld\n", ig*NGPU, ntotgrad);
 	    }
 	}
 	if(ig){

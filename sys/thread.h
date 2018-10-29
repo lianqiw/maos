@@ -97,7 +97,7 @@ long thread_id(void);
 #define OMP_TASK(urgent) DO_PRAGMA(omp task)
 #endif
 INLINE void THREAD_POOL_INIT(int nthread){
-    fprintf(stderr, "Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
+    info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
@@ -191,7 +191,7 @@ INLINE void  CALL_THREAD(thread_t *A, int urgent){
     }
 }
 
-#define THREAD_POOL_INIT(A) ({thread_pool_init(A);fprintf(stderr, "Using thread pool with %d threads\n", A);})
+#define THREAD_POOL_INIT(A) ({thread_pool_init(A);info("Using thread pool with %d threads\n", A);})
 #define THREAD_YIELD thread_pool_do_job_once()
 #endif
 

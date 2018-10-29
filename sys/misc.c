@@ -172,8 +172,8 @@ void print_file(const char *fnin){
     if(!(fp=fopen(fn,"r"))){
 	error("Open %s failed\n",fn);
     }
-    copyfile_fp(stderr, fp);
-    fflush(stderr);
+    copyfile_fp(stdout, fp);
+    fflush(stdout);
     fclose(fp);
     free(fn);
 }
@@ -759,7 +759,7 @@ void set_realtime(int icpu, int niceness){
 }
 quitfun_t quitfun=0;
 void default_quitfun(const char *msg){
-    fprintf(stderr, "%s", msg);
+    info("%s", msg);
     sync();
     if(strncmp(msg, "FATAL", 5)){
 	print_backtrace();

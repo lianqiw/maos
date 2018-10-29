@@ -58,9 +58,9 @@ setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dcell *eyec=d2cellref(eye, ngrad, nwfs);
 	for(int ig=0; ig<ntotgrad; ig++){
 	    if(!detached){
-		info("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
+		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
 	    }else if(ig%100==0){
-		info("%6d of %6d\n", ig, ntotgrad);
+		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
 	    if(ig) eye->p[ig-1]=0;
 	    eye->p[ig]=1;

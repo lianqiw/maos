@@ -29,7 +29,7 @@
 #define EVENT_TOC
 #define EVENT_PRINT(A...)
 #else
-#define EVENT_PRINT(A...) fprintf(stderr, A);EVENT_DEINIT
+#define EVENT_PRINT(A...) info(A);EVENT_DEINIT
 #endif
 
 #if TIMING <2
@@ -41,7 +41,7 @@
 #define EVENT2_INIT EVENT_INIT
 #define EVENT2_TIC EVENT_TIC
 #define EVENT2_TOC EVENT_TOC
-#define EVENT2_PRINT(A...) fprintf(stderr, A);EVENT_DEINIT
+#define EVENT2_PRINT(A...) info(A);EVENT_DEINIT
 #endif
 namespace cuda_recon{
 cufit_grid::cufit_grid(const PARMS_T *parms, const RECON_T *recon, const curecon_geom *_grid)

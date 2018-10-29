@@ -102,7 +102,7 @@ extern int detached;
 #define dbg(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d): ", BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
-	    fprintf(stderr,"%s", fline); })
+	    fprintf(stdout,"%s", fline); })
 
 #define error(A...) ({char fline[4096]; int n__;			\
 	    snprintf(fline,4096, "%sFATAL(%s:%d): ", RED, BASEFILE, __LINE__); \
@@ -113,19 +113,20 @@ extern int detached;
 #define warning(A...) ({char fline[4096]; int n__;			\
 	    snprintf(fline,4096, "WARN(%s:%d): ", BASEFILE, __LINE__); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
+	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
 
-#define info(A...) fprintf(stderr, A)
+#define info(A...) fprintf(stdout, A)
+#define info2(A...) fprintf(stderr, A) //stderr is not directed to file.
 
 #define info_time(A...) ({char fline[4096]; int n__;			      \
 	    snprintf(fline,4096, "INFO(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);     \
-	    fprintf(stderr,"%s", fline); })
+	    fprintf(stdout,"%s", fline); })
 
 #define warning_time(A...) ({char fline[4096]; int n__;			\
 	    snprintf(fline,4096, "WARN(%s:%d)[%s]: ", BASEFILE, __LINE__, myasctime()); \
 	    n__=strlen(fline); snprintf(fline+n__, 4096-n__-1, A);	\
-	    fprintf(stderr,"%s%s%s", RED, fline, BLACK); })
+	    fprintf(stdout,"%s%s%s", RED, fline, BLACK); })
 
 #define warning_once(A...) ({static int done=0; if(!done){done=1; warning(A);}})
 #define info_once(A...) ({static int done=0; if(!done){done=1; info(A);}})
@@ -154,8 +155,8 @@ extern int detached;
 #define toc(A...) ({char fline[4096];char sect[4096];			\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
-	    fprintf(stderr,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
-#define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stderr, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
+	    fprintf(stdout,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
+#define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stdout, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

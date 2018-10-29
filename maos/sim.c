@@ -323,5 +323,5 @@ void maos_sim(){
 	free_simu(simu);
 	global->simu=0;
     }/*seed */
-    printf("%.2f\n", sqrt(restot/rescount)*1e9);
+    info("%.2f\n", sqrt(restot/rescount)*1e9);
 }
