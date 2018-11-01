@@ -46,4 +46,6 @@ lmat* loc_coord2ind(loc_t *aloc, const char *fndead);
 cn2est_t* cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs);
 void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_update);
 double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs);
+void nea_chol(dmat **pout, const dmat *in);
+void nea_inv(dmat **pout, const dmat *in);
 #endif

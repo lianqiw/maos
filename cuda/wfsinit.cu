@@ -255,8 +255,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	/*wfs amplitude map on loc */
 	cp2gpu(cuwfs[iwfs].amp, powfs[ipowfs].realamp->p[wfsind]);
-	if(powfs[ipowfs].neasim && powfs[ipowfs].neasim->p[wfsind]){
-	    cp2gpu(cuwfs[iwfs].neasim, powfs[ipowfs].neasim->p[wfsind]);
+	if(powfs[ipowfs].neasim){//neasim is the LL' decomposition of nea
+	    dmat *neasim=INDR(powfs[ipowfs].neasim, wfsind,0);
+	    if(neasim) cp2gpu(cuwfs[iwfs].neasim,neasim);
 	}
 	/* * Now start physical optics setup * */
 	if(parms->powfs[ipowfs].type==1){//Pyramid WFS

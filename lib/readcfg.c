@@ -636,24 +636,25 @@ int readcfg_dblarr(double **ret, const char *format,...){
    Read as a dmat. It can be a file name or an array.
  */
 static dmat *readstr_dmat_do(int n, const char *str){
-    double *val=NULL;
     if(!str){
 	return 0;
-    }else if(check_suffix(str, ".gz") || check_suffix(str, ".bin") || check_suffix(str, ".fits")){
-	char *fn=strextract(str);
-	return dread("%s", fn);
-	free(fn);
+    }
+    dmat *res=0;
+    char *fn=strextract(str);    
+    if(check_suffix(fn, ".gz") || check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
+	res=dread("%s", fn);
     }else{
-        double **pval=&val;
 	int nx, ny;
-	readstr_numarr((void**)pval, n, &nx, &ny,M_DBL, str);
-	dmat *res=0;
+	double *val=NULL;
+        double **pval=&val;
+	readstr_numarr((void**)pval, n, &nx, &ny,M_DBL, fn);
 	if(!nx || !ny) {
 	    free(val); val=0;
 	}
 	res=dnew_data(nx, ny, val);
-	return res;
     }
+    free(fn);
+    return res;
 }
 dmat *readstr_dmat(const char *str){
     return readstr_dmat_do(0, str);

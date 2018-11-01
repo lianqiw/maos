@@ -45,8 +45,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dfree(intstat->i0sum);
 
     intstat->mtche=dcellnew(nsa,ni0);
-    dcell *sanea=dcellnew(ni0,1);
-    
+    dcellfree(powfs[ipowfs].sanea);
+    dcell *sanea=powfs[ipowfs].sanea=dcellnew(ni0,1);
     intstat->i0sum=dnew(nsa,ni0);
     intstat->i0sumsum=dnew(ni0, 1);
 
@@ -55,11 +55,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     dcell* gys=intstat->gy/*PDELL*/;
     dmat *i0sum=intstat->i0sum;
     dcell *mtche=intstat->mtche;
-    if(parms->powfs[ipowfs].phytype_recon==1){//use MF nea for recon
-	dcellfree(powfs[ipowfs].saneaxy);
-	powfs[ipowfs].saneaxy=dcellnew(nsa,ni0);
-    }
-    dcell *saneaxy=powfs[ipowfs].saneaxy;
+  
+    //dcell *saneaxy=powfs[ipowfs].saneaxy;
     int nllt;
     if(parms->powfs[ipowfs].llt){
 	nllt=parms->powfs[ipowfs].llt->n;
@@ -87,7 +84,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    int irot=ii0*irot_multiplier;
 	    srot=powfs[ipowfs].srot->p[irot]->p;
 	}
-	sanea->p[ii0]=dnew(nsa,2);
+	sanea->p[ii0]=dnew(nsa,3);
 	dmat*  psanea=sanea->p[ii0]/*PDMAT*/;
 	double i0sumsum=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
@@ -139,7 +136,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	    IND(psanea,isa,0)=nea2->p[0];
 	    IND(psanea,isa,1)=nea2->p[3];
-	    IND(saneaxy, isa, ii0)=nea2;
+	    IND(psanea,isa,2)=nea2->p[1];
 	}/*isa  */
 
 	if(mtchadp){
@@ -195,20 +192,18 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }/*isa  */
 	}
     }
-    if(parms->powfs[ipowfs].phytype_recon==1 && parms->save.setup){
+    if(parms->save.setup){
 	writebin(sanea, "powfs%d_sanea", ipowfs);
     }
     if(parms->powfs[ipowfs].phytype_recon==1 && parms->recon.glao && ni0>0){
 	info("Averaging saneaxy of different WFS for GLAO mode\n");
-	dcell *saneaxy2=dcellnew(nsa, 1);
+	dmat *sanea2=0;
 	double scale=1./ni0;
-	for(int isa=0; isa<nsa; isa++){
-	    for(int ii0=0; ii0<ni0; ii0++){
-		dadd(&saneaxy2->p[isa], 1, IND(saneaxy, isa, ii0), scale);
-	    }
+	for(int ii0=0; ii0<ni0; ii0++){
+	    dadd(&sanea2, 1, sanea->p[ii0], scale);
 	}
-	dcellfree(powfs[ipowfs].saneaxy);
-	powfs[ipowfs].saneaxy=saneaxy2;
+	dcellfree(powfs[ipowfs].sanea);
+	powfs[ipowfs].sanea=dcellnew(1,1);
+	powfs[ipowfs].sanea->p[0]=sanea2;
     }
-    dcellfree(sanea);
 }

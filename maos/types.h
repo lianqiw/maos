@@ -114,7 +114,8 @@ typedef struct POWFS_T{
     dmat *pixoffy;      /**<Actual pixel offset wrt lenslet*/
     /*Geometric gradient */
     dspcell *GS0;        /**<gtilt (average gradient) on ampm*/
-    dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
+    dcell *neasim;      /**<LL' decomposition of nea covariance matrix, with
+			   unit in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
     /*Matched filter */
     dcell *sprint;      /**<which subapertures to print sanea*/
@@ -124,8 +125,8 @@ typedef struct POWFS_T{
     dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
     dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     //subaperture noise equivalent angles.
-    dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
-    //int namp;           /**<number of amplitude maps*/
+    dcell *sanea;       /**<computed sanea (nsa*3) for each WFS. (rad^2)*/
+    //int namp;         /**<number of amplitude maps*/
     int pixpsax;        /**<number of detector pixels along x*/
     int pixpsay;        /**<number of detector pixels along y*/
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/

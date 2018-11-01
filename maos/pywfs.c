@@ -385,19 +385,18 @@ void pywfs_setup(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)
     }
     //Determine the NEA. It will be changed by powfs.gradscale as dithering converges    
     {
-	powfs[ipowfs].saneaxy=dcellnew(nsa,1);
+	powfs[ipowfs].sanea=dcellnew(1,1);
+	dmat *sanea=powfs[ipowfs].sanea->p[0]=dnew(nsa,3);
 	double rne=parms->powfs[ipowfs].rne;
 	for(int isa=0; isa<nsa; isa++){
-	    dmat *tmp=dnew(2,2);
 	    double ogi=pywfs->gain*parms->powfs[ipowfs].gradscale;
 	    double sig=pywfs->saa->p[isa]*parms->powfs[ipowfs].siglev;//siglev of subaperture
-	    IND(tmp,0,0)=IND(tmp,1,1)=pow(ogi/sig,2)*(sig+4*rne*rne);
-	    powfs[ipowfs].saneaxy->p[isa]=tmp;
+	    IND(sanea,isa,0)=IND(sanea,isa,1)=pow(ogi/sig,2)*(sig+4*rne*rne);
 	}
     }
     if(parms->save.setup){
 	writebin(pywfs->gradoff, "powfs%d_gradoff", ipowfs);
-	writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea", ipowfs);
+	writebin(powfs[ipowfs].sanea, "powfs%d_sanea", ipowfs);
 	writebin(pywfs->GTT, "powfs%d_GTT", ipowfs);
     }
 

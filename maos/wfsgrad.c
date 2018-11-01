@@ -402,7 +402,7 @@ void wfsgrad_iwfs(thread_t *info){
 		dscale(*gradout,1./dtrat);/*average */
 	    }
 	    if(noisy && !parms->powfs[ipowfs].usephy){
-		const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
+		const dmat *nea=INDR(powfs[ipowfs].neasim,wfsind,0);//neasim is the LL' decomposition
 		const double *neax=nea->p;
 		const double *neay=nea->p+nsa;
 		const double *neaxy=nea->p+nsa*2;
@@ -1045,7 +1045,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		    //adjust WFS measurement dither dithersig by gain adjustment. used for dither t/t removal from gradients.
 		    //dbg("a2me=%g, mgold=%g, mgnew=%g\n", pd->a2me, mgold, mgnew);
 		    pd->a2me*=(mgnew/mgold);
-		    dcellscale(powfs[ipowfs].saneaxy, pow(mgnew/mgold, 2));
+		    dcellscale(powfs[ipowfs].sanea, pow(mgnew/mgold, 2));
 		    if(parms->save.dither){
 			writebin(simu->gradscale->p[iwfs], "wfs%d_gradscale_%d", iwfs, simu->isim);
 		    }
@@ -1071,7 +1071,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
 		if(parms->save.dither==1){
 		    writebin(powfs[ipowfs].intstat->mtche, "powfs%d_mtche_%d", ipowfs, simu->isim);
 		    writebin(powfs[ipowfs].intstat->i0sum, "powfs%d_i0sum_%d", ipowfs, simu->isim);
-		    writebin(powfs[ipowfs].saneaxy, "powfs%d_sanea_%d", ipowfs, simu->isim);
+		    writebin(powfs[ipowfs].sanea, "powfs%d_sanea_%d", ipowfs, simu->isim);
 		}
 #if USE_CUDA
 		if(parms->gpu.wfs){

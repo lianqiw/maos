@@ -2599,7 +2599,8 @@ static void print_parms(const PARMS_T *parms){
 	"Skip",
 	"matched filter",
 	"thresholded center of gravity",
-	"Maximum A Priori Tracing (MAP)"
+	"Maximum a posteriori tracing (MAP)",
+	"correlation"
     };
     const char* tomo_precond[]={
 	"No",

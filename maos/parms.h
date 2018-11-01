@@ -127,8 +127,7 @@ typedef struct POWFS_CFG_T{
     double safill2d;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
     double saspherical;/**<Subaperture spherical aberration in nm RMS at best focus.*/
     double safocuspv;   /**<Subaperture focus error in nm p/v*/
-    char  *neareconfile;/**<prefix of file contains noise equivalent angle in
-			   radian. _wfs# is added when reading file.*/
+    char  *neareconfile;/**<File contains noise equivalent angle in radian^2. Contains cell array of nwfsx1.*/
     double nearecon;/**<NEA used in reconstruction*/
     double neasim;  /**<NEA used in simulation. -1 to use nearecon*/
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at

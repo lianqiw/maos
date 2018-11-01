@@ -877,24 +877,3 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *grad, int *tomo_up
 	}
     }
 }
-/**
-   Optimize TWFS gain
-*/
-/*double twfs_gain_optim(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
-    dcell *tmp=0;
-    dcellmm(&tmp, recon->RRtwfs, recon->saneal, "nn", 1);
-    dcell *tmp2=0;
-    dcellmm(&tmp2, tmp, tmp, "nt", 1);
-    //The Spherical modes are defined (by zernike()) to have one unit WFE.
-    info("TWFS mode due to measurement noise is %g\n", sqrt(tmp2->p[0]->p[0]));
-    dmat *sphpsd=dread("%s", parms->recon.fnsphpsd);//spherical mode only
-    dcell *coeff=servo_optim(sphpsd, parms->sim.dt, parms->powfs[parms->itpowfs].dtrat, M_PI*0.25, tmp2->p[0], 1);
-    double eptwfs=coeff->p[0]->p[0];
-    dbg("TWFS gain is set to %g\n", eptwfs);
-    cellfree(tmp);
-    cellfree(tmp2);
-    dfree(sphpsd);
-    cellfree(coeff);
-    return eptwfs;
-}
-*/
