@@ -357,7 +357,6 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
     /*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
     fft_t *fft=mycalloc(1,fft_t);
     if(!fft->plan[dir+1]){
-	TIC;tic;
 	LOCK_FFT;
 	fft_threads(nx, ny);
 	fft->plan[dir+1]=FFTW(plan_guru_split_dft)
@@ -366,7 +365,6 @@ static void X(cell_fft2plan)(X(cell) *dc, int dir){
 	    error("Plan is empty\n");
 	}
 	UNLOCK_FFT;
-	toc2("done");
     }
     dc->fft=fft;
 }

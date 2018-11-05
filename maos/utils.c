@@ -374,7 +374,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, i
 	     "PSF Sum to: %.15g\n"
 	     "Exposure: %gs\n", 
 	     ievl<0?0:parms->evl.thetax->p[ievl]*206265, ievl<0?0:parms->evl.thetay->p[ievl]*206265,
-	     parms->atm.r0, parms->atm.L0,
+	     parms->atm.r0, parms->atm.L0->p[0],
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*(isim-parms->evl.psfisim+1));
     return strdup(header);

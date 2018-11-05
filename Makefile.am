@@ -26,7 +26,6 @@ EXTRA_DIST = doxygen.cfg docs version.h scripts config
 
 BUILT_SOURCES=version #non existent file will always run
 version:
-	@cd $(srcdir)
-	@echo static const char \*GIT_VERSION=\"`git describe --tags`\"\; >$(srcdir)/version.h
+	@echo static const char \*GIT_VERSION=\"`cd $(srcdir) && git describe --tags`\"\; >$(srcdir)/version.h
 
 .ONESHELL:

@@ -784,7 +784,7 @@ cn2est_t *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	hs->p[iwfs]=parms->wfs[iwfs].hs;
     }
     cn2est_t *cn2est=cn2est_new(pair, wfstheta, powfs[ipowfs].saloc, powfs[ipowfs].saa, parms->cn2.saat, 
-			     hs, ht, parms->cn2.keepht, parms->atm.L0);
+			     hs, ht, parms->cn2.keepht, parms->atmr.L0);
     cn2est->os=dnew(ht->nx, 1);
     if(!parms->cn2.keepht){
 	/*preserve the number of over sampled layers. */

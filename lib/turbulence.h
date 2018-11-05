@@ -27,7 +27,7 @@ typedef struct GENATM_T{
     rand_t *rstat;   /**<The random stream*/
     double *wt;      /**<The layer weights*/
     double r0;       /**<The Fried Parameter*/
-    double L0;       /**<The outer scale*/
+    double *L0;       /**<The outer scale*/
     double dx;       /**<The sampling*/
     double fmin;     /**<Minimum spatial frequency*/
     double fmax;     /**<Maximum spatial frequency*/
@@ -39,7 +39,6 @@ typedef struct GENATM_T{
     dmat *r0logpsds; /**<Spatial PSD of log(r0) (m)=beta*f^alpha. [alpha, beta, minfreq, maxfreq]*/
     /*The following are private data. do not set when call. */
     mapcell *screen;  /**<The destination screen pointer*/
-    dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
     long method;     /**<The method*/
 }GENATM_T;
 map_t *genatm_simple(double r0, double L0, double dx, long nx);
@@ -49,8 +48,8 @@ mapcell* vonkarman_screen(GENATM_T *data);
 mapcell* biharmonic_screen(GENATM_T *data);
 mapcell *fractal_screen(GENATM_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
-dmat *spatial_psd(long nx, long ny, double dx, double strength, double L0,
-		  double fmin, double fmax, double slope, double power);
+void spatial_psd(dmat **out, long nx, long ny, double dx, double strength, double L0,
+		 double fmin, double fmax, double slope, double power);
 dmat* turbpsd(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 
 double calc_aniso(double r0, int nht, double *ht, double *wt);

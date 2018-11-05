@@ -268,7 +268,7 @@ static void readcfg_powfs(PARMS_T *parms){
 		wvl=wvl*1e-6;
 	    }
 	    if(wvl<=wvlm){
-		error("Wavelength must in ascend order\n");
+		error("Wavelength must be in ascend order\n");
 	    }
 	    wvlm=wvl;
 	    parms->powfs[ipowfs].wvl->p[iwvl]=wvl;
@@ -654,7 +654,7 @@ static void readcfg_moao(PARMS_T *parms){
 */
 static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.r0z);
-    READ_DBL(atm.L0);
+    //READ_DBL(atm.L0);
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
     READ_INT(atm.method);
@@ -673,6 +673,7 @@ static void readcfg_atm(PARMS_T *parms){
     parms->atm.wt=readcfg_dmat_n(parms->atm.nps,"atm.wt");
     parms->atm.ws=readcfg_dmat_n(parms->atm.nps,"atm.ws");
     parms->atm.wddeg=readcfg_dmat_nmax(parms->atm.nps,"atm.wddeg");
+    parms->atm.L0=readcfg_dmat_nmax(parms->atm.nps, "atm.L0");
     for(int ih=0; ih<parms->atm.nps; ih++){
 	if(fabs(parms->atm.wddeg->p[ih])>1){
 	    warning("wddeg is not zero. Disable wdrand\n");
@@ -691,7 +692,7 @@ static void readcfg_atmr(PARMS_T *parms){
     }
     READ_DBL(atmr.L0);
     if(parms->atmr.L0<=0){
-	parms->atmr.L0=parms->atm.L0;
+	parms->atmr.L0=dsum(parms->atm.L0)/parms->atm.nps;
     }
     READ_DMAT(atmr.ht);
     READ_DMAT(atmr.wt);
@@ -702,7 +703,7 @@ static void readcfg_atmr(PARMS_T *parms){
 	dcp(&parms->atmr.wt, parms->atm.wt);
     }else{
 	if(parms->atmr.wt->nx!=parms->atmr.ht->nx){
-	    error("atmr.wt has to match atmr.ht\n");
+	    error("atmr.wt length has to match atmr.ht\n");
 	}
     }
     parms->atmr.nps=parms->atmr.ht->nx;
@@ -730,7 +731,7 @@ static void readcfg_aper(PARMS_T *parms){
     free(dtmp);
 
     if(parms->aper.d <= parms->aper.din){
-	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
+	error("Inner dimeter(%g) should be less than Outer Diameter(%g).\n", parms->aper.din, parms->aper.d);
     }
     READ_DBL(aper.rotdeg);
     parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
@@ -1437,7 +1438,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(powfsi->fieldstop>0){
 	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
-		error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
+		warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
 	    }
 	    powfsi->fieldstop/=206265.;
 	    if(powfsi->type == 1 && powfsi->fieldstop < powfsi->modulate*2+0.5/206265.){
@@ -1493,7 +1494,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
 	wfs_hs/=parms->powfs[ipowfs].nwfs;
-	if(parms->powfs[ipowfs].hs<=EPS){
+	if(parms->powfs[ipowfs].hs==0){
 	    if(wfs_hs>EPS){
 		parms->powfs[ipowfs].hs=wfs_hs;
 		warning("powfs[%d].hs is set to %g\n", ipowfs, parms->powfs[ipowfs].hs);
@@ -1792,7 +1793,7 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 static void setup_parms_postproc_atm(PARMS_T *parms){
     /*
       Drop weak turbulence layers in simulation.
-    */
+    
     int jps=0;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(parms->atm.wt->p[ips]>1.e-4){
@@ -1818,7 +1819,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	dresize(parms->atm.wt, jps, 1);
 	dresize(parms->atm.ws, jps, 1);
 	dresize(parms->atm.wddeg, jps, 1);
-    }
+    }*/
     if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
 	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
@@ -1893,7 +1894,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	    if(parms->atm.iground==-1){
 		parms->atm.iground=ips;
 	    }else{
-		error("Multiple grounds atm. Please combine them together.\n");
+		warning("Multiple grounds atm. Please combine them together.\n");
 	    }
 	}
 	if(parms->atm.ht->p[ips]<0){
@@ -2034,7 +2035,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     /*record the size of the atmosphere. */
     parms->atm.size->p[0]=parms->atm.nx*parms->atm.dx;
     parms->atm.size->p[1]=parms->atm.ny*parms->atm.dx;
-    if(parms->atm.L0 > parms->atm.size->p[0]){
+    if(parms->atm.L0->p[0] > parms->atm.size->p[0]){
 	warning("Atmospheric size is smaller than outer scale!\n");
     }
     /*for screen evolving. */
@@ -2184,7 +2185,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->powfs[ipowfs].r0=parms->atm.r0;
 	}
 	if(parms->powfs[ipowfs].L0<=0){
-	    parms->powfs[ipowfs].L0=parms->atm.L0;
+	    parms->powfs[ipowfs].L0=dsum(parms->atm.L0)/parms->atm.nps;
 	}
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
@@ -2461,7 +2462,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	/*required memory to hold memory. */
 	long covmem=(long)round(pow(parms->aper.d/parms->evl.dx,4))*8*fnd;
 	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->evl.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
-	    error("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
+	    warning("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
 	}
     }
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
@@ -2560,7 +2561,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, int override){
     if(parms->evl.psfmean || parms->evl.psfhist){
 	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf->p);
 	if(fnd==0){
-	    error("Required to output PSF, but evl.psf are all zero\n");
+	    warning("Required to output PSF, but evl.psf are all zero\n");
 	}else{
 	    info("Output PSF for %d directions\n", fnd);
 	}
@@ -2620,7 +2621,7 @@ static void print_parms(const PARMS_T *parms){
     info("%sTurbulence at zenith:%s\n"
 	  "Fried parameter r0 is %gm, Outer scale is %gm Greenwood freq is %.1fHz\n"
 	  "Anisoplanatic angle is %.2f\"",GREEN, BLACK,
-	  parms->atm.r0, parms->atm.L0, fgreen, theta0z*206265);
+	  parms->atm.r0, parms->atm.L0->p[0], fgreen, theta0z*206265);
     if(parms->ndm==2){
 	double H1=parms->dm[0].ht;
 	double H2=parms->dm[1].ht;
@@ -2712,7 +2713,7 @@ static void print_parms(const PARMS_T *parms){
 	info(" bkgrnd is %g", parms->powfs[ipowfs].bkgrnd);
 	info("\n");
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
-	    error("wfs thetax or thetay is too large\n");
+	    warning("wfs thetax or thetay appears too large\n");
 	}
     }
     info("%sThere are %d DMs%s\n",GREEN, parms->ndm, BLACK);
@@ -2790,7 +2791,7 @@ static void print_parms(const PARMS_T *parms){
 		 i,parms->fit.wt->p[i],parms->fit.thetax->p[i]*206265, 
 		 parms->fit.thetay->p[i]*206265);
 	    if(fabs(parms->fit.thetax->p[i])>1 || fabs(parms->fit.thetay->p[i])>1){
-		error("fit thetax or thetay is too large\n");
+		warning("fit thetax or thetay appears too large\n");
 	    }
 	}
     }else if(parms->recon.alg==1){
@@ -2812,7 +2813,7 @@ static void print_parms(const PARMS_T *parms){
 	    error("Invalid\n");
 	}
     }else{
-	error("parms->recon.alg=%d is illegal.\n", parms->recon.alg);
+	error("parms->recon.alg=%d is not supported.\n", parms->recon.alg);
     }
     info("\n");
   
@@ -2823,7 +2824,7 @@ static void print_parms(const PARMS_T *parms){
 	      i,parms->evl.wt->p[i],parms->evl.thetax->p[i]*206265, 
 	      parms->evl.thetay->p[i]*206265);
 	if(fabs(parms->evl.thetax->p[i])>1 || fabs(parms->evl.thetay->p[i])>1){
-	    error("evl thetax or thetay is too large\n");
+	    warning("evl thetax or thetay appears too large\n");
 	}
     }
 

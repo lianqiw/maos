@@ -46,7 +46,7 @@ static mapcell *genatm_do(SIM_T *simu){
 	    gs->rstat  = simu->atm_rand;
 	    gs->wt     = atm->wt->p;
 	    gs->r0     = atm->r0;
-	    gs->L0     = atm->L0;
+	    gs->L0     = atm->L0->p;
 	    gs->dx     = atm->dx;
 	    gs->nx     = atm->nx;
 	    gs->ny     = atm->ny;
@@ -1430,7 +1430,6 @@ void free_simu(SIM_T *simu){
     free(simu->misc_rand);
     dfree(simu->telws);
     if(simu->atmcfg){
-	dfree(simu->atmcfg->spect);
 	free(simu->atmcfg);
     }
     cellfree(simu->atm);

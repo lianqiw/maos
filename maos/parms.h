@@ -33,9 +33,9 @@ extern double TOMOSCALE;
 typedef struct ATM_CFG_T{
     double r0z;   /**<r0 at zenith*/
     double r0;    /**<derived from r0z for zenith angle za*/
-    double L0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
     double hmax;  /**<maximum in ht*/
+    dmat *L0;     /**<outer scale. One number or one per layer*/
     dmat *r0logpsds; /**<[alpha beta]: temporal PSD of log(r0) is beta*f^alpha. f is in hz.*/
     dmat *r0logpsdt; /**<[alpha beta]: spatial  PSD of log(r0) is beta*f^alpha. f is in m.*/
     dmat *ht;   /**<height of each layer*/
