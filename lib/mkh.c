@@ -271,16 +271,17 @@ dsp *mkhbin1d(dmat *xin, dmat *xout){
 	hbin->p[iin]=count;
 	double ixin=xin->p[iin];
 	while(iout+1<xout->nx && xout->p[iout+1]<ixin){
-	    iout++;
+	    iout++;//find location in xout to the left of ixin
 	}
-	if(xout->p[iout]>ixin || (iout+1==xout->nx && xout->p[iout]<ixin)){/*outside of the area. */
+	if(iout==0 || iout+1==xout->nx || xout->nx==1){//outside of the area.
+	    //if(xout->p[iout]>=ixin || (iout+1==xout->nx && xout->p[iout]<ixin)){/*outside of the area. */
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1;
 	    count++;
 	}else{/*within the area */
-	    if(iout+1==xout->nx){
-		error("This shouldn't happen\n");
-	    }
+	    //if(iout+1==xout->nx){
+	    //error("This shouldn't happen\n");
+	    //}
 	    double wt=(ixin-xout->p[iout])/(xout->p[iout+1]-xout->p[iout]);
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1.-wt;
