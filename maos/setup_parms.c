@@ -1542,7 +1542,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-
+    parms->hipowfs_hs=INFINITY;
     parms->hipowfs=lnew(parms->npowfs, 1);
     parms->lopowfs=lnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1562,6 +1562,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->hipowfs->p[parms->nhipowfs]=ipowfs;
 		parms->nhipowfs++;
 		parms->nhiwfs+=parms->powfs[ipowfs].nwfs;
+		if(parms->powfs[ipowfs].hs<parms->hipowfs_hs){
+		    parms->hipowfs_hs=parms->powfs[ipowfs].hs;
+		}
 	    }
 	    if(parms->powfs[ipowfs].trs){
 		if(!parms->powfs[ipowfs].llt){
@@ -1832,8 +1835,8 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	    parms->atmr.os->p[ips]=parms->atmr.os->p[parms->atmr.nps-1];
 	}
 	parms->atmr.nps=nps;
-    }
-    if((parms->recon.glao || parms->nhiwfs==1) && parms->recon.alg==0 && parms->atmr.ht->nx>1 && !parms->sim.idealtomo){
+    }else if((parms->recon.glao || parms->nhiwfs==1)
+	     && parms->recon.alg==0 && parms->atmr.ht->nx>1 && !parms->sim.idealtomo){
 	/*GLAO or single high wfs mode. reconstruct only a single layer near the DM.*/
 	warning("In GLAO or single high wfs Mode, use 1 tomography grid near the ground dm.\n");
 	dresize(parms->atmr.ht, 1, 1);
@@ -1842,6 +1845,23 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atmr.ht->p[0]=parms->dm[0].ht;
 	parms->atmr.wt->p[0]=1;
 	parms->atmr.nps=1;
+    }else{
+	int ipsr2=0;
+	for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+	    if(parms->atmr.ht->p[ipsr] > parms->hipowfs_hs){
+		info("Tomography Layer %d is above high order WFS. drop it\n", ipsr);
+		//remove layer;
+	    }else if(ipsr!=ipsr2){
+		parms->atmr.ht->p[ipsr2]=parms->atmr.ht->p[ipsr];
+		parms->atmr.wt->p[ipsr2]=parms->atmr.wt->p[ipsr];
+		ipsr2++;
+	    }
+	}
+	if(ipsr2!=parms->atmr.nps){	
+	    parms->atmr.nps=ipsr2;
+	    dresize(parms->atmr.ht, ipsr2, 1);
+	    dresize(parms->atmr.wt, ipsr2, 1);
+	}
     }
     normalize_sumabs(parms->atm.wt->p, parms->atm.nps, 1);
     normalize_sumabs(parms->atmr.wt->p, parms->atmr.nps, 1);

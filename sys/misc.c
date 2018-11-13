@@ -418,20 +418,30 @@ char *mystrdup(const char *A){
    Remove files that are older than sec seconds in folder fndir. If sec==0,
    remove everything.
 */
-void remove_file_older(const char *fndir, long sec){
+void remove_file_older(const char *fndir, int level, long sec){
     DIR *dir=opendir(fndir);
     if(!dir){
-	error("Unable to open directory %s\n",fndir);
+	warning("Unable to open directory %s\n",fndir);
+	return;
+    }else{
+	//info("Cleaning %s\n", fndir);
     }
     struct dirent *dp;
     struct stat buf;
     char fnfull[PATH_MAX];
     long sec2=myclocki()-sec;
     while((dp=readdir(dir))){
+	if(dp->d_name[0]=='.') continue;
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
-	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_atime<=sec2 || sec==0)){
-	    remove(fnfull);
-	    info("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
+	if(!stat(fnfull,&buf)){
+	    if(S_ISDIR(buf.st_mode)){
+		if(level>0) remove_file_older(fnfull, level-1, sec);
+	    }else if(S_ISREG(buf.st_mode) && (buf.st_atime<=sec2 || sec==0)){
+		if(check_suffix(fnfull, ".bin") || check_suffix(fnfull, ".lock")){
+		    remove(fnfull);
+		    //info("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
+		}
+	    }
 	}
     }
     closedir(dir);

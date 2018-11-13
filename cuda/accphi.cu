@@ -521,6 +521,7 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax
 	const Real dispx=(ht*thetax+mispx-vx*dt*isim-cuatm[ips].ox)/dx;
 	const Real dispy=(ht*thetay+mispy-vy*dt*isim-cuatm[ips].oy)/dy;
 	const Real scale=1.f-ht/hs;
+	if(scale<0) continue;
 	const int nloc=loc.Nloc();
 
 #define COMM loc.P(),loc.Nloc(),scale/dx,scale/dy, dispx, dispy, atmalpha
@@ -537,6 +538,7 @@ void gpu_atm2loc(Real *phiout, const culoc_t &loc, Real hs, Real hc, Real thetax
 void gpu_map2loc(const cumap_t &map, const culoc_t &loc, Real *phiout,
 		 Real alpha, Real dispx, Real dispy, Real scale, int wrap, cudaStream_t stream){
     (void)wrap;
+    if(scale<0) return;
     dispx=(dispx-map.ox)/map.dx;
     dispy=(dispy-map.oy)/map.dy;
     const int nloc=loc.Nloc();

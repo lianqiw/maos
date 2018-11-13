@@ -48,7 +48,7 @@ char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 char *strnadd(int argc, const char *argv[], const char *delim);
 char *expand_filename(const char *fn);
 
-void remove_file_older(const char *fndir, long sec);
+void remove_file_older(const char *fndir, int level, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);
 int mystrcmp(const char *a, const char *b);
 char *mystrndup(const char *A, int len);

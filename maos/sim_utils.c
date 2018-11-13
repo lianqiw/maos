@@ -32,7 +32,6 @@
 /*static double opdzlim[2]={-3e-5,3e-5}; */
 static double *opdzlim=NULL;
 extern int disable_save;
-int DM_NCPA=1;
 static mapcell *genatm_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
@@ -932,9 +931,6 @@ static void init_simu_wfs(SIM_T *simu){
 	const double hc=parms->powfs[ipowfs].hc;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht->p[ips]-hc;
-	    if(ht>hs){
-		error("Layer is above guide star\n");
-	    }
 	    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+nwfs*ips];
 	    data->displacex0=ht*parms->wfs[iwfs].thetax;
 	    data->displacey0=ht*parms->wfs[iwfs].thetay;

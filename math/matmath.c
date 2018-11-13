@@ -639,6 +639,40 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
     IND(B,1,1)=stheta*IND(tmp,1,0)+ctheta*IND(tmp,1,1);
     X(free)(tmp);
 }
+/**
+   Compute the correlation matrix.
+ */
+void X(corr)(X(mat) **pout, const X(mat) *A, const X(mat) *B){
+    if(!A || !B) error("Empty matrix\n");
+    assert(A->nx==B->nx && A->ny==B->ny);
+    if(!*pout){
+	*pout=X(new)(A->nx*2-1, A->ny*2-1);
+    }else{
+	if(((*pout)->nx&1)!=1 || ((*pout)->ny&1)!=1){
+	    error("output dimension shall be odd\n");
+	}
+    }
+    X(mat)*out=*pout;
+    const long offx2=(out->nx-1)>>1;
+    const long offy2=(out->ny-1)>>1;
+    
+    for(long offy=-offy2; offy<=offy2; offy++){
+	long sy1, nny;
+#define SHIFT_INDEX(sy1, nny, ny, offy) if(offy>0){sy1=offy; nny=ny;}else{sy1=0;nny=ny+offy;}
+	SHIFT_INDEX(sy1, nny, A->ny, offy);
+	for(long offx=-offx2; offx<=offx2; offx++){
+	    long sx1, nnx;
+	    SHIFT_INDEX(sx1, nnx, A->nx, offx);
+	    double tmp=0;
+	    for(long iy1=sy1; iy1<nny; iy1++){
+		for(long ix1=sx1; ix1<nnx; ix1++){
+		    tmp+=IND(A, ix1, iy1)*IND(B, ix1-offx, iy1-offy);
+		}
+	    }
+	    IND(out, offx+offx2, offy+offy2)=tmp;
+	}
+    }
+}
 
 /**
    Compute thresholded center of gravity. The threshold

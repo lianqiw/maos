@@ -442,8 +442,7 @@ static void filter_ol(SIM_T *simu){
     if(simu->Merr_lo && parms->sim.eplo->p[0]>0){
 	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
     }
-    extern int DM_NCPA;
-    if(DM_NCPA && simu->recon->dm_ncpa){
+    if(simu->recon->dm_ncpa){
 	warning_once("Add NCPA after integrator\n");
 	dcelladd(&simu->dmcmd, 1, simu->recon->dm_ncpa, 1);
     }

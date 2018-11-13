@@ -64,6 +64,7 @@ void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	    double dispx=ht*parms->wfs[iwfs].thetax;
 	    double dispy=ht*parms->wfs[iwfs].thetay;
 	    double scale=1.-ht/hs;
+	    if(scale<0) continue;
 	    prop_grid(simu->dmprojsq->p[idm], loc, opd->p, 
 		      alpha, dispx, dispy, scale, 0, 0, 0);
 	}
@@ -268,6 +269,7 @@ void wfsgrad_iwfs(thread_t *info){
 		for(int ips=0; ips<nps; ips++){
 		    const double hl=atm->p[ips]->h;
 		    const double scale=1.-hl/hs;
+		    if(scale<0) continue;
 		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox->p[illt]/hs;
 		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy->p[illt]/hs;
 		    const double displacex=-atm->p[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg->p[0];

@@ -344,7 +344,6 @@ void gpu_wfsgrad_queue(thread_t *info){
 	Real2 *loc=cupowfs[ipowfs].loc;
 	/*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
 	stream_t &stream=cuwfs[iwfs].stream;
-	dmat *gradcl=simu->gradcl->p[iwfs];
 	curmat phiout=cuwfs[iwfs].phiout;
 	curmat gradacc=cuwfs[iwfs].gradacc;
 	curmat gradcalc=cuwfs[iwfs].gradcalc;
@@ -543,9 +542,9 @@ void gpu_wfsgrad_queue(thread_t *info){
 			 (Real(*)[2])cuwfs[iwfs].cogcoeff.P(), srot);
 		}
 		    break;
-		case 3:{
-		    dcell *cints=NULL;
-		    cp2cpu(&cints, ints, stream);
+		    /*case 3:{
+		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
+		    dcell *cints=simu->ints->p[iwfs];
 		    CUDA_SYNC_STREAM;
 		    double geach[3];
 		    for(int isa=0; isa<nsa; isa++){
@@ -556,13 +555,45 @@ void gpu_wfsgrad_queue(thread_t *info){
 			gradcl->p[isa]=geach[0];
 			gradcl->p[isa+nsa]=geach[1];
 		    }
-		    dcellfree(cints);
 		}
 		    break;
-		default:
-		    TO_IMPLEMENT;
+		case 4:{
+		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
+		    dcell *cints=simu->ints->p[iwfs];
+		    CUDA_SYNC_STREAM;
+		    double geach[2];
+		    dmat *corr=0;
+		    Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
+		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
+		    double *srot=parms->powfs[ipowfs].radpix?INDR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
+		    for(int isa=0; isa<nsa; isa++){
+			dcorr(&corr, cints->p[isa], INDR(powfs[ipowfs].intstat->i0, isa, wfsind));
+			parabolic_peak(geach, corr);
+			geach[0]*=pixthetax;
+			geach[1]*=pixthetay;
+
+			if(srot){
+			    double theta=srot[isa];
+			    double cx=cos(theta);
+			    double sx=sin(theta);
+			    double tmp=geach[0]*cx-geach[1]*sx;
+			    geach[1]=geach[0]*sx+geach[1]*cx;
+			    geach[0]=tmp;
+			}
+			gradcl->p[isa]=geach[0];
+			gradcl->p[isa+nsa]=geach[1];
+						
+		    }
+		    dfree(corr);
 		}
-		ctoc("mtche");
+		break;*/
+		default:
+		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
+		    CUDA_SYNC_STREAM;
+		    calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,
+				  parms, powfs, iwfs, parms->powfs[ipowfs].phytype_sim);
+		}
+		ctoc("grad");
 		CUDA_CHECK_ERROR;
 	    }else{
 		if(noisy && !parms->powfs[ipowfs].usephy){
@@ -596,7 +627,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	curmat &gradcalc=cuwfs[iwfs].gradcalc;
 	dmat *gradcl=simu->gradcl->p[iwfs];
 	if(do_phy){
-	    if(parms->powfs[ipowfs].phytype_sim!=3){//3 is handled in cpu.
+	    if(parms->powfs[ipowfs].phytype_sim<3){//3 is handled in cpu.
 		cp2cpu(&gradcl, gradcalc, stream);
 	    }
 	    if(save_gradgeom){//also do geom grad during phy grad sims

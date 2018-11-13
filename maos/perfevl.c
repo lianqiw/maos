@@ -58,6 +58,7 @@ static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha
 	double dispx=ht*parms->evl.thetax->p[ievl];
 	double dispy=ht*parms->evl.thetay->p[ievl];
 	double scale=1.-ht/hs;
+	if(scale<0) continue;
 	loc_t *locs=aper->locs;
 	if(aper->locs_dm){
 	    locs=aper->locs_dm->p[ievl+idm*parms->evl.nevl];
@@ -256,6 +257,7 @@ void perfevl_ievl(thread_t *info){
 		for(int ipsr=0; ipsr<npsr; ipsr++){
 		    double hl=parms->atmr.ht->p[ipsr];
 		    double scale = 1. - hl/parms->evl.hs->p[ievl];
+		    if(scale<0) continue;
 		    double displacex=parms->evl.thetax->p[ievl]*hl;
 		    double displacey=parms->evl.thetay->p[ievl]*hl;
 		    if(parms->tomo.square){

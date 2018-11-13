@@ -789,6 +789,7 @@ typedef struct PARMS_T{
     int idmground;   /**<Index of ground dm. default to 0*/
     int step_lo;     /**<Enabling step for low order wfs*/
     int step_hi;     /**<Enabling step for high order wfs*/
+    double hipowfs_hs;  /**<high order wfs minimum height*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

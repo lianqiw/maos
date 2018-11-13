@@ -207,9 +207,11 @@ file_t* zfopen_try(const char *fn, const char *mod){
 	}else{//file exist
 	    if(!mystrcmp(fn2, CACHE)){
 		futimes(fp->fd, NULL);
-		char *cpath=mydirname(fn2);
-		remove_file_older(cpath, 365*24*3600);
-		free(cpath);
+		/*
+		  Relocated to destructor of mem.c
+		  char *cpath=mydirname(fn2);
+		  remove_file_older(cpath, 30*24*3600);
+		  free(cpath);*/
 	    }
 	}
 	break;

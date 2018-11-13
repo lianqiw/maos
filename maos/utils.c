@@ -871,6 +871,41 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
     *cs=(beta*cos(angle)+(1-beta)*cos(angle2))*scale;
     *ss=(beta*sin(angle)+(1-beta)*sin(angle2))*scale;
 }
+/**
+   Find peak, then using parabolic fit on 3x3 window around it.
+*/
+
+void parabolic_peak(double *grad, dmat *corr){
+    double valmax=0;
+    int jy=0, jx=0;
+    //Find Peak location (jx, jy)
+    for(int iy=1; iy<corr->ny-1; iy++){
+	for(int ix=1; ix<corr->nx-1; ix++){
+	    if(IND(corr,ix,iy)>valmax){
+		jy=iy; jx=ix;
+		valmax=IND(corr,ix,iy);
+	    }
+	}
+    }
+    //Calculate 1d sum 
+    double vx[3], vy[3];
+    for(long iy=0; iy<3; iy++){
+	vy[iy]=0; vx[iy]=0;
+	for(long ix=0; ix<3; ix++){
+	    vy[iy]+=IND(corr, ix+jx-1, iy+jy-1);
+	    vx[iy]+=IND(corr, iy+jx-1, ix+jy-1);
+	}
+    }
+    //Parabolic fit.
+    double px[2], py[2];
+    px[0]=(vx[0]+vx[2])*0.5-vx[1];
+    py[0]=(vy[0]+vy[2])*0.5-vy[1];
+    px[1]=(vx[2]-vx[0])*0.5;
+    py[1]=(vy[2]-vy[0])*0.5;
+    //Center
+    grad[0]=px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
+    grad[1]=py[0]==0?0:(-py[1]/(2*py[0])+jy-(corr->ny-1)*0.5);
+}
 
 /**
    Calculate gradients using current specified algorithm
@@ -895,7 +930,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
 	}
     }
-    const double *srot=(parms->powfs[ipowfs].radpix)?powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
+    const double *srot=(parms->powfs[ipowfs].radpix)?INDR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
     /*output directly to simu->gradcl. replace */
@@ -905,6 +940,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     double *pgradx=(*pgrad)->p;
     double *pgrady=pgradx+nsa;
     double i1sum=0;
+    dmat *corr=0;
     if(parms->powfs[ipowfs].sigmatch==2){
 	for(int isa=0; isa<nsa; isa++){
 	    const double thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
@@ -953,14 +989,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 		 powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1], sumi);
 	    geach[0]*=pixthetax;
 	    geach[1]*=pixthetay;
-	    if(srot){
-		double theta=srot[isa];
-		double cx=cos(theta);
-		double sx=sin(theta);
-		double tmp=geach[0]*cx-geach[1]*sx;
-		geach[1]=geach[0]*sx+geach[1]*cx;
-		geach[0]=tmp;
-	    }
+	  
 	}
 	    break;
 	case 3:{//MAP: This algorithm is not very useful.
@@ -970,14 +999,25 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	}
 	    break;
 	case 4:{//Correlation.
-
+	    dcorr(&corr, ints[isa], powfs[ipowfs].intstat->i0->p[isa]);
+	    parabolic_peak(geach, corr);
+	    geach[0]*=pixthetax;
+	    geach[1]*=pixthetay;
 	}
 	    break;
 	default:
 	    error("Invalid");
 	}
-	
+	if(phytype>2 && srot){
+	    double theta=srot[isa];
+	    double cx=cos(theta);
+	    double sx=sin(theta);
+	    double tmp=geach[0]*cx-geach[1]*sx;
+	    geach[1]=geach[0]*sx+geach[1]*cx;
+	    geach[0]=tmp;
+	}
 	pgradx[isa]=geach[0];
 	pgrady[isa]=geach[1];
     }//for isa
+    dfree(corr);
 }

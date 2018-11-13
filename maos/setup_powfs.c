@@ -1612,7 +1612,6 @@ void free_powfs_unused(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
 	    cellfree(powfs[ipowfs].intstat->sepsf);
-	    cellfree(powfs[ipowfs].intstat->i0);
 	    cellfree(powfs[ipowfs].intstat->gx);
 	    cellfree(powfs[ipowfs].intstat->gy);
 	}
@@ -1633,8 +1632,8 @@ void free_powfs_shwfs(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	INTSTAT_T *intstat=powfs[ipowfs].intstat;
 	cellfree(intstat->fotf);
 	cellfree(intstat->potf);
-	dcellfree(intstat->mtche);
-
+	cellfree(intstat->mtche);
+	cellfree(powfs[ipowfs].intstat->i0);
 	dfree(intstat->i0sum);
 	dfree(intstat->i0sumsum);
 	free(intstat);

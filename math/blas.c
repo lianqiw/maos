@@ -402,7 +402,6 @@ void X(svd_cache)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
 	    mymkdir("%s", dirsvd);
 	}else{
 	    if(zfexist(fnsvd)) zftouch(fnsvd);
-	    remove_file_older(dirsvd, 365*24*3600);
 	}
 	long avail=available_space(dirsvd);
 	long need=A->nx*A->ny*sizeof(T)*3;
