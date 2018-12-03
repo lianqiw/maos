@@ -211,7 +211,7 @@ void listen_draw(){
 	    STREAD(drawdata->xylog, sizeof(char)*2);
 	    break;
 	case DRAW_FINAL:
-	    dbg("client is done\n");
+	    //dbg("client is done\n");
 	    sock_block=1;
 	    break;
 	case DRAW_END:

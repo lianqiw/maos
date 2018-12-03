@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
     long *seed=NULL;
     long *seed2=NULL;
     /*Find all valid path and seeds. */
-    int jpath=0, mpath=0;
+    int jpath=0;
     int restype=-1;
     for(int ipath=0; ipath<npath; ipath++){
 	if(!isdir(path[ipath])){
@@ -102,18 +102,16 @@ int main(int argc, char *argv[]){
 	struct dirent *dp;
 	int nseedfound=0;
 	while((dp=readdir(dir))){
-	    if(strncmp(dp->d_name, "Res", 3) || !check_suffix(dp->d_name, ".bin")){
-		continue;
-	    }else{
+	    if(!strncmp(dp->d_name, "Res", 3) && check_suffix(dp->d_name, ".bin")){
 		long seedi, seedi2;
 		int found=0;
 		if(sscanf(dp->d_name, "Res_%ld.bin",&(seedi))==1){
-		    nseedfound++;
+		    //MAOS results
 		    if(restype!=-1 && restype!=1){
 			error("Only maos or skyc results can display together\n");
 		    }
 		    restype=1;
-		    if(arg->nseed){
+		    if(arg->nseed){//filter seeds.
 			int wanted=0;
 			for(int is=0; is<arg->nseed; is++){
 			    if(arg->seeds[is]==seedi){
@@ -132,13 +130,13 @@ int main(int argc, char *argv[]){
 			}
 		    }
 		    if(!found){
-			info("Found unique seed %ld\n", seedi);
 			nseed++;
 			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
 		    }
+		    nseedfound++;
 		}else if(sscanf(dp->d_name, "Res%ld_%ld.bin",&seedi, &seedi2)==2){
-		    nseedfound++;/*sky coverage*/
+		    //Sky coverage results
 		    if(restype!=-1 && restype!=2){
 			error("Only maos or skyc results can display together\n");
 		    }
@@ -150,13 +148,14 @@ int main(int argc, char *argv[]){
 			}
 		    }
 		    if(!found){
-			dbg("Found unique seed %ld %ld\n", seedi, seedi2);
+			dbg("Found seed %ld %ld.\n", seedi, seedi2);
 			nseed++;
 			seed=myrealloc(seed,nseed,long);
 			seed[nseed-1]=seedi;
 			seed2=myrealloc(seed2,nseed,long);
 			seed2[nseed-1]=seedi2;
 		    }
+		    nseedfound++;
 		}
 	    }
 	}
@@ -164,10 +163,10 @@ int main(int argc, char *argv[]){
 	if(nseedfound){ /*record the path as valid */
 	    path[jpath]=path[ipath];
 	    info("Found path: %s\n", path[jpath]);
-	    jpath++; mpath++;
+	    jpath++;
 	}
     }
-    npath=mpath;
+    npath=jpath;
     if(npath==0){
 	info("Nothing to display\n");
 	return 1;

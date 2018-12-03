@@ -454,7 +454,7 @@ void plot_points(const char *fig,    /**<Category of the figure*/
 	STWRITECMDSTR(DRAW_YLABEL,ylabel);
 	STWRITEINT(DRAW_END);
     }
- end:
+  end:
     UNLOCK(lock); 
 }
 

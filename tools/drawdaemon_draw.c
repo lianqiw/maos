@@ -684,6 +684,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	/*computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim */
 	int icumu=(int)drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
+	    cairo_save(cr);
 	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	    if(drawdata->nstyle>1){
 		PARSE_STYLE(drawdata->style[ipts]);
@@ -720,6 +721,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		}else{
 		    ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 		}
+		if(!isfinite(ptsy[ips])){
+		    continue;
+		}
 		iy=(((ylog?log10(ptsy[ips]):ptsy[ips])-centery)*scaley*zoomy+ncy);
 		if(drawdata->cumuquad){
 		    y_cumu=ptsy[ips]*ptsy[ips];
@@ -733,6 +737,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 			ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
 		    }else{
 			ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
+		    }
+		    if(!isfinite(ptsy[ips])){
+			break;
 		    }
 		    if(drawdata->cumu){
 			if(ptsy[ips]!=0){
@@ -760,12 +767,14 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    if(!(connectpts && style==5)){/*plot points. */
 		y_cumu=0;
 		for(int ips=ips0; ips<ptsnx; ips+=ptstep){
+		    if(!isfinite(ptsy[ips])) break;
 		    /*Map the coordinate to the image */
 		    if(ptsx){/*don't do round here. */
 			ix=(((xlog?log10(ptsx[ips]):ptsx[ips])-centerx)*scalex*zoomx+ncx);
 		    }else{
 			ix=(((xlog?log10(ips):ips)-centerx)*scalex*zoomx+ncx);
 		    }
+		    
 		    if(drawdata->cumu){
 			if(ptsy[ips]!=0){
 			    if(drawdata->cumuquad){
@@ -792,18 +801,19 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }*/
 	    if(ptsnx>0){
 		cairo_save(cr);
-		cairo_translate(cr, ix, round((iy-font_size*0.5)/1)*1);
+		cairo_translate(cr, ix+2, round((iy-font_size*0.5)/1)*1);
 		cairo_scale(cr,1,-1);
 		if(drawdata->cumu){
 		    char val[80];
 		    snprintf(val, 80, "%.2f", y);
 		    pango_text(cr, layout, 0, 0, val, 1, 1, 0);
 		}
-		if(drawdata->legend && drawdata->legendcurve){
+		if(drawdata->legend && drawdata->legendcurve && connectpts){
 		    pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 1, 0);
 		}
 		cairo_restore(cr);
 	    }
+	    cairo_restore(cr);
 	}/*iptsy */
 #if DRAW_NEW == 1
 	cairo_destroy(cr);

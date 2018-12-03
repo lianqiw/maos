@@ -1369,7 +1369,7 @@ GtkWidget *create_window(){
     }
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_stick(GTK_WINDOW(window));
+    //gtk_window_stick(GTK_WINDOW(window));
     curwindow=window;
     windows= g_slist_append(windows, window);
     extern GdkPixbuf *icon_main;
