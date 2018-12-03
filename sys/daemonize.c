@@ -266,10 +266,10 @@ static void* dup_stdout(dup_stdout_t *data){
    Redirect stdout (1) and stderr (2) to fd
  */
 static void redirect2fd(int fd){
-    setbuf(stdout, NULL);//disable buffering to see immediate output.
     if(dup2(fd, 1)<0){
 	warning("Error redirecting stdout\n");
     }
+    setbuf(stdout, NULL);//disable buffering to see immediate output.
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     /*if(dup2(fd, 2)<0){
       warning("Error redirecting stderr\n");
@@ -281,10 +281,10 @@ static void redirect2fd(int fd){
    Redirect stdout and stderr to fn
  */
 static void redirect2fn(const char *fn){
-    setbuf(stdout, NULL);
     if(!freopen(fn, "w", stdout)){
 	warning("Error redirecting stdout/stderr\n");
     }
+    setbuf(stdout, NULL);
     //2018-10-29: We no longer redirecting stderr to file to keep it clean.
     //Redirect stderr to stdout 
     //dup2(fileno(stdout), fileno(stderr));
@@ -299,7 +299,6 @@ void redirect(void){
     if(disable_save) return;
     char fn[PATH_MAX];
     snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
-    (void)remove(fn);
     if(detached){//only output to file
 	redirect2fn(fn);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirecting stdin\n");

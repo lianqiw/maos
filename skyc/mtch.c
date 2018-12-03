@@ -33,16 +33,16 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     //cfft2plan(otf, 1);
     //cfft2plan(otf, -1);
     //cfft2plan(otfsave,1);
-    ccpd(&otf, psf);/*loaded psf has peak in corner */
-    cfft2i(otf, -1);/*turn to OTF, peak in corner. was 1, turn to -1 on 1/30/2013 */
+    ccpd(&otf, psf);//loaded psf has peak in corner 
+    cfft2i(otf, -1);//turn to OTF, peak in corner. was 1, turn to -1 on 1/30/2013 
     ccwm(otf, dtf->nominal);
     ccp(&otfsave, otf);
-    cfft2(otf, 1);/*turn back. */
+    cfft2(otf, 1);//turn back. 
     dspmulcreal(i0->p, dtf->si, otf->p, 1);
     ccp(&otf, otfsave);
     cmat*  potf=otf;
     cmat*  potfsave=otfsave;
-    /*Now derivative */
+    //Now derivative 
     for(int iy=0; iy<otf->ny; iy++){
 	for(int ix=0; ix<otf->nx; ix++){
 	    IND(potf,ix,iy)*=dtf->U->p[ix];
@@ -59,6 +59,7 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
 /**
    shift without wraping i0 into i0x1 (+1) and i0x2 (-1)
 */
+/*
 static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
     int nx=i0->nx;
     double (*i0x1p)[nx]=(double(*)[nx])i0x1;
@@ -69,10 +70,11 @@ static void mki0shx(double *i0x1, double *i0x2, dmat *i0, double scale){
 	    i0x2p[iy][ix]=IND(i0,ix+1,iy)*scale;
 	}
     }
-}
+    }*/
 /**
   shift without wraping i0 into i0y1 (+1) and i0y2 (-1)
 */
+/*
 static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
     int nx=i0->nx;
     double (*i0y1p)[nx]=(double(*)[nx])i0y1;
@@ -83,7 +85,7 @@ static void mki0shy(double *i0y1, double *i0y2, dmat *i0, double scale){
 	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
 	}
     }
-}
+    }*/
 /**
    Compute matched filter.
  */

@@ -180,7 +180,7 @@ void recon_split(SIM_T *simu){
 void recon_servo_update(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    if(!parms->recon.psd) return;
+    assert(parms->recon.psd);
     if(simu->dmerr && parms->sim.dtrat_hi>0){//compute PSD on dmerr.
 	const int dtrat=parms->recon.psddtrat;
 	const int iacc=(simu->reconisim/parms->sim.dtrat_hi);//reconstruction steps
@@ -237,6 +237,7 @@ void recon_servo_update(SIM_T *simu){
 	    dzero(simu->Merrts);
 	    dfree(ts);
 	    //Sum all the PSDs
+	    warning_once("Need to enable gain update for each mode\n");
 	    psd_sum(psd, 1);
 	    //writebin(psd, "psdcl_lo_%d", simu->reconisim);
 

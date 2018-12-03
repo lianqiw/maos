@@ -69,7 +69,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.imperrnm);
     READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
-    READ_INT(skyc.mtch);
+    READ_INT(skyc.phytype);
     readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
     readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
     parms->skyc.dtrats=readcfg_dmat("skyc.dtrats");
@@ -412,41 +412,13 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }else{
 	error("Please implement PSD load\n");
     }
-/* if(0){
-	char temp[80]; 
-	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	parms->skyc.psd_ngs=dread("%s",temp); 
-	info("Loading PSD of NGS modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_TT_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	parms->skyc.psd_tt=dread("%s",temp); 
-	info("Loading PSD of TT modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	parms->skyc.psd_ps=dread("%s",temp); 
-	info("Loading PSD of PS modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_FOCUS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	parms->skyc.psd_focus=dread("%s",temp); 
-	info("Loading PSD of FOCUS modes from %s\n", temp);
-    }else{
-	if(!parms->skyc.psd_scale){
-	    warning("Setting psd_scale to 1\n");
-	    parms->skyc.psd_scale=1;
-	}
-	char temp[80]; 
-	snprintf(temp,80, "PSD/PSD_NGS.bin");
-	parms->skyc.psd_ngs=dread("PSD/PSD_NGS.bin");
-	info("Loading PSD of NGS modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_TT.bin");
-	parms->skyc.psd_tt=dread("%s",temp); 
-	info("Loading PSD of TT modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_PS.bin");
-	parms->skyc.psd_ps=dread("%s",temp); 
-	info("Loading PSD of PS modes from %s\n", temp);
-	snprintf(temp,80, "PSD/PSD_FOCUS.bin");
-	parms->skyc.psd_focus=dread("%s",temp); 
-	info("Loading PSD of focus modes from %s\n", temp);
+
+    {
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "skyc_%s_%ld.conf", HOST, (long)getpid());
+	close_config("%s", fn);
+	mysymlink(fn, "skyc_recent.conf");
     }
-*/
-    close_config("skyc_recent.conf");
 
     if(parms->skyc.neaaniso){
 	info("Variance of the gradients in stored PSF is added to NEA\n");
@@ -489,5 +461,4 @@ void free_parms(PARMS_S *parms){
     dfree(parms->maos.mcc_oa_tt);
     dfree(parms->maos.mcc_oa_tt2);
     dfree(parms->skyc.rnefs);
-    //dfree(parms->skyc.resfocus);
 }

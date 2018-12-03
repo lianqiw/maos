@@ -276,7 +276,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     const double dx=dsa/nx;/*adjust dx. */
     const double dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
     if(fabs(parms->powfs[ipowfs].dx-dx)>EPS)
-	warning("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
+	info("Adjusting dx from %g to %g\n", parms->powfs[ipowfs].dx,dx);
     if(fabs(dsa - nx * dx)>EPS){
 	warning("nx=%d,dsa=%f,dx=%f not agree\n", nx, dsa, dx);
     }
@@ -591,25 +591,29 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 }
 void setup_powfs_neasim(const PARMS_T *parms, POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	const long nsa=powfs[ipowfs].saloc->nloc;
 	dcell *nea=0;
 	if(parms->powfs[ipowfs].neaphy){
 	    nea=dcelldup(powfs[ipowfs].sanea);
-	}else{
-	    if(parms->powfs[ipowfs].neasimfile){
-		nea=dcellread(parms->powfs[ipowfs].neasimfile);
-	    }else if(parms->powfs[ipowfs].neasim==-1 && parms->powfs[ipowfs].neareconfile){
-		nea=dcellread(parms->powfs[ipowfs].neareconfile);
-	    }
-	}
-	if(nea){
 	    for(int ii=0; ii<nea->nx; ii++){
 		nea_chol(&nea->p[ii], nea->p[ii]);
+	    }
+	}else{
+	    //neasimfile/neareconfile is saved by skyc in rad, not in rad^2.
+	    char *file=parms->powfs[ipowfs].neasimfile; 
+	    if(!file && parms->powfs[ipowfs].neasim==-1){
+		file=parms->powfs[ipowfs].neareconfile;
+	    }
+	    nea=dcellread_prefix(file, parms, ipowfs);
+	}
+	if(nea){
+	    for(int ii=0; ii<nea->nx*nea->ny; ii++){
+		check_nea(nea->p[ii],nsa);
 	    }
 	}else{
 	    int nnea=powfs[ipowfs].loc_tel?parms->powfs[ipowfs].nwfs:1;
 	    nea=dcellnew(nnea, 1);
 	    for(int jwfs=0; jwfs<nnea; jwfs++){
-		const long nsa=powfs[ipowfs].saloc->nloc;
 		double nea_rad;
 		if(parms->powfs[ipowfs].neasim<0){
 		    nea_rad=parms->powfs[ipowfs].nearecon;//in mas
@@ -730,7 +734,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     int ncompx, ncompy;
     if(parms->powfs[ipowfs].ncomp){
 	ncompx=ncompy=parms->powfs[ipowfs].ncomp;
-	warning("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
+	info("ncomp is specified in input file to %dx%d\n", ncompx,ncompy);
     }else{
 	/*
 	  compute required otf size to cover the detector FoV
@@ -973,7 +977,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(!parms->powfs[ipowfs].llt || !parms->powfs[ipowfs].llt->fnrange) return;
     char *fnrange=parms->powfs[ipowfs].llt->fnrange;
-    warning("loading sodium range from %s\n", fnrange);
+    warning("loading sodium range variation from %s\n", fnrange);
     if(powfs[ipowfs].focus) dfree(powfs[ipowfs].focus);
     powfs[ipowfs].focus=dread("%s",fnrange);
     if(powfs[ipowfs].focus->ny!=1 &&powfs[ipowfs].focus->ny!=parms->powfs[ipowfs].nwfs){

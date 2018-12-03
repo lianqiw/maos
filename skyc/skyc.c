@@ -25,14 +25,22 @@
 char *dirstart;
 
 void skyc_version(void){
-    info("Skyc Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
-#ifdef __OPTIMIZE__
-    info(", w/t optimization.\n");
+    info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+    info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
+#if USE_CUDA
+#if CUDA_DOUBLE
+    info(" +CUDA(double)");
 #else
-    info(", w/o optimization\n");
+    info(" +CUDA(single)");
 #endif
-    info("Source: %s %s\n", SRCDIR, GIT_VERSION);
-    info("BUILD: %s\n", BUILDDIR);
+#else
+    info(" -CUDA");
+#endif
+#ifdef __OPTIMIZE__
+    info(" +optimization.\n");
+#else
+    info(" -optimization\n");
+#endif
     info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;

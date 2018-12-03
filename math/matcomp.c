@@ -163,7 +163,7 @@ INLINE void sq2cpy(T *out, const T *in, const long length){
 */
 INLINE void realcpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
-	out[i]=creal(in[i]);
+	out[i]=REAL(in[i]);
     }
 }
 /**
@@ -176,11 +176,11 @@ INLINE void abscpy(T *out, const T *in, const long length){
 }
 INLINE T RA2XY(T A){
     //convert r/a to x/y
-    return COMPLEX(creal(A)*cos(cimag(A)), creal(A)*sin(cimag(A)));
+    return COMPLEX(REAL(A)*cos(IMAG(A)), REAL(A)*sin(IMAG(A)));
 }
 INLINE T XY2RA(T A){
     //convert x/y to r/a*/
-    return COMPLEX(fabs(A), atan2(cimag(A),creal(A)));
+    return COMPLEX(fabs(A), atan2(IMAG(A),REAL(A)));
 }
 
 /**
@@ -292,7 +292,7 @@ void X(embedc)(X(mat) *restrict A, const X(mat) *restrict B, const R theta, CEMB
 	    DO_LOOP(,ABS2);
 	    break;
 	case C_REAL:
-	    DO_LOOP(,creal);
+	    DO_LOOP(,REAL);
 	    break;
 	case C_ABS:
 	    DO_LOOP(,fabs);
@@ -420,7 +420,7 @@ void X(embedscaleout)(X(mat) *restrict A, const X(mat) *B,
 	DO_LOOP(,ABS2);
 	break;
     case C_REAL:
-	DO_LOOP(,creal);
+	DO_LOOP(,REAL);
 	break;
     case C_ABS:
 	DO_LOOP(,fabs);
@@ -539,11 +539,33 @@ void X(real2d)(XR(mat)**restrict A0, R alpha,
     }
     if(fabs(alpha)<EPS){
 	for(long i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=creal(B->p[i])*beta;
+	    A->p[i]=REAL(B->p[i])*beta;
 	}
     }else{
 	for(long i=0; i<B->nx*B->ny; i++){
-	    A->p[i]=A->p[i]*alpha+creal(B->p[i])*beta;
+	    A->p[i]=A->p[i]*alpha+REAL(B->p[i])*beta;
+	}
+    }
+}
+/**
+   Copy imaginary part of a X(mat) to XR(mat) with optional scaling:
+   A0=A0.*alpha+imag(B)*beta
+*/
+void X(imag2d)(XR(mat)**restrict A0, R alpha,
+	       const X(mat) *restrict B, R beta){
+    XR(mat) *restrict A=*A0;
+    if(!A){
+	*A0=A=XR(new)(B->nx, B->ny);
+    }else{
+	assert(A->nx==B->nx && A->ny==B->ny);
+    }
+    if(fabs(alpha)<EPS){
+	for(long i=0; i<B->nx*B->ny; i++){
+	    A->p[i]=IMAG(B->p[i])*beta;
+	}
+    }else{
+	for(long i=0; i<B->nx*B->ny; i++){
+	    A->p[i]=A->p[i]*alpha+IMAG(B->p[i])*beta;
 	}
     }
 }

@@ -181,7 +181,7 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 	}
     }
     if(isnan(creal(res))){
-	warning("NaN found.\n");
+	warning_once("NaN found.\n");
     }
     return res;
 }
@@ -639,6 +639,7 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta){
     IND(B,1,1)=stheta*IND(tmp,1,0)+ctheta*IND(tmp,1,1);
     X(free)(tmp);
 }
+
 /**
    Compute the correlation matrix.
  */
@@ -663,7 +664,7 @@ void X(corr)(X(mat) **pout, const X(mat) *A, const X(mat) *B){
 	for(long offx=-offx2; offx<=offx2; offx++){
 	    long sx1, nnx;
 	    SHIFT_INDEX(sx1, nnx, A->nx, offx);
-	    double tmp=0;
+	    R tmp=0;
 	    for(long iy1=sy1; iy1<nny; iy1++){
 		for(long ix1=sx1; ix1<nnx; ix1++){
 		    tmp+=IND(A, ix1, iy1)*IND(B, ix1-offx, iy1-offy);
@@ -672,6 +673,40 @@ void X(corr)(X(mat) **pout, const X(mat) *A, const X(mat) *B){
 	    IND(out, offx+offx2, offy+offy2)=tmp;
 	}
     }
+}
+/**
+   Compute the parabolic fit center using 3x3 points around the peak.
+*/
+void X(para3)(R *grad, const X(mat) *corr){
+    R valmax=0;
+    int jy=0, jx=0;
+    //Find Peak location (jx, jy)
+    for(int iy=1; iy<corr->ny-1; iy++){
+	for(int ix=1; ix<corr->nx-1; ix++){
+	    if(creal(IND(corr,ix,iy))>valmax){
+		jy=iy; jx=ix;
+		valmax=creal(IND(corr,ix,iy));
+	    }
+	}
+    }
+    //Calculate 1d sum of 3 row/columns.
+    R vx[3], vy[3];
+    for(long iy=0; iy<3; iy++){
+	vy[iy]=0; vx[iy]=0;
+	for(long ix=0; ix<3; ix++){
+	    vy[iy]+=creal(IND(corr, ix+jx-1, iy+jy-1));
+	    vx[iy]+=creal(IND(corr, iy+jx-1, ix+jy-1));
+	}
+    }
+    //Parabolic fit.
+    R px[2], py[2];
+    px[0]=(vx[0]+vx[2])*0.5-vx[1];
+    py[0]=(vy[0]+vy[2])*0.5-vy[1];
+    px[1]=(vx[2]-vx[0])*0.5;
+    py[1]=(vy[2]-vy[0])*0.5;
+    //Center
+    grad[0]=px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
+    grad[1]=py[0]==0?0:(-py[1]/(2*py[0])+jy-(corr->ny-1)*0.5);
 }
 
 /**

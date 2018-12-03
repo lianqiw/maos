@@ -41,27 +41,73 @@
 
    All routines in this file depends on saneai and may be called repeatedly during simulation.
 */
-
+/**
+   Check the dimension of NEA and fix if possible
+*/
+void check_nea(dmat *nea, int nsa){
+    if(!nea){
+	error("nea is not defined.\n");
+    }else if(nea->ny==1){
+	if(nea->nx==2*nsa){
+	    nea->nx=nsa;
+	    nea->ny=2;
+	}else if(nea->nx==3*nsa){
+	    nea->nx=nsa;
+	    nea->ny=3;
+	}else{
+	    error("nea has wrong format (%ldx%ld).\n", nea->nx, nea->ny);
+	}
+    }else if(nea->nx!=nsa || nea->ny>3){
+	error("nea has wrong format (%ldx%ld).\n", nea->nx, nea->ny);
+    }
+}
 /**
    Apply cholesky in a 2x2 symmetric matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
    Input and output may be the same.
  */
 void nea_chol(dmat **pout, const dmat *in){
-    if(in->ny!=3){
+    if(in->ny!=2 && in->ny!=3){
 	error("nea_chol: wrong format\n");
     }
     if(!*pout){
-	*pout=dnew(in->nx, in->ny);
+	*pout=dnew(in->nx, 3);
     }
+    int isxy=in->ny==3?1:0;
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
 	//Use temporary variable to handle the case that out and in is the same.
 	double a=sqrt(IND(in,isa,0));
-	double b=IND(in,isa,2)/a;
+	double b=isxy?(IND(in,isa,2)/a):0;
 	double c=sqrt(IND(in,isa,1)-b*b);
 	IND(out,isa,0)=a;
 	IND(out,isa,1)=c;
 	IND(out,isa,2)=b;
+    }
+}
+/**
+   Apply LL' to lower diagonal matrix packed in [a[0,0],a[1,1],a[0,1]] as row vector.
+   Input and output may be the same.
+ */
+void nea_mm(dmat **pout, const dmat *in){
+    if(in->ny!=2 && in->ny!=3){
+	error("nea_mm: wrong format\n");
+    }
+    int isxy=in->ny==3?1:0;
+    if(!*pout){
+	*pout=dnew(in->nx, 3);
+    }
+    dmat *out=*pout;
+    if(out->ny<in->ny){
+	error("nea_mm: wrong format. Need 3 columns in the output.\n");
+    }
+    for(int isa=0; isa<in->nx; isa++){
+	//Use temporary variable to handle the case that out and in is the same.
+	double a=IND(in,isa,0);
+	double b=isxy?(IND(in,isa,2)):0;
+	double c=IND(in,isa,1);
+	IND(out,isa,0)=a*a;
+	IND(out,isa,1)=c*c+b*b;
+	if(isxy) IND(out,isa,2)=a*b;
     }
 }
 /**
@@ -70,20 +116,22 @@ void nea_chol(dmat **pout, const dmat *in){
 */
 
 void nea_inv(dmat **pout, const dmat *in){
-    if(in->ny!=3){
-	error("nea_chol: wrong format\n");
+    if(in->ny!=2 && in->ny!=3){
+	error("nea_inv: wrong format\n");
     }
     if(!*pout){
-	*pout=dnew(in->nx, in->ny);
+	*pout=dnew(in->nx, 3);
     }
+    int isxy=in->ny==3?1:0;
     dmat *out=*pout;
     for(int isa=0; isa<in->nx; isa++){
-	double invdet=1./(IND(in,isa,0)*IND(in,isa,1)-IND(in,isa,2)*IND(in,isa,2));
+	double xy=isxy?IND(in,isa,2):0;
+	double invdet=1./(IND(in,isa,0)*IND(in,isa,1)-xy*xy);
 	//Use temporary variable to handle the case that out and in is the same.
 	double a=invdet*IND(in,isa,1);
 	IND(out,isa,1)=invdet*IND(in,isa,0);
 	IND(out,isa,0)=a;
-	IND(out,isa,2)=invdet*IND(in,isa,2);
+	IND(out,isa,2)=invdet*xy;
     }
 }
 
@@ -111,14 +159,18 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	if(parms->powfs[ipowfs].skip==3) continue;
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	const double pixtheta=parms->powfs[ipowfs].pixtheta;
-	dcell *saneac=0;
-
+	dcell *saneac=0;//in unit of rad^2.
+	
 	if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && !parms->powfs[ipowfs].phyusenea){
 	    /*Physical optics use nea from intstat*/
-	    saneac=dcellref(powfs[ipowfs].sanea);
+	    saneac=dcelldup(powfs[ipowfs].sanea);
 	}else{
 	    if(parms->powfs[ipowfs].neareconfile){
-		saneac=dcellread(parms->powfs[ipowfs].neareconfile);
+		saneac=dcellread_prefix(parms->powfs[ipowfs].neareconfile, parms, ipowfs);
+		for(int i=0; i<saneac->nx*saneac->ny; i++){
+		    check_nea(saneac->p[i], nsa);
+		    nea_mm(&saneac->p[i], saneac->p[i]);
+		}	
 	    }else{
 		saneac=dcellnew(1,1);
 		saneac->p[0]=dnew(nsa,3);
@@ -126,10 +178,10 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		if(neamas < 0.001 || neamas > 2000){
 		    warning("powfs[%d].nearecon=%g mas may have unit incorrect.\n", ipowfs, neamas);
 		}
-		//convert from mill-arcsec to radian^2.
-		double nearad2=pow(neamas/206265000.,2)/parms->powfs[ipowfs].dtrat;
+		//convert from mill-arcsec to radian.
+		double nearad=pow(neamas/206265000.,2)/(parms->powfs[ipowfs].dtrat);
 		for(int isa=0; isa<nsa; isa++){
-		    IND(saneac->p[0],isa,0)=IND(saneac->p[0],isa,1)=nearad2/IND(powfs[ipowfs].saa,isa);
+		    IND(saneac->p[0],isa,0)=IND(saneac->p[0],isa,1)=nearad/(IND(powfs[ipowfs].saa,isa));
 		}
 	    }
 	}
@@ -139,22 +191,18 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}else if(parms->recon.glao){
 	    error("Please average nearecon for GLAO mode.\n");
 	}
-	    
 
 	const double area_thres=(nsa>4)?0.9*parms->powfs[ipowfs].safill2d:0;
 
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
-	    int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	    int iwfs0=parms->powfs[ipowfs].wfsr->p[0];
 	    lmat *samask=0;
 	    if(parms->wfs[iwfs].sabad){
 		samask=loc_coord2ind(powfs[ipowfs].saloc, parms->wfs[iwfs].sabad);
 	    }
 	    if(!do_ref  || iwfs==iwfs0 || parms->wfs[iwfs].sabad || parms->wfs[iwfs0].sabad){
-		dmat *sanea0=INDR(saneac, iwfs, 0);
-		if(!sanea0 || sanea0->ny!=3){
-		    error("sanea is not defined or has wrong format.\n");
-		}
+		dmat *sanea0=INDR(saneac, jwfs, 0);
 		int isxy=sanea0->ny==3?1:0;
 
 		dcell *sanea2=dcellnew(nsa, 1);
@@ -184,15 +232,16 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    }
 		}
 		double nea_mean=sqrt(nea2_sum/nea2_count*0.5);
-		if(nea_mean>pixtheta*4 
+		recon->neam->p[iwfs]=nea_mean/sqrt(TOMOSCALE);
+		if(nea_mean>pixtheta*2
 		   && parms->powfs[ipowfs].usephy
-		   && parms->powfs[ipowfs].order==1
+		   && parms->powfs[ipowfs].order==1 
 		    ){
-		    warning("TT WFS %d has too much measurement error. Ignore it\n", iwfs);
+		    warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
+			    iwfs, nea_mean*206265000);
 		    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,pixtheta*1e4);
 		    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,0);
 		    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,0);
-		    nea_mean=INFINITY;
 		}else{
 		    sanea->p[iwfs+iwfs*nwfs]=nea2sp(sanea2->p, nsa);
 		    saneal->p[iwfs+iwfs*nwfs]=nea2sp(sanea2l->p,nsa);
@@ -201,9 +250,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		dcellfree(sanea2);
 		dcellfree(sanea2l);
 		dcellfree(sanea2i);
-		recon->neam->p[iwfs]=nea_mean/sqrt(TOMOSCALE);
 		dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
-
 	    }else if(do_ref){
 		sanea->p[iwfs+iwfs*nwfs] =dspref( sanea->p[iwfs0+iwfs0*nwfs]);
 		saneal->p[iwfs+iwfs*nwfs]=dspref(saneal->p[iwfs0+iwfs0*nwfs]);
@@ -211,26 +258,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		recon->neam->p[iwfs]=recon->neam->p[iwfs0];
 	    }
 	    lfree(samask);
-
-	    {
-		const char *neatype;
-		if(parms->powfs[ipowfs].neareconfile){
-		    neatype="file";
-		}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
-			 !parms->powfs[ipowfs].phyusenea){
-		    switch(parms->powfs[ipowfs].phytype_recon){
-		    case 1:
-			neatype="cmf";break;
-		    case 2:
-			neatype="cog";break;
-		    default:
-			neatype="unknown";break;
-		    }
-		}else{
-		    neatype="geom";
-		}
-		info("%s(%.2f) ", neatype, recon->neam->p[iwfs]*206265000*sqrt(TOMOSCALE));
-	    }
+	    
 	    if(!parms->powfs[ipowfs].lo){
 		neam_hi+=pow(recon->neam->p[iwfs],2);
 		count_hi++;
@@ -239,12 +267,37 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     }/*ipowfs */
     
     recon->neamhi=sqrt(neam_hi/count_hi);
-    info("\n");
     if(parms->save.setup){
 	writebin(recon->sanea, "sanea");
 	writebin(recon->saneal,"saneal");
 	writebin(recon->saneai,"saneai");
     }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].skip==3) continue;
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfsr; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfsr->p[jwfs];
+	    const char *neatype;
+	    
+	    if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
+	       !parms->powfs[ipowfs].phyusenea){
+		switch(parms->powfs[ipowfs].phytype_recon){
+		case 1:
+		    neatype="cmf";break;
+		case 2:
+		    neatype="cog";break;
+		default:
+		    neatype="unknown";break;
+		}
+	    }else if(parms->powfs[ipowfs].neareconfile){
+		neatype="file";
+	    }else{
+		neatype="geom";
+	    }
+	    info("%s(%.2f) ", neatype, recon->neam->p[iwfs]*206265000*sqrt(TOMOSCALE));
+	}
+    }
+    info("\n");
+
 }
 
 /**
@@ -557,7 +610,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 	    dcellfree(GPTTDF);
 	}else{
-	    warning("Skipping RL Low rank terms in split tomography\n");
+	    info("Skipping RL Low rank terms in split tomography\n");
 	}
 	dcellfree(ULo);
 	dcellfree(VLo);

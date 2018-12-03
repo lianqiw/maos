@@ -55,4 +55,5 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   double pixrot,    /**<Rotation (CCW, radian) of pixel island 0 for cartesian*/
 	   int radgx,        /**<1: gx/gy is along r/a coord.*/
 	   int cr );
+dmat *derive_by_fft(const dmat *i0, double theta);
 #endif

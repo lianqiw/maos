@@ -51,8 +51,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     intstat->i0sumsum=dnew(ni0, 1);
 
     dcell *i0s=intstat->i0;
-    dcell* gxs=intstat->gx/*PDELL*/;
-    dcell* gys=intstat->gy/*PDELL*/;
+    dcell* gxs=parms->powfs[ipowfs].mtchfft?0:intstat->gx/*PDELL*/;
+    dcell* gys=parms->powfs[ipowfs].mtchfft?0:intstat->gy/*PDELL*/;
     dmat *i0sum=intstat->i0sum;
     dcell *mtche=intstat->mtche;
   
@@ -113,7 +113,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
 	    dmat *nea2=0;
-	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0), IND(gxs,isa,ii0), IND(gys,isa,ii0), 
+	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0),
+				    gxs?IND(gxs,isa,ii0):0, gys?IND(gys,isa,ii0):0, 
 				    parms->powfs[ipowfs].qe,
 				    bkgrnd2, bkgrnd2c, bkgrnd, bkgrndc, rne, pixthetax, pixthetay,
 				    pixrot, radgx, crdisable?0:parms->powfs[ipowfs].mtchcr);
@@ -174,20 +175,20 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    double dsa=powfs[ipowfs].saloc->dx;
 	    double llimit=-dsa/2;
 	    double ulimit=dsa/2;
-	    info("sa index: radius   noise equivalent angle\n");
+	    info("index: position noise equivalent angle\n");
 	    for(int isa=0; isa<nsa; isa++){
 		double locx=powfs[ipowfs].saloc->locx[isa];
 		double locy=powfs[ipowfs].saloc->locy[isa];
 		if((parms->powfs[ipowfs].llt && (nsa<10 || (locx>0&&locy>llimit&&locy<ulimit)))
 		   ||(!parms->powfs[ipowfs].llt && locx>=0 && locx<dsa*0.6 && locy>=0 && locy<dsa*0.6)
 		    || nsa<=4){
-		    info("sa%4d:%4.1fm",isa, locx);
+		    info("sa%4d:%6.1fm",isa, locx);
 		    for(int ii0=0; ii0<ni0; ii0++){
 			info(" (%4.1f,%4.1f)", 
 			      sqrt(IND(sanea->p[ii0],isa,0))*206265000,
 			      sqrt(IND(sanea->p[ii0],isa,1))*206265000);
 		    }//for ii0
-		    info("mas\n");
+		    info(" mas\n");
 		}
 	    }/*isa  */
 	}

@@ -49,23 +49,22 @@ static void maos_daemon(int sock){
     }
 }
 void maos_version(void){
-    info("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+    info("SRC: %s v%s %s\n", SRCDIR, PACKAGE_VERSION, GIT_VERSION);
+    info("BUILD: %s by %s on %s %s", BUILDDIR, COMPILER, __DATE__, __TIME__);
 #if USE_CUDA
 #if CUDA_DOUBLE
-    info(", w/t CUDA(double)");
+    info(" +CUDA(double)");
 #else
-    info(", w/t CUDA(single)");
+    info(" +CUDA(single)");
 #endif
 #else
-    info(", w/o CUDA");
+    info(" -CUDA");
 #endif
 #ifdef __OPTIMIZE__
-    info(", w/t optimization.\n");
+    info(" +optimization.\n");
 #else
-    info(", w/o optimization\n");
+    info(" -optimization\n");
 #endif
-    info("Source: %s %s\n", SRCDIR, GIT_VERSION);
-    info("BUILD: %s\n", BUILDDIR);
     info("Launched at %s in %s with PID %ld.\n",myasctime(),HOST, (long)getpid());
 #if HAS_LWS
     extern uint16_t PORT;

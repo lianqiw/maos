@@ -130,7 +130,7 @@ typedef struct SKYC_S{
     int evlstart;    /**<time step to start evaluate performance*/
     int phystart;    /**<time step to start physical optics*/
     int mtchcr;      /**<constraint in matched filter*/
-    int mtch;        /**<matched filter*/
+    int phytype;     /**<Type of pixel processing. 1: mtch, 2: cog, 3: correlation*/
     int neaaniso;     /**<use additional measurement error caused by
 			 anisoplanatism in regularization.*/
     int neanonlin;   /**<use additional measurement error caused by WFS nonlinearity*/

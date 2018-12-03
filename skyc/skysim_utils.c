@@ -161,8 +161,9 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	mpsol=dcellnew(aster->nwfs, 1); //for psol grad.
     }
     const long nwvl=parms->maos.nwvl;
-    dcell **psf=0, **mtche=0, **ints=0;
+    dcell **psf=0, **mtche=0, **ints=0, **i0s=0;
     ccell *wvf=0,*wvfc=0, *otf=0;
+    dmat *corr=0;
     if(hasphy){
 	psf=mycalloc(aster->nwfs,dcell*);
 	wvf=ccellnew(aster->nwfs,1);
@@ -170,7 +171,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	mtche=mycalloc(aster->nwfs,dcell*);
 	ints=mycalloc(aster->nwfs,dcell*);
 	otf=ccellnew(aster->nwfs,1);
-    
+	i0s=mycalloc(aster->nwfs, dcell*);
 	for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	    const int ipowfs=aster->wfs[iwfs].ipowfs;
 	    const long ncomp=parms->maos.ncomp[ipowfs];
@@ -184,6 +185,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	    }else{
 		mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[idtratc];
 	    }
+	    i0s[iwfs]=aster->wfs[iwfs].pistat->i0s;
 	    otf->p[iwfs]=cnew(ncomp,ncomp);
 	    //cfft2plan(otf->p[iwfs],-1);
 	    //cfft2plan(otf->p[iwfs],1);
@@ -343,19 +345,32 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 			    igrad[0]=0;
 			    igrad[1]=0;
 			    double pixtheta=parms->skyc.pixtheta[ipowfs];
-			    if(parms->skyc.mtch){
+			    //if(parms->skyc.phytype==1){
+			    //	dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
+			    // }
+			    //if(parms->skyc.phytype!=1 || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
+			    //if(parms->skyc.phytype==1){
+			    //	    warning_once("mtch is out of range\n");
+			    //	}
+			    switch(parms->skyc.phytype){
+			    case 1:
 				dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
-			    }
-			    if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
-				if(!parms->skyc.mtch){
-				    warning("fall back to cog\n");
-				}else{
-				    warning_once("mtch is out of range\n");
-				}
-				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*IND(rnefs,idtrat,ipowfs), 0); 
+				break;
+			    case 2:
+				dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*IND(rnefs,idtrat,ipowfs), 0);
 				igrad[0]*=pixtheta;
 				igrad[1]*=pixtheta;
+				break;
+			    case 3:
+				dcorr(&corr, ints[iwfs]->p[isa], i0s[iwfs]->p[isa]);
+				dpara3(igrad, corr);
+				igrad[0]*=pixtheta;
+				igrad[1]*=pixtheta;
+				break;
+			    default:
+				error("Invalid phytype\n");
 			    }
+				// }
 			    gradout->p[iwfs]->p[isa]=igrad[0];
 			    gradout->p[iwfs]->p[isa+nsa]=igrad[1];
 			}/*isa */
@@ -410,6 +425,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
     dcellfree(zgradc);
     dcellfree(gradout);
     dfree(gradsave);
+    dfree(corr);
     if(hasphy){
 	dcellfreearr(psf, aster->nwfs);
 	dcellfreearr(ints, aster->nwfs);
@@ -417,6 +433,7 @@ dmat *skysim_sim(dmat **mresout, const dmat *mideal, const dmat *mideal_oa, doub
 	ccellfree(wvfc);
 	ccellfree(otf);
 	free(mtche);
+	free(i0s);
     }
     servo_free(st2t);
     /*dfree(mres); */
@@ -450,7 +467,9 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	writebin(aster[selaster].wfs[iwfs].pistat->sanea, 
 		   "%s/neafull_wfs%d",path,iwfs+6);
     }
-    writebin(aster[selaster].gain->p[seldtrat], "%s/gain",path);
+    if(parms->skyc.servo>0){
+	writebin(aster[selaster].gain->p[seldtrat], "%s/gain",path);
+    }
     writebin(simu->mres->p[isky], "%s/mres",path);
     writebin(simu->psds,"%s/psds",path);
     char fnconf[PATH_MAX];
@@ -464,8 +483,9 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
     fprintf(fp,"sim.mffocus=%d\n", parms->maos.mffocus);
     fprintf(fp,"sim.ahstfocus=%d\n", parms->maos.ahstfocus);
     fprintf(fp,"tomo.ahst_wt=3\n");
-    fprintf(fp,"sim.servotype_lo=2\n");/*type II */
-    fprintf(fp,"sim.eplo='gain.bin'\n");
+    if(parms->skyc.servo>0){
+	fprintf(fp,"sim.eplo='gain.bin'\n");
+    }
     fprintf(fp,"powfs0_llt.fnrange='%s'\n", parms->maos.fnrange);
     fprintf(fp,"atm.r0z=%.4f\n", parms->maos.r0z);
     fprintf(fp,"atm.size=[128 128]\n");
@@ -500,17 +520,26 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	}
     }
     fprintf(fp,"]\n");
-    fprintf(fp,"wfs.powfs=[0 0 0 0 0 0");
-    for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
-	fprintf(fp, " %d", aster[selaster].wfs[iwfs].ipowfs+1);
-    }
-    fprintf(fp,"]\n");
 
+    if(parms->maos.npowfs<3){
+	int nwfs[2]; 
+	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
+	    nwfs[aster[selaster].wfs[iwfs].ipowfs]++;
+	}
+	fprintf(fp, "powfs.nwfs=[6");
+	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
+	    fprintf(fp, " %d", nwfs[ipowfs]);
+	}
+	fprintf(fp,"]\n");
+    }else{
+	error("Fill this out please\n");
+    }
     dmat* rnefs=parms->skyc.rnefs;
     double rne=IND(rnefs,seldtrat,0);
     double bkgrnd=aster[selaster].wfs[0].bkgrnd;
 
     if(parms->maos.npowfs==1){
+	fprintf(fp, "powfs.nwfs=[6 1]\n");
 	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" ]\n");
 	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\"]\n");
 	fprintf(fp, "powfs.phyusenea=[0 1]\n");
@@ -519,7 +548,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 	fprintf(fp, "powfs.rne=[3 %.2f]\n", rne);
 	fprintf(fp, "powfs.phystep=[0 %ld]\n", 50+(long)parms->skyc.dtrats->p[seldtrat]*20);
 	fprintf(fp, "powfs.noisy=[1 1 ]\n");
-	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000]\n", parms->skyc.pixtheta[1]*206265000);
+	fprintf(fp, "powfs.pixtheta=[0.8 %g]\n", parms->skyc.pixtheta[1]);
 	fprintf(fp, "powfs.pixpsa=[6 %d]\n", parms->skyc.pixpsa[0]);
 	fprintf(fp, "powfs.ncomp=[64 %d]\n", parms->maos.ncomp[0]);
 	fprintf(fp, "powfs.nwvl=[1 %d]\n",nwvl);
@@ -542,9 +571,9 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
 		50+(long)parms->skyc.dtrats->p[seldtrat]*20, 
 		50+(long)parms->skyc.dtrats->p[seldtrat]*20);
 	fprintf(fp, "powfs.noisy=[1 1 1]\n");
-	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000 %g/206265000]\n",
-		parms->skyc.pixtheta[0]*206265000,
-		parms->skyc.pixtheta[1]*206265000);
+	fprintf(fp, "powfs.pixtheta=[0.8 %g %g]\n",
+		parms->skyc.pixtheta[0]*206265,
+		parms->skyc.pixtheta[1]*206265);
 	fprintf(fp, "powfs.pixpsa=[6 %d %d]\n",
 		parms->skyc.pixpsa[0], 
 		parms->skyc.pixpsa[1]);

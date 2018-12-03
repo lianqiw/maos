@@ -453,9 +453,9 @@ void remove_file_older(const char *fndir, int level, long sec){
 void mymkdir(const char *format, ...){
     format2fn;
     if(!fn) return;
-    if(fn[strlen(fn)-1]=='/')
+    while(fn[strlen(fn)-1]=='/')
 	fn[strlen(fn)-1]='\0';
-    if(mkdir(fn, 0700)==-1 && errno!=EEXIST){
+    if(mkdir(fn, 0777)==-1 && errno!=EEXIST){
 	perror("mkdir");
 	char *tmp=strrchr(fn,'/');
 	if(!tmp){
@@ -463,8 +463,9 @@ void mymkdir(const char *format, ...){
 	}
 	tmp[0]='\0';
 	mymkdir("%s",fn);
+
 	tmp[0]='/';
-	if(mkdir(fn,0700)==-1 && errno!=EEXIST){
+	if(mkdir(fn,0777)==-1 && errno!=EEXIST){
 	    error("Unable to mkdir '%s'\n",fn);
 	}
     }

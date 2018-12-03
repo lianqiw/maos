@@ -431,6 +431,7 @@ static void init_simu_evl(SIM_T *simu){
 	simu->ole     = simu->res->p[0];
 	simu->cle     = simu->res->p[2];
 	simu->clem    = simu->res->p[3];
+	dcellset(simu->res, NAN);
     }
 
     {/*USE MMAP for data that need to save at every time step */

@@ -224,6 +224,7 @@ case "$CN" in
     *)
 	;;	
 esac
+AC_DEFINE_UNQUOTED(COMPILER, ["$CC ($CC_VERSION)"], ["Compile"])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
@@ -563,8 +564,8 @@ if test "$has_z" = "no" ;then
     AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([Invalid zlib])])
 fi
 
-#Check for FFTW interface in MKL
-AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="yes"], [builtin_fftw="no"], [$LAPACK -lm])
+#Check for FFTW interface in MKL. Note: MKL does not support fftw_plan_r2r_1d
+AC_CHECK_LIB([m], [fftw_execute], [builtin_fftw="no"], [builtin_fftw="no"], [$LAPACK -lm])
 if test "$builtin_fftw" = "yes";then
     AC_MSG_NOTICE([FFTW is already provided by $LAPACK])
     fftw_threads=1

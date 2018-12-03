@@ -453,25 +453,30 @@ static void mki0sh(double *i0x1, double *i0x2, const dmat *i0, double scale, lon
 }
 
 /**
-  shift i0 without wraping into i0y1 (+1) and i0y2 (-1)
-*/
-/*
-static void mki0shy(double *i0y1, double *i0y2, const dmat *i0, double scale){
-    int nx=i0->nx;
-    typedef double pcol[nx];
-    pcol *i0y1p=(pcol*)i0y1;
-    pcol *i0y2p=(pcol*)i0y2;
-    for(int iy=0; iy<i0->ny-1; iy++){
-	for(int ix=0; ix<i0->nx; ix++){
-	    i0y1p[iy+1][ix]=IND(i0,ix,iy)*scale;
-	    i0y2p[iy][ix]=IND(i0,ix,iy+1)*scale;
+   Compute the derivative using FFT method along direction specified by theta (radian).
+ */
+dmat *derive_by_fft(const dmat *i0, double theta){
+    cmat *otf=0;
+    ccpd(&otf, i0);
+    cfft2(otf, -1);
+    double sx=cos(theta)*2.*M_PI/i0->nx;
+    double sy=sin(theta)*2.*M_PI/i0->ny;
+    long ny2=i0->ny/2;
+    long nx2=i0->nx/2;
+    for(long iy=0; iy<i0->ny; iy++){
+	for(long ix=0; ix<i0->nx; ix++){
+	    IND(otf, ix, iy)*=-_Complex_I*((ix<nx2?ix:(ix-i0->nx))*sx+(iy<ny2?iy:(iy-i0->ny))*sy);
 	}
     }
-    }*/
+    cfft2(otf, 1);
+    dmat *gx=0;
+    creal2d(&gx,0, otf, 1./(i0->nx*i0->ny));
+    cfree(otf);
+    return gx;
+}
 /**
    Generating matched filter from averaged short exposure images.
 */
-
 dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	   const dmat *i0, /**<Averaged subaperture image*/
 	   const dmat *gx, /**<derivative of i0 along x*/
@@ -525,7 +530,12 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
 	IND(i0m,0,mtchcry+1)=-IND(i0m,0,mtchcry);
 	IND(i0m,1,mtchcry+1)=-IND(i0m,1,mtchcry);
     }
-    
+    dmat *gx2=0, *gy2=0;
+    if(!gx){
+	warning_once("Compute derivative using FFT\n");
+	gx=gx2=derive_by_fft(i0, theta); dscale(gx2, kpx);
+	gy=gy2=derive_by_fft(i0, theta+M_PI/2); dscale(gy2, kpy);
+    }
     adddbl(PCOL(i0g,0), 1, gx->p, i0n, 1, 0);
     adddbl(PCOL(i0g,1), 1, gy->p, i0n, 1, 0);
     adddbl(PCOL(i0g,2), 1, i0->p, i0n, kpx, bkgrnd_res);
@@ -580,5 +590,7 @@ dmat *mtch(dmat **neaout, /**<[out] sanea*/
     dfree(i0m);
     dfree(i0g);
     dfree(wt);
+    dfree(gx2);
+    dfree(gy2);
     return mtche;
 }

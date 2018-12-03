@@ -143,8 +143,8 @@ static void skysim_isky(SIM_S *simu){
 #pragma omp taskwait
 #endif
 	/*Select asters that have good performance. */
-	setup_aster_select(PCOL(pres_geom,isky),aster, naster, star, 
-			   parms->skyc.mtch?0.5*simu->varol:INFINITY,parms); 
+	int nsel=setup_aster_select(PCOL(pres_geom,isky),aster, naster, star, 
+				    parms->skyc.phytype==1?0.5*simu->varol:INFINITY,parms); 
 	double tk_2=myclockd();
 	double tk_3=tk_2;
 	int selaster=0;
@@ -319,9 +319,9 @@ static void skysim_isky(SIM_S *simu){
 	long laps_m=simu->status->laps/60-laps_h*60;
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
-	info("Field%4d,%2d stars, aster%3d/%-3d,%3.0f Hz: %6.2f nm "
-	      "Sel%3.0fs Load%3.0fs Phy%3.0fs Tot %ld:%02ld Used %ld:%02ld Left %ld:%02ld\n",
-	      isky, nstar, selaster, naster, simu->fss->p[isky], sqrt(skymini)*1e9,
+	info("Field%4d,%2d stars %3d/%-3d(%1d),%3.0f Hz:%7.2f nm "
+	      "Sel%3.0fs Load%3.0fs Phy%3.0fs Tot%2ld:%02ld Used%2ld:%02ld Left%2ld:%02ld\n",
+	     isky, nstar, selaster, naster, nsel, simu->fss->p[isky], sqrt(skymini)*1e9,
 	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while isky*/
 }
@@ -541,7 +541,7 @@ void skysim(const PARMS_S *parms){
 	seed_rand(&simu->rand, parms->skyc.seed+parms->maos.zadeg);
 	simu->status->iseed=iseed_maos;
 	prep_bspstrehl(simu);
-	if(parms->skyc.neanonlin){
+	if(parms->skyc.neanonlin && parms->skyc.phytype==1){
 	    simu->nonlin=wfs_nonlinearity(parms, simu->powfs, seed_maos);
 	}
 	skysim_read_mideal(simu);

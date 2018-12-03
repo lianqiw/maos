@@ -530,9 +530,19 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
 		    int pixpsax=powfs[ipowfs].pixpsax;
 		    int pixpsay=powfs[ipowfs].pixpsay;
-		    double siglev=parms->powfs[ipowfs].siglev;
-		    if(parms->powfs[ipowfs].sigmatch==2){
+		    double siglev=0;
+		    switch(parms->powfs[ipowfs].sigmatch){
+		    case 0://No signal level match. Use sum(i0) as denominator. Linear.
+			siglev=parms->powfs[ipowfs].siglev;
+			break;
+		    case 1://Use instantaneous intensity of each sa
+			siglev=0;
+			break;
+		    case 2://Use averaged instantaneous intensity.
 			siglev=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
+			break;
+		    default:
+			error("Invalid sigmatch\n");
 		    }
 		    Real *saa=(parms->powfs[ipowfs].sigmatch!=1)?cupowfs[ipowfs].saa.P():0;
 		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot.P():NULL;
@@ -542,52 +552,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 			 (Real(*)[2])cuwfs[iwfs].cogcoeff.P(), srot);
 		}
 		    break;
-		    /*case 3:{
-		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
-		    dcell *cints=simu->ints->p[iwfs];
-		    CUDA_SYNC_STREAM;
-		    double geach[3];
-		    for(int isa=0; isa<nsa; isa++){
-			geach[0]=gradcl->p[isa];
-			geach[1]=gradcl->p[isa+nsa];
-			geach[2]=1;
-			maxapriori(geach, cints->p[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
-			gradcl->p[isa]=geach[0];
-			gradcl->p[isa+nsa]=geach[1];
-		    }
-		}
-		    break;
-		case 4:{
-		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
-		    dcell *cints=simu->ints->p[iwfs];
-		    CUDA_SYNC_STREAM;
-		    double geach[2];
-		    dmat *corr=0;
-		    Real pixthetax=(Real)parms->powfs[ipowfs].radpixtheta;
-		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
-		    double *srot=parms->powfs[ipowfs].radpix?INDR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
-		    for(int isa=0; isa<nsa; isa++){
-			dcorr(&corr, cints->p[isa], INDR(powfs[ipowfs].intstat->i0, isa, wfsind));
-			parabolic_peak(geach, corr);
-			geach[0]*=pixthetax;
-			geach[1]*=pixthetay;
-
-			if(srot){
-			    double theta=srot[isa];
-			    double cx=cos(theta);
-			    double sx=sin(theta);
-			    double tmp=geach[0]*cx-geach[1]*sx;
-			    geach[1]=geach[0]*sx+geach[1]*cx;
-			    geach[0]=tmp;
-			}
-			gradcl->p[isa]=geach[0];
-			gradcl->p[isa+nsa]=geach[1];
-						
-		    }
-		    dfree(corr);
-		}
-		break;*/
-		default:
+		default://Use CPU version.
 		    cp2cpu(&simu->ints->p[iwfs], ints, stream);
 		    CUDA_SYNC_STREAM;
 		    calc_phygrads(&simu->gradcl->p[iwfs],simu->ints->p[iwfs]->p,

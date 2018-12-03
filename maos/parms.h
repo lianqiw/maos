@@ -207,6 +207,7 @@ typedef struct POWFS_CFG_T{
     int mtchadp;    /**<Using adaptive matched filter. When the number of pixels
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/
+    int mtchfft;    /**<Compute gx, gy using i0 with FFT derivative instead of PSF.*/
     double cogthres;/**<CoG threshold, relative to max(im)*/
     double cogoff;  /**<CoG offset to remove, relative to max(im). */
     int needGS0;    /**<need to compute GS0 (derived parameter)*/

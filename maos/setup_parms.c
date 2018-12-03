@@ -332,6 +332,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(int,mtchcpl);
     READ_POWFS_RELAX(int,sigmatch);
     READ_POWFS_RELAX(int,mtchadp);
+    READ_POWFS_RELAX(int,mtchfft);
     READ_POWFS_RELAX(dbl,cogthres);
     READ_POWFS_RELAX(dbl,cogoff);
     READ_POWFS_RELAX(int,ncpa_method);
@@ -1849,9 +1850,8 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	int ipsr2=0;
 	for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 	    if(parms->atmr.ht->p[ipsr] > parms->hipowfs_hs){
-		info("Tomography Layer %d is above high order WFS. drop it\n", ipsr);
-		//remove layer;
-	    }else if(ipsr!=ipsr2){
+		info("Tomography Layer %d is above high order guide star and therefore dropped.\n", ipsr);
+	    }else{
 		parms->atmr.ht->p[ipsr2]=parms->atmr.ht->p[ipsr];
 		parms->atmr.wt->p[ipsr2]=parms->atmr.wt->p[ipsr];
 		ipsr2++;
@@ -2621,7 +2621,9 @@ static void print_parms(const PARMS_T *parms){
 	"matched filter",
 	"thresholded center of gravity",
 	"Maximum a posteriori tracing (MAP)",
-	"correlation"
+	"correlation (peak first)",
+	"correlation (sum first)",
+	"Invalid"
     };
     const char* tomo_precond[]={
 	"No",
@@ -2688,7 +2690,7 @@ static void print_parms(const PARMS_T *parms){
 		  (parms->powfs[ipowfs].radpix?parms->powfs[ipowfs].radpix:parms->powfs[ipowfs].pixpsa), 
 		  parms->powfs[ipowfs].pixpsa, 
 		  parms->powfs[ipowfs].radpixtheta*206265000,parms->powfs[ipowfs].pixtheta*206265000,
-		  parms->powfs[ipowfs].pixblur,
+		  parms->powfs[ipowfs].pixblur*100,
 		  1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
 	}else{
 	    info("    PWFS, %gHz, ", 1./parms->sim.dt/parms->powfs[ipowfs].dtrat);
@@ -2944,6 +2946,10 @@ PARMS_T * setup_parms(const char *mainconf, const char *extraconf, int override)
 	    mysymlink(fn, "run_recent.log");
 	}
 	info("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
+    }else{
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX, "run_%s_%ld.log", HOST, (long)getpid());
+	remove(fn);
     }
     return parms;
 }

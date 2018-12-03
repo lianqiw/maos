@@ -71,6 +71,7 @@
     void X(rotvecnn)(X(mat) **B0, const X(mat) *A, R theta);		\
     void X(mulvec3)(T *y, const X(mat) *A, const T *x);			\
     void X(corr)(X(mat) **corr, const X(mat) *A, const X(mat) *B);	\
+    void X(para3)(R *grad, const X(mat) *corr);				\
     void X(cog)(R *grad,const X(mat) *i0,R offsetx, R offsety, R thres, R bkgrnd, R flux); \
     void X(shift2center)(X(mat) *A, R offsetx, R offsety);		\
     int X(clip)(X(mat) *A, R min, R max);				\
@@ -149,6 +150,7 @@
     void X(abs2toreal)(X(mat) *A);					\
     void X(cpd)(X(mat)**restrict A, const XR(mat) *restrict B);		\
     void X(real2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
+    void X(imag2d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(abs22d)(XR(mat)**restrict A0, R alpha,const X(mat) *restrict B, R beta); \
     void X(cp)(X(mat)**restrict A0, const X(mat) *restrict B);		\
     void X(tilt2)(X(mat) *otf, X(mat) *otfin, R sx, R sy, int pinct);	\

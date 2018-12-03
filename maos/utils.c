@@ -36,11 +36,11 @@
 /**
    \file maos/utils.c
    A few utility routines
- */
+*/
 
 /**
    Plot the loc, together with all beams
- */
+*/
 void plotloc(const char *fig, const PARMS_T *parms, 
 	     loc_t *loc, double ht, const char *format,...){
     format2fn;
@@ -93,7 +93,7 @@ void plotloc(const char *fig, const PARMS_T *parms,
 	count++;
     }
     plot_points(fig, 1, &loc, NULL ,NULL, NULL,NULL, cir, NULL,
-	       "Coordinate","x (m)","y (m)", "%s",fn);
+		"Coordinate","x (m)","y (m)", "%s",fn);
     dfree(cir);
 }
 /**
@@ -195,7 +195,7 @@ void plotdir(const char *fig, const PARMS_T *parms, double totfov, const char *f
 }
 /**
    Rename the log files when simulation exits.
- */
+*/
 void rename_file(int sig){
     draw_final(1);
     if(disable_save) return;
@@ -225,7 +225,7 @@ void rename_file(int sig){
 }
 /**
    Handles signals.
- */
+*/
 int maos_signal_handler(int sig){
     info("maos: %s", sys_siglist[sig]);
     rename_file(sig);/*handles signal */
@@ -237,37 +237,37 @@ int maos_signal_handler(int sig){
 }
 /**
    Print out usage information.
- */
+*/
 static void print_usage(void){
     info(
-"Usage: maos [OPTION...] [FILE]...\n"
-"maos is a simulation tool developed to adaptive optics systems\n\n"
-"Examples:\n"
-"maos   # Run the default configuration of NFIRAOS: nfiaros.conf as the baseline.\n"
-"maos -c scao_ngs.conf -s 2 -n 2 -d -o scao_ngs override.conf chol.conf\n"
-"       # Run a single conjugate natural guide star case, with seed 2, 2 threads\n"
-"       # detach from the terminal and output results to folder scao_ngs\n"
-"       # and read in overriding parameters stored in override.conf and chol.conf\n"
-"\n"
-"Options: \n"
-"-h, --help        to print out this message\n"
-"-d, --detach      to detach from terminal and run in background\n"
-"-f, --force       force starting simulation without scheduler\n"
-"-n, --nthread=N   Use N threads, default is 1\n"
-"-o, --output=DIR  output the results to DIR.\n"
-"-c, --conf=FILE.conf\n"
-"                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
-"-p, --path=dir    Add dir to the internal PATH\n"
-"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
-"-G, --ngpu=N'     Use a total of N gpus.\n"
-"-r, --run=host    Run the job in another host.\n"
-	  );
+	"Usage: maos [OPTION...] [FILE]...\n"
+	"maos is a simulation tool developed to adaptive optics systems\n\n"
+	"Examples:\n"
+	"maos   # Run the default configuration of NFIRAOS: nfiaros.conf as the baseline.\n"
+	"maos -c scao_ngs.conf -s 2 -n 2 -d -o scao_ngs override.conf chol.conf\n"
+	"       # Run a single conjugate natural guide star case, with seed 2, 2 threads\n"
+	"       # detach from the terminal and output results to folder scao_ngs\n"
+	"       # and read in overriding parameters stored in override.conf and chol.conf\n"
+	"\n"
+	"Options: \n"
+	"-h, --help        to print out this message\n"
+	"-d, --detach      to detach from terminal and run in background\n"
+	"-f, --force       force starting simulation without scheduler\n"
+	"-n, --nthread=N   Use N threads, default is 1\n"
+	"-o, --output=DIR  output the results to DIR.\n"
+	"-c, --conf=FILE.conf\n"
+	"                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
+	"-p, --path=dir    Add dir to the internal PATH\n"
+	"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic\n"
+	"-G, --ngpu=N'     Use a total of N gpus.\n"
+	"-r, --run=host    Run the job in another host.\n"
+	);
     exit(0);
 }
 
 /**
    Parse command line arguments argc, argv
- */
+*/
 ARG_T * parse_args(int argc, const char *argv[]){
     ARG_T *arg=mycalloc(1,ARG_T);
     char *host=NULL;
@@ -635,7 +635,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 }
 /**
    Compute spherical aberration
- */
+*/
 void lgs_wfs_sph_psd(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon, const int iwfs){
     int ipowfs=parms->wfs[iwfs].powfs;
     /*First save matched filter and i0*/
@@ -728,7 +728,7 @@ typedef struct {
     int isa;
 }mapdata_t;
 /**
-  The function to evaluate the result at x.
+   The function to evaluate the result at x.
 */
 static double mapfun(double *x, mapdata_t *info){
     const dmat *ints=info->ints;
@@ -874,39 +874,83 @@ void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, i
 /**
    Find peak, then using parabolic fit on 3x3 window around it.
 */
-
-void parabolic_peak(double *grad, dmat *corr){
+/*
+  void parabolic_peak_fit(double *grad, dmat *corr){
+  double valmax=0;
+  int jy=0, jx=0;
+  //Find Peak location (jx, jy)
+  for(int iy=1; iy<corr->ny-1; iy++){
+  for(int ix=1; ix<corr->nx-1; ix++){
+  if(IND(corr,ix,iy)>valmax){
+  jy=iy; jx=ix;
+  valmax=IND(corr,ix,iy);
+  }
+  }
+  }
+  //Calculate 1d sum of 3 row/columns.
+  double vx[3], vy[3];
+  for(long iy=0; iy<3; iy++){
+  vy[iy]=0; vx[iy]=0;
+  for(long ix=0; ix<3; ix++){
+  vy[iy]+=IND(corr, ix+jx-1, iy+jy-1);
+  vx[iy]+=IND(corr, iy+jx-1, ix+jy-1);
+  }
+  }
+  //Parabolic fit.
+  double px[2], py[2];
+  px[0]=(vx[0]+vx[2])*0.5-vx[1];
+  py[0]=(vy[0]+vy[2])*0.5-vy[1];
+  px[1]=(vx[2]-vx[0])*0.5;
+  py[1]=(vy[2]-vy[0])*0.5;
+  //Center
+  grad[0]=px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
+  grad[1]=py[0]==0?0:(-py[1]/(2*py[0])+jy-(corr->ny-1)*0.5);
+  }
+*/
+/**
+   Fit 3 points around the peak of a 1-d profile.
+*/
+double parabolic_peak_1d(dmat *corr){
     double valmax=0;
-    int jy=0, jx=0;
-    //Find Peak location (jx, jy)
-    for(int iy=1; iy<corr->ny-1; iy++){
-	for(int ix=1; ix<corr->nx-1; ix++){
-	    if(IND(corr,ix,iy)>valmax){
-		jy=iy; jx=ix;
-		valmax=IND(corr,ix,iy);
-	    }
-	}
-    }
-    //Calculate 1d sum 
-    double vx[3], vy[3];
-    for(long iy=0; iy<3; iy++){
-	vy[iy]=0; vx[iy]=0;
-	for(long ix=0; ix<3; ix++){
-	    vy[iy]+=IND(corr, ix+jx-1, iy+jy-1);
-	    vx[iy]+=IND(corr, iy+jx-1, ix+jy-1);
+    int jx=0;
+    for(int ix=1; ix<corr->nx-1; ix++){
+	if(IND(corr,ix)>valmax){
+	    jx=ix;
+	    valmax=IND(corr,ix);
 	}
     }
     //Parabolic fit.
-    double px[2], py[2];
-    px[0]=(vx[0]+vx[2])*0.5-vx[1];
-    py[0]=(vy[0]+vy[2])*0.5-vy[1];
-    px[1]=(vx[2]-vx[0])*0.5;
-    py[1]=(vy[2]-vy[0])*0.5;
-    //Center
-    grad[0]=px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
-    grad[1]=py[0]==0?0:(-py[1]/(2*py[0])+jy-(corr->ny-1)*0.5);
+    double px[2];
+    px[0]=(IND(corr, jx+1)+IND(corr, jx-1))*0.5-IND(corr, jx);
+    px[1]=(IND(corr, jx+1)-IND(corr, jx-1))*0.5;
+    return px[0]==0?0:(-px[1]/(2*px[0])+jx-(corr->nx-1)*0.5);
 }
-
+/**
+   First sum along 1 dimension, then fit 3 points around the peak. More robust than the old method.
+*/
+void parabolic_peak_sum(double *grad, dmat *corr, int nbox){
+    const long nx=corr->nx;
+    const long ny=corr->ny;
+    if(nbox<=0 || nbox>nx) nbox=nx;
+    if(nbox<=0 || nbox>ny) nbox=ny;
+    dmat *corrx=dnew(nbox,1);
+    dmat *corry=dnew(nbox,1);
+    const long offx=(nx-nbox)/2;
+    const long offy=(ny-nbox)/2;
+    for(int iy=0; iy<nbox; iy++){
+	for(int ix=0; ix<nbox; ix++){
+	    IND(corrx, ix)+=IND(corr, ix+offx, iy+offy);
+	    IND(corry, iy)+=IND(corr, ix+offx, iy+offy);
+	}
+    }
+    grad[0]=parabolic_peak_1d(corrx);
+    grad[1]=parabolic_peak_1d(corry);
+    if (0){
+	info("grad=%g, %g\n", grad[0], grad[1]);
+	writebin(corr, "corr");
+	exit(0);
+    }
+}
 /**
    Calculate gradients using current specified algorithm
 */
@@ -943,14 +987,15 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     dmat *corr=0;
     if(parms->powfs[ipowfs].sigmatch==2){
 	for(int isa=0; isa<nsa; isa++){
-	    const double thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
-	    const double offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
-	    for(int ip=0; ip<ints[isa]->nx*ints[isa]->ny; ip++){
-		double sig=ints[isa]->p[ip]-offset;
-		if(sig>thres){
-		    i1sum+=sig;
-		}
-	    }
+	    i1sum+=dsum(ints[isa]);//Disable the following to match GPU code.
+	    /*const double thres=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2];
+	      const double offset=powfs[ipowfs].cogcoeff->p[wfsind]->p[isa*2+1];
+	      for(int ip=0; ip<ints[isa]->nx*ints[isa]->ny; ip++){
+	      double sig=ints[isa]->p[ip]-offset;
+	      if(sig>thres){
+	      i1sum+=sig;
+	      }
+	      }*/
 	}
     }
 
@@ -982,6 +1027,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 		break;
 	    case 2://normalized use scaled current intensity (non-linear)
 		sumi=powfs[ipowfs].saa->p[isa]*(i1sum/powfs[ipowfs].saasum);
+		warning_once("Please verify implementation is correct\n");
 		break;
 	    }
 	    dcog(geach,ints[isa],0.,0.,
@@ -992,15 +1038,27 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	  
 	}
 	    break;
-	case 3:{//MAP: This algorithm is not very useful.
+	case 3:{//MAP: (to be removed. This algorithm is not very useful.)
 	    geach[0]=pgradx[isa];//warm restart
 	    geach[1]=pgrady[isa];
 	    maxapriori(geach, ints[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
 	}
 	    break;
-	case 4:{//Correlation.
+	case 4:{//Correlation. Peak first.
 	    dcorr(&corr, ints[isa], powfs[ipowfs].intstat->i0->p[isa]);
-	    parabolic_peak(geach, corr);
+	    dpara3(geach, corr);
+	    if((fabs(geach[0])+fabs(geach[1]))>powfs[ipowfs].pixpsax){
+		warning_once("wfs %d, subaperture %d has incorrect gradient measurement\n", iwfs, isa);
+		geach[0]=0;
+		geach[1]=0;
+	    }
+	    geach[0]*=pixthetax;
+	    geach[1]*=pixthetay;
+	}
+	    break;
+	case 5:{//Correlation. Sum first (to be removed. Not working well)
+	    dcorr(&corr, ints[isa], powfs[ipowfs].intstat->i0->p[isa]);
+	    parabolic_peak_sum(geach, corr, 5);
 	    geach[0]*=pixthetax;
 	    geach[1]*=pixthetay;
 	}
@@ -1020,4 +1078,27 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	pgrady[isa]=geach[1];
     }//for isa
     dfree(corr);
+}
+/**
+   Read cell array from file specified by whole name or prefix.
+*/
+dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs){
+    dcell *nea=0;
+    if(!file){
+	nea=0;
+    }else if(zfexist(file)){
+	//info("using %s\n", file);
+	nea=dcellread(file);
+    }else if(zfexist("%s_powfs%d.bin", file, ipowfs)){
+	//info("using %s_powfs%d.bin\n", file, ipowfs);
+	nea=dcellread("%s_powfs%d.bin", file, ipowfs);
+    }else{
+	nea=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	for(int jwfs=0; jwfs<nea->nx; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+	    //info("using %s_wfs%d.bin\n", file, iwfs);
+	    nea->p[jwfs]=dread("%s_wfs%d.bin", file, iwfs);
+	}
+    }
+    return nea;
 }

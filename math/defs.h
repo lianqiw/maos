@@ -26,6 +26,8 @@
 #ifndef AOS_MATH_DEFS_H
 #define AOS_MATH_DEFS_H
 #undef COMPLEX
+#undef IMAG
+#undef REAL
 #undef MAT_TYPE
 #undef XR
 #undef XC
@@ -85,9 +87,11 @@
 #define M_SPT64 M_CSP64
 #define M_SPT32 M_CSP32
 #define COMPLEX DCOMPLEX
+#define REAL creal
+#define IMAG cimag
 #define RANDU(A) COMPLEX(randu(A),randu(A))
 #define RANDN(A) COMPLEX(randn(A),randn(A))
-#define PRINT(A) info("(%10.3e %10.3eI)",creal(A),cimag(A));
+#define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define DOT dotcmp
 #define EXPI(A) COMPLEX(cos(A),sin(A))
 #endif
@@ -121,9 +125,11 @@
 #define M_SPT64 M_ZSP64
 #define M_SPT32 M_ZSP32
 #define COMPLEX FCOMPLEX
+#define REAL creal
+#define IMAG cimag
 #define RANDU(A) COMPLEX((float)randu(A),(float)randu(A))
 #define RANDN(A) COMPLEX((float)randn(A),(float)randn(A))
-#define PRINT(A) info("(%10.3e %10.3eI)",crealf(A),cimagf(A));
+#define PRINT(A) info("(%10.3e %10.3eI)",REAL(A),IMAG(A));
 #define DOT dotzmp
 #define EXPI(A) COMPLEX(cosf(A),sinf(A))
 #endif/*#define USE_COMPLEX */

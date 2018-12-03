@@ -521,7 +521,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #endif
 #define seotfj se_save->p[3*ith]
 #define seotfk se_save->p[3*ith+1]
-#define sepsf se_save->p[3*ith+2]
+//#define sepsf se_save->p[3*ith+2]
 		if(!seotfk){
 		    seotfk=cnew(ncompx,ncompy);
 		}
@@ -554,9 +554,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(dsum(IND(psepsf,isa,iwvl))>1.1){
 		    error("Short exposure PSF has wrong scaling. It should total to <=1\n");
 		}
-		ccpd(&sepsf,IND(psepsf,isa,iwvl));
 		/*C_ABS causes sum of PSF to increase when there are negative values. Switch to literal copy.*/
-		cembed(seotfk, sepsf, angle);//if radrot: rotate from x/y to r/a coordinate
+		cembedd(seotfk, IND(psepsf,isa,iwvl), angle);//if radrot: rotate from x/y to r/a coordinate
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF, peak in corner, max is 1 */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){

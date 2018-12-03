@@ -296,7 +296,8 @@ Real curinn(const curmat &a, const curmat &b, cudaStream_t stream){
     DO(cudaMalloc(&res, sizeof(Real)));
     cudaMemsetAsync(res, 0, sizeof(Real), stream);
     inn_wrap(res, a.P(), b.P(), a.Nx()*a.Ny(), stream);
-    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, res, sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);//this command is not synchrnous.
     return out;
 }
@@ -304,20 +305,23 @@ Real curinn(const curmat &a, const curmat &b, cudaStream_t stream){
 /**
    Sum all the elements in an array.
  */
-void cursum2(Real *restrict res, const curmat &a, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(Real), stream);
+void cursum2(Real *restrict res,/**<Result in GPU*/
+	     const curmat &a,   /**<Source in GPU*/
+	     cudaStream_t stream){
+    cudaMemsetAsync(res, 0, sizeof(Real), stream);
     sum_wrap(res, a.P(), a.Nx()*a.Ny(), stream);
 }
 /**
    Sum all the elements in an array, and return a value.
 */
 Real cursum(const curmat &a, cudaStream_t stream){
-    Real out;
-    Real *res;
+    Real out;//result in CPU.
+    Real *res;//result in GPU
     DO(cudaMalloc(&res, sizeof(Real)));
     cudaMemsetAsync(res, 0, sizeof(Real), stream);
     sum_wrap(res, a.P(), a.Nx()*a.Ny(), stream);
-    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, res, sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);
     return out;
 }
@@ -332,7 +336,8 @@ Real curmax(const curmat &a, cudaStream_t stream){
     cudaMemsetAsync(res, 0, sizeof(Real), stream);
     int n=a.Nx()*a.Ny();
     max_wrap(res, a.P(), n, stream);
-    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, res, sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);
     return out;
 }
@@ -347,7 +352,8 @@ Real curmaxabs(const curmat &a, cudaStream_t stream){
     cudaMemsetAsync(res, 0, sizeof(Real), stream);
     int n=a.Nx()*a.Ny();
     maxabs_wrap(res, a.P(), n, stream);
-    cudaMemcpyAsync(&out, res, sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, res, sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);
     return out;
 }
@@ -367,7 +373,8 @@ Real curcellmax(const curcell &a, cudaStream_t stream){
     if(n>1) {
 	max_wrap(&res[n], res, n, stream);
     }
-    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);
     return out;
 }
@@ -387,7 +394,8 @@ Real curcellmaxabs(const curcell &a, cudaStream_t stream){
     if(n>1) {
 	maxabs_wrap(&res[n], res, n, stream);
     }
-    cudaMemcpyAsync(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, &res[n>1?n:0], sizeof(Real), cudaMemcpyDeviceToHost);
     cudaFree(res);
     return out;
 }
