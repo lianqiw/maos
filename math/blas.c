@@ -282,10 +282,13 @@ X(mat)* X(chol)(const X(mat) *A){
     Z(potrf)("L", &n, B->p, &n, &info);
     if(info){
 	writebin(A, "error_chol_A");
+	if(A->nx + A->ny < 20){
+	    X(show)(A, "chol_A");
+	}
 	if(info<0){
 	    error("The %td-th parameter has an illegal value\n", -info);
 	}else{
-	    error("The leading minor of order %td is not posite denifite\n", info);
+	    error("The leading minor of order %td is not posite definite\n", info);
 	}
     }else{/*Zero out the upper diagonal. For some reason they are not zero. */
 	X(mat)*  Bp=B;

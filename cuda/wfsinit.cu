@@ -107,8 +107,8 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
 	const int nsa=powfs[ipowfs].saloc->nloc;
 	if(parms->powfs[ipowfs].usephy){
-	    if(parms->powfs[ipowfs].phytype_sim==1){
-		if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+	    if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+		if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
 		    int icol=powfs[ipowfs].intstat->mtche->ny>1?wfsind:0;
 		    dcell *mtchec=dcellsub(powfs[ipowfs].intstat->mtche, 0, 0, icol, 1);
 		    dmat *mtche=concat_dcell_as_vector(mtchec);
@@ -120,13 +120,15 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 		    }
 		    cp2gpu(cuwfs[iwfs].mtche, mtche);
 		    dfree(mtche);
-		    cp2gpu(cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*icol, nsa, 1);
-		    cuwfs[iwfs].i0sumsum=powfs[ipowfs].intstat->i0sumsum->p[icol];
-		}else{
-		    cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
-		    cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
-		    cuwfs[iwfs].i0sumsum=cuwfs[iwfs0].i0sumsum;
 		}
+		if(powfs[ipowfs].intstat->i0sum){
+		    cp2gpu(cuwfs[iwfs].i0sum,PINDR(powfs[ipowfs].intstat->i0sum,wfsind,0),nsa,1);
+		    cuwfs[iwfs].i0sumsum=INDR(powfs[ipowfs].intstat->i0sumsum,wfsind,0);
+		}
+	    }else{
+		cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
+		cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
+		cuwfs[iwfs].i0sumsum=cuwfs[iwfs0].i0sumsum;
 	    }
 	}
     }

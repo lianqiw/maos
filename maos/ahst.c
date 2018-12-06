@@ -111,16 +111,13 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 	    }
 
 	    for(int jmod=0; jmod<nmod; jmod++){
-		/*if(parms->save.setup){
-		    writedbl(mod[jmod], nloc, 1, "ahst_mode_%d", jmod);
-		    }*/
 		for(int imod=jmod; imod<nmod; imod++){
-		    if(imod<2&&jmod<2) continue;
+		    if(imod<2 && jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
-		    IND(MCC,jmod,imod)=tmp;
-		    if(imod!=jmod){
+		    IND(MCC,imod,jmod)=IND(MCC,jmod,imod)=tmp;
+		    /*if(imod!=jmod){
 			IND(MCC,imod,jmod)=IND(MCC,jmod,imod);
-		    }
+			}*/
 		}
 	    }
 	}//for(ievl)
@@ -351,8 +348,10 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     if(isfinite(hs)){
 	//LGS WFS.
 	if(ndm==2){//Plate scale mode
-	    ngsmod->indps=ngsmod->nmod;
-	    ngsmod->nmod+=3;
+	    if(parms->evl.nevl>1){//cannot determine plate scale with only 1 direction.
+		ngsmod->indps=ngsmod->nmod;
+		ngsmod->nmod+=3;
+	    }
 	}else if(parms->nhiwfs>1){//Astigmatism for LTAO
 	    ngsmod->indastig=ngsmod->nmod;
 	    ngsmod->nmod+=2;

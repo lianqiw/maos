@@ -954,7 +954,7 @@ void parabolic_peak_sum(double *grad, dmat *corr, int nbox){
 /**
    Calculate gradients using current specified algorithm
 */
-void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype){
+void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, const int iwfs, const int phytype){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int nsa=powfs[ipowfs].saloc->nloc;
     const double rne=parms->powfs[ipowfs].rne;
@@ -964,6 +964,13 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
     double *i0sum=NULL;
     double i0sumg=0;
     if(phytype==1){
+	mtche=PINDR(powfs[ipowfs].intstat->mtche, 0, wfsind);
+    }
+    if(powfs[ipowfs].intstat->i0sum){
+	i0sum=PINDR(powfs[ipowfs].intstat->i0sum, 0, wfsind);
+	i0sumg=INDR(powfs[ipowfs].intstat->i0sumsum, wfsind, 0);
+    }
+    /*if(phytype==1){
 	if(powfs[ipowfs].intstat->mtche->ny==1){
 	    mtche=powfs[ipowfs].intstat->mtche->p;
 	    i0sum=powfs[ipowfs].intstat->i0sum->p;
@@ -972,8 +979,8 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
 	    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
 	    i0sumg=powfs[ipowfs].intstat->i0sumsum->p[wfsind];
-	}
-    }
+	    }
+	    }*/
     const double *srot=(parms->powfs[ipowfs].radpix)?INDR(powfs[ipowfs].srot, wfsind, 0)->p:NULL;
     double pixthetax=parms->powfs[ipowfs].radpixtheta;
     double pixthetay=parms->powfs[ipowfs].pixtheta;
@@ -998,7 +1005,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	      }*/
 	}
     }
-
+    double sigtot=parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
     for(int isa=0; isa<nsa; isa++){
 	double geach[3]={0,0,1};
 	switch(phytype){
@@ -1021,7 +1028,11 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	    double sumi=0;
 	    switch(parms->powfs[ipowfs].sigmatch){
 	    case 0://normalization use model intensity (linear model)
-		sumi=powfs[ipowfs].saa->p[isa]*parms->powfs[ipowfs].siglev;
+		if(i0sum){
+		    sumi=i0sum[isa];
+		}else{
+		    sumi=sigtot*powfs[ipowfs].saa->p[isa];
+		}
 		break;
 	    case 1://normalization use current intensity (non-linear)
 		break;
@@ -1066,7 +1077,7 @@ void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS
 	default:
 	    error("Invalid");
 	}
-	if(phytype>2 && srot){
+	if(phytype>1 && srot){
 	    double theta=srot[isa];
 	    double cx=cos(theta);
 	    double sx=sin(theta);

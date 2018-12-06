@@ -82,7 +82,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int iwfs=info->start;
     const PARMS_T *parms=simu->parms;
     const int ipowfs=parms->wfs[iwfs].powfs;
-    if(isim<parms->powfs[ipowfs].step) return;
+    //if(isim<parms->powfs[ipowfs].step) return;
     assert(iwfs<parms->nwfs);
     /*
       simu->gradcl is CL grad output (also for warm-restart of maxapriori
@@ -112,7 +112,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int noisy=parms->powfs[ipowfs].noisy;
     /*The following depends on isim */
     /*const int dtrat_reset=(isim%dtrat==0); */
-    const int dtrat_output=(isim+1-parms->powfs[ipowfs].step)%dtrat==0;
+    const int dtrat_output=(isim+1)%dtrat==0;
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
     const int do_geom=(!do_phy || save_gradgeom || do_pistatout) && parms->powfs[ipowfs].type==0;
@@ -123,7 +123,7 @@ void wfsgrad_iwfs(thread_t *info){
     dcell *ints=simu->ints->p[iwfs];
     dmat  *opd=simu->wfsopd->p[iwfs];
     dzero(opd);
-    if((isim-parms->powfs[ipowfs].step)%dtrat==0){
+    if(isim%dtrat==0){
 	dcellzero(ints);
 	dzero(*gradacc);
     }
@@ -681,7 +681,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
 	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
 	   && simu->Mint_lo && simu->Mint_lo->mint->p[1]
 	   && simu->isim+1>parms->powfs[ipowfs].step
-	   && (simu->isim+1-parms->powfs[ipowfs].step)%parms->powfs[ipowfs].dtrat==0){
+	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
 	    /*In new ahst mode, the first plate scale mode contains focus for
 	      lgs. But it turns out to be not necessary to remove it because the
 	      HPF in the LGS path removed the influence of this focus mode. set
@@ -697,7 +697,7 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
     dcell *LGSfocus=simu->LGSfocus;//computed in wfsgrad_post from gradcl.
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(simu->isim<parms->powfs[ipowfs].step) continue;
-	if(parms->sim.closeloop && (simu->isim+1-parms->powfs[ipowfs].step)%parms->sim.dtrat_hi!=0) continue;
+	if(parms->sim.closeloop && (simu->isim+1)%parms->sim.dtrat_hi!=0) continue;
 	if(!parms->powfs[ipowfs].llt) continue;
 	const int do_phy=(parms->powfs[ipowfs].usephy && simu->isim>=parms->powfs[ipowfs].phystep);
 	if(!do_phy) continue;
@@ -782,7 +782,7 @@ void wfsgrad_post(thread_t *info){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int dtrat=parms->powfs[ipowfs].dtrat;
 	if(isim<parms->powfs[ipowfs].step) continue;
-	const int dtrat_output=((isim+1-parms->powfs[ipowfs].step)%dtrat==0);
+	const int dtrat_output=((isim+1)%dtrat==0);
 	const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
 	dmat **gradout=&simu->gradcl->p[iwfs];
 	/* copy fsmreal to output  */
@@ -872,7 +872,7 @@ static void wfsgrad_dither_post(SIM_T *simu){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].dither) continue;
 	if(simu->isim<parms->powfs[ipowfs].step) continue;
-	if((simu->isim+1-parms->powfs[ipowfs].step)%parms->powfs[ipowfs].dtrat!=0) continue;
+	if((simu->isim+1)%parms->powfs[ipowfs].dtrat!=0) continue;
 	const int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	const int npll=parms->powfs[ipowfs].dither_pllrat;

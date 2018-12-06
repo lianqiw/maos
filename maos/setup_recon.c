@@ -232,7 +232,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    }
 		}
 		double nea_mean=sqrt(nea2_sum/nea2_count*0.5);
-		recon->neam->p[iwfs]=nea_mean/sqrt(TOMOSCALE);
+		recon->neam->p[iwfs]=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
 		if(nea_mean>pixtheta*2
 		   && parms->powfs[ipowfs].usephy
 		   && parms->powfs[ipowfs].order==1 
@@ -250,7 +250,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		dcellfree(sanea2);
 		dcellfree(sanea2l);
 		dcellfree(sanea2i);
-		dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
+		if(!parms->powfs[ipowfs].skip){
+		    dspscale(recon->saneai->p[iwfs+iwfs*nwfs], TOMOSCALE);
+		}
 	    }else if(do_ref){
 		sanea->p[iwfs+iwfs*nwfs] =dspref( sanea->p[iwfs0+iwfs0*nwfs]);
 		saneal->p[iwfs+iwfs*nwfs]=dspref(saneal->p[iwfs0+iwfs0*nwfs]);
@@ -293,7 +295,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    }else{
 		neatype="geom";
 	    }
-	    info("%s(%.2f) ", neatype, recon->neam->p[iwfs]*206265000*sqrt(TOMOSCALE));
+	    info("%s(%.2f) ", neatype, recon->neam->p[iwfs]*206265000*(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE)));
 	}
     }
     info("\n");

@@ -1434,9 +1434,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    /*round phystep to be multiple of dtrat. */
 	    powfsi->phystep=((powfsi->phystep+powfsi->dtrat-1)/powfsi->dtrat)*powfsi->dtrat;
 	}
-	if(powfsi->phystep>=0 && powfsi->phystep < powfsi->step){
+	/*if(powfsi->phystep>=0 && powfsi->phystep < powfsi->step){
 	    powfsi->phystep=powfsi->step;
-	}
+	    }*/
 	if(powfsi->fieldstop>0){
 	    if(powfsi->fieldstop>10 || powfsi->fieldstop<1e-4){
 		warning("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, powfsi->fieldstop);
@@ -1536,12 +1536,13 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		if(parms->powfs[ipowfs].step<parms->powfs[lgspowfs].dither_pllskip){
 		    parms->powfs[ipowfs].step=parms->powfs[lgspowfs].dither_pllskip;
 		}
-		//floor to multiple of dtrat.
-		const int dtrat=parms->powfs[ipowfs].dtrat;
-		parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
-		warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
 	    }
 	}
+	//floor to multiple of dtrat.
+	const int dtrat=parms->powfs[ipowfs].dtrat;
+	if(parms->powfs[ipowfs].step<0) parms->powfs[ipowfs].step=0;
+	parms->powfs[ipowfs].step=((parms->powfs[ipowfs].step+dtrat-1)/dtrat)*dtrat;
+	//warning("powfs %d step is set to %d, dtrat=%d\n", ipowfs, parms->powfs[ipowfs].step, dtrat);
     }
     parms->hipowfs_hs=INFINITY;
     parms->hipowfs=lnew(parms->npowfs, 1);
@@ -1600,7 +1601,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		error("powfs %d radpixtheta<0\n", ipowfs);
 	    }
 	}
-	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
+	if (parms->powfs[ipowfs].phystep>parms->powfs[ipowfs].step || parms->save.gradgeom){
 	    parms->powfs[ipowfs].needGS0=1;
 	}else{
 	    parms->powfs[ipowfs].needGS0=0;
@@ -1612,8 +1613,16 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}else{
 	    parms->powfs[ipowfs].usephy=0;
 	}
-	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].type==0 && parms->powfs[ipowfs].sigmatch==2){
-	    warning("sigmatch==2 is not working well with SHWFS and offset/threshold is not implemented in CUDA.\n");
+	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].sigmatch==-1){
+	    if(parms->powfs[ipowfs].type==0){
+		if(parms->powfs[ipowfs].phytype_sim==2){//CoG
+		    parms->powfs[ipowfs].sigmatch=1;
+		}else{//Others
+		    parms->powfs[ipowfs].sigmatch=0;
+		}
+	    }else if(parms->powfs[ipowfs].type==1){
+		parms->powfs[ipowfs].sigmatch=2;
+	    }
 	}
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. "

@@ -162,7 +162,7 @@ static void mtche(Real *restrict grad, Real (*mtches)[2],
     }
 }
 /**
-   Apply tCoG.
+   Apply tCoG. /todo: replace atomicAdd by reduction.
 */
 __global__ static void tcog_do(Real *grad, const Real *restrict ints, Real siglev, Real *saa,
 			       int nx, int ny, Real pixthetax, Real pixthetay, int nsa, Real (*cogcoeff)[2], Real *srot){
@@ -186,9 +186,10 @@ __global__ static void tcog_do(Real *grad, const Real *restrict ints, Real sigle
     __syncthreads();
     if(threadIdx.x==0 && threadIdx.y==0){
 	if(saa){
-	    sum[0]=siglev*saa[isa];
+	    Real sum2=siglev*saa[isa];
+	    if(sum[0]<sum2) sum[0]=sum2;
 	}
-	if(Z(fabs)(sum[0])>0){
+	if(sum[0]>thres){
 	    Real gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;
 	    Real gy=(sum[2]/sum[0]-(ny-1)*0.5)*pixthetay;
 	    if(srot){
@@ -348,7 +349,7 @@ void gpu_wfsgrad_queue(thread_t *info){
 	curmat gradacc=cuwfs[iwfs].gradacc;
 	curmat gradcalc=cuwfs[iwfs].gradcalc;
 	curmat gradref=0;
-	if((isim-parms->powfs[ipowfs].step)%dtrat==0){
+	if(isim%dtrat==0){
 	    cuzero(cuwfs[iwfs].ints, stream);
 	    cuzero(cuwfs[iwfs].gradacc, stream);
 	}
@@ -530,24 +531,28 @@ void gpu_wfsgrad_queue(thread_t *info){
 		    Real pixthetay=(Real)parms->powfs[ipowfs].pixtheta;
 		    int pixpsax=powfs[ipowfs].pixpsax;
 		    int pixpsay=powfs[ipowfs].pixpsay;
-		    double siglev=0;
+		    Real scale1=0;
+		    Real *scale2=0;
 		    switch(parms->powfs[ipowfs].sigmatch){
 		    case 0://No signal level match. Use sum(i0) as denominator. Linear.
-			siglev=parms->powfs[ipowfs].siglev;
+			//scale1=parms->powfs[ipowfs].siglev*parms->powfs[ipowfs].dtrat;
+			//scale2=cupowfs[ipowfs].saa.P();
+			//The following is preferred.
+			scale1=1.f;
+			scale2=cuwfs[iwfs].i0sum.P();
 			break;
 		    case 1://Use instantaneous intensity of each sa
-			siglev=0;
 			break;
 		    case 2://Use averaged instantaneous intensity.
-			siglev=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
+			scale1=cursum(ints.M(),stream)/powfs[ipowfs].saasum;
+			scale2=cupowfs[ipowfs].saa.P();
 			break;
 		    default:
 			error("Invalid sigmatch\n");
 		    }
-		    Real *saa=(parms->powfs[ipowfs].sigmatch!=1)?cupowfs[ipowfs].saa.P():0;
 		    Real *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot.P():NULL;
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
-			(gradcalc, ints[0], siglev, saa,
+			(gradcalc, ints[0], scale1, scale2,
 			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, 
 			 (Real(*)[2])cuwfs[iwfs].cogcoeff.P(), srot);
 		}

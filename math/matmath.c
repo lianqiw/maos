@@ -730,10 +730,10 @@ void X(cog)(R *grad,const X(mat) *im,R offsetx, R offsety,
 	    }
 	}
     }
-    if(flux>0){//linerize CoG by overriding sum
-	sum=flux;
+    if(sum < flux){//linerize CoG by overriding sum, but only if sum is too small.
+	sum = flux;
     }
-    if(fabs(sum)>0){
+    if(sum > thres){
 	grad[0]=sumx/sum-((R)(im->nx-1)*0.5+offsetx);
 	grad[1]=sumy/sum-((R)(im->ny-1)*0.5+offsety);
     }else{

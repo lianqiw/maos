@@ -127,7 +127,8 @@ void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    int lo_output=parms->ntipowfs && (!parms->sim.closeloop || (isim+1-parms->step_lo)%parms->sim.dtrat_lo==0);
+    int lo_output=parms->ntipowfs && (!parms->sim.closeloop
+				      || ((isim>=parms->step_lo) && ((isim+1-parms->step_lo)%parms->sim.dtrat_lo==0)));
     if(parms->recon.split==2){
 	if(!parms->gpu.tomo){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
