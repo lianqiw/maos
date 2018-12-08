@@ -891,6 +891,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.psddtrat);
     READ_INT(recon.psddtrat_lo); 
     READ_INT(recon.psddtrat_twfs);
+    READ_DBL(recon.psdservo_gain);
     READ_INT(recon.psdnseg);
     READ_STR(recon.fnsphpsd);
 }

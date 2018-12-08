@@ -226,9 +226,8 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		double xx=x[iloc]*x[iloc];
 		double xy=x[iloc]*y[iloc];
 		double yy=y[iloc]*y[iloc];
-		/*remove piston in focus */
 		if(ngsmod->indps){
-		    if(ngsmod->ahstfocus){
+		    if(ngsmod->ahstfocus){//no focus mode at ps
 			IND(mod,iloc,ngsmod->indps)=amp[iloc]
 			    *(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
 		    }else{
@@ -247,7 +246,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		    IND(mod,iloc,ngsmod->indastig)=amp[iloc]*(xx-yy);
 		    IND(mod,iloc,ngsmod->indastig+1)=amp[iloc]*(xy);
 		}
-		if(ngsmod->indfocus){
+		if(ngsmod->indfocus){ /*remove piston in focus */
 		    IND(mod,iloc,ngsmod->indfocus)=amp[iloc]*(xx+yy-MCC_fcp);
 		}
 	    }
@@ -683,7 +682,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 		}
 		if(ngsmod->indps){//ps mode
 		    if(ngsmod->ahstfocus){
-			focus+=pm[ngsmod->indps]*scale;//scaled to avoid cause focus mode in science.
+			focus+=pm[ngsmod->indps]*scale;//scaled to avoid focus mode in science.
 		    }else{
 			focus+=pm[ngsmod->indps];
 		    }
@@ -795,11 +794,10 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     if(!dmerr) return;
     const RECON_T *recon=simu->recon;
     const NGSMOD_T *ngsmod=recon->ngsmod;
-
-    dcellzero(simu->Mngs);
+    dcellzero(simu->Mngs); 
     dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn",1);
     double *mngs=simu->Mngs->p[0]->p;
-    if(ngsmod->indastig){
+    if(ngsmod->indastig){//LTAO
 	//Temporary: remove LPF'ed focus/astigmatism from LGS DM command.
 	if(!simu->ngsmodlpf){
 	    simu->ngsmodlpf=dnew(3,1);
@@ -814,10 +812,11 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
     }
     if(ngsmod->indfocus && simu->parms->sim.mffocus){
-	//zero out global focus mode if any so we don't remove it from DM commands.
-	if(ngsmod->indps && ngsmod->ahstfocus){
+	//Prevent global focus mode from been removed from DM commands.
+	if(ngsmod->indps && !ngsmod->ahstfocus){
 	    const double scale=ngsmod->scale;
-	    mngs[ngsmod->indfocus]=mngs[2]*(1-scale);
+	    //Preserve the focus mode contained in PS 1 mode.
+	    mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(1-scale);
 	}else{
 	    mngs[ngsmod->indfocus]=0;
 	}

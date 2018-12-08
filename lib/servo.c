@@ -609,7 +609,7 @@ int servo_filter(SERVO_T *st, const dcell *_merr){
 	servo_typeII_filter(st, merr);
 	break;
     default:
-	error("Invalid: st->ep->nx=%ld", st->ep->nx);
+	error("Invalid: st->ep->nx=%ld\n", st->ep->nx);
     }
     dcelladd(st->mint->p, 1, st->mpreint, 1);
     return 1;

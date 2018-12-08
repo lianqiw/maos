@@ -434,6 +434,9 @@ void wfsgrad_iwfs(thread_t *info){
     info("WFS %d grad timing: atm %.2f dm %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2,tk4-tk3);
 #endif
 }
+/**
+   Calculate the amplitude of dithering signal or response based on frequency of the dithering signal.
+*/
 static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
 			      long dtrat,   /**<skip columns due to wfs/sim dt ratio*/
 			      long npoint,  /**<number of points during dithering*/
@@ -477,14 +480,6 @@ static double calc_dither_amp(dmat *dithersig, /**<array of data. nmod*nsim */
 	}
     }
     double a2m=sqrt(ipv*ipv+qdv*qdv)/nframe;
-    //writebin(dithersig, "dithersig"); exit(0);
-    /*{
-	static int count=0;
-	writebin(dithersig, "dithersig_%d", count);
-	dbg("a2m=%g, slope=%g, npoint=%ld, dtrat=%ld, detrend=%d\n", a2m, slope, npoint, dtrat, detrend);
-	count++;
-	if(count==2){ exit(0);}
-	}*/
     return a2m;
 }
 
@@ -508,7 +503,14 @@ void wfsgrad_fsm(SIM_T *simu, int iwfs){
     IND(simu->fsmerrs->p[iwfs], 1, isim)=simu->fsmerr->p[iwfs]->p[1];
 }
 
-/*Postprocessing for dithering dithersig extraction*/
+/**
+   Postprocessing for dithering dithersig extraction:
+   1. Every step: accumulate signal for phase detection.
+   2. At PLL output: determine input/output amplitude of dithering signal.
+   3. At Gain output:determine matched filter i0, gx, gy, or CoG gain.
+   4. Subtract t/t from gradients for non-comon-path (TT) dithering.
+
+*/
 static void wfsgrad_dither(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
@@ -656,8 +658,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 
 /**
    Accomplish Two tasks:
-   1) Average LGS focus measurement to drive the trombone.
-   2) High pass filter lgs focus to remove sodium range variation effact.
+   1) Use LPF'ed LGS focus measurement to drive the trombone.
+   2) HPF lgs focus on gradients to remove sodium range variation effact.
    
    We trust the focus measurement of the LGS WFS at high temporal frequency
    which NGS cannot provide due to low frame rate. After the HPF on lgs

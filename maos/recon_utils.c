@@ -248,6 +248,7 @@ static void Tomo_prop_do(thread_t *info){
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
 		double scale=1. - ht/hs;
+		if(scale<0) continue;
 		memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 		xmap.p=data->xin->p[ips]->p;
 		prop_grid_stat(&xmap, recon->ploc->stat, xx->p, 1, 
@@ -347,6 +348,7 @@ static void Tomo_iprop_do(thread_t *info){
 		    displace[1]+=simu->atm->p[ips0]->vy*delay;
 		}
 		double scale=1. - ht/hs;
+		if(scale<0) continue;
 		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);
 	    }
@@ -498,6 +500,7 @@ void FitR(dcell **xout, const void *A,
 		const double ht = parms->atm.ht->p[ips]-fit->floc->ht;
 		double scale=1-ht/hs;
 		double displace[2];
+		if(scale<0) continue;
 		displace[0]=fit->thetax->p[ifit]*ht-simu->atm->p[ips]->vx*isim*parms->sim.dt;
 		displace[1]=fit->thetay->p[ifit]*ht-simu->atm->p[ips]->vy*isim*parms->sim.dt;
 		prop_grid(simu->atm->p[ips], fit->floc, xp->p[ifit]->p, 
@@ -515,6 +518,7 @@ void FitR(dcell **xout, const void *A,
 		const double ht = fit->xloc->p[ips]->ht-fit->floc->ht;
 		double scale=1-ht/hs;
 		double displace[2];
+		if(scale<0) continue;
 		displace[0]=fit->thetax->p[ifit]*ht;
 		displace[1]=fit->thetay->p[ifit]*ht;
 		prop_nongrid(fit->xloc->p[ips], xin->p[ips]->p, fit->floc, 
@@ -632,6 +636,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double scale=1-ht/hs;
 			double dispx=parms->evl.thetax->p[ievl]*ht;
 			double dispy=parms->evl.thetay->p[ievl]*ht;
+			if(scale<0) continue;
 			if(parms->tomo.square){/*square xloc */
 			    memcpy(&xmap, recon->xmap->p[ips], sizeof(map_t));
 			    xmap.p=opdr->p[ips]->p;
@@ -649,6 +654,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double scale=1.-ht/hs;
 			double dispx=parms->evl.thetax->p[ievl]*ht;
 			double dispy=parms->evl.thetay->p[ievl]*ht;
+			if(scale<0) continue;
 			prop_nongrid(recon->aloc->p[idm], dmadd->p[idm]->p, locs,
 				     xx->p, 1, dispx, dispy, scale, 0, 0);
 		    }

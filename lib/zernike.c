@@ -97,7 +97,8 @@ dmat* zernike(const loc_t *loc, double D, int rmin, int rmax, int flag){
 	}
 	locs->p[iloc]=atan2(locy[iloc], locx[iloc]);
     }
-    if(nover > (M_PI*D/loc->dx)*1.5){
+    if(rover > 1.5){
+	//if(nover > (M_PI*D/loc->dx)*1.5 ){
 	warning("%ld/%ld points outside unit circle with maximum radius %g\n",
 		nover, nloc, rover);
     }

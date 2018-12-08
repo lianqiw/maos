@@ -462,6 +462,7 @@ typedef struct RECON_CFG_T{
     int psddtrat;   /**<how many time step to sample for PSD computation.*/
     int psddtrat_lo;   /**<how many time step to sample for low order PSD computation.*/
     int psddtrat_twfs; /**<how many time step to sample for TWFS PSD computation.*/
+    int psdservo_gain; /**<Gain used to update servo parameter*/
     int psdnseg;    /**<#how many overlapping partitions of the time history to compute PSD.*/
     char *fnsphpsd; /**<PSD of spherical aberration due to profile evolution.*/
 }RECON_CFG_T;

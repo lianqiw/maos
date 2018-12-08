@@ -276,7 +276,7 @@ static void filter_cl(SIM_T *simu){
 	/*Low order in split tomography only. fused integrator*/
 	if(servo_filter(simu->Mint_lo, simu->Merr_lo) && parms->sim.fuseint){
 	    /*accumulate to the main integrator. Use mpreint to properly account
-	     * for type II controler.*/
+	     * for type II controler. Gain is already applied.*/
 	    addlow2dm(&simu->dmint->mint->p[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }
@@ -357,7 +357,7 @@ static void filter_cl(SIM_T *simu){
     /*hysteresis. */
     if(simu->hyst){
 	hyst_dcell(simu->hyst, simu->dmreal, simu->dmcmd);
-    }
+    }else//dmreal and dmcmd is the same.
     
     if(recon->moao && !parms->gpu.moao){
 	warning_once("moao filter implemented with LPF\n");

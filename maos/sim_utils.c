@@ -62,7 +62,6 @@ static mapcell *genatm_do(SIM_T *simu){
 	screens = parms->atm.fun(gs);
 	toc2("Atmosphere ");
     }else{
-	info("Generating Testing Atmosphere Screen\n");
 	/*
 	  create screens on two layers that produce pure
 	  tip/tilt for LGS to debug split tomography test
@@ -83,7 +82,6 @@ static mapcell *genatm_do(SIM_T *simu){
 	}
 	loc_t *psloc=0;
 	const double strength=sqrt(1.0299*pow(parms->aper.d/atm->r0, 5./3.))*(0.5e-6/(2*M_PI));//PR WFE.
-	dbg("Strength=%g\n", strength);
 	for(int ips=0; ips<atm->nps; ips++){
 	    screens->p[ips]=mapnew(nx, ny, dx, dx, NULL);
 	    screens->p[ips]->h=atm->ht->p[ips];
@@ -92,12 +90,15 @@ static mapcell *genatm_do(SIM_T *simu){
 		if(!psloc){
 		    psloc=mksqloc_auto(nx, ny, atm->dx, atm->dx);
 		}
+		info("Generating Testing Atmosphere Screen with zernike %g, RMS~=%g nm\n", -dbgatm, strength*1e9);
 		dmat *opd=zernike(psloc, nx*atm->dx, 0, 0, -dbgatm);
 		dmat *opd2=dref_reshape(opd, nx, ny);
 		dadd((dmat**)&screens->p[ips], 0, opd2, atm->wt->p[ips]*strength);
 		dfree(opd);
 		dfree(opd2);
 	    }else if(dbgatm<0){//Fourier mode;
+		info("Generating Testing Atmosphere Screen with Fourier mode %g, RMS~=%g nm\n", -dbgatm, strength*1e9);
+
 		double kk=2*M_PI/dbgatm*dx;
 		long nn=MAX(nx, ny);
 		dmat *sind=dnew(nn, 1);

@@ -148,6 +148,7 @@ void recon_split(SIM_T *simu){
 		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
 		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 		    simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
+		    //info("Step %5d: focus lpf=%g\n", isim, simu->ngsfocuslpf);
 		}
 	    }//else: there is ideal NGS correction done in perfevl. 
 	}
@@ -233,27 +234,26 @@ void recon_servo_update(SIM_T *simu){
 	if(iframe+1==dtrat){
 	    //writebin(simu->Merrts, "Merrts_%d", simu->reconisim);
 	    dmat *ts=dtrans(simu->Merrts);
-	    double dt=parms->sim.dt*parms->sim.dtrat_lo;
-	    dmat *psd=psd1dt(ts, parms->recon.psdnseg, dt);
 	    dzero(simu->Merrts);
-	    dfree(ts);
-	    //Sum all the PSDs
-	    warning_once("Need to enable gain update for each mode\n");
-	    psd_sum(psd, 1);
-	    //writebin(psd, "psdcl_lo_%d", simu->reconisim);
+	    double dt=parms->sim.dt*parms->sim.dtrat_lo;
+	    for(int icol=0; icol<ts->ny; icol++){
+		dmat *tsi=dsub(ts, icol, 1, 0, 0);
+		dmat *psd=psd1dt(tsi, parms->recon.psdnseg, dt);
 
-	    if(simu->Mint_lo->ep->nx==1 && simu->Mint_lo->ep->nx==1){
-		dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
-		dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
-		const double g=0.5;
-		simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
-		info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
-		dfree(psdol);
-		dcellfree(coeff);
-	    }else{
-		error("Please implement\n");
+		if(simu->Mint_lo->ep->nx==1){//integrator
+		    dmat *psdol=servo_rej2ol(psd, parms->sim.dt, parms->sim.dtrat_lo, simu->Mint_lo->ep->p[0], 0);
+		    dcell *coeff=servo_optim(psdol, parms->sim.dt, parms->sim.dtrat_lo, M_PI*0.25, 0, 1);
+		    const double g=parms->recon.psdservo_gain;
+		    simu->Mint_lo->ep->p[0]=simu->Mint_lo->ep->p[0]*(1-g)+coeff->p[0]->p[0]*g;
+		    info("Step %d New gain (low) : %.3f\n", simu->reconisim, simu->Mint_lo->ep->p[0]);
+		    dfree(psdol);
+		    dcellfree(coeff);
+		}else{
+		    error("Please implement\n");
+		}
+		dfree(psd);
 	    }
-	    dfree(psd);
+	    	    dfree(ts);
 	}
     }
 }
