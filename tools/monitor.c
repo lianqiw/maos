@@ -353,31 +353,29 @@ void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
 }
 static void kill_all_jobs(GtkAction *btn){
     (void)btn;
-    int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
-    int count=0;
-    for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
-	if(iproc->hid == ihost 
-	   && (iproc->status.info<11)){
-	    count++;
-	}
-    }
-    if(count==0) return;
+    int this_host=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
+
     GtkWidget *dia=gtk_message_dialog_new
 	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
 	 GTK_MESSAGE_QUESTION,
-	 GTK_BUTTONS_YES_NO,
-	 "Kill all %d jobs on server %s?", count, hosts[ihost]);
+	 GTK_BUTTONS_NONE,
+	 "Kill all jobs on server %s or all servers?", hosts[this_host]);
+    gtk_dialog_add_buttons(GTK_DIALOG(dia), "This server", 1, "All servers", 2, "Cancel", 0, NULL);
     int result=gtk_dialog_run(GTK_DIALOG(dia));
     gtk_widget_destroy (dia);
-    if(result==GTK_RESPONSE_YES){
-	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
-	    if(iproc->hid == ihost 
-	       && (iproc->status.info<11)){
-		if(scheduler_cmd(iproc->hid,iproc->pid,CMD_KILL)){
-		    warning("Failed to kill the job\n");
+    if(result){
+	for(int ihost=0; ihost<nhost; ihost++){
+	    if(result==1 && ihost!=this_host){
+		continue;
+	    }
+	    for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
+		if(iproc->hid == ihost && (iproc->status.info<11)){
+		    if(scheduler_cmd(iproc->hid,iproc->pid,CMD_KILL)){
+			warning("Failed to kill the job\n");
+		    }
+		    iproc->status.info=S_TOKILL;
+		    refresh(iproc);
 		}
-		iproc->status.info=S_TOKILL;
-		refresh(iproc);
 	    }
 	}
     }
@@ -467,18 +465,20 @@ static int test_all(int status, double frac){
 }
 static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
     (void)btn;
-    int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
-    if(!pproc[ihost]) return;
-    int sock=hsock[ihost];
-    if(sock==-1) return;
-    int cmd[2];
-    cmd[0]=CMD_REMOVE;
-    for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
-	if(testfun(iproc->status.info, iproc->frac)){
-	    cmd[1]=iproc->pid;
-	    if(stwriteintarr(sock,cmd,2)){
-		warning("write to socket %d failed\n",sock);
-		break;
+    //int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
+    for(int ihost=0; ihost<nhost; ihost++){
+	if(!pproc[ihost]) continue;
+	int sock=hsock[ihost];
+	if(sock==-1) continue;
+	int cmd[2];
+	cmd[0]=CMD_REMOVE;
+	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
+	    if(testfun(iproc->status.info, iproc->frac)){
+		cmd[1]=iproc->pid;
+		if(stwriteintarr(sock,cmd,2)){
+		    warning("write to socket %d failed\n",sock);
+		    break;
+		}
 	    }
 	}
     }

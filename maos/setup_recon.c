@@ -361,9 +361,9 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     /*normalize the weights to sum to 1. */
     normalize_sumabs(recon->wt->p, recon->npsr, 1);
     const int npsr=recon->npsr;
-    recon->cxx=parms->tomo.cxx;
+    recon->cxxalg=parms->tomo.cxxalg;
     /*test_cxx(recon, parms); */
-    if(parms->tomo.cxx==0){
+    if(parms->tomo.cxxalg==0){
 	if(parms->load.cxx){
 	    recon->L2=dspcellread("%s",parms->load.cxx);
 	    if(recon->L2->nx!=npsr || recon->L2->ny!=npsr){
@@ -389,7 +389,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	}
 	dspcellscale(recon->L2, sqrt(parms->tomo.cxxscale*TOMOSCALE));
     }
-    if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
+    if(parms->tomo.cxxalg==1 || (parms->tomo.cxxalg==2 && parms->tomo.precond==1)){
 	recon->invpsd=mycalloc(1,INVPSD_T);
 	if(parms->load.cxx){
 	    recon->invpsd->invpsd=dcellread("%s",parms->load.cxx);
@@ -421,7 +421,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->invpsd->xloc = recon->xloc;
 	recon->invpsd->square = parms->tomo.square;
     }
-    if(parms->tomo.cxx==2){
+    if(parms->tomo.cxxalg==2){
 	recon->fractal=mycalloc(1,FRACTAL_T);
 	recon->fractal->xloc=recon->xloc;
 	recon->fractal->r0=parms->atmr.r0;
@@ -565,7 +565,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcelladdI(recon->RL.M, tikcr*maxeig);
 	}
 	/*add L2 and ZZT */
-	switch(parms->tomo.cxx){
+	switch(parms->tomo.cxxalg){
 	case 0:/*Add L2'*L2 to RL.M */
 	    for(int ips=0; ips<npsr; ips++){
 		dsp* tmp=dspmulsp(recon->L2->p[ips+npsr*ips], recon->L2->p[ips+npsr*ips],"tn");
@@ -809,7 +809,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     if(parms->tomo.alg==1&&!parms->tomo.assemble){/*no need to do anything */
 	return;
     }
-    if(parms->tomo.cxx==0 && recon->L2save){
+    if(parms->tomo.cxxalg==0 && recon->L2save){
 	/*Need to adjust RLM with the new L2. */
 	dspcell* RLM=(dspcell*)recon->RL.M/*PDSPCELL*/;
 	const int npsr=recon->npsr;
@@ -905,11 +905,14 @@ setup_recon_focus(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     if(parms->sim.focus2tel){
-	int idm=parms->idmground;
 	dcell *Fdm=dcellnew(parms->ndm, 1);
-	Fdm->p[idm]=dnew(recon->anloc->p[idm], 1);
-	loc_add_focus(Fdm->p[idm]->p, recon->aloc->p[idm], 1);
-	recon->RFdm=dcellpinv(Fdm, 0);
+	recon->RFdm=dcellnew(1, parms->ndm);
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(idm!=parms->idmground) continue;
+	    Fdm->p[idm]=dnew(recon->anloc->p[idm], 1);
+	    loc_add_focus(Fdm->p[idm]->p, recon->aloc->p[idm], 1);
+	    recon->RFdm->p[idm]=dpinv(Fdm->p[idm], 0);
+	}
 	dcellfree(Fdm);
 	if(parms->save.setup){
 	    writebin(recon->RFdm, "RFdm");

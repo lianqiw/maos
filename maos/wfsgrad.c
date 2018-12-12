@@ -678,20 +678,24 @@ static void wfsgrad_lgsfocus(SIM_T* simu){
     const RECON_T *recon=simu->recon;
     
     /*New plate mode focus offset for LGS WFS. Not really needed*/
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
-	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].llt && parms->tomo.ahst_focus==2 
 	   && simu->Mint_lo && simu->Mint_lo->mint->p[1]
 	   && simu->isim+1>parms->powfs[ipowfs].step
 	   && (simu->isim+1)%parms->powfs[ipowfs].dtrat==0){
-	    /*In new ahst mode, the first plate scale mode contains focus for
+	    /*When tomo.ahst_focus>0, the first plate scale mode contains focus for
 	      lgs. But it turns out to be not necessary to remove it because the
 	      HPF in the LGS path removed the influence of this focus mode. set
-	      sim.ahstfocus=2 to enable adjust gradients.*/
+	      tomo.ahst_focus=2 to enable adjust gradients.*/
+
 	    double scale=simu->recon->ngsmod->scale;
 	    int indps=simu->recon->ngsmod->indps;
-	    double focus=-simu->Mint_lo->mint->p[1]->p[0]->p[indps]*(scale-1);
-	    dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], focus);
+	    dmat *mint=simu->Mint_lo->mint->p[0]->p[0];//2018-12-11: changed first p[1] to p[0]
+	    double focus=mint->p[indps]*(scale-1); 
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[jwfs];
+		dadd(&simu->gradcl->p[iwfs], 1, recon->GFall->p[iwfs], focus);
+	    }
 	}
     }
 

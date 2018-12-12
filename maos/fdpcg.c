@@ -329,6 +329,7 @@ fdpcg_prop(long nps, long nxp, long nyp, long *nx, long *ny, double dx, double *
   Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information.
 */
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs, mapcell *atm){
+    TIC;tic;
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].lo && !parms->powfs[ipowfs].skip){
@@ -372,7 +373,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     /*Concatenate invpsd; */
     dcomplex *invpsd=mycalloc(nxtot,dcomplex);
     long offset=0;
-    switch(parms->tomo.cxx){
+    switch(parms->tomo.cxxalg){
     case 0:/*forward matrix uses biharmonic approx. We use here also. */
 	for(long ips=0; ips<nps; ips++){
 	    cmat *psd=cnew(nx[ips],ny[ips]);
@@ -463,7 +464,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	double dispy[nps];
 	int iwfs=parms->powfs[hipowfs].wfsr->p[jwfs];
 	double neai=recon->neam->p[iwfs];
-	info("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
+	//info("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai*sqrt(TOMOSCALE));
 	for(long ips=0; ips<nps; ips++){
 	    /*
 	      2010-05-28: The cone effect cancels with the cone
@@ -576,6 +577,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     fdpcg->xloc=recon->xloc;
     fdpcg->square=parms->tomo.square;
     fdpcg->nxtot=nxtot;
+    toc2("fdpcg_prepare");
     return fdpcg;
 }
 typedef struct{

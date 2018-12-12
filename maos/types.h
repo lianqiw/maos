@@ -163,7 +163,7 @@ typedef struct NGSMOD_T{
     dcell *Modes;   /**<DM vector for the modes*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
-    int ahstfocus;  /**<records parms->sim.ahstfocus*/
+    int ahstfocus;  /**<records parms->tomo.ahst_focus*/
     int indfocus;  /**<Include focus in NGS controlled modes. Records the index*/
     int indps;     /**<Include plate scale in NGS controlled modes. Records the index*/
     int indastig;  /**<Include astigmatism mode in NGS controlled modes. Records the index*/
@@ -379,7 +379,7 @@ typedef struct RECON_T{
     int has_ttr;       /**<whether there is any tip/tilt removed WFS*/
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
-    int cxx;           /**<records parms->tomo.cxx*/
+    int cxxalg;        /**<records parms->tomo.cxxalg*/
 
     //For Error PSD computation
     dspcell *Herr;      /**<Ray tracing from DM along science directions for a few points*/
@@ -555,7 +555,6 @@ typedef struct SIM_T{
     SERVO_T *dmint;    /**<dm integrator. (used of fuseint==1)*/
     dcell *dmfit;      /**<direct high order fit output*/
     dcell *dmerr,*dmerr_store;      /**<high order dm error signal.*/
-
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  

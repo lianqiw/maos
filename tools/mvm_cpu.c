@@ -41,7 +41,6 @@ static void mvmt_do(const float *mvmt, float *g, float *dm, int nact, int ngleft
 #ifdef __INTEL_COMPILER
 #pragma vector aligned
 #pragma ivdep
-#pragma simd vectorlength(16) assert
 #endif
 	for(int ig=0; ig<ngleft; ig++){
 	    tmp+=mvmt[ig+ia*ngtot]*g[ig];

@@ -1072,14 +1072,21 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 
 /**
    Add val amount of focus to opd. The unit is in radian like.
-   Piston is not removed.
+   Piston is removed.
 */
 void loc_add_focus(double *opd, loc_t *loc, double val){
     if(fabs(val)<1.e-15) return;
     const double *restrict locx=loc->locx;
     const double *restrict locy=loc->locy;
+    double piston=0;
     for(long iloc=0; iloc<loc->nloc; iloc++){
-	opd[iloc]+=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
+	double tmp=(locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc])*val;
+	opd[iloc]+=tmp;
+	piston+=tmp;
+    }
+    piston=-piston/loc->nloc;
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	opd[iloc]+=piston;
     }
 }
 /**

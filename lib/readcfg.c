@@ -355,11 +355,11 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    /*
 	      Compatibility mode: rename old key names to new key names. Will
 	      remove in the future.
-	     */
-	    RENAME(atm.fractal, atm.method);
+	    */
+	    /*RENAME(atm.fractal, atm.method);*/
 	    RENAME(atm.zadeg, sim.zadeg);
 	    /*Added on 2011-04-28 */
-	    RENAME(dbg.noatm, sim.noatm);
+	    /*RENAME(dbg.noatm, sim.noatm);
 	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
 	    RENAME(sim.fitonly, sim.idealfit);
@@ -375,11 +375,13 @@ void open_config(const char* config_in, /**<[in]The .conf file to read*/
 	    RENAME(tomo.split_wt, tomo.ahst_wt);
 	    RENAME(tomo.split, recon.split);
 	    RENAME(evl.opdcov, evl.cov);
-	    RENAME(evl.psfpttr, evl.pttr);
+	    RENAME(evl.psfpttr, evl.pttr);*/
 	    /*Added 2017-11-27*/
-	    RENAME(sim.apdm, sim.aphi);
+	    /*RENAME(sim.apdm, sim.aphi);
 	    RENAME(sim.epdm, sim.ephi);
-	    RENAME(sim.aldm, sim.alhi);
+	    RENAME(sim.aldm, sim.alhi);*/
+	    //RENAME(tomo.cxx,tomo.cxxalg);
+	    //RENAME(sim.ahstfocus, tomo.ahst_focus);
 #endif
 	    STORE_T *store=mycalloc(1,STORE_T);
 	    if(prefix){

@@ -359,7 +359,7 @@ static void Tomo_iprop_do(thread_t *info){
 	    }
 	}
 	if(data->xin){/*data->xin is empty when called from TomoR */
-	    switch(recon->cxx){
+	    switch(recon->cxxalg){
 	    case 0:{/*L2 */
 		dmat *xx=NULL;
 		dspmm(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips],"nn", 1);

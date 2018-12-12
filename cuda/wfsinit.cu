@@ -122,7 +122,7 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 		    dfree(mtche);
 		}
 		if(powfs[ipowfs].intstat->i0sum){
-		    cp2gpu(cuwfs[iwfs].i0sum,PINDR(powfs[ipowfs].intstat->i0sum,wfsind,0),nsa,1);
+		    cp2gpu(cuwfs[iwfs].i0sum,PINDR(powfs[ipowfs].intstat->i0sum,0,wfsind),nsa,1);
 		    cuwfs[iwfs].i0sumsum=INDR(powfs[ipowfs].intstat->i0sumsum,wfsind,0);
 		}
 	    }else{

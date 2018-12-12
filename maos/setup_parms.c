@@ -798,7 +798,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.pos);
     READ_INT(tomo.cone);
     READ_INT(tomo.square);
-    READ_INT(tomo.cxx);
+    READ_INT(tomo.cxxalg);
     READ_DBL(tomo.cxxscale);
     READ_INT(tomo.guard);
     READ_DBL(tomo.tikcr);
@@ -806,6 +806,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.piston_cr);
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
+    READ_INT(tomo.ahst_focus);
     READ_INT(tomo.alg);
     READ_INT(tomo.bgs);
     READ_INT(tomo.precond);
@@ -956,8 +957,6 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.wfsalias);
     READ_INT(sim.idealwfs);
     READ_INT(sim.idealevl);
-    READ_INT(sim.ahstfocus);
-
     READ_STR(sim.mvmhost);
     READ_INT(sim.mvmport);
     READ_INT(sim.mvmsize);
@@ -2373,9 +2372,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.ecnn || parms->load.tomo || parms->tomo.alg!=1 || parms->tomo.bgs){
 	parms->tomo.assemble=1;
     }
-    if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
+    if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxxalg !=0){
 	error("Only CG work with non L2 cxx.\n");
-	parms->tomo.cxx=0;
+	parms->tomo.cxxalg=0;
     }
     if(parms->recon.alg==0 && parms->tomo.predict==1 && parms->tomo.alg!=1){
 	error("Predictive tomography only works with CG. need to redo CBS/MVM after wind velocity is know.\n");
@@ -2447,10 +2446,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.mffocus<0 || parms->sim.mffocus>2){
 	error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
     }
-    if(parms->sim.ahstfocus){
+    if(parms->tomo.ahst_focus){
 	if(parms->recon.split!=1 || !parms->sim.mffocus){
-	    parms->sim.ahstfocus=0;//no need ahstfocus
-	    dbg("Disable sim.ahstfocus.\n");
+	    parms->tomo.ahst_focus=0;//no need ahst_focus
+	    dbg("Disable tomo.ahst_focus.\n");
 	}
     }
  
@@ -2997,9 +2996,9 @@ void setup_parms_gpu(PARMS_T *parms, int *gpus, int ngpu){
 		warning("Disable gpu.tomo when dbg.tomo_hxw=1\n");
 		parms->gpu.tomo=0;
 	    }
-	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
+	    if(parms->gpu.tomo && parms->tomo.cxxalg!=0){
 		parms->gpu.tomo=0;
-		warning("\n\nGPU reconstruction is only available for tomo.cxx==0. Disable GPU Tomography.\n");
+		warning("\n\nGPU reconstruction is only available for tomo.cxxalg==0. Disable GPU Tomography.\n");
 	    }
 	    if(parms->gpu.tomo && parms->tomo.alg >2){
 		parms->gpu.tomo=0;

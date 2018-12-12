@@ -579,6 +579,10 @@ int servo_filter(SERVO_T *st, const dcell *_merr){
     if(!st->mint){
 	error("SERVO_T must be created using servo_new()\n");
     }
+    if(st->ep->ny==1 && st->ep->nx>3){
+	st->ep->ny=st->ep->nx;
+	st->ep->nx=1;
+    }
     switch(st->ep->nx){
     case 1://type I
 	if(st->ep->ny==1){

@@ -355,7 +355,7 @@ typedef struct TOMO_CFG_T{
     double cgthres;  /**<Repeat cg if residual is not reached*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
-    int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
+    int cxxalg;      /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
     int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
@@ -367,6 +367,7 @@ typedef struct TOMO_CFG_T{
 			3: Identity weighting (bad)
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
+    int ahst_focus;   /**<Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -539,7 +540,6 @@ typedef struct SIM_CFG_T{
     int dmclip;      /**<derived: Need to clip actuator stroke*/
     int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
-    int ahstfocus;   /**<Make magnification mode free of focus in science*/
     int mvmport;     /**<Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction.*/
     char *mvmhost;   /**<Which host does the MVM server run*/
     int mvmsize;     /**<number of gradients to send each time. 0 is all.*/

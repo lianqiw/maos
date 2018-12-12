@@ -36,7 +36,7 @@
    science pupil, the assumed NGS mode on DM remain intact, but the influence on
    Science OPD needs to use ray tracing. 
 */
-
+static void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain);
 static TIC;
 
 /**
@@ -115,9 +115,6 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, const APER_T *ape
 		    if(imod<2 && jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
 		    IND(MCC,imod,jmod)=IND(MCC,jmod,imod)=tmp;
-		    /*if(imod!=jmod){
-			IND(MCC,imod,jmod)=IND(MCC,jmod,imod);
-			}*/
 		}
 	    }
 	}//for(ievl)
@@ -306,8 +303,10 @@ static dcell *ngsmod_dm(const PARMS_T *parms, RECON_T *recon){
 	ngsmod2dm(&dmt,recon,M,1.);
 	M->p[0]->p[imod]=0;
 	for(int idm=0; idm<ndm; idm++){
-	    memcpy(PCOL(mod->p[idm], imod), dmt->p[idm]->p, 
-		   sizeof(double)*aloc[idm]->nloc);
+	    double piston=dsum(dmt->p[idm])/aloc[idm]->nloc;
+	    for(long iact=0; iact<aloc[idm]->nloc; iact++){
+		IND(mod->p[idm], iact, imod)=IND(dmt->p[idm], iact)-piston;
+	    }
 	}
     }
     dcellfree(M);
@@ -321,9 +320,12 @@ static dcell *ngsmod_dm(const PARMS_T *parms, RECON_T *recon){
 */
 void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon, 
 		       const APER_T *aper, const POWFS_T *powfs){
-    if(recon->ngsmod) error("Should only be called once\n");
+    if(recon->ngsmod) {
+	warning("Should only be called once\n");
+	return;
+    }
     NGSMOD_T *ngsmod=recon->ngsmod=mycalloc(1,NGSMOD_T);
-    ngsmod->ahstfocus=parms->sim.ahstfocus;
+    ngsmod->ahstfocus=parms->tomo.ahst_focus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
     if(ndm>1 && fabs(parms->dm[0].ht)>1.e-10){
@@ -360,7 +362,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod->nmod+=1;
 	}
     }
-    info("ahst: nmod=%d, mffocus=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->sim.ahstfocus);
+    info("ahst: nmod=%d, mffocus=%d, ahst_focus=%d\n", ngsmod->nmod, parms->sim.mffocus, parms->tomo.ahst_focus);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[ndm-1].ht;//last DM.
@@ -642,10 +644,10 @@ void calc_ngsmod_post(double *pttr_out, double *pttrcoeff_out, double *ngsmod_ou
    Convert NGS modes to DM actuator commands using analytical expression. For >2
    DMs, we only put NGS modes on ground and top-most DM.
 */
-void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
+static void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(!M || !M->p[0]) return;
     const NGSMOD_T *ngsmod=recon->ngsmod;
-    const int nmod=ngsmod->nmod;
+    //const int nmod=ngsmod->nmod;
     assert(M->nx==1 && M->ny==1 && M->p[0]->nx==nmod);
     double scale=ngsmod->scale;
     /*The MCC_fcp depends weakly on the aperture sampling. */
@@ -671,38 +673,32 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 	double *xloc=aloc[idm]->locx;
 	double *yloc=aloc[idm]->locy;
 	if(idm==0){
-	    if(nmod==2){//tip/tilt only
-		for(unsigned long iloc=0; iloc<nloc; iloc++){
-		    p[iloc]+=gain*(pm[0]*xloc[iloc]+pm[1]*yloc[iloc]);
+	    double focus=0, astigx=0, astigy=0;
+	    if(ngsmod->indfocus){//focus is a mode
+		focus+=pm[ngsmod->indfocus];
+	    }
+	    if(ngsmod->indps){//ps mode
+		if(ngsmod->ahstfocus){
+		    focus+=pm[ngsmod->indps]*scale;//scaled to avoid focus mode in science.
+		}else{
+		    focus+=pm[ngsmod->indps];
 		}
-	    }else{//with platescale and/or focus
-		double focus=0, astigx=0, astigy=0;
-		if(ngsmod->indfocus){//focus is a mode
-		    focus+=pm[ngsmod->indfocus];
-		}
-		if(ngsmod->indps){//ps mode
-		    if(ngsmod->ahstfocus){
-			focus+=pm[ngsmod->indps]*scale;//scaled to avoid focus mode in science.
-		    }else{
-			focus+=pm[ngsmod->indps];
-		    }
-		    astigx+=pm[ngsmod->indps+1];
-		    astigy+=pm[ngsmod->indps+2];
-		}
-		if(ngsmod->indastig){
-		    astigx+=pm[ngsmod->indastig];
-		    astigy+=pm[ngsmod->indastig+1];
-		}
-		for(unsigned long iloc=0; iloc<nloc; iloc++){
-		    double xx=xloc[iloc]*xloc[iloc];
-		    double xy=xloc[iloc]*yloc[iloc];
-		    double yy=yloc[iloc]*yloc[iloc];
-		    p[iloc]+=gain*(pm[0]*xloc[iloc]
-				   +pm[1]*yloc[iloc]
-				   +focus*(xx+yy-MCC_fcp)
-				   +astigx*(xx-yy)
-				   +astigy*(xy));
-		}
+		astigx+=pm[ngsmod->indps+1];
+		astigy+=pm[ngsmod->indps+2];
+	    }
+	    if(ngsmod->indastig){
+		astigx+=pm[ngsmod->indastig];
+		astigy+=pm[ngsmod->indastig+1];
+	    }
+	    for(unsigned long iloc=0; iloc<nloc; iloc++){
+		double xx=xloc[iloc]*xloc[iloc];
+		double xy=xloc[iloc]*yloc[iloc];
+		double yy=yloc[iloc]*yloc[iloc];
+		p[iloc]+=gain*(pm[0]*xloc[iloc]
+			       +pm[1]*yloc[iloc]
+			       +focus*(xx+yy-MCC_fcp)
+			       +astigx*(xx-yy)
+			       +astigy*(xy));
 	    }
 	}else if(idm+1==ndm && ngsmod->indps){
 	    double scale2=-scale*gain;
@@ -812,12 +808,16 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
     }
     if(ngsmod->indfocus && simu->parms->sim.mffocus){
-	//Prevent global focus mode from been removed from DM commands.
-	if(ngsmod->indps && !ngsmod->ahstfocus){
+	//Preserve focus measured by LGS WFS.
+	if(ngsmod->indps && ngsmod->ahstfocus){
+	    /* When ahstfocus is true, the first PS mode contains focus mode in
+	     * LGS WFS. Relocate this focus mode to the global focus mode to
+	     * preserve LGS measurements.*/
 	    const double scale=ngsmod->scale;
-	    //Preserve the focus mode contained in PS 1 mode.
-	    mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(1-scale);
+	    mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(scale-1);
 	}else{
+	    /* When ahstfocus is false, the first PS mode does not create focus
+	     * mode in LGS WFS.*/
 	    mngs[ngsmod->indfocus]=0;
 	}
     }

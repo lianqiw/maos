@@ -1232,7 +1232,6 @@ static void init_simu_dm(SIM_T *simu){
 	if(parms->sim.dmproj){
 	    save->dmproj = zfarr_init(nstep, 1, "dmproj_%d.bin", seed);
 	}
-
     }
 }
 
@@ -1854,7 +1853,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     }
     fprintf(fp,"]\n");
     fprintf(fp,"maos.nstep=%d\n",parms->sim.end);
-    fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
+    fprintf(fp,"maos.ahstfocus=%d\n", parms->tomo.ahst_focus);
     fprintf(fp,"maos.mffocus=%d\n", parms->sim.mffocus);
     fprintf(fp,"maos.fnrange=%s\n", parms->powfs[parms->hipowfs->p[0]].llt->fnrange);
     fprintf(fp,"maos.indps=%d\n", recon->ngsmod->indps);

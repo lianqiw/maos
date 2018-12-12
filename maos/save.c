@@ -124,10 +124,10 @@ void save_recon(SIM_T *simu){
 	dcell *dmlo=NULL;
 	switch(simu->parms->recon.split){
 	case 1:
-	    ngsmod2dm(&dmlo, recon, simu->Merr_lo, 1);
+	    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Merr_lo, "nn", 1);
 	    break;
 	case 2:
-	    dcellmm(&dmlo, simu->recon->MVModes, simu->Merr_lo, "nn", 1);
+	    dcellmm(&dmlo, recon->MVModes, simu->Merr_lo, "nn", 1);
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
@@ -141,10 +141,10 @@ void save_recon(SIM_T *simu){
 	dcell *dmlo=NULL;
 	switch(simu->parms->recon.split){
 	case 1:
-	    ngsmod2dm(&dmlo, recon, simu->Mint_lo->mint->p[0], 1);
+	    dcellmm(&dmlo, recon->ngsmod->Modes, simu->Mint_lo->mint->p[0], "nn", 1);
 	    break;
 	case 2:
-	    dcellmm(&dmlo, simu->recon->MVModes, simu->Mint_lo->mint->p[0], "nn", 1);
+	    dcellmm(&dmlo, recon->MVModes, simu->Mint_lo->mint->p[0], "nn", 1);
 	    break;
 	}
 	for(int idm=0; dmlo && idm<parms->ndm; idm++){
