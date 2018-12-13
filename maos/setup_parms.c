@@ -807,6 +807,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
     READ_INT(tomo.ahst_focus);
+    READ_INT(tomo.ahst_mr);
     READ_INT(tomo.alg);
     READ_INT(tomo.bgs);
     READ_INT(tomo.precond);

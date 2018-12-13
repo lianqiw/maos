@@ -408,12 +408,8 @@ static void perfevl_mean(SIM_T *simu){
 	dmulvec(pcleNGSm,recon->ngsmod->IMCC,pcleNGSdot,1);
 	double *poleNGSm=simu->oleNGSm->p+isim*nngsmod;
 	dmulvec(poleNGSm,recon->ngsmod->IMCC,poleNGSdot,1);
-	if(simu->parms->tomo.ahst_idealngs==1){
-	    /*we no longer add ideal ngs modes to DM. Instead, we add them
-	      to NGS wavefront only. This prevents it to capture all the
-	      focus mode in the atmosphere.*/
-	    ngs=0; tt=0;
-	}else if(simu->parms->tomo.ahst_idealngs==2){
+	
+	if(simu->parms->tomo.ahst_idealngs==2){
 	    //Simulate close loop correction using ideal NGS mod.
 	    simu->Merr_lo=simu->Merr_lo_store;
 	    memcpy(simu->Merr_lo->p[0]->p, pcleNGSm, nngsmod*sizeof(double));
@@ -422,9 +418,16 @@ static void perfevl_mean(SIM_T *simu){
 		pcleNGSm[imod]+=simu->Mint_lo->mint->p[0]->p[0]->p[imod];
 	    }
 	}
-	simu->clem->p[isim*3]=lgs; /*lgs mode */
-	simu->clem->p[isim*3+1]=tt;    /*tt mode */
-	simu->clem->p[isim*3+2]=ngs;   /*ngs mod */
+	
+	IND(simu->clem, 0, isim)=lgs; /*lgs mode */
+	if(simu->parms->tomo.ahst_idealngs!=1){
+	    IND(simu->clem, 1, isim)=tt;    /*tt mode */
+	    IND(simu->clem, 2, isim)=ngs;   /*ngs mod */
+	    if(recon->ngsmod->indfocus){
+		double focus=dwdot(pcleNGSdot, recon->ngsmod->IMCC_F, pcleNGSdot);
+		IND(simu->clem, 3, isim)=focus;
+	    }
+	}
 	simu->status->clerrlo=sqrt(ngs)*1e9;
 	simu->status->clerrhi=sqrt(lgs)*1e9;
 	/*compute error spliting to tip/tilt and high order for any

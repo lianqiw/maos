@@ -348,7 +348,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->nmod=2; //Basic tip/tilt mode.
     if(isfinite(hs)){
 	//LGS WFS.
-	if(ndm==2){//Plate scale mode
+	if(ndm>1){//Plate scale mode
 	    if(parms->evl.nevl>1){//cannot determine plate scale with only 1 direction.
 		ngsmod->indps=ngsmod->nmod;
 		ngsmod->nmod+=3;
@@ -384,7 +384,6 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->MCCu=dtrans(MCCl); dfree(MCCl);
     if(parms->save.setup){
 	writebin(recon->ngsmod->MCC, "ahst_MCC");
-	writebin(recon->ngsmod->MCCu, "ahst_MCCu");
     }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     dmat *MCC=ngsmod->MCC;
@@ -394,6 +393,11 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
     ngsmod->IMCC_TT->p[2]=IND(MCC,0,1);
     ngsmod->IMCC_TT->p[3]=IND(MCC,1,1);
     dinvspd_inplace(ngsmod->IMCC_TT);
+    if(ngsmod->indfocus){
+	ngsmod->IMCC_F=dnew(ngsmod->nmod, ngsmod->nmod);
+	const int indfocus=ngsmod->indfocus;
+	IND(ngsmod->IMCC_F, indfocus, indfocus)=1./IND(ngsmod->MCC, indfocus, indfocus);
+    }
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_dm(parms,recon);
     if(recon->actstuck && !parms->recon.modal){

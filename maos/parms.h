@@ -368,6 +368,7 @@ typedef struct TOMO_CFG_T{
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
     int ahst_focus;   /**<Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
+    int ahst_mr;     /**<multi-rate control. Separate AHST modes into separate dtrats.*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.

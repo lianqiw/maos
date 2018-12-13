@@ -419,14 +419,14 @@ static void init_simu_evl(SIM_T *simu){
 	simu->timing=dnew_mmap(5, nsim, NULL, "Timing_%d.bin", seed);
     }
     {/*MMAP the main result file */
-	long nnx[4]={nmod,nmod,nmod,3};
-	long nny[4]={nsim,nsim,nsim,nsim};
-	nnx[1]=0;//deprecated
-	nny[1]=0;
-	if(!parms->recon.split){
-	    nnx[3]=0; 
-	    nny[3]=0;
+	int ahst_nmod=0;
+	if(parms->recon.split){
+	    ahst_nmod=3;
+	    if(simu->recon->ngsmod->indfocus) ahst_nmod++;
 	}
+	long nnx[4]={nmod,0,nmod,ahst_nmod};
+	long nny[4]={nsim,0,nsim,nsim};
+
 	simu->res = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
 	//Do not reference. Just assign. Don't free.
 	simu->ole     = simu->res->p[0];
@@ -1659,24 +1659,24 @@ void print_progress(const SIM_T *simu){
 	      isim,
 	      mysqrt(simu->ole->p[isim*nmod])*1e9,
 	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-	      mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
+	     mysqrt(simu->ole->p[2+isim*nmod])*1e9, BLACK);
 	
 	info("Timing: Tot:%5.2f Mean:%5.2f Used %ld:%02ld Left %ld:%02ld\n",
-	      status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
+	     status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
     }else{    
 	info("%sStep %5d: OL: %6.1f %6.1f %6.1f nm CL %6.1f %6.1f %6.1f nm",
-	      GREEN, isim,
-	      mysqrt(simu->ole->p[isim*nmod])*1e9,
-	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-	      mysqrt(simu->ole->p[2+isim*nmod])*1e9,
-	      mysqrt(simu->cle->p[isim*nmod])*1e9,
-	      mysqrt(simu->cle->p[1+isim*nmod])*1e9,
-	      mysqrt(simu->cle->p[2+isim*nmod])*1e9);
+	     GREEN, isim,
+	     mysqrt(IND(simu->ole, 0, isim))*1e9,
+	     mysqrt(IND(simu->ole, 1, isim))*1e9,
+	     mysqrt(IND(simu->ole, 2, isim))*1e9,
+	     mysqrt(IND(simu->cle, 0, isim))*1e9,
+	     mysqrt(IND(simu->cle, 1, isim))*1e9,
+	     mysqrt(IND(simu->cle, 2, isim))*1e9);
 	if(parms->recon.split){
 	    info(" Split %6.1f %6.1f %6.1f nm",
-		  mysqrt(simu->clem->p[isim*3])*1e9,
-		  mysqrt(simu->clem->p[1+isim*3])*1e9,
-		  mysqrt(simu->clem->p[2+isim*3])*1e9);
+		 mysqrt(IND(simu->clem, 0, isim))*1e9,
+		 mysqrt(IND(simu->clem, 1, isim))*1e9,
+		 mysqrt(IND(simu->clem, 2, isim))*1e9);
 	}
 	info("%s\n", BLACK);
     
