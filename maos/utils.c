@@ -365,7 +365,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, i
     double wvl=parms->evl.wvl->p[iwvl];
     double sumamp2=aper->sumamp2;
     snprintf(header, 320, 
-	     "Science PSF at (%.15g, %.15g) arcsec\n"
+	     /*"Science PSF at (%.15g, %.15g) arcsec\n"
 	     "Turbulence: r0=%g, l0=%g\n"
 	     "Wavelength: %.15gm\n"
 	     "OPD Sampling: %.15gm\n"
@@ -373,6 +373,16 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl, i
 	     "PSF Sampling: %.15g arcsec\n"
 	     "PSF Sum to: %.15g\n"
 	     "Exposure: %gs\n", 
+	     */
+	     "theta=(%.15g, %.15g) / Field location (arcsec)\n"
+	     "r0=%g / Fried parameter (meter)\n"
+	     "L0=%g / Outer scale (meter)\n"
+	     "wvl=%g / Wavelength (m)\n"
+	     "dx=%g / OPD sampling (m)\n"
+	     "nfft=(%d,%d) / FFT grid size\n"
+	     "dp=%g / PSF sampling (arcsec)\n"
+	     "sum=%g / PSF total intensity\n"
+	     "dt=%g / Total exposure (seconds)\n", 
 	     ievl<0?0:parms->evl.thetax->p[ievl]*206265, ievl<0?0:parms->evl.thetay->p[ievl]*206265,
 	     parms->atm.r0, parms->atm.L0->p[0],
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,

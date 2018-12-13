@@ -627,7 +627,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     default:
 	error("Data type is not yet supported. magic=%x\n", magic);
     }
-    const int nh=36;
+    const int nh=36;//each fits page can only contain 36 headers.
     char header[nh][80];
     memset(header, ' ', sizeof(char)*36*80);
     int hc=0;
@@ -640,7 +640,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
     snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
     snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
  
-#define FLUSH_OUT /*write the block and reset */	\
+#define FLUSH_OUT /*write the page if ready */		\
 	if(hc==nh){					\
 	    zfwrite(header, sizeof(char), 36*80, fp);	\
 	    memset(header, ' ', sizeof(char)*36*80);	\
@@ -658,24 +658,43 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	snprintf(header[hc], 80, "%-8s= %20s", "GCOUNT", "1");    header[hc][30]=' '; hc++;
     }
     if(str){
-	const char *str2=str+strlen(str);
-	while(str<str2){
+	const char *str_end=str+strlen(str);
+	while(str<str_end){
+	    FLUSH_OUT;
 	    const char *nl=strchr(str, '\n');
+	    const char *eq=strchr(str, '=');
+	    if(!nl || eq>nl) eq=0;
 	    int length;
 	    if(nl){
-		length=nl-str+1;
+		if(eq){
+		    length=nl-eq;
+		}else{
+		    length=nl-str+1;
+		}
 	    }else{
-		length=strlen(str);
+		length=strlen(str)+1;
 	    }
 	    if(length>70) length=70;
-	    FLUSH_OUT;
-	    strncpy(header[hc], "COMMENT   ", 10);
-	    strncpy(header[hc]+10, str, length);
-	    if(nl){
+
+	    if(eq){//there is an equal sign.
+		strncpy(header[hc], str, MIN(8, (eq-str)));
+		header[hc][8]='=';
+		header[hc][9]=' ';
+		strncpy(header[hc]+10, eq+1, length);
+	    }else{
+		strncpy(header[hc], "COMMENT   ", 10);
+		strncpy(header[hc]+10, str, length);
+	    }
+	    if(nl){//Replace \n by ;
 		header[hc][10+length-1]=';';
 	    }
 	    hc++;
-	    str+=length;
+	    //update str to after \n
+	    if(eq){
+		str=eq+length+1;
+	    }else{
+		str+=length;
+	    }
 	}
     }
     FLUSH_OUT;
