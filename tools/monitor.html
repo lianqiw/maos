@@ -71,7 +71,7 @@
 	     width: 100%;
 	     margin: auto;
 	     overflow: hidden;   
-	     background: #F9F9F9;
+	     background: #BFBFBF;
 	 }
 	 .tabs ul {
 	     list-style: none;
@@ -79,10 +79,15 @@
 	     padding: 0;
 	     margin: 0;      
 	 }
-	 .tabs li a {
-	     /*width:10%;  */
-	     color: #444444;
-	     display: block;
+	 .tabs ul li {
+	     padding: 2 0;
+	     display: inline;
+	     cursor: pointer;
+	 }
+	 /*.tabhost {*/
+	 .tabs ul li {
+	     /*color: #444444;
+	     background:#gray;
 	     float: left;
 	     font-weight:bold;   
 	     padding: 10px;
@@ -90,31 +95,40 @@
 	     text-decoration: none;
 	     border:none;
 	     border-left:1px solid #d9d9d9;
-	     border-bottom:1px solid #d9d9d9;    
+	     border-bottom:1px solid #d9d9d9;
+*/
+	     border:none;
+	     outline: none;
+	     padding: 5px 8px;
+	     background: #BFBFBF;
+	     cursor: pointer;
+	     font-size: 14px;
 	 }
-	 .tabs li a:hover {
+	 .tabs ul li:hover, .tabs ul li.active{
+	     /*.tabs li button:hover, .active {*/
 	     color: #7d7d7d; 
-	     background:#FFFFFF;
+	     background:#EFEFEF;
 	 }
-	 .tabs li:first-child a {
+	 /*.tabs li:first-child button {
 	     border-left:none;
-	 }
-	 .tabs li a.active {
+	 }*/
+	 /*
+	 .tabs li button.active {
 	     background:#FFFFFF;
 	     border:none;
 	     border-left:1px solid #d9d9d9;
 	     border-bottom:1px solid #FFFFFF;    
 	 }
-	 .tabs li:first-child a.active {
+	 .tabs li:first-child button.active {
 	     border:none;
 	     border-bottom:1px solid #FFFFFF;    
 	 }
-	 .tabs li:last-child a.active {
+	 .tabs li:last-child button.active {
 	     border:none;
 	     border-left:1px solid #d9d9d9;  
 	     border-bottom:1px solid #FFFFFF;    
 	 }
-
+*/
 	</style>
     </head>
 
@@ -124,6 +138,7 @@
 	    <table width="100%">
 		<tr><td class="title">MAOS Monitor</td></tr>
 	    </table>
+	    <!--
 	    <table>
 		<tr>
 		    <td><button onclick="clear_all(0)">Clear Finished</button></td>
@@ -134,10 +149,15 @@
 		    <td><button onclick="add_host()">Add host</button></td>
 		</tr>
 	    </table>
+	    -->
 	    <div class="tabs">
 		<ul id="tab_hosts">
-		    <li><a name="tab" id="tab_1" href="javascript:void(0)" onclick="switch_tabs(1)" class="active">localhost</a></li>
-		    <li><a name="tab" id="tab_2" href="javascript:void(0)" onclick="switch_tabs(2)">taurus:10001</a></li>
+		     <li><span onclick="clear_all(0)">Clear Finished</span></li>
+		    <li><span onclick="clear_all(1)">Clear Skipped</span></li>
+		    <li><span onclick="clear_all(2)">Clear Crashed</span></li>
+		    <li><span onclick="kill_all()">Kill All</span></li>
+		    <li><input id="hostname_input"></li>
+		    <li><span onclick="add_host()">Add host</span></li>
 		</ul>
 	    </div>
 	</article>
@@ -278,7 +298,8 @@
 		 cell.appendChild(button.cloneNode(false));
 	     }
 	 }
-	 function websocket_start(hostname){
+	 function websocket_start(node){
+	     hostname=node.id;
 	     console.log("Connecting to "+hostname);
 	     var socket_lm;
 	     var hostname2=hostname.split(':')[0];
@@ -289,22 +310,26 @@
 	     } else {
 		 socket_lm = new WebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
 	     }
-	     socket_lm.onerror = function(error){
-		 console.log('Websocket error: ' + error);
-	     }
-	     socket_lm.onopen = function() {
-		 var tabs=document.getElementsByName("tab");
-		 for(var i=0; i<tabs.length; i++){
-		     if(tabs[i].innerHTML==hostname){
-			 tabs[i].style.color="#40dd40";
-			 break;
-		     }
-		 }
+	     if(typeof(Storage)!="undefined"){
+		 //Notice that local storage only support strings.
+				 localStorage.hosts+=";"+hostname;
+		 console.log("localStorage.hosts= " + localStorage.hosts)
+	     }  
+	     socket_lm.onopen = function() {//change tab color upon connecton
+		 node.style.color="#40dd40";
 		 var nrow=joblist.rows.length;
 		 for(irow=1; irow<nrow; irow++){
 		     joblist.deleteRow(-1);
 		 }
-	     } 
+	     }
+	     socket_lm.onerror = function(error){
+		 console.log('Websocket error: ' + error);
+		 socket_lm.onclose();
+	     }
+	     socket_lm.onclose = function(){//try to auto-reconnect
+		 node.style.color="#dd4040";
+		 //setTimeout(websocket_start(node), 5000);
+	     }
 	     socket_lm.onmessage =function got_packet(msg) {
 		 j = msg.data.split(';');
 		 //console.log(msg.data);
@@ -428,36 +453,23 @@
 		 }
 	     }
 
-	     socket_lm.onclose = function(){
-		 document.getElementById("monitor_status").style.color = "#dd4040";
-		 document.getElementById("monitor_status").textContent = "Disconnected";
-		 setTimeout(websocket_start(document.URL), 5000);
-	     }
 	     return socket_lm;
 	 }
 
 
-	 function switch_tabs(selectedtab) {
-	     console.log(selectedtab);
-	     // tabs
-	     var s_tab = "tab_" + selectedtab;       
-	     var tabs = document.getElementsByName("tab");
-
-	     for(var x=0; x<tabs.length; x++) {
-		 if (tabs[x].id == s_tab) {
-		     tabs[x].className = "active"; 
-		     if(x==0 && tabs[x].innerHTML=='localhost') {
-			 tabs[x].innerHTML=get_hostname();
-		     }
-		     hostname=tabs[x].innerHTML;
-		 } else {
-		     tabs[x].className = "";
-		 }
+	 function switch_tabs(li) {
+	     node=li.firstChild;
+	     console.log("switch_tabs:"+node.id);
+	  
+	     var nodes=document.getElementsByClassName("tabhost");
+	     for(var x=0; x<nodes.length; x++){
+		 nodes[x].className=nodes[x].className.replace(" active","");
 	     }
-	     console.log("s_tab:"+s_tab+"hostname: "+hostname);
-
+	     li.className+=" active";
+	     hostname=node.id;
+	 
 	     // contents for each host.
-	     var s_tab_content = "tab_content_" + selectedtab;   
+	     var s_tab_content = "tab_content_" + hostname;
 	     var contents = document.getElementsByClassName("tab_content");
 	     var found=0;
 	     for(var x=0; x<contents.length; x++) {
@@ -483,35 +495,47 @@
 		 document.body.appendChild(newdiv);
 	     }
 	     if(typeof hostname !='undefined' && typeof socket_lms[hostname]=='undefined'){
-		 socket_lms[hostname]=websocket_start(hostname);
+		 socket_lms[hostname]=websocket_start(node);
 	     }
 	 }
-	 function add_host(){
-	     var hostname=document.getElementById("hostname_input").value;
-	     var tabs=document.getElementById("tab_hosts");
-	     var hosts=tabs.getElementsByTagName("li");
-	     var nhost=hosts.length;
-	     for(var ih=0; ih<nhost; ih++){
+	 function add_host(hostname){
+	     if(!hostname){
+		 hostname=document.getElementById("hostname_input").value;
+	     }	     
+	     if(hostname.length==0) return;
+	     if(localStorage.hosts.split(";").includes(hostname)) return;
+	     console.log("add_host:"+hostname)
+
+	     var hosts=document.getElementsByClassName("tabhost");
+	     for(var ih=0; ih<hosts.length; ih++){
 		 if(hosts[ih].firstChild.innerHTML==hostname){
 		     console.log("Host "+hostname+" already exists");
 		     return;
 		 }
 	     }
-	     var host=document.createElement("li");
-	     var node=document.createElement("a");
-	     nhost=nhost+1;
-	     node.name="tab";
-	     node.id="tab_"+nhost;
-	     node.href="javascript:void(0)";
-	     node.onclick=function(){switch_tabs(nhost);};
-	     node.value=hostname;
-	     var node2=document.createTextNode(hostname);
-	     node.appendChild(node2);
-	     host.appendChild(node);
-	     tabs.appendChild(host);
+	     var li=document.createElement("li");
+	     li.className="tabhost";
+
+	     var node=document.createElement("span");
+	     node.appendChild(document.createTextNode(hostname.split(':')[0]));
+	     node.id=hostname;
+
+	     node.onclick=function(){switch_tabs(li);};
+	     
+	     var closebtn=document.createElement("span");
+	     closebtn.appendChild(document.createTextNode("\u00D7"));
+	     closebtn.className="close";
+
+	     li.appendChild(node);
+	     li.appendChild(closebtn);
+	     document.getElementById("tab_hosts").appendChild(li);
+	     
+	     node.onclick();
 	 }
-	 switch_tabs(1)
-	 
+	 var hosts=get_hostname() + ";" + localStorage.hosts;
+	 localStorage.hosts="";
+	 console.log("localStorage.hosts="+hosts)
+	 hosts.split(";").forEach(function(host){add_host(host);});
 	</script>
 
     </body>
