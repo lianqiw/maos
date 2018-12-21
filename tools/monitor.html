@@ -130,12 +130,14 @@
 		    <td><button onclick="clear_all(1)">Clear Skipped</button></td>
 		    <td><button onclick="clear_all(2)">Clear Crashed</button></td>
 		    <td><button onclick="kill_all()">Kill All</button></td>
+		    <td><input id="hostname_input"></td>
+		    <td><button onclick="add_host()">Add host</button></td>
 		</tr>
 	    </table>
 	    <div class="tabs">
-		<ul>
-		    <li><a name="tab" id="tab_1" href="javascript:void(0)" onclick="tabs(1)" class="active">localhost</a></li>
-		    <li><a name="tab" id="tab_2" href="javascript:void(0)" onclick="tabs(2)">taurus:10001</a></li>
+		<ul id="tab_hosts">
+		    <li><a name="tab" id="tab_1" href="javascript:void(0)" onclick="switch_tabs(1)" class="active">localhost</a></li>
+		    <li><a name="tab" id="tab_2" href="javascript:void(0)" onclick="switch_tabs(2)">taurus:10001</a></li>
 		</ul>
 	    </div>
 	</article>
@@ -188,6 +190,7 @@
 		 socket_lms[hostname].send(cmd[icmd]);
 	     }
 	 }
+
 	 var pcol;
 
 	 var cols={
@@ -276,6 +279,7 @@
 	     }
 	 }
 	 function websocket_start(hostname){
+	     console.log("Connecting to "+hostname);
 	     var socket_lm;
 	     var hostname2=hostname.split(':')[0];
 	     var joblist=document.getElementById("joblist_"+hostname2);
@@ -284,6 +288,9 @@
 		 socket_lm = new MozWebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
 	     } else {
 		 socket_lm = new WebSocket(pcol+hostname+"/xxx", "maos-monitor-protocol");
+	     }
+	     socket_lm.onerror = function(error){
+		 console.log('Websocket error: ' + error);
 	     }
 	     socket_lm.onopen = function() {
 		 var tabs=document.getElementsByName("tab");
@@ -430,10 +437,12 @@
 	 }
 
 
-	 function tabs(selectedtab) {    
+	 function switch_tabs(selectedtab) {
+	     console.log(selectedtab);
 	     // tabs
 	     var s_tab = "tab_" + selectedtab;       
 	     var tabs = document.getElementsByName("tab");
+
 	     for(var x=0; x<tabs.length; x++) {
 		 if (tabs[x].id == s_tab) {
 		     tabs[x].className = "active"; 
@@ -445,8 +454,9 @@
 		     tabs[x].className = "";
 		 }
 	     }
-	     console.log(hostname);
-	     // contents
+	     console.log("s_tab:"+s_tab+"hostname: "+hostname);
+
+	     // contents for each host.
 	     var s_tab_content = "tab_content_" + selectedtab;   
 	     var contents = document.getElementsByClassName("tab_content");
 	     var found=0;
@@ -476,8 +486,31 @@
 		 socket_lms[hostname]=websocket_start(hostname);
 	     }
 	 }
-
-	 tabs(1)
+	 function add_host(){
+	     var hostname=document.getElementById("hostname_input").value;
+	     var tabs=document.getElementById("tab_hosts");
+	     var hosts=tabs.getElementsByTagName("li");
+	     var nhost=hosts.length;
+	     for(var ih=0; ih<nhost; ih++){
+		 if(hosts[ih].firstChild.innerHTML==hostname){
+		     console.log("Host "+hostname+" already exists");
+		     return;
+		 }
+	     }
+	     var host=document.createElement("li");
+	     var node=document.createElement("a");
+	     nhost=nhost+1;
+	     node.name="tab";
+	     node.id="tab_"+nhost;
+	     node.href="javascript:void(0)";
+	     node.onclick=function(){switch_tabs(nhost);};
+	     node.value=hostname;
+	     var node2=document.createTextNode(hostname);
+	     node.appendChild(node2);
+	     host.appendChild(node);
+	     tabs.appendChild(host);
+	 }
+	 switch_tabs(1)
 	 
 	</script>
 

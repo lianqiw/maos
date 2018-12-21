@@ -217,6 +217,7 @@ case "$CN" in
 	fi
 	;;
     CLANG)
+	CC_VERSION=$($CC -dumpversion)
 	if test "$system" = "apple" ;then
 	    CFLAGS+=" -stdlib=libc++"
 	fi
@@ -224,7 +225,7 @@ case "$CN" in
     *)
 	;;	
 esac
-AC_DEFINE_UNQUOTED(COMPILER, ["$CC ($CC_VERSION)"], ["Compile"])
+AC_DEFINE_UNQUOTED(COMPILER, ["$CN ($CC_VERSION)"], ["Compiler"])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
