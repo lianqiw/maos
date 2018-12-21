@@ -603,7 +603,7 @@ void gpu_wfsgrad_sync(SIM_T *simu, int iwfs){
 	    if(save_gradgeom){//also do geom grad during phy grad sims
 		zfarr_cur(simu->save->gradgeom[iwfs], simu->isim/dtrat, gradacc, stream);
 	    }
-	    if(parms->plot.run){
+	    if(parms->plot.run && cuwfs[iwfs].ints.Nx()<=4){
 		cp2cpu(&simu->ints->p[iwfs], cuwfs[iwfs].ints, stream);
 	    }
 	}else{

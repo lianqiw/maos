@@ -342,14 +342,9 @@ void gpu_perfevl_queue(thread_t *info){
 		psfcomp_r(cudata->perf.psfol.P(), opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
 		if(parms->plot.run){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			dmat *psftemp=0;
-			cp2cpu(&psftemp, cudata->perf.psfol[iwvl], stream);
-			if(parms->plot.psf==2){
-			    dcwlog10(psftemp);
-			}
-			ddraw("PSFol", psftemp, NULL, NULL, "Science Open Loop PSF", 
-			      "x", "y", "OL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
-			dfree(psftemp);
+			drawpsf_gpu("PSFol", cudata->perf.psfol[iwvl], stream,
+				    parms->plot.psf,  "Science Open Loop PSF", 
+				    "x", "y", "OL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 		    }
 		}
 		if(!parms->gpu.psf){ //need to move psf from GPU to CPU for accumulation.
@@ -421,14 +416,9 @@ void gpu_perfevl_queue(thread_t *info){
 		}
 		if(parms->plot.run){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			dmat *psftemp=NULL;
-			cp2cpu(&psftemp, cuperf_t::psfcl[iwvl+nwvl*ievl], stream);
-			if(parms->plot.psf==2){
-			    dcwlog10(psftemp);
-			}
-			ddraw("PSFcl", psftemp, NULL, NULL, "Science Closed Loop PSF", 
-			      "x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
-			dfree(psftemp);
+			drawpsf_gpu("PSFcl",  cuperf_t::psfcl[iwvl+nwvl*ievl], stream,
+				    parms->plot.psf,  "Science Closed Loop PSF", 
+				    "x", "y", "CL%2d %.2f", ievl, parms->evl.wvl->p[iwvl]*1e6);
 		    }
 		}
 		if(!parms->gpu.psf){

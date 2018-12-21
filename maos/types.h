@@ -75,7 +75,6 @@ typedef struct INTSTAT_T{
     dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
-    int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
 }INTSTAT_T;
 
 /**
@@ -152,6 +151,7 @@ typedef struct NGSMOD_T{
     double ht;      /**<height of upper DM.*/
     double scale;   /**<(1-ht/hs)^-2*/
     double aper_fcp;/**<piston term in focus in plocs.*/
+    double lp2;     /**<LPF coefficient for Rngs->p[1]*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
@@ -159,7 +159,7 @@ typedef struct NGSMOD_T{
     dmat *IMCC_F;   /**<inv of MCC only including focus mode*/
     dmat *MCCu;     /**<MCCu'*MCCu=MCC*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
-    dcell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
+    dccell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
     dcell *Pngs;    /**<Project DM command to NGS modes */
     dcell *Modes;   /**<DM vector for the modes*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
@@ -558,6 +558,7 @@ typedef struct SIM_T{
     dcell *dmerr,*dmerr_store;      /**<high order dm error signal.*/
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
+    dcell *Merr_lo_lpf;/**<Saves LPF of Merr_lo result*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/

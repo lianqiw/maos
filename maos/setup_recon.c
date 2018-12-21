@@ -233,13 +233,13 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		}
 		double nea_mean=sqrt(nea2_sum/nea2_count*0.5);
 		recon->neam->p[iwfs]=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
-		if(nea_mean>pixtheta*2
+		if(nea_mean>pixtheta*0.33
 		   && parms->powfs[ipowfs].usephy
-		   && parms->powfs[ipowfs].order==1 
+		   && parms->powfs[ipowfs].order<=2 
 		    ){
 		    warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
 			    iwfs, nea_mean*206265000);
-		    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,pixtheta*1e4);
+		    sanea->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,INFINITY);
 		    saneal->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,0);
 		    saneai->p[iwfs+iwfs*nwfs]=dspnewdiag(nsa*2,NULL,0);
 		}else{

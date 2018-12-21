@@ -44,4 +44,11 @@ double wfsfocusadj(SIM_T *simu, int iwfs);
 void dither_position(double *cs, double *ss, const PARMS_T *parms, int ipowfs, int isim, double deltam);
 void calc_phygrads(dmat **pgrad, dmat *ints[], const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int phytype);
 dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs);
+
+/**
+   Create first order low pass filter coeffcient from cross over frequency and sampling rate.
+*/
+INLINE double fc2lp(double fc, double dt){
+    return 1-exp(-2*M_PI*fc*dt);
+}
 #endif

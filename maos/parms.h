@@ -368,7 +368,6 @@ typedef struct TOMO_CFG_T{
 		     */
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
     int ahst_focus;   /**<Make magnification mode free of focus in science (only effective when sim.mffocus=1*/
-    int ahst_mr;     /**<multi-rate control. Separate AHST modes into separate dtrats.*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -473,11 +472,12 @@ typedef struct RECON_CFG_T{
 */
 typedef struct SIM_CFG_T{
     double dt;       /**<sampling period. 1/800*/
-    double dtlo;       /**<low order wfs sampling period*/
-    double dthi;       /**<high order wfs sampling period*/
+    double dtlo;     /**<low order wfs sampling period*/
+    double dthi;     /**<high order wfs sampling period*/
     double za;       /**<zenith angle in radian*/
-    int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
-    int dtrat_lo;      /**<dtrat of the lower order loop.*/
+    int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
+    int dtrat_lo;    /**<lowest dtrat of the lower order loop.*/
+    int dtrat_lo2;   /**<highest dtrat of the lower order loop.*/
     int dtrat_skip;   /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/

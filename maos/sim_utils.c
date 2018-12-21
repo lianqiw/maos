@@ -1512,6 +1512,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerr_store);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo_store);
+    dcellfree(simu->Merr_lo_lpf);
     dcellfree(simu->fsmerr_store);
     dcellfree(simu->fsmreal);
     servo_free(simu->fsmint);
@@ -1692,14 +1693,28 @@ void print_progress(const SIM_T *simu){
     }
     
     if(parms->plot.run){
-	dcell *res=dcellnew(2,1);
-	dmat *tmp=dsub(parms->recon.split?simu->clem:simu->cle, 0, 3, 0, simu->isim+1);
-	res->p[0]=dnew(tmp->ny, 1);
-	res->p[1]=dnew(tmp->ny, 1);
+	dmat *tmp=parms->recon.split?simu->clem:simu->cle;
+	const char *legs[4]={0,0,0,0};
+	int nline=2;
+	legs[0]="High Order";
+	legs[1]="Tip/Tilt";
 	if(parms->recon.split){
-	    for(int i=0; i<tmp->ny; i++){
+	    nline++;
+	    legs[2]="Plate Scale";
+	    if(tmp->nx==4){
+		nline++;
+		legs[3]="Focus";
+	    }
+	}
+	dcell *res=dcellnewsame(nline,1,simu->isim+1,1);
+	if(parms->recon.split){
+	    for(int i=0; i<=simu->isim; i++){
 		IND(res->p[0], i)=IND(tmp, 0, i);//LGS
-		IND(res->p[1], i)=IND(tmp, 2, i);//NGS
+		IND(res->p[1], i)=IND(tmp, 1, i);//TT
+		IND(res->p[2], i)=IND(tmp, 2, i)-IND(tmp, 1, i);//PS
+		if(nline==4){
+		    IND(res->p[3], i)=IND(tmp, 3, i);//Focus
+		}
 	    }
 	}else{
 	    for(int i=0; i<tmp->ny; i++){
@@ -1707,9 +1722,7 @@ void print_progress(const SIM_T *simu){
 		IND(res->p[1], i)=IND(tmp, 0, i)-IND(tmp,2,i);//TT
 	    }
 	}
-	dfree(tmp);
 	dcellcwpow(res, 0.5); dcellscale(res, 1e9);
-	const char *legs[3]={"High Order", "Low Order"};
 	plot_points("Res", res->nx, NULL, res, NULL, NULL, "nn", NULL, legs,
 		    "Wavefront Error", "Time Step", "Wavefront Error (nm)", "Close loop");
 	dcellfree(res);

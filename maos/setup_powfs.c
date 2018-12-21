@@ -1413,6 +1413,20 @@ setup_powfs_phygrad(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		intstat->gx=dcellread("%s/powfs%d_gx",parms->powfs[ipowfs].i0load, ipowfs);
 		intstat->gy=dcellread("%s/powfs%d_gy",parms->powfs[ipowfs].i0load, ipowfs);
 	    }
+	    if(intstat->i0->header){
+		double dt=search_header_num(intstat->i0->header,"dt");
+		if(isfinite(dt)){
+		    double ratio=parms->sim.dt*parms->powfs[ipowfs].dtrat/dt;
+		    warning("Scale loaded i0 by %g\n", ratio);
+		    dcellscale(intstat->i0, ratio);
+		    dcellscale(intstat->gx, ratio);
+		    dcellscale(intstat->gy, ratio);
+		}else{
+		    warning("Loaded i0 header does not have dt\n");
+		}
+	    }else{
+		warning("Loaded i0 does not have header\n");
+	    }
 	}else{
 	    if(parms->powfs[ipowfs].piinfile){
 		/*load psf. 1 for each wavefront sensor. */

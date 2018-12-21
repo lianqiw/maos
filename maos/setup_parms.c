@@ -71,13 +71,7 @@ void free_strarr(char **str, int n){
 	free(str);
     }
 }
-/**
-   Create first order low pass filter coeffcient from cross over frequency and sampling rate.
-*/
-static double fc2lp(double fc, double dt){
-    double lp=2*M_PI*fc*dt;
-    return 1-exp(-lp);//2017-09-26 was lp.
-}
+
 /**
    Free the parms struct.
  */
@@ -807,7 +801,6 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
     READ_INT(tomo.ahst_focus);
-    READ_INT(tomo.ahst_mr);
     READ_INT(tomo.alg);
     READ_INT(tomo.bgs);
     READ_INT(tomo.precond);
@@ -1671,7 +1664,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	warning("There is no high order WFS!!!\n");
     }
     parms->sim.dtrat_hi=-1;
-    parms->sim.dtrat_lo=-1;
+    parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
+    parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
     parms->step_lo=-1;
     parms->step_hi=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1682,13 +1676,16 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].lo || (parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){//has t/t measurement.
 	    if(parms->sim.dtrat_lo<0){
 		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
-	    }else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
-		error("We don't handle multiple framerate of the Tilt included WFS yet\n");
+	    }else if(parms->sim.dtrat_lo<parms->powfs[ipowfs].dtrat){
+		parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
 	    }
-	    if(parms->step_lo<0){
+	    if(parms->sim.dtrat_lo2<0){
+		parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
+	    }else if(parms->sim.dtrat_lo2>parms->powfs[ipowfs].dtrat){
+		parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
+	    }
+	    if(parms->step_lo<0 || parms->step_lo>parms->powfs[ipowfs].step){
 		parms->step_lo=parms->powfs[ipowfs].step;
-	    }else if(parms->step_lo!=parms->powfs[ipowfs].step){
-		error("Different low order WFS has different enabling step\n");
 	    }
 	}
 	if(!parms->powfs[ipowfs].lo){
@@ -1706,6 +1703,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
+    if(parms->sim.dtrat_lo % parms->sim.dtrat_lo2 !=0){
+	error("dtrat=%d has to be multiple of %d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
+    }
+    info("dtrat_lo=%d, dtrat_lo2=%d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
     parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
     if(parms->sim.fcfocus<0){

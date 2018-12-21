@@ -437,6 +437,20 @@ void drawopdamp_gpu(const char *fig, loc_t *loc, const curmat &opd, cudaStream_t
 	dfree(tmp);
     }
 }
+void drawpsf_gpu(const char *fig, curmat &psf, cudaStream_t stream, int plotpsf,
+		  const char *title, const char *xlabel, const char *ylabel,
+		  const char* format,...){
+    format2fn;
+    if(draw_current(fig, fn)){
+	dmat *psftemp=NULL;
+	cp2cpu(&psftemp, psf, stream);
+	if(plotpsf==2){
+	    dcwlog10(psftemp);
+	}
+	ddraw(fig, psftemp, NULL, NULL, title, xlabel, ylabel, "%s", fn);
+	dfree(psftemp);
+    }
+}
 /**
    Free data if not referenced or reference is 1.
 */

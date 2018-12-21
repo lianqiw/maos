@@ -127,28 +127,43 @@ void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    int lo_output=parms->ntipowfs && (!parms->sim.closeloop
-				      || ((isim>=parms->step_lo) && ((isim+1-parms->step_lo)%parms->sim.dtrat_lo==0)));
     if(parms->recon.split==2){
 	if(!parms->gpu.tomo){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
 	}
     }
+    int iRngs=-1;
+    if(parms->ntipowfs && isim>=parms->step_lo){
+	if(!parms->sim.closeloop || (isim+1-parms->step_lo)%parms->sim.dtrat_lo==0){
+	    iRngs=0;//takes precedence.
+	}else if ((isim+1-parms->step_lo)%parms->sim.dtrat_lo2==0){
+	    iRngs=1;
+	    if(parms->recon.split==2){
+		error("Multi-rate control for MVR is to be implemented\n");
+	    }
+	}
+    }
     /*Low order WFS has output */
-    if(lo_output){
+    if(iRngs>-1){
 	simu->Merr_lo=simu->Merr_lo_store;
 	dcellzero(simu->Merr_lo);
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    if(!parms->tomo.ahst_idealngs){//Low order NGS recon. 
-		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-		if(parms->sim.mffocus && ngsmod->indfocus){ //Do LPF on focus.
+	    if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
+		dcellmm(&simu->Merr_lo,ngsmod->Rngs->p[iRngs],simu->gradlastcl,"nn",1);
+		if(parms->sim.mffocus && ngsmod->indfocus && iRngs==0){ //Do LPF on focus.
 		    const double lpfocus=parms->sim.lpfocuslo;
 		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
 		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
 		    simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
 		    //info("Step %5d: focus lpf=%g\n", isim, simu->ngsfocuslpf);
+		}
+		if(ngsmod->lp2 && iRngs==1){
+		    double lpf=ngsmod->lp2;
+		    //Do LHF on measurements
+		    dcelladd(&simu->Merr_lo_lpf, 1.-lpf, simu->Merr_lo, lpf);
+		    dcelladd(&simu->Merr_lo, 1, simu->Merr_lo_lpf, -1);
 		}
 	    }//else: there is ideal NGS correction done in perfevl. 
 	}
@@ -253,7 +268,7 @@ void recon_servo_update(SIM_T *simu){
 		}
 		dfree(psd);
 	    }
-	    	    dfree(ts);
+	    dfree(ts);
 	}
     }
 }

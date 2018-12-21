@@ -103,13 +103,15 @@ void gpu_wfsgrad_update_mtche(const PARMS_T *parms, const POWFS_T *powfs){
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuarray<cuwfs_t> &cuwfs=cudata_t::wfs;
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
-	const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
-	const int nsa=powfs[ipowfs].saloc->nloc;
-	if(parms->powfs[ipowfs].usephy){
-	    if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+	if(parms->powfs[ipowfs].usephy && powfs[ipowfs].intstat){
+	    const int wfsind=parms->powfs[ipowfs].wfsind->p[iwfs];
+	    const int iwfs0=parms->powfs[ipowfs].wfs->p[0];
+	    const int nsa=powfs[ipowfs].saloc->nloc;
+	    const int multi_mf=parms->powfs[ipowfs].phytype_sim==1 && powfs[ipowfs].intstat->mtche->ny>1;
+
+	    if(multi_mf|| wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		if(parms->powfs[ipowfs].phytype_sim==1){//matched filter
-		    int icol=powfs[ipowfs].intstat->mtche->ny>1?wfsind:0;
+		    int icol=multi_mf?wfsind:0;
 		    dcell *mtchec=dcellsub(powfs[ipowfs].intstat->mtche, 0, 0, icol, 1);
 		    dmat *mtche=concat_dcell_as_vector(mtchec);
 		    dcellfree(mtchec);

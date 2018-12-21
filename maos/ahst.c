@@ -416,20 +416,14 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 
     if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	ngsmod->GM=dcellnew(parms->nwfsr, 1);
-	int nttwfs=0;
-	int nttfwfs=0;
 	info("Low order control includes WFS");
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip==3) continue;
 	    if(parms->powfs[ipowfs].lo
 	       || (parms->recon.split && parms->nlopowfs==0 && !parms->powfs[ipowfs].trs)){
-		if(parms->powfs[ipowfs].order==1){
-		    nttwfs++;
-		}else{
-		    nttfwfs++;
-		}
 		info(" %d", iwfs);
+
 		for(int idm=0; idm<parms->ndm; idm++){
 		    if(parms->powfs[ipowfs].type==0){//shwfs
 			dspmm(PIND(ngsmod->GM, iwfs), IND(recon->GAlo, iwfs, idm), IND(ngsmod->Modes, idm), "nn", 1);
@@ -448,18 +442,6 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
 	info("\n");
-	if(ngsmod->nmod>2 && nttfwfs==0){
-	    error("Only TTF wfs cannot control plate scale or focus\n");
-	}
-	if(ngsmod->nmod==6 && nttfwfs==1 && nttwfs==0){
-	    warning("There is only one wfs, remove first plate scale mode as it degenerates with focus mode");
-	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		if(ngsmod->GM->p[iwfs]){
-		    int nx=ngsmod->GM->p[iwfs]->nx;
-		    memset(ngsmod->GM->p[iwfs]->p+nx*2, 0, nx*sizeof(double));
-		}
-	    }
-	}
     }
     if(parms->recon.modal){//convert Modes to space of amod
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -528,7 +510,72 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
 	if(ngsmod->Pngs) writebin(ngsmod->Pngs,"ahst_Pngs");
     }
 }
-    
+/**
+   Invert GM while handling rank deficiency. Ignore those WFS whoes mask is 0. It assumes the modes are ordered as below:
+   T/T x, T/T y, PS1, PS2, PS3, Focus
+*/
+static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
+    if(GM->ny!=1){
+	error("To be implemented\n");
+    }
+    info("inv_gm is using wfs ");
+    dcell *GM2=dcellnew(GM->nx, GM->ny);
+    int nmod=0, ntt=0, nttf=0;
+    for(int iwfs=0; iwfs<GM->nx; iwfs++){
+	if((!mask || IND(mask, iwfs)) && IND(GM, iwfs) && IND(saneai, iwfs, iwfs)->x[0]>0){
+	    info(" %d", iwfs);
+	    IND(GM2, iwfs)=ddup(IND(GM, iwfs));
+	    nmod=IND(GM2, iwfs)->ny;
+	    int ng=IND(GM2, iwfs)->nx;
+	    if(ng==8){//TTF OIWFS
+		nttf++;
+	    }else if(ng==2){
+		ntt++;
+	    }else{
+		error("Unknown WFS type\n");
+	    }
+	}
+    }
+    info("\n");
+    lmat *modvalid=lnew(nmod, 1);
+    if(nttf>0 || ntt>0){
+	lset(modvalid, 1);
+    }
+    if(nttf>0){
+	if(ntt==0 && nmod==6){
+	    modvalid->p[2]=0;//disable magnofication mode
+	}//else: all mode is valid
+    }else{//nttf==0;
+	if(nmod>=6){
+	    modvalid->p[5]=0;//no focus control.
+	}
+	if(nmod>=5){
+	    if(ntt<3){//1 or 2 TT OIWFS can not control all 3 PS modes
+		modvalid->p[2]=0;
+	    }
+	    if(ntt==1){//1 TT OIWFS can not control any PS mode.
+		modvalid->p[3]=0;
+		modvalid->p[4]=0;
+	    }
+	}
+    }
+			
+    lshow(modvalid, "modvalid");
+    for(int iwfs=0; iwfs<GM->nx; iwfs++){
+	if(IND(GM2, iwfs)){
+	    for(int imod=0; imod<nmod; imod++){
+		if(!IND(modvalid, imod)){
+		    int ng=IND(GM2, iwfs)->nx;
+		    memset(PCOL(IND(GM2, iwfs), imod), 0, ng*sizeof(double));
+		}
+	    }
+	}
+    }
+    dcell *RM=dcellpinv(GM2, saneai);
+    dcellfree(GM2);
+    lfree(modvalid);
+    return RM;
+}
 /**
    setup NGS modes reconstructor in ahst mode.
  */
@@ -536,18 +583,34 @@ void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
     NGSMOD_T *ngsmod=recon->ngsmod;
     if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	cellfree(ngsmod->Rngs);
+	ngsmod->Rngs=dccellnew(2,1);
+	ngsmod->Rngs->p[0]=inv_gm(ngsmod->GM, recon->saneai, 0);
 	/*
 	  W is recon->saneai;
 	  Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
 	  Pngs=Rngs*GA
 	*/
-	ngsmod->Rngs=dcellpinv(ngsmod->GM, recon->saneai);
+	if(parms->sim.dtrat_lo !=parms->sim.dtrat_lo2){
+	    //Multi-rate control
+	    int nwfsr=parms->nwfsr;
+	    lmat *mask=lnew(nwfsr, 1);
+	    for(int iwfsr=0; iwfsr<nwfsr; iwfsr++){
+		int ipowfs=parms->wfsr[iwfsr].powfs;
+		if(parms->powfs[ipowfs].dtrat == parms->sim.dtrat_lo2 && IND(ngsmod->GM, iwfsr)){
+		    IND(mask, iwfsr)=1;
+		}
+	    }
+	    ngsmod->Rngs->p[1]=inv_gm(ngsmod->GM, recon->saneai, mask);
+	    lfree(mask);
+	    ngsmod->lp2=fc2lp((double)parms->sim.dtrat_lo2/parms->sim.dtrat_lo, 1.);
+	    ngsmod->lp2=0; warning("lpf=%g\n", ngsmod->lp2);
+	}
     }
   
     if(parms->tomo.ahst_wt==1){
 	/*Use gradient weighting. */
 	dcellzero(ngsmod->Pngs);
-	dcellmm(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, "nn", 1);
+	dcellmm(&ngsmod->Pngs, ngsmod->Rngs->p[0], recon->GAlo, "nn", 1);
 	if(parms->save.setup){
 	    writebin(ngsmod->Pngs,"ahst_Pngs");
 	}
@@ -774,15 +837,16 @@ void ngsmod2science(dmat *iopd, const loc_t *loc, const NGSMOD_T *ngsmod,
 }
 void ngsmod_free(NGSMOD_T *ngsmod){
     if(!ngsmod) return;
-    dcellfree(ngsmod->GM);
-    dcellfree(ngsmod->Rngs);
-    dcellfree(ngsmod->Pngs);
-    dcellfree(ngsmod->Modes);
+    cellfree(ngsmod->GM);
+    cellfree(ngsmod->Rngs);
+    cellfree(ngsmod->Pngs);
+    cellfree(ngsmod->Modes);
     dfree(ngsmod->MCC);
     dfree(ngsmod->MCCu);
-    dcellfree(ngsmod->MCCP);
+    cellfree(ngsmod->MCCP);
     dfree(ngsmod->IMCC);
     dfree(ngsmod->IMCC_TT);
+    dfree(ngsmod->IMCC_F);
     free(ngsmod);
 }
 
