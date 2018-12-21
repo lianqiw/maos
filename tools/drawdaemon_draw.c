@@ -372,6 +372,7 @@ void update_limit(drawdata_t *drawdata){
 	    if(icumu<ptsnx){
 		ips0=icumu;
 	    }
+	    xmin=ips0;
 	    double y_cumu=0,y=0;
 		  
 	    int first=1;
@@ -441,6 +442,11 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
       cairo_set_font_options(cr, fonto);
       cairo_font_options_destroy(fonto);
       }*/
+    if(!drawdata->image && !drawdata->square){
+	drawdata->cumu=cumu;
+    }else{
+	drawdata->cumu=0;
+    }
     if(drawdata->cumu){
 	if((int)drawdata->icumulast==(int)drawdata->icumu){
 	    drawdata->limit=drawdata->limit_cumu;

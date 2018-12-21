@@ -20,6 +20,7 @@
 #include "icon-draw.h"
 int sock;
 int sock_block=0;
+int cumu=0;
 #ifdef MAC_INTEGRATION
 #include <gtkosxapplication.h>
 #endif

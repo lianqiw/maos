@@ -40,6 +40,7 @@
 typedef struct drawdata_t drawdata_t;
 extern int sock;
 extern int sock_block;
+extern int cumu;//global cumulative plot mode.
 struct drawdata_t{
     /*First, input data from draw.c */
     /*Draw images. */

@@ -45,6 +45,7 @@ static GtkWidget *curwindow=NULL;
 static GtkWidget *curtopnb=NULL;
 static GtkWidget *contexmenu=NULL;
 static drawdata_t *drawdata_dialog=NULL;
+static GtkToolItem *toggle_cumu=NULL;
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
@@ -254,7 +255,8 @@ on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer pdata){
 static gboolean
 on_expose_event(GtkWidget *widget, GdkEventExpose *event, gpointer pdata){
     drawdata_t* drawdata=*((drawdata_t**)pdata);
-    if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
+    int cumu_effective=cumu && !drawdata->image && !drawdata->square;
+    if(drawdata->font_name_version != font_name_version || !drawdata->drawn || drawdata->cumu != cumu_effective){
 	delayed_update_pixmap(drawdata);
     }
     if(drawdata->pixmap){
@@ -1055,6 +1057,9 @@ static void limit_change2(GtkSpinButton *spin, gdouble *val){
 static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
     *key=gtk_toggle_button_get_active(btn);
     delayed_update_pixmap(drawdata_dialog);
+    if(key==&cumu){
+	gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(toggle_cumu), cumu);	
+    }
 }
 static void range_changed(GtkRange *range, gdouble *val){
     *val=gtk_range_get_value(range);
@@ -1071,11 +1076,12 @@ static void spin_changed(GtkSpinButton *spin, gdouble *val){
     drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
 }
-static void toolbutton_cumu_click(GtkToolButton *btn){
+static void toolbutton_cumu_click(GtkToggleToolButton *btn){
     (void)btn;
     drawdata_t *page=get_current_drawdata();
-    if(!page->image){
-	page->cumu=page->cumu?0:1;
+    if(!page->image && !page->square){
+	cumu=gtk_toggle_tool_button_get_active(btn);
+	//cumu=1-cumu;
     }
     delayed_update_pixmap(page);
 }
@@ -1115,8 +1121,8 @@ static void tool_property(GtkToolButton *button, gpointer data){
     int n;
     GtkWidget *spins[6];
     double diff[3];
-    diff[0]=(drawdata->limit[1]-drawdata->limit[0]);
-    diff[1]=(drawdata->limit[3]-drawdata->limit[2]);
+    diff[0]=(drawdata->limit0[1]-drawdata->limit0[0]);
+    diff[1]=(drawdata->limit0[3]-drawdata->limit0[2]);
     if(drawdata->zlim){
 	diff[2]=(drawdata->zlim[1]-drawdata->zlim[0]);
 	n=6;
@@ -1129,7 +1135,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	    diff[i/2]=1;
 	}
 	double step=pow(10,floor(log10(fabs(diff[i/2])))-2);
-	spins[i]=gtk_spin_button_new_with_range(-1000*step, 1000*step, step);
+	spins[i]=gtk_spin_button_new_with_range(drawdata->limit0[i]-1000*step, drawdata->limit0[i]+1000*step, step);
 	double *val;
 	if(i<4){
 	    val=&drawdata->limit0[i];
@@ -1186,8 +1192,8 @@ static void tool_property(GtkToolButton *button, gpointer data){
 
     hbox=gtk_hbox_new(FALSE,0);
     checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
-    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumu);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumu);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &cumu);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), cumu);
     gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
     gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
     checkbtn=gtk_check_button_new_with_label("quadrature ");
@@ -1485,9 +1491,10 @@ GtkWidget *create_window(){
     g_signal_connect(item,"clicked",G_CALLBACK(tool_property),NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
-    item=gtk_tool_button_new(NULL, "_Copy");
+    item=gtk_toggle_tool_button_new(); toggle_cumu=item;
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(item), "_Copy");
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(item), "edit-copy");
-    g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_cumu_click), NULL);
+    g_signal_connect(item, "toggled", G_CALLBACK(toolbutton_cumu_click), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
     item=gtk_separator_tool_item_new();
