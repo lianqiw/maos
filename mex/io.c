@@ -31,14 +31,8 @@
 #include <inttypes.h>
 #include "io.h"
 //static void write_timestamp(file_t *fp);
-//GNU GCC changes definition of inline to C99 compatible since 4.4
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 5 && !defined(__clang__)
-#define INLINE static inline __attribute__((gnu_inline, always_inline)) //GNU
-#else
-#define INLINE static inline __attribute__((always_inline)) //C99
-#endif //if __GNUC__ == 4 && __GNUC_MINOR__ < 5
 
-static const char *myasctime(void){
+const char *myasctime(void){
     static char st[64];
     time_t a;
     time(&a);
@@ -229,7 +223,7 @@ void zfclose(file_t *fp){
     }
     free(fp);
 }
-INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((gzFile)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    zfclose(fp);
@@ -320,7 +314,7 @@ void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_
     zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
     free(tmp);
 }
-INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((gzFile)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{
@@ -460,7 +454,7 @@ static void write_bin_header(const char *header, file_t *fp){
 /**
    Obtain the current magic number. If it is a header, read it out if output of
 header is not NULL.  The header will be appended to the output header.*/
-static uint32_t read_bin_magic(file_t *fp, char **header){
+uint32_t read_bin_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
     uint64_t nlen, nlen2;
     if(fp->isfits){

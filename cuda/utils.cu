@@ -266,20 +266,20 @@ void gpu_write(const int *p, int nx, int ny, const char *format, ...){
     free(tmp);
 }
 template <typename T, typename R, typename S>
-inline void scale_add(T *p1, R alpha, const S *p2, R beta, long n){
+void scale_add(T *p1, R alpha, const S *p2, R beta, long n){
     for(long i=0; i<n; i++){
 	p1[i]=p1[i]*alpha+p2[i]*beta;
     }
 }
 template <>
-inline void scale_add<double2, double, Comp>(double2 *p1, double alpha, const Comp *p2, double beta, long n){
+void scale_add<double2, double, Comp>(double2 *p1, double alpha, const Comp *p2, double beta, long n){
     for(long i=0; i<n; i++){
 	p1[i].x=p1[i].x*alpha+p2[i].x*beta;
 	p1[i].y=p1[i].y*alpha+p2[i].y*beta;
     }
 }
 template <>
-inline void scale_add<float2, float, Comp>(float2 *p1, float alpha, const Comp *p2, float beta, long n){
+ void scale_add<float2, float, Comp>(float2 *p1, float alpha, const Comp *p2, float beta, long n){
     for(long i=0; i<n; i++){
 	p1[i].x=p1[i].x*alpha+p2[i].x*beta;
 	p1[i].y=p1[i].y*alpha+p2[i].y*beta;

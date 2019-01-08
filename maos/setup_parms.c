@@ -190,14 +190,14 @@ void free_parms(PARMS_T *parms){
     dfree(parms->dbg.draw_gmax);
     free(parms);
 }
-INLINE int sum_intarr(int n, long *a){
+static inline int sum_intarr(int n, long *a){
     int sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);
     }
     return sum;
 }
-INLINE int sum_dblarr(int n, double *a){
+static inline int sum_dblarr(int n, double *a){
     double sum=0;
     for(int i=0; i<n; i++){
 	sum+=(a[i]!=0);

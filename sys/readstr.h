@@ -24,7 +24,7 @@
 */
 /*Check whether the char is space. We only treat real space, \t and \v as space. */
 /*
-INLINE int is_space(char c){
+static inline int is_space(char c){
     if(c==' ' || c=='\t' || c=='\v'){
 	return 1;
     }else{
@@ -33,7 +33,7 @@ INLINE int is_space(char c){
 }
 */
 /*Check whether the current express ends. String end or newline is treated as end.*/
-INLINE int is_end(char c){
+static inline int is_end(char c){
     if(c=='\0' || c=='\n' || c=='\r'){
 	return 1;
     }else{

@@ -96,12 +96,12 @@ long thread_id(void);
 #else
 #define OMP_TASK(urgent) DO_PRAGMA(omp task)
 #endif
-INLINE void THREAD_POOL_INIT(int nthread){
+static inline void THREAD_POOL_INIT(int nthread){
     info("Using OpenMP version %d with %d threads\n", _OPENMP, nthread);
     omp_set_num_threads(nthread);
     omp_set_nested(0);//make sure nested is not enabled
 }
-INLINE void QUEUE(long *group, thread_fun fun, void *arg, int nthread, int urgent){
+static inline void QUEUE(long *group, thread_fun fun, void *arg, int nthread, int urgent){
     (void) group;
     (void) urgent;
     for(int it=0; it<nthread; it++){
@@ -109,7 +109,7 @@ INLINE void QUEUE(long *group, thread_fun fun, void *arg, int nthread, int urgen
 	    fun(arg);
     }
 }
-INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+static inline void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     (void)urgent;
     OMP_TASKSYNC_START
 	QUEUE(NULL, fun, arg, nthread, urgent);
@@ -117,7 +117,7 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 }
 
 /*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
-/*Don't turn the following into INLINE function becase task will be waited*/
+/*Don't turn the following into static inline function becase task will be waited*/
 /*
 #define QUEUE(group,fun,arg,nthread,urgent)	\
     (void) group; (void) urgent;		\
@@ -128,8 +128,8 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 */
 #define WAIT(group) DO_PRAGMA(omp taskwait)
 
-/*Turn to inline function because nvcc concatenates _Pragma to } */
-INLINE void QUEUE_THREAD(long *group, thread_t *A, int urgent){
+/*Turn to static inline function because nvcc concatenates _Pragma to } */
+static inline void QUEUE_THREAD(long *group, thread_t *A, int urgent){
     (void)urgent;
     (void)group;
     for(int it=0; it<A[0].nthread; it++){		
@@ -140,7 +140,7 @@ INLINE void QUEUE_THREAD(long *group, thread_t *A, int urgent){
     }
 }
 
-INLINE void CALL_THREAD(thread_t *A, int urgent){
+static inline void CALL_THREAD(thread_t *A, int urgent){
     /*Split CALL_THREAD_DO to a separate routing to avoid recursiving calling
      * CALL_THREAD. This is to work about a bug in icc that always return 0 for
      * omp_in_parallel when nthread==1*/
@@ -163,14 +163,14 @@ INLINE void CALL_THREAD(thread_t *A, int urgent){
    Queue jobs to group. Do not wait
 */
 #define QUEUE thread_pool_queue_many
-INLINE void  QUEUE_THREAD(long *group, thread_t *A, int urgent){
+static inline void  QUEUE_THREAD(long *group, thread_t *A, int urgent){
     thread_pool_queue_many(group,NULL,A,A[0].nthread,urgent);
 }
 #define WAIT(group) thread_pool_wait(&group);
 /**
    Queue jobs to a temp group, Then wait for it to complete.
 */
-INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
+static inline void CALL(thread_fun fun, void *arg, int nthread, int urgent){
     if(nthread>1){							
 	long group=0; 
 	QUEUE(&group, fun, arg, nthread, urgent); 
@@ -181,7 +181,7 @@ INLINE void CALL(thread_fun fun, void *arg, int nthread, int urgent){
 }
 
 
-INLINE void  CALL_THREAD(thread_t *A, int urgent){
+static inline void  CALL_THREAD(thread_t *A, int urgent){
     if((A[0].nthread)>1){ 
 	long group=0; 
 	QUEUE_THREAD(&group,A,urgent);
@@ -220,27 +220,13 @@ int lockadd(int *src, int step);
 #define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
 #define SPIN_UNLOCK(i) __sync_lock_release(&i)
 /**
-   Create a new thread and let it go.
+   Create a new thread and forget.
 */
-INLINE int thread_new(thread_fun fun, void* arg){
-    int ans;
-    pthread_t temp;
-    pthread_attr_t attr;
-    if((ans=pthread_attr_init(&attr))){
-	error("pthread_attr_init failed with %d\n", ans);
-    }
-    if((ans=pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED))){
-	error("pthread_attr_setdetachstate failed with %d\n", ans);	
-    }
-    if((ans=pthread_create(&temp, &attr, fun, arg))){
-	error("pthread_create failed with answer %d\n", ans);
-    }
-    return ans;
-}
+int thread_new(thread_fun fun, void* arg);
 void thread_block_signal();
 
 
-INLINE int cmpxchg(int *ptr, int old, int newval){
+static inline int cmpxchg(int *ptr, int old, int newval){
     volatile int *__ptr = (volatile int *)(ptr);	
     int __ret;                                     
     __asm__ volatile( "lock; cmpxchg %2,%1"
@@ -250,7 +236,7 @@ INLINE int cmpxchg(int *ptr, int old, int newval){
     return __ret;
 }
 
-INLINE int atomicadd(int *ptr, int val){
+static inline int atomicadd(int *ptr, int val){
     int old;
     do{
 	old=*ptr;

@@ -135,10 +135,10 @@ __global__ static void fdpcg_mul_block_sync_half(Comp *xout, const Comp *xin, Co
 	xout[pm2]=vout[ix];
     }
 }
-__device__ inline void do_scale(Real &a, Real b){
+__device__ static inline void do_scale(Real &a, Real b){
     a*=b;
 }
-__device__ inline void do_scale(Comp &a, Real b){
+__device__ static inline void do_scale(Comp &a, Real b){
     a.x*=b;
     a.y*=b;
 }

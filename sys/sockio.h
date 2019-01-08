@@ -26,16 +26,16 @@ int stwrite(int sfd, const void *p, size_t len);
 int stread(int sfd, void *p, size_t len);
 int stwrite2(int sfd, const void *p, size_t len, size_t buflen);
 int stread2(int sfd, void *p, size_t len, size_t buflen);
-INLINE int stwriteint(int sfd, int cmd){
+static inline int stwriteint(int sfd, int cmd){
     return stwrite(sfd, &cmd, sizeof(int));
 }
-INLINE int stwriteintarr(int sfd, int* cmd, unsigned int len){
+static inline int stwriteintarr(int sfd, int* cmd, unsigned int len){
     return stwrite(sfd,cmd,len*sizeof(int));
 }
-INLINE int streadint(int sfd, int *cmd){
+static inline int streadint(int sfd, int *cmd){
     return stread(sfd, cmd, sizeof(int));
 }
-INLINE int streadintarr(int sfd, int* cmd, unsigned int len){
+static inline int streadintarr(int sfd, int* cmd, unsigned int len){
     return stread(sfd,cmd,len*sizeof(int));
 }
 int stwritestr(int sfd, const char *str);

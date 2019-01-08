@@ -40,12 +40,11 @@ extern int cuda_dedup; //Set to 1 during setup and 0 during simulation
 */
 
 template<typename M, typename N> 
-inline void type_convert(M *out, const N* in, int nx){
+void type_convert(M *out, const N* in, int nx){
     for(int i=0; i<nx; i++){
 	out[i]=static_cast<M>(in[i]);
     }
 }
-
 template<>
 inline void type_convert<float2, double2>(float2*out, const double2* in, int nx){
     for(int i=0; i<nx; i++){
@@ -61,7 +60,7 @@ inline void type_convert<double2, float2>(double2*out, const float2* in, int nx)
     }
 }
 /*template<>
-inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
+  inline void type_convert<float2, dcomplex>(float2* out, const dcomplex* in, int nx){
     type_convert(out, (const double2*)in, nx);
 }
 */
@@ -140,7 +139,7 @@ int cp2gpu(M**dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     return own;
 }
 
-template<typename M, typename N> inline void
+template<typename M, typename N> static inline void
 cp2gpu(cumat<M>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
     if(!src || !nx || !ny) return;
     if(dest){
@@ -154,24 +153,24 @@ cp2gpu(cumat<M>& dest, const N*src, int nx, int ny, cudaStream_t stream=0){
 	dest=cumat<M>(nx, ny, tmp, own);
     }
 }
-inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){
+static inline void cp2gpu(Real**dest, const dmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-inline void cp2gpu(curmat &dest, const dmat*src, cudaStream_t stream=0){
+static inline void cp2gpu(curmat &dest, const dmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-inline void cp2gpu(curmat &dest, const smat*src, cudaStream_t stream=0){
+static inline void cp2gpu(curmat &dest, const smat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
 
-inline void cp2gpu(cucmat &dest, const cmat*src, cudaStream_t stream=0){
+static inline void cp2gpu(cucmat &dest, const cmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }
-inline void cp2gpu(cucmat &dest, const zmat*src, cudaStream_t stream=0){
+static inline void cp2gpu(cucmat &dest, const zmat*src, cudaStream_t stream=0){
     if(!src) return;
     cp2gpu(dest, src->p, src->nx, src->ny, stream);
 }

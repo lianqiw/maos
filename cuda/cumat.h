@@ -22,7 +22,7 @@
 #define AOS_CUDA_CUMAT_H
 #include <typeinfo>
 template <typename T>
-    inline void cuwritedata(const cumat<T> &A, file_t *fp){
+    static inline void cuwritedata(const cumat<T> &A, file_t *fp){
     uint32_t magic;
     if(typeid(T)==typeid(float)){
 	magic=M_FLT;
@@ -46,7 +46,7 @@ template <typename T>
     }
 }
 template <typename T>
-inline void cuwrite(const cumat<T> &A, const char *format, ...)CHECK_ARG(2){
+static inline void cuwrite(const cumat<T> &A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     cuwritedata<T>(A, fp);
@@ -54,7 +54,7 @@ inline void cuwrite(const cumat<T> &A, const char *format, ...)CHECK_ARG(2){
 }
 
 template <typename T>
-inline void cuwrite(const cucell<T> &A, const char *format, ...)CHECK_ARG(2){
+static inline void cuwrite(const cucell<T> &A, const char *format, ...)CHECK_ARG(2){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
     header_t header={MCC_ANY, A?(uint64_t)A.Nx():0, A?(uint64_t)A.Ny():0, NULL};
@@ -68,7 +68,7 @@ inline void cuwrite(const cucell<T> &A, const char *format, ...)CHECK_ARG(2){
 }
 
 template <typename T>
-inline void cucellcp(cucell<T> &out, const cucell<T>&in, cudaStream_t stream){
+static inline void cucellcp(cucell<T> &out, const cucell<T>&in, cudaStream_t stream){
     if(!out){
 	out=in.New();
     }

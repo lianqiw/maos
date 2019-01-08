@@ -47,7 +47,7 @@
    Ray tracing from phiin with size of nxin*nyin to 
    phiout with size of nxout*nyout, normalized spacing of dxout, dyout, origin offset of oxout, oyout.
  */
-INLINE int 
+static int 
 FUN_NAME_BLOCK(CONST_IN double *phiin, long nxin, long nyin,
 	       CONST_OUT double *phiout, long nxout, long nyout, 
 	       double dxout, double dyout, double oxout, double oyout,

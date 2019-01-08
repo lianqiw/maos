@@ -33,7 +33,7 @@ typedef int spint;  /*This is always 32 bit. */
    Wrap the index for dataset with total of n frames for continuity. The actual data becomes
    0, 1, 2, ..., n-2, n-1, n-2, ..., 0, 1
 */
-INLINE int wrap(long index, long n){
+static inline int wrap(long index, long n){
     long m=n*2-1;
     index=index%m;
     if(index<0) index+=m;
@@ -100,46 +100,46 @@ typedef complex<float> fcomplex;
 #define csqrtf sqrt
 #define clogf log
 #define cargf arg
-INLINE fcomplex operator*(double A, const fcomplex &B){
+static inline fcomplex operator*(double A, const fcomplex &B){
     return B*(float)A;
 }
-INLINE fcomplex operator*(const fcomplex &B, double A){
+static inline fcomplex operator*(const fcomplex &B, double A){
     return B*(float)A;
 }
-INLINE dcomplex operator*(float A, const dcomplex &B){
+static inline dcomplex operator*(float A, const dcomplex &B){
     return B*(double)A;
 }
-INLINE dcomplex operator*(const dcomplex &B, float A){
+static inline dcomplex operator*(const dcomplex &B, float A){
     return B*(double)A;
 }
-INLINE fcomplex operator+(double A, const fcomplex &B){
+static inline fcomplex operator+(double A, const fcomplex &B){
     return B+(float)A;
 }
-INLINE fcomplex operator+(const fcomplex &B, double A){
+static inline fcomplex operator+(const fcomplex &B, double A){
     return B+(float)A;
 }
-INLINE dcomplex operator+(float A, const dcomplex &B){
+static inline dcomplex operator+(float A, const dcomplex &B){
     return B+(double)A;
 }
-INLINE dcomplex operator+(const dcomplex &B, float A){
+static inline dcomplex operator+(const dcomplex &B, float A){
     return B+(double)A;
 }
-INLINE fcomplex operator-(double A, const fcomplex &B){
+static inline fcomplex operator-(double A, const fcomplex &B){
     return (float)A-B;
 }
-INLINE fcomplex operator-(const fcomplex &B, double A){
+static inline fcomplex operator-(const fcomplex &B, double A){
     return B-(float)A;
 }
-INLINE dcomplex operator-(float A, const dcomplex &B){
+static inline dcomplex operator-(float A, const dcomplex &B){
     return (double)A-B;
 }
-INLINE dcomplex operator-(const dcomplex &B, float A){
+static inline dcomplex operator-(const dcomplex &B, float A){
     return B-(double)A;
 }
-INLINE double conj(double A){
+static inline double conj(double A){
     return A;
 }
-INLINE double real(double A){
+static inline double real(double A){
     return A;
 }
 
@@ -180,16 +180,16 @@ float cargf(fcomplex);
 #endif
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 /*BSD lacks few routines in C99 implementation*/
-INLINE dcomplex clog(dcomplex x){
+static inline dcomplex clog(dcomplex x){
   return log(cabs(x))+I*carg(x);
 }
-INLINE fcomplex clogf(fcomplex x){
+static inline fcomplex clogf(fcomplex x){
   return logf(cabsf(x))+I*cargf(x);
 }
-INLINE dcomplex cpow(dcomplex x, dcomplex z){
+static inline dcomplex cpow(dcomplex x, dcomplex z){
   return cexp(clog(x)*z);
 }
-INLINE fcomplex cpowf(fcomplex x, fcomplex z){
+static inline fcomplex cpowf(fcomplex x, fcomplex z){
   return cexpf(clogf(x)*z);
 }
 #endif //defined(__FreeBSD__) || defined(__NetBSD__)

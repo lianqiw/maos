@@ -19,7 +19,7 @@
 #define AOS_CUDA_KERNEL_H
 #include "common.h"
 /*
-__device__ inline float atomicAdd(float* address, float val)
+__device__ static inline float atomicAdd(float* address, float val)
 {
     float old = *address;
     float assumed;
@@ -33,9 +33,8 @@ __device__ inline float atomicAdd(float* address, float val)
 }
 #endif
 */
-//Do not use __CUDA_ARCH__ as it depends on compilation flags
-#if CUDA_VERSION < 60
-__device__ inline double atomicAdd(double* address, double val)
+#if __CUDA_ARCH__ < 600  && CUDA_DOUBLE
+__device__ static inline double myAtomicAdd(double* address, double val)
 {
     double old = *address;
     double assumed;
@@ -47,8 +46,9 @@ __device__ inline double atomicAdd(double* address, double val)
     } while (assumed != old);
     return old;
 }
-#endif 
-__device__ inline float atomicMax(float* address, float val)
+#define atomicAdd myAtomicAdd
+#endif
+__device__ static inline float atomicMax(float* address, float val)
 {
     float old = *address;
     float assumed;
@@ -60,7 +60,7 @@ __device__ inline float atomicMax(float* address, float val)
     } while (assumed != old);
     return old;
 }
-__device__ inline double atomicMax(double* address, double val)
+__device__ static inline double atomicMax(double* address, double val)
 {
     double old = *address;
     double assumed;
@@ -72,7 +72,7 @@ __device__ inline double atomicMax(double* address, double val)
     } while (assumed != old);
     return old;
 }
-__device__ inline Real CABS2(Comp r){
+__device__ static inline Real CABS2(Comp r){
     const Real a=Z(cuCreal)(r);
     const Real b=Z(cuCimag)(r);
     return a*a+b*b;
@@ -103,19 +103,19 @@ __global__ void sum_do(Real *restrict res, const Real *a, const int n);
 __global__ void sum2_do(Real *restrict res, const Real *a, const int n);
 __global__ void inn_do(Real *res_add, const Real *a, const Real *b, const int n);
 
-inline void inn_wrap(Real *res_add, const Real *a, const Real *b, const int n, cudaStream_t stream){
+static inline void inn_wrap(Real *res_add, const Real *a, const Real *b, const int n, cudaStream_t stream){
     inn_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res_add, a, b, n);
 }
-inline static void sum_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+static inline void sum_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
     sum_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
-inline static void sum2_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+static inline void sum2_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
     sum2_do<<<REDUCE(n), 0, stream>>>(res,a,n);
 }
-inline static void max_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+static inline void max_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
     max_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
-inline static void maxabs_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
+static inline void maxabs_wrap(Real *res, const Real * a, const int n, cudaStream_t stream){
     maxabs_do<<<REDUCE(n), DIM_REDUCE*sizeof(Real), stream>>>(res,a,n);
 }
 __global__ void embed_do(Comp *out, Real *in, int nx);

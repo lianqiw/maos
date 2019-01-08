@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "accphi.h"
 #include "prop_wrap.h"
+
 /*
   One kernel that handles multiple layers/directions, linear or cubic to enable fully parallelization across the full GPU.
 

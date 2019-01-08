@@ -21,6 +21,25 @@
    Functions regarding to threading
 */
 PNEW2(mutex_fftw);
+
+/**
+   Create a new thread and forget.
+*/
+int thread_new(thread_fun fun, void* arg){
+    int ans;
+    pthread_t temp;
+    pthread_attr_t attr;
+    if((ans=pthread_attr_init(&attr))){
+	error("pthread_attr_init failed with %d\n", ans);
+    }
+    if((ans=pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED))){
+	error("pthread_attr_setdetachstate failed with %d\n", ans);	
+    }
+    if((ans=pthread_create(&temp, &attr, fun, arg))){
+	error("pthread_create failed with answer %d\n", ans);
+    }
+    return ans;
+}
 /**
    Break out the job to be executed by multiple threads. 
 */

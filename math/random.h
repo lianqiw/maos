@@ -129,7 +129,7 @@ void mts_refresh(register mt_state* state);
 #define mt_64_to_double (1./18446744073709551616.)
 /* Mult'r to cvt long long to dbl */
 
-INLINE unsigned long mts_lrand(/*32 bit val */
+static inline unsigned long mts_lrand(/*32 bit val */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -141,7 +141,7 @@ INLINE unsigned long mts_lrand(/*32 bit val */
     MT_PRE_TEMPER(random_value);
     return MT_FINAL_TEMPER(random_value);
     }
-INLINE double mts_drand( /*32 bit precision double. [0,1) */
+static inline double mts_drand( /*32 bit precision double. [0,1) */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -154,7 +154,7 @@ INLINE double mts_drand( /*32 bit precision double. [0,1) */
 
     return random_value * mt_32_to_double;
     }
-INLINE double mts_ldrand( /*64 bit precision double */
+static inline double mts_ldrand( /*64 bit precision double */
     register mt_state*	state)		/* State for the PRNG */
     {
 #if MT_MACHINE_BITS == 64

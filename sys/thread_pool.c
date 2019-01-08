@@ -112,7 +112,7 @@ static thread_pool_t pool;/*The default pool; */
  * run the job, and then acquire the mutex, and check whether the job is
  * finished.
  */
-INLINE void do_job(void) {
+static inline void do_job(void) {
     /*Take the job out of the todo list */
     jobs_t *job=pool.jobshead;
     pool.jobshead=job->next;

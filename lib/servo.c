@@ -41,7 +41,7 @@ typedef struct SERVO_CALC_T{
 }SERVO_CALC_T;
 #define TWOPI 6.283185307179586
 /*Compute phase between -2pi, and 0*/
-INLINE double phase(dcomplex val){
+static inline double phase(dcomplex val){
     double ang=atan2(cimag(val), creal(val));
     if(ang>0){
 	ang=ang-TWOPI;
@@ -423,7 +423,7 @@ double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtra
 /**
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
-INLINE void 
+static inline void 
 servo_typeII_filter(SERVO_T *st, const dcell *merrc){
     if(!merrc) return;
     const dmat *gain=st->ep;

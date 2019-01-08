@@ -84,10 +84,10 @@ int mycudaFree(void *p);//Unreference deduplicated memory
 /*static int tot_mem=0; */
 #undef cudaMalloc
 #undef cudaFree
-inline int CUDAMALLOC(void **p, size_t size){
+static inline int CUDAMALLOC(void **p, size_t size){
     return cudaMalloc(p,size);
 }
-inline int CUDAFREE(void *p){
+static inline int CUDAFREE(void *p){
     return mycudaFree(p);
 }
 #define DEBUG_MEM 0
@@ -107,54 +107,54 @@ int current_gpu();
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-__inline__ static __host__ __device__ float2 operator*(const float2 &a, const float2 &b){
+static inline __host__ __device__ float2 operator*(const float2 &a, const float2 &b){
     return cuCmulf(a,b);
 }
-__inline__ static __host__ __device__ float2 operator+(const float2 &a, const float2 &b){
+static inline __host__ __device__ float2 operator+(const float2 &a, const float2 &b){
     return cuCaddf(a,b);
 }
-__inline__ static __host__ __device__ float2&operator*=(float2 &a, const float2 &b){
+static inline __host__ __device__ float2&operator*=(float2 &a, const float2 &b){
     a=cuCmulf(a,b);
     return a;
 }
-__inline__ static __host__ __device__ float2 operator*(const float2 &a, const float b){
+static inline __host__ __device__ float2 operator*(const float2 &a, const float b){
     float2 tmp;
     tmp.x=a.x*b;
     tmp.y=a.y*b;
     return tmp;
 }
-__inline__ static __host__ __device__ float2&operator*=(float2 &a, const float b){
+static inline __host__ __device__ float2&operator*=(float2 &a, const float b){
     a.x*=b;
     a.y*=b;
     return a;
 }
-__inline__ static __host__ __device__ double2 operator*(const double2 &a, const double2 &b){
+static inline __host__ __device__ double2 operator*(const double2 &a, const double2 &b){
     return cuCmul(a,b);
 }
-__inline__ static __host__ __device__ double2 operator+(const double2 &a, const double2 &b){
+static inline __host__ __device__ double2 operator+(const double2 &a, const double2 &b){
     return cuCadd(a,b);
 }
-__inline__ static __host__ __device__ double2&operator*=(double2 &a, const double2 &b){
+static inline __host__ __device__ double2&operator*=(double2 &a, const double2 &b){
     a=cuCmul(a,b);
     return a;
 }
-__inline__ static __host__ __device__ double2 operator*(const double2 &a, const double b){
+static inline __host__ __device__ double2 operator*(const double2 &a, const double b){
     double2 tmp;
     tmp.x=a.x*b;
     tmp.y=a.y*b;
     return tmp;
 }
-__inline__ static __host__ __device__ double2&operator*=(double2 &a, const double b){
+static inline __host__ __device__ double2&operator*=(double2 &a, const double b){
     a.x*=b;
     a.y*=b;
     return a;
 }
-inline void* malloc4async(size_t N){
+static inline void* malloc4async(size_t N){
     void *tmp;
     cudaMallocHost(&tmp, N);
     return tmp;
 }
-inline void free4async(void *P){
+static inline void free4async(void *P){
     cudaFreeHost(P);
 }
 extern int NULL_STREAM;
@@ -217,7 +217,7 @@ extern pthread_mutex_t cufft_mutex;
     }
 
 extern const char *cufft_str[];
-INLINE void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){
+static inline void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){
     LOCK_CUFFT;						
     int _ans=FFT_C2C(plan, in, out, dir);		
     UNLOCK_CUFFT;						
@@ -225,7 +225,7 @@ INLINE void CUFFT2(cufftHandle plan, Comp *in, Comp *out, int dir){
 	error("cufft failed: %s\n", cufft_str[_ans]);	
     }							
 }
-INLINE void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){	
+static inline void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){	
     LOCK_CUFFT;						
     int _ans=FFT_R2C(plan, (Real*)in, out);		
     UNLOCK_CUFFT;						
@@ -233,7 +233,7 @@ INLINE void CUFFTR2C(cufftHandle plan, const Real *in, Comp *out){
 	error("cufft failed: %s\n", cufft_str[_ans]);	
     }							
 }
-INLINE void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){	
+static inline void CUFFTC2R(cufftHandle plan, const Comp *in, Real *out){	
     LOCK_CUFFT;						
     int _ans=FFT_C2R(plan, (Comp*)in, out);		
     UNLOCK_CUFFT;						
@@ -314,7 +314,7 @@ typedef struct event_t{
 	return event;
     }
 }event_t;
-inline void X(pagelock)(X(mat) *A, ...){
+static inline void X(pagelock)(X(mat) *A, ...){
     va_list ap;
     va_start(ap, A);
     do{
@@ -323,7 +323,7 @@ inline void X(pagelock)(X(mat) *A, ...){
     }while(A);
     va_end(ap);
 }
-inline void X(pageunlock)(X(mat) *A, ...){
+static inline void X(pageunlock)(X(mat) *A, ...){
     va_list ap;
     va_start(ap, A);
     do{

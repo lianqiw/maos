@@ -79,7 +79,7 @@ typedef struct cudata_t{
 class cudata_t;
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;
-inline cudata_t* _cudata(){
+static inline cudata_t* _cudata(){
     return (cudata_t*)pthread_getspecific(cudata_key);
 }
 #define cudata _cudata()
@@ -93,7 +93,7 @@ long gpu_get_mem(void);
 /**
    switch to the next GPU and update the pointer.
 */
-inline void gpu_set(int igpu){
+static inline void gpu_set(int igpu){
     extern cuarray<int> GPUS;
     if(igpu>=NGPU){
 	error("Invalid igpu=%d", igpu);
@@ -112,7 +112,7 @@ inline void gpu_set(int igpu){
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.
 */
-inline int gpu_next(float add=1){
+static inline int gpu_next(float add=1){
     static float cur=-1;
     cur+=add;
     int ans=(int)ceil(cur);

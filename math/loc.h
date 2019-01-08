@@ -29,7 +29,7 @@ lmat *loc_create_embed(long *nembed, const loc_t *loc, double oversize, int fftp
 void loc_create_map_npad(loc_t *loc, int npad, int nx, int ny);
 void loc_create_map(loc_t *loc);
 /*Obtain an entry in the map, with boundary checking enforced*/
-INLINE long loc_map_get(map_t *map, long ix, long iy){
+static inline long loc_map_get(map_t *map, long ix, long iy){
     if(ix>=0 && ix<map->nx && iy>=0 && iy<map->ny){
 	return (long)map->p[ix+iy*map->nx];
     }else{

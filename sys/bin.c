@@ -316,7 +316,7 @@ void zfclose(file_t *fp){
   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
   fwrite. Follows the interface of fwrite.
 */
-INLINE void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=(long)(size*nmemb)){
 	    perror("gzwrite");
@@ -393,7 +393,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
    Read from the file. If in gzip mode, calls gzread, otherwise, calls
    fread. Follows the interface of fread.
 */
-INLINE int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
     }else{

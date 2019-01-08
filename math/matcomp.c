@@ -153,7 +153,7 @@ void X(embed_wvf)(X(mat) *restrict A, const R *opd, const R *amp,
 /**
    do a modules square and copy to real part of output
 */
-INLINE void sq2cpy(T *out, const T *in, const long length){
+static inline void sq2cpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=ABS2(in[i]);
     }
@@ -161,7 +161,7 @@ INLINE void sq2cpy(T *out, const T *in, const long length){
 /**
    Copy the real part.
 */
-INLINE void realcpy(T *out, const T *in, const long length){
+static inline void realcpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=REAL(in[i]);
     }
@@ -169,16 +169,16 @@ INLINE void realcpy(T *out, const T *in, const long length){
 /**
    Copy the absolute value to output.
  */
-INLINE void abscpy(T *out, const T *in, const long length){
+static inline void abscpy(T *out, const T *in, const long length){
     for(long i=0; i<length; i++){
 	out[i]=fabs(in[i]);
     }
 }
-INLINE T RA2XY(T A){
+static inline T RA2XY(T A){
     //convert r/a to x/y
     return COMPLEX(REAL(A)*cos(IMAG(A)), REAL(A)*sin(IMAG(A)));
 }
-INLINE T XY2RA(T A){
+static inline T XY2RA(T A){
     //convert x/y to r/a*/
     return COMPLEX(fabs(A), atan2(IMAG(A),REAL(A)));
 }

@@ -32,23 +32,20 @@ typedef int16_t char16_t;
 //#ifdef __cplusplus
 //}
 //#endif
-#ifndef INLINE
-#define INLINE inline __attribute__((always_inline))
-#endif
 #define REFERENCE 0
 /*
   2014-07-08:
   We reference data instead of copying.
  */
 extern int donotquit;
-INLINE mxArray *loc2mx(const loc_t*loc){
+mxArray *loc2mx(const loc_t*loc){
     if(!loc) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=mxCreateDoubleMatrix(loc->nloc, 2, mxREAL);
     memcpy(mxGetPr(out), loc->locx, loc->nloc*sizeof(double));
     memcpy(mxGetPr(out)+loc->nloc, loc->locy, loc->nloc*sizeof(double));
     return out;
 }
-INLINE mxArray *dsp2mx(const dsp*A){
+mxArray *dsp2mx(const dsp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxREAL);
     mxArray *out=0;
     if(REFERENCE){
@@ -68,7 +65,7 @@ INLINE mxArray *dsp2mx(const dsp*A){
     }
     return out;
 }
-INLINE mxArray *csp2mx(const csp*A){
+mxArray *csp2mx(const csp*A){
     if(!A) return mxCreateSparse(0, 0, 0, mxCOMPLEX);
     mxArray *out=0;
     out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxCOMPLEX);
@@ -82,7 +79,7 @@ INLINE mxArray *csp2mx(const csp*A){
     }
     return out;
 }
-INLINE mxArray *d2mx(const dmat *A){
+mxArray *d2mx(const dmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxREAL);
     mxArray *out=0;
     if(REFERENCE && !A->mmap && A->nref){
@@ -97,7 +94,7 @@ INLINE mxArray *d2mx(const dmat *A){
     }
     return out;
 }
-INLINE mxArray *c2mx(const cmat *A){
+mxArray *c2mx(const cmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxCOMPLEX);
     mxArray *out=0;
     out=mxCreateDoubleMatrix(A->nx, A->ny, mxCOMPLEX);
@@ -125,14 +122,14 @@ dmat *l2d(const lmat *A){
     return out;
 }
 
-INLINE mxArray *l2mx(const lmat *A){
+mxArray *l2mx(const lmat *A){
     dmat *out=l2d(A);
     mxArray *B=d2mx(out);
     dfree(out);
     return B;
 }
 /*
-INLINE mxArray *dcell2mx(const dcell *A){
+mxArray *dcell2mx(const dcell *A){
     if(!A) return mxCreateCellMatrix(0,0);
     mxArray *out=mxCreateCellMatrix(A->nx,A->ny);
     for(int i=0; i<A->nx*A->ny; i++){
@@ -142,7 +139,7 @@ INLINE mxArray *dcell2mx(const dcell *A){
     }
     return out;
 }
-INLINE mxArray *ccell2mx(const ccell *A){
+mxArray *ccell2mx(const ccell *A){
     if(!A) return mxCreateCellMatrix(0,0);
     mxArray *out=mxCreateCellMatrix(A->nx,A->ny);
     for(int i=0; i<A->nx*A->ny; i++){
@@ -189,10 +186,10 @@ mxArray *any2mx(const void *A_){
     }
     return out;
 }
-INLINE mxArray *str2mx(const char *str){
+mxArray *str2mx(const char *str){
     return mxCreateString(str);
 }
-INLINE dsp *mx2dsp(const mxArray *A){
+dsp *mx2dsp(const mxArray *A){
     if(!mxIsDouble(A) || mxIsComplex(A)) error("Only double is supported\n");
     dsp *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
@@ -208,7 +205,7 @@ INLINE dsp *mx2dsp(const mxArray *A){
     }
     return out;
 }
-INLINE loc_t *mx2loc(const mxArray *A){
+loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
     loc->nref=malloc(sizeof(int)); loc->nref[0]=1;
@@ -232,7 +229,7 @@ INLINE loc_t *mx2loc(const mxArray *A){
     return loc;
 }
 
-INLINE dmat *mx2d(const mxArray *A){
+dmat *mx2d(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");
@@ -246,19 +243,19 @@ INLINE dmat *mx2d(const mxArray *A){
     }
     return out;
 }
-INLINE dmat *mx2c(const mxArray *A){
+dmat *mx2c(const mxArray *A){
     mexErrMsgTxt("mx2c is not yet implemented\n");
     (void)A;
     return 0;
 }
-INLINE lmat *mx2l(const mxArray *A){
+lmat *mx2l(const mxArray *A){
     dmat *B=mx2d(A);
     lmat *out=d2l(B);
     dfree(B);
     return out;
 }
 /*
-INLINE dmat *mx2dvec(const mxArray *A){
+dmat *mx2dvec(const mxArray *A){
     dmat *out=mx2d(A);
     if(out->nx==1){
 	out->nx=out->ny;
@@ -269,7 +266,7 @@ INLINE dmat *mx2dvec(const mxArray *A){
     }
     return out;
 }
-INLINE dcell *mx2dcell(const mxArray *A){
+dcell *mx2dcell(const mxArray *A){
     if(!mxIsCell(A)){
 	mexErrMsgTxt("A is not cell");
     }
@@ -386,13 +383,13 @@ static mxArray *cn2est2mx(cn2est_t *cn2est){
     return A;
 
 }
-INLINE char *mx2str(const mxArray *A){
+char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=(char*)malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
 }
-INLINE rand_t *mx2rand(const mxArray *A){
+rand_t *mx2rand(const mxArray *A){
     int seed=(int)mxGetScalar(A);
     rand_t *out=(rand_t*)malloc(sizeof(rand_t));
     seed_rand(out, seed);

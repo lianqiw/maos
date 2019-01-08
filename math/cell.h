@@ -32,7 +32,7 @@ void cellinit(cell **A, long nx, long ny);
 void cellinit2(cell **A, const cell *B);
 void celldim(const void *A_, long *nx, long *ny, long **nxs, long **nys);
 void cellresize(void *in, long nx, long ny);
-INLINE void cellreshape(void *in_, long nx, long ny){
+static inline void cellreshape(void *in_, long nx, long ny){
     cell *in=cell_cast(in_);
     if(in->nx*in->ny != nx*ny){
 	error("Incorrect new dimension\n");

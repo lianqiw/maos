@@ -225,12 +225,12 @@ typedef struct cell{
 
 /*A method to simulate operator overloading for indexing arrys*/
 #if DEBUG
-INLINE void assert_1d(long i, long nx, long ny){
+static inline void assert_1d(long i, long nx, long ny){
     if(i<0 || i>=nx*ny){
 	error("%ld is out of range for (%ld,%ld) array\n", i, nx, ny);
     }
 }
-INLINE void assert_2d(long ix, long iy, long nx, long ny){
+static inline void assert_2d(long ix, long iy, long nx, long ny){
     if(ix<0 || ix>=nx || iy<0 || iy>=ny){
 	error("(%ld,%ld) is out of range for (%ld,%ld) array\n", ix, iy, nx, ny);
     }

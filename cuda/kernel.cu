@@ -16,6 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "kernel.h"
+
 /**
    A few kernels.
 */
