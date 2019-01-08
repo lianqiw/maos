@@ -353,7 +353,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    error("Unable to chdir to %s\n", arg->dirout);
 	}
     }else{
-	warning("Disable saving when no -o is supplied.\n");
+	//warning("Disable saving when no -o is supplied.\n");
 	disable_save=1;
     }
     return arg;

@@ -518,7 +518,7 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
     if(GM->ny!=1){
 	error("To be implemented\n");
     }
-    info("inv_gm is using wfs ");
+    info("Rngs is using wfs ");
     dcell *GM2=dcellnew(GM->nx, GM->ny);
     int nmod=0, ntt=0, nttf=0;
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
@@ -527,12 +527,12 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
 	    IND(GM2, iwfs)=ddup(IND(GM, iwfs));
 	    nmod=IND(GM2, iwfs)->ny;
 	    int ng=IND(GM2, iwfs)->nx;
-	    if(ng==8){//TTF OIWFS
+	    if(ng>=8){//TTF OIWFS
 		nttf++;
 	    }else if(ng==2){
 		ntt++;
 	    }else{
-		error("Unknown WFS type\n");
+		error("Unknown WFS type: ng=%d\n", ng);
 	    }
 	}
     }
