@@ -71,13 +71,7 @@ static char fnwisdom[64];
 static void load_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"r"))){
-	int fd=fileno(fpwisdom);
-	if(!flock(fd,LOCK_SH)){
-	    FFTW(import_wisdom_from_file)(fpwisdom);
-	    flock(fd,LOCK_UN);
-	}else{
-	    perror("flock");
-	}
+	FFTW(import_wisdom_from_file)(fpwisdom);
 	fclose(fpwisdom);
     }
 }
@@ -87,13 +81,7 @@ static void load_wisdom(){
 static void save_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"w"))){
-	int fd=fileno(fpwisdom);
-	if(!flock(fd,LOCK_EX)){
-	    FFTW(export_wisdom_to_file)(fpwisdom);
-	    flock(fd,LOCK_UN);
-	}else{
-	    perror("flock");
-	}
+	FFTW(export_wisdom_to_file)(fpwisdom);
 	fclose(fpwisdom);
     }
 }
