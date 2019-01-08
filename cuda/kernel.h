@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -33,7 +33,8 @@ __device__ inline float atomicAdd(float* address, float val)
 }
 #endif
 */
-#if !defined( __CUDA_ARCH__ ) || __CUDA_ARCH__ <600
+//Do not use __CUDA_ARCH__ as it depends on compilation flags
+#if CUDA_VERSION < 60
 __device__ inline double atomicAdd(double* address, double val)
 {
     double old = *address;
@@ -46,7 +47,7 @@ __device__ inline double atomicAdd(double* address, double val)
     } while (assumed != old);
     return old;
 }
-#endif
+#endif 
 __device__ inline float atomicMax(float* address, float val)
 {
     float old = *address;

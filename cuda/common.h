@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -175,19 +175,10 @@ extern int NULL_STREAM;
 
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
 #define REDUCE(nsa) MIN((nsa+DIM_REDUCE-1)/DIM_REDUCE,NG1D), DIM_REDUCE
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
-#define NTH2 16
-#else
-#define NTH2 32
-#endif
 #define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
 #define DIM3(nx,ny,nb,nbz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nbz),dim3(MIN(nx,nb),MIN(ny,nb))
 
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 200
-#define MEMCPY_D2D cudaMemcpyDeviceToDevice
-#else
 #define MEMCPY_D2D cudaMemcpyDefault
-#endif
 #define MEMCPY_D2H cudaMemcpyDeviceToHost
 #define MEMCPY_H2D cudaMemcpyHostToDevice
 /*

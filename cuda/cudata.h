@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -23,6 +23,7 @@
 #include "wfs.h"
 extern int NGPU;
 extern int MAXGPU;
+extern cuarray<int> GPUS;
 typedef Real ATYPE;
 typedef Real GTYPE;
 namespace cuda_recon{

@@ -898,12 +898,13 @@ if test "$with_cuda" != "no" ;then
     if test "$host_cpu" = "x86_64" ;then
         CUDAOPT+=" -DDLONG"
     fi
+    CUDAOPT+=" -Wno-deprecated-gpu-targets"
     CCBINOPT="$OPTScommon $OPTSprof $OPTSextra -fPIC $CFLAGS -Wno-unused-parameter"
     CCBINOPT="${CCBINOPT/-fpermissive/}"
     LIBCUDA+=" -lcurand -lcusparse -lcufft -lcublas -lcudart"
     if $CCBIN -v 2>&1 |grep clang ;then
 	CCN=CLANG
-	LIBCUDA+=" -lc++"
+	LIBCUDA+=" -lstdc++"
     elif $CCBIN -v 2>&1 |grep icc ;then
 	 CCN=ICC
 	 LIBCUDA+=" -lstdc++"
@@ -917,6 +918,7 @@ if test "$with_cuda" != "no" ;then
     if test -n "$OPENMP_CFLAGS";then
         CCBINOPT+=" $OPENMP_CFLAGS"
     fi
+    AC_DEFINE_UNQUOTED(CUDA_VERSION, $cudaver)
 else
     cudaver="no"
 fi

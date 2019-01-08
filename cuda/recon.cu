@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -167,7 +167,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    if(!parms->moao[imoao].used) continue;
 	    int ntot=nwfs+nevl;
 	    int count=0;
-	    dir_t dir[ntot];
+	    dir_t* dir=new dir_t[ntot];
 	    dm_moao[imoao]=curccell(ntot, 1);
 	    int anx=recon->moao[imoao].amap->p[0]->nx;
 	    int any=recon->moao[imoao].amap->p[0]->ny;
@@ -203,6 +203,7 @@ void curecon_t::update(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		}
 	    }
 	    moao[imoao]=new cumoao_t(parms, recon->moao+imoao, dir, count, grid);
+	    delete[] dir;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(parms->powfs[ipowfs].moao==imoao){

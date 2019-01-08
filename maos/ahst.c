@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -560,7 +560,6 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
 	}
     }
 			
-    lshow(modvalid, "modvalid");
     for(int iwfs=0; iwfs<GM->nx; iwfs++){
 	if(IND(GM2, iwfs)){
 	    for(int imod=0; imod<nmod; imod++){

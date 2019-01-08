@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -176,7 +176,7 @@ void gpu_atm2gpu(const mapcell *atmc, const dmat *atmscale, const PARMS_T *parms
 		}else{
 		    char *gcmd=NULL;
 		    for(int igpu=0; igpu<NGPU; igpu++){
-			extern cuarray<int> GPUS;
+			//extern cuarray<int> GPUS;
 			gpu_set(igpu);
 			if(gpu_get_mem()>need){
 			    char tmp[8];

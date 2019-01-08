@@ -1,5 +1,5 @@
 /*
-  Copyright 2009-2018 Lianqi Wang <lianqiw-at-tmt-dot-org>
+  Copyright 2009-2019 Lianqi Wang <lianqiw-at-tmt-dot-org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -139,7 +139,7 @@ static curmat convert_neai(dsp *nea){
 }
 #define TIMING 0
 void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
-    dir_t dir[nwfs];
+    dir_t* dir=new dir_t[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	dir[iwfs].skip=parms->powfs[ipowfs].skip;
@@ -153,7 +153,7 @@ void cutomo_grid::init_hx(const PARMS_T *parms, const RECON_T *recon){
 	}
     }
     hx.Init_l2d(grid->pmap, dir, nwfs, grid->xmap);
-
+    delete[] dir;
     LAP_T lapc[recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
 	Real tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap->p[ips]->dx)*0.25f;
