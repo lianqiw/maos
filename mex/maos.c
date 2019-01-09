@@ -59,7 +59,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		nstep=(int)mxGetScalar(prhs[0]);
 	    }
 	}
-	if(strcmp(cmd,"setup") && strcmp(cmd, "sim") && strcmp(cmd, "get")){
+	if(nrhs==0 || (strcmp(cmd,"setup") && strcmp(cmd, "sim") && strcmp(cmd, "get"))){
 	    printf("Usage: "
 		 "       maos('setup', '-o dirout -n N -c scao_ngs.conf -g0')\n"
 		 "  simu=maos('sim', nstep)\n"
@@ -67,6 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 		 "  simu=maos('get','simu')\n"
 		 " parms=maos('get','parms')\n"
 		);
+	    return;
 	}
 	if(!strcmp(cmd, "reset")){
 	    if(global) maos_reset();

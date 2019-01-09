@@ -296,24 +296,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 	zfwrite_do(ptr, size, nmemb, fp);
     }
 }
-void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
-    dcomplex *tmp=(dcomplex*)malloc(nmemb*sizeof(dcomplex));
-    for(size_t i=0; i<nmemb; i++){
-	tmp[i].x=pr[i];
-	tmp[i].y=pi[i];
-    }
-    zfwrite(tmp, sizeof(dcomplex), nmemb, fp);
-    free(tmp);
-}
-void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp){
-    fcomplex *tmp=(fcomplex*)malloc(nmemb*sizeof(fcomplex));
-    for(size_t i=0; i<nmemb; i++){
-	tmp[i].x=pr[i];
-	tmp[i].y=pi[i];
-    }
-    zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
-    free(tmp);
-}
+
 static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((gzFile)fp->p, ptr, size*nmemb)>0?0:-1;

@@ -81,6 +81,53 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 	    }
 	}
     }else{/*not cell.*/
+	int ntot=0;
+	int byte=0;
+	int magic;
+	if(mxIsComplex(arr)){
+	    switch(mxGetClassID(arr)){
+	    case mxDOUBLE_CLASS:
+		byte=16;
+		magic=M_CMP;
+		break;
+	    case mxSINGLE_CLASS:
+		byte=8;
+		magic=M_ZMP;
+		break;
+	    default:
+		error("Please implement this class type\n");
+	    }
+	}else{
+	    switch(mxGetClassID(arr)){
+	    case mxDOUBLE_CLASS:
+		byte=8;
+		magic=M_DBL;
+		break;
+	    case mxSINGLE_CLASS:
+		byte=4;
+		magic=M_FLT;
+		break;
+	    case mxINT64_CLASS:
+		byte=8;
+		magic=M_INT64;
+		break;
+	    case mxINT32_CLASS:
+		byte=4;
+		magic=M_INT32;
+		break;
+	    case mxINT16_CLASS:
+		byte=2;
+		magic=M_INT16;
+		break;
+	    case mxINT8_CLASS:
+		byte=1;
+		magic=M_INT8;
+		break;
+	    default:
+		error("Please implement this class type\n");
+	    }
+	}
+	
 	if(mxIsSparse(arr)){
 	    if(header2.ndim!=2){
 		zfclose(fp);
@@ -137,41 +184,41 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		    header2.dims[1]=1;
 		    write_header(&header2, fp);
 		}
-		if(mxIsComplex(arr)){
-		    zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr),nz,fp);
-		}else{
-		    zfwrite(mxGetPr(arr), sizeof(double), nz, fp);
-		}
-	    }
-	}else if(mxIsComplex(arr)){
-	    if(mxIsDouble(arr)){
-		header2.magic=M_CMP;
-		write_header(&header2, fp);
-		if(header2.ntot){
-		    zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), header2.ntot, fp);
-		}
-	    }else{
-		header2.magic=M_ZMP;
-		write_header(&header2, fp);
-		if(header2.ntot){
-		    zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), header2.ntot, fp);
-		}
+		ntot=nz;
 	    }
 	}else{
+	    ntot=header2.ntot;
+	    header2.magic=magic;
+	    write_header(&header2, fp);
+	}
+#if !MX_HAS_INTERLEAVED_COMPLEX
+	if(mxIsComplex(arr)){//convert from continuous to interleaved data.
+	    void *Pr0=mxGetPr(arr);
+	    void *Pi0=mxGetPi(arr);
+	    void *tmp0=malloc(ntot*byte);
 	    if(mxIsDouble(arr)){
-		header2.magic=M_DBL;
-		write_header(&header2, fp);
-		if(header2.ntot){
-		    zfwrite(mxGetPr(arr), sizeof(double), header2.ntot, fp);
-		}  
+		dcomplex *tmp=tmp0;
+		double *Pr=Pr0;
+		double *Pi=Pi0;
+		for(size_t i=0; i<ntot; i++){
+		    tmp[i].x=Pr[i];
+		    tmp[i].y=Pi[i];
+		}
 	    }else{
-		header2.magic=M_FLT;
-		write_header(&header2, fp);
-		if(header2.ntot){
-		    zfwrite(mxGetPr(arr), sizeof(float), header2.ntot, fp);
+		fcomplex *tmp=tmp0;
+		float *Pr=Pr0;
+		float *Pi=Pi0;
+		for(size_t i=0; i<ntot; i++){
+		    tmp[i].x=Pr[i];
+		    tmp[i].y=Pi[i];
 		}
 	    }
-	}
+	    
+	    zfwrite(tmp0, byte, ntot, fp);
+	    free(tmp0);
+	}else
+#endif
+	    zfwrite(mxGetData(arr), byte, ntot, fp);
     }
     free(str);
 }

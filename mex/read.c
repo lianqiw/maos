@@ -72,103 +72,119 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
     int iscell=0;
     if(fp->eof) return NULL;
     mxArray *out=NULL;
+    mwSize byte=0;
+    mxClassID id=0;
+
     switch(magic){
-    case MCC_ANY:
-    case MCC_DBL:
-    case MCC_CMP:
-    case MC_CSP:
-    case MC_SP:
-    case MC_DBL:
-    case MC_CMP:
-    case MC_INT32:
-    case MC_INT64:
+    case M_SP64:  byte=8; id=mxDOUBLE_CLASS;break;
+    case M_DBL:   byte=8; id=mxDOUBLE_CLASS;break;
+
+    case M_CSP64: byte=16;id=mxDOUBLE_CLASS;break;
+    case M_CMP:   byte=16;id=mxDOUBLE_CLASS;break;
+
+    case M_SP32:  byte=4; id=mxSINGLE_CLASS;break;
+    case M_FLT:   byte=4; id=mxSINGLE_CLASS;break;
+
+    case M_CSP32: byte=8; id=mxSINGLE_CLASS;break;
+    case M_ZMP:   byte=8; id=mxSINGLE_CLASS;break;
+	
+    case M_INT64: byte=8; id=mxINT64_CLASS; break;
+    case M_INT32: byte=4; id=mxINT32_CLASS; break;
+    case M_INT16: byte=2; id=mxINT16_CLASS; break;
+    case M_INT8:  byte=1; id=mxINT8_CLASS; break;
+    default: id=(mxClassID)0;
+    }
+    mxComplexity mxFLAG;
+    if(magic==M_CSP32 || magic==M_CSP64 || magic==M_CMP || magic==M_ZMP){
+	mxFLAG=mxCOMPLEX;
+    }else{
+	mxFLAG=mxREAL;
+    }
+    int issp=0;
+    int ibyte=0;
+    if(magic==M_CSP32 || magic==M_CSP64 || magic==M_CSP32 || magic==M_SP64){
+	issp=1;
+	if(start==-1){
+	    warning("Skipping sparse matrix not implemented yet.\n");
+	    start=0;
+	}
+	if(magic==M_CSP32 || magic==M_CSP32 ){
+	    ibyte=4;
+	}else{
+	    ibyte=8;
+	}
+    }
+    if(magic>=0x6410 && magic<=0x6424){//any array
+  	iscell=1;
+	long ix;
+	if(fp->eof) return NULL;
+	/*if(strstr(header2.str,"type=struct"))
+	  {
+	  out=mxCreateStructMatrix(1,1,ntot);
+	  }else*/
 	{
-	    iscell=1;
-	    long ix;
-	    if(fp->eof) return NULL;
-	    /*if(strstr(header2.str,"type=struct"))
-	      {
-	      out=mxCreateStructMatrix(1,1,ntot);
-	      }else*/
-	    {
-		if(ntot>1 || !skip_unicell){
-		    out=mxCreateCellArray(header2.ndim, header2.dims);
-		}
-	    }
-	    mxArray *header0=mxCreateCellMatrix(ntot+1,1);
-	    int nheader0=0;
-	    for(ix=0; ix<ntot; ix++){
-		int start2=0;
-		if(start==-1 || ix<start || ix>=start+howmany){
-		    start2=-1;
-		}
-		mxArray *header3=NULL;
-		mxArray *tmp=readdata(fp, &header3, start2, 0);
-		if(fp->eof){
-		    break;
-		}
-		if(tmp && tmp!=SKIPPED){
-		    if(mxIsStruct(out)){
-			/*
-			  char *key=strstr(header3.str, "struct_key=");
-			  char *key2=strstr(key, ";\n");
-			  char field[64];
-			  if(!key){
-			  warning("key name is not found.\n");
-			  snprintf(field, 64, "key%d", ix);
-			  }else{
-			  key+=11;
-			  strncpy(field, 64, key, key2-key);
-			  }
-			  mxSetField(out, ix, field, tmp);*/
-		    }else{
-			if(ntot>1 || !skip_unicell){
-			    mxSetCell(out, ix, tmp);
-			}else{
-			    out=tmp;
-			}
-		    }
-		    if(header3){
-			mxSetCell(header0, ix, header3);
-			if(mxGetNumberOfElements(header3)){
-			    nheader0++;
-			}
-		    }
-		}
-	    }
-	    if(nheader0){
-		if(header){
-		    mxSetCell(header0, ntot, *header);
-		    *header=header0;
-		}else{
-		    mxDestroyArray(header0);
-		}
-	    }else{
-		mxDestroyArray(header0);//just use the global header2.
+	    if(ntot>1 || !skip_unicell){
+		out=mxCreateCellArray(header2.ndim, header2.dims);
 	    }
 	}
-	break;
-    case M_SP64:
-    case M_SP32:
-    case M_CSP64:/*complex sparse*/
-    case M_CSP32:/*complex sparse*/
-	{
-	    if(start==-1) error("Invalid use\n");
-	    size_t size;
-	    switch(magic){
-	    case M_CSP32:
-	    case M_SP32:
-		size=4;break;
-	    case M_CSP64:
-	    case M_SP64:
-		size=8;break;
-	    default:
-		size=0;
-		zfclose(fp);
-		error("Invalid magic\n");
+	mxArray *header0=mxCreateCellMatrix(ntot+1,1);
+	int nheader0=0;
+	for(ix=0; ix<ntot; ix++){
+	    int start2=0;
+	    if(start==-1 || ix<start || ix>=start+howmany){
+		start2=-1;
 	    }
-	    int isreal=(magic==M_SP32 || magic==M_SP64);
-	   
+	    mxArray *header3=NULL;
+	    mxArray *tmp=readdata(fp, &header3, start2, 0);
+	    if(fp->eof){
+		break;
+	    }
+	    if(tmp && tmp!=SKIPPED){
+		if(mxIsStruct(out)){
+		    /*
+		      char *key=strstr(header3.str, "struct_key=");
+		      char *key2=strstr(key, ";\n");
+		      char field[64];
+		      if(!key){
+		      warning("key name is not found.\n");
+		      snprintf(field, 64, "key%d", ix);
+		      }else{
+		      key+=11;
+		      strncpy(field, 64, key, key2-key);
+		      }
+		      mxSetField(out, ix, field, tmp);*/
+		}else{
+		    if(ntot>1 || !skip_unicell){
+			mxSetCell(out, ix, tmp);
+		    }else{
+			out=tmp;
+		    }
+		}
+		if(header3){
+		    mxSetCell(header0, ix, header3);
+		    if(mxGetNumberOfElements(header3)){
+			nheader0++;
+		    }
+		}
+	    }
+	}
+	if(nheader0){
+	    if(header){
+		mxSetCell(header0, ntot, *header);
+		*header=header0;
+	    }else{
+		mxDestroyArray(header0);
+	    }
+	}else{
+	    mxDestroyArray(header0);//just use the global header2.
+	}
+    }else if(start==-1){//skip read.
+	if(zfseek(fp, byte*ntot, SEEK_CUR)){
+	    error("Seek failed\n");
+	}
+	out=SKIPPED;
+    }else if(magic!=M_HEADER){
+	if(issp){//sparse matrix
 	    int64_t nzmax;
 	    int64_t nx, ny;
 	    if(header2.ndim!=2){
@@ -183,20 +199,20 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 		nzmax=0;
 	    }
 	    if(fp->eof) return NULL;
-	    out=mxCreateSparse(nx,ny,nzmax,isreal?mxREAL:mxCOMPLEX);
+	    out=mxCreateSparse(nx,ny,nzmax,mxFLAG);
 	    if(nx!=0 && ny!=0 && nzmax!=0){
-		if(sizeof(mwIndex)==size){/*Match*/
-		    zfread(mxGetJc(out), size,ny+1,fp);
-		    zfread(mxGetIr(out), size,nzmax, fp);
-		}else{
+		if(sizeof(mwIndex)==ibyte){/*Match*/
+		    zfread(mxGetJc(out), ibyte,ny+1,fp);
+		    zfread(mxGetIr(out), ibyte,nzmax, fp);
+		}else{//Convert index.
 		    long i;
 		    mwIndex *Jc0=mxGetJc(out);
 		    mwIndex *Ir0=mxGetIr(out);
-		    void *Jc=malloc(size*(ny+1));
-		    void *Ir=malloc(size*nzmax);
-		    zfread(Jc, size, ny+1, fp);
-		    zfread(Ir, size, nzmax, fp);
-		    if(size==4){
+		    void *Jc=malloc(ibyte*(ny+1));
+		    void *Ir=malloc(ibyte*nzmax);
+		    zfread(Jc, ibyte, ny+1, fp);
+		    zfread(Ir, ibyte, nzmax, fp);
+		    if(ibyte==4){
 			uint32_t* Jc2=(uint32_t*)Jc;
 			uint32_t* Ir2=(uint32_t*)Ir;
 			for(i=0; i<ny+1; i++){
@@ -207,7 +223,7 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			}
 			free(Jc);
 			free(Ir);
-		    }else if(size==8){
+		    }else if(ibyte==8){
 			uint64_t* Jc2=(uint64_t*)Jc;
 			uint64_t* Ir2=(uint64_t*)Ir;
 			for(i=0; i<ny+1; i++){
@@ -222,124 +238,43 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 			mexErrMsgTxt("Invalid sparse format\n");
 		    }
 		}
-
-		if(isreal){
-		    zfread(mxGetPr(out), sizeof(double), nzmax, fp);
-		}else{
-		    dcomplex *tmp=(dcomplex*)malloc(nzmax*sizeof(dcomplex));
-		    zfread(tmp, sizeof(dcomplex), nzmax, fp);
-		    double *Pr=mxGetPr(out);
-		    double *Pi=mxGetPi(out);
-		    for(long i=0; i<nzmax; i++){
-			Pr[i]=tmp[i].x;
-			Pi[i]=tmp[i].y;
-		    }
-		    free(tmp);
-		}
 	    }
-	}
-	break;
-    case M_DBL:/*double array*/
-    case M_FLT:/*float array*/
-	{
-	    mwSize byte;
-	    mxClassID id;
-	    if(magic==M_DBL){
-		byte=sizeof(double);
-		id=mxDOUBLE_CLASS;
-	    }else{
-		byte=sizeof(float);
-		id=mxSINGLE_CLASS;
-	    }
-	    if(start==-1){
-		if(zfseek(fp, byte*ntot, SEEK_CUR)){
-		    error("Seek failed\n");
-		}
-		out=SKIPPED;
-	    }else{
-		out=mxCreateNumericArray(header2.ndim, header2.dims, id, mxREAL);
-		if(ntot){
-		    zfread(mxGetPr(out), byte,ntot,fp);
-		}
-	    }
-	}
-	break;
-    case M_INT64:/*long array*/
-    case M_INT32:
-    case M_INT16:
-    case M_INT8:
-	{
-	    int byte=0;
-	    mxClassID id;
-	    switch(magic){
-	    case M_INT64: byte=8; id=mxINT64_CLASS; break;
-	    case M_INT32: byte=4; id=mxINT32_CLASS; break;
-	    case M_INT16: byte=2; id=mxINT16_CLASS; break;
-	    case M_INT8:  byte=1; id=mxINT8_CLASS; break;
-	    default: id=(mxClassID)0;
-	    }
-	    if(start==-1){
-		if(zfseek(fp, byte*ntot, SEEK_CUR)){
-		    error("Seek failed\n");
-		}
-		out=SKIPPED;
-	    }else{
-		out=mxCreateNumericArray(header2.ndim,header2.dims,id,mxREAL);
-		if(ntot){
-		    /*Don't use sizeof(mxINT64_CLASS), it is just an integer, 
-		      not a valid C type.*/
-		    zfread(mxGetPr(out), byte,ntot,fp);
-		}
-	    }
-	}
-	break;
-    case M_CMP:/*double complex array*/
-	if(start==-1){
-	    if(zfseek(fp, 16*ntot, SEEK_CUR)){
-		error("Seek failed\n");
-	    }
-	    out=SKIPPED;
+	    ntot=nzmax;
 	}else{
-	    out=mxCreateNumericArray(header2.ndim, header2.dims, mxDOUBLE_CLASS, mxCOMPLEX);
-	    if(ntot){
-		dcomplex*tmp=(dcomplex*)malloc(ntot*sizeof(dcomplex));
-		zfread(tmp,sizeof(dcomplex),ntot,fp);
-		double *Pr=mxGetPr(out);
-		double *Pi=mxGetPi(out);
-		long i;
-		for(i=0; i<ntot; i++){
+	    out=mxCreateNumericArray(header2.ndim,header2.dims,id,mxFLAG);
+	}
+#if !MX_HAS_INTERLEAVED_COMPLEX
+	//convert from interleaved complex to separate complex.
+	if(mxFLAG==mxCOMPLEX){
+	    void *tmp0=malloc(ntot*byte);
+	    zfread(tmp0, byte, ntot, fp);
+	    void *Pr0=mxGetPr(out);
+	    void *Pi0=mxGetPi(out);
+	    if(id==mxDOUBLE_CLASS){
+		dcomplex *tmp=tmp0;
+		double *Pr=Pr0;
+		double *Pi=Pi0;
+		for(long i=0; i<ntot; i++){
 		    Pr[i]=tmp[i].x;
 		    Pi[i]=tmp[i].y;
 		}
-		free(tmp);
-	    }
-	}
-	break;
-    case M_ZMP:/*float complex array. convert to double*/
-	if(start==-1){
-	    if(zfseek(fp, 8*ntot, SEEK_CUR)){
-		error("Seek failed\n");
-	    }
-	    out=SKIPPED;
-	}else{
-	    out=mxCreateNumericArray(header2.ndim, header2.dims, mxSINGLE_CLASS, mxCOMPLEX);
-	    if(ntot){
-		fcomplex*tmp=(fcomplex*)malloc(ntot*sizeof(fcomplex));
-		zfread(tmp,sizeof(fcomplex),ntot,fp);
-		float *Pr=(float*)mxGetPr(out);
-		float *Pi=(float*)mxGetPi(out);
-		long i;
-		for(i=0; i<ntot; i++){
+	    }else if(id==mxSINGLE_CLASS){
+		dcomplex *tmp=tmp0;
+		float *Pr=Pr0;
+		float *Pi=Pi0;
+		for(long i=0; i<ntot; i++){
 		    Pr[i]=tmp[i].x;
 		    Pi[i]=tmp[i].y;
 		}
-		free(tmp);
+	    }else{
+		error("Invalid\n");
 	    }
-	}
-	break;
-    case M_HEADER:
-	break;
-    default:
+	    free(tmp0);
+	}else
+#endif
+	    zfread(mxGetData(out), byte, ntot, fp);		
+	
+    }else{
 	fprintf(stderr,"magic=%x\n",magic);
 	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;

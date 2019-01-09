@@ -24,14 +24,9 @@
 typedef int16_t char16_t;
 #endif
 #include <mex.h>
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
 #include "../lib/aos.h"
 #include "aolibmex.h"
-//#ifdef __cplusplus
-//}
-//#endif
+
 #define REFERENCE 0
 /*
   2014-07-08:
@@ -71,12 +66,16 @@ mxArray *csp2mx(const csp*A){
     out=mxCreateSparse(A->nx,A->ny,A->nzmax,mxCOMPLEX);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
     memcpy(mxGetJc(out),A->p,(A->ny+1)*sizeof(long));
+#if MX_HAS_INTERLEAVED_COMPLEX
+    memcpy(mxGetData(out),A->x,A->nzmax*sizeof(dcomplex));
+#else
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
     for(long i=0; i<A->nzmax; i++){
 	pr[i]=creal(A->x[i]);
 	pi[i]=cimag(A->x[i]);
     }
+#endif
     return out;
 }
 mxArray *d2mx(const dmat *A){
@@ -98,6 +97,9 @@ mxArray *c2mx(const cmat *A){
     if(!A) return mxCreateDoubleMatrix(0,0,mxCOMPLEX);
     mxArray *out=0;
     out=mxCreateDoubleMatrix(A->nx, A->ny, mxCOMPLEX);
+#if MX_HAS_INTERLEAVED_COMPLEX
+    memcpy(mxGetData(out),A->p,A->nx*A->ny*sizeof(dcomplex));
+#else
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
     long i;
@@ -105,6 +107,7 @@ mxArray *c2mx(const cmat *A){
 	pr[i]=creal(A->p[i]);
 	pi[i]=cimag(A->p[i]);
     }
+#endif
     return out;
 }
 lmat *d2l(const dmat *A){
@@ -205,6 +208,24 @@ dsp *mx2dsp(const mxArray *A){
     }
     return out;
 }
+#if MX_HAS_INTERLEAVED_COMPLEX
+csp *mx2csp(const mxArray *A){
+    if(!mxIsDouble(A) || !mxIsComplex(A)) error("Only double dcomplex is supported\n");
+    csp *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=(csp*)calloc(1, sizeof(csp));
+	out->id=M_CSP64;
+	out->nz=-1;
+	out->nx=mxGetM(A);
+	out->ny=mxGetN(A);
+	out->p=(spint*)mxGetJc(A);
+	out->i=(spint*)mxGetIr(A);
+	out->x=mxGetData(A);
+	out->nzmax=mxGetNzmax(A);
+    }
+    return out;
+}
+#endif
 loc_t *mx2loc(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
     loc_t *loc=(loc_t*)calloc(1, sizeof(loc_t));
@@ -231,11 +252,11 @@ loc_t *mx2loc(const mxArray *A){
 
 dmat *mx2d(const mxArray *A){
     if(!mxIsDouble(A)) error("Only double is supported\n");
-    if(mxGetPi(A)){
+    if(mxIsComplex(A)){
 	mexErrMsgTxt("A is complex");
     }
     if(mxGetIr(A)){
-	mexErrMsgTxt("A is dsp");
+	mexErrMsgTxt("A is sparse");
     }
     dmat *out=0;
     if(A && mxGetM(A) && mxGetN(A)){
@@ -243,9 +264,23 @@ dmat *mx2d(const mxArray *A){
     }
     return out;
 }
-dmat *mx2c(const mxArray *A){
+cmat *mx2c(const mxArray *A){
+#if MX_HAS_INTERLEAVED_COMPLEX
+    if(!mxIsComplex(A)){
+	mexErrMsgTxt("A is not complex");
+    }
+    if(mxGetIr(A)){
+	mexErrMsgTxt("A is sparse");
+    }
+    cmat *out=0;
+    if(A && mxGetM(A) && mxGetN(A)){
+	out=cnew_ref(mxGetM(A), mxGetN(A), mxGetData(A));
+    }
+    return out;
+#else
     mexErrMsgTxt("mx2c is not yet implemented\n");
     (void)A;
+#endif
     return 0;
 }
 lmat *mx2l(const mxArray *A){
@@ -285,13 +320,23 @@ static void *mx2any(const mxArray *A, void*(*fun)(const mxArray*)){
     else if(!mxIsCell(A)){
 	if(fun){
 	    return fun(A);
-	}else if(mxGetPi(A)){
+	} else if(mxIsComplex(A)){
+#if MX_HAS_INTERLEAVED_COMPLEX
+	    if(mxIsSparse(A)){
+		return mx2csp(A);
+	    }else{
+		return mx2c(A);
+	    }
+#else
 	    error("Complex type not handled by mx2any\n");
 	    return NULL;
-	}else if(mxIsSparse(A)){
-	    return mx2dsp(A);
+#endif
 	}else{
-	    return mx2d(A);
+	    if(mxIsSparse(A)){
+		return mx2dsp(A);
+	    }else{
+		return mx2d(A);
+	    }
 	}
     }else{
 	cell *out=0;

@@ -30,6 +30,9 @@ typedef int16_t char16_t;
 //#if !defined(MX_API_VER) || MX_API_VER < 0x07030000 //MATLAB2016 dropped this def.
 typedef unsigned int mwIndex;
 #endif
+//#if !MX_HAS_INTERLEAVED_COMPLEX //Matlab R2018a uses interleaved memory in 2018a and after
+double *mxGetPiIsDeprecated(mxArray*);
+//#endif
 #define MAX(A,B) (A)>(B)?(A):(B)
 typedef struct {float x; float y;} fcomplex;
 typedef struct {double x; double y;} dcomplex;
