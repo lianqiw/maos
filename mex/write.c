@@ -83,7 +83,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
     }else{/*not cell.*/
 	int ntot=0;
 	int byte=0;
-	int magic;
+	int magic=0;
 	if(mxIsComplex(arr)){
 	    switch(mxGetClassID(arr)){
 	    case mxDOUBLE_CLASS:
@@ -200,7 +200,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		dcomplex *tmp=tmp0;
 		double *Pr=Pr0;
 		double *Pi=Pi0;
-		for(size_t i=0; i<ntot; i++){
+		for(int i=0; i<ntot; i++){
 		    tmp[i].x=Pr[i];
 		    tmp[i].y=Pi[i];
 		}
@@ -208,7 +208,7 @@ static void writedata(file_t *fp, const mxArray *arr, const mxArray *header){
 		fcomplex *tmp=tmp0;
 		float *Pr=Pr0;
 		float *Pi=Pi0;
-		for(size_t i=0; i<ntot; i++){
+		for(int i=0; i<ntot; i++){
 		    tmp[i].x=Pr[i];
 		    tmp[i].y=Pi[i];
 		}

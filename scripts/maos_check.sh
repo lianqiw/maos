@@ -36,115 +36,87 @@ case $D in
 esac
 
 echo > maos_check.log
+ii=0
 
 function run_maos(){
     ./maos sim.end=1000 $args "$*" >> maos_check.log
-    if [ $? != 0 ];then
-	echo 'error'
+    if [ $? == 0 ];then
+	RMS[ii]=$(tail -n5 maos_check.log |grep 'Mean:' |cut -d ':' -f 2)
     else
-	tail -n5 maos_check.log |grep 'Mean:' |cut -d ':' -f 2
+	RMS[ii]='error'
     fi
+
+    if [ "${RMS[$ii]}" != 'error' ];then
+	a=${RMS[$ii]%.*}
+    else
+	a=0
+    fi
+    b=${REF[$ii]%.*}
+    echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm, $(((a-b)*100/b))%
+    ii=$((ii+1)) 
 }
 
 echo "D is ${D}m. DM order is $((D*2))."
 
-ii=0
-echo -n "Ideal fit (cpu)  "
-RMS[$ii]=$(run_maos sim.idealfit=1 -g-1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+echo -n "Ideal fit (cpu): "
+run_maos sim.idealfit=1 -g-1 
 
-echo -n "Ideal tomo (cpu) "
-RMS[$ii]=$(run_maos sim.idealtomo=1 -g-1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+
+echo -n "Ideal tomo (cpu):"
+run_maos sim.idealtomo=1 -g-1 
 
 echo -n "LGS MCAO (inte): "
-RMS[$ii]=$(run_maos recon.split=0 tomo.precond=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos recon.split=0 tomo.precond=0
 
 echo -n "LGS MCAO (CG):   "
-RMS[$ii]=$(run_maos tomo.precond=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos tomo.precond=0
 
 echo -n "LGS MCAO (FDPCG):"
-RMS[$ii]=$(run_maos tomo.precond=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos tomo.precond=1
 
 echo -n "LGS MCAO (CBS):  "
-RMS[$ii]=$(run_maos tomo.alg=0 fit.alg=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos tomo.alg=0 fit.alg=0
 
 if [ $D -le 10 ];then
 echo -n "LGS MCAO (SVD):  "
-RMS[$ii]=$(run_maos tomo.alg=2 fit.alg=2 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos tomo.alg=2 fit.alg=2
 
 echo -n "LGS MCAO (MVM):  "
-RMS[$ii]=$(run_maos atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos atmr.os=[2] tomo.precond=1 tomo.maxit=100 fit.alg=0 recon.mvm=1
 fi
 
 echo -n "LGS MOAO:        "
-RMS[$ii]=$(run_maos evl.moao=0 moao.dx=[1/2] )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos evl.moao=0 moao.dx=[1/2]
 
 echo -n "LGS GLAO (inte): "
-RMS[$ii]=$(run_maos dm_single.conf  recon.glao=1 recon.split=0 wfs_lgs_ttf.conf )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos dm_single.conf  recon.glao=1 recon.split=0 wfs_lgs_ttf.conf
 
 echo -n "LGS GLAO (split):"
-RMS[$ii]=$(run_maos dm_single.conf  recon.glao=1 recon.split=1 wfs_lgs_ttf.conf )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos dm_single.conf  recon.glao=1 recon.split=1 wfs_lgs_ttf.conf
 
 echo -n "NGS SCAO (inte): "
-RMS[$ii]=$(run_maos -cscao_ngs.conf recon.split=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cscao_ngs.conf recon.split=0
 
 echo -n "NGS SCAO (split):"
-RMS[$ii]=$(run_maos -cscao_ngs.conf recon.split=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cscao_ngs.conf recon.split=1
 
 echo -n "NGS MCAO (inte): "
-RMS[$ii]=$(run_maos -cmcao_ngs.conf recon.split=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cmcao_ngs.conf recon.split=0
 
 echo -n "NGS MCAO (split):"
-RMS[$ii]=$(run_maos -cmcao_ngs.conf recon.split=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cmcao_ngs.conf recon.split=1
 
 echo -n "SCAO LGS (inte): "
-RMS[$ii]=$(run_maos -cscao_lgs.conf recon.split=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cscao_lgs.conf recon.split=0
 
 echo -n "SCAO LGS (split):"
-RMS[$ii]=$(run_maos -cscao_lgs.conf recon.split=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos -cscao_lgs.conf recon.split=1
 
 echo -n "LGS LTAO (inte): "
-RMS[$ii]=$(run_maos dm_single.conf fov_oa.conf recon.split=0 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos dm_single.conf fov_oa.conf recon.split=0
 
 echo -n "LGS LTAO (split):"
-RMS[$ii]=$(run_maos dm_single.conf fov_oa.conf recon.split=1 )
-echo ${RMS[$ii]} nm, Ref: ${REF[$ii]} nm
-ii=$((ii+1)) 
+run_maos dm_single.conf fov_oa.conf recon.split=1
 
 echo ${RMS[*]}
 
