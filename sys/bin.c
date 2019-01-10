@@ -912,6 +912,13 @@ void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
     writearr(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
 }
+/**
+   Write a double array of size nx*ny to file.
+*/
+void writeflt(const float *p, long nx, long ny, const char*format,...){
+    format2fn;
+    writearr(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
+}
 
 /**
    Unreference the mmaped memory. When the reference drops to zero, unmap it.

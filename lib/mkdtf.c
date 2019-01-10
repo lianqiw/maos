@@ -472,8 +472,6 @@ dmat* smooth(const dmat *prof, double dxnew){
     const double dxin=(prof->p[nxin-1]-x0in)/(nxin-1);
     dmat *out;
     if(dxnew > dxin * 2){
-	TIC;tic;
-	info_once("smooth: Smoothing ");
 	const long nxnew=ceil((prof->p[nxin-1]-x0in)/dxnew);
 	loc_t *loc_in=mk1dloc_vec(prof->p, nxin);
 	loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
@@ -494,9 +492,7 @@ dmat* smooth(const dmat *prof, double dxnew){
 	dspfree(ht);
 	locfree(loc_in);
 	locfree(loc_out);
-	toc2("done");
     }else{
-	dbg("smooth: Referencing");
 	out=dref(prof);
     }
     return out;

@@ -27,11 +27,7 @@
 /*
    used to save array of dmat, cmat, ccell or dcell. mainly used to save
 psfout. No user modifiable entries.  */
-typedef struct zfarr{
-    file_t *fp;     /**<pointer to file*/
-    long cur;       /**<Current element*/
-    long tot;       /**<Total number of elements*/
-}zfarr;
+typedef struct zfarr zfarr;
 zfarr* zfarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
 void zfarr_push(zfarr *ca, int i, const void *A);
 void zfarr_dcell(zfarr *ca, int i, const dcell *A);

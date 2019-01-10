@@ -476,8 +476,9 @@ typedef struct SIM_CFG_T{
     double dthi;     /**<high order wfs sampling period*/
     double za;       /**<zenith angle in radian*/
     int dtrat_hi;    /**<ratio of sampling period over clock of high order wfs*/
-    int dtrat_lo;    /**<lowest dtrat of the lower order loop.*/
-    int dtrat_lo2;   /**<highest dtrat of the lower order loop.*/
+    int dtrat_lo;    /**<highest dtrat of the lower order loop.*/
+    int dtrat_lo2;   /**<lowest dtrat of the lower order loop.*/
+    int dtrat_lof;   /**<lowest dtrat of the lower order focus loop.*/
     int dtrat_skip;   /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
@@ -626,6 +627,8 @@ typedef struct DBG_CFG_T{
     dmat* draw_gmax;  /**<Set zlim for gradient drawing*/
     int wfs_iac;      /**<Cubic spline coupling factor for turbulence fitting onto wfs grid.*/
     int fullatm;      /**<Always copy full atm to GPU.*/
+    int lo_blend;     /**<Low order multi-rate control blending scheme.*/
+    double eploscale; /**<Scale of eplo*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

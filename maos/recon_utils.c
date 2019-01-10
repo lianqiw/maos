@@ -604,7 +604,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
     dcell *dmadd=NULL;
     if(opdr && parms->dbg.useopdr){
 	/* The original formulation using Hx*x-Ha*a.  Changed from ploc to plocs
-	   on July 18, 2011. Plos is too low sampled. Make sure the sampling of
+	   on July 18, 2011. Ploc is too low sampled. Make sure the sampling of
 	   plocs is not too big.  Deprecated. Use dm space instead.
 	*/
 	if(dmpsol){/*Pseudo OL estimates */
@@ -685,35 +685,28 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 */
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.evlol) return;
-    simu->reconisim = simu->isim;
-    if(parms->sim.idealfit || parms->sim.idealtomo){
-	if(parms->sim.closeloop){//no delay due to measurement.
-	    simu->reconisim = simu->isim+1;
+    if(parms->sim.evlol || parms->sim.idealfit || parms->sim.idealtomo) return;
+    if(parms->recon.glao){
+	/* Average the gradients in GLAO mode. */
+	if(simu->gradlastcl){
+	    dcellzero(simu->gradlastcl);
+	}else{
+	    long nnx[parms->nwfsr];
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		int ipowfs=parms->wfsr[iwfs].powfs;
+		nnx[iwfs]=simu->powfs[ipowfs].saloc->nloc*2;
+	    }
+	    simu->gradlastcl=dcellnew3(parms->nwfsr, 1, nnx, NULL);
+	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    const double scale=1./parms->powfs[ipowfs].nwfs;
+	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
+		dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
+	    }
 	}
     }else{
-	if(parms->recon.glao){
-	    /* Average the gradients in GLAO mode. */
-	    if(simu->gradlastcl){
-		dcellzero(simu->gradlastcl);
-	    }else{
-		long nnx[parms->nwfsr];
-		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-		    int ipowfs=parms->wfsr[iwfs].powfs;
-		    nnx[iwfs]=simu->powfs[ipowfs].saloc->nloc*2;
-		}
-		simu->gradlastcl=dcellnew3(parms->nwfsr, 1, nnx, NULL);
-	    }
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		const double scale=1./parms->powfs[ipowfs].nwfs;
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs->p[indwfs];
-		    dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
-		}
-	    }
-	}else{
-	    dcellcp(&simu->gradlastcl, simu->gradcl); 
-	}
+	dcellcp(&simu->gradlastcl, simu->gradcl); 
     }
 }
 

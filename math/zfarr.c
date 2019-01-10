@@ -18,6 +18,11 @@
 #include <sys/file.h>
 #include "zfarr.h"
 #include "mathdef.h"
+struct zfarr{
+    file_t *fp;     /**<pointer to file*/
+    long cur;       /**<Current element*/
+    long tot;       /**<Total number of elements*/
+};
 
 /**
    Initializing an zfarray object that contains arrays of dmat, cmat, dcell or ccell
@@ -51,6 +56,9 @@ void zfarr_push(zfarr *ca, int i, const void *p){
 	warning("Invalid. cur=%ld, i=%d, skip.\n", ca->cur, i);
 	return;
     }
+    if(i>=ca->tot){
+	warning_once("zfarr %s overflow. Size is %ld, current position is %ld\n", zfname(ca->fp), ca->tot, ca->cur);
+    }
     uint32_t id=((cell*)p)->id;
     while(ca->cur<i && !zfisfits(ca->fp)) {
 	writedata_by_id(ca->fp, 0, id); 
@@ -82,11 +90,11 @@ zfarr_mat(z);
 */
 void zfarr_close(zfarr *ca){
     if(!ca) return;
-    /*if(ca->cur !=ca->tot){
+    if(ca->cur > ca->tot){
 	warning("zfarr %s is initialized with %ld elements, "
-		 "but %ld elements are written\n",
-		 zfname(ca->fp),ca->tot,ca->cur);
-		 }*/
+		"but %ld elements are written\n",
+		zfname(ca->fp),ca->tot,ca->cur);
+    }
     zfclose(ca->fp);
     free(ca);
 }

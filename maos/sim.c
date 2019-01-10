@@ -104,6 +104,11 @@ void maos_isim(int isim){
     double ck_0=myclockd();
     simu->isim=isim;
     simu->status->isim=isim;
+    if(parms->sim.idealfit || parms->sim.idealtomo || !parms->sim.closeloop){
+	simu->reconisim=simu->isim;
+    }else{//work on gradients from last time step for parallelization.
+	simu->reconisim=simu->isim-1;
+    }
     sim_update_etf(simu);
     if(!parms->atm.frozenflow){
 	//Do not put this one inside parallel 

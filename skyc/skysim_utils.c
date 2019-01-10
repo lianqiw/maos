@@ -522,7 +522,7 @@ void skysim_save(const SIM_S *simu, const ASTER_S *aster, const double *ipres, i
     fprintf(fp,"]\n");
 
     if(parms->maos.npowfs<3){
-	int nwfs[2]; 
+	int nwfs[2]={0,0}; 
 	for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	    nwfs[aster[selaster].wfs[iwfs].ipowfs]++;
 	}

@@ -514,7 +514,7 @@ void setup_ngsmod_prep(const PARMS_T *parms, RECON_T *recon,
    Invert GM while handling rank deficiency. Ignore those WFS whoes mask is 0. It assumes the modes are ordered as below:
    T/T x, T/T y, PS1, PS2, PS3, Focus
 */
-static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
+static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask, lmat **pmodvalid){
     if(GM->ny!=1){
 	error("To be implemented\n");
     }
@@ -537,7 +537,15 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
 	}
     }
     info("\n");
-    lmat *modvalid=lnew(nmod, 1);
+    lmat *modvalid=0;
+    if(pmodvalid){
+	if(!*pmodvalid){
+	    *pmodvalid=lnew(nmod,1);
+	}
+	modvalid=*pmodvalid;
+    }else{
+	modvalid=lnew(nmod, 1);
+    }
     if(nttf>0 || ntt>0){
 	lset(modvalid, 1);
     }
@@ -572,7 +580,9 @@ static dcell *inv_gm(const dcell *GM, const dspcell *saneai, const lmat *mask){
     }
     dcell *RM=dcellpinv(GM2, saneai);
     dcellfree(GM2);
-    lfree(modvalid);
+    if(!pmodvalid){
+	lfree(modvalid);
+    }
     return RM;
 }
 /**
@@ -583,7 +593,7 @@ void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
     if(parms->recon.split==1 && !parms->tomo.ahst_idealngs && parms->ntipowfs){
 	cellfree(ngsmod->Rngs);
 	ngsmod->Rngs=dccellnew(2,1);
-	ngsmod->Rngs->p[0]=inv_gm(ngsmod->GM, recon->saneai, 0);
+	ngsmod->Rngs->p[0]=inv_gm(ngsmod->GM, recon->saneai, 0, 0);
 	/*
 	  W is recon->saneai;
 	  Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
@@ -599,10 +609,22 @@ void setup_ngsmod_recon(const PARMS_T *parms, RECON_T *recon){
 		    IND(mask, iwfsr)=1;
 		}
 	    }
-	    ngsmod->Rngs->p[1]=inv_gm(ngsmod->GM, recon->saneai, mask);
+	    ngsmod->Rngs->p[1]=inv_gm(ngsmod->GM, recon->saneai, mask, &ngsmod->modvalid);
 	    lfree(mask);
-	    ngsmod->lp2=fc2lp((double)parms->sim.dtrat_lo2/parms->sim.dtrat_lo, 1.);
-	    ngsmod->lp2=0; warning("lpf=%g\n", ngsmod->lp2);
+	    switch(parms->dbg.lo_blend){
+	    case 0://Just use the two together
+		ngsmod->lp2=0;
+		break;
+	    case 1://Slower loop generates offset for faster loop
+		ngsmod->lp2=-1;
+		break;
+	    case 2://HPF on faster loop @ 1/20 of lower loop.
+		ngsmod->lp2=fc2lp(0.05/parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
+		break;
+	    default:
+		error("Invalid dbg.lo_blend=%d\n", parms->dbg.lo_blend);
+	    }
+	    warning("ngsmod->lp2=%g\n", ngsmod->lp2);
 	}
     }
   
@@ -846,6 +868,7 @@ void ngsmod_free(NGSMOD_T *ngsmod){
     dfree(ngsmod->IMCC);
     dfree(ngsmod->IMCC_TT);
     dfree(ngsmod->IMCC_F);
+    lfree(ngsmod->modvalid);
     free(ngsmod);
 }
 
@@ -856,6 +879,7 @@ void ngsmod_free(NGSMOD_T *ngsmod){
 void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     if(!dmerr) return;
     const RECON_T *recon=simu->recon;
+    const PARMS_T *parms=simu->parms;
     const NGSMOD_T *ngsmod=recon->ngsmod;
     dcellzero(simu->Mngs); 
     dcellmm(&simu->Mngs, ngsmod->Pngs, dmerr, "nn",1);
@@ -865,7 +889,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	if(!simu->ngsmodlpf){
 	    simu->ngsmodlpf=dnew(3,1);
 	}
-	const double lpfocus=simu->parms->sim.lpfocushi;
+	const double lpfocus=parms->sim.lpfocushi;
 	warning_once("HPF focus/astig from DM error signal. lpfocus=%g\n", lpfocus);
 	simu->ngsmodlpf->p[0]=simu->ngsmodlpf->p[0]*(1-lpfocus)+mngs[ngsmod->indfocus]*lpfocus;
 	simu->ngsmodlpf->p[1]=simu->ngsmodlpf->p[1]*(1-lpfocus)+mngs[ngsmod->indastig]*lpfocus;
@@ -874,13 +898,15 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	mngs[ngsmod->indastig]=simu->ngsmodlpf->p[1];
 	mngs[ngsmod->indastig+1]=simu->ngsmodlpf->p[2];
     }
-    if(ngsmod->indfocus && simu->parms->sim.mffocus){
-	//Preserve focus measured by LGS WFS.
+    if(ngsmod->indfocus && parms->sim.mffocus && 0){
+	/*preserve LGS focus. 
+	  2019-01-15: Let all focus mode be removed
+	  * actually improves performance.*/
+	const double scale=ngsmod->scale;
 	if(ngsmod->indps && ngsmod->ahstfocus){
 	    /* When ahstfocus is true, the first PS mode contains focus mode in
 	     * LGS WFS. Relocate this focus mode to the global focus mode to
 	     * preserve LGS measurements.*/
-	    const double scale=ngsmod->scale;
 	    mngs[ngsmod->indfocus]=-mngs[ngsmod->indps]*(scale-1);
 	}else{
 	    /* When ahstfocus is false, the first PS mode does not create focus
@@ -889,4 +915,4 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
 	}
     }
     dcellmm(&dmerr, ngsmod->Modes, simu->Mngs, "nn", -1);
-}
+ }

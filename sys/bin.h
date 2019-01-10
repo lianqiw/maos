@@ -149,6 +149,7 @@ void read_header(header_t *header, file_t *fp);
 void writearr(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
 	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
+void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void mmap_unref(struct mmap_t *in);
 struct mmap_t *mmap_new(int fd, void *p, long n);
 mmap_t*mmap_ref(mmap_t *in);

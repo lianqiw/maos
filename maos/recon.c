@@ -132,41 +132,86 @@ void recon_split(SIM_T *simu){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
 	}
     }
-    int iRngs=-1;
+    int enRngs[2]={0,0}; int anyRngs=0;
     if(parms->ntipowfs && isim>=parms->step_lo){
-	if(!parms->sim.closeloop || (isim+1-parms->step_lo)%parms->sim.dtrat_lo==0){
-	    iRngs=0;//takes precedence.
-	}else if ((isim+1-parms->step_lo)%parms->sim.dtrat_lo2==0){
-	    iRngs=1;
+	if(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_lo==0){
+	    enRngs[0]=1;//Common rate
+	    anyRngs++;
+	}
+	if(parms->sim.dtrat_lo!=parms->sim.dtrat_lo2 && (isim+1)%parms->sim.dtrat_lo2==0){
+	    enRngs[1]=1;// Multi-rate control
+	  
+	    anyRngs++;
 	    if(parms->recon.split==2){
 		error("Multi-rate control for MVR is to be implemented\n");
 	    }
 	}
     }
-    /*Low order WFS has output */
-    if(iRngs>-1){
+    if(anyRngs){
+	/*Low order WFS has output */
 	simu->Merr_lo=simu->Merr_lo_store;
 	dcellzero(simu->Merr_lo);
+	
 	switch(parms->recon.split){
-	case 1:{
-	    NGSMOD_T *ngsmod=recon->ngsmod;
+	case 1:
 	    if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
-		dcellmm(&simu->Merr_lo,ngsmod->Rngs->p[iRngs],simu->gradlastcl,"nn",1);
-		if(parms->sim.mffocus && ngsmod->indfocus && iRngs==0){ //Do LPF on focus.
+		dcell *tmp=0;
+		NGSMOD_T *ngsmod=recon->ngsmod;
+		for(int iRngs=0; iRngs<2; iRngs++){
+		    //For multi-rate control, iRngs=0 is slower loop and iRngs=1 is the faster loop
+		    if(!enRngs[iRngs]) continue;
+		    dcell **merr;//reconstruction output
+		    if((ngsmod->lp2>=0 && iRngs==1) || (ngsmod->lp2<0 && iRngs==0)){
+			merr=&tmp; //output to separate array to handle LPF or TWFS
+			dcellzero(tmp);
+		    }else{
+			merr=&simu->Merr_lo;
+		    }
+		    dcellmm(merr,ngsmod->Rngs->p[iRngs],simu->gradlastcl,"nn",1);
+		    if(iRngs==0){
+			dcellscale(*merr, parms->dbg.eploscale);
+		    }
+		    if(iRngs==1 && ngsmod->lp2>=0){ //Do LHF on measurements
+			if(ngsmod->lp2>0){//HPF
+			    double *valpf=simu->Merr_lo2->p[0]->p;
+			    double *val=tmp->p[0]->p;
+			    for(int imod=0; imod<ngsmod->nmod; imod++){
+				if(imod==ngsmod->indfocus){//there is no need to blend focus.
+				    continue;
+				}
+				valpf[imod]=valpf[imod]*(1.-ngsmod->lp2)+val[imod]*ngsmod->lp2;
+				val[imod]-=valpf[imod];
+			    }
+			}
+			if(ngsmod->lp2>0 || (ngsmod->lp2==0 && !enRngs[0])){
+			    dcelladd(&simu->Merr_lo, 1, tmp, 1);
+			}
+		    }else if(ngsmod->lp2<0){//Use slower as Truth WFS mode by mode
+			for(int imod=0; imod<ngsmod->nmod; imod++){
+			    if(IND(ngsmod->modvalid, imod)){//Modes that has multi-rates
+				if(iRngs==0){//Accumulate Truth mode offset
+				    simu->Merr_lo2->p[0]->p[imod]+=tmp->p[0]->p[imod]*(0.5/parms->dbg.eploscale);
+				}else{//Apply truth mode offset.
+				    simu->Merr_lo->p[0]->p[imod]+=simu->Merr_lo2->p[0]->p[imod];
+				}
+			    }else if(iRngs==0){//direct output. Avoid double integrator as above.
+				simu->Merr_lo->p[0]->p[imod]=tmp->p[0]->p[imod];
+			    }
+			}
+		    }
+		}//for iRngs
+		dcellfree(tmp);
+		
+		if(parms->sim.mffocus && ngsmod->indfocus && parms->sim.lpfocushi<1){ //Do LPF on focus.
 		    const double lpfocus=parms->sim.lpfocuslo;
 		    double ngsfocus=simu->Merr_lo->p[0]->p[ngsmod->indfocus];
-		    simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
-		    simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
-		    //info("Step %5d: focus lpf=%g\n", isim, simu->ngsfocuslpf);
-		}
-		if(ngsmod->lp2 && iRngs==1){
-		    double lpf=ngsmod->lp2;
-		    //Do LHF on measurements
-		    dcelladd(&simu->Merr_lo_lpf, 1.-lpf, simu->Merr_lo, lpf);
-		    dcelladd(&simu->Merr_lo, 1, simu->Merr_lo_lpf, -1);
+		    if(ngsfocus){//there is output
+			simu->ngsfocuslpf=simu->ngsfocuslpf*(1-lpfocus)+lpfocus*ngsfocus;
+			simu->Merr_lo->p[0]->p[ngsmod->indfocus]=simu->ngsfocuslpf;
+		    }
 		}
 	    }//else: there is ideal NGS correction done in perfevl. 
-	}
+	    
 	    break;
 	case 2:{
 	    /*A separate integrator for low order is required. Use it to form error signal*/
@@ -194,6 +239,7 @@ void recon_split(SIM_T *simu){
 	}
     }
 }
+
 void recon_servo_update(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;

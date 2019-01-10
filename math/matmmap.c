@@ -109,7 +109,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *hea
 			     const char *format, ...){
     if(!nx || !ny) return NULL;
     if(disable_save){
-	return X(cellnewsame)(nx, ny, mx, my);
+	return X(cellnew_same)(nx, ny, mx, my);
     }
     format2fn;
     int fd=mmap_open(fn, 1);

@@ -345,7 +345,7 @@ void wfsgrad_iwfs(thread_t *info){
 	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
 	    if(save_ints){
-		zfarr_dcell(simu->save->intsnf[iwfs], isim/dtrat, ints);
+		zfarr_dcell(simu->save->intsnf[iwfs], isim, ints);
 	    }
 	    if(noisy){/*add noise */
 		const double bkgrndc=bkgrnd*parms->powfs[ipowfs].bkgrndc;
@@ -372,7 +372,7 @@ void wfsgrad_iwfs(thread_t *info){
 			     bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, parms->powfs[ipowfs].qe, rne, 1.);
 		}
 		if(save_ints){
-		    zfarr_dcell(simu->save->intsny[iwfs], isim/dtrat, ints);
+		    zfarr_dcell(simu->save->intsny[iwfs], isim, ints);
 		}
 	    }
 	    if(parms->powfs[ipowfs].i0save==2){
@@ -424,7 +424,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-	    zfarr_dmat(simu->save->gradgeom[iwfs], isim/dtrat, gradtmp);/*noise free. */
+	    zfarr_dmat(simu->save->gradgeom[iwfs], isim, gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
     }//dtrat_out
@@ -557,10 +557,8 @@ static void wfsgrad_dither(SIM_T *simu, int iwfs){
 	dfree(tmp);
     }
     
-  
-
     int npllacc=(simu->isim-parms->powfs[ipowfs].dither_pllskip+1)/parms->powfs[ipowfs].dtrat;
-    if(npllacc%npll==0){
+    if(npllacc >0 && npllacc%npll==0){
 	//Synchronous detection of dither dithersig in input (DM) and output
 	//(gradients) dithersig. The ratio between the two is used for optical gain adjustment.
 	const int npoint=parms->powfs[ipowfs].dither_npoint;
@@ -839,7 +837,7 @@ void wfsgrad_post(thread_t *info){
 		}
 	    }
 	    if(parms->save.grad->p[iwfs]){
-		zfarr_push(simu->save->gradcl[iwfs], isim/dtrat, simu->gradcl->p[iwfs]);
+		zfarr_push(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	    }
 	    if(parms->plot.run){
 		drawopd("Gclx", simu->powfs[ipowfs].saloc, simu->gradcl->p[iwfs]->p,

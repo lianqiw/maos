@@ -28,6 +28,16 @@ Real cucg_t::solve(curcell &xout, const curcell &xin, stream_t &stream){
 	if(!disable_save){
 	    cuwrite(xin,  "cucg_solve_xin_%d", cgtmp.count_fail);
 	    cuwrite(xout, "cucg_solve_xout_%d", cgtmp.count_fail);
+	    cuwrite(cgtmp.r0, "cucg_solve_r0_%d", cgtmp.count_fail);
+	    cuwrite(cgtmp.z0, "cucg_solve_z0_%d", cgtmp.count_fail);
+	    cuwrite(cgtmp.p0, "cucg_solve_p0_%d", cgtmp.count_fail);
+	    cuwrite(cgtmp.Ap, "cucg_solve_Ap_%d", cgtmp.count_fail);
+	    cuwrite(cgtmp.store, "cucg_solve_store_%d", cgtmp.count_fail);
+#if CUDA_DOUBLE
+	    writedbl(cgtmp.diff, maxit+1,1, "cucg_solve_diff_%d", cgtmp.count_fail);
+#else
+	    writeflt(cgtmp.diff, maxit+1,1, "cucg_solve_diff_%d", cgtmp.count_fail);
+#endif
 	}
     }
     return ans;

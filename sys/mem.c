@@ -205,7 +205,7 @@ static int memkey_del(void*p){
 	return 0;
     }else{
 	UNLOCK(mutex_mem);
-	warning("Free: %p not found\n", p);
+	error("Free: %p not found\n", p);
 	print_backtrace();
 	return 1;
     }

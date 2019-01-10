@@ -124,6 +124,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 	    break;
 	default:
 	    warning("cmd=%d is not understood\n", cmd);
+	    break;
 	}
     }
     //info("draw stop lisening to drawdaemon at %d\n", sock_draw);
@@ -182,21 +183,23 @@ int draw_add(int fd){
 }
 static void draw_remove(int fd, int reuse){
     if(sock_ndraw<=0 || fd<0) return;
-    int found=0;
-    for(int ifd=0; ifd<sock_ndraw; ifd++){
-	if(sock_draws[ifd].fd==fd){
-	    found=1;
-	    list_destroy(&sock_draws[ifd].list);
-	    free(sock_draws[ifd].figfn[0]);
-	    free(sock_draws[ifd].figfn[1]);
-	}else if(found){//shift left
-	    memcpy(&sock_draws[ifd-1], &sock_draws[ifd], sizeof(sockinfo_t));
-	}
-    }
     if(reuse){
 	scheduler_send_socket(fd, DRAW_ID);
     }
     close(fd);
+    int found=0;
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	if(sock_draws[ifd].fd==fd){
+	    found=1;
+	    sock_draws[ifd].fd=-1;
+	    list_destroy(&sock_draws[ifd].list);
+	    free(sock_draws[ifd].figfn[0]);sock_draws[ifd].figfn[0]=0;
+	    free(sock_draws[ifd].figfn[1]);sock_draws[ifd].figfn[1]=0;
+	}else if(found){//shift left
+	    memcpy(&sock_draws[ifd-1], &sock_draws[ifd], sizeof(sockinfo_t));
+	}
+    }
+  
     if(found){
 	sock_ndraw--;
     }else{

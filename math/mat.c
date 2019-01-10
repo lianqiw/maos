@@ -549,7 +549,7 @@ X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
 /**
    Create an new X(cell) with X(mat) specified. Each block is stored continuously in memory.
 */
-X(cell) *X(cellnewsame)(long nx, long ny, long mx, long my){
+X(cell) *X(cellnew_same)(long nx, long ny, long mx, long my){
     long tot=nx*ny*mx*my;    
     if(!tot) return NULL;
     X(cell) *out=X(cellnew)(nx,ny);

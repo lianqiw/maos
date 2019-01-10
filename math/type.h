@@ -246,19 +246,19 @@ static inline void assert_2d(long ix, long iy, long nx, long ny){
 #define PIND1(A,i) ((A)->p+(i))
 #define PIND2(A,ix,iy) ((A)->p+(ix)+(A)->nx*(iy))
 //#endif
-#define IND0(A) error("Invalid use. Use IND(A,i) or IND(A,ix,iy)\n");
-#define PIND0(A) error("Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n");
+#define IND0(A) _Pragma("#error Invalid use. Use IND(A,i) or IND(A,ix,iy)\n")
+#define PIND0(A) _Pragma("#error Invalid use. Use PIND(A,i) or PIND(A,ix,iy)\n")
 #define IND_GET(_0,_1,_2,_3,NAME,...) NAME
 #define IND(...) IND_GET(_0,__VA_ARGS__,IND2,IND1,IND0,IND0)(__VA_ARGS__)
 #define PIND(...) IND_GET(_0,__VA_ARGS__,PIND2,PIND1,PIND0,PIND0)(__VA_ARGS__)
 #define PCOL(A,iy) ((A)->p+(iy)*(A)->nx)
 
 //Define indexing using wrapping. See wrap()
-#define IND1R(A,i) error("Invalid use. Use INDR(A,i,j)");
-#define IND2R(A,ix,iy) IND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-#define INDR(...) IND_GET(_0,__VA_ARGS__,IND2R,IND1R,IND1R,IND1R)(__VA_ARGS__)
-#define PIND1R(A,i) error("Invalid use. Use PINDR(A,i,j)");
-#define PIND2R(A,ix,iy) PIND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
-#define PINDR(...) IND_GET(_0,__VA_ARGS__,PIND2R,PIND1R,PIND1R,PIND1R)(__VA_ARGS__)
+//#define IND1R(A,i) _Pragma("#error Invalid use. Use INDR(A,i,j)")
+#define INDR(A,ix,iy) IND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+//#define INDR(...) IND_GET(_0,__VA_ARGS__,IND2R,IND1R,IND1R,IND1R)(__VA_ARGS__)
+//#define PIND1R(A,i) _Pragma("#error Invalid use. Use PINDR(A,i,j)")
+#define PINDR(A,ix,iy) PIND2(A, wrap(ix, A->nx), wrap(iy, A->ny))
+//#define PINDR(...) IND_GET(_0,__VA_ARGS__,PIND2R,PIND1R,PIND1R,PIND1R)(__VA_ARGS__)
 #define PCOLR(A,iy) ((A)->p+wrap(iy, A->ny)*(A)->nx)
 #endif

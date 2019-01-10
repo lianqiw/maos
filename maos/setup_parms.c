@@ -80,6 +80,7 @@ void free_parms(PARMS_T *parms){
     dfree(parms->atm.wt);
     dfree(parms->atm.ws);
     dfree(parms->atm.wddeg);
+    dfree(parms->atm.L0);
     dfree(parms->atmr.ht);
     dfree(parms->atmr.wt);
     lfree(parms->atmr.os);
@@ -1063,6 +1064,8 @@ static void readcfg_dbg(PARMS_T *parms){
     parms->dbg.draw_gmax=dbl2pair(readcfg_dbl("dbg.draw_gmax"));
     READ_INT(dbg.wfs_iac);
     READ_INT(dbg.fullatm);
+    READ_INT(dbg.lo_blend);
+    READ_DBL(dbg.eploscale);
 }
 /**
    Read in GPU options
@@ -1666,6 +1669,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dtrat_hi=-1;
     parms->sim.dtrat_lo=-1;//maximmum of all lo wfs
     parms->sim.dtrat_lo2=-1;//minimum of all lo wfs
+    parms->sim.dtrat_lof=-1;
     parms->step_lo=-1;
     parms->step_hi=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1683,6 +1687,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
 	    }else if(parms->sim.dtrat_lo2>parms->powfs[ipowfs].dtrat){
 		parms->sim.dtrat_lo2=parms->powfs[ipowfs].dtrat;
+	    }
+	    if(parms->powfs[ipowfs].order>1){
+		if(parms->sim.dtrat_lof<0 || parms->sim.dtrat_lof>parms->powfs[ipowfs].dtrat){
+		    parms->sim.dtrat_lof=parms->powfs[ipowfs].dtrat;
+		}
 	    }
 	    if(parms->step_lo<0 || parms->step_lo>parms->powfs[ipowfs].step){
 		parms->step_lo=parms->powfs[ipowfs].step;
@@ -1704,16 +1713,18 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
     }
     if(parms->sim.dtrat_lo % parms->sim.dtrat_lo2 !=0){
-	error("dtrat=%d has to be multiple of %d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
+	error("Slower dtrat=%d has to be multiple of %d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
     }
-    info("dtrat_lo=%d, dtrat_lo2=%d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2);
+    //info("dtrat_lo=%d, dtrat_lo2=%d, dtrat_lof=%d\n", parms->sim.dtrat_lo, parms->sim.dtrat_lo2, parms->sim.dtrat_lof);
     parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
     if(parms->sim.fcfocus<0){
 	parms->sim.fcfocus=0.1/parms->sim.dtlo;
     }
+   
     parms->sim.lpfocushi=fc2lp(parms->sim.fcfocus, parms->sim.dthi);
-    parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dtlo);
+    parms->sim.lpfocuslo=fc2lp(parms->sim.fcfocus, parms->sim.dt*parms->sim.dtrat_lof);
+
     parms->sim.lpttm=fc2lp(parms->sim.fcttm, parms->sim.dthi);
 }
 /**

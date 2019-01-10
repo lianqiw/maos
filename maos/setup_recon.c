@@ -235,7 +235,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		recon->neam->p[iwfs]=nea_mean/(parms->powfs[ipowfs].skip?1:sqrt(TOMOSCALE));
 		if(nea_mean>pixtheta*0.33
 		   && parms->powfs[ipowfs].usephy
-		   && parms->powfs[ipowfs].order<=2 
+		   && parms->powfs[ipowfs].order<=2
+		   && parms->sim.dtrat_lo == parms->sim.dtrat_lo2
 		    ){
 		    warning("TT WFS %d has too much measurement error: %g mas\". Ignore it\n",
 			    iwfs, nea_mean*206265000);
@@ -266,6 +267,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		count_hi++;
 	    }
 	}/*iwfs*/
+	dcellfree(saneac);
     }/*ipowfs */
     
     recon->neamhi=sqrt(neam_hi/count_hi);
@@ -284,7 +286,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	       !parms->powfs[ipowfs].phyusenea){
 		switch(parms->powfs[ipowfs].phytype_recon){
 		case 1:
-		    neatype="cmf";break;
+		    neatype=parms->powfs[ipowfs].mtchcr?"cmf":"mf"; break;
 		case 2:
 		    neatype="cog";break;
 		default:

@@ -744,13 +744,9 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->wfsopd->p[iwfs]=dnew(powfs[ipowfs].loc->nloc, 1);
 	if(parms->powfs[ipowfs].usephy){
 	    if(parms->powfs[ipowfs].type==0){
-		simu->ints->p[iwfs]=dcellnew(nsa,1);
-		for(int isa=0; isa<nsa; isa++){
-		    simu->ints->p[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
-		}		
+		simu->ints->p[iwfs]=dcellnew_same(nsa,1,powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 	    }else{
-		simu->ints->p[iwfs]=dcellnew(1,1);
-		simu->ints->p[iwfs]->p[0]=dnew(powfs[ipowfs].saloc->nloc,powfs[ipowfs].pywfs->nside);
+		simu->ints->p[iwfs]=dcellnew_same(1,1,powfs[ipowfs].saloc->nloc,powfs[ipowfs].pywfs->nside);
 	    }
 	}
 	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom->p[iwfs] || parms->powfs[ipowfs].pistatout){
@@ -830,10 +826,7 @@ static void init_simu_wfs(SIM_T *simu){
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].saloc->nloc;
 	    /*The PSFs here are PSFs of each subaperture. */
-	    simu->wfspsfout->p[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
-	    for(long ipsf=0; ipsf<simu->wfspsfout->p[iwfs]->nx*simu->wfspsfout->p[iwfs]->ny; ipsf++){
-		simu->wfspsfout->p[iwfs]->p[ipsf]=cnew(notf/2+2,notf/2+2);//changed from ntof/2.
-	    }
+	    simu->wfspsfout->p[iwfs]=ccellnew_same(nsa,parms->powfs[ipowfs].nwvl,notf/2+2,notf/2+2);
 	    mymkdir("%s/wvfout/", dirskysim);
 	    mymkdir("%s/ztiltout/", dirskysim);
 	    save->wfspsfout[iwfs]=zfarr_init
@@ -883,11 +876,10 @@ static void init_simu_wfs(SIM_T *simu){
 	save->intsnf=mycalloc(nwfs,zfarr*);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.ints->p[iwfs] && parms->powfs[ipowfs].usephy){
-		save->intsnf[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
+		save->intsnf[iwfs]=zfarr_init(nstep,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
 		if(parms->powfs[ipowfs].noisy){
-		    save->intsny[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_intsny_%d.bin", iwfs, seed);
+		    save->intsny[iwfs]=zfarr_init(nstep,1, "wfs%d_intsny_%d.bin", iwfs, seed);
 		}
 	    }
 	}
@@ -898,11 +890,10 @@ static void init_simu_wfs(SIM_T *simu){
 	    save->gradol=mycalloc(nwfs,zfarr*);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
-		int dtrat=parms->powfs[ipowfs].dtrat;
 		if(parms->save.grad->p[iwfs]){
-		    save->gradcl[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
+		    save->gradcl[iwfs]=zfarr_init(nstep,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		    if(parms->powfs[ipowfs].psol){
-			save->gradol[iwfs]=zfarr_init(nstep/dtrat-1,1, 
+			save->gradol[iwfs]=zfarr_init(nstep,1, 
 							"wfs%d_gradol_%d.bin", iwfs, seed);
 		    }
 		}
@@ -911,10 +902,8 @@ static void init_simu_wfs(SIM_T *simu){
 	if(parms->save.gradgeom){
 	    save->gradgeom=mycalloc(nwfs,zfarr*);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		int dtrat=parms->powfs[ipowfs].dtrat;
 		if(parms->save.gradgeom->p[iwfs]){
-		    save->gradgeom[iwfs]=zfarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+		    save->gradgeom[iwfs]=zfarr_init(nstep,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 		}
 	    }
 	}
@@ -1175,8 +1164,8 @@ static void init_simu_dm(SIM_T *simu){
 	dcelladd(&simu->dmint->mint->p[0], 1, recon->dm_ncpa, 1);
     }
     if(parms->recon.split){
-	simu->Merr_lo_store=dcellnew(1,1);
-	simu->Merr_lo_store->p[0]=dnew(recon->ngsmod->nmod,1);
+	simu->Merr_lo_store=dcellnew_same(1,1,recon->ngsmod->nmod,1);
+	simu->Merr_lo2=dcellnew_same(1,1,recon->ngsmod->nmod,1);
 	simu->Mint_lo=servo_new(simu->Merr_lo_store, 
 				parms->sim.aplo, parms->sim.allo,
 				parms->sim.dtlo, parms->sim.eplo);
@@ -1206,7 +1195,7 @@ static void init_simu_dm(SIM_T *simu){
 	}
     }
     if(parms->recon.psd){
-	simu->dmerrts=dcellnewsame(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
+	simu->dmerrts=dcellnew_same(parms->evl.nevl, 1, recon->Herr->p[0]->nx,
 				   parms->recon.psddtrat);
 	if(parms->recon.split){
 	    simu->Merrts=dnew(recon->ngsmod->nmod, parms->recon.psddtrat_lo);
@@ -1219,9 +1208,9 @@ static void init_simu_dm(SIM_T *simu){
 	save->dmint=zfarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	save->dmfit=zfarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	if(parms->recon.split){
-	    save->Merr_lo=zfarr_init(nstep-parms->sim.dtrat_lo, 1, "Merr_lo_%d.bin", seed);
+	    save->Merr_lo=zfarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
 	    if(!parms->sim.fuseint){
-		save->Mint_lo=zfarr_init(nstep-parms->sim.dtrat_lo, 1, "Mint_lo_%d.bin", seed);
+		save->Mint_lo=zfarr_init(nstep, 1, "Mint_lo_%d.bin", seed);
 	    }
 	}
 	if(parms->sim.lpttm>EPS){
@@ -1512,7 +1501,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerr_store);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo_store);
-    dcellfree(simu->Merr_lo_lpf);
+    dcellfree(simu->Merr_lo2);
     dcellfree(simu->fsmerr_store);
     dcellfree(simu->fsmreal);
     servo_free(simu->fsmint);
@@ -1572,6 +1561,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->evlopd);    
     dfree(simu->lgsfocuslpf);
     cellfree(simu->ints);
+    cellfree(simu->intsout);
     cellfree(simu->wfspsfout);
     cellfree(simu->pistatout);
     if(simu->dither){
@@ -1706,7 +1696,7 @@ void print_progress(const SIM_T *simu){
 		legs[3]="Focus";
 	    }
 	}
-	dcell *res=dcellnewsame(nline,1,simu->isim+1,1);
+	dcell *res=dcellnew_same(nline,1,simu->isim+1,1);
 	if(parms->recon.split){
 	    for(int i=0; i<=simu->isim; i++){
 		IND(res->p[0], i)=IND(tmp, 0, i);//LGS

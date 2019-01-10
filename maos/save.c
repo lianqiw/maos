@@ -78,7 +78,7 @@ void save_gradol(SIM_T *simu){
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
-	    zfarr_dmat(simu->save->gradol[iwfs], simu->reconisim/parms->powfs[ipowfs].dtrat, simu->gradlastol->p[iwfs]);
+	    zfarr_dmat(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);
 	}
     }
     if(parms->save.ngcov>0){
@@ -191,9 +191,9 @@ void save_recon(SIM_T *simu){
 	    zfarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint->p[0]);
 	}
 	if(simu->Merr_lo){
-	    zfarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
+	    zfarr_dmat(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo->p[0]);
 	    if(!parms->sim.fuseint && simu->Mint_lo->mint->p[0]){
-		zfarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]);
+		zfarr_dmat(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint->p[0]->p[0]);
 	    }
 	}
     }

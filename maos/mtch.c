@@ -90,6 +90,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
 	const int radgx=parms->powfs[ipowfs].radgx;
+	dmat *nea2=0;
 	for(int isa=0; isa<nsa; isa++){
 	    double pixrot=0;//pixel rotation
 	    if(srot && parms->powfs[ipowfs].radpix){
@@ -112,7 +113,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    if(powfs[ipowfs].bkgrndc){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]; 
 	    }
-	    dmat *nea2=0;
 	    IND(mtche,isa,ii0)=mtch(&nea2, IND(i0s,isa,ii0),
 				    gxs?IND(gxs,isa,ii0):0, gys?IND(gys,isa,ii0):0, 
 				    parms->powfs[ipowfs].qe,
@@ -139,6 +139,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    IND(psanea,isa,1)=nea2->p[3];
 	    IND(psanea,isa,2)=nea2->p[1];
 	}/*isa  */
+	dfree(nea2);
 
 	if(mtchadp){
 	    info("Mtched filter contraint are disabled for %d subaps out of %d.\n",

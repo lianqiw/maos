@@ -49,6 +49,10 @@ dcell *dcellread_prefix(const char *file, const PARMS_T *parms, int ipowfs);
    Create first order low pass filter coeffcient from cross over frequency and sampling rate.
 */
 static inline double fc2lp(double fc, double dt){
-    return 1-exp(-2*M_PI*fc*dt);
+    if(fc*dt>=1){
+	return 1;
+    }else{
+	return 1-exp(-2*M_PI*fc*dt);
+    }
 }
 #endif

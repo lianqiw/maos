@@ -163,6 +163,7 @@ typedef struct NGSMOD_T{
     dcell *Pngs;    /**<Project DM command to NGS modes */
     dcell *Modes;   /**<DM vector for the modes*/
     dspcell *Wa;    /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
+    lmat *modvalid; /**<Flag of valid modes that has multi-rate control*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
     int ahstfocus;  /**<records parms->tomo.ahst_focus*/
     int indfocus;  /**<Include focus in NGS controlled modes. Records the index*/
@@ -558,7 +559,7 @@ typedef struct SIM_T{
     dcell *dmerr,*dmerr_store;      /**<high order dm error signal.*/
     /*Low order*/
     dcell *Merr_lo,*Merr_lo_store;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_lpf;/**<Saves LPF of Merr_lo result*/
+    dcell *Merr_lo2;   /**<Saves LPF of Merr_lo result*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     dcell *Mngs;       /**<Temporary: NGS mode in DM commands*/
     /*llt pointing loop*/
